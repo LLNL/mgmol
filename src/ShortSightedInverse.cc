@@ -458,7 +458,7 @@ void ShortSightedInverse::augmentGramMatrix(DataDistribution& distributor_S, con
 // TODO: Consider setting up sparse rows for needed data prior to second stage communication.
 //       This should speed it up a bit.
 
-    Control& ct = *(Control::instance());  
+   Control& ct = *(Control::instance());  
    //update locally centered row data
    Mesh* mymesh = Mesh::instance();
    const pb::Grid& mygrid  = mymesh->grid();  
@@ -467,7 +467,9 @@ void ShortSightedInverse::augmentGramMatrix(DataDistribution& distributor_S, con
    // consolidate locally centered data
    DataDistribution distributor1("overlap",loc_radius_, myPEenv, domain);
    distributor1.augmentLocalData((*gramMat_), false);   
-   if(onpe0)
+   
+   const bool print_flag = (onpe0 && ct.verbose > 2);
+   if(print_flag)
    {
       cout<<" Gram Matrix data distribution stats: distributor1 "<<endl;
       distributor1.printStats();
@@ -486,7 +488,7 @@ void ShortSightedInverse::augmentGramMatrix(DataDistribution& distributor_S, con
    const double srad = ct.spread_radius;// - 0.5*loc_radius_;
    DataDistribution distributor2("overlap2",srad, myPEenv, domain); 
    distributor2.updateLocalRows(*gramMat_, true);    
-   if(onpe0 && ct.verbose > 1)
+   if(print_flag)
    {
       cout<<" Gram Matrix data distribution stats: distributor2 "<<endl;
       distributor2.printStats();

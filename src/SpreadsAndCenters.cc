@@ -207,9 +207,9 @@ void SpreadsAndCenters::printLocal(ostream& os, const int root)const
 void SpreadsAndCenters::print(ostream& os, const int root)const
 {
     Control& ct = *(Control::instance());      
-    if((ct.numst < 512 || ct.verbose > 2) && ct.verbose>0)
+    if(ct.numst < 512 || ct.verbose > 2)
        printGlobal(os, root);
-    else if( ct.verbose>0 )
+    else
        printLocal(os, root);  
 
 }

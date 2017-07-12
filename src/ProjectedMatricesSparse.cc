@@ -316,9 +316,8 @@ void ProjectedMatricesSparse::printMatrices(ostream& os)const
    printHB(os);   
    
    /* print stats for Gram Matrix data distribution */
-//   Control& ct = *(Control::instance());  
-//   if((ct.verbose > 1) && onpe0)
-   if(onpe0)
+   Control& ct = *(Control::instance());  
+   if((ct.verbose > 1) && onpe0)
    {
       cout<<" Gram Matrix data distribution stats "<<endl;
       (*distributor_matS_).printStats();

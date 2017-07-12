@@ -517,7 +517,7 @@ int MGmol::quench(LocGridOrbitals* orbitals,
         // build matrices necessary to compute spreads and centers
         spreadf_->computePositionMatrix(*orbitals, work_orbitals);
         
-        if( ct.verbose>1 || ct.atoms_dyn==0 )
+        if( ct.verbose>0 || ct.atoms_dyn==0 )
         {
             spreadf_->print(os_);             
             spreadf_->printStats(os_);
