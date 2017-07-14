@@ -40,7 +40,7 @@ ortho_freq=100
 type=@
 damping=@
 target=@
-alpha=@
+alpha=1.
 [Orbitals]
 initial_type=Gaussian
 initial_width=1.5
