@@ -97,6 +97,15 @@ def format_and_write(template, filename):
 format_and_write(md_template, 'mgmol_md.cfg')
 format_and_write(quench_template, 'mgmol_quench.cfg')
 
+host = gethostname()
+
+if 'cab' in host:
+    params.update(cab_params)
+elif 'vulcan' in host:
+    params.update(vulcan_params)
+else:
+    raise RuntimeError('Unsupported machine.')
+
 runfile_quench = runfile_quench_template.format(**params)
 runfile_md = runfile_md_template.format(**params)
 

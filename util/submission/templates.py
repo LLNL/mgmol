@@ -26,7 +26,7 @@ type=MD
 [MD]
 type=@
 num_steps=@
-dt=15.
+dt=@
 [XLBOMD]
 dissipation=@
 align=@
@@ -46,11 +46,10 @@ initial_type=Gaussian
 initial_width=1.5
 overallocate_factor=@
 [ProjectedMatrices]
-solver=short_sighted
+solver=@
 [LocalizationRegions]
 radius=@
-move_tol=0.1
-computation=@
+move_tol=@
 [Restart]
 input_filename=wave.out
 input_level=3
@@ -156,17 +155,17 @@ atol=1.e-7
 num_lin_iterations=3
 ortho_freq=100
 [SpreadPenalty]
-type=individual
-damping=0.5
-target=1.75
+type=@
+damping=@
+target=@
 alpha=1.
 [Orbitals]
 initial_type=Gaussian
 initial_width=1.5
 [ProjectedMatrices]
-solver=short_sighted
+solver=@
 [LocalizationRegions]
-radius=8.
+radius=@
 [Restart]
 output_type=distributed
 """
@@ -182,7 +181,8 @@ H2O_64_params={
 }
 
 d144_params={
-    'nodes':                    '8',
+    'nodes':                    '7',
+    'walltime':                 '03:00:00',
     'ntasks':                   '100',
     'omp_num_threads':          omp_num_threads,
     'cores_per_task':           '1',
@@ -191,12 +191,20 @@ d144_params={
     'jobname':                  'd144',
 }
 
-computer_params={
-    'computer':                 computer,
-    'queue':                    queue,
-    'walltime':                 walltime,
-    'scratch':                  scratch,
-    'scratchdir':               scratchdir,
+vulcan_params={
+    'queue':                    'psmall',
+    'scratch_path':              '/p/lscratchv/mgmolu/dunn27/mgmol/',
+    'gres':                     'lscratchv',
+    'exe':                      'mgmol-bgq',
+}
+
+cab_params={
+    'queue':                    'pdebug,pbatch',
+    'scratch_path':              '/p/lscratchd/dunn27/mgmol/',
+    'gres':                     'lscratchd',
+    'omp_num_threads':          '1',
+    'exe':                      'mgmol-pel',
+    'walltime':                 '00:30:00',
 }
 
 runfile_quench_template="""#!/bin/tcsh
@@ -204,7 +212,7 @@ runfile_quench_template="""#!/bin/tcsh
 #MSUB -o mgmol.out
 #MSUB -q {queue}
 #MSUB -A matsci
-#MSUB -l gres={scratch}
+#MSUB -l gres={gres}
 #MSUB -N {jobname}
 
 rm -f queued
@@ -219,11 +227,11 @@ set ntasks = {ntasks}
 
 set maindir = $home/mgmol
 
-set exe     = $maindir/bin/mgmol-{computer}
+set exe     = $maindir/bin/{exe}
 
 set datadir = `pwd`
 
-set scratchdir = {scratchdir}/`basename $datadir`
+set scratchdir = {scratch_path}`basename $datadir`
 mkdir $scratchdir
 cd $scratchdir
 
@@ -254,7 +262,7 @@ runfile_md_template="""#!/bin/tcsh
 #MSUB -o mgmol.out
 #MSUB -q {queue}
 #MSUB -A matsci
-#MSUB -l gres={scratch}
+#MSUB -l gres={gres}
 #MSUB -N {jobname}
 
 rm -f queued
@@ -269,11 +277,11 @@ set ntasks = {ntasks}
 
 set maindir = $home/mgmol
 
-set exe     = $maindir/bin/mgmol-{computer}
+set exe     = $maindir/bin/{exe}
 
 set datadir = `pwd`
 
-set scratchdir = {scratchdir}/`basename $datadir`
+set scratchdir = {scratch_path}`basename $datadir`
 mkdir $scratchdir
 cd $scratchdir
 
