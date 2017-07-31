@@ -327,6 +327,7 @@ void DataDistribution::distributeLocalDataWithCommOvlp(const int nsteps, const i
 
  /* initialize siz to size of local data */
  int siz = loc_data_sz_[dir]; 
+// if(siz > bsiz)cout<<"siz = "<<siz<<" and bsiz = "<<bsiz<<endl;
  /* check that buffer size is large enough */ 
  assert(siz <= bsiz);
 
@@ -779,8 +780,8 @@ void DataDistribution::computeMaxDataSize(const short dir, const VariableSizeMat
    
    if(count_computeMaxDataSize_==maxcount_computeMaxDataSize_)
    {
-       max_matsize_*= 2.0; //1.5; Changed by Ian to facilitate long O(N) runs.
-       max_nnz_*= 2.0; //1.5; Changed by Ian to facilitate long O(N) runs.
+       max_matsize_*= 2.50; //1.5; Changed by Ian to facilitate long O(N) runs.
+       max_nnz_*= 2.50; //1.5; Changed by Ian to facilitate long O(N) runs.
        
        Control& ct = *(Control::instance());
        if(onpe0 && ct.verbose>0)cout<<"DataDistribution: Use maxsize="<<max_matsize_<<", nzmax="<<max_nnz_<<endl;
