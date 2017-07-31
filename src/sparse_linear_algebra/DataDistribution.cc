@@ -780,8 +780,8 @@ void DataDistribution::computeMaxDataSize(const short dir, const VariableSizeMat
    
    if(count_computeMaxDataSize_==maxcount_computeMaxDataSize_)
    {
-       max_matsize_*= 2.50; //1.5; Changed by Ian to facilitate long O(N) runs.
-       max_nnz_*= 2.50; //1.5; Changed by Ian to facilitate long O(N) runs.
+       max_matsize_*= 4.0; //1.5; Changed by Ian to facilitate long O(N) runs.
+       max_nnz_*= 4.0; //1.5; Changed by Ian to facilitate long O(N) runs.
        
        Control& ct = *(Control::instance());
        if(onpe0 && ct.verbose>0)cout<<"DataDistribution: Use maxsize="<<max_matsize_<<", nzmax="<<max_nnz_<<endl;
