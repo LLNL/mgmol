@@ -489,7 +489,9 @@ int MGmol::quench(LocGridOrbitals* orbitals,
     delete orbitals_precond_;orbitals_precond_=0;
 
     // Get the n.l. energy
-    if( ct.verbose>1 && ct.short_sighted )
+    // TODO: Fix bug where energy vs. time output is incorrect if get_evnl is not called.
+    //if( ct.verbose>1 && ct.short_sighted )
+    if( ct.short_sighted )
     {
         const double  evnl=get_evnl(ions, *orbitals);
         if( onpe0 ){
