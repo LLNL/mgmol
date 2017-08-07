@@ -569,8 +569,9 @@ double ShortSightedInverse::computeGramMatCond()
    LSMat.initSquareMat((*gramMat_), false);   
    // Linear solver object to compute condition number
    LinearSolver solver; 
-   // compute condition number (estimate)
-   condest = solver.computeConditionNumber(LSMat);
+   // compute "local" condition number (estimate)
+   if(LSMat.n() > 0)
+      condest = solver.computeConditionNumber(LSMat);
 
    // get max condition number
    MGmol_MPI& mmpi = *(MGmol_MPI::instance());   

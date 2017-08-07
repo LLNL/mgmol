@@ -338,9 +338,9 @@ double LinearSolver::computeEigMin(LinearSolverMatrix<lsdatatype>& LSMat, std::v
    eigmin_tm_.start();
    
    // initialize evec
-   evec.clear();
-   evec.resize(n);
-   evec[0] = 1.; // make evec non-zero
+//   evec.clear();
+//   evec.resize(n);
+//   evec[0] = 1.; // make evec non-zero
 
    double *rhs = &evec[0];
 
@@ -386,10 +386,10 @@ double LinearSolver::computeEigMax(LinearSolverMatrix<lsdatatype>& LSMat, std::v
    eigmax_tm_.start();
    
    // initialize evec
-   evec.clear();
-   evec.resize(n);
-   evec[0] = 1.; // make evec non-zero
-   // get pointer to evec -- normalize here if needed
+//   evec.clear();
+//   evec.resize(n);
+//   evec[0] = 1.; // make evec non-zero
+   // get pointer to evec 
    vector<double>::iterator it = evec.begin();
    double *rhs = &(*it);
    //initialize sol vector
@@ -425,13 +425,21 @@ double LinearSolver::computeEigMax(LinearSolverMatrix<lsdatatype>& LSMat, std::v
 double LinearSolver::computeConditionNumber(LinearSolverMatrix<lsdatatype>& LSMat)
 {
    assert(LSMat.n() > 0);
-     
+   
+   const int n = LSMat.n();  
    double condest = 0.;
-   std::vector<double> vec(LSMat.n(), 1.);
-   
-   double emin = computeEigMin(LSMat, vec);
-   double emax = computeEigMax(LSMat, vec);
-   
+   const double nrm = 1./(double)n;
+   std::vector<double> minvec(n, nrm);
+   std::vector<double> maxvec(minvec);
+
+   MGmol_MPI& mmpi = *(MGmol_MPI::instance());   
+   MPI_Comm comm=mmpi.commSameSpin();   
+   int myid;
+   MPI_Comm_rank(comm, &myid);
+
+   double emin = computeEigMin(LSMat, minvec);
+   double emax = computeEigMax(LSMat, maxvec);
+  
    condest = emax/emin;
    
    return condest;
