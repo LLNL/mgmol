@@ -199,7 +199,7 @@ vulcan_params={
 }
 
 cab_params={
-    'queue':                    'pdebug,pbatch',
+    'queue':                    'pbatch',
     'scratch_path':              '/p/lscratchd/dunn27/mgmol/',
     'gres':                     'lscratchd',
     'omp_num_threads':          '1',
