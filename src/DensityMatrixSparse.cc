@@ -88,7 +88,7 @@ void DensityMatrixSparse::assembleMatrixFromCenteredData(const std::vector<doubl
 double DensityMatrixSparse::getTraceDotProductWithMat(VariableSizeMatrix<sparserow>* vsmat)
 {
    assert(dm_ != 0);
-   assert(dm_->n() != 0);
+//   assert(dm_->n() != 0);
    /* compute trace */
    double trace = 0.0;
    for(std::vector<int>::iterator itr = locfcns_.begin(); itr != locfcns_.end(); ++itr)
@@ -106,7 +106,7 @@ double DensityMatrixSparse::getTraceDotProductWithMat(VariableSizeMatrix<sparser
 void DensityMatrixSparse::printDM(ostream& os, int nrows)const
 {
   assert( dm_ != 0 );
-  assert( dm_->n() > 0);
+//  assert( dm_->n() > 0);
 
   (*dm_).print(os, locfcns_, nrows);
 
@@ -121,6 +121,7 @@ void DensityMatrixSparse::getLocalMatrix(LocalMatrices<MATDTYPE>& localX, const 
     const short chromatic_number=(short)global_indexes[0].size();
     
     if( chromatic_number==0 )return;
+    if( dm_->n() == 0 ) return;
     
     for(short iloc=0;iloc<subdiv;iloc++)
     {

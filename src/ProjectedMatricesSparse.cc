@@ -201,7 +201,7 @@ double ProjectedMatricesSparse::getExpectationH()
 {  
    assert(invS_ != NULL);
    assert(matHB_ != 0);
-   assert(matHB_->n() != 0);
+//   assert(matHB_->n() != 0);
 
    return dm_->getTraceDotProductWithMat(matHB_);
 }
@@ -483,6 +483,9 @@ void ProjectedMatricesSparse::printTimers(ostream& os)
 void ProjectedMatricesSparse::updateLocalMat(const VariableSizeMatrix<sparserow>& submatM,
                                              SquareLocalMatrices<MATDTYPE>* localM)
 {   
+   //return if matrix size is zero
+   if(localM->n() == 0) return;
+   
    for(short iloc=0;iloc<subdiv_;iloc++){
        MATDTYPE* localM_iloc=localM->getSubMatrix(iloc);
        for(int icolor=0;icolor<chromatic_number_;icolor++)
