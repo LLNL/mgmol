@@ -13,6 +13,7 @@ using namespace std;
 #include "LinearSolver.h"
 #include "LinearSolverMatrix.h"
 #include "PreconILU.h"
+#include "random.h"
 
 Timer   LinearSolver::gmres_tm_("LinearSolver::gmres");
 Timer   LinearSolver::eigmin_tm_("LinearSolver::computeEigmin");
@@ -231,6 +232,7 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
 /*-------------------- Krylov loop*/
        i = -1;
        pti=pti1=0;
+
        while((i < im-1) && (beta > eps1) && (its++ < maxits))  
        {
           i++;
@@ -261,9 +263,11 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
 	          negt = -t;
 	          daxpy(&n, &negt, &vv[j*n],& one, &vv[pti1],& one);
           }
+
 /*-------------------- h_{j+1,j} = ||w||_{2}    */
           t = dnrm2(&n, &vv[pti1], &one);
           hh[ptih+i1] = t;
+
           // report failure
           if (t == 0.0) 
 	           return(1);
@@ -281,6 +285,7 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
 	           hh[ptih+k1] = c[k1]*t + s[k1]*hh[ptih+k];
 	           hh[ptih+k] = -s[k1]*t + c[k1]*hh[ptih+k];
           }
+
               gam = sqrt(pow(hh[ptih+i],2) + pow(hh[ptih+i1],2) );
 /*-------------------- check if gamma is zero */
               if (gam == 0.0) gam = epsmac;
@@ -319,6 +324,7 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
 	       } 
 /*-------------------- end main while loop */
      } 
+
 /*-------------------- prepare to return */
   iters_ = its; 
   resnorm_ = beta;
@@ -336,12 +342,7 @@ double LinearSolver::computeEigMin(LinearSolverMatrix<lsdatatype>& LSMat, std::v
    double gamma = 0., beta = 0., eigmin;
    
    eigmin_tm_.start();
-   
-   // initialize evec
-//   evec.clear();
-//   evec.resize(n);
-//   evec[0] = 1.; // make evec non-zero
-
+    
    double *rhs = &evec[0];
 
    //initialize sol vector
@@ -351,12 +352,14 @@ double LinearSolver::computeEigMin(LinearSolverMatrix<lsdatatype>& LSMat, std::v
    //compute preconditioner -- ILU0
    PreconILU<pcdatatype> precon(LSMat,1.0e-3,1000,0);
    /* setup the preconditioner */
-   precon.setup(LSMat, PCILU0);   
- 
+   precon.setup(LSMat, PCILU0);
+   // begin
+   if(n == 1) maxits = 1; // just do one iteration for trivial case
    for(int i=0; i<maxits; i++)
    {
       //solve
       fgmres(LSMat, precon, rhs, solptr, 1.0e-6, 10, 10);
+
       gamma = dnrm2(&n, solptr, &one);
       eigmin = 1./gamma;
       //normalize solution
@@ -370,7 +373,7 @@ double LinearSolver::computeEigMin(LinearSolverMatrix<lsdatatype>& LSMat, std::v
       //reset beta
       beta = eigmin;
    }
-   
+
    delete [] solptr;
 
    eigmin_tm_.stop();   
@@ -384,11 +387,7 @@ double LinearSolver::computeEigMax(LinearSolverMatrix<lsdatatype>& LSMat, std::v
    double gamma = 0., beta = 0., eigmax;
    
    eigmax_tm_.start();
-   
-   // initialize evec
-//   evec.clear();
-//   evec.resize(n);
-//   evec[0] = 1.; // make evec non-zero
+
    // get pointer to evec 
    vector<double>::iterator it = evec.begin();
    double *rhs = &(*it);
@@ -426,16 +425,15 @@ double LinearSolver::computeConditionNumber(LinearSolverMatrix<lsdatatype>& LSMa
 {
    assert(LSMat.n() > 0);
    
+   srand(13579);
+   
    const int n = LSMat.n();  
    double condest = 0.;
-   const double nrm = 1./(double)n;
-   std::vector<double> minvec(n, nrm);
+//   const double nrm = 1./(double)n;
+   
+//   std::vector<double> randvec(generate_rand(n));          
+   std::vector<double> minvec(generate_rand(n));
    std::vector<double> maxvec(minvec);
-
-   MGmol_MPI& mmpi = *(MGmol_MPI::instance());   
-   MPI_Comm comm=mmpi.commSameSpin();   
-   int myid;
-   MPI_Comm_rank(comm, &myid);
 
    double emin = computeEigMin(LSMat, minvec);
    double emax = computeEigMax(LSMat, maxvec);
