@@ -150,7 +150,7 @@ SquareLocalMatrices<MATDTYPE>& getLocalT()const
 
 void updateSubMatX()
 {        
-    assert(invS_ != NULL);
+    assert(dm_ != NULL);
     update_submatX_tm_.start();
     (*dm_).getLocalMatrix((*localX_), global_indexes_);
     update_submatX_tm_.stop();

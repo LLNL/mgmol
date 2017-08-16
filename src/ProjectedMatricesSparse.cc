@@ -65,11 +65,11 @@ ProjectedMatricesSparse::ProjectedMatricesSparse(const int ndim,
 
 void ProjectedMatricesSparse::clearData()
 {
-    if(isDataSetup_)
-    {                        
+//    if(isDataSetup_)
+//    {                        
        //if(onpe0)cout<<"delete invS"<<endl;
-       delete invS_; invS_=0;
-       delete dm_; dm_ = 0;
+//       delete invS_; invS_=0;
+//       delete dm_; dm_ = 0;
        //if(onpe0)cout<<"delete localX"<<endl;
        delete localX_;localX_=0;
        //if(onpe0)cout<<"delete localT"<<endl;
@@ -82,7 +82,7 @@ void ProjectedMatricesSparse::clearData()
        delete submatT_; submatT_=0;
         
        isDataSetup_=false;
-    }
+//    }
 }
     
 ProjectedMatricesSparse::~ProjectedMatricesSparse()
@@ -97,7 +97,10 @@ ProjectedMatricesSparse::~ProjectedMatricesSparse()
     assert( distributor_sH_ !=0 );  
     assert( distributor_matS_ !=0 );
     assert( distributor_invS_ !=0 );
-    
+
+    //if(onpe0)cout<<"delete invS"<<endl;
+    delete invS_; invS_=0;
+    delete dm_; dm_ = 0;    
     clearData();
 };
 
@@ -105,6 +108,8 @@ void ProjectedMatricesSparse::setup(const double kbt, const int nel, const vecto
 {
     //assert( (short)global_indexes.size()>0 );
     //assert( (short)global_indexes[0].size()>0 );
+    Control& ct = *(Control::instance());
+
     ProjectedMatricesInterface::setup(kbt,nel,global_indexes);
             
     global_indexes_=global_indexes;
@@ -113,6 +118,14 @@ void ProjectedMatricesSparse::setup(const double kbt, const int nel, const vecto
     
     // clear old data
     clearData();
+    // clear invS and DM data if MD
+    // Ideally MD would be calling a different setup routine
+    // from LocGridOrbitals, that resets all data
+    if(ct.atoms_dyn == 2)
+    {
+       delete invS_; invS_=0;
+       delete dm_; dm_ = 0;    
+    }
    
 //printf("setup is called ...\n");
    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
@@ -129,9 +142,14 @@ void ProjectedMatricesSparse::setup(const double kbt, const int nel, const vecto
          locvars_ = (*lrs_).getOverlapGids();
    
          lsize_ = locvars_.size();//table.get_size();   
-         invS_ = new ShortSightedInverse((*lrs_), locvars_, local_cluster_);
-         dm_ = new DensityMatrixSparse((*lrs_), dim_, locvars_, local_cluster_);
-
+         
+         // reset invS and DM data
+         if(invS_ == 0 || dm_ == 0 || ct.atoms_dyn == 2)
+         {
+            invS_ = new ShortSightedInverse((*lrs_), locvars_, local_cluster_);
+            dm_ = new DensityMatrixSparse((*lrs_), dim_, locvars_, local_cluster_);
+         }
+         
          matHB_ = new VariableSizeMatrix<sparserow>("HB",lsize_);          
          //estimate size of table needed for efficient access to elements of sH
          sH_ = new VariableSizeMatrix<sparserow>("sH",4096); 
@@ -152,7 +170,6 @@ void ProjectedMatricesSparse::setup(const double kbt, const int nel, const vecto
    mmpi.allreduce(&locmin,1,MPI_MIN);
    mmpi.allreduce(&locmax,1,MPI_MAX);
    
-   Control& ct = *(Control::instance());
    if(onpe0 && ct.verbose>0)
    {
       printf("Max. number of locally centered functions: %d \n", locmax);
