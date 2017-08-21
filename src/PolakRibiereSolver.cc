@@ -111,7 +111,7 @@ void PolakRibiereSolver::dielON()
     }
     
     // turn ON continuum solvent
-    if( isON && deig2_ < 2.e-2*ct.numst )
+    if( isON && (ct.restart_info>=3 || deig2_ < 2.e-2*ct.numst) )
     {
         electrostat_->setupPB(ct.rho0,ct.drho0,pot);
         electrostat_->setup(ct.vh_its);
