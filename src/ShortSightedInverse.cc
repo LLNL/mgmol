@@ -596,9 +596,6 @@ std::vector<int> ShortSightedInverse::centeredFcnLocalIds()
 // Do local solve with (augmented) Gram Matrix
 int ShortSightedInverse::GramMatLSSolve(const double *rhs, double *sol)
 {
-    inverse_solve_tm_.start();
-
-    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     Control& ct = *(Control::instance());  
 
     int conv=0;
@@ -620,16 +617,6 @@ int ShortSightedInverse::GramMatLSSolve(const double *rhs, double *sol)
     
     /* check for convergence */
 
-    int tmp[2]={its,conv};
-    mmpi.allreduce(&tmp[0], 2, MPI_MAX);
-    its=tmp[0];
-    conv=tmp[1];
-      
-    mmpi.allreduce(&rnrm, 1, MPI_MAX);
-
-    inverse_solve_tm_.stop();
-    
-    // check for convergence 
     if(conv==0)
     {
        if((onpe0) && (ct.verbose> 3))
