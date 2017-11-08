@@ -896,12 +896,10 @@ void VariableSizeMatrix<T>::axpy(const double alpha, const VariableSizeMatrix<T>
 {
    assert(n_ == B.n());
    const int n = B.n();
-   std::vector<double>bvals;
+   
    for(int i=0; i<n; i++)
    {
-      B.getRowEntries(i, bvals);
-      const int size=bvals.size();//data_[i]->nnz();
-      data_[i]->axpy(size, alpha, &bvals[0]);
+      data_[i]->axpy(B.getRow(i), alpha);
       i++;
    }
 } 

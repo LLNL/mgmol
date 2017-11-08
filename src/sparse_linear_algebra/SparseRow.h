@@ -43,6 +43,15 @@ class SparseRow
     // the lower and upper indexes (inclusive) of the region of the array 
     // that is to be sorted
     void sortData(const int begin, const int end);
+
+    std::vector<int>& cols()
+    {
+       return cols_;
+    }
+    std::vector<double>& vals()
+    {
+       return vals_;
+    }
   
 public:
     SparseRow (const int nnz=DEFAULT_ROW_NNZ)
@@ -222,6 +231,19 @@ public:
        assert(size <= (int)vals_.size());
        const int ione = 1;
        daxpy(&size, &alpha, &vals_[0], &ione, &y[0], &ione);
+    }
+
+    void axpy(SparseRow &arow, const double alpha)
+    {
+       const int m = arow.nnz();
+       const int one = 1;
+
+       std::vector<int> acols(arow.cols());
+       std::vector<double> avals(arow.vals());
+       
+       dscal(&m, &alpha, &avals[0],&one);
+
+       updateRowAdd(m, &acols[0], &avals[0]);
     }
 
     virtual void updateRow(const int col, const double val, const INSERTMODE mode)
