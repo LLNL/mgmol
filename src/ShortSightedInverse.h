@@ -72,7 +72,7 @@ class ShortSightedInverse{
 //  double spread_radius_;				// Spreading radius for data distribution  
   
   /* Linear system solver variables */
-  std::vector<int> locfcns_;				// Local variables centered on this proc.  
+  std::vector<int> locfcns_;   // Global ids of Local variables centered on this proc.  
   std::vector<int> loccluster_;  // indexes of cluster assigned to this subdomain
   double fgmres_tol_; // relative convergence tolerance for fgmres
   short im_; 			// Krylov subspace dimension for fgmres
