@@ -154,7 +154,7 @@ void ProjectedMatricesSparse::setup(const double kbt, const int nel, const vecto
          //estimate size of table needed for efficient access to elements of sH
          sH_ = new VariableSizeMatrix<sparserow>("sH",4096); 
          /* initialize Sparse H matrix -- this is necessary for efficient data distribution */
-//         (*sH_).setupSparseRows(locvars_);
+         (*sH_).setupSparseRows(locvars_);
 //         (*sH_).setupsparserows(locfcns);
          
          submatT_ = new VariableSizeMatrix<sparserow>("Theta",lsize_);          
@@ -266,6 +266,9 @@ void ProjectedMatricesSparse::consolidateOrbitalsOverlapMat(VariableSizeMatrix<s
 void ProjectedMatricesSparse::consolidateH()
 {
    /* Gather data to initialize matH and matHB */
+   
+   assert(sH_->n() == (int)locvars_.size());
+   
    consolidate_H_tm_.start();
    std::vector<int>locfcns;
    (*lrs_).getLocalSubdomainIndices(locfcns);   

@@ -75,6 +75,7 @@ public:
     void printMatBlock2(const int gid0,const int gid1, std::ostream& os);
 //    void printMatMM(ofstream& outfile);				/* print MM matrix */         
     void reset();				/* reset CSR matrix to be reused */         
+    void clear();
     void setupSparseRows(const std::vector<int>& rows);   /* reset/ initialize matrix with sparse rows */
     void copyData(const VariableSizeMatrix<T>& A, const int n);   /* Copy data from matrix A. Copies n rows of A */
     void set2Identity();		/* Set matrix to identity */
@@ -82,7 +83,8 @@ public:
     
     void printMat(const char *fname, std::vector<int>& lvec);				/* print select rows of CSR matrix */     
 
-    double AmultSymBdiag(VariableSizeMatrix<T> *B, const int row);    
+    template<typename T2>
+    double AmultSymBdiag(VariableSizeMatrix<T2> *B, const int row);    
     double AmultSymB_ij(VariableSizeMatrix<T> *B, const int row, const int col, Table& indexT); /* compute ij-th entry of A*B */        
 
     double trace(); /* compute the trace of the matrix */    
@@ -272,24 +274,21 @@ void updateLocalRowInsert(const int count, const int lrindex, const int* const c
 void updateLocalRow(const int lrindex, const int col, const double val, const INSERTMODE mode, const int pos=0)
 {   
    //updateRow_tm_.start();
-   data_[lrindex]->updateRow(col, val, mode);
-   totnnz_++;
+   totnnz_ += data_[lrindex]->updateRow(col, val, mode);
    //updateRow_tm_.stop();    
    return;
 }
 void updateLocalRowAdd(const int lrindex, const int col, const double val, const int pos=0)
 {   
    //updateRow_tm_.start();
-   data_[lrindex]->updateRowAdd(col, val);
-   totnnz_++;
+   totnnz_ +=data_[lrindex]->updateRowAdd(col, val);
    //updateRow_tm_.stop(); 
    return;
 }
 void updateLocalRowInsert(const int lrindex, const int col, const double val, const int pos=0)
 {   
    //updateRow_tm_.start();
-   data_[lrindex]->updateRowInsert(col, val);
-   totnnz_++;
+   totnnz_ +=data_[lrindex]->updateRowInsert(col, val);
    //updateRow_tm_.stop();    
    return;
 }
@@ -498,6 +497,11 @@ void gemv(const double alpha, const std::vector<double>& x, const double beta, s
 double rowDotVec(const int row, const double *x)
 {
    return data_[row]->dotVec(x);
+}
+
+double pnorm(const int row, const int p)
+{
+   return data_[row]->pnorm(p);
 }
 
 VariableSizeMatrix<T>& operator+=(const VariableSizeMatrix<T>& a) { axpy(1.0,a); return *this; }

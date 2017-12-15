@@ -54,8 +54,9 @@ class SparseRowAndTable : public SparseRow{
        pos_->insert(col);
     }
 
-    void updateRow(const int col, const double val, const INSERTMODE mode)
+    int updateRow(const int col, const double val, const INSERTMODE mode)
     {   
+        int newentry = 0;
         const int index = getColumnPosition(col);
         /* column entry exists. Just insert/ add to it */
         if(index != -1)
@@ -63,13 +64,15 @@ class SparseRowAndTable : public SparseRow{
         else  // column entry does not exist. Insert new column entry
         {
            insertEntry(col, val);       
+           newentry++;   
         } 
     
-        return;
+        return newentry;
     }
 
-    void updateRowAdd(const int col, const double val)
+    int updateRowAdd(const int col, const double val)
     {   
+        int newentry = 0;
         const int index = getColumnPosition(col);
         /* column entry exists. Just insert/ add to it */
         if(index != -1)
@@ -77,13 +80,15 @@ class SparseRowAndTable : public SparseRow{
         else  // column entry does not exist. Insert new column entry
         {
            insertEntry(col, val);       
+           newentry++;   
         } 
     
-        return;
+        return newentry;
     }
 
-    void updateRowInsert(const int col, const double val)
+    int updateRowInsert(const int col, const double val)
     {   
+        int newentry = 0;
         const int index = getColumnPosition(col);
         /* column entry exists. Just insert/ add to it */
         if(index != -1)
@@ -91,9 +96,10 @@ class SparseRowAndTable : public SparseRow{
         else  // column entry does not exist. Insert new column entry
         {
            insertEntry(col, val);       
+           newentry++;   
         } 
     
-        return;
+        return newentry;
     }    
 
     int updateRow(const int count, const int* const cols, const double* const vals, const INSERTMODE mode);    

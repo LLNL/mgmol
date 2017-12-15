@@ -281,7 +281,9 @@ void VariableSizeMatrix<T>::initializeMatrixElements(const LocalMatrices<MATDTYP
                                           const vector<vector<int> >& global_indexes,
                                           const int numst,
                                           const double tol)
-{ 
+{
+    assert( global_indexes.size()==ss.subdiv() );
+ 
     short subdiv =(short)global_indexes.size();
     short chromatic_number =(short)global_indexes[0].size(); 
     
@@ -471,6 +473,20 @@ void VariableSizeMatrix<T>::reset()
      data_.clear();
 }
 
+//clear data, keep size, rows, ...
+template <class T>
+void VariableSizeMatrix<T>::clear()
+{
+    totnnz_ = 0;
+
+    TvecIterator rowptr=data_.begin();
+    while(rowptr != data_.end())
+    {
+        (*rowptr)->reset();
+        rowptr++;
+    }
+}
+
 /* reset/ initialize matrix with sparse rows */
 template <class T>
 void VariableSizeMatrix<T>::setupSparseRows(const std::vector<int>& rows)
@@ -547,7 +563,8 @@ void VariableSizeMatrix<T>::printMat(const char *fname, vector<int>& lvec)
  * Assume B is a symmetric square matrix.
 */
 template <class T>
-double VariableSizeMatrix<T>::AmultSymBdiag(VariableSizeMatrix<T> *B, const int row)
+template <typename T2>
+double VariableSizeMatrix<T>::AmultSymBdiag(VariableSizeMatrix<T2> *B, const int row)
 {   
     double val = 0.0;
     
@@ -831,11 +848,13 @@ void VariableSizeMatrix<T>::sparsify(const std::vector<int>& pattern)
    
    int row=0;
    int maxnzrow = 0;
+   totnnz_=0;
    for(std::vector<int>::const_iterator rp=pattern.begin(); rp != pattern.end(); ++rp)
    {
       if(*rp)
       {
          maxnzrow = maxnzrow > data_[row]->nnz() ? maxnzrow : data_[row]->nnz();
+         totnnz_ +=data_[row]->nnz();
       }
       else
       {         
@@ -925,5 +944,7 @@ template class VariableSizeMatrix<SparseRow>;
 template class VariableSizeMatrix<SparseRowAndTable>;
 template VariableSizeMatrix<SparseRow>::VariableSizeMatrix(const VariableSizeMatrix<SparseRowAndTable>& A, const bool copy_table);
 template VariableSizeMatrix<SparseRowAndTable>::VariableSizeMatrix(const VariableSizeMatrix<SparseRow>& A, const bool copy_table);
+template double VariableSizeMatrix<SparseRow>::AmultSymBdiag(VariableSizeMatrix<SparseRow> *B, const int row);
+template double VariableSizeMatrix<SparseRow>::AmultSymBdiag(VariableSizeMatrix<SparseRowAndTable> *B, const int row);
 //template double VariableSizeMatrix<SparseRow>::AmultSymB_ij(VariableSizeMatrix<SparseRowAndTable> *B, const int row, const int col, Table& indexT);
 

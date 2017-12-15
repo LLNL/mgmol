@@ -181,15 +181,22 @@ double  computeEntropy()
     return 0.;
 }
 
+// This call assumes sH has not been consolidated and its row ordering on the local 
+// subdomain (locvars_) has been defined by calling setupSparseRows(locvars_).
+// NOTE: We restrict only to contributions computed/ belonging in the local subdomain
 void  addMatrixElementSparseH(const int st1, const int st2, const double val)
 {
-    (*sH_).insertMatrixElement(st1, st2, val, ADD, true);
+    assert(sH_->n() == (int)locvars_.size());
+    
+    (*sH_).insertMatrixElement(st1, st2, val, ADD, false);
     
     return;
 }
 
+// Add data from square local matrix (only contributions from functions overlapping subdomain)
 void  addMatrixElementsSparseH(const SquareLocalMatrices<MATDTYPE>& slH)
 {
+   
     Control& ct = *(Control::instance());
     (*sH_).initializeMatrixElements(slH, global_indexes_, ct.numst, tol_matrix_elements);
     

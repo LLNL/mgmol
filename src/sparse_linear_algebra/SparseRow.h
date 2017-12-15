@@ -246,22 +246,25 @@ public:
        updateRowAdd(m, &acols[0], &avals[0]);
     }
 
-    virtual void updateRow(const int col, const double val, const INSERTMODE mode)
+    virtual int updateRow(const int col, const double val, const INSERTMODE mode)
     {   
+        int newentry = 0;
         const int index = getColumnPosition(col);
         /* column entry exists. Just insert/ add to it */
         if(index != -1)
            updateEntry(index, val, mode);          
         else  // column entry does not exist. Insert new column entry
         {
-           insertEntry(col, val);       
+           insertEntry(col, val);
+           newentry++;   
         } 
     
-        return;
+        return newentry;
     }
 
-    virtual void updateRowAdd(const int col, const double val)
+    virtual int updateRowAdd(const int col, const double val)
     {   
+        int newentry = 0;
         const int index = getColumnPosition(col);
         /* column entry exists. Just insert/ add to it */
         if(index != -1)
@@ -269,12 +272,14 @@ public:
         else  // column entry does not exist. Insert new column entry
         {
            insertEntry(col, val);       
+           newentry++;   
         } 
     
-        return;
+        return newentry;
     }
-    virtual void updateRowInsert(const int col, const double val)
+    virtual int updateRowInsert(const int col, const double val)
     {   
+        int newentry = 0;
         const int index = getColumnPosition(col);
         /* column entry exists. Just insert/ add to it */
         if(index != -1)
@@ -282,9 +287,10 @@ public:
         else  // column entry does not exist. Insert new column entry
         {
            insertEntry(col, val);       
-        }
+           newentry++;   
+        } 
     
-        return;
+        return newentry;
     }
     
     // get the column position of column col by searching through column data to see
@@ -352,6 +358,11 @@ public:
    {
        return dotVec(&x[0]);
    }
+   
+   // compute the pnorm of the row = (sum[ |x_i|^p])^(1/p)
+   // special case of p=0 returns the max (L-infinity) norm
+   double pnorm(const int p);
+   
 };
 
 #endif  

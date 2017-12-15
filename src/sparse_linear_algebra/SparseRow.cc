@@ -162,3 +162,28 @@ double SparseRow::dotVec(const double* x)
     
     return val;  
 }
+
+// compute the pnorm of the row = (sum[ |x_i|^p])^(1/p)
+// special case of p=0 returns the max (L-infinity) norm
+double SparseRow::pnorm(const int p)
+{
+   double nrm = 0.;
+   if(p > 0)
+   {
+      for(int k=0; k<(int)vals_.size(); k++)
+      {
+         nrm += pow(abs(vals_[k]),(double)p);
+      }
+      double xp = 1/(double)p;
+      nrm = pow(nrm,xp);
+   }
+   else // return L-infinity norm
+   {
+      for(int k=0; k<(int)vals_.size(); k++)
+      {
+         double aval = abs(vals_[k]);
+         nrm = nrm > aval ? nrm : aval;
+      }         
+   }
+   return nrm;
+}
