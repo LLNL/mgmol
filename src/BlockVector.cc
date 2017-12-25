@@ -298,7 +298,7 @@ void BlockVector<T>::initialize(const vector<vector<int> >& gid,
     size_storage_instance_ = size_storage_;
 
     allocate_storage();
-    //memset(storage_, 0, size_storage_*sizeof(T));
+    memset(storage_, 0, size_storage_*sizeof(T));
 
     vect_.resize(nbvect);
     for(int i = 0;i < nbvect;i++)
