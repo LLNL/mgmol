@@ -2364,8 +2364,6 @@ int HDFrestart::readOldCenterOnMesh(vector<double>& data, int i)
         
         string datasetname = datasetstream.str();
 
-        cout<<datasetname<<endl;
-
         htri_t exists=H5Lexists(file_id_, datasetname.c_str(), H5P_DEFAULT);
         if(!exists) return -1;
 
@@ -2418,8 +2416,6 @@ int HDFrestart::readOldCenter(vector<double>& data, int i)
         datasetstream << "OldCenter_" << i;
         
         string datasetname = datasetstream.str();
-
-        cout<<datasetname<<endl;
 
         htri_t exists=H5Lexists(file_id_, datasetname.c_str(), H5P_DEFAULT);
         if(!exists) return -1;
