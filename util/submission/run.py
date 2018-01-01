@@ -41,15 +41,13 @@ if 'H2O_64' in prefix:
     quench_template = quench_template_H2O_64
     params = {}
     params.update(H2O_64_params)
-    params.update(computer_params)
 
-elif 'd144' in prefix or 'ShortSighted' in prefix or 'shortsighted' in prefix:
+elif 'd144' in prefix or 'ShortSighted' in prefix or 'shortsighted' in prefix or 'equilibration' in prefix:
     example = 'ShortSighted'
     md_template = md_template_d144
     quench_template = quench_template_d144
     params = {}
     params.update(d144_params)
-    params.update(computer_params)
 
 example_dir = os.path.join(main_dir, 'examples', example)
 
@@ -83,14 +81,19 @@ def format_and_write(template, filename):
             elif '@' in line:
                 attribute = line.split('=')[0]
 
-                value = category[attribute]
-            
+                try:
+                    value = category[attribute]
+                except:
+                    value = line.split('@')[1]
+                    if len(value) == 0:
+                        continue
+
                 if type(value) == 'str':
                     value = value.lstrip("'").rstrip("'")
                 else:
                     value = str(value)
 
-                line = line.replace('@', value)
+                line = line.split('@')[0] + value
 
             f.write(line + '\n')
 

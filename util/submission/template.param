@@ -12,18 +12,6 @@ Authors:  Guy Cohen, Yevgeny Bar Lev; Columbia University,
 
 """
 
-param_template = """
-Poisson = {{'solver': '{solver}', 'max_steps': {max_steps}}}
-MD = {{'type': '{extrapolation}', 'num_steps': {num_MD_steps}}}
-XLBOMD = {{'dissipation': {dissipation}, 'align': {align}}}
-Quench = {{'atol': {tolerance}, 'max_steps_tight': {max_quench_steps_tight}, 'max_steps': {max_quench_steps}}}
-Restart = {{'interval': {interval}}}
-Orbitals = {{'overallocate_factor': {overallocate_factor}}}
-"""
-#SpreadPenalty = {{'damping': {damping}, 'target': {target}, 'type': '{penalty_type}', 'alpha': {alpha}}}
-#LocalizationRegions = {{'computation': {lrs_computation}, 'radius': {lrs_radius}}}
-#"""
-
 run_array_template="""#!/bin/bash
 
 maindir=$(pwd)

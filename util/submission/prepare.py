@@ -63,7 +63,16 @@ class JobStatus:
 def dir_name(prefix, pdict, secondary_keys=[], excluded_keys=[]):
     """A function for consistently naming data directories according to parameters."""
     def dict_to_name(d):
-        return '_'.join(map(lambda item : "%s%s" % item, d.items()))
+        
+        items = d.items()
+
+        for i in range(len(items)):
+
+            items[i] = list(items[i])
+            items[i][0] = items[i][0].split('.')[-1]
+            items[i] = tuple(items[i])
+
+        return '_'.join(map(lambda item : "%s%s" % item, items))
 
     main_items = pdict.copy()
     secondary_items = dict()
@@ -76,6 +85,35 @@ def dir_name(prefix, pdict, secondary_keys=[], excluded_keys=[]):
         return prefix+'_'+dict_to_name(main_items)+'/'+dict_to_name(secondary_items)
     else:
         return prefix+'_'+dict_to_name(main_items)
+
+
+def param_string(pdict):
+    """A function for creating a reduced parameter input file."""
+
+    param_dict = {}
+
+    for pair in pdict.items():
+
+        genus = pair[0].split('.')[0]
+        species = pair[0].split('.')[1]
+
+        if genus not in param_dict.keys():
+
+            param_dict[genus] = {}
+
+        param_dict[genus][species] = pair[1]
+
+
+    param_string = ""
+   
+    for pair in param_dict.items():
+
+        param_string += pair[0]
+        param_string += " = "
+        param_string += str(pair[1])
+        param_string += "\n"
+
+    return param_string
 
 
 if __name__ == "__main__":
@@ -129,7 +167,8 @@ if __name__ == "__main__":
             job_list.write(cwd + '/' + outdir + '\n')
     
             # formating template
-            p_contents = param_template.format(**pdict)
+            #p_contents = param_template.format(**pdict) #Commented out by Ian for flexible input files.
+            p_contents = param_string(pdict)
             p_runfile = runfile_template.format(executable=executable)
             #if(not path.exists(cwd+'/'+outdir)):
                 #mkdir(cwd+'/'+outdir)

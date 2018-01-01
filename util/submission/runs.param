@@ -15,13 +15,13 @@ from os import getcwd
 
 # parameters to scan
 params={
-    'extrapolation':            ['XLBOMD'],
-    'tolerance':                [5, 6, 7],
-    'align':                    [0],
-    'dissipation':              [5, 7],
-    'solver':                   ['CG', 'MG'],
-    'num_MD_steps':             [100],
-    'interval':                 [50],
+    'MD.type':                  ['XLBOMD'],
+    'Quench.atol':              [5, 6, 7],
+    'XLBOMD.align':             [0],
+    'XLBOMD.dissipation':       [5, 7],
+    'Poisson.solver':           ['CG', 'MG'],
+    'MD.num_steps':             [100],
+    'Restart.interval':         [50],
 }
 
 # number of runs
@@ -32,7 +32,7 @@ executable = 'python ~/mgmol/util/submission/run.py '+param_file_name+' '+str(nu
 
 # directory structure rules
 prefix = getcwd().split('/')[-1]
-excluded_keys = ['num_MD_steps', 'interval', 'align']
+excluded_keys = ['MD.num_steps', 'Restart.interval', 'XLBOMD.align']
 secondary_keys = []
 
 
@@ -41,9 +41,9 @@ secondary_keys = []
 # To use, add items of the form ['new_key', func_of_pdict].
 post_data = []
 
-def max_steps_func(pdict):
-    
-    steps_dict = {'MG':20, 'CG':50}
-    return steps_dict[pdict['solver']]
-
-post_data = [['max_steps', max_steps_func]]
+#def max_steps_func(pdict):
+#    
+#    steps_dict = {'MG':20, 'CG':50}
+#    return steps_dict[pdict['solver']]
+#
+#post_data = [['max_steps', max_steps_func]]

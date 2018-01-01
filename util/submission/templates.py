@@ -1,4 +1,4 @@
-md_template_d144 = """verbosity=1
+md_template_d144 = """verbosity=0
 xcFunctional=PBE
 FDtype=4th
 [Mesh]
@@ -16,8 +16,9 @@ lz=21.2406
 pseudopotential=pseudo.D_tm_pbe
 [Poisson]
 solver=@
-max_steps_initial=20
-max_steps=@
+max_steps_initial=@50
+max_steps=@50
+reset=@
 bcx=periodic
 bcy=periodic
 bcz=periodic
@@ -26,30 +27,30 @@ type=MD
 [MD]
 type=@
 num_steps=@
-dt=@
+dt=@15.
 [XLBOMD]
-dissipation=@
+dissipation=@5
 align=@
 [Quench]
-max_steps=@
+max_steps=@5
 max_steps_tight=@
-atol=1.e-@
+atol=1.e-@10
 num_lin_iterations=3
 ortho_freq=100
 [SpreadPenalty]
-type=@
+type=@energy
 damping=@
-target=@
-alpha=1.
+target=@1.75
+alpha=@0.01
 [Orbitals]
 initial_type=Gaussian
 initial_width=1.5
-overallocate_factor=@
+overallocate_factor=@2.
 [ProjectedMatrices]
-solver=@
+solver=@short_sighted
 [LocalizationRegions]
-radius=@
-move_tol=@
+radius=@8.
+move_tol=@0.1
 [Restart]
 input_filename=wave.out
 input_level=3
@@ -142,8 +143,8 @@ lz=21.2406
 pseudopotential=pseudo.D_tm_pbe
 [Poisson]
 solver=@
-max_steps_initial=20
-max_steps=@
+max_steps_initial=@50
+max_steps=@50
 bcx=periodic
 bcy=periodic
 bcz=periodic
@@ -155,17 +156,17 @@ atol=1.e-7
 num_lin_iterations=3
 ortho_freq=100
 [SpreadPenalty]
-type=@
+type=@energy
 damping=@
-target=@
-alpha=1.
+target=@1.75
+alpha=@0.01
 [Orbitals]
 initial_type=Gaussian
 initial_width=1.5
 [ProjectedMatrices]
-solver=@
+solver=@short_sighted
 [LocalizationRegions]
-radius=@
+radius=@8.
 [Restart]
 output_type=distributed
 """
@@ -181,9 +182,9 @@ H2O_64_params={
 }
 
 d144_params={
-    'nodes':                    '7',
-    'walltime':                 '03:00:00',
-    'ntasks':                   '100',
+    'nodes':                    '8',
+    'walltime':                 '01:30:00',
+    'ntasks':                   '125',
     'omp_num_threads':          omp_num_threads,
     'cores_per_task':           '1',
     'potentials': 'ln -s $maindir/potentials/pseudo.D_tm_pbe',
@@ -204,7 +205,7 @@ cab_params={
     'gres':                     'lscratchd',
     'omp_num_threads':          '1',
     'exe':                      'mgmol-pel',
-    'walltime':                 '00:30:00',
+    'walltime':                 '01:30:00',
 }
 
 runfile_quench_template="""#!/bin/tcsh
