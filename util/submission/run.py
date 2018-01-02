@@ -51,7 +51,7 @@ elif 'd144' in prefix or 'ShortSighted' in prefix or 'shortsighted' in prefix or
 
 example_dir = os.path.join(main_dir, 'examples', example)
 
-if 'd144' in prefix or 'ShortSighted' in prefix or 'shortsighted' in prefix:
+if 'd144' in prefix or 'ShortSighted' in prefix or 'shortsighted' in prefix or 'equilibration' in prefix:
     lrs = os.path.join(example_dir, 'lrs.in')
     copy(lrs, cwd)
 
