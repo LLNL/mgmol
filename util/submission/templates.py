@@ -50,6 +50,7 @@ overallocate_factor=@2.
 solver=@short_sighted
 [LocalizationRegions]
 radius=@8.
+auxiliary_radius=@
 move_tol=@0.1
 [Restart]
 input_filename=wave.out
@@ -212,7 +213,7 @@ runfile_quench_template="""#!/bin/tcsh
 #MSUB -l nodes={nodes},walltime={walltime}
 #MSUB -o mgmol.out
 #MSUB -q {queue}
-#MSUB -A matsci
+#MSUB -A comp
 #MSUB -l gres={gres}
 #MSUB -N {jobname}
 
@@ -262,7 +263,7 @@ runfile_md_template="""#!/bin/tcsh
 #MSUB -l nodes={nodes},walltime={walltime}
 #MSUB -o mgmol.out
 #MSUB -q {queue}
-#MSUB -A matsci
+#MSUB -A comp
 #MSUB -l gres={gres}
 #MSUB -N {jobname}
 

@@ -146,7 +146,7 @@ def msub(job_dir, num_runs):
 		previous_job = output.lstrip().rstrip()
 		write_job_id(job_dir, previous_job)
 
-        run_string = 'msub -q pdebug -o mgmol.out -l nodes=1,walltime=00:05:00,depend=' + previous_job + ' -S $(which python) ' + this_file + ' ' + sys.argv[1] + ' ' + sys.argv[2]
+        run_string = 'msub -q pbatch -o mgmol.out -l nodes=1,walltime=00:05:00,depend=' + previous_job + ' -S $(which python) ' + this_file + ' ' + sys.argv[1] + ' ' + sys.argv[2]
         print run_string
 	output = Popen(run_string, stdout=PIPE, shell=True).communicate()[0]
 	previous_job = output.lstrip().rstrip()
