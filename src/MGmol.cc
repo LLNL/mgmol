@@ -635,10 +635,10 @@ void MGmol::write_header()
     
     os_<<"//////////////////////////////////////////////////////////"<<endl;
     os_<<endl;
-#ifdef SVNVERSION
+#ifdef GITHASH
 #define xstr(x) #x
-#define LOGSVN(x) os_<<" MGmol: svn_version "<<xstr(x)<<endl;
-    LOGSVN(SVNVERSION);
+#define LOGGIT(x) os_<<" MGmol: git_hash "<<xstr(x)<<endl;
+    LOGGIT(GITHASH);
     os_<<endl;
 #endif
     os_<<" Compiled: "<<__DATE__<<", "<<__TIME__<<endl;

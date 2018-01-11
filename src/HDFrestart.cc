@@ -629,10 +629,10 @@ HDFrestart::HDFrestart(const string filename,
 
     verbosity_=0;
 
-#ifdef SVNVERSION
-#define xstr(x) #x
-#define LOG(x) addReleaseNumber2File(xstr(x));
-    LOG(SVNVERSION);
+#ifdef GITHASH
+#define xstr(g,x) #g#x
+#define LOG(x) addReleaseNumber2File(xstr(git,x));
+    LOG(GITHASH);
 #endif
     
     if( onpe0 && ct.verbose>0 )

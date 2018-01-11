@@ -14,7 +14,7 @@ INSTALL_DIR = $(MAIN_DIR)/install
 
 include $(INSTALL_DIR)/Makefile.in
 
-SVNVERSION := $(shell svnversion ./ )
+GITHASH := $(shell git show -s --format="%h" )
  
 BINDIR = ../bin
 
@@ -149,7 +149,7 @@ OBJECTS += $(MAIN_SRC:%.cc=$(OBJDIR)/%.o)
 OBJDIR := objs-$(PLAT)
 EXENAME = mgmol
 
-DEFS += $(MACHINE_FLAGS) -DSVNVERSION="$(SVNVERSION)" -DUSE_MPI -DUSE_DIS_MAT -DSCALAPACK
+DEFS += $(MACHINE_FLAGS) -DGITHASH="$(GITHASH)" -DUSE_MPI -DUSE_DIS_MAT -DSCALAPACK
 
 INCLUDE += $(patsubst %,-I%,$(MODULES))
 

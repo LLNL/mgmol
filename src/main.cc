@@ -312,10 +312,10 @@ int main(int argc, char **argv)
         if (vm.count("version")) {
             if( onpe0 )
             {
-#ifdef SVNVERSION
+#ifdef GITHASH
 #define xstr(x) #x
-#define LOG(x) cout<<" MGmol: svn_version "<<xstr(x)<<endl;
-                LOG(SVNVERSION);
+#define LOG(x) cout<<" MGmol: git_hash "<<xstr(x)<<endl;
+                LOG(GITHASH);
                 cout<<endl;
 #endif
             }
