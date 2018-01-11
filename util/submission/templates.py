@@ -218,6 +218,7 @@ runfile_quench_template="""#!/bin/tcsh
 #MSUB -N {jobname}
 
 rm -f queued
+echo ' ' > running
 
 use boost-nompi-1.55.0
 export BOOST_ROOT=/usr/local/tools/boost-nompi-1.55.0
@@ -255,7 +256,7 @@ rm -f wave.out
 set restart_file=`ls -ld * | awk '/snapshot0/ {{ print $9 }}' | tail -n1`
 ln -s -f $restart_file wave.out
 
-rm running
+rm -f running
 echo ' ' > queued
 """
 
@@ -268,6 +269,7 @@ runfile_md_template="""#!/bin/tcsh
 #MSUB -N {jobname}
 
 rm -f queued
+echo ' ' > running
 
 use boost-nompi-1.55.0
 export BOOST_ROOT=/usr/local/tools/boost-nompi-1.55.0
@@ -306,6 +308,6 @@ rm -f wave.out
 set restart_file=`ls -ld * | awk '/snapshot0/ {{ print $9 }}' | tail -n1`
 ln -s -f $restart_file wave.out
 
-rm running
-echo ' ' > done
+rm -f running
+echo ' ' > queued
 """

@@ -31,8 +31,6 @@ done
 
 runfile_template="""#!/bin/bash
 rm -f queued
-echo ' ' > running
 {executable}
-rm -f running
-echo ' ' > done
+echo ' ' > running
 """
