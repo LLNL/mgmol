@@ -51,7 +51,7 @@ void EnergySpreadPenalty::addResidual(LocGridOrbitals& phi,
         }
         coeff /= (8. * (*it) * (*it));
 
-        coeff = coeff>0. ? (alpha_*coeff) : 0.;
+        coeff = coeff>0. ? (coeff) : 0.;
         factors.push_back( coeff );
         
         gid_it++;
