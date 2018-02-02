@@ -26,5 +26,11 @@ endif
 ifeq ($(MACHGRP),eos)
         MACHGRP := EOS
 endif
+ifeq ($(MACHGRP),sum)
+        MACHGRP := SUM
+endif
+ifeq ($(MACHGRP),tit)
+        MACHGRP := TIT
+endif
 
 include $(INSTALL_DIR)/Make$(MACHGRP).inc
