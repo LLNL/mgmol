@@ -32,5 +32,8 @@ endif
 ifeq ($(MACHGRP),tit)
         MACHGRP := TIT
 endif
+ifeq ($(MACHGRP),or-)
+	MACHGRP := CAD
+endif
 
 include $(INSTALL_DIR)/Make$(MACHGRP).inc
