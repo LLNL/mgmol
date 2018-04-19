@@ -1,0 +1,16 @@
+#
+# Dipeptide embedded in continuum solvent
+#
+
+
+#generate coordinates file in XYZ format from PDB input
+python ../../util/pdb2xyz.py arg_asp_wo_water.pdb
+
+set exe = ../../bin/mgmol-pel
+
+ln -sf ../../potentials/pseudo.H_pbe
+ln -sf ../../potentials/pseudo.O_pbe
+ln -sf ../../potentials/pseudo.C_pbe
+ln -sf ../../potentials/pseudo.N_soft_pbe
+
+srun -ppdebug -n33 $exe -c quench.cfg -i arg_asp_wo_water.xyz

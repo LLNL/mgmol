@@ -1,0 +1,199 @@
+# Input file for MGmol program. 
+# All items after a # are treated as comments. Blank lines are ignored.
+#
+# $Id:$
+#
+# Description of run. One line only!
+Hydroxysulphane
+
+# computation cell (origin and end)
+-5.  -5.  -5.  5.  5.  5.
+
+#global discretization grid
+64  64  64
+
+# Number of species
+3
+
+# Pseudopotential file names, followed by type
+# type: 0=unfiltered, 1=filtered, 2=external
+pseudo.S  1
+pseudo.O  1
+pseudo.H  1
+
+# Input file name to get initial wavefunctions from
+# format: name  level_info  hdf5p
+# level_info: 0=nothing, 
+#             1=atomic data,
+#             2=atomic+density+potentials
+#             4=everything
+# Doesn't read anything if name=0
+0
+
+# output file name to write wavefunctions to
+# format: name  level_info  hdf5p
+# automatic naming if name=1 (snapshot_"date")
+1  3  0
+
+# discretized Laplacian operator
+# 0 = Compact 4th order
+# 1 = Standard 2nd order
+# 2 = Standard 4th order
+# 3 = Standard 6th order
+0
+
+# Boundary condition for Poisson
+# (0 = Dirichlet, 1 = periodic, 2 = charged system)
+1  1  1
+
+# Dielectric function (1) or not(0)
+# Initial number of Multigrid sweeps for hartree potential
+# Number of Multigrid sweeps for each hartree iteration
+0  5  5
+
+#dielectric parameters rho0 and beta
+0.0004  1.3
+
+#screening constant for potential mixing
+0.
+
+#Mixing potential (p) or density(d)?
+p
+
+#iterative solver
+0
+
+# First  field: Potential mixing parameter 
+# Second field: DM mixing parameter
+1.  1.
+
+# Run method
+#  0 = no ionic motion - quench electrons
+#  2 = MD
+#  6 = LBFGS geometry optimization
+6
+
+# Number of steps
+# 2nd field: number of scf steps per ionic step if md or lbfgs
+25  60
+
+#frequency of localization centers update (in scf it.)
+#update type (0=centers only,1=radii only,2=centers+radii)
+#tolerance on localization centers moves
+#volume calculation
+0  0  0.01  0
+
+#Type of thermostat: 0=none, 1=Berendsen, 2=Langevin 
+#Temperature
+#Relaxation time (a.u.)
+0   300.  100.
+
+# Damping
+0.
+
+# Quench method
+# 0=PSD
+# 1=Anderson extrapolation -> requires m and beta
+1  1  1.
+
+#Extrapolation scheme for WF in MD
+#1=standard linear
+#2=using 3 steps
+1
+
+#Frequency for print of residuals
+1
+
+# Ionic motion timestep (a.u.)
+8.
+
+#  SC and force convergence criteria
+1.e-8  4.e-4
+
+# Exchange correlation flag
+#   0 = LDA
+#   2 = PBE
+0
+
+# Number of ionic steps after which to save data to disk
+200
+
+#verbosity level
+0
+
+# electron temperature (eV)for Fermi-Dirac occupations
+0.
+
+#type of orbitals:
+# 0=eigenfunctions
+# 1=nonorthogonal
+1
+
+#Initialization with localized orbitals (1) or not (0)
+#Orbital initialization type
+# 0: random
+# 1: gaussians of width given by 3rd parameter
+1  0  2.
+
+# Order of MD integration
+# 0 = 2nd Order Velocity Verlet
+0
+
+# Number of states
+7
+
+# Occupations for the states in the format of a repeat count followed by
+# the occupation.
+7  2.
+
+
+# Number of ions
+4
+
+# Preconditioning
+# 1-Method: 0=Multigrid
+# 2-Relaxation parameter for wavefunction's correction (1. or smaller)
+# 3-Max. number of coarse levels for MG / # of precond applications
+# 4-project PSD
+0   2.  3   0
+
+# Initial iterations without changing the potential in a quench
+3
+
+# 1st field: Cutting radius
+# 2nd field: orthonormalization frequency (0=never)
+1000.  30
+
+# 1st field: 0=cell relative coordinates 1=absolute coordinates
+# 2nd field: override positions (1) or not (0) with input file for restart
+1  0
+
+# Compute Wannier centers?
+1
+
+# print (1) transfer matrices or not (0)
+0
+
+# Ionic coordinates: name species x y z movable-ion
+#   Note: the species number is indexed from one (not zero)
+#    can the ion move? yes/no = 1/0.
+# 6th field: can the ion move? yes/no = 1/0.
+# Baker's coordinates
+S1 1   1.151843        -1.166630       0.114641     1
+O2 2    -1.535620      -0.477489       -0.671797    1
+H3 3   2.591627        0.893070        0.075741     1
+H4 3   -2.207850       0.751049        0.481415     1
+
+#LRs
+1.151843        -1.166630       0.114641  1000. 
+1.151843        -1.166630       0.114641  1000. 
+1.151843        -1.166630       0.114641  1000. 
+-1.535620      -0.477489       -0.671797  1000. 
+-1.535620      -0.477489       -0.671797  1000. 
+-1.535620      -0.477489       -0.671797  1000. 
+-1.535620      -0.477489       -0.671797  1000. 
+
+#list constraints
+constraint distance S1   O2     2.88
+constraint distance S1   H3     2.5
+

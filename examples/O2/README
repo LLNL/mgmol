@@ -1,0 +1,9 @@
+ln -s ../../potentials/pseudo.O_pbe 
+ln -s ../../potentials/pseudo.O_HamannPBE
+
+set exe = ~/SVN/MGmol/mgmol/branches/bin/mgmol-pel
+
+srun -ppdebug -n9 $exe -c mgmol.cfg -i coords.in -l lrs.in > ! O2.out
+
+srun -ppdebug -n18 $exe -c mgmol_spin0.cfg -i coords.in -l lrs.in > ! O2_spin0.out
+srun -ppdebug -n18 $exe -c mgmol_spin1.cfg -i coords.in -l lrs.in > ! O2_spin1.out

@@ -1,0 +1,50 @@
+#!/bin/csh
+#MSUB -l nodes=1:ppn=8,walltime=0:05:00
+#MSUB -A matsci
+#MSUB -q pbatch
+#MSUB -d /p/lscratche/jeanluc/MGmol/Cl2_ONCVPSP_LDA
+set ncpus = 8
+
+set maindir    = $home/SVN/MGmol/mgmol/trunk
+set datadir    = $maindir/examples/Cl2_ONCVPSP_LDA
+set potdir     = $maindir/potentials
+
+set delta = 0.05
+
+set exe = $maindir/bin/mgmol-pel
+set exe = $maindir/../branches/bin/mgmol-pel
+
+ln -s -f $potdir/pseudo.Cl_ONCVPSP_LDA .
+ln -s -f $datadir/moveCl2.py
+
+set input_init  = coords.in
+set output_init = Cl2.out
+set config_file = mgmol.cfg
+set sub_script = $datadir/job.cab
+
+cp $datadir/$config_file .
+
+if( -e $output_init )then
+  set lastinput = `ls -lt *.in |head -n1 | awk '{print $9}'`
+  set zval = `grep Cl2 $lastinput |tail -n1| awk '{print $5}'`
+  set newzval = `echo "$zval + $delta" | bc -l`
+  set input  = Cl2_z{$newzval}.in
+  set output = Cl2_z{$newzval}.out
+  python moveCl2.py $lastinput $delta > $input
+  echo $input
+  echo $output
+else
+  ln -sf $datadir/$input_init
+  set input  = $input_init
+  set output = $output_init
+endif
+
+srun -n $ncpus $exe -c $config_file -i $input > $output
+
+set lastinput = `ls -lt *.in |head -n1 | awk '{print $9}'`
+set zval = `grep Cl2 $lastinput |tail -n1| awk '{print $5}'`
+set flag = `echo "$zval < 4.0" | bc -l`
+
+if( $flag > 0 )then
+  msub $sub_script
+endif

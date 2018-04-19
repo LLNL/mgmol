@@ -1,0 +1,16 @@
+ln -s ../../potentials/pseudo.D_tm_pbe 
+
+set exe = ../../bin/mgmol-pel
+
+#old interface
+#set input = D144_R8_quench.in
+#srun -ppdebug -n25 $exe $input
+
+
+#new interface
+srun -ppdebug -n25 $exe -i coords.in -l lrs.in -c mgmol_quench.cfg
+
+rm -f wave.out
+set restart_file=`ls -ld * | awk '/snapshot0/ { print $9 }' | tail -n1`
+ln -s -f $restart_file wave.out
+srun -ppdebug -n25 $exe -c mgmol_md.cfg

@@ -1,0 +1,5 @@
+ln -s ../../potentials/pseudo.Si
+ln -s ../../potentials/pseudo.H
+
+srun -ppdebug -n4 ../../bin/mgmol-pel SiH4.in
+srun -ppdebug -n4 ../../bin/mgmol-pel -i sih4.xyz -l lrs.in -c mgmol.cfg

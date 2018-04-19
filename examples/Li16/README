@@ -1,0 +1,10 @@
+#Small Li crystal example. With only 16 atoms and no k-points, it may
+#not be physically accurate, but this is mostly to have a small example
+#to test metals
+
+set exe = ../../bin/mgmol-pel
+
+ln -sf ../../potentials/pseudo.Li_ONCVPSP_LDA
+
+#MVP algorithm
+srun -ppdebug -n9 $exe -c mvp.cfg -i coords.in

@@ -1,0 +1,7 @@
+#Test multiple projectors potentials by Hamann (PRB 88, 085117, 2013)
+
+ln -sf $home/SVN/MGmol/mgmol/trunk/potentials/pseudo.Cl_ONCVPSP_LDA 
+
+set exe = $home/SVN/MGmol/mgmol/branches/bin/mgmol-pel
+
+srun -ppdebug -n16 $exe -c mgmol.cfg -i coords.in

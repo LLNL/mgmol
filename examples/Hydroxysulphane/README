@@ -1,0 +1,9 @@
+set exe = /nfs/tmp2/jeanluc/SVN/MGmol/mgmol/branches/bin/mgmol-pel
+
+#FIRE algorithm
+srun -ppdebug -n8 $exe hydroxysulphane_fire.in
+
+#LBFGS
+srun -ppdebug -n8 $exe hydroxysulphane.in
+
+srun -ppdebug -n8 $exe -c lbfgs.cfg -i coords.in -l lrs.in

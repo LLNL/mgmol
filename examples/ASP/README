@@ -1,0 +1,30 @@
+set maindir = ../..
+
+#create new_asp.pdb from asp.pdb by:
+# 1) replace first N by H
+# 2) remove second atom (H)
+# 3) replace last CA by H
+#asp.pdb was extracted from a large pdb file with a long protein
+
+#generate XYZ file for input
+python $maindir/util/pdb2xyz.py new_asp.pdb >! asp.xyz
+
+#to estimate domain needed for computation (and use info in quench.cfg)
+python $maindir/util/getPDBboxInBohr.py new_asp.pdb 6.
+
+ln -sf $maindir/potentials/pseudo.H_pbe
+ln -sf $maindir/potentials/pseudo.C_pbe
+ln -sf $maindir/potentials/pseudo.O_pbe
+ln -sf $maindir/potentials/pseudo.N_soft_pbe
+
+srun -ppdebug -n36 $maindir/bin/mgmol-pel -c quench.cfg -i asp.xyz >! asp.out &
+
+#generate data for visualization of electronic density from restart dump
+python $maindir/util/read_hdf5.py -bov snapshot0 Density
+
+#create XYZ file with Maximally Localized Wannier Centers from MGmol output
+python $maindir/util/getMLWCinXYZ.py asp.out >! mlwc.xyz
+
+#visit:
+#load both xyz files
+#create bonds only for atoms, not for mlwc

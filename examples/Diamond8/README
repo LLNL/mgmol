@@ -1,0 +1,3 @@
+ln -sf ../../potentials/pseudo.C
+
+srun -ppdebug -n5 ../../bin/mgmol-pel -c mgmol.cfg -i coords.in

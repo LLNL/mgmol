@@ -1,0 +1,42 @@
+# $Id: Makefile.in,v 1.3 2010/08/10 18:38:33 jeanluc Exp $
+
+MACHGRP := $(shell hostname -s | sed  's/[0-9]*//g' | cut -c1-3)
+
+ifeq ($(MACHGRP),seq)
+        MACHGRP := BGQ
+endif
+ifeq ($(MACHGRP),vul)
+        MACHGRP := BGQ
+endif
+ifeq ($(MACHGRP),uda)
+        MACHGRP := BGP
+endif
+ifeq ($(MACHGRP),ubg)  
+        MACHGRP := BGL
+endif
+ifeq ($(MACHGRP),zeu)  
+        MACHGRP := PEL
+endif
+ifeq ($(MACHGRP),atl)  
+        MACHGRP := PEL
+endif
+ifeq ($(MACHGRP),her)  
+        MACHGRP := PEL
+endif
+ifeq ($(MACHGRP),tux)  
+        MACHGRP := CASC
+endif
+ifeq ($(MACHGRP),up)
+        MACHGRP := SP5
+endif
+ifeq ($(MACHGRP),ans)
+        MACHGRP := PEL
+endif
+ifeq ($(MACHGRP),syr)
+        MACHGRP := PEL
+endif
+ifeq ($(MACHGRP),cab)
+        MACHGRP := PEL
+endif
+
+include $(INSTALL_DIR)/Make$(MACHGRP).inc

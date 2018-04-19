@@ -1,0 +1,49 @@
+#!/usr/bin/env python
+
+"""
+
+runs.param
+
+Brief:  Parameters for use with prepare.py for setting up directory structure.
+
+Authors:  Guy Cohen, Yevgeny Bar Lev; Columbia University, 
+          Ian S. Dunn; Lawrence Livermore National Laboratory
+
+"""
+
+from os import getcwd
+
+# parameters to scan
+params={
+    'extrapolation':            ['XLBOMD'],
+    'tolerance':                [5, 6, 7],
+    'align':                    [0],
+    'dissipation':              [5, 7],
+    'solver':                   ['CG', 'MG'],
+    'num_MD_steps':             [100],
+    'interval':                 [50],
+}
+
+# number of runs
+num_runs = 4
+
+param_file_name = 'param.in'
+executable = 'python ~/mgmol/util/submission/run.py '+param_file_name+' '+str(num_runs)
+
+# directory structure rules
+prefix = getcwd().split('/')[-1]
+excluded_keys = ['num_MD_steps', 'interval', 'align']
+secondary_keys = []
+
+
+# posting data
+# The following allows the creation of derived parameters by post-processing functions.
+# To use, add items of the form ['new_key', func_of_pdict].
+post_data = []
+
+def max_steps_func(pdict):
+    
+    steps_dict = {'MG':20, 'CG':50}
+    return steps_dict[pdict['solver']]
+
+post_data = [['max_steps', max_steps_func]]

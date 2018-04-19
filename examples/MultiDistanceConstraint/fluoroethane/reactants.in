@@ -1,0 +1,207 @@
+# 8  atoms
+# 8  names
+# 10  orbitals
+# Input file for MGmol program. 
+# All items after a # are treated as comments. Blank lines are ignored.
+#
+# Description of run. One line only!
+Fluoro-ethane
+
+# computation cell (origin and end)
+-8.65  -8.65  -8.65  8.65  8.65  8.65
+
+#global discretization grid
+96  96  96
+
+# Number of species
+3
+
+# Pseudopotential filenames + type
+# type: 0=unfiltered, 1=filtered, 2=external
+pseudo.C_pbe  1
+pseudo.F_pbe  1
+pseudo.H_pbe  1
+
+# Input file name to get initial wavefunctions from
+# format: name  level_info  file_type
+# level_info: 0=nothing, 
+#          1=atomic data,
+#          2=atomic+density+potentials
+#          4=everything
+# Doesn't read anything if name=0
+# file_type: 0->1 file/task, 1->parallel hdf
+0
+
+# output file name to write wavefunctions to (same format as input)
+# format: name  level_info  file_type
+# level_info: 0=nothing, 
+#          1=atomic data,
+#          2=atomic+density+potentials
+#          4=everything
+# Doesn't write anything if name=0
+# automatic naming if name=1 (snapshot_"date")
+# file_type: 0->1 file/task, 1->parallel hdf
+0  4   1
+
+# discretized Laplacian operator
+# 0 = Compact 4th order
+# 1 = Standard 2nd order
+# 2 = Standard 4th order
+# 3 = Standard 6th order
+2
+
+# Boundary condition for Poisson
+# (0 = Homogeneous Dirichlet, 1 = periodic, 2 = Dirichlet charged system)
+# 4th field: For Dirichlet charged system, max. order for multipole expansion
+1  1  1
+
+# Continuum dielectric solvation model (1) or not(0)
+# Initial number of Multigrid sweeps for hartree potential
+# Number of Multigrid sweeps for each hartree iteration
+0  10   20
+
+#Continuum dielectric solvation model parameters rho0 and beta
+0.0004  1.3
+
+#screening constant for potential mixing
+0.
+
+#Mixing potential (p)
+p
+
+#number inner MVP iterations
+0
+
+# First  field:    Potential mixing parameter 
+# Second field:    DM mixing parameter
+1.  1.
+
+# Run method
+#  0 = no ionic motion - quench electrons
+#  2 = MD
+#  6 = LBFGS geometry optimization
+6
+
+# Number of steps
+# 2nd field: number of scf steps per ionic step if md or lbfgs
+100  150
+
+#update localization centers (1) or not (0)?
+#update type (0=centers only,1=radii only,2=centers+radii)
+#tolerance on centers move
+#volume calculation (1) or not (0)
+0  0  0.01  0
+
+#Type of thermostat: 0=none, 1=Berendsen, 2=Langevin 
+#Target temperature
+#Relaxation time (a.u.)
+0   300.  100.
+
+# Damping
+0.
+
+# Quench method
+# 0=PSD
+# 1=Anderson extrapolation: requires history length and beta as 2nd and 3rd parameters
+1  1  1.
+
+#Block version (1)
+1
+
+#Frequency for print of residuals (0=none)
+10
+
+# Ionic motion timestep (a.u.)
+10.
+
+#  SC and force convergence criteria
+1.e-8  4.e-4
+
+# Exchange correlation flag
+#   0 = LDA
+#   2 = PBE
+2
+
+#Number of ionic steps after which to save data to disk
+200
+
+#verbosity level
+1
+
+# electron temperature (eV)for Fermi-Dirac occupations
+0.0 
+
+#type of orbitals:
+# 0=eigenfunctions
+# 1=nonorthogonal
+1
+
+#Initialization with localized orbitals (1) or not (0)
+#Orbital initialization type
+# 0: random
+# 1: gaussians of width given by 3rd parameter
+1  1  1.5
+
+# Order of MD integration
+# 0 = 2nd Order Velocity Verlet
+0
+
+# Number of electronic states
+10
+
+# Occupations for the states in the format of a repeat count followed by
+# the occupation (total should equal number of states)
+10 2.
+
+# Number of ions
+8
+
+# Preconditioning
+# 1-Method: 0=Multigrid
+# 2-Scaling factor for corrections (around 2.0)
+# 3-Max. number of coarse levels for MG
+# 4-project PSD? 0=no, 1=yes
+0   2.  1   0
+
+# Number initial iterations with frozen potential in a quench
+3
+
+# 1st field: Average localization radius.
+# (set to negative value to use restart file values when no LR adaptation)
+# 2nd field: orthonormalization frequency (0=never)
+1000.  20
+
+# 1st field: 1=absolute coordinates
+# 2nd field: override positions (1) or not (0) with input file for restart
+1  0
+
+# Compute Wannier centers? 0=no, 1=MLWF, 2=NOLMO
+1
+
+# print (1) transfer matrices or not (0)
+0
+
+# Ionic coordinates: name species x y z movable [vx vy vz]
+#     Note: the species number is indexed from 1 to num. species
+# 6th field: can the ion move? yes/no = 1/0.
+C1	1	0.0838    1.0998    -0.0028   	1  
+C2	1	2.1275    -0.8867   -0.0003   	1  
+F3	2	-2.3286   -0.0707   -0.0016   	1  
+H4	3	0.1632    2.3008    1.6841    	1  
+H5	3	0.1599    2.3026    -1.6891   	1  
+H6	3	3.9905    0.0167    0.0066    	1  
+H7	3	1.9850    -2.0840   1.6792    	1  
+H8	3	1.9926    -2.0819   -1.6813   	1  
+
+#localization regions: centers+radii
+-2.301503   -0.365888   -0.432122    1000.
+1.107429    0.098652    -0.002231    1000.
+-2.316777   -0.329871   0.451625     1000.
+2.023556    -1.674808   1.125765     1000.
+-1.521042   0.325224    -0.002650    1000.
+-2.660132   0.335511    -0.022664    1000.
+0.150268    1.907762    -1.146461    1000.
+3.356926    -0.263386   0.003884     1000.
+0.151980    1.907014    1.141163     1000.
+2.028986    -1.673618   -1.127617    1000.
+

@@ -1,0 +1,31 @@
+#!/bin/tcsh
+#MSUB -l nodes=256,walltime=1:00:00
+#MSUB -d /p/lscratchv/jeanluc/MGmol/H2O_512/ONCV/R10
+#MSUB -q pdebug
+#MSUB -A matsci
+#MSUB -l gres=lscratchv
+
+setenv OMP_NUM_THREADS 4
+set ncpus = 4096
+
+set maindir = $home/SVN/MGmol/mgmol/trunk
+
+#set exe     = /usr/gapps/mgmol/bin/mgmol_bgq-r1378
+set exe     = $maindir/bin/mgmol-bgq
+
+ln -fs $maindir/potentials/pseudo.D_ONCV_PBE_SG15
+ln -fs $maindir/potentials/pseudo.O_ONCV_PBE_SG15
+
+set datadir = $maindir/examples/H2O_512
+set configfile = mgmol_mdR10.cfg
+
+cp $datadir/$configfile .
+
+#restart
+rm -f wave.out
+set restart_file=`ls -ld * | awk '/snapshot_1/ { print $9 }' | tail -n1`
+ln -s -f $restart_file wave.out
+
+#run
+srun -n $ncpus $exe -c $configfile
+

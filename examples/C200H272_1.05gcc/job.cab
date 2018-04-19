@@ -1,0 +1,50 @@
+#!/bin/csh
+#MSUB -l nodes=4,walltime=0:30:00
+#MSUB -A matsci
+# #MSUB -q pbatch@cab
+#MSUB -q pdebug
+#MSUB -d /p/lscratchd/jeanluc/MGmol/POLYMERS/C200H272_1.05gcc
+setenv OMP_NUM_THREADS 1
+set ncpus=54
+#set ncpus=108
+
+set maindir = $home/SVN/MGmol/mgmol/trunk
+
+set exe=$maindir/../branches/bin/mgmol-pel
+echo $exe
+
+set datadir = $maindir/examples/C200H272_1.05gcc
+set potdir  = $maindir/potentials
+set wrkdir  = `pwd`
+
+ln -s -f $potdir/pseudo.C_pbe
+ln -s -f $potdir/pseudo.H_pbe
+
+#initial quench
+set input   = coords.in
+set lrs     = lrs.in
+set config_file     = mgmol_quench.cfg
+set opt_config_file = mgmol_opt.cfg
+set md_config_file  = mgmol_md.cfg
+
+cp $datadir/$input .
+cp $datadir/$lrs .
+cp $datadir/$config_file .
+cp $datadir/$md_config_file .
+cp $datadir/$opt_config_file .
+
+srun -n $ncpus $exe -c $config_file -i $input -l $lrs
+
+#optimize LRs
+rm -f wave.out
+set restart_file=`ls -l $wrkdir | awk '/snapshot/ { print $9 }'|grep snapshot | tail -n1`
+ln -s -f $restart_file wave.out
+
+srun -n $ncpus $exe -c $opt_config_file
+
+#run MD
+rm -f wave.out
+set restart_file=`ls -l $wrkdir | awk '/snapshot/ { print $9 }'|grep snapshot | tail -n1`
+ln -s -f $restart_file wave.out
+
+srun -n $ncpus $exe -c $md_config_file

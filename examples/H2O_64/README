@@ -1,0 +1,12 @@
+#
+# Visualization of one orbital
+#
+msub job_quench_plot.vulcan
+
+set utils = $home/SVN/MGmol/mgmol/trunk/util
+
+#run python script to extract data for one function plot (on non-BGQ system):
+python $utils/read_hdf5.py -bov snapshot0_17_018_00_22.h5 Function0001
+
+#run visit and open the files snapshot0_17_018_00_22.bov and snapshot0_17_018_00_22_atoms.xyz
+#just generated

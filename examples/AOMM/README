@@ -1,0 +1,5 @@
+ln -s ../../potentials/pseudo.Si
+
+set exe = ../../bin/mgmol-pel
+
+srun -ppdebug -n27 $exe -c Si216.cfg -i coords.in -l lrs.in

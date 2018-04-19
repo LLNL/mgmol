@@ -1,0 +1,6 @@
+ln -s ../../potentials/pseudo.Si
+ln -s ../../potentials/pseudo.H
+
+srun -ppdebug -n8 ../../bin/mgmol-pel Si5H12.in 
+
+srun -ppdebug -n8 ../../bin/mgmol-pel -c Si5H12.cfg -i coords.in -l lrs.in 

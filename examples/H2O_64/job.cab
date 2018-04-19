@@ -1,0 +1,43 @@
+#!/bin/tcsh
+# #MSUB -l nodes=7,walltime=1:00:00
+#MSUB -l nodes=4,walltime=1:00:00
+#MSUB -d /p/lscratchd/jeanluc/MGmol/H2O_64
+#MSUB -q pbatch
+#MSUB -A matsci
+#MSUB -l gres=lscratchd
+
+setenv OMP_NUM_THREADS 1
+setenv KMP_DETERMINISTIC_REDUCTION 1
+
+#set ncpus = 98
+#set ncpus = 49
+set ncpus = 64
+
+set maindir = $home/SVN/MGmol/mgmol/trunk
+
+set exe     = /usr/gapps/mgmol/bin/mgmol_pel-rb1007
+#set exe     = /nfs/tmp2/jeanluc/SVN/MGmol/mgmol/trunk/bin/mgmol-pel
+set exe     = $home/SVN/MGmol/mgmol/trunk/bin/mgmol-pel
+
+set datadir = $maindir/examples/H2O_64
+
+set cfg_quench = mgmol_quench.cfg
+set cfg_md = mgmol_md.cfg
+
+cp $datadir/$cfg_md .
+cp $datadir/$cfg_quench .
+cp $datadir/coords.in .
+
+ln -s -f $maindir/potentials/pseudo.O_ONCV_PBE_SG15 .
+ln -s -f $maindir/potentials/pseudo.D_ONCV_PBE_SG15 .
+
+#1st run
+srun -n $ncpus $exe -c $cfg_quench -i coords.in
+
+#restart
+rm -f wave.out
+set restart_file=`ls -ld * | awk '/snapshot_1/ { print $9 }' | tail -n1`
+ln -s -f $restart_file wave.out
+
+srun -n $ncpus $exe -c $cfg_md
+

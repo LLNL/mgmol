@@ -1,0 +1,45 @@
+#!/bin/tcsh
+#MSUB -l nodes=2,walltime=0:20:00
+#MSUB -d /p/lscratchd/mgmolu/D144localPotentials
+#MSUB -q pdebug
+#MSUB -A matsci
+#MSUB -l gres=lscratchd
+
+setenv OMP_NUM_THREADS 1
+setenv KMP_DETERMINISTIC_REDUCTION 1
+
+set ncpus = 25
+
+set maindir = $home/SVN/MGmol/mgmol/trunk
+
+set exe = /usr/gapps/mgmol/bin/mgmol_pel-r1412
+set exe = /nfs/tmp2/jeanluc/SVN/MGmol/mgmol/trunk/bin/mgmol-pel-mp
+
+set datadir = $maindir/examples/D144localPotentials
+
+set md_cfg = mgmol_md.cfg
+
+cp $datadir/$md_cfg .
+cp $datadir/mgmol_quench.cfg .
+cp $datadir/d144.in .
+cp $datadir/lrs.in .
+
+ln -s -f $maindir/potentials/pseudo.H .
+
+#1st run
+srun -n $ncpus $exe -c mgmol_quench.cfg -i d144.in -l lrs.in
+
+#restart
+rm -f wave.out
+set restart_file=`ls -ld * | awk '/snapshot0_1/ { print $9 }' | tail -n1`
+ln -s -f $restart_file wave.out
+
+srun -n $ncpus $exe -c $md_cfg
+
+#restart
+rm -f wave.out
+set restart_file=`ls -ld * | awk '/snapshot0_1/ { print $9 }' | tail -n1`
+ln -s -f $restart_file wave.out
+
+srun -n $ncpus $exe -c $md_cfg
+

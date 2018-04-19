@@ -1,0 +1,30 @@
+#!/bin/tcsh
+#MSUB -l nodes=32,walltime=1:00:00
+#MSUB -d /p/lscratchv/mgmolu/WATER/H2O_64/Rinf
+#MSUB -q pdebug
+#MSUB -A matsci
+#MSUB -l gres=lscratchv
+
+setenv OMP_NUM_THREADS 4
+
+set ncpus = 512
+
+set maindir = $home/SVN/MGmol/mgmol/trunk
+
+set exe = $maindir/bin/mgmol-bgq
+
+set datadir = $maindir/examples/H2O_64
+
+set config_file = mgmol_quench_plot.cfg
+
+cp $datadir/$config_file .
+
+ln -fs $maindir/potentials/pseudo.D_ONCV_PBE_SG15
+ln -fs $maindir/potentials/pseudo.O_ONCV_PBE_SG15
+
+rm -f wave.out
+set restart_file=`ls -ld * | awk '/snapshot/ { print $9 }' | tail -n1`
+ln -s -f $restart_file wave.out
+
+srun -n $ncpus $exe -c $config_file
+

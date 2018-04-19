@@ -1,0 +1,46 @@
+#!/bin/csh
+#MSUB -l nodes=1024,walltime=01:00:00
+#MSUB -A matsci
+#MSUB -q pdebug
+#MSUB -d /p/lscratchv/mgmolu/tests/4x4y4z
+
+setenv OMP_NUM_THREADS 4
+
+set ncpus=16384
+
+set maindir = $home/SVN/MGmol/mgmol/trunk
+
+set exe = /usr/gapps/mgmol/bin/mgmol_bgq-mp
+
+echo $exe
+
+set datadir = $maindir/examples/Water4x4y4z
+
+set potdir  = $maindir/potentials
+
+ln -s -f $potdir/pseudo.O_ONCV_PBE_SG15
+ln -s -f $potdir/pseudo.D_ONCV_PBE_SG15
+
+#set lrs and coordinate files
+set lrs_input = lrs.in
+set coord_input = coords.in
+
+cp $datadir/$lrs_input .
+cp $datadir/$coord_input .
+
+#initial quench
+set input   = quench.cfg
+cp $datadir/$input .
+
+srun -n $ncpus $exe -i $coord_input -l $lrs_input -c $input
+
+#run MD
+set input   = md.cfg
+cp $datadir/$input .
+
+rm -f wave.out
+set restart_file = `ls -l | awk '/snapshot/ { print $9 }'| tail -n1`
+ln -s -f $restart_file wave.out
+
+srun -n $ncpus $exe -c $input
+

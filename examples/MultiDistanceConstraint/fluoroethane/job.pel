@@ -1,0 +1,65 @@
+#!/bin/csh
+#MSUB -l nodes=4:ppn=8,walltime=0:30:00
+#MSUB -A ache
+#MSUB -q pdebug@atlas
+#MSUB -d /p/lscratcha/jeanluc/MGmol/fluoroethane
+
+set maindir    = /g/g91/jeanluc/SVN/MGmol/mgmol/trunk
+set datadir    = $maindir/examples/MultiDistanceConstraint/fluoroethane
+set potdir     = $maindir/potentials
+set scriptsdir = $maindir/util
+
+set ncpus=27
+
+set delta=0.25
+
+set exe=$maindir/bin/mgmol_pel
+
+ln -s -f $potdir/pseudo.H_pbe .
+ln -s -f $potdir/pseudo.C_pbe .
+ln -s -f $potdir/pseudo.F_pbe .
+
+set input_init = fluoroethane_lbfgs_d-.30.in
+if ( ! -e $input_init ) then
+  ln -s -f $datadir/fluoroethane_lbfgs_d-.30.in .
+endif
+
+#get constraint distance
+set file = `ls -lt fluoroethane_lbfgs*.in|head -n1|awk '{print $9}'`
+set cval = `grep constraint $file |tail -n1 | awk '{print $12}'`
+set dval = `echo "scale=2; $cval/1.0" | bc -l | cut -c1-4`
+echo $dval
+
+set newdval=`echo "scale=2; $dval+$delta"|bc | cut -c1-4`
+echo $newdval
+
+set input1  = fluoroethane_lbfgs_d{$dval}.in
+set input2  = fluoroethane_lbfgs_d{$newdval}.in
+set output1 = fluoroethane_lbfgs_d{$dval}.out
+set output2 = fluoroethane_lbfgs_d{$newdval}.out
+
+if ( -e $output1 ) then
+  python $scriptsdir/mgmol2input.py $input1 $output1 > tmp
+  python $scriptsdir/enforce_MultiDistance_constraint.py tmp 1. C1 F3 1. C2 H7 -1. F3 H7 $newdval >! $input2
+  rm -f tmp
+else
+  set input2  = $input1
+  set output2 = $output1
+endif
+echo $input2
+
+if ( -e $input2 ) then
+  srun -n $ncpus $exe $input2 > $output2
+
+  set res=`grep 'Max. |' $output2 | tail -n1 | awk '{print $4}'`
+  set tol=4.e-4
+  set flag1 = `echo $res|awk '{ if ($1 < '$tol') {print "1"} else {print "0"}}'`
+  if ( $flag1 > 0 ) then   
+    set maxdval=7.9
+    set sub_script = $datadir/job.pel
+    set flag2 = `echo $newdval|awk '{ if ($1 < '$maxdval') {print "1"} else {print "0"}}'`
+    if ( $flag2 > 0 ) then
+      msub $sub_script
+    endif
+  endif
+endif

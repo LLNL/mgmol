@@ -1,0 +1,4 @@
+# computation cell (origin and end)
+-20.52  -20.52  0.  20.52  20.52  10.26
+#global discretization grid
+128  128  32

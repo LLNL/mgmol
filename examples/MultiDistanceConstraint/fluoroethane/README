@@ -1,0 +1,10 @@
+#get data out of MGmol outputs
+./extractEnergiesAndForces.sh > barrier.dat
+
+#get barrier plot
+matlab -nodisplay
+>> plotBarrier('barrier.dat')
+>> exit
+
+#view results
+gv plotBarrier_dpi100.eps

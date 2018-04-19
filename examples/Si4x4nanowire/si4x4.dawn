@@ -1,0 +1,28 @@
+#MSUB -l nodes=8,walltime=0:30:00
+#MSUB -a "04/12/03 02:00:00"
+#MSUB -d /p/lscratcha/jeanluc/MGmol/Si4x4nanowire
+#MSUB -q pdebug
+#MSUB -A dev
+#MSUB -m ea
+#MSUB -S /bin/tcsh
+setenv OMP_NUM_THREADS 1
+set ncpus = 32
+
+set svndir = $home/SVN/MGmol/mgmol/trunk
+
+set exe = $svndir/bin/mgmol_bgp
+
+set datadir = $svndir/examples/Si4x4nanowire
+
+set input = Si4x4nanowire.in
+
+cp $datadir/$input .
+cp $datadir/cell.dat .
+
+ln -s -f $datadir/pseudo.Si .
+ln -s -f $svndir/potentials/pseudo.H .
+
+python $svndir/util/generate_LinXYZPot.py -b -f cell.dat -e 0.001 -d 0 -o bias.xyz
+
+mpirun -np $ncpus  -cwd `pwd` -exe $exe -args $input
+

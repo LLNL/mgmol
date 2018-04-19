@@ -1,0 +1,26 @@
+#!/bin/tcsh
+#MSUB -l nodes=32,walltime=1:00:00
+#MSUB -d /p/lscratchv/mgmolu/WATER/H2O_64
+#MSUB -q pdebug
+#MSUB -A matsci
+#MSUB -l gres=lscratchv
+
+setenv OMP_NUM_THREADS 4
+
+set ncpus = 512
+
+set exe     = /usr/gapps/mgmol/bin/mgmol_bgq-r1492
+
+set datadir = $home/SVN/MGmol/mgmol/trunk/examples/H2O_64
+
+set configfile = mgmol_md.cfg
+
+cp $datadir/$configfile .
+
+#restart
+rm -f wave.out
+set restart_file=`ls -ld snapshot* | awk '/snapshot/ { print $9 }' | tail -n1`
+ln -s -f $restart_file wave.out
+
+srun -n $ncpus $exe -c $configfile
+

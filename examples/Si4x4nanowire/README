@@ -1,0 +1,11 @@
+python ../../util/generate_LinXYZPot.py -b -f cell.dat -e 0.001 -d 0 -o bias.xyz
+
+ln -s ../../potentials/pseudo.H
+
+set exe = ../../../branches/bin/mgmol-pel
+set ncpus = 16
+
+set input = Si4x4nanowire.in
+srun -ppdebug -n $ncpus $exe $input
+
+srun -ppdebug -n $ncpus $exe -c mgmol.cfg -i coords.in -l lrs.in

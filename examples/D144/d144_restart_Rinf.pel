@@ -1,0 +1,42 @@
+#MSUB -S /bin/tcsh
+#MSUB -l nodes=4:ppn=8,walltime=0:30:00
+#MSUB -a "04/12/03 02:00:00"
+#MSUB -d /p/lscratchc/jeanluc/MGmol/D144
+#MSUB -q pdebug
+#MSUB -A linfpmd
+
+setenv OMP_NUM_THREADS 1
+set ncpus = 25
+
+set maindir = /$home/SVN/MGmol/mgmol/trunk
+
+set exe     = $maindir/bin/mgmol-pel
+#set exe     = /usr/gapps/mgmol/bin/mgmol_pel-r754
+
+set wrkdir  = `pwd`
+set datadir = $maindir/examples/D144
+
+set inputq = D144_Rinf_quench.in
+set input1 = D144_Rinf_restart.in
+
+cp  $datadir/$input1 .
+cp  $datadir/$inputq .
+
+ln -s -f $maindir/potentials/pseudo.D_tm_pbe .
+
+#1st run
+srun -n $ncpus $exe $inputq
+
+#restart
+rm -f wave.out
+set restart_file=`ls -ld * | awk '/snapshot_1/ { print $9 }' | tail -n1`
+ln -s -f $restart_file wave.out
+
+srun -n $ncpus $exe $input1
+
+#restart
+rm -f wave.out
+set restart_file=`ls -ld * | awk '/snapshot_1/ { print $9 }' | tail -n1`
+ln -s -f $restart_file wave.out
+
+srun -n $ncpus $exe $input1

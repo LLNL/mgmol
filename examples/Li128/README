@@ -1,0 +1,6 @@
+ln -s ../../potentials/pseudo.Li_ONCVPSP_LDA
+
+set exe = ../../bin/mgmol-pel
+
+srun -ppdebug -n54 $exe -c mvp.cfg -i coords.in > MVP.out &
+
