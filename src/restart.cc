@@ -87,10 +87,7 @@ int MGmol::write_hdf5(const string filename,
     char zero='0';
     if( strcmp(&zero,&filename[0])==0 )return 0;
 
-    int gdim[3];
-    gdim[0]=mygrid.gdim(0);
-    gdim[1]=mygrid.gdim(1);
-    gdim[2]=mygrid.gdim(2);
+    unsigned gdim[3]={mygrid.gdim(0),mygrid.gdim(1),mygrid.gdim(2)};
     
     // create restart file
     HDFrestart h5f_file(filename, myPEenv, gdim, ct.out_restart_file_type);

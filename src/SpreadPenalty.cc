@@ -168,7 +168,7 @@ void SpreadPenalty::computeAndAddResidualSpreadPenalty(const vector<float>& lagr
         i++;
     }
     
-    const int dim[3]={mygrid.dim(0),mygrid.dim(1),mygrid.dim(2)};
+    const unsigned dim[3]={mygrid.dim(0),mygrid.dim(1),mygrid.dim(2)};
     const int loc_length = dim[0]/subdivx;
     const int incx=dim[1]*dim[2];
     const int incy=dim[2];

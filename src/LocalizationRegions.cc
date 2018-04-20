@@ -1633,7 +1633,6 @@ void LocalizationRegions::writeOldCenters(HDFrestart& h5f_file)
     
 }
 
-
 void LocalizationRegions::writeOldCenter(HDFrestart& h5f_file, int i)
 {
     assert( overlap_regions_.size() == old_centers_[i].size() );
@@ -1661,7 +1660,7 @@ void LocalizationRegions::writeOldCenter(HDFrestart& h5f_file, int i)
             for(short i=s;i<ms;i++)data.push_back(1.e32);
         }
         
-        int  dims[2]={data.size()/3, 3};
+        size_t dims[2]={data.size()/3, 3};
 
         stringstream datasetname;
         datasetname << "OldCenter_" << i;

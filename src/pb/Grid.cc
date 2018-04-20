@@ -18,7 +18,7 @@ namespace pb{
 // constructor
 Grid::Grid(const double origin[3], 
            const double lattice[3], 
-           const int ngpts[3], 
+           const unsigned ngpts[3], 
            const PEenv& mype_env,
            const short nghosts, const short level):mype_env_(mype_env)
 {
@@ -230,7 +230,7 @@ const Grid Grid::coarse_grid() const
     assert((gdim(1)%2)==0);
     assert((gdim(2)%2)==0);
 
-    int dim[3]={gdim_[0]>>1,gdim_[1]>>1,gdim_[2]>>1};
+    unsigned dim[3]={gdim_[0]>>1,gdim_[1]>>1,gdim_[2]>>1};
     Grid  coarse_G(origin_,ll_,dim,
                    mype_env_, ghost_pt_,level_-1);
     //cout<<"gsize="<<gsize()<<endl;

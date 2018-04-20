@@ -252,7 +252,7 @@ int MGmol::dumprestartFile(LocGridOrbitals** orbitals, Ions& ions, Rho& rho,
     Mesh* mymesh = Mesh::instance();
     const pb::PEenv& myPEenv=mymesh->peenv();
     const pb::Grid& mygrid  = mymesh->grid();
-    const int gdim[3]={mygrid.gdim(0),mygrid.gdim(1),mygrid.gdim(2)};
+    const unsigned gdim[3]={mygrid.gdim(0),mygrid.gdim(1),mygrid.gdim(2)};
 
     string filename(string(ct.out_restart_file));
     //add an integer corresponding to attempt number/count

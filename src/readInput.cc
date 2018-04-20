@@ -473,7 +473,8 @@ int MGmol::readParameters(ifstream* tfile, bool& cell_relative)
     }
     mmpi.bcast(&origin[0], 3);
     mmpi.bcast(&end[0],    3);
-    mmpi.bcast(&ct.ngpts_[0],  3);
+    int ngpts[3]={(int)ct.ngpts_[0],(int)ct.ngpts_[1],(int)ct.ngpts_[2]};
+    mmpi.bcast(&ngpts[0],  3);
 
     const double cell[3]={end[0]-origin[0],end[1]-origin[1],end[2]-origin[2]};
 

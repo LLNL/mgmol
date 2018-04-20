@@ -27,7 +27,7 @@ class Mesh
     
     static MPI_Comm comm_;
     
-    static int    ngpts_[3];
+    static unsigned ngpts_[3];
     static double origin_[3];
     static double lattice_[3];
     static int    lap_type_;
@@ -71,7 +71,7 @@ public:
     }
     
     static void setup(MPI_Comm comm,
-               const int ngpts[3],
+               const unsigned ngpts[3],
                const double origin[3], 
                const double lattice[3], 
                const int lap_type)

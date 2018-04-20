@@ -26,11 +26,11 @@ class Grid
 private:
     const PEenv&  mype_env_;
 
-    int     dim_[3]; // local dim (on PE)
-    int     gdim_[3];// global dim
-    int     size_;
-    int     sizeg_;
-    long    gsize_;
+    unsigned     dim_[3]; // local dim (on PE)
+    unsigned     gdim_[3];// global dim
+    unsigned     size_;
+    unsigned     sizeg_;
+    unsigned long    gsize_;
     short   ghost_pt_;
     double  hgrid_[3];
     double  vel_;       // volume element
@@ -47,7 +47,7 @@ public:
     
     Grid(const double origin[3], 
          const double lattice[3], 
-         const int ngpts[3], 
+         const unsigned ngpts[3], 
 	 const PEenv& mype_env,
 	 const short nghosts=1, const short level=0);
          
@@ -58,22 +58,22 @@ public:
 
     bool active() const{ return active_;}
     const PEenv& mype_env() const{ return mype_env_; }
-    int dim(const short i) const
+    unsigned dim(const short i) const
     { 
         assert( dim_[i]>0 );
         assert( dim_[i]<10000 );
         return dim_[i]; 
     }
-    int gdim(const short i) const{ return gdim_[i]; }
+    unsigned gdim(const short i) const{ return gdim_[i]; }
     int inc(const short i) const{ return inc_[i]; }
     double ll(const short i) const{ return ll_[i]; }
     double origin(const short i) const{ return origin_[i]; }
     double start(const short i) const{ return start_[i]; }
     int istart(const short i) const{ return istart_[i]; }
 
-    int size() const{ return size_; }
-    int sizeg() const{ return sizeg_; }
-    long gsize() const{ return gsize_; }
+    unsigned size() const{ return size_; }
+    unsigned sizeg() const{ return sizeg_; }
+    unsigned long gsize() const{ return gsize_; }
     short ghost_pt() const
     { 
         assert( ghost_pt_<10 );

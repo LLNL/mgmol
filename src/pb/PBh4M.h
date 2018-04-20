@@ -105,7 +105,7 @@ public:
     void rhs(GridFunc<T> &A, GridFunc<T> &B)const
     {
         assert(A.grid().sizeg()==PB<T>::grid_.sizeg());
-        assert(B.grid().sizeg()==grid_.sizeg());
+        assert(B.grid().sizeg()==PB<T>::grid_.sizeg());
         
         FDoper<T>::rhs_4th_Mehr1(A,B);
         B.set_bc(A.bc(0),A.bc(1),A.bc(2));

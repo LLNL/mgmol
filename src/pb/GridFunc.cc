@@ -1981,7 +1981,7 @@ void GridFunc<T>::initTriLin(const T a[4], const bool wghosts)
     
     const short nghosts = ghost_pt();
 
-    const int dim[3]={grid_.dim(0),grid_.dim(1),grid_.dim(2)};
+    const unsigned dim[3]={grid_.dim(0),grid_.dim(1),grid_.dim(2)};
 
     const int ilow = grid_.istart(0);
     const int jlow = grid_.istart(1);

@@ -433,7 +433,7 @@ int main(int argc, char **argv)
     
     if(flag_boost)
     {
-        int ngpts[3]={ct.ngpts_[0],ct.ngpts_[1],ct.ngpts_[2]};
+        unsigned ngpts[3]={ct.ngpts_[0],ct.ngpts_[1],ct.ngpts_[2]};
         double origin[3]={ct.ox_,ct.oy_,ct.oz_};
         const double cell[3]={ct.lx_,ct.ly_,ct.lz_};
         Mesh::setup(mmpi.commSpin(),ngpts,origin,cell,ct.lap_type);

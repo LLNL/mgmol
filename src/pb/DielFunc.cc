@@ -76,7 +76,7 @@ double DielFunc<T>::depsilon_rho(const T rho)
 template <class T>
 void DielFunc<T>::Gepsilon_rho(GridFunc<T>& rho)
 {
-    assert(grid_.dim(0)>1);
+    assert(GridFunc<T>::grid_.dim(0)>1);
     
 //    GridFunc<T>::tag_ = rho.tag();
     GridFunc<T>::bc_[0]=1;
@@ -91,7 +91,7 @@ void DielFunc<T>::Gepsilon_rho(GridFunc<T>& rho)
     const int incy1=GridFunc<T>::grid().inc(1);
     const int incy2=rho.grid().inc(1);
 
-    assert(grid().inc(2)==1);
+    assert(GridFunc<T>::grid().inc(2)==1);
     assert(rho.grid().inc(2)==1);
 
     if(rho.uu()!=NULL){
@@ -140,7 +140,7 @@ template <class T>
 void DielFunc<T>::Gepsilon_rho(GridFunc<T>& rho, 
                             const T rho0, const T drho0)
 {
-    assert(grid_.dim(0)>1);
+    assert(GridFunc<T>::grid_.dim(0)>1);
     
 //    GridFunc<T>::tag_ = rho.tag();
     GridFunc<T>::bc_[0]=1;
@@ -204,7 +204,7 @@ template <class T>
 void DielFunc<T>::Gdepsilon_rho(GridFunc<T>& rho, GridFunc<T> &depsilon,
                              const T rho0, const T drho0)
 {
-    assert(grid_.dim(0)>1);
+    assert(GridFunc<T>::grid_.dim(0)>1);
     
 //    GridFunc<T>::tag_ = rho.tag();
     GridFunc<T>::bc_[0]=1;
@@ -269,7 +269,7 @@ void DielFunc<T>::Gdepsilon_rho(GridFunc<T>& rho, GridFunc<T> &depsilon,
 template <class T>
 void DielFunc<T>::Gdepsilon_rho(GridFunc<T>& rho, GridFunc<T> &depsilon)
 {
-    assert(grid_.dim(0)>1);
+    assert(GridFunc<T>::grid_.dim(0)>1);
     
 //    GridFunc<T>::tag_ = rho.tag();
     GridFunc<T>::bc_[0]=1;

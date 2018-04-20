@@ -120,7 +120,7 @@ protected:
     // indexes corresponding to valid function in each subdomain
     std::vector<std::vector<int> > global_indexes_;
 
-    int  dim_;
+    unsigned dim_;
 
     dist_matrix::DistMatrix<DISTMATDTYPE>* theta_;
     dist_matrix::DistMatrix<DISTMATDTYPE>* matHB_;

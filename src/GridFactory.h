@@ -16,7 +16,7 @@
 class GridFactory
 {
 public:
-    static pb::Grid* createGrid(const int    ngpts[3],
+    static pb::Grid* createGrid(const unsigned ngpts[3],
                             const double origin[3], 
                             const double lattice[3], 
                             const int lap_type,

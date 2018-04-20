@@ -44,9 +44,9 @@ public:
                                fine_grid.start(1),
                                fine_grid.start(2)};
     
-        const int dim[3]={(fine_grid.dim(0)>>level)/subdivx,
-                          (fine_grid.dim(1)>>level),
-                          (fine_grid.dim(2)>>level)};
+        const unsigned dim[3]={(fine_grid.dim(0)>>level)/subdivx,
+                               (fine_grid.dim(1)>>level),
+                               (fine_grid.dim(2)>>level)};
         
         assert( dim[0]<=fine_grid.dim(0) );
         assert( dim[1]<=fine_grid.dim(1) );

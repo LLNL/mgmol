@@ -1351,7 +1351,7 @@ void MGmol::cleanup()
      && ct.atoms_dyn==0 )
     {
         const pb::Grid& mygrid  = mymesh->grid();
-        int gdim[3]={mygrid.gdim(0),mygrid.gdim(1),mygrid.gdim(2)};
+        unsigned gdim[3]={mygrid.gdim(0),mygrid.gdim(1),mygrid.gdim(2)};
     
         // create restart file
         string filename(string(ct.out_restart_file));

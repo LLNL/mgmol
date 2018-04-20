@@ -789,7 +789,7 @@ void Ions::writeAtomicNumbers(HDFrestart& h5f_file)
         //    data.push_back(-1);
         //}
 
-        int  dims[2]={data.size(), 1};
+        size_t dims[2]={data.size(), 1};
 
         string datasetname("/Atomic_numbers");
         if( h5f_file.useHdf5p() )
@@ -846,7 +846,7 @@ void Ions::writeAtomNames(HDFrestart& h5f_file)
             for(short i=s;i<ms;i++)data.push_back(empty_string);
         }
         
-        int  dims[2]={data.size(), 1};
+        size_t dims[2]={data.size(), 1};
 
         string datasetname("/Atomic_names");
         if( h5f_file.useHdf5p() )
@@ -934,7 +934,7 @@ void Ions::writeLockedAtomNames(HDFrestart& h5f_file)
             if( ms==0 )return;
         }
         
-        int  dims[2]={data.size(), 1};
+        size_t dims[2]={data.size(), 1};
 
         string datasetname("/LockedAtomsNames");
         if( h5f_file.useHdf5p() )
@@ -987,7 +987,7 @@ void Ions::writeAtomicIDs(HDFrestart& h5f_file)
             for(short i=s;i<ms;i++)data.push_back(-1);
         }
         
-        int  dims[2]={data.size(), 1};
+        size_t dims[2]={data.size(), 1};
 
         string datasetname("/Atomic_IDs");
         if( h5f_file.useHdf5p() )
@@ -1042,7 +1042,7 @@ void Ions::writeAtomicNLprojIDs(HDFrestart& h5f_file)
             for(short i=s;i<ms;i++)data.push_back(-1);
         }
 
-        int  dims[2]={data.size(), 1};
+        size_t dims[2]={data.size(), 1};
 
         string datasetname("/AtomicNLproj_IDs");
         if( h5f_file.useHdf5p() )
@@ -1098,7 +1098,7 @@ void Ions::writePositions(HDFrestart& h5f_file)
             for(short i=s;i<ms;i++)data.push_back(1.e32);
         }
         
-        int  dims[2]={data.size()/3, 3};
+        size_t dims[2]={data.size()/3, 3};
 
         string datasetname("/Ionic_positions");
         if( h5f_file.useHdf5p() )
@@ -1272,7 +1272,7 @@ void Ions::writeVelocities(HDFrestart& h5f_file)
             for(short i=s;i<ms;i++)data.push_back(1.e32);
         }
         
-        int  dims[2]={data.size()/3, 3};
+        size_t dims[2]={data.size()/3, 3};
 
         string datasetname("/Ionic_velocities");
         if( h5f_file.useHdf5p() )
@@ -1334,7 +1334,7 @@ void Ions::writeRandomStates(HDFrestart& h5f_file)
             for(short i=s;i<ms;i++)data.push_back(0);
         }
 
-        int  dims[2]={data.size()/3, 3};
+        size_t dims[2]={data.size()/3, 3};
 
         string datasetname("/Ionic_RandomStates");
         if( h5f_file.useHdf5p() )
@@ -1504,8 +1504,6 @@ void Ions::writeForces(HDFrestart& h5f_file)
     hid_t file_id=h5f_file.file_id();
     if( file_id>=0 )
     {
-        short dim0=3;
-        
         // fill up data array to dimension common to all tasks
         short ms=data.size();
         if( h5f_file.useHdf5p() )
@@ -1515,7 +1513,7 @@ void Ions::writeForces(HDFrestart& h5f_file)
             for(short i=s;i<ms;i++)data.push_back(1.e32);
         }
         
-        int  dims[2]={data.size()/dim0, dim0};
+        size_t dims[2]={data.size()/3, 3};
 
         string datasetname("/Ionic_forces");
         if( h5f_file.useHdf5p() )

@@ -357,7 +357,7 @@ public:
     float oz_;
     
     // mesh
-    int ngpts_[3];
+    unsigned ngpts_[3];
  
     short     wf_dyn; // quench method
     short     wf_m;   // number of wf to keep in memory 

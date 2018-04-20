@@ -37,7 +37,7 @@ hid_t H5Acreate2( hid_t loc_id, const char *attr_name, hid_t type_id, hid_t spac
 
 int readListCentersAndRadii(hid_t dset_id, std::vector<double>& attr_data);
 int readGids(hid_t dset_id, std::vector<int>& gids);
-int writeListCentersAndRadii(hid_t dset_id, const int natt, const std::vector<double>& attr_data);
+int writeListCentersAndRadii(hid_t dset_id, const unsigned natt, const std::vector<double>& attr_data);
 int writeGids(hid_t dset_id, const std::vector<int>& gids);
 
 class HDFrestart
@@ -84,7 +84,7 @@ class HDFrestart
     void setActivity();
     void setupBlocks();
     void setOptions(const short option_number);
-    void addReleaseNumber2File(char* release);
+    void addReleaseNumber2File(const char* release);
     void gatherDataXdir(std::vector<int>& data);
     void gatherDataXdir(std::vector<unsigned short>& data);
     void gatherDataXdir(std::vector<double>& data);
@@ -98,7 +98,7 @@ public:
 
     HDFrestart(const std::string filename, const pb::PEenv& pes,
                const short option_number);
-    HDFrestart(const std::string filename, const pb::PEenv& pes, const int gdim[3],
+    HDFrestart(const std::string filename, const pb::PEenv& pes, const unsigned gdim[3],
                const short option_number);
     
     bool gatherDataX()const{return gather_data_x_;}

@@ -58,7 +58,7 @@ PBh4M<T>::PBh4M(const PBh4M& oper):PB<T>(oper), pp_(oper.pp_,PB<T>::grid_),
 {
     //cout<<"Copy constructor for PBh4M"<<endl;
     if( PB<T>::grid_.active() ){
-        assert(grid_.sizeg()>1);
+        assert(PB<T>::grid_.sizeg()>1);
     }
     //sqrt_a_.set_grid(grid_);
     //inv_sqrt_a_.set_grid(grid_);

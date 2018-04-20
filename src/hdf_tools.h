@@ -13,16 +13,16 @@
 
 namespace mgmol_tools
 {
-void write1d(hid_t file_id, std::string datasetname, std::vector<int>& data, int length);
-void write2d(hid_t file_id, std::string datasetname, std::vector<int>& data, int* dims);
-void write2d(hid_t file_id, std::string datasetname, std::vector<unsigned short>& data, int* dims);
-void write2d(hid_t file_id, std::string datasetname, std::vector<double>& data, int* dims);
-void write2d(hid_t file_id, std::string datasetname, std::vector<std::string>& data, int* dims);
+void write1d(hid_t file_id, std::string datasetname, std::vector<int>& data, size_t length);
+void write2d(hid_t file_id, std::string datasetname, std::vector<int>& data, size_t* dims);
+void write2d(hid_t file_id, std::string datasetname, std::vector<unsigned short>& data, size_t* dims);
+void write2d(hid_t file_id, std::string datasetname, std::vector<double>& data, size_t* dims);
+void write2d(hid_t file_id, std::string datasetname, std::vector<std::string>& data, size_t* dims);
 
-void parallelWrite2d(hid_t file_id, std::string datasetname, std::vector<int>& data, int* dims, MPI_Comm comm);
-void parallelWrite2d(hid_t file_id, std::string datasetname, std::vector<unsigned short>& data, int* dims, MPI_Comm comm);
-void parallelWrite2d(hid_t file_id, std::string datasetname, std::vector<double>& data, int* dims, MPI_Comm comm);
-void parallelWrite2d(hid_t file_id, std::string datasetname, std::vector<std::string>& data, int* dims, MPI_Comm comm);
+void parallelWrite2d(hid_t file_id, std::string datasetname, std::vector<int>& data, size_t* dims, MPI_Comm comm);
+void parallelWrite2d(hid_t file_id, std::string datasetname, std::vector<unsigned short>& data, size_t* dims, MPI_Comm comm);
+void parallelWrite2d(hid_t file_id, std::string datasetname, std::vector<double>& data, size_t* dims, MPI_Comm comm);
+void parallelWrite2d(hid_t file_id, std::string datasetname, std::vector<std::string>& data, size_t* dims, MPI_Comm comm);
 
 void addAttribute2Dataset(hid_t dset_id, const char* attname, 
                           const std::vector<double>&  attr_data);

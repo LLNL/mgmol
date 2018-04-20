@@ -209,7 +209,7 @@ void Electrostatic::setupPB(const double rho0, const double drho0,
     
     diel_flag_=true;
     
-    int    ngpts[3]={myGrid.gdim(0),myGrid.gdim(1),myGrid.gdim(2)};
+    unsigned    ngpts[3]={myGrid.gdim(0),myGrid.gdim(1),myGrid.gdim(2)};
     double origin[3]={myGrid.origin(0),myGrid.origin(1),myGrid.origin(2)};
     double cell[3]={myGrid.ll(0),myGrid.ll(1),myGrid.ll(2)};
     

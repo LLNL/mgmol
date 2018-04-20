@@ -426,7 +426,7 @@ int HDFrestart::getFromFile(string attname)const
     return data;
 }
      
-void HDFrestart::addReleaseNumber2File(char* release)
+void HDFrestart::addReleaseNumber2File(const char* release)
 {
     if( active_ )
     {
@@ -515,7 +515,7 @@ bool HDFrestart::olderVersion()
 // constructor for one layer of PEs writing data
 HDFrestart::HDFrestart(const string filename,
                        const pb::PEenv& pes,
-                       const int gdim[3],
+                       const unsigned gdim[3],
                        const short option_number):
     pes_(pes),
     filename_(filename)
@@ -756,7 +756,7 @@ HDFrestart::HDFrestart(const string filename,
     }
 #ifdef USE_MPI
     // Bcast size of data
-    int dimsf[3]={dimsf_[0],dimsf_[1],dimsf_[2]};
+    int dimsf[3]={(int)dimsf_[0],(int)dimsf_[1],(int)dimsf_[2]};
     mmpi.bcast(&dimsf[0], 3);
 
     dimsf_[0]=dimsf[0];
@@ -776,7 +776,7 @@ HDFrestart::HDFrestart(const string filename,
     open_existing_tm_.stop();
 };
 
-int writeListCentersAndRadii(hid_t dset_id, const int natt, const vector<double>& attr_data)
+int writeListCentersAndRadii(hid_t dset_id, const unsigned natt, const vector<double>& attr_data)
 {
     assert( dset_id>-1 );
     assert( attr_data.size()<10000 );

@@ -201,7 +201,7 @@ void IonicAlgorithm::dumpRestart()
     Mesh* mymesh = Mesh::instance();
     const pb::PEenv& myPEenv= mymesh->peenv();
     const pb::Grid& mygrid  = mymesh->grid();
-    int gdim[3]={mygrid.gdim(0),mygrid.gdim(1),mygrid.gdim(2)};
+    unsigned gdim[3]={mygrid.gdim(0),mygrid.gdim(1),mygrid.gdim(2)};
 
     HDFrestart h5file(string(ct.out_restart_file), myPEenv, gdim, ct.out_restart_file_type);
     

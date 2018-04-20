@@ -161,7 +161,7 @@ void MultipoleExpansion::get_dipole(const pb::GridFunc<RHODTYPE>& rho)
 
     const int incx=grid.inc(0);
     const int incy=grid.inc(1);
-    const int dim[3]={grid.dim(0),grid.dim(1),grid.dim(2)};
+    const unsigned dim[3]={grid.dim(0),grid.dim(1),grid.dim(2)};
 
     Vector3D gpoint(start[0],start[1],start[2]);
     double   dipole[3]={0.,0.,0.};
@@ -235,7 +235,7 @@ void MultipoleExpansion::computeQuadrupole(const pb::GridFunc<RHODTYPE>& rho)
 
     const int incx=grid.inc(0);
     const int incy=grid.inc(1);
-    const int dim[3]={grid.dim(0),grid.dim(1),grid.dim(2)};
+    const unsigned dim[3]={grid.dim(0),grid.dim(1),grid.dim(2)};
 
     Vector3D gpoint(start[0],start[1],start[2]);
     double   quadrupole[6]={0.,0.,0.,0.,0.,0.};
@@ -316,7 +316,7 @@ void MultipoleExpansion::resetOriginToChargeCenter(const pb::GridFunc<RHODTYPE>&
 
     const int incx=grid.inc(0);
     const int incy=grid.inc(1);
-    const int dim[3]={grid.dim(0),grid.dim(1),grid.dim(2)};
+    const unsigned dim[3]={grid.dim(0),grid.dim(1),grid.dim(2)};
 
     Vector3D gpoint(start[0],start[1],start[2]);
     double   charge_center[3]={0.,0.,0.};

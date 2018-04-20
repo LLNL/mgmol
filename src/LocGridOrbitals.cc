@@ -1209,7 +1209,7 @@ int LocGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, string name)
 
     vector<set<int> > filled; // set of functions already filled by data
     filled.resize(subdivx_);
-    hsize_t dims[2]={0,0};
+    int dims[2]={0,0};
     
     // get centers corresponding to dataset (stored function) from input file
     multimap<string,Vector3D> centers_in_dataset;
@@ -2448,7 +2448,7 @@ void LocGridOrbitals::initRand()
 {
     Control& ct = *(Control::instance());
 
-    const int dim[3]={grid_.dim(0),grid_.dim(1),grid_.dim(2)};
+    const unsigned dim[3]={grid_.dim(0),grid_.dim(1),grid_.dim(2)};
     
     double* xrand=new double[grid_.gdim(0)];
     double* yrand=new double[grid_.gdim(1)];
