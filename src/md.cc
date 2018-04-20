@@ -528,7 +528,8 @@ void MGmol::md(LocGridOrbitals** orbitals,
             //also print in stdout for small problems or high verbosity
             if( ions_->getNumIons()<256 || ct.verbose>2 )
             {
-                ions.printForcesGlobal(os_);
+                if( ct.verbose>0 )
+                    ions.printForcesGlobal(os_);
             }
             else
                 if( zero.compare (ct.md_print_filename)==0 )
