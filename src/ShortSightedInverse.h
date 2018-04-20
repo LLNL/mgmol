@@ -158,9 +158,15 @@ VariableSizeMatrix<sparserowtab> *gramMat()
    return gramMat_;
 }
 
+VariableSizeMatrix<sparserowtab>& getGramMat()
+{
+   return *gramMat_;
+}
+
 std::vector<int> centeredFcnLocalIds();
 
-int solve(const double *rhs, double *sol);
+// Do local solve with (augmented) Gram Matrix
+int GramMatLSSolve(const double *rhs, double *sol);
 
 int augMatSize()
 {
@@ -173,6 +179,16 @@ double *getInvSRowEntries(const int row)
    assert(row <= invS_->n());
 
    return invS_->getRowEntries(row);
+}
+
+PreconILU<pcdatatype> * precon()
+{
+   return precon_;
+}
+
+LinearSolverMatrix<lsdatatype> * matLS()
+{
+   return matLS_;
 }
 
 };

@@ -733,7 +733,7 @@ void ProjectedMatricesSparse::computeGenEigenInterval(std::vector<double>& inter
       // Solve to apply inverse to new_sol to update solution
       // No need to do matvec with scaled copy of sol.
       // Reuse previously stored matvec from residual calculation
-      invS_->solve(&work[0], &new_sol[0]);
+      invS_->GramMatLSSolve(&work[0], &new_sol[0]);
        
       // compute 'shifted' eigenvalue
       beta = MPdot(m,&sol[0],&new_sol[0]);
@@ -787,7 +787,7 @@ void ProjectedMatricesSparse::computeGenEigenInterval(std::vector<double>& inter
       // Solve to apply inverse to new_sol to update solution
       // No need to do matvec with scaled copy of sol.
       // Reuse previously stored matvec from residual calculation
-      invS_->solve(&work[0], &new_sol[0]);
+      invS_->GramMatLSSolve(&work[0], &new_sol[0]);
        
       // compute 'shifted' eigenvalue
       beta = MPdot(m,&sol[0],&new_sol[0]);
@@ -805,6 +805,10 @@ void ProjectedMatricesSparse::computeGenEigenInterval(std::vector<double>& inter
    vec2 = sol;
 
    // Communicate to take global min and max and save results
+   double tmp = e1;
+   e1 = min(tmp, e2);
+   e2 = max(tmp, e2);
+
    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
    mmpi.allreduce(&e1,1,MPI_MIN);
    mmpi.allreduce(&e2,1,MPI_MAX);

@@ -559,7 +559,7 @@ double ShortSightedInverse::computeGramMatCond()
 {
    assert(isGramAugmented_==true);
       
-   double condest=0;   
+   double condest=0.;   
    /* get size of submatrix and set its extents */
    const int bsize = locvars_.size();
    const int bnzmax = (*gramMat_).getNzmaxSubmat(0, bsize-1);   
@@ -593,7 +593,8 @@ std::vector<int> ShortSightedInverse::centeredFcnLocalIds()
     return local_cols;
 }
 
-int ShortSightedInverse::solve(const double *rhs, double *sol)
+// Do local solve with (augmented) Gram Matrix
+int ShortSightedInverse::GramMatLSSolve(const double *rhs, double *sol)
 {
     inverse_solve_tm_.start();
 
