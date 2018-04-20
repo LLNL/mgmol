@@ -26,12 +26,12 @@ private:
 public:
     MPI_DistMatrixCommunicator()
     {
-        comm_=-1;
+        comm_=MPI_COMM_NULL;
     }
 
     ~MPI_DistMatrixCommunicator()
     {
-        assert( comm_!=-1 );
+        assert( comm_!=MPI_COMM_NULL );
         MPI_Comm_free(&comm_);
     }
     

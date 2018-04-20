@@ -23,7 +23,7 @@ class MatricesBlacsContext
 {
     MatricesBlacsContext()
        :blactxt_(0),
-        comm_(-1),
+        comm_(MPI_COMM_NULL),
         size_(-1),
         n_(-1)
     {}
@@ -61,7 +61,7 @@ public:
             delete blactxt_;
             blactxt_=0;
         }
-        comm_=-1;
+        comm_=MPI_COMM_NULL;
         size_=-1;
         n_=-1;
     }

@@ -64,13 +64,13 @@ public:
     
     void setLowerOrderGrid()
     {
-        setFDLowerOrderGrid( PBh2<T>::minNumberGhosts() );
+        this->setFDLowerOrderGrid( PBh2<T>::minNumberGhosts() );
     }
 
     PBh2<T>& getLowerOrderOp()
     {
         if( lower_order_op_==NULL ){
-            setFDLowerOrderGrid(PBh2<T>::minNumberGhosts());
+            this->setFDLowerOrderGrid(PBh2<T>::minNumberGhosts());
             lower_order_op_=new PBh2<T>( PB<T>::getLowerOrderGrid(), PB<T>::epsilon_ );
         }
         return *lower_order_op_;

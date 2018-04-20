@@ -23,7 +23,7 @@ public:
     // A->B
     void apply(GridFunc<T> &A, GridFunc<T> &B)
     {
-        del1_4th(A,B, 0);
+        this->del1_4th(A,B, 0);
     }
 
     ~Delxh4(){};
@@ -43,7 +43,7 @@ public:
     // A->B
     void apply(GridFunc<T> &A, GridFunc<T> &B)
     {
-        del1_4th(A,B, 1);
+        this->del1_4th(A,B, 1);
     }
     
     ~Delyh4(){};
@@ -63,7 +63,7 @@ public:
     // A->B
     void apply(GridFunc<T> &A, GridFunc<T> &B)
     {
-        del1_4th(A,B, 2);
+        this->del1_4th(A,B, 2);
     }
 
     ~Delzh4(){};

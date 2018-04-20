@@ -36,7 +36,7 @@ void saveData(std::vector< std::vector<T> > data, const char* filename) {
 
           copy(data[i].begin(), data[i].end(), std::ostream_iterator<T>(outputFile , " "));
 
-          outputFile << endl;
+          outputFile << std::endl;
 
         }
 
@@ -57,9 +57,9 @@ void saveData(std::vector<T> data, const char* filename) {
 
       if (outputFile.is_open()) {
 
-        copy(data.begin(), data.end(), ostream_iterator<T>(outputFile , " "));
+        copy(data.begin(), data.end(), std::ostream_iterator<T>(outputFile , " "));
 
-        outputFile << endl;
+        outputFile << std::endl;
 
       }
 

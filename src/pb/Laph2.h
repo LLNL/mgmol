@@ -60,13 +60,13 @@ public:
     
     void setLowerOrderGrid()
     {
-        setFDLowerOrderGrid(minNumberGhosts());
+        this->setFDLowerOrderGrid(minNumberGhosts());
     }
 
     Laph2& getLowerOrderOp()
     {
         if( lower_order_op_==NULL ){
-            setFDLowerOrderGrid(Laph2::minNumberGhosts());
+            this->setFDLowerOrderGrid(Laph2::minNumberGhosts());
             lower_order_op_=new Laph2( Lap<T>::getLowerOrderGrid() );
         }
         return *lower_order_op_;
@@ -81,7 +81,7 @@ public:
     void apply(GridFunc<T> &A, GridFunc<T> &B)
     {
         //if(grid_.mype_env().mytask()==0)cout<<Lap<T>::name_<<endl;
-        del2_2nd(A,B);
+        this->del2_2nd(A,B);
         B.set_bc(A.bc(0),A.bc(1),A.bc(2));
     }
     void apply(GridFuncVector<T>& A, GridFuncVector<T> &B)
@@ -90,7 +90,7 @@ public:
         A.trade_boundaries();
         const int nfunc=(int)A.size();
         for(int k=0;k<nfunc;k++){
-            del2_2nd(A.func(k),B.func(k));
+            this->del2_2nd(A.func(k),B.func(k));
         }
     }
  

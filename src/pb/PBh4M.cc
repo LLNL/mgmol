@@ -37,7 +37,7 @@ PBh4M<T>::PBh4M(const Grid& mygrid, DielFunc<T>& myepsilon):
         inv_sqrt_a_.trade_boundaries();
 
         pp_=0.;
-        del2_4th(sqrt_a_,pp_); // -lap
+        FDoper<T>::del2_4th(sqrt_a_,pp_); // -lap
         pp_*=-1.;
         pp_*=inv_sqrt_a_;
 
@@ -159,7 +159,7 @@ void PBh4M<T>::get_vepsilon(GridFunc<T>& vh, GridFunc<T> &rhod, GridFunc<T>& vep
 #endif
     PB<T>::work2_=0.;
     for(int i=0;i<3;i++){
-	del1_4th(vh, PB<T>::work1_, i);
+	FDoper<T>::del1_4th(vh, PB<T>::work1_, i);
 	PB<T>::work2_.add_prod(PB<T>::work1_,PB<T>::work1_);
     }
     
@@ -183,7 +183,7 @@ void PBh4M<T>::init(GridFunc<T>& gf_rhod){
     inv_sqrt_a_.trade_boundaries();
 
     pp_=0.;
-    del2_4th(sqrt_a_,pp_); // -lap
+    FDoper<T>::del2_4th(sqrt_a_,pp_); // -lap
     pp_*=-1.;
     pp_*=inv_sqrt_a_;
 

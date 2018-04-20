@@ -120,7 +120,7 @@ void Ion::setup(const short subdivx)
 }
 
 
-void Ion::bcast(int comm)
+void Ion::bcast(MPI_Comm comm)
 {
 #ifdef USE_MPI
     MPI_Bcast(old_position_, 3, MPI_DOUBLE, 0, comm);

@@ -99,7 +99,7 @@ HDFrestart::~HDFrestart()
     mmpi.barrier();
 
 #ifdef USE_MPI
-    if( comm_active_!=-1 )
+    if( comm_active_!=MPI_COMM_NULL )
         MPI_Comm_free(&comm_active_);
 #endif
 }
@@ -1981,14 +1981,14 @@ void HDFrestart::setCommActive()
         if( mpirc!=MPI_SUCCESS )
         {
             (*MPIdata::serr)<<"ERROR in MPI_Comm_split!!!"<<endl;
-            comm_active_=-1;
+            comm_active_=MPI_COMM_NULL;
             return;
         }
     }
     else
 #endif
     {
-        comm_active_=-1;
+        comm_active_=MPI_COMM_NULL;
     }
 }
 

@@ -71,7 +71,7 @@ public:
 
     void setLowerOrderGrid()
     {
-        setFDLowerOrderGrid( minNumberGhosts() );
+        FDoper<T>::setFDLowerOrderGrid( minNumberGhosts() );
     }
 
     PBh4MP& lowerOrderOp()
@@ -86,12 +86,12 @@ public:
 
     void rhs(GridFunc<T> &A, GridFunc<T> &B)const
     {
-        rhs_4th_Mehr2(A,B);
+        FDoper<T>::rhs_4th_Mehr2(A,B);
 	B.set_bc(A.bc(0),A.bc(1),A.bc(2));
     }
     void rhs(GridFunc<T> &A, T* const B)const
     {
-        rhs_4th_Mehr2(A,B);
+        FDoper<T>::rhs_4th_Mehr2(A,B);
     }
     
  

@@ -14,6 +14,7 @@
 #include <cassert>
 #include <vector>
 #include <map>
+#include <cstring>
 
 // full lower triangular part of symmetric matrix with compact storage
 

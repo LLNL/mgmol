@@ -315,7 +315,7 @@ public:
             force_[i]=0.;
         }
     }
-    void bcast(int);
+    void bcast(MPI_Comm);
 
     double minimage(const Ion&, const double cell[3], const short periodic[3], 
             double xc[3])const;

@@ -46,7 +46,7 @@ public:
 
     void setLowerOrderGrid()
     {
-        setFDLowerOrderGrid(Laph4M::minNumberGhosts());
+        FDoper<T>::setFDLowerOrderGrid(Laph4M::minNumberGhosts());
     }
 
     Laph4M& getLowerOrderOp()
@@ -62,7 +62,7 @@ public:
     // A->B
     void apply(GridFunc<T>& A, GridFunc<T> &B)
     {
-        del2_4th_Mehr(A,B);
+        FDoper<T>::del2_4th_Mehr(A,B);
         B.set_bc(A.bc(0),A.bc(1),A.bc(2));
     }
     void apply(GridFuncVector<T>& A, GridFuncVector<T> &B)
@@ -77,12 +77,12 @@ public:
  
     void rhs(GridFunc<T> &A, GridFunc<T> &B)const
     {
-        rhs_4th_Mehr1(A,B);
+        this->rhs_4th_Mehr1(A,B);
         B.set_bc(A.bc(0),A.bc(1),A.bc(2));
     }
     void rhs(GridFunc<T> &A, T* const B)const
     {
-        rhs_4th_Mehr1(A,B);
+        this->rhs_4th_Mehr1(A,B);
     } 
 
     void jacobi(GridFunc<T>&, const GridFunc<T>&, GridFunc<T>&);

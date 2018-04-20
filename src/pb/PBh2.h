@@ -49,7 +49,7 @@ public:
 
     void setLowerOrderGrid()
     {
-        setFDLowerOrderGrid( minNumberGhosts() );
+        FDoper<T>::setFDLowerOrderGrid( minNumberGhosts() );
     }
 
     PBh2& getLowerOrderOp()

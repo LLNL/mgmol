@@ -60,13 +60,13 @@ public:
 
     void setLowerOrderGrid()
     {
-        setFDLowerOrderGrid(Laph2<T>::minNumberGhosts());
+        this->setFDLowerOrderGrid(Laph2<T>::minNumberGhosts());
     }
     
     Laph2<T>& getLowerOrderOp()
     {
         if( lower_order_op_==NULL ){
-            setFDLowerOrderGrid(Laph2<T>::minNumberGhosts());
+            this->setFDLowerOrderGrid(Laph2<T>::minNumberGhosts());
             lower_order_op_=new Laph2<T>( Lap<T>::getLowerOrderGrid() );
         }
         return *lower_order_op_;
@@ -80,12 +80,12 @@ public:
     // A->B
     void apply(GridFunc<T> &A, GridFunc<T> &B)
     {
-        del2_4th(A,B);
+        this->del2_4th(A,B);
         B.set_bc(A.bc(0),A.bc(1),A.bc(2));
     }
     void applyWithPot(GridFunc<T> &A, const double* pot, T* B)
     {
-        del2_4th_withPot(A,pot,B);
+        this->del2_4th_withPot(A,pot,B);
     }
     void apply(GridFuncVector<T>& A, GridFuncVector<T> &B)
     {
@@ -93,7 +93,7 @@ public:
         A.trade_boundaries();
         const int nfunc=(int)A.size();
         for(int k=0;k<nfunc;k++){
-            del2_4th(A.func(k),B.func(k));
+            this->del2_4th(A.func(k),B.func(k));
         }
     }
  

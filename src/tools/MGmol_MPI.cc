@@ -27,10 +27,10 @@ Timer MGmol_MPI::split_allreduce_sums_float_tm_("split_allreduce_sums_float");
 
 MGmol_MPI* MGmol_MPI::pinstance_=0;
 
-MPI_Comm   MGmol_MPI::comm_global_=-1;
-MPI_Comm   MGmol_MPI::comm_spin_=-1;
-MPI_Comm   MGmol_MPI::comm_different_spin_=-1;
-MPI_Comm   MGmol_MPI::comm_images_=-1;
+MPI_Comm   MGmol_MPI::comm_global_=MPI_COMM_NULL;
+MPI_Comm   MGmol_MPI::comm_spin_=MPI_COMM_NULL;
+MPI_Comm   MGmol_MPI::comm_different_spin_=MPI_COMM_NULL;
+MPI_Comm   MGmol_MPI::comm_images_=MPI_COMM_NULL;
 
 int MGmol_MPI::mype_=-1;
 int MGmol_MPI::mype_spin_=-1;

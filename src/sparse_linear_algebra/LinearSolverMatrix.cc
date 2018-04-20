@@ -522,7 +522,7 @@ void LinearSolverMatrix<T>::matvec(const float* const v, double *w )const
 
 /* get column entry */
 template <class T>
-T getEntry(const int row, const int col)
+T LinearSolverMatrix<T>::getEntry(const int row, const int col)
 {
    std::vector<int>::const_iterator start = i_.begin() + p_[row];
    std::vector<int>::const_iterator stop = i_.begin() + p_[row+1];   

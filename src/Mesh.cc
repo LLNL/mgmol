@@ -13,7 +13,7 @@
 
 using namespace std;
 
-MPI_Comm Mesh::comm_=-1;
+MPI_Comm Mesh::comm_=MPI_COMM_NULL;
 Mesh* Mesh::pinstance_=0;
 
 int    Mesh::ngpts_[3]={0,0,0};

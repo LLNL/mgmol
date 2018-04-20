@@ -15,9 +15,9 @@ namespace pb{
 template <class T>
 void ShiftedLaph4M<T>::apply(GridFunc<T>& A, GridFunc<T> &B)
 {
-    del2_4th_Mehr(A,B);
+    FDoper<T>::del2_4th_Mehr(A,B);
     GridFunc<T> C(A.grid(),A.bc(0),A.bc(1),A.bc(2));
-    rhs_4th_Mehr1(A,C);
+    FDoper<T>::rhs_4th_Mehr1(A,C);
     B.axpy(lambda2_,C);
     B.set_bc(A.bc(0),A.bc(1),A.bc(2));
 }
@@ -29,8 +29,8 @@ void ShiftedLaph4M<T>::apply(GridFuncVector<T>& A, GridFuncVector<T> &B)
     A.trade_boundaries();
     GridFunc<T> C(A.func(0).grid(),A.func(0).bc(0),A.func(0).bc(1),A.func(0).bc(2));
     for(int k=0;k<nfunc;k++){
-        del2_4th_Mehr(A.func(k),B.func(k));
-        rhs_4th_Mehr1(A.func(k),C);
+        FDoper<T>::del2_4th_Mehr(A.func(k),B.func(k));
+        FDoper<T>::rhs_4th_Mehr1(A.func(k),C);
         B.func(k).axpy(lambda2_,C);
     }
 }

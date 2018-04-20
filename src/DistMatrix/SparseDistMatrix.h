@@ -99,7 +99,7 @@ public:
     static void printConsolidationNumber(std::ostream& os)
     {
        os<<"SparseDistMatrix: consolidation_number_="
-         <<consolidation_number_<<endl;
+         <<consolidation_number_<<std::endl;
     }
  
     static void setConsolidationNumber(unsigned short number)
@@ -141,7 +141,7 @@ public:
     
     void printNpartitions(std::ostream& os)
     {
-       os<<"SparseDistMatrix: npartitions_="<<npartitions_<<endl;
+       os<<"SparseDistMatrix: npartitions_="<<npartitions_<<std::endl;
     }
  
     void clearIndexAndVal()

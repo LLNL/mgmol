@@ -19,12 +19,12 @@ void PBh6<T>::pb_6th(GridFunc<T>& A, GridFunc<T>& B)
 
     for(int i=0;i<3;i++){
 
-	del1_6th(PB<T>::epsilon_, PB<T>::work2_, i);
-	del1_6th(A, PB<T>::work1_, i);
+	FDoper<T>::del1_6th(PB<T>::epsilon_, PB<T>::work2_, i);
+	FDoper<T>::del1_6th(A, PB<T>::work1_, i);
 	B.substract_prod(PB<T>::work1_, PB<T>::work2_);
     }
 
-    del2_6th(A,PB<T>::work1_);
+    FDoper<T>::del2_6th(A,PB<T>::work1_);
     B.add_prod(PB<T>::work1_, PB<T>::epsilon_);
 }
 template <class T>
@@ -55,7 +55,7 @@ void PBh6<T>::get_vepsilon(GridFunc<T>& vh, GridFunc<T> &rho, GridFunc<T>& vepsi
 {
     PB<T>::work2_=0.;
     for(int i=0;i<3;i++){
-	del1_6th(vh, PB<T>::work1_, i);
+	FDoper<T>::del1_6th(vh, PB<T>::work1_, i);
 	PB<T>::work2_.add_prod(PB<T>::work1_, PB<T>::work1_);
     }
 

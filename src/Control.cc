@@ -31,7 +31,7 @@
 #define max(a,b) (((a)<(b)) ? (b) : (a))
 
 Control* Control::pinstance_=0;
-MPI_Comm Control::comm_global_=-1;
+MPI_Comm Control::comm_global_=MPI_COMM_NULL;
 float Control::total_spin_=0.;
 string Control::run_directory_(".");
 bool Control::with_spin_=false;

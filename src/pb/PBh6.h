@@ -65,13 +65,13 @@ public:
 
     void setLowerOrderGrid()
     {
-        setFDLowerOrderGrid( PBh4<T>::minNumberGhosts() );
+        FDoper<T>::setFDLowerOrderGrid( PBh4<T>::minNumberGhosts() );
     }
 
     PBh4<T>& getLowerOrderOp()
     {
         if( lower_order_op_==NULL ){
-            setFDLowerOrderGrid(PBh4<T>::minNumberGhosts());
+            FDoper<T>::setFDLowerOrderGrid(PBh4<T>::minNumberGhosts());
             lower_order_op_=new PBh4<T>( PB<T>::getLowerOrderGrid(), PB<T>::epsilon_ );
         }
         return *lower_order_op_;
