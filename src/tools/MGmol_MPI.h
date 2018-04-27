@@ -63,7 +63,7 @@ private:
 public:
     static MGmol_MPI* instance()
     {
-        assert( comm_global_!=-1 );
+        assert( comm_global_!=MPI_COMM_NULL );
         if( pinstance_==0 )
         {
             pinstance_ = new MGmol_MPI();

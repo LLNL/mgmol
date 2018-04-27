@@ -54,7 +54,7 @@ static void finishRead(ifstream& tfile)
 
 Control::Control()
 {
-    assert( comm_global_!=-1 );
+    assert( comm_global_!=MPI_COMM_NULL );
     
 #ifdef USE_MPI
     MPI_Comm_rank(comm_global_, &mype_);

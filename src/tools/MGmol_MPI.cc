@@ -531,7 +531,7 @@ int MGmol_MPI::allreduceSpin(double* sendbuf, double* recvbuf, int count, MPI_Op
     if( nspin_==1 )return 0;
     
 #ifdef USE_MPI
-    assert( comm_different_spin_!=-1 );
+    assert( comm_different_spin_!=MPI_COMM_NULL );
     int mpi_err=MPI_Allreduce(sendbuf, recvbuf, count, MPI_DOUBLE, op, comm_different_spin_);
     if( mpi_err!=MPI_SUCCESS ){
         (*MPIdata::serr)<<"ERROR in MPI_Allreduce(double*, double*) of size "<<count<<"!!!"<<endl;
@@ -547,7 +547,7 @@ int MGmol_MPI::allreduceSpin(float* sendbuf, float* recvbuf, int count, MPI_Op o
     if( nspin_==1 )return 0;
     
 #ifdef USE_MPI
-    assert( comm_different_spin_!=-1 );
+    assert( comm_different_spin_!=MPI_COMM_NULL );
     int mpi_err=MPI_Allreduce(sendbuf, recvbuf, count, MPI_FLOAT, op, comm_different_spin_);
     if( mpi_err!=MPI_SUCCESS ){
         (*MPIdata::serr)<<"ERROR in MPI_Allreduce(double*, double*) of size "<<count<<"!!!"<<endl;
@@ -567,7 +567,7 @@ int MGmol_MPI::exchangeDataSpin(double* localdata, double* remotedata, int count
     assert( myspin_==0 || myspin_==1 );
 
 #ifdef USE_MPI
-    assert( comm_different_spin_!=-1 );
+    assert( comm_different_spin_!=MPI_COMM_NULL );
     MPI_Request requestr;
     int src=(myspin_+1)%2;
     int dst=src;
@@ -606,7 +606,7 @@ int MGmol_MPI::exchangeDataSpin(float* localdata, float* remotedata, int count)c
     assert( myspin_==0 || myspin_==1 );
 
 #ifdef USE_MPI
-    assert( comm_different_spin_!=-1 );
+    assert( comm_different_spin_!=MPI_COMM_NULL );
     MPI_Request requestr;
     int src=(myspin_+1)%2;
     int dst=src;
@@ -913,7 +913,7 @@ int MGmol_MPI::allGather(int* sendbuf, int s_count, int* recvbuf, int recvbufsiz
 int MGmol_MPI::allGatherImages(vector<double>& sendbuf, vector<double>& recvbuf)
 {
 #ifdef USE_MPI
-    assert( comm_images_!=-1 );
+    assert( comm_images_!=MPI_COMM_NULL );
     assert( sendbuf.size()*nimages_==recvbuf.size() );
     int count=(int)sendbuf.size();
     int mpi_err=MPI_Allgather(&sendbuf[0], count, MPI_DOUBLE, 
@@ -931,7 +931,7 @@ int MGmol_MPI::allGatherImages(vector<double>& sendbuf, vector<double>& recvbuf)
 int MGmol_MPI::allGatherImages(vector<int>& sendbuf, vector<int>& recvbuf)
 {
 #ifdef USE_MPI
-    assert( comm_images_!=-1 );
+    assert( comm_images_!=MPI_COMM_NULL );
     if( sendbuf.size()*nimages_!=recvbuf.size() )
     {
         cerr<<"sendbuf.size()="<<sendbuf.size()
@@ -955,7 +955,7 @@ int MGmol_MPI::allGatherImages(vector<int>& sendbuf, vector<int>& recvbuf)
 int MGmol_MPI::allGatherImages(vector<short>& sendbuf, vector<short>& recvbuf)
 {
 #ifdef USE_MPI
-    assert( comm_images_!=-1 );
+    assert( comm_images_!=MPI_COMM_NULL );
     if( sendbuf.size()*nimages_!=recvbuf.size() )
     {
         cerr<<"sendbuf.size()="<<sendbuf.size()

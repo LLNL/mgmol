@@ -161,7 +161,7 @@ private:
 public:
     static Control* instance()
     {
-        assert( comm_global_!=-1 );
+        assert( comm_global_!=MPI_COMM_NULL );
         if( pinstance_==0 ){
             pinstance_ = new Control();
         }

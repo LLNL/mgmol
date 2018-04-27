@@ -1092,7 +1092,7 @@ void SparseDistMatrix<double>::sendRecvData()
   const int  first_task=ntasks_per_partition_*color;
   if( ntasks_per_partition_>1 )
   {
-      assert( partition_comm_->comm()!=-1 );
+      assert( partition_comm_->comm()!=MPI_COMM_NULL );
       MPI_Allreduce(&max_val_size, &newsize, 1, MPI_INT, MPI_MAX, partition_comm_->comm());
   }
   MPI_Request  rr=MPI_REQUEST_NULL;
@@ -1126,7 +1126,7 @@ void SparseDistMatrix<double>::sendRecvData()
   
   if( ntasks_per_partition_>1 )
   {
-    assert( partition_comm_->comm()!=-1 );
+    assert( partition_comm_->comm()!=MPI_COMM_NULL );
     if( recv )
     {
       MPI_Irecv(rbuf_val, newsize, MPI_DOUBLE, src_key, 0, partition_comm_->comm(), &rr);
@@ -1187,7 +1187,7 @@ void SparseDistMatrix<double>::sendRecvData()
       if( recv ){
         // receive
         //cout<<"PE: "<<mype_<<", receive data from PE "<<src_key<<endl;
-        assert( partition_comm_->comm()!=-1 );
+        assert( partition_comm_->comm()!=MPI_COMM_NULL );
         MPI_Irecv(rbuf_val, newsize, MPI_DOUBLE, src_key, tag, partition_comm_->comm(), &rr);
       }
 
@@ -1217,7 +1217,7 @@ void SparseDistMatrix<double>::sendRecvData()
            sbuf_val[size_index_and_val]  =-1.;
         }
 
-        assert( partition_comm_->comm()!=-1 );
+        assert( partition_comm_->comm()!=MPI_COMM_NULL );
         rc=MPI_Isend(sbuf_val, newsize,
                   MPI_DOUBLE, dest_key, tag, partition_comm_->comm(), psr);
         assert( rc==MPI_SUCCESS );
@@ -1271,7 +1271,7 @@ void SparseDistMatrix<float>::sendRecvData()
   const int  first_task=ntasks_per_partition_*color;
   if( ntasks_per_partition_>1 )
   {
-      assert( partition_comm_->comm()!=-1 );
+      assert( partition_comm_->comm()!=MPI_COMM_NULL );
       MPI_Allreduce(&max_val_size, &newsize, 1, MPI_INT, MPI_MAX, partition_comm_->comm());
   }
   MPI_Request  rr=MPI_REQUEST_NULL;
@@ -1305,7 +1305,7 @@ void SparseDistMatrix<float>::sendRecvData()
   
   if( ntasks_per_partition_>1 )
   {
-    assert( partition_comm_->comm()!=-1 );
+    assert( partition_comm_->comm()!=MPI_COMM_NULL );
     if( recv )
     {
       MPI_Irecv(rbuf_val, newsize, MPI_FLOAT, src_key, 0, partition_comm_->comm(), &rr);
@@ -1366,7 +1366,7 @@ void SparseDistMatrix<float>::sendRecvData()
       if( recv ){
         // receive
         //cout<<"PE: "<<mype_<<", receive data from PE "<<src_key<<endl;
-        assert( partition_comm_->comm()!=-1 );
+        assert( partition_comm_->comm()!=MPI_COMM_NULL );
         MPI_Irecv(rbuf_val, newsize, MPI_FLOAT, src_key, tag, partition_comm_->comm(), &rr);
       }
 
@@ -1396,7 +1396,7 @@ void SparseDistMatrix<float>::sendRecvData()
            sbuf_val[size_index_and_val]  =-1.;
         }
 
-        assert( partition_comm_->comm()!=-1 );
+        assert( partition_comm_->comm()!=MPI_COMM_NULL );
         rc=MPI_Isend(sbuf_val, newsize,
                   MPI_FLOAT, dest_key, tag, partition_comm_->comm(), psr);
         assert( rc==MPI_SUCCESS );
