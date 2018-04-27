@@ -1,42 +1,44 @@
 #MSUB -S /bin/tcsh
 #MSUB -l nodes=2:ppn=16,walltime=0:30:00
-#MSUB -a "04/12/03 02:00:00"
 #MSUB -d /p/lscratchd/jeanluc/MGmol/ShortSighted
-# #MSUB -q pdebug
-#MSUB -q pbatch@cab
+#MSUB -q pdebug
 #MSUB -A linfpmd
 
 setenv OMP_NUM_THREADS 1
 set ncpus = 25
 
-set maindir = $home/SVN/MGmol/mgmol/trunk
+set maindir = $home/GIT/mgmol
 
 set exe     = $maindir/bin/mgmol-pel
 
 set wrkdir  = `pwd`
 set datadir = $maindir/examples/ShortSighted
 
-set inputq = D144_R8_quench.in
-set input1 = D144_R8_restart.in
+set quench_cfg = mgmol_quench.cfg
+set md_cfg     = mgmol_md.cfg
 
-cp  $datadir/$input1 .
-cp  $datadir/$inputq .
+cp $datadir/$md_cfg .
+cp $datadir/$quench_cfg .
+cp $datadir/coords.in .
+cp $datadir/lrs.in .
 
 ln -s -f $maindir/potentials/pseudo.D_tm_pbe .
+ln -s -f $maindir/potentials/pseudo.D_ONCV_PBE_SG15 .
 
 #1st run
-srun -n $ncpus $exe $inputq
+srun -n $ncpus $exe -c $quench_cfg -i coords.in -l lrs.in
 
 #restart
 rm -f wave.out
-set restart_file=`ls -ld * | awk '/snapshot_1/ { print $9 }' | tail -n1`
+set restart_file=`ls -ld * | awk '/snapshot0_1/ { print $9 }' | tail -n1`
 ln -s -f $restart_file wave.out
 
-srun -n $ncpus $exe $input1
+srun -n $ncpus $exe -c $md_cfg
 
 #restart
 rm -f wave.out
-set restart_file=`ls -ld * | awk '/snapshot_1/ { print $9 }' | tail -n1`
+set restart_file=`ls -ld * | awk '/snapshot0_1/ { print $9 }' | tail -n1`
 ln -s -f $restart_file wave.out
 
-srun -n $ncpus $exe $input1
+srun -n $ncpus $exe -c $md_cfg
+

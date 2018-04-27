@@ -3,5 +3,4 @@ ln -s ../../potentials/pseudo.O_pbe
 ln -s ../../potentials/pseudo.C_pbe
 ln -s ../../potentials/pseudo.H_pbe
 
-srun -ppdebug -n32 ../../bin/mgmol_pel 2-pyridone.in
 srun -ppdebug -n32 /nfs/tmp2/jeanluc/SVN/MGmol/mgmol/branches/bin/mgmol-pel -c 2-pyridone.cfg -l lrs.in -i coords.in
