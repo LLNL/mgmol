@@ -134,9 +134,6 @@ SRC =   \
 MGMOL_SRC = \
        main.cc
 
-NEB_SRC = \
-       main_neb.cc
-
 ALL_SRC = $(SRC)
 ALL_SRC += $(MGMOL_SRC)
 
@@ -218,24 +215,6 @@ gprof:
 	CLIBS="$(NAT_COMPLIB)" \
 	CXXFLAGS="$(DEFS) $(INCLUDE) $(OPT_FLAGS) -pg" \
 	MAIN_SRC=$(MGMOL_SRC) EXENAME=mgmol-$(PLAT)
-
-neb_opt:
-	@$(MAKE) --no-print-directory COMMON_TARGETS \
-	$(BINDIR)/neb-$(PLAT) \
-	BUILD_SUFFIX=$(PLAT) OBJDIR=objs-$(PLAT) \
-	CXX="$(MPCC)" \
-	CLIBS="$(NAT_COMPLIB)" \
-	CXXFLAGS="$(DEFS) $(INCLUDE) $(OPT_FLAGS)" \
-	MAIN_SRC=$(NEB_SRC) EXENAME=neb-$(PLAT)
-
-neb_dbg:
-	@$(MAKE) --no-print-directory COMMON_TARGETS \
-	$(BINDIR)/neb-$(PLAT) \
-	BUILD_SUFFIX=$(PLAT) OBJDIR=objs-$(PLAT) \
-	CXX="$(MPCC)" \
-	CLIBS="$(NAT_COMPLIB)" \
-	CXXFLAGS="$(DEFS) $(INCLUDE) $(DEBUG_FLAGS)" \
-	MAIN_SRC=$(NEB_SRC) EXENAME=neb-$(PLAT)
 
 .SUFFIXES: .cc
 

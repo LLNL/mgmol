@@ -1,0 +1,17 @@
+We are planning to move to CMake in the near future. In the meantime, to build
+MGmol, you need to add the first 3 letters of the name of your local platform
+in install/Makefile.in. Then add a file install/MakeXXX.inc (where XXX are 3
+letters used to identify your platform in install/Makefile.in with the proper
+paths to the libraries needed. Look at the examples already there.
+Once this is done, simply type 'make' in the main directory
+or the 'src' directory. Type 'make debug' to build teh debug version.
+
+Third part libraries/packages required:
+--------------------------------------
+Scalapack
+HDF5
+Blas
+Lapack
+Boost
+MPI
+
