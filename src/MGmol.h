@@ -242,11 +242,6 @@ public:
     void global_exit(int i);
     void printEigAndOcc();
     
-    int readInput(const string input_file);
-    int readInput(const string input_file1,const string input_file2);
-
-    int readParameters(ifstream* tfile,
-                       bool& cell_relative);
     int readCoordinates(ifstream* tfile,
                         const bool cell_relative);
     int readCoordinates(const string filename,
@@ -348,7 +343,6 @@ public:
               LocGridOrbitals& work_orbitals,
               const double dd,
               const bool apply_flag);
-    int read_params1(ifstream* tfile);
     void adaptLR(const SpreadsAndCenters* spreadf,
              const OrbitalsTransform* ot);
     int update_masks();

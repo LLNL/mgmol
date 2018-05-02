@@ -6,31 +6,11 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-//
-//                  main.cc
-//
-//    Description:
-//        Real grid, finite difference, molecular dynamics program
-//        for with nonorthogonal localized orbitals.
-//
-//        Uses Mehrstellen operators, multigrid accelerations, and
-//        non-local pseudopotentials.
-//
-//     Includes LDA and PBE exchange and correlation functionals.
-//
-// Units:
-//   Potentials, eigenvalues and operators in Rydberg
-//   Energies in Hartree
-//
-// $Id$
 #include <cassert>
 #include <iostream>
 #include <vector>
 #include <iterator>
 using namespace std;
-
-
-#include <time.h>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -45,9 +25,7 @@ using namespace std;
 #endif      
 
 #include "Mesh.h"
-
 #include "DistMatrix.h"
-
 #include "MGmol.h"
 #include "MPIdata.h"
 #include "Control.h"
@@ -56,18 +34,12 @@ using namespace std;
 #include "MGmol_MPI.h"
 #include "tools.h"
 
-#ifdef ZOLTAN
-#include "zoltan.h"
-#endif
-
-
+#include <time.h>
 #include <fenv.h>
 #include <sys/cdefs.h>
 
-#ifdef HAVE_BOOST
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
-#endif
 
 //#include "MemTrack.h"
 
@@ -110,17 +82,11 @@ int main(int argc, char **argv)
 
     float total_spin = 0.;
     bool with_spin = false;
-    bool flag_boost=false;
-#ifdef HAVE_BOOST
+
     po::variables_map vm;
 
     // use configure file if it can be found
     //std::string config_filename("mgmol.cfg");
-    
-    //if( fileExists( config_filename.c_str() ) )
-    if( argc > 2 )
-    {
-    flag_boost=true;
     
     // read options from PE0 only
     if( onpe0 )
@@ -355,8 +321,6 @@ int main(int argc, char **argv)
         return 1;
     }    
     
-    } // read config file
-    
     MGmol_MPI::setup(MPI_COMM_WORLD, with_spin);
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     MPI_Comm global_comm=mmpi.commGlobal();
@@ -364,40 +328,15 @@ int main(int argc, char **argv)
     Control::setup(global_comm,with_spin,total_spin);
     Control& ct = *(Control::instance());
 
-    if(flag_boost)
-    {
-        ct.setOptions(vm);
-        ct.sync();
-    
-        int ret = ct.checkOptions();
-        if( ret<0 )return ret;
-    }
-    else
-    {
-        input_file=argv[1];
-    }
+    ct.setOptions(vm);
+    ct.sync();
+
+    int ret = ct.checkOptions();
+    if( ret<0 )return ret;
+
     mmpi.bcastGlobal(input_file);
     mmpi.bcastGlobal(lrs_filename);
-#else  // no boost
-    input_file=argv[1];
-
-    MGmol_MPI::setup(MPI_COMM_WORLD, with_spin);
-    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    MPI_Comm global_comm=mmpi.commGlobal();
-
-    Control::setup(global_comm,total_spin);
-    Control& ct = *(Control::instance());
-#endif
     
-#ifdef ZOLTAN
-    float version;
-    Zoltan_Initialize(argc, argv, &version);
-    if( onpe0 )
-    {
-        cout<<"uses ZOLTAN v"<<version<<endl;
-    }
-#endif
-
 #ifdef _OPENMP
     if(onpe0){
     cout << " " << omp_get_max_threads() << " thread"
@@ -431,28 +370,15 @@ int main(int argc, char **argv)
 
     MGmol* mgmol=new MGmol (global_comm,*MPIdata::sout);
     
-    if(flag_boost)
-    {
-        unsigned ngpts[3]={ct.ngpts_[0],ct.ngpts_[1],ct.ngpts_[2]};
-        double origin[3]={ct.ox_,ct.oy_,ct.oz_};
-        const double cell[3]={ct.lx_,ct.ly_,ct.lz_};
-        Mesh::setup(mmpi.commSpin(),ngpts,origin,cell,ct.lap_type);
+    unsigned ngpts[3]={ct.ngpts_[0],ct.ngpts_[1],ct.ngpts_[2]};
+    double origin[3]={ct.ox_,ct.oy_,ct.oz_};
+    const double cell[3]={ct.lx_,ct.ly_,ct.lz_};
+    Mesh::setup(mmpi.commSpin(),ngpts,origin,cell,ct.lap_type);
         
-        mgmol->setupFromInput(input_file);
-        mgmol->setupLRsFromInput(lrs_filename);
-        mgmol->setupConstraintsFromInput(constraints_filename);
+    mgmol->setupFromInput(input_file);
+    mgmol->setupLRsFromInput(lrs_filename);
+    mgmol->setupConstraintsFromInput(constraints_filename);
         
-    }
-    else
-    {
-        // Read input file
-        int info=mgmol->readInput(input_file);
-        if(info<0){
-            cerr<<"Incorrect input: info="<<info<<endl;
-            ct.global_exit(2);
-        }
-    }
-    
     ct.checkNLrange();
     
     LocGridOrbitals::setDotProduct(ct.dot_product_type);
