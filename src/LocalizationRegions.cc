@@ -1722,6 +1722,41 @@ short LocalizationRegions::getNumOldCenters()const {
 
 }
 
+double LocalizationRegions::computeMinDistBetweenLocalPairs()const
+{
+    Control& ct = *(Control::instance());
+    Mesh* mymesh = Mesh::instance();
+    const pb::Grid& mygrid  = mymesh->grid();
+
+    Vector3D  ll(mygrid.ll(0), mygrid.ll(1), mygrid.ll(2));
+
+    double distance=1.e18;
+
+    for(vector<LRData>::const_iterator it1 =local_regions_.begin();
+                                       it1!=local_regions_.end();
+                                       it1++)
+    for(vector<LRData>::const_iterator it2 =local_regions_.begin();
+                                       it2!=local_regions_.end();
+                                       it2++)
+    {
+        if(it1!=it2)
+        {
+            double d=(it1->center).minimage(it2->center, ll, ct.bcPoisson);
+            if(d<distance)distance=d;
+        }
+    }
+
+    if( distance<1.e-3 )
+    {
+        for(vector<LRData>::const_iterator it1 =local_regions_.begin();
+                                           it1!=local_regions_.end();
+                                           it1++)
+            cerr<<"center at "<<it1->center<<endl;
+    }
+
+    return distance;
+}
+
 //void LocalizationRegions::setOldCenters(const vector<double>& tau)
 //{
 //    assert(tau.size() == 3*local_ions_.size());

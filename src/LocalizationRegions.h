@@ -505,6 +505,8 @@ public:
     short getNumOldCenters()const;
 
     unsigned int getIterativeIndex()const { return iterative_index_; }
+
+    double computeMinDistBetweenLocalPairs()const;
 };
 
 #endif

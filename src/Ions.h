@@ -314,6 +314,12 @@ public:
     void updateForcesInteractingIons();
     void updateTaupInteractingIons();
     void rescaleVelocities(const double factor);
+
+/*!
+ * Calculate minimum distance between local pairs
+ */
+    double computeMinLocalSpacing()const;
+
 };
 
 

@@ -237,6 +237,14 @@ int MGmol::initial()
         
         if( n>0 )lrs_->setup();
     }
+
+    double dlrsmin=lrs_->computeMinDistBetweenLocalPairs();
+    if(dlrsmin<1.e-3)
+    {
+        cerr<<"ERROR: Min. distance between LR centers is "
+            <<dlrsmin<<"!!!"<<endl;
+    }
+
     // initialize and setup load balancing object
     // set number of iterations to 10.
     if(ct.load_balancing_alpha > 0.0)
@@ -371,6 +379,12 @@ int MGmol::initial()
     initKBR();
 
     ions_->setup();
+
+    double d=ions_->computeMinLocalSpacing();
+    if( d<1.e-3 )
+    {
+       cerr<"ERROR: min. distance between centers is smaller than 1.e-3!!!\n";
+    }
     
     // Initialize the nuclear local potential and the compensating charges  
     if( ct.verbose>0 )

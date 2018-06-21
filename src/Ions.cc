@@ -3688,3 +3688,28 @@ void Ions::rescaleVelocities(const double factor)
         ion++;
     }
 }
+
+double Ions::computeMinLocalSpacing()const
+{
+    Control& ct = *(Control::instance());
+    double distance=1.e6;
+
+    vector<Ion*>::const_iterator ion1=local_ions_.begin();
+    vector<Ion*>::const_iterator ion2=local_ions_.begin();
+    while(ion1!=local_ions_.end())
+    {
+        while(ion2!=local_ions_.end())
+        {
+            if(ion1!=ion2)
+            {
+                double d=(*ion1)->minimage(**ion2, lattice_, ct.bc);
+                if(d<distance)distance=d;
+            }
+            ion2++;
+        }
+        ion1++;
+    }
+
+    return distance;
+}
+
