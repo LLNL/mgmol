@@ -225,11 +225,13 @@ int MGmol::initial()
     if( ct.restart_info>2 )
     {
         string name = "ExtrapolatedFunction";
-        if( ct.verbose>0 )printWithTimeStamp("MGmol::initial(), read LRs from ExtrapolatedFunction database...",os_);
+        if( ct.verbose>0 )
+        printWithTimeStamp("read LRs from ExtrapolatedFunction database...",os_);
         int n=read_restart_lrs(*h5f_file_, name);
         if( n==0 )
         {
-            if( ct.verbose>0 )printWithTimeStamp("MGmol::initial(), read LRs from Function database...",os_);
+            if( ct.verbose>0 )
+            printWithTimeStamp("read LRs from Function database...",os_);
             name="Function";
             n=read_restart_lrs(*h5f_file_, name);
         }
@@ -243,6 +245,7 @@ int MGmol::initial()
     {
         cerr<<"ERROR: Min. distance between LR centers is "
             <<dlrsmin<<"!!!"<<endl;
+        return 1;
     }
 
     // initialize and setup load balancing object
