@@ -47,8 +47,6 @@ Timer  GridFuncInterface::finishExchangeNorthSouth_tm_("GridFunc::finishExNorthS
 Timer  GridFuncInterface::finishExchangeUpDown_tm_("GridFunc::finishExUpDown");
 Timer  GridFuncInterface::finishExchangeEastWest_tm_("GridFunc::finishExEastWest");
 
-template <typename T>GridFunc<T>*  GridFunc<T>::bc_func_=NULL;
-
 template <typename T>vector<T> GridFunc<T>::buf1_;
 template <typename T>vector<T> GridFunc<T>::buf2_;
 template <typename T>vector<T> GridFunc<T>::buf3_;

@@ -84,15 +84,7 @@ public:
         
         return *ls_;
     }
-    
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& setCholeskyL(
-        const dist_matrix::DistMatrix<DISTMATDTYPE>& ls)
-    {
-        assert( ls_!=NULL );
-        
-        *ls_=ls;
-    }
-    
+ 
     void setMatrix(const dist_matrix::DistMatrix<DISTMATDTYPE>& mat, const int orbitals_index);
     //void setMatrix(const DISTMATDTYPE* const val, const int orbitals_index);
 

@@ -41,16 +41,6 @@ void memmon_print_usage();
 
 namespace dist_matrix{
  
-template<class T> Timer SparseDistMatrix<T>::pSumToDistMatrix_tm_("SparseDistMatrix::pSumToDistMatrix");
-template<class T> Timer SparseDistMatrix<T>::pSumSendRecv_tm_("SparseDistMatrix::pSumSendRecv");
-template<class T> Timer SparseDistMatrix<T>::assign_tm_("SparseDistMatrix::assign");
-template<class T> Timer SparseDistMatrix<T>::maptoarray_tm_("SparseDistMatrix::maptoarray");
-template<class T> Timer SparseDistMatrix<T>::consolidateArray_tm_("SparseDistMatrix::consolidateArray");
-
-template<class T> unsigned short SparseDistMatrix<T>::consolidation_number_=8;
-template<class T> int SparseDistMatrix<T>::sparse_distmatrix_nb_partitions_=128;
-template<class T> RemoteTasksDistMatrix<T>** SparseDistMatrix<T>::def_rtasks_DistMatrix_ptr_=0;
-
 const unsigned short reserve_size=8;
 
 template <class T>
@@ -290,7 +280,7 @@ void SparseDistMatrix<double>::maptoarray()
       vector<double>& index_and_val_pe(index_and_val_[pe]);
       index_and_val_pe.clear();
       const map<int,double>& ref_map_val(map_val_[pe]);
-      if( ref_map_val.size()>1 );
+      if( ref_map_val.size()>1 )
          index_and_val_pe.reserve(reserve_size);
       for(map<int,double>::const_iterator p =ref_map_val.begin();
                                           p!=ref_map_val.end();
@@ -315,7 +305,7 @@ void SparseDistMatrix<float>::maptoarray()
       vector<float>& index_and_val_pe(index_and_val_[pe]);
       index_and_val_pe.clear();
       const map<int,float>& ref_map_val(map_val_[pe]);
-      if( ref_map_val.size()>1 );
+      if( ref_map_val.size()>1 )
          index_and_val_pe.reserve(reserve_size);
       for(map<int,float>::const_iterator p =ref_map_val.begin();
                                           p!=ref_map_val.end();

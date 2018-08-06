@@ -168,6 +168,26 @@ public:
     }
 };
 
+template <class T>
+int SparseDistMatrix<T>::sparse_distmatrix_nb_partitions_=128;
+
+template<class T>
+unsigned short SparseDistMatrix<T>::consolidation_number_=8;
+
+template<class T>
+RemoteTasksDistMatrix<T>** SparseDistMatrix<T>::def_rtasks_DistMatrix_ptr_=0;
+
+template<class T>
+Timer SparseDistMatrix<T>::pSumToDistMatrix_tm_("SparseDistMatrix::pSumToDistMatrix");
+template<class T>
+Timer SparseDistMatrix<T>::pSumSendRecv_tm_("SparseDistMatrix::pSumSendRecv");
+template<class T>
+Timer SparseDistMatrix<T>::assign_tm_("SparseDistMatrix::assign");
+template<class T>
+Timer SparseDistMatrix<T>::maptoarray_tm_("SparseDistMatrix::maptoarray");
+template<class T>
+Timer SparseDistMatrix<T>::consolidateArray_tm_("SparseDistMatrix::consolidateArray");
+
 } // namespace
 
 #endif

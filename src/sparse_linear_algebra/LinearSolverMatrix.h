@@ -169,4 +169,19 @@ void Usolve(float* const x, const std::vector<T>& diag)const; // In-place triang
 
 };
 
+template <class T>
+Timer LinearSolverMatrix<T>::matrix_insert_tm_(
+    "LinearSolverMatrix::insertEntry");
+
+template <class T>
+Timer LinearSolverMatrix<T>::matrix_init_tm_(
+    "LinearSolverMatrix::initialize");
+
+template <class T>
+Timer LinearSolverMatrix<T>::matrix_initsq_tm_(
+    "LinearSolverMatrix::initialize_sq");
+
+template <class T>Timer LinearSolverMatrix<T>::matvec_tm_(
+    "LinearSolverMatrix::matvec");
+
 #endif  

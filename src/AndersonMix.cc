@@ -33,7 +33,6 @@ static const double min_theta=-3.;
 
 
 //#define DEBUG 0
-template<class T> Timer AndersonMix<T>::update_tm_("AndersonMix<T>::update");
 
 template <class T>
 AndersonMix<T>::AndersonMix(const int m, const double beta, T& x, const bool ortho_flag):

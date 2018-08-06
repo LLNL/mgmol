@@ -86,6 +86,7 @@ public:
     DistMatrixWithSparseComponent& operator=(const DistMatrix<T>& mat)
     {
         DistMatrix<T>::operator=(mat);
+        return *this;
     }
     
 };

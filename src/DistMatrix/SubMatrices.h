@@ -105,6 +105,13 @@ class SubMatrices
     SubMatrices<T>& operator=(const SubMatrices<T>&);
 };
 
+template<class T>
+Timer SubMatrices<T>::gather_tm_("SubMatrices<T>::gather");
+template<class T>
+Timer SubMatrices<T>::gather_comp_tm_("SubMatrices<T>::gather_comp");
+template<class T>
+Timer SubMatrices<T>::gather_comm_tm_("SubMatrices<T>::gather_comm");
+
 } // namespace
 
 #endif

@@ -226,15 +226,6 @@ extern "C"
 
 namespace dist_matrix{
  
-template<class T> Timer DistMatrix<T>::matgather_tm_("DistMatrix::matgather");
-template<class T> Timer DistMatrix<T>::pdgemr2d_tm_("DistMatrix::pdgemr2d");
-template<class T> Timer DistMatrix<T>::potri_tm_("DistMatrix::potri");
-template<class T> Timer DistMatrix<T>::potrf_tm_("DistMatrix::potrf");
-template<class T> Timer DistMatrix<T>::trtri_tm_("DistMatrix::trtri");
-
-template<class T> int DistMatrix<T>::distmatrix_def_block_size_ = 32;
-template<class T> BlacsContext* DistMatrix<T>::default_bc_ = 0;
-
 #ifndef SCALAPACK
 int numroc(int* a, int* b, int* c, int* d, int* e)
 {

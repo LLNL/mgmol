@@ -57,4 +57,6 @@ public:
     void restart(void);
 };
 
+template<class T> Timer AndersonMix<T>::update_tm_("AndersonMix<T>::update");
+
 #endif

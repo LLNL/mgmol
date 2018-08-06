@@ -250,4 +250,36 @@ public:
     static void printTimers(std::ostream& os);
 };
 
+template <typename T>
+std::vector<T*>       BlockVector<T>::class_storage_;
+template <typename T>
+std::vector<short> BlockVector<T>::allocated_;
+template <typename T>
+short         BlockVector<T>::max_alloc_instances_=7;
+template <typename T>
+pb::GridFuncVector<T>* BlockVector<T>::data_wghosts_=0;
+
+template <typename T>
+int BlockVector<T>::size_storage_=0;
+template <typename T>
+int BlockVector<T>::numel_=-1;
+template <typename T>
+int BlockVector<T>::locnumel_=-1;
+template <typename T>
+short BlockVector<T>::subdivx_=-1;
+template <typename T>
+short BlockVector<T>::n_instances_=0;
+template <typename T>
+int BlockVector<T>::allocated_size_storage_=0;
+template <typename T>
+float BlockVector<T>::overallocate_factor_=0.; // should be explicitly set to value >= 1
+
+template <typename T>
+int BlockVector<T>::ld_=0;
+
+template <typename T>
+Timer BlockVector<T>::set_data_tm_("BlockVector::set_data_wghosts");
+
+template <typename T>
+Timer BlockVector<T>::trade_data_tm_("BlockVector::trade_data");
 #endif

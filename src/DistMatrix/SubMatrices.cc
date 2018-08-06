@@ -25,10 +25,6 @@ typedef unsigned int type_displ;
 
 namespace dist_matrix{
  
-template<class T> Timer SubMatrices<T>::gather_tm_("SubMatrices<T>::gather");
-template<class T> Timer SubMatrices<T>::gather_comp_tm_("SubMatrices<T>::gather_comp");
-template<class T> Timer SubMatrices<T>::gather_comm_tm_("SubMatrices<T>::gather_comm");
-
 // constructor based on vectors of indexes corresponding
 // to "local" matrix elements
 template <class T>

@@ -295,6 +295,9 @@ double norm(const GridFunc<T>& A)
   return A.norm2();
 }
 
+template <typename T>
+GridFunc<T>* GridFunc<T>::bc_func_=NULL;
+
 } // namespace pb
 
 #endif

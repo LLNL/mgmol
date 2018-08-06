@@ -2962,7 +2962,7 @@ int whatisopen(hid_t fid)
 
     if (cnt <= 0) return cnt;
 
-    if(cnt>1)printf("HDF5 file: %d object(s) open\n", cnt);
+    if(cnt>1)cout<<"HDF5 file: "<<cnt<<" object(s) open\n";
 
     //objs = malloc(cnt * sizeof(hid_t));
     hid_t* objs = new hid_t[cnt];

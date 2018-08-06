@@ -15,13 +15,6 @@ namespace pb{
 using namespace std;
 
 template <class T>
-const T DielFunc<T>::e0def_	  =78.36;
-template <class T>
-const T DielFunc<T>::rho0def_   =0.0004;
-template <class T>
-const T DielFunc<T>::drho0def_  =1.3;
-
-template <class T>
 DielFunc<T>& DielFunc<T>::operator=(const T val)
 {
     const int N=GridFunc<T>::grid_.sizeg();

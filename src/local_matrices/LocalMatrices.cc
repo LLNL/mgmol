@@ -12,10 +12,6 @@
 #include "LocalMatrices.h"
 #include "blas3_c.h"
 
-template <class T>Timer LocalMatrices<T>::fill_dist_matrix_tm_("LocalMatrices::fill_dist_matrix");
-
-template <class T>dist_matrix::RemoteTasksDistMatrix<DISTMATDTYPE>* LocalMatrices<T>::remote_tasks_DistMatrix_=0;
-template <class T>short LocalMatrices<T>::sparse_distmatrix_nb_tasks_per_partitions_=256;
 
 template <class T>
 LocalMatrices<T>::LocalMatrices(const short subdiv, const int m, const int n):

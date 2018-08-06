@@ -322,10 +322,13 @@ double ProjectedMatricesSparse::dotProductWithDM(const SquareLocalMatrices<MATDT
 
 double ProjectedMatricesSparse::dotProductSimple(const SquareLocalMatrices<MATDTYPE>& local_product)
 {
-   std::cerr<<"ERROR: ProjectedMatricesSparse::dotProductSimple() not implemented!!!"<<std::endl;
+    std::cerr<<"ERROR: ProjectedMatricesSparse::dotProductSimple() \
+               not implemented!!!"<<std::endl;
 
-   MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-   MPI_Abort(mmpi.commSameSpin(),0);
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    MPI_Abort(mmpi.commSameSpin(),0);
+
+    return -1.;
 }
 
 void ProjectedMatricesSparse::printMatrices(ostream& os)const
