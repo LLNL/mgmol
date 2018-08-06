@@ -172,7 +172,7 @@ double SparseRow::pnorm(const int p)
    {
       for(int k=0; k<(int)vals_.size(); k++)
       {
-         nrm += pow(abs(vals_[k]),(double)p);
+         nrm += pow(fabs(vals_[k]),(double)p);
       }
       double xp = 1/(double)p;
       nrm = pow(nrm,xp);
@@ -181,7 +181,7 @@ double SparseRow::pnorm(const int p)
    {
       for(int k=0; k<(int)vals_.size(); k++)
       {
-         double aval = abs(vals_[k]);
+         double aval = fabs(vals_[k]);
          nrm = nrm > aval ? nrm : aval;
       }         
    }
