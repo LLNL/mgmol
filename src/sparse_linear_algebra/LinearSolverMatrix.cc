@@ -418,10 +418,9 @@ void LinearSolverMatrix<T>::matvec(const double* const v, double *w )const
        const int stop = p_[i+1];
        std::vector<int>::const_iterator it = getColumnIterator(start);
        std::vector<int>::const_iterator end = getColumnIterator(stop);
-       int k = start;
        const double fact = v[i];       
 
-       for(it, k; it != end; ++it, k++)
+       for(int k=start; it != end; ++it, k++)
        {
            w[*it] += x_[k] * fact;
        }
@@ -446,10 +445,9 @@ void LinearSolverMatrix<T>::matvec(const float* const v, float *w )const
        const int stop = p_[i+1];
        std::vector<int>::const_iterator it = getColumnIterator(start);
        std::vector<int>::const_iterator end = getColumnIterator(stop);
-       int k = start;
        const double fact = (double)v[i];       
 
-       for(it, k; it != end; ++it, k++)
+       for(int k=start; it != end; ++it, k++)
        {
            z[*it] += ((double)x_[k] * fact);
        }
@@ -477,10 +475,9 @@ void LinearSolverMatrix<T>::matvec(const double* const v, float *w )const
        const int stop = p_[i+1];
        std::vector<int>::const_iterator it = getColumnIterator(start);
        std::vector<int>::const_iterator end = getColumnIterator(stop);
-       int k = start;
        const double fact = v[i];       
 
-       for(it, k; it != end; ++it, k++)
+       for(int k=start; it != end; ++it, k++)
        {
            w[*it] += (float)(x_[k] * fact);
        }
@@ -503,10 +500,9 @@ void LinearSolverMatrix<T>::matvec(const float* const v, double *w )const
        const int stop = p_[i+1];
        std::vector<int>::const_iterator it = getColumnIterator(start);
        std::vector<int>::const_iterator end = getColumnIterator(stop);
-       int k = start;
        const double fact = (double)v[i];       
 
-       for(it, k; it != end; ++it, k++)
+       for(int k=start; it != end; ++it, k++)
        {
            w[*it] += ((double)x_[k] * fact);
        }
@@ -544,7 +540,7 @@ void LinearSolverMatrix<T>::Lsolve(double* const x)const
        const_TvecIterator dptr = x_.begin()+k1;
 
        const double fact = x[i];
-       for(row, dptr; row != end; ++row, ++dptr) 
+       for(; row != end; ++row, ++dptr) 
          x[*row] -= (*dptr) * fact; 
    }
    
@@ -567,7 +563,7 @@ void LinearSolverMatrix<T>::Lsolve(float* const x)const
        const_TvecIterator dptr = x_.begin()+k1;
 
        const double fact = z[i];
-       for(row, dptr; row != end; ++row, ++dptr) 
+       for(; row != end; ++row, ++dptr) 
          z[*row] -= ((double)(*dptr) * fact); 
    }
     for(int i=0; i<n_; i++)
@@ -590,7 +586,7 @@ void LinearSolverMatrix<T>::Usolve(double* const x, const std::vector<T>& diag)c
        const_TvecIterator dptr = x_.begin()+k1;
 
        const double fact = x[i];
-       for(row, dptr; row != end; ++row, ++dptr) 
+       for(; row != end; ++row, ++dptr) 
          x[*row] -= (*dptr) * fact; 
    }
    
@@ -616,7 +612,7 @@ void LinearSolverMatrix<T>::Usolve(float* const x, const std::vector<T>& diag)co
        const_TvecIterator dptr = x_.begin()+k1;
 
        const double fact = z[i];
-       for(row, dptr; row != end; ++row, ++dptr) 
+       for(; row != end; ++row, ++dptr) 
          z[*row] -= ((double)(*dptr) * fact); 
    }
     for(int i=0; i<n_; i++)

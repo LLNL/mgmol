@@ -1712,8 +1712,6 @@ void LocalizationRegions::setupOldCenters(HDFrestart& h5_file)
             center++;
         }    
     }
-    
-    Control& ct = *(Control::instance());
 }
 
 short LocalizationRegions::getNumOldCenters()const {

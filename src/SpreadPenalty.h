@@ -47,8 +47,6 @@ public:
     {
         assert( spread2_target_>=0. );
         assert( alpha_>=0. );
-        
-        Control& ct = *(Control::instance());
     }
 
     //add penalty functional contribution to residual

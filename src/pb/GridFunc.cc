@@ -1080,21 +1080,25 @@ void GridFunc<T>::print(ostream& tfile)
         MGmol_MPI& mmpi = *(MGmol_MPI::instance());
         int     mpirc;
         
-        for(int i=0;i<mype_env().n_mpi_tasks();i++){
-            
+        for(int i=0;i<mype_env().n_mpi_tasks();i++)
+        {
             if(i>0)
+            {
             if(i==mytask_){
                 mpirc=mmpi.send(uu_, grid_.sizeg(), 0);
                 mpirc=mmpi.send(start, 3, 0);
                 cout<<" Print GridFunc<T> from task "<<mytask_<<endl;
-            }else if(0==mytask_){
-                mpirc=mmpi.recv(work, grid_.sizeg(), i);
-                if(mpirc!=MPI_SUCCESS)
-                    cout<<"print: MPI_Recv work failed!!!"<<endl;
-                mpirc=mmpi.recv(start, 3, i);                
-                if(mpirc!=MPI_SUCCESS)
-                    cout<<"print: MPI_Recv start[] failed!!!"<<endl;
-                vv=work;
+            }else{
+                if(0==mytask_){
+                    mpirc=mmpi.recv(work, grid_.sizeg(), i);
+                    if(mpirc!=MPI_SUCCESS)
+                        cout<<"print: MPI_Recv work failed!!!"<<endl;
+                    mpirc=mmpi.recv(start, 3, i);                
+                    if(mpirc!=MPI_SUCCESS)
+                        cout<<"print: MPI_Recv start[] failed!!!"<<endl;
+                    vv=work;
+                }
+            }
             }
 #endif
             if(mype_env().onpe0()){
@@ -1222,6 +1226,7 @@ void GridFunc<T>::global_xyz_task0(T *global_func)
         int ipe=mype_env().xyz2task(i,j,k);
 
         if(ipe>0)
+        {
         if(mype_env().onpe0()){
             mpirc=mmpi.recv(work, grid_.sizeg(), ipe);
             if(mpirc!=MPI_SUCCESS)
@@ -1233,6 +1238,7 @@ void GridFunc<T>::global_xyz_task0(T *global_func)
                         dim(2)*sizeof(T));
         }else if(mytask_==ipe){
             mpirc=mmpi.send(uu_, grid_.sizeg(), 0);
+        }
         }
         
         MPI_Barrier( mype_env().comm() );        
@@ -1286,10 +1292,12 @@ void GridFunc<T>::write_global_xyz(ofstream&  tfile)
         const int ipe=mype_env().xyz2task(i,j,k);
 
         if(ipe>0)
-        if(mytask_==0){
+        {
+        if(mytask_==0)
+        {
             mpirc=mmpi.recv(work, grid_.sizeg(), ipe);
             if(mpirc!=MPI_SUCCESS)
-                    cout<<"GridFunc<T>::write_global_xyz, MPI_Recv work failed!!!"<<endl;
+                cout<<"GridFunc<T>::write_global_xyz, MPI_Recv work failed!!!"<<endl;
             for(int ii=0;ii<ldim0;ii++)
             for(int jj=0;jj<ldim1;jj++)
                  memcpy(global_func+(istart+ii)*gincx+(jstart+jj)*gincy+kstart,
@@ -1299,6 +1307,7 @@ void GridFunc<T>::write_global_xyz(ofstream&  tfile)
             mpirc=mmpi.send(uu_, grid_.sizeg(), 0);
             if(mpirc!=MPI_SUCCESS)
                     cout<<"GridFunc<T>::write_global_xyz, MPI_Send work failed!!!"<<endl;
+        }
         }
         
         MPI_Barrier( mype_env().comm() );        

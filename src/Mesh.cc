@@ -75,8 +75,6 @@ void Mesh::subdivGridx(const int nlevels)
         break;
     }
    
-    Control& ct = *(Control::instance());
-
     loc_numpt_=numpt_/subdivx_;
 }
 

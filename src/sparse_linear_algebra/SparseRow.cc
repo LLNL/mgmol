@@ -153,9 +153,8 @@ double SparseRow::dotVec(const double* x)
     //TODO: Needs an assert on vector length
 
     double val = 0.;
-    int k=0;
     std::vector<int>::const_iterator it = cols_.begin();
-    for(it, k; it != cols_.end(); ++it, k++)
+    for(int k=0; it != cols_.end(); ++it, k++)
     {
        val += vals_[k] * x[*it];
     }

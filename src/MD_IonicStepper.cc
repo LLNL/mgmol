@@ -121,6 +121,7 @@ int MD_IonicStepper::init(HDFrestart& h5f_file)
     int    ione=1;
     double one=1.;
     if ( dt_ > 0.0 )
+    {
     if( !h5f_file.olderVersion())
     {
         if( onpe0 )
@@ -151,6 +152,7 @@ int MD_IonicStepper::init(HDFrestart& h5f_file)
         dscal(&size_tau, &minus, &taum_[0], &ione);
         
         daxpy(&size_tau, &one, &tau0_[0], &ione, &taum_[0], &ione);
+    }
     }
 
     return 0;

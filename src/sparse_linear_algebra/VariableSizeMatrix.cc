@@ -930,10 +930,9 @@ void VariableSizeMatrix<T>::gemv(const double alpha, const std::vector<double>& 
    assert((int)y.size() == (int)x.size());
    assert((int)y.size() == n_);
    
-   int k=0;
    const_TvecIterator row=data_.begin();
    
-   for(row, k; row!=data_.end(); row++, k++)
+   for(int k=0; row!=data_.end(); row++, k++)
    {
       double val = (*row)->dotVec(x);
       y[k] = beta*y[k] + alpha*val;

@@ -386,7 +386,7 @@ int MGmol::initial()
     double d=ions_->computeMinLocalSpacing();
     if( d<1.e-3 )
     {
-       cerr<"ERROR: min. distance between centers is smaller than 1.e-3!!!\n";
+       cerr<<"ERROR: min. distance between centers is smaller than 1.e-3!!!\n";
     }
     
     // Initialize the nuclear local potential and the compensating charges  

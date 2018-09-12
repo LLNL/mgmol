@@ -376,7 +376,7 @@ void MultipoleExpansion::setup(RHODTYPE* rho)
 {
     get_monopole(rho);
 
-    if( !fabs(qtotal_)>0.1 )
+    if( !( fabs(qtotal_)>0.1 ) )
         get_dipole(rho);
 }
 //template <typename T>

@@ -163,8 +163,6 @@ public:
         
         max_displ_=0.;
       
-        Control& ct = *(Control::instance());
-
         K_ = 1;
         if( K_==1 ) K_++;
 

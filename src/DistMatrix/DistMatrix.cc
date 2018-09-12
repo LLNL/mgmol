@@ -1713,7 +1713,7 @@ double DistMatrix<float>::norm(char ty)
 #endif
   }
 #ifdef USE_MPI
-  MPI_Bcast(&norm_val, 1, MPI_DOUBLE, 0, comm_global_);
+  MPI_Bcast(&norm_val, 1, MPI_FLOAT, 0, comm_global_);
 #endif
   return norm_val;
 }

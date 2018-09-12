@@ -152,7 +152,6 @@ LocGridOrbitals::LocGridOrbitals(const LocGridOrbitals &A, const bool copy_data)
     local_cluster_(A.local_cluster_)
 {
     //if(onpe0)cout<<"call LocGridOrbitals(const LocGridOrbitals &A, const bool copy_data)"<<endl;
-    Control& ct = *(Control::instance());
     
     assert( A.chromatic_number_>=0 );
     assert( A.proj_matrices_!=0 );
@@ -1200,12 +1199,21 @@ int LocGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, string name)
     ORBDTYPE* buffer=new ORBDTYPE[block[0]*block[1]*block[2]];
 
     if( onpe0 && ct.verbose>2 )
-    if( h5f_file.gatherDataX() )
-        (*MPIdata::sout)<<"LocGridOrbitals::read_func_hdf5(): Read wave functions from "
-            <<grid_.mype_env().n_mpi_task(1)*grid_.mype_env().n_mpi_task(2)
-            <<" PEs"<<endl;
-    else
-        (*MPIdata::sout)<<"LocGridOrbitals::read_func_hdf5(): Read wave functions "<<name<<" from all tasks..."<<endl;
+    {
+        if( h5f_file.gatherDataX() )
+        {
+            (*MPIdata::sout)
+                <<"LocGridOrbitals::read_func_hdf5(): Read wave functions from "
+                <<grid_.mype_env().n_mpi_task(1)*grid_.mype_env().n_mpi_task(2)
+                <<" PEs"<<endl;
+        }
+        else
+        {
+            (*MPIdata::sout)
+                <<"LocGridOrbitals::read_func_hdf5(): Read wave functions "
+                <<name<<" from all tasks..."<<endl;
+        }
+    }
 
     vector<set<int> > filled; // set of functions already filled by data
     filled.resize(subdivx_);
