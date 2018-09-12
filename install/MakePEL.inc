@@ -1,4 +1,7 @@
-# $Id:$
+#Before compiling, load the following modules:
+#module load intel
+#module load hdf5-parallel
+#module load mkl
 
 #platform
 PLAT = pel
@@ -7,13 +10,12 @@ PLAT = pel
 #Intel compiler
 ##############################################
 
-MPCC    = /usr/local/bin/mpiicpc-14.0.174
-CXX     = /usr/local/bin/icpc-14.0.174
+MPCC    = mpic++
+CXX     = mpic++
 OPT_FLAGS = -O2 -DNDEBUG -Zp16 -g -Wunused-function -Wunused-variable -fp-model precise -fp-model source
-BLASDIR = /opt/intel-14.0/mkl
+BLASDIR = $(MKLROOT)
 BLASLIBDIR = $(BLASDIR)/lib/intel64
-HDF_DIR = /usr/local/tools/hdf5-intel-parallel-1.8.8
-HDF_DIR_SERIAL = /usr/local/tools/hdf5-intel-serial-1.8.8
+HDF_DIR = $(HDF5)
 LAPACKLIB  = -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core
 COMMONLIBS = -lboost_program_options
 CNAME = icpc
@@ -36,7 +38,7 @@ GCC_OPT_FLAGS   =  -O2 -DNDEBUG -g
 
 ##############################################
 
-NAT_COMPLIB = -lifcore -openmp
+NAT_COMPLIB = -lifcore -qopenmp
 GCC_COMPLIB = -Wl,-rpath,/usr/local/tools/ifort-14.0.174/lib -fopenmp
 
 DEBUG_FLAGS = -O0 -g -Wuninitialized -ftrapuv
@@ -44,61 +46,37 @@ EXTRACXXFLAGS =
 
 FFLAGS= -O -DNDEBUG
 
-BOOST_DIR      = /usr/local/tools/boost-nompi
+#BOOST_DIR      = /usr/local/tools/boost-nompi
 
 LIBXC_DIR      = /usr/gapps/mgmol/Libxc/1.2.0/build
 
-ARPACK_DIR     = $(HOME)/ARPACK
+ARPACK_DIR     = 
 
 MACHINE_FLAGS = -DADD_ -DHAVE_BOOST -DUSE_CNR
 
-INCLUDE = -I/usr/local/include -I$(HDF_DIR)/include \
-	-I$(BLASDIR)/include \
-	-I$(BOOST_DIR)/include \
-	-I$(LIBXC_DIR)/include
+INCLUDE = -I$(HDF_DIR)/include \
+	-I$(BLASDIR)/include
           
 MPI_LIB =
 
 HDF_LIB = $(HDF_DIR)/lib/libhdf5_hl.a $(HDF_DIR)/lib/libhdf5.a -lz
 HDF_LIB_SERIAL = $(HDF_DIR_SERIAL)/lib/libhdf5.a -lz
 
-ARPACK_LIB=$(ARPACK_DIR)/lib/parpack_$(PLAT).a $(ARPACK_DIR)/lib/libarpack_$(PLAT).a
 ARPACK_LIB=
-
-#
-#  BLACS setup.  All version need the debug level (0 or 1),
-#  and the directory where the BLACS libraries are
-#
-BLACSDBGLVL   = 0
-BLACSdir      = /usr/gapps/mgmol/lib
-
-#
-#  MPI setup; uncomment and tailor to your system if using MPIBLACS
-#  Will need to comment out the default native BLACS setup below below
-#
-#USEMPI        = -DUsingMpiBlacs
-BLACSCINIT    = $(BLACSdir)/blacsCinit_MPI-$(PLAT)-$(BLACSDBGLVL).a
-BLACSLIB      = $(BLACSdir)/blacs_MPI-$(PLAT)-$(BLACSDBGLVL).a
-
-#
-#  system primitive BLACS setup, comment out if using MPI
-#
-CBLACSLIB     = $(BLACSCINIT) $(BLACSLIB) $(BLACSCINIT)
 
 #
 #  The name of the libraries to be linked to
 #
-#SCALAPACKLIB  = /usr/gapps/mgmol/lib/scalapack1.8_$(PLAT).a
-SCALAPACKLIB  = /opt/intel-14.0/mkl/lib/intel64/libmkl_scalapack_lp64.a \
-                /opt/intel-14.0/mkl/lib/intel64/libmkl_blacs_lp64.a 
+SCALAPACKLIB  = $(MKLROOT)/lib/intel64/libmkl_scalapack_lp64.a \
+                $(MKLROOT)/lib/intel64/libmkl_blacs_intelmpi_lp64.a 
 
-LD_LIBRARY_PATH = -L$(BOOST_DIR)/lib -L$(BLASLIBDIR) -Wl,-rpath,$(BLASLIBDIR)
+LD_LIBRARY_PATH = -L$(BLASLIBDIR) -Wl,-rpath,$(BLASLIBDIR)
 
 #mixed precision lib
 MPBLASLIB =
 
-LIBS= $(LIBDISTMATRIX) $(LAPACKLIB) 
+LIBS= $(LAPACKLIB) 
 
-PLIBS = $(SCALAPACKLIB) $(ARPACK_LIB) $(CBLACSLIB) $(LAPACKLIB) $(HDF_LIB)  
+PLIBS = $(SCALAPACKLIB) $(HDF_LIB)
 
 DEFS =
