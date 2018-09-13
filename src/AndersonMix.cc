@@ -252,23 +252,23 @@ void AndersonMix<T>::update(T& f, T& work)
         }
 //#endif
     }
-    
-    
+
     // update x_
-    
     if(m_>0)
-        work.assign(x_);
-    // compute x bar and save it into x_
-    for(int j=0;j<mm_;j++)
-    {      
-        const double rhs=theta_[j];
-        
-        x_.axpy(-1.*rhs,work);
-        x_.axpy(rhs,*xi_[j]);
-    }
-    // update xi_ for next step
-    if( m_>0 )
     {
+        //save current x_
+        work.assign(x_);
+
+        // compute x bar and save it into x_
+        double factor=1.;
+        for(int j=0;j<mm_;j++)factor-=theta_[j];
+        if(mm_>0)x_.scal(factor);
+
+        for(int j=0;j<mm_;j++)
+        {
+            x_.axpy(theta_[j],*xi_[j]);
+        }
+        // update xi_ for next step
         // restart
         T* tx=xi_[m_-1];
         for(int j=m_-1;j>0;j--)
@@ -276,27 +276,26 @@ void AndersonMix<T>::update(T& f, T& work)
             xi_[j]=xi_[j-1];
         }
         xi_[0]=tx;
-    }
-    // keep x_ in memory
-    if(m_>0)
+        // keep old x_ in memory
         xi_[0]->assign(work);
-    
-    
+    }
 
     // compute f bar
     if(m_>0)
-        work.assign(f);
-    for(int j=0;j<mm_;j++)
-    {      
-        const double rhs=theta_[j];
-        f.axpy(-1.*rhs,work);
-        f.axpy(rhs,*fi_[j]);
-    }
-
-    
-    // update fi_ for next step
-    if( m_>0 )
     {
+        //save current f
+        work.assign(f);
+
+        double factor=1.;
+        for(int j=0;j<mm_;j++)factor-=theta_[j];
+        if(mm_>0)f.scal(factor);
+
+        for(int j=0;j<mm_;j++)
+        {
+            f.axpy(theta_[j],*fi_[j]);
+        }
+
+        // update fi_ for next step
         assert( fi_[m_-1]!=0 );
         T* tf=fi_[m_-1];
         for(int j=m_-1;j>0;j--)
