@@ -44,33 +44,18 @@ short DataDistribution::count_computeMaxDataSize_=0;
 short DataDistribution::maxcount_computeMaxDataSize_=500;
 
 /* Constructor */
-DataDistribution::DataDistribution(const std::string name, const int max_steps[3], const pb::PEenv& myPEenv, const double domain[]):
-    name_(name),
-    spread_radius_(0.0),
-    mypeenv_(myPEenv)
+DataDistribution::DataDistribution(
+    const std::string name, const int max_steps[3],
+    const pb::PEenv& myPEenv, const double domain[]):
+        name_(name),
+        spread_radius_(0.0),
+        mypeenv_(myPEenv)
 {      
-    assert( domain[0]>0. );
-    assert( domain[1]>0. );
-    assert( domain[2]>0. );   
-    
-    /* get processor distribution */
-    nproc_xyz_[0] = myPEenv.n_mpi_task(0);     
-    nproc_xyz_[1] = myPEenv.n_mpi_task(1);     
-    nproc_xyz_[2] = myPEenv.n_mpi_task(2);  
-    
-    /* get domain info */
-    domain_[0] = domain[0];   
-    domain_[1] = domain[1];   
-    domain_[2] = domain[2];       
-
     /* get cartesian communicator */
     cart_comm_ = myPEenv.cart_comm();
 
-    /* compute left and right steps in xyz directions */
-    computeNumSteps(max_steps);
+    dir_reduce_ = new DirectionalReduce(myPEenv.cart_comm(), max_steps);
   
-//    assert(spread_radius_ > 0.0);
-    
    rbuf_nrows_ptr_ = NULL;
    rbuf_start_double_pos_ptr_ = NULL;
    rbuf_nnzrow_ptr_ = NULL;    
@@ -80,37 +65,24 @@ DataDistribution::DataDistribution(const std::string name, const int max_steps[3
    rbuf_data_size_ = 0;  
   
   lsize_=-1;
-  
-  assert( domain_[0]>0. );
-  assert( domain_[1]>0. );
-  assert( domain_[2]>0. );
 }
 
 /* Constructor */
-DataDistribution::DataDistribution(const std::string name, const double s_radius, const pb::PEenv& myPEenv, const double domain[]):
-    name_(name),
-    spread_radius_(s_radius),
-    mypeenv_(myPEenv)
+DataDistribution::DataDistribution(
+    const std::string name, const double s_radius,
+    const pb::PEenv& myPEenv, const double domain[]):
+        name_(name),
+        spread_radius_(s_radius),
+        mypeenv_(myPEenv)
 {      
     assert( domain[0]>0. );
     assert( domain[1]>0. );
     assert( domain[2]>0. );   
     
-    /* get processor distribution */
-    nproc_xyz_[0] = myPEenv.n_mpi_task(0);     
-    nproc_xyz_[1] = myPEenv.n_mpi_task(1);     
-    nproc_xyz_[2] = myPEenv.n_mpi_task(2);  
-    
-    /* get domain info */
-    domain_[0] = domain[0];   
-    domain_[1] = domain[1];   
-    domain_[2] = domain[2];       
-
     /* get cartesian communicator */
     cart_comm_ = myPEenv.cart_comm();
 
-    /* compute left and right steps in xyz directions */
-    computeNumSteps();
+    dir_reduce_ = new DirectionalReduce(myPEenv.cart_comm(), s_radius, domain);
   
     assert(spread_radius_ > 0.0);
     
@@ -123,62 +95,8 @@ DataDistribution::DataDistribution(const std::string name, const double s_radius
    rbuf_data_size_ = 0;  
   
   lsize_=-1;
-  
-  assert( domain_[0]>0. );
-  assert( domain_[1]>0. );
-  assert( domain_[2]>0. );
 }
 
-/* Compute number of steps in each direction */
-void DataDistribution::computeNumSteps()
-{
-  assert(spread_radius_ > 0.0);
-    
-  assert( nproc_xyz_[0]>=1 );
-  assert( nproc_xyz_[1]>=1 );
-  assert( nproc_xyz_[2]>=1 );
-  
-  assert( domain_[0]>0. );
-  assert( domain_[1]>0. );
-  assert( domain_[2]>0. );
-
-  /* First compute processor width info */
-  proc_width_[0] = domain_[0]/nproc_xyz_[0];
-  proc_width_[1] = domain_[1]/nproc_xyz_[1];
-  proc_width_[2] = domain_[2]/nproc_xyz_[2];
- 
-  /* compute left and right steps in xyz directions */
-  /* x-direction */
-  lstep_[0] = min((int)(ceil(spread_radius_/(proc_width_[0]))), (nproc_xyz_[0]-1));
-  rstep_[0] = min(lstep_[0], nproc_xyz_[0] - lstep_[0] - 1);
- 
-  /* y-direction */
-  lstep_[1] = min((int)(ceil(spread_radius_/(proc_width_[1]))), (nproc_xyz_[1]-1));
-  rstep_[1] = min(lstep_[1], nproc_xyz_[1] - lstep_[1] - 1);  
-  /* z-direction */
-  lstep_[2] = min((int)(ceil(spread_radius_/(proc_width_[2]))), (nproc_xyz_[2]-1));
-  rstep_[2] = min(lstep_[2], nproc_xyz_[2] - lstep_[2] - 1);  
-}
-
-/* Compute number of steps in each direction */
-void DataDistribution::computeNumSteps(const int max_steps[3])
-{   
-  assert( nproc_xyz_[0]>=1 );
-  assert( nproc_xyz_[1]>=1 );
-  assert( nproc_xyz_[2]>=1 );
-  
-  /* compute left and right steps in xyz directions */
-  /* x-direction */
-  lstep_[0] = min(max_steps[0], (nproc_xyz_[0]-1));
-  rstep_[0] = min(lstep_[0], nproc_xyz_[0] - lstep_[0] - 1);
- 
-  /* y-direction */
-  lstep_[1] = min(max_steps[1], (nproc_xyz_[1]-1));
-  rstep_[1] = min(lstep_[1], nproc_xyz_[1] - lstep_[1] - 1);  
-  /* z-direction */
-  lstep_[2] = min(max_steps[2], (nproc_xyz_[2]-1));
-  rstep_[2] = min(lstep_[2], nproc_xyz_[2] - lstep_[2] - 1);  
-}
 
 /* Merge data received from neighboring processor to local data. Append local data by inserting new rows when necessary */
 template <class T>
@@ -215,7 +133,8 @@ void DataDistribution::mergeDataFromNeighborToLocalData(VariableSizeMatrix<T>& a
 
 /* Update local data with data received from neighboring processor - Merge only on existing data. No new data is merged */
 template <class T>
-void DataDistribution::updateExistingLocalDataEntriesWithRecvBuf(VariableSizeMatrix<T>& amat, const char *rbuf)
+void DataDistribution::updateExistingLocalDataEntriesWithRecvBuf(
+    VariableSizeMatrix<T>& amat, const char *rbuf)
 {
 //   const int n = *rbuf_nrows_ptr_;
 //   int* const lvars = rbuf_lvars_ptr_;
@@ -243,7 +162,8 @@ void DataDistribution::updateExistingLocalDataEntriesWithRecvBuf(VariableSizeMat
 }
 
 template <class T>
-void DataDistribution::copyRowsFromRecvBuf(VariableSizeMatrix<T>& amat, const char * const rbuf, const bool append)
+void DataDistribution::copyRowsFromRecvBuf(
+    VariableSizeMatrix<T>& amat, const char * const rbuf, const bool append)
 {
 //   const int n = *rbuf_nrows_ptr_;
 //   int* const lvars = rbuf_lvars_ptr_;
@@ -314,9 +234,11 @@ void DataDistribution::packLocalData(VariableSizeMatrix<sparserow>& lmat, const 
 /* Perform data distribution of local data */
 /* Data is packed in fixed-size CSR format */  
 template <class T>
-void DataDistribution::distributeLocalDataWithCommOvlp(const int nsteps, const int dir, const int disp, const int bsiz, const int *pos, 
-                                           VariableSizeMatrix<sparserow>& lmat, VariableSizeMatrix<T>& amat, 
-                                           const bool append, const bool bcflag)
+void DataDistribution::distributeLocalDataWithCommOvlp(
+    const int nsteps, const int dir, const int disp, const int bsiz,
+    const int *pos, 
+    VariableSizeMatrix<sparserow>& lmat, VariableSizeMatrix<T>& amat, 
+    const bool append, const bool bcflag)
 { 
 // use barriers to ensure processors begin at the same time before timing this routine
 //  MGmol_MPI& mmpi = *(MGmol_MPI::instance());
@@ -424,9 +346,11 @@ void DataDistribution::distributeLocalDataWithCommOvlp(const int nsteps, const i
 /* Perform data distribution of local data */
 /* Data is packed in fixed-size CSR format */  
 template <class T>
-void DataDistribution::distributeLocalData(const int nsteps, const int dir, const int disp, const int bsiz, const int *pos, 
-                                           VariableSizeMatrix<sparserow>& lmat, VariableSizeMatrix<T>& amat, 
-                                           const bool append, const bool bcflag)
+void DataDistribution::distributeLocalData(
+    const int nsteps, const int dir, const int disp, const int bsiz,
+    const int *pos, 
+    VariableSizeMatrix<sparserow>& lmat, VariableSizeMatrix<T>& amat, 
+    const bool append, const bool bcflag)
 { 
  distribute_local_data_tm_.start();
 
@@ -479,11 +403,12 @@ void DataDistribution::distributeLocalData(const int nsteps, const int dir, cons
 
 /* Augment the local matrix - data distribution */
 template <class T>
-void DataDistribution::augmentLocalData(VariableSizeMatrix<T>& vsmat, const bool append, const bool bcflag)
+void DataDistribution::augmentLocalData(
+    VariableSizeMatrix<T>& vsmat, const bool append, const bool bcflag)
 {
-  assert( lstep_[0]>=0 );
-  assert( lstep_[1]>=0 );
-  assert( lstep_[2]>=0 );
+  assert( dir_reduce_->lstep(0)>=0 );
+  assert( dir_reduce_->lstep(1)>=0 );
+  assert( dir_reduce_->lstep(2)>=0 );
   
   augment_local_data_tm_.start();   
     
@@ -494,7 +419,7 @@ void DataDistribution::augmentLocalData(VariableSizeMatrix<T>& vsmat, const bool
   //short has_datasize_converged=0;
   for(short dir = 0; dir < 3; dir++)
   {
-     if(lstep_[dir] > 0)
+     if(dir_reduce_->lstep(dir) > 0)
      {    
         /* Spread and receive data in the x/y/z-direction. 
          * This corresponds to spreading data 
@@ -515,16 +440,16 @@ void DataDistribution::augmentLocalData(VariableSizeMatrix<T>& vsmat, const bool
         
         /* determine whether or not to apply boundary condition */
         bool trim = false;
-        if(lstep_[dir] == rstep_[dir]) trim = bcflag;   
+        if(dir_reduce_->lstep(dir) == dir_reduce_->rstep(dir) ) trim = bcflag;   
         /* send data to the left and recv from right */
         short disp = -1;
-        distributeLocalDataWithCommOvlp(lstep_[dir], dir, disp, buffer_size, &data_pos_[pos], mat, vsmat, append, trim);
+        distributeLocalDataWithCommOvlp(dir_reduce_->lstep(dir), dir, disp, buffer_size, &data_pos_[pos], mat, vsmat, append, trim);
 //        distributeLocalData(lstep_[dir], dir, disp, buffer_size, &data_pos_[pos], mat, vsmat, append, trim);
         /**************** PHASE II *******************/
 
         /* send data to the right and recv from left */
         disp = 1;
-        distributeLocalDataWithCommOvlp(rstep_[dir], dir, disp, buffer_size, &data_pos_[pos], mat, vsmat, append, trim);
+        distributeLocalDataWithCommOvlp(dir_reduce_->rstep(dir), dir, disp, buffer_size, &data_pos_[pos], mat, vsmat, append, trim);
 //        distributeLocalData(rstep_[dir], dir, disp, buffer_size, &data_pos_[pos], mat, vsmat, append, trim);
      }
   }
@@ -538,8 +463,11 @@ void DataDistribution::augmentLocalData(VariableSizeMatrix<T>& vsmat, const bool
 /* Perform data distribution of local data */
 /* Data is packed in fixed-size CSR format */  
 template <class T>
-void DataDistribution::distributeLocalRowsWithCommOvlp(const int nsteps, const int dir, const int disp, const int bsiz, const int *pos, 
-                                           VariableSizeMatrix<sparserow>& lmat, VariableSizeMatrix<T>& amat, const bool append)
+void DataDistribution::distributeLocalRowsWithCommOvlp(
+    const int nsteps, const int dir, const int disp, const int bsiz,
+    const int *pos, 
+    VariableSizeMatrix<sparserow>& lmat, VariableSizeMatrix<T>& amat,
+    const bool append)
 {  
 // use barriers to ensure processors begin at the same time before timing this routine
 //  MGmol_MPI& mmpi = *(MGmol_MPI::instance());
@@ -613,8 +541,11 @@ void DataDistribution::distributeLocalRowsWithCommOvlp(const int nsteps, const i
 /* Perform data distribution of local data */
 /* Data is packed in fixed-size CSR format */  
 template <class T>
-void DataDistribution::distributeLocalRows(const int nsteps, const int dir, const int disp, const int bsiz, const int *pos, 
-                                           VariableSizeMatrix<sparserow>& lmat, VariableSizeMatrix<T>& amat, const bool append)
+void DataDistribution::distributeLocalRows(
+    const int nsteps, const int dir, const int disp, const int bsiz,
+    const int *pos, 
+    VariableSizeMatrix<sparserow>& lmat, VariableSizeMatrix<T>& amat,
+    const bool append)
 {  
     distribute_local_row_tm_.start();
 
@@ -672,7 +603,7 @@ void DataDistribution::updateLocalRows(VariableSizeMatrix<T>& vsmat, const bool 
   int maxsize, nzmax;
   for(short dir = 0; dir < 3; dir++)
   {
-     if(lstep_[dir] > 0)
+     if(dir_reduce_->lstep(dir) > 0)
      {    
         /* Spread and receive data in the x/y/z-direction. 
          * This corresponds to spreading data 
@@ -692,13 +623,13 @@ void DataDistribution::updateLocalRows(VariableSizeMatrix<T>& vsmat, const bool 
      
         /* send data to the left and recv from right */
         disp = -1;
-        distributeLocalRowsWithCommOvlp(lstep_[dir], dir, disp, buffer_size, &data_pos_[pos], mat, vsmat, append);
+        distributeLocalRowsWithCommOvlp(dir_reduce_->lstep(dir), dir, disp, buffer_size, &data_pos_[pos], mat, vsmat, append);
 //        distributeLocalRows(lstep_[dir], dir, disp, buffer_size, &data_pos_[pos], mat, vsmat, append);
         /**************** PHASE II *******************/
 
         /* send data to the right and recv from left */
         disp = 1;
-        distributeLocalRowsWithCommOvlp(rstep_[dir], dir, disp, buffer_size, &data_pos_[pos], mat, vsmat, append);
+        distributeLocalRowsWithCommOvlp(dir_reduce_->rstep(dir), dir, disp, buffer_size, &data_pos_[pos], mat, vsmat, append);
 //        distributeLocalRows(rstep_[dir], dir, disp, buffer_size, &data_pos_[pos], mat, vsmat, append);
      }  
   }
@@ -709,63 +640,10 @@ void DataDistribution::updateLocalRows(VariableSizeMatrix<T>& vsmat, const bool 
   return;
 }
 
-//template <class T>
-void DataDistribution::gatherDataSizes(const short dir, const VariableSizeMatrix<sparserow>& lmat, int *maxsize, int *nzmax)
-{  
-// use barriers to ensure processors begin at the same time before timing this routine
-//  MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-//  mmpi.barrier();  
-    gathersizes_tm_.start();
-    
-     /* setup persistent communication requests for buffer size computation*/
-     setupPersistentRequests(dir); 
 
-    /* initialize send and recv buffer */
-    sbuf_[0] = lmat.n();
-    sbuf_[1] = lmat.nnzmat();
- 
-    /* Step in the left direction */
-    short step = 0;
-    while(step < lstep_[dir])
-    {
-       /* Send and receive data */
-       MPI_Start(&request_[0]); // recv
-       MPI_Start(&request_[1]); // send
-       MPI_Waitall(2, request_, MPI_STATUSES_IGNORE);
-       /* get max. sizes */
-       sbuf_[0] = sbuf_[0] > rbuf_[0] ? sbuf_[0] : rbuf_[0];
-       sbuf_[1] = sbuf_[1] > rbuf_[1] ? sbuf_[1] : rbuf_[1];          
-       step++;
-    }
-
-    /* Step in the right direction */
-    step = 0;
-    while(step < rstep_[dir])
-    {
-       /* Send and receive data */
-       MPI_Start(&request_[2]); // recv
-       MPI_Start(&request_[3]); // send
-       MPI_Waitall(2, &request_[2], MPI_STATUSES_IGNORE);
-       /* get max. sizes */
-       sbuf_[0] = sbuf_[0] > rbuf_[0] ? sbuf_[0] : rbuf_[0];
-       sbuf_[1] = sbuf_[1] > rbuf_[1] ? sbuf_[1] : rbuf_[1];          
-       step++;
-    }
-    
-    /* now assign values */
-    *maxsize = sbuf_[0];
-    *nzmax = sbuf_[1]; 
-
-    //if(onpe0)cout<<"Name: "<<name_<<", maxsize="<<*maxsize<<", nzmax="<<*nzmax<<endl;
-    
-    deletePersistentRequests();
-
-    gathersizes_tm_.stop();
-
-    return;
-}
-
-void DataDistribution::computeMaxDataSize(const short dir, const VariableSizeMatrix<sparserow>& lmat, int *maxsize, int *nzmax)
+void DataDistribution::computeMaxDataSize(
+    const short dir, const VariableSizeMatrix<sparserow>& lmat,
+    int *maxsize, int *nzmax)
 {
    // limit number of calls to gatherDataSizes()
    // somewhat arbitrary and may need to be tuned
@@ -773,7 +651,12 @@ void DataDistribution::computeMaxDataSize(const short dir, const VariableSizeMat
    
    if(count_computeMaxDataSize_<maxcount_computeMaxDataSize_)
    {
-      gatherDataSizes(dir,lmat,maxsize,nzmax);
+//      gatherDataSizes(dir,lmat,maxsize,nzmax);
+      int data[2]={lmat.n(),lmat.nnzmat()};
+      dir_reduce_->computeDirMax(dir,data);
+      *maxsize=data[0];
+      *nzmax=data[1];
+
       max_matsize_= ( *maxsize > max_matsize_) ? *maxsize : max_matsize_;
       max_nnz_    = ( *nzmax > max_nnz_)       ? *nzmax   : max_nnz_;
    }
@@ -816,6 +699,30 @@ void DataDistribution::reduceDataSizes(const short dir, const VariableSizeMatrix
     reducesizes_tm_.stop();
 
     return;
+}
+void DataDistribution::setPointersToRecvData(const char *rbuf)
+{
+    assert(rbuf != NULL);
+
+    rbuf_nrows_ptr_ = (int *)rbuf;
+    /* check if matrix is nonzero */
+    if(*rbuf_nrows_ptr_ != 0)
+    {
+        rbuf_start_double_pos_ptr_ = rbuf_nrows_ptr_ + 1;
+        rbuf_nnzrow_ptr_ = rbuf_start_double_pos_ptr_ + 1;
+        rbuf_lvars_ptr_ = rbuf_nnzrow_ptr_ + (*rbuf_nrows_ptr_ + 1);
+        rbuf_pj_ptr_ = rbuf_lvars_ptr_ + (*rbuf_nrows_ptr_);
+        rbuf_pa_ptr_ = (double *)(rbuf + *rbuf_start_double_pos_ptr_);
+
+        /* compute size of data in buffer */
+        rbuf_data_size_ = *rbuf_start_double_pos_ptr_
+                        + rbuf_nnzrow_ptr_[*rbuf_nrows_ptr_]*sizeof(double);
+     }
+     else
+     {
+        /* The size is equal to the size of an int if nrows == 0. */
+        rbuf_data_size_ = sizeof(int);
+    }
 }
 
 void DataDistribution::printTimers(ostream& os)

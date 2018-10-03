@@ -1,4 +1,5 @@
-SRC += sparse_linear_algebra/SparseRow.cc \
+SRC += sparse_linear_algebra/DirectionalReduce.cc \
+       sparse_linear_algebra/SparseRow.cc \
        sparse_linear_algebra/SparseRowAndTable.cc \
        sparse_linear_algebra/Table.cc \
        sparse_linear_algebra/PackedCommunicationBuffer.cc \

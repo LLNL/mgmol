@@ -13,6 +13,7 @@
 #ifndef _DATADISTRIBUTION_H_
 #define _DATADISTRIBUTION_H_
 
+#include "DirectionalReduce.h"
 #include "VariableSizeMatrix.h"
 #include "PEenv.h"
 #include "MPIdata.h"
@@ -46,21 +47,16 @@ class DataDistribution
   static short count_computeMaxDataSize_;
   static short maxcount_computeMaxDataSize_;
   
-  std::string name_;
-  const double spread_radius_;				// Spreading radius for data distribution
+    std::string name_;
+    const double spread_radius_;// Spreading radius for data distribution
+
+    DirectionalReduce* dir_reduce_;
+
   const pb::PEenv& mypeenv_;
 
   int lsize_;				// Initial size of local matrix
   int aug_size_;				// Augmented size of the local matrix after data distribution
-  double domain_[3];			// Problem domain dimensions
-  int nproc_xyz_[3];			// Number of processors in each direction;
-  double proc_width_[3];				// Processor radius in each direction  
   MPI_Comm cart_comm_;				// MPI cartesian communicator for data distribution
-  MPI_Request request_[4];	// MPI request handle
-  int sbuf_[2]; 		// work buffer for data transfer (send)
-  int rbuf_[2];		// work buffer for data transfer (recv)
-  int lstep_[3];			// number of steps to the left for each dimension
-  int rstep_[3];			// number of steps to the right for each dimension
   int data_pos_[6]; 		// positions of datatypes within buffer - 2 entries per direction	
   int loc_data_sz_[3];		// size of initial local data that is packed for data distribution
 
@@ -80,12 +76,7 @@ class DataDistribution
   /* actual size of data in recv buffer (in bytes or sizeof char) */
   int rbuf_data_size_;
 
-/* Compute number of steps in each direction */
-  void computeNumSteps() ; 
-/* compute number of steps given the max number of steps in each direction */
-  void computeNumSteps(const int max_steps[3]) ; 
 //  template <class T>
-  void gatherDataSizes(const short dir, const VariableSizeMatrix<sparserow>& lmat, int *maxsize, int *nzmax); /* compute max data sizes from neighbors*/
   /* compute starting positions for packing local data */
 //  template <class T>
   void computePackedDataPositions(const VariableSizeMatrix<sparserow>& lmat, int *pos)const
@@ -112,64 +103,8 @@ class DataDistribution
       return bsiz;
   }
 
-  /* setup persistent requests */
-  void setupPersistentRequests(const short dir)
-  {
-    /* initialize persisted requests */
-    request_[0] = MPI_REQUEST_NULL;
-    request_[1] = MPI_REQUEST_NULL;    
-    request_[2] = MPI_REQUEST_NULL;
-    request_[3] = MPI_REQUEST_NULL; 
-    
-     int source, dest;
-     /* Get source and destination ID to send and recv data - left direction */
-     short disp = -1;
-     MPI_Cart_shift(cart_comm_, dir, disp, &source, &dest);
-     /* setup request for left direction */
-     MPI_Recv_init(&rbuf_[0], 2, MPI_INT, source, 0, cart_comm_, &request_[0]);
-     MPI_Rsend_init(&sbuf_[0], 2, MPI_INT, dest, 0, cart_comm_, &request_[1]); 
-
-     /* setup request for right direction - just reverse source and dest (no need for mpi_cart_shift()) */
-     MPI_Recv_init(&rbuf_[0], 2, MPI_INT, dest, 1, cart_comm_, &request_[2]);
-     MPI_Rsend_init(&sbuf_[0], 2, MPI_INT, source, 1, cart_comm_, &request_[3]);      
-     
-     return;
-  }
-  /* delete persistent requests */
-  void deletePersistentRequests()
-  {
-       MPI_Request_free(&request_[0]);
-       MPI_Request_free(&request_[1]);
-       MPI_Request_free(&request_[2]);       
-       MPI_Request_free(&request_[3]);  
-       
-       return;
-  }
-  
   /* Set data pointer positions on recv buffer */
-  void setPointersToRecvData(const char *rbuf)
-  {
-     assert(rbuf != NULL);
-     
-     rbuf_nrows_ptr_ = (int *)rbuf;
-     /* check if matrix is nonzero */
-     if(*rbuf_nrows_ptr_ != 0)
-     {
-        rbuf_start_double_pos_ptr_ = rbuf_nrows_ptr_ + 1;
-        rbuf_nnzrow_ptr_ = rbuf_start_double_pos_ptr_ + 1;
-        rbuf_lvars_ptr_ = rbuf_nnzrow_ptr_ + (*rbuf_nrows_ptr_ + 1);
-        rbuf_pj_ptr_ = rbuf_lvars_ptr_ + (*rbuf_nrows_ptr_);
-        rbuf_pa_ptr_ = (double *)(rbuf + *rbuf_start_double_pos_ptr_);
-        
-        /* compute size of data in buffer */
-        rbuf_data_size_ = *rbuf_start_double_pos_ptr_ + rbuf_nnzrow_ptr_[*rbuf_nrows_ptr_]*sizeof(double);
-     }
-     else
-     {
-        /* The size is equal to the size of an int if nrows == 0. */
-        rbuf_data_size_ = sizeof(int);     
-     }
-  }
+  void setPointersToRecvData(const char *rbuf);
 
   /* Reset data pointer positions on recv buffer to NULL*/
   void resetPointersToRecvDataToNULL()
@@ -214,9 +149,12 @@ class DataDistribution
   void computeMaxDataSize(const short dir, const VariableSizeMatrix<sparserow>& lmat, int *maxsize, int *nzmax);
  
 public:
-    DataDistribution(const std::string name, const double s_radius, const pb::PEenv& myPEenv, const double domain[]);
-    DataDistribution(const std::string name, const int max_steps[3], const pb::PEenv& myPEenv, const double domain[]);
-    ~DataDistribution(){}
+
+    DataDistribution(const std::string name, const double s_radius,
+                     const pb::PEenv& myPEenv, const double domain[]);
+    DataDistribution(const std::string name, const int max_steps[3],
+                     const pb::PEenv& myPEenv, const double domain[]);
+    ~DataDistribution(){ delete dir_reduce_; }
     
     static void enforceComputeMaxDataSize()
     {
@@ -233,18 +171,14 @@ public:
     
     void printStats()
     {
-      if(onpe0)
-      {
-         std::cout<<"spread_radius = "<<spread_radius_<<" initial size = "<<lsize_<<" augmented size = "<<aug_size_<<std::endl;
-         std::cout<<"x-direction."<<std::endl;
-         std::cout<<"lstep = "<<lstep_[0]<<", rstep = "<<rstep_[0]<<std::endl; 
-         std::cout<<"y-direction."<<std::endl;
-         std::cout<<"lstep = "<<lstep_[1]<<", rstep = "<<rstep_[1]<<std::endl; 
-         std::cout<<"z-direction."<<std::endl;
-         std::cout<<"lstep = "<<lstep_[2]<<", rstep = "<<rstep_[2]<<std::endl;         
-       }
-       return;
+        if(onpe0)
+        {
+            std::cout<<"spread_radius = "<<spread_radius_
+                     <<" initial size = "<<lsize_
+                     <<" augmented size = "<<aug_size_<<std::endl;
+            dir_reduce_->printStats(std::cout);
+        }
     }
 };
 
-#endif  
+#endif
