@@ -20,28 +20,32 @@
 #include <cstring>
 using namespace std;
 
+FunctionsPacking::FunctionsPacking(
+    LocalizationRegions* lrs, const bool global, const MPI_Comm comm)
+        : comm_(comm)
+{
+    setup(lrs, global);
+}
 
 FunctionsPacking::FunctionsPacking(const FunctionsPacking& p)
 {
-    centers_    =p.centers_;
     gid2color_      =p.gid2color_;
     global_size_       =p.global_size_;
     num_colors_ =p.num_colors_;    
-    loc_regions_=p.loc_regions_;
 }
 
 // Setup based on
 // Recursive Largest First (RLF) algorithm
-void FunctionsPacking::setup()
+void FunctionsPacking::setup(LocalizationRegions* lrs, const bool global)
 {
     Control& ct = *(Control::instance());
     list< list<int> > colored_gids;
 
     std::vector<int> gids;
-    if( ct.globalColoring() )
-        lrs_->getGidsGlobal(gids);
+    if( global )
+        lrs->getGidsGlobal(gids);
     else
-        gids=lrs_->getOverlapGids();
+        gids=lrs->getOverlapGids();
 
     //SymmetricMatrix<char> orbi_overlap(numst_,comm_);
     SymmetricMatrix<char>* orbi_overlap;
@@ -49,21 +53,19 @@ void FunctionsPacking::setup()
         orbi_overlap=new SymmetricMatrix<char>(gids,comm_);
     else
         orbi_overlap=new SymmetricMatrix<char>(gids.size(),comm_);
-    if( ct.globalColoring() ){
+    if( global ){
         if( onpe0 && ct.verbose>1 )
             (*MPIdata::sout)<<" PACK STATES: Global coloring..."<<endl;
-        initOrbiOverlapGlobal(0, *orbi_overlap);
+        initOrbiOverlapGlobal(lrs,0, *orbi_overlap);
     }else{
         if( onpe0 && ct.verbose>1 )
             (*MPIdata::sout)<<" PACK STATES: Local coloring..."<<endl;
-        initOrbiOverlapLocal(0, *orbi_overlap);
+        initOrbiOverlapLocal(lrs, 0, *orbi_overlap);
     }
 
     global_size_=orbi_overlap->dimension();
 
     getColors(*orbi_overlap, colored_gids);
-
-    setLocRegions(*lrs_,colored_gids);
 
     delete orbi_overlap;
 }
@@ -143,139 +145,25 @@ void FunctionsPacking::getColors(const SymmetricMatrix<char>& overlaps,
 
 }
 
-int FunctionsPacking::getAllCentersAndRadii4color(const short color, vector<double>& centers_and_radii)const
-{    
-    vector<double> local_centers_and_radii;
-    getLocCentersAndRadii4color(color,local_centers_and_radii);
-    
-    centers_and_radii.clear();
-    MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
-    mmpi.allGatherV(local_centers_and_radii,centers_and_radii);
-    
-    return centers_and_radii.size()/4;
-}
-
-void FunctionsPacking::setLocRegions(const LocalizationRegions& lrs,
-                                     const list< list<int> >& colored_gids )
+short FunctionsPacking::checkOverlapLRs(
+    LocalizationRegions* lrs,
+    const int gid1, const int gid2)const
 {
-    loc_regions_.clear();
-    Control& ct = *(Control::instance());
-    
-    if( ct.verbose>0 )
-        printWithTimeStamp(" FunctionsPacking::setLocRegions",cout);
-    
-    list<list<int> >::const_iterator ic=colored_gids.begin();
-    short color=0;
-    if( lrs.globalNumLRs()>1 ){
-        // loop over colored_gids
-        while( ic!=colored_gids.end() ){
-
-            // loop over functions of same color
-            list<int>::const_iterator ii=ic->begin();
-            while( ii!=ic->end() ){
-                const int gid=*ii;
-            
-                assert( gid>=0 );
-                assert( gid<(int)lrs.globalNumLRs() );
-                if( lrs.radius(gid)>0.1 ) // radius=-1 if gid not know locally
-                {
-                    Sphere lr;
-                    lr.center=lrs.getCenter(gid);
-                    lr.radii =lrs.radius(gid);
-                    assert( lr.radii>0. );
-                    lr.gid   =gid;
-                    loc_regions_.insert(pair<short,Sphere>(color,lr));
-                }
-                ii++;
-            }
-            color++;
-            ic++;
-        }
-    }else{
-        assert( lrs.globalNumLRs()==0 || lrs.globalNumLRs()==1 );
-    
-        // loop over colored_gids
-        while( ic!=colored_gids.end() ){
-
-            Sphere lr;
-            lr.center=lrs.getCenter(0);
-            lr.radii =lrs.radius(0);
-            lr.gid   =*(ic->begin());
-            loc_regions_.insert(pair<short,Sphere>(color,lr));
-            
-            color++;
-            ic++;
-        }
-    }
-}
-
-// get localization centers and radii stored in function color
-int FunctionsPacking::getLocCentersAndRadii4color(const short color,
-                                                  vector<double>& data)const
-{
-    data.clear();
-    multimap<short,Sphere>::const_iterator p  =loc_regions_.find(color);
-    if( p==loc_regions_.end() )return 0;
-    
-    while( p!=loc_regions_.upper_bound(color) )
-    {
-        double arr[]={p->second.center[0],
-                      p->second.center[1],
-                      p->second.center[2],
-                      p->second.radii};
-        //data.push_back( p->second.center[0] );
-        //data.push_back( p->second.center[1] );
-        //data.push_back( p->second.center[2] );
-        //data.push_back( p->second.radii );
-        data.insert(data.end(),arr,arr+4);
-        p++;
-    }
-    return data.size()/4;
-}
-
-// get localization centers and radii stored in function color
-int FunctionsPacking::getLocGids4color(const short color, vector<int>& data)const
-{
-    data.clear();
-    multimap<short,Sphere>::const_iterator p  =loc_regions_.find(color);
-    if( p==loc_regions_.end() )return 0;
-
-     while( p!=loc_regions_.upper_bound(color) )
-     {
-        data.push_back( p->second.gid );
-        p++;
-    }
-    return data.size();
-}
-
-// get localization centers and radii stored in function color
-int FunctionsPacking::getAllGids4color(const short color, vector<int>& gids)const
-{
-    vector<int> lgids;
-    getLocGids4color(color,lgids);
-    
-    gids.clear();
-    MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
-    mmpi.allGatherV(lgids,gids);
-    
-    return gids.size();
-}
-
-short FunctionsPacking::checkOverlapLRs(const int gid1, const int gid2)const
-{
-    return lrs_->overlap(gid1,gid2) ? 1 : 0;
+    return lrs->overlap(gid1,gid2) ? 1 : 0;
 }
 
 //  Initialize the array orbi_overlap_[j][i] telling if 
 //  the orbitals i and j overlap somewhere (on any PE or region)
 // at level "level"
-void FunctionsPacking::initOrbiOverlapLocal(const short level, SymmetricMatrix<char>& orbi_overlap)
+void FunctionsPacking::initOrbiOverlapLocal(
+    LocalizationRegions* lrs,
+    const short level, SymmetricMatrix<char>& orbi_overlap)
 {
     Control& ct = *(Control::instance());
     if( onpe0 && ct.verbose>2 )
         (*MPIdata::sout)<<"LocGridOrbitals::initOrbiOverlapLocal() for level "<<level<<endl;
 
-    const vector<int>& local_gids(lrs_->getOverlapGids());
+    const vector<int>& local_gids(lrs->getOverlapGids());
     
     assert( orbi_overlap.dimension()==local_gids.size() );
     
@@ -291,14 +179,16 @@ void FunctionsPacking::initOrbiOverlapLocal(const short level, SymmetricMatrix<c
                                         it2++)
         {
             const int gid2=*it2;
-            short oo1=checkOverlapLRs(gid1, gid2);
+            short oo1=checkOverlapLRs(lrs,gid1, gid2);
             orbi_overlap.setVal(gid1,gid2,oo1);
         }
         
     }
 }
 
-void FunctionsPacking::initOrbiOverlapGlobal(const short level, SymmetricMatrix<char>& orbi_overlap)
+void FunctionsPacking::initOrbiOverlapGlobal(
+    LocalizationRegions* lrs,
+    const short level, SymmetricMatrix<char>& orbi_overlap)
 {
     Control& ct = *(Control::instance());
     const int dim=orbi_overlap.dimension();
@@ -313,7 +203,7 @@ void FunctionsPacking::initOrbiOverlapGlobal(const short level, SymmetricMatrix<
         orbi_overlap.setVal(gid1,gid1,1);
         for(int gid2=0;gid2<gid1;gid2++)
         {
-            short oo1=checkOverlapLRs(gid1, gid2);
+            short oo1=checkOverlapLRs(lrs,gid1, gid2);
             //short oo1=checkOverlap(gid1, gid2,level);
             //if( oo1!=oo2 )
             //{

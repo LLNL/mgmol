@@ -101,6 +101,7 @@ SRC =   \
  HDFrestart.cc \
  MasksSet.cc \
  FunctionsPacking.cc \
+ ColoredRegions.cc \
  LocGridOrbitals.cc \
  mcstep.cc \
  MD_IonicStepper.cc \
