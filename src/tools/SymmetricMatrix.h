@@ -6,11 +6,10 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #ifndef SYMMETRICMATRIX_H
 #define SYMMETRICMATRIX_H
 
-#include "MPIdata.h"
+#include <mpi.h>
 #include <cassert>
 #include <vector>
 #include <map>
@@ -138,7 +137,7 @@ public:
            for(int j=0; j<dimension_; j++)
            {
               if(val(i, j) == (T)lval) continue;
-              if(onpe0) fprintf(fout,"%d %d %d \n",i, j, val(i,j)); 
+              fprintf(fout,"%d %d %d \n",i, j, val(i,j)); 
            }
         }
     }

@@ -33,7 +33,7 @@ class FunctionsPacking
 {
 private:
     std::vector<Vector3D>              centers_;
-    std::map<int,short>                where_; // tells where one gid is allocated
+    std::map<int,short>                gid2color_; // tells where one gid is allocated
     int                                global_size_;
     short                              num_colors_;
     
@@ -65,12 +65,12 @@ public:
     void setup();
 
     // return color of gid if exists locally, otherwise return -1
-    short getColorState(const int gid)const
+    short getColor(const int gid)const
     { 
         assert( gid>=0 );
         
-        std::map<int,short>::const_iterator it = where_.find(gid);
-        if( it==where_.end() )
+        std::map<int,short>::const_iterator it = gid2color_.find(gid);
+        if( it==gid2color_.end() )
            return -1;
         else
            return it->second;
@@ -87,8 +87,10 @@ public:
     }
     
     // get localization centers stored in function color
-    int getLocCentersAndRadii4color(const short color, std::vector<double>& centers_and_radii)const;
-    int getAllCentersAndRadii4color(const short color, std::vector<double>& centers_and_radii)const;
+    int getLocCentersAndRadii4color(const short color,
+        std::vector<double>& centers_and_radii)const;
+    int getAllCentersAndRadii4color(const short color,
+        std::vector<double>& centers_and_radii)const;
 
     int getLocGids4color(const short color, std::vector<int>& data)const;
     int getAllGids4color(const short color, std::vector<int>& data)const;

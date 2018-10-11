@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #include "FunctionsPacking.h"
 #include "Index.h"
 #include "MPIdata.h"
@@ -21,217 +20,11 @@
 #include <cstring>
 using namespace std;
 
-void colorRLF(const SymmetricMatrix<char>& overlaps, 
-           list< list<int> >& colored_gids)
-{
-    Control& ct = *(Control::instance());
-    const int dim=overlaps.dimension();
-    if( onpe0 && ct.verbose>0 )
-    {
-        (*MPIdata::sout)<<"Uses Recursive Largest First (RLF) algorithm"
-                        <<" for problem of size "<<dim<<endl;
-    }
-
-    colored_gids.clear();
- 
-    // initialize list of "uncolored" gids
-    list<int> uncolored;
-    const vector<int>& gids(overlaps.gids());
-    for(int i=0;i<dim;i++)uncolored.push_back(gids[i]);
-    
-    while( uncolored.size()>0 ){
-    
-        // compute degrees of vertices
-        multimap<int,int> degrees;
-        list<int>::const_iterator pj=uncolored.begin();
-        while( pj!=uncolored.end() ){
-            const int j0=(*pj);
-            int degree=0;
-            list<int>::const_iterator pi=uncolored.begin();
-            while( pi!=uncolored.end() ){
-                degree+=overlaps.val(*pi,j0);
-                pi++;
-            }
-            if( degree )degrees.insert(pair<int,int>(degree,j0));
-            pj++;
-        }
-            
-        // find the 1st color: largest degree
-        multimap<int,int>::const_iterator p0=degrees.end();
-        p0--;        
-        const int v0=p0->second;
-        //if( onpe0 )
-        //    (*MPIdata::sout)<<"Color "<<v0<<" of degree "<<p0->first<<endl;
-        uncolored.remove(v0);
-        
-        // start list of functions of same color
-        list<int> vi;
-        vi.push_back(v0);
-        
-        // compute set u of vertices adjacents to v0
-        // compute set v of vertices non-adjacents to v0
-        list<int> u;
-        list<int> v;
-        pj=uncolored.begin();
-        while( pj!=uncolored.end() ){
-            int i0=(*pj);
-            if( overlaps.val(i0,v0) ){
-                u.push_back(i0);
-            }else{
-                v.push_back(i0);
-            }
-            pj++;
-        }
-        
-        // try to color another vertex with color v0
-        while( v.size()>0 ){
-            
-            // compute degrees in u for functions in v
-            multimap<int,int> udegrees;
-            list<int>::const_iterator pv=v.begin();
-            while( pv!=v.end() ){
-                const int j0=(*pv);
-                int degree=0;
-                list<int>::const_iterator pu=u.begin();
-                while( pu!=u.end() ){
-                    int i0=(*pu);
-                    degree+=overlaps.val(i0,j0);
-                    pu++;
-                }
-                udegrees.insert(pair<int,int>(degree,j0));
-                pv++;
-            }
-                
-            // find the largest degree in udegrees
-            assert( udegrees.size()>0 );
-            multimap<int,int>::const_iterator pu0=udegrees.end();
-            pu0--;
-            const int u0=pu0->second;
-        
-            // use same color for v0 and u0
-            vi.push_back(u0);
-            uncolored.remove(u0);
-        
-#ifndef NDEBUG
-            if( onpe0 && ct.verbose>0 ){
-                (*MPIdata::sout)<<"PE 0: Same color for orbitals "
-                                <<*vi.begin()<<" and "<<u0<<endl;
-                assert( !overlaps.val(*vi.begin(),u0) );
-            }
-#endif        
-        
-            // add to list u adjacents to u0
-            list<int> vremove;
-            pj=v.begin();
-            while( pj!=v.end() ){
-                const int i0=(*pj);
-                if( overlaps.val(i0,u0) ){
-                    u.push_back(i0);
-                    vremove.push_back(i0);
-                }
-                pj++;
-            }
-            
-            // remove from list v adjacents to u0
-            pj=vremove.begin();
-            while( pj!=vremove.end() ){
-                v.remove(*pj);
-                pj++;
-            }
-
-        }
-        
-        colored_gids.push_back(vi);
-    }     
-}
-
-/* 
-   quicksort of the elements in a. elements in b are permuted 
-   according to the resulting sorted a.
-*/
-void quicksortI_h2l (int *a, int *b, int lo, int hi)
-{
-//  lo is the lower index, hi is the upper index
-//  of the region of array a that is to be sorted
-    int i=lo, j=hi;
-    int v;
-    int x=ceil(a[(lo+hi)/2]);
-    int q;
-
-    //  partition
-    do
-    {    
-        while (a[i]>x) i++; 
-        while (a[j]<x) j--;
-        if (i<=j)
-        {
-            v=a[i]; a[i]=a[j]; a[j]=v;
-            q=b[i]; b[i]=b[j]; b[j]=q;
-            i++; j--;
-        }
-    } while (i<=j);
-
-    //  recursion
-    if (lo<j) quicksortI_h2l(a, b, lo, j);
-    if (i<hi) quicksortI_h2l(a, b, i, hi);
-}   
-
-void greedyColor(const SymmetricMatrix<char>& overlaps, 
-           list< list<int> >& colored_gids)
-{
-    if( onpe0 )
-    {
-        (*MPIdata::sout)<<"Uses greedy algorithm"<<endl;
-    }
-
-   const int dim = overlaps.dimension();
-   vector<int>vecia;
-   vector<int>vecja;
-   vecia.reserve(dim+1);
-   vecja.reserve(dim);
-
-   int *nnzrow = new int[dim];
-   int *iord = new int[dim];
-   
-   /* nonzero pattern of overlap matrix */
-   overlaps.getNNZPattern(vecia, vecja, nnzrow);
-   
-   for(int i=0; i<dim; i++)
-      iord[i] = i;
-   
-   /* sort degree of nodes from hi to lo */
-   quicksortI_h2l(nnzrow, iord, 0, dim-1);
-   /* perform greedy multicoloring */
-   int num_colors=0;
-   vector<int>::iterator ia = vecia.begin();
-   vector<int>::iterator ja = vecja.begin();   
-   /* overwrite nnzrow array -- no longer needed */
-   int *colors = nnzrow;
-   greedyMC(dim, &(*ja), &(*ia), &num_colors, iord, colors);
-   
-   /* populate list of colored_grids */
-   for(int color=0; color<num_colors; color++)
-   {
-      list<int> llist;
-      for(int i=0; i<dim; i++)
-      {
-         if(colors[i] == color)
-            llist.push_back(i);
-      }
-      colored_gids.push_back(llist);
-   }
-
-   delete [] iord;
-   delete [] colors;
-
-   return;
-}  
-/*----------------------------------------------------------------*/
 
 FunctionsPacking::FunctionsPacking(const FunctionsPacking& p)
 {
     centers_    =p.centers_;
-    where_      =p.where_;
+    gid2color_      =p.gid2color_;
     global_size_       =p.global_size_;
     num_colors_ =p.num_colors_;    
     loc_regions_=p.loc_regions_;
@@ -275,6 +68,7 @@ void FunctionsPacking::setup()
     delete orbi_overlap;
 }
 
+//compute map "gid2color_" that maps gids to slots
 void FunctionsPacking::getColors(const SymmetricMatrix<char>& overlaps, 
                                  list< list<int> >& colored_gids)
 {
@@ -283,24 +77,29 @@ void FunctionsPacking::getColors(const SymmetricMatrix<char>& overlaps,
     
     if( onpe0 && ct.verbose>0 )
     {
-        (*MPIdata::sout)<<"setup FunctionsPacking for size="<<global_size_<<endl;
+        (*MPIdata::sout)<<"setup FunctionsPacking for size="
+                        <<global_size_<<endl;
     }
 
     if( !ct.RLFColoring() )
     {
-        greedyColor(overlaps, colored_gids);
+        greedyColor(overlaps, colored_gids,
+                    (ct.verbose>0 && onpe0), (*MPIdata::sout) );
     }else{
-        colorRLF(overlaps, colored_gids);
+        colorRLF(overlaps, colored_gids,
+                 (ct.verbose>0 && onpe0), (*MPIdata::sout) );
     }
 
     num_colors_=(short)colored_gids.size();
-    if( onpe0 && ct.verbose>0 )(*MPIdata::sout)<<" num_colors_= "<<num_colors_<<endl; 
+    if( onpe0 && ct.verbose>0 )
+        (*MPIdata::sout)<<"FunctionsPacking::num_colors_= "
+                        <<num_colors_<<endl; 
 
     assert( num_colors_<10000 );
    
     vector<short> nb_orb(num_colors_);
 
-    // attribute colors
+    // this is where we actually attribute gids to colors to slots
     short color=0;
 
     // loop over colored_gids
@@ -312,10 +111,10 @@ void FunctionsPacking::getColors(const SymmetricMatrix<char>& overlaps,
         // loop over functions of same color
         list<int>::const_iterator ii=ic->begin();
         while( ii!=ic->end() ){
-            
-            where_.insert( pair<int,short>(*ii,color) );
+            int gid=*ii; 
+            gid2color_.insert( pair<int,short>(gid,color) );
             //if( onpe0 )
-            //    (*MPIdata::sout)<<"Orbital "<<(*ii)<<" of color "<<where_[(*ii)]<<endl;
+            //    (*MPIdata::sout)<<"Orbital "<<(*ii)<<" of color "<<gid2color_[(*ii)]<<endl;
 
             ii++;
         }
@@ -328,7 +127,7 @@ void FunctionsPacking::getColors(const SymmetricMatrix<char>& overlaps,
     while( ic!=colored_gids.end() ){
         list<int>::const_iterator ii=ic->begin();
         while( ii!=ic->end() ){
-            assert( where_.find(*ii)->second<num_colors_ );
+            assert( gid2color_.find(*ii)->second<num_colors_ );
             ii++;
         }
         ic++;
@@ -337,7 +136,8 @@ void FunctionsPacking::getColors(const SymmetricMatrix<char>& overlaps,
     int ntot_orb=accumulate(nb_orb.begin(),nb_orb.end(),0);
     
     if( ntot_orb!=global_size_ ){
-        if( onpe0 )(*MPIdata::sout)<<ntot_orb<<" orbitals instead of "<<global_size_<<endl;
+        if( onpe0 )(*MPIdata::sout)<<ntot_orb<<" orbitals instead of "
+                                   <<global_size_<<endl;
         exit(0);
     }
 

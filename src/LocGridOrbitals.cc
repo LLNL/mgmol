@@ -2047,7 +2047,7 @@ void LocGridOrbitals::orthonormalize2states(const int st1, const int st2)
     int color_st[2]={-1,-1};
     for(short ic=0;ic<2;++ic)
     {
-        color_st[ic]=pack_->getColorState(st[ic]);
+        color_st[ic]=pack_->getColor(st[ic]);
     }
 
     // work to do only if one of the states exists locally
@@ -2685,7 +2685,7 @@ void LocGridOrbitals::computeSinCos2states(vector<vector<double> >& a,
     const int st[2]={st1,st2};
     int color_st[2]={-1,-1};
     for(short ic=0;ic<2;++ic){
-        color_st[ic]=pack_->getColorState(st[ic]);
+        color_st[ic]=pack_->getColor(st[ic]);
     }    
 
     const int dim0=grid_.dim(0);
@@ -2800,7 +2800,7 @@ void LocGridOrbitals::computeSinCosDiag2states(SpreadsAndCenters& spread,
 
     short color_st[2]={-1,-1};
     for(short ic=0;ic<2;++ic){
-        color_st[ic]=pack_->getColorState(st[ic]);
+        color_st[ic]=pack_->getColor(st[ic]);
     }    
 
     int loc_length = dim0/subdivx_;
@@ -3493,7 +3493,7 @@ void LocGridOrbitals::computeGlobalIndexes()
                                     it++)
     {
         const int gid=*it;
-        short color=pack_->getColorState(gid);
+        short color=pack_->getColor(gid);
         assert( color<chromatic_number_ );
         for(short iloc=0;iloc<subdivx_;iloc++)
         {

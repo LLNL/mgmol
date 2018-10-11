@@ -59,7 +59,6 @@ SRC =   \
  GrassmanCG.cc \
  GrassmanCGSparse.cc \
  LBFGS.cc \
- SymmetricMatrix.cc \
  IonicStepper.cc \
  Energy.cc \
  GramMatrix.cc \

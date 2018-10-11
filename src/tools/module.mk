@@ -6,4 +6,5 @@ SRC += tools/mgmol_mpi_tools.cc \
        tools/MGmol_MPI.cc \
        tools/entropy.cc \
        tools/random.cc \
-       tools/coloring.cc
+       tools/coloring.cc \
+       tools/SymmetricMatrix.cc
