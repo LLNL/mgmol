@@ -108,7 +108,6 @@ LocGridOrbitals::LocGridOrbitals(const pb::Grid& my_grid,
     assert( numst_>=0 );
     
     pack_=0;
-    colored_regions_=0;
     gidToStorage_=0;
     
     global_indexes_.clear();
@@ -129,14 +128,12 @@ LocGridOrbitals::~LocGridOrbitals()
     assert( proj_matrices_!=0 );
     assert( lrs_!=0 );
     assert( pack_!=0 );
-    assert( colored_regions_!=0 );
     assert( gidToStorage_!=0 );
     
     (*n_copies_)--;
     if( (*n_copies_)==0 )
     {
         delete pack_; pack_=0;
-        delete colored_regions_; colored_regions_=0;
         delete[] n_copies_;
         delete distributor_diagdotprod_; distributor_diagdotprod_ =0;
         delete distributor_normalize_;   distributor_normalize_ =0;     
@@ -219,7 +216,6 @@ void LocGridOrbitals::copySharedData(const LocGridOrbitals &A)
     chromatic_number_=A.chromatic_number_;
 
     pack_            =A.pack_;
-    colored_regions_ =A.colored_regions_;
  
     global_indexes_  =A.global_indexes_;
     
@@ -725,8 +721,6 @@ int LocGridOrbitals::packStates()
 
     pack_=new FunctionsPacking(lrs_,global,mmpi.commSameSpin());
 
-    colored_regions_=new ColoredRegions(*pack_,*lrs_,global);
- 
     assert( pack_->chromatic_number()<100000 );
     
     return pack_->chromatic_number();
@@ -1035,6 +1029,9 @@ int LocGridOrbitals::write_func_hdf5(HDFrestart& h5f_file, string name)
     hid_t file_id=h5f_file.file_id();
     bool iwrite = h5f_file.active();
 
+    const bool global = ct.globalColoring();
+    ColoredRegions colored_regions(*pack_,*lrs_,global);
+
     // Create the dataspace for the dataset.
     
     hid_t filespace=-1; 
@@ -1092,12 +1089,12 @@ int LocGridOrbitals::write_func_hdf5(HDFrestart& h5f_file, string name)
         int nrec=0;
         if( h5f_file.useHdf5p() )
         {
-            nrec=colored_regions_->getAllCentersAndRadii4color(
+            nrec=colored_regions.getAllCentersAndRadii4color(
                      color, centers_and_radii);
         }
         else
         {
-            nrec=colored_regions_->getLocCentersAndRadii4color(
+            nrec=colored_regions.getLocCentersAndRadii4color(
                      color, centers_and_radii);
             assert( centers_and_radii.size() == 4*nrec );
         }
@@ -1112,11 +1109,11 @@ int LocGridOrbitals::write_func_hdf5(HDFrestart& h5f_file, string name)
         int ngids=0;
         if( h5f_file.useHdf5p() )
         {
-            ngids=colored_regions_->getAllGids4color(color, gids);
+            ngids=colored_regions.getAllGids4color(color, gids);
         }
         else
         {
-            ngids=colored_regions_->getLocGids4color(color, gids);
+            ngids=colored_regions.getLocGids4color(color, gids);
         }
         
         if(iwrite)
@@ -1189,6 +1186,9 @@ int LocGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, string name)
 
     Control& ct = *(Control::instance());
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+
+    const bool global = ct.globalColoring();
+    ColoredRegions colored_regions(*pack_,*lrs_,global);
 
     hsize_t   block[3]={grid_.dim(0),grid_.dim(1),grid_.dim(2)};
     hsize_t   offset[3]={0,0,0};
@@ -1316,7 +1316,7 @@ int LocGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, string name)
             
             // get possible colors for function centered at center
             set<int> possible_colors;
-            colored_regions_->getPossibleColors(center, possible_colors);
+            colored_regions.getPossibleColors(center, possible_colors);
             //if( possible_colors.size()!=1 ){
             //    (*MPIdata::serr)<<"possible_colors.size()="<<possible_colors.size()<<endl;
             //    (*MPIdata::serr)<<"center: "<<center<<endl;

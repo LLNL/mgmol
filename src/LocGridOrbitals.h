@@ -39,7 +39,6 @@ class ProjectedMatricesInterface;
 class LocalizationRegions;
 class MasksSet;
 class FunctionsPacking;
-class ColoredRegions;
 class LocGridOrbitals;
 class SpreadsAndCenters;
 class Masks4Orbitals;
@@ -89,7 +88,6 @@ private:
     short* n_copies_;
 
     FunctionsPacking *pack_;
-    ColoredRegions* colored_regions_;
 
     int     chromatic_number_;
     
