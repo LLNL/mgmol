@@ -7,9 +7,12 @@ DirectionalReduce::DirectionalReduce(MPI_Comm cart_comm,
                                      const int max_steps[3]):
     cart_comm_(cart_comm)
 {
+#ifndef NDEBUG
     int status;
-
-    assert( MPI_Topo_test(cart_comm_, &status) == MPI_CART );
+    int ret = MPI_Topo_test(cart_comm_, &status); 
+    assert( ret == MPI_SUCCESS );
+    assert( status == MPI_CART );
+#endif
 
     int periodic[3];
     int coords[3];
@@ -24,9 +27,12 @@ DirectionalReduce::DirectionalReduce(MPI_Comm cart_comm,
                                      const double domain[3]):
     cart_comm_(cart_comm)
 {
+#ifndef NDEBUG
     int status;
-
-    assert( MPI_Topo_test(cart_comm_, &status) == MPI_CART );
+    int ret = MPI_Topo_test(cart_comm_, &status);
+    assert( ret == MPI_SUCCESS );
+    assert( status == MPI_CART );
+#endif
 
     int periodic[3];
     int coords[3];
