@@ -212,8 +212,8 @@ void SpreadPenaltyVolume::computeAndAddResidualSpreadPenalty(const vector<float>
     
     for(short icolor=0;icolor<orbitals.chromatic_number();icolor++)
     {
-        const ORBDTYPE* const iphi=orbitals.getPhi(icolor);
-        ORBDTYPE* ires=res.getPhi(icolor);
+        const ORBDTYPE* const iphi=orbitals.getPsi(icolor);
+        ORBDTYPE* ires=res.getPsi(icolor);
 
         for(short iloc=0;iloc<subdivx;iloc++)
         {

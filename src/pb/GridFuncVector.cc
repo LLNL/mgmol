@@ -987,11 +987,13 @@ void GridFuncVector<T>::init_vect(const int k, T* vv, const char dis)const
 template <typename T>
 void GridFuncVector<T>::getValues(const int k, float* vv)const
 {
+    assert( k<functions_.size() );
     functions_[k]->getValues(vv);
 }
 template <typename T>
 void GridFuncVector<T>::getValues(const int k, double* vv)const
 {
+    assert( k<functions_.size() );
     functions_[k]->getValues(vv);
 }
 

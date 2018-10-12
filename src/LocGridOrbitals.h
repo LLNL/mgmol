@@ -150,7 +150,6 @@ private:
     void computeGlobalIndexes();
     void computeInvNorms2(vector< vector<float> >& inv_norms2)const;
 
-    double max_radii()const;
     void initFourier();
     void initRand();
     const dist_matrix::DistMatrix<DISTMATDTYPE> product(const ORBDTYPE* const, const int, const int,
@@ -187,7 +186,7 @@ protected:
     unsigned int lrs_iterative_index_;
 
     // indexes corresponding to valid function in each subdomain
-    std::vector<std::vector<int> > global_indexes_;
+    std::vector<std::vector<int> > overlapping_gids_;
 
 public:
 
@@ -240,11 +239,6 @@ public:
     ~LocGridOrbitals();
     
     static void printTimers(std::ostream& os);
-
-    ORBDTYPE* getPhi(const int i)const
-    {
-        return block_vector_.vect(i);
-    }
 
     void saveOrbitals(const char* filename);
 
@@ -360,37 +354,19 @@ public:
     }
     void setPsi(const pb::GridFunc<double>& gf_work, const int ist)
     {
-        ORBDTYPE* pdst=block_vector_.vect(ist);
-        gf_work.getValues(pdst);
+         block_vector_.assignComponent(gf_work,ist);    
     }
     void setPsi(const pb::GridFunc<float>& gf_work, const int ist)
     {
-        ORBDTYPE* pdst=block_vector_.vect(ist);
-        gf_work.getValues(pdst);
-    }
-    void setPsi(const pb::GridFuncVector<double>& gf_work, const int ist)
-    {
-        ORBDTYPE* pdst=block_vector_.vect(ist);
-        gf_work.getValues(ist,pdst);
-    }
-    void setPsi(const pb::GridFuncVector<float>& gf_work, const int ist)
-    {
-        ORBDTYPE* pdst=block_vector_.vect(ist);
-        gf_work.getValues(ist,pdst);
+        block_vector_.assignComponent(gf_work,ist);
     }
     void setPsi(const pb::GridFuncVector<float>& gf_work)
     {
-        for(int i=0;i<chromatic_number_;i++)
-        {
-            setPsi(gf_work,i);
-        }
+        block_vector_.assign(gf_work);
     }
     void setPsi(const pb::GridFuncVector<double>& gf_work)
     {
-        for(int i=0;i<chromatic_number_;i++)
-        {
-            setPsi(gf_work,i);
-        }
+        block_vector_.assign(gf_work);
     }
     int chromatic_number(void)const
     {
@@ -517,15 +493,15 @@ public:
     double normState(const int st)const;
     const vector<vector<int> >& getGlobalIndexes()const
     {
-        assert( global_indexes_.size()>0 );
-        return global_indexes_;
+        assert( overlapping_gids_.size()>0 );
+        return overlapping_gids_;
     }
     int getGlobalIndex(const short iloc, const short color)const
     {
-        assert( global_indexes_.size()>0 );
-        assert( iloc<global_indexes_.size() );
-        assert( color<global_indexes_[iloc].size() );
-        return global_indexes_[iloc][color];
+        assert( overlapping_gids_.size()>0 );
+        assert( iloc<overlapping_gids_.size() );
+        assert( color<overlapping_gids_[iloc].size() );
+        return overlapping_gids_[iloc][color];
     }
 
     void rotateSubMatrices(dist_matrix::DistMatrix<DISTMATDTYPE>&  rotation_matrix,

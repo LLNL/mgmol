@@ -147,6 +147,17 @@ public:
     {
         memcpy(storage_, src, size_storage_*sizeof(T));
     }
+
+    /*
+     * assign functions for source data with ghost values
+     */
+    void assign(const pb::GridFuncVector<float>& src);
+    void assign(const pb::GridFuncVector<double>& src);
+    void assignComponent(const pb::GridFunc<float>& src, const int i);
+    void assignComponent(const pb::GridFunc<double>& src, const int i);
+    void assignComponent(const pb::GridFuncVector<float>& src, const int i);
+    void assignComponent(const pb::GridFuncVector<double>& src, const int i);
+
     void assignLocal(const int color, const short iloc,
                      const T* const src)
     {

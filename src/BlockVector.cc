@@ -256,6 +256,51 @@ BlockVector<T>& BlockVector<T>::operator-=(const BlockVector<T>& src)
     }
     return *this;
 }
+template <typename T>
+void BlockVector<T>::assign(const pb::GridFuncVector<double>& src)
+{
+    for(int i=0;i<vect_.size();i++)
+    {
+        T* dest=vect_[i];
+        src.getValues(i,dest);
+    }
+}
+template <typename T>
+void BlockVector<T>::assign(const pb::GridFuncVector<float>& src)
+{
+    for(int i=0;i<vect_.size();i++)
+    {
+        T* dest=vect_[i];
+        src.getValues(i,dest);
+    }
+}
+
+template <typename T>
+void BlockVector<T>::assignComponent(const pb::GridFunc<double>& src, const int i)
+{
+    T* dest=vect_[i];
+    src.getValues(dest);
+}
+template <typename T>
+void BlockVector<T>::assignComponent(const pb::GridFunc<float>& src, const int i)
+{
+    T* dest=vect_[i];
+    src.getValues(dest);
+}
+
+template <typename T>
+void BlockVector<T>::assignComponent(const pb::GridFuncVector<double>& src, const int i)
+{
+    T* dest=vect_[i];
+    src.getValues(i,dest);
+}
+template <typename T>
+void BlockVector<T>::assignComponent(const pb::GridFuncVector<float>& src, const int i)
+{
+    T* dest=vect_[i];
+    src.getValues(i,dest);
+}
+
 template <typename T>    
 void BlockVector<T>::initialize(const vector<vector<int> >& gid,
                                 const bool skinny_stencil)
