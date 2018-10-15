@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #ifndef BLOCKVECTOR_H
 #define BLOCKVECTOR_H
 
@@ -130,9 +129,10 @@ public:
     }
     
     T maxAbsValue()const;
-    
-    void setDataWithGhosts(pb::GridFuncVector<float>* data_wghosts);
-    void setDataWithGhosts(pb::GridFuncVector<double>* data_wghosts);
+
+    template<typename T2>
+    void setDataWithGhosts(pb::GridFuncVector<T2>* data_wghosts);
+
     void setDataWithGhosts();
     
     void assign(const int color, const T* const src, const int n=1)
@@ -151,12 +151,12 @@ public:
     /*
      * assign functions for source data with ghost values
      */
-    void assign(const pb::GridFuncVector<float>& src);
-    void assign(const pb::GridFuncVector<double>& src);
-    void assignComponent(const pb::GridFunc<float>& src, const int i);
-    void assignComponent(const pb::GridFunc<double>& src, const int i);
-    void assignComponent(const pb::GridFuncVector<float>& src, const int i);
-    void assignComponent(const pb::GridFuncVector<double>& src, const int i);
+    template<typename T2>
+    void assign(const pb::GridFuncVector<T2>& src);
+    template<typename T2>
+    void assignComponent(const pb::GridFunc<T2>& src, const int i);
+    template<typename T2>
+    void assignComponent(const pb::GridFuncVector<T2>& src, const int i);
 
     void assignLocal(const int color, const short iloc,
                      const T* const src)

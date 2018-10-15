@@ -98,7 +98,7 @@ public:
 	drho0_      =drho0def_;
     }
     
-    ~DielFunc(){};
+    virtual ~DielFunc(){};
 
     DielFunc& operator=(const T);
 

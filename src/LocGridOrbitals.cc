@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #include "global.h"
 
 #ifdef USE_MPI
@@ -3620,4 +3619,15 @@ void LocGridOrbitals::rotateSubMatrices(dist_matrix::DistMatrix<DISTMATDTYPE>&  
 {
     proj_matrices_->rotateAll(rotation_matrix, flag_eigen);
 }
+
+template void LocGridOrbitals::setDataWithGhosts(
+    pb::GridFuncVector<float>* data_wghosts);
+template void LocGridOrbitals::setDataWithGhosts(
+    pb::GridFuncVector<double>* data_wghosts);
+
+template void LocGridOrbitals::setPsi(const pb::GridFunc<float>& gf_work, const int ist);
+template void LocGridOrbitals::setPsi(const pb::GridFunc<double>& gf_work, const int ist);
+
+template void LocGridOrbitals::setPsi(const pb::GridFuncVector<float>& gf_work);
+template void LocGridOrbitals::setPsi(const pb::GridFuncVector<double>& gf_work);
 

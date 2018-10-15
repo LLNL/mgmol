@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #include "BlockVector.h"
 #include "global.h"
 #include "MPIdata.h"
@@ -257,16 +256,8 @@ BlockVector<T>& BlockVector<T>::operator-=(const BlockVector<T>& src)
     return *this;
 }
 template <typename T>
-void BlockVector<T>::assign(const pb::GridFuncVector<double>& src)
-{
-    for(int i=0;i<vect_.size();i++)
-    {
-        T* dest=vect_[i];
-        src.getValues(i,dest);
-    }
-}
-template <typename T>
-void BlockVector<T>::assign(const pb::GridFuncVector<float>& src)
+template <typename T2>
+void BlockVector<T>::assign(const pb::GridFuncVector<T2>& src)
 {
     for(int i=0;i<vect_.size();i++)
     {
@@ -276,26 +267,16 @@ void BlockVector<T>::assign(const pb::GridFuncVector<float>& src)
 }
 
 template <typename T>
-void BlockVector<T>::assignComponent(const pb::GridFunc<double>& src, const int i)
-{
-    T* dest=vect_[i];
-    src.getValues(dest);
-}
-template <typename T>
-void BlockVector<T>::assignComponent(const pb::GridFunc<float>& src, const int i)
+template <typename T2>
+void BlockVector<T>::assignComponent(const pb::GridFunc<T2>& src, const int i)
 {
     T* dest=vect_[i];
     src.getValues(dest);
 }
 
 template <typename T>
-void BlockVector<T>::assignComponent(const pb::GridFuncVector<double>& src, const int i)
-{
-    T* dest=vect_[i];
-    src.getValues(i,dest);
-}
-template <typename T>
-void BlockVector<T>::assignComponent(const pb::GridFuncVector<float>& src, const int i)
+template <typename T2>
+void BlockVector<T>::assignComponent(const pb::GridFuncVector<T2>& src, const int i)
 {
     T* dest=vect_[i];
     src.getValues(i,dest);
@@ -414,28 +395,8 @@ void BlockVector<T>::setDataWithGhosts()
 }
 
 template <typename T>
-void BlockVector<T>::setDataWithGhosts(pb::GridFuncVector<float>* data_wghosts)
-{
-    assert( data_wghosts!=0 );
-    
-    set_data_tm_.start();
-
-    data_wghosts->resetData();
-
-    data_wghosts->set_updated_boundaries(false);
-    
-    //if( onpe0 )
-    //    (*MPIdata::sout)<<"BlockVector::set_data_with_ghosts()"<<endl;
-    for(int i=0;i<(int)vect_.size();i++)
-    {
-        data_wghosts->assign(i,vect_[i]);
-    }
-    
-    set_data_tm_.stop();
-}
-
-template <typename T>
-void BlockVector<T>::setDataWithGhosts(pb::GridFuncVector<double>* data_wghosts)
+template <typename T2>
+void BlockVector<T>::setDataWithGhosts(pb::GridFuncVector<T2>* data_wghosts)
 {
     assert( data_wghosts!=0 );
     
@@ -492,7 +453,19 @@ void BlockVector<T>::set_ld_and_size_storage()
 }
 
 template class BlockVector<double>;
+template void BlockVector<double>::assign(const pb::GridFuncVector<float>& src);
+template void BlockVector<double>::assign(const pb::GridFuncVector<double>& src);
+template void BlockVector<double>::assignComponent(const pb::GridFunc<float>& src, const int i);
+template void BlockVector<double>::assignComponent(const pb::GridFunc<double>& src, const int i);
+template void BlockVector<double>::setDataWithGhosts(pb::GridFuncVector<float>* data_wghosts);
+template void BlockVector<double>::setDataWithGhosts(pb::GridFuncVector<double>* data_wghosts);
 #ifdef USE_MP
 template class BlockVector<float>;
+template void BlockVector<float>::assign(const pb::GridFuncVector<float>& src);
+template void BlockVector<float>::assign(const pb::GridFuncVector<double>& src);
+template void BlockVector<float>::assignComponent(const pb::GridFunc<float>& src, const int i);
+template void BlockVector<float>::assignComponent(const pb::GridFunc<double>& src, const int i);
+template void BlockVector<float>::setDataWithGhosts(pb::GridFuncVector<float>* data_wghosts);
+template void BlockVector<float>::setDataWithGhosts(pb::GridFuncVector<double>* data_wghosts);
 #endif
 

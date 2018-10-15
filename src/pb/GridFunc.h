@@ -100,10 +100,10 @@ public:
     // copy constructor
     GridFunc(const GridFunc<double>& A);
     GridFunc(const GridFunc<float>& A);
-    
+
     // copy constructor on different grid
     GridFunc(const GridFunc<T>&, const Grid&);
-    
+
     void setValues(const GridFunc<T>& src);
     void setValues(const T val);
     
@@ -117,9 +117,9 @@ public:
 
     double fmax();
 
-    void getValues(double*)const;
-    void getValues(float*)const;
-    
+    template<typename T2>
+    void getValues(T2*)const;
+
     void init_vect(T*,const char)const;
     void init_vect_shift(T *global_func)const;
     void gather(T *)const;
@@ -236,8 +236,10 @@ public:
     double integral()const;
     double get_average();
     double average0();
-    void assign(const float* const,const char dis='d');
-    void assign(const double* const,const char dis='d');
+
+    template<typename T2>
+    void assign(const T2* const,const char dis='d');
+
     void test_newgrid();
     void print(std::ostream&);
     void write_plt(const char [])const;

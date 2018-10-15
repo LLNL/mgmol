@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #ifndef PRECONDITIONING_H
 #define PRECONDITIONING_H
 
@@ -63,16 +62,6 @@ public:
             const short level, const int istate=-1);
     void mg(pb::GridFuncVector<T>& gf_v, const pb::GridFuncVector<T>&  gf_f,
             const short level);
-    void mg(pb::GridFuncVector<float>& gf_v, const pb::GridFuncVector<double>& gf_f,
-            const short level)
-    {
-        exitWithErrorMessage("mg(pb::GridFuncVector<double>&, const pb::GridFuncVector<float>&, const short)");
-    }
-    void mg(pb::GridFunc<float>& gf_v, const pb::GridFunc<double>& gf_f,
-            const short level, const int istate=-1)
-    {
-        exitWithErrorMessage("mg(pb::GridFunc<double>&, const pb::GridFunc<float>&, const short, const int)");
-    }
     short max_levels()const{ return max_levels_; }
 };
 #endif

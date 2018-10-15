@@ -6,13 +6,13 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id: GridFuncVector.cc,v 1.10 2010/01/28 22:56:31 jeanluc Exp $
-#include <cassert>
 #include "GridFuncVector.h"
 #include "MGmol_blas1.h"
 #include "mputils.h"
 #include "MPIdata.h"
+
 #include <set>
+#include <cassert>
 
 namespace pb{
 Timer  GridFuncVectorInterface::trade_bc_tm_("GridFuncVector::trade_bc");
@@ -1581,4 +1581,9 @@ void GridFuncVector<T>::trade_boundaries_colors(const short first_color, const s
 
 template class GridFuncVector<double>;
 template class GridFuncVector<float>;
+template void GridFuncVector<float>::assign(const int i, const float* const v, const char dis='d');
+template void GridFuncVector<float>::assign(const int i, const double* const v, const char dis='d');
+template void GridFuncVector<double>::assign(const int i, const float* const v, const char dis='d');
+template void GridFuncVector<double>::assign(const int i, const double* const v, const char dis='d');
+
 } // namespace pb

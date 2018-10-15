@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id: GridFunc<T>.cc,v 1.42 2010/01/28 22:56:31 jeanluc Exp $
 #include <cstdlib>
 #include <cstdarg>
 #include <fstream>
@@ -193,7 +192,7 @@ GridFunc<T>::GridFunc(const Grid& my_grid,
     }
 }
 
-// copy constructor - double
+// copy constructor
 template <typename T>
 GridFunc<T>::GridFunc(const GridFunc<double>& A):grid_(A.grid())
 {
@@ -209,21 +208,18 @@ GridFunc<T>::GridFunc(const GridFunc<double>& A):grid_(A.grid())
     if( !grid_.active() )return;
     int n=grid_.sizeg();
     
-    double * au = A.uu();
+    double* au = A.uu();
     if(au != 0){
         uu_ = new T[n];
         MPcpy(uu_, au, n);
         updated_boundaries_=A.updated_boundaries();
     }else{
         updated_boundaries_=false;
-        uu_ = NULL;
+        uu_ = 0;
     }
-
-    //cout<<"Copy constructor for function on grid "<<grid_.level()<<endl;    
 
 }
 
-// copy constructor - float
 template <typename T>
 GridFunc<T>::GridFunc(const GridFunc<float>& A):grid_(A.grid())
 {
@@ -238,20 +234,19 @@ GridFunc<T>::GridFunc(const GridFunc<float>& A):grid_(A.grid())
 
     if( !grid_.active() )return;
     int n=grid_.sizeg();
-    
-    float * au = A.uu();
+
+    float* au = A.uu();
     if(au != 0){
         uu_ = new T[n];
         MPcpy(uu_, au, n);
         updated_boundaries_=A.updated_boundaries();
     }else{
         updated_boundaries_=false;
-        uu_ = NULL;
+        uu_ = 0;
     }
 
-    //cout<<"Copy constructor for function on grid "<<grid_.level()<<endl;    
-
 }
+
 
 // copy constructor on different grid
 template <typename T>
@@ -334,6 +329,7 @@ GridFunc<T>::GridFunc(const T* const vv, const Grid& new_grid,
  
     const size_t sdim2=dim_[2]*sizeof(T);
     if(vv!=0){
+        assert( grid_.sizeg()>0 );
         uu_ = new T[grid_.sizeg()];
         memset(uu_,0,grid_.sizeg()*sizeof(T));
 
@@ -777,7 +773,8 @@ void GridFunc<T>::diff(const GridFunc<T>& A, const GridFunc<T>& B)
 
 // Initialize data with ghosts uu_ by copying data without ghosts vv
 template <typename T>
-void GridFunc<T>::assign(const double* const vv, const char dis)
+template <typename T2>
+void GridFunc<T>::assign(const T2* const vv, const char dis)
 {
     if( !grid_.active() )return;
 
@@ -820,71 +817,7 @@ void GridFunc<T>::assign(const double* const vv, const char dis)
                 int ix1 = (ix+ nghosts)*incx_;
                 int ix2 = ix*incx2;
 
-                const double* const pv=vv+ix2;
-                T* pu=uu_+ix1+nghosts+nghosts*incy_;
-                for(int iy = 0;iy < dim_[1];iy++)
-                {
-                    int iy1 = iy*incy_;
-                    int iy2 = iy*incy2;
-                        
-                    MPcpy(pu+iy1, pv+iy2, dim_[2]);  
-                } 
-            }
-        }
-
-        updated_boundaries_=false;
-    }
-    else
-    {
-        updated_boundaries_=false;
-    }
-
-}
-
-// Initialize data with ghosts uu_ by copying data without ghosts vv
-template <typename T>
-void GridFunc<T>::assign(const float* const vv, const char dis)
-{
-    if( !grid_.active() )return;
-
-    const short nghosts=ghost_pt();
-
-    if(vv!=0)
-    {
-        if( dis=='g' )
-        {
-            const int ldz=grid_.gdim(2);
-            const int istart=mype_env().my_mpi(0)*dim_[0];
-            const int jstart=mype_env().my_mpi(1)*dim_[1];
-            const int kstart=mype_env().my_mpi(2)*dim_[2];
-            const int gincx=grid_.gdim(1)*ldz;
-            const int gincy=ldz;
-        
-            for(int ix = 0;ix < dim_[0];ix++)
-            {
-                int ix1 = (ix+ nghosts)*incx_;
-                int ix2 = (ix+istart)*gincx;
-
-                for(int iy = 0;iy < dim_[1];iy++)
-                {
-                    int iy1 = ix1+(iy+nghosts)*incy_;
-                    int iy2 = ix2+(iy+jstart)*gincy+kstart;
-                        
-                    MPcpy(uu_+iy1+nghosts, vv+iy2, dim_[2]);
-                } 
-            }
-
-        }
-        else
-        {
-            const int incx2=dim_[2]*dim_[1];
-            const int incy2=dim_[2];
-            for(int ix = 0;ix < dim_[0];ix++)
-            {
-                int ix1 = (ix+ nghosts)*incx_;
-                int ix2 = ix*incx2;
-
-                const float* const pv=vv+ix2;
+                const T2* const pv=vv+ix2;
                 T* pu=uu_+ix1+nghosts+nghosts*incy_;
                 for(int iy = 0;iy < dim_[1];iy++)
                 {
@@ -1775,7 +1708,8 @@ void GridFunc<T>::init_vect(T* vv, const char dis)const
 
 // assign vv with values in member uu_
 template <typename T>
-void GridFunc<T>::getValues(float* vv)const
+template <typename T2>
+void GridFunc<T>::getValues(T2* vv)const
 {
     if( !grid_.active() )return;
 
@@ -1793,42 +1727,7 @@ void GridFunc<T>::getValues(float* vv)const
         int ix1 = ix0 + ix*incx_;
         int ix2 = ix*incx_dest;
 
-        float* pdest=vv+ix2;
-        const T* pu=uu_+ix1+nghosts*incy_;
-        
-        for(int iy = 0;iy < dim_[1];iy++)
-        {
-            MPcpy(pdest, pu, dim_[2]);
-            
-            pdest += incy_dest;
-            pu += incy_;
-   
-        } 
-
-    } 
-}
-
-// assign vv with values in member uu_
-template <typename T>
-void GridFunc<T>::getValues(double* vv)const
-{
-    if( !grid_.active() )return;
-
-    assert(grid_.inc(2)==1);
-    assert(vv!=0);
-  
-    const short nghosts=ghost_pt();
-
-    const int incx_dest=dim_[2]*dim_[1];
-    const int incy_dest=dim_[2];
-    const int ix0=nghosts*(incx_+1);
-
-    for(int ix = 0;ix < dim_[0];ix++)
-    {
-        int ix1 = ix0 + ix*incx_;
-        int ix2 = ix*incx_dest;
-
-        double* pdest=vv+ix2;
+        T2* pdest=vv+ix2;
         const T* pu=uu_+ix1+nghosts*incy_;
         
         for(int iy = 0;iy < dim_[1];iy++)
@@ -4071,7 +3970,10 @@ template <typename T>
 GridFunc<T>::~GridFunc<T>()
 {
     if( uu_!=0 )
+    {
         delete[] uu_;
+        uu_=0;
+    }
 
     //cout<<"Destructor for function on grid "<<grid_.level()<<endl;    
 }
@@ -4154,4 +4056,15 @@ void GridFunc<T>::assign(const GridFunc<T>& src, const char dis)
 }
 template class GridFunc<double>;
 template class GridFunc<float>;
+
+template void GridFunc<double>::getValues(double*)const;
+template void GridFunc<double>::getValues(float*)const;
+template void GridFunc<float>::getValues(double*)const;
+template void GridFunc<float>::getValues(float*)const;
+
+template void GridFunc<double>::assign(const double* const,const char dis);
+template void GridFunc<double>::assign(const float* const,const char dis);
+template void GridFunc<float>::assign(const double* const,const char dis);
+template void GridFunc<float>::assign(const float* const,const char dis);
+
 } // namespace pb

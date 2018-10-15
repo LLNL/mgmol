@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id: GridFuncVector.h,v 1.8 2009/02/03 17:22:12 jeanluc Exp $
 #ifndef FUNCVECTOR_H
 #define FUNCVECTOR_H
 
@@ -160,23 +159,16 @@ public:
     }
     
     void setup();
-    
-    void assign(const int i, const float* const v, const char dis='d')
+
+    template<typename T2>
+    void assign(const int i, const T2* const v, const char dis='d')
     {
         assert( i<functions_.size() );
         
         functions_[i]->assign(v,dis);
         updated_boundaries_=false;
     }
-    
-    void assign(const int i, const double* const v, const char dis='d')
-    {
-        assert( i<functions_.size() );
-        
-        functions_[i]->assign(v,dis);
-        updated_boundaries_=false;
-    }
-    
+
     void push_back(GridFunc<T>* function)
     {
         assert( function!=0 );

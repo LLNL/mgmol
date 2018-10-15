@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #ifndef LOCALGRIDORBITALS_H
 #define LOCALGRIDORBITALS_H
 
@@ -292,13 +291,8 @@ public:
         data_wghosts_index_=getIterativeIndex();
     }
 
-    void setDataWithGhosts(pb::GridFuncVector<float>* data_wghosts)
-    {
-        assert( data_wghosts!=0 );
-        
-        block_vector_.setDataWithGhosts(data_wghosts);
-    }
-    void setDataWithGhosts(pb::GridFuncVector<double>* data_wghosts)
+    template<typename T>
+    void setDataWithGhosts(pb::GridFuncVector<T>* data_wghosts)
     {
         assert( data_wghosts!=0 );
         
@@ -352,19 +346,13 @@ public:
         assert(iloc<subdivx_);
         return block_vector_.vect(i)+iloc*loc_numpt_;
     }
-    void setPsi(const pb::GridFunc<double>& gf_work, const int ist)
-    {
-         block_vector_.assignComponent(gf_work,ist);    
-    }
-    void setPsi(const pb::GridFunc<float>& gf_work, const int ist)
+    template<typename T>
+    void setPsi(const pb::GridFunc<T>& gf_work, const int ist)
     {
         block_vector_.assignComponent(gf_work,ist);
     }
-    void setPsi(const pb::GridFuncVector<float>& gf_work)
-    {
-        block_vector_.assign(gf_work);
-    }
-    void setPsi(const pb::GridFuncVector<double>& gf_work)
+    template<typename T>
+    void setPsi(const pb::GridFuncVector<T>& gf_work)
     {
         block_vector_.assign(gf_work);
     }
