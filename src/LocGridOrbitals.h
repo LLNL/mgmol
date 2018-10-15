@@ -109,7 +109,7 @@ private:
     void copySharedData(const LocGridOrbitals &A);
     
     const ORBDTYPE* getGidStorage(const int st, const short iloc)const;
-    int packStates();
+    int packStates(LocalizationRegions* lrs);
     void setAssignedIndexes();
     void projectOut(ORBDTYPE* const, const int, const double scale=1.);
 
@@ -146,7 +146,7 @@ private:
     void computeLocalProduct(const ORBDTYPE* const, const int, 
                              LocalMatrices<MATDTYPE>&, const bool transpose=false);
 
-    void computeGlobalIndexes();
+    void computeGlobalIndexes(LocalizationRegions& lrs);
     void computeInvNorms2(vector< vector<float> >& inv_norms2)const;
 
     void initFourier();
@@ -166,7 +166,7 @@ private:
                           const int ncolors,
                           const SquareLocalMatrices<MATDTYPE>& matrix, 
                           ORBDTYPE* product, const int ldp)const;
-    void setup(MasksSet* masks, MasksSet* corrmasks);
+    void setup(MasksSet* masks, MasksSet* corrmasks, LocalizationRegions* lrs);
 
     /* Data distribution objects */
     DataDistribution *distributor_diagdotprod_;
@@ -186,6 +186,12 @@ protected:
 
     // indexes corresponding to valid function in each subdomain
     std::vector<std::vector<int> > overlapping_gids_;
+
+    // indexes of all global functions overlapping with subdomain/task
+    std::vector<int> all_overlapping_gids_;
+
+    // indexes of all global functions centered within subdomain/task
+    std::vector<int> local_gids_;
 
 public:
 
@@ -244,8 +250,8 @@ public:
     void resetDotProductMatrices();
     void init2zero();
     
-    void setup();
-    void reset(MasksSet* masks, MasksSet* corrmasks);
+    void setup(LocalizationRegions* lrs);
+    void reset(MasksSet* masks, MasksSet* corrmasks, LocalizationRegions* lrs);
     
     virtual void assign(const LocGridOrbitals& orbitals);
     void copyDataFrom(const LocGridOrbitals& src);

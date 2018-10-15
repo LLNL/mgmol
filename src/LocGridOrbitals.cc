@@ -118,14 +118,13 @@ LocGridOrbitals::LocGridOrbitals(const pb::Grid& my_grid,
     distributor_normalize_ = 0;
    
     if(masks && corrmasks) 
-        masks4orbitals_.reset(new Masks4Orbitals(masks,corrmasks,*lrs_));
+        masks4orbitals_.reset(new Masks4Orbitals(masks,corrmasks,*lrs));
 }
 
 LocGridOrbitals::~LocGridOrbitals()
 {
     assert( *n_copies_>0 );
     assert( proj_matrices_!=0 );
-    assert( lrs_!=0 );
     assert( pack_!=0 );
     assert( gidToStorage_!=0 );
     
@@ -155,7 +154,6 @@ LocGridOrbitals::LocGridOrbitals(const LocGridOrbitals &A, const bool copy_data)
     
     assert( A.chromatic_number_>=0 );
     assert( A.proj_matrices_!=0 );
-    assert( A.lrs_!=0 );
     
     (*A.n_copies_)++;
 
@@ -216,10 +214,12 @@ void LocGridOrbitals::copySharedData(const LocGridOrbitals &A)
 
     pack_            =A.pack_;
  
-    overlapping_gids_  =A.overlapping_gids_;
-    
+    overlapping_gids_     = A.overlapping_gids_;
+    all_overlapping_gids_ = A.all_overlapping_gids_;
+    local_gids_           = A.local_gids_;
+ 
     distributor_diagdotprod_ = A.distributor_diagdotprod_;
-    distributor_normalize_ = A.distributor_normalize_;
+    distributor_normalize_   = A.distributor_normalize_;
 }
 
 void LocGridOrbitals::copyDataFrom(const LocGridOrbitals& src)
@@ -285,36 +285,37 @@ const ORBDTYPE* LocGridOrbitals::getGidStorage(const int gid, const short iloc)c
         return 0;
 }    
 
-void LocGridOrbitals::setup(MasksSet* masks, MasksSet* corrmasks)
+void LocGridOrbitals::setup(
+    MasksSet* masks, MasksSet* corrmasks, LocalizationRegions* lrs)
 {
     assert( masks!=0 );
     Control& ct = *(Control::instance());
     if( ct.verbose>0 )
         printWithTimeStamp("LocGridOrbitals::setup(MasksSet*, MasksSet*)...",(*MPIdata::sout));
 
-    masks4orbitals_.reset(new Masks4Orbitals(masks,corrmasks,*lrs_));
+    masks4orbitals_.reset(new Masks4Orbitals(masks,corrmasks,*lrs));
     
-    setup();
+    setup(lrs);
 }
 
-void LocGridOrbitals::setup()
+void LocGridOrbitals::setup(LocalizationRegions* lrs)
 {
     Control& ct = *(Control::instance());
        
     // preconditions
-    assert( lrs_!=0 );
+    assert( lrs!=0 );
     assert( proj_matrices_!=0 );
     
     if( ct.verbose>0 )
         printWithTimeStamp("LocGridOrbitals::setup()...",(*MPIdata::sout));
 
-    lrs_iterative_index_ = lrs_->getIterativeIndex();
+    lrs_iterative_index_ = lrs->getIterativeIndex();
 
     overlapping_gids_.clear();
 
-    chromatic_number_=packStates();
+    chromatic_number_=packStates(lrs);
 
-    computeGlobalIndexes();
+    computeGlobalIndexes(*lrs);
 
     bool skinny_stencil=!ct.Mehrstellen();
 
@@ -332,7 +333,7 @@ void LocGridOrbitals::setup()
     const pb::PEenv& myPEenv=mymesh->peenv();
     double domain[3]={mygrid.ll(0),mygrid.ll(1),mygrid.ll(2)};
 
-    double maxr=lrs_->max_radii();
+    double maxr=lrs->max_radii();
     distributor_diagdotprod_ = new DataDistribution("dot",maxr, myPEenv, domain);
     distributor_normalize_ = new DataDistribution("norm",2.*maxr, myPEenv, domain);
 
@@ -340,14 +341,15 @@ void LocGridOrbitals::setup()
         printWithTimeStamp("LocGridOrbitals::setup() done...",(*MPIdata::sout));
 }
 
-void LocGridOrbitals::reset(MasksSet* masks, MasksSet* corrmasks)
+void LocGridOrbitals::reset(
+    MasksSet* masks, MasksSet* corrmasks, LocalizationRegions* lrs)
 {    
     //free some old data
     block_vector_.clear();
     setIterativeIndex(-10);
 
     // reset
-    setup(masks,corrmasks);
+    setup(masks,corrmasks,lrs);
 }
 
 void LocGridOrbitals::assign(const LocGridOrbitals& orbitals)
@@ -697,9 +699,9 @@ void LocGridOrbitals::initFourier()
     resetIterativeIndex();
 }
 
-int LocGridOrbitals::packStates()
+int LocGridOrbitals::packStates(LocalizationRegions* lrs)
 {
-    assert( lrs_!=0 );
+    assert( lrs!=0 );
 
     Control& ct = *(Control::instance());
     
@@ -707,7 +709,7 @@ int LocGridOrbitals::packStates()
         (*MPIdata::sout)<<" PACK STATES "<<0<<" to "<<numst_<<endl;
 
     // compute overlap for all the orbitals on all PEs
-    const int dim= ct.globalColoring() ? numst_ : lrs_->getNumOverlapGids();
+    const int dim= ct.globalColoring() ? numst_ : lrs->getNumOverlapGids();
 
     if( onpe0 && ct.verbose>2 )
         (*MPIdata::sout)<<" PACK "<<dim<<" STATES"<<endl;
@@ -718,7 +720,7 @@ int LocGridOrbitals::packStates()
 
     MGmol_MPI& mmpi ( *(MGmol_MPI::instance()) );
 
-    pack_=new FunctionsPacking(lrs_,global,mmpi.commSameSpin());
+    pack_=new FunctionsPacking(lrs,global,mmpi.commSameSpin());
 
     assert( pack_->chromatic_number()<100000 );
     
@@ -1691,7 +1693,7 @@ void LocGridOrbitals::computeDiagonalElementsDotProductLocal(
     }
     else
     {
-       lrs_->getLocalSubdomainIndices(locfcns);
+       locfcns = local_gids_;
     }
  
     /* define data distribution variables */
@@ -3247,9 +3249,7 @@ void LocGridOrbitals::compute_sincosdiag(SpreadsAndCenters& spread,
     vector<double> cosy;
     vector<double> cosz;
     grid_.getSinCosFunctions(sinx,siny,sinz,cosx,cosy,cosz);
-    
-    assert(lrs_ != 0);
-    
+ 
     vector< vector<float> > inv_norms2;
     if( !normalized_functions )
     {
@@ -3258,10 +3258,9 @@ void LocGridOrbitals::compute_sincosdiag(SpreadsAndCenters& spread,
     
     const int initTabSize = 4096;
     VariableSizeMatrix<sparserow> mat("SinCos",initTabSize);
-    const vector<int>& gids( lrs_->getOverlapGids() );
     //initialize sparse ordering of rows to match local overlap regions
     //This is necessary for computing correct moves in moveTo()
-    mat.setupSparseRows(gids);
+    mat.setupSparseRows(all_overlapping_gids_);
 
     for(short iloc=0;iloc<subdivx_;iloc++)
     {
@@ -3302,12 +3301,9 @@ void LocGridOrbitals::compute_sincosdiag(SpreadsAndCenters& spread,
     mat.scale(grid_.vel());
     /* gather data */
     (*distributor_normalize_).augmentLocalData(mat, true);
-    
-    vector<int> locfcns;
-    (*lrs_).getLocalSubdomainIndices(locfcns);
-    
+ 
     /* transfer data to spread object */
-    spread.setSinCosData(mat, gids, locfcns);  
+    spread.setSinCosData(mat, all_overlapping_gids_, local_gids_);  
 
     sincos_tm_.stop();
 }
@@ -3489,9 +3485,11 @@ void LocGridOrbitals::addDot2H(LocGridOrbitals& Apsi, SquareLocalMatrices<MATDTY
     addDot_tm_.stop();
 }
 
-void LocGridOrbitals::computeGlobalIndexes()
+void LocGridOrbitals::computeGlobalIndexes(LocalizationRegions& lrs)
 {
-    assert( lrs_!=0 );
+    all_overlapping_gids_ = lrs.getOverlapGids();
+
+    lrs.getLocalSubdomainIndices(local_gids_);
 
     overlapping_gids_.clear();
     overlapping_gids_.resize(subdivx_);
@@ -3499,9 +3497,8 @@ void LocGridOrbitals::computeGlobalIndexes()
     {
         overlapping_gids_[iloc].resize(chromatic_number_,-1);
     }
-    const vector<int>& gids( lrs_->getOverlapGids() );
-    for(vector<int>::const_iterator it= gids.begin();
-                                    it!=gids.end();
+    for(vector<int>::const_iterator it= all_overlapping_gids_.begin();
+                                    it!=all_overlapping_gids_.end();
                                     it++)
     {
         const int gid=*it;
@@ -3509,7 +3506,7 @@ void LocGridOrbitals::computeGlobalIndexes()
         assert( color<chromatic_number_ );
         for(short iloc=0;iloc<subdivx_;iloc++)
         {
-            if( lrs_->overlapSubdiv(gid,iloc) )
+            if( lrs.overlapSubdiv(gid,iloc) )
             {
                 overlapping_gids_[iloc][color]= gid;
             }

@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id:$
 #include <cmath>
 #include <iostream>
 #include <cassert>
@@ -294,7 +293,7 @@ int MGmol::initial()
                                          currentMasks_,
                                          corrMasks_,
                                          local_cluster_);    
-    current_orbitals_->setup();    
+    current_orbitals_->setup(lrs_);
     
     if( !ct.short_sighted )
     {

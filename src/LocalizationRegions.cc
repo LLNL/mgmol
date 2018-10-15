@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #include "global.h"
 
 #include "LocalizationRegions.h"
@@ -1081,7 +1080,7 @@ bool LocalizationRegions::overlap(const int gid1, const int gid2)
     return false;
 }
 
-bool LocalizationRegions::overlapSubdiv(const int gid, const short iloc)
+bool LocalizationRegions::overlapSubdiv(const int gid, const short iloc)const
 {
     assert( subdiv_overlap_gids_.size()>0 );
     
@@ -1089,7 +1088,7 @@ bool LocalizationRegions::overlapSubdiv(const int gid, const short iloc)
     return (find(ov.begin(),ov.end(),gid)!=ov.end());
 }
 
-bool LocalizationRegions::overlapSubdiv(const int gid)
+bool LocalizationRegions::overlapSubdiv(const int gid)const
 {
     assert( subdiv_overlap_gids_.size()>0 );
     

@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #ifndef LOCALIZATIONREGIONS_H
 #define LOCALIZATIONREGIONS_H
 
@@ -470,8 +469,8 @@ public:
     //}
     
     bool overlap(const int gid1, const int gid2);
-    bool overlapSubdiv(const int gid, const short iloc);
-    bool overlapSubdiv(const int gid);
+    bool overlapSubdiv(const int gid, const short iloc)const;
+    bool overlapSubdiv(const int gid)const;
     
     void getGidsGlobal(std::vector<int>& gids);
     void updateOverlapRegions();

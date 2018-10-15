@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #include "Ions.h"
 #include "MGmol_blas1.h"
 #include "MD_IonicStepper.h"
@@ -150,7 +149,7 @@ LocGridOrbitals* MGmol::new_orbitals_with_current_LRs(bool setup)
 
     // clear data and setup
     if( setup )
-        new_orbitals->setup();
+        new_orbitals->setup(lrs_);
 
     return new_orbitals;
 }

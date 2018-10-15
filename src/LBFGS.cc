@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #include "LBFGS.h"
 #include "Control.h"
 #include "ProjectedMatrices.h"
@@ -73,7 +72,7 @@ LBFGS::LBFGS(LocGridOrbitals** orbitals,
                              &ref_lrs_,
                              ref_masks_,ref_corrmasks_,local_cluster_);
     
-    ref_orbitals_->setup();
+    ref_orbitals_->setup(&ref_lrs_);
     ref_orbitals_->assign(**orbitals_);
 }
 
@@ -115,7 +114,7 @@ void LBFGS::updateRefs()
             *ref_masks_ = masks_;
             *ref_corrmasks_ = corrmasks_;
         }
-        ref_orbitals_->reset(ref_masks_, ref_corrmasks_);
+        ref_orbitals_->reset(ref_masks_, ref_corrmasks_, &lrs_);
         if( onpe0 )
              (*MPIdata::sout)<<"lbfgs: Update reference orbitals "<<endl;
         ref_orbitals_->assign(**orbitals_);
