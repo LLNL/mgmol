@@ -171,7 +171,7 @@ void MGmol::extrapolate_orbitals(LocGridOrbitals** orbitals)
     LocGridOrbitals* new_orbitals = new_orbitals_with_current_LRs();   
 
     orbitals_extrapol->extrapolate_orbitals(orbitals, new_orbitals);
-    
+ 
     (*orbitals)->incrementIterativeIndex();
 
 

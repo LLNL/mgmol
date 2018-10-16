@@ -118,7 +118,9 @@ LocGridOrbitals::LocGridOrbitals(const pb::Grid& my_grid,
     distributor_normalize_ = 0;
    
     if(masks && corrmasks) 
-        masks4orbitals_.reset(new Masks4Orbitals(masks,corrmasks,*lrs));
+        masks4orbitals_.reset(new Masks4Orbitals(masks,corrmasks,
+             lrs->getOverlapGids() ) );
+
 }
 
 LocGridOrbitals::~LocGridOrbitals()
@@ -189,7 +191,8 @@ LocGridOrbitals::LocGridOrbitals(const LocGridOrbitals &A,
 
     setGids2Storage();
     
-    masks4orbitals_.reset(new Masks4Orbitals(masks, corrmasks, *A.lrs_));
+    masks4orbitals_.reset(new Masks4Orbitals(masks, corrmasks, 
+        A.all_overlapping_gids_ ) );
     
     //setup new projected_matrices object
     Control& ct = *(Control::instance());
@@ -293,8 +296,9 @@ void LocGridOrbitals::setup(
     if( ct.verbose>0 )
         printWithTimeStamp("LocGridOrbitals::setup(MasksSet*, MasksSet*)...",(*MPIdata::sout));
 
-    masks4orbitals_.reset(new Masks4Orbitals(masks,corrmasks,*lrs));
-    
+    masks4orbitals_.reset(new Masks4Orbitals(masks,corrmasks,
+        lrs->getOverlapGids() ) );
+ 
     setup(lrs);
 }
 
@@ -342,7 +346,8 @@ void LocGridOrbitals::setup(LocalizationRegions* lrs)
 }
 
 void LocGridOrbitals::reset(
-    MasksSet* masks, MasksSet* corrmasks, LocalizationRegions* lrs)
+    MasksSet* masks, MasksSet* corrmasks,
+    LocalizationRegions* lrs)
 {    
     //free some old data
     block_vector_.clear();
@@ -560,7 +565,8 @@ void LocGridOrbitals::init2zero()
     }
 }
 
-void LocGridOrbitals::initGauss(const double rc)
+void LocGridOrbitals::initGauss(const double rc,
+                                const LocalizationRegions& lrs)
 {
     assert( chromatic_number_>=0 );
     assert( subdivx_>0 );
@@ -599,7 +605,7 @@ void LocGridOrbitals::initGauss(const double rc)
             const int gid=overlapping_gids_[iloc][icolor];
             if(gid>-1)
             {
-                const Vector3D& center(lrs_->getCenter(gid));
+                const Vector3D& center(lrs.getCenter(gid));
                 Vector3D xc;
 
                 xc[0] = start0+iloc*dim0*hgrid[0];
@@ -3531,7 +3537,7 @@ void LocGridOrbitals::printTimers(ostream& os)
     axpy_tm_.print((*MPIdata::sout));
 }
 
-void LocGridOrbitals::initWF()
+void LocGridOrbitals::initWF(const LocalizationRegions& lrs)
 {
     Control& ct = *(Control::instance());
 
@@ -3546,7 +3552,7 @@ void LocGridOrbitals::initWF()
             {   
                 (*MPIdata::sout)<<" with Gaussian functions..."<<endl;
             }
-            initGauss(ct.init_rc);
+            initGauss(ct.init_rc, lrs);
             break;
         case 2:
             if( onpe0 && ct.verbose>1 )

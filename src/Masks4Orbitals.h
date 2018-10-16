@@ -7,11 +7,10 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "GridMask.h"
-#include "Orbitals.h"
 
 #include <map>
+#include <vector>
 class MasksSet;
-class LocalizationRegions;
 
 class Masks4Orbitals
 {
@@ -22,11 +21,12 @@ private:
     std::map<int,GridMask*> gid_to_mask_;     // map gid->mask;
     std::map<int,GridMask*> gid_to_corrmask_; // map gid->corrmask;
 
-    void associateGids2Masks(const LocalizationRegions& lrs);
+    void associateGids2Masks(const std::vector<int>&);
 
 public:
     
-    Masks4Orbitals(MasksSet* masks, MasksSet* corrmasks, const LocalizationRegions& lrs);
+    Masks4Orbitals(MasksSet* masks, MasksSet* corrmasks,
+                   const std::vector<int>&);
     ~Masks4Orbitals();
 
     short checkOverlap(const int gid1, const int gid2, const short level);

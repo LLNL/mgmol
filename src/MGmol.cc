@@ -366,7 +366,7 @@ int MGmol::initial()
         }
     
         // Initialize states
-        current_orbitals_->initWF();
+        current_orbitals_->initWF(*lrs_);
         
         // initialize masks again
         if( ct.init_loc==1 )

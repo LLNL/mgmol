@@ -7,27 +7,24 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "Masks4Orbitals.h"
-#include "LocalizationRegions.h"
 #include "MasksSet.h"
 #include "Control.h"
 using namespace std;
 
 Masks4Orbitals::Masks4Orbitals(MasksSet* masks, MasksSet* corrmasks, 
-                               const LocalizationRegions& lrs):
+                               const vector<int>& overlap_gids):
     masks_(masks),
     corrmasks_(corrmasks)
 {
-    associateGids2Masks(lrs);
+    associateGids2Masks(overlap_gids);
 }
 
 Masks4Orbitals::~Masks4Orbitals()
 {
 }
 
-void Masks4Orbitals::associateGids2Masks(const LocalizationRegions& lrs)
+void Masks4Orbitals::associateGids2Masks(const vector<int>& overlap_gids)
 {    
-    assert( lrs.globalNumLRs()>0 );
-    
     Control& ct = *(Control::instance());    
     const int nmasks=(int)(masks_->size());
     if( onpe0 && ct.verbose>2 )
@@ -38,7 +35,6 @@ void Masks4Orbitals::associateGids2Masks(const LocalizationRegions& lrs)
     gid_to_mask_.clear();
     gid_to_corrmask_.clear();
 
-    const vector<int>& overlap_gids(lrs.getOverlapGids() );
     for(vector<int>::const_iterator it =overlap_gids.begin();
                                     it!=overlap_gids.end();
                                     it++)

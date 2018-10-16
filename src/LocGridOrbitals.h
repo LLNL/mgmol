@@ -455,7 +455,7 @@ public:
         return *this;
     }
     
-    void initGauss(const double);
+    void initGauss(const double, const LocalizationRegions&);
     virtual void axpy(const double alpha, const LocGridOrbitals&);
 
     void app_mask(const int, pb::GridFunc<ORBDTYPE>&, const short level)const;
@@ -482,7 +482,7 @@ public:
 
     void setGids2Storage();
     
-    void initWF();
+    void initWF(const LocalizationRegions& lrs);
     void checkCond(const double tol, const bool flag_stop);
     double normState(const int st)const;
     const vector<vector<int> >& getGlobalIndexes()const
