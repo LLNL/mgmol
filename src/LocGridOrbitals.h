@@ -107,7 +107,7 @@ private:
     // private functions
     //
     void copySharedData(const LocGridOrbitals &A);
-    
+
     const ORBDTYPE* getGidStorage(const int st, const short iloc)const;
     int packStates(LocalizationRegions* lrs);
     void setAssignedIndexes();
@@ -234,8 +234,9 @@ public:
                     LocalizationRegions*,
                     MasksSet* masks, 
                     MasksSet* corrmasks, 
-                    ClusterOrbitals* local_cluster);
-    
+                    ClusterOrbitals* local_cluster,
+                    const bool setup_flag=true);
+
     LocGridOrbitals(const LocGridOrbitals &A, const bool copy_data=true);
     LocGridOrbitals(const LocGridOrbitals &A, ProjectedMatricesInterface* proj_matrices, 
                     MasksSet* masks, MasksSet* corrmasks,

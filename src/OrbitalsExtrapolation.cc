@@ -63,7 +63,6 @@ void OrbitalsExtrapolation::setupPreviousOrbitals(LocGridOrbitals** orbitals,
                          proj_matrices,
                          lrs,
                          currentMasks, corrMasks, local_cluster);
-    new_orbitals->setup(lrs);
 
     new_orbitals->read_func_hdf5(h5f_file,"ExtrapolatedFunction");
     new_orbitals->incrementIterativeIndex();

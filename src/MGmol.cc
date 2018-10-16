@@ -293,8 +293,7 @@ int MGmol::initial()
                                          currentMasks_,
                                          corrMasks_,
                                          local_cluster_);    
-    current_orbitals_->setup(lrs_);
-    
+ 
     if( !ct.short_sighted )
     {
         printWithTimeStamp("MGmol::initial(), create MatricesBlacsContext and misc...",os_);

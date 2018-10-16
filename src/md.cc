@@ -145,11 +145,7 @@ LocGridOrbitals* MGmol::new_orbitals_with_current_LRs(bool setup)
                                      lrs_,
                                      currentMasks_,
                                      corrMasks_,
-                                     local_cluster_);
-
-    // clear data and setup
-    if( setup )
-        new_orbitals->setup(lrs_);
+                                     local_cluster_, setup);
 
     return new_orbitals;
 }

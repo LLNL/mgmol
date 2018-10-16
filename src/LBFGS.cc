@@ -71,8 +71,7 @@ LBFGS::LBFGS(LocGridOrbitals** orbitals,
                              (*orbitals_)->getProjMatrices(),
                              &ref_lrs_,
                              ref_masks_,ref_corrmasks_,local_cluster_);
-    
-    ref_orbitals_->setup(&ref_lrs_);
+
     ref_orbitals_->assign(**orbitals_);
 }
 

@@ -81,7 +81,8 @@ LocGridOrbitals::LocGridOrbitals(const pb::Grid& my_grid,
                                  LocalizationRegions* lrs,
                                  MasksSet* masks, 
                                  MasksSet* corrmasks,
-                                 ClusterOrbitals* local_cluster):
+                                 ClusterOrbitals* local_cluster,
+                                 const bool setup_flag):
         grid_(my_grid),
         proj_matrices_(proj_matrices),
         block_vector_(my_grid,subdivx,bc),
@@ -121,6 +122,7 @@ LocGridOrbitals::LocGridOrbitals(const pb::Grid& my_grid,
         masks4orbitals_.reset(new Masks4Orbitals(masks,corrmasks,
              lrs->getOverlapGids() ) );
 
+    if(setup_flag)setup(lrs);
 }
 
 LocGridOrbitals::~LocGridOrbitals()
