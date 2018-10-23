@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #include <iostream>
 #include <fstream>
 #include <iomanip>
@@ -211,7 +210,7 @@ bool MGmol::rotateStatesPairsCommonCenter(LocGridOrbitals& orbitals,
         //if( onpe0 && ct.verbose>1 )
         //    os_<<"n1="<<n1<<", n2="<<n2<<endl;
         
-        orbitals.computeSinCosDiag2states(spreadf2st,st1,st2);
+        spreadf2st.computeSinCosDiag2states(orbitals,st1,st2);
         
         if( onpe0 )spreadf2st.print(os_);
 
@@ -221,7 +220,7 @@ bool MGmol::rotateStatesPairsCommonCenter(LocGridOrbitals& orbitals,
 
         getMLWF2states(st1, st2,
             orbitals, work_orbitals);
-        orbitals.computeSinCosDiag2states(spreadf2st,st1,st2);
+        spreadf2st.computeSinCosDiag2states(orbitals,st1,st2);
 
         if( onpe0 )spreadf2st.print(os_);
         
@@ -295,7 +294,7 @@ bool MGmol::rotateStatesPairsOverlap(LocGridOrbitals& orbitals,
         }
         
         SpreadsAndCenters spreadf2st(origin,ll);
-        orbitals.computeSinCosDiag2states(spreadf2st,st1,st2);
+        spreadf2st.computeSinCosDiag2states(orbitals,st1,st2);
         
         spreadf2st.print(os_);
 
@@ -313,7 +312,7 @@ bool MGmol::rotateStatesPairsOverlap(LocGridOrbitals& orbitals,
         
         getMLWF2states(st1, st2,
             orbitals, work_orbitals);
-        orbitals.computeSinCosDiag2states(spreadf2st,st1,st2);
+        spreadf2st.computeSinCosDiag2states(orbitals,st1,st2);
 
         spreadf2st.print(os_);
         orbitals.computeGramAndInvS();

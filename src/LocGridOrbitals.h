@@ -20,6 +20,7 @@
 #include "MGmol_MPI.h"
 #include "Orbitals.h"
 #include "ClusterOrbitals.h"
+#include "SinCosOps.h"
 
 #include "global.h"
 
@@ -39,7 +40,6 @@ class LocalizationRegions;
 class MasksSet;
 class FunctionsPacking;
 class LocGridOrbitals;
-class SpreadsAndCenters;
 class Masks4Orbitals;
 
 typedef double (LocGridOrbitals::* PtrFunc)(const LocGridOrbitals&);
@@ -57,7 +57,6 @@ private:
     static Timer overlap_tm_;    
     static Timer dot_product_tm_;    
     static Timer addDot_tm_;    
-    static Timer sincos_tm_;    
     static Timer mask_tm_;    
     static Timer prod_matrix_tm_;    
     static Timer get_dm_tm_;
@@ -194,6 +193,7 @@ protected:
     std::vector<int> local_gids_;
 
 public:
+    friend class SinCosOps;
 
     virtual void setTimeStepIndex(int n) {}
     double norm()const;
@@ -203,6 +203,11 @@ public:
     {
         return proj_matrices_;
     }
+
+    const std::vector<int>& getAllOverlappingGids()const
+    { return all_overlapping_gids_;}
+    const std::vector<int>& getLocalGids()const
+    { return local_gids_; }
 
     ClusterOrbitals* local_cluster()const
     {
@@ -419,23 +424,6 @@ public:
                         dist_matrix::SparseDistMatrix<DISTMATDTYPE>&)const;
     void addDotWithNcol2Matrix(LocGridOrbitals&, 
                         dist_matrix::SparseDistMatrix<DISTMATDTYPE>&)const;
-
-    void compute_sincos(std::vector< std::vector<double> >& )const;
-    void compute_sincos(SpreadsAndCenters& )const;
-    void compute_sincos(std::vector< std::vector<double> >&, const int );
-    void compute_sincos(SpreadsAndCenters&, const int );
-    void compute_sincos2(SpreadsAndCenters& );
-    void compute_sincos2diag(SpreadsAndCenters& );
-    void compute_sincos2(std::vector< std::vector<double> >&, const int );
-    void compute_sincos2(SpreadsAndCenters&, const int );
-    void compute_sincosdiag(SpreadsAndCenters&, const bool normalized_functions=true)const;
-    void compute_sincos(LocGridOrbitals&, SpreadsAndCenters& );
-    void computeSinCos2states(SpreadsAndCenters&,
-                              const int st1, const int st2)const;
-    void computeSinCos2states(std::vector< std::vector<double> >&,
-                              const int st1, const int st2)const;
-    void computeSinCosDiag2states(SpreadsAndCenters&,
-                                  const int st1, const int st2)const;
 
     void scal(const double alpha)
     {

@@ -6,12 +6,11 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-////////////////////////////////////////////////////////////////////////////////
-//
-// SpreadsAndCenters.C
-//
-////////////////////////////////////////////////////////////////////////////////
-// $Id$
+#include "SpreadsAndCenters.h"
+#include "MGmol_MPI.h"
+#include "Control.h"
+#include "LocGridOrbitals.h"
+#include "MPIdata.h"
 
 #include <iostream>
 #include <iomanip>
@@ -19,11 +18,6 @@
 #include <cmath>
 using namespace std;
 
-#include "SpreadsAndCenters.h"
-#include "MGmol_MPI.h"
-#include "Control.h"
-#include "LocGridOrbitals.h"
-#include "MPIdata.h"
 static double fourthirdpi=4.*M_PI/3.;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -326,15 +320,17 @@ double SpreadsAndCenters::computeDistance(const int st1, const int st2)const
     return d;
 }
 
-//////////////////////////////////////////////////////////////////////////////////
-void SpreadsAndCenters::setSinCosData(VariableSizeMatrix<sparserow> &mat, const vector<int>& gids, 
+///////////////////////////////////////////////////////////////////////////////
+void SpreadsAndCenters::setSinCosData(VariableSizeMatrix<sparserow> &mat,
+                                      const vector<int>& gids, 
                                       const vector<int>& localRowGid)
 {
     setData(mat,gids,localRowGid,r_);
 }
 
-//////////////////////////////////////////////////////////////////////////////////
-void SpreadsAndCenters::setData(VariableSizeMatrix<sparserow> &mat, const vector<int>& gids, 
+///////////////////////////////////////////////////////////////////////////////
+void SpreadsAndCenters::setData(VariableSizeMatrix<sparserow> &mat,
+                                const vector<int>& gids, 
                                 const vector<int>& localRowGid,
                                 vector< vector<double> >& matr)
 {
@@ -398,10 +394,119 @@ void SpreadsAndCenters::computePositionMatrix(LocGridOrbitals& orbitals,
     
     work_orbitals.normalize();
 
-    work_orbitals.compute_sincosdiag(*this, true);
+    computeSinCosDiag(work_orbitals, true);
 }
 
 void SpreadsAndCenters::computePositionMatrix(const LocGridOrbitals& orbitals)
 {
-    orbitals.compute_sincosdiag(*this, false);
+    computeSinCosDiag(orbitals, false);
+}
+
+void SpreadsAndCenters::computeSinCos(const LocGridOrbitals& orbitals)
+{
+    vector<vector<double> >a;
+    a.resize(6);
+
+    int n2=orbitals.numst()*orbitals.numst();
+    for ( int k = 0; k < 6; k++ ){
+      a[k].resize(n2, 0.);
+    }
+    SinCosOps::compute(orbitals,a);
+    setSinCosData(a, n2);
+}
+
+void SpreadsAndCenters::computeSinCosSquare(const LocGridOrbitals& orbitals)
+{
+    vector<vector<double> >a;
+    a.resize(6);
+
+    int n2=orbitals.numst()*orbitals.numst();
+    for ( short k = 0; k < 6; k++ ){
+      a[k].resize(n2, 0.);
+    }
+    SinCosOps::computeSquare(orbitals,a);
+    setSinCosData(a, n2);
+}
+
+void SpreadsAndCenters::computeSinCosSquare1D(const LocGridOrbitals& orbitals,
+                                              const int dir)
+{
+    vector<vector<double> >a;
+    a.resize(2);
+
+    int n2=orbitals.numst()*orbitals.numst();
+    for ( short k = 0; k < 2; k++ ){
+      a[k].resize(n2, 0.);
+    }
+    SinCosOps::computeSquare1D(orbitals,a,dir);
+    setSinCosData(a, n2);
+}
+
+void SpreadsAndCenters::computeSinCos2states(const LocGridOrbitals& orbitals,
+                                             const int st1, const int st2)
+{
+    vector<vector<double> >a;
+    a.resize(6);
+
+    int n2 = 4;
+    for ( int k = 0; k < 6; k++ ){
+      a[k].resize(n2, 0.);
+    }
+    SinCosOps::compute2states(orbitals,a,st1,st2);
+    setSinCosData(a, n2);
+}
+
+void SpreadsAndCenters::computeSinCosDiag2states(
+                            const LocGridOrbitals& orbitals,
+                            const int st1, const int st2)
+{
+    vector<vector<double> >a;
+    a.resize(6);
+
+    for ( int k = 0; k < 6; k++ ){
+      a[k].resize(2, 0.);
+    }
+
+    SinCosOps::computeDiag2states(orbitals,a,st1,st2);
+    setSinCosData(a, 2);
+}
+
+void SpreadsAndCenters::computeSinCos1D(const LocGridOrbitals& orbitals,
+                                        const int dir)
+{
+    vector<vector<double> >a;
+    a.resize(2);
+
+    int n2 = orbitals.numst()*orbitals.numst();
+    for ( short k = 0; k < 2; k++ ){
+      a[k].resize(n2, 0.);
+    }
+
+    SinCosOps::compute1D(orbitals,a,dir);
+    setSinCosData(a, n2);
+}
+
+void SpreadsAndCenters::computeSinCos(const LocGridOrbitals& orbitals1,
+                                      const LocGridOrbitals& orbitals2)
+{
+    vector<vector<double> >a;
+    a.resize(6);
+
+    int n2 = orbitals1.numst()*orbitals1.numst();
+    for ( short k = 0; k < 6; k++ ){
+      a[k].resize(n2, 0.);
+    }
+    SinCosOps::compute(orbitals1,orbitals2,a);
+    setSinCosData(a, n2);
+}
+
+void SpreadsAndCenters::computeSinCosDiag(const LocGridOrbitals& orbitals,
+                                          const bool normalized_functions)
+{
+    const int initTabSize = 4096;
+    VariableSizeMatrix<sparserow> mat("SinCos",initTabSize);
+
+    SinCosOps::computeDiag(orbitals, mat, normalized_functions);
+    setSinCosData(mat, orbitals.getAllOverlappingGids(),
+                       orbitals.getLocalGids());
 }

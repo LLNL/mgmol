@@ -1170,6 +1170,7 @@ void MGmol::printTimers()
     pb::GridFuncVectorInterface::printTimers(os_);
     pb::FDoperInterface::printTimers(os_);
     LocGridOrbitals::printTimers(os_);
+    SinCosOps::printTimers(os_);
     GridMask::printTimers(os_);
     
     sgemm_tm.print(os_);

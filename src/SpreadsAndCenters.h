@@ -6,13 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-////////////////////////////////////////////////////////////////////////////////
-//
-// SpreadsAndCenters.h
-//
-////////////////////////////////////////////////////////////////////////////////
-// $Id$
-
 #ifndef SpreadsAndCenters_H
 #define SpreadsAndCenters_H
 
@@ -118,26 +111,14 @@ public:
     double computeDistance(const int st1, const int st2)const;
     
     // set data for cosine and sine matrices
-    void setSinCosData(VariableSizeMatrix<sparserow> &mat, const std::vector<int>&, const std::vector<int>& localRowGid);
+    void setSinCosData(VariableSizeMatrix<sparserow> &mat,
+                       const std::vector<int>&,
+                       const std::vector<int>& localRowGid);
     void setSinCosData(std::vector<std::vector<double> >& a, const int n);
-    
-//    SpreadsAndCenters(const int nst, const Vector3D& orig, const Vector3D& ll):
-//       origin_(orig),cell_(ll)
-//    {
-//      ngids_=nst;
-//      
-//      const int ndir=6;
-//      r_.resize(ndir);
-//  
-//      for ( int k = 0; k < ndir; k++ ){
-//        r_[k].resize(ngids_);
-//      }
-//      localRows_.clear();
-//      localRowGid_.clear();    
-//    };
-    
-    SpreadsAndCenters(const Vector3D& orig, const Vector3D& ll):
-                      origin_(orig),cell_(ll)
+ 
+    SpreadsAndCenters(const Vector3D& orig, const Vector3D& ll)
+        : origin_(orig),
+          cell_(ll)
     {
         ngids_=-1; // not set yet
         
@@ -157,5 +138,23 @@ public:
     void computePositionMatrix(LocGridOrbitals& orbitals, 
                                LocGridOrbitals& work_orbitals);
     void computePositionMatrix(const LocGridOrbitals& orbitals);
+
+    void computeSinCos(const LocGridOrbitals& orbitals);
+    void computeSinCosSquare(const LocGridOrbitals& orbitals);
+    void computeSinCosSquare1D(const LocGridOrbitals& orbitals,
+                             const int dir);
+    void computeSinCos2states(const LocGridOrbitals& orbitals,
+                              const int st1, const int st2);
+    void computeSinCosDiag2states(
+                            const LocGridOrbitals& orbitals,
+                            const int st1, const int st2);
+
+    void computeSinCos1D(const LocGridOrbitals& orbitals,
+                         const int dir);
+    void computeSinCos(const LocGridOrbitals& orbitals1,
+                       const LocGridOrbitals& orbitals2);
+    void computeSinCosDiag(const LocGridOrbitals& orbitals,
+                           const bool normalized_functions);
 };
+
 #endif
