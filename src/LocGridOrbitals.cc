@@ -143,7 +143,8 @@ LocGridOrbitals::~LocGridOrbitals()
     delete gidToStorage_; gidToStorage_=0;
 }
 
-LocGridOrbitals::LocGridOrbitals(const LocGridOrbitals &A, const bool copy_data):
+LocGridOrbitals::LocGridOrbitals(const LocGridOrbitals &A,
+                                 const bool copy_data):
     Orbitals(A, copy_data),
     grid_(A.grid_),
     proj_matrices_(A.proj_matrices_),
@@ -2648,15 +2649,6 @@ void LocGridOrbitals::addDot2H(LocGridOrbitals& Apsi)
     addDot_tm_.stop();
 }
 
-void LocGridOrbitals::addDot2H(LocGridOrbitals& Apsi, SquareLocalMatrices<MATDTYPE>& ss)
-{
-    addDot_tm_.start();
-        
-    computeLocalProduct(Apsi,ss);
-    
-    addDot_tm_.stop();
-}
-
 void LocGridOrbitals::computeGlobalIndexes(LocalizationRegions& lrs)
 {
     all_overlapping_gids_ = lrs.getOverlapGids();
@@ -2782,11 +2774,6 @@ void LocGridOrbitals::initWF(const LocalizationRegions& lrs)
  
 }
 
-void LocGridOrbitals::rotateSubMatrices(dist_matrix::DistMatrix<DISTMATDTYPE>&  rotation_matrix,
-                                        const bool flag_eigen)
-{
-    proj_matrices_->rotateAll(rotation_matrix, flag_eigen);
-}
 
 template void LocGridOrbitals::setDataWithGhosts(
     pb::GridFuncVector<float>* data_wghosts);

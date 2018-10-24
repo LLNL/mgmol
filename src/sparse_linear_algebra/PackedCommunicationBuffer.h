@@ -6,10 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-/*!
- * Main header file for PACKEDCOMMUNICATIONBUFFER class
-*/
-
 #ifndef _PACKEDCOMMUNICATIONBUFFER_H_
 #define _PACKEDCOMMUNICATIONBUFFER_H_
 
@@ -22,7 +18,6 @@
 class PackedCommunicationBuffer
 {
    static Timer pack_local_data_tm_;
-   //static Timer setup_data_ptr_tm_;
    static Timer merge_or_insert_new_rows_tm_;
    static Timer merge_to_existing_rows_tm_;
    static Timer copy_and_insert_new_rows_tm_;
@@ -53,28 +48,25 @@ class PackedCommunicationBuffer
      
    /* Pack local data into buffer */
    void packLocalData(VariableSizeMatrix<sparserow>& lmat, const int *pos);
-   
-   /* clear storage */
-   void clearStorage()
-   {
-      if(storage_ != NULL)
-      	delete [] storage_;
-      storage_ = NULL;
-   }
-   
+ 
 public:
-  /* constructor */
-	PackedCommunicationBuffer(const int bsize); 
-   /* destructor */
-   ~PackedCommunicationBuffer()
-   {
-      //clearStorage();
-   }
+    PackedCommunicationBuffer(const int bsize); 
+    ~PackedCommunicationBuffer()
+    {
+        //we don't delete storage_ here since it is static
+        //and will be reused in other objects
+    }
+
+    static void deleteStorage()
+    {
+        if(storage_ != 0) delete [] storage_;
+        storage_ = 0;
+    }
 
    /* initialize send buffer with local matrix */
    void initialize(VariableSizeMatrix<sparserow>& lmat, const int *data_type_pos)
    {
-      assert( storage_ != NULL);
+      assert( storage_ != 0);
       packLocalData(lmat, data_type_pos);
    }	
 	

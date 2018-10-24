@@ -332,7 +332,9 @@ int MGmol::get_NOLMO(NOLMOTransform& noot,
         dist_matrix::DistMatrix<DISTMATDTYPE>  u_dis("Udis",*bc, numst, numst);
         u_dis.init(a, numst);
 
-        orbitals.rotateSubMatrices(u_dis);
+        ProjectedMatricesInterface* proj_matrices=orbitals.proj_matrices();
+        proj_matrices->rotateAll(u_dis, false);
+        //orbitals.rotateSubMatrices(u_dis);
     }
 
     get_NOLMO_tm.stop();

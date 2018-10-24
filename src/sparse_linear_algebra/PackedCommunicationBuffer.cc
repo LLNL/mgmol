@@ -23,7 +23,6 @@ using namespace std;
 #endif
 
 Timer PackedCommunicationBuffer::pack_local_data_tm_("PackedCommunicationBuffer::packLocalData");
-//Timer PackedCommunicationBuffer::setup_data_ptr_tm_("PackedCommunicationBuffer::setupDataPtr");
 Timer PackedCommunicationBuffer::merge_or_insert_new_rows_tm_("PackedCommunicationBuffer::mergeOrInsertNewRows");
 Timer PackedCommunicationBuffer::merge_to_existing_rows_tm_("PackedCommunicationBuffer::mergeToExistingRows");
 Timer PackedCommunicationBuffer::copy_and_insert_new_rows_tm_("PackedCommunicationBuffer::copyAndInsertNewRows");
@@ -50,17 +49,17 @@ PackedCommunicationBuffer::PackedCommunicationBuffer(const int bsize)
    }
    memset(storage_, 0, storage_size_*sizeof(char));
 
-   packed_nnzrow_ptr_ = NULL;    
-   packed_lvars_ptr_ = NULL; 
-   packed_pj_ptr_ = NULL; 
-   packed_pa_ptr_ = NULL; 
+   packed_nnzrow_ptr_ = 0;    
+   packed_lvars_ptr_ = 0; 
+   packed_pj_ptr_ = 0; 
+   packed_pa_ptr_ = 0; 
    packed_data_size_ = 0;    
 }
 
 /* Set data pointer positions on recv buffer */
 void PackedCommunicationBuffer::setupPackedDataPointers(const char *data)
 {
-   assert(data != NULL);
+   assert(data != 0);
 
    //setup_data_ptr_tm_.start();   
    int * iptr = (int *)data;
@@ -153,7 +152,7 @@ void PackedCommunicationBuffer::mergeRecvDataToMatrix(VariableSizeMatrix<T>& ama
         const int k = packed_nnzrow_ptr_[i+1] - packed_nnzrow_ptr_[i];
         row_size[i] = k;
      
-        if(rindex != NULL)
+        if(rindex != 0)
         {
               const int lrindex = *rindex;
               /* insert columns */
@@ -191,7 +190,7 @@ void PackedCommunicationBuffer::updateMatrixEntriesWithRecvBuf(VariableSizeMatri
    {
       int *rindex = (int *)amat.getTableValue(packed_lvars_ptr_[i]);
       /* row on this proc. */
-      if(rindex != NULL)
+      if(rindex != 0)
       {
             const int lrindex = *rindex;
             /* insert columns */
@@ -213,7 +212,7 @@ void PackedCommunicationBuffer::insertRowsFromRecvBuf(VariableSizeMatrix<T>& ama
       const int start = packed_nnzrow_ptr_[i];
       const int ncols = packed_nnzrow_ptr_[i+1] - start;
       /* row on this proc. */
-      if(rindex != NULL)
+      if(rindex != 0)
       {
          /* insert columns */
          amat.initializeLocalRow(ncols, *rindex, &packed_pj_ptr_[start], &packed_pa_ptr_[start]);

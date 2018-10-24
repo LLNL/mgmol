@@ -243,7 +243,8 @@ public:
                     const bool setup_flag=true);
 
     LocGridOrbitals(const LocGridOrbitals &A, const bool copy_data=true);
-    LocGridOrbitals(const LocGridOrbitals &A, ProjectedMatricesInterface* proj_matrices, 
+    LocGridOrbitals(const LocGridOrbitals &A,
+                    ProjectedMatricesInterface* proj_matrices, 
                     MasksSet* masks, MasksSet* corrmasks,
                     const bool copy_data=true);    
     
@@ -487,10 +488,7 @@ public:
         return overlapping_gids_[iloc][color];
     }
 
-    void rotateSubMatrices(dist_matrix::DistMatrix<DISTMATDTYPE>&  rotation_matrix,
-                           const bool flag_eigen=false);
     void addDot2H(LocGridOrbitals& Apsi);
-    void addDot2H(LocGridOrbitals& Apsi, SquareLocalMatrices<MATDTYPE>& slh);    
 
 };
 

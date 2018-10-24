@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #ifndef RADIALINTER_H
 #define RADIALINTER_H
 
@@ -31,6 +30,8 @@ public:
         RadialFunction(x,y)
     {
     }
+
+    ~RadialInter(){}
 
     double linint(const double x, const int j=0)const;
     double cubint(const double x, const int j=0)const;

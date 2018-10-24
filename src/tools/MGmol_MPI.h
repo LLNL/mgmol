@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id:$
 #ifndef MGMOL_MPI
 #define MGMOL_MPI
 
@@ -70,7 +69,13 @@ public:
         }
         return pinstance_;
     }
-    
+
+    static void deleteInstance()
+    {
+        delete pinstance_;
+        pinstance_=0;
+    }
+
     static void setup(const MPI_Comm comm,
                       const bool with_spin=false,
                       const int nimages=1)

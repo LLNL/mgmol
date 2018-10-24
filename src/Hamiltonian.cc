@@ -190,8 +190,9 @@ void Hamiltonian::addHlocal2matrix(LocGridOrbitals& phi1,
 #endif
 
     SquareLocalMatrices<MATDTYPE> ss(phi1.subdivx(), phi1.chromatic_number());
+
+    phi1.computeLocalProduct(*hlphi_, ss);
  
-    phi1.addDot2H(*hlphi_, ss);
     mat.initializeMatrixElements(ss, phi1.getGlobalIndexes(), ct.numst);
 }
 

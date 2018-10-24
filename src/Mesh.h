@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #ifndef MESH_H
 #define MESH_H
 
@@ -68,6 +67,12 @@ public:
             pinstance_ = new Mesh();
         }
         return pinstance_;
+    }
+
+    static void deleteInstance()
+    {
+        delete pinstance_;
+        pinstance_=0;
     }
     
     static void setup(MPI_Comm comm,

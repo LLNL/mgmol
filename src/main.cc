@@ -6,6 +6,22 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
+//
+//                  main.cc
+//
+//    Description:
+//        Real grid, finite difference, molecular dynamics program
+//        for with nonorthogonal localized orbitals.
+//
+//        Uses Mehrstellen operators, multigrid accelerations, and
+//        non-local pseudopotentials.
+//
+//     Includes LDA and PBE exchange and correlation functionals.
+//
+// Units:
+//   Potentials, eigenvalues and operators in Rydberg
+//   Energies in Hartree
+//
 #include <cassert>
 #include <iostream>
 #include <vector>
@@ -33,6 +49,7 @@ using namespace std;
 #include "ReplicatedWorkSpace.h"
 #include "MGmol_MPI.h"
 #include "tools.h"
+#include "PackedCommunicationBuffer.h"
 
 #include <time.h>
 #include <fenv.h>
@@ -477,7 +494,13 @@ if(myPEenv.color()==0)
         MatricesBlacsContext::instance().clear();
     }
 } // close main scope
-    
+
+    //release memory for static arrays
+    PackedCommunicationBuffer::deleteStorage();
+    Mesh::deleteInstance();
+    Control::deleteInstance();
+    MGmol_MPI::deleteInstance();
+
 #ifdef USE_MPI
     mpirc=MPI_Finalize();
 #endif

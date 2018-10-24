@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #ifndef CONTROL_H
 #define CONTROL_H
 
@@ -166,6 +165,14 @@ public:
             pinstance_ = new Control();
         }
         return pinstance_;
+    }
+    static void deleteInstance()
+    {
+        if( pinstance_!=0 )
+        {
+            delete pinstance_;
+            pinstance_=0;
+        }
     }
     static void setup(const MPI_Comm comm, const bool with_spin,
                       const float total_spin,
