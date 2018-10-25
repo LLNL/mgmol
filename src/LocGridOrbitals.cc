@@ -2201,7 +2201,7 @@ void LocGridOrbitals::computeDiagonalGram(
 }
 
 void LocGridOrbitals::computeInvNorms2(
-         vector< vector<float> >& inv_norms2)const
+         vector< vector<double> >& inv_norms2)const
 {
     const int initTabSize = 4096;
     VariableSizeMatrix<sparserow> diagS("diagS",initTabSize);
@@ -2218,7 +2218,7 @@ void LocGridOrbitals::computeInvNorms2(
             const int gid=overlapping_gids_[iloc][color];            
             if( gid!=-1 )
             {
-                inv_norms2[iloc][color] = (float)diagS.get_value(gid,gid);
+                inv_norms2[iloc][color] = diagS.get_value(gid,gid);
             }
         }
     }
@@ -2379,9 +2379,7 @@ void LocGridOrbitals::projectOut(ORBDTYPE* const array, const int lda,
     }
 
     delete[] tproduct;
-
 }
-
 
 
 void LocGridOrbitals::initRand()

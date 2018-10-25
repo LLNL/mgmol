@@ -688,7 +688,7 @@ void SinCosOps::computeDiag(const LocGridOrbitals& orbitals,
     vector<double> cosz;
     grid.getSinCosFunctions(sinx,siny,sinz,cosx,cosy,cosz);
 
-    vector< vector<float> > inv_norms2;
+    vector< vector<double> > inv_norms2;
     if( !normalized_functions )
     {
         orbitals.computeInvNorms2(inv_norms2);

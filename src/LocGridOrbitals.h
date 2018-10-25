@@ -145,7 +145,7 @@ private:
                              LocalMatrices<MATDTYPE>&, const bool transpose=false);
 
     void computeGlobalIndexes(LocalizationRegions& lrs);
-    void computeInvNorms2(vector< vector<float> >& inv_norms2)const;
+    void computeInvNorms2(vector< vector<double> >& inv_norms2)const;
     void computeDiagonalGram(VariableSizeMatrix<sparserow>& diagS)const;
 
     void initFourier();
