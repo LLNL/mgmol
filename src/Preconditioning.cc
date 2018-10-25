@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #include "Preconditioning.h"
 #include "LapFactory.h"
 
@@ -94,26 +93,29 @@ void Preconditioning<T>::clear()
 
 template <typename T>
 void Preconditioning<T>::reset(map<int,GridMask*>& st_to_mask,
-                            const vector<vector<int> >& gid)
+                               const vector<vector<int> >& overlapping_gids)
 {
     clear();
     
-    setup(st_to_mask, gid);
+    setup(st_to_mask, overlapping_gids);
 }
 
 template <typename T>
 void Preconditioning<T>::setup(map<int,GridMask*>& st_to_mask,
-                       const vector<vector<int> >& gid)
+                               const vector<vector<int> >& overlapping_gids)
 {
-    assert( gid.size()>0 );
+    assert( overlapping_gids.size()>0 );
 
-    gid_=gid;
+    overlapping_gids_=overlapping_gids;
 
     // fine level
-    pb::GridFunc<T>*  gf_work=new pb::GridFunc<T>(*grid_[0],bc_[0],bc_[1],bc_[2]);
+    pb::GridFunc<T>*  gf_work =
+        new pb::GridFunc<T>(*grid_[0],bc_[0],bc_[1],bc_[2]);
     gf_work_.push_back(gf_work);
 
-    pb::GridFuncVector<T>*  gfv_work=new pb::GridFuncVector<T>(true,*grid_[0],bc_[0],bc_[1],bc_[2],gid_);
+    pb::GridFuncVector<T>*  gfv_work =
+        new pb::GridFuncVector<T>(true,*grid_[0],bc_[0],bc_[1],bc_[2],
+                                  overlapping_gids_);
     gfv_work_.push_back(gfv_work);
 
     // coarse levels
@@ -130,20 +132,28 @@ void Preconditioning<T>::setup(map<int,GridMask*>& st_to_mask,
         gf_work=new pb::GridFunc<T>(*coarse_grid,bc_[0],bc_[1],bc_[2]);        
         gf_work_.push_back(gf_work);
         
-        pb::GridFunc<T>* gf_rcoarse=new pb::GridFunc<T>(*coarse_grid,bc_[0],bc_[1],bc_[2]);        
+        pb::GridFunc<T>* gf_rcoarse =
+            new pb::GridFunc<T>(*coarse_grid,bc_[0],bc_[1],bc_[2]);        
         gf_rcoarse_.push_back(gf_rcoarse);
-        pb::GridFunc<T>* gf_newv=new pb::GridFunc<T>(*coarse_grid,bc_[0],bc_[1],bc_[2]);        
+        pb::GridFunc<T>* gf_newv =
+            new pb::GridFunc<T>(*coarse_grid,bc_[0],bc_[1],bc_[2]);        
         gf_newv_.push_back(gf_newv);
         
         mygrid=coarse_grid;
         
-        gfv_work=new pb::GridFuncVector<T>(true,*coarse_grid,bc_[0],bc_[1],bc_[2],gid_);        
+        gfv_work = new pb::GridFuncVector<T>(
+                       true,*coarse_grid,bc_[0],bc_[1],bc_[2],
+                       overlapping_gids_);        
         gfv_work_.push_back(gfv_work);
         
-        pb::GridFuncVector<T>* gfv_rcoarse=new pb::GridFuncVector<T>(true,*coarse_grid,bc_[0],bc_[1],bc_[2],gid_);
+        pb::GridFuncVector<T>* gfv_rcoarse =
+            new pb::GridFuncVector<T>(true,*coarse_grid,bc_[0],bc_[1],bc_[2],
+                                      overlapping_gids_);
         gfv_rcoarse_.push_back(gfv_rcoarse);
         
-        pb::GridFuncVector<T>* gfv_newv=new pb::GridFuncVector<T>(true,*coarse_grid,bc_[0],bc_[1],bc_[2],gid_);        
+        pb::GridFuncVector<T>* gfv_newv =
+            new pb::GridFuncVector<T>(true,*coarse_grid,bc_[0],bc_[1],bc_[2],
+                                      overlapping_gids_);        
         gfv_newv_.push_back(gfv_newv);
     }
     gid2mask_=st_to_mask;
@@ -288,9 +298,9 @@ void Preconditioning<T>::app_mask(pb::GridFunc<T>& gu,
 {
     if( color==-1 )return; // no mask applied
 
-    assert( gid_.size()>0 );
+    assert( overlapping_gids_.size()>0 );
 
-    const short subdivx=gid_.size();
+    const short subdivx=overlapping_gids_.size();
     
     const pb::Grid& lgrid(gu.grid());
     const short nghosts=lgrid.ghost_pt();
@@ -300,7 +310,7 @@ void Preconditioning<T>::app_mask(pb::GridFunc<T>& gu,
 
     for(short iloc=0;iloc<subdivx;iloc++)
     {
-        int st=gid_[iloc][color];
+        int st=overlapping_gids_[iloc][color];
 
         if( st!=-1 )
         {

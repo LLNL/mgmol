@@ -402,7 +402,7 @@ int MGmol::quench(LocGridOrbitals* orbitals,
     }
 
     // get actual indexes of stored functions
-    const vector<vector<int> >& gids(orbitals->getGlobalIndexes());
+    const vector<vector<int> >& gids(orbitals->getOverlappingGids());
     
     g_kbpsi_->setup(*ions_, *orbitals);
     electrostat_->setup(ct.vh_its);

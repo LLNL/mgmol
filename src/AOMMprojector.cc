@@ -56,7 +56,7 @@ AOMMprojector::AOMMprojector(LocGridOrbitals& phi, LocalizationRegions& lrs)
     kernelprojector_=new SubspaceProjector(*kernel_phi_);
     
     matrix_mask_=new SquareLocalMatrices<MATDTYPE>(subdivx,kernel_phi_->chromatic_number());
-    lrs.getMatrixDistances(*matrix_mask_, phi.getGlobalIndexes());
+    lrs.getMatrixDistances(*matrix_mask_, phi.getOverlappingGids());
     
 #if 0
     if( onpe0 )

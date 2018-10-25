@@ -26,6 +26,7 @@
 
 #include "Potentials.h"
 #include "tools.h"
+#include "MGmol_MPI.h"
 
 #define max(a,b) (((a)<(b)) ? (b) : (a))
 
@@ -479,35 +480,12 @@ void Control::sync(void)
                       MPI_INT, 0, comm_global_);
     mpirc = MPI_Bcast(&float_buffer[0], size_float_buffer,
                       MPI_FLOAT, 0, comm_global_);
-/*
-    char buffer0[64];
-    if( mype_==0 ){
-        memcpy(buffer0, load_balancing_output_file.c_str(), (load_balancing_output_file.size()+1)*sizeof(char));
-    }
-    mpirc = MPI_Bcast(buffer0, 64, MPI_CHAR, 0, comm_global_);
-    load_balancing_output_file.assign(buffer0);
-*/        
-    char buffer1[64];
-    if( mype_==0 ){
-        memcpy(buffer1, restart_file.c_str(), (restart_file.size()+1)*sizeof(char));
-    }
-    mpirc = MPI_Bcast(buffer1, 64, MPI_CHAR, 0, comm_global_);
-    restart_file.assign(buffer1);
 
-    char buffer2[64];
-    if( mype_==0 ){
-        memcpy(buffer2, out_restart_file.c_str(), (out_restart_file.size()+1)*sizeof(char));
-    }
-    mpirc = MPI_Bcast(buffer2, 64, MPI_CHAR, 0, comm_global_);
-    out_restart_file.assign(buffer2);
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    mmpi.bcast(restart_file, comm_global_);
+    mmpi.bcast(out_restart_file, comm_global_);
+    mmpi.bcast(md_print_filename, comm_global_);
 
-    char buffer3[64];
-    if( mype_==0 ){
-        memcpy(buffer3, md_print_filename.c_str(), (md_print_filename.size()+1)*sizeof(char));
-    }
-    mpirc = MPI_Bcast(buffer3, 64, MPI_CHAR, 0, comm_global_);
-    md_print_filename.assign(buffer3);
-    
     short npot=pot_filenames_.size();
     mpirc = MPI_Bcast(&npot, 1, MPI_SHORT, 0, comm_global_);
     if(mype_>0)

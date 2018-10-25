@@ -6,9 +6,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
-#ifndef PROJECTED_MATRICES_H
-#define PROJECTED_MATRICES_H
+#ifndef MGMOL_PROJECTED_MATRICES_H
+#define MGMOL_PROJECTED_MATRICES_H
 
 #include "ProjectedMatricesInterface.h"
 #include "SquareLocalMatrices.h"
@@ -241,7 +240,8 @@ public:
             MATDTYPE* localT_iloc=localT_->getSubMatrix(iloc);
             for(int icolor=0;icolor<chromatic_number_;icolor++)
             for(int jcolor=0;jcolor<chromatic_number_;jcolor++)
-                localT_iloc[icolor+chromatic_number_*jcolor]=submatWork_->val(icolor,jcolor,iloc);
+                localT_iloc[icolor+chromatic_number_*jcolor] =
+                    submatWork_->val(icolor,jcolor,iloc);
         }
         update_submatT_tm_.stop();
     }
@@ -250,7 +250,8 @@ public:
 
     void printTimers(ostream& os);
     
-    void initializeGramMatrix(const SquareLocalMatrices<MATDTYPE>& ss, const int orbitals_index)
+    void initializeGramMatrix(const SquareLocalMatrices<MATDTYPE>& ss,
+                              const int orbitals_index)
     {
         assert( gm_!=0 );
         
@@ -259,7 +260,6 @@ public:
         
         gm_->setMatrix(*work_, orbitals_index);
         init_gram_matrix_tm_.stop();
-//        gm_->computeInverse();
     }
     void printGramMM(ofstream& tfile)
     {
@@ -440,7 +440,8 @@ public:
        return computeChemicalPotentialAndOccupations(aux_energies_,width, nel, max_numst);
     }
 
-    dist_matrix::DistMatrix<DISTMATDTYPE> getDistMatrixFromLocalMatrices(const LocalMatrices<MATDTYPE>& ss)
+    dist_matrix::DistMatrix<DISTMATDTYPE> getDistMatrixFromLocalMatrices(
+        const LocalMatrices<MATDTYPE>& ss)
     {
         MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
         const dist_matrix::BlacsContext& bc = *mbc. bcxt();

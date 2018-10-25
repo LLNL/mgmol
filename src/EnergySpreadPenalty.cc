@@ -136,7 +136,7 @@ void EnergySpreadPenalty::computeAndAddResidualSpreadPenalty(const vector<float>
     const float coeffy=2.*M_PI/mygrid.ll(1);
     const float coeffz=2.*M_PI/mygrid.ll(2);
     
-    const vector<vector<int> >& global_indexes(orbitals.getGlobalIndexes());
+    const vector<vector<int> >& global_indexes(orbitals.getOverlappingGids());
     
     for(short icolor=0;icolor<orbitals.chromatic_number();icolor++)
     {

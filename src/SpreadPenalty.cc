@@ -193,7 +193,7 @@ void SpreadPenalty::computeAndAddResidualSpreadPenalty(const vector<float>& lagr
     const float pbound=0.5;
     const float mbound=-1.*pbound;
     
-    const vector<vector<int> >& global_indexes(orbitals.getGlobalIndexes());
+    const vector<vector<int> >& global_indexes(orbitals.getOverlappingGids());
     
     for(short icolor=0;icolor<orbitals.chromatic_number();icolor++)
     {

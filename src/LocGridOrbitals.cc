@@ -35,8 +35,6 @@
 #include "Masks4Orbitals.h"
 #include "hdf_tools.h"
 #include "Mesh.h"
-
-// pb
 #include "GridFunc.h"
 #include "Laph2.h"
 #include "Laph4M.h"
@@ -61,7 +59,6 @@ int LocGridOrbitals::data_wghosts_index_=-1;
 Timer LocGridOrbitals::get_dm_tm_("LocGridOrbitals::get_dm");
 Timer LocGridOrbitals::matB_tm_("LocGridOrbitals::matB");
 Timer LocGridOrbitals::invBmat_tm_("LocGridOrbitals::invBmat");
-Timer LocGridOrbitals::invS_tm_("LocGridOrbitals::invS");
 Timer LocGridOrbitals::overlap_tm_("LocGridOrbitals::overlap");
 Timer LocGridOrbitals::dot_product_tm_("LocGridOrbitals::dot_product");
 Timer LocGridOrbitals::addDot_tm_("LocGridOrbitals::addDot");
@@ -521,7 +518,6 @@ void LocGridOrbitals::app_mask(const int color, ORBDTYPE *u,
 
     }
     mask_tm_.stop();
-    
 }
 
 void LocGridOrbitals::app_mask(const int color, pb::GridFunc<ORBDTYPE>& gu, 
@@ -760,42 +756,22 @@ void LocGridOrbitals::precond_smooth(ORBDTYPE *rhs,
     }    
 }
 
-void LocGridOrbitals::multiply_by_matrix(const dist_matrix::DistMatrix<DISTMATDTYPE>& matrix,
-                                         ORBDTYPE* const product,
-                                         const int ldp)
+void LocGridOrbitals::multiply_by_matrix(
+         const dist_matrix::DistMatrix<DISTMATDTYPE>& dmatrix,
+         ORBDTYPE* const product,
+         const int ldp)
 {
-    prod_matrix_tm_.start();
-
 #if 0
     (*MPIdata::sout)<<"self multiply_by_matrix"<<endl;
 #endif
 
-    memset(product,0,ldp*chromatic_number_*sizeof(ORBDTYPE));
-
     ReplicatedWorkSpace& wspace( ReplicatedWorkSpace::instance() );
     DISTMATDTYPE* work_matrix=wspace.square_matrix();
     
-    matrix.matgather(work_matrix, numst_);
+    //build a local complete matrix from a distributed matrix
+    dmatrix.matgather(work_matrix, numst_);
 
-    DISTMATDTYPE* matrix_local=new DISTMATDTYPE[chromatic_number_*chromatic_number_]; 
-
-    // loop over subdomains
-    for(short iloc=0;iloc<subdivx_;iloc++)
-    {
-        ORBDTYPE* phi=getPsi(0,iloc);
-
-        matrixToLocalMatrix(iloc,work_matrix,matrix_local);
-
-        // Compute loc_numpt_ rows (for subdomain iloc)
-        MPgemmNN(loc_numpt_, chromatic_number_, chromatic_number_, 1.,
-            phi, lda_,
-            matrix_local, chromatic_number_,
-            0., product+iloc*loc_numpt_, ldp);
-    }
-    
-    delete[] matrix_local;
-
-    prod_matrix_tm_.stop();
+    multiply_by_matrix(0, chromatic_number_, work_matrix, product, ldp);
 }
 
 
@@ -823,7 +799,9 @@ void LocGridOrbitals::multiply_by_matrix(const int first_color,
     // loop over subdomains
     for(short iloc=0;iloc<subdivx_;iloc++)
     {
+        //extract block corresponding to local indexes
         matrixToLocalMatrix(iloc,matrix,matrix_local,first_color,ncolors);
+
         // Compute product for subdomain iloc
         MPgemmNN(loc_numpt_, ncolors, chromatic_number_, 1.,
                 getPsi(0,iloc), lda_,
@@ -846,11 +824,12 @@ void LocGridOrbitals::multiply_by_matrix(const int first_color,
     prod_matrix_tm_.stop();
 }
 
-void LocGridOrbitals::multiplyByMatrix(const int first_color, 
-                                       const int ncolors,
-                                       const SquareLocalMatrices<MATDTYPE>& matrix, 
-                                       ORBDTYPE* product,
-                                       const int ldp)const
+void LocGridOrbitals::multiplyByMatrix(
+                          const int first_color, 
+                          const int ncolors,
+                          const SquareLocalMatrices<MATDTYPE>& matrix, 
+                          ORBDTYPE* product,
+                          const int ldp)const
 {
     prod_matrix_tm_.start();
     
@@ -878,7 +857,10 @@ void LocGridOrbitals::multiplyByMatrix(const int first_color,
     prod_matrix_tm_.stop();
 }
 
-void LocGridOrbitals::multiplyByMatrix(const SquareLocalMatrices<MATDTYPE>& matrix)
+//Here the result is stored in one of the matrices used in the multiplication,
+//so a temporary arry is necessary
+void LocGridOrbitals::multiplyByMatrix(
+                          const SquareLocalMatrices<MATDTYPE>& matrix)
 {
     prod_matrix_tm_.start();
 
@@ -936,7 +918,8 @@ void LocGridOrbitals::multiply_by_matrix(const DISTMATDTYPE* const matrix,
                        product.psi(0), product.lda_);
 }
 
-void LocGridOrbitals::multiply_by_matrix(const dist_matrix::DistMatrix<DISTMATDTYPE>& matrix)
+void LocGridOrbitals::multiply_by_matrix(
+                          const dist_matrix::DistMatrix<DISTMATDTYPE>& matrix)
 {
     prod_matrix_tm_.start();
 
@@ -1407,18 +1390,17 @@ void LocGridOrbitals::matrixToLocalMatrix(const short iloc,
 {
     assert( ncolor<=chromatic_number_ );
     memset(lmatrix,0,chromatic_number_*ncolor*sizeof(DISTMATDTYPE));   
-    
-    // loop over columns
+
     for(int jcolor=0;jcolor<ncolor;jcolor++){
-        const int jst=overlapping_gids_[iloc][first_color+jcolor];
-        if( jst!=-1 )
+        const int gidj=overlapping_gids_[iloc][first_color+jcolor];
+        if( gidj!=-1 )
         {
-            const int njst = jst*numst_;
+            const int njst = gidj*numst_;
             const int njc  = jcolor*chromatic_number_;
             for(int icolor=0;icolor<chromatic_number_;icolor++){
-                const int ist=overlapping_gids_[iloc][icolor];
-                if( ist!=-1 ){
-                    lmatrix[njc+icolor] = matrix[njst+ist];
+                const int gidi=overlapping_gids_[iloc][icolor];
+                if( gidi!=-1 ){
+                    lmatrix[njc+icolor] = matrix[njst+gidi];
                 }
             }
         }
@@ -1514,15 +1496,6 @@ void LocGridOrbitals::getLocalOverlap(SquareLocalMatrices<MATDTYPE>& ss)
         getLocalOverlap(*this,ss);
 #else
         const ORBDTYPE* const psi=block_vector_.vect(0);
-#ifdef DEBUG
-        for(short iloc=0;iloc<subdivx_;iloc++)
-        for(int color=0;color<chromatic_number_;color++)
-        {
-            int pst=overlapping_gids_[iloc][color];
-            if( pst==-1)
-                assert(fabs(*(psi+color*lda_+iloc*loc_numpt_+loc_numpt_/2))<1.e-15);
-        }
-#endif    
 
         for(short iloc=0;iloc<subdivx_;iloc++)
         {
@@ -1543,46 +1516,12 @@ void LocGridOrbitals::getLocalOverlap(const LocGridOrbitals& orbitals,
                                       SquareLocalMatrices<MATDTYPE>& ss)
 {
     assert( chromatic_number_>=0 );
-    assert( loc_numpt_>0 );
-    assert( grid_.vel()>1.e-8 );
-    assert( subdivx_>0 );
-    
+
     if( chromatic_number_!=0 )
     {
-    
-        const ORBDTYPE* const psi1=block_vector_.vect(0);
-        const ORBDTYPE* const psi2=orbitals.block_vector_.vect(0);
-#ifdef DEBUG
-        for(short iloc=0;iloc<subdivx_;iloc++)
-        for(int color=0;color<chromatic_number_;color++)
-        {
-            int pst=overlapping_gids_[iloc][color];
-            if( pst==-1)
-                assert(fabs(*(psi1+color*lda_+iloc*loc_numpt_+loc_numpt_/2))<1.e-15);
-        }
-#endif    
-
-#ifdef USE_MP // use temporary float data for matrix ss
-        SquareLocalMatrices<ORBDTYPE> ssf(ss.subdiv(), ss.m());
-        for(short iloc=0;iloc<subdivx_;iloc++)
-        {            
-            ssf.gemm(iloc,loc_numpt_,
-                     psi1+iloc*loc_numpt_, lda_,
-                     psi2+iloc*loc_numpt_, orbitals.lda_);
-        }
-        
-        ss.copy(ssf);
-#else
-        for(short iloc=0;iloc<subdivx_;iloc++)
-        {
-            ss.gemm(iloc,loc_numpt_,
-                    psi1+iloc*loc_numpt_, lda_,
-                    psi2+iloc*loc_numpt_, orbitals.lda_);
-        }
-#endif
+        computeLocalProduct(orbitals.block_vector_.vect(0), orbitals.lda_,
+                            ss, false);
     }
-
-    ss.scal(grid_.vel());
 }
 
 void LocGridOrbitals::computeLocalProduct(const LocGridOrbitals& orbitals, 
@@ -1591,12 +1530,10 @@ void LocGridOrbitals::computeLocalProduct(const LocGridOrbitals& orbitals,
 {
     //assert( orbitals.chromatic_number_>=0 );
     assert( orbitals.lda_>1 );
-    assert( grid_.vel()>0. );
 
     if( chromatic_number_!=0 )
-    computeLocalProduct(orbitals.psi(0),
-                        orbitals.lda_, 
-                        ss, transpose);
+        computeLocalProduct(orbitals.psi(0), orbitals.lda_,
+                            ss, transpose);
 
 }
 
@@ -1605,33 +1542,33 @@ void LocGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
                                           LocalMatrices<MATDTYPE>& ss,
                                           const bool transpose)
 {
+    assert( loc_numpt_>0 );
     assert( loc_numpt_<=ld );
     assert( array!=0 );
     assert( chromatic_number_!=0 );
-    
+    assert( grid_.vel()>0. );
+    assert( subdivx_>0 );
+
     const ORBDTYPE* const a = transpose ? array : block_vector_.vect(0);
     const ORBDTYPE* const b = transpose ? block_vector_.vect(0) : array;
 
     const int lda = transpose ? ld : lda_;
     const int ldb = transpose ? lda_ : ld;
 
-#ifdef USE_MP // use temporary float data for matrix ss
-    SquareLocalMatrices<ORBDTYPE> ssf(ss.subdiv(), ss.m());
+#ifdef USE_MP
+    // use temporary float data for matrix ss
+    LocalMatrices<ORBDTYPE> ssf(ss.subdiv(), ss.m());
+#else
+    LocalMatrices<ORBDTYPE>& ssf(ss);
+#endif
     for(short iloc=0;iloc<subdivx_;iloc++)
     {            
         ssf.gemm(iloc,loc_numpt_,
                  a+iloc*loc_numpt_, lda,
                  b+iloc*loc_numpt_, ldb);
     }
-    
+#ifdef USE_MP
     ss.copy(ssf);
-#else
-    for(short iloc=0;iloc<subdivx_;iloc++)
-    {
-        ss.gemm(iloc, loc_numpt_, 
-                a+iloc*loc_numpt_, lda,
-                b+iloc*loc_numpt_, ldb);
-    }
 #endif
     
     ss.scal(grid_.vel());
@@ -1646,15 +1583,15 @@ void LocGridOrbitals::computeDiagonalElementsDotProduct(
 
     memset(&ss[0],0,numst_*sizeof(DISTMATDTYPE));
 
-//    int ione=1;
     for(int icolor=0;icolor<chromatic_number_;icolor++)
     for(short iloc=0;iloc<subdivx_;iloc++){
-        const int ifunc=overlapping_gids_[iloc][icolor];
-        if( ifunc>-1 ){
-            double alpha
-                =MPdot(loc_numpt_, orbitals.getPsi(icolor,iloc), getPsi(icolor,iloc));
+        const int gid=overlapping_gids_[iloc][icolor];
+        if( gid>-1 ){
+            double alpha =
+                MPdot(loc_numpt_, orbitals.getPsi(icolor,iloc),
+                                  getPsi(icolor,iloc));
          
-            ss[ifunc] += (DISTMATDTYPE)(alpha*grid_.vel());
+            ss[gid] += (DISTMATDTYPE)(alpha*grid_.vel());
         }
     }
     vector<DISTMATDTYPE> tmp(ss);
@@ -1734,7 +1671,8 @@ void LocGridOrbitals::computeDiagonalElementsDotProductLocal(
 #endif
 }
 
-void LocGridOrbitals::computeGram(dist_matrix::DistMatrix<DISTMATDTYPE>& gram_mat)
+void LocGridOrbitals::computeGram(
+         dist_matrix::DistMatrix<DISTMATDTYPE>& gram_mat)
 {
     assert( proj_matrices_!=0 );
 
@@ -1745,8 +1683,9 @@ void LocGridOrbitals::computeGram(dist_matrix::DistMatrix<DISTMATDTYPE>& gram_ma
     gram_mat=proj_matrices_->getDistMatrixFromLocalMatrices(ss);
 }
 
-void LocGridOrbitals::computeGram(const LocGridOrbitals& orbitals,
-                                  dist_matrix::DistMatrix<DISTMATDTYPE>& gram_mat)
+void LocGridOrbitals::computeGram(
+          const LocGridOrbitals& orbitals,
+          dist_matrix::DistMatrix<DISTMATDTYPE>& gram_mat)
 {
     assert( proj_matrices_!=0 );
 
@@ -1754,6 +1693,7 @@ void LocGridOrbitals::computeGram(const LocGridOrbitals& orbitals,
 
     getLocalOverlap(orbitals, ss);
 
+    //make a DistMatrix out of ss
     gram_mat=proj_matrices_->getDistMatrixFromLocalMatrices(ss);
 }
 
@@ -1787,7 +1727,7 @@ void LocGridOrbitals::computeGram(const int verbosity)
     overlap_tm_.stop();
 }
 
-// compute the lower-triangular part of the overlap matrix
+
 void LocGridOrbitals::computeGramAndInvS(const int verbosity)
 {
     assert( proj_matrices_!=0 );
@@ -1795,11 +1735,8 @@ void LocGridOrbitals::computeGramAndInvS(const int verbosity)
     computeGram(verbosity);
     
     /* Compute inverse of Gram matrix */
-    invS_tm_.start();
     proj_matrices_->computeInvS();
-    invS_tm_.stop();
 }
-
 
 void LocGridOrbitals::checkCond(const double tol, const bool flag_stop)
 {
@@ -1972,8 +1909,9 @@ void LocGridOrbitals::orthonormalize(const bool overlap_uptodate)
     proj_matrices_->setGram2Id(getIterativeIndex());
 }
 
-void LocGridOrbitals::orthonormalizeLoewdin(const bool overlap_uptodate,
-                                            SquareLocalMatrices<MATDTYPE>* matrixTransform)
+void LocGridOrbitals::orthonormalizeLoewdin(
+                          const bool overlap_uptodate,
+                          SquareLocalMatrices<MATDTYPE>* matrixTransform)
 {
     //if( chromatic_number_==0 )return;
 
@@ -2231,12 +2169,10 @@ void LocGridOrbitals::multiplyByMatrix2states(const int st1, const int st2,
 
 }
 
-void LocGridOrbitals::computeInvNorms2(vector< vector<float> >& inv_norms2)const
+void LocGridOrbitals::computeDiagonalGram(
+         VariableSizeMatrix<sparserow>& diagS)const
 {
     const double vel=grid_.vel();
-        
-    const int initTabSize = 4096;
-    VariableSizeMatrix<sparserow> diagS("diagS",initTabSize);
 
     for(int color=0;color<chromatic_number_;color++)
     {
@@ -2250,34 +2186,33 @@ void LocGridOrbitals::computeInvNorms2(vector< vector<float> >& inv_norms2)const
             }
         }
     }
-    /* get local size */
+    //get local size
     int lsize = diagS.n();
-    /* do data distribution to update local data.
-     * All PE's need to know full diagonal entries of 
-     * overlapping functions, hence append=true.
-    */
-    (*distributor_normalize_).augmentLocalData(diagS, true);    
-
+    // do data distribution to update local data.
+    // All PE's need to know full diagonal entries of 
+    // overlapping functions, hence append=true.
+    distributor_normalize_->augmentLocalData(diagS, true);
 #ifdef DEBUG
     Control& ct = *(Control::instance());
     if( onpe0 && ct.verbose>2 )
         for(int i=0;i<lsize;i++)
             (*MPIdata::sout)<<"i="<<i<<", diagS[i]="<<diagS.getRowEntry(i,0)<<endl;
 #endif
-    for(int i=0;i<lsize;i++)
-    {
-        assert( diagS.getRowEntry(i,0)>1.e-15 );
-        double val = 1./diagS.getRowEntry(i,0);
-        diagS.updateLocalEntryInsert(i, 0, val);
-    }
-    
+}
+
+void LocGridOrbitals::computeInvNorms2(
+         vector< vector<float> >& inv_norms2)const
+{
+    const int initTabSize = 4096;
+    VariableSizeMatrix<sparserow> diagS("diagS",initTabSize);
+
+    computeDiagonalGram(diagS);
+
     // assign return values
     inv_norms2.resize(subdivx_);
     for(short iloc=0;iloc<subdivx_;iloc++)
+    {
         inv_norms2[iloc].resize(chromatic_number_);
-
-    for(short iloc=0;iloc<subdivx_;iloc++)
-    {   
         for(short color=0;color<chromatic_number_;color++)
         {
             const int gid=overlapping_gids_[iloc][color];            
@@ -2286,7 +2221,15 @@ void LocGridOrbitals::computeInvNorms2(vector< vector<float> >& inv_norms2)const
                 inv_norms2[iloc][color] = (float)diagS.get_value(gid,gid);
             }
         }
-    }  
+    }
+
+    for(short iloc=0;iloc<subdivx_;iloc++)
+    {
+        for(short color=0;color<chromatic_number_;color++)
+        {
+            inv_norms2[iloc][color] = 1./inv_norms2[iloc][color];
+        }
+    }
 }
 
 void LocGridOrbitals::normalize()
@@ -2299,68 +2242,36 @@ void LocGridOrbitals::normalize()
     //if( onpe0 && ct.verbose>2 )
     //        (*MPIdata::sout)<<"Normalize LocGridOrbitals"<<endl;
 
-    const double vel=grid_.vel();
-
     Control& ct = *(Control::instance());
     
     if(ct.short_sighted)
     {
-       const int initTabSize = 4096;
-       VariableSizeMatrix<sparserow> diagS("diagSforN",initTabSize);
+        const int initTabSize = 4096;
+        VariableSizeMatrix<sparserow> diagS("diagSforN",initTabSize);
 
-       for(int color=0;color<chromatic_number_;color++)
-       {
-           for(short iloc=0;iloc<subdivx_;iloc++)
-           {
-               const int gid=overlapping_gids_[iloc][color];
-               if( gid!=-1 )
-               {
-                   double val = vel*(double)block_vector_.dot(color,color,iloc);
-                   assert( abs(val)<1.e+10 );
-                   diagS.insertMatrixElement(gid, gid, val, ADD, true);
-               }
-           }
-       }
-       /* get local size */
-       int lsize = diagS.n();
-       /* do data distribution to update local data.
-        * All PE's need to know full diagonal entries of 
-        * overlapping functions, hence append=true.
-       */
-       (*distributor_normalize_).augmentLocalData(diagS, true);    
+        computeDiagonalGram(diagS);
 
-#ifdef DEBUG
-       if( onpe0 )
-           for(int i=0;i<lsize;i++)
-               (*MPIdata::sout)<<"i="<<i<<", diagS[i]="<<diagS.getRowEntry(i,0)<<endl;
-#endif
-       for(int i=0;i<lsize;i++)
-       {
-           assert( diagS.getRowEntry(i,0)>1.e-15 );
-           double val = 1./sqrt(diagS.getRowEntry(i,0));
-           diagS.updateLocalEntryInsert(i, 0, val);
-       }
-       
-       /* Do normalization */
-       for(short iloc=0;iloc<subdivx_;iloc++)
-       {   
-        // Loop over the functions
-           for(int color=0;color<chromatic_number_;color++)
-           {
-               const int gid=overlapping_gids_[iloc][color];            
-               if( gid!=-1 )
-               {
-                // normalize state
-                   double alpha = diagS.get_value(gid,gid);
-                //(*MPIdata::sout)<<"alpha="<<alpha<<endl;
-                   block_vector_.scal(alpha,color,iloc);
-               }
-           }
-       }  
+        /* Do normalization */
+        for(short iloc=0;iloc<subdivx_;iloc++)
+        {   
+            // Loop over the functions
+            for(int color=0;color<chromatic_number_;color++)
+            {
+                const int gid=overlapping_gids_[iloc][color];            
+                if( gid!=-1 )
+                {
+                     // normalize state
+                     double alpha = 1./sqrt(diagS.get_value(gid,gid));
+                     //(*MPIdata::sout)<<"alpha="<<alpha<<endl;
+                     block_vector_.scal(alpha,color,iloc);
+                }
+            }
+        }  
          
     }
     else
-    {    
+    {
+       const double vel=grid_.vel();
        vector<double> diagS(numst_,0.);   
        for(int color=0;color<chromatic_number_;color++){
            for(short iloc=0;iloc<subdivx_;iloc++){
@@ -2682,7 +2593,6 @@ void LocGridOrbitals::printTimers(ostream& os)
 {
     matB_tm_.print(os);
     invBmat_tm_.print(os);
-    invS_tm_.print(os);
     overlap_tm_.print(os);
     dot_product_tm_.print(os);
     mask_tm_.print(os);

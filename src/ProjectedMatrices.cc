@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id: ProjectedMatrices.cc 1750 2017-04-20 00:01:44Z jeanluc $
 #include "ProjectedMatrices.h"
 
 #if PROCRUSTES

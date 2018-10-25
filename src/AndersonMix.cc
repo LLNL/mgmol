@@ -6,17 +6,7 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-////////////////////////////////////////////////////////////////////////////////
-//
-// AndersonMix.cc
-//
-////////////////////////////////////////////////////////////////////////////////
-// $Id$
-#ifndef ANDERSONMIX_C
-#define ANDERSONMIX_C
-
 #include "global.h"
-
 #include "MPIdata.h"
 #include "AndersonMix.h"
 #include "lapack_c.h"
@@ -318,7 +308,8 @@ void AndersonMix<T>::update(T& f, T& work)
     
     if(ortho_flag_)
     {
-        SquareLocalMatrices<MATDTYPE> ortho_transform(x_.subdivx(),x_.chromatic_number());
+        SquareLocalMatrices<double> ortho_transform(x_.subdivx(),
+                                                    x_.chromatic_number());
         x_.orthonormalizeLoewdin(false,&ortho_transform);
         for(int j=0;j<m_;j++)
         {
@@ -331,6 +322,4 @@ void AndersonMix<T>::update(T& f, T& work)
 }
 
 template class AndersonMix<LocGridOrbitals>;
-
-#endif
 

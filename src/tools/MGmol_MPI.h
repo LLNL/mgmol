@@ -54,8 +54,6 @@ private:
     static void setupComm(const MPI_Comm comm,
                    const bool with_spin,
                    const int nimages);
-    int bcast(std::string& common_string, MPI_Comm comm)const;
-
     static Timer split_allreduce_sums_double_tm_;
     static Timer split_allreduce_sums_float_tm_;
                      
@@ -147,6 +145,7 @@ public:
         MPI_Barrier(comm_global_);
 #endif
     }
+    int bcast(std::string& common_string, MPI_Comm comm)const;
     int bcast(short* val, int size=1, int root=0)const;
     int bcast(int* val, int size=1, int root=0)const;
     int bcast(double* val, int size=1, int root=0)const;

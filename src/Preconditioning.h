@@ -6,8 +6,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef PRECONDITIONING_H
-#define PRECONDITIONING_H
+#ifndef MGMOL_PRECONDITIONING_H
+#define MGMOL_PRECONDITIONING_H
 
 #include "GridFunc.h"
 #include "GridMask.h"
@@ -36,7 +36,7 @@ class Preconditioning
     std::vector<pb::GridFuncVector<T>*> gfv_newv_;
     
     std::map<int,GridMask*> gid2mask_;     // map state->mask;
-    std::vector<std::vector<int> > gid_;
+    std::vector<std::vector<int> > overlapping_gids_;
 
     void app_mask(pb::GridFunc<T>&, 
                   const short level, const int istate=-1)const;

@@ -34,7 +34,7 @@ HamiltonianMVP_DMStrategy<T1, T2, T3>::HamiltonianMVP_DMStrategy(
         rho_(rho),
         energy_(energy),
         electrostat_(electrostat),
-        global_indexes_(orbitals->getGlobalIndexes()),
+        global_indexes_(orbitals->getOverlappingGids()),
         orbitals_(orbitals),
         mgmol_strategy_(mgmol_strategy)
 {

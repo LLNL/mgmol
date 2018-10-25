@@ -53,7 +53,6 @@ private:
     ////////////////////////////////////////////////////////
     static Timer matB_tm_;    
     static Timer invBmat_tm_;    
-    static Timer invS_tm_;    
     static Timer overlap_tm_;    
     static Timer dot_product_tm_;    
     static Timer addDot_tm_;    
@@ -147,6 +146,7 @@ private:
 
     void computeGlobalIndexes(LocalizationRegions& lrs);
     void computeInvNorms2(vector< vector<float> >& inv_norms2)const;
+    void computeDiagonalGram(VariableSizeMatrix<sparserow>& diagS)const;
 
     void initFourier();
     void initRand();
@@ -475,7 +475,7 @@ public:
     void initWF(const LocalizationRegions& lrs);
     void checkCond(const double tol, const bool flag_stop);
     double normState(const int st)const;
-    const vector<vector<int> >& getGlobalIndexes()const
+    const vector<vector<int> >& getOverlappingGids()const
     {
         assert( overlapping_gids_.size()>0 );
         return overlapping_gids_;

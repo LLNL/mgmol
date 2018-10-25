@@ -63,20 +63,21 @@ void OrbitalsPreconditioning::setup(LocGridOrbitals& orbitals,
         assert( maski!=0 );
         gid_to_mask.insert(pair<int,GridMask*>(gid,maski));
     }
-    precond_->setup(gid_to_mask,orbitals.getGlobalIndexes());
+    precond_->setup(gid_to_mask,orbitals.getOverlappingGids());
     
     assert( orbitals.chromatic_number()==orbitals.getGlobalIndexes()[0].size() );
     
     if( ct.blockPrecond() )
     {
-        gfv_work_=new pb::GridFuncVector<MGPRECONDTYPE>(true,mygrid,ct.bc[0],ct.bc[1],ct.bc[2],
-                                         orbitals.getGlobalIndexes());
+        gfv_work_=new pb::GridFuncVector<MGPRECONDTYPE>(
+                      true,mygrid,ct.bc[0],ct.bc[1],ct.bc[2],
+                      orbitals.getOverlappingGids());
     }
-    
+ 
     if( mixed_precision_ )
     {
         data_wghosts_=new pb::GridFuncVector<MGPRECONDTYPE>(true,mygrid,ct.bc[0],ct.bc[1],ct.bc[2],
-                                         orbitals.getGlobalIndexes());
+                                         orbitals.getOverlappingGids());
     }
     else
     {

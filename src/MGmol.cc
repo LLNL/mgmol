@@ -58,7 +58,6 @@ using namespace std;
 #include "DFTsolver.h"
 #include "DMStrategyFactory.h"
 #include "Preconditioning.h"
-#include "Masks4Orbitals.h"
 #include "OrbitalsPreconditioning.h"
 #include "PackedCommunicationBuffer.h"
 #include "PoissonInterface.h"
@@ -398,7 +397,7 @@ int MGmol::initial()
     if( ct.restart_info <=1 )
         proj_matrices_->setDMuniform(ct.getNelSpin(),current_orbitals_->getIterativeIndex());
     
-    rho_->setup(ct.orbital_type, current_orbitals_->getGlobalIndexes());
+    rho_->setup(ct.orbital_type, current_orbitals_->getOverlappingGids());
     
     if( ct.restart_info <=1 )
     {

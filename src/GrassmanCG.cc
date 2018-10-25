@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id:$
 #include "MGmol.h"
 
 #include "LocGridOrbitals.h"
@@ -107,7 +106,7 @@ double GrassmanCG::computeStepSize(LocGridOrbitals& orbitals)
    SquareLocalMatrices<MATDTYPE> ss(sdir_->subdivx(), sdir_->chromatic_number());
    sdir_->getLocalOverlap(orbitals, ss); 
    dist_matrix::DistMatrix<DISTMATDTYPE> invSzTphiMat("invSzTphiMat", bc, dim, dim); 
-   ss.fillDistMatrix(invSzTphiMat, sdir_->getGlobalIndexes());  
+   ss.fillDistMatrix(invSzTphiMat, sdir_->getOverlappingGids());  
    dist_matrix::DistMatrix<DISTMATDTYPE> invSphiTzMat("phiTzMat", bc, dim, dim); 
    invSphiTzMat.transpose(1.0, invSzTphiMat, 0.);
    // apply invS
@@ -118,7 +117,7 @@ double GrassmanCG::computeStepSize(LocGridOrbitals& orbitals)
    ss.reset();
    sdir_->getLocalOverlap(ss); 
    dist_matrix::DistMatrix<DISTMATDTYPE> zTzMat("zTzMat", bc, dim, dim); 
-   ss.fillDistMatrix(zTzMat, sdir_->getGlobalIndexes());    
+   ss.fillDistMatrix(zTzMat, sdir_->getOverlappingGids());    
    
    // Now compute Tr[S^{-1}*Z^T*(-G)] = Tr[S^{-1}*Zo^T*Phi*S^{-1}*Phi^T*H*Phi] - Tr[S^{-1}*Zo^T*H*Phi]
    // Compute Tr[S^{-1}*Zo^T*Phi*S^{-1}*Phi^T*H*Phi];

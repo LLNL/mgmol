@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #include "Hamiltonian.h"
 #include "Control.h"
 #include "Mesh.h"
@@ -98,7 +97,7 @@ void Hamiltonian::applyLocal(const int first_state,
         pb::GridFunc<POTDTYPE>  gfpot(mygrid,ct.bc[0],ct.bc[1],ct.bc[2]);
         gfpot.assign(vtot);
         if( ct.Mehrstellen() ) gfpot.trade_boundaries();
-        const vector<vector<int> >& gid( phi.getGlobalIndexes() );
+        const vector<vector<int> >& gid( phi.getOverlappingGids() );
         pb::GridFuncVector<ORBDTYPE> gfvw1(false,mygrid,ct.bc[0],ct.bc[1],ct.bc[2],gid);
         pb::GridFuncVector<ORBDTYPE> gfvw2(false,mygrid,ct.bc[0],ct.bc[1],ct.bc[2],gid);
         //if( onpe0 )(*MPIdata::sout)<<"Hamiltonian::applyLocal, index="<<phi.getIterativeIndex()<<endl;
@@ -193,6 +192,6 @@ void Hamiltonian::addHlocal2matrix(LocGridOrbitals& phi1,
 
     phi1.computeLocalProduct(*hlphi_, ss);
  
-    mat.initializeMatrixElements(ss, phi1.getGlobalIndexes(), ct.numst);
+    mat.initializeMatrixElements(ss, phi1.getOverlappingGids(), ct.numst);
 }
 

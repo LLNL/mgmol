@@ -380,7 +380,7 @@ void MGmol::computeHnlPhiAndAdd2HPhi(Ions& ions,
     const pb::Grid& mygrid  = mymesh->grid();
     const int numpt=mygrid.size();
     
-    const vector<vector<int> >& gid( phi.getGlobalIndexes() );
+    const vector<vector<int> >& gid( phi.getOverlappingGids() );
     const short ncolors=gid[0].size();
  
     {
