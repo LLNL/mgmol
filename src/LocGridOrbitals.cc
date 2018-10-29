@@ -102,17 +102,10 @@ LocGridOrbitals::LocGridOrbitals(const pb::Grid& my_grid,
 
     assert( numst_>=0 );
     
-    pack_=0;
     gidToStorage_=0;
     
     overlapping_gids_.clear();
-     
-    n_copies_=new short[1];
-    (*n_copies_)=1;
-    
-    distributor_diagdotprod_ = 0;
-    distributor_normalize_ = 0;
-   
+
     if(masks && corrmasks) 
         masks4orbitals_.reset(new Masks4Orbitals(masks,corrmasks,
              lrs->getOverlapGids() ) );
@@ -122,19 +115,10 @@ LocGridOrbitals::LocGridOrbitals(const pb::Grid& my_grid,
 
 LocGridOrbitals::~LocGridOrbitals()
 {
-    assert( *n_copies_>0 );
     assert( proj_matrices_!=0 );
-    assert( pack_!=0 );
+    assert( pack_ );
     assert( gidToStorage_!=0 );
     
-    (*n_copies_)--;
-    if( (*n_copies_)==0 )
-    {
-        delete pack_; pack_=0;
-        delete[] n_copies_;
-        delete distributor_diagdotprod_; distributor_diagdotprod_ =0;
-        delete distributor_normalize_;   distributor_normalize_ =0;     
-    }
     // delete gidToStorage here. This is OK since it is not a shared data
     // else there would be a memory leak.
     delete gidToStorage_; gidToStorage_=0;
@@ -154,8 +138,7 @@ LocGridOrbitals::LocGridOrbitals(const LocGridOrbitals &A,
     
     assert( A.chromatic_number_>=0 );
     assert( A.proj_matrices_!=0 );
-    
-    (*A.n_copies_)++;
+    assert( A.lrs_!=0 );
 
     copySharedData(A);
     
@@ -180,9 +163,7 @@ LocGridOrbitals::LocGridOrbitals(const LocGridOrbitals &A,
     assert( proj_matrices!=0 );
     assert( masks!=0 );
     assert( lrs_!=0 );
-    
-    (*A.n_copies_)++;
-
+ 
     copySharedData(A);
     
     gidToStorage_=0;
@@ -202,14 +183,11 @@ void LocGridOrbitals::copySharedData(const LocGridOrbitals &A)
     //if(onpe0)cout<<"call LocGridOrbitals::copySharedData(const LocGridOrbitals &A)"<<endl;
 
     assert( A.gidToStorage_!=0 );
-    assert( A.n_copies_!=0 );
-    assert( A.pack_!=0 );
+    assert( A.pack_ );
 
     numst_           =A.numst_;
 
     lrs_iterative_index_ = A.lrs_iterative_index_;
-    
-    n_copies_        =A.n_copies_;
     
     chromatic_number_=A.chromatic_number_;
 
@@ -327,17 +305,16 @@ void LocGridOrbitals::setup(LocalizationRegions* lrs)
     
     proj_matrices_->setup(ct.occ_width, ct.getNel(), overlapping_gids_);
 
-    if( distributor_diagdotprod_!=0 )delete distributor_diagdotprod_;
-    if( distributor_normalize_!=0 )delete distributor_normalize_;
-
     Mesh* mymesh = Mesh::instance();
     const pb::Grid& mygrid  = mymesh->grid();  
     const pb::PEenv& myPEenv=mymesh->peenv();
     double domain[3]={mygrid.ll(0),mygrid.ll(1),mygrid.ll(2)};
 
     double maxr=lrs->max_radii();
-    distributor_diagdotprod_ = new DataDistribution("dot",maxr, myPEenv, domain);
-    distributor_normalize_ = new DataDistribution("norm",2.*maxr, myPEenv, domain);
+    distributor_diagdotprod_.reset(
+        new DataDistribution("dot",maxr, myPEenv, domain) );
+    distributor_normalize_.reset(
+        new DataDistribution("norm",2.*maxr, myPEenv, domain) );
 
     if( ct.verbose>0 )
         printWithTimeStamp("LocGridOrbitals::setup() done...",(*MPIdata::sout));
@@ -717,13 +694,11 @@ int LocGridOrbitals::packStates(LocalizationRegions* lrs)
     if( onpe0 && ct.verbose>2 )
         (*MPIdata::sout)<<" PACK "<<dim<<" STATES"<<endl;
 
-    if( pack_!=0 )delete pack_;
-
     const bool global = ct.globalColoring();
 
     MGmol_MPI& mmpi ( *(MGmol_MPI::instance()) );
 
-    pack_=new FunctionsPacking(lrs,global,mmpi.commSameSpin());
+    pack_.reset( new FunctionsPacking(lrs,global,mmpi.commSameSpin()) );
 
     assert( pack_->chromatic_number()<100000 );
     
@@ -1173,7 +1148,7 @@ int LocGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, string name)
 {
     assert( chromatic_number_>=0 );
     assert( name.size()>0 );
-    assert( pack_!=0 );
+    assert( pack_ );
 
     Control& ct = *(Control::instance());
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
@@ -2186,8 +2161,6 @@ void LocGridOrbitals::computeDiagonalGram(
             }
         }
     }
-    //get local size
-    int lsize = diagS.n();
     // do data distribution to update local data.
     // All PE's need to know full diagonal entries of 
     // overlapping functions, hence append=true.

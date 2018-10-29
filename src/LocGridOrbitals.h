@@ -21,7 +21,7 @@
 #include "Orbitals.h"
 #include "ClusterOrbitals.h"
 #include "SinCosOps.h"
-
+#include "FunctionsPacking.h"
 #include "global.h"
 
 #include "hdf5.h"
@@ -38,7 +38,6 @@ class ProjectedMatrices;
 class ProjectedMatricesInterface;
 class LocalizationRegions;
 class MasksSet;
-class FunctionsPacking;
 class LocGridOrbitals;
 class Masks4Orbitals;
 
@@ -79,15 +78,11 @@ private:
     ////////////////////////////////////////////////////////
     
     int numst_;
-    
-    // number of copies of that object (with some shared data)
-    // pointer is shared among copies
-    short* n_copies_;
 
-    FunctionsPacking *pack_;
+    boost::shared_ptr<FunctionsPacking> pack_;
 
     int     chromatic_number_;
-    
+
     // map gid -> function storage (for each subdomain)
     std::vector<map<int,ORBDTYPE*> >* gidToStorage_;
 
@@ -168,8 +163,8 @@ private:
     void setup(MasksSet* masks, MasksSet* corrmasks, LocalizationRegions* lrs);
 
     /* Data distribution objects */
-    DataDistribution *distributor_diagdotprod_;
-    DataDistribution *distributor_normalize_;    
+    boost::shared_ptr<DataDistribution> distributor_diagdotprod_;
+    boost::shared_ptr<DataDistribution> distributor_normalize_;    
 
 protected:
    
