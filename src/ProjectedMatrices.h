@@ -165,7 +165,8 @@ public:
     {
         sH_->push_back(st1,st2,val);
     }
-    
+
+    //fill SparseDistMatrix sH_ with values in slH
     void addMatrixElementsSparseH(const SquareLocalMatrices<MATDTYPE>& slH)
     {
         Control& ct = *(Control::instance());

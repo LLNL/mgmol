@@ -483,7 +483,7 @@ public:
         return overlapping_gids_[iloc][color];
     }
 
-    void addDot2H(LocGridOrbitals& Apsi);
+    void addDot2H(LocGridOrbitals& Apsi, ProjectedMatricesInterface*);
 
 };
 

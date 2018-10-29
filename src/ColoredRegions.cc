@@ -37,7 +37,6 @@ void ColoredRegions::setup(LocalizationRegions& lrs,
         printWithTimeStamp(" ColoredRegions::setLocRegions",cout);
 
     vector<int>::const_iterator ic=gids.begin();
-    short color=0;
     if( lrs.globalNumLRs()>1 ){
         // loop over gids
         while( ic!=gids.end() ){

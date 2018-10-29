@@ -8,6 +8,7 @@
 
 #include "MGmol_MPI.h"
 #include "VariableSizeMatrix.h"
+#include "DataDistribution.h"
 #include "Table.h"
 #include "mputils.h"
 
@@ -937,6 +938,24 @@ void VariableSizeMatrix<T>::gemv(const double alpha, const std::vector<double>& 
       double val = (*row)->dotVec(x);
       y[k] = beta*y[k] + alpha*val;
    }
+}
+
+template <class T>
+void VariableSizeMatrix<T>::consolidate(
+         const vector<int>& gids, DataDistribution& distributor)
+{
+    //cout<<"Call VariableSizeMatrix<T>::consolidate()...\n";
+    vector<int> pattern(n_,0);
+    for(std::vector<int>::const_iterator it=gids.begin(); it!=gids.end(); ++it)
+    {
+       const int *rindex = (int *)getTableValue(*it);
+       pattern[*rindex] = 1;
+    }
+    sparsify(pattern);
+
+    //gather/ distribute data from neighbors whose centered functions 
+    //overlap with functions centered on local subdomain
+    distributor.updateLocalRows(*this, true);
 }
 
 template class VariableSizeMatrix<SparseRow>;

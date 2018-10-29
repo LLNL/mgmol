@@ -6,9 +6,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
-#ifndef HAMILTONIAN_H
-#define HAMILTONIAN_H
+#ifndef MGMOL_HAMILTONIAN_H
+#define MGMOL_HAMILTONIAN_H
 
 #include "Timer.h"
 #include "LapFactory.h"
@@ -28,6 +27,10 @@ class Hamiltonian{
     
     static Timer apply_Hloc_tm_;
     
+    void applyLocal(const int istate, const int nstates,
+                    LocGridOrbitals& phi,
+                    LocGridOrbitals& hphi);
+
 public:
     static Timer apply_Hloc_tm()
     {
@@ -43,10 +46,6 @@ public:
     {
         return *pot_;
     }
-    LocGridOrbitals& getHlPhi()
-    {
-        return *hlphi_;
-    }
     void setHlOutdated()
     {
         itindex_=-1;
@@ -56,19 +55,20 @@ public:
         return lapOper_;
     }
 
-    void applyLocal(const int istate, const int nstates,
-                    LocGridOrbitals& phi, 
-                    LocGridOrbitals& hphi);
-    const LocGridOrbitals& applyLocal(LocGridOrbitals& phi, const bool force=false);
+    const LocGridOrbitals& applyLocal(LocGridOrbitals& phi,
+                                      const bool force=false);
     
     void addHlocal2matrix(LocGridOrbitals& orbitals1, 
-                     LocGridOrbitals& orbitals2, 
-                     dist_matrix::SparseDistMatrix<DISTMATDTYPE>& mat, const bool force=false);
-    void addHlocal2matrix(LocGridOrbitals& orbitals1, 
-                     LocGridOrbitals& orbitals2,
-                     VariableSizeMatrix<sparserow>& mat, const bool force=false);                     
+                          LocGridOrbitals& orbitals2,
+                          dist_matrix::SparseDistMatrix<DISTMATDTYPE>& mat,
+                          const bool force=false);
+    void addHlocal2matrix(LocGridOrbitals& orbitals1,
+                          LocGridOrbitals& orbitals2,
+                          VariableSizeMatrix<sparserow>& mat,
+                          const bool force=false);
     void addHlocalij(LocGridOrbitals& orbitals1, 
-                     LocGridOrbitals& orbitals2);
+                     LocGridOrbitals& orbitals2,
+                     ProjectedMatricesInterface*);
 };
 
 #endif

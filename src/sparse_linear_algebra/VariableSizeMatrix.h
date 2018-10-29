@@ -9,8 +9,8 @@
 /*!
  * Variable size csr/csc matrix used for data transfer operations
 */
-#ifndef _VARIABLESIZEMATRIX_H_
-#define _VARIABLESIZEMATRIX_H_
+#ifndef MGMOL_VARIABLESIZEMATRIX_H_
+#define MGMOL_VARIABLESIZEMATRIX_H_
 
 #include "Table.h"
 #include "SparseRow.h"
@@ -32,6 +32,8 @@
 #define MAX_PRINT_ROWS 100
 /* define default number of print rows for diagnostics */
 #define NUM_PRINT_ROWS 5
+
+class DataDistribution;
 
 /* define matrix row datatype */
 typedef SparseRow sparserow;
@@ -503,6 +505,9 @@ double pnorm(const int row, const int p)
 {
    return data_[row]->pnorm(p);
 }
+
+//fill "non-local" rows wit data from other MPI tasks
+void consolidate(const vector<int>& gids, DataDistribution& distributor);
 
 VariableSizeMatrix<T>& operator+=(const VariableSizeMatrix<T>& a) { axpy(1.0,a); return *this; }
 VariableSizeMatrix<T>& operator-=(const VariableSizeMatrix<T>& a) { axpy(-1.0,a); return *this; }

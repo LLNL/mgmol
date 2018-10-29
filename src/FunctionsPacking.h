@@ -7,15 +7,15 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 // Class to allocate orbitals into "global" functions
+#ifndef MGMOL_FUNCTIONSPACKING_H
+#define MGMOL_FUNCTIONSPACKING_H
+
 #include "SymmetricMatrix.h"
 
 #include<map>
 #include<set>
 #include<vector>
 #include<list>
-
-#ifndef FUNCTIONSPACKING_H
-#define FUNCTIONSPACKING_H
 
 class LocalizationRegions;
 

@@ -36,7 +36,8 @@ void Hamiltonian::setup(const pb::Grid& myGrid, const int lap_type)
     lapOper_ = LapFactory<ORBDTYPE>::createLap(myGrid,lap_type);
 }
 
-const LocGridOrbitals& Hamiltonian::applyLocal(LocGridOrbitals& phi, const bool force)
+const LocGridOrbitals& Hamiltonian::applyLocal(LocGridOrbitals& phi,
+                                               const bool force)
 {
     assert( phi.getIterativeIndex()>=0 );
     assert( pot_->getIterativeIndex()>=0 );
@@ -148,9 +149,9 @@ void Hamiltonian::applyLocal(const int first_state,
 
 // add to hij the elements <phi1|Hloc|phi2>
 // corresponding to the local part of the Hamiltonian
-void Hamiltonian::addHlocal2matrix(LocGridOrbitals& phi1, 
-                              LocGridOrbitals& phi2, 
-                              dist_matrix::SparseDistMatrix<DISTMATDTYPE>& hij, const bool force)
+void Hamiltonian::addHlocal2matrix(
+    LocGridOrbitals& phi1, LocGridOrbitals& phi2,
+    dist_matrix::SparseDistMatrix<DISTMATDTYPE>& hij, const bool force)
 {
     applyLocal(phi2, force);
 
@@ -163,7 +164,8 @@ void Hamiltonian::addHlocal2matrix(LocGridOrbitals& phi1,
 }
 
 void Hamiltonian::addHlocalij(LocGridOrbitals& phi1, 
-                              LocGridOrbitals& phi2)
+                              LocGridOrbitals& phi2,
+                              ProjectedMatricesInterface* proj_matrices)
 {
     applyLocal(phi2);
 
@@ -172,12 +174,12 @@ void Hamiltonian::addHlocalij(LocGridOrbitals& phi1,
         (*MPIdata::sout)<<"Hamiltonian::addHLocalij()"<<endl;
 #endif
  
-    phi1.addDot2H(*hlphi_);
+    phi1.addDot2H(*hlphi_, proj_matrices);
 }
 
-void Hamiltonian::addHlocal2matrix(LocGridOrbitals& phi1, 
-                              LocGridOrbitals& phi2,
-                              VariableSizeMatrix<sparserow>& mat, const bool force)
+void Hamiltonian::addHlocal2matrix(
+    LocGridOrbitals& phi1, LocGridOrbitals& phi2,
+    VariableSizeMatrix<sparserow>& mat, const bool force)
 {
     Control& ct = *(Control::instance());
  

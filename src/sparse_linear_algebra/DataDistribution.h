@@ -6,12 +6,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-/*!
- * Main header file for data distribution
-*/
-
-#ifndef _DATADISTRIBUTION_H_
-#define _DATADISTRIBUTION_H_
+#ifndef MGMOL_DATADISTRIBUTION_H_
+#define MGMOL_DATADISTRIBUTION_H_
 
 #include "DirectionalReduce.h"
 #include "VariableSizeMatrix.h"

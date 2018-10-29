@@ -1574,16 +1574,12 @@ void GridFuncVector<T>::trade_boundaries_colors(const short first_color, const s
     trade_bc_colors_tm_.stop();
 
 }
-//template <class T>
-//template void GridFuncVector<T>::prod(GridFuncVector<T>& A, const GridFunc<double>& B);
-//template <class T>
-//template void GridFuncVector<T>::prod(GridFuncVector<T>& A, const GridFunc<float>& B);
 
 template class GridFuncVector<double>;
 template class GridFuncVector<float>;
-template void GridFuncVector<float>::assign(const int i, const float* const v, const char dis='d');
-template void GridFuncVector<float>::assign(const int i, const double* const v, const char dis='d');
-template void GridFuncVector<double>::assign(const int i, const float* const v, const char dis='d');
-template void GridFuncVector<double>::assign(const int i, const double* const v, const char dis='d');
+template void GridFuncVector<float>::assign(const int i, const float* const v, const char dis);
+template void GridFuncVector<float>::assign(const int i, const double* const v, const char dis);
+template void GridFuncVector<double>::assign(const int i, const float* const v, const char dis);
+template void GridFuncVector<double>::assign(const int i, const double* const v, const char dis);
 
 } // namespace pb

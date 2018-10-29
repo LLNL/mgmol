@@ -16,7 +16,7 @@ DirectionalReduce::DirectionalReduce(MPI_Comm cart_comm,
 
     int periodic[3];
     int coords[3];
-    int error = MPI_Cart_get( cart_comm_, 3, nprocs_, periodic, coords);
+    MPI_Cart_get( cart_comm_, 3, nprocs_, periodic, coords);
 
     /* compute left and right steps in xyz directions */
     computeNumSteps(max_steps);
@@ -36,7 +36,7 @@ DirectionalReduce::DirectionalReduce(MPI_Comm cart_comm,
 
     int periodic[3];
     int coords[3];
-    int error = MPI_Cart_get( cart_comm_, 3, nprocs_, periodic, coords);
+    MPI_Cart_get( cart_comm_, 3, nprocs_, periodic, coords);
 
     /* compute left and right steps in xyz directions */
     computeNumSteps(spread_radius, domain);

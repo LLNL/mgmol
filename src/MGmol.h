@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id:$
 #ifndef MGMOL_H
 #define MGMOL_H
 
@@ -176,7 +175,8 @@ private:
                 LocGridOrbitals& hphi,
                 const KBPsiMatrixInterface* const kbpsi);                           
     void addHlocalij(LocGridOrbitals& orbitalsi,
-                     LocGridOrbitals& orbitalsj);
+                     LocGridOrbitals& orbitalsj,
+                     ProjectedMatricesInterface* projmatrices);
     void addHlocal2matrix(LocGridOrbitals& orbitalsi,
                      LocGridOrbitals& orbitalsj, 
                      dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sparseH);

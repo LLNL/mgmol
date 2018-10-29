@@ -666,7 +666,6 @@ void ProjectedMatricesSparse::applyInvS(SquareLocalMatrices<MATDTYPE>& mat)
    return;
 }
 
-
 /* Use the power method to compute the extents of the spectrum of the generalized eigenproblem.
  * In order to use a residual-based convergence criterion in an efficient way, we delay 
  * normalization of the vectors to avoid multiple matvecs.

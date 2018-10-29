@@ -666,8 +666,6 @@ void SinCosOps::computeDiag(const LocGridOrbitals& orbitals,
     compute_tm_.start();
 
     const pb::Grid& grid( orbitals.grid_ );
-    const int numst = orbitals.numst_;
-    int n2=numst*numst;
 
     const int dim0=grid.dim(0);
     const int dim1=grid.dim(1);

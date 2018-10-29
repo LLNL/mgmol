@@ -239,10 +239,10 @@ void MGmol::computeHij(LocGridOrbitals& orbitals_i,
 }
 
 void MGmol::computeHij(LocGridOrbitals& orbitals_i,
-            LocGridOrbitals& orbitals_j,
-            const Ions& ions,
-            const KBPsiMatrixInterface* const kbpsi,
-            dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sparseH)
+                      LocGridOrbitals& orbitals_j,
+                      const Ions& ions,
+                      const KBPsiMatrixInterface* const kbpsi,
+                      dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sparseH)
 {
 #ifdef PRINT_OPERATIONS
     if( onpe0 )
@@ -275,7 +275,7 @@ void MGmol::computeHij(LocGridOrbitals& orbitals_i,
 
     // add local Hamiltonian part to phi^T*H*phi 
     addHlocalij(orbitals_i,
-                orbitals_j);
+                orbitals_j, projmatrices);
 
     projmatrices->consolidateH();
 }
@@ -455,9 +455,10 @@ void MGmol::addHlocal2matrix(LocGridOrbitals& orbitalsi,
     computeHij_tm_.stop();
 }
 
-void MGmol::addHlocal2matrix(LocGridOrbitals& orbitalsi,
-                 LocGridOrbitals& orbitalsj, 
-                 dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sparseH)
+void MGmol::addHlocal2matrix(
+                LocGridOrbitals& orbitalsi,
+                LocGridOrbitals& orbitalsj, 
+                dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sparseH)
 {
     computeHij_tm_.start();
     
@@ -493,7 +494,8 @@ void MGmol::addHlocal2matrix(LocGridOrbitals& orbitalsi,
 }
 
 void MGmol::addHlocalij(LocGridOrbitals& orbitalsi,
-                        LocGridOrbitals& orbitalsj)
+                        LocGridOrbitals& orbitalsj,
+                        ProjectedMatricesInterface* pmat)
 {
     computeHij_tm_.start();
     
@@ -501,7 +503,7 @@ void MGmol::addHlocalij(LocGridOrbitals& orbitalsi,
     os_<<" addHlocalij()"<<endl;
 #endif
 
-    hamiltonian_->addHlocalij(orbitalsi, orbitalsj);
+    hamiltonian_->addHlocalij(orbitalsi, orbitalsj, pmat);
     
     computeHij_tm_.stop();
 }
@@ -551,7 +553,7 @@ void MGmol::getHpsiAndTheta(Ions& ions,
         kbpsi->computeHvnlMatrix(ions,proj_matrices_);
 
         // add local part of H to sh
-        phi.addDot2H(hphi);
+        phi.addDot2H(hphi, proj_matrices_);
 
         proj_matrices_->consolidateH();
         

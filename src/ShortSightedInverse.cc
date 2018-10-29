@@ -474,20 +474,10 @@ void ShortSightedInverse::augmentGramMatrix(DataDistribution& distributor_S, con
       cout<<" Gram Matrix data distribution stats: distributor1 "<<endl;
       distributor1.printStats();
    }
-   //sparsify mat keeping only updated data
-   vector<int>pattern(gramMat_->n(),0);
-   for(std::vector<int>::iterator it=locfcns_.begin(); it!=locfcns_.end(); ++it)
-   {
-      const int *rindex = (int *)gramMat_->getTableValue(*it);
-      pattern[*rindex] = 1;
-   }
-   gramMat_->sparsify(pattern);
 
-   //now gather updated data from neighbors.
-   //gather from neighbors that contain functions that overlap with locally centered functions
-   const double srad = ct.spread_radius;// - 0.5*loc_radius_;
-   DataDistribution distributor2("overlap2",srad, myPEenv, domain); 
-   distributor2.updateLocalRows(*gramMat_, true);    
+    DataDistribution distributor2("overlap2",ct.spread_radius, myPEenv, domain); 
+    gramMat_->consolidate(locfcns_, distributor2);
+
    if(print_flag)
    {
       cout<<" Gram Matrix data distribution stats: distributor2 "<<endl;

@@ -23,6 +23,7 @@ MODULES = tools pb DistMatrix sparse_linear_algebra \
           radial
  
 SRC =   \
+ SubCell.cc \
  SinCosOps.cc \
  PolakRibiereSolver.cc \
  EnergySpreadPenalty.cc \

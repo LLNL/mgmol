@@ -2518,7 +2518,8 @@ void LocGridOrbitals::addDotWithNcol2Matrix(LocGridOrbitals& Apsi,
     addDotWithNcol2Matrix(0, chromatic_number_, Apsi, sparse_matrix);
 }
 
-void LocGridOrbitals::addDot2H(LocGridOrbitals& Apsi)
+void LocGridOrbitals::addDot2H(LocGridOrbitals& Apsi,
+                               ProjectedMatricesInterface* proj_matrices)
 {
     addDot_tm_.start();
     
@@ -2526,7 +2527,7 @@ void LocGridOrbitals::addDot2H(LocGridOrbitals& Apsi)
     
     computeLocalProduct(Apsi,slh);
     
-    proj_matrices_->addMatrixElementsSparseH(slh);
+    proj_matrices->addMatrixElementsSparseH(slh);
 
     addDot_tm_.stop();
 }
