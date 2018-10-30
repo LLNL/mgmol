@@ -6,15 +6,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-////////////////////////////////////////////////////////////////////////////////
-//
-// BlacsContext.h
-//
-////////////////////////////////////////////////////////////////////////////////
-// $Id: BlacsContext.h 7 2011-03-08 18:50:31Z jeanluc $
-
-#ifndef BLACSCONTEXT_H
-#define BLACSCONTEXT_H
+#ifndef MGMOL_BLACSCONTEXT_H
+#define MGMOL_BLACSCONTEXT_H
 
 #if USE_MPI
 #include <mpi.h>

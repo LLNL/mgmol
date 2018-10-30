@@ -8,8 +8,11 @@
 
 #include "ProjectedMatrices.h"
 
-#if PROCRUSTES
+#ifdef PROCRUSTES
 #include "munkres.h"
+void procrustes(dist_matrix::DistMatrix<DISTMATDTYPE>& a,
+                dist_matrix::DistMatrix<DISTMATDTYPE>& b,
+                dist_matrix::DistMatrix<DISTMATDTYPE>& p);
 #endif
 
 #include "DensityMatrix.h"
@@ -39,7 +42,6 @@ Timer ProjectedMatrices::update_submatT_tm_("ProjectedMatrices::updateSubmatT");
 Timer ProjectedMatrices::update_submatX_tm_("ProjectedMatrices::updateSubmatX");
 Timer ProjectedMatrices::eigsum_tm_("ProjectedMatrices::eigsum");
 Timer ProjectedMatrices::consolidate_H_tm_("ProjectedMatrices::consolidate_sH");
-Timer ProjectedMatrices::eig_interval_tm_("ProjectedMatrices::computeEigenInterval");
 
 //const short LocGridOrbitals::sparse_distmatrix_nb_tasks_per_partitions_=96;
 //const short LocGridOrbitals::sparse_distmatrix_nb_tasks_per_partitions_=256;
@@ -90,7 +92,7 @@ ProjectedMatrices::ProjectedMatrices(const int ndim,
         theta_ =new dist_matrix::DistMatrix<DISTMATDTYPE>("Theta", bc, ndim, ndim);
         u_     =new dist_matrix::DistMatrix<DISTMATDTYPE>("U",     bc, ndim, ndim);
         work_  =new dist_matrix::DistMatrix<DISTMATDTYPE>("work",  bc, ndim, ndim);
-#if PROCRUSTES
+#ifdef PROCRUSTES
         occupation0_.resize(dim_);
         u0_    =0;
         p_     =new dist_matrix::DistMatrix<DISTMATDTYPE>("P",     bc, ndim, ndim);
@@ -143,7 +145,7 @@ ProjectedMatrices::~ProjectedMatrices()
         delete submatWork_;submatWork_=0;
         delete submatLS_;submatLS_=0;
 
-#if PROCRUSTES
+#ifdef PROCRUSTES
         delete u0_;
         delete p_;
 #endif
@@ -213,67 +215,7 @@ void ProjectedMatrices::setup(const double kbt, const int nel,
 #endif
 }
 
-#if PROCRUSTES
-void procrustes(dist_matrix::DistMatrix<DISTMATDTYPE>& a, dist_matrix::DistMatrix<DISTMATDTYPE>& b,
-                dist_matrix::DistMatrix<DISTMATDTYPE>& p)
-{
-    MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-    const dist_matrix::BlacsContext& bc = mbc. bcxt();
-    const int nst    =a.m();
 
-    p.gemm('t','n',1.,b,a,0.);
-    
-    munkres::Matrix<double> matrix(nst, nst);
-    
-    double maxval=0.;
-    for ( int row = 0 ; row < nst ; row++ ) {
-        for ( int col = 0 ; col < nst ; col++ ) {
-            maxval = max( maxval, p.val(row+nst*col) );
-        }
-    }
-    
-    // Initialize matrix
-    for ( int row = 0 ; row < nst ; row++ ) {
-        for ( int col = 0 ; col < nst ; col++ ) {
-            matrix(row,col) = maxval-fabs( p.val(row+nst*col) );
-        }
-    }
-
-    // Apply Munkres algorithm to matrix.
-    munkres::Munkres m;
-    m.solve(matrix);
-
-    // 0 -> 1, -1 -> 0
-    for ( int row = 0 ; row < nst ; row++ ) {
-        for ( int col = 0 ; col < nst ; col++ ) {
-            matrix(row,col)+=1.;
-        }
-    }
-    
-    for ( int row = 0 ; row < nst ; row++ ) {
-        for ( int col = 0 ; col < nst ; col++ ) {
-            if( matrix(row,col)>0.5 ){
-                if( p.val(row+nst*col)<0. )
-                    matrix(row,col)=-1.;
-                break;
-            }
-        }
-    }
-    
-    for ( int row = 0 ; row < nst ; row++ ) {
-        for ( int col = 0 ; col < nst ; col++ ) {
-            p.setval(row+nst*col, matrix(row,col));
-        }
-    }
-
-    //(*MPIdata::sout)<<"Procrustes matrix..."<<endl;
-    //p.print((*MPIdata::sout),0,0,nst,nst); 
-
-    //w.gemm('n','n',1.,b,p,0.);
-}
-#endif
-
-       
 void ProjectedMatrices::computeInvS()
 {
     compute_inverse_tm_.start();
@@ -344,7 +286,7 @@ void ProjectedMatrices::solveGenEigenProblem(dist_matrix::DistMatrix<DISTMATDTYP
     // solve a standard symmetric eigenvalue problem
     mat.syev(job, 'l', eigenvalues_, *u_);
 
-#if PROCRUSTES
+#ifdef PROCRUSTES
     if( u0_!=0 ){
         work_->gemm('t','n',1.,*u_,*u0_,0.);
         for(int j=0;j<dim_;j++){
@@ -437,7 +379,7 @@ void ProjectedMatrices::rotateBackDM()
     computeOccupations(occupation0_);
     *u0_=*work_;
 
-#if PROCRUSTES
+#ifdef PROCRUSTES
     procrustes(*u_,*u0_,*p_);
 #endif
 
@@ -1113,163 +1055,3 @@ double ProjectedMatrices::computeTraceInvSmultMatMultTheta(const dist_matrix::Di
     return pmat.trace(); 
 }
 
-
-/* Use the power method to compute the extents of the spectrum of the generalized eigenproblem.
- * In order to use a residual-based convergence criterion in an efficient way, we delay 
- * normalization of the vectors to avoid multiple matvecs.
- * NOTE: We are only interested in the eigenvalues, so the final eigenvector may not be normalized.
-*/
-
-void ProjectedMatrices::computeGenEigenInterval(std::vector<double>& interval, const int maxits, const double pad)
-{   
-    srand(13579);
-
-    eig_interval_tm_.start();
-    
-    interval.clear();
-    
-    MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-    const dist_matrix::BlacsContext& bc = *mbc. bcxt();    
-
-    dist_matrix::DistMatrix<DISTMATDTYPE>  mat(*matHB_);
-    dist_matrix::DistMatrix<DISTMATDTYPE>  smat(gm_->getMatrix());
-    
-    // use the power method to get the eigenvalue interval
-    const int m = mat.m(); // number of global rows
-    const int mloc = mat.mloc(); // number of local rows
-    const double one = 1., zero = 0.;
-
-    // define static variables and shift for matrices to speed up convergence
-    static double shft = 0.; //shft is initially zero
-    // shift
-    mat.axpy(shft, gm_->getMatrix());     
-
-    // initialize random vectors for power method
-    static std::vector<DISTMATDTYPE>vec1(generate_rand(mloc)); // initial random vector.
-    static std::vector<DISTMATDTYPE>vec2(vec1); // initial random vector.
-
-   // initialize solution data
-   // initial guess
-   dist_matrix::DistMatrix<DISTMATDTYPE> sol("sol",bc, m, 1);
-   sol.assignColumn(&vec1[0], 0); // initialize local solution data
-   // new solution
-   dist_matrix::DistMatrix<DISTMATDTYPE> new_sol("new_sol",bc, m, 1);   
-   std::vector<DISTMATDTYPE>vec(mloc,0.);
-   new_sol.assignColumn(&vec[0], 0);
-   
-   // get norm of initial sol
-   double alpha = sol.nrm2();
-   double gamma = 1./alpha;
-   if(onpe0)cout<<"e1:: ITER 0:: = "<< alpha<<" shft = "<<shft<<endl;   
-      
-   // residual
-   dist_matrix::DistMatrix<DISTMATDTYPE> res(new_sol);
-   // initial eigenvalue estimate (for shifted system)
-   double beta = sol.dot(new_sol);   
-
-   // compute first extent
-   int iter1 = 0;
-   // loop
-   for(int i=0; i<maxits; i++)
-   {
-      iter1++;
-      
-      // First compute residual for convergence check
-      res.gemv('N', one, mat, sol, zero);
-      // store matvec result appropriately scaled for later reuse
-      new_sol.clear();
-      new_sol.axpy(gamma,res);       
-      // Compute residual: res = beta*S*x - mat*x
-      res.gemm('N', 'N', beta, gm_->getMatrix(), sol, -1.);      
-      // compute residual norm
-      double resnorm = res.nrm2();
-      // check for convergence
-      if(resnorm < 1.0e-2) break;
-      
-      // apply inverse to new_sol to update solution
-      // No need to do matvec with scaled copy of sol.
-      // Reuse previously stored matvec from residual calculation
-      gm_->applyInv(new_sol); // can also do gemv with gm_->getInverse()
-      
-      // compute 'shifted' eigenvalue
-      beta = sol.dot(new_sol);
-      // scale beta by gamma to account for normalizing sol
-      beta *= gamma;
-      // update solution data
-      sol = new_sol;
-      // compute norm and update gamma
-      alpha = sol.nrm2();
-      gamma = 1./alpha;   
-   }
-   // compute first extent (eigenvalue)
-   double e1 = beta - shft;   
-   sol.copyDataToVector(vec1);
-  
-   // shift matrix by beta and compute second extent
-   // store shift
-   double shft_e1 = -beta;
-   mat.axpy(shft_e1, smat);
-
-   // reset data and begin loop
-   sol.assignColumn(&vec2[0], 0);
-   new_sol.assignColumn(&vec[0], 0);
-   alpha = sol.nrm2();
-   gamma = 1./alpha;
-   beta = sol.dot(new_sol);      
-   
-   // loop   
-   if(onpe0)cout<<"e2:: ITER 0:: = "<< beta<<endl;   
-   int iter2=0;
-   for(int i=0; i<maxits; i++)
-   {
-      iter2++;
-      
-      // First compute residual for convergence check
-      res.gemv('N', one, mat, sol, zero);
-      // store matvec result appropriately scaled for later reuse
-      new_sol.clear();
-      new_sol.axpy(gamma,res);       
-      // Compute residual: res = beta*S*x - mat*x
-      res.gemm('N', 'N', beta, gm_->getMatrix(), sol, -1.);      
-      // compute residual norm
-      double resnorm = res.nrm2();
-      // check for convergence
-      if(resnorm < 1.0e-2) break;
-      
-      // apply inverse to new_sol to update solution
-      // No need to do matvec with scaled copy of sol.
-      // Reuse previously stored matvec from residual calculation
-      gm_->applyInv(new_sol); // can also do gemv with gm_->getInverse()
-      
-      // compute 'shifted' eigenvalue
-      beta = sol.dot(new_sol);
-      // scale beta by gamma to account for not normalizing sol
-      beta *= gamma;
-      // update solution data
-      sol = new_sol;
-      // compute norm and update gamma
-      alpha = sol.nrm2();
-      gamma = 1./alpha; 
-   }
-   // compute second extent
-   double e2 = beta - shft_e1 - shft;
-   sol.copyDataToVector(vec2);
-
-   // save results
-   double tmp = e1;
-   e1 = min(tmp, e2);
-   e2 = max(tmp, e2);
-   double padding = pad*(e2-e1);
-
-if(onpe0)cout<<"Power method Eigen intervals********************  = ( "<<e1<<", "<<e2<<")"<<"iter1 = "<<iter1<<", iter2 = "<<iter2<<endl;   
-
-   e1 -= padding;
-   e2 += padding; 
-   interval.push_back(e1);
-   interval.push_back(e2);   
-   
-   // update shft
-   shft = max(fabs(e1), fabs(e2));
-
-   eig_interval_tm_.stop();
-}

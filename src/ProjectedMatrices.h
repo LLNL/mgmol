@@ -26,8 +26,6 @@
 
 #include <iostream>
 
-#define PROCRUSTES  0
-
 #define EXTRAPOLATE_H 1
 
 //const double tol_matrix_elements=1.e-14;
@@ -56,7 +54,7 @@ class ProjectedMatrices:public ProjectedMatricesInterface
 
     // orthogonal tranformation
     dist_matrix::DistMatrix<DISTMATDTYPE>* u_;
-#if PROCRUSTES
+#ifdef PROCRUSTES
     dist_matrix::DistMatrix<DISTMATDTYPE>* u0_;
     // matrix of permutation to apply for continuity with u0_
     dist_matrix::DistMatrix<DISTMATDTYPE>* p_;
@@ -72,7 +70,6 @@ class ProjectedMatrices:public ProjectedMatricesInterface
     static Timer update_submatX_tm_;
     static Timer eigsum_tm_;
     static Timer consolidate_H_tm_;    
-    static Timer eig_interval_tm_;
 
     static dist_matrix::RemoteTasksDistMatrix<DISTMATDTYPE>* remote_tasks_DistMatrix_;
    

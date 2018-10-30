@@ -6,12 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-////////////////////////////////////////////////////////////////////////////////
-//
-// BlacsContext.C
-//
-////////////////////////////////////////////////////////////////////////////////
-// $Id: BlacsContext.C,v 1.12 2010/12/02 23:26:14 jeanluc Exp $
 #include <iostream>
 #include <cmath>
 #include <cassert>
