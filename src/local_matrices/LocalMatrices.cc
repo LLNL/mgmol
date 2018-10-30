@@ -198,10 +198,11 @@ void LocalMatrices<T>::gemm(const char transa, const char transb, const double a
 }
 
 template <class T>
-void LocalMatrices<T>::fillSparseDistMatrix(dist_matrix::SparseDistMatrix<DISTMATDTYPE>& dst,
-                                         const vector<vector<int> >& global_indexes,
-                                         const int numst,
-                                         const double tol)const
+void LocalMatrices<T>::fillSparseDistMatrix(
+    dist_matrix::SparseDistMatrix<DISTMATDTYPE>& dst,
+    const vector<vector<int> >& global_indexes,
+    const int numst,
+    const double tol)const
 {
     int*    ist=new int[2*subdiv_];
     T* val=new T[subdiv_];

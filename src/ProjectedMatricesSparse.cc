@@ -232,7 +232,8 @@ double ProjectedMatricesSparse::getExpectationMat(VariableSizeMatrix<sparserow>*
    return dm_->getTraceDotProductWithMat(mat);
 }
 
-void ProjectedMatricesSparse::consolidateOrbitalsOverlapMat(VariableSizeMatrix<sparserow>& mat)
+void ProjectedMatricesSparse::consolidateOrbitalsOverlapMat(
+         VariableSizeMatrix<sparserow>& mat)
 {
    consolidate_H_tm_.start();
    std::vector<int>locfcns;
@@ -245,24 +246,18 @@ void ProjectedMatricesSparse::consolidateOrbitalsOverlapMat(VariableSizeMatrix<s
    double domain[3]={mygrid.ll(0),mygrid.ll(1),mygrid.ll(2)};
    // consolidate locally centered data
    DataDistribution distributor1("overlap",(*lrs_).max_radii(), myPEenv, domain);
-   distributor1.augmentLocalData((mat), false);   
-   //sparsify mat keeping only updated data
-   vector<int>pattern(mat.n(),0);
-   for(std::vector<int>::iterator it=locfcns.begin(); it!=locfcns.end(); ++it)
-   {
-      const int *rindex = (int *)mat.getTableValue(*it);
-      pattern[*rindex] = 1;
-   }
-   mat.sparsify(pattern);
+   distributor1.augmentLocalData(mat, false);   
 
-   //now gather updated data from neighbors.
-   //gather from neighbors that contain functions that overlap with locally centered functions
-   DataDistribution distributor("overlap2",2*(*lrs_).max_radii(), myPEenv, domain); 
-   distributor.updateLocalRows(mat, true);      
+    //now gather updated data from neighbors.
+    //gather from neighbors that contain functions that overlap with
+    //locally centered functions
+    Control& ct(*Control::instance());
+    DataDistribution distributor("overlap2",ct.spread_radius, myPEenv, domain);
 
-   consolidate_H_tm_.stop();    
-    return;
-}    
+    mat.consolidate(locfcns, distributor);
+
+    consolidate_H_tm_.stop();
+}
 void ProjectedMatricesSparse::consolidateH()
 {
    /* Gather data to initialize matH and matHB */
@@ -276,24 +271,18 @@ void ProjectedMatricesSparse::consolidateH()
    /* gather data for matH amd matHB */   
    (*distributor_sH_).augmentLocalData((*sH_), false);   
 
-   vector<int>pattern((*sH_).n(),0);
-   for(std::vector<int>::iterator it=locfcns.begin(); it!=locfcns.end(); ++it)
-   {
-      const int *rindex = (int *)(*sH_).getTableValue(*it);
-      pattern[*rindex] = 1;
-   }
-   // sparsify to zero out rows with partial contributions
-   (*sH_).sparsify(pattern);
-
    Mesh* mymesh = Mesh::instance();
    const pb::Grid& mygrid  = mymesh->grid();  
    const pb::PEenv& myPEenv=mymesh->peenv();
    double domain[3]={mygrid.ll(0),mygrid.ll(1),mygrid.ll(2)};
    //now gather updated data from neighbors.
    //gather from neighbors that contain functions that overlap with locally centered functions
-   DataDistribution distributor("H",2*(*lrs_).max_radii(), myPEenv, domain);
-   distributor.updateLocalRows((*sH_), true);      
-   (*matHB_).copyData((*sH_), lsize_);   
+    Control& ct(*(Control::instance()));
+    DataDistribution distributor("H",ct.spread_radius, myPEenv, domain);
+
+    sH_->consolidate(locfcns, distributor);
+
+   (*matHB_).copyData((*sH_), lsize_);
 
    consolidate_H_tm_.stop();
    return;

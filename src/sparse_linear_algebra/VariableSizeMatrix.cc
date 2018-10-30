@@ -948,7 +948,7 @@ void VariableSizeMatrix<T>::consolidate(
     vector<int> pattern(n_,0);
     for(std::vector<int>::const_iterator it=gids.begin(); it!=gids.end(); ++it)
     {
-       const int *rindex = (int *)getTableValue(*it);
+       const int *rindex = (int *)(table_->get_value(*it));
        pattern[*rindex] = 1;
     }
     sparsify(pattern);

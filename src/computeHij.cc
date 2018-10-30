@@ -441,8 +441,8 @@ void MGmol::computeHnlPhiAndAdd2HPhi(Ions& ions,
 }
 
 void MGmol::addHlocal2matrix(LocGridOrbitals& orbitalsi,
-                 LocGridOrbitals& orbitalsj, 
-                 VariableSizeMatrix<sparserow>& mat)
+                             LocGridOrbitals& orbitalsj, 
+                             VariableSizeMatrix<sparserow>& mat)
 {
     computeHij_tm_.start();
     
