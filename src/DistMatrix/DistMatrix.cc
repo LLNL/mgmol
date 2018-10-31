@@ -6,12 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-////////////////////////////////////////////////////////////////////////////////
-//
-// DistMatrix.C
-//
-////////////////////////////////////////////////////////////////////////////////
-// $Id: DistMatrix.C,v 1.46 2011/01/18 23:12:11 jeanluc Exp $
 #include "BlacsContext.h"
 #include "DistMatrix.h"
 #include "MGmol_MPI.h"
@@ -2327,6 +2321,18 @@ DistMatrix<T>::DistMatrix(const string& name,
                      const int n) : object_name_(name),
                                     comm_global_(bc.comm_global()),
                                     bc_(bc)
+{
+  resize(m,n,distmatrix_def_block_size_,distmatrix_def_block_size_);
+  setDiagonalValues(dmat);
+}
+
+template <class T>
+DistMatrix<T>::DistMatrix(const string& name,
+                     const T* const dmat,
+                     const int m,
+                     const int n) : object_name_(name),
+                                    comm_global_(default_bc_->comm_global()),
+                                    bc_(*default_bc_)
 {
   resize(m,n,distmatrix_def_block_size_,distmatrix_def_block_size_);
   setDiagonalValues(dmat);

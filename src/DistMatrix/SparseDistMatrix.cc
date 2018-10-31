@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id: SparseDistMatrix.C,v 1.38 2010/12/02 18:31:30 jeanluc Exp $
 #include "SparseDistMatrix.h"
 
 #include <string.h>

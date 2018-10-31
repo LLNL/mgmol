@@ -20,7 +20,6 @@
 #include "SparseDistMatrix.h"
 #include "DistMatrix.h"
 #include "RemoteTasksDistMatrix.h"
-#include "MatricesBlacsContext.h"
 
 #include "hdf5.h"
 
@@ -441,9 +440,7 @@ public:
     dist_matrix::DistMatrix<DISTMATDTYPE> getDistMatrixFromLocalMatrices(
         const LocalMatrices<MATDTYPE>& ss)
     {
-        MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-        const dist_matrix::BlacsContext& bc = *mbc. bcxt();
-        dist_matrix::DistMatrix<DISTMATDTYPE> tmp("tmp",bc,dim_,dim_);
+        dist_matrix::DistMatrix<DISTMATDTYPE> tmp("tmp",dim_,dim_);
  
         ss.fillDistMatrix(tmp,global_indexes_);
         
@@ -570,24 +567,20 @@ public:
     {
         if( h_minus1_==0 )
         {
-            MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-            const dist_matrix::BlacsContext& bc=*mbc.bcxt();
-            h_minus1_=new dist_matrix::DistMatrix<DISTMATDTYPE>("H_minus1",bc, dim_, dim_);
+            h_minus1_=new dist_matrix::DistMatrix<DISTMATDTYPE>("H_minus1", dim_, dim_);
         }
         *h_minus1_=*matHB_;
     }
     void updateHminus2()
     {
-        MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-        const dist_matrix::BlacsContext& bc=*mbc.bcxt();
         if( h_minus1_==0 )
         {
-            h_minus1_=new dist_matrix::DistMatrix<DISTMATDTYPE>("H_minus1",bc, dim_, dim_);
+            h_minus1_=new dist_matrix::DistMatrix<DISTMATDTYPE>("H_minus1", dim_, dim_);
         }
         else
         {
             if( h_minus2_==0 )
-                h_minus2_=new dist_matrix::DistMatrix<DISTMATDTYPE>("H_minus2",bc, dim_, dim_);
+                h_minus2_=new dist_matrix::DistMatrix<DISTMATDTYPE>("H_minus2", dim_, dim_);
             *h_minus2_ = *h_minus1_;
         }
         *h_minus1_=*matHB_;
@@ -613,9 +606,7 @@ public:
     double computeTraceMatMultTheta(const dist_matrix::DistMatrix<DISTMATDTYPE>& mat)
     {
         assert(theta_ != 0);
-        MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-        const dist_matrix::BlacsContext& bc = *mbc. bcxt();
-        dist_matrix::DistMatrix<DISTMATDTYPE> pmatrix("pmatrix",bc,dim_,dim_);
+        dist_matrix::DistMatrix<DISTMATDTYPE> pmatrix("pmatrix",dim_,dim_);
         pmatrix.gemm('n', 'n', 1.0, mat, *theta_, 0.); 
         return pmatrix.trace();
     }  

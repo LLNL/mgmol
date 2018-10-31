@@ -14,8 +14,6 @@ void procrustes(dist_matrix::DistMatrix<DISTMATDTYPE>& a,
                 dist_matrix::DistMatrix<DISTMATDTYPE>& b,
                 dist_matrix::DistMatrix<DISTMATDTYPE>& p)
 {
-    MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-    const dist_matrix::BlacsContext& bc = mbc. bcxt();
     const int nst    =a.m();
 
     p.gemm('t','n',1.,b,a,0.);

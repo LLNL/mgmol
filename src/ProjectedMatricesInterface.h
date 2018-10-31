@@ -6,8 +6,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef PROJECTED_MATRICES_INTERFACE_H
-#define PROJECTED_MATRICES_INTERFACE_H
+#ifndef MGMOL_PROJECTED_MATRICES_INTERFACE_H
+#define MGMOL_PROJECTED_MATRICES_INTERFACE_H
 
 #include <iostream>
 #include <vector>
@@ -16,7 +16,6 @@
 /* Currently only needed functions in ProjectedMatrices.h class. Must be cleaned-up later */
 #include "tools.h"
 #include "DistMatrix.h"
-#include "MatricesBlacsContext.h"
 #include "SubMatrices.h"
 #include "SubMatricesIndexing.h"
 #include "MGmol_MPI.h"
@@ -221,9 +220,7 @@ public:
     {
         exitWithErrorMessage("dm");
 
-        MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-        const dist_matrix::BlacsContext& bc=*mbc.bcxt();        
-        dist_matrix::DistMatrix<DISTMATDTYPE>* tmp = new dist_matrix::DistMatrix<DISTMATDTYPE>("tmp",  bc);
+        dist_matrix::DistMatrix<DISTMATDTYPE>* tmp = new dist_matrix::DistMatrix<DISTMATDTYPE>("tmp");
         
         return (*tmp);
     }  
@@ -231,9 +228,7 @@ public:
     {
         exitWithErrorMessage("kernel4dot");
 
-        MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-        const dist_matrix::BlacsContext& bc=*mbc.bcxt();        
-        dist_matrix::DistMatrix<DISTMATDTYPE>* tmp = new dist_matrix::DistMatrix<DISTMATDTYPE>("tmp",  bc);
+        dist_matrix::DistMatrix<DISTMATDTYPE>* tmp = new dist_matrix::DistMatrix<DISTMATDTYPE>("tmp");
         
         return (*tmp);        
     }  
@@ -241,9 +236,7 @@ public:
     {
         exitWithErrorMessage("getLS");
 
-        MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-        const dist_matrix::BlacsContext& bc=*mbc.bcxt();        
-        dist_matrix::DistMatrix<DISTMATDTYPE>* tmp = new dist_matrix::DistMatrix<DISTMATDTYPE>("tmp",  bc);
+        dist_matrix::DistMatrix<DISTMATDTYPE>* tmp = new dist_matrix::DistMatrix<DISTMATDTYPE>("tmp");
         
         return (*tmp);
     }    
@@ -364,9 +357,7 @@ public:
         
         exitWithErrorMessage("getDistMatrixFromLocalMatrices");
         
-        MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-        const dist_matrix::BlacsContext& bc=*mbc.bcxt();        
-        dist_matrix::DistMatrix<DISTMATDTYPE> dummy("dummy",  bc);
+        dist_matrix::DistMatrix<DISTMATDTYPE> dummy("dummy");
         
         return dummy;        
     }
@@ -384,9 +375,7 @@ public:
         MPI_Comm comm=mmpi.commSameSpin();
         std::vector<std::vector<int> > indexes;
         
-        MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-        const dist_matrix::BlacsContext& bc=*mbc.bcxt();        
-        dist_matrix::DistMatrix<DISTMATDTYPE> dm("dm",  bc);
+        dist_matrix::DistMatrix<DISTMATDTYPE> dm("dm");
 
         dist_matrix::SubMatricesIndexing<DISTMATDTYPE> submat_indexing(indexes, comm, dm);
 

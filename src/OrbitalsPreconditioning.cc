@@ -65,7 +65,7 @@ void OrbitalsPreconditioning::setup(LocGridOrbitals& orbitals,
     }
     precond_->setup(gid_to_mask,orbitals.getOverlappingGids());
     
-    assert( orbitals.chromatic_number()==orbitals.getGlobalIndexes()[0].size() );
+    assert( orbitals.chromatic_number()==orbitals.getOverlappingGids()[0].size() );
     
     if( ct.blockPrecond() )
     {

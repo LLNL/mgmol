@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #include "KBPsiMatrix.h"
 #include "Mesh.h"
 #include "Ions.h"
@@ -810,9 +809,7 @@ double KBPsiMatrix::getEvnl(const Ions& ions, LocGridOrbitals& orbitals, Project
     const int numst=orbitals.numst();
     if( numst==0 )return 0.;
 
-    MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-    const dist_matrix::BlacsContext* bc = mbc. bcxt();
-    dist_matrix::DistMatrix<DISTMATDTYPE> Aij("A",*bc, numst, numst);
+    dist_matrix::DistMatrix<DISTMATDTYPE> Aij("A", numst, numst);
 
     getPsiKBPsiSym(ions, Aij);
 

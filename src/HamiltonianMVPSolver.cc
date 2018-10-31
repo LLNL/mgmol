@@ -6,11 +6,9 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id:$
 #include "HamiltonianMVPSolver.h"
 #include "LocGridOrbitals.h"
 #include "Ions.h"
-#include "MatricesBlacsContext.h"
 #include "Control.h"
 #include "ProjectedMatrices.h"
 #include "ProjectedMatricesSparse.h"

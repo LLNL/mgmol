@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #include "MGmol.h"
 #include "Ions.h"
 #include "Hamiltonian.h"
@@ -102,12 +101,9 @@ int ABPG::update(LocGridOrbitals& orbitals,
     int msize=ct.numst;
     if( ct.loc_mode ){
         // work matrices
-        MatricesBlacsContext& mbc = *(MatricesBlacsContext::instance());
-        const dist_matrix::BlacsContext& bc = *mbc. bcxt();
-    
-        dist_matrix::DistMatrix<DISTMATDTYPE>  u_dis("U",bc, msize, msize);
+        dist_matrix::DistMatrix<DISTMATDTYPE>  u_dis("U", msize, msize);
         u_dis=proj_matrices_->matS();
-        dist_matrix::DistMatrix<DISTMATDTYPE>  w_dis("W",bc, msize, msize);
+        dist_matrix::DistMatrix<DISTMATDTYPE>  w_dis("W", msize, msize);
         w_dis.identity();
         u_dis.axpy(-1.,w_dis);
         const double inorm=u_dis.norm('i');

@@ -11,7 +11,6 @@
 using namespace std;
 
 #include "GramMatrix.h"
-#include "MatricesBlacsContext.h"
 #include "MGmol_MPI.h"
 
 void rotateSym(dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
@@ -24,13 +23,11 @@ GramMatrix::GramMatrix(const int ndim)
     dim_=ndim;
 
     if( dim_>0 ){
-        MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-        const dist_matrix::BlacsContext* bc = mbc. bcxt();
-        matS_  =new dist_matrix::DistMatrix<DISTMATDTYPE>("S",    *bc, ndim, ndim);
-        ls_    =new dist_matrix::DistMatrix<DISTMATDTYPE>("LS",   *bc, ndim, ndim);
-        invS_  =new dist_matrix::DistMatrix<DISTMATDTYPE>("invS", *bc, ndim, ndim);
+        matS_  =new dist_matrix::DistMatrix<DISTMATDTYPE>("S",    ndim, ndim);
+        ls_    =new dist_matrix::DistMatrix<DISTMATDTYPE>("LS",   ndim, ndim);
+        invS_  =new dist_matrix::DistMatrix<DISTMATDTYPE>("invS", ndim, ndim);
 
-        work_  =new dist_matrix::DistMatrix<DISTMATDTYPE>("work", *bc, ndim, ndim);
+        work_  =new dist_matrix::DistMatrix<DISTMATDTYPE>("work", ndim, ndim);
     }else{
         matS_  =0;
         ls_    =0;
@@ -174,10 +171,8 @@ void GramMatrix::setMatrix(const dist_matrix::DistMatrix<DISTMATDTYPE>& mat, con
 
 double GramMatrix::getLinDependent2states(int& st1, int& st2)const
 {
-    MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-    const dist_matrix::BlacsContext* bc = mbc. bcxt();
     vector<DISTMATDTYPE> eigenvalues(dim_);
-    dist_matrix::DistMatrix<DISTMATDTYPE> u("u",    *bc, dim_, dim_);
+    dist_matrix::DistMatrix<DISTMATDTYPE> u("u", dim_, dim_);
     // solve a standard symmetric eigenvalue problem
     dist_matrix::DistMatrix<DISTMATDTYPE> mat(*matS_);
     mat.syev('v', 'l', eigenvalues, u);
@@ -204,10 +199,8 @@ double GramMatrix::getLinDependent2states(int& st1, int& st2)const
 
 double GramMatrix::getLinDependent2states(int& st1, int& st2, int& st3)const
 {
-    MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-    const dist_matrix::BlacsContext* bc = mbc. bcxt();
     vector<DISTMATDTYPE> eigenvalues(dim_);
-    dist_matrix::DistMatrix<DISTMATDTYPE> u("u",    *bc, dim_, dim_);
+    dist_matrix::DistMatrix<DISTMATDTYPE> u("u", dim_, dim_);
     // solve a standard symmetric eigenvalue problem
     dist_matrix::DistMatrix<DISTMATDTYPE> mat(*matS_);
     mat.syev('v', 'l', eigenvalues, u);

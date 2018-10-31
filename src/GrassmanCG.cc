@@ -65,11 +65,9 @@ void GrassmanCG::conjugate()
 double GrassmanCG::computeStepSize(LocGridOrbitals& orbitals)
 {       
     Control& ct = *(Control::instance());  
-    MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-    const dist_matrix::BlacsContext& bc = *mbc. bcxt();
     const int dim = ct.numst;
 
-   dist_matrix::DistMatrix<DISTMATDTYPE> work_matrix("work_matrix", bc, dim, dim);     
+   dist_matrix::DistMatrix<DISTMATDTYPE> work_matrix("work_matrix", dim, dim);     
   
    // Done with conjugation. Now compute direction for phi correction.
    // Operations are done assuming an implicit orthogonalization of the 
@@ -91,23 +89,23 @@ double GrassmanCG::computeStepSize(LocGridOrbitals& orbitals)
    // matrices on the local subdomains, and consolidate them when needed
 
    // Compute Phi^T*H*Zo and S^{-1}*Zo^T*H*Phi
-   dist_matrix::DistMatrix<DISTMATDTYPE> phiHzMat("phiHzMat", bc, dim, dim);   
+   dist_matrix::DistMatrix<DISTMATDTYPE> phiHzMat("phiHzMat", dim, dim);   
    computeOrbitalsProdWithH(orbitals, *sdir_, phiHzMat);     
    // Compute S^{-1}*Zo^T*H*Phi
-   dist_matrix::DistMatrix<DISTMATDTYPE> invSzHphiMat("invSzHphiMat", bc, dim, dim);
+   dist_matrix::DistMatrix<DISTMATDTYPE> invSzHphiMat("invSzHphiMat", dim, dim);
    invSzHphiMat.transpose(1.0, phiHzMat, 0.);   
    proj_matrices_->applyInvS(invSzHphiMat);
 
    // compute Zo^T*H*Zo 
-   dist_matrix::DistMatrix<DISTMATDTYPE> zHzMat("zHzMat", bc, dim, dim);      
+   dist_matrix::DistMatrix<DISTMATDTYPE> zHzMat("zHzMat", dim, dim);      
    computeOrbitalsProdWithH(*sdir_, zHzMat);   
 
    // Compute S^{_1}*Zo^T*Phi and S^{_1}*Phi^T*Zo
    SquareLocalMatrices<MATDTYPE> ss(sdir_->subdivx(), sdir_->chromatic_number());
    sdir_->getLocalOverlap(orbitals, ss); 
-   dist_matrix::DistMatrix<DISTMATDTYPE> invSzTphiMat("invSzTphiMat", bc, dim, dim); 
+   dist_matrix::DistMatrix<DISTMATDTYPE> invSzTphiMat("invSzTphiMat", dim, dim); 
    ss.fillDistMatrix(invSzTphiMat, sdir_->getOverlappingGids());  
-   dist_matrix::DistMatrix<DISTMATDTYPE> invSphiTzMat("phiTzMat", bc, dim, dim); 
+   dist_matrix::DistMatrix<DISTMATDTYPE> invSphiTzMat("phiTzMat", dim, dim); 
    invSphiTzMat.transpose(1.0, invSzTphiMat, 0.);
    // apply invS
    proj_matrices_->applyInvS(invSzTphiMat);
@@ -116,7 +114,7 @@ double GrassmanCG::computeStepSize(LocGridOrbitals& orbitals)
    // Compute Zo^T*Zo
    ss.reset();
    sdir_->getLocalOverlap(ss); 
-   dist_matrix::DistMatrix<DISTMATDTYPE> zTzMat("zTzMat", bc, dim, dim); 
+   dist_matrix::DistMatrix<DISTMATDTYPE> zTzMat("zTzMat", dim, dim); 
    ss.fillDistMatrix(zTzMat, sdir_->getOverlappingGids());    
    
    // Now compute Tr[S^{-1}*Z^T*(-G)] = Tr[S^{-1}*Zo^T*Phi*S^{-1}*Phi^T*H*Phi] - Tr[S^{-1}*Zo^T*H*Phi]
@@ -134,7 +132,7 @@ double GrassmanCG::computeStepSize(LocGridOrbitals& orbitals)
    work_matrix.gemm('n','n',1.,invSzHphiMat,invSphiTzMat,0.);
    denom1 -=2*work_matrix.trace();
    //add Tr[S^{-1}*Zo^T*Phi*S^{-1}*Phi^T*H*Phi*S^{-1}*Phi^T*Zo]:
-   dist_matrix::DistMatrix<DISTMATDTYPE> pmat("pmat", bc, dim, dim); 
+   dist_matrix::DistMatrix<DISTMATDTYPE> pmat("pmat", dim, dim); 
    proj_matrices_->computeMatMultTheta(invSzTphiMat,pmat);
    work_matrix.gemm('n','n',1.,pmat,invSphiTzMat,0.);   
    denom1 += work_matrix.trace();

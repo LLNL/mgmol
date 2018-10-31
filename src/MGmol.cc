@@ -241,9 +241,8 @@ int MGmol::initial()
     double dlrsmin=lrs_->computeMinDistBetweenLocalPairs();
     if(dlrsmin<1.e-3)
     {
-        cerr<<"ERROR: Min. distance between LR centers is "
+        cout<<"WARNING: Min. distance between LR centers is "
             <<dlrsmin<<"!!!"<<endl;
-        return 1;
     }
 
     // initialize and setup load balancing object
@@ -297,9 +296,7 @@ int MGmol::initial()
     {
         printWithTimeStamp("MGmol::initial(), create MatricesBlacsContext and misc...",os_);
 
-        MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-        const dist_matrix::BlacsContext& bc=*mbc.bcxt();
-        dist_matrix::DistMatrix<DISTMATDTYPE> tmp("tmp", bc, ct.numst, ct.numst);
+        dist_matrix::DistMatrix<DISTMATDTYPE> tmp("tmp", ct.numst, ct.numst);
         remote_tasks_DistMatrix_
             =new dist_matrix::RemoteTasksDistMatrix<DISTMATDTYPE>(tmp);
         ProjectedMatrices::registerRemoteTasksDistMatrix(remote_tasks_DistMatrix_);
@@ -383,7 +380,7 @@ int MGmol::initial()
     double d=ions_->computeMinLocalSpacing();
     if( d<1.e-3 )
     {
-       cerr<<"ERROR: min. distance between centers is smaller than 1.e-3!!!\n";
+       cerr<<"ERROR: min. distance between ions is smaller than 1.e-3!!!\n";
     }
     
     // Initialize the nuclear local potential and the compensating charges  

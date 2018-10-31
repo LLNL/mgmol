@@ -6,13 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-////////////////////////////////////////////////////////////////////////////////
-//
-// DistMatrix.h
-//
-////////////////////////////////////////////////////////////////////////////////
-// $Id: DistMatrix.h 22 2012-12-05 21:55:18Z jeanluc $
-
 #ifndef DISTMATRIX_H
 #define DISTMATRIX_H
 
@@ -392,19 +385,22 @@ public:
                   const BlacsContext& bc, 
                   const int lda, const T* const a, 
 		  const int m, const int n);
-                  
+
     // Construct a diagonal DistMatrix from a vector dmat of diagonal elements
     DistMatrix<T>(const std::string& name,
                   const BlacsContext&,
     		  const T * const dmat,
     		  const int m, const int n,
     		  const int mb, const int nb);
-                  
+
     // Construct a diagonal DistMatrix from a vector dmat of diagonal elements
     DistMatrix<T>(const std::string& name,
                   const BlacsContext&,
     		  const T * const dmat,
     		  const int m, const int n);
+    DistMatrix<T>(const std::string& name,
+                  const T * const dmat,
+                  const int m, const int n);
                   
     DistMatrix<T>& operator=(const DistMatrix<T>& a);
     DistMatrix<T>& assign(const DistMatrix<T>&, const int, const int);

@@ -26,7 +26,6 @@ void procrustes(dist_matrix::DistMatrix<DISTMATDTYPE>& a,
 #include "SparseDistMatrix.h"
 #include "fermi.h"
 #include "tools.h"
-#include "random.h"
 
 #include <iomanip>
 #include <fstream>
@@ -84,18 +83,16 @@ ProjectedMatrices::ProjectedMatrices(const int ndim,
 
     if( dim_>0 )
     {
-        MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-        const dist_matrix::BlacsContext& bc=*mbc.bcxt();
-        matH_  =new dist_matrix::DistMatrix<DISTMATDTYPE>("H",     bc, ndim, ndim);
+        matH_  =new dist_matrix::DistMatrix<DISTMATDTYPE>("H",     ndim, ndim);
         
-        matHB_ =new dist_matrix::DistMatrix<DISTMATDTYPE>("HB",    bc, ndim, ndim);
-        theta_ =new dist_matrix::DistMatrix<DISTMATDTYPE>("Theta", bc, ndim, ndim);
-        u_     =new dist_matrix::DistMatrix<DISTMATDTYPE>("U",     bc, ndim, ndim);
-        work_  =new dist_matrix::DistMatrix<DISTMATDTYPE>("work",  bc, ndim, ndim);
+        matHB_ =new dist_matrix::DistMatrix<DISTMATDTYPE>("HB",    ndim, ndim);
+        theta_ =new dist_matrix::DistMatrix<DISTMATDTYPE>("Theta", ndim, ndim);
+        u_     =new dist_matrix::DistMatrix<DISTMATDTYPE>("U",     ndim, ndim);
+        work_  =new dist_matrix::DistMatrix<DISTMATDTYPE>("work",  ndim, ndim);
 #ifdef PROCRUSTES
         occupation0_.resize(dim_);
         u0_    =0;
-        p_     =new dist_matrix::DistMatrix<DISTMATDTYPE>("P",     bc, ndim, ndim);
+        p_     =new dist_matrix::DistMatrix<DISTMATDTYPE>("P",     ndim, ndim);
 
         u0_->identity();
 #endif
@@ -255,9 +252,7 @@ void ProjectedMatrices::rotateAll(const dist_matrix::DistMatrix<DISTMATDTYPE>&  
 
 void ProjectedMatrices::applyInvS(SquareLocalMatrices<MATDTYPE>& mat)
 {
-    MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-    const dist_matrix::BlacsContext& bc = *mbc. bcxt();
-    dist_matrix::DistMatrix<DISTMATDTYPE> pmatrix("pmatrix",bc,dim_,dim_);
+    dist_matrix::DistMatrix<DISTMATDTYPE> pmatrix("pmatrix",dim_,dim_);
  
     mat.fillDistMatrix(pmatrix,global_indexes_);
 
@@ -308,7 +303,8 @@ void ProjectedMatrices::solveGenEigenProblem(dist_matrix::DistMatrix<DISTMATDTYP
     sygv_tm_.stop();
 }
 
-void ProjectedMatrices::buildDM(const dist_matrix::DistMatrix<DISTMATDTYPE>& z, const int orbitals_index)
+void ProjectedMatrices::buildDM(const dist_matrix::DistMatrix<DISTMATDTYPE>& z,
+                                const int orbitals_index)
 {
     dm_->build(z,orbitals_index);
 }
@@ -319,7 +315,9 @@ void ProjectedMatrices::buildDM(const dist_matrix::DistMatrix<DISTMATDTYPE>& z,
 {
     dm_->build(z, occ, orbitals_index);
 }
-void ProjectedMatrices::buildDM(const vector<DISTMATDTYPE>& occ,const int orbitals_index)
+
+void ProjectedMatrices::buildDM(const vector<DISTMATDTYPE>& occ,
+                                const int orbitals_index)
 {
     dm_->build(occ,orbitals_index);
 }
@@ -328,10 +326,7 @@ void ProjectedMatrices::updateDMwithEigenstates(const int iterative_index)
 {
     if( onpe0 )(*MPIdata::sout)<<"ProjectedMatrices: Compute DM using eigenstates"<<endl;
     
-    MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-    const dist_matrix::BlacsContext& bc = *mbc. bcxt();
- 
-    dist_matrix::DistMatrix<DISTMATDTYPE>  zz("Z",bc, dim_, dim_);
+    dist_matrix::DistMatrix<DISTMATDTYPE>  zz("Z", dim_, dim_);
     vector<DISTMATDTYPE> val(dim_);
 
     // solves generalized eigenvalue problem
@@ -373,9 +368,6 @@ void ProjectedMatrices::updateDMwithEigenstatesAndRotate(const int iterative_ind
 #if 0
 void ProjectedMatrices::rotateBackDM()
 {
-    MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-    const dist_matrix::BlacsContext& bc = *mbc. bcxt();
- 
     computeOccupations(occupation0_);
     *u0_=*work_;
 
@@ -383,7 +375,7 @@ void ProjectedMatrices::rotateBackDM()
     procrustes(*u_,*u0_,*p_);
 #endif
 
-    dist_matrix::DistMatrix<DISTMATDTYPE> rot("R",bc, dim_, dim_);
+    dist_matrix::DistMatrix<DISTMATDTYPE> rot("R", dim_, dim_);
     rot.gemm('n','t',1.,*u_,*u0_,0.);
 //int nst=rot.m();
 //(*MPIdata::sout)<<"u0"<<endl;
@@ -396,7 +388,7 @@ void ProjectedMatrices::rotateBackDM()
 #if 0
     (*MPIdata::sout)<<"Test unitarity of u0_"<<endl;
     dist_matrix::DistMatrix<DISTMATDTYPE> u0(*u0_);
-    dist_matrix::DistMatrix<DISTMATDTYPE> test("t",bc,nst,nst);
+    dist_matrix::DistMatrix<DISTMATDTYPE> test("t",nst,nst);
     test.gemm('t','n',1.,u0,*u0_,0.);
     for(int i=0;i<test.mloc();i++)
     for(int j=0;j<i;j++){
@@ -436,7 +428,7 @@ void ProjectedMatrices::rotateBackDM()
     dist_matrix::DistMatrix<DISTMATDTYPE> z(*u_);
     ls_->trtrs('l', 't', 'n', z);
 
-    dist_matrix::DistMatrix<DISTMATDTYPE> gamma("Gamma",bc, &occupation_[0], dim_, dim_);
+    dist_matrix::DistMatrix<DISTMATDTYPE> gamma("Gamma", &occupation_[0], dim_, dim_);
     const double orbital_occupation = with_spin_ ? 1. : 2.;
     gamma.scal(orbital_occupation); // rescale for spin
  
@@ -580,7 +572,6 @@ double ProjectedMatrices::computeEntropy()
      }
     return entropy;
 }
-
 
 void ProjectedMatrices::printOccupations(ostream& os)const
 {
@@ -918,18 +909,15 @@ double ProjectedMatrices::computeChemicalPotentialAndOccupations(const std::vect
 
 void ProjectedMatrices::getLoewdinTransform(SquareLocalMatrices<MATDTYPE>& localP)
 {
-    MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-    const dist_matrix::BlacsContext& bc = *mbc. bcxt();
-
     dist_matrix::DistMatrix<DISTMATDTYPE>  mat(gm_->getMatrix());
-    dist_matrix::DistMatrix<DISTMATDTYPE>  vect("eigenvectors",bc,dim_,dim_);
+    dist_matrix::DistMatrix<DISTMATDTYPE>  vect("eigenvectors",dim_,dim_);
     vector<DISTMATDTYPE> eigenvalues(dim_);
     mat.syev('v', 'l', eigenvalues, vect);
 
     vector<DISTMATDTYPE> diag_values(dim_);
     for(int i=0;i<dim_;i++)diag_values[i]=(DISTMATDTYPE)(1./sqrt(eigenvalues[i]));
 
-    dist_matrix::DistMatrix<DISTMATDTYPE>  matP("P",bc,dim_,dim_);
+    dist_matrix::DistMatrix<DISTMATDTYPE>  matP("P",dim_,dim_);
     matP.clear();
     matP.setDiagonal(diag_values);
     //if( onpe0 )
@@ -943,10 +931,7 @@ void ProjectedMatrices::getLoewdinTransform(SquareLocalMatrices<MATDTYPE>& local
 
 double ProjectedMatrices::getTraceDiagProductWithInvS(vector<DISTMATDTYPE>& ddiag)
 {
-    MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-    const dist_matrix::BlacsContext& bc = *mbc. bcxt();
-
-    dist_matrix::DistMatrix<DISTMATDTYPE> diag("diag", bc, dim_, dim_);    
+    dist_matrix::DistMatrix<DISTMATDTYPE> diag("diag", dim_, dim_);    
     diag.setDiagonal(ddiag);
 
     work_->gemm('n', 'n', 1., diag, gm_->getInverse(), 0.);
@@ -964,13 +949,10 @@ double ProjectedMatrices::dotProductWithInvS(const SquareLocalMatrices<MATDTYPE>
 {
     assert( gram_4dotProducts_!=0 );
     
-    MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-    const dist_matrix::BlacsContext& bc = *mbc. bcxt();
-    
-    dist_matrix::DistMatrix<DISTMATDTYPE> ds("ds", bc, dim_, dim_);
+    dist_matrix::DistMatrix<DISTMATDTYPE> ds("ds", dim_, dim_);
     local_product.fillDistMatrix(ds,global_indexes_);
 
-    dist_matrix::DistMatrix<DISTMATDTYPE> work("work", bc, dim_, dim_);
+    dist_matrix::DistMatrix<DISTMATDTYPE> work("work", dim_, dim_);
     work.gemm('n', 'n', 1., ds, gram_4dotProducts_->getInverse(), 0.);
 
     return work.trace();
@@ -978,13 +960,10 @@ double ProjectedMatrices::dotProductWithInvS(const SquareLocalMatrices<MATDTYPE>
 
 double ProjectedMatrices::dotProductWithDM(const SquareLocalMatrices<MATDTYPE>& local_product)
 {
-    MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-    const dist_matrix::BlacsContext& bc = *mbc. bcxt();
-    
-    dist_matrix::DistMatrix<DISTMATDTYPE> ds("ds", bc, dim_, dim_);
+    dist_matrix::DistMatrix<DISTMATDTYPE> ds("ds", dim_, dim_);
     local_product.fillDistMatrix(ds,global_indexes_);
 
-    dist_matrix::DistMatrix<DISTMATDTYPE> work("work", bc, dim_, dim_);
+    dist_matrix::DistMatrix<DISTMATDTYPE> work("work", dim_, dim_);
     work.gemm('n', 'n', 0.5, ds, kernel4dot(), 0.);
 
     return work.trace();
@@ -993,11 +972,8 @@ double ProjectedMatrices::dotProductWithDM(const SquareLocalMatrices<MATDTYPE>& 
 double ProjectedMatrices::dotProductSimple(const SquareLocalMatrices<MATDTYPE>& local_product)
 {
     assert( dm_4dot_product_!=0 );
-    
-    MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-    const dist_matrix::BlacsContext& bc = *mbc. bcxt();
-    
-    dist_matrix::DistMatrix<DISTMATDTYPE> ds("ds", bc, dim_, dim_);
+
+    dist_matrix::DistMatrix<DISTMATDTYPE> ds("ds", dim_, dim_);
     local_product.fillDistMatrix(ds,global_indexes_);
 
     return ds.trace();
@@ -1019,19 +995,17 @@ void ProjectedMatrices::printTimers(ostream& os)
 //Assumes SquareLocalMatrix object contains partial contributions
 double ProjectedMatrices::computeTraceInvSmultMat(const SquareLocalMatrices<MATDTYPE>& mat)
 {
-    MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-    const dist_matrix::BlacsContext& bc = *mbc. bcxt();
-    dist_matrix::DistMatrix<DISTMATDTYPE> pmatrix("pmatrix",bc,dim_,dim_);
+    dist_matrix::DistMatrix<DISTMATDTYPE> pmatrix("pmatrix",dim_,dim_);
  
     mat.fillDistMatrix(pmatrix,global_indexes_);
 
     gm_->applyInv(pmatrix);
     return pmatrix.trace();
 /*
-    dist_matrix::DistMatrix<DISTMATDTYPE> work_matrix("work_matrix",bc,dim_,dim_); 
+    dist_matrix::DistMatrix<DISTMATDTYPE> work_matrix("work_matrix",dim_,dim_); 
     work_matrix.symm('l', 'l', 1., gm_->getInverse(), pmatrix, 0.);
     
-    dist_matrix::DistMatrix<DISTMATDTYPE> pm = gm_->getInverse();//("pmatrix",bc,dim_,dim_);
+    dist_matrix::DistMatrix<DISTMATDTYPE> pm = gm_->getInverse();//("pmatrix",dim_,dim_);
     double itrace = pm.trace();
     if(onpe0)cout<<"INVERSE trace = "<<itrace<<endl;
     
@@ -1042,9 +1016,7 @@ double ProjectedMatrices::computeTraceInvSmultMat(const SquareLocalMatrices<MATD
 double ProjectedMatrices::computeTraceInvSmultMatMultTheta(const dist_matrix::DistMatrix<DISTMATDTYPE>& mat)
 {
     assert(theta_ != 0);
-    MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-    const dist_matrix::BlacsContext& bc = *mbc. bcxt();
-    dist_matrix::DistMatrix<DISTMATDTYPE> pmat("pmat",bc,dim_,dim_);    
+    dist_matrix::DistMatrix<DISTMATDTYPE> pmat("pmat",dim_,dim_);    
     
     //compute mat*theta_
     pmat.gemm('n', 'n', 1.0, mat, *theta_, 0.); 

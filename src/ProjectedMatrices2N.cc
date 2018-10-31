@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id:$
 #include "ProjectedMatrices2N.h"
 
 ProjectedMatrices2N::ProjectedMatrices2N(const int ndim, 
@@ -15,8 +14,7 @@ ProjectedMatrices2N::ProjectedMatrices2N(const int ndim,
 {
     bdim_=ndim/2;
 
-    const dist_matrix::BlacsContext& bc( *MatricesBlacsContext::instance().bcxt() );
-    work2N_ = new dist_matrix::DistMatrix<DISTMATDTYPE>("work2N",bc, ndim, ndim);
+    work2N_ = new dist_matrix::DistMatrix<DISTMATDTYPE>("work2N", ndim, ndim);
 }
 
 ProjectedMatrices2N::~ProjectedMatrices2N()

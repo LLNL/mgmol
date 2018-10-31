@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id:$
 #include "MGmol.h"
 #include "Control.h"
 #include "Mesh.h"
@@ -327,9 +326,7 @@ int MGmol::get_NOLMO(NOLMOTransform& noot,
                                          orbitals);
         orbitals.incrementIterativeIndex();
 
-        MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-        const dist_matrix::BlacsContext* bc = mbc. bcxt();
-        dist_matrix::DistMatrix<DISTMATDTYPE>  u_dis("Udis",*bc, numst, numst);
+        dist_matrix::DistMatrix<DISTMATDTYPE>  u_dis("Udis", numst, numst);
         u_dis.init(a, numst);
 
         ProjectedMatricesInterface* proj_matrices=orbitals.proj_matrices();

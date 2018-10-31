@@ -6,14 +6,12 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #include <iostream>
 #include <iomanip>
 using namespace std;
 
 #include <string.h>
 #include "DensityMatrix.h"
-#include "MatricesBlacsContext.h"
 #include "MGmol_MPI.h"
 
 const double factor_kernel4dot=10.;
@@ -40,11 +38,9 @@ DensityMatrix::DensityMatrix(const int ndim)
 
     if( dim_>0 )
     {
-        MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-        const dist_matrix::BlacsContext* bc = mbc. bcxt();
-        dm_         =new dist_matrix::DistMatrix<DISTMATDTYPE>("DM",    *bc, ndim, ndim);
-        kernel4dot_ =new dist_matrix::DistMatrix<DISTMATDTYPE>("K4dot", *bc, ndim, ndim);
-        work_       =new dist_matrix::DistMatrix<DISTMATDTYPE>("work",  *bc, ndim, ndim);
+        dm_         =new dist_matrix::DistMatrix<DISTMATDTYPE>("DM",    ndim, ndim);
+        kernel4dot_ =new dist_matrix::DistMatrix<DISTMATDTYPE>("K4dot", ndim, ndim);
+        work_       =new dist_matrix::DistMatrix<DISTMATDTYPE>("work",  ndim, ndim);
         occupation_.resize(dim_);
     }else{
         occ_uptodate_=true;
@@ -117,10 +113,8 @@ void DensityMatrix::build(const dist_matrix::DistMatrix<DISTMATDTYPE>& zmat,
         (*MPIdata::sout)<<"DensityMatrix::build(const DistMatrix<DISTMATDTYPE>&,const vector<DISTMATDTYPE>&,const int)"<<endl;
 #endif
     
-    MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-    const dist_matrix::BlacsContext* bc = mbc. bcxt();
-
-    dist_matrix::DistMatrix<DISTMATDTYPE> gamma("Gamma",*bc, &occ[0], dim_, dim_);
+    //diagonal matrix with occ values in diagonal
+    dist_matrix::DistMatrix<DISTMATDTYPE> gamma("Gamma", &occ[0], dim_, dim_);
     gamma.scal(orbital_occupation_); // rescale for spin
 
     // work_ = zmat*gamma with gamma symmetric
@@ -167,10 +161,7 @@ void DensityMatrix::build(const int new_orbitals_index)
     if( !occ_uptodate_ && onpe0 )
         (*MPIdata::sout)<<"Warning: occupations not up to date to build DM!!!"<<endl;
 
-    MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-    const dist_matrix::BlacsContext* bc = mbc. bcxt();
-
-    dist_matrix::DistMatrix<DISTMATDTYPE> gamma("Gamma",*bc, &occupation_[0], dim_, dim_);
+    dist_matrix::DistMatrix<DISTMATDTYPE> gamma("Gamma", &occupation_[0], dim_, dim_);
     gamma.scal(orbital_occupation_); // rescale for spin
 
     *dm_=gamma;
@@ -263,10 +254,7 @@ void DensityMatrix::printOccupations(ostream& os)const
 void DensityMatrix::diagonalize(const dist_matrix::DistMatrix<DISTMATDTYPE>& ls,
                                 vector<DISTMATDTYPE>& occ)
 {
-    MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-    const dist_matrix::BlacsContext* bc = mbc. bcxt();
-    
-    dist_matrix::DistMatrix<DISTMATDTYPE> evect("EigVect", *bc, dim_, dim_);
+    dist_matrix::DistMatrix<DISTMATDTYPE> evect("EigVect", dim_, dim_);
     
     *work_ = (*dm_);
 

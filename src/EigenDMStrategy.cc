@@ -8,7 +8,6 @@
 
 #include "EigenDMStrategy.h"
 #include "LocGridOrbitals.h"
-#include "MatricesBlacsContext.h"
 #include "Control.h"
 #include "ProjectedMatrices.h"
 
@@ -28,10 +27,8 @@ void EigenDMStrategy::initialize()
 int EigenDMStrategy::update()
 {
     Control& ct = *(Control::instance());
-    MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-    const dist_matrix::BlacsContext& bc = *mbc. bcxt();
 
-    dist_matrix::DistMatrix<DISTMATDTYPE>  zz("Z",bc, ct.numst, ct.numst);
+    dist_matrix::DistMatrix<DISTMATDTYPE>  zz("Z", ct.numst, ct.numst);
     
     ProjectedMatrices* pmat=dynamic_cast<ProjectedMatrices*>( proj_matrices_ );
     pmat->updateDMwithEigenstatesAndRotate(current_orbitals_->getIterativeIndex(),zz); 

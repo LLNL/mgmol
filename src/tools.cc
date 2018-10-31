@@ -8,7 +8,6 @@
 
 #include "tools.h"
 #include "MPIdata.h"
-#include "MatricesBlacsContext.h"
 #include "SparseDistMatrix.h"
 #include "Control.h"
 #include "Vector3D.h"
@@ -116,8 +115,6 @@ void rotateSym(dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
 void sqrtDistMatrix(dist_matrix::DistMatrix<DISTMATDTYPE>& u)
 {
     (*MPIdata::sout)<<"sqrtDistMatrix()"<<endl;
-    MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-    const dist_matrix::BlacsContext& bc = *mbc. bcxt();
     const int nst    =u.m();
 #if 0
     dist_matrix::DistMatrix<DISTMATDTYPE> u0(u);
@@ -139,8 +136,8 @@ void sqrtDistMatrix(dist_matrix::DistMatrix<DISTMATDTYPE>& u)
 
 #endif
  
-    dist_matrix::DistMatrix<DISTMATDTYPE> w("w",bc,nst,nst);
-    dist_matrix::DistMatrix<DISTMATDTYPE> z("z",bc,nst,nst);
+    dist_matrix::DistMatrix<DISTMATDTYPE> w("w",nst,nst);
+    dist_matrix::DistMatrix<DISTMATDTYPE> z("z",nst,nst);
  
     vector<DISTMATDTYPE> eigenvalues(nst);
  
@@ -159,7 +156,7 @@ void sqrtDistMatrix(dist_matrix::DistMatrix<DISTMATDTYPE>& u)
     }
     //for(int i=0;i<nst;i++)
     //    (*MPIdata::sout)<<"eigenvalues="<<eigenvalues[i]<<endl;
-    dist_matrix::DistMatrix<DISTMATDTYPE> g("g",bc, &eigenvalues[0], nst, nst);
+    dist_matrix::DistMatrix<DISTMATDTYPE> g("g", &eigenvalues[0], nst, nst);
  
     // u = z * g * z**T
     w.symm('r','l',1.,g,z,0.);

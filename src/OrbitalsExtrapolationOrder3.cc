@@ -8,7 +8,6 @@
 
 #include "OrbitalsExtrapolationOrder3.h"
 #include "LocGridOrbitals.h"
-#include "MatricesBlacsContext.h"
 #include "DistMatrixTools.h"
 #include "ProjectedMatricesInterface.h"
 
@@ -16,9 +15,6 @@
 
 void OrbitalsExtrapolationOrder3::extrapolate_orbitals(LocGridOrbitals** orbitals, LocGridOrbitals* new_orbitals)
 {
-    MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-    const dist_matrix::BlacsContext* bc = mbc. bcxt();
-
     Control& ct = *(Control::instance());
 
     new_orbitals->assign(**orbitals);
@@ -38,8 +34,8 @@ void OrbitalsExtrapolationOrder3::extrapolate_orbitals(LocGridOrbitals** orbital
         // align orbitals_minus1 with new_orbitals
         if( ct.it_algo_type>1 )
         {
-            dist_matrix::DistMatrix<DISTMATDTYPE> matQ("Q",*bc, ct.numst, ct.numst);
-            dist_matrix::DistMatrix<DISTMATDTYPE> yyt("yyt",*bc, ct.numst, ct.numst);
+            dist_matrix::DistMatrix<DISTMATDTYPE> matQ("Q", ct.numst, ct.numst);
+            dist_matrix::DistMatrix<DISTMATDTYPE> yyt("yyt", ct.numst, ct.numst);
 
             // alignement
             orbitals_minus1_->computeGram(*new_orbitals, matQ);                

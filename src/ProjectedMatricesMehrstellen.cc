@@ -16,11 +16,8 @@ ProjectedMatricesMehrstellen::ProjectedMatricesMehrstellen(const int ndim,
 {
     if( dim_>0 )
     {
-        MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-        const dist_matrix::BlacsContext& bc=*mbc.bcxt();
-        
-        matB_  =new dist_matrix::DistMatrix<DISTMATDTYPE>("B",     bc, ndim, ndim);
-        invB_  =new dist_matrix::DistMatrix<DISTMATDTYPE>("invB",  bc, ndim, ndim);
+        matB_  =new dist_matrix::DistMatrix<DISTMATDTYPE>("B",    ndim, ndim);
+        invB_  =new dist_matrix::DistMatrix<DISTMATDTYPE>("invB", ndim, ndim);
         matB_->identity();
         invB_->identity();
     }

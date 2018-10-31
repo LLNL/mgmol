@@ -9,7 +9,6 @@
 #include "OrbitalsExtrapolationOrder2.h"
 #include "Control.h"
 #include "LocGridOrbitals.h"
-#include "MatricesBlacsContext.h"
 #include "DistMatrixTools.h"
 #include "ProjectedMatricesInterface.h"
 
@@ -37,9 +36,7 @@ void OrbitalsExtrapolationOrder2::extrapolate_orbitals(LocGridOrbitals** orbital
             // align orbitals_minus1_ with new_orbitals
             if( ct.it_algo_type>1 )
             {
-                MatricesBlacsContext& mbc( MatricesBlacsContext::instance() );
-                const dist_matrix::BlacsContext* bc = mbc. bcxt();
-                dist_matrix::DistMatrix<DISTMATDTYPE> matQ("Q",*bc, ct.numst, ct.numst);
+                dist_matrix::DistMatrix<DISTMATDTYPE> matQ("Q", ct.numst, ct.numst);
 #if 0
                 LocGridOrbitals tmp(*orbitals_minus1_);
                 tmp.axpy(-1.,*new_orbitals);
@@ -50,7 +47,7 @@ void OrbitalsExtrapolationOrder2::extrapolate_orbitals(LocGridOrbitals** orbital
 #endif                
                 orbitals_minus1_->computeGram(*new_orbitals, matQ);
                 
-                dist_matrix::DistMatrix<DISTMATDTYPE> yyt("yyt",*bc, ct.numst, ct.numst);
+                dist_matrix::DistMatrix<DISTMATDTYPE> yyt("yyt", ct.numst, ct.numst);
                 getProcrustesTransform(matQ, yyt);
                 
                 orbitals_minus1_->multiply_by_matrix(matQ);
