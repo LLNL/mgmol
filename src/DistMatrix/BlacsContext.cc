@@ -135,6 +135,7 @@ void BlacsContext::buildCommunicator()
   }
   MPI_Comm_create(comm_global_,subgroup,&comm_active_);
   delete[] ranks;
+
 #else
   comm_active_ = 0;
 #endif
@@ -399,6 +400,11 @@ BlacsContext::BlacsContext(const BlacsContext& bc, const char type) :
 BlacsContext::~BlacsContext()
 {
   if ( myrow_ != -1 ) Cblacs_gridexit( ictxt_ );
+  if( active_ )
+  {
+    assert( comm_active_!= MPI_COMM_NULL );
+    MPI_Comm_free(&comm_active_);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
