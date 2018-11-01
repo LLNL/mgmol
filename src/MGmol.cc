@@ -653,11 +653,11 @@ void MGmol::write_header()
     os_<<endl;
 #endif
     os_<<" Compiled: "<<__DATE__<<", "<<__TIME__<<endl;
-    os_<<" Real-space finite difference ab initio calculations"<<endl;
+    os_<<" Real-space finite difference ab initio calculations\n";
     os_<<endl;
-    os_<<" authors: J.-L. Fattebert, Lawrence Livermore National Laboratory"<<endl;
-    os_<<"          D. Osei-Kuffuor, Lawrence Livermore National Laboratory"<<endl;
-    os_<<endl;
+    os_<<" authors: J.-L. Fattebert, Oak Ridge National Laboratory\n";
+    os_<<"          D. Osei-Kuffuor, Lawrence Livermore National Laboratory\n";
+    os_<<"          I.S. Dunn, Columbia University\n\n";
     os_<<"//////////////////////////////////////////////////////////"<<endl;
 
     os_<<endl<<endl<<description<<endl;
