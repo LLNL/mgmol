@@ -434,7 +434,6 @@ public:
     void extrapolateCentersLinear(const bool force, const bool move_centers=true);
     void extrapolateCentersQuadratic();
     void extrapolateCentersVerlet(const bool force, const bool move_centers=true);
-    void moveToOldCentersOnMesh(short i);
     void moveToExtrapolatedCenters();
     
     void resetOldCenters();

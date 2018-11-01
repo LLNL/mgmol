@@ -190,9 +190,7 @@ protected:
 public:
     friend class SinCosOps;
 
-    virtual void setTimeStepIndex(int n) {}
     double norm()const;
-    virtual void incrementTimeStepIndex() {}
 
     ProjectedMatricesInterface* proj_matrices()const
     {
@@ -203,28 +201,6 @@ public:
     { return all_overlapping_gids_;}
     const std::vector<int>& getLocalGids()const
     { return local_gids_; }
-
-    ClusterOrbitals* local_cluster()const
-    {
-        return local_cluster_;
-    }
-
-    LocalizationRegions* lrs()const
-    {
-        return lrs_;
-    }
-
-    short* bc()const
-    {
-        return bc_;
-    }
-
-    const pb::Grid& grid()const
-    {
-        return grid_;
-    }
-
-    unsigned int lrs_iterative_index()const { return lrs_iterative_index_; }
 
     LocGridOrbitals(const pb::Grid& my_grid, 
                     const short subdivx,
@@ -246,8 +222,6 @@ public:
     ~LocGridOrbitals();
     
     static void printTimers(std::ostream& os);
-
-    void saveOrbitals(const char* filename);
 
     void resetDotProductMatrices();
     void init2zero();
@@ -319,11 +293,6 @@ public:
         return block_vector_.getVectorWithGhosts(i);
     }
         
-    const pb::GridFuncVector<ORBDTYPE>& getDataWGhosts()
-    {
-        return block_vector_.getDataWGhosts();
-    }
-    
     pb::GridFuncVector<ORBDTYPE>* getPtDataWGhosts()
     {
         return block_vector_.getPtDataWGhosts();

@@ -1574,30 +1574,6 @@ void LocGridOrbitals::computeDiagonalElementsDotProduct(
     mmpi.allreduce(&tmp[0], &ss[0], numst_, MPI_SUM);
 }
 
-void LocGridOrbitals::saveOrbitals(const char* filename)
-{
-
-  MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-
-  int total_numpt = 0;
-
-  mmpi.allreduce(&loc_numpt_, &total_numpt, 1, MPI_SUM);
-
-  vector < vector<ORBDTYPE> > orbitals(numst_, vector<ORBDTYPE>(total_numpt));
-
-  for (int i = 0; i < numst_; ++i) {
-
-    ORBDTYPE* columnStart = getPsi(i);
-    vector<ORBDTYPE> column(columnStart, columnStart + loc_numpt_ );
-
-    mmpi.allGatherV(column, orbitals[i]);
-    
-  }
-
-  saveData(orbitals, filename);
-
-}
-
 void LocGridOrbitals::computeDiagonalElementsDotProductLocal(
     const LocGridOrbitals& orbitals, 
     vector<DISTMATDTYPE>& ss)
