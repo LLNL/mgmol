@@ -173,8 +173,12 @@ void Hamiltonian::addHlocalij(LocGridOrbitals& phi1,
     if( onpe0 )
         (*MPIdata::sout)<<"Hamiltonian::addHLocalij()"<<endl;
 #endif
- 
-    phi1.addDot2H(*hlphi_, proj_matrices);
+
+    SquareLocalMatrices<MATDTYPE> slm(phi1.subdivx(), phi1.chromatic_number());
+
+    phi1.computeLocalProduct(*hlphi_,slm);
+
+    proj_matrices->addMatrixElementsSparseH(slm);
 }
 
 void Hamiltonian::addHlocal2matrix(

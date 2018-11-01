@@ -2494,20 +2494,6 @@ void LocGridOrbitals::addDotWithNcol2Matrix(LocGridOrbitals& Apsi,
     addDotWithNcol2Matrix(0, chromatic_number_, Apsi, sparse_matrix);
 }
 
-void LocGridOrbitals::addDot2H(LocGridOrbitals& Apsi,
-                               ProjectedMatricesInterface* proj_matrices)
-{
-    addDot_tm_.start();
-    
-    SquareLocalMatrices<MATDTYPE> slh(subdivx_,chromatic_number_);
-    
-    computeLocalProduct(Apsi,slh);
-    
-    proj_matrices->addMatrixElementsSparseH(slh);
-
-    addDot_tm_.stop();
-}
-
 void LocGridOrbitals::computeGlobalIndexes(LocalizationRegions& lrs)
 {
     all_overlapping_gids_ = lrs.getOverlapGids();

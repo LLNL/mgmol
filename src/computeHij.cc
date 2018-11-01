@@ -553,7 +553,11 @@ void MGmol::getHpsiAndTheta(Ions& ions,
         kbpsi->computeHvnlMatrix(ions,proj_matrices_);
 
         // add local part of H to sh
-        phi.addDot2H(hphi, proj_matrices_);
+        SquareLocalMatrices<MATDTYPE> slh(phi.subdivx(),phi.chromatic_number());
+
+        phi.computeLocalProduct(hphi, slh);
+
+        proj_matrices_->addMatrixElementsSparseH(slh); 
 
         proj_matrices_->consolidateH();
         
