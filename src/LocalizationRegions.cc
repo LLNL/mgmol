@@ -1719,7 +1719,8 @@ short LocalizationRegions::getNumOldCenters()const {
 
 }
 
-double LocalizationRegions::computeMinDistBetweenLocalPairs()const
+double LocalizationRegions::computeMinDistBetweenLocalPairs(
+    std::ostream& os, const bool print)const
 {
     Control& ct = *(Control::instance());
     Mesh* mymesh = Mesh::instance();
@@ -1743,12 +1744,12 @@ double LocalizationRegions::computeMinDistBetweenLocalPairs()const
         }
     }
 
-    if( distance<1.e-3 )
+    if( distance<1.e-3 && print )
     {
         for(vector<LRData>::const_iterator it1 =local_regions_.begin();
                                            it1!=local_regions_.end();
                                            it1++)
-            cerr<<"center at "<<it1->center<<endl;
+            os<<"center at "<<it1->center<<endl;
     }
 
     return distance;

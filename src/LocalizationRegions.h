@@ -502,7 +502,7 @@ public:
 
     unsigned int getIterativeIndex()const { return iterative_index_; }
 
-    double computeMinDistBetweenLocalPairs()const;
+    double computeMinDistBetweenLocalPairs(std::ostream& os, const bool print)const;
 };
 
 #endif

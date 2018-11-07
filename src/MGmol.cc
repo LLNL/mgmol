@@ -238,7 +238,7 @@ int MGmol::initial()
         if( n>0 )lrs_->setup();
     }
 
-    double dlrsmin=lrs_->computeMinDistBetweenLocalPairs();
+    double dlrsmin=lrs_->computeMinDistBetweenLocalPairs(cout, (ct.verbose>2) );
     if(dlrsmin<1.e-3)
     {
         cout<<"WARNING: Min. distance between LR centers is "
