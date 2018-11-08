@@ -98,12 +98,12 @@ void DirectionalReduce::setupPersistentRequests(const short dir)
     MPI_Cart_shift(cart_comm_, dir, disp, &source, &dest);
     /* setup request for left direction */
     MPI_Recv_init(&rbuf_[0], 2, MPI_INT, source, 0, cart_comm_, &request_[0]);
-    MPI_Rsend_init(&sbuf_[0], 2, MPI_INT, dest, 0, cart_comm_, &request_[1]);
+    MPI_Send_init(&sbuf_[0], 2, MPI_INT, dest, 0, cart_comm_, &request_[1]);
 
     // setup request for right direction 
     // just reverse source and dest (no need for mpi_cart_shift())
     MPI_Recv_init(&rbuf_[0], 2, MPI_INT, dest, 1, cart_comm_, &request_[2]);
-    MPI_Rsend_init(&sbuf_[0], 2, MPI_INT, source, 1, cart_comm_, &request_[3]);
+    MPI_Send_init(&sbuf_[0], 2, MPI_INT, source, 1, cart_comm_, &request_[3]);
 }
 
 void DirectionalReduce::deletePersistentRequests()
