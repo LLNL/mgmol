@@ -239,7 +239,7 @@ int HamiltonianMVPSolver<T1, T2, T3>::solve(LocGridOrbitals& orbitals)
         // line minimization
         double beta = minQuadPolynomialFrom3values(e0,e1,ei, (ct.verbose>2), os_);
 
-        if( onpe0 && ct.verbose>1 )
+        if( onpe0 && ct.verbose>0 )
         {
             os_<<setprecision(12);
             os_<<fixed<<"Inner iteration "<<inner_it<<", E0="<<e0<<", E(1/2)="<<ei<<", E1="<<e1;
@@ -292,7 +292,7 @@ int HamiltonianMVPSolver<T1, T2, T3>::solve(LocGridOrbitals& orbitals)
                 // line minimization
                 beta = minQuadPolynomialFrom3values(e0,e1,ei, (ct.verbose>2), os_);
             
-                if( onpe0 && ct.verbose>1 )
+                if( onpe0 && ct.verbose>0 )
                 {
                     os_<<setprecision(12);
                     os_<<fixed<<"Inner iteration "<<inner_it<<", E0="<<e0<<", E(1/2)="<<ei<<", E1="<<e1;

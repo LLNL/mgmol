@@ -324,7 +324,10 @@ void ProjectedMatrices::buildDM(const vector<DISTMATDTYPE>& occ,
 
 void ProjectedMatrices::updateDMwithEigenstates(const int iterative_index)
 {
-    if( onpe0 )(*MPIdata::sout)<<"ProjectedMatrices: Compute DM using eigenstates"<<endl;
+    Control& ct = *(Control::instance());
+
+    if( onpe0 && ct.verbose>1 )
+        (*MPIdata::sout)<<"ProjectedMatrices: Compute DM using eigenstates\n";
     
     dist_matrix::DistMatrix<DISTMATDTYPE>  zz("Z", dim_, dim_);
     vector<DISTMATDTYPE> val(dim_);
@@ -334,7 +337,7 @@ void ProjectedMatrices::updateDMwithEigenstates(const int iterative_index)
     solveGenEigenProblem(zz,val);
     setAuxilliaryEnergiesFromEigenenergies();
     double final_mu = computeChemicalPotentialAndOccupations();
-    if(onpe0)cout<<"Final mu_ = "<<final_mu<<endl;
+    if( onpe0 && ct.verbose>1 )cout<<"Final mu_ = "<<final_mu<<endl;
     
     // Build the density matrix X 
     // X = Z * gamma * Z^T
@@ -791,7 +794,7 @@ double ProjectedMatrices::computeChemicalPotentialAndOccupations(const std::vect
     assert( nel>=0 );
     
     Control& ct = *(Control::instance());
-    if( onpe0 && ct.verbose>0 )
+    if( onpe0 && ct.verbose>1 )
         (*MPIdata::sout)<<"computeChemicalPotentialAndOccupations() with width="
                         <<width<<", for "<<nel<<" electrons"<<endl;
 

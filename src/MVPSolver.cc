@@ -312,7 +312,7 @@ int MVPSolver::solve(LocGridOrbitals& orbitals)
                 // line minimization
                 double beta = minQuadPolynomial(e0,e1,de0, (ct.verbose>2), os_);
 
-                if( onpe0 && ct.verbose>1 )
+                if( onpe0 && ct.verbose>0 )
                 {
                     os_<<setprecision(12);
                     os_<<fixed<<"Inner iteration "<<inner_it<<", E0="<<e0<<", E1="<<e1;

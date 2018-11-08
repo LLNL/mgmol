@@ -301,6 +301,7 @@ int PolakRibiereSolver::solve(LocGridOrbitals& orbitals,
    
     int dm_success=0;
     bool wolfe = false;
+    bool skip_wolfe_cond = true;
     double alpha_k = alpha_;
    
     // main electronic structure outer loop
@@ -378,7 +379,8 @@ int PolakRibiereSolver::solve(LocGridOrbitals& orbitals,
                 z_k_->applyMask();
             }
 
-            wolfe = (step==0) ? true : checkWolfeConditions(last_eks, alpha_k);
+            wolfe = ( skip_wolfe_cond ) ?
+                    true : checkWolfeConditions(last_eks, alpha_k);
         }
         
         // strip dm from the overlap contribution
@@ -497,13 +499,17 @@ int PolakRibiereSolver::solve(LocGridOrbitals& orbitals,
                 os_<<setprecision(2)<<scientific<<"Condition Number of S: "
                    <<condS<<endl;
         }
+
+        if( testUpdatePot() )
+        { 
+            // updated Hij needed to compute new DM
+            if( dm_strategy_->needH() )mgmol_strategy_->updateHmatrix(orbitals,ions);
         
-        // updated Hij needed to compute new DM
-        if( dm_strategy_->needH() )mgmol_strategy_->updateHmatrix(orbitals,ions);
-        
-        // compute new density matrix
-        dm_success = dm_strategy_->update();
-        
+            // compute new density matrix
+            dm_success = dm_strategy_->update();
+
+            skip_wolfe_cond = false;
+        }
     
         incInnerIt();
 
