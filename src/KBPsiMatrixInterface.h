@@ -6,8 +6,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef KBPSIMATRIX_INTERFACE_H
-#define KBPSIMATRIX_INTERFACE_H
+#ifndef MGMOL_KBPSIMATRIX_INTERFACE_H
+#define MGMOL_KBPSIMATRIX_INTERFACE_H
 
 #include "SparseDistMatrix.h"
 #include "RemoteTasksDistMatrix.h"
@@ -16,12 +16,10 @@
 #include "Timer.h"
 #include "LocGridOrbitals.h"
 
-//class LocGridOrbitals;
 class ProjectedMatrices;
 class ProjectedMatricesInterface;
 class Ions;
 class Ion;
-class ProjectedMatricesSparseAOMM;
 
 class KBPsiMatrixInterface
 {
@@ -51,7 +49,6 @@ public:
     virtual void addKBPsi(const int gid, const int st, const double val)=0;
     virtual void addKBBPsi(const int gid, const int st, const double val)=0;
     
-    virtual double getEvnl(const Ions& ions, LocGridOrbitals& orbitals, ProjectedMatricesInterface* proj_matrices)=0;
     virtual double getValIonState(const int gid, const int st)const=0;
     virtual void scaleWithKBcoeff(const Ions& ions)=0;
 
@@ -62,22 +59,6 @@ public:
     virtual void setup(const Ions& ions, 
                const LocGridOrbitals& orbitals)=0;
 
-    /* Default implementation - returns error message */
-    virtual void registerRemoteTasksDistMatrix(dist_matrix::RemoteTasksDistMatrix<DISTMATDTYPE>* remote_tasks_DistMatrix)
-    {
-        (void) remote_tasks_DistMatrix;
-        
-
-        exitWithErrorMessage("registerRemoteTasksDistMatrix");
-    }     
-    virtual void computeHvnlMatrix(const Ions& ions,VariableSizeMatrix<sparserow>& vsmat)const
-    {
-        (void) ions;
-        (void) vsmat;
-        
-        exitWithErrorMessage("registerRemoteTasksDistMatrix");        
-    }        
-    
     virtual void printTimers(ostream& os);
 
     void computeLocalElement(Ion& ion, const int istate, 

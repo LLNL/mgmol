@@ -401,16 +401,20 @@ void DensityMatrix::dressUpS(const dist_matrix::DistMatrix<DISTMATDTYPE>& ls,
     stripped_    =false;
 }
 
-// dm -> S*dm*S
-//void DensityMatrix::surroundByS(const dist_matrix::DistMatrix<DISTMATDTYPE>& matS,
-//                                const int new_orbitals_index)
-//{
-//    assert( !stripped_ );
-//
-//    work_->symm('r', 'l', 1., matS, *dm_, 0.);
-//    dm_->symm('l', 'l', 1., matS, *work_, 0.);
-//    
-//    orbitals_index_=new_orbitals_index;
-//    occ_uptodate_=false;
-//    stripped_    =false;
-//}
+double DensityMatrix::getExpectation(
+    const dist_matrix::DistMatrix<DISTMATDTYPE>& A)
+{
+    work_->gemm('n', 'n', 1., A, *dm_, 0.);
+    double val=work_->trace();
+
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+
+    if( mmpi.nspin() >1 ){
+        double tmp=0.;
+        mmpi.allreduceSpin(&val, &tmp, 1, MPI_SUM);
+        val=tmp;
+    }
+
+    return val;
+}
+

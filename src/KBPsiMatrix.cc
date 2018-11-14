@@ -804,7 +804,9 @@ void KBPsiMatrix::printTimers(ostream& os)
     allGatherNonzeroElements_tm_.print(os);
 }
 
-double KBPsiMatrix::getEvnl(const Ions& ions, LocGridOrbitals& orbitals, ProjectedMatricesInterface* proj_matrices)
+double KBPsiMatrix::getEvnl(
+    const Ions& ions, LocGridOrbitals& orbitals,
+    ProjectedMatrices* proj_matrices)
 {
     const int numst=orbitals.numst();
     if( numst==0 )return 0.;
@@ -817,3 +819,5 @@ double KBPsiMatrix::getEvnl(const Ions& ions, LocGridOrbitals& orbitals, Project
 
     return evnl;
 }
+
+

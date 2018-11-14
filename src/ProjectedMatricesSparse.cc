@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id: ProjectedMatricesSparse.cc 265 2012-08-09 23:38:48Z jeanluc $
 #include "ProjectedMatricesSparse.h"
 #include <iomanip>
 #include <fstream>
@@ -18,7 +17,6 @@
 #include "Control.h"
 #include "MGmol_MPI.h"
 #include "BasicDataDistributors.h"
-// pb
 #include "tools.h"
 #include "random.h"
 

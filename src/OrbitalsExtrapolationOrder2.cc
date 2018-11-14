@@ -10,7 +10,7 @@
 #include "Control.h"
 #include "LocGridOrbitals.h"
 #include "DistMatrixTools.h"
-#include "ProjectedMatricesInterface.h"
+#include "ProjectedMatrices.h"
 
 #define EXTRAPOLATE_H 1
 
@@ -21,6 +21,12 @@ void OrbitalsExtrapolationOrder2::extrapolate_orbitals(LocGridOrbitals** orbital
     
 #if EXTRAPOLATE_H
     ProjectedMatricesInterface* proj_matrices=(*orbitals)->getProjMatrices();
+    ProjectedMatrices* projmat=0;
+    if( ct.it_algo_type>1 )
+    {
+        projmat = dynamic_cast<ProjectedMatrices*>(proj_matrices);
+        assert( projmat );
+    }
 #endif
 
     new_orbitals->assign(**orbitals);
@@ -57,7 +63,7 @@ void OrbitalsExtrapolationOrder2::extrapolate_orbitals(LocGridOrbitals** orbital
 #if EXTRAPOLATE_H
                 if( ct.verbose>2 && onpe0 )
                     (*MPIdata::sout)<<"Extrapolate H..."<<endl;
-                proj_matrices->extrapolateHorder2(matQ,yyt,(*MPIdata::sout));
+                projmat->extrapolateHorder2(matQ,yyt,(*MPIdata::sout));
                 extrapolated_H_=true;
 #endif
             
@@ -88,7 +94,11 @@ void OrbitalsExtrapolationOrder2::extrapolate_orbitals(LocGridOrbitals** orbital
         if( ct.it_algo_type>1 )
         {
 #if EXTRAPOLATE_H
-            proj_matrices->updateHminus1();
+            ProjectedMatrices* projmat =
+                dynamic_cast<ProjectedMatrices*>(proj_matrices);
+            assert( projmat );
+
+            projmat->updateHminus1();
 #endif
         }
     }
@@ -97,7 +107,7 @@ void OrbitalsExtrapolationOrder2::extrapolate_orbitals(LocGridOrbitals** orbital
 #if EXTRAPOLATE_H
     if( ct.it_algo_type>1 )
     {
-        proj_matrices->saveH();
+        projmat->saveH();
     }
 #endif
     

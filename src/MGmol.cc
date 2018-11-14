@@ -805,8 +805,12 @@ void MGmol::printEigAndOcc()
         && ct.occupationWidthIsZero())
         && onpe0 )
     {
-        proj_matrices_->printEigenvalues(os_);
-        proj_matrices_->printOccupations(os_);
+        ProjectedMatrices* projmatrices =
+            dynamic_cast<ProjectedMatrices*>(proj_matrices_);
+        assert( projmatrices );
+
+        projmatrices->printEigenvalues(os_);
+        projmatrices->printOccupations(os_);
     }
 }
 
@@ -1295,8 +1299,30 @@ void MGmol::initKBR()
 double MGmol::get_evnl(const Ions& ions, LocGridOrbitals& orbitals)
 {
     evnl_tm_.start();
+    Control& ct = *(Control::instance());
 
-    double val=g_kbpsi_->getEvnl(ions, orbitals, proj_matrices_);
+    double val;
+    if( ct.short_sighted )
+    {
+        ProjectedMatricesSparse* projmatrices =
+            dynamic_cast<ProjectedMatricesSparse*>(proj_matrices_);
+        assert( projmatrices );
+        KBPsiMatrixSparse* kbpsi =
+            dynamic_cast<KBPsiMatrixSparse*>(g_kbpsi_);
+        assert( kbpsi );
+        val=kbpsi->getEvnl(ions, orbitals, projmatrices);
+    }
+    else
+    {
+        ProjectedMatrices* projmatrices =
+            dynamic_cast<ProjectedMatrices*>(proj_matrices_);
+        assert( projmatrices );
+        KBPsiMatrix* kbpsi =
+            dynamic_cast<KBPsiMatrix*>(g_kbpsi_);
+        assert( kbpsi );
+
+        val=kbpsi->getEvnl(ions, orbitals, projmatrices);
+    }
 
     evnl_tm_.stop();
 

@@ -28,20 +28,22 @@ void GrassmanCG::conjugate()
        // first compute matG = MG^T*G
        SquareLocalMatrices<MATDTYPE> matG(new_grad_->subdivx(), new_grad_->chromatic_number());
        new_pcgrad_->getLocalOverlap(*new_grad_, matG); // equivalent to pcgrad.computeLocalProduct(grad, matG);  
-       //compute trace(S^{-1}*matG 
-       double alpha = proj_matrices_->computeTraceInvSmultMat(matG);
+       //compute trace(S^{-1}*matG
+       ProjectedMatrices* projmatrices =
+           dynamic_cast<ProjectedMatrices*>(proj_matrices_);
+       double alpha = projmatrices->computeTraceInvSmultMat(matG);
 
        // compute matG = MG^T*G_old       
        matG.reset();
        new_pcgrad_->getLocalOverlap(*grad_, matG);
        // subtract trace from alpha
-       alpha -= proj_matrices_->computeTraceInvSmultMat(matG);
+       alpha -= projmatrices->computeTraceInvSmultMat(matG);
        
        //Denominator: compute matG = ((G_old)^T*MG_old)
        matG.reset();
        grad_->getLocalOverlap(*pcgrad_, matG); // equivalent to grad_->computeLocalProduct(*pcgrad_, matG);      
        //compute trace(S^{-1}*matG 
-       alpha /= proj_matrices_->computeTraceInvSmultMat(matG);    
+       alpha /= projmatrices->computeTraceInvSmultMat(matG);    
        
        //compute conjugate direction
        double tau = max(0.,alpha);
@@ -87,6 +89,9 @@ double GrassmanCG::computeStepSize(LocGridOrbitals& orbitals)
    // 6. dot product Zo^T*Zo
    // We only need to compute and save partial contributions of these 
    // matrices on the local subdomains, and consolidate them when needed
+   ProjectedMatrices* projmatrices =
+      dynamic_cast<ProjectedMatrices*>( proj_matrices_);
+   assert( projmatrices );
 
    // Compute Phi^T*H*Zo and S^{-1}*Zo^T*H*Phi
    dist_matrix::DistMatrix<DISTMATDTYPE> phiHzMat("phiHzMat", dim, dim);   
@@ -94,7 +99,7 @@ double GrassmanCG::computeStepSize(LocGridOrbitals& orbitals)
    // Compute S^{-1}*Zo^T*H*Phi
    dist_matrix::DistMatrix<DISTMATDTYPE> invSzHphiMat("invSzHphiMat", dim, dim);
    invSzHphiMat.transpose(1.0, phiHzMat, 0.);   
-   proj_matrices_->applyInvS(invSzHphiMat);
+   projmatrices->applyInvS(invSzHphiMat);
 
    // compute Zo^T*H*Zo 
    dist_matrix::DistMatrix<DISTMATDTYPE> zHzMat("zHzMat", dim, dim);      
@@ -108,8 +113,8 @@ double GrassmanCG::computeStepSize(LocGridOrbitals& orbitals)
    dist_matrix::DistMatrix<DISTMATDTYPE> invSphiTzMat("phiTzMat", dim, dim); 
    invSphiTzMat.transpose(1.0, invSzTphiMat, 0.);
    // apply invS
-   proj_matrices_->applyInvS(invSzTphiMat);
-   proj_matrices_->applyInvS(invSphiTzMat);   
+   projmatrices->applyInvS(invSzTphiMat);
+   projmatrices->applyInvS(invSphiTzMat);   
 
    // Compute Zo^T*Zo
    ss.reset();
@@ -119,7 +124,7 @@ double GrassmanCG::computeStepSize(LocGridOrbitals& orbitals)
    
    // Now compute Tr[S^{-1}*Z^T*(-G)] = Tr[S^{-1}*Zo^T*Phi*S^{-1}*Phi^T*H*Phi] - Tr[S^{-1}*Zo^T*H*Phi]
    // Compute Tr[S^{-1}*Zo^T*Phi*S^{-1}*Phi^T*H*Phi];
-   double anum = proj_matrices_->computeTraceMatMultTheta(invSzTphiMat);
+   double anum = projmatrices->computeTraceMatMultTheta(invSzTphiMat);
    //subtract Tr[S^{-1}*Zo^T*H*Phi];
    anum -= invSzHphiMat.trace();
    
@@ -127,22 +132,22 @@ double GrassmanCG::computeStepSize(LocGridOrbitals& orbitals)
    //Now compute denominator: Tr[S^{-1}(Z^T*H*Z) - S^{-1}Z^T*Z*S^{-1}*Phi^T*H*Phi] 
    //Compute Tr[S^{-1}(Z^T*H*Z) = Tr[S^{-1}*Zo^T*H*Zo]-2*Tr[S^{-1}*Zo^T*H*Phi*S^{-1}*Phi^T*Zo]+Tr[S^{-1}*Zo^T*Phi*S^{-1}*Phi^T*H*Phi*S^{-1}*Phi^T*Zo]
    //First compute Tr[S^{-1}*Zo^T*H*Zo]:
-   double denom1 = proj_matrices_->computeTraceInvSmultMat(zHzMat);
+   double denom1 = projmatrices->computeTraceInvSmultMat(zHzMat);
    //subtract 2*Tr[S^{-1}*Zo^T*H*Phi*S^{-1}*Phi^T*Zo]:
    work_matrix.gemm('n','n',1.,invSzHphiMat,invSphiTzMat,0.);
    denom1 -=2*work_matrix.trace();
    //add Tr[S^{-1}*Zo^T*Phi*S^{-1}*Phi^T*H*Phi*S^{-1}*Phi^T*Zo]:
    dist_matrix::DistMatrix<DISTMATDTYPE> pmat("pmat", dim, dim); 
-   proj_matrices_->computeMatMultTheta(invSzTphiMat,pmat);
+   projmatrices->computeMatMultTheta(invSzTphiMat,pmat);
    work_matrix.gemm('n','n',1.,pmat,invSphiTzMat,0.);   
    denom1 += work_matrix.trace();
    
    //Compute S^{-1}Z^T*Z*S^{-1}*Phi^T*H*Phi] = Tr[S^{-1}*Zo^T*Zo*S^{-1}*Phi^T*H*Phi] - Tr[S^{-1}*Zo^T*Phi*S^{-1}*Phi^T*Zo*S^{-1}*Phi^T*H*Phi]
    //first compute Tr[S^{-1}*Zo^T*Zo*S^{-1}*Phi^T*H*Phi]: 
-   double denom2 = proj_matrices_->computeTraceInvSmultMatMultTheta(zTzMat);
+   double denom2 = projmatrices->computeTraceInvSmultMatMultTheta(zTzMat);
    //subtract Tr[S^{-1}*Zo^T*Phi*S^{-1}*Phi^T*Zo*S^{-1}*Phi^T*H*Phi]:
    pmat.clear();
-   proj_matrices_->computeMatMultTheta(invSphiTzMat,pmat);
+   projmatrices->computeMatMultTheta(invSphiTzMat,pmat);
    work_matrix.gemm('n','n',1.,invSzTphiMat,pmat,0.);   
    denom2 -= work_matrix.trace();   
    

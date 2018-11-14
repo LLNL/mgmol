@@ -6,9 +6,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id: ProjectedMatricesSparse.h 261 2012-08-09 19:04:10Z jeanluc $
-#ifndef PROJECTED_MATRICES_SPARSE_H
-#define PROJECTED_MATRICES_SPARSE_H
+#ifndef MGMOL_PROJECTED_MATRICES_SPARSE_H
+#define MGMOL_PROJECTED_MATRICES_SPARSE_H
 
 #include "ProjectedMatricesInterface.h"
 
@@ -104,6 +103,8 @@ class ProjectedMatricesSparse:public ProjectedMatricesInterface
     }    
     void computeGenEigenInterval(std::vector<double>& interval, const int maxits, const double padding = 0.01);
 
+    double eigenvalue0_;
+
 public:  
     ProjectedMatricesSparse(const int ndim, LocalizationRegions *lrs, ClusterOrbitals * local_cluster = 0);
     ~ProjectedMatricesSparse();
@@ -124,6 +125,11 @@ public:
     void printMatrices(ostream& os)const;
     void printTimers(ostream& os);
     double getNel()const;
+    double getLowestEigenvalue()const
+    {
+        assert( eigenvalue0_==eigenvalue0_ );
+        return eigenvalue0_;
+    }
     void printGramMatrix2states(const int st1, const int st2, std::ostream& os)const;
 
 void initializeGramMatrix(const SquareLocalMatrices<MATDTYPE>& ss, const int orbitals_index)
@@ -415,6 +421,10 @@ void setHB2H()
 {
 }
 
+    DensityMatrixSparse& getDM()
+    {
+        return *dm_;
+    }
 };
 
 #endif

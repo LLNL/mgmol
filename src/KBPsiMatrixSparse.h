@@ -6,14 +6,14 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id:$
-#ifndef KBPSIMATRIX_SPARSE_H
-#define KBPSIMATRIX_SPARSE_H
+#ifndef MGMOL_KBPSIMATRIX_SPARSE_H
+#define MGMOL_KBPSIMATRIX_SPARSE_H
 
 #include "KBPsiMatrixInterface.h"
 #include "VariableSizeMatrix.h"
 #include "DataDistribution.h"
 #include "DistMatrixWithSparseComponent.h"
+#include "DensityMatrixSparse.h"
 
 #include "Timer.h"
 #include "GridFunc.h"
@@ -26,7 +26,7 @@ class Ions;
 class Ion;
 class LocGridOrbitals;
 class ProjectedMatricesInterface;
-class ProjectedMatricesSparseAOMM;
+class ProjectedMatricesSparse;
 
 class KBPsiMatrixSparse:public KBPsiMatrixInterface
 {
@@ -109,7 +109,7 @@ public:
 
     void printTimers(ostream& os);
     
-    double getEvnl(const Ions& ions, LocGridOrbitals& orbitals, ProjectedMatricesInterface* proj_matrices);
+    double getEvnl(const Ions& ions, LocGridOrbitals& orbitals, ProjectedMatricesSparse* proj_matrices);
     void computeKBpsi(Ions& ions, 
                       pb::GridFunc<ORBDTYPE>*, 
                       const int, const bool flag);
@@ -141,12 +141,9 @@ public:
     void setup(const Ions& ions, 
                const LocGridOrbitals& orbitals);
 
-    //void addTraces(const int gid,
-    //               const double* const mat_X, const int numst, 
-    //               double& energy)const;
     double getTraceDM(const int gid,
                       const DISTMATDTYPE* const mat_X, const int numst)const ;
-    double getTraceDM(const int gid, const ProjectedMatricesInterface *pmat)const;
+    double getTraceDM(const int gid, const DensityMatrixSparse& dm)const;
 };
 
 #endif

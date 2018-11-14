@@ -263,7 +263,7 @@ public:
     void computeHij(LocGridOrbitals& orbitals_i,
             LocGridOrbitals& orbitals_j,
             const Ions& ions,
-            const KBPsiMatrixInterface* const kbpsi,
+            const KBPsiMatrixSparse* const kbpsi,
             VariableSizeMatrix<sparserow>& mat, const bool consolidate);
     void computeHij(LocGridOrbitals& orbitals_i,
             LocGridOrbitals& orbitals_j,

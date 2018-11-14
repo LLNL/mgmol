@@ -6,9 +6,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
-#ifndef KBPSIMATRIX_H
-#define KBPSIMATRIX_H
+#ifndef MGMOL_KBPSIMATRIX_H
+#define MGMOL_KBPSIMATRIX_H
 
 #include <limits.h>
 #include <vector>
@@ -23,8 +22,8 @@
 
 class Ions;
 class Ion;
-//class LocGridOrbitals;
 class ProjectedMatrices;
+class DensityMatrix;
 
 #if ( UINT_MAX >= 4294967295 )
 
@@ -152,7 +151,8 @@ public:
 
     void printTimers(ostream& os);
     
-    double getEvnl(const Ions& ions, LocGridOrbitals& orbitals, ProjectedMatricesInterface* proj_matrices);
+    double getEvnl(const Ions& ions, LocGridOrbitals& orbitals,
+                   ProjectedMatrices* proj_matrices);
     double getValIonState(const int gid, const int st)const
     {
         assert( st<numst_ );

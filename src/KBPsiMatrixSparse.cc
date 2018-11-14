@@ -585,7 +585,9 @@ void KBPsiMatrixSparse::printTimers(ostream& os)
     trace_tm_.print(os);
 }
 
-double KBPsiMatrixSparse::getEvnl(const Ions& ions, LocGridOrbitals& orbitals, ProjectedMatricesInterface* proj_matrices)
+double KBPsiMatrixSparse::getEvnl(
+    const Ions& ions, LocGridOrbitals& orbitals,
+    ProjectedMatricesSparse* proj_matrices)
 {
     const int numst=orbitals.numst();
     if( numst==0 )return 0.;
@@ -604,7 +606,7 @@ double KBPsiMatrixSparse::getEvnl(const Ions& ions, LocGridOrbitals& orbitals, P
         for(short i=0;i<nprojs;i++)
         {
             const int gid=gids[i];
-            trace += getTraceDM(gid, proj_matrices);
+            trace += getTraceDM(gid, proj_matrices->getDM());
         }
         ion++;
     } 
@@ -619,35 +621,8 @@ double KBPsiMatrixSparse::getEvnl(const Ions& ions, LocGridOrbitals& orbitals, P
     return evnl*Ry2Ha;
 }
 
-/*
-double KBPsiMatrixSparse::getTraceDM(const int gid,
-                                     const double* const mat_X, const int numst)const
-{
-    double trace=0.;
-    
-    int *rindex = (int *)(*kbpsimat_).getTableValue(gid);
-    if(rindex == NULL) return trace;
-    
-    const int lrindex = *rindex;
-    for(int p1 = 0; p1 < (*kbpsimat_).nnzrow(lrindex); p1++)
-    {
-        const int st1 =  (*kbpsimat_).getColumnIndex(lrindex, p1);
-        const double t1 = getValIonState(gid,st1) ;
-        const double* const pmat=&mat_X[st1*numst];
-         
-        for(int p2 = 0; p2 < (*kbpsimat_).nnzrow(lrindex); p2++)
-        {
-            const int st2 =  (*kbpsimat_).getColumnIndex(lrindex, p2);               
-               
-            trace += t1 * getValIonState(gid,st2) * pmat[st2];
-        }
-    }
-    
-    return trace;
-}
-*/
-double KBPsiMatrixSparse::getTraceDM(const int gid,
-                                     const DISTMATDTYPE* const mat_X, const int numst)const
+double KBPsiMatrixSparse::getTraceDM(
+    const int gid, const DISTMATDTYPE* const mat_X, const int numst)const
 {
     double trace=0.;
     
@@ -664,8 +639,8 @@ double KBPsiMatrixSparse::getTraceDM(const int gid,
          
         for(int p2 = 0; p2 < nnzrow1; p2++)
         {
-            const int st2 =  (*kbpsimat_).getColumnIndex(lrindex, p2);               
-               
+            const int st2 =  (*kbpsimat_).getColumnIndex(lrindex, p2);
+ 
             trace += t1 * (*kbpsimat_).getRowEntry(lrindex, p2) * pmat[st2]; //getValIonState(gid,st2) * pmat[st2];
         }
     }
@@ -673,7 +648,9 @@ double KBPsiMatrixSparse::getTraceDM(const int gid,
     return trace;
 }
 
-double KBPsiMatrixSparse::getTraceDM(const int gid, const ProjectedMatricesInterface *pmat)const
+double KBPsiMatrixSparse::getTraceDM(
+    const int gid, const DensityMatrixSparse& dm)const
+//    const int gid, const ProjectedMatricesInterface *pmat)const
 {
     trace_tm_.start();
     
@@ -701,7 +678,7 @@ double KBPsiMatrixSparse::getTraceDM(const int gid, const ProjectedMatricesInter
         const double t1 = vval[p1]; //getValIonState(gid,st1) ;
          
         vector<double> row_values;
-        pmat->getDMEntries(st1,cols,row_values);
+        dm.getEntries(st1,cols,row_values);
         assert( row_values.size()==cols.size() );
         
         for(int p2 = 0; p2 < nnzrow1; p2++)

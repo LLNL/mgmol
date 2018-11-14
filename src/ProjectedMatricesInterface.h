@@ -139,30 +139,6 @@ public:
   
     //////////////////////////////////////////////////////////////////////
     /* Default implementation - returns error message */
-    virtual double getDMEntry(const int row, const int col)const
-    {
-        (void) row;
-        (void) col;
-
-        exitWithErrorMessage("getDMEntry");
-        return 0.;
-    }
-    virtual void getDMEntries(const int row, const std::vector<int>& cols,
-                                std::vector<double>& values)const
-    {
-        (void) row;
-        (void) cols;
-        (void) values;
-
-        exitWithErrorMessage("getDMEntries");
-    }
-
-    virtual void printEigenvalues(std::ostream& os)const
-    {
-        (void) os;
-
-        exitWithErrorMessage("printEigenvalues");
-    }
     virtual void printOccupations(std::ostream& os)const    
     {
         (void) os;
@@ -176,14 +152,6 @@ public:
         return 0;   
     }
     virtual double computeCond()=0;
-    virtual double getExpectation(const dist_matrix::DistMatrix<DISTMATDTYPE>& A)   
-    {
-        (void) A;
-
-        exitWithErrorMessage("getExpectation");
-        
-        return 0;
-    }
     virtual void getOccupations(std::vector<PROJMATDTYPE>& occ)const                      
     {
         (void) occ;
@@ -215,7 +183,7 @@ public:
         exitWithErrorMessage("computeChemicalPotentialAndOccupations");
         
         return 0;
-    }                               
+    }
     virtual const dist_matrix::DistMatrix<DISTMATDTYPE>& dm()const
     {
         exitWithErrorMessage("dm");
@@ -224,22 +192,6 @@ public:
         
         return (*tmp);
     }  
-    virtual const dist_matrix::DistMatrix<DISTMATDTYPE>& kernel4dot()const
-    {
-        exitWithErrorMessage("kernel4dot");
-
-        dist_matrix::DistMatrix<DISTMATDTYPE>* tmp = new dist_matrix::DistMatrix<DISTMATDTYPE>("tmp");
-        
-        return (*tmp);        
-    }  
-    virtual const dist_matrix::DistMatrix<DISTMATDTYPE>& getLS()const
-    {
-        exitWithErrorMessage("getLS");
-
-        dist_matrix::DistMatrix<DISTMATDTYPE>* tmp = new dist_matrix::DistMatrix<DISTMATDTYPE>("tmp");
-        
-        return (*tmp);
-    }    
     virtual void saveDM()
     {
         exitWithErrorMessage("saveDM");
@@ -248,7 +200,6 @@ public:
     {
         exitWithErrorMessage("resetDM");
     }
-       
     virtual void updateDMwithRelax(const double mix, const int itindex)
     {
         (void)mix;
@@ -256,53 +207,6 @@ public:
         
         exitWithErrorMessage("updateDMwithRelax");
     }       
-    virtual void initExtrapolationH()
-    {
-        exitWithErrorMessage("dressupDM");
-    }     
-    virtual void extrapolateHorder2(dist_matrix::DistMatrix<DISTMATDTYPE> matQ,
-                            dist_matrix::DistMatrix<DISTMATDTYPE>& yyt, std::ostream& os)
-    {
-        (void)matQ;
-        (void)yyt;
-        (void) os;
-        
-        exitWithErrorMessage("extrapolateHorder2");
-    } 
-    virtual void extrapolateHorder3()
-    {
-        exitWithErrorMessage("extrapolateHorder3");
-    }     
-    virtual void saveH()
-    {
-        exitWithErrorMessage("saveH");
-    }     
-    virtual void updateHminus1()
-    {
-        exitWithErrorMessage("updateHminus1");
-    }    
-    virtual void updateHminus2()
-    {
-        exitWithErrorMessage("updateHminus2");
-    }              
-    virtual void updateHminus2(dist_matrix::DistMatrix<DISTMATDTYPE> matQ,
-                            dist_matrix::DistMatrix<DISTMATDTYPE>& yyt, std::ostream& os)
-    {
-        (void) matQ;
-        (void) yyt;
-        (void) os;
-                
-        exitWithErrorMessage("updateHminus2");
-    }                              
-    virtual void updateHminus1tmp(dist_matrix::DistMatrix<DISTMATDTYPE> matQ,
-                          dist_matrix::DistMatrix<DISTMATDTYPE>& yyt, std::ostream& os)
-    {
-        (void) matQ;
-        (void) yyt;
-        (void) os;
-        
-        exitWithErrorMessage("updateHminus1tmp");
-    }                           
     virtual int read_dm_hdf5(hid_t file_id)
     {
         (void) file_id;
@@ -319,20 +223,6 @@ public:
         
         return 0;
     }     
-    virtual void updateDMwithEigenstates(const int iterative_index)
-    {
-        (void) iterative_index;
-        
-        exitWithErrorMessage("updateDMwithEigenstates");
-    }     
-    virtual void updateDMwithEigenstatesAndRotate(const int iterative_index,
-                                          dist_matrix::DistMatrix<DISTMATDTYPE>&  zz)
-    {
-        (void) iterative_index;
-        (void) zz;
-        
-        exitWithErrorMessage("updateDMwithEigenstatesAndRotate");
-    }
     virtual void updateDM(const int iterative_index)
     {
         (void) iterative_index;
@@ -350,151 +240,7 @@ public:
         
         exitWithErrorMessage("initializeMatB");
     }  
-
-    virtual dist_matrix::DistMatrix<DISTMATDTYPE> getDistMatrixFromLocalMatrices(const LocalMatrices<MATDTYPE>& ss)
-    {
-        (void) ss;
-        
-        exitWithErrorMessage("getDistMatrixFromLocalMatrices");
-        
-        dist_matrix::DistMatrix<DISTMATDTYPE> dummy("dummy");
-        
-        return dummy;        
-    }
-    
-
-    virtual void updateSubMatLS()
-    {
-        exitWithErrorMessage("ProjectedMatricesInterface::updateSubMatLS()");
-    }  
-    virtual const dist_matrix::SubMatrices<DISTMATDTYPE>& getSubMatLS()const
-    {
-        exitWithErrorMessage("getSubMatLS");
-        
-        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-        MPI_Comm comm=mmpi.commSameSpin();
-        std::vector<std::vector<int> > indexes;
-        
-        dist_matrix::DistMatrix<DISTMATDTYPE> dm("dm");
-
-        dist_matrix::SubMatricesIndexing<DISTMATDTYPE> submat_indexing(indexes, comm, dm);
-
-        dist_matrix::SubMatrices<DISTMATDTYPE>* tmp = new dist_matrix::SubMatrices<DISTMATDTYPE>("tmp", indexes, comm, dm, submat_indexing);
-        
-        return (*tmp);        
-    }  
-    virtual void setGram2Id(const int orbitals_index)
-    {
-        (void) orbitals_index;
-        
-        exitWithErrorMessage("setGram2Id");
-    }  
-    virtual void getLoewdinTransform(SquareLocalMatrices<MATDTYPE>& localP)
-    {
-        (void) localP;
-        
-        exitWithErrorMessage("getLoewdinTransform");
-    }  
-
-    virtual double getLowestEigenvalue()const
-    {
-//        exitWithErrorMessage("getLowestEigenvalue");
-        
-        return 0.;
-    }  
-    virtual void rotateAll(const dist_matrix::DistMatrix<DISTMATDTYPE>&  rotation_matrix,
-                           const bool flag_eigen)
-    {
-        (void) rotation_matrix;
-        (void) flag_eigen;
-        
-        exitWithErrorMessage("rotateAll");
-    }   
-    
-/*
-    virtual double computeTraceSubmatXmultNewGram(ProjectedMatricesInterface &projMat)
-    {
-       (void) projMat;
-        exitWithErrorMessage("computeProdGramWithTheta");       
-    } 
-*/    
-    virtual void computeProdGramWithTheta(ProjectedMatricesInterface &projMat)
-    {
-       (void) projMat;
-        exitWithErrorMessage("computeProdGramWithTheta");       
-    }    
-    virtual double computeTraceInvSmultMat(const SquareLocalMatrices<MATDTYPE>& mat, const bool consolidate)
-    {
-       (void) mat;
-       (void) consolidate;
-       exitWithErrorMessage("computeTraceInvSmultMat");
-       
-       return 0;              
-    }
-    virtual double computeTraceInvSmultMat(VariableSizeMatrix<sparserow>& mat, const bool consolidate)
-    {
-       (void) mat;
-       (void) consolidate;
-       exitWithErrorMessage("computeTraceInvSmultMat");
-       
-       return 0;              
-    }    
-    virtual double computeTraceSubmatXmultMatmultTheta(SquareLocalMatrices<MATDTYPE>& mat, const bool consolidate)
-    {
-       (void) mat;
-       (void) consolidate;
-       exitWithErrorMessage("computeTraceSubmatXmultMatmultTheta");
-       
-       return 0;              
-    }    
-    virtual double computeTraceInvSmultMat(const SquareLocalMatrices<MATDTYPE>& mat)
-    {
-       (void) mat;
-       exitWithErrorMessage("computeTraceInvSmultMat");
-       
-       return 0;              
-    } 
-    
-    virtual double computeTraceInvSmultMat(const dist_matrix::DistMatrix<DISTMATDTYPE>& mat) 
-    {
-       (void) mat;
-       exitWithErrorMessage("computeTraceInvSmultMat");
-       
-       return 0;              
-    }         
-
-    virtual double computeTraceInvSmultMatMultTheta(const dist_matrix::DistMatrix<DISTMATDTYPE>& mat) 
-    {
-       (void) mat;
-       exitWithErrorMessage("computeTraceInvSmultMatMultTheta");
-       
-       return 0;              
-    }      
-
-    virtual void applyInvS(dist_matrix::DistMatrix<DISTMATDTYPE>& mat) 
-    {
-       (void) mat;
-       exitWithErrorMessage("applyInvS");
-       
-       return;              
-    } 
-
-    virtual double computeTraceMatMultTheta(const dist_matrix::DistMatrix<DISTMATDTYPE>& mat) 
-    {
-       (void) mat;
-       exitWithErrorMessage("computeTraceMatMultTheta");
-       
-       return 0;              
-    }     
-
-    virtual void computeMatMultTheta(const dist_matrix::DistMatrix<DISTMATDTYPE>& mat, dist_matrix::DistMatrix<DISTMATDTYPE>& pmat) 
-    {
-       (void) mat;
-       (void) pmat;
-       exitWithErrorMessage("computeMatMultTheta");
-       
-       return;              
-    }          
+    virtual double getLowestEigenvalue()const=0;
 };
 
 #endif

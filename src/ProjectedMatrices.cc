@@ -506,19 +506,10 @@ double ProjectedMatrices::getExpectationH()
     return getExpectation(*matHB_);
 }
 
-double ProjectedMatrices::getExpectation(const dist_matrix::DistMatrix<DISTMATDTYPE>& A)
+double ProjectedMatrices::getExpectation(
+    const dist_matrix::DistMatrix<DISTMATDTYPE>& A)
 {
-    work_->gemm('n', 'n', 1., A, dm_->getMatrix(), 0.);
-    double val=work_->trace();
-    
-    if( with_spin_ ){
-        double tmp=0.;
-        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-        mmpi.allreduceSpin(&val, &tmp, 1, MPI_SUM);
-        val=tmp;
-    }
-    
-    return val;
+    return dm_->getExpectation(A);
 }
 
 // strip dm from the overlap contribution

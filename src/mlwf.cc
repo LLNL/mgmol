@@ -13,7 +13,7 @@
 #include "NOLMOTransform.h"
 #include "LocGridOrbitals.h"
 #include "ReplicatedWorkSpace.h"
-#include "ProjectedMatricesInterface.h"
+#include "ProjectedMatrices.h"
 #include "LocalizationRegions.h"
 #include "blas3_c.h"
 #include "mputils.h"
@@ -286,8 +286,12 @@ int MGmol::get_NOLMO(NOLMOTransform& noot,
             distributeColumns(sincos[i],noot.b(i+2*d));
     }
     sincos.clear();
-    
-    noot.init_transform(proj_matrices_->getLS(),true);        
+   
+    ProjectedMatrices* projmatrices =
+        dynamic_cast<ProjectedMatrices*>( proj_matrices_ );
+    assert( projmatrices );
+
+    noot.init_transform(projmatrices->getLS(),true);        
     noot.compute_transform(100, 1.e-6);
     
     if( apply_flag )
@@ -301,7 +305,7 @@ int MGmol::get_NOLMO(NOLMOTransform& noot,
         
         // include initial a0 into transformation a
         ReplicatedWorkSpace& wspace( ReplicatedWorkSpace::instance() );
-        wspace.initSquareMatrix(proj_matrices_->getLS());
+        wspace.initSquareMatrix(projmatrices->getLS());
         wspace.setUpperTriangularSquareMatrixToZero();
 
         dtrsm_c('l', 'l', 'n', 'n', numst, numst,
@@ -329,7 +333,8 @@ int MGmol::get_NOLMO(NOLMOTransform& noot,
         dist_matrix::DistMatrix<DISTMATDTYPE>  u_dis("Udis", numst, numst);
         u_dis.init(a, numst);
 
-        ProjectedMatricesInterface* proj_matrices=orbitals.proj_matrices();
+        ProjectedMatrices* proj_matrices =
+            dynamic_cast<ProjectedMatrices*>( orbitals.proj_matrices() );
         proj_matrices->rotateAll(u_dis, false);
         //orbitals.rotateSubMatrices(u_dis);
     }

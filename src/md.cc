@@ -76,7 +76,10 @@ void MGmol::preWFextrapolation()
     else
     {
 #if EXTRAPOLATE_H
-        proj_matrices_->initExtrapolationH();
+        ProjectedMatrices* projmat =
+            dynamic_cast<ProjectedMatrices*>(proj_matrices_);
+        assert( projmat );
+        projmat->initExtrapolationH();
 #endif
     }
 }

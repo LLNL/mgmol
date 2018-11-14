@@ -6,9 +6,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id:$
-#ifndef ORBITALSEXTRAPOLATIONORDER2_H
-#define ORBITALSEXTRAPOLATIONORDER2_H
+#ifndef MGMOL_ORBITALSEXTRAPOLATIONORDER2_H
+#define MGMOL_ORBITALSEXTRAPOLATIONORDER2_H
 
 #include "OrbitalsExtrapolation.h"
 

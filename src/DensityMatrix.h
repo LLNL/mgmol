@@ -146,6 +146,7 @@ public:
     void diagonalize(const char eigv,
                      vector<DISTMATDTYPE>& occ,
                      dist_matrix::DistMatrix<DISTMATDTYPE>& vect);
+    double getExpectation(const dist_matrix::DistMatrix<DISTMATDTYPE>& A);
 };
 
 #endif

@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #include <iostream>
 #include <cmath>
 using namespace std;
@@ -28,6 +27,7 @@ using namespace std;
 #include "ReplicatedWorkSpace.h"
 #include "KBPsiMatrixSparse.h"
 #include "ProjectedMatrices.h"
+#include "ProjectedMatricesSparse.h"
 #include "Forces.h"
 
 
@@ -499,6 +499,11 @@ void Forces::nlforceSparse(LocGridOrbitals& orbitals, Ions& ions)
     map<int,double*> erg;
     if( ct.short_sighted )
     {
+        ProjectedMatricesSparse* proj_matrices =
+            dynamic_cast<ProjectedMatricesSparse*>(proj_matrices_);
+        assert( projmatrices );
+        DensityMatrixSparse& dm( proj_matrices->getDM());
+
         // loop over all the ions
         // parallelization over ions by including only those centered in subdomain
         const vector<Ion*>::const_iterator iend=ions.local_ions().end();
@@ -534,7 +539,7 @@ void Forces::nlforceSparse(LocGridOrbitals& orbitals, Ions& ions)
                 {
                     short dir   =it/NPTS;
                     short ishift=it%NPTS;
-                    double alpha=kbpsi[dir][ishift]->getTraceDM(gid, proj_matrices_);
+                    double alpha=kbpsi[dir][ishift]->getTraceDM(gid, dm);
                     erg[gid][NPTS*dir+ishift]=alpha*kbmult;
                 }
             }

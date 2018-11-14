@@ -6,11 +6,7 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #include <cassert>
-//#ifdef _OPENMP
-//#include <omp.h>
-//#endif
 
 #include "MGmol_blas1.h"
 #include "DistMatrix.h"
@@ -90,7 +86,7 @@ void MGmol::computeHij(LocGridOrbitals& orbitals_i,
 void MGmol::computeHij(LocGridOrbitals& orbitals_i,
             LocGridOrbitals& orbitals_j,
             const Ions& ions,
-            const KBPsiMatrixInterface* const kbpsi,
+            const KBPsiMatrixSparse* const kbpsi,
             VariableSizeMatrix<sparserow>& mat, const bool consolidate)
 {
 #ifdef PRINT_OPERATIONS

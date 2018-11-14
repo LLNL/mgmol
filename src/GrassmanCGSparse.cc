@@ -29,6 +29,9 @@ void GrassmanCGSparse::conjugate()
    // the resulting matrices prior to performing operations using the VariableSizeMatrix format.
    if(conjugate_)
    {
+       ProjectedMatricesSparse* projmatrices =
+           dynamic_cast<ProjectedMatricesSparse*>( proj_matrices_ );
+
        //compute G-G_old
        const double m_one = -1.;
        new_grad_->axpy(m_one, *grad_);
@@ -37,19 +40,19 @@ void GrassmanCGSparse::conjugate()
        SquareLocalMatrices<MATDTYPE> matG(new_grad_->subdivx(), new_grad_->chromatic_number());
        new_grad_->getLocalOverlap(*new_pcgrad_, matG); 
        //compute trace(S^{-1}*matG 
-       double alpha = proj_matrices_->computeTraceInvSmultMat(matG, true);
+       double alpha = projmatrices->computeTraceInvSmultMat(matG, true);
 
        // compute matG = G_old^T*MG       
        matG.reset();
        grad_->getLocalOverlap(*new_pcgrad_, matG);
        // subtract trace from alpha
-       alpha -= proj_matrices_->computeTraceInvSmultMat(matG, true);
+       alpha -= projmatrices->computeTraceInvSmultMat(matG, true);
        
        //Denominator: compute matG = ((G_old)^T*MG_old)^T = MG_old^T*G_old
        matG.reset();
        pcgrad_->getLocalOverlap(*grad_, matG); 
        //compute trace(S^{-1}*matG 
-       alpha /= proj_matrices_->computeTraceInvSmultMat(matG);           
+       alpha /= projmatrices->computeTraceInvSmultMat(matG, true);           
        
        //compute conjugate direction
        double tau = max(0.,alpha);
