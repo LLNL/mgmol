@@ -6,12 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-////////////////////////////////////////////////////////////////////////////////
-//
-// MPIdata.C
-//
-////////////////////////////////////////////////////////////////////////////////
-// $Id$
 // Adapted from MPIdata.C,v 1.4 2002/01/10 00:36:34 fgygi
 
 #include "MPIdata.h"

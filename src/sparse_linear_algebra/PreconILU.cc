@@ -539,7 +539,7 @@ int PreconILU<T>::ilu0 ( LinearSolverMatrix<T2>& csmat_)
 
     std::vector<int>::const_iterator start, end, lstart, lend, row;
     std::vector<int>::iterator ustart, uend, jpiv;
-    TvecIterator ldstart, udstart, ldend, udend, ldptr, udptr;
+    TvecIterator ldstart, udstart, ldptr, udptr;
     LUvecIterator dstart, dptr;
 
 /*-------------------- beginning of main loop */
@@ -681,7 +681,7 @@ int PreconILU<T>::milut ( LinearSolverMatrix<lsdatatype>& csmat_)
 
     std::vector<int>::const_iterator start, end, lstart, lend, row;
     std::vector<int>::iterator ustart, uend, jpiv;
-    TvecIterator ldstart, udstart, ldend, udend, ldptr, udptr;
+    TvecIterator ldstart, udstart, ldend, ldptr, udptr;
     LSvecIterator dstart, dend, dptr;
     
 /*-------------------- beginning of main loop */
@@ -944,7 +944,7 @@ int PreconILU<T>::ilut ( LinearSolverMatrix<lsdatatype>& csmat_)
 
     std::vector<int>::const_iterator start, end, lstart, lend, row;
     std::vector<int>::iterator ustart, uend, jpiv;
-    TvecIterator ldstart, udstart, ldend, udend, ldptr, udptr;
+    TvecIterator ldstart, udstart, ldptr, udptr;
     LSvecIterator dstart, dend, dptr;
 
 /*-------------------- beginning of main loop */

@@ -6,22 +6,15 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-////////////////////////////////////////////////////////////////////////////////
-//
-//  Timer.h
-//
-////////////////////////////////////////////////////////////////////////////////
-// $Id: Timer.h,v 1.6 2010/01/29 01:10:10 jeanluc Exp $
-
-#ifndef TIMER_H
-#define TIMER_H
+#ifndef MGMOL_TIMER_H
+#define MGMOL_TIMER_H
 
 #include <time.h>
 #include <sys/time.h>
 #include <cstring>
 #include <iomanip>
 #include <iostream>
-#include "mpi.h"
+#include <mpi.h>
 
 class Timer
 {

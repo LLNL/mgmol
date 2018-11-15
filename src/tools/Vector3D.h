@@ -6,18 +6,10 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-////////////////////////////////////////////////////////////////////////////////
-//
-// Vector3D.h
-//
-// double 3-vectors
-//
-////////////////////////////////////////////////////////////////////////////////
-// $Id$
 // Adapted from D3vector.h,v 1.11 2002/06/26 22:53:45 fgygi
 
-#ifndef Vector3D_H
-#define Vector3D_H
+#ifndef MGMOL_Vector3D_H
+#define MGMOL_Vector3D_H
 
 #include <iostream>
 #include <cmath>

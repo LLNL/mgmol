@@ -19,7 +19,9 @@ using namespace std;
    s(f) = -f ln(f) - (1-f) ln(1-f).
    Returns the entropy = trace[s(f)] = sum {s(f)}_i
 */
-double entropy_eval(const std::vector<double>& f, std::vector<double>& s, const double occ_factor)
+template<typename T>
+double entropy_eval(const std::vector<T>& f, std::vector<T>& s,
+                    const double occ_factor)
 {
     const int dim = f.size();
     assert( s.size() == dim );
@@ -40,11 +42,11 @@ double entropy_eval(const std::vector<double>& f, std::vector<double>& s, const 
         assert( fi>=0.-tol_interval );
         assert( fi<=1.+tol_interval );
         if(fi<tol){
-            s[st] = (1.-fi)*log(1.-fi);
+            s[st] = (T)(1.-fi)*log(1.-fi);
         }else if( fi>1.-tol ){
-            s[st] = fi*log(fi);
+            s[st] = (T)(fi*log(fi));
         }else{
-            s[st] = fi*log(fi)+(1.-fi)*log(1.-fi);
+            s[st] = (T)(fi*log(fi)+(1.-fi)*log(1.-fi));
         }
         entropy += s[st];
         
@@ -54,48 +56,17 @@ double entropy_eval(const std::vector<double>& f, std::vector<double>& s, const 
     return (double)(-occ_factor)*entropy; // in units of kbt
 }
 
-double entropy_eval(const std::vector<float>& f, std::vector<float>& s, const double occ_factor)
-{
-    const int dim = f.size();
-    assert( s.size() == dim );
-
-    const double tol=1.e-15;
-
-#ifndef NDEBUG
-    const double tol_interval = 1.e-6;
-#endif
-    
-    double entropy = 0.;
-
-    for (int st = 0; st < dim; st++)
-    {
-        const double fi = (double)f[st];
-//        if( fi>1.+tol_interval )
-//            (*MPIdata::sout)<<setprecision(15)<<scientific<<"f["<<st<<"]="<<fi<<endl;
-        assert( fi>=0.-tol_interval );
-        assert( fi<=1.+tol_interval );
-        if(fi<tol){
-            s[st] = (float)((1.-fi)*log(1.-fi));
-        }else if( fi>1.-tol ){
-            s[st] = (float)(fi*log(fi));
-        }else{
-            s[st] = (float)(fi*log(fi)+(1.-fi)*log(1.-fi));
-        }
-        entropy += s[st];
-    }
-    
-    return (double)(-occ_factor)*entropy; // in units of kbt
-}
 
 // Evaluate entropy given 'energies'
+template<typename T>
 double entropy_evalFromEnergies(const double mu,
                           const int max_occ,
                           const double kBT,
-                          const std::vector<double>& energies, 
-                          std::vector<double>& s, 
+                          const std::vector<T>& energies, 
+                          std::vector<T>& s, 
                           const double occ_factor)
 {
-   std::vector<double> f((int)energies.size(),0.);
+   std::vector<T> f((int)energies.size(),0.);
    
    // calculate occupations based on fermi-dirac function
    fermi_distribution(mu,max_occ,kBT,energies,f );
@@ -106,21 +77,12 @@ double entropy_evalFromEnergies(const double mu,
    return ent;
 }
 
-// Evaluate entropy given 'energies'
-double entropy_evalFromEnergies(const double mu,
+template double entropy_eval(const std::vector<double>& f,
+                             std::vector<double>& s,
+                             const double occ_factor);
+template double entropy_evalFromEnergies(const double mu,
                           const int max_occ,
                           const double kBT,
-                          const std::vector<float>& energies, 
-                          std::vector<float>& s, 
-                          const double occ_factor)
-{
-   std::vector<float> f((int)energies.size(),0.);
-   
-   // calculate occupations based on fermi-dirac function
-   fermi_distribution(mu,max_occ,kBT,energies,f );
-   
-   // call entropy function
-   double ent = entropy_eval(f,s,occ_factor);   
-   
-   return ent;
-}
+                          const std::vector<double>& energies,
+                          std::vector<double>& s,
+                          const double occ_factor);

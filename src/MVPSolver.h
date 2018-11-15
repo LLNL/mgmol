@@ -5,10 +5,10 @@
 // All rights reserved. 
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
+#ifndef MGMOL_MVPSOLVER_H
+#define MGMOL_MVPSOLVER_H
 
-// $Id:$
 #include "DistMatrix.h"
-// pb
 #include "Timer.h"
 
 class LocGridOrbitals;
@@ -74,3 +74,6 @@ public:
     int solve(LocGridOrbitals& orbitals);
     void printTimers(std::ostream& os);
 };
+
+#endif
+

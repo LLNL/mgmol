@@ -6,16 +6,10 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-////////////////////////////////////////////////////////////////////////////////
-//
-// Timeout.h
-//
-////////////////////////////////////////////////////////////////////////////////
-// $Id$
 // Adapted form Jeep: Timeout.h,v 1.4 2001/10/10 22:42:44
 
-#ifndef TIMEOUT_H
-#define TIMEOUT_H
+#ifndef MGMOL_TIMEOUT_H
+#define MGMOL_TIMEOUT_H
 
 #include<iostream>
 #include<iomanip>

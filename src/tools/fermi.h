@@ -6,20 +6,16 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef FERMI_H
-#define FERMI_H
+#ifndef MGMOL_FERMI_H
+#define MGMOL_FERMI_H
 
 #include <vector>
 
+template<typename T>
 double fermi_distribution(const double mu,
                           const int max_numst,
                           const double kBT,
-                          const std::vector<double>& energies,
-                          std::vector<double>& occ );
+                          const std::vector<T>& energies,
+                          std::vector<T>& occ );
 
-double fermi_distribution(const double mu,
-                          const int max_numst,
-                          const double kBT,
-                          const std::vector<float>& energies,
-                          std::vector<float>& occ );
 #endif

@@ -6,9 +6,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id:$
-#ifndef SUBSPACEPROJ_H
-#define SUBSPACEPROJ_H
+#ifndef MGMOL_SUBSPACEPROJ_H
+#define MGMOL_SUBSPACEPROJ_H
 
 #include "global.h"
 
