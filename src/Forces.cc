@@ -499,10 +499,10 @@ void Forces::nlforceSparse(LocGridOrbitals& orbitals, Ions& ions)
     map<int,double*> erg;
     if( ct.short_sighted )
     {
-        ProjectedMatricesSparse* proj_matrices =
+        ProjectedMatricesSparse* projmatrices =
             dynamic_cast<ProjectedMatricesSparse*>(proj_matrices_);
         assert( projmatrices );
-        DensityMatrixSparse& dm( proj_matrices->getDM());
+        DensityMatrixSparse& dm( projmatrices->getDM());
 
         // loop over all the ions
         // parallelization over ions by including only those centered in subdomain
