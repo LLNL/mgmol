@@ -28,7 +28,8 @@
 #include <vector>
 #include <map>
 #include <iostream>
-#include <boost/smart_ptr.hpp>
+#include <memory>
+
 template <class T>
 class LocalMatrices;
 template <class T>
@@ -79,7 +80,7 @@ private:
     
     int numst_;
 
-    boost::shared_ptr<FunctionsPacking> pack_;
+    std::shared_ptr<FunctionsPacking> pack_;
 
     int     chromatic_number_;
 
@@ -163,12 +164,12 @@ private:
     void setup(MasksSet* masks, MasksSet* corrmasks, LocalizationRegions* lrs);
 
     /* Data distribution objects */
-    boost::shared_ptr<DataDistribution> distributor_diagdotprod_;
-    boost::shared_ptr<DataDistribution> distributor_normalize_;    
+    std::shared_ptr<DataDistribution> distributor_diagdotprod_;
+    std::shared_ptr<DataDistribution> distributor_normalize_;    
 
 protected:
    
-    boost::shared_ptr<Masks4Orbitals> masks4orbitals_;
+    std::shared_ptr<Masks4Orbitals> masks4orbitals_;
        
     const pb::Grid& grid_;
     

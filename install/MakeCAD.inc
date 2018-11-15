@@ -1,8 +1,8 @@
 #Load following modules:
-#module load PE-gnu
+#module load PE-gnu/3.0
 #module load boost
 #module load openBLAS
-#module load scalapack/2.0.2
+#module load scalapack
 #module load hdf5-parallel
 
 #platform

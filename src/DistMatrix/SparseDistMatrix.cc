@@ -263,7 +263,7 @@ void SparseDistMatrix<T>::push_back(const int index1, const int index2,
   const int pe=pr+pc*nprow_; // destination PE
   assert( pe>=0 );
   assert( pe<(int)map_val_.size() );
-  assert( !isnan(val) );
+  assert( !std::isnan(val) );
 
   map_val_[pe][(index1<<SHIFT)+index2]+=val;
 }

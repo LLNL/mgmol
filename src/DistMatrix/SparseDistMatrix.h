@@ -6,15 +6,14 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id: SparseDistMatrix.h 17 2012-08-15 17:11:26Z jeanluc $
 // Storage class for matrix distributed over a set of processors
 // Each processor may own some contributions to the matrix denoted
 // by a set of indices and values. The global matrix is the sum of
 // all the contributions. Indices can be duplicated to represent 
 // multiple contributions on a single processor.
 
-#ifndef SPARSEDISTMATRIX_H
-#define SPARSEDISTMATRIX_H
+#ifndef MGMOL_SPARSEDISTMATRIX_H
+#define MGMOL_SPARSEDISTMATRIX_H
 
 #if USE_MPI
 #include <mpi.h>
@@ -30,7 +29,7 @@ typedef int MPI_Comm;
 #include <vector>
 #include <map>
 #include <iostream>
-#include <boost/smart_ptr.hpp>
+#include <memory>
 
 namespace dist_matrix{
 
@@ -59,7 +58,7 @@ private:
     RemoteTasksDistMatrix<T>* rtasks_distmatrix_;
     //vector<short> other_tasks_indexes_;
     
-    boost::shared_ptr<MPI_DistMatrixCommunicator>   partition_comm_;
+    std::shared_ptr<MPI_DistMatrixCommunicator>   partition_comm_;
     int        ntasks_per_partition_;
     int        npartitions_;
     

@@ -383,7 +383,7 @@ void BlockVector<T>::hasnan(const int j)const
 {
     for(int i=0;i<ld_;i++)
     {
-        if( isnan(vect_[j][i]) )
+        if( std::isnan(vect_[j][i]) )
             (*MPIdata::sout)<<"BlockVector: Nan in column "<<j<<", row "<<i<<endl;
     }
 }

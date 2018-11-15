@@ -88,7 +88,6 @@ public:
         DistMatrix<T>::operator=(mat);
         return *this;
     }
-    
 };
 
 }
