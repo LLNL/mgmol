@@ -1,8 +1,8 @@
 // Copyright (c) 2017, Lawrence Livermore National Security, LLC. Produced at
-// the Lawrence Livermore National Laboratory. 
+// the Lawrence Livermore National Laboratory.
 // Written by J.-L. Fattebert, D. Osei-Kuffuor and I.S. Dunn.
 // LLNL-CODE-743438
-// All rights reserved. 
+// All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
@@ -15,125 +15,120 @@
 // Limited memory BFGS method
 
 #include "LBFGS_IonicStepper.h"
-#include "mcstep.h"
+#include "MGmol_MPI.h"
 #include "MGmol_blas1.h"
 #include "MPIdata.h"
- #include "hdf5.h"
-#include "MGmol_MPI.h"
-     
-#include <iostream>
-#include <iomanip>
+#include "hdf5.h"
+#include "mcstep.h"
+
 #include <cmath>
+#include <iomanip>
+#include <iostream>
 using namespace std;
 
-static const int nb_attri=11;
-
+static const int nb_attri = 11;
 
 LBFGS_IonicStepper::LBFGS_IonicStepper(const double dt,
-        const vector<short>& atmove,
-        vector<double>& tau0, 
-        vector<double>& taup,
-        vector<double>& fion,
-        const vector<int>& gid,
-        const int m, 
-        double* etot):
-            IonicStepper(dt, atmove, tau0, taup),
-            fion_(fion),
-            gids_(gid),
-            etot_(etot)
+    const vector<short>& atmove, vector<double>& tau0, vector<double>& taup,
+    vector<double>& fion, const vector<int>& gid, const int m, double* etot)
+    : IonicStepper(dt, atmove, tau0, taup), fion_(fion), gids_(gid), etot_(etot)
 {
-    assert( gid.size()==atmove.size() );
-    assert( 3*gid.size()==fion.size() );
+    assert(gid.size() == atmove.size());
+    assert(3 * gid.size() == fion.size());
 
-    MGmol_MPI& mmpi = *(MGmol_MPI::instance());    
-    
-    eps_=2.e-6; 
-    xtol_=1.e-15;
-    last_step_accepted_=1;
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
-    info_=0;
-    iflag_=0;
-    point_=0;
-    iter_=0;
-    npt_=0;
+    eps_                = 2.e-6;
+    xtol_               = 1.e-15;
+    last_step_accepted_ = 1;
 
-    //count total number of atoms
-    int na=(int)atmove_.size();
-    int tmp=0;
+    info_  = 0;
+    iflag_ = 0;
+    point_ = 0;
+    iter_  = 0;
+    npt_   = 0;
+
+    // count total number of atoms
+    int na  = (int)atmove_.size();
+    int tmp = 0;
     mmpi.allreduce(&na, &tmp, 1, MPI_SUM);
-    na=tmp;
+    na = tmp;
 
-    for (int i=0;i<3;i++)etot_[i]=0.;
+    for (int i = 0; i < 3; i++)
+        etot_[i] = 0.;
 
     // count total number of d.o.f.
     const int nmove = (int)atmove_.size();
-    gndofs_=0;
-    for ( int ia = 0; ia < nmove; ia++ )
+    gndofs_         = 0;
+    for (int ia = 0; ia < nmove; ia++)
     {
-        //if ( atmove_[ia] )
-        gndofs_+=3;
+        // if ( atmove_[ia] )
+        gndofs_ += 3;
     }
-    
-    mmpi.allreduce(&gndofs_, &tmp, 1, MPI_SUM);
-    gndofs_=tmp;
-    
-    
-    m_=min(m,gndofs_);
-#if USE_MPI
-    if ( onpe0 )
-#endif
-      (*MPIdata::sout) << " LBFGS with m=" << m_ << endl;
 
-    freeze_geom_center_=( 3*na==gndofs_ );
+    mmpi.allreduce(&gndofs_, &tmp, 1, MPI_SUM);
+    gndofs_ = tmp;
+
+    m_ = min(m, gndofs_);
 #if USE_MPI
-    if ( onpe0 )
+    if (onpe0)
 #endif
-      if ( freeze_geom_center_ )
-        (*MPIdata::sout) << " LBFGS with geometry center frozen" << endl;
+        (*MPIdata::sout) << " LBFGS with m=" << m_ << endl;
+
+    freeze_geom_center_ = (3 * na == gndofs_);
+#if USE_MPI
+    if (onpe0)
+#endif
+        if (freeze_geom_center_)
+            (*MPIdata::sout) << " LBFGS with geometry center frozen" << endl;
 
     // allocate duplicated arrays used in LBFGS computations
     xcurrent_.resize(gndofs_);
     g_.resize(gndofs_);
-    work_.resize(gndofs_*2*(m_+1)+2*m_);
+    work_.resize(gndofs_ * 2 * (m_ + 1) + 2 * m_);
     xref_.resize(gndofs_);
     diag_.resize(gndofs_);
 
     //(*MPIdata::sout)<<"gndofs_="<<gndofs_<<", m_="<<m_<<endl;
-    assert(gndofs_>0);
-    assert(m_>0);
+    assert(gndofs_ > 0);
+    assert(m_ > 0);
 };
 
-int LBFGS_IonicStepper::writeDoubleAtt(hid_t dataset_id)const
+int LBFGS_IonicStepper::writeDoubleAtt(hid_t dataset_id) const
 {
     // attribute: 16 double
-    string attname="double parameters";
-    hsize_t dim=16;
+    string attname = "double parameters";
+    hsize_t dim    = 16;
 
     // Create dataset attribute.
     hid_t dataspace_id = H5Screate_simple(1, &dim, NULL);
-    if( dataspace_id<0 ){
-        (*MPIdata::serr)<<"Attribute "<<attname<<": H5Screate failed!!!"<<endl;
+    if (dataspace_id < 0)
+    {
+        (*MPIdata::serr) << "Attribute " << attname << ": H5Screate failed!!!"
+                         << endl;
         return -1;
     }
 
-    hid_t attribute_id = H5Acreate2(dataset_id, attname.c_str(), H5T_NATIVE_DOUBLE, 
-                                    dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
-    if( attribute_id<0 ){
-        (*MPIdata::serr)<<"Attribute "<<attname<<": H5Acreate failed!!!"<<endl;
+    hid_t attribute_id = H5Acreate2(dataset_id, attname.c_str(),
+        H5T_NATIVE_DOUBLE, dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
+    if (attribute_id < 0)
+    {
+        (*MPIdata::serr) << "Attribute " << attname << ": H5Acreate failed!!!"
+                         << endl;
         return -1;
     }
 
-    vector<double>  attr_d(dim);
-    attr_d[0] = fx_;
-    attr_d[1] = fy_;
-    attr_d[2] = stx_;
-    attr_d[3] = sty_;
-    attr_d[4] = dgx_;
-    attr_d[5] = dgy_;
-    attr_d[6] = stmin_;
-    attr_d[7] = stmax_;
-    attr_d[8] = width_;
-    attr_d[9] = width1_;
+    vector<double> attr_d(dim);
+    attr_d[0]  = fx_;
+    attr_d[1]  = fy_;
+    attr_d[2]  = stx_;
+    attr_d[3]  = sty_;
+    attr_d[4]  = dgx_;
+    attr_d[5]  = dgy_;
+    attr_d[6]  = stmin_;
+    attr_d[7]  = stmax_;
+    attr_d[8]  = width_;
+    attr_d[9]  = width1_;
     attr_d[10] = finit_;
     attr_d[11] = dginit_;
     attr_d[12] = etot_[0];
@@ -141,148 +136,179 @@ int LBFGS_IonicStepper::writeDoubleAtt(hid_t dataset_id)const
     attr_d[14] = etot_[2];
     attr_d[15] = stp_;
 
-    //(*MPIdata::sout)<<"Write attribute "<<attname<<endl;    
+    //(*MPIdata::sout)<<"Write attribute "<<attname<<endl;
     herr_t status = H5Awrite(attribute_id, H5T_NATIVE_DOUBLE, &attr_d[0]);
-    if( status<0 ){
-        (*MPIdata::serr)<<"Attribute "<<attname<<": H5Awrite failed!!!"<<endl;
+    if (status < 0)
+    {
+        (*MPIdata::serr) << "Attribute " << attname << ": H5Awrite failed!!!"
+                         << endl;
         return -1;
     }
-    
+
     status = H5Aclose(attribute_id);
-    if( status<0 ){
-        (*MPIdata::serr)<<"LBFGS_IonicStepper::writeDoubleAtt(): H5Aclose failed!!!"<<endl;
+    if (status < 0)
+    {
+        (*MPIdata::serr)
+            << "LBFGS_IonicStepper::writeDoubleAtt(): H5Aclose failed!!!"
+            << endl;
         return -1;
     }
 
     status = H5Sclose(dataspace_id);
-    if( status<0 ){
-        (*MPIdata::serr)<<"LBFGS_IonicStepper::writeDoubleAtt(): H5Sclose failed!!!"<<endl;
+    if (status < 0)
+    {
+        (*MPIdata::serr)
+            << "LBFGS_IonicStepper::writeDoubleAtt(): H5Sclose failed!!!"
+            << endl;
         return -1;
     }
-    
+
     return 0;
 }
 
-int LBFGS_IonicStepper::writeIntAtt(hid_t dataset_id)const
+int LBFGS_IonicStepper::writeIntAtt(hid_t dataset_id) const
 {
     // attribute: nb_attri int
-    string attname="int parameters";
-    hsize_t dim=nb_attri;
-    
+    string attname = "int parameters";
+    hsize_t dim    = nb_attri;
+
     // Create dataspace and attribute
     hid_t dataspace_id = H5Screate_simple(1, &dim, NULL);
-    if( dataspace_id<0 ){
-        (*MPIdata::serr)<<"Attribute "<<attname<<": H5Screate failed!!!"<<endl;
+    if (dataspace_id < 0)
+    {
+        (*MPIdata::serr) << "Attribute " << attname << ": H5Screate failed!!!"
+                         << endl;
         return -1;
     }
 
-    hid_t attribute_id = H5Acreate2(dataset_id, attname.c_str(), H5T_NATIVE_INT, 
-                                    dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
-    if( attribute_id<0 ){
-        (*MPIdata::serr)<<"Attribute "<<attname<<": H5Acreate failed!!!"<<endl;
+    hid_t attribute_id = H5Acreate2(dataset_id, attname.c_str(), H5T_NATIVE_INT,
+        dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
+    if (attribute_id < 0)
+    {
+        (*MPIdata::serr) << "Attribute " << attname << ": H5Acreate failed!!!"
+                         << endl;
         return -1;
     }
 
-    vector<int>  attr_i(dim);
-    attr_i[0]=iflag_;
-    attr_i[1]=m_;
-    attr_i[2]=iter_;
-    attr_i[3]=point_;
-    attr_i[4]=info_;
-    attr_i[5]=infoc_;
-    attr_i[6]=nfev_;
-    attr_i[7]=npt_;
-    attr_i[8]=(int)brackt_;
-    attr_i[9]=(int)stage1_;
-    attr_i[10]=last_step_accepted_;
-    
+    vector<int> attr_i(dim);
+    attr_i[0]  = iflag_;
+    attr_i[1]  = m_;
+    attr_i[2]  = iter_;
+    attr_i[3]  = point_;
+    attr_i[4]  = info_;
+    attr_i[5]  = infoc_;
+    attr_i[6]  = nfev_;
+    attr_i[7]  = npt_;
+    attr_i[8]  = (int)brackt_;
+    attr_i[9]  = (int)stage1_;
+    attr_i[10] = last_step_accepted_;
+
     herr_t status = H5Awrite(attribute_id, H5T_NATIVE_INT, &attr_i[0]);
-    if( status<0 ){
-        (*MPIdata::serr)<<"Attribute "<<attname<<": H5Awrite failed!!!"<<endl;
+    if (status < 0)
+    {
+        (*MPIdata::serr) << "Attribute " << attname << ": H5Awrite failed!!!"
+                         << endl;
         return -1;
     }
-    
+
     status = H5Aclose(attribute_id);
-    if( status<0 ){
-        (*MPIdata::serr)<<"Attribute "<<attname<<": H5Aclose failed!!!"<<endl;
+    if (status < 0)
+    {
+        (*MPIdata::serr) << "Attribute " << attname << ": H5Aclose failed!!!"
+                         << endl;
         return -1;
     }
 
     status = H5Sclose(dataspace_id);
-    if( status<0 ){
-        (*MPIdata::serr)<<"LBFGS_IonicStepper::writeIntAtt(): H5Sclose failed!!!"<<endl;
+    if (status < 0)
+    {
+        (*MPIdata::serr)
+            << "LBFGS_IonicStepper::writeIntAtt(): H5Sclose failed!!!" << endl;
         return -1;
     }
-    
+
     return 0;
 }
 
 int LBFGS_IonicStepper::writeLBFGSinfo(HDFrestart& h5f_file)
 {
-    assert( gndofs_==(int)diag_.size() );
-    assert( gndofs_==(int)xref_.size() );
-    
-    hid_t file_id=h5f_file.file_id();
-    if( file_id<0 )return 0;
-    
-    hsize_t  dim = work_.size()+2*gndofs_;
+    assert(gndofs_ == (int)diag_.size());
+    assert(gndofs_ == (int)xref_.size());
+
+    hid_t file_id = h5f_file.file_id();
+    if (file_id < 0) return 0;
+
+    hsize_t dim = work_.size() + 2 * gndofs_;
 
     // Create the data space for the dataset.
     hid_t dataspace_id = H5Screate_simple(1, &dim, NULL);
-    if( dataspace_id<0 ){
-        (*MPIdata::serr)<<"LBFGS_IonicStepper::writeLBFGSinfo(), H5Screate_simple failed!!!"<<endl;
+    if (dataspace_id < 0)
+    {
+        (*MPIdata::serr) << "LBFGS_IonicStepper::writeLBFGSinfo(), "
+                            "H5Screate_simple failed!!!"
+                         << endl;
         return -1;
     }
-    
+
     // Create dataset.
     string name("/LBFGS");
-    hid_t dataset_id = H5Dcreate2(file_id, name.c_str(), H5T_NATIVE_DOUBLE, 
-                           dataspace_id,
-                           H5P_DEFAULT,H5P_DEFAULT,H5P_DEFAULT);
-    if( dataset_id<0 ){
-        (*MPIdata::serr)<<"LBFGS_IonicStepper::writeLBFGSinfo(), H5Dcreate2 "<<name<<" failed!!!"<<endl;
+    hid_t dataset_id = H5Dcreate2(file_id, name.c_str(), H5T_NATIVE_DOUBLE,
+        dataspace_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    if (dataset_id < 0)
+    {
+        (*MPIdata::serr) << "LBFGS_IonicStepper::writeLBFGSinfo(), H5Dcreate2 "
+                         << name << " failed!!!" << endl;
         return -1;
     }
 
     // Write the dataset.
-    if( onpe0 )
+    if (onpe0)
     {
-        double* u=new double[dim];
-        memcpy(u,                 &work_[0], work_.size()*sizeof(double));
-        memcpy(u+work_.size(),    &diag_[0], gndofs_*sizeof(double));
-        memcpy(u+work_.size()+gndofs_, &xref_[0], gndofs_*sizeof(double));
-    
-        herr_t status = H5Dwrite(dataset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, 
-                          H5P_DEFAULT,  u);
-        if( status<0 ){
-            (*MPIdata::serr)<<"Error in LBFGS_IonicStepper::writeLBFGSinfo(): H5Dwrite failed!!!"<<endl;
+        double* u = new double[dim];
+        memcpy(u, &work_[0], work_.size() * sizeof(double));
+        memcpy(u + work_.size(), &diag_[0], gndofs_ * sizeof(double));
+        memcpy(u + work_.size() + gndofs_, &xref_[0], gndofs_ * sizeof(double));
+
+        herr_t status = H5Dwrite(
+            dataset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, u);
+        if (status < 0)
+        {
+            (*MPIdata::serr)
+                << "Error in LBFGS_IonicStepper::writeLBFGSinfo(): H5Dwrite "
+                   "failed!!!"
+                << endl;
             return status;
         }
-     
+
         delete[] u;
     }
 
-    int return_status=writeDoubleAtt(dataset_id);
-    if( return_status!=0 ) return return_status;
+    int return_status = writeDoubleAtt(dataset_id);
+    if (return_status != 0) return return_status;
 
-    return_status=writeIntAtt(dataset_id);
-    if( return_status!=0 ) return return_status;
-    
+    return_status = writeIntAtt(dataset_id);
+    if (return_status != 0) return return_status;
+
     herr_t status = H5Sclose(dataspace_id);
-    if( status<0 ){
-        (*MPIdata::serr)<<"LBFGS_IonicStepper::writeLBFGSinfo(): H5Sclose failed!!!"<<endl;
+    if (status < 0)
+    {
+        (*MPIdata::serr)
+            << "LBFGS_IonicStepper::writeLBFGSinfo(): H5Sclose failed!!!"
+            << endl;
         return -1;
     }
-    
+
     status = H5Dclose(dataset_id);
-    if( status<0 ){
-        (*MPIdata::serr)<<"LBFGS_IonicStepper::writeLBFGSinfo(): H5Dclose failed!!!"<<endl;
+    if (status < 0)
+    {
+        (*MPIdata::serr)
+            << "LBFGS_IonicStepper::writeLBFGSinfo(): H5Dclose failed!!!"
+            << endl;
         return -1;
     }
-    
-    if( onpe0 )
-        (*MPIdata::sout)<<"LBFGS restart info written"<<endl;
-        
+
+    if (onpe0) (*MPIdata::sout) << "LBFGS restart info written" << endl;
+
     return return_status;
 }
 
@@ -291,71 +317,97 @@ int LBFGS_IonicStepper::writeLBFGSinfo(HDFrestart& h5f_file)
 // return -1 if error occurs
 int LBFGS_IonicStepper::read_lbfgs(HDFrestart& h5f_file)
 {
-    hid_t file_id=h5f_file.file_id();
+    hid_t file_id = h5f_file.file_id();
 
     hsize_t dim_dset;
     hsize_t maxdim;
-    hid_t   dataset_id;
-    herr_t  status;
-    const string error_string="!!!Error in LBFGS_IonicStepper::read_lbfgs(): ";
+    hid_t dataset_id;
+    herr_t status;
+    const string error_string
+        = "!!!Error in LBFGS_IonicStepper::read_lbfgs(): ";
 
-    short check_data=0;
-    vector<double>  attr_d(16);
-    if( onpe0 ){
+    short check_data = 0;
+    vector<double> attr_d(16);
+    if (onpe0)
+    {
         // Open an existing dataset.
         string datasetname("/LBFGS");
-        int err_id=h5f_file.dset_exists(datasetname);
-        if( err_id==0 ){ // dataset does not exists
-            if( onpe0 )
-                (*MPIdata::sout)<<"Warning: no dataset /LBFGS-> no restart info for LBFGS"<<endl;
-        
-        }else{
+        int err_id = h5f_file.dset_exists(datasetname);
+        if (err_id == 0)
+        { // dataset does not exists
+            if (onpe0)
+                (*MPIdata::sout)
+                    << "Warning: no dataset /LBFGS-> no restart info for LBFGS"
+                    << endl;
+        }
+        else
+        {
             dataset_id = H5Dopen2(file_id, "/LBFGS", H5P_DEFAULT);
-            if( dataset_id<0 ){
-                if( onpe0 )
-                    (*MPIdata::sout)<<"Warning: H5Dopen failed for /LBFGS-> no restart info for LBFGS"<<endl;
-            }else{
-                (*MPIdata::sout)<<"Read LBFGS information from PE 0"<<endl;
-                check_data=1;
-            
+            if (dataset_id < 0)
+            {
+                if (onpe0)
+                    (*MPIdata::sout) << "Warning: H5Dopen failed for /LBFGS-> "
+                                        "no restart info for LBFGS"
+                                     << endl;
+            }
+            else
+            {
+                (*MPIdata::sout) << "Read LBFGS information from PE 0" << endl;
+                check_data = 1;
+
                 // 1st attribute: 16 double
-                string attname="double parameters";
+                string attname = "double parameters";
 
                 //  Open a dataset attribute.
                 hid_t attribute_id = H5Aopen_name(dataset_id, attname.c_str());
-                if( attribute_id<0 ){
-                    (*MPIdata::serr)<<"PE "<<mype<<": "<<error_string<<"H5Aopen failed for "<<attname<<"!!!"
-                        <<endl;
+                if (attribute_id < 0)
+                {
+                    (*MPIdata::serr)
+                        << "PE " << mype << ": " << error_string
+                        << "H5Aopen failed for " << attname << "!!!" << endl;
                     return -1;
                 }
 
-                hid_t attdataspace=H5Aget_space(attribute_id);
-                int rank=H5Sget_simple_extent_dims(attdataspace, &dim_dset, &maxdim);
-                if( rank!=1 ){
-                    (*MPIdata::serr)<<error_string<<"error in rank for attribute "<<attname<<endl;
+                hid_t attdataspace = H5Aget_space(attribute_id);
+                int rank           = H5Sget_simple_extent_dims(
+                    attdataspace, &dim_dset, &maxdim);
+                if (rank != 1)
+                {
+                    (*MPIdata::serr)
+                        << error_string << "error in rank for attribute "
+                        << attname << endl;
                     return -1;
                 }
-                if( dim_dset!=16 ){
-                    (*MPIdata::serr)<<error_string<<"error in dim for attribute "<<attname<<endl;
+                if (dim_dset != 16)
+                {
+                    (*MPIdata::serr)
+                        << error_string << "error in dim for attribute "
+                        << attname << endl;
                     return -1;
                 }
-                
+
                 // read attribute
                 status = H5Aread(attribute_id, H5T_NATIVE_DOUBLE, &attr_d[0]);
-                if( status<0 ){
-                    (*MPIdata::serr)<<error_string<<"H5Aread failed!!!"<<endl;
+                if (status < 0)
+                {
+                    (*MPIdata::serr)
+                        << error_string << "H5Aread failed!!!" << endl;
                     return -1;
                 }
 
                 // close ressources
                 status = H5Aclose(attribute_id);
-                if( status<0 ){
-                    (*MPIdata::serr)<<error_string<<"H5Aclose failed!!!"<<endl;
+                if (status < 0)
+                {
+                    (*MPIdata::serr)
+                        << error_string << "H5Aclose failed!!!" << endl;
                     return -1;
                 }
                 status = H5Sclose(attdataspace);
-                if( status<0 ){
-                    (*MPIdata::serr)<<error_string<<"H5Sclose failed!!!"<<endl;
+                if (status < 0)
+                {
+                    (*MPIdata::serr)
+                        << error_string << "H5Sclose failed!!!" << endl;
                     return -1;
                 }
             }
@@ -367,183 +419,216 @@ int LBFGS_IonicStepper::read_lbfgs(HDFrestart& h5f_file)
 #endif
 
     // return 1 if no data read
-    if( !check_data )return 1;
-    
+    if (!check_data) return 1;
+
 #ifdef USE_MPI
     mmpi.bcast(&attr_d[0], 16);
 #endif
-    
-    if( onpe0 )
-        (*MPIdata::sout)<<"Setup LBFGS using restart info"<<endl;
-    
-    fx_       = attr_d[0]; 
-    fy_       = attr_d[1]; 
-    stx_      = attr_d[2]; 
-    sty_      = attr_d[3]; 
-    dgx_      = attr_d[4]; 
-    dgy_      = attr_d[5]; 
-    stmin_    = attr_d[6]; 
-    stmax_    = attr_d[7]; 
-    width_    = attr_d[8]; 
-    width1_   = attr_d[9]; 
-    finit_    = attr_d[10]; 
-    dginit_   = attr_d[11]; 
-    etot_[0]  = attr_d[12]; 
-    etot_[1]  = attr_d[13]; 
-    etot_[2]  = attr_d[14]; 
-    stp_      = attr_d[15]; 
 
-    vector<int>  attr_i;
+    if (onpe0) (*MPIdata::sout) << "Setup LBFGS using restart info" << endl;
+
+    fx_      = attr_d[0];
+    fy_      = attr_d[1];
+    stx_     = attr_d[2];
+    sty_     = attr_d[3];
+    dgx_     = attr_d[4];
+    dgy_     = attr_d[5];
+    stmin_   = attr_d[6];
+    stmax_   = attr_d[7];
+    width_   = attr_d[8];
+    width1_  = attr_d[9];
+    finit_   = attr_d[10];
+    dginit_  = attr_d[11];
+    etot_[0] = attr_d[12];
+    etot_[1] = attr_d[13];
+    etot_[2] = attr_d[14];
+    stp_     = attr_d[15];
+
+    vector<int> attr_i;
     attr_i.resize(nb_attri);
-    if( onpe0 ){
+    if (onpe0)
+    {
         // 2nd attribute: nb_attri int
-        string attname="int parameters";
+        string attname = "int parameters";
 
         //  Open a dataset attribute.
         hid_t attribute_id = H5Aopen_name(dataset_id, attname.c_str());
-        if( attribute_id<0 ){
-            (*MPIdata::serr)<<"H5Aopen failed for "<<attname<<"!!!"<<endl;
+        if (attribute_id < 0)
+        {
+            (*MPIdata::serr)
+                << "H5Aopen failed for " << attname << "!!!" << endl;
             return -1;
         }
 
-        hid_t attdataspace=H5Aget_space(attribute_id);
-        int rank=H5Sget_simple_extent_dims(attdataspace, &dim_dset, &maxdim);
-        if( rank!=1 ){
-            (*MPIdata::serr)<<"error in rank for attribute "<<attname<<endl;
+        hid_t attdataspace = H5Aget_space(attribute_id);
+        int rank = H5Sget_simple_extent_dims(attdataspace, &dim_dset, &maxdim);
+        if (rank != 1)
+        {
+            (*MPIdata::serr)
+                << "error in rank for attribute " << attname << endl;
             return -1;
         }
-        if( dim_dset==(nb_attri-1) ){ //for backward compatibility with older restart files
-            attr_i[10]=true;
-        }else{
-            if( dim_dset!=nb_attri ){
-                (*MPIdata::serr)<<"error in dim for attribute "<<attname<<endl;
+        if (dim_dset == (nb_attri - 1))
+        { // for backward compatibility with older restart files
+            attr_i[10] = true;
+        }
+        else
+        {
+            if (dim_dset != nb_attri)
+            {
+                (*MPIdata::serr)
+                    << "error in dim for attribute " << attname << endl;
                 return -1;
             }
         }
 
         // read attribute
         status = H5Aread(attribute_id, H5T_NATIVE_INT, &attr_i[0]);
-        if( status<0 ){
-            (*MPIdata::serr)<<"H5Aread failed!!!"<<endl;
+        if (status < 0)
+        {
+            (*MPIdata::serr) << "H5Aread failed!!!" << endl;
             return -1;
         }
 
         // close ressources
         status = H5Aclose(attribute_id);
-        if( status<0 ){
-            (*MPIdata::serr)<<"H5Aclose failed!!!"<<endl;
+        if (status < 0)
+        {
+            (*MPIdata::serr) << "H5Aclose failed!!!" << endl;
             return -1;
         }
         status = H5Sclose(attdataspace);
-        if( status<0 ){
-            (*MPIdata::serr)<<"H5Sclose failed!!!"<<endl;
+        if (status < 0)
+        {
+            (*MPIdata::serr) << "H5Sclose failed!!!" << endl;
             return -1;
         }
     }
 #ifdef USE_MPI
     mmpi.bcast(&attr_i[0], nb_attri);
 #endif
-    iflag_  =attr_i[0];
-    m_      =attr_i[1];
-    iter_   =attr_i[2];
-    point_  =attr_i[3];
-    info_   =attr_i[4];
-    infoc_  =attr_i[5];
-    nfev_   =attr_i[6];
-    npt_    =attr_i[7];
-    brackt_ =attr_i[8];
-    stage1_ =attr_i[9];
-    last_step_accepted_=attr_i[10];
+    iflag_              = attr_i[0];
+    m_                  = attr_i[1];
+    iter_               = attr_i[2];
+    point_              = attr_i[3];
+    info_               = attr_i[4];
+    infoc_              = attr_i[5];
+    nfev_               = attr_i[6];
+    npt_                = attr_i[7];
+    brackt_             = attr_i[8];
+    stage1_             = attr_i[9];
+    last_step_accepted_ = attr_i[10];
 
-    work_.resize(gndofs_*2*(m_+1)+2*m_);
-    int     dim=work_.size()+2*gndofs_;
-    double* u=new double[dim];
-    if( onpe0 ){
-        hid_t dset_space=H5Dget_space(dataset_id);
-       
-        status = H5Dread(dataset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, 
-                         H5P_DEFAULT, u);
-        if( status<0 ){
-            (*MPIdata::serr)<<"LBFGS_IonicStepper::read_lbfgs(): H5Dread failed!!!"<<endl;
-        return -1;
+    work_.resize(gndofs_ * 2 * (m_ + 1) + 2 * m_);
+    int dim   = work_.size() + 2 * gndofs_;
+    double* u = new double[dim];
+    if (onpe0)
+    {
+        hid_t dset_space = H5Dget_space(dataset_id);
+
+        status = H5Dread(
+            dataset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, u);
+        if (status < 0)
+        {
+            (*MPIdata::serr)
+                << "LBFGS_IonicStepper::read_lbfgs(): H5Dread failed!!!"
+                << endl;
+            return -1;
         }
-        
-        status=H5Sclose(dset_space); 
-        if( status<0 ){
-            (*MPIdata::serr)<<"LBFGS_IonicStepper::read_lbfgs(): H5Sclose failed!!!"<<endl;
+
+        status = H5Sclose(dset_space);
+        if (status < 0)
+        {
+            (*MPIdata::serr)
+                << "LBFGS_IonicStepper::read_lbfgs(): H5Sclose failed!!!"
+                << endl;
             return -1;
         }
 
         // Close the dataset.
         status = H5Dclose(dataset_id);
-        if( status<0 ){
-            (*MPIdata::serr)<<"LBFGS_IonicStepper::read_lbfgs(): H5Dclose failed!!!"<<endl;
-        return -1;
+        if (status < 0)
+        {
+            (*MPIdata::serr)
+                << "LBFGS_IonicStepper::read_lbfgs(): H5Dclose failed!!!"
+                << endl;
+            return -1;
         }
     }
-    
+
 #ifdef USE_MPI
     mmpi.bcast(&u[0], dim);
 #endif
-    int wsize=work_.size();
-    int ione=1;
+    int wsize = work_.size();
+    int ione  = 1;
     dcopy(&wsize, u, &ione, &work_[0], &ione);
-    dcopy(&gndofs_, u+wsize, &ione, &diag_[0], &ione);
+    dcopy(&gndofs_, u + wsize, &ione, &diag_[0], &ione);
     // test for compatibility with previous version restart files
-    if( (int)dim_dset >= dim ){
-        memcpy(&xref_[0], u+work_.size()+diag_.size(), xref_.size()*sizeof(double));
-    }else{
-        if ( onpe0 )
-            (*MPIdata::sout)<<"LBFGS Warning: No reference ionic positions in restart file"
-                <<endl;
+    if ((int)dim_dset >= dim)
+    {
+        memcpy(&xref_[0], u + work_.size() + diag_.size(),
+            xref_.size() * sizeof(double));
+    }
+    else
+    {
+        if (onpe0)
+            (*MPIdata::sout)
+                << "LBFGS Warning: No reference ionic positions in restart file"
+                << endl;
     }
     delete[] u;
-
 
     return 0;
 }
 
-
 int LBFGS_IonicStepper::init(HDFrestart& h5f_file)
 {
-    hid_t file_id=h5f_file.file_id();
-    
-    if( file_id>=0 )
-    {
-        readPositions_hdf5(h5f_file,string("/Ionic_positions"));
-        
-        // Open dataset
-        hid_t    dataset_id = H5Dopen2(file_id, "/Ionic_velocities",H5P_DEFAULT);
-        herr_t  status=0;
-        if( dataset_id<0 ){
-            if ( onpe0 ){
-                (*MPIdata::sout)<<"Warning: LBFGS_IonicStepper::init(), H5Dopen2 failed for /Ionic_velocities!!!"
-                    <<endl;
-                (*MPIdata::sout)<<"Set velocities to zero"<<endl;
-            }
-            memset(&taup_[0], 0, taup_.size()*sizeof(double));
+    hid_t file_id = h5f_file.file_id();
 
-        }else{
+    if (file_id >= 0)
+    {
+        readPositions_hdf5(h5f_file, string("/Ionic_positions"));
+
+        // Open dataset
+        hid_t dataset_id = H5Dopen2(file_id, "/Ionic_velocities", H5P_DEFAULT);
+        herr_t status    = 0;
+        if (dataset_id < 0)
+        {
+            if (onpe0)
+            {
+                (*MPIdata::sout) << "Warning: LBFGS_IonicStepper::init(), "
+                                    "H5Dopen2 failed for /Ionic_velocities!!!"
+                                 << endl;
+                (*MPIdata::sout) << "Set velocities to zero" << endl;
+            }
+            memset(&taup_[0], 0, taup_.size() * sizeof(double));
+        }
+        else
+        {
             // Read velocities equal to (taup-tau0)/dt
             status = H5Dread(dataset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL,
-                              H5P_DEFAULT, &taup_[0]);
-            if( status<0 ){
-                (*MPIdata::serr)<<"Error: LBFGS_IonicStepper::init: H5Dread failed for taup!!!"
-                    <<endl;
+                H5P_DEFAULT, &taup_[0]);
+            if (status < 0)
+            {
+                (*MPIdata::serr) << "Error: LBFGS_IonicStepper::init: H5Dread "
+                                    "failed for taup!!!"
+                                 << endl;
                 return -1;
             }
 
             // close dataset
             status = H5Dclose(dataset_id);
-            if( status<0 ){
-                (*MPIdata::serr)<<"Error: LBFGS_IonicStepper::init(): H5Dclose failed!!!"<<endl;
+            if (status < 0)
+            {
+                (*MPIdata::serr)
+                    << "Error: LBFGS_IonicStepper::init(): H5Dclose failed!!!"
+                    << endl;
                 return -1;
             }
-        
         }
     }
 
-    int    n=(int)tau0_.size(), ione=1;
+    int n = (int)tau0_.size(), ione = 1;
 #ifdef USE_MPI
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     mmpi.bcast(&tau0_[0], n);
@@ -551,153 +636,151 @@ int LBFGS_IonicStepper::init(HDFrestart& h5f_file)
 #endif
     daxpy(&n, &dt_, &taup_[0], &ione, &tau0_[0], &ione);
 
-    int rlbfgs=read_lbfgs(h5f_file);
+    int rlbfgs = read_lbfgs(h5f_file);
 
     return rlbfgs;
 }
 
 void LBFGS_IonicStepper::restart()
 {
-    info_=0;
-    iflag_=0;
-    point_=0;
-    iter_=0;
-    npt_=0;
+    info_  = 0;
+    iflag_ = 0;
+    point_ = 0;
+    iter_  = 0;
+    npt_   = 0;
 }
-
 
 int LBFGS_IonicStepper::write_hdf5(HDFrestart& h5f_file)
 {
-    int status=0;
-    
-    hid_t file_id=h5f_file.file_id();
-    if( file_id<0 )return 0;
-        
-    const bool write_flag = ( onpe0 || h5f_file.useHdf5p() );
+    int status = 0;
 
-    if( write_flag )
+    hid_t file_id = h5f_file.file_id();
+    if (file_id < 0) return 0;
+
+    const bool write_flag = (onpe0 || h5f_file.useHdf5p());
+
+    if (write_flag)
     {
-        status=writeLBFGSinfo(h5f_file);
+        status = writeLBFGSinfo(h5f_file);
     }
-    
+
     return status;
 }
 
 int LBFGS_IonicStepper::run()
 {
-    const int na = (int) atmove_.size();
-    assert( (int)fion_.size()==3*na );
-    assert( gids_.size()==atmove_.size() );
+    const int na = (int)atmove_.size();
+    assert((int)fion_.size() == 3 * na);
+    assert(gids_.size() == atmove_.size());
 
-    double step=2.74; // safe step for H2 molecule 
-  
+    double step = 2.74; // safe step for H2 molecule
+
     // reset data to 0
-    memset(&xcurrent_[0], 0, gndofs_*sizeof(double));
-    memset(&g_[0], 0, gndofs_*sizeof(double));
-    
-    // set local data
-    for ( int ia = 0; ia < na; ia++ )
-    {
-        const int gid=gids_[ia];
-        for ( short j = 0; j < 3; j++ )
-            xcurrent_[3*gid+j] = tau0_[3*ia+j];
-        if ( atmove_[ia] )
-        {
-          for ( short j = 0; j < 3; j++ )
-          {
-            assert(gid<gndofs_/3);
+    memset(&xcurrent_[0], 0, gndofs_ * sizeof(double));
+    memset(&g_[0], 0, gndofs_ * sizeof(double));
 
-            g_[3*gid+j]        = -fion_[3*ia+j];
-          }
-        }
-    } 
- 
-    bool diagco;
-    if (iflag_==1)
+    // set local data
+    for (int ia = 0; ia < na; ia++)
     {
-      diagco = false;
+        const int gid = gids_[ia];
+        for (short j = 0; j < 3; j++)
+            xcurrent_[3 * gid + j] = tau0_[3 * ia + j];
+        if (atmove_[ia])
+        {
+            for (short j = 0; j < 3; j++)
+            {
+                assert(gid < gndofs_ / 3);
+
+                g_[3 * gid + j] = -fion_[3 * ia + j];
+            }
+        }
+    }
+
+    bool diagco;
+    if (iflag_ == 1)
+    {
+        diagco = false;
     }
     else
     {
-      diagco = true;
-      for (int k=0; k<gndofs_; k++)
-        diag_[k]=step;
+        diagco = true;
+        for (int k = 0; k < gndofs_; k++)
+            diag_[k] = step;
     }
 
     // consolidate data across all pes
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    mmpi.allreduce(&xcurrent_[0],gndofs_,MPI_SUM);
-    mmpi.allreduce(&g_[0],gndofs_,MPI_SUM);
+    mmpi.allreduce(&xcurrent_[0], gndofs_, MPI_SUM);
+    mmpi.allreduce(&g_[0], gndofs_, MPI_SUM);
 
-    if ( onpe0 )
-        iflag_=lbfgs(etot_[2], diagco, iflag_);
+    if (onpe0) iflag_ = lbfgs(etot_[2], diagco, iflag_);
 
     // sync data across all pes
-    mmpi.bcast(&xcurrent_[0],gndofs_);
-    mmpi.bcast(&iflag_,1);
-    mmpi.bcast(&last_step_accepted_,1);
+    mmpi.bcast(&xcurrent_[0], gndofs_);
+    mmpi.bcast(&iflag_, 1);
+    mmpi.bcast(&last_step_accepted_, 1);
 
-    if ( iflag_==0 )
-      return 1;
-    if ( iflag_==-1 )
+    if (iflag_ == 0) return 1;
+    if (iflag_ == -1)
     {
-      if ( onpe0 )
-      {
-        (*MPIdata::sout) << "lbfgs: Line search failed-> Stop algorithm" << endl;
-        (*MPIdata::sout) << "This could be due to inaccurate energies/forces" << endl;
-      }
-      return -1;
+        if (onpe0)
+        {
+            (*MPIdata::sout)
+                << "lbfgs: Line search failed-> Stop algorithm" << endl;
+            (*MPIdata::sout)
+                << "This could be due to inaccurate energies/forces" << endl;
+        }
+        return -1;
     }
-    if ( iflag_==-2 )
+    if (iflag_ == -2)
     {
-      if ( onpe0 )
-        (*MPIdata::sout) << "lbfgs: inverse Hessian approximation is not positive" << endl;
-      return -2;
+        if (onpe0)
+            (*MPIdata::sout)
+                << "lbfgs: inverse Hessian approximation is not positive"
+                << endl;
+        return -2;
     }
-    if ( iflag_==-3 )
+    if (iflag_ == -3)
     {
-      if ( onpe0 )
-        (*MPIdata::sout) << "lbfgs: yy is too small" << endl;
-      return -3;
+        if (onpe0) (*MPIdata::sout) << "lbfgs: yy is too small" << endl;
+        return -3;
     }
 
     // update local taup_
-    for ( int ia = 0; ia < na; ia++ )
+    for (int ia = 0; ia < na; ia++)
     {
-        if ( atmove_[ia] )
+        if (atmove_[ia])
         {
-          const int gid=gids_[ia];
-          for ( int j = 0; j < 3; j++ )
-          {
-              taup_[3*ia+j] = xcurrent_[3*gid+j];
-          }
+            const int gid = gids_[ia];
+            for (int j = 0; j < 3; j++)
+            {
+                taup_[3 * ia + j] = xcurrent_[3 * gid + j];
+            }
         }
         else
         {
-          for ( int j = 0; j < 3; j++ )
-              taup_[3*ia+j] = tau0_[3*ia+j]; 
+            for (int j = 0; j < 3; j++)
+                taup_[3 * ia + j] = tau0_[3 * ia + j];
         }
-    } 
-    
+    }
+
     return 0;
 }
 
-
-double LBFGS_IonicStepper::etol(void)const
+double LBFGS_IonicStepper::etol(void) const
 {
-  double emax = max(etot_[2],etot_[1]);
-  emax = max(emax,etot_[0]);
-  double emin = min(etot_[2],etot_[1]);
-  emin = min(emin,etot_[0]);
-  double espread = emax-emin;
-  
-  return min(espread*1.e-4, 1.e-8);
+    double emax    = max(etot_[2], etot_[1]);
+    emax           = max(emax, etot_[0]);
+    double emin    = min(etot_[2], etot_[1]);
+    emin           = min(emin, etot_[0]);
+    double espread = emax - emin;
 
+    return min(espread * 1.e-4, 1.e-8);
 }
 
 // lbfgs() returns an integer between -3 and +2:
 //    iflag   is an integer variable that must be set to 0 on initial entry
-//            to the subroutine. 
+//            to the subroutine.
 //    diagco  is a boolean variable that must be set to true if the
 //            user  wishes to provide the diagonal matrix Hk0 at each
 //            iteration. Otherwise it should be set to false, in which
@@ -710,10 +793,10 @@ double LBFGS_IonicStepper::etol(void)const
 // detecting errors. On a return value 1, the user must
 // evaluate the function F and gradient G. On a return value
 // 2, the user must provide the diagonal matrix Hk0.
-// 
+//
 // The following negative values, detecting an error,
 // are possible:
-// 
+//
 //  -1  The line search routine mcsrch failed. The
 //      parameter info_ provides more detailed information
 //      (see the documentation of mcsrch)
@@ -721,168 +804,171 @@ double LBFGS_IonicStepper::etol(void)const
 //      Hessian approximation, given in diag_, is not
 //      positive.
 //  -3  Numerical problem with yy (division by 0).
-int LBFGS_IonicStepper::lbfgs(const double f, 
-                              const bool diagco,
-                              const int iflag)
+int LBFGS_IonicStepper::lbfgs(
+    const double f, const bool diagco, const int iflag)
 {
-  const int ispt= gndofs_+2*m_;
-  const int iypt= ispt+gndofs_*m_;   
+    const int ispt = gndofs_ + 2 * m_;
+    const int iypt = ispt + gndofs_ * m_;
 
-  int     inc=1;
-  bool    finish=true;
-  
-  if (iflag==0)
-  {
-    iter_=0;
-    point_= 0;
-    finish= false;
-    if (diagco)
-    {
-      for (int i=0; i<gndofs_; i++)
-      if ( diag_[i]<=0.)
-      {
-        return -2;      
-      }
-    }
-    else
-    {
-      for (int i=0; i<gndofs_; i++)
-        diag_[i]= 1.;
-    }
-    // the work vector work_ is divided as follows:
-    // ---------------------------------------
-    // the first n locations are used to store the gradient and
-    //     other temporary information.
-    // locations n...n+m-1 store the scalars rho.
-    // locations n+m...n+2m-1 store the numbers alpha used
-    //     in the formula that computes h*g.
-    // locations n+2m...n+2m+nm-1 store the last m search
-    //     steps.
-    // locations n+2m+nm...n+2m+2nm-1 store the last m
-    //     gradient differences.
-    //
-    // the search steps and gradient differences are stored in a
-    // circular order controlled by the parameter point.
-    //
-    for (int i=0; i<gndofs_; i++)
-      work_[ispt+i] = -g_[i]*diag_[i];
+    int inc     = 1;
+    bool finish = true;
 
-  }
-
-  // Main iteration loop
-  do
-  {
-    if ((iflag==0)||(!finish))
+    if (iflag == 0)
     {
-      info_=0;
-      iter_++;
-      int bound=iter_-1;
-      if (iter_!=1)
-      {
-        if (iter_>m_)
-          bound=m_;
-        double ys= ddot(&gndofs_,&work_[iypt+npt_],&inc,&work_[ispt+npt_],&inc);
-        if (!diagco)
+        iter_  = 0;
+        point_ = 0;
+        finish = false;
+        if (diagco)
         {
-          double yy= ddot(&gndofs_,&work_[iypt+npt_],&inc,&work_[iypt+npt_],&inc);
-          if( yy<1.e-14 ){
-              if( onpe0 )(*MPIdata::sout)<<"lbfgs: yy="<<yy<<endl;
-              return -3;
-          }
-          double ratio=ys/yy;
-          for (int i=0;i<gndofs_;i++)
-            diag_[i]= ratio;
+            for (int i = 0; i < gndofs_; i++)
+                if (diag_[i] <= 0.)
+                {
+                    return -2;
+                }
         }
         else
         {
-          return 2;
+            for (int i = 0; i < gndofs_; i++)
+                diag_[i] = 1.;
         }
-    
-        // Compute -H*g using the formula given in: Nocedal, J. 1980,
-        // "Updating quasi-Newton matrices with limited storage",
-        // Mathematics of Computation, Vol.24, No.151, pp. 773-782.
-        minushg(bound, ys);
-  
-        // Fix geometry center by setting average displacement to 0.
-        if ( freeze_geom_center_ )
+        // the work vector work_ is divided as follows:
+        // ---------------------------------------
+        // the first n locations are used to store the gradient and
+        //     other temporary information.
+        // locations n...n+m-1 store the scalars rho.
+        // locations n+m...n+2m-1 store the numbers alpha used
+        //     in the formula that computes h*g.
+        // locations n+2m...n+2m+nm-1 store the last m search
+        //     steps.
+        // locations n+2m+nm...n+2m+2nm-1 store the last m
+        //     gradient differences.
+        //
+        // the search steps and gradient differences are stored in a
+        // circular order controlled by the parameter point.
+        //
+        for (int i = 0; i < gndofs_; i++)
+            work_[ispt + i] = -g_[i] * diag_[i];
+    }
+
+    // Main iteration loop
+    do
+    {
+        if ((iflag == 0) || (!finish))
         {
-          double ax=0.;
-          double ay=0.;
-          double az=0.;
-          for (int i=0;i<gndofs_;i+=3)
-          {
-            ax+=work_[i];
-            ay+=work_[i+1];
-            az+=work_[i+2];
-          }
-          ax*=(3./(double)gndofs_);
-          ay*=(3./(double)gndofs_);
-          az*=(3./(double)gndofs_);
-          for (int i=0;i<gndofs_;i+=3)
-          {
-            work_[i]  -=ax;
-            work_[i+1]-=ay;
-            work_[i+2]-=az;
-          }
-          //(*MPIdata::sout)<<"lbfgs:shift search vector by "<<ax<<", "<<ay<<", "<<az<<endl;
+            info_ = 0;
+            iter_++;
+            int bound = iter_ - 1;
+            if (iter_ != 1)
+            {
+                if (iter_ > m_) bound = m_;
+                double ys = ddot(&gndofs_, &work_[iypt + npt_], &inc,
+                    &work_[ispt + npt_], &inc);
+                if (!diagco)
+                {
+                    double yy = ddot(&gndofs_, &work_[iypt + npt_], &inc,
+                        &work_[iypt + npt_], &inc);
+                    if (yy < 1.e-14)
+                    {
+                        if (onpe0)
+                            (*MPIdata::sout) << "lbfgs: yy=" << yy << endl;
+                        return -3;
+                    }
+                    double ratio = ys / yy;
+                    for (int i = 0; i < gndofs_; i++)
+                        diag_[i] = ratio;
+                }
+                else
+                {
+                    return 2;
+                }
+
+                // Compute -H*g using the formula given in: Nocedal, J. 1980,
+                // "Updating quasi-Newton matrices with limited storage",
+                // Mathematics of Computation, Vol.24, No.151, pp. 773-782.
+                minushg(bound, ys);
+
+                // Fix geometry center by setting average displacement to 0.
+                if (freeze_geom_center_)
+                {
+                    double ax = 0.;
+                    double ay = 0.;
+                    double az = 0.;
+                    for (int i = 0; i < gndofs_; i += 3)
+                    {
+                        ax += work_[i];
+                        ay += work_[i + 1];
+                        az += work_[i + 2];
+                    }
+                    ax *= (3. / (double)gndofs_);
+                    ay *= (3. / (double)gndofs_);
+                    az *= (3. / (double)gndofs_);
+                    for (int i = 0; i < gndofs_; i += 3)
+                    {
+                        work_[i] -= ax;
+                        work_[i + 1] -= ay;
+                        work_[i + 2] -= az;
+                    }
+                    //(*MPIdata::sout)<<"lbfgs:shift search vector by "<<ax<<",
+                    //"<<ay<<", "<<az<<endl;
+                }
+
+                // Restrict the new search direction to small displacements (0.1
+                // a.u.)
+                const double dismax = 0.1;
+                int maxw            = (idamax(&gndofs_, &work_[0], &inc) - 1);
+                if (fabs(work_[maxw]) > dismax)
+                {
+                    double alpha = dismax / fabs(work_[maxw]);
+                    (*MPIdata::sout)
+                        << "lbfgs: rescale search vector by " << alpha << endl;
+                    dscal(&gndofs_, &alpha, &work_[0], &inc);
+                }
+
+                // Store the new search direction
+                memcpy(&work_[ispt + point_ * gndofs_], &work_[0],
+                    gndofs_ * sizeof(double));
+            }
+
+            nfev_ = 0;
+            stp_  = 1.;
+            dcopy(&gndofs_, &g_[0], &inc, &work_[0], &inc);
         }
-        
-        // Restrict the new search direction to small displacements (0.1 a.u.)
-        const double dismax=0.1;
-        int maxw=(idamax(&gndofs_,&work_[0],&inc)-1);
-        if (fabs(work_[maxw])>dismax)
+
+        // obtain the one-dimensional minimizer of the function
+        // by using the line search routine mcsrch
+        mcsrch(f, &work_[ispt + point_ * gndofs_], stp_);
+        if (info_ == -1)
         {
-          double alpha=dismax/fabs(work_[maxw]);
-          (*MPIdata::sout)<<"lbfgs: rescale search vector by "<<alpha<<endl;
-          dscal(&gndofs_,&alpha,&work_[0],&inc);
+            return 1;
+        }
+        if (info_ != 1)
+        {
+            return -1;
         }
 
-        // Store the new search direction
-        memcpy(&work_[ispt+point_*gndofs_], &work_[0], gndofs_*sizeof(double));
+        // Compute the new step and gradient change
+        npt_ = point_ * gndofs_;
+        dscal(&gndofs_, &stp_, &work_[ispt + npt_], &inc);
+        for (int i = 0; i < gndofs_; i++)
+        {
+            work_[iypt + npt_ + i] = g_[i] - work_[i];
+        }
+        point_++;
+        if (point_ == m_) point_ = 0;
 
-      }
-      
-      nfev_=0;
-      stp_=1.;
-      dcopy(&gndofs_,&g_[0],&inc,&work_[0],&inc);
+        // Termination test
+        double gnorm = sqrt(ddot(&gndofs_, &g_[0], &inc, &g_[0], &inc));
+        (*MPIdata::sout) << setprecision(2) << scientific;
+        if (onpe0)
+            (*MPIdata::sout) << "lbfgs: Norm of gradient=" << gnorm << endl;
+        finish = (gnorm <= eps_);
 
-    }
+    } while (!finish);
 
-    // obtain the one-dimensional minimizer of the function 
-    // by using the line search routine mcsrch
-    mcsrch(f, &work_[ispt+point_*gndofs_], stp_);
-    if (info_==-1)
-    {
-      return 1;
-    }
-    if (info_!=1)
-    {
-      return -1;
-    }
+    (*MPIdata::sout) << "The minimization terminated without detecting errors."
+                     << endl;
 
-    // Compute the new step and gradient change 
-    npt_=point_*gndofs_;
-    dscal(&gndofs_,&stp_,&work_[ispt+npt_],&inc);
-    for (int i=0;i<gndofs_;i++)
-    {
-      work_[iypt+npt_+i]= g_[i]-work_[i];
-    }
-    point_++;
-    if (point_==m_)
-      point_=0;
-
-    // Termination test
-    double gnorm= sqrt(ddot(&gndofs_,&g_[0],&inc,&g_[0],&inc));
-    (*MPIdata::sout)<<setprecision(2)<<scientific;
-    if( onpe0 )(*MPIdata::sout)<<"lbfgs: Norm of gradient="<<gnorm<<endl;
-    finish = ( gnorm <= eps_ );
-
-  }
-  while ( !finish );
-  
-  (*MPIdata::sout) << "The minimization terminated without detecting errors." << endl;
-  
-  return 0;
+    return 0;
 }
 
 // Compute -H*g using the formula given in: Nocedal, J. 1980,
@@ -890,281 +976,283 @@ int LBFGS_IonicStepper::lbfgs(const double f,
 // Mathematics of Computation, Vol.24, No.151, pp. 773-782.
 void LBFGS_IonicStepper::minushg(const int bound, const double ys)
 {
-  assert( fabs(ys)>0. );
+    assert(fabs(ys) > 0.);
 
-  int     inc=1;
-  const int ispt= gndofs_+2*m_;
-  const int iypt= ispt+gndofs_*m_; 
-  int     cp=point_;
-  if (point_==0)
-    cp=m_;
-  work_[gndofs_+cp-1]=1./ys;
-  for (int i=0;i<gndofs_;i++)
-    work_[i]=-g_[i];
-  cp= point_;
-  for (int i=0;i<bound;i++)
-  {
-    cp--;
-    if (cp==-1)
-      cp=m_-1;
-    double sq=ddot(&gndofs_,&work_[ispt+cp*gndofs_],&inc,&work_[0],&inc);
-    int    inmc=gndofs_+m_+cp;
-    int    iycn=iypt+cp*gndofs_;
-    work_[inmc]= work_[gndofs_+cp]*sq;
-    double alpha=-work_[inmc];
-    daxpy(&gndofs_,&alpha,&work_[iycn],&inc,&work_[0],&inc);
-  }
+    int inc        = 1;
+    const int ispt = gndofs_ + 2 * m_;
+    const int iypt = ispt + gndofs_ * m_;
+    int cp         = point_;
+    if (point_ == 0) cp = m_;
+    work_[gndofs_ + cp - 1] = 1. / ys;
+    for (int i = 0; i < gndofs_; i++)
+        work_[i] = -g_[i];
+    cp = point_;
+    for (int i = 0; i < bound; i++)
+    {
+        cp--;
+        if (cp == -1) cp = m_ - 1;
+        double sq = ddot(
+            &gndofs_, &work_[ispt + cp * gndofs_], &inc, &work_[0], &inc);
+        int inmc     = gndofs_ + m_ + cp;
+        int iycn     = iypt + cp * gndofs_;
+        work_[inmc]  = work_[gndofs_ + cp] * sq;
+        double alpha = -work_[inmc];
+        daxpy(&gndofs_, &alpha, &work_[iycn], &inc, &work_[0], &inc);
+    }
 
-  for (int i=0;i<gndofs_;i++)
-    work_[i] *= diag_[i];
+    for (int i = 0; i < gndofs_; i++)
+        work_[i] *= diag_[i];
 
-  for (int i=0;i<bound;i++)
-  {
-    double yr= ddot(&gndofs_,&work_[iypt+cp*gndofs_],&inc,&work_[0],&inc);
-    double beta= work_[gndofs_+cp]*yr;
-    int    inmc=gndofs_+m_+cp;
-    beta= work_[inmc]-beta;
-    int    iscn=ispt+cp*gndofs_;
-    daxpy(&gndofs_,&beta,&work_[iscn],&inc,&work_[0],&inc);
-    cp++;
-    if (cp==m_)
-      cp=0;
-  }
+    for (int i = 0; i < bound; i++)
+    {
+        double yr = ddot(
+            &gndofs_, &work_[iypt + cp * gndofs_], &inc, &work_[0], &inc);
+        double beta = work_[gndofs_ + cp] * yr;
+        int inmc    = gndofs_ + m_ + cp;
+        beta        = work_[inmc] - beta;
+        int iscn    = ispt + cp * gndofs_;
+        daxpy(&gndofs_, &beta, &work_[iscn], &inc, &work_[0], &inc);
+        cp++;
+        if (cp == m_) cp = 0;
+    }
 }
 
 void LBFGS_IonicStepper::mcsrch(const double f, double* s, double& stp)
 {
-//   Parameters for line search routine     
-  const int    maxfev= 5;
-  const double gtol=0.9;
-  const double ftol=1.e-4;
-  // nonnegative input variables which specify lower and upper bounds 
-  // for the step
-  const double stpmin=1.e-5;
-  const double stpmax=1.e+6;
+    //   Parameters for line search routine
+    const int maxfev  = 5;
+    const double gtol = 0.9;
+    const double ftol = 1.e-4;
+    // nonnegative input variables which specify lower and upper bounds
+    // for the step
+    const double stpmin = 1.e-5;
+    const double stpmax = 1.e+6;
 
-  // Adapted from the fortran77 subroutine csrch of More' and Thuente.
-  //
-  // The purpose of mcsrch is to find a step which satisfies
-  // a sufficient decrease condition and a curvature condition.
-  // 
-  // At each stage the subroutine updates an interval of
-  // uncertainty with endpoints stx and sty. the interval of
-  // uncertainty is initially chosen so that it contains a
-  // minimizer of the modified function
-  // 
-  //  f(x+stp*s) - f(x) - ftol*stp*(gradf(x)'s).
-  // 
-  // if a step is obtained for which the modified function
-  // has a nonpositive function value and nonnegative derivative,
-  // then the interval of uncertainty is chosen so that it
-  // contains a minimizer of f(x+stp*s).
-  // 
-  // the algorithm is designed to find a step which satisfies
-  // the sufficient decrease condition
-  //
-  //       f(x+stp*s) <= f(x) + ftol*stp*(gradf(x)'s),
-  // 
-  // and the curvature condition
-  // 
-  //  abs(gradf(x+stp*s)'s)) <= gtol*abs(gradf(x)'s).
-  //
-  // if ftol is less than gtol and if, for example, the function
-  // is bounded below, then there is always a step which satisfies
-  // both conditions. if no step can be found which satisfies both
-  // conditions, then the algorithm usually stops when rounding
-  // errors prevent further progress. in this case stp only
-  // satisfies the sufficient decrease condition.
-  // 
-  //   f is a variable. on input it must contain the value of f at x. 
-  // 
-  //   s specifies the search direction.
-  // 
-  //   stp is a nonnegative variable. 
-  //   on input stp contains an initial estimate of a satisfactory step. 
-  //   on output stp contains the final estimate.
-  // 
-  int    inc=1;
+    // Adapted from the fortran77 subroutine csrch of More' and Thuente.
+    //
+    // The purpose of mcsrch is to find a step which satisfies
+    // a sufficient decrease condition and a curvature condition.
+    //
+    // At each stage the subroutine updates an interval of
+    // uncertainty with endpoints stx and sty. the interval of
+    // uncertainty is initially chosen so that it contains a
+    // minimizer of the modified function
+    //
+    //  f(x+stp*s) - f(x) - ftol*stp*(gradf(x)'s).
+    //
+    // if a step is obtained for which the modified function
+    // has a nonpositive function value and nonnegative derivative,
+    // then the interval of uncertainty is chosen so that it
+    // contains a minimizer of f(x+stp*s).
+    //
+    // the algorithm is designed to find a step which satisfies
+    // the sufficient decrease condition
+    //
+    //       f(x+stp*s) <= f(x) + ftol*stp*(gradf(x)'s),
+    //
+    // and the curvature condition
+    //
+    //  abs(gradf(x+stp*s)'s)) <= gtol*abs(gradf(x)'s).
+    //
+    // if ftol is less than gtol and if, for example, the function
+    // is bounded below, then there is always a step which satisfies
+    // both conditions. if no step can be found which satisfies both
+    // conditions, then the algorithm usually stops when rounding
+    // errors prevent further progress. in this case stp only
+    // satisfies the sufficient decrease condition.
+    //
+    //   f is a variable. on input it must contain the value of f at x.
+    //
+    //   s specifies the search direction.
+    //
+    //   stp is a nonnegative variable.
+    //   on input stp contains an initial estimate of a satisfactory step.
+    //   on output stp contains the final estimate.
+    //
+    int inc = 1;
 
-  if (info_!=-1)
-  {
-    infoc_ = 1;
-
-    //  compute the initial gradient in the search direction
-    //  and check that s is a descent direction.
-    dginit_=ddot(&gndofs_,&g_[0],&inc,s,&inc);
-    if (dginit_ >= 0.)
+    if (info_ != -1)
     {
-      (*MPIdata::sout) << "lbfgs: the search direction is not a descent direction" << endl;
-      return;
-    }
+        infoc_ = 1;
 
-    // initialize local variables.
-    brackt_ = false;
-    stage1_ = true;
-    nfev_ = 0;
-    finit_ = f;
-    width_ = stpmax - stpmin;
-    width1_ = 2.*width_;
-    (*MPIdata::sout)<<"lbfgs: update reference positions"<<endl;
-    dcopy(&gndofs_,&xcurrent_[0],&inc,&xref_[0],&inc);
-    last_step_accepted_=1;
+        //  compute the initial gradient in the search direction
+        //  and check that s is a descent direction.
+        dginit_ = ddot(&gndofs_, &g_[0], &inc, s, &inc);
+        if (dginit_ >= 0.)
+        {
+            (*MPIdata::sout)
+                << "lbfgs: the search direction is not a descent direction"
+                << endl;
+            return;
+        }
 
-    // the variables stx, fx, dgx contain the values of the step,
-    // function, and directional derivative at the best step.
-    // the variables sty, fy, dgy contain the value of the step,
-    // function, and derivative at the other endpoint of
-    // the interval of uncertainty.
-    // the variables stp, f, dg contain the values of the step,
-    // function, and derivative at the current step.
-    stx_ = 0.;
-    fx_  = finit_;
-    dgx_ = dginit_;
-    sty_ = 0.;
-    fy_  = finit_;
-    dgy_ = dginit_;
-  }else{
-    last_step_accepted_=0;
-  }
-  
-  for (int k=0;k<10;k++)
-  {
-    if (info_!=-1)
-    {
-      // set the minimum and maximum steps to correspond
-      // to the present interval of uncertainty.
-      if (brackt_)
-      {
-        stmin_ = min(stx_,sty_);
-        stmax_ = max(stx_,sty_);
-      }
-      else
-      {
-        stmin_ = stx_;
-        stmax_ = stp + 4.*(stp - stx_);
-      }
+        // initialize local variables.
+        brackt_ = false;
+        stage1_ = true;
+        nfev_   = 0;
+        finit_  = f;
+        width_  = stpmax - stpmin;
+        width1_ = 2. * width_;
+        (*MPIdata::sout) << "lbfgs: update reference positions" << endl;
+        dcopy(&gndofs_, &xcurrent_[0], &inc, &xref_[0], &inc);
+        last_step_accepted_ = 1;
 
-      // force the step to be within the bounds stpmax and stpmin.
-      stp = max(stp,stpmin);
-      stp = min(stp,stpmax);
-
-      // if an unusual termination is to occur then let
-      // stp be the lowest point obtained so far.
-
-      if ((brackt_ && (stp <= stmin_ || stp >= stmax_))
-          || nfev_ >= maxfev-1 || infoc_ == 0
-          || (brackt_ && stmax_-stmin_ <= xtol_*stmax_)) 
-        stp = stx_;
-
-      // evaluate the function and gradient at stp
-      // and compute the directional derivative.
-      // we return to main program to obtain f and g.
-      (*MPIdata::sout)<<setprecision(2)<<scientific;
-      (*MPIdata::sout) << "lbfgs: try new position with stp=" << stp << endl;
-      for (int j=0;j<gndofs_;j++){
-        assert( s[j]<10. );
-        xcurrent_[j] = xref_[j] + stp*s[j];
-      }
-      if( stp<stpmin )
-        restart();
-      info_=-1;
-      return;
-    }
-    info_=0;
-    nfev_++;
-    double dg = ddot(&gndofs_,&g_[0],&inc,s,&inc);
-    double dgtest = ftol*dginit_;
-    double ftest1 = finit_ + stp*dgtest;
-
-    //(*MPIdata::sout)<<"ftest1="<<ftest1<<", f="<<f<<", dginit_="<<dginit_<<", dg="<<dg
-    //<<", stp="<<stp<<endl;
-
-    // test for convergence.
-    // 
-    //     info =-1  a return is made to compute the function and gradient.
-    //     info = 1  the sufficient decrease condition and the
-    //       directional derivative condition hold.
-    //     info = 2  relative width of the interval of uncertainty
-    //       is at most xtol.
-    //     info = 3  number of calls to fcn has reached maxfev.
-    //     info = 4  the step is at the lower bound stpmin.
-    //     info = 5  the step is at the upper bound stpmax.
-    //     info = 6  rounding errors prevent further progress.
-    //       there may not be a step which satisfies the
-    //       sufficient decrease and curvature conditions.
-    //       tolerances may be too small.
-    // 
-    if ((brackt_ && (stp <= stmin_ || stp >= stmax_)) || infoc_ == 0) 
-      info_ = 6;
-    if (stp == stpmax && f <= ftest1 && dg <= dgtest)
-      info_ = 5;
-    if (stp == stpmin && (f > ftest1 || dg >= dgtest)) 
-      info_ = 4;
-    if (nfev_ >= maxfev){ 
-      info_ = 3;
-      if (f <= ftest1 )
-      {
-        (*MPIdata::sout)<<"Warning: 2nd Wolfe condition not satisfied"<<endl;
-        info_ = 1;
-      }
-    }
-    if (brackt_ && stmax_-stmin_ <= xtol_*stmax_) 
-      info_ = 2;
-    if (f <= ftest1 && fabs(dg) <= gtol*(-dginit_)) 
-      info_ = 1;
-
-    // check for termination.
-    if (info_ != 0) return;
-
-    // in the first stage we seek a step for which the modified
-    // function has a nonpositive value and nonnegative derivative.
-    if (stage1_ && f <= ftest1 && dg >= min(ftol,gtol)*dginit_) 
-      stage1_ = false;
-
-    // a modified function is used to predict the step only if
-    // we have not obtained a step for which the modified
-    // function has a nonpositive function value and nonnegative
-    // derivative, and if a lower function value has been
-    // obtained but the decrease is not sufficient.
-
-    if (stage1_ && f <= fx_ && f > ftest1) 
-    {
-      // define the modified function and derivative values.
-      double fm = f - stp*dgtest;
-      double fxm = fx_ - stx_*dgtest;
-      double fym = fy_ - sty_*dgtest;
-      double dgm = dg - dgtest;
-      double dgxm = dgx_ - dgtest;
-      double dgym = dgy_ - dgtest;
-
-      // call mcstep to update the interval of uncertainty
-      // and to compute the new step.
-      infoc_=mcstep(stx_,fxm,dgxm,sty_,fym,dgym,stp,fm,dgm,
-                    brackt_,stmin_,stmax_);
-
-      // reset the function and gradient values for f.
-      fx_ = fxm + stx_*dgtest;
-      fy_ = fym + sty_*dgtest;
-      dgx_ = dgxm + dgtest;
-      dgy_ = dgym + dgtest;
-
+        // the variables stx, fx, dgx contain the values of the step,
+        // function, and directional derivative at the best step.
+        // the variables sty, fy, dgy contain the value of the step,
+        // function, and derivative at the other endpoint of
+        // the interval of uncertainty.
+        // the variables stp, f, dg contain the values of the step,
+        // function, and derivative at the current step.
+        stx_ = 0.;
+        fx_  = finit_;
+        dgx_ = dginit_;
+        sty_ = 0.;
+        fy_  = finit_;
+        dgy_ = dginit_;
     }
     else
     {
-      // call mcstep to update the interval of uncertainty
-      // and to compute the new step.
-      infoc_=mcstep(stx_,fx_,dgx_,sty_,fy_,dgy_,stp,f,dg,
-                    brackt_,stmin_,stmax_);
+        last_step_accepted_ = 0;
     }
 
-    // force a sufficient decrease in the size of the
-    // interval of uncertainty.
-    if (brackt_)
+    for (int k = 0; k < 10; k++)
     {
-      if (fabs(sty_-stx_) >= 0.66*width1_)
-        stp = stx_ + 0.5*(sty_ - stx_);
-      width1_ = width_;
-      width_ = fabs(sty_-stx_);
+        if (info_ != -1)
+        {
+            // set the minimum and maximum steps to correspond
+            // to the present interval of uncertainty.
+            if (brackt_)
+            {
+                stmin_ = min(stx_, sty_);
+                stmax_ = max(stx_, sty_);
+            }
+            else
+            {
+                stmin_ = stx_;
+                stmax_ = stp + 4. * (stp - stx_);
+            }
+
+            // force the step to be within the bounds stpmax and stpmin.
+            stp = max(stp, stpmin);
+            stp = min(stp, stpmax);
+
+            // if an unusual termination is to occur then let
+            // stp be the lowest point obtained so far.
+
+            if ((brackt_ && (stp <= stmin_ || stp >= stmax_))
+                || nfev_ >= maxfev - 1 || infoc_ == 0
+                || (brackt_ && stmax_ - stmin_ <= xtol_ * stmax_))
+                stp = stx_;
+
+            // evaluate the function and gradient at stp
+            // and compute the directional derivative.
+            // we return to main program to obtain f and g.
+            (*MPIdata::sout) << setprecision(2) << scientific;
+            (*MPIdata::sout)
+                << "lbfgs: try new position with stp=" << stp << endl;
+            for (int j = 0; j < gndofs_; j++)
+            {
+                assert(s[j] < 10.);
+                xcurrent_[j] = xref_[j] + stp * s[j];
+            }
+            if (stp < stpmin) restart();
+            info_ = -1;
+            return;
+        }
+        info_ = 0;
+        nfev_++;
+        double dg     = ddot(&gndofs_, &g_[0], &inc, s, &inc);
+        double dgtest = ftol * dginit_;
+        double ftest1 = finit_ + stp * dgtest;
+
+        //(*MPIdata::sout)<<"ftest1="<<ftest1<<", f="<<f<<",
+        //dginit_="<<dginit_<<", dg="<<dg
+        //<<", stp="<<stp<<endl;
+
+        // test for convergence.
+        //
+        //     info =-1  a return is made to compute the function and gradient.
+        //     info = 1  the sufficient decrease condition and the
+        //       directional derivative condition hold.
+        //     info = 2  relative width of the interval of uncertainty
+        //       is at most xtol.
+        //     info = 3  number of calls to fcn has reached maxfev.
+        //     info = 4  the step is at the lower bound stpmin.
+        //     info = 5  the step is at the upper bound stpmax.
+        //     info = 6  rounding errors prevent further progress.
+        //       there may not be a step which satisfies the
+        //       sufficient decrease and curvature conditions.
+        //       tolerances may be too small.
+        //
+        if ((brackt_ && (stp <= stmin_ || stp >= stmax_)) || infoc_ == 0)
+            info_ = 6;
+        if (stp == stpmax && f <= ftest1 && dg <= dgtest) info_ = 5;
+        if (stp == stpmin && (f > ftest1 || dg >= dgtest)) info_ = 4;
+        if (nfev_ >= maxfev)
+        {
+            info_ = 3;
+            if (f <= ftest1)
+            {
+                (*MPIdata::sout)
+                    << "Warning: 2nd Wolfe condition not satisfied" << endl;
+                info_ = 1;
+            }
+        }
+        if (brackt_ && stmax_ - stmin_ <= xtol_ * stmax_) info_ = 2;
+        if (f <= ftest1 && fabs(dg) <= gtol * (-dginit_)) info_ = 1;
+
+        // check for termination.
+        if (info_ != 0) return;
+
+        // in the first stage we seek a step for which the modified
+        // function has a nonpositive value and nonnegative derivative.
+        if (stage1_ && f <= ftest1 && dg >= min(ftol, gtol) * dginit_)
+            stage1_ = false;
+
+        // a modified function is used to predict the step only if
+        // we have not obtained a step for which the modified
+        // function has a nonpositive function value and nonnegative
+        // derivative, and if a lower function value has been
+        // obtained but the decrease is not sufficient.
+
+        if (stage1_ && f <= fx_ && f > ftest1)
+        {
+            // define the modified function and derivative values.
+            double fm   = f - stp * dgtest;
+            double fxm  = fx_ - stx_ * dgtest;
+            double fym  = fy_ - sty_ * dgtest;
+            double dgm  = dg - dgtest;
+            double dgxm = dgx_ - dgtest;
+            double dgym = dgy_ - dgtest;
+
+            // call mcstep to update the interval of uncertainty
+            // and to compute the new step.
+            infoc_ = mcstep(stx_, fxm, dgxm, sty_, fym, dgym, stp, fm, dgm,
+                brackt_, stmin_, stmax_);
+
+            // reset the function and gradient values for f.
+            fx_  = fxm + stx_ * dgtest;
+            fy_  = fym + sty_ * dgtest;
+            dgx_ = dgxm + dgtest;
+            dgy_ = dgym + dgtest;
+        }
+        else
+        {
+            // call mcstep to update the interval of uncertainty
+            // and to compute the new step.
+            infoc_ = mcstep(stx_, fx_, dgx_, sty_, fy_, dgy_, stp, f, dg,
+                brackt_, stmin_, stmax_);
+        }
+
+        // force a sufficient decrease in the size of the
+        // interval of uncertainty.
+        if (brackt_)
+        {
+            if (fabs(sty_ - stx_) >= 0.66 * width1_)
+                stp = stx_ + 0.5 * (sty_ - stx_);
+            width1_ = width_;
+            width_  = fabs(sty_ - stx_);
+        }
     }
-  }
 }

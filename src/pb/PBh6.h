@@ -1,8 +1,8 @@
 // Copyright (c) 2017, Lawrence Livermore National Security, LLC. Produced at
-// the Lawrence Livermore National Laboratory. 
+// the Lawrence Livermore National Laboratory.
 // Written by J.-L. Fattebert, D. Osei-Kuffuor and I.S. Dunn.
 // LLNL-CODE-743438
-// All rights reserved. 
+// All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
@@ -10,97 +10,93 @@
 #ifndef PB_H6_H
 #define PB_H6_H
 
-#include "PBh4.h"
 #include "PB.h"
+#include "PBh4.h"
 
 // operator -epsilon div*grad -(grad epsilon)* grad
-namespace pb{
+namespace pb
+{
 template <class T>
-class PBh6:public PB<T>
+class PBh6 : public PB<T>
 {
 
 private:
-
     void pb_6th(GridFunc<T>& A, GridFunc<T>& B);
-    
+
     PBh4<T>* lower_order_op_;
 
 public:
-
     // constructor
-    PBh6(const Grid& mygrid, DielFunc<T>& myepsilon):
-        PB<T>(mygrid, myepsilon)
+    PBh6(const Grid& mygrid, DielFunc<T>& myepsilon) : PB<T>(mygrid, myepsilon)
     {
-        PB<T>::initialized_=true;
-        lower_order_op_=NULL;
+        PB<T>::initialized_ = true;
+        lower_order_op_     = NULL;
     };
-    PBh6(const Grid& mygrid, const double e0, const double rho0, const double drho0):
-        PB<T>(mygrid, e0, rho0, drho0)
+    PBh6(const Grid& mygrid, const double e0, const double rho0,
+        const double drho0)
+        : PB<T>(mygrid, e0, rho0, drho0)
     {
-        PB<T>::initialized_=false;
-        lower_order_op_=NULL;
+        PB<T>::initialized_ = false;
+        lower_order_op_     = NULL;
     };
-    
+
     ~PBh6()
     {
-        if( lower_order_op_!=NULL ){
+        if (lower_order_op_ != NULL)
+        {
             delete lower_order_op_;
-            lower_order_op_=NULL;
+            lower_order_op_ = NULL;
         }
     }
 
     // construct a coarse grid operator
     PBh6 coarseOp(const Grid& mygrid)
     {
-        Grid coarse_G=mygrid.coarse_grid();
-	DielFunc<T>  ecoarse(coarse_G, PB<T>::epsilon_.epsilon_max());
-	PB<T>::epsilon_.restrict3D(ecoarse);
-	
-	PBh6  A(coarse_G, ecoarse);
-	
-	return A;
+        Grid coarse_G = mygrid.coarse_grid();
+        DielFunc<T> ecoarse(coarse_G, PB<T>::epsilon_.epsilon_max());
+        PB<T>::epsilon_.restrict3D(ecoarse);
+
+        PBh6 A(coarse_G, ecoarse);
+
+        return A;
     }
-    
+
     PBh6 replicatedOp(const Grid&);
 
     void setLowerOrderGrid()
     {
-        FDoper<T>::setFDLowerOrderGrid( PBh4<T>::minNumberGhosts() );
+        FDoper<T>::setFDLowerOrderGrid(PBh4<T>::minNumberGhosts());
     }
 
     PBh4<T>& getLowerOrderOp()
     {
-        if( lower_order_op_==NULL ){
+        if (lower_order_op_ == NULL)
+        {
             FDoper<T>::setFDLowerOrderGrid(PBh4<T>::minNumberGhosts());
-            lower_order_op_=new PBh4<T>( PB<T>::getLowerOrderGrid(), PB<T>::epsilon_ );
+            lower_order_op_
+                = new PBh4<T>(PB<T>::getLowerOrderGrid(), PB<T>::epsilon_);
         }
         return *lower_order_op_;
     }
 
-    static short minNumberGhosts()
-    {
-        return 3;
-    }
+    static short minNumberGhosts() { return 3; }
 
     // A->B
-    void apply(GridFunc<T> &A, GridFunc<T> &B) 
+    void apply(GridFunc<T>& A, GridFunc<T>& B)
     {
-        pb_6th(A,B);
-	B.set_bc(A.bc(0),A.bc(1),A.bc(2));
+        pb_6th(A, B);
+        B.set_bc(A.bc(0), A.bc(1), A.bc(2));
     }
 
-
-    void init(GridFunc<T>& gf_rhod){
+    void init(GridFunc<T>& gf_rhod)
+    {
         PB<T>::epsilon_.Gepsilon_rho(gf_rhod);
-        PB<T>::initialized_=true;
+        PB<T>::initialized_ = true;
     };
 
-    void jacobi(GridFunc<T>& A, 
-                const GridFunc<T>& B, 
-                GridFunc<T>& W);
+    void jacobi(GridFunc<T>& A, const GridFunc<T>& B, GridFunc<T>& W);
 
-
-    void get_vepsilon(GridFunc<T>&,GridFunc<T>&,GridFunc<T>&);
+    void get_vepsilon(GridFunc<T>&, GridFunc<T>&, GridFunc<T>&);
 };
 
 } // namespace pb

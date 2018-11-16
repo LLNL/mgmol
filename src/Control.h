@@ -1,22 +1,22 @@
 // Copyright (c) 2017, Lawrence Livermore National Security, LLC. Produced at
-// the Lawrence Livermore National Laboratory. 
+// the Lawrence Livermore National Laboratory.
 // Written by J.-L. Fattebert, D. Osei-Kuffuor and I.S. Dunn.
 // LLNL-CODE-743438
-// All rights reserved. 
+// All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #ifndef CONTROL_H
 #define CONTROL_H
 
-#include "Timeout.h"
 #include "Species.h"
+#include "Timeout.h"
 
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <string>
 #include <cassert>
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <vector>
 
 #ifdef USE_MPI
 #include <mpi.h>
@@ -28,10 +28,10 @@ class Potentials;
 #ifdef HAVE_BOOST
 namespace boost
 {
-    namespace program_options
-    {
-        class variables_map;
-    }
+namespace program_options
+{
+    class variables_map;
+}
 }
 #endif
 
@@ -40,63 +40,62 @@ class Control
 {
 private:
     static Control* pinstance_;
-    
+
     // this class uses its own communicator to bcast options to
     // all tasks involved in run
     static MPI_Comm comm_global_;
-    
+
     // spin of system
     static float total_spin_; // +/-1/2, +/-1, ...
     static bool with_spin_;
- 
+
     int mype_;
-    
-    // pointer to array of Species 
+
+    // pointer to array of Species
     std::vector<Species> sp_;
 
     // pseudopotentials filenames
     std::vector<std::string> pot_filenames_;
-    std::vector<short>  pseudopot_flags_;
+    std::vector<short> pseudopot_flags_;
 
     // Uses localized orbitals or not
-    bool    loc_mode_;
-    
+    bool loc_mode_;
+
     // Number of electrons
     int nel_; // total
     int nempty_;
     int nelspin_; // Number electrons for local spin
-        
+
     // total charge of system ions+electrons
     short system_charge_;
 
     float min_distance_centers_;
-    
-    //threshold below which action is taken to reduce linear dependence between
-    //functions at each MD step
+
+    // threshold below which action is taken to reduce linear dependence between
+    // functions at each MD step
     float threshold_eigenvalue_gram_;
-    
-    //threshold below which action is taken to reduce linear dependence between
-    //functions during quench
+
+    // threshold below which action is taken to reduce linear dependence between
+    // functions during quench
     float threshold_eigenvalue_gram_quench_;
-    
-    //Max. distance between pairs for MLWF transform
+
+    // Max. distance between pairs for MLWF transform
     float pair_mlwf_distance_threshold_;
-    
+
     // relative tolerance of KS energy convergence
     float conv_rtol_;
-    
-    short conv_criterion_;
 
+    short conv_criterion_;
 
     // multiplicative factor for spread penalty
     float spread_penalty_damping_;
     float spread_penalty_target_;
     float spread_penalty_alpha_;
     short spread_penalty_type_;
-    
+
     short dm_use_old_;
-    
-    // Number of electronic steps per ionic step 
+
+    // Number of electronic steps per ionic step
     short max_electronic_steps_loose_;
     short max_electronic_steps_tight_;
     //
@@ -106,137 +105,112 @@ private:
     // 10 = no diel. parameter with PCG for Poisson
     // 11 = diel. parameter with PCG for Poisson
     short diel_flag_;
-    
+
     // corloring algorithm
     // 0 =global RLF
     // 1 =global greedy
     // 10=local RLF
     // 11=local greedy
     short coloring_algo_;
-    
+
     // Number of MG levels for preconditioning
-    short  mg_levels_;
+    short mg_levels_;
 
     // preconditioning type
     // 0  = MG
     // 10 = MG, block implementation
-    short     precond_type_;
-    
+    short precond_type_;
+
     // flag to decide if condition number of Gram matrix
-    // should be computed during quench (value 2) or 
+    // should be computed during quench (value 2) or
     // only at the end of quench (value 1)
     short computeCondGram_;
-    
+
     // max. distance for atomic information to be communicated
     float maxDistanceAtomicInfo_;
-    
+
     float aomm_radius_;
     float aomm_threshold_factor_;
-    
-    //rescaling factor for velocities at restart
+
+    // rescaling factor for velocities at restart
     double rescale_v_;
- 
+
     float overallocate_factor_;
- 
+
     static std::string run_directory_;
 
     Timeout timeout_;
-    
-    //DM solver:
+
+    // DM solver:
     // simple(0), MVP(1)
-    short     DM_solver_;
+    short DM_solver_;
 
     Control();
-    
-    ~Control()
-    {};
-    Control(const Control& ct)
-    {
-        (void)ct;
-    };
-    
+
+    ~Control(){};
+    Control(const Control& ct) { (void)ct; };
+
     void printRestartLink();
-    
+
 public:
     static Control* instance()
     {
-        assert( comm_global_!=MPI_COMM_NULL );
-        if( pinstance_==0 ){
+        assert(comm_global_ != MPI_COMM_NULL);
+        if (pinstance_ == 0)
+        {
             pinstance_ = new Control();
         }
         return pinstance_;
     }
     static void deleteInstance()
     {
-        if( pinstance_!=0 )
+        if (pinstance_ != 0)
         {
             delete pinstance_;
-            pinstance_=0;
+            pinstance_ = 0;
         }
     }
     static void setup(const MPI_Comm comm, const bool with_spin,
-                      const float total_spin,
-                      std::string run_directory=".");
-    
+        const float total_spin, std::string run_directory = ".");
+
     void setDefaultValues();
-    
-    bool globalColoring()const
-    {
-        return (coloring_algo_/10==0);
-    }
-    
-    bool RLFColoring()const
-    {
-        return (coloring_algo_%10==0);
-    }
-    bool use_old_dm()const{ return (dm_use_old_==1); }
-    
+
+    bool globalColoring() const { return (coloring_algo_ / 10 == 0); }
+
+    bool RLFColoring() const { return (coloring_algo_ % 10 == 0); }
+    bool use_old_dm() const { return (dm_use_old_ == 1); }
+
     std::string getFullFilename(const std::string& filename)
     {
-        return run_directory_+"/"+filename;
+        return run_directory_ + "/" + filename;
     }
-    
-    int getNel()const
+
+    int getNel() const { return nel_; }
+
+    int getNelSpin() const
     {
-        return nel_;
-    }
-    
-    int getNelSpin()const
-    {
-        assert( nelspin_>=0 );
+        assert(nelspin_ >= 0);
         return nelspin_;
     }
-    
-    float getSpin()const
-    {
-        return total_spin_;
-    }
-    
-    short getMGlevels()
-    {
-        return mg_levels_;
-    }
-    
-    short getPrecondType()const
-    {
-        return precond_type_;
-    }
-    
-    bool blockPrecond()const
-    {
-        return (precond_type_/10==1);
-    }
-   
+
+    float getSpin() const { return total_spin_; }
+
+    short getMGlevels() { return mg_levels_; }
+
+    short getPrecondType() const { return precond_type_; }
+
+    bool blockPrecond() const { return (precond_type_ / 10 == 1); }
+
     void convergeTightly()
     {
-        max_electronic_steps=max_electronic_steps_tight_;
+        max_electronic_steps = max_electronic_steps_tight_;
     }
- 
+
     void convergeLoosely()
     {
-        max_electronic_steps=max_electronic_steps_loose_;
+        max_electronic_steps = max_electronic_steps_loose_;
     }
- 
+
     void print(std::ostream&);
     void sync(void);
     void adjust();
@@ -245,113 +219,88 @@ public:
     void readRestartOutputInfo(std::ifstream* tfile);
     int readLRupdateInfo(std::ifstream* tfile);
     int readThermostatInfo(std::ifstream* tfile);
-    void printThermostatInfo(std::ostream& os)const;
+    void printThermostatInfo(std::ostream& os) const;
     void setNumst(const short myspin, const int nval);
-    void setNumIons(const int num_ions);    
-    int setPreconditionerParameters(const short type, 
-                                    const float factor, 
-                                    const bool project_out,
-                                    const short nlevels, const float);
-    int setShortSightedSolverParameters(const float fact, 
-    											const float stol,
-    											const float dtol, 
-    											const short kim, 
-    											const short itmax, 
-    											const short lfil, 
-    											const short maxfill, 
-    											const short ilutype);      
-    void setSpreadRadius();                              
+    void setNumIons(const int num_ions);
+    int setPreconditionerParameters(const short type, const float factor,
+        const bool project_out, const short nlevels, const float);
+    int setShortSightedSolverParameters(const float fact, const float stol,
+        const float dtol, const short kim, const short itmax, const short lfil,
+        const short maxfill, const short ilutype);
+    void setSpreadRadius();
     int readOccupations(std::ifstream* tfile);
-    bool checkTimeout()
-    {
-        return timeout_.check();
-    }
-    
-    bool occupationWidthIsZero()
-    {
-        return occ_width<1.e-12;
-    }
+    bool checkTimeout() { return timeout_.check(); }
 
-    void setLocMode(const float,
-                    const float,const float,const float,
-                    const float);
+    bool occupationWidthIsZero() { return occ_width < 1.e-12; }
 
+    void setLocMode(
+        const float, const float, const float, const float, const float);
 
-    bool isLocMode()const
-    {
-        return loc_mode_;
-    }
-    
+    bool isLocMode() const { return loc_mode_; }
+
     bool adaptiveLRs()
     {
-        assert( wannier_transform_type>=0 );
-        assert( lr_update>=0 );
-        
+        assert(wannier_transform_type >= 0);
+        assert(lr_update >= 0);
+
         return (wannier_transform_type && loc_mode_ && lr_update);
     }
-    
+
     bool adaptiveLRsizes()
     {
-        assert( wannier_transform_type>=0 );
-        assert( lr_update>=0 );
-        
-        return (wannier_transform_type && loc_mode_ && lr_update && lr_updates_type>0);
-    }
-    
-    float getMinDistanceCenters()const
-    {
-        return min_distance_centers_;
+        assert(wannier_transform_type >= 0);
+        assert(lr_update >= 0);
+
+        return (wannier_transform_type && loc_mode_ && lr_update
+                && lr_updates_type > 0);
     }
 
+    float getMinDistanceCenters() const { return min_distance_centers_; }
+
     void setTolEigenvalueGram(const float tol);
-    float getThresholdEigenvalueGram()const
+    float getThresholdEigenvalueGram() const
     {
-        assert( threshold_eigenvalue_gram_>=0. );
-        
+        assert(threshold_eigenvalue_gram_ >= 0.);
+
         return threshold_eigenvalue_gram_;
     }
-    float getThresholdEigenvalueGramQuench()const
+    float getThresholdEigenvalueGramQuench() const
     {
-        assert( threshold_eigenvalue_gram_quench_>=0. );
-        
+        assert(threshold_eigenvalue_gram_quench_ >= 0.);
+
         return threshold_eigenvalue_gram_quench_;
     }
 
-    float getThresholdDistancePairMLWF()const
+    float getThresholdDistancePairMLWF() const
     {
-        assert( pair_mlwf_distance_threshold_>=0. );
-        
+        assert(pair_mlwf_distance_threshold_ >= 0.);
+
         return pair_mlwf_distance_threshold_;
     }
 
     void global_exit(int i);
-    
-    bool Mehrstellen()const
-    {
-        return( lap_type==0 || lap_type==10 );
-    }
-    
+
+    bool Mehrstellen() const { return (lap_type == 0 || lap_type == 10); }
+
     void setColoringAlgo(const short coloring_algo)
     {
-        coloring_algo_=coloring_algo;
+        coloring_algo_ = coloring_algo;
     }
-    
-    void setDielAlgo(const short dielflag, const short nu1, const short nu2, const short nlev)
+
+    void setDielAlgo(const short dielflag, const short nu1, const short nu2,
+        const short nlev)
     {
         diel_flag_ = dielflag;
-        
-        diel = diel_flag_%10;
-        poisson_pc_nu1 = nu1;
-        poisson_pc_nu2 = nu2;
+
+        diel            = diel_flag_ % 10;
+        poisson_pc_nu1  = nu1;
+        poisson_pc_nu2  = nu2;
         poisson_pc_nlev = nlev;
     }
-    
+
     // 10 or larger means CG, otherwise MG V-cycles
-    bool MGPoissonSolver()
-    {
-        return (diel_flag_/10==0);
-    }
-    
+    bool MGPoissonSolver() { return (diel_flag_ / 10 == 0); }
+
     //
     // data
     //
@@ -362,51 +311,50 @@ public:
     float ox_;
     float oy_;
     float oz_;
-    
+
     // mesh
     unsigned ngpts_[3];
- 
-    short     wf_dyn; // quench method
-    short     wf_m;   // number of wf to keep in memory 
-    
-    int     numst;
-    
-    short   wf_extrapolation;
 
+    short wf_dyn; // quench method
+    short wf_m; // number of wf to keep in memory
 
-    short   lrs_compute;    
-    short   lrs_extrapolation;
-    
-    float  betaAnderson;
-    
+    int numst;
+
+    short wf_extrapolation;
+
+    short lrs_compute;
+    short lrs_extrapolation;
+
+    float betaAnderson;
+
     // dielectric model for solvation
-    short     diel;
-    short     poisson_pc_nu1;
-    short     poisson_pc_nu2; 
-    short     poisson_pc_nlev;
+    short diel;
+    short poisson_pc_nu1;
+    short poisson_pc_nu2;
+    short poisson_pc_nlev;
 
-    short     lap_type;
-    
-    short     orthof; // orthogonalization frequency
-    
+    short lap_type;
+
+    short orthof; // orthogonalization frequency
+
     // screening constant for potential mixing
-    float  screening_const;
+    float screening_const;
 
-    bool      restart_run;
+    bool restart_run;
 
-    short     num_species;
-    int     num_ions;
-    
-    // timestep in front of MG correction 
+    short num_species;
+    int num_ions;
+
+    // timestep in front of MG correction
     float precond_factor;
-    bool   precond_factor_computed;
- 
-    short  project_out_psd;
+    bool precond_factor_computed;
+
+    short project_out_psd;
 
     // Exchange-Correlation flag
     short xctype;
 
-    // Actual number of steps done 
+    // Actual number of steps done
     short steps;
 
     // convergence criterion for w.f.
@@ -420,7 +368,7 @@ public:
 
     // Number of steps after which to perform checkpointing
     short checkpoint;
-    
+
     // Frequency print residuals (in electronic steps)
     short iprint_residual;
 
@@ -430,7 +378,7 @@ public:
     // Potential mixing parameters
     float mix_pot;
     float dm_mix;
-    
+
     // Density matrix computation algorithm
     // 0 =diagonalization
     short dm_algo;
@@ -448,220 +396,161 @@ public:
 
     // Localization radius
     float cut_radius;
-    
+
     float occ_width;
-   
+
     // transfer matrix flag
     short tmatrices;
 
     // Initialization with localized orbitals (1) or not (0)
     short init_loc;
-    
+
     // Initialization type (0=random, 1=Gaussians)
     short init_type;
     float init_rc;
-    
+
     // MD flag
     short atoms_dyn;
     float dt;
     short enforceVmass0;
     short md_print_freq;
-    std::string md_print_filename;    
-    
-    // Number of electronic steps per ionic step 
+    std::string md_print_filename;
+
+    // Number of electronic steps per ionic step
     short max_electronic_steps;
     short dm_inner_steps;
-    
+
     // Number of steps
     short num_MD_steps;
-    
-    // number of scf steps between localization centers updates
-    short     lr_updates_type;
-    short     lr_update;
-    float  tol_orb_centers_move;
-    short     lr_volume_calc;
-    
-    short     orbital_type;
-    short     dot_product_type;
-    
-    // with line minimization for electronic structure optimization
-    short     line_min;
 
-    short    thermostat_type;
+    // number of scf steps between localization centers updates
+    short lr_updates_type;
+    short lr_update;
+    float tol_orb_centers_move;
+    short lr_volume_calc;
+
+    short orbital_type;
+    short dot_product_type;
+
+    // with line minimization for electronic structure optimization
+    short line_min;
+
+    short thermostat_type;
     // temperature control
     float tkel;
     float thtime;
     float thwidth;
 
     // boundary conditions
-    short    bc[3];
+    short bc[3];
 
     // boundary conditions
-    short    bcPoisson[3];
-    short    multipole_order;
-    
+    short bcPoisson[3];
+    short multipole_order;
+
     // dielectric parameters
     float rho0;
     float drho0;
-    
+
     // flag to reset Vh at beginning of each MD step
     short hartree_reset_;
-    
+
     // short-sighted computation of selected elements of inverse
-    short     short_sighted;
-    short     fgmres_kim;
-    short     fgmres_maxits;
-    short     ilu_type;
-    short	  ilu_lof;
-    short     ilu_maxfil;
-    
-    float	  spread_factor;
-    float    spread_radius;
-    float    fgmres_tol;
-    float    ilu_droptol; 
-    
-    bool		 parallel_transport;
+    short short_sighted;
+    short fgmres_kim;
+    short fgmres_maxits;
+    short ilu_type;
+    short ilu_lof;
+    short ilu_maxfil;
+
+    float spread_factor;
+    float spread_radius;
+    float fgmres_tol;
+    float ilu_droptol;
+
+    bool parallel_transport;
     // number of MVP cycles
-    short     it_algo_type;
-    
-    short DM_solver()const
-    {
-        return DM_solver_;
-    }
-    
+    short it_algo_type;
+
+    short DM_solver() const { return DM_solver_; }
+
     //
-    short     use_kernel_functions;
-    
+    short use_kernel_functions;
+
     // restart info
-    short    restart_info;
-    short    out_restart_info;
-    std::string   restart_file;
-    std::string   out_restart_file;
-    short    out_restart_file_naming_strategy;
-    short    restart_file_type;
-    short    out_restart_file_type;
-    short    override_restart;
-    
+    short restart_info;
+    short out_restart_info;
+    std::string restart_file;
+    std::string out_restart_file;
+    short out_restart_file_naming_strategy;
+    short restart_file_type;
+    short out_restart_file_type;
+    short override_restart;
+
     short verbose;
-    
+
     float load_balancing_alpha;
     float load_balancing_damping_tol;
     short load_balancing_max_iterations;
     short load_balancing_modulo;
     short write_clusters;
     std::string load_balancing_output_file;
-    
-    float reducedCutRadius()const
-    {
-        return 0.5*cut_radius;
-    }
-    std::vector<Species>& getSpecies()
-    {
-        return sp_;
-    }
+
+    float reducedCutRadius() const { return 0.5 * cut_radius; }
+    std::vector<Species>& getSpecies() { return sp_; }
     void setSpecies(Potentials& pot);
     void readPotFilenames(std::ifstream* tfile);
     void registerPotentials(Potentials& pot);
-    
-    bool spread_penalize_xlbomd()
-    {
-        return ( spread_penalty_type_ == 3 );
-    }
-    bool isSpreadFunctionalActive()
-    {
-        return ( spread_penalty_alpha_>0. );
-    }
-    float spreadPenaltyDampingFactor()const
-    {
-        return spread_penalty_damping_;
-    }
-    float spreadPenaltyAlphaFactor()const
-    {
-        return spread_penalty_alpha_;
-    }
-    
-    float spreadPenaltyTarget()const
-    {
-        return spread_penalty_target_;
-    }
-    bool isSpreadFunctionalVolume()
-    {
-        return (spread_penalty_type_==1);
-    }
+
+    bool spread_penalize_xlbomd() { return (spread_penalty_type_ == 3); }
+    bool isSpreadFunctionalActive() { return (spread_penalty_alpha_ > 0.); }
+    float spreadPenaltyDampingFactor() const { return spread_penalty_damping_; }
+    float spreadPenaltyAlphaFactor() const { return spread_penalty_alpha_; }
+
+    float spreadPenaltyTarget() const { return spread_penalty_target_; }
+    bool isSpreadFunctionalVolume() { return (spread_penalty_type_ == 1); }
     bool isSpreadFunctionalEnergy()
     {
-        return (spread_penalty_type_==2 || spread_penalty_type_==3);
+        return (spread_penalty_type_ == 2 || spread_penalty_type_ == 3);
     }
-    
-    float initRadius()const
+
+    float initRadius() const
     {
-        float  cut_init=cut_radius;
-        if( init_type==0 ) // random
+        float cut_init = cut_radius;
+        if (init_type == 0) // random
         {
-            if( cut_radius>2. )cut_init=2.;
+            if (cut_radius > 2.) cut_init = 2.;
         }
         return cut_init;
     }
-    
-    hid_t outHdfDataType()const
+
+    hid_t outHdfDataType() const
     {
-        hid_t dtype_id= out_restart_info>3 ? H5T_NATIVE_DOUBLE : H5T_NATIVE_FLOAT;
+        hid_t dtype_id
+            = out_restart_info > 3 ? H5T_NATIVE_DOUBLE : H5T_NATIVE_FLOAT;
         return dtype_id;
     }
-    
-    bool computeCondGramQuench()const
-    {
-        return ( computeCondGram_>1 );
-    }
-    bool computeCondGramMD()const
-    {
-        return ( computeCondGram_>0 );
-    }
+
+    bool computeCondGramQuench() const { return (computeCondGram_ > 1); }
+    bool computeCondGramMD() const { return (computeCondGram_ > 0); }
     void setTolEnergy();
-    
-    float maxDistanceAtomicInfo()const
-    {
-        return maxDistanceAtomicInfo_;
-    }
+
+    float maxDistanceAtomicInfo() const { return maxDistanceAtomicInfo_; }
     int checkNLrange();
     int checkOptions();
 #ifdef HAVE_BOOST
     void setOptions(const boost::program_options::variables_map& vm);
 #endif
-    bool fullyOccupied()
-    {
-        return ( ( nelspin_-numst )==0 );
-    }
-    
-    float AOMMradius()const
-    {
-        return aomm_radius_;
-    }
-    float AOMMthresholdFactor()const
-    {
-        return aomm_threshold_factor_;
-    }
-    double VelocityScalingFactor()const
-    {
-        return rescale_v_;
-    }
-    float orbitalsOverallocateFactor()const
-    {
-        return overallocate_factor_;
-    }
-   
-    bool checkResidual()const
-    {
-        return (conv_criterion_>0);
-    }
-    bool checkMaxResidual()const
-    {
-        return (conv_criterion_==2);
-    }
-    bool resetVH()const
-    {
-        return ( hartree_reset_>0 );
-     }
+    bool fullyOccupied() { return ((nelspin_ - numst) == 0); }
+
+    float AOMMradius() const { return aomm_radius_; }
+    float AOMMthresholdFactor() const { return aomm_threshold_factor_; }
+    double VelocityScalingFactor() const { return rescale_v_; }
+    float orbitalsOverallocateFactor() const { return overallocate_factor_; }
+
+    bool checkResidual() const { return (conv_criterion_ > 0); }
+    bool checkMaxResidual() const { return (conv_criterion_ == 2); }
+    bool resetVH() const { return (hartree_reset_ > 0); }
 };
 
 #endif

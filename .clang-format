@@ -1,0 +1,12 @@
+BasedOnStyle: WebKit
+Language: Cpp
+IndentWidth: 4
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+BreakConstructorInitializers: BeforeColon
+ColumnLimit: 80
+BreakBeforeBraces: Allman
+AlignConsecutiveAssignments: true
+AlignOperands: true
+AllowShortIfStatementsOnASingleLine: true
+AlwaysBreakTemplateDeclarations: true
+IndentCaseLabels: true

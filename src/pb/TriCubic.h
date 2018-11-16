@@ -1,8 +1,8 @@
 // Copyright (c) 2017, Lawrence Livermore National Security, LLC. Produced at
-// the Lawrence Livermore National Laboratory. 
+// the Lawrence Livermore National Laboratory.
 // Written by J.-L. Fattebert, D. Osei-Kuffuor and I.S. Dunn.
 // LLNL-CODE-743438
-// All rights reserved. 
+// All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
@@ -10,8 +10,8 @@
 #ifndef PB_TRICUBIC_H
 #define PB_TRICUBIC_H
 
-#include <vector>
 #include "GridFunc.h"
+#include <vector>
 using namespace std;
 
 #ifdef HAVE_TRICUBIC
@@ -22,36 +22,32 @@ using namespace std;
 typedef int MPI_Comm;
 #endif
 
-namespace pb{
+namespace pb
+{
 
 class Grid;
-//class GridFunc;
+// class GridFunc;
 template <class T>
 class TriCubic
 {
 private:
-    vector< vector<double> >  spline_coeff_;
-    
-    const Grid&               grid_;
-    double                    h_[3];
-    short                     bc_[3];
+    vector<vector<double>> spline_coeff_;
+
+    const Grid& grid_;
+    double h_[3];
+    short bc_[3];
 
 public:
     TriCubic(const Grid& grid, const short bc[3]);
 
     void computeSplineCoeffs(const T* const f);
-    void computeSplineCoeffs(const GridFunc<T>& f,
-                             const GridFunc<T>& fx,
-                             const GridFunc<T>& fy,
-                             const GridFunc<T>& fz,
-                             const GridFunc<T>& fxy,
-                             const GridFunc<T>& fxz,
-                             const GridFunc<T>& fyz,
-                             const GridFunc<T>& fxyz);
-    void getGradient(const double r[3], double dfdr[3], MPI_Comm );
-    void getValues(const vector<double>&, vector<double>&, MPI_Comm );
+    void computeSplineCoeffs(const GridFunc<T>& f, const GridFunc<T>& fx,
+        const GridFunc<T>& fy, const GridFunc<T>& fz, const GridFunc<T>& fxy,
+        const GridFunc<T>& fxz, const GridFunc<T>& fyz,
+        const GridFunc<T>& fxyz);
+    void getGradient(const double r[3], double dfdr[3], MPI_Comm);
+    void getValues(const vector<double>&, vector<double>&, MPI_Comm);
 };
-
 }
 #endif
 

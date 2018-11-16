@@ -1,8 +1,8 @@
 // Copyright (c) 2017, Lawrence Livermore National Security, LLC. Produced at
-// the Lawrence Livermore National Laboratory. 
+// the Lawrence Livermore National Laboratory.
 // Written by J.-L. Fattebert, D. Osei-Kuffuor and I.S. Dunn.
 // LLNL-CODE-743438
-// All rights reserved. 
+// All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
@@ -10,16 +10,16 @@
 #ifndef GRAMMATRIX_H
 #define GRAMMATRIX_H
 
-#include <vector>
 #include "DistMatrix.h"
 #include "SubMatrices.h"
+#include <vector>
 
-#include "MPIdata.h"
 #include "Control.h"
+#include "MPIdata.h"
 
 #include <unistd.h>
 
-#define NPRINT_ROWS_AND_COLS  5
+#define NPRINT_ROWS_AND_COLS 5
 
 class GramMatrix
 {
@@ -31,117 +31,110 @@ class GramMatrix
     dist_matrix::DistMatrix<DISTMATDTYPE>* work_;
 
     // index of orbitals associated to object (for compatibility testing)
-    int  orbitals_index_;
+    int orbitals_index_;
     bool isLSuptodate_;
     bool isInvSuptodate_;
 
-    void transformLTML(dist_matrix::DistMatrix<DISTMATDTYPE>& mat, const DISTMATDTYPE alpha)const;
+    void transformLTML(dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
+        const DISTMATDTYPE alpha) const;
 
 public:
     GramMatrix(const int ndim);
     GramMatrix(const GramMatrix&);
     GramMatrix& operator=(const GramMatrix&);
- 
-    ~ GramMatrix();
-    
-    int getAssociatedOrbitalsIndex()const
+
+    ~GramMatrix();
+
+    int getAssociatedOrbitalsIndex() const { return orbitals_index_; }
+
+    void print(ostream& os, int nprint_rows = NPRINT_ROWS_AND_COLS,
+        int nprint_col = NPRINT_ROWS_AND_COLS) const
     {
-        return orbitals_index_;
+        if (onpe0) os << " GramMatrix" << endl;
+        matS_->print(os, 0, 0, nprint_rows, nprint_col);
     }
 
-    void print(ostream& os, 
-               int nprint_rows=NPRINT_ROWS_AND_COLS,
-               int nprint_col=NPRINT_ROWS_AND_COLS)const
+    void printMM(ostream& os) const
     {
-        if( onpe0 )
-    	    os<<" GramMatrix"<<endl;
-        matS_->print(os,0,0,nprint_rows,nprint_col);
-    }
-
-    void printMM(ostream& os)const
-    {
-        if( onpe0 )
-            os<<"Gram Matrix"<<endl;
+        if (onpe0) os << "Gram Matrix" << endl;
         matS_->printMM(os);
     }
-    
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& getMatrix()const
+
+    const dist_matrix::DistMatrix<DISTMATDTYPE>& getMatrix() const
     {
         return *matS_;
     }
-    
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& getInverse()const
+
+    const dist_matrix::DistMatrix<DISTMATDTYPE>& getInverse() const
     {
-        assert( isInvSuptodate_ );
-        
+        assert(isInvSuptodate_);
+
         return *invS_;
     }
-    
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& getCholeskyL()const
+
+    const dist_matrix::DistMatrix<DISTMATDTYPE>& getCholeskyL() const
     {
-        assert( ls_!=NULL );
-        assert( isLSuptodate_ );
-        
+        assert(ls_ != NULL);
+        assert(isLSuptodate_);
+
         return *ls_;
     }
- 
-    void setMatrix(const dist_matrix::DistMatrix<DISTMATDTYPE>& mat, const int orbitals_index);
-    //void setMatrix(const DISTMATDTYPE* const val, const int orbitals_index);
+
+    void setMatrix(const dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
+        const int orbitals_index);
+    // void setMatrix(const DISTMATDTYPE* const val, const int orbitals_index);
 
     void updateLS()
     {
         // Cholesky decomposition of s
-        *ls_=*matS_;	
-        int info=ls_->potrf('l');
-        if( info!=0 )
+        *ls_     = *matS_;
+        int info = ls_->potrf('l');
+        if (info != 0)
         {
             print(*MPIdata::serr);
-            if( onpe0 )
-                (*MPIdata::serr)<<"ERROR in GramMatrix::updateLS()"<<endl;
-            (*MPIdata::serr)<<flush;
+            if (onpe0)
+                (*MPIdata::serr) << "ERROR in GramMatrix::updateLS()" << endl;
+            (*MPIdata::serr) << flush;
             sleep(5);
             Control& ct = *(Control::instance());
             ct.global_exit(2);
         }
-        
-        isLSuptodate_=true;
+
+        isLSuptodate_ = true;
     }
     void set2Id(const int orbitals_index)
     {
         matS_->identity();
         invS_->identity();
         ls_->identity();
-        
-        orbitals_index_=orbitals_index;
-        isLSuptodate_=true;
-        isInvSuptodate_=true;
+
+        orbitals_index_ = orbitals_index;
+        isLSuptodate_   = true;
+        isInvSuptodate_ = true;
     }
     void applyInv(dist_matrix::DistMatrix<DISTMATDTYPE>& mat)
     {
-        ls_->potrs('l',mat);
+        ls_->potrs('l', mat);
     }
 
-    void updateSubMatLS(dist_matrix::SubMatrices<DISTMATDTYPE>& submatLS)const
+    void updateSubMatLS(dist_matrix::SubMatrices<DISTMATDTYPE>& submatLS) const
     {
-        assert( ls_!=NULL );
-        assert( isLSuptodate_ );
+        assert(ls_ != NULL);
+        assert(isLSuptodate_);
 
         submatLS.gather(*ls_);
     }
 
-    void printMM(ofstream& tfile)
-    {
-        matS_->printMM(tfile);
-    }
-    
+    void printMM(ofstream& tfile) { matS_->printMM(tfile); }
+
     void computeInverse();
-    void solveLST(dist_matrix::DistMatrix<DISTMATDTYPE>& z)const;
+    void solveLST(dist_matrix::DistMatrix<DISTMATDTYPE>& z) const;
     double computeCond();
     void sygst(dist_matrix::DistMatrix<DISTMATDTYPE>& mat);
     void rotateAll(const dist_matrix::DistMatrix<DISTMATDTYPE>& matU);
 
-    double getLinDependent2states(int& st1, int& st2, int& st3)const;
-    double getLinDependent2states(int& st1, int& st2)const;
+    double getLinDependent2states(int& st1, int& st2, int& st3) const;
+    double getLinDependent2states(int& st1, int& st2) const;
 };
 
 #endif

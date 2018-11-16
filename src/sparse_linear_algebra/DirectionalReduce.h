@@ -1,5 +1,5 @@
-#include <mpi.h>
 #include <iostream>
+#include <mpi.h>
 
 class DirectionalReduce
 {
@@ -20,20 +20,18 @@ class DirectionalReduce
     void deletePersistentRequests();
 
     void computeNumSteps(const int max_steps[3]);
-    void computeNumSteps(const double spread_radius,
-                         const double domain[3]);
+    void computeNumSteps(const double spread_radius, const double domain[3]);
 
 public:
     DirectionalReduce(MPI_Comm cart_comm, const int max_steps[3]);
 
-    DirectionalReduce(MPI_Comm cart_comm, const double spread_radius,
-                                          const double domain[3]);
+    DirectionalReduce(
+        MPI_Comm cart_comm, const double spread_radius, const double domain[3]);
 
     void computeDirMax(const short dir, int data[2]);
 
-    int lstep(const short dir){ return lstep_[dir]; }
-    int rstep(const short dir){ return rstep_[dir]; }
+    int lstep(const short dir) { return lstep_[dir]; }
+    int rstep(const short dir) { return rstep_[dir]; }
 
     void printStats(std::ostream& os);
 };
-

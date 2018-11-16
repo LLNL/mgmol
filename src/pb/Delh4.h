@@ -1,8 +1,8 @@
 // Copyright (c) 2017, Lawrence Livermore National Security, LLC. Produced at
-// the Lawrence Livermore National Laboratory. 
+// the Lawrence Livermore National Laboratory.
 // Written by J.-L. Fattebert, D. Osei-Kuffuor and I.S. Dunn.
 // LLNL-CODE-743438
-// All rights reserved. 
+// All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
@@ -11,67 +11,47 @@
 
 #include "FDoper.h"
 
-namespace pb{
+namespace pb
+{
 
 template <class T>
-class Delxh4:public FDoper<T>
+class Delxh4 : public FDoper<T>
 {
 public:
-
-    Delxh4(const Grid& mygrid):FDoper<T>(mygrid){ }
+    Delxh4(const Grid& mygrid) : FDoper<T>(mygrid) {}
 
     // A->B
-    void apply(GridFunc<T> &A, GridFunc<T> &B)
-    {
-        this->del1_4th(A,B, 0);
-    }
+    void apply(GridFunc<T>& A, GridFunc<T>& B) { this->del1_4th(A, B, 0); }
 
     ~Delxh4(){};
 
-    static short minNumberGhosts()
-    {
-        return 2;
-    }
+    static short minNumberGhosts() { return 2; }
 };
 template <class T>
-class Delyh4:public FDoper<T>
+class Delyh4 : public FDoper<T>
 {
 public:
-
-    Delyh4(const Grid& mygrid):FDoper<T>(mygrid){ }
+    Delyh4(const Grid& mygrid) : FDoper<T>(mygrid) {}
 
     // A->B
-    void apply(GridFunc<T> &A, GridFunc<T> &B)
-    {
-        this->del1_4th(A,B, 1);
-    }
-    
+    void apply(GridFunc<T>& A, GridFunc<T>& B) { this->del1_4th(A, B, 1); }
+
     ~Delyh4(){};
 
-    static short minNumberGhosts()
-    {
-        return 2;
-    }
+    static short minNumberGhosts() { return 2; }
 };
 template <class T>
-class Delzh4:public FDoper<T>
+class Delzh4 : public FDoper<T>
 {
 public:
-
-    Delzh4(const Grid& mygrid):FDoper<T>(mygrid){ }
+    Delzh4(const Grid& mygrid) : FDoper<T>(mygrid) {}
 
     // A->B
-    void apply(GridFunc<T> &A, GridFunc<T> &B)
-    {
-        this->del1_4th(A,B, 2);
-    }
+    void apply(GridFunc<T>& A, GridFunc<T>& B) { this->del1_4th(A, B, 2); }
 
     ~Delzh4(){};
 
-    static short minNumberGhosts()
-    {
-        return 2;
-    }
+    static short minNumberGhosts() { return 2; }
 };
 
 } // namespace pb

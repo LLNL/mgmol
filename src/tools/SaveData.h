@@ -1,87 +1,88 @@
 // Copyright (c) 2017, Lawrence Livermore National Security, LLC. Produced at
-// the Lawrence Livermore National Laboratory. 
+// the Lawrence Livermore National Laboratory.
 // Written by J.-L. Fattebert, D. Osei-Kuffuor and I.S. Dunn.
 // LLNL-CODE-743438
-// All rights reserved. 
+// All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #ifndef SAVEDATA_H_
 #define SAVEDATA_H_
 
-#include "DistMatrix.h"
 #include "BlacsContext.h"
+#include "DistMatrix.h"
 #include "MatricesBlacsContext.h"
 
-#include <iostream>
-#include <iterator>
-#include <string>
+#include <csignal>
 #include <fstream>
 #include <iostream>
-#include <csignal>
+#include <iterator>
 #include <mpi.h>
+#include <string>
 
 template <class T>
-void saveData(std::vector< std::vector<T> > data, const char* filename) {
+void saveData(std::vector<std::vector<T>> data, const char* filename)
+{
 
-  if ( onpe0 ) {
+    if (onpe0)
+    {
 
-    std::ofstream outputFile(filename);
+        std::ofstream outputFile(filename);
 
-    outputFile.precision(16);
+        outputFile.precision(16);
 
-      if (outputFile.is_open()) {
+        if (outputFile.is_open())
+        {
 
-        for (int i = 0; i < data.size(); ++i) {
+            for (int i = 0; i < data.size(); ++i)
+            {
 
-          copy(data[i].begin(), data[i].end(), std::ostream_iterator<T>(outputFile , " "));
+                copy(data[i].begin(), data[i].end(),
+                    std::ostream_iterator<T>(outputFile, " "));
 
-          outputFile << std::endl;
-
+                outputFile << std::endl;
+            }
         }
-
-      }
-
-  }
-
+    }
 }
 
 template <class T>
-void saveData(std::vector<T> data, const char* filename) {
+void saveData(std::vector<T> data, const char* filename)
+{
 
-  if ( onpe0 ) {
+    if (onpe0)
+    {
+
+        std::ofstream outputFile(filename);
+
+        outputFile.precision(16);
+
+        if (outputFile.is_open())
+        {
+
+            copy(data.begin(), data.end(),
+                std::ostream_iterator<T>(outputFile, " "));
+
+            outputFile << std::endl;
+        }
+    }
+}
+
+template <class T>
+void saveData(dist_matrix::DistMatrix<T> data, const char* filename)
+{
+
+    dist_matrix::BlacsContext bc(MPI_COMM_WORLD, 1, 1);
 
     std::ofstream outputFile(filename);
 
     outputFile.precision(16);
 
-      if (outputFile.is_open()) {
+    if (outputFile.is_open())
+    {
 
-        copy(data.begin(), data.end(), std::ostream_iterator<T>(outputFile , " "));
-
-        outputFile << std::endl;
-
-      }
-
-  }
-
-}
-
-template <class T>
-void saveData(dist_matrix::DistMatrix<T> data, const char* filename) {
-
-  dist_matrix::BlacsContext bc(MPI_COMM_WORLD, 1, 1);
-
-  std::ofstream outputFile(filename);
-
-  outputFile.precision(16);
-
-    if (outputFile.is_open()) {
-
-      data.print(outputFile);
-
+        data.print(outputFile);
     }
-
 }
 
 #endif /* SAVEDATA_H_ */

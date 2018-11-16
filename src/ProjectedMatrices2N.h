@@ -1,8 +1,8 @@
 // Copyright (c) 2017, Lawrence Livermore National Security, LLC. Produced at
-// the Lawrence Livermore National Laboratory. 
+// the Lawrence Livermore National Laboratory.
 // Written by J.-L. Fattebert, D. Osei-Kuffuor and I.S. Dunn.
 // LLNL-CODE-743438
-// All rights reserved. 
+// All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
@@ -12,37 +12,30 @@
 
 #include "ProjectedMatrices.h"
 
-class ProjectedMatrices2N:public ProjectedMatrices
+class ProjectedMatrices2N : public ProjectedMatrices
 {
     int bdim_;
-    dist_matrix::DistMatrix<DISTMATDTYPE>*  work2N_;
+    dist_matrix::DistMatrix<DISTMATDTYPE>* work2N_;
 
 public:
-    ProjectedMatrices2N(const int ndim, 
-                        const bool with_spin);
-    
+    ProjectedMatrices2N(const int ndim, const bool with_spin);
+
     ~ProjectedMatrices2N();
-    
-    void assignBlocksH(dist_matrix::DistMatrix<DISTMATDTYPE>&, 
-                       dist_matrix::DistMatrix<DISTMATDTYPE>&, 
-                       dist_matrix::DistMatrix<DISTMATDTYPE>&, 
-                       dist_matrix::DistMatrix<DISTMATDTYPE>&);
-    double mu()const
-    {
-        return mu_;
-    }
-        
-    void iterativeUpdateDMwithEigenstates(const double occ_width,
-                                          const int nel,
-                                          const int iterative_index,
-                                          const bool flag_reduce_T=true);
+
+    void assignBlocksH(dist_matrix::DistMatrix<DISTMATDTYPE>&,
+        dist_matrix::DistMatrix<DISTMATDTYPE>&,
+        dist_matrix::DistMatrix<DISTMATDTYPE>&,
+        dist_matrix::DistMatrix<DISTMATDTYPE>&);
+    double mu() const { return mu_; }
+
+    void iterativeUpdateDMwithEigenstates(const double occ_width, const int nel,
+        const int iterative_index, const bool flag_reduce_T = true);
     void diagonalizeDM(std::vector<DISTMATDTYPE>& occ,
-                       dist_matrix::DistMatrix<DISTMATDTYPE>& vect)
+        dist_matrix::DistMatrix<DISTMATDTYPE>& vect)
     {
-        //we are assuming Gram matrix=identity
+        // we are assuming Gram matrix=identity
         dm_->diagonalize('v', occ, vect);
     }
 };
 
 #endif
-

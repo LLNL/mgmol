@@ -1,8 +1,8 @@
 // Copyright (c) 2017, Lawrence Livermore National Security, LLC. Produced at
-// the Lawrence Livermore National Laboratory. 
+// the Lawrence Livermore National Laboratory.
 // Written by J.-L. Fattebert, D. Osei-Kuffuor and I.S. Dunn.
 // LLNL-CODE-743438
-// All rights reserved. 
+// All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
@@ -15,8 +15,8 @@
 typedef int MPI_Comm;
 #endif
 
-
-namespace dist_matrix{
+namespace dist_matrix
+{
 
 class MPI_DistMatrixCommunicator
 {
@@ -24,24 +24,16 @@ private:
     MPI_Comm comm_;
 
 public:
-    MPI_DistMatrixCommunicator()
-    {
-        comm_=MPI_COMM_NULL;
-    }
+    MPI_DistMatrixCommunicator() { comm_ = MPI_COMM_NULL; }
 
     ~MPI_DistMatrixCommunicator()
     {
-        assert( comm_!=MPI_COMM_NULL );
+        assert(comm_ != MPI_COMM_NULL);
         MPI_Comm_free(&comm_);
     }
-    
-    MPI_Comm& comm()
-    {
-        return comm_;
-    }
 
+    MPI_Comm& comm() { return comm_; }
 };
-
 }
 
 #endif

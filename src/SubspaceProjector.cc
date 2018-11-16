@@ -1,8 +1,8 @@
 // Copyright (c) 2017, Lawrence Livermore National Security, LLC. Produced at
-// the Lawrence Livermore National Laboratory. 
+// the Lawrence Livermore National Laboratory.
 // Written by J.-L. Fattebert, D. Osei-Kuffuor and I.S. Dunn.
 // LLNL-CODE-743438
-// All rights reserved. 
+// All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
@@ -10,27 +10,26 @@
 #include "LocGridOrbitals.h"
 #include "ProjectedMatricesInterface.h"
 
-#define NPRINT_ROWS_AND_COLS  10
+#define NPRINT_ROWS_AND_COLS 10
 
 SubspaceProjector::SubspaceProjector(LocGridOrbitals& subspace)
-    : subspace_(subspace),
-      proj_matrices_(*subspace_.getProjMatrices())
+    : subspace_(subspace), proj_matrices_(*subspace_.getProjMatrices())
 {
-    chromatic_number_=subspace_.chromatic_number();
-    subdivx_         =subspace_.subdivx();
-    lda_             =subspace_.getLda();
-    loc_numpt_       =subspace_.getLocNumpt();
+    chromatic_number_ = subspace_.chromatic_number();
+    subdivx_          = subspace_.subdivx();
+    lda_              = subspace_.getLda();
+    loc_numpt_        = subspace_.getLocNumpt();
 }
 
 // compute [I-P*(S^-1)*P^T]*orbitals
-void SubspaceProjector::projectOut(LocGridOrbitals& orbitals, 
-                                   SquareLocalMatrices<MATDTYPE>* mask)
+void SubspaceProjector::projectOut(
+    LocGridOrbitals& orbitals, SquareLocalMatrices<MATDTYPE>* mask)
 {
-    assert( chromatic_number_>=0 );
-    assert( lda_>=loc_numpt_ );
-    
-    //assumption for now, to be removed in the future
-    assert( chromatic_number_==orbitals.chromatic_number() );
+    assert(chromatic_number_ >= 0);
+    assert(lda_ >= loc_numpt_);
+
+    // assumption for now, to be removed in the future
+    assert(chromatic_number_ == orbitals.chromatic_number());
 #if 0
     {
     // test if projection is now 0
@@ -41,36 +40,35 @@ void SubspaceProjector::projectOut(LocGridOrbitals& orbitals,
     }
 #endif
 
-    SquareLocalMatrices<MATDTYPE> pmatrix(subdivx_,chromatic_number_);
- 
+    SquareLocalMatrices<MATDTYPE> pmatrix(subdivx_, chromatic_number_);
+
     // compute <xi,orbitals>
-    if(chromatic_number_!=0)
-        subspace_.computeLocalProduct(orbitals,pmatrix,false);
-    
+    if (chromatic_number_ != 0)
+        subspace_.computeLocalProduct(orbitals, pmatrix, false);
+
     // compute <xi,xi>^{-1}*<xi,orbitals>
     proj_matrices_.applyInvS(pmatrix);
-    
-    if( mask!=0 )pmatrix.applyMask(*mask);
-   
-    ORBDTYPE* tproduct=new ORBDTYPE[loc_numpt_*chromatic_number_]; 
-    memset(tproduct,0,loc_numpt_*chromatic_number_*sizeof(ORBDTYPE));
+
+    if (mask != 0) pmatrix.applyMask(*mask);
+
+    ORBDTYPE* tproduct = new ORBDTYPE[loc_numpt_ * chromatic_number_];
+    memset(tproduct, 0, loc_numpt_ * chromatic_number_ * sizeof(ORBDTYPE));
 
     // loop over subdomains
-    for(short iloc=0;iloc<subdivx_;iloc++)
+    for (short iloc = 0; iloc < subdivx_; iloc++)
     {
-        ORBDTYPE* xi   =subspace_.getPsi(0,iloc);
-        MATDTYPE* localMat_iloc=pmatrix.getSubMatrix(iloc);
- 
+        ORBDTYPE* xi            = subspace_.getPsi(0, iloc);
+        MATDTYPE* localMat_iloc = pmatrix.getSubMatrix(iloc);
+
         // Compute loc_numpt_ rows (for subdomain iloc)
-        MPgemmNN(loc_numpt_, chromatic_number_, chromatic_number_, 1.,
-            xi, lda_,
-            localMat_iloc, chromatic_number_,
-            0., tproduct, loc_numpt_);
-    
-        double minus=-1.;
-        ORBDTYPE* parray=orbitals.getPsi(0,iloc);
-        for(int j=0;j<chromatic_number_;j++)
-            MPaxpy(loc_numpt_, minus, tproduct+j*loc_numpt_, parray  +j*lda_);
+        MPgemmNN(loc_numpt_, chromatic_number_, chromatic_number_, 1., xi, lda_,
+            localMat_iloc, chromatic_number_, 0., tproduct, loc_numpt_);
+
+        double minus     = -1.;
+        ORBDTYPE* parray = orbitals.getPsi(0, iloc);
+        for (int j = 0; j < chromatic_number_; j++)
+            MPaxpy(loc_numpt_, minus, tproduct + j * loc_numpt_,
+                parray + j * lda_);
     }
 
     delete[] tproduct;

@@ -1,8 +1,8 @@
 // Copyright (c) 2017, Lawrence Livermore National Security, LLC. Produced at
-// the Lawrence Livermore National Laboratory. 
+// the Lawrence Livermore National Laboratory.
 // Written by J.-L. Fattebert, D. Osei-Kuffuor and I.S. Dunn.
 // LLNL-CODE-743438
-// All rights reserved. 
+// All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
@@ -11,29 +11,29 @@
 #define MULTIPOLEEXPANSION_H
 
 #include "GridFunc.h"
-#include "Vector3D.h"
 #include "MPIdata.h"
 #include "Rho.h"
+#include "Vector3D.h"
 
 #include <vector>
 
-//template <typename T>
+// template <typename T>
 class MultipoleExpansion
 {
 private:
     const pb::Grid& grid_;
-    Vector3D    origin_;
-    Vector3D    origin_cell_;
-    Vector3D    cell_;
-    short       bc_[3];
-    
-    short       order_;
-    double      qtotal_;
-    Vector3D    dipole_moment_;
-    double      quadrupole_moment_[6];
+    Vector3D origin_;
+    Vector3D origin_cell_;
+    Vector3D cell_;
+    short bc_[3];
+
+    short order_;
+    double qtotal_;
+    Vector3D dipole_moment_;
+    double quadrupole_moment_[6];
 
     std::vector<short> space_dim_;
-    
+
     bool onpe0_;
 
     void get_dipole(RHODTYPE* rho);
@@ -45,24 +45,20 @@ private:
     void resetOriginToChargeCenter(const pb::GridFunc<RHODTYPE>& rho);
 
 public:
-
     // constructor
     MultipoleExpansion(const pb::Grid& mygrid, const short bc[3],
-                       const Vector3D&,const Vector3D&);
-    
+        const Vector3D&, const Vector3D&);
+
     void setup(RHODTYPE* rho);
     void setup(pb::GridFunc<RHODTYPE>& rho);
     template <typename T>
     void expand(pb::GridFunc<T>& func);
     template <typename T>
     void expand2d(pb::GridFunc<T>& func);
-    template <typename T>    
+    template <typename T>
     void expand3d(pb::GridFunc<T>& func);
 
-    void setOrder(const short order)
-    {
-        order_=order;
-    }
+    void setOrder(const short order) { order_ = order; }
 };
 
 #endif

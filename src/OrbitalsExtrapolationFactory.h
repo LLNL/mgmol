@@ -1,8 +1,8 @@
 // Copyright (c) 2017, Lawrence Livermore National Security, LLC. Produced at
-// the Lawrence Livermore National Laboratory. 
+// the Lawrence Livermore National Laboratory.
 // Written by J.-L. Fattebert, D. Osei-Kuffuor and I.S. Dunn.
 // LLNL-CODE-743438
-// All rights reserved. 
+// All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
@@ -17,11 +17,11 @@
 class OrbitalsExtrapolationFactory
 {
 public:
-
-    static OrbitalsExtrapolation* create(const int type, SpreadPenalty *spread_penalty)
+    static OrbitalsExtrapolation* create(
+        const int type, SpreadPenalty* spread_penalty)
     {
         OrbitalsExtrapolation* orbitals_extrapol;
-        switch( type )
+        switch (type)
         {
             case 1:
                 orbitals_extrapol = new OrbitalsExtrapolationOrder2();
@@ -30,8 +30,9 @@ public:
                 orbitals_extrapol = new OrbitalsExtrapolationOrder3();
                 break;
             default:
-                (*MPIdata::serr)<<"OrbitalsExtrapolation* create() --- option invalid:"
-                               <<type<<endl;
+                (*MPIdata::serr)
+                    << "OrbitalsExtrapolation* create() --- option invalid:"
+                    << type << endl;
                 exit(2);
         }
         return orbitals_extrapol;

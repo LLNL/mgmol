@@ -1,16 +1,16 @@
 // Copyright (c) 2017, Lawrence Livermore National Security, LLC. Produced at
-// the Lawrence Livermore National Laboratory. 
+// the Lawrence Livermore National Laboratory.
 // Written by J.-L. Fattebert, D. Osei-Kuffuor and I.S. Dunn.
 // LLNL-CODE-743438
-// All rights reserved. 
+// All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #ifndef AOMMPROJECTOR_H
 #define AOMMPROJECTOR_H
 
-#include "global.h"
 #include "SquareLocalMatrices.h"
+#include "global.h"
 
 class LocGridOrbitals;
 class SubspaceProjector;
@@ -24,15 +24,15 @@ class AOMMprojector
 {
 private:
     LocGridOrbitals* kernel_phi_;
-    
+
     SubspaceProjector* kernelprojector_;
-    
+
     MasksSet* kernelMasks_;
-    
+
     ProjectedMatricesInterface* kernel_proj_matrices_;
 
     SquareLocalMatrices<MATDTYPE>* matrix_mask_;
-    
+
     short counter_;
 
 public:

@@ -1,20 +1,20 @@
 // Copyright (c) 2017, Lawrence Livermore National Security, LLC. Produced at
-// the Lawrence Livermore National Laboratory. 
+// the Lawrence Livermore National Laboratory.
 // Written by J.-L. Fattebert, D. Osei-Kuffuor and I.S. Dunn.
 // LLNL-CODE-743438
-// All rights reserved. 
+// All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "global.h"
 
 #include "Control.h"
-#include <iomanip>
 #include <cassert>
 #include <cmath>
 #include <cstring>
-#include <unistd.h>
+#include <iomanip>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #ifdef HAVE_BOOST
 #include <boost/program_options.hpp>
@@ -24,206 +24,208 @@
 #include <mpi.h>
 #endif
 
+#include "MGmol_MPI.h"
 #include "Potentials.h"
 #include "tools.h"
-#include "MGmol_MPI.h"
 
-#define max(a,b) (((a)<(b)) ? (b) : (a))
+#define max(a, b) (((a) < (b)) ? (b) : (a))
 
-Control* Control::pinstance_=0;
-MPI_Comm Control::comm_global_=MPI_COMM_NULL;
-float Control::total_spin_=0.;
+Control* Control::pinstance_   = 0;
+MPI_Comm Control::comm_global_ = MPI_COMM_NULL;
+float Control::total_spin_     = 0.;
 string Control::run_directory_(".");
-bool Control::with_spin_=false;
+bool Control::with_spin_ = false;
 
 static void finishRead(ifstream& tfile)
 {
-    //while( tfile.get()!='\n');
-    //string str;
-    //getline(tfile,str);
+    // while( tfile.get()!='\n');
+    // string str;
+    // getline(tfile,str);
     char str[256];
-    tfile.getline(str,256);
+    tfile.getline(str, 256);
 
     char cc = (char)tfile.peek();
-    while( cc ==  ('#') || ( cc == '\n' ) || cc==' ' )
-    { 
-        while( tfile.get()!='\n');
+    while (cc == ('#') || (cc == '\n') || cc == ' ')
+    {
+        while (tfile.get() != '\n')
+            ;
         cc = (char)tfile.peek(); // look at next character
     }
 }
 
 Control::Control()
 {
-    assert( comm_global_!=MPI_COMM_NULL );
-    
+    assert(comm_global_ != MPI_COMM_NULL);
+
 #ifdef USE_MPI
     MPI_Comm_rank(comm_global_, &mype_);
 #endif
 
-    //default values
-    lrs_extrapolation=1; // default
-    lrs_compute=0;
-    system_charge_=0.;
-    for(short i=0;i<3;i++)
+    // default values
+    lrs_extrapolation = 1; // default
+    lrs_compute       = 0;
+    system_charge_    = 0.;
+    for (short i = 0; i < 3; i++)
     {
-        bc[i]=1;
+        bc[i] = 1;
     }
-    poisson_pc_nu1=2;
-    poisson_pc_nu2=2;
-    poisson_pc_nlev=10;
-    coloring_algo_=0;
-    maxDistanceAtomicInfo_=8.;
-    spread_factor=2.;
-    conv_criterion_=0;
-    steps=0;   
-    dm_algo=0;
-    dm_approx_order=500;
-    dm_approx_ndigits=1;
-    dm_approx_power_maxits=100;
- 
-    //undefined values
-    it_algo_type=-1;
-    DM_solver_=-1;
-    orbital_type=-1;
-    aomm_radius_=-1.;
-    aomm_threshold_factor_=-1.;
-    rescale_v_=-1.;
-    thtime=-1.;
-    thwidth=-1.;
-    nel_=-1;
-    nempty_=-1;
-    nelspin_=-1;
-    diel_flag_=-1;    
-    wf_dyn=-1; 
-    wf_m=-1;   
-    numst=-1;
-    wf_extrapolation=-1;
-    betaAnderson=0.;
-    diel=-1;
-    lap_type=-1;
-    precond_type_=-1;
-    orthof=-1;
-    init_loc=-1;
-    init_type=-1;
-    max_electronic_steps_loose_=-1;
-    max_electronic_steps_tight_=-1;
-    max_electronic_steps=-1;
-    lr_updates_type=-1;
-    lr_update=-1;
-    lr_volume_calc=-1;
-    init_rc=-1.;
-    out_restart_file_naming_strategy=0;
-    tol_orb_centers_move=10.e8;
-    restart_file_type=-1;
-    restart_info=-1;
-    xctype=-1;
-    use_kernel_functions=-1;
-    dm_inner_steps=-1;
-    enforceVmass0=-1;
-    overallocate_factor_=-1.;
+    poisson_pc_nu1         = 2;
+    poisson_pc_nu2         = 2;
+    poisson_pc_nlev        = 10;
+    coloring_algo_         = 0;
+    maxDistanceAtomicInfo_ = 8.;
+    spread_factor          = 2.;
+    conv_criterion_        = 0;
+    steps                  = 0;
+    dm_algo                = 0;
+    dm_approx_order        = 500;
+    dm_approx_ndigits      = 1;
+    dm_approx_power_maxits = 100;
 
-    ngpts_[0]=-1;
-    ngpts_[1]=-1;
-    ngpts_[2]=-1;
-    num_species=-1;
-    num_ions=-1;
-    cut_radius=-1.;
-    bcPoisson[0]=-1;
-    bcPoisson[1]=-1;
-    bcPoisson[2]=-1;
-    out_restart_file_type=-1;
-    spread_radius=-1.;
-    iprint_residual=-1;
-    override_restart=-1;
-    dot_product_type=-1;
-    spread_penalty_damping_=-1;
-    spread_penalty_alpha_=-1;
-    spread_penalty_target_=-1.;
-    spread_penalty_type_=-1;
-    restart_run=false;
-    conv_tol=-1.;
-    thermostat_type=-1;
-    hartree_reset_=-1;
-    threshold_eigenvalue_gram_=-1.;
-    threshold_eigenvalue_gram_quench_=-1.;
-    pair_mlwf_distance_threshold_=-1.;
- 
+    // undefined values
+    it_algo_type                     = -1;
+    DM_solver_                       = -1;
+    orbital_type                     = -1;
+    aomm_radius_                     = -1.;
+    aomm_threshold_factor_           = -1.;
+    rescale_v_                       = -1.;
+    thtime                           = -1.;
+    thwidth                          = -1.;
+    nel_                             = -1;
+    nempty_                          = -1;
+    nelspin_                         = -1;
+    diel_flag_                       = -1;
+    wf_dyn                           = -1;
+    wf_m                             = -1;
+    numst                            = -1;
+    wf_extrapolation                 = -1;
+    betaAnderson                     = 0.;
+    diel                             = -1;
+    lap_type                         = -1;
+    precond_type_                    = -1;
+    orthof                           = -1;
+    init_loc                         = -1;
+    init_type                        = -1;
+    max_electronic_steps_loose_      = -1;
+    max_electronic_steps_tight_      = -1;
+    max_electronic_steps             = -1;
+    lr_updates_type                  = -1;
+    lr_update                        = -1;
+    lr_volume_calc                   = -1;
+    init_rc                          = -1.;
+    out_restart_file_naming_strategy = 0;
+    tol_orb_centers_move             = 10.e8;
+    restart_file_type                = -1;
+    restart_info                     = -1;
+    xctype                           = -1;
+    use_kernel_functions             = -1;
+    dm_inner_steps                   = -1;
+    enforceVmass0                    = -1;
+    overallocate_factor_             = -1.;
+
+    ngpts_[0]                         = -1;
+    ngpts_[1]                         = -1;
+    ngpts_[2]                         = -1;
+    num_species                       = -1;
+    num_ions                          = -1;
+    cut_radius                        = -1.;
+    bcPoisson[0]                      = -1;
+    bcPoisson[1]                      = -1;
+    bcPoisson[2]                      = -1;
+    out_restart_file_type             = -1;
+    spread_radius                     = -1.;
+    iprint_residual                   = -1;
+    override_restart                  = -1;
+    dot_product_type                  = -1;
+    spread_penalty_damping_           = -1;
+    spread_penalty_alpha_             = -1;
+    spread_penalty_target_            = -1.;
+    spread_penalty_type_              = -1;
+    restart_run                       = false;
+    conv_tol                          = -1.;
+    thermostat_type                   = -1;
+    hartree_reset_                    = -1;
+    threshold_eigenvalue_gram_        = -1.;
+    threshold_eigenvalue_gram_quench_ = -1.;
+    pair_mlwf_distance_threshold_     = -1.;
+
     // data members set once for all (not accessible through interface)
-    screening_const=0.;
+    screening_const = 0.;
 }
 
 void Control::setup(const MPI_Comm comm_global, const bool with_spin,
-                    const float total_spin,
-                    string run_directory)
+    const float total_spin, string run_directory)
 {
-    assert( pinstance_==NULL );
-    
-    comm_global_=comm_global;
-    with_spin_=with_spin;
-    total_spin_=total_spin;
-    
-    run_directory_=run_directory;
-    
-    if( run_directory_.compare(".")!=0 )
+    assert(pinstance_ == NULL);
+
+    comm_global_ = comm_global;
+    with_spin_   = with_spin;
+    total_spin_  = total_spin;
+
+    run_directory_ = run_directory;
+
+    if (run_directory_.compare(".") != 0)
     {
         mode_t mode = (S_IRWXU | S_IRWXG | S_IRWXO);
-        mkdir(run_directory_.c_str(),mode);
-        (*MPIdata::sout)<<"Create dir "<<run_directory_<<endl;
+        mkdir(run_directory_.c_str(), mode);
+        (*MPIdata::sout) << "Create dir " << run_directory_ << endl;
     }
 }
-    
+
 void Control::print(ostream& os)
 {
-    if(restart_info==0)
-        os<<" Initial run"<<endl;
+    if (restart_info == 0) os << " Initial run" << endl;
 
-    os<<" Files used:"<<endl;
-    if(restart_info>0)
-        os<<" Restart input file:  "<<restart_file<<endl;
-    os<<" Restart output file: "<<out_restart_file<<endl;
-    
-    if(diel){
-        os<<" With dielectric medium:";
-        os<<setprecision(4)<<scientific
-          <<" rho0="<<rho0<<", drho0="<<drho0<<endl;
+    os << " Files used:" << endl;
+    if (restart_info > 0)
+        os << " Restart input file:  " << restart_file << endl;
+    os << " Restart output file: " << out_restart_file << endl;
+
+    if (diel)
+    {
+        os << " With dielectric medium:";
+        os << setprecision(4) << scientific << " rho0=" << rho0
+           << ", drho0=" << drho0 << endl;
     }
 
-    os<<" Boundary conditions for Poisson: "
-      <<bcPoisson[0]<<", "<<bcPoisson[1]<<", "<<bcPoisson[2]<<endl;
+    os << " Boundary conditions for Poisson: " << bcPoisson[0] << ", "
+       << bcPoisson[1] << ", " << bcPoisson[2] << endl;
 
-    switch(orbital_type){
+    switch (orbital_type)
+    {
         case 0:
-            os<<" Works in Eigenfunctions basis"<<endl;
+            os << " Works in Eigenfunctions basis" << endl;
             break;
         case 1:
-            os<<" Works in Nonorthogonal orbitals basis"<<endl;
+            os << " Works in Nonorthogonal orbitals basis" << endl;
             break;
         case 2:
-            os<<" Works in Orthonormal orbitals basis"<<endl;
+            os << " Works in Orthonormal orbitals basis" << endl;
             break;
         default:
-            os<<" Orbitals type undefined!!!"<<endl;
+            os << " Orbitals type undefined!!!" << endl;
             return;
     }
 
-    switch(xctype) {
-        case 0:               // LDA Perdew Zunger 81
-            os<<"    XC using LDA with Perdew-Zunger 81"<<endl;
+    switch (xctype)
+    {
+        case 0: // LDA Perdew Zunger 81
+            os << "    XC using LDA with Perdew-Zunger 81" << endl;
             break;
-        case 2:               
-            os<<"    XC using PBE"<<endl;
+        case 2:
+            os << "    XC using PBE" << endl;
             break;
         default:
-            os<<"output: Unknown exchange-correlation functional"<<endl;
+            os << "output: Unknown exchange-correlation functional" << endl;
             break;
     }
-    os<<" Number of species  = "<<sp_.size()<<endl;
+    os << " Number of species  = " << sp_.size() << endl;
 
-    os<<" Hartree: number initial sweeps            : "<<vh_init<<endl;
-    os<<" Hartree: number of sweeps for each Poisson: "<<vh_its<<endl;
+    os << " Hartree: number initial sweeps            : " << vh_init << endl;
+    os << " Hartree: number of sweeps for each Poisson: " << vh_its << endl;
 
-    string str(""); 
-    switch(conv_criterion_)
+    string str("");
+    switch (conv_criterion_)
     {
         case 0:
             str = "delta energy";
@@ -235,421 +237,429 @@ void Control::print(ostream& os)
             str = "maxResidual";
             break;
     }
-    os<<" KS convergence criterion: "
-       << str <<endl;
-    os<<" KS convergence value: "
-        <<scientific<<setprecision(2)<<conv_tol<<endl;
-    os<<fixed;
-    os<<" Density matrix mixing = "<<dm_mix<<endl;
-    if(dm_algo == 0)
+    os << " KS convergence criterion: " << str << endl;
+    os << " KS convergence value: " << scientific << setprecision(2) << conv_tol
+       << endl;
+    os << fixed;
+    os << " Density matrix mixing = " << dm_mix << endl;
+    if (dm_algo == 0)
     {
-       os<<" Density matrix computation algorithm = "<<" Diagonalization "<<endl;
+        os << " Density matrix computation algorithm = "
+           << " Diagonalization " << endl;
     }
-    os<<" Load balancing alpha for computing bias = "<<load_balancing_alpha<<endl;
-    os<<" Load balancing parameter for damping bias updates = "<<load_balancing_damping_tol<<endl;
-    os<<" Load balancing max. number of iterations = "<<load_balancing_max_iterations<<endl;
-    os<<" Control parameter for recomputing load balancing = "<<load_balancing_modulo<<endl;
-    os<<" Load balancing output filename = "<<load_balancing_output_file<<endl;
-    if( loc_mode_ )
-        os<<" Localization radius       = "<<cut_radius<<endl;
-    os<<endl;
+    os << " Load balancing alpha for computing bias = " << load_balancing_alpha
+       << endl;
+    os << " Load balancing parameter for damping bias updates = "
+       << load_balancing_damping_tol << endl;
+    os << " Load balancing max. number of iterations = "
+       << load_balancing_max_iterations << endl;
+    os << " Control parameter for recomputing load balancing = "
+       << load_balancing_modulo << endl;
+    os << " Load balancing output filename = " << load_balancing_output_file
+       << endl;
+    if (loc_mode_) os << " Localization radius       = " << cut_radius << endl;
+    os << endl;
 
-    os<<" preconditioner factor:"<<precond_factor<<endl;
-    if( precond_type_%10==0 )
+    os << " preconditioner factor:" << precond_factor << endl;
+    if (precond_type_ % 10 == 0)
     {
-        os<<" Multigrid preconditioning for wave functions:"<<endl;
-        os<<" # of Multigrid levels   : "<<mg_levels_<<endl;
+        os << " Multigrid preconditioning for wave functions:" << endl;
+        os << " # of Multigrid levels   : " << mg_levels_ << endl;
     }
     else
     {
-        os<<" Undefined preconditioning"<<endl;
+        os << " Undefined preconditioning" << endl;
     }
-    os<<" Richardson time-step    :"<<precond_factor<<endl;
-    if( wf_dyn==1 )
-        os<<" Anderson extrapolation scheme for wave functions with beta="
-            <<betaAnderson<<endl;
-    os<<"Mix potentials with beta="<<mix_pot<<endl;
-    if(atoms_dyn)
+    os << " Richardson time-step    :" << precond_factor << endl;
+    if (wf_dyn == 1)
+        os << " Anderson extrapolation scheme for wave functions with beta="
+           << betaAnderson << endl;
+    os << "Mix potentials with beta=" << mix_pot << endl;
+    if (atoms_dyn)
     {
-        switch(atoms_dyn)
+        switch (atoms_dyn)
         {
             case 0:
-                os<<endl<<endl
-                    <<" Quench the electrons"<<endl;
+                os << endl << endl << " Quench the electrons" << endl;
                 break;
             case 2:
-                os<<endl<<endl
-                    <<" Verlet MD"<<endl;
+                os << endl << endl << " Verlet MD" << endl;
                 break;
             case 6:
-                os<<endl<<endl
-                    <<" LBFGS geometry optimization"<<endl;
+                os << endl << endl << " LBFGS geometry optimization" << endl;
                 break;
             case 7:
-                os<<endl<<endl
-                    <<" FIRE geometry optimization"<<endl;
+                os << endl << endl << " FIRE geometry optimization" << endl;
                 break;
             default:
-                os<<"UNKNOWN MOLECULAR DYNAMICS METHOD"
-                    <<endl;
+                os << "UNKNOWN MOLECULAR DYNAMICS METHOD" << endl;
         }
     }
-  
-    if(atoms_dyn)
+
+    if (atoms_dyn)
     {
-        os<<" Timestep for molecular dynamics = "<<dt<<endl;
-        if( dt<= 0. )
-        os<<" Warning: time step <= 0. !!!"<<endl;
-        os<<" Max. # of SC it. per MD step = "<<max_electronic_steps<<endl;   
+        os << " Timestep for molecular dynamics = " << dt << endl;
+        if (dt <= 0.) os << " Warning: time step <= 0. !!!" << endl;
+        os << " Max. # of SC it. per MD step = " << max_electronic_steps
+           << endl;
     }
 
     printThermostatInfo(os);
-    
-    if( isSpreadFunctionalActive() )
+
+    if (isSpreadFunctionalActive())
     {
-        os<<" Includes spread penalty functional"<<endl;
-        if( spread_penalty_type_!=2 )
-            os<<setprecision(2)<<scientific
-              <<" Penalty damping factor: "<<spread_penalty_damping_<<endl;
-        os<<" Target spread: "<<spread_penalty_target_<<endl;
-        os<<" Spread Penalty factor: "<<spread_penalty_alpha_<<endl;
+        os << " Includes spread penalty functional" << endl;
+        if (spread_penalty_type_ != 2)
+            os << setprecision(2) << scientific
+               << " Penalty damping factor: " << spread_penalty_damping_
+               << endl;
+        os << " Target spread: " << spread_penalty_target_ << endl;
+        os << " Spread Penalty factor: " << spread_penalty_alpha_ << endl;
     }
 }
 
 void Control::sync(void)
 {
-    if( onpe0 && verbose>0 )
-        (*MPIdata::sout)<<"Control::sync()"<<endl;
+    if (onpe0 && verbose > 0) (*MPIdata::sout) << "Control::sync()" << endl;
 #ifdef USE_MPI
     // pack
-    const short size_short_buffer=89;
-    short* short_buffer=new short[size_short_buffer];
-    if( mype_==0 )
+    const short size_short_buffer = 89;
+    short* short_buffer           = new short[size_short_buffer];
+    if (mype_ == 0)
     {
-        short_buffer[0]=wf_dyn;
-        short_buffer[1]=wf_m;
-        short_buffer[2]=multipole_order;
-        short_buffer[3]=wf_extrapolation;
-        short_buffer[4]=diel;
-        short_buffer[5]=lap_type;
-        short_buffer[6]=precond_type_;
-        short_buffer[7]=orthof;
-        short_buffer[8]=it_algo_type;
-        short_buffer[9]=num_species;
-        short_buffer[10]=mg_levels_;
-        short_buffer[11]=project_out_psd;
-        short_buffer[12]=xctype;
-        short_buffer[13]=steps;
-        short_buffer[14]=checkpoint;
-        short_buffer[15]=verbose;
-        short_buffer[16]=iprint_residual;
-        short_buffer[17]=wannier_transform_type;
-        short_buffer[18]=vh_init;
-        short_buffer[19]=vh_its;
-        short_buffer[20]=max_changes_pot;
-        short_buffer[21]=tmatrices;
-        short_buffer[22]=init_loc;
-        short_buffer[23]=init_type;
-        short_buffer[24]=atoms_dyn;
-        short_buffer[25]=max_electronic_steps;
-        short_buffer[26]=num_MD_steps;
-        short_buffer[27]=lr_updates_type;
-        short_buffer[28]=lr_update;
-        short_buffer[29]=lr_volume_calc;
-        short_buffer[30]=orbital_type;
-        short_buffer[31]=line_min;
-        short_buffer[32]=thermostat_type;
-        short_buffer[33]=bc[0];
-        short_buffer[34]=bc[1];
-        short_buffer[35]=bc[2];
-        short_buffer[36]=bcPoisson[0];
-        short_buffer[37]=bcPoisson[1];
-        short_buffer[38]=bcPoisson[2];
-        short_buffer[39]=short_sighted;
-        short_buffer[40]=(short)loc_mode_;
-        short_buffer[41]=restart_info;
-        short_buffer[42]=restart_file_type;
-        short_buffer[43]=out_restart_info;
-        short_buffer[44]=out_restart_file_type;
-        short_buffer[45]=(short)precond_factor_computed;
-        short_buffer[46]=dot_product_type;
-        short_buffer[47]=out_restart_file_naming_strategy;
-        short_buffer[48]=enforceVmass0;
-        short_buffer[49]=dm_inner_steps;
-        short_buffer[50]=override_restart;
-        short_buffer[51]=fgmres_kim;        
-        short_buffer[52]=fgmres_maxits;
-        short_buffer[53]=ilu_type;
-        short_buffer[54]=ilu_lof;
-        short_buffer[55]=ilu_maxfil;
-        short_buffer[56]=coloring_algo_;
-        short_buffer[57]=diel_flag_;
-        short_buffer[58]=poisson_pc_nu1;
-        short_buffer[59]=poisson_pc_nu2;
-        short_buffer[60]=poisson_pc_nlev;
-        short_buffer[61]=system_charge_;
-        short_buffer[62]=md_print_freq;
-        short_buffer[63]=use_kernel_functions;             
-        short_buffer[64]=ngpts_[0];
-        short_buffer[65]=ngpts_[1];
-        short_buffer[66]=ngpts_[2];
-        short_buffer[67]=computeCondGram_;
-        short_buffer[68]=lrs_extrapolation;
-        short_buffer[69]=(short)parallel_transport;
-        short_buffer[70]=(short)with_spin_;
-        short_buffer[71]=conv_criterion_;
-        short_buffer[72]=load_balancing_max_iterations;
-        short_buffer[73]=load_balancing_modulo;
-        short_buffer[74]=write_clusters;
-        short_buffer[75]=DM_solver_;
-        short_buffer[80]=dm_algo;
-        short_buffer[81]=dm_approx_order;
-        short_buffer[82]=dm_approx_ndigits;
-        short_buffer[83]=dm_approx_power_maxits;
-        short_buffer[84]=spread_penalty_type_;
-        short_buffer[85]=dm_use_old_;
-        short_buffer[86]=max_electronic_steps_tight_;
-        short_buffer[88]=hartree_reset_;
-    }else{
-        memset(&short_buffer[0],0,size_short_buffer*sizeof(short));
+        short_buffer[0]  = wf_dyn;
+        short_buffer[1]  = wf_m;
+        short_buffer[2]  = multipole_order;
+        short_buffer[3]  = wf_extrapolation;
+        short_buffer[4]  = diel;
+        short_buffer[5]  = lap_type;
+        short_buffer[6]  = precond_type_;
+        short_buffer[7]  = orthof;
+        short_buffer[8]  = it_algo_type;
+        short_buffer[9]  = num_species;
+        short_buffer[10] = mg_levels_;
+        short_buffer[11] = project_out_psd;
+        short_buffer[12] = xctype;
+        short_buffer[13] = steps;
+        short_buffer[14] = checkpoint;
+        short_buffer[15] = verbose;
+        short_buffer[16] = iprint_residual;
+        short_buffer[17] = wannier_transform_type;
+        short_buffer[18] = vh_init;
+        short_buffer[19] = vh_its;
+        short_buffer[20] = max_changes_pot;
+        short_buffer[21] = tmatrices;
+        short_buffer[22] = init_loc;
+        short_buffer[23] = init_type;
+        short_buffer[24] = atoms_dyn;
+        short_buffer[25] = max_electronic_steps;
+        short_buffer[26] = num_MD_steps;
+        short_buffer[27] = lr_updates_type;
+        short_buffer[28] = lr_update;
+        short_buffer[29] = lr_volume_calc;
+        short_buffer[30] = orbital_type;
+        short_buffer[31] = line_min;
+        short_buffer[32] = thermostat_type;
+        short_buffer[33] = bc[0];
+        short_buffer[34] = bc[1];
+        short_buffer[35] = bc[2];
+        short_buffer[36] = bcPoisson[0];
+        short_buffer[37] = bcPoisson[1];
+        short_buffer[38] = bcPoisson[2];
+        short_buffer[39] = short_sighted;
+        short_buffer[40] = (short)loc_mode_;
+        short_buffer[41] = restart_info;
+        short_buffer[42] = restart_file_type;
+        short_buffer[43] = out_restart_info;
+        short_buffer[44] = out_restart_file_type;
+        short_buffer[45] = (short)precond_factor_computed;
+        short_buffer[46] = dot_product_type;
+        short_buffer[47] = out_restart_file_naming_strategy;
+        short_buffer[48] = enforceVmass0;
+        short_buffer[49] = dm_inner_steps;
+        short_buffer[50] = override_restart;
+        short_buffer[51] = fgmres_kim;
+        short_buffer[52] = fgmres_maxits;
+        short_buffer[53] = ilu_type;
+        short_buffer[54] = ilu_lof;
+        short_buffer[55] = ilu_maxfil;
+        short_buffer[56] = coloring_algo_;
+        short_buffer[57] = diel_flag_;
+        short_buffer[58] = poisson_pc_nu1;
+        short_buffer[59] = poisson_pc_nu2;
+        short_buffer[60] = poisson_pc_nlev;
+        short_buffer[61] = system_charge_;
+        short_buffer[62] = md_print_freq;
+        short_buffer[63] = use_kernel_functions;
+        short_buffer[64] = ngpts_[0];
+        short_buffer[65] = ngpts_[1];
+        short_buffer[66] = ngpts_[2];
+        short_buffer[67] = computeCondGram_;
+        short_buffer[68] = lrs_extrapolation;
+        short_buffer[69] = (short)parallel_transport;
+        short_buffer[70] = (short)with_spin_;
+        short_buffer[71] = conv_criterion_;
+        short_buffer[72] = load_balancing_max_iterations;
+        short_buffer[73] = load_balancing_modulo;
+        short_buffer[74] = write_clusters;
+        short_buffer[75] = DM_solver_;
+        short_buffer[80] = dm_algo;
+        short_buffer[81] = dm_approx_order;
+        short_buffer[82] = dm_approx_ndigits;
+        short_buffer[83] = dm_approx_power_maxits;
+        short_buffer[84] = spread_penalty_type_;
+        short_buffer[85] = dm_use_old_;
+        short_buffer[86] = max_electronic_steps_tight_;
+        short_buffer[88] = hartree_reset_;
     }
-    const short size_int_buffer=4;
-    int* int_buffer=new int[size_int_buffer];
-    if( mype_==0 ){
-        int_buffer[0]=numst;
-        int_buffer[1]=nel_;
-        int_buffer[2]=nempty_;
-        int_buffer[3]=num_ions;
-    }else{
-        memset(&int_buffer[0],0,size_int_buffer*sizeof(int));
+    else
+    {
+        memset(&short_buffer[0], 0, size_short_buffer * sizeof(short));
     }
-    
-    const short size_float_buffer=42;
-    float* float_buffer=new float[size_float_buffer];
-    if( mype_==0 ){
-        float_buffer[0]=betaAnderson;
-        float_buffer[1]=spread_penalty_target_;
-        float_buffer[2]=precond_factor;
-        float_buffer[3]=conv_tol;
-        float_buffer[4]=tol_forces;
-        float_buffer[5]=mix_pot;
-        float_buffer[6]=dm_mix;
-        float_buffer[7]=cut_radius;
-        float_buffer[9]=occ_width;
-        float_buffer[10]=init_rc;
-        float_buffer[11]=dt;
-        float_buffer[12]=tol_orb_centers_move;
-        float_buffer[13]=tkel;
-        float_buffer[14]=thtime;
-        float_buffer[15]=spread_penalty_damping_; 
-        float_buffer[16]=rho0;
-        float_buffer[17]=drho0;
-        float_buffer[18]=min_distance_centers_;
-        float_buffer[19]=conv_tol_stop;
-        float_buffer[20]=threshold_eigenvalue_gram_;
-        float_buffer[21]=fgmres_tol;
-        float_buffer[22]=ilu_droptol;
-        float_buffer[23]=spread_factor;
-        float_buffer[24]=ox_;
-        float_buffer[25]=oy_;
-        float_buffer[26]=oz_;
-        float_buffer[27]=lx_;
-        float_buffer[28]=ly_;
-        float_buffer[29]=lz_;
-        float_buffer[30]=total_spin_;
-        float_buffer[31]=maxDistanceAtomicInfo_;
-        float_buffer[32]=thwidth;
-        float_buffer[33]=aomm_radius_;
-        float_buffer[34]=aomm_threshold_factor_;
-        float_buffer[35]=(rescale_v_-1.);
-        float_buffer[36]=load_balancing_alpha;
-        float_buffer[37]=load_balancing_damping_tol;
-        float_buffer[38]=spread_penalty_alpha_;
-        float_buffer[39]=overallocate_factor_;
-        float_buffer[40]=threshold_eigenvalue_gram_quench_;
-        float_buffer[41]=pair_mlwf_distance_threshold_;
-        
-    }else{
-        memset(&float_buffer[0],0,size_float_buffer*sizeof(float));
+    const short size_int_buffer = 4;
+    int* int_buffer             = new int[size_int_buffer];
+    if (mype_ == 0)
+    {
+        int_buffer[0] = numst;
+        int_buffer[1] = nel_;
+        int_buffer[2] = nempty_;
+        int_buffer[3] = num_ions;
     }
-    
+    else
+    {
+        memset(&int_buffer[0], 0, size_int_buffer * sizeof(int));
+    }
+
+    const short size_float_buffer = 42;
+    float* float_buffer           = new float[size_float_buffer];
+    if (mype_ == 0)
+    {
+        float_buffer[0]  = betaAnderson;
+        float_buffer[1]  = spread_penalty_target_;
+        float_buffer[2]  = precond_factor;
+        float_buffer[3]  = conv_tol;
+        float_buffer[4]  = tol_forces;
+        float_buffer[5]  = mix_pot;
+        float_buffer[6]  = dm_mix;
+        float_buffer[7]  = cut_radius;
+        float_buffer[9]  = occ_width;
+        float_buffer[10] = init_rc;
+        float_buffer[11] = dt;
+        float_buffer[12] = tol_orb_centers_move;
+        float_buffer[13] = tkel;
+        float_buffer[14] = thtime;
+        float_buffer[15] = spread_penalty_damping_;
+        float_buffer[16] = rho0;
+        float_buffer[17] = drho0;
+        float_buffer[18] = min_distance_centers_;
+        float_buffer[19] = conv_tol_stop;
+        float_buffer[20] = threshold_eigenvalue_gram_;
+        float_buffer[21] = fgmres_tol;
+        float_buffer[22] = ilu_droptol;
+        float_buffer[23] = spread_factor;
+        float_buffer[24] = ox_;
+        float_buffer[25] = oy_;
+        float_buffer[26] = oz_;
+        float_buffer[27] = lx_;
+        float_buffer[28] = ly_;
+        float_buffer[29] = lz_;
+        float_buffer[30] = total_spin_;
+        float_buffer[31] = maxDistanceAtomicInfo_;
+        float_buffer[32] = thwidth;
+        float_buffer[33] = aomm_radius_;
+        float_buffer[34] = aomm_threshold_factor_;
+        float_buffer[35] = (rescale_v_ - 1.);
+        float_buffer[36] = load_balancing_alpha;
+        float_buffer[37] = load_balancing_damping_tol;
+        float_buffer[38] = spread_penalty_alpha_;
+        float_buffer[39] = overallocate_factor_;
+        float_buffer[40] = threshold_eigenvalue_gram_quench_;
+        float_buffer[41] = pair_mlwf_distance_threshold_;
+    }
+    else
+    {
+        memset(&float_buffer[0], 0, size_float_buffer * sizeof(float));
+    }
+
     int mpirc;
-    mpirc = MPI_Bcast(&short_buffer[0],    size_short_buffer,
-                      MPI_SHORT, 0, comm_global_);
-    mpirc = MPI_Bcast(&int_buffer[0],    size_int_buffer,
-                      MPI_INT, 0, comm_global_);
-    mpirc = MPI_Bcast(&float_buffer[0], size_float_buffer,
-                      MPI_FLOAT, 0, comm_global_);
+    mpirc = MPI_Bcast(
+        &short_buffer[0], size_short_buffer, MPI_SHORT, 0, comm_global_);
+    mpirc
+        = MPI_Bcast(&int_buffer[0], size_int_buffer, MPI_INT, 0, comm_global_);
+    mpirc = MPI_Bcast(
+        &float_buffer[0], size_float_buffer, MPI_FLOAT, 0, comm_global_);
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     mmpi.bcast(restart_file, comm_global_);
     mmpi.bcast(out_restart_file, comm_global_);
     mmpi.bcast(md_print_filename, comm_global_);
 
-    short npot=pot_filenames_.size();
-    mpirc = MPI_Bcast(&npot, 1, MPI_SHORT, 0, comm_global_);
-    if(mype_>0)
+    short npot = pot_filenames_.size();
+    mpirc      = MPI_Bcast(&npot, 1, MPI_SHORT, 0, comm_global_);
+    if (mype_ > 0)
     {
         pot_filenames_.resize(npot);
         pseudopot_flags_.resize(npot);
     }
-    for(short i=0;i<npot;i++)
+    for (short i = 0; i < npot; i++)
     {
-        short size_str=(short)pot_filenames_[i].size();
-        mpirc=MPI_Bcast(&size_str,1,MPI_SHORT, 0, comm_global_);
-        
-        char* buffer=new char[size_str + 1];
-        if( mype_==0 ){
-            pot_filenames_[i].copy(buffer,string::npos);
-            buffer[pot_filenames_[i].length()]=0;
+        short size_str = (short)pot_filenames_[i].size();
+        mpirc          = MPI_Bcast(&size_str, 1, MPI_SHORT, 0, comm_global_);
+
+        char* buffer = new char[size_str + 1];
+        if (mype_ == 0)
+        {
+            pot_filenames_[i].copy(buffer, string::npos);
+            buffer[pot_filenames_[i].length()] = 0;
         }
-        mpirc=MPI_Bcast(buffer,size_str+1, MPI_CHAR, 0, comm_global_);
-        pot_filenames_[i].assign(&buffer[0],size_str);
-        
+        mpirc = MPI_Bcast(buffer, size_str + 1, MPI_CHAR, 0, comm_global_);
+        pot_filenames_[i].assign(&buffer[0], size_str);
+
         delete[] buffer;
-        
-        mpirc=MPI_Bcast(&pseudopot_flags_[i],1,MPI_SHORT, 0, comm_global_);
+
+        mpirc = MPI_Bcast(&pseudopot_flags_[i], 1, MPI_SHORT, 0, comm_global_);
     }
 
-    if(mpirc!=MPI_SUCCESS){
-        (*MPIdata::sout)<<"MPI Bcast of Control failed!!!"<<endl;
+    if (mpirc != MPI_SUCCESS)
+    {
+        (*MPIdata::sout) << "MPI Bcast of Control failed!!!" << endl;
         MPI_Abort(comm_global_, 2);
     }
 
     // unpack
-    wf_dyn              =short_buffer[0]; 
-    wf_m                =short_buffer[1]; 
-    multipole_order     =short_buffer[2];
-    wf_extrapolation    =short_buffer[3]; 
-    diel                =short_buffer[4]; 
-    lap_type            =short_buffer[5]; 
-    precond_type_       =short_buffer[6]; 
-    orthof              =short_buffer[7]; 
-    it_algo_type        =short_buffer[8]; 
-    num_species         =short_buffer[9 ];
-    mg_levels_          =short_buffer[10];
-    project_out_psd     =short_buffer[11];
-    xctype              =short_buffer[12];
-    steps               =short_buffer[13];
-    checkpoint          =short_buffer[14];
-    verbose             =short_buffer[15];
-    iprint_residual     =short_buffer[16];
-    wannier_transform_type=short_buffer[17];
-    vh_init             =short_buffer[18];
-    vh_its              =short_buffer[19];
-    max_changes_pot     =short_buffer[20];
-    tmatrices           =short_buffer[21];
-    init_loc            =short_buffer[22];
-    init_type           =short_buffer[23];
-    atoms_dyn           =short_buffer[24];
-    max_electronic_steps                =short_buffer[25];
-    num_MD_steps           =short_buffer[26];
-    lr_updates_type     =short_buffer[27];
-    lr_update           =short_buffer[28];
-    lr_volume_calc      =short_buffer[29];
-    orbital_type        =short_buffer[30];
-    line_min            =short_buffer[31];
-    thermostat_type     =short_buffer[32];
-    bc[0]               =short_buffer[33];
-    bc[1]               =short_buffer[34];
-    bc[2]               =short_buffer[35];
-    bcPoisson[0]        =short_buffer[36];
-    bcPoisson[1]        =short_buffer[37];
-    bcPoisson[2]        =short_buffer[38];
-    short_sighted       =short_buffer[39];
-    loc_mode_           =(bool)short_buffer[40];
-    restart_info        =short_buffer[41];
-    restart_file_type   =short_buffer[42];
-    out_restart_info    =short_buffer[43];
-    out_restart_file_type=short_buffer[44];
-    precond_factor_computed=(bool)short_buffer[45];
-    dot_product_type    =short_buffer[46];
-    out_restart_file_naming_strategy=short_buffer[47];
-    enforceVmass0       =short_buffer[48];
-    dm_inner_steps      =short_buffer[49];
-    override_restart    =short_buffer[50];
-    fgmres_kim				=short_buffer[51];
-    fgmres_maxits			=short_buffer[52];    
-    ilu_type				=short_buffer[53];
-    ilu_lof					=short_buffer[54];
-    ilu_maxfil				=short_buffer[55];
-    coloring_algo_      =short_buffer[56];
-    diel_flag_          =short_buffer[57];
-    poisson_pc_nu1      =short_buffer[58];
-    poisson_pc_nu2      =short_buffer[59];
-    poisson_pc_nlev     =short_buffer[60];
-    system_charge_      =short_buffer[61];
-    md_print_freq       =short_buffer[62];
-    use_kernel_functions=short_buffer[63];
-    ngpts_[0]           =short_buffer[64];
-    ngpts_[1]           =short_buffer[65];
-    ngpts_[2]           =short_buffer[66];
-    computeCondGram_    =short_buffer[67];
-    lrs_extrapolation   =short_buffer[68];
-    parallel_transport  =(bool)short_buffer[69];
-    with_spin_          =(bool)short_buffer[70];
-    conv_criterion_     =short_buffer[71];
-    load_balancing_max_iterations  =short_buffer[72];
-    load_balancing_modulo			  =short_buffer[73];
-    write_clusters					  = short_buffer[74];
-    DM_solver_                     = short_buffer[75];
-    dm_algo					=short_buffer[80];
-    dm_approx_order					=short_buffer[81];
-    dm_approx_ndigits					=short_buffer[82];
-    dm_approx_power_maxits				=short_buffer[83];
-    spread_penalty_type_=short_buffer[84];
-    dm_use_old_         =short_buffer[85];
-    max_electronic_steps_tight_=short_buffer[86];
-    hartree_reset_ =short_buffer[88];
- 
-    numst               =int_buffer[0]; 
-    nel_                =int_buffer[1]; 
-    nempty_             =int_buffer[2]; 
-    num_ions            =int_buffer[3];    
-    
-    betaAnderson         =float_buffer[0] ;
-    spread_penalty_target_=float_buffer[1] ;
-    precond_factor       =float_buffer[2] ;
-    conv_tol             =float_buffer[3] ;
-    tol_forces           =float_buffer[4] ;
-    mix_pot              =float_buffer[5] ;
-    dm_mix               =float_buffer[6] ;
-    cut_radius           =float_buffer[7] ;
-    occ_width            =float_buffer[9];
-    init_rc              =float_buffer[10];
-    dt                   =float_buffer[11];
-    tol_orb_centers_move =float_buffer[12];
-    tkel                 =float_buffer[13];
-    thtime               =float_buffer[14];
-    spread_penalty_damping_=float_buffer[15];
-    rho0                 =float_buffer[16];
-    drho0                =float_buffer[17];
-    min_distance_centers_=float_buffer[18];
-    conv_tol_stop        =float_buffer[19];
-    threshold_eigenvalue_gram_ =float_buffer[20];
-    fgmres_tol           =float_buffer[21];
-    ilu_droptol 			 =float_buffer[22];
-    spread_factor        =float_buffer[23];
-    ox_                  =float_buffer[24];
-    oy_                  =float_buffer[25];
-    oz_                  =float_buffer[26];
-    lx_                  =float_buffer[27];
-    ly_                  =float_buffer[28];
-    lz_                  =float_buffer[29];
-    total_spin_          =float_buffer[30];
-    maxDistanceAtomicInfo_=float_buffer[31];
-    thwidth               =float_buffer[32];
-    aomm_radius_          =float_buffer[33];
-    aomm_threshold_factor_=float_buffer[34];
-    rescale_v_            =1.+(double)(float_buffer[35]);
-    load_balancing_alpha = float_buffer[36];
-    load_balancing_damping_tol = float_buffer[37];
-    spread_penalty_alpha_      = float_buffer[38];
-    overallocate_factor_       = float_buffer[39];
-    threshold_eigenvalue_gram_quench_= float_buffer[40];
-    pair_mlwf_distance_threshold_= float_buffer[41];
-    max_electronic_steps_loose_  =max_electronic_steps;
-    
+    wf_dyn                           = short_buffer[0];
+    wf_m                             = short_buffer[1];
+    multipole_order                  = short_buffer[2];
+    wf_extrapolation                 = short_buffer[3];
+    diel                             = short_buffer[4];
+    lap_type                         = short_buffer[5];
+    precond_type_                    = short_buffer[6];
+    orthof                           = short_buffer[7];
+    it_algo_type                     = short_buffer[8];
+    num_species                      = short_buffer[9];
+    mg_levels_                       = short_buffer[10];
+    project_out_psd                  = short_buffer[11];
+    xctype                           = short_buffer[12];
+    steps                            = short_buffer[13];
+    checkpoint                       = short_buffer[14];
+    verbose                          = short_buffer[15];
+    iprint_residual                  = short_buffer[16];
+    wannier_transform_type           = short_buffer[17];
+    vh_init                          = short_buffer[18];
+    vh_its                           = short_buffer[19];
+    max_changes_pot                  = short_buffer[20];
+    tmatrices                        = short_buffer[21];
+    init_loc                         = short_buffer[22];
+    init_type                        = short_buffer[23];
+    atoms_dyn                        = short_buffer[24];
+    max_electronic_steps             = short_buffer[25];
+    num_MD_steps                     = short_buffer[26];
+    lr_updates_type                  = short_buffer[27];
+    lr_update                        = short_buffer[28];
+    lr_volume_calc                   = short_buffer[29];
+    orbital_type                     = short_buffer[30];
+    line_min                         = short_buffer[31];
+    thermostat_type                  = short_buffer[32];
+    bc[0]                            = short_buffer[33];
+    bc[1]                            = short_buffer[34];
+    bc[2]                            = short_buffer[35];
+    bcPoisson[0]                     = short_buffer[36];
+    bcPoisson[1]                     = short_buffer[37];
+    bcPoisson[2]                     = short_buffer[38];
+    short_sighted                    = short_buffer[39];
+    loc_mode_                        = (bool)short_buffer[40];
+    restart_info                     = short_buffer[41];
+    restart_file_type                = short_buffer[42];
+    out_restart_info                 = short_buffer[43];
+    out_restart_file_type            = short_buffer[44];
+    precond_factor_computed          = (bool)short_buffer[45];
+    dot_product_type                 = short_buffer[46];
+    out_restart_file_naming_strategy = short_buffer[47];
+    enforceVmass0                    = short_buffer[48];
+    dm_inner_steps                   = short_buffer[49];
+    override_restart                 = short_buffer[50];
+    fgmres_kim                       = short_buffer[51];
+    fgmres_maxits                    = short_buffer[52];
+    ilu_type                         = short_buffer[53];
+    ilu_lof                          = short_buffer[54];
+    ilu_maxfil                       = short_buffer[55];
+    coloring_algo_                   = short_buffer[56];
+    diel_flag_                       = short_buffer[57];
+    poisson_pc_nu1                   = short_buffer[58];
+    poisson_pc_nu2                   = short_buffer[59];
+    poisson_pc_nlev                  = short_buffer[60];
+    system_charge_                   = short_buffer[61];
+    md_print_freq                    = short_buffer[62];
+    use_kernel_functions             = short_buffer[63];
+    ngpts_[0]                        = short_buffer[64];
+    ngpts_[1]                        = short_buffer[65];
+    ngpts_[2]                        = short_buffer[66];
+    computeCondGram_                 = short_buffer[67];
+    lrs_extrapolation                = short_buffer[68];
+    parallel_transport               = (bool)short_buffer[69];
+    with_spin_                       = (bool)short_buffer[70];
+    conv_criterion_                  = short_buffer[71];
+    load_balancing_max_iterations    = short_buffer[72];
+    load_balancing_modulo            = short_buffer[73];
+    write_clusters                   = short_buffer[74];
+    DM_solver_                       = short_buffer[75];
+    dm_algo                          = short_buffer[80];
+    dm_approx_order                  = short_buffer[81];
+    dm_approx_ndigits                = short_buffer[82];
+    dm_approx_power_maxits           = short_buffer[83];
+    spread_penalty_type_             = short_buffer[84];
+    dm_use_old_                      = short_buffer[85];
+    max_electronic_steps_tight_      = short_buffer[86];
+    hartree_reset_                   = short_buffer[88];
+
+    numst    = int_buffer[0];
+    nel_     = int_buffer[1];
+    nempty_  = int_buffer[2];
+    num_ions = int_buffer[3];
+
+    betaAnderson                      = float_buffer[0];
+    spread_penalty_target_            = float_buffer[1];
+    precond_factor                    = float_buffer[2];
+    conv_tol                          = float_buffer[3];
+    tol_forces                        = float_buffer[4];
+    mix_pot                           = float_buffer[5];
+    dm_mix                            = float_buffer[6];
+    cut_radius                        = float_buffer[7];
+    occ_width                         = float_buffer[9];
+    init_rc                           = float_buffer[10];
+    dt                                = float_buffer[11];
+    tol_orb_centers_move              = float_buffer[12];
+    tkel                              = float_buffer[13];
+    thtime                            = float_buffer[14];
+    spread_penalty_damping_           = float_buffer[15];
+    rho0                              = float_buffer[16];
+    drho0                             = float_buffer[17];
+    min_distance_centers_             = float_buffer[18];
+    conv_tol_stop                     = float_buffer[19];
+    threshold_eigenvalue_gram_        = float_buffer[20];
+    fgmres_tol                        = float_buffer[21];
+    ilu_droptol                       = float_buffer[22];
+    spread_factor                     = float_buffer[23];
+    ox_                               = float_buffer[24];
+    oy_                               = float_buffer[25];
+    oz_                               = float_buffer[26];
+    lx_                               = float_buffer[27];
+    ly_                               = float_buffer[28];
+    lz_                               = float_buffer[29];
+    total_spin_                       = float_buffer[30];
+    maxDistanceAtomicInfo_            = float_buffer[31];
+    thwidth                           = float_buffer[32];
+    aomm_radius_                      = float_buffer[33];
+    aomm_threshold_factor_            = float_buffer[34];
+    rescale_v_                        = 1. + (double)(float_buffer[35]);
+    load_balancing_alpha              = float_buffer[36];
+    load_balancing_damping_tol        = float_buffer[37];
+    spread_penalty_alpha_             = float_buffer[38];
+    overallocate_factor_              = float_buffer[39];
+    threshold_eigenvalue_gram_quench_ = float_buffer[40];
+    pair_mlwf_distance_threshold_     = float_buffer[41];
+    max_electronic_steps_loose_       = max_electronic_steps;
+
     delete[] short_buffer;
     delete[] int_buffer;
     delete[] float_buffer;
@@ -659,147 +669,175 @@ void Control::sync(void)
 #endif
 }
 
-//function to set default values when boost interface not used
+// function to set default values when boost interface not used
 void Control::setDefaultValues()
 {
-    assert( max_electronic_steps>-1 );
-    
-    overallocate_factor_=1.2;
-    max_electronic_steps_loose_=max_electronic_steps;
-    max_electronic_steps_tight_=max_electronic_steps;
+    assert(max_electronic_steps > -1);
 
+    overallocate_factor_        = 1.2;
+    max_electronic_steps_loose_ = max_electronic_steps;
+    max_electronic_steps_tight_ = max_electronic_steps;
 }
 
 void Control::adjust()
 {
-    if( nel_-2*numst==0 ){
-        dm_mix     = 1.;
-    }
-    if( orbital_type==0 )
+    if (nel_ - 2 * numst == 0)
     {
-        orthof     = 0;
-        dm_mix     = 1.;
-        wf_dyn     = 0;
+        dm_mix = 1.;
     }
-    if( orbital_type==2 )
+    if (orbital_type == 0)
     {
-        orthof     = 0;
+        orthof = 0;
+        dm_mix = 1.;
+        wf_dyn = 0;
     }
-    if( loc_mode_ && lr_update )
-        wannier_transform_type = max( wannier_transform_type, 1);
-    restart_run = (restart_info>0) ? true : false;    
+    if (orbital_type == 2)
+    {
+        orthof = 0;
+    }
+    if (loc_mode_ && lr_update)
+        wannier_transform_type = max(wannier_transform_type, 1);
+    restart_run = (restart_info > 0) ? true : false;
 }
 
 int Control::checkState()
 {
-    for(short i=0;i<3;i++)
-    if ((bcPoisson[i] != 0)
-     && (bcPoisson[i] != 1)
-     && (bcPoisson[i] != 2) ){
-        (*MPIdata::sout)<<"Control::checkState() -> invalid boundary conditions"<<endl;
+    for (short i = 0; i < 3; i++)
+        if ((bcPoisson[i] != 0) && (bcPoisson[i] != 1) && (bcPoisson[i] != 2))
+        {
+            (*MPIdata::sout)
+                << "Control::checkState() -> invalid boundary conditions"
+                << endl;
+            return -1;
+        }
+
+    if (diel != 0 && diel != 1)
+    {
+        (*MPIdata::sout) << "Flag diel should be 0 or 1" << endl;
+        return -1;
+    }
+    if (vh_init < 0 || vh_init > 100)
+    {
+        (*MPIdata::sout) << "Invalid parameter vh_init" << endl;
+        return -1;
+    }
+    if (vh_its < 0 || vh_its > 100)
+    {
+        (*MPIdata::sout) << "Invalid parameter vh_its" << endl;
+        return -1;
+    }
+    if (rho0 > .1)
+    {
+        (*MPIdata::sout) << "rho0=" << rho0 << " is too large" << endl;
+        return -1;
+    }
+    if (short_sighted != 0 && short_sighted != 1)
+    {
+        (*MPIdata::sout) << "Control::checkState() -> Short-sighted option "
+                            "should be 0 (off) or 1 (on)"
+                         << endl;
+        return -1;
+    }
+    if (atoms_dyn != 0 && atoms_dyn != 2 && atoms_dyn != 6 && atoms_dyn != 7)
+    {
+        (*MPIdata::sout)
+            << "Control::checkState() -> invalid parameter for md method"
+            << endl;
+        return -1;
+    }
+    if (thermostat_type != 0 && thermostat_type != 1 && thermostat_type != 2
+        && thermostat_type != 3)
+    {
+        (*MPIdata::sout) << "Control::checkState() -> Invalid thermostat option"
+                         << endl;
+        return -1;
+    }
+    if (wf_dyn != 0 && wf_dyn != 1)
+    {
+        (*MPIdata::sout) << "Control::checkState() -> Invalid quench method"
+                         << endl;
+        return -1;
+    }
+    if (atoms_dyn == 2)
+        if (!(wf_extrapolation == 0 || wf_extrapolation == 1
+                || wf_extrapolation == 2))
+        {
+            (*MPIdata::sout) << "Control::checkState() -> Invalid option for "
+                                "WF extrapolation in MD!!!"
+                             << endl;
+            return -1;
+        }
+    if (init_loc != 0 && init_loc != 1)
+    {
+        (*MPIdata::sout)
+            << "Control::checkState() -> Invalid orbital initialization flag"
+            << endl;
+        return -1;
+    }
+    if (init_type != 0 && init_type != 1 && init_type != 2)
+    {
+        (*MPIdata::sout)
+            << "Control::checkState() -> Invalid orbital initialization shape"
+            << endl;
+        return -1;
+    }
+    if (numst < 0)
+    {
+        (*MPIdata::sout) << "Control::checkState() -> Invalid number of states"
+                         << endl;
+        return -1;
+    }
+    assert(xctype == 0 || xctype == 2);
+    assert(mix_pot < 2. && mix_pot > 0.);
+    assert(precond_type_ % 10 == 0);
+    assert(project_out_psd == 0 || project_out_psd == 1);
+    assert(wannier_transform_type == 0 || wannier_transform_type == 1
+           || wannier_transform_type == 2);
+    assert(tmatrices == 1 || tmatrices == 0);
+    assert(mg_levels_ >= -1);
+    assert(rho0 > 0.);
+    assert(drho0 > 0.);
+    assert(orbital_type >= 0);
+    assert(orbital_type < 3);
+    assert(num_MD_steps >= 0);
+    assert(dt >= 0.);
+    if (short_sighted > 0)
+    {
+        assert(fgmres_kim >= 0);
+        assert(fgmres_maxits >= 0);
+        assert(fgmres_tol > 0.);
+        assert(ilu_droptol > 0.);
+        assert(ilu_lof >= 0);
+        assert(ilu_maxfil >= 0);
+    }
+    if (!(lap_type == 0 || lap_type == 1 || lap_type == 2 || lap_type == 3
+            || lap_type == 4 || lap_type == 10))
+    {
+        (*MPIdata::sout) << "Control::checkState() -> Invalid Laplacian type"
+                         << endl;
+        return -1;
+    }
+    if (lr_update > 0 && lr_volume_calc > 0 && wannier_transform_type != 2)
+    {
+        (*MPIdata::sout) << "Control::lr_update=" << lr_update << endl;
+        (*MPIdata::sout) << "Control::lr_volume_calc =" << lr_volume_calc
+                         << endl;
+        (*MPIdata::sout) << "Control::checkState(): NOLMO centers required for "
+                            "LR adaptation!"
+                         << endl;
         return -1;
     }
 
-    if( diel!=0 && diel!=1 ){
-        (*MPIdata::sout)<<"Flag diel should be 0 or 1"<<endl;
-        return -1;
-    }
-    if( vh_init<0 || vh_init>100 ){
-        (*MPIdata::sout)<<"Invalid parameter vh_init"<<endl;
-        return -1;
-    }
-    if( vh_its<0 || vh_its>100 ){
-        (*MPIdata::sout)<<"Invalid parameter vh_its"<<endl;
-        return -1;
-    }
-    if(rho0>.1){
-        (*MPIdata::sout)<<"rho0="<<rho0<<" is too large"<<endl;
-        return -1;
-    }
-    if( short_sighted!=0 && short_sighted!=1 ){
-        (*MPIdata::sout)<<"Control::checkState() -> Short-sighted option should be 0 (off) or 1 (on)"<<endl;
-        return -1;
-    }
-    if( atoms_dyn!=0 && atoms_dyn!=2 
-     && atoms_dyn!=6 && atoms_dyn!=7 ){
-        (*MPIdata::sout)<<"Control::checkState() -> invalid parameter for md method"<<endl;
-        return -1;
-    }
-    if( thermostat_type!=0 && thermostat_type!=1 && thermostat_type!=2 && thermostat_type!=3 ){
-        (*MPIdata::sout)<<"Control::checkState() -> Invalid thermostat option"<<endl;
-        return -1;
-    }
-    if( wf_dyn!=0 && wf_dyn!=1 ){
-        (*MPIdata::sout)<<"Control::checkState() -> Invalid quench method"<<endl;
-        return -1;
-    }
-    if( atoms_dyn==2 )
-    if( !(wf_extrapolation==0 || wf_extrapolation==1 || wf_extrapolation==2) )
+    if (coloring_algo_ / 10 == 1 && precond_type_ / 10 == 0)
     {
-        (*MPIdata::sout)<<"Control::checkState() -> Invalid option for WF extrapolation in MD!!!"<<endl;
+        (*MPIdata::serr) << "ERROR in Control: local coloring algorithm "
+                            "requires block preconditioner!!!"
+                         << endl;
         return -1;
     }
-    if( init_loc!=0 && init_loc!=1){
-        (*MPIdata::sout)<<"Control::checkState() -> Invalid orbital initialization flag"<<endl;
-        return -1;
-    }
-    if( init_type!=0 && init_type!=1 && init_type!=2){
-        (*MPIdata::sout)<<"Control::checkState() -> Invalid orbital initialization shape"<<endl;
-        return -1;
-    }
-    if( numst<0 ){
-        (*MPIdata::sout)<<"Control::checkState() -> Invalid number of states"<<endl;
-        return -1;
-    }
-    assert( xctype==0 ||  xctype==2 );
-    assert( mix_pot < 2. && mix_pot>0. );
-    assert( precond_type_%10==0 );
-    assert( project_out_psd==0 || project_out_psd==1 );
-    assert( wannier_transform_type==0 
-         || wannier_transform_type==1 
-         || wannier_transform_type==2 );
-    assert( tmatrices==1 || tmatrices==0 );
-    assert(mg_levels_>=-1);
-    assert(rho0>0.);
-    assert(drho0>0.); 
-    assert(orbital_type>=0);
-    assert(orbital_type<3);
-    assert(num_MD_steps>=0);
-    assert(dt>=0.);
-    if( short_sighted > 0 )
-    {
-       assert(fgmres_kim >= 0);
-       assert(fgmres_maxits >= 0);
-       assert(fgmres_tol > 0.);
-       assert(ilu_droptol > 0.);
-       assert(ilu_lof >= 0);
-       assert(ilu_maxfil >= 0);
-    }
-    if( !( lap_type==0
-        || lap_type==1
-        || lap_type==2
-        || lap_type==3
-        || lap_type==4
-        || lap_type==10 ) ){
-        (*MPIdata::sout)<<"Control::checkState() -> Invalid Laplacian type"<<endl;
-        return -1;
-    }
-    if( lr_update>0 && lr_volume_calc>0
-                          && wannier_transform_type!=2 ){
-        (*MPIdata::sout)<<"Control::lr_update="<<lr_update<<endl;
-        (*MPIdata::sout)<<"Control::lr_volume_calc ="<<lr_volume_calc<<endl;
-        (*MPIdata::sout)<<"Control::checkState(): NOLMO centers required for LR adaptation!"<<endl;
-        return -1;
-    }
-    
-    if( coloring_algo_/10==1 && precond_type_/10==0 )
-    {
-        (*MPIdata::serr)<<"ERROR in Control: local coloring algorithm requires block preconditioner!!!"<<endl;
-        return -1;
-    }
-    
+
     int ret = checkOptions();
-    
+
     return ret;
 }
 
@@ -808,88 +846,93 @@ int Control::checkState()
 // each spin 1/2 has a charge 1 e-
 void Control::setNumst(const short myspin, const int neval)
 {
-    assert( nempty_>=0 );
-    assert( neval>0 );
-    
-    nel_=neval-system_charge_;
-        
-    if( with_spin_ ) // 1 electrons/orbital
+    assert(nempty_ >= 0);
+    assert(neval > 0);
+
+    nel_ = neval - system_charge_;
+
+    if (with_spin_) // 1 electrons/orbital
     {
-        if( mype_==0 )cout<<"spin="<<total_spin_<<", nel="<<nel_<<endl;
-        assert( (nel_-(int)(2.*total_spin_))%2 == 0 );
-        
-        numst = ( nel_-(int)(2.*total_spin_) )/2;
-        if(myspin==0)numst+=(int)(2.*total_spin_);
+        if (mype_ == 0)
+            cout << "spin=" << total_spin_ << ", nel=" << nel_ << endl;
+        assert((nel_ - (int)(2. * total_spin_)) % 2 == 0);
+
+        numst = (nel_ - (int)(2. * total_spin_)) / 2;
+        if (myspin == 0) numst += (int)(2. * total_spin_);
     }
     else // no spin, 2 electrons/orbital
-    {  
+    {
         // only set numst if not set yet
-        if( numst==-1 )
+        if (numst == -1)
         {
-            numst=nel_/2;
-            if( occupationWidthIsZero() )
+            numst = nel_ / 2;
+            if (occupationWidthIsZero())
             {
-                assert( 2*numst==nel_ );
+                assert(2 * numst == nel_);
             }
             else
             {
-                if( 2*numst<nel_ )numst++;
+                if (2 * numst < nel_) numst++;
             }
-            
         }
     }
-    
-    numst+=nempty_;
-    nelspin_=numst-nempty_;
-    
-    if( mype_==0 )cout<<"spin="<<total_spin_<<", nel="<<neval<<", numst="<<numst
-                      <<", nempty="<<nempty_<<endl;
+
+    numst += nempty_;
+    nelspin_ = numst - nempty_;
+
+    if (mype_ == 0)
+        cout << "spin=" << total_spin_ << ", nel=" << neval
+             << ", numst=" << numst << ", nempty=" << nempty_ << endl;
 }
 
 void Control::setTolEnergy()
 {
     // if rtol has been set, use it to define conv_tol
-    if( conv_rtol_>0. )
+    if (conv_rtol_ > 0.)
     {
-        conv_tol=conv_rtol_*nel_;
-        if( mype_==0 )
-            (*MPIdata::sout)<<"Tolerance on energy based on relative tolerance"<<endl;
+        conv_tol = conv_rtol_ * nel_;
+        if (mype_ == 0)
+            (*MPIdata::sout)
+                << "Tolerance on energy based on relative tolerance" << endl;
     }
-    if( conv_tol_stop>= 999. )conv_tol_stop=100.*conv_tol;
+    if (conv_tol_stop >= 999.) conv_tol_stop = 100. * conv_tol;
     MPI_Bcast(&conv_tol, 1, MPI_FLOAT, 0, comm_global_);
     MPI_Bcast(&conv_tol_stop, 1, MPI_FLOAT, 0, comm_global_);
-    if( mype_==0 )
-        (*MPIdata::sout)<<"Tolerance on energy set to "<<conv_tol<<endl;
-    
-    assert( conv_tol>0. );
+    if (mype_ == 0)
+        (*MPIdata::sout) << "Tolerance on energy set to " << conv_tol << endl;
+
+    assert(conv_tol > 0.);
 }
 
 void Control::readRestartInfo(ifstream* tfile)
 {
-    string zero="0";
-    if(tfile!=NULL)
+    string zero = "0";
+    if (tfile != NULL)
     {
         // Read in the restart file names
         string filename;
-        (*tfile)>>filename;
-        
+        (*tfile) >> filename;
+
         restart_file.assign(run_directory_);
         restart_file.append("/");
         restart_file.append(filename);
 
-        if(zero.compare( filename )==0)
-            restart_info=0;
-        else{
-            (*tfile)>>restart_info;
+        if (zero.compare(filename) == 0)
+            restart_info = 0;
+        else
+        {
+            (*tfile) >> restart_info;
 #ifdef USE_MPI
-            (*tfile)>>restart_file_type;
+            (*tfile) >> restart_file_type;
 #else
-            restart_file_type=0; // no hdf5p available if no mpi
-#endif    
+            restart_file_type     = 0; // no hdf5p available if no mpi
+#endif
         }
-        (*MPIdata::sout)<<"Input restart file: "<<restart_file<<endl;
-    }else{
-        restart_info=0;
+        (*MPIdata::sout) << "Input restart file: " << restart_file << endl;
+    }
+    else
+    {
+        restart_info = 0;
     }
 
     printRestartLink();
@@ -898,141 +941,168 @@ void Control::readRestartInfo(ifstream* tfile)
     MPI_Bcast(&restart_info, 1, MPI_SHORT, 0, comm_global_);
     MPI_Bcast(&restart_file_type, 1, MPI_SHORT, 0, comm_global_);
     char buffer[64];
-    if( mype_==0 ){
-        memcpy(buffer, restart_file.c_str(), (restart_file.size()+1)*sizeof(char));
+    if (mype_ == 0)
+    {
+        memcpy(buffer, restart_file.c_str(),
+            (restart_file.size() + 1) * sizeof(char));
     }
     int mpirc = MPI_Bcast(buffer, 64, MPI_CHAR, 0, comm_global_);
-    if(mpirc!=MPI_SUCCESS){
-        (*MPIdata::sout)<<"Control::readRestartInfo(): MPI Bcast of restart_file failed!!!"<<endl;
+    if (mpirc != MPI_SUCCESS)
+    {
+        (*MPIdata::sout)
+            << "Control::readRestartInfo(): MPI Bcast of restart_file failed!!!"
+            << endl;
     }
-#endif    
+#endif
 }
 
 void Control::readRestartOutputInfo(ifstream* tfile)
 {
-    const string zero="0";
-    const string one ="1";
-    if(tfile!=NULL){
+    const string zero = "0";
+    const string one  = "1";
+    if (tfile != NULL)
+    {
         // Read in the output restart filename
         string filename;
-        (*tfile)>>filename;
-        //int dpcs_chkpoint=0;
-        if(zero.compare(filename)==0) // no restart dump
-            out_restart_info=0;
-        else{
-            if(one.compare(filename)==0){ // automatic naming of dump
-                filename = "snapshot";
+        (*tfile) >> filename;
+        // int dpcs_chkpoint=0;
+        if (zero.compare(filename) == 0) // no restart dump
+            out_restart_info = 0;
+        else
+        {
+            if (one.compare(filename) == 0)
+            { // automatic naming of dump
+                filename                         = "snapshot";
                 out_restart_file_naming_strategy = 1;
             }
-            (*tfile)>>out_restart_info;
+            (*tfile) >> out_restart_info;
 #ifdef USE_MPI
-            (*tfile)>>out_restart_file_type;
+            (*tfile) >> out_restart_file_type;
 #else
-            out_restart_file_type=0; // no hdf5p available if no mpi
-#endif    
+            out_restart_file_type = 0; // no hdf5p available if no mpi
+#endif
             //(*tfile)>>dpcs_chkpoint;
-            //timeout_.set(dpcs_chkpoint);
+            // timeout_.set(dpcs_chkpoint);
         }
 
         out_restart_file.assign(run_directory_);
         out_restart_file.append("/");
         out_restart_file.append(filename);
-        (*MPIdata::sout)<<"Output restart file: "<<out_restart_file
-            <<" with info level "<<out_restart_info<<endl;
-        //(*MPIdata::sout)<<"Time for DPCS checkpoint: "<<dpcs_chkpoint<<"[s]"<<endl;
+        (*MPIdata::sout) << "Output restart file: " << out_restart_file
+                         << " with info level " << out_restart_info << endl;
+        //(*MPIdata::sout)<<"Time for DPCS checkpoint:
+        //"<<dpcs_chkpoint<<"[s]"<<endl;
     }
 }
 
-int Control::setPreconditionerParameters(const short type,
-                                         const float factor,
-                                         const bool project_out, 
-                                         const short nlevels, 
-                                         const float fgrid_hmax)
+int Control::setPreconditionerParameters(const short type, const float factor,
+    const bool project_out, const short nlevels, const float fgrid_hmax)
 {
-    if( ( type%10 )!=0 ){
-        (*MPIdata::sout)<<type<<": Invalid preconditioner type"<<endl;
+    if ((type % 10) != 0)
+    {
+        (*MPIdata::sout) << type << ": Invalid preconditioner type" << endl;
         return -1;
     }
 
-    precond_type_=type;
-    if( precond_type_%10==0 )(*MPIdata::sout)<<"MG preconditioner"<<endl;
-    if( precond_type_/10==1 )(*MPIdata::sout)<<"Preconditioner: block implementation"<<endl;
-    
-    precond_factor=factor;
-    if( factor<0. )precond_factor_computed=true;
-    else           precond_factor_computed=false;
-    project_out_psd=(short)project_out;
-    mg_levels_=nlevels;
+    precond_type_ = type;
+    if (precond_type_ % 10 == 0)
+        (*MPIdata::sout) << "MG preconditioner" << endl;
+    if (precond_type_ / 10 == 1)
+        (*MPIdata::sout) << "Preconditioner: block implementation" << endl;
+
+    precond_factor = factor;
+    if (factor < 0.)
+        precond_factor_computed = true;
+    else
+        precond_factor_computed = false;
+    project_out_psd = (short)project_out;
+    mg_levels_      = nlevels;
 
     // Define number of coarse levels for orbitals preconditioning
-    short maxlevels=-1;
-    for(short level=0;level<3;level++){
-         float hmaxgrid=fgrid_hmax*(1<<level);
-         assert(hmaxgrid>0);
-         if(hmaxgrid<1.4)maxlevels+=1;
+    short maxlevels = -1;
+    for (short level = 0; level < 3; level++)
+    {
+        float hmaxgrid = fgrid_hmax * (1 << level);
+        assert(hmaxgrid > 0);
+        if (hmaxgrid < 1.4) maxlevels += 1;
     }
-    if(mg_levels_>maxlevels){
-        (*MPIdata::sout)<<"Set MG levels number to maxlevels="<<maxlevels<<endl;
-        mg_levels_=maxlevels;
+    if (mg_levels_ > maxlevels)
+    {
+        (*MPIdata::sout) << "Set MG levels number to maxlevels=" << maxlevels
+                         << endl;
+        mg_levels_ = maxlevels;
     }
-    (*MPIdata::sout)<<"MG preconditioner: number of levels ="<<mg_levels_<<endl;
+    (*MPIdata::sout) << "MG preconditioner: number of levels =" << mg_levels_
+                     << endl;
     return 0;
 }
 
-int Control::setShortSightedSolverParameters(const float fact, const float stol, const float dtol, const short kim, const short itmax, const short lfil, const short maxfill, const short ilutype)
+int Control::setShortSightedSolverParameters(const float fact, const float stol,
+    const float dtol, const short kim, const short itmax, const short lfil,
+    const short maxfill, const short ilutype)
 {
-    if( lfil<0 ){
-        (*MPIdata::sout)<<"Invalid fill level parameter for ILU preconditioner: lof = "<<lfil<<endl;
+    if (lfil < 0)
+    {
+        (*MPIdata::sout)
+            << "Invalid fill level parameter for ILU preconditioner: lof = "
+            << lfil << endl;
         return -1;
     }
-    if( itmax<0 ){
-        (*MPIdata::sout)<<"Invalid maxits parameter for fgmres solver: maxits = "<<itmax<<endl;
+    if (itmax < 0)
+    {
+        (*MPIdata::sout)
+            << "Invalid maxits parameter for fgmres solver: maxits = " << itmax
+            << endl;
         return -1;
     }
-    if( kim<0 ){
-        (*MPIdata::sout)<<"Invalid Krylov dimension parameter for fgmres solver: kim = "<<kim<<endl;
+    if (kim < 0)
+    {
+        (*MPIdata::sout)
+            << "Invalid Krylov dimension parameter for fgmres solver: kim = "
+            << kim << endl;
         return -1;
     }
-    
-    spread_factor = fact;    
-    fgmres_tol = stol;
-    ilu_droptol = dtol;
-    fgmres_kim = kim;
+
+    spread_factor = fact;
+    fgmres_tol    = stol;
+    ilu_droptol   = dtol;
+    fgmres_kim    = kim;
     fgmres_maxits = itmax;
-    ilu_lof = lfil;
-    ilu_maxfil = maxfill;
-    ilu_type = ilutype;
-    
+    ilu_lof       = lfil;
+    ilu_maxfil    = maxfill;
+    ilu_type      = ilutype;
+
     return 0;
 }
 
 int Control::readLRupdateInfo(ifstream* tfile)
 {
-    (*tfile)>>lr_update;
-    (*MPIdata::sout)<<"Control::readLRupdateInfo(), input lr_update="
-        <<lr_update<<endl;
-    if( lr_update>0 ){
+    (*tfile) >> lr_update;
+    (*MPIdata::sout) << "Control::readLRupdateInfo(), input lr_update="
+                     << lr_update << endl;
+    if (lr_update > 0)
+    {
 
-        (*tfile)>>lr_updates_type;
-        if( lr_updates_type!=0
-         && lr_updates_type!=1
-         && lr_updates_type!=2 )
+        (*tfile) >> lr_updates_type;
+        if (lr_updates_type != 0 && lr_updates_type != 1
+            && lr_updates_type != 2)
         {
-            (*MPIdata::sout)<<"Control::readLRupdateInfo(), "
-                <<"Invalid value for lr_updates_type"<<endl;
+            (*MPIdata::sout) << "Control::readLRupdateInfo(), "
+                             << "Invalid value for lr_updates_type" << endl;
             return -1;
         }
-        (*tfile)>>tol_orb_centers_move;
-        (*MPIdata::sout)<<"Control::readLRupdateInfo(), input tol_orb_centers_move="
-            <<tol_orb_centers_move<<endl;
-        if( lr_updates_type>0 ){
-            (*tfile)>>lr_volume_calc;
-            if( lr_volume_calc!=0
-             && lr_volume_calc!=1
-             && lr_volume_calc!=2 )
+        (*tfile) >> tol_orb_centers_move;
+        (*MPIdata::sout)
+            << "Control::readLRupdateInfo(), input tol_orb_centers_move="
+            << tol_orb_centers_move << endl;
+        if (lr_updates_type > 0)
+        {
+            (*tfile) >> lr_volume_calc;
+            if (lr_volume_calc != 0 && lr_volume_calc != 1
+                && lr_volume_calc != 2)
             {
-                (*MPIdata::sout)<<"Control::readLRupdateInfo(), "
-                    <<"Invalid value for lr_volume_calc"<<endl;
+                (*MPIdata::sout) << "Control::readLRupdateInfo(), "
+                                 << "Invalid value for lr_volume_calc" << endl;
                 return -1;
             }
         }
@@ -1042,141 +1112,165 @@ int Control::readLRupdateInfo(ifstream* tfile)
 
 int Control::readThermostatInfo(ifstream* tfile)
 {
-    (*tfile)>>thermostat_type;
-    if( thermostat_type!=0 && thermostat_type!=1 && thermostat_type!=2 && thermostat_type!=3 ){
-        (*MPIdata::sout)<<"Invalid thermostat option"<<endl;
+    (*tfile) >> thermostat_type;
+    if (thermostat_type != 0 && thermostat_type != 1 && thermostat_type != 2
+        && thermostat_type != 3)
+    {
+        (*MPIdata::sout) << "Invalid thermostat option" << endl;
         return -1;
     }
-    if( thermostat_type>0 ){
-        (*tfile)>>tkel>>thtime;
-        if( thtime<=0. ){
-            (*MPIdata::sout)<<"Invalid thermostat option: time should be >0."<<endl;
+    if (thermostat_type > 0)
+    {
+        (*tfile) >> tkel >> thtime;
+        if (thtime <= 0.)
+        {
+            (*MPIdata::sout)
+                << "Invalid thermostat option: time should be >0." << endl;
             return -1;
         }
     }
     return 0;
 }
 
-void Control::printThermostatInfo(ostream& os)const
+void Control::printThermostatInfo(ostream& os) const
 {
-    if( thermostat_type>0 && mype_==0 )
+    if (thermostat_type > 0 && mype_ == 0)
     {
-        os<<"Thermostat type: ";
-        if( thermostat_type==1 )os<<"Berendsen"<<endl;
-        else if( thermostat_type==2 )os<<"Langevin"<<endl;
-        else if( thermostat_type==3 )os<<"SCALING"<<endl;
-        else os<<endl;
-        os<<"Thermostat target T: "<<tkel<<endl;
-        os<<"Thermostat trelaxation time: "<<thtime<<endl;
-        os<<"Thermostat trelaxation width: "<<thwidth<<endl;
+        os << "Thermostat type: ";
+        if (thermostat_type == 1)
+            os << "Berendsen" << endl;
+        else if (thermostat_type == 2)
+            os << "Langevin" << endl;
+        else if (thermostat_type == 3)
+            os << "SCALING" << endl;
+        else
+            os << endl;
+        os << "Thermostat target T: " << tkel << endl;
+        os << "Thermostat trelaxation time: " << thtime << endl;
+        os << "Thermostat trelaxation width: " << thwidth << endl;
     }
 }
 
 int Control::readOccupations(ifstream* tfile)
 {
     int count = 0;
-    float nel=0.;
-    do {
-        float  t1=0.;
-        int     nst=0;
-        if(mype_==0){
+    float nel = 0.;
+    do
+    {
+        float t1 = 0.;
+        int nst  = 0;
+        if (mype_ == 0)
+        {
 #ifdef DEBUG
-            (*MPIdata::sout)<<" Occupations of states..."<<endl;
+            (*MPIdata::sout) << " Occupations of states..." << endl;
 #endif
-            (*tfile)>>nst;
-            if (nst <= 0){
-                (*MPIdata::sout)<<"Control::readOccupations: numst="<<numst<<endl;
-                (*MPIdata::sout)<<"Control::readOccupations: nst="<<nst<<", count="<<count<<endl;
-                (*MPIdata::sout)<<"Control::readOccupations: Bad repeat count for state occupations"
-                <<endl;
+            (*tfile) >> nst;
+            if (nst <= 0)
+            {
+                (*MPIdata::sout)
+                    << "Control::readOccupations: numst=" << numst << endl;
+                (*MPIdata::sout) << "Control::readOccupations: nst=" << nst
+                                 << ", count=" << count << endl;
+                (*MPIdata::sout) << "Control::readOccupations: Bad repeat "
+                                    "count for state occupations"
+                                 << endl;
                 return -1;
             }
-            if ((count + nst) > numst){
-                (*MPIdata::sout)<<"Control::readOccupations: Occupations specified for too many states"
-                    <<endl;
+            if ((count + nst) > numst)
+            {
+                (*MPIdata::sout) << "Control::readOccupations: Occupations "
+                                    "specified for too many states"
+                                 << endl;
                 return -1;
             }
- 
-            (*tfile)>>t1;
-            if (t1 < 0.){
-                (*MPIdata::sout)<<"Control::readOccupations: occupation="<<t1<<endl;
-                (*MPIdata::sout)<<"Control::readOccupations: occupation should be a positive number"
-                    <<endl;
+
+            (*tfile) >> t1;
+            if (t1 < 0.)
+            {
+                (*MPIdata::sout)
+                    << "Control::readOccupations: occupation=" << t1 << endl;
+                (*MPIdata::sout) << "Control::readOccupations: occupation "
+                                    "should be a positive number"
+                                 << endl;
                 return -1;
             }
             finishRead(*tfile);
         }
 #ifdef USE_MPI
-        int mpirc = MPI_Bcast(&nst,  1,    MPI_INT,    0, comm_global_);
-        if(mpirc!=MPI_SUCCESS){
-            (*MPIdata::sout)<<"MPI Bcast of occupation numbers failed!!!"<<endl;
+        int mpirc = MPI_Bcast(&nst, 1, MPI_INT, 0, comm_global_);
+        if (mpirc != MPI_SUCCESS)
+        {
+            (*MPIdata::sout)
+                << "MPI Bcast of occupation numbers failed!!!" << endl;
             return -1;
         }
         mpirc = MPI_Bcast(&t1, 1, MPI_FLOAT, 0, comm_global_);
-        if(mpirc!=MPI_SUCCESS){
-            (*MPIdata::sout)<<"MPI Bcast of occupation failed!!!"<<endl;
+        if (mpirc != MPI_SUCCESS)
+        {
+            (*MPIdata::sout) << "MPI Bcast of occupation failed!!!" << endl;
             return -1;
         }
 #endif
-        nel   += nst*t1;         
+        nel += nst * t1;
         count += nst;
- 
-    } while(count < numst);
-    
-    nel_=(int)nel;
-    
-    nempty_=(2*numst-(int)nel)/2;
-    
+
+    } while (count < numst);
+
+    nel_ = (int)nel;
+
+    nempty_ = (2 * numst - (int)nel) / 2;
+
     return count;
 }
 
-void Control::setLocMode(const float radius,
-                         const float lx, const float ly, const float lz,
-                         const float mind_centers)
+void Control::setLocMode(const float radius, const float lx, const float ly,
+    const float lz, const float mind_centers)
 {
-    cut_radius  = radius;
+    cut_radius            = radius;
     min_distance_centers_ = mind_centers;
-    loc_mode_ = ( cut_radius< lx 
-               || cut_radius< ly 
-               || cut_radius< lz );
-    if( orbital_type!=1 ){
-        cut_radius=1000.;
-        loc_mode_=false;
+    loc_mode_ = (cut_radius < lx || cut_radius < ly || cut_radius < lz);
+    if (orbital_type != 1)
+    {
+        cut_radius = 1000.;
+        loc_mode_  = false;
     }
 
-    if( loc_mode_ )init_loc=1;
-    else if( restart_info>2 )init_loc=0;
+    if (loc_mode_)
+        init_loc = 1;
+    else if (restart_info > 2)
+        init_loc = 0;
 
-    if( !loc_mode_ ){
-        lr_update=0;
-        min_distance_centers_=0.;
+    if (!loc_mode_)
+    {
+        lr_update             = 0;
+        min_distance_centers_ = 0.;
     }
-    if(  loc_mode_ )project_out_psd=0;
+    if (loc_mode_) project_out_psd = 0;
 #ifdef DEBUG
-        if(mype_==0)(*MPIdata::sout)<<" Localization radius="<<cut_radius<<endl;
+    if (mype_ == 0)
+        (*MPIdata::sout) << " Localization radius=" << cut_radius << endl;
 #endif
 }
 
-//set radius for short-sighted matrices based on 
-//orbitals localization radius, that is how many elements
-//of Gram matrix are used to compute inverse
+// set radius for short-sighted matrices based on
+// orbitals localization radius, that is how many elements
+// of Gram matrix are used to compute inverse
 void Control::setSpreadRadius()
 {
-    assert( spread_factor>0. );
-    assert( cut_radius>0. );
+    assert(spread_factor > 0.);
+    assert(cut_radius > 0.);
 
-    spread_radius = spread_factor*cut_radius;
+    spread_radius = spread_factor * cut_radius;
 }
 
-void Control::setNumIons(const int nions)
-{
-   num_ions = nions;
-}
+void Control::setNumIons(const int nions) { num_ions = nions; }
 
 void Control::setTolEigenvalueGram(const float tol)
 {
-    threshold_eigenvalue_gram_=tol;
-    if(onpe0)(*MPIdata::sout)<<"Tol. Eigenvalue Gram="<<threshold_eigenvalue_gram_<<endl;
+    threshold_eigenvalue_gram_ = tol;
+    if (onpe0)
+        (*MPIdata::sout) << "Tol. Eigenvalue Gram="
+                         << threshold_eigenvalue_gram_ << endl;
 }
 
 void Control::global_exit(int i)
@@ -1190,621 +1284,672 @@ void Control::global_exit(int i)
 
 void Control::setSpecies(Potentials& pot)
 {
-    assert( sp_.empty() );
-    
-    int i=0;
-    
-    for(vector<string>::iterator it = pot_filenames_.begin();
-                                 it!= pot_filenames_.end();
-                               ++it)
+    assert(sp_.empty());
+
+    int i = 0;
+
+    for (vector<string>::iterator it = pot_filenames_.begin();
+         it != pot_filenames_.end(); ++it)
     {
-        
-        if( pot.pot_type(i)==0 || pot.pot_type(i)==1 )
+
+        if (pot.pot_type(i) == 0 || pot.pot_type(i) == 1)
         {
-            //if(onpe0)(*MPIdata::sout)<<" pot_type="<<pot.pot_type(i)<<endl;
+            // if(onpe0)(*MPIdata::sout)<<" pot_type="<<pot.pot_type(i)<<endl;
             Species s(comm_global_);
             sp_.push_back(s);
         }
-    
+
         i++;
-    } 
-    
+    }
+
     // Read in pseudopotentials
     pot.readAll(sp_);
 }
 
 void Control::readPotFilenames(ifstream* tfile)
 {
-    assert( pot_filenames_.empty() );
-    
-    for(int i = 0;i < num_species;i++)
+    assert(pot_filenames_.empty());
+
+    for (int i = 0; i < num_species; i++)
     {
         string pot_filename;
-        short flag=-1;
-        if(mype_==0)
+        short flag = -1;
+        if (mype_ == 0)
         {
-            (*tfile)>>pot_filename>>flag;
+            (*tfile) >> pot_filename >> flag;
         }
-        
+
         pot_filenames_.push_back(pot_filename);
         pseudopot_flags_.push_back(flag);
-        
-        if(mype_==0)
+
+        if (mype_ == 0)
         {
             read_comments(*tfile);
-            if(onpe0)(*MPIdata::sout)<<"Potential file name: "
-                                     <<pot_filenames_[i]<<endl;
+            if (onpe0)
+                (*MPIdata::sout)
+                    << "Potential file name: " << pot_filenames_[i] << endl;
         }
     }
 }
 
 void Control::registerPotentials(Potentials& pot)
-{     
-    assert( pot_filenames_.size()==pseudopot_flags_.size() );
-    
-    short i=0;
-    for(vector<string>::iterator it = pot_filenames_.begin();
-                                 it!= pot_filenames_.end();
-                               ++it)
+{
+    assert(pot_filenames_.size() == pseudopot_flags_.size());
+
+    short i = 0;
+    for (vector<string>::iterator it = pot_filenames_.begin();
+         it != pot_filenames_.end(); ++it)
     {
         // just make sure every process does the same thing...
         MPI_Barrier(comm_global_);
-        
-        pot.registerName(*it,pseudopot_flags_[i]);
+
+        pot.registerName(*it, pseudopot_flags_[i]);
         i++;
     }
 }
 
 int Control::checkNLrange()
 {
-    for(vector<Species>::const_iterator it =sp_.begin();
-                                        it!=sp_.end();
-                                      ++it)
+    for (vector<Species>::const_iterator it = sp_.begin(); it != sp_.end();
+         ++it)
     {
-        for(short i=0;i<3;i++)
-        if( it->dim_nl()>ngpts_[i] )
-        {
-            cerr<<"WARNING: Size of cell not large enough for Species "
-                <<it->name()
-                <<" in direction "<<i<<endl;
-            cerr<<" dim nl="<<it->dim_nl()<<" larger than n="<<ngpts_[i]<<endl;
-            return -1;
-        }
+        for (short i = 0; i < 3; i++)
+            if (it->dim_nl() > ngpts_[i])
+            {
+                cerr << "WARNING: Size of cell not large enough for Species "
+                     << it->name() << " in direction " << i << endl;
+                cerr << " dim nl=" << it->dim_nl()
+                     << " larger than n=" << ngpts_[i] << endl;
+                return -1;
+            }
     }
-    
+
     return 0;
 }
 
 #ifdef HAVE_BOOST
-// set internal flags from read boost options 
+// set internal flags from read boost options
 void Control::setOptions(const boost::program_options::variables_map& vm)
 {
-    printWithTimeStamp("Control::setOptions()...",cout);
-    
-    if( onpe0 )
-    {
-    assert(vm.count("Domain.lx"));
-    assert(vm.count("Poisson.bcx"));
-    assert(vm.count("xcFunctional"));
+    printWithTimeStamp("Control::setOptions()...", cout);
 
-    string str;
-    
-    verbose=vm["verbosity"].as<short>();
-    
-    str=vm["xcFunctional"].as<string>();
-    if( str.compare("LDA")==0 )xctype=0;
-    if( str.compare("PBE")==0 )xctype=2;
-    
-    str=vm["FDtype"].as<string>();
-    if( str.compare("Mehrstellen")==0 )lap_type=0;
-    if( str.compare("2nd")==0 )lap_type=1;
-    if( str.compare("4th")==0 )lap_type=2;
-    if( str.compare("6th")==0 )lap_type=3;
-    if( str.compare("8th")==0 )lap_type=4;
-    if( str.compare("Mehrstellen2")==0 )lap_type=10;
-    assert( lap_type>=0 );
-    
-    system_charge_=vm["charge"].as<short>();
-    
-    lx_=vm["Domain.lx"].as<float>();
-    ly_=vm["Domain.ly"].as<float>();
-    lz_=vm["Domain.lz"].as<float>();
-    ox_=vm["Domain.ox"].as<float>();
-    oy_=vm["Domain.oy"].as<float>();
-    oz_=vm["Domain.oz"].as<float>();
+    if (onpe0)
+    {
+        assert(vm.count("Domain.lx"));
+        assert(vm.count("Poisson.bcx"));
+        assert(vm.count("xcFunctional"));
 
-    ngpts_[0]=vm["Mesh.nx"].as<short>();
-    ngpts_[1]=vm["Mesh.ny"].as<short>();
-    ngpts_[2]=vm["Mesh.nz"].as<short>();
-    
-    if(vm.count("Potentials.pseudopotential"))
-    {
-        short filter_flag = vm["Potentials.filterPseudo"].as<bool>() ? 1 : 0;
-        
-        pot_filenames_=vm["Potentials.pseudopotential"].as< vector<string> >();
-        for(short i=0;i<pot_filenames_.size();i++)
-            pseudopot_flags_.push_back(filter_flag);
-    }
-    
-    if(vm.count("Potentials.external"))
-    {
-        short bin_flag = vm["Potentials.binExternal"].as<bool>() ? 3 : 2;
-        std::vector<std::string> pot_filenames=vm["Potentials.external"].as< vector<string> >();
-        
-       for(short i=0;i<pot_filenames.size();i++)
+        string str;
+
+        verbose = vm["verbosity"].as<short>();
+
+        str = vm["xcFunctional"].as<string>();
+        if (str.compare("LDA") == 0) xctype = 0;
+        if (str.compare("PBE") == 0) xctype = 2;
+
+        str = vm["FDtype"].as<string>();
+        if (str.compare("Mehrstellen") == 0) lap_type = 0;
+        if (str.compare("2nd") == 0) lap_type = 1;
+        if (str.compare("4th") == 0) lap_type = 2;
+        if (str.compare("6th") == 0) lap_type = 3;
+        if (str.compare("8th") == 0) lap_type = 4;
+        if (str.compare("Mehrstellen2") == 0) lap_type = 10;
+        assert(lap_type >= 0);
+
+        system_charge_ = vm["charge"].as<short>();
+
+        lx_ = vm["Domain.lx"].as<float>();
+        ly_ = vm["Domain.ly"].as<float>();
+        lz_ = vm["Domain.lz"].as<float>();
+        ox_ = vm["Domain.ox"].as<float>();
+        oy_ = vm["Domain.oy"].as<float>();
+        oz_ = vm["Domain.oz"].as<float>();
+
+        ngpts_[0] = vm["Mesh.nx"].as<short>();
+        ngpts_[1] = vm["Mesh.ny"].as<short>();
+        ngpts_[2] = vm["Mesh.nz"].as<short>();
+
+        if (vm.count("Potentials.pseudopotential"))
         {
-            pot_filenames_.push_back(pot_filenames[i]);
-            pseudopot_flags_.push_back(bin_flag);
+            short filter_flag
+                = vm["Potentials.filterPseudo"].as<bool>() ? 1 : 0;
+
+            pot_filenames_
+                = vm["Potentials.pseudopotential"].as<vector<string>>();
+            for (short i = 0; i < pot_filenames_.size(); i++)
+                pseudopot_flags_.push_back(filter_flag);
         }
-    }
-    
-    restart_file=vm["Restart.input_filename"].as<string>();
-    if( restart_file.compare("")==0 )
-    {
-        restart_info=0;
-    }
-    else
-    {
-        printRestartLink();
-        restart_info=vm["Restart.input_level"].as<short>();
-    }
-    str=vm["Restart.input_type"].as<string>();
-    if( str.compare("distributed")==0 )restart_file_type=0;
-    else                               restart_file_type=1;
-    
-    
-    string filename( vm["Restart.output_filename"].as<string>() );
-    string autoname("auto");
-    if(autoname.compare(filename)==0) // automatic naming of dump
-    {
-        filename = "snapshot";
-        out_restart_file_naming_strategy = 1;
-    }
-    out_restart_file.assign(run_directory_);
-    out_restart_file.append("/");
-    out_restart_file.append(filename);
-    
-    out_restart_info=vm["Restart.output_level"].as<short>();
-    str=vm["Restart.output_type"].as<string>();
-    if( str.compare("distributed")==0 )out_restart_file_type=0;
-    if( str.compare("single_file")==0 )out_restart_file_type=1;
-    if( out_restart_file_type<0 )
-    {
-        (*MPIdata::serr)<<"ERROR in Control::setOptions: Invalid restart dump type"<<endl;
-        MPI_Abort(comm_global_, 2);
-    }
-    
-    (*MPIdata::sout)<<"Output restart file: "<<out_restart_file
-                    <<" with info level "<<out_restart_info<<endl;
 
-    checkpoint=vm["Restart.interval"].as<short>();
-    
-    rescale_v_=vm["Restart.rescale_v"].as<double>();
-    
-    // Poisson solver
-    str=vm["Poisson.bcx"].as<string>();
-    if( str.compare("0")==0 )       bcPoisson[0]=0;
-    if( str.compare("periodic")==0 )bcPoisson[0]=1;
-    if( str.compare("charge")==0 )  bcPoisson[0]=2;
-
-    str=vm["Poisson.bcy"].as<string>();
-    if( str.compare("0")==0 )       bcPoisson[1]=0;
-    if( str.compare("periodic")==0 )bcPoisson[1]=1;
-    if( str.compare("charge")==0 )  bcPoisson[1]=2;
-
-    str=vm["Poisson.bcz"].as<string>();
-    if( str.compare("0")==0 )       bcPoisson[2]=0;
-    if( str.compare("periodic")==0 )bcPoisson[2]=1;
-    if( str.compare("charge")==0 )  bcPoisson[2]=2;
-    
-    
-    str=vm["Poisson.solver"].as<string>();
-    if( str.compare("CG")==0 )diel_flag_=10;
-    if( str.compare("MG")==0 )diel_flag_=0;
-    
-    str=vm["Poisson.diel"].as<string>();
-    if( str.compare("on")==0  || str.compare("ON")==0 )diel=1;
-    if( str.compare("off")==0 || str.compare("OFF")==0)diel=0;
-    
-    bool poisson_reset = vm["Poisson.reset"].as<bool>();
-    hartree_reset_ = poisson_reset ? 1 : 0;
-   
-    poisson_pc_nu1=vm["Poisson.nu1"].as<short>();
-    poisson_pc_nu2=vm["Poisson.nu2"].as<short>();
-    vh_init=vm["Poisson.max_steps_initial"].as<short>();
-    vh_its=vm["Poisson.max_steps"].as<short>();
-    poisson_pc_nlev=vm["Poisson.max_levels"].as<short>();
-    rho0=vm["Poisson.rho0"].as<float>();
-    drho0=vm["Poisson.beta"].as<float>();
-    
-    
-    str=vm["ProjectedMatrices.solver"].as<string>();
-    if( str.compare("short_sighted")==0 )short_sighted=1;
-    if( str.compare("exact")==0 )        short_sighted=0;
-    
-    tmatrices = vm["ProjectedMatrices.printMM"].as<bool>() ? 1 : 0;
-    
-    if(short_sighted)
-    {
-        spread_factor = vm["ShortSightedInverse.spread_factor"].as<float>();    
-        fgmres_tol    = vm["ShortSightedInverse.tol"].as<float>();
-        ilu_droptol   = vm["ShortSightedInverse.ilu_drop_tol"].as<float>();
-        fgmres_kim    = vm["ShortSightedInverse.krylov_dim"].as<short>();
-        fgmres_maxits = vm["ShortSightedInverse.max_iterations"].as<short>();
-        ilu_lof       = vm["ShortSightedInverse.ilu_filling_level"].as<short>();
-        ilu_maxfil    = vm["ShortSightedInverse.ilut_max_fill"].as<int>();
-        str           = vm["ShortSightedInverse.ilu_type"].as<string>();
-        if( str.compare("ILU")==0 )ilu_type      = 0;
-        else                       ilu_type      = 1;
-    }
-    else
-    {
-        spread_factor = 1000.;
-    }
-    
-    str=vm["Quench.solver"].as<string>();
-    if( str.compare("ABPG")==0 )
-    {
-        it_algo_type=0;
-        wf_dyn=1;
-        wf_m=vm["ABPG.m"].as<short>();
-        betaAnderson=vm["ABPG.beta"].as<float>();
-    }
-    if( str.compare("PSD")==0 )
-    {
-        it_algo_type=0;
-        wf_dyn=0;
-    }
-    if( str.compare("NLCG")==0 )
-    {
-        it_algo_type=1;
-        wf_dyn=1;
-        
-        parallel_transport = vm["NLCG.parallel_transport"].as<bool>() ? 1 : 0;       
-    }    
-    if( str.compare("PR")==0 ) // Polak-Ribiere
-    {
-        it_algo_type=3;
-    }
-    cout<<"Outer solver type: "<<str<<endl;
-    assert( it_algo_type>=0 );
-
-    mg_levels_      = vm["Quench.preconditioner_num_levels"].as<short>()-1;
-    precond_factor  = vm["Quench.step_length"].as<float>();
-    if( precond_factor<0. )
-    {
-        switch( lap_type )
+        if (vm.count("Potentials.external"))
         {
-            case 0:
+            short bin_flag = vm["Potentials.binExternal"].as<bool>() ? 3 : 2;
+            std::vector<std::string> pot_filenames
+                = vm["Potentials.external"].as<vector<string>>();
+
+            for (short i = 0; i < pot_filenames.size(); i++)
             {
-                precond_factor=2.;
-                break;
+                pot_filenames_.push_back(pot_filenames[i]);
+                pseudopot_flags_.push_back(bin_flag);
             }
-
-            case 2:
-            {
-                precond_factor=1.5;
-                break;
-            }
-        
-            default:
-                precond_factor=2.;
         }
-    }
-    
-    max_changes_pot = vm["Quench.num_lin_iterations"].as<short>();
-    conv_tol      = vm["Quench.atol"].as<float>();
-    conv_rtol_    = vm["Quench.rtol"].as<float>();
-    
-    str=vm["Quench.conv_criterion"].as<string>();
-    if( str.compare("deltaE")  ==0 )conv_criterion_=0;
-    if( str.compare("residual")==0 )conv_criterion_=1;
-    if( str.compare("maxResidual")==0 )conv_criterion_=2;
 
-    computeCondGram_ = vm["Quench.compute_cond_Gram"].as<bool>() ? 2 : 0;
-    short ival = computeCondGram_>0 ? 2 : 1;
-    computeCondGram_ = vm["MD.compute_cond_Gram"].as<bool>()     ? ival : computeCondGram_;
-
-    orthof          = vm["Quench.ortho_freq"].as<short>();
-    iprint_residual = vm["Quench.interval_print_residual"].as<short>();
-    conv_tol_stop = vm["Quench.required_tol"].as<float>();
-    threshold_eigenvalue_gram_quench_ =vm["Quench.min_Gram_eigenvalue"].as<float>();
-    pair_mlwf_distance_threshold_ =vm["Quench.pair_mlwf_distance_threshold"].as<float>();
-
-    spread_penalty_alpha_ =vm["SpreadPenalty.alpha"].as<float>();
-    if( spread_penalty_alpha_>0. )
-    {
-        str=vm["SpreadPenalty.type"].as<string>();
-        if( str.compare("volume")==0 )
+        restart_file = vm["Restart.input_filename"].as<string>();
+        if (restart_file.compare("") == 0)
         {
-            //new interface
-            spread_penalty_type_=1;
-            spread_penalty_damping_=vm["SpreadPenalty.damping"].as<float>();
-            spread_penalty_target_ =vm["SpreadPenalty.target"].as<float>();
-        }
-        else if( str.compare("individual")==0 )
-        {
-            //new interface
-            spread_penalty_type_=0;
-            spread_penalty_damping_=vm["SpreadPenalty.damping"].as<float>();
-            spread_penalty_target_ =vm["SpreadPenalty.target"].as<float>();
-        }
-        else if( str.compare("energy")==0 )
-        {
-            //individual penalties with new interface
-            spread_penalty_type_=2;
-            spread_penalty_target_=vm["SpreadPenalty.target"].as<float>();
-        }
-        else if( str.compare("XLBOMD")==0 )
-        {
-            spread_penalty_type_=3;
-            spread_penalty_target_=vm["SpreadPenalty.target"].as<float>();
+            restart_info = 0;
         }
         else
         {
-            cerr<<"ERROR: Spread Penalty needs a type"<<endl;
-            MPI_Abort(comm_global_, 0);
+            printRestartLink();
+            restart_info = vm["Restart.input_level"].as<short>();
         }
-        
-        if( spread_penalty_target_<=0. )
+        str = vm["Restart.input_type"].as<string>();
+        if (str.compare("distributed") == 0)
+            restart_file_type = 0;
+        else
+            restart_file_type = 1;
+
+        string filename(vm["Restart.output_filename"].as<string>());
+        string autoname("auto");
+        if (autoname.compare(filename) == 0) // automatic naming of dump
         {
-            (*MPIdata::sout)<<"Invalid value for Spread Penalty target: "
-                            <<spread_penalty_target_<<endl;
-            MPI_Abort(comm_global_, 0);
+            filename                         = "snapshot";
+            out_restart_file_naming_strategy = 1;
         }
-    }
-    
-    aomm_radius_=vm["AOMM.kernel_radius"].as<float>();
-    use_kernel_functions= ( aomm_radius_>0. ) ? 1 : 0;
-    
-    aomm_threshold_factor_=vm["AOMM.threshold_factor"].as<float>();
-    
-    str=vm["Coloring.algo"].as<string>();
-    if( str.compare("RLF")==0 )   coloring_algo_=0;
-    if( str.compare("Greedy")==0 )coloring_algo_=1;
-    
-    str=vm["Coloring.scope"].as<string>();
-    if( str.compare("local")==0 )coloring_algo_+=10;
-    
-    str=vm["Run.type"].as<string>();
-    max_electronic_steps=vm["Quench.max_steps"].as<short>();
-    max_electronic_steps_loose_=max_electronic_steps;
-    max_electronic_steps_tight_=vm["Quench.max_steps_tight"].as<short>();
-    if( str.compare("QUENCH")==0 )
-    {
-        atoms_dyn=0;
-    }
-    if( str.compare("MD")==0 )
-    {
-        atoms_dyn=2;
-        dt=vm["MD.dt"].as<float>();
-        num_MD_steps=vm["MD.num_steps"].as<short>();
-        md_print_freq=vm["MD.print_interval"].as<short>();
-        md_print_filename=vm["MD.print_directory"].as<string>();
-        str=vm["MD.thermostat"].as<string>();
-        if( str.compare("ON")==0 || str.compare("on")==0 )
-        { 
-            str=vm["Thermostat.type"].as<string>();
-            if( str.compare("Berendsen")==0 )thermostat_type=1;
-            if( str.compare("Langevin")==0 ) thermostat_type=2;
-            if( str.compare("SCALING")==0 )  thermostat_type=3;
-            if( thermostat_type  <0 )
+        out_restart_file.assign(run_directory_);
+        out_restart_file.append("/");
+        out_restart_file.append(filename);
+
+        out_restart_info = vm["Restart.output_level"].as<short>();
+        str              = vm["Restart.output_type"].as<string>();
+        if (str.compare("distributed") == 0) out_restart_file_type = 0;
+        if (str.compare("single_file") == 0) out_restart_file_type = 1;
+        if (out_restart_file_type < 0)
+        {
+            (*MPIdata::serr)
+                << "ERROR in Control::setOptions: Invalid restart dump type"
+                << endl;
+            MPI_Abort(comm_global_, 2);
+        }
+
+        (*MPIdata::sout) << "Output restart file: " << out_restart_file
+                         << " with info level " << out_restart_info << endl;
+
+        checkpoint = vm["Restart.interval"].as<short>();
+
+        rescale_v_ = vm["Restart.rescale_v"].as<double>();
+
+        // Poisson solver
+        str = vm["Poisson.bcx"].as<string>();
+        if (str.compare("0") == 0) bcPoisson[0] = 0;
+        if (str.compare("periodic") == 0) bcPoisson[0] = 1;
+        if (str.compare("charge") == 0) bcPoisson[0] = 2;
+
+        str = vm["Poisson.bcy"].as<string>();
+        if (str.compare("0") == 0) bcPoisson[1] = 0;
+        if (str.compare("periodic") == 0) bcPoisson[1] = 1;
+        if (str.compare("charge") == 0) bcPoisson[1] = 2;
+
+        str = vm["Poisson.bcz"].as<string>();
+        if (str.compare("0") == 0) bcPoisson[2] = 0;
+        if (str.compare("periodic") == 0) bcPoisson[2] = 1;
+        if (str.compare("charge") == 0) bcPoisson[2] = 2;
+
+        str = vm["Poisson.solver"].as<string>();
+        if (str.compare("CG") == 0) diel_flag_ = 10;
+        if (str.compare("MG") == 0) diel_flag_ = 0;
+
+        str = vm["Poisson.diel"].as<string>();
+        if (str.compare("on") == 0 || str.compare("ON") == 0) diel = 1;
+        if (str.compare("off") == 0 || str.compare("OFF") == 0) diel = 0;
+
+        bool poisson_reset = vm["Poisson.reset"].as<bool>();
+        hartree_reset_     = poisson_reset ? 1 : 0;
+
+        poisson_pc_nu1  = vm["Poisson.nu1"].as<short>();
+        poisson_pc_nu2  = vm["Poisson.nu2"].as<short>();
+        vh_init         = vm["Poisson.max_steps_initial"].as<short>();
+        vh_its          = vm["Poisson.max_steps"].as<short>();
+        poisson_pc_nlev = vm["Poisson.max_levels"].as<short>();
+        rho0            = vm["Poisson.rho0"].as<float>();
+        drho0           = vm["Poisson.beta"].as<float>();
+
+        str = vm["ProjectedMatrices.solver"].as<string>();
+        if (str.compare("short_sighted") == 0) short_sighted = 1;
+        if (str.compare("exact") == 0) short_sighted = 0;
+
+        tmatrices = vm["ProjectedMatrices.printMM"].as<bool>() ? 1 : 0;
+
+        if (short_sighted)
+        {
+            spread_factor = vm["ShortSightedInverse.spread_factor"].as<float>();
+            fgmres_tol    = vm["ShortSightedInverse.tol"].as<float>();
+            ilu_droptol   = vm["ShortSightedInverse.ilu_drop_tol"].as<float>();
+            fgmres_kim    = vm["ShortSightedInverse.krylov_dim"].as<short>();
+            fgmres_maxits
+                = vm["ShortSightedInverse.max_iterations"].as<short>();
+            ilu_lof = vm["ShortSightedInverse.ilu_filling_level"].as<short>();
+            ilu_maxfil = vm["ShortSightedInverse.ilut_max_fill"].as<int>();
+            str        = vm["ShortSightedInverse.ilu_type"].as<string>();
+            if (str.compare("ILU") == 0)
+                ilu_type = 0;
+            else
+                ilu_type = 1;
+        }
+        else
+        {
+            spread_factor = 1000.;
+        }
+
+        str = vm["Quench.solver"].as<string>();
+        if (str.compare("ABPG") == 0)
+        {
+            it_algo_type = 0;
+            wf_dyn       = 1;
+            wf_m         = vm["ABPG.m"].as<short>();
+            betaAnderson = vm["ABPG.beta"].as<float>();
+        }
+        if (str.compare("PSD") == 0)
+        {
+            it_algo_type = 0;
+            wf_dyn       = 0;
+        }
+        if (str.compare("NLCG") == 0)
+        {
+            it_algo_type = 1;
+            wf_dyn       = 1;
+
+            parallel_transport
+                = vm["NLCG.parallel_transport"].as<bool>() ? 1 : 0;
+        }
+        if (str.compare("PR") == 0) // Polak-Ribiere
+        {
+            it_algo_type = 3;
+        }
+        cout << "Outer solver type: " << str << endl;
+        assert(it_algo_type >= 0);
+
+        mg_levels_     = vm["Quench.preconditioner_num_levels"].as<short>() - 1;
+        precond_factor = vm["Quench.step_length"].as<float>();
+        if (precond_factor < 0.)
+        {
+            switch (lap_type)
             {
-                (*MPIdata::sout)<<"Invalid value for Thermostat.type: "<<thermostat_type<<endl;
-                MPI_Abort(comm_global_, 0);
-            }
-            
-            tkel  =vm["Thermostat.temperature"].as<float>();
-            if( tkel  <0. )
-            {
-                (*MPIdata::sout)<<"Invalid value for Thermostat.temperature: "<<tkel<<endl;
-                MPI_Abort(comm_global_, 0);
-            }
-            thtime=vm["Thermostat.relax_time"].as<float>();
-            if( thtime  <0. )
-            {
-                (*MPIdata::sout)<<"Invalid value for Thermostat.relax_time: "<<thtime<<endl;
-                MPI_Abort(comm_global_, 0);
-            }
-            
-            if( str.compare("SCALING")==0 )
-            {
-                thwidth=vm["Thermostat.width"].as<float>();
-                if( thwidth<0. )
+                case 0:
                 {
-                    (*MPIdata::sout)<<"Invalid value for Thermostat.width: "<<thwidth<<endl;
+                    precond_factor = 2.;
+                    break;
+                }
+
+                case 2:
+                {
+                    precond_factor = 1.5;
+                    break;
+                }
+
+                default:
+                    precond_factor = 2.;
+            }
+        }
+
+        max_changes_pot = vm["Quench.num_lin_iterations"].as<short>();
+        conv_tol        = vm["Quench.atol"].as<float>();
+        conv_rtol_      = vm["Quench.rtol"].as<float>();
+
+        str = vm["Quench.conv_criterion"].as<string>();
+        if (str.compare("deltaE") == 0) conv_criterion_ = 0;
+        if (str.compare("residual") == 0) conv_criterion_ = 1;
+        if (str.compare("maxResidual") == 0) conv_criterion_ = 2;
+
+        computeCondGram_ = vm["Quench.compute_cond_Gram"].as<bool>() ? 2 : 0;
+        short ival       = computeCondGram_ > 0 ? 2 : 1;
+        computeCondGram_
+            = vm["MD.compute_cond_Gram"].as<bool>() ? ival : computeCondGram_;
+
+        orthof          = vm["Quench.ortho_freq"].as<short>();
+        iprint_residual = vm["Quench.interval_print_residual"].as<short>();
+        conv_tol_stop   = vm["Quench.required_tol"].as<float>();
+        threshold_eigenvalue_gram_quench_
+            = vm["Quench.min_Gram_eigenvalue"].as<float>();
+        pair_mlwf_distance_threshold_
+            = vm["Quench.pair_mlwf_distance_threshold"].as<float>();
+
+        spread_penalty_alpha_ = vm["SpreadPenalty.alpha"].as<float>();
+        if (spread_penalty_alpha_ > 0.)
+        {
+            str = vm["SpreadPenalty.type"].as<string>();
+            if (str.compare("volume") == 0)
+            {
+                // new interface
+                spread_penalty_type_ = 1;
+                spread_penalty_damping_
+                    = vm["SpreadPenalty.damping"].as<float>();
+                spread_penalty_target_ = vm["SpreadPenalty.target"].as<float>();
+            }
+            else if (str.compare("individual") == 0)
+            {
+                // new interface
+                spread_penalty_type_ = 0;
+                spread_penalty_damping_
+                    = vm["SpreadPenalty.damping"].as<float>();
+                spread_penalty_target_ = vm["SpreadPenalty.target"].as<float>();
+            }
+            else if (str.compare("energy") == 0)
+            {
+                // individual penalties with new interface
+                spread_penalty_type_   = 2;
+                spread_penalty_target_ = vm["SpreadPenalty.target"].as<float>();
+            }
+            else if (str.compare("XLBOMD") == 0)
+            {
+                spread_penalty_type_   = 3;
+                spread_penalty_target_ = vm["SpreadPenalty.target"].as<float>();
+            }
+            else
+            {
+                cerr << "ERROR: Spread Penalty needs a type" << endl;
+                MPI_Abort(comm_global_, 0);
+            }
+
+            if (spread_penalty_target_ <= 0.)
+            {
+                (*MPIdata::sout) << "Invalid value for Spread Penalty target: "
+                                 << spread_penalty_target_ << endl;
+                MPI_Abort(comm_global_, 0);
+            }
+        }
+
+        aomm_radius_         = vm["AOMM.kernel_radius"].as<float>();
+        use_kernel_functions = (aomm_radius_ > 0.) ? 1 : 0;
+
+        aomm_threshold_factor_ = vm["AOMM.threshold_factor"].as<float>();
+
+        str = vm["Coloring.algo"].as<string>();
+        if (str.compare("RLF") == 0) coloring_algo_ = 0;
+        if (str.compare("Greedy") == 0) coloring_algo_ = 1;
+
+        str = vm["Coloring.scope"].as<string>();
+        if (str.compare("local") == 0) coloring_algo_ += 10;
+
+        str                         = vm["Run.type"].as<string>();
+        max_electronic_steps        = vm["Quench.max_steps"].as<short>();
+        max_electronic_steps_loose_ = max_electronic_steps;
+        max_electronic_steps_tight_ = vm["Quench.max_steps_tight"].as<short>();
+        if (str.compare("QUENCH") == 0)
+        {
+            atoms_dyn = 0;
+        }
+        if (str.compare("MD") == 0)
+        {
+            atoms_dyn         = 2;
+            dt                = vm["MD.dt"].as<float>();
+            num_MD_steps      = vm["MD.num_steps"].as<short>();
+            md_print_freq     = vm["MD.print_interval"].as<short>();
+            md_print_filename = vm["MD.print_directory"].as<string>();
+            str               = vm["MD.thermostat"].as<string>();
+            if (str.compare("ON") == 0 || str.compare("on") == 0)
+            {
+                str = vm["Thermostat.type"].as<string>();
+                if (str.compare("Berendsen") == 0) thermostat_type = 1;
+                if (str.compare("Langevin") == 0) thermostat_type = 2;
+                if (str.compare("SCALING") == 0) thermostat_type = 3;
+                if (thermostat_type < 0)
+                {
+                    (*MPIdata::sout) << "Invalid value for Thermostat.type: "
+                                     << thermostat_type << endl;
                     MPI_Abort(comm_global_, 0);
                 }
+
+                tkel = vm["Thermostat.temperature"].as<float>();
+                if (tkel < 0.)
+                {
+                    (*MPIdata::sout)
+                        << "Invalid value for Thermostat.temperature: " << tkel
+                        << endl;
+                    MPI_Abort(comm_global_, 0);
+                }
+                thtime = vm["Thermostat.relax_time"].as<float>();
+                if (thtime < 0.)
+                {
+                    (*MPIdata::sout)
+                        << "Invalid value for Thermostat.relax_time: " << thtime
+                        << endl;
+                    MPI_Abort(comm_global_, 0);
+                }
+
+                if (str.compare("SCALING") == 0)
+                {
+                    thwidth = vm["Thermostat.width"].as<float>();
+                    if (thwidth < 0.)
+                    {
+                        (*MPIdata::sout)
+                            << "Invalid value for Thermostat.width: " << thwidth
+                            << endl;
+                        MPI_Abort(comm_global_, 0);
+                    }
+                }
             }
+            else
+            {
+                thermostat_type = 0;
+            }
+            wf_extrapolation = vm["MD.extrapolation_type"].as<short>();
+            enforceVmass0
+                = vm["MD.remove_mass_center_motion"].as<bool>() ? 1 : 0;
+
+            threshold_eigenvalue_gram_
+                = vm["MD.min_Gram_eigenvalue"].as<float>();
+
+            // override value of wf_extrapolation for XL-BOMD
+            str = vm["MD.type"].as<string>();
+        } // MD
+        else
+        {
+            threshold_eigenvalue_gram_ = threshold_eigenvalue_gram_quench_;
+        }
+
+        if (str.compare("GeomOpt") == 0)
+        {
+            str = vm["GeomOpt.type"].as<string>();
+            if (str.compare("LBFGS") == 0) atoms_dyn = 6;
+            dt = vm["GeomOpt.dt"].as<float>();
+
+            num_MD_steps = vm["GeomOpt.max_steps"].as<short>();
+            tol_forces   = vm["GeomOpt.tol"].as<float>();
+            dt           = vm["GeomOpt.dt"].as<float>();
+        }
+
+        nempty_ = vm["Orbitals.nempty"].as<short>();
+        str     = vm["Orbitals.type"].as<string>();
+        if (str.compare("NO") == 0) orbital_type = 1;
+        if (str.compare("Orthonormal") == 0) orbital_type = 2;
+        cout << "Orbitals type: " << str << endl;
+        float etemp = vm["Orbitals.temperature"].as<float>();
+        // K_B*T in Rydberg
+        occ_width = 2. * 3.166811429e-6 * etemp;
+
+        str = vm["Orbitals.dotProduct"].as<string>();
+        if (str.compare("diagonal") == 0)
+            dot_product_type = 0; // use diag(inverse(S))
+        if (str.compare("exact") == 0) dot_product_type = 1; // use inverse(S)
+
+        str = vm["Orbitals.initial_type"].as<string>();
+        if (str.compare("random") == 0) init_type = 0;
+        if (str.compare("Gaussian") == 0) init_type = 1;
+        if (str.compare("Fourier") == 0) init_type = 2;
+
+        // width of initial Gaussian, otherwise just used to determine
+        // if local or not
+        init_rc = vm["Orbitals.initial_width"].as<float>();
+        if (init_type == 1 && init_rc > 100.)
+        {
+            cout << endl
+                 << "!!!WARNING: Gaussian orbitals with large spreads may lead "
+                    "to bad condition number for S!!!"
+                 << endl;
+            cout << "Try using a smaller value for Orbitals.initial_width"
+                 << endl
+                 << endl;
+        }
+
+        overallocate_factor_ = vm["Orbitals.overallocate_factor"].as<float>();
+
+        if (init_rc < 1000.)
+            init_loc = 1;
+        else
+            init_loc = 0;
+
+        cut_radius           = vm["LocalizationRegions.radius"].as<float>();
+        tol_orb_centers_move = vm["LocalizationRegions.move_tol"].as<float>();
+        lr_update = (short)vm["LocalizationRegions.adaptive"].as<bool>();
+        min_distance_centers_
+            = vm["LocalizationRegions.min_distance"].as<float>();
+        lrs_compute = vm["LocalizationRegions.computation"].as<short>();
+        str = vm["LocalizationRegions.extrapolation_scheme"].as<string>();
+
+        if (lrs_compute > 0 || str.compare("none") == 0)
+            lrs_extrapolation = 0;
+        else if (str.compare("linear") == 0)
+            lrs_extrapolation = 1;
+        else if (str.compare("quadratic") == 0)
+            lrs_extrapolation = 2;
+        else if (str.compare("Verlet") == 0)
+            lrs_extrapolation = 10;
+
+        dm_mix         = vm["DensityMatrix.mixing"].as<float>();
+        dm_inner_steps = vm["DensityMatrix.nb_inner_it"].as<short>();
+        dm_use_old_    = vm["DensityMatrix.use_old"].as<bool>() ? 1 : 0;
+        str            = vm["DensityMatrix.solver"].as<string>();
+        if (str.compare("Mixing") == 0) DM_solver_ = 0;
+        if (str.compare("MVP") == 0) DM_solver_ = 1;
+        if (str.compare("HMVP") == 0) DM_solver_ = 2;
+
+        load_balancing_alpha = vm["LoadBalancing.alpha"].as<float>();
+        load_balancing_damping_tol
+            = vm["LoadBalancing.damping_tol"].as<float>();
+        load_balancing_max_iterations
+            = vm["LoadBalancing.max_iterations"].as<short>();
+        load_balancing_modulo = vm["LoadBalancing.modulo"].as<short>();
+        load_balancing_output_file
+            = vm["LoadBalancing.output_file"].as<string>();
+        if (load_balancing_output_file.compare("") == 0)
+            write_clusters = 0;
+        else
+            write_clusters = 1;
+
+        // derived flags
+        loc_mode_ = cut_radius < 100. ? true : false;
+        if (coloring_algo_ >= 10)
+        {
+            precond_type_ = 10;
         }
         else
         {
-            thermostat_type=0;
-        }     
-        wf_extrapolation=vm["MD.extrapolation_type"].as<short>();
-        enforceVmass0=vm["MD.remove_mass_center_motion"].as<bool>() ? 1 : 0;
+            precond_type_ = 0;
+        }
 
-        threshold_eigenvalue_gram_ =vm["MD.min_Gram_eigenvalue"].as<float>();
-        
-        // override value of wf_extrapolation for XL-BOMD
-        str=vm["MD.type"].as<string>();
-    } // MD
-    else
-    {
-        threshold_eigenvalue_gram_=threshold_eigenvalue_gram_quench_;
-    }
-    
-    if( str.compare("GeomOpt")==0 )
-    {
-        str=vm["GeomOpt.type"].as<string>();
-        if( str.compare("LBFGS")==0 )atoms_dyn=6;
-        dt=vm["GeomOpt.dt"].as<float>();
+        if (vm.count("Quench.MLWC"))
+        {
+            wannier_transform_type = vm["Quench.MLWC"].as<bool>() ? 1 : 0;
+        }
+        else // default
+        {
+            if (loc_mode_)
+                wannier_transform_type = 1;
+            else
+                wannier_transform_type = 0;
+        }
+        wannier_transform_type
+            = vm["Quench.MLWF"].as<bool>() ? 2 : wannier_transform_type;
 
-        num_MD_steps =vm["GeomOpt.max_steps"].as<short>();
-        tol_forces=vm["GeomOpt.tol"].as<float>();
-        dt=vm["GeomOpt.dt"].as<float>();
-    }
-    
-    nempty_=vm["Orbitals.nempty"].as<short>();
-    str=vm["Orbitals.type"].as<string>();
-    if( str.compare("NO")==0 )orbital_type=1;
-    if( str.compare("Orthonormal")==0 )orbital_type=2;
-    cout<<"Orbitals type: "<<str<<endl;
-    float etemp=vm["Orbitals.temperature"].as<float>();
-    //K_B*T in Rydberg
-    occ_width=2.*3.166811429e-6*etemp;
-     
-    str=vm["Orbitals.dotProduct"].as<string>();
-    if( str.compare("diagonal")==0 )dot_product_type=0; // use diag(inverse(S))
-    if( str.compare("exact")==0 )dot_product_type=1; // use inverse(S)
-   
-    str=vm["Orbitals.initial_type"].as<string>();
-    if( str.compare("random")==0 )  init_type=0;
-    if( str.compare("Gaussian")==0 )init_type=1;
-    if( str.compare("Fourier")==0 ) init_type=2;
-    
-    // width of initial Gaussian, otherwise just used to determine
-    // if local or not
-    init_rc=vm["Orbitals.initial_width"].as<float>();
-    if( init_type==1 && init_rc>100. )
-    {
-        cout<<endl<<"!!!WARNING: Gaussian orbitals with large spreads may lead to bad condition number for S!!!"<<endl;
-        cout<<"Try using a smaller value for Orbitals.initial_width"<<endl<<endl;
-    }
-    
-    overallocate_factor_=vm["Orbitals.overallocate_factor"].as<float>();
-    
-    if( init_rc<1000. )init_loc=1;
-    else               init_loc=0;
-    
-    cut_radius=vm["LocalizationRegions.radius"].as<float>();
-    tol_orb_centers_move=vm["LocalizationRegions.move_tol"].as<float>();
-    lr_update=(short)vm["LocalizationRegions.adaptive"].as<bool>();
-    min_distance_centers_=vm["LocalizationRegions.min_distance"].as<float>();
-    lrs_compute = vm["LocalizationRegions.computation"].as<short>();   
-    str=vm["LocalizationRegions.extrapolation_scheme"].as<string>();
-    
-    if ( lrs_compute>0 || str.compare("none")==0 ) lrs_extrapolation=0;
-    else if( str.compare("linear")==0 )    lrs_extrapolation=1;
-    else if( str.compare("quadratic")==0 ) lrs_extrapolation=2;
-    else if( str.compare("Verlet")==0 )    lrs_extrapolation=10;
- 
-    dm_mix=vm["DensityMatrix.mixing"].as<float>();
-    dm_inner_steps=vm["DensityMatrix.nb_inner_it"].as<short>();
-    dm_use_old_ = vm["DensityMatrix.use_old"].as<bool>() ? 1 : 0;
-    str=vm["DensityMatrix.solver"].as<string>();
-    if( str.compare("Mixing") == 0) DM_solver_=0;
-    if( str.compare("MVP") == 0)    DM_solver_=1;
-    if( str.compare("HMVP") == 0)   DM_solver_=2;
-    
-    load_balancing_alpha=vm["LoadBalancing.alpha"].as<float>();
-    load_balancing_damping_tol=vm["LoadBalancing.damping_tol"].as<float>();
-    load_balancing_max_iterations=vm["LoadBalancing.max_iterations"].as<short>();
-    load_balancing_modulo=vm["LoadBalancing.modulo"].as<short>(); 
-    load_balancing_output_file=vm["LoadBalancing.output_file"].as<string>();   
-    if( load_balancing_output_file.compare("")==0 )
-        write_clusters = 0;
-    else   
-        write_clusters = 1;
+        maxDistanceAtomicInfo_ = vm["Parallel.atomic_info_radius"].as<float>();
 
-    // derived flags
-    loc_mode_ = cut_radius<100. ? true : false;
-    if( coloring_algo_>=10 )
-    {
-        precond_type_=10;
-    }
-    else
-    {
-        precond_type_=0;
-    }
+        // options not available in configure file
+        lr_updates_type         = 0;
+        precond_factor_computed = false;
+        override_restart        = 0;
+        mix_pot                 = 1.;
+        project_out_psd         = 0;
+        multipole_order         = 1;
 
-    if( vm.count("Quench.MLWC") )
-    {
-        wannier_transform_type = vm["Quench.MLWC"].as<bool>() ? 1 : 0;
-    }
-    else //default
-    {
-        if( loc_mode_ )wannier_transform_type = 1;
-        else           wannier_transform_type = 0;
-    }
-    wannier_transform_type = vm["Quench.MLWF"].as<bool>() ? 2 : wannier_transform_type;
-    
-    maxDistanceAtomicInfo_=vm["Parallel.atomic_info_radius"].as<float>();
-    
-    //options not available in configure file
-    lr_updates_type=0;
-    precond_factor_computed=false;
-    override_restart=0;
-    mix_pot=1.;
-    project_out_psd=0;
-    multipole_order=1;
-    
     } // onpe0
-    
-    //synchronize all processors
+
+    // synchronize all processors
     sync();
 }
 #endif
 
 int Control::checkOptions()
 {
-    if( it_algo_type > 3 )
+    if (it_algo_type > 3)
     {
-        cerr<<"ERROR: specified inner solver not implemented"<<endl;
+        cerr << "ERROR: specified inner solver not implemented" << endl;
         return -1;
     }
 
-    if( orbital_type!=1 && orbital_type!=2 )
+    if (orbital_type != 1 && orbital_type != 2)
     {
-        cerr<<"ERROR: unknown orbitals type: "<<orbital_type<<endl;
+        cerr << "ERROR: unknown orbitals type: " << orbital_type << endl;
         return -1;
     }
-    
-    if( short_sighted && lap_type==0 )
+
+    if (short_sighted && lap_type == 0)
     {
-        cerr<<"ERROR: Mehrstellen not compatible with Short-sighted algorithm!"<<endl;
+        cerr
+            << "ERROR: Mehrstellen not compatible with Short-sighted algorithm!"
+            << endl;
         return -1;
     }
-    
-    if( it_algo_type==3 && lap_type==0 )
+
+    if (it_algo_type == 3 && lap_type == 0)
     {
-        cerr<<"ERROR: Mehrstellen not compatible with Polak-Ribiere algorithm!"<<endl;
+        cerr
+            << "ERROR: Mehrstellen not compatible with Polak-Ribiere algorithm!"
+            << endl;
         return -1;
     }
-    
-    if( out_restart_file_type==1 && !globalColoring() && out_restart_info>2 )
+
+    if (out_restart_file_type == 1 && !globalColoring() && out_restart_info > 2)
     {
-        cerr<<"ERROR: writing single restart file with wave functions requires global coloring!!!"<<endl;
+        cerr << "ERROR: writing single restart file with wave functions "
+                "requires global coloring!!!"
+             << endl;
         return -1;
     }
-    
-    if( restart_file_type==1 && !globalColoring() && restart_info>2 )
+
+    if (restart_file_type == 1 && !globalColoring() && restart_info > 2)
     {
-        cerr<<"ERROR: reading single restart file with wave functions requires global coloring!!!"<<endl;
+        cerr << "ERROR: reading single restart file with wave functions "
+                "requires global coloring!!!"
+             << endl;
         return -1;
     }
-    if( short_sighted>0 && !loc_mode_ )
+    if (short_sighted > 0 && !loc_mode_)
     {
-        (*MPIdata::sout)<<"ERROR: Short-sighted algorithm requires localization mode!!"<<endl;
+        (*MPIdata::sout)
+            << "ERROR: Short-sighted algorithm requires localization mode!!"
+            << endl;
         return -1;
     }
-    if( lrs_extrapolation>0 && lrs_compute>0 )
+    if (lrs_extrapolation > 0 && lrs_compute > 0)
     {
-        (*MPIdata::sout)<<"ERROR: must choose either extrapolation or computation of centers."<<endl;   
+        (*MPIdata::sout) << "ERROR: must choose either extrapolation or "
+                            "computation of centers."
+                         << endl;
     }
     return 0;
 }
 
 void Control::printRestartLink()
 {
-    if( mype_==0 )
+    if (mype_ == 0)
     {
         char buf[512];
         int count = readlink(restart_file.c_str(), buf, sizeof(buf));
         if (count >= 0)
         {
             buf[count] = '\0';
-            printf("Restart file: %s -> %s\n",restart_file.c_str(), buf);
+            printf("Restart file: %s -> %s\n", restart_file.c_str(), buf);
         }
     }
 }

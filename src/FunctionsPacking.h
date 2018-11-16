@@ -1,8 +1,8 @@
 // Copyright (c) 2017, Lawrence Livermore National Security, LLC. Produced at
-// the Lawrence Livermore National Laboratory. 
+// the Lawrence Livermore National Laboratory.
 // Written by J.-L. Fattebert, D. Osei-Kuffuor and I.S. Dunn.
 // LLNL-CODE-743438
-// All rights reserved. 
+// All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
@@ -12,60 +12,51 @@
 
 #include "SymmetricMatrix.h"
 
-#include<map>
-#include<set>
-#include<vector>
-#include<list>
+#include <list>
+#include <map>
+#include <set>
+#include <vector>
 
 class LocalizationRegions;
-
 
 class FunctionsPacking
 {
 private:
-    std::map<int,short>    gid2color_; // tells where one gid is allocated
-    int                    global_size_;
-    short                  num_colors_;
-    
-    MPI_Comm    comm_;
+    std::map<int, short> gid2color_; // tells where one gid is allocated
+    int global_size_;
+    short num_colors_;
+
+    MPI_Comm comm_;
 
     void setup(LocalizationRegions* lrs, const bool global);
 
-    void getColors(const SymmetricMatrix<char>& overlaps, 
-                   std::list< std::list<int> >& colors);
-    short checkOverlapLRs(LocalizationRegions* lrs,
-                          const int gid1, const int gid2)const;
-    void initOrbiOverlapLocal(LocalizationRegions* lrs,
-                              const short level, SymmetricMatrix<char>& orbi_overlap);
-    void initOrbiOverlapGlobal(LocalizationRegions* lrs,
-                               const short level,
-                               SymmetricMatrix<char>& orbi_overlap);
+    void getColors(const SymmetricMatrix<char>& overlaps,
+        std::list<std::list<int>>& colors);
+    short checkOverlapLRs(
+        LocalizationRegions* lrs, const int gid1, const int gid2) const;
+    void initOrbiOverlapLocal(LocalizationRegions* lrs, const short level,
+        SymmetricMatrix<char>& orbi_overlap);
+    void initOrbiOverlapGlobal(LocalizationRegions* lrs, const short level,
+        SymmetricMatrix<char>& orbi_overlap);
 
 public:
-
-    
-    FunctionsPacking(LocalizationRegions* lrs, const bool global,
-                     const MPI_Comm comm);
+    FunctionsPacking(
+        LocalizationRegions* lrs, const bool global, const MPI_Comm comm);
     FunctionsPacking(const FunctionsPacking&);
-    
+
     // return color of gid if exists locally, otherwise return -1
-    short getColor(const int gid)const
-    { 
-        assert( gid>=0 );
-        
-        std::map<int,short>::const_iterator it = gid2color_.find(gid);
-        if( it==gid2color_.end() )
-           return -1;
-        else
-           return it->second;
-    }
-    
-
-    int chromatic_number()const
+    short getColor(const int gid) const
     {
-        return num_colors_;
+        assert(gid >= 0);
+
+        std::map<int, short>::const_iterator it = gid2color_.find(gid);
+        if (it == gid2color_.end())
+            return -1;
+        else
+            return it->second;
     }
 
+    int chromatic_number() const { return num_colors_; }
 };
 
 #endif

@@ -1,8 +1,8 @@
 // Copyright (c) 2017, Lawrence Livermore National Security, LLC. Produced at
-// the Lawrence Livermore National Laboratory. 
+// the Lawrence Livermore National Laboratory.
 // Written by J.-L. Fattebert, D. Osei-Kuffuor and I.S. Dunn.
 // LLNL-CODE-743438
-// All rights reserved. 
+// All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
@@ -13,255 +13,261 @@
 
 using namespace std;
 
-namespace pb{
+namespace pb
+{
 
 // constructor
-Grid::Grid(const double origin[3], 
-           const double lattice[3], 
-           const unsigned ngpts[3], 
-           const PEenv& mype_env,
-           const short nghosts, const short level):mype_env_(mype_env)
+Grid::Grid(const double origin[3], const double lattice[3],
+    const unsigned ngpts[3], const PEenv& mype_env, const short nghosts,
+    const short level)
+    : mype_env_(mype_env)
 {
-    assert(lattice[0]>1.e-8);
-    assert(lattice[1]>1.e-8);
-    assert(lattice[2]>1.e-8);
+    assert(lattice[0] > 1.e-8);
+    assert(lattice[1] > 1.e-8);
+    assert(lattice[2] > 1.e-8);
 
-    assert(ngpts[0]>0);
-    assert(ngpts[1]>0);
-    assert(ngpts[2]>0);
+    assert(ngpts[0] > 0);
+    assert(ngpts[1] > 0);
+    assert(ngpts[2] > 0);
 
-    assert(ngpts[0]<10000);
-    assert(ngpts[1]<10000);
-    assert(ngpts[2]<10000);
+    assert(ngpts[0] < 10000);
+    assert(ngpts[1] < 10000);
+    assert(ngpts[2] < 10000);
 
-    origin_[0]=origin[0];
-    origin_[1]=origin[1];
-    origin_[2]=origin[2];
+    origin_[0] = origin[0];
+    origin_[1] = origin[1];
+    origin_[2] = origin[2];
 
-    ll_[0]=lattice[0];
-    ll_[1]=lattice[1];
-    ll_[2]=lattice[2];
+    ll_[0] = lattice[0];
+    ll_[1] = lattice[1];
+    ll_[2] = lattice[2];
 
-    level_=level;
+    level_ = level;
 
-    if(mype_env.color()==0){
-        active_=true;
-    
-        assert(mype_env.n_mpi_task(0)>0);
-        assert(mype_env.n_mpi_task(1)>0);
-        assert(mype_env.n_mpi_task(2)>0);
+    if (mype_env.color() == 0)
+    {
+        active_ = true;
 
-        dim_[0]=ngpts[0]/mype_env.n_mpi_task(0);
-        dim_[1]=ngpts[1]/mype_env.n_mpi_task(1);
-        dim_[2]=ngpts[2]/mype_env.n_mpi_task(2);
-        assert( dim_[0]*mype_env.n_mpi_task(0)==ngpts[0] );
-        assert( dim_[1]*mype_env.n_mpi_task(1)==ngpts[1] );
-        assert( dim_[2]*mype_env.n_mpi_task(2)==ngpts[2] );
+        assert(mype_env.n_mpi_task(0) > 0);
+        assert(mype_env.n_mpi_task(1) > 0);
+        assert(mype_env.n_mpi_task(2) > 0);
 
-        gdim_[0]=ngpts[0];
-        gdim_[1]=ngpts[1];
-        gdim_[2]=ngpts[2];
+        dim_[0] = ngpts[0] / mype_env.n_mpi_task(0);
+        dim_[1] = ngpts[1] / mype_env.n_mpi_task(1);
+        dim_[2] = ngpts[2] / mype_env.n_mpi_task(2);
+        assert(dim_[0] * mype_env.n_mpi_task(0) == ngpts[0]);
+        assert(dim_[1] * mype_env.n_mpi_task(1) == ngpts[1]);
+        assert(dim_[2] * mype_env.n_mpi_task(2) == ngpts[2]);
+
+        gdim_[0] = ngpts[0];
+        gdim_[1] = ngpts[1];
+        gdim_[2] = ngpts[2];
 
         ghost_pt_ = nghosts;
 
-        //cout<< "Construct grid of dim"<<dim(0)<<","<<dim(1)<<","<<dim(2)<<endl;
+        // cout<< "Construct grid of
+        // dim"<<dim(0)<<","<<dim(1)<<","<<dim(2)<<endl;
 
-        size_ =dim_[0]*dim_[1]*dim_[2];
-        sizeg_=(dim_[0]+2*nghosts)*(dim_[1]+2*nghosts)*(dim_[2]+2*nghosts);
+        size_  = dim_[0] * dim_[1] * dim_[2];
+        sizeg_ = (dim_[0] + 2 * nghosts) * (dim_[1] + 2 * nghosts)
+                 * (dim_[2] + 2 * nghosts);
 
-        gsize_ =gdim_[0]*gdim_[1]*gdim_[2];
+        gsize_ = gdim_[0] * gdim_[1] * gdim_[2];
 
-
-        for(short i=0;i<3;i++){
-            hgrid_[i]=ll_[i]/(double)gdim_[i];
-            assert(hgrid_[i]>1.e-8);
+        for (short i = 0; i < 3; i++)
+        {
+            hgrid_[i] = ll_[i] / (double)gdim_[i];
+            assert(hgrid_[i] > 1.e-8);
         }
-        //cout<<"h="<<hgrid(0)<<","<<hgrid(1)<<","<<hgrid(2)<<endl;
+        // cout<<"h="<<hgrid(0)<<","<<hgrid(1)<<","<<hgrid(2)<<endl;
 
-        vel_=hgrid_[0]*hgrid_[1]*hgrid_[2];
+        vel_ = hgrid_[0] * hgrid_[1] * hgrid_[2];
 
+        inc_[0] = (dim_[1] + 2 * ghost_pt_) * (dim_[2] + 2 * ghost_pt_);
+        inc_[1] = (dim_[2] + 2 * ghost_pt_);
+        inc_[2] = 1;
 
-        inc_[0]=(dim_[1]+2*ghost_pt_)*(dim_[2]+2*ghost_pt_);
-        inc_[1]=(dim_[2]+2*ghost_pt_);
-        inc_[2]=1;
-
-        for(short i=0;i<3;i++){
-            start_[i] =mype_env.my_mpi(i)*dim_[i]*hgrid_[i]+origin_[i]; 
-            istart_[i]=mype_env.my_mpi(i)*dim_[i];
+        for (short i = 0; i < 3; i++)
+        {
+            start_[i]  = mype_env.my_mpi(i) * dim_[i] * hgrid_[i] + origin_[i];
+            istart_[i] = mype_env.my_mpi(i) * dim_[i];
         }
+    }
+    else
+    {
+        active_ = false;
 
-    }else{
-        active_=false;
-
-        for(short i=0;i<3;i++){
-            dim_[i]=0;
-            gdim_[i]=0;
-            start_[i]=0.;
-            istart_[i]=0;
-            inc_[i]=1;
-            hgrid_[i]=0.;
+        for (short i = 0; i < 3; i++)
+        {
+            dim_[i]    = 0;
+            gdim_[i]   = 0;
+            start_[i]  = 0.;
+            istart_[i] = 0;
+            inc_[i]    = 1;
+            hgrid_[i]  = 0.;
         }
-        vel_=0.;
-        size_=0;
-        sizeg_=0;
-        gsize_=0;
-        ghost_pt_=0;
+        vel_      = 0.;
+        size_     = 0;
+        sizeg_    = 0;
+        gsize_    = 0;
+        ghost_pt_ = 0;
     }
 
-    if( active_ )
-    for(short i=0;i<3;i++){
-        assert( dim_[i]>0 );
-        assert( dim_[i]<10000 );
-    }        
+    if (active_)
+        for (short i = 0; i < 3; i++)
+        {
+            assert(dim_[i] > 0);
+            assert(dim_[i] < 10000);
+        }
 }
 
 // copy constructor
-Grid::Grid(const Grid& my_grid, const short nghosts):mype_env_(my_grid.mype_env_)
+Grid::Grid(const Grid& my_grid, const short nghosts)
+    : mype_env_(my_grid.mype_env_)
 {
-    dim_[0]  =my_grid.dim_[0];
-    dim_[1]  =my_grid.dim_[1];
-    dim_[2]  =my_grid.dim_[2];
+    dim_[0] = my_grid.dim_[0];
+    dim_[1] = my_grid.dim_[1];
+    dim_[2] = my_grid.dim_[2];
 
-    if(nghosts==-1){
-        ghost_pt_=my_grid.ghost_pt_; // default
-        inc_[0]  =my_grid.inc_[0];
-        inc_[1]  =my_grid.inc_[1];
-        inc_[2]  =my_grid.inc_[2];
-        sizeg_   =my_grid.sizeg_;
-    }else{
-        ghost_pt_=nghosts;
-        inc_[0]=(dim_[1]+2*ghost_pt_)*(dim_[2]+2*ghost_pt_);
-        inc_[1]=(dim_[2]+2*ghost_pt_);
-        inc_[2]=1;
-        sizeg_=(dim_[0]+2*ghost_pt_)*(dim_[1]+2*ghost_pt_)*(dim_[2]+2*ghost_pt_);
+    if (nghosts == -1)
+    {
+        ghost_pt_ = my_grid.ghost_pt_; // default
+        inc_[0]   = my_grid.inc_[0];
+        inc_[1]   = my_grid.inc_[1];
+        inc_[2]   = my_grid.inc_[2];
+        sizeg_    = my_grid.sizeg_;
     }
-    
-    active_  =my_grid.active_;
+    else
+    {
+        ghost_pt_ = nghosts;
+        inc_[0]   = (dim_[1] + 2 * ghost_pt_) * (dim_[2] + 2 * ghost_pt_);
+        inc_[1]   = (dim_[2] + 2 * ghost_pt_);
+        inc_[2]   = 1;
+        sizeg_    = (dim_[0] + 2 * ghost_pt_) * (dim_[1] + 2 * ghost_pt_)
+                 * (dim_[2] + 2 * ghost_pt_);
+    }
 
-    //cout<<"Copy const. for grid\n";
-    gdim_[0]  =my_grid.gdim(0);
-    gdim_[1]  =my_grid.gdim(1);
-    gdim_[2]  =my_grid.gdim(2);
-    origin_[0]   =my_grid.origin_[0];
-    origin_[1]   =my_grid.origin_[1];
-    origin_[2]   =my_grid.origin_[2];
-    ll_[0]   =my_grid.ll_[0];
-    ll_[1]   =my_grid.ll_[1];
-    ll_[2]   =my_grid.ll_[2];
-    hgrid_[0]=my_grid.hgrid(0);
-    hgrid_[1]=my_grid.hgrid(1);
-    hgrid_[2]=my_grid.hgrid(2);
-    start_[0]=my_grid.start(0);
-    start_[1]=my_grid.start(1);
-    start_[2]=my_grid.start(2);
-    istart_[0]=my_grid.istart(0);
-    istart_[1]=my_grid.istart(1);
-    istart_[2]=my_grid.istart(2);
+    active_ = my_grid.active_;
 
+    // cout<<"Copy const. for grid\n";
+    gdim_[0]   = my_grid.gdim(0);
+    gdim_[1]   = my_grid.gdim(1);
+    gdim_[2]   = my_grid.gdim(2);
+    origin_[0] = my_grid.origin_[0];
+    origin_[1] = my_grid.origin_[1];
+    origin_[2] = my_grid.origin_[2];
+    ll_[0]     = my_grid.ll_[0];
+    ll_[1]     = my_grid.ll_[1];
+    ll_[2]     = my_grid.ll_[2];
+    hgrid_[0]  = my_grid.hgrid(0);
+    hgrid_[1]  = my_grid.hgrid(1);
+    hgrid_[2]  = my_grid.hgrid(2);
+    start_[0]  = my_grid.start(0);
+    start_[1]  = my_grid.start(1);
+    start_[2]  = my_grid.start(2);
+    istart_[0] = my_grid.istart(0);
+    istart_[1] = my_grid.istart(1);
+    istart_[2] = my_grid.istart(2);
 
-    size_    =my_grid.size_;
-    gsize_   =my_grid.gsize_;
-    vel_     =my_grid.vel_;
-    level_   =my_grid.level_;
+    size_  = my_grid.size_;
+    gsize_ = my_grid.gsize_;
+    vel_   = my_grid.vel_;
+    level_ = my_grid.level_;
 
-    if( active_ )
-    for(short i=0;i<3;i++){
-        assert( dim_[i]>0 );
-        assert( dim_[i]<10000 );
-    }        
+    if (active_)
+        for (short i = 0; i < 3; i++)
+        {
+            assert(dim_[i] > 0);
+            assert(dim_[i] < 10000);
+        }
 }
 
 Grid& Grid::operator=(const Grid& my_grid)
 {
-    if( this != &my_grid){
-        //cout<<" operator= for grid\n";
-        assert(my_grid.dim(0)>0);
-        assert(my_grid.dim(1)>0);
-        assert(my_grid.dim(2)>0);
+    if (this != &my_grid)
+    {
+        // cout<<" operator= for grid\n";
+        assert(my_grid.dim(0) > 0);
+        assert(my_grid.dim(1) > 0);
+        assert(my_grid.dim(2) > 0);
 
-        sizeg_   =my_grid.sizeg();
-        size_    =my_grid.size();
-        gsize_    =my_grid.gsize();
+        sizeg_ = my_grid.sizeg();
+        size_  = my_grid.size();
+        gsize_ = my_grid.gsize();
 
-        dim_[0]  =my_grid.dim(0);
-        dim_[1]  =my_grid.dim(1);
-        dim_[2]  =my_grid.dim(2);
-        gdim_[0]  =my_grid.gdim(0);
-        gdim_[1]  =my_grid.gdim(1);
-        gdim_[2]  =my_grid.gdim(2);
-        origin_[0]   =my_grid.origin(0);
-        origin_[1]   =my_grid.origin(1);
-        origin_[2]   =my_grid.origin(2);
-        ll_[0]   =my_grid.ll(0);
-        ll_[1]   =my_grid.ll(1);
-        ll_[2]   =my_grid.ll(2);
-        hgrid_[0]=my_grid.hgrid(0);
-        hgrid_[1]=my_grid.hgrid(1);
-        hgrid_[2]=my_grid.hgrid(2);
-        inc_[0]  =my_grid.inc(0);
-        inc_[1]  =my_grid.inc(1);
-        inc_[2]  =my_grid.inc(2);
-        start_[0]=my_grid.start(0);
-        start_[1]=my_grid.start(1);
-        start_[2]=my_grid.start(2);
-        istart_[0]=my_grid.istart(0);
-        istart_[1]=my_grid.istart(1);
-        istart_[2]=my_grid.istart(2);
+        dim_[0]    = my_grid.dim(0);
+        dim_[1]    = my_grid.dim(1);
+        dim_[2]    = my_grid.dim(2);
+        gdim_[0]   = my_grid.gdim(0);
+        gdim_[1]   = my_grid.gdim(1);
+        gdim_[2]   = my_grid.gdim(2);
+        origin_[0] = my_grid.origin(0);
+        origin_[1] = my_grid.origin(1);
+        origin_[2] = my_grid.origin(2);
+        ll_[0]     = my_grid.ll(0);
+        ll_[1]     = my_grid.ll(1);
+        ll_[2]     = my_grid.ll(2);
+        hgrid_[0]  = my_grid.hgrid(0);
+        hgrid_[1]  = my_grid.hgrid(1);
+        hgrid_[2]  = my_grid.hgrid(2);
+        inc_[0]    = my_grid.inc(0);
+        inc_[1]    = my_grid.inc(1);
+        inc_[2]    = my_grid.inc(2);
+        start_[0]  = my_grid.start(0);
+        start_[1]  = my_grid.start(1);
+        start_[2]  = my_grid.start(2);
+        istart_[0] = my_grid.istart(0);
+        istart_[1] = my_grid.istart(1);
+        istart_[2] = my_grid.istart(2);
 
-        ghost_pt_=my_grid.ghost_pt_;
-        vel_     =my_grid.vel_;
-        level_   =my_grid.level_;
+        ghost_pt_ = my_grid.ghost_pt_;
+        vel_      = my_grid.vel_;
+        level_    = my_grid.level_;
 
-        active_  =my_grid.active_;
+        active_ = my_grid.active_;
     }
-    if( active_ )
-    for(short i=0;i<3;i++){
-        assert( dim_[i]>0 );
-        assert( dim_[i]<10000 );
-    }        
+    if (active_)
+        for (short i = 0; i < 3; i++)
+        {
+            assert(dim_[i] > 0);
+            assert(dim_[i] < 10000);
+        }
 
     return *this;
 }
 
 const Grid Grid::coarse_grid() const
 {
-    //cout<<" Build coarse Grid\n";
-    assert((gdim(0)%2)==0);
-    assert((gdim(1)%2)==0);
-    assert((gdim(2)%2)==0);
+    // cout<<" Build coarse Grid\n";
+    assert((gdim(0) % 2) == 0);
+    assert((gdim(1) % 2) == 0);
+    assert((gdim(2) % 2) == 0);
 
-    unsigned dim[3]={gdim_[0]>>1,gdim_[1]>>1,gdim_[2]>>1};
-    Grid  coarse_G(origin_,ll_,dim,
-                   mype_env_, ghost_pt_,level_-1);
-    //cout<<"gsize="<<gsize()<<endl;
-    //cout<<"coarse_G.gsize="<<coarse_G.gsize()<<endl;
-    //cout<<"size="<<size()<<endl;
-    //cout<<"coarse_G.size="<<coarse_G.size()<<endl;
-    assert(gsize()==8*coarse_G.gsize());            
-    assert(size()==8*coarse_G.size());              
+    unsigned dim[3] = { gdim_[0] >> 1, gdim_[1] >> 1, gdim_[2] >> 1 };
+    Grid coarse_G(origin_, ll_, dim, mype_env_, ghost_pt_, level_ - 1);
+    // cout<<"gsize="<<gsize()<<endl;
+    // cout<<"coarse_G.gsize="<<coarse_G.gsize()<<endl;
+    // cout<<"size="<<size()<<endl;
+    // cout<<"coarse_G.size="<<coarse_G.size()<<endl;
+    assert(gsize() == 8 * coarse_G.gsize());
+    assert(size() == 8 * coarse_G.size());
 
-    return coarse_G;        
+    return coarse_G;
 }
 
 const Grid Grid::replicated_grid(const PEenv& replicated_peenv) const
 {
-    //cout<<" Build replicated Grid\n";
+    // cout<<" Build replicated Grid\n";
 
-    Grid  replicated_grid(origin_,ll_,gdim_,
-                          replicated_peenv, 
-                          ghost_pt_,level_);
+    Grid replicated_grid(
+        origin_, ll_, gdim_, replicated_peenv, ghost_pt_, level_);
 
-    return replicated_grid;        
+    return replicated_grid;
 }
 
 template <typename T>
-void Grid::getSinCosFunctions(
-    vector<T>& sinx,
-    vector<T>& siny,
-    vector<T>& sinz,
-    vector<T>& cosx,
-    vector<T>& cosy,
-    vector<T>& cosz)const
+void Grid::getSinCosFunctions(vector<T>& sinx, vector<T>& siny, vector<T>& sinz,
+    vector<T>& cosx, vector<T>& cosy, vector<T>& cosz) const
 {
     sinx.resize(dim_[0]);
     siny.resize(dim_[1]);
@@ -270,61 +276,58 @@ void Grid::getSinCosFunctions(
     cosy.resize(dim_[1]);
     cosz.resize(dim_[2]);
 
-    const T inv_2pi=0.5*M_1_PI;
-    const T  alphax=ll_[0]*inv_2pi;
-    const T  alphay=ll_[1]*inv_2pi;
-    const T  alphaz=ll_[2]*inv_2pi;
+    const T inv_2pi = 0.5 * M_1_PI;
+    const T alphax  = ll_[0] * inv_2pi;
+    const T alphay  = ll_[1] * inv_2pi;
+    const T alphaz  = ll_[2] * inv_2pi;
 
-    // use an hh so that the arguments of trigonometric functions go from 
+    // use an hh so that the arguments of trigonometric functions go from
     // 0 to 2*pi from origin of mesh to end of mesh
-    const T  hhx=2.*M_PI/(T)gdim_[0];
-    const T  hhy=2.*M_PI/(T)gdim_[1];
-    const T  hhz=2.*M_PI/(T)gdim_[2];
+    const T hhx = 2. * M_PI / (T)gdim_[0];
+    const T hhy = 2. * M_PI / (T)gdim_[1];
+    const T hhz = 2. * M_PI / (T)gdim_[2];
 
     const int xoff = istart_[0];
     const int yoff = istart_[1];
     const int zoff = istart_[2];
 
-    for(int i=0;i<dim_[0];i++)sinx[i]=sin(T(xoff+i)*hhx)*alphax;
-    for(int i=0;i<dim_[0];i++)cosx[i]=cos(T(xoff+i)*hhx)*alphax;
-    for(int i=0;i<dim_[1];i++)siny[i]=sin(T(yoff+i)*hhy)*alphay;
-    for(int i=0;i<dim_[1];i++)cosy[i]=cos(T(yoff+i)*hhy)*alphay;
-    for(int i=0;i<dim_[2];i++)sinz[i]=sin(T(zoff+i)*hhz)*alphaz;
-    for(int i=0;i<dim_[2];i++)cosz[i]=cos(T(zoff+i)*hhz)*alphaz;
+    for (int i = 0; i < dim_[0]; i++)
+        sinx[i] = sin(T(xoff + i) * hhx) * alphax;
+    for (int i = 0; i < dim_[0]; i++)
+        cosx[i] = cos(T(xoff + i) * hhx) * alphax;
+    for (int i = 0; i < dim_[1]; i++)
+        siny[i] = sin(T(yoff + i) * hhy) * alphay;
+    for (int i = 0; i < dim_[1]; i++)
+        cosy[i] = cos(T(yoff + i) * hhy) * alphay;
+    for (int i = 0; i < dim_[2]; i++)
+        sinz[i] = sin(T(zoff + i) * hhz) * alphaz;
+    for (int i = 0; i < dim_[2]; i++)
+        cosz[i] = cos(T(zoff + i) * hhz) * alphaz;
 }
 
-Vector3D Grid::closestGridPt(Vector3D coords)const
+Vector3D Grid::closestGridPt(Vector3D coords) const
 {
-    for( int i=0; i<3; i++ )
+    for (int i = 0; i < 3; i++)
     {
         double mod_term = floor(coords[i] / hgrid_[i]) * hgrid_[i];
-        double mod = coords[i] - mod_term;
+        double mod      = coords[i] - mod_term;
 
-        if( mod < 0.5*hgrid_[i] )
+        if (mod < 0.5 * hgrid_[i])
             mod = 0.;
         else
             mod = hgrid_[i];
 
         coords[i] = mod_term + mod;
-    }      
+    }
 
     return coords;
 }
 
-template void Grid::getSinCosFunctions(
-    vector<float>& sinx,
-    vector<float>& siny,
-    vector<float>& sinz,
-    vector<float>& cosx,
-    vector<float>& cosy,
-    vector<float>& cosz)const;
-template void Grid::getSinCosFunctions(
-    vector<double>& sinx,
-    vector<double>& siny,
-    vector<double>& sinz,
-    vector<double>& cosx,
-    vector<double>& cosy,
-    vector<double>& cosz)const;
+template void Grid::getSinCosFunctions(vector<float>& sinx, vector<float>& siny,
+    vector<float>& sinz, vector<float>& cosx, vector<float>& cosy,
+    vector<float>& cosz) const;
+template void Grid::getSinCosFunctions(vector<double>& sinx,
+    vector<double>& siny, vector<double>& sinz, vector<double>& cosx,
+    vector<double>& cosy, vector<double>& cosz) const;
 
 } // namespace pb
-    

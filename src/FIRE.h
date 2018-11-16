@@ -1,8 +1,8 @@
 // Copyright (c) 2017, Lawrence Livermore National Security, LLC. Produced at
-// the Lawrence Livermore National Laboratory. 
+// the Lawrence Livermore National Laboratory.
 // Written by J.-L. Fattebert, D. Osei-Kuffuor and I.S. Dunn.
 // LLNL-CODE-743438
-// All rights reserved. 
+// All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
@@ -10,13 +10,13 @@
 #ifndef FIRE_H
 #define FIRE_H
 
-#include "IonicAlgorithm.h"
+#include "Energy.h"
 #include "FIRE_IonicStepper.h"
+#include "IonicAlgorithm.h"
 #include "Ions.h"
 #include "LocGridOrbitals.h"
-#include "Rho.h"
-#include "Energy.h"
 #include "LocalizationRegions.h"
+#include "Rho.h"
 
 class MasksSet;
 class Energy;
@@ -39,16 +39,10 @@ private:
     const MGmol& mgmol_strategy_;
 
 public:
-    FIRE(LocGridOrbitals** orbitals,
-          Ions& ions,
-          Rho& rho,
-          ConstraintSet& constraints,
-          LocalizationRegions& lrs,
-          MasksSet& masks,
-          Electrostatic& electrostat,
-          const double dt,
-          MGmol&);
-    
+    FIRE(LocGridOrbitals** orbitals, Ions& ions, Rho& rho,
+        ConstraintSet& constraints, LocalizationRegions& lrs, MasksSet& masks,
+        Electrostatic& electrostat, const double dt, MGmol&);
+
     ~FIRE();
 };
 

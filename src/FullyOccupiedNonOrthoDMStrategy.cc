@@ -1,8 +1,8 @@
 // Copyright (c) 2017, Lawrence Livermore National Security, LLC. Produced at
-// the Lawrence Livermore National Laboratory. 
+// the Lawrence Livermore National Laboratory.
 // Written by J.-L. Fattebert, D. Osei-Kuffuor and I.S. Dunn.
 // LLNL-CODE-743438
-// All rights reserved. 
+// All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
@@ -10,19 +10,16 @@
 #include "ProjectedMatricesInterface.h"
 
 FullyOccupiedNonOrthoDMStrategy::FullyOccupiedNonOrthoDMStrategy(
-    ProjectedMatricesInterface* proj_matrices):
-    proj_matrices_(proj_matrices)
+    ProjectedMatricesInterface* proj_matrices)
+    : proj_matrices_(proj_matrices)
 {
 }
 
-void FullyOccupiedNonOrthoDMStrategy::initialize()
-{
-    update(); 
-}
+void FullyOccupiedNonOrthoDMStrategy::initialize() { update(); }
 
 int FullyOccupiedNonOrthoDMStrategy::update()
 {
-    assert( proj_matrices_!=0 );
+    assert(proj_matrices_ != 0);
 
     proj_matrices_->setDMto2InvS();
 
@@ -34,5 +31,5 @@ int FullyOccupiedNonOrthoDMStrategy::update()
     assert( (dd-nel)==0 );
 #endif
 
-    return 0; //success
+    return 0; // success
 }

@@ -1,8 +1,8 @@
 // Copyright (c) 2017, Lawrence Livermore National Security, LLC. Produced at
-// the Lawrence Livermore National Laboratory. 
+// the Lawrence Livermore National Laboratory.
 // Written by J.-L. Fattebert, D. Osei-Kuffuor and I.S. Dunn.
 // LLNL-CODE-743438
-// All rights reserved. 
+// All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
@@ -11,109 +11,110 @@
 
 #include "FDoperInterface.h"
 
-#include "GridFunc.h"
 #include "Grid.h"
+#include "GridFunc.h"
 
-namespace pb{
+namespace pb
+{
 
 template <class T>
-class FDoper : public FDoperInterface 
+class FDoper : public FDoperInterface
 {
-    Grid*   lower_order_grid_;
+    Grid* lower_order_grid_;
 
 protected:
-    Grid    grid_;
+    Grid grid_;
 
-    double  inv_h_[3];
-    double  inv_h2_[3];
-    int     dim_[3];
-    int     incx_;
-    int     incy_;
-    
-    double  c0mehr4_;
-    double  cxmehr4_;
-    double  cymehr4_;
-    double  czmehr4_;
-    double  cxymehr4_;
-    double  cyzmehr4_;
-    double  cxzmehr4_;
+    double inv_h_[3];
+    double inv_h2_[3];
+    int dim_[3];
+    int incx_;
+    int incy_;
 
-    void del1_4th(GridFunc<T>&, GridFunc<T>&, const short)const; 
-    void del2_4th(GridFunc<T>&, GridFunc<T>&)const; 
-    void del2_4th_withPot(GridFunc<T>&, const double* const pot, T*)const; 
-    void del1_2nd(GridFunc<T>&, GridFunc<T>&, const short)const; 
-    void del2_2nd(GridFunc<T>&, GridFunc<T>&)const;
-    void del1_6th(GridFunc<T>&, GridFunc<T>&, const short)const; 
-    void del2_6th(GridFunc<T>&, GridFunc<T>&)const;
-    void del1_8th(GridFunc<T>&, GridFunc<T>&, const short)const; 
-    void del2_8th(GridFunc<T>&, GridFunc<T>&)const;
+    double c0mehr4_;
+    double cxmehr4_;
+    double cymehr4_;
+    double czmehr4_;
+    double cxymehr4_;
+    double cyzmehr4_;
+    double cxzmehr4_;
+
+    void del1_4th(GridFunc<T>&, GridFunc<T>&, const short) const;
+    void del2_4th(GridFunc<T>&, GridFunc<T>&) const;
+    void del2_4th_withPot(GridFunc<T>&, const double* const pot, T*) const;
+    void del1_2nd(GridFunc<T>&, GridFunc<T>&, const short) const;
+    void del2_2nd(GridFunc<T>&, GridFunc<T>&) const;
+    void del1_6th(GridFunc<T>&, GridFunc<T>&, const short) const;
+    void del2_6th(GridFunc<T>&, GridFunc<T>&) const;
+    void del1_8th(GridFunc<T>&, GridFunc<T>&, const short) const;
+    void del2_8th(GridFunc<T>&, GridFunc<T>&) const;
 
     // Mehrstellenverfahren operators
-    void del2_4th_Mehr(GridFunc<T>&, GridFunc<T>&)const;
-    void rhs_4th_Mehr1(GridFunc<T>&, GridFunc<T>&)const;
-    void rhs_4th_Mehr1(GridFunc<T>&, T* const)const;
-    void rhs_4th_Mehr2(GridFunc<T>&, GridFunc<T>&)const;
-    void rhs_4th_Mehr2(GridFunc<T>&, T* const)const;
-    double Mgm(GridFunc<T>&, const GridFunc<T>&, const int, const int)const;
+    void del2_4th_Mehr(GridFunc<T>&, GridFunc<T>&) const;
+    void rhs_4th_Mehr1(GridFunc<T>&, GridFunc<T>&) const;
+    void rhs_4th_Mehr1(GridFunc<T>&, T* const) const;
+    void rhs_4th_Mehr2(GridFunc<T>&, GridFunc<T>&) const;
+    void rhs_4th_Mehr2(GridFunc<T>&, T* const) const;
+    double Mgm(GridFunc<T>&, const GridFunc<T>&, const int, const int) const;
 
 public:
-
     FDoper(const Grid&);
     FDoper(const FDoper& oper, const Grid&);
-   
+
     FDoper& operator=(const FDoper& oper);
 
-    int dim(const int i)const { return dim_[i]; }
-    short ghosts()const{ return grid_.ghost_pt(); };
-    double inv_h(const short i)const { return inv_h_[i]; }
-    double inv_h2(const short i)const { return inv_h2_[i]; }
-    const Grid& grid(){ return grid_; }
+    int dim(const int i) const { return dim_[i]; }
+    short ghosts() const { return grid_.ghost_pt(); };
+    double inv_h(const short i) const { return inv_h_[i]; }
+    double inv_h2(const short i) const { return inv_h2_[i]; }
+    const Grid& grid() { return grid_; }
 
     void smooth(GridFunc<T>&, GridFunc<T>&, const double);
 
-    virtual void transform(GridFunc<T> &)const{ };
-    virtual void inv_transform(GridFunc<T> &)const{ };
-    virtual void rhs(GridFunc<T> &A, GridFunc<T> &B)const
-    { 
-        rhs_tm_.start();    
-        B=A;
-        rhs_tm_.stop();    
-    };
-    virtual void rhs(GridFunc<T> &A, T* B)const
+    virtual void transform(GridFunc<T>&) const {};
+    virtual void inv_transform(GridFunc<T>&) const {};
+    virtual void rhs(GridFunc<T>& A, GridFunc<T>& B) const
     {
-        rhs_tm_.start();    
-        A.init_vect(B,'d');
-        rhs_tm_.stop();    
+        rhs_tm_.start();
+        B = A;
+        rhs_tm_.stop();
+    };
+    virtual void rhs(GridFunc<T>& A, T* B) const
+    {
+        rhs_tm_.start();
+        A.init_vect(B, 'd');
+        rhs_tm_.stop();
     }
 
-    const Grid& getLowerOrderGrid()const
+    const Grid& getLowerOrderGrid() const
     {
-        assert( lower_order_grid_!=NULL );
+        assert(lower_order_grid_ != NULL);
         return *lower_order_grid_;
     }
 
     void setFDLowerOrderGrid(const short nghosts)
     {
-        if( lower_order_grid_==NULL )
-            lower_order_grid_=new Grid(grid_, nghosts);
+        if (lower_order_grid_ == NULL)
+            lower_order_grid_ = new Grid(grid_, nghosts);
     }
 
-    virtual void apply(GridFunc<T>&,GridFunc<T>&)=0;
-    
-    GridFunc<T> operator*(GridFunc<T> &A)
+    virtual void apply(GridFunc<T>&, GridFunc<T>&) = 0;
+
+    GridFunc<T> operator*(GridFunc<T>& A)
     {
-    	GridFunc<T>  work(A.grid(),A.bc(0),A.bc(1),A.bc(2));
- 
-    	apply(A, work);
- 
-    	return work;
+        GridFunc<T> work(A.grid(), A.bc(0), A.bc(1), A.bc(2));
+
+        apply(A, work);
+
+        return work;
     }
 
     virtual ~FDoper()
     {
-        if( lower_order_grid_!=NULL ){
+        if (lower_order_grid_ != NULL)
+        {
             delete lower_order_grid_;
-            lower_order_grid_=NULL;
+            lower_order_grid_ = NULL;
         }
     }
 };

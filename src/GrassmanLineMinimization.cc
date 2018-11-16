@@ -1,22 +1,22 @@
 // Copyright (c) 2017, Lawrence Livermore National Security, LLC. Produced at
-// the Lawrence Livermore National Laboratory. 
+// the Lawrence Livermore National Laboratory.
 // Written by J.-L. Fattebert, D. Osei-Kuffuor and I.S. Dunn.
 // LLNL-CODE-743438
-// All rights reserved. 
+// All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 // $Id:$
 #include "MGmol.h"
 
-#include "Hamiltonian.h"
 #include "Control.h"
 #include "GrassmanLineMinimization.h"
+#include "Hamiltonian.h"
 #include "Potentials.h"
 
-bool GrassmanLineMinimization::pbset_ = false;
+bool GrassmanLineMinimization::pbset_      = false;
 bool GrassmanLineMinimization::accelerate_ = false;
-bool GrassmanLineMinimization::conjugate_ = false;
+bool GrassmanLineMinimization::conjugate_  = false;
 
 Timer GrassmanLineMinimization::line_min_tm_("Grassman_line_min");
 Timer GrassmanLineMinimization::nl_update_tm_("Grassman_nl_update");
@@ -27,45 +27,41 @@ Timer GrassmanLineMinimization::update_states_tm_("Grassman_update_states");
 // Performs a single self consistent step.
 //
 // orthof=true: wants orthonormalized updated wave functions
-int GrassmanLineMinimization::update(LocGridOrbitals& orbitals,
-        Ions& ions,
-        const double precond_factor,
-        const bool orthof,
-        LocGridOrbitals& work_orbitals,
-        const bool accelerate,
-        const bool print_res,
-        const double atol)
+int GrassmanLineMinimization::update(LocGridOrbitals& orbitals, Ions& ions,
+    const double precond_factor, const bool orthof,
+    LocGridOrbitals& work_orbitals, const bool accelerate, const bool print_res,
+    const double atol)
 {
     nl_update_tm_.start();
 
-    (void) orthof; // not used
-    
-    static bool first_time=true;
-    
-    if( first_time )
+    (void)orthof; // not used
+
+    static bool first_time = true;
+
+    if (first_time)
     {
-        first_time=false;
-        conjugate_=false;
- 
-        new_grad_ = new LocGridOrbitals(orbitals, false);
-        new_pcgrad_ = new LocGridOrbitals(*new_grad_);       
+        first_time = false;
+        conjugate_ = false;
+
+        new_grad_   = new LocGridOrbitals(orbitals, false);
+        new_pcgrad_ = new LocGridOrbitals(*new_grad_);
     }
     else
     {
-        conjugate_=true;
+        conjugate_ = true;
     }
 
-    accelerate_=accelerate;
-    
+    accelerate_ = accelerate;
+
     Control& ct = *(Control::instance());
-    if(onpe0 && ct.verbose>2) os_<<"GrassmanLineMinimization::update() ..."<<endl;
+    if (onpe0 && ct.verbose > 2)
+        os_ << "GrassmanLineMinimization::update() ..." << endl;
 
     // Update wavefunctions
-    const bool check_res=(atol>0.);
-    double normRes=mgmol_strategy_->computeResidual(orbitals,work_orbitals,*new_grad_,
-       (print_res ||check_res),
-       check_res );
-    if( normRes<atol && check_res )
+    const bool check_res = (atol > 0.);
+    double normRes = mgmol_strategy_->computeResidual(orbitals, work_orbitals,
+        *new_grad_, (print_res || check_res), check_res);
+    if (normRes < atol && check_res)
     {
         nl_update_tm_.stop();
         return 0;
@@ -75,60 +71,62 @@ int GrassmanLineMinimization::update(LocGridOrbitals& orbitals,
     update_states(orbitals, *new_grad_, work_orbitals, precond_factor);
 
     nl_update_tm_.stop();
-    
+
     return 1;
-} 
+}
 
 //////////////////////////////////////////////////////////////////////////////
 
-void GrassmanLineMinimization::update_states(LocGridOrbitals& orbitals, 
-                          LocGridOrbitals& grad,
-                          LocGridOrbitals& work_orbitals,
-                          const double precond_factor)
+void GrassmanLineMinimization::update_states(LocGridOrbitals& orbitals,
+    LocGridOrbitals& grad, LocGridOrbitals& work_orbitals,
+    const double precond_factor)
 {
-    assert( orbitals.getIterativeIndex()>=0 );
-    
+    assert(orbitals.getIterativeIndex() >= 0);
+
     update_states_tm_.start();
 
     Control& ct = *(Control::instance());
 
     // compute preconditioned residual
     new_pcgrad_->assign(*new_grad_);
-    if( (ct.getPrecondType()%10)==0 && ct.getMGlevels()>=0 ){
-        // PRECONDITIONING 
+    if ((ct.getPrecondType() % 10) == 0 && ct.getMGlevels() >= 0)
+    {
+        // PRECONDITIONING
         mgmol_strategy_->precond_mg(*new_pcgrad_);
     }
-    const double alpha=0.5*precond_factor;
+    const double alpha = 0.5 * precond_factor;
 
     // Update wavefuntion
 #ifdef PRINT_OPERATIONS
-    if( onpe0 )
-        os_<<"Update states"<<endl;    
+    if (onpe0) os_ << "Update states" << endl;
 #else
-    if( onpe0 && ct.verbose>2 )
-        os_<<"Update states"<<endl;    
+    if (onpe0 && ct.verbose > 2) os_ << "Update states" << endl;
 #endif
 
     // do conjugation
     conjugate();
     // compute step size and update functions
-    if( accelerate_ ){
+    if (accelerate_)
+    {
         // Grassman line minimization method
         double lambda = computeStepSize(orbitals);
-//        orbitals.projectOut(*sdir_);
-        orbitals.axpy(lambda, *sdir_);  
+        //        orbitals.projectOut(*sdir_);
+        orbitals.axpy(lambda, *sdir_);
         // recompute overlap and inverse for new wavefunctions
-        orbitals.computeGramAndInvS();          
-        if(onpe0 && ct.verbose>1)cout<<"Grassman CG: lambda = "<<lambda<<endl;
+        orbitals.computeGramAndInvS();
+        if (onpe0 && ct.verbose > 1)
+            cout << "Grassman CG: lambda = " << lambda << endl;
         // now do parallel transport update of history data
         parallelTransportUpdate(lambda, orbitals);
-    }else{
+    }
+    else
+    {
         // Preconditioned Power Method
-//        orbitals.projectOut(*sdir_);
-        orbitals.axpy(alpha,*sdir_);
-//        if(onpe0)cout<<"alpha = "<<alpha<<endl;
+        //        orbitals.projectOut(*sdir_);
+        orbitals.axpy(alpha, *sdir_);
+        //        if(onpe0)cout<<"alpha = "<<alpha<<endl;
         // recompute overlap and inverse for new wavefunctions
-        orbitals.computeGramAndInvS();         
+        orbitals.computeGramAndInvS();
         // now do parallel transport update of history data
         parallelTransportUpdate(alpha, orbitals);
     }
@@ -136,13 +134,13 @@ void GrassmanLineMinimization::update_states(LocGridOrbitals& orbitals,
 
     update_states_tm_.stop();
 
-    assert( orbitals.getIterativeIndex()>=0 );
+    assert(orbitals.getIterativeIndex() >= 0);
 }
 
 void GrassmanLineMinimization::printTimers(ostream& os)
 {
-   line_min_tm_.print(os);
-   nl_update_tm_.print(os);
-   comp_res_tm_.print(os);
-   update_states_tm_.print(os);      
+    line_min_tm_.print(os);
+    nl_update_tm_.print(os);
+    comp_res_tm_.print(os);
+    update_states_tm_.print(os);
 }

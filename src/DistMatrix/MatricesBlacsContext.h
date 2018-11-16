@@ -1,8 +1,8 @@
 // Copyright (c) 2017, Lawrence Livermore National Security, LLC. Produced at
-// the Lawrence Livermore National Laboratory. 
+// the Lawrence Livermore National Laboratory.
 // Written by J.-L. Fattebert, D. Osei-Kuffuor and I.S. Dunn.
 // LLNL-CODE-743438
-// All rights reserved. 
+// All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
@@ -18,52 +18,49 @@
 #include <mpi.h>
 #endif
 
-
 class MatricesBlacsContext
 {
     MatricesBlacsContext()
-       :blactxt_(0),
-        comm_(MPI_COMM_NULL),
-        size_(-1),
-        n_(-1)
-    {}
-    
+        : blactxt_(0), comm_(MPI_COMM_NULL), size_(-1), n_(-1)
+    {
+    }
+
     ~MatricesBlacsContext()
     {
-        if( blactxt_!=0 )delete blactxt_;
+        if (blactxt_ != 0) delete blactxt_;
     };
-    
-    dist_matrix::BlacsContext *blactxt_;
+
+    dist_matrix::BlacsContext* blactxt_;
     MPI_Comm comm_;
     int size_;
     int n_;
 
 public:
     static MatricesBlacsContext& instance();
-    
+
     void setup(const MPI_Comm comm, const int size);
-    
-    dist_matrix::BlacsContext* bcxt()const
+
+    dist_matrix::BlacsContext* bcxt() const
     {
-        assert( blactxt_!=0 );
+        assert(blactxt_ != 0);
         return blactxt_;
     }
-    
-    void print(std::ostream& os)const
+
+    void print(std::ostream& os) const
     {
-        os<<"MatricesBlacsContext: "<<n_<<" x "<<n_<<std::endl;
+        os << "MatricesBlacsContext: " << n_ << " x " << n_ << std::endl;
     }
-    
+
     void clear()
     {
-        if( blactxt_!=0 )
+        if (blactxt_ != 0)
         {
             delete blactxt_;
-            blactxt_=0;
+            blactxt_ = 0;
         }
-        comm_=MPI_COMM_NULL;
-        size_=-1;
-        n_=-1;
+        comm_ = MPI_COMM_NULL;
+        size_ = -1;
+        n_    = -1;
     }
 };
 

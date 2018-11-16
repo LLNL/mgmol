@@ -1,112 +1,121 @@
 // Copyright (c) 2017, Lawrence Livermore National Security, LLC. Produced at
-// the Lawrence Livermore National Laboratory. 
+// the Lawrence Livermore National Laboratory.
 // Written by J.-L. Fattebert, D. Osei-Kuffuor and I.S. Dunn.
 // LLNL-CODE-743438
-// All rights reserved. 
+// All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #ifndef PB_H
 #define PB_H
 
-#include "FDoper.h"
 #include "DielFunc.h"
+#include "FDoper.h"
 
 // operator -epsilon div*grad -(grad epsilon)* grad
 
-namespace pb{
+namespace pb
+{
 template <class T>
-class PB:public FDoper<T>
+class PB : public FDoper<T>
 {
 protected:
-    bool      initialized_;
-    DielFunc<T>  epsilon_;
-    GridFunc<T>  work1_;
-    GridFunc<T>  work2_;
-
+    bool initialized_;
+    DielFunc<T> epsilon_;
+    GridFunc<T> work1_;
+    GridFunc<T> work2_;
 
 public:
-
     // constructor
-    PB(const Grid& mygrid, const double e0):
-        FDoper<T>(mygrid),epsilon_(FDoper<T>::grid_, e0),work1_(FDoper<T>::grid_,0,0,0),work2_(FDoper<T>::grid_,0,0,0)
-    { 
-        initialized_=false;
-    };
-
-    // constructor
-    PB(const Grid& mygrid, const double e0, const double rho0, const double drho0):
-        FDoper<T>(mygrid),epsilon_(FDoper<T>::grid_, e0, rho0, drho0),work1_(FDoper<T>::grid_,0,0,0),work2_(FDoper<T>::grid_,0,0,0)
-    { 
-        initialized_=false;
-    };
-
-    // constructor
-    PB(const Grid& mygrid, DielFunc<T>& myepsilon):
-        FDoper<T>(mygrid), epsilon_(myepsilon, FDoper<T>::grid_),work1_(FDoper<T>::grid_,0,0,0),work2_(FDoper<T>::grid_,0,0,0)
+    PB(const Grid& mygrid, const double e0)
+        : FDoper<T>(mygrid),
+          epsilon_(FDoper<T>::grid_, e0),
+          work1_(FDoper<T>::grid_, 0, 0, 0),
+          work2_(FDoper<T>::grid_, 0, 0, 0)
     {
-        if(!epsilon_.updated_boundaries())
-            epsilon_.trade_boundaries();
-        //std::cout<<"Build operator PB"<<std::endl;
+        initialized_ = false;
     };
 
-    //copy constructor
-    PB(const PB& oper):FDoper<T>(oper.grid_),epsilon_(FDoper<T>::grid_),
-                      work1_(FDoper<T>::grid_,0,0,0), work2_(FDoper<T>::grid_,0,0,0)
+    // constructor
+    PB(const Grid& mygrid, const double e0, const double rho0,
+        const double drho0)
+        : FDoper<T>(mygrid),
+          epsilon_(FDoper<T>::grid_, e0, rho0, drho0),
+          work1_(FDoper<T>::grid_, 0, 0, 0),
+          work2_(FDoper<T>::grid_, 0, 0, 0)
     {
-        //std::cout<<"Copy constructor for PB"<<std::endl;
-        if( FDoper<T>::grid_.active() ){
-            assert(FDoper<T>::grid_.sizeg()>1);
+        initialized_ = false;
+    };
+
+    // constructor
+    PB(const Grid& mygrid, DielFunc<T>& myepsilon)
+        : FDoper<T>(mygrid),
+          epsilon_(myepsilon, FDoper<T>::grid_),
+          work1_(FDoper<T>::grid_, 0, 0, 0),
+          work2_(FDoper<T>::grid_, 0, 0, 0)
+    {
+        if (!epsilon_.updated_boundaries()) epsilon_.trade_boundaries();
+        // std::cout<<"Build operator PB"<<std::endl;
+    };
+
+    // copy constructor
+    PB(const PB& oper)
+        : FDoper<T>(oper.grid_),
+          epsilon_(FDoper<T>::grid_),
+          work1_(FDoper<T>::grid_, 0, 0, 0),
+          work2_(FDoper<T>::grid_, 0, 0, 0)
+    {
+        // std::cout<<"Copy constructor for PB"<<std::endl;
+        if (FDoper<T>::grid_.active())
+        {
+            assert(FDoper<T>::grid_.sizeg() > 1);
         }
-        epsilon_=oper.epsilon_;
-        work1_=oper.work1_;
-        work2_=oper.work2_;
-        initialized_=oper.initialized();
+        epsilon_     = oper.epsilon_;
+        work1_       = oper.work1_;
+        work2_       = oper.work2_;
+        initialized_ = oper.initialized();
     }
-    
+
     PB& operator=(const PB& oper)
     {
-        (void) oper; // unused
-        
-        std::cout<<"operator= of PB!!!"<<std::endl;
+        (void)oper; // unused
+
+        std::cout << "operator= of PB!!!" << std::endl;
         exit(2);
         return *this;
     }
-    
-    // A->B
-    virtual void apply(GridFunc<T> &A, GridFunc<T> &B)=0; 
 
-    void init_epsilon(GridFunc<T>& gf_rhod, const double rho0, const double drho0){
+    // A->B
+    virtual void apply(GridFunc<T>& A, GridFunc<T>& B) = 0;
+
+    void init_epsilon(
+        GridFunc<T>& gf_rhod, const double rho0, const double drho0)
+    {
         epsilon_.Gepsilon_rho(gf_rhod, rho0, drho0);
     }
 
-
-    GridFunc<T> operator*(GridFunc<T> &A)
+    GridFunc<T> operator*(GridFunc<T>& A)
     {
-        GridFunc<T>  work(A.grid(),A.bc(0),A.bc(1),A.bc(2));
- 
+        GridFunc<T> work(A.grid(), A.bc(0), A.bc(1), A.bc(2));
+
         apply(A, work);
- 
+
         return work;
     }
 
     double energyES(GridFunc<T>&, GridFunc<T>&);
-    
-    bool initialized()const{
-        return initialized_;
-    }
 
-    virtual void jacobi(GridFunc<T>& A, 
-                const GridFunc<T>& B, 
-                GridFunc<T>& W)=0;
+    bool initialized() const { return initialized_; }
 
-    virtual void get_vepsilon(GridFunc<T>&,GridFunc<T>&,GridFunc<T>&)=0;
-    virtual void setLowerOrderGrid()=0;
-    
+    virtual void jacobi(GridFunc<T>& A, const GridFunc<T>& B, GridFunc<T>& W)
+        = 0;
+
+    virtual void get_vepsilon(GridFunc<T>&, GridFunc<T>&, GridFunc<T>&) = 0;
+    virtual void setLowerOrderGrid()                                    = 0;
 
     virtual ~PB()
     {
-        //std::cout<<"destroy PB"<<std::endl;
+        // std::cout<<"destroy PB"<<std::endl;
     }
 };
 

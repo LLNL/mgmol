@@ -1,8 +1,8 @@
 // Copyright (c) 2017, Lawrence Livermore National Security, LLC. Produced at
-// the Lawrence Livermore National Laboratory. 
+// the Lawrence Livermore National Laboratory.
 // Written by J.-L. Fattebert, D. Osei-Kuffuor and I.S. Dunn.
 // LLNL-CODE-743438
-// All rights reserved. 
+// All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
@@ -22,24 +22,23 @@ class Stamp
 public:
     static std::string filename_;
     static int line_;
-    
+
     Stamp(const std::string& filename, const int line)
     {
-        line_=line;
-        filename_=filename;
+        line_     = line;
+        filename_ = filename;
     }
-    
 };
 
-template <class T> inline T *operator*(const Stamp& ppair, T *p)
+template <class T>
+inline T* operator*(const Stamp& ppair, T* p)
 {
     return p;
 }
 
 } // namespace MGmolMem
 
-#define MEMTRACK_NEW MGmolMem::Stamp(__FILE__,__LINE__) * new
+#define MEMTRACK_NEW MGmolMem::Stamp(__FILE__, __LINE__) * new
 #define new MEMTRACK_NEW
 
 #endif
-
