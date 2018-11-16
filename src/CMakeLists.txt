@@ -129,19 +129,43 @@ set(SOURCES  SubCell.cc
  Hartree_CG.cc 
  ClusterOrbitals.cc 
  SP2.cc
+ DavidsonSolver.cc
+ ChebyshevApproximation.cc
+ ChebyshevApproximationSparse.cc
+ OrbitalsExtrapolationReversible.cc
+ LocalizationRegionsXLBOMD.cc
+ AuxiliaryLocGridOrbitals.cc
+ SubspaceAlignment.cc
 )
 
 add_library(mgmol_src ${SOURCES})
-target_include_directories (mgmol_src PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${HDF5_INCLUDE_DIRS})
-target_link_libraries(mgmol_src ${link_libs} ${HDF5_CXX_LIBRARIES})
-#target_include_directories(mgmol_src PUBLIC ${HDF5_INCLUDE_DIRS})
-#target_link_libraries(mgmol_src PUBLIC ${HDF5_CXX_LIBRARIES})
+
+if(${HDF5_FOUND})
+  target_include_directories(mgmol_src PUBLIC ${HDF5_INCLUDE_DIRS})
+  target_link_libraries(mgmol_src ${HDF5_LIBRARIES})
+endif(${HDF5_FOUND})
+
+if(${Boost_FOUND})
+  target_include_directories(mgmol_src PUBLIC ${Boost_INCLUDE_DIRS})
+  target_link_libraries(mgmol_src ${Boost_LIBRARIES})
+endif(${Boost_FOUND})
+
+if(${BLAS_FOUND})
+  target_link_libraries(mgmol_src ${BLAS_LIBRARIES})
+  target_link_libraries(mgmol_src ${LAPACK_LIBRARIES})
+endif(${BLAS_FOUND})
+
+target_include_directories (mgmol_src PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(mgmol_src ${link_libs})
 
 # compile definitions
 target_compile_definitions (mgmol_src PRIVATE -D__MGMOL_DAVIDSON__)
 target_compile_definitions (mgmol_src PRIVATE -D__MGMOL_CHEBYSHEV__)
 target_compile_definitions (mgmol_src PRIVATE -D__MGMOL_XLBOMD__)
-
+target_compile_definitions (mgmol_src PRIVATE -DHAVE_BOOST)
+target_compile_definitions (mgmol_src PRIVATE -DADD_)
+target_compile_definitions (mgmol_src PRIVATE -DUSE_CNR_)
+target_compile_definitions (mgmol_src PRIVATE -DUSE_MPI)
 # compile options
 #target_compile_options (mgmol_src PRIVATE -Wl --no_undefined)
 

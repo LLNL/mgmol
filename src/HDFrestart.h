@@ -37,6 +37,8 @@ hid_t H5Dcreate2(hid_t loc_id, const char* name, hid_t dtype_id, hid_t space_id,
     hid_t lcpl_id, hid_t dcpl_id, hid_t dapl_id);
 hid_t H5Acreate2(hid_t loc_id, const char* attr_name, hid_t type_id,
     hid_t space_id, hid_t acpl_id, hid_t aapl_id);
+#else
+herr_t H5LTfind_dataset (hid_t file_id_, const char* datasetname );
 #endif
 
 int readListCentersAndRadii(hid_t dset_id, std::vector<double>& attr_data);

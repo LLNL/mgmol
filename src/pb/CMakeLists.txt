@@ -27,4 +27,5 @@ set(SOURCES GridFuncVector.cc
 
 add_library(mgmol_pb ${SOURCES})
 target_include_directories (mgmol_pb PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_compile_definitions (mgmol_pb PRIVATE -DUSE_MPI)
 install(TARGETS mgmol_pb DESTINATION lib)

@@ -13,4 +13,5 @@ set(SOURCES mgmol_mpi_tools.cc
 )
 
 add_library(mgmol_tools ${SOURCES})
+target_compile_definitions (mgmol_tools PRIVATE -DUSE_MPI_)
 install(TARGETS mgmol_tools DESTINATION lib)
