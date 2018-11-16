@@ -17,6 +17,8 @@
 
 class ProjectedMatricesInterface;
 class MGmol;
+class Hamiltonian;
+class Energy;
 
 class ABPG:public OrbitalsStepper
 {

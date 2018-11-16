@@ -10,6 +10,11 @@
 #define MVP_DMStrategy_H
 
 #include "DMStrategy.h"
+
+#include <mpi.h>
+#include <iostream>
+#include <vector>
+
 class ProjectedMatricesInterface;
 class LocGridOrbitals;
 class Ions;

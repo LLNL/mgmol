@@ -6,14 +6,15 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #ifndef ENERGY_H
 #define ENERGY_H
 
 #include "Grid.h"
 #include "Timer.h"
+#include "global.h"
 
 #include <vector>
+#include <ostream>
 
 class Potentials;
 class Ions;
@@ -54,7 +55,7 @@ public:
 
     double evaluateTotal(const double ts, ProjectedMatricesInterface*,
                          const LocGridOrbitals& phi,
-                         const int, ostream&);
+                         const int, std::ostream&);
     
     double evaluateEnergyIonsInVext();
     

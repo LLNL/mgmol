@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id:$
 #ifndef DMSTRATEGYFACTORY_H
 #define DMSTRATEGYFACTORY_H
 
@@ -15,9 +14,11 @@
 #include "FullyOccupiedNonOrthoDMStrategy.h"
 #include "NonOrthoDMStrategy.h"
 #include "EigenDMStrategy.h"
-#include "ProjectedMatricesInterface.h"
+#include "ProjectedMatricesSparse.h"
 #include "ProjectedMatrices.h"
 #include "Control.h"
+#include "DistMatrix.h"
+#include "DistMatrixWithSparseComponent.h"
 
 class DMStrategyFactory
 {

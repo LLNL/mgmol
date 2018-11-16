@@ -6,14 +6,14 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
-#ifndef DENSITYMATRIX_H
-#define DENSITYMATRIX_H
+#ifndef MGMOL_DENSITYMATRIX_H
+#define MGMOL_DENSITYMATRIX_H
 
 #include "DistMatrix.h"
 #include "MPIdata.h"
 
 #include <vector>
+#include <ostream>
 
 #define DM_NPRINT_ROWS_AND_COLS  5
 
@@ -69,11 +69,11 @@ public:
         return dm_->dot(mat);
     }
 
-    void print(ostream& os)const
+    void print(std::ostream& os)const
     {
         assert( !stripped_ );
         if( onpe0 )
-    	    os<<" DensityMatrix"<<endl;
+    	    os<<" DensityMatrix"<<std::endl;
         dm_->print(os,0,0,DM_NPRINT_ROWS_AND_COLS,DM_NPRINT_ROWS_AND_COLS);
     }
     
@@ -140,11 +140,11 @@ public:
 
     void rotate(const dist_matrix::DistMatrix<DISTMATDTYPE>&  rotation_matrix,
                 const bool flag_eigen);
-    void printOccupations(ostream& os)const;
+    void printOccupations(std::ostream& os)const;
     void diagonalize(const dist_matrix::DistMatrix<DISTMATDTYPE>& ls,
-                     vector<DISTMATDTYPE>& occ);
+                    std:: vector<DISTMATDTYPE>& occ);
     void diagonalize(const char eigv,
-                     vector<DISTMATDTYPE>& occ,
+                     std::vector<DISTMATDTYPE>& occ,
                      dist_matrix::DistMatrix<DISTMATDTYPE>& vect);
     double getExpectation(const dist_matrix::DistMatrix<DISTMATDTYPE>& A);
 };

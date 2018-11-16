@@ -6,10 +6,10 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id:$
 #ifndef FORCES_Header
 #define FORCES_Header
 
+#include "Rho.h"
 #include "global.h"
 
 #define NPTS   2

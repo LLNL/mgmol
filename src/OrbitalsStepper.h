@@ -6,8 +6,11 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef ORBITALSSTEPPER_H
-#define ORBITALSSTEPPER_H
+#ifndef MGMOL_ORBITALSSTEPPER_H
+#define MGMOL_ORBITALSSTEPPER_H
+
+class LocGridOrbitals;
+class Ions;
 
 class OrbitalsStepper
 {
