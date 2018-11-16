@@ -1,6 +1,8 @@
-cmake_minimum_required (VERSION 3.5.2)
+cmake_minimum_required (VERSION 3.8)
 
 project (MGmol C CXX)
+
+set (CMAKE_CXX_STANDARD 11)
 
 # Specify the location of additional CMAKE modules
 SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
