@@ -3,7 +3,7 @@
 ## For now, this script assumes intel/ mkl libraries are being used.
 
 # load some modules
-module load cmake
+module load cmake/3.8.2
 module load intel
 module load mkl
 module load hdf5-parallel
@@ -18,12 +18,15 @@ set BLAS_VENDOR = Intel10_64lp
 # manually set the location of BLACS libraries for scalapack
 set BLACS_LIB = ${SCALAPACK_ROOT}/lib
 
-set BUILD_DIR = build
+set INSTALL_DIR = mgmol_install
+mkdir -p ${INSTALL_DIR}
+
+set BUILD_DIR = mgmol_build
 mkdir -p ${BUILD_DIR}
 cd ${BUILD_DIR}
 
 # call cmake 
-cmake -DCMAKE_CXX_COMPILER=mpic++ -DSCALAPACK_BLACS_LIBRARIES=${BLACS_LIB}/libmkl_blacs_intelmpi_lp64.so -DBLA_VENDOR=${BLAS_VENDOR} ..
+cmake -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} -DCMAKE_CXX_COMPILER=mpic++ -DSCALAPACK_BLACS_LIBRARIES=${BLACS_LIB}/libmkl_blacs_intelmpi_lp64.so -DBLA_VENDOR=${BLAS_VENDOR} ..
 
 # call make install
-make install 
+make -j install 
