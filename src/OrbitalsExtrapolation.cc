@@ -52,7 +52,8 @@ void OrbitalsExtrapolation::setupPreviousOrbitals(LocGridOrbitals** orbitals,
     const pb::Grid& mygrid = mymesh->grid();
 
     LocGridOrbitals* new_orbitals
-        = new LocGridOrbitals(mygrid, mymesh->subdivx(), ct.numst, ct.bc,
+        = new LocGridOrbitals("ForExtraploation", mygrid, mymesh->subdivx(),
+            ct.numst, ct.bc,
             proj_matrices, lrs, currentMasks, corrMasks, local_cluster);
 
     new_orbitals->read_func_hdf5(h5f_file, "ExtrapolatedFunction");

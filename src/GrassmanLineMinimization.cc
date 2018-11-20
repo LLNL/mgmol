@@ -43,8 +43,8 @@ int GrassmanLineMinimization::update(LocGridOrbitals& orbitals, Ions& ions,
         first_time = false;
         conjugate_ = false;
 
-        new_grad_   = new LocGridOrbitals(orbitals, false);
-        new_pcgrad_ = new LocGridOrbitals(*new_grad_);
+        new_grad_   = new LocGridOrbitals("NewG", orbitals, false);
+        new_pcgrad_ = new LocGridOrbitals("NewP", *new_grad_);
     }
     else
     {

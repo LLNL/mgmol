@@ -47,6 +47,8 @@ typedef double (LocGridOrbitals::*PtrFunc)(const LocGridOrbitals&);
 class LocGridOrbitals : public Orbitals
 {
 private:
+    const std::string name_;
+
     ////////////////////////////////////////////////////////
     // common data shared by all instances of class
     ////////////////////////////////////////////////////////
@@ -192,13 +194,15 @@ public:
     }
     const std::vector<int>& getLocalGids() const { return local_gids_; }
 
-    LocGridOrbitals(const pb::Grid& my_grid, const short subdivx,
+    LocGridOrbitals(std::string name,
+        const pb::Grid& my_grid, const short subdivx,
         const int numst, const short bc[3], ProjectedMatricesInterface*,
         LocalizationRegions*, MasksSet* masks, MasksSet* corrmasks,
         ClusterOrbitals* local_cluster, const bool setup_flag = true);
 
-    LocGridOrbitals(const LocGridOrbitals& A, const bool copy_data = true);
-    LocGridOrbitals(const LocGridOrbitals& A,
+    LocGridOrbitals(std::string name,
+        const LocGridOrbitals& A, const bool copy_data = true);
+    LocGridOrbitals(std::string name, const LocGridOrbitals& A,
         ProjectedMatricesInterface* proj_matrices, MasksSet* masks,
         MasksSet* corrmasks, const bool copy_data = true);
 

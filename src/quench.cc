@@ -412,7 +412,7 @@ int MGmol::quench(LocGridOrbitals* orbitals, Ions& ions,
     electrostat_->setup(ct.vh_its);
     rho_->setup(ct.orbital_type, gids);
 
-    LocGridOrbitals work_orbitals(*orbitals);
+    LocGridOrbitals work_orbitals("Work", *orbitals);
 
     orbitals->setDataWithGhosts();
     orbitals->trade_boundaries();

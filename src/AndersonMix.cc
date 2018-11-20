@@ -36,8 +36,8 @@ AndersonMix<T>::AndersonMix(
         fi_.resize(m_);
         for (int i = 0; i < m_; i++)
         {
-            xi_[i] = new T(x);
-            fi_[i] = new T(x);
+            xi_[i] = new T("xi", x);
+            fi_[i] = new T("fi", x);
         }
         mat_.resize(m_ * m_);
         rhs_.resize(m_);
@@ -93,7 +93,7 @@ void AndersonMix<T>::update(T& f, T& work)
             // non-diagonal terms
             if (i > 0)
             {
-                T* tmp1 = new T(f);
+                T* tmp1 = new T("AndersonMix_tmp", f);
                 for (int j = 0; j < i; j++)
                 {
                     if (j > 0) tmp1->assign(f);

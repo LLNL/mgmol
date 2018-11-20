@@ -48,7 +48,7 @@ LBFGS::LBFGS(LocGridOrbitals** orbitals, Ions& ions, Rho& rho,
 
     vh_init_ = new pb::GridFunc<POTDTYPE>(electrostat_.getVh());
 
-    ref_orbitals_ = new LocGridOrbitals(mygrid, mymesh->subdivx(), ct.numst,
+    ref_orbitals_ = new LocGridOrbitals("LBFGS_ref", mygrid, mymesh->subdivx(), ct.numst,
         ct.bc, (*orbitals_)->getProjMatrices(), &ref_lrs_, ref_masks_,
         ref_corrmasks_, local_cluster_);
 

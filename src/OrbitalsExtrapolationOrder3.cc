@@ -34,7 +34,7 @@ void OrbitalsExtrapolationOrder3::extrapolate_orbitals(
 
     if (orbitals_minus1_ != 0)
     {
-        LocGridOrbitals tmp_orbitals_minus1(*new_orbitals, false);
+        LocGridOrbitals tmp_orbitals_minus1("minus1", *new_orbitals, false);
 
         if (ct.verbose > 1 && onpe0)
             (*MPIdata::sout)

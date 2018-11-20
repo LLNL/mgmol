@@ -138,7 +138,7 @@ LocGridOrbitals* MGmol::new_orbitals_with_current_LRs(bool setup)
     if (ct.lr_update) update_masks();
 
     // need to build new orbitals as masks have changed
-    LocGridOrbitals* new_orbitals = new LocGridOrbitals(mygrid,
+    LocGridOrbitals* new_orbitals = new LocGridOrbitals("NewMasks", mygrid,
         mymesh->subdivx(), ct.numst, ct.bc, proj_matrices_, lrs_, currentMasks_,
         corrMasks_, local_cluster_, setup);
 
@@ -245,7 +245,7 @@ int MGmol::dumprestartFile(LocGridOrbitals** orbitals, Ions& ions, Rho& rho,
 
     HDFrestart h5file(filename, myPEenv, gdim, ct.out_restart_file_type);
 
-    LocGridOrbitals previous_orbitals(**orbitals, false);
+    LocGridOrbitals previous_orbitals("ForDumping", **orbitals, false);
     if (!orbitals_extrapol->getRestartData(previous_orbitals))
         previous_orbitals.assign(**orbitals);
     int ierr = write_hdf5(h5file, rho.rho_, ions, previous_orbitals, *lrs_);

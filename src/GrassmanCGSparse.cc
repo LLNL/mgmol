@@ -68,12 +68,10 @@ void GrassmanCGSparse::conjugate()
     else
     {
         // initialize history data
-        grad_   = new LocGridOrbitals(*new_grad_, true);
-        pcgrad_ = new LocGridOrbitals(*new_pcgrad_, true);
-        sdir_   = new LocGridOrbitals(*new_pcgrad_, true);
+        grad_   = new LocGridOrbitals("G", *new_grad_, true);
+        pcgrad_ = new LocGridOrbitals("P", *new_pcgrad_, true);
+        sdir_   = new LocGridOrbitals("S", *new_pcgrad_, true);
     }
-
-    return;
 }
 
 double GrassmanCGSparse::computeStepSize(LocGridOrbitals& orbitals)

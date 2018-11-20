@@ -48,7 +48,7 @@ int ABPG::update(LocGridOrbitals& orbitals, Ions& ions,
     if (onpe0 && ct.verbose > 2) os_ << "ABPG::update()..." << endl;
 
     // temporary LocGridOrbitals to hold residual
-    LocGridOrbitals res(orbitals, false);
+    LocGridOrbitals res("Residual", orbitals, false);
 
     const bool check_res = (atol > 0.);
     double normRes       = mgmol_strategy_->computeResidual(

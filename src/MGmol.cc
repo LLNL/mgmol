@@ -287,7 +287,8 @@ int MGmol::initial()
     if (ct.verbose > 0)
         printWithTimeStamp("MGmol::initial(), create LocGridOrbitals...", os_);
 
-    current_orbitals_ = new LocGridOrbitals(mygrid, mymesh->subdivx(), ct.numst,
+    current_orbitals_ = new LocGridOrbitals("Primary", mygrid,
+        mymesh->subdivx(), ct.numst,
         ct.bc, proj_matrices_, lrs_, currentMasks_, corrMasks_, local_cluster_);
 
     if (!ct.short_sighted)

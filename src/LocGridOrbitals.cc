@@ -67,12 +67,14 @@ Timer LocGridOrbitals::assign_tm_("LocGridOrbitals::assign");
 Timer LocGridOrbitals::normalize_tm_("LocGridOrbitals::normalize");
 Timer LocGridOrbitals::axpy_tm_("LocGridOrbitals::axpy");
 
-LocGridOrbitals::LocGridOrbitals(const pb::Grid& my_grid, const short subdivx,
+LocGridOrbitals::LocGridOrbitals(std::string name,
+    const pb::Grid& my_grid, const short subdivx,
     const int numst, const short bc[3],
     ProjectedMatricesInterface* proj_matrices, LocalizationRegions* lrs,
     MasksSet* masks, MasksSet* corrmasks, ClusterOrbitals* local_cluster,
     const bool setup_flag)
-    : grid_(my_grid),
+    : name_(name),
+      grid_(my_grid),
       proj_matrices_(proj_matrices),
       block_vector_(my_grid, subdivx, bc),
       lrs_(lrs),
@@ -120,8 +122,10 @@ LocGridOrbitals::~LocGridOrbitals()
     gidToStorage_ = 0;
 }
 
-LocGridOrbitals::LocGridOrbitals(const LocGridOrbitals& A, const bool copy_data)
+LocGridOrbitals::LocGridOrbitals(const std::string name,
+    const LocGridOrbitals& A, const bool copy_data)
     : Orbitals(A, copy_data),
+      name_(name),
       grid_(A.grid_),
       proj_matrices_(A.proj_matrices_),
       block_vector_(A.block_vector_, copy_data),
@@ -143,10 +147,12 @@ LocGridOrbitals::LocGridOrbitals(const LocGridOrbitals& A, const bool copy_data)
     setGids2Storage();
 }
 
-LocGridOrbitals::LocGridOrbitals(const LocGridOrbitals& A,
+LocGridOrbitals::LocGridOrbitals(const std::string name,
+    const LocGridOrbitals& A,
     ProjectedMatricesInterface* proj_matrices, MasksSet* masks,
     MasksSet* corrmasks, const bool copy_data)
     : Orbitals(A, copy_data),
+      name_(name),
       grid_(A.grid_),
       proj_matrices_(proj_matrices),
       block_vector_(A.block_vector_, copy_data),

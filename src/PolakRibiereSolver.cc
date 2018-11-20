@@ -294,15 +294,15 @@ int PolakRibiereSolver::solve(LocGridOrbitals& orbitals,
             os_ << "Preconditioning factor: " << ct.precond_factor << endl;
     }
 
-    r_k_   = new LocGridOrbitals(orbitals, false);
-    r_km1_ = new LocGridOrbitals(orbitals, false);
+    r_k_   = new LocGridOrbitals("PR_rk", orbitals, false);
+    r_km1_ = new LocGridOrbitals("PR_rkm1", orbitals, false);
 
     if (with_preconditioner_)
     {
-        z_k_   = new LocGridOrbitals(orbitals, false);
-        z_km1_ = new LocGridOrbitals(orbitals, false);
+        z_k_   = new LocGridOrbitals("PR_zk", orbitals, false);
+        z_km1_ = new LocGridOrbitals("PR_zkm1", orbitals, false);
     }
-    p_k_ = new LocGridOrbitals(orbitals, false);
+    p_k_ = new LocGridOrbitals("PR_pk", orbitals, false);
 
     int dm_success       = 0;
     bool wolfe           = false;

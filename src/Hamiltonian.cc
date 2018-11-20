@@ -42,12 +42,12 @@ const LocGridOrbitals& Hamiltonian::applyLocal(
     assert(phi.getIterativeIndex() >= 0);
     assert(pot_->getIterativeIndex() >= 0);
 
-    if (hlphi_ == NULL) hlphi_ = new LocGridOrbitals(phi, false);
+    if (hlphi_ == NULL) hlphi_ = new LocGridOrbitals("Hphi", phi, false);
     if (!hlphi_->isCompatibleWith(phi))
     {
         delete hlphi_;
         itindex_ = -1;
-        hlphi_   = new LocGridOrbitals(phi, false);
+        hlphi_   = new LocGridOrbitals("Hphi", phi, false);
     }
     const int new_index
         = 100 * phi.getIterativeIndex() + pot_->getIterativeIndex();
