@@ -43,6 +43,13 @@ enum class OuterSolverType
     Davidson
 };
 
+enum class WFExtrapolationType
+{
+    Order2,
+    Order3,
+    Reversible
+};
+
 // Main control structure
 class Control
 {
@@ -130,6 +137,8 @@ private:
     short precond_type_;
 
     short it_algo_type_;
+
+    short wf_extrapolation_;
 
     // flag to decide if condition number of Gram matrix
     // should be computed during quench (value 2) or
@@ -330,8 +339,6 @@ public:
 
     int numst;
 
-    short wf_extrapolation;
-
     short lrs_compute;
     short lrs_extrapolation;
 
@@ -510,7 +517,6 @@ public:
     void readPotFilenames(std::ifstream* tfile);
     void registerPotentials(Potentials& pot);
 
-    bool spread_penalize_xlbomd() { return (spread_penalty_type_ == 3); }
     bool isSpreadFunctionalActive() { return (spread_penalty_alpha_ > 0.); }
     float spreadPenaltyDampingFactor() const { return spread_penalty_damping_; }
     float spreadPenaltyAlphaFactor() const { return spread_penalty_alpha_; }
@@ -572,6 +578,19 @@ public:
                 return OuterSolverType::Davidson;
             case 3:
                 return OuterSolverType::PolakRibiere;
+        }
+    }
+
+    WFExtrapolationType WFExtrapolation()
+    {
+        switch(wf_extrapolation_)
+        {
+            case 0:
+                return WFExtrapolationType::Reversible;
+            case 1:
+                return WFExtrapolationType::Order2;
+            case 2:
+                return WFExtrapolationType::Order3;
         }
     }
 };

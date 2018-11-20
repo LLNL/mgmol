@@ -98,7 +98,7 @@ Control::Control()
     wf_dyn                           = -1;
     wf_m                             = -1;
     numst                            = -1;
-    wf_extrapolation                 = -1;
+    wf_extrapolation_                = -1;
     betaAnderson                     = 0.;
     diel                             = -1;
     lap_type                         = -1;
@@ -330,7 +330,7 @@ void Control::sync(void)
         short_buffer[0]  = wf_dyn;
         short_buffer[1]  = wf_m;
         short_buffer[2]  = multipole_order;
-        short_buffer[3]  = wf_extrapolation;
+        short_buffer[3]  = wf_extrapolation_;
         short_buffer[4]  = diel;
         short_buffer[5]  = lap_type;
         short_buffer[6]  = precond_type_;
@@ -530,7 +530,7 @@ void Control::sync(void)
     wf_dyn                           = short_buffer[0];
     wf_m                             = short_buffer[1];
     multipole_order                  = short_buffer[2];
-    wf_extrapolation                 = short_buffer[3];
+    wf_extrapolation_                = short_buffer[3];
     diel                             = short_buffer[4];
     lap_type                         = short_buffer[5];
     precond_type_                    = short_buffer[6];
@@ -759,8 +759,9 @@ int Control::checkState()
         return -1;
     }
     if (atoms_dyn == 2)
-        if (!(wf_extrapolation == 0 || wf_extrapolation == 1
-                || wf_extrapolation == 2))
+        if (!(WFExtrapolation() == WFExtrapolationType::Reversible
+                || WFExtrapolation() == WFExtrapolationType::Order2
+                || WFExtrapolation() == WFExtrapolationType::Order3))
         {
             (*MPIdata::sout) << "Control::checkState() -> Invalid option for "
                                 "WF extrapolation in MD!!!"
@@ -1733,7 +1734,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
             {
                 thermostat_type = 0;
             }
-            wf_extrapolation = vm["MD.extrapolation_type"].as<short>();
+            wf_extrapolation_ = vm["MD.extrapolation_type"].as<short>();
             enforceVmass0
                 = vm["MD.remove_mass_center_motion"].as<bool>() ? 1 : 0;
 

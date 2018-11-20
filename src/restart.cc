@@ -166,7 +166,8 @@ int MGmol::write_hdf5(HDFrestart& h5f_file, vector<vector<RHODTYPE>>& rho,
         int ierr = orbitals.write_hdf5(h5f_file);
         if (ierr < 0) return ierr;
 
-        if (ct.isLocMode() && ct.wf_extrapolation == 0)
+        if (ct.isLocMode() &&
+            ct.WFExtrapolation() == WFExtrapolationType::Reversible)
         {
             lrs.writeOldCenters(h5f_file);
         }

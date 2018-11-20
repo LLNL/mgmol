@@ -306,7 +306,7 @@ int MGmol::initial()
         //        g_kbpsi_->registerRemoteTasksDistMatrix(remote_tasks_DistMatrix_);
         remote_tasks_DistMatrix_ptr_ = remote_tasks_DistMatrix_;
     }
-    if (ct.wf_extrapolation == 0)
+    if (ct.WFExtrapolation() == WFExtrapolationType::Reversible)
     {
         BlockVector<ORBDTYPE>::incMaxAllocInstances(2);
     }
@@ -314,7 +314,7 @@ int MGmol::initial()
     {
         BlockVector<ORBDTYPE>::incMaxAllocInstances(2);
     }
-    if (ct.wf_m > 1 || ct.wf_extrapolation > 1)
+    if (ct.wf_m > 1 || ct.WFExtrapolation() == WFExtrapolationType::Order3)
         BlockVector<ORBDTYPE>::incMaxAllocInstances(1);
     for (short i = 1; i < ct.wf_m; i++)
         BlockVector<ORBDTYPE>::incMaxAllocInstances(2);

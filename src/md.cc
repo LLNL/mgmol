@@ -313,7 +313,7 @@ void MGmol::md(LocGridOrbitals** orbitals, Ions& ions)
     DFTsolver::resetItCount();
 
     orbitals_extrapol
-        = OrbitalsExtrapolationFactory::create(ct.wf_extrapolation, NULL);
+        = OrbitalsExtrapolationFactory::create(ct.WFExtrapolation(), NULL);
 
     MD_IonicStepper* stepper = new MD_IonicStepper(
         ct.dt, atmove, tau0, taup, taum, fion, pmass, rand_states);
@@ -591,7 +591,8 @@ void MGmol::md(LocGridOrbitals** orbitals, Ions& ions)
 
         preWFextrapolation();
 
-        if (ct.dt > 0. || ct.wf_extrapolation == 0)
+        if (ct.dt > 0. ||
+            ct.WFExtrapolation() == WFExtrapolationType::Reversible)
         {
             if (ct.lrs_extrapolation > 0) extrapolate_centers(small_move);
 
