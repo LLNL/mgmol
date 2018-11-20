@@ -452,7 +452,7 @@ int MGmol::initial()
         current_orbitals_->computeBAndInvB(*lapOper);
         if (ct.verbose > 0)
             printWithTimeStamp("Compute initial condition number...", os_);
-        current_orbitals_->checkCond(100000., (ct.atoms_dyn != 0));
+        current_orbitals_->checkCond(100000., ct.AtomsMove());
     }
 
     if (ct.verbose > 0) printWithTimeStamp("Setup kbpsi...", os_);
@@ -535,9 +535,9 @@ void MGmol::run()
 
     if (ct.verbose > 0) printWithTimeStamp("Run...", os_);
     // Dispatch to the method chosen
-    switch (ct.atoms_dyn)
+    switch (ct.AtomsDynamic())
     {
-        case 0: // Quench the electrons
+        case AtomsDynamicType::Quench:
             quench(current_orbitals_, *ions_, ct.max_electronic_steps, 20, eks);
 
             // Forces for the last states
@@ -561,17 +561,17 @@ void MGmol::run()
 
             break;
 
-        case 2: // MD
+        case AtomsDynamicType::MD:
             md(&current_orbitals_, *ions_);
             // finalEnergy();
             break;
 
-        case 6: // LBFGS
+        case AtomsDynamicType::LBFGS:
             lbfgsrlx(&current_orbitals_, *ions_);
             // finalEnergy();
             break;
 
-        case 7: // FIRE
+        case AtomsDynamicType::FIRE:
             runfire(&current_orbitals_, *ions_);
             // finalEnergy();
             break;
@@ -1371,7 +1371,7 @@ void MGmol::cleanup()
     printTimers();
 
     // Save data to restart file
-    if (ct.out_restart_info > 0 && ct.atoms_dyn == 0)
+    if (ct.out_restart_info > 0 && !ct.AtomsMove())
     {
         const pb::Grid& mygrid = mymesh->grid();
         unsigned gdim[3] = { mygrid.gdim(0), mygrid.gdim(1), mygrid.gdim(2) };

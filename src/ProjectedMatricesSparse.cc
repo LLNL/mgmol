@@ -135,7 +135,7 @@ void ProjectedMatricesSparse::setup(
     // clear invS and DM data if MD
     // Ideally MD would be calling a different setup routine
     // from LocGridOrbitals, that resets all data
-    if (ct.atoms_dyn == 2)
+    if (ct.AtomsDynamic() == AtomsDynamicType::MD)
     {
         delete invS_;
         invS_ = 0;
@@ -160,7 +160,7 @@ void ProjectedMatricesSparse::setup(
         lsize_ = locvars_.size(); // table.get_size();
 
         // reset invS and DM data
-        if (invS_ == 0 || dm_ == 0 || ct.atoms_dyn == 2)
+        if (invS_ == 0 || dm_ == 0 || ct.AtomsDynamic() == AtomsDynamicType::MD)
         {
             invS_ = new ShortSightedInverse((*lrs_), locvars_, local_cluster_);
             dm_   = new DensityMatrixSparse(

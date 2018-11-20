@@ -50,6 +50,15 @@ enum class WFExtrapolationType
     Reversible
 };
 
+enum class AtomsDynamicType
+{
+    Quench,
+    MD,
+    LBFGS,
+    FIRE,
+    UNDEFINED
+};
+
 // Main control structure
 class Control
 {
@@ -139,6 +148,8 @@ private:
     short it_algo_type_;
 
     short wf_extrapolation_;
+
+    short atoms_dyn_;
 
     // flag to decide if condition number of Gram matrix
     // should be computed during quench (value 2) or
@@ -427,7 +438,6 @@ public:
     float init_rc;
 
     // MD flag
-    short atoms_dyn;
     float dt;
     short enforceVmass0;
     short md_print_freq;
@@ -592,6 +602,28 @@ public:
             case 2:
                 return WFExtrapolationType::Order3;
         }
+    }
+
+    AtomsDynamicType AtomsDynamic()
+    {
+        switch(atoms_dyn_)
+        {
+            case 0:
+                return AtomsDynamicType::Quench;
+            case 2:
+                return AtomsDynamicType::MD;
+            case 6:
+                return AtomsDynamicType::LBFGS;
+            case 7:
+                return AtomsDynamicType::FIRE;
+            default:
+                return AtomsDynamicType::UNDEFINED;
+        }
+    }
+
+    bool AtomsMove()
+    {
+        return (atoms_dyn_!=0);
     }
 };
 

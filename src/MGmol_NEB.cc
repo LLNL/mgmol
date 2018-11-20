@@ -20,22 +20,22 @@ void MGmol::geomOptimSetup()
 {
     Control& ct = *(Control::instance());
 
-    switch (ct.atoms_dyn)
+    switch (ct.AtomsDynamic())
     {
-        case 6:
+        case AtomsDynamicType::LBFGS:
             geom_optimizer_ = new LBFGS(&current_orbitals_, *ions_, *rho_,
                 *constraints_, *lrs_, local_cluster_, *currentMasks_,
                 *corrMasks_, *electrostat_, ct.dt, *this);
             break;
 
-        case 7:
+        case AtomsDynamicType::FIRE:
             geom_optimizer_
                 = new FIRE(&current_orbitals_, *ions_, *rho_, *constraints_,
                     *lrs_, *currentMasks_, *electrostat_, ct.dt, *this);
             break;
 
         default:
-            (*MPIdata::serr) << "geomOptimSetup(): option " << ct.atoms_dyn
+            (*MPIdata::serr) << "geomOptimSetup(): option "
                              << " is an invalid method" << endl;
             return;
     }

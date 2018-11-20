@@ -275,20 +275,20 @@ void Control::print(ostream& os)
         os << " Anderson extrapolation scheme for wave functions with beta="
            << betaAnderson << endl;
     os << "Mix potentials with beta=" << mix_pot << endl;
-    if (atoms_dyn)
+    if (atoms_dyn_)
     {
-        switch (atoms_dyn)
+        switch (AtomsDynamic())
         {
-            case 0:
+            case AtomsDynamicType::Quench:
                 os << endl << endl << " Quench the electrons" << endl;
                 break;
-            case 2:
+            case AtomsDynamicType::MD:
                 os << endl << endl << " Verlet MD" << endl;
                 break;
-            case 6:
+            case AtomsDynamicType::LBFGS:
                 os << endl << endl << " LBFGS geometry optimization" << endl;
                 break;
-            case 7:
+            case AtomsDynamicType::FIRE:
                 os << endl << endl << " FIRE geometry optimization" << endl;
                 break;
             default:
@@ -296,7 +296,7 @@ void Control::print(ostream& os)
         }
     }
 
-    if (atoms_dyn)
+    if (!(AtomsDynamic() == AtomsDynamicType::Quench))
     {
         os << " Timestep for molecular dynamics = " << dt << endl;
         if (dt <= 0.) os << " Warning: time step <= 0. !!!" << endl;
@@ -351,7 +351,7 @@ void Control::sync(void)
         short_buffer[21] = tmatrices;
         short_buffer[22] = init_loc;
         short_buffer[23] = init_type;
-        short_buffer[24] = atoms_dyn;
+        short_buffer[24] = atoms_dyn_;
         short_buffer[25] = max_electronic_steps;
         short_buffer[26] = num_MD_steps;
         short_buffer[27] = lr_updates_type;
@@ -551,7 +551,7 @@ void Control::sync(void)
     tmatrices                        = short_buffer[21];
     init_loc                         = short_buffer[22];
     init_type                        = short_buffer[23];
-    atoms_dyn                        = short_buffer[24];
+    atoms_dyn_                       = short_buffer[24];
     max_electronic_steps             = short_buffer[25];
     num_MD_steps                     = short_buffer[26];
     lr_updates_type                  = short_buffer[27];
@@ -738,7 +738,7 @@ int Control::checkState()
                          << endl;
         return -1;
     }
-    if (atoms_dyn != 0 && atoms_dyn != 2 && atoms_dyn != 6 && atoms_dyn != 7)
+    if (AtomsDynamic() == AtomsDynamicType::UNDEFINED)
     {
         (*MPIdata::sout)
             << "Control::checkState() -> invalid parameter for md method"
@@ -758,7 +758,7 @@ int Control::checkState()
                          << endl;
         return -1;
     }
-    if (atoms_dyn == 2)
+    if (AtomsDynamic() == AtomsDynamicType::MD)
         if (!(WFExtrapolation() == WFExtrapolationType::Reversible
                 || WFExtrapolation() == WFExtrapolationType::Order2
                 || WFExtrapolation() == WFExtrapolationType::Order3))
@@ -1678,11 +1678,11 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         max_electronic_steps_tight_ = vm["Quench.max_steps_tight"].as<short>();
         if (str.compare("QUENCH") == 0)
         {
-            atoms_dyn = 0;
+            atoms_dyn_ = 0;
         }
         if (str.compare("MD") == 0)
         {
-            atoms_dyn         = 2;
+            atoms_dyn_        = 2;
             dt                = vm["MD.dt"].as<float>();
             num_MD_steps      = vm["MD.num_steps"].as<short>();
             md_print_freq     = vm["MD.print_interval"].as<short>();
@@ -1752,7 +1752,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         if (str.compare("GeomOpt") == 0)
         {
             str = vm["GeomOpt.type"].as<string>();
-            if (str.compare("LBFGS") == 0) atoms_dyn = 6;
+            if (str.compare("LBFGS") == 0) atoms_dyn_ = 6;
             dt = vm["GeomOpt.dt"].as<float>();
 
             num_MD_steps = vm["GeomOpt.max_steps"].as<short>();

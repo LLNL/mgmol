@@ -194,7 +194,7 @@ void MGmol::wftransform(
         // because orbitals and work_orbitals share projected matrices
         resetProjectedMatricesAndDM(*orbitals, ions);
 
-        if (ct.verbose > 1 || ct.atoms_dyn == 0)
+        if (ct.verbose > 1 || !ct.AtomsMove())
             mlwt->printCentersAndSpreads(os_);
         ot = mlwt;
         if (ct.wannier_transform_type == 3)
@@ -204,7 +204,7 @@ void MGmol::wftransform(
             createNOOT = true;
 
             get_NOLMO(*noot, *orbitals, *work_orbitals, dd, false);
-            if (ct.verbose > 1 || ct.atoms_dyn == 0)
+            if (ct.verbose > 1 || !ct.AtomsMove())
                 noot->printCentersAndSpreads(os_);
 
             ot = noot;
@@ -212,7 +212,7 @@ void MGmol::wftransform(
     }
 
     // print transformation matrix
-    if (ct.orbital_type == 0 && ct.atoms_dyn == 0)
+    if (ct.orbital_type == 0 && !ct.AtomsMove())
     {
         mlwt->printTransform();
     }
