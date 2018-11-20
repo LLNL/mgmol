@@ -432,9 +432,9 @@ int MGmol::quench(LocGridOrbitals* orbitals, Ions& ions,
 
     // solve electronic structure problem
     // (inner iterations)
-    switch (ct.it_algo_type)
+    switch (ct.OuterSolver())
     {
-        case 0:
+        case OuterSolverType::ABPG:
         {
             DFTsolver solver(hamiltonian_, proj_matrices_, energy_,
                 electrostat_, this, ions, rho_, dm_strategy_, os_);
@@ -445,7 +445,7 @@ int MGmol::quench(LocGridOrbitals* orbitals, Ions& ions,
             break;
         }
 
-        case 1:
+        case OuterSolverType::NLCG:
         {
             DFTsolver solver(hamiltonian_, proj_matrices_, energy_,
                 electrostat_, this, ions, rho_, dm_strategy_, os_);
@@ -456,7 +456,7 @@ int MGmol::quench(LocGridOrbitals* orbitals, Ions& ions,
             break;
         }
 
-        case 3:
+        case OuterSolverType::PolakRibiere:
         {
             PolakRibiereSolver solver(hamiltonian_, proj_matrices_, energy_,
                 electrostat_, this, ions, rho_, dm_strategy_, os_);
@@ -468,7 +468,7 @@ int MGmol::quench(LocGridOrbitals* orbitals, Ions& ions,
         }
 
         default:
-            cerr << "Undefined iterative electronic structure solver" << endl;
+            cerr << "Undefined iterative outer solver" << endl;
             return -1;
     }
 

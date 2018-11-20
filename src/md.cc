@@ -69,7 +69,8 @@ void MGmol::moveVnuc(Ions& ions)
 void MGmol::preWFextrapolation()
 {
     Control& ct = *(Control::instance());
-    if (ct.it_algo_type <= 1)
+    if (ct.OuterSolver() == OuterSolverType::ABPG ||
+        ct.OuterSolver() == OuterSolverType::NLCG )
     {
         if (ct.dm_mix < 1.) proj_matrices_->stripDM();
     }
@@ -92,16 +93,17 @@ void MGmol::postWFextrapolation(LocGridOrbitals* orbitals)
         orbitals->computeGramAndInvS();
     }
 
-    if (ct.it_algo_type > 1)
-    {
-        if (orbitals_extrapol->extrapolatedH()) dm_strategy_->update();
-    }
-    else
+    if (ct.OuterSolver() == OuterSolverType::ABPG || 
+        ct.OuterSolver() == OuterSolverType::NLCG )
     {
         if (ct.dm_mix < 1.)
             proj_matrices_->dressupDM();
         else
             proj_matrices_->setDMto2InvS();
+    }
+    else
+    {
+        if (orbitals_extrapol->extrapolatedH()) dm_strategy_->update();
     }
 }
 

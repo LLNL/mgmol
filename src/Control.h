@@ -35,6 +35,14 @@ namespace program_options
 }
 #endif
 
+enum class OuterSolverType
+{
+    ABPG,
+    PolakRibiere,
+    NLCG,
+    Davidson
+};
+
 // Main control structure
 class Control
 {
@@ -120,6 +128,8 @@ private:
     // 0  = MG
     // 10 = MG, block implementation
     short precond_type_;
+
+    short it_algo_type_;
 
     // flag to decide if condition number of Gram matrix
     // should be computed during quench (value 2) or
@@ -469,8 +479,6 @@ public:
     float ilu_droptol;
 
     bool parallel_transport;
-    // number of MVP cycles
-    short it_algo_type;
 
     short DM_solver() const { return DM_solver_; }
 
@@ -551,6 +559,21 @@ public:
     bool checkResidual() const { return (conv_criterion_ > 0); }
     bool checkMaxResidual() const { return (conv_criterion_ == 2); }
     bool resetVH() const { return (hartree_reset_ > 0); }
+
+    OuterSolverType OuterSolver()
+    {
+        switch(it_algo_type_)
+        {
+            case 0:
+                return OuterSolverType::ABPG;
+            case 1:
+                return OuterSolverType::NLCG;
+            case 2:
+                return OuterSolverType::Davidson;
+            case 3:
+                return OuterSolverType::PolakRibiere;
+        }
+    }
 };
 
 #endif

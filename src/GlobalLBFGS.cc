@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id:$
 #include "GlobalLBFGS.h"
 #include "Control.h"
 #include "Electrostatic.h"
@@ -357,7 +356,7 @@ void GlobalLBFGS::updatePotAndMasks()
 
     rho_.setup(ct.orbital_type, (*orbitals_)->getGlobalIndexes());
 
-    const short update_dm = (ct.it_algo_type <= 1) ? 1 : 0;
+    const short update_dm = (ct.OuterSolver() == OuterSolverType::ABPG) ? 1 : 0;
     mgmol_strategy_.updateProjectedMatrices(**orbitals_, ions_, update_dm);
 }
 

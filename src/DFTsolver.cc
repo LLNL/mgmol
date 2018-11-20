@@ -39,16 +39,16 @@ DFTsolver::DFTsolver(Hamiltonian* hamiltonian,
 {
     Control& ct(*(Control::instance()));
 
-    switch (ct.it_algo_type)
+    switch (ct.OuterSolver())
     {
-        case 0:
+        case OuterSolverType::ABPG:
         {
             orbitals_stepper_
                 = new ABPG(hamiltonian_, proj_matrices_, mgmol_strategy, os_);
             break;
         }
 
-        case 1:
+        case OuterSolverType::NLCG:
         {
             if (ct.short_sighted)
             {

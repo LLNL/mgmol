@@ -83,7 +83,7 @@ Control::Control()
     dm_approx_power_maxits = 100;
 
     // undefined values
-    it_algo_type                     = -1;
+    it_algo_type_                    = -1;
     DM_solver_                       = -1;
     orbital_type                     = -1;
     aomm_radius_                     = -1.;
@@ -335,7 +335,7 @@ void Control::sync(void)
         short_buffer[5]  = lap_type;
         short_buffer[6]  = precond_type_;
         short_buffer[7]  = orthof;
-        short_buffer[8]  = it_algo_type;
+        short_buffer[8]  = it_algo_type_;
         short_buffer[9]  = num_species;
         short_buffer[10] = mg_levels_;
         short_buffer[11] = project_out_psd;
@@ -535,7 +535,7 @@ void Control::sync(void)
     lap_type                         = short_buffer[5];
     precond_type_                    = short_buffer[6];
     orthof                           = short_buffer[7];
-    it_algo_type                     = short_buffer[8];
+    it_algo_type_                    = short_buffer[8];
     num_species                      = short_buffer[9];
     mg_levels_                       = short_buffer[10];
     project_out_psd                  = short_buffer[11];
@@ -1544,30 +1544,30 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         str = vm["Quench.solver"].as<string>();
         if (str.compare("ABPG") == 0)
         {
-            it_algo_type = 0;
-            wf_dyn       = 1;
-            wf_m         = vm["ABPG.m"].as<short>();
-            betaAnderson = vm["ABPG.beta"].as<float>();
+            it_algo_type_ = 0;
+            wf_dyn        = 1;
+            wf_m          = vm["ABPG.m"].as<short>();
+            betaAnderson  = vm["ABPG.beta"].as<float>();
         }
         if (str.compare("PSD") == 0)
         {
-            it_algo_type = 0;
-            wf_dyn       = 0;
+            it_algo_type_ = 0;
+            wf_dyn        = 0;
         }
         if (str.compare("NLCG") == 0)
         {
-            it_algo_type = 1;
-            wf_dyn       = 1;
+            it_algo_type_ = 1;
+            wf_dyn        = 1;
 
             parallel_transport
                 = vm["NLCG.parallel_transport"].as<bool>() ? 1 : 0;
         }
         if (str.compare("PR") == 0) // Polak-Ribiere
         {
-            it_algo_type = 3;
+            it_algo_type_ = 3;
         }
         cout << "Outer solver type: " << str << endl;
-        assert(it_algo_type >= 0);
+        assert(it_algo_type_ >= 0);
 
         mg_levels_     = vm["Quench.preconditioner_num_levels"].as<short>() - 1;
         precond_factor = vm["Quench.step_length"].as<float>();
@@ -1881,7 +1881,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
 
 int Control::checkOptions()
 {
-    if (it_algo_type > 3)
+    if (it_algo_type_ > 3)
     {
         cerr << "ERROR: specified inner solver not implemented" << endl;
         return -1;
@@ -1901,7 +1901,7 @@ int Control::checkOptions()
         return -1;
     }
 
-    if (it_algo_type == 3 && lap_type == 0)
+    if (it_algo_type_ == 3 && lap_type == 0)
     {
         cerr
             << "ERROR: Mehrstellen not compatible with Polak-Ribiere algorithm!"

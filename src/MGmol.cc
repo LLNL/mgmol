@@ -310,7 +310,7 @@ int MGmol::initial()
     {
         BlockVector<ORBDTYPE>::incMaxAllocInstances(2);
     }
-    if (ct.it_algo_type == 3)
+    if (ct.OuterSolver() == OuterSolverType::Davidson)
     {
         BlockVector<ORBDTYPE>::incMaxAllocInstances(2);
     }
@@ -1222,9 +1222,9 @@ void MGmol::printTimers()
     lrs_->printTimers(os_);
     local_cluster_->printTimers(os_);
     forces_->printTimers(os_);
-    if (ct.it_algo_type == 0)
+    if (ct.OuterSolver() == OuterSolverType::ABPG)
         ABPG::printTimers(os_);
-    else if (ct.it_algo_type == 1)
+    else if (ct.OuterSolver() == OuterSolverType::NLCG)
         GrassmanLineMinimization::printTimers(os_);
     adaptLR_tm_.print(os_);
     updateCenters_tm.print(os_);

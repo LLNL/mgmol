@@ -19,13 +19,16 @@ void OrbitalsExtrapolationOrder2::extrapolate_orbitals(
 {
     Control& ct = *(Control::instance());
 
+    bool use_dense_proj_mat = false;
 #if EXTRAPOLATE_H
     ProjectedMatricesInterface* proj_matrices = (*orbitals)->getProjMatrices();
     ProjectedMatrices* projmat                = 0;
-    if (ct.it_algo_type > 1)
+    if (ct.OuterSolver() != OuterSolverType::ABPG &&
+        ct.OuterSolver() != OuterSolverType::NLCG )
     {
         projmat = dynamic_cast<ProjectedMatrices*>(proj_matrices);
         assert(projmat);
+        use_dense_proj_mat = true;
     }
 #endif
 
@@ -40,7 +43,7 @@ void OrbitalsExtrapolationOrder2::extrapolate_orbitals(
                 (*MPIdata::sout) << "Extrapolate orbitals order 2..." << endl;
 
             // align orbitals_minus1_ with new_orbitals
-            if (ct.it_algo_type > 1)
+            if (use_dense_proj_mat)
             {
                 dist_matrix::DistMatrix<DISTMATDTYPE> matQ(
                     "Q", ct.numst, ct.numst);
@@ -79,7 +82,7 @@ void OrbitalsExtrapolationOrder2::extrapolate_orbitals(
 #endif
             }
             else
-            { // ct.it_algo_type==0/1
+            { // !use_dense_proj_mat
 
                 new_orbitals->scal(2.);
             }
@@ -94,7 +97,7 @@ void OrbitalsExtrapolationOrder2::extrapolate_orbitals(
                 << "Set orbitals_minus1_ to values of orbitals" << endl;
         orbitals_minus1_ = *orbitals;
 
-        if (ct.it_algo_type > 1)
+        if (use_dense_proj_mat)
         {
 #if EXTRAPOLATE_H
             ProjectedMatrices* projmat
@@ -108,7 +111,7 @@ void OrbitalsExtrapolationOrder2::extrapolate_orbitals(
 
     *orbitals = new_orbitals;
 #if EXTRAPOLATE_H
-    if (ct.it_algo_type > 1)
+    if (use_dense_proj_mat)
     {
         projmat->saveH();
     }
