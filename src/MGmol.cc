@@ -62,6 +62,7 @@ using namespace std;
 #include "SubMatrices.h"
 #include "SubspaceProjector.h"
 #include "XConGrid.h"
+#include "manage_memory.h"
 
 #define DELTA 1e-8
 
@@ -306,19 +307,8 @@ int MGmol::initial()
         //        g_kbpsi_->registerRemoteTasksDistMatrix(remote_tasks_DistMatrix_);
         remote_tasks_DistMatrix_ptr_ = remote_tasks_DistMatrix_;
     }
-    if (ct.WFExtrapolation() == WFExtrapolationType::Reversible)
-    {
-        BlockVector<ORBDTYPE>::incMaxAllocInstances(2);
-    }
-    if (ct.OuterSolver() == OuterSolverType::Davidson)
-    {
-        BlockVector<ORBDTYPE>::incMaxAllocInstances(2);
-    }
-    if (ct.wf_m > 1 || ct.WFExtrapolation() == WFExtrapolationType::Order3)
-        BlockVector<ORBDTYPE>::incMaxAllocInstances(1);
-    for (short i = 1; i < ct.wf_m; i++)
-        BlockVector<ORBDTYPE>::incMaxAllocInstances(2);
-    if (ct.use_kernel_functions) BlockVector<ORBDTYPE>::incMaxAllocInstances(1);
+
+    increaseMemorySlotsForOrbitals();
 
     Potentials& pot            = hamiltonian_->potential();
     pb::Lap<ORBDTYPE>* lapOper = hamiltonian_->lapOper();
@@ -1645,3 +1635,4 @@ void MGmol::addResidualSpreadPenalty(LocGridOrbitals& phi, LocGridOrbitals& res)
 
     spread_penalty_->addResidual(phi, res);
 }
+
