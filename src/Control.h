@@ -66,6 +66,15 @@ enum class DMNonLinearSolverType
     HMVP
 };
 
+enum class DMEigensolverType
+{
+    Eigensolver,
+#ifdef __MGMOL_CHEBYSHEV__
+    Chebyshev,
+#endif
+    SP2
+};
+
 // Main control structure
 class Control
 {
@@ -157,6 +166,8 @@ private:
     short wf_extrapolation_;
 
     short atoms_dyn_;
+
+    short dm_algo_;
 
     // flag to decide if condition number of Gram matrix
     // should be computed during quench (value 2) or
@@ -416,7 +427,6 @@ public:
 
     // Density matrix computation algorithm
     // 0 =diagonalization
-    short dm_algo;
     short dm_approx_order;
     short dm_approx_ndigits;
     short dm_approx_power_maxits;
@@ -635,6 +645,21 @@ public:
                 return DMNonLinearSolverType::MVP;
             case 2:
                 return DMNonLinearSolverType::HMVP;
+        }
+    }
+
+    DMEigensolverType DMEigensolver() const
+    {
+        switch(dm_algo_)
+        {
+            case 0:
+                return DMEigensolverType::Eigensolver;
+#ifdef __MGMOL_CHEBYSHEV__
+            case 1:
+                return DMEigensolverType::Chebyshev;
+#endif
+            case 2:
+                return DMEigensolverType::SP2;
         }
     }
 

@@ -229,9 +229,8 @@ void ProjectedMatricesSparse::updateTheta()
     distributor.updateLocalRows((*submatT_));
 
     update_theta_tm_.stop();
-
-    return;
 }
+
 double ProjectedMatricesSparse::getExpectationH()
 {
     assert(invS_ != NULL);

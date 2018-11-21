@@ -77,7 +77,7 @@ Control::Control()
     spread_factor          = 2.;
     conv_criterion_        = 0;
     steps                  = 0;
-    dm_algo                = 0;
+    dm_algo_               = 0;
     dm_approx_order        = 500;
     dm_approx_ndigits      = 1;
     dm_approx_power_maxits = 100;
@@ -242,7 +242,7 @@ void Control::print(ostream& os)
        << endl;
     os << fixed;
     os << " Density matrix mixing = " << dm_mix << endl;
-    if (dm_algo == 0)
+    if (DMEigensolver() == DMEigensolverType::Eigensolver)
     {
         os << " Density matrix computation algorithm = "
            << " Diagonalization " << endl;
@@ -403,7 +403,7 @@ void Control::sync(void)
         short_buffer[73] = load_balancing_modulo;
         short_buffer[74] = write_clusters;
         short_buffer[75] = DM_solver_;
-        short_buffer[80] = dm_algo;
+        short_buffer[80] = dm_algo_;
         short_buffer[81] = dm_approx_order;
         short_buffer[82] = dm_approx_ndigits;
         short_buffer[83] = dm_approx_power_maxits;
@@ -603,7 +603,7 @@ void Control::sync(void)
     load_balancing_modulo            = short_buffer[73];
     write_clusters                   = short_buffer[74];
     DM_solver_                       = short_buffer[75];
-    dm_algo                          = short_buffer[80];
+    dm_algo_                         = short_buffer[80];
     dm_approx_order                  = short_buffer[81];
     dm_approx_ndigits                = short_buffer[82];
     dm_approx_power_maxits           = short_buffer[83];
@@ -1821,6 +1821,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         dm_inner_steps = vm["DensityMatrix.nb_inner_it"].as<short>();
         dm_use_old_    = vm["DensityMatrix.use_old"].as<bool>() ? 1 : 0;
         str            = vm["DensityMatrix.solver"].as<string>();
+
         if (str.compare("Mixing") == 0) DM_solver_ = 0;
         if (str.compare("MVP") == 0) DM_solver_ = 1;
         if (str.compare("HMVP") == 0) DM_solver_ = 2;

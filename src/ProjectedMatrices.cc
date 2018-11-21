@@ -366,7 +366,13 @@ void ProjectedMatrices::updateDM(const int iterative_index)
 {
     Control& ct = *(Control::instance());
 
-    if (ct.dm_algo == 0) updateDMwithEigenstates(iterative_index);
+    if (ct.DMEigensolver() == DMEigensolverType::Eigensolver)
+        updateDMwithEigenstates(iterative_index);
+    else
+    {
+        cerr<<"Eigensolver not available in ProjectedMatrices::updateDM()\n";
+        ct.global_exit(2);
+    }
 }
 
 void ProjectedMatrices::updateDMwithEigenstatesAndRotate(
@@ -460,7 +466,7 @@ void ProjectedMatrices::rotateBackDM()
 void ProjectedMatrices::computeOccupationsFromDM()
 {
     Control& ct = *(Control::instance());
-    if (ct.dm_algo == 0 && dim_ > 0)
+    if (ct.DMEigensolver() == DMEigensolverType::Eigensolver && dim_ > 0)
     {
         assert(dm_ != 0);
         dm_->computeOccupations(gm_->getCholeskyL());
@@ -565,7 +571,8 @@ double ProjectedMatrices::computeEntropy()
     Control& ct = *(Control::instance());
     double entropy;
 
-    if (ct.dm_algo == 0 || dm_->fromUniformOccupations())
+    if (ct.DMEigensolver() == DMEigensolverType::Eigensolver
+        || dm_->fromUniformOccupations())
     {
         if (!occupationsUptodate())
         {
@@ -713,7 +720,7 @@ void ProjectedMatrices::printEigenvalues(ostream& os) const
 void ProjectedMatrices::printEigenvaluesEV(ostream& os) const
 {
     Control& ct = *(Control::instance());
-    if (ct.dm_algo == 0 && onpe0)
+    if (ct.DMEigensolver() == DMEigensolverType::Eigensolver && onpe0)
     {
         os << endl << " Eigenvalues [eV]:";
 
@@ -736,7 +743,7 @@ void ProjectedMatrices::printEigenvaluesEV(ostream& os) const
 void ProjectedMatrices::printEigenvaluesHa(ostream& os) const
 {
     Control& ct = *(Control::instance());
-    if (ct.dm_algo == 0 && onpe0)
+    if (ct.DMEigensolver() == DMEigensolverType::Eigensolver && onpe0)
     {
         os << endl << " Eigenvalues [Ha]:";
 
@@ -759,7 +766,7 @@ void ProjectedMatrices::printEigenvaluesHa(ostream& os) const
 void ProjectedMatrices::setAuxilliaryEnergiesFromEigenenergies()
 {
     Control& ct = *(Control::instance());
-    if (ct.dm_algo == 0)
+    if (ct.DMEigensolver() == DMEigensolverType::Eigensolver)
     {
         assert((int)eigenvalues_.size() == dim_);
 
