@@ -384,7 +384,7 @@ int MGmol::initial()
         proj_matrices_->setDMuniform(
             ct.getNelSpin(), current_orbitals_->getIterativeIndex());
 
-    rho_->setup(ct.orbital_type, current_orbitals_->getOverlappingGids());
+    rho_->setup(ct.getOrbitalsType(), current_orbitals_->getOverlappingGids());
 
     if (ct.restart_info <= 1)
     {
@@ -780,7 +780,8 @@ void MGmol::initBackground()
 void MGmol::printEigAndOcc()
 {
     Control& ct = *(Control::instance());
-    if (!(ct.fullyOccupied() && ct.orbital_type > 0
+    if (!(ct.fullyOccupied()
+            && ct.getOrbitalsType() != OrbitalsType::Eigenfunctions
             && ct.occupationWidthIsZero())
         && onpe0)
     {

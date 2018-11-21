@@ -31,7 +31,6 @@ void dtrsm_c(const char side, const char uplo, const char transa,
     dtrsm(&side, &uplo, &transa, &diag, &m, &n, &alpha, a, &lda, b, &ldb);
 }
 
-//#if 0
 void distributeColumns(
     vector<DISTMATDTYPE>& vmm, dist_matrix::DistMatrix<DISTMATDTYPE>& mat)
 {
@@ -212,7 +211,7 @@ void MGmol::wftransform(
     }
 
     // print transformation matrix
-    if (ct.orbital_type == 0 && !ct.AtomsMove())
+    if (ct.getOrbitalsType() == OrbitalsType::Eigenfunctions && !ct.AtomsMove())
     {
         mlwt->printTransform();
     }
@@ -328,4 +327,4 @@ int MGmol::get_NOLMO(NOLMOTransform& noot, LocGridOrbitals& orbitals,
 
     return 0;
 }
-//#endif
+

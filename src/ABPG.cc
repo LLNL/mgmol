@@ -29,7 +29,8 @@ void ABPG::setup(LocGridOrbitals& orbitals)
     if (ct.wf_dyn == 1) // use Anderson extrapolation
     {
         wf_mix_ = new AndersonMix<LocGridOrbitals>(
-            ct.wf_m, ct.betaAnderson, orbitals, (ct.orbital_type == 2));
+            ct.wf_m, ct.betaAnderson, orbitals,
+            (ct.getOrbitalsType() == OrbitalsType::Orthonormal));
     }
 }
 
@@ -63,7 +64,7 @@ int ABPG::update(LocGridOrbitals& orbitals, Ions& ions,
     update_states(orbitals, res, work_orbitals, precond_factor, accelerate);
 
     bool flag_ortho = false;
-    if (ct.orbital_type == 0 || orthof)
+    if (ct.getOrbitalsType() == OrbitalsType::Eigenfunctions || orthof)
     {
         if (ct.isLocMode())
         {
@@ -80,13 +81,13 @@ int ABPG::update(LocGridOrbitals& orbitals, Ions& ions,
             if (wf_mix_ != 0) wf_mix_->restart();
         }
     }
-    else if (ct.orbital_type != 2)
+    else if (ct.getOrbitalsType() != OrbitalsType::Orthonormal)
     {
         orbitals.normalize();
     }
 
     // if orthonorm() not called, recompute overlap
-    if (!flag_ortho && ct.orbital_type != 2)
+    if (!flag_ortho && ct.getOrbitalsType() != OrbitalsType::Orthonormal)
     {
         orbitals.computeGramAndInvS();
     }
@@ -174,7 +175,8 @@ void ABPG::update_states(LocGridOrbitals& orbitals, LocGridOrbitals& res,
         // Preconditioned Power Method
         orbitals.axpy(alpha, res);
 
-        if (ct.orbital_type == 2) orbitals.orthonormalizeLoewdin(false);
+        if (ct.getOrbitalsType() == OrbitalsType::Orthonormal)
+            orbitals.orthonormalizeLoewdin(false);
     }
     orbitals.incrementIterativeIndex();
 

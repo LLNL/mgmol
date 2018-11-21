@@ -6,21 +6,17 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
-#ifndef RHO_H
-#define RHO_H
+#ifndef MGMOL_RHO_H
+#define MGMOL_RHO_H
 
 #include <vector>
 
-// pb
 #include "Timer.h"
-
 #include "DistMatrix.h"
 #include "LocGridOrbitals.h"
-
+#include "Control.h"
 #include "global.h"
 
-// class LocGridOrbitals;
 class HDFrestart;
 class ProjectedMatricesInterface;
 
@@ -35,7 +31,7 @@ class Rho
     dist_matrix::DistMatrix<DISTMATDTYPE>& dm_;
 #endif
 
-    int orbitals_type_;
+    OrbitalsType orbitals_type_;
 
     std::vector<std::vector<int>> orbitals_indexes_;
 
@@ -82,7 +78,8 @@ public:
     ~Rho();
 
     void rescaleTotalCharge();
-    void setup(const int orbitals_type, const std::vector<std::vector<int>>&);
+    void setup(const OrbitalsType orbitals_type,
+               const std::vector<std::vector<int>>&);
     void setVerbosityLevel(const int vlevel) { verbosity_level_ = vlevel; }
 
     void update(LocGridOrbitals& current_orbitals);

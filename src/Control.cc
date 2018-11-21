@@ -85,7 +85,7 @@ Control::Control()
     // undefined values
     it_algo_type_                    = -1;
     DM_solver_                       = -1;
-    orbital_type                     = -1;
+    orbital_type_                    = -1;
     aomm_radius_                     = -1.;
     aomm_threshold_factor_           = -1.;
     rescale_v_                       = -1.;
@@ -191,15 +191,15 @@ void Control::print(ostream& os)
     os << " Boundary conditions for Poisson: " << bcPoisson[0] << ", "
        << bcPoisson[1] << ", " << bcPoisson[2] << endl;
 
-    switch (orbital_type)
+    switch (getOrbitalsType())
     {
-        case 0:
+        case OrbitalsType::Eigenfunctions:
             os << " Works in Eigenfunctions basis" << endl;
             break;
-        case 1:
+        case OrbitalsType::Nonorthogonal:
             os << " Works in Nonorthogonal orbitals basis" << endl;
             break;
-        case 2:
+        case OrbitalsType::Orthonormal:
             os << " Works in Orthonormal orbitals basis" << endl;
             break;
         default:
@@ -357,7 +357,7 @@ void Control::sync(void)
         short_buffer[27] = lr_updates_type;
         short_buffer[28] = lr_update;
         short_buffer[29] = lr_volume_calc;
-        short_buffer[30] = orbital_type;
+        short_buffer[30] = orbital_type_;
         short_buffer[31] = line_min;
         short_buffer[32] = thermostat_type;
         short_buffer[33] = bc[0];
@@ -557,7 +557,7 @@ void Control::sync(void)
     lr_updates_type                  = short_buffer[27];
     lr_update                        = short_buffer[28];
     lr_volume_calc                   = short_buffer[29];
-    orbital_type                     = short_buffer[30];
+    orbital_type_                    = short_buffer[30];
     line_min                         = short_buffer[31];
     thermostat_type                  = short_buffer[32];
     bc[0]                            = short_buffer[33];
@@ -685,13 +685,13 @@ void Control::adjust()
     {
         dm_mix = 1.;
     }
-    if (orbital_type == 0)
+    if (getOrbitalsType() == OrbitalsType::Eigenfunctions)
     {
         orthof = 0;
         dm_mix = 1.;
         wf_dyn = 0;
     }
-    if (orbital_type == 2)
+    if (getOrbitalsType() == OrbitalsType::Orthonormal)
     {
         orthof = 0;
     }
@@ -798,8 +798,7 @@ int Control::checkState()
     assert(mg_levels_ >= -1);
     assert(rho0 > 0.);
     assert(drho0 > 0.);
-    assert(orbital_type >= 0);
-    assert(orbital_type < 3);
+    assert(getOrbitalsType() != OrbitalsType::UNDEFINED);
     assert(num_MD_steps >= 0);
     assert(dt >= 0.);
     if (short_sighted > 0)
@@ -1230,7 +1229,7 @@ void Control::setLocMode(const float radius, const float lx, const float ly,
     cut_radius            = radius;
     min_distance_centers_ = mind_centers;
     loc_mode_ = (cut_radius < lx || cut_radius < ly || cut_radius < lz);
-    if (orbital_type != 1)
+    if (getOrbitalsType() != OrbitalsType::Nonorthogonal)
     {
         cut_radius = 1000.;
         loc_mode_  = false;
@@ -1762,8 +1761,8 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
 
         nempty_ = vm["Orbitals.nempty"].as<short>();
         str     = vm["Orbitals.type"].as<string>();
-        if (str.compare("NO") == 0) orbital_type = 1;
-        if (str.compare("Orthonormal") == 0) orbital_type = 2;
+        if (str.compare("NO") == 0) orbital_type_ = 1;
+        if (str.compare("Orthonormal") == 0) orbital_type_ = 2;
         cout << "Orbitals type: " << str << endl;
         float etemp = vm["Orbitals.temperature"].as<float>();
         // K_B*T in Rydberg
@@ -1889,9 +1888,9 @@ int Control::checkOptions()
         return -1;
     }
 
-    if (orbital_type != 1 && orbital_type != 2)
+    if (getOrbitalsType() == OrbitalsType::UNDEFINED)
     {
-        cerr << "ERROR: unknown orbitals type: " << orbital_type << endl;
+        cerr << "ERROR: unknown orbitals type\n";
         return -1;
     }
 

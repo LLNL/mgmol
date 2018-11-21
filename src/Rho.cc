@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #include "Rho.h"
 #include "Control.h"
 #include "LocGridOrbitals.h"
@@ -25,7 +24,7 @@ Timer Rho::compute_tm_("Rho::compute");
 // class ProjectedMatricesInterface;
 
 Rho::Rho()
-    : orbitals_type_(-1),
+    : orbitals_type_(OrbitalsType::UNDEFINED),
       iterative_index_(-10),
       verbosity_level_(0) // default value
 {
@@ -55,7 +54,7 @@ Rho::Rho()
 Rho::~Rho() {}
 
 void Rho::setup(
-    const int orbitals_type, const vector<vector<int>>& orbitals_indexes)
+    const OrbitalsType orbitals_type, const vector<vector<int>>& orbitals_indexes)
 {
     if (verbosity_level_ > 2 && onpe0)
         (*MPIdata::sout) << " Rho::setup()" << endl;
@@ -302,7 +301,8 @@ void Rho::accumulateCharge(const double alpha, const short ix_max,
 void Rho::computeRhoSubdomain(
     const int iloc_init, const int iloc_end, const LocGridOrbitals& orbitals)
 {
-    assert(orbitals_type_ == 0 || orbitals_type_ == 1);
+    assert(orbitals_type_ == OrbitalsType::Eigenfunctions
+        || orbitals_type_ == OrbitalsType::Nonorthogonal);
 
     compute_tm_.start();
 
@@ -393,7 +393,8 @@ void Rho::computeRhoSubdomainOffDiagBlock(const int iloc_init,
     const int iloc_end, const vector<const LocGridOrbitals*>& vorbitals,
     const ProjectedMatricesInterface* const projmatrices)
 {
-    assert(orbitals_type_ == 0 || orbitals_type_ == 1);
+    assert(orbitals_type_ == OrbitalsType::Eigenfunctions
+        || orbitals_type_ == OrbitalsType::Nonorthogonal);
     assert(vorbitals.size() == 2);
 
     // printWithTimeStamp("Rho::computeRhoSubdomainOffDiagBlock()...",cout);
@@ -518,7 +519,7 @@ void Rho::computeRhoSubdomainOffDiagBlock(const int iloc_init,
 void Rho::computeRhoSubdomain(const int iloc_init, const int iloc_end,
     const LocGridOrbitals& orbitals, const vector<PROJMATDTYPE>& occ)
 {
-    assert(orbitals_type_ == 0 || orbitals_type_ == 1 || orbitals_type_ == 2);
+    assert(orbitals_type_ != OrbitalsType::UNDEFINED);
     if (verbosity_level_ > 2 && onpe0)
         (*MPIdata::sout) << "Rho::computeRhoSubdomain, diagonal case..."
                          << endl;
@@ -576,7 +577,8 @@ void Rho::computeRho(
 
     memset(&rho_[myspin_][0], 0, subdivx * loc_numpt * sizeof(RHODTYPE));
 
-    if (orbitals_type_ == 0 || (orbitals_type_ == 2 && ct.fullyOccupied()))
+    if (orbitals_type_ == OrbitalsType::Eigenfunctions
+        || (orbitals_type_ == OrbitalsType::Orthonormal && ct.fullyOccupied()))
     {
         vector<PROJMATDTYPE> occ(orbitals.numst());
         proj_matrices.getOccupations(occ);
@@ -599,7 +601,7 @@ void Rho::computeRho(LocGridOrbitals& orbitals1, LocGridOrbitals& orbitals2,
     const dist_matrix::DistMatrix<DISTMATDTYPE>& dm21,
     const dist_matrix::DistMatrix<DISTMATDTYPE>& dm22)
 {
-    assert(orbitals_type_ == 1);
+    assert(orbitals_type_ == OrbitalsType::Nonorthogonal);
 
     Mesh* mymesh        = Mesh::instance();
     const int subdivx   = mymesh->subdivx();
@@ -645,7 +647,7 @@ void Rho::computeRho(LocGridOrbitals& orbitals1, LocGridOrbitals& orbitals2,
 void Rho::computeRho(
     LocGridOrbitals& orbitals, const dist_matrix::DistMatrix<DISTMATDTYPE>& dm)
 {
-    assert(orbitals_type_ == 1);
+    assert(orbitals_type_ == OrbitalsType::Nonorthogonal);
 
     iterative_index_++;
 

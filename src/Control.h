@@ -75,6 +75,14 @@ enum class DMEigensolverType
     SP2
 };
 
+enum class OrbitalsType
+{
+    Eigenfunctions,
+    Nonorthogonal,
+    Orthonormal,
+    UNDEFINED
+};
+
 // Main control structure
 class Control
 {
@@ -162,6 +170,8 @@ private:
     short precond_type_;
 
     short it_algo_type_;
+
+    short orbital_type_;
 
     short wf_extrapolation_;
 
@@ -473,7 +483,6 @@ public:
     float tol_orb_centers_move;
     short lr_volume_calc;
 
-    short orbital_type;
     short dot_product_type;
 
     // with line minimization for electronic structure optimization
@@ -660,6 +669,21 @@ public:
 #endif
             case 2:
                 return DMEigensolverType::SP2;
+        }
+    }
+
+    OrbitalsType getOrbitalsType()
+    {
+        switch(orbital_type_)
+        {
+            case 0:
+                return OrbitalsType::Eigenfunctions;
+            case 1:
+                return OrbitalsType::Nonorthogonal;
+            case 2:
+                return OrbitalsType::Orthonormal;
+            default:
+                return OrbitalsType::UNDEFINED;
         }
     }
 

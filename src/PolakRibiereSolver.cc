@@ -468,13 +468,13 @@ int PolakRibiereSolver::solve(LocGridOrbitals& orbitals,
 
         orbitals.incrementIterativeIndex();
 
-        if (ct.orbital_type != 2)
+        if (ct.getOrbitalsType() != OrbitalsType::Orthonormal)
         {
             orbitals.normalize();
         }
 
         // recompute overlap
-        if (ct.orbital_type != 2)
+        if (ct.getOrbitalsType() != OrbitalsType::Orthonormal)
         {
             orbitals.computeGramAndInvS();
         }

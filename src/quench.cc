@@ -410,7 +410,7 @@ int MGmol::quench(LocGridOrbitals* orbitals, Ions& ions,
 
     g_kbpsi_->setup(*ions_, *orbitals);
     electrostat_->setup(ct.vh_its);
-    rho_->setup(ct.orbital_type, gids);
+    rho_->setup(ct.getOrbitalsType(), gids);
 
     LocGridOrbitals work_orbitals("Work", *orbitals);
 
