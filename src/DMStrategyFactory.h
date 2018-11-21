@@ -31,13 +31,13 @@ public:
         Control& ct = *(Control::instance());
 
         DMStrategy* dm_strategy;
-        if (ct.DM_solver() == 1)
+        if (ct.DM_solver() == DMNonLinearSolverType::MVP)
         {
             dm_strategy
                 = new MVP_DMStrategy(comm, os, ions, rho, energy, electrostat,
                     mgmol_strategy, orbitals, proj_matrices, ct.use_old_dm());
         }
-        else if (ct.DM_solver() == 2)
+        else if (ct.DM_solver() == DMNonLinearSolverType::HMVP)
         {
             if (ct.short_sighted)
             {

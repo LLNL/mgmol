@@ -59,6 +59,13 @@ enum class AtomsDynamicType
     UNDEFINED
 };
 
+enum class DMNonLinearSolverType
+{
+    Mixing,
+    MVP,
+    HMVP
+};
+
 // Main control structure
 class Control
 {
@@ -497,9 +504,6 @@ public:
 
     bool parallel_transport;
 
-    short DM_solver() const { return DM_solver_; }
-
-    //
     short use_kernel_functions;
 
     // restart info
@@ -618,6 +622,19 @@ public:
                 return AtomsDynamicType::FIRE;
             default:
                 return AtomsDynamicType::UNDEFINED;
+        }
+    }
+
+    DMNonLinearSolverType DM_solver() const
+    {
+        switch(DM_solver_)
+        {
+            case 0:
+                return DMNonLinearSolverType::Mixing;
+            case 1:
+                return DMNonLinearSolverType::MVP;
+            case 2:
+                return DMNonLinearSolverType::HMVP;
         }
     }
 
