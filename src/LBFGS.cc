@@ -14,11 +14,12 @@
 #include "Mesh.h"
 #include "ProjectedMatrices.h"
 
-LBFGS::LBFGS(LocGridOrbitals** orbitals, Ions& ions, Rho& rho,
+template <class T>
+LBFGS<T>::LBFGS(T** orbitals, Ions& ions, Rho<T>& rho,
     ConstraintSet& constraints, LocalizationRegions& lrs,
     ClusterOrbitals* local_cluster, MasksSet& masks, MasksSet& corrmasks,
     Electrostatic& electrostat, const double dt, MGmol& strategy)
-    : IonicAlgorithm(orbitals, ions, rho, constraints, lrs, masks, strategy),
+    : IonicAlgorithm<T>(orbitals, ions, rho, constraints, lrs, masks, strategy),
       orbitals_(orbitals),
       ions_(ions),
       rho_(rho),
@@ -39,22 +40,27 @@ LBFGS::LBFGS(LocGridOrbitals** orbitals, Ions& ions, Rho& rho,
     etot_i_[2] = 10000.;
 
     stepper_ = new LBFGS_IonicStepper(
-        dt, atmove_, tau0_, taup_, fion_, gid_, 20, &etot_i_[0]);
-    registerStepper(stepper_);
+        dt, IonicAlgorithm<T>::atmove_,
+            IonicAlgorithm<T>::tau0_,
+            IonicAlgorithm<T>::taup_,
+            IonicAlgorithm<T>::fion_,
+            IonicAlgorithm<T>::gid_, 20, &etot_i_[0]);
+    IonicAlgorithm<T>::registerStepper(stepper_);
 
     ref_masks_     = new MasksSet(lrs, false, ct.getMGlevels());
     ref_corrmasks_ = new MasksSet(lrs, true, 0);
 
     vh_init_ = new pb::GridFunc<POTDTYPE>(electrostat_.getVh());
 
-    ref_orbitals_ = new LocGridOrbitals("LBFGS_ref", mygrid, mymesh->subdivx(), ct.numst,
+    ref_orbitals_ = new T("LBFGS_ref", mygrid, mymesh->subdivx(), ct.numst,
         ct.bc, (*orbitals_)->getProjMatrices(), &ref_lrs_, ref_masks_,
         ref_corrmasks_, local_cluster_);
 
     ref_orbitals_->assign(**orbitals_);
 }
 
-LBFGS::~LBFGS()
+template <class T>
+LBFGS<T>::~LBFGS()
 {
     delete vh_init_;
     delete ref_masks_;
@@ -63,7 +69,8 @@ LBFGS::~LBFGS()
     delete ref_orbitals_;
 }
 
-int LBFGS::quenchElectrons(const int itmax, double& etot)
+template <class T>
+int LBFGS<T>::quenchElectrons(const int itmax, double& etot)
 {
     etot_i_[0] = etot_i_[1];
     etot_i_[1] = etot_i_[2];
@@ -73,7 +80,8 @@ int LBFGS::quenchElectrons(const int itmax, double& etot)
     return ret;
 }
 
-void LBFGS::updateRefs()
+template <class T>
+void LBFGS<T>::updateRefs()
 {
     Control& ct = *(Control::instance());
     if (!stepper_->check_last_step_accepted())
@@ -101,7 +109,8 @@ void LBFGS::updateRefs()
     }
 }
 
-void LBFGS::setQuenchTol() const
+template <class T>
+void LBFGS<T>::setQuenchTol() const
 {
     Control& ct = *(Control::instance());
     ct.conv_tol = 0.1 * stepper_->etol();
@@ -111,15 +120,19 @@ void LBFGS::setQuenchTol() const
                          << ct.conv_tol << endl;
 }
 
-void LBFGS::updatePotAndMasks()
+template <class T>
+void LBFGS<T>::updatePotAndMasks()
 {
     if (!stepper_->check_last_step_accepted())
         electrostat_.setupInitialVh(*vh_init_);
 
-    IonicAlgorithm::updatePotAndMasks();
+    IonicAlgorithm<T>::updatePotAndMasks();
 }
 
-bool LBFGS::lbfgsLastStepNotAccepted() const
+template <class T>
+bool LBFGS<T>::lbfgsLastStepNotAccepted() const
 {
     return !stepper_->check_last_step_accepted();
 }
+
+template class LBFGS<LocGridOrbitals>;

@@ -83,7 +83,7 @@ int MGmol::getMLWF(MLWFTransform& mlwft, LocGridOrbitals& orbitals,
     for (int i = 0; i < 6; i++)
         sincos[i].resize(numst * numst);
 
-    SinCosOps::compute(work_orbitals, sincos);
+    SinCosOps<LocGridOrbitals>::compute(work_orbitals, sincos);
 
     mlwft.distributeColumnsR(sincos);
     // for(int i=0;i<6;i++)
@@ -138,7 +138,7 @@ int MGmol::getMLWF2states(const int st1, const int st2,
     for (int i = 0; i < 6; i++)
         sincos[i].resize(4);
 
-    SinCosOps::compute2states(work_orbitals, sincos, st1, st2);
+    SinCosOps<LocGridOrbitals>::compute2states(work_orbitals, sincos, st1, st2);
 
     for (int i = 0; i < 6; i++)
         distributeColumns(sincos[i], mlwft.r(i));
@@ -263,11 +263,11 @@ int MGmol::get_NOLMO(NOLMOTransform& noot, LocGridOrbitals& orbitals,
 
     for (short d = 0; d < 3; d++)
     {
-        SinCosOps::compute1D(work_orbitals, sincos, d);
+        SinCosOps<LocGridOrbitals>::compute1D(work_orbitals, sincos, d);
         for (short i = 0; i < 2; i++)
             distributeColumns(sincos[i], noot.r(i + 2 * d));
 
-        SinCosOps::computeSquare1D(work_orbitals, sincos, d);
+        SinCosOps<LocGridOrbitals>::computeSquare1D(work_orbitals, sincos, d);
         for (short i = 0; i < 2; i++)
             distributeColumns(sincos[i], noot.b(i + 2 * d));
     }

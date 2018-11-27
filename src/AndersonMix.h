@@ -6,14 +6,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-////////////////////////////////////////////////////////////////////////////////
-//
-// AndersonMix.h
-//
-////////////////////////////////////////////////////////////////////////////////
-// $Id$
-#ifndef ANDERSON_MIX
-#define ANDERSON_MIX
+#ifndef MGMOL_ANDERSON_MIX
+#define MGMOL_ANDERSON_MIX
 
 #include "Mixing.h"
 #include "Timer.h"

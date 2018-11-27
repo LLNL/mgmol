@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #include "Electrostatic.h"
 #include "Control.h"
 #include "GridFactory.h"
@@ -21,7 +20,6 @@
 #include "ShiftedHartree.h"
 #include "mputils.h"
 
-// pb
 #include "GridFunc.h"
 #include "Laph2.h"
 #include "Laph4.h"
@@ -186,7 +184,7 @@ void Electrostatic::setupInitialVh(const pb::GridFunc<POTDTYPE>& vh_init)
     if (iterative_index_ == -1) iterative_index_ = 0;
 }
 
-void Electrostatic::computeVhRho(Rho& rho)
+void Electrostatic::computeVhRho(Rho<LocGridOrbitals>& rho)
 {
     assert(grhoc_ != NULL);
 
@@ -435,14 +433,15 @@ void Electrostatic::setup(const short max_sweeps)
 }
 
 void Electrostatic::computeVh(const pb::GridFunc<POTDTYPE>& vh_init,
-    const Ions& ions, Rho& rho, Potentials& pot)
+    const Ions& ions, Rho<LocGridOrbitals>& rho, Potentials& pot)
 {
     poisson_solver_->set_vh(vh_init);
 
     computeVh(ions, rho, pot);
 }
 
-void Electrostatic::computeVh(const Ions& ions, Rho& rho, Potentials& pot)
+void Electrostatic::computeVh(const Ions& ions, Rho<LocGridOrbitals>& rho,
+                              Potentials& pot)
 {
     solve_tm_.start();
 #ifdef PRINT_OPERATIONS

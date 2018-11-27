@@ -308,7 +308,8 @@ void LocalizationRegions::resetOldCenters()
     num_extrapolations_ = 0;
 }
 
-float LocalizationRegions::move(const SpreadsAndCenters& sc, const bool flag)
+float LocalizationRegions::move(const SpreadsAndCenters<LocGridOrbitals>& sc,
+                                const bool flag)
 {
     vector<Vector3D> centers;
     sc.computeCenters(centers);
@@ -342,7 +343,7 @@ float LocalizationRegions::getMeanRadius()
 }
 
 float LocalizationRegions::updateRadii(
-    const SpreadsAndCenters& sc, const float ratio)
+    const SpreadsAndCenters<LocGridOrbitals>& sc, const float ratio)
 {
     for (vector<LRData>::iterator it = overlap_regions_.begin();
          it != overlap_regions_.end(); ++it)
@@ -354,7 +355,8 @@ float LocalizationRegions::updateRadii(
     return getMeanRadius();
 }
 
-float LocalizationRegions::updateRadiiConstVol(const SpreadsAndCenters& sc)
+float LocalizationRegions::updateRadiiConstVol(
+    const SpreadsAndCenters<LocGridOrbitals>& sc)
 {
     assert(volume_ > 0.);
 

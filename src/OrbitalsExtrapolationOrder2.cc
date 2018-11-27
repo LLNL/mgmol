@@ -14,8 +14,9 @@
 
 #define EXTRAPOLATE_H 1
 
-void OrbitalsExtrapolationOrder2::extrapolate_orbitals(
-    LocGridOrbitals** orbitals, LocGridOrbitals* new_orbitals)
+template <class T>
+void OrbitalsExtrapolationOrder2<T>::extrapolate_orbitals(
+    T** orbitals, T* new_orbitals)
 {
     Control& ct = *(Control::instance());
 
@@ -37,8 +38,9 @@ void OrbitalsExtrapolationOrder2::extrapolate_orbitals(
     extrapolated_H_ = false;
     // do the extrapolation if previous orbitals exist (not at first step)
     {
-        if (orbitals_minus1_ != 0)
+        if (OrbitalsExtrapolation<T>::orbitals_minus1_ != 0)
         {
+            T* orbitals_minus1 = OrbitalsExtrapolation<T>::orbitals_minus1_;
             if (ct.verbose > 1 && onpe0)
                 (*MPIdata::sout) << "Extrapolate orbitals order 2..." << endl;
 
@@ -48,22 +50,22 @@ void OrbitalsExtrapolationOrder2::extrapolate_orbitals(
                 dist_matrix::DistMatrix<DISTMATDTYPE> matQ(
                     "Q", ct.numst, ct.numst);
 #if 0
-                LocGridOrbitals tmp(*orbitals_minus1_);
+                T tmp(*orbitals_minus1_);
                 tmp.axpy(-1.,*new_orbitals);
                 tmp.computeGram(matQ);
                 double normQ=matQ.trace();
                 if( onpe0 )
                     (*MPIdata::sout)<<"||Phi_old-Phi_new|| before Procrustes = "<<normQ<<endl;
 #endif
-                orbitals_minus1_->computeGram(*new_orbitals, matQ);
+                orbitals_minus1->computeGram(*new_orbitals, matQ);
 
                 dist_matrix::DistMatrix<DISTMATDTYPE> yyt(
                     "yyt", ct.numst, ct.numst);
                 getProcrustesTransform(matQ, yyt);
 
-                orbitals_minus1_->multiply_by_matrix(matQ);
-                orbitals_minus1_->axpy(-1., *new_orbitals);
-                orbitals_minus1_->multiply_by_matrix(yyt);
+                orbitals_minus1->multiply_by_matrix(matQ);
+                orbitals_minus1->axpy(-1., *new_orbitals);
+                orbitals_minus1->multiply_by_matrix(yyt);
 
 #if EXTRAPOLATE_H
                 if (ct.verbose > 2 && onpe0)
@@ -86,16 +88,16 @@ void OrbitalsExtrapolationOrder2::extrapolate_orbitals(
 
                 new_orbitals->scal(2.);
             }
-            new_orbitals->axpy(-1., *orbitals_minus1_);
+            new_orbitals->axpy(-1., *orbitals_minus1);
 
-            delete orbitals_minus1_;
+            delete orbitals_minus1;
         }
 
         // save data for next extrapolation
         if (ct.verbose > 1 && onpe0)
             (*MPIdata::sout)
                 << "Set orbitals_minus1_ to values of orbitals" << endl;
-        orbitals_minus1_ = *orbitals;
+        OrbitalsExtrapolation<T>::orbitals_minus1_ = *orbitals;
 
         if (use_dense_proj_mat)
         {
@@ -131,3 +133,5 @@ void OrbitalsExtrapolationOrder2::extrapolate_orbitals(
         (*orbitals)->orthonormalizeLoewdin();
     }
 }
+
+template class OrbitalsExtrapolationOrder2<LocGridOrbitals>;

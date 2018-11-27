@@ -6,12 +6,10 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
-#ifndef KBPROJECTOR_H
-#define KBPROJECTOR_H
+#ifndef MGMOL_KBPROJECTOR_H
+#define MGMOL_KBPROJECTOR_H
 
 #include "GridFunc.h"
-#include "LocGridOrbitals.h"
 #include "Mesh.h"
 #include "global.h"
 #include "mputils.h"
@@ -192,7 +190,7 @@ public:
     void axpySKet(const short iloc, const double alpha, T* const) const;
     template <typename T>
     void axpyKet(
-        const short iloc, const vector<double>& alpha, T* const dst) const;
+        const short iloc, const std::vector<double>& alpha, T* const dst) const;
 
     bool onlyOneProjector() const
     {

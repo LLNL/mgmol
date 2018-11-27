@@ -7,7 +7,6 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "DFTsolver.h"
-#include "Energy.h"
 #include "FIRE.h"
 #include "LBFGS.h"
 #include "MGmol.h"
@@ -23,14 +22,16 @@ void MGmol::geomOptimSetup()
     switch (ct.AtomsDynamic())
     {
         case AtomsDynamicType::LBFGS:
-            geom_optimizer_ = new LBFGS(&current_orbitals_, *ions_, *rho_,
+            geom_optimizer_ = new LBFGS<LocGridOrbitals>(&current_orbitals_,
+                *ions_, *rho_,
                 *constraints_, *lrs_, local_cluster_, *currentMasks_,
                 *corrMasks_, *electrostat_, ct.dt, *this);
             break;
 
         case AtomsDynamicType::FIRE:
             geom_optimizer_
-                = new FIRE(&current_orbitals_, *ions_, *rho_, *constraints_,
+                = new FIRE<LocGridOrbitals>(&current_orbitals_, *ions_, *rho_,
+                    *constraints_,
                     *lrs_, *currentMasks_, *electrostat_, ct.dt, *this);
             break;
 
@@ -39,7 +40,7 @@ void MGmol::geomOptimSetup()
                              << " is an invalid method" << endl;
             return;
     }
-    DFTsolver::resetItCount();
+    DFTsolver<LocGridOrbitals>::resetItCount();
 
     geom_optimizer_->init(h5f_file_);
 
@@ -51,7 +52,7 @@ void MGmol::geomOptimSetup()
     }
     else
     {
-        DFTsolver::setItCountLarge();
+        DFTsolver<LocGridOrbitals>::setItCountLarge();
     }
 }
 

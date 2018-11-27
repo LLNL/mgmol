@@ -13,8 +13,8 @@
 #include "Vector3D.h"
 
 #include <vector>
-class LocGridOrbitals;
 
+template <class T>
 class SpreadsAndCenters
 {
 private:
@@ -130,22 +130,22 @@ public:
     const std::vector<int>& getGids() const { return gids_; }
 
     void computePositionMatrix(
-        LocGridOrbitals& orbitals, LocGridOrbitals& work_orbitals);
-    void computePositionMatrix(const LocGridOrbitals& orbitals);
+        T& orbitals, T& work_orbitals);
+    void computePositionMatrix(const T& orbitals);
 
-    void computeSinCos(const LocGridOrbitals& orbitals);
-    void computeSinCosSquare(const LocGridOrbitals& orbitals);
-    void computeSinCosSquare1D(const LocGridOrbitals& orbitals, const int dir);
+    void computeSinCos(const T& orbitals);
+    void computeSinCosSquare(const T& orbitals);
+    void computeSinCosSquare1D(const T& orbitals, const int dir);
     void computeSinCos2states(
-        const LocGridOrbitals& orbitals, const int st1, const int st2);
+        const T& orbitals, const int st1, const int st2);
     void computeSinCosDiag2states(
-        const LocGridOrbitals& orbitals, const int st1, const int st2);
+        const T& orbitals, const int st1, const int st2);
 
-    void computeSinCos1D(const LocGridOrbitals& orbitals, const int dir);
+    void computeSinCos1D(const T& orbitals, const int dir);
     void computeSinCos(
-        const LocGridOrbitals& orbitals1, const LocGridOrbitals& orbitals2);
+        const T& orbitals1, const T& orbitals2);
     void computeSinCosDiag(
-        const LocGridOrbitals& orbitals, const bool normalized_functions);
+        const T& orbitals, const bool normalized_functions);
 };
 
 #endif

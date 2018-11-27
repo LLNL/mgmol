@@ -6,11 +6,11 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef _GRASSMANLINEMINIMIZATION_H_
-#define _GRASSMANLINEMINIMIZATION_H_
+#ifndef MGMOL_GRASSMANLINEMINIMIZATION_H
+#define MGMOL_GRASSMANLINEMINIMIZATION_H
 
+#include "Hamiltonian.h"
 #include "Ions.h"
-#include "LocGridOrbitals.h"
 #include "OrbitalsStepper.h"
 #include "ProjectedMatricesInterface.h"
 
@@ -18,10 +18,11 @@
 
 class MGmol;
 
-class GrassmanLineMinimization : public OrbitalsStepper
+template <class T>
+class GrassmanLineMinimization : public OrbitalsStepper<T>
 {
 protected:
-    Hamiltonian* hamiltonian_;
+    Hamiltonian<T>* hamiltonian_;
     ProjectedMatricesInterface* proj_matrices_;
     MGmol* mgmol_strategy_;
     std::ostream& os_;
@@ -33,23 +34,23 @@ protected:
     Ions* ptr2ions_;
 
     // Pointers to residual and search direction
-    LocGridOrbitals* new_grad_;
-    LocGridOrbitals* new_pcgrad_;
+    T* new_grad_;
+    T* new_pcgrad_;
 
-    LocGridOrbitals* grad_;
-    LocGridOrbitals* pcgrad_;
-    LocGridOrbitals* sdir_;
+    T* grad_;
+    T* pcgrad_;
+    T* sdir_;
 
     static Timer line_min_tm_;
     static Timer nl_update_tm_;
     static Timer comp_res_tm_;
     static Timer update_states_tm_;
 
-    void update_states(LocGridOrbitals& orbitals, LocGridOrbitals& res,
-        LocGridOrbitals& work_orbitals, const double precond_factor);
+    void update_states(T& orbitals, T& res,
+        T& work_orbitals, const double precond_factor);
 
 public:
-    GrassmanLineMinimization(Hamiltonian* hamiltonian,
+    GrassmanLineMinimization(Hamiltonian<T>* hamiltonian,
         ProjectedMatricesInterface* proj_matrices, MGmol* mgmol_strategy,
         Ions& ions, std::ostream& os)
         : hamiltonian_(hamiltonian),
@@ -58,7 +59,6 @@ public:
           os_(os)
     {
         ptr2ions_ = &ions;
-        ;
         conjugate_ = false;
     }
 
@@ -71,17 +71,17 @@ public:
         delete sdir_;
     }
 
-    void setup(LocGridOrbitals&){};
+    void setup(T&){};
 
-    int update(LocGridOrbitals& orbitals, Ions& ions,
+    int update(T& orbitals, Ions& ions,
         const double precond_factor, const bool orthof,
-        LocGridOrbitals& work_orbitals, const bool accelerate,
+        T& work_orbitals, const bool accelerate,
         const bool print_res, const double atol);
 
     virtual void conjugate()                                  = 0;
-    virtual double computeStepSize(LocGridOrbitals& orbitals) = 0;
+    virtual double computeStepSize(T& orbitals) = 0;
     virtual void parallelTransportUpdate(
-        const double lambda, LocGridOrbitals& orbitals)
+        const double lambda, T& orbitals)
         = 0;
     static void printTimers(ostream& os);
 };

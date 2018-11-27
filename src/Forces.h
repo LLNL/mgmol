@@ -6,9 +6,10 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef FORCES_Header
-#define FORCES_Header
+#ifndef MGMOL_FORCES_H
+#define MGMOL_FORCES_H
 
+#include "Hamiltonian.h"
 #include "Rho.h"
 #include "global.h"
 
@@ -18,14 +19,13 @@
 class Ion;
 class Ions;
 class LocGridOrbitals;
-class Hamiltonian;
 class ProjectedMatricesInterface;
 
 class Forces
 {
 private:
-    Hamiltonian* hamiltonian_;
-    Rho* rho_;
+    Hamiltonian<LocGridOrbitals>* hamiltonian_;
+    Rho<LocGridOrbitals>* rho_;
     ProjectedMatricesInterface* proj_matrices_;
 
     static Timer lforce_tm_;
@@ -44,7 +44,7 @@ private:
     int get_var(Ion& ion, int* pvec, double*** var_pot, double*** var_charge);
 
 public:
-    Forces(Hamiltonian* hamiltonian, Rho* rho,
+    Forces(Hamiltonian<LocGridOrbitals>* hamiltonian, Rho<LocGridOrbitals>* rho,
         ProjectedMatricesInterface* proj_matrices)
         : hamiltonian_(hamiltonian), rho_(rho), proj_matrices_(proj_matrices)
     {

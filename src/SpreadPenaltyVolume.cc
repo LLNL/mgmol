@@ -6,12 +6,13 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#include "SpreadPenaltyVolume.h"
 #include "LocGridOrbitals.h"
+#include "SpreadPenaltyVolume.h"
 #include "Mesh.h"
 
-void SpreadPenaltyVolume::addResidual(
-    LocGridOrbitals& phi, LocGridOrbitals& res)
+template <class T>
+void SpreadPenaltyVolume<T>::addResidual(
+    T& phi, T& res)
 {
     Control& ct     = *(Control::instance());
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
@@ -131,10 +132,11 @@ void SpreadPenaltyVolume::addResidual(
 
 // add to current residual "res" component proportional to gradient of penalty
 // spread functional
-void SpreadPenaltyVolume::computeAndAddResidualSpreadPenalty(
+template <class T>
+void SpreadPenaltyVolume<T>::computeAndAddResidualSpreadPenalty(
     const vector<float>& sigma, const float eta,
     const vector<Vector3D>& centers, const vector<int>& gids,
-    LocGridOrbitals& orbitals, LocGridOrbitals& res)
+    T& orbitals, T& res)
 {
     assert(gids.size() == centers.size());
 
@@ -267,7 +269,8 @@ void SpreadPenaltyVolume::computeAndAddResidualSpreadPenalty(
     }
 }
 
-double SpreadPenaltyVolume::evaluateEnergy(const LocGridOrbitals& phi)
+template <class T>
+double SpreadPenaltyVolume<T>::evaluateEnergy(const T& phi)
 {
     assert(spreadf_ != 0);
     assert(spread_target_ >= 0.);
@@ -299,3 +302,6 @@ double SpreadPenaltyVolume::evaluateEnergy(const LocGridOrbitals& phi)
     else
         return 0.;
 }
+
+template class SpreadPenaltyVolume<LocGridOrbitals>;
+

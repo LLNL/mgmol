@@ -9,26 +9,20 @@
 #include "ABPG.h"
 #include "AndersonMix.h"
 #include "Control.h"
-#include "Hamiltonian.h"
 #include "Ions.h"
 #include "MGmol.h"
 #include "Potentials.h"
 #include "ProjectedMatricesInterface.h"
+#include "LocGridOrbitals.h"
 
-bool ABPG::pbset_ = false;
-
-Timer ABPG::abpg_tm_("abpg_line_min");
-Timer ABPG::abpg_nl_update_tm_("abpg_nl_update");
-Timer ABPG::comp_res_tm_("abpg_comp_residuals_st");
-Timer ABPG::update_states_tm_("abpg_update_states");
-
-void ABPG::setup(LocGridOrbitals& orbitals)
+template <class T>
+void ABPG<T>::setup(T& orbitals)
 {
     Control& ct = *(Control::instance());
 
     if (ct.wf_dyn == 1) // use Anderson extrapolation
     {
-        wf_mix_ = new AndersonMix<LocGridOrbitals>(
+        wf_mix_ = new AndersonMix<T>(
             ct.wf_m, ct.betaAnderson, orbitals,
             (ct.getOrbitalsType() == OrbitalsType::Orthonormal));
     }
@@ -38,9 +32,10 @@ void ABPG::setup(LocGridOrbitals& orbitals)
 // Performs a single wave functions update step.
 //
 // orthof=true: wants orthonormalized updated wave functions
-int ABPG::update(LocGridOrbitals& orbitals, Ions& ions,
+template <class T>
+int ABPG<T>::update(T& orbitals, Ions& ions,
     const double precond_factor, const bool orthof,
-    LocGridOrbitals& work_orbitals, const bool accelerate, const bool print_res,
+    T& work_orbitals, const bool accelerate, const bool print_res,
     const double atol)
 {
     abpg_nl_update_tm_.start();
@@ -48,8 +43,8 @@ int ABPG::update(LocGridOrbitals& orbitals, Ions& ions,
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 2) os_ << "ABPG::update()..." << endl;
 
-    // temporary LocGridOrbitals to hold residual
-    LocGridOrbitals res("Residual", orbitals, false);
+    // temporary Orbitals to hold residual
+    T res("Residual", orbitals, false);
 
     const bool check_res = (atol > 0.);
     double normRes       = mgmol_strategy_->computeResidual(
@@ -115,8 +110,9 @@ int ABPG::update(LocGridOrbitals& orbitals, Ions& ions,
 
 //////////////////////////////////////////////////////////////////////////////
 // Update orbitals using MG preconditioning and Anderson extrapolation
-void ABPG::update_states(LocGridOrbitals& orbitals, LocGridOrbitals& res,
-    LocGridOrbitals& work_orbitals, const double precond_factor,
+template <class T>
+void ABPG<T>::update_states(T& orbitals, T& res,
+    T& work_orbitals, const double precond_factor,
     const bool accelerate)
 {
     assert(orbitals.getIterativeIndex() >= 0);
@@ -185,10 +181,14 @@ void ABPG::update_states(LocGridOrbitals& orbitals, LocGridOrbitals& res,
     assert(orbitals.getIterativeIndex() >= 0);
 }
 
-void ABPG::printTimers(ostream& os)
+template <class T>
+void ABPG<T>::printTimers(ostream& os)
 {
     abpg_tm_.print(os);
     abpg_nl_update_tm_.print(os);
     comp_res_tm_.print(os);
     update_states_tm_.print(os);
 }
+
+template class ABPG<LocGridOrbitals>;
+

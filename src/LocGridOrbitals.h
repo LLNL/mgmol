@@ -182,7 +182,7 @@ protected:
     std::vector<int> local_gids_;
 
 public:
-    friend class SinCosOps;
+    friend class SinCosOps<LocGridOrbitals>;
 
     double norm() const;
 

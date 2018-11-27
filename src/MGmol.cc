@@ -104,8 +104,6 @@ extern Timer quench_tm;
 extern Timer ions_setupInteractingIons_tm;
 extern Timer ions_setup_tm;
 extern Timer updateCenters_tm;
-// extern Timer nonOrthoRhoKernel_tm;
-// extern Timer nonOrthoRhoKernelDiagonalBlock_tm;
 
 Timer MGmol::total_tm_("MGmol::total");
 Timer MGmol::setup_tm_("MGmol::setup");
@@ -400,14 +398,14 @@ int MGmol::initial()
     if (ct.verbose > 0) printWithTimeStamp("Initialize XC functional...", os_);
     if (ct.xctype == 0)
     {
-        xcongrid_ = new LDAonGrid(*rho_, pot);
+        xcongrid_ = new LDAonGrid<LocGridOrbitals>(*rho_, pot);
     }
     else if (ct.xctype == 2)
     {
         if (mmpi.nspin() > 1)
-            xcongrid_ = new PBEonGridSpin(*rho_, pot);
+            xcongrid_ = new PBEonGridSpin<LocGridOrbitals>(*rho_, pot);
         else
-            xcongrid_ = new PBEonGrid(*rho_, pot);
+            xcongrid_ = new PBEonGrid<LocGridOrbitals>(*rho_, pot);
     }
     else
     {
@@ -457,7 +455,7 @@ int MGmol::initial()
     {
         Vector3D origin(mygrid.origin(0), mygrid.origin(1), mygrid.origin(2));
         Vector3D ll(mygrid.ll(0), mygrid.ll(1), mygrid.ll(2));
-        spreadf_ = new SpreadsAndCenters(origin, ll);
+        spreadf_ = new SpreadsAndCenters<LocGridOrbitals>(origin, ll);
     }
 
     bool energy_with_spread_penalty = false;
@@ -465,25 +463,26 @@ int MGmol::initial()
     {
         if (ct.isSpreadFunctionalVolume())
         {
-            spread_penalty_ = new SpreadPenaltyVolume(spreadf_,
+            spread_penalty_ = new SpreadPenaltyVolume<LocGridOrbitals>(spreadf_,
                 ct.spreadPenaltyTarget(), ct.spreadPenaltyAlphaFactor(),
                 ct.spreadPenaltyDampingFactor());
         }
         else if (ct.isSpreadFunctionalEnergy())
         {
             energy_with_spread_penalty = true;
-            spread_penalty_            = new EnergySpreadPenalty(spreadf_,
-                ct.spreadPenaltyTarget(), ct.spreadPenaltyAlphaFactor());
+            spread_penalty_            =
+                new EnergySpreadPenalty<LocGridOrbitals>(spreadf_,
+                    ct.spreadPenaltyTarget(), ct.spreadPenaltyAlphaFactor());
         }
         else
-            spread_penalty_ = new SpreadPenalty(spreadf_,
+            spread_penalty_ = new SpreadPenalty<LocGridOrbitals>(spreadf_,
                 ct.spreadPenaltyTarget(), ct.spreadPenaltyAlphaFactor(),
                 ct.spreadPenaltyDampingFactor());
     }
 
-    SpreadPenaltyInterface* spread_penalty
+    SpreadPenaltyInterface<LocGridOrbitals>* spread_penalty
         = energy_with_spread_penalty ? spread_penalty_ : 0;
-    energy_ = new Energy(
+    energy_ = new Energy<LocGridOrbitals>(
         mygrid, *ions_, pot, *electrostat_, *rho_, *xcongrid_, spread_penalty);
 
     if (ct.verbose > 0) printWithTimeStamp("Setup matrices...", os_);
@@ -1153,7 +1152,7 @@ void MGmol::printTimers()
     pb::GridFuncVectorInterface::printTimers(os_);
     pb::FDoperInterface::printTimers(os_);
     LocGridOrbitals::printTimers(os_);
-    SinCosOps::printTimers(os_);
+    SinCosOps<LocGridOrbitals>::printTimers(os_);
     GridMask::printTimers(os_);
 
     sgemm_tm.print(os_);
@@ -1183,11 +1182,9 @@ void MGmol::printTimers()
     g_kbpsi_->printTimers(os_);
 
     get_kbpsi_tm.print(os_);
-    Hamiltonian::apply_Hloc_tm().print(os_);
+    Hamiltonian<LocGridOrbitals>::apply_Hloc_tm().print(os_);
     computeHij_tm_.print(os_);
-    Rho::printTimers(os_);
-    // nonOrthoRhoKernel_tm.print(os_);
-    // nonOrthoRhoKernelDiagonalBlock_tm.print(os_);
+    Rho<LocGridOrbitals>::printTimers(os_);
     XConGrid::get_xc_tm_.print(os_);
     get_Hpsi_and_Hij_tm_.print(os_);
     get_res_tm_.print(os_);
@@ -1195,7 +1192,7 @@ void MGmol::printTimers()
     vnlpsi_tm.print(os_);
     get_MLWF_tm.print(os_);
     get_NOLMO_tm.print(os_);
-    Energy::eval_te_tm().print(os_);
+    Energy<LocGridOrbitals>::eval_te_tm().print(os_);
     Electrostatic::solve_tm().print(os_);
     PoissonInterface::printTimers(os_);
     AndersonMix<LocGridOrbitals>::update_tm().print(os_);
@@ -1213,9 +1210,9 @@ void MGmol::printTimers()
     local_cluster_->printTimers(os_);
     forces_->printTimers(os_);
     if (ct.OuterSolver() == OuterSolverType::ABPG)
-        ABPG::printTimers(os_);
+        ABPG<LocGridOrbitals>::printTimers(os_);
     else if (ct.OuterSolver() == OuterSolverType::NLCG)
-        GrassmanLineMinimization::printTimers(os_);
+        GrassmanLineMinimization<LocGridOrbitals>::printTimers(os_);
     adaptLR_tm_.print(os_);
     updateCenters_tm.print(os_);
     md_iterations_tm.print(os_);
@@ -1325,7 +1322,7 @@ void MGmol::setup()
         = new Electrostatic(ct.lap_type, ct.bcPoisson, ct.screening_const);
     electrostat_->setup(ct.vh_init);
 
-    rho_ = new Rho();
+    rho_ = new Rho<LocGridOrbitals>();
     rho_->setVerbosityLevel(ct.verbose);
 
     int ierr = initial();

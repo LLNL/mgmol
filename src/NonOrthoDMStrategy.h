@@ -6,22 +6,22 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef NONORTHODMSTRATEGY_H
-#define NONORTHODMSTRATEGY_H
+#ifndef MGMOL_NONORTHODMSTRATEGY_H
+#define MGMOL_NONORTHODMSTRATEGY_H
 
 #include "DMStrategy.h"
-class ProjectedMatricesInterface;
-class LocGridOrbitals;
+#include "ProjectedMatricesInterface.h"
 
+template <class T>
 class NonOrthoDMStrategy : public DMStrategy
 {
 private:
-    LocGridOrbitals* orbitals_;
+    T* orbitals_;
     ProjectedMatricesInterface* proj_matrices_;
     const double mix_;
 
 public:
-    NonOrthoDMStrategy(LocGridOrbitals* orbitals,
+    NonOrthoDMStrategy(T* orbitals,
         ProjectedMatricesInterface* proj_matrices, const double mix);
 
     void initialize();
@@ -33,7 +33,10 @@ public:
 
     void dressDM();
 
-    void reset();
+    void reset()
+    {
+        proj_matrices_->resetDM();
+    }
 };
 
 #endif

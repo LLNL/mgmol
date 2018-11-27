@@ -18,7 +18,6 @@
 #include "Potentials.h"
 #include "ProjectedMatrices.h"
 #include "ProjectedMatricesSparse.h"
-#include "Rho.h"
 #include "tools.h"
 
 #include <iomanip>
@@ -36,7 +35,7 @@ Timer HamiltonianMVPSolver<T1, T2, T3>::target_tm_(
 
 template <class T1, class T2, class T3>
 HamiltonianMVPSolver<T1, T2, T3>::HamiltonianMVPSolver(MPI_Comm comm,
-    ostream& os, Ions& ions, Rho* rho, Energy* energy,
+    ostream& os, Ions& ions, Rho<LocGridOrbitals>* rho, Energy<LocGridOrbitals>* energy,
     Electrostatic* electrostat, MGmol* mgmol_strategy, const int numst,
     const double kbT, const int nel, const vector<vector<int>>& global_indexes,
     const short n_inner_steps, const T1& hinit,
@@ -75,7 +74,8 @@ void HamiltonianMVPSolver<T1, T2, T3>::reset()
 
 // update density matrix in N x N space
 template <class T1, class T2, class T3>
-int HamiltonianMVPSolver<T1, T2, T3>::solve(LocGridOrbitals& orbitals)
+template <typename T>
+int HamiltonianMVPSolver<T1, T2, T3>::solve(T& orbitals)
 {
     Control& ct = *(Control::instance());
 
@@ -112,10 +112,6 @@ int HamiltonianMVPSolver<T1, T2, T3>::solve(LocGridOrbitals& orbitals)
     orbitals.setDataWithGhosts();
 
     // compute linear component of H
-    //    T2  h11("h11", numst_, numst_,comm_,
-    //                                 mgmol_strategy_->getRemoteTasksDistMatrix(),
-    //                                 sparse_distmatrix_nb_partitions);
-
     T2 h11("h11", numst_, comm_);
 
     kbpsi.computeAll(ions_, orbitals);
@@ -165,7 +161,6 @@ int HamiltonianMVPSolver<T1, T2, T3>::solve(LocGridOrbitals& orbitals)
         //
         // compute energy at end for new H
         //
-
         T1 htarget(projmatrices->getH());
 
         iterative_index++;
@@ -355,11 +350,18 @@ void HamiltonianMVPSolver<T1, T2, T3>::printTimers(ostream& os)
     }
 }
 
+
+//explicit instantiation of class
 template class HamiltonianMVPSolver<dist_matrix::DistMatrix<DISTMATDTYPE>,
     dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE>,
     ProjectedMatrices>;
 template class HamiltonianMVPSolver<VariableSizeMatrix<sparserow>,
     VariableSizeMatrix<sparserow>, ProjectedMatricesSparse>;
-// template int HamiltonianMVPSolver< dist_matrix::DistMatrix<DISTMATDTYPE>,
-// dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE> >::solve<
-// ProjectedMatrices * >(LocGridOrbitals& orbitals);
+
+//explicit instantiation of member function solve()
+template int HamiltonianMVPSolver<dist_matrix::DistMatrix<DISTMATDTYPE>,
+    dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE>,
+    ProjectedMatrices>::solve(LocGridOrbitals& orbitals);
+template int HamiltonianMVPSolver<VariableSizeMatrix<sparserow>,
+    VariableSizeMatrix<sparserow>, ProjectedMatricesSparse>::solve(LocGridOrbitals& orbitals);
+

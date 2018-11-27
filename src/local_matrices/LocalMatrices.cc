@@ -262,9 +262,6 @@ void LocalMatrices<T>::fillDistMatrix(
     dist_matrix::DistMatrix<DISTMATDTYPE>& dst,
     const vector<vector<int>>& global_indexes, const double tol) const
 {
-    // if(onpe0)(*MPIdata::sout)<<"LocGridOrbitals::add_matrix_elements() for
-    // object "
-    //             <<mat.name()<<endl;
     fill_dist_matrix_tm_.start();
 
 #ifdef USE_MPI
@@ -279,7 +276,6 @@ void LocalMatrices<T>::fillDistMatrix(
 
     fillSparseDistMatrix(sm, global_indexes, tol);
 
-    // if(onpe0)(*MPIdata::sout)<<"LocGridOrbitals::add_matrix_elements()"<<endl;
     sm.parallelSumToDistMatrix();
 
     fill_dist_matrix_tm_.stop();

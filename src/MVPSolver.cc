@@ -22,8 +22,10 @@
 
 #include <iomanip>
 
-Timer MVPSolver::solve_tm_("MVPSolver::solve");
-Timer MVPSolver::target_tm_("MVPSolver::target");
+template <class T>
+Timer MVPSolver<T>::solve_tm_("MVPSolver::solve");
+template <class T>
+Timer MVPSolver<T>::target_tm_("MVPSolver::target");
 
 static int sparse_distmatrix_nb_partitions = 128;
 
@@ -37,8 +39,9 @@ double evalEntropyMVP(ProjectedMatricesInterface* projmatrices,
     return ts;
 }
 
-MVPSolver::MVPSolver(MPI_Comm comm, ostream& os, Ions& ions, Rho* rho,
-    Energy* energy, Electrostatic* electrostat, MGmol* mgmol_strategy,
+template <class T>
+MVPSolver<T>::MVPSolver(MPI_Comm comm, ostream& os, Ions& ions, Rho<T>* rho,
+    Energy<T>* energy, Electrostatic* electrostat, MGmol* mgmol_strategy,
     const int numst, const double kbT, const int nel,
     const vector<vector<int>>& global_indexes, const short n_inner_steps,
     const bool use_old_dm)
@@ -64,13 +67,15 @@ MVPSolver::MVPSolver(MPI_Comm comm, ostream& os, Ions& ions, Rho* rho,
     proj_mat_work_->setup(kbT, nel, global_indexes);
 }
 
-MVPSolver::~MVPSolver()
+template <class T>
+MVPSolver<T>::~MVPSolver()
 {
     delete work_;
     delete proj_mat_work_;
 }
 
-double MVPSolver::evaluateDerivative(
+template <class T>
+double MVPSolver<T>::evaluateDerivative(
     dist_matrix::DistMatrix<DISTMATDTYPE>& dmInit,
     dist_matrix::DistMatrix<DISTMATDTYPE>& delta_dm, const double ts0)
 {
@@ -112,10 +117,10 @@ double MVPSolver::evaluateDerivative(
     return de0;
 }
 
-void MVPSolver::buildTarget_MVP(dist_matrix::DistMatrix<DISTMATDTYPE>& h11,
+template <class T>
+void MVPSolver<T>::buildTarget_MVP(dist_matrix::DistMatrix<DISTMATDTYPE>& h11,
     dist_matrix::DistMatrix<DISTMATDTYPE>& s11,
     dist_matrix::DistMatrix<DISTMATDTYPE>& target)
-// build target
 {
     target_tm_.start();
 
@@ -147,7 +152,8 @@ void MVPSolver::buildTarget_MVP(dist_matrix::DistMatrix<DISTMATDTYPE>& h11,
 }
 
 // update density matrix in N x N space
-int MVPSolver::solve(LocGridOrbitals& orbitals)
+template <class T>
+int MVPSolver<T>::solve(T& orbitals)
 {
     Control& ct = *(Control::instance());
 
@@ -374,7 +380,8 @@ int MVPSolver::solve(LocGridOrbitals& orbitals)
     return 0;
 }
 
-void MVPSolver::printTimers(ostream& os)
+template <class T>
+void MVPSolver<T>::printTimers(ostream& os)
 {
     if (onpe0)
     {
@@ -383,3 +390,5 @@ void MVPSolver::printTimers(ostream& os)
         target_tm_.print(os);
     }
 }
+
+template class MVPSolver<LocGridOrbitals>;

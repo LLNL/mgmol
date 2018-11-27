@@ -6,8 +6,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef OrbitalsPreconditioning_H
-#define OrbitalsPreconditioning_H
+#ifndef MGMOL_OrbitalsPreconditioning_H
+#define MGMOL_OrbitalsPreconditioning_H
 
 #include "GridFuncVector.h"
 #include "Lap.h"
@@ -15,7 +15,6 @@
 #include "Preconditioning.h"
 
 class Masks4Orbitals;
-// class LocGridOrbitals;
 class MasksSet;
 class ProjectedMatricesInterface;
 class Potentials;

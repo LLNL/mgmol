@@ -12,12 +12,11 @@
 #include "LocGridOrbitals.h"
 #include "MGmol_MPI.h"
 
-Timer SinCosOps::compute_tm_("SinCosOps::compute_tm");
-
 using namespace std;
 
-void SinCosOps::compute(
-    const LocGridOrbitals& orbitals, vector<vector<double>>& a)
+template <class T>
+void SinCosOps<T>::compute(
+    const T& orbitals, vector<vector<double>>& a)
 {
     assert(a.size() == 6);
 
@@ -119,8 +118,9 @@ void SinCosOps::compute(
     compute_tm_.stop();
 }
 
-void SinCosOps::computeSquare(
-    const LocGridOrbitals& orbitals, vector<vector<double>>& a)
+template <class T>
+void SinCosOps<T>::computeSquare(
+    const T& orbitals, vector<vector<double>>& a)
 {
     assert(a.size() == 6);
     for (short i = 0; i < 6; i++)
@@ -237,7 +237,8 @@ void SinCosOps::computeSquare(
     compute_tm_.stop();
 }
 
-void SinCosOps::computeSquare1D(const LocGridOrbitals& orbitals,
+template <class T>
+void SinCosOps<T>::computeSquare1D(const T& orbitals,
     vector<vector<double>>& a, const int dim_index)
 {
     assert(a.size() == 2);
@@ -327,7 +328,8 @@ void SinCosOps::computeSquare1D(const LocGridOrbitals& orbitals,
     compute_tm_.stop();
 }
 
-void SinCosOps::compute1D(const LocGridOrbitals& orbitals,
+template <class T>
+void SinCosOps<T>::compute1D(const T& orbitals,
     vector<vector<double>>& a, const int dim_index)
 {
     assert(a.size() == 2);
@@ -423,7 +425,8 @@ void SinCosOps::compute1D(const LocGridOrbitals& orbitals,
     compute_tm_.stop();
 }
 
-void SinCosOps::computeDiag2states(const LocGridOrbitals& orbitals,
+template <class T>
+void SinCosOps<T>::computeDiag2states(const T& orbitals,
     vector<vector<double>>& a, const int st1, const int st2)
 {
     assert(st1 >= 0);
@@ -513,7 +516,8 @@ void SinCosOps::computeDiag2states(const LocGridOrbitals& orbitals,
     compute_tm_.stop();
 }
 
-void SinCosOps::compute2states(const LocGridOrbitals& orbitals,
+template <class T>
+void SinCosOps<T>::compute2states(const T& orbitals,
     vector<vector<double>>& a, const int st1, const int st2)
 {
     assert(a.size() == 6);
@@ -619,8 +623,9 @@ void SinCosOps::compute2states(const LocGridOrbitals& orbitals,
     compute_tm_.stop();
 }
 
-void SinCosOps::compute(const LocGridOrbitals& orbitals1,
-    const LocGridOrbitals& orbitals2, vector<vector<double>>& a)
+template <class T>
+void SinCosOps<T>::compute(const T& orbitals1,
+    const T& orbitals2, vector<vector<double>>& a)
 {
     assert(a.size() == 6);
 
@@ -707,7 +712,8 @@ void SinCosOps::compute(const LocGridOrbitals& orbitals1,
     compute_tm_.stop();
 }
 
-void SinCosOps::computeDiag(const LocGridOrbitals& orbitals,
+template <class T>
+void SinCosOps<T>::computeDiag(const T& orbitals,
     VariableSizeMatrix<sparserow>& mat, const bool normalized_functions)
 {
     compute_tm_.start();
@@ -788,3 +794,6 @@ void SinCosOps::computeDiag(const LocGridOrbitals& orbitals,
 
     compute_tm_.stop();
 }
+
+template class SinCosOps<LocGridOrbitals>;
+

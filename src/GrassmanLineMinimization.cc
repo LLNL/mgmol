@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id:$
 #include "MGmol.h"
 
 #include "Control.h"
@@ -14,22 +13,30 @@
 #include "Hamiltonian.h"
 #include "Potentials.h"
 
-bool GrassmanLineMinimization::pbset_      = false;
-bool GrassmanLineMinimization::accelerate_ = false;
-bool GrassmanLineMinimization::conjugate_  = false;
+template <class T>
+bool GrassmanLineMinimization<T>::pbset_      = false;
+template <class T>
+bool GrassmanLineMinimization<T>::accelerate_ = false;
+template <class T>
+bool GrassmanLineMinimization<T>::conjugate_  = false;
 
-Timer GrassmanLineMinimization::line_min_tm_("Grassman_line_min");
-Timer GrassmanLineMinimization::nl_update_tm_("Grassman_nl_update");
-Timer GrassmanLineMinimization::comp_res_tm_("Grassman_comp_res");
-Timer GrassmanLineMinimization::update_states_tm_("Grassman_update_states");
+template <class T>
+Timer GrassmanLineMinimization<T>::line_min_tm_("Grassman_line_min");
+template <class T>
+Timer GrassmanLineMinimization<T>::nl_update_tm_("Grassman_nl_update");
+template <class T>
+Timer GrassmanLineMinimization<T>::comp_res_tm_("Grassman_comp_res");
+template <class T>
+Timer GrassmanLineMinimization<T>::update_states_tm_("Grassman_update_states");
 
 //
 // Performs a single self consistent step.
 //
 // orthof=true: wants orthonormalized updated wave functions
-int GrassmanLineMinimization::update(LocGridOrbitals& orbitals, Ions& ions,
+template <class T>
+int GrassmanLineMinimization<T>::update(T& orbitals, Ions& ions,
     const double precond_factor, const bool orthof,
-    LocGridOrbitals& work_orbitals, const bool accelerate, const bool print_res,
+    T& work_orbitals, const bool accelerate, const bool print_res,
     const double atol)
 {
     nl_update_tm_.start();
@@ -43,8 +50,8 @@ int GrassmanLineMinimization::update(LocGridOrbitals& orbitals, Ions& ions,
         first_time = false;
         conjugate_ = false;
 
-        new_grad_   = new LocGridOrbitals("NewG", orbitals, false);
-        new_pcgrad_ = new LocGridOrbitals("NewP", *new_grad_);
+        new_grad_   = new T("NewG", orbitals, false);
+        new_pcgrad_ = new T("NewP", *new_grad_);
     }
     else
     {
@@ -55,7 +62,7 @@ int GrassmanLineMinimization::update(LocGridOrbitals& orbitals, Ions& ions,
 
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 2)
-        os_ << "GrassmanLineMinimization::update() ..." << endl;
+        os_ << "GrassmanLineMinimization<T>::update() ..." << endl;
 
     // Update wavefunctions
     const bool check_res = (atol > 0.);
@@ -77,8 +84,9 @@ int GrassmanLineMinimization::update(LocGridOrbitals& orbitals, Ions& ions,
 
 //////////////////////////////////////////////////////////////////////////////
 
-void GrassmanLineMinimization::update_states(LocGridOrbitals& orbitals,
-    LocGridOrbitals& grad, LocGridOrbitals& work_orbitals,
+template <class T>
+void GrassmanLineMinimization<T>::update_states(T& orbitals,
+    T& grad, T& work_orbitals,
     const double precond_factor)
 {
     assert(orbitals.getIterativeIndex() >= 0);
@@ -137,10 +145,13 @@ void GrassmanLineMinimization::update_states(LocGridOrbitals& orbitals,
     assert(orbitals.getIterativeIndex() >= 0);
 }
 
-void GrassmanLineMinimization::printTimers(ostream& os)
+template <class T>
+void GrassmanLineMinimization<T>::printTimers(ostream& os)
 {
     line_min_tm_.print(os);
     nl_update_tm_.print(os);
     comp_res_tm_.print(os);
     update_states_tm_.print(os);
 }
+
+template class GrassmanLineMinimization<LocGridOrbitals>;

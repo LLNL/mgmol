@@ -10,8 +10,9 @@
 #include "LocGridOrbitals.h"
 #include "Mesh.h"
 
-void EnergySpreadPenalty::addResidual(
-    LocGridOrbitals& phi, LocGridOrbitals& res)
+template <class T>
+void EnergySpreadPenalty<T>::addResidual(
+    T& phi, T& res)
 {
     assert(spreadf_ != 0);
     assert(spread2_target_ >= 0.);
@@ -69,10 +70,11 @@ void EnergySpreadPenalty::addResidual(
 // add to current residual "res" component proportional to gradient of penalty
 // spread functional factors equal 2*alpha(F[\phi]-sigma_0^2) (not included in
 // lagrangemult) assumes orbitals are normalized
-void EnergySpreadPenalty::computeAndAddResidualSpreadPenalty(
+template <class T>
+void EnergySpreadPenalty<T>::computeAndAddResidualSpreadPenalty(
     const vector<float>& spread2, const vector<float>& factors,
     const vector<Vector3D>& centers, const vector<int>& gids,
-    LocGridOrbitals& orbitals, LocGridOrbitals& res)
+    T& orbitals, T& res)
 {
     assert(spread2.size() == centers.size());
     assert(factors.size() == centers.size());
@@ -190,7 +192,8 @@ void EnergySpreadPenalty::computeAndAddResidualSpreadPenalty(
     }
 }
 
-double EnergySpreadPenalty::evaluateEnergy(const LocGridOrbitals& phi)
+template <class T>
+double EnergySpreadPenalty<T>::evaluateEnergy(const T& phi)
 {
     assert(spreadf_ != 0);
     assert(spread2_target_ >= 0.);
@@ -221,3 +224,6 @@ double EnergySpreadPenalty::evaluateEnergy(const LocGridOrbitals& phi)
 
     return alpha_ * total_energy;
 }
+
+template class EnergySpreadPenalty<LocGridOrbitals>;
+

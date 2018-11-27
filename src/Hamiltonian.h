@@ -10,26 +10,25 @@
 #define MGMOL_HAMILTONIAN_H
 
 #include "LapFactory.h"
-#include "LocGridOrbitals.h"
+#include "ProjectedMatricesInterface.h"
 #include "SparseDistMatrix.h"
 #include "Timer.h"
 #include "VariableSizeMatrix.h"
 
-class LocGridOrbitals;
 class Potentials;
 
+template <class T>
 class Hamiltonian
 {
-
     pb::Lap<ORBDTYPE>* lapOper_;
     Potentials* pot_;
-    LocGridOrbitals* hlphi_;
+    T* hlphi_;
     int itindex_;
 
     static Timer apply_Hloc_tm_;
 
-    void applyLocal(const int istate, const int nstates, LocGridOrbitals& phi,
-        LocGridOrbitals& hphi);
+    void applyLocal(const int istate, const int nstates, T& phi,
+        T& hphi);
 
 public:
     static Timer apply_Hloc_tm() { return apply_Hloc_tm_; }
@@ -43,17 +42,17 @@ public:
     void setHlOutdated() { itindex_ = -1; }
     pb::Lap<ORBDTYPE>* lapOper() { return lapOper_; }
 
-    const LocGridOrbitals& applyLocal(
-        LocGridOrbitals& phi, const bool force = false);
+    const T& applyLocal(
+        T& phi, const bool force = false);
 
-    void addHlocal2matrix(LocGridOrbitals& orbitals1,
-        LocGridOrbitals& orbitals2,
+    void addHlocal2matrix(T& orbitals1,
+        T& orbitals2,
         dist_matrix::SparseDistMatrix<DISTMATDTYPE>& mat,
         const bool force = false);
-    void addHlocal2matrix(LocGridOrbitals& orbitals1,
-        LocGridOrbitals& orbitals2, VariableSizeMatrix<sparserow>& mat,
+    void addHlocal2matrix(T& orbitals1,
+        T& orbitals2, VariableSizeMatrix<sparserow>& mat,
         const bool force = false);
-    void addHlocalij(LocGridOrbitals& orbitals1, LocGridOrbitals& orbitals2,
+    void addHlocalij(T& orbitals1, T& orbitals2,
         ProjectedMatricesInterface*);
 };
 

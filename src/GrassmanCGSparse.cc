@@ -19,7 +19,8 @@
 #include "ProjectedMatricesInterface.h"
 #include "ProjectedMatricesSparse.h"
 
-void GrassmanCGSparse::conjugate()
+template <class T>
+void GrassmanCGSparse<T>::conjugate()
 {
     // compute conjugation
     // We tranpose the dot product operations where necessary. This is done
@@ -28,39 +29,46 @@ void GrassmanCGSparse::conjugate()
     // matrix). If the dot products are transposed ahead of time, then there is
     // no need to transpose the resulting matrices prior to performing
     // operations using the VariableSizeMatrix format.
-    if (conjugate_)
+    if (GrassmanLineMinimization<T>::conjugate_)
     {
         ProjectedMatricesSparse* projmatrices
-            = dynamic_cast<ProjectedMatricesSparse*>(proj_matrices_);
+            = dynamic_cast<ProjectedMatricesSparse*>(
+                  GrassmanLineMinimization<T>::proj_matrices_);
 
         // compute G-G_old
         const double m_one = -1.;
-        new_grad_->axpy(m_one, *grad_);
+        GrassmanLineMinimization<T>::new_grad_->axpy(
+            m_one, *GrassmanLineMinimization<T>::grad_);
         // Numerator: compute matG = (MG^T*(G-G_old))^T = G^T*MG - G_old^T*MG
         // first compute matG = G^T*MG
         SquareLocalMatrices<MATDTYPE> matG(
-            new_grad_->subdivx(), new_grad_->chromatic_number());
-        new_grad_->getLocalOverlap(*new_pcgrad_, matG);
+            GrassmanLineMinimization<T>::new_grad_->subdivx(),
+            GrassmanLineMinimization<T>::new_grad_->chromatic_number());
+        GrassmanLineMinimization<T>::new_grad_->getLocalOverlap(
+            *GrassmanLineMinimization<T>::new_pcgrad_, matG);
         // compute trace(S^{-1}*matG
         double alpha = projmatrices->computeTraceInvSmultMat(matG, true);
 
         // compute matG = G_old^T*MG
         matG.reset();
-        grad_->getLocalOverlap(*new_pcgrad_, matG);
+        GrassmanLineMinimization<T>::grad_->getLocalOverlap(
+            *GrassmanLineMinimization<T>::new_pcgrad_, matG);
         // subtract trace from alpha
         alpha -= projmatrices->computeTraceInvSmultMat(matG, true);
 
         // Denominator: compute matG = ((G_old)^T*MG_old)^T = MG_old^T*G_old
         matG.reset();
-        pcgrad_->getLocalOverlap(*grad_, matG);
+        GrassmanLineMinimization<T>::pcgrad_->getLocalOverlap(
+            *GrassmanLineMinimization<T>::grad_, matG);
         // compute trace(S^{-1}*matG
         alpha /= projmatrices->computeTraceInvSmultMat(matG, true);
 
         // compute conjugate direction
         double tau       = max(0., alpha);
         const double one = 1.;
-        sdir_->scal(tau);
-        sdir_->axpy(one, *new_pcgrad_);
+        GrassmanLineMinimization<T>::sdir_->scal(tau);
+        GrassmanLineMinimization<T>::sdir_->axpy(
+            one, *GrassmanLineMinimization<T>::new_pcgrad_);
 
         //       if(onpe0)cout<<"conjugate: alpha = "<<alpha<<", tau =
         //       "<<tau<<endl;
@@ -68,13 +76,17 @@ void GrassmanCGSparse::conjugate()
     else
     {
         // initialize history data
-        grad_   = new LocGridOrbitals("G", *new_grad_, true);
-        pcgrad_ = new LocGridOrbitals("P", *new_pcgrad_, true);
-        sdir_   = new LocGridOrbitals("S", *new_pcgrad_, true);
+        GrassmanLineMinimization<T>::grad_   =
+            new T("G", *GrassmanLineMinimization<T>::new_grad_, true);
+        GrassmanLineMinimization<T>::pcgrad_ =
+            new T("P", *GrassmanLineMinimization<T>::new_pcgrad_, true);
+        GrassmanLineMinimization<T>::sdir_   =
+            new T("S", *GrassmanLineMinimization<T>::new_pcgrad_, true);
     }
 }
 
-double GrassmanCGSparse::computeStepSize(LocGridOrbitals& orbitals)
+template <class T>
+double GrassmanCGSparse<T>::computeStepSize(T& orbitals)
 {
 
     // Done with conjugation. Now compute direction for phi correction.
@@ -97,34 +109,34 @@ double GrassmanCGSparse::computeStepSize(LocGridOrbitals& orbitals)
     Control& ct = *(Control::instance());
 
     // Compute Z^T*H*Phi
-    VariableSizeMatrix<sparserow> zHphiMat("zHphi", sdir_->chromatic_number());
-    computeOrbitalsProdWithH(*sdir_, orbitals, zHphiMat, false);
+    VariableSizeMatrix<sparserow> zHphiMat("zHphi", GrassmanLineMinimization<T>::sdir_->chromatic_number());
+    computeOrbitalsProdWithH(*GrassmanLineMinimization<T>::sdir_, orbitals, zHphiMat, false);
     // Compute Phi^T*H*Z
     VariableSizeMatrix<sparserow> phiHzMat(
         "phiHz", orbitals.chromatic_number());
-    computeOrbitalsProdWithH(orbitals, *sdir_, phiHzMat, false);
+    computeOrbitalsProdWithH(orbitals, *GrassmanLineMinimization<T>::sdir_, phiHzMat, false);
     // compute Zo^T*H*Zo
-    VariableSizeMatrix<sparserow> zHzMat("zHz", sdir_->chromatic_number());
-    computeOrbitalsProdWithH(*sdir_, zHzMat, false);
+    VariableSizeMatrix<sparserow> zHzMat("zHz", GrassmanLineMinimization<T>::sdir_->chromatic_number());
+    computeOrbitalsProdWithH(*GrassmanLineMinimization<T>::sdir_, zHzMat, false);
     // Compute Zo^T*Phi
     SquareLocalMatrices<MATDTYPE> ss(
-        sdir_->subdivx(), sdir_->chromatic_number());
-    sdir_->getLocalOverlap(orbitals, ss);
-    VariableSizeMatrix<sparserow> zTphiMat("zTphi", sdir_->chromatic_number());
+        GrassmanLineMinimization<T>::sdir_->subdivx(), GrassmanLineMinimization<T>::sdir_->chromatic_number());
+    GrassmanLineMinimization<T>::sdir_->getLocalOverlap(orbitals, ss);
+    VariableSizeMatrix<sparserow> zTphiMat("zTphi", GrassmanLineMinimization<T>::sdir_->chromatic_number());
     zTphiMat.initializeMatrixElements(
-        ss, sdir_->getOverlappingGids(), ct.numst);
+        ss, GrassmanLineMinimization<T>::sdir_->getOverlappingGids(), ct.numst);
     // Compute Phi^T*Zo
     ss.reset();
-    orbitals.getLocalOverlap(*sdir_, ss);
+    orbitals.getLocalOverlap(*GrassmanLineMinimization<T>::sdir_, ss);
     VariableSizeMatrix<sparserow> phiTzMat(
         "phiTz", orbitals.chromatic_number());
     zTphiMat.initializeMatrixElements(
         ss, orbitals.getOverlappingGids(), ct.numst);
     // Compute Zo^T*Zo
     ss.reset();
-    sdir_->getLocalOverlap(ss);
-    VariableSizeMatrix<sparserow> zTzMat("zTz", sdir_->chromatic_number());
-    zTzMat.initializeMatrixElements(ss, sdir_->getOverlappingGids(), ct.numst);
+    GrassmanLineMinimization<T>::sdir_->getLocalOverlap(ss);
+    VariableSizeMatrix<sparserow> zTzMat("zTz", GrassmanLineMinimization<T>::sdir_->chromatic_number());
+    zTzMat.initializeMatrixElements(ss, GrassmanLineMinimization<T>::sdir_->getOverlappingGids(), ct.numst);
 
     // Now compute Tr[S^{-1}*Z^T*G] =
     // Tr[S^{-1}*Zo^T*H*Phi]-Tr[S^{-1}*Zo^T*Phi*S^{-1}*Phi^T*H*Phi]
@@ -144,7 +156,7 @@ double GrassmanCGSparse::computeStepSize(LocGridOrbitals& orbitals)
 }
 
 /*
-double GrassmanCG::computeStepSize(LocGridOrbitals& orbitals)
+double GrassmanCG::computeStepSize(T& orbitals)
 {
     Control& ct = *(Control::instance());
     const int dim = ct.numst;
@@ -257,51 +269,54 @@ Tr[S^{-1}*Zo^T*Phi*S^{-1}*Phi^T*Zo*S^{-1}*Phi^T*H*Phi]
 // Compute P^T*H*Q for orbitals1-->P and orbitals2-->Q and return result in mat.
 // consolidate flag with either gather data or else return local partial
 // contributions
-void GrassmanCGSparse::computeOrbitalsProdWithH(LocGridOrbitals& orbitals1,
-    LocGridOrbitals& orbitals2, VariableSizeMatrix<sparserow>& mat,
+template <class T>
+void GrassmanCGSparse<T>::computeOrbitalsProdWithH(T& orbitals1,
+    T& orbitals2, VariableSizeMatrix<sparserow>& mat,
     const bool consolidate)
 {
     // initialize KBPsiMatrices
-    KBPsiMatrixSparse kbpsi_1(hamiltonian_->lapOper());
-    kbpsi_1.setup(*ptr2ions_, orbitals1);
-    kbpsi_1.computeAll(*ptr2ions_, orbitals1);
+    KBPsiMatrixSparse kbpsi_1(GrassmanLineMinimization<T>::hamiltonian_->lapOper());
+    kbpsi_1.setup(*GrassmanLineMinimization<T>::ptr2ions_, orbitals1);
+    kbpsi_1.computeAll(*GrassmanLineMinimization<T>::ptr2ions_, orbitals1);
 
-    KBPsiMatrixSparse kbpsi_2(hamiltonian_->lapOper());
-    kbpsi_2.setup(*ptr2ions_, orbitals2);
-    kbpsi_2.computeAll(*ptr2ions_, orbitals2);
+    KBPsiMatrixSparse kbpsi_2(GrassmanLineMinimization<T>::hamiltonian_->lapOper());
+    kbpsi_2.setup(*GrassmanLineMinimization<T>::ptr2ions_, orbitals2);
+    kbpsi_2.computeAll(*GrassmanLineMinimization<T>::ptr2ions_, orbitals2);
 
     // compute P^T*H*Q (orbitals1=P; orbitals2=Q)
-    mgmol_strategy_->computeHij(
-        orbitals1, orbitals2, *ptr2ions_, &kbpsi_1, &kbpsi_2, mat, consolidate);
-
-    return;
+    GrassmanLineMinimization<T>::mgmol_strategy_->computeHij(
+        orbitals1, orbitals2, *GrassmanLineMinimization<T>::ptr2ions_, &kbpsi_1, &kbpsi_2, mat, consolidate);
 }
 
 // Compute P^T*H*P for orbitals1-->P and return result in mat.
 // consolidate flag with either gather data or else return local partial
 // contributions
-void GrassmanCGSparse::computeOrbitalsProdWithH(LocGridOrbitals& orbitals,
+template <class T>
+void GrassmanCGSparse<T>::computeOrbitalsProdWithH(T& orbitals,
     VariableSizeMatrix<sparserow>& mat, const bool consolidate)
 {
     // initialize KBPsiMatrices
-    KBPsiMatrixSparse kbpsi(hamiltonian_->lapOper());
-    kbpsi.setup(*ptr2ions_, orbitals);
-    kbpsi.computeAll(*ptr2ions_, orbitals);
+    KBPsiMatrixSparse kbpsi(GrassmanLineMinimization<T>::hamiltonian_->lapOper());
+    kbpsi.setup(*GrassmanLineMinimization<T>::ptr2ions_, orbitals);
+    kbpsi.computeAll(*GrassmanLineMinimization<T>::ptr2ions_, orbitals);
 
     // compute P^T*H*Q (orbitals1=P; orbitals2=Q)
-    mgmol_strategy_->computeHij(
-        orbitals, orbitals, *ptr2ions_, &kbpsi, mat, consolidate);
+    GrassmanLineMinimization<T>::mgmol_strategy_->computeHij(
+        orbitals, orbitals, *GrassmanLineMinimization<T>::ptr2ions_, &kbpsi, mat, consolidate);
 
     return;
 }
 
 // parallel transport of history data
 // update G=grad_, MG=pcgrad_ and Zo=sdir_
-void GrassmanCGSparse::parallelTransportUpdate(
-    const double lambda, LocGridOrbitals& orbitals)
+template <class T>
+void GrassmanCGSparse<T>::parallelTransportUpdate(
+    const double lambda, T& orbitals)
 {
     // update gradient information
     //    SquareLocalMatrices<MATDTYPE> ss(grad->subdivx(),
     //    grad->chromatic_number()); grad->getLocalOverlap(ss);
     //    proj_matrices_->applyInvS(ss);
 }
+
+template class GrassmanCGSparse<LocGridOrbitals>;

@@ -6,26 +6,26 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef AOMMPROJECTOR_H
-#define AOMMPROJECTOR_H
+#ifndef MGMOL_AOMMPROJECTOR_H
+#define MGMOL_AOMMPROJECTOR_H
 
 #include "SquareLocalMatrices.h"
+#include "SubspaceProjector.h"
 #include "global.h"
 
-class LocGridOrbitals;
-class SubspaceProjector;
 class MasksSet;
 class ProjectedMatricesInterface;
 class LocalizationRegions;
 
 // implements AOMM algorithm ("kernel" function projectors)
 // by E. Tsuchida, J. Phys. Soc. Japan 76 (3), 2007, p. 034708
+template <class T>
 class AOMMprojector
 {
 private:
-    LocGridOrbitals* kernel_phi_;
+    T* kernel_phi_;
 
-    SubspaceProjector* kernelprojector_;
+    SubspaceProjector<T>* kernelprojector_;
 
     MasksSet* kernelMasks_;
 
@@ -36,12 +36,12 @@ private:
     short counter_;
 
 public:
-    AOMMprojector(LocGridOrbitals& phi, LocalizationRegions& lrs);
+    AOMMprojector(T& phi, LocalizationRegions& lrs);
     ~AOMMprojector();
 
-    void projectOut(LocGridOrbitals& phi);
+    void projectOut(T& phi);
 
-    void resetProjectors(LocGridOrbitals& phi);
+    void resetProjectors(T& phi);
 };
 
 #endif

@@ -20,7 +20,7 @@ using namespace std;
 
 template <class T1, class T2, class T3>
 HamiltonianMVP_DMStrategy<T1, T2, T3>::HamiltonianMVP_DMStrategy(MPI_Comm comm,
-    ostream& os, Ions& ions, Rho* rho, Energy* energy,
+    ostream& os, Ions& ions, Rho<LocGridOrbitals>* rho, Energy<LocGridOrbitals>* energy,
     Electrostatic* electrostat, MGmol* mgmol_strategy,
     LocGridOrbitals* orbitals)
     : comm_(comm),

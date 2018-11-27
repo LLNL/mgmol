@@ -6,9 +6,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id: PBEonGrid.h 303 2012-09-06 23:35:50Z jeanluc $
-#ifndef PBEONGRIDSPIN_H
-#define PBEONGRIDSPIN_H
+#ifndef MGMOL_PBEONGRIDSPIN_H
+#define MGMOL_PBEONGRIDSPIN_H
 
 #include "Mesh.h"
 #include "PBEFunctional.h"
@@ -27,6 +26,7 @@
 
 class Potentials;
 
+template <class T>
 class PBEonGridSpin : public XConGrid
 {
     int np_;
@@ -40,12 +40,12 @@ class PBEonGridSpin : public XConGrid
 #else
     PBEFunctional* pbe_;
 #endif
-    Rho& rho_;
+    Rho<T>& rho_;
 
     Potentials& pot_;
 
 public:
-    PBEonGridSpin(Rho& rho, Potentials& pot);
+    PBEonGridSpin(Rho<T>& rho, Potentials& pot);
 
     ~PBEonGridSpin()
     {

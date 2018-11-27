@@ -6,8 +6,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef DMSTRATEGYFACTORY_H
-#define DMSTRATEGYFACTORY_H
+#ifndef MGMOL_DMSTRATEGYFACTORY_H
+#define MGMOL_DMSTRATEGYFACTORY_H
 
 #include "Control.h"
 #include "DistMatrix.h"
@@ -24,7 +24,7 @@ class DMStrategyFactory
 {
 public:
     static DMStrategy* create(MPI_Comm comm, std::ostream& os, Ions& ions,
-        Rho* rho, Energy* energy, Electrostatic* electrostat,
+        Rho<LocGridOrbitals>* rho, Energy<LocGridOrbitals>* energy, Electrostatic* electrostat,
         MGmol* mgmol_strategy, ProjectedMatricesInterface* proj_matrices,
         LocGridOrbitals* orbitals)
     {
@@ -34,7 +34,8 @@ public:
         if (ct.DM_solver() == DMNonLinearSolverType::MVP)
         {
             dm_strategy
-                = new MVP_DMStrategy(comm, os, ions, rho, energy, electrostat,
+                = new MVP_DMStrategy<LocGridOrbitals>(comm, os, ions, rho,
+                    energy, electrostat,
                     mgmol_strategy, orbitals, proj_matrices, ct.use_old_dm());
         }
         else if (ct.DM_solver() == DMNonLinearSolverType::HMVP)
@@ -73,7 +74,7 @@ public:
                 {
                     if (ct.getOrbitalsType() == OrbitalsType::Nonorthogonal)
                     {
-                        dm_strategy = new NonOrthoDMStrategy(
+                        dm_strategy = new NonOrthoDMStrategy<LocGridOrbitals>(
                             orbitals, proj_matrices, ct.dm_mix);
                     }
                 }

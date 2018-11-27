@@ -9,17 +9,17 @@
 #define MGMOL_MVPSOLVER_H
 
 #include "DistMatrix.h"
+#include "Energy.h"
+#include "Rho.h"
 #include "Timer.h"
 
-class LocGridOrbitals;
 class Ions;
-class Rho;
-class Energy;
 class MGmol;
 class Electrostatic;
 class ProjectedMatrices2N;
 class ProjectedMatrices;
 
+template <class T>
 class MVPSolver
 {
 private:
@@ -31,8 +31,8 @@ private:
     bool use_old_dm_;
     Ions& ions_;
 
-    Rho* rho_;
-    Energy* energy_;
+    Rho<T>* rho_;
+    Energy<T>* energy_;
     Electrostatic* electrostat_;
 
     int history_length_;
@@ -57,14 +57,14 @@ private:
         dist_matrix::DistMatrix<DISTMATDTYPE>& target);
 
 public:
-    MVPSolver(MPI_Comm comm, std::ostream& os, Ions& ions, Rho* rho,
-        Energy* energy, Electrostatic* electrostat, MGmol* mgmol_strategy,
+    MVPSolver(MPI_Comm comm, std::ostream& os, Ions& ions, Rho<T>* rho,
+        Energy<T>* energy, Electrostatic* electrostat, MGmol* mgmol_strategy,
         const int numst, const double kbT, const int nel,
         const std::vector<std::vector<int>>& global_indexes,
         const short n_inner_steps, const bool use_old_dm);
     ~MVPSolver();
 
-    int solve(LocGridOrbitals& orbitals);
+    int solve(T& orbitals);
     void printTimers(std::ostream& os);
 };
 

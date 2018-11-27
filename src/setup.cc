@@ -18,7 +18,7 @@ int MGmol::setupFromInput(const string filename)
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
-    hamiltonian_    = new Hamiltonian();
+    hamiltonian_    = new Hamiltonian<LocGridOrbitals>();
     Potentials& pot = hamiltonian_->potential();
 
     ct.registerPotentials(pot);

@@ -6,19 +6,17 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
-#ifndef ELECTROSTATIC_H
-#define ELECTROSTATIC_H
+#ifndef MGMOL_ELECTROSTATIC_H
+#define MGMOL_ELECTROSTATIC_H
 
-// pb
 #include "GridFunc.h"
 #include "Poisson.h"
 #include "Rho.h"
 #include "Timer.h"
 
 class Ions;
+class LocGridOrbitals;
 class Potentials;
-class Rho;
 
 class Electrostatic
 {
@@ -52,12 +50,12 @@ public:
 
     void setupRhoc(RHODTYPE* rhoc);
     void fillFuncAroundIons(const Ions& ions);
-    void computeVh(const Ions& ions, Rho& rho, Potentials& pot);
+    void computeVh(const Ions& ions, Rho<LocGridOrbitals>& rho, Potentials& pot);
     void computeVh(const pb::GridFunc<POTDTYPE>& vhinit, const Ions& ions,
-        Rho& rho, Potentials& pot);
+        Rho<LocGridOrbitals>& rho, Potentials& pot);
     void setupInitialVh(const POTDTYPE* const);
     void setupInitialVh(const pb::GridFunc<POTDTYPE>&);
-    void computeVhRho(Rho& rho);
+    void computeVhRho(Rho<LocGridOrbitals>& rho);
     void resetSolution() { poisson_solver_->resetVh(); }
 
     const pb::GridFunc<POTDTYPE>& getVh() const;

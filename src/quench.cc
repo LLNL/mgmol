@@ -23,8 +23,6 @@ using namespace std;
 #include "DMStrategy.h"
 #include "Electrostatic.h"
 #include "Energy.h"
-#include "GrassmanCG.h"
-#include "GrassmanCGSparse.h"
 #include "Hamiltonian.h"
 #include "Ions.h"
 #include "KBPsiMatrixSparse.h"
@@ -58,7 +56,8 @@ Timer updateCenters_tm("MGmol::updateCenters");
 // 1 -> radius only
 // 2 -> center and radius
 void MGmol::adaptLR(
-    const SpreadsAndCenters* spreadf, const OrbitalsTransform* ot)
+    const SpreadsAndCenters<LocGridOrbitals>* spreadf,
+    const OrbitalsTransform* ot)
 {
     Control& ct = *(Control::instance());
     if (ct.verbose > 0)
@@ -199,7 +198,7 @@ bool MGmol::rotateStatesPairsCommonCenter(
         if (onpe0 && ct.verbose > 1)
             os_ << "Min. distance between centers " << st1 << " and " << st2
                 << " = " << drmin << endl;
-        SpreadsAndCenters spreadf2st(origin, ll);
+        SpreadsAndCenters<LocGridOrbitals> spreadf2st(origin, ll);
 
         orbitals.orthonormalize2states(st1, st2);
 
@@ -291,7 +290,7 @@ bool MGmol::rotateStatesPairsOverlap(LocGridOrbitals& orbitals,
                 << eigmin << endl;
         }
 
-        SpreadsAndCenters spreadf2st(origin, ll);
+        SpreadsAndCenters<LocGridOrbitals> spreadf2st(origin, ll);
         spreadf2st.computeSinCosDiag2states(orbitals, st1, st2);
 
         spreadf2st.print(os_);
@@ -382,7 +381,8 @@ void MGmol::disentangleOrbitals(LocGridOrbitals& orbitals,
     }
 }
 
-int MGmol::quench(LocGridOrbitals* orbitals, Ions& ions,
+template <class T>
+int MGmol::quench(T* orbitals, Ions& ions,
     const int max_inner_steps, const int iprint, double& last_eks)
 {
     assert(max_inner_steps > -1);
@@ -395,7 +395,7 @@ int MGmol::quench(LocGridOrbitals* orbitals, Ions& ions,
     Control& ct = *(Control::instance());
     if (ct.restart_info > 2)
     {
-        DFTsolver::setItCountLarge();
+        DFTsolver<T>::setItCountLarge();
     }
 
     if (onpe0)
@@ -412,7 +412,7 @@ int MGmol::quench(LocGridOrbitals* orbitals, Ions& ions,
     electrostat_->setup(ct.vh_its);
     rho_->setup(ct.getOrbitalsType(), gids);
 
-    LocGridOrbitals work_orbitals("Work", *orbitals);
+    T work_orbitals("Work", *orbitals);
 
     orbitals->setDataWithGhosts();
     orbitals->trade_boundaries();
@@ -422,7 +422,7 @@ int MGmol::quench(LocGridOrbitals* orbitals, Ions& ions,
     // setup "kernel" functions for AOMM algorithm
     if (ct.use_kernel_functions)
     {
-        aomm_ = new AOMMprojector(*orbitals, *lrs_);
+        aomm_ = new AOMMprojector<T>(*orbitals, *lrs_);
         aomm_->projectOut(*orbitals);
     }
 
@@ -436,7 +436,8 @@ int MGmol::quench(LocGridOrbitals* orbitals, Ions& ions,
     {
         case OuterSolverType::ABPG:
         {
-            DFTsolver solver(hamiltonian_, proj_matrices_, energy_,
+            DFTsolver<T> solver(hamiltonian_, proj_matrices_,
+                energy_,
                 electrostat_, this, ions, rho_, dm_strategy_, os_);
 
             retval = solver.solve(
@@ -447,7 +448,8 @@ int MGmol::quench(LocGridOrbitals* orbitals, Ions& ions,
 
         case OuterSolverType::NLCG:
         {
-            DFTsolver solver(hamiltonian_, proj_matrices_, energy_,
+            DFTsolver<T> solver(hamiltonian_, proj_matrices_,
+                energy_,
                 electrostat_, this, ions, rho_, dm_strategy_, os_);
 
             retval = solver.solve(
@@ -458,7 +460,8 @@ int MGmol::quench(LocGridOrbitals* orbitals, Ions& ions,
 
         case OuterSolverType::PolakRibiere:
         {
-            PolakRibiereSolver solver(hamiltonian_, proj_matrices_, energy_,
+            PolakRibiereSolver<T> solver(hamiltonian_,
+                proj_matrices_, energy_,
                 electrostat_, this, ions, rho_, dm_strategy_, os_);
 
             retval = solver.solve(
@@ -538,3 +541,7 @@ int MGmol::quench(LocGridOrbitals* orbitals, Ions& ions,
     quench_tm.stop();
     return retval;
 }
+
+template int MGmol::quench<LocGridOrbitals>(LocGridOrbitals*, Ions&, const int,
+    const int, double&);
+

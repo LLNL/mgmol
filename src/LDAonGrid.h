@@ -6,9 +6,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
-#ifndef LDAONGRID_H
-#define LDAONGRID_H
+#ifndef MGMOL_LDAONGRID_H
+#define MGMOL_LDAONGRID_H
 
 #include "LDAFunctional.h"
 #include "Mesh.h"
@@ -27,9 +26,10 @@
 
 class Potentials;
 
+template <class T>
 class LDAonGrid : public XConGrid
 {
-    Rho& rho_;
+    Rho<T>& rho_;
 
 #ifdef USE_LIBXC
     xc_func_type xfunc_;
@@ -43,7 +43,8 @@ class LDAonGrid : public XConGrid
     Potentials& pot_;
 
 public:
-    LDAonGrid(Rho& rho, Potentials& pot) : rho_(rho), pot_(pot)
+    LDAonGrid(Rho<T>& rho, Potentials& pot) :
+        rho_(rho), pot_(pot)
     {
 #ifdef USE_LIBXC
         int func_id = XC_LDA_X;

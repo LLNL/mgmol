@@ -6,11 +6,11 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #include "Energy.h"
 #include "Control.h"
 #include "Electrostatic.h"
 #include "Ions.h"
+#include "LocGridOrbitals.h"
 #include "Mesh.h"
 #include "Potentials.h"
 #include "ProjectedMatricesInterface.h"
@@ -23,11 +23,14 @@ using namespace std;
 
 #define RY2HA 0.5
 
-Timer Energy::eval_te_tm_("Energy::eval_te");
+template <class T>
+Timer Energy<T>::eval_te_tm_("Energy::eval_te");
 
-Energy::Energy(const pb::Grid& mygrid, const Ions& ions, const Potentials& pot,
-    const Electrostatic& es, const Rho& rho, const XConGrid& xc,
-    SpreadPenaltyInterface* spread_penalty)
+template <class T>
+Energy<T>::Energy(const pb::Grid& mygrid, const Ions& ions, const Potentials& pot,
+    const Electrostatic& es, const Rho<T>& rho,
+    const XConGrid& xc,
+    SpreadPenaltyInterface<T>* spread_penalty)
     : mygrid_(mygrid),
       ions_(ions),
       pot_(pot),
@@ -39,16 +42,18 @@ Energy::Energy(const pb::Grid& mygrid, const Ions& ions, const Potentials& pot,
     nspin_ = rho.rho_.size();
 }
 
-void Energy::saveVofRho()
+template <class T>
+void Energy<T>::saveVofRho()
 {
 #ifdef PRINT_OPERATIONS
-    if (onpe0) (*MPIdata::sout) << "Energy::saveVofRho()" << endl;
+    if (onpe0) (*MPIdata::sout) << "Energy<T>::saveVofRho()" << endl;
 #endif
     pot_.getVofRho(vofrho_);
 }
 
 // get integral of rho*v[rho] in Hartree
-double Energy::getEVrhoRho() const
+template <class T>
+double Energy<T>::getEVrhoRho() const
 {
     double e = rho_.dotWithRho(&vofrho_[0]);
 
@@ -56,14 +61,15 @@ double Energy::getEVrhoRho() const
     return RY2HA * mygrid_.vel() * e;
 }
 
-double Energy::evaluateEnergyIonsInVext()
+template <class T>
+double Energy<T>::evaluateEnergyIonsInVext()
 {
     double energy = 0.;
 
 #ifdef HAVE_TRICUBIC
     if (!pot_.withVext()) return energy;
 
-    //(*MPIdata::sout)<<"Energy::evaluateEnergyIonsInVext()"<<endl;
+    //(*MPIdata::sout)<<"Energy<T>::evaluateEnergyIonsInVext()"<<endl;
     double position[3];
     vector<double> positions;
     positions.reserve(3 * ions_.local_ions().size());
@@ -97,7 +103,7 @@ double Energy::evaluateEnergyIonsInVext()
         ion_index++;
     }
 
-    //(*MPIdata::sout)<<"Energy::evaluateEnergyIonsInVext(),
+    //(*MPIdata::sout)<<"Energy<T>::evaluateEnergyIonsInVext(),
     //energy="<<energy<<endl;
     double tmp      = 0.;
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
@@ -107,8 +113,9 @@ double Energy::evaluateEnergyIonsInVext()
     return energy;
 }
 
-double Energy::evaluateTotal(const double ts, // in [Ha]
-    ProjectedMatricesInterface* projmatrices, const LocGridOrbitals& phi,
+template <class T>
+double Energy<T>::evaluateTotal(const double ts, // in [Ha]
+    ProjectedMatricesInterface* projmatrices, const T& phi,
     const int verbosity, ostream& os)
 {
     eval_te_tm_.start();
@@ -185,3 +192,5 @@ double Energy::evaluateTotal(const double ts, // in [Ha]
 
     return energy_sc;
 }
+
+template class Energy<LocGridOrbitals>;

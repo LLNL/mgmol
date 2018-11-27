@@ -38,7 +38,7 @@
 #include <vector>
 using namespace std;
 
-static OrbitalsExtrapolation* orbitals_extrapol;
+static OrbitalsExtrapolation<LocGridOrbitals>* orbitals_extrapol;
 
 Timer md_iterations_tm("md_iterations");
 Timer md_tau_tm("md_tau");
@@ -227,7 +227,8 @@ void checkMaxForces(
            << endl;
 }
 
-int MGmol::dumprestartFile(LocGridOrbitals** orbitals, Ions& ions, Rho& rho,
+int MGmol::dumprestartFile(LocGridOrbitals** orbitals, Ions& ions,
+    Rho<LocGridOrbitals>& rho,
     const bool write_extrapolated_wf, const short count)
 {
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
@@ -309,10 +310,11 @@ void MGmol::md(LocGridOrbitals** orbitals, Ions& ions)
     taum = vel;
 
     int size_tau = (int)tau0.size();
-    DFTsolver::resetItCount();
+    DFTsolver<LocGridOrbitals>::resetItCount();
 
     orbitals_extrapol
-        = OrbitalsExtrapolationFactory::create(ct.WFExtrapolation(), NULL);
+        = OrbitalsExtrapolationFactory<LocGridOrbitals>::create(
+              ct.WFExtrapolation(), NULL);
 
     MD_IonicStepper* stepper = new MD_IonicStepper(
         ct.dt, atmove, tau0, taup, taum, fion, pmass, rand_states);
@@ -380,7 +382,7 @@ void MGmol::md(LocGridOrbitals** orbitals, Ions& ions)
                 dm_strategy_->update();
             }
 
-            DFTsolver::setItCountLarge();
+            DFTsolver<LocGridOrbitals>::setItCountLarge();
         }
 
         // check if we are restarting from an MD dump

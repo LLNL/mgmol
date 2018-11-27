@@ -11,13 +11,16 @@
 
 #include "OrbitalsExtrapolation.h"
 
-class OrbitalsExtrapolationOrder2 : public OrbitalsExtrapolation
+template <class T>
+class OrbitalsExtrapolationOrder2 : public OrbitalsExtrapolation<T>
 {
 public:
-    OrbitalsExtrapolationOrder2() { extrapolated_H_ = false; }
+    OrbitalsExtrapolationOrder2()
+        : extrapolated_H_(false)
+    {}
 
     void extrapolate_orbitals(
-        LocGridOrbitals** orbitals, LocGridOrbitals* new_orbitals);
+        T** orbitals, T* new_orbitals);
 
     bool extrapolatedH() const { return extrapolated_H_; }
 

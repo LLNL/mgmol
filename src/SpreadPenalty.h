@@ -9,15 +9,15 @@
 #ifndef SpreadPenalty_H
 #define SpreadPenalty_H
 
-class LocGridOrbitals;
 #include "Control.h"
 #include "SpreadPenaltyInterface.h"
 #include "SpreadsAndCenters.h"
 
-class SpreadPenalty : public SpreadPenaltyInterface
+template <class T>
+class SpreadPenalty : public SpreadPenaltyInterface<T>
 {
 private:
-    SpreadsAndCenters* spreadf_;
+    SpreadsAndCenters<T>* spreadf_;
 
     double spread2_target_;
     double alpha_;
@@ -25,14 +25,14 @@ private:
 
     void computeAndAddResidualSpreadPenalty(const vector<float>& lagrangemult,
         const vector<float>& factors, const vector<Vector3D>& centers,
-        const vector<int>& gids, LocGridOrbitals& orbitals,
-        LocGridOrbitals& res);
+        const vector<int>& gids, T& orbitals,
+        T& res);
 
     float computeSpreadPenaltyFactor(const float spread2);
     float computeSpreadPenaltyFactorXLBOMD(const float spread2);
 
 public:
-    SpreadPenalty(SpreadsAndCenters* spreadf, const double spread_target,
+    SpreadPenalty(SpreadsAndCenters<T>* spreadf, const double spread_target,
         const double alpha, const double dampingFactor)
         : spreadf_(spreadf),
           spread2_target_(spread_target * spread_target),
@@ -44,11 +44,11 @@ public:
     }
 
     // add penalty functional contribution to residual
-    void addResidual(LocGridOrbitals& phi, LocGridOrbitals& res);
+    void addResidual(T& phi, T& res);
 
-    void addResidual(LocGridOrbitals& phi, LocGridOrbitals& res, bool xlbomd);
+    void addResidual(T& phi, T& res, bool xlbomd);
 
-    double evaluateEnergy(const LocGridOrbitals& phi);
+    double evaluateEnergy(const T& phi);
 };
 
 #endif

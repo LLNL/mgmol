@@ -13,13 +13,13 @@
 
 #include "Timer.h"
 #include "DistMatrix.h"
-#include "LocGridOrbitals.h"
 #include "Control.h"
 #include "global.h"
 
 class HDFrestart;
 class ProjectedMatricesInterface;
 
+template <class T>
 class Rho
 {
 
@@ -48,26 +48,26 @@ class Rho
 
     double computeTotalCharge();
     void computeRhoSubdomain(const int iloc_init, const int iloc_end,
-        const LocGridOrbitals& orbitals);
+        const T& orbitals);
     void computeRhoSubdomain(const int iloc_init, const int iloc_end,
-        const LocGridOrbitals& orbitals, const std::vector<DISTMATDTYPE>& occ);
+        const T& orbitals, const std::vector<DISTMATDTYPE>& occ);
     void computeRhoSubdomainOffDiagBlock(const int iloc_init,
         const int iloc_end,
-        const std::vector<const LocGridOrbitals*>& vorbitals,
+        const std::vector<const T*>& vorbitals,
         const ProjectedMatricesInterface* const);
 
     void accumulateCharge(const double alpha, const short ix_max,
         const ORBDTYPE* const psii, const ORBDTYPE* const psij,
         RHODTYPE* const plrho);
     int setupSubdomainData(const int iloc,
-        const std::vector<const LocGridOrbitals*>& vorbitals,
+        const std::vector<const T*>& vorbitals,
         const ProjectedMatricesInterface* const projmatrices,
         std::vector<MATDTYPE>& melements,
         std::vector<std::vector<const ORBDTYPE*>>& mpsi);
 
-    void computeRho(LocGridOrbitals& orbitals);
+    void computeRho(T& orbitals);
     void computeRho(
-        LocGridOrbitals& orbitals, ProjectedMatricesInterface& proj_matrices);
+        T& orbitals, ProjectedMatricesInterface& proj_matrices);
 
 public:
     // electronic density on grid
@@ -75,24 +75,24 @@ public:
     std::vector<std::vector<RHODTYPE>> rho_minus1_;
 
     Rho();
-    ~Rho();
+    ~Rho(){};
 
     void rescaleTotalCharge();
     void setup(const OrbitalsType orbitals_type,
                const std::vector<std::vector<int>>&);
     void setVerbosityLevel(const int vlevel) { verbosity_level_ = vlevel; }
 
-    void update(LocGridOrbitals& current_orbitals);
+    void update(T& current_orbitals);
 
     // compute rho using density matrix specified in arguments
-    void computeRho(LocGridOrbitals& orbitals1, LocGridOrbitals& orbitals2,
+    void computeRho(T& orbitals1, T& orbitals2,
         const dist_matrix::DistMatrix<DISTMATDTYPE>& dm11,
         const dist_matrix::DistMatrix<DISTMATDTYPE>& dm12,
         const dist_matrix::DistMatrix<DISTMATDTYPE>& dm21,
         const dist_matrix::DistMatrix<DISTMATDTYPE>& dm22);
 
     // compute rho using density matrix specified in arguments
-    void computeRho(LocGridOrbitals& orbitals,
+    void computeRho(T& orbitals,
         const dist_matrix::DistMatrix<DISTMATDTYPE>& dm);
 
     void init(const RHODTYPE* const rhoc);
@@ -102,8 +102,8 @@ public:
     void extrapolate();
     void axpyRhoc(const double alpha, RHODTYPE* rhoc);
 
-    template <typename T>
-    double dotWithRho(const T* const func) const;
+    template <typename T2>
+    double dotWithRho(const T2* const func) const;
 
     void gatherSpin();
 

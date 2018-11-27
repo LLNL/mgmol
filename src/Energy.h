@@ -6,12 +6,14 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef ENERGY_H
-#define ENERGY_H
+#ifndef MGMOL_ENERGY_H
+#define MGMOL_ENERGY_H
 
 #include "Grid.h"
+#include "Rho.h"
 #include "Timer.h"
 #include "global.h"
+#include "SpreadPenaltyInterface.h"
 
 #include <ostream>
 #include <vector>
@@ -19,21 +21,19 @@
 class Potentials;
 class Ions;
 class Electrostatic;
-class LocGridOrbitals;
 class ProjectedMatricesInterface;
-class Rho;
 class XConGrid;
-class SpreadPenaltyInterface;
 
+template <class T>
 class Energy
 {
     const pb::Grid& mygrid_;
     const Ions& ions_;
     const Potentials& pot_;
     const Electrostatic& es_;
-    const Rho& rho_;
+    const Rho<T>& rho_;
     const XConGrid& xc_;
-    SpreadPenaltyInterface* spread_penalty_;
+    SpreadPenaltyInterface<T>* spread_penalty_;
 
     std::vector<POTDTYPE> vofrho_;
 
@@ -45,13 +45,13 @@ class Energy
 
 public:
     Energy(const pb::Grid&, const Ions&, const Potentials&,
-        const Electrostatic&, const Rho&, const XConGrid&,
-        SpreadPenaltyInterface*);
+        const Electrostatic&, const Rho<T>&, const XConGrid&,
+        SpreadPenaltyInterface<T>*);
 
     static Timer eval_te_tm() { return eval_te_tm_; }
 
     double evaluateTotal(const double ts, ProjectedMatricesInterface*,
-        const LocGridOrbitals& phi, const int, std::ostream&);
+        const T& phi, const int, std::ostream&);
 
     double evaluateEnergyIonsInVext();
 

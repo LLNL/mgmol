@@ -9,9 +9,9 @@
 #ifndef MGMOL_ORBITALSSTEPPER_H
 #define MGMOL_ORBITALSSTEPPER_H
 
-class LocGridOrbitals;
 class Ions;
 
+template <class T>
 class OrbitalsStepper
 {
 public:
@@ -19,11 +19,11 @@ public:
 
     virtual ~OrbitalsStepper() {}
 
-    virtual void setup(LocGridOrbitals&) = 0;
+    virtual void setup(T&) = 0;
 
-    virtual int update(LocGridOrbitals& orbitals, Ions& ions,
+    virtual int update(T& orbitals, Ions& ions,
         const double precond_factor, const bool orthof,
-        LocGridOrbitals& work_orbitals, const bool accelerate,
+        T& work_orbitals, const bool accelerate,
         const bool print_res, const double atol)
         = 0;
 };

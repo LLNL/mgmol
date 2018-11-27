@@ -7,11 +7,8 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 //
-//                        restart.cc
-//
 //    Functions to read and write restart data to files.
 //
-// $Id$
 #include <cassert>
 #include <fstream>
 #include <iostream>
@@ -39,7 +36,7 @@ using namespace std;
 #include "tools.h"
 
 // read rho and potentials form a hdf5 file
-int MGmol::read_rho_and_pot_hdf5(HDFrestart& file, Rho& rho)
+int MGmol::read_rho_and_pot_hdf5(HDFrestart& file, Rho<LocGridOrbitals>& rho)
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 0)
@@ -204,7 +201,7 @@ int MGmol::read_restart_lrs(HDFrestart& h5f_file, const string& dset_name)
 
 // Reads the restart information from restart files.
 int MGmol::read_restart_data(
-    HDFrestart& h5f_file, Rho& rho, LocGridOrbitals& orbitals)
+    HDFrestart& h5f_file, Rho<LocGridOrbitals>& rho, LocGridOrbitals& orbitals)
 {
     Control& ct = *(Control::instance());
     if (ct.verbose > 0)

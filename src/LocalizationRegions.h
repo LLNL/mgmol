@@ -6,8 +6,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef LOCALIZATIONREGIONS_H
-#define LOCALIZATIONREGIONS_H
+#ifndef MGMOL_LOCALIZATIONREGIONS_H
+#define MGMOL_LOCALIZATIONREGIONS_H
 
 #include "Control.h"
 #include "HDFrestart.h"
@@ -19,16 +19,17 @@
 #include "hdf_tools.h"
 #include "mgmol_mpi_tools.h"
 #include "tools.h"
+#include "SpreadsAndCenters.h"
 
 #include <iostream>
 #include <set>
 #include <vector>
 
-class SpreadsAndCenters;
 class OrbitalsTransform;
 class SymmetricPair;
 template <class T>
 class SquareLocalMatrices;
+class LocGridOrbitals;
 
 typedef struct LRData
 {
@@ -406,10 +407,12 @@ public:
         return norm2(dr);
     }
 
-    float move(const SpreadsAndCenters& sc, const bool flag = false);
+    float move(const SpreadsAndCenters<LocGridOrbitals>& sc,
+               const bool flag = false);
     float updateRadii(const OrbitalsTransform* ot, const float ratio);
-    float updateRadii(const SpreadsAndCenters& sc, const float ratio);
-    float updateRadiiConstVol(const SpreadsAndCenters& sc);
+    float updateRadii(const SpreadsAndCenters<LocGridOrbitals>& sc,
+                      const float ratio);
+    float updateRadiiConstVol(const SpreadsAndCenters<LocGridOrbitals>& sc);
 
     float resetRadii(const std::vector<double>& new_radii, const float ratio);
     float resetRadiiConstVol(const std::vector<double>& new_radii);

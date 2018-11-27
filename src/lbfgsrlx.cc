@@ -35,10 +35,11 @@ void MGmol::lbfgsrlx(LocGridOrbitals** orbitals, Ions& ions)
 {
     Control& ct = *(Control::instance());
 
-    LBFGS lbfgs(orbitals, ions, *rho_, *constraints_, *lrs_, local_cluster_,
+    LBFGS<LocGridOrbitals> lbfgs(orbitals, ions, *rho_, *constraints_, *lrs_,
+        local_cluster_,
         *currentMasks_, *corrMasks_, *electrostat_, ct.dt, *this);
 
-    DFTsolver::resetItCount();
+    DFTsolver<LocGridOrbitals>::resetItCount();
 
     lbfgs.init(h5f_file_);
 
@@ -53,7 +54,7 @@ void MGmol::lbfgsrlx(LocGridOrbitals** orbitals, Ions& ions)
     }
     else
     {
-        DFTsolver::setItCountLarge();
+        DFTsolver<LocGridOrbitals>::setItCountLarge();
     }
 
     // save computed vh for a fair energy "comparison" with vh computed
