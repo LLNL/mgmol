@@ -3397,15 +3397,15 @@ void Ions::augmentIonsData(const int nsteps, const int dir, const int disp,
         // chars data
         MPI_Irecv(
             cbuff_r, cbuff_size_r, MPI_CHAR, src, 0, cart_comm_, &request1[0]);
-        MPI_Irsend(cbuff, csize, MPI_CHAR, dst, 0, cart_comm_, &request1[1]);
+        MPI_Isend(cbuff, csize, MPI_CHAR, dst, 0, cart_comm_, &request1[1]);
         // integers data
         MPI_Irecv(
             ibuff_r, ibuff_size_r, MPI_INT, src, 0, cart_comm_, &request2[0]);
-        MPI_Irsend(ibuff, isize, MPI_INT, dst, 0, cart_comm_, &request2[1]);
+        MPI_Isend(ibuff, isize, MPI_INT, dst, 0, cart_comm_, &request2[1]);
         // doubles data
         MPI_Irecv(dbuff_r, dbuff_size_r, MPI_DOUBLE, src, 0, cart_comm_,
             &request3[0]);
-        MPI_Irsend(dbuff, dsize, MPI_DOUBLE, dst, 0, cart_comm_, &request3[1]);
+        MPI_Isend(dbuff, dsize, MPI_DOUBLE, dst, 0, cart_comm_, &request3[1]);
 
         // update lists with most recent data
         vector<IonData>::iterator idata = ions_data_.begin() + *offset;

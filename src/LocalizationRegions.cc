@@ -1423,14 +1423,14 @@ void LocalizationRegions::augmentOverlapRegions(const short dir,
     /* Send and receive size of data */
     int rsiz = 0;
     MPI_Irecv(&rsiz, 1, MPI_INT, source, 0, cart_comm, &request[0]);
-    MPI_Irsend(&siz, 1, MPI_INT, dest, 0, cart_comm, &request[1]);
+    MPI_Isend(&siz, 1, MPI_INT, dest, 0, cart_comm, &request[1]);
     MPI_Waitall(2, request, MPI_STATUS_IGNORE);
 
     /* Send and receive data */
     char* rbuf              = new char[rsiz];
     MPI_Request request2[2] = { MPI_REQUEST_NULL, MPI_REQUEST_NULL };
     MPI_Irecv(rbuf, rsiz, MPI_CHAR, source, 0, cart_comm, &request2[0]);
-    MPI_Irsend(buf, siz, MPI_CHAR, dest, 0, cart_comm, &request2[1]);
+    MPI_Isend(buf, siz, MPI_CHAR, dest, 0, cart_comm, &request2[1]);
     MPI_Waitall(2, request2, MPI_STATUS_IGNORE);
 
     /* set pointer positions */
