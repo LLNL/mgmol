@@ -258,8 +258,10 @@ template <typename T>
 std::vector<T*> BlockVector<T>::class_storage_;
 template <typename T>
 std::vector<short> BlockVector<T>::allocated_;
+
+// 4 slots for phi, residual, work, H*phi
 template <typename T>
-short BlockVector<T>::max_alloc_instances_ = 7;
+short BlockVector<T>::max_alloc_instances_ = 4;
 template <typename T>
 pb::GridFuncVector<T>* BlockVector<T>::data_wghosts_ = 0;
 
