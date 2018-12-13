@@ -283,7 +283,7 @@ void DataDistribution::distributeLocalDataWithCommOvlp(const int nsteps,
         //#if 1
         int remote_size;
         MPI_Irecv(&remote_size, 1, MPI_INT, source, 0, cart_comm_, &request[0]);
-        MPI_Irsend(&siz, 1, MPI_INT, dest, 0, cart_comm_, &request[1]);
+        MPI_Isend(&siz, 1, MPI_INT, dest, 0, cart_comm_, &request[1]);
         /* wait to complete communication */
         MPI_Waitall(2, request, MPI_STATUSES_IGNORE);
         if (remote_size > bsiz)
@@ -307,11 +307,11 @@ void DataDistribution::distributeLocalDataWithCommOvlp(const int nsteps,
             cout << "ERROR in MPI_Irecv, code=" << mpircv << endl;
             MPI_Abort(cart_comm_, 0);
         }
-        int mpisnd = MPI_Irsend(packed_buffer.sendBuffer(), siz, MPI_CHAR, dest,
+        int mpisnd = MPI_Isend(packed_buffer.sendBuffer(), siz, MPI_CHAR, dest,
             0, cart_comm_, &request[1]);
         if (mpisnd != MPI_SUCCESS)
         {
-            cout << "ERROR in MPI_Irsend, code=" << mpisnd << endl;
+            cout << "ERROR in MPI_Isend, code=" << mpisnd << endl;
             MPI_Abort(cart_comm_, 0);
         }
         /* wait to complete communication */
@@ -336,7 +336,7 @@ void DataDistribution::distributeLocalDataWithCommOvlp(const int nsteps,
             send_recv_ovlp_tm_.start();
             MPI_Irecv(packed_buffer.recvBuffer(), bsiz, MPI_CHAR, source, 0,
                 cart_comm_, &request[0]);
-            MPI_Irsend(packed_buffer.sendBuffer(), siz, MPI_CHAR, dest, 0,
+            MPI_Isend(packed_buffer.sendBuffer(), siz, MPI_CHAR, dest, 0,
                 cart_comm_, &request[1]);
             send_recv_ovlp_tm_.stop();
 
@@ -397,7 +397,7 @@ void DataDistribution::distributeLocalData(const int nsteps, const int dir,
         send_recv_tm_.start();
         MPI_Irecv(packed_buffer.recvBuffer(), bsiz, MPI_CHAR, source, 0,
             cart_comm_, &request[0]);
-        MPI_Irsend(packed_buffer.sendBuffer(), siz, MPI_CHAR, dest, 0,
+        MPI_Isend(packed_buffer.sendBuffer(), siz, MPI_CHAR, dest, 0,
             cart_comm_, &request[1]);
         MPI_Waitall(2, request, MPI_STATUSES_IGNORE);
         send_recv_tm_.stop();
@@ -528,7 +528,7 @@ void DataDistribution::distributeLocalRowsWithCommOvlp(const int nsteps,
         send_recv_rows_tm_.start();
         MPI_Irecv(packed_buffer.recvBuffer(), bsiz, MPI_CHAR, source, 0,
             cart_comm_, &request[0]);
-        MPI_Irsend(packed_buffer.sendBuffer(), siz, MPI_CHAR, dest, 0,
+        MPI_Isend(packed_buffer.sendBuffer(), siz, MPI_CHAR, dest, 0,
             cart_comm_, &request[1]);
         /* wait to complete communication */
         MPI_Waitall(2, request, MPI_STATUSES_IGNORE);
@@ -552,7 +552,7 @@ void DataDistribution::distributeLocalRowsWithCommOvlp(const int nsteps,
             send_recv_rows_ovlp_tm_.start();
             MPI_Irecv(packed_buffer.recvBuffer(), bsiz, MPI_CHAR, source, 0,
                 cart_comm_, &request[0]);
-            MPI_Irsend(packed_buffer.sendBuffer(), siz, MPI_CHAR, dest, 0,
+            MPI_Isend(packed_buffer.sendBuffer(), siz, MPI_CHAR, dest, 0,
                 cart_comm_, &request[1]);
             send_recv_rows_ovlp_tm_.stop();
 
@@ -606,7 +606,7 @@ void DataDistribution::distributeLocalRows(const int nsteps, const int dir,
         send_recv_rows_tm_.start();
         MPI_Irecv(packed_buffer.recvBuffer(), bsiz, MPI_CHAR, source, 0,
             cart_comm_, &request[0]);
-        MPI_Irsend(packed_buffer.sendBuffer(), siz, MPI_CHAR, dest, 0,
+        MPI_Isend(packed_buffer.sendBuffer(), siz, MPI_CHAR, dest, 0,
             cart_comm_, &request[1]);
         MPI_Waitall(2, request, MPI_STATUSES_IGNORE);
         send_recv_rows_tm_.stop();
