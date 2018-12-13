@@ -257,7 +257,7 @@ int PolakRibiereSolver::solve(LocGridOrbitals& orbitals,
     const short iprint, double& last_eks)
 {
     Control& ct(*(Control::instance()));
-    assert(ct.orbital_type != 0);
+    assert(ct.getOrbitalsType() != OrbitalsType::Eigenfunctions);
 
     solve_tm_.start();
 
