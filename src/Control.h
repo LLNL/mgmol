@@ -25,7 +25,6 @@
 
 class Potentials;
 
-#ifdef HAVE_BOOST
 namespace boost
 {
 namespace program_options
@@ -33,7 +32,6 @@ namespace program_options
     class variables_map;
 }
 }
-#endif
 
 enum class OuterSolverType
 {
@@ -585,9 +583,7 @@ public:
     float maxDistanceAtomicInfo() const { return maxDistanceAtomicInfo_; }
     int checkNLrange();
     int checkOptions();
-#ifdef HAVE_BOOST
     void setOptions(const boost::program_options::variables_map& vm);
-#endif
     bool fullyOccupied() { return ((nelspin_ - numst) == 0); }
 
     float AOMMradius() const { return aomm_radius_; }

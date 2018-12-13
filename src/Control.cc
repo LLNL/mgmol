@@ -16,9 +16,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#ifdef HAVE_BOOST
 #include <boost/program_options.hpp>
-#endif
 
 #ifdef USE_MPI
 #include <mpi.h>
@@ -1367,7 +1365,6 @@ int Control::checkNLrange()
     return 0;
 }
 
-#ifdef HAVE_BOOST
 // set internal flags from read boost options
 void Control::setOptions(const boost::program_options::variables_map& vm)
 {
@@ -1878,7 +1875,6 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
     // synchronize all processors
     sync();
 }
-#endif
 
 int Control::checkOptions()
 {

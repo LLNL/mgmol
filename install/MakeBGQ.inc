@@ -13,7 +13,7 @@ BOOST_DIR     = /usr/global/tools/adept/boost-1.47.0/bgqos_0
 MPCC  = $(SEQ_ROOT)/comm/xl/bin/mpixlcxx_r
 MPGCC = /usr/local/bin/mpig++-latestmpi
 
-MACHINE_FLAGS = -DBGQ -DHAVE_BOOST -DUSE_BARRIERS
+MACHINE_FLAGS = -DBGQ -DUSE_BARRIERS
 
 INCLUDE = -I../include -I$(HDF_DIR)/include \
           -I$(BLASDIR)/include -I$(BOOST_DIR)/include

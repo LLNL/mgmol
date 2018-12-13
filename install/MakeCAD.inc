@@ -1,5 +1,5 @@
 #Load following modules:
-#module load PE-gnu/3.0
+#module load PE-gnu
 #module load boost
 #module load openBLAS
 #module load scalapack
@@ -25,7 +25,7 @@ EXTRACXXFLAGS =
 
 FFLAGS= -O -DNDEBUG
 
-MACHINE_FLAGS = -DADD_ -DHAVE_BOOST
+MACHINE_FLAGS = -DADD_
 
 INCLUDE = $(HDF5_INC) \
 	  $(LAPACK_INC) $(OPENBLAS_INC) \

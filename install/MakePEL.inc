@@ -52,7 +52,7 @@ LIBXC_DIR      = /usr/gapps/mgmol/Libxc/1.2.0/build
 
 ARPACK_DIR     = 
 
-MACHINE_FLAGS = -DADD_ -DHAVE_BOOST -DUSE_CNR
+MACHINE_FLAGS = -DADD_ -DUSE_CNR
 
 INCLUDE = -I$(HDF_DIR)/include \
 	-I$(BLASDIR)/include
