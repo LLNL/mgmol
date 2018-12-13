@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #include "ConstraintSet.h"
 #include "Control.h"
 #include "DFTsolver.h"
@@ -14,7 +13,6 @@
 #include "Electrostatic.h"
 #include "Energy.h"
 #include "Ions.h"
-#include "KBPsiMatrix.h"
 #include "LBFGS.h"
 #include "LBFGS_IonicStepper.h"
 #include "LocGridOrbitals.h"

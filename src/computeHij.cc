@@ -17,7 +17,6 @@
 #include "GridFuncVector.h"
 #include "Hamiltonian.h"
 #include "Ions.h"
-#include "KBPsiMatrix.h"
 #include "KBPsiMatrixSparse.h"
 #include "Lap.h"
 #include "LocGridOrbitals.h"
@@ -159,35 +158,7 @@ void MGmol::computeHij(LocGridOrbitals& orbitals_i, LocGridOrbitals& orbitals_j,
 }
 
 void MGmol::computeHij(LocGridOrbitals& orbitals_i, LocGridOrbitals& orbitals_j,
-    const Ions& ions, const KBPsiMatrix* const kbpsi_i,
-    const KBPsiMatrix* const kbpsi_j,
-    dist_matrix::DistMatrix<DISTMATDTYPE>& hij)
-{
-#ifdef PRINT_OPERATIONS
-    if (onpe0) os_ << "computeHij()" << endl;
-#endif
-#ifdef USE_MPI
-    assert(remote_tasks_DistMatrix_ != 0);
-    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    MPI_Comm comm   = mmpi.commSameSpin();
-    dist_matrix::SparseDistMatrix<DISTMATDTYPE> sparseH(
-        comm, hij, remote_tasks_DistMatrix_, sparse_distmatrix_nb_partitions);
-#else
-    dist_matrix::SparseDistMatrix<DISTMATDTYPE> sparseH(
-        0, hij, rtasks_distmatrix);
-#endif
-
-    kbpsi_i->computeHvnlMatrix(kbpsi_j, ions, sparseH);
-
-    // add local Hamiltonian part to phi^T*H*phi
-    addHlocal2matrix(orbitals_i, orbitals_j, sparseH);
-
-    // sum matrix elements among processors
-    sparseH.parallelSumToDistMatrix();
-}
-
-void MGmol::computeHij(LocGridOrbitals& orbitals_i, LocGridOrbitals& orbitals_j,
-    const Ions& ions, const KBPsiMatrixInterface* const kbpsi,
+    const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
     dist_matrix::DistMatrix<DISTMATDTYPE>& hij)
 {
 #ifdef PRINT_OPERATIONS
@@ -214,7 +185,7 @@ void MGmol::computeHij(LocGridOrbitals& orbitals_i, LocGridOrbitals& orbitals_j,
 }
 
 void MGmol::computeHij(LocGridOrbitals& orbitals_i, LocGridOrbitals& orbitals_j,
-    const Ions& ions, const KBPsiMatrixInterface* const kbpsi,
+    const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
     dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sparseH)
 {
 #ifdef PRINT_OPERATIONS
@@ -231,7 +202,7 @@ void MGmol::computeHij(LocGridOrbitals& orbitals_i, LocGridOrbitals& orbitals_j,
 }
 
 void MGmol::computeHij(LocGridOrbitals& orbitals_i, LocGridOrbitals& orbitals_j,
-    const Ions& ions, const KBPsiMatrixInterface* const kbpsi,
+    const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
     ProjectedMatricesInterface* projmatrices)
 {
 #ifdef PRINT_OPERATIONS
@@ -247,21 +218,7 @@ void MGmol::computeHij(LocGridOrbitals& orbitals_i, LocGridOrbitals& orbitals_j,
 }
 
 void MGmol::getKBPsiAndHij(LocGridOrbitals& orbitals_i,
-    LocGridOrbitals& orbitals_j, Ions& ions, KBPsiMatrix* kbpsi_i,
-    KBPsiMatrix* kbpsi_j, ProjectedMatricesInterface* projmatrices,
-    dist_matrix::DistMatrix<DISTMATDTYPE>& hij)
-{
-    kbpsi_i->computeAll(ions, orbitals_i);
-    if (kbpsi_j != kbpsi_i) kbpsi_j->computeAll(ions, orbitals_j);
-
-    computeHij(orbitals_i, orbitals_j, ions, kbpsi_i, kbpsi_j, hij);
-
-    projmatrices->setHiterativeIndex(orbitals_j.getIterativeIndex(),
-        hamiltonian_->potential().getIterativeIndex());
-}
-
-void MGmol::getKBPsiAndHij(LocGridOrbitals& orbitals_i,
-    LocGridOrbitals& orbitals_j, Ions& ions, KBPsiMatrixInterface* kbpsi,
+    LocGridOrbitals& orbitals_j, Ions& ions, KBPsiMatrixSparse* kbpsi,
     ProjectedMatricesInterface* projmatrices,
     dist_matrix::DistMatrix<DISTMATDTYPE>& hij)
 {
@@ -274,7 +231,7 @@ void MGmol::getKBPsiAndHij(LocGridOrbitals& orbitals_i,
 }
 
 void MGmol::getKBPsiAndHij(LocGridOrbitals& orbitals_i,
-    LocGridOrbitals& orbitals_j, Ions& ions, KBPsiMatrixInterface* kbpsi,
+    LocGridOrbitals& orbitals_j, Ions& ions, KBPsiMatrixSparse* kbpsi,
     ProjectedMatricesInterface* projmatrices,
     dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sh)
 {
@@ -288,7 +245,7 @@ void MGmol::getKBPsiAndHij(LocGridOrbitals& orbitals_i,
 }
 
 void MGmol::getKBPsiAndHij(LocGridOrbitals& orbitals_i,
-    LocGridOrbitals& orbitals_j, Ions& ions, KBPsiMatrixInterface* kbpsi,
+    LocGridOrbitals& orbitals_j, Ions& ions, KBPsiMatrixSparse* kbpsi,
     ProjectedMatricesInterface* projmatrices)
 {
     kbpsi->computeAll(ions, orbitals_i);
@@ -302,7 +259,7 @@ void MGmol::getKBPsiAndHij(LocGridOrbitals& orbitals_i,
 }
 
 void MGmol::getKBPsiAndHij(LocGridOrbitals& orbitals, Ions& ions,
-    KBPsiMatrixInterface* kbpsi, dist_matrix::DistMatrix<DISTMATDTYPE>& hij)
+    KBPsiMatrixSparse* kbpsi, dist_matrix::DistMatrix<DISTMATDTYPE>& hij)
 {
     getKBPsiAndHij(orbitals, orbitals, ions, kbpsi, proj_matrices_, hij);
 }
@@ -313,7 +270,7 @@ void MGmol::getKBPsiAndHij(LocGridOrbitals& orbitals, Ions& ions)
 }
 
 void MGmol::computeHnlPhiAndAdd2HPhi(Ions& ions, LocGridOrbitals& phi,
-    LocGridOrbitals& hphi, const KBPsiMatrixInterface* const kbpsi)
+    LocGridOrbitals& hphi, const KBPsiMatrixSparse* const kbpsi)
 {
     // H_nl
 #ifdef PRINT_OPERATIONS
@@ -458,7 +415,7 @@ void MGmol::getHpsiAndTheta(
 }
 
 void MGmol::getHpsiAndTheta(Ions& ions, LocGridOrbitals& phi,
-    LocGridOrbitals& hphi, const KBPsiMatrixInterface* const kbpsi)
+    LocGridOrbitals& hphi, const KBPsiMatrixSparse* const kbpsi)
 {
     get_Hpsi_and_Hij_tm_.start();
 

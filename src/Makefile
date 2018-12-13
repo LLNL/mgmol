@@ -88,7 +88,6 @@ SRC =   \
  Hamiltonian.cc \
  BlockVector.cc \
  KBPsiMatrixInterface.cc \
- KBPsiMatrix.cc \
  KBPsiMatrixSparse.cc \
  KBprojectorSparse.cc \
  MultipoleExpansion.cc \

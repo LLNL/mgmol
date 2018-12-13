@@ -10,7 +10,7 @@
 #include "Control.h"
 #include "Hamiltonian.h"
 #include "Ions.h"
-#include "KBPsiMatrix.h"
+#include "KBPsiMatrixSparse.h"
 #include "LocGridOrbitals.h"
 #include "MGmol_MPI.h"
 #include "MPIdata.h"
@@ -62,7 +62,7 @@ extern "C"
 
 extern Hamiltonian* hamiltonian;
 
-void get_kbpsi(KBPsiMatrix& kbpsi, Ions& ions, pb::GridFunc<ORBDTYPE>* phi)
+void get_kbpsi(KBPsiMatrixSparse& kbpsi, Ions& ions, pb::GridFunc<ORBDTYPE>* phi)
 {
     kbpsi.reset();
 
@@ -74,7 +74,7 @@ void get_kbpsi(KBPsiMatrix& kbpsi, Ions& ions, pb::GridFunc<ORBDTYPE>* phi)
     kbpsi.scaleWithKBcoeff(ions);
 }
 
-void matvec(pb::GridFunc<ORBDTYPE>& gfpsi, double* hpsi, KBPsiMatrix& kbpsi,
+void matvec(pb::GridFunc<ORBDTYPE>& gfpsi, double* hpsi, KBPsiMatrixSparse& kbpsi,
     Ions& ions, Preconditioning* precond, const double shift)
 {
     Control& ct            = *(Control::instance());
@@ -182,7 +182,7 @@ double getLAeigen(const double tol, const int maxit, Ions& ions)
     precond->setup(st2mask, ptr_func);
     precond->setGamma(current_orbitals->get_gamma());
 
-    KBPsiMatrix kbpsi(hamiltonian->lapOper());
+    KBPsiMatrixSparse kbpsi(hamiltonian->lapOper());
     kbpsi.allocate(ions, nev);
 
     pb::GridFunc<ORBDTYPE> gfpsi(mygrid, ct.bc[0], ct.bc[1], ct.bc[2]);

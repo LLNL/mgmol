@@ -13,7 +13,6 @@
 #include "Energy.h"
 #include "Hamiltonian.h"
 #include "Ions.h"
-#include "KBPsiMatrix.h"
 #include "LocGridOrbitals.h"
 #include "LocalizationRegions.h"
 #include "MD_IonicStepper.h"

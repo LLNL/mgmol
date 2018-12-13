@@ -6,17 +6,16 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
-#ifndef MY_PROTO_H
-#define MY_PROTO_H
+#ifndef MGMOL_PROTOTYPES_H
+#define MGMOL_PROTOTYPES_H
 
 #include "global.h"
 
 class Ions;
-class KBPsiMatrixInterface;
+class KBPsiMatrixSparse;
 
 void get_vnlpsi(const Ions& ions, const std::vector<std::vector<int>>&,
-    const int, const KBPsiMatrixInterface* const kbpsi, ORBDTYPE* const);
+    const int, const KBPsiMatrixSparse* const kbpsi, ORBDTYPE* const);
 double getLAeigen(const double tol, const int maxit, Ions& ions);
 
 #endif

@@ -27,7 +27,7 @@ using namespace std;
 #include "GrassmanCGSparse.h"
 #include "Hamiltonian.h"
 #include "Ions.h"
-#include "KBPsiMatrix.h"
+#include "KBPsiMatrixSparse.h"
 #include "LocalizationRegions.h"
 #include "MGmol.h"
 #include "MPIdata.h"

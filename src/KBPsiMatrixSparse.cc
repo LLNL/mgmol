@@ -6,14 +6,13 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id:$
 #include "KBPsiMatrixSparse.h"
 #include "Control.h"
 #include "Ions.h"
 #include "LocGridOrbitals.h"
 #include "MGmol_MPI.h"
 #include "Mesh.h"
-#include "ProjectedMatricesInterface.h"
+#include "ProjectedMatrices.h"
 #include "ProjectedMatricesSparse.h"
 
 #include <limits.h>
@@ -295,25 +294,27 @@ void KBPsiMatrixSparse::computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi2,
         int* rindex = (int*)(*kbBpsimat_).getTableValue(gid);
         if (rindex == NULL) continue;
         const int lrindex = *rindex;
-        const int nnzrow1 = (*kbBpsimat_).nnzrow(lrindex);
+        const int nnzrow1 = kbBpsimat_->nnzrow(lrindex);
         for (int p1 = 0; p1 < nnzrow1; p1++)
         {
-            const int st1 = (*kbBpsimat_).getColumnIndex(lrindex, p1);
+            const int st1 = kbBpsimat_->getColumnIndex(lrindex, p1);
             const double kbpsi1
-                = coeff * (*kbBpsimat_).getRowEntry(lrindex, p1);
+                = coeff * kbBpsimat_->getRowEntry(lrindex, p1);
             if (fabs(kbpsi1) > tolKBpsi)
             {
                 const int nnzrow2 = (*kbpsi2->kbpsimat_).nnzrow(lrindex);
                 for (int p2 = 0; p2 < nnzrow2; p2++)
                 {
-                    const int st2
-                        = (*kbpsi2->kbpsimat_).getColumnIndex(lrindex, p2);
                     const double alpha
                         = kbpsi1
                           * (*kbpsi2->kbpsimat_).getRowEntry(lrindex, p2);
                     /* set hnlij */
                     if (fabs(alpha) > tolKBpsi)
+                    {
+                        const int st2
+                            = (*kbpsi2->kbpsimat_).getColumnIndex(lrindex, p2);
                         hnlij.push_back(st1, st2, alpha);
+                    }
                 }
             }
         }
@@ -342,10 +343,10 @@ void KBPsiMatrixSparse::computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi2,
         int* rindex = (int*)(*kbBpsimat_).getTableValue(gid);
         if (rindex == NULL) continue;
         const int lrindex = *rindex;
-        const int nnzrow1 = (*kbBpsimat_).nnzrow(lrindex);
+        const int nnzrow1 = kbBpsimat_->nnzrow(lrindex);
         for (int p1 = 0; p1 < nnzrow1; p1++)
         {
-            const int st1 = (*kbBpsimat_).getColumnIndex(lrindex, p1);
+            const int st1 = kbBpsimat_->getColumnIndex(lrindex, p1);
             const double kbpsi1
                 = coeff * (*kbBpsimat_).getRowEntry(lrindex, p1);
             if (fabs(kbpsi1) > tolKBpsi)
@@ -353,14 +354,16 @@ void KBPsiMatrixSparse::computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi2,
                 const int nnzrow2 = (*kbpsi2->kbpsimat_).nnzrow(lrindex);
                 for (int p2 = 0; p2 < nnzrow2; p2++)
                 {
-                    const int st2
-                        = (*kbpsi2->kbpsimat_).getColumnIndex(lrindex, p2);
                     const double alpha
                         = kbpsi1
                           * (*kbpsi2->kbpsimat_).getRowEntry(lrindex, p2);
                     /* set hnlij */
                     if (fabs(alpha) > tolKBpsi)
+                    {
+                        const int st2
+                            = (*kbpsi2->kbpsimat_).getColumnIndex(lrindex, p2);
                         mat.insertMatrixElement(st1, st2, alpha, ADD, true);
+                    }
                 }
             }
         }
@@ -401,14 +404,16 @@ void KBPsiMatrixSparse::computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi2,
                 const int nnzrow2 = (*kbpsi2->kbpsimat_).nnzrow(lrindex);
                 for (int p2 = 0; p2 < nnzrow2; p2++)
                 {
-                    const int st2
-                        = (*kbpsi2->kbpsimat_).getColumnIndex(lrindex, p2);
                     const double alpha
                         = kbpsi1
                           * (*kbpsi2->kbpsimat_).getRowEntry(lrindex, p2);
                     /* set hnlij */
                     if (fabs(alpha) > tolKBpsi)
+                    {
+                        const int st2
+                            = (*kbpsi2->kbpsimat_).getColumnIndex(lrindex, p2);
                         proj_matrices->addMatrixElementSparseH(st1, st2, alpha);
+                    }
                 }
             }
         }
@@ -499,49 +504,53 @@ void KBPsiMatrixSparse::computeHvnlMatrix(
 // build elements of matrix <phi_i|Vnl|phi_j> (assumed to be symmetric)
 // assemble resulting matrix in variable sparse matrix format
 void KBPsiMatrixSparse::getPsiKBPsiSym(
+    const Ion& ion, VariableSizeMatrix<sparserow>& sm)
+{
+    vector<int> gids;
+    ion.getGidsNLprojs(gids);
+    vector<short> kbsigns;
+    ion.getKBsigns(kbsigns);
+
+    const short nprojs = (short)gids.size();
+    for (short i = 0; i < nprojs; i++)
+    {
+        const int gid      = gids[i];
+        const double coeff = (double)kbsigns[i];
+        int* rindex        = (int*)(kbpsimat_->getTableValue(gid));
+        if (rindex == NULL) continue;
+        const int lrindex = *rindex;
+        const int nnzrow1 = kbpsimat_->nnzrow(lrindex);
+        for (int p1 = 0; p1 < nnzrow1; p1++)
+        {
+            double kbpsielement1 = kbpsimat_->getRowEntry(lrindex, p1);
+            if (fabs(kbpsielement1) <= tolKBpsi)
+                continue;
+            const int st1 = kbpsimat_->getColumnIndex(lrindex, p1);
+            for (int p2 = 0; p2 < nnzrow1; p2++)
+            {
+                double kbpsielement2 = kbpsimat_->getRowEntry(lrindex, p2);
+                if (fabs(kbpsielement2) <= tolKBpsi)
+                    continue;
+                const double alpha = coeff * kbpsielement1 * kbpsielement2;
+                /* set hnlij */
+                if (fabs(alpha) > tolKBpsi)
+                {
+                    const int st2 = kbpsimat_->getColumnIndex(lrindex, p2);
+                    sm.insertMatrixElement(st1, st2, alpha, ADD, true);
+                }
+            }
+        }
+    }
+}
+
+void KBPsiMatrixSparse::getPsiKBPsiSym(
     const Ions& ions, VariableSizeMatrix<sparserow>& sm)
 {
     // loop over all the ions
     // parallelization over ions by including only those centered in subdomain
-    const vector<Ion*>::const_iterator iend = ions.local_ions().end();
-    vector<Ion*>::const_iterator ion        = ions.local_ions().begin();
-    while (ion != iend)
+    for (auto& ion : ions.local_ions())
     {
-        vector<int> gids;
-        (*ion)->getGidsNLprojs(gids);
-        vector<short> kbsigns;
-        (*ion)->getKBsigns(kbsigns);
-
-        const short nprojs = (short)gids.size();
-        for (short i = 0; i < nprojs; i++)
-        {
-            const int gid      = gids[i];
-            const double coeff = (double)kbsigns[i];
-            int* rindex        = (int*)(*kbpsimat_).getTableValue(gid);
-            if (rindex == NULL) continue;
-            const int lrindex = *rindex;
-            const int nnzrow1 = (*kbpsimat_).nnzrow(lrindex);
-            for (int p1 = 0; p1 < nnzrow1; p1++)
-            {
-                if (fabs((*kbpsimat_).getRowEntry(lrindex, p1)) <= tolKBpsi)
-                    continue;
-                const int st1 = (*kbpsimat_).getColumnIndex(lrindex, p1);
-                for (int p2 = 0; p2 < nnzrow1; p2++)
-                {
-                    if (fabs((*kbpsimat_).getRowEntry(lrindex, p2)) <= tolKBpsi)
-                        continue;
-                    const int st2 = (*kbpsimat_).getColumnIndex(lrindex, p2);
-                    const double alpha
-                        = coeff * (*kbpsimat_).getRowEntry(lrindex, p1)
-                          * (*kbpsimat_).getRowEntry(lrindex, p2);
-                    /* set hnlij */
-                    if (fabs(alpha) > tolKBpsi)
-                        sm.insertMatrixElement(st1, st2, alpha, ADD, true);
-                }
-            }
-        }
-
-        ion++;
+        getPsiKBPsiSym(*ion, sm);
     }
 }
 
@@ -606,12 +615,10 @@ double KBPsiMatrixSparse::getEvnl(const Ions& ions, LocGridOrbitals& orbitals,
     double trace = 0.0;
     // loop over all the ions
     // parallelization over ions by including only those centered in subdomain
-    const vector<Ion*>::const_iterator iend = ions.local_ions().end();
-    vector<Ion*>::const_iterator ion        = ions.local_ions().begin();
-    while (ion != iend)
+    for (auto& ion : ions.local_ions())
     {
         vector<int> gids;
-        (*ion)->getGidsNLprojs(gids);
+        ion->getGidsNLprojs(gids);
 
         const short nprojs = (short)gids.size();
         for (short i = 0; i < nprojs; i++)
@@ -619,7 +626,41 @@ double KBPsiMatrixSparse::getEvnl(const Ions& ions, LocGridOrbitals& orbitals,
             const int gid = gids[i];
             trace += getTraceDM(gid, proj_matrices->getDM());
         }
-        ion++;
+    }
+
+    /* gather trace result */
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    MPI_Comm comm   = mmpi.commSpin();
+
+    double evnl = 0.0;
+    MPI_Allreduce(&trace, &evnl, 1, MPI_DOUBLE, MPI_SUM, comm);
+
+    return evnl * Ry2Ha;
+}
+
+double KBPsiMatrixSparse::getEvnl(const Ions& ions, LocGridOrbitals& orbitals,
+    ProjectedMatrices* proj_matrices)
+{
+    const int numst = orbitals.numst();
+    if (numst == 0) return 0.;
+
+    DISTMATDTYPE* replicated_dm;
+    proj_matrices->getReplicatedDM(replicated_dm);
+
+    double trace = 0.0;
+    // loop over all the ions
+    // parallelization over ions by including only those centered in subdomain
+    for (auto& ion : ions.local_ions())
+    {
+        vector<int> gids;
+        ion->getGidsNLprojs(gids);
+
+        const short nprojs = (short)gids.size();
+        for (short i = 0; i < nprojs; i++)
+        {
+            const int gid = gids[i];
+            trace += getTraceDM(gid, replicated_dm, numst);
+        }
     }
 
     /* gather trace result */
@@ -641,21 +682,20 @@ double KBPsiMatrixSparse::getTraceDM(
     if (rindex == NULL) return trace;
 
     const int lrindex = *rindex;
-    const int nnzrow1 = (*kbpsimat_).nnzrow(lrindex);
+    const int nnzrow1 = kbpsimat_->nnzrow(lrindex);
     for (int p1 = 0; p1 < nnzrow1; p1++)
     {
-        const int st1 = (*kbpsimat_).getColumnIndex(lrindex, p1);
+        const int st1 = kbpsimat_->getColumnIndex(lrindex, p1);
         const double t1
-            = (*kbpsimat_)
-                  .getRowEntry(lrindex, p1); // getValIonState(gid,st1) ;
+            = (*kbpsimat_).getRowEntry(lrindex, p1);
         const DISTMATDTYPE* const pmat = &mat_X[st1 * numst];
 
         for (int p2 = 0; p2 < nnzrow1; p2++)
         {
-            const int st2 = (*kbpsimat_).getColumnIndex(lrindex, p2);
+            const int st2 = kbpsimat_->getColumnIndex(lrindex, p2);
 
             trace += t1 * (*kbpsimat_).getRowEntry(lrindex, p2)
-                     * pmat[st2]; // getValIonState(gid,st2) * pmat[st2];
+                     * pmat[st2];
         }
     }
 
@@ -664,14 +704,17 @@ double KBPsiMatrixSparse::getTraceDM(
 
 double KBPsiMatrixSparse::getTraceDM(
     const int gid, const DensityMatrixSparse& dm) const
-//    const int gid, const ProjectedMatricesInterface *pmat)const
 {
     trace_tm_.start();
 
     double trace = 0.;
 
     int* rindex = (int*)(*kbpsimat_).getTableValue(gid);
-    if (rindex == NULL) return trace;
+    if (rindex == NULL)
+    {
+        trace_tm_.stop();
+        return trace;
+    }
 
     const int lrindex = *rindex;
     const int nnzrow1 = (*kbpsimat_).nnzrow(lrindex);
@@ -681,6 +724,7 @@ double KBPsiMatrixSparse::getTraceDM(
     kbpsimat_->getColumnIndexes(lrindex, cols);
     assert(cols.size() == nnzrow1);
 
+    //get values in row of kbpsimat_
     vector<double> vval;
     vval.reserve(nnzrow1);
     kbpsimat_->getRowEntries(lrindex, vval);
@@ -689,18 +733,16 @@ double KBPsiMatrixSparse::getTraceDM(
     for (int p1 = 0; p1 < nnzrow1; p1++)
     {
         const int st1 = cols[p1];
-        const double t1 = vval[p1]; // getValIonState(gid,st1) ;
+        const double t1 = vval[p1];
 
+        //get values in row of DM for specific columns
         vector<double> row_values;
         dm.getEntries(st1, cols, row_values);
         assert(row_values.size() == cols.size());
 
         for (int p2 = 0; p2 < nnzrow1; p2++)
         {
-            // const int st2 =  cols[p2];
-
             trace += t1 * vval[p2] * row_values[p2];
-            // trace += t1 *vval[p2] * (*pmat).getDMEntry(st1, st2);
         }
     }
 

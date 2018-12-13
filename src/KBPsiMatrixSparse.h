@@ -91,6 +91,7 @@ class KBPsiMatrixSparse : public KBPsiMatrixInterface
         ProjectedMatricesInterface*) const;
 
     void getPsiKBPsiSym(const Ions& ions, VariableSizeMatrix<sparserow>& sm);
+    void getPsiKBPsiSym(const Ion& ion, VariableSizeMatrix<sparserow>& sm);
     void computeKBpsi(Ions& ions, LocGridOrbitals& orbitals,
         const int first_color, const int nb_colors, const bool flag);
     void clearData();
@@ -104,6 +105,8 @@ public:
 
     double getEvnl(const Ions& ions, LocGridOrbitals& orbitals,
         ProjectedMatricesSparse* proj_matrices);
+    double getEvnl(const Ions& ions, LocGridOrbitals& orbitals,
+        ProjectedMatrices* proj_matrices);
     void computeKBpsi(
         Ions& ions, pb::GridFunc<ORBDTYPE>*, const int, const bool flag);
     double getValIonState(const int gid, const int st) const

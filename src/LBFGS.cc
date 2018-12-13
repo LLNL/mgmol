@@ -9,7 +9,6 @@
 #include "LBFGS.h"
 #include "Control.h"
 #include "Electrostatic.h"
-#include "KBPsiMatrix.h"
 #include "MGmol.h"
 #include "MasksSet.h"
 #include "Mesh.h"

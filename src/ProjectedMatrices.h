@@ -588,6 +588,7 @@ public:
     }
     void computeGenEigenInterval(std::vector<double>& interval,
         const int maxits, const double padding = 0.01);
+    DensityMatrix& getDM() { return *dm_; }
 };
 
 #endif

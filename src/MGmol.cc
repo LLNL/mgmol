@@ -33,7 +33,6 @@ using namespace std;
 #include "HDFrestart.h"
 #include "Hamiltonian.h"
 #include "Ions.h"
-#include "KBPsiMatrix.h"
 #include "KBPsiMatrixSparse.h"
 #include "LBFGS.h"
 #include "LDAonGrid.h"
@@ -1288,19 +1287,16 @@ double MGmol::get_evnl(const Ions& ions, LocGridOrbitals& orbitals)
         ProjectedMatricesSparse* projmatrices
             = dynamic_cast<ProjectedMatricesSparse*>(proj_matrices_);
         assert(projmatrices);
-        KBPsiMatrixSparse* kbpsi = dynamic_cast<KBPsiMatrixSparse*>(g_kbpsi_);
-        assert(kbpsi);
-        val = kbpsi->getEvnl(ions, orbitals, projmatrices);
+
+        val = g_kbpsi_->getEvnl(ions, orbitals, projmatrices);
     }
     else
     {
         ProjectedMatrices* projmatrices
             = dynamic_cast<ProjectedMatrices*>(proj_matrices_);
         assert(projmatrices);
-        KBPsiMatrix* kbpsi = dynamic_cast<KBPsiMatrix*>(g_kbpsi_);
-        assert(kbpsi);
 
-        val = kbpsi->getEvnl(ions, orbitals, projmatrices);
+        val = g_kbpsi_->getEvnl(ions, orbitals, projmatrices);
     }
 
     evnl_tm_.stop();
@@ -1552,7 +1548,7 @@ double MGmol::computeConstraintResidual(LocGridOrbitals& orbitals,
 // Get preconditioned residual in res_orbitals
 double MGmol::computePrecondResidual(LocGridOrbitals& phi,
     LocGridOrbitals& hphi, LocGridOrbitals& res, Ions& ions,
-    KBPsiMatrixInterface* kbpsi, const bool print_residual, const bool norm_res)
+    KBPsiMatrixSparse* kbpsi, const bool print_residual, const bool norm_res)
 
 {
     Control& ct = *(Control::instance());

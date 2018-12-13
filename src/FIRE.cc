@@ -6,11 +6,9 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id:$
 #include "FIRE.h"
 #include "Control.h"
 #include "Electrostatic.h"
-#include "KBPsiMatrix.h"
 #include "MGmol.h"
 #include "MasksSet.h"
 #include "Mesh.h"

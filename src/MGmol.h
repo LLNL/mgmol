@@ -33,7 +33,6 @@ class Hamiltonian;
 class ProjectedMatrices;
 class ProjectedMatricesInterface;
 class KBPsiMatrix;
-class KBPsiMatrixInterface;
 class KBPsiMatrixSparse;
 class MasksSet;
 class IonicAlgorithm;
@@ -95,7 +94,7 @@ private:
 
     ClusterOrbitals* local_cluster_;
 
-    KBPsiMatrixInterface* g_kbpsi_;
+    KBPsiMatrixSparse* g_kbpsi_;
 
     SpreadsAndCenters* spreadf_;
 
@@ -134,28 +133,24 @@ private:
         HDFrestart& h5f_file, Rho& rho, LocGridOrbitals& orbitals);
     void write_header();
     void getKBPsiAndHij(LocGridOrbitals& orbitals_i,
-        LocGridOrbitals& orbitals_j, Ions& ions, KBPsiMatrix* kbpsi_i,
-        KBPsiMatrix* kbpsi_j, ProjectedMatricesInterface* projmatrices,
-        dist_matrix::DistMatrix<DISTMATDTYPE>& hij);
-    void getKBPsiAndHij(LocGridOrbitals& orbitals_i,
-        LocGridOrbitals& orbitals_j, Ions& ions, KBPsiMatrixInterface* kbpsi,
+        LocGridOrbitals& orbitals_j, Ions& ions, KBPsiMatrixSparse* kbpsi,
         ProjectedMatricesInterface* projmatrices,
         dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sh);
     void computeHij(LocGridOrbitals& orbitals_i, LocGridOrbitals& orbitals_j,
-        const Ions& ions, const KBPsiMatrixInterface* const kbpsi,
+        const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
         dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sparseH);
     void getKBPsiAndHij(LocGridOrbitals& orbitals_i,
-        LocGridOrbitals& orbitals_j, Ions& ions, KBPsiMatrixInterface* kbpsi,
+        LocGridOrbitals& orbitals_j, Ions& ions, KBPsiMatrixSparse* kbpsi,
         ProjectedMatricesInterface* projmatrices);
     void getKBPsiAndHij(LocGridOrbitals& orbitals_i,
-        LocGridOrbitals& orbitals_j, Ions& ions, KBPsiMatrixInterface* kbpsi,
+        LocGridOrbitals& orbitals_j, Ions& ions, KBPsiMatrixSparse* kbpsi,
         ProjectedMatricesInterface* projmatrices,
         dist_matrix::DistMatrix<DISTMATDTYPE>& hij);
     void getKBPsiAndHij(LocGridOrbitals& orbitals, Ions& ions,
-        KBPsiMatrixInterface* kbpsi,
+        KBPsiMatrixSparse* kbpsi,
         dist_matrix::DistMatrix<DISTMATDTYPE>& hij);
     void computeHnlPhiAndAdd2HPhi(Ions& ions, LocGridOrbitals& phi,
-        LocGridOrbitals& hphi, const KBPsiMatrixInterface* const kbpsi);
+        LocGridOrbitals& hphi, const KBPsiMatrixSparse* const kbpsi);
     void addHlocalij(LocGridOrbitals& orbitalsi, LocGridOrbitals& orbitalsj,
         ProjectedMatricesInterface* projmatrices);
     void addHlocal2matrix(LocGridOrbitals& orbitalsi,
@@ -243,14 +238,10 @@ public:
         const KBPsiMatrixSparse* const kbpsi_j,
         dist_matrix::DistMatrix<DISTMATDTYPE>& hij);
     void computeHij(LocGridOrbitals& orbitals_i, LocGridOrbitals& orbitals_j,
-        const Ions& ions, const KBPsiMatrix* const kbpsi_i,
-        const KBPsiMatrix* const kbpsi_j,
+        const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
         dist_matrix::DistMatrix<DISTMATDTYPE>& hij);
     void computeHij(LocGridOrbitals& orbitals_i, LocGridOrbitals& orbitals_j,
-        const Ions& ions, const KBPsiMatrixInterface* const kbpsi,
-        dist_matrix::DistMatrix<DISTMATDTYPE>& hij);
-    void computeHij(LocGridOrbitals& orbitals_i, LocGridOrbitals& orbitals_j,
-        const Ions& ions, const KBPsiMatrixInterface* const kbpsi,
+        const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
         ProjectedMatricesInterface*);
     void addHlocal2matrix(LocGridOrbitals& orbitalsi,
         LocGridOrbitals& orbitalsj,
@@ -276,11 +267,11 @@ public:
         LocGridOrbitals& orbitals, LocGridOrbitals& work_orbitals, Ions&, int&);
     void updateHmatrix(LocGridOrbitals& orbitals, Ions& ions);
     void getHpsiAndTheta(Ions& ions, LocGridOrbitals& phi,
-        LocGridOrbitals& hphi, const KBPsiMatrixInterface* const kbpsi);
+        LocGridOrbitals& hphi, const KBPsiMatrixSparse* const kbpsi);
     void getHpsiAndTheta(
         Ions& ions, LocGridOrbitals& phi, LocGridOrbitals& hphi);
     double computePrecondResidual(LocGridOrbitals& phi, LocGridOrbitals& hphi,
-        LocGridOrbitals& res, Ions& ions, KBPsiMatrixInterface* kbpsi,
+        LocGridOrbitals& res, Ions& ions, KBPsiMatrixSparse* kbpsi,
         const bool print_residual, const bool norm_res);
     void addResidualSpreadPenalty(LocGridOrbitals& phi, LocGridOrbitals& res);
     int get_NOLMO(NOLMOTransform& noot, LocGridOrbitals& orbitals,

@@ -6,7 +6,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #include <cassert>
 #include <iostream>
 #include <list>
@@ -14,7 +13,7 @@ using namespace std;
 
 #include "GridFunc.h"
 #include "Ions.h"
-#include "KBPsiMatrix.h"
+#include "KBPsiMatrixSparse.h"
 #include "LocGridOrbitals.h"
 #include "MGmol.h"
 #include "MGmol_blas1.h"
@@ -25,7 +24,7 @@ Timer get_kbpsi_tm("get_kbpsi");
 Timer vnlpsi_tm("vnlpsi");
 
 void get_vnlpsi(const Ions& ions, const vector<vector<int>>& subdomain_gids,
-    const int color, const KBPsiMatrixInterface* const kbpsi,
+    const int color, const KBPsiMatrixSparse* const kbpsi,
     ORBDTYPE* const vpsi)
 {
     vnlpsi_tm.start();
