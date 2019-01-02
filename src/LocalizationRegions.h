@@ -29,7 +29,6 @@ class OrbitalsTransform;
 class SymmetricPair;
 template <class T>
 class SquareLocalMatrices;
-class LocGridOrbitals;
 
 typedef struct LRData
 {
@@ -407,12 +406,15 @@ public:
         return norm2(dr);
     }
 
-    float move(const SpreadsAndCenters<LocGridOrbitals>& sc,
+    template <class T>
+    float move(const SpreadsAndCenters<T>& sc,
                const bool flag = false);
     float updateRadii(const OrbitalsTransform* ot, const float ratio);
-    float updateRadii(const SpreadsAndCenters<LocGridOrbitals>& sc,
+    template <class T>
+    float updateRadii(const SpreadsAndCenters<T>& sc,
                       const float ratio);
-    float updateRadiiConstVol(const SpreadsAndCenters<LocGridOrbitals>& sc);
+    template <class T>
+    float updateRadiiConstVol(const SpreadsAndCenters<T>& sc);
 
     float resetRadii(const std::vector<double>& new_radii, const float ratio);
     float resetRadiiConstVol(const std::vector<double>& new_radii);

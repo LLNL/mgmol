@@ -9,6 +9,7 @@
 #include "global.h"
 
 #include "LocalizationRegions.h"
+#include "LocGridOrbitals.h"
 #include "Mesh.h"
 #include "OrbitalsTransform.h"
 #include "SpreadsAndCenters.h"
@@ -308,7 +309,8 @@ void LocalizationRegions::resetOldCenters()
     num_extrapolations_ = 0;
 }
 
-float LocalizationRegions::move(const SpreadsAndCenters<LocGridOrbitals>& sc,
+template <class T>
+float LocalizationRegions::move(const SpreadsAndCenters<T>& sc,
                                 const bool flag)
 {
     vector<Vector3D> centers;
@@ -342,8 +344,9 @@ float LocalizationRegions::getMeanRadius()
     return cbrt(rcube / (float)nlr);
 }
 
+template <class T>
 float LocalizationRegions::updateRadii(
-    const SpreadsAndCenters<LocGridOrbitals>& sc, const float ratio)
+    const SpreadsAndCenters<T>& sc, const float ratio)
 {
     for (vector<LRData>::iterator it = overlap_regions_.begin();
          it != overlap_regions_.end(); ++it)
@@ -355,8 +358,9 @@ float LocalizationRegions::updateRadii(
     return getMeanRadius();
 }
 
+template <class T>
 float LocalizationRegions::updateRadiiConstVol(
-    const SpreadsAndCenters<LocGridOrbitals>& sc)
+    const SpreadsAndCenters<T>& sc)
 {
     assert(volume_ > 0.);
 
@@ -1822,4 +1826,13 @@ double LocalizationRegions::computeMinDistBetweenLocalPairs(
 //
 //    kbproj_.clear();
 //}
-//
+
+template float LocalizationRegions::move(
+    const SpreadsAndCenters<LocGridOrbitals>& sc,
+    const bool flag);
+template float LocalizationRegions::updateRadiiConstVol(
+    const SpreadsAndCenters<LocGridOrbitals>& sc);
+template float LocalizationRegions::updateRadii(
+   const SpreadsAndCenters<LocGridOrbitals>& sc,
+   const float ratio);
+
