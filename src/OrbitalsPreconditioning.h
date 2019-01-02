@@ -11,7 +11,6 @@
 
 #include "GridFuncVector.h"
 #include "Lap.h"
-#include "LocGridOrbitals.h"
 #include "Preconditioning.h"
 
 class Masks4Orbitals;
@@ -20,6 +19,7 @@ class ProjectedMatricesInterface;
 class Potentials;
 class LocalizationRegions;
 
+template <class T>
 class OrbitalsPreconditioning
 {
 private:
@@ -52,12 +52,15 @@ public:
 
     ~OrbitalsPreconditioning();
 
-    void setup(LocGridOrbitals& orbitals, const short mg_levels,
+    void setup(T& orbitals, const short mg_levels,
         const short lap_type, MasksSet*, LocalizationRegions*);
-    void precond_mg(LocGridOrbitals& orbitals);
+    void precond_mg(T& orbitals);
     void setGamma(const pb::Lap<ORBDTYPE>& lapOper, const Potentials& pot,
         const short mg_levels, ProjectedMatricesInterface* proj_matrices);
     static void printTimers(std::ostream& os);
 };
+
+template <class T>
+Timer OrbitalsPreconditioning<T>::precond_tm_("OrbitalsPreconditioning::precond");
 
 #endif

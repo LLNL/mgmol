@@ -17,9 +17,9 @@
 #include "Preconditioning.h"
 #include "ProjectedMatricesInterface.h"
 
-Timer OrbitalsPreconditioning::precond_tm_("OrbitalsPreconditioning::precond");
 
-OrbitalsPreconditioning::~OrbitalsPreconditioning()
+template <class T>
+OrbitalsPreconditioning<T>::~OrbitalsPreconditioning()
 {
     assert(is_set_);
     assert(precond_ != 0);
@@ -37,7 +37,8 @@ OrbitalsPreconditioning::~OrbitalsPreconditioning()
     }
 }
 
-void OrbitalsPreconditioning::setup(LocGridOrbitals& orbitals,
+template <class T>
+void OrbitalsPreconditioning<T>::setup(T& orbitals,
     const short mg_levels, const short lap_type, MasksSet* currentMasks,
     LocalizationRegions* lrs)
 {
@@ -88,14 +89,15 @@ void OrbitalsPreconditioning::setup(LocGridOrbitals& orbitals,
     assert(data_wghosts_);
 }
 
-void OrbitalsPreconditioning::precond_mg(LocGridOrbitals& orbitals)
+template <class T>
+void OrbitalsPreconditioning<T>::precond_mg(T& orbitals)
 {
     assert(is_set_);
     assert(precond_ != 0);
     assert(gamma_ > 0.);
 
 #ifdef PRINT_OPERATIONS
-    if (onpe0) (*MPIdata::sout) << "LocGridOrbitals::precond_mg()..." << endl;
+    if (onpe0) (*MPIdata::sout) << "T::precond_mg()..." << endl;
 #endif
     precond_tm_.start();
 
@@ -139,12 +141,14 @@ void OrbitalsPreconditioning::precond_mg(LocGridOrbitals& orbitals)
     }
 
 #ifdef PRINT_OPERATIONS
-    if (onpe0) (*MPIdata::sout) << "LocGridOrbitals::precond_mg() done" << endl;
+    if (onpe0) (*MPIdata::sout)
+        << "OrbitalsPreconditioning<T>::precond_mg() done" << endl;
 #endif
     precond_tm_.stop();
 }
 
-void OrbitalsPreconditioning::setGamma(const pb::Lap<ORBDTYPE>& lapOper,
+template <class T>
+void OrbitalsPreconditioning<T>::setGamma(const pb::Lap<ORBDTYPE>& lapOper,
     const Potentials& pot, const short mg_levels,
     ProjectedMatricesInterface* proj_matrices)
 {
@@ -171,7 +175,10 @@ void OrbitalsPreconditioning::setGamma(const pb::Lap<ORBDTYPE>& lapOper,
 #endif
 }
 
-void OrbitalsPreconditioning::printTimers(ostream& os)
+template <class T>
+void OrbitalsPreconditioning<T>::printTimers(ostream& os)
 {
     precond_tm_.print(os);
 }
+
+template class OrbitalsPreconditioning<LocGridOrbitals>;

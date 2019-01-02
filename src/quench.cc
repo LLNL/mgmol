@@ -426,7 +426,7 @@ int MGmol::quench(T* orbitals, Ions& ions,
         aomm_->projectOut(*orbitals);
     }
 
-    orbitals_precond_ = new OrbitalsPreconditioning();
+    orbitals_precond_ = new OrbitalsPreconditioning<T>();
     orbitals_precond_->setup(
         *orbitals, ct.getMGlevels(), ct.lap_type, currentMasks_, lrs_);
 

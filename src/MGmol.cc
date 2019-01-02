@@ -1215,7 +1215,7 @@ void MGmol::printTimers()
     setup_tm_.print(os_);
     HDFrestart::printTimers(os_);
     BlockVector<ORBDTYPE>::printTimers(os_);
-    OrbitalsPreconditioning::printTimers(os_);
+    OrbitalsPreconditioning<LocGridOrbitals>::printTimers(os_);
     MDfiles::printTimers(os_);
 }
 

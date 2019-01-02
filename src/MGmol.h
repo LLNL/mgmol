@@ -35,7 +35,6 @@ class KBPsiMatrix;
 class KBPsiMatrixSparse;
 class MasksSet;
 class DMStrategy;
-class OrbitalsPreconditioning;
 
 #include "AOMMprojector.h"
 #include "BasicDataDistributors.h"
@@ -44,6 +43,7 @@ class OrbitalsPreconditioning;
 #include "Forces.h"
 #include "Ions.h"
 #include "LocGridOrbitals.h"
+#include "OrbitalsPreconditioning.h"
 #include "RemoteTasksDistMatrix.h"
 #include "Rho.h"
 #include "SparseDistMatrix.h"
@@ -190,7 +190,7 @@ private:
     /* Data distribution objects */
     BasicDataDistributors* data_distributor_;
 
-    OrbitalsPreconditioning* orbitals_precond_;
+    OrbitalsPreconditioning<LocGridOrbitals>* orbitals_precond_;
 
 public:
     Electrostatic* electrostat_;
