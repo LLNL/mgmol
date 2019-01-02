@@ -20,13 +20,14 @@
 #include "ProjectedMatrices.h"
 #include "ProjectedMatricesSparse.h"
 
+template <class T>
 class DMStrategyFactory
 {
 public:
     static DMStrategy* create(MPI_Comm comm, std::ostream& os, Ions& ions,
-        Rho<LocGridOrbitals>* rho, Energy<LocGridOrbitals>* energy, Electrostatic* electrostat,
+        Rho<T>* rho, Energy<LocGridOrbitals>* energy, Electrostatic* electrostat,
         MGmol* mgmol_strategy, ProjectedMatricesInterface* proj_matrices,
-        LocGridOrbitals* orbitals)
+        T* orbitals)
     {
         Control& ct = *(Control::instance());
 
@@ -34,7 +35,7 @@ public:
         if (ct.DM_solver() == DMNonLinearSolverType::MVP)
         {
             dm_strategy
-                = new MVP_DMStrategy<LocGridOrbitals>(comm, os, ions, rho,
+                = new MVP_DMStrategy<T>(comm, os, ions, rho,
                     energy, electrostat,
                     mgmol_strategy, orbitals, proj_matrices, ct.use_old_dm());
         }
@@ -45,7 +46,7 @@ public:
                 dm_strategy = new HamiltonianMVP_DMStrategy<
                     VariableSizeMatrix<sparserow>,
                     VariableSizeMatrix<sparserow>, ProjectedMatricesSparse,
-                    LocGridOrbitals>(
+                    T>(
                     comm, os, ions, rho, energy, electrostat, mgmol_strategy,
                     orbitals);
             }
@@ -55,7 +56,7 @@ public:
                     dist_matrix::DistMatrix<DISTMATDTYPE>,
                     dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE>,
                     ProjectedMatrices,
-                    LocGridOrbitals>(comm, os, ions, rho, energy, electrostat,
+                    T>(comm, os, ions, rho, energy, electrostat,
                     mgmol_strategy, orbitals);
             }
         }
@@ -76,7 +77,7 @@ public:
                 {
                     if (ct.getOrbitalsType() == OrbitalsType::Nonorthogonal)
                     {
-                        dm_strategy = new NonOrthoDMStrategy<LocGridOrbitals>(
+                        dm_strategy = new NonOrthoDMStrategy<T>(
                             orbitals, proj_matrices, ct.dm_mix);
                     }
                 }

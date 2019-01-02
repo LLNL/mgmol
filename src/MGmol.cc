@@ -475,7 +475,8 @@ int MGmol::initial()
     updateHmatrix(*current_orbitals_, *ions_);
 
     // HMVP algorithm requires that H is initialized
-    dm_strategy_ = DMStrategyFactory::create(comm_, os_, *ions_, rho_, energy_,
+    dm_strategy_ = DMStrategyFactory<LocGridOrbitals>::create(
+        comm_, os_, *ions_, rho_, energy_,
         electrostat_, this, proj_matrices_, current_orbitals_);
 
     // theta = invB * Hij
