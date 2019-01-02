@@ -266,7 +266,7 @@ int MGmol::initial()
     else
         proj_matrices_ = new ProjectedMatrices(ct.numst, with_spin);
 
-    forces_ = new Forces(hamiltonian_, rho_, proj_matrices_);
+    forces_ = new Forces<LocGridOrbitals>(hamiltonian_, rho_, proj_matrices_);
 
     if (ct.verbose > 0)
         printWithTimeStamp("MGmol::initial(), create MasksSet...", os_);

@@ -20,6 +20,7 @@ using namespace std;
 #include "MGmol.h"
 #include "MGmol_blas1.h"
 #include "MPIdata.h"
+#include "LocGridOrbitals.h"
 #include "Mesh.h"
 #include "Potentials.h"
 #include "ProjectedMatrices.h"
@@ -32,16 +33,6 @@ using namespace std;
 
 #define Ry2Ha 0.5;
 double shift_R[NPTS];
-
-Timer Forces::lforce_tm_("Forces::lforce");
-Timer Forces::nlforce_tm_("Forces::nlforce");
-Timer Forces::get_var_tm_("Forces::var");
-Timer Forces::get_loc_proj_tm_("Forces::loc_proj");
-Timer Forces::consolidate_data_("Forces::consolidate");
-Timer Forces::lforce_local_tm_("Forces::lforce_local");
-Timer Forces::total_tm_("Forces::total");
-Timer Forces::kbpsi_tm_("Forces::KBpsi");
-Timer Forces::energy_tm_("Forces::nl_energy");
 
 double get_trilinval(const double xc, const double yc, const double zc,
     const double h0, const double h1, const double h2, const Vector3D& ref,
@@ -61,7 +52,8 @@ double get_deriv2(double value[2])
     return (value[1] - value[0]) / (2. * DELTAC);
 }
 
-int Forces::get_var(
+template <class T>
+int Forces<T>::get_var(
     Ion& ion, int* pvec, double*** var_pot, double*** var_charge)
 {
     get_var_tm_.start();
@@ -247,7 +239,8 @@ int Forces::get_var(
     return docount;
 }
 
-void Forces::get_loc_proj(RHODTYPE* rho, const int* const pvec,
+template <class T>
+void Forces<T>::get_loc_proj(RHODTYPE* rho, const int* const pvec,
     double*** var_pot, double*** var_charge, const int docount,
     double** loc_proj)
 {
@@ -279,7 +272,8 @@ void Forces::get_loc_proj(RHODTYPE* rho, const int* const pvec,
     get_loc_proj_tm_.stop();
 }
 
-void Forces::lforce_ion(Ion& ion, RHODTYPE* rho, double** loc_proj)
+template <class T>
+void Forces<T>::lforce_ion(Ion& ion, RHODTYPE* rho, double** loc_proj)
 {
     double ***var_pot, ***var_charge;
 
@@ -300,7 +294,8 @@ void Forces::lforce_ion(Ion& ion, RHODTYPE* rho, double** loc_proj)
     D3FREE(var_pot);
 }
 
-void Forces::lforce(Ions& ions, RHODTYPE* rho)
+template <class T>
+void Forces<T>::lforce(Ions& ions, RHODTYPE* rho)
 {
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
@@ -448,7 +443,8 @@ void Forces::lforce(Ions& ions, RHODTYPE* rho)
 // Get the nl energy as the trace of loc_kbpsi*mat_X for several loc_kbpsi
 // result added to erg
 
-void Forces::nlforceSparse(LocGridOrbitals& orbitals, Ions& ions)
+template <class T>
+void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
 {
     if (ions.getNumIons() == 0) return;
 
@@ -636,7 +632,8 @@ void Forces::nlforceSparse(LocGridOrbitals& orbitals, Ions& ions)
     nlforce_tm_.stop();
 }
 
-void Forces::force(LocGridOrbitals& orbitals, Ions& ions)
+template <class T>
+void Forces<T>::force(T& orbitals, Ions& ions)
 {
 #ifdef USE_BARRIERS
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
@@ -694,3 +691,5 @@ void Forces::force(LocGridOrbitals& orbitals, Ions& ions)
 
     total_tm_.stop();
 }
+
+template class Forces<LocGridOrbitals>;

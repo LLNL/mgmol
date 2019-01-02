@@ -78,7 +78,7 @@ private:
 
     Hamiltonian<LocGridOrbitals>* hamiltonian_;
 
-    Forces* forces_;
+    Forces<LocGridOrbitals>* forces_;
 
     MasksSet* currentMasks_;
     MasksSet* corrMasks_;
