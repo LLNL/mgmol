@@ -58,7 +58,8 @@ void KBPsiMatrixSparse::clearData()
     }
 }
 
-void KBPsiMatrixSparse::setup(const Ions& ions, const LocGridOrbitals& orbitals)
+template <class T>
+void KBPsiMatrixSparse::setup(const Ions& ions, const T& orbitals)
 {
     setup_tm_.start();
 
@@ -129,7 +130,8 @@ void KBPsiMatrixSparse::globalSumKBpsi()
 
 // Loop over the ions with projectors overlapping with local subdomain
 // and evaluate <KB|psi> for some state.
-void KBPsiMatrixSparse::computeKBpsi(Ions& ions, LocGridOrbitals& orbitals,
+template <class T>
+void KBPsiMatrixSparse::computeKBpsi(Ions& ions, T& orbitals,
     const int first_color, const int nb_colors, const bool flag)
 {
     assert(first_color >= 0);
@@ -554,7 +556,8 @@ void KBPsiMatrixSparse::getPsiKBPsiSym(
     }
 }
 
-void KBPsiMatrixSparse::computeAll(Ions& ions, LocGridOrbitals& orbitals)
+template <class T>
+void KBPsiMatrixSparse::computeAll(Ions& ions, T& orbitals)
 {
     assert(count_proj_subdomain_ == ions.countProjectorsSubdomain());
 
@@ -606,7 +609,8 @@ void KBPsiMatrixSparse::printTimers(ostream& os)
     trace_tm_.print(os);
 }
 
-double KBPsiMatrixSparse::getEvnl(const Ions& ions, LocGridOrbitals& orbitals,
+template <class T>
+double KBPsiMatrixSparse::getEvnl(const Ions& ions, T& orbitals,
     ProjectedMatricesSparse* proj_matrices)
 {
     const int numst = orbitals.numst();
@@ -638,7 +642,8 @@ double KBPsiMatrixSparse::getEvnl(const Ions& ions, LocGridOrbitals& orbitals,
     return evnl * Ry2Ha;
 }
 
-double KBPsiMatrixSparse::getEvnl(const Ions& ions, LocGridOrbitals& orbitals,
+template <class T>
+double KBPsiMatrixSparse::getEvnl(const Ions& ions, T& orbitals,
     ProjectedMatrices* proj_matrices)
 {
     const int numst = orbitals.numst();
@@ -750,3 +755,16 @@ double KBPsiMatrixSparse::getTraceDM(
 
     return trace;
 }
+
+template void KBPsiMatrixSparse::computeKBpsi(Ions& ions,
+        LocGridOrbitals& orbitals,
+        const int first_color, const int nb_colors, const bool flag);
+template double KBPsiMatrixSparse::getEvnl(const Ions& ions,
+        LocGridOrbitals& orbitals,
+        ProjectedMatricesSparse* proj_matrices);
+template double KBPsiMatrixSparse::getEvnl(const Ions& ions,
+        LocGridOrbitals& orbitals,
+        ProjectedMatrices* proj_matrices);
+template void KBPsiMatrixSparse::setup(const Ions&, const LocGridOrbitals&);
+template void KBPsiMatrixSparse::computeAll(Ions&, LocGridOrbitals&);
+
