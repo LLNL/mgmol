@@ -17,11 +17,11 @@
 class Ions;
 class MGmol;
 class Electrostatic;
-class LocGridOrbitals;
+class T4;
 class ProjectedMatrices2N;
 class ProjectedMatrices;
 
-template <class T1, class T2, class T3>
+template <class T1, class T2, class T3, class T4>
 class HamiltonianMVPSolver
 {
 
@@ -33,8 +33,8 @@ private:
 
     Ions& ions_;
 
-    Rho<LocGridOrbitals>* rho_;
-    Energy<LocGridOrbitals>* energy_;
+    Rho<T4>* rho_;
+    Energy<T4>* energy_;
     Electrostatic* electrostat_;
     MGmol* mgmol_strategy_;
 
@@ -63,16 +63,15 @@ private:
 
 public:
     HamiltonianMVPSolver(MPI_Comm comm, std::ostream& os, Ions& ions,
-        Rho<LocGridOrbitals>* rho,
-        Energy<LocGridOrbitals>* energy, Electrostatic* electrostat,
+        Rho<T4>* rho,
+        Energy<T4>* energy, Electrostatic* electrostat,
         MGmol* mgmol_strategy,
         const int numst, const double kbT, const int nel,
         const std::vector<std::vector<int>>& global_indexes,
         const short n_inner_steps, const T1& hinit,
         const bool try_shorter_intervals = false);
     ~HamiltonianMVPSolver();
-    template<class T>
-    int solve(T& orbitals);
+    int solve(T4& orbitals);
     void reset();
     void printTimers(std::ostream& os);
 };

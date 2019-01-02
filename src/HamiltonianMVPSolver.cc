@@ -24,18 +24,18 @@
 double evalEntropyMVP(ProjectedMatricesInterface* projmatrices,
     const bool print_flag, ostream& os);
 
-template <class T1, class T2, class T3>
-Timer HamiltonianMVPSolver<T1, T2, T3>::solve_tm_(
+template <class T1, class T2, class T3, class T4>
+Timer HamiltonianMVPSolver<T1, T2, T3, T4>::solve_tm_(
     "HamiltonianMVPSolver::solve");
-template <class T1, class T2, class T3>
-Timer HamiltonianMVPSolver<T1, T2, T3>::target_tm_(
+template <class T1, class T2, class T3, class T4>
+Timer HamiltonianMVPSolver<T1, T2, T3, T4>::target_tm_(
     "HamiltonianMVPSolver::target");
 
 // static int sparse_distmatrix_nb_partitions=128;
 
-template <class T1, class T2, class T3>
-HamiltonianMVPSolver<T1, T2, T3>::HamiltonianMVPSolver(MPI_Comm comm,
-    ostream& os, Ions& ions, Rho<LocGridOrbitals>* rho, Energy<LocGridOrbitals>* energy,
+template <class T1, class T2, class T3, class T4>
+HamiltonianMVPSolver<T1, T2, T3, T4>::HamiltonianMVPSolver(MPI_Comm comm,
+    ostream& os, Ions& ions, Rho<T4>* rho, Energy<T4>* energy,
     Electrostatic* electrostat, MGmol* mgmol_strategy, const int numst,
     const double kbT, const int nel, const vector<vector<int>>& global_indexes,
     const short n_inner_steps, const T1& hinit,
@@ -59,23 +59,22 @@ HamiltonianMVPSolver<T1, T2, T3>::HamiltonianMVPSolver(MPI_Comm comm,
     initial_hmatrix_ = new T1(hinit);
 }
 
-template <class T1, class T2, class T3>
-HamiltonianMVPSolver<T1, T2, T3>::~HamiltonianMVPSolver()
+template <class T1, class T2, class T3, class T4>
+HamiltonianMVPSolver<T1, T2, T3, T4>::~HamiltonianMVPSolver()
 {
     delete hmatrix_;
     delete initial_hmatrix_;
 }
 
-template <class T1, class T2, class T3>
-void HamiltonianMVPSolver<T1, T2, T3>::reset()
+template <class T1, class T2, class T3, class T4>
+void HamiltonianMVPSolver<T1, T2, T3, T4>::reset()
 {
     (*hmatrix_) = (*initial_hmatrix_);
 }
 
 // update density matrix in N x N space
-template <class T1, class T2, class T3>
-template <typename T>
-int HamiltonianMVPSolver<T1, T2, T3>::solve(T& orbitals)
+template <class T1, class T2, class T3, class T4>
+int HamiltonianMVPSolver<T1, T2, T3, T4>::solve(T4& orbitals)
 {
     Control& ct = *(Control::instance());
 
@@ -339,8 +338,8 @@ int HamiltonianMVPSolver<T1, T2, T3>::solve(T& orbitals)
     return 0;
 }
 
-template <class T1, class T2, class T3>
-void HamiltonianMVPSolver<T1, T2, T3>::printTimers(ostream& os)
+template <class T1, class T2, class T3, class T4>
+void HamiltonianMVPSolver<T1, T2, T3, T4>::printTimers(ostream& os)
 {
     if (onpe0)
     {
@@ -354,14 +353,7 @@ void HamiltonianMVPSolver<T1, T2, T3>::printTimers(ostream& os)
 //explicit instantiation of class
 template class HamiltonianMVPSolver<dist_matrix::DistMatrix<DISTMATDTYPE>,
     dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE>,
-    ProjectedMatrices>;
+    ProjectedMatrices, LocGridOrbitals>;
 template class HamiltonianMVPSolver<VariableSizeMatrix<sparserow>,
-    VariableSizeMatrix<sparserow>, ProjectedMatricesSparse>;
-
-//explicit instantiation of member function solve()
-template int HamiltonianMVPSolver<dist_matrix::DistMatrix<DISTMATDTYPE>,
-    dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE>,
-    ProjectedMatrices>::solve(LocGridOrbitals& orbitals);
-template int HamiltonianMVPSolver<VariableSizeMatrix<sparserow>,
-    VariableSizeMatrix<sparserow>, ProjectedMatricesSparse>::solve(LocGridOrbitals& orbitals);
+    VariableSizeMatrix<sparserow>, ProjectedMatricesSparse, LocGridOrbitals>;
 

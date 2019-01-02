@@ -14,36 +14,34 @@
 #include "HamiltonianMVPSolver.h"
 #include "Rho.h"
 
-class ProjectedMatricesInterface;
-class LocGridOrbitals;
 class Ions;
 class MGmol;
 class Electrostatic;
 class MGmol;
 
-template <class T1, class T2, class T3>
+template <class T1, class T2, class T3, class T4>
 class HamiltonianMVP_DMStrategy : public DMStrategy
 {
 private:
-    LocGridOrbitals* orbitals_;
+    T4* orbitals_;
 
     MPI_Comm comm_;
     std::ostream& os_;
 
     Ions& ions_;
-    Rho<LocGridOrbitals>* rho_;
-    Energy<LocGridOrbitals>* energy_;
+    Rho<T4>* rho_;
+    Energy<T4>* energy_;
     Electrostatic* electrostat_;
     const std::vector<std::vector<int>>& global_indexes_;
     MGmol* mgmol_strategy_;
 
-    HamiltonianMVPSolver<T1, T2, T3>* solver_;
+    HamiltonianMVPSolver<T1, T2, T3, T4>* solver_;
 
 public:
     HamiltonianMVP_DMStrategy(MPI_Comm comm, std::ostream& os, Ions& ions,
-        Rho<LocGridOrbitals>* rho, Energy<LocGridOrbitals>* energy,
+        Rho<T4>* rho, Energy<T4>* energy,
         Electrostatic* electrostat,
-        MGmol* mgmol_strategy, LocGridOrbitals* orbitals);
+        MGmol* mgmol_strategy, T4* orbitals);
 
     ~HamiltonianMVP_DMStrategy();
 

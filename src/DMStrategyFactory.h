@@ -44,7 +44,8 @@ public:
             {
                 dm_strategy = new HamiltonianMVP_DMStrategy<
                     VariableSizeMatrix<sparserow>,
-                    VariableSizeMatrix<sparserow>, ProjectedMatricesSparse>(
+                    VariableSizeMatrix<sparserow>, ProjectedMatricesSparse,
+                    LocGridOrbitals>(
                     comm, os, ions, rho, energy, electrostat, mgmol_strategy,
                     orbitals);
             }
@@ -53,7 +54,8 @@ public:
                 dm_strategy = new HamiltonianMVP_DMStrategy<
                     dist_matrix::DistMatrix<DISTMATDTYPE>,
                     dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE>,
-                    ProjectedMatrices>(comm, os, ions, rho, energy, electrostat,
+                    ProjectedMatrices,
+                    LocGridOrbitals>(comm, os, ions, rho, energy, electrostat,
                     mgmol_strategy, orbitals);
             }
         }
