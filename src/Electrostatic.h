@@ -15,7 +15,6 @@
 #include "Timer.h"
 
 class Ions;
-class LocGridOrbitals;
 class Potentials;
 
 class Electrostatic
@@ -50,12 +49,14 @@ public:
 
     void setupRhoc(RHODTYPE* rhoc);
     void fillFuncAroundIons(const Ions& ions);
-    void computeVh(const Ions& ions, Rho<LocGridOrbitals>& rho, Potentials& pot);
-    void computeVh(const pb::GridFunc<POTDTYPE>& vhinit, const Ions& ions,
-        Rho<LocGridOrbitals>& rho, Potentials& pot);
+    template <class T> void computeVh(
+        const Ions& ions, Rho<T>& rho, Potentials& pot);
+    template <class T> void computeVh(
+        const pb::GridFunc<POTDTYPE>& vhinit, const Ions& ions,
+        Rho<T>& rho, Potentials& pot);
     void setupInitialVh(const POTDTYPE* const);
     void setupInitialVh(const pb::GridFunc<POTDTYPE>&);
-    void computeVhRho(Rho<LocGridOrbitals>& rho);
+    template <class T> void computeVhRho(Rho<T>& rho);
     void resetSolution() { poisson_solver_->resetVh(); }
 
     const pb::GridFunc<POTDTYPE>& getVh() const;

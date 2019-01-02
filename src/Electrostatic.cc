@@ -12,6 +12,7 @@
 #include "Hartree.h"
 #include "Hartree_CG.h"
 #include "Ions.h"
+#include "LocGridOrbitals.h"
 #include "Mesh.h"
 #include "PBdiel.h"
 #include "PBdiel_CG.h"
@@ -184,7 +185,8 @@ void Electrostatic::setupInitialVh(const pb::GridFunc<POTDTYPE>& vh_init)
     if (iterative_index_ == -1) iterative_index_ = 0;
 }
 
-void Electrostatic::computeVhRho(Rho<LocGridOrbitals>& rho)
+template <class T>
+void Electrostatic::computeVhRho(Rho<T>& rho)
 {
     assert(grhoc_ != NULL);
 
@@ -432,15 +434,17 @@ void Electrostatic::setup(const short max_sweeps)
     poisson_solver_->setup(nu1, nu2, max_sweeps, 1.e-16, max_nlevs);
 }
 
+template <class T>
 void Electrostatic::computeVh(const pb::GridFunc<POTDTYPE>& vh_init,
-    const Ions& ions, Rho<LocGridOrbitals>& rho, Potentials& pot)
+    const Ions& ions, Rho<T>& rho, Potentials& pot)
 {
     poisson_solver_->set_vh(vh_init);
 
     computeVh(ions, rho, pot);
 }
 
-void Electrostatic::computeVh(const Ions& ions, Rho<LocGridOrbitals>& rho,
+template <class T>
+void Electrostatic::computeVh(const Ions& ions, Rho<T>& rho,
                               Potentials& pot)
 {
     solve_tm_.start();
@@ -505,3 +509,9 @@ void Electrostatic::computeVh(const Ions& ions, Rho<LocGridOrbitals>& rho,
 
     solve_tm_.stop();
 }
+
+template void Electrostatic::computeVhRho(Rho<LocGridOrbitals>& rho);
+template void Electrostatic::computeVh(const Ions& ions,
+    Rho<LocGridOrbitals>& rho, Potentials& pot);
+template void Electrostatic::computeVh(const pb::GridFunc<POTDTYPE>& vhinit,
+    const Ions& ions, Rho<LocGridOrbitals>& rho, Potentials& pot);
