@@ -35,7 +35,6 @@ using namespace std;
 #include "Ions.h"
 #include "KBPsiMatrixSparse.h"
 #include "LBFGS.h"
-#include "LDAonGrid.h"
 #include "LocGridOrbitals.h"
 #include "LocalizationRegions.h"
 #include "MDfiles.h"
@@ -45,8 +44,6 @@ using namespace std;
 #include "MasksSet.h"
 #include "Mesh.h"
 #include "OrbitalsPreconditioning.h"
-#include "PBEonGrid.h"
-#include "PBEonGridSpin.h"
 #include "PackedCommunicationBuffer.h"
 #include "PoissonInterface.h"
 #include "Potentials.h"
@@ -61,6 +58,7 @@ using namespace std;
 #include "SubMatrices.h"
 #include "SubspaceProjector.h"
 #include "XConGrid.h"
+#include "XCfunctionalFactory.h"
 #include "manage_memory.h"
 
 #define DELTA 1e-8
@@ -396,22 +394,9 @@ int MGmol::initial()
     }
 
     if (ct.verbose > 0) printWithTimeStamp("Initialize XC functional...", os_);
-    if (ct.xctype == 0)
-    {
-        xcongrid_ = new LDAonGrid<LocGridOrbitals>(*rho_, pot);
-    }
-    else if (ct.xctype == 2)
-    {
-        if (mmpi.nspin() > 1)
-            xcongrid_ = new PBEonGridSpin<LocGridOrbitals>(*rho_, pot);
-        else
-            xcongrid_ = new PBEonGrid<LocGridOrbitals>(*rho_, pot);
-    }
-    else
-    {
-        (*MPIdata::serr) << "Invalid XC option" << endl;
-        return -1;
-    }
+    xcongrid_ = XCfunctionalFactory<LocGridOrbitals>::create(
+                    ct.xctype, mmpi.nspin(), *rho_, pot);
+    assert( xcongrid_ != 0 );
 
     // initialize nl potentials with restart values if possible
     //    if( ct.restart_info>1 )
