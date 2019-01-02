@@ -25,7 +25,7 @@ class DMStrategyFactory
 {
 public:
     static DMStrategy* create(MPI_Comm comm, std::ostream& os, Ions& ions,
-        Rho<T>* rho, Energy<LocGridOrbitals>* energy, Electrostatic* electrostat,
+        Rho<T>* rho, Energy<T>* energy, Electrostatic* electrostat,
         MGmol* mgmol_strategy, ProjectedMatricesInterface* proj_matrices,
         T* orbitals)
     {
@@ -71,7 +71,8 @@ public:
             {
                 if (ct.getOrbitalsType() == OrbitalsType::Eigenfunctions)
                 {
-                    dm_strategy = new EigenDMStrategy(orbitals, proj_matrices);
+                    dm_strategy = new EigenDMStrategy<T>(
+                        orbitals, proj_matrices);
                 }
                 else
                 {

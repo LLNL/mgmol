@@ -11,15 +11,18 @@
 #include "LocGridOrbitals.h"
 #include "ProjectedMatrices.h"
 
-EigenDMStrategy::EigenDMStrategy(LocGridOrbitals* current_orbitals,
+template <class T>
+EigenDMStrategy<T>::EigenDMStrategy(T* current_orbitals,
     ProjectedMatricesInterface* proj_matrices)
     : current_orbitals_(current_orbitals), proj_matrices_(proj_matrices)
 {
 }
 
-void EigenDMStrategy::initialize() { update(); }
+template <class T>
+void EigenDMStrategy<T>::initialize() { update(); }
 
-int EigenDMStrategy::update()
+template <class T>
+int EigenDMStrategy<T>::update()
 {
     Control& ct = *(Control::instance());
 
@@ -37,3 +40,5 @@ int EigenDMStrategy::update()
 
     return 0;
 }
+
+template class EigenDMStrategy<LocGridOrbitals>;
