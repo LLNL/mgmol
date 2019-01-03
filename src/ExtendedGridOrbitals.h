@@ -19,7 +19,6 @@
 #include "MGmol_MPI.h"
 #include "MPIdata.h"
 #include "Orbitals.h"
-#include "SaveData.h"
 #include "SinCosOps.h"
 #include "SparseDistMatrix.h"
 #include "global.h"
@@ -81,9 +80,6 @@ private:
 
     int numst_;
 
-    // map gid -> function storage (for each subdomain)
-    std::vector<map<int, ORBDTYPE*>>* gidToStorage_;
-
     // pointers to objects owned outside class
     ProjectedMatricesInterface* proj_matrices_;
     ClusterOrbitals* local_cluster_;
@@ -99,9 +95,6 @@ private:
     //
     void copySharedData(const ExtendedGridOrbitals& A);
 
-    const ORBDTYPE* getGidStorage(const int st, const short iloc) const;
-    int packStates(LocalizationRegions* lrs);
-    void setAssignedIndexes();
     void projectOut(ORBDTYPE* const, const int, const double scale = 1.);
 
     void multiply_by_matrix(const int first_color, const int ncolors,
@@ -115,8 +108,6 @@ private:
     {
         block_vector_.assign(i, v, n);
     }
-    short checkOverlap(const int, const int, const short);
-
     ExtendedGridOrbitals& operator=(const ExtendedGridOrbitals& orbitals);
     ExtendedGridOrbitals();
 
@@ -399,8 +390,6 @@ public:
     int write_func_hdf5(HDFrestart&, string name = "Function");
     int read_hdf5(HDFrestart& h5f_file);
     int read_func_hdf5(HDFrestart&, string name = "Function");
-
-    void setGids2Storage();
 
     void initWF(const LocalizationRegions& lrs);
     void checkCond(const double tol, const bool flag_stop);

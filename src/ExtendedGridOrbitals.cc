@@ -12,7 +12,6 @@
 #include <mpi.h>
 #endif
 
-#include "ColoredRegions.h"
 #include "Control.h"
 #include "DistMatrix.h"
 #include "FunctionsPacking.h"
@@ -97,8 +96,6 @@ ExtendedGridOrbitals::ExtendedGridOrbitals(std::string name,
 
     assert(numst_ >= 0);
 
-    gidToStorage_ = 0;
-
     overlapping_gids_.clear();
 
     if (setup_flag) setup(lrs);
@@ -107,12 +104,6 @@ ExtendedGridOrbitals::ExtendedGridOrbitals(std::string name,
 ExtendedGridOrbitals::~ExtendedGridOrbitals()
 {
     assert(proj_matrices_ != 0);
-    assert(gidToStorage_ != 0);
-
-    // delete gidToStorage here. This is OK since it is not a shared data
-    // else there would be a memory leak.
-    delete gidToStorage_;
-    gidToStorage_ = 0;
 }
 
 ExtendedGridOrbitals::ExtendedGridOrbitals(const std::string name,
@@ -133,10 +124,6 @@ ExtendedGridOrbitals::ExtendedGridOrbitals(const std::string name,
     assert(A.lrs_ != 0);
 
     copySharedData(A);
-
-    gidToStorage_ = 0;
-
-    setGids2Storage();
 }
 
 ExtendedGridOrbitals::ExtendedGridOrbitals(const std::string name,
@@ -157,10 +144,6 @@ ExtendedGridOrbitals::ExtendedGridOrbitals(const std::string name,
 
     copySharedData(A);
 
-    gidToStorage_ = 0;
-
-    setGids2Storage();
-
     // setup new projected_matrices object
     Control& ct = *(Control::instance());
     proj_matrices_->setup(ct.occ_width, ct.getNel(), overlapping_gids_);
@@ -170,8 +153,6 @@ void ExtendedGridOrbitals::copySharedData(const ExtendedGridOrbitals& A)
 {
     // if(onpe0)cout<<"call ExtendedGridOrbitals::copySharedData(const
     // ExtendedGridOrbitals &A)"<<endl;
-
-    assert(A.gidToStorage_ != 0);
 
     numst_ = A.numst_;
 
@@ -206,47 +187,6 @@ void ExtendedGridOrbitals::setDotProduct(const short dot_type)
         dotProduct_ = &ExtendedGridOrbitals::dotProductSimple;
 }
 
-void ExtendedGridOrbitals::setGids2Storage()
-{
-    assert(numst_ >= 0);
-    assert(subdivx_ > 0);
-
-    if (gidToStorage_ != 0)
-        gidToStorage_->clear();
-    else
-        gidToStorage_ = new vector<map<int, ORBDTYPE*>>();
-    gidToStorage_->resize(subdivx_);
-    for (short iloc = 0; iloc < subdivx_; iloc++)
-    {
-        map<int, ORBDTYPE*>& gid2st((*gidToStorage_)[iloc]);
-        for (int color = 0; color < numst_; color++)
-        {
-            const int gid = overlapping_gids_[iloc][color];
-            if (gid != -1)
-            {
-                gid2st.insert(pair<int, ORBDTYPE*>(gid, getPsi(color, iloc)));
-            }
-        }
-    }
-}
-
-// return pointer to const data
-const ORBDTYPE* ExtendedGridOrbitals::getGidStorage(
-    const int gid, const short iloc) const
-{
-    assert(numst_ >= 0);
-    assert(iloc < subdivx_);
-    assert(iloc >= 0);
-    assert(gid < numst_);
-    assert(iloc < (short)gidToStorage_->size());
-
-    map<int, ORBDTYPE*>::const_iterator p = (*gidToStorage_)[iloc].find(gid);
-    if (p != (*gidToStorage_)[iloc].end())
-        return p->second;
-    else
-        return 0;
-}
-
 void ExtendedGridOrbitals::setup(LocalizationRegions* lrs)
 {
     Control& ct = *(Control::instance());
@@ -267,8 +207,6 @@ void ExtendedGridOrbitals::setup(LocalizationRegions* lrs)
     bool skinny_stencil = !ct.Mehrstellen();
 
     block_vector_.initialize(overlapping_gids_, skinny_stencil);
-
-    setGids2Storage();
 
     proj_matrices_->setup(ct.occ_width, ct.getNel(), overlapping_gids_);
 
@@ -328,14 +266,6 @@ void ExtendedGridOrbitals::axpy(const double alpha, const ExtendedGridOrbitals& 
     incrementIterativeIndex();
 
     axpy_tm_.stop();
-}
-
-short ExtendedGridOrbitals::checkOverlap(
-    const int st1, const int st2, const short level)
-{
-    assert(masks4orbitals_);
-
-    return 1;
 }
 
 void ExtendedGridOrbitals::applyMask(const bool first_time)
@@ -407,36 +337,33 @@ void ExtendedGridOrbitals::initGauss(const double rc, const LocalizationRegions&
 
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
-            const int gid = overlapping_gids_[iloc][icolor];
-            if (gid > -1)
+            const Vector3D& center(lrs.getCenter(icolor));
+            Vector3D xc;
+
+            xc[0] = start0 + iloc * dim0 * hgrid[0];
+            for (int ix = iloc * dim0; ix < (iloc + 1) * dim0; ix++)
             {
-                const Vector3D& center(lrs.getCenter(gid));
-                Vector3D xc;
+                xc[1] = start1;
 
-                xc[0] = start0 + iloc * dim0 * hgrid[0];
-                for (int ix = iloc * dim0; ix < (iloc + 1) * dim0; ix++)
+                for (int iy = 0; iy < dim1; iy++)
                 {
-                    xc[1] = start1;
-
-                    for (int iy = 0; iy < dim1; iy++)
+                    xc[2] = start2;
+                    for (int iz = 0; iz < dim2; iz++)
                     {
-                        xc[2] = start2;
-                        for (int iz = 0; iz < dim2; iz++)
-                        {
-                            const double r = xc.minimage(center, ll, bc_);
-                            if (r < rmax)
-                                ipsi[ix * incx + iy * incy + iz]
-                                    = (ORBDTYPE)exp(-r * r * invrc2);
-                            else
-                                ipsi[ix * incx + iy * incy + iz] = 0.;
+                        const double r = xc.minimage(center, ll, bc_);
+                        if (r < rmax)
+                            ipsi[ix * incx + iy * incy + iz]
+                                = (ORBDTYPE)exp(-r * r * invrc2);
+                        else
+                            ipsi[ix * incx + iy * incy + iz] = 0.;
 
-                            xc[2] += hgrid[2];
-                        }
-                        xc[1] += hgrid[1];
+                        xc[2] += hgrid[2];
                     }
-                    xc[0] += hgrid[0];
+                    xc[1] += hgrid[1];
                 }
+                xc[0] += hgrid[0];
             }
+         
         }
     }
     resetIterativeIndex();
@@ -485,31 +412,27 @@ void ExtendedGridOrbitals::initFourier()
 
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
-
-            const int gid = overlapping_gids_[iloc][icolor];
-            if (gid > -1)
+            double x = start0 + iloc * dim0 * hgrid[0];
+            for (int ix = iloc * dim0; ix < (iloc + 1) * dim0; ix++)
             {
-                double x = start0 + iloc * dim0 * hgrid[0];
-                for (int ix = iloc * dim0; ix < (iloc + 1) * dim0; ix++)
+                double y = start1;
+
+                for (int iy = 0; iy < dim1; iy++)
                 {
-                    double y = start1;
-
-                    for (int iy = 0; iy < dim1; iy++)
+                    double z = start2;
+                    for (int iz = 0; iz < dim2; iz++)
                     {
-                        double z = start2;
-                        for (int iz = 0; iz < dim2; iz++)
-                        {
-                            ipsi[ix * incx + iy * incy + iz]
-                                = (ORBDTYPE)(cos(kk[0] * x) * cos(kk[1] * y)
-                                             * cos(kk[2] * z));
+                        ipsi[ix * incx + iy * incy + iz]
+                            = (ORBDTYPE)(cos(kk[0] * x) * cos(kk[1] * y)
+                                         * cos(kk[2] * z));
 
-                            z += hgrid[2];
-                        }
-                        y += hgrid[1];
+                        z += hgrid[2];
                     }
-                    x += hgrid[0];
+                    y += hgrid[1];
                 }
+                x += hgrid[0];
             }
+         
         }
     }
     resetIterativeIndex();
@@ -581,18 +504,6 @@ void ExtendedGridOrbitals::multiply_by_matrix(const int first_color,
             lda_, matrix_local, numst_, 0.,
             product + iloc * loc_numpt_, ldp);
     }
-
-#ifdef DEBUG
-    for (short iloc = 0; iloc < subdivx_; iloc++)
-    {
-
-        for (int i = 0; i < ncolors; i++)
-            if (overlapping_gids_[iloc][first_color + i] == -1)
-                assert(fabs(*(product + i * ldp + iloc * loc_numpt_
-                              + loc_numpt_ / 2))
-                       < 1.e-15);
-    }
-#endif
 
     delete[] matrix_local;
 
@@ -788,8 +699,6 @@ int ExtendedGridOrbitals::write_func_hdf5(HDFrestart& h5f_file, string name)
     hid_t file_id = h5f_file.file_id();
     bool iwrite   = h5f_file.active();
 
-    const bool global = ct.globalColoring();
-
     // Create the dataspace for the dataset.
 
     hid_t filespace = -1;
@@ -927,8 +836,6 @@ int ExtendedGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, string name)
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
     static int mycolor = 0;
-
-    const bool global = ct.globalColoring();
 
     hsize_t block[3]  = { grid_.dim(0), grid_.dim(1), grid_.dim(2) };
     hsize_t offset[3] = { 0, 0, 0 };
@@ -1097,19 +1004,18 @@ void ExtendedGridOrbitals::matrixToLocalMatrix(const short iloc,
     for (int jcolor = 0; jcolor < ncolor; jcolor++)
     {
         const int gidj = overlapping_gids_[iloc][first_color + jcolor];
-        if (gidj != -1)
+     
+        const int njst = gidj * numst_;
+        const int njc  = jcolor * numst_;
+        for (int icolor = 0; icolor < numst_; icolor++)
         {
-            const int njst = gidj * numst_;
-            const int njc  = jcolor * numst_;
-            for (int icolor = 0; icolor < numst_; icolor++)
+            const int gidi = overlapping_gids_[iloc][icolor];
+            if (gidi != -1)
             {
-                const int gidi = overlapping_gids_[iloc][icolor];
-                if (gidi != -1)
-                {
-                    lmatrix[njc + icolor] = matrix[njst + gidi];
-                }
+                lmatrix[njc + icolor] = matrix[njst + gidi];
             }
         }
+     
     }
 }
 
@@ -1283,14 +1189,11 @@ void ExtendedGridOrbitals::computeDiagonalElementsDotProduct(
     for (int icolor = 0; icolor < numst_; icolor++)
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
-            const int gid = overlapping_gids_[iloc][icolor];
-            if (gid > -1)
-            {
-                double alpha = MPdot(loc_numpt_, orbitals.getPsi(icolor, iloc),
-                    getPsi(icolor, iloc));
+            double alpha = MPdot(loc_numpt_, orbitals.getPsi(icolor, iloc),
+                getPsi(icolor, iloc));
 
-                ss[gid] += (DISTMATDTYPE)(alpha * grid_.vel());
-            }
+            ss[icolor] += (DISTMATDTYPE)(alpha * grid_.vel());
+         
         }
     vector<DISTMATDTYPE> tmp(ss);
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
@@ -1324,15 +1227,12 @@ void ExtendedGridOrbitals::computeDiagonalElementsDotProductLocal(
     for (int icolor = 0; icolor < numst_; icolor++)
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
-            const int ifunc = overlapping_gids_[iloc][icolor];
-            if (ifunc > -1)
-            {
-                double alpha = MPdot(loc_numpt_, orbitals.getPsi(icolor, iloc),
-                    getPsi(icolor, iloc));
+            double alpha = MPdot(loc_numpt_, orbitals.getPsi(icolor, iloc),
+                getPsi(icolor, iloc));
 
-                double val = alpha * grid_.vel();
-                diag.insertMatrixElement(ifunc, ifunc, val, ADD, true);
-            }
+            double val = alpha * grid_.vel();
+            diag.insertMatrixElement(icolor, icolor, val, ADD, true);
+         
         }
 #ifdef USE_MPI
     /* do data distribution to update local sums */
@@ -1659,27 +1559,13 @@ double ExtendedGridOrbitals::normState(const int gid) const
 {
     assert(gid >= 0);
 
-    // find color of state
-    int color_gid = -1;
-    for (short iloc = 0; iloc < subdivx_; iloc++)
-        for (int color = 0; color < numst_; color++)
-        {
-            const int pst = overlapping_gids_[iloc][color];
-            if (pst == gid)
-            {
-                assert(color_gid == -1 || color_gid == color);
-                color_gid = color;
-            }
-        }
     double tmp = 0.;
-    if (color_gid >= 0)
-        for (short iloc = 0; iloc < subdivx_; iloc++)
-            if (overlapping_gids_[iloc][color_gid] == gid)
-            {
-                // diagonal element
-                tmp += block_vector_.dot(color_gid, color_gid, iloc);
-                // cout<<"gid="<<gid<<", tmp="<<tmp<<endl;
-            }
+    for (short iloc = 0; iloc < subdivx_; iloc++)
+    { 
+        // diagonal element
+        tmp += block_vector_.dot(gid, gid, iloc);
+        // cout<<"gid="<<gid<<", tmp="<<tmp<<endl;
+    }
 
     double norm     = 0.;
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
@@ -1862,13 +1748,10 @@ void ExtendedGridOrbitals::computeDiagonalGram(
     {
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
-            const int gid = overlapping_gids_[iloc][color];
-            if (gid != -1)
-            {
-                double val
-                    = vel * (double)block_vector_.dot(color, color, iloc);
-                diagS.insertMatrixElement(gid, gid, val, ADD, true);
-            }
+            double val
+                = vel * (double)block_vector_.dot(color, color, iloc);
+            diagS.insertMatrixElement(color, color, val, ADD, true);
+         
         }
     }
     // do data distribution to update local data.
@@ -1900,10 +1783,7 @@ void ExtendedGridOrbitals::computeInvNorms2(vector<vector<double>>& inv_norms2) 
         for (short color = 0; color < numst_; color++)
         {
             const int gid = overlapping_gids_[iloc][color];
-            if (gid != -1)
-            {
-                inv_norms2[iloc][color] = diagS.get_value(gid, gid);
-            }
+            inv_norms2[iloc][color] = diagS.get_value(gid, gid);
         }
     }
 
@@ -1942,13 +1822,12 @@ void ExtendedGridOrbitals::normalize()
             for (int color = 0; color < numst_; color++)
             {
                 const int gid = overlapping_gids_[iloc][color];
-                if (gid != -1)
-                {
-                    // normalize state
-                    double alpha = 1. / sqrt(diagS.get_value(gid, gid));
-                    //(*MPIdata::sout)<<"alpha="<<alpha<<endl;
-                    block_vector_.scal(alpha, color, iloc);
-                }
+             
+                // normalize state
+                double alpha = 1. / sqrt(diagS.get_value(gid, gid));
+                //(*MPIdata::sout)<<"alpha="<<alpha<<endl;
+                block_vector_.scal(alpha, color, iloc);
+             
             }
         }
     }
@@ -1960,13 +1839,9 @@ void ExtendedGridOrbitals::normalize()
         {
             for (short iloc = 0; iloc < subdivx_; iloc++)
             {
-
                 const int gid = overlapping_gids_[iloc][color];
-                if (gid != -1)
-                {
-                    diagS[gid]
-                        += vel * (double)block_vector_.dot(color, color, iloc);
-                }
+                diagS[gid]
+                    += vel * (double)block_vector_.dot(color, color, iloc);
             }
         }
 
@@ -1989,16 +1864,11 @@ void ExtendedGridOrbitals::normalize()
             // Loop over the functions
             for (int color = 0; color < numst_; color++)
             {
-
-                const int gid = overlapping_gids_[iloc][color];
-
-                if (gid != -1)
-                {
-                    // normalize state
-                    double alpha = diagS[gid];
-                    //(*MPIdata::sout)<<"alpha="<<alpha<<endl;
-                    block_vector_.scal(alpha, color, iloc);
-                }
+                // normalize state
+                double alpha = diagS[color];
+                //(*MPIdata::sout)<<"alpha="<<alpha<<endl;
+                block_vector_.scal(alpha, color, iloc);
+             
             }
         }
     }
@@ -2218,20 +2088,19 @@ void ExtendedGridOrbitals::addDotWithNcol2Matrix(const int first_color,
         for (short icolor = 0; icolor < ncolors; icolor++)
         {
             const int gid1 = overlapping_gids_[iloc][icolor];
-            if (gid1 != -1)
+         
+            for (int jcolor = first_color;
+                 jcolor < first_color + numst_; jcolor++)
             {
-                for (int jcolor = first_color;
-                     jcolor < first_color + numst_; jcolor++)
+                int gid2 = overlapping_gids_[iloc][jcolor];
+                if (gid2 != -1)
                 {
-                    int gid2 = overlapping_gids_[iloc][jcolor];
-                    if (gid2 != -1)
-                    {
-                        sparse_matrix.push_back(gid1, gid2,
-                            work_cols[icolor + jcolor * numst_]
-                                * vel);
-                    }
+                    sparse_matrix.push_back(gid1, gid2,
+                        work_cols[icolor + jcolor * numst_]
+                            * vel);
                 }
             }
+         
         }
     }
 
