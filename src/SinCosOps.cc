@@ -47,7 +47,7 @@ void SinCosOps<T>::compute(
     vector<double> cosz;
     grid.getSinCosFunctions(sinx, siny, sinz, cosx, cosy, cosz);
 
-    const int size = orbitals.chromatic_number_;
+    const int size = orbitals.chromatic_number();
 
     for (short iloc = 0; iloc < orbitals.subdivx_; iloc++)
     {
@@ -182,7 +182,7 @@ void SinCosOps<T>::computeSquare(
         sinz2[i]         = tmp * tmp * alphaz;
         cosz2[i]         = (1. - tmp * tmp) * alphaz;
     }
-    const int size = orbitals.chromatic_number_;
+    const int size = orbitals.chromatic_number();
 
     for (short iloc = 0; iloc < orbitals.subdivx_; iloc++)
     {
@@ -280,7 +280,7 @@ void SinCosOps<T>::computeSquare1D(const T& orbitals,
         sinx2[i]         = tmp * tmp * alphax;
         cosx2[i]         = (1. - tmp * tmp) * alphax;
     }
-    const int size = orbitals.chromatic_number_;
+    const int size = orbitals.chromatic_number();
 
     for (short iloc = 0; iloc < orbitals.subdivx_; iloc++)
     {
@@ -371,7 +371,7 @@ void SinCosOps<T>::compute1D(const T& orbitals,
     for (int i = 0; i < dim; i++)
         cosx[i] = cos(double(off + i) * hh) * alphax;
 
-    const int size = orbitals.chromatic_number_;
+    const int size = orbitals.chromatic_number();
 
     for (short iloc = 0; iloc < orbitals.subdivx_; iloc++)
     {
@@ -447,7 +447,7 @@ void SinCosOps<T>::computeDiag2states(const T& orbitals,
     short color_st[2] = { -1, -1 };
     for (short ic = 0; ic < 2; ++ic)
     {
-        color_st[ic] = orbitals.pack_->getColor(st[ic]);
+        color_st[ic] = orbitals.getColor(st[ic]);
     }
 
     int loc_length = dim0 / orbitals.subdivx_;
@@ -533,7 +533,7 @@ void SinCosOps<T>::compute2states(const T& orbitals,
     int color_st[2] = { -1, -1 };
     for (short ic = 0; ic < 2; ++ic)
     {
-        color_st[ic] = orbitals.pack_->getColor(st[ic]);
+        color_st[ic] = orbitals.getColor(st[ic]);
     }
 
     const int dim0 = grid.dim(0);
@@ -658,11 +658,11 @@ void SinCosOps<T>::compute(const T& orbitals1,
     for (short iloc = 0; iloc < orbitals1.subdivx_; iloc++)
     {
 
-        for (int color = 0; color < orbitals1.chromatic_number_; color++)
+        for (int color = 0; color < orbitals1.chromatic_number(); color++)
         {
             int i = orbitals1.overlapping_gids_[iloc][color];
             if (i != -1)
-                for (int jstate = 0; jstate < orbitals2.chromatic_number_;
+                for (int jstate = 0; jstate < orbitals2.chromatic_number();
                      jstate++)
                 {
                     int j = orbitals2.overlapping_gids_[iloc][jstate];
@@ -750,7 +750,7 @@ void SinCosOps<T>::computeDiag(const T& orbitals,
     // This is necessary for computing correct moves in moveTo()
     mat.setupSparseRows(orbitals.all_overlapping_gids_);
 
-    const int size = orbitals.chromatic_number_;
+    const int size = orbitals.chromatic_number();
 
     for (short iloc = 0; iloc < orbitals.subdivx_; iloc++)
     {

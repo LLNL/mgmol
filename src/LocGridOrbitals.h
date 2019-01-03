@@ -428,6 +428,10 @@ public:
         assert(color < overlapping_gids_[iloc].size());
         return overlapping_gids_[iloc][color];
     }
+    int getColor(const int gid)const
+    {
+        return pack_->getColor(gid);
+    }
 };
 
 #endif

@@ -81,10 +81,6 @@ private:
 
     int numst_;
 
-    std::shared_ptr<FunctionsPacking> pack_;
-
-    int chromatic_number_;
-
     // map gid -> function storage (for each subdomain)
     std::vector<map<int, ORBDTYPE*>>* gidToStorage_;
 
@@ -230,7 +226,7 @@ public:
 
     bool isCompatibleWith(const ExtendedGridOrbitals& orbitals) const
     {
-        return (pack_ == orbitals.pack_);
+        return true;
     }
 
     void resetDataWithGhostsIndex() { data_wghosts_index_ = 0; }
@@ -311,19 +307,14 @@ public:
     }
     int chromatic_number(void) const
     {
-        assert(chromatic_number_ < 10000);
-        return chromatic_number_;
+        assert(numst_ < 10000);
+        return numst_;
     }
     short subdivx(void) const { return subdivx_; }
     void printChromaticNumber(std::ostream& os) const
     {
-        int max_chromatic_number;
-        int local_chromatic_number = chromatic_number_;
-        MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
-        mmpi.allreduce(
-            &local_chromatic_number, &max_chromatic_number, 1, MPI_MAX);
         if (onpe0)
-            os << " Max. chromatic_number: " << max_chromatic_number << endl;
+            os << " Max. chromatic_number: " << numst_ << endl;
     }
     void printNumst(std::ostream& os) const
     {
@@ -425,6 +416,10 @@ public:
         assert(iloc < overlapping_gids_.size());
         assert(color < overlapping_gids_[iloc].size());
         return overlapping_gids_[iloc][color];
+    }
+    int getColor(const int gid)const
+    {
+        return gid;
     }
 };
 
