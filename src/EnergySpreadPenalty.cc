@@ -7,6 +7,7 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "EnergySpreadPenalty.h"
+#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "Mesh.h"
 
@@ -226,4 +227,4 @@ double EnergySpreadPenalty<T>::evaluateEnergy(const T& phi)
 }
 
 template class EnergySpreadPenalty<LocGridOrbitals>;
-
+template class EnergySpreadPenalty<ExtendedGridOrbitals>;

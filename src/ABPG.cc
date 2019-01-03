@@ -191,4 +191,4 @@ void ABPG<T>::printTimers(ostream& os)
 }
 
 template class ABPG<LocGridOrbitals>;
-
+template class ABPG<ExtendedGridOrbitals>;

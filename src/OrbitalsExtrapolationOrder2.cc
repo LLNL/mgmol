@@ -9,6 +9,7 @@
 #include "OrbitalsExtrapolationOrder2.h"
 #include "Control.h"
 #include "DistMatrixTools.h"
+#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "ProjectedMatrices.h"
 
@@ -135,3 +136,4 @@ void OrbitalsExtrapolationOrder2<T>::extrapolate_orbitals(
 }
 
 template class OrbitalsExtrapolationOrder2<LocGridOrbitals>;
+template class OrbitalsExtrapolationOrder2<ExtendedGridOrbitals>;

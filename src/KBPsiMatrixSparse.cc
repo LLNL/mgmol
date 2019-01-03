@@ -9,6 +9,7 @@
 #include "KBPsiMatrixSparse.h"
 #include "Control.h"
 #include "Ions.h"
+#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "MGmol_MPI.h"
 #include "Mesh.h"
@@ -767,4 +768,16 @@ template double KBPsiMatrixSparse::getEvnl(const Ions& ions,
         ProjectedMatrices* proj_matrices);
 template void KBPsiMatrixSparse::setup(const Ions&, const LocGridOrbitals&);
 template void KBPsiMatrixSparse::computeAll(Ions&, LocGridOrbitals&);
+
+template void KBPsiMatrixSparse::computeKBpsi(Ions& ions,
+        ExtendedGridOrbitals& orbitals,
+        const int first_color, const int nb_colors, const bool flag);
+template double KBPsiMatrixSparse::getEvnl(const Ions& ions,
+        ExtendedGridOrbitals& orbitals,
+        ProjectedMatricesSparse* proj_matrices);
+template double KBPsiMatrixSparse::getEvnl(const Ions& ions,
+        ExtendedGridOrbitals& orbitals,
+        ProjectedMatrices* proj_matrices);
+template void KBPsiMatrixSparse::setup(const Ions&, const ExtendedGridOrbitals&);
+template void KBPsiMatrixSparse::computeAll(Ions&, ExtendedGridOrbitals&);
 

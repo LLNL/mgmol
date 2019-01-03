@@ -8,6 +8,7 @@
 
 #include "EigenDMStrategy.h"
 #include "Control.h"
+#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "ProjectedMatrices.h"
 
@@ -42,3 +43,4 @@ int EigenDMStrategy<T>::update()
 }
 
 template class EigenDMStrategy<LocGridOrbitals>;
+template class EigenDMStrategy<ExtendedGridOrbitals>;

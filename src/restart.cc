@@ -240,4 +240,4 @@ int MGmol<T>::read_restart_data(
 }
 
 template class MGmol<LocGridOrbitals>;
-
+template class MGmol<ExtendedGridOrbitals>;

@@ -38,11 +38,12 @@ class Potentials;
 class ProjectedMatrices;
 class ProjectedMatricesInterface;
 class LocalizationRegions;
-class MasksSet;
 class ExtendedGridOrbitals;
-class Masks4Orbitals;
+class MasksSet;
+class MasksSet;
 
-typedef double (ExtendedGridOrbitals::*PtrFunc)(const ExtendedGridOrbitals&);
+typedef double (ExtendedGridOrbitals::*ExtendedGridOrbitalsPtrFunc)
+    (const ExtendedGridOrbitals&);
 
 class ExtendedGridOrbitals : public Orbitals
 {
@@ -57,7 +58,6 @@ private:
     static Timer overlap_tm_;
     static Timer dot_product_tm_;
     static Timer addDot_tm_;
-    static Timer mask_tm_;
     static Timer prod_matrix_tm_;
     static Timer get_dm_tm_;
     static Timer assign_tm_;
@@ -71,7 +71,7 @@ private:
     static int loc_numpt_;
 
     // static double (ExtendedGridOrbitals::*dotProduct_)(const ExtendedGridOrbitals&);
-    static PtrFunc dotProduct_;
+    static ExtendedGridOrbitalsPtrFunc dotProduct_;
 
     static int data_wghosts_index_;
 
@@ -155,15 +155,13 @@ private:
     void multiplyByMatrix(const int first_color, const int ncolors,
         const SquareLocalMatrices<MATDTYPE>& matrix, ORBDTYPE* product,
         const int ldp) const;
-    void setup(MasksSet* masks, MasksSet* corrmasks, LocalizationRegions* lrs);
+    void setup(LocalizationRegions* lrs);
 
     /* Data distribution objects */
     std::shared_ptr<DataDistribution> distributor_diagdotprod_;
     std::shared_ptr<DataDistribution> distributor_normalize_;
 
 protected:
-    std::shared_ptr<Masks4Orbitals> masks4orbitals_;
-
     const pb::Grid& grid_;
 
     LocalizationRegions* lrs_;
@@ -203,8 +201,8 @@ public:
     ExtendedGridOrbitals(std::string name,
         const ExtendedGridOrbitals& A, const bool copy_data = true);
     ExtendedGridOrbitals(std::string name, const ExtendedGridOrbitals& A,
-        ProjectedMatricesInterface* proj_matrices, MasksSet* masks,
-        MasksSet* corrmasks, const bool copy_data = true);
+        ProjectedMatricesInterface* proj_matrices,
+        const bool copy_data = true);
 
     ~ExtendedGridOrbitals();
 
@@ -213,7 +211,7 @@ public:
     void resetDotProductMatrices();
     void init2zero();
 
-    void setup(LocalizationRegions* lrs);
+    //void setup(LocalizationRegions* lrs);
     void reset(MasksSet* masks, MasksSet* corrmasks, LocalizationRegions* lrs);
 
     virtual void assign(const ExtendedGridOrbitals& orbitals);

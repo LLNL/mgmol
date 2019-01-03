@@ -8,7 +8,6 @@
 
 #include "IonicAlgorithm.h"
 #include "Control.h"
-#include "LocGridOrbitals.h"
 #include "MGmol.h"
 #include "MasksSet.h"
 #include "Mesh.h"
@@ -232,3 +231,4 @@ void IonicAlgorithm<T>::updatePotAndMasks()
 }
 
 template class IonicAlgorithm<LocGridOrbitals>;
+template class IonicAlgorithm<ExtendedGridOrbitals>;

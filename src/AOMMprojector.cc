@@ -7,15 +7,13 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "AOMMprojector.h"
-#include "LocGridOrbitals.h"
 #include "MasksSet.h"
 #include "Mesh.h"
 #include "ProjectedMatrices.h"
 #include "ProjectedMatricesSparse.h"
 #include "SubspaceProjector.h"
 
-template <class T>
-AOMMprojector<T>::AOMMprojector(T& phi, LocalizationRegions& lrs)
+AOMMprojector::AOMMprojector(LocGridOrbitals& phi, LocalizationRegions& lrs)
 {
     Control& ct     = *(Control::instance());
     Mesh* mymesh    = Mesh::instance();
@@ -46,7 +44,7 @@ AOMMprojector<T>::AOMMprojector(T& phi, LocalizationRegions& lrs)
 
     // kernel functions use their own projected matrices and masks
     kernel_phi_
-        = new T("AOMM", phi, kernel_proj_matrices_, kernelMasks_, 0);
+        = new LocGridOrbitals("AOMM", phi, kernel_proj_matrices_, kernelMasks_, 0);
     kernel_phi_->initGauss(0.5 * radius, lrs);
 
     kernel_phi_->setIterativeIndex(phi.getIterativeIndex() * 10);
@@ -56,7 +54,7 @@ AOMMprojector<T>::AOMMprojector(T& phi, LocalizationRegions& lrs)
 
     kernel_phi_->computeGramAndInvS(ct.verbose);
 
-    kernelprojector_ = new SubspaceProjector<T>(*kernel_phi_);
+    kernelprojector_ = new SubspaceProjector<LocGridOrbitals>(*kernel_phi_);
 
     matrix_mask_ = new SquareLocalMatrices<MATDTYPE>(
         subdivx, kernel_phi_->chromatic_number());
@@ -74,8 +72,7 @@ AOMMprojector<T>::AOMMprojector(T& phi, LocalizationRegions& lrs)
     //    matrix_mask_->setMaskThreshold(threshold, 10000.);
 }
 
-template <class T>
-void AOMMprojector<T>::resetProjectors(T& phi)
+void AOMMprojector::resetProjectors(LocGridOrbitals& phi)
 {
     if (onpe0) cout << "AOMM: reset projectors..." << endl;
 
@@ -87,11 +84,10 @@ void AOMMprojector<T>::resetProjectors(T& phi)
     kernel_phi_->computeGramAndInvS(0);
 
     delete kernelprojector_;
-    kernelprojector_ = new SubspaceProjector<T>(*kernel_phi_);
+    kernelprojector_ = new SubspaceProjector<LocGridOrbitals>(*kernel_phi_);
 }
 
-template <class T>
-void AOMMprojector<T>::projectOut(T& phi)
+void AOMMprojector::projectOut(LocGridOrbitals& phi)
 {
     assert(kernelprojector_ != 0);
     assert(matrix_mask_ != 0);
@@ -103,8 +99,7 @@ void AOMMprojector<T>::projectOut(T& phi)
     counter_++;
 }
 
-template <class T>
-AOMMprojector<T>::~AOMMprojector()
+AOMMprojector::~AOMMprojector()
 {
     assert(kernel_phi_ != 0);
 
@@ -120,4 +115,3 @@ AOMMprojector<T>::~AOMMprojector()
     matrix_mask_ = 0;
 }
 
-template class AOMMprojector<LocGridOrbitals>;

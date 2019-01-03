@@ -9,6 +9,7 @@
 #include "SinCosOps.h"
 
 #include "FunctionsPacking.h"
+#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "MGmol_MPI.h"
 
@@ -796,4 +797,4 @@ void SinCosOps<T>::computeDiag(const T& orbitals,
 }
 
 template class SinCosOps<LocGridOrbitals>;
-
+template class SinCosOps<ExtendedGridOrbitals>;

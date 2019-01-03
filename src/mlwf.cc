@@ -334,4 +334,4 @@ int MGmol<T>::get_NOLMO(NOLMOTransform& noot, T& orbitals,
 }
 
 template class MGmol<LocGridOrbitals>;
-
+template class MGmol<ExtendedGridOrbitals>;

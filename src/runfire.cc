@@ -11,6 +11,7 @@
 #include "FIRE.h"
 #include "FIRE_IonicStepper.h"
 #include "Ions.h"
+#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "MGmol.h"
 #include "MPIdata.h"
@@ -122,3 +123,6 @@ void MGmol<T>::runfire(T** orbitals, Ions& ions)
 
 template void MGmol<LocGridOrbitals>::runfire(
     LocGridOrbitals** orbitals, Ions& ions);
+template void MGmol<ExtendedGridOrbitals>::runfire(
+    ExtendedGridOrbitals** orbitals, Ions& ions);
+

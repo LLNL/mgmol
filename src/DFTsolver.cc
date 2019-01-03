@@ -15,7 +15,6 @@
 #include "GrassmanCG.h"
 #include "GrassmanCGSparse.h"
 #include "Ions.h"
-#include "LocGridOrbitals.h"
 #include "MGmol.h"
 #include "ProjectedMatricesInterface.h"
 #include "Rho.h"
@@ -422,3 +421,4 @@ template <class T>
 void DFTsolver<T>::printTimers(ostream& os) { solve_tm_.print(os); }
 
 template class DFTsolver<LocGridOrbitals>;
+template class DFTsolver<ExtendedGridOrbitals>;

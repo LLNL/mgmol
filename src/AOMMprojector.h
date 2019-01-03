@@ -9,6 +9,7 @@
 #ifndef MGMOL_AOMMPROJECTOR_H
 #define MGMOL_AOMMPROJECTOR_H
 
+#include "LocGridOrbitals.h"
 #include "SquareLocalMatrices.h"
 #include "SubspaceProjector.h"
 #include "global.h"
@@ -19,13 +20,12 @@ class LocalizationRegions;
 
 // implements AOMM algorithm ("kernel" function projectors)
 // by E. Tsuchida, J. Phys. Soc. Japan 76 (3), 2007, p. 034708
-template <class T>
 class AOMMprojector
 {
 private:
-    T* kernel_phi_;
+    LocGridOrbitals* kernel_phi_;
 
-    SubspaceProjector<T>* kernelprojector_;
+    SubspaceProjector<LocGridOrbitals>* kernelprojector_;
 
     MasksSet* kernelMasks_;
 
@@ -36,12 +36,12 @@ private:
     short counter_;
 
 public:
-    AOMMprojector(T& phi, LocalizationRegions& lrs);
+    AOMMprojector(LocGridOrbitals& phi, LocalizationRegions& lrs);
     ~AOMMprojector();
 
-    void projectOut(T& phi);
+    void projectOut(LocGridOrbitals& phi);
 
-    void resetProjectors(T& phi);
+    void resetProjectors(LocGridOrbitals& phi);
 };
 
 #endif

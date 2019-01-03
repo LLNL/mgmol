@@ -357,3 +357,9 @@ template class HamiltonianMVPSolver<dist_matrix::DistMatrix<DISTMATDTYPE>,
 template class HamiltonianMVPSolver<VariableSizeMatrix<sparserow>,
     VariableSizeMatrix<sparserow>, ProjectedMatricesSparse, LocGridOrbitals>;
 
+template class HamiltonianMVPSolver<dist_matrix::DistMatrix<DISTMATDTYPE>,
+    dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE>,
+    ProjectedMatrices, ExtendedGridOrbitals>;
+template class HamiltonianMVPSolver<VariableSizeMatrix<sparserow>,
+    VariableSizeMatrix<sparserow>, ProjectedMatricesSparse, ExtendedGridOrbitals>;
+

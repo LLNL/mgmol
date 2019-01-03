@@ -8,6 +8,7 @@
 
 #include "SpreadsAndCenters.h"
 #include "Control.h"
+#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "MGmol_MPI.h"
 #include "MPIdata.h"
@@ -547,4 +548,4 @@ void SpreadsAndCenters<T>::computeSinCosDiag(
 }
 
 template class SpreadsAndCenters<LocGridOrbitals>;
-
+template class SpreadsAndCenters<ExtendedGridOrbitals>;

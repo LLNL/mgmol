@@ -10,6 +10,7 @@
 
 #include "Control.h"
 #include "Delh4.h"
+#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "Mesh.h"
 #include "PBh4.h"
@@ -151,3 +152,4 @@ double PBEonGrid<T>::getExc() const
 }
 
 template class PBEonGrid<LocGridOrbitals>;
+template class PBEonGrid<ExtendedGridOrbitals>;

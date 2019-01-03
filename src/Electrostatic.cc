@@ -12,6 +12,7 @@
 #include "Hartree.h"
 #include "Hartree_CG.h"
 #include "Ions.h"
+#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "Mesh.h"
 #include "PBdiel.h"
@@ -515,3 +516,10 @@ template void Electrostatic::computeVh(const Ions& ions,
     Rho<LocGridOrbitals>& rho, Potentials& pot);
 template void Electrostatic::computeVh(const pb::GridFunc<POTDTYPE>& vhinit,
     const Ions& ions, Rho<LocGridOrbitals>& rho, Potentials& pot);
+
+template void Electrostatic::computeVhRho(Rho<ExtendedGridOrbitals>& rho);
+template void Electrostatic::computeVh(const Ions& ions,
+    Rho<ExtendedGridOrbitals>& rho, Potentials& pot);
+template void Electrostatic::computeVh(const pb::GridFunc<POTDTYPE>& vhinit,
+    const Ions& ions, Rho<ExtendedGridOrbitals>& rho, Potentials& pot);
+

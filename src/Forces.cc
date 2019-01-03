@@ -693,3 +693,4 @@ void Forces<T>::force(T& orbitals, Ions& ions)
 }
 
 template class Forces<LocGridOrbitals>;
+template class Forces<ExtendedGridOrbitals>;

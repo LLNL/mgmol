@@ -10,7 +10,6 @@
 #include "Control.h"
 #include "Electrostatic.h"
 #include "MGmol.h"
-#include "LocGridOrbitals.h"
 #include "MasksSet.h"
 #include "Mesh.h"
 #include "ProjectedMatrices.h"
@@ -137,3 +136,4 @@ bool LBFGS<T>::lbfgsLastStepNotAccepted() const
 }
 
 template class LBFGS<LocGridOrbitals>;
+template class LBFGS<ExtendedGridOrbitals>;

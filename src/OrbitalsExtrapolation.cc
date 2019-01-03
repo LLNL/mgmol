@@ -9,6 +9,7 @@
 #include "OrbitalsExtrapolation.h"
 #include "ClusterOrbitals.h"
 #include "LocalizationRegions.h"
+#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "MPIdata.h"
 #include "MasksSet.h"
@@ -70,3 +71,4 @@ void OrbitalsExtrapolation<T>::setupPreviousOrbitals(T** orbitals,
 }
 
 template class OrbitalsExtrapolation<LocGridOrbitals>;
+template class OrbitalsExtrapolation<ExtendedGridOrbitals>;

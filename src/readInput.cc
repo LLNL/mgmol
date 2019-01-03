@@ -249,4 +249,4 @@ int MGmol<T>::readCoordinates(const string filename, const bool cell_relative)
 }
 
 template class MGmol<LocGridOrbitals>;
-
+template class MGmol<ExtendedGridOrbitals>;

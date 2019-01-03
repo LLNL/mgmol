@@ -7,6 +7,7 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "SubspaceProjector.h"
+#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "ProjectedMatricesInterface.h"
 
@@ -89,3 +90,4 @@ void SubspaceProjector<T>::projectOut(
 }
 
 template class SubspaceProjector<LocGridOrbitals>;
+template class SubspaceProjector<ExtendedGridOrbitals>;

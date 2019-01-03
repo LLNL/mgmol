@@ -94,3 +94,10 @@ template class HamiltonianMVP_DMStrategy<dist_matrix::DistMatrix<DISTMATDTYPE>,
     ProjectedMatrices, LocGridOrbitals>;
 template class HamiltonianMVP_DMStrategy<VariableSizeMatrix<sparserow>,
     VariableSizeMatrix<sparserow>, ProjectedMatricesSparse, LocGridOrbitals>;
+
+template class HamiltonianMVP_DMStrategy<dist_matrix::DistMatrix<DISTMATDTYPE>,
+    dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE>,
+    ProjectedMatrices, ExtendedGridOrbitals>;
+template class HamiltonianMVP_DMStrategy<VariableSizeMatrix<sparserow>,
+    VariableSizeMatrix<sparserow>, ProjectedMatricesSparse, ExtendedGridOrbitals>;
+

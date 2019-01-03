@@ -8,6 +8,7 @@
 
 #include "Rho.h"
 #include "Control.h"
+#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "MPIdata.h"
 #include "Mesh.h"
@@ -770,8 +771,11 @@ void Rho<T>::printTimers(std::ostream& os)
 }
 
 template class Rho<LocGridOrbitals>;
+template class Rho<ExtendedGridOrbitals>;
 
 template double Rho<LocGridOrbitals>::dotWithRho<double>(
+    const double* const func) const;
+template double Rho<ExtendedGridOrbitals>::dotWithRho<double>(
     const double* const func) const;
 #ifdef USE_MP
 template double Rho<LocGridOrbitals>::dotWithRho<float>(

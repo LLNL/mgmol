@@ -6,6 +6,7 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
+#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "SpreadPenaltyVolume.h"
 #include "Mesh.h"
@@ -304,4 +305,4 @@ double SpreadPenaltyVolume<T>::evaluateEnergy(const T& phi)
 }
 
 template class SpreadPenaltyVolume<LocGridOrbitals>;
-
+template class SpreadPenaltyVolume<ExtendedGridOrbitals>;

@@ -9,6 +9,7 @@
 #include "OrbitalsPreconditioning.h"
 
 #include "Control.h"
+#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "LocalizationRegions.h"
 #include "MasksSet.h"
@@ -182,3 +183,4 @@ void OrbitalsPreconditioning<T>::printTimers(ostream& os)
 }
 
 template class OrbitalsPreconditioning<LocGridOrbitals>;
+template class OrbitalsPreconditioning<ExtendedGridOrbitals>;

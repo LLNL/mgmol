@@ -133,3 +133,4 @@ void MGmol<T>::lbfgsrlx(T** orbitals, Ions& ions)
 }
 
 template void MGmol<LocGridOrbitals>::lbfgsrlx(LocGridOrbitals** orbitals, Ions& ions);
+template void MGmol<ExtendedGridOrbitals>::lbfgsrlx(ExtendedGridOrbitals** orbitals, Ions& ions);

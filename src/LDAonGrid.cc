@@ -8,6 +8,7 @@
 
 #include "LDAonGrid.h"
 
+#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "Potentials.h"
 
@@ -40,3 +41,4 @@ void LDAonGrid<T>::update()
 }
 
 template class LDAonGrid<LocGridOrbitals>;
+template class LDAonGrid<ExtendedGridOrbitals>;

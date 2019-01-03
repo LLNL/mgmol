@@ -19,7 +19,6 @@
 #include "Ions.h"
 #include "KBPsiMatrixSparse.h"
 #include "Lap.h"
-#include "LocGridOrbitals.h"
 #include "MGmol.h"
 #include "MGmol_MPI.h"
 #include "Mesh.h"
@@ -493,4 +492,4 @@ void MGmol<T>::getHpsiAndTheta(Ions& ions, T& phi,
 }
 
 template class MGmol<LocGridOrbitals>;
-
+template class MGmol<ExtendedGridOrbitals>;

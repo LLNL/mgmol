@@ -1403,11 +1403,19 @@ void MGmol<T>::cleanup()
     total_tm_.print(os_);
 }
 
-template <class T>
-void MGmol<T>::projectOutKernel(T& phi)
+template <>
+void MGmol<LocGridOrbitals>::projectOutKernel(LocGridOrbitals& phi)
 {
     assert(aomm_ != 0);
     aomm_->projectOut(phi);
+}
+
+template <class T>
+void MGmol<T>::projectOutKernel(T& phi)
+{
+    (void)phi;
+
+    return;
 }
 
 template <class T>
@@ -1659,4 +1667,4 @@ void MGmol<T>::addResidualSpreadPenalty(T& phi, T& res)
 }
 
 template class MGmol<LocGridOrbitals>;
-
+template class MGmol<ExtendedGridOrbitals>;

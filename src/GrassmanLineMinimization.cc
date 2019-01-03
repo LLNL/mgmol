@@ -156,3 +156,4 @@ void GrassmanLineMinimization<T>::printTimers(ostream& os)
 }
 
 template class GrassmanLineMinimization<LocGridOrbitals>;
+template class GrassmanLineMinimization<ExtendedGridOrbitals>;

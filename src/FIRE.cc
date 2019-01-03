@@ -37,3 +37,4 @@ FIRE<T>::FIRE(T** orbitals, Ions& ions, Rho<T>& rho,
 }
 
 template class FIRE<LocGridOrbitals>;
+template class FIRE<ExtendedGridOrbitals>;

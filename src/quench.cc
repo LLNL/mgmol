@@ -50,6 +50,14 @@ Timer quench_evnl_tm("quench_evnl");
 template <class T> Timer MGmol<T>::adaptLR_tm_("MGmol::adaptLR");
 Timer updateCenters_tm("MGmol<T>::updateCenters");
 
+template <>
+void MGmol<ExtendedGridOrbitals>::adaptLR(
+    const SpreadsAndCenters<ExtendedGridOrbitals>* spreadf,
+    const OrbitalsTransform* ot)
+{
+    return;
+}
+
 // depending on the value of ct.lr_updates_type, update
 // localization regions:
 // 0 -> center only
@@ -387,6 +395,19 @@ void MGmol<T>::disentangleOrbitals(T& orbitals,
     }
 }
 
+template <>
+void MGmol<LocGridOrbitals>::applyAOMMprojection(LocGridOrbitals& orbitals)
+{
+    aomm_ = new AOMMprojector(orbitals, *lrs_);
+    aomm_->projectOut(orbitals);
+}
+
+template <class T>
+void MGmol<T>::applyAOMMprojection(T& orbitals)
+{
+    return;
+}
+
 template <class T>
 int MGmol<T>::quench(T* orbitals, Ions& ions,
     const int max_inner_steps, const int iprint, double& last_eks)
@@ -428,8 +449,7 @@ int MGmol<T>::quench(T* orbitals, Ions& ions,
     // setup "kernel" functions for AOMM algorithm
     if (ct.use_kernel_functions)
     {
-        aomm_ = new AOMMprojector<T>(*orbitals, *lrs_);
-        aomm_->projectOut(*orbitals);
+        applyAOMMprojection(*orbitals);
     }
 
     orbitals_precond_ = new OrbitalsPreconditioning<T>();
@@ -549,4 +569,4 @@ int MGmol<T>::quench(T* orbitals, Ions& ions,
 }
 
 template class MGmol<LocGridOrbitals>;
-
+template class MGmol<ExtendedGridOrbitals>;

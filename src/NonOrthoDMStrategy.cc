@@ -8,6 +8,7 @@
 
 #include "NonOrthoDMStrategy.h"
 #include "Control.h"
+#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "ProjectedMatricesInterface.h"
 
@@ -78,3 +79,4 @@ void NonOrthoDMStrategy<T>::dressDM()
 }
 
 template class NonOrthoDMStrategy<LocGridOrbitals>;
+template class NonOrthoDMStrategy<ExtendedGridOrbitals>;

@@ -10,6 +10,7 @@
 #include "Control.h"
 #include "Electrostatic.h"
 #include "Ions.h"
+#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "Mesh.h"
 #include "Potentials.h"
@@ -194,3 +195,5 @@ double Energy<T>::evaluateTotal(const double ts, // in [Ha]
 }
 
 template class Energy<LocGridOrbitals>;
+template class Energy<ExtendedGridOrbitals>;
+

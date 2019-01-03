@@ -7,6 +7,7 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "AndersonMix.h"
+#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "MPIdata.h"
 #include "SquareLocalMatrices.h"
@@ -340,3 +341,4 @@ void AndersonMix<T>::update(T& f, T& work)
 }
 
 template class AndersonMix<LocGridOrbitals>;
+template class AndersonMix<ExtendedGridOrbitals>;

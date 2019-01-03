@@ -392,3 +392,4 @@ void MVPSolver<T>::printTimers(ostream& os)
 }
 
 template class MVPSolver<LocGridOrbitals>;
+template class MVPSolver<ExtendedGridOrbitals>;

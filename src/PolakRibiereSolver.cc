@@ -572,3 +572,4 @@ int PolakRibiereSolver<T>::solve(T& orbitals,
 }
 
 template class PolakRibiereSolver<LocGridOrbitals>;
+template class PolakRibiereSolver<ExtendedGridOrbitals>;

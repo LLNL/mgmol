@@ -8,6 +8,7 @@
 
 #include "ConstraintSet.h"
 #include "Hamiltonian.h"
+#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "MGmol.h"
 #include "Potentials.h"
@@ -124,4 +125,5 @@ int MGmol<T>::setupConstraintsFromInput(const string filename)
 }
 
 template class MGmol<LocGridOrbitals>;
+template class MGmol<ExtendedGridOrbitals>;
 

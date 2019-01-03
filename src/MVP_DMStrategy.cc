@@ -9,6 +9,7 @@
 #include "MVP_DMStrategy.h"
 #include "Control.h"
 #include "Ions.h"
+#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "MGmol.h"
 #include "MVPSolver.h"
@@ -48,7 +49,7 @@ int MVP_DMStrategy<T>::update()
         (*MPIdata::sout) << "MVP_DMStrategy<T>::update()..." << endl;
     }
 
-    MVPSolver<LocGridOrbitals> solver(comm_, os_, ions_, rho_, energy_,
+    MVPSolver<T> solver(comm_, os_, ions_, rho_, energy_,
         electrostat_,
         mgmol_strategy_, ct.numst, ct.occ_width, ct.getNel(), global_indexes_,
         ct.dm_inner_steps, use_old_dm_);
@@ -69,3 +70,4 @@ void MVP_DMStrategy<T>::dressDM()
 }
 
 template class MVP_DMStrategy<LocGridOrbitals>;
+template class MVP_DMStrategy<ExtendedGridOrbitals>;

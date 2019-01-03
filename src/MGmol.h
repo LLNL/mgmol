@@ -42,9 +42,11 @@ class IonicAlgorithm;
 #include "BasicDataDistributors.h"
 #include "ClusterOrbitals.h"
 #include "DistMatrixWithSparseComponent.h"
+#include "ExtendedGridOrbitals.h"
 #include "Forces.h"
 #include "Ions.h"
 #include "LocGridOrbitals.h"
+#include "MGmolInterface.h"
 #include "OrbitalsPreconditioning.h"
 #include "OrbitalsExtrapolation.h"
 #include "RemoteTasksDistMatrix.h"
@@ -54,7 +56,7 @@ class IonicAlgorithm;
 #include "SpreadPenaltyInterface.h"
 
 template <class T>
-class MGmol
+class MGmol : public MGmolInterface
 {
 private:
     std::ostream& os_;
@@ -72,7 +74,7 @@ private:
 
     T* current_orbitals_;
 
-    AOMMprojector<T>* aomm_;
+    AOMMprojector* aomm_;
 
     Ions* ions_;
 
@@ -329,7 +331,7 @@ public:
     double computeResidual(T& orbitals,
         T& work_orbitals, T& res,
         const bool print_residual, const bool norm_res);
-
+    void applyAOMMprojection(T&);
     void force(T& orbitals, Ions& ions)
     {
         forces_->force(orbitals, ions);

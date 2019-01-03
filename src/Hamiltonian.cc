@@ -8,6 +8,7 @@
 
 #include "Hamiltonian.h"
 #include "Control.h"
+#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "Mesh.h"
 #include "Potentials.h"
@@ -212,3 +213,4 @@ void Hamiltonian<T>::addHlocal2matrix(T& phi1, T& phi2,
 }
 
 template class Hamiltonian<LocGridOrbitals>;
+template class Hamiltonian<ExtendedGridOrbitals>;

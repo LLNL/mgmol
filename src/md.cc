@@ -13,6 +13,7 @@
 #include "Energy.h"
 #include "Hamiltonian.h"
 #include "Ions.h"
+#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "LocalizationRegions.h"
 #include "MD_IonicStepper.h"
@@ -672,4 +673,5 @@ void MGmol<T>::md(T** orbitals, Ions& ions)
 }
 
 template class MGmol<LocGridOrbitals>;
+template class MGmol<ExtendedGridOrbitals>;
 

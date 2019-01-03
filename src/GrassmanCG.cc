@@ -279,3 +279,4 @@ void GrassmanCG<T>::parallelTransportUpdate(
 }
 
 template class GrassmanCG<LocGridOrbitals>;
+template class GrassmanCG<ExtendedGridOrbitals>;
