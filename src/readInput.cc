@@ -18,6 +18,7 @@ using namespace std;
 #include "Control.h"
 #include "Ions.h"
 #include "LocalizationRegions.h"
+#include "LocGridOrbitals.h"
 #include "MGmol.h"
 #include "Mesh.h"
 #include "Species.h"
@@ -27,7 +28,8 @@ using namespace std;
 
 //#define DEBUG 1
 
-int MGmol::readLRsFromInput(ifstream* tfile)
+template <class T>
+int MGmol<T>::readLRsFromInput(ifstream* tfile)
 {
     assert(lrs_ != 0);
 
@@ -164,7 +166,8 @@ int MGmol::readLRsFromInput(ifstream* tfile)
     return ct.numst;
 }
 
-int MGmol::readCoordinates(ifstream* tfile, const bool cell_relative)
+template <class T>
+int MGmol<T>::readCoordinates(ifstream* tfile, const bool cell_relative)
 {
     Control& ct = *(Control::instance());
     if (ct.verbose > 0) printWithTimeStamp("Read atomic coordinates...", os_);
@@ -204,7 +207,8 @@ int MGmol::readCoordinates(ifstream* tfile, const bool cell_relative)
     return 0;
 }
 
-int MGmol::readCoordinates(const string filename, const bool cell_relative)
+template <class T>
+int MGmol<T>::readCoordinates(const string filename, const bool cell_relative)
 {
     Control& ct = *(Control::instance());
     if (ct.verbose > 0) printWithTimeStamp("Read atomic coordinates...", os_);
@@ -243,3 +247,6 @@ int MGmol::readCoordinates(const string filename, const bool cell_relative)
 
     return 0;
 }
+
+template class MGmol<LocGridOrbitals>;
+

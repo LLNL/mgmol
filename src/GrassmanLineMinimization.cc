@@ -11,6 +11,7 @@
 #include "Control.h"
 #include "GrassmanLineMinimization.h"
 #include "Hamiltonian.h"
+#include "LocGridOrbitals.h"
 #include "Potentials.h"
 
 template <class T>

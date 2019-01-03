@@ -42,6 +42,7 @@ using namespace std;
 
 #include "Control.h"
 #include "DistMatrix.h"
+#include "LocGridOrbitals.h"
 #include "MGmol.h"
 #include "MGmol_MPI.h"
 #include "MPIdata.h"
@@ -520,7 +521,8 @@ int main(int argc, char** argv)
 #endif
 #endif
 
-        MGmol* mgmol = new MGmol(global_comm, *MPIdata::sout);
+        MGmol<LocGridOrbitals>* mgmol
+            = new MGmol<LocGridOrbitals>(global_comm, *MPIdata::sout);
 
         unsigned ngpts[3]    = { ct.ngpts_[0], ct.ngpts_[1], ct.ngpts_[2] };
         double origin[3]     = { ct.ox_, ct.oy_, ct.oz_ };
@@ -553,7 +555,7 @@ int main(int argc, char** argv)
                 DISTMATDTYPE>::setNumTasksPerPartitioning(128);
             dist_matrix::SparseDistMatrix<DISTMATDTYPE>::
                 setRemoteTasksDistMatrixPtr(
-                    MGmol::getRemoteTasksDistMatrixPtr());
+                    MGmol<LocGridOrbitals>::getRemoteTasksDistMatrixPtr());
 
             MGmol_MPI& mmpi = *(MGmol_MPI::instance());
             int npes        = mmpi.size();
@@ -660,3 +662,4 @@ int main(int argc, char** argv)
 
     return 0;
 }
+

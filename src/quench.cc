@@ -47,16 +47,17 @@ using namespace std;
 
 Timer quench_tm("quench");
 Timer quench_evnl_tm("quench_evnl");
-Timer MGmol::adaptLR_tm_("MGmol::adaptLR");
-Timer updateCenters_tm("MGmol::updateCenters");
+template <class T> Timer MGmol<T>::adaptLR_tm_("MGmol::adaptLR");
+Timer updateCenters_tm("MGmol<T>::updateCenters");
 
 // depending on the value of ct.lr_updates_type, update
 // localization regions:
 // 0 -> center only
 // 1 -> radius only
 // 2 -> center and radius
-void MGmol::adaptLR(
-    const SpreadsAndCenters<LocGridOrbitals>* spreadf,
+template <class T>
+void MGmol<T>::adaptLR(
+    const SpreadsAndCenters<T>* spreadf,
     const OrbitalsTransform* ot)
 {
     Control& ct = *(Control::instance());
@@ -136,7 +137,8 @@ void MGmol::adaptLR(
     adaptLR_tm_.stop();
 }
 
-void MGmol::updateHmatrix(LocGridOrbitals& orbitals, Ions& ions)
+template <class T>
+void MGmol<T>::updateHmatrix(T& orbitals, Ions& ions)
 {
 #ifdef PRINT_OPERATIONS
     if (onpe0) os_ << "updateHmatrix()" << endl;
@@ -150,7 +152,8 @@ void MGmol::updateHmatrix(LocGridOrbitals& orbitals, Ions& ions)
     energy_->saveVofRho();
 }
 
-void MGmol::resetProjectedMatricesAndDM(LocGridOrbitals& orbitals, Ions& ions)
+template <class T>
+void MGmol<T>::resetProjectedMatricesAndDM(T& orbitals, Ions& ions)
 {
     orbitals.computeGramAndInvS();
 
@@ -166,8 +169,9 @@ void MGmol::resetProjectedMatricesAndDM(LocGridOrbitals& orbitals, Ions& ions)
 }
 
 // try to use some rotations to avoid degeneracies
-bool MGmol::rotateStatesPairsCommonCenter(
-    LocGridOrbitals& orbitals, LocGridOrbitals& work_orbitals)
+template <class T>
+bool MGmol<T>::rotateStatesPairsCommonCenter(
+    T& orbitals, T& work_orbitals)
 {
     Control& ct        = *(Control::instance());
     bool wannier_pairs = false;
@@ -198,7 +202,7 @@ bool MGmol::rotateStatesPairsCommonCenter(
         if (onpe0 && ct.verbose > 1)
             os_ << "Min. distance between centers " << st1 << " and " << st2
                 << " = " << drmin << endl;
-        SpreadsAndCenters<LocGridOrbitals> spreadf2st(origin, ll);
+        SpreadsAndCenters<T> spreadf2st(origin, ll);
 
         orbitals.orthonormalize2states(st1, st2);
 
@@ -250,8 +254,9 @@ bool MGmol::rotateStatesPairsCommonCenter(
 }
 
 // try to use some rotations to avoid degeneracies
-bool MGmol::rotateStatesPairsOverlap(LocGridOrbitals& orbitals,
-    LocGridOrbitals& work_orbitals, const double threshold)
+template <class T>
+bool MGmol<T>::rotateStatesPairsOverlap(T& orbitals,
+    T& work_orbitals, const double threshold)
 {
     Control& ct     = *(Control::instance());
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
@@ -290,7 +295,7 @@ bool MGmol::rotateStatesPairsOverlap(LocGridOrbitals& orbitals,
                 << eigmin << endl;
         }
 
-        SpreadsAndCenters<LocGridOrbitals> spreadf2st(origin, ll);
+        SpreadsAndCenters<T> spreadf2st(origin, ll);
         spreadf2st.computeSinCosDiag2states(orbitals, st1, st2);
 
         spreadf2st.print(os_);
@@ -351,8 +356,9 @@ bool MGmol::rotateStatesPairsOverlap(LocGridOrbitals& orbitals,
     return pairs;
 }
 
-void MGmol::disentangleOrbitals(LocGridOrbitals& orbitals,
-    LocGridOrbitals& work_orbitals, Ions& ions, int& max_steps)
+template <class T>
+void MGmol<T>::disentangleOrbitals(T& orbitals,
+    T& work_orbitals, Ions& ions, int& max_steps)
 {
     Control& ct = *(Control::instance());
 
@@ -382,7 +388,7 @@ void MGmol::disentangleOrbitals(LocGridOrbitals& orbitals,
 }
 
 template <class T>
-int MGmol::quench(T* orbitals, Ions& ions,
+int MGmol<T>::quench(T* orbitals, Ions& ions,
     const int max_inner_steps, const int iprint, double& last_eks)
 {
     assert(max_inner_steps > -1);
@@ -542,6 +548,5 @@ int MGmol::quench(T* orbitals, Ions& ions,
     return retval;
 }
 
-template int MGmol::quench<LocGridOrbitals>(LocGridOrbitals*, Ions&, const int,
-    const int, double&);
+template class MGmol<LocGridOrbitals>;
 

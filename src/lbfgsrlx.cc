@@ -15,7 +15,6 @@
 #include "Ions.h"
 #include "LBFGS.h"
 #include "LBFGS_IonicStepper.h"
-#include "LocGridOrbitals.h"
 #include "LocalizationRegions.h"
 #include "MGmol.h"
 #include "MGmol_blas1.h"
@@ -31,15 +30,16 @@
 #include <vector>
 using namespace std;
 
-void MGmol::lbfgsrlx(LocGridOrbitals** orbitals, Ions& ions)
+template <class T>
+void MGmol<T>::lbfgsrlx(T** orbitals, Ions& ions)
 {
     Control& ct = *(Control::instance());
 
-    LBFGS<LocGridOrbitals> lbfgs(orbitals, ions, *rho_, *constraints_, *lrs_,
+    LBFGS<T> lbfgs(orbitals, ions, *rho_, *constraints_, *lrs_,
         local_cluster_,
         *currentMasks_, *corrMasks_, *electrostat_, ct.dt, *this);
 
-    DFTsolver<LocGridOrbitals>::resetItCount();
+    DFTsolver<T>::resetItCount();
 
     lbfgs.init(h5f_file_);
 
@@ -54,7 +54,7 @@ void MGmol::lbfgsrlx(LocGridOrbitals** orbitals, Ions& ions)
     }
     else
     {
-        DFTsolver<LocGridOrbitals>::setItCountLarge();
+        DFTsolver<T>::setItCountLarge();
     }
 
     // save computed vh for a fair energy "comparison" with vh computed
@@ -131,3 +131,5 @@ void MGmol::lbfgsrlx(LocGridOrbitals** orbitals, Ions& ions)
         lbfgs.dumpRestart();
     }
 }
+
+template void MGmol<LocGridOrbitals>::lbfgsrlx(LocGridOrbitals** orbitals, Ions& ions);

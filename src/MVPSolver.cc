@@ -41,7 +41,7 @@ double evalEntropyMVP(ProjectedMatricesInterface* projmatrices,
 
 template <class T>
 MVPSolver<T>::MVPSolver(MPI_Comm comm, ostream& os, Ions& ions, Rho<T>* rho,
-    Energy<T>* energy, Electrostatic* electrostat, MGmol* mgmol_strategy,
+    Energy<T>* energy, Electrostatic* electrostat, MGmol<T>* mgmol_strategy,
     const int numst, const double kbT, const int nel,
     const vector<vector<int>>& global_indexes, const short n_inner_steps,
     const bool use_old_dm)

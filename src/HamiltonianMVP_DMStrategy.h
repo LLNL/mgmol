@@ -12,12 +12,12 @@
 #include "DMStrategy.h"
 #include "Energy.h"
 #include "HamiltonianMVPSolver.h"
+#include "MGmol.h"
 #include "Rho.h"
 
 class Ions;
-class MGmol;
 class Electrostatic;
-class MGmol;
+template <class T> class MGmol;
 
 template <class T1, class T2, class T3, class T4>
 class HamiltonianMVP_DMStrategy : public DMStrategy
@@ -33,7 +33,7 @@ private:
     Energy<T4>* energy_;
     Electrostatic* electrostat_;
     const std::vector<std::vector<int>>& global_indexes_;
-    MGmol* mgmol_strategy_;
+    MGmol<T4>* mgmol_strategy_;
 
     HamiltonianMVPSolver<T1, T2, T3, T4>* solver_;
 
@@ -41,7 +41,7 @@ public:
     HamiltonianMVP_DMStrategy(MPI_Comm comm, std::ostream& os, Ions& ions,
         Rho<T4>* rho, Energy<T4>* energy,
         Electrostatic* electrostat,
-        MGmol* mgmol_strategy, T4* orbitals);
+        MGmol<T4>* mgmol_strategy, T4* orbitals);
 
     ~HamiltonianMVP_DMStrategy();
 

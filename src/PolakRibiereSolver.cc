@@ -14,7 +14,7 @@
 #include "Energy.h"
 #include "Hamiltonian.h"
 #include "Ions.h"
-#include "MGmol.h"
+#include "LocGridOrbitals.h"
 #include "Potentials.h"
 #include "ProjectedMatricesInterface.h"
 #include "Rho.h"
@@ -27,7 +27,8 @@ int PolakRibiereSolver<T>::it_scf_ = 0;
 template <class T>
 PolakRibiereSolver<T>::PolakRibiereSolver(Hamiltonian<T>* hamiltonian,
     ProjectedMatricesInterface* proj_matrices, Energy<T>* energy,
-    Electrostatic* electrostat, MGmol* mgmol_strategy, Ions& ions, Rho<T>* rho,
+    Electrostatic* electrostat, MGmol<T>* mgmol_strategy, Ions& ions,
+    Rho<T>* rho,
     DMStrategy* dm_strategy, std::ostream& os)
     : hamiltonian_(hamiltonian),
       proj_matrices_(proj_matrices),

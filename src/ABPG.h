@@ -12,13 +12,13 @@
 #include "Energy.h"
 #include "Hamiltonian.h"
 #include "Mixing.h"
+#include "MGmol.h"
 #include "OrbitalsStepper.h"
 #include "Timer.h"
 
 #include <iostream>
 
 class ProjectedMatricesInterface;
-class MGmol;
 
 template <class T>
 class ABPG : public OrbitalsStepper<T>
@@ -26,7 +26,7 @@ class ABPG : public OrbitalsStepper<T>
     Hamiltonian<T>* hamiltonian_;
     ProjectedMatricesInterface* proj_matrices_;
     Energy<T>* energy_;
-    MGmol* mgmol_strategy_;
+    MGmol<T>* mgmol_strategy_;
 
     std::ostream& os_;
 
@@ -44,7 +44,7 @@ class ABPG : public OrbitalsStepper<T>
 
 public:
     ABPG(Hamiltonian<T>* hamiltonian, ProjectedMatricesInterface* proj_matrices,
-        MGmol* mgmol_strategy, std::ostream& os)
+        MGmol<T>* mgmol_strategy, std::ostream& os)
         : hamiltonian_(hamiltonian),
           proj_matrices_(proj_matrices),
           mgmol_strategy_(mgmol_strategy),

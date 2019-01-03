@@ -16,7 +16,7 @@
 
 #include <iostream>
 
-class MGmol;
+template <class T> class MGmol;
 
 template <class T>
 class GrassmanCGSparse : public GrassmanLineMinimization<T>
@@ -24,7 +24,7 @@ class GrassmanCGSparse : public GrassmanLineMinimization<T>
 
 public:
     GrassmanCGSparse(Hamiltonian<T>* hamiltonian,
-        ProjectedMatricesInterface* proj_matrices, MGmol* mgmol_strategy,
+        ProjectedMatricesInterface* proj_matrices, MGmol<T>* mgmol_strategy,
         Ions& ions, std::ostream& os)
         : GrassmanLineMinimization<T>(
               hamiltonian, proj_matrices, mgmol_strategy, ions, os)

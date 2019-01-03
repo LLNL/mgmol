@@ -14,11 +14,11 @@
 #include "IonicAlgorithm.h"
 #include "Ions.h"
 #include "LocalizationRegions.h"
+#include "MGmol.h"
 #include "Rho.h"
 
 class MasksSet;
 class Electrostatic;
-class MGmol;
 class KBPsiMatrixInterface;
 class ConstraintSet;
 
@@ -34,12 +34,12 @@ private:
     const MasksSet& masks_;
     const Electrostatic& electrostat_;
 
-    const MGmol& mgmol_strategy_;
+    const MGmol<T>& mgmol_strategy_;
 
 public:
     FIRE(T** orbitals, Ions& ions, Rho<T>& rho,
         ConstraintSet& constraints, LocalizationRegions& lrs, MasksSet& masks,
-        Electrostatic& electrostat, const double dt, MGmol&);
+        Electrostatic& electrostat, const double dt, MGmol<T>&);
 
     ~FIRE(){};
 };

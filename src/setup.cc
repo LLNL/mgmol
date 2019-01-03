@@ -8,17 +8,19 @@
 
 #include "ConstraintSet.h"
 #include "Hamiltonian.h"
+#include "LocGridOrbitals.h"
 #include "MGmol.h"
 #include "Potentials.h"
 
-int MGmol::setupFromInput(const string filename)
+template <class T>
+int MGmol<T>::setupFromInput(const string filename)
 {
     Control& ct = *(Control::instance());
-    if (ct.verbose > 0) printWithTimeStamp("MGmol::setupFromInput()...", cout);
+    if (ct.verbose > 0) printWithTimeStamp("MGmol<T>::setupFromInput()...", cout);
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
-    hamiltonian_    = new Hamiltonian<LocGridOrbitals>();
+    hamiltonian_    = new Hamiltonian<T>();
     Potentials& pot = hamiltonian_->potential();
 
     ct.registerPotentials(pot);
@@ -48,7 +50,8 @@ int MGmol::setupFromInput(const string filename)
     return 0;
 }
 
-int MGmol::setupLRsFromInput(const string filename)
+template <class T>
+int MGmol<T>::setupLRsFromInput(const string filename)
 {
     MGmol_MPI& mmpi        = *(MGmol_MPI::instance());
     Mesh* mymesh           = Mesh::instance();
@@ -87,7 +90,8 @@ int MGmol::setupLRsFromInput(const string filename)
     return 0;
 }
 
-int MGmol::setupConstraintsFromInput(const string filename)
+template <class T>
+int MGmol<T>::setupConstraintsFromInput(const string filename)
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
@@ -118,3 +122,6 @@ int MGmol::setupConstraintsFromInput(const string filename)
 
     return 0;
 }
+
+template class MGmol<LocGridOrbitals>;
+

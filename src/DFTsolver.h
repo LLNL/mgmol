@@ -11,13 +11,13 @@
 
 #include "Energy.h"
 #include "Hamiltonian.h"
+#include "MGmol.h"
 #include "OrbitalsStepper.h"
 #include "Rho.h"
 #include "Timer.h"
 #include <iostream>
 
 class Ions;
-class MGmol;
 class Electrostatic;
 class ProjectedMatricesInterface;
 class DMStrategy;
@@ -29,7 +29,7 @@ private:
     static Timer solve_tm_;
     static int it_scf_;
 
-    MGmol* mgmol_strategy_;
+    MGmol<T>* mgmol_strategy_;
 
     Hamiltonian<T>* hamiltonian_;
     ProjectedMatricesInterface* proj_matrices_;
@@ -67,7 +67,7 @@ private:
 public:
     DFTsolver(Hamiltonian<T>* hamiltonian,
         ProjectedMatricesInterface* proj_matrices, Energy<T>* energy,
-        Electrostatic* electrostat, MGmol* mgmol_strategy, Ions& ions,
+        Electrostatic* electrostat, MGmol<T>* mgmol_strategy, Ions& ions,
         Rho<T>* rho,
         DMStrategy* dm_strategy, std::ostream& os);
 

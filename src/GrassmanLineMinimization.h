@@ -16,7 +16,7 @@
 
 #include <iostream>
 
-class MGmol;
+template <class T> class MGmol;
 
 template <class T>
 class GrassmanLineMinimization : public OrbitalsStepper<T>
@@ -24,7 +24,7 @@ class GrassmanLineMinimization : public OrbitalsStepper<T>
 protected:
     Hamiltonian<T>* hamiltonian_;
     ProjectedMatricesInterface* proj_matrices_;
-    MGmol* mgmol_strategy_;
+    MGmol<T>* mgmol_strategy_;
     std::ostream& os_;
 
     static bool accelerate_;
@@ -51,7 +51,7 @@ protected:
 
 public:
     GrassmanLineMinimization(Hamiltonian<T>* hamiltonian,
-        ProjectedMatricesInterface* proj_matrices, MGmol* mgmol_strategy,
+        ProjectedMatricesInterface* proj_matrices, MGmol<T>* mgmol_strategy,
         Ions& ions, std::ostream& os)
         : hamiltonian_(hamiltonian),
           proj_matrices_(proj_matrices),

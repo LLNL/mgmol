@@ -21,7 +21,7 @@
 
 class MasksSet;
 class Electrostatic;
-class MGmol;
+template <class T> class MGmol;
 class KBPsiMatrixInterface;
 
 template <class T>
@@ -46,13 +46,13 @@ private:
 
     double etot_i_[3];
 
-    MGmol& mgmol_strategy_;
+    MGmol<T>& mgmol_strategy_;
 
 public:
     LBFGS(T** orbitals, Ions& ions, Rho<T>& rho,
         ConstraintSet& constraints, LocalizationRegions& lrs,
         ClusterOrbitals* local_cluster, MasksSet& masks, MasksSet& corrmasks,
-        Electrostatic& electrostat, const double dt, MGmol&);
+        Electrostatic& electrostat, const double dt, MGmol<T>&);
 
     ~LBFGS();
 

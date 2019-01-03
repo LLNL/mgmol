@@ -16,6 +16,7 @@
 #include "FullyOccupiedNonOrthoDMStrategy.h"
 #include "HamiltonianMVP_DMStrategy.h"
 #include "MVP_DMStrategy.h"
+#include "MGmol.h"
 #include "NonOrthoDMStrategy.h"
 #include "ProjectedMatrices.h"
 #include "ProjectedMatricesSparse.h"
@@ -26,7 +27,7 @@ class DMStrategyFactory
 public:
     static DMStrategy* create(MPI_Comm comm, std::ostream& os, Ions& ions,
         Rho<T>* rho, Energy<T>* energy, Electrostatic* electrostat,
-        MGmol* mgmol_strategy, ProjectedMatricesInterface* proj_matrices,
+        MGmol<T>* mgmol_strategy, ProjectedMatricesInterface* proj_matrices,
         T* orbitals)
     {
         Control& ct = *(Control::instance());

@@ -13,12 +13,12 @@
 #include "IonicStepper.h"
 #include "Ions.h"
 #include "LocalizationRegions.h"
+#include "MGmol.h"
 #include "Rho.h"
 
 #include <vector>
 
 class MasksSet;
-class MGmol;
 
 template <class T>
 class IonicAlgorithm
@@ -31,7 +31,7 @@ private:
     LocalizationRegions& lrs_;
     MasksSet& masks_;
 
-    MGmol& mgmol_strategy_;
+    MGmol<T>& mgmol_strategy_;
     IonicStepper* stepper_;
     std::vector<std::string>& ions_names_;
 
@@ -48,7 +48,7 @@ protected:
 public:
     IonicAlgorithm(T** orbitals, Ions& ions, Rho<T>& rho,
         ConstraintSet& constraints, LocalizationRegions& lrs, MasksSet& masks,
-        MGmol&);
+        MGmol<T>&);
 
     virtual ~IonicAlgorithm(){};
 

@@ -68,8 +68,9 @@ namespace mgmol
 std::ostream* out = NULL;
 }
 
+template <class T>
 dist_matrix::RemoteTasksDistMatrix<DISTMATDTYPE>*
-    MGmol::remote_tasks_DistMatrix_ptr_
+    MGmol<T>::remote_tasks_DistMatrix_ptr_
     = 0;
 
 string description;
@@ -103,22 +104,34 @@ extern Timer ions_setupInteractingIons_tm;
 extern Timer ions_setup_tm;
 extern Timer updateCenters_tm;
 
-Timer MGmol::total_tm_("MGmol::total");
-Timer MGmol::setup_tm_("MGmol::setup");
-Timer MGmol::closing_tm_("MGmol::closing");
-Timer MGmol::init_tm_("MGmol::init");
-Timer MGmol::dump_tm_("MGmol::dump");
-Timer MGmol::evnl_tm_("MGmol::evnl");
-Timer MGmol::get_res_tm_("MGmol::comp_res_from_Hphi");
-Timer MGmol::computeHij_tm_("MGmol::computeHij");
-Timer MGmol::get_Hpsi_and_Hij_tm_("MGmol::get_Hpsi_and_Hij");
-Timer MGmol::comp_res_tm_("MGmol::comp_res");
-Timer MGmol::init_nuc_tm_("MGmol::init_nuc");
+template <class T>
+Timer MGmol<T>::total_tm_("MGmol::total");
+template <class T>
+Timer MGmol<T>::setup_tm_("MGmol::setup");
+template <class T>
+Timer MGmol<T>::closing_tm_("MGmol::closing");
+template <class T>
+Timer MGmol<T>::init_tm_("MGmol::init");
+template <class T>
+Timer MGmol<T>::dump_tm_("MGmol::dump");
+template <class T>
+Timer MGmol<T>::evnl_tm_("MGmol::evnl");
+template <class T>
+Timer MGmol<T>::get_res_tm_("MGmol::comp_res_from_Hphi");
+template <class T>
+Timer MGmol<T>::computeHij_tm_("MGmol::computeHij");
+template <class T>
+Timer MGmol<T>::get_Hpsi_and_Hij_tm_("MGmol::get_Hpsi_and_Hij");
+template <class T>
+Timer MGmol<T>::comp_res_tm_("MGmol::comp_res");
+template <class T>
+Timer MGmol<T>::init_nuc_tm_("MGmol::init_nuc");
 
 #include "Signal.h"
 set<int> Signal::recv_;
 
-MGmol::MGmol(MPI_Comm comm, std::ostream& os) : os_(os)
+template <class T>
+MGmol<T>::MGmol(MPI_Comm comm, std::ostream& os) : os_(os)
 {
     comm_ = comm;
 
@@ -149,7 +162,8 @@ MGmol::MGmol(MPI_Comm comm, std::ostream& os) : os_(os)
     energy_ = 0;
 }
 
-MGmol::~MGmol()
+template <class T>
+MGmol<T>::~MGmol()
 {
     Control& ct = *(Control::instance());
     delete[] rhoc_;
@@ -191,7 +205,8 @@ MGmol::~MGmol()
     if (dm_strategy_ != 0) delete dm_strategy_;
 }
 
-int MGmol::initial()
+template <class T>
+int MGmol<T>::initial()
 {
     Control& ct     = *(Control::instance());
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
@@ -199,7 +214,7 @@ int MGmol::initial()
 
     assert(ct.numst >= 0);
 
-    if (ct.verbose > 0) printWithTimeStamp("MGmol::initial()...", os_);
+    if (ct.verbose > 0) printWithTimeStamp("MGmol<T>::initial()...", os_);
 
     init_tm_.start();
 
@@ -214,7 +229,7 @@ int MGmol::initial()
 
     if (ct.verbose > 0)
         printWithTimeStamp(
-            "MGmol::initial(), create ProjectedMatrices...", os_);
+            "MGmol<T>::initial(), create ProjectedMatrices...", os_);
 
     // If not an initial run read data from files
     if (ct.restart_info > 2)
@@ -266,10 +281,10 @@ int MGmol::initial()
     else
         proj_matrices_ = new ProjectedMatrices(ct.numst, with_spin);
 
-    forces_ = new Forces<LocGridOrbitals>(hamiltonian_, rho_, proj_matrices_);
+    forces_ = new Forces<T>(hamiltonian_, rho_, proj_matrices_);
 
     if (ct.verbose > 0)
-        printWithTimeStamp("MGmol::initial(), create MasksSet...", os_);
+        printWithTimeStamp("MGmol<T>::initial(), create MasksSet...", os_);
 
     currentMasks_ = new MasksSet(false, ct.getMGlevels());
     currentMasks_->setup(*lrs_);
@@ -281,16 +296,16 @@ int MGmol::initial()
         ct.orbitalsOverallocateFactor());
 
     if (ct.verbose > 0)
-        printWithTimeStamp("MGmol::initial(), create LocGridOrbitals...", os_);
+        printWithTimeStamp("MGmol<T>::initial(), create T...", os_);
 
-    current_orbitals_ = new LocGridOrbitals("Primary", mygrid,
+    current_orbitals_ = new T("Primary", mygrid,
         mymesh->subdivx(), ct.numst,
         ct.bc, proj_matrices_, lrs_, currentMasks_, corrMasks_, local_cluster_);
 
     if (!ct.short_sighted)
     {
         printWithTimeStamp(
-            "MGmol::initial(), create MatricesBlacsContext and misc...", os_);
+            "MGmol<T>::initial(), create MatricesBlacsContext and misc...", os_);
 
         dist_matrix::DistMatrix<DISTMATDTYPE> tmp("tmp", ct.numst, ct.numst);
         remote_tasks_DistMatrix_
@@ -337,7 +352,7 @@ int MGmol::initial()
     if (ct.restart_info <= 2)
     {
         if (ct.verbose > 0)
-            printWithTimeStamp("MGmol::initial(), init wf and masks...", os_);
+            printWithTimeStamp("MGmol<T>::initial(), init wf and masks...", os_);
 
         // Make temp mask for initial random wave functions
         if (ct.init_loc == 1)
@@ -394,7 +409,7 @@ int MGmol::initial()
     }
 
     if (ct.verbose > 0) printWithTimeStamp("Initialize XC functional...", os_);
-    xcongrid_ = XCfunctionalFactory<LocGridOrbitals>::create(
+    xcongrid_ = XCfunctionalFactory<T>::create(
                     ct.xctype, mmpi.nspin(), *rho_, pot);
     assert( xcongrid_ != 0 );
 
@@ -440,7 +455,7 @@ int MGmol::initial()
     {
         Vector3D origin(mygrid.origin(0), mygrid.origin(1), mygrid.origin(2));
         Vector3D ll(mygrid.ll(0), mygrid.ll(1), mygrid.ll(2));
-        spreadf_ = new SpreadsAndCenters<LocGridOrbitals>(origin, ll);
+        spreadf_ = new SpreadsAndCenters<T>(origin, ll);
     }
 
     bool energy_with_spread_penalty = false;
@@ -448,7 +463,7 @@ int MGmol::initial()
     {
         if (ct.isSpreadFunctionalVolume())
         {
-            spread_penalty_ = new SpreadPenaltyVolume<LocGridOrbitals>(spreadf_,
+            spread_penalty_ = new SpreadPenaltyVolume<T>(spreadf_,
                 ct.spreadPenaltyTarget(), ct.spreadPenaltyAlphaFactor(),
                 ct.spreadPenaltyDampingFactor());
         }
@@ -456,18 +471,18 @@ int MGmol::initial()
         {
             energy_with_spread_penalty = true;
             spread_penalty_            =
-                new EnergySpreadPenalty<LocGridOrbitals>(spreadf_,
+                new EnergySpreadPenalty<T>(spreadf_,
                     ct.spreadPenaltyTarget(), ct.spreadPenaltyAlphaFactor());
         }
         else
-            spread_penalty_ = new SpreadPenalty<LocGridOrbitals>(spreadf_,
+            spread_penalty_ = new SpreadPenalty<T>(spreadf_,
                 ct.spreadPenaltyTarget(), ct.spreadPenaltyAlphaFactor(),
                 ct.spreadPenaltyDampingFactor());
     }
 
-    SpreadPenaltyInterface<LocGridOrbitals>* spread_penalty
+    SpreadPenaltyInterface<T>* spread_penalty
         = energy_with_spread_penalty ? spread_penalty_ : 0;
-    energy_ = new Energy<LocGridOrbitals>(
+    energy_ = new Energy<T>(
         mygrid, *ions_, pot, *electrostat_, *rho_, *xcongrid_, spread_penalty);
 
     if (ct.verbose > 0) printWithTimeStamp("Setup matrices...", os_);
@@ -475,7 +490,7 @@ int MGmol::initial()
     updateHmatrix(*current_orbitals_, *ions_);
 
     // HMVP algorithm requires that H is initialized
-    dm_strategy_ = DMStrategyFactory<LocGridOrbitals>::create(
+    dm_strategy_ = DMStrategyFactory<T>::create(
         comm_, os_, *ions_, rho_, energy_,
         electrostat_, this, proj_matrices_, current_orbitals_);
 
@@ -497,7 +512,8 @@ int MGmol::initial()
     return 0;
 } // initial()
 
-void MGmol::run()
+template <class T>
+void MGmol<T>::run()
 {
     total_tm_.start();
 
@@ -557,7 +573,8 @@ void MGmol::run()
     cleanup();
 } // run()
 
-void MGmol::finalEnergy()
+template <class T>
+void MGmol<T>::finalEnergy()
 {
     // Get the total energy
     const double ts = 0.5 * proj_matrices_->computeEntropy(); // in [Ha]
@@ -565,7 +582,8 @@ void MGmol::finalEnergy()
         ts, proj_matrices_, *current_orbitals_, 2, os_);
 }
 
-void MGmol::printMM()
+template <class T>
+void MGmol<T>::printMM()
 {
     Control& ct = *(Control::instance());
     if (ct.tmatrices == 1)
@@ -581,7 +599,8 @@ void MGmol::printMM()
 }
 
 /* Writes out header information */
-void MGmol::write_header()
+template <class T>
+void MGmol<T>::write_header()
 {
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
@@ -708,7 +727,8 @@ void MGmol::write_header()
     if (current_orbitals_ != NULL && ct.verbose > 3) lrs_->printAllRegions(os_);
 }
 
-void MGmol::global_exit(int i)
+template <class T>
+void MGmol<T>::global_exit(int i)
 {
 #ifdef USE_MPI
     MPI_Abort(comm_, i);
@@ -717,7 +737,8 @@ void MGmol::global_exit(int i)
 #endif
 }
 
-void MGmol::check_anisotropy()
+template <class T>
+void MGmol<T>::check_anisotropy()
 {
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
@@ -734,7 +755,8 @@ void MGmol::check_anisotropy()
     }
 }
 
-void MGmol::initBackground()
+template <class T>
+void MGmol<T>::initBackground()
 {
     assert(ions_ != 0);
 
@@ -761,7 +783,8 @@ void MGmol::initBackground()
     if (fabs(background_charge_) < 1.e-10) background_charge_ = 0.;
 }
 
-void MGmol::printEigAndOcc()
+template <class T>
+void MGmol<T>::printEigAndOcc()
 {
     Control& ct = *(Control::instance());
     if (!(ct.fullyOccupied()
@@ -778,7 +801,8 @@ void MGmol::printEigAndOcc()
     }
 }
 
-double MGmol::get_charge(RHODTYPE* rho)
+template <class T>
+double MGmol<T>::get_charge(RHODTYPE* rho)
 {
     Control& ct              = *(Control::instance());
     Mesh* mymesh             = Mesh::instance();
@@ -807,7 +831,8 @@ double MGmol::get_charge(RHODTYPE* rho)
 }
 
 //  Initialization of the compensating potential
-void MGmol::initVcomp(Ions& ions)
+template <class T>
+void MGmol<T>::initVcomp(Ions& ions)
 {
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
@@ -914,7 +939,8 @@ double get_trilinval(const double xc, const double yc, const double zc,
 }
 #endif
 
-void MGmol::initNuc(Ions& ions)
+template <class T>
+void MGmol<T>::initNuc(Ions& ions)
 {
     init_nuc_tm_.start();
 
@@ -1121,7 +1147,8 @@ void MGmol::initNuc(Ions& ions)
     init_nuc_tm_.stop();
 }
 
-void MGmol::printTimers()
+template <class T>
+void MGmol<T>::printTimers()
 {
     Control& ct = *(Control::instance());
     if (onpe0)
@@ -1137,8 +1164,8 @@ void MGmol::printTimers()
     pb::GridFuncInterface::printTimers(os_);
     pb::GridFuncVectorInterface::printTimers(os_);
     pb::FDoperInterface::printTimers(os_);
-    LocGridOrbitals::printTimers(os_);
-    SinCosOps<LocGridOrbitals>::printTimers(os_);
+    T::printTimers(os_);
+    SinCosOps<T>::printTimers(os_);
     GridMask::printTimers(os_);
 
     sgemm_tm.print(os_);
@@ -1168,9 +1195,9 @@ void MGmol::printTimers()
     g_kbpsi_->printTimers(os_);
 
     get_kbpsi_tm.print(os_);
-    Hamiltonian<LocGridOrbitals>::apply_Hloc_tm().print(os_);
+    Hamiltonian<T>::apply_Hloc_tm().print(os_);
     computeHij_tm_.print(os_);
-    Rho<LocGridOrbitals>::printTimers(os_);
+    Rho<T>::printTimers(os_);
     XConGrid::get_xc_tm_.print(os_);
     get_Hpsi_and_Hij_tm_.print(os_);
     get_res_tm_.print(os_);
@@ -1178,10 +1205,10 @@ void MGmol::printTimers()
     vnlpsi_tm.print(os_);
     get_MLWF_tm.print(os_);
     get_NOLMO_tm.print(os_);
-    Energy<LocGridOrbitals>::eval_te_tm().print(os_);
+    Energy<T>::eval_te_tm().print(os_);
     Electrostatic::solve_tm().print(os_);
     PoissonInterface::printTimers(os_);
-    AndersonMix<LocGridOrbitals>::update_tm().print(os_);
+    AndersonMix<T>::update_tm().print(os_);
     proj_matrices_->printTimers(os_);
     ShortSightedInverse::printTimers(os_);
     VariableSizeMatrixInterface::printTimers(os_);
@@ -1196,9 +1223,9 @@ void MGmol::printTimers()
     local_cluster_->printTimers(os_);
     forces_->printTimers(os_);
     if (ct.OuterSolver() == OuterSolverType::ABPG)
-        ABPG<LocGridOrbitals>::printTimers(os_);
+        ABPG<T>::printTimers(os_);
     else if (ct.OuterSolver() == OuterSolverType::NLCG)
-        GrassmanLineMinimization<LocGridOrbitals>::printTimers(os_);
+        GrassmanLineMinimization<T>::printTimers(os_);
     adaptLR_tm_.print(os_);
     updateCenters_tm.print(os_);
     md_iterations_tm.print(os_);
@@ -1216,11 +1243,12 @@ void MGmol::printTimers()
     setup_tm_.print(os_);
     HDFrestart::printTimers(os_);
     BlockVector<ORBDTYPE>::printTimers(os_);
-    OrbitalsPreconditioning<LocGridOrbitals>::printTimers(os_);
+    OrbitalsPreconditioning<T>::printTimers(os_);
     MDfiles::printTimers(os_);
 }
 
-void MGmol::initKBR()
+template <class T>
+void MGmol<T>::initKBR()
 {
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
@@ -1259,7 +1287,8 @@ void MGmol::initKBR()
     }
 }
 
-double MGmol::get_evnl(const Ions& ions, LocGridOrbitals& orbitals)
+template <class T>
+double MGmol<T>::get_evnl(const Ions& ions, T& orbitals)
 {
     evnl_tm_.start();
     Control& ct = *(Control::instance());
@@ -1287,16 +1316,18 @@ double MGmol::get_evnl(const Ions& ions, LocGridOrbitals& orbitals)
     return val;
 }
 
-double MGmol::getTotalEnergy() { return total_energy_; }
+template <class T>
+double MGmol<T>::getTotalEnergy() { return total_energy_; }
 
-void MGmol::setup()
+template <class T>
+void MGmol<T>::setup()
 {
     total_tm_.start();
     setup_tm_.start();
 
     Control& ct = *(Control::instance());
 
-    if (ct.verbose > 0) printWithTimeStamp("MGmol::setup()...", os_);
+    if (ct.verbose > 0) printWithTimeStamp("MGmol<T>::setup()...", os_);
 
     Mesh* mymesh = Mesh::instance();
 
@@ -1308,7 +1339,7 @@ void MGmol::setup()
         = new Electrostatic(ct.lap_type, ct.bcPoisson, ct.screening_const);
     electrostat_->setup(ct.vh_init);
 
-    rho_ = new Rho<LocGridOrbitals>();
+    rho_ = new Rho<T>();
     rho_->setVerbosityLevel(ct.verbose);
 
     int ierr = initial();
@@ -1325,12 +1356,13 @@ void MGmol::setup()
     }
 #endif
 
-    if (ct.verbose > 0) printWithTimeStamp("MGmol::setup done...", os_);
+    if (ct.verbose > 0) printWithTimeStamp("MGmol<T>::setup done...", os_);
 
     setup_tm_.stop();
 }
 
-void MGmol::cleanup()
+template <class T>
+void MGmol<T>::cleanup()
 {
     closing_tm_.start();
 
@@ -1371,13 +1403,15 @@ void MGmol::cleanup()
     total_tm_.print(os_);
 }
 
-void MGmol::projectOutKernel(LocGridOrbitals& phi)
+template <class T>
+void MGmol<T>::projectOutKernel(T& phi)
 {
     assert(aomm_ != 0);
     aomm_->projectOut(phi);
 }
 
-void MGmol::setGamma(const pb::Lap<ORBDTYPE>& lapOper, const Potentials& pot)
+template <class T>
+void MGmol<T>::setGamma(const pb::Lap<ORBDTYPE>& lapOper, const Potentials& pot)
 {
     assert(orbitals_precond_ != 0);
 
@@ -1386,15 +1420,17 @@ void MGmol::setGamma(const pb::Lap<ORBDTYPE>& lapOper, const Potentials& pot)
     orbitals_precond_->setGamma(lapOper, pot, ct.getMGlevels(), proj_matrices_);
 }
 
-void MGmol::precond_mg(LocGridOrbitals& phi)
+template <class T>
+void MGmol<T>::precond_mg(T& phi)
 {
     assert(orbitals_precond_ != 0);
 
     orbitals_precond_->precond_mg(phi);
 }
 
-double MGmol::computeResidual(LocGridOrbitals& orbitals,
-    LocGridOrbitals& work_orbitals, LocGridOrbitals& res,
+template <class T>
+double MGmol<T>::computeResidual(T& orbitals,
+    T& work_orbitals, T& res,
     const bool print_residual, const bool norm_res)
 
 {
@@ -1428,8 +1464,9 @@ double MGmol::computeResidual(LocGridOrbitals& orbitals,
 
 //////////////////////////////////////////////////////////////////////////////
 // compute res using psi and hpsi
-void MGmol::computeResidualUsingHPhi(LocGridOrbitals& psi,
-    const LocGridOrbitals& hphi, LocGridOrbitals& res, const bool applyB)
+template <class T>
+void MGmol<T>::computeResidualUsingHPhi(T& psi,
+    const T& hphi, T& res, const bool applyB)
 {
     assert(psi.isCompatibleWith(hphi));
     assert(psi.isCompatibleWith(res));
@@ -1489,8 +1526,9 @@ void MGmol::computeResidualUsingHPhi(LocGridOrbitals& psi,
 
 //////////////////////////////////////////////////////////////////////////////
 
-double MGmol::computeConstraintResidual(LocGridOrbitals& orbitals,
-    const LocGridOrbitals& hphi, LocGridOrbitals& res,
+template <class T>
+double MGmol<T>::computeConstraintResidual(T& orbitals,
+    const T& hphi, T& res,
     const bool print_residual, const bool compute_norm_res)
 {
     Control& ct(*(Control::instance()));
@@ -1529,8 +1567,9 @@ double MGmol::computeConstraintResidual(LocGridOrbitals& orbitals,
 
 //////////////////////////////////////////////////////////////////////////////
 // Get preconditioned residual in res_orbitals
-double MGmol::computePrecondResidual(LocGridOrbitals& phi,
-    LocGridOrbitals& hphi, LocGridOrbitals& res, Ions& ions,
+template <class T>
+double MGmol<T>::computePrecondResidual(T& phi,
+    T& hphi, T& res, Ions& ions,
     KBPsiMatrixSparse* kbpsi, const bool print_residual, const bool norm_res)
 
 {
@@ -1568,13 +1607,15 @@ double MGmol::computePrecondResidual(LocGridOrbitals& phi,
 //    The new potentials are computed as a linear combination
 //    of the old ones (input "vh" and "vxc") and the ones
 //    corresponding to the input "rho".
-void MGmol::update_pot(const pb::GridFunc<POTDTYPE>& vh_init, const Ions& ions)
+template <class T>
+void MGmol<T>::update_pot(const pb::GridFunc<POTDTYPE>& vh_init, const Ions& ions)
 {
     electrostat_->setupInitialVh(vh_init);
     update_pot(ions);
 }
 
-void MGmol::update_pot(const Ions& ions)
+template <class T>
+void MGmol<T>::update_pot(const Ions& ions)
 {
 #ifdef PRINT_OPERATIONS
     if (onpe0) os_ << "Update potentials" << endl;
@@ -1609,10 +1650,13 @@ void MGmol::update_pot(const Ions& ions)
 #endif
 }
 
-void MGmol::addResidualSpreadPenalty(LocGridOrbitals& phi, LocGridOrbitals& res)
+template <class T>
+void MGmol<T>::addResidualSpreadPenalty(T& phi, T& res)
 {
     assert(spread_penalty_ != 0);
 
     spread_penalty_->addResidual(phi, res);
 }
+
+template class MGmol<LocGridOrbitals>;
 

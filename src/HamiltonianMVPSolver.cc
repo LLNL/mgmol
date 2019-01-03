@@ -36,7 +36,7 @@ Timer HamiltonianMVPSolver<T1, T2, T3, T4>::target_tm_(
 template <class T1, class T2, class T3, class T4>
 HamiltonianMVPSolver<T1, T2, T3, T4>::HamiltonianMVPSolver(MPI_Comm comm,
     ostream& os, Ions& ions, Rho<T4>* rho, Energy<T4>* energy,
-    Electrostatic* electrostat, MGmol* mgmol_strategy, const int numst,
+    Electrostatic* electrostat, MGmol<T4>* mgmol_strategy, const int numst,
     const double kbT, const int nel, const vector<vector<int>>& global_indexes,
     const short n_inner_steps, const T1& hinit,
     const bool try_shorter_intervals)

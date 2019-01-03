@@ -10,6 +10,7 @@
 #include "Control.h"
 #include "Electrostatic.h"
 #include "MGmol.h"
+#include "LocGridOrbitals.h"
 #include "MasksSet.h"
 #include "Mesh.h"
 #include "ProjectedMatrices.h"
@@ -18,7 +19,7 @@ template <class T>
 LBFGS<T>::LBFGS(T** orbitals, Ions& ions, Rho<T>& rho,
     ConstraintSet& constraints, LocalizationRegions& lrs,
     ClusterOrbitals* local_cluster, MasksSet& masks, MasksSet& corrmasks,
-    Electrostatic& electrostat, const double dt, MGmol& strategy)
+    Electrostatic& electrostat, const double dt, MGmol<T>& strategy)
     : IonicAlgorithm<T>(orbitals, ions, rho, constraints, lrs, masks, strategy),
       orbitals_(orbitals),
       ions_(ions),

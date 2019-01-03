@@ -11,6 +11,7 @@
 
 #include "DMStrategy.h"
 #include "Energy.h"
+#include "MGmol.h"
 #include "Rho.h"
 
 #include <iostream>
@@ -19,9 +20,7 @@
 
 class ProjectedMatricesInterface;
 class Ions;
-class MGmol;
 class Electrostatic;
-class MGmol;
 
 template <class T>
 class MVP_DMStrategy : public DMStrategy
@@ -38,13 +37,13 @@ private:
     Energy<T>* energy_;
     Electrostatic* electrostat_;
     const std::vector<std::vector<int>>& global_indexes_;
-    MGmol* mgmol_strategy_;
+    MGmol<T>* mgmol_strategy_;
 
     bool use_old_dm_;
 
 public:
     MVP_DMStrategy(MPI_Comm comm, std::ostream& os, Ions& ions, Rho<T>* rho,
-        Energy<T>* energy, Electrostatic* electrostat, MGmol* mgmol_strategy,
+        Energy<T>* energy, Electrostatic* electrostat, MGmol<T>* mgmol_strategy,
         T* orbitals, ProjectedMatricesInterface* proj_matrices,
         const bool use_old_dm);
 

@@ -11,13 +11,13 @@
 
 #include "DistMatrix.h"
 #include "Energy.h"
+#include "MGmol.h"
 #include "Rho.h"
 #include "Timer.h"
 
 class Ions;
-class MGmol;
+template <class T> class MGmol;
 class Electrostatic;
-class T4;
 class ProjectedMatrices2N;
 class ProjectedMatrices;
 
@@ -36,7 +36,7 @@ private:
     Rho<T4>* rho_;
     Energy<T4>* energy_;
     Electrostatic* electrostat_;
-    MGmol* mgmol_strategy_;
+    MGmol<T4>* mgmol_strategy_;
 
     int numst_;
 
@@ -65,7 +65,7 @@ public:
     HamiltonianMVPSolver(MPI_Comm comm, std::ostream& os, Ions& ions,
         Rho<T4>* rho,
         Energy<T4>* energy, Electrostatic* electrostat,
-        MGmol* mgmol_strategy,
+        MGmol<T4>* mgmol_strategy,
         const int numst, const double kbT, const int nel,
         const std::vector<std::vector<int>>& global_indexes,
         const short n_inner_steps, const T1& hinit,

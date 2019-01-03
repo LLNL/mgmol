@@ -12,17 +12,20 @@
 #include "MGmol.h"
 #include "ProjectedMatricesInterface.h"
 
-void MGmol::sebprintForces() { ions_->printForces(os_); }
-void MGmol::sebprintPositions() { ions_->printPositions(os_); }
+template <class T>
+void MGmol<T>::sebprintForces() { ions_->printForces(os_); }
+template <class T>
+void MGmol<T>::sebprintPositions() { ions_->printPositions(os_); }
 
-void MGmol::geomOptimSetup()
+template <class T>
+void MGmol<T>::geomOptimSetup()
 {
     Control& ct = *(Control::instance());
 
     switch (ct.AtomsDynamic())
     {
         case AtomsDynamicType::LBFGS:
-            geom_optimizer_ = new LBFGS<LocGridOrbitals>(&current_orbitals_,
+            geom_optimizer_ = new LBFGS<T>(&current_orbitals_,
                 *ions_, *rho_,
                 *constraints_, *lrs_, local_cluster_, *currentMasks_,
                 *corrMasks_, *electrostat_, ct.dt, *this);
@@ -30,7 +33,7 @@ void MGmol::geomOptimSetup()
 
         case AtomsDynamicType::FIRE:
             geom_optimizer_
-                = new FIRE<LocGridOrbitals>(&current_orbitals_, *ions_, *rho_,
+                = new FIRE<T>(&current_orbitals_, *ions_, *rho_,
                     *constraints_,
                     *lrs_, *currentMasks_, *electrostat_, ct.dt, *this);
             break;
@@ -40,7 +43,7 @@ void MGmol::geomOptimSetup()
                              << " is an invalid method" << endl;
             return;
     }
-    DFTsolver<LocGridOrbitals>::resetItCount();
+    DFTsolver<T>::resetItCount();
 
     geom_optimizer_->init(h5f_file_);
 
@@ -52,11 +55,12 @@ void MGmol::geomOptimSetup()
     }
     else
     {
-        DFTsolver<LocGridOrbitals>::setItCountLarge();
+        DFTsolver<T>::setItCountLarge();
     }
 }
 
-void MGmol::geomOptimQuench()
+template <class T>
+void MGmol<T>::geomOptimQuench()
 {
     Control& ct = *(Control::instance());
 
@@ -69,16 +73,20 @@ void MGmol::geomOptimQuench()
         ts, proj_matrices_, *current_orbitals_, 2, os_);
 }
 
-void MGmol::geomOptimComputeForces() { geom_optimizer_->computeForces(); }
+template <class T>
+void MGmol<T>::geomOptimComputeForces() { geom_optimizer_->computeForces(); }
 
-void MGmol::geomOptimSetForces(const vector<vector<double>>& f)
+template <class T>
+void MGmol<T>::geomOptimSetForces(const vector<vector<double>>& f)
 {
     geom_optimizer_->setForces(f);
 }
 
-void MGmol::geomOptimDumpRestart() { geom_optimizer_->dumpRestart(); }
+template <class T>
+void MGmol<T>::geomOptimDumpRestart() { geom_optimizer_->dumpRestart(); }
 
-int MGmol::geomOptimRun1Step()
+template <class T>
+int MGmol<T>::geomOptimRun1Step()
 {
     int conv = geom_optimizer_->run1step();
     geom_optimizer_->updatePotAndMasks();
@@ -87,7 +95,8 @@ int MGmol::geomOptimRun1Step()
     return conv;
 }
 
-short MGmol::geomOptimCheckTolForces(const double tol_force)
+template <class T>
+short MGmol<T>::geomOptimCheckTolForces(const double tol_force)
 {
     return geom_optimizer_->checkTolForces(tol_force);
 }

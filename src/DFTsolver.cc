@@ -28,7 +28,8 @@ int DFTsolver<T>::it_scf_ = 0;
 template <class T>
 DFTsolver<T>::DFTsolver(Hamiltonian<T>* hamiltonian,
     ProjectedMatricesInterface* proj_matrices, Energy<T>* energy,
-    Electrostatic* electrostat, MGmol* mgmol_strategy, Ions& ions, Rho<T>* rho,
+    Electrostatic* electrostat, MGmol<T>* mgmol_strategy, Ions& ions,
+    Rho<T>* rho,
     DMStrategy* dm_strategy, std::ostream& os)
     : hamiltonian_(hamiltonian),
       proj_matrices_(proj_matrices),

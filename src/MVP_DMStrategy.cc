@@ -10,6 +10,7 @@
 #include "Control.h"
 #include "Ions.h"
 #include "LocGridOrbitals.h"
+#include "MGmol.h"
 #include "MVPSolver.h"
 #include "ProjectedMatricesInterface.h"
 
@@ -19,7 +20,7 @@ using namespace std;
 template <class T>
 MVP_DMStrategy<T>::MVP_DMStrategy(MPI_Comm comm, ostream& os, Ions& ions,
     Rho<T>* rho,
-    Energy<T>* energy, Electrostatic* electrostat, MGmol* mgmol_strategy,
+    Energy<T>* energy, Electrostatic* electrostat, MGmol<T>* mgmol_strategy,
     T* orbitals, ProjectedMatricesInterface* proj_matrices,
     const bool use_old_dm)
     : comm_(comm),

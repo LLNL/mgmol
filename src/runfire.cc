@@ -20,7 +20,7 @@
 using namespace std;
 
 template <class T>
-void MGmol::runfire(T** orbitals, Ions& ions)
+void MGmol<T>::runfire(T** orbitals, Ions& ions)
 {
     printWithTimeStamp("Run FIRE algorithm...", cout);
 
@@ -120,4 +120,5 @@ void MGmol::runfire(T** orbitals, Ions& ions)
     }
 }
 
-template void MGmol::runfire<LocGridOrbitals>(LocGridOrbitals** orbitals, Ions& ions);
+template void MGmol<LocGridOrbitals>::runfire(
+    LocGridOrbitals** orbitals, Ions& ions);

@@ -10,11 +10,11 @@
 
 #include "DistMatrix.h"
 #include "Energy.h"
+#include "MGmol.h"
 #include "Rho.h"
 #include "Timer.h"
 
 class Ions;
-class MGmol;
 class Electrostatic;
 class ProjectedMatrices2N;
 class ProjectedMatrices;
@@ -38,7 +38,7 @@ private:
     int history_length_;
     std::vector<double> eks_history_;
 
-    MGmol* mgmol_strategy_;
+    MGmol<T>* mgmol_strategy_;
 
     double de_old_;
     double de_;
@@ -58,7 +58,7 @@ private:
 
 public:
     MVPSolver(MPI_Comm comm, std::ostream& os, Ions& ions, Rho<T>* rho,
-        Energy<T>* energy, Electrostatic* electrostat, MGmol* mgmol_strategy,
+        Energy<T>* energy, Electrostatic* electrostat, MGmol<T>* mgmol_strategy,
         const int numst, const double kbT, const int nel,
         const std::vector<std::vector<int>>& global_indexes,
         const short n_inner_steps, const bool use_old_dm);

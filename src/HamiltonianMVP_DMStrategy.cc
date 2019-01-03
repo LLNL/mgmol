@@ -13,6 +13,7 @@
 #include "HamiltonianMVPSolver.h"
 #include "Ions.h"
 #include "LocGridOrbitals.h"
+#include "MGmol.h"
 #include "ProjectedMatrices.h"
 #include "ProjectedMatricesSparse.h"
 #include <vector>
@@ -21,7 +22,7 @@ using namespace std;
 template <class T1, class T2, class T3, class T4>
 HamiltonianMVP_DMStrategy<T1, T2, T3, T4>::HamiltonianMVP_DMStrategy(
     MPI_Comm comm, ostream& os, Ions& ions, Rho<T4>* rho, Energy<T4>* energy,
-    Electrostatic* electrostat, MGmol* mgmol_strategy,
+    Electrostatic* electrostat, MGmol<T4>* mgmol_strategy,
     T4* orbitals)
     : comm_(comm),
       os_(os),
