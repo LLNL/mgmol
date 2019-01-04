@@ -105,6 +105,7 @@ SRC =   \
  FunctionsPacking.cc \
  ColoredRegions.cc \
  LocGridOrbitals.cc \
+ ExtendedGridOrbitals.cc \
  mcstep.cc \
  MD_IonicStepper.cc \
  LBFGS_IonicStepper.cc \

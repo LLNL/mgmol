@@ -9,20 +9,22 @@
 #ifndef MGMOL_ORBITALSEXTRAPOLATIONORDER3_H
 #define MGMOL_ORBITALSEXTRAPOLATIONORDER3_H
 
-#include "LocGridOrbitals.h"
 #include "OrbitalsExtrapolation.h"
 
-class OrbitalsExtrapolationOrder3 : public OrbitalsExtrapolation
+template <class T>
+class OrbitalsExtrapolationOrder3 : public OrbitalsExtrapolation<T>
 {
 private:
-    LocGridOrbitals* initial_orbitals_minus2_;
-    LocGridOrbitals* orbitals_minus2_;
+    T* initial_orbitals_minus2_;
+    T* orbitals_minus1_;
+    T* orbitals_minus2_;
 
 public:
     OrbitalsExtrapolationOrder3()
+        : initial_orbitals_minus2_(0),
+          orbitals_minus1_(0),
+          orbitals_minus2_(0)
     {
-        initial_orbitals_minus2_ = 0;
-        orbitals_minus2_         = 0;
     };
 
     ~OrbitalsExtrapolationOrder3()
@@ -40,11 +42,11 @@ public:
     }
 
     void extrapolate_orbitals(
-        LocGridOrbitals** orbitals, LocGridOrbitals* new_orbitals);
+        T** orbitals, T* new_orbitals);
 
     void clearOldOrbitals()
     {
-        OrbitalsExtrapolation::clearOldOrbitals();
+        OrbitalsExtrapolation<T>::clearOldOrbitals();
 
         if (orbitals_minus2_ != 0)
         {

@@ -6,11 +6,10 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef SpreadPenaltyInterface_H
-#define SpreadPenaltyInterface_H
+#ifndef MGMOL_SpreadPenaltyInterface_H
+#define MGMOL_SpreadPenaltyInterface_H
 
-class LocGridOrbitals;
-
+template <class T>
 class SpreadPenaltyInterface
 {
 public:
@@ -19,8 +18,8 @@ public:
     virtual ~SpreadPenaltyInterface() {}
 
     // add penalty functional contribution to residual
-    virtual void addResidual(LocGridOrbitals& phi, LocGridOrbitals& res) = 0;
-    virtual double evaluateEnergy(const LocGridOrbitals& phi)            = 0;
+    virtual void addResidual(T& phi, T& res) = 0;
+    virtual double evaluateEnergy(const T& phi) = 0;
 };
 
 #endif

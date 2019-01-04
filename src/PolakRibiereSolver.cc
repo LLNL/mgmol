@@ -14,17 +14,21 @@
 #include "Energy.h"
 #include "Hamiltonian.h"
 #include "Ions.h"
-#include "MGmol.h"
+#include "LocGridOrbitals.h"
 #include "Potentials.h"
 #include "ProjectedMatricesInterface.h"
 #include "Rho.h"
 
-Timer PolakRibiereSolver::solve_tm_("solve");
-int PolakRibiereSolver::it_scf_ = 0;
+template <class T>
+Timer PolakRibiereSolver<T>::solve_tm_("solve");
+template <class T>
+int PolakRibiereSolver<T>::it_scf_ = 0;
 
-PolakRibiereSolver::PolakRibiereSolver(Hamiltonian* hamiltonian,
-    ProjectedMatricesInterface* proj_matrices, Energy* energy,
-    Electrostatic* electrostat, MGmol* mgmol_strategy, Ions& ions, Rho* rho,
+template <class T>
+PolakRibiereSolver<T>::PolakRibiereSolver(Hamiltonian<T>* hamiltonian,
+    ProjectedMatricesInterface* proj_matrices, Energy<T>* energy,
+    Electrostatic* electrostat, MGmol<T>* mgmol_strategy, Ions& ions,
+    Rho<T>* rho,
     DMStrategy* dm_strategy, std::ostream& os)
     : hamiltonian_(hamiltonian),
       proj_matrices_(proj_matrices),
@@ -54,9 +58,11 @@ PolakRibiereSolver::PolakRibiereSolver(Hamiltonian* hamiltonian,
         = ((ct.getPrecondType() % 10) == 0 && ct.getMGlevels() >= 0);
 }
 
-PolakRibiereSolver::~PolakRibiereSolver() {}
+template <class T>
+PolakRibiereSolver<T>::~PolakRibiereSolver() {}
 
-void PolakRibiereSolver::printEnergy(const short step) const
+template <class T>
+void PolakRibiereSolver<T>::printEnergy(const short step) const
 {
     if (onpe0)
     {
@@ -84,13 +90,15 @@ void PolakRibiereSolver::printEnergy(const short step) const
     }
 }
 
-bool PolakRibiereSolver::checkPrintResidual(const short step) const
+template <class T>
+bool PolakRibiereSolver<T>::checkPrintResidual(const short step) const
 {
     Control& ct(*(Control::instance()));
     return (ct.iprint_residual > 0) ? !(step % ct.iprint_residual) : false;
 }
 
-void PolakRibiereSolver::dielON()
+template <class T>
+void PolakRibiereSolver<T>::dielON()
 {
     Potentials& pot(hamiltonian_->potential());
     bool isON = pot.diel();
@@ -119,13 +127,15 @@ void PolakRibiereSolver::dielON()
             os_ << " Solvation turned off for this step" << endl;
 }
 
-bool PolakRibiereSolver::testUpdatePot() const
+template <class T>
+bool PolakRibiereSolver<T>::testUpdatePot() const
 {
     Control& ct(*(Control::instance()));
     return (it_scf_ > ct.max_changes_pot);
 }
 
-bool PolakRibiereSolver::checkConvPot() const
+template <class T>
+bool PolakRibiereSolver<T>::checkConvPot() const
 {
     Control& ct(*(Control::instance()));
     Potentials& pot(hamiltonian_->potential());
@@ -136,7 +146,8 @@ bool PolakRibiereSolver::checkConvPot() const
     return false;
 }
 
-bool PolakRibiereSolver::checkWolfeConditions(
+template <class T>
+bool PolakRibiereSolver<T>::checkWolfeConditions(
     const double trial_step_energy, const double alpha_k) const
 {
     assert(sigma_a_ > 0.);
@@ -173,7 +184,8 @@ bool PolakRibiereSolver::checkWolfeConditions(
 // 1 if not converged yet,
 // -1 if not reaching minimum convergence
 // -2 if failing to converge
-int PolakRibiereSolver::checkConvergenceEnergy(
+template <class T>
+int PolakRibiereSolver<T>::checkConvergenceEnergy(
     const short step, const short max_steps)
 {
     Control& ct(*(Control::instance()));
@@ -222,8 +234,9 @@ int PolakRibiereSolver::checkConvergenceEnergy(
     return 1;
 }
 
-double PolakRibiereSolver::evaluateEnergy(
-    const LocGridOrbitals& orbitals, const bool print_flag)
+template <class T>
+double PolakRibiereSolver<T>::evaluateEnergy(
+    const T& orbitals, const bool print_flag)
 {
     // Get the new total energy
     const double ts = 0.5 * proj_matrices_->computeEntropy(); // in [Ha]
@@ -240,7 +253,8 @@ double PolakRibiereSolver::evaluateEnergy(
 }
 
 // Polak-Ribiere
-double PolakRibiereSolver::computeBeta(LocGridOrbitals& work_orbitals) const
+template <class T>
+double PolakRibiereSolver<T>::computeBeta(T& work_orbitals) const
 {
     work_orbitals.assign(*r_k_);
     work_orbitals.axpy(-1., *r_km1_);
@@ -252,8 +266,9 @@ double PolakRibiereSolver::computeBeta(LocGridOrbitals& work_orbitals) const
     return beta;
 }
 
-int PolakRibiereSolver::solve(LocGridOrbitals& orbitals,
-    LocGridOrbitals& work_orbitals, Ions& ions, const short max_steps,
+template <class T>
+int PolakRibiereSolver<T>::solve(T& orbitals,
+    T& work_orbitals, Ions& ions, const short max_steps,
     const short iprint, double& last_eks)
 {
     Control& ct(*(Control::instance()));
@@ -294,15 +309,15 @@ int PolakRibiereSolver::solve(LocGridOrbitals& orbitals,
             os_ << "Preconditioning factor: " << ct.precond_factor << endl;
     }
 
-    r_k_   = new LocGridOrbitals("PR_rk", orbitals, false);
-    r_km1_ = new LocGridOrbitals("PR_rkm1", orbitals, false);
+    r_k_   = new T("PR_rk", orbitals, false);
+    r_km1_ = new T("PR_rkm1", orbitals, false);
 
     if (with_preconditioner_)
     {
-        z_k_   = new LocGridOrbitals("PR_zk", orbitals, false);
-        z_km1_ = new LocGridOrbitals("PR_zkm1", orbitals, false);
+        z_k_   = new T("PR_zk", orbitals, false);
+        z_km1_ = new T("PR_zkm1", orbitals, false);
     }
-    p_k_ = new LocGridOrbitals("PR_pk", orbitals, false);
+    p_k_ = new T("PR_pk", orbitals, false);
 
     int dm_success       = 0;
     bool wolfe           = false;
@@ -555,3 +570,6 @@ int PolakRibiereSolver::solve(LocGridOrbitals& orbitals,
 
     return retval;
 }
+
+template class PolakRibiereSolver<LocGridOrbitals>;
+template class PolakRibiereSolver<ExtendedGridOrbitals>;

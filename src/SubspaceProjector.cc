@@ -7,12 +7,14 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "SubspaceProjector.h"
+#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "ProjectedMatricesInterface.h"
 
 #define NPRINT_ROWS_AND_COLS 10
 
-SubspaceProjector::SubspaceProjector(LocGridOrbitals& subspace)
+template<class T>
+SubspaceProjector<T>::SubspaceProjector(T& subspace)
     : subspace_(subspace), proj_matrices_(*subspace_.getProjMatrices())
 {
     chromatic_number_ = subspace_.chromatic_number();
@@ -22,8 +24,9 @@ SubspaceProjector::SubspaceProjector(LocGridOrbitals& subspace)
 }
 
 // compute [I-P*(S^-1)*P^T]*orbitals
-void SubspaceProjector::projectOut(
-    LocGridOrbitals& orbitals, SquareLocalMatrices<MATDTYPE>* mask)
+template<class T>
+void SubspaceProjector<T>::projectOut(
+    T& orbitals, SquareLocalMatrices<MATDTYPE>* mask)
 {
     assert(chromatic_number_ >= 0);
     assert(lda_ >= loc_numpt_);
@@ -85,3 +88,6 @@ void SubspaceProjector::projectOut(
 
     orbitals.incrementIterativeIndex();
 }
+
+template class SubspaceProjector<LocGridOrbitals>;
+template class SubspaceProjector<ExtendedGridOrbitals>;

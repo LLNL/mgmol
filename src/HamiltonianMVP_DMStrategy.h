@@ -6,44 +6,42 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef HamiltonianMVP_DMStrategy_H
-#define HamiltonianMVP_DMStrategy_H
+#ifndef MGMOL_HamiltonianMVP_DMStrategy_H
+#define MGMOL_HamiltonianMVP_DMStrategy_H
 
 #include "DMStrategy.h"
+#include "Energy.h"
 #include "HamiltonianMVPSolver.h"
-class ProjectedMatricesInterface;
-class LocGridOrbitals;
-class Ions;
-class Hamiltonian;
-class Rho;
-class Energy;
-class MGmol;
-class Electrostatic;
-class MGmol;
-// class HamiltonianMVPSolver;
+#include "MGmol.h"
+#include "Rho.h"
 
-template <class T1, class T2, class T3>
+class Ions;
+class Electrostatic;
+template <class T> class MGmol;
+
+template <class T1, class T2, class T3, class T4>
 class HamiltonianMVP_DMStrategy : public DMStrategy
 {
 private:
-    LocGridOrbitals* orbitals_;
+    T4* orbitals_;
 
     MPI_Comm comm_;
     std::ostream& os_;
 
     Ions& ions_;
-    Rho* rho_;
-    Energy* energy_;
+    Rho<T4>* rho_;
+    Energy<T4>* energy_;
     Electrostatic* electrostat_;
     const std::vector<std::vector<int>>& global_indexes_;
-    MGmol* mgmol_strategy_;
+    MGmol<T4>* mgmol_strategy_;
 
-    HamiltonianMVPSolver<T1, T2, T3>* solver_;
+    HamiltonianMVPSolver<T1, T2, T3, T4>* solver_;
 
 public:
     HamiltonianMVP_DMStrategy(MPI_Comm comm, std::ostream& os, Ions& ions,
-        Rho* rho, Energy* energy, Electrostatic* electrostat,
-        MGmol* mgmol_strategy, LocGridOrbitals* orbitals);
+        Rho<T4>* rho, Energy<T4>* energy,
+        Electrostatic* electrostat,
+        MGmol<T4>* mgmol_strategy, T4* orbitals);
 
     ~HamiltonianMVP_DMStrategy();
 

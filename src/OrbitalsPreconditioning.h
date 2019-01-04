@@ -6,21 +6,20 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef OrbitalsPreconditioning_H
-#define OrbitalsPreconditioning_H
+#ifndef MGMOL_OrbitalsPreconditioning_H
+#define MGMOL_OrbitalsPreconditioning_H
 
 #include "GridFuncVector.h"
 #include "Lap.h"
-#include "LocGridOrbitals.h"
 #include "Preconditioning.h"
 
 class Masks4Orbitals;
-// class LocGridOrbitals;
 class MasksSet;
 class ProjectedMatricesInterface;
 class Potentials;
 class LocalizationRegions;
 
+template <class T>
 class OrbitalsPreconditioning
 {
 private:
@@ -53,12 +52,15 @@ public:
 
     ~OrbitalsPreconditioning();
 
-    void setup(LocGridOrbitals& orbitals, const short mg_levels,
+    void setup(T& orbitals, const short mg_levels,
         const short lap_type, MasksSet*, LocalizationRegions*);
-    void precond_mg(LocGridOrbitals& orbitals);
+    void precond_mg(T& orbitals);
     void setGamma(const pb::Lap<ORBDTYPE>& lapOper, const Potentials& pot,
         const short mg_levels, ProjectedMatricesInterface* proj_matrices);
     static void printTimers(std::ostream& os);
 };
+
+template <class T>
+Timer OrbitalsPreconditioning<T>::precond_tm_("OrbitalsPreconditioning::precond");
 
 #endif

@@ -18,6 +18,7 @@ using namespace std;
 #include "Control.h"
 #include "Ions.h"
 #include "LocalizationRegions.h"
+#include "LocGridOrbitals.h"
 #include "MGmol.h"
 #include "Mesh.h"
 #include "Species.h"
@@ -27,17 +28,17 @@ using namespace std;
 
 //#define DEBUG 1
 
-int MGmol::readLRsFromInput(ifstream* tfile)
+template <class T>
+int MGmol<T>::readLRsFromInput(ifstream* tfile)
 {
-    assert(lrs_ != 0);
-
     Control& ct(*(Control::instance()));
+
+    assert(lrs_ != 0);
+    assert(ct.restart_info < 3 || !ct.isLocMode());
 
     if (ct.verbose > 0) printWithTimeStamp("readLRsFromInput", os_);
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-
-    if (ct.restart_info > 2) return 0;
 
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
@@ -75,8 +76,7 @@ int MGmol::readLRsFromInput(ifstream* tfile)
                     if (tfile->fail())
                     {
                         os_ << "WARNING: Failed reading Localization center... "
-                               "Use atomic position for center "
-                            << i << endl;
+                            << endl;
                         flag = false;
                         break;
                     }
@@ -90,6 +90,10 @@ int MGmol::readLRsFromInput(ifstream* tfile)
             // set center to ionic position if not read from input file
             if (!flag)
             {
+                if (ct.verbose > 1)
+                    os_ << "Use atomic position for center "
+                        << i << endl;
+
                 for (int k = 0; k < 3; k++)
                     crds[k] = (*ion)->position(k);
                 ion++;
@@ -164,7 +168,8 @@ int MGmol::readLRsFromInput(ifstream* tfile)
     return ct.numst;
 }
 
-int MGmol::readCoordinates(ifstream* tfile, const bool cell_relative)
+template <class T>
+int MGmol<T>::readCoordinates(ifstream* tfile, const bool cell_relative)
 {
     Control& ct = *(Control::instance());
     if (ct.verbose > 0) printWithTimeStamp("Read atomic coordinates...", os_);
@@ -204,7 +209,8 @@ int MGmol::readCoordinates(ifstream* tfile, const bool cell_relative)
     return 0;
 }
 
-int MGmol::readCoordinates(const string filename, const bool cell_relative)
+template <class T>
+int MGmol<T>::readCoordinates(const string filename, const bool cell_relative)
 {
     Control& ct = *(Control::instance());
     if (ct.verbose > 0) printWithTimeStamp("Read atomic coordinates...", os_);
@@ -243,3 +249,6 @@ int MGmol::readCoordinates(const string filename, const bool cell_relative)
 
     return 0;
 }
+
+template class MGmol<LocGridOrbitals>;
+template class MGmol<ExtendedGridOrbitals>;

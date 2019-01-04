@@ -19,31 +19,38 @@
 #include "ProjectedMatricesInterface.h"
 #include "ProjectedMatricesSparse.h"
 
-void GrassmanCG::conjugate()
+template <class T>
+void GrassmanCG<T>::conjugate()
 {
     // compute conjugation
-    if (conjugate_)
+    T* new_pcgrad = GrassmanLineMinimization<T>::new_pcgrad_;
+    T* new_grad = GrassmanLineMinimization<T>::new_grad_;
+    T* grad = GrassmanLineMinimization<T>::grad_;
+    T* pcgrad = GrassmanLineMinimization<T>::pcgrad_;
+    T* sdir = GrassmanLineMinimization<T>::sdir_;
+    if (GrassmanLineMinimization<T>::conjugate_)
     {
         // Numerator: compute matG = (MG^T*(G-G_old)) = MG^T*G - MG^T*G_old
         // first compute matG = MG^T*G
         SquareLocalMatrices<MATDTYPE> matG(
-            new_grad_->subdivx(), new_grad_->chromatic_number());
-        new_pcgrad_->getLocalOverlap(*new_grad_,
+            new_grad->subdivx(), new_grad->chromatic_number());
+        new_pcgrad->getLocalOverlap(*new_grad,
             matG); // equivalent to pcgrad.computeLocalProduct(grad, matG);
         // compute trace(S^{-1}*matG
         ProjectedMatrices* projmatrices
-            = dynamic_cast<ProjectedMatrices*>(proj_matrices_);
+            = dynamic_cast<ProjectedMatrices*>(
+                GrassmanLineMinimization<T>::proj_matrices_);
         double alpha = projmatrices->computeTraceInvSmultMat(matG);
 
         // compute matG = MG^T*G_old
         matG.reset();
-        new_pcgrad_->getLocalOverlap(*grad_, matG);
+        new_pcgrad->getLocalOverlap(*grad, matG);
         // subtract trace from alpha
         alpha -= projmatrices->computeTraceInvSmultMat(matG);
 
         // Denominator: compute matG = ((G_old)^T*MG_old)
         matG.reset();
-        grad_->getLocalOverlap(*pcgrad_,
+        grad->getLocalOverlap(*pcgrad,
             matG); // equivalent to grad_->computeLocalProduct(*pcgrad_, matG);
         // compute trace(S^{-1}*matG
         alpha /= projmatrices->computeTraceInvSmultMat(matG);
@@ -51,8 +58,8 @@ void GrassmanCG::conjugate()
         // compute conjugate direction
         double tau       = max(0., alpha);
         const double one = 1.;
-        sdir_->scal(tau);
-        sdir_->axpy(one, *new_pcgrad_);
+        sdir->scal(tau);
+        sdir->axpy(one, *new_pcgrad);
 
         //       if(onpe0)cout<<"conjugate: alpha = "<<alpha<<", tau =
         //       "<<tau<<endl;
@@ -60,13 +67,14 @@ void GrassmanCG::conjugate()
     else
     {
         // initialize history data
-        grad_   = new LocGridOrbitals("G", *new_grad_, true);
-        pcgrad_ = new LocGridOrbitals("P", *new_pcgrad_, true);
-        sdir_   = new LocGridOrbitals("S", *new_pcgrad_, true);
+        grad   = new T("G", *new_grad, true);
+        pcgrad = new T("P", *new_pcgrad, true);
+        sdir   = new T("S", *new_pcgrad, true);
     }
 }
 
-double GrassmanCG::computeStepSize(LocGridOrbitals& orbitals)
+template <class T>
+double GrassmanCG<T>::computeStepSize(T& orbitals)
 {
     Control& ct   = *(Control::instance());
     const int dim = ct.numst;
@@ -92,12 +100,15 @@ double GrassmanCG::computeStepSize(LocGridOrbitals& orbitals)
     // We only need to compute and save partial contributions of these
     // matrices on the local subdomains, and consolidate them when needed
     ProjectedMatrices* projmatrices
-        = dynamic_cast<ProjectedMatrices*>(proj_matrices_);
+        = dynamic_cast<ProjectedMatrices*>(
+            GrassmanLineMinimization<T>::proj_matrices_);
     assert(projmatrices);
+
+    T* sdir = GrassmanLineMinimization<T>::sdir_;
 
     // Compute Phi^T*H*Zo and S^{-1}*Zo^T*H*Phi
     dist_matrix::DistMatrix<DISTMATDTYPE> phiHzMat("phiHzMat", dim, dim);
-    computeOrbitalsProdWithH(orbitals, *sdir_, phiHzMat);
+    computeOrbitalsProdWithH(orbitals, *sdir, phiHzMat);
     // Compute S^{-1}*Zo^T*H*Phi
     dist_matrix::DistMatrix<DISTMATDTYPE> invSzHphiMat(
         "invSzHphiMat", dim, dim);
@@ -106,15 +117,15 @@ double GrassmanCG::computeStepSize(LocGridOrbitals& orbitals)
 
     // compute Zo^T*H*Zo
     dist_matrix::DistMatrix<DISTMATDTYPE> zHzMat("zHzMat", dim, dim);
-    computeOrbitalsProdWithH(*sdir_, zHzMat);
+    computeOrbitalsProdWithH(*sdir, zHzMat);
 
     // Compute S^{_1}*Zo^T*Phi and S^{_1}*Phi^T*Zo
     SquareLocalMatrices<MATDTYPE> ss(
-        sdir_->subdivx(), sdir_->chromatic_number());
-    sdir_->getLocalOverlap(orbitals, ss);
+        sdir->subdivx(), sdir->chromatic_number());
+    sdir->getLocalOverlap(orbitals, ss);
     dist_matrix::DistMatrix<DISTMATDTYPE> invSzTphiMat(
         "invSzTphiMat", dim, dim);
-    ss.fillDistMatrix(invSzTphiMat, sdir_->getOverlappingGids());
+    ss.fillDistMatrix(invSzTphiMat, sdir->getOverlappingGids());
     dist_matrix::DistMatrix<DISTMATDTYPE> invSphiTzMat("phiTzMat", dim, dim);
     invSphiTzMat.transpose(1.0, invSzTphiMat, 0.);
     // apply invS
@@ -123,9 +134,9 @@ double GrassmanCG::computeStepSize(LocGridOrbitals& orbitals)
 
     // Compute Zo^T*Zo
     ss.reset();
-    sdir_->getLocalOverlap(ss);
+    sdir->getLocalOverlap(ss);
     dist_matrix::DistMatrix<DISTMATDTYPE> zTzMat("zTzMat", dim, dim);
-    ss.fillDistMatrix(zTzMat, sdir_->getOverlappingGids());
+    ss.fillDistMatrix(zTzMat, sdir->getOverlappingGids());
 
     // Now compute Tr[S^{-1}*Z^T*(-G)] = Tr[S^{-1}*Zo^T*Phi*S^{-1}*Phi^T*H*Phi]
     // - Tr[S^{-1}*Zo^T*H*Phi] Compute Tr[S^{-1}*Zo^T*Phi*S^{-1}*Phi^T*H*Phi];
@@ -174,46 +185,49 @@ double GrassmanCG::computeStepSize(LocGridOrbitals& orbitals)
 // Compute P^T*H*Q for orbitals1-->P and orbitals2-->Q and return result in mat.
 // consolidate flag with either gather data or else return local partial
 // contributions
-void GrassmanCG::computeOrbitalsProdWithH(LocGridOrbitals& orbitals1,
-    LocGridOrbitals& orbitals2, dist_matrix::DistMatrix<DISTMATDTYPE>& mat)
+template <class T>
+void GrassmanCG<T>::computeOrbitalsProdWithH(T& orbitals1,
+    T& orbitals2, dist_matrix::DistMatrix<DISTMATDTYPE>& mat)
 {
     // initialize KBPsiMatrices
-    KBPsiMatrixSparse kbpsi_1(hamiltonian_->lapOper());
-    kbpsi_1.setup(*ptr2ions_, orbitals1);
-    kbpsi_1.computeAll(*ptr2ions_, orbitals1);
+    KBPsiMatrixSparse kbpsi_1(GrassmanLineMinimization<T>::hamiltonian_->lapOper());
+    kbpsi_1.setup(*GrassmanLineMinimization<T>::ptr2ions_, orbitals1);
+    kbpsi_1.computeAll(*GrassmanLineMinimization<T>::ptr2ions_, orbitals1);
 
-    KBPsiMatrixSparse kbpsi_2(hamiltonian_->lapOper());
-    kbpsi_2.setup(*ptr2ions_, orbitals2);
-    kbpsi_2.computeAll(*ptr2ions_, orbitals2);
+    KBPsiMatrixSparse kbpsi_2(GrassmanLineMinimization<T>::hamiltonian_->lapOper());
+    kbpsi_2.setup(*GrassmanLineMinimization<T>::ptr2ions_, orbitals2);
+    kbpsi_2.computeAll(*GrassmanLineMinimization<T>::ptr2ions_, orbitals2);
 
     // compute P^T*H*Q (orbitals1=P; orbitals2=Q)
-    mgmol_strategy_->computeHij(
-        orbitals1, orbitals2, *ptr2ions_, &kbpsi_1, &kbpsi_2, mat);
-
-    return;
+    GrassmanLineMinimization<T>::mgmol_strategy_->computeHij(
+        orbitals1, orbitals2, *GrassmanLineMinimization<T>::ptr2ions_,
+        &kbpsi_1, &kbpsi_2, mat);
 }
 
 // Compute P^T*H*P for orbitals1-->P and return result in mat.
 // consolidate flag with either gather data or else return local partial
 // contributions
-void GrassmanCG::computeOrbitalsProdWithH(
-    LocGridOrbitals& orbitals, dist_matrix::DistMatrix<DISTMATDTYPE>& mat)
+template <class T>
+void GrassmanCG<T>::computeOrbitalsProdWithH(
+    T& orbitals, dist_matrix::DistMatrix<DISTMATDTYPE>& mat)
 {
     // initialize KBPsiMatrices
-    KBPsiMatrixSparse kbpsi(hamiltonian_->lapOper());
-    kbpsi.setup(*ptr2ions_, orbitals);
-    kbpsi.computeAll(*ptr2ions_, orbitals);
+    KBPsiMatrixSparse kbpsi(GrassmanLineMinimization<T>::hamiltonian_->lapOper());
+    kbpsi.setup(*GrassmanLineMinimization<T>::ptr2ions_, orbitals);
+    kbpsi.computeAll(*GrassmanLineMinimization<T>::ptr2ions_, orbitals);
 
     // compute P^T*H*Q (orbitals1=P; orbitals2=Q)
-    mgmol_strategy_->computeHij(orbitals, orbitals, *ptr2ions_, &kbpsi, mat);
+    GrassmanLineMinimization<T>::mgmol_strategy_->computeHij(orbitals, orbitals,
+        *GrassmanLineMinimization<T>::ptr2ions_, &kbpsi, mat);
 
     return;
 }
 
 // parallel transport of history data
 // update G=grad_, MG=pcgrad_ and Zo=sdir_
-void GrassmanCG::parallelTransportUpdate(
-    const double lambda, LocGridOrbitals& phi)
+template <class T>
+void GrassmanCG<T>::parallelTransportUpdate(
+    const double lambda, T& phi)
 {
     Control& ct = *(Control::instance());
 
@@ -221,40 +235,41 @@ void GrassmanCG::parallelTransportUpdate(
     const double fact = 1.;
 
     // update history data
-    LocGridOrbitals* gradptr;
+    T* gradptr;
     // update gradient information
-    gradptr   = new_grad_;
-    new_grad_ = grad_;
-    grad_     = gradptr;
+    gradptr   = GrassmanLineMinimization<T>::new_grad_;
+    GrassmanLineMinimization<T>::new_grad_ = GrassmanLineMinimization<T>::grad_;
+    GrassmanLineMinimization<T>::grad_     = gradptr;
     // update preconditioned gradient information
-    gradptr     = new_pcgrad_;
-    new_pcgrad_ = pcgrad_;
-    pcgrad_     = gradptr;
+    gradptr     = GrassmanLineMinimization<T>::new_pcgrad_;
+    GrassmanLineMinimization<T>::new_pcgrad_ =
+        GrassmanLineMinimization<T>::pcgrad_;
+    GrassmanLineMinimization<T>::pcgrad_     = gradptr;
     // compute projection-based parallel transport
     if (ct.parallel_transport)
     {
         // compute G_old = G - lambda*(Phi*S^{-1}*Phi^T*G).*corrmasks
-        phi.projectOut(*grad_, fact);
-        grad_->applyCorrMask(true);
+        phi.projectOut(*GrassmanLineMinimization<T>::grad_, fact);
+        GrassmanLineMinimization<T>::grad_->applyCorrMask(true);
         // compute MG_old = MG - lambda*(Phi*S^{-1}*Phi^T*MG).*masks
-        phi.projectOut(*pcgrad_, fact);
-        pcgrad_->applyMask(true);
+        phi.projectOut(*GrassmanLineMinimization<T>::pcgrad_, fact);
+        GrassmanLineMinimization<T>::pcgrad_->applyMask(true);
         // update preconditioned search direction information
-        phi.projectOut(*sdir_, fact);
-        sdir_->applyMask(true);
+        phi.projectOut(*GrassmanLineMinimization<T>::sdir_, fact);
+        GrassmanLineMinimization<T>::sdir_->applyMask(true);
     }
 
     // Reset iterative index for current (transported) search direction and
     // gradient This is especially necessary for the search direction, in order
     // to ensure correct computations with the Hamiltonian and wrt phi.
-    sdir_->setIterativeIndex(-10);
-    grad_->setIterativeIndex(-10);
-    pcgrad_->setIterativeIndex(-10);
+    GrassmanLineMinimization<T>::sdir_->setIterativeIndex(-10);
+    GrassmanLineMinimization<T>::grad_->setIterativeIndex(-10);
+    GrassmanLineMinimization<T>::pcgrad_->setIterativeIndex(-10);
 #if 0
     // test if projection is now 0
     dist_matrix::DistMatrix<DISTMATDTYPE> tmatrix(phi.product(*sdir_));
     if( onpe0 )
-        (*MPIdata::sout)<<"GrassmanCG::projectOut(), Product after projection:"<<endl;
+        (*MPIdata::sout)<<"GrassmanCG<T>::projectOut(), Product after projection:"<<endl;
     tmatrix.print((*MPIdata::sout),0,0,5,5);
     double trace = tmatrix.trace();
     if(onpe0)cout<<"Trace of projection test = "<<trace<<endl;
@@ -262,3 +277,6 @@ void GrassmanCG::parallelTransportUpdate(
 
     return;
 }
+
+template class GrassmanCG<LocGridOrbitals>;
+template class GrassmanCG<ExtendedGridOrbitals>;

@@ -6,9 +6,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
-#ifndef PBEONGRID_H
-#define PBEONGRID_H
+#ifndef MGMOL_PBEONGRID_H
+#define MGMOL_PBEONGRID_H
 
 #include "Mesh.h"
 #include "PBEFunctional.h"
@@ -27,6 +26,7 @@
 
 class Potentials;
 
+template <class T>
 class PBEonGrid : public XConGrid
 {
     int np_;
@@ -39,12 +39,12 @@ class PBEonGrid : public XConGrid
 #else
     PBEFunctional* pbe_;
 #endif
-    Rho& rho_;
+    Rho<T>& rho_;
 
     Potentials& pot_;
 
 public:
-    PBEonGrid(Rho& rho, Potentials& pot) : rho_(rho), pot_(pot)
+    PBEonGrid(Rho<T>& rho, Potentials& pot) : rho_(rho), pot_(pot)
     {
         np_ = rho.rho_[0].size();
 #ifdef USE_LIBXC

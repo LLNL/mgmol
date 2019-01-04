@@ -6,9 +6,10 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef FORCES_Header
-#define FORCES_Header
+#ifndef MGMOL_FORCES_H
+#define MGMOL_FORCES_H
 
+#include "Hamiltonian.h"
 #include "Rho.h"
 #include "global.h"
 
@@ -17,15 +18,14 @@
 
 class Ion;
 class Ions;
-class LocGridOrbitals;
-class Hamiltonian;
 class ProjectedMatricesInterface;
 
+template <class T>
 class Forces
 {
 private:
-    Hamiltonian* hamiltonian_;
-    Rho* rho_;
+    Hamiltonian<T>* hamiltonian_;
+    Rho<T>* rho_;
     ProjectedMatricesInterface* proj_matrices_;
 
     static Timer lforce_tm_;
@@ -44,7 +44,7 @@ private:
     int get_var(Ion& ion, int* pvec, double*** var_pot, double*** var_charge);
 
 public:
-    Forces(Hamiltonian* hamiltonian, Rho* rho,
+    Forces(Hamiltonian<T>* hamiltonian, Rho<T>* rho,
         ProjectedMatricesInterface* proj_matrices)
         : hamiltonian_(hamiltonian), rho_(rho), proj_matrices_(proj_matrices)
     {
@@ -53,10 +53,10 @@ public:
         assert(proj_matrices_ != 0);
     }
 
-    void nlforce(LocGridOrbitals& orbitals, Ions& ions);
-    void nlforceSparse(LocGridOrbitals& orbitals, Ions& ions);
+    void nlforce(T& orbitals, Ions& ions);
+    void nlforceSparse(T& orbitals, Ions& ions);
     void lforce(Ions& ions, RHODTYPE* rho);
-    void force(LocGridOrbitals& orbitals, Ions& ions);
+    void force(T& orbitals, Ions& ions);
 
     void printTimers(ostream& os)
     {
@@ -71,5 +71,24 @@ public:
         total_tm_.print(os);
     }
 };
+
+template <class T>
+Timer Forces<T>::lforce_tm_("Forces::lforce");
+template <class T>
+Timer Forces<T>::nlforce_tm_("Forces::nlforce");
+template <class T>
+Timer Forces<T>::get_var_tm_("Forces::var");
+template <class T>
+Timer Forces<T>::get_loc_proj_tm_("Forces::loc_proj");
+template <class T>
+Timer Forces<T>::consolidate_data_("Forces::consolidate");
+template <class T>
+Timer Forces<T>::lforce_local_tm_("Forces::lforce_local");
+template <class T>
+Timer Forces<T>::total_tm_("Forces::total");
+template <class T>
+Timer Forces<T>::kbpsi_tm_("Forces::KBpsi");
+template <class T>
+Timer Forces<T>::energy_tm_("Forces::nl_energy");
 
 #endif

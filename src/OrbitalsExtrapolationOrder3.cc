@@ -8,13 +8,15 @@
 
 #include "OrbitalsExtrapolationOrder3.h"
 #include "DistMatrixTools.h"
+#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "ProjectedMatrices.h"
 
 #define EXTRAPOLATE_H 1
 
-void OrbitalsExtrapolationOrder3::extrapolate_orbitals(
-    LocGridOrbitals** orbitals, LocGridOrbitals* new_orbitals)
+template<class T>
+void OrbitalsExtrapolationOrder3<T>::extrapolate_orbitals(
+    T** orbitals, T* new_orbitals)
 {
     Control& ct = *(Control::instance());
 
@@ -37,7 +39,7 @@ void OrbitalsExtrapolationOrder3::extrapolate_orbitals(
 
     if (orbitals_minus1_ != 0)
     {
-        LocGridOrbitals tmp_orbitals_minus1("minus1", *new_orbitals, false);
+        T tmp_orbitals_minus1("minus1", *new_orbitals, false);
 
         if (ct.verbose > 1 && onpe0)
             (*MPIdata::sout)
@@ -66,7 +68,7 @@ void OrbitalsExtrapolationOrder3::extrapolate_orbitals(
             if (orbitals_minus2_ != 0)
             {
 #if 0
-                LocGridOrbitals tmp(*orbitals_minus2_);
+                T tmp(*orbitals_minus2_);
                 tmp.axpy(-1.,*new_orbitals);
                 tmp.computeGram(matQ);
                 double normQ=matQ.trace();
@@ -158,3 +160,6 @@ void OrbitalsExtrapolationOrder3::extrapolate_orbitals(
         (*orbitals)->orthonormalizeLoewdin();
     }
 }
+
+template class OrbitalsExtrapolationOrder3<LocGridOrbitals>;
+template class OrbitalsExtrapolationOrder3<ExtendedGridOrbitals>;

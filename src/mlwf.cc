@@ -7,14 +7,15 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "Control.h"
-#include "LocGridOrbitals.h"
 #include "LocalizationRegions.h"
+#include "LocGridOrbitals.h"
 #include "MGmol.h"
 #include "MLWFTransform.h"
 #include "Mesh.h"
 #include "NOLMOTransform.h"
 #include "ProjectedMatrices.h"
 #include "ReplicatedWorkSpace.h"
+#include "SinCosOps.h"
 #include "blas3_c.h"
 #include "mputils.h"
 
@@ -44,8 +45,9 @@ void distributeColumns(
     mat.assign(&vmm[mycol * nb * nst], count);
 }
 
-int MGmol::getMLWF(MLWFTransform& mlwft, LocGridOrbitals& orbitals,
-    LocGridOrbitals& work_orbitals, const double dd, const bool apply_flag)
+template <class T>
+int MGmol<T>::getMLWF(MLWFTransform& mlwft, T& orbitals,
+    T& work_orbitals, const double dd, const bool apply_flag)
 {
     Control& ct = *(Control::instance());
     assert(!ct.isLocMode());
@@ -83,7 +85,7 @@ int MGmol::getMLWF(MLWFTransform& mlwft, LocGridOrbitals& orbitals,
     for (int i = 0; i < 6; i++)
         sincos[i].resize(numst * numst);
 
-    SinCosOps::compute(work_orbitals, sincos);
+    SinCosOps<T>::compute(work_orbitals, sincos);
 
     mlwft.distributeColumnsR(sincos);
     // for(int i=0;i<6;i++)
@@ -109,8 +111,9 @@ int MGmol::getMLWF(MLWFTransform& mlwft, LocGridOrbitals& orbitals,
     return 0;
 }
 
-int MGmol::getMLWF2states(const int st1, const int st2,
-    LocGridOrbitals& orbitals, LocGridOrbitals& work_orbitals)
+template <class T>
+int MGmol<T>::getMLWF2states(const int st1, const int st2,
+    T& orbitals, T& work_orbitals)
 {
     get_MLWF_tm.start();
 
@@ -138,7 +141,7 @@ int MGmol::getMLWF2states(const int st1, const int st2,
     for (int i = 0; i < 6; i++)
         sincos[i].resize(4);
 
-    SinCosOps::compute2states(work_orbitals, sincos, st1, st2);
+    SinCosOps<T>::compute2states(work_orbitals, sincos, st1, st2);
 
     for (int i = 0; i < 6; i++)
         distributeColumns(sincos[i], mlwft.r(i));
@@ -161,8 +164,9 @@ int MGmol::getMLWF2states(const int st1, const int st2,
     return 0;
 }
 
-void MGmol::wftransform(
-    LocGridOrbitals* orbitals, LocGridOrbitals* work_orbitals, Ions& ions)
+template <class T>
+void MGmol<T>::wftransform(
+    T* orbitals, T* work_orbitals, Ions& ions)
 {
     Control& ct            = *(Control::instance());
     Mesh* mymesh           = Mesh::instance();
@@ -228,8 +232,9 @@ void MGmol::wftransform(
     }
 }
 
-int MGmol::get_NOLMO(NOLMOTransform& noot, LocGridOrbitals& orbitals,
-    LocGridOrbitals& work_orbitals, const double dd, const bool apply_flag)
+template <class T>
+int MGmol<T>::get_NOLMO(NOLMOTransform& noot, T& orbitals,
+    T& work_orbitals, const double dd, const bool apply_flag)
 {
     get_NOLMO_tm.start();
 
@@ -263,11 +268,11 @@ int MGmol::get_NOLMO(NOLMOTransform& noot, LocGridOrbitals& orbitals,
 
     for (short d = 0; d < 3; d++)
     {
-        SinCosOps::compute1D(work_orbitals, sincos, d);
+        SinCosOps<T>::compute1D(work_orbitals, sincos, d);
         for (short i = 0; i < 2; i++)
             distributeColumns(sincos[i], noot.r(i + 2 * d));
 
-        SinCosOps::computeSquare1D(work_orbitals, sincos, d);
+        SinCosOps<T>::computeSquare1D(work_orbitals, sincos, d);
         for (short i = 0; i < 2; i++)
             distributeColumns(sincos[i], noot.b(i + 2 * d));
     }
@@ -328,3 +333,5 @@ int MGmol::get_NOLMO(NOLMOTransform& noot, LocGridOrbitals& orbitals,
     return 0;
 }
 
+template class MGmol<LocGridOrbitals>;
+template class MGmol<ExtendedGridOrbitals>;

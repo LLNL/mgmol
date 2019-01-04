@@ -7,7 +7,6 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "AOMMprojector.h"
-#include "LocGridOrbitals.h"
 #include "MasksSet.h"
 #include "Mesh.h"
 #include "ProjectedMatrices.h"
@@ -55,7 +54,7 @@ AOMMprojector::AOMMprojector(LocGridOrbitals& phi, LocalizationRegions& lrs)
 
     kernel_phi_->computeGramAndInvS(ct.verbose);
 
-    kernelprojector_ = new SubspaceProjector(*kernel_phi_);
+    kernelprojector_ = new SubspaceProjector<LocGridOrbitals>(*kernel_phi_);
 
     matrix_mask_ = new SquareLocalMatrices<MATDTYPE>(
         subdivx, kernel_phi_->chromatic_number());
@@ -85,7 +84,7 @@ void AOMMprojector::resetProjectors(LocGridOrbitals& phi)
     kernel_phi_->computeGramAndInvS(0);
 
     delete kernelprojector_;
-    kernelprojector_ = new SubspaceProjector(*kernel_phi_);
+    kernelprojector_ = new SubspaceProjector<LocGridOrbitals>(*kernel_phi_);
 }
 
 void AOMMprojector::projectOut(LocGridOrbitals& phi)
@@ -115,3 +114,4 @@ AOMMprojector::~AOMMprojector()
     delete matrix_mask_;
     matrix_mask_ = 0;
 }
+

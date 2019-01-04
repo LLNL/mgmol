@@ -8,17 +8,20 @@
 
 #include "ConstraintSet.h"
 #include "Hamiltonian.h"
+#include "ExtendedGridOrbitals.h"
+#include "LocGridOrbitals.h"
 #include "MGmol.h"
 #include "Potentials.h"
 
-int MGmol::setupFromInput(const string filename)
+template <class T>
+int MGmol<T>::setupFromInput(const string filename)
 {
     Control& ct = *(Control::instance());
-    if (ct.verbose > 0) printWithTimeStamp("MGmol::setupFromInput()...", cout);
+    if (ct.verbose > 0) printWithTimeStamp("MGmol<T>::setupFromInput()...", cout);
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
-    hamiltonian_    = new Hamiltonian();
+    hamiltonian_    = new Hamiltonian<T>();
     Potentials& pot = hamiltonian_->potential();
 
     ct.registerPotentials(pot);
@@ -45,10 +48,16 @@ int MGmol::setupFromInput(const string filename)
     ct.setTolEnergy();
     ct.setSpreadRadius();
 
+    // create localization regions
+    const pb::Grid& mygrid = mymesh->grid();
+    Vector3D vcell(mygrid.ll(0), mygrid.ll(1), mygrid.ll(2));
+    lrs_ = new LocalizationRegions(vcell, ct.tol_orb_centers_move);
+
     return 0;
 }
 
-int MGmol::setupLRsFromInput(const string filename)
+template <class T>
+int MGmol<T>::setupLRsFromInput(const string filename)
 {
     MGmol_MPI& mmpi        = *(MGmol_MPI::instance());
     Mesh* mymesh           = Mesh::instance();
@@ -56,7 +65,7 @@ int MGmol::setupLRsFromInput(const string filename)
     Control& ct            = *(Control::instance());
 
     ifstream* tfile = 0;
-    if (mmpi.instancePE0() && ct.restart_info < 3 && !filename.empty())
+    if (mmpi.instancePE0() && !filename.empty())
     {
         os_ << "Read LRs from file " << filename << endl;
         tfile = new ifstream(filename.data(), ios::in);
@@ -70,12 +79,8 @@ int MGmol::setupLRsFromInput(const string filename)
             os_ << "Open " << filename << endl;
         }
     }
-    // create localization regions
-    Vector3D vcell(mygrid.ll(0), mygrid.ll(1), mygrid.ll(2));
 
-    lrs_ = new LocalizationRegions(vcell, ct.tol_orb_centers_move);
-
-    if (ct.restart_info < 3) readLRsFromInput(tfile);
+    readLRsFromInput(tfile);
 
     if (!(tfile == 0))
     {
@@ -87,7 +92,8 @@ int MGmol::setupLRsFromInput(const string filename)
     return 0;
 }
 
-int MGmol::setupConstraintsFromInput(const string filename)
+template <class T>
+int MGmol<T>::setupConstraintsFromInput(const string filename)
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
@@ -118,3 +124,7 @@ int MGmol::setupConstraintsFromInput(const string filename)
 
     return 0;
 }
+
+template class MGmol<LocGridOrbitals>;
+template class MGmol<ExtendedGridOrbitals>;
+

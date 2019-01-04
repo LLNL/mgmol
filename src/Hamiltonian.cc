@@ -8,14 +8,17 @@
 
 #include "Hamiltonian.h"
 #include "Control.h"
+#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "Mesh.h"
 #include "Potentials.h"
 #include "ProjectedMatrices.h"
 
-Timer Hamiltonian::apply_Hloc_tm_("Hamiltonian::apply_Hloc");
+template <class T>
+Timer Hamiltonian<T>::apply_Hloc_tm_("Hamiltonian::apply_Hloc");
 
-Hamiltonian::Hamiltonian()
+template <class T>
+Hamiltonian<T>::Hamiltonian()
 {
     itindex_ = -1;
     lapOper_ = NULL;
@@ -23,40 +26,43 @@ Hamiltonian::Hamiltonian()
     pot_     = new Potentials();
 };
 
-Hamiltonian::~Hamiltonian()
+template <class T>
+Hamiltonian<T>::~Hamiltonian()
 {
     if (hlphi_ != NULL) delete hlphi_;
     if (lapOper_ != NULL) delete lapOper_;
     delete pot_;
 }
 
-void Hamiltonian::setup(const pb::Grid& myGrid, const int lap_type)
+template <class T>
+void Hamiltonian<T>::setup(const pb::Grid& myGrid, const int lap_type)
 {
     if (lapOper_ != NULL) delete lapOper_;
     lapOper_ = LapFactory<ORBDTYPE>::createLap(myGrid, lap_type);
 }
 
-const LocGridOrbitals& Hamiltonian::applyLocal(
-    LocGridOrbitals& phi, const bool force)
+template <class T>
+const T& Hamiltonian<T>::applyLocal(
+    T& phi, const bool force)
 {
     assert(phi.getIterativeIndex() >= 0);
     assert(pot_->getIterativeIndex() >= 0);
 
-    if (hlphi_ == NULL) hlphi_ = new LocGridOrbitals("Hphi", phi, false);
+    if (hlphi_ == NULL) hlphi_ = new T("Hphi", phi, false);
     if (!hlphi_->isCompatibleWith(phi))
     {
         delete hlphi_;
         itindex_ = -1;
-        hlphi_   = new LocGridOrbitals("Hphi", phi, false);
+        hlphi_   = new T("Hphi", phi, false);
     }
     const int new_index
         = 100 * phi.getIterativeIndex() + pot_->getIterativeIndex();
 #ifdef DEBUG
     if (onpe0)
     {
-        (*MPIdata::sout) << "Hamiltonian::applyLocal(), new_index ="
+        (*MPIdata::sout) << "Hamiltonian<T>::applyLocal(), new_index ="
                          << new_index << endl;
-        (*MPIdata::sout) << "Hamiltonian::applyLocal(), itindex_  =" << itindex_
+        (*MPIdata::sout) << "Hamiltonian<T>::applyLocal(), itindex_  =" << itindex_
                          << endl;
     }
 #endif
@@ -71,20 +77,21 @@ const LocGridOrbitals& Hamiltonian::applyLocal(
     {
         if (onpe0)
             (*MPIdata::sout)
-                << "Hamiltonian::hlphi up to date, itindex_=" << itindex_
+                << "Hamiltonian<T>::hlphi up to date, itindex_=" << itindex_
                 << endl;
 #endif
     }
     return *hlphi_;
 }
 
-void Hamiltonian::applyLocal(const int first_state, const int ncolors,
-    LocGridOrbitals& phi, LocGridOrbitals& hphi)
+template <class T>
+void Hamiltonian<T>::applyLocal(const int first_state, const int ncolors,
+    T& phi, T& hphi)
 {
     apply_Hloc_tm_.start();
 #ifdef PRINT_OPERATIONS
     if (onpe0)
-        (*MPIdata::sout) << "Hamiltonian::applyLocal() for states "
+        (*MPIdata::sout) << "Hamiltonian<T>::applyLocal() for states "
                          << first_state << " to " << first_state + ncolors - 1
                          << endl;
 #endif
@@ -109,7 +116,7 @@ void Hamiltonian::applyLocal(const int first_state, const int ncolors,
             false, mygrid, ct.bc[0], ct.bc[1], ct.bc[2], gid);
         pb::GridFuncVector<ORBDTYPE> gfvw2(
             false, mygrid, ct.bc[0], ct.bc[1], ct.bc[2], gid);
-        // if( onpe0 )(*MPIdata::sout)<<"Hamiltonian::applyLocal,
+        // if( onpe0 )(*MPIdata::sout)<<"Hamiltonian<T>::applyLocal,
         // index="<<phi.getIterativeIndex()<<endl;
         for (int i = 0; i < ncolors; i++)
         {
@@ -156,25 +163,27 @@ void Hamiltonian::applyLocal(const int first_state, const int ncolors,
 
 // add to hij the elements <phi1|Hloc|phi2>
 // corresponding to the local part of the Hamiltonian
-void Hamiltonian::addHlocal2matrix(LocGridOrbitals& phi1, LocGridOrbitals& phi2,
+template <class T>
+void Hamiltonian<T>::addHlocal2matrix(T& phi1, T& phi2,
     dist_matrix::SparseDistMatrix<DISTMATDTYPE>& hij, const bool force)
 {
     applyLocal(phi2, force);
 
 #ifdef PRINT_OPERATIONS
-    if (onpe0) (*MPIdata::sout) << "Hamiltonian::addHlocal2matrix()" << endl;
+    if (onpe0) (*MPIdata::sout) << "Hamiltonian<T>::addHlocal2matrix()" << endl;
 #endif
 
     phi1.addDotWithNcol2Matrix(*hlphi_, hij);
 }
 
-void Hamiltonian::addHlocalij(LocGridOrbitals& phi1, LocGridOrbitals& phi2,
+template <class T>
+void Hamiltonian<T>::addHlocalij(T& phi1, T& phi2,
     ProjectedMatricesInterface* proj_matrices)
 {
     applyLocal(phi2);
 
 #ifdef PRINT_OPERATIONS
-    if (onpe0) (*MPIdata::sout) << "Hamiltonian::addHLocalij()" << endl;
+    if (onpe0) (*MPIdata::sout) << "Hamiltonian<T>::addHLocalij()" << endl;
 #endif
 
     SquareLocalMatrices<MATDTYPE> slm(phi1.subdivx(), phi1.chromatic_number());
@@ -184,7 +193,8 @@ void Hamiltonian::addHlocalij(LocGridOrbitals& phi1, LocGridOrbitals& phi2,
     proj_matrices->addMatrixElementsSparseH(slm);
 }
 
-void Hamiltonian::addHlocal2matrix(LocGridOrbitals& phi1, LocGridOrbitals& phi2,
+template <class T>
+void Hamiltonian<T>::addHlocal2matrix(T& phi1, T& phi2,
     VariableSizeMatrix<sparserow>& mat, const bool force)
 {
     Control& ct = *(Control::instance());
@@ -192,7 +202,7 @@ void Hamiltonian::addHlocal2matrix(LocGridOrbitals& phi1, LocGridOrbitals& phi2,
     applyLocal(phi2, force);
 
 #ifdef PRINT_OPERATIONS
-    if (onpe0) (*MPIdata::sout) << "Hamiltonian::addHLocalij()" << endl;
+    if (onpe0) (*MPIdata::sout) << "Hamiltonian<T>::addHLocalij()" << endl;
 #endif
 
     SquareLocalMatrices<MATDTYPE> ss(phi1.subdivx(), phi1.chromatic_number());
@@ -201,3 +211,6 @@ void Hamiltonian::addHlocal2matrix(LocGridOrbitals& phi1, LocGridOrbitals& phi2,
 
     mat.initializeMatrixElements(ss, phi1.getOverlappingGids(), ct.numst);
 }
+
+template class Hamiltonian<LocGridOrbitals>;
+template class Hamiltonian<ExtendedGridOrbitals>;

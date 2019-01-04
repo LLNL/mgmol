@@ -6,11 +6,12 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #include "PBEonGrid.h"
 
 #include "Control.h"
 #include "Delh4.h"
+#include "ExtendedGridOrbitals.h"
+#include "LocGridOrbitals.h"
 #include "Mesh.h"
 #include "PBh4.h"
 
@@ -18,7 +19,8 @@
 
 Timer XConGrid::get_xc_tm_("XConGrid::get_xc");
 
-void PBEonGrid::update()
+template <class T>
+void PBEonGrid<T>::update()
 {
     get_xc_tm_.start();
 
@@ -121,7 +123,8 @@ void PBEonGrid::update()
     get_xc_tm_.stop();
 }
 
-double PBEonGrid::getExc() const
+template <class T>
+double PBEonGrid<T>::getExc() const
 {
     assert(pbe_ != NULL);
 
@@ -147,3 +150,6 @@ double PBEonGrid::getExc() const
     return mygrid.vel() * pbe_->computeRhoDotExc();
 #endif
 }
+
+template class PBEonGrid<LocGridOrbitals>;
+template class PBEonGrid<ExtendedGridOrbitals>;

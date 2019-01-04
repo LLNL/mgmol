@@ -6,8 +6,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef _GRASSMANCGSPARSE_H_
-#define _GRASSMANCGSPARSE_H_
+#ifndef MGMOL_GRASSMANCGSPARSE_H
+#define MGMOL_GRASSMANCGSPARSE_H
 
 #include "GrassmanLineMinimization.h"
 #include "Potentials.h"
@@ -16,28 +16,29 @@
 
 #include <iostream>
 
-class MGmol;
+template <class T> class MGmol;
 
-class GrassmanCGSparse : public GrassmanLineMinimization
+template <class T>
+class GrassmanCGSparse : public GrassmanLineMinimization<T>
 {
 
 public:
-    GrassmanCGSparse(Hamiltonian* hamiltonian,
-        ProjectedMatricesInterface* proj_matrices, MGmol* mgmol_strategy,
+    GrassmanCGSparse(Hamiltonian<T>* hamiltonian,
+        ProjectedMatricesInterface* proj_matrices, MGmol<T>* mgmol_strategy,
         Ions& ions, std::ostream& os)
-        : GrassmanLineMinimization(
+        : GrassmanLineMinimization<T>(
               hamiltonian, proj_matrices, mgmol_strategy, ions, os)
     {
     }
 
     void conjugate();
-    double computeStepSize(LocGridOrbitals& orbitals);
-    void computeOrbitalsProdWithH(LocGridOrbitals& orbitals1,
-        LocGridOrbitals& orbitals2, VariableSizeMatrix<sparserow>& mat,
+    double computeStepSize(T& orbitals);
+    void computeOrbitalsProdWithH(T& orbitals1,
+        T& orbitals2, VariableSizeMatrix<sparserow>& mat,
         const bool consolidate);
-    void computeOrbitalsProdWithH(LocGridOrbitals& orbitals,
+    void computeOrbitalsProdWithH(T& orbitals,
         VariableSizeMatrix<sparserow>& mat, const bool consolidate);
     void parallelTransportUpdate(
-        const double lambda, LocGridOrbitals& orbitals);
+        const double lambda, T& orbitals);
 };
 #endif

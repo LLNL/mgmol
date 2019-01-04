@@ -6,13 +6,14 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #include "Electrostatic.h"
 #include "Control.h"
 #include "GridFactory.h"
 #include "Hartree.h"
 #include "Hartree_CG.h"
 #include "Ions.h"
+#include "ExtendedGridOrbitals.h"
+#include "LocGridOrbitals.h"
 #include "Mesh.h"
 #include "PBdiel.h"
 #include "PBdiel_CG.h"
@@ -21,7 +22,6 @@
 #include "ShiftedHartree.h"
 #include "mputils.h"
 
-// pb
 #include "GridFunc.h"
 #include "Laph2.h"
 #include "Laph4.h"
@@ -186,7 +186,8 @@ void Electrostatic::setupInitialVh(const pb::GridFunc<POTDTYPE>& vh_init)
     if (iterative_index_ == -1) iterative_index_ = 0;
 }
 
-void Electrostatic::computeVhRho(Rho& rho)
+template <class T>
+void Electrostatic::computeVhRho(Rho<T>& rho)
 {
     assert(grhoc_ != NULL);
 
@@ -434,15 +435,18 @@ void Electrostatic::setup(const short max_sweeps)
     poisson_solver_->setup(nu1, nu2, max_sweeps, 1.e-16, max_nlevs);
 }
 
+template <class T>
 void Electrostatic::computeVh(const pb::GridFunc<POTDTYPE>& vh_init,
-    const Ions& ions, Rho& rho, Potentials& pot)
+    const Ions& ions, Rho<T>& rho, Potentials& pot)
 {
     poisson_solver_->set_vh(vh_init);
 
     computeVh(ions, rho, pot);
 }
 
-void Electrostatic::computeVh(const Ions& ions, Rho& rho, Potentials& pot)
+template <class T>
+void Electrostatic::computeVh(const Ions& ions, Rho<T>& rho,
+                              Potentials& pot)
 {
     solve_tm_.start();
 #ifdef PRINT_OPERATIONS
@@ -506,3 +510,16 @@ void Electrostatic::computeVh(const Ions& ions, Rho& rho, Potentials& pot)
 
     solve_tm_.stop();
 }
+
+template void Electrostatic::computeVhRho(Rho<LocGridOrbitals>& rho);
+template void Electrostatic::computeVh(const Ions& ions,
+    Rho<LocGridOrbitals>& rho, Potentials& pot);
+template void Electrostatic::computeVh(const pb::GridFunc<POTDTYPE>& vhinit,
+    const Ions& ions, Rho<LocGridOrbitals>& rho, Potentials& pot);
+
+template void Electrostatic::computeVhRho(Rho<ExtendedGridOrbitals>& rho);
+template void Electrostatic::computeVh(const Ions& ions,
+    Rho<ExtendedGridOrbitals>& rho, Potentials& pot);
+template void Electrostatic::computeVh(const pb::GridFunc<POTDTYPE>& vhinit,
+    const Ions& ions, Rho<ExtendedGridOrbitals>& rho, Potentials& pot);
+

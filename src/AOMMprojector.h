@@ -6,14 +6,14 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef AOMMPROJECTOR_H
-#define AOMMPROJECTOR_H
+#ifndef MGMOL_AOMMPROJECTOR_H
+#define MGMOL_AOMMPROJECTOR_H
 
+#include "LocGridOrbitals.h"
 #include "SquareLocalMatrices.h"
+#include "SubspaceProjector.h"
 #include "global.h"
 
-class LocGridOrbitals;
-class SubspaceProjector;
 class MasksSet;
 class ProjectedMatricesInterface;
 class LocalizationRegions;
@@ -25,7 +25,7 @@ class AOMMprojector
 private:
     LocGridOrbitals* kernel_phi_;
 
-    SubspaceProjector* kernelprojector_;
+    SubspaceProjector<LocGridOrbitals>* kernelprojector_;
 
     MasksSet* kernelMasks_;
 

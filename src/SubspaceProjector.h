@@ -10,16 +10,15 @@
 #define MGMOL_SUBSPACEPROJ_H
 
 #include "global.h"
+#include "SquareLocalMatrices.h"
 
-class LocGridOrbitals;
 class ProjectedMatricesInterface;
-template <class T>
-class SquareLocalMatrices;
 
+template<class T>
 class SubspaceProjector
 {
 private:
-    LocGridOrbitals& subspace_;
+    T& subspace_;
     ProjectedMatricesInterface& proj_matrices_;
     short chromatic_number_;
     short subdivx_;
@@ -27,11 +26,11 @@ private:
     int loc_numpt_;
 
 public:
-    SubspaceProjector(LocGridOrbitals& subspace);
+    SubspaceProjector(T& subspace);
 
     ~SubspaceProjector() {}
 
-    void projectOut(LocGridOrbitals&, SquareLocalMatrices<MATDTYPE>* mask = 0);
+    void projectOut(T&, SquareLocalMatrices<MATDTYPE>* mask = 0);
 };
 
 #endif

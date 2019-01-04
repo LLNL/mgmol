@@ -6,17 +6,17 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef SpreadPenaltyVolume_H
-#define SpreadPenaltyVolume_H
+#ifndef MGMOL_SPREADPENALTYVOLUME_H
+#define MGMOL_SPREADPENALTYVOLUME_H
 
-class LocGridOrbitals;
 #include "SpreadPenaltyInterface.h"
 #include "SpreadsAndCenters.h"
 
-class SpreadPenaltyVolume : public SpreadPenaltyInterface
+template <class T>
+class SpreadPenaltyVolume : public SpreadPenaltyInterface<T>
 {
 private:
-    SpreadsAndCenters* spreadf_;
+    SpreadsAndCenters<T>* spreadf_;
 
     double spread_target_;
     double alpha_;
@@ -26,11 +26,12 @@ private:
 
     void computeAndAddResidualSpreadPenalty(const vector<float>& lagrangemult,
         const float factor, const vector<Vector3D>& centers,
-        const vector<int>& gids, LocGridOrbitals& orbitals,
-        LocGridOrbitals& res);
+        const vector<int>& gids, T& orbitals,
+        T& res);
 
 public:
-    SpreadPenaltyVolume(SpreadsAndCenters* spreadf, const double spread_target,
+    SpreadPenaltyVolume(SpreadsAndCenters<T>* spreadf,
+        const double spread_target,
         const double alpha, const double dampingFactor)
         : spreadf_(spreadf),
           spread_target_(spread_target),
@@ -45,8 +46,8 @@ public:
     }
 
     // add penalty functional contribution to residual
-    void addResidual(LocGridOrbitals& phi, LocGridOrbitals& res);
-    double evaluateEnergy(const LocGridOrbitals& phi);
+    void addResidual(T& phi, T& res);
+    double evaluateEnergy(const T& phi);
 };
 
 #endif

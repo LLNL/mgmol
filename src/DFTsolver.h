@@ -6,40 +6,40 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef DFTSOLVER_H
-#define DFTSOLVER_H
+#ifndef MGMOL_DFTSOLVER_H
+#define MGMOL_DFTSOLVER_H
 
+#include "Energy.h"
+#include "Hamiltonian.h"
+#include "MGmol.h"
+#include "OrbitalsStepper.h"
+#include "Rho.h"
 #include "Timer.h"
 #include <iostream>
 
-class LocGridOrbitals;
 class Ions;
-class MGmol;
-class OrbitalsStepper;
-class Energy;
 class Electrostatic;
-class Hamiltonian;
 class ProjectedMatricesInterface;
-class Rho;
 class DMStrategy;
 
+template <class T>
 class DFTsolver
 {
 private:
     static Timer solve_tm_;
     static int it_scf_;
 
-    MGmol* mgmol_strategy_;
+    MGmol<T>* mgmol_strategy_;
 
-    Hamiltonian* hamiltonian_;
+    Hamiltonian<T>* hamiltonian_;
     ProjectedMatricesInterface* proj_matrices_;
-    Energy* energy_;
+    Energy<T>* energy_;
     Electrostatic* electrostat_;
     Ions& ions_;
-    Rho* rho_;
+    Rho<T>* rho_;
     DMStrategy* dm_strategy_;
 
-    OrbitalsStepper* orbitals_stepper_;
+    OrbitalsStepper<T>* orbitals_stepper_;
 
     // flag used to turn ON acceleration algorithm (if available) close to
     // convergence
@@ -57,7 +57,7 @@ private:
 
     void printEnergy(const short) const;
     int checkConvergenceEnergy(const short step, const short max_steps);
-    double evaluateEnergy(const LocGridOrbitals& orbitals, const bool flag);
+    double evaluateEnergy(const T& orbitals, const bool flag);
     void incInnerIt() { it_scf_++; }
     bool checkPrintResidual(const short step) const;
     void dielON();
@@ -65,14 +65,15 @@ private:
     bool checkConvPot() const;
 
 public:
-    DFTsolver(Hamiltonian* hamiltonian,
-        ProjectedMatricesInterface* proj_matrices, Energy* energy,
-        Electrostatic* electrostat, MGmol* mgmol_strategy, Ions& ions, Rho* rho,
+    DFTsolver(Hamiltonian<T>* hamiltonian,
+        ProjectedMatricesInterface* proj_matrices, Energy<T>* energy,
+        Electrostatic* electrostat, MGmol<T>* mgmol_strategy, Ions& ions,
+        Rho<T>* rho,
         DMStrategy* dm_strategy, std::ostream& os);
 
     ~DFTsolver();
 
-    int solve(LocGridOrbitals& orbitals, LocGridOrbitals& work_orbitals,
+    int solve(T& orbitals, T& work_orbitals,
         Ions& ions, const short max_steps, const short iprint,
         double& last_eks);
 

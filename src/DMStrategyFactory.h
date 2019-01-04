@@ -6,8 +6,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef DMSTRATEGYFACTORY_H
-#define DMSTRATEGYFACTORY_H
+#ifndef MGMOL_DMSTRATEGYFACTORY_H
+#define MGMOL_DMSTRATEGYFACTORY_H
 
 #include "Control.h"
 #include "DistMatrix.h"
@@ -16,17 +16,19 @@
 #include "FullyOccupiedNonOrthoDMStrategy.h"
 #include "HamiltonianMVP_DMStrategy.h"
 #include "MVP_DMStrategy.h"
+#include "MGmol.h"
 #include "NonOrthoDMStrategy.h"
 #include "ProjectedMatrices.h"
 #include "ProjectedMatricesSparse.h"
 
+template <class T>
 class DMStrategyFactory
 {
 public:
     static DMStrategy* create(MPI_Comm comm, std::ostream& os, Ions& ions,
-        Rho* rho, Energy* energy, Electrostatic* electrostat,
-        MGmol* mgmol_strategy, ProjectedMatricesInterface* proj_matrices,
-        LocGridOrbitals* orbitals)
+        Rho<T>* rho, Energy<T>* energy, Electrostatic* electrostat,
+        MGmol<T>* mgmol_strategy, ProjectedMatricesInterface* proj_matrices,
+        T* orbitals)
     {
         Control& ct = *(Control::instance());
 
@@ -34,7 +36,8 @@ public:
         if (ct.DM_solver() == DMNonLinearSolverType::MVP)
         {
             dm_strategy
-                = new MVP_DMStrategy(comm, os, ions, rho, energy, electrostat,
+                = new MVP_DMStrategy<T>(comm, os, ions, rho,
+                    energy, electrostat,
                     mgmol_strategy, orbitals, proj_matrices, ct.use_old_dm());
         }
         else if (ct.DM_solver() == DMNonLinearSolverType::HMVP)
@@ -43,7 +46,8 @@ public:
             {
                 dm_strategy = new HamiltonianMVP_DMStrategy<
                     VariableSizeMatrix<sparserow>,
-                    VariableSizeMatrix<sparserow>, ProjectedMatricesSparse>(
+                    VariableSizeMatrix<sparserow>, ProjectedMatricesSparse,
+                    T>(
                     comm, os, ions, rho, energy, electrostat, mgmol_strategy,
                     orbitals);
             }
@@ -52,7 +56,8 @@ public:
                 dm_strategy = new HamiltonianMVP_DMStrategy<
                     dist_matrix::DistMatrix<DISTMATDTYPE>,
                     dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE>,
-                    ProjectedMatrices>(comm, os, ions, rho, energy, electrostat,
+                    ProjectedMatrices,
+                    T>(comm, os, ions, rho, energy, electrostat,
                     mgmol_strategy, orbitals);
             }
         }
@@ -67,13 +72,14 @@ public:
             {
                 if (ct.getOrbitalsType() == OrbitalsType::Eigenfunctions)
                 {
-                    dm_strategy = new EigenDMStrategy(orbitals, proj_matrices);
+                    dm_strategy = new EigenDMStrategy<T>(
+                        orbitals, proj_matrices);
                 }
                 else
                 {
                     if (ct.getOrbitalsType() == OrbitalsType::Nonorthogonal)
                     {
-                        dm_strategy = new NonOrthoDMStrategy(
+                        dm_strategy = new NonOrthoDMStrategy<T>(
                             orbitals, proj_matrices, ct.dm_mix);
                     }
                 }

@@ -6,39 +6,40 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef _GRASSMANCG_H_
-#define _GRASSMANCG_H_
+#ifndef MGMOL_GRASSMANCG_H
+#define MGMOL_GRASSMANCG_H
 
 #include "DistMatrix.h"
 #include "GrassmanLineMinimization.h"
+#include "Hamiltonian.h"
 #include "Potentials.h"
 #include "ProjectedMatricesInterface.h"
 #include "SparseDistMatrix.h"
 
 #include <iostream>
 
-class Energy;
-class MGmol;
+template <class T> class MGmol;
 
-class GrassmanCG : public GrassmanLineMinimization
+template <class T>
+class GrassmanCG : public GrassmanLineMinimization<T>
 {
 
 public:
-    GrassmanCG(Hamiltonian* hamiltonian,
-        ProjectedMatricesInterface* proj_matrices, MGmol* mgmol_strategy,
+    GrassmanCG(Hamiltonian<T>* hamiltonian,
+        ProjectedMatricesInterface* proj_matrices, MGmol<T>* mgmol_strategy,
         Ions& ions, std::ostream& os)
-        : GrassmanLineMinimization(
+        : GrassmanLineMinimization<T>(
               hamiltonian, proj_matrices, mgmol_strategy, ions, os)
     {
     }
 
     void conjugate();
-    double computeStepSize(LocGridOrbitals& orbitals);
-    void computeOrbitalsProdWithH(LocGridOrbitals& orbitals1,
-        LocGridOrbitals& orbitals2, dist_matrix::DistMatrix<DISTMATDTYPE>& mat);
+    double computeStepSize(T& orbitals);
+    void computeOrbitalsProdWithH(T& orbitals1,
+        T& orbitals2, dist_matrix::DistMatrix<DISTMATDTYPE>& mat);
     void computeOrbitalsProdWithH(
-        LocGridOrbitals& orbitals, dist_matrix::DistMatrix<DISTMATDTYPE>& mat);
+        T& orbitals, dist_matrix::DistMatrix<DISTMATDTYPE>& mat);
     void parallelTransportUpdate(
-        const double lambda, LocGridOrbitals& orbitals);
+        const double lambda, T& orbitals);
 };
 #endif

@@ -9,6 +9,8 @@
 #include "Preconditioning.h"
 #include "LapFactory.h"
 
+using namespace std;
+
 template <typename T>
 Preconditioning<T>::Preconditioning(const short lap_type, const short maxlevels,
     const pb::Grid& grid, const short bc[3])

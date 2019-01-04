@@ -13,6 +13,7 @@
 #include "Energy.h"
 #include "Hamiltonian.h"
 #include "Ions.h"
+#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "LocalizationRegions.h"
 #include "MD_IonicStepper.h"
@@ -38,8 +39,6 @@
 #include <vector>
 using namespace std;
 
-static OrbitalsExtrapolation* orbitals_extrapol;
-
 Timer md_iterations_tm("md_iterations");
 Timer md_tau_tm("md_tau");
 Timer md_moveVnuc_tm("md_moveVnuc");
@@ -48,7 +47,8 @@ Timer md_extrapolateOrbitals_tm("md_extrapolateOrbitals");
 
 #define DUMP_MAX_NUM_TRY 5
 
-void MGmol::moveVnuc(Ions& ions)
+template <class T>
+void MGmol<T>::moveVnuc(Ions& ions)
 {
     md_moveVnuc_tm.start();
 
@@ -65,7 +65,8 @@ void MGmol::moveVnuc(Ions& ions)
     md_moveVnuc_tm.stop();
 }
 
-void MGmol::preWFextrapolation()
+template <class T>
+void MGmol<T>::preWFextrapolation()
 {
     Control& ct = *(Control::instance());
     if (ct.OuterSolver() == OuterSolverType::ABPG ||
@@ -84,7 +85,8 @@ void MGmol::preWFextrapolation()
     }
 }
 
-void MGmol::postWFextrapolation(LocGridOrbitals* orbitals)
+template <class T>
+void MGmol<T>::postWFextrapolation(T* orbitals)
 {
     Control& ct = *(Control::instance());
     if (ct.isLocMode())
@@ -102,11 +104,12 @@ void MGmol::postWFextrapolation(LocGridOrbitals* orbitals)
     }
     else
     {
-        if (orbitals_extrapol->extrapolatedH()) dm_strategy_->update();
+        if (orbitals_extrapol_->extrapolatedH()) dm_strategy_->update();
     }
 }
 
-void MGmol::extrapolate_centers(bool small_move)
+template <class T>
+void MGmol<T>::extrapolate_centers(bool small_move)
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 0) os_ << "Extrapolate LR centers..." << endl;
@@ -127,7 +130,8 @@ void MGmol::extrapolate_centers(bool small_move)
     }
 }
 
-LocGridOrbitals* MGmol::new_orbitals_with_current_LRs(bool setup)
+template <class T>
+T* MGmol<T>::new_orbitals_with_current_LRs(bool setup)
 {
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
@@ -139,16 +143,17 @@ LocGridOrbitals* MGmol::new_orbitals_with_current_LRs(bool setup)
     if (ct.lr_update) update_masks();
 
     // need to build new orbitals as masks have changed
-    LocGridOrbitals* new_orbitals = new LocGridOrbitals("NewMasks", mygrid,
+    T* new_orbitals = new T("NewMasks", mygrid,
         mymesh->subdivx(), ct.numst, ct.bc, proj_matrices_, lrs_, currentMasks_,
         corrMasks_, local_cluster_, setup);
 
     return new_orbitals;
 }
 
-void MGmol::update_orbitals_LRs(LocGridOrbitals** orbitals)
+template <class T>
+void MGmol<T>::update_orbitals_LRs(T** orbitals)
 {
-    LocGridOrbitals* new_orbitals = new_orbitals_with_current_LRs();
+    T* new_orbitals = new_orbitals_with_current_LRs();
     new_orbitals->assign(**orbitals);
     delete (*orbitals);
     (*orbitals) = new_orbitals;
@@ -156,26 +161,28 @@ void MGmol::update_orbitals_LRs(LocGridOrbitals** orbitals)
     (*orbitals)->applyMask();
 }
 
-void MGmol::extrapolate_orbitals(LocGridOrbitals** orbitals)
+template <class T>
+void MGmol<T>::extrapolate_orbitals(T** orbitals)
 {
     md_extrapolateOrbitals_tm.start();
 
-    LocGridOrbitals* new_orbitals = new_orbitals_with_current_LRs();
+    T* new_orbitals = new_orbitals_with_current_LRs();
 
-    orbitals_extrapol->extrapolate_orbitals(orbitals, new_orbitals);
+    orbitals_extrapol_->extrapolate_orbitals(orbitals, new_orbitals);
 
     (*orbitals)->incrementIterativeIndex();
 
     md_extrapolateOrbitals_tm.stop();
 }
 
-void MGmol::move_orbitals(LocGridOrbitals** orbitals)
+template <class T>
+void MGmol<T>::move_orbitals(T** orbitals)
 {
     Control& ct = *(Control::instance());
 
     if (onpe0 && ct.verbose > 1) os_ << "Move orbitals..." << endl;
 
-    LocGridOrbitals* new_orbitals = new_orbitals_with_current_LRs();
+    T* new_orbitals = new_orbitals_with_current_LRs();
 
     // copy old data
     new_orbitals->assign(**orbitals);
@@ -191,7 +198,8 @@ void MGmol::move_orbitals(LocGridOrbitals** orbitals)
     (*orbitals)->incrementIterativeIndex();
 }
 
-int MGmol::update_masks()
+template <class T>
+int MGmol<T>::update_masks()
 {
     Control& ct = *(Control::instance());
     if (!ct.isLocMode()) return 0;
@@ -227,7 +235,9 @@ void checkMaxForces(
            << endl;
 }
 
-int MGmol::dumprestartFile(LocGridOrbitals** orbitals, Ions& ions, Rho& rho,
+template <class T>
+int MGmol<T>::dumprestartFile(T** orbitals, Ions& ions,
+    Rho<T>& rho,
     const bool write_extrapolated_wf, const short count)
 {
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
@@ -246,8 +256,8 @@ int MGmol::dumprestartFile(LocGridOrbitals** orbitals, Ions& ions, Rho& rho,
 
     HDFrestart h5file(filename, myPEenv, gdim, ct.out_restart_file_type);
 
-    LocGridOrbitals previous_orbitals("ForDumping", **orbitals, false);
-    if (!orbitals_extrapol->getRestartData(previous_orbitals))
+    T previous_orbitals("ForDumping", **orbitals, false);
+    if (!orbitals_extrapol_->getRestartData(previous_orbitals))
         previous_orbitals.assign(**orbitals);
     int ierr = write_hdf5(h5file, rho.rho_, ions, previous_orbitals, *lrs_);
     mmpi.allreduce(&ierr, 1, MPI_MIN);
@@ -289,7 +299,8 @@ int MGmol::dumprestartFile(LocGridOrbitals** orbitals, Ions& ions, Rho& rho,
     return 0;
 }
 
-void MGmol::md(LocGridOrbitals** orbitals, Ions& ions)
+template <class T>
+void MGmol<T>::md(T** orbitals, Ions& ions)
 {
     Control& ct = *(Control::instance());
 
@@ -309,10 +320,11 @@ void MGmol::md(LocGridOrbitals** orbitals, Ions& ions)
     taum = vel;
 
     int size_tau = (int)tau0.size();
-    DFTsolver::resetItCount();
+    DFTsolver<T>::resetItCount();
 
-    orbitals_extrapol
-        = OrbitalsExtrapolationFactory::create(ct.WFExtrapolation(), NULL);
+    orbitals_extrapol_
+        = OrbitalsExtrapolationFactory<T>::create(
+              ct.WFExtrapolation(), NULL);
 
     MD_IonicStepper* stepper = new MD_IonicStepper(
         ct.dt, atmove, tau0, taup, taum, fion, pmass, rand_states);
@@ -371,7 +383,7 @@ void MGmol::md(LocGridOrbitals** orbitals, Ions& ions)
             {
                 if (onpe0) os_ << "Create new orbitals_minus1..." << endl;
 
-                orbitals_extrapol->setupPreviousOrbitals(&current_orbitals_,
+                orbitals_extrapol_->setupPreviousOrbitals(&current_orbitals_,
                     proj_matrices_, lrs_, local_cluster_, currentMasks_,
                     corrMasks_, *h5f_file_);
 
@@ -380,7 +392,7 @@ void MGmol::md(LocGridOrbitals** orbitals, Ions& ions)
                 dm_strategy_->update();
             }
 
-            DFTsolver::setItCountLarge();
+            DFTsolver<T>::setItCountLarge();
         }
 
         // check if we are restarting from an MD dump
@@ -584,7 +596,7 @@ void MGmol::md(LocGridOrbitals** orbitals, Ions& ions)
 
         if (!small_move)
         {
-            orbitals_extrapol->clearOldOrbitals();
+            orbitals_extrapol_->clearOldOrbitals();
             lrs_->clearOldCenters();
         }
 
@@ -657,5 +669,9 @@ void MGmol::md(LocGridOrbitals** orbitals, Ions& ions)
     }
 
     delete stepper;
-    delete orbitals_extrapol;
+    delete orbitals_extrapol_;
 }
+
+template class MGmol<LocGridOrbitals>;
+template class MGmol<ExtendedGridOrbitals>;
+

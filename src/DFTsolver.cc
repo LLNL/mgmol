@@ -14,18 +14,21 @@
 #include "Energy.h"
 #include "GrassmanCG.h"
 #include "GrassmanCGSparse.h"
-#include "Hamiltonian.h"
 #include "Ions.h"
 #include "MGmol.h"
 #include "ProjectedMatricesInterface.h"
 #include "Rho.h"
 
-Timer DFTsolver::solve_tm_("solve");
-int DFTsolver::it_scf_ = 0;
+template <class T>
+Timer DFTsolver<T>::solve_tm_("solve");
+template <class T>
+int DFTsolver<T>::it_scf_ = 0;
 
-DFTsolver::DFTsolver(Hamiltonian* hamiltonian,
-    ProjectedMatricesInterface* proj_matrices, Energy* energy,
-    Electrostatic* electrostat, MGmol* mgmol_strategy, Ions& ions, Rho* rho,
+template <class T>
+DFTsolver<T>::DFTsolver(Hamiltonian<T>* hamiltonian,
+    ProjectedMatricesInterface* proj_matrices, Energy<T>* energy,
+    Electrostatic* electrostat, MGmol<T>* mgmol_strategy, Ions& ions,
+    Rho<T>* rho,
     DMStrategy* dm_strategy, std::ostream& os)
     : hamiltonian_(hamiltonian),
       proj_matrices_(proj_matrices),
@@ -44,7 +47,8 @@ DFTsolver::DFTsolver(Hamiltonian* hamiltonian,
         case OuterSolverType::ABPG:
         {
             orbitals_stepper_
-                = new ABPG(hamiltonian_, proj_matrices_, mgmol_strategy, os_);
+                = new ABPG<T>(hamiltonian_, proj_matrices_,
+                                            mgmol_strategy, os_);
             break;
         }
 
@@ -52,12 +56,12 @@ DFTsolver::DFTsolver(Hamiltonian* hamiltonian,
         {
             if (ct.short_sighted)
             {
-                orbitals_stepper_ = new GrassmanCGSparse(
+                orbitals_stepper_ = new GrassmanCGSparse<T>(
                     hamiltonian_, proj_matrices_, mgmol_strategy, ions, os_);
             }
             else
             {
-                orbitals_stepper_ = new GrassmanCG(
+                orbitals_stepper_ = new GrassmanCG<T>(
                     hamiltonian_, proj_matrices_, mgmol_strategy, ions, os_);
             }
             break;
@@ -74,9 +78,11 @@ DFTsolver::DFTsolver(Hamiltonian* hamiltonian,
     // )accelerate_=true;
 }
 
-DFTsolver::~DFTsolver() { delete orbitals_stepper_; }
+template <class T>
+DFTsolver<T>::~DFTsolver() { delete orbitals_stepper_; }
 
-void DFTsolver::printEnergy(const short step) const
+template <class T>
+void DFTsolver<T>::printEnergy(const short step) const
 {
     if (onpe0)
     {
@@ -104,13 +110,15 @@ void DFTsolver::printEnergy(const short step) const
     }
 }
 
-bool DFTsolver::checkPrintResidual(const short step) const
+template <class T>
+bool DFTsolver<T>::checkPrintResidual(const short step) const
 {
     Control& ct(*(Control::instance()));
     return (ct.iprint_residual > 0) ? !(step % ct.iprint_residual) : false;
 }
 
-void DFTsolver::dielON()
+template <class T>
+void DFTsolver<T>::dielON()
 {
     Potentials& pot(hamiltonian_->potential());
     bool isON = pot.diel();
@@ -139,13 +147,15 @@ void DFTsolver::dielON()
             os_ << " Solvation turned off for this step" << endl;
 }
 
-bool DFTsolver::testUpdatePot() const
+template <class T>
+bool DFTsolver<T>::testUpdatePot() const
 {
     Control& ct(*(Control::instance()));
     return (it_scf_ > ct.max_changes_pot);
 }
 
-bool DFTsolver::checkConvPot() const
+template <class T>
+bool DFTsolver<T>::checkConvPot() const
 {
     Control& ct(*(Control::instance()));
     Potentials& pot(hamiltonian_->potential());
@@ -161,7 +171,8 @@ bool DFTsolver::checkConvPot() const
 // 1 if not converged yet,
 // -1 if not reaching minimum convergence
 // -2 if failing to converge
-int DFTsolver::checkConvergenceEnergy(const short step, const short max_steps)
+template <class T>
+int DFTsolver<T>::checkConvergenceEnergy(const short step, const short max_steps)
 {
     Control& ct(*(Control::instance()));
 
@@ -212,8 +223,9 @@ int DFTsolver::checkConvergenceEnergy(const short step, const short max_steps)
     return 1;
 }
 
-double DFTsolver::evaluateEnergy(
-    const LocGridOrbitals& orbitals, const bool print_flag)
+template <class T>
+double DFTsolver<T>::evaluateEnergy(
+    const T& orbitals, const bool print_flag)
 {
     // save energy recent history
     eks_history_[1] = eks_history_[0];
@@ -229,7 +241,8 @@ double DFTsolver::evaluateEnergy(
     return eks_history_[0];
 }
 
-int DFTsolver::solve(LocGridOrbitals& orbitals, LocGridOrbitals& work_orbitals,
+template <class T>
+int DFTsolver<T>::solve(T& orbitals, T& work_orbitals,
     Ions& ions, const short max_steps, const short iprint, double& last_eks)
 {
     solve_tm_.start();
@@ -404,4 +417,8 @@ int DFTsolver::solve(LocGridOrbitals& orbitals, LocGridOrbitals& work_orbitals,
     return retval;
 }
 
-void DFTsolver::printTimers(ostream& os) { solve_tm_.print(os); }
+template <class T>
+void DFTsolver<T>::printTimers(ostream& os) { solve_tm_.print(os); }
+
+template class DFTsolver<LocGridOrbitals>;
+template class DFTsolver<ExtendedGridOrbitals>;

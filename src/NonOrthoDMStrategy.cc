@@ -8,34 +8,38 @@
 
 #include "NonOrthoDMStrategy.h"
 #include "Control.h"
+#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "ProjectedMatricesInterface.h"
 
-NonOrthoDMStrategy::NonOrthoDMStrategy(LocGridOrbitals* orbitals,
+template <class T>
+NonOrthoDMStrategy<T>::NonOrthoDMStrategy(T* orbitals,
     ProjectedMatricesInterface* proj_matrices, const double mix)
     : orbitals_(orbitals), proj_matrices_(proj_matrices), mix_(mix)
 {
 }
 
-void NonOrthoDMStrategy::initialize()
+template <class T>
+void NonOrthoDMStrategy<T>::initialize()
 {
     Control& ct = *(Control::instance());
 
     if (onpe0 && ct.verbose > 2)
     {
-        (*MPIdata::sout) << "NonOrthoDMStrategy::initialize()..." << endl;
+        (*MPIdata::sout) << "NonOrthoDMStrategy<T>::initialize()..." << endl;
     }
     proj_matrices_->updateDM(orbitals_->getIterativeIndex());
 }
 
-int NonOrthoDMStrategy::update()
+template <class T>
+int NonOrthoDMStrategy<T>::update()
 {
     assert(proj_matrices_ != 0);
 
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 2)
     {
-        (*MPIdata::sout) << "NonOrthoDMStrategy::update() with mixing = "
+        (*MPIdata::sout) << "NonOrthoDMStrategy<T>::update() with mixing = "
                          << mix_ << endl;
     }
 
@@ -56,20 +60,23 @@ int NonOrthoDMStrategy::update()
         if (onpe0)
             (*MPIdata::sout)
                 << setprecision(8)
-                << "test NonOrthoDMStrategy::update(): Nel = " << dd << endl;
+                << "test NonOrthoDMStrategy<T>::update(): Nel = " << dd << endl;
     }
 
     return 0; // success
 }
 
-void NonOrthoDMStrategy::stripDM()
+template <class T>
+void NonOrthoDMStrategy<T>::stripDM()
 {
     if (mix_ < 1.) proj_matrices_->stripDM();
 }
 
-void NonOrthoDMStrategy::dressDM()
+template <class T>
+void NonOrthoDMStrategy<T>::dressDM()
 {
     if (mix_ < 1.) proj_matrices_->dressupDM();
 }
 
-void NonOrthoDMStrategy::reset() { proj_matrices_->resetDM(); }
+template class NonOrthoDMStrategy<LocGridOrbitals>;
+template class NonOrthoDMStrategy<ExtendedGridOrbitals>;

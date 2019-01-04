@@ -8,16 +8,14 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-// LDAFunctional.C
-//
 // LDA Exchange-correlation energy and potential
 // Ceperley & Alder, parametrized by Perdew and Zunger
 //
 ////////////////////////////////////////////////////////////////////////////////
-// $Id$
 
 #include "LDAFunctional.h"
 #include "Control.h"
+#include "MGmol_MPI.h"
 #include "mputils.h"
 
 #include <cassert>

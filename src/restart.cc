@@ -7,11 +7,8 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 //
-//                        restart.cc
-//
 //    Functions to read and write restart data to files.
 //
-// $Id$
 #include <cassert>
 #include <fstream>
 #include <iostream>
@@ -39,7 +36,8 @@ using namespace std;
 #include "tools.h"
 
 // read rho and potentials form a hdf5 file
-int MGmol::read_rho_and_pot_hdf5(HDFrestart& file, Rho& rho)
+template <class T>
+int MGmol<T>::read_rho_and_pot_hdf5(HDFrestart& file, Rho<T>& rho)
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 0)
@@ -71,8 +69,9 @@ int MGmol::read_rho_and_pot_hdf5(HDFrestart& file, Rho& rho)
 }
 
 // Writes restart information in a file.
-int MGmol::write_hdf5(const string filename, vector<vector<RHODTYPE>>& rho,
-    Ions& ions, LocGridOrbitals& orbitals, LocalizationRegions& lrs)
+template <class T>
+int MGmol<T>::write_hdf5(const string filename, vector<vector<RHODTYPE>>& rho,
+    Ions& ions, T& orbitals, LocalizationRegions& lrs)
 {
     Mesh* mymesh             = Mesh::instance();
     const pb::PEenv& myPEenv = mymesh->peenv();
@@ -95,8 +94,9 @@ int MGmol::write_hdf5(const string filename, vector<vector<RHODTYPE>>& rho,
 }
 
 // Writes restart information in a HDF5 file.
-int MGmol::write_hdf5(HDFrestart& h5f_file, vector<vector<RHODTYPE>>& rho,
-    Ions& ions, LocGridOrbitals& orbitals, LocalizationRegions& lrs)
+template <class T>
+int MGmol<T>::write_hdf5(HDFrestart& h5f_file, vector<vector<RHODTYPE>>& rho,
+    Ions& ions, T& orbitals, LocalizationRegions& lrs)
 {
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
@@ -184,11 +184,12 @@ int MGmol::write_hdf5(HDFrestart& h5f_file, vector<vector<RHODTYPE>>& rho,
     return 0;
 }
 
-int MGmol::read_restart_lrs(HDFrestart& h5f_file, const string& dset_name)
+template <class T>
+int MGmol<T>::read_restart_lrs(HDFrestart& h5f_file, const string& dset_name)
 {
     Control& ct = *(Control::instance());
     if (ct.verbose > 0)
-        printWithTimeStamp("MGmol::read_restart_lrs()...", (*MPIdata::sout));
+        printWithTimeStamp("MGmol<T>::read_restart_lrs()...", (*MPIdata::sout));
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
@@ -203,12 +204,13 @@ int MGmol::read_restart_lrs(HDFrestart& h5f_file, const string& dset_name)
 }
 
 // Reads the restart information from restart files.
-int MGmol::read_restart_data(
-    HDFrestart& h5f_file, Rho& rho, LocGridOrbitals& orbitals)
+template <class T>
+int MGmol<T>::read_restart_data(
+    HDFrestart& h5f_file, Rho<T>& rho, T& orbitals)
 {
     Control& ct = *(Control::instance());
     if (ct.verbose > 0)
-        printWithTimeStamp("MGmol::read_restart_data()...", (*MPIdata::sout));
+        printWithTimeStamp("MGmol<T>::read_restart_data()...", (*MPIdata::sout));
 
     Timer timer("ReadRestart");
     timer.start();
@@ -223,8 +225,7 @@ int MGmol::read_restart_data(
         int ierr = orbitals.read_hdf5(h5f_file);
         if (ierr < 0)
         {
-            (*MPIdata::serr) << "MGmol::read_restart_data(): error in reading "
-                                "LocGridOrbitals"
+            (*MPIdata::serr) << "MGmol<T>::read_restart_data(): error in reading "
                              << endl;
             return ierr;
         }
@@ -237,3 +238,6 @@ int MGmol::read_restart_data(
 
     return 0;
 }
+
+template class MGmol<LocGridOrbitals>;
+template class MGmol<ExtendedGridOrbitals>;

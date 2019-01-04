@@ -8,16 +8,19 @@
 
 #include "OrbitalsExtrapolation.h"
 #include "ClusterOrbitals.h"
-#include "LocGridOrbitals.h"
 #include "LocalizationRegions.h"
+#include "ExtendedGridOrbitals.h"
+#include "LocGridOrbitals.h"
 #include "MPIdata.h"
 #include "MasksSet.h"
 #include "Mesh.h"
 #include "ProjectedMatricesInterface.h"
 
-OrbitalsExtrapolation::~OrbitalsExtrapolation() { clearOldOrbitals(); }
+template<class T>
+OrbitalsExtrapolation<T>::~OrbitalsExtrapolation() { clearOldOrbitals(); }
 
-void OrbitalsExtrapolation::clearOldOrbitals()
+template<class T>
+void OrbitalsExtrapolation<T>::clearOldOrbitals()
 {
     if (orbitals_minus1_ != 0)
     {
@@ -26,7 +29,8 @@ void OrbitalsExtrapolation::clearOldOrbitals()
     }
 }
 
-bool OrbitalsExtrapolation::getRestartData(LocGridOrbitals& orbitals)
+template<class T>
+bool OrbitalsExtrapolation<T>::getRestartData(T& orbitals)
 {
     if (orbitals_minus1_ != 0)
     {
@@ -39,20 +43,21 @@ bool OrbitalsExtrapolation::getRestartData(LocGridOrbitals& orbitals)
     }
 }
 
-void OrbitalsExtrapolation::setupPreviousOrbitals(LocGridOrbitals** orbitals,
+template<class T>
+void OrbitalsExtrapolation<T>::setupPreviousOrbitals(T** orbitals,
     ProjectedMatricesInterface* proj_matrices, LocalizationRegions* lrs,
     ClusterOrbitals* local_cluster, MasksSet* currentMasks, MasksSet* corrMasks,
     HDFrestart& h5f_file)
 {
     if (onpe0)
-        cout << "OrbitalsExtrapolation::setupPreviousOrbitals()..." << endl;
+        cout << "OrbitalsExtrapolation<T>::setupPreviousOrbitals()..." << endl;
 
     Control& ct            = *(Control::instance());
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
 
-    LocGridOrbitals* new_orbitals
-        = new LocGridOrbitals("ForExtraploation", mygrid, mymesh->subdivx(),
+    T* new_orbitals
+        = new T("ForExtraploation", mygrid, mymesh->subdivx(),
             ct.numst, ct.bc,
             proj_matrices, lrs, currentMasks, corrMasks, local_cluster);
 
@@ -64,3 +69,6 @@ void OrbitalsExtrapolation::setupPreviousOrbitals(LocGridOrbitals** orbitals,
     orbitals_minus1_ = (*orbitals);
     *orbitals        = new_orbitals;
 }
+
+template class OrbitalsExtrapolation<LocGridOrbitals>;
+template class OrbitalsExtrapolation<ExtendedGridOrbitals>;

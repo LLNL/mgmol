@@ -9,16 +9,20 @@
 #include "MVP_DMStrategy.h"
 #include "Control.h"
 #include "Ions.h"
+#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
+#include "MGmol.h"
 #include "MVPSolver.h"
 #include "ProjectedMatricesInterface.h"
 
 #include <vector>
 using namespace std;
 
-MVP_DMStrategy::MVP_DMStrategy(MPI_Comm comm, ostream& os, Ions& ions, Rho* rho,
-    Energy* energy, Electrostatic* electrostat, MGmol* mgmol_strategy,
-    LocGridOrbitals* orbitals, ProjectedMatricesInterface* proj_matrices,
+template <class T>
+MVP_DMStrategy<T>::MVP_DMStrategy(MPI_Comm comm, ostream& os, Ions& ions,
+    Rho<T>* rho,
+    Energy<T>* energy, Electrostatic* electrostat, MGmol<T>* mgmol_strategy,
+    T* orbitals, ProjectedMatricesInterface* proj_matrices,
     const bool use_old_dm)
     : comm_(comm),
       os_(os),
@@ -36,29 +40,34 @@ MVP_DMStrategy::MVP_DMStrategy(MPI_Comm comm, ostream& os, Ions& ions, Rho* rho,
     assert(energy_ != 0);
 }
 
-void MVP_DMStrategy::initialize() {}
-
-int MVP_DMStrategy::update()
+template <class T>
+int MVP_DMStrategy<T>::update()
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 2)
     {
-        (*MPIdata::sout) << "MVP_DMStrategy::update()..." << endl;
+        (*MPIdata::sout) << "MVP_DMStrategy<T>::update()..." << endl;
     }
 
-    MVPSolver solver(comm_, os_, ions_, rho_, energy_, electrostat_,
+    MVPSolver<T> solver(comm_, os_, ions_, rho_, energy_,
+        electrostat_,
         mgmol_strategy_, ct.numst, ct.occ_width, ct.getNel(), global_indexes_,
         ct.dm_inner_steps, use_old_dm_);
 
     return solver.solve(*orbitals_);
 }
 
-void MVP_DMStrategy::stripDM()
+template <class T>
+void MVP_DMStrategy<T>::stripDM()
 {
     if (use_old_dm_) proj_matrices_->stripDM();
 }
 
-void MVP_DMStrategy::dressDM()
+template <class T>
+void MVP_DMStrategy<T>::dressDM()
 {
     if (use_old_dm_) proj_matrices_->dressupDM();
 }
+
+template class MVP_DMStrategy<LocGridOrbitals>;
+template class MVP_DMStrategy<ExtendedGridOrbitals>;

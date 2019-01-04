@@ -12,10 +12,10 @@
 #include "GridFunc.h"
 #include "GridMask.h"
 #include "Lap.h"
-#include "LocGridOrbitals.h"
 #include "tools.h"
 
 #include <vector>
+#include <map>
 
 template <typename T>
 class Preconditioning

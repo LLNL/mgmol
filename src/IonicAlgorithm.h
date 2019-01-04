@@ -6,34 +6,32 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id:$
-#ifndef IonicAlgorithm_H
-#define IonicAlgorithm_H
+#ifndef MGMOL_IonicAlgorithm_H
+#define MGMOL_IonicAlgorithm_H
 
 #include "ConstraintSet.h"
 #include "IonicStepper.h"
 #include "Ions.h"
-#include "LocGridOrbitals.h"
 #include "LocalizationRegions.h"
+#include "MGmol.h"
 #include "Rho.h"
 
 #include <vector>
 
 class MasksSet;
-class Electrostatic;
-class MGmol;
 
+template <class T>
 class IonicAlgorithm
 {
 private:
-    LocGridOrbitals** orbitals_;
+    T** orbitals_;
     Ions& ions_;
-    Rho& rho_;
+    Rho<T>& rho_;
     ConstraintSet& constraints_;
     LocalizationRegions& lrs_;
     MasksSet& masks_;
 
-    MGmol& mgmol_strategy_;
+    MGmol<T>& mgmol_strategy_;
     IonicStepper* stepper_;
     std::vector<std::string>& ions_names_;
 
@@ -48,9 +46,9 @@ protected:
     void registerStepper(IonicStepper* stepper);
 
 public:
-    IonicAlgorithm(LocGridOrbitals** orbitals, Ions& ions, Rho& rho,
+    IonicAlgorithm(T** orbitals, Ions& ions, Rho<T>& rho,
         ConstraintSet& constraints, LocalizationRegions& lrs, MasksSet& masks,
-        MGmol&);
+        MGmol<T>&);
 
     virtual ~IonicAlgorithm(){};
 

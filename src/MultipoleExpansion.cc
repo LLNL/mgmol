@@ -6,12 +6,14 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 // Convention: a positive charge generates a positive potential
-#include <iomanip>
 
 #include "MGmol_MPI.h"
 #include "MultipoleExpansion.h"
+
+#include <iomanip>
+
+using namespace std;
 
 // template <typename T>
 MultipoleExpansion::MultipoleExpansion(const pb::Grid& mygrid,

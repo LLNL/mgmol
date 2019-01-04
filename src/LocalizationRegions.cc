@@ -9,6 +9,7 @@
 #include "global.h"
 
 #include "LocalizationRegions.h"
+#include "LocGridOrbitals.h"
 #include "Mesh.h"
 #include "OrbitalsTransform.h"
 #include "SpreadsAndCenters.h"
@@ -308,7 +309,9 @@ void LocalizationRegions::resetOldCenters()
     num_extrapolations_ = 0;
 }
 
-float LocalizationRegions::move(const SpreadsAndCenters& sc, const bool flag)
+template <class T>
+float LocalizationRegions::move(const SpreadsAndCenters<T>& sc,
+                                const bool flag)
 {
     vector<Vector3D> centers;
     sc.computeCenters(centers);
@@ -341,8 +344,9 @@ float LocalizationRegions::getMeanRadius()
     return cbrt(rcube / (float)nlr);
 }
 
+template <class T>
 float LocalizationRegions::updateRadii(
-    const SpreadsAndCenters& sc, const float ratio)
+    const SpreadsAndCenters<T>& sc, const float ratio)
 {
     for (vector<LRData>::iterator it = overlap_regions_.begin();
          it != overlap_regions_.end(); ++it)
@@ -354,7 +358,9 @@ float LocalizationRegions::updateRadii(
     return getMeanRadius();
 }
 
-float LocalizationRegions::updateRadiiConstVol(const SpreadsAndCenters& sc)
+template <class T>
+float LocalizationRegions::updateRadiiConstVol(
+    const SpreadsAndCenters<T>& sc)
 {
     assert(volume_ > 0.);
 
@@ -853,6 +859,8 @@ bool LocalizationRegions::isLRcenterLocal(const LRData& lr) const
 
 void LocalizationRegions::setupLocalRegionsFromOverlapRegions()
 {
+    assert (overlap_regions_.size() > 0);
+
     setupLocalRegionsFromOverlapRegions_tm_.start();
 
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
@@ -860,9 +868,13 @@ void LocalizationRegions::setupLocalRegionsFromOverlapRegions()
     Control& ct = *(Control::instance());
 
     if (ct.verbose > 0)
+    {
         printWithTimeStamp(
             "LocalizationRegions::setupLocalRegionsFromOverlapRegions()...",
             (*MPIdata::sout));
+        //(*MPIdata::sout)<<"Number of overlap regions: "
+        //                <<overlap_regions_.size()<<endl;
+    }
 
     local_regions_.clear();
 
@@ -1820,4 +1832,13 @@ double LocalizationRegions::computeMinDistBetweenLocalPairs(
 //
 //    kbproj_.clear();
 //}
-//
+
+template float LocalizationRegions::move(
+    const SpreadsAndCenters<LocGridOrbitals>& sc,
+    const bool flag);
+template float LocalizationRegions::updateRadiiConstVol(
+    const SpreadsAndCenters<LocGridOrbitals>& sc);
+template float LocalizationRegions::updateRadii(
+   const SpreadsAndCenters<LocGridOrbitals>& sc,
+   const float ratio);
+

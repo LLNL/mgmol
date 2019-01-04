@@ -11,12 +11,9 @@
 #include <list>
 using namespace std;
 
-#include "GridFunc.h"
 #include "Ions.h"
 #include "KBPsiMatrixSparse.h"
-#include "LocGridOrbitals.h"
 #include "MGmol.h"
-#include "MGmol_blas1.h"
 #include "Mesh.h"
 #include "Species.h"
 

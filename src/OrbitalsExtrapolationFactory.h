@@ -6,27 +6,31 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef OrbitalsExtrapolationFACTORY_H
-#define OrbitalsExtrapolationFACTORY_H
+#ifndef MGMOL_OrbitalsExtrapolationFACTORY_H
+#define MGMOL_OrbitalsExtrapolationFACTORY_H
 
 #include "OrbitalsExtrapolationOrder2.h"
 #include "OrbitalsExtrapolationOrder3.h"
 #include "SpreadPenalty.h"
 
+template <class T>
 class OrbitalsExtrapolationFactory
 {
 public:
-    static OrbitalsExtrapolation* create(
-        const WFExtrapolationType type, SpreadPenalty* spread_penalty)
+    static OrbitalsExtrapolation<T>* create(
+        const WFExtrapolationType type,
+        SpreadPenalty<T>* spread_penalty)
     {
-        OrbitalsExtrapolation* orbitals_extrapol;
+        OrbitalsExtrapolation<T>* orbitals_extrapol;
         switch (type)
         {
             case WFExtrapolationType::Order2:
-                orbitals_extrapol = new OrbitalsExtrapolationOrder2();
+                orbitals_extrapol =
+                    new OrbitalsExtrapolationOrder2<T>();
                 break;
             case WFExtrapolationType::Order3:
-                orbitals_extrapol = new OrbitalsExtrapolationOrder3();
+                orbitals_extrapol =
+                    new OrbitalsExtrapolationOrder3<T>();
                 break;
             default:
                 (*MPIdata::serr)

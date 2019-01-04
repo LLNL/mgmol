@@ -24,7 +24,6 @@
 
 class Ions;
 class Ion;
-class LocGridOrbitals;
 class ProjectedMatricesInterface;
 class ProjectedMatricesSparse;
 
@@ -92,7 +91,8 @@ class KBPsiMatrixSparse : public KBPsiMatrixInterface
 
     void getPsiKBPsiSym(const Ions& ions, VariableSizeMatrix<sparserow>& sm);
     void getPsiKBPsiSym(const Ion& ion, VariableSizeMatrix<sparserow>& sm);
-    void computeKBpsi(Ions& ions, LocGridOrbitals& orbitals,
+    template <class T>
+    void computeKBpsi(Ions& ions, T& orbitals,
         const int first_color, const int nb_colors, const bool flag);
     void clearData();
 
@@ -103,9 +103,11 @@ public:
 
     void printTimers(ostream& os);
 
-    double getEvnl(const Ions& ions, LocGridOrbitals& orbitals,
+    template <class T>
+    double getEvnl(const Ions& ions, T& orbitals,
         ProjectedMatricesSparse* proj_matrices);
-    double getEvnl(const Ions& ions, LocGridOrbitals& orbitals,
+    template <class T>
+    double getEvnl(const Ions& ions, T& orbitals,
         ProjectedMatrices* proj_matrices);
     void computeKBpsi(
         Ions& ions, pb::GridFunc<ORBDTYPE>*, const int, const bool flag);
@@ -131,8 +133,10 @@ public:
     void computeHvnlMatrix(const KBPsiMatrixInterface* const kbpsi2,
         const Ions& ions, ProjectedMatricesInterface* proj_matrices) const;
 
-    void computeAll(Ions& ions, LocGridOrbitals& orbitals);
-    void setup(const Ions& ions, const LocGridOrbitals& orbitals);
+    template <class T>
+    void computeAll(Ions& ions, T& orbitals);
+    template <class T>
+    void setup(const Ions& ions, const T& orbitals);
 
     double getTraceDM(
         const int gid, const DISTMATDTYPE* const mat_X, const int numst) const;

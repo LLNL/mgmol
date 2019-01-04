@@ -6,8 +6,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef LOCALIZATIONREGIONS_H
-#define LOCALIZATIONREGIONS_H
+#ifndef MGMOL_LOCALIZATIONREGIONS_H
+#define MGMOL_LOCALIZATIONREGIONS_H
 
 #include "Control.h"
 #include "HDFrestart.h"
@@ -19,12 +19,12 @@
 #include "hdf_tools.h"
 #include "mgmol_mpi_tools.h"
 #include "tools.h"
+#include "SpreadsAndCenters.h"
 
 #include <iostream>
 #include <set>
 #include <vector>
 
-class SpreadsAndCenters;
 class OrbitalsTransform;
 class SymmetricPair;
 template <class T>
@@ -189,7 +189,7 @@ public:
 
         clearOldCenters();
 
-        if (ct.restart_info <= 2)
+        if (ct.restart_info <= 2 || !ct.isLocMode())
         {
             // bcast data regions_ read from PE0
             bcastLRs();
@@ -406,10 +406,15 @@ public:
         return norm2(dr);
     }
 
-    float move(const SpreadsAndCenters& sc, const bool flag = false);
+    template <class T>
+    float move(const SpreadsAndCenters<T>& sc,
+               const bool flag = false);
     float updateRadii(const OrbitalsTransform* ot, const float ratio);
-    float updateRadii(const SpreadsAndCenters& sc, const float ratio);
-    float updateRadiiConstVol(const SpreadsAndCenters& sc);
+    template <class T>
+    float updateRadii(const SpreadsAndCenters<T>& sc,
+                      const float ratio);
+    template <class T>
+    float updateRadiiConstVol(const SpreadsAndCenters<T>& sc);
 
     float resetRadii(const std::vector<double>& new_radii, const float ratio);
     float resetRadiiConstVol(const std::vector<double>& new_radii);

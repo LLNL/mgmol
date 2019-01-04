@@ -6,11 +6,14 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #include "LDAonGrid.h"
+
+#include "ExtendedGridOrbitals.h"
+#include "LocGridOrbitals.h"
 #include "Potentials.h"
 
-void LDAonGrid::update()
+template <class T>
+void LDAonGrid<T>::update()
 {
     get_xc_tm_.start();
 
@@ -36,3 +39,6 @@ void LDAonGrid::update()
 
     get_xc_tm_.stop();
 }
+
+template class LDAonGrid<LocGridOrbitals>;
+template class LDAonGrid<ExtendedGridOrbitals>;

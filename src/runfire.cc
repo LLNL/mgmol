@@ -6,12 +6,12 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id:$
 #include "Control.h"
 #include "DFTsolver.h"
 #include "FIRE.h"
 #include "FIRE_IonicStepper.h"
 #include "Ions.h"
+#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "MGmol.h"
 #include "MPIdata.h"
@@ -20,16 +20,18 @@
 #include <iostream>
 using namespace std;
 
-void MGmol::runfire(LocGridOrbitals** orbitals, Ions& ions)
+template <class T>
+void MGmol<T>::runfire(T** orbitals, Ions& ions)
 {
     printWithTimeStamp("Run FIRE algorithm...", cout);
 
     Control& ct = *(Control::instance());
 
-    FIRE fire(orbitals, ions, *rho_, *constraints_, *lrs_, *currentMasks_,
+    FIRE<T> fire(orbitals, ions, *rho_, *constraints_, *lrs_,
+        *currentMasks_,
         *electrostat_, ct.dt, *this);
 
-    DFTsolver::resetItCount();
+    DFTsolver<T>::resetItCount();
 
     fire.init(h5f_file_);
 
@@ -44,7 +46,7 @@ void MGmol::runfire(LocGridOrbitals** orbitals, Ions& ions)
     }
     else
     {
-        DFTsolver::setItCountLarge();
+        DFTsolver<T>::setItCountLarge();
     }
 
     // save computed vh for a fair energy "comparison" with vh computed
@@ -118,3 +120,9 @@ void MGmol::runfire(LocGridOrbitals** orbitals, Ions& ions)
         fire.dumpRestart();
     }
 }
+
+template void MGmol<LocGridOrbitals>::runfire(
+    LocGridOrbitals** orbitals, Ions& ions);
+template void MGmol<ExtendedGridOrbitals>::runfire(
+    ExtendedGridOrbitals** orbitals, Ions& ions);
+

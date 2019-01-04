@@ -6,16 +6,16 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id:$
 #include "IonicAlgorithm.h"
 #include "Control.h"
 #include "MGmol.h"
 #include "MasksSet.h"
 #include "Mesh.h"
 
-IonicAlgorithm::IonicAlgorithm(LocGridOrbitals** orbitals, Ions& ions, Rho& rho,
+template <class T>
+IonicAlgorithm<T>::IonicAlgorithm(T** orbitals, Ions& ions, Rho<T>& rho,
     ConstraintSet& constraints, LocalizationRegions& lrs, MasksSet& masks,
-    MGmol& strategy)
+    MGmol<T>& strategy)
     : orbitals_(orbitals),
       ions_(ions),
       rho_(rho),
@@ -36,14 +36,16 @@ IonicAlgorithm::IonicAlgorithm(LocGridOrbitals** orbitals, Ions& ions, Rho& rho,
     assert(3 * atmove_.size() == tau0_.size());
 }
 
-void IonicAlgorithm::registerStepper(IonicStepper* stepper)
+template <class T>
+void IonicAlgorithm<T>::registerStepper(IonicStepper* stepper)
 {
     stepper_ = stepper;
 }
 
-void IonicAlgorithm::init(HDFrestart* h5f_file)
+template <class T>
+void IonicAlgorithm<T>::init(HDFrestart* h5f_file)
 {
-    printWithTimeStamp("IonicAlgorithm::init()...", cout);
+    printWithTimeStamp("IonicAlgorithm<T>::init()...", cout);
 
     Control& ct = *(Control::instance());
 
@@ -89,14 +91,16 @@ void IonicAlgorithm::init(HDFrestart* h5f_file)
     }
 }
 
-int IonicAlgorithm::quenchElectrons(const int itmax, double& etot)
+template <class T>
+int IonicAlgorithm<T>::quenchElectrons(const int itmax, double& etot)
 {
     int ret = mgmol_strategy_.quench(*orbitals_, ions_, itmax, 0, etot);
 
     return ret;
 }
 
-void IonicAlgorithm::setupConstraints()
+template <class T>
+void IonicAlgorithm<T>::setupConstraints()
 {
     // constraints need to be added again and setup as atoms
     // may have moved and local atoms are not the same anymore
@@ -105,7 +109,8 @@ void IonicAlgorithm::setupConstraints()
     constraints_.setup(ions_);
 }
 
-int IonicAlgorithm::run1step()
+template <class T>
+int IonicAlgorithm<T>::run1step()
 {
     // compute taup
     int conv = stepper_->run();
@@ -131,7 +136,8 @@ int IonicAlgorithm::run1step()
     return conv;
 }
 
-void IonicAlgorithm::computeForces()
+template <class T>
+void IonicAlgorithm<T>::computeForces()
 {
     mgmol_strategy_.force(**orbitals_, ions_);
 
@@ -145,7 +151,8 @@ void IonicAlgorithm::computeForces()
     ions_.printForcesGlobal((*MPIdata::sout));
 }
 
-void IonicAlgorithm::setForces(const vector<vector<double>>& f)
+template <class T>
+void IonicAlgorithm<T>::setForces(const vector<vector<double>>& f)
 {
     assert(3 * f.size() == fion_.size());
 
@@ -161,7 +168,8 @@ void IonicAlgorithm::setForces(const vector<vector<double>>& f)
     constraints_.projectOutForces();
 }
 
-bool IonicAlgorithm::checkTolForces(const double tol)
+template <class T>
+bool IonicAlgorithm<T>::checkTolForces(const double tol)
 {
     assert(3 * atmove_.size() == fion_.size());
 
@@ -189,7 +197,8 @@ bool IonicAlgorithm::checkTolForces(const double tol)
     return (flag_convF);
 }
 
-void IonicAlgorithm::dumpRestart()
+template <class T>
+void IonicAlgorithm<T>::dumpRestart()
 {
     Control& ct              = *(Control::instance());
     Mesh* mymesh             = Mesh::instance();
@@ -207,7 +216,8 @@ void IonicAlgorithm::dumpRestart()
     stepper_->write_hdf5(h5file);
 }
 
-void IonicAlgorithm::updatePotAndMasks()
+template <class T>
+void IonicAlgorithm<T>::updatePotAndMasks()
 {
     // Update items that change when the ionic coordinates change
     mgmol_strategy_.moveVnuc(ions_);
@@ -219,3 +229,6 @@ void IonicAlgorithm::updatePotAndMasks()
     //}
     mgmol_strategy_.move_orbitals(orbitals_);
 }
+
+template class IonicAlgorithm<LocGridOrbitals>;
+template class IonicAlgorithm<ExtendedGridOrbitals>;

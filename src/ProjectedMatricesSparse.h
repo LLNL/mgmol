@@ -31,7 +31,6 @@
 // const double tol_matrix_elements=0.;
 
 class HDFrestart;
-class MGmol;
 
 // struct to hold a double and the associated rank
 struct typeDoubleInt

@@ -9,7 +9,9 @@
 #ifndef MGMOL_H
 #define MGMOL_H
 
+#include "Energy.h"
 #include "GridFuncVector.h"
+#include "Hamiltonian.h"
 #include "Lap.h"
 
 #include "Control.h"
@@ -20,39 +22,41 @@
 
 inline double linear(const double r) { return 1. - r; }
 
-// class Rho;
 class XConGrid;
 class Electrostatic;
 class ConstraintSet;
-class Energy;
 class MLWFTransform;
 class NOLMOTransform;
-class SpreadsAndCenters;
 class OrbitalsTransform;
-class Hamiltonian;
 class ProjectedMatrices;
 class ProjectedMatricesInterface;
 class KBPsiMatrix;
 class KBPsiMatrixSparse;
 class MasksSet;
-class IonicAlgorithm;
-class AOMMprojector;
 class DMStrategy;
-class OrbitalsPreconditioning;
-class SpreadPenaltyInterface;
-// class LocGridOrbitals;
 
+template <class T>
+class IonicAlgorithm;
+
+#include "AOMMprojector.h"
 #include "BasicDataDistributors.h"
 #include "ClusterOrbitals.h"
 #include "DistMatrixWithSparseComponent.h"
+#include "ExtendedGridOrbitals.h"
 #include "Forces.h"
 #include "Ions.h"
 #include "LocGridOrbitals.h"
+#include "MGmolInterface.h"
+#include "OrbitalsPreconditioning.h"
+#include "OrbitalsExtrapolation.h"
 #include "RemoteTasksDistMatrix.h"
 #include "Rho.h"
 #include "SparseDistMatrix.h"
+#include "SpreadsAndCenters.h"
+#include "SpreadPenaltyInterface.h"
 
-class MGmol
+template <class T>
+class MGmol : public MGmolInterface
 {
 private:
     std::ostream& os_;
@@ -68,19 +72,19 @@ private:
 
     XConGrid* xcongrid_;
 
-    LocGridOrbitals* current_orbitals_;
+    T* current_orbitals_;
 
     AOMMprojector* aomm_;
 
     Ions* ions_;
 
-    Rho* rho_;
+    Rho<T>* rho_;
 
-    Energy* energy_;
+    Energy<T>* energy_;
 
-    Hamiltonian* hamiltonian_;
+    Hamiltonian<T>* hamiltonian_;
 
-    Forces* forces_;
+    Forces<T>* forces_;
 
     MasksSet* currentMasks_;
     MasksSet* corrMasks_;
@@ -88,7 +92,7 @@ private:
     // ProjectedMatrices* proj_matrices_;
     ProjectedMatricesInterface* proj_matrices_;
 
-    IonicAlgorithm* geom_optimizer_;
+    IonicAlgorithm<T>* geom_optimizer_;
 
     LocalizationRegions* lrs_;
 
@@ -96,9 +100,9 @@ private:
 
     KBPsiMatrixSparse* g_kbpsi_;
 
-    SpreadsAndCenters* spreadf_;
+    SpreadsAndCenters<T>* spreadf_;
 
-    SpreadPenaltyInterface* spread_penalty_;
+    SpreadPenaltyInterface<T>* spread_penalty_;
 
     DMStrategy* dm_strategy_;
 
@@ -110,6 +114,8 @@ private:
     double total_energy_;
     ConstraintSet* constraints_;
 
+    OrbitalsExtrapolation<T>* orbitals_extrapol_;
+
     float md_time_;
     int md_iteration_;
 
@@ -119,56 +125,58 @@ private:
     double get_charge(RHODTYPE* rho);
     void initVcomp(Ions& ions);
     void printTimers();
-    void computeLocKBPsiIonProjL(LocGridOrbitals& orbitals, Ion& ion,
+    void computeLocKBPsiIonProjL(T& orbitals, Ion& ion,
         const int ion_index,
         dist_matrix::SparseDistMatrix<DISTMATDTYPE>*** prjsum, const int l);
-    void computeLocKBPsiIon(LocGridOrbitals& orbitals, Ion& ion,
+    void computeLocKBPsiIon(T& orbitals, Ion& ion,
         const int ion_index,
         dist_matrix::SparseDistMatrix<DISTMATDTYPE>*** loc_kbpsi);
-    void computeLocKBPsi(LocGridOrbitals& orbitals, vector<Ion*>& ions_nl,
+    void computeLocKBPsi(T& orbitals, vector<Ion*>& ions_nl,
         dist_matrix::SparseDistMatrix<DISTMATDTYPE>*** prjsum);
-    int read_rho_and_pot_hdf5(HDFrestart& file, Rho& rho);
+    int read_rho_and_pot_hdf5(HDFrestart& file, Rho<T>& rho);
     int read_restart_lrs(HDFrestart& h5f_file, const string& dset_name);
     int read_restart_data(
-        HDFrestart& h5f_file, Rho& rho, LocGridOrbitals& orbitals);
+        HDFrestart& h5f_file, Rho<T>& rho,
+        T& orbitals);
     void write_header();
-    void getKBPsiAndHij(LocGridOrbitals& orbitals_i,
-        LocGridOrbitals& orbitals_j, Ions& ions, KBPsiMatrixSparse* kbpsi,
+    void getKBPsiAndHij(T& orbitals_i,
+        T& orbitals_j, Ions& ions, KBPsiMatrixSparse* kbpsi,
         ProjectedMatricesInterface* projmatrices,
         dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sh);
-    void computeHij(LocGridOrbitals& orbitals_i, LocGridOrbitals& orbitals_j,
+    void computeHij(T& orbitals_i, T& orbitals_j,
         const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
         dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sparseH);
-    void getKBPsiAndHij(LocGridOrbitals& orbitals_i,
-        LocGridOrbitals& orbitals_j, Ions& ions, KBPsiMatrixSparse* kbpsi,
+    void getKBPsiAndHij(T& orbitals_i,
+        T& orbitals_j, Ions& ions, KBPsiMatrixSparse* kbpsi,
         ProjectedMatricesInterface* projmatrices);
-    void getKBPsiAndHij(LocGridOrbitals& orbitals_i,
-        LocGridOrbitals& orbitals_j, Ions& ions, KBPsiMatrixSparse* kbpsi,
+    void getKBPsiAndHij(T& orbitals_i,
+        T& orbitals_j, Ions& ions, KBPsiMatrixSparse* kbpsi,
         ProjectedMatricesInterface* projmatrices,
         dist_matrix::DistMatrix<DISTMATDTYPE>& hij);
-    void getKBPsiAndHij(LocGridOrbitals& orbitals, Ions& ions,
+    void getKBPsiAndHij(T& orbitals, Ions& ions,
         KBPsiMatrixSparse* kbpsi,
         dist_matrix::DistMatrix<DISTMATDTYPE>& hij);
-    void computeHnlPhiAndAdd2HPhi(Ions& ions, LocGridOrbitals& phi,
-        LocGridOrbitals& hphi, const KBPsiMatrixSparse* const kbpsi);
-    void addHlocalij(LocGridOrbitals& orbitalsi, LocGridOrbitals& orbitalsj,
+    void computeHnlPhiAndAdd2HPhi(Ions& ions, T& phi,
+        T& hphi, const KBPsiMatrixSparse* const kbpsi);
+    void addHlocalij(T& orbitalsi, T& orbitalsj,
         ProjectedMatricesInterface* projmatrices);
-    void addHlocal2matrix(LocGridOrbitals& orbitalsi,
-        LocGridOrbitals& orbitalsj,
+    void addHlocal2matrix(T& orbitalsi,
+        T& orbitalsj,
         dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sparseH);
-    int dumprestartFile(LocGridOrbitals** orbitals, Ions& ions, Rho& rho,
+    int dumprestartFile(T** orbitals, Ions& ions,
+                        Rho<T>& rho,
         const bool write_extrapolated_wf, const short count);
 
     void swapColumnsVect(dist_matrix::DistMatrix<DISTMATDTYPE>& evect,
         const dist_matrix::DistMatrix<DISTMATDTYPE>& hb2N,
         const std::vector<double>& eval,
         dist_matrix::DistMatrix<DISTMATDTYPE>& work);
-    void wftransform(LocGridOrbitals*, LocGridOrbitals*, Ions&);
+    void wftransform(T*, T*, Ions&);
     int readLRsFromInput(ifstream* tfile);
     void preWFextrapolation();
-    void postWFextrapolation(LocGridOrbitals* orbitals);
-    void computeResidualUsingHPhi(LocGridOrbitals& psi,
-        const LocGridOrbitals& hphi, LocGridOrbitals& res,
+    void postWFextrapolation(T* orbitals);
+    void computeResidualUsingHPhi(T& psi,
+        const T& hphi, T& res,
         const bool applyB = true);
 
     int initial();
@@ -190,7 +198,7 @@ private:
     /* Data distribution objects */
     BasicDataDistributors* data_distributor_;
 
-    OrbitalsPreconditioning* orbitals_precond_;
+    OrbitalsPreconditioning<T>* orbitals_precond_;
 
 public:
     Electrostatic* electrostat_;
@@ -220,79 +228,78 @@ public:
 
     int readCoordinates(ifstream* tfile, const bool cell_relative);
     int readCoordinates(const string filename, const bool cell_relative);
-    double computeConstraintResidual(LocGridOrbitals& orbitals,
-        const LocGridOrbitals& hphi, LocGridOrbitals& res,
+    double computeConstraintResidual(T& orbitals,
+        const T& hphi, T& res,
         const bool print_residual, const bool norm_res);
 
-    void md(LocGridOrbitals** orbitals, Ions& ions);
-    void lbfgsrlx(LocGridOrbitals** orbitals, Ions& ions);
-    void computeHij(LocGridOrbitals& orbitals_i, LocGridOrbitals& orbitals_j,
+    void md(T** orbitals, Ions& ions);
+    void lbfgsrlx(T** orbitals, Ions& ions);
+    void computeHij(T& orbitals_i, T& orbitals_j,
         const Ions& ions, const KBPsiMatrixSparse* const kbpsi_i,
         const KBPsiMatrixSparse* const kbpsi_j,
         VariableSizeMatrix<sparserow>& mat, const bool consolidate);
-    void computeHij(LocGridOrbitals& orbitals_i, LocGridOrbitals& orbitals_j,
+    void computeHij(T& orbitals_i, T& orbitals_j,
         const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
         VariableSizeMatrix<sparserow>& mat, const bool consolidate);
-    void computeHij(LocGridOrbitals& orbitals_i, LocGridOrbitals& orbitals_j,
+    void computeHij(T& orbitals_i, T& orbitals_j,
         const Ions& ions, const KBPsiMatrixSparse* const kbpsi_i,
         const KBPsiMatrixSparse* const kbpsi_j,
         dist_matrix::DistMatrix<DISTMATDTYPE>& hij);
-    void computeHij(LocGridOrbitals& orbitals_i, LocGridOrbitals& orbitals_j,
+    void computeHij(T& orbitals_i, T& orbitals_j,
         const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
         dist_matrix::DistMatrix<DISTMATDTYPE>& hij);
-    void computeHij(LocGridOrbitals& orbitals_i, LocGridOrbitals& orbitals_j,
+    void computeHij(T& orbitals_i, T& orbitals_j,
         const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
         ProjectedMatricesInterface*);
-    void addHlocal2matrix(LocGridOrbitals& orbitalsi,
-        LocGridOrbitals& orbitalsj,
+    void addHlocal2matrix(T& orbitalsi,
+        T& orbitalsj,
         dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE>& mat);
-    void addHlocal2matrix(LocGridOrbitals& orbitalsi,
-        LocGridOrbitals& orbitalsj, VariableSizeMatrix<sparserow>& mat);
+    void addHlocal2matrix(T& orbitalsi,
+        T& orbitalsj, VariableSizeMatrix<sparserow>& mat);
     void update_pot(const pb::GridFunc<POTDTYPE>& vh_init, const Ions& ions);
     void update_pot(const Ions& ions);
-    int mvp(LocGridOrbitals& orbitals, Ions& ions, Potentials& pot,
-        const double etol);
-    int quench(LocGridOrbitals* orbitals, Ions& ions, const int max_steps,
+    int quench(T* orbitals, Ions& ions, const int max_steps,
         const int iprint, double& last_eks);
-    void runfire(LocGridOrbitals** orbitals, Ions& ions);
+    void runfire(T** orbitals, Ions& ions);
     void moveVnuc(Ions& ions);
-    void resetProjectedMatricesAndDM(LocGridOrbitals& orbitals, Ions& ions);
-    int getMLWF(MLWFTransform& mlwft, LocGridOrbitals& orbitals,
-        LocGridOrbitals& work_orbitals, const double dd, const bool apply_flag);
+    void resetProjectedMatricesAndDM(T& orbitals, Ions& ions);
+    int getMLWF(MLWFTransform& mlwft, T& orbitals,
+        T& work_orbitals, const double dd, const bool apply_flag);
     bool rotateStatesPairsCommonCenter(
-        LocGridOrbitals& orbitals, LocGridOrbitals& work_orbitals);
-    bool rotateStatesPairsOverlap(LocGridOrbitals& orbitals,
-        LocGridOrbitals& work_orbitals, const double);
+        T& orbitals, T& work_orbitals);
+    bool rotateStatesPairsOverlap(T& orbitals,
+        T& work_orbitals, const double);
     void disentangleOrbitals(
-        LocGridOrbitals& orbitals, LocGridOrbitals& work_orbitals, Ions&, int&);
-    void updateHmatrix(LocGridOrbitals& orbitals, Ions& ions);
-    void getHpsiAndTheta(Ions& ions, LocGridOrbitals& phi,
-        LocGridOrbitals& hphi, const KBPsiMatrixSparse* const kbpsi);
+        T& orbitals, T& work_orbitals, Ions&, int&);
+    void updateHmatrix(T& orbitals, Ions& ions);
+    void getHpsiAndTheta(Ions& ions, T& phi,
+        T& hphi, const KBPsiMatrixSparse* const kbpsi);
     void getHpsiAndTheta(
-        Ions& ions, LocGridOrbitals& phi, LocGridOrbitals& hphi);
-    double computePrecondResidual(LocGridOrbitals& phi, LocGridOrbitals& hphi,
-        LocGridOrbitals& res, Ions& ions, KBPsiMatrixSparse* kbpsi,
+        Ions& ions, T& phi, T& hphi);
+    double computePrecondResidual(T& phi, T& hphi,
+        T& res, Ions& ions, KBPsiMatrixSparse* kbpsi,
         const bool print_residual, const bool norm_res);
-    void addResidualSpreadPenalty(LocGridOrbitals& phi, LocGridOrbitals& res);
-    int get_NOLMO(NOLMOTransform& noot, LocGridOrbitals& orbitals,
-        LocGridOrbitals& work_orbitals, const double dd, const bool apply_flag);
-    void adaptLR(const SpreadsAndCenters* spreadf, const OrbitalsTransform* ot);
+    void addResidualSpreadPenalty(T& phi, T& res);
+    int get_NOLMO(NOLMOTransform& noot, T& orbitals,
+        T& work_orbitals, const double dd, const bool apply_flag);
+    void adaptLR(const SpreadsAndCenters<T>* spreadf,
+                 const OrbitalsTransform* ot);
     int update_masks();
-    void move_orbitals(LocGridOrbitals** orbitals);
-    int getMLWF2states(const int st1, const int st2, LocGridOrbitals& orbitals,
-        LocGridOrbitals& work_orbitals);
+    void move_orbitals(T** orbitals);
+    int getMLWF2states(const int st1, const int st2, T& orbitals,
+        T& work_orbitals);
     void extrapolate_centers(bool small_move);
-    void compute_centers(bool small_move, LocGridOrbitals** orbitals);
-    void extrapolate_orbitals(LocGridOrbitals** orbitals);
-    LocGridOrbitals* new_orbitals_with_current_LRs(bool setup = true);
-    void update_orbitals_LRs(LocGridOrbitals** orbitals);
+    void compute_centers(bool small_move, T** orbitals);
+    void extrapolate_orbitals(T** orbitals);
+    T* new_orbitals_with_current_LRs(bool setup = true);
+    void update_orbitals_LRs(T** orbitals);
     void clearOldOrbitals();
-    void getKBPsiAndHij(LocGridOrbitals& orbitals, Ions& ions);
+    void getKBPsiAndHij(T& orbitals, Ions& ions);
     int write_hdf5(const string filename, vector<vector<RHODTYPE>>& rho,
-        Ions& ions, LocGridOrbitals& orbitals, LocalizationRegions& lrs);
+        Ions& ions, T& orbitals, LocalizationRegions& lrs);
     int write_hdf5(HDFrestart& h5f_file, vector<vector<RHODTYPE>>& rho,
-        Ions& ions, LocGridOrbitals& orbitals, LocalizationRegions& lrs);
-    double get_evnl(const Ions& ions, LocGridOrbitals& orbitals);
+        Ions& ions, T& orbitals, LocalizationRegions& lrs);
+    double get_evnl(const Ions& ions, T& orbitals);
     void sebprintPositions();
     void sebprintForces();
     void get_positions(vector<vector<double>>& r);
@@ -317,15 +324,15 @@ public:
     void finalEnergy();
     void printMM();
 
-    void projectOutKernel(LocGridOrbitals& phi);
+    void projectOutKernel(T& phi);
 
-    void precond_mg(LocGridOrbitals& orbitals);
+    void precond_mg(T& orbitals);
     void setGamma(const pb::Lap<ORBDTYPE>& lapOper, const Potentials& pot);
-    double computeResidual(LocGridOrbitals& orbitals,
-        LocGridOrbitals& work_orbitals, LocGridOrbitals& res,
+    double computeResidual(T& orbitals,
+        T& work_orbitals, T& res,
         const bool print_residual, const bool norm_res);
-
-    void force(LocGridOrbitals& orbitals, Ions& ions)
+    void applyAOMMprojection(T&);
+    void force(T& orbitals, Ions& ions)
     {
         forces_->force(orbitals, ions);
     }

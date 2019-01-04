@@ -9,14 +9,16 @@
 #include "FIRE.h"
 #include "Control.h"
 #include "Electrostatic.h"
+#include "LocGridOrbitals.h"
 #include "MGmol.h"
 #include "MasksSet.h"
 #include "Mesh.h"
 
-FIRE::FIRE(LocGridOrbitals** orbitals, Ions& ions, Rho& rho,
+template <class T>
+FIRE<T>::FIRE(T** orbitals, Ions& ions, Rho<T>& rho,
     ConstraintSet& constraints, LocalizationRegions& lrs, MasksSet& masks,
-    Electrostatic& electrostat, const double dt, MGmol& strategy)
-    : IonicAlgorithm(orbitals, ions, rho, constraints, lrs, masks, strategy),
+    Electrostatic& electrostat, const double dt, MGmol<T>& strategy)
+    : IonicAlgorithm<T>(orbitals, ions, rho, constraints, lrs, masks, strategy),
       orbitals_(orbitals),
       ions_(ions),
       rho_(rho),
@@ -25,9 +27,14 @@ FIRE::FIRE(LocGridOrbitals** orbitals, Ions& ions, Rho& rho,
       electrostat_(electrostat),
       mgmol_strategy_(strategy)
 {
-    stepper_ = new FIRE_IonicStepper(dt, atmove_, tau0_, taup_, fion_, pmass_);
+    stepper_ = new FIRE_IonicStepper(dt, IonicAlgorithm<T>::atmove_,
+                                     IonicAlgorithm<T>::tau0_,
+                                     IonicAlgorithm<T>::taup_,
+                                     IonicAlgorithm<T>::fion_,
+                                     IonicAlgorithm<T>::pmass_);
 
-    registerStepper(stepper_);
+    IonicAlgorithm<T>::registerStepper(stepper_);
 }
 
-FIRE::~FIRE() {}
+template class FIRE<LocGridOrbitals>;
+template class FIRE<ExtendedGridOrbitals>;

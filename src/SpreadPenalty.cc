@@ -7,16 +7,19 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "SpreadPenalty.h"
+#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "Mesh.h"
 
-void SpreadPenalty::addResidual(LocGridOrbitals& phi, LocGridOrbitals& res)
+template <class T>
+void SpreadPenalty<T>::addResidual(T& phi, T& res)
 {
     addResidual(phi, res, false);
 }
 
-void SpreadPenalty::addResidual(
-    LocGridOrbitals& phi, LocGridOrbitals& res, bool xlbomd)
+template <class T>
+void SpreadPenalty<T>::addResidual(
+    T& phi, T& res, bool xlbomd)
 {
     Control& ct = *(Control::instance());
 
@@ -96,7 +99,8 @@ void SpreadPenalty::addResidual(
         spread2, factors, centers, gids, phi, res);
 }
 
-float SpreadPenalty::computeSpreadPenaltyFactor(const float spread2)
+template <class T>
+float SpreadPenalty<T>::computeSpreadPenaltyFactor(const float spread2)
 {
     // compute 2*F[\phi]-sigma_0^2
     //(alpha ignored since it cancels out with teh one in eta)
@@ -111,7 +115,8 @@ float SpreadPenalty::computeSpreadPenaltyFactor(const float spread2)
     return factor;
 }
 
-float SpreadPenalty::computeSpreadPenaltyFactorXLBOMD(const float spread2)
+template <class T>
+float SpreadPenalty<T>::computeSpreadPenaltyFactorXLBOMD(const float spread2)
 {
     float factor = (spread2 - spread2_target_);
 
@@ -124,10 +129,11 @@ float SpreadPenalty::computeSpreadPenaltyFactorXLBOMD(const float spread2)
 
 // add to current residual "res" component proportional to gradient of penalty
 // spread functional
-void SpreadPenalty::computeAndAddResidualSpreadPenalty(
+template <class T>
+void SpreadPenalty<T>::computeAndAddResidualSpreadPenalty(
     const vector<float>& lagrangemult, const vector<float>& factors,
     const vector<Vector3D>& centers, const vector<int>& gids,
-    LocGridOrbitals& orbitals, LocGridOrbitals& res)
+    T& orbitals, T& res)
 {
     assert(lagrangemult.size() == centers.size());
     assert(factors.size() == centers.size());
@@ -251,7 +257,8 @@ void SpreadPenalty::computeAndAddResidualSpreadPenalty(
     }
 }
 
-double SpreadPenalty::evaluateEnergy(const LocGridOrbitals& phi)
+template <class T>
+double SpreadPenalty<T>::evaluateEnergy(const T& phi)
 {
     assert(spreadf_ != 0);
     assert(spread2_target_ >= 0.);
@@ -283,3 +290,6 @@ double SpreadPenalty::evaluateEnergy(const LocGridOrbitals& phi)
 
     return alpha_ * total_energy;
 }
+
+template class SpreadPenalty<LocGridOrbitals>;
+template class SpreadPenalty<ExtendedGridOrbitals>;

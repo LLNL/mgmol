@@ -6,44 +6,42 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id:$
-#ifndef FIRE_H
-#define FIRE_H
+#ifndef MGMOL_FIRE_H
+#define MGMOL_FIRE_H
 
 #include "Energy.h"
 #include "FIRE_IonicStepper.h"
 #include "IonicAlgorithm.h"
 #include "Ions.h"
-#include "LocGridOrbitals.h"
 #include "LocalizationRegions.h"
+#include "MGmol.h"
 #include "Rho.h"
 
 class MasksSet;
-class Energy;
 class Electrostatic;
-class MGmol;
 class KBPsiMatrixInterface;
 class ConstraintSet;
 
-class FIRE : public IonicAlgorithm
+template <class T>
+class FIRE : public IonicAlgorithm<T>
 {
 private:
-    LocGridOrbitals** orbitals_;
+    T** orbitals_;
     const Ions& ions_;
-    const Rho& rho_;
+    const Rho<T>& rho_;
     FIRE_IonicStepper* stepper_;
     const LocalizationRegions& lrs_;
     const MasksSet& masks_;
     const Electrostatic& electrostat_;
 
-    const MGmol& mgmol_strategy_;
+    const MGmol<T>& mgmol_strategy_;
 
 public:
-    FIRE(LocGridOrbitals** orbitals, Ions& ions, Rho& rho,
+    FIRE(T** orbitals, Ions& ions, Rho<T>& rho,
         ConstraintSet& constraints, LocalizationRegions& lrs, MasksSet& masks,
-        Electrostatic& electrostat, const double dt, MGmol&);
+        Electrostatic& electrostat, const double dt, MGmol<T>&);
 
-    ~FIRE();
+    ~FIRE(){};
 };
 
 #endif

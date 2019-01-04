@@ -6,18 +6,21 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id:$
 #include "PBEonGridSpin.h"
 
 #include "Control.h"
 #include "Delh4.h"
+#include "ExtendedGridOrbitals.h"
+#include "LocGridOrbitals.h"
 #include "Mesh.h"
+#include "MGmol_MPI.h"
 #include "PBh4.h"
 
 #include "Potentials.h"
 #include "mputils.h"
 
-PBEonGridSpin::PBEonGridSpin(Rho& rho, Potentials& pot)
+template <class T>
+PBEonGridSpin<T>::PBEonGridSpin(Rho<T>& rho, Potentials& pot)
     : np_(rho.rho_[0].size()), rho_(rho), pot_(pot)
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
@@ -41,7 +44,8 @@ PBEonGridSpin::PBEonGridSpin(Rho& rho, Potentials& pot)
     vxc_.resize(np_ * 2);
 }
 
-void PBEonGridSpin::update()
+template <class T>
+void PBEonGridSpin<T>::update()
 {
     get_xc_tm_.start();
 
@@ -246,7 +250,8 @@ void PBEonGridSpin::update()
     get_xc_tm_.stop();
 }
 
-double PBEonGridSpin::getExc() const
+template <class T>
+double PBEonGridSpin<T>::getExc() const
 {
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
@@ -264,3 +269,6 @@ double PBEonGridSpin::getExc() const
 #endif
     return exc * mygrid.vel();
 }
+
+template class PBEonGridSpin<LocGridOrbitals>;
+template class PBEonGridSpin<ExtendedGridOrbitals>;

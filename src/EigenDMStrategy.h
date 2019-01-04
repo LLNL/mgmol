@@ -6,21 +6,21 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef EIGENDMSTRATEGY_H
-#define EIGENDMSTRATEGY_H
+#ifndef MGMOL_EIGENDMSTRATEGY_H
+#define MGMOL_EIGENDMSTRATEGY_H
 
 #include "DMStrategy.h"
-class LocGridOrbitals;
 class ProjectedMatricesInterface;
 
+template <class T>
 class EigenDMStrategy : public DMStrategy
 {
 private:
-    LocGridOrbitals* current_orbitals_;
+    T* current_orbitals_;
     ProjectedMatricesInterface* proj_matrices_;
 
 public:
-    EigenDMStrategy(LocGridOrbitals* current_orbitals,
+    EigenDMStrategy(T* current_orbitals,
         ProjectedMatricesInterface* proj_matrices);
 
     void initialize();

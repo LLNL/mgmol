@@ -9,7 +9,6 @@
 #ifndef MGMOL_KBPSIMATRIX_INTERFACE_H
 #define MGMOL_KBPSIMATRIX_INTERFACE_H
 
-#include "LocGridOrbitals.h"
 #include "RemoteTasksDistMatrix.h"
 #include "SparseDistMatrix.h"
 #include "Timer.h"
@@ -46,17 +45,6 @@ public:
 
     virtual void addKBPsi(const int gid, const int st, const double val)  = 0;
     virtual void addKBBPsi(const int gid, const int st, const double val) = 0;
-
-    virtual double getValIonState(const int gid, const int st) const = 0;
-    virtual void scaleWithKBcoeff(const Ions& ions)                  = 0;
-
-    virtual void computeHvnlMatrix(
-        const Ions&, dist_matrix::SparseDistMatrix<DISTMATDTYPE>&) const = 0;
-    virtual void computeHvnlMatrix(
-        const Ions&, ProjectedMatricesInterface*) const = 0;
-
-    virtual void computeAll(Ions& ions, LocGridOrbitals& orbitals)        = 0;
-    virtual void setup(const Ions& ions, const LocGridOrbitals& orbitals) = 0;
 
     virtual void printTimers(ostream& os);
 

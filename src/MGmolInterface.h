@@ -6,24 +6,21 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef MGMOL_XCONGRID_H
-#define MGMOL_XCONGRID_H
+#ifndef MGMOLINTERFACE_H
+#define MGMOLINTERFACE_H
 
-#include "Timer.h"
-
-class XConGrid
+class MGmolInterface
 {
-
 public:
-    static Timer get_xc_tm_;
+    MGmolInterface(){}
 
-    XConGrid(){};
+    ~MGmolInterface(){}
 
-    virtual ~XConGrid(){};
-
-    virtual void update() = 0;
-
-    virtual double getExc() const = 0;
+    virtual int setupFromInput(const string input_file)=0;
+    virtual int setupLRsFromInput(const string input_file)=0;
+    virtual int setupConstraintsFromInput(const string input_file)=0;
+    virtual void run()=0;
 };
 
 #endif
+

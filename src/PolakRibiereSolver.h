@@ -6,37 +6,36 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef PolakRibiereSolver_H
-#define PolakRibiereSolver_H
+#ifndef MGMOL_PolakRibiereSolver_H
+#define MGMOL_PolakRibiereSolver_H
 
+#include "Energy.h"
+#include "Hamiltonian.h"
+#include "MGmol.h"
+#include "Rho.h"
 #include "Timer.h"
 #include <iostream>
 
-class LocGridOrbitals;
 class Ions;
-class MGmol;
-class OrbitalsStepper;
-class Energy;
 class Electrostatic;
-class Hamiltonian;
 class ProjectedMatricesInterface;
-class Rho;
 class DMStrategy;
 
+template <class T>
 class PolakRibiereSolver
 {
 private:
     static Timer solve_tm_;
     static int it_scf_;
 
-    MGmol* mgmol_strategy_;
+    MGmol<T>* mgmol_strategy_;
 
-    Hamiltonian* hamiltonian_;
+    Hamiltonian<T>* hamiltonian_;
     ProjectedMatricesInterface* proj_matrices_;
-    Energy* energy_;
+    Energy<T>* energy_;
     Electrostatic* electrostat_;
     Ions& ions_;
-    Rho* rho_;
+    Rho<T>* rho_;
     DMStrategy* dm_strategy_;
 
     std::ostream& os_;
@@ -52,16 +51,16 @@ private:
     /*!
      * residual (gradient with negative sign)
      */
-    LocGridOrbitals* r_k_;
-    LocGridOrbitals* r_km1_;
+    T* r_k_;
+    T* r_km1_;
 
     /*!
      * preconditioned residual
      */
-    LocGridOrbitals* z_k_;
-    LocGridOrbitals* z_km1_;
+    T* z_k_;
+    T* z_km1_;
 
-    LocGridOrbitals* p_k_;
+    T* p_k_;
 
     double sum_eig_[2];
     double deig_;
@@ -71,7 +70,7 @@ private:
 
     void printEnergy(const short) const;
     int checkConvergenceEnergy(const short step, const short max_steps);
-    double evaluateEnergy(const LocGridOrbitals& orbitals, const bool flag);
+    double evaluateEnergy(const T& orbitals, const bool flag);
     void incInnerIt() { it_scf_++; }
     bool checkPrintResidual(const short step) const;
     void dielON();
@@ -81,17 +80,18 @@ private:
     bool checkWolfeConditions(
         const double trial_step_energy, const double alpha) const;
 
-    double computeBeta(LocGridOrbitals& work_orbitals) const;
+    double computeBeta(T& work_orbitals) const;
 
 public:
-    PolakRibiereSolver(Hamiltonian* hamiltonian,
-        ProjectedMatricesInterface* proj_matrices, Energy* energy,
-        Electrostatic* electrostat, MGmol* mgmol_strategy, Ions& ions, Rho* rho,
+    PolakRibiereSolver(Hamiltonian<T>* hamiltonian,
+        ProjectedMatricesInterface* proj_matrices, Energy<T>* energy,
+        Electrostatic* electrostat, MGmol<T>* mgmol_strategy, Ions& ions,
+        Rho<T>* rho,
         DMStrategy* dm_strategy, std::ostream& os);
 
     ~PolakRibiereSolver();
 
-    int solve(LocGridOrbitals& orbitals, LocGridOrbitals& work_orbitals,
+    int solve(T& orbitals, T& work_orbitals,
         Ions& ions, const short max_steps, const short iprint,
         double& last_eks);
 

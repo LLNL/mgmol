@@ -8,6 +8,7 @@
 
 #include "SpreadsAndCenters.h"
 #include "Control.h"
+#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "MGmol_MPI.h"
 #include "MPIdata.h"
@@ -21,7 +22,8 @@ using namespace std;
 static double fourthirdpi = 4. * M_PI / 3.;
 
 ////////////////////////////////////////////////////////////////////////////////
-Vector3D SpreadsAndCenters::computeCenter(const int index) const
+template <class T>
+Vector3D SpreadsAndCenters<T>::computeCenter(const int index) const
 {
     assert(index >= 0 && index < ngids_);
     assert(index < (int)r_[0].size());
@@ -52,21 +54,24 @@ Vector3D SpreadsAndCenters::computeCenter(const int index) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-double SpreadsAndCenters::computeSpread2(int i) const
+template <class T>
+double SpreadsAndCenters<T>::computeSpread2(int i) const
 {
     assert(i >= 0 & i < ngids_);
     return computeSpread2(i, 0) + computeSpread2(i, 1) + computeSpread2(i, 2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-double SpreadsAndCenters::computeSpread(int i) const
+template <class T>
+double SpreadsAndCenters<T>::computeSpread(int i) const
 {
     assert(computeSpread2(i) >= 0.);
     return sqrt(computeSpread2(i));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-double SpreadsAndCenters::computeSpread2(void) const
+template <class T>
+double SpreadsAndCenters<T>::computeSpread2(void) const
 {
     double sum = 0.0;
     for (int i = 0; i < ngids_; i++)
@@ -75,14 +80,16 @@ double SpreadsAndCenters::computeSpread2(void) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-double SpreadsAndCenters::computeSpread(void) const
+template <class T>
+double SpreadsAndCenters<T>::computeSpread(void) const
 {
     assert(computeSpread2() >= 0.);
     return sqrt(computeSpread2());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-double SpreadsAndCenters::computeSpread2(int i, int j) const
+template <class T>
+double SpreadsAndCenters<T>::computeSpread2(int i, int j) const
 {
     assert(i >= 0 && i < ngids_);
     assert(j >= 0 && j < 3);
@@ -95,7 +102,8 @@ double SpreadsAndCenters::computeSpread2(int i, int j) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-double SpreadsAndCenters::volume() const
+template <class T>
+double SpreadsAndCenters<T>::volume() const
 {
     double vol = 0.;
     for (int i = 0; i < ngids_; i++)
@@ -107,7 +115,8 @@ double SpreadsAndCenters::volume() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void SpreadsAndCenters::printGlobal(ostream& os, const int root) const
+template <class T>
+void SpreadsAndCenters<T>::printGlobal(ostream& os, const int root) const
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     int ngids       = localRows_.size();
@@ -180,7 +189,8 @@ void SpreadsAndCenters::printGlobal(ostream& os, const int root) const
     }
 }
 
-void SpreadsAndCenters::printLocal(ostream& os, const int root) const
+template <class T>
+void SpreadsAndCenters<T>::printLocal(ostream& os, const int root) const
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     if (mmpi.mypeSpin() == root)
@@ -206,7 +216,8 @@ void SpreadsAndCenters::printLocal(ostream& os, const int root) const
     }
 }
 
-void SpreadsAndCenters::print(ostream& os, const int root) const
+template <class T>
+void SpreadsAndCenters<T>::print(ostream& os, const int root) const
 {
     Control& ct = *(Control::instance());
     if (ct.numst < 512 || ct.verbose > 2)
@@ -215,7 +226,8 @@ void SpreadsAndCenters::print(ostream& os, const int root) const
         printLocal(os, root);
 }
 ////////////////////////////////////////////////////////////////////////////////
-void SpreadsAndCenters::printStats(ostream& os) const
+template <class T>
+void SpreadsAndCenters<T>::printStats(ostream& os) const
 {
     if (onpe0 && ngids_ > 0)
         os << endl << " Orbitals spreads (statistics)" << endl << endl;
@@ -258,7 +270,8 @@ void SpreadsAndCenters::printStats(ostream& os) const
 }
 
 // get spreads for functions centered in subdomain
-void SpreadsAndCenters::computeLocalSpreads(vector<float>& spreads)
+template <class T>
+void SpreadsAndCenters<T>::computeLocalSpreads(vector<float>& spreads)
 {
     spreads.clear();
 
@@ -269,7 +282,8 @@ void SpreadsAndCenters::computeLocalSpreads(vector<float>& spreads)
     }
 }
 
-void SpreadsAndCenters::computeLocalSpreads2(vector<float>& spreads)
+template <class T>
+void SpreadsAndCenters<T>::computeLocalSpreads2(vector<float>& spreads)
 {
     spreads.clear();
 
@@ -281,7 +295,8 @@ void SpreadsAndCenters::computeLocalSpreads2(vector<float>& spreads)
 }
 
 // get centers for functions centered in subdomain
-void SpreadsAndCenters::getLocalCenters(vector<Vector3D>& centers)
+template <class T>
+void SpreadsAndCenters<T>::getLocalCenters(vector<Vector3D>& centers)
 {
     centers.clear();
 
@@ -292,7 +307,8 @@ void SpreadsAndCenters::getLocalCenters(vector<Vector3D>& centers)
     }
 }
 
-void SpreadsAndCenters::getLocalGids(vector<int>& lindex)
+template <class T>
+void SpreadsAndCenters<T>::getLocalGids(vector<int>& lindex)
 {
     lindex.clear();
 
@@ -306,7 +322,8 @@ void SpreadsAndCenters::getLocalGids(vector<int>& lindex)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-double SpreadsAndCenters::computeDistance(const int st1, const int st2) const
+template <class T>
+double SpreadsAndCenters<T>::computeDistance(const int st1, const int st2) const
 {
     assert(st1 < ngids_);
     assert(st2 < ngids_);
@@ -324,14 +341,16 @@ double SpreadsAndCenters::computeDistance(const int st1, const int st2) const
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-void SpreadsAndCenters::setSinCosData(VariableSizeMatrix<sparserow>& mat,
+template <class T>
+void SpreadsAndCenters<T>::setSinCosData(VariableSizeMatrix<sparserow>& mat,
     const vector<int>& gids, const vector<int>& localRowGid)
 {
     setData(mat, gids, localRowGid, r_);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-void SpreadsAndCenters::setData(VariableSizeMatrix<sparserow>& mat,
+template <class T>
+void SpreadsAndCenters<T>::setData(VariableSizeMatrix<sparserow>& mat,
     const vector<int>& gids, const vector<int>& localRowGid,
     vector<vector<double>>& matr)
 {
@@ -361,7 +380,8 @@ void SpreadsAndCenters::setData(VariableSizeMatrix<sparserow>& mat,
     }
 }
 
-void SpreadsAndCenters::setSinCosData(vector<vector<double>>& a, const int n)
+template <class T>
+void SpreadsAndCenters<T>::setSinCosData(vector<vector<double>>& a, const int n)
 {
     r_.clear();
     localRows_.clear();
@@ -383,8 +403,9 @@ void SpreadsAndCenters::setSinCosData(vector<vector<double>>& a, const int n)
     localRowGid_ = localRows_;
 }
 
-void SpreadsAndCenters::computePositionMatrix(
-    LocGridOrbitals& orbitals, LocGridOrbitals& work_orbitals)
+template <class T>
+void SpreadsAndCenters<T>::computePositionMatrix(
+    T& orbitals, T& work_orbitals)
 {
     // copy into work array before normalizing
     work_orbitals.copyDataFrom(orbitals);
@@ -397,12 +418,14 @@ void SpreadsAndCenters::computePositionMatrix(
     computeSinCosDiag(work_orbitals, true);
 }
 
-void SpreadsAndCenters::computePositionMatrix(const LocGridOrbitals& orbitals)
+template <class T>
+void SpreadsAndCenters<T>::computePositionMatrix(const T& orbitals)
 {
     computeSinCosDiag(orbitals, false);
 }
 
-void SpreadsAndCenters::computeSinCos(const LocGridOrbitals& orbitals)
+template <class T>
+void SpreadsAndCenters<T>::computeSinCos(const T& orbitals)
 {
     vector<vector<double>> a;
     a.resize(6);
@@ -412,11 +435,12 @@ void SpreadsAndCenters::computeSinCos(const LocGridOrbitals& orbitals)
     {
         a[k].resize(n2, 0.);
     }
-    SinCosOps::compute(orbitals, a);
+    SinCosOps<T>::compute(orbitals, a);
     setSinCosData(a, n2);
 }
 
-void SpreadsAndCenters::computeSinCosSquare(const LocGridOrbitals& orbitals)
+template <class T>
+void SpreadsAndCenters<T>::computeSinCosSquare(const T& orbitals)
 {
     vector<vector<double>> a;
     a.resize(6);
@@ -426,12 +450,13 @@ void SpreadsAndCenters::computeSinCosSquare(const LocGridOrbitals& orbitals)
     {
         a[k].resize(n2, 0.);
     }
-    SinCosOps::computeSquare(orbitals, a);
+    SinCosOps<T>::computeSquare(orbitals, a);
     setSinCosData(a, n2);
 }
 
-void SpreadsAndCenters::computeSinCosSquare1D(
-    const LocGridOrbitals& orbitals, const int dir)
+template <class T>
+void SpreadsAndCenters<T>::computeSinCosSquare1D(
+    const T& orbitals, const int dir)
 {
     vector<vector<double>> a;
     a.resize(2);
@@ -441,12 +466,13 @@ void SpreadsAndCenters::computeSinCosSquare1D(
     {
         a[k].resize(n2, 0.);
     }
-    SinCosOps::computeSquare1D(orbitals, a, dir);
+    SinCosOps<T>::computeSquare1D(orbitals, a, dir);
     setSinCosData(a, n2);
 }
 
-void SpreadsAndCenters::computeSinCos2states(
-    const LocGridOrbitals& orbitals, const int st1, const int st2)
+template <class T>
+void SpreadsAndCenters<T>::computeSinCos2states(
+    const T& orbitals, const int st1, const int st2)
 {
     vector<vector<double>> a;
     a.resize(6);
@@ -456,12 +482,13 @@ void SpreadsAndCenters::computeSinCos2states(
     {
         a[k].resize(n2, 0.);
     }
-    SinCosOps::compute2states(orbitals, a, st1, st2);
+    SinCosOps<T>::compute2states(orbitals, a, st1, st2);
     setSinCosData(a, n2);
 }
 
-void SpreadsAndCenters::computeSinCosDiag2states(
-    const LocGridOrbitals& orbitals, const int st1, const int st2)
+template <class T>
+void SpreadsAndCenters<T>::computeSinCosDiag2states(
+    const T& orbitals, const int st1, const int st2)
 {
     vector<vector<double>> a;
     a.resize(6);
@@ -471,12 +498,13 @@ void SpreadsAndCenters::computeSinCosDiag2states(
         a[k].resize(2, 0.);
     }
 
-    SinCosOps::computeDiag2states(orbitals, a, st1, st2);
+    SinCosOps<T>::computeDiag2states(orbitals, a, st1, st2);
     setSinCosData(a, 2);
 }
 
-void SpreadsAndCenters::computeSinCos1D(
-    const LocGridOrbitals& orbitals, const int dir)
+template <class T>
+void SpreadsAndCenters<T>::computeSinCos1D(
+    const T& orbitals, const int dir)
 {
     vector<vector<double>> a;
     a.resize(2);
@@ -487,12 +515,13 @@ void SpreadsAndCenters::computeSinCos1D(
         a[k].resize(n2, 0.);
     }
 
-    SinCosOps::compute1D(orbitals, a, dir);
+    SinCosOps<T>::compute1D(orbitals, a, dir);
     setSinCosData(a, n2);
 }
 
-void SpreadsAndCenters::computeSinCos(
-    const LocGridOrbitals& orbitals1, const LocGridOrbitals& orbitals2)
+template <class T>
+void SpreadsAndCenters<T>::computeSinCos(
+    const T& orbitals1, const T& orbitals2)
 {
     vector<vector<double>> a;
     a.resize(6);
@@ -502,17 +531,21 @@ void SpreadsAndCenters::computeSinCos(
     {
         a[k].resize(n2, 0.);
     }
-    SinCosOps::compute(orbitals1, orbitals2, a);
+    SinCosOps<T>::compute(orbitals1, orbitals2, a);
     setSinCosData(a, n2);
 }
 
-void SpreadsAndCenters::computeSinCosDiag(
-    const LocGridOrbitals& orbitals, const bool normalized_functions)
+template <class T>
+void SpreadsAndCenters<T>::computeSinCosDiag(
+    const T& orbitals, const bool normalized_functions)
 {
     const int initTabSize = 4096;
     VariableSizeMatrix<sparserow> mat("SinCos", initTabSize);
 
-    SinCosOps::computeDiag(orbitals, mat, normalized_functions);
+    SinCosOps<T>::computeDiag(orbitals, mat, normalized_functions);
     setSinCosData(
         mat, orbitals.getAllOverlappingGids(), orbitals.getLocalGids());
 }
+
+template class SpreadsAndCenters<LocGridOrbitals>;
+template class SpreadsAndCenters<ExtendedGridOrbitals>;
