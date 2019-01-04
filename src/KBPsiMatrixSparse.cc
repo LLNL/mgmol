@@ -139,7 +139,7 @@ void KBPsiMatrixSparse::computeKBpsi(Ions& ions, T& orbitals,
     assert(first_color < 100000);
     assert(nb_colors > 0);
     assert(nb_colors < 100000);
-    assert(orbitals.getIterativeIndex() > 0);
+    assert(orbitals.getIterativeIndex() >= 0);
 
     compute_kbpsi_tm_.start();
 
