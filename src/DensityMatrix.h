@@ -99,6 +99,8 @@ public:
         occ_uptodate_ = false;
         uniform_occ_  = false;
         stripped_     = false;
+
+        orbitals_index_ = 0;
     }
     // double getSumOccupations()const;
     void getOccupations(std::vector<DISTMATDTYPE>& occ) const
