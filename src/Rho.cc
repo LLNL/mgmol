@@ -106,6 +106,7 @@ void Rho<T>::update(T& current_orbitals)
         *(current_orbitals.getProjMatrices()));
 
     assert(current_orbitals.getIterativeIndex() >= 0);
+    assert(proj_matrices.getDMMatrixIndex() >= 0);
 
     update_tm_.start();
 
@@ -135,6 +136,8 @@ void Rho<T>::update(T& current_orbitals)
     gatherSpin();
 
     rescaleTotalCharge();
+
+    assert(iterative_index_ >= 0);
 
     update_tm_.stop();
 }

@@ -859,6 +859,8 @@ bool LocalizationRegions::isLRcenterLocal(const LRData& lr) const
 
 void LocalizationRegions::setupLocalRegionsFromOverlapRegions()
 {
+    assert (overlap_regions_.size() > 0);
+
     setupLocalRegionsFromOverlapRegions_tm_.start();
 
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
@@ -866,9 +868,13 @@ void LocalizationRegions::setupLocalRegionsFromOverlapRegions()
     Control& ct = *(Control::instance());
 
     if (ct.verbose > 0)
+    {
         printWithTimeStamp(
             "LocalizationRegions::setupLocalRegionsFromOverlapRegions()...",
             (*MPIdata::sout));
+        //(*MPIdata::sout)<<"Number of overlap regions: "
+        //                <<overlap_regions_.size()<<endl;
+    }
 
     local_regions_.clear();
 

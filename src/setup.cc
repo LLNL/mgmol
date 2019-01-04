@@ -48,6 +48,11 @@ int MGmol<T>::setupFromInput(const string filename)
     ct.setTolEnergy();
     ct.setSpreadRadius();
 
+    // create localization regions
+    const pb::Grid& mygrid = mymesh->grid();
+    Vector3D vcell(mygrid.ll(0), mygrid.ll(1), mygrid.ll(2));
+    lrs_ = new LocalizationRegions(vcell, ct.tol_orb_centers_move);
+
     return 0;
 }
 
@@ -60,7 +65,7 @@ int MGmol<T>::setupLRsFromInput(const string filename)
     Control& ct            = *(Control::instance());
 
     ifstream* tfile = 0;
-    if (mmpi.instancePE0() && ct.restart_info < 3 && !filename.empty())
+    if (mmpi.instancePE0() && !filename.empty())
     {
         os_ << "Read LRs from file " << filename << endl;
         tfile = new ifstream(filename.data(), ios::in);
@@ -74,12 +79,8 @@ int MGmol<T>::setupLRsFromInput(const string filename)
             os_ << "Open " << filename << endl;
         }
     }
-    // create localization regions
-    Vector3D vcell(mygrid.ll(0), mygrid.ll(1), mygrid.ll(2));
 
-    lrs_ = new LocalizationRegions(vcell, ct.tol_orb_centers_move);
-
-    if (ct.restart_info < 3) readLRsFromInput(tfile);
+    readLRsFromInput(tfile);
 
     if (!(tfile == 0))
     {

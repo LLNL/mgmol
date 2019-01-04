@@ -534,7 +534,8 @@ int main(int argc, char** argv)
         Mesh::setup(mmpi.commSpin(), ngpts, origin, cell, ct.lap_type);
 
         mgmol->setupFromInput(input_file);
-        mgmol->setupLRsFromInput(lrs_filename);
+        if (ct.restart_info < 3 || !ct.isLocMode())
+            mgmol->setupLRsFromInput(lrs_filename);
         mgmol->setupConstraintsFromInput(constraints_filename);
 
         ct.checkNLrange();

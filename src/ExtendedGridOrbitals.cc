@@ -671,6 +671,8 @@ int ExtendedGridOrbitals::read_hdf5(HDFrestart& h5f_file)
         }
     }
 
+    resetIterativeIndex();
+
     return ierr;
 }
 
@@ -755,8 +757,6 @@ int ExtendedGridOrbitals::write_func_hdf5(HDFrestart& h5f_file, string name)
         // Write list of centers and radii
         // const int nst=pack_->nb_orb(color);
 
-        vector<double> centers_and_radii;
-
         vector<int> gids;
         gids.push_back(color);
 
@@ -827,6 +827,7 @@ int ExtendedGridOrbitals::write_func_hdf5(HDFrestart& h5f_file, string name)
     return 0;
 }
 
+//read all the data sets with names starting with "name"
 int ExtendedGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, string name)
 {
     assert(numst_ >= 0);
@@ -834,8 +835,6 @@ int ExtendedGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, string name)
 
     Control& ct     = *(Control::instance());
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-
-    static int mycolor = 0;
 
     hsize_t block[3]  = { grid_.dim(0), grid_.dim(1), grid_.dim(2) };
     hsize_t offset[3] = { 0, 0, 0 };
@@ -873,44 +872,28 @@ int ExtendedGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, string name)
         }
     }
 
-    vector<set<int>> filled; // set of functions already filled by data
-    filled.resize(subdivx_);
-    int dims[2] = { 0, 0 };
-
-    // get centers corresponding to dataset (stored function) from input file
-    multimap<string, Vector3D> centers_in_dataset;
-    int ncenters = h5f_file.getLRCenters(centers_in_dataset, numst_, name);
-    if (ncenters < 0) return ncenters;
-    assert (ncenters == 1);
-
-    SubCell sub_cell(grid_, subdivx_, 0);
     const short precision = ct.restart_info > 3 ? 2 : 1;
 
-    // read one color/dataset
-    multimap<string, Vector3D>::iterator itcenter = centers_in_dataset.begin();
-    while (itcenter != centers_in_dataset.end())
+    for (int icolor = 0; icolor < numst_; icolor++)
     {
-        vector<double> attr_data;
-        short attribute_length = 0;
+        const string datasetname(getDatasetName(name, icolor));
 
-        const string key(itcenter->first);
-
-        // checkif dataset exists...
-        int err_id = h5f_file.dset_exists(key);
+        // check if dataset exists...
+        int err_id = h5f_file.dset_exists(datasetname);
         if (h5f_file.gatherDataX()) mmpi.bcast(&err_id, 1);
         if (err_id == 0) break; // dataset does not exists
 
         if (onpe0 && ct.verbose > 2)
-            (*MPIdata::sout) << "Read Dataset " << key << " with precision "
-                             << precision << endl;
+            (*MPIdata::sout) << "Read Dataset " << datasetname
+                             << " with precision " << precision << endl;
 
         // Open dataset.
-        hid_t dset_id = h5f_file.open_dset(key);
+        hid_t dset_id = h5f_file.open_dset(datasetname);
         if (dset_id < 0)
         {
             (*MPIdata::serr)
-                << "ExtendedGridOrbitals::read_func_hdf5() --- cannot open " << key
-                << endl;
+                << "ExtendedGridOrbitals::read_func_hdf5() --- cannot open "
+                << datasetname << endl;
             return dset_id;
         }
 
@@ -923,50 +906,22 @@ int ExtendedGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, string name)
             return -1;
         }
 
-        if (h5f_file.active())
-        {
-            int natt = readListCentersAndRadii(dset_id, attr_data);
-            assert(natt == centers_in_dataset.count(key));
-
-            if (natt < 0) return -1;
-            dims[0]          = natt;
-            dims[1]          = dims[0] > 0 ? attr_data.size() / dims[0] : 0;
-            attribute_length = dims[1];
-        }
-
         status = h5f_file.close_dset(dset_id);
         if (status < 0)
         {
             return status;
         }
 
-        int intdims[2] = { dims[0], dims[1] };
-
-#ifdef USE_MPI
-        if (h5f_file.gatherDataX())
-        {
-            // Bcast size of data and data
-            mmpi.bcast(intdims, 2);
-            const int dim = intdims[0] * intdims[1];
-            assert(dim > 0);
-            assert(intdims[1] == 4);
-            if (!mmpi.instancePE0()) attr_data.resize(dim);
-            mmpi.bcast(&attr_data[0], dim);
-        }
-#endif
-
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
             {
                 const int shift = iloc * loc_numpt_;
                 block_vector_.assignLocal(
-                    mycolor, iloc, buffer + shift);
+                    icolor, iloc, buffer + shift);
             }
         }
 
-        itcenter++; // increment multimap
-     
-    } // end loop over centers_in_dataset
+    }
 
     delete[] buffer;
     resetIterativeIndex();
@@ -981,9 +936,7 @@ int ExtendedGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, string name)
         }
     }
 
-    mycolor++;
-
-    return centers_in_dataset.size();
+    return numst_;
 }
 
 // initialize matrix numst_ by ncolor (for columns first_color to

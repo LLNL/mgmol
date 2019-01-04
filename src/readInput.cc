@@ -31,15 +31,14 @@ using namespace std;
 template <class T>
 int MGmol<T>::readLRsFromInput(ifstream* tfile)
 {
-    assert(lrs_ != 0);
-
     Control& ct(*(Control::instance()));
+
+    assert(lrs_ != 0);
+    assert(ct.restart_info < 3 || !ct.isLocMode());
 
     if (ct.verbose > 0) printWithTimeStamp("readLRsFromInput", os_);
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-
-    if (ct.restart_info > 2) return 0;
 
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
@@ -77,8 +76,7 @@ int MGmol<T>::readLRsFromInput(ifstream* tfile)
                     if (tfile->fail())
                     {
                         os_ << "WARNING: Failed reading Localization center... "
-                               "Use atomic position for center "
-                            << i << endl;
+                            << endl;
                         flag = false;
                         break;
                     }
@@ -92,6 +90,10 @@ int MGmol<T>::readLRsFromInput(ifstream* tfile)
             // set center to ionic position if not read from input file
             if (!flag)
             {
+                if (ct.verbose > 1)
+                    os_ << "Use atomic position for center "
+                        << i << endl;
+
                 for (int k = 0; k < 3; k++)
                     crds[k] = (*ion)->position(k);
                 ion++;

@@ -189,7 +189,7 @@ public:
 
         clearOldCenters();
 
-        if (ct.restart_info <= 2)
+        if (ct.restart_info <= 2 || !ct.isLocMode())
         {
             // bcast data regions_ read from PE0
             bcastLRs();

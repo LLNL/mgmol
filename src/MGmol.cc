@@ -232,7 +232,7 @@ int MGmol<T>::initial()
             "MGmol<T>::initial(), create ProjectedMatrices...", os_);
 
     // If not an initial run read data from files
-    if (ct.restart_info > 2)
+    if (ct.restart_info > 2 && ct.isLocMode())
     {
         string name = "ExtrapolatedFunction";
         if (ct.verbose > 0)
