@@ -83,7 +83,6 @@ set(SOURCES  SubCell.cc
  Hamiltonian.cc 
  BlockVector.cc 
  KBPsiMatrixInterface.cc 
- KBPsiMatrix.cc 
  KBPsiMatrixSparse.cc 
  KBprojectorSparse.cc 
  MultipoleExpansion.cc 
@@ -101,6 +100,7 @@ set(SOURCES  SubCell.cc
  FunctionsPacking.cc 
  ColoredRegions.cc 
  LocGridOrbitals.cc 
+ ExtendedGridOrbitals.cc
  mcstep.cc 
  MD_IonicStepper.cc 
  LBFGS_IonicStepper.cc 
@@ -136,6 +136,7 @@ set(SOURCES  SubCell.cc
  LocalizationRegionsXLBOMD.cc
  AuxiliaryLocGridOrbitals.cc
  SubspaceAlignment.cc
+ xlbomd.cc
 )
 
 add_library(mgmol_src ${SOURCES})
