@@ -48,9 +48,11 @@ Comput. Phys. Comm., 162, (2004), pp. 24-36.
 Release
 -------
 
-Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+Copyright (c) 2018, Lawrence Livermore National Security, LLC
+and UT-Battelle, LLC.
 
-Produced at the Lawrence Livermore National Laboratory.
+Produced at the Lawrence Livermore National Laboratory and
+the Oak Ridge National Laboratory.
 
 All rights reserved.
 

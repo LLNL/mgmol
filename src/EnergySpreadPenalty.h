@@ -1,5 +1,7 @@
-// Copyright (c) 2017, Lawrence Livermore National Security, LLC. Produced at
-// the Lawrence Livermore National Laboratory.
+// Copyright (c) 2017, Lawrence Livermore National Security, LLC and
+// UT-Battelle, LLC.
+// Produced at the Lawrence Livermore National Laboratory and the Oak Ridge
+// National Laboratory.
 // Written by J.-L. Fattebert, D. Osei-Kuffuor and I.S. Dunn.
 // LLNL-CODE-743438
 // All rights reserved.
