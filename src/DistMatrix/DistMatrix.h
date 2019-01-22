@@ -501,8 +501,12 @@ public:
 
     void copyDataToVector(std::vector<T>& v) const
     {
-        assert((int)v.size() >= size_);
-        memcpy(&v[0], &val_[0], mloc_ * nloc_ * sizeof(T));
+        if (active_)
+        {
+            assert((int)v.size() >= size_);
+            assert(val_ != 0);
+            memcpy(&v[0], &val_[0], mloc_ * nloc_ * sizeof(T));
+        }
     }
     double dotColumns(const int i, const int j) const
     {
