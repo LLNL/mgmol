@@ -44,6 +44,10 @@ Fattebert, J.-L., and F. Gygi,
 "Linear scaling first-principles molecular dynamics with controlled accuracy",
 Comput. Phys. Comm., 162, (2004), pp. 24-36.
 
+Fattebert, J.-L., and J. Bernholc,
+"Towards grid-based O(N) density-functional theory methods:
+Optimized nonorthogonal orbitals and multigrid acceleration",
+Physical Review B 62 (3), (2000), p. 1713
 
 Release
 -------
