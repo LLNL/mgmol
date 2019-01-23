@@ -132,6 +132,7 @@ set(SOURCES  SubCell.cc
  DavidsonSolver.cc
  ChebyshevApproximation.cc
  ChebyshevApproximationSparse.cc
+ ChebyshevApproximationInterface.cc
  OrbitalsExtrapolationReversible.cc
  LocalizationRegionsXLBOMD.cc
  AuxiliaryLocGridOrbitals.cc
