@@ -1751,6 +1751,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         {
             str = vm["GeomOpt.type"].as<string>();
             if (str.compare("LBFGS") == 0) atoms_dyn_ = 6;
+            if (str.compare("FIRE") == 0) atoms_dyn_ = 7;
             dt = vm["GeomOpt.dt"].as<float>();
 
             num_MD_steps = vm["GeomOpt.max_steps"].as<short>();
