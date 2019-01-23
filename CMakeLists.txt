@@ -24,7 +24,7 @@ SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # Cmake build type
 if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE opt)
+  set(CMAKE_BUILD_TYPE Release)
   message(STATUS "No user specified build type, using default...")
 endif()
 message(STATUS "Build type is ${CMAKE_BUILD_TYPE}")
@@ -33,22 +33,24 @@ string(TOUPPER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE_UPPER)
 # set some default flag options
 # GNU
 set(GNU_CXX_FLAGS_DEBUG -O0 -g -Wuninitialized)
-set(GNU_CXX_FLAGS_OPT -g -DNDEBUG -O3)
+set(GNU_CXX_FLAGS_RELEASE -g -DNDEBUG -O3)
 # INTEL
 set(Intel_CXX_FLAGS_DEBUG -O0 -g)
-set(Intel_CXX_FLAGS_OPT -g -DNDEBUG -O3)
+set(Intel_CXX_FLAGS_RELEASE -O2 -DNDEBUG -Zp16 -g -Wunused-function -Wunused-variable -fp-model precise -fp-model source)
+#set(Intel_CXX_FLAGS_RELEASE -g -DNDEBUG -O3)
 # IBM
 set(XL_CXX_FLAGS_DEBUG -g -O0 -qsmp=omp:noopt -qcheck=all -qminimaltoc)
-set(XL_CXX_FLAGS_OPT -g -DNDEBUG -qstrict -qsmp=omp:auto -O3 -qinfo=cns:uni:ini:pro:ord -qminimaltoc)
+set(XL_CXX_FLAGS_RELEASE -g -DNDEBUG -qstrict -qsmp=omp:auto -O3 -qinfo=cns:uni:ini:pro:ord -qminimaltoc)
 # Clang
 set(DEFAULT_CXX_FLAGS_DEBUG -g -O0)
-set(DEFAULT_CXX_FLAGS_OPT -g -DNDEBUG -O3)
+set(DEFAULT_CXX_FLAGS_RELEASE -g -DNDEBUG -O3)
 # default
 set(DEFAULT_CXX_FLAGS_DEBUG -g -O0)
-set(DEFAULT_CXX_FLAGS_OPT -g -DNDEBUG -O3)
+set(DEFAULT_CXX_FLAGS_RELEASE -g -DNDEBUG -O3)
 
 if(CMAKE_BUILD_TYPE_UPPER)
-  if(CMAKE_BUILD_TYPE_UPPER STREQUAL "DEBUG")
+  if(CMAKE_BUILD_TYPE_UPPER STREQUAL "DEBUG" 
+    OR CMAKE_BUILD_TYPE_UPPER STREQUAL "RELEASE")
     if(CMAKE_C_FLAGS STREQUAL "")
       if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU"
           OR CMAKE_CXX_COMPILER_ID STREQUAL "Intel"
@@ -154,7 +156,7 @@ endif(NOT LAPACK_LIBRARIES)
 
 # Scalapack (required)
 set (MGMOL_WITH_SCALAPACK True CACHE BOOL "Build with SCALAPACK")
-if (${MGMOL_WITH_SCALAPACK} OR DEFINED SCALAPACK_DIR)
+if (${MGMOL_WITH_SCALAPACK} OR DEFINED SCALAPACK_ROOT)
   find_package(SCALAPACK)
   if(${SCALAPACK_FOUND})
     add_definitions(-DSCALAPACK)
@@ -164,27 +166,27 @@ if (${MGMOL_WITH_SCALAPACK} OR DEFINED SCALAPACK_DIR)
   else(${SCALAPACK_FOUND})
     message(FATAL_ERROR "Required SCALAPACK package not found. Please specify correct path to SCALAPACK root directory.")
   endif(${SCALAPACK_FOUND})  
-endif(${MGMOL_WITH_SCALAPACK} OR DEFINED SCALAPACK_DIR)
+endif(${MGMOL_WITH_SCALAPACK} OR DEFINED SCALAPACK_ROOT)
 
 # ARPACK (optional)
 set(MGMOL_WITH_ARPACK FALSE CACHE BOOL "Compile with ARPACK package")
-if(${MGMOL_WITH_ARPACK} OR DEFINED ARPACK_DIR)
+if(${MGMOL_WITH_ARPACK} OR DEFINED ARPACK_ROOT)
   find_package(ARPACK)
   if(${ARPACK_FOUND})
     message(STATUS "Build with ARPACK package")
     add_definitions(-DHAVE_ARPACK)
   endif(${ARPACK_FOUND})
-endif(${MGMOL_WITH_ARPACK} OR DEFINED ARPACK_DIR)
+endif(${MGMOL_WITH_ARPACK} OR DEFINED ARPACK_ROOT)
 
 # tricubic (optional)
 set(MGMOL_WITH_TRICUBIC FALSE CACHE BOOL "Compile with tricubic package")
-if(${MGMOL_WITH_TRICUBIC} OR DEFINED TRICUBIC_DIR)
+if(${MGMOL_WITH_TRICUBIC} OR DEFINED TRICUBIC_ROOT)
   find_package(TRICUBIC)
   if(${TRICUBIC_FOUND})
     message(STATUS "Build with tricubic package")
     add_definitions(-DHAVE_TRICUBIC)
   endif(${TRICUBIC_FOUND})
-endif(${MGMOL_WITH_TRICUBIC} OR DEFINED TRICUBIC_DIR)
+endif(${MGMOL_WITH_TRICUBIC} OR DEFINED TRICUBIC_ROOT)
 
 # add include directories
 include_directories("${PROJECT_SOURCE_DIR}/src/DistMatrix")

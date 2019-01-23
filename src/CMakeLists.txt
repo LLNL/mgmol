@@ -141,44 +141,33 @@ set(SOURCES  SubCell.cc
 add_library(mgmol_src ${SOURCES})
 
 if(${HDF5_FOUND})
-  target_include_directories(mgmol_src PUBLIC ${HDF5_INCLUDE_DIRS})
-  target_link_libraries(mgmol_src ${HDF5_LIBRARIES})
+  target_include_directories(mgmol_src PRIVATE ${HDF5_INCLUDE_DIRS})
+
+
 endif(${HDF5_FOUND})
 
 if(${Boost_FOUND})
-  target_include_directories(mgmol_src PUBLIC ${Boost_INCLUDE_DIRS})
-  target_link_libraries(mgmol_src ${Boost_LIBRARIES})
+  target_include_directories(mgmol_src PRIVATE ${Boost_INCLUDE_DIRS})
 endif(${Boost_FOUND})
 
-if(${BLAS_FOUND})
-  target_link_libraries(mgmol_src ${BLAS_LIBRARIES})
-  target_link_libraries(mgmol_src ${LAPACK_LIBRARIES})
-endif(${BLAS_FOUND})
-
-target_include_directories (mgmol_src PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories (mgmol_src PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(mgmol_src ${link_libs})
 
 # compile definitions
-target_compile_definitions (mgmol_src PRIVATE -D__MGMOL_DAVIDSON__)
-target_compile_definitions (mgmol_src PRIVATE -D__MGMOL_CHEBYSHEV__)
-target_compile_definitions (mgmol_src PRIVATE -D__MGMOL_XLBOMD__)
-target_compile_definitions (mgmol_src PRIVATE -DHAVE_BOOST)
-target_compile_definitions (mgmol_src PRIVATE -DADD_)
-target_compile_definitions (mgmol_src PRIVATE -DUSE_CNR_)
-target_compile_definitions (mgmol_src PRIVATE -DUSE_MPI)
-# compile options
-#target_compile_options (mgmol_src PRIVATE -Wl --no_undefined)
+target_compile_definitions (mgmol_src PUBLIC -DADD_)
+target_compile_definitions (mgmol_src PUBLIC -DUSE_CNR_)
+target_compile_definitions (mgmol_src PUBLIC -DUSE_MPI)
 
-#target_include_directories (mgmol_src PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/DistMatrix)
-
-#target_include_directories(mgmol_src PUBLIC DistMatrix)
-#add_dependencies(mgmol_src mgmol_distmatrix)
 install(TARGETS mgmol_src DESTINATION lib)
 
-   
-
+# build executable
 add_executable(mgmol-opt main.cc)
 target_link_libraries(mgmol-opt mgmol_src ${link_libs}) 
+target_link_libraries(mgmol-opt ${SCALAPACK_LIBRARIES})
+target_link_libraries(mgmol-opt ${HDF5_LIBRARIES})
+target_link_libraries(mgmol-opt ${BLAS_LIBRARIES})
+target_link_libraries(mgmol-opt ${LAPACK_LIBRARIES})
+target_link_libraries(mgmol-opt ${Boost_LIBRARIES})
 
 install(TARGETS mgmol-opt DESTINATION bin)
 

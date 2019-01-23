@@ -12,6 +12,6 @@ set(SOURCES mgmol_mpi_tools.cc
        SymmetricMatrix.cc
 )
 
-add_library(mgmol_tools ${SOURCES})
+add_library(mgmol_tools STATIC ${SOURCES})
 target_compile_definitions (mgmol_tools PRIVATE -DUSE_MPI_)
 install(TARGETS mgmol_tools DESTINATION lib)
