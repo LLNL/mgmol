@@ -52,7 +52,7 @@ CBLACSLIB     = $(BLACSCINIT) $(BLACSLIB) $(BLACSCINIT)
 # Scalapack libraries
 SCALAPACKLIB  = $(SCALAPACK_DIR)/libscalapack.a
 
-LD_LIBRARY_PATH = -L$(BLASDIR)/lib
+MGMOL_LD_LIBRARY_PATH = -L$(BLASDIR)/lib
 
 LAPACKLIB   = /usr/local/tools/lapack/lib/liblapack.a -lesslsmpbg
 #LAPACKLIB   = /usr/local/tools/lapack/lib/liblapack.a -lesslbg

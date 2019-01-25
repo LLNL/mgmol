@@ -70,7 +70,7 @@ ARPACK_LIB=
 SCALAPACKLIB  = $(MKLROOT)/lib/intel64/libmkl_scalapack_lp64.a \
                 $(MKLROOT)/lib/intel64/libmkl_blacs_intelmpi_lp64.a 
 
-LD_LIBRARY_PATH = -L$(BLASLIBDIR) -Wl,-rpath,$(BLASLIBDIR)
+MGMOL_LD_LIBRARY_PATH = -L$(BLASLIBDIR) -Wl,-rpath,$(BLASLIBDIR)
 
 #mixed precision lib
 MPBLASLIB =

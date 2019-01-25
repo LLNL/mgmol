@@ -39,7 +39,7 @@ MPI_LIB =
 
 HDF_LIB = -L$(HDF_DIR)/lib -lhdf5 -lhdf5_cpp -lhdf5_hl
 
-LD_LIBRARY_PATH = -L$(BOOST_DIR)/lib -L$(BLASLIBDIR) -Wl,-rpath,$(BLASLIBDIR) \
+MGMOL_LD_LIBRARY_PATH = -L$(BOOST_DIR)/lib -L$(BLASLIBDIR) -Wl,-rpath,$(BLASLIBDIR) \
                   -L$(OLCF_NETLIB_LAPACK_ROOT)/lib64 -Wl,-rpath,$(OLCF_NETLIB_LAPACK_ROOT)/lib64 \
                   -L$(SCALAPACK_DIR)/lib -Wl,-rpath,$(SCALAPACK_DIR)/lib
 
