@@ -1605,10 +1605,14 @@ void SparseDistMatrix<double>::parallelSumToDistMatrix2()
             for (int pe = 0; pe < ntasks_mat_; pe++)
             {
                 remote_data_size += remote_data_desc[pe];
-                if (remote_data_size > 250000) // 2MB
-                    cout << "mype_=" << mype_ << ", pe=" << pe
+                static bool first_time = true;
+                if (remote_data_size > 250000 && first_time) // 2MB
+                {
+                    cout << "WARNING: mype_=" << mype_ << ", pe=" << pe
                          << ", remote_data_desc[pe]=" << remote_data_desc[pe]
                          << ", remote_data_size=" << remote_data_size << endl;
+                    first_time = false;
+                }
             }
             if (remote_data_size > 0)
             {
