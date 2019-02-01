@@ -434,6 +434,10 @@ public:
     {
         return pack_->getColor(gid);
     }
+    void augmentLocalData(VariableSizeMatrix<sparserow>& mat)const
+    {
+        distributor_normalize_->augmentLocalData(mat, true);
+    }
 };
 
 #endif

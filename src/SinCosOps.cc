@@ -26,7 +26,7 @@ void SinCosOps<T>::compute(
     compute_tm_.start();
 
     const pb::Grid& grid(orbitals.grid_);
-    const int numst = orbitals.numst_;
+    const int numst = orbitals.numst();
 
     const int dim0 = grid.dim(0);
     const int dim1 = grid.dim(1);
@@ -750,7 +750,7 @@ void SinCosOps<T>::computeDiag(const T& orbitals,
 
     // initialize sparse ordering of rows to match local overlap regions
     // This is necessary for computing correct moves in moveTo()
-    mat.setupSparseRows(orbitals.all_overlapping_gids_);
+    mat.setupSparseRows(orbitals.getAllOverlappingGids());
 
     const int size = orbitals.chromatic_number();
 
@@ -793,7 +793,7 @@ void SinCosOps<T>::computeDiag(const T& orbitals,
     /* scale data */
     mat.scale(grid.vel());
     /* gather data */
-    orbitals.distributor_normalize_->augmentLocalData(mat, true);
+    orbitals.augmentLocalData(mat);
 
     compute_tm_.stop();
 }

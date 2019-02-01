@@ -76,11 +76,11 @@ private:
 
     static int data_wghosts_index_;
 
+    static int numst_;
+
     ////////////////////////////////////////////////////////
     // common data shared by copies of object (and copied whan a copy is made)
     ////////////////////////////////////////////////////////
-
-    int numst_;
 
     // pointers to objects owned outside class
     ProjectedMatricesInterface* proj_matrices_;
@@ -147,8 +147,7 @@ private:
     void setup(LocalizationRegions* lrs);
 
     /* Data distribution objects */
-    std::shared_ptr<DataDistribution> distributor_diagdotprod_;
-    std::shared_ptr<DataDistribution> distributor_normalize_;
+    std::shared_ptr<DataDistribution> distributor_;
 
 protected:
     const pb::Grid& grid_;
@@ -157,13 +156,8 @@ protected:
 
     static short subdivx_;
 
-    unsigned int lrs_iterative_index_;
-
     // indexes corresponding to valid function in each subdomain
     std::vector<std::vector<int>> overlapping_gids_;
-
-    // indexes of all global functions overlapping with subdomain/task
-    std::vector<int> all_overlapping_gids_;
 
     // indexes of all global functions centered within subdomain/task
     std::vector<int> local_gids_;
@@ -177,7 +171,7 @@ public:
 
     const std::vector<int>& getAllOverlappingGids() const
     {
-        return all_overlapping_gids_;
+        return overlapping_gids_[0];
     }
     const std::vector<int>& getLocalGids() const { return local_gids_; }
 
@@ -411,6 +405,10 @@ public:
     int getColor(const int gid)const
     {
         return gid;
+    }
+    void augmentLocalData(VariableSizeMatrix<sparserow>& mat)const
+    {
+        distributor_->augmentLocalData(mat, true);
     }
 };
 
