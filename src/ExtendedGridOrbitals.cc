@@ -1117,7 +1117,7 @@ void ExtendedGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
 
 #ifdef USE_MP
     // use temporary float data for matrix ss
-    LocalMatrices<ORBDTYPE> ssf(ss.subdiv(), ss.m());
+    LocalMatrices<ORBDTYPE> ssf(ss.subdiv(), ss.m(), ss.n());
 #else
     LocalMatrices<ORBDTYPE>& ssf(ss);
 #endif

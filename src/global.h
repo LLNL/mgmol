@@ -8,8 +8,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef __global_h__
-#define __global_h__
+#ifndef MGMOL_GLOBAL_H
+#define MGMOL_GLOBAL_H
 
 // this file should be included in every MGmol file
 // to enable global definitions, macros, ...
