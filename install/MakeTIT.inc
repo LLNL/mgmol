@@ -3,18 +3,24 @@
 #module load cray-hdf5-parallel
 #module load cray-libsci
 #module load boost/1.62.0
+#module load scorep
 
 #platform
 PLAT = titan
 
-MPCC    = CC
-CXX     = CC
+#PREF = scorep
 
-OPT_FLAGS = -O2 -DNDEBUG -g
+MPCC    = $(PREF) CC
+CXX     = $(PREF) CC
+
+OPT_FLAGS = -O2 -DNDEBUG -g -fopenmp
+
 BLASDIR = $(CRAY_LIBSCI_BASE_DIR)/intel/15.0/x86_64
 HDF_DIR = $(HDF5_DIR)
 LAPACKLIB  = -lsci_gnu_mp
-COMMONLIBS = -lboost_program_options -openmp
+
+COMMONLIBS = -lboost_program_options -fopenmp
+
 CNAME = icpc
 
 NAT_COMPLIB = 
