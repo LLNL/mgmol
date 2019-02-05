@@ -15,11 +15,6 @@
 #include <iostream>
 using namespace std;
 
-Timer jag_sgemm_tm("jag_sgemm");
-
-// overrige call to jag_sgemm with sgemm
-#define jag_sgemm sgemm
-#define jag_sgemm_tm sgemm_tm
 
 Timer dgemm_tm("dgemm");
 Timer sgemm_tm("sgemm");
@@ -34,34 +29,7 @@ Timer tttsyrk_tm("tttsyrk");
 Timer mpdot_tm("mpdot");
 Timer ttdot_tm("ttdot");
 
-///*
-#ifdef BGQ
 
-#ifdef USE_MP
-
-// use John Gunnels code
-extern "C"
-{
-    void jag_sgemm(Pchar, Pchar, Pint, Pint, Pint, Pfloat, Pfloat, Pint, Pfloat,
-        Pint, Pfloat, float* const, Pint);
-}
-
-#define JAGSGEMM 1
-
-#else
-
-#define JAGSGEMM 0
-
-#endif
-
-#else // non-BGQ platforms
-
-#define JAGSGEMM 0
-//#define JAGSGEMM 1
-//#define jag_sgemm sgemm
-
-#endif
-//*/
 
 /* Function definitions. See mputils.h for comments */
 
@@ -323,27 +291,6 @@ void MPsyrk(const char uplo, const char trans, const int n, const int k,
     mpsyrk_tm.stop();
 }
 
-void Tgemm(const char transa, const char transb, const int m, const int n,
-    const int k, const double alpha, const double* const a, const int lda,
-    const double* const b, const int ldb, const double beta, double* const c,
-    const int ldc)
-{
-    dgemm_tm.start();
-    dgemm(
-        &transa, &transb, &m, &n, &k, &alpha, a, &lda, b, &ldb, &beta, c, &ldc);
-    dgemm_tm.start();
-}
-void Tgemm(const char transa, const char transb, const int m, const int n,
-    const int k, const float alpha, const float* const a, const int lda,
-    const float* const b, const int ldb, const float beta, float* const c,
-    const int ldc)
-{
-    sgemm_tm.start();
-    sgemm(
-        &transa, &transb, &m, &n, &k, &alpha, a, &lda, b, &ldb, &beta, c, &ldc);
-    sgemm_tm.stop();
-}
-
 void MPgemm(const char transa, const char transb, const int m, const int n,
     const int k, const double alpha, const double* const a, const int lda,
     const double* const b, const int ldb, const double beta, double* const c,
@@ -365,24 +312,7 @@ void MPgemmNN(const int m, const int n, const int k, const double alpha,
     char transa = 'n';
     char transb = 'n';
 
-#if JAGSGEMM
-    jag_sgemm_tm.start();
-
-    float falpha  = (float)alpha;
-    float fbeta   = (float)beta;
-    const int nbf = ldb * n;
-    float* bf     = new float[nbf];
-    for (int i = 0; i < nbf; i++)
-        bf[i] = (float)b[i];
-
-    jag_sgemm(&transa, &transb, &m, &n, &k, &falpha, a, &lda, bf, &ldb, &fbeta,
-        c, &ldc);
-    delete[] bf;
-
-    jag_sgemm_tm.stop();
-#else
     MPgemm(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
-#endif
 }
 
 // input in float, computation in double
@@ -393,24 +323,7 @@ void MPgemmTN(const int m, const int n, const int k, const double alpha,
     char transa = 't';
     char transb = 'n';
 
-#if JAGSGEMM
-    jag_sgemm_tm.start();
-
-    float falpha  = (float)alpha;
-    float fbeta   = (float)beta;
-    const int ncf = ldc * n;
-    float* cf     = new float[ncf];
-
-    jag_sgemm(&transa, &transb, &m, &n, &k, &falpha, a, &lda, b, &ldb, &fbeta,
-        cf, &ldc);
-    for (int i = 0; i < ncf; i++)
-        c[i] = (double)cf[i];
-    delete[] cf;
-
-    jag_sgemm_tm.stop();
-#else
     MPgemm(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
-#endif
 }
 
 // input in float, computation in double
@@ -421,19 +334,7 @@ void MPgemmTN(const int m, const int n, const int k, const double alpha,
     char transa = 't';
     char transb = 'n';
 
-#if JAGSGEMM
-    jag_sgemm_tm.start();
-
-    float falpha = (float)alpha;
-    float fbeta  = (float)beta;
-
-    jag_sgemm(&transa, &transb, &m, &n, &k, &falpha, a, &lda, b, &ldb, &fbeta,
-        c, &ldc);
-
-    jag_sgemm_tm.stop();
-#else
     MPgemm(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
-#endif
 }
 
 // input/output in float, computation in double
@@ -442,17 +343,6 @@ void MPgemm(const char transa, const char transb, const int m, const int n,
     const float* const b, const int ldb, const double beta, float* const c,
     const int ldc)
 {
-#if JAGSGEMM
-    jag_sgemm_tm.start();
-
-    float falpha = (float)alpha;
-    float fbeta  = (float)beta;
-
-    jag_sgemm(&transa, &transb, &m, &n, &k, &falpha, a, &lda, b, &ldb, &fbeta,
-        c, &ldc);
-
-    jag_sgemm_tm.stop();
-#else
     mpgemm_tm.start();
 
     if (beta == 1. && (alpha == 0. || m == 0 || n == 0 || k == 0)) return;
@@ -544,7 +434,6 @@ void MPgemm(const char transa, const char transb, const int m, const int n,
     }
 
     mpgemm_tm.stop();
-#endif
 }
 
 /////// additional calls ... may be removed later if unused

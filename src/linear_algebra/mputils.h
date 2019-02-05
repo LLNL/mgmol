@@ -8,8 +8,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef MPUTILS_H
-#define MPUTILS_H
+#ifndef MGMOL_MPUTILS_H
+#define MGMOL_MPUTILS_H
 
 #include "MGmol_blas1.h"
 #include "blas3_c.h"
@@ -103,19 +103,6 @@ template <typename T1, typename T2>
 void MPsyrk(const char uplo, const char trans, const int n, const int k,
     const double alpha, const T1* const a, const int lda, const double beta,
     T2* c, const int ldc);
-
-/* gemm */
-/* Generalized matrix-matrix multiplication: C = alpha * A*B + beta*C.
- * Calls blas sgemm or dgemm depending on arguments.
- */
-void Tgemm(const char transa, const char transb, const int m, const int n,
-    const int k, const double alpha, const double* const a, const int lda,
-    const double* const b, const int ldb, const double beta, double* const c,
-    const int ldc);
-void Tgemm(const char transa, const char transb, const int m, const int n,
-    const int k, const float alpha, const float* const a, const int lda,
-    const float* const b, const int ldb, const float beta, float* const c,
-    const int ldc);
 
 /* Mixed precision gemm */
 void MPgemm(const char transa, const char transb, const int m, const int n,
