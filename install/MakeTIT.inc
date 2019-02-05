@@ -13,7 +13,7 @@ PLAT = titan
 MPCC    = $(PREF) CC
 CXX     = $(PREF) CC
 
-OPT_FLAGS = -O2 -DNDEBUG -g -fopenmp
+OPT_FLAGS = -O2 -DNDEBUG -g -fopenmp -ftree-vectorize
 
 BLASDIR = $(CRAY_LIBSCI_BASE_DIR)/intel/15.0/x86_64
 HDF_DIR = $(HDF5_DIR)
