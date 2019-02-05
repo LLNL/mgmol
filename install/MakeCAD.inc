@@ -1,9 +1,8 @@
 #Load following modules:
 #module load PE-intel/3.0
-#module load hdf5-parallel/1.8.21
+#module load hdf5_parallel/1.8.21
 #module load boost/1.67.0-pe3
 #module load mkl
-
 
 #platform
 PLAT = cades
@@ -27,12 +26,12 @@ FFLAGS= -O -DNDEBUG
 
 MACHINE_FLAGS = -DADD_
 
-INCLUDE = $(HDF5_INC) \
+INCLUDE = -I $(HDF5_PARALLEL_DIR)/include \
 	-I$(BOOST_DIR)/include
           
 MPI_LIB =
 
-HDF_LIB = $(HDF5_LIB) -lhdf5 -lhdf5_hl
+HDF_LIB = -L $(HDF5_PARALLEL_DIR)/lib -lhdf5 -lhdf5_hl
 SCALAPACKLIB = -lmkl_scalapack_lp64 -lmkl_blacs_openmpi_lp64
 
 MGMOL_LD_LIBRARY_PATH = 
