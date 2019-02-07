@@ -37,8 +37,8 @@ Rho<T>::Rho()
     nspin_          = mmpi.nspin();
 
     // default values for block sizes
-    block_functions_ = 4;
-    block_space_     = 128;
+    block_functions_ = 8;
+    block_space_     = 256;
 
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();

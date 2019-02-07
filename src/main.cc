@@ -551,7 +551,7 @@ int main(int argc, char** argv)
         {
             MatricesBlacsContext::instance().setup(mmpi.commSpin(), ct.numst);
 
-            dist_matrix::DistMatrix<DISTMATDTYPE>::setBlockSize(32);
+            dist_matrix::DistMatrix<DISTMATDTYPE>::setBlockSize(64);
 
             dist_matrix::DistMatrix<DISTMATDTYPE>::setDefaultBlacsContext(
                 MatricesBlacsContext::instance().bcxt());
