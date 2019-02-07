@@ -37,12 +37,12 @@ class LocalMatrices
     static short sparse_distmatrix_nb_tasks_per_partitions_;
 
     T* storage_;
-    const int n_;
     int storage_size_;
     std::vector<T*> ptr_matrices_;
 
 protected:
     const int m_;
+    const int n_;
     const short subdiv_;
 
 public:

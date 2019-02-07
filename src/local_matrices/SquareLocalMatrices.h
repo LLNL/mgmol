@@ -8,9 +8,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
-#ifndef SQUARELOCALMATRICES_H
-#define SQUARELOCALMATRICES_H
+#ifndef MGMOL_SQUARELOCALMATRICES_H
+#define MGMOL_SQUARELOCALMATRICES_H
 
 #include "LocalMatrices.h"
 
@@ -23,6 +22,11 @@ public:
     void fillUpperWithLower();
     void setDiagonal2Zero();
     void transpose();
+
+    /*!
+     * set elements to 0 for rows/cols with gids equal to -1
+     */
+    void applySymmetricMask(const std::vector<std::vector<int>>& gids);
 };
 
 #endif

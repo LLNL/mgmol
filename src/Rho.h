@@ -47,6 +47,7 @@ class Rho
 
     static Timer update_tm_;
     static Timer compute_tm_;
+    static Timer compute_blas_tm_;
 
     double computeTotalCharge();
     void computeRhoSubdomain(const int iloc_init, const int iloc_end,
@@ -57,6 +58,8 @@ class Rho
         const int iloc_end,
         const std::vector<const T*>& vorbitals,
         const ProjectedMatricesInterface* const);
+    void computeRhoSubdomainUsingBlas3(
+        const int iloc_init, const int iloc_end, const T& orbitals);
 
     void accumulateCharge(const double alpha, const short ix_max,
         const ORBDTYPE* const psii, const ORBDTYPE* const psij,

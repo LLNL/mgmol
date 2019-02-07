@@ -25,6 +25,8 @@ template <class T>
 Timer Rho<T>::update_tm_("Rho::update");
 template <class T>
 Timer Rho<T>::compute_tm_("Rho::compute");
+template <class T>
+Timer Rho<T>::compute_blas_tm_("Rho::compute_usingBlas");
 
 template <class T>
 Rho<T>::Rho()
@@ -609,7 +611,15 @@ void Rho<T>::computeRho(
 #else
         dm_ = proj_matrices.dm();
 #endif
-        computeRhoSubdomain(0, subdivx, orbitals);
+        if( dynamic_cast<LocGridOrbitals*>(&orbitals) )
+        {
+            SquareLocalMatrices<MATDTYPE>& localX((orbitals.projMatrices())->getLocalX());
+
+            //if (verbosity_level_ > 1 && onpe0)
+            //    (*MPIdata::sout) << "Mask DM..." << endl;
+            localX.applySymmetricMask(orbitals_indexes_);
+        }
+        computeRhoSubdomainUsingBlas3(0, subdivx, orbitals);
     }
 }
 
@@ -661,6 +671,56 @@ void Rho<T>::computeRho(T& orbitals1, T& orbitals2,
     dm_ = dm;
 #endif
     computeRhoSubdomainOffDiagBlock(0, subdivx, vorbitals, projmatrices1);
+}
+
+template <class T>
+void Rho<T>::computeRhoSubdomainUsingBlas3(
+    const int iloc_init, const int iloc_end, const T& orbitals)
+{
+    compute_blas_tm_.start();
+
+    Mesh* mymesh    = Mesh::instance();
+    const int nrows = mymesh->locNumpt();
+
+    RHODTYPE* const prho = &rho_[myspin_][0];
+
+    SquareLocalMatrices<MATDTYPE>& localX((orbitals.projMatrices())->getLocalX());
+
+    const int ld = orbitals.getLda();
+    const int ncols = orbitals.chromatic_number();
+    ORBDTYPE* product = new ORBDTYPE[nrows * ncols];
+
+    for (int iloc = iloc_init; iloc < iloc_end; iloc++)
+    {
+        const int istart = iloc * nrows;
+
+        RHODTYPE* const lrho = &prho[istart];
+
+        const MATDTYPE* const mat = localX.getSubMatrix(iloc);
+        ORBDTYPE* phi             = orbitals.getPsi(0, iloc);
+
+        // O(N^3) part
+        MPgemmNN(nrows, ncols, ncols, 1., phi,
+                 ld, mat, ncols, 0., product, nrows);
+
+        // O(N^2) part
+        for(int j=0; j<ncols; j++)
+        {
+            int index1 = j*nrows;
+            int index2 = j*ld;
+            for(int i=0; i<nrows; i++)
+            {
+                lrho[i] += product[index1]*phi[index2];
+                index1++;
+                index2++;
+            }
+        }
+
+    }
+
+    delete[] product;
+
+    compute_blas_tm_.stop();
 }
 
 template <class T>
@@ -773,6 +833,7 @@ void Rho<T>::printTimers(std::ostream& os)
 {
     update_tm_.print(os);
     compute_tm_.print(os);
+    compute_blas_tm_.print(os);
 }
 
 template class Rho<LocGridOrbitals>;

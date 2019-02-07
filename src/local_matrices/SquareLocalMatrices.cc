@@ -72,5 +72,32 @@ void SquareLocalMatrices<T>::transpose()
     }
 }
 
+//set matrix elements to zero in rows/columns
+//not associated with any orbital
+template <class T>
+void SquareLocalMatrices<T>::applySymmetricMask(const vector< vector<int>>& gids)
+{
+    const int m = LocalMatrices<T>::m_;
+    const int n = LocalMatrices<T>::n_;
+
+    for (short iloc = 0; iloc < LocalMatrices<T>::subdiv_; iloc++)
+    {
+        T* mat = LocalMatrices<T>::getSubMatrix(iloc);
+        const vector<int>& loc_gids(gids[iloc]);
+
+        for (int j = 0; j < n; j++)
+        {
+            const bool jvalid = (loc_gids[j] != -1);
+            const int offset = j*m;
+
+            for (int i = 0; i < m; i++)
+            {
+                const bool ivalid = (loc_gids[i] != -1);
+                if ( !(ivalid && jvalid) )mat[offset + i] = 0.;
+            }
+        }
+    }
+}
+
 template class SquareLocalMatrices<double>;
 template class SquareLocalMatrices<float>;
