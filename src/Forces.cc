@@ -537,7 +537,7 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
     }
     else
     {
-        ReplicatedWorkSpace& wspace(ReplicatedWorkSpace::instance());
+        ReplicatedWorkSpace<DISTMATDTYPE>& wspace(ReplicatedWorkSpace<DISTMATDTYPE>::instance());
         const int ndim               = wspace.getDim();
         DISTMATDTYPE* work_DM_matrix = wspace.square_matrix();
 

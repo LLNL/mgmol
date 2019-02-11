@@ -8,9 +8,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
-#ifndef REPLICATED_WORKSPACE_H
-#define REPLICATED_WORKSPACE_H
+#ifndef MGMOL_REPLICATED_WORKSPACE_H
+#define MGMOL_REPLICATED_WORKSPACE_H
 
 #include "DistMatrix.h"
 #include "Timer.h"
@@ -21,12 +20,14 @@
 
 // see S. Meyers, "More Effective C++", Item 26
 // (limiting the number of objects of a class)
+
+template <class T>
 class ReplicatedWorkSpace
 {
-    DISTMATDTYPE* square_matrix_;
+    T* square_matrix_;
     int ndim_;
 
-    DISTMATDTYPE work_double[MAX_SIZE];
+    T work_double[MAX_SIZE];
 
     static Timer mpisum_tm_;
 
@@ -47,10 +48,10 @@ public:
     void setup(const int ndim)
     {
         ndim_          = ndim;
-        square_matrix_ = new DISTMATDTYPE[ndim_ * ndim_];
+        square_matrix_ = new T[ndim_ * ndim_];
     }
 
-    DISTMATDTYPE* square_matrix()
+    T* square_matrix()
     {
         assert(square_matrix_ != 0);
         return square_matrix_;
@@ -59,14 +60,14 @@ public:
     void resetmem()
     {
         assert(square_matrix_ != 0);
-        memset(square_matrix_, 0, ndim_ * ndim_ * sizeof(DISTMATDTYPE));
+        memset(square_matrix_, 0, ndim_ * ndim_ * sizeof(T));
     }
 
     void mpiBcastSquareMatrix();
 
     void setUpperTriangularSquareMatrixToZero();
 
-    void initSquareMatrix(const dist_matrix::DistMatrix<DISTMATDTYPE>& distmat)
+    void initSquareMatrix(const dist_matrix::DistMatrix<T>& distmat)
     {
         distmat.matgather(square_matrix_, ndim_);
     }

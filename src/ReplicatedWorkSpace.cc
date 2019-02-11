@@ -8,41 +8,39 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #include "ReplicatedWorkSpace.h"
+
+#include "MGmol_blas1.h"
+#include "MGmol_MPI.h"
 
 #ifdef USE_MPI
 #include <mpi.h>
 #endif
 
-// pb
-#include "MGmol_blas1.h"
-#include "mputils.h"
-
-#include "Control.h"
-#include "MGmol_MPI.h"
-
-Timer ReplicatedWorkSpace::mpisum_tm_("ReplicatedWorkSpace::mpisum");
+template <class T>
+Timer ReplicatedWorkSpace<T>::mpisum_tm_("ReplicatedWorkSpace::mpisum");
 
 // allows zero or one object
-ReplicatedWorkSpace& ReplicatedWorkSpace::instance()
+template <class T>
+ReplicatedWorkSpace<T>& ReplicatedWorkSpace<T>::instance()
 {
-    static ReplicatedWorkSpace instance;
+    static ReplicatedWorkSpace<T> instance;
     return instance;
 }
 
-void ReplicatedWorkSpace::mpiBcastSquareMatrix()
+template <class T>
+void ReplicatedWorkSpace<T>::mpiBcastSquareMatrix()
 {
 #ifdef USE_MPI
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     int n2          = ndim_ * ndim_;
     mmpi.bcast(square_matrix_, n2, 0);
-//    MPI_Bcast(square_matrix_, n2, MPI_DOUBLE, 0, mmpi.commSpin());
 #endif
     return;
 }
 
-void ReplicatedWorkSpace::setUpperTriangularSquareMatrixToZero()
+template <class T>
+void ReplicatedWorkSpace<T>::setUpperTriangularSquareMatrixToZero()
 {
     for (int i = 0; i < ndim_; i++)
     {
@@ -52,3 +50,6 @@ void ReplicatedWorkSpace::setUpperTriangularSquareMatrixToZero()
         }
     }
 }
+
+template class ReplicatedWorkSpace<double>;
+

@@ -556,7 +556,7 @@ int main(int argc, char** argv)
             dist_matrix::DistMatrix<DISTMATDTYPE>::setDefaultBlacsContext(
                 MatricesBlacsContext::instance().bcxt());
 
-            ReplicatedWorkSpace::instance().setup(ct.numst);
+            ReplicatedWorkSpace<double>::instance().setup(ct.numst);
 
             dist_matrix::SparseDistMatrix<
                 DISTMATDTYPE>::setNumTasksPerPartitioning(128);

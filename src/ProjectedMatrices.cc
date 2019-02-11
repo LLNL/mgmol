@@ -623,7 +623,7 @@ int ProjectedMatrices::writeDM_hdf5(HDFrestart& h5f_file)
 {
     hid_t file_id = h5f_file.file_id();
 
-    ReplicatedWorkSpace& wspace(ReplicatedWorkSpace::instance());
+    ReplicatedWorkSpace<double>& wspace(ReplicatedWorkSpace<double>::instance());
 
     wspace.initSquareMatrix(dm_->getMatrix());
 
@@ -675,7 +675,7 @@ int ProjectedMatrices::writeDM_hdf5(HDFrestart& h5f_file)
 ////// TEMPLATE THIS FOR FLOAT OPTION ??
 int ProjectedMatrices::read_dm_hdf5(hid_t file_id)
 {
-    ReplicatedWorkSpace& wspace(ReplicatedWorkSpace::instance());
+    ReplicatedWorkSpace<double>& wspace(ReplicatedWorkSpace<double>::instance());
     DISTMATDTYPE* work_matrix = wspace.square_matrix();
 
     int ierr        = 0;

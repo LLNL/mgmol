@@ -753,7 +753,7 @@ void LocGridOrbitals::multiply_by_matrix(
     (*MPIdata::sout)<<"self multiply_by_matrix"<<endl;
 #endif
 
-    ReplicatedWorkSpace& wspace(ReplicatedWorkSpace::instance());
+    ReplicatedWorkSpace<DISTMATDTYPE>& wspace(ReplicatedWorkSpace<DISTMATDTYPE>::instance());
     DISTMATDTYPE* work_matrix = wspace.square_matrix();
 
     // build a local complete matrix from a distributed matrix
@@ -906,7 +906,7 @@ void LocGridOrbitals::multiply_by_matrix(
     ORBDTYPE* product = new ORBDTYPE[loc_numpt_ * chromatic_number_];
     memset(product, 0, loc_numpt_ * chromatic_number_ * sizeof(ORBDTYPE));
 
-    ReplicatedWorkSpace& wspace(ReplicatedWorkSpace::instance());
+    ReplicatedWorkSpace<DISTMATDTYPE>& wspace(ReplicatedWorkSpace<DISTMATDTYPE>::instance());
     DISTMATDTYPE* work_matrix = wspace.square_matrix();
 
     matrix.matgather(work_matrix, numst_);

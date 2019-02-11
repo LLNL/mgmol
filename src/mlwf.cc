@@ -296,7 +296,7 @@ int MGmol<T>::get_NOLMO(NOLMOTransform& noot, T& orbitals,
         DISTMATDTYPE* a = &noot.mat()[0];
 
         // include initial a0 into transformation a
-        ReplicatedWorkSpace& wspace(ReplicatedWorkSpace::instance());
+        ReplicatedWorkSpace<DISTMATDTYPE>& wspace(ReplicatedWorkSpace<DISTMATDTYPE>::instance());
         wspace.initSquareMatrix(projmatrices->getLS());
         wspace.setUpperTriangularSquareMatrixToZero();
 
