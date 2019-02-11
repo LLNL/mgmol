@@ -8,31 +8,15 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id:$
 #include "Timer.h"
-#ifdef BGL
-#include <rts.h>
-#endif
 
-#ifdef BGL
-#define HAVE_RTS 1
-#endif
-
-#ifdef HAVE_RTS
-#include <rts.h>
-#endif
 using namespace std;
 
 double Timer::gtod(void) const
 {
-#ifdef BGL
-    double seconds_per_cycle = 1.4285714285714285714e-9; // 700 MHz
-    return ((double)rts_get_timebase()) * seconds_per_cycle;
-#else
     struct timeval tv;
     gettimeofday(&tv, (struct timezone*)NULL);
     return tv.tv_sec + 1.e-6 * tv.tv_usec;
-#endif
 }
 
 void Timer::print(ostream& os) const

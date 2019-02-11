@@ -18,6 +18,10 @@
 #include <sys/time.h>
 #include <time.h>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 class Timer
 {
 private:
@@ -76,16 +80,24 @@ public:
 
     void start()
     {
-        clk_     = clock();
-        t_       = gtod();
-        running_ = true;
-        ncalls_++;
+#ifdef _OPENMP
+        if (omp_get_thread_num() == 0)
+#endif
+        {
+            clk_     = clock();
+            t_       = gtod();
+            running_ = true;
+            ncalls_++;
+        }
     };
 
     bool running() const { return running_; };
 
     void stop()
     {
+#ifdef _OPENMP
+        if (omp_get_thread_num() == 0)
+#endif
         if (running_)
         {
             total_cpu_ += ((double)(clock() - clk_)) / CLOCKS_PER_SEC;
