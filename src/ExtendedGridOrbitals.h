@@ -147,7 +147,7 @@ private:
     void setup(LocalizationRegions* lrs);
 
     /* Data distribution objects */
-    std::shared_ptr<DataDistribution> distributor_;
+    static std::shared_ptr<DataDistribution> distributor_;
 
 protected:
     const pb::Grid& grid_;
@@ -157,7 +157,7 @@ protected:
     static short subdivx_;
 
     // indexes corresponding to valid function in each subdomain
-    std::vector<std::vector<int>> overlapping_gids_;
+    static std::vector<std::vector<int>> overlapping_gids_;
 
     // indexes of all global functions centered within subdomain/task
     std::vector<int> local_gids_;
