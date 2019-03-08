@@ -99,9 +99,7 @@ private:
 
     void projectOut(ORBDTYPE* const, const int, const double scale = 1.);
 
-    void multiply_by_matrix(const int first_color, const int ncolors,
-        const DISTMATDTYPE* const matrix, ExtendedGridOrbitals& product) const;
-    void multiply_by_matrix(const int, const int, const DISTMATDTYPE* const,
+    void multiply_by_matrix(const DISTMATDTYPE* const,
         ORBDTYPE*, const int) const;
     void multiply_by_matrix(const dist_matrix::DistMatrix<DISTMATDTYPE>& matrix,
         ORBDTYPE* const product, const int ldp);
@@ -114,10 +112,6 @@ private:
     ExtendedGridOrbitals();
 
     void computeMatB(const ExtendedGridOrbitals&, const pb::Lap<ORBDTYPE>&);
-    void matrixToLocalMatrix(const short, const DISTMATDTYPE* const,
-        DISTMATDTYPE* const, const int, const int) const;
-    void matrixToLocalMatrix(
-        const short, const DISTMATDTYPE* const, DISTMATDTYPE* const) const;
 
     double dotProductDiagonal(const ExtendedGridOrbitals& orbitals);
     double dotProductWithDM(const ExtendedGridOrbitals& orbitals);
@@ -141,7 +135,7 @@ private:
     void precond_smooth(
         ORBDTYPE*, const int, const int, const int, const int, const double);
     void app_mask(const int, ORBDTYPE*, const short level) const;
-    void multiplyByMatrix(const int first_color, const int ncolors,
+    void multiplyByMatrix(
         const SquareLocalMatrices<MATDTYPE>& matrix, ORBDTYPE* product,
         const int ldp) const;
     void setup(LocalizationRegions* lrs);
@@ -373,7 +367,7 @@ public:
     void applyCorrMask(const bool first_time = false);
 
     void multiplyByMatrix(const SquareLocalMatrices<MATDTYPE>& matrix);
-    void multiplyByMatrix(const int first_color, const int ncolors,
+    void multiplyByMatrix(
         const SquareLocalMatrices<MATDTYPE>& matrix,
         ExtendedGridOrbitals& product) const;
     void multiply_by_matrix(

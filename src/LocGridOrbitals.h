@@ -154,7 +154,7 @@ private:
     void precond_smooth(
         ORBDTYPE*, const int, const int, const int, const int, const double);
     void app_mask(const int, ORBDTYPE*, const short level) const;
-    void multiplyByMatrix(const int first_color, const int ncolors,
+    void multiplyByMatrix(
         const SquareLocalMatrices<MATDTYPE>& matrix, ORBDTYPE* product,
         const int ldp) const;
     void setup(MasksSet* masks, MasksSet* corrmasks, LocalizationRegions* lrs);
@@ -399,7 +399,7 @@ public:
     void applyCorrMask(const bool first_time = false);
 
     void multiplyByMatrix(const SquareLocalMatrices<MATDTYPE>& matrix);
-    void multiplyByMatrix(const int first_color, const int ncolors,
+    void multiplyByMatrix(
         const SquareLocalMatrices<MATDTYPE>& matrix,
         LocGridOrbitals& product) const;
     void multiply_by_matrix(

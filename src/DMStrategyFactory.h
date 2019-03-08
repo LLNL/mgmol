@@ -44,24 +44,9 @@ public:
         }
         else if (ct.DM_solver() == DMNonLinearSolverType::HMVP)
         {
-            if (ct.short_sighted)
-            {
-                dm_strategy = new HamiltonianMVP_DMStrategy<
-                    VariableSizeMatrix<sparserow>,
-                    VariableSizeMatrix<sparserow>, ProjectedMatricesSparse,
-                    T>(
-                    comm, os, ions, rho, energy, electrostat, mgmol_strategy,
-                    orbitals);
-            }
-            else
-            {
-                dm_strategy = new HamiltonianMVP_DMStrategy<
-                    dist_matrix::DistMatrix<DISTMATDTYPE>,
-                    dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE>,
-                    ProjectedMatrices,
-                    T>(comm, os, ions, rho, energy, electrostat,
-                    mgmol_strategy, orbitals);
-            }
+            dm_strategy = createHamiltonianMVP_DMStrategy(
+                comm, os, ions, rho, energy, electrostat, mgmol_strategy,
+                proj_matrices, orbitals, ct.short_sighted);
         }
         else
         {
@@ -90,6 +75,15 @@ public:
 
         return dm_strategy;
     }
+
+private:
+
+    static DMStrategy* createHamiltonianMVP_DMStrategy(
+        MPI_Comm comm, std::ostream& os, Ions& ions,
+        Rho<T>* rho, Energy<T>* energy, Electrostatic* electrostat,
+        MGmol<T>* mgmol_strategy, ProjectedMatricesInterface* proj_matrices, T*,
+        const bool);
+
 };
 
 #endif

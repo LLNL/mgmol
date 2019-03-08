@@ -356,12 +356,11 @@ void HamiltonianMVPSolver<T1, T2, T3, T4>::printTimers(ostream& os)
 template class HamiltonianMVPSolver<dist_matrix::DistMatrix<DISTMATDTYPE>,
     dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE>,
     ProjectedMatrices, LocGridOrbitals>;
+
 template class HamiltonianMVPSolver<VariableSizeMatrix<sparserow>,
     VariableSizeMatrix<sparserow>, ProjectedMatricesSparse, LocGridOrbitals>;
 
 template class HamiltonianMVPSolver<dist_matrix::DistMatrix<DISTMATDTYPE>,
     dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE>,
     ProjectedMatrices, ExtendedGridOrbitals>;
-template class HamiltonianMVPSolver<VariableSizeMatrix<sparserow>,
-    VariableSizeMatrix<sparserow>, ProjectedMatricesSparse, ExtendedGridOrbitals>;
 

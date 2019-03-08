@@ -30,8 +30,26 @@
 
 static int sparse_distmatrix_nb_partitions = 128;
 
-template <class T>
-void MGmol<T>::computeHij(T& orbitals_i, T& orbitals_j,
+template <>
+template <>
+void MGmol<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals& orbitalsi,
+    LocGridOrbitals& orbitalsj, VariableSizeMatrix<sparserow>& mat)
+{
+    computeHij_tm_.start();
+
+#if DEBUG
+    os_ << " addHlocal2matrix()" << endl;
+#endif
+
+    hamiltonian_->addHlocal2matrix(orbitalsi, orbitalsj, mat, true);
+
+    computeHij_tm_.stop();
+}
+
+template <>
+template <>
+void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i,
+    LocGridOrbitals& orbitals_j,
     const Ions& ions, const KBPsiMatrixSparse* const kbpsi_i,
     const KBPsiMatrixSparse* const kbpsi_j, VariableSizeMatrix<sparserow>& mat,
     const bool consolidate)
@@ -82,8 +100,10 @@ void MGmol<T>::computeHij(T& orbitals_i, T& orbitals_j,
     }
 }
 
-template <class T>
-void MGmol<T>::computeHij(T& orbitals_i, T& orbitals_j,
+template <>
+template <>
+void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i,
+    LocGridOrbitals& orbitals_j,
     const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
     VariableSizeMatrix<sparserow>& mat, const bool consolidate)
 {
@@ -132,8 +152,34 @@ void MGmol<T>::computeHij(T& orbitals_i, T& orbitals_j,
     }
 }
 
+template <>
+template <>
+void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i, LocGridOrbitals& orbitals_j,
+    const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
+    const KBPsiMatrixSparse* const kbpsi_j,
+    dist_matrix::DistMatrix<DISTMATDTYPE>& hij, const bool consolidate)
+{
+    (void) consolidate;
+
+    computeHij_private(orbitals_i, orbitals_j, ions, kbpsi, kbpsi_j, hij);
+}
+
+template <>
+template <>
+void MGmol<ExtendedGridOrbitals>::computeHij(ExtendedGridOrbitals& orbitals_i,
+    ExtendedGridOrbitals& orbitals_j,
+    const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
+    const KBPsiMatrixSparse* const kbpsi_j,
+    dist_matrix::DistMatrix<DISTMATDTYPE>& hij, const bool consolidate)
+{
+    (void) consolidate;
+
+    computeHij_private(orbitals_i, orbitals_j, ions, kbpsi, kbpsi_j, hij);
+}
+
+
 template <class T>
-void MGmol<T>::computeHij(T& orbitals_i, T& orbitals_j,
+void MGmol<T>::computeHij_private(T& orbitals_i, T& orbitals_j,
     const Ions& ions, const KBPsiMatrixSparse* const kbpsi_i,
     const KBPsiMatrixSparse* const kbpsi_j,
     dist_matrix::DistMatrix<DISTMATDTYPE>& hij)
@@ -161,8 +207,32 @@ void MGmol<T>::computeHij(T& orbitals_i, T& orbitals_j,
     sparseH.parallelSumToDistMatrix();
 }
 
+template <>
+template <>
+void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i,
+    LocGridOrbitals& orbitals_j,
+    const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
+    dist_matrix::DistMatrix<DISTMATDTYPE>& hij, const bool consolidate)
+{
+    (void) consolidate;
+
+    computeHij_private(orbitals_i, orbitals_j, ions, kbpsi, hij);
+}
+
+template <>
+template <>
+void MGmol<ExtendedGridOrbitals>::computeHij(ExtendedGridOrbitals& orbitals_i,
+    ExtendedGridOrbitals& orbitals_j,
+    const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
+    dist_matrix::DistMatrix<DISTMATDTYPE>& hij, const bool consolidate)
+{
+    (void) consolidate;
+
+    computeHij_private(orbitals_i, orbitals_j, ions, kbpsi, hij);
+}
+
 template <class T>
-void MGmol<T>::computeHij(T& orbitals_i, T& orbitals_j,
+void MGmol<T>::computeHij_private(T& orbitals_i, T& orbitals_j,
     const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
     dist_matrix::DistMatrix<DISTMATDTYPE>& hij)
 {
@@ -232,7 +302,7 @@ void MGmol<T>::getKBPsiAndHij(T& orbitals_i,
 {
     kbpsi->computeAll(ions, orbitals_i);
 
-    computeHij(orbitals_i, orbitals_j, ions, kbpsi, hij);
+    computeHij(orbitals_i, orbitals_j, ions, kbpsi, hij, true);
 
     projmatrices->setHiterativeIndex(orbitals_j.getIterativeIndex(),
         hamiltonian_->potential().getIterativeIndex());
@@ -353,21 +423,6 @@ void MGmol<T>::computeHnlPhiAndAdd2HPhi(Ions& ions, T& phi,
     }
 
     hphi.setIterativeIndex(phi.getIterativeIndex());
-}
-
-template <class T>
-void MGmol<T>::addHlocal2matrix(T& orbitalsi,
-    T& orbitalsj, VariableSizeMatrix<sparserow>& mat)
-{
-    computeHij_tm_.start();
-
-#if DEBUG
-    os_ << " addHlocal2matrix()" << endl;
-#endif
-
-    hamiltonian_->addHlocal2matrix(orbitalsi, orbitalsj, mat, true);
-
-    computeHij_tm_.stop();
 }
 
 template <class T>

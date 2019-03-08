@@ -203,7 +203,7 @@ void GrassmanCG<T>::computeOrbitalsProdWithH(T& orbitals1,
     // compute P^T*H*Q (orbitals1=P; orbitals2=Q)
     GrassmanLineMinimization<T>::mgmol_strategy_->computeHij(
         orbitals1, orbitals2, *GrassmanLineMinimization<T>::ptr2ions_,
-        &kbpsi_1, &kbpsi_2, mat);
+        &kbpsi_1, &kbpsi_2, mat, true);
 }
 
 // Compute P^T*H*P for orbitals1-->P and return result in mat.
@@ -220,7 +220,7 @@ void GrassmanCG<T>::computeOrbitalsProdWithH(
 
     // compute P^T*H*Q (orbitals1=P; orbitals2=Q)
     GrassmanLineMinimization<T>::mgmol_strategy_->computeHij(orbitals, orbitals,
-        *GrassmanLineMinimization<T>::ptr2ions_, &kbpsi, mat);
+        *GrassmanLineMinimization<T>::ptr2ions_, &kbpsi, mat, true);
 
     return;
 }

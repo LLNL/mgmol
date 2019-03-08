@@ -1512,7 +1512,7 @@ void MGmol<T>::computeResidualUsingHPhi(T& psi,
 
         // get B*phi*theta and store it in res in [Ry]
         // (even if Ritz functions mode)
-        psi.multiplyByMatrix(0, ncolors, localT, res);
+        psi.multiplyByMatrix(localT, res);
 
         if (applyB)
         {

@@ -14,10 +14,10 @@
 #include "DMStrategy.h"
 #include "Electrostatic.h"
 #include "Energy.h"
-#include "GrassmanCG.h"
-#include "GrassmanCGSparse.h"
+#include "GrassmanCGFactory.h"
 #include "Ions.h"
 #include "MGmol.h"
+#include "Potentials.h"
 #include "ProjectedMatricesInterface.h"
 #include "Rho.h"
 
@@ -56,16 +56,10 @@ DFTsolver<T>::DFTsolver(Hamiltonian<T>* hamiltonian,
 
         case OuterSolverType::NLCG:
         {
-            if (ct.short_sighted)
-            {
-                orbitals_stepper_ = new GrassmanCGSparse<T>(
-                    hamiltonian_, proj_matrices_, mgmol_strategy, ions, os_);
-            }
-            else
-            {
-                orbitals_stepper_ = new GrassmanCG<T>(
-                    hamiltonian_, proj_matrices_, mgmol_strategy, ions, os_);
-            }
+            orbitals_stepper_ = GrassmanCGFactory<T>::create(
+                hamiltonian_, proj_matrices_, mgmol_strategy, ions, os_,
+                ct.short_sighted);
+
             break;
         }
 

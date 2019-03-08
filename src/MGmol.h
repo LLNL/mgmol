@@ -236,28 +236,36 @@ public:
 
     void md(T** orbitals, Ions& ions);
     void lbfgsrlx(T** orbitals, Ions& ions);
+
+    template <class T2>
     void computeHij(T& orbitals_i, T& orbitals_j,
         const Ions& ions, const KBPsiMatrixSparse* const kbpsi_i,
         const KBPsiMatrixSparse* const kbpsi_j,
-        VariableSizeMatrix<sparserow>& mat, const bool consolidate);
-    void computeHij(T& orbitals_i, T& orbitals_j,
-        const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
-        VariableSizeMatrix<sparserow>& mat, const bool consolidate);
-    void computeHij(T& orbitals_i, T& orbitals_j,
+        T2& mat, const bool consolidate);
+
+    void computeHij_private(T& orbitals_i, T& orbitals_j,
         const Ions& ions, const KBPsiMatrixSparse* const kbpsi_i,
         const KBPsiMatrixSparse* const kbpsi_j,
-        dist_matrix::DistMatrix<DISTMATDTYPE>& hij);
+        dist_matrix::DistMatrix<DISTMATDTYPE>& mat);
+
+    template <class T2>
     void computeHij(T& orbitals_i, T& orbitals_j,
         const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
-        dist_matrix::DistMatrix<DISTMATDTYPE>& hij);
+        T2& mat, const bool consolidate);
+
+   void computeHij_private(T& orbitals_i, T& orbitals_j,
+        const Ions& ions, const KBPsiMatrixSparse* const kbpsi_i,
+        dist_matrix::DistMatrix<DISTMATDTYPE>& mat);
+
     void computeHij(T& orbitals_i, T& orbitals_j,
         const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
         ProjectedMatricesInterface*);
     void addHlocal2matrix(T& orbitalsi,
         T& orbitalsj,
         dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE>& mat);
+    template <class T2>
     void addHlocal2matrix(T& orbitalsi,
-        T& orbitalsj, VariableSizeMatrix<sparserow>& mat);
+        T& orbitalsj, T2& mat);
     void update_pot(const pb::GridFunc<POTDTYPE>& vh_init, const Ions& ions);
     void update_pot(const Ions& ions);
     int quench(T* orbitals, Ions& ions, const int max_steps,

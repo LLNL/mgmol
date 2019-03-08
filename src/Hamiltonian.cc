@@ -214,5 +214,33 @@ void Hamiltonian<T>::addHlocal2matrix(T& phi1, T& phi2,
     mat.initializeMatrixElements(ss, phi1.getOverlappingGids(), ct.numst);
 }
 
-template class Hamiltonian<LocGridOrbitals>;
-template class Hamiltonian<ExtendedGridOrbitals>;
+template Hamiltonian<LocGridOrbitals>::Hamiltonian<LocGridOrbitals>();
+template Hamiltonian<ExtendedGridOrbitals>::Hamiltonian<ExtendedGridOrbitals>();
+
+template Hamiltonian<LocGridOrbitals>::~Hamiltonian<LocGridOrbitals>();
+template Hamiltonian<ExtendedGridOrbitals>::~Hamiltonian<ExtendedGridOrbitals>();
+
+template void Hamiltonian<LocGridOrbitals>::setup(pb::Grid const&, int);
+template void Hamiltonian<ExtendedGridOrbitals>::setup(pb::Grid const&, int);
+
+template const LocGridOrbitals& Hamiltonian<LocGridOrbitals>::applyLocal(
+    LocGridOrbitals&, const bool);
+template const ExtendedGridOrbitals& Hamiltonian<ExtendedGridOrbitals>::applyLocal(
+    ExtendedGridOrbitals&, const bool);
+template void Hamiltonian<LocGridOrbitals>::addHlocalij(LocGridOrbitals&,
+    LocGridOrbitals&,
+    ProjectedMatricesInterface* proj_matrices);
+template void Hamiltonian<ExtendedGridOrbitals>::addHlocalij(ExtendedGridOrbitals&,
+    ExtendedGridOrbitals&,
+    ProjectedMatricesInterface* proj_matrices);
+template void Hamiltonian<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals&,
+    LocGridOrbitals&, VariableSizeMatrix<sparserow>& mat, const bool force);
+template void Hamiltonian<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals&,
+    LocGridOrbitals&, dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sparseH,
+    const bool);
+
+template void Hamiltonian<ExtendedGridOrbitals>::addHlocal2matrix(
+    ExtendedGridOrbitals&, ExtendedGridOrbitals&,
+    dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sparseH,
+    const bool);
+

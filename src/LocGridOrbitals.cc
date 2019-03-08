@@ -809,14 +809,12 @@ void LocGridOrbitals::multiply_by_matrix(const int first_color,
     prod_matrix_tm_.stop();
 }
 
-void LocGridOrbitals::multiplyByMatrix(const int first_color, const int ncolors,
+void LocGridOrbitals::multiplyByMatrix(
     const SquareLocalMatrices<MATDTYPE>& matrix, ORBDTYPE* product,
     const int ldp) const
 {
     prod_matrix_tm_.start();
 
-    assert(ncolors > 0);
-    assert((first_color + ncolors) <= chromatic_number_);
     assert(subdivx_ > 0);
 
 #if 0
@@ -830,8 +828,8 @@ void LocGridOrbitals::multiplyByMatrix(const int first_color, const int ncolors,
             const MATDTYPE* const mat = matrix.getSubMatrix(iloc);
 
             // Compute product for subdomain iloc
-            MPgemmNN(loc_numpt_, chromatic_number_, ncolors, 1.,
-                getPsi(0, iloc), lda_, mat + first_color, chromatic_number_, 0.,
+            MPgemmNN(loc_numpt_, chromatic_number_, chromatic_number_, 1.,
+                getPsi(0, iloc), lda_, mat, chromatic_number_, 0.,
                 product + iloc * loc_numpt_, ldp);
         }
 
@@ -872,11 +870,11 @@ void LocGridOrbitals::multiplyByMatrix(
     prod_matrix_tm_.stop();
 }
 
-void LocGridOrbitals::multiplyByMatrix(const int first_color, const int ncolors,
+void LocGridOrbitals::multiplyByMatrix(
     const SquareLocalMatrices<MATDTYPE>& matrix, LocGridOrbitals& product) const
 {
     multiplyByMatrix(
-        first_color, ncolors, matrix, product.psi(0), product.lda_);
+        matrix, product.psi(0), product.lda_);
 }
 
 void LocGridOrbitals::multiply_by_matrix(const int first_color,

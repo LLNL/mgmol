@@ -449,36 +449,31 @@ void ExtendedGridOrbitals::multiply_by_matrix(
     // build a local complete matrix from a distributed matrix
     dmatrix.matgather(work_matrix, numst_);
 
-    multiply_by_matrix(0, numst_, work_matrix, product, ldp);
+    multiply_by_matrix(work_matrix, product, ldp);
 }
 
-void ExtendedGridOrbitals::multiply_by_matrix(const int first_color,
-    const int ncolors, const DISTMATDTYPE* const matrix, ORBDTYPE* product,
+void ExtendedGridOrbitals::multiply_by_matrix(
+    const DISTMATDTYPE* const matrix, ORBDTYPE* product,
     const int ldp) const
 {
     prod_matrix_tm_.start();
 
-    assert(ncolors > 0);
-    assert((first_color + ncolors) <= numst_);
     assert(subdivx_ > 0);
 
-    memset(product, 0, ldp * ncolors * sizeof(ORBDTYPE));
+    memset(product, 0, ldp * numst_ * sizeof(ORBDTYPE));
 
 #if 0
     (*MPIdata::sout)<<" multiply_by_matrix, first_color="<<first_color<<endl;
 #endif
 
-    DISTMATDTYPE* matrix_local = new DISTMATDTYPE[numst_ * ncolors];
+    DISTMATDTYPE* matrix_local = new DISTMATDTYPE[numst_ * numst_];
 
     // loop over subdomains
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
-        // extract block corresponding to local indexes
-        matrixToLocalMatrix(iloc, matrix, matrix_local, first_color, ncolors);
-
         // Compute product for subdomain iloc
-        MPgemmNN(loc_numpt_, ncolors, numst_, 1., getPsi(0, iloc),
-            lda_, matrix_local, numst_, 0.,
+        MPgemmNN(loc_numpt_, numst_, numst_, 1., getPsi(0, iloc),
+            lda_, matrix, numst_, 0.,
             product + iloc * loc_numpt_, ldp);
     }
 
@@ -487,15 +482,11 @@ void ExtendedGridOrbitals::multiply_by_matrix(const int first_color,
     prod_matrix_tm_.stop();
 }
 
-void ExtendedGridOrbitals::multiplyByMatrix(const int first_color, const int ncolors,
+void ExtendedGridOrbitals::multiplyByMatrix(
     const SquareLocalMatrices<MATDTYPE>& matrix, ORBDTYPE* product,
     const int ldp) const
 {
     prod_matrix_tm_.start();
-
-    assert(ncolors > 0);
-    assert((first_color + ncolors) <= numst_);
-    assert(subdivx_ > 0);
 
 #if 0
     (*MPIdata::sout)<<" multiplyByMatrix, first_color="<<first_color<<endl;
@@ -507,8 +498,8 @@ void ExtendedGridOrbitals::multiplyByMatrix(const int first_color, const int nco
         const MATDTYPE* const mat = matrix.getSubMatrix(iloc);
 
         // Compute product for subdomain iloc
-        MPgemmNN(loc_numpt_, numst_, ncolors, 1.,
-            getPsi(0, iloc), lda_, mat + first_color, numst_, 0.,
+        MPgemmNN(loc_numpt_, numst_, numst_, 1.,
+            getPsi(0, iloc), lda_, mat, numst_, 0.,
             product + iloc * loc_numpt_, ldp);
     }
 
@@ -546,26 +537,17 @@ void ExtendedGridOrbitals::multiplyByMatrix(
     prod_matrix_tm_.stop();
 }
 
-void ExtendedGridOrbitals::multiplyByMatrix(const int first_color, const int ncolors,
+void ExtendedGridOrbitals::multiplyByMatrix(
     const SquareLocalMatrices<MATDTYPE>& matrix, ExtendedGridOrbitals& product) const
 {
-    multiplyByMatrix(
-        first_color, ncolors, matrix, product.psi(0), product.lda_);
-}
-
-void ExtendedGridOrbitals::multiply_by_matrix(const int first_color,
-    const int ncolors, const DISTMATDTYPE* const matrix,
-    ExtendedGridOrbitals& product) const
-{
-    multiply_by_matrix(
-        first_color, ncolors, matrix, product.psi(0), product.lda_);
+    multiplyByMatrix(matrix, product.psi(0), product.lda_);
 }
 
 void ExtendedGridOrbitals::multiply_by_matrix(
     const DISTMATDTYPE* const matrix, ExtendedGridOrbitals& product) const
 {
     multiply_by_matrix(
-        0, numst_, matrix, product.psi(0), product.lda_);
+        matrix, product.psi(0), product.lda_);
 }
 
 void ExtendedGridOrbitals::multiply_by_matrix(
@@ -595,17 +577,14 @@ void ExtendedGridOrbitals::multiply_by_matrix(
     {
         ORBDTYPE* phi = getPsi(0, iloc);
 
-        matrixToLocalMatrix(iloc, work_matrix, matrix_local);
-
         // Compute loc_numpt_ rows (for subdomain iloc)
         MPgemmNN(loc_numpt_, numst_, numst_, 1., phi,
-            lda_, matrix_local, numst_, 0., product, loc_numpt_);
+            lda_, work_matrix, numst_, 0., product, loc_numpt_);
 
         for (int color = 0; color < numst_; color++)
             memcpy(phi + color * lda_, product + color * loc_numpt_, slnumpt);
     }
 
-    delete[] matrix_local;
     delete[] product;
 
     prod_matrix_tm_.stop();
@@ -908,36 +887,6 @@ int ExtendedGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, string name)
     }
 
     return numst_;
-}
-
-// initialize matrix numst_ by ncolor (for columns first_color to
-// first_color+ncolor)
-void ExtendedGridOrbitals::matrixToLocalMatrix(const short iloc,
-    const DISTMATDTYPE* const matrix, DISTMATDTYPE* const lmatrix) const
-{
-    matrixToLocalMatrix(iloc, matrix, lmatrix, 0, numst_);
-}
-
-void ExtendedGridOrbitals::matrixToLocalMatrix(const short iloc,
-    const DISTMATDTYPE* const matrix, DISTMATDTYPE* const dst,
-    const int first_color, const int ncolor) const
-{
-    assert(ncolor <= numst_);
-    memset(dst, 0, numst_ * ncolor * sizeof(DISTMATDTYPE));
-
-    for (int jcolor = 0; jcolor < ncolor; jcolor++)
-    {
-        const int gidj = first_color + jcolor;
-     
-        const int njst = gidj * numst_;
-        const int njc  = jcolor * numst_;
-        for (int icolor = 0; icolor < numst_; icolor++)
-        {
-            const int gidi = icolor;
-            dst[njc + icolor] = matrix[njst + gidi];
-        }
-     
-    }
 }
 
 // compute the matrix <psi1|B|psi2>
