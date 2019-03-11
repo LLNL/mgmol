@@ -322,9 +322,7 @@ public:
 
     static void setDotProduct(const short dot_type);
     void computeDiagonalElementsDotProduct(
-        const ExtendedGridOrbitals& orbitals, std::vector<DISTMATDTYPE>& ss);
-    void computeDiagonalElementsDotProductLocal(
-        const ExtendedGridOrbitals& orbitals, std::vector<DISTMATDTYPE>& ss);
+        const ExtendedGridOrbitals& orbitals, std::vector<DISTMATDTYPE>& ss)const;
 
     const dist_matrix::DistMatrix<DISTMATDTYPE> product(
         const ExtendedGridOrbitals&, const bool transpose = false);

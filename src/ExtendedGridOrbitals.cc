@@ -32,11 +32,9 @@
 #include "Preconditioning.h"
 #include "ProjectedMatrices.h"
 #include "ReplicatedWorkSpace.h"
-#include "SparseDistMatrix.h"
 #include "SquareLocalMatrices.h"
 #include "SubCell.h"
 #include "SubMatrices.h"
-#include "VariableSizeMatrix.h"
 #include "hdf_tools.h"
 #include "lapack_c.h"
 
@@ -1049,14 +1047,14 @@ void ExtendedGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
 }
 
 void ExtendedGridOrbitals::computeDiagonalElementsDotProduct(
-    const ExtendedGridOrbitals& orbitals, vector<DISTMATDTYPE>& ss)
+    const ExtendedGridOrbitals& orbitals, vector<DISTMATDTYPE>& ss)const
 {
     assert(numst_ > 0);
     assert(grid_.vel() > 0.);
 
-    memset(&ss[0], 0, numst_ * sizeof(DISTMATDTYPE));
-
     for (int icolor = 0; icolor < numst_; icolor++)
+    {
+        ss[icolor] = 0.;
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
             double alpha = MPdot(loc_numpt_, orbitals.getPsi(icolor, iloc),
@@ -1065,55 +1063,10 @@ void ExtendedGridOrbitals::computeDiagonalElementsDotProduct(
             ss[icolor] += (DISTMATDTYPE)(alpha * grid_.vel());
          
         }
+    }
     vector<DISTMATDTYPE> tmp(ss);
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     mmpi.allreduce(&tmp[0], &ss[0], numst_, MPI_SUM);
-}
-
-void ExtendedGridOrbitals::computeDiagonalElementsDotProductLocal(
-    const ExtendedGridOrbitals& orbitals, vector<DISTMATDTYPE>& ss)
-{
-    assert(grid_.vel() > 0.);
-
-    /* get locally centered functions */
-    std::vector<int> locfcns;
-    if (local_cluster_ != 0)
-    {
-        locfcns = local_cluster_->getClusterIndices();
-    }
-    else
-    {
-        locfcns = local_gids_;
-    }
-
-    /* define data distribution variables */
-    const int siz = (int)locfcns.size();
-    VariableSizeMatrix<sparserow> diag("diagDot", numst_ * subdivx_);
-    /* initialize sparse diagonal matrix with locally centered indixes */
-    diag.setupSparseRows(locfcns);
-
-    /* assemble diagonal matrix */
-    //    int ione=1;
-    for (int icolor = 0; icolor < numst_; icolor++)
-        for (short iloc = 0; iloc < subdivx_; iloc++)
-        {
-            double alpha = MPdot(loc_numpt_, orbitals.getPsi(icolor, iloc),
-                getPsi(icolor, iloc));
-
-            double val = alpha * grid_.vel();
-            diag.insertMatrixElement(icolor, icolor, val, ADD, true);
-         
-        }
-#ifdef USE_MPI
-    /* do data distribution to update local sums */
-    distributor_->augmentLocalData(diag, false);
-    /* collect data */
-    ss.clear();
-    for (int row = 0; row < siz; row++)
-    {
-        ss.push_back((DISTMATDTYPE)diag.getRowEntry(row, 0));
-    }
-#endif
 }
 
 void ExtendedGridOrbitals::computeGram(
@@ -1213,19 +1166,10 @@ double ExtendedGridOrbitals::dotProductWithInvS(const ExtendedGridOrbitals& orbi
 double ExtendedGridOrbitals::dotProductDiagonal(const ExtendedGridOrbitals& orbitals)
 {
     assert(proj_matrices_ != 0);
-    //(*MPIdata::sout)<<"call ExtendedGridOrbitals::dotProductDiagonal()..."<<endl;
 
-    vector<DISTMATDTYPE> ss;
-    Control& ct = *(Control::instance());
-    if (ct.short_sighted)
-    {
-        computeDiagonalElementsDotProductLocal(orbitals, ss);
-    }
-    else
-    {
-        ss.resize(numst_);
-        computeDiagonalElementsDotProduct(orbitals, ss);
-    }
+    vector<DISTMATDTYPE> ss(numst_);
+    computeDiagonalElementsDotProduct(orbitals, ss);
+
     return proj_matrices_->getTraceDiagProductWithInvS(ss);
 }
 
@@ -1548,59 +1492,19 @@ void ExtendedGridOrbitals::multiplyByMatrix2states(
     }
 }
 
-void ExtendedGridOrbitals::computeDiagonalGram(
-    VariableSizeMatrix<sparserow>& diagS) const
-{
-    const double vel = grid_.vel();
-
-    for (int color = 0; color < numst_; color++)
-    {
-        for (short iloc = 0; iloc < subdivx_; iloc++)
-        {
-            double val
-                = vel * (double)block_vector_.dot(color, color, iloc);
-            diagS.insertMatrixElement(color, color, val, ADD, true);
-         
-        }
-    }
-    // do data distribution to update local data.
-    // All PE's need to know full diagonal entries of
-    // overlapping functions, hence append=true.
-    distributor_->augmentLocalData(diagS, true);
-#ifdef DEBUG
-    Control& ct = *(Control::instance());
-    if (onpe0 && ct.verbose > 2)
-        for (int i = 0; i < lsize; i++)
-            (*MPIdata::sout)
-                << "i=" << i << ", diagS[i]=" << diagS.getRowEntry(i, 0)
-                << endl;
-#endif
-}
-
 void ExtendedGridOrbitals::computeInvNorms2(vector<vector<double>>& inv_norms2) const
 {
-    const int initTabSize = 4096;
-    VariableSizeMatrix<sparserow> diagS("diagS", initTabSize);
+    vector<double> diagS(numst_);
 
-    computeDiagonalGram(diagS);
+    computeDiagonalElementsDotProduct(*this, diagS);
 
-    // assign return values
-    inv_norms2.resize(subdivx_);
-    for (short iloc = 0; iloc < subdivx_; iloc++)
+    for (short color = 0; color < numst_; color++)
     {
-        inv_norms2[iloc].resize(numst_);
-        for (short color = 0; color < numst_; color++)
-        {
-            const int gid = color;
-            inv_norms2[iloc][color] = diagS.get_value(gid, gid);
-        }
-    }
+        double alpha = 1. / diagS[color];
 
-    for (short iloc = 0; iloc < subdivx_; iloc++)
-    {
-        for (short color = 0; color < numst_; color++)
+        for (short iloc = 0; iloc < subdivx_; iloc++)
         {
-            inv_norms2[iloc][color] = 1. / inv_norms2[iloc][color];
+            inv_norms2[iloc][color] = alpha;
         }
     }
 }
@@ -1615,70 +1519,25 @@ void ExtendedGridOrbitals::normalize()
     // if( onpe0 && ct.verbose>2 )
     //        (*MPIdata::sout)<<"Normalize ExtendedGridOrbitals"<<endl;
 
-    Control& ct = *(Control::instance());
+    const double vel = grid_.vel();
+    vector<double> diagS(numst_);
 
-    if (ct.short_sighted)
+    computeDiagonalElementsDotProduct(*this, diagS);
+
+    for (int color = 0; color < numst_; color++)
     {
-        const int initTabSize = 4096;
-        VariableSizeMatrix<sparserow> diagS("diagSforN", initTabSize);
-
-        computeDiagonalGram(diagS);
-
-        /* Do normalization */
-        for (short iloc = 0; iloc < subdivx_; iloc++)
-        {
-            // Loop over the functions
-            for (int color = 0; color < numst_; color++)
-            {
-                const int gid = color;
-             
-                // normalize state
-                double alpha = 1. / sqrt(diagS.get_value(gid, gid));
-                //(*MPIdata::sout)<<"alpha="<<alpha<<endl;
-                block_vector_.scal(alpha, color, iloc);
-             
-            }
-        }
-    }
-    else
-    {
-        const double vel = grid_.vel();
-        vector<double> diagS(numst_, 0.);
-        for (int color = 0; color < numst_; color++)
-        {
-            for (short iloc = 0; iloc < subdivx_; iloc++)
-            {
-                const int gid = color;
-                diagS[gid]
-                    += vel * (double)block_vector_.dot(color, color, iloc);
-            }
-        }
-
-        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-        mmpi.split_allreduce_sums_double(&diagS[0], numst_);
 #ifdef DEBUG
         if (onpe0 && ct.verbose > 2)
             for (int i = 0; i < numst_; i++)
                 (*MPIdata::sout)
                     << "i=" << i << ", diagS[i]=" << diagS[i] << endl;
 #endif
-        for (int i = 0; i < numst_; i++)
-        {
-            assert(diagS[i] > 1.e-15);
-            diagS[i] = 1. / sqrt(diagS[i]);
-        }
+        assert(diagS[color] > 1.e-15);
+        diagS[color] = 1. / sqrt(diagS[color]);
+
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
-
-            // Loop over the functions
-            for (int color = 0; color < numst_; color++)
-            {
-                // normalize state
-                double alpha = diagS[color];
-                //(*MPIdata::sout)<<"alpha="<<alpha<<endl;
-                block_vector_.scal(alpha, color, iloc);
-             
-            }
+            block_vector_.scal(diagS[color], color, iloc);
         }
     }
 
