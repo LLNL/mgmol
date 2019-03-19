@@ -55,11 +55,6 @@ class ProjectedMatrices : public ProjectedMatricesInterface
 
     // orthogonal tranformation
     dist_matrix::DistMatrix<DISTMATDTYPE>* u_;
-#ifdef PROCRUSTES
-    dist_matrix::DistMatrix<DISTMATDTYPE>* u0_;
-    // matrix of permutation to apply for continuity with u0_
-    dist_matrix::DistMatrix<DISTMATDTYPE>* p_;
-#endif
     double min_val_;
 
     static Timer sygv_tm_;

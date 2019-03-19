@@ -10,13 +10,6 @@
 
 #include "ProjectedMatrices.h"
 
-#ifdef PROCRUSTES
-#include "munkres.h"
-void procrustes(dist_matrix::DistMatrix<DISTMATDTYPE>& a,
-    dist_matrix::DistMatrix<DISTMATDTYPE>& b,
-    dist_matrix::DistMatrix<DISTMATDTYPE>& p);
-#endif
-
 #include "Control.h"
 #include "DensityMatrix.h"
 #include "GramMatrix.h"
@@ -94,13 +87,6 @@ ProjectedMatrices::ProjectedMatrices(const int ndim, const bool with_spin)
         theta_ = new dist_matrix::DistMatrix<DISTMATDTYPE>("Theta", ndim, ndim);
         u_     = new dist_matrix::DistMatrix<DISTMATDTYPE>("U", ndim, ndim);
         work_  = new dist_matrix::DistMatrix<DISTMATDTYPE>("work", ndim, ndim);
-#ifdef PROCRUSTES
-        occupation0_.resize(dim_);
-        u0_ = 0;
-        p_  = new dist_matrix::DistMatrix<DISTMATDTYPE>("P", ndim, ndim);
-
-        u0_->identity();
-#endif
     }
 
     if (onpe0)
@@ -158,10 +144,6 @@ ProjectedMatrices::~ProjectedMatrices()
         delete submatLS_;
         submatLS_ = 0;
 
-#ifdef PROCRUSTES
-        delete u0_;
-        delete p_;
-#endif
         delete submat_indexing_;
         submat_indexing_ = 0;
     }
@@ -300,20 +282,6 @@ void ProjectedMatrices::solveGenEigenProblem(
     // solve a standard symmetric eigenvalue problem
     mat.syev(job, 'l', eigenvalues_, *u_);
 
-#ifdef PROCRUSTES
-    if (u0_ != 0)
-    {
-        work_->gemm('t', 'n', 1., *u_, *u0_, 0.);
-        for (int j = 0; j < dim_; j++)
-        {
-            double val = 0.;
-            int i      = work_->iamax(j, val);
-            if (val < 0.) u_->scalColumn(j, -1.);
-        }
-        procrustes(*u_, *u0_, *p_);
-    }
-#endif
-
     // Get the eigenvectors Z of the generalized eigenvalue problem
     // Solve Z=L**(-T)*U
     z = *u_;
@@ -390,78 +358,6 @@ void ProjectedMatrices::updateDMwithEigenstatesAndRotate(
 
     dm_->build(iterative_index);
 }
-
-#if 0
-void ProjectedMatrices::rotateBackDM()
-{
-    computeOccupations(occupation0_);
-    *u0_=*work_;
-
-#ifdef PROCRUSTES
-    procrustes(*u_,*u0_,*p_);
-#endif
-
-    dist_matrix::DistMatrix<DISTMATDTYPE> rot("R", dim_, dim_);
-    rot.gemm('n','t',1.,*u_,*u0_,0.);
-//int nst=rot.m();
-//(*MPIdata::sout)<<"u0"<<endl;
-//u0_->print((*MPIdata::sout),0,0,nst,nst);
-//(*MPIdata::sout)<<"u"<<endl;
-//u_->print((*MPIdata::sout),0,0,nst,nst);
-//(*MPIdata::sout)<<"rot"<<endl;
-//rot.print((*MPIdata::sout),0,0,nst,nst);
-
-#if 0
-    (*MPIdata::sout)<<"Test unitarity of u0_"<<endl;
-    dist_matrix::DistMatrix<DISTMATDTYPE> u0(*u0_);
-    dist_matrix::DistMatrix<DISTMATDTYPE> test("t",nst,nst);
-    test.gemm('t','n',1.,u0,*u0_,0.);
-    for(int i=0;i<test.mloc();i++)
-    for(int j=0;j<i;j++){
-        if( fabs( test.val(i+j*test.mloc()) )>1.e-8 )
-            (*MPIdata::sout)<<"test["<<i<<"]["<<j<<"]="
-                <<test.val(i+j*test.mloc())<<endl;
-    }
-    for(int i=0;i<test.mloc();i++){
-        if( fabs( test.val(i+i*test.mloc())-1. )>1.e-8 )
-            (*MPIdata::sout)<<"test["<<i<<"]["<<i<<"]="
-                <<test.val(i+i*test.mloc())<<endl;
-    }
-#endif
-#if 0
-    (*MPIdata::sout)<<"Test unitarity of u_"<<endl;
-    dist_matrix::DistMatrix<DISTMATDTYPE> u(*u_);
-    test.gemm('t','n',1.,u,*u_,0.);
-    for(int i=0;i<test.mloc();i++)
-    for(int j=0;j<i;j++){
-        if( fabs( test.val(i+j*test.mloc()) )>1.e-8 )
-            (*MPIdata::sout)<<"test["<<i<<"]["<<j<<"]="
-                <<test.val(i+j*test.mloc())<<endl;
-    }
-    for(int i=0;i<test.mloc();i++){
-        if( fabs( test.val(i+i*test.mloc())-1. )>1.e-8 )
-            (*MPIdata::sout)<<"test["<<i<<"]["<<i<<"]="
-                <<test.val(i+i*test.mloc())<<endl;
-    }
-#endif
-
-    sqrtDistMatrix(rot);
-    for(int i=0;i<dim_;i++)
-        occupation_[i]=0.5*( occupation0_[i]+occupation_[i] );
-
-    u_->gemm('n','n',1.,rot,*u0_,0.);
-
-    dist_matrix::DistMatrix<DISTMATDTYPE> z(*u_);
-    ls_->trtrs('l', 't', 'n', z);
-
-    dist_matrix::DistMatrix<DISTMATDTYPE> gamma("Gamma", &occupation_[0], dim_, dim_);
-    const double orbital_occupation = with_spin_ ? 1. : 2.;
-    gamma.scal(orbital_occupation); // rescale for spin
- 
-    work_->symm('r', 'l', 1., gamma, z, 0.);
-    dm_->gemm('n', 't', 1., *work_, z, 0.);
-}
-#endif
 
 void ProjectedMatrices::computeOccupationsFromDM()
 {
