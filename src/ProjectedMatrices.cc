@@ -85,7 +85,6 @@ ProjectedMatrices::ProjectedMatrices(const int ndim, const bool with_spin)
 
         matHB_ = new dist_matrix::DistMatrix<DISTMATDTYPE>("HB", ndim, ndim);
         theta_ = new dist_matrix::DistMatrix<DISTMATDTYPE>("Theta", ndim, ndim);
-        u_     = new dist_matrix::DistMatrix<DISTMATDTYPE>("U", ndim, ndim);
         work_  = new dist_matrix::DistMatrix<DISTMATDTYPE>("work", ndim, ndim);
     }
 
@@ -120,7 +119,6 @@ ProjectedMatrices::~ProjectedMatrices()
     {
         assert(matH_ != 0);
         assert(theta_ != 0);
-        assert(u_ != 0);
         assert(work_ != 0);
 
         delete matHB_;
@@ -128,7 +126,6 @@ ProjectedMatrices::~ProjectedMatrices()
         delete matH_;
         delete theta_;
         theta_ = 0;
-        delete u_;
         delete work_;
 
         delete localX_;
@@ -280,11 +277,11 @@ void ProjectedMatrices::solveGenEigenProblem(
     gm_->sygst(mat);
 
     // solve a standard symmetric eigenvalue problem
-    mat.syev(job, 'l', eigenvalues_, *u_);
+    mat.syev(job, 'l', eigenvalues_, z);
 
     // Get the eigenvectors Z of the generalized eigenvalue problem
     // Solve Z=L**(-T)*U
-    z = *u_;
+//    z = *u_;
     gm_->solveLST(z);
 
     val = eigenvalues_;

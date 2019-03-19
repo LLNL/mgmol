@@ -52,8 +52,6 @@ class ProjectedMatrices : public ProjectedMatricesInterface
     dist_matrix::DistMatrix<DISTMATDTYPE>* mat_X_old_;
     dist_matrix::DistMatrix<DISTMATDTYPE>* mat_L_old_;
 
-    // orthogonal tranformation
-    dist_matrix::DistMatrix<DISTMATDTYPE>* u_;
     double min_val_;
 
     static Timer sygv_tm_;
