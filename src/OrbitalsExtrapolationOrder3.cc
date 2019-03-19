@@ -64,7 +64,8 @@ void OrbitalsExtrapolationOrder3<T>::extrapolate_orbitals(
             tmp_orbitals_minus1.multiply_by_matrix(yyt);
 
 #if EXTRAPOLATE_H
-            projmat->updateHminus1tmp(matQ, yyt, (*MPIdata::sout));
+            OrbitalsExtrapolation<T>::hextrapol_->updateHminus1tmp(
+                matQ, yyt, (*MPIdata::sout));
 #endif
 
             if (orbitals_minus2_ != 0)
@@ -86,7 +87,8 @@ void OrbitalsExtrapolationOrder3<T>::extrapolate_orbitals(
                 orbitals_minus2_->axpy(-1., *orbitals_minus1_);
                 orbitals_minus2_->multiply_by_matrix(yyt);
 #if EXTRAPOLATE_H
-                projmat->updateHminus2(matQ, yyt, (*MPIdata::sout));
+                OrbitalsExtrapolation<T>::hextrapol_->updateHminus2(
+                    matQ, yyt, (*MPIdata::sout));
 #endif
 
 #if 0        
@@ -101,7 +103,7 @@ void OrbitalsExtrapolationOrder3<T>::extrapolate_orbitals(
 #if EXTRAPOLATE_H
             if (ct.verbose > 2 && onpe0)
                 (*MPIdata::sout) << "Extrapolate H..." << endl;
-            projmat->extrapolateHorder3();
+            OrbitalsExtrapolation<T>::hextrapol_->extrapolateHorder3();
 #endif
         }
         else
@@ -138,7 +140,7 @@ void OrbitalsExtrapolationOrder3<T>::extrapolate_orbitals(
     if (use_dense_proj_mat)
     {
 #if EXTRAPOLATE_H
-        projmat->updateHminus2();
+        hextrapol_->updateHminus2(projmat->getMatHB());
 #endif
     }
 
@@ -146,7 +148,7 @@ void OrbitalsExtrapolationOrder3<T>::extrapolate_orbitals(
 #if EXTRAPOLATE_H
     if (use_dense_proj_mat)
     {
-        projmat->saveH();
+        hextrapol_->saveH(projmat->getMatHB());
     }
 #endif
 

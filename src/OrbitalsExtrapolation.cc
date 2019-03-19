@@ -29,6 +29,9 @@ void OrbitalsExtrapolation<T>::clearOldOrbitals()
         delete orbitals_minus1_;
         orbitals_minus1_ = 0;
     }
+#if EXTRAPOLATE_H
+    delete hextrapol_;
+#endif
 }
 
 template<class T>

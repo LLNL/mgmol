@@ -31,8 +31,7 @@ void OrbitalsExtrapolationOrder2<T>::extrapolate_orbitals(
         ct.OuterSolver() != OuterSolverType::NLCG )
     {
         projmat = dynamic_cast<ProjectedMatrices*>(proj_matrices);
-        assert(projmat);
-        use_dense_proj_mat = true;
+        if( projmat )use_dense_proj_mat = true;
     }
 #endif
 
@@ -73,7 +72,8 @@ void OrbitalsExtrapolationOrder2<T>::extrapolate_orbitals(
 #if EXTRAPOLATE_H
                 if (ct.verbose > 2 && onpe0)
                     (*MPIdata::sout) << "Extrapolate H..." << endl;
-                projmat->extrapolateHorder2(matQ, yyt, (*MPIdata::sout));
+                OrbitalsExtrapolation<T>::hextrapol_->extrapolateHorder2(
+                    matQ, yyt, (*MPIdata::sout));
                 extrapolated_H_ = true;
 #endif
 
@@ -105,11 +105,7 @@ void OrbitalsExtrapolationOrder2<T>::extrapolate_orbitals(
         if (use_dense_proj_mat)
         {
 #if EXTRAPOLATE_H
-            ProjectedMatrices* projmat
-                = dynamic_cast<ProjectedMatrices*>(proj_matrices);
-            assert(projmat);
-
-            projmat->updateHminus1();
+            hextrapol_->updateHminus1( projmat->getMatHB() );
 #endif
         }
     }
@@ -118,7 +114,7 @@ void OrbitalsExtrapolationOrder2<T>::extrapolate_orbitals(
 #if EXTRAPOLATE_H
     if (use_dense_proj_mat)
     {
-        projmat->saveH();
+        hextrapol_->saveH(projmat->getMatHB());
     }
 #endif
 

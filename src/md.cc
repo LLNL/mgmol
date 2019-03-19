@@ -82,7 +82,7 @@ void MGmol<T>::preWFextrapolation()
         ProjectedMatrices* projmat
             = dynamic_cast<ProjectedMatrices*>(proj_matrices_);
         assert(projmat);
-        projmat->initExtrapolationH();
+        orbitals_extrapol_->initExtrapolationH( projmat->getMatHB() );
 #endif
     }
 }

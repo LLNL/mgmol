@@ -27,7 +27,6 @@
 
 #include <iostream>
 
-#define EXTRAPOLATE_H 1
 
 // const double tol_matrix_elements=1.e-14;
 // const double tol_matrix_elements=0.;
@@ -69,13 +68,6 @@ class ProjectedMatrices : public ProjectedMatricesInterface
 
     static dist_matrix::RemoteTasksDistMatrix<DISTMATDTYPE>*
         remote_tasks_DistMatrix_;
-
-#if EXTRAPOLATE_H
-    dist_matrix::DistMatrix<DISTMATDTYPE>* h_minus1_;
-    dist_matrix::DistMatrix<DISTMATDTYPE>* h_minus2_;
-    dist_matrix::DistMatrix<DISTMATDTYPE>* new_h_;
-    dist_matrix::DistMatrix<DISTMATDTYPE>* tmp_h_minus1_;
-#endif
 
     ProjectedMatrices& operator=(const ProjectedMatrices& src);
     ProjectedMatrices(const ProjectedMatrices& pm);
@@ -457,93 +449,6 @@ public:
                 "called!!!"
              << endl;
     }
-#if EXTRAPOLATE_H
-    void initExtrapolationH() { *new_h_ = *matHB_; }
-    void extrapolateHorder2(dist_matrix::DistMatrix<DISTMATDTYPE> matQ,
-        dist_matrix::DistMatrix<DISTMATDTYPE>& yyt, ostream& os)
-    {
-        rotateSym(*h_minus1_, matQ, *work_);
-
-        h_minus1_->axpy(-1., *new_h_);
-        work_->gemm('n', 'n', 1., *h_minus1_, yyt, 0.);
-        h_minus1_->gemm('t', 'n', 1., yyt, *work_, 0.);
-        if (onpe0) os << "delta H..." << endl;
-        h_minus1_->print(os, 0, 0, 5, 5);
-        new_h_->axpy(-1., *h_minus1_);
-    }
-    void updateHminus1tmp(dist_matrix::DistMatrix<DISTMATDTYPE> matQ,
-        dist_matrix::DistMatrix<DISTMATDTYPE>& yyt, ostream& os)
-    {
-        if (h_minus1_ != 0)
-        {
-            rotateSym(*h_minus1_, matQ, *work_);
-            *tmp_h_minus1_ = *h_minus1_;
-            tmp_h_minus1_->axpy(-1., *new_h_);
-            work_->gemm('n', 'n', 1., *tmp_h_minus1_, yyt, 0.);
-            tmp_h_minus1_->gemm('t', 'n', 1., yyt, *work_, 0.);
-            if (onpe0) os << "delta H..." << endl;
-            tmp_h_minus1_->print(os, 0, 0, 5, 5);
-        }
-    }
-    void updateHminus2(dist_matrix::DistMatrix<DISTMATDTYPE> matQ,
-        dist_matrix::DistMatrix<DISTMATDTYPE>& yyt, ostream& os)
-    {
-        if (h_minus2_ != 0)
-        {
-            rotateSym(*h_minus2_, matQ, *work_);
-            h_minus2_->axpy(-1., *h_minus1_);
-            work_->gemm('n', 'n', 1., *h_minus2_, yyt, 0.);
-            h_minus2_->gemm('t', 'n', 1., yyt, *work_, 0.);
-            if (onpe0) os << "delta H..." << endl;
-            h_minus2_->print(os, 0, 0, 5, 5);
-        }
-    }
-    void extrapolateHorder3()
-    {
-        if (h_minus2_ != 0)
-        {
-            new_h_->axpy(-2., *tmp_h_minus1_);
-            new_h_->axpy(1., *h_minus2_);
-        }
-        else
-        {
-            if (h_minus1_ != 0)
-            {
-                new_h_->axpy(-1., *tmp_h_minus1_);
-            }
-        }
-    }
-
-    void saveH() { *matHB_ = *new_h_; }
-    void updateHminus1()
-    {
-        if (h_minus1_ == 0)
-        {
-            h_minus1_ = new dist_matrix::DistMatrix<DISTMATDTYPE>(
-                "H_minus1", dim_, dim_);
-        }
-        *h_minus1_ = *matHB_;
-    }
-    void updateHminus2()
-    {
-        if (h_minus1_ == 0)
-        {
-            h_minus1_ = new dist_matrix::DistMatrix<DISTMATDTYPE>(
-                "H_minus1", dim_, dim_);
-        }
-        else
-        {
-            if (h_minus2_ == 0)
-                h_minus2_ = new dist_matrix::DistMatrix<DISTMATDTYPE>(
-                    "H_minus2", dim_, dim_);
-            *h_minus2_ = *h_minus1_;
-        }
-        *h_minus1_ = *matHB_;
-    }
-#endif
-#if 0
-    void rotateBackDM();
-#endif
 
     void resetDotProductMatrices();
     double dotProductWithInvS(const SquareLocalMatrices<MATDTYPE>& ss);
@@ -574,7 +479,7 @@ public:
         assert(theta_ != 0);
         pmat.gemm('n', 'n', 1.0, mat, *theta_, 0.);
     }
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& getMatHB() { return *matHB_; }
+    dist_matrix::DistMatrix<DISTMATDTYPE>& getMatHB() { return *matHB_; }
     void setDM(const dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
         const int orbitals_index)
     {

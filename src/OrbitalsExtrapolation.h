@@ -11,6 +11,9 @@
 #ifndef MGMOL_ORBITALSEXTRAPOLATION_H
 #define MGMOL_ORBITALSEXTRAPOLATION_H
 
+#define EXTRAPOLATE_H 1
+
+#include "Hextrapolation.h"
 #include "Control.h"
 class LocalizationRegions;
 class ClusterOrbitals;
@@ -23,10 +26,27 @@ class OrbitalsExtrapolation
 {
 public:
     OrbitalsExtrapolation()
-        : orbitals_minus1_(0)
-    {}
+        : orbitals_minus1_(0), hextrapol_(0)
+    {
+#if EXTRAPOLATE_H
+        Control& ct = *(Control::instance());
+
+        if (ct.OuterSolver() != OuterSolverType::ABPG &&
+            ct.OuterSolver() != OuterSolverType::NLCG )
+            hextrapol_ = new Hextrapolation(ct.numst);
+#endif
+    }
 
     virtual ~OrbitalsExtrapolation();
+
+#if EXTRAPOLATE_H
+    void initExtrapolationH(const dist_matrix::DistMatrix<DISTMATDTYPE>& mat)
+    {
+        assert( hextrapol_ );
+
+        hextrapol_->initExtrapolationH(mat);
+    }
+#endif
 
     virtual bool extrapolatedH() const { return false; }
 
@@ -46,6 +66,10 @@ public:
 
 protected:
     T* orbitals_minus1_;
+
+#if EXTRAPOLATE_H
+    Hextrapolation* hextrapol_;
+#endif
 };
 
 #endif
