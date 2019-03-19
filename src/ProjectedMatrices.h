@@ -129,7 +129,6 @@ protected:
     // work matrix for tmp usage
     dist_matrix::DistMatrix<DISTMATDTYPE>* work_;
 
-    std::vector<DISTMATDTYPE> aux_energies_;
     void printTheta(ostream& os) const
     {
         if (onpe0) os << " Matrix Theta" << endl;
@@ -147,7 +146,6 @@ protected:
         if (onpe0) os << " Matrix H" << endl;
         matH_->print(os, 0, 0, NPRINT_ROWS_AND_COLS, NPRINT_ROWS_AND_COLS);
     }
-    void setAuxilliaryEnergiesFromEigenenergies();
 
 public:
     ProjectedMatrices(const int, const bool with_spin);
@@ -381,7 +379,6 @@ public:
     int writeDM_hdf5(HDFrestart& h5f_file);
     int read_dm_hdf5(hid_t file_id);
     void printEigenvalues(ostream& os) const;
-    void setAuxilliaryEnergiesFromOccupations();
     void updateDM(const int iterative_index);
     void updateDMwithEigenstates(const int iterative_index);
     void updateDMwithEigenstatesAndRotate(
@@ -390,7 +387,7 @@ public:
         const double width, const int nel, const int max_numst)
     {
         return computeChemicalPotentialAndOccupations(
-            aux_energies_, width, nel, max_numst);
+            eigenvalues_, width, nel, max_numst);
     }
 
     dist_matrix::DistMatrix<DISTMATDTYPE> getDistMatrixFromLocalMatrices(

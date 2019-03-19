@@ -355,7 +355,6 @@ void ProjectedMatrices::updateDMwithEigenstates(const int iterative_index)
     // solves generalized eigenvalue problem
     // and return solution in zz and val
     solveGenEigenProblem(zz, val);
-    setAuxilliaryEnergiesFromEigenenergies();
     double final_mu = computeChemicalPotentialAndOccupations();
     if (onpe0 && ct.verbose > 1) cout << "Final mu_ = " << final_mu << endl;
 
@@ -385,7 +384,6 @@ void ProjectedMatrices::updateDMwithEigenstatesAndRotate(
     // solves generalized eigenvalue problem
     // and return solution in zz and val
     solveGenEigenProblem(zz, val);
-    setAuxilliaryEnergiesFromEigenenergies();
     computeChemicalPotentialAndOccupations();
 
     rotateAll(zz, true);
@@ -763,47 +761,6 @@ void ProjectedMatrices::printEigenvaluesHa(ostream& os) const
         if (width_ > 1.e-10)
             os << " FERMI ENERGY   = " << 0.5 * mu_ << "[Ha]" << endl;
     }
-}
-
-void ProjectedMatrices::setAuxilliaryEnergiesFromEigenenergies()
-{
-    Control& ct = *(Control::instance());
-    if (ct.DMEigensolver() == DMEigensolverType::Eigensolver)
-    {
-        assert((int)eigenvalues_.size() == dim_);
-
-        if (aux_energies_.size() == 0) aux_energies_.resize(dim_);
-        aux_energies_ = eigenvalues_;
-
-        assert((int)aux_energies_.size() == dim_);
-    }
-}
-
-void ProjectedMatrices::setAuxilliaryEnergiesFromOccupations()
-{
-    if (aux_energies_.size() == 0) aux_energies_.resize(dim_);
-
-    const double eps   = 1.e-15;
-    const double shift = width_ > 1.e-8 ? -log(eps) / width_ : 1000.;
-
-    vector<DISTMATDTYPE> occ(dim_);
-    dm_->getOccupations(occ);
-    for (int i = 0; i < dim_; i++)
-    {
-        if (occ[i] < eps)
-        {
-            aux_energies_[i] = mu_ + shift;
-        }
-        else if ((1. - occ[i]) < eps)
-        {
-            aux_energies_[i] = mu_ - shift;
-        }
-        else
-        {
-            aux_energies_[i] = mu_ + width_ * log(1. / occ[i] - 1.);
-        }
-    }
-    assert((int)aux_energies_.size() == dim_);
 }
 
 // find the Fermi level by a bisection

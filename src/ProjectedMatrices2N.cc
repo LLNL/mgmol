@@ -40,7 +40,6 @@ void ProjectedMatrices2N::iterativeUpdateDMwithEigenstates(
     vector<DISTMATDTYPE> eigenval(dim);
 
     solveGenEigenProblem(*work2N_, eigenval);
-    setAuxilliaryEnergiesFromEigenenergies();
 
     double kbT = occ_width;
     vector<DISTMATDTYPE> occ(dim);
