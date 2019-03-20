@@ -22,6 +22,7 @@
 #include "DistMatrix.h"
 #include "RemoteTasksDistMatrix.h"
 #include "SparseDistMatrix.h"
+#include "DistMatrix2SquareLocalMatrices.h"
 
 #include "hdf5.h"
 
@@ -74,7 +75,7 @@ class ProjectedMatrices : public ProjectedMatricesInterface
     dist_matrix::SubMatricesIndexing<DISTMATDTYPE>* submat_indexing_;
 
     dist_matrix::SubMatrices<DISTMATDTYPE>* submatLS_;
-    dist_matrix::SubMatrices<DISTMATDTYPE>* submatWork_;
+    DistMatrix2SquareLocalMatrices* dm2sl_;
 #endif
 
     /*!
@@ -176,38 +177,14 @@ public:
 
     void updateSubMatX(const dist_matrix::DistMatrix<DISTMATDTYPE>& dm)
     {
-        update_submatX_tm_.start();
-        submatWork_->gather(dm);
-
-        if (chromatic_number_ > 0)
-            for (short iloc = 0; iloc < subdiv_; iloc++)
-            {
-                MATDTYPE* const localX_iloc = localX_->getSubMatrix(iloc);
-                for (int icolor = 0; icolor < chromatic_number_; icolor++)
-                    for (int jcolor = 0; jcolor < chromatic_number_; jcolor++)
-                        localX_iloc[icolor + chromatic_number_ * jcolor]
-                            = submatWork_->val(icolor, jcolor, iloc);
-            }
-        update_submatX_tm_.stop();
+        dm2sl_->convert(dm, *localX_);
     }
 
     void updateSubMatLS() { gm_->updateSubMatLS(*submatLS_); }
 
     void updateSubMatT()
     {
-        update_submatT_tm_.start();
-        submatWork_->gather(*theta_);
-
-        if (chromatic_number_ > 0)
-            for (short iloc = 0; iloc < subdiv_; iloc++)
-            {
-                MATDTYPE* localT_iloc = localT_->getSubMatrix(iloc);
-                for (int icolor = 0; icolor < chromatic_number_; icolor++)
-                    for (int jcolor = 0; jcolor < chromatic_number_; jcolor++)
-                        localT_iloc[icolor + chromatic_number_ * jcolor]
-                            = submatWork_->val(icolor, jcolor, iloc);
-            }
-        update_submatT_tm_.stop();
+        dm2sl_->convert(*theta_, *localT_);
     }
 
     void getLoewdinTransform(SquareLocalMatrices<MATDTYPE>& localP);

@@ -22,6 +22,8 @@
 #include "fermi.h"
 #include "tools.h"
 
+#include "DistMatrix2SquareLocalMatrices.h"
+
 #include <fstream>
 #include <iomanip>
 
@@ -68,7 +70,7 @@ ProjectedMatrices::ProjectedMatrices(const int ndim, const bool with_spin)
     mat_L_old_ = 0;
 
 #ifdef USE_DIS_MAT
-    submatWork_ = 0;
+    dm2sl_ = 0;
     submatLS_   = 0;
 #endif
     localX_ = 0;
@@ -138,8 +140,7 @@ ProjectedMatrices::~ProjectedMatrices()
         delete sH_;
         sH_ = 0;
 
-        delete submatWork_;
-        submatWork_ = 0;
+        delete dm2sl_;
         delete submatLS_;
         submatLS_ = 0;
 
@@ -180,15 +181,15 @@ void ProjectedMatrices::setup(
 
     if (sH_ != NULL) delete sH_;
 
-    if (submatWork_ != NULL) delete submatWork_;
+    if (dm2sl_ != NULL) delete dm2sl_;
     if (submatLS_ != NULL) delete submatLS_;
     // if( orbitals_type_!=0 )
     {
 
         if (dim_ > 0)
         {
-            submatWork_ = new dist_matrix::SubMatrices<DISTMATDTYPE>("Work",
-                global_indexes, comm, dm_->getMatrix(), *submat_indexing_);
+            dm2sl_ = new DistMatrix2SquareLocalMatrices(
+                         comm, global_indexes, dm_->getMatrix());
             submatLS_   = new dist_matrix::SubMatrices<DISTMATDTYPE>("LS",
                 global_indexes, comm, gm_->getMatrix(), *submat_indexing_);
 

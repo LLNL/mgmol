@@ -23,6 +23,7 @@ MODULES = tools pb DistMatrix sparse_linear_algebra \
           radial
  
 SRC =   \
+ DistMatrix2SquareLocalMatrices.cc \
  GrassmanCGFactory.cc \
  DMStrategyFactory.cc \
  manage_memory.cc \

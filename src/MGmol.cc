@@ -61,6 +61,7 @@ using namespace std;
 #include "SubspaceProjector.h"
 #include "XConGrid.h"
 #include "XCfunctionalFactory.h"
+#include "DistMatrix2SquareLocalMatrices.h"
 #include "manage_memory.h"
 
 #define DELTA 1e-8
@@ -1183,6 +1184,8 @@ void MGmol<T>::printTimers()
     ttdot_tm.print(os_);
 
     dist_matrix::SubMatrices<double>::printTimers(os_);
+
+    DistMatrix2SquareLocalMatrices::printTimers(os_);
 
     dist_matrix::SparseDistMatrix<DISTMATDTYPE>::printTimers(os_);
 
