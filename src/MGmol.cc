@@ -1182,9 +1182,7 @@ void MGmol<T>::printTimers()
     mpdot_tm.print(os_);
     ttdot_tm.print(os_);
 
-    dist_matrix::SubMatrices<double>::gather_tm().print(os_);
-    dist_matrix::SubMatrices<double>::gather_comp_tm().print(os_);
-    dist_matrix::SubMatrices<double>::gather_comm_tm().print(os_);
+    dist_matrix::SubMatrices<double>::printTimers(os_);
 
     dist_matrix::SparseDistMatrix<DISTMATDTYPE>::printTimers(os_);
 

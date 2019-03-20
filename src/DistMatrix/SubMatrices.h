@@ -8,11 +8,9 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id: SubMatrices.h 7 2011-03-08 18:50:31Z jeanluc $
-// Class SubMatrices
 // container for m_ matrices n_*n_ corresponding to submatrices contributions
-#ifndef SubMatrices_H
-#define SubMatrices_H
+#ifndef MGMOL_SubMatrices_H
+#define MGMOL_SubMatrices_H
 
 #if USE_MPI
 #include <mpi.h>
@@ -20,16 +18,17 @@
 typedef int MPI_Comm;
 #endif
 
-#include <iostream>
-#include <map>
-#include <set>
-#include <vector>
-using namespace std;
-
 #include "DistMatrix.h"
 #include "SubMatricesIndexing.h"
 #include "Timer.h"
 // template <class T> class SubMatricesIndexing;
+
+#include <iostream>
+#include <vector>
+#include <cstring>
+
+typedef unsigned int type_displ;
+
 
 namespace dist_matrix
 {
@@ -42,7 +41,7 @@ private:
     static Timer gather_comp_tm_;
     static Timer gather_comm_tm_;
 
-    string object_name_;
+    std::string object_name_;
 
     // MPI
     const MPI_Comm comm_;
@@ -55,27 +54,33 @@ private:
     // "local" data
     int n_; // size of local matrices
     int nb_local_matrices_; // number of matrices on this PE
-    vector<T*> local_data_; // "local" data
+    std::vector<T*> local_data_; // "local" data
     T* storage_;
 
     bool send_;
 
+    void sendrecv(T* sendbuf, T* recvbuf,
+        const std::vector<type_displ>& my_displ,
+        const std::vector<type_displ>& remote_displ);
+
 public:
-    static Timer gather_tm() { return gather_tm_; }
+    static void printTimers(std::ostream& os)
+    {
+        gather_tm_.print(os);
+        gather_comp_tm_.print(os);
+        gather_comm_tm_.print(os);
+    }
 
-    static Timer gather_comp_tm() { return gather_comp_tm_; }
-
-    static Timer gather_comm_tm() { return gather_comm_tm_; }
-
-    SubMatrices<T>(const string& name, const vector<vector<int>>& indexes,
+    SubMatrices<T>(const std::string& name,
+        const std::vector<std::vector<int>>& indexes,
         MPI_Comm comm, const DistMatrix<T>& mat, const SubMatricesIndexing<T>&);
 
     ~SubMatrices<T>() { delete[] storage_; }
 
     void scal(const double alpha);
     void gather(const DistMatrix<T>& mat);
-    void print(ostream&);
-    void get_array(const int im, vector<T>& val);
+    void print(std::ostream&);
+    void get_array(const int im, std::vector<T>& val);
 
     T val(const int i, const int j, const int im) const
     {
