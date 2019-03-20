@@ -57,25 +57,18 @@ DensityMatrix* ProjectedMatrices::dm_4dot_product_ = 0;
 static int sparse_distmatrix_nb_partitions = 128;
 
 ProjectedMatrices::ProjectedMatrices(const int ndim, const bool with_spin)
-    : with_spin_(with_spin)
+    : with_spin_(with_spin),
+      dim_(ndim),
+      dm_(new DensityMatrix(ndim) ),
+      gm_(new GramMatrix(ndim) )
 {
-    dim_             = ndim;
     width_           = 0.;
     min_val_         = 0.25;
     submat_indexing_ = 0;
 
-    dm_        = new DensityMatrix(ndim);
-    gm_        = new GramMatrix(ndim);
-    mat_X_old_ = 0;
-    mat_L_old_ = 0;
-
 #ifdef USE_DIS_MAT
-    dm2sl_ = 0;
     submatLS_   = 0;
 #endif
-    localX_ = 0;
-    localT_ = 0;
-
     sH_ = 0;
 
     if (dim_ > 0)
@@ -85,11 +78,10 @@ ProjectedMatrices::ProjectedMatrices(const int ndim, const bool with_spin)
 
     if (dim_ > 0)
     {
-        matH_ = new dist_matrix::DistMatrix<DISTMATDTYPE>("H", ndim, ndim);
-
-        matHB_ = new dist_matrix::DistMatrix<DISTMATDTYPE>("HB", ndim, ndim);
-        theta_ = new dist_matrix::DistMatrix<DISTMATDTYPE>("Theta", ndim, ndim);
-        work_  = new dist_matrix::DistMatrix<DISTMATDTYPE>("work", ndim, ndim);
+        matH_.reset( new dist_matrix::DistMatrix<DISTMATDTYPE>("H", ndim, ndim) );
+        matHB_.reset( new dist_matrix::DistMatrix<DISTMATDTYPE>("HB", ndim, ndim) );
+        theta_.reset( new dist_matrix::DistMatrix<DISTMATDTYPE>("Theta", ndim, ndim) );
+        work_.reset( new dist_matrix::DistMatrix<DISTMATDTYPE>("work", ndim, ndim) );
     }
 
     if (onpe0)
@@ -101,46 +93,11 @@ ProjectedMatrices::ProjectedMatrices(const int ndim, const bool with_spin)
 
 ProjectedMatrices::~ProjectedMatrices()
 {
-    assert(dm_ != 0);
-    assert(gm_ != 0);
-
-    delete dm_;
-    dm_ = 0;
-    delete gm_;
-    gm_ = 0;
-    if (mat_X_old_)
-    {
-        delete mat_X_old_;
-        mat_X_old_ = 0;
-    }
-    if (mat_L_old_)
-    {
-        delete mat_L_old_;
-        mat_L_old_ = 0;
-    }
-
     if (dim_ > 0)
     {
-        assert(matH_ != 0);
-        assert(theta_ != 0);
-        assert(work_ != 0);
-
-        delete matHB_;
-        matHB_ = 0;
-        delete matH_;
-        delete theta_;
-        theta_ = 0;
-        delete work_;
-
-        delete localX_;
-        localX_ = 0;
-        delete localT_;
-        localT_ = 0;
-
         delete sH_;
         sH_ = 0;
 
-        delete dm2sl_;
         delete submatLS_;
         submatLS_ = 0;
 
@@ -176,29 +133,23 @@ void ProjectedMatrices::setup(
     submat_indexing_ = new dist_matrix::SubMatricesIndexing<DISTMATDTYPE>(
         global_indexes, comm, gm_->getMatrix());
 
-    if (localX_ != NULL) delete localX_;
-    if (localT_ != NULL) delete localT_;
-
     if (sH_ != NULL) delete sH_;
 
-    if (dm2sl_ != NULL) delete dm2sl_;
     if (submatLS_ != NULL) delete submatLS_;
-    // if( orbitals_type_!=0 )
+ 
+    if (dim_ > 0)
     {
+        dm2sl_.reset( new DistMatrix2SquareLocalMatrices(
+                     comm, global_indexes, dm_->getMatrix()) );
+        submatLS_   = new dist_matrix::SubMatrices<DISTMATDTYPE>("LS",
+            global_indexes, comm, gm_->getMatrix(), *submat_indexing_);
 
-        if (dim_ > 0)
-        {
-            dm2sl_ = new DistMatrix2SquareLocalMatrices(
-                         comm, global_indexes, dm_->getMatrix());
-            submatLS_   = new dist_matrix::SubMatrices<DISTMATDTYPE>("LS",
-                global_indexes, comm, gm_->getMatrix(), *submat_indexing_);
-
-            localX_
-                = new SquareLocalMatrices<MATDTYPE>(subdiv_, chromatic_number_);
-            localT_
-                = new SquareLocalMatrices<MATDTYPE>(subdiv_, chromatic_number_);
-        }
+        localX_.reset(
+            new SquareLocalMatrices<MATDTYPE>(subdiv_, chromatic_number_) );
+        localT_.reset(
+            new SquareLocalMatrices<MATDTYPE>(subdiv_, chromatic_number_) );
     }
+ 
 #endif
 
 #ifdef USE_MPI
@@ -284,7 +235,6 @@ void ProjectedMatrices::solveGenEigenProblem(
 
     // Get the eigenvectors Z of the generalized eigenvalue problem
     // Solve Z=L**(-T)*U
-//    z = *u_;
     gm_->solveLST(z);
 
     val = eigenvalues_;
@@ -364,7 +314,7 @@ void ProjectedMatrices::computeOccupationsFromDM()
     Control& ct = *(Control::instance());
     if (ct.DMEigensolver() == DMEigensolverType::Eigensolver && dim_ > 0)
     {
-        assert(dm_ != 0);
+        assert(dm_);
         dm_->computeOccupations(gm_->getCholeskyL());
     }
 }
@@ -381,7 +331,7 @@ void ProjectedMatrices::printDM(ostream& os) const { dm_->print(os); }
 
 const dist_matrix::DistMatrix<DISTMATDTYPE>& ProjectedMatrices::dm() const
 {
-    assert(dm_ != 0);
+    assert(dm_);
     return dm_->getMatrix();
 }
 const dist_matrix::DistMatrix<DISTMATDTYPE>&

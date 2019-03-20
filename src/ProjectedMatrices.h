@@ -50,8 +50,8 @@ class ProjectedMatrices : public ProjectedMatricesInterface
     /*!
      * matrices to save old values and enable mixing or reset
      */
-    dist_matrix::DistMatrix<DISTMATDTYPE>* mat_X_old_;
-    dist_matrix::DistMatrix<DISTMATDTYPE>* mat_L_old_;
+    std::unique_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> mat_X_old_;
+    std::unique_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> mat_L_old_;
 
     double min_val_;
 
@@ -73,17 +73,17 @@ class ProjectedMatrices : public ProjectedMatricesInterface
 
 #ifdef USE_DIS_MAT
     dist_matrix::SubMatricesIndexing<DISTMATDTYPE>* submat_indexing_;
-
     dist_matrix::SubMatrices<DISTMATDTYPE>* submatLS_;
-    DistMatrix2SquareLocalMatrices* dm2sl_;
+
+    std::unique_ptr<DistMatrix2SquareLocalMatrices> dm2sl_;
 #endif
 
     /*!
      * Matrices to be used to multiply orbitals on the right
      * (dimension equal to number of local colors)
      */
-    SquareLocalMatrices<MATDTYPE>* localX_; // density matrix
-    SquareLocalMatrices<MATDTYPE>* localT_; // theta=inv(S)*H_phi
+    std::unique_ptr<SquareLocalMatrices<MATDTYPE>> localX_; // density matrix
+    std::unique_ptr<SquareLocalMatrices<MATDTYPE>> localT_; // theta=inv(S)*H_phi
 
     dist_matrix::SparseDistMatrix<DISTMATDTYPE>* sH_;
 
@@ -105,15 +105,15 @@ protected:
 
     unsigned dim_;
 
-    dist_matrix::DistMatrix<DISTMATDTYPE>* theta_;
-    dist_matrix::DistMatrix<DISTMATDTYPE>* matHB_;
-    dist_matrix::DistMatrix<DISTMATDTYPE>* matH_;
+    std::unique_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> theta_;
+    std::unique_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> matHB_;
+    std::unique_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> matH_;
 
-    DensityMatrix* dm_;
-    GramMatrix* gm_;
+    std::unique_ptr<DensityMatrix> dm_;
+    std::unique_ptr<GramMatrix> gm_;
 
     // work matrix for tmp usage
-    dist_matrix::DistMatrix<DISTMATDTYPE>* work_;
+    std::unique_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> work_;
 
     void printTheta(std::ostream& os) const
     {
@@ -194,7 +194,7 @@ public:
     void initializeGramMatrix(
         const SquareLocalMatrices<MATDTYPE>& ss, const int orbitals_index)
     {
-        assert(gm_ != 0);
+        assert(gm_);
 
         init_gram_matrix_tm_.start();
         ss.fillDistMatrix(*work_, global_indexes_);
@@ -206,7 +206,7 @@ public:
     void printHamiltonianMM(std::ofstream& tfile) { matH_->printMM(tfile); }
     int getDMMatrixIndex() const
     {
-        assert(dm_ != 0);
+        assert(dm_);
         return dm_->getOrbitalsIndex();
     }
     void setDMuniform(const DISTMATDTYPE nel, const int orbitals_index)
@@ -367,10 +367,10 @@ public:
         if (onpe0) std::cout << "ProjectedMatrices::saveDM()" << std::endl;
         if (!mat_X_old_)
         {
-            mat_X_old_
-                = new dist_matrix::DistMatrix<DISTMATDTYPE>(dm_->getMatrix());
-            mat_L_old_ = new dist_matrix::DistMatrix<DISTMATDTYPE>(
-                gm_->getCholeskyL());
+            mat_X_old_.reset(
+                new dist_matrix::DistMatrix<DISTMATDTYPE>(dm_->getMatrix()));
+            mat_L_old_.reset( new dist_matrix::DistMatrix<DISTMATDTYPE>(
+                gm_->getCholeskyL()) );
         }
         else
         {
