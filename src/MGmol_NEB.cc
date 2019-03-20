@@ -14,6 +14,8 @@
 #include "MGmol.h"
 #include "ProjectedMatricesInterface.h"
 
+using namespace std;
+
 template <class T>
 void MGmol<T>::sebprintForces() { ions_->printForces(os_); }
 template <class T>

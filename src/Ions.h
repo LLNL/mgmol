@@ -62,7 +62,7 @@ class Ions
     void readRestartVelocities(HDFrestart& h5_file);
     void readRestartRandomStates(HDFrestart& h5_file);
     void readRestartPositions(HDFrestart& h5_file);
-    int read1atom(ifstream* tfile, const bool cell_relative);
+    int read1atom(std::ifstream* tfile, const bool cell_relative);
 
     void associate2PE();
     void setupInteractingIons();
@@ -125,7 +125,7 @@ class Ions
     void gatherLockedData(std::vector<int>& locked_data, const int root) const;
     void computeNumIons(void);
     int readNatoms(const std::string input_file, const bool cell_relative);
-    int readNatoms(ifstream* tfile, const bool cell_relative);
+    int readNatoms(std::ifstream* tfile, const bool cell_relative);
     int readAtomsFromXYZ(const std::string filename, const bool cell_relative);
     void setupContraintsData(std::vector<Ion*>&);
     void clearStepperData();
@@ -142,23 +142,23 @@ class Ions
     void gatherForces(std::vector<double>& forces, const int root = 0) const;
 
     void gatherNames(
-        vector<string>& names, const int root, const MPI_Comm comm) const;
+        std::vector<std::string>& names, const int root, const MPI_Comm comm) const;
     void gatherPositions(
-        vector<double>& positions, const int root, const MPI_Comm comm) const;
+        std::vector<double>& positions, const int root, const MPI_Comm comm) const;
     void gatherLockedNames(
-        vector<string>& names, const int root, const MPI_Comm comm) const;
+        std::vector<std::string>& names, const int root, const MPI_Comm comm) const;
     void gatherIndexes(
-        vector<int>& indexes, const int root, const MPI_Comm comm) const;
+        std::vector<int>& indexes, const int root, const MPI_Comm comm) const;
     void gatherNLprojIds(
-        vector<int>& nlprojids, const int root, const MPI_Comm comm) const;
+        std::vector<int>& nlprojids, const int root, const MPI_Comm comm) const;
     void gatherVelocities(
-        vector<double>& velocities, const int root, const MPI_Comm comm) const;
+        std::vector<double>& velocities, const int root, const MPI_Comm comm) const;
     void gatherAtomicNumbers(
-        vector<int>& atnumbers, const int root, const MPI_Comm comm) const;
-    void gatherRandStates(vector<unsigned short>& rstates, const int root,
+        std::vector<int>& atnumbers, const int root, const MPI_Comm comm) const;
+    void gatherRandStates(std::vector<unsigned short>& rstates, const int root,
         const MPI_Comm comm) const;
     void gatherForces(
-        vector<double>& forces, const int root, const MPI_Comm comm) const;
+        std::vector<double>& forces, const int root, const MPI_Comm comm) const;
     bool hasLockedAtoms() const;
 
 public:
@@ -200,12 +200,12 @@ public:
     double energySelf() const;
     double energyDiff(const short bc[3]) const;
 
-    void printPositions(ostream& os, const int root = 0) const;
-    void printPositionsLocal(ostream& os, const int root = 0) const;
-    void printPositionsGlobal(ostream& os, const int root = 0) const;
-    void printForces(ostream& os, const int root = 0) const;
-    void printForcesLocal(ostream& os, const int root = 0) const;
-    void printForcesGlobal(ostream& os, const int root = 0) const;
+    void printPositions(std::ostream& os, const int root = 0) const;
+    void printPositionsLocal(std::ostream& os, const int root = 0) const;
+    void printPositionsGlobal(std::ostream& os, const int root = 0) const;
+    void printForces(std::ostream& os, const int root = 0) const;
+    void printForcesLocal(std::ostream& os, const int root = 0) const;
+    void printForcesGlobal(std::ostream& os, const int root = 0) const;
     int getNumIons(void);
     int getNumLocIons(void) const { return local_ions_.size(); }
     int getNumListIons(void) const { return list_ions_.size(); }
@@ -260,7 +260,7 @@ public:
     // functions to initialize atomic coordinates
     // either from input file, or restart file
     int readAtoms(const std::string filename, const bool cell_relative);
-    int readAtoms(ifstream* tfile, const bool cell_relative);
+    int readAtoms(std::ifstream* tfile, const bool cell_relative);
     void initFromRestartFile(HDFrestart& h5_file);
 
     int getNValenceElectrons() const;
@@ -274,8 +274,8 @@ public:
     void getVelocities(std::vector<double>& tau) const;
     void getForces(std::vector<double>& tau) const;
     void syncData(const std::vector<Species>& sp);
-    // void syncNames(const int nions, std::vector<string>& local_names,
-    // std::vector<string>& names);
+    // void syncNames(const int nions, std::vector<std::string>& local_names,
+    // std::vector<std::string>& names);
     double getMaxVlRadius() const { return max_Vl_radius_; }
     double getMaxVnlRadius() const
     {

@@ -88,7 +88,7 @@ private:
     int chromatic_number_;
 
     // map gid -> function storage (for each subdomain)
-    std::vector<map<int, ORBDTYPE*>>* gidToStorage_;
+    std::vector<std::map<int, ORBDTYPE*>>* gidToStorage_;
 
     // pointers to objects owned outside class
     ProjectedMatricesInterface* proj_matrices_;
@@ -141,7 +141,7 @@ private:
         LocalMatrices<MATDTYPE>&, const bool transpose = false);
 
     void computeGlobalIndexes(LocalizationRegions& lrs);
-    void computeInvNorms2(vector<vector<double>>& inv_norms2) const;
+    void computeInvNorms2(std::vector<std::vector<double>>& inv_norms2) const;
     void computeDiagonalGram(VariableSizeMatrix<sparserow>& diagS) const;
 
     void initFourier();
@@ -286,7 +286,7 @@ public:
 #ifdef PRINT_OPERATIONS
             if (onpe0)
                 (*MPIdata::sout)
-                    << "LocGridOrbitals::trade_boundaries()" << endl;
+                    << "LocGridOrbitals::trade_boundaries()" << std::endl;
 #endif
             block_vector_.trade_boundaries();
             last_index_traded = data_wghosts_index_;
@@ -327,11 +327,11 @@ public:
         mmpi.allreduce(
             &local_chromatic_number, &max_chromatic_number, 1, MPI_MAX);
         if (onpe0)
-            os << " Max. chromatic_number: " << max_chromatic_number << endl;
+            os << " Max. chromatic_number: " << max_chromatic_number << std::endl;
     }
     void printNumst(std::ostream& os) const
     {
-        if (onpe0) os << " Number of states   = " << numst_ << endl;
+        if (onpe0) os << " Number of states   = " << numst_ <<std:: endl;
     }
     void computeBAndInvB(const pb::Lap<ORBDTYPE>& LapOper);
 
@@ -408,17 +408,17 @@ public:
     void multiplyByMatrix2states(const int st1, const int st2,
         const double* mat, LocGridOrbitals& product);
 
-    int write_hdf5(HDFrestart& h5f_file, string name = "Function");
-    int write_func_hdf5(HDFrestart&, string name = "Function");
+    int write_hdf5(HDFrestart& h5f_file, std::string name = "Function");
+    int write_func_hdf5(HDFrestart&, std::string name = "Function");
     int read_hdf5(HDFrestart& h5f_file);
-    int read_func_hdf5(HDFrestart&, string name = "Function");
+    int read_func_hdf5(HDFrestart&, std::string name = "Function");
 
     void setGids2Storage();
 
     void initWF(const LocalizationRegions& lrs);
     void checkCond(const double tol, const bool flag_stop);
     double normState(const int st) const;
-    const vector<vector<int>>& getOverlappingGids() const
+    const std::vector<std::vector<int>>& getOverlappingGids() const
     {
         assert(overlapping_gids_.size() > 0);
         return overlapping_gids_;

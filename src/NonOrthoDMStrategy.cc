@@ -14,6 +14,8 @@
 #include "LocGridOrbitals.h"
 #include "ProjectedMatricesInterface.h"
 
+using namespace std;
+
 template <class T>
 NonOrthoDMStrategy<T>::NonOrthoDMStrategy(T* orbitals,
     ProjectedMatricesInterface* proj_matrices, const double mix)

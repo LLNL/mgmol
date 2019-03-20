@@ -13,6 +13,8 @@
 #include "LocGridOrbitals.h"
 #include "Mesh.h"
 
+using namespace std;
+
 template <class T>
 void SpreadPenalty<T>::addResidual(T& phi, T& res)
 {

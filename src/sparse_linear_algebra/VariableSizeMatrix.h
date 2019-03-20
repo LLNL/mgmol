@@ -197,7 +197,7 @@ public:
         return data_[lrindex]->getColumnIndex(pos);
     }
 
-    void getColumnIndexes(const int lrindex, vector<int>& indexes) const
+    void getColumnIndexes(const int lrindex, std::vector<int>& indexes) const
     {
         indexes = data_[lrindex]->getColumnIndexes();
     }
@@ -512,7 +512,7 @@ public:
     double pnorm(const int row, const int p) { return data_[row]->pnorm(p); }
 
     // fill "non-local" rows wit data from other MPI tasks
-    void consolidate(const vector<int>& gids, DataDistribution& distributor);
+    void consolidate(const std::vector<int>& gids, DataDistribution& distributor);
 
     VariableSizeMatrix<T>& operator+=(const VariableSizeMatrix<T>& a)
     {

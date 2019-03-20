@@ -25,6 +25,8 @@
 #define ORBITAL_OCCUPATION 2.0
 #define RY2EV 13.605804
 
+using namespace std;
+
 Timer ProjectedMatricesSparse::compute_inverse_tm_(
     "ProjectedMatricesSparse::computeInverse");
 Timer ProjectedMatricesSparse::compute_invB_tm_(

@@ -103,7 +103,7 @@ public:
 
     ~KBPsiMatrixSparse();
 
-    void printTimers(ostream& os);
+    void printTimers(std::ostream& os);
 
     template <class T>
     double getEvnl(const Ions& ions, T& orbitals,

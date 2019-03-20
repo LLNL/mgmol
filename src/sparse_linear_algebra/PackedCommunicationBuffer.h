@@ -135,7 +135,7 @@ public:
     template <class T>
     void insertRowsFromRecvBuf(VariableSizeMatrix<T>& amat, const bool append);
 
-    static void printTimers(ostream& os)
+    static void printTimers(std::ostream& os)
     {
         pack_local_data_tm_.print(os);
         // setup_data_ptr_tm_.print(os);

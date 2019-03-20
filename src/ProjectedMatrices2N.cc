@@ -10,6 +10,8 @@
 
 #include "ProjectedMatrices2N.h"
 
+using namespace std;
+
 ProjectedMatrices2N::ProjectedMatrices2N(const int ndim, const bool with_spin)
     : ProjectedMatrices(ndim, with_spin)
 {

@@ -85,6 +85,6 @@ public:
     virtual void parallelTransportUpdate(
         const double lambda, T& orbitals)
         = 0;
-    static void printTimers(ostream& os);
+    static void printTimers(std::ostream& os);
 };
 #endif

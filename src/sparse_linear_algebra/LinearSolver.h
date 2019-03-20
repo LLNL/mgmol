@@ -84,7 +84,7 @@ public:
     // get residual norm
     double residualNorm() { return (resnorm_); }
     // print timers
-    static void printTimers(ostream& os)
+    static void printTimers(std::ostream& os)
     {
         gmres_tm_.print(os);
         eigmin_tm_.print(os);

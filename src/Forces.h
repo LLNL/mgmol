@@ -60,7 +60,7 @@ public:
     void lforce(Ions& ions, RHODTYPE* rho);
     void force(T& orbitals, Ions& ions);
 
-    void printTimers(ostream& os)
+    void printTimers(std::ostream& os)
     {
         lforce_tm_.print(os);
         nlforce_tm_.print(os);

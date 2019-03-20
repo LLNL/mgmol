@@ -133,10 +133,10 @@ private:
     void computeLocKBPsiIon(T& orbitals, Ion& ion,
         const int ion_index,
         dist_matrix::SparseDistMatrix<DISTMATDTYPE>*** loc_kbpsi);
-    void computeLocKBPsi(T& orbitals, vector<Ion*>& ions_nl,
+    void computeLocKBPsi(T& orbitals, std::vector<Ion*>& ions_nl,
         dist_matrix::SparseDistMatrix<DISTMATDTYPE>*** prjsum);
     int read_rho_and_pot_hdf5(HDFrestart& file, Rho<T>& rho);
-    int read_restart_lrs(HDFrestart& h5f_file, const string& dset_name);
+    int read_restart_lrs(HDFrestart& h5f_file, const std::string& dset_name);
     int read_restart_data(
         HDFrestart& h5f_file, Rho<T>& rho,
         T& orbitals);
@@ -174,7 +174,7 @@ private:
         const std::vector<double>& eval,
         dist_matrix::DistMatrix<DISTMATDTYPE>& work);
     void wftransform(T*, T*, Ions&);
-    int readLRsFromInput(ifstream* tfile);
+    int readLRsFromInput(std::ifstream* tfile);
     void preWFextrapolation();
     void postWFextrapolation(T* orbitals);
     void computeResidualUsingHPhi(T& psi,
@@ -228,8 +228,8 @@ public:
     void global_exit(int i);
     void printEigAndOcc();
 
-    int readCoordinates(ifstream* tfile, const bool cell_relative);
-    int readCoordinates(const string filename, const bool cell_relative);
+    int readCoordinates(std::ifstream* tfile, const bool cell_relative);
+    int readCoordinates(const std::string filename, const bool cell_relative);
     double computeConstraintResidual(T& orbitals,
         const T& hphi, T& res,
         const bool print_residual, const bool norm_res);
@@ -305,30 +305,30 @@ public:
     void update_orbitals_LRs(T** orbitals);
     void clearOldOrbitals();
     void getKBPsiAndHij(T& orbitals, Ions& ions);
-    int write_hdf5(const string filename, vector<vector<RHODTYPE>>& rho,
+    int write_hdf5(const std::string filename, std::vector<std::vector<RHODTYPE>>& rho,
         Ions& ions, T& orbitals, LocalizationRegions& lrs);
-    int write_hdf5(HDFrestart& h5f_file, vector<vector<RHODTYPE>>& rho,
+    int write_hdf5(HDFrestart& h5f_file, std::vector<std::vector<RHODTYPE>>& rho,
         Ions& ions, T& orbitals, LocalizationRegions& lrs);
     double get_evnl(const Ions& ions, T& orbitals);
     void sebprintPositions();
     void sebprintForces();
-    void get_positions(vector<vector<double>>& r);
-    void set_positions(vector<vector<double>>& r);
-    void get_forces(vector<vector<double>>& f);
-    void set_forces(vector<vector<double>>& f);
+    void get_positions(std::vector<std::vector<double>>& r);
+    void set_positions(std::vector<std::vector<double>>& r);
+    void get_forces(std::vector<std::vector<double>>& f);
+    void set_forces(std::vector<std::vector<double>>& f);
     int nions() { return ions_->getNumIons(); }
     double getTotalEnergy();
     void setup();
-    int setupFromInput(const string input_file);
-    int setupLRsFromInput(const string input_file);
-    int setupConstraintsFromInput(const string input_file);
+    int setupFromInput(const std::string input_file);
+    int setupLRsFromInput(const std::string input_file);
+    int setupConstraintsFromInput(const std::string input_file);
     void cleanup();
     void geomOptimSetup();
     void geomOptimQuench();
     void geomOptimComputeForces();
     int geomOptimRun1Step();
     void geomOptimDumpRestart();
-    void geomOptimSetForces(const vector<vector<double>>& f);
+    void geomOptimSetForces(const std::vector<std::vector<double>>& f);
     short geomOptimCheckTolForces(const double tol_force);
 
     void finalEnergy();

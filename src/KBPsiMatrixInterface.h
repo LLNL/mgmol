@@ -48,7 +48,7 @@ public:
     virtual void addKBPsi(const int gid, const int st, const double val)  = 0;
     virtual void addKBBPsi(const int gid, const int st, const double val) = 0;
 
-    virtual void printTimers(ostream& os);
+    virtual void printTimers(std::ostream& os);
 
     void computeLocalElement(Ion& ion, const int istate, const int iloc,
         const ORBDTYPE* const psi, const bool flag);

@@ -97,18 +97,18 @@ class ShortSightedInverse
     int solve();
 
 public:
-    ShortSightedInverse(LocalizationRegions& lrs, const vector<int>& locvars,
+    ShortSightedInverse(LocalizationRegions& lrs, const std::vector<int>& locvars,
         ClusterOrbitals* local_cluster = 0); // constructor
     void initGramMatrix(const LocalMatrices<MATDTYPE>& ss,
-        const vector<vector<int>>& global_indexes,
+        const std::vector<std::vector<int>>& global_indexes,
         const int orbitals_index); // initialize local Gram matrix
     void computeInvS(DataDistribution& dtor_S,
         DataDistribution& dtor_invS); // Compute the local matrix inverse
     double getTraceDiagProductWithInvS(
-        vector<DMDTYPE>& ddiag); // return sum_i ( ddiag[i]*S**(-1)[i][i] )
-    void printGramMat(ostream& os, int nrows = NUM_PRINT_ROWS) const;
+        std::vector<DMDTYPE>& ddiag); // return sum_i ( ddiag[i]*S**(-1)[i][i] )
+    void printGramMat(std::ostream& os, int nrows = NUM_PRINT_ROWS) const;
     double getTraceDotProductWithInvS(VariableSizeMatrix<sparserow>* mat);
-    static void printTimers(ostream& os); // print timers
+    static void printTimers(std::ostream& os); // print timers
     ~ShortSightedInverse(); // destructor
 
     /* get the initial local size */
@@ -137,7 +137,7 @@ public:
         return (*invS_).AmultSymB_ij(B, row, col, *((*gramMat_).getTable()));
     }
 
-    void printGramMM(ofstream& tfile);
+    void printGramMM(std::ofstream& tfile);
 
     /* compute condition number of gramMat_ */
     double computeGramMatCond();

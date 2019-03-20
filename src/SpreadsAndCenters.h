@@ -49,7 +49,7 @@ private:
     double computeSpread2(int i) const;
     double computeSpread2(void) const;
 
-    void setData(VariableSizeMatrix<sparserow>& mat, const vector<int>& gids,
+    void setData(VariableSizeMatrix<sparserow>& mat, const std::vector<int>& gids,
         const std::vector<int>& localRowGid,
         std::vector<std::vector<double>>& matr);
 

@@ -18,6 +18,8 @@
 #include "Mesh.h"
 #include "ProjectedMatricesInterface.h"
 
+using namespace std;
+
 template<class T>
 OrbitalsExtrapolation<T>::~OrbitalsExtrapolation() { clearOldOrbitals(); }
 

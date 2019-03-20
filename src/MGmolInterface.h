@@ -11,6 +11,8 @@
 #ifndef MGMOLINTERFACE_H
 #define MGMOLINTERFACE_H
 
+#include <cstring>
+
 class MGmolInterface
 {
 public:
@@ -18,9 +20,9 @@ public:
 
     ~MGmolInterface(){}
 
-    virtual int setupFromInput(const string input_file)=0;
-    virtual int setupLRsFromInput(const string input_file)=0;
-    virtual int setupConstraintsFromInput(const string input_file)=0;
+    virtual int setupFromInput(const std::string input_file)=0;
+    virtual int setupLRsFromInput(const std::string input_file)=0;
+    virtual int setupConstraintsFromInput(const std::string input_file)=0;
     virtual void run()=0;
 };
 

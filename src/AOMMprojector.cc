@@ -33,8 +33,8 @@ AOMMprojector::AOMMprojector(LocGridOrbitals& phi, LocalizationRegions& lrs)
     const double threshold = ct.AOMMthresholdFactor() * radius;
 
     if (onpe0)
-        cout << "AOMM: setup with radius " << radius << " and threshold "
-             << threshold << endl;
+        std::cout << "AOMM: setup with radius " << radius << " and threshold "
+             << threshold << std::endl;
 
     kernelMasks_ = new MasksSet(false);
     kernelMasks_->setup(lrs, radius);
@@ -76,7 +76,7 @@ AOMMprojector::AOMMprojector(LocGridOrbitals& phi, LocalizationRegions& lrs)
 
 void AOMMprojector::resetProjectors(LocGridOrbitals& phi)
 {
-    if (onpe0) cout << "AOMM: reset projectors..." << endl;
+    if (onpe0) std::cout << "AOMM: reset projectors..." << std::endl;
 
     kernel_phi_->assign(phi);
 

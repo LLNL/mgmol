@@ -124,8 +124,8 @@ public:
     double getEigSum();
     double getLinDependent2states(
         int& st1, int& st2, const bool print_flag = false) const;
-    void printMatrices(ostream& os) const;
-    void printTimers(ostream& os);
+    void printMatrices(std::ostream& os) const;
+    void printTimers(std::ostream& os);
     double getNel() const;
     double getLowestEigenvalue() const
     {
@@ -237,9 +237,9 @@ public:
     }
 
     /* print the Theta matrix -- for diagnostics */
-    void printTheta(ostream& os) const
+    void printTheta(std::ostream& os) const
     {
-        if (onpe0) os << " Matrix Theta ... n = " << (*submatT_).n() << endl;
+        if (onpe0) os << " Matrix Theta ... n = " << (*submatT_).n() << std::endl;
 
         std::vector<int> locfcns;
         (*lrs_).getLocalSubdomainIndices(locfcns);
@@ -249,10 +249,10 @@ public:
     }
 
     /* print the HB matrix -- for diagnostics */
-    void printHB(ostream& os) const
+    void printHB(std::ostream& os) const
     {
 
-        if (onpe0) os << " Matrix HB ... n = " << (*matHB_).n() << endl;
+        if (onpe0) os << " Matrix HB ... n = " << (*matHB_).n() << std::endl;
 
         std::vector<int> locfcns;
         (*lrs_).getLocalSubdomainIndices(locfcns);
@@ -262,7 +262,7 @@ public:
     }
 
     /* print the inverse Gram matrix -- for diagnostics */
-    void printDM(ostream& os) const
+    void printDM(std::ostream& os) const
     {
         assert(dm_ != NULL);
         (*dm_).printDM(os);
@@ -299,7 +299,7 @@ public:
         return;
     }
 
-    void printGramMM(ofstream& tfile)
+    void printGramMM(std::ofstream& tfile)
     {
         assert(invS_ != NULL);
         (*invS_).printGramMM(tfile);
@@ -308,19 +308,19 @@ public:
     }
 
     /* print (part of) the (global) Gram matrix -- for diagnostics */
-    void printS(ostream& os) const
+    void printS(std::ostream& os) const
     {
         assert(invS_ != NULL);
         (*invS_).printGramMat(os);
     }
 
     /* print the H matrix -- for diagnostics */
-    void printH(ostream& os) const
+    void printH(std::ostream& os) const
     {
         /* matrix sH has local contributions, so we need to
          * gather neighboring data first.
          */
-        if (onpe0) os << " Matrix H " << endl;
+        if (onpe0) os << " Matrix H " << std::endl;
 
         std::vector<int> locfcns;
         (*lrs_).getLocalSubdomainIndices(locfcns);
@@ -368,7 +368,7 @@ public:
             if (onpe0)
                 (*MPIdata::sout)
                     << " CONDITION NUMBER OF THE OVERLAP MATRIX EXCEEDS TOL: "
-                    << rcond << "!!!" << endl;
+                    << rcond << "!!!" << std::endl;
             Control& ct = *(Control::instance());
             if (flag) ct.global_exit(2);
         }
@@ -398,8 +398,8 @@ public:
 
     const VariableSizeMatrix<sparserow>& getH() { return *matHB_; }
     void assignH(const VariableSizeMatrix<sparserow>& matH) { *matHB_ = matH; }
-    void printEigenvalues(ostream& os) const {}
-    void printOccupations(ostream& os) const {}
+    void printEigenvalues(std::ostream& os) const {}
+    void printOccupations(std::ostream& os) const {}
     void setHB2H() {}
 
     DensityMatrixSparse& getDM() { return *dm_; }

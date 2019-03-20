@@ -12,6 +12,8 @@
 #include "MGmol_MPI.h"
 #include "blas3_c.h"
 
+using namespace std;
+
 template <class T>
 LocalMatrices<T>::LocalMatrices(const short subdiv, const int m, const int n)
     : subdiv_(subdiv), m_(m), n_(n)

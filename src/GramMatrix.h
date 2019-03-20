@@ -49,16 +49,16 @@ public:
 
     int getAssociatedOrbitalsIndex() const { return orbitals_index_; }
 
-    void print(ostream& os, int nprint_rows = NPRINT_ROWS_AND_COLS,
+    void print(std::ostream& os, int nprint_rows = NPRINT_ROWS_AND_COLS,
         int nprint_col = NPRINT_ROWS_AND_COLS) const
     {
-        if (onpe0) os << " GramMatrix" << endl;
+        if (onpe0) os << " GramMatrix" << std::endl;
         matS_->print(os, 0, 0, nprint_rows, nprint_col);
     }
 
-    void printMM(ostream& os) const
+    void printMM(std::ostream& os) const
     {
-        if (onpe0) os << "Gram Matrix" << endl;
+        if (onpe0) os << "Gram Matrix" << std::endl;
         matS_->printMM(os);
     }
 
@@ -95,8 +95,7 @@ public:
         {
             print(*MPIdata::serr);
             if (onpe0)
-                (*MPIdata::serr) << "ERROR in GramMatrix::updateLS()" << endl;
-            (*MPIdata::serr) << flush;
+                (*MPIdata::serr) << "ERROR in GramMatrix::updateLS()" << std::endl;
             sleep(5);
             Control& ct = *(Control::instance());
             ct.global_exit(2);
@@ -127,7 +126,7 @@ public:
         submatLS.gather(*ls_);
     }
 
-    void printMM(ofstream& tfile) { matS_->printMM(tfile); }
+    void printMM(std::ofstream& tfile) { matS_->printMM(tfile); }
 
     void computeInverse();
     void solveLST(dist_matrix::DistMatrix<DISTMATDTYPE>& z) const;

@@ -8,8 +8,9 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #include "SquareLocalMatrices.h"
+
+using namespace std;
 
 template <class T>
 SquareLocalMatrices<T>::SquareLocalMatrices(const int subdiv, const int m)

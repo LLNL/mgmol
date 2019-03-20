@@ -13,6 +13,8 @@
 #include "KBprojectorSparse.h"
 #include "Species.h"
 
+using namespace std;
+
 Timer KBPsiMatrixInterface::computeLocalElement_tm_(
     "KBPsiMatrixInterface::computeLocalElement");
 

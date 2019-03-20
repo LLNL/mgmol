@@ -84,7 +84,7 @@ public:
         double* const x) const; // triangular solve with L and U factors
     void LUsolve(float* const y,
         float* const x) const; // triangular solve with L and U factors
-    static void printTimers(ostream& os); // print timers
+    static void printTimers(std::ostream& os); // print timers
     ~PreconILU(); // destructor
 
     void diagSolve(double* const y_, double* const x_)

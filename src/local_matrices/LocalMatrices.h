@@ -155,7 +155,7 @@ public:
     void print(std::ostream& os, const int iloc) const
     {
         os << "LocalMatrices for iloc=" << iloc << std::endl;
-        os << scientific;
+        os << std::scientific;
         const T* const ssiloc = ptr_matrices_[iloc];
         for (int i = 0; i < m_; i++)
         {
@@ -163,14 +163,14 @@ public:
             {
                 os << ssiloc[i + j * m_] << "\t";
             }
-            os << endl;
+            os << std::endl;
         }
     }
 
     void printBlock(std::ostream& os, const int iloc, const short bsize) const
     {
         os << "LocalMatrices for iloc=" << iloc << std::endl;
-        os << scientific;
+        os << std::scientific;
         const T* const ssiloc = ptr_matrices_[iloc];
         for (int i = 0; i < bsize; i++)
         {
@@ -178,7 +178,7 @@ public:
             {
                 os << ssiloc[i + j * m_] << "\t";
             }
-            os << endl;
+            os << std::endl;
         }
     }
 

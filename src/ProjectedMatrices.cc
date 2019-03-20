@@ -27,6 +27,8 @@
 
 #define RY2EV 13.605804
 
+using namespace std;
+
 Timer ProjectedMatrices::sygv_tm_("ProjectedMatrices::sygv");
 Timer ProjectedMatrices::compute_inverse_tm_(
     "ProjectedMatrices::computeInverse");

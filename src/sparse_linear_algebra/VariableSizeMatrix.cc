@@ -27,6 +27,8 @@
 #include <mpi.h>
 #endif
 
+using namespace std;
+
 Timer VariableSizeMatrixInterface::AmultSymBdiag_tm_(
     "VariableSizeMatrix::AmultSymBdiag");
 Timer VariableSizeMatrixInterface::AmultSymB_ij_tm_(

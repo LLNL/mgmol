@@ -13,6 +13,8 @@
 #include "SpreadPenaltyVolume.h"
 #include "Mesh.h"
 
+using namespace std;
+
 template <class T>
 void SpreadPenaltyVolume<T>::addResidual(
     T& phi, T& res)

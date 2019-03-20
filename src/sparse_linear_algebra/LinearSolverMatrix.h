@@ -103,7 +103,7 @@ public:
         init(alloc_size, nzmax);
     }
 
-    static void printTimers(ostream& os)
+    static void printTimers(std::ostream& os)
     {
         matrix_init_tm_.print(os);
         matrix_initsq_tm_.print(os);

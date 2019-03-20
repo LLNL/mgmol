@@ -26,9 +26,9 @@ private:
 
     double volume_target_;
 
-    void computeAndAddResidualSpreadPenalty(const vector<float>& lagrangemult,
-        const float factor, const vector<Vector3D>& centers,
-        const vector<int>& gids, T& orbitals,
+    void computeAndAddResidualSpreadPenalty(const std::vector<float>& lagrangemult,
+        const float factor, const std::vector<Vector3D>& centers,
+        const std::vector<int>& gids, T& orbitals,
         T& res);
 
 public:

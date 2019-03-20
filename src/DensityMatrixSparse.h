@@ -69,10 +69,10 @@ public:
     }
     double getTraceDotProductWithMat(VariableSizeMatrix<sparserow>* vsmat);
     VariableSizeMatrix<sparserow>* mat() { return dm_; }
-    void printDM(ostream& os, int nrows = NUM_PRINT_ROWS) const;
+    void printDM(std::ostream& os, int nrows = NUM_PRINT_ROWS) const;
     void getLocalMatrix(LocalMatrices<MATDTYPE>& localX,
-        const vector<vector<int>>& global_indexes);
-    void printTimers(ostream& os) { gather_DM_tm_.print(os); }
+        const std::vector<std::vector<int>>& global_indexes);
+    void printTimers(std::ostream& os) { gather_DM_tm_.print(os); }
 };
 
 #endif

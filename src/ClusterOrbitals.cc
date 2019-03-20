@@ -14,6 +14,8 @@
 #include "Mesh.h"
 #include <vector>
 
+using namespace std;
+
 Timer ClusterOrbitals::computeClusters_tm_("ClusterOrbitals::ComputeClusters");
 Timer ClusterOrbitals::setupClusters_tm_("ClusterOrbitals::Setup");
 

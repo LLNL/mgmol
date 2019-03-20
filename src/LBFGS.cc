@@ -16,6 +16,8 @@
 #include "Mesh.h"
 #include "ProjectedMatrices.h"
 
+using namespace std;
+
 template <class T>
 LBFGS<T>::LBFGS(T** orbitals, Ions& ions, Rho<T>& rho,
     ConstraintSet& constraints, LocalizationRegions& lrs,

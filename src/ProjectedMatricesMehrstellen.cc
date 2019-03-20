@@ -12,6 +12,8 @@
 
 #include "tools.h"
 
+using namespace std;
+
 ProjectedMatricesMehrstellen::ProjectedMatricesMehrstellen(
     const int ndim, const bool with_spin)
     : ProjectedMatrices(ndim, with_spin)

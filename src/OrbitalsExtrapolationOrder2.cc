@@ -16,6 +16,7 @@
 #include "ProjectedMatrices.h"
 
 #define EXTRAPOLATE_H 1
+using namespace std;
 
 template <class T>
 void OrbitalsExtrapolationOrder2<T>::extrapolate_orbitals(

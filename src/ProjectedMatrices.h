@@ -114,21 +114,21 @@ protected:
     // work matrix for tmp usage
     dist_matrix::DistMatrix<DISTMATDTYPE>* work_;
 
-    void printTheta(ostream& os) const
+    void printTheta(std::ostream& os) const
     {
-        if (onpe0) os << " Matrix Theta" << endl;
+        if (onpe0) os << " Matrix Theta" << std::endl;
         theta_->print(os, 0, 0, NPRINT_ROWS_AND_COLS, NPRINT_ROWS_AND_COLS);
     }
 
-    void printHB(ostream& os) const
+    void printHB(std::ostream& os) const
     {
-        if (onpe0) os << " Matrix HB" << endl;
+        if (onpe0) os << " Matrix HB" << std::endl;
         matHB_->print(os, 0, 0, NPRINT_ROWS_AND_COLS, NPRINT_ROWS_AND_COLS);
     }
 
-    void printH(ostream& os) const
+    void printH(std::ostream& os) const
     {
-        if (onpe0) os << " Matrix H" << endl;
+        if (onpe0) os << " Matrix H" << std::endl;
         matH_->print(os, 0, 0, NPRINT_ROWS_AND_COLS, NPRINT_ROWS_AND_COLS);
     }
 
@@ -212,7 +212,7 @@ public:
 
     void getLoewdinTransform(SquareLocalMatrices<MATDTYPE>& localP);
 
-    void printTimers(ostream& os);
+    void printTimers(std::ostream& os);
 
     void initializeGramMatrix(
         const SquareLocalMatrices<MATDTYPE>& ss, const int orbitals_index)
@@ -225,8 +225,8 @@ public:
         gm_->setMatrix(*work_, orbitals_index);
         init_gram_matrix_tm_.stop();
     }
-    void printGramMM(ofstream& tfile) { gm_->printMM(tfile); }
-    void printHamiltonianMM(ofstream& tfile) { matH_->printMM(tfile); }
+    void printGramMM(std::ofstream& tfile) { gm_->printMM(tfile); }
+    void printHamiltonianMM(std::ofstream& tfile) { matH_->printMM(tfile); }
     int getDMMatrixIndex() const
     {
         assert(dm_ != 0);
@@ -343,9 +343,9 @@ public:
 
     double getLowestEigenvalue() const { return eigenvalues_[0]; }
 
-    void printS(ostream& os) const { gm_->print(os); }
+    void printS(std::ostream& os) const { gm_->print(os); }
 
-    virtual void printMatrices(ostream& os) const
+    virtual void printMatrices(std::ostream& os) const
     {
         printS(os);
         printH(os);
@@ -353,8 +353,8 @@ public:
         printHB(os);
     }
 
-    void printDM(ostream& os) const;
-    void printOccupations(ostream& os) const;
+    void printDM(std::ostream& os) const;
+    void printOccupations(std::ostream& os) const;
 
     double computeCond() { return gm_->computeCond(); }
 
@@ -363,7 +363,7 @@ public:
     double checkCond(const double tol, const bool flag = true);
     int writeDM_hdf5(HDFrestart& h5f_file);
     int read_dm_hdf5(hid_t file_id);
-    void printEigenvalues(ostream& os) const;
+    void printEigenvalues(std::ostream& os) const;
     void updateDM(const int iterative_index);
     void updateDMwithEigenstates(const int iterative_index);
     void updateDMwithEigenstatesAndRotate(
@@ -387,7 +387,7 @@ public:
 
     void saveDM()
     {
-        if (onpe0) cout << "ProjectedMatrices::saveDM()" << endl;
+        if (onpe0) std::cout << "ProjectedMatrices::saveDM()" << std::endl;
         if (!mat_X_old_)
         {
             mat_X_old_
@@ -443,9 +443,9 @@ public:
     virtual void initializeMatB(const SquareLocalMatrices<MATDTYPE>& ss)
     {
         (void)ss;
-        cerr << "ERROR: ProjectedMatrices::initializeMatB() should never be "
+        std::cerr << "ERROR: ProjectedMatrices::initializeMatB() should never be "
                 "called!!!"
-             << endl;
+             << std::endl;
     }
 
     void resetDotProductMatrices();

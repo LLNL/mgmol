@@ -25,9 +25,9 @@ private:
     double alpha_;
     double dampingFactor_;
 
-    void computeAndAddResidualSpreadPenalty(const vector<float>& lagrangemult,
-        const vector<float>& factors, const vector<Vector3D>& centers,
-        const vector<int>& gids, T& orbitals,
+    void computeAndAddResidualSpreadPenalty(const std::vector<float>& lagrangemult,
+        const std::vector<float>& factors, const std::vector<Vector3D>& centers,
+        const std::vector<int>& gids, T& orbitals,
         T& res);
 
     float computeSpreadPenaltyFactor(const float spread2);
