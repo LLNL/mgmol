@@ -18,9 +18,13 @@ set(link_libs mgmol_distmatrix
    mgmol_tools
    )
 
-set(SOURCES  SubCell.cc 
+set(SOURCES
+ DistMatrix2SquareLocalMatrices.cc
+ GrassmanCGFactory.cc
+ DMStrategyFactory.cc
+ manage_memory.cc
+ SubCell.cc
  SinCosOps.cc 
- Power.cc 
  PolakRibiereSolver.cc 
  EnergySpreadPenalty.cc 
  SpreadPenalty.cc 
@@ -128,16 +132,6 @@ set(SOURCES  SubCell.cc
  PCGSolver.cc 
  Hartree_CG.cc 
  ClusterOrbitals.cc 
- SP2.cc
- DavidsonSolver.cc
- ChebyshevApproximation.cc
- ChebyshevApproximationSparse.cc
- ChebyshevApproximationInterface.cc
- OrbitalsExtrapolationReversible.cc
- LocalizationRegionsXLBOMD.cc
- AuxiliaryLocGridOrbitals.cc
- SubspaceAlignment.cc
- xlbomd.cc
 )
 
 add_library(mgmol_src ${SOURCES})
