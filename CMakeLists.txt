@@ -187,6 +187,8 @@ if(${MGMOL_WITH_TRICUBIC} OR DEFINED TRICUBIC_ROOT)
   endif(${TRICUBIC_FOUND})
 endif(${MGMOL_WITH_TRICUBIC} OR DEFINED TRICUBIC_ROOT)
 
+enable_testing()
+
 # additional definitions
 add_definitions(-DUSE_DIS_MAT)
 
@@ -203,12 +205,8 @@ include_directories("${PROJECT_SOURCE_DIR}/src")
 
 # add subdirectories for source files, tests
 add_subdirectory(src)
-#add_subdirectory(test)
+
+add_subdirectory(tests)
 
 # additional definitions
 #add_definitions(-DGITHASH="\\"${GITHASH}\\"")
-#-----------------------------------------------------------------------------
-# Setup CTEST environment
-#-----------------------------------------------------------------------------
-include(CTest)
-
