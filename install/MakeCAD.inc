@@ -12,9 +12,9 @@ PLAT = cades
 MPCC    = mpiCC
 CXX     = mpiCC
 
-OPT_FLAGS = -O2 -DNDEBUG -g 
+OPT_FLAGS = -O2 -DNDEBUG -g -qopenmp
 
-COMMONLIBS = -lboost_program_options 
+COMMONLIBS = -lboost_program_options -qopenmp
 CNAME = 
 
 NAT_COMPLIB = 
@@ -39,7 +39,9 @@ MGMOL_LD_LIBRARY_PATH =
 #mixed precision lib
 MPBLASLIB =
 
-LIBS= $(MKL_LIB) -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
+LIBS= $(MKL_LIB) -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 \
+      -lpthread -lm -ldl
+
 PLIBS = $(SCALAPACKLIB) $(HDF_LIB)
 
 DEFS =

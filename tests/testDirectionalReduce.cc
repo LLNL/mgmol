@@ -40,8 +40,8 @@ int main(int argc, char** argv)
         int nprocs[3];
         int periodic[3];
         int coords[3];
-        int error
-            = MPI_Cart_get(myPEenv.cart_comm(), 3, nprocs, periodic, coords);
+        //int error =
+        MPI_Cart_get(myPEenv.cart_comm(), 3, nprocs, periodic, coords);
 
         // direction for test
         const short dir = 1;

@@ -91,9 +91,14 @@ endif (${MPI_CXX_FOUND})
 
 # Use openMP if available
 find_package(OpenMP)
-if(NOT ${OPENMP_CXX_FOUND})
+if(${OPENMP_CXX_FOUND})
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+    set(CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE_UPPER}
+        "${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE_UPPER}} -qopenmp")
+  endif()
+else(${OPENMP_CXX_FOUND})
   message(STATUS "Building without OpenMP")
-endif(NOT ${OPENMP_CXX_FOUND})
+endif(${OPENMP_CXX_FOUND})
 
 # HDF5 (required)
 set (MGMOL_ENABLE_HDF5 True CACHE BOOL "Build with HDF5")
@@ -108,27 +113,21 @@ if (${MGMOL_ENABLE_HDF5})
 #  find_package(HDF5 COMPONENTS ${MGMOL_HDF5_COMPONENTS} REQUIRED)
   include(mgmolFindHDF5)
   if (${HDF5_FOUND})
-    add_definitions(-DHAVE_HDF5)
 #    message(STATUS "HDF5_INCLUDE_DIRS after search: ${HDF5_IS_PARALLEL} ${HDF5_INCLUDE_DIRS}")
 #    message(STATUS "HDF5_CXX_LIBRARIES after search: ${HDF5_IS_PARALLEL} ${HDF5_CXX_LIBRARIES}")
 #    message(STATUS "HDF5_C_LIBRARIES after search: ${HDF5_IS_PARALLEL} ${HDF5_C_LIBRARIES}")
-#    message(STATUS "HDF5_LIBRARIES after search: ${HDF5_IS_PARALLEL} ${HDF5_LIBRARIES}")    
+    message(STATUS "HDF5_LIBRARIES after search: ${HDF5_IS_PARALLEL} ${HDF5_LIBRARIES}")
 #    message(STATUS "HDF5_HL_LIBRARIES after search: ${HDF5_IS_PARALLEL} ${HDF5_CXX_HL_LIBRARIES}")    
   else(${HDF5_FOUND})
-    message(FATAL_ERROR "Required HDF5 package not found. Please specify correct path to HDF5.")
+    message(FATAL_ERROR "Required HDF5 package not found.")
   endif (${HDF5_FOUND})
 endif (${MGMOL_ENABLE_HDF5})
 
 # Boost (required)
-set (MGMOL_ENABLE_BOOST True CACHE BOOL "Build with Boost (program options)")
-if (${MGMOL_ENABLE_BOOST})
-  find_package(Boost COMPONENTS program_options REQUIRED)
-  if(${Boost_FOUND})
-    add_definitions(-DHAVE_BOOST)
-  else(${Boost_FOUND})
-    message(STATUS "Building without Boost")
-  endif(${Boost_FOUND})  
-endif(${MGMOL_ENABLE_BOOST})
+find_package(Boost COMPONENTS program_options REQUIRED)
+if(NOT ${Boost_FOUND})
+  message(FATAL_ERROR "Boost library requited")
+endif(NOT ${Boost_FOUND})
 
 # blas/ lapack (required)
 # no vendor options here. Use cmake option -DBLA_VENDOR=<vendor> 
@@ -188,6 +187,11 @@ if(${MGMOL_WITH_TRICUBIC} OR DEFINED TRICUBIC_ROOT)
   endif(${TRICUBIC_FOUND})
 endif(${MGMOL_WITH_TRICUBIC} OR DEFINED TRICUBIC_ROOT)
 
+enable_testing()
+
+# additional definitions
+add_definitions(-DUSE_DIS_MAT)
+
 # add include directories
 include_directories("${PROJECT_SOURCE_DIR}/src/DistMatrix")
 include_directories("${PROJECT_SOURCE_DIR}/src/linear_algebra")
@@ -199,16 +203,10 @@ include_directories("${PROJECT_SOURCE_DIR}/src/sparse_linear_algebra")
 include_directories("${PROJECT_SOURCE_DIR}/src/tools")
 include_directories("${PROJECT_SOURCE_DIR}/src")
 
-# add subdirectories for source files, tests and examples
+# add subdirectories for source files, tests
 add_subdirectory(src)
-#add_subdirectory(test)
-#add_subdirectory(examples)
+
+add_subdirectory(tests)
 
 # additional definitions
 #add_definitions(-DGITHASH="\\"${GITHASH}\\"")
-#add_definitions(-DUSE_DIS_MAT)
-#-----------------------------------------------------------------------------
-# Setup CTEST environment
-#-----------------------------------------------------------------------------
-include(CTest)
-
