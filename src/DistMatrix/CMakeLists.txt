@@ -12,8 +12,6 @@ set(SOURCES MPI_AllToSome.cc
 add_library(mgmol_distmatrix STATIC ${SOURCES})
 target_include_directories (mgmol_distmatrix PRIVATE ${SCALAPACK_INCLUDE_DIRS})
 
-target_compile_definitions (mgmol_distmatrix PUBLIC -DUSE_DIS_MAT)
 target_compile_definitions (mgmol_distmatrix PUBLIC -DSCALAPACK)
-target_compile_definitions (mgmol_distmatrix PRIVATE -DUSE_MPI)
 target_compile_definitions (mgmol_distmatrix PRIVATE -DADD_)
 install(TARGETS mgmol_distmatrix DESTINATION lib) 

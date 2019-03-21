@@ -113,14 +113,13 @@ if (${MGMOL_ENABLE_HDF5})
 #  find_package(HDF5 COMPONENTS ${MGMOL_HDF5_COMPONENTS} REQUIRED)
   include(mgmolFindHDF5)
   if (${HDF5_FOUND})
-    add_definitions(-DHAVE_HDF5)
 #    message(STATUS "HDF5_INCLUDE_DIRS after search: ${HDF5_IS_PARALLEL} ${HDF5_INCLUDE_DIRS}")
 #    message(STATUS "HDF5_CXX_LIBRARIES after search: ${HDF5_IS_PARALLEL} ${HDF5_CXX_LIBRARIES}")
 #    message(STATUS "HDF5_C_LIBRARIES after search: ${HDF5_IS_PARALLEL} ${HDF5_C_LIBRARIES}")
-#    message(STATUS "HDF5_LIBRARIES after search: ${HDF5_IS_PARALLEL} ${HDF5_LIBRARIES}")    
+    message(STATUS "HDF5_LIBRARIES after search: ${HDF5_IS_PARALLEL} ${HDF5_LIBRARIES}")
 #    message(STATUS "HDF5_HL_LIBRARIES after search: ${HDF5_IS_PARALLEL} ${HDF5_CXX_HL_LIBRARIES}")    
   else(${HDF5_FOUND})
-    message(FATAL_ERROR "Required HDF5 package not found. Please specify correct path to HDF5.")
+    message(FATAL_ERROR "Required HDF5 package not found.")
   endif (${HDF5_FOUND})
 endif (${MGMOL_ENABLE_HDF5})
 
@@ -188,6 +187,9 @@ if(${MGMOL_WITH_TRICUBIC} OR DEFINED TRICUBIC_ROOT)
   endif(${TRICUBIC_FOUND})
 endif(${MGMOL_WITH_TRICUBIC} OR DEFINED TRICUBIC_ROOT)
 
+# additional definitions
+add_definitions(-DUSE_DIS_MAT)
+
 # add include directories
 include_directories("${PROJECT_SOURCE_DIR}/src/DistMatrix")
 include_directories("${PROJECT_SOURCE_DIR}/src/linear_algebra")
@@ -199,14 +201,12 @@ include_directories("${PROJECT_SOURCE_DIR}/src/sparse_linear_algebra")
 include_directories("${PROJECT_SOURCE_DIR}/src/tools")
 include_directories("${PROJECT_SOURCE_DIR}/src")
 
-# add subdirectories for source files, tests and examples
+# add subdirectories for source files, tests
 add_subdirectory(src)
 #add_subdirectory(test)
-#add_subdirectory(examples)
 
 # additional definitions
 #add_definitions(-DGITHASH="\\"${GITHASH}\\"")
-#add_definitions(-DUSE_DIS_MAT)
 #-----------------------------------------------------------------------------
 # Setup CTEST environment
 #-----------------------------------------------------------------------------
