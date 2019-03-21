@@ -62,9 +62,9 @@ template <class T>
 int MGmol<T>::setupLRsFromInput(const string filename)
 {
     MGmol_MPI& mmpi        = *(MGmol_MPI::instance());
-    Mesh* mymesh           = Mesh::instance();
-    const pb::Grid& mygrid = mymesh->grid();
-    Control& ct            = *(Control::instance());
+//    Mesh* mymesh           = Mesh::instance();
+//    const pb::Grid& mygrid = mymesh->grid();
+//    Control& ct            = *(Control::instance());
 
     ifstream* tfile = 0;
     if (mmpi.instancePE0() && !filename.empty())

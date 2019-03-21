@@ -252,7 +252,7 @@ void SubMatrices<T>::gather(const DistMatrix<T>& mat)
         memcpy(recvbuf + my_displ[mype_], sendbuf + remote_displ[mype_],
             nelements * sizeof(T));
 
-    int src = mype_;
+//    int src = mype_;
 
     sendrecv(sendbuf,recvbuf,my_displ,remote_displ);
 

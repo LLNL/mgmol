@@ -565,8 +565,8 @@ void ExtendedGridOrbitals::multiply_by_matrix(
 
     matrix.matgather(work_matrix, numst_);
 
-    DISTMATDTYPE* matrix_local
-        = new DISTMATDTYPE[numst_ * numst_];
+//    DISTMATDTYPE* matrix_local
+//        = new DISTMATDTYPE[numst_ * numst_];
 
     const size_t slnumpt = loc_numpt_ * sizeof(ORBDTYPE);
 
@@ -1519,7 +1519,7 @@ void ExtendedGridOrbitals::normalize()
     // if( onpe0 && ct.verbose>2 )
     //        (*MPIdata::sout)<<"Normalize ExtendedGridOrbitals"<<endl;
 
-    const double vel = grid_.vel();
+//    const double vel = grid_.vel();
     vector<double> diagS(numst_);
 
     computeDiagonalElementsDotProduct(*this, diagS);
