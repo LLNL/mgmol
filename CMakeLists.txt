@@ -91,9 +91,14 @@ endif (${MPI_CXX_FOUND})
 
 # Use openMP if available
 find_package(OpenMP)
-if(NOT ${OPENMP_CXX_FOUND})
+if(${OPENMP_CXX_FOUND})
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+    set(CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE_UPPER}
+        "${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE_UPPER}} -qopenmp")
+  endif()
+else(${OPENMP_CXX_FOUND})
   message(STATUS "Building without OpenMP")
-endif(NOT ${OPENMP_CXX_FOUND})
+endif(${OPENMP_CXX_FOUND})
 
 # HDF5 (required)
 set (MGMOL_ENABLE_HDF5 True CACHE BOOL "Build with HDF5")
