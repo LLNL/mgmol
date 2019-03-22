@@ -21,7 +21,7 @@ public:
 
     virtual ~Mixing(){};
 
-    virtual void update(T& res, T& work, std::ostream& os) = 0;
+    virtual void update(T& res, T& work, std::ostream& os, const bool verbose) = 0;
     virtual void restart(void)           = 0;
 };
 

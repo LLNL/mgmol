@@ -174,7 +174,7 @@ void ABPG<T>::update_states(T& orbitals, T& res,
         assert(wf_mix_ != 0);
         ostream os(nullptr);
         if(onpe0)os.rdbuf(cout.rdbuf());
-        wf_mix_->update(res, work_orbitals, os);
+        wf_mix_->update(res, work_orbitals, os, (ct.verbose>0));
     }
     else
     {

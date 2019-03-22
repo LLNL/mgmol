@@ -47,7 +47,7 @@ public:
 
     // update trial solution based on residual
     // need work array for temporary storage
-    void update(T& res, T& work, std::ostream& os);
+    void update(T& res, T& work, std::ostream& os, const bool verbose);
     void restart(void);
 };
 

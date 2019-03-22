@@ -15,6 +15,10 @@
 #include "global.h"
 #include "lapack_c.h"
 
+#ifdef TESTING
+#include "Solution.h"
+#endif
+
 #include <iomanip>
 #include <iostream>
 using namespace std;
@@ -68,7 +72,7 @@ void AndersonMix<T>::restart(void)
 }
 
 template <class T>
-void AndersonMix<T>::update(T& f, T& work, ostream& os)
+void AndersonMix<T>::update(T& f, T& work, ostream& os, const bool verbose)
 {
     update_tm_.start();
 #ifdef DEBUG
@@ -242,8 +246,7 @@ void AndersonMix<T>::update(T& f, T& work, ostream& os)
         }
 
         //#ifdef DEBUG
-        Control& ct = *(Control::instance());
-        if ( os.good() && mm_ > 0 && ct.verbose > 0)
+        if ( os.good() && mm_ > 0 && verbose )
         {
             os << "Anderson extrapolation:";
             for (int j = 0; j < mm_; j++)
@@ -324,5 +327,9 @@ void AndersonMix<T>::update(T& f, T& work, ostream& os)
     update_tm_.stop();
 }
 
+#ifdef TESTING
+template class AndersonMix<Solution>;
+#else
 template class AndersonMix<LocGridOrbitals>;
 template class AndersonMix<ExtendedGridOrbitals>;
+#endif
