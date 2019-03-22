@@ -109,6 +109,7 @@ set(SOURCES
  MD_IonicStepper.cc 
  LBFGS_IonicStepper.cc 
  lbfgsrlx.cc 
+ OrthoAndersonMix.cc
  AndersonMix.cc 
  MLWFTransform.cc 
  Ion.cc 

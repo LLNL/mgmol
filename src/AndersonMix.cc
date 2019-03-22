@@ -12,7 +12,6 @@
 #include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "MPIdata.h"
-#include "SquareLocalMatrices.h"
 #include "global.h"
 #include "lapack_c.h"
 
@@ -28,8 +27,8 @@ static const double min_theta   = -3.;
 
 template <class T>
 AndersonMix<T>::AndersonMix(
-    const int m, const double beta, T& x, const bool ortho_flag)
-    : m_(m), x_(x), ortho_flag_(ortho_flag)
+    const int m, const double beta, T& x)
+    : m_(m), x_(x)
 {
     mm_   = -1;
     beta_ = beta;
@@ -69,17 +68,17 @@ void AndersonMix<T>::restart(void)
 }
 
 template <class T>
-void AndersonMix<T>::update(T& f, T& work)
+void AndersonMix<T>::update(T& f, T& work, ostream& os)
 {
     update_tm_.start();
 #ifdef DEBUG
-    if (onpe0) (*MPIdata::sout) << "AndersonMix::update()" << endl;
+    os << "AndersonMix::update()" << endl;
 #endif
     int ione = 1;
 
     if (mm_ < m_) mm_++;
 
-    //(*MPIdata::sout)<<"mm_="<<mm_<<endl;
+    //os<<"mm_="<<mm_<<endl;
 
     if (mm_ > 0)
     {
@@ -163,9 +162,8 @@ void AndersonMix<T>::update(T& f, T& work)
                 // "volume" = sqrt( determinant )
                 if (det < min_det_mat)
                 {
-                    if (onpe0)
-                        (*MPIdata::sout) << "Det. Anderson matrix=" << det
-                                         << ", set m=" << mm_ << endl;
+                    os << "Det. Anderson matrix=" << det
+                       << ", set m=" << mm_ << endl;
                     mm_--;
                 }
                 else
@@ -176,8 +174,8 @@ void AndersonMix<T>::update(T& f, T& work)
             if( onpe0 )
             for(int i=0;i<mm_;i++)
             {
-                (*MPIdata::sout)<<"rhs["<<i<<"]="<<rhs_[i]<<endl;
-                (*MPIdata::sout)<<"mat["<<i<<"]="<<mat_[i+m_*i]<<endl;
+                os<<"rhs["<<i<<"]="<<rhs_[i]<<endl;
+                os<<"mat["<<i<<"]="<<mat_[i+m_*i]<<endl;
             }
 #endif
             dcopy(&n2, &mat_[0], &ione, &tmp_mat[0], &ione);
@@ -190,8 +188,7 @@ void AndersonMix<T>::update(T& f, T& work)
             delete[] tmp_mem;
             if (info != 0)
             {
-                (*MPIdata::sout)
-                    << "AndersonMix, dpotrs: info=" << info << endl;
+                os << "AndersonMix, dpotrs: info=" << info << endl;
                 exit(0);
             }
 
@@ -202,11 +199,10 @@ void AndersonMix<T>::update(T& f, T& work)
                     if (mm_ > 1)
                     {
                         mm_--;
-                        if (onpe0)
-                            (*MPIdata::sout)
-                                << "Warning: theta[" << j << "]=" << theta_[j]
-                                << " > " << max_theta << ", set m=" << mm_
-                                << endl;
+                        os
+                            << "Warning: theta[" << j << "]=" << theta_[j]
+                            << " > " << max_theta << ", set m=" << mm_
+                            << endl;
                         flag = true;
                         break;
                     }
@@ -219,10 +215,9 @@ void AndersonMix<T>::update(T& f, T& work)
                     {
                         alpha = 0.; // simple SD
                     }
-                    if (onpe0)
-                        (*MPIdata::sout)
-                            << "Warning: theta[" << j << "]=" << theta_[j]
-                            << " --> reset theta to " << alpha << endl;
+                    os
+                        << "Warning: theta[" << j << "]=" << theta_[j]
+                        << " --> reset theta to " << alpha << endl;
                     theta_[j] = alpha;
                 }
                 else if (theta_[j] < min_theta)
@@ -230,19 +225,17 @@ void AndersonMix<T>::update(T& f, T& work)
                     if (mm_ > 1)
                     {
                         mm_--;
-                        if (onpe0)
-                            (*MPIdata::sout)
-                                << "Warning: theta[" << j << "]=" << theta_[j]
-                                << " < " << min_theta << ", set m=" << mm_
-                                << endl;
+                        os
+                            << "Warning: theta[" << j << "]=" << theta_[j]
+                            << " < " << min_theta << ", set m=" << mm_
+                            << endl;
                         flag = true;
                         break;
                     }
                     double alpha = min_theta;
-                    if (onpe0)
-                        (*MPIdata::sout)
-                            << "Warning: theta[" << j << "]=" << theta_[j]
-                            << " --> reset theta to " << alpha << endl;
+                    os
+                        << "Warning: theta[" << j << "]=" << theta_[j]
+                        << " --> reset theta to " << alpha << endl;
                     theta_[j] = alpha;
                 }
             }
@@ -250,12 +243,12 @@ void AndersonMix<T>::update(T& f, T& work)
 
         //#ifdef DEBUG
         Control& ct = *(Control::instance());
-        if (onpe0 && mm_ > 0 && ct.verbose > 0)
+        if ( os.good() && mm_ > 0 && ct.verbose > 0)
         {
-            (*MPIdata::sout) << "Anderson extrapolation:";
+            os << "Anderson extrapolation:";
             for (int j = 0; j < mm_; j++)
-                (*MPIdata::sout) << "  theta[" << j << "]=" << theta_[j];
-            (*MPIdata::sout) << endl;
+                os << "  theta[" << j << "]=" << theta_[j];
+            os << endl;
         }
         //#endif
     }
@@ -289,7 +282,7 @@ void AndersonMix<T>::update(T& f, T& work)
     }
 
     // compute f bar
-    if (m_ > 0)
+    if (m_ > 0 )
     {
         // save current f
         work.assign(f);
@@ -318,8 +311,7 @@ void AndersonMix<T>::update(T& f, T& work)
     }
 
 #ifdef DEBUG
-    if (onpe0)
-        (*MPIdata::sout) << "AndersonMix: update x with beta=" << beta_ << endl;
+    os << "AndersonMix: update x with beta=" << beta_ << endl;
 #endif
     // update x_
     if (mm_ > 0)
@@ -327,17 +319,7 @@ void AndersonMix<T>::update(T& f, T& work)
     else
         x_.axpy(1., f);
 
-    if (ortho_flag_)
-    {
-        SquareLocalMatrices<double> ortho_transform(
-            x_.subdivx(), x_.chromatic_number());
-        x_.orthonormalizeLoewdin(false, &ortho_transform);
-        for (int j = 0; j < m_; j++)
-        {
-            //            xi_[j]->multiplyByMatrix(ortho_transform);
-            //            fi_[j]->multiplyByMatrix(ortho_transform);
-        }
-    }
+    postprocessUpdate();
 
     update_tm_.stop();
 }

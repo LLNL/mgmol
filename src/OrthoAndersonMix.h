@@ -8,21 +8,30 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef MGMOL_MIXING
-#define MGMOL_MIXING
+#ifndef MGMOL_ORTHOANDERSON_MIX
+#define MGMOL_ORTHOANDERSON_MIX
 
-#include <iostream>
+#include "AndersonMix.h"
 
 template <class T>
-class Mixing
+class OrthoAndersonMix : public AndersonMix<T>
 {
+private:
+    const int m_;
+    T& x_; // current trial solution
+
+protected:
+
+    virtual void postprocessUpdate();
+
 public:
-    Mixing(){};
 
-    virtual ~Mixing(){};
+    OrthoAndersonMix(const int m, const double beta, T& x)
+        : m_(m), x_(x), AndersonMix<T>(m,beta,x)
+    {}
 
-    virtual void update(T& res, T& work, std::ostream& os) = 0;
-    virtual void restart(void)           = 0;
+    virtual ~OrthoAndersonMix(){};
 };
 
 #endif
+

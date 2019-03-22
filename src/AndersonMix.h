@@ -16,6 +16,7 @@
 
 #include <cassert>
 #include <vector>
+#include <iostream>
 
 template <class T>
 class AndersonMix : public Mixing<T>
@@ -23,7 +24,6 @@ class AndersonMix : public Mixing<T>
     const int m_;
     int mm_;
     double beta_; // mixing parameter
-    T& x_; // current trial solution
 
     std::vector<T*> xi_; // last mm_ trial solutions
     std::vector<T*> fi_; // last mm_ residuals
@@ -31,21 +31,23 @@ class AndersonMix : public Mixing<T>
     std::vector<double> rhs_;
     std::vector<double> theta_;
 
-    bool ortho_flag_;
-
     static Timer update_tm_;
+
+    virtual void postprocessUpdate(){};
+
+    T& x_; // current trial solution
 
 public:
     static Timer update_tm() { return update_tm_; }
 
     AndersonMix(
-        const int m, const double beta, T& x, const bool ortho_flag = false);
+        const int m, const double beta, T& x);
 
-    ~AndersonMix();
+    virtual ~AndersonMix();
 
     // update trial solution based on residual
     // need work array for temporary storage
-    void update(T& res, T& work);
+    void update(T& res, T& work, std::ostream& os);
     void restart(void);
 };
 

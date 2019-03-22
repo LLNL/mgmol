@@ -9,13 +9,16 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "ABPG.h"
-#include "AndersonMix.h"
+#include "OrthoAndersonMix.h"
 #include "Control.h"
 #include "Ions.h"
 #include "MGmol.h"
 #include "Potentials.h"
 #include "ProjectedMatricesInterface.h"
 #include "LocGridOrbitals.h"
+
+#include <iostream>
+using namespace std;
 
 template <class T>
 void ABPG<T>::setup(T& orbitals)
@@ -24,9 +27,12 @@ void ABPG<T>::setup(T& orbitals)
 
     if (ct.wf_dyn == 1) // use Anderson extrapolation
     {
-        wf_mix_ = new AndersonMix<T>(
-            ct.wf_m, ct.betaAnderson, orbitals,
-            (ct.getOrbitalsType() == OrbitalsType::Orthonormal));
+        if( ct.getOrbitalsType() == OrbitalsType::Orthonormal )
+        wf_mix_ = new OrthoAndersonMix<T>(
+            ct.wf_m, ct.betaAnderson, orbitals);
+        else
+            wf_mix_ = new AndersonMix<T>(
+                ct.wf_m, ct.betaAnderson, orbitals);
     }
 }
 
@@ -166,7 +172,9 @@ void ABPG<T>::update_states(T& orbitals, T& res,
         res.scal(alpha);
         // Extrapolation scheme
         assert(wf_mix_ != 0);
-        wf_mix_->update(res, work_orbitals);
+        ostream os(nullptr);
+        if(onpe0)os.rdbuf(cout.rdbuf());
+        wf_mix_->update(res, work_orbitals, os);
     }
     else
     {
