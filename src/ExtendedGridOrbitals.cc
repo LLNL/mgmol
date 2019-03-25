@@ -464,8 +464,6 @@ void ExtendedGridOrbitals::multiply_by_matrix(
     (*MPIdata::sout)<<" multiply_by_matrix, first_color="<<first_color<<endl;
 #endif
 
-    DISTMATDTYPE* matrix_local = new DISTMATDTYPE[numst_ * numst_];
-
     // loop over subdomains
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
@@ -474,8 +472,6 @@ void ExtendedGridOrbitals::multiply_by_matrix(
             lda_, matrix, numst_, 0.,
             product + iloc * loc_numpt_, ldp);
     }
-
-    delete[] matrix_local;
 
     prod_matrix_tm_.stop();
 }
@@ -564,9 +560,6 @@ void ExtendedGridOrbitals::multiply_by_matrix(
     DISTMATDTYPE* work_matrix = wspace.square_matrix();
 
     matrix.matgather(work_matrix, numst_);
-
-//    DISTMATDTYPE* matrix_local
-//        = new DISTMATDTYPE[numst_ * numst_];
 
     const size_t slnumpt = loc_numpt_ * sizeof(ORBDTYPE);
 
