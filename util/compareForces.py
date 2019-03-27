@@ -19,7 +19,7 @@ input2=open(sys.argv[2],'r')
 frame=-1
 if len(sys.argv)>3:
   frame=eval(sys.argv[3])
-  print 'Input argument: Frame=',frame
+  print( 'Input argument: Frame=',frame )
 
 L1=input1.readlines()
 L2=input2.readlines()
@@ -28,7 +28,7 @@ star='*'
 
 ##############################################
 # count number atoms
-def getNumAtoms(L):
+def getNumAtoms(lines):
   searchterm1='## '
   searchterm2='FORCES'
   searchterm3='Forces'
@@ -36,10 +36,10 @@ def getNumAtoms(L):
   already_found_one=0
   na=0
   flag=0
-  for line in L: ## loop over lines of file 
-    num_matches1 = string.count(line, searchterm1)
-    num_matches2 = string.count(line, searchterm2)
-    num_matches3 = string.count(line, searchterm3)
+  for line in lines: ## loop over lines of file
+    num_matches1 = line.count(searchterm1)
+    num_matches2 = line.count(searchterm2)
+    num_matches3 = line.count(searchterm3)
     if num_matches2 or num_matches3:
       flag=1
     if num_matches1 & flag==1:
@@ -58,33 +58,35 @@ def getNumAtoms(L):
 na1=getNumAtoms(L1)
 na2=getNumAtoms(L2)
 
-print 'N atoms in file1=', na1
-print 'N atoms in file2=', na2
+print( 'N atoms in file1=', na1)
+print( 'N atoms in file2=', na2)
 
 
 ##############################################
 
-def getForces(names,coords,forces,L,fframe):
+def getForces(names,coords,forces,lines,fframe):
   na=len(names)
-  l=len(L)  ## no of lines in file
+  l=len(lines)  ## no of lines in file
   line_min=0  
   cur_frame=0
   for line in range(l): ## loop over lines of file1 
     if line>line_min:
-      num_matches3 = string.count(L[line], 'md_ProjectForces')
+      thisline = lines[line]
+      num_matches3 = thisline.count('md_ProjectForces')
       if num_matches3:
         return
 
-      num_matches1 = string.count(L[line], 'Forces')
-      num_matches2 = string.count(L[line], 'FORCES')
-      num_matches3 = string.count(L[line], 'Timer:')
+      num_matches1 = thisline.count('Forces')
+      num_matches2 = thisline.count('FORCES')
+      num_matches3 = thisline.count('Timer:')
       num_matches=num_matches1+num_matches2
       if num_matches and not num_matches3:
         j=0
-        print 'Frame: ',cur_frame,' Read forces starting at line ', line,' for ',na,' atoms'
+        print( 'Frame: ',cur_frame,' Read forces starting at line ', line,' for ',na,' atoms')
         for line2 in range(line+1,line+na+2):
-          if string.count(L[line2], '##')>0:
-            words=string.split(L[line2])
+          thisline2 = lines[line2]
+          if thisline2.count('##')>0:
+            words=thisline2.split()
             shift=0
             while words[shift]!='##':
               shift=shift+1
@@ -106,7 +108,7 @@ def getForces(names,coords,forces,L,fframe):
             j=j+1
         line_min=line+na+2
         if fframe==cur_frame:
-          print 'break'
+          print ('break')
           break
         cur_frame=cur_frame+1
 
@@ -169,7 +171,7 @@ def subtractAverageForce(forces):
     fx=eval(word[0])-avgx
     fy=eval(word[1])-avgy
     fz=eval(word[2])-avgz
-    forces[i]=`fx`+'\t'+`fy`+'\t'+`fz`
+    forces[i]=str(fx)+'\t'+str(fy)+'\t'+str(fz)
 
 ##############################################
 
@@ -177,10 +179,12 @@ def subtractAverageForce(forces):
 #subtractAverageForce(forces2)
 
 na=0
-for i in range(na1): 
-  word1=string.split(forces1[i])
-  for j in range(na2): 
-    word2=string.split(forces2[j])
+for i in range(na1):
+  force1=forces1[i]
+  word1=force1.split()
+  for j in range(na2):
+    force2=forces2[j]
+    word2=force2.split()
     if names1[i]==names2[j]:
       fx1=eval(word1[0])
       fy1=eval(word1[1])
@@ -205,23 +209,23 @@ for i in range(na1):
       if df<mindf:
         mindf=df
       na=na+1
-      print names1[i],': delta f=',df
-print 'na=',na      
+      print (names1[i],': delta f=',df)
+print ('na=',na)
 avg=avg/na
 
-print 'N atoms =', na
-print 'Avg. df=',avgx,avgy,avgz
-print 'Avg. |df|=',avg
-print 'Min. df=',mindf
-print 'Max. df=',maxdf
-print 'df max for atom ',names1[imax],' and ',names2[jmax]
-print 'Forces atoms with largest force difference:'
+print ('N atoms =', na)
+print ('Avg. df=',avgx,avgy,avgz)
+print ('Avg. |df|=',avg)
+print ('Min. df=',mindf)
+print ('Max. df=',maxdf)
+print ('df max for atom ',names1[imax],' and ',names2[jmax])
+print ('Forces atoms with largest force difference:')
 filename1=sys.argv[1]
 filename1=filename1.ljust(15)
 filename2=sys.argv[2]
 filename2=filename2.ljust(15)
-print filename1,'\t',names1[imax],'\t',coords1[imax],'\t',forces1[imax]
-print filename2,'\t',names2[jmax],'\t',coords2[jmax],'\t',forces2[jmax]
+print (filename1,'\t',names1[imax],'\t',coords1[imax],'\t',forces1[imax])
+print (filename2,'\t',names2[jmax],'\t',coords2[jmax],'\t',forces2[jmax])
 
 delf=(maxdf+1.e-5-mindf)/10.
 for j in range(na):
@@ -230,7 +234,7 @@ for j in range(na):
   bin[b]=bin[b]+1
 
 for i in range(0,10):
-  print mindf+(i+0.5)*delf, bin[i]
+  print (mindf+(i+0.5)*delf, bin[i])
 
 #for j in range(na): 
-#  print dff[j]
+#  print (dff[j])
