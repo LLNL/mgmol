@@ -1,0 +1,19 @@
+Pseudopotentials used by MGmol are not fundamentally different than other
+norm conserving pseudopotentials. They are just in a different format.
+Pseudopotentials in this subdirectory have typically been adapted from
+pseudopotentials generated for other Plane Waves codes.
+
+Pseudopotentials with names containing "ONCV" refer to Optimized
+norm-conserving Vanderbilt pseudopotentials as described in:
+
+D. R. Hamann, Phys. Rev. B 88, 085117 (2013)
+https://doi.org/10.1103/PhysRevB.88.085117
+
+Pseudopotentials with names containing "SG15" have been adapted from the Qbox
+code (http://www.quantum-simulation.org). Their generation id described in
+the following paper:
+
+M. Schlipf and F. Gygi, Computer Physics Communications (2015)
+DOI: 10.1016/j.cpc.2015.05.011
+http://dx.doi.org/10.1016/j.cpc.2015.05.011
+

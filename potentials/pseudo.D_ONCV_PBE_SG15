@@ -1,13 +1,3 @@
-# Copyright (c) 2017, Lawrence Livermore National Security, LLC. Produced at
-# the Lawrence Livermore National Laboratory. 
-# Written by J.-L. Fattebert, D. Osei-Kuffuor and I.S. Dunn.
-# LLNL-CODE-743438
-# All rights reserved. 
-# This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
-# Please also read this link https://github.com/llnl/mgmol/LICENSE
-#
-# 
-# 
 # 
 #  This pseudopotential file has been produced using the code
 #  ONCVPSP  (Optimized Norm-Conservinng Vanderbilt PSeudopotential)
@@ -36,7 +26,10 @@
 #  variety of different compounds. For details of the construction and 
 #  testing of the pseudopotential please refer to:
 #  
-#  [insert reference to paper here]
+#    M. Schlipf and F. Gygi, Computer Physics Communications (2015)
+#    DOI: 10.1016/j.cpc.2015.05.011
+#    http://dx.doi.org/10.1016/j.cpc.2015.05.011
+#    http://www.quantum-simulation.org
 #  
 #  We kindly ask that you include this reference in all publications 
 #  associated to this pseudopotential.
