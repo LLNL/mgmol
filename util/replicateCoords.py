@@ -20,25 +20,25 @@ nnn=nx*ny*nz
 # list possible species in a dictionary with their count
 species={'H':0,'He':0,'Li':0,'Be':0,'B':0,'C':0,'N':0,'O':0,'F':0,'Na':0,
          'Mg':0,'Al':0,'Si':0,'P':0,'S':0,'Cl':0,'K':0,'Ca':0,'D':0,'In':0,
-         'Au':0}
+         'Au':0,'Mo':0}
 
 lx=0.
 ly=0.
 lz=0.
 for line in cfg:
   if "lx" in line:
-    word=string.split(line,'=')
+    word=line.split('=')
     lx=eval(word[1])
   if "ly" in line:
-    word=string.split(line,'=')
+    word=line.split('=')
     ly=eval(word[1])
   if "lz" in line:
-    word=string.split(line,'=')
+    word=line.split('=')
     lz=eval(word[1])
 
 count_atom = 0
 for line in coords: ## loop over lines of file
-  word=string.split(line)
+  word=line.split()
   if len(word)>0:
     if len(word)>4:
       name1=word[0][0:1]
@@ -62,13 +62,15 @@ for line in coords: ## loop over lines of file
               count_atom = count_atom + 1
               name = myspecies + str(count_atom)
               sp=word[1]
-              print name.ljust(7),str(sp).rjust(3),str(x).rjust(16),str(y).rjust(16),str(z).rjust(16),
-              if len(word)>5: print word[5].rjust(3),
-              if len(word)>6: print str(vx).rjust(16),str(vy).rjust(16),str(vz).rjust(16),
-              print  '\n',
+              print (name.ljust(7),str(sp).rjust(3),str(x).rjust(16),str(y).rjust(16),str(z).rjust(16),end='')
+              if len(word)>5:
+                print (" ",word[5].rjust(3),end='')
+              if len(word)>6:
+                print (" ",str(vx).rjust(16),str(vy).rjust(16),str(vz).rjust(16),end='')
+              print  ('\n',end='')
       else:
-        print line,  
+        print (line, end='')
     else:
-      print line,
+      print (line,end='')
   else:
-    print line,
+    print (line,end='')
