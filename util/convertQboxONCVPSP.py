@@ -30,13 +30,13 @@ mesh_spacing=pseudopot.find('mesh_spacing').text
 h=eval(mesh_spacing)
 
 local_pot=pseudopot.find('local_potential')
-lpot=string.split(local_pot.text)
+lpot=local_pot.text.split()
 
 lmax=0
 for projector in pseudopot.findall('projector'):
-  l=projector.get('l')
+  l=int(projector.get('l'))
   if l>lmax:
-    lmax=eval(l)
+    lmax=l
 
 dij_factors=[]
 for l in range(lmax+1):
@@ -52,73 +52,74 @@ for dij in dijs:
     dij_factors[l].append(v)
 
 #print header
-strings=string.split(description,'\n')
+strings=description.split('\n')
 for s in strings:
-  print '#',s
+  print ('#',s)
 
-print string.split(filename,'.')[0]
-print '#'
-print 'color'
-print '#radii of balls and covalent bonds'
-print '-1.  -1.'
-print '# Nlcc flag'
-print 0
-print '# Atomic number'
-print atomic_number
-print '# Atomic mass'
-print mass
-print '# Number of valence electrons'
-print valence_charge
-print '#Gaussian core charge parameter rc'
-print 1.
-print '# Number of potentials'
-print lmax+2
-print '# l-value for state which is local, then type of potential format'
-print lmax+1, 3
-print '# Local potential radius'
-print 3.2
-print '# Non-local potential radius'
-print 3.2
+print (filename.split('.')[0])
+print ('#')
+print ('color')
+print ('#radii of balls and covalent bonds')
+print ('-1.  -1.')
+print ('# Nlcc flag')
+print (0)
+print ('# Atomic number')
+print (atomic_number)
+print ('# Atomic mass')
+print (mass)
+print ('# Number of valence electrons')
+print (valence_charge)
+print ('#Gaussian core charge parameter rc')
+print (1.)
+print ('# Number of potentials')
+print (lmax+2)
+print ('# l-value for state which is local, then type of potential format')
+print (lmax+1, 3)
+print ('# Local potential radius')
+print (3.2)
+print ('# Non-local potential radius')
+print (3.2)
 
-print '# number of points in radial grid'
+print ('# number of points in radial grid')
 proj= pseudopot.find('local_potential')
 ngpts=eval(proj.get('size'))
-print ngpts
+print (ngpts)
 
 projs=[]
 for l in range(lmax+1):
   projs.append([])
 
-print '# VANDERBILT-KLEINMAN-BYLANDER PROJECTORs'
-print '# l, nproj'
+print ('# VANDERBILT-KLEINMAN-BYLANDER PROJECTORs')
+print ('# l, nproj')
 l=0
 for dij in dij_factors:
-  print l,len(dij),
+  print (l,len(dij),end=" ")
   for d in dij:
-    print d,
-  print ''
+    print (d,end=" ")
+  print ('')
   l=l+1
 
 for projector in pseudopot.findall('projector'):
   l=eval(projector.get('l'))
   i=projector.get('i')
   pot=projector.text
-  s=string.split(pot)
+  s=pot.split()
   projs[l].append(s)
 
 #print projectors
 l=0
 for proj in projs:
-  print '# l=',l
+  print ('# l=',l)
   for i in range(ngpts):
-    r=i*h
-    print r,
+    r=round(i*h,2)
+    print (r,end=" ")
     for p in proj:
-      print eval(p[i]),
-    print ''
+      print (eval(p[i]),end=" ")
+    print ('')
   l=l+1
   
 #print local potential
-print '# local'
+print ('# local')
 for i in range(ngpts):
-  print i*h, lpot[i]
+  r=round(i*h,2)
+  print (r, lpot[i])
