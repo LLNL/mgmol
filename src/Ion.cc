@@ -8,9 +8,9 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #include "Ion.h"
 #include "MGmol_blas1.h"
+
 #include <iomanip>
 #include <iostream>
 
@@ -355,3 +355,133 @@ double Ion::energyDiff(
 
     return getZion() * ion.getZion() * erfc(r / t1) / r;
 }
+
+//This is where the local atomic potential is set, as well as the compensating
+//charge.
+void Ion::addContributionToVnucAndRhoc(POTDTYPE* vnuc,
+                                       RHODTYPE* rhoc,
+                                       const pb::Grid& mygrid,
+                                       const short bc[3])
+{
+    assert(map_l_);
+
+    const double h0 = mygrid.hgrid(0);
+    const double h1 = mygrid.hgrid(1);
+    const double h2 = mygrid.hgrid(2);
+
+    Vector3D ll(mygrid.ll(0), mygrid.ll(1), mygrid.ll(2));
+
+    const int dim0  = mygrid.dim(0);
+    const int dim1  = mygrid.dim(1);
+    const int dim2  = mygrid.dim(2);
+
+    const int inc0 = dim1 * dim2;
+
+    // min./max. indices of subdomain mesh
+    const int ilow = mygrid.istart(0);
+    const int jlow = mygrid.istart(1);
+    const int klow = mygrid.istart(2);
+    const int ihi  = ilow + dim0 - 1;
+    const int jhi  = jlow + dim1 - 1;
+    const int khi  = klow + dim2 - 1;
+
+    const Vector3D position(position_[0], position_[1], position_[2]);
+
+    // Generate indices where potential is not zero
+    vector<vector<int>> Ai;
+    Ai.resize(3);
+    get_Ai(Ai[0], mygrid.gdim(0), 0);
+    get_Ai(Ai[1], mygrid.gdim(1), 1);
+    get_Ai(Ai[2], mygrid.gdim(2), 2);
+    const int dimlx = Ai[0].size();
+    const int dimly = Ai[1].size();
+    const int dimlz = Ai[2].size();
+
+    const double rc = species_.rc();
+    const double lr = species_.lradius();
+    assert(rc > 1.e-8);
+
+    const double pi3half = M_PI * sqrt(M_PI);
+    const double rcnorm = rc * rc * rc * pi3half;
+    assert(rcnorm > 1.e-8);
+    const double alpha   = getZion() / rcnorm;
+    const double inv_rc2 = 1. / (rc * rc);
+
+    const RadialInter& lpot(getLocalPot());
+#if DEBUG
+    int icount        = 0;
+    double charge_ion = 0.;
+#endif
+
+    double zc         = lstart_[2];
+
+    //triple loop over indices where potential is not zero
+    for (int iz = 0; iz < dimlz; iz++)
+    {
+        double yc       = lstart_[1];
+        const int ai2iz = Ai[2][iz];
+        const int ivecz = ai2iz % dim2;
+
+        if ((ai2iz >= klow) && (ai2iz <= khi))
+        for (int iy = 0; iy < dimly; iy++)
+        {
+            double xc       = lstart_[0];
+            const int ai1iy = Ai[1][iy];
+            const int ivecy = dim2 * (ai1iy % dim1);
+
+            if ((ai1iy >= jlow) && (ai1iy <= jhi))
+            for (int ix = 0; ix < dimlx; ix++)
+            {
+                const int ai0ix = Ai[0][ix];
+                if ((ai0ix >= ilow) && (ai0ix <= ihi))
+                {
+                    const int ivec = inc0 * (ai0ix % dim0)
+                                     + ivecy
+                                     + ivecz;
+                    assert(ivec < mygrid.size());
+
+                    Vector3D vc(xc, yc, zc);
+                    const double r
+                        = vc.minimage(position, ll, bc);
+                    const double r2 = r * r;
+
+                    const double tmp = alpha * exp(-r2 * inv_rc2);
+                    rhoc[ivec] += tmp;
+#if DEBUG
+                    charge_ion += tmp;
+#endif
+                    if (r < lr)
+                    {
+#if 0
+                        vnuc[ivec] += 
+                            get_trilinval(xc,yc,zc,h0,h1,h2,position,ll,lpot);
+#else
+                        vnuc[ivec] += lpot.cubint(r);
+#endif
+                    }
+#if DEBUG
+                    icount++;
+#endif
+                }
+
+                xc += h0;
+
+            } // end loop over ix
+
+            yc += h1;
+
+        } // end loop over iy
+
+        zc += h2;
+
+    } // end loop over iz
+
+#if DEBUG
+    cout << setprecision(10);
+    cout << " icount=" << icount << endl;
+    cout << " charge compensating Ion=" << mygrid.vel() * charge_ion
+        << endl;
+#endif
+
+}
+
