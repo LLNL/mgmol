@@ -15,6 +15,7 @@
 #include "IonData.h"
 #include "KBprojectorSparse.h"
 #include "Species.h"
+#include "Mesh.h"
 
 #include <cstring>
 #include <vector>
@@ -95,7 +96,7 @@ public:
     ~Ion(){};
 
     void init(const double crds[3], const double velocity[3], const bool lock);
-    void setup(const short);
+    void setup();
 
     KBprojectorSparse& kbproj() { return kbproj_; }
     const KBprojectorSparse& kbproj() const { return kbproj_; }

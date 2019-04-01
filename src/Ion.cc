@@ -104,11 +104,9 @@ void Ion::init(const double crds[3], const double velocity[3], const bool lock)
     rand_state_[2]      = rem;
 };
 
-void Ion::setup(const short subdivx)
+void Ion::setup()
 {
-    assert(subdivx > 0);
-
-    kbproj_.setup(subdivx, position_);
+    kbproj_.setup(position_);
 
     map_nl_ = kbproj_.overlapPE();
 }

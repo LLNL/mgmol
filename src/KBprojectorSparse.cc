@@ -8,7 +8,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #include "KBprojectorSparse.h"
 #include "Mesh.h"
 #include "Species.h"
@@ -49,9 +48,18 @@ KBprojectorSparse::KBprojectorSparse(const Species& sp) : species_(sp)
     for (short l = 0; l <= maxl_; l++)
         assert(multiplicity_[l] > 0 || l == llocal_);
 
+    Mesh* mymesh           = Mesh::instance();
+    const pb::Grid& mygrid = mymesh->grid();
+    for(short i=0; i<3; i++)
+        h_[i] = mygrid.hgrid(i);
+    subdivx_ = mymesh->subdivx();
+
     assert(llocal_ <= maxl_);
     assert(range_kbproj_ >= 0);
     assert(range_kbproj_ < 256);
+    assert(h_[0] > 0.);
+    assert(h_[1] > 0.);
+    assert(h_[2] > 0.);
 }
 
 // copy constructor (without initialization of projectors)
@@ -69,19 +77,20 @@ KBprojectorSparse::KBprojectorSparse(const KBprojectorSparse& kb)
 
     is_in_domain_ = NULL;
 
-    subdivx_ = -1;
+    subdivx_ = kb.subdivx_;
     for (short i = 0; i < 3; i++)
+    {
+        h_[i] = kb.h_[i];
         kb_proj_start_index_[i] = -1;
+    }
 
     assert(llocal_ <= maxl_);
     assert(range_kbproj_ >= 0);
     assert(range_kbproj_ < 256);
 }
 
-void KBprojectorSparse::setup(const short subdivx, const double center[3])
+void KBprojectorSparse::setup(const double center[3])
 {
-    assert(subdivx >= 1);
-
     initCenter(center);
     for (short i = 0; i < 3; i++)
     {
@@ -89,15 +98,12 @@ void KBprojectorSparse::setup(const short subdivx, const double center[3])
     }
 
     // if(onpe0)cout<<"KBprojectorSparse::setup()..."<<endl;
-    subdivx_ = subdivx;
-
-    projector_.resize(subdivx_);
     nlindex_.resize(subdivx_);
     size_nl_.assign(subdivx_, 0);
 
     if (maxl_ > 0)
     {
-        allocateProjectors();
+        setPtrProjectors();
 
         setIndexesAndProjectors();
     }
@@ -179,10 +185,39 @@ bool KBprojectorSparse::overlapPE() const
     return (n > 0);
 }
 
+void KBprojectorSparse::allocateProjectors(const short iloc, const int icount)
+{
+    const int nprojs = nProjectors();
+
+    projectors_storage_.push_back( vector<KBPROJDTYPE>(nprojs*icount) );
+    assert(projectors_storage_.size()==(iloc+1));
+
+    KBPROJDTYPE* pstorage( &projectors_storage_[iloc][0] );
+
+    // Loop over radial projectors
+    for (short l = 0; l <= maxl_; l++)
+    {
+        // Skip the local potential
+        if (l != llocal_)
+        {
+            for (short p = 0; p < multiplicity_[l]; ++p)
+            {
+                for (short m = 0; m < 2*l+1; m++)
+                {
+                    ptr_projector_[iloc][l][p][m] = pstorage;
+                    pstorage += icount;
+                }
+            }
+        }
+    }
+}
+
 void KBprojectorSparse::setProjectors(const short iloc, const int icount)
 {
     assert(is_in_domain_ != NULL);
     assert(is_in_domain_[iloc] != NULL);
+
+    allocateProjectors(iloc, icount);
 
     // Loop over radial projectors
     for (short l = 0; l <= maxl_; l++)
@@ -221,29 +256,22 @@ void KBprojectorSparse::setProjectors(const short iloc, const int icount)
 // Generates an s-projector
 void KBprojectorSparse::setSProjector(const short iloc, const int icount)
 {
-    assert((int)projector_.size() > iloc);
-    assert(projector_[iloc].size() > 0);
-    assert(projector_[iloc][0].size() > 0);
+    assert((int)ptr_projector_.size() > iloc);
+    assert(ptr_projector_[iloc].size() > 0);
+    assert(ptr_projector_[iloc][0].size() > 0);
 
     const bool* const is_in_domain = is_in_domain_[iloc];
-
-    Mesh* mymesh           = Mesh::instance();
-    const pb::Grid& mygrid = mymesh->grid();
-    const double hgrid0    = mygrid.hgrid(0);
-    const double hgrid1    = mygrid.hgrid(1);
-    const double hgrid2    = mygrid.hgrid(2);
 
     const double factor = sqrt(1. / (4. * M_PI));
 
     for (short p = 0; p < multiplicity_[0]; ++p)
     {
-        assert(projector_[iloc][0][p].size() > 0);
+        assert(ptr_projector_[iloc][0][p].size() > 0);
 
         int jcount = 0;
         const RadialInter& nlproj(species_.getRadialKBP(0, p));
 
-        projector_[iloc][0][p][0].resize(icount);
-        KBPROJDTYPE* rtptr = &projector_[iloc][0][p][0][0];
+        KBPROJDTYPE* rtptr = ptr_projector_[iloc][0][p][0];
 
         int idx = 0;
 
@@ -276,13 +304,13 @@ void KBprojectorSparse::setSProjector(const short iloc, const int icount)
                     }
 
                     idx++;
-                    z += hgrid2;
+                    z += h_[2];
                 }
 
-                y += hgrid1;
+                y += h_[1];
             }
 
-            x += hgrid0;
+            x += h_[0];
         }
 
         if (jcount != icount)
@@ -298,33 +326,22 @@ void KBprojectorSparse::setSProjector(const short iloc, const int icount)
 // Generates p-projectors
 void KBprojectorSparse::setPProjector(const short iloc, const int icount)
 {
-    assert((int)projector_.size() > iloc);
-    assert((int)projector_[iloc].size() > 1);
-    assert((int)projector_[iloc][1].size() == multiplicity_[1]);
+    assert((int)ptr_projector_.size() > iloc);
+    assert((int)ptr_projector_[iloc].size() > 1);
+    assert((int)ptr_projector_[iloc][1].size() == multiplicity_[1]);
 
     const bool* const is_in_domain = is_in_domain_[iloc];
-
-    Mesh* mymesh           = Mesh::instance();
-    const pb::Grid& mygrid = mymesh->grid();
-    const double hgrid0    = mygrid.hgrid(0);
-    const double hgrid1    = mygrid.hgrid(1);
-    const double hgrid2    = mygrid.hgrid(2);
 
     const double factor = sqrt(3. / (4. * M_PI));
 
     for (short p = 0; p < multiplicity_[1]; p++)
     {
-        assert(projector_[iloc][1][p].size() > 0);
+        assert(ptr_projector_[iloc][1][p].size() > 0);
 
         int jcount = 0;
-        for (short m = 0; m < 3; m++)
-        {
-            assert(m < projector_[iloc][1][p].size());
-            projector_[iloc][1][p][m].resize(icount);
-        }
-        KBPROJDTYPE* projx = &projector_[iloc][1][p][0][0];
-        KBPROJDTYPE* projy = &projector_[iloc][1][p][1][0];
-        KBPROJDTYPE* projz = &projector_[iloc][1][p][2][0];
+        KBPROJDTYPE* projx = ptr_projector_[iloc][1][p][0];
+        KBPROJDTYPE* projy = ptr_projector_[iloc][1][p][1];
+        KBPROJDTYPE* projz = ptr_projector_[iloc][1][p][2];
 
         int idx = 0;
         const RadialInter& nlproj(species_.getRadialKBP(1, p));
@@ -375,11 +392,11 @@ void KBprojectorSparse::setPProjector(const short iloc, const int icount)
                         jcount++;
                     }
                     idx++;
-                    z += hgrid2;
+                    z += h_[2];
                 }
-                y += hgrid1;
+                y += h_[1];
             }
-            x += hgrid0;
+            x += h_[0];
         }
 
         if (jcount != icount)
@@ -396,18 +413,12 @@ void KBprojectorSparse::setPProjector(const short iloc, const int icount)
 // Generates d-projectors
 void KBprojectorSparse::setDProjector(const short iloc, const int icount)
 {
-    assert((int)projector_.size() > iloc);
-    assert((int)projector_[iloc].size() > 2);
+    assert((int)ptr_projector_.size() > iloc);
+    assert((int)ptr_projector_[iloc].size() > 2);
     assert(multiplicity_[2] > 0);
-    assert((int)projector_[iloc][2].size() == multiplicity_[2]);
+    assert((int)ptr_projector_[iloc][2].size() == multiplicity_[2]);
 
     const bool* const is_in_domain = is_in_domain_[iloc];
-
-    Mesh* mymesh           = Mesh::instance();
-    const pb::Grid& mygrid = mymesh->grid();
-    const double hgrid0    = mygrid.hgrid(0);
-    const double hgrid1    = mygrid.hgrid(1);
-    const double hgrid2    = mygrid.hgrid(2);
 
     const double sqrt3     = sqrt(3.0);
     const double inv_sqrt3 = 1. / sqrt3;
@@ -417,16 +428,11 @@ void KBprojectorSparse::setDProjector(const short iloc, const int icount)
     for (short p = 0; p < multiplicity_[2]; p++)
     {
         int jcount = 0;
-        for (int m = 0; m < 5; m++)
-        {
-            assert(m < projector_[iloc][2][p].size());
-            projector_[iloc][2][p][m].resize(icount);
-        }
-        KBPROJDTYPE* r1 = &projector_[iloc][2][p][0][0];
-        KBPROJDTYPE* r2 = &projector_[iloc][2][p][1][0];
-        KBPROJDTYPE* r3 = &projector_[iloc][2][p][2][0];
-        KBPROJDTYPE* r4 = &projector_[iloc][2][p][3][0];
-        KBPROJDTYPE* r5 = &projector_[iloc][2][p][4][0];
+        KBPROJDTYPE* r1 = ptr_projector_[iloc][2][p][0];
+        KBPROJDTYPE* r2 = ptr_projector_[iloc][2][p][1];
+        KBPROJDTYPE* r3 = ptr_projector_[iloc][2][p][2];
+        KBPROJDTYPE* r4 = ptr_projector_[iloc][2][p][3];
+        KBPROJDTYPE* r5 = ptr_projector_[iloc][2][p][4];
 
         int idx = 0;
 
@@ -491,11 +497,11 @@ void KBprojectorSparse::setDProjector(const short iloc, const int icount)
                     }
 
                     idx++;
-                    z += hgrid2;
+                    z += h_[2];
                 }
-                y += hgrid1;
+                y += h_[1];
             }
-            x += hgrid0;
+            x += h_[0];
         }
 
         if (jcount != icount)
@@ -511,18 +517,12 @@ void KBprojectorSparse::setDProjector(const short iloc, const int icount)
 // Generates f-projectors
 void KBprojectorSparse::setFProjector(const short iloc, const int icount)
 {
-    assert((int)projector_.size() > iloc);
-    assert((int)projector_[iloc].size() > 3);
+    assert((int)ptr_projector_.size() > iloc);
+    assert((int)ptr_projector_[iloc].size() > 3);
     assert(multiplicity_[3] > 0);
-    assert((int)projector_[iloc][3].size() == multiplicity_[3]);
+    assert((int)ptr_projector_[iloc][3].size() == multiplicity_[3]);
 
     const bool* const is_in_domain = is_in_domain_[iloc];
-
-    Mesh* mymesh           = Mesh::instance();
-    const pb::Grid& mygrid = mymesh->grid();
-    const double hgrid0    = mygrid.hgrid(0);
-    const double hgrid1    = mygrid.hgrid(1);
-    const double hgrid2    = mygrid.hgrid(2);
 
     const double sqrt2 = sqrt(2.0);
     const double sqrt3 = sqrt(3.0);
@@ -534,18 +534,13 @@ void KBprojectorSparse::setFProjector(const short iloc, const int icount)
     for (short p = 0; p < multiplicity_[3]; p++)
     {
         int jcount = 0;
-        for (int m = 0; m < 7; m++)
-        {
-            assert(m < projector_[iloc][3][p].size());
-            projector_[iloc][3][p][m].resize(icount);
-        }
-        KBPROJDTYPE* r1 = &projector_[iloc][3][p][0][0];
-        KBPROJDTYPE* r2 = &projector_[iloc][3][p][1][0];
-        KBPROJDTYPE* r3 = &projector_[iloc][3][p][2][0];
-        KBPROJDTYPE* r4 = &projector_[iloc][3][p][3][0];
-        KBPROJDTYPE* r5 = &projector_[iloc][3][p][4][0];
-        KBPROJDTYPE* r6 = &projector_[iloc][3][p][5][0];
-        KBPROJDTYPE* r7 = &projector_[iloc][3][p][6][0];
+        KBPROJDTYPE* r1 = ptr_projector_[iloc][3][p][0];
+        KBPROJDTYPE* r2 = ptr_projector_[iloc][3][p][1];
+        KBPROJDTYPE* r3 = ptr_projector_[iloc][3][p][2];
+        KBPROJDTYPE* r4 = ptr_projector_[iloc][3][p][3];
+        KBPROJDTYPE* r5 = ptr_projector_[iloc][3][p][4];
+        KBPROJDTYPE* r6 = ptr_projector_[iloc][3][p][5];
+        KBPROJDTYPE* r7 = ptr_projector_[iloc][3][p][6];
 
         int idx = 0;
 
@@ -626,11 +621,11 @@ void KBprojectorSparse::setFProjector(const short iloc, const int icount)
                     }
 
                     idx++;
-                    z += hgrid2;
+                    z += h_[2];
                 }
-                y += hgrid1;
+                y += h_[1];
             }
-            x += hgrid0;
+            x += h_[0];
         }
 
         if (jcount != icount)
@@ -647,6 +642,9 @@ void KBprojectorSparse::setKBProjStart()
 {
     assert(range_kbproj_ >= 0);
     assert(range_kbproj_ < 256);
+    assert(h_[0] > 0.);
+    assert(h_[1] > 0.);
+    assert(h_[2] > 0.);
 
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
@@ -654,10 +652,9 @@ void KBprojectorSparse::setKBProjStart()
     for (short dir = 0; dir < 3; dir++)
     {
         const double cell_origin = mygrid.origin(dir);
-        const double hgrid       = mygrid.hgrid(dir);
 
         // n1 = nb of nodes between the boundary and center
-        double n1 = (center_[dir] - cell_origin) / hgrid;
+        double n1 = (center_[dir] - cell_origin) / h_[dir];
         assert(fabs(n1) < 10000.);
 
         // get the integral part of n1 in ic
@@ -668,7 +665,7 @@ void KBprojectorSparse::setKBProjStart()
         if (f1 < -0.5) ic--;
 
         kb_proj_start_index_[dir] = ic - (range_kbproj_ >> 1);
-        kb_proj_start_[dir] = cell_origin + hgrid * kb_proj_start_index_[dir];
+        kb_proj_start_[dir] = cell_origin + h_[dir] * kb_proj_start_index_[dir];
         //(*MPIdata::sout)<<"nlproj_start_[i]="<<nlproj_start_[i]<<endl;
         //(*MPIdata::sout)<<"nlstart_[i]     ="<<nlstart_[i]<<endl;
 
@@ -833,7 +830,7 @@ void KBprojectorSparse::axpySKet(
 {
     assert(multiplicity_[0] == 1);
 
-    const vector<KBPROJDTYPE>& proj(projector_[iloc][0][0][0]);
+    const KBPROJDTYPE* const proj(ptr_projector_[iloc][0][0][0]);
     const vector<int>& pidx = nlindex_[iloc];
     const int size_nl       = size_nl_[iloc];
     for (int idx = 0; idx < size_nl; idx++)
@@ -1019,19 +1016,21 @@ bool KBprojectorSparse::setIndexesAndProjectors()
     return map_nl;
 }
 
-void KBprojectorSparse::allocateProjectors()
+void KBprojectorSparse::setPtrProjectors()
 {
+    ptr_projector_.resize(subdivx_);
+
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
-        projector_[iloc].resize(maxl_ + 1);
+        ptr_projector_[iloc].resize(maxl_ + 1);
         for (short l = 0; l <= maxl_; l++)
         {
             if (l != llocal_)
             {
                 assert(multiplicity_[l] > 0);
-                projector_[iloc][l].resize(multiplicity_[l]);
+                ptr_projector_[iloc][l].resize(multiplicity_[l]);
                 for (short p = 0; p < multiplicity_[l]; p++)
-                    projector_[iloc][l][p].resize(2 * l + 1);
+                    ptr_projector_[iloc][l][p].resize(2 * l + 1);
             }
         }
     }

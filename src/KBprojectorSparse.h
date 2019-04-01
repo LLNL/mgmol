@@ -17,6 +17,7 @@
 #include "mputils.h"
 #include <cassert>
 #include <vector>
+#include <memory>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -44,9 +45,12 @@ class KBprojectorSparse
     short maxl_;
     short llocal_;
 
-    // projectors for iloc, l, p, m
-    std::vector<std::vector<std::vector<std::vector<std::vector<KBPROJDTYPE>>>>>
-        projector_;
+    // pointers to projectors for each iloc, l, p, m
+    std::vector<std::vector<std::vector<std::vector<KBPROJDTYPE*>>>>
+        ptr_projector_;
+
+    //storage for each 'iloc' i sstored in a std::vector
+    std::vector<std::vector<KBPROJDTYPE>> projectors_storage_;
 
     std::vector<int> size_nl_;
 
@@ -69,11 +73,15 @@ class KBprojectorSparse
     // multiplicity of projector for each "l"
     std::vector<short> multiplicity_;
 
+    double h_[3];
+
 #if CHECK_NORM
     std::vector<std::vector<double>> norm2_;
 #endif
 
     // private functions
+    void allocateProjectors(const short iloc, const int icount);
+
     void setProjectors(const short iloc, const int icount);
 
     void setSProjector(const short iloc, const int icount);
@@ -94,36 +102,26 @@ class KBprojectorSparse
         const short iloc, const short l, const short p, const short m) const
     {
         assert(iloc < subdivx_);
-        assert(l < projector_[iloc].size());
-        assert(p < projector_[iloc][l].size());
-        assert(m < projector_[iloc][l][p].size());
+        assert(l < ptr_projector_[iloc].size());
+        assert(p < ptr_projector_[iloc][l].size());
+        assert(m < ptr_projector_[iloc][l][p].size());
 
-        return &projector_[iloc][l][p][m][0];
-    }
-    std::vector<KBPROJDTYPE>& getRefProjector(
-        const short iloc, const short l, const short p, const short m)
-    {
-        assert(iloc < subdivx_);
-        assert(l < projector_[iloc].size());
-        assert(p < projector_[iloc][l].size());
-        assert(m < projector_[iloc][l][p].size());
-
-        return projector_[iloc][l][p][m];
+        return ptr_projector_[iloc][l][p][m];
     }
     double dotPsi(
         const short iloc, const short l, const short p, const short m) const
     {
         assert(iloc < subdivx_);
-        assert(l < projector_[iloc].size());
-        assert(p < projector_[iloc][l].size());
-        assert(m < projector_[iloc][l][p].size());
+        assert(l < ptr_projector_[iloc].size());
+        assert(p < ptr_projector_[iloc][l].size());
+        assert(m < ptr_projector_[iloc][l][p].size());
         assert(omp_get_thread_num() < work_nlindex_.size());
 
         return MPdot(size_nl_[iloc], &work_nlindex_[omp_get_thread_num()][0],
-            &projector_[iloc][l][p][m][0]);
+            (ptr_projector_[iloc][l][p][m]));
     }
     bool setIndexesAndProjectors();
-    void allocateProjectors();
+    void setPtrProjectors();
 
     void getProjectors(
         const short iloc, std::vector<const KBPROJDTYPE*>& projectors) const;
@@ -132,7 +130,10 @@ public:
     KBprojectorSparse(const Species& sp);
     KBprojectorSparse(const KBprojectorSparse& kbp);
 
-    ~KBprojectorSparse() { clear(); }
+    ~KBprojectorSparse()
+    {
+        clear();
+    }
 
     void clear()
     {
@@ -147,7 +148,7 @@ public:
         for (short dir = 0; dir < 3; dir++)
             proj_indices_[dir].clear();
     }
-    void setup(const short subdivx, const double center[3]);
+    void setup(const double center[3]);
     void initCenter(const double center[3])
     {
         for (short i = 0; i < 3; i++)

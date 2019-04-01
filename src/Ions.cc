@@ -114,14 +114,12 @@ Ions::Ions(const double lat[3], const vector<Species>& sp) : species_(sp)
 
 Ions::Ions(const Ions& ions, const double shift[3]) : species_(ions.species_)
 {
-    Mesh* mymesh = Mesh::instance();
-
     vector<Ion*>::const_iterator ion = ions.list_ions_.begin();
     while (ion != ions.list_ions_.end())
     {
         Ion* newion = new Ion(**ion);
         newion->shift(shift);
-        newion->setup(mymesh->subdivx());
+        newion->setup();
         list_ions_.push_back(newion);
         ion++;
     }
@@ -210,11 +208,10 @@ void Ions::setup()
     if (ct.verbose > 0)
         printWithTimeStamp("Ions::setup()... individual ions...", cout);
 
-    Mesh* mymesh               = Mesh::instance();
     vector<Ion*>::iterator ion = list_ions_.begin();
     while (ion != list_ions_.end())
     {
-        (*ion)->setup(mymesh->subdivx());
+        (*ion)->setup();
         ion++;
     }
 
