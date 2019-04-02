@@ -34,6 +34,8 @@ DirectionalReduce::DirectionalReduce(
     MPI_Comm cart_comm, const double spread_radius, const double domain[3])
     : cart_comm_(cart_comm)
 {
+    assert(spread_radius > 0.);
+
 #ifndef NDEBUG
     int status;
     int ret = MPI_Topo_test(cart_comm_, &status);

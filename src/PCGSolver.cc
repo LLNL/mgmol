@@ -205,8 +205,9 @@ bool PCGSolver<T, T2>::solve(pb::GridFunc<T2>& gf_phi, pb::GridFunc<T2>& gf_rhs)
         oper_.apply(p, ap);
         double ptap = p.gdot(ap);
         double alp  = rtz / ptap;
-        //      if(onpe0)printf("rtz = %f, ptap = %f, alp = %f \n",rtz, ptap,
-        //      alp);
+
+        assert(alp == alp);
+
         // update solution
         gf_phi.axpy(alp, p);
         // gf_phi += p*alp;

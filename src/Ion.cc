@@ -455,6 +455,7 @@ void Ion::addContributionToVnucAndRhoc(POTDTYPE* vnuc,
                             get_trilinval(xc,yc,zc,h0,h1,h2,position,ll,lpot);
 #else
                         vnuc[ivec] += lpot.cubint(r);
+                        assert(vnuc[ivec] == vnuc[ivec]);
 #endif
                     }
 #if DEBUG

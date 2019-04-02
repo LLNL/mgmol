@@ -102,6 +102,8 @@ void Hartree_CG<T>::solve(
     Poisson::Int_vhrhoc_ = vel * Poisson::vh_->gdot(rhoc);
 
     PoissonInterface::poisson_tm_.stop();
+
+    assert(residual_reduction == residual_reduction);
 }
 
 template class Hartree_CG<pb::Laph2<POTDTYPE>>;

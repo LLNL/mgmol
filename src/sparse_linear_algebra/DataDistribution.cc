@@ -84,6 +84,7 @@ DataDistribution::DataDistribution(const std::string name,
     assert(domain[0] > 0.);
     assert(domain[1] > 0.);
     assert(domain[2] > 0.);
+    assert(s_radius > 0.);
 
     /* get cartesian communicator */
     cart_comm_ = myPEenv.cart_comm();
