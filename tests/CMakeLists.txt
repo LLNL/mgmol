@@ -30,6 +30,13 @@ add_test(NAME testSiH4
          ${CMAKE_CURRENT_SOURCE_DIR}/SiH4/mgmol.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/SiH4/sih4.xyz
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+add_test(NAME testCl2
+         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Cl2_ONCVPSP_LDA/test.py
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4
+         ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
+         ${CMAKE_CURRENT_SOURCE_DIR}/Cl2_ONCVPSP_LDA/mgmol.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/Cl2_ONCVPSP_LDA/coords.in
+         ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 
 target_include_directories(testHDF5P PRIVATE ${HDF5_INCLUDE_DIRS})
 target_include_directories(testAndersonMix PRIVATE
