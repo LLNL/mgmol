@@ -16,7 +16,7 @@
 
 using namespace std;
 
-const double rthreshold = 1.e-4;
+const double rthreshold = 1.e-5;
 
 vector<vector<ORBDTYPE>> KBprojectorSparse::work_nlindex_;
 vector<vector<KBPROJDTYPE>> KBprojectorSparse::work_proj_;
