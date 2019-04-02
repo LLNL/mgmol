@@ -10,6 +10,10 @@
 
 #include "PCGSolver.h"
 
+#include <iostream>
+#include <iomanip>
+using namespace std;
+
 template <class T, typename T2>
 void PCGSolver<T, T2>::clear()
 {
@@ -181,6 +185,13 @@ bool PCGSolver<T, T2>::solve(pb::GridFunc<T2>& gf_phi, pb::GridFunc<T2>& gf_rhs)
     res -= lhs;
 
     double init_rnorm = res.norm2();
+    assert(init_rnorm == init_rnorm);
+    //cout<<"init_rnorm="<<init_rnorm<<endl;
+
+    //Early return if rhs is 0.
+    //Not doing that can cause numerical issues
+    if(init_rnorm < 1.e-24)return true;
+
     double rnorm      = init_rnorm;
 
     /* preconditioned residual as type POISSONPRECONDTYPE */
@@ -198,8 +209,7 @@ bool PCGSolver<T, T2>::solve(pb::GridFunc<T2>& gf_phi, pb::GridFunc<T2>& gf_rhs)
     double rtz = res.gdot(z);
 
     // main loop
-    int k = 0;
-    for (k = 0; k < maxiters_; k++)
+    for (int k = 0; k < maxiters_; k++)
     {
         // matvec: ap = A*p
         oper_.apply(p, ap);
