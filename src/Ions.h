@@ -64,7 +64,7 @@ class Ions
     void readRestartPositions(HDFrestart& h5_file);
     int read1atom(std::ifstream* tfile, const bool cell_relative);
 
-    void associate2PE();
+    //void associate2PE();
     void setupInteractingIons();
     void setupListOverlappingIons();
     void setMapVL();
@@ -334,6 +334,8 @@ public:
      * Calculate minimum distance between local pairs
      */
     double computeMinLocalSpacing() const;
+
+    void checkUnicityLocalIons();
 };
 
 #endif

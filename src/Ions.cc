@@ -8,7 +8,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #include <cmath>
 #include <iostream>
 #include <iterator>
@@ -192,6 +191,10 @@ void Ions::setup()
     ions_setup_tm.start();
 
     updateListIons();
+
+#ifndef NDEBUG
+    checkUnicityLocalIons();
+#endif
 
     setupInteractingIons();
 
@@ -534,110 +537,109 @@ double Ions::energyDiff(const short bc[3]) const
 
 // Associate each ion with the PE where they are centered
 // by setting a flag "here"
-void Ions::associate2PE()
-{
-    Control& ct(*(Control::instance()));
-    Mesh* mymesh             = Mesh::instance();
-    const pb::PEenv& myPEenv = mymesh->peenv();
-    const pb::Grid& mygrid   = mymesh->grid();
-
-    double div_lattice[3];
-    for (short i = 0; i < 3; i++)
-        div_lattice[i] = lattice_[i] / (double)(myPEenv.n_mpi_task(i));
-
-    double offset[3];
-    for (short i = 0; i < 3; i++)
-        offset[i] = (double)myPEenv.my_mpi(i) * div_lattice[i];
-
-#ifdef DEBUG
-    int isum2 = 0;
-    (*MPIdata::sout) << " offset=(" << offset[0] << "," << offset[1] << ","
-                     << offset[2] << ")" << endl;
-#endif
-
-    for (short i = 0; i < 3; i++)
-        if (myPEenv.n_mpi_task(i) == (myPEenv.my_mpi(i) + 1))
-            div_lattice[i] = lattice_[i] - offset[i];
-
-    const double origin[3]
-        = { mygrid.origin(0), mygrid.origin(1), mygrid.origin(2) };
-    const double end[3] = { origin[0] + lattice_[0], origin[1] + lattice_[1],
-        origin[2] + lattice_[2] };
-
-    int isum = 0;
-
-    // Loop over ions
-    local_ions_.clear();
-    vector<Ion*>::iterator ion = list_ions_.begin();
-    while (ion != list_ions_.end())
-    {
-        double t[3];
-        for (short i = 0; i < 3; i++)
-        {
-            t[i] = (*ion)->position(i);
-            while (t[i] >= end[i])
-                t[i] -= lattice_[i];
-            while (t[i] < origin[i])
-                t[i] += lattice_[i];
-            t[i] -= origin[i];
-            t[i] -= offset[i];
-        }
-
-#if DEBUG
-        (*MPIdata::sout) << " t=(" << t[0] << "," << t[1] << "," << t[2] << ")"
-                         << endl;
-#endif
-
-        if ((t[0] >= 0. && t[0] < (div_lattice[0]))
-            && (t[1] >= 0. && t[1] < (div_lattice[1]))
-            && (t[2] >= 0. && t[2] < (div_lattice[2])))
-        {
-
-            (*ion)->set_here(true);
-
-            local_ions_.push_back(*ion);
-
-            isum++;
-        }
-        else
-        {
-            (*ion)->set_here(false);
-        }
-#ifdef DEBUG
-        if ((*ion)->here())
-        {
-            (*MPIdata::sout) << " Ion " << (*ion)->name() << " centered on PE "
-                             << myPEenv.mytask() << endl;
-            isum2++;
-        }
-#endif
-        ion++;
-    }
-    // Test all atoms associated to each processors sum up to
-    // total number of atoms
-
-    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    mmpi.allreduce(&isum, 1, MPI_SUM);
-    if (onpe0)
-    {
-        (*MPIdata::sout) << " num_ions=" << num_ions_ << endl;
-        (*MPIdata::sout) << " isum=" << isum << endl;
-    }
-    if (isum != num_ions_)
-    {
-        (*MPIdata::sout) << " num_ions != isum !!!!" << endl;
-        ct.global_exit(2);
-    }
-
-#ifdef DEBUG
-    mmpi.allreduce(&isum2, 1, MPI_SUM);
-    (*MPIdata::sout) << " Isum2=" << isum2 << endl;
-    assert(isum2 == num_ions_);
-#endif
-
-    // if( onpe0 )
-    //    (*MPIdata::sout)<<"Ions::associate2PE() done..."<<endl;
-}
+//void Ions::associate2PE()
+//{
+//    Control& ct(*(Control::instance()));
+//    Mesh* mymesh             = Mesh::instance();
+//    const pb::PEenv& myPEenv = mymesh->peenv();
+//    const pb::Grid& mygrid   = mymesh->grid();
+//
+//    double div_lattice[3];
+//    for (short i = 0; i < 3; i++)
+//        div_lattice[i] = lattice_[i] / (double)(myPEenv.n_mpi_task(i));
+//
+//    double offset[3];
+//    for (short i = 0; i < 3; i++)
+//        offset[i] = (double)myPEenv.my_mpi(i) * div_lattice[i];
+//
+//#ifdef DEBUG
+//    int isum2 = 0;
+//    (*MPIdata::sout) << " offset=(" << offset[0] << "," << offset[1] << ","
+//                     << offset[2] << ")" << endl;
+//#endif
+//
+//    for (short i = 0; i < 3; i++)
+//        if (myPEenv.n_mpi_task(i) == (myPEenv.my_mpi(i) + 1))
+//            div_lattice[i] = lattice_[i] - offset[i];
+//
+//    const double origin[3]
+//        = { mygrid.origin(0), mygrid.origin(1), mygrid.origin(2) };
+//    const double end[3] = { origin[0] + lattice_[0], origin[1] + lattice_[1],
+//        origin[2] + lattice_[2] };
+//
+//    int isum = 0;
+//
+//    // Loop over ions
+//    local_ions_.clear();
+//    vector<Ion*>::iterator ion = list_ions_.begin();
+//    while (ion != list_ions_.end())
+//    {
+//        double t[3];
+//        for (short i = 0; i < 3; i++)
+//        {
+//            t[i] = (*ion)->position(i);
+//            while (t[i] >= end[i])
+//                t[i] -= lattice_[i];
+//            while (t[i] < origin[i])
+//                t[i] += lattice_[i];
+//            t[i] -= origin[i];
+//            t[i] -= offset[i];
+//        }
+//
+//#if DEBUG
+//        (*MPIdata::sout) << " t=(" << t[0] << "," << t[1] << "," << t[2] << ")"
+//                         << endl;
+//#endif
+//
+//        if ((t[0] >= 0. && t[0] < (div_lattice[0]))
+//            && (t[1] >= 0. && t[1] < (div_lattice[1]))
+//            && (t[2] >= 0. && t[2] < (div_lattice[2])))
+//        {
+//
+//            (*ion)->set_here(true);
+//
+//            local_ions_.push_back(*ion);
+//
+//            isum++;
+//        }
+//        else
+//        {
+//            (*ion)->set_here(false);
+//        }
+//#ifndef NDEBUG
+//        if ((*ion)->here())
+//        {
+//            (*MPIdata::sout) << " Ion " << (*ion)->name() << " centered on PE "
+//                             << myPEenv.mytask() << endl;
+//        }
+//#endif
+//        ion++;
+//    }
+//    // Test all atoms associated to each processors sum up to
+//    // total number of atoms
+//
+//    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+//    mmpi.allreduce(&isum, 1, MPI_SUM);
+//    if (onpe0)
+//    {
+//        (*MPIdata::sout) << " num_ions=" << num_ions_ << endl;
+//        (*MPIdata::sout) << " isum=" << isum << endl;
+//    }
+//    if (isum != num_ions_)
+//    {
+//        (*MPIdata::sout) << " num_ions != isum !!!!" << endl;
+//        ct.global_exit(2);
+//    }
+//
+//#ifdef DEBUG
+//    mmpi.allreduce(&isum2, 1, MPI_SUM);
+//    (*MPIdata::sout) << " Isum2=" << isum2 << endl;
+//    assert(isum2 == num_ions_);
+//#endif
+//
+//    // if( onpe0 )
+//    //    (*MPIdata::sout)<<"Ions::associate2PE() done..."<<endl;
+//}
 
 // Writes out the positions of all the ions
 // PE root does the writing
@@ -1221,6 +1223,10 @@ void Ions::initFromRestartFile(HDFrestart& h5_file)
 
     // update list ions
     updateListIons();
+
+#ifndef NDEBUG
+    checkUnicityLocalIons();
+#endif
 }
 
 void Ions::readRestartPositions(HDFrestart& h5_file)
@@ -2165,7 +2171,7 @@ int Ions::readAtomsFromXYZ(const string filename, const bool cell_relative)
         if (inListIons(crds[3 * ia + 0], crds[3 * ia + 1], crds[3 * ia + 2]))
         {
             list_ions_.push_back(new_ion);
-            if (onpe0 && ct.verbose > 2)
+            if (ct.verbose > 2)
                 (*MPIdata::sout)
                     << "Ion " << aname << " at position " << crds[3 * ia + 0]
                     << "," << crds[3 * ia + 1] << "," << crds[3 * ia + 2]
@@ -2375,14 +2381,12 @@ int Ions::read1atom(ifstream* tfile, const bool cell_relative)
                 ;
         }
 
-#ifdef DEBUG
+#ifndef NDEBUG
         (*MPIdata::sout) << "Ions::read1atom() --- Read Ion in position ("
                          << crds[0] << "," << crds[1] << "," << crds[2] << ")"
                          << " and velocity :(" << velocity[0] << ","
                          << velocity[1] << "," << velocity[2] << ")" << endl;
 #endif
-
-        // read_comments(*tfile);
 
     } // if onpe0
 
@@ -3281,6 +3285,7 @@ bool Ions::inListIons(const double x, const double y, const double z)
 
 bool Ions::inLocalIons(const double x, const double y, const double z)
 {
+    //cout<<"inLocalIons..."<<endl;
     Mesh* mymesh             = Mesh::instance();
     const pb::PEenv& myPEenv = mymesh->peenv();
     const pb::Grid& mygrid   = mymesh->grid();
@@ -3315,6 +3320,22 @@ bool Ions::inLocalIons(const double x, const double y, const double z)
     }
 
     return inList;
+}
+
+void Ions::checkUnicityLocalIons()
+{
+    //cout<<"Ions::checkUnicityLocalIons()..."<<endl;
+    MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
+
+    for(auto& ion : list_ions_)
+    {
+        int here = ion->here();
+        mmpi.allreduce(&here, 1, MPI_SUM);
+        if(here != 1)
+        {
+            cout<<"Ion "<<ion->name()<<" is here on multiple tasks"<<endl;
+        }
+    }
 }
 
 int Ions::getNumIons(void)
