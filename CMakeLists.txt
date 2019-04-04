@@ -192,6 +192,14 @@ enable_testing()
 # additional definitions
 add_definitions(-DUSE_DIS_MAT)
 
+execute_process(
+  COMMAND git log -1 --format=%h
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE GIT_COMMIT_HASH
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+add_definitions(-DGITHASH=${GIT_COMMIT_HASH})
+
 # add include directories
 include_directories("${PROJECT_SOURCE_DIR}/src/DistMatrix")
 include_directories("${PROJECT_SOURCE_DIR}/src/linear_algebra")
@@ -208,5 +216,3 @@ add_subdirectory(src)
 
 add_subdirectory(tests)
 
-# additional definitions
-#add_definitions(-DGITHASH="\\"${GITHASH}\\"")
