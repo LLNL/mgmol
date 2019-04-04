@@ -192,9 +192,9 @@ void Ions::setup()
 
     updateListIons();
 
-#ifndef NDEBUG
-    checkUnicityLocalIons();
-#endif
+//#ifndef NDEBUG
+//    checkUnicityLocalIons();
+//#endif
 
     setupInteractingIons();
 
@@ -1224,9 +1224,9 @@ void Ions::initFromRestartFile(HDFrestart& h5_file)
     // update list ions
     updateListIons();
 
-#ifndef NDEBUG
-    checkUnicityLocalIons();
-#endif
+//#ifndef NDEBUG
+//    checkUnicityLocalIons();
+//#endif
 }
 
 void Ions::readRestartPositions(HDFrestart& h5_file)
@@ -3322,21 +3322,21 @@ bool Ions::inLocalIons(const double x, const double y, const double z)
     return inList;
 }
 
-void Ions::checkUnicityLocalIons()
-{
-    //cout<<"Ions::checkUnicityLocalIons()..."<<endl;
-    MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
-
-    for(auto& ion : list_ions_)
-    {
-        int here = ion->here();
-        mmpi.allreduce(&here, 1, MPI_SUM);
-        if(here != 1)
-        {
-            cout<<"Ion "<<ion->name()<<" is here on multiple tasks"<<endl;
-        }
-    }
-}
+//void Ions::checkUnicityLocalIons()
+//{
+//    //cout<<"Ions::checkUnicityLocalIons()..."<<endl;
+//    MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
+//    //cout<<"size list = "<<list_ions_.size()<<endl;
+//    for(auto& ion : list_ions_)
+//    {
+//        int here = ion->here();
+//        mmpi.allreduce(&here, 1, MPI_SUM);
+//        if(here != 1)
+//        {
+//            cout<<"Ion "<<ion->name()<<" is here on multiple tasks"<<endl;
+//        }
+//    }
+//}
 
 int Ions::getNumIons(void)
 {
