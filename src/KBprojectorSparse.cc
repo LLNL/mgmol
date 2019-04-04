@@ -189,6 +189,11 @@ void KBprojectorSparse::allocateProjectors(const short iloc, const int icount)
 {
     const int nprojs = nProjectors();
 
+    //projector may not overlap with all local patches, so add empty
+    //vector in slots associated with smaller iloc if they have not been
+    //filled
+    while(projectors_storage_.size()<iloc)
+        projectors_storage_.push_back( vector<KBPROJDTYPE>(0) );
     projectors_storage_.push_back( vector<KBPROJDTYPE>(nprojs*icount) );
     assert(projectors_storage_.size()==(iloc+1));
 
