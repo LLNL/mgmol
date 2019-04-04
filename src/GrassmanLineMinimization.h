@@ -87,4 +87,8 @@ public:
         = 0;
     static void printTimers(std::ostream& os);
 };
+// Instantiate static variables here to avoid clang warnings
+template <class T> bool GrassmanLineMinimization<T>::pbset_ = false;
+template <class T> bool GrassmanLineMinimization<T>::accelerate_ = false;
+template <class T> bool GrassmanLineMinimization<T>::conjugate_  = false;
 #endif

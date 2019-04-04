@@ -49,7 +49,6 @@ using namespace std;
 
 Timer quench_tm("quench");
 Timer quench_evnl_tm("quench_evnl");
-template <class T> Timer MGmol<T>::adaptLR_tm_("MGmol::adaptLR");
 Timer updateCenters_tm("MGmol<T>::updateCenters");
 
 template <>

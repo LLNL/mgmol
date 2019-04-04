@@ -17,9 +17,6 @@
 #include "ProjectedMatrices.h"
 
 template <class T>
-Timer Hamiltonian<T>::apply_Hloc_tm_("Hamiltonian::apply_Hloc");
-
-template <class T>
 Hamiltonian<T>::Hamiltonian()
 {
     itindex_ = -1;
@@ -214,11 +211,11 @@ void Hamiltonian<T>::addHlocal2matrix(T& phi1, T& phi2,
     mat.initializeMatrixElements(ss, phi1.getOverlappingGids(), ct.numst);
 }
 
-template Hamiltonian<LocGridOrbitals>::Hamiltonian<LocGridOrbitals>();
-template Hamiltonian<ExtendedGridOrbitals>::Hamiltonian<ExtendedGridOrbitals>();
+template Hamiltonian<LocGridOrbitals>::Hamiltonian();
+template Hamiltonian<ExtendedGridOrbitals>::Hamiltonian();
 
-template Hamiltonian<LocGridOrbitals>::~Hamiltonian<LocGridOrbitals>();
-template Hamiltonian<ExtendedGridOrbitals>::~Hamiltonian<ExtendedGridOrbitals>();
+template Hamiltonian<LocGridOrbitals>::~Hamiltonian();
+template Hamiltonian<ExtendedGridOrbitals>::~Hamiltonian();
 
 template void Hamiltonian<LocGridOrbitals>::setup(pb::Grid const&, int);
 template void Hamiltonian<ExtendedGridOrbitals>::setup(pb::Grid const&, int);

@@ -31,6 +31,8 @@ void increaseMemorySlotsForOrbitals()
             BlockVector<ORBDTYPE>::incMaxAllocInstances(4);
             break;
         }
+        default:
+            break;
 
     }
 
@@ -51,6 +53,8 @@ void increaseMemorySlotsForOrbitals()
             BlockVector<ORBDTYPE>::incMaxAllocInstances(2);
             break;
         }
+        default:
+            break;
 
     }
 

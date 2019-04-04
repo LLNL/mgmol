@@ -59,5 +59,7 @@ public:
 
     void saveVofRho();
 };
-
+// Instantiate static variable here to avoid clang warnings
+template <class T>
+Timer Energy<T>::eval_te_tm_("Energy::eval_te");
 #endif

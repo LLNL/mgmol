@@ -18,7 +18,7 @@ class MGmolInterface
 public:
     MGmolInterface(){}
 
-    ~MGmolInterface(){}
+    virtual ~MGmolInterface(){}
 
     virtual int setupFromInput(const std::string input_file)=0;
     virtual int setupLRsFromInput(const std::string input_file)=0;

@@ -40,14 +40,16 @@ enum class OuterSolverType
     ABPG,
     PolakRibiere,
     NLCG,
-    Davidson
+    Davidson,
+    UNDEFINED    
 };
 
 enum class WFExtrapolationType
 {
     Order2,
     Order3,
-    Reversible
+    Reversible,
+    UNDEFINED    
 };
 
 enum class AtomsDynamicType
@@ -63,7 +65,8 @@ enum class DMNonLinearSolverType
 {
     Mixing,
     MVP,
-    HMVP
+    HMVP,
+    UNDEFINED
 };
 
 enum class DMEigensolverType
@@ -72,7 +75,8 @@ enum class DMEigensolverType
 #ifdef __MGMOL_CHEBYSHEV__
     Chebyshev,
 #endif
-    SP2
+    SP2,
+    UNDEFINED
 };
 
 enum class OrbitalsType
@@ -609,6 +613,9 @@ public:
                 return OuterSolverType::Davidson;
             case 3:
                 return OuterSolverType::PolakRibiere;
+            default:
+                std::cerr << "ERROR: Undefined OuterSolverType" << std::endl;
+                return OuterSolverType::UNDEFINED;
         }
     }
 
@@ -622,6 +629,9 @@ public:
                 return WFExtrapolationType::Order2;
             case 2:
                 return WFExtrapolationType::Order3;
+            default:
+                std::cerr << "ERROR: Undefined WFExtrapolationType" << std::endl;
+                return WFExtrapolationType::UNDEFINED;
         }
     }
 
@@ -638,6 +648,7 @@ public:
             case 7:
                 return AtomsDynamicType::FIRE;
             default:
+                std::cerr << "ERROR: Undefined AtomsDynamicType" << std::endl;
                 return AtomsDynamicType::UNDEFINED;
         }
     }
@@ -652,6 +663,9 @@ public:
                 return DMNonLinearSolverType::MVP;
             case 2:
                 return DMNonLinearSolverType::HMVP;
+            default:
+                std::cerr << "ERROR: Undefined DMNonLinearSolverType" << std::endl;
+                return DMNonLinearSolverType::UNDEFINED;
         }
     }
 
@@ -667,6 +681,9 @@ public:
 #endif
             case 2:
                 return DMEigensolverType::SP2;
+            default:
+                std::cerr << "ERROR: Undefined DMEigensolverType" << std::endl;
+                return DMEigensolverType::UNDEFINED;                
         }
     }
 
@@ -681,6 +698,7 @@ public:
             case 2:
                 return OrbitalsType::Orthonormal;
             default:
+                std::cerr << "ERROR: Undefined OrbitalsType" << std::endl;
                 return OrbitalsType::UNDEFINED;
         }
     }

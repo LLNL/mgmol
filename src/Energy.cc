@@ -27,9 +27,6 @@ using namespace std;
 #define RY2HA 0.5
 
 template <class T>
-Timer Energy<T>::eval_te_tm_("Energy::eval_te");
-
-template <class T>
 Energy<T>::Energy(const pb::Grid& mygrid, const Ions& ions, const Potentials& pot,
     const Electrostatic& es, const Rho<T>& rho,
     const XConGrid& xc,

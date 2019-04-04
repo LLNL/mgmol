@@ -71,11 +71,6 @@ namespace mgmol
 std::ostream* out = NULL;
 }
 
-template <class T>
-dist_matrix::RemoteTasksDistMatrix<DISTMATDTYPE>*
-    MGmol<T>::remote_tasks_DistMatrix_ptr_
-    = 0;
-
 string description;
 
 extern Timer computeHij_tm;
@@ -106,29 +101,6 @@ extern Timer quench_tm;
 extern Timer ions_setupInteractingIons_tm;
 extern Timer ions_setup_tm;
 extern Timer updateCenters_tm;
-
-template <class T>
-Timer MGmol<T>::total_tm_("MGmol::total");
-template <class T>
-Timer MGmol<T>::setup_tm_("MGmol::setup");
-template <class T>
-Timer MGmol<T>::closing_tm_("MGmol::closing");
-template <class T>
-Timer MGmol<T>::init_tm_("MGmol::init");
-template <class T>
-Timer MGmol<T>::dump_tm_("MGmol::dump");
-template <class T>
-Timer MGmol<T>::evnl_tm_("MGmol::evnl");
-template <class T>
-Timer MGmol<T>::get_res_tm_("MGmol::comp_res_from_Hphi");
-template <class T>
-Timer MGmol<T>::computeHij_tm_("MGmol::computeHij");
-template <class T>
-Timer MGmol<T>::get_Hpsi_and_Hij_tm_("MGmol::get_Hpsi_and_Hij");
-template <class T>
-Timer MGmol<T>::comp_res_tm_("MGmol::comp_res");
-template <class T>
-Timer MGmol<T>::init_nuc_tm_("MGmol::init_nuc");
 
 #include "Signal.h"
 set<int> Signal::recv_;

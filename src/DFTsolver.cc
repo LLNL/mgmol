@@ -22,11 +22,6 @@
 #include "Rho.h"
 
 template <class T>
-Timer DFTsolver<T>::solve_tm_("solve");
-template <class T>
-int DFTsolver<T>::it_scf_ = 0;
-
-template <class T>
 DFTsolver<T>::DFTsolver(Hamiltonian<T>* hamiltonian,
     ProjectedMatricesInterface* proj_matrices, Energy<T>* energy,
     Electrostatic* electrostat, MGmol<T>* mgmol_strategy, Ions& ions,

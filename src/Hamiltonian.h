@@ -57,5 +57,6 @@ public:
     void addHlocalij(T& orbitals1, T& orbitals2,
         ProjectedMatricesInterface*);
 };
-
+// Instantiate static variable here to avoid clang warnings
+template <class T> Timer Hamiltonian<T>::apply_Hloc_tm_("Hamiltonian::apply_Hloc");
 #endif

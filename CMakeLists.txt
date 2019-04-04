@@ -42,8 +42,8 @@ set(Intel_CXX_FLAGS_RELEASE -O2 -DNDEBUG -Zp16 -g -Wunused-function -Wunused-var
 set(XL_CXX_FLAGS_DEBUG -g -O0 -qsmp=omp:noopt -qcheck=all -qminimaltoc)
 set(XL_CXX_FLAGS_RELEASE -g -DNDEBUG -qstrict -qsmp=omp:auto -O3 -qinfo=cns:uni:ini:pro:ord -qminimaltoc)
 # Clang
-set(DEFAULT_CXX_FLAGS_DEBUG -g -O0)
-set(DEFAULT_CXX_FLAGS_RELEASE -g -DNDEBUG -O3)
+set(Clang_CXX_FLAGS_DEBUG -g -O0 -Wno-deprecated-register)
+set(Clang_CXX_FLAGS_RELEASE -g -DNDEBUG -O3 -qstrict -Wno-deprecated-register)
 # default
 set(DEFAULT_CXX_FLAGS_DEBUG -g -O0)
 set(DEFAULT_CXX_FLAGS_RELEASE -g -DNDEBUG -O3)
@@ -51,7 +51,7 @@ set(DEFAULT_CXX_FLAGS_RELEASE -g -DNDEBUG -O3)
 if(CMAKE_BUILD_TYPE_UPPER)
   if(CMAKE_BUILD_TYPE_UPPER STREQUAL "DEBUG" 
     OR CMAKE_BUILD_TYPE_UPPER STREQUAL "RELEASE")
-    if(CMAKE_C_FLAGS STREQUAL "")
+    if(CMAKE_CXX_FLAGS STREQUAL "")
       if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU"
           OR CMAKE_CXX_COMPILER_ID STREQUAL "Intel"
           OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
@@ -65,8 +65,13 @@ if(CMAKE_BUILD_TYPE_UPPER)
           "${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE_UPPER}}")
       else()
         message(STATUS "Unknown CXX compiler ${CMAKE_CXX_COMPILER_ID}. Using default CXX compiler flags")
-        set(DEFAULT_CXX_FLAGS_${CMAKE_BUILD_TYPE_UPPER}
-          ${CMAKE_CXX_FLAGS})        
+        set(CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE_UPPER}
+          ${DEFAULT_CXX_FLAGS_${CMAKE_BUILD_TYPE_UPPER}})
+        string(REPLACE ";" " "
+          CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE_UPPER}
+          "${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE_UPPER}}")
+        message(STATUS "Setting CXX compiler flags to "
+          "${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE_UPPER}}")
       endif()
     else()
       message(STATUS "Using user supplied CXX compiler flags: ${CMAKE_CXX_FLAGS}")

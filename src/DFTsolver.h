@@ -84,5 +84,7 @@ public:
 
     static void printTimers(std::ostream& os);
 };
-
+// Instantiate static variables here to avoid clang warnings
+template <class T> Timer DFTsolver<T>::solve_tm_("solve");
+template <class T> int DFTsolver<T>::it_scf_ = 0;
 #endif

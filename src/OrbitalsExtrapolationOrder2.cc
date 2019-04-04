@@ -106,7 +106,7 @@ void OrbitalsExtrapolationOrder2<T>::extrapolate_orbitals(
         if (use_dense_proj_mat)
         {
 #if EXTRAPOLATE_H
-            hextrapol_->updateHminus1( projmat->getMatHB() );
+            OrbitalsExtrapolation<T>::hextrapol_->updateHminus1( projmat->getMatHB() );
 #endif
         }
     }
@@ -115,7 +115,7 @@ void OrbitalsExtrapolationOrder2<T>::extrapolate_orbitals(
 #if EXTRAPOLATE_H
     if (use_dense_proj_mat)
     {
-        hextrapol_->saveH(projmat->getMatHB());
+        OrbitalsExtrapolation<T>::hextrapol_->saveH(projmat->getMatHB());
     }
 #endif
 

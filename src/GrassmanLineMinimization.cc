@@ -17,13 +17,6 @@
 #include "Potentials.h"
 
 template <class T>
-bool GrassmanLineMinimization<T>::pbset_      = false;
-template <class T>
-bool GrassmanLineMinimization<T>::accelerate_ = false;
-template <class T>
-bool GrassmanLineMinimization<T>::conjugate_  = false;
-
-template <class T>
 Timer GrassmanLineMinimization<T>::line_min_tm_("Grassman_line_min");
 template <class T>
 Timer GrassmanLineMinimization<T>::nl_update_tm_("Grassman_nl_update");
