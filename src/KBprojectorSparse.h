@@ -11,13 +11,11 @@
 #ifndef MGMOL_KBPROJECTOR_H
 #define MGMOL_KBPROJECTOR_H
 
-#include "GridFunc.h"
-#include "Mesh.h"
 #include "global.h"
 #include "mputils.h"
+
 #include <cassert>
 #include <vector>
-#include <memory>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -42,8 +40,8 @@ class KBprojectorSparse
     const Species& species_;
 
     short subdivx_;
-    short maxl_;
-    short llocal_;
+    const short maxl_;
+    const short llocal_;
 
     // pointers to projectors for each iloc, l, p, m
     std::vector<std::vector<std::vector<std::vector<KBPROJDTYPE*>>>>
@@ -89,11 +87,13 @@ class KBprojectorSparse
     void setDProjector(const short iloc, const int icount);
     void setFProjector(const short iloc, const int icount);
 
-    void setNLindex(const short iloc, const int size, const int* const pvec);
+    void setNLindex(const short iloc, const int size,
+        const std::vector<int>& pvec);
 
     void setKBProjStart();
     void setProjIndices(const short dir);
-    int get_index_array(int* pvec, const short iloc, const short index_low[3],
+    int get_index_array(std::vector<int>& pvec, const short iloc,
+        const short index_low[3],
         const short index_high[3]);
     bool overlapWithBox(const short index_low[3], const short index_high[3]);
 
@@ -155,32 +155,7 @@ public:
             center_[i] = center[i];
     }
 
-    double maxRadius() const
-    {
-        Mesh* mymesh           = Mesh::instance();
-        const pb::Grid& mygrid = mymesh->grid();
-
-        double radius = 0.;
-
-        if (maxl_ > 0)
-            for (short dir = 0; dir < 3; dir++)
-            {
-                const double hgrid = mygrid.hgrid(dir);
-
-                double left  = center_[dir] - kb_proj_start_[dir];
-                double right = kb_proj_start_[dir] + (range_kbproj_ - 1) * hgrid
-                               - center_[dir];
-
-                radius = left > radius ? left : radius;
-                radius = right > radius ? right : radius;
-
-                // cout<<"kb_proj_start_[dir]="<<kb_proj_start_[dir]
-                //    <<", center="<<center_[dir]
-                //    <<", left="<<left<<", right="<<right<<endl;
-            }
-
-        return radius;
-    }
+    double maxRadius() const;
 
     bool overlapPE() const;
     void init_work_nlindex(const short iloc, const ORBDTYPE* const psi);

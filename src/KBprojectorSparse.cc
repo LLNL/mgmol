@@ -21,14 +21,13 @@ const double rthreshold = 1.e-5;
 vector<vector<ORBDTYPE>> KBprojectorSparse::work_nlindex_;
 vector<vector<KBPROJDTYPE>> KBprojectorSparse::work_proj_;
 
-KBprojectorSparse::KBprojectorSparse(const Species& sp) : species_(sp)
+KBprojectorSparse::KBprojectorSparse(const Species& sp) : species_(sp),
+    maxl_(species_.max_l()), llocal_(species_.llocal())
 {
     assert(species_.dim_nl() >= 0);
     assert(species_.dim_nl() < 1000);
 
     range_kbproj_ = species_.dim_nl();
-    maxl_         = species_.max_l();
-    llocal_       = species_.llocal();
 
     if (work_nlindex_.size() == 0) work_nlindex_.resize(omp_get_max_threads());
     if (work_proj_.size() == 0) work_proj_.resize(omp_get_max_threads());
@@ -36,7 +35,6 @@ KBprojectorSparse::KBprojectorSparse(const Species& sp) : species_(sp)
 
     is_in_domain_ = NULL;
 
-    subdivx_ = -1;
     for (short i = 0; i < 3; i++)
     {
         kb_proj_start_index_[i] = 10000;
@@ -64,14 +62,13 @@ KBprojectorSparse::KBprojectorSparse(const Species& sp) : species_(sp)
 
 // copy constructor (without initialization of projectors)
 KBprojectorSparse::KBprojectorSparse(const KBprojectorSparse& kb)
-    : species_(kb.species_), multiplicity_(kb.multiplicity_)
+    : species_(kb.species_), maxl_(kb.maxl_), llocal_(kb.llocal_),
+      multiplicity_(kb.multiplicity_)
 {
     assert(species_.dim_nl() >= 0);
     assert(species_.dim_nl() < 1000);
 
     range_kbproj_ = kb.range_kbproj_;
-    maxl_         = kb.maxl_;
-    llocal_       = kb.llocal_;
 
     initCenter(kb.center_);
 
@@ -115,7 +112,7 @@ void KBprojectorSparse::setup(const double center[3])
 }
 
 void KBprojectorSparse::setNLindex(
-    const short iloc, const int size_nl, const int* const pvec)
+    const short iloc, const int size_nl, const vector<int>& pvec)
 {
     assert(size_nl > 0);
     assert((int)nlindex_.size() > iloc);
@@ -756,7 +753,7 @@ bool KBprojectorSparse::overlapWithBox(
 
 // Generate index array "pvec" and
 // an array "is_in_domain" with value true if the node is in the region
-int KBprojectorSparse::get_index_array(int* pvec, const short iloc,
+int KBprojectorSparse::get_index_array(vector<int>& pvec, const short iloc,
     const short index_low[3], const short index_high[3])
 {
     assert(range_kbproj_ >= 0);
@@ -877,21 +874,13 @@ bool KBprojectorSparse::setIndexesAndProjectors()
     clear();
 
     Mesh* mymesh           = Mesh::instance();
-    const short subdivx    = mymesh->subdivx();
     const pb::Grid& mygrid = mymesh->grid();
-
-    const int istart0 = mygrid.istart(0);
-
-    const int dim0  = mygrid.dim(0);
-    const int dim1  = mygrid.dim(1);
-    const int dim2  = mygrid.dim(2);
-    const int ldim0 = dim0 / subdivx;
 
     const int nl  = species_.dim_nl();
     const int nl3 = nl * nl * nl;
 
-    int* pvec     = new int[nl3];
-    is_in_domain_ = new bool*[subdivx];
+    vector<int> pvec(nl3);
+    is_in_domain_ = new bool*[subdivx_];
 
     setKBProjStart();
 
@@ -902,8 +891,8 @@ bool KBprojectorSparse::setIndexesAndProjectors()
     short index_low[3], index_high[3];
     index_low[1]  = mygrid.istart(1);
     index_low[2]  = mygrid.istart(2);
-    index_high[1] = index_low[1] + dim1 - 1;
-    index_high[2] = index_low[2] + dim2 - 1;
+    index_high[1] = mymesh->ihigh1();
+    index_high[2] = mymesh->ihigh2();
 
 #if CHECK_NORM
     norm2_.resize(4);
@@ -921,11 +910,10 @@ bool KBprojectorSparse::setIndexesAndProjectors()
 #endif
 
     bool map_nl = false;
-    for (short iloc = 0; iloc < subdivx; iloc++)
+    for (short iloc = 0; iloc < subdivx_; iloc++)
     {
-
-        index_low[0]  = istart0 + iloc * ldim0;
-        index_high[0] = index_low[0] + ldim0 - 1;
+        index_low[0]  = mymesh->ilow0(iloc);
+        index_high[0] = mymesh->ihigh0(iloc);
         bool map2     = overlapWithBox(index_low, index_high);
 
         if (map2)
@@ -937,7 +925,7 @@ bool KBprojectorSparse::setIndexesAndProjectors()
             // get "pvec" and "is_in_domain"
             int icount = get_index_array(pvec, iloc, index_low, index_high);
             assert(icount <= nl3);
-            assert(icount <= dim2 * dim1 * ldim0);
+            assert(icount <= mymesh->npointsPatch());
             assert(icount > 0);
 
             setNLindex(iloc, icount, pvec);
@@ -951,8 +939,6 @@ bool KBprojectorSparse::setIndexesAndProjectors()
         } // end if map
 
     } // end for iloc
-
-    delete[] pvec;
 
 #if CHECK_NORM
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
@@ -1109,6 +1095,25 @@ double KBprojectorSparse::dotPsi(const short iloc, const short index) const
 
     return 0.;
 }
+
+double KBprojectorSparse::maxRadius() const
+{
+    double radius = 0.;
+
+    if (maxl_ > 0)
+        for (short dir = 0; dir < 3; dir++)
+        {
+            double left  = center_[dir] - kb_proj_start_[dir];
+            double right = kb_proj_start_[dir] + (range_kbproj_ - 1) * h_[dir]
+                           - center_[dir];
+
+            radius = left > radius ? left : radius;
+            radius = right > radius ? right : radius;
+        }
+
+    return radius;
+}
+
 
 template void KBprojectorSparse::axpySKet<double>(
     const short iloc, const double alpha, double* const dst) const;

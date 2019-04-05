@@ -8,8 +8,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef MESH_H
-#define MESH_H
+#ifndef MGMOL_MESH_H
+#define MGMOL_MESH_H
 
 #include "Control.h"
 #include "GridFactory.h"
@@ -121,6 +121,18 @@ public:
         assert(numpt_ < 1000000000);
         return loc_numpt_;
     }
+    short ilow0(const short iloc)const
+    { return myGrid_->istart(0) + iloc * myGrid_->dim(0) / subdivx_; }
+
+    short ihigh0(const short iloc)const
+    { return ilow0(iloc) + myGrid_->dim(0) / subdivx_ -1; }
+    short ihigh1()const
+    { return myGrid_->istart(1) + myGrid_->dim(1) -1; }
+    short ihigh2()const
+    { return myGrid_->istart(2) + myGrid_->dim(2) -1; }
+
+    int npointsPatch()
+    { return myGrid_->dim(0) * myGrid_->dim(1) * myGrid_->dim(2) / subdivx_; }
 };
 
 #endif

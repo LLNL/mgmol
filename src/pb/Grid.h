@@ -8,9 +8,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id: Grid.h,v 1.11 2010/01/28 22:56:47 jeanluc Exp $
-#ifndef GRID_H
-#define GRID_H
+#ifndef MGMOL_GRID_H
+#define MGMOL_GRID_H
 
 #include <algorithm>
 #include <cassert>
