@@ -30,7 +30,6 @@ using namespace std;
 #include "ReplicatedWorkSpace.h"
 #include "VariableSizeMatrix.h"
 #include "Vector3D.h"
-#include "mdim.h"
 #include "tools.h"
 
 #define Ry2Ha 0.5;
@@ -56,7 +55,8 @@ double get_deriv2(double value[2])
 
 template <class T>
 int Forces<T>::get_var(
-    Ion& ion, int* pvec, double*** var_pot, double*** var_charge)
+    Ion& ion, vector<int>& pvec, vector<vector<vector<double>>>& var_pot,
+    vector<vector<vector<double>>>& var_charge)
 {
     get_var_tm_.start();
 
@@ -91,13 +91,13 @@ int Forces<T>::get_var(
     const double p1 = ion.position(1);
     const double p2 = ion.position(2);
 
-    double** potx = var_pot[0];
-    double** poty = var_pot[1];
-    double** potz = var_pot[2];
+    vector<vector<double>>& potx = var_pot[0];
+    vector<vector<double>>& poty = var_pot[1];
+    vector<vector<double>>& potz = var_pot[2];
 
-    double** chargex = var_charge[0];
-    double** chargey = var_charge[1];
-    double** chargez = var_charge[2];
+    vector<vector<double>>& chargex = var_charge[0];
+    vector<vector<double>>& chargey = var_charge[1];
+    vector<vector<double>>& chargez = var_charge[2];
 
     // Generate indices
     vector<vector<int>> Ai;
@@ -242,9 +242,11 @@ int Forces<T>::get_var(
 }
 
 template <class T>
-void Forces<T>::get_loc_proj(RHODTYPE* rho, const int* const pvec,
-    double*** var_pot, double*** var_charge, const int docount,
-    double** loc_proj)
+void Forces<T>::get_loc_proj(RHODTYPE* rho, const vector<int>& pvec,
+    std::vector<std::vector<std::vector<double>>>& var_pot,
+    std::vector<std::vector<std::vector<double>>>& var_charge,
+    const int docount,
+    vector<double>& loc_proj)
 {
     get_loc_proj_tm_.start();
 
@@ -252,14 +254,14 @@ void Forces<T>::get_loc_proj(RHODTYPE* rho, const int* const pvec,
 
     for (short dir = 0; dir < 3; dir++)
     {
-        double* lproj = &(*loc_proj)[dir * NPTS];
+        double* lproj = &(loc_proj[dir * NPTS]);
 
         // pseudopotential * rho
         // - delta rhoc * vh
         for (short ishift = 0; ishift < NPTS; ishift++)
         {
-            const double* const vpot      = var_pot[dir][ishift];
-            const double* const drhoc_ptr = var_charge[dir][ishift];
+            const vector<double>& vpot      = var_pot[dir][ishift];
+            const vector<double>& drhoc_ptr = var_charge[dir][ishift];
 
             for (int idx = 0; idx < docount; idx++)
             {
@@ -275,25 +277,33 @@ void Forces<T>::get_loc_proj(RHODTYPE* rho, const int* const pvec,
 }
 
 template <class T>
-void Forces<T>::lforce_ion(Ion& ion, RHODTYPE* rho, double** loc_proj)
+void Forces<T>::lforce_ion(Ion& ion, RHODTYPE* rho, vector<double>& loc_proj)
 {
-    double ***var_pot, ***var_charge;
-
     Mesh* mymesh    = Mesh::instance();
     const int numpt = mymesh->numpt();
 
-    DIM3(var_pot, 3, NPTS, numpt, double);
-    int* pvec = new int[numpt];
-    DIM3(var_charge, 3, NPTS, numpt, double);
+    vector<vector<vector<double>>> var_pot;
+    vector<vector<vector<double>>> var_charge;
+
+    var_pot.resize(3);
+    var_charge.resize(3);
+    for(short i = 0; i < 3; i++)
+    {
+        var_pot[i].resize(NPTS);
+        var_charge[i].resize(NPTS);
+        for(short j = 0; j < NPTS; j++)
+        {
+            var_pot[i][j].resize(numpt);
+            var_charge[i][j].resize(numpt);
+        }
+    }
+
+    vector<int> pvec(numpt);
 
     // generate pvec, var_pot and var_charge for this ion
     int docount = get_var(ion, pvec, var_pot, var_charge);
 
     get_loc_proj(rho, pvec, var_pot, var_charge, docount, loc_proj);
-
-    D3FREE(var_charge);
-    delete[] pvec;
-    D3FREE(var_pot);
 }
 
 template <class T>
@@ -310,7 +320,7 @@ void Forces<T>::lforce(Ions& ions, RHODTYPE* rho)
     // cout<<"max Vl radius = "<<ions.getMaxVlRadius()<<endl;
 
     int buffer_size  = 3 * NPTS;
-    double* loc_proj = new double[buffer_size];
+    vector<double> loc_proj(buffer_size);
 
     lforce_local_tm_.start();
 
@@ -321,18 +331,16 @@ void Forces<T>::lforce(Ions& ions, RHODTYPE* rho)
     VariableSizeMatrix<sparserow> loc_proj_mat(
         "locProj", ions.overlappingVL_ions().size());
     // Loop over ions with potential overlaping with local subdomain
-    vector<Ion*>::const_iterator ion = ions.overlappingVL_ions().begin();
-    while (ion != ions.overlappingVL_ions().end())
+    for (auto& ion : ions.overlappingVL_ions())
     {
-        int index = (*ion)->index();
+        int index = ion->index();
         for (short dir = 0; dir < 3 * NPTS; dir++)
             loc_proj[dir] = 0.;
-        lforce_ion(**ion, rho, &loc_proj);
+        lforce_ion(*ion, rho, loc_proj);
 
         /* insert row into 2D matrix */
-        loc_proj_mat.insertNewRow(buffer_size, index, &cols[0], loc_proj, true);
-
-        ion++;
+        loc_proj_mat.insertNewRow(buffer_size, index, &cols[0], &loc_proj[0],
+                                  true);
     }
 
     lforce_local_tm_.stop();
@@ -359,22 +367,20 @@ void Forces<T>::lforce(Ions& ions, RHODTYPE* rho)
 
     consolidate_data_.stop();
 
-    vector<Ion*>::const_iterator lion = ions.local_ions().begin();
-    while (lion != ions.local_ions().end())
+    for(auto& lion : ions.local_ions())
     {
         // Forces opposed to the gradient
-        int index   = (*lion)->index();
+        int index   = lion->index();
         int* rindex = (int*)loc_proj_mat.getTableValue(index);
         assert(rindex != NULL);
-        memset(loc_proj, 0, buffer_size * sizeof(double));
-        loc_proj_mat.row_daxpy(*rindex, buffer_size, mygrid.vel(), loc_proj);
+        std::fill(loc_proj.begin(), loc_proj.end(), 0.);
+        loc_proj_mat.row_daxpy(*rindex, buffer_size, mygrid.vel(),
+                               &loc_proj[0]);
 
-        (*lion)->add_force(-get_deriv2(loc_proj),
-            -get_deriv2((loc_proj + NPTS)), -get_deriv2((loc_proj + 2 * NPTS)));
-
-        lion++;
+        lion->add_force(-get_deriv2(&loc_proj[0]),
+            -get_deriv2(&(loc_proj[NPTS])), 
+            -get_deriv2(&(loc_proj[2 * NPTS])));
     }
-    delete[] loc_proj;
 //    }
 //    else
 /*
@@ -418,19 +424,18 @@ void Forces<T>::lforce(Ions& ions, RHODTYPE* rho)
     {
         double position[3];
         double grad[3];
-        vector<Ion*>::iterator ion = ions.local_ions().begin();
-        while (ion != ions.local_ions().end())
+        for (auto& ion : ions.local_ions())
         {
-            (*ion)->getPosition(position);
+            ion->getPosition(position);
 
             pot.getGradVext(position, grad);
 
             const double charge = (*ion)->getZion();
 
-            (*ion)->add_force(
+            ion->add_force(
                 grad[0] * charge, grad[1] * charge, grad[2] * charge);
             // if( onpe0 )
-            //(*MPIdata::sout)<<"External force on Ion "<<(*ion)->name()<<": "
+            //(*MPIdata::sout)<<"External force on Ion "<<ion->name()<<": "
             //                              <<grad[0]*charge<<","
             //                              <<grad[1]*charge<<","
             //                              <<grad[2]*charge<<endl;
@@ -495,14 +500,12 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
         // loop over all the ions
         // parallelization over ions by including only those centered in
         // subdomain
-        const vector<Ion*>::const_iterator iend = ions.local_ions().end();
-        vector<Ion*>::const_iterator ion        = ions.local_ions().begin();
-        while (ion != iend)
+        for (auto& ion : ions.local_ions())
         {
             vector<int> gids;
-            (*ion)->getGidsNLprojs(gids);
+            ion->getGidsNLprojs(gids);
             vector<short> kbsigns;
-            (*ion)->getKBsigns(kbsigns);
+            ion->getKBsigns(kbsigns);
 
             const short nprojs = (short)gids.size();
             for (short i = 0; i < nprojs; i++)
@@ -532,7 +535,6 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
                     erg[gid][NPTS * dir + ishift] = alpha * kbmult;
                 }
             }
-            ion++;
         }
     }
     else
@@ -549,14 +551,12 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
         // loop over all the ions
         // parallelization over ions by including only those centered in
         // subdomain
-        const vector<Ion*>::const_iterator iend = ions.local_ions().end();
-        vector<Ion*>::const_iterator ion        = ions.local_ions().begin();
-        while (ion != iend)
+        for (auto& ion : ions.local_ions())
         {
             vector<int> gids;
-            (*ion)->getGidsNLprojs(gids);
+            ion->getGidsNLprojs(gids);
             vector<short> kbsigns;
-            (*ion)->getKBsigns(kbsigns);
+            ion->getKBsigns(kbsigns);
 
             const short nprojs = (short)gids.size();
             for (short i = 0; i < nprojs; i++)
@@ -576,7 +576,6 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
                         erg[gid][NPTS * dir + ishift] = alpha * kbmult;
                     }
             }
-            ion++;
         }
     }
     energy_tm_.stop();
@@ -594,12 +593,10 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
 
     // compute forces on each ion by finite differences
     const double factor                     = -1. * Ry2Ha;
-    vector<Ion*>::iterator iion             = ions.local_ions().begin();
-    const vector<Ion*>::const_iterator iend = ions.local_ions().end();
-    while (iion != iend)
+    for (auto& ion : ions.local_ions())
     {
         vector<int> gids;
-        (*iion)->getGidsNLprojs(gids);
+        ion->getGidsNLprojs(gids);
 
         const short nprojs = (short)gids.size();
         for (short i = 0; i < nprojs; i++)
@@ -618,10 +615,9 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
                     ff[dir] = sum[dir];
             }
 
-            (*iion)->add_force(ff[0], ff[1], ff[2]);
+            ion->add_force(ff[0], ff[1], ff[2]);
         }
 
-        ++iion;
     }
 
     map<int, double*>::iterator ierg = erg.begin();

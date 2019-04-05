@@ -15,6 +15,8 @@
 #include "Rho.h"
 #include "global.h"
 
+#include <vector>
+
 #define NPTS 2
 #define DELTAC 0.002
 
@@ -40,10 +42,14 @@ private:
     static Timer energy_tm_;
     static Timer total_tm_;
 
-    void lforce_ion(Ion& ion, RHODTYPE* rho, double** loc_proj);
-    void get_loc_proj(RHODTYPE* rho, const int* const pvec, double*** var_pot,
-        double*** var_charge, const int docount, double** loc_proj);
-    int get_var(Ion& ion, int* pvec, double*** var_pot, double*** var_charge);
+    void lforce_ion(Ion& ion, RHODTYPE* rho, std::vector<double>& loc_proj);
+    void get_loc_proj(RHODTYPE* rho, const std::vector<int>& pvec,
+        std::vector<std::vector<std::vector<double>>>& var_pot,
+        std::vector<std::vector<std::vector<double>>>& var_charge,
+        const int docount, std::vector<double>& loc_proj);
+    int get_var(Ion& ion, std::vector<int>& pvec,
+                std::vector<std::vector<std::vector<double>>>& var_pot,
+                std::vector<std::vector<std::vector<double>>>& var_charge);
 
 public:
     Forces(Hamiltonian<T>* hamiltonian, Rho<T>* rho,
