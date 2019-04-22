@@ -1,85 +1,31 @@
 # 
 #  This pseudopotential file has been produced using the code
-#  ONCVPSP  (Optimized Norm-Conservinng Vanderbilt PSeudopotential)
+#  ONCVPSP (Optimized Norm-Conservinng Vanderbilt PSeudopotential)
 #  scalar-relativistic version 2.1.1, 03/26/2014 by D. R. Hamann
-#  The code is available through a link at URL www.mat-simresearch.com.
-#  Documentation with the package provides a full discription of the
-#  input data below.
-# 
-# 
-#  While it is not required under the terms of the GNU GPL, it is
-#  suggested that you cite D. R. Hamann, Phys. Rev. B 88, 085117 (2013)
-#  in any publication using these pseudopotentials.
-# 
-# 
-#  Copyright 2015 The Regents of the University of California
-#  
-#  This work is licensed under the Creative Commons Attribution-ShareAlike 
-#  4.0 International License. To view a copy of this license, visit 
-#  http://creativecommons.org/licenses/by-sa/4.0/ or send a letter to 
-#  Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
-#  
-#  This pseudopotential is part of the Schlipf-Gygi norm-conserving 
-#  pseudopotential library. Its construction parameters were tuned to 
-#  reproduce materials of a training set with very high accuracy and 
-#  should be suitable as a general purpose pseudopotential to treat a 
-#  variety of different compounds. For details of the construction and 
-#  testing of the pseudopotential please refer to:
-#  
+#  as distributed by Mat-Sim Research at www.mat-simresearch.com.
+#  Reference:
+#    D. R. Hamann, Phys. Rev. B 88, 085117 (2013)
+#    DOI:https://doi.org/10.1103/PhysRevB.88.085117
+#
+#
+#  Pseudopotential generation was done by M. Schlipf and F. Gygi using
+#  the input parameters obtained from their optimization algorithm.
+#  Reference:
 #    M. Schlipf and F. Gygi, Computer Physics Communications (2015)
 #    DOI: 10.1016/j.cpc.2015.05.011
 #    http://dx.doi.org/10.1016/j.cpc.2015.05.011
 #    http://www.quantum-simulation.org
-#  
-#  We kindly ask that you include this reference in all publications 
-#  associated to this pseudopotential.
+#  License:
+#  This work is licensed under the Creative Commons Attribution-ShareAlike
+#  4.0 International License. To view a copy of this license, visit
+#  http://creativecommons.org/licenses/by-sa/4.0/ or send a letter to
+#  Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+#
+#
+#  Format:
+#    The format of this file has been adapted to match MGmol pseudopotential
+#    parser using the script convertONCVPSP_SG15.py
 # 
-# 
-# Input file for PP generation:
-# 
-# # ATOM AND REFERENCE CONFIGURATION
-# # atsym  z    nc    nv    iexc   psfile
-#   B  5.00     1     2     4      fpmd
-# #
-# #   n    l    f        energy (Ha)
-#     1    0    2.00
-#     2    0    2.00
-#     2    1    1.00
-# #
-# # PSEUDOPOTENTIAL AND OPTIMIZATION
-# # lmax
-#     1
-# #
-# #   l,   rc,     ep,   ncon, nbas, qcut
-#     0   1.77019  -0.34703    5    8   8.06008
-#     1   1.90153  -0.13255    5    8   7.08856
-# #
-# # LOCAL POTENTIAL
-# # lloc, lpopt,  rc(5),   dvloc0
-#     4    5   1.37794      0.00000
-# #
-# # VANDERBILT-KLEINMAN-BYLANDER PROJECTORs
-# # l, nproj, debl
-#     0    2   0.76885
-#     1    2   1.77366
-# #
-# # MODEL CORE CHARGE
-# # icmod, fcfact
-#     0   0.00000
-# #
-# # LOG DERIVATIVE ANALYSIS
-# # epsh1, epsh2, depsh
-#    -5.00    3.00    0.02
-# #
-# # OUTPUT GRID
-# # rlmax, drl
-#     6.00    0.01
-# #
-# # TEST CONFIGURATIONS
-# # ncnf
-#     0
-# # nvcnf
-# #   n    l    f
 # 
 B_ONCV_PBE-1
 #
