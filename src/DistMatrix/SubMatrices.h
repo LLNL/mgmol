@@ -79,7 +79,7 @@ public:
 
     void scal(const double alpha);
     void gather(const DistMatrix<T>& mat);
-    void print(std::ostream&);
+    void print(std::ostream&)const;
     void get_array(const int im, std::vector<T>& val);
 
     T val(const int i, const int j, const int im) const

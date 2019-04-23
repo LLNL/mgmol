@@ -10,6 +10,7 @@
 
 #include <iomanip>
 #include <iostream>
+#include <memory>
 using namespace std;
 
 #include "GramMatrix.h"
@@ -20,9 +21,8 @@ void rotateSym(dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
     dist_matrix::DistMatrix<DISTMATDTYPE>& work);
 
 GramMatrix::GramMatrix(const int ndim)
+    : dim_(ndim)
 {
-    dim_ = ndim;
-
     if (dim_ > 0)
     {
         matS_ = new dist_matrix::DistMatrix<DISTMATDTYPE>("S", ndim, ndim);
@@ -45,9 +45,8 @@ GramMatrix::GramMatrix(const int ndim)
 }
 
 GramMatrix::GramMatrix(const GramMatrix& gm)
+    : dim_(gm.dim_)
 {
-    dim_ = gm.dim_;
-
     if (dim_ > 0)
     {
         matS_ = new dist_matrix::DistMatrix<DISTMATDTYPE>(*gm.matS_);
@@ -174,13 +173,6 @@ void GramMatrix::setMatrix(
 
     updateLS();
 }
-// void GramMatrix::setMatrix(const double* const val, const int orbitals_index)
-//{
-//    matS_->init(val, dim_);
-//    orbitals_index_=orbitals_index;
-//
-//    updateLS();
-//}
 
 double GramMatrix::getLinDependent2states(int& st1, int& st2) const
 {
@@ -233,4 +225,29 @@ double GramMatrix::getLinDependent2states(int& st1, int& st2, int& st3) const
     st3 = u.iamax(0, val1);
 
     return (double)eigenvalues[0];
+}
+
+const dist_matrix::SubMatrices<DISTMATDTYPE>& GramMatrix::getSubMatLS(
+    MPI_Comm comm, const vector<vector<int>>& global_indexes)
+{
+    assert(ls_ != NULL);
+    assert(isLSuptodate_);
+
+    static shared_ptr<dist_matrix::SubMatrices<DISTMATDTYPE>> submatLS = 0;
+    static shared_ptr<dist_matrix::SubMatricesIndexing<DISTMATDTYPE>> submat_indexing = 0;
+
+    //first time through, build these objects
+    if( submatLS==0)
+    {
+        submat_indexing.reset( new dist_matrix::SubMatricesIndexing<DISTMATDTYPE>(
+            global_indexes, comm, *matS_) );
+
+        submatLS.reset( new dist_matrix::SubMatrices<DISTMATDTYPE>("LS",
+            global_indexes, comm, *matS_, *submat_indexing) );
+    }
+
+    //set submatLS_ from ls_
+    submatLS->gather(*ls_);
+
+    return *submatLS;
 }

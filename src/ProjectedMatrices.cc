@@ -66,9 +66,6 @@ ProjectedMatrices::ProjectedMatrices(const int ndim, const bool with_spin)
     min_val_         = 0.25;
     submat_indexing_ = 0;
 
-#ifdef USE_DIS_MAT
-    submatLS_   = 0;
-#endif
     sH_ = 0;
 
     if (dim_ > 0)
@@ -97,9 +94,6 @@ ProjectedMatrices::~ProjectedMatrices()
     {
         delete sH_;
         sH_ = 0;
-
-        delete submatLS_;
-        submatLS_ = 0;
 
         delete submat_indexing_;
         submat_indexing_ = 0;
@@ -135,14 +129,10 @@ void ProjectedMatrices::setup(
 
     if (sH_ != NULL) delete sH_;
 
-    if (submatLS_ != NULL) delete submatLS_;
- 
     if (dim_ > 0)
     {
         dm2sl_.reset( new DistMatrix2SquareLocalMatrices(
                      comm, global_indexes, dm_->getMatrix()) );
-        submatLS_   = new dist_matrix::SubMatrices<DISTMATDTYPE>("LS",
-            global_indexes, comm, gm_->getMatrix(), *submat_indexing_);
 
         localX_.reset(
             new SquareLocalMatrices<MATDTYPE>(subdiv_, chromatic_number_) );

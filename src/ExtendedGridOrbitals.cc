@@ -1267,11 +1267,10 @@ void ExtendedGridOrbitals::orthonormalize(const bool overlap_uptodate)
         = dynamic_cast<ProjectedMatrices*>(proj_matrices_);
     assert(projmatrices);
 
-    projmatrices->updateSubMatLS();
-
+    MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
     const dist_matrix::SubMatrices<DISTMATDTYPE>& submatLS(
-        projmatrices->getSubMatLS());
-    // submatLS->print((*MPIdata::sout));
+        projmatrices->getSubMatLS(mmpi.commSameSpin(), overlapping_gids_));
+    //submatLS.print((*MPIdata::sout));
 
     if (onpe0 && ct.verbose > 1)
         (*MPIdata::sout) << "ExtendedGridOrbitals::orthonormalize()" << endl;

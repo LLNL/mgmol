@@ -73,7 +73,6 @@ class ProjectedMatrices : public ProjectedMatricesInterface
 
 #ifdef USE_DIS_MAT
     dist_matrix::SubMatricesIndexing<DISTMATDTYPE>* submat_indexing_;
-    dist_matrix::SubMatrices<DISTMATDTYPE>* submatLS_;
 
     std::unique_ptr<DistMatrix2SquareLocalMatrices> dm2sl_;
 #endif
@@ -167,10 +166,10 @@ public:
 
     SquareLocalMatrices<MATDTYPE>& getLocalT() const { return *localT_; }
 
-    const dist_matrix::SubMatrices<DISTMATDTYPE>& getSubMatLS() const
+    const dist_matrix::SubMatrices<DISTMATDTYPE>& getSubMatLS(
+        MPI_Comm comm, const std::vector<std::vector<int>>& global_indexes) const
     {
-        assert(submatLS_ != 0);
-        return *submatLS_;
+        return gm_->getSubMatLS(comm, global_indexes);
     }
 
     void updateSubMatX() { updateSubMatX(dm_->getMatrix()); }
@@ -179,8 +178,6 @@ public:
     {
         dm2sl_->convert(dm, *localX_);
     }
-
-    void updateSubMatLS() { gm_->updateSubMatLS(*submatLS_); }
 
     void updateSubMatT()
     {

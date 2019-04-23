@@ -8,9 +8,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id: SubMatricesIndexing.h 17 2012-08-15 17:11:26Z jeanluc $
-#ifndef SubMatricesIndexing_H
-#define SubMatricesIndexing_H
+#ifndef MGMOL_SubMatricesIndexing_H
+#define MGMOL_SubMatricesIndexing_H
 
 #include "DistMatrix.h"
 

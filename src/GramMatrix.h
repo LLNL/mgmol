@@ -8,9 +8,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
-#ifndef GRAMMATRIX_H
-#define GRAMMATRIX_H
+#ifndef MGMOL_GRAMMATRIX_H
+#define MGMOL_GRAMMATRIX_H
 
 #include "DistMatrix.h"
 #include "SubMatrices.h"
@@ -26,6 +25,7 @@
 class GramMatrix
 {
     int dim_;
+
     dist_matrix::DistMatrix<DISTMATDTYPE>* matS_;
     dist_matrix::DistMatrix<DISTMATDTYPE>* invS_;
     dist_matrix::DistMatrix<DISTMATDTYPE>* ls_;
@@ -84,7 +84,6 @@ public:
 
     void setMatrix(const dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
         const int orbitals_index);
-    // void setMatrix(const DISTMATDTYPE* const val, const int orbitals_index);
 
     void updateLS()
     {
@@ -115,16 +114,13 @@ public:
     }
     void applyInv(dist_matrix::DistMatrix<DISTMATDTYPE>& mat)
     {
+        assert(isLSuptodate_);
+
         ls_->potrs('l', mat);
     }
 
-    void updateSubMatLS(dist_matrix::SubMatrices<DISTMATDTYPE>& submatLS) const
-    {
-        assert(ls_ != NULL);
-        assert(isLSuptodate_);
-
-        submatLS.gather(*ls_);
-    }
+    const dist_matrix::SubMatrices<DISTMATDTYPE>& getSubMatLS(MPI_Comm comm,
+        const std::vector<std::vector<int>>& global_indexes);
 
     void printMM(std::ofstream& tfile) { matS_->printMM(tfile); }
 

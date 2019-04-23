@@ -8,7 +8,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id: SubMatricesIndexing.C,v 1.5 2010/09/29 22:47:24 jeanluc Exp $
 #include "SubMatricesIndexing.h"
 #include "MPI_AllToSome.h"
 

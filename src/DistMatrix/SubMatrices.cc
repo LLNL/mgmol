@@ -298,7 +298,7 @@ void SubMatrices<T>::gather(const DistMatrix<T>& mat)
 
 ////////////////////////////////////////////////////////////////////////////////
 template <class T>
-void SubMatrices<T>::print(ostream& os)
+void SubMatrices<T>::print(ostream& os)const
 {
     for (int im = 0; im < nb_local_matrices_; im++)
     {
