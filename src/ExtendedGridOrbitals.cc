@@ -16,7 +16,6 @@
 
 #include "Control.h"
 #include "DistMatrix.h"
-#include "FunctionsPacking.h"
 #include "GridFunc.h"
 #include "GridMask.h"
 #include "HDFrestart.h"
@@ -25,22 +24,17 @@
 #include "ExtendedGridOrbitals.h"
 #include "LocalizationRegions.h"
 #include "MPIdata.h"
-#include "Masks4Orbitals.h"
 #include "MasksSet.h"
 #include "Mesh.h"
-#include "Potentials.h"
-#include "Preconditioning.h"
 #include "ProjectedMatrices.h"
 #include "ReplicatedWorkSpace.h"
 #include "SquareLocalMatrices.h"
-#include "SubCell.h"
 #include "SubMatrices.h"
 #include "hdf_tools.h"
 #include "lapack_c.h"
 
 #include <cmath>
 #include <fstream>
-#include <vector>
 using namespace std;
 
 #define ORBITAL_OCCUPATION 2.
@@ -82,6 +76,9 @@ ExtendedGridOrbitals::ExtendedGridOrbitals(std::string name,
       lrs_(lrs),
       local_cluster_(local_cluster)
 {
+    (void) masks;
+    (void) corrmasks;
+
     // preconditions
     assert(subdivx > 0);
     assert(proj_matrices != 0);
@@ -216,6 +213,10 @@ void ExtendedGridOrbitals::setup(LocalizationRegions* lrs)
 void ExtendedGridOrbitals::reset(
     MasksSet* masks, MasksSet* corrmasks, LocalizationRegions* lrs)
 {
+    (void) masks;
+    (void) corrmasks;
+    (void) lrs;
+
     // free some old data
     block_vector_.clear();
     setIterativeIndex(-10);
@@ -1758,10 +1759,10 @@ void ExtendedGridOrbitals::printTimers(ostream& os)
     dot_product_tm_.print(os);
     addDot_tm_.print(os);
     prod_matrix_tm_.print(os);
-    get_dm_tm_.print((*MPIdata::sout));
-    assign_tm_.print((*MPIdata::sout));
-    normalize_tm_.print((*MPIdata::sout));
-    axpy_tm_.print((*MPIdata::sout));
+    get_dm_tm_.print(os);
+    assign_tm_.print(os);
+    normalize_tm_.print(os);
+    axpy_tm_.print(os);
 }
 
 void ExtendedGridOrbitals::initWF(const LocalizationRegions& lrs)

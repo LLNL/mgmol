@@ -8,17 +8,15 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef EXTENDEDGRIDORBITALS_H
-#define EXTENDEDGRIDORBITALS_H
+#ifndef MGMOL_EXTENDEDGRIDORBITALS_H
+#define MGMOL_EXTENDEDGRIDORBITALS_H
 
 #include "BlockVector.h"
 #include "ClusterOrbitals.h"
 #include "DataDistribution.h"
-#include "FunctionsPacking.h"
 #include "GridFunc.h"
 #include "HDFrestart.h"
 #include "Lap.h"
-#include "MGmol_MPI.h"
 #include "MPIdata.h"
 #include "Orbitals.h"
 #include "SinCosOps.h"
@@ -27,9 +25,9 @@
 
 #include "hdf5.h"
 #include <iostream>
-#include <map>
 #include <memory>
 #include <vector>
+#include <string>
 
 template <class T>
 class LocalMatrices;

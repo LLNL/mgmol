@@ -2602,10 +2602,10 @@ void LocGridOrbitals::printTimers(ostream& os)
     mask_tm_.print(os);
     addDot_tm_.print(os);
     prod_matrix_tm_.print(os);
-    get_dm_tm_.print((*MPIdata::sout));
-    assign_tm_.print((*MPIdata::sout));
-    normalize_tm_.print((*MPIdata::sout));
-    axpy_tm_.print((*MPIdata::sout));
+    get_dm_tm_.print(os);
+    assign_tm_.print(os);
+    normalize_tm_.print(os);
+    axpy_tm_.print(os);
 }
 
 void LocGridOrbitals::initWF(const LocalizationRegions& lrs)
