@@ -76,7 +76,7 @@ int ABPG<T>::update(T& orbitals, Ions& ions,
         }
         else
         {
-            orbitals.orthonormalize();
+            orbitals.orthonormalizeLoewdin();
             flag_ortho = true;
         }
         if (ct.wf_dyn) // restart mixing after (ortho-)normalization

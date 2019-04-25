@@ -28,7 +28,7 @@ output = subprocess.check_output(command,shell=True)
 #make sure forces are below tolerance
 lines=output.split(b'\n')
 
-tol = 3.e-6
+tol = 4.e-6
 Fz  = 1.2e-3
 for line in lines:
   num_matches = line.count(b'%%')
