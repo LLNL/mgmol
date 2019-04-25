@@ -10,6 +10,13 @@
 
 #include "DistMatrix2SquareLocalMatrices.h"
 
+DistMatrix2SquareLocalMatrices* DistMatrix2SquareLocalMatrices::pinstance_ = 0;
+MPI_Comm DistMatrix2SquareLocalMatrices::comm_   = MPI_COMM_NULL;
+std::unique_ptr< dist_matrix::SubMatricesIndexing<DISTMATDTYPE> >
+    DistMatrix2SquareLocalMatrices::submat_indexing_;
+std::unique_ptr< dist_matrix::SubMatrices<DISTMATDTYPE> >
+    DistMatrix2SquareLocalMatrices::submatWork_;
+
 Timer DistMatrix2SquareLocalMatrices::convert_tm_(
     "DistMatrix2SquareLocalMatrices::convert");
 
@@ -36,4 +43,11 @@ void DistMatrix2SquareLocalMatrices::convert(
     convert_tm_.stop();
 }
 
+const dist_matrix::SubMatrices<DISTMATDTYPE>&
+    DistMatrix2SquareLocalMatrices::convert(
+        const dist_matrix::DistMatrix<DISTMATDTYPE>& dmat)
+{
+    submatWork_->gather(dmat);
 
+    return *submatWork_;
+}

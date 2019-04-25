@@ -71,12 +71,6 @@ class ProjectedMatrices : public ProjectedMatricesInterface
     ProjectedMatrices& operator=(const ProjectedMatrices& src);
     ProjectedMatrices(const ProjectedMatrices& pm);
 
-#ifdef USE_DIS_MAT
-    dist_matrix::SubMatricesIndexing<DISTMATDTYPE>* submat_indexing_;
-
-    std::unique_ptr<DistMatrix2SquareLocalMatrices> dm2sl_;
-#endif
-
     /*!
      * Matrices to be used to multiply orbitals on the right
      * (dimension equal to number of local colors)
@@ -176,12 +170,16 @@ public:
 
     void updateSubMatX(const dist_matrix::DistMatrix<DISTMATDTYPE>& dm)
     {
-        dm2sl_->convert(dm, *localX_);
+        DistMatrix2SquareLocalMatrices* dm2sl =
+            DistMatrix2SquareLocalMatrices::instance();
+        dm2sl->convert(dm, *localX_);
     }
 
     void updateSubMatT()
     {
-        dm2sl_->convert(*theta_, *localT_);
+        DistMatrix2SquareLocalMatrices* dm2sl =
+            DistMatrix2SquareLocalMatrices::instance();
+        dm2sl->convert(*theta_, *localT_);
     }
 
     void getLoewdinTransform(SquareLocalMatrices<MATDTYPE>& localP);

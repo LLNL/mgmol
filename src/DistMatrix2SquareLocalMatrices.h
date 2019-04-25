@@ -24,23 +24,44 @@
 
 class DistMatrix2SquareLocalMatrices
 {
+    static DistMatrix2SquareLocalMatrices* pinstance_;
+
     static Timer convert_tm_;
 
-    std::unique_ptr< dist_matrix::SubMatricesIndexing<DISTMATDTYPE> > submat_indexing_;
+    static MPI_Comm comm_;
 
-    std::unique_ptr< dist_matrix::SubMatrices<DISTMATDTYPE> > submatWork_;
+    static std::unique_ptr< dist_matrix::SubMatricesIndexing<DISTMATDTYPE> >
+        submat_indexing_;
+    static std::unique_ptr< dist_matrix::SubMatrices<DISTMATDTYPE> > submatWork_;
 
 public:
+    static DistMatrix2SquareLocalMatrices* instance()
+    {
+        if (pinstance_ == 0)
+        {
+            pinstance_ = new DistMatrix2SquareLocalMatrices();
+        }
+        return pinstance_;
+    }
 
-    DistMatrix2SquareLocalMatrices(
+    DistMatrix2SquareLocalMatrices()
+    {
+        assert( comm_!=MPI_COMM_NULL );
+        assert( submat_indexing_ );
+        assert( submatWork_ );
+    }
+
+    static void setup(
         MPI_Comm comm,
         const std::vector<std::vector<int>>& gids,
         const dist_matrix::DistMatrix<DISTMATDTYPE>& empty_mat)
-        : submat_indexing_( new dist_matrix::SubMatricesIndexing<DISTMATDTYPE>(
-                            gids, comm, empty_mat) ),
-          submatWork_( new dist_matrix::SubMatrices<DISTMATDTYPE>("Work",
-                       gids, comm, empty_mat, *submat_indexing_) )
     {
+        comm_ = comm;
+        submat_indexing_.reset(
+            new dist_matrix::SubMatricesIndexing<DISTMATDTYPE>(
+                gids, comm, empty_mat) );
+        submatWork_.reset( new dist_matrix::SubMatrices<DISTMATDTYPE>(
+            "Work", gids, comm, empty_mat, *submat_indexing_) );
     }
 
     ~DistMatrix2SquareLocalMatrices()
@@ -49,6 +70,8 @@ public:
 
     void convert(const dist_matrix::DistMatrix<DISTMATDTYPE>& dmat,
                 SquareLocalMatrices<MATDTYPE>& lmat);
+    const dist_matrix::SubMatrices<DISTMATDTYPE>& convert(
+        const dist_matrix::DistMatrix<DISTMATDTYPE>& dmat);
 
     static void printTimers(std::ostream& os)
     {

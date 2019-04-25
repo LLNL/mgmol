@@ -18,11 +18,8 @@
 #include "MPIdata.h"
 #include "ReplicatedWorkSpace.h"
 #include "SparseDistMatrix.h"
-#include "SubMatrices.h"
 #include "fermi.h"
 #include "tools.h"
-
-#include "DistMatrix2SquareLocalMatrices.h"
 
 #include <fstream>
 #include <iomanip>
@@ -64,7 +61,6 @@ ProjectedMatrices::ProjectedMatrices(const int ndim, const bool with_spin)
 {
     width_           = 0.;
     min_val_         = 0.25;
-    submat_indexing_ = 0;
 
     sH_ = 0;
 
@@ -94,9 +90,6 @@ ProjectedMatrices::~ProjectedMatrices()
     {
         delete sH_;
         sH_ = 0;
-
-        delete submat_indexing_;
-        submat_indexing_ = 0;
     }
 
     if (n_instances_ == 1)
@@ -123,16 +116,14 @@ void ProjectedMatrices::setup(
 #ifdef USE_DIS_MAT
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     MPI_Comm comm   = mmpi.commSpin();
-    if (submat_indexing_ != 0) delete submat_indexing_;
-    submat_indexing_ = new dist_matrix::SubMatricesIndexing<DISTMATDTYPE>(
-        global_indexes, comm, gm_->getMatrix());
 
     if (sH_ != NULL) delete sH_;
 
     if (dim_ > 0)
     {
-        dm2sl_.reset( new DistMatrix2SquareLocalMatrices(
-                     comm, global_indexes, dm_->getMatrix()) );
+        DistMatrix2SquareLocalMatrices* dm2sl =
+            DistMatrix2SquareLocalMatrices::instance();
+        dm2sl->setup( comm, global_indexes, dm_->getMatrix() );
 
         localX_.reset(
             new SquareLocalMatrices<MATDTYPE>(subdiv_, chromatic_number_) );
@@ -193,13 +184,17 @@ void ProjectedMatrices::rotateAll(
 
 void ProjectedMatrices::applyInvS(SquareLocalMatrices<MATDTYPE>& mat)
 {
+    //build DistMatrix from SquareLocalMatrices
     dist_matrix::DistMatrix<DISTMATDTYPE> pmatrix("pmatrix", dim_, dim_);
 
     mat.fillDistMatrix(pmatrix, global_indexes_);
 
     gm_->applyInv(pmatrix);
 
-    mat.init(pmatrix, global_indexes_, *submat_indexing_);
+    //convert result back into a SquareLocalMatrices
+    DistMatrix2SquareLocalMatrices* dm2sl =
+            DistMatrix2SquareLocalMatrices::instance();
+    dm2sl->convert(pmatrix, mat);
 }
 
 void ProjectedMatrices::setDMto2InvS()
@@ -760,7 +755,9 @@ void ProjectedMatrices::getLoewdinTransform(
     mat.symm('r', 'l', 1., matP, vect, 0.);
     matP.gemm('n', 't', 1., mat, vect, 0.);
 
-    localP.init(matP, global_indexes_, *submat_indexing_);
+    DistMatrix2SquareLocalMatrices* dm2sl =
+        DistMatrix2SquareLocalMatrices::instance();
+    dm2sl->convert(matP, localP);
 }
 
 double ProjectedMatrices::getTraceDiagProductWithInvS(

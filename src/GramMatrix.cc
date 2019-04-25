@@ -13,6 +13,7 @@
 #include <memory>
 using namespace std;
 
+#include "DistMatrix2SquareLocalMatrices.h"
 #include "GramMatrix.h"
 #include "MGmol_MPI.h"
 
@@ -233,21 +234,8 @@ const dist_matrix::SubMatrices<DISTMATDTYPE>& GramMatrix::getSubMatLS(
     assert(ls_ != NULL);
     assert(isLSuptodate_);
 
-    static shared_ptr<dist_matrix::SubMatrices<DISTMATDTYPE>> submatLS = 0;
-    static shared_ptr<dist_matrix::SubMatricesIndexing<DISTMATDTYPE>> submat_indexing = 0;
+    DistMatrix2SquareLocalMatrices* dm2sl =
+        DistMatrix2SquareLocalMatrices::instance();
 
-    //first time through, build these objects
-    if( submatLS==0)
-    {
-        submat_indexing.reset( new dist_matrix::SubMatricesIndexing<DISTMATDTYPE>(
-            global_indexes, comm, *matS_) );
-
-        submatLS.reset( new dist_matrix::SubMatrices<DISTMATDTYPE>("LS",
-            global_indexes, comm, *matS_, *submat_indexing) );
-    }
-
-    //set submatLS_ from ls_
-    submatLS->gather(*ls_);
-
-    return *submatLS;
+    return dm2sl->convert(*ls_);
 }
