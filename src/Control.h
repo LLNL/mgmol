@@ -614,7 +614,6 @@ public:
             case 3:
                 return OuterSolverType::PolakRibiere;
             default:
-                std::cerr << "ERROR: Undefined OuterSolverType" << std::endl;
                 return OuterSolverType::UNDEFINED;
         }
     }
@@ -630,7 +629,6 @@ public:
             case 2:
                 return WFExtrapolationType::Order3;
             default:
-                std::cerr << "ERROR: Undefined WFExtrapolationType" << std::endl;
                 return WFExtrapolationType::UNDEFINED;
         }
     }
@@ -648,7 +646,6 @@ public:
             case 7:
                 return AtomsDynamicType::FIRE;
             default:
-                std::cerr << "ERROR: Undefined AtomsDynamicType" << std::endl;
                 return AtomsDynamicType::UNDEFINED;
         }
     }
@@ -664,7 +661,6 @@ public:
             case 2:
                 return DMNonLinearSolverType::HMVP;
             default:
-                std::cerr << "ERROR: Undefined DMNonLinearSolverType" << std::endl;
                 return DMNonLinearSolverType::UNDEFINED;
         }
     }
@@ -682,7 +678,6 @@ public:
             case 2:
                 return DMEigensolverType::SP2;
             default:
-                std::cerr << "ERROR: Undefined DMEigensolverType" << std::endl;
                 return DMEigensolverType::UNDEFINED;                
         }
     }
@@ -698,7 +693,6 @@ public:
             case 2:
                 return OrbitalsType::Orthonormal;
             default:
-                std::cerr << "ERROR: Undefined OrbitalsType" << std::endl;
                 return OrbitalsType::UNDEFINED;
         }
     }
