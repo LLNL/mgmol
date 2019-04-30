@@ -8,15 +8,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-////////////////////////////////////////////////////////////////////////////////
-//
-// blacs.h
-//
-////////////////////////////////////////////////////////////////////////////////
-// $Id: blacs.h 7 2011-03-08 18:50:31Z jeanluc $
-
-#ifndef BLACS_H
-#define BLACS_H
+#ifndef MGMOL_BLACS_H
+#define MGMOL_BLACS_H
 
 #if USE_MPI
 #include <mpi.h>

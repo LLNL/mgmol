@@ -8,6 +8,7 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
+#include "MGmol_scalapack.h"
 #include "DistMatrix.h"
 #include "BlacsContext.h"
 #include "MGmol_MPI.h"
@@ -27,162 +28,8 @@ using namespace std;
 #include "blacs.h"
 #endif
 
-#ifdef __KCC
-#define TEMP_DECL /**/
-#else
 #define TEMP_DECL template <>
-#endif
 
-#ifdef ADD_
-#define idamax idamax_
-#define isamax isamax_
-#define pdamax pdamax_
-#define psamax psamax_
-#define dswap dswap_
-#define indxl2g indxl2g_
-#endif
-
-extern "C"
-{
-#ifdef SCALAPACK
-    // PBLAS
-    void pdswap(
-        Pint, double*, Pint, Pint, Pint, Pint, double*, Pint, Pint, Pint, Pint);
-    void psswap(
-        Pint, float*, Pint, Pint, Pint, Pint, float*, Pint, Pint, Pint, Pint);
-    void pdsymm(Pchar, Pchar, Pint, Pint, Pdouble, Pdouble, Pint, Pint, Pint,
-        Pdouble, Pint, Pint, Pint, Pdouble, double* const, Pint, Pint, Pint);
-    void pssymm(Pchar, Pchar, Pint, Pint, Pfloat, Pfloat, Pint, Pint, Pint,
-        Pfloat, Pint, Pint, Pint, Pfloat, float* const, Pint, Pint, Pint);
-    void pdgemm(Pchar, Pchar, Pint, Pint, Pint, Pdouble, Pdouble, Pint, Pint,
-        Pint, Pdouble, Pint, Pint, Pint, Pdouble, double* const, Pint, Pint,
-        Pint);
-    void pdgemv(Pchar, Pint, Pint, Pdouble, Pdouble, Pint, Pint, Pint, Pdouble,
-        Pint, Pint, Pint, Pint, Pdouble, double* const, Pint, Pint, Pint, Pint);
-    void pdsymv(Pchar, Pint, Pdouble, Pdouble, Pint, Pint, Pint, Pdouble, Pint,
-        Pint, Pint, Pint, Pdouble, double* const, Pint, Pint, Pint, Pint);
-    void psgemm(Pchar, Pchar, Pint, Pint, Pint, Pfloat, Pfloat, Pint, Pint,
-        Pint, Pfloat, Pint, Pint, Pint, Pfloat, float* const, Pint, Pint, Pint);
-    void psgemv(Pchar, Pint, Pint, Pfloat, Pfloat, Pint, Pint, Pint, Pfloat,
-        Pint, Pint, Pint, Pint, Pfloat, float* const, Pint, Pint, Pint, Pint);
-    void pssymv(Pchar, Pint, Pfloat, Pfloat, Pint, Pint, Pint, Pfloat, Pint,
-        Pint, Pint, Pint, Pfloat, float* const, Pint, Pint, Pint, Pint);
-    void pdsyrk(Pchar, Pchar, Pint, Pint, Pdouble, Pdouble, Pint, Pint, Pint,
-        Pdouble, double* const, Pint, Pint, Pint);
-    void pssyrk(Pchar, Pchar, Pint, Pint, Pfloat, Pfloat, Pint, Pint, Pint,
-        Pfloat, float* const, Pint, Pint, Pint);
-    void pdtran(Pint, Pint, Pdouble, Pdouble, Pint, Pint, Pint, Pdouble,
-        double* const, Pint, Pint, Pint);
-    void pstran(Pint, Pint, Pfloat, Pfloat, Pint, Pint, Pint, Pfloat,
-        float* const, Pint, Pint, Pint);
-    void pdtrmm(Pchar, Pchar, Pchar, Pchar, Pint, Pint, Pdouble, Pdouble, Pint,
-        Pint, Pint, double*, Pint, Pint, Pint);
-    void pstrmm(Pchar, Pchar, Pchar, Pchar, Pint, Pint, Pfloat, Pfloat, Pint,
-        Pint, Pint, float*, Pint, Pint, Pint);
-    void pdtrsm(Pchar, Pchar, Pchar, Pchar, Pint, Pint, Pdouble, Pdouble, Pint,
-        Pint, Pint, double*, Pint, Pint, Pint);
-    void pstrsm(Pchar, Pchar, Pchar, Pchar, Pint, Pint, Pfloat, Pfloat, Pint,
-        Pint, Pint, float*, Pint, Pint, Pint);
-    void pdamax(Pint, double*, int*, double*, Pint, Pint, Pint, Pint);
-    void psamax(Pint, float*, int*, float*, Pint, Pint, Pint, Pint);
-
-    // SCALAPACK
-    double pdlatra(Pint, Pdouble, Pint, Pint, Pint);
-    double pslatra(Pint, Pfloat, Pint, Pint, Pint);
-    double pdlaset(
-        char*, int*, int*, double*, double*, double*, int*, int*, int*);
-    float pslaset(char*, int*, int*, float*, float*, float*, int*, int*, int*);
-    double pdlacp3(Pint, Pint, double*, Pint, double*, Pint, Pint, Pint, Pint);
-    float pslacp3(Pint, Pint, float*, Pint, float*, Pint, Pint, Pint, Pint);
-    double pdlange(Pchar, int*, int*, double*, int*, int*, int*, double*);
-    float pslange(Pchar, int*, int*, float*, int*, int*, int*, float*);
-    void pdtrtrs(Pchar, Pchar, Pchar, Pint, Pint, Pdouble, Pint, Pint, Pint,
-        double*, Pint, Pint, Pint, int*);
-    void pstrtrs(Pchar, Pchar, Pchar, Pint, Pint, Pfloat, Pint, Pint, Pint,
-        float*, Pint, Pint, Pint, int*);
-    void pdgemr2d(Pint, Pint, Pdouble, Pint, Pint, Pint, double* const, Pint,
-        Pint, Pint, Pint);
-    void psgemr2d(Pint, Pint, Pfloat, Pint, Pint, Pint, float* const, Pint,
-        Pint, Pint, Pint);
-    void pigemr2d(
-        Pint, Pint, Pint, Pint, Pint, Pint, int*, Pint, Pint, Pint, Pint);
-    void pdpotrf(Pchar, int*, double*, int*, int*, int*, int*);
-    void pspotrf(Pchar, int*, float*, int*, int*, int*, int*);
-    void pdpotrs(Pchar, int*, int*, double*, int*, int*, int*, double*, int*,
-        int*, int*, int*);
-    void pspotrs(Pchar, int*, int*, float*, int*, int*, int*, float*, int*,
-        int*, int*, int*);
-    void pdgetrf(int*, int*, double*, int*, int*, int*, int*, int*);
-    void psgetrf(int*, int*, float*, int*, int*, int*, int*, int*);
-    void pdgetrs(Pchar, int*, int*, double*, int*, int*, int*, int*, double*,
-        int*, int*, int*, int*);
-    void psgetrs(Pchar, int*, int*, float*, int*, int*, int*, int*, float*,
-        int*, int*, int*, int*);
-    void pdpotri(Pchar, int*, double*, int*, int*, int*, int*);
-    void pspotri(Pchar, int*, float*, int*, int*, int*, int*);
-    void pdtrtri(Pchar, Pchar, int*, double*, int*, int*, int*, int*);
-    void pdpocon(Pchar, int*, double*, int*, int*, int*, double*, double*,
-        double*, int*, int*, int*, int*);
-    void pspocon(Pchar, int*, float*, int*, int*, int*, float*, float*, float*,
-        int*, int*, int*, int*);
-    void pdsygst(Pint, Pchar, Pint, double*, Pint, Pint, Pint, Pdouble, Pint,
-        Pint, Pint, double*, int*);
-    void pssygst(Pint, Pchar, Pint, float*, Pint, Pint, Pint, Pfloat, Pint,
-        Pint, Pint, float*, int*);
-    void pdsyev(Pchar, Pchar, int*, double*, int*, int*, int*, double*, double*,
-        int*, int*, int*, double*, int*, int*);
-    void pssyev(Pchar, Pchar, int*, float*, int*, int*, int*, float*, float*,
-        int*, int*, int*, float*, int*, int*);
-    void pdgesvd(Pchar, Pchar, int*, int*, double*, int*, int*, int*, double*,
-        double*, int*, int*, int*, double*, int*, int*, int*, double*, int*,
-        int*);
-    void psgesvd(Pchar, Pchar, int*, int*, float*, int*, int*, int*, float*,
-        float*, int*, int*, int*, float*, int*, int*, int*, float*, int*, int*);
-    // SCALAPACK TOOLS
-    int numroc(Pint, Pint, Pint, Pint, Pint);
-    int indxl2g(Pint, Pint, Pint, Pint, Pint);
-#endif
-    // BLAS1
-    void daxpy(Pint, Pdouble, Pdouble, Pint, double*, Pint);
-    void dcopy(Pint, Pdouble, Pint, double* const, Pint);
-    //  int idamax(Pint,double*,Pint);
-    void dswap(Pint, double*, Pint, double*, Pint);
-
-    // BLAS2
-    void dgemv(Pchar, Pint, Pint, Pdouble, Pdouble, Pint, Pdouble, Pint,
-        Pdouble, double*, Pint);
-
-    void dsymv(Pchar, Pint, Pdouble, Pdouble, Pint, Pdouble, Pint, Pdouble,
-        double*, Pint);
-
-    // BLAS3
-    void dsymm(Pchar, Pchar, Pint, Pint, Pdouble, Pdouble, Pint, Pdouble, Pint,
-        Pdouble, double*, Pint);
-    void dgemm(Pchar, Pchar, Pint, Pint, Pint, Pdouble, Pdouble, Pint, Pdouble,
-        Pint, Pdouble, double*, Pint);
-    void dsyrk(Pchar, Pchar, Pint, Pint, Pdouble, Pdouble, Pint, Pdouble,
-        double* const, Pint);
-    void dtrmm(Pchar, Pchar, Pchar, Pchar, Pint, Pint, Pdouble, Pdouble, Pint,
-        double* const, Pint);
-    void dtrsm(Pchar, Pchar, Pchar, Pchar, Pint, Pint, Pdouble, Pdouble, Pint,
-        double* const, Pint);
-    // LAPACK
-    double dlange(Pchar, int*, int*, double*, int*, double*);
-    void dtrtrs(
-        Pchar, Pchar, Pchar, Pint, Pint, Pdouble, Pint, double*, Pint, int*);
-    void dpotrf(Pchar, int*, double*, int*, int*);
-    void dpotrs(Pchar, int*, int*, double*, int*, double*, int*, int*);
-    void dgetrf(int*, int*, double*, int*, int*, int*);
-    void dgetrs(Pchar, int*, int*, double*, int*, int*, double*, int*, int*);
-    void dpotri(Pchar, int*, double*, int*, int*);
-    void dtrtri(Pchar, Pchar, int*, double*, int*, int*);
-    void dpocon(
-        Pchar, int*, double*, int*, double*, double*, double*, int*, int*);
-    void dsygst(int*, Pchar, int*, double*, int*, Pdouble, Pint, int*);
-    void dsyev(Pchar, Pchar, int*, double*, int*, double*, double*, int*, int*);
-    void dgesvd(Pchar, Pchar, int*, int*, double*, int*, double*, double*, int*,
-        double*, int*, double*, int*, int*);
-}
 
 namespace dist_matrix
 {
@@ -428,7 +275,6 @@ void DistMatrix<T>::scal(const double alpha)
     }
     //  int     ione = 1;
     if (active_) MPscal(size_, alpha, &val_[0]);
-    //  if ( active_ ) dscal(&size_, &alpha, &val_[0], &ione);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -822,7 +668,7 @@ void DistMatrix<double>::gemv(const char transa, const double alpha,
             &ione, desc_, &ione);
 #else
         int ione = 1;
-        dgemv(&transa, &m, &n, &alpha, &a.val_[0], &a.lld_, &b.val_[0], &ione,
+        DGEMV(&transa, &m, &n, &alpha, &a.val_[0], &a.lld_, &b.val_[0], &ione,
             &beta, &val_[0], &ione);
 #endif
     }
@@ -882,7 +728,7 @@ void DistMatrix<double>::symv(const char uplo, const double alpha,
             &ione, desc_, &ione);
 #else
         int ione = 1;
-        dsymv(&uplo, &m_, &alpha, &a.val_[0], &a.lld_, &b.val_[0], &ione, &beta,
+        DSYMV(&uplo, &m_, &alpha, &a.val_[0], &a.lld_, &b.val_[0], &ione, &beta,
             &val_[0], &ione);
 #endif
     }
@@ -2837,10 +2683,7 @@ void DistMatrix<T>::axpyColumn(
     const int icol, const double alpha, const DistMatrix<T>& x)
 {
     const int ni = mloc_ * icol;
-    //    int ione=1;
     MPaxpy(mloc_, alpha, &x.val_[ni], &val_[ni]);
-    //    daxpy(&mloc_, &alpha, &x.val_[ni], &ione,
-    //                          &val_[ni],   &ione);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2848,9 +2691,7 @@ template <class T>
 void DistMatrix<T>::scalColumn(const int icol, const double alpha)
 {
     const int ni = mloc_ * icol;
-    //    int ione=1;
     MPscal(mloc_, alpha, &val_[ni]);
-    //    dscal(&mloc_, &alpha, &val_[ni],   &ione);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

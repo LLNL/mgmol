@@ -347,11 +347,11 @@ void MGmol<T>::md(T** orbitals, Ions& ions)
         // tau0: velocities->displacements
         double dt = -ct.dt;
         int ione  = 1;
-        dscal(&size_tau, &dt, &tau0[0], &ione);
+        DSCAL(&size_tau, &dt, &tau0[0], &ione);
 
         // tau0: previous positions given displacement
         double one = 1.;
-        daxpy(&size_tau, &one, &taup[0], &ione, &tau0[0], &ione);
+        DAXPY(&size_tau, &one, &taup[0], &ione, &tau0[0], &ione);
 
         // enforce constraints before 1st step
         constraints_->enforceConstraints(20);

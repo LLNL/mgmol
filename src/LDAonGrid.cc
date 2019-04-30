@@ -30,8 +30,8 @@ void LDAonGrid<T>::update()
     int ione   = 1;
     double one = 1.;
     int np     = vxc_.size();
-    daxpy(&np, &one, &vtmp[0], &ione, &vxc_[0], &ione);
-    daxpy(&np, &one, &etmp[0], &ione, &exc_[0], &ione);
+    DAXPY(&np, &one, &vtmp[0], &ione, &vxc_[0], &ione);
+    DAXPY(&np, &one, &etmp[0], &ione, &exc_[0], &ione);
 
     pot_.setVxc(&vxc_[0], iterative_index);
 #else

@@ -8,8 +8,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef DISTMATRIX_H
-#define DISTMATRIX_H
+#ifndef MGMOL_DISTMATRIX_H
+#define MGMOL_DISTMATRIX_H
 
 #include "MGmol_blas1.h"
 #include "Timer.h"
@@ -19,117 +19,6 @@
 #include <complex>
 #include <string.h>
 #include <vector>
-
-#ifdef ADD_
-#define numroc numroc_
-#define pdswap pdswap_
-#define psswap psswap_
-#define pdlange pdlange_
-#define pslange pslange_
-#define pdlacp3 pdlacp3_
-#define pslacp3 pslacp3_
-#define pdtran pdtran_
-#define pstran pstran_
-#define pdsymm pdsymm_
-#define pssymm pssymm_
-#define pdgemm pdgemm_
-#define pdgemv pdgemv_
-#define pdsymv pdsymv_
-#define psgemm psgemm_
-#define psgemv psgemv_
-#define pssymv pssymv_
-#define pdsyrk pdsyrk_
-#define pssyrk pssyrk_
-#define pdgemr2d pdgemr2d_
-#define psgemr2d psgemr2d_
-#define pigemr2d pigemr2d_
-#define pdtrmm pdtrmm_
-#define pstrmm pstrmm_
-#define pdtrsm pdtrsm_
-#define pstrsm pstrsm_
-#define pdtrtrs pdtrtrs_
-#define pstrtrs pstrtrs_
-#define pdpotrf pdpotrf_
-#define pspotrf pspotrf_
-#define pdpotrs pdpotrs_
-#define pspotrs pspotrs_
-#define pdgetrf pdgetrf_
-#define psgetrf psgetrf_
-#define pdgetrs pdgetrs_
-#define psgetrs psgetrs_
-#define pdpotri pdpotri_
-#define pspotri pspotri_
-#define pdtrtri pdtrtri_
-#define pstrtri pstrtri_
-#define pdpocon pdpocon_
-#define pspocon pspocon_
-#define pdsygst pdsygst_
-#define pssygst pssygst_
-#define pdsyev pdsyev_
-#define pssyev pssyev_
-#define pdlatra pdlatra_
-#define pslatra pslatra_
-#define pdlaset pdlaset_
-#define pslaset pslaset_
-#define pdgesvd pdgesvd_
-#define psgesvd psgesvd_
-
-#define dlange dlange_
-#define slange slange_
-#define dscal dscal_
-#define dcopy dcopy_
-#define ddot ddot_
-#define daxpy daxpy_
-#define dsymm dsymm_
-#define ssymm ssymm_
-#define dgemm dgemm_
-#define dgemv dgemv_
-#define dsymv dsymv_
-#define sgemm sgemm_
-#define sgemv sgemv_
-#define ssymv ssymv_
-#define dsyrk dsyrk_
-#define dtrmm dtrmm_
-#define strmm strmm_
-#define dtrsm dtrsm_
-#define strsm strsm_
-#define dtrtrs dtrtrs_
-#define strtrs strtrs_
-#define dpotrf dpotrf_
-#define spotrf spotrf_
-#define dpotrs dpotrs_
-#define spotrs spotrs_
-#define dgetrf dgetrf_
-#define sgetrf sgetrf_
-#define dgetrs dgetrs_
-#define sgetrs sgetrs_
-#define dpotri dpotri_
-#define spotri spotri_
-#define dtrtri dtrtri_
-#define strtri strtri_
-#define dpocon dpocon_
-#define spocon spocon_
-#define dsygst dsygst_
-#define ssygst ssygst_
-#define dsyev dsyev_
-#define ssyev ssyev_
-#define dgesvd dgesvd_
-#define sgesvd sgesvd_
-#endif
-
-typedef const char* const Pchar;
-typedef const int* const Pint;
-typedef const double* const Pdouble;
-typedef const float* const Pfloat;
-
-extern "C"
-{
-    // BLAS1
-    void dscal(Pint, Pdouble, double*, Pint);
-    double ddot(Pint, Pdouble, Pint, Pdouble, Pint);
-    void sscal(Pint, Pfloat, float*, Pint);
-    float sdot(Pint, Pfloat, Pint, Pfloat, Pint);
-}
 
 #if USE_MPI
 #include <mpi.h>
@@ -510,15 +399,11 @@ public:
     }
     double dotColumns(const int i, const int j) const
     {
-        //      int ione=1;
         return MPdot(mloc_, &val_[mloc_ * i], &val_[mloc_ * j]);
-        //      return ddot(&mloc_,&val_[mloc_*i],&ione,&val_[mloc_*j],&ione);
     }
     double dotColumns(const int i, const DistMatrix<T>& a, const int j) const
     {
-        //      int ione=1;
         return MPdot(mloc_, &val_[mloc_ * i], &a.val_[mloc_ * j]);
-        //      return ddot(&mloc_,&val_[mloc_*i],&ione,&a.val_[mloc_*j],&ione);
     }
     double sumProdElements(const DistMatrix<T>& a) const;
     void getDiagonalValues(T* const dmat) const;

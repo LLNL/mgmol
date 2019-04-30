@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.8)
 
-project (MGmol C CXX)
+project (MGmol C CXX Fortran)
 
 set (CMAKE_CXX_STANDARD 11)
 
@@ -196,6 +196,41 @@ enable_testing()
 
 # additional definitions
 add_definitions(-DUSE_DIS_MAT)
+
+include(FortranCInterface)
+FortranCInterface_HEADER(
+    fc_mangle.h
+    MACRO_NAMESPACE "FC_"
+    SYMBOLS
+        DSCAL SSCAL DAXPY SAXPY DDOT SDOT DCOPY SCOPY
+        DNRM2 SNRM2 IDAMAX ISAMAX DSWAP SSWAP DROT SROT
+        DGEMV DSYMV
+        #blas3
+        DGEMM SGEMM DSYMM DSYRK SSYRK DTRMM DTRSM STRSM
+)
+
+FortranCInterface_HEADER(
+    scalapack_mangle.h
+    MACRO_NAMESPACE "FC_"
+    SYMBOLS
+        numroc indxl2g
+        pdswap psswap pdlange pslange pdlacp3 pslacp3 pdtran pstran
+        pdsymm pssymm pdgemm pdgemv pdsymv psgemm
+        psgemv pssymv pdsyrk pssyrk pdgemr2d psgemr2d pigemr2d
+        pdtrmm pstrmm pdtrsm pstrsm pdtrtrs pstrtrs pdpotrf pspotrf
+        pdpotrs pspotrs pdgetrf psgetrf pdgetrs psgetrs pdpotri pspotri
+        pdtrtri pstrtri pdpocon pspocon pdsygst pssygst pdsyev pssyev
+        pdlatra pslatra pdlaset pslaset pdgesvd psgesvd
+)
+
+#FortranCInterface_HEADER(
+#    arpack_mangle.h
+#    MACRO_NAMESPACE "FC_"
+#    SYMBOLS
+#        PDSAUPD PDSEUPD DSAUPD DSEUPD
+#)
+
+include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 
 execute_process(
   COMMAND git log -1 --format=%h

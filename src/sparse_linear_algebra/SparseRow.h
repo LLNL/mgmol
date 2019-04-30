@@ -11,17 +11,18 @@
 /*!
  * Sparse row container for variable size matrix class
  */
-#ifndef _SPARSEROW_H_
-#define _SPARSEROW_H_
+#ifndef MGMOL__SPARSEROW_H_
+#define MGMOL__SPARSEROW_H_
 
 #include "MGmol_blas1.h"
 #include "Table.h"
-
 #include "MGmol_MPI.h"
 #include "MPIdata.h"
+
 #include <algorithm>
 #include <cassert>
 #include <vector>
+
 typedef enum INSERTMODE
 {
     INSERT,
@@ -218,7 +219,7 @@ public:
     {
         const int len = (int)vals_.size();
         const int one = 1;
-        dscal(&len, &coeff, &vals_[0], &one);
+        DSCAL(&len, &coeff, &vals_[0], &one);
     }
 
     // perform daxpy with row data
@@ -226,7 +227,7 @@ public:
     {
         assert(size <= (int)vals_.size());
         const int ione = 1;
-        daxpy(&size, &alpha, &vals_[0], &ione, &y[0], &ione);
+        DAXPY(&size, &alpha, &vals_[0], &ione, &y[0], &ione);
     }
 
     void axpy(SparseRow& arow, const double alpha)
@@ -237,7 +238,7 @@ public:
         std::vector<int> acols(arow.cols());
         std::vector<double> avals(arow.vals());
 
-        dscal(&m, &alpha, &avals[0], &one);
+        DSCAL(&m, &alpha, &avals[0], &one);
 
         updateRowAdd(m, &acols[0], &avals[0]);
     }

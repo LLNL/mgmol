@@ -8,13 +8,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-////////////////////////////////////////////////////////////////////////////////
-//
-// MD_IonicStepper.C
-//
-////////////////////////////////////////////////////////////////////////////////
-// $Id$
-
 #include "MD_IonicStepper.h"
 #include "Control.h"
 #include "MGmol_MPI.h"
@@ -126,15 +119,15 @@ int MD_IonicStepper::init(HDFrestart& h5f_file)
                                  << dt_ << endl;
             // taum_: velocities -> displacements = -dt*vel
             double alpha = -1. * dt_;
-            dscal(&size_tau, &alpha, &taum_[0], &ione);
+            DSCAL(&size_tau, &alpha, &taum_[0], &ione);
 
             // initialize taup_ (to define velocities)
             double minus_one = -1.;
             taup_            = tau0_;
-            daxpy(&size_tau, &minus_one, &taum_[0], &ione, &taup_[0], &ione);
+            DAXPY(&size_tau, &minus_one, &taum_[0], &ione, &taup_[0], &ione);
 
             // taum_ -> previous positions: tau0_ - dt*vel
-            daxpy(&size_tau, &one, &tau0_[0], &ione, &taum_[0], &ione);
+            DAXPY(&size_tau, &one, &tau0_[0], &ione, &taum_[0], &ione);
         }
         else
         {
@@ -144,14 +137,14 @@ int MD_IonicStepper::init(HDFrestart& h5f_file)
                                  << endl;
             // taum_: velocities -> displacements = +dt*vel
             double alpha = dt_;
-            dscal(&size_tau, &alpha, &taum_[0], &ione);
+            DSCAL(&size_tau, &alpha, &taum_[0], &ione);
 
-            daxpy(&size_tau, &one, &taum_[0], &ione, &tau0_[0], &ione);
+            DAXPY(&size_tau, &one, &taum_[0], &ione, &tau0_[0], &ione);
 
             double minus = -1.;
-            dscal(&size_tau, &minus, &taum_[0], &ione);
+            DSCAL(&size_tau, &minus, &taum_[0], &ione);
 
-            daxpy(&size_tau, &one, &tau0_[0], &ione, &taum_[0], &ione);
+            DAXPY(&size_tau, &one, &tau0_[0], &ione, &taum_[0], &ione);
         }
     }
 
@@ -497,9 +490,9 @@ void MD_IonicStepper::updateTau()
         int size_tau = (int)tau0_.size();
         int ione     = 1;
         double alpha = 1.;
-        daxpy(&size_tau, &alpha, &tau0_[0], &ione, &taup_[0], &ione);
+        DAXPY(&size_tau, &alpha, &tau0_[0], &ione, &taup_[0], &ione);
         alpha = -1.;
-        daxpy(&size_tau, &alpha, &taum_[0], &ione, &taup_[0], &ione);
+        DAXPY(&size_tau, &alpha, &taum_[0], &ione, &taup_[0], &ione);
     }
 }
 

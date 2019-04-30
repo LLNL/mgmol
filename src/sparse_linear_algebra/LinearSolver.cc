@@ -67,7 +67,7 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
     {
         /*-------------------- compute initial residual vector */
         LSMat.matvec(sol, vv);
-        dscal(&n, &coeff, vv, &one);
+        DSCAL(&n, &coeff, vv, &one);
 
         vv[lrindex] = 1.0 * scal + vv[lrindex];
         beta        = dnrm2(&n, vv, &one);
@@ -78,7 +78,7 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
         if (beta == 0.0) break;
         t = 1.0 / beta;
         /*--------------------   normalize:  vv    =  vv   / beta */
-        dscal(&n, &t, vv, &one);
+        DSCAL(&n, &t, vv, &one);
         if (its == 0) eps1 = tol * beta;
         /*--------------------initialize 1-st term  of rhs of hessenberg mtx */
         rs[0] = beta;
@@ -115,7 +115,7 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
                 t            = ddot(&n, &vv[j * n], &one, &vv[pti1], &one);
                 hh[ptih + j] = t;
                 negt         = -t;
-                daxpy(&n, &negt, &vv[j * n], &one, &vv[pti1], &one);
+                DAXPY(&n, &negt, &vv[j * n], &one, &vv[pti1], &one);
             }
             /*-------------------- h_{j+1,j} = ||w||_{2}    */
             t             = dnrm2(&n, &vv[pti1], &one);
@@ -124,7 +124,7 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
             if (t == 0.0) return (1);
             t = 1.0 / t;
             /*-------------------- v_{j+1} = w / h_{j+1,j}  */
-            dscal(&n, &t, &vv[pti1], &one);
+            DSCAL(&n, &t, &vv[pti1], &one);
             /*-------------------- done with modified gram schimdt/arnoldi step
             | now  update factorization of hh.
             | perform previous transformations  on i-th column of h
@@ -163,7 +163,7 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
         }
         /*--------------------  linear combination of z_j's to get sol. */
         for (j = 0; j <= i; j++)
-            daxpy(&n, &rs[j], &z[j * n], &one, sol, &one);
+            DAXPY(&n, &rs[j], &z[j * n], &one, sol, &one);
         /*--------------------  restart outer loop if needed */
         if (beta < eps1)
             break;
@@ -225,7 +225,7 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
         if (beta == 0.0) break;
         t = 1.0 / beta;
         /*--------------------   normalize:  vv    =  vv   / beta */
-        dscal(&n, &t, vv, &one);
+        DSCAL(&n, &t, vv, &one);
         if (its == 0) eps1 = tol * beta;
         /*--------------------initialize 1-st term  of rhs of hessenberg mtx */
         rs[0] = beta;
@@ -263,7 +263,7 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
                 t            = ddot(&n, &vv[j * n], &one, &vv[pti1], &one);
                 hh[ptih + j] = t;
                 negt         = -t;
-                daxpy(&n, &negt, &vv[j * n], &one, &vv[pti1], &one);
+                DAXPY(&n, &negt, &vv[j * n], &one, &vv[pti1], &one);
             }
 
             /*-------------------- h_{j+1,j} = ||w||_{2}    */
@@ -274,7 +274,7 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
             if (t == 0.0) return (1);
             t = 1.0 / t;
             /*-------------------- v_{j+1} = w / h_{j+1,j}  */
-            dscal(&n, &t, &vv[pti1], &one);
+            DSCAL(&n, &t, &vv[pti1], &one);
             /*-------------------- done with modified gram schimdt/arnoldi step
             | now  update factorization of hh.
             | perform previous transformations  on i-th column of h
@@ -314,7 +314,7 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
         }
         /*--------------------  linear combination of z_j's to get sol. */
         for (j = 0; j <= i; j++)
-            daxpy(&n, &rs[j], &z[j * n], &one, sol, &one);
+            DAXPY(&n, &rs[j], &z[j * n], &one, sol, &one);
         /*--------------------  restart outer loop if needed */
         if (beta < eps1)
             break;
@@ -365,7 +365,7 @@ double LinearSolver::computeEigMin(
         gamma  = dnrm2(&n, solptr, &one);
         eigmin = 1. / gamma;
         // normalize solution
-        dscal(&n, &eigmin, solptr, &one);
+        DSCAL(&n, &eigmin, solptr, &one);
         // update evec -- set rhs = solptr
         memcpy(rhs, solptr, n * sizeof(double));
         // check for convergence
@@ -407,7 +407,7 @@ double LinearSolver::computeEigMax(
         eigmax = dnrm2(&n, solptr, &one);
         // normalize result
         gamma = 1. / eigmax;
-        dscal(&n, &gamma, solptr, &one);
+        DSCAL(&n, &gamma, solptr, &one);
         // update evec
         memcpy(rhs, solptr, n * sizeof(double));
         // check for convergence

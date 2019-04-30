@@ -171,11 +171,11 @@ int IonicStepper::writeVelocities(HDFrestart& h5f_file) const
     vector<double> data(taup_);
     double minus = -1.;
     int n = (int)tau0_.size(), ione = 1;
-    daxpy(&n, &minus, &tau0_[0], &ione, &data[0], &ione);
+    DAXPY(&n, &minus, &tau0_[0], &ione, &data[0], &ione);
     if (dt_ > 0.)
     {
         double invdt = 1. / dt_;
-        dscal(&n, &invdt, &data[0], &ione);
+        DSCAL(&n, &invdt, &data[0], &ione);
     }
 
     herr_t status = H5Dwrite(

@@ -151,7 +151,6 @@ target_include_directories (mgmol_src PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(mgmol_src ${link_libs})
 
 # compile definitions
-target_compile_definitions (mgmol_src PUBLIC -DADD_)
 target_compile_definitions (mgmol_src PUBLIC -DUSE_CNR_)
 target_compile_definitions (mgmol_src PUBLIC -DUSE_MPI)
 

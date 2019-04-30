@@ -8,9 +8,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
-#ifndef LAPACK_H
-#define LAPACK_H
+#ifndef MGMOL_LAPACK_H
+#define MGMOL_LAPACK_H
 
 typedef const char* const Pchar;
 
@@ -62,12 +61,19 @@ extern "C"
     void dpotrf(Pchar, const int* const, double*, const int* const, int*);
     void dpotrs(Pchar, const int* const, const int* const, double*,
         const int* const, double*, const int* const, int*);
+    void dgetrf(int*, int*, double*, int*, int*, int*);
+    void dgetrs(Pchar, int*, int*, double*, int*, int*, double*, int*, int*);
     void dpocon(Pchar, const int* const, double*, const int* const, double*,
         double*, double*, const int* const, int*);
     void dtrtrs(Pchar, Pchar, Pchar, const int* const, const int* const,
         double*, const int* const, double*, const int* const, int*);
+    void dtrtri(Pchar, Pchar, int*, double*, int*, int*);
     void dsygst(const int* const, Pchar, const int* const, double*,
         const int* const, double*, const int* const, int*);
+    void dgesvd(Pchar, Pchar, int*, int*, double*, int*, double*, double*, int*,
+        double*, int*, double*, int*, int*);
+    double dlange(Pchar, int*, int*, double*, int*, double*);
+
 }
 
 #endif

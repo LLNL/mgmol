@@ -85,9 +85,9 @@ void PBEonGrid<T>::update()
         &cfunc_, np_, &rho_.rho_[0][0], sigma, &etmp[0], &vtmp[0], &stmp[0]);
     delete[] sigma;
 
-    daxpy(&np_, &one, &vtmp[0], &ione, &vxc_[0], &ione);
-    daxpy(&np_, &one, &etmp[0], &ione, &exc_[0], &ione);
-    daxpy(&np_, &one, &stmp[0], &ione, &vsigma_[0], &ione);
+    DAXPY(&np_, &one, &vtmp[0], &ione, &vxc_[0], &ione);
+    DAXPY(&np_, &one, &etmp[0], &ione, &exc_[0], &ione);
+    DAXPY(&np_, &one, &stmp[0], &ione, &vsigma_[0], &ione);
 
     vector<POTDTYPE> vstmp(np_);
     MPcpy(&vstmp[0], &vsigma_[0], np_);

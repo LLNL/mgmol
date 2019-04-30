@@ -250,7 +250,7 @@ void LinearSolverMatrix<T>::init(
             p_.push_back(k);
 
             /* rescale row */
-            dscal(&len, (double*)&scale_vec_[i], (double*)getPtrToData(p_[i]),
+            DSCAL(&len, (double*)&scale_vec_[i], (double*)getPtrToData(p_[i]),
                 &one);
         }
     }
@@ -351,7 +351,7 @@ void LinearSolverMatrix<T>::initSquareMat(
             p_.push_back(k);
 
             /* rescale row */
-            dscal(&len, (double*)&scale_vec_[i], (double*)getPtrToData(p_[i]),
+            DSCAL(&len, (double*)&scale_vec_[i], (double*)getPtrToData(p_[i]),
                 &one);
         }
     }

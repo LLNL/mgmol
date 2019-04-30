@@ -105,7 +105,7 @@ public:
     {
         int n    = (int)y_[j].size();
         int ione = 1;
-        dscal(&n, &alpha, &y_[j][0], &ione);
+        DSCAL(&n, &alpha, &y_[j][0], &ione);
     }
 
     double norm2(const int j = 0) { return radintf2(j); }

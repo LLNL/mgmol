@@ -140,19 +140,19 @@ void PBEonGridSpin<T>::update()
     delete[] rho;
 
     int nn = np_ * 2;
-    daxpy(&nn, &one, &vxc_[0], &ione, &vtmp[0], &ione);
+    DAXPY(&nn, &one, &vxc_[0], &ione, &vtmp[0], &ione);
     nn = np_;
-    daxpy(&nn, &one, &etmp[0], &ione, &exc_[0], &ione);
+    DAXPY(&nn, &one, &etmp[0], &ione, &exc_[0], &ione);
 
     nn = np_ * 3;
-    daxpy(&nn, &one, &stmp[0], &ione, &vsigma_[0], &ione);
+    DAXPY(&nn, &one, &stmp[0], &ione, &vsigma_[0], &ione);
 
     // factor 2.
     double two = 2.;
     int ithree = 3;
-    dscal(&np_, &two, &vsigma_[0], &ithree);
-    // dscal(&np_, &two, &vsigma_[np_], &ithree);
-    dscal(&np_, &two, &vsigma_[2], &ithree);
+    DSCAL(&np_, &two, &vsigma_[0], &ithree);
+    // DSCAL(&np_, &two, &vsigma_[np_], &ithree);
+    DSCAL(&np_, &two, &vsigma_[2], &ithree);
 
     if (myspin_ == 0)
     {

@@ -8,13 +8,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-////////////////////////////////////////////////////////////////////////////////
-//
-// NOLMOTransform.C
-//
-////////////////////////////////////////////////////////////////////////////////
-// $Id$
-
 #include <cassert>
 #include <iomanip>
 #include <iostream>
@@ -25,11 +18,6 @@ using namespace std;
 #include "MPIdata.h"
 #include "NOLMOTransform.h"
 #include "mputils.h"
-
-#ifdef ADD_
-#define daxpy daxpy_
-#define dscal dscal_
-#endif
 
 //#define DEBUG 1
 

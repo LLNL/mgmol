@@ -8,7 +8,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #include "Potentials.h"
 #include "Control.h"
 #include "Delh4.h"
@@ -583,16 +582,12 @@ void Potentials::setVh(
 
 void Potentials::axpVcompToVh(const double alpha)
 {
-    //    int ione=1;
     MPaxpy(size_, alpha, &v_comp_[0], &vh_rho_[0]);
-    //    daxpy(&size_, &alpha, &v_comp_[0], &ione, &vh_rho_[0], &ione);
 }
 
 void Potentials::axpVcomp(POTDTYPE* v, const double alpha)
 {
-    //    int ione=1;
     MPaxpy(size_, alpha, &v_comp_[0], v);
-    //    daxpy(&size_, &alpha, &v_comp_[0], &ione, v, &ione);
 }
 template void Potentials::setVxc<double>(
     const double* const vxc, const int iterativeIndex);

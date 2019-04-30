@@ -8,21 +8,12 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-////////////////////////////////////////////////////////////////////////////////
-//
-// MLWFTransform.h
-//
-////////////////////////////////////////////////////////////////////////////////
-// $Id$
-// Adapted from  MLWFTransform.h,v 1.4 2002/06/28 18:05:58 fgygi Exp
-
-#ifndef MLWFTRANSFORM_H
-#define MLWFTRANSFORM_H
+#ifndef MGMOL_MLWFTRANSFORM_H
+#define MGMOL_MLWFTRANSFORM_H
 
 #include "OrbitalsTransform.h"
 #include "Vector3D.h"
 
-//#if 0
 class MLWFTransform : public OrbitalsTransform
 {
 private:
@@ -78,5 +69,4 @@ public:
 
     void printTransform();
 };
-//#endif
 #endif

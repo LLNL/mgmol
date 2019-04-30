@@ -125,7 +125,7 @@ int FIRE_IonicStepper::init(HDFrestart& h5f_file)
     mmpi.bcast(&tau0_[0], n);
     mmpi.bcast(&taup_[0], n);
 #endif
-    daxpy(&n, &dt_, &taup_[0], &ione, &tau0_[0], &ione);
+    DAXPY(&n, &dt_, &taup_[0], &ione, &tau0_[0], &ione);
 
     return 0;
 }

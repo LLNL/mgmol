@@ -8,14 +8,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-////////////////////////////////////////////////////////////////////////////////
-//
-// LBFGS_IonicStepper.C
-//
-////////////////////////////////////////////////////////////////////////////////
-// $Id$
-// Limited memory BFGS method
-
 #include "LBFGS_IonicStepper.h"
 #include "MGmol_MPI.h"
 #include "MGmol_blas1.h"
@@ -636,7 +628,7 @@ int LBFGS_IonicStepper::init(HDFrestart& h5f_file)
     mmpi.bcast(&tau0_[0], n);
     mmpi.bcast(&taup_[0], n);
 #endif
-    daxpy(&n, &dt_, &taup_[0], &ione, &tau0_[0], &ione);
+    DAXPY(&n, &dt_, &taup_[0], &ione, &tau0_[0], &ione);
 
     int rlbfgs = read_lbfgs(h5f_file);
 
@@ -923,7 +915,7 @@ int LBFGS_IonicStepper::lbfgs(
                     double alpha = dismax / fabs(work_[maxw]);
                     (*MPIdata::sout)
                         << "lbfgs: rescale search vector by " << alpha << endl;
-                    dscal(&gndofs_, &alpha, &work_[0], &inc);
+                    DSCAL(&gndofs_, &alpha, &work_[0], &inc);
                 }
 
                 // Store the new search direction
@@ -950,7 +942,7 @@ int LBFGS_IonicStepper::lbfgs(
 
         // Compute the new step and gradient change
         npt_ = point_ * gndofs_;
-        dscal(&gndofs_, &stp_, &work_[ispt + npt_], &inc);
+        DSCAL(&gndofs_, &stp_, &work_[ispt + npt_], &inc);
         for (int i = 0; i < gndofs_; i++)
         {
             work_[iypt + npt_ + i] = g_[i] - work_[i];
@@ -999,7 +991,7 @@ void LBFGS_IonicStepper::minushg(const int bound, const double ys)
         int iycn     = iypt + cp * gndofs_;
         work_[inmc]  = work_[gndofs_ + cp] * sq;
         double alpha = -work_[inmc];
-        daxpy(&gndofs_, &alpha, &work_[iycn], &inc, &work_[0], &inc);
+        DAXPY(&gndofs_, &alpha, &work_[iycn], &inc, &work_[0], &inc);
     }
 
     for (int i = 0; i < gndofs_; i++)
@@ -1013,7 +1005,7 @@ void LBFGS_IonicStepper::minushg(const int bound, const double ys)
         int inmc    = gndofs_ + m_ + cp;
         beta        = work_[inmc] - beta;
         int iscn    = ispt + cp * gndofs_;
-        daxpy(&gndofs_, &beta, &work_[iscn], &inc, &work_[0], &inc);
+        DAXPY(&gndofs_, &beta, &work_[iscn], &inc, &work_[0], &inc);
         cp++;
         if (cp == m_) cp = 0;
     }

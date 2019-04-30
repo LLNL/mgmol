@@ -363,7 +363,7 @@ void RadialFunction::inv_ft(const vector<double>& rgrid, vector<double>& rfunc,
     double alpha = M_2_PI;
     assert(irmax > 10);
     int ione = 1;
-    dscal(&irmax, &alpha, &rfunc[0], &ione);
+    DSCAL(&irmax, &alpha, &rfunc[0], &ione);
 }
 
 void RadialFunction::compute_ft(const vector<double>& ggrid,

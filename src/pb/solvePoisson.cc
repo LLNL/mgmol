@@ -8,7 +8,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id: solvePoisson.cc,v 1.4 2009/01/27 00:17:03 jeanluc Exp $
 #include <iostream>
 
 #ifdef USE_MPI
@@ -19,7 +18,6 @@
 #include "PBh4M.h"
 #include "PEenv.h"
 #include "SolverPB.h"
-
 #include "Laph4M.h"
 #include "SolverLap.h"
 

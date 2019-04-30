@@ -8,7 +8,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #include "Control.h"
 #include "Hamiltonian.h"
 #include "Ions.h"
@@ -25,13 +24,7 @@
 #include <float.h>
 
 #ifdef HAVE_ARPACK
-
-#ifdef ADD_
-#define dsaupd dsaupd_
-#define dseupd dseupd_
-#define pdsaupd pdsaupd_
-#define pdseupd pdseupd_
-#endif
+#include "arpack_mangle.h"
 
 typedef int LOGICAL;
 
@@ -132,7 +125,7 @@ void matvec(pb::GridFunc<ORBDTYPE>& gfpsi, double* hpsi, KBPsiMatrixSparse& kbps
     // convert to Hartree units
     int ione    = 1;
     double half = 0.5;
-    dscal(&numpt, &half, hpsi, &ione);
+    DSCAL(&numpt, &half, hpsi, &ione);
 
     if (precond != NULL)
     {

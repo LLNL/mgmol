@@ -36,7 +36,7 @@ Timer ttdot_tm("ttdot");
 void Tscal(const int len, const double scal, double* dptr)
 {
     const int one = 1;
-    dscal(&len, &scal, dptr, &one);
+    DSCAL(&len, &scal, dptr, &one);
 }
 void Tscal(const int len, const float scal, float* dptr)
 {
@@ -46,7 +46,7 @@ void Tscal(const int len, const float scal, float* dptr)
 void MPscal(const int len, const double scal, double* dptr)
 {
     const int one = 1;
-    dscal(&len, &scal, dptr, &one);
+    DSCAL(&len, &scal, dptr, &one);
 }
 
 void MPscal(const int len, const double scal, float* dptr)
@@ -141,18 +141,18 @@ double MPdot(const int len, const double* const xptr, const double* const yptr)
 void Taxpy(const int len, double scal, const double* const xptr, double* yptr)
 {
     const int one = 1;
-    daxpy(&len, &scal, xptr, &one, yptr, &one);
+    DAXPY(&len, &scal, xptr, &one, yptr, &one);
 }
 void Taxpy(const int len, float scal, const float* const xptr, float* yptr)
 {
     const int one = 1;
-    saxpy(&len, &scal, xptr, &one, yptr, &one);
+    SAXPY(&len, &scal, xptr, &one, yptr, &one);
 }
 void MPaxpy(const int len, double scal, const double* __restrict__ xptr,
     double* __restrict__ yptr)
 {
     const int one = 1;
-    daxpy(&len, &scal, xptr, &one, yptr, &one);
+    DAXPY(&len, &scal, xptr, &one, yptr, &one);
 }
 
 void Ttrsm(const char side, const char uplo, const char transa, const char diag,

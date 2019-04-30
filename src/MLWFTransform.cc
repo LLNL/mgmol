@@ -8,8 +8,9 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 //#define DEBUG 1
+#include "MGmol_blas1.h"
+
 #include <cassert>
 #include <iomanip>
 #include <iostream>
@@ -23,21 +24,9 @@
 #include <mpi.h>
 #endif
 
-#ifdef ADD_
-#define drot drot_
-#define srot srot_
-#endif
-
-extern "C"
-{
-    void drot(int*, double*, int*, double*, int*, double*, double*);
-    void srot(int*, float*, int*, float*, int*, float*, float*);
-}
 
 using namespace std;
 
-//#if 0
-////////////////////////////////////////////////////////////////////////////////
 double MLWFTransform::spread2(int i, int j) const
 {
     assert(i >= 0 && i < nst_);
@@ -82,8 +71,11 @@ double MLWFTransform::spread2(int i, int j) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
 void MLWFTransform::setia(vector<int>& iiu) { iu_ = iiu; }
+
 ////////////////////////////////////////////////////////////////////////////////
+
 void MLWFTransform::compute_transform(const int maxsweep, const double tol)
 {
     if (bcr_->onpe0())
@@ -336,7 +328,7 @@ double MLWFTransform::jade(int maxsweep, double tol)
                         (*MPIdata::sout) << "c=" << c << ", s=" << s << endl;
 #endif
                         int ione = 1;
-                        drot(&nst_, &u_loc[ncp], &ione, &u_loc[ncq], &ione, &c,
+                        DROT(&nst_, &u_loc[ncp], &ione, &u_loc[ncq], &ione, &c,
                             &s);
 
                         // update the matrices r_loc[k]
@@ -344,7 +336,7 @@ double MLWFTransform::jade(int maxsweep, double tol)
                         {
                             // A := A * R(p,q)^T
                             int ione = 1;
-                            drot(&nst_, &r_loc[k][ncp], &ione, &r_loc[k][ncq],
+                            DROT(&nst_, &r_loc[k][ncp], &ione, &r_loc[k][ncq],
                                 &ione, &c, &s);
                         }
 
@@ -393,7 +385,7 @@ double MLWFTransform::jade(int maxsweep, double tol)
                             for (int k = 0; k < m; k++)
                             {
                                 // A := R(p,q) * A
-                                drot(&n_loc, &r_loc[k][rowp], &nst_,
+                                DROT(&n_loc, &r_loc[k][rowp], &nst_,
                                     &r_loc[k][rowq], &nst_, &c, &s);
                             }
                         }

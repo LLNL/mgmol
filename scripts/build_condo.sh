@@ -27,6 +27,7 @@ cd ${BUILD_DIR}
 # call cmake 
 cmake -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} \
       -DCMAKE_CXX_COMPILER=mpiCC \
+      -DCMAKE_Fortran_COMPILER=mpif77 \
       -DBLA_VENDOR=${BLAS_VENDOR} \
       -DSCALAPACK_BLACS_LIBRARY=${BLACS_LIB}/libmkl_blacs_openmpi_lp64.so \
       ..

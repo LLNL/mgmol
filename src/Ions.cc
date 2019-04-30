@@ -3703,9 +3703,9 @@ void Ions::initStepperData()
 
     int ione     = 1;
     double alpha = 1.;
-    daxpy(&size_tau, &alpha, &tau0_[0], &ione, &taup_[0], &ione);
+    DAXPY(&size_tau, &alpha, &tau0_[0], &ione, &taup_[0], &ione);
     alpha = -1.;
-    daxpy(&size_tau, &alpha, &taum_[0], &ione, &taup_[0], &ione);
+    DAXPY(&size_tau, &alpha, &taum_[0], &ione, &taup_[0], &ione);
 }
 
 // update local ion data with ionic stepper data

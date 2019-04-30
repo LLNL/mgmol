@@ -8,9 +8,10 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id: MGmol_blas1.h,v 1.12 2009/04/22 22:53:32 jeanluc Exp $
-#ifndef PB_MYBLAS1_H
-#define PB_MYBLAS1_H
+#ifndef MGMOL_MYBLAS1_H
+#define MGMOL_MYBLAS1_H
+
+#include "fc_mangle.h"
 
 #include <cmath>
 #include <string.h>
@@ -24,48 +25,25 @@ typedef int MPI_Comm;
 #define MY_VERSION 0
 #define EPSILON 1.e-12
 
-#ifdef ADD_ // LINUX, SGI, SUN
-
-#define daxpy daxpy_
-#define saxpy saxpy_
-#define dscal dscal_
-#define sscal sscal_
-#define dcopy dcopy_
-#define scopy scopy_
-#define ddot ddot_
-#define sdot sdot_
-#define dnrm2 dnrm2_
-#define snrm2 snrm2_
-#define dswap dswap_
-#define sswap sswap_
-#define idamax idamax_
-#define isamax isamax_
-
-#endif
-
-#ifdef UPCASE // CRAY_T3E
-
-#define daxpy SAXPY
-#define dscal SSCAL
-#define dcopy SCOPY
-#define ddot SDOT
-#define dnrm2 SNRM2
-#define dswap SSWAP
+#define scopy SCOPY
+#define dcopy DCOPY
+#define ddot DDOT
+#define dnrm2 DNRM2
+#define dswap DSWAP
 #define idamax IDAMAX
 #define isamax ISAMAX
 
-#endif
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-    void daxpy(const int* const, const double* const, const double* const,
+    void DAXPY(const int* const, const double* const, const double* const,
         const int* const, double*, const int* const);
-    void saxpy(const int* const, const float* const, const float* const,
+    void SAXPY(const int* const, const float* const, const float* const,
         const int* const, float*, const int* const);
-    void dscal(
+    void DSCAL(
         const int* const, const double* const, double*, const int* const);
     void sscal(const int* const, const float* const, float*, const int* const);
     void dcopy(const int* const, const double* const, const int* const, double*,
@@ -84,6 +62,8 @@ extern "C"
         const int* const, float*, const int* const, float*, const int* const);
     int idamax(const int* const, const double* const, const int* const);
     int isamax(const int* const, const float* const, const int* const);
+    void DROT(int*, double*, int*, double*, int*, double*, double*);
+    void SROT(int*, float*, int*, float*, int*, float*, float*);
 #ifdef __cplusplus
 }
 #endif
@@ -116,7 +96,7 @@ inline void my_daxpy(
 #else
     int ione = 1;
 
-    daxpy(&n, &alpha, a, &ione, b, &ione);
+    DAXPY(&n, &alpha, a, &ione, b, &ione);
 #endif
 }
 
@@ -130,7 +110,7 @@ inline void my_dscal(const int n, const double alpha, double* a)
 #else
     int ione = 1;
 
-    dscal(&n, &alpha, a, &ione);
+    DSCAL(&n, &alpha, a, &ione);
 #endif
 }
 
