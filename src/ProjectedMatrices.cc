@@ -121,9 +121,7 @@ void ProjectedMatrices::setup(
 
     if (dim_ > 0)
     {
-        DistMatrix2SquareLocalMatrices* dm2sl =
-            DistMatrix2SquareLocalMatrices::instance();
-        dm2sl->setup( comm, global_indexes, dm_->getMatrix() );
+        DistMatrix2SquareLocalMatrices::setup( comm, global_indexes, dm_->getMatrix() );
 
         localX_.reset(
             new SquareLocalMatrices<MATDTYPE>(subdiv_, chromatic_number_) );
