@@ -11,12 +11,12 @@ if(DEFINED ENV{SCALAPACK_ROOT})
   list(APPEND _SCALAPACK_SEARCHES ${_SCALAPACK_SEARCH_DIR})
 endif(DEFINED ENV{SCALAPACK_ROOT})
 
-set(SCALAPACK_NAMES mkl_scalapack_lp64 )
+set(SCALAPACK_NAMES scalapack mkl_scalapack_lp64 )
 
 # Try each search configuration.
 if(NOT SCALAPACK_INCLUDE_DIR)
   foreach(search ${_SCALAPACK_SEARCHES})
-    find_path(SCALAPACK_INCLUDE_DIR NAMES mkl_scalapack.h PATHS ${search} PATH_SUFFIXES include NO_DEFAULT_PATH)
+    find_path(SCALAPACK_INCLUDE_DIR NAMES scalapack.h mkl_scalapack.h PATHS ${search} PATH_SUFFIXES include NO_DEFAULT_PATH)
     message(STATUS "SCALAPACK_INCLUDE_DIR: ${SCALAPACK_INCLUDE_DIR}")
   endforeach()
 endif(NOT SCALAPACK_INCLUDE_DIR)
