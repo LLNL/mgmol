@@ -2,6 +2,8 @@ find_package(PythonInterp 3.2 REQUIRED)
 
 add_executable(testHDF5P
                ${CMAKE_SOURCE_DIR}/tests/testHDF5P.cc)
+add_executable(testMPI
+               ${CMAKE_SOURCE_DIR}/tests/testMPI.cc)
 add_executable(testBlacsContext
                ${CMAKE_SOURCE_DIR}/tests/testBlacsContext.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/BlacsContext.cc)
@@ -20,6 +22,9 @@ target_compile_definitions(testAndersonMix PUBLIC TESTING)
 add_test(NAME testHDF5P
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4
                  ${CMAKE_CURRENT_BINARY_DIR}/testHDF5P)
+add_test(NAME testMPI
+         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4
+                 ${CMAKE_CURRENT_BINARY_DIR}/testMPI)
 add_test(NAME testBlacsContext
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4
                  ${CMAKE_CURRENT_BINARY_DIR}/testBlacsContext)
