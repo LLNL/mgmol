@@ -76,6 +76,11 @@ main (int argc, char **argv)
      * Create a new file collectively and release property list identifier.
      */
     file_id = H5Fcreate(H5FILE_NAME, H5F_ACC_TRUNC, H5P_DEFAULT, plist_id);
+    if (file_id < 0){
+       printf("H5Fcreate failed \n");
+       printf("Quitting...\n");
+       return 1;
+    }
     H5Pclose(plist_id);
    
 
