@@ -6,15 +6,21 @@ import string
 
 print("Test Cl2_ONCVPSP_LDA...")
 
+nargs=len(sys.argv)
+
 mpicmd = sys.argv[1]+" "+sys.argv[2]+" "+sys.argv[3]
-exe = sys.argv[4]
-inp = sys.argv[5]
-coords = sys.argv[6]
+for i in range(4,nargs-4):
+  mpicmd = mpicmd + " "+sys.argv[i]
+print("MPI run command: {}".format(mpicmd))
+
+exe = sys.argv[nargs-4]
+inp = sys.argv[nargs-3]
+coords = sys.argv[nargs-2]
 print("coordinates file: %s"%coords)
 
 #create links to potentials files
 dst1 = 'pseudo.Cl_ONCVPSP_LDA'
-src1 = sys.argv[7] + '/' + dst1
+src1 = sys.argv[-1] + '/' + dst1
 
 if not os.path.exists(dst1):
   print("Create link to %s"%dst1)
@@ -22,6 +28,7 @@ if not os.path.exists(dst1):
 
 #run mgmol
 command = "{} {} -c {} -i {}".format(mpicmd,exe,inp,coords)
+print("Run command: {}".format(command))
 output = subprocess.check_output(command,shell=True)
 
 #analyse mgmol standard output
