@@ -22,6 +22,15 @@
 #include <iostream>
 #include <vector>
 
+#ifndef MGMOL_MPI_ERROR
+
+#define MGMOL_MPI_ERROR(X)  \
+    std::cerr<< "ERROR in file "<<__FILE__<<" at line "<<__LINE__<< std::endl; \
+    std::cerr<< "Error Message: "<< X << std::endl; \
+    abort();
+
+#endif
+
 class MGmol_MPI
 {
 private:
@@ -51,6 +60,8 @@ private:
     static short myimage_;
     static short nimages_;
 
+    static std::ostream* os_;
+
     MGmol_MPI();
 
     static void setupComm(
@@ -75,10 +86,13 @@ public:
         pinstance_ = 0;
     }
 
-    static void setup(const MPI_Comm comm, const bool with_spin = false,
+    static void setup(const MPI_Comm comm, std::ostream& os,
+        const bool with_spin = false,
         const int nimages = 1)
     {
         assert(pinstance_ == 0);
+
+        os_ = &os;
 
         short wspin = (short)with_spin;
         MPI_Bcast(&wspin, 1, MPI_SHORT, 0, comm);
@@ -228,7 +242,7 @@ public:
     void split_allreduce_sums_int(int*, const int);
     void split_allreduce_sums_short(short int*, const int);
 
-    void abort() { MPI_Abort(comm_global_, 0); }
+    void abort()const { MPI_Abort(comm_global_, 0); }
 };
 
 #endif

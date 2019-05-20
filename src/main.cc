@@ -80,6 +80,7 @@ ostream& operator<<(ostream& os, const vector<T>& v)
 
 int main(int argc, char** argv)
 {
+    //change handling of memory allocation errors
     set_new_handler(noMoreMemory);
 
     cout.sync_with_stdio();
@@ -478,7 +479,7 @@ int main(int argc, char** argv)
             return 1;
         }
 
-    MGmol_MPI::setup(MPI_COMM_WORLD, with_spin);
+    MGmol_MPI::setup(MPI_COMM_WORLD, std::cout, with_spin);
     MGmol_MPI& mmpi      = *(MGmol_MPI::instance());
     MPI_Comm global_comm = mmpi.commGlobal();
 
