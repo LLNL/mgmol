@@ -7,6 +7,14 @@ add_executable(testMPI
 add_executable(testBlacsContext
                ${CMAKE_SOURCE_DIR}/tests/testBlacsContext.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/BlacsContext.cc)
+add_executable(testDistMatrix
+               ${CMAKE_SOURCE_DIR}/tests/testDistMatrix.cc
+               ${CMAKE_SOURCE_DIR}/src/DistMatrix/DistMatrix.cc
+               ${CMAKE_SOURCE_DIR}/src/DistMatrix/BlacsContext.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc)
 add_executable(testDirectionalReduce
                ${CMAKE_SOURCE_DIR}/tests/testDirectionalReduce.cc
                ${CMAKE_SOURCE_DIR}/src/sparse_linear_algebra/DirectionalReduce.cc
@@ -28,6 +36,9 @@ add_test(NAME testMPI
 add_test(NAME testBlacsContext
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4
                  ${CMAKE_CURRENT_BINARY_DIR}/testBlacsContext)
+add_test(NAME testDistMatrix
+         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4
+                 ${CMAKE_CURRENT_BINARY_DIR}/testDistMatrix)
 add_test(NAME testDirectionalReduce
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4
                  ${CMAKE_CURRENT_BINARY_DIR}/testDirectionalReduce)
@@ -63,6 +74,8 @@ target_include_directories(testAndersonMix PRIVATE
 target_link_libraries(testHDF5P ${HDF5_LIBRARIES})
 target_link_libraries(testBlacsContext ${SCALAPACK_LIBRARIES}
                                        ${BLAS_LIBRARIES})
+target_link_libraries(testDistMatrix ${SCALAPACK_LIBRARIES}
+                                     ${BLAS_LIBRARIES})
 target_link_libraries(testAndersonMix  ${BLAS_LIBRARIES} ${Boost_LIBRARIES})
 
 set_tests_properties(testSiH4 PROPERTIES REQUIRED_FILES
