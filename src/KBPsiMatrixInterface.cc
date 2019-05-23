@@ -34,7 +34,7 @@ void KBPsiMatrixInterface::computeLocalElement(Ion& ion, const int istate,
 
     if (omp_get_thread_num() == 0) computeLocalElement_tm_.start();
 
-    ion_kbproj.init_work_nlindex(iloc, psi);
+    ion_kbproj.registerPsi(iloc, psi);
 
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();

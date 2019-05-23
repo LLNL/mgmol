@@ -126,6 +126,12 @@ class KBprojectorSparse
     void getProjectors(
         const short iloc, std::vector<const KBPROJDTYPE*>& projectors) const;
 
+    void initCenter(const double center[3])
+    {
+        for (short i = 0; i < 3; i++)
+            center_[i] = center[i];
+    }
+
 public:
     KBprojectorSparse(const Species& sp);
     KBprojectorSparse(const KBprojectorSparse& kbp);
@@ -148,17 +154,14 @@ public:
         for (short dir = 0; dir < 3; dir++)
             proj_indices_[dir].clear();
     }
+
+    //setup data that depends on atomic position
     void setup(const double center[3]);
-    void initCenter(const double center[3])
-    {
-        for (short i = 0; i < 3; i++)
-            center_[i] = center[i];
-    }
 
     double maxRadius() const;
 
     bool overlapPE() const;
-    void init_work_nlindex(const short iloc, const ORBDTYPE* const psi);
+    void registerPsi(const short iloc, const ORBDTYPE* const psi);
 
     bool overlaps(const short iloc) const { return (size_nl_[iloc] > 0); }
     double dotPsi(const short iloc, const short index) const;

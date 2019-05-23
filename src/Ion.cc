@@ -55,8 +55,6 @@ Ion::Ion(const Species& species, const string& name, const double crds[3],
 {
     assert(name.size() > 0);
 
-    kbproj_.initCenter(crds);
-
     init(crds, velocity, lock);
 }
 
@@ -67,8 +65,6 @@ Ion::Ion(const Species& species, IonData data)
       nlproj_gid_(data.nlproj_id),
       kbproj_(species)
 {
-    kbproj_.initCenter(data.current_position);
-
     const bool lock = data.atmove ? false : true;
     init(data.current_position, data.velocity, lock);
 }

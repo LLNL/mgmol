@@ -70,8 +70,6 @@ KBprojectorSparse::KBprojectorSparse(const KBprojectorSparse& kb)
 
     range_kbproj_ = kb.range_kbproj_;
 
-    initCenter(kb.center_);
-
     is_in_domain_ = NULL;
 
     subdivx_ = kb.subdivx_;
@@ -88,13 +86,14 @@ KBprojectorSparse::KBprojectorSparse(const KBprojectorSparse& kb)
 
 void KBprojectorSparse::setup(const double center[3])
 {
+    //if(onpe0)cout<<"KBprojectorSparse::setup()..."<<endl;
+
     initCenter(center);
     for (short i = 0; i < 3; i++)
     {
         kb_proj_start_[i] = center_[i];
     }
 
-    // if(onpe0)cout<<"KBprojectorSparse::setup()..."<<endl;
     nlindex_.resize(subdivx_);
     size_nl_.assign(subdivx_, 0);
 
@@ -149,7 +148,7 @@ void KBprojectorSparse::setNLindex(
             work_nlindex_[it].resize(size_nl);
 }
 
-void KBprojectorSparse::init_work_nlindex(
+void KBprojectorSparse::registerPsi(
     const short iloc, const ORBDTYPE* const psi)
 {
     assert(iloc < subdivx_);

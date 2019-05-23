@@ -117,7 +117,7 @@ Ions::Ions(const Ions& ions, const double shift[3]) : species_(ions.species_)
     while (ion != ions.list_ions_.end())
     {
         Ion* newion = new Ion(**ion);
-        newion->shift(shift);
+        newion->shiftPosition(shift);
         newion->setup();
         list_ions_.push_back(newion);
         ion++;

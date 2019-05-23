@@ -198,12 +198,10 @@ public:
 
         kbproj_.clear();
     }
-    void shift(const double shift[3])
+    void shiftPosition(const double shift[3])
     {
         for (short dir = 0; dir < 3; dir++)
             shift_position(dir, shift[dir]);
-
-        kbproj_.initCenter(position_);
     }
     double norm2F() const
     {
