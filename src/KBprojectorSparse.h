@@ -8,9 +8,10 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef MGMOL_KBPROJECTOR_H
-#define MGMOL_KBPROJECTOR_H
+#ifndef MGMOL_KBPROJECTORSPARSE_H
+#define MGMOL_KBPROJECTORSPARSE_H
 
+#include "KBprojector.h"
 #include "global.h"
 #include "mputils.h"
 
@@ -24,24 +25,15 @@
 #define omp_get_max_threads() 1
 #endif
 
-class Species;
-
 #define CHECK_NORM 0
 
 // one KB projector
-class KBprojectorSparse
+class KBprojectorSparse : public KBprojector
 {
     // work arrays (1 for each thread)
     static std::vector<std::vector<ORBDTYPE>> work_nlindex_;
 
     static std::vector<std::vector<KBPROJDTYPE>> work_proj_;
-
-    // reference to species associated to projector
-    const Species& species_;
-
-    short subdivx_;
-    const short maxl_;
-    const short llocal_;
 
     // pointers to projectors for each iloc, l, p, m
     std::vector<std::vector<std::vector<std::vector<KBPROJDTYPE*>>>>
@@ -54,8 +46,6 @@ class KBprojectorSparse
 
     short range_kbproj_;
 
-    double center_[3];
-
     // projector start
     short kb_proj_start_index_[3];
     double kb_proj_start_[3];
@@ -67,11 +57,6 @@ class KBprojectorSparse
     std::vector<std::vector<int>> nlindex_;
 
     bool** is_in_domain_;
-
-    // multiplicity of projector for each "l"
-    std::vector<short> multiplicity_;
-
-    double h_[3];
 
 #if CHECK_NORM
     std::vector<std::vector<double>> norm2_;
@@ -126,11 +111,11 @@ class KBprojectorSparse
     void getProjectors(
         const short iloc, std::vector<const KBPROJDTYPE*>& projectors) const;
 
-    void initCenter(const double center[3])
-    {
-        for (short i = 0; i < 3; i++)
-            center_[i] = center[i];
-    }
+    template <typename T>
+    void axpySKetT(const short iloc, const double alpha, T* const dst) const;
+
+    template <typename T>
+    void axpyKetT(const short iloc, const std::vector<double>&  alpha, T* const dst) const;
 
 public:
     KBprojectorSparse(const Species& sp);
@@ -167,33 +152,18 @@ public:
     double dotPsi(const short iloc, const short index) const;
 
     // axpySket for templated destination type
-    template <typename T>
-    void axpySKet(const short iloc, const double alpha, T* const) const;
-    template <typename T>
-    void axpyKet(
-        const short iloc, const std::vector<double>& alpha, T* const dst) const;
+    virtual void axpySKet(const short iloc, const double alpha, double* const dst) const
+    { axpySKetT(iloc, alpha, dst); }
+    virtual void axpySKet(const short iloc, const double alpha, float* const dst) const
+    { axpySKetT(iloc, alpha, dst); }
 
-    bool onlyOneProjector() const
-    {
-        return ((maxl_ == 1) && (llocal_ == 1) && (multiplicity_[0] == 1));
-    }
+    virtual void axpyKet(
+        const short iloc, const std::vector<double>& alpha, double* const dst) const
+    { axpyKetT(iloc, alpha, dst); }
+    virtual void axpyKet(
+        const short iloc, const std::vector<double>& alpha, float* const dst) const
+    { axpyKetT(iloc, alpha, dst); }
 
-    short nProjectors() const
-    {
-        short nproj = 0;
-        assert(llocal_ < 4);
-        for (short l = 0; l <= maxl_; l++)
-            if (llocal_ != l) nproj += (2 * l + 1) * multiplicity_[l];
-        return nproj;
-    }
-
-    short nProjectorsSubdomain() const
-    {
-        short nproj = 0;
-        assert(llocal_ < 4);
-        if (overlapPE()) nproj = nProjectors();
-        return nproj;
-    }
 
     void getKBsigns(std::vector<short>& kbsigns) const;
     void getKBcoeffs(std::vector<double>& coeffs) const;

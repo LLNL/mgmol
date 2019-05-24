@@ -8,16 +8,16 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#include <cassert>
-#include <iostream>
-#include <list>
-using namespace std;
-
 #include "Ions.h"
 #include "KBPsiMatrixSparse.h"
 #include "MGmol.h"
 #include "Mesh.h"
 #include "Species.h"
+
+#include <cassert>
+#include <iostream>
+#include <list>
+using namespace std;
 
 Timer get_kbpsi_tm("get_kbpsi");
 Timer vnlpsi_tm("vnlpsi");
@@ -54,16 +54,16 @@ void get_vnlpsi(const Ions& ions, const vector<vector<int>>& subdomain_gids,
                 vector<double> kbcoeffs;
                 (*ion)->getKBcoeffs(kbcoeffs);
 
-                const KBprojectorSparse& ion_kbproj((*ion)->kbproj());
+                const std::shared_ptr<KBprojector> ion_kbproj((*ion)->kbproj());
 
-                if (ion_kbproj.onlyOneProjector())
+                if (ion_kbproj->onlyOneProjector())
                 {
                     assert(ion_gids.size() == 1);
                     const int gid = ion_gids[0];
 
                     const double coeff = kbpsi->getValIonState(gid, st)
                                          * kbcoeffs[0] * signs[0];
-                    ion_kbproj.axpySKet(iloc, coeff, vpsi);
+                    ion_kbproj->axpySKet(iloc, coeff, vpsi);
                 }
                 else
                 {
@@ -75,7 +75,7 @@ void get_vnlpsi(const Ions& ions, const vector<vector<int>>& subdomain_gids,
                         coeff.push_back(kbpsi->getValIonState(gid, st)
                                         * kbcoeffs[i] * signs[i]);
                     }
-                    ion_kbproj.axpyKet(iloc, coeff, vpsi);
+                    ion_kbproj->axpyKet(iloc, coeff, vpsi);
                 }
 
                 ion++;

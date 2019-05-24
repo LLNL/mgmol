@@ -9,6 +9,7 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "Ion.h"
+#include "KBprojectorSparse.h"
 #include "MGmol_blas1.h"
 
 #include <iomanip>
@@ -33,10 +34,11 @@ Ion::Ion(const Species& species, const string& name, const double crds[3],
     : name_(name),
       species_(species),
       index_(_index),
-      nlproj_gid_(_nlproj_gid),
-      kbproj_(species)
+      nlproj_gid_(_nlproj_gid)
 {
     assert(name.size() > 0);
+
+    kbproj_.reset( new KBprojectorSparse(species) );
 
     _index++;
     _nlproj_gid += nProjectors();
@@ -50,10 +52,11 @@ Ion::Ion(const Species& species, const string& name, const double crds[3],
     : name_(name),
       species_(species),
       index_(index),
-      nlproj_gid_(nlproj_gid),
-      kbproj_(species)
+      nlproj_gid_(nlproj_gid)
 {
     assert(name.size() > 0);
+
+    kbproj_.reset( new KBprojectorSparse(species) );
 
     init(crds, velocity, lock);
 }
@@ -62,11 +65,35 @@ Ion::Ion(const Species& species, IonData data)
     : name_(data.ion_name),
       species_(species),
       index_(data.index),
-      nlproj_gid_(data.nlproj_id),
-      kbproj_(species)
+      nlproj_gid_(data.nlproj_id)
 {
+    kbproj_.reset( new KBprojectorSparse(species) );
+
     const bool lock = data.atmove ? false : true;
     init(data.current_position, data.velocity, lock);
+}
+
+Ion::Ion(const Ion& ion)
+    : name_(ion.name_),
+      species_(ion.species_),
+      index_(ion.index_),
+      nlproj_gid_(ion.nlproj_gid_)
+{
+    kbproj_.reset( new KBprojectorSparse(species_) );
+
+    for (short i = 0; i < 3; i++)
+    {
+        position_[i]     = ion.position_[i];
+        old_position_[i] = ion.old_position_[i];
+        lpot_start_[i]   = ion.lpot_start_[i];
+        lstart_[i]       = ion.lstart_[i];
+        force_[i]        = ion.force_[i];
+        velocity_[i]     = ion.velocity_[i];
+    }
+    locked_ = ion.locked_;
+    map_nl_ = ion.map_nl_;
+    map_l_  = ion.map_l_;
+    here_   = ion.here_;
 }
 
 // initialize data members
@@ -102,9 +129,9 @@ void Ion::init(const double crds[3], const double velocity[3], const bool lock)
 
 void Ion::setup()
 {
-    kbproj_.setup(position_);
+    kbproj_->setup(position_);
 
-    map_nl_ = kbproj_.overlapPE();
+    map_nl_ = kbproj_->overlapPE();
 }
 
 void Ion::bcast(MPI_Comm comm)
@@ -310,10 +337,10 @@ void Ion::getGidsNLprojs(vector<int>& gids) const
 // of Ion
 void Ion::getKBsigns(vector<short>& kbsigns) const
 {
-    kbproj_.getKBsigns(kbsigns);
+    kbproj_->getKBsigns(kbsigns);
 }
 
-void Ion::getKBcoeffs(vector<double>& coeffs) { kbproj_.getKBcoeffs(coeffs); }
+void Ion::getKBcoeffs(vector<double>& coeffs) { kbproj_->getKBcoeffs(coeffs); }
 
 void Ion::get_Ai(vector<int>& Ai, const int gdim, const short dir) const
 {

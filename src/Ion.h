@@ -13,12 +13,13 @@
 
 #include "GridFunc.h"
 #include "IonData.h"
-#include "KBprojectorSparse.h"
+#include "KBprojector.h"
 #include "Species.h"
 #include "Mesh.h"
 
 #include <cstring>
 #include <vector>
+#include <memory>
 
 // Ion structure
 class Ion
@@ -50,7 +51,7 @@ class Ion
     // here=true if global contribution has to be computed on this process
     bool here_;
 
-    KBprojectorSparse kbproj_;
+    std::shared_ptr<KBprojector> kbproj_;
 
     // indices of first grid point where the local pot. is non-zero
     short lpot_start_[3];
@@ -92,16 +93,17 @@ public:
         const double velocity[3], const unsigned int index,
         const unsigned int nlproj_id, const bool lock = false);
     Ion(const Species& species, IonData data);
+    Ion(const Ion& ion);
 
     ~Ion(){};
 
     void init(const double crds[3], const double velocity[3], const bool lock);
     void setup();
 
-    KBprojectorSparse& kbproj() { return kbproj_; }
-    const KBprojectorSparse& kbproj() const { return kbproj_; }
+    std::shared_ptr<KBprojector> kbproj() { return kbproj_; }
+    const std::shared_ptr<KBprojector> kbproj() const { return kbproj_; }
 
-    double radiusNLproj() const { return kbproj_.maxRadius(); }
+    double radiusNLproj() const { return kbproj_->maxRadius(); }
 
     double computeRadiusVl() const
     {
@@ -189,14 +191,14 @@ public:
         position_[1] = y;
         position_[2] = z;
 
-        kbproj_.clear();
+        kbproj_->clear();
     }
     void shiftPositionXLBOMDTest(Vector3D shift)
     {
         for (short dir = 0; dir < 3; dir++)
             shift_position(dir, shift[dir]);
 
-        kbproj_.clear();
+        kbproj_->clear();
     }
     void shiftPosition(const double shift[3])
     {
@@ -210,11 +212,11 @@ public:
         return ff;
     }
 
-    short nProjectors() const { return kbproj_.nProjectors(); }
+    short nProjectors() const { return kbproj_->nProjectors(); }
 
     short nProjectorsSubdomain() const
     {
-        return kbproj_.nProjectorsSubdomain();
+        return kbproj_->nProjectorsSubdomain();
     }
 
     double velocity(const short i) const { return velocity_[i]; }

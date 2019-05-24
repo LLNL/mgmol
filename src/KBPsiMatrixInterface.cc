@@ -28,13 +28,13 @@ void KBPsiMatrixInterface::computeLocalElement(Ion& ion, const int istate,
     ion.getGidsNLprojs(gids);
     if (gids.empty()) return;
 
-    KBprojectorSparse& ion_kbproj(ion.kbproj());
+    std::shared_ptr<KBprojector> ion_kbproj(ion.kbproj());
 
-    if (!ion_kbproj.overlaps(iloc)) return;
+    if (!ion_kbproj->overlaps(iloc)) return;
 
     if (omp_get_thread_num() == 0) computeLocalElement_tm_.start();
 
-    ion_kbproj.registerPsi(iloc, psi);
+    ion_kbproj->registerPsi(iloc, psi);
 
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
@@ -46,7 +46,7 @@ void KBPsiMatrixInterface::computeLocalElement(Ion& ion, const int istate,
     for (short i = 0; i < nprojs; i++)
     {
         const int gid    = gids[i];
-        const double val = vel * ion_kbproj.dotPsi(iloc, i);
+        const double val = vel * ion_kbproj->dotPsi(iloc, i);
         if (flag)
         {
             addKBBPsi(gid, istate, val);

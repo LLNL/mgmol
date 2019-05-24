@@ -14,81 +14,55 @@
 
 #include <cstring>
 
-using namespace std;
-
 const double rthreshold = 1.e-5;
 
-vector<vector<ORBDTYPE>> KBprojectorSparse::work_nlindex_;
-vector<vector<KBPROJDTYPE>> KBprojectorSparse::work_proj_;
+std::vector<std::vector<ORBDTYPE>> KBprojectorSparse::work_nlindex_;
+std::vector<std::vector<KBPROJDTYPE>> KBprojectorSparse::work_proj_;
 
-KBprojectorSparse::KBprojectorSparse(const Species& sp) : species_(sp),
-    maxl_(species_.max_l()), llocal_(species_.llocal())
+KBprojectorSparse::KBprojectorSparse(const Species& sp) : KBprojector(sp)
 {
-    assert(species_.dim_nl() >= 0);
-    assert(species_.dim_nl() < 1000);
-
     range_kbproj_ = species_.dim_nl();
 
     if (work_nlindex_.size() == 0) work_nlindex_.resize(omp_get_max_threads());
     if (work_proj_.size() == 0) work_proj_.resize(omp_get_max_threads());
     // cout<<"constructor: work_nlindex_.size()="<<work_nlindex_.size()<<endl;
 
-    is_in_domain_ = NULL;
+    is_in_domain_ = nullptr;
 
     for (short i = 0; i < 3; i++)
     {
         kb_proj_start_index_[i] = 10000;
     }
 
-    for (short l = 0; l <= maxl_; l++)
-        multiplicity_.push_back(sp.getMultiplicity(l));
-
-    for (short l = 0; l <= maxl_; l++)
-        assert(multiplicity_[l] > 0 || l == llocal_);
-
-    Mesh* mymesh           = Mesh::instance();
-    const pb::Grid& mygrid = mymesh->grid();
-    for(short i=0; i<3; i++)
-        h_[i] = mygrid.hgrid(i);
-    subdivx_ = mymesh->subdivx();
-
-    assert(llocal_ <= maxl_);
     assert(range_kbproj_ >= 0);
     assert(range_kbproj_ < 256);
-    assert(h_[0] > 0.);
-    assert(h_[1] > 0.);
-    assert(h_[2] > 0.);
 }
 
 // copy constructor (without initialization of projectors)
 KBprojectorSparse::KBprojectorSparse(const KBprojectorSparse& kb)
-    : species_(kb.species_), maxl_(kb.maxl_), llocal_(kb.llocal_),
-      multiplicity_(kb.multiplicity_)
+    : KBprojector(kb)
 {
-    assert(species_.dim_nl() >= 0);
-    assert(species_.dim_nl() < 1000);
-
     range_kbproj_ = kb.range_kbproj_;
 
-    is_in_domain_ = NULL;
+    is_in_domain_ = nullptr;
 
-    subdivx_ = kb.subdivx_;
     for (short i = 0; i < 3; i++)
     {
-        h_[i] = kb.h_[i];
         kb_proj_start_index_[i] = -1;
     }
 
-    assert(llocal_ <= maxl_);
     assert(range_kbproj_ >= 0);
     assert(range_kbproj_ < 256);
 }
 
 void KBprojectorSparse::setup(const double center[3])
 {
+    assert(subdivx_ > 0);
+
     //if(onpe0)cout<<"KBprojectorSparse::setup()..."<<endl;
 
-    initCenter(center);
+    KBprojector::setup(center);
+
     for (short i = 0; i < 3; i++)
     {
         kb_proj_start_[i] = center_[i];
@@ -111,7 +85,7 @@ void KBprojectorSparse::setup(const double center[3])
 }
 
 void KBprojectorSparse::setNLindex(
-    const short iloc, const int size_nl, const vector<int>& pvec)
+    const short iloc, const int size_nl, const std::vector<int>& pvec)
 {
     assert(size_nl > 0);
     assert((int)nlindex_.size() > iloc);
@@ -124,7 +98,7 @@ void KBprojectorSparse::setNLindex(
 
     nlindex_[iloc].resize(size_nl);
     size_nl_[iloc] = size_nl;
-    vector<int>& nli(nlindex_[iloc]);
+    std::vector<int>& nli(nlindex_[iloc]);
     const int lnumpt = numpt / subdivx_;
 
     for (int i = 0; i < size_nl; i++)
@@ -133,7 +107,7 @@ void KBprojectorSparse::setNLindex(
         if ((pvec[i] < iloc * lnumpt) || (pvec[i] >= (iloc + 1) * lnumpt))
         {
             (*MPIdata::sout) << " iloc=" << iloc << ", i=" << i
-                             << ", pvec=" << pvec[i] << endl;
+                             << ", pvec=" << pvec[i] << std::endl;
             exit(2);
         }
 
@@ -158,12 +132,12 @@ void KBprojectorSparse::registerPsi(
     const int sizenl   = size_nl_[iloc];
     // if( work_nlindex_[thread].size() < sizenl )
     //    work_nlindex_[thread].resize(sizenl);
-    const vector<int>& rnlindex(nlindex_[iloc]);
+    const std::vector<int>& rnlindex(nlindex_[iloc]);
     // cout<<"thread="<<thread<<endl;
     // cout<<"work_nlindex_.size()="<<work_nlindex_.size()<<endl;
     assert(work_nlindex_.size() == omp_get_max_threads());
     assert(thread < work_nlindex_.size());
-    vector<ORBDTYPE>& work(work_nlindex_[thread]);
+    std::vector<ORBDTYPE>& work(work_nlindex_[thread]);
     for (int i = 0; i < sizenl; i++)
     {
         const int j = rnlindex[i];
@@ -173,6 +147,8 @@ void KBprojectorSparse::registerPsi(
 
 bool KBprojectorSparse::overlapPE() const
 {
+    assert(!size_nl_.empty());
+
     int n = 0;
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
@@ -189,8 +165,8 @@ void KBprojectorSparse::allocateProjectors(const short iloc, const int icount)
     //vector in slots associated with smaller iloc if they have not been
     //filled
     while(projectors_storage_.size()<iloc)
-        projectors_storage_.push_back( vector<KBPROJDTYPE>(0) );
-    projectors_storage_.push_back( vector<KBPROJDTYPE>(nprojs*icount) );
+        projectors_storage_.push_back( std::vector<KBPROJDTYPE>(0) );
+    projectors_storage_.push_back( std::vector<KBPROJDTYPE>(nprojs*icount) );
     assert(projectors_storage_.size()==(iloc+1));
 
     KBPROJDTYPE* pstorage( &projectors_storage_[iloc][0] );
@@ -215,8 +191,8 @@ void KBprojectorSparse::allocateProjectors(const short iloc, const int icount)
 
 void KBprojectorSparse::setProjectors(const short iloc, const int icount)
 {
-    assert(is_in_domain_ != NULL);
-    assert(is_in_domain_[iloc] != NULL);
+    assert(is_in_domain_ != nullptr);
+    assert(is_in_domain_[iloc] != nullptr);
 
     allocateProjectors(iloc, icount);
 
@@ -247,7 +223,7 @@ void KBprojectorSparse::setProjectors(const short iloc, const int icount)
                 default:
                     (*MPIdata::sout)
                         << "KBprojectorSparse::setProjectors(): "
-                        << "Angular momentum state not implemented!!!" << endl;
+                        << "Angular momentum state not implemented!!!" << std::endl;
                     exit(1);
             }
         }
@@ -318,7 +294,7 @@ void KBprojectorSparse::setSProjector(const short iloc, const int icount)
         {
             (*MPIdata::sout) << "KBprojectorSparse::setSProjector(): Problem "
                                 "with non-local projectors generation"
-                             << endl;
+                             << std::endl;
             exit(2);
         }
     }
@@ -404,7 +380,7 @@ void KBprojectorSparse::setPProjector(const short iloc, const int icount)
         {
             (*MPIdata::sout)
                 << "setPProjector: Problem with non-local projector generation"
-                << endl;
+                << std::endl;
             exit(2);
         }
 
@@ -508,7 +484,7 @@ void KBprojectorSparse::setDProjector(const short iloc, const int icount)
         if (jcount != icount)
         {
             (*MPIdata::sout)
-                << "setDProjector: Problem with non-local generation" << endl;
+                << "setDProjector: Problem with non-local generation" << std::endl;
             exit(2);
         }
 
@@ -632,7 +608,7 @@ void KBprojectorSparse::setFProjector(const short iloc, const int icount)
         if (jcount != icount)
         {
             (*MPIdata::sout)
-                << "setDProjector: Problem with non-local generation" << endl;
+                << "setDProjector: Problem with non-local generation" << std::endl;
             exit(2);
         }
 
@@ -752,7 +728,7 @@ bool KBprojectorSparse::overlapWithBox(
 
 // Generate index array "pvec" and
 // an array "is_in_domain" with value true if the node is in the region
-int KBprojectorSparse::get_index_array(vector<int>& pvec, const short iloc,
+int KBprojectorSparse::get_index_array(std::vector<int>& pvec, const short iloc,
     const short index_low[3], const short index_high[3])
 {
     assert(range_kbproj_ >= 0);
@@ -826,13 +802,13 @@ int KBprojectorSparse::get_index_array(vector<int>& pvec, const short iloc,
 }
 
 template <typename T>
-void KBprojectorSparse::axpySKet(
+void KBprojectorSparse::axpySKetT(
     const short iloc, const double alpha, T* const dst) const
 {
     assert(multiplicity_[0] == 1);
 
     const KBPROJDTYPE* const proj(ptr_projector_[iloc][0][0][0]);
-    const vector<int>& pidx = nlindex_[iloc];
+    const std::vector<int>& pidx = nlindex_[iloc];
     const int size_nl       = size_nl_[iloc];
     for (int idx = 0; idx < size_nl; idx++)
     {
@@ -841,18 +817,18 @@ void KBprojectorSparse::axpySKet(
 }
 
 template <typename T>
-void KBprojectorSparse::axpyKet(
-    const short iloc, const vector<double>& alpha, T* const dst) const
+void KBprojectorSparse::axpyKetT(
+    const short iloc, const std::vector<double>& alpha, T* const dst) const
 {
     const short thread = omp_get_thread_num();
-    vector<KBPROJDTYPE>& work_proj(work_proj_[thread]);
+    std::vector<KBPROJDTYPE>& work_proj(work_proj_[thread]);
     assert(work_proj.size() > 0);
 
     const int size_nl                = size_nl_[iloc];
     KBPROJDTYPE* const loc_work_proj = &work_proj[0];
     memset(loc_work_proj, 0, size_nl * sizeof(KBPROJDTYPE));
 
-    vector<const KBPROJDTYPE*> projectors;
+    std::vector<const KBPROJDTYPE*> projectors;
     getProjectors(iloc, projectors);
 
     for (short i = 0; i < alpha.size(); i++)
@@ -878,7 +854,7 @@ bool KBprojectorSparse::setIndexesAndProjectors()
     const int nl  = species_.dim_nl();
     const int nl3 = nl * nl * nl;
 
-    vector<int> pvec(nl3);
+    std::vector<int> pvec(nl3);
     is_in_domain_ = new bool*[subdivx_];
 
     setKBProjStart();
@@ -934,7 +910,7 @@ bool KBprojectorSparse::setIndexesAndProjectors()
         else
         {
             size_nl_[iloc]      = 0;
-            is_in_domain_[iloc] = NULL;
+            is_in_domain_[iloc] = nullptr;
         } // end if map
 
     } // end for iloc
@@ -945,7 +921,7 @@ bool KBprojectorSparse::setIndexesAndProjectors()
     if (onpe0)
         for (short p = 0; p < multiplicity_[0]; ++p)
             cout << "Norm2 S-projector, p=" << p << " ="
-                 << norm2_[0][p] * mygrid.vel() << endl;
+                 << norm2_[0][p] * mygrid.vel() << std::endl;
 
     if (maxl_ > 0)
     {
@@ -954,11 +930,11 @@ bool KBprojectorSparse::setIndexesAndProjectors()
             for (short p = 0; p < multiplicity_[1]; ++p)
             {
                 cout << "Norm2 Px-projector, p=" << p << " ="
-                     << norm2_[1][3 * p + 0] * mygrid.vel() << endl;
+                     << norm2_[1][3 * p + 0] * mygrid.vel() << std::endl;
                 cout << "Norm2 Py-projector, p=" << p << " ="
-                     << norm2_[1][3 * p + 1] * mygrid.vel() << endl;
+                     << norm2_[1][3 * p + 1] * mygrid.vel() << std::endl;
                 cout << "Norm2 Pz-projector, p=" << p << " ="
-                     << norm2_[1][3 * p + 2] * mygrid.vel() << endl;
+                     << norm2_[1][3 * p + 2] * mygrid.vel() << std::endl;
             }
 
         if (maxl_ > 1)
@@ -968,15 +944,15 @@ bool KBprojectorSparse::setIndexesAndProjectors()
                 for (short p = 0; p < multiplicity_[2]; ++p)
                 {
                     cout << "Norm2 D-projector, p=" << p << " ="
-                         << norm2_[2][5 * p + 0] * mygrid.vel() << endl;
+                         << norm2_[2][5 * p + 0] * mygrid.vel() << std::endl;
                     cout << "Norm2 D-projector, p=" << p << " ="
-                         << norm2_[2][5 * p + 1] * mygrid.vel() << endl;
+                         << norm2_[2][5 * p + 1] * mygrid.vel() << std::endl;
                     cout << "Norm2 D-projector, p=" << p << " ="
-                         << norm2_[2][5 * p + 2] * mygrid.vel() << endl;
+                         << norm2_[2][5 * p + 2] * mygrid.vel() << std::endl;
                     cout << "Norm2 D-projector, p=" << p << " ="
-                         << norm2_[2][5 * p + 3] * mygrid.vel() << endl;
+                         << norm2_[2][5 * p + 3] * mygrid.vel() << std::endl;
                     cout << "Norm2 D-projector, p=" << p << " ="
-                         << norm2_[2][5 * p + 4] * mygrid.vel() << endl;
+                         << norm2_[2][5 * p + 4] * mygrid.vel() << std::endl;
                 }
             if (maxl_ > 2)
             {
@@ -985,19 +961,19 @@ bool KBprojectorSparse::setIndexesAndProjectors()
                     for (short p = 0; p < multiplicity_[1]; ++p)
                     {
                         cout << "Norm2 F-projector, p=" << p << " ="
-                             << norm2_[3][7 * p + 0] * mygrid.vel() << endl;
+                             << norm2_[3][7 * p + 0] * mygrid.vel() << std::endl;
                         cout << "Norm2 F-projector, p=" << p << " ="
-                             << norm2_[3][7 * p + 1] * mygrid.vel() << endl;
+                             << norm2_[3][7 * p + 1] * mygrid.vel() << std::endl;
                         cout << "Norm2 F-projector, p=" << p << " ="
-                             << norm2_[3][7 * p + 2] * mygrid.vel() << endl;
+                             << norm2_[3][7 * p + 2] * mygrid.vel() << std::endl;
                         cout << "Norm2 F-projector, p=" << p << " ="
-                             << norm2_[3][7 * p + 3] * mygrid.vel() << endl;
+                             << norm2_[3][7 * p + 3] * mygrid.vel() << std::endl;
                         cout << "Norm2 F-projector, p=" << p << " ="
-                             << norm2_[3][7 * p + 4] * mygrid.vel() << endl;
+                             << norm2_[3][7 * p + 4] * mygrid.vel() << std::endl;
                         cout << "Norm2 F-projector, p=" << p << " ="
-                             << norm2_[3][7 * p + 5] * mygrid.vel() << endl;
+                             << norm2_[3][7 * p + 5] * mygrid.vel() << std::endl;
                         cout << "Norm2 F-projector, p=" << p << " ="
-                             << norm2_[3][7 * p + 6] * mygrid.vel() << endl;
+                             << norm2_[3][7 * p + 6] * mygrid.vel() << std::endl;
                     }
             }
         }
@@ -1027,7 +1003,7 @@ void KBprojectorSparse::setPtrProjectors()
 }
 
 void KBprojectorSparse::getProjectors(
-    const short iloc, vector<const KBPROJDTYPE*>& projectors) const
+    const short iloc, std::vector<const KBPROJDTYPE*>& projectors) const
 {
     projectors.clear();
 
@@ -1046,7 +1022,7 @@ void KBprojectorSparse::getProjectors(
 
 // get sign factor for <KB,Psi> matrix for all the projectors
 // of Ion
-void KBprojectorSparse::getKBsigns(vector<short>& kbsigns) const
+void KBprojectorSparse::getKBsigns(std::vector<short>& kbsigns) const
 {
     kbsigns.clear();
 
@@ -1061,7 +1037,7 @@ void KBprojectorSparse::getKBsigns(vector<short>& kbsigns) const
     }
 }
 
-void KBprojectorSparse::getKBcoeffs(vector<double>& coeffs) const
+void KBprojectorSparse::getKBcoeffs(std::vector<double>& coeffs) const
 {
     coeffs.clear();
 
@@ -1114,12 +1090,12 @@ double KBprojectorSparse::maxRadius() const
 }
 
 
-template void KBprojectorSparse::axpySKet<double>(
+template void KBprojectorSparse::axpySKetT<double>(
     const short iloc, const double alpha, double* const dst) const;
-template void KBprojectorSparse::axpySKet<float>(
+template void KBprojectorSparse::axpySKetT<float>(
     const short iloc, const double alpha, float* const dst) const;
 
-template void KBprojectorSparse::axpyKet<double>(
-    const short iloc, const vector<double>& alpha, double* const dst) const;
-template void KBprojectorSparse::axpyKet<float>(
-    const short iloc, const vector<double>& alpha, float* const dst) const;
+template void KBprojectorSparse::axpyKetT<double>(
+    const short iloc, const std::vector<double>& alpha, double* const dst) const;
+template void KBprojectorSparse::axpyKetT<float>(
+    const short iloc, const std::vector<double>& alpha, float* const dst) const;
