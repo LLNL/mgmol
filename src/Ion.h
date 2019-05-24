@@ -69,9 +69,6 @@ class Ion
     // random state for thermostat
     unsigned short rand_state_[3];
 
-    // IonData
-    IonData idata_;
-
     void shift_position(const short i, const double shift)
     {
         old_position_[i] = position_[i];
@@ -305,10 +302,9 @@ public:
         rand_state_[1] = s1;
         rand_state_[2] = s2;
     }
-    void setIonData();
     void setFromIonData(const IonData& data);
 
-    const IonData& getIonData() const { return idata_; }
+    void getIonData(IonData& data)const;
 
     void getGidsNLprojs(std::vector<int>& gids) const;
     void getKBsigns(std::vector<short>& kbsigns) const;

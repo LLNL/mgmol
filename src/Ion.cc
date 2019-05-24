@@ -281,27 +281,27 @@ void Ion::printPositionAndForce(ostream& os) const
        << force_[0] << setw(16) << force_[1] << setw(16) << force_[2] << endl;
 }
 
-void Ion::setIonData()
+void Ion::getIonData(IonData& idata)const
 {
-    idata_.ion_name   = name_;
-    idata_.atomic_num = atomic_number();
-    idata_.index      = index_;
-    idata_.nlproj_id  = nlproj_gid_;
-    idata_.pmass      = getMass();
+    idata.ion_name   = name_;
+    idata.atomic_num = atomic_number();
+    idata.index      = index_;
+    idata.nlproj_id  = nlproj_gid_;
+    idata.pmass      = getMass();
 
     if (locked_)
-        idata_.atmove = 0;
+        idata.atmove = 0;
     else
-        idata_.atmove = 1;
+        idata.atmove = 1;
 
     for (int pos = 0; pos < 3; pos++)
     {
-        idata_.rand_state[pos]       = rand_state_[pos];
-        idata_.initial_position[pos] = 0.;
-        idata_.old_position[pos]     = old_position_[pos];
-        idata_.current_position[pos] = position_[pos];
-        idata_.velocity[pos]         = velocity_[pos];
-        idata_.force[pos]            = force_[pos];
+        idata.rand_state[pos]       = rand_state_[pos];
+        idata.initial_position[pos] = 0.;
+        idata.old_position[pos]     = old_position_[pos];
+        idata.current_position[pos] = position_[pos];
+        idata.velocity[pos]         = velocity_[pos];
+        idata.force[pos]            = force_[pos];
     }
 }
 

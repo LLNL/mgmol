@@ -3568,16 +3568,18 @@ void Ions::updateListIons()
     // collect local_ions data
     // assume local_ions size is same as size of ions_names vector
     ions_data_.clear();
-    vector<Ion*>::iterator lion = local_ions_.begin();
-    while (lion != local_ions_.end())
+
     {
-        (*lion)->setIonData();
+        IonData idata;
+        for (auto& lion : local_ions_)
+        {
+            lion->getIonData(idata);
 
-        // populate ions_data_ list
-        ions_data_.push_back((*lion)->getIonData());
-
-        lion++;
+            // populate ions_data_ list
+            ions_data_.push_back(idata);
+        }
     }
+
     // update list ions from current ion positions
     // Note: this is based on data from MD vectors
 
