@@ -34,6 +34,12 @@ int main(int argc, char **argv)
 
     MPI_Init(&argc,&argv);
     MPI_Comm_size(MPI_COMM_WORLD, &npes);
+    if (npes != 4) {
+       std::cout<<"Number of processors in MPI: "<<npes<<std::endl;
+       std::cout<<"This example to set up to use only 4 processes \n";
+       std::cout<<"Quitting..."<<std::endl;
+       return 1;
+    }
     MPI_Comm_rank(MPI_COMM_WORLD, &mype);
 
     int nprow=2;

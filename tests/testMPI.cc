@@ -25,6 +25,12 @@ main (int argc, char **argv)
 
     int nprocs;
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+    if(nprocs != 4)
+    {
+        std::cerr<<"Expected 4 MPI ranks. Got "<<nprocs<<std::endl;
+        return 1;
+    }
+
     int myproc;
     MPI_Comm_rank(MPI_COMM_WORLD, &myproc);
 
@@ -50,6 +56,8 @@ main (int argc, char **argv)
         std::cerr<<"Error in MPI_Finalize..."<<std::endl;;
         return 1;
     }
+
+    std::cout<<"SUCESSFUL test!"<<std::endl;
 
     return 0;
 }
