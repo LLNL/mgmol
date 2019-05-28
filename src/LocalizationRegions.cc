@@ -18,6 +18,7 @@
 #include "SquareLocalMatrices.h"
 #include "SymmetricPair.h"
 #include "tools.h"
+#include "hdf_tools.h"
 
 #include <algorithm>
 #include <iomanip>

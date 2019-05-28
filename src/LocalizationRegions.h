@@ -18,7 +18,6 @@
 #include "Timer.h"
 #include "Vector3D.h"
 #include "global.h"
-#include "hdf_tools.h"
 #include "mgmol_mpi_tools.h"
 #include "tools.h"
 #include "SpreadsAndCenters.h"
