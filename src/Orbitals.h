@@ -8,9 +8,10 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id:$
-#ifndef ORBITALS_H
-#define ORBITALS_H
+#ifndef MGMOL_ORBITALS_H
+#define MGMOL_ORBITALS_H
+
+#include "hdf5.h"
 
 class Orbitals
 {
@@ -59,5 +60,13 @@ public:
     }
 
     short getIterativeIndex() const { return iterative_index_; }
+
+    hid_t outHdfDataType(const short out_restart_info) const
+    {
+        hid_t dtype_id
+            = out_restart_info > 3 ? H5T_NATIVE_DOUBLE : H5T_NATIVE_FLOAT;
+        return dtype_id;
+    }
+
 };
 #endif

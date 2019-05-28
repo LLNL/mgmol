@@ -23,7 +23,6 @@
 #ifdef USE_MPI
 #include <mpi.h>
 #endif
-#include "hdf5.h"
 
 class Potentials;
 
@@ -573,13 +572,6 @@ public:
             if (cut_radius > 2.) cut_init = 2.;
         }
         return cut_init;
-    }
-
-    hid_t outHdfDataType() const
-    {
-        hid_t dtype_id
-            = out_restart_info > 3 ? H5T_NATIVE_DOUBLE : H5T_NATIVE_FLOAT;
-        return dtype_id;
     }
 
     bool computeCondGramQuench() const { return (computeCondGram_ > 1); }
