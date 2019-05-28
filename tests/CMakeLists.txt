@@ -66,6 +66,15 @@ add_test(NAME testCl2
          ${CMAKE_CURRENT_SOURCE_DIR}/Cl2_ONCVPSP_LDA/mgmol.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/Cl2_ONCVPSP_LDA/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+add_test(NAME testMD_D72
+         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/MD_D72/test.py
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 5
+         ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
+         ${CMAKE_CURRENT_SOURCE_DIR}/MD_D72/mgmol_quench.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/MD_D72/mgmol_md.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/MD_D72/coords.in
+         ${CMAKE_CURRENT_SOURCE_DIR}/MD_D72/lrs.in
+         ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 
 target_include_directories(testHDF5P PRIVATE ${HDF5_INCLUDE_DIRS})
 target_include_directories(testAndersonMix PRIVATE
