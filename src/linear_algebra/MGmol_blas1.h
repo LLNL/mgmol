@@ -47,7 +47,7 @@ extern "C"
         const int* const, float*, const int* const);
     void DSCAL(
         const int* const, const double* const, double*, const int* const);
-    void sscal(const int* const, const float* const, float*, const int* const);
+    void SSCAL(const int* const, const float* const, float*, const int* const);
     void dcopy(const int* const, const double* const, const int* const, double*,
         const int* const);
     void scopy(const int* const, const float* const, const int* const, float*,

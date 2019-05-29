@@ -41,7 +41,7 @@ void Tscal(const int len, const double scal, double* dptr)
 void Tscal(const int len, const float scal, float* dptr)
 {
     const int one = 1;
-    sscal(&len, &scal, dptr, &one);
+    SSCAL(&len, &scal, dptr, &one);
 }
 void MPscal(const int len, const double scal, double* dptr)
 {
