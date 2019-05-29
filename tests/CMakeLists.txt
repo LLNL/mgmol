@@ -85,7 +85,9 @@ target_link_libraries(testBlacsContext ${SCALAPACK_LIBRARIES}
                                        ${BLAS_LIBRARIES})
 target_link_libraries(testDistMatrix ${SCALAPACK_LIBRARIES}
                                      ${BLAS_LIBRARIES})
-target_link_libraries(testAndersonMix  ${BLAS_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(testAndersonMix ${LAPACK_LIBRARIES}
+                                      ${BLAS_LIBRARIES}
+                                      ${Boost_LIBRARIES})
 
 set_tests_properties(testSiH4 PROPERTIES REQUIRED_FILES
                      ${CMAKE_SOURCE_DIR}/potentials/pseudo.Si)
