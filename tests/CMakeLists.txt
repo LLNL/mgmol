@@ -78,7 +78,8 @@ add_test(NAME testMD_D72
 
 target_include_directories(testHDF5P PRIVATE ${HDF5_INCLUDE_DIRS})
 target_include_directories(testAndersonMix PRIVATE
-                           ${CMAKE_SOURCE_DIR}/tests/Anderson)
+                           ${CMAKE_SOURCE_DIR}/tests/Anderson
+                           ${HDF5_INCLUDE_DIRS})
 
 target_link_libraries(testHDF5P ${HDF5_LIBRARIES})
 target_link_libraries(testBlacsContext ${SCALAPACK_LIBRARIES}
