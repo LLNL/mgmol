@@ -11,49 +11,24 @@
 #ifndef MGMOL_LAPACK_H
 #define MGMOL_LAPACK_H
 
+#include "fc_mangle.h"
+
 typedef const char* const Pchar;
 
-#ifdef UPCASE
-
-#define dposv SPOSV
-#define dsyev SSYEV
-#define dgeev SGEEV
-#define dpotri SPOTRI
-#define dpotrf SPOTRF
-#define dpotrs SPOTRS
-#define dsygst SSYGST
-#define dtrtrs STRTRS
-#define dpocon SPOCON
-#define dsygv SSYGV
-
-#endif
-
-#ifdef ADD_
-
-#define dposv dposv_
-#define dsyev dsyev_
-#define dgeev dgeev_
-#define dpotri dpotri_
-#define dpotrf dpotrf_
-#define dpotrs dpotrs_
-#define dpocon dpocon_
-#define dsygst dsygst_
-#define dtrtrs dtrtrs_
-#define dpocon dpocon_
-#define dsygv dsygv_
-
-#endif
+#define dsyev DSYEV
+#define dpotri DPOTRI
+#define dpotrf DPOTRF
+#define dpotrs DPOTRS
+#define dsygst DSYGST
+#define dtrtrs DTRTRS
+#define dpocon DPOCON
+#define dsygv DSYGV
+#define dlange DLANGE
 
 extern "C"
 {
-
-    void dposv(Pchar, const int* const, const int* const, double*,
-        const int* const, double*, const int* const, int*);
     void dsyev(Pchar, Pchar, const int* const, double*, const int* const,
         double*, double*, const int* const, int*);
-    void dgeev(Pchar, Pchar, const int* const, double*, const int* const,
-        double*, double*, double*, const int* const, double*, const int* const,
-        double*, const int* const, int*);
     void dsygv(const int* const, Pchar, Pchar, const int* const, double*,
         const int* const, double*, const int* const, double*, double*,
         const int* const, int*);
@@ -73,7 +48,6 @@ extern "C"
     void dgesvd(Pchar, Pchar, int*, int*, double*, int*, double*, double*, int*,
         double*, int*, double*, int*, int*);
     double dlange(Pchar, int*, int*, double*, int*, double*);
-
 }
 
 #endif

@@ -27,7 +27,9 @@ typedef int MPI_Comm;
 
 #define scopy SCOPY
 #define dcopy DCOPY
+#define sdot SDOT
 #define ddot DDOT
+#define snrm2 SNRM2
 #define dnrm2 DNRM2
 #define dswap DSWAP
 #define idamax IDAMAX

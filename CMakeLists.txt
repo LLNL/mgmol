@@ -197,6 +197,8 @@ FortranCInterface_HEADER(
         DGEMV DSYMV
         #blas3
         DGEMM SGEMM DSYMM DSYRK SSYRK DTRMM DTRSM STRSM
+        #lapack
+        DSYEV DPOTRF DPOTRS DPOTRI DSYGST DTRTRS DPOCON DSYGV DLANGE
 )
 
 FortranCInterface_HEADER(
@@ -211,6 +213,7 @@ FortranCInterface_HEADER(
         pdpotrs pspotrs pdgetrf psgetrf pdgetrs psgetrs pdpotri pspotri
         pdtrtri pstrtri pdpocon pspocon pdsygst pssygst pdsyev pssyev
         pdlatra pslatra pdlaset pslaset pdgesvd psgesvd
+        pdamax psamax
 )
 
 #FortranCInterface_HEADER(

@@ -1,11 +1,7 @@
 #ifndef MGMOL_SOLUTIONH
 #define MGMOL_SOLUTIONH
 
-#ifdef ADD_
-#define               ddot    ddot_
-#define               daxpy   daxpy_
-#define               dscal   dscal_
-#endif
+#include "MGmol_blas1.h"
  
 #include <vector>
 #include <cmath>
@@ -17,14 +13,6 @@
 #include <boost/random/linear_congruential.hpp>
 
 using namespace std;
-
-extern "C"{
-double ddot(const int* const, const double* const, const int* const,
-                              const double* const, const int* const);
-void daxpy(const int* const, const double* const, const double* const, 
-           const int* const, double *, const int* const);
-void dscal(const int* const, const double* const, double *, const int* const);
-}
 
 
 class Solution
@@ -80,7 +68,7 @@ public:
     double norm()
     {
         int ione=1;
-        double norm2=ddot(&n_, &u_[0], &ione, &u_[0], &ione);
+        double norm2=DDOT(&n_, &u_[0], &ione, &u_[0], &ione);
         return sqrt(norm2);
     }
     
@@ -93,7 +81,7 @@ public:
     double dotProduct(const Solution& v)
     {
         int ione=1;
-        return invs_*ddot(&n_, &u_[0], &ione, &v.u_[0], &ione);
+        return invs_*DDOT(&n_, &u_[0], &ione, &v.u_[0], &ione);
     }
     
     Solution& operator-=(const Solution& y)
@@ -106,13 +94,13 @@ public:
     void axpy(const double alpha, const Solution& y)
     {
         int ione=1;
-        daxpy(&n_, &alpha, &y.u_[0], &ione, &u_[0], &ione);
+        DAXPY(&n_, &alpha, &y.u_[0], &ione, &u_[0], &ione);
     }
     
     void scal(const double alpha)
     {
         int ione=1;
-        dscal(&n_, &alpha, &u_[0], &ione);
+        DSCAL(&n_, &alpha, &u_[0], &ione);
     }
     
     double operator[](const int i)

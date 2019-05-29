@@ -139,7 +139,7 @@ void AndersonMix<T>::update(T& f, T& work, ostream& os, const bool verbose)
 
             while (mm_ > 1)
             {
-                dcopy(&n2, &mat_[0], &ione, &tmp_mat[0], &ione);
+                DCOPY(&n2, &mat_[0], &ione, &tmp_mat[0], &ione);
                 // rescale matrix to have 1. as diagonal entries
                 // (equivalent to having normalized vectors)
                 for (int i = 0; i < mm_; i++)
@@ -156,7 +156,7 @@ void AndersonMix<T>::update(T& f, T& work, ostream& os, const bool verbose)
                         tmp_mat[i * m_ + j] *= alpha;
                     }
                 }
-                dsyev(&jobz, &uplo, &mm_, &tmp_mat[0], &m_, w, work2, &lwork2,
+                DSYEV(&jobz, &uplo, &mm_, &tmp_mat[0], &m_, w, work2, &lwork2,
                     &info);
 
                 double det = 1;
@@ -182,11 +182,11 @@ void AndersonMix<T>::update(T& f, T& work, ostream& os, const bool verbose)
                 os<<"mat["<<i<<"]="<<mat_[i+m_*i]<<endl;
             }
 #endif
-            dcopy(&n2, &mat_[0], &ione, &tmp_mat[0], &ione);
+            DCOPY(&n2, &mat_[0], &ione, &tmp_mat[0], &ione);
 
             // solve linear system to find Anderson coefficients
-            dpotrf(&uplo, &mm_, &tmp_mat[0], &m_, &info);
-            dpotrs(
+            DPOTRF(&uplo, &mm_, &tmp_mat[0], &m_, &info);
+            DPOTRS(
                 &uplo, &mm_, &ione, &tmp_mat[0], &m_, &theta_[0], &m_, &info);
 
             delete[] tmp_mem;
