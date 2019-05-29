@@ -137,27 +137,21 @@ set(SOURCES
 
 add_library(mgmol_src ${SOURCES})
 
-if(${HDF5_FOUND})
-  target_include_directories(mgmol_src PRIVATE ${HDF5_INCLUDE_DIRS})
-
-
-endif(${HDF5_FOUND})
-
-if(${Boost_FOUND})
-  target_include_directories(mgmol_src PRIVATE ${Boost_INCLUDE_DIRS})
-endif(${Boost_FOUND})
-
+target_include_directories(mgmol_src PRIVATE ${HDF5_INCLUDE_DIRS})
+target_include_directories(mgmol_src PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories (mgmol_src PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
 target_link_libraries(mgmol_src ${link_libs})
 
 # compile definitions
-target_compile_definitions (mgmol_src PUBLIC -DUSE_CNR_)
+#target_compile_definitions (mgmol_src PUBLIC -DUSE_CNR_)
 target_compile_definitions (mgmol_src PUBLIC -DUSE_MPI)
 
 install(TARGETS mgmol_src DESTINATION lib)
 
 # build executable
 add_executable(mgmol-opt main.cc)
+
 target_link_libraries(mgmol-opt mgmol_src ${link_libs}) 
 target_link_libraries(mgmol-opt ${SCALAPACK_LIBRARIES})
 target_link_libraries(mgmol-opt ${HDF5_LIBRARIES})
