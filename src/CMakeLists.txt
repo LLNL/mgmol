@@ -155,6 +155,7 @@ install(TARGETS mgmol_src DESTINATION lib)
 
 # build executable
 add_executable(mgmol-opt main.cc)
+target_include_directories (mgmol-opt PRIVATE ${Boost_INCLUDE_DIRS})
 
 target_link_libraries(mgmol-opt mgmol_src ${link_libs}) 
 target_link_libraries(mgmol-opt ${SCALAPACK_LIBRARIES})

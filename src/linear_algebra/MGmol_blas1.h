@@ -25,10 +25,6 @@ typedef int MPI_Comm;
 #define MY_VERSION 0
 #define EPSILON 1.e-12
 
-#define scopy SCOPY
-#define dcopy DCOPY
-#define sdot SDOT
-#define ddot DDOT
 #define snrm2 SNRM2
 #define dnrm2 DNRM2
 #define dswap DSWAP
@@ -48,13 +44,13 @@ extern "C"
     void DSCAL(
         const int* const, const double* const, double*, const int* const);
     void SSCAL(const int* const, const float* const, float*, const int* const);
-    void dcopy(const int* const, const double* const, const int* const, double*,
+    void DCOPY(const int* const, const double* const, const int* const, double*,
         const int* const);
-    void scopy(const int* const, const float* const, const int* const, float*,
+    void SCOPY(const int* const, const float* const, const int* const, float*,
         const int* const);
-    double ddot(const int* const, const double* const, const int* const,
+    double DDOT(const int* const, const double* const, const int* const,
         const double* const, const int* const);
-    float sdot(const int* const, const float* const, const int* const,
+    float SDOT(const int* const, const float* const, const int* const,
         const float* const, const int* const);
     double dnrm2(const int* const, const double* const, const int* const);
     float snrm2(const int* const, const float* const, const int* const);
@@ -76,7 +72,7 @@ double my_pddot(int, const double* const, const double* const, MPI_Comm);
 inline void my_dcopy(const int n, const double* const a, double* b)
 {
     int ione = 1;
-    dcopy(&n, a, &ione, b, &ione);
+    DCOPY(&n, a, &ione, b, &ione);
 }
 
 inline void my_daxpy(
