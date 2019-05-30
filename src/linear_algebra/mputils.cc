@@ -291,13 +291,26 @@ void MPsyrk(const char uplo, const char trans, const int n, const int k,
     mpsyrk_tm.stop();
 }
 
+void Tgemv(const char trans, const int m, const int n, const double alpha,
+    const double* const a, const int lda, const double* const x, const int incx,
+    const double beta, double* const y, const int incy)
+{
+    DGEMV(&trans, &m, &n, &alpha, a, &lda, x, &incx, &beta, y, &incy);
+}
+void Tgemv(const char trans, const int m, const int n, const float alpha,
+    const float* const a, const int lda, const float* const x, const int incx,
+    const float beta, float* const y, const int incy)
+{
+    SGEMV(&trans, &m, &n, &alpha, a, &lda, x, &incx, &beta, y, &incy);
+}
+
 void MPgemm(const char transa, const char transb, const int m, const int n,
     const int k, const double alpha, const double* const a, const int lda,
     const double* const b, const int ldb, const double beta, double* const c,
     const int ldc)
 {
     dgemm_tm.start();
-    dgemm(
+    DGEMM(
         &transa, &transb, &m, &n, &k, &alpha, a, &lda, b, &ldb, &beta, c, &ldc);
     dgemm_tm.stop();
 }

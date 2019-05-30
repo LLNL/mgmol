@@ -12,6 +12,7 @@
 #define MGMOL_MPUTILS_H
 
 #include "MGmol_blas1.h"
+#include "blas2_c.h"
 #include "blas3_c.h"
 
 /* scal */
@@ -103,6 +104,13 @@ template <typename T1, typename T2>
 void MPsyrk(const char uplo, const char trans, const int n, const int k,
     const double alpha, const T1* const a, const int lda, const double beta,
     T2* c, const int ldc);
+
+void Tgemv(const char trans, const int m, const int n, const double alpha,
+    const double* const a, const int lda, const double* const x, const int incx,
+    const double beta, double* const y, const int incy);
+void Tgemv(const char trans, const int m, const int n, const float alpha,
+    const float* const a, const int lda, const float* const x, const int incx,
+    const float beta, float* const y, const int incy);
 
 /* Mixed precision gemm */
 void MPgemm(const char transa, const char transb, const int m, const int n,

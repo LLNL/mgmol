@@ -133,6 +133,7 @@ set(SOURCES
  PCGSolver.cc 
  Hartree_CG.cc 
  ClusterOrbitals.cc 
+ Power.cc
 )
 
 add_library(mgmol_src ${SOURCES})

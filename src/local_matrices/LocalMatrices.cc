@@ -11,6 +11,7 @@
 #include "LocalMatrices.h"
 #include "MGmol_MPI.h"
 #include "blas3_c.h"
+#include "mputils.h"
 
 using namespace std;
 
@@ -76,6 +77,35 @@ void LocalMatrices<T1>::copy(const LocalMatrices<T2>& mat)
         }
     }
 }
+
+#ifdef HAVE_BML
+template <class T>
+void LocalMatrices<T>::copy(const bml_matrix_t* A)
+{
+    assert(subdiv_ == 1);
+
+    T* dst_mat = ptr_matrices_[0];
+
+    if (bml_get_precision(A) == double_real)
+    {
+        for (int j = 0; j < n_; j++)
+            for (int i = 0; i < m_; i++)
+            {
+                double* val         = (double*)bml_get(A, i, j);
+                dst_mat[i + j * m_] = (T)*val;
+            }
+    }
+    else
+    {
+        for (int j = 0; j < n_; j++)
+            for (int i = 0; i < m_; i++)
+            {
+                float* val          = (float*)bml_get(A, i, j);
+                dst_mat[i + j * m_] = (T)*val;
+            }
+    }
+}
+#endif
 
 // perform the symmetric operation
 // C := A'*A
@@ -349,7 +379,35 @@ void LocalMatrices<T>::setMaskThreshold(
     }
 }
 
+template <class T>
+void LocalMatrices<T>::printBlock(ostream& os, const int blocksize)
+{
+    for (short iloc = 0; iloc < subdiv_; iloc++)
+    {
+        T* local_mat = ptr_matrices_[iloc];
+        os << "iloc=" << iloc << endl;
+        for (int j = 0; j < blocksize; j++)
+        {
+            for (int i = 0; i < blocksize; i++)
+            {
+                int index = i + j * m_;
+                os << local_mat[index] << " ";
+            }
+            os << endl;
+        }
+    }
+}
+
+template <class T>
+void LocalMatrices<T>::matvec(
+    const std::vector<T>& u, std::vector<T>& f, const int iloc)
+{
+    T* mat = ptr_matrices_[iloc];
+    Tgemv('n', m_, n_, 1., mat, m_, &u[0], 1, 0., &f[0], 1);
+}
+
 template class LocalMatrices<double>;
 template class LocalMatrices<float>;
 
 template void LocalMatrices<double>::copy(const LocalMatrices<float>& mat);
+template void LocalMatrices<double>::copy(const LocalMatrices<double>& mat);

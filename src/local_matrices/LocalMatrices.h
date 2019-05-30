@@ -20,6 +20,13 @@
 
 #include "../global.h"
 
+#ifdef HAVE_BML
+extern "C"
+{
+#include <bml.h>
+}
+#endif
+
 #include <cassert>
 #include <iostream>
 #include <vector>
@@ -51,6 +58,9 @@ public:
 
     template <class T2>
     void copy(const LocalMatrices<T2>& mat);
+#ifdef HAVE_BML
+    void copy(const bml_matrix_t* A);
+#endif
 
     virtual ~LocalMatrices()
     {
@@ -75,14 +85,14 @@ public:
 
     int m() const { return m_; }
 
-    const T* getSubMatrix(const int iloc) const
+    const T* getSubMatrix(const int iloc = 0) const
     {
         assert(iloc < (int)ptr_matrices_.size());
         assert(ptr_matrices_[iloc] != NULL);
         return ptr_matrices_[iloc];
     }
 
-    T* getSubMatrix(const int iloc)
+    T* getSubMatrix(const int iloc = 0)
     {
         assert(iloc < (int)ptr_matrices_.size());
         assert(ptr_matrices_[iloc] != NULL);
@@ -124,6 +134,10 @@ public:
     }
 
     void scal(const double alpha) { Tscal(storage_size_, alpha, storage_); }
+    void axpy(const double alpha, const LocalMatrices& matA)
+    {
+        Taxpy(storage_size_, alpha, matA.storage_, storage_);
+    }
 
     void syrk(const int iloc, const int m, const float* const a, const int lda);
     void syrk(
@@ -205,6 +219,9 @@ public:
     void applyMask(const LocalMatrices& mask);
 
     void setMaskThreshold(const T min_threshold, const T max_threshold);
+    void printBlock(std::ostream& os, const int blocksize);
+
+    void matvec(const std::vector<T>& u, std::vector<T>& f, const int iloc);
 };
 
 template <class T>

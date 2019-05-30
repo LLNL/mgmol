@@ -73,6 +73,44 @@ void SquareLocalMatrices<T>::transpose()
     }
 }
 
+template <class T>
+double SquareLocalMatrices<T>::computePartialTrace(
+    const vector<int>& ids, const int iloc)
+{
+    int m = LocalMatrices<T>::m_;
+
+    T* ssiloc = LocalMatrices<T>::getSubMatrix(iloc);
+
+    double trace = 0.;
+    const int n  = (int)ids.size();
+#ifdef _OPENMP
+#pragma omp parallel for reduction(+ : trace)
+#endif
+    for (int i = 0; i < n; i++)
+    {
+        assert(ids[i] < m);
+        trace += ssiloc[ids[i] * (m + 1)];
+    }
+
+    return trace;
+}
+
+template <class T>
+void SquareLocalMatrices<T>::shift(const T shift)
+{
+    const int m = LocalMatrices<T>::m_;
+
+    for (short iloc = 0; iloc < LocalMatrices<T>::subdiv_; iloc++)
+    {
+        T* mat = LocalMatrices<T>::getSubMatrix(iloc);
+
+        for (int i = 0; i < m; i++)
+        {
+            mat[i + m * i] += shift;
+        }
+    }
+}
+
 //set matrix elements to zero in rows/columns
 //not associated with any orbital
 template <class T>

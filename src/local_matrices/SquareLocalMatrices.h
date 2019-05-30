@@ -13,6 +13,8 @@
 
 #include "LocalMatrices.h"
 
+#include <vector>
+
 template <class T>
 class SquareLocalMatrices : public LocalMatrices<T>
 {
@@ -22,6 +24,16 @@ public:
     void fillUpperWithLower();
     void setDiagonal2Zero();
     void transpose();
+
+    /*!
+     *  compute trace of matrix only for elements listed in ids
+     */
+    double computePartialTrace(const std::vector<int>& ids, const int iloc = 0);
+
+    /*!
+     * add shift to diagonal, to shift eigenvalues
+     */
+    void shift(const T);
 
     /*!
      * set elements to 0 for rows/cols with gids equal to -1
