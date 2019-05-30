@@ -25,7 +25,6 @@ using namespace std;
 Timer HDFrestart::open_existing_tm_("HDFrestart::open_existing");
 Timer HDFrestart::create_file_tm_("HDFrestart::create_file");
 Timer HDFrestart::close_file_tm_("HDFrestart::close_file");
-int whatisopen(hid_t fid);
 
 #ifdef USE_HDF16
 hid_t H5Dopen2(hid_t loc_id, const char* name, hid_t dapl_id)
@@ -51,42 +50,26 @@ struct HDF_FixedLengthString
     char mystring[MyHDFStrLength];
 };
 
-string getDatasetName(const string& name, const int color)
+std::string getDatasetName(const std::string& name, const int color)
 {
-    char extension[4];
-    sprintf(extension, "%d", color);
+    std::string extension = std::to_string(color);
 
-    int l = 0;
-    if (color < 10) l++;
-    if (color < 100) l++;
-    if (color < 1000) l++;
-
-    string datasetname(name);
+    std::string datasetname(name);
     if (color < 10) datasetname.append("0");
     if (color < 100) datasetname.append("0");
     if (color < 1000) datasetname.append("0");
 
-    l = 1;
-    if (color > 9) l++;
-    if (color > 99) l++;
-    if (color > 999) l++;
-    datasetname.append(extension, l);
+    datasetname.append(extension);
 
     return datasetname;
 }
 
-string getDatasetName_old(const string& name, const int color)
+std::string getDatasetName_old(const std::string& name, const int color)
 {
-    char extension[4];
-    sprintf(extension, "%d", color);
-
-    int l = 1;
-    if (color > 9) l++;
-    if (color > 99) l++;
-    if (color > 999) l++;
+    std::string extension = std::to_string(color);
 
     string datasetname(name);
-    datasetname.append(extension, l);
+    datasetname.append(extension);
 
     return datasetname;
 }
@@ -113,7 +96,7 @@ int HDFrestart::close()
 
     Control& ct = *(Control::instance());
 
-    if (ct.verbose > 1 && active_) whatisopen(file_id_);
+    if (ct.verbose > 1 && active_) mgmol_tools::whatisopen(file_id_);
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     mmpi.barrier();
@@ -157,56 +140,48 @@ void HDFrestart::addDateToFilename()
     time(&tt);
 
     struct tm* tt1 = gmtime(&tt);
-    char extension[10];
 
     // year
     filename_.append("_");
-    sprintf(extension, "%d", tt1->tm_year - 100);
-    filename_.append(extension, 2);
+    std::string extension = std::to_string(tt1->tm_year - 100);
+    filename_.append(extension);
 
     // day
     filename_.append("_");
-    int len = 3;
-    sprintf(extension, "%d", tt1->tm_yday);
+    extension = std::to_string(tt1->tm_yday);
     if (tt1->tm_yday < 10)
     {
         filename_.append("00");
-        len = 1;
     }
     else if (tt1->tm_yday < 100)
     {
         filename_.append("0");
-        len = 2;
     }
-    filename_.append(extension, len);
+    filename_.append(extension);
 
     // hour
     filename_.append("_");
-    sprintf(extension, "%d", tt1->tm_hour);
-    len = 2;
+    extension = std::to_string(tt1->tm_hour);
     if (tt1->tm_hour < 10)
     {
         filename_.append("0");
-        len = 1;
     }
-    filename_.append(extension, len);
+    filename_.append(extension);
 
     // minutes
     filename_.append("_");
-    sprintf(extension, "%d", tt1->tm_min);
-    len = 2;
+    extension = std::to_string(tt1->tm_min);
     if (tt1->tm_min < 10)
     {
         filename_.append("0");
-        len = 1;
     }
-    filename_.append(extension, len);
+    filename_.append(extension);
 #ifdef USE_MPI
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     // make sure all the PEs use the same filename
     vector<char> name_buffer(filename_.begin(), filename_.end());
     mmpi.bcast(&name_buffer[0], name_buffer.size());
-    const string name(name_buffer.begin(), name_buffer.end());
+    const std::string name(name_buffer.begin(), name_buffer.end());
     filename_ = name;
 #endif
 }
@@ -254,7 +229,7 @@ void HDFrestart::appendTaskNumberToFilename()
         filename_.append("0");
     }
 
-    stringstream oss("");
+    std::stringstream oss("");
     oss << mytask;
 
     filename_.append(oss.str());
@@ -295,7 +270,7 @@ void HDFrestart::addMDTime2File(const float run_time)
 {
     if (active_)
     {
-        string attname("MD_time");
+        std::string attname("MD_time");
 
         //  Open a dataset attribute.
         hsize_t dims[1]    = { 1 };
@@ -331,7 +306,7 @@ void HDFrestart::addMDTime2File(const float run_time)
     }
 }
 
-void HDFrestart::add2File(const int data, string attname)
+void HDFrestart::add2File(const int data, std::string attname)
 {
     if (active_)
     {
@@ -375,10 +350,10 @@ void HDFrestart::addMDstep2File(const int md_step)
 float HDFrestart::getMDTimeFromFile() const
 {
     float run_time       = 0.;
-    string function_name = "HDFrestart::getMDTimeFromFile()";
+    std::string function_name = "HDFrestart::getMDTimeFromFile()";
     if (onpe0)
     {
-        string attname("MD_time");
+        std::string attname("MD_time");
         htri_t exists = H5Aexists(file_id_, attname.c_str());
         if (exists > 0)
         {
@@ -423,10 +398,10 @@ float HDFrestart::getMDTimeFromFile() const
 
 int HDFrestart::getMDstepFromFile() const { return getFromFile("MD_step"); }
 
-int HDFrestart::getFromFile(string attname) const
+int HDFrestart::getFromFile(std::string attname) const
 {
     int data             = 1;
-    string function_name = "HDFrestart::getFromFile()";
+   std:: string function_name = "HDFrestart::getFromFile()";
     if (onpe0)
     {
         htri_t exists = H5Aexists(file_id_, attname.c_str());
@@ -478,7 +453,7 @@ void HDFrestart::addReleaseNumber2File(const char* release)
         hid_t strtype = H5Tcopy(H5T_C_S1);
         H5Tset_size(strtype, MyHDFStrLength);
 
-        string attname("MGmol Release");
+        std::string attname("MGmol Release");
         //  Open a dataset attribute.
         hsize_t dims[1]    = { 1 };
         hid_t dataspace_id = H5Screate_simple(1, dims, NULL);
@@ -518,67 +493,8 @@ void HDFrestart::addReleaseNumber2File(const char* release)
     }
 }
 
-bool HDFrestart::olderVersion()
-{
-    short older = -1;
-#ifdef USE_MPI
-    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    mmpi.bcast(&older, 1);
-#endif
-    assert(older == -1);
-    if (onpe0)
-    {
-        // create type for strings of length MyHDFStrLength
-        hid_t strtype = H5Tcopy(H5T_C_S1);
-        H5Tset_size(strtype, MyHDFStrLength);
-
-        string attname("MGmol Release");
-        char string_older[] = "1.47.1";
-
-        hid_t attribute_id = H5Aopen_name(file_id_, attname.c_str());
-        if (attribute_id < 0)
-        {
-            (*MPIdata::sout)
-                << "WARNING: HDFrestart::readReleaseNumberFromFile(): "
-                << attname << " --- H5Aopen_name failed!!!" << endl;
-        }
-        else
-        {
-            HDF_FixedLengthString t;
-            herr_t status = H5Aread(attribute_id, strtype, &t);
-            char release[MyHDFStrLength];
-            strncpy(&release[0], t.mystring, MyHDFStrLength);
-
-            (*MPIdata::sout)
-                << "Restart file created by MGmol" << release << endl;
-
-            status = H5Aclose(attribute_id);
-            if (status < 0)
-            {
-                (*MPIdata::serr) << "H5Aclose failed!!!" << endl;
-            }
-            older = (strcmp(release, string_older) < 0) ? 1 : 0;
-
-            if (older)
-                (*MPIdata::sout)
-                    << "Restart file created by MGmol with version older than "
-                    << string_older << endl;
-            else
-                (*MPIdata::sout) << "Restart file created by MGmol"
-                                 << string_older << " or newer" << endl;
-        }
-    }
-#ifdef USE_MPI
-    // MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    mmpi.bcast(&older, 1);
-#endif
-    assert(older == 0 || older == 1);
-
-    return (older == 1);
-}
-
 // constructor for one layer of PEs writing data
-HDFrestart::HDFrestart(const string filename, const pb::PEenv& pes,
+HDFrestart::HDFrestart(const std::string filename, const pb::PEenv& pes,
     const unsigned gdim[3], const short option_number)
     : pes_(pes), filename_(filename)
 {
@@ -713,7 +629,7 @@ HDFrestart::HDFrestart(const string filename, const pb::PEenv& pes,
 
 // constructor reading data (existing file)
 HDFrestart::HDFrestart(
-    const string filename, const pb::PEenv& pes, const short option_number)
+    const std::string filename, const pb::PEenv& pes, const short option_number)
     : pes_(pes), file_id_(-1)
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
@@ -880,7 +796,7 @@ int writeListCentersAndRadii(
     hsize_t dims[2] = { natt, attsize };
     // assert( dims[0]>0 );
 
-    string attname("List of centers and radii");
+    std::string attname("List of centers and radii");
     //  Open a dataset attribute.
     hid_t dataspace_id = H5Screate_simple(2, dims, 0);
     hid_t attribute_id = H5Acreate2(dset_id, attname.c_str(), H5T_NATIVE_DOUBLE,
@@ -925,7 +841,7 @@ int writeGids(hid_t dset_id, const vector<int>& gids)
     const int natt = gids.size();
     if (natt <= 0) return 0;
 
-    string attname("List of gids");
+    std::string attname("List of gids");
 
     mgmol_tools::addAttribute2Dataset(dset_id, attname.c_str(), gids);
 
@@ -934,7 +850,7 @@ int writeGids(hid_t dset_id, const vector<int>& gids)
 
 int readListCentersAndRadii(hid_t dset_id, vector<double>& attr_data)
 {
-    string attname("List of centers and radii");
+    std::string attname("List of centers and radii");
     htri_t exists = H5Aexists(dset_id, attname.c_str());
     if (exists < 0)
     {
@@ -1008,7 +924,7 @@ int readGids(hid_t dset_id, vector<int>& gids)
 
     gids.clear();
 
-    string attname("List of gids");
+    std::string attname("List of gids");
     htri_t exists = H5Aexists(dset_id, attname.c_str());
     if (exists < 0)
     {
@@ -1065,8 +981,8 @@ int readGids(hid_t dset_id, vector<int>& gids)
     return dims;
 }
 
-int HDFrestart::getLRCenters(multimap<string, Vector3D>& centers,
-    const int n_max_centers, const string& name)
+int HDFrestart::getLRCenters(std::multimap<std::string, Vector3D>& centers,
+    const int n_max_centers, const std::string& name)
 {
     Control& ct = *(Control::instance());
     if (ct.verbose > 0)
@@ -1083,7 +999,7 @@ int HDFrestart::getLRCenters(multimap<string, Vector3D>& centers,
         int dim = 0;
         vector<double> attr_data;
 
-        string datasetname(getDatasetName(name, color));
+        std::string datasetname(getDatasetName(name, color));
 
         int err_id = dset_exists(datasetname);
         if (err_id == 0)
@@ -1137,7 +1053,8 @@ int HDFrestart::getLRCenters(multimap<string, Vector3D>& centers,
                 {
                     Vector3D center(attr_data[4 * i], attr_data[4 * i + 1],
                         attr_data[4 * i + 2]);
-                    centers.insert(pair<string, Vector3D>(datasetname, center));
+                    centers.insert(std::pair<std::string, Vector3D>(
+                        datasetname, center));
                     if (verbosity_ > 2 && onpe0)
                     {
                         (*MPIdata::sout) << setprecision(8);
@@ -1171,7 +1088,7 @@ int HDFrestart::getLRCenters(multimap<string, Vector3D>& centers,
 
 // get distinct function centers and their multiplicities in file
 int HDFrestart::getLRs(LocalizationRegions& lrs, const int max_nb_lrs,
-    const string& name, const bool add)
+    const std::string& name, const bool add)
 {
     Control& ct = *(Control::instance());
     if (ct.verbose > 0)
@@ -1201,7 +1118,7 @@ int HDFrestart::getLRs(LocalizationRegions& lrs, const int max_nb_lrs,
         vector<double> attr_data;
         vector<int> gids;
 
-        string datasetname(getDatasetName(name, color));
+        std::string datasetname(getDatasetName(name, color));
 
         int err_id = dset_exists(datasetname);
         if (err_id == 0)
@@ -1294,7 +1211,7 @@ int HDFrestart::getLRs(LocalizationRegions& lrs, const int max_nb_lrs,
 
 /////////////////////////////////////////////////////////////////////////////
 
-int HDFrestart::read_1func_hdf5(double* vv, string datasetname)
+int HDFrestart::read_1func_hdf5(double* vv, std::string datasetname)
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 0)
@@ -1441,7 +1358,7 @@ int HDFrestart::read_1func_hdf5(double* vv, string datasetname)
     return 0;
 }
 
-int HDFrestart::read_1func_hdf5(float* vv, string datasetname)
+int HDFrestart::read_1func_hdf5(float* vv, std::string datasetname)
 {
     if (onpe0)
         (*MPIdata::sout) << "HDFrestart::read_1func_hdf5(). Try to read data "
@@ -1586,10 +1503,9 @@ int HDFrestart::read_1func_hdf5(float* vv, string datasetname)
 
     return 0;
 }
-//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 int HDFrestart::write_1func_hdf5(
-    double* vv, string datasetname, double* ll, double* cell_origin)
+    double* vv, std::string datasetname, double* ll, double* cell_origin)
 {
     assert(ll != NULL);
     assert(cell_origin != NULL);
@@ -1633,7 +1549,7 @@ int HDFrestart::write_1func_hdf5(
             attr_data[1] = ll[1];
             attr_data[2] = ll[2];
 
-            string attname("Lattice parameters");
+            std::string attname("Lattice parameters");
             mgmol_tools::addAttribute2Dataset(
                 dset_id, attname.c_str(), attr_data);
         }
@@ -2176,7 +2092,7 @@ int HDFrestart::writeData(float* data, hid_t space_id, hid_t memspace,
 }
 
 int HDFrestart::read_att(
-    const hid_t dset_id, string attname, vector<double>& attr_data)
+    const hid_t dset_id, std::string attname, vector<double>& attr_data)
 {
     assert(attr_data.size() > 0);
 
@@ -2643,10 +2559,10 @@ int HDFrestart::readOldCenterOnMesh(vector<double>& data, int i)
     {
         assert(file_id_ >= 0);
 
-        stringstream datasetstream;
+        std::stringstream datasetstream;
         datasetstream << "OldCenterOnMesh_" << i;
 
-        string datasetname = datasetstream.str();
+        std::string datasetname = datasetstream.str();
 
         htri_t exists = H5Lexists(file_id_, datasetname.c_str(), H5P_DEFAULT);
         if (!exists) return -1;
@@ -2761,7 +2677,7 @@ int HDFrestart::readGidsList(vector<int>& data)
     {
         assert(file_id_ >= 0);
 
-        string datasetname = "GidsList";
+        std::string datasetname = "GidsList";
 
         htri_t exists = H5Lexists(file_id_, datasetname.c_str(), H5P_DEFAULT);
         if (!exists) return -1;
@@ -2857,7 +2773,7 @@ int HDFrestart::readAtomicVelocities(vector<double>& data)
     return 0;
 }
 
-int HDFrestart::readLockedAtomNames(vector<string>& data)
+int HDFrestart::readLockedAtomNames(std::vector<std::string>& data)
 {
     if (onpe0)
         (*MPIdata::sout) << "HDFrestart::readLockedAtomNames()..." << endl;
@@ -2882,7 +2798,7 @@ int HDFrestart::readLockedAtomNames(vector<string>& data)
             return -1;
         }
 
-        string attname("String_Length");
+        std::string attname("String_Length");
         htri_t existsA = H5Aexists(dataset_id, attname.c_str());
         if (existsA)
         {
@@ -2934,7 +2850,7 @@ int HDFrestart::readLockedAtomNames(vector<string>& data)
     data.clear();
     for (short i = 0; i < buffer.size(); i += name_length)
     {
-        string t(&buffer[i], name_length);
+        std::string t(&buffer[i], name_length);
         assert(t.size() > 0);
 
         stripLeadingAndTrailingBlanks(t);
@@ -2946,7 +2862,7 @@ int HDFrestart::readLockedAtomNames(vector<string>& data)
     return 0;
 }
 
-int HDFrestart::readAtomicNames(vector<string>& data)
+int HDFrestart::readAtomicNames(std::vector<std::string>& data)
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 0)
@@ -2972,7 +2888,7 @@ int HDFrestart::readAtomicNames(vector<string>& data)
                 return -1;
             }
 
-            string attname("String_Length");
+            std::string attname("String_Length");
             htri_t existsA = H5Aexists(dataset_id, attname.c_str());
             if (existsA)
             {
@@ -3036,7 +2952,7 @@ int HDFrestart::readAtomicNames(vector<string>& data)
     data.clear();
     for (short i = 0; i < buffer.size(); i += name_length)
     {
-        string t(&buffer[i], name_length);
+        std::string t(&buffer[i], name_length);
         assert(t.size() > 0);
         // cout<<"name="<<t<<endl;
 
@@ -3292,37 +3208,4 @@ void HDFrestart::gatherDataXdir(vector<char>& data)
             }
         }
     }
-}
-
-// adapted from https://www.hdfgroup.org/HDF5-FAQ.html
-int whatisopen(hid_t fid)
-{
-    char name[1024];
-
-    ssize_t cnt = H5Fget_obj_count(fid, H5F_OBJ_ALL);
-
-    if (cnt <= 0) return cnt;
-
-    if (cnt > 1) cout << "HDF5 file: " << cnt << " object(s) open\n";
-
-    // objs = malloc(cnt * sizeof(hid_t));
-    hid_t* objs = new hid_t[cnt];
-
-    int howmany = H5Fget_obj_ids(fid, H5F_OBJ_ALL, cnt, objs);
-
-    if (onpe0 && cnt > 1) printf("open objects:\n");
-
-    hid_t* obj = objs;
-    for (int i = 0; i < howmany; i++)
-    {
-        hid_t anobj   = *obj++;
-        H5I_type_t ot = H5Iget_type(anobj);
-        H5Iget_name(anobj, name, 1024);
-        if (ot != H5I_FILE)
-            printf("HDF object %d: type %d, name %s\n", i, ot, name);
-    }
-
-    delete[] objs;
-
-    return howmany;
 }

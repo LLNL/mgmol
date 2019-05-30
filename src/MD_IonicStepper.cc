@@ -111,41 +111,21 @@ int MD_IonicStepper::init(HDFrestart& h5f_file)
     double one   = 1.;
     if (dt_ > 0.0)
     {
-        if (!h5f_file.olderVersion())
-        {
-            if (onpe0)
-                (*MPIdata::sout) << "MD_IonicStepper::init() --- use positions "
-                                    "from restart file with dt="
-                                 << dt_ << endl;
-            // taum_: velocities -> displacements = -dt*vel
-            double alpha = -1. * dt_;
-            DSCAL(&size_tau, &alpha, &taum_[0], &ione);
+        if (onpe0)
+            (*MPIdata::sout) << "MD_IonicStepper::init() --- use positions "
+                                "from restart file with dt="
+                             << dt_ << endl;
+        // taum_: velocities -> displacements = -dt*vel
+        double alpha = -1. * dt_;
+        DSCAL(&size_tau, &alpha, &taum_[0], &ione);
 
-            // initialize taup_ (to define velocities)
-            double minus_one = -1.;
-            taup_            = tau0_;
-            DAXPY(&size_tau, &minus_one, &taum_[0], &ione, &taup_[0], &ione);
+        // initialize taup_ (to define velocities)
+        double minus_one = -1.;
+        taup_            = tau0_;
+        DAXPY(&size_tau, &minus_one, &taum_[0], &ione, &taup_[0], &ione);
 
-            // taum_ -> previous positions: tau0_ - dt*vel
-            DAXPY(&size_tau, &one, &tau0_[0], &ione, &taum_[0], &ione);
-        }
-        else
-        {
-            if (onpe0)
-                (*MPIdata::sout) << "MD_IonicStepper::init() --- extrapolate "
-                                    "positions from restart file"
-                                 << endl;
-            // taum_: velocities -> displacements = +dt*vel
-            double alpha = dt_;
-            DSCAL(&size_tau, &alpha, &taum_[0], &ione);
-
-            DAXPY(&size_tau, &one, &taum_[0], &ione, &tau0_[0], &ione);
-
-            double minus = -1.;
-            DSCAL(&size_tau, &minus, &taum_[0], &ione);
-
-            DAXPY(&size_tau, &one, &tau0_[0], &ione, &taum_[0], &ione);
-        }
+        // taum_ -> previous positions: tau0_ - dt*vel
+        DAXPY(&size_tau, &one, &tau0_[0], &ione, &taum_[0], &ione);
     }
 
     return 0;

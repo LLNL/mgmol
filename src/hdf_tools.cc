@@ -654,4 +654,38 @@ void addAttribute2Dataset(
         cerr << "H5Aclose failed!!!" << endl;
     }
 }
+
+// adapted from https://www.hdfgroup.org/HDF5-FAQ.html
+int whatisopen(hid_t fid)
+{
+    char name[1024];
+
+    ssize_t cnt = H5Fget_obj_count(fid, H5F_OBJ_ALL);
+
+    if (cnt <= 0) return cnt;
+
+    if (cnt > 1) cout << "HDF5 file: " << cnt << " object(s) open\n";
+
+    // objs = malloc(cnt * sizeof(hid_t));
+    hid_t* objs = new hid_t[cnt];
+
+    int howmany = H5Fget_obj_ids(fid, H5F_OBJ_ALL, cnt, objs);
+
+    if (cnt > 1) printf("open objects:\n");
+
+    hid_t* obj = objs;
+    for (int i = 0; i < howmany; i++)
+    {
+        hid_t anobj   = *obj++;
+        H5I_type_t ot = H5Iget_type(anobj);
+        H5Iget_name(anobj, name, 1024);
+        if (ot != H5I_FILE)
+            printf("HDF object %d: type %d, name %s\n", i, ot, name);
+    }
+
+    delete[] objs;
+
+    return howmany;
+}
+
 }

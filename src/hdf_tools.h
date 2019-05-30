@@ -39,4 +39,5 @@ void addAttribute2Dataset(
     hid_t dset_id, const char* attname, const std::vector<double>& attr_data);
 void addAttribute2Dataset(
     hid_t dset_id, const char* attname, const std::vector<int>& attr_data);
+int whatisopen(hid_t fid);
 }

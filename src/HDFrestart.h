@@ -8,9 +8,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
-#ifndef HDFRESTART_H
-#define HDFRESTART_H
+#ifndef MGMOL_HDFRESTART_H
+#define MGMOL_HDFRESTART_H
 
 #include "IonData.h"
 #include "MPIdata.h"
@@ -261,8 +260,6 @@ public:
     int readOldCenter(std::vector<double>& data, int i);
     int readOldCenterOnMesh(std::vector<double>& data, int i);
     int readGidsList(std::vector<int>& data);
-
-    bool olderVersion();
 
     void addDateToFilename();
     void addMDTime2File(const float run_time);
