@@ -127,7 +127,11 @@ double GrassmanCG<T>::computeStepSize(T& orbitals)
     sdir->getLocalOverlap(orbitals, ss);
     dist_matrix::DistMatrix<DISTMATDTYPE> invSzTphiMat(
         "invSzTphiMat", dim, dim);
-    ss.fillDistMatrix(invSzTphiMat, sdir->getOverlappingGids());
+    LocalMatrices2DistMatrix* sl2dm =
+        LocalMatrices2DistMatrix::instance();
+
+    sl2dm->convert(ss, invSzTphiMat, dim);
+
     dist_matrix::DistMatrix<DISTMATDTYPE> invSphiTzMat("phiTzMat", dim, dim);
     invSphiTzMat.transpose(1.0, invSzTphiMat, 0.);
     // apply invS
@@ -138,7 +142,7 @@ double GrassmanCG<T>::computeStepSize(T& orbitals)
     ss.reset();
     sdir->getLocalOverlap(ss);
     dist_matrix::DistMatrix<DISTMATDTYPE> zTzMat("zTzMat", dim, dim);
-    ss.fillDistMatrix(zTzMat, sdir->getOverlappingGids());
+    sl2dm->convert(ss, zTzMat, dim);
 
     // Now compute Tr[S^{-1}*Z^T*(-G)] = Tr[S^{-1}*Zo^T*Phi*S^{-1}*Phi^T*H*Phi]
     // - Tr[S^{-1}*Zo^T*H*Phi] Compute Tr[S^{-1}*Zo^T*Phi*S^{-1}*Phi^T*H*Phi];

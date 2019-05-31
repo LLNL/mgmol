@@ -9,7 +9,6 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "LocalMatrices.h"
-#include "MGmol_MPI.h"
 #include "blas3_c.h"
 #include "mputils.h"
 
@@ -215,127 +214,6 @@ void LocalMatrices<T>::gemm(const char transa, const char transb,
         // do matrix multiplication
         MPgemm(transa, transb, m_, n_, nca, alpha, amat, lda, bmat, ldb, beta,
             c, m_);
-    }
-}
-
-template <class T>
-void LocalMatrices<T>::fillSparseDistMatrix(
-    dist_matrix::SparseDistMatrix<DISTMATDTYPE>& dst,
-    const vector<vector<int>>& global_indexes, const int numst,
-    const double tol) const
-{
-    int* ist = new int[2 * subdiv_];
-    T* val   = new T[subdiv_];
-
-    const short chromatic_number = (short)global_indexes[0].size();
-
-    // double loop over colors
-    for (short icolor = 0; icolor < chromatic_number; icolor++)
-    {
-        for (short jcolor = 0; jcolor < chromatic_number; jcolor++)
-        {
-            int pst_old  = -1;
-            int valindex = -1;
-
-            // loop over subdomains
-            for (short iloc = 0; iloc < subdiv_; iloc++)
-            {
-                const int st1 = global_indexes[iloc][icolor];
-                //(*MPIdata::sout)<<"icolor="<<icolor<<", pst1="<<pst1<<endl;
-
-                if (st1 != -1)
-                {
-                    const int st2 = global_indexes[iloc][jcolor];
-                    if (st2 != -1)
-                    {
-                        // unique id for current pair
-                        const int pst         = st2 * numst + st1;
-                        const T* const ssiloc = getSubMatrix(iloc);
-                        const T tmp
-                            = ssiloc[jcolor * chromatic_number + icolor];
-
-                        // accumulate values
-                        if (fabs(tmp) > tol)
-                        {
-                            if (pst == pst_old)
-                            {
-                                assert(valindex >= 0);
-                                val[valindex] += tmp;
-                            }
-                            else
-                            {
-                                valindex++;
-                                val[valindex]         = tmp;
-                                ist[2 * valindex]     = st1;
-                                ist[2 * valindex + 1] = st2;
-                                pst_old               = pst;
-                            }
-                        }
-                    }
-                }
-
-            } // iloc
-
-            // assign values
-            for (int i = 0; i <= valindex; i++)
-                dst.push_back(ist[2 * i], ist[2 * i + 1], (double)val[i]);
-
-        } // jcolor
-    } // icolor
-
-    delete[] val;
-    delete[] ist;
-}
-
-// Add matrix elements corresponding to subdomains at their right place
-// into distributed matrix
-// Important Note: Neglect contributions smaller than tol!
-// (may lead to results dependent on number of CPUs)
-template <class T>
-void LocalMatrices<T>::fillDistMatrix(
-    dist_matrix::DistMatrix<DISTMATDTYPE>& dst,
-    const vector<vector<int>>& global_indexes, const double tol) const
-{
-    fill_dist_matrix_tm_.start();
-
-#ifdef USE_MPI
-    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    MPI_Comm comm   = mmpi.commSameSpin();
-    dist_matrix::SparseDistMatrix<DISTMATDTYPE> sm(comm, dst,
-        remote_tasks_DistMatrix_, sparse_distmatrix_nb_tasks_per_partitions_);
-#else
-    dist_matrix::SparseDistMatrix<DISTMATDTYPE> sm(
-        0, dst, remote_tasks_DistMatrix_);
-#endif
-
-    fillSparseDistMatrix(sm, global_indexes, tol);
-
-    sm.parallelSumToDistMatrix();
-
-    fill_dist_matrix_tm_.stop();
-}
-
-template <class T>
-void LocalMatrices<T>::init(const dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
-    const vector<vector<int>>& global_indexes,
-    const dist_matrix::SubMatricesIndexing<DISTMATDTYPE>& submat_indexing)
-{
-    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    MPI_Comm comm   = mmpi.commSameSpin();
-
-    dist_matrix::SubMatrices<DISTMATDTYPE> submat(
-        "submat", global_indexes, comm, mat, submat_indexing);
-    submat.gather(mat);
-
-    const short chromatic_number = (short)global_indexes[0].size();
-
-    for (short iloc = 0; iloc < subdiv_; iloc++)
-    {
-        T* local_mat = ptr_matrices_[iloc];
-        for (short icolor = 0; icolor < chromatic_number; icolor++)
-            for (short jcolor = 0; jcolor < chromatic_number; jcolor++)
-                local_mat[icolor + chromatic_number * jcolor]
-                    = (T)submat.val(icolor, jcolor, iloc);
     }
 }
 

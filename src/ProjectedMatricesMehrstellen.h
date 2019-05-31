@@ -47,8 +47,10 @@ public:
 
     void initializeMatB(const SquareLocalMatrices<MATDTYPE>& ss)
     {
-        // addMatrixElements(ss, *work_);
-        ss.fillDistMatrix(*work_, global_indexes_);
+        LocalMatrices2DistMatrix* sl2dm =
+            LocalMatrices2DistMatrix::instance();
+
+        sl2dm->convert(ss, *work_, dim_);
 
         *matB_ = *work_;
     }

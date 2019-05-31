@@ -19,6 +19,7 @@ set(link_libs mgmol_distmatrix
    )
 
 set(SOURCES
+ LocalMatrices2DistMatrix.cc
  DistMatrix2SquareLocalMatrices.cc
  GrassmanCGFactory.cc
  DMStrategyFactory.cc

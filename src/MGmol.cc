@@ -287,9 +287,6 @@ int MGmol<T>::initial()
             = new dist_matrix::RemoteTasksDistMatrix<DISTMATDTYPE>(tmp);
         ProjectedMatrices::registerRemoteTasksDistMatrix(
             remote_tasks_DistMatrix_);
-        LocalMatrices<MATDTYPE>::registerRemoteTasksDistMatrix(
-            remote_tasks_DistMatrix_);
-        //        g_kbpsi_->registerRemoteTasksDistMatrix(remote_tasks_DistMatrix_);
         remote_tasks_DistMatrix_ptr_ = remote_tasks_DistMatrix_;
     }
 

@@ -23,6 +23,7 @@
 #include "RemoteTasksDistMatrix.h"
 #include "SparseDistMatrix.h"
 #include "DistMatrix2SquareLocalMatrices.h"
+#include "LocalMatrices2DistMatrix.h"
 
 #include "hdf5.h"
 
@@ -142,7 +143,11 @@ public:
     void addMatrixElementsSparseH(const SquareLocalMatrices<MATDTYPE>& slH)
     {
         Control& ct = *(Control::instance());
-        slH.fillSparseDistMatrix(*sH_, global_indexes_, ct.numst);
+
+       LocalMatrices2DistMatrix* sl2dm =
+            LocalMatrices2DistMatrix::instance();
+
+        sl2dm->convert(slH, *sH_, ct.numst);
     }
     void clearSparseH() { sH_->clearData(); }
     void scaleSparseH(const double scale) { sH_->scal(scale); }
@@ -192,7 +197,11 @@ public:
         assert(gm_);
 
         init_gram_matrix_tm_.start();
-        ss.fillDistMatrix(*work_, global_indexes_);
+
+        LocalMatrices2DistMatrix* sl2dm =
+            LocalMatrices2DistMatrix::instance();
+
+        sl2dm->convert(ss, *work_, dim_);
 
         gm_->setMatrix(*work_, orbitals_index);
         init_gram_matrix_tm_.stop();
@@ -352,7 +361,10 @@ public:
     {
         dist_matrix::DistMatrix<DISTMATDTYPE> tmp("tmp", dim_, dim_);
 
-        ss.fillDistMatrix(tmp, global_indexes_);
+        LocalMatrices2DistMatrix* sl2dm =
+            LocalMatrices2DistMatrix::instance();
+
+        sl2dm->convert(ss, tmp, dim_);
 
         return tmp;
     }

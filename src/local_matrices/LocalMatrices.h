@@ -13,8 +13,6 @@
 
 #include "MGmol_blas1.h"
 
-#include "SparseDistMatrix.h"
-#include "SubMatrices.h"
 #include "Timer.h"
 #include "mputils.h"
 
@@ -38,11 +36,6 @@ const double tol_mat_elements = 1.e-14;
 template <class T>
 class LocalMatrices
 {
-    static Timer fill_dist_matrix_tm_;
-    static dist_matrix::RemoteTasksDistMatrix<DISTMATDTYPE>*
-        remote_tasks_DistMatrix_;
-    static short sparse_distmatrix_nb_tasks_per_partitions_;
-
     T* storage_;
     int storage_size_;
     std::vector<T*> ptr_matrices_;
@@ -70,14 +63,6 @@ public:
             storage_ = 0;
         }
     };
-
-    static void registerRemoteTasksDistMatrix(
-        dist_matrix::RemoteTasksDistMatrix<DISTMATDTYPE>*
-            remote_tasks_DistMatrix)
-    {
-        assert(remote_tasks_DistMatrix != 0);
-        remote_tasks_DistMatrix_ = remote_tasks_DistMatrix;
-    }
 
     short subdiv() const { return subdiv_; }
 
@@ -204,18 +189,8 @@ public:
 
     static void printTimers(std::ostream& os)
     {
-        fill_dist_matrix_tm_.print(os);
     }
 
-    void fillSparseDistMatrix(dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sm,
-        const std::vector<std::vector<int>>& global_indexes, const int numst,
-        const double tol = tol_mat_elements) const;
-    void fillDistMatrix(dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
-        const std::vector<std::vector<int>>& global_indexes,
-        const double tol = tol_mat_elements) const;
-    void init(const dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
-        const std::vector<std::vector<int>>& global_indexes,
-        const dist_matrix::SubMatricesIndexing<DISTMATDTYPE>& submat_indexing);
     void applyMask(const LocalMatrices& mask);
 
     void setMaskThreshold(const T min_threshold, const T max_threshold);
@@ -223,16 +198,5 @@ public:
 
     void matvec(const std::vector<T>& u, std::vector<T>& f, const int iloc);
 };
-
-template <class T>
-Timer LocalMatrices<T>::fill_dist_matrix_tm_("LocalMatrices::fill_dist_matrix");
-
-template <class T>
-dist_matrix::RemoteTasksDistMatrix<DISTMATDTYPE>*
-    LocalMatrices<T>::remote_tasks_DistMatrix_
-    = 0;
-
-template <class T>
-short LocalMatrices<T>::sparse_distmatrix_nb_tasks_per_partitions_ = 256;
 
 #endif
