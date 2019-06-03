@@ -8,7 +8,6 @@
 
 #include "Power.h"
 
-#include "Control.h"
 #include "GramMatrix.h"
 #include "mputils.h"
 #include "random.h"
@@ -20,9 +19,12 @@ using namespace std;
 Timer Power::compute_tm_("Power::compute");
 Timer Power::compute_gen_tm_("Power::compute_gen");
 
+std::ostream* Power::os_ = &std::cout;
+
 // compute sum of squares of elements of vector y-theta*v
 MATDTYPE Power::diff2(
-    vector<MATDTYPE>& y, vector<MATDTYPE>& v, const MATDTYPE theta)
+    vector<MATDTYPE>& y, vector<MATDTYPE>& v, const MATDTYPE theta,
+    const bool verbose)
 {
     MATDTYPE diff                             = 0.;
     std::vector<MATDTYPE>::const_iterator it1 = v.begin();
@@ -35,18 +37,15 @@ MATDTYPE Power::diff2(
         ++it1;
     }
 
-    Control& ct = *(Control::instance());
-    if (onpe0 && ct.verbose > 1)
-        cout << "Power method: theta=" << theta << ", diff2=" << diff << '\n';
+    if ( verbose)
+        (*os_) << "Power method: theta=" << theta << ", diff2=" << diff << '\n';
 
     return diff;
 }
 
 MATDTYPE Power::power(LocalMatrices<MATDTYPE>& A, vector<MATDTYPE>& y,
-    const int maxits, const double epsilon)
+    const int maxits, const double epsilon, const bool verbose)
 {
-    Control& ct = *(Control::instance());
-
     vector<MATDTYPE> v(y.size());
     MATDTYPE theta = 0.;
 
@@ -60,10 +59,10 @@ MATDTYPE Power::power(LocalMatrices<MATDTYPE>& A, vector<MATDTYPE>& y,
         const MATDTYPE tol = epsilon * fabs(theta);
         // do at least 2 iterations before checking for convergence
         if (i > 1)
-            if (diff2(y, v, theta) <= tol * tol)
+            if (diff2(y, v, theta, verbose) <= tol * tol)
             {
-                if (onpe0 && ct.verbose > 1)
-                    cout << "Power method converge in " << i << " iterations\n";
+                if (verbose)
+                    (*os_) << "Power method converge in " << i << " iterations\n";
                 break;
             }
     }
@@ -73,13 +72,12 @@ MATDTYPE Power::power(LocalMatrices<MATDTYPE>& A, vector<MATDTYPE>& y,
 
 // compute extreme eigenvalues of A by power method
 void Power::computeEigenInterval(
-    SquareLocalMatrices<MATDTYPE>& A, double& emin, double& emax)
+    SquareLocalMatrices<MATDTYPE>& A, double& emin, double& emax,
+    const double epsilon, const bool verbose)
 {
     compute_tm_.start();
 
     int maxits     = 100;
-    double epsilon = 1.e-2;
-
     srand(13579);
 
     // use shift to target highest or lowest eigenvalue
@@ -90,14 +88,14 @@ void Power::computeEigenInterval(
     // initialize random vectors for power method
     static std::vector<DISTMATDTYPE> vec1(generate_rand(A.n()));
 
-    double beta1 = power(A, vec1, maxits, epsilon);
+    double beta1 = power(A, vec1, maxits, epsilon, verbose);
     double e1    = beta1 - shft;
 
     // shift matrix and compute other extreme eigenvalue
     A.shift(-beta1);
 
     static std::vector<DISTMATDTYPE> vec2(generate_rand(A.n()));
-    double beta2 = power(A, vec2, maxits, epsilon);
+    double beta2 = power(A, vec2, maxits, epsilon, verbose);
 
     double e2 = beta2 + beta1 - shft;
 
@@ -164,8 +162,7 @@ void Power::computeGenEigenInterval(dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
     // get norm of initial sol
     double alpha = sol.nrm2();
     double gamma = 1. / alpha;
-    if (onpe0)
-        cout << "e1:: ITER 0:: = " << alpha << " shft = " << shft << endl;
+    (*os_) << "e1:: ITER 0:: = " << alpha << " shft = " << shft << endl;
 
     // residual
     dist_matrix::DistMatrix<DISTMATDTYPE> res(new_sol);
@@ -223,7 +220,7 @@ void Power::computeGenEigenInterval(dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
     beta  = sol.dot(new_sol);
 
     // loop
-    if (onpe0) cout << "e2:: ITER 0:: = " << beta << endl;
+    (*os_) << "e2:: ITER 0:: = " << beta << endl;
     int iter2 = 0;
     for (int i = 0; i < maxits; i++)
     {
@@ -266,10 +263,9 @@ void Power::computeGenEigenInterval(dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
     e2             = max(tmp, e2);
     double padding = pad * (e2 - e1);
 
-    if (onpe0)
-        cout << "Power method Eigen intervals********************  = ( " << e1
-             << ", " << e2 << ")\n"
-             << "iter1 = " << iter1 << ", iter2 = " << iter2 << endl;
+    (*os_) << "Power method Eigen intervals********************  = ( " << e1
+           << ", " << e2 << ")\n"
+           << "iter1 = " << iter1 << ", iter2 = " << iter2 << endl;
 
     e1 -= padding;
     e2 += padding;

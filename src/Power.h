@@ -16,15 +16,19 @@ class Power
     static Timer compute_tm_;
     static Timer compute_gen_tm_;
 
+    static std::ostream* os_;
+
     static MATDTYPE diff2(
-        std::vector<MATDTYPE>& y, std::vector<MATDTYPE>& v, const MATDTYPE theta);
+        std::vector<MATDTYPE>& y, std::vector<MATDTYPE>& v, const MATDTYPE theta,
+        const bool verbose);
 
     static MATDTYPE power(LocalMatrices<MATDTYPE>& A, std::vector<MATDTYPE>& y,
-        const int maxits, const double epsilon);
+        const int maxits, const double epsilon, const bool verbose);
 
 public:
     static void computeEigenInterval(
-        SquareLocalMatrices<MATDTYPE>& A, double& emin, double& emax);
+        SquareLocalMatrices<MATDTYPE>& A, double& emin, double& emax,
+        const double epsilon = 1.e-2, const bool verbose = false);
     static void computeGenEigenInterval(
         dist_matrix::DistMatrix<DISTMATDTYPE>& mat, GramMatrix& gm,
         std::vector<double>& interval, const int maxits, const double pad);
