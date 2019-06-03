@@ -357,7 +357,7 @@ int PolakRibiereSolver<T>::solve(T& orbitals,
             bool flag = false;
             if (iprint) flag = (!(step % iprint) && step < max_steps - 1);
 
-            if (flag) mgmol_strategy_->printEigAndOcc();
+            if (flag && !ct.short_sighted) mgmol_strategy_->printEigAndOcc();
 
             last_eks = evaluateEnergy(orbitals, flag);
 
@@ -555,7 +555,7 @@ int PolakRibiereSolver<T>::solve(T& orbitals,
     if (z_k_ != 0) delete z_k_;
     if (z_km1_ != 0) delete z_km1_;
 
-    if (iprint) mgmol_strategy_->printEigAndOcc();
+    if (iprint && !ct.short_sighted) mgmol_strategy_->printEigAndOcc();
 
 #ifdef HAVE_ARPACK
     if (ct.precond_factor_computed)

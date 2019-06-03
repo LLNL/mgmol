@@ -315,7 +315,7 @@ int DFTsolver<T>::solve(T& orbitals, T& work_orbitals,
         bool flag = false;
         if (iprint) flag = (!(step % iprint) && step < max_steps - 1);
 
-        if (flag) mgmol_strategy_->printEigAndOcc();
+        if (flag && !ct.short_sighted) mgmol_strategy_->printEigAndOcc();
 
         last_eks = evaluateEnergy(orbitals, flag);
 
@@ -390,7 +390,7 @@ int DFTsolver<T>::solve(T& orbitals, T& work_orbitals,
 
     } // end iterations
 
-    if (iprint) mgmol_strategy_->printEigAndOcc();
+    if (iprint && !ct.short_sighted) mgmol_strategy_->printEigAndOcc();
 
 #ifdef HAVE_ARPACK
     if (ct.precond_factor_computed)
