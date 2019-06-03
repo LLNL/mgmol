@@ -97,6 +97,7 @@ void LocalMatrices2DistMatrix::convert(const LocalMatrices<T>& lmat,
         const int numst,
         const double tol)const
 {
+    assert(remote_tasks_DistMatrix_ != nullptr);
 #ifdef USE_MPI
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     MPI_Comm comm   = mmpi.commSameSpin();
