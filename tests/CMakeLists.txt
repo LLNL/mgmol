@@ -80,6 +80,14 @@ add_test(NAME testCl2
          ${CMAKE_CURRENT_SOURCE_DIR}/Cl2_ONCVPSP_LDA/mgmol.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/Cl2_ONCVPSP_LDA/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+add_test(NAME BandGapN2
+         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/BandGapN2/test.py
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 3
+         ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
+         ${CMAKE_CURRENT_SOURCE_DIR}/BandGapN2/mgmol.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/BandGapN2/coords.in
+         ${CMAKE_CURRENT_SOURCE_DIR}/BandGapN2/lrs.in
+         ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME testMD_D72
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/MD_D72/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 5
