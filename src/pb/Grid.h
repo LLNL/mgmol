@@ -66,6 +66,13 @@ public:
     unsigned gdim(const short i) const { return gdim_[i]; }
     int inc(const short i) const { return inc_[i]; }
     double ll(const short i) const { return ll_[i]; }
+    double maxDomainSize()const
+    {
+        double maxd = ll_[0];
+        if (ll_[1] > maxd) maxd = ll_[1];
+        if (ll_[2] > maxd) maxd = ll_[2];
+        return maxd;
+    }
     double origin(const short i) const { return origin_[i]; }
     double start(const short i) const { return start_[i]; }
     int istart(const short i) const { return istart_[i]; }

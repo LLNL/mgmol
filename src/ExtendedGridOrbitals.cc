@@ -80,7 +80,6 @@ ExtendedGridOrbitals::ExtendedGridOrbitals(std::string name,
     // preconditions
     assert(subdivx > 0);
     assert(proj_matrices != 0);
-    assert(lrs != 0);
 
     for (short i = 0; i < 3; i++)
         assert(bc[i] == 0 || bc[i] == 1);
@@ -94,9 +93,7 @@ ExtendedGridOrbitals::ExtendedGridOrbitals(std::string name,
 
     assert(numst_ >= 0);
 
-    overlapping_gids_.clear();
-
-    if (setup_flag) setup(lrs);
+    if (setup_flag) setup();
 }
 
 ExtendedGridOrbitals::~ExtendedGridOrbitals()
@@ -118,8 +115,6 @@ ExtendedGridOrbitals::ExtendedGridOrbitals(const std::string name,
     // copy_data)"<<endl;
 
     assert(A.proj_matrices_ != 0);
-
-    copySharedData(A);
 }
 
 ExtendedGridOrbitals::ExtendedGridOrbitals(const std::string name,
@@ -136,19 +131,9 @@ ExtendedGridOrbitals::ExtendedGridOrbitals(const std::string name,
 {
     assert(proj_matrices != 0);
 
-    copySharedData(A);
-
     // setup new projected_matrices object
     Control& ct = *(Control::instance());
     proj_matrices_->setup(ct.occ_width, ct.getNel(), overlapping_gids_);
-}
-
-void ExtendedGridOrbitals::copySharedData(const ExtendedGridOrbitals& A)
-{
-    // if(onpe0)cout<<"call ExtendedGridOrbitals::copySharedData(const
-    // ExtendedGridOrbitals &A)"<<endl;
-
-    local_gids_           = A.local_gids_;
 }
 
 void ExtendedGridOrbitals::copyDataFrom(const ExtendedGridOrbitals& src)
@@ -172,20 +157,17 @@ void ExtendedGridOrbitals::setDotProduct(const short dot_type)
         dotProduct_ = &ExtendedGridOrbitals::dotProductSimple;
 }
 
-void ExtendedGridOrbitals::setup(LocalizationRegions* lrs)
+void ExtendedGridOrbitals::setup()
 {
     Control& ct = *(Control::instance());
 
     // preconditions
-    assert(lrs != 0);
     assert(proj_matrices_ != 0);
 
     if (ct.verbose > 0)
         printWithTimeStamp("ExtendedGridOrbitals::setup()...", (*MPIdata::sout));
 
-    overlapping_gids_.clear();
-
-    computeGlobalIndexes(*lrs);
+    computeGlobalIndexes();
 
     bool skinny_stencil = !ct.Mehrstellen();
 
@@ -198,7 +180,7 @@ void ExtendedGridOrbitals::setup(LocalizationRegions* lrs)
     const pb::PEenv& myPEenv = mymesh->peenv();
     double domain[3]         = { mygrid.ll(0), mygrid.ll(1), mygrid.ll(2) };
 
-    double maxr = lrs->max_radii();
+    const double maxr = mygrid.maxDomainSize();
     distributor_.reset(
         new DataDistribution("DistributorExtendedGridOrbitals",
                              maxr, myPEenv, domain));
@@ -220,7 +202,7 @@ void ExtendedGridOrbitals::reset(
     setIterativeIndex(-10);
 
     // reset
-    setup(lrs);
+    setup();
 }
 
 void ExtendedGridOrbitals::assign(const ExtendedGridOrbitals& orbitals)
@@ -1732,10 +1714,8 @@ void ExtendedGridOrbitals::addDotWithNcol2Matrix(ExtendedGridOrbitals& Apsi,
     addDotWithNcol2Matrix(0, numst_, Apsi, sparse_matrix);
 }
 
-void ExtendedGridOrbitals::computeGlobalIndexes(LocalizationRegions& lrs)
+void ExtendedGridOrbitals::computeGlobalIndexes()
 {
-    lrs.getLocalSubdomainIndices(local_gids_);
-
     overlapping_gids_.clear();
     overlapping_gids_.resize(subdivx_);
     for (short iloc = 0; iloc < subdivx_; iloc++)
@@ -1826,8 +1806,8 @@ void ExtendedGridOrbitals::initWF(const LocalizationRegions& lrs)
     }
     else
     {
-        orthonormalize();
-        // orthonormalizeLoewdin();
+        // orthonormalize();
+        orthonormalizeLoewdin();
     }
 
     setDataWithGhosts();

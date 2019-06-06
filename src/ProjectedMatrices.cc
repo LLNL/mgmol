@@ -109,7 +109,8 @@ void ProjectedMatrices::setup(
 {
     assert(global_indexes.size() > 0);
 
-    ProjectedMatricesInterface::setup(kbt, nel, global_indexes);
+    setupBase(kbt, nel, global_indexes.size(),
+        global_indexes[0].size());
 
     global_indexes_ = global_indexes;
 
@@ -751,7 +752,7 @@ void ProjectedMatrices::getLoewdinTransform(
     matP.clear();
     matP.setDiagonal(diag_values);
     // if( onpe0 )
-    //  (*MPIdata::sout)<<"LocGridOrbitals::orthonormalizeLoewdin() ---
+    //  (*MPIdata::sout)<<"ProjectedMatrices::getLoewdinTransform() ---
     //  matP"<<endl;
     // matP.print((*MPIdata::sout),0,0,5,5);
     mat.symm('r', 'l', 1., matP, vect, 0.);

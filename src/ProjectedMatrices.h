@@ -131,7 +131,7 @@ public:
     ProjectedMatrices(const int, const bool with_spin);
     virtual ~ProjectedMatrices();
 
-    void setup(const double kbt, const int nel,
+    virtual void setup(const double kbt, const int nel,
         const std::vector<std::vector<int>>& global_indexes);
 
     void addMatrixElementSparseH(const int st1, const int st2, const double val)

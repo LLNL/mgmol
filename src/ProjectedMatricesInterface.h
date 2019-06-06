@@ -62,14 +62,17 @@ public:
 
     virtual ~ProjectedMatricesInterface(){};
 
+    virtual void setup(const double kbt, const int nel,
+        const std::vector<std::vector<int>>& global_indexes)=0;
+
     // initial setup function
-    virtual void setup(const double kbt, const int num_el,
-        const std::vector<std::vector<int>>& global_indexes)
+    void setupBase(const double kbt, const int num_el,
+        const int subdiv, const int chromatic_number)
     {
         width_            = kbt;
         nel_              = num_el;
-        subdiv_           = (short)global_indexes.size();
-        chromatic_number_ = (short)global_indexes[0].size();
+        subdiv_           = subdiv;
+        chromatic_number_ = chromatic_number;
     }
 
     void setHiterativeIndex(const int phi_index, const int pot_index)

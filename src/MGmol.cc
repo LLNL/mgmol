@@ -273,10 +273,6 @@ int MGmol<T>::initial()
     if (ct.verbose > 0)
         printWithTimeStamp("MGmol<T>::initial(), create T...", os_);
 
-    current_orbitals_ = new T("Primary", mygrid,
-        mymesh->subdivx(), ct.numst,
-        ct.bc, proj_matrices_, lrs_, currentMasks_, corrMasks_, local_cluster_);
-
     if (!ct.short_sighted)
     {
         printWithTimeStamp(
@@ -289,6 +285,11 @@ int MGmol<T>::initial()
             remote_tasks_DistMatrix_);
         remote_tasks_DistMatrix_ptr_ = remote_tasks_DistMatrix_;
     }
+
+    current_orbitals_ = new T("Primary", mygrid,
+        mymesh->subdivx(), ct.numst,
+        ct.bc, proj_matrices_, lrs_, currentMasks_, corrMasks_, local_cluster_,
+        true);
 
     increaseMemorySlotsForOrbitals();
 

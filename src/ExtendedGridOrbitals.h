@@ -93,8 +93,6 @@ private:
     //
     // private functions
     //
-    void copySharedData(const ExtendedGridOrbitals& A);
-
     void projectOut(ORBDTYPE* const, const int, const double scale = 1.);
 
     void multiply_by_matrix(const DISTMATDTYPE* const,
@@ -119,7 +117,7 @@ private:
     void computeLocalProduct(const ORBDTYPE* const, const int,
         LocalMatrices<MATDTYPE>&, const bool transpose = false);
 
-    void computeGlobalIndexes(LocalizationRegions& lrs);
+    void computeGlobalIndexes();
     void computeInvNorms2(std::vector<std::vector<double>>& inv_norms2) const;
     void computeDiagonalGram(VariableSizeMatrix<sparserow>& diagS) const;
 
@@ -136,7 +134,7 @@ private:
     void multiplyByMatrix(
         const SquareLocalMatrices<MATDTYPE>& matrix, ORBDTYPE* product,
         const int ldp) const;
-    void setup(LocalizationRegions* lrs);
+    void setup();
 
     /* Data distribution objects */
     static std::shared_ptr<DataDistribution> distributor_;
@@ -151,9 +149,6 @@ protected:
     // indexes corresponding to valid function in each subdomain
     static std::vector<std::vector<int>> overlapping_gids_;
 
-    // indexes of all global functions centered within subdomain/task
-    std::vector<int> local_gids_;
-
 public:
     friend class SinCosOps<ExtendedGridOrbitals>;
 
@@ -165,7 +160,7 @@ public:
     {
         return overlapping_gids_[0];
     }
-    const std::vector<int>& getLocalGids() const { return local_gids_; }
+    const std::vector<int>& getLocalGids() const { return overlapping_gids_[0]; }
 
     ExtendedGridOrbitals(std::string name,
         const pb::Grid& my_grid, const short subdivx,
@@ -186,7 +181,6 @@ public:
     void resetDotProductMatrices();
     void init2zero();
 
-    //void setup(LocalizationRegions* lrs);
     void reset(MasksSet* masks, MasksSet* corrmasks, LocalizationRegions* lrs);
 
     virtual void assign(const ExtendedGridOrbitals& orbitals);
