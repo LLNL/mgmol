@@ -251,7 +251,7 @@ public:
 #ifdef PRINT_OPERATIONS
             if (onpe0)
                 (*MPIdata::sout)
-                    << "ExtendedGridOrbitals::trade_boundaries()" << endl;
+                    << "ExtendedGridOrbitals::trade_boundaries()" << std::endl;
 #endif
             block_vector_.trade_boundaries();
             last_index_traded = data_wghosts_index_;

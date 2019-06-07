@@ -2009,6 +2009,7 @@ void DistMatrix<double>::matgather(double* a, const int lda) const
     assert(m_ == n_);
 
 #ifdef SCALAPACK
+    //all the nodes receive the data
     const int ii  = -1;
     const int jj  = -1;
     const int rev = 0;

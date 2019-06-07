@@ -195,6 +195,10 @@ void DensityMatrix::build(const int new_orbitals_index)
 void DensityMatrix::setUniform(
     const DISTMATDTYPE nel, const int new_orbitals_index)
 {
+#ifdef PRINT_OPERATIONS
+   if (onpe0)
+        (*MPIdata::sout) << "DensityMatrix::setUniform()" <<std::endl;
+#endif
     const DISTMATDTYPE occ = (DISTMATDTYPE)((double)nel / (double)dim_);
     assert(occ < 1.01);
     for (int i = 0; i < dim_; i++)

@@ -77,6 +77,8 @@ template <class T>
 double SquareLocalMatrices<T>::computePartialTrace(
     const vector<int>& ids, const int iloc)
 {
+    assert(!ids.empty());
+
     int m = LocalMatrices<T>::m_;
 
     T* ssiloc = LocalMatrices<T>::getSubMatrix(iloc);

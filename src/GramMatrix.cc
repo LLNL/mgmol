@@ -172,6 +172,8 @@ void GramMatrix::setMatrix(
     *matS_          = mat;
     orbitals_index_ = orbitals_index;
 
+    isInvSuptodate_ = false;
+
     updateLS();
 }
 
