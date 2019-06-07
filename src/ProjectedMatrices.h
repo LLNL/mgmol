@@ -201,7 +201,7 @@ public:
         LocalMatrices2DistMatrix* sl2dm =
             LocalMatrices2DistMatrix::instance();
 
-        sl2dm->convert(ss, *work_, dim_);
+        sl2dm->accumulate(ss, *work_, dim_);
 
         gm_->setMatrix(*work_, orbitals_index);
         init_gram_matrix_tm_.stop();
@@ -347,6 +347,7 @@ public:
     void printEigenvalues(std::ostream& os) const;
     void updateDM(const int iterative_index);
     void updateDMwithEigenstates(const int iterative_index);
+    void updateDMwithSP2(const int iterative_index);
     void updateDMwithEigenstatesAndRotate(
         const int iterative_index, dist_matrix::DistMatrix<DISTMATDTYPE>& zz);
     double computeChemicalPotentialAndOccupations(
@@ -364,7 +365,7 @@ public:
         LocalMatrices2DistMatrix* sl2dm =
             LocalMatrices2DistMatrix::instance();
 
-        sl2dm->convert(ss, tmp, dim_);
+        sl2dm->accumulate(ss, tmp, dim_);
 
         return tmp;
     }

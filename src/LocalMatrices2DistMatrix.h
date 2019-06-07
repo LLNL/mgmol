@@ -76,6 +76,12 @@ public:
         dist_matrix::DistMatrix<T>& dst,
         const int numst,
         const double tol = tol_mat_elements)const;
+
+    template<class T>
+    void accumulate(const LocalMatrices<T>& lmat,
+        dist_matrix::DistMatrix<T>& dst,
+        const int numst,
+        const double tol = tol_mat_elements)const;
 };
 
 #endif

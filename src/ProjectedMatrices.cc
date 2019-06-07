@@ -190,7 +190,7 @@ void ProjectedMatrices::applyInvS(SquareLocalMatrices<MATDTYPE>& mat)
     LocalMatrices2DistMatrix* sl2dm =
         LocalMatrices2DistMatrix::instance();
 
-    sl2dm->convert(mat, pmatrix, dim_);
+    sl2dm->accumulate(mat, pmatrix, dim_);
 
     gm_->applyInv(pmatrix);
 
@@ -789,7 +789,7 @@ double ProjectedMatrices::dotProductWithInvS(
     LocalMatrices2DistMatrix* sl2dm =
         LocalMatrices2DistMatrix::instance();
 
-    sl2dm->convert(local_product, ds, dim_);
+    sl2dm->accumulate(local_product, ds, dim_);
 
     dist_matrix::DistMatrix<DISTMATDTYPE> work("work", dim_, dim_);
     work.gemm('n', 'n', 1., ds, gram_4dotProducts_->getInverse(), 0.);
@@ -804,7 +804,7 @@ double ProjectedMatrices::dotProductWithDM(
     LocalMatrices2DistMatrix* sl2dm =
         LocalMatrices2DistMatrix::instance();
 
-    sl2dm->convert(local_product, ds, dim_);
+    sl2dm->accumulate(local_product, ds, dim_);
 
     dist_matrix::DistMatrix<DISTMATDTYPE> work("work", dim_, dim_);
     work.gemm('n', 'n', 0.5, ds, kernel4dot(), 0.);
@@ -821,7 +821,7 @@ double ProjectedMatrices::dotProductSimple(
     LocalMatrices2DistMatrix* sl2dm =
         LocalMatrices2DistMatrix::instance();
 
-    sl2dm->convert(local_product, ds, dim_);
+    sl2dm->accumulate(local_product, ds, dim_);
 
     return ds.trace();
 }
@@ -847,7 +847,7 @@ double ProjectedMatrices::computeTraceInvSmultMat(
 
     LocalMatrices2DistMatrix* sl2dm =
         LocalMatrices2DistMatrix::instance();
-    sl2dm->convert(mat, pmatrix, dim_);
+    sl2dm->accumulate(mat, pmatrix, dim_);
 
     gm_->applyInv(pmatrix);
     return pmatrix.trace();

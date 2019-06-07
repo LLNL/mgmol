@@ -108,8 +108,41 @@ void LocalMatrices2DistMatrix::convert(const LocalMatrices<T>& lmat,
         0, dst, remote_tasks_DistMatrix_);
 #endif
 
+    //convert into a SparseDistMatrix
     convert(lmat, sm, numst, tol);
 
+    //accumulate into a DistMatrix
+    sm.parallelSumToDistMatrix();
+
+    //We need to rescale by 1/#tasks because we have accumulated
+    //the values of the local matrix when converting to a DistMatrix
+    //Probably not very efficient. Needs to be revisited.
+    dst.scal(1./(double)mmpi.size());
+}
+
+//Sum up all the local contributions (in LocalMatrices) into 
+//one DistMatrix
+template<class T>
+void LocalMatrices2DistMatrix::accumulate(const LocalMatrices<T>& lmat,
+        dist_matrix::DistMatrix<T>& dst,
+        const int numst,
+        const double tol)const
+{
+    assert(remote_tasks_DistMatrix_ != nullptr);
+#ifdef USE_MPI
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    MPI_Comm comm   = mmpi.commSameSpin();
+    dist_matrix::SparseDistMatrix<DISTMATDTYPE> sm(comm, dst,
+        remote_tasks_DistMatrix_, sparse_distmatrix_nb_tasks_per_partitions_);
+#else
+    dist_matrix::SparseDistMatrix<DISTMATDTYPE> sm(
+        0, dst, remote_tasks_DistMatrix_);
+#endif
+
+    //convert into a SparseDistMatrix
+    convert(lmat, sm, numst, tol);
+
+    //accumulate into a DistMatrix
     sm.parallelSumToDistMatrix();
 }
 
@@ -117,5 +150,8 @@ template void LocalMatrices2DistMatrix::convert(
     const LocalMatrices<DISTMATDTYPE>& lmat, dist_matrix::SparseDistMatrix<DISTMATDTYPE>& dst,
     const int numst, const double tol)const;
 template void LocalMatrices2DistMatrix::convert(
+    const LocalMatrices<DISTMATDTYPE>& lmat, dist_matrix::DistMatrix<DISTMATDTYPE>& dst,
+    const int numst, const double tol)const;
+template void LocalMatrices2DistMatrix::accumulate(
     const LocalMatrices<DISTMATDTYPE>& lmat, dist_matrix::DistMatrix<DISTMATDTYPE>& dst,
     const int numst, const double tol)const;
