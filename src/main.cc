@@ -389,6 +389,10 @@ int main(int argc, char** argv)
                 "DensityMatrix.nb_inner_it",
                 po::value<short>()->default_value(3),
                 "Max. number of inner iterations in DM optimization")(
+                "DensityMatrix.algo",
+                po::value<string>()->default_value("Diagonalization"),
+                "Algorithm for computing Density Matrix. "
+                "Diagonalization or SP2.")(
                 "DensityMatrix.use_old", po::value<bool>()->default_value(true),
                 "Start DM optimization with matrix of previous WF step");
 

@@ -133,7 +133,8 @@ set(SOURCES
  PBdiel_CG.cc 
  PCGSolver.cc 
  Hartree_CG.cc 
- ClusterOrbitals.cc 
+ ClusterOrbitals.cc
+ SP2.cc
  Power.cc
 )
 

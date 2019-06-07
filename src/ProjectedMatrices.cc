@@ -16,8 +16,10 @@
 #include "HDFrestart.h"
 #include "MGmol_MPI.h"
 #include "MPIdata.h"
+#include "Power.h"
 #include "ReplicatedWorkSpace.h"
 #include "SparseDistMatrix.h"
+#include "SP2.h"
 #include "fermi.h"
 #include "tools.h"
 
@@ -269,17 +271,79 @@ void ProjectedMatrices::updateDMwithEigenstates(const int iterative_index)
     buildDM(zz, iterative_index);
 }
 
+//"replicated" implementation of SP2.
+//Theta is replicated on each MPI task, and SP2 solve run independently
+//by each MPI task
+void ProjectedMatrices::updateDMwithSP2(const int iterative_index)
+{
+    Control& ct = *(Control::instance());
+
+    if (onpe0 && ct.verbose > 1)
+        (*MPIdata::sout) << "ProjectedMatrices: Compute DM using SP2\n";
+
+    updateThetaAndHB();
+
+    //generate replicated copy of theta_
+    SquareLocalMatrices<double> theta(1, dim_);
+    double* work_matrix = theta.getSubMatrix();
+    theta_->matgather(work_matrix, dim_);
+
+    double emin;
+    double emax;
+    double epsilon = 1.e-2;
+    Power::computeEigenInterval(theta, emin, emax, epsilon, (onpe0 && ct.verbose > 1));
+    if (onpe0 && ct.verbose > 1) cout<<"emin="<<emin<<", emax="<<emax<<endl;
+
+    const bool distributed = false;
+    SP2 sp2(ct.dm_tol, distributed);
+    {
+    //include all the indexes so that traces are computed for the whole
+    //replicated matrix
+    std::vector<int> ids(dim_);
+    for(int i = 0; i < dim_; i++)ids[i]=i;
+    double buffer = 0.1;
+    sp2.initializeLocalMat(theta, emin - buffer, emax + buffer, ids);
+    }
+
+    sp2.solve(nel_, (ct.verbose > 1));
+
+    dist_matrix::DistMatrix<DISTMATDTYPE> dm("dm", dim_, dim_);
+#ifdef HAVE_BML
+    bml_matrix_t* dummy = bml_zero_matrix(
+        dense, double_real, thetaSP2.n(), thetaSP2.n(), sequential);
+#else
+    SquareLocalMatrices<MATDTYPE> dummy(1, theta.n());
+#endif
+
+    sp2.getDM(dm, gm_->getInverse(), dummy);
+    dm_->setMatrix(dm, iterative_index);
+
+#ifdef HAVE_BML
+    bml_deallocate(&dummy);
+#endif
+}
+
 void ProjectedMatrices::updateDM(const int iterative_index)
 {
     Control& ct = *(Control::instance());
 
     if (ct.DMEigensolver() == DMEigensolverType::Eigensolver)
         updateDMwithEigenstates(iterative_index);
+    else if(ct.DMEigensolver() == DMEigensolverType::SP2)
+        updateDMwithSP2(iterative_index);
     else
     {
         cerr<<"Eigensolver not available in ProjectedMatrices::updateDM()\n";
         ct.global_exit(2);
     }
+
+#ifndef NDEBUG
+    double nel = getNel();
+    cout<<"ProjectedMatrices::updateDM(), nel = "<<nel<<std::endl;
+    assert( fabs(nel-nel)<1.e-2 );
+    double energy = getExpectationH();
+    cout<<"ProjectedMatrices::updateDM(), energy = "<<energy<<std::endl;
+#endif
 }
 
 void ProjectedMatrices::updateDMwithEigenstatesAndRotate(
@@ -299,8 +363,12 @@ void ProjectedMatrices::updateDMwithEigenstatesAndRotate(
 
 void ProjectedMatrices::computeOccupationsFromDM()
 {
-    Control& ct = *(Control::instance());
-    if (ct.DMEigensolver() == DMEigensolverType::Eigensolver && dim_ > 0)
+#ifdef PRINT_OPERATIONS
+    if (onpe0)
+        (*MPIdata::sout) << "ProjectedMatrices::computeOccupationsFromDM()"
+            <<std::endl;
+#endif
+    if ( dim_ > 0)
     {
         assert(dm_);
         dm_->computeOccupations(gm_->getCholeskyL());
@@ -313,6 +381,10 @@ void ProjectedMatrices::getOccupations(vector<DISTMATDTYPE>& occ) const
 }
 void ProjectedMatrices::setOccupations(const vector<DISTMATDTYPE>& occ)
 {
+#ifdef PRINT_OPERATIONS
+    if (onpe0) (*MPIdata::sout) << "ProjectedMatrices::setOccupations()"
+        << endl;
+#endif
     dm_->setOccupations(occ);
 }
 void ProjectedMatrices::printDM(ostream& os) const { dm_->print(os); }
@@ -406,6 +478,7 @@ double ProjectedMatrices::computeEntropy()
     double entropy;
 
     if (ct.DMEigensolver() == DMEigensolverType::Eigensolver
+        || ct.DMEigensolver() == DMEigensolverType::SP2
         || dm_->fromUniformOccupations())
     {
         if (!occupationsUptodate())

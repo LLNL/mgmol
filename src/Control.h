@@ -443,6 +443,11 @@ public:
     short dm_approx_order;
     short dm_approx_ndigits;
     short dm_approx_power_maxits;
+
+    // SP2 options
+    double dm_ratio;
+    double dm_tol;
+
     // Initial number of v-cycles for hartree solution
     short vh_init;
 
