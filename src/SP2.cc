@@ -171,8 +171,6 @@ void SP2::initializeLocalMat(const SquareLocalMatrices<MATDTYPE>& submatM,
     MATDTYPE* localM_iloc = Xi_->getSubMatrix();
 #endif
 
-    // implicit negation of -(emax-emin)
-//    double factor = 1. / (emin - emax);
     double factor = 1. / (emax - emin);
 
     // initialize Xi
@@ -180,7 +178,8 @@ void SP2::initializeLocalMat(const SquareLocalMatrices<MATDTYPE>& submatM,
 
     const int n1 = n + 1;
     // shift and scale Xi
-    // first do shift
+    // We shift by -emin since we know it, instead of by the maximum
+    // eigenvalue in magnitude as in original paper by Niklasson
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
@@ -191,7 +190,6 @@ void SP2::initializeLocalMat(const SquareLocalMatrices<MATDTYPE>& submatM,
         double* val = (double*)bml_get(Xi_, i, i);
         *val -= emax;
 #else
-//        localM_iloc[pos] -= emax;
         localM_iloc[pos] -= emin;
 #endif
     }
