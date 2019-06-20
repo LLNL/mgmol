@@ -18,6 +18,7 @@
 #include "MPIdata.h"
 #include "Mesh.h"
 #include "Species.h"
+#include "Ions.h"
 #include "tools.h"
 
 #include "TriCubic.h"
@@ -589,6 +590,173 @@ void Potentials::axpVcomp(POTDTYPE* v, const double alpha)
 {
     MPaxpy(size_, alpha, &v_comp_[0], v);
 }
+
+// Initialization of the compensating potential
+void Potentials::initialize(Ions& ions)
+{
+    Mesh* mymesh           = Mesh::instance();
+    const pb::Grid& mygrid = mymesh->grid();
+    const int numpt = mygrid.size();
+
+    double point[3] = { 0., 0., 0. };
+    Control& ct     = *(Control::instance());
+
+    memset(&v_comp_[0], 0, numpt * sizeof(POTDTYPE));
+    memset(&rho_comp_[0], 0, numpt * sizeof(RHODTYPE));
+    memset(&v_nuc_[0], 0, numpt * sizeof(RHODTYPE));
+
+    const int dim0 = mygrid.dim(0);
+    const int dim1 = mygrid.dim(1);
+    const int dim2 = mygrid.dim(2);
+
+    const double start0 = mygrid.start(0);
+    const double start1 = mygrid.start(1);
+    const double start2 = mygrid.start(2);
+
+    const double h0 = mygrid.hgrid(0);
+    const double h1 = mygrid.hgrid(1);
+    const double h2 = mygrid.hgrid(2);
+
+    const double lattice[3] = { mygrid.ll(0), mygrid.ll(1), mygrid.ll(2) };
+
+    const int incx = dim2 * dim1;
+
+    // Loop over ions
+    for(auto& ion : ions.overlappingVL_ions() )
+    {
+        const Species& sp(ion->getSpecies());
+        const double lrad = sp.lradius();
+        assert(lrad > 0.1);
+
+        const RadialInter& lpot(sp.local_pot());
+
+        //loop over local subdomain
+        for (int ix = 0; ix < dim0; ix++)
+        {
+            point[0]   = start0 + ix * h0;
+            int istart = incx * ix;
+
+            for (int iy = 0; iy < dim1; iy++)
+            {
+                point[1]   = start1 + iy * h1;
+                int jstart = istart + dim2 * iy;
+
+                for (int iz = 0; iz < dim2; iz++)
+                {
+                    point[2] = start2 + iz * h2;
+
+                    const double r
+                        = ion->minimage(point, lattice, ct.bcPoisson);
+
+                    if (r < lrad)
+                    {
+                        rho_comp_[jstart + iz] += sp.getRhoComp(r);
+                        v_comp_[jstart + iz]   += sp.getVcomp(r);
+                        v_nuc_[jstart + iz]    += lpot.cubint(r);
+                    }
+                }
+            }
+        }
+    }
+}
+
+void Potentials::rescaleRhoComp()
+{
+    Control& ct              = *(Control::instance());
+    Mesh* mymesh             = Mesh::instance();
+    const pb::Grid& mygrid   = mymesh->grid();
+
+    // Check compensating charges
+    double comp_rho = getCharge(&rho_comp_[0]);
+
+    if (onpe0 && ct.verbose > 1)
+    {
+        cout << " Rescaling rhoc" << endl;
+    }
+    if (ionic_charge_ > 0.)
+    {
+        const int numpt = mygrid.size();
+        double t = ionic_charge_ / comp_rho;
+        MPscal(numpt, t, &rho_comp_[0]);
+
+        // Check new compensating charges
+        comp_rho = getCharge(&rho_comp_[0]);
+    }
+    if (onpe0 && ct.verbose > 1)
+        cout << " Rescaled compensating charges: " << setprecision(8) << fixed
+            << comp_rho << endl;
+    if (comp_rho < 0.) ct.global_exit(2);
+}
+
+double Potentials::getCharge(RHODTYPE* rho)
+{
+    Control& ct              = *(Control::instance());
+    Mesh* mymesh             = Mesh::instance();
+    const pb::Grid& mygrid   = mymesh->grid();
+
+    double charge   = mygrid.integralOverMesh(rho);
+
+    if (onpe0 && ct.verbose > 0)
+        cout << setprecision(8) << fixed << "Charge: " << charge << endl;
+
+    return charge;
+}
+
+void Potentials::addBackgroundToRhoComp()
+{
+    if (fabs(background_charge_) > 0.)
+    {
+        Control& ct              = *(Control::instance());
+        Mesh* mymesh             = Mesh::instance();
+        const pb::Grid& mygrid   = mymesh->grid();
+        const int numpt = mygrid.size();
+
+        double background
+            = background_charge_ / (mygrid.gsize() * mygrid.vel());
+        if (ct.bcPoisson[0] == 1 && ct.bcPoisson[1] == 1
+            && ct.bcPoisson[2] == 1)
+        {
+            if (onpe0)
+            {
+                cout << setprecision(12) << scientific
+                    << "Add background charge " << background << " to rhoc "
+                    << endl;
+            }
+            for (int i = 0; i < numpt; i++)
+                rho_comp_[i] += background;
+
+            // Check new compensating charges
+            getCharge(&rho_comp_[0]);
+        }
+    }
+}
+
+void Potentials::initBackground(Ions& ions)
+{
+    Control& ct = *(Control::instance());
+
+    // Count up the total ionic charge
+    ionic_charge_ = ions.computeIonicCharge();
+
+    // calculation the compensating background charge
+    //   for charged supercell calculations
+    background_charge_ = 0.;
+    charge_in_cell_    = ionic_charge_ - ct.getNel();
+    if (ct.bcPoisson[0] != 2 && ct.bcPoisson[1] != 2 && ct.bcPoisson[2] != 2)
+    {
+        background_charge_ = (-1.) * charge_in_cell_;
+    }
+    if (onpe0 && ct.verbose > 0)
+    {
+        cout << "N electrons=      " << ct.getNel() << endl;
+        cout << "ionic charge=     " << ionic_charge_ << endl;
+        cout << "background charge=" << background_charge_ << endl;
+    }
+
+    if (fabs(background_charge_) < 1.e-10) background_charge_ = 0.;
+}
+
+
 template void Potentials::setVxc<double>(
     const double* const vxc, const int iterativeIndex);
 template void Potentials::setVxc<float>(

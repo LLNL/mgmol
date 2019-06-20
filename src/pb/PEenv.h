@@ -8,7 +8,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id: PEenv.h,v 1.14 2009/02/18 01:06:45 jeanluc Exp $
 #ifndef PB_PEENV_H
 #define PB_PEENV_H
 

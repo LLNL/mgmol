@@ -8,9 +8,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
-#ifndef POT_H
-#define POT_H
+#ifndef MGMOL_POTENTIALS_H
+#define MGMOL_POTENTIALS_H
 
 #include "Rho.h"
 #include "TriCubic.h"
@@ -36,6 +35,10 @@ class Potentials
 
     double scf_dvrho_;
     double scf_dv_;
+
+    double background_charge_;
+    double charge_in_cell_;
+    double ionic_charge_;
 
     bool vh_frozen_;
 
@@ -129,14 +132,12 @@ public:
     POTDTYPE* vext() { return &v_ext_[0]; }
     POTDTYPE* vepsilon() { return &vepsilon_[0]; }
 
-    void set_vcomp(const int i, const POTDTYPE val) { v_comp_[i] = val; }
     void set_vcomp(const POTDTYPE val)
     {
         const int n = (int)v_comp_.size();
         for (int i = 0; i < n; i++)
             v_comp_[i] = val;
     }
-    void add_vcomp(const int i, const POTDTYPE val) { v_comp_[i] += val; }
     void axpVcompToVh(const double alpha);
     void axpVcomp(POTDTYPE* v, const double alpha);
 
@@ -146,6 +147,8 @@ public:
     POTDTYPE vepsilon(const int i) { return vepsilon_[i]; }
 
     bool diel() const { return diel_; }
+
+    double getChargeInCell() const { return charge_in_cell_; }
 
     void initWithVnuc();
 
@@ -162,6 +165,12 @@ public:
     void setVxc(const T* const vxc, const int iterativeIndex);
     void setVh(const POTDTYPE* const vh, const int iterativeIndex);
     void setVh(const pb::GridFunc<POTDTYPE>& vh, const int iterativeIndex);
+
+    void initialize(Ions& ions);
+    void rescaleRhoComp();
+    double getCharge(RHODTYPE* rho);
+    void initBackground(Ions& ions);
+    void addBackgroundToRhoComp();
 
 #ifdef HAVE_TRICUBIC
     void readExternalPot(const string filename, const short type);

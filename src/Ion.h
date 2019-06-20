@@ -314,10 +314,6 @@ public:
     void getKBcoeffs(std::vector<double>& coeffs);
     double energyDiff(
         Ion& ion, const double lattice[3], const short bc[3]) const;
-
-    void addContributionToVnucAndRhoc(POTDTYPE* vnuc, RHODTYPE* rhoc,
-        const pb::Grid& mygrid, const short bc[3]);
-
 };
 
 #endif

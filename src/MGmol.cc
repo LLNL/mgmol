@@ -139,7 +139,6 @@ template <class T>
 MGmol<T>::~MGmol()
 {
     Control& ct = *(Control::instance());
-    delete[] rhoc_;
     delete electrostat_;
     delete rho_;
     delete constraints_;
@@ -317,7 +316,7 @@ int MGmol<T>::initial()
     mmpi.barrier();
     if (ct.verbose > 0) current_orbitals_->printChromaticNumber(os_);
 
-    initBackground();
+    pot.initBackground(*ions_);
 
     // Random initialization of the wavefunctions
     if (ct.restart_info <= 2)
@@ -371,7 +370,7 @@ int MGmol<T>::initial()
     {
         if (ct.init_type == 0) // random functions
         {
-            rho_->init(rhoc_);
+            rho_->init(pot.rho_comp());
         }
         else
         {
@@ -582,6 +581,7 @@ void MGmol<T>::write_header()
     char* timeptr = ctime(&tt);
 
     Control& ct = *(Control::instance());
+    Potentials& pot = hamiltonian_->potential();
 
     if (onpe0)
     {
@@ -645,7 +645,7 @@ void MGmol<T>::write_header()
     if (onpe0)
     {
         os_ << " Number of ions     = " << nions << endl;
-        os_ << " Total charge in cell = " << charge_in_cell_ << endl;
+        os_ << " Total charge in cell = " << pot.getChargeInCell() << endl;
 
         ct.print(os_);
 
@@ -727,34 +727,6 @@ void MGmol<T>::check_anisotropy()
 }
 
 template <class T>
-void MGmol<T>::initBackground()
-{
-    assert(ions_ != 0);
-
-    Control& ct = *(Control::instance());
-
-    // Count up the total ionic charge
-    ionic_charge_ = ions_->computeIonicCharge();
-
-    // calculation the compensating background charge
-    //   for charged supercell calculations
-    background_charge_ = 0.;
-    charge_in_cell_    = ionic_charge_ - ct.getNel();
-    if (ct.bcPoisson[0] != 2 && ct.bcPoisson[1] != 2 && ct.bcPoisson[2] != 2)
-    {
-        background_charge_ = (-1.) * charge_in_cell_;
-    }
-    if (onpe0 && ct.verbose > 0)
-    {
-        os_ << "N electrons=      " << ct.getNel() << endl;
-        os_ << "ionic charge=     " << ionic_charge_ << endl;
-        os_ << "background charge=" << background_charge_ << endl;
-    }
-
-    if (fabs(background_charge_) < 1.e-10) background_charge_ = 0.;
-}
-
-template <class T>
 void MGmol<T>::printEigAndOcc()
 {
     Control& ct = *(Control::instance());
@@ -769,98 +741,6 @@ void MGmol<T>::printEigAndOcc()
 
         projmatrices->printEigenvalues(os_);
         projmatrices->printOccupations(os_);
-    }
-}
-
-template <class T>
-double MGmol<T>::get_charge(RHODTYPE* rho)
-{
-    Control& ct              = *(Control::instance());
-    Mesh* mymesh             = Mesh::instance();
-    const pb::PEenv& myPEenv = mymesh->peenv();
-    const pb::Grid& mygrid   = mymesh->grid();
-
-    double charge   = 0.;
-    const int numpt = (int)mygrid.size();
-
-    for (int idx = 0; idx < numpt; idx++)
-    {
-        assert(rho[idx] < 100.);
-        assert(rho[idx] >= -1.); // coulb be < 0. with neutralizing background
-        charge += rho[idx];
-    }
-    charge = myPEenv.double_sum_all(charge);
-
-    assert(mygrid.vel() > 0.000001);
-    assert(mygrid.vel() < 1000.);
-
-    charge *= mygrid.vel();
-    if (onpe0 && ct.verbose > 0)
-        os_ << setprecision(8) << fixed << "Charge: " << charge << endl;
-
-    return charge;
-}
-
-//  Initialization of the compensating potential
-template <class T>
-void MGmol<T>::initVcomp(Ions& ions)
-{
-    Mesh* mymesh           = Mesh::instance();
-    const pb::Grid& mygrid = mymesh->grid();
-
-    double point[3] = { 0., 0., 0. };
-    Control& ct     = *(Control::instance());
-
-    Potentials& pot = hamiltonian_->potential();
-    pot.set_vcomp(0.);
-
-    const int dim0 = mygrid.dim(0);
-    const int dim1 = mygrid.dim(1);
-    const int dim2 = mygrid.dim(2);
-
-    const double start0 = mygrid.start(0);
-    const double start1 = mygrid.start(1);
-    const double start2 = mygrid.start(2);
-
-    const double h0 = mygrid.hgrid(0);
-    const double h1 = mygrid.hgrid(1);
-    const double h2 = mygrid.hgrid(2);
-
-    const double lattice[3] = { mygrid.ll(0), mygrid.ll(1), mygrid.ll(2) };
-
-    const int incx = dim2 * dim1;
-
-    /* Loop over ions */
-    for(auto& ion : ions.overlappingVL_ions() )
-    {
-        const Species& sp(ion->getSpecies());
-        const double lrad = ion->getRadiusLocalPot();
-        assert(lrad > 0.1);
-
-        for (int ix = 0; ix < dim0; ix++)
-        {
-            point[0]   = start0 + ix * h0;
-            int istart = incx * ix;
-
-            for (int iy = 0; iy < dim1; iy++)
-            {
-                point[1]   = start1 + iy * h1;
-                int jstart = istart + dim2 * iy;
-
-                for (int iz = 0; iz < dim2; iz++)
-                {
-                    point[2] = start2 + iz * h2;
-
-                    const double r
-                        = ion->minimage(point, lattice, ct.bcPoisson);
-
-                    if (r < lrad)
-                    {
-                        pot.add_vcomp(jstart + iz, sp.getVcomp(r) );
-                    }
-                }
-            }
-        }
     }
 }
 
@@ -904,30 +784,12 @@ void MGmol<T>::initNuc(Ions& ions)
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 1) os_ << "Init vnuc and rhoc..." << endl;
 
-    Mesh* mymesh           = Mesh::instance();
-    const pb::Grid& mygrid = mymesh->grid();
-
     Potentials& pot = hamiltonian_->potential();
-    POTDTYPE* vnuc  = pot.vnuc();
 
-    const int numpt = mygrid.size();
-
-    assert(numpt > 0);
-    assert(mygrid.vel() > 0.);
-
-    memset(rhoc_, 0, numpt * sizeof(RHODTYPE));
-    memset(vnuc, 0, numpt * sizeof(POTDTYPE));
-
-    // Loop over ions
-    for(auto& ion : ions.overlappingVL_ions() )
-    {
-        ion->addContributionToVnucAndRhoc(vnuc, rhoc_, mygrid, ct.bcPoisson);
-    }
-
-    initVcomp(ions);
+    pot.initialize(ions);
 
     // Check compensating charges
-    double comp_rho = get_charge(rhoc_);
+    double comp_rho = pot.getCharge(pot.rho_comp());
 
     if (onpe0 && ct.verbose > 1)
     {
@@ -936,48 +798,12 @@ void MGmol<T>::initNuc(Ions& ions)
     }
 
 #if 1
-    // Rescale compensating charges
-    if (onpe0 && ct.verbose > 1)
-    {
-        os_ << " Rescaling rhoc" << endl;
-    }
-    if (ionic_charge_ > 0.)
-    {
-        double t = ionic_charge_ / comp_rho;
-        //        my_dscal(numpt, t, rhoc_);
-        MPscal(numpt, t, rhoc_);
-
-        // Check new compensating charges
-        comp_rho = get_charge(rhoc_);
-    }
-    if (onpe0 && ct.verbose > 1)
-        os_ << " Rescaled compensating charges: " << setprecision(8) << fixed
-            << comp_rho << endl;
-    if (comp_rho < 0.) global_exit(2);
+    pot.rescaleRhoComp();
 #endif
 
-    if (fabs(background_charge_) > 0.)
-    {
-        double background
-            = background_charge_ / (mygrid.gsize() * mygrid.vel());
-        if (ct.bcPoisson[0] == 1 && ct.bcPoisson[1] == 1
-            && ct.bcPoisson[2] == 1)
-        {
-            if (onpe0)
-            {
-                os_ << setprecision(12) << scientific
-                    << "Add background charge " << background << " to rhoc "
-                    << endl;
-            }
-            for (int i = 0; i < numpt; i++)
-                rhoc_[i] += background;
+    pot.addBackgroundToRhoComp();
 
-            // Check new compensating charges
-            comp_rho = get_charge(rhoc_);
-        }
-    }
-
-    electrostat_->setupRhoc(rhoc_);
+    electrostat_->setupRhoc(pot.rho_comp());
 
     if (onpe0 && ct.verbose > 3) os_ << " initNuc done" << endl;
 
@@ -1165,11 +991,6 @@ void MGmol<T>::setup()
     Control& ct = *(Control::instance());
 
     if (ct.verbose > 0) printWithTimeStamp("MGmol<T>::setup()...", os_);
-
-    Mesh* mymesh = Mesh::instance();
-
-    const int numpt = mymesh->numpt();
-    rhoc_           = new RHODTYPE[numpt];
 
     if (ct.verbose > 0) printWithTimeStamp("Setup VH...", os_);
     electrostat_

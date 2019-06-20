@@ -325,6 +325,22 @@ Vector3D Grid::closestGridPt(Vector3D coords) const
     return coords;
 }
 
+double Grid::integralOverMesh(const double* const func)const
+{
+    assert(vel_ > 0.000001);
+    assert(vel_ < 1000.);
+
+    double value = 0.;
+
+    for (int idx = 0; idx < size_; idx++)
+    {
+        value += func[idx];
+    }
+    value = vel_ * mype_env_.double_sum_all(value);
+
+    return value;
+}
+
 template void Grid::getSinCosFunctions(vector<float>& sinx, vector<float>& siny,
     vector<float>& sinz, vector<float>& cosx, vector<float>& cosy,
     vector<float>& cosz) const;

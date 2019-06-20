@@ -113,6 +113,8 @@ public:
     const Grid coarse_grid() const;
     const Grid replicated_grid(const PEenv&) const;
 
+    double integralOverMesh(const double* const func) const;
+
     Vector3D closestGridPt(Vector3D coords) const;
 
     ~Grid()

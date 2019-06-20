@@ -69,9 +69,6 @@ private:
     static dist_matrix::RemoteTasksDistMatrix<DISTMATDTYPE>*
         remote_tasks_DistMatrix_ptr_;
 
-    // Compensating charge density
-    RHODTYPE* rhoc_;
-
     XConGrid* xcongrid_;
 
     T* current_orbitals_;
@@ -110,9 +107,6 @@ private:
 
     HDFrestart* h5f_file_;
 
-    double background_charge_;
-    double charge_in_cell_;
-    double ionic_charge_;
     double total_energy_;
     ConstraintSet* constraints_;
 
@@ -123,9 +117,7 @@ private:
 
     // private functions
     void check_anisotropy();
-    void initBackground();
     double get_charge(RHODTYPE* rho);
-    void initVcomp(Ions& ions);
     void printTimers();
     void computeLocKBPsiIonProjL(T& orbitals, Ion& ion,
         const int ion_index,
