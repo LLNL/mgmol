@@ -124,6 +124,11 @@ public:
         return radius;
     }
 
+    const Species& getSpecies()const
+    {
+        return species_;
+    }
+
     double getRadiusLocalPot() const { return species_.lradius(); }
 
     double getRC() const { return species_.rc(); }
@@ -165,9 +170,7 @@ public:
 
     double eself() const
     {
-        assert(species_.rc() > 1.e-10);
-        const double zion = (double)species_.zion();
-        return zion * zion / species_.rc();
+        return species_.eself();
     }
 
     double getZion() const

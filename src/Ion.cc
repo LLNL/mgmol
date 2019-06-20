@@ -372,9 +372,7 @@ double Ion::energyDiff(
     const double r = minimage(ion, lattice, bc);
     assert(r > 0.);
 
-    const double t1 = sqrt(getRC() * getRC() + ion.getRC() * ion.getRC());
-
-    return getZion() * ion.getZion() * erfc(r / t1) / r;
+    return species_.ediff(ion.getSpecies(), r);
 }
 
 //This is where the local atomic potential is set, as well as the compensating
@@ -409,7 +407,7 @@ void Ion::addContributionToVnucAndRhoc(POTDTYPE* vnuc,
     const Vector3D position(position_[0], position_[1], position_[2]);
 
     // Generate indices where potential is not zero
-    vector<vector<int>> Ai;
+    std::vector<std::vector<int>> Ai;
     Ai.resize(3);
     get_Ai(Ai[0], mygrid.gdim(0), 0);
     get_Ai(Ai[1], mygrid.gdim(1), 1);
@@ -418,15 +416,7 @@ void Ion::addContributionToVnucAndRhoc(POTDTYPE* vnuc,
     const int dimly = Ai[1].size();
     const int dimlz = Ai[2].size();
 
-    const double rc = species_.rc();
     const double lr = species_.lradius();
-    assert(rc > 1.e-8);
-
-    const double pi3half = M_PI * sqrt(M_PI);
-    const double rcnorm = rc * rc * rc * pi3half;
-    assert(rcnorm > 1.e-8);
-    const double alpha   = getZion() / rcnorm;
-    const double inv_rc2 = 1. / (rc * rc);
 
     const RadialInter& lpot(getLocalPot());
 #if DEBUG
@@ -464,9 +454,8 @@ void Ion::addContributionToVnucAndRhoc(POTDTYPE* vnuc,
                     Vector3D vc(xc, yc, zc);
                     const double r
                         = vc.minimage(position, ll, bc);
-                    const double r2 = r * r;
 
-                    const double tmp = alpha * exp(-r2 * inv_rc2);
+                    const double tmp = species_.getRhoComp(r);
                     rhoc[ivec] += tmp;
 #if DEBUG
                     charge_ion += tmp;
@@ -506,4 +495,3 @@ void Ion::addContributionToVnucAndRhoc(POTDTYPE* vnuc,
 #endif
 
 }
-

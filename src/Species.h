@@ -8,9 +8,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
-#ifndef SPECIES_H
-#define SPECIES_H
+#ifndef MGMOL_SPECIES_H
+#define MGMOL_SPECIES_H
 
 #include <cassert>
 #include <cmath>
@@ -40,12 +39,17 @@ private:
 
     // Gaussian charge parameter
     double rc_;
+    double invrc_;
+    double comp_charge_factor_; // zion/(sqrt(pi)*rc)^3
 
     // type of pseudopotential
     // 0: KB
     // 1: KB with different convention for radial functions
     // 2: ONCVPSP
     short type_flag_;
+
+    // Mass
+    double mass_;
 
     // max. radius for which v_loc != 0
     double lradius_;
@@ -59,6 +63,18 @@ private:
     // size of the grid to represent local potentials
     short dim_l_;
 
+    // Max. angular momentum l for non-local projectors
+    short max_l_;
+
+    // l-value for local pseudopotential
+    short llocal_;
+
+    // Number of potentials
+    short num_potentials_;
+
+    // multiplicity for each l
+    std::vector<short> multiplicity_;
+
     // Unsigned normalization coefficients for the KB projectors
     std::vector<std::vector<double>> ekb_;
 
@@ -67,23 +83,8 @@ private:
     // Signs of kb_norm
     std::vector<std::vector<short>> kb_sign_;
 
-    // Max. angular momentum l for non-local projectors
-    short max_l_;
-
-    // l-value for local pseudopotential
-    short llocal_;
-
-    // multiplicity for each l
-    std::vector<short> multiplicity_;
-
-    // Mass
-    double mass_;
-
     // Radial pseudopotentials from input file
     std::vector<RadialInter> input_kbp_;
-
-    // Number of potentials
-    short num_potentials_;
 
     // Filtered Kleinman-Bylander Projectors on linear interpolation grid
     std::vector<std::vector<RadialInter>> kbp_;
@@ -98,6 +99,8 @@ private:
 
     // MPI communicator
     MPI_Comm comm_;
+
+    void setRcDependentData();
 
     void assignLocalPot(
         const std::vector<double>& x, const std::vector<double>& v)
@@ -144,25 +147,15 @@ private:
     }
 
 public:
-    Species(MPI_Comm comm)
+    Species(MPI_Comm comm):
+        name_("undefined"), atomic_number_(-1), zion_(-1), n_rad_points_(0),
+        rc_(-1.), invrc_(-1.), mass_(0.), lradius_(0.), nlradius_(0.),
+        dim_nl_(-1), dim_l_(-1), max_l_(-1), llocal_(0), num_potentials_(0),
+        comm_(comm)
     {
 #ifdef DEBUG
         (*MPIdata::sout) << " Construct 1 undefined Species" << endl;
 #endif
-
-        name_           = "undefined";
-        zion_           = 0;
-        n_rad_points_   = 0;
-        rc_             = 1.;
-        lradius_        = 0.;
-        nlradius_       = 0.;
-        dim_nl_         = -1;
-        dim_l_          = -1;
-        max_l_          = -1;
-        llocal_         = 0;
-        mass_           = 0.;
-        num_potentials_ = 0;
-        comm_           = comm;
     }
 
     ~Species() {}
@@ -213,6 +206,19 @@ public:
     }
     void initPotentials(const bool, const double, const bool);
 
+    double getVcomp(const double radius)const
+    {
+        if (radius > 1e-8)
+            return (double)zion_ * erf(radius * invrc_) / radius;
+        else
+            return (double)zion_ * M_2_SQRTPI * invrc_;
+    }
+
+    double getRhoComp(const double radius)const
+    {
+        return comp_charge_factor_ * exp(-radius *radius * invrc_ * invrc_);
+    }
+
     void getKBsigns(std::vector<short>& kbsigns) const;
     void getKBcoeffs(std::vector<double>& coeffs) const;
 
@@ -228,6 +234,21 @@ public:
         return kb_coeff_[l][p];
     }
     // void getNLprojIndexes(std::vector<short>& indexes)const;
+
+    double eself() const
+    {
+        assert(rc_ > 1.e-10);
+        const double zion = (double)zion_;
+        return zion * zion * invrc_;
+    }
+
+    double ediff(const Species& sp, const double distance)const
+    {
+        const double t1 = sqrt(rc_*rc_+sp.rc_*sp.rc_);
+
+        return (double)zion_ * (double)sp.zion_ * erfc(distance / t1)
+            / distance;
+    }
 
     void syncKBP(const int root);
 };

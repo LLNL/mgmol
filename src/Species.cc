@@ -8,7 +8,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #include "Species.h"
 #include "Control.h"
 #include "MGmol_MPI.h"
@@ -137,6 +136,8 @@ void Species::read_1species(const string& filename)
     MPI_Bcast(&num_potentials_, 1, MPI_SHORT, 0, comm_);
     MPI_Bcast(&llocal_, 1, MPI_SHORT, 0, comm_);
     MPI_Bcast(&type_flag_, 1, MPI_SHORT, 0, comm_);
+
+    setRcDependentData();
 
     input_kbp_.resize(num_potentials_);
     multiplicity_.resize(num_potentials_);
@@ -440,8 +441,6 @@ void Species::initLocalPotential(const bool flag_filter, const double hmax,
 {
     Control& ct = *(Control::instance());
 
-    const double Zv       = (double)zion_;
-    const double invrc    = 1. / rc_;
     const double lrcut    = lradius_ * 0.75;
     const bool print_flag = (printFlag && !ct.restart_run);
 
@@ -458,19 +457,13 @@ void Species::initLocalPotential(const bool flag_filter, const double hmax,
     RadialInter rwork(rps);
     vector<double>& work(rwork.y(0));
     assert(work.size() > 0);
-    int irmin = 0;
-    if (rps[0] < 1.e-8)
-    {
-        irmin   = 1;
-        work[0] = potl[0] + Zv * invrc * M_2_SQRTPI;
-    }
 
-    for (int idx = irmin; idx < n_rad_points_; idx++)
+    for (int idx = 0; idx < n_rad_points_; idx++)
     {
         assert(rps[idx] > 1.e-8);
 
         double r  = rps[idx];
-        work[idx] = potl[idx] + Zv * erf(r * invrc) / r;
+        work[idx] = potl[idx] + getVcomp(r);
     }
 
     // output local projector
@@ -809,4 +802,17 @@ void Species::syncKBP(const int root)
                 kbp_[l][p].bcast(comm_, root);
         }
     local_pot_.bcast(comm_, root);
+}
+
+void Species::setRcDependentData()
+{
+    assert(rc_ > 0. );
+
+    invrc_ = 1./rc_;
+
+    const double pi3half = M_PI * sqrt(M_PI);
+    const double rcnorm = rc_ * rc_ * rc_ * pi3half;
+    assert(rcnorm > 1.e-8);
+
+    comp_charge_factor_ = (double)zion_ / rcnorm;
 }

@@ -64,8 +64,6 @@ using namespace std;
 #include "DistMatrix2SquareLocalMatrices.h"
 #include "manage_memory.h"
 
-#define DELTA 1e-8
-
 namespace mgmol
 {
 std::ostream* out = NULL;
@@ -833,16 +831,11 @@ void MGmol<T>::initVcomp(Ions& ions)
     const int incx = dim2 * dim1;
 
     /* Loop over ions */
-    vector<Ion*>::const_iterator ion = ions.overlappingVL_ions().begin();
-    while (ion != ions.overlappingVL_ions().end())
+    for(auto& ion : ions.overlappingVL_ions() )
     {
-        const double lrad = (*ion)->getRadiusLocalPot();
+        const Species& sp(ion->getSpecies());
+        const double lrad = ion->getRadiusLocalPot();
         assert(lrad > 0.1);
-
-        const double Zv = (*ion)->getZion();
-        const double rc = (*ion)->getRC();
-        assert(rc > 0.1);
-        const double invrc = 1. / rc;
 
         for (int ix = 0; ix < dim0; ix++)
         {
@@ -859,24 +852,15 @@ void MGmol<T>::initVcomp(Ions& ions)
                     point[2] = start2 + iz * h2;
 
                     const double r
-                        = (*ion)->minimage(point, lattice, ct.bcPoisson);
+                        = ion->minimage(point, lattice, ct.bcPoisson);
 
                     if (r < lrad)
                     {
-                        if (r <= DELTA)
-                        {
-                            pot.add_vcomp(jstart + iz, Zv * M_2_SQRTPI * invrc);
-                        }
-                        else
-                        {
-                            pot.add_vcomp(jstart + iz, Zv * erf(r * invrc) / r);
-                        }
+                        pot.add_vcomp(jstart + iz, sp.getVcomp(r) );
                     }
                 }
             }
         }
-
-        ion++;
     }
 }
 
