@@ -32,7 +32,9 @@ int main(int argc, char** argv)
 
         double emin;
         double emax;
-        Power::computeEigenInterval(A, emin, emax, 1.e-3, true);
+        Power power(n);
+
+        power.computeEigenInterval(A, emin, emax, 1.e-3, true);
 
         const double tol = 1.e-3;
         if (std::abs(emin-shift)>tol)

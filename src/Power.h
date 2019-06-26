@@ -9,27 +9,42 @@
 #include "DistMatrix.h"
 #include "SquareLocalMatrices.h"
 #include "global.h"
+#include "random.h"
+
 class GramMatrix;
 
 class Power
 {
+private:
     static Timer compute_tm_;
     static Timer compute_gen_tm_;
 
     static std::ostream* os_;
 
-    static MATDTYPE diff2(
+    MATDTYPE diff2(
         std::vector<MATDTYPE>& y, std::vector<MATDTYPE>& v, const MATDTYPE theta,
         const bool verbose);
 
-    static MATDTYPE power(LocalMatrices<MATDTYPE>& A, std::vector<MATDTYPE>& y,
+    MATDTYPE power(LocalMatrices<MATDTYPE>& A, std::vector<MATDTYPE>& y,
         const int maxits, const double epsilon, const bool verbose);
 
+    // use shift to target highest or lowest eigenvalue
+    double shift_;
+
+    std::vector<DISTMATDTYPE> vec1_;
+    std::vector<DISTMATDTYPE> vec2_;
+
 public:
-    static void computeEigenInterval(
+    Power(const int n)
+        : shift_(0.), vec1_(generate_rand(n)), vec2_(generate_rand(n))
+    {
+        
+    }
+
+    void computeEigenInterval(
         SquareLocalMatrices<MATDTYPE>& A, double& emin, double& emax,
         const double epsilon = 1.e-2, const bool verbose = false);
-    static void computeGenEigenInterval(
+    void computeGenEigenInterval(
         dist_matrix::DistMatrix<DISTMATDTYPE>& mat, GramMatrix& gm,
         std::vector<double>& interval, const int maxits, const double pad);
 

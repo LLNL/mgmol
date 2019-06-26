@@ -14,8 +14,6 @@
 
 #include <vector>
 
-using namespace std;
-
 Timer Power::compute_tm_("Power::compute");
 Timer Power::compute_gen_tm_("Power::compute_gen");
 
@@ -23,7 +21,7 @@ std::ostream* Power::os_ = &std::cout;
 
 // compute sum of squares of elements of vector y-theta*v
 MATDTYPE Power::diff2(
-    vector<MATDTYPE>& y, vector<MATDTYPE>& v, const MATDTYPE theta,
+    std::vector<MATDTYPE>& y, std::vector<MATDTYPE>& v, const MATDTYPE theta,
     const bool verbose)
 {
     MATDTYPE diff                             = 0.;
@@ -43,10 +41,10 @@ MATDTYPE Power::diff2(
     return diff;
 }
 
-MATDTYPE Power::power(LocalMatrices<MATDTYPE>& A, vector<MATDTYPE>& y,
+MATDTYPE Power::power(LocalMatrices<MATDTYPE>& A, std::vector<MATDTYPE>& y,
     const int maxits, const double epsilon, const bool verbose)
 {
-    vector<MATDTYPE> v(y.size());
+    std::vector<MATDTYPE> v(y.size());
     MATDTYPE theta = 0.;
 
     for (int i = 0; i < maxits; i++)
@@ -80,24 +78,17 @@ void Power::computeEigenInterval(
     int maxits     = 100;
     srand(13579);
 
-    // use shift to target highest or lowest eigenvalue
-    static double shft = 0.;
+    A.shift(shift_);
 
-    A.shift(shft);
-
-    // initialize random vectors for power method
-    static std::vector<DISTMATDTYPE> vec1(generate_rand(A.n()));
-
-    double beta1 = power(A, vec1, maxits, epsilon, verbose);
-    double e1    = beta1 - shft;
+    double beta1 = power(A, vec1_, maxits, epsilon, verbose);
+    double e1    = beta1 - shift_;
 
     // shift matrix and compute other extreme eigenvalue
     A.shift(-beta1);
 
-    static std::vector<DISTMATDTYPE> vec2(generate_rand(A.n()));
-    double beta2 = power(A, vec2, maxits, epsilon, verbose);
+    double beta2 = power(A, vec2_, maxits, epsilon, verbose);
 
-    double e2 = beta2 + beta1 - shft;
+    double e2 = beta2 + beta1 - shift_;
 
     if (e1 < e2)
     {
@@ -111,7 +102,7 @@ void Power::computeEigenInterval(
     }
 
     // set shift to search for e1 first at next call
-    shft = -e2;
+    shift_ = -e2;
 
     compute_tm_.stop();
 }
@@ -140,20 +131,13 @@ void Power::computeGenEigenInterval(dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
     const int mloc   = mat.mloc(); // number of local rows
     const double one = 1., zero = 0.;
 
-    // define static variables and shift for matrices to speed up convergence
-    static double shft = 0.; // shft is initially zero
     // shift
-    mat.axpy(shft, smat);
-
-    // initialize random vectors for power method
-    static std::vector<DISTMATDTYPE> vec1(
-        generate_rand(mloc)); // initial random vector.
-    static std::vector<DISTMATDTYPE> vec2(vec1); // initial random vector.
+    mat.axpy(shift_, smat);
 
     // initialize solution data
     // initial guess
     dist_matrix::DistMatrix<DISTMATDTYPE> sol("sol", m, 1);
-    sol.assignColumn(&vec1[0], 0); // initialize local solution data
+    sol.assignColumn(&vec1_[0], 0); // initialize local solution data
     // new solution
     dist_matrix::DistMatrix<DISTMATDTYPE> new_sol("new_sol", m, 1);
     std::vector<DISTMATDTYPE> vec(mloc, 0.);
@@ -162,7 +146,7 @@ void Power::computeGenEigenInterval(dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
     // get norm of initial sol
     double alpha = sol.nrm2();
     double gamma = 1. / alpha;
-    (*os_) << "e1:: ITER 0:: = " << alpha << " shft = " << shft << endl;
+    (*os_) << "e1:: ITER 0:: = " << alpha << " shift = " << shift_ << std::endl;
 
     // residual
     dist_matrix::DistMatrix<DISTMATDTYPE> res(new_sol);
@@ -204,8 +188,8 @@ void Power::computeGenEigenInterval(dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
         gamma = 1. / alpha;
     }
     // compute first extent (eigenvalue)
-    double e1 = beta - shft;
-    sol.copyDataToVector(vec1);
+    double e1 = beta - shift_;
+    sol.copyDataToVector(vec1_);
 
     // shift matrix by beta and compute second extent
     // store shift
@@ -213,14 +197,14 @@ void Power::computeGenEigenInterval(dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
     mat.axpy(shft_e1, smat);
 
     // reset data and begin loop
-    sol.assignColumn(&vec2[0], 0);
+    sol.assignColumn(&vec2_[0], 0);
     new_sol.assignColumn(&vec[0], 0);
     alpha = sol.nrm2();
     gamma = 1. / alpha;
     beta  = sol.dot(new_sol);
 
     // loop
-    (*os_) << "e2:: ITER 0:: = " << beta << endl;
+    (*os_) << "e2:: ITER 0:: = " << beta << std::endl;
     int iter2 = 0;
     for (int i = 0; i < maxits; i++)
     {
@@ -254,18 +238,18 @@ void Power::computeGenEigenInterval(dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
         gamma = 1. / alpha;
     }
     // compute second extent
-    double e2 = beta - shft_e1 - shft;
-    sol.copyDataToVector(vec2);
+    double e2 = beta - shft_e1 - shift_;
+    sol.copyDataToVector(vec2_);
 
     // save results
     double tmp     = e1;
-    e1             = min(tmp, e2);
-    e2             = max(tmp, e2);
+    e1             = std::min(tmp, e2);
+    e2             = std::max(tmp, e2);
     double padding = pad * (e2 - e1);
 
     (*os_) << "Power method Eigen intervals********************  = ( " << e1
            << ", " << e2 << ")\n"
-           << "iter1 = " << iter1 << ", iter2 = " << iter2 << endl;
+           << "iter1 = " << iter1 << ", iter2 = " << iter2 << std::endl;
 
     e1 -= padding;
     e2 += padding;
@@ -273,7 +257,7 @@ void Power::computeGenEigenInterval(dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
     interval.push_back(e2);
 
     // update shft
-    shft = max(fabs(e1), fabs(e2));
+    shift_ = std::max(fabs(e1), fabs(e2));
 
     compute_gen_tm_.stop();
 }

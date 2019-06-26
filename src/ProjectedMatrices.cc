@@ -291,7 +291,10 @@ void ProjectedMatrices::updateDMwithSP2(const int iterative_index)
     double emin;
     double emax;
     double epsilon = 1.e-2;
-    Power::computeEigenInterval(theta, emin, emax, epsilon, (onpe0 && ct.verbose > 1));
+
+    static Power power(dim_);
+
+    power.computeEigenInterval(theta, emin, emax, epsilon, (onpe0 && ct.verbose > 1));
     if (onpe0 && ct.verbose > 1) cout<<"emin="<<emin<<", emax="<<emax<<endl;
 
     const bool distributed = false;
