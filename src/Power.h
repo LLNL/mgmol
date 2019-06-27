@@ -21,12 +21,8 @@ private:
 
     static std::ostream* os_;
 
-    MATDTYPE diff2(
-        std::vector<MATDTYPE>& y, std::vector<MATDTYPE>& v, const MATDTYPE theta,
-        const bool verbose);
-
-    MATDTYPE power(LocalMatrices<MATDTYPE>& A, std::vector<MATDTYPE>& y,
-        const int maxits, const double epsilon, const bool verbose);
+//    MATDTYPE power(SquareLocalMatrices<MATDTYPE>& A, std::vector<MATDTYPE>& y,
+//        const int maxits, const double epsilon, const bool verbose);
 
     // use shift to target highest or lowest eigenvalue
     double shift_;

@@ -20,7 +20,7 @@ Timer Power::compute_gen_tm_("Power::compute_gen");
 std::ostream* Power::os_ = &std::cout;
 
 // compute sum of squares of elements of vector y-theta*v
-MATDTYPE Power::diff2(
+MATDTYPE diff2(
     std::vector<MATDTYPE>& y, std::vector<MATDTYPE>& v, const MATDTYPE theta,
     const bool verbose)
 {
@@ -36,12 +36,12 @@ MATDTYPE Power::diff2(
     }
 
     if ( verbose)
-        (*os_) << "Power method: theta=" << theta << ", diff2=" << diff << '\n';
+        std::cout << "Power method: theta=" << theta << ", diff2=" << diff << '\n';
 
     return diff;
 }
 
-MATDTYPE Power::power(LocalMatrices<MATDTYPE>& A, std::vector<MATDTYPE>& y,
+MATDTYPE power(SquareLocalMatrices<MATDTYPE>& A, std::vector<MATDTYPE>& y,
     const int maxits, const double epsilon, const bool verbose)
 {
     std::vector<MATDTYPE> v(y.size());
@@ -60,7 +60,7 @@ MATDTYPE Power::power(LocalMatrices<MATDTYPE>& A, std::vector<MATDTYPE>& y,
             if (diff2(y, v, theta, verbose) <= tol * tol)
             {
                 if (verbose)
-                    (*os_) << "Power method converge in " << i << " iterations\n";
+                    std::cout << "Power method converge in " << i << " iterations\n";
                 break;
             }
     }
