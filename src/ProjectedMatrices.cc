@@ -17,6 +17,7 @@
 #include "MGmol_MPI.h"
 #include "MPIdata.h"
 #include "Power.h"
+#include "PowerGen.h"
 #include "ReplicatedWorkSpace.h"
 #include "SparseDistMatrix.h"
 #include "SP2.h"
@@ -953,4 +954,17 @@ double ProjectedMatrices::computeTraceInvSmultMatMultTheta(
     gm_->applyInv(pmat);
 
     return pmat.trace();
+}
+
+/* Use the power method to compute the extents of the spectrum of the
+ * generalized eigenproblem.
+ */
+void ProjectedMatrices::computeGenEigenInterval(
+    std::vector<double>& interval, const int maxits, const double pad)
+{
+    dist_matrix::DistMatrix<DISTMATDTYPE> mat(*matHB_);
+
+    static PowerGen power(dim_);
+
+    power.computeGenEigenInterval(mat, *gm_, interval, maxits, pad);
 }

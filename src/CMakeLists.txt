@@ -136,6 +136,7 @@ set(SOURCES
  ClusterOrbitals.cc
  SP2.cc
  Power.cc
+ PowerGen.cc
 )
 
 add_library(mgmol_src ${SOURCES})
