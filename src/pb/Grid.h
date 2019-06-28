@@ -16,7 +16,6 @@
 #include <iostream>
 #include <vector>
 
-#include "../Control.h"
 #include "PEenv.h"
 #include "Vector3D.h"
 
@@ -119,7 +118,6 @@ public:
 
     ~Grid()
     {
-        // cout<<"destructor for grid of dim"<<dim(0)<<"\n";
     }
 
     template <typename T>

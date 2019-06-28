@@ -12,7 +12,7 @@
 #include <cassert>
 #include <cmath>
 #include <iostream>
-using namespace std;
+//using namespace std;
 
 #ifdef SCALAPACK
 #include "blacs.h"
@@ -113,17 +113,17 @@ void BlacsContext::buildCommunicator()
     int status = MPI_Comm_group(comm_global_, &group_world);
     if (status != MPI_SUCCESS)
     {
-        cerr << "BlacsContext::buildCommunicator() --- Error in MPI_Comm_group"
-             << endl;
-        cerr << "size_=" << size_ << endl;
-        cerr << "comm_global_=" << comm_global_ << endl;
+        std::cerr << "BlacsContext::buildCommunicator() --- Error in MPI_Comm_group"
+             << std::endl;
+        std::cerr << "size_=" << size_ << std::endl;
+        std::cerr << "comm_global_=" << comm_global_ << std::endl;
         exit(0);
     }
     status = MPI_Group_incl(group_world, size_, ranks, &subgroup);
     if (status != MPI_SUCCESS)
     {
-        cerr << "BlacsContext::buildCommunicator() --- Error in MPI_Group_incl"
-             << endl;
+        std::cerr << "BlacsContext::buildCommunicator() --- Error in MPI_Group_incl"
+             << std::endl;
         exit(0);
     }
     MPI_Comm_create(comm_global_, subgroup, &comm_active_);
@@ -180,7 +180,7 @@ BlacsContext::BlacsContext(
     mype_        = 0;
 #endif
 
-    size_ = min(nprocs_, max_cpus);
+    size_ = std::min(nprocs_, max_cpus);
 
     if (type == 'r')
     {
@@ -203,8 +203,8 @@ BlacsContext::BlacsContext(
     }
     else
     {
-        cerr << " BlacsContext::BlacsContext: type = " << type
-             << " is an incorrect parameter" << endl;
+        std::cerr << " BlacsContext::BlacsContext: type = " << type
+             << " is an incorrect parameter" << std::endl;
         MPI_Abort(comm_global, 0);
     }
 
@@ -239,8 +239,8 @@ BlacsContext::BlacsContext(
 #endif
     if (nprocs_ < nprow * npcol)
     {
-        cerr << " nprocs_=" << nprocs_ << endl;
-        cerr << " BlacsContext nprow*npcol > nprocs_" << endl;
+        std::cerr << " nprocs_=" << nprocs_ << std::endl;
+        std::cerr << " BlacsContext nprow*npcol > nprocs_" << std::endl;
         MPI_Abort(comm_global, 0);
     }
 
@@ -274,8 +274,8 @@ BlacsContext::BlacsContext(
 
     if (ipe < 0 || nprow <= 0 || npcol <= 0 || ipe + nprow * npcol > nprocs_)
     {
-        cerr << " BlacsContext::BlacsContext: invalid parameters"
-             << " in " << __FILE__ << ":" << __LINE__ << endl;
+        std::cerr << " BlacsContext::BlacsContext: invalid parameters"
+             << " in " << __FILE__ << ":" << __LINE__ << std::endl;
         MPI_Abort(comm_global, 0);
     }
     int* pmap = new int[nprow * npcol];
@@ -322,7 +322,7 @@ BlacsContext::BlacsContext(BlacsContext& bc, const int irow, const int icol,
     if (irow < 0 || icol < 0 || nr <= 0 || nc <= 0 || irow + nr > bc.nprow()
         || icol + nc > bc.npcol() || nr * nc != nprow * npcol)
     {
-        cerr << " BlacsContext::BlacsContext: invalid parameters" << endl;
+        std::cerr << " BlacsContext::BlacsContext: invalid parameters" << std::endl;
         MPI_Abort(comm_global_, 0);
     }
     int* pmap = new int[nprow * npcol];
@@ -378,8 +378,8 @@ BlacsContext::BlacsContext(const BlacsContext& bc, const char type)
     }
     else
     {
-        cerr << " BlacsContext::BlacsContext: row/col incorrect parameter: "
-             << type << endl;
+        std::cerr << " BlacsContext::BlacsContext: row/col incorrect parameter: "
+             << type << std::endl;
         MPI_Abort(comm_global_, 0);
     }
 

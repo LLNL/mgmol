@@ -13,7 +13,6 @@
 #include "Timer.h"
 
 #include <iostream>
-using namespace std;
 
 
 Timer dgemm_tm("dgemm");

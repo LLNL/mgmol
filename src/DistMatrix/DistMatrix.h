@@ -11,7 +11,6 @@
 #ifndef MGMOL_DISTMATRIX_H
 #define MGMOL_DISTMATRIX_H
 
-#include "MGmol_blas1.h"
 #include "Timer.h"
 #include "mputils.h"
 
@@ -410,6 +409,7 @@ public:
 
     MPI_Comm comm_global() const;
 };
+
 template <class T>
 std::ostream& operator<<(std::ostream& os, DistMatrix<T>& a);
 

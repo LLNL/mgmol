@@ -25,13 +25,11 @@ const int iq_    = 127773;
 const int mask_  = 123459876;
 const double am_ = (1.0 / im_);
 
-using namespace std;
-
 // function to call if operator new can't allocate enough memory
 void noMoreMemory()
 {
-    cerr << "Unable to satisfy request for memory for MPI task " << mype
-         << endl;
+    std::cerr << "Unable to satisfy request for memory for MPI task " << mype
+         << std::endl;
     Control& ct = *(Control::instance());
     ct.global_exit(3);
 }
@@ -50,7 +48,7 @@ bool checkValidName(const std::string& name)
     return true;
 }
 
-void stripLeadingAndTrailingBlanks(string& stringToModify)
+void stripLeadingAndTrailingBlanks(std::string& stringToModify)
 {
     if (stringToModify.empty()) return;
 
@@ -59,17 +57,17 @@ void stripLeadingAndTrailingBlanks(string& stringToModify)
     int endIndex = stringToModify.find_last_of("0123456789");
     // cerr<<"startIndex="<<startIndex<<endl;
     // cerr<<"endIndex="<<endIndex<<endl;
-    string tempString(stringToModify);
+    std::string tempString(stringToModify);
     stringToModify.erase();
     stringToModify = tempString.substr(startIndex, (endIndex - startIndex + 1));
 }
 
-void stripName(string& stringToModify)
+void stripName(std::string& stringToModify)
 {
     if (stringToModify.empty()) return;
 
     // make new string with 1st two characters
-    string tempString(stringToModify.substr(0, 2));
+    std::string tempString(stringToModify.substr(0, 2));
     int endIndex = tempString.find_first_of("_0123456789");
     // cout<<"endIndex="<<endIndex<<endl;
     if (endIndex > 0)
@@ -78,7 +76,7 @@ void stripName(string& stringToModify)
         stringToModify = tempString;
 }
 
-void appendNumber(string& name, const int number)
+void appendNumber(std::string& name, const int number)
 {
     char extension[4];
     sprintf(extension, "%d", number);
@@ -92,7 +90,7 @@ void appendNumber(string& name, const int number)
     name.append(extension, l);
 }
 
-void read_comments(ifstream& tfile)
+void read_comments(std::ifstream& tfile)
 {
     // while( tfile.get()!='\n');
     // string str;
@@ -118,7 +116,7 @@ void rotateSym(dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
 
 void sqrtDistMatrix(dist_matrix::DistMatrix<DISTMATDTYPE>& u)
 {
-    (*MPIdata::sout) << "sqrtDistMatrix()" << endl;
+    (*MPIdata::sout) << "sqrtDistMatrix()" << std::endl;
     const int nst = u.m();
 #if 0
     dist_matrix::DistMatrix<DISTMATDTYPE> u0(u);
@@ -143,7 +141,7 @@ void sqrtDistMatrix(dist_matrix::DistMatrix<DISTMATDTYPE>& u)
     dist_matrix::DistMatrix<DISTMATDTYPE> w("w", nst, nst);
     dist_matrix::DistMatrix<DISTMATDTYPE> z("z", nst, nst);
 
-    vector<DISTMATDTYPE> eigenvalues(nst);
+    std::vector<DISTMATDTYPE> eigenvalues(nst);
 
     // a = (u+Id).
     dist_matrix::DistMatrix<DISTMATDTYPE> a(u);
@@ -213,7 +211,7 @@ void setSparseDistMatriConsolidationNumber(const int npes)
             *MPIdata::sout);
 }
 
-void reduceBytes(vector<char>& val, const MPI_Comm comm)
+void reduceBytes(std::vector<char>& val, const MPI_Comm comm)
 {
     assert(sizeof(char) == 1);
 
@@ -223,7 +221,7 @@ void reduceBytes(vector<char>& val, const MPI_Comm comm)
     int nc = nn / 4;
     if (nc * 4 < nn) nc++;
 
-    vector<char> bb(nc, 0);
+    std::vector<char> bb(nc, 0);
     for (int i = 0; i < nn; i++)
     {
         if (val[i] == 1)
@@ -251,7 +249,7 @@ void reduceBytes(vector<char>& val, const MPI_Comm comm)
     }
 
     // transfer data
-    vector<char> bbsum(nc, 0);
+    std::vector<char> bbsum(nc, 0);
     MPI_Allreduce(&bb[0], &bbsum[0], nc, MPI_CHAR, MPI_BOR, comm);
     // cout<<"Allreduce terminated..."<<endl;
 
@@ -285,7 +283,7 @@ void arrayops(const double* const a, const double* const b, const double s,
     }
 }
 
-void printWithTimeStamp(const string string2print, ostream& os)
+void printWithTimeStamp(const std::string string2print, std::ostream& os)
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     mmpi.barrier();
@@ -298,9 +296,9 @@ void printWithTimeStamp(const string string2print, ostream& os)
         char* dateString = asctime(local_tm);
         char* c          = index(dateString, '\n');
         if (c != NULL) *c = (char)'\0';
-        string date(dateString);
+        std::string date(dateString);
 
-        os << date << ": " << string2print << endl;
+        os << date << ": " << string2print << std::endl;
         os.flush();
     }
 #if 0
@@ -383,10 +381,10 @@ bool isOverlaping(const Vector3D& center, const float radius)
     return false;
 }
 
-void exitWithErrorMessage(const string name)
+void exitWithErrorMessage(const std::string name)
 {
-    cerr << "Function " << name
-         << " not implemented and should not be called!!!" << endl;
+    std::cerr << "Function " << name
+         << " not implemented and should not be called!!!" << std::endl;
     MPI_Finalize();
     exit(0);
     // MPI_Abort(MPI_COMM_WORLD,0);
@@ -416,23 +414,23 @@ double ran0()
 }
 
 double minQuadPolynomial(const double e0, const double e1, const double de0,
-    const bool print_flag, ostream& os)
+    const bool print_flag, std::ostream& os)
 {
     double x0 = -de0 / (2. * (e1 - de0 - e0));
     if (x0 < 0. && e1 < e0) x0 = 1.;
-    x0 = min(x0, 1.);
+    x0 = std::min(x0, 1.);
 
     if (onpe0 && print_flag)
     {
-        os << setprecision(12) << fixed << "x0=" << x0 << endl;
+        os << std::setprecision(12) << std::fixed << "x0=" << x0 << std::endl;
         double val = x0 * x0 * (e1 - e0 - de0) + x0 * de0 + e0;
-        os << "Predicted E: " << val << endl;
+        os << "Predicted E: " << val << std::endl;
     }
     return x0;
 }
 
 double minQuadPolynomialFrom3values(const double e0, const double e1,
-    const double ehalf, const bool print_flag, ostream& os)
+    const double ehalf, const bool print_flag, std::ostream& os)
 {
     double b = -e1 + 4 * ehalf - 3. * e0;
     double a = -4. * ehalf + 2. * e1 + 2. * e0;
@@ -447,14 +445,14 @@ double minQuadPolynomialFrom3values(const double e0, const double e1,
     }
 
     double x0 = -b / (2. * a);
-    x0        = min(x0, 1.);
+    x0        = std::min(x0, 1.);
 
     if (onpe0 && print_flag)
     {
-        os << setprecision(12) << fixed << "x0=" << x0 << endl;
+        os << std::setprecision(12) << std::fixed << "x0=" << x0 << std::endl;
         double val = a * x0 * x0 + b * x0 + e0;
-        // os<<"a="<<a<<", b="<<b<<endl;
-        os << "Predicted E: " << val << endl;
+        // os<<"a="<<a<<", b="<<b<<std::endl;
+        os << "Predicted E: " << val << std::endl;
     }
     return x0;
 }

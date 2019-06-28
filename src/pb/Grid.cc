@@ -8,12 +8,9 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id: Grid.cc,v 1.7 2010/01/28 22:56:32 jeanluc Exp $
 #include "Grid.h"
 #include <cmath>
 #include <vector>
-
-using namespace std;
 
 namespace pb
 {
@@ -268,8 +265,9 @@ const Grid Grid::replicated_grid(const PEenv& replicated_peenv) const
 }
 
 template <typename T>
-void Grid::getSinCosFunctions(vector<T>& sinx, vector<T>& siny, vector<T>& sinz,
-    vector<T>& cosx, vector<T>& cosy, vector<T>& cosz) const
+void Grid::getSinCosFunctions(std::vector<T>& sinx, std::vector<T>& siny,
+    std::vector<T>& sinz, std::vector<T>& cosx, std::vector<T>& cosy,
+    std::vector<T>& cosz) const
 {
     sinx.resize(dim_[0]);
     siny.resize(dim_[1]);
@@ -341,11 +339,12 @@ double Grid::integralOverMesh(const double* const func)const
     return value;
 }
 
-template void Grid::getSinCosFunctions(vector<float>& sinx, vector<float>& siny,
-    vector<float>& sinz, vector<float>& cosx, vector<float>& cosy,
-    vector<float>& cosz) const;
-template void Grid::getSinCosFunctions(vector<double>& sinx,
-    vector<double>& siny, vector<double>& sinz, vector<double>& cosx,
-    vector<double>& cosy, vector<double>& cosz) const;
+template void Grid::getSinCosFunctions(std::vector<float>& sinx,
+    std::vector<float>& siny,
+    std::vector<float>& sinz, std::vector<float>& cosx, std::vector<float>& cosy,
+    std::vector<float>& cosz) const;
+template void Grid::getSinCosFunctions(std::vector<double>& sinx,
+    std::vector<double>& siny, std::vector<double>& sinz, std::vector<double>& cosx,
+    std::vector<double>& cosy, std::vector<double>& cosz) const;
 
 } // namespace pb
