@@ -460,8 +460,6 @@ void Species::initLocalPotential(const bool flag_filter, const double hmax,
 
     for (int idx = 0; idx < n_rad_points_; idx++)
     {
-        assert(rps[idx] > 1.e-8);
-
         double r  = rps[idx];
         work[idx] = potl[idx] + getVcomp(r);
     }
