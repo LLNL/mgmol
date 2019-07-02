@@ -23,6 +23,14 @@ add_executable(testDistMatrix
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc)
+add_executable(testConditionDistMatrix
+               ${CMAKE_SOURCE_DIR}/tests/testConditionDistMatrix.cc
+               ${CMAKE_SOURCE_DIR}/src/DistMatrix/DistMatrix.cc
+               ${CMAKE_SOURCE_DIR}/src/DistMatrix/BlacsContext.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc)
 add_executable(testPower
                ${CMAKE_SOURCE_DIR}/tests/testPower.cc
                ${CMAKE_SOURCE_DIR}/src/Power.cc
@@ -74,6 +82,9 @@ add_test(NAME testDistVector
 add_test(NAME testDistMatrix
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4
                  ${CMAKE_CURRENT_BINARY_DIR}/testDistMatrix)
+add_test(NAME testConditionDistMatrix
+         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4
+                 ${CMAKE_CURRENT_BINARY_DIR}/testConditionDistMatrix)
 add_test(NAME testPower
          COMMAND ${CMAKE_CURRENT_BINARY_DIR}/testPower)
 add_test(NAME testPowerDistMatrix
@@ -144,6 +155,8 @@ target_link_libraries(testDistVector ${SCALAPACK_LIBRARIES}
                                      ${BLAS_LIBRARIES})
 target_link_libraries(testDistMatrix ${SCALAPACK_LIBRARIES}
                                      ${BLAS_LIBRARIES})
+target_link_libraries(testConditionDistMatrix ${SCALAPACK_LIBRARIES}
+                                              ${BLAS_LIBRARIES})
 target_link_libraries(testPower ${BLAS_LIBRARIES}
                                 ${SCALAPACK_LIBRARIES})
 target_link_libraries(testPowerDistMatrix ${BLAS_LIBRARIES}
