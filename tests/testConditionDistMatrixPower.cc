@@ -8,8 +8,10 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 #include "DistMatrix.h"
+#include "DistVector.h"
 #include "BlacsContext.h"
 #include "MGmol_MPI.h"
+#include "Power.h"
 
 #include <iostream>
 
@@ -20,7 +22,7 @@ int main(int argc, char** argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 
     if (myrank == 0)
-       std::cout << "Test condition DistMatrix" << std::endl;
+       std::cout << "Test condition DistMatrix using power method" << std::endl;
 
     {
         MGmol_MPI::setup(MPI_COMM_WORLD, std::cout);
@@ -42,29 +44,36 @@ int main(int argc, char** argv)
 
         const double expected_cond = (0.1*(n-1)+shift)/(shift);
 
-        dist_matrix::DistMatrix<double> LS("LS",bc,n,n,nb,nb);
+        //
+        // Now use power method to estimate extreme eigenvalues
+        // and approximate condition number
+        //
 
-        // Cholesky decomposition of S
-        LS = S;
-        int info = LS.potrf('l');
-        if (info != 0)
-        {
-            std::cerr<<"Cholesky decomposition of S failed!"<<std::endl;
-            return 1;
-        }
+        // DistVector will be generated in Power
+        // and need default values
+        dist_matrix::DistMatrix<DISTMATDTYPE>::setDefaultBlacsContext(&bc);
+        double emin;
+        double emax;
+        Power<dist_matrix::DistVector<double>,
+              dist_matrix::DistMatrix<double>> power(n);
 
-        double anorm   = S.norm('1');
-        double invcond = LS.pocon('l', anorm);
-        double cond    = cond = 1. / invcond;
-        std::cout<<"Condition number calculated = "<<cond<<std::endl;
+        power.computeEigenInterval(S, emin, emax, 1.e-3, (myrank == 0));
+        std::cout << "emax = "<<emax<<std::endl;
+        std::cout << "emin = "<<emin<<std::endl;
+
+        const double cond = emax/emin;
+        std::cout<<"Condition number calculated with Power method = "<<cond<<std::endl;
         std::cout<<"Expected condition number   = "<<expected_cond<<std::endl;
-
-        const double tol = 1.e-3;
-        if (std::abs(cond-expected_cond)>tol)
+        const double tolpower = 0.06;
+        const double rdiff = std::abs(cond-expected_cond)/cond;
+        std::cout << "Calculated and expected condition number differ by "
+                      <<rdiff*100.<<"%" << std::endl;
+        if (rdiff > tolpower)
         {
-            std::cerr << "Calculated and expected condition number differ!" << std::endl;
+            std::cerr << "Error larger than tol = "<<tolpower*100.<<"%" << std::endl;
             return 1;
         }
+
     }
 
     mpirc = MPI_Finalize();
