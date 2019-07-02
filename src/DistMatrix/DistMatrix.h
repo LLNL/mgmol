@@ -30,6 +30,7 @@ typedef double DISTMATDTYPE;
 
 namespace dist_matrix
 {
+template <class T> class DistVector;
 
 class BlacsContext;
 
@@ -48,8 +49,10 @@ private:
 
     std::string object_name_;
 
-    const MPI_Comm comm_global_;
     const BlacsContext& bc_;
+
+    const MPI_Comm comm_global_;
+
     int ictxt_;
     int lld_; // leading dimension of local matrix
     int m_, n_; // size of global matrix
@@ -63,7 +66,7 @@ private:
     bool m_incomplete_, n_incomplete_; // this process has an incomplete block
 
     // local array
-    T* val_;
+    std::vector<T> val_;
     int size_;
 
     void setDiagonalValues(const T* const dmat);
@@ -102,6 +105,9 @@ public:
         val_[index] += val;
     }
 
+    // add shift to diagonal, to shift eigenvalues
+    void shift(const T shift);
+
     void addval(const int l, const int m, const int x, const int y, const T val)
     {
         // cout<<"Add "<<val<<" to element "<<l<<","<<m<<","<<x<<","<<y
@@ -122,6 +128,8 @@ public:
         assert(ib * mb_ + x + (jb * nb_ + y) * mloc_ < size_);
         val_[ib * mb_ + x + (jb * nb_ + y) * mloc_] += val;
     }
+
+    void setVal(const int i, const int j, const T val);
 
     int ictxt(void) const { return ictxt_; }
     int lld(void) const { return lld_; }
@@ -268,14 +276,13 @@ public:
         return *this;
     }
 
-    ~DistMatrix()
-    {
-        if (active_) delete[] val_;
-    }
+    ~DistMatrix(){}
+
+    T* data(){ return val_.data(); }
 
     void identity(void);
     void setVal(const char, const T);
-    void matgather(T* a, const int lda) const;
+    void matgather(T* const a, const int lda) const;
 
     void resize(const int m, const int n, const int mb, const int nb);
     void init(const T* const a, const int lda);
@@ -307,6 +314,7 @@ public:
     // this = beta*this + alpha * A * x
     void gemv(const char trans, const T alpha, const DistMatrix<T>& a,
         const DistMatrix<T>& x, const T beta);
+    void matvec(DistVector<T>& v, DistVector<T>& y);
     // symmetric version of matvec
     void symv(const char uplo, const T alpha, const DistMatrix<T>& a,
         const DistMatrix<T>& x, const T beta);
@@ -371,7 +379,7 @@ public:
         if (active_)
         {
             assert(n <= size_);
-            memcpy(val_, v, n * sizeof(T));
+            memcpy(val_.data(), v, n * sizeof(T));
         }
     }
     void assignColumn(const T* const v, const int i)
@@ -382,7 +390,23 @@ public:
             if (size_ > 0) memcpy(&val_[i * mloc_], v, mloc_ * sizeof(T));
         }
     }
+
+    //assign data only on first MPI task
+    void assign0(const std::vector<T>& v)
+    {
+        if (myrow_==0 && mycol_==0)
+        {
+            assert(v.size() <= size_);
+            memcpy(val_.data(), v.data(), v.size() * sizeof(T));
+        }
+    }
+
     void swapColumns(const int j1, const int j2);
+
+    void swap(DistMatrix<T>& dm)
+    {
+        val_.swap(dm.val_);
+    }
 
     void axpyColumn(const int icol, const double alpha, const DistMatrix<T>& x);
     void scalColumn(const int icol, const double alpha);
@@ -392,7 +416,6 @@ public:
         if (active_)
         {
             assert((int)v.size() >= size_);
-            assert(val_ != 0);
             memcpy(&v[0], &val_[0], mloc_ * nloc_ * sizeof(T));
         }
     }
@@ -417,7 +440,7 @@ template <class T>
 int DistMatrix<T>::distmatrix_def_block_size_ = 32;
 
 template <class T>
-BlacsContext* DistMatrix<T>::default_bc_ = 0;
+BlacsContext* DistMatrix<T>::default_bc_ = nullptr;
 
 template <class T>
 Timer DistMatrix<T>::matgather_tm_("DistMatrix::matgather");

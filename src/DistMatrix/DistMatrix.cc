@@ -9,7 +9,9 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "MGmol_scalapack.h"
+
 #include "DistMatrix.h"
+#include "DistVector.h"
 #include "BlacsContext.h"
 #include "MGmol_MPI.h"
 
@@ -27,8 +29,6 @@
 #include "blacs.h"
 #endif
 
-#define TEMP_DECL template <>
-
 
 namespace dist_matrix
 {
@@ -44,8 +44,8 @@ int indxl2g(Pint indxloc, Pint nb, Pint iproc, Pint isrcproc, Pint nprocs)
 template <class T>
 DistMatrix<T>::DistMatrix(const std::string& name)
     : object_name_(name),
-      comm_global_(default_bc_->comm_global()),
       bc_(*default_bc_),
+      comm_global_(default_bc_->comm_global()),
       m_(0),
       n_(0),
       mb_(0),
@@ -78,8 +78,8 @@ DistMatrix<T>::DistMatrix(
 template <class T>
 DistMatrix<T>::DistMatrix(const std::string& name, const int m, const int n)
     : object_name_(name),
-      comm_global_(default_bc_->comm_global()),
-      bc_(*default_bc_)
+      bc_(*default_bc_),
+      comm_global_(default_bc_->comm_global())
 {
     resize(m, n, distmatrix_def_block_size_, distmatrix_def_block_size_);
 }
@@ -122,6 +122,7 @@ void DistMatrix<T>::resize(const int m, const int n, const int mb, const int nb)
     assert(n > 0);
     assert(mb > 0);
     assert(nb > 0);
+
     m_ = m;
     n_ = n;
 #ifdef SCALAPACK
@@ -171,12 +172,11 @@ void DistMatrix<T>::resize(const int m, const int n, const int mb, const int nb)
     if (active_)
     {
         size_ = mloc_ * nloc_;
-        val_  = new T[size_];
+        val_.resize(size_);
     }
     else
     {
         size_ = 0;
-        val_  = NULL;
     }
     clear();
 }
@@ -185,7 +185,7 @@ void DistMatrix<T>::resize(const int m, const int n, const int mb, const int nb)
 template <class T>
 void DistMatrix<T>::clear(void)
 {
-    if (active_) memset(&val_[0], 0, size_ * sizeof(T));
+    if (active_) memset(val_.data(), 0, size_ * sizeof(T));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -222,6 +222,22 @@ void DistMatrix<T>::setDiagonal(const std::vector<T>& diag_values)
             {
                 const int jg = indxl2gcol(j);
                 if (ig == jg) val_[i + j * mloc_] = diag_values[ig];
+            }
+        }
+}
+
+// add shift to diagonal, to shift eigenvalues
+template <class T>
+void DistMatrix<T>::shift(const T shift)
+{
+    if (active_)
+        for (int i = 0; i < mloc_; i++)
+        {
+            const int ig = indxl2grow(i);
+            for (int j = 0; j < nloc_; j++)
+            {
+                const int jg = indxl2gcol(j);
+                if (ig == jg) val_[i + j * mloc_] += shift;
             }
         }
 }
@@ -294,7 +310,7 @@ void DistMatrix<T>::axpy(const double alpha, const DistMatrix<T>& x)
 ////////////////////////////////////////////////////////////////////////////////
 // identity: initialize matrix to identity
 ////////////////////////////////////////////////////////////////////////////////
-TEMP_DECL
+template <>
 void DistMatrix<double>::identity(void)
 {
 #ifdef SCALAPACK
@@ -306,12 +322,12 @@ void DistMatrix<double>::identity(void)
         pdlaset(&uplo, &m_, &n_, &alpha, &beta, &val_[0], &ione, &ione, desc_);
 #else
     clear();
-    for (int i = 0; i < min(m_, n_); i++)
+    for (int i = 0; i < std::min(m_, n_); i++)
         val_[i + mloc_ * i] = 1.0;
 #endif
 }
 
-TEMP_DECL
+template <>
 void DistMatrix<float>::identity(void)
 {
 #ifdef SCALAPACK
@@ -323,13 +339,13 @@ void DistMatrix<float>::identity(void)
         pslaset(&uplo, &m_, &n_, &alpha, &beta, &val_[0], &ione, &ione, desc_);
 #else
     clear();
-    for (int i = 0; i < min(m_, n_); i++)
+    for (int i = 0; i < std::min(m_, n_); i++)
         val_[i + mloc_ * i] = 1.0;
 #endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-TEMP_DECL
+template <>
 DistMatrix<double>& DistMatrix<double>::operator=(const DistMatrix<double>& src)
 {
     if (this == &src) return *this;
@@ -370,7 +386,7 @@ DistMatrix<double>& DistMatrix<double>::operator=(const DistMatrix<double>& src)
         BlacsContext bc(comm_global_);
         int gictxt = bc.ictxt();
         pdgemr2d_tm_.start();
-        pdgemr2d(&m_, &n_, src.val_, &ione, &ione, src.desc(), &val_[0], &ione,
+        pdgemr2d(&m_, &n_, src.val_.data(), &ione, &ione, src.desc(), &val_[0], &ione,
             &ione, desc_, &gictxt);
         pdgemr2d_tm_.stop();
     }
@@ -378,7 +394,7 @@ DistMatrix<double>& DistMatrix<double>::operator=(const DistMatrix<double>& src)
     return *this;
 }
 
-TEMP_DECL
+template <>
 DistMatrix<float>& DistMatrix<float>::operator=(const DistMatrix<float>& src)
 {
     if (this == &src) return *this;
@@ -419,7 +435,7 @@ DistMatrix<float>& DistMatrix<float>::operator=(const DistMatrix<float>& src)
         BlacsContext bc(comm_global_);
         int gictxt = bc.ictxt();
         pdgemr2d_tm_.start();
-        psgemr2d(&m_, &n_, src.val_, &ione, &ione, src.desc(), &val_[0], &ione,
+        psgemr2d(&m_, &n_, src.val_.data(), &ione, &ione, src.desc(), &val_[0], &ione,
             &ione, desc_, &gictxt);
         pdgemr2d_tm_.stop();
     }
@@ -428,7 +444,7 @@ DistMatrix<float>& DistMatrix<float>::operator=(const DistMatrix<float>& src)
 }
 ////////////////////////////////////////////////////////////////////////////////
 // Copy a distributed matrix src into another in a block at position (ib,jb)
-TEMP_DECL
+template <>
 DistMatrix<double>& DistMatrix<double>::assign(
     const DistMatrix<double>& src, const int ib, const int jb)
 {
@@ -470,14 +486,14 @@ DistMatrix<double>& DistMatrix<double>::assign(
         int gictxt = bc.ictxt();
         assert(m + ib <= m_);
         assert(n + jb <= n_);
-        pdgemr2d(&m, &n, src.val_, &ione, &ione, src.desc(), val_, &pib, &pjb,
+        pdgemr2d(&m, &n, src.val_.data(), &ione, &ione, src.desc(), val_.data(), &pib, &pjb,
             desc_, &gictxt);
     }
 #endif
     return *this;
 }
 
-TEMP_DECL
+template <>
 DistMatrix<float>& DistMatrix<float>::assign(
     const DistMatrix<float>& src, const int ib, const int jb)
 {
@@ -519,7 +535,7 @@ DistMatrix<float>& DistMatrix<float>::assign(
         int gictxt = bc.ictxt();
         assert(m + ib <= m_);
         assert(n + jb <= n_);
-        psgemr2d(&m, &n, src.val_, &ione, &ione, src.desc(), val_, &pib, &pjb,
+        psgemr2d(&m, &n, src.val_.data(), &ione, &ione, src.desc(), val_.data(), &pib, &pjb,
             desc_, &gictxt);
     }
 #endif
@@ -637,7 +653,7 @@ void DistMatrix<T>::setVal(const char uplo, const T xx)
 // matrix-vector multiplication
 // this = alpha*op(A)*b+beta*this
 ////////////////////////////////////////////////////////////////////////////////
-TEMP_DECL
+template<>
 void DistMatrix<double>::gemv(const char transa, const double alpha,
     const DistMatrix<double>& a, const DistMatrix<double>& b, const double beta)
 {
@@ -673,7 +689,30 @@ void DistMatrix<double>::gemv(const char transa, const double alpha,
     }
 }
 
-TEMP_DECL
+// y = *this * v
+template<>
+void DistMatrix<double>::matvec(dist_matrix::DistVector<double>& v,
+                                dist_matrix::DistVector<double>& y)
+{
+    if (active_)
+    {
+        char transa = 'N';
+        double alpha = 1.;
+        double beta = 0.;
+#ifdef SCALAPACK
+        int ione = 1;
+        pdgemv(&transa, &m_, &n_, &alpha, &val_[0], &ione, &ione, desc(),
+            &v.val_[0], &ione, &ione, v.desc(), &ione, &beta, &y.val_[0],
+            &ione, &ione, y.desc_, &ione);
+#else
+        int ione = 1;
+        DGEMV(&transa, &m_, &n_, &alpha, &val_[0], &lld_, &v.val_[0], &ione,
+            &beta, &y.val_[0], &ione);
+#endif
+    }
+}
+
+template <>
 void DistMatrix<float>::gemv(const char transa, const float alpha,
     const DistMatrix<float>& a, const DistMatrix<float>& b, const float beta)
 {
@@ -709,7 +748,7 @@ void DistMatrix<float>::gemv(const char transa, const float alpha,
     }
 }
 
-TEMP_DECL
+template <>
 void DistMatrix<double>::symv(const char uplo, const double alpha,
     const DistMatrix<double>& a, const DistMatrix<double>& b, const double beta)
 {
@@ -733,7 +772,7 @@ void DistMatrix<double>::symv(const char uplo, const double alpha,
     }
 }
 
-TEMP_DECL
+template <>
 void DistMatrix<float>::symv(const char uplo, const float alpha,
     const DistMatrix<float>& a, const DistMatrix<float>& b, const float beta)
 {
@@ -761,7 +800,7 @@ void DistMatrix<float>::symv(const char uplo, const float alpha,
 // matrix multiplication
 // this = alpha*op(A)*op(B)+beta*this
 ////////////////////////////////////////////////////////////////////////////////
-TEMP_DECL
+template <>
 void DistMatrix<double>::gemm(const char transa, const char transb,
     const double alpha, const DistMatrix<double>& a,
     const DistMatrix<double>& b, const double beta)
@@ -807,7 +846,7 @@ void DistMatrix<double>::gemm(const char transa, const char transb,
     }
 }
 
-TEMP_DECL
+template <>
 void DistMatrix<float>::gemm(const char transa, const char transb,
     const float alpha, const DistMatrix<float>& a, const DistMatrix<float>& b,
     const float beta)
@@ -858,7 +897,7 @@ void DistMatrix<float>::gemm(const char transa, const char transb,
 // this = beta * this + alpha * b * a
 // with "a" symetric
 ////////////////////////////////////////////////////////////////////////////////
-TEMP_DECL
+template <>
 void DistMatrix<double>::symm(const char side, const char uplo,
     const double alpha, const DistMatrix<double>& a,
     const DistMatrix<double>& b, const double beta)
@@ -894,7 +933,7 @@ void DistMatrix<double>::symm(const char side, const char uplo,
     }
 }
 
-TEMP_DECL
+template <>
 void DistMatrix<float>::symm(const char side, const char uplo,
     const float alpha, const DistMatrix<float>& a, const DistMatrix<float>& b,
     const float beta)
@@ -939,7 +978,7 @@ void DistMatrix<float>::symm(const char side, const char uplo,
 // alpha is a scalar, *this is an m by n matrix, and A is a unit or non-unit,
 // upper- or lower-triangular matrix.
 ////////////////////////////////////////////////////////////////////////////////
-TEMP_DECL
+template <>
 void DistMatrix<double>::trmm(const char side, const char uplo,
     const char trans, const char diag, const double alpha,
     const DistMatrix<double>& a)
@@ -966,7 +1005,7 @@ void DistMatrix<double>::trmm(const char side, const char uplo,
     }
 }
 
-TEMP_DECL
+template <>
 void DistMatrix<float>::trmm(const char side, const char uplo, const char trans,
     const char diag, const float alpha, const DistMatrix<float>& a)
 {
@@ -1004,7 +1043,7 @@ void DistMatrix<float>::trmm(const char side, const char uplo, const char trans,
 // X*op( A ) = alpha*(*this)     if side=='r'
 // where op(A) = A or trans(A)
 ////////////////////////////////////////////////////////////////////////////////
-TEMP_DECL
+template <>
 void DistMatrix<double>::trsm(const char side, const char uplo,
     const char trans, const char diag, const double alpha,
     const DistMatrix<double>& a)
@@ -1031,7 +1070,7 @@ void DistMatrix<double>::trsm(const char side, const char uplo,
     }
 }
 
-TEMP_DECL
+template <>
 void DistMatrix<float>::trsm(const char side, const char uplo, const char trans,
     const char diag, const float alpha, const DistMatrix<float>& a)
 {
@@ -1062,7 +1101,7 @@ void DistMatrix<float>::trsm(const char side, const char uplo, const char trans,
 // and  B  is an N-by-NRHS matrix.
 // Output in B.
 ////////////////////////////////////////////////////////////////////////////////
-TEMP_DECL
+template <>
 void DistMatrix<double>::trtrs(const char uplo, const char trans,
     const char diag, DistMatrix<double>& b) const
 {
@@ -1091,7 +1130,7 @@ void DistMatrix<double>::trtrs(const char uplo, const char trans,
     }
 }
 
-TEMP_DECL
+template <>
 void DistMatrix<float>::trtrs(const char uplo, const char trans,
     const char diag, DistMatrix<float>& b) const
 {
@@ -1123,7 +1162,7 @@ void DistMatrix<float>::trtrs(const char uplo, const char trans,
 // Computes the Cholesky factorization of a square real
 // symmetric positive definite distributed matrix
 ////////////////////////////////////////////////////////////////////////////////
-TEMP_DECL
+template <>
 int DistMatrix<double>::potrf(char uplo)
 {
     potrf_tm_.start();
@@ -1151,7 +1190,7 @@ int DistMatrix<double>::potrf(char uplo)
     return info;
 }
 
-TEMP_DECL
+template <>
 int DistMatrix<float>::potrf(char uplo)
 {
     potrf_tm_.start();
@@ -1182,7 +1221,7 @@ int DistMatrix<float>::potrf(char uplo)
 // Computes an LU factorization of a general m by n real
 // distributed matrix using partial pivoting with row interchanges
 ////////////////////////////////////////////////////////////////////////////////
-TEMP_DECL
+template <>
 void DistMatrix<double>::getrf(std::vector<int>& ipiv)
 {
     int info;
@@ -1208,7 +1247,7 @@ void DistMatrix<double>::getrf(std::vector<int>& ipiv)
     }
 }
 
-TEMP_DECL
+template <>
 void DistMatrix<float>::getrf(std::vector<int>& ipiv)
 {
     int info;
@@ -1238,7 +1277,7 @@ void DistMatrix<float>::getrf(std::vector<int>& ipiv)
 //  tive definite matrix A using the Cholesky factorization
 // A = U**T*U or A = L*L**T computed by potrf
 ////////////////////////////////////////////////////////////////////////////////
-TEMP_DECL
+template <>
 void DistMatrix<double>::potrs(char uplo, DistMatrix<double>& b)
 {
     int info;
@@ -1267,7 +1306,7 @@ void DistMatrix<double>::potrs(char uplo, DistMatrix<double>& b)
     }
 }
 
-TEMP_DECL
+template <>
 void DistMatrix<float>::potrs(char uplo, DistMatrix<float>& b)
 {
     int info;
@@ -1299,7 +1338,7 @@ void DistMatrix<float>::potrs(char uplo, DistMatrix<float>& b)
 // Solve a system of linear equations A * X = B or A' * X = B with a general
 // N-by-N matrix A using the LU factorization computed by getrf()
 ////////////////////////////////////////////////////////////////////////////////
-TEMP_DECL
+template <>
 void DistMatrix<double>::getrs(
     char trans, DistMatrix<double>& b, std::vector<int>& ipiv)
 {
@@ -1332,7 +1371,7 @@ void DistMatrix<double>::getrs(
     }
 }
 
-TEMP_DECL
+template <>
 void DistMatrix<float>::getrs(
     char trans, DistMatrix<float>& b, std::vector<int>& ipiv)
 {
@@ -1369,7 +1408,7 @@ void DistMatrix<float>::getrs(
 // using the Cholesky factorization A = U**T*U or A = L*L**T computed
 // by DistMatrix<double>::potrf
 ////////////////////////////////////////////////////////////////////////////////
-TEMP_DECL
+template <>
 int DistMatrix<double>::potri(char uplo)
 {
     potri_tm_.start();
@@ -1396,7 +1435,7 @@ int DistMatrix<double>::potri(char uplo)
     return info;
 }
 
-TEMP_DECL
+template <>
 int DistMatrix<float>::potri(char uplo)
 {
     potri_tm_.start();
@@ -1424,7 +1463,7 @@ int DistMatrix<float>::potri(char uplo)
 }
 
 // DTRTRI - computes the inverse of a real upper or lower triangular matrix A
-TEMP_DECL
+template <>
 int DistMatrix<double>::trtri(char uplo, char diag)
 {
     trtri_tm_.start();
@@ -1456,11 +1495,11 @@ int DistMatrix<double>::trtri(char uplo, char diag)
 // or the infinity norm, or the element of largest absolute value of a
 // distributed matrix
 //
-// max(abs(A(i,j))) if ty== 'm' or 'M'
+// std::max(abs(A(i,j))) if ty== 'm' or 'M'
 // 1-norm           if ty == '1'
 // infinity-norm    if ty=='I' or 'i'
 // Frobenius norm   if ty=='F' or 'f'
-TEMP_DECL
+template <>
 double DistMatrix<double>::norm(char ty)
 {
     int lwork       = 0;
@@ -1472,13 +1511,13 @@ double DistMatrix<double>::norm(char ty)
         if (ty == 'I' || ty == 'i') lwork = mloc_;
         if (ty == '1') lwork = nloc_;
 
-       std::vector<double> work(lwork);
+        std::vector<double> work(lwork);
 
         norm_val
             = pdlange(&ty, &m_, &n_, &val_[0], &ione, &ione, desc_, &work[0]);
 #else
         if (ty == 'I' || ty == 'i') lwork = m_;
-       std::vector<double> work(lwork);
+        std::vector<double> work(lwork);
         norm_val = dlange(&ty, &m_, &n_, &val_[0], &m_, &work[0]);
 #endif
     }
@@ -1488,7 +1527,7 @@ double DistMatrix<double>::norm(char ty)
     return norm_val;
 }
 
-TEMP_DECL
+template <>
 double DistMatrix<float>::norm(char ty)
 {
     int lwork      = 0;
@@ -1500,13 +1539,13 @@ double DistMatrix<float>::norm(char ty)
         if (ty == 'I' || ty == 'i') lwork = mloc_;
         if (ty == '1') lwork = nloc_;
 
-       std::vector<float> work(lwork);
+        std::vector<float> work(lwork);
 
         norm_val = (double)pslange(
             &ty, &m_, &n_, &val_[0], &ione, &ione, desc_, &work[0]);
 #else
         if (ty == 'I' || ty == 'i') lwork = m_;
-       std::vector<float> work(lwork);
+        std::vector<float> work(lwork);
         norm_val     = (double)slange(&ty, &m_, &n_, &val_[0], &m_, &work[0]);
 #endif
     }
@@ -1523,7 +1562,7 @@ double DistMatrix<float>::norm(char ty)
 // (as computed by DistMatrix<double>::potrf)
 // anorm: 1-norm of matrix A
 ////////////////////////////////////////////////////////////////////////////////
-TEMP_DECL
+template <>
 double DistMatrix<double>::pocon(char uplo, double anorm)
 {
     int info;
@@ -1572,7 +1611,7 @@ double DistMatrix<double>::pocon(char uplo, double anorm)
     return rcond;
 }
 
-TEMP_DECL
+template <>
 double DistMatrix<float>::pocon(char uplo, float anorm)
 {
     int info;
@@ -1625,7 +1664,7 @@ double DistMatrix<float>::pocon(char uplo, float anorm)
 // this = beta * this + alpha * A * A^T  (trans=='n')
 // this = beta * this + alpha * A^T * A  (trans=='t')
 ////////////////////////////////////////////////////////////////////////////////
-TEMP_DECL
+template <>
 void DistMatrix<double>::syrk(
     char uplo, char trans, double alpha, DistMatrix<double>& a, double beta)
 {
@@ -1657,7 +1696,7 @@ void DistMatrix<double>::syrk(
     }
 }
 
-TEMP_DECL
+template <>
 void DistMatrix<float>::syrk(
     char uplo, char trans, float alpha, DistMatrix<float>& a, float beta)
 {
@@ -1693,7 +1732,7 @@ void DistMatrix<float>::syrk(
 // copy submatrix A(ia:ia+m, ja:ja+n) into *this;
 // *this and A may live in different contexts,
 // Assumes that the context of *this is a subcontext of the context of A
-TEMP_DECL
+template <>
 void DistMatrix<double>::getsub(
     const DistMatrix<double>& a, int m, int n, int ia, int ja)
 {
@@ -1708,7 +1747,7 @@ void DistMatrix<double>::getsub(
     BlacsContext bc(comm_global_);
     int gictxt = bc.ictxt();
     // int gictxt = ictxt_;
-    pdgemr2d(&m, &n, a.val_, &iap, &jap, a.desc_, val_, &ione, &ione, desc_,
+    pdgemr2d(&m, &n, a.val_.data(), &iap, &jap, a.desc_, val_.data(), &ione, &ione, desc_,
         &gictxt);
 #else
     for (int j = 0; j < n; j++)
@@ -1717,7 +1756,7 @@ void DistMatrix<double>::getsub(
 #endif
 }
 
-TEMP_DECL
+template <>
 void DistMatrix<float>::getsub(
     const DistMatrix<float>& a, int m, int n, int ia, int ja)
 {
@@ -1732,7 +1771,7 @@ void DistMatrix<float>::getsub(
     BlacsContext bc(comm_global_);
     int gictxt = bc.ictxt();
     // int gictxt = ictxt_;
-    psgemr2d(&m, &n, a.val_, &iap, &jap, a.desc_, val_, &ione, &ione, desc_,
+    psgemr2d(&m, &n, a.val_.data(), &iap, &jap, a.desc_, val_.data(), &ione, &ione, desc_,
         &gictxt);
 #else
     for (int j = 0; j < n; j++)
@@ -1741,7 +1780,7 @@ void DistMatrix<float>::getsub(
 #endif
 }
 ////////////////////////////////////////////////////////////////////////////////
-TEMP_DECL
+template <>
 void DistMatrix<int>::getsub(
     const DistMatrix<int>& a, int m, int n, int ia, int ja)
 {
@@ -1755,7 +1794,7 @@ void DistMatrix<int>::getsub(
     int ione = 1;
     BlacsContext bc(comm_global_);
     int gictxt = bc.ictxt();
-    pigemr2d(&m, &n, a.val_, &iap, &jap, a.desc(), val_, &ione, &ione, desc_,
+    pigemr2d(&m, &n, a.val_.data(), &iap, &jap, a.desc(), val_.data(), &ione, &ione, desc_,
         &gictxt);
 #else
     for (int j = 0; j < n; j++)
@@ -1768,7 +1807,7 @@ void DistMatrix<int>::getsub(
 // matrix transpose
 // this = alpha * transpose(A) + beta * this
 ////////////////////////////////////////////////////////////////////////////////
-TEMP_DECL
+template <>
 void DistMatrix<double>::transpose(
     const double alpha, const DistMatrix<double>& a, const double beta)
 {
@@ -1797,7 +1836,7 @@ void DistMatrix<double>::transpose(
     }
 }
 
-TEMP_DECL
+template <>
 void DistMatrix<float>::transpose(
     const float alpha, const DistMatrix<float>& a, const float beta)
 {
@@ -2000,8 +2039,8 @@ DistMatrix<T>::DistMatrix(const std::string& name, const BlacsContext& bc,
 // Generate a duplicated matrix from a distributed matrix
 //
 ////////////////////////////////////////////////////////////////////////////////
-TEMP_DECL
-void DistMatrix<double>::matgather(double* a, const int lda) const
+template <>
+void DistMatrix<double>::matgather(double* const a, const int lda) const
 {
     matgather_tm_.start();
 
@@ -2013,7 +2052,7 @@ void DistMatrix<double>::matgather(double* a, const int lda) const
     const int jj  = -1;
     const int rev = 0;
     const int i   = 1;
-    if (active_) pdlacp3(&m_, &i, &val_[0], desc_, a, &lda, &ii, &jj, &rev);
+    if (active_) pdlacp3(&m_, &i, val_.data(), desc_, a, &lda, &ii, &jj, &rev);
 
     // int nrpocs=bc_.size();
     int nrpocs     = bc_.nprocs();
@@ -2048,8 +2087,8 @@ void DistMatrix<double>::matgather(double* a, const int lda) const
     matgather_tm_.stop();
 }
 
-TEMP_DECL
-void DistMatrix<float>::matgather(float* a, const int lda) const
+template <>
+void DistMatrix<float>::matgather(float* const a, const int lda) const
 {
     matgather_tm_.start();
 
@@ -2060,7 +2099,7 @@ void DistMatrix<float>::matgather(float* a, const int lda) const
     const int jj  = -1;
     const int rev = 0;
     const int i   = 1;
-    if (active_) pslacp3(&m_, &i, &val_[0], desc_, a, &lda, &ii, &jj, &rev);
+    if (active_) pslacp3(&m_, &i, val_.data(), desc_, a, &lda, &ii, &jj, &rev);
 
     // int nrpocs=bc_.size();
     int nrpocs     = bc_.nprocs();
@@ -2179,7 +2218,7 @@ void DistMatrix<T>::getDiagonalValues(T* const dmat) const
 ////////////////////////////////////////////////////////////////////////////////
 // Compute the trace of the DistMatrix
 ////////////////////////////////////////////////////////////////////////////////
-TEMP_DECL
+template <>
 double DistMatrix<double>::trace(void) const
 {
     assert(m_ == n_);
@@ -2203,7 +2242,7 @@ double DistMatrix<double>::trace(void) const
     return trace;
 }
 
-TEMP_DECL
+template <>
 double DistMatrix<float>::trace(void) const
 {
     assert(m_ == n_);
@@ -2235,7 +2274,7 @@ double DistMatrix<float>::trace(void) const
 // B must have been previously factorized as U**T*U or L*L**T by
 // DistMatrix<double>::dpotrf.
 ////////////////////////////////////////////////////////////////////////////////
-TEMP_DECL
+template <>
 void DistMatrix<double>::sygst(
     int itype, char uplo, const DistMatrix<double>& b)
 {
@@ -2264,7 +2303,7 @@ void DistMatrix<double>::sygst(
     }
 }
 
-TEMP_DECL
+template <>
 void DistMatrix<float>::sygst(int itype, char uplo, const DistMatrix<float>& b)
 {
     int info;
@@ -2292,9 +2331,9 @@ void DistMatrix<float>::sygst(int itype, char uplo, const DistMatrix<float>& b)
     }
 }
 ////////////////////////////////////////////////////////////////////////////////
-TEMP_DECL
+template <>
 void DistMatrix<double>::syev(
-    char jobz, char uplo, std:: vector<double>& w, DistMatrix<double>& z)
+    char jobz, char uplo, std::vector<double>& w, DistMatrix<double>& z)
 {
     int info;
     if (active_)
@@ -2334,9 +2373,9 @@ void DistMatrix<double>::syev(
 #endif
 }
 
-TEMP_DECL
+template <>
 void DistMatrix<float>::syev(
-    char jobz, char uplo, std:: vector<float>& w, DistMatrix<float>& z)
+    char jobz, char uplo, std::vector<float>& w, DistMatrix<float>& z)
 {
     int info;
     if (active_)
@@ -2376,7 +2415,7 @@ void DistMatrix<float>::syev(
 #endif
 }
 ////////////////////////////////////////////////////////////////////////////////
-TEMP_DECL
+template <>
 void DistMatrix<double>::gesvd(char jobu, char jobvt, std::vector<double>& s,
     DistMatrix<double>& u, DistMatrix<double>& vt)
 {
@@ -2426,7 +2465,7 @@ void DistMatrix<double>::gesvd(char jobu, char jobvt, std::vector<double>& s,
 #endif
 }
 
-TEMP_DECL
+template <>
 void DistMatrix<float>::gesvd(char jobu, char jobvt, std::vector<float>& s,
     DistMatrix<float>& u, DistMatrix<float>& vt)
 {
@@ -2479,7 +2518,7 @@ void DistMatrix<float>::gesvd(char jobu, char jobvt, std::vector<float>& s,
 ////////////////////////////////////////////////////////////////////////////////
 template <class T>
 void DistMatrix<T>::sygv(char jobz, char uplo, const char fac, DistMatrix<T>& b,
-   std::vector<T>& w, DistMatrix<T>& z)
+    std::vector<T>& w, DistMatrix<T>& z)
 {
     // compute Cholesky factorization of b if necessary
     if (fac != 'c') b.potrf(uplo);
@@ -2497,7 +2536,7 @@ void DistMatrix<T>::sygv(char jobz, char uplo, const char fac, DistMatrix<T>& b,
 
 ////////////////////////////////////////////////////////////////////////////////
 // get max in absolute value of column j
-TEMP_DECL
+template <>
 int DistMatrix<double>::iamax(const int j, double& val)
 {
     int indx = -1;
@@ -2524,7 +2563,7 @@ int DistMatrix<double>::iamax(const int j, double& val)
     return indx;
 }
 
-TEMP_DECL
+template <>
 int DistMatrix<float>::iamax(const int j, float& val)
 {
     int indx = -1;
@@ -2551,7 +2590,7 @@ int DistMatrix<float>::iamax(const int j, float& val)
     return indx;
 }
 ////////////////////////////////////////////////////////////////////////////////
-TEMP_DECL
+template <>
 void DistMatrix<double>::swapColumns(const int j1, const int j2)
 {
     if (j1 == j2) return;
@@ -2569,7 +2608,7 @@ void DistMatrix<double>::swapColumns(const int j1, const int j2)
 #endif
 }
 
-TEMP_DECL
+template <>
 void DistMatrix<float>::swapColumns(const int j1, const int j2)
 {
     if (j1 == j2) return;
@@ -2807,29 +2846,25 @@ std::ostream& operator<<(std::ostream& os, const DistMatrix<T>& a)
     return os;
 }
 
+template<>
+void DistMatrix<double>::setVal(const int i, const int j, const double val)
+{
+    // C -> Fortran
+    int ii = i+1;
+    int jj = j+1;
+    pdelset(val_.data(), &ii, &jj, desc_, &val);
+}
+
+template<>
+void DistMatrix<float>::setVal(const int i, const int j, const float val)
+{
+    pselset(val_.data(), &i, &j, desc_, &val);
+}
+
 template std::ostream& operator<<(std::ostream& os, const DistMatrix<double>&);
 template std::ostream& operator<<(std::ostream& os, const DistMatrix<float>&);
 
-#ifdef __KCC
-// explicit instantiation declaration
-template void DistMatrix<double>::clear(void);
-template DistMatrix<double>::DistMatrix(
-    const BlacsContext&, const int, const int, const int, const int);
-template DistMatrix<double>::DistMatrix(const DistMatrix&);
-template DistMatrix<double>::DistMatrix(const BlacsContext&,
-    const double* const, const int, const int, const int, const int);
-
-template void DistMatrix<double>::resize(
-    const int m, const int n, const int mb, const int nb);
-template void DistMatrix<double>::init(const double* const a, const int lda);
-template void DistMatrix<double>::trset(const char);
-template void DistMatrix<double>::print(
-    std::ostream&, const int, const int, const int, const int) const;
-template void DistMatrix<double>::print(std::ostream&) const;
-template class vector<int>;
-#else
 template class DistMatrix<double>;
 template class DistMatrix<float>;
-#endif
 
 } // namespace

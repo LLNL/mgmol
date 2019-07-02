@@ -208,7 +208,7 @@ FortranCInterface_HEADER(
         pdtrmm pstrmm pdtrsm pstrsm pdtrtrs pstrtrs pdpotrf pspotrf
         pdpotrs pspotrs pdgetrf psgetrf pdgetrs psgetrs pdpotri pspotri
         pdtrtri pstrtri pdpocon pspocon pdsygst pssygst pdsyev pssyev
-        pdlatra pslatra pdlaset pslaset pdgesvd psgesvd
+        pdelset pselset pdlatra pslatra pdlaset pslaset pdgesvd psgesvd
         pdamax psamax
 )
 

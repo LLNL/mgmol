@@ -49,11 +49,11 @@ void PowerGen::computeGenEigenInterval(dist_matrix::DistMatrix<double>& mat,
     // initialize solution data
     // initial guess
     dist_matrix::DistVector<double> sol("sol", m);
-    sol.assign(&vec1_[0]); // initialize local solution data
+    sol.assign(vec1_); // initialize local solution data
     // new solution
     dist_matrix::DistVector<double> new_sol("new_sol", m);
     std::vector<double> vec(mloc, 0.);
-    new_sol.assign(&vec[0]);
+    new_sol.assign(vec);
 
     // get norm of initial sol
     double alpha = sol.nrm2();
@@ -109,8 +109,8 @@ void PowerGen::computeGenEigenInterval(dist_matrix::DistMatrix<double>& mat,
     mat.axpy(shft_e1, smat);
 
     // reset data and begin loop
-    sol.assign(&vec2_[0]);
-    new_sol.assign(&vec[0]);
+    sol.assign(vec2_);
+    new_sol.assign(vec);
     alpha = sol.nrm2();
     gamma = 1. / alpha;
     beta  = sol.dot(new_sol);
