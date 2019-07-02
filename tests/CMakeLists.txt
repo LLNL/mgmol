@@ -7,6 +7,14 @@ add_executable(testMPI
 add_executable(testBlacsContext
                ${CMAKE_SOURCE_DIR}/tests/testBlacsContext.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/BlacsContext.cc)
+add_executable(testDistVector
+               ${CMAKE_SOURCE_DIR}/tests/testDistVector.cc
+               ${CMAKE_SOURCE_DIR}/src/DistMatrix/DistMatrix.cc
+               ${CMAKE_SOURCE_DIR}/src/DistMatrix/BlacsContext.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc)
 add_executable(testDistMatrix
                ${CMAKE_SOURCE_DIR}/tests/testDistMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/DistMatrix.cc
@@ -48,6 +56,9 @@ add_test(NAME testMPI
 add_test(NAME testBlacsContext
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4
                  ${CMAKE_CURRENT_BINARY_DIR}/testBlacsContext)
+add_test(NAME testDistVector
+         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4
+                 ${CMAKE_CURRENT_BINARY_DIR}/testDistVector)
 add_test(NAME testDistMatrix
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4
                  ${CMAKE_CURRENT_BINARY_DIR}/testDistMatrix)
@@ -114,6 +125,8 @@ target_include_directories(testAndersonMix PRIVATE
 target_link_libraries(testHDF5P ${HDF5_LIBRARIES})
 target_link_libraries(testBlacsContext ${SCALAPACK_LIBRARIES}
                                        ${BLAS_LIBRARIES})
+target_link_libraries(testDistVector ${SCALAPACK_LIBRARIES}
+                                     ${BLAS_LIBRARIES})
 target_link_libraries(testDistMatrix ${SCALAPACK_LIBRARIES}
                                      ${BLAS_LIBRARIES})
 target_link_libraries(testPower ${BLAS_LIBRARIES}
