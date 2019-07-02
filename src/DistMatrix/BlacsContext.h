@@ -75,7 +75,7 @@ public:
     // Constructors
 
     // default global context: construct a single-row global BlacsContext
-    BlacsContext(MPI_Comm comm);
+    explicit BlacsContext(MPI_Comm comm);
 
     // specialized global BlacsContext
     // BlacsContext('r'): single-row global context (same as BlacsContext())

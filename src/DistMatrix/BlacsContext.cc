@@ -138,6 +138,8 @@ void BlacsContext::buildCommunicator()
 BlacsContext::BlacsContext(MPI_Comm comm_global)
     : ictxt_(-1), myrow_(-1), mycol_(-1), comm_global_(comm_global)
 {
+    assert(comm_global != MPI_COMM_NULL);
+
     // construct a single row global context
     char order = 'R';
 #if USE_MPI
