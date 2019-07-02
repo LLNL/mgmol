@@ -1536,7 +1536,7 @@ void LocalizationRegions::getMatrixDistances(
                      it2 != gids_iloc.end(); ++it2)
                 {
                     if ((*it2) >= 0)
-                        mat.setVal(iloc, i, j, sqrt(getDistance2(*it1, *it2)));
+                        mat.setVal(i, j, sqrt(getDistance2(*it1, *it2)), iloc);
                     j++;
                 }
             }

@@ -278,10 +278,10 @@ void LocalMatrices<T>::printBlock(ostream& os, const int blocksize)
 
 template <class T>
 void LocalMatrices<T>::matvec(
-    const std::vector<T>& u, std::vector<T>& f, const int iloc)
+    const LocalVector<T>& u, LocalVector<T>& f, const int iloc)
 {
     T* mat = ptr_matrices_[iloc];
-    Tgemv('n', m_, n_, 1., mat, m_, &u[0], 1, 0., &f[0], 1);
+    Tgemv('n', m_, n_, 1., mat, m_, u.data(), 1, 0., f.data(), 1);
 }
 
 template class LocalMatrices<double>;

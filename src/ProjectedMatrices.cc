@@ -293,7 +293,7 @@ void ProjectedMatrices::updateDMwithSP2(const int iterative_index)
     double emax;
     double epsilon = 1.e-2;
 
-    static Power power(dim_);
+    static Power<LocalVector<double>, SquareLocalMatrices<double>> power(dim_);
 
     power.computeEigenInterval(theta, emin, emax, epsilon, (onpe0 && ct.verbose > 1));
     if (onpe0 && ct.verbose > 1) cout<<"emin="<<emin<<", emax="<<emax<<endl;

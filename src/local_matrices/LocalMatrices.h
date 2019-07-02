@@ -11,6 +11,7 @@
 #ifndef MGMOL_LOCALMATRICES_H
 #define MGMOL_LOCALMATRICES_H
 
+#include "LocalVector.h"
 #include "MGmol_blas1.h"
 
 #include "Timer.h"
@@ -83,13 +84,13 @@ public:
         assert(ptr_matrices_[iloc] != NULL);
         return ptr_matrices_[iloc];
     }
-
-    void addVal(const int iloc, const int index, const T val)
+#if 0
+    void addVal(const int index, const T val, const int iloc=0)
     {
         ptr_matrices_[iloc][index] += val;
     }
 
-    void addVal(const int iloc, const int i, const int j, const T val)
+    void addVal(const int i, const int j, const T val, const int iloc=0)
     {
         assert(i < m_);
         assert(j < n_);
@@ -97,26 +98,24 @@ public:
     }
 
     // use fortran convention to be compatible with BLAS
-    T getVal(const int iloc, const int i, const int j) const
+    T getVal(const int i, const int j, const int iloc=0) const
     {
         assert(i < m_);
         assert(j < n_);
         return ptr_matrices_[iloc][m_ * j + i];
     }
-
-    void setVal(const int iloc, const int i, const int j, const T val)
+#endif
+    void setVal(const int i, const int j, const T val, const int iloc=0)
     {
         assert(i < m_);
         assert(j < n_);
         ptr_matrices_[iloc][m_ * j + i] = val;
     }
 
-    void setVal2zero(const int iloc, const int i, const int j)
-    {
-        assert(i < m_);
-        assert(j < n_);
-        ptr_matrices_[iloc][m_ * j + i] = 0.;
-    }
+//    void setVal2zero(const int i, const int j, const int iloc=0)
+//    {
+//        setVal(i, j, 0., iloc);
+//    }
 
     void scal(const double alpha) { Tscal(storage_size_, alpha, storage_); }
     void axpy(const double alpha, const LocalMatrices& matA)
@@ -196,7 +195,7 @@ public:
     void setMaskThreshold(const T min_threshold, const T max_threshold);
     void printBlock(std::ostream& os, const int blocksize);
 
-    void matvec(const std::vector<T>& u, std::vector<T>& f, const int iloc);
+    void matvec(const LocalVector<T>& u, LocalVector<T>& f, const int iloc=0);
 };
 
 #endif

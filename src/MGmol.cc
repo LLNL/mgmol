@@ -49,6 +49,7 @@ using namespace std;
 #include "PackedCommunicationBuffer.h"
 #include "PoissonInterface.h"
 #include "Potentials.h"
+#include "Power.h"
 #include "Preconditioning.h"
 #include "ProjectedMatricesMehrstellen.h"
 #include "ProjectedMatricesSparse.h"
@@ -62,6 +63,7 @@ using namespace std;
 #include "XConGrid.h"
 #include "XCfunctionalFactory.h"
 #include "DistMatrix2SquareLocalMatrices.h"
+#include "SP2.h"
 #include "manage_memory.h"
 
 namespace mgmol
@@ -882,6 +884,8 @@ void MGmol<T>::printTimers()
     LinearSolver::printTimers(os_);
     Table::printTimers(os_);
     LocalMatrices<MATDTYPE>::printTimers(os_);
+    Power<LocalVector<double>, SquareLocalMatrices<double>>::printTimers(os_);
+    SP2::printTimers(os_);
     lrs_->printTimers(os_);
     local_cluster_->printTimers(os_);
     forces_->printTimers(os_);

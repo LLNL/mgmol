@@ -8,24 +8,24 @@
 #ifndef MGMOL_POWER_H
 #define MGMOL_POWER_H
 
-#include "SquareLocalMatrices.h"
+#include "Timer.h"
 #include "random.h"
 
 #include <vector>
+#include <iostream>
 
+template<class VECTOR, class MATRIX>
 class Power
 {
 private:
     static Timer compute_tm_;
     static Timer compute_gen_tm_;
 
-    static std::ostream* os_;
-
     // use shift to target highest or lowest eigenvalue
     double shift_;
 
-    std::vector<double> vec1_;
-    std::vector<double> vec2_;
+    VECTOR vec1_;
+    VECTOR vec2_;
 
 public:
     Power(const int n)
@@ -35,7 +35,7 @@ public:
     }
 
     void computeEigenInterval(
-        SquareLocalMatrices<MATDTYPE>& A, double& emin, double& emax,
+        MATRIX& A, double& emin, double& emax,
         const double epsilon = 1.e-2, const bool verbose = false);
 
     static void printTimers(std::ostream& os)

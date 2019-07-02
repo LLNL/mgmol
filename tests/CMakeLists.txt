@@ -35,6 +35,18 @@ add_executable(testPower
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
                ${CMAKE_SOURCE_DIR}/src/tools/random.cc)
+add_executable(testPowerDistMatrix
+               ${CMAKE_SOURCE_DIR}/tests/testPowerDistMatrix.cc
+               ${CMAKE_SOURCE_DIR}/src/Power.cc
+               ${CMAKE_SOURCE_DIR}/src/local_matrices/LocalMatrices.cc
+               ${CMAKE_SOURCE_DIR}/src/local_matrices/SquareLocalMatrices.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
+               ${CMAKE_SOURCE_DIR}/src/DistMatrix/DistMatrix.cc
+               ${CMAKE_SOURCE_DIR}/src/DistMatrix/BlacsContext.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/random.cc)
 add_executable(testDirectionalReduce
                ${CMAKE_SOURCE_DIR}/tests/testDirectionalReduce.cc
                ${CMAKE_SOURCE_DIR}/src/sparse_linear_algebra/DirectionalReduce.cc
@@ -64,6 +76,9 @@ add_test(NAME testDistMatrix
                  ${CMAKE_CURRENT_BINARY_DIR}/testDistMatrix)
 add_test(NAME testPower
          COMMAND ${CMAKE_CURRENT_BINARY_DIR}/testPower)
+add_test(NAME testPowerDistMatrix
+         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4
+                 ${CMAKE_CURRENT_BINARY_DIR}/testPowerDistMatrix)
 add_test(NAME testDirectionalReduce
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4
                  ${CMAKE_CURRENT_BINARY_DIR}/testDirectionalReduce)
@@ -130,6 +145,8 @@ target_link_libraries(testDistVector ${SCALAPACK_LIBRARIES}
 target_link_libraries(testDistMatrix ${SCALAPACK_LIBRARIES}
                                      ${BLAS_LIBRARIES})
 target_link_libraries(testPower ${BLAS_LIBRARIES}
+                                ${SCALAPACK_LIBRARIES})
+target_link_libraries(testPowerDistMatrix ${BLAS_LIBRARIES}
                                 ${SCALAPACK_LIBRARIES})
 target_link_libraries(testAndersonMix ${LAPACK_LIBRARIES}
                                       ${BLAS_LIBRARIES}

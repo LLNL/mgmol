@@ -12,29 +12,25 @@
 #include "mputils.h"
 #include "random.h"
 #include "DistVector.h"
+#include "SquareLocalMatrices.h"
+#include "LocalVector.h"
 
-#include <vector>
 
-Timer Power::compute_tm_("Power::compute");
-Timer Power::compute_gen_tm_("Power::compute_gen");
+Timer Power<LocalVector<double>, SquareLocalMatrices<double>>::compute_tm_("Power::compute");
+Timer Power<LocalVector<double>, SquareLocalMatrices<double>>::compute_gen_tm_("Power::compute_gen");
 
-std::ostream* Power::os_ = &std::cout;
+Timer Power<dist_matrix::DistVector<double>, dist_matrix::DistMatrix<double> >::compute_tm_("Power::compute");
+Timer Power<dist_matrix::DistVector<double>, dist_matrix::DistMatrix<double> >::compute_gen_tm_("Power::compute_gen");
+
+
 
 // compute sum of squares of elements of vector y-theta*v
+template<class VECTOR>
 double diff2(
-    std::vector<double>& y, std::vector<double>& v, const MATDTYPE theta,
+    VECTOR& y, VECTOR& v, const double theta,
     const bool verbose)
 {
-    double diff                             = 0.;
-    std::vector<double>::const_iterator it1 = v.begin();
-    for (std::vector<double>::const_iterator it2 = y.begin(); it2 != y.end();
-         ++it2)
-    {
-        double tmp = *it2 - theta * (*it1);
-        diff += tmp * tmp;
-
-        ++it1;
-    }
+    double diff = y.scaledDiff2(v, theta);
 
     if ( verbose)
         std::cout << "Power method: theta=" << theta << ", diff2=" << diff << '\n';
@@ -42,19 +38,19 @@ double diff2(
     return diff;
 }
 
-double power(SquareLocalMatrices<double>& A, std::vector<double>& y,
+template<class VECTOR, class MATRIX>
+double power(MATRIX& A, VECTOR& y,
     const int maxits, const double epsilon, const bool verbose)
 {
-    std::vector<double> v(y.size());
+    VECTOR v(A.m());
     double theta = 0.;
 
     for (int i = 0; i < maxits; i++)
     {
-        double norm = Tnrm2(y.size(), &y[0]);
-        Tscal(y.size(), 1. / norm, &y[0]);
+        y.normalize();
         v.swap(y);
-        A.matvec(v, y, 0);
-        theta              = Tdot(y.size(), &y[0], &v[0]);
+        A.matvec(v, y);
+        theta = y.dot(v);
         const double tol = epsilon * fabs(theta);
         // do at least 2 iterations before checking for convergence
         if (i > 1)
@@ -70,8 +66,9 @@ double power(SquareLocalMatrices<double>& A, std::vector<double>& y,
 }
 
 // compute extreme eigenvalues of A by power method
-void Power::computeEigenInterval(
-    SquareLocalMatrices<double>& A, double& emin, double& emax,
+template<class VECTOR, class MATRIX>
+void Power<VECTOR,MATRIX>::computeEigenInterval(
+    MATRIX& A, double& emin, double& emax,
     const double epsilon, const bool verbose)
 {
     compute_tm_.start();
@@ -106,3 +103,7 @@ void Power::computeEigenInterval(
 
     compute_tm_.stop();
 }
+
+template class Power<LocalVector<double>, SquareLocalMatrices<double>>;
+template class Power<dist_matrix::DistVector<double>,
+                     dist_matrix::DistMatrix<double>>;
