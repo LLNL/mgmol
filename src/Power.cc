@@ -16,14 +16,6 @@
 #include "LocalVector.h"
 
 
-Timer Power<LocalVector<double>, SquareLocalMatrices<double>>::compute_tm_("Power::compute");
-Timer Power<LocalVector<double>, SquareLocalMatrices<double>>::compute_gen_tm_("Power::compute_gen");
-
-Timer Power<dist_matrix::DistVector<double>, dist_matrix::DistMatrix<double> >::compute_tm_("Power::compute");
-Timer Power<dist_matrix::DistVector<double>, dist_matrix::DistMatrix<double> >::compute_gen_tm_("Power::compute_gen");
-
-
-
 // compute sum of squares of elements of vector y-theta*v
 template<class VECTOR>
 double diff2(

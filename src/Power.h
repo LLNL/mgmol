@@ -19,7 +19,6 @@ class Power
 {
 private:
     static Timer compute_tm_;
-    static Timer compute_gen_tm_;
 
     // use shift to target highest or lowest eigenvalue
     double shift_;
@@ -41,8 +40,10 @@ public:
     static void printTimers(std::ostream& os)
     {
         compute_tm_.print(os);
-        compute_gen_tm_.print(os);
     }
 };
+
+template<class VECTOR, class MATRIX>
+Timer Power<VECTOR, MATRIX>::compute_tm_("Power::compute");
 
 #endif

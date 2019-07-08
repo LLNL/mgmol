@@ -16,7 +16,6 @@
 #include <vector>
 
 Timer PowerGen::compute_tm_("PowerGen::compute");
-Timer PowerGen::compute_gen_tm_("PowerGen::compute_gen");
 
 
 /* Use the power method to compute the extents of the spectrum of the
@@ -32,7 +31,7 @@ void PowerGen::computeGenEigenInterval(dist_matrix::DistMatrix<double>& mat,
 {
     srand(13579);
 
-    compute_gen_tm_.start();
+    compute_tm_.start();
 
     interval.clear();
 
@@ -171,5 +170,5 @@ void PowerGen::computeGenEigenInterval(dist_matrix::DistMatrix<double>& mat,
     // update shft
     shift_ = std::max(fabs(e1), fabs(e2));
 
-    compute_gen_tm_.stop();
+    compute_tm_.stop();
 }
