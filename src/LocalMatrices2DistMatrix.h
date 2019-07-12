@@ -43,8 +43,8 @@ public:
         if (pinstance_ == 0)
         {
             pinstance_ = new LocalMatrices2DistMatrix();
-            return pinstance_;
         }
+        return pinstance_;
     }
 
     LocalMatrices2DistMatrix()
