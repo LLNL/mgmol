@@ -11,7 +11,6 @@
 #include "Timer.h"
 #include "random.h"
 
-#include <vector>
 #include <iostream>
 
 template<class VECTOR, class MATRIX>
