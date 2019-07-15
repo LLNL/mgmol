@@ -70,7 +70,7 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
         DSCAL(&n, &coeff, vv, &one);
 
         vv[lrindex] = 1.0 * scal + vv[lrindex];
-        beta        = dnrm2(&n, vv, &one);
+        beta        = DNRM2(&n, vv, &one);
         /*-------------------- print info --------- */
         //       if (onpe0 && fits != NULL && its == 0 && myid == 0 && DEBUG)
         //         printf("%8d   %10.2e\n",its, beta) ;
@@ -112,13 +112,13 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
             ptih = i * im1;
             for (j = 0; j <= i; j++)
             {
-                t            = ddot(&n, &vv[j * n], &one, &vv[pti1], &one);
+                t            = DDOT(&n, &vv[j * n], &one, &vv[pti1], &one);
                 hh[ptih + j] = t;
                 negt         = -t;
                 DAXPY(&n, &negt, &vv[j * n], &one, &vv[pti1], &one);
             }
             /*-------------------- h_{j+1,j} = ||w||_{2}    */
-            t             = dnrm2(&n, &vv[pti1], &one);
+            t             = DNRM2(&n, &vv[pti1], &one);
             hh[ptih + i1] = t;
             // report failure
             if (t == 0.0) return (1);
@@ -217,7 +217,7 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
         LSMat.matvec(sol, vv);
         for (j = 0; j < n; j++)
             vv[j] = rhs[j] - vv[j]; /*  vv[0]= initial residual */
-        beta = dnrm2(&n, vv, &one);
+        beta = DNRM2(&n, vv, &one);
         /*-------------------- print info --------- */
         //       if (onpe0 && fits != NULL && its == 0 && myid == 0 && DEBUG)
         //         printf("%8d   %10.2e\n",its, beta) ;
@@ -260,14 +260,14 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
             ptih = i * im1;
             for (j = 0; j <= i; j++)
             {
-                t            = ddot(&n, &vv[j * n], &one, &vv[pti1], &one);
+                t            = DDOT(&n, &vv[j * n], &one, &vv[pti1], &one);
                 hh[ptih + j] = t;
                 negt         = -t;
                 DAXPY(&n, &negt, &vv[j * n], &one, &vv[pti1], &one);
             }
 
             /*-------------------- h_{j+1,j} = ||w||_{2}    */
-            t             = dnrm2(&n, &vv[pti1], &one);
+            t             = DNRM2(&n, &vv[pti1], &one);
             hh[ptih + i1] = t;
 
             // report failure
@@ -362,7 +362,7 @@ double LinearSolver::computeEigMin(
         // solve
         fgmres(LSMat, precon, rhs, solptr, 1.0e-6, 10, 10);
 
-        gamma  = dnrm2(&n, solptr, &one);
+        gamma  = DNRM2(&n, solptr, &one);
         eigmin = 1. / gamma;
         // normalize solution
         DSCAL(&n, &eigmin, solptr, &one);
@@ -404,7 +404,7 @@ double LinearSolver::computeEigMax(
         // do matvec
         LSMat.matvec(rhs, solptr);
         // compute norm
-        eigmax = dnrm2(&n, solptr, &one);
+        eigmax = DNRM2(&n, solptr, &one);
         // normalize result
         gamma = 1. / eigmax;
         DSCAL(&n, &gamma, solptr, &one);

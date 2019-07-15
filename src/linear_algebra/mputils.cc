@@ -70,7 +70,7 @@ double Tnrm2(const int len, const double* const dptr)
 {
     const int one = 1;
     double nrm;
-    nrm = dnrm2(&len, dptr, &one);
+    nrm = DNRM2(&len, dptr, &one);
 
     return nrm;
 }
@@ -78,7 +78,7 @@ float Tnrm2(const int len, const float* const dptr)
 {
     const int one = 1;
     float nrm;
-    nrm = snrm2(&len, dptr, &one);
+    nrm = SNRM2(&len, dptr, &one);
 
     return nrm;
 }
@@ -97,7 +97,7 @@ double Tdot(const int len, const double* const xptr, const double* const yptr)
 {
     const int one = 1;
     double dot;
-    dot = ddot(&len, xptr, &one, yptr, &one);
+    dot = DDOT(&len, xptr, &one, yptr, &one);
 
     return dot;
 }
@@ -105,7 +105,7 @@ float Tdot(const int len, const float* const xptr, const float* const yptr)
 {
     const int one = 1;
     float dot;
-    dot = sdot(&len, xptr, &one, yptr, &one);
+    dot = SDOT(&len, xptr, &one, yptr, &one);
 
     return dot;
 }
@@ -116,7 +116,7 @@ double MPdot(const int len, const float* __restrict__ xptr,
 
 #ifdef BGQ
     const int one = 1;
-    double dot    = (double)sdot(&len, xptr, &one, yptr, &one);
+    double dot    = (double)SDOT(&len, xptr, &one, yptr, &one);
 #else
     double dot = 0.;
     for (int k = 0; k < len; k++)
@@ -134,7 +134,7 @@ double MPdot(const int len, const float* __restrict__ xptr,
 double MPdot(const int len, const double* const xptr, const double* const yptr)
 {
     const int one = 1;
-    return ddot(&len, xptr, &one, yptr, &one);
+    return DDOT(&len, xptr, &one, yptr, &one);
 }
 
 void Taxpy(const int len, double scal, const double* const xptr, double* yptr)
@@ -158,14 +158,14 @@ void Ttrsm(const char side, const char uplo, const char transa, const char diag,
     const int m, const int n, const double alpha, const double* const a,
     const int lda, double* const b, const int ldb)
 {
-    dtrsm(&side, &uplo, &transa, &diag, &m, &n, &alpha, a, &lda, b, &ldb);
+    DTRSM(&side, &uplo, &transa, &diag, &m, &n, &alpha, a, &lda, b, &ldb);
 }
 
 void Ttrsm(const char side, const char uplo, const char transa, const char diag,
     const int m, const int n, const float alpha, const float* const a,
     const int lda, float* const b, const int ldb)
 {
-    strsm(&side, &uplo, &transa, &diag, &m, &n, &alpha, a, &lda, b, &ldb);
+    STRSM(&side, &uplo, &transa, &diag, &m, &n, &alpha, a, &lda, b, &ldb);
 }
 
 void Tsyrk(const char uplo, const char trans, const int n, const int k,
@@ -173,7 +173,7 @@ void Tsyrk(const char uplo, const char trans, const int n, const int k,
     double* c, const int ldc)
 {
     dsyrk_tm.start();
-    dsyrk(&uplo, &trans, &n, &k, &alpha, a, &lda, &beta, c, &ldc);
+    DSYRK(&uplo, &trans, &n, &k, &alpha, a, &lda, &beta, c, &ldc);
     dsyrk_tm.stop();
 }
 void Tsyrk(const char uplo, const char trans, const int n, const int k,
@@ -181,7 +181,7 @@ void Tsyrk(const char uplo, const char trans, const int n, const int k,
     float* c, const int ldc)
 {
     ssyrk_tm.start();
-    ssyrk(&uplo, &trans, &n, &k, &alpha, a, &lda, &beta, c, &ldc);
+    SSYRK(&uplo, &trans, &n, &k, &alpha, a, &lda, &beta, c, &ldc);
     ssyrk_tm.stop();
 }
 
@@ -190,7 +190,7 @@ void MPsyrk(const char uplo, const char trans, const int n, const int k,
     double* c, const int ldc)
 {
     dsyrk_tm.start();
-    dsyrk(&uplo, &trans, &n, &k, &alpha, a, &lda, &beta, c, &ldc);
+    DSYRK(&uplo, &trans, &n, &k, &alpha, a, &lda, &beta, c, &ldc);
     dsyrk_tm.stop();
 }
 

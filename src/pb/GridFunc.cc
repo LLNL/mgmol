@@ -88,7 +88,7 @@ double GridFunc<double>::fmax()
 {
     int ione = 1;
     int n    = grid_.sizeg();
-    int imax = idamax(&n, &uu_[0], &ione) - 1;
+    int imax = IDAMAX(&n, &uu_[0], &ione) - 1;
 
     double vmax = mype_env().double_max_all(uu_[imax]);
 
@@ -100,7 +100,7 @@ double GridFunc<float>::fmax()
 {
     int ione = 1;
     int n    = grid_.sizeg();
-    int imax = isamax(&n, &uu_[0], &ione) - 1;
+    int imax = ISAMAX(&n, &uu_[0], &ione) - 1;
 
     double vmax = mype_env().double_max_all((double)uu_[imax]);
 

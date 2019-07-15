@@ -478,8 +478,8 @@ double ProjectedMatricesSparse::getLinDependent2states(
         vector<double> tmp(bsize);
         LSMat.matvec(&evec[0], &tmp[0]);
         int one      = 1;
-        double norme = dnrm2(&bsize, &evec[0], &one);
-        double norma = dnrm2(&bsize, &tmp[0], &one);
+        double norme = DNRM2(&bsize, &evec[0], &one);
+        double norma = DNRM2(&bsize, &tmp[0], &one);
         cout << "eigenvalue: " << out.val << endl;
         cout << "Norm S*v: " << norma / norme << endl;
     }

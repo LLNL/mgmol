@@ -555,8 +555,8 @@ int LBFGS_IonicStepper::read_lbfgs(HDFrestart& h5f_file)
 #endif
     int wsize = work_.size();
     int ione  = 1;
-    dcopy(&wsize, u, &ione, &work_[0], &ione);
-    dcopy(&gndofs_, u + wsize, &ione, &diag_[0], &ione);
+    DCOPY(&wsize, u, &ione, &work_[0], &ione);
+    DCOPY(&gndofs_, u + wsize, &ione, &diag_[0], &ione);
     // test for compatibility with previous version restart files
     if ((int)dim_dset >= dim)
     {
@@ -855,11 +855,11 @@ int LBFGS_IonicStepper::lbfgs(
             if (iter_ != 1)
             {
                 if (iter_ > m_) bound = m_;
-                double ys = ddot(&gndofs_, &work_[iypt + npt_], &inc,
+                double ys = DDOT(&gndofs_, &work_[iypt + npt_], &inc,
                     &work_[ispt + npt_], &inc);
                 if (!diagco)
                 {
-                    double yy = ddot(&gndofs_, &work_[iypt + npt_], &inc,
+                    double yy = DDOT(&gndofs_, &work_[iypt + npt_], &inc,
                         &work_[iypt + npt_], &inc);
                     if (yy < 1.e-14)
                     {
@@ -909,7 +909,7 @@ int LBFGS_IonicStepper::lbfgs(
                 // Restrict the new search direction to small displacements (0.1
                 // a.u.)
                 const double dismax = 0.1;
-                int maxw            = (idamax(&gndofs_, &work_[0], &inc) - 1);
+                int maxw            = (IDAMAX(&gndofs_, &work_[0], &inc) - 1);
                 if (fabs(work_[maxw]) > dismax)
                 {
                     double alpha = dismax / fabs(work_[maxw]);
@@ -925,7 +925,7 @@ int LBFGS_IonicStepper::lbfgs(
 
             nfev_ = 0;
             stp_  = 1.;
-            dcopy(&gndofs_, &g_[0], &inc, &work_[0], &inc);
+            DCOPY(&gndofs_, &g_[0], &inc, &work_[0], &inc);
         }
 
         // obtain the one-dimensional minimizer of the function
@@ -951,7 +951,7 @@ int LBFGS_IonicStepper::lbfgs(
         if (point_ == m_) point_ = 0;
 
         // Termination test
-        double gnorm = sqrt(ddot(&gndofs_, &g_[0], &inc, &g_[0], &inc));
+        double gnorm = sqrt(DDOT(&gndofs_, &g_[0], &inc, &g_[0], &inc));
         (*MPIdata::sout) << setprecision(2) << scientific;
         if (onpe0)
             (*MPIdata::sout) << "lbfgs: Norm of gradient=" << gnorm << endl;
@@ -985,7 +985,7 @@ void LBFGS_IonicStepper::minushg(const int bound, const double ys)
     {
         cp--;
         if (cp == -1) cp = m_ - 1;
-        double sq = ddot(
+        double sq = DDOT(
             &gndofs_, &work_[ispt + cp * gndofs_], &inc, &work_[0], &inc);
         int inmc     = gndofs_ + m_ + cp;
         int iycn     = iypt + cp * gndofs_;
@@ -999,7 +999,7 @@ void LBFGS_IonicStepper::minushg(const int bound, const double ys)
 
     for (int i = 0; i < bound; i++)
     {
-        double yr = ddot(
+        double yr = DDOT(
             &gndofs_, &work_[iypt + cp * gndofs_], &inc, &work_[0], &inc);
         double beta = work_[gndofs_ + cp] * yr;
         int inmc    = gndofs_ + m_ + cp;
@@ -1071,7 +1071,7 @@ void LBFGS_IonicStepper::mcsrch(const double f, double* s, double& stp)
 
         //  compute the initial gradient in the search direction
         //  and check that s is a descent direction.
-        dginit_ = ddot(&gndofs_, &g_[0], &inc, s, &inc);
+        dginit_ = DDOT(&gndofs_, &g_[0], &inc, s, &inc);
         if (dginit_ >= 0.)
         {
             (*MPIdata::sout)
@@ -1088,7 +1088,7 @@ void LBFGS_IonicStepper::mcsrch(const double f, double* s, double& stp)
         width_  = stpmax - stpmin;
         width1_ = 2. * width_;
         (*MPIdata::sout) << "lbfgs: update reference positions" << endl;
-        dcopy(&gndofs_, &xcurrent_[0], &inc, &xref_[0], &inc);
+        DCOPY(&gndofs_, &xcurrent_[0], &inc, &xref_[0], &inc);
         last_step_accepted_ = 1;
 
         // the variables stx, fx, dgx contain the values of the step,
@@ -1156,7 +1156,7 @@ void LBFGS_IonicStepper::mcsrch(const double f, double* s, double& stp)
         }
         info_ = 0;
         nfev_++;
-        double dg     = ddot(&gndofs_, &g_[0], &inc, s, &inc);
+        double dg     = DDOT(&gndofs_, &g_[0], &inc, s, &inc);
         double dgtest = ftol * dginit_;
         double ftest1 = finit_ + stp * dgtest;
 

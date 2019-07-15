@@ -440,7 +440,7 @@ template <>
 float BlockVector<float>::maxAbsValue() const
 {
     int ione   = 1;
-    int imax   = isamax(&size_storage_, storage_, &ione);
+    int imax   = ISAMAX(&size_storage_, storage_, &ione);
     float maxv = fabs(storage_[imax - 1]);
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
     mmpi.allreduce(&maxv, 1, MPI_MAX);
@@ -451,7 +451,7 @@ template <>
 double BlockVector<double>::maxAbsValue() const
 {
     int ione    = 1;
-    int imax    = idamax(&size_storage_, storage_, &ione);
+    int imax    = IDAMAX(&size_storage_, storage_, &ione);
     double maxv = fabs(storage_[imax - 1]);
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
     mmpi.allreduce(&maxv, 1, MPI_MAX);

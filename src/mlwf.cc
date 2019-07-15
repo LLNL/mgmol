@@ -31,7 +31,7 @@ void dtrsm_c(const char side, const char uplo, const char transa,
     const char diag, const int m, const int n, const double alpha,
     const double* const a, const int lda, double* const b, const int ldb)
 {
-    dtrsm(&side, &uplo, &transa, &diag, &m, &n, &alpha, a, &lda, b, &ldb);
+    DTRSM(&side, &uplo, &transa, &diag, &m, &n, &alpha, a, &lda, b, &ldb);
 }
 
 void distributeColumns(
