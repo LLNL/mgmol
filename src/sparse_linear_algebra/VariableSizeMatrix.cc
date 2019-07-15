@@ -803,8 +803,6 @@ void VariableSizeMatrix<T>::AmultSymBLocal(VariableSizeMatrix<T>* B,
     VariableSizeMatrix<T>& C, const std::vector<int>& locfcns,
     VariableSizeMatrix<SparseRowAndTable>& pattern, bool flag)
 {
-    assert(&C != 0);
-
     const int nb = (*B).n();
 
     assert((int)locfcns.size() >= 0);
@@ -858,8 +856,6 @@ void VariableSizeMatrix<T>::AmultSymB(VariableSizeMatrix<T>* B,
     VariableSizeMatrix<T>& C, VariableSizeMatrix<SparseRowAndTable>& pattern,
     bool flag)
 {
-    assert(&C != 0);
-
     const int nb = (*B).n();
     assert(nb > 0);
 

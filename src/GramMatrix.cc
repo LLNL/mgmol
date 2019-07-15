@@ -16,6 +16,8 @@ using namespace std;
 #include "DistMatrix2SquareLocalMatrices.h"
 #include "GramMatrix.h"
 #include "MGmol_MPI.h"
+#include "Power.h"
+#include "DistVector.h"
 
 void rotateSym(dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
     const dist_matrix::DistMatrix<DISTMATDTYPE>& rotation_matrix,
@@ -137,6 +139,7 @@ void GramMatrix::solveLST(dist_matrix::DistMatrix<DISTMATDTYPE>& z) const
 
 double GramMatrix::computeCond()
 {
+#if 0
     double anorm   = matS_->norm('1');
     double invcond = ls_->pocon('l', anorm);
     double cond    = 0.;
@@ -144,6 +147,18 @@ double GramMatrix::computeCond()
 #ifdef USE_MPI
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     mmpi.bcast(&cond, 1);
+#endif
+#else
+    double emin;
+    double emax;
+
+    // static object so that eigenvectors inside Power
+    // are saved from one call to the next
+    static Power<dist_matrix::DistVector<double>,
+                 dist_matrix::DistMatrix<double>> power(dim_);
+
+    power.computeEigenInterval(*matS_, emin, emax, 1.e-3);
+    const double cond = emax/emin;
 #endif
 
     return cond;

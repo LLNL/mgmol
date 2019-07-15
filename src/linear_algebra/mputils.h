@@ -74,12 +74,12 @@ void MPaxpy(const int len, double scal, const T1* __restrict__ xptr,
 inline void Tcopy(const int* const len, const double* const x,
     const int* const incx, double* y, const int* const incy)
 {
-    dcopy(len, x, incx, y, incy);
+    DCOPY(len, x, incx, y, incy);
 }
 inline void Tcopy(const int* const len, const float* const x,
     const int* const incx, float* y, const int* const incy)
 {
-    scopy(len, x, incx, y, incy);
+    SCOPY(len, x, incx, y, incy);
 }
 
 /* syrk */

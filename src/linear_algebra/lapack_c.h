@@ -15,10 +15,6 @@
 
 typedef const char* const Pchar;
 
-#define dsyev DSYEV
-#define dpotri DPOTRI
-#define dpotrf DPOTRF
-#define dpotrs DPOTRS
 #define dsygst DSYGST
 #define dtrtrs DTRTRS
 #define dpocon DPOCON
@@ -27,14 +23,14 @@ typedef const char* const Pchar;
 
 extern "C"
 {
-    void dsyev(Pchar, Pchar, const int* const, double*, const int* const,
+    void DSYEV(Pchar, Pchar, const int* const, double*, const int* const,
         double*, double*, const int* const, int*);
     void dsygv(const int* const, Pchar, Pchar, const int* const, double*,
         const int* const, double*, const int* const, double*, double*,
         const int* const, int*);
-    void dpotri(Pchar, const int* const, double*, const int* const, int*);
-    void dpotrf(Pchar, const int* const, double*, const int* const, int*);
-    void dpotrs(Pchar, const int* const, const int* const, double*,
+    void DPOTRI(Pchar, const int* const, double*, const int* const, int*);
+    void DPOTRF(Pchar, const int* const, double*, const int* const, int*);
+    void DPOTRS(Pchar, const int* const, const int* const, double*,
         const int* const, double*, const int* const, int*);
     void dgetrf(int*, int*, double*, int*, int*, int*);
     void dgetrs(Pchar, int*, int*, double*, int*, int*, double*, int*, int*);

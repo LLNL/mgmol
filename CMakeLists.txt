@@ -93,7 +93,7 @@ if (${MPI_CXX_FOUND})
 else(${MPI_CXX_FOUND})
   message(FATAL_ERROR "Required MPI package not found. Please specify correct path to MPI.")  
 endif (${MPI_CXX_FOUND})
-
+message("MPIEXEC :" ${MPIEXEC})
 # Use openMP if available
 find_package(OpenMP)
 if(${OPENMP_CXX_FOUND})

@@ -170,8 +170,9 @@ int MGmol_MPI::bcast(double* val, int size, int root) const
         MGMOL_MPI_ERROR("ERROR in MPI_Bcast(double*, int) of size " << size<< "!!!");
     }
 #else
-    return 0;
+    int mpi_err =  0;
 #endif
+    return mpi_err;
 }
 
 int MGmol_MPI::bcast(float* val, int size, int root) const
@@ -183,10 +184,10 @@ int MGmol_MPI::bcast(float* val, int size, int root) const
         MGMOL_MPI_ERROR("ERROR in MPI_Bcast(float*, int) of size " << size
                          << "!!!");
     }
-    return mpi_err;
 #else
-    return 0;
+    int mpi_err = 0;
 #endif
+    return mpi_err;
 }
 
 int MGmol_MPI::bcast(int* val, int size, int root) const
@@ -198,10 +199,10 @@ int MGmol_MPI::bcast(int* val, int size, int root) const
         MGMOL_MPI_ERROR( "MPI_Bcast(int*, int) of size " << size
                          << "!!!");
     }
-    return mpi_err;
 #else
-    return 0;
+    int mpi_err = 0;
 #endif
+    return mpi_err;
 }
 
 int MGmol_MPI::bcast(short* val, int size, int root) const
@@ -213,10 +214,10 @@ int MGmol_MPI::bcast(short* val, int size, int root) const
         MGMOL_MPI_ERROR( "MPI_Bcast(short*, int) of size " << size
                          << "!!!" );
     }
-    return mpi_err;
 #else
-    return 0;
+    int mpi_err = 0;
 #endif
+    return mpi_err;
 }
 
 int MGmol_MPI::bcastGlobal(double* val, int size, int root) const
@@ -229,8 +230,9 @@ int MGmol_MPI::bcastGlobal(double* val, int size, int root) const
                          << "!!!");
     }
 #else
-    return 0;
+    int mpi_err = 0;
 #endif
+    return mpi_err;
 }
 
 int MGmol_MPI::bcastGlobal(short* val, int size, int root) const
@@ -243,8 +245,9 @@ int MGmol_MPI::bcastGlobal(short* val, int size, int root) const
                          << "!!!");
     }
 #else
-    return 0;
+    int mpi_err = 0;
 #endif
+    return mpi_err;
 }
 
 int MGmol_MPI::bcastGlobal(int* val, int size, int root) const
@@ -256,10 +259,10 @@ int MGmol_MPI::bcastGlobal(int* val, int size, int root) const
         MGMOL_MPI_ERROR( "MPI_Bcast(short*, int) of size " << size
                          << "!!!");
     }
-    return mpi_err;
 #else
-    return 0;
+    int mpi_err = 0;
 #endif
+    return mpi_err;
 }
 
 int MGmol_MPI::bcast(char* val, int size, int root) const
@@ -271,10 +274,10 @@ int MGmol_MPI::bcast(char* val, int size, int root) const
         MGMOL_MPI_ERROR( "MPI_Bcast(char*, int) of size " << size
                          << "!!!");
     }
-    return mpi_err;
 #else
-    return 0;
+    int mpi_err = 0;
 #endif
+    return mpi_err;
 }
 
 int MGmol_MPI::reduce(double* sendbuf, double* recvbuf, int count, MPI_Op op,

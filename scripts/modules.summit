@@ -1,0 +1,9 @@
+#!/bin/csh
+module load xl
+module load essl
+module load netlib-lapack
+module load netlib-scalapack
+module load hdf5
+module load boost
+module load cmake
+

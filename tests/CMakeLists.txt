@@ -80,13 +80,13 @@ add_executable(testAndersonMix
 target_compile_definitions(testAndersonMix PUBLIC TESTING)
 
 add_test(NAME testHDF5P
-         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4
+         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testHDF5P)
 add_test(NAME testMPI
-         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4
+         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testMPI)
 add_test(NAME testBlacsContext
-         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4
+         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testBlacsContext)
 add_test(NAME testDistVector
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4
@@ -106,21 +106,21 @@ add_test(NAME testPowerDistMatrix
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4
                  ${CMAKE_CURRENT_BINARY_DIR}/testPowerDistMatrix)
 add_test(NAME testDirectionalReduce
-         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4
+         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testDirectionalReduce)
 add_test(NAME testAndersonMix
          COMMAND ${CMAKE_CURRENT_BINARY_DIR}/testAndersonMix 20 2)
 
 add_test(NAME testFatom
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Fatom/test.py
-         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
          ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
          ${CMAKE_CURRENT_SOURCE_DIR}/Fatom/mgmol.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/Fatom/F.xyz
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME testSiH4
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/SiH4/testSiH4.py
-         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
          ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
          ${CMAKE_CURRENT_SOURCE_DIR}/SiH4/mgmol.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/SiH4/sih4.xyz
