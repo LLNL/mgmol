@@ -33,7 +33,7 @@ public:
     }
 
     void computeEigenInterval(
-        MATRIX& A, double& emin, double& emax,
+        const MATRIX& A, double& emin, double& emax,
         const double epsilon = 1.e-2, const bool verbose = false);
 
     static void printTimers(std::ostream& os)

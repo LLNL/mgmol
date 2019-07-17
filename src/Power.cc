@@ -60,22 +60,23 @@ double power(MATRIX& A, VECTOR& y,
 // compute extreme eigenvalues of A by power method
 template<class VECTOR, class MATRIX>
 void Power<VECTOR,MATRIX>::computeEigenInterval(
-    MATRIX& A, double& emin, double& emax,
+    const MATRIX& A, double& emin, double& emax,
     const double epsilon, const bool verbose)
 {
     compute_tm_.start();
 
     int maxits     = 100;
 
-    A.shift(shift_);
+    MATRIX B(A);
+    B.shift(shift_);
 
-    double beta1 = power(A, vec1_, maxits, epsilon, verbose);
+    double beta1 = power(B, vec1_, maxits, epsilon, verbose);
     double e1    = beta1 - shift_;
 
     // shift matrix and compute other extreme eigenvalue
-    A.shift(-beta1);
+    B.shift(-beta1);
 
-    double beta2 = power(A, vec2_, maxits, epsilon, verbose);
+    double beta2 = power(B, vec2_, maxits, epsilon, verbose);
 
     double e2 = beta2 + beta1 - shift_;
 
