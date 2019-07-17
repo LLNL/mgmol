@@ -1471,6 +1471,10 @@ void ExtendedGridOrbitals::computeInvNorms2(vector<vector<double>>& inv_norms2) 
 
     computeDiagonalElementsDotProduct(*this, diagS);
 
+    inv_norms2.resize(subdivx_);
+    for (short iloc = 0; iloc < subdivx_; iloc++)
+        inv_norms2[iloc].resize(numst_);
+
     for (short color = 0; color < numst_; color++)
     {
         double alpha = 1. / diagS[color];
