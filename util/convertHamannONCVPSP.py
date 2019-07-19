@@ -43,8 +43,6 @@ print("#Reference:")
 print("#D. R. Hamann, Phys. Rev. B 88, 085117 (2013)")
 
 #header paramaters
-dij_factors=[]
-
 active = False
 step=0
 mesh_spacing=0.01
@@ -55,6 +53,7 @@ lloc=-1
 for line in lines:
   words=line.split()
   if len(words)>1:
+    #look for symbol to start reading data
     if words[1]=='PSPCODE8':
       active = True
   if active:
@@ -81,8 +80,6 @@ for line in lines:
     if step==3:
       lmax=eval(words[2])
       lloc=eval(words[3])
-      for l in range(lmax+1):
-        dij_factors.append([])
       print("# Number of potentials")
       print (lmax+2)
       print ('# l-value for state which is local, then type of potential format')
@@ -137,7 +134,7 @@ for line in lines:
     count=count+1
     if count%(n+1)==8:
       l=eval(words[0])
-      print("# radial grid, and projecrtors for l={}".format(l))
+      print("# radial grid, and projectors for l={}".format(l))
     else:
       if count>7:
         r=float(words[1].replace("D","E"))
