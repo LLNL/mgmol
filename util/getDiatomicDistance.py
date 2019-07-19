@@ -17,14 +17,14 @@ input=open(sys.argv[1],'r')
 name1=sys.argv[2]
 name2=sys.argv[3]
 
-L1=input.readlines()
+lines=input.readlines()
 
 found1=0
 found2=0
 
 #read file and get data for atoms
-for line in L1: ## loop over lines of file
-  words=string.split(line)
+for line in lines: ## loop over lines of file
+  words=line.split()
   if len(words)>0:
     if words[0][0:2]=='##' and words[0][0:3]!='###':
       name=words[1]
@@ -42,6 +42,6 @@ for line in L1: ## loop over lines of file
         found2=1
       if found1==1 & found2==1:
         d=sqrt((x2-x1)**2+(y2-y1)**2+(z2-z1)**2)
-        print "d [Bohr]=",d, ", d [Ang]=",d*0.529177
+        print ("d[Bohr]={}, d[Ang]={}".format(d, d*0.529177))
         found1=0
         found2=0
