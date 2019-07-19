@@ -61,5 +61,14 @@ void increaseMemorySlotsForOrbitals()
     for (short i = 1; i < ct.wf_m; i++)
         BlockVector<ORBDTYPE>::incMaxAllocInstances(2);
     if (ct.use_kernel_functions) BlockVector<ORBDTYPE>::incMaxAllocInstances(1);
+
+    switch (ct.AtomsDynamic() )
+    {
+        case AtomsDynamicType::LBFGS:
+            BlockVector<ORBDTYPE>::incMaxAllocInstances(1);
+            break;
+        default:
+            break;
+    }
 }
 
