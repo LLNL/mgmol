@@ -1,0 +1,60 @@
+#!/usr/bin/env python
+import sys
+import os
+import subprocess
+import string
+
+print("Test MLWF...")
+
+mpicmd = sys.argv[1]+" "+sys.argv[2]+" "+sys.argv[3]
+exe = sys.argv[4]
+inp = sys.argv[5]
+coords = sys.argv[6]
+print("coordinates file: %s"%coords)
+
+#create links to potentials files
+dst = 'pseudo.Si_ONCV_PBE_SG15'
+src = sys.argv[7] + '/' + dst
+
+if not os.path.exists(dst):
+  print("Create link to %s"%dst)
+  os.symlink(src, dst)
+
+#run MGmol
+command = "{} {} -c {} -i {}".format(mpicmd,exe,inp,coords)
+output = subprocess.check_output(command,shell=True)
+
+#analyse mgmol standard output
+lines=output.split(b'\n')
+
+print("Check MLWF convergence and spread values...")
+
+found = False
+for line in lines:
+  num_matches = line.count(b'MLWFTransform')
+  if num_matches:
+    found = True
+
+  if found:
+    num_matches = line.count(b'jade')
+    if num_matches:
+      print(line)
+      words=line.split()
+      nsweeps = eval(words[0])
+      if nsweeps>35:
+        print("Test failed: nsweeps = {}".format(nsweeps));
+        sys.exit(1)
+
+    num_matches = line.count(b'&&')
+    if num_matches:
+      print(line)
+      words=line.split()
+      spread = eval(words[5])
+      if spread>3.2:
+        print("Test failed: spread = {}".format(spread));
+        sys.exit(1)
+      if spread<2.5:
+        print("Test failed: spread = {}".format(spread));
+        sys.exit(1)
+
+sys.exit(0)
