@@ -96,16 +96,11 @@ public:
 
     double dot(const DistVector<T>& v) const
     {
-        assert(ictxt_ == x.ictxt());
         double sum  = 0.;
         double tsum = 0.;
         if (DistMatrix<T>::active())
         {
-            assert(m_ == v.m());
-            assert(n_ == v.n());
-            assert(mloc_ == v.mloc());
-            assert(nloc_ == v.nloc());
-            assert(v.size_ == size_);
+            assert(v.size_ == DistMatrix<T>::size_);
             tsum = MPdot(DistMatrix<T>::val_.size(), DistMatrix<T>::val_.data(), v.val_.data());
         }
 #ifdef SCALAPACK
