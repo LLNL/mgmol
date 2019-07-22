@@ -33,7 +33,7 @@ using namespace std;
 #include "tools.h"
 
 #define Ry2Ha 0.5;
-double shift_R[NPTS];
+double shift_R[3*NPTS][3];
 
 double get_trilinval(const double xc, const double yc, const double zc,
     const double h0, const double h1, const double h2, const Vector3D& ref,
@@ -55,8 +55,8 @@ double get_deriv2(double value[2])
 
 template <class T>
 int Forces<T>::get_var(
-    Ion& ion, vector<int>& pvec, vector<vector<vector<double>>>& var_pot,
-    vector<vector<vector<double>>>& var_charge)
+    Ion& ion, vector<int>& pvec, vector<vector<double>>& var_pot,
+    vector<vector<double>>& var_charge)
 {
     get_var_tm_.start();
 
@@ -85,14 +85,6 @@ int Forces<T>::get_var(
     const double p0 = ion.position(0);
     const double p1 = ion.position(1);
     const double p2 = ion.position(2);
-
-    vector<vector<double>>& potx = var_pot[0];
-    vector<vector<double>>& poty = var_pot[1];
-    vector<vector<double>>& potz = var_pot[2];
-
-    vector<vector<double>>& chargex = var_charge[0];
-    vector<vector<double>>& chargey = var_charge[1];
-    vector<vector<double>>& chargez = var_charge[2];
 
     // Generate indices
     vector<vector<int>> Ai;
@@ -137,17 +129,21 @@ int Forces<T>::get_var(
                     double y = yc - p1;
                     double z = zc - p2;
 
-                    for (short ishift = 0; ishift < NPTS; ishift++)
+                    for (short ishift = 0; ishift < 3*NPTS; ishift++)
                     {
                         double xs
-                            = x - shift_R[ishift]; // the ion moves +shift_R
+                            = x - shift_R[ishift][0]; // the ion moves +shift_R
+                        double ys
+                            = y - shift_R[ishift][1]; // the ion moves +shift_
+                        double zs
+                            = z - shift_R[ishift][2]; // the ion moves +shift_R
 
-                        double r2 = xs * xs + y * y + z * z;
+                        double r2 = xs * xs + ys * ys + zs * zs;
                         double r  = sqrt(r2);
 
                         if (r > lrad)
                         {
-                            potx[ishift][docount] = 0.;
+                            var_pot[ishift][docount] = 0.;
                         }
                         else
                         {
@@ -156,63 +152,11 @@ int Forces<T>::get_var(
                                 get_trilinval(xc-shift_R[ishift],yc,zc,
                                               h0,h1,h2,position,ll,lpot);
 #else
-                            potx[ishift][docount] = lpot.cubint(r);
+                            var_pot[ishift][docount] = lpot.cubint(r);
 #endif
                         }
 
-                        chargex[ishift][docount] = sp.getRhoComp(r);
-                    }
-
-                    for (short ishift = 0; ishift < NPTS; ishift++)
-                    {
-                        double ys
-                            = y - shift_R[ishift]; // the ion moves +shift_R
-
-                        double r2 = x * x + ys * ys + z * z;
-                        double r  = sqrt(r2);
-
-                        if (r > lrad)
-                        {
-                            poty[ishift][docount] = 0.;
-                        }
-                        else
-                        {
-#if 0
-                            poty[ishift][docount] = 
-                                get_trilinval(xc,yc-shift_R[ishift],zc,
-                                              h0,h1,h2,position,ll,lpot);
-#else
-                            poty[ishift][docount] = lpot.cubint(r);
-#endif
-                        }
-
-                        chargey[ishift][docount] = sp.getRhoComp(r);
-                    }
-
-                    for (short ishift = 0; ishift < NPTS; ishift++)
-                    {
-                        double zs
-                            = z - shift_R[ishift]; // the ion moves +shift_R
-
-                        double r2 = x * x + y * y + zs * zs;
-                        double r  = sqrt(r2);
-
-                        if (r > lrad)
-                        {
-                            potz[ishift][docount] = 0.;
-                        }
-                        else
-                        {
-#if 0
-                             potz[ishift][docount] = 
-                                 get_trilinval(xc,yc,zc-shift_R[ishift],
-                                               h0,h1,h2,position,ll,lpot);
-#else
-                            potz[ishift][docount] = lpot.cubint(r);
-#endif
-                        }
-
-                        chargez[ishift][docount] = sp.getRhoComp(r);
+                        var_charge[ishift][docount] = sp.getRhoComp(r);
                     }
 
                     docount++;
@@ -239,8 +183,8 @@ int Forces<T>::get_var(
 
 template <class T>
 void Forces<T>::get_loc_proj(RHODTYPE* rho, const vector<int>& pvec,
-    std::vector<std::vector<std::vector<double>>>& var_pot,
-    std::vector<std::vector<std::vector<double>>>& var_charge,
+    std::vector<std::vector<double>>& var_pot,
+    std::vector<std::vector<double>>& var_charge,
     const int docount,
     vector<double>& loc_proj)
 {
@@ -256,8 +200,8 @@ void Forces<T>::get_loc_proj(RHODTYPE* rho, const vector<int>& pvec,
         // - delta rhoc * vh
         for (short ishift = 0; ishift < NPTS; ishift++)
         {
-            const vector<double>& vpot      = var_pot[dir][ishift];
-            const vector<double>& drhoc_ptr = var_charge[dir][ishift];
+            const vector<double>& vpot      = var_pot[NPTS*dir+ishift];
+            const vector<double>& drhoc_ptr = var_charge[NPTS*dir+ishift];
 
             for (int idx = 0; idx < docount; idx++)
             {
@@ -278,20 +222,15 @@ void Forces<T>::lforce_ion(Ion& ion, RHODTYPE* rho, vector<double>& loc_proj)
     Mesh* mymesh    = Mesh::instance();
     const int numpt = mymesh->numpt();
 
-    vector<vector<vector<double>>> var_pot;
-    vector<vector<vector<double>>> var_charge;
+    vector<vector<double>> var_pot;
+    vector<vector<double>> var_charge;
 
-    var_pot.resize(3);
-    var_charge.resize(3);
-    for(short i = 0; i < 3; i++)
+    var_pot.resize(3*NPTS);
+    var_charge.resize(3*NPTS);
+    for(short i = 0; i < 3*NPTS; i++)
     {
-        var_pot[i].resize(NPTS);
-        var_charge[i].resize(NPTS);
-        for(short j = 0; j < NPTS; j++)
-        {
-            var_pot[i][j].resize(numpt);
-            var_charge[i][j].resize(numpt);
-        }
+        var_pot[i].resize(numpt);
+        var_charge[i].resize(numpt);
     }
 
     vector<int> pvec(numpt);
@@ -475,7 +414,7 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
             kbpsi[dir][npt] = new KBPsiMatrixSparse(NULL, false);
 
             double shift[3] = { 0., 0., 0. };
-            shift[dir]      = shift_R[npt];
+            shift[dir]      = shift_R[dir*NPTS+npt][dir];
             Ions shifted_ions(ions, shift); ///***
 
             kbpsi[dir][npt]->setup(shifted_ions, orbitals);
@@ -650,12 +589,19 @@ void Forces<T>::force(T& orbitals, Ions& ions)
 
     vector<RHODTYPE>& rho = (rho_->rho_.size() > 1) ? rho_tmp : rho_->rho_[0];
 
-    shift_R[0] = -DELTAC;
-    shift_R[1] = DELTAC;
+    for(int i = 0; i<3*NPTS; i++)
+    {
+        for(int j = 0; j<3; j++) shift_R[i][j] = 0.;
+    }
+    for(int i = 0; i<3; i++)
+    {
+        shift_R[NPTS*i+0][i] = -DELTAC;
+        shift_R[NPTS*i+1][i] = DELTAC;
 #if NPTS > 3
-    shift_R[2] = -2. * DELTAC;
-    shift_R[3] = 2. * DELTAC;
+        shift_R[NPTS*i+2][i] = -2. * DELTAC;
+        shift_R[NPTS*i+3][i] = 2. * DELTAC;
 #endif
+    }
     Control& ct = *(Control::instance());
 
     // Zero out forces
