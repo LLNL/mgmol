@@ -66,12 +66,7 @@ int Forces<T>::get_var(
     int docount = 0, incx = mygrid.dim(1) * mygrid.dim(2);
     int ilow[3], ihi[3];
 
-    double rc = ion.getRC();
-    assert(rc > 1.e-6);
-    const double rc2     = rc * rc;
-    const double inv_rc2 = 1. / rc2;
-    const double rcnorm  = rc * rc * rc * M_PI * sqrt(M_PI);
-    const double alpha   = ion.getZion() / rcnorm;
+    const Species& sp(ion.getSpecies());
 
     const int dim0 = mygrid.dim(0);
     const int dim1 = mygrid.dim(1);
@@ -81,7 +76,7 @@ int Forces<T>::get_var(
     const int gdim1 = mygrid.gdim(1);
     const int gdim2 = mygrid.gdim(2);
 
-    const double lrad = ion.getRadiusLocalPot();
+    const double lrad = sp.lradius();
 
     const double h0 = mygrid.hgrid(0);
     const double h1 = mygrid.hgrid(1);
@@ -118,8 +113,9 @@ int Forces<T>::get_var(
     Vector3D ll(mygrid.ll(0), mygrid.ll(1), mygrid.ll(2));
     Vector3D position(ion.position(0), ion.position(1), ion.position(2));
 
-    double zc               = ion.lstart(2);
     const RadialInter& lpot = ion.getLocalPot();
+
+    double zc               = ion.lstart(2);
     for (int iz = 0; iz < dimlz; iz++)
     {
         double yc = ion.lstart(1);
@@ -164,7 +160,7 @@ int Forces<T>::get_var(
 #endif
                         }
 
-                        chargex[ishift][docount] = alpha * exp(-r2 * inv_rc2);
+                        chargex[ishift][docount] = sp.getRhoComp(r);
                     }
 
                     for (short ishift = 0; ishift < NPTS; ishift++)
@@ -190,7 +186,7 @@ int Forces<T>::get_var(
 #endif
                         }
 
-                        chargey[ishift][docount] = alpha * exp(-r2 * inv_rc2);
+                        chargey[ishift][docount] = sp.getRhoComp(r);
                     }
 
                     for (short ishift = 0; ishift < NPTS; ishift++)
@@ -216,7 +212,7 @@ int Forces<T>::get_var(
 #endif
                         }
 
-                        chargez[ishift][docount] = alpha * exp(-r2 * inv_rc2);
+                        chargez[ishift][docount] = sp.getRhoComp(r);
                     }
 
                     docount++;
