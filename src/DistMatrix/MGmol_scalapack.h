@@ -64,6 +64,8 @@ extern "C"
     // SCALAPACK
     void pdelset(double*, Pint, Pint, int*, Pdouble);
     void pselset(float*, Pint, Pint, int*, Pfloat);
+    float pselget(Pchar, Pchar, float*, Pfloat,  Pint, Pint, Pint);
+    double pdelget(Pchar, Pchar, double*, Pdouble,  Pint, Pint, Pint);
     double pdlatra(Pint, Pdouble, Pint, Pint, Pint);
     double pslatra(Pint, Pfloat, Pint, Pint, Pint);
     double pdlaset(

@@ -59,7 +59,7 @@ public:
     double dot(const dist_matrix::DistMatrix<DISTMATDTYPE>& mat)
     {
         assert(!stripped_);
-        return dm_->dot(mat);
+        return dm_->traceProduct(mat);
     }
 
     void print(std::ostream& os) const

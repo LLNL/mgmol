@@ -165,14 +165,14 @@ int main(int argc, char **argv)
           
     std::cout << " results checked" << std::endl;
 
-    double norma=a.nrm2();
+    double norma=a.norm('F');
     if(mype == 0)std::cout<<"Norm(a)="<<norma<<std::endl;
     if(mype == 0)std::cout<<"DistMatrix::matgather..."<<std::endl;
     double*  aa=new double[a.m()*a.n()];
     a.matgather(aa, a.m());
     if(mype == 0)std::cout<<"DistMatrix::init..."<<std::endl;
     b.init(aa, a.m());
-    double norm=b.nrm2();
+    double norm=b.norm('F');
     if(mype == 0)std::cout<<"Norm(b)="<<norm<<std::endl;
     if( fabs(norm-norma)>0.000001 ){
        std::cout<<"DistMatrix: problem with matgather/init"<<std::endl;
@@ -180,7 +180,7 @@ int main(int argc, char **argv)
     }
     if(mype == 0)std::cout<<"DistMatrix::transpose..."<<std::endl;
     c.transpose(b);
-    norm=c.nrm2();
+    norm=c.norm('F');
     if(mype == 0)std::cout<<"Norm(c)="<<norm<<std::endl;
     if(mype == 0)std::cout<<"DistMatrix::scal..."<<std::endl;
     c.scal(0.5);
@@ -191,7 +191,7 @@ int main(int argc, char **argv)
     if(mype == 0)std::cout<<"DistMatrix::operator=..."<<std::endl;
     c=a;
     if(mype == 0)std::cout<<"DistMatrix::nrm2..."<<std::endl;
-    norm=c.nrm2();
+    norm=c.norm('F');
     if(mype == 0)std::cout<<"Norm="<<norm<<std::endl;
   
     }

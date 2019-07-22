@@ -62,9 +62,15 @@ public:
         DistMatrix<T>::swap(v);
     }
 
+    double nrm2() const
+    {
+        double dott = this->dot(*this);
+        return sqrt(dott);
+    }
+
     void normalize()
     {
-        double norm2 = DistMatrix<T>::nrm2();
+        double norm2 = nrm2();
         DistMatrix<T>::scal( 1./norm2 );
     }
 
@@ -77,7 +83,7 @@ public:
             int m = v.mloc();
             for(int i=0;i<m;i++)
             {
-                double tmp = DistMatrix<T>::val(i) - theta * v[i];
+                double tmp = DistMatrix<T>::val_[i] - theta * v.val_[i];
                 diff2 += tmp * tmp;
             }
         }
@@ -87,6 +93,30 @@ public:
 
         return diff2;
     }
+
+    double dot(const DistVector<T>& v) const
+    {
+        assert(ictxt_ == x.ictxt());
+        double sum  = 0.;
+        double tsum = 0.;
+        if (DistMatrix<T>::active())
+        {
+            assert(m_ == v.m());
+            assert(n_ == v.n());
+            assert(mloc_ == v.mloc());
+            assert(nloc_ == v.nloc());
+            assert(v.size_ == size_);
+            tsum = MPdot(DistMatrix<T>::val_.size(), DistMatrix<T>::val_.data(), v.val_.data());
+        }
+#ifdef SCALAPACK
+        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+        mmpi.allreduce(&tsum, &sum, 1, MPI_SUM);
+#else
+            sum = tsum;
+#endif
+        return sum;
+    }
+
 };
 
 }

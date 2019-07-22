@@ -243,8 +243,9 @@ void DistMatrix<T>::shift(const T shift)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
 template <class T>
-double DistMatrix<T>::dot(const DistMatrix<T>& x) const
+double DistMatrix<T>::traceProduct(const DistMatrix<T>& x) const
 {
     assert(ictxt_ == x.ictxt());
     double sum  = 0.;
@@ -272,14 +273,6 @@ double DistMatrix<T>::dot(const DistMatrix<T>& x) const
 
 ////////////////////////////////////////////////////////////////////////////////
 template <class T>
-double DistMatrix<T>::nrm2() const
-{
-    double dott = this->dot(*this);
-    return sqrt(dott);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-template <class T>
 void DistMatrix<T>::scal(const double alpha)
 {
     if (alpha == 1.0) return;
@@ -288,7 +281,6 @@ void DistMatrix<T>::scal(const double alpha)
         clear();
         return;
     }
-    //  int     ione = 1;
     if (active_) MPscal(size_, alpha, &val_[0]);
 }
 
@@ -304,7 +296,6 @@ void DistMatrix<T>::axpy(const double alpha, const DistMatrix<T>& x)
     assert(nloc_ == x.nloc_);
     assert(size_ == x.size_);
     if (active_) MPaxpy(size_, alpha, &x.val_[0], &val_[0]);
-    //  if( active_ ) daxpy(&size_, &alpha, &x.val_[0], &ione, &val_[0], &ione);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -540,113 +531,6 @@ DistMatrix<float>& DistMatrix<float>::assign(
     }
 #endif
     return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// set value of diagonal or off-diagonal elements to a constant
-// uplo=='u': set strictly upper part to x
-// uplo=='l': set strictly lower part to x
-// uplo=='d': set diagonal to x
-////////////////////////////////////////////////////////////////////////////////
-template <class T>
-void DistMatrix<T>::setVal(const char uplo, const T xx)
-{
-    if (active_)
-    {
-        if (uplo == 'l' || uplo == 'L')
-        {
-            // initialize strictly lower part
-            for (int li = 0; li < mblocks_; li++)
-            {
-                for (int lj = 0; lj < nblocks_; lj++)
-                {
-                    for (int ii = 0; ii < mbs(li); ii++)
-                    {
-                        for (int jj = 0; jj < nbs(lj); jj++)
-                        {
-                            if (i(li, ii) > j(lj, jj))
-                                val_[(ii + li * mb_) + (jj + lj * nb_) * mloc_]
-                                    = xx;
-                        }
-                    }
-                }
-            }
-        }
-        else if (uplo == 'u' || uplo == 'U')
-        {
-            // initialize strictly upper part
-            for (int li = 0; li < mblocks_; li++)
-            {
-                for (int lj = 0; lj < nblocks_; lj++)
-                {
-                    for (int ii = 0; ii < mbs(li); ii++)
-                    {
-                        for (int jj = 0; jj < nbs(lj); jj++)
-                        {
-                            if (i(li, ii) < j(lj, jj))
-                                val_[(ii + li * mb_) + (jj + lj * nb_) * mloc_]
-                                    = xx;
-                        }
-                    }
-                }
-            }
-        }
-        else if (uplo == 'd' || uplo == 'D')
-        {
-            // initialize diagonal elements
-            if (active_)
-            {
-                // loop through all local blocks (ll,mm)
-                for (int ll = 0; ll < mblocks(); ll++)
-                {
-                    for (int mm = 0; mm < nblocks(); mm++)
-                    {
-                        // check if block (ll,mm) has diagonal elements
-                        int imin = i(ll, 0);
-                        int imax = imin + mbs(ll) - 1;
-                        int jmin = j(mm, 0);
-                        int jmax = jmin + nbs(mm) - 1;
-                        // cout << " process (" << myrow_ << "," << mycol_ <<
-                        // ")"
-                        // << " block (" << ll << "," << mm << ")"
-                        // << " imin/imax=" << imin << "/" << imax
-                        // << " jmin/jmax=" << jmin << "/" << jmax << std::endl;
-
-                        if ((imin <= jmax) && (imax >= jmin))
-                        {
-                            // block (ll,mm) holds diagonal elements
-                            int idiagmin = std::max(imin, jmin);
-                            int idiagmax = std::min(imax, jmax);
-
-                            // cout << " process (" << myrow_ << "," << mycol_
-                            // << ")"
-                            // << " holds diagonal elements " << idiagmin << "
-                            // to " << idiagmax << " in block (" << ll << "," <<
-                            // mm << ")" << std::endl;
-
-                            for (int ii = idiagmin; ii <= idiagmax; ii++)
-                            {
-                                // access element (ii,ii)
-                                int jj                  = ii;
-                                int iii                 = ll * mb_ + x(ii);
-                                int jjj                 = mm * nb_ + y(jj);
-                                val_[iii + mloc_ * jjj] = xx;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        else
-        {
-            std::cerr << " DistMatrix<double>::set: invalid argument" << std::endl;
-#ifdef USE_MPI
-            MPI_Abort(comm_global_, 2);
-#else
-            exit(2);
-#endif
-        }
-    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2764,73 +2648,36 @@ void DistMatrix<T>::print(
 ////////////////////////////////////////////////////////////////////////////////
 // get value for global index (i,j)
 // assuming we are on the right processor to get it!
-template <class T>
-const T DistMatrix<T>::getGlobalVal(
-    const int i, const int j, const bool onpe) const
+template <>
+float DistMatrix<float>::getVal(
+    const int i, const int j) const
 {
-    assert(i < m_);
-    assert(j < n_);
-    assert(i >= 0);
-    assert(j >= 0);
+    char scope = 'A';
+    char top = ' ';
+    // C -> Fortran
+    int ia = i+1;
+    int ja = j+1;
 
-    bool flag = true;
-    T val     = 0.;
-    if (!onpe)
-    {
-        const int taski = (i / mb_) % nprow_;
-        const int taskj = (j / nb_) % npcol_;
-        flag            = (taski == myrow_ && taskj == mycol_);
-    }
-
-    if (flag)
-    {
-        const int ib = i / (nprow_ * mb_);
-        const int jb = j / (npcol_ * nb_);
-        const int x  = i % mb_;
-        const int y  = j % nb_;
-        assert(ib * mb_ + x + (jb * nb_ + y) * mloc_ < size_);
-        val = val_[ib * mb_ + x + (jb * nb_ + y) * mloc_];
-    }
-
-#ifdef USE_MPI
-    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    if (!onpe)
-        mmpi.bcast(
-            &val, 1, 0); // MPI_Bcast(&val, 1, MPI_DOUBLE, 0, comm_global_);
-#endif
+    float val;
+    pselget(&scope, &top, &val, val_.data(), &ia, &ja, desc_);
     return val;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// set value for global index (i,j)
-template <class T>
-void DistMatrix<T>::setGlobalVal(
-    const int i, const int j, const T val, const bool onpe)
+template <>
+double DistMatrix<double>::getVal(
+    const int i, const int j) const
 {
-    assert(i < m_);
-    assert(j < n_);
-    assert(i >= 0);
-    assert(j >= 0);
+    char scope = 'A';
+    char top = ' ';
+    // C -> Fortran
+    int ia = i+1;
+    int ja = j+1;
 
-    bool flag = true;
-    if (!onpe)
-    {
-        const int taski = (i / mb_) % nprow_;
-        const int taskj = (j / nb_) % npcol_;
-        flag            = (taski == myrow_ && taskj == mycol_);
-    }
-    if (flag)
-    {
-
-        const int ib = i / (nprow_ * mb_);
-        const int jb = j / (npcol_ * nb_);
-        const int x  = i % mb_;
-        const int y  = j % nb_;
-        assert(ib * mb_ + x + (jb * nb_ + y) * mloc_ < size_);
-
-        val_[ib * mb_ + x + (jb * nb_ + y) * mloc_] = val;
-    }
+    double val;
+    pdelget(&scope, &top, &val, val_.data(), &ia, &ja, desc_);
+    return val;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 template <class T>
 MPI_Comm DistMatrix<T>::comm_global() const
@@ -2852,13 +2699,18 @@ void DistMatrix<double>::setVal(const int i, const int j, const double val)
     // C -> Fortran
     int ii = i+1;
     int jj = j+1;
+
     pdelset(val_.data(), &ii, &jj, desc_, &val);
 }
 
 template<>
 void DistMatrix<float>::setVal(const int i, const int j, const float val)
 {
-    pselset(val_.data(), &i, &j, desc_, &val);
+    // C -> Fortran
+    int ia = i+1;
+    int ja = j+1;
+
+    pselset(val_.data(), &ia, &ja, desc_, &val);
 }
 
 template std::ostream& operator<<(std::ostream& os, const DistMatrix<double>&);

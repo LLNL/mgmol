@@ -202,7 +202,7 @@ double GramMatrix::getLinDependent2states(int& st1, int& st2) const
     // get the index of the two largest components of column 0 of u
     DISTMATDTYPE val1;
     st1 = u.iamax(0, val1);
-    u.setGlobalVal(st1, 0, 0.);
+    u.setVal(st1, 0, 0.);
     if (onpe0)
         cout << "GramMatrix::getLinDependent2states... element val=" << val1
              << endl;
@@ -215,7 +215,7 @@ double GramMatrix::getLinDependent2states(int& st1, int& st2) const
     // look for 2nd largest coefficient with different sign
     while (val1 * val2 > 0.)
     {
-        u.setGlobalVal(st2, 0, 0.);
+        u.setVal(st2, 0, 0.);
         st2 = u.iamax(0, val2);
         if (onpe0)
             cout << "GramMatrix::getLinDependent2states... element val=" << val2
@@ -235,10 +235,10 @@ double GramMatrix::getLinDependent2states(int& st1, int& st2, int& st3) const
     // get the index of the two largest components of column 0 of u
     DISTMATDTYPE val1;
     st1 = u.iamax(0, val1);
-    u.setGlobalVal(st1, 0, 0.);
+    u.setVal(st1, 0, 0.);
 
     st2 = u.iamax(0, val1);
-    u.setGlobalVal(st2, 0, 0.);
+    u.setVal(st2, 0, 0.);
 
     st3 = u.iamax(0, val1);
 

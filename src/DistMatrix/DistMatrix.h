@@ -65,11 +65,17 @@ private:
     bool active_;
     bool m_incomplete_, n_incomplete_; // this process has an incomplete block
 
+    void setDiagonalValues(const T* const dmat);
+
+    double dot(const DistMatrix<T>& a) const;
+
+protected:
+
     // local array
     std::vector<T> val_;
-    int size_;
 
-    void setDiagonalValues(const T* const dmat);
+    // size of local data (mloc_ * nloc_)
+    int size_;
 
 public:
     std::string name() const { return object_name_; }
@@ -79,13 +85,14 @@ public:
 
     static void setDefaultBlacsContext(BlacsContext* bc) { default_bc_ = bc; }
 
-    static Timer matgather_tm() { return matgather_tm_; }
-    static Timer pdgemr2d_tm() { return pdgemr2d_tm_; }
-
-    static Timer potri_tm() { return potri_tm_; }
-    static Timer trtri_tm() { return trtri_tm_; }
-
-    static Timer potrf_tm() { return potrf_tm_; }
+    static void printTimers(std::ostream& os)
+    {
+        matgather_tm_.print(os);
+        pdgemr2d_tm_.print(os);
+        potri_tm_.print(os);
+        trtri_tm_.print(os);
+        potrf_tm_.print(os);
+    }
 
     int nprow() const { return nprow_; }
     int npcol() const { return npcol_; }
@@ -99,22 +106,9 @@ public:
     {
         val_[l * mb_ + x + (m * nb_ + y) * mloc_] = val;
     }
-    void addval(const int index, const T val)
-    {
-        assert(index < size_);
-        val_[index] += val;
-    }
 
     // add shift to diagonal, to shift eigenvalues
     void shift(const T shift);
-
-    void addval(const int l, const int m, const int x, const int y, const T val)
-    {
-        // cout<<"Add "<<val<<" to element "<<l<<","<<m<<","<<x<<","<<y
-        //    <<" on PE "<<myrow_<<","<<mycol_<<endl;
-        assert(l * mb_ + x + (m * nb_ + y) * mloc_ < size_);
-        val_[l * mb_ + x + (m * nb_ + y) * mloc_] += val;
-    }
 
     // input: global index (i,j)
     void addval(const int i, const int j, const T val)
@@ -278,10 +272,7 @@ public:
 
     ~DistMatrix(){}
 
-    T* data(){ return val_.data(); }
-
     void identity(void);
-    void setVal(const char, const T);
     void matgather(T* const a, const int lda) const;
 
     void resize(const int m, const int n, const int mb, const int nb);
@@ -290,7 +281,10 @@ public:
 
     void clear(void);
 
-    double dot(const DistMatrix<T>& a) const;
+    // compute trace of matrix product
+    // trace( (*this)^T*A )
+    double traceProduct(const DistMatrix<T>& A) const;
+
     void axpy(const double alpha, const DistMatrix<T>& a);
     void scal(const double alpha);
     double nrm2() const;
@@ -367,12 +361,8 @@ public:
 
     // get value for global index (i,j)
     // assuming we are on the right processor to get it!
-    const T getGlobalVal(
-        const int i, const int j, const bool onpe = false) const;
-
-    // set value for global index (i,j)
-    void setGlobalVal(
-        const int i, const int j, const T val, const bool onpe = false);
+    T getVal(
+        const int i, const int j) const;
 
     void assign(const T* const v, const int n)
     {

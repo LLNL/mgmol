@@ -851,9 +851,7 @@ void MGmol<T>::printTimers()
 
     dist_matrix::SparseDistMatrix<DISTMATDTYPE>::printTimers(os_);
 
-    dist_matrix::DistMatrix<DISTMATDTYPE>::matgather_tm().print(os_);
-    dist_matrix::DistMatrix<DISTMATDTYPE>::potrf_tm().print(os_);
-    dist_matrix::DistMatrix<DISTMATDTYPE>::potri_tm().print(os_);
+    dist_matrix::DistMatrix<DISTMATDTYPE>::printTimers(os_);
 
     MGmol_MPI::printTimers(os_);
 
