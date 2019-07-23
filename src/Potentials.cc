@@ -591,19 +591,13 @@ void Potentials::axpVcomp(POTDTYPE* v, const double alpha)
     MPaxpy(size_, alpha, &v_comp_[0], v);
 }
 
-// Initialization of the compensating potential
-void Potentials::initialize(Ions& ions)
+void Potentials::initializeRadialDataOnMesh(const Vector3D& position,
+    const Species& sp)
 {
-    Mesh* mymesh           = Mesh::instance();
-    const pb::Grid& mygrid = mymesh->grid();
-    const int numpt = mygrid.size();
-
-    double point[3] = { 0., 0., 0. };
     Control& ct     = *(Control::instance());
 
-    memset(&v_comp_[0], 0, numpt * sizeof(POTDTYPE));
-    memset(&rho_comp_[0], 0, numpt * sizeof(RHODTYPE));
-    memset(&v_nuc_[0], 0, numpt * sizeof(RHODTYPE));
+    Mesh* mymesh           = Mesh::instance();
+    const pb::Grid& mygrid = mymesh->grid();
 
     const int dim0 = mygrid.dim(0);
     const int dim1 = mygrid.dim(1);
@@ -617,46 +611,61 @@ void Potentials::initialize(Ions& ions)
     const double h1 = mygrid.hgrid(1);
     const double h2 = mygrid.hgrid(2);
 
-    const double lattice[3] = { mygrid.ll(0), mygrid.ll(1), mygrid.ll(2) };
+    Vector3D point( 0., 0., 0. );
 
-    const int incx = dim2 * dim1;
+    const double lrad = sp.lradius();
+
+    const RadialInter& lpot(sp.local_pot());
+    const Vector3D lattice( mygrid.ll(0), mygrid.ll(1), mygrid.ll(2) );
+
+    int offset = 0;
+    for (int ix = 0; ix < dim0; ix++)
+    {
+        point[0]   = start0 + ix * h0;
+
+        for (int iy = 0; iy < dim1; iy++)
+        {
+            point[1]   = start1 + iy * h1;
+
+            for (int iz = 0; iz < dim2; iz++)
+            {
+                point[2] = start2 + iz * h2;
+
+                const double r
+                    = position.minimage(point, lattice, ct.bcPoisson);
+
+                if (r < lrad)
+                {
+                    rho_comp_[offset] += sp.getRhoComp(r);
+                    v_comp_[offset]   += sp.getVcomp(r);
+                    v_nuc_[offset]    += lpot.cubint(r);
+                }
+
+                offset++;
+            }
+        }
+    }
+}
+
+// Initialization of the compensating potential
+void Potentials::initialize(Ions& ions)
+{
+    Mesh* mymesh           = Mesh::instance();
+    const pb::Grid& mygrid = mymesh->grid();
+    const int numpt = mygrid.size();
+
+    memset(&v_comp_[0], 0, numpt * sizeof(POTDTYPE));
+    memset(&rho_comp_[0], 0, numpt * sizeof(RHODTYPE));
+    memset(&v_nuc_[0], 0, numpt * sizeof(RHODTYPE));
 
     // Loop over ions
     for(auto& ion : ions.overlappingVL_ions() )
     {
         const Species& sp(ion->getSpecies());
-        const double lrad = sp.lradius();
-        assert(lrad > 0.1);
 
-        const RadialInter& lpot(sp.local_pot());
+        Vector3D position(ion->position(0), ion->position(1), ion->position(2));
 
-        //loop over local subdomain
-        for (int ix = 0; ix < dim0; ix++)
-        {
-            point[0]   = start0 + ix * h0;
-            int istart = incx * ix;
-
-            for (int iy = 0; iy < dim1; iy++)
-            {
-                point[1]   = start1 + iy * h1;
-                int jstart = istart + dim2 * iy;
-
-                for (int iz = 0; iz < dim2; iz++)
-                {
-                    point[2] = start2 + iz * h2;
-
-                    const double r
-                        = ion->minimage(point, lattice, ct.bcPoisson);
-
-                    if (r < lrad)
-                    {
-                        rho_comp_[jstart + iz] += sp.getRhoComp(r);
-                        v_comp_[jstart + iz]   += sp.getVcomp(r);
-                        v_nuc_[jstart + iz]    += lpot.cubint(r);
-                    }
-                }
-            }
-        }
+        initializeRadialDataOnMesh(position, sp);
     }
 }
 

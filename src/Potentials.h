@@ -77,6 +77,8 @@ class Potentials
 
     void evalNormDeltaVtotRho(const vector<vector<RHODTYPE>>& rho);
 
+    void initializeRadialDataOnMesh(const Vector3D& position, const Species& sp);
+
 public:
     Potentials(const bool vh_frozen = false);
 
