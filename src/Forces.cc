@@ -107,14 +107,14 @@ int Forces<T>::get_var(
 
     const RadialInter& lpot = ion.getLocalPot();
 
-    double zc               = ion.lstart(2);
-    for (int iz = 0; iz < dimlz; iz++)
+    double xc = ion.lstart(0);
+    for (int ix = 0; ix < dimlx; ix++)
     {
         double yc = ion.lstart(1);
         for (int iy = 0; iy < dimly; iy++)
         {
-            double xc = ion.lstart(0);
-            for (int ix = 0; ix < dimlx; ix++)
+            double zc               = ion.lstart(2);
+            for (int iz = 0; iz < dimlz; iz++)
             {
                 if ((Ai[0][ix] >= ilow[0]) && (Ai[0][ix] <= ihi[0])
                     && (Ai[1][iy] >= ilow[1]) && (Ai[1][iy] <= ihi[1])
@@ -128,7 +128,18 @@ int Forces<T>::get_var(
                     double x = xc - p0;
                     double y = yc - p1;
                     double z = zc - p2;
+                    double r2 = x * x + y * y + z * z;
+                    double r  = sqrt(r2);
 
+                    if (r > lrad)
+                    {
+                        for (short ishift = 0; ishift < 3*NPTS; ishift++)
+                        {
+                            var_pot[ishift][docount] = 0.;
+                            var_charge[ishift][docount] = 0.;
+                        }
+                    }
+                    else
                     for (short ishift = 0; ishift < 3*NPTS; ishift++)
                     {
                         double xs
@@ -141,20 +152,13 @@ int Forces<T>::get_var(
                         double r2 = xs * xs + ys * ys + zs * zs;
                         double r  = sqrt(r2);
 
-                        if (r > lrad)
-                        {
-                            var_pot[ishift][docount] = 0.;
-                        }
-                        else
-                        {
 #if 0
-                            potx[ishift][docount] = 
-                                get_trilinval(xc-shift_R[ishift],yc,zc,
-                                              h0,h1,h2,position,ll,lpot);
+                        potx[ishift][docount] =
+                            get_trilinval(xc-shift_R[ishift],yc,zc,
+                                          h0,h1,h2,position,ll,lpot);
 #else
-                            var_pot[ishift][docount] = lpot.cubint(r);
+                        var_pot[ishift][docount] = lpot.cubint(r);
 #endif
-                        }
 
                         var_charge[ishift][docount] = sp.getRhoComp(r);
                     }
@@ -163,17 +167,17 @@ int Forces<T>::get_var(
 
                 } /* end if */
 
-                xc += h0;
+                zc += h2;
 
-            } // end for ix
+            } // end for iz
 
             yc += h1;
 
         } // end for iy
 
-        zc += h2;
+        xc += h0;
 
-    } // end for iz
+    } // end for ix
 
     assert(docount > 0);
     get_var_tm_.stop();
