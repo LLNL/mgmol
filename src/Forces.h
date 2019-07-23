@@ -43,11 +43,11 @@ private:
     static Timer total_tm_;
 
     void lforce_ion(Ion& ion, RHODTYPE* rho, std::vector<double>& loc_proj);
-    void get_loc_proj(RHODTYPE* rho, const std::vector<int>& pvec,
+    void get_loc_proj(RHODTYPE* rho,
         std::vector<std::vector<double>>& var_pot,
         std::vector<std::vector<double>>& var_charge,
-        const int docount, std::vector<double>& loc_proj);
-    int get_var(Ion& ion, std::vector<int>& pvec,
+        std::vector<double>& loc_proj);
+    int get_var(Ion& ion,
                 std::vector<std::vector<double>>& var_pot,
                 std::vector<std::vector<double>>& var_charge);
 

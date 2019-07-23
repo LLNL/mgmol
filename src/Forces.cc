@@ -55,16 +55,17 @@ double get_deriv2(double value[2])
 
 template <class T>
 int Forces<T>::get_var(
-    Ion& ion, vector<int>& pvec, vector<vector<double>>& var_pot,
+    Ion& ion, vector<vector<double>>& var_pot,
     vector<vector<double>>& var_charge)
 {
     get_var_tm_.start();
 
+    Control& ct     = *(Control::instance());
+
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
 
-    int docount = 0, incx = mygrid.dim(1) * mygrid.dim(2);
-    int ilow[3], ihi[3];
+    int offset = 0;
 
     const Species& sp(ion.getSpecies());
 
@@ -72,127 +73,92 @@ int Forces<T>::get_var(
     const int dim1 = mygrid.dim(1);
     const int dim2 = mygrid.dim(2);
 
-    const int gdim0 = mygrid.gdim(0);
-    const int gdim1 = mygrid.gdim(1);
-    const int gdim2 = mygrid.gdim(2);
-
     const double lrad = sp.lradius();
 
     const double h0 = mygrid.hgrid(0);
     const double h1 = mygrid.hgrid(1);
     const double h2 = mygrid.hgrid(2);
 
-    const double p0 = ion.position(0);
-    const double p1 = ion.position(1);
-    const double p2 = ion.position(2);
-
-    // Generate indices
-    vector<vector<int>> Ai;
-    Ai.resize(3);
-    ion.get_Ai(Ai[0], gdim0, 0);
-    ion.get_Ai(Ai[1], gdim1, 1);
-    ion.get_Ai(Ai[2], gdim2, 2);
-    const int dimlx = Ai[0].size();
-    const int dimly = Ai[1].size();
-    const int dimlz = Ai[2].size();
-
-    for (int i = 0; i < 3; i++)
-    {
-        ilow[i] = mygrid.istart(i);
-        ihi[i]  = ilow[i] + mygrid.dim(i) - 1;
-    }
-
     Vector3D ll(mygrid.ll(0), mygrid.ll(1), mygrid.ll(2));
     Vector3D position(ion.position(0), ion.position(1), ion.position(2));
 
     const RadialInter& lpot = ion.getLocalPot();
 
-    double xc = ion.lstart(0);
-    for (int ix = 0; ix < dimlx; ix++)
+    Vector3D point( 0., 0., 0. );
+
+    point[0] = mygrid.start(0);
+
+    for (int ix = 0; ix < dim0; ix++)
     {
-        double yc = ion.lstart(1);
-        for (int iy = 0; iy < dimly; iy++)
+        point[1] = mygrid.start(1);
+
+        for (int iy = 0; iy < dim1; iy++)
         {
-            double zc               = ion.lstart(2);
-            for (int iz = 0; iz < dimlz; iz++)
+            point[2] = mygrid.start(2);
+            for (int iz = 0; iz < dim2; iz++)
             {
-                if ((Ai[0][ix] >= ilow[0]) && (Ai[0][ix] <= ihi[0])
-                    && (Ai[1][iy] >= ilow[1]) && (Ai[1][iy] <= ihi[1])
-                    && (Ai[2][iz] >= ilow[2]) && (Ai[2][iz] <= ihi[2]))
+                const double r
+                    = position.minimage(point, ll, ct.bcPoisson);
+
+                if (r > lrad)
                 {
-
-                    pvec[docount] = incx * (Ai[0][ix] % dim0)
-                                    + dim2 * (Ai[1][iy] % dim1)
-                                    + (Ai[2][iz] % dim2);
-
-                    double x = xc - p0;
-                    double y = yc - p1;
-                    double z = zc - p2;
-                    double r2 = x * x + y * y + z * z;
-                    double r  = sqrt(r2);
-
-                    if (r > lrad)
-                    {
-                        for (short ishift = 0; ishift < 3*NPTS; ishift++)
-                        {
-                            var_pot[ishift][docount] = 0.;
-                            var_charge[ishift][docount] = 0.;
-                        }
-                    }
-                    else
                     for (short ishift = 0; ishift < 3*NPTS; ishift++)
                     {
-                        double xs
-                            = x - shift_R[ishift][0]; // the ion moves +shift_R
-                        double ys
-                            = y - shift_R[ishift][1]; // the ion moves +shift_
-                        double zs
-                            = z - shift_R[ishift][2]; // the ion moves +shift_R
+                        var_pot[ishift][offset] = 0.;
+                        var_charge[ishift][offset] = 0.;
+                    }
+                }
+                else
+                for (short ishift = 0; ishift < 3*NPTS; ishift++)
+                {
+                    Vector3D shifted_point(point);
+                    shifted_point[0] -= shift_R[ishift][0];
+                    shifted_point[1] -= shift_R[ishift][1];
+                    shifted_point[2] -= shift_R[ishift][2];
 
-                        double r2 = xs * xs + ys * ys + zs * zs;
-                        double r  = sqrt(r2);
-
+                    const double r
+                        = position.minimage(shifted_point, ll, ct.bcPoisson);
 #if 0
-                        potx[ishift][docount] =
-                            get_trilinval(xc-shift_R[ishift],yc,zc,
-                                          h0,h1,h2,position,ll,lpot);
+                    potx[ishift][offset] =
+                        get_trilinval(xc-shift_R[ishift],yc,zc,
+                                      h0,h1,h2,position,ll,lpot);
 #else
-                        var_pot[ishift][docount] = lpot.cubint(r);
+                    var_pot[ishift][offset] = lpot.cubint(r);
 #endif
 
-                        var_charge[ishift][docount] = sp.getRhoComp(r);
-                    }
+                    var_charge[ishift][offset] = sp.getRhoComp(r);
+                }
 
-                    docount++;
+                offset++;
 
-                } /* end if */
-
-                zc += h2;
+                point[2] += h2;
 
             } // end for iz
 
-            yc += h1;
+            point[1] += h1;
 
         } // end for iy
 
-        xc += h0;
+        point[0] += h0;
 
     } // end for ix
 
-    assert(docount > 0);
+    assert(offset > 0);
     get_var_tm_.stop();
 
-    return docount;
+    return offset;
 }
 
 template <class T>
-void Forces<T>::get_loc_proj(RHODTYPE* rho, const vector<int>& pvec,
+void Forces<T>::get_loc_proj(RHODTYPE* rho,
     std::vector<std::vector<double>>& var_pot,
     std::vector<std::vector<double>>& var_charge,
-    const int docount,
     vector<double>& loc_proj)
 {
     get_loc_proj_tm_.start();
+
+    Mesh* mymesh    = Mesh::instance();
+    const int numpt = mymesh->numpt();
 
     Potentials& pot = hamiltonian_->potential();
 
@@ -207,12 +173,10 @@ void Forces<T>::get_loc_proj(RHODTYPE* rho, const vector<int>& pvec,
             const vector<double>& vpot      = var_pot[NPTS*dir+ishift];
             const vector<double>& drhoc_ptr = var_charge[NPTS*dir+ishift];
 
-            for (int idx = 0; idx < docount; idx++)
+            for (int idx = 0; idx < numpt; idx++)
             {
-                const int pvidx = pvec[idx];
-
-                lproj[ishift] += vpot[idx] * rho[pvidx];
-                lproj[ishift] -= drhoc_ptr[idx] * pot.vh_rho(pvidx);
+                lproj[ishift] += vpot[idx] * rho[idx];
+                lproj[ishift] -= drhoc_ptr[idx] * pot.vh_rho(idx);
             }
         }
     }
@@ -237,12 +201,10 @@ void Forces<T>::lforce_ion(Ion& ion, RHODTYPE* rho, vector<double>& loc_proj)
         var_charge[i].resize(numpt);
     }
 
-    vector<int> pvec(numpt);
+    // generate var_pot and var_charge for this ion
+    get_var(ion, var_pot, var_charge);
 
-    // generate pvec, var_pot and var_charge for this ion
-    int docount = get_var(ion, pvec, var_pot, var_charge);
-
-    get_loc_proj(rho, pvec, var_pot, var_charge, docount, loc_proj);
+    get_loc_proj(rho, var_pot, var_charge, loc_proj);
 }
 
 template <class T>
