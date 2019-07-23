@@ -2646,20 +2646,22 @@ void DistMatrix<T>::print(
     }
 }
 ////////////////////////////////////////////////////////////////////////////////
-// get value for global index (i,j)
-// assuming we are on the right processor to get it!
 template <>
 float DistMatrix<float>::getVal(
     const int i, const int j) const
 {
     char scope = 'A';
-    char top = ' ';
+    char top = ' '; // default topology
     // C -> Fortran
     int ia = i+1;
     int ja = j+1;
 
     float val;
-    pselget(&scope, &top, &val, val_.data(), &ia, &ja, desc_);
+    if(active_)
+        pselget(&scope, &top, &val, val_.data(), &ia, &ja, desc_);
+#ifdef USE_MPI
+    MPI_Bcast(&val, 1, MPI_DOUBLE, 0, comm_global_);
+#endif
     return val;
 }
 
@@ -2668,14 +2670,37 @@ double DistMatrix<double>::getVal(
     const int i, const int j) const
 {
     char scope = 'A';
-    char top = ' ';
+    char top = ' '; // default topology
     // C -> Fortran
     int ia = i+1;
     int ja = j+1;
 
     double val;
-    pdelget(&scope, &top, &val, val_.data(), &ia, &ja, desc_);
+    if(active_)
+        pdelget(&scope, &top, &val, val_.data(), &ia, &ja, desc_);
+#ifdef USE_MPI
+    MPI_Bcast(&val, 1, MPI_FLOAT, 0, comm_global_);
+#endif
     return val;
+}
+
+// get value for global index (i,j)
+// assuming we are on the right processor to get it!
+template <class T>
+T DistMatrix<T>::getValOnPE(const int i, const int j) const
+{
+    assert(i < m_);
+    assert(j < n_);
+    assert(i >= 0);
+    assert(j >= 0);
+
+    const int ib = i / (nprow_ * mb_);
+    const int jb = j / (npcol_ * nb_);
+    const int x  = i % mb_;
+    const int y  = j % nb_;
+
+    assert(ib * mb_ + x + (jb * nb_ + y) * mloc_ < size_);
+    return val_[ib * mb_ + x + (jb * nb_ + y) * mloc_];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

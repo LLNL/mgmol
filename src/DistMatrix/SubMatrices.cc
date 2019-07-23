@@ -215,7 +215,7 @@ void SubMatrices<T>::gather(const DistMatrix<T>& mat)
                 assert(i < mat.m());
                 assert(i >= 0);
                 assert(j >= 0);
-                buf_remote_val[displ + k] = mat.getVal(i, j);
+                buf_remote_val[displ + k] = mat.getValOnPE(i, j);
             }
         }
 

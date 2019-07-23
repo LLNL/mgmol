@@ -363,6 +363,7 @@ public:
     // assuming we are on the right processor to get it!
     T getVal(
         const int i, const int j) const;
+    T getValOnPE(const int i, const int j)const;
 
     void assign(const T* const v, const int n)
     {
