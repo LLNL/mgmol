@@ -8,8 +8,7 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
-#include "RadialFunction.h"
+#include "RadialMeshFunction.h"
 #include "../Control.h"
 #include "MPIdata.h"
 
@@ -22,7 +21,7 @@ using namespace std;
 const double inv48 = 1. / 48;
 
 // Gaussian cutoff function
-double RadialFunction::gauss_cutoff(const double r, const double rcut)
+double RadialMeshFunction::gauss_cutoff(const double r, const double rcut)
 {
     if (r < rcut) return 1.;
 
@@ -31,7 +30,7 @@ double RadialFunction::gauss_cutoff(const double r, const double rcut)
 }
 
 // smooth cutoff function
-double RadialFunction::gcutoff(const double g, const double gcut)
+double RadialMeshFunction::gcutoff(const double g, const double gcut)
 {
     if (g < gcut) return 1.;
 
@@ -39,7 +38,7 @@ double RadialFunction::gcutoff(const double g, const double gcut)
     return exp(-6. * (t * t));
 }
 
-void RadialFunction::gauss_filter(const double rcut, const int j)
+void RadialMeshFunction::gauss_filter(const double rcut, const int j)
 {
     int n = (int)y_[j].size();
     for (int i = 0; i < n; i++)
@@ -48,7 +47,7 @@ void RadialFunction::gauss_filter(const double rcut, const int j)
     }
 }
 
-void RadialFunction::read(const int nrow, const int ncol, ifstream* tfile)
+void RadialMeshFunction::read(const int nrow, const int ncol, ifstream* tfile)
 {
     assert(ncol > 1);
     assert(nrow > 1);
@@ -74,7 +73,7 @@ void RadialFunction::read(const int nrow, const int ncol, ifstream* tfile)
 }
 
 #ifdef USE_MPI
-void RadialFunction::bcast(MPI_Comm comm, const int root)
+void RadialMeshFunction::bcast(MPI_Comm comm, const int root)
 {
     int mpi_rank;
     MPI_Comm_rank(comm, &mpi_rank);
@@ -100,7 +99,7 @@ void RadialFunction::bcast(MPI_Comm comm, const int root)
     int mpirc = MPI_Bcast(&x_[0], nn[0], MPI_DOUBLE, root, comm);
     if (mpirc != MPI_SUCCESS)
     {
-        (*MPIdata::sout) << "RadialFunction::bcast() failed!!!" << endl;
+        (*MPIdata::sout) << "RadialMeshFunction::bcast() failed!!!" << endl;
         MPI_Abort(comm, 0);
     }
 
@@ -111,17 +110,17 @@ void RadialFunction::bcast(MPI_Comm comm, const int root)
         mpirc = MPI_Bcast(&y_[i][0], nn[0], MPI_DOUBLE, root, comm);
         if (mpirc != MPI_SUCCESS)
         {
-            (*MPIdata::sout) << "RadialFunction::bcast() failed!!!" << endl;
+            (*MPIdata::sout) << "RadialMeshFunction::bcast() failed!!!" << endl;
             MPI_Abort(comm, 0);
         }
     }
 }
 #else
-void RadialFunction::bcast(MPI_Comm comm, const int root) { return; }
+void RadialMeshFunction::bcast(MPI_Comm comm, const int root) { return; }
 #endif
 
 // radial integratation of f
-double RadialFunction::radint(const int j)
+double RadialMeshFunction::radint(const int j)
 {
     vector<double>& f = y_[j];
     const int n       = (int)x_.size();
@@ -149,7 +148,7 @@ double RadialFunction::radint(const int j)
 
     if (f[n - 1] * x_[n - 1] * x_[n - 1] > 5.e-3)
     {
-        (*MPIdata::sout) << "WARNING RadialFunction" << endl;
+        (*MPIdata::sout) << "WARNING RadialMeshFunction" << endl;
         (*MPIdata::sout) << "WARNING radint(): f[n-1]*x_[n-1]*x_[n-1]="
                          << f[n - 1] * x_[n - 1] * x_[n - 1] << endl;
         (*MPIdata::sout) << "WARNING radint(): x_[n-1]=" << x_[n - 1] << endl;
@@ -160,7 +159,7 @@ double RadialFunction::radint(const int j)
 }
 
 // radial integratation of f^2
-double RadialFunction::radintf2(const int j)
+double RadialMeshFunction::radintf2(const int j)
 {
     vector<double>& f = y_[j];
     const int n       = (int)x_.size();
@@ -188,7 +187,7 @@ double RadialFunction::radintf2(const int j)
 
     if (f[n - 1] * f[n - 1] * x_[n - 1] * x_[n - 1] > 5.e-3)
     {
-        (*MPIdata::sout) << "WARNING RadialFunction" << endl;
+        (*MPIdata::sout) << "WARNING RadialMeshFunction" << endl;
         (*MPIdata::sout) << "WARNING radint(): f[n-1]*f[n-1]*x_[n-1]*x_[n-1]="
                          << f[n - 1] * f[n - 1] * x_[n - 1] * x_[n - 1] << endl;
         (*MPIdata::sout) << "WARNING radint(): x_[n-1]=" << x_[n - 1] << endl;
@@ -199,7 +198,7 @@ double RadialFunction::radintf2(const int j)
 }
 
 // compute the inverse FT
-void RadialFunction::inv_ft(const vector<double>& rgrid, vector<double>& rfunc,
+void RadialMeshFunction::inv_ft(const vector<double>& rgrid, vector<double>& rfunc,
     const int lval, const int j)
 {
     assert(rgrid.size() == rfunc.size());
@@ -218,7 +217,7 @@ void RadialFunction::inv_ft(const vector<double>& rgrid, vector<double>& rfunc,
 
     int irmin = 0;
     double ri = 0.;
-    RadialFunction rwork(x_);
+    RadialMeshFunction rwork(x_);
     vector<double>& work = rwork.y();
 
     switch (lval)
@@ -366,7 +365,7 @@ void RadialFunction::inv_ft(const vector<double>& rgrid, vector<double>& rfunc,
     DSCAL(&irmax, &alpha, &rfunc[0], &ione);
 }
 
-void RadialFunction::compute_ft(const vector<double>& ggrid,
+void RadialMeshFunction::compute_ft(const vector<double>& ggrid,
     vector<double>& gcof, const int lval, ofstream* tfile, const int j)
 {
     vector<double>& func = y_[j];
@@ -378,7 +377,7 @@ void RadialFunction::compute_ft(const vector<double>& ggrid,
 
     memset(&gcof[0], 0, ikmax * sizeof(double));
 
-    RadialFunction rwork(x_);
+    RadialMeshFunction rwork(x_);
     vector<double>& work = rwork.y();
 
     // Integrate work to get coeff. 0
@@ -476,7 +475,7 @@ void RadialFunction::compute_ft(const vector<double>& ggrid,
         }
 }
 
-void RadialFunction::rft(RadialFunction& filt_func, const int lval,
+void RadialMeshFunction::rft(RadialMeshFunction& filt_func, const int lval,
     const double hmax, const bool print, const int j, const bool printFlag)
 {
     assert(hmax > 0.);
@@ -496,7 +495,7 @@ void RadialFunction::rft(RadialFunction& filt_func, const int lval,
     for (int i = 0; i < ikmax; i++)
         ggrid[i] = (double)(i)*dg;
 
-    RadialFunction gfunc(ggrid);
+    RadialMeshFunction gfunc(ggrid);
     vector<double>& gcof = gfunc.y();
 
     // compute FT of func
@@ -513,7 +512,7 @@ void RadialFunction::rft(RadialFunction& filt_func, const int lval,
 
     Control& ct = *(Control::instance());
     if (printFlag && ct.verbose > 0)
-        (*MPIdata::sout) << "RadialFunction::rft(),"
+        (*MPIdata::sout) << "RadialMeshFunction::rft(),"
                          << " Cutoff for pseudopotential: " << gcut * gcut
                          << "[Ry]" << endl;
 
@@ -535,7 +534,7 @@ void RadialFunction::rft(RadialFunction& filt_func, const int lval,
     gfunc.inv_ft(filt_func.x(), filt_func.y(0), lval, 0);
 }
 
-void RadialFunction::printLocalPot(
+void RadialMeshFunction::printLocalPot(
     const string& name, const short ll, ofstream* tfile)
 {
     assert(tfile != 0);

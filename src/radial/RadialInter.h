@@ -8,21 +8,21 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef RADIALINTER_H
-#define RADIALINTER_H
+#ifndef MGMOL_RADIALINTER_H
+#define MGMOL_RADIALINTER_H
 
-#include "RadialFunction.h"
+#include "RadialMeshFunction.h"
 
-class RadialInter : public RadialFunction
+class RadialInter : public RadialMeshFunction
 {
 private:
 public:
-    RadialInter(const std::vector<double>& x) : RadialFunction(x) {}
+    RadialInter(const std::vector<double>& x) : RadialMeshFunction(x) {}
 
-    RadialInter() : RadialFunction() {}
+    RadialInter() : RadialMeshFunction() {}
 
     RadialInter(std::vector<double>& x, std::vector<std::vector<double>>& y)
-        : RadialFunction(x, y)
+        : RadialMeshFunction(x, y)
     {
     }
 

@@ -8,8 +8,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef RADIALFUNCTION_H
-#define RADIALFUNCTION_H
+#ifndef MGMOL_RADIALMESHFUNCTION_H
+#define MGMOL_RADIALMESHFUNCTION_H
 
 #include <cassert>
 #include <fstream>
@@ -19,7 +19,7 @@
 
 #include "MGmol_blas1.h"
 
-class RadialFunction
+class RadialMeshFunction
 {
 protected:
     std::vector<double> x_;
@@ -28,16 +28,16 @@ protected:
     double invdr_;
 
 public:
-    RadialFunction()
+    RadialMeshFunction()
     {
         // initialize with invalid values
         drlin_ = -1.;
         invdr_ = -1.;
     };
 
-    virtual ~RadialFunction(){};
+    virtual ~RadialMeshFunction(){};
 
-    RadialFunction(const std::vector<double>& x)
+    RadialMeshFunction(const std::vector<double>& x)
     {
         drlin_ = x[1] - x[0];
         assert(drlin_ > 1.e-15);
@@ -48,7 +48,7 @@ public:
         y_[0].resize(x_.size());
     };
 
-    RadialFunction(
+    RadialMeshFunction(
         const std::vector<double>& x, const std::vector<std::vector<double>>& y)
     {
         drlin_ = x[1] - x[0];
@@ -60,7 +60,7 @@ public:
         y_ = y;
     }
 
-    RadialFunction(const std::vector<double>& x, const std::vector<double>& y)
+    RadialMeshFunction(const std::vector<double>& x, const std::vector<double>& y)
     {
         drlin_ = x[1] - x[0];
         assert(drlin_ > 1.e-15);
@@ -187,7 +187,7 @@ public:
         const int lval, const int j = 0);
     void compute_ft(const std::vector<double>& ggrid, std::vector<double>& gcof,
         const int lval, std::ofstream* tfile, const int j = 0);
-    void rft(RadialFunction& filt_func, const int lval, const double hmax,
+    void rft(RadialMeshFunction& filt_func, const int lval, const double hmax,
         const bool, const int j = 0, const bool printFlag = false);
 
     void printLocalPot(
