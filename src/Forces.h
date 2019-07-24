@@ -34,7 +34,7 @@ private:
 
     static Timer lforce_tm_;
     static Timer nlforce_tm_;
-    static Timer get_var_tm_;
+    static Timer evaluateShiftedFields_tm_;
     static Timer get_loc_proj_tm_;
     static Timer consolidate_data_;
     static Timer lforce_local_tm_;
@@ -47,10 +47,13 @@ private:
         std::vector<std::vector<double>>& var_pot,
         std::vector<std::vector<double>>& var_charge,
         std::vector<double>& loc_proj);
-    int get_var(Ion& ion,
+    void evaluateShiftedFields(Ion& ion,
                 std::vector<std::vector<double>>& var_pot,
                 std::vector<std::vector<double>>& var_charge);
-
+    void evaluateRadialFunc(const std::vector<Vector3D>& positions,
+                     const double lrad,
+                     std::vector<std::vector<double>>& var,
+                     std::function<double(double)> const&);
 public:
     Forces(Hamiltonian<T>* hamiltonian, Rho<T>* rho,
         ProjectedMatricesInterface* proj_matrices)
@@ -70,7 +73,7 @@ public:
     {
         lforce_tm_.print(os);
         nlforce_tm_.print(os);
-        get_var_tm_.print(os);
+        evaluateShiftedFields_tm_.print(os);
         get_loc_proj_tm_.print(os);
         consolidate_data_.print(os);
         lforce_local_tm_.print(os);
@@ -85,7 +88,7 @@ Timer Forces<T>::lforce_tm_("Forces::lforce");
 template <class T>
 Timer Forces<T>::nlforce_tm_("Forces::nlforce");
 template <class T>
-Timer Forces<T>::get_var_tm_("Forces::var");
+Timer Forces<T>::evaluateShiftedFields_tm_("Forces::evalShiftedFields");
 template <class T>
 Timer Forces<T>::get_loc_proj_tm_("Forces::loc_proj");
 template <class T>

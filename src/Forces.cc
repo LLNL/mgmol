@@ -8,15 +8,10 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#include <cmath>
-#include <iostream>
-using namespace std;
-
 #include "Control.h"
 #include "DataDistribution.h"
 #include "Forces.h"
 #include "Grid.h"
-#include "Hamiltonian.h"
 #include "Ions.h"
 #include "KBPsiMatrixSparse.h"
 #include "MGmol.h"
@@ -31,6 +26,8 @@ using namespace std;
 #include "VariableSizeMatrix.h"
 #include "Vector3D.h"
 #include "tools.h"
+
+#include <iostream>
 
 #define Ry2Ha 0.5;
 double shift_R[3*NPTS][3];
@@ -54,12 +51,52 @@ double get_deriv2(double value[2])
 }
 
 template <class T>
-int Forces<T>::get_var(
-    Ion& ion, vector<vector<double>>& var_pot,
-    vector<vector<double>>& var_charge)
+void Forces<T>::evaluateShiftedFields(
+    Ion& ion, std::vector<std::vector<double>>& var_pot,
+    std::vector<std::vector<double>>& var_charge)
 {
-    get_var_tm_.start();
+    evaluateShiftedFields_tm_.start();
 
+    const Species& sp(ion.getSpecies());
+    const RadialInter& lpot = ion.getLocalPot();
+
+    auto lambda_radiallpot = [&lpot] (double r) { return lpot.cubint(r); };
+    auto lambda_rhocomp = [&sp] (double r) { return sp.getRhoComp(r); };
+
+    Vector3D ref_position(ion.position(0), ion.position(1), ion.position(2));
+
+    // generate shifted atomic positions
+    // (NPTS in each direction)
+    std::vector<Vector3D> positions;
+    for (short ishift = 0; ishift < 3*NPTS; ishift++)
+    {
+        Vector3D shifted_point(ref_position);
+        shifted_point[0] += shift_R[ishift][0];
+        shifted_point[1] += shift_R[ishift][1];
+        shifted_point[2] += shift_R[ishift][2];
+
+        positions.push_back(shifted_point);
+    }
+
+    const double lrad = sp.lradius();
+
+    // evaluate filtered/unfiltered potential on mesh
+    // for shifted atomic poistions
+    evaluateRadialFunc(positions, lrad, var_pot, lambda_radiallpot);
+
+    // evaluate Gaussian compensating charge on mesh
+    // for shifted atomic poistions
+    evaluateRadialFunc(positions, lrad, var_charge, lambda_rhocomp);
+
+    evaluateShiftedFields_tm_.stop();
+};
+
+template <class T>
+void Forces<T>::evaluateRadialFunc(const std::vector<Vector3D>& positions,
+                            const double lrad,
+                            std::vector<std::vector<double>>& var,
+                            std::function<double(double)> const& lambda_radial)
+{
     Control& ct     = *(Control::instance());
 
     Mesh* mymesh           = Mesh::instance();
@@ -67,22 +104,15 @@ int Forces<T>::get_var(
 
     int offset = 0;
 
-    const Species& sp(ion.getSpecies());
-
     const int dim0 = mygrid.dim(0);
     const int dim1 = mygrid.dim(1);
     const int dim2 = mygrid.dim(2);
-
-    const double lrad = sp.lradius();
 
     const double h0 = mygrid.hgrid(0);
     const double h1 = mygrid.hgrid(1);
     const double h2 = mygrid.hgrid(2);
 
     Vector3D ll(mygrid.ll(0), mygrid.ll(1), mygrid.ll(2));
-    Vector3D position(ion.position(0), ion.position(1), ion.position(2));
-
-    const RadialInter& lpot = ion.getLocalPot();
 
     Vector3D point( 0., 0., 0. );
 
@@ -97,36 +127,21 @@ int Forces<T>::get_var(
             point[2] = mygrid.start(2);
             for (int iz = 0; iz < dim2; iz++)
             {
-                const double r
-                    = position.minimage(point, ll, ct.bcPoisson);
+                short ishift = 0;
 
-                if (r > lrad)
+                for (auto& position : positions)
                 {
-                    for (short ishift = 0; ishift < 3*NPTS; ishift++)
-                    {
-                        var_pot[ishift][offset] = 0.;
-                        var_charge[ishift][offset] = 0.;
-                    }
-                }
-                else
-                for (short ishift = 0; ishift < 3*NPTS; ishift++)
-                {
-                    Vector3D shifted_point(point);
-                    shifted_point[0] -= shift_R[ishift][0];
-                    shifted_point[1] -= shift_R[ishift][1];
-                    shifted_point[2] -= shift_R[ishift][2];
-
                     const double r
-                        = position.minimage(shifted_point, ll, ct.bcPoisson);
-#if 0
-                    potx[ishift][offset] =
-                        get_trilinval(xc-shift_R[ishift],yc,zc,
-                                      h0,h1,h2,position,ll,lpot);
-#else
-                    var_pot[ishift][offset] = lpot.cubint(r);
-#endif
-
-                    var_charge[ishift][offset] = sp.getRhoComp(r);
+                        = position.minimage(point, ll, ct.bcPoisson);
+                    if (r < lrad)
+                    {
+                        var[ishift][offset] = lambda_radial(r);
+                    }
+                    else
+                    {
+                        var[ishift][offset] = 0.;
+                    }
+                    ishift++;
                 }
 
                 offset++;
@@ -143,17 +158,13 @@ int Forces<T>::get_var(
 
     } // end for ix
 
-    assert(offset > 0);
-    get_var_tm_.stop();
-
-    return offset;
 }
 
 template <class T>
 void Forces<T>::get_loc_proj(RHODTYPE* rho,
     std::vector<std::vector<double>>& var_pot,
     std::vector<std::vector<double>>& var_charge,
-    vector<double>& loc_proj)
+    std::vector<double>& loc_proj)
 {
     get_loc_proj_tm_.start();
 
@@ -170,8 +181,8 @@ void Forces<T>::get_loc_proj(RHODTYPE* rho,
         // - delta rhoc * vh
         for (short ishift = 0; ishift < NPTS; ishift++)
         {
-            const vector<double>& vpot      = var_pot[NPTS*dir+ishift];
-            const vector<double>& drhoc_ptr = var_charge[NPTS*dir+ishift];
+            const std::vector<double>& vpot      = var_pot[NPTS*dir+ishift];
+            const std::vector<double>& drhoc_ptr = var_charge[NPTS*dir+ishift];
 
             for (int idx = 0; idx < numpt; idx++)
             {
@@ -185,13 +196,13 @@ void Forces<T>::get_loc_proj(RHODTYPE* rho,
 }
 
 template <class T>
-void Forces<T>::lforce_ion(Ion& ion, RHODTYPE* rho, vector<double>& loc_proj)
+void Forces<T>::lforce_ion(Ion& ion, RHODTYPE* rho, std::vector<double>& loc_proj)
 {
     Mesh* mymesh    = Mesh::instance();
     const int numpt = mymesh->numpt();
 
-    vector<vector<double>> var_pot;
-    vector<vector<double>> var_charge;
+    std::vector<std::vector<double>> var_pot;
+    std::vector<std::vector<double>> var_charge;
 
     var_pot.resize(3*NPTS);
     var_charge.resize(3*NPTS);
@@ -202,7 +213,7 @@ void Forces<T>::lforce_ion(Ion& ion, RHODTYPE* rho, vector<double>& loc_proj)
     }
 
     // generate var_pot and var_charge for this ion
-    get_var(ion, var_pot, var_charge);
+    evaluateShiftedFields(ion, var_pot, var_charge);
 
     get_loc_proj(rho, var_pot, var_charge, loc_proj);
 }
@@ -221,7 +232,7 @@ void Forces<T>::lforce(Ions& ions, RHODTYPE* rho)
     // cout<<"max Vl radius = "<<ions.getMaxVlRadius()<<endl;
 
     int buffer_size  = 3 * NPTS;
-    vector<double> loc_proj(buffer_size);
+    std::vector<double> loc_proj(buffer_size);
 
     lforce_local_tm_.start();
 
@@ -293,7 +304,7 @@ void Forces<T>::lforce(Ions& ions, RHODTYPE* rho)
        init_loc_proj(loc_proj,ions.getNumIons());
 
        // Loop over ions
-       vector<Ion*>::const_iterator ion=ions.overlappingVL_ions().begin();
+       std::vector<Ion*>::const_iterator ion=ions.overlappingVL_ions().begin();
        while(ion!=ions.overlappingVL_ions().end()){
 
            int index=(*ion)->index();
@@ -306,7 +317,7 @@ void Forces<T>::lforce(Ions& ions, RHODTYPE* rho)
        pb::my_dscal(n,mygrid.vel(),*loc_proj);
        global_sums_double(*loc_proj, n);
 
-       vector<Ion*>::iterator lion=ions.local_ions().begin();
+       std::vector<Ion*>::iterator lion=ions.local_ions().begin();
        while(lion!=ions.local_ions().end()){
            // Forces opposed to the gradient
            int index=(*lion)->index();
@@ -403,9 +414,9 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
         // subdomain
         for (auto& ion : ions.local_ions())
         {
-            vector<int> gids;
+            std::vector<int> gids;
             ion->getGidsNLprojs(gids);
-            vector<short> kbsigns;
+            std::vector<short> kbsigns;
             ion->getKBsigns(kbsigns);
 
             const short nprojs = (short)gids.size();
@@ -454,9 +465,9 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
         // subdomain
         for (auto& ion : ions.local_ions())
         {
-            vector<int> gids;
+            std::vector<int> gids;
             ion->getGidsNLprojs(gids);
-            vector<short> kbsigns;
+            std::vector<short> kbsigns;
             ion->getKBsigns(kbsigns);
 
             const short nprojs = (short)gids.size();
@@ -496,7 +507,7 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
     const double factor                     = -1. * Ry2Ha;
     for (auto& ion : ions.local_ions())
     {
-        vector<int> gids;
+        std::vector<int> gids;
         ion->getGidsNLprojs(gids);
 
         const short nprojs = (short)gids.size();
@@ -544,7 +555,7 @@ void Forces<T>::force(T& orbitals, Ions& ions)
     const int numpt = rho_->rho_[0].size();
     double one      = 1.;
 
-    vector<RHODTYPE> rho_tmp;
+    std::vector<RHODTYPE> rho_tmp;
     if (rho_->rho_.size() > 1)
     {
         rho_tmp.resize(numpt);
@@ -553,7 +564,7 @@ void Forces<T>::force(T& orbitals, Ions& ions)
         MPaxpy(numpt, one, &rho_->rho_[1][0], &rho_tmp[0]);
     }
 
-    vector<RHODTYPE>& rho = (rho_->rho_.size() > 1) ? rho_tmp : rho_->rho_[0];
+    std::vector<RHODTYPE>& rho = (rho_->rho_.size() > 1) ? rho_tmp : rho_->rho_[0];
 
     for(int i = 0; i<3*NPTS; i++)
     {
