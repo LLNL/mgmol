@@ -164,6 +164,7 @@ target_link_libraries(mgmol-opt ${HDF5_HL_LIBRARIES})
 target_link_libraries(mgmol-opt ${BLAS_LIBRARIES})
 target_link_libraries(mgmol-opt ${LAPACK_LIBRARIES})
 target_link_libraries(mgmol-opt ${Boost_LIBRARIES})
+target_link_libraries(mgmol-opt ${MPI_CXX_LIBRARIES})
 
 install(TARGETS mgmol-opt DESTINATION bin)
 
