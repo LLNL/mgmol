@@ -15,6 +15,7 @@
 #include "Rho.h"
 #include "global.h"
 
+#include <functional>
 #include <vector>
 
 #define NPTS 2
