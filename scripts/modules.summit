@@ -6,4 +6,5 @@ module load netlib-scalapack
 module load hdf5
 module load boost
 module load cmake
+module load python
 
