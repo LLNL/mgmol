@@ -13,6 +13,7 @@
 
 #include "Timer.h"
 #include "mputils.h"
+#include "MGmol_scalapack.h"
 
 #include <cassert>
 #include <complex>
@@ -113,14 +114,12 @@ public:
     // input: global index (i,j)
     void addval(const int i, const int j, const T val)
     {
-        const int ib = (i / (nprow_ * mb_));
-        const int x  = i % mb_;
-
-        const int jb = (j / (npcol_ * nb_));
-        const int y  = j % nb_;
-
-        assert(ib * mb_ + x + (jb * nb_ + y) * mloc_ < size_);
-        val_[ib * mb_ + x + (jb * nb_ + y) * mloc_] += val;
+        int dummy=0;
+        int ig = i + 1;
+        const int il = INDXG2L(&ig, &mb_, &dummy, &dummy, &nprow_)-1;
+        int jg = j + 1;
+        const int jl = INDXG2L(&jg, &nb_, &dummy, &dummy, &npcol_)-1;
+        val_[il + jl * mloc_] += val;
     }
 
     void setVal(const int i, const int j, const T val);
@@ -163,18 +162,6 @@ public:
 
     // index of blocks: element (i,j) is at position (x,y)
     // in local block (l,m) of process (pr,pc)
-    int ib(const int i) const
-    {
-        assert(i < m_);
-        assert(i >= 0);
-        return i / (nprow_ * mb_);
-    }
-    int x(const int i) const
-    {
-        assert(i < m_);
-        assert(i >= 0);
-        return i % mb_;
-    }
     int pr(const int i) const
     {
         assert(i < m_);
@@ -182,12 +169,6 @@ public:
         return (i / mb_) % nprow_;
     }
 
-    int jb(const int j) const
-    {
-        assert(j < n_);
-        assert(j >= 0);
-        return j / (npcol_ * nb_);
-    }
     int y(const int j) const
     {
         assert(j < n_);
@@ -277,7 +258,6 @@ public:
 
     void resize(const int m, const int n, const int mb, const int nb);
     void init(const T* const a, const int lda);
-    void initTest();
 
     void clear(void);
 

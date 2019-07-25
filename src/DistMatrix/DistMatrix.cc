@@ -34,8 +34,8 @@ namespace dist_matrix
 {
 
 #ifndef SCALAPACK
-int numroc(int* a, int* b, int* c, int* d, int* e) { return *a; }
-int indxl2g(Pint indxloc, Pint nb, Pint iproc, Pint isrcproc, Pint nprocs)
+int NUMROC(int* a, int* b, int* c, int* d, int* e) { return *a; }
+int INDXL2G(Pint indxloc, Pint nb, Pint iproc, Pint isrcproc, Pint nprocs)
 {
     return *indxloc;
 }
@@ -139,8 +139,8 @@ void DistMatrix<T>::resize(const int m, const int n, const int mb, const int nb)
     mycol_       = bc_.mycol();
     active_      = myrow_ >= 0;
     int isrcproc = 0;
-    mloc_        = numroc(&m_, &mb_, &myrow_, &isrcproc, &nprow_);
-    nloc_        = numroc(&n_, &nb_, &mycol_, &isrcproc, &npcol_);
+    mloc_        = NUMROC(&m_, &mb_, &myrow_, &isrcproc, &nprow_);
+    nloc_        = NUMROC(&n_, &nb_, &mycol_, &isrcproc, &npcol_);
 
     // set leading dimension of val array to mloc_;
     lld_ = mloc_;
@@ -196,7 +196,7 @@ int DistMatrix<T>::indxl2grow(const int indxloc) const
 {
     const int isrcproc = 0;
     const int findx    = indxloc + 1;
-    return indxl2g(&findx, &mb_, &myrow_, &isrcproc, &nprow_) - 1;
+    return INDXL2G(&findx, &mb_, &myrow_, &isrcproc, &nprow_) - 1;
 }
 
 template <class T>
@@ -204,7 +204,7 @@ int DistMatrix<T>::indxl2gcol(const int indxloc) const
 {
     const int isrcproc = 0;
     const int findx    = indxloc + 1;
-    return indxl2g(&findx, &nb_, &mycol_, &isrcproc, &npcol_) - 1;
+    return INDXL2G(&findx, &nb_, &mycol_, &isrcproc, &npcol_) - 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1834,29 +1834,6 @@ void DistMatrix<T>::init(const T* const a, const int lda)
 
 ////////////////////////////////////////////////////////////////////////////////
 template <class T>
-void DistMatrix<T>::initTest()
-{
-    if (active_)
-    {
-        for (int li = 0; li < mblocks_; li++)
-        {
-            for (int lj = 0; lj < nblocks_; lj++)
-            {
-                for (int ii = 0; ii < mbs(li); ii++)
-                {
-                    for (int jj = 0; jj < nbs(lj); jj++)
-                    {
-                        val_[(ii + li * mb_) + (jj + lj * nb_) * mloc_]
-                            = 1000 * i(li, ii) + j(lj, jj);
-                    }
-                }
-            }
-        }
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-template <class T>
 double DistMatrix<T>::sumProdElements(const DistMatrix<T>& a) const
 {
     assert(mblocks_ == a.mblocks_);
@@ -2228,7 +2205,7 @@ void DistMatrix<double>::syev(
         assert(mb_ > 1);
         int ione = 1, izero = 0;
         int nn    = std::max(mb_, m_);
-        int np0   = numroc(&nn, &mb_, &izero, &izero, &nprow_);
+        int np0   = NUMROC(&nn, &mb_, &izero, &izero, &nprow_);
         int lwork = 5 * m_ + 3 * np0 + mb_ * nn + m_ * np0;
         lwork *= 2;
         double* work = new double[lwork];
@@ -2270,7 +2247,7 @@ void DistMatrix<float>::syev(
         assert(mb_ > 1);
         int ione = 1, izero = 0;
         int nn    = std::max(mb_, m_);
-        int np0   = numroc(&nn, &mb_, &izero, &izero, &nprow_);
+        int np0   = NUMROC(&nn, &mb_, &izero, &izero, &nprow_);
         int lwork = 5 * m_ + 3 * np0 + mb_ * nn + m_ * np0;
         lwork *= 2;
         float* work = new float[lwork];

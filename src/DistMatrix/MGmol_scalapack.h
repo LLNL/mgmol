@@ -120,8 +120,9 @@ extern "C"
     void psgesvd(Pchar, Pchar, int*, int*, float*, int*, int*, int*, float*,
         float*, int*, int*, int*, float*, int*, int*, int*, float*, int*, int*);
     // SCALAPACK TOOLS
-    int numroc(Pint, Pint, Pint, Pint, Pint);
-    int indxl2g(Pint, Pint, Pint, Pint, Pint);
+    int NUMROC(Pint, Pint, Pint, Pint, Pint);
+    int INDXL2G(Pint, Pint, Pint, Pint, Pint);
+    int INDXG2L(Pint, Pint, Pint, Pint, Pint);
 #endif
 }
 
