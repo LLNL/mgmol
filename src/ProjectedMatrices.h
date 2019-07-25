@@ -410,7 +410,7 @@ public:
     {
         const dist_matrix::DistMatrix<DISTMATDTYPE>& dm(dm_->getMatrix());
 
-        dm.matgather(replicated_DM_matrix, dim_);
+        dm.allgather(replicated_DM_matrix, dim_);
     }
 
     double getLinDependent2states(int& st1, int& st2, const bool flag) const

@@ -34,7 +34,7 @@ void NOLMOTransform::init_transform(
     tmp.transpose(work);
     tmp.trset('u'); // set to zero lower part of upper triangular matrix
 
-    tmp.matgather(&lst_[0], nst_);
+    tmp.allgather(&lst_[0], nst_);
 
     // copy lst_ into a_
     *a_ = tmp;

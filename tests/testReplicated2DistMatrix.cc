@@ -4,7 +4,6 @@
 #include "BlacsContext.h"
 #include "DistMatrix.h"
 #include "LocalMatrices2DistMatrix.h"
-#include "DistMatrix2SquareLocalMatrices.h"
 #include "SquareLocalMatrices.h"
 #include "RemoteTasksDistMatrix.h"
 #include "MGmol_MPI.h"
@@ -68,7 +67,7 @@ int main(int argc, char **argv)
     for(int i=0;i<n;i++)gids[0][i]=i;
     dist_matrix::RemoteTasksDistMatrix<double> remote_tasks_DistMatrix(distm);
 
-    // setup a replicated matrix
+    // setup an nxn local matrix
     SquareLocalMatrices<double> replicated(1, n);
     for ( int i = 0; i < m; i++ )
     for ( int j = 0; j < n; j++ )
@@ -80,12 +79,8 @@ int main(int argc, char **argv)
     lm2dm->convert(replicated, distm, n);
 
     // convert back to a replicated matrix
-    DistMatrix2SquareLocalMatrices::setup( MPI_COMM_WORLD, gids, distm );
-    DistMatrix2SquareLocalMatrices* dm2lm =
-        DistMatrix2SquareLocalMatrices::instance();
-
     SquareLocalMatrices<double> result(1, n);
-    dm2lm->convert(distm, result);
+    distm.allgather(result.getSubMatrix(), n);
 
     const double tol = 1.e-8;
     for ( int i = 0; i < m; i++ )

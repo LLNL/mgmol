@@ -757,7 +757,7 @@ void LocGridOrbitals::multiply_by_matrix(
     DISTMATDTYPE* work_matrix = wspace.square_matrix();
 
     // build a local complete matrix from a distributed matrix
-    dmatrix.matgather(work_matrix, numst_);
+    dmatrix.allgather(work_matrix, numst_);
 
     multiply_by_matrix(0, chromatic_number_, work_matrix, product, ldp);
 }
@@ -907,7 +907,7 @@ void LocGridOrbitals::multiply_by_matrix(
     ReplicatedWorkSpace<DISTMATDTYPE>& wspace(ReplicatedWorkSpace<DISTMATDTYPE>::instance());
     DISTMATDTYPE* work_matrix = wspace.square_matrix();
 
-    matrix.matgather(work_matrix, numst_);
+    matrix.allgather(work_matrix, numst_);
 
     DISTMATDTYPE* matrix_local
         = new DISTMATDTYPE[chromatic_number_ * chromatic_number_];

@@ -1901,9 +1901,9 @@ DistMatrix<T>::DistMatrix(const std::string& name, const BlacsContext& bc,
 //
 ////////////////////////////////////////////////////////////////////////////////
 template <>
-void DistMatrix<double>::matgather(double* const a, const int lda) const
+void DistMatrix<double>::allgather(double* const a, const int lda) const
 {
-    matgather_tm_.start();
+    allgather_tm_.start();
 
     assert(m_ == n_);
 
@@ -1938,20 +1938,20 @@ void DistMatrix<double>::matgather(double* const a, const int lda) const
             mpirc = MPI_Send(a, size, MPI_DOUBLE, mype + (i + 1) * n_active, 0,
                 comm_global_);
         if (mpirc != MPI_SUCCESS)
-            std::cerr << "DistMatrix<T>::matgather: MPI Send/Recv failed for PE "
+            std::cerr << "DistMatrix<T>::allgather: MPI Send/Recv failed for PE "
                  << mype << std::endl;
     }
 #else
     memcpy(a, &val_[0], lda * n_ * sizeof(double));
 
 #endif
-    matgather_tm_.stop();
+    allgather_tm_.stop();
 }
 
 template <>
-void DistMatrix<float>::matgather(float* const a, const int lda) const
+void DistMatrix<float>::allgather(float* const a, const int lda) const
 {
-    matgather_tm_.start();
+    allgather_tm_.start();
 
     assert(m_ == n_);
 
@@ -1984,14 +1984,14 @@ void DistMatrix<float>::matgather(float* const a, const int lda) const
             mpirc = MPI_Send(
                 a, size, MPI_FLOAT, mype + (i + 1) * n_active, 0, comm_global_);
         if (mpirc != MPI_SUCCESS)
-            std::cerr << "DistMatrix<T>::matgather: MPI Send/Recv failed for PE "
+            std::cerr << "DistMatrix<T>::allgather: MPI Send/Recv failed for PE "
                  << mype << std::endl;
     }
 #else
     memcpy(a, &val_[0], lda * n_ * sizeof(float));
 
 #endif
-    matgather_tm_.stop();
+    allgather_tm_.stop();
 }
 ////////////////////////////////////////////////////////////////////////////////
 // Constructor for a diagonal distributed matrix

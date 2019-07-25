@@ -39,7 +39,7 @@ template <class T>
 class DistMatrix
 {
 private:
-    static Timer matgather_tm_;
+    static Timer allgather_tm_;
     static Timer pdgemr2d_tm_;
     static Timer potri_tm_;
     static Timer potrf_tm_;
@@ -88,7 +88,7 @@ public:
 
     static void printTimers(std::ostream& os)
     {
-        matgather_tm_.print(os);
+        allgather_tm_.print(os);
         pdgemr2d_tm_.print(os);
         potri_tm_.print(os);
         trtri_tm_.print(os);
@@ -254,7 +254,10 @@ public:
     ~DistMatrix(){}
 
     void identity(void);
-    void matgather(T* const a, const int lda) const;
+
+    // gathers distributed data from all tasks and distribute
+    // combined data to all tasks
+    void allgather(T* const a, const int lda) const;
 
     void resize(const int m, const int n, const int mb, const int nb);
     void init(const T* const a, const int lda);
@@ -414,7 +417,7 @@ template <class T>
 BlacsContext* DistMatrix<T>::default_bc_ = nullptr;
 
 template <class T>
-Timer DistMatrix<T>::matgather_tm_("DistMatrix::matgather");
+Timer DistMatrix<T>::allgather_tm_("DistMatrix::matgather");
 
 template <class T>
 Timer DistMatrix<T>::pdgemr2d_tm_("DistMatrix::pdgemr2d");

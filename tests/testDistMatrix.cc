@@ -167,15 +167,15 @@ int main(int argc, char **argv)
 
     double norma=a.norm('F');
     if(mype == 0)std::cout<<"Norm(a)="<<norma<<std::endl;
-    if(mype == 0)std::cout<<"DistMatrix::matgather..."<<std::endl;
+    if(mype == 0)std::cout<<"DistMatrix::allgather..."<<std::endl;
     double*  aa=new double[a.m()*a.n()];
-    a.matgather(aa, a.m());
+    a.allgather(aa, a.m());
     if(mype == 0)std::cout<<"DistMatrix::init..."<<std::endl;
     b.init(aa, a.m());
     double norm=b.norm('F');
     if(mype == 0)std::cout<<"Norm(b)="<<norm<<std::endl;
     if( fabs(norm-norma)>0.000001 ){
-       std::cout<<"DistMatrix: problem with matgather/init"<<std::endl;
+       std::cout<<"DistMatrix: problem with allgather/init"<<std::endl;
        return -1;
     }
     if(mype == 0)std::cout<<"DistMatrix::transpose..."<<std::endl;

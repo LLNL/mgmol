@@ -69,7 +69,7 @@ public:
 
     void initSquareMatrix(const dist_matrix::DistMatrix<T>& distmat)
     {
-        distmat.matgather(square_matrix_, ndim_);
+        distmat.allgather(square_matrix_, ndim_);
     }
     int getDim() { return ndim_; }
 };

@@ -287,7 +287,7 @@ void ProjectedMatrices::updateDMwithSP2(const int iterative_index)
     //generate replicated copy of theta_
     SquareLocalMatrices<double> theta(1, dim_);
     double* work_matrix = theta.getSubMatrix();
-    theta_->matgather(work_matrix, dim_);
+    theta_->allgather(work_matrix, dim_);
 
     double emin;
     double emax;

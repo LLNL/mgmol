@@ -426,7 +426,7 @@ void ExtendedGridOrbitals::multiply_by_matrix(
     DISTMATDTYPE* work_matrix = wspace.square_matrix();
 
     // build a local complete matrix from a distributed matrix
-    dmatrix.matgather(work_matrix, numst_);
+    dmatrix.allgather(work_matrix, numst_);
 
     multiply_by_matrix(work_matrix, product, ldp);
 }
@@ -540,7 +540,7 @@ void ExtendedGridOrbitals::multiply_by_matrix(
     ReplicatedWorkSpace<DISTMATDTYPE>& wspace(ReplicatedWorkSpace<DISTMATDTYPE>::instance());
     DISTMATDTYPE* work_matrix = wspace.square_matrix();
 
-    matrix.matgather(work_matrix, numst_);
+    matrix.allgather(work_matrix, numst_);
 
     const size_t slnumpt = loc_numpt_ * sizeof(ORBDTYPE);
 
