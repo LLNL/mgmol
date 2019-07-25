@@ -186,7 +186,7 @@ add_definitions(-DUSE_DIS_MAT)
 include(FortranCInterface)
 FortranCInterface_HEADER(
     fc_mangle.h
-    MACRO_NAMESPACE "FC_"
+    MACRO_NAMESPACE "FC_BLASLAPACK_"
     SYMBOLS
         DSCAL SSCAL DAXPY SAXPY DDOT SDOT DCOPY SCOPY
         DNRM2 SNRM2 IDAMAX ISAMAX DROT SROT
@@ -199,9 +199,9 @@ FortranCInterface_HEADER(
 
 FortranCInterface_HEADER(
     scalapack_mangle.h
-    MACRO_NAMESPACE "FC_"
+    MACRO_NAMESPACE "FC_SCALAPACK_"
     SYMBOLS
-        numroc indxl2g
+        NUMROC INDXL2G INDXG2L
         pdswap psswap pdlange pslange pdlacp3 pslacp3 pdtran pstran
         pdsymm pssymm pdgemm pdgemv pdsymv psgemm
         psgemv pssymv pdsyrk pssyrk pdgemr2d psgemr2d pigemr2d
