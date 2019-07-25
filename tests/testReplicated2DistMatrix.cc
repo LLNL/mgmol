@@ -3,9 +3,7 @@
 //
 #include "BlacsContext.h"
 #include "DistMatrix.h"
-#include "LocalMatrices2DistMatrix.h"
 #include "SquareLocalMatrices.h"
-#include "RemoteTasksDistMatrix.h"
 #include "MGmol_MPI.h"
 
 #include <mpi.h>
@@ -41,8 +39,8 @@ int main(int argc, char **argv)
     int nprow=2;
     int npcol=2;
 
-    const int n=21;
-    const int nb=6;
+    const int n=11;
+    const int nb=3;
 
     int m=n;
     int mb_a=nb;
@@ -61,12 +59,6 @@ int main(int argc, char **argv)
            << distm.mb() << "x" << distm.nb() << " / " << std::endl;
     }
 
-    std::vector<std::vector<int>> gids;
-    gids.resize(1);
-    gids[0].resize(n);
-    for(int i=0;i<n;i++)gids[0][i]=i;
-    dist_matrix::RemoteTasksDistMatrix<double> remote_tasks_DistMatrix(distm);
-
     // setup an nxn local matrix
     SquareLocalMatrices<double> replicated(1, n);
     for ( int i = 0; i < m; i++ )
@@ -74,13 +66,17 @@ int main(int argc, char **argv)
         replicated.setVal(i, j, 10.*(i+1)+j+1);
 
     // distribute replicated matrix
-    LocalMatrices2DistMatrix::setup(MPI_COMM_WORLD, gids, &remote_tasks_DistMatrix);
-    LocalMatrices2DistMatrix* lm2dm = LocalMatrices2DistMatrix::instance();
-    lm2dm->convert(replicated, distm, n);
+    distm.initFromReplicated(replicated.getSubMatrix(), n);
 
     // convert back to a replicated matrix
     SquareLocalMatrices<double> result(1, n);
     distm.allgather(result.getSubMatrix(), n);
+
+    if(mype==0)
+    {
+        std::cout << std::setprecision(2);
+        result.print(std::cout);
+    }
 
     const double tol = 1.e-8;
     for ( int i = 0; i < m; i++ )

@@ -262,6 +262,8 @@ public:
     void resize(const int m, const int n, const int mb, const int nb);
     void init(const T* const a, const int lda);
 
+    void initFromReplicated(double* const a, const int lda);
+
     void clear(void);
 
     // compute trace of matrix product

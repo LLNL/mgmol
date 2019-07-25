@@ -21,12 +21,6 @@ add_executable(testReplicated2DistMatrix
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/BlacsContext.cc
                ${CMAKE_SOURCE_DIR}/src/local_matrices/LocalMatrices.cc
                ${CMAKE_SOURCE_DIR}/src/local_matrices/SquareLocalMatrices.cc
-               ${CMAKE_SOURCE_DIR}/src/DistMatrix2SquareLocalMatrices.cc
-               ${CMAKE_SOURCE_DIR}/src/DistMatrix/SubMatrices.cc
-               ${CMAKE_SOURCE_DIR}/src/DistMatrix/SubMatricesIndexing.cc
-               ${CMAKE_SOURCE_DIR}/src/DistMatrix/MPI_AllToSome.cc
-               ${CMAKE_SOURCE_DIR}/src/DistMatrix/SparseDistMatrix.cc
-               ${CMAKE_SOURCE_DIR}/src/LocalMatrices2DistMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc

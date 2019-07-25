@@ -1896,6 +1896,24 @@ DistMatrix<T>::DistMatrix(const std::string& name, const BlacsContext& bc,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// Generate a distributed matrix from a replicated one
+//
+template <>
+void DistMatrix<double>::initFromReplicated(double* const src, const int lda)
+{
+#ifdef SCALAPACK
+    //all the nodes send data
+    const int rev = 1;
+    const int ii  = 1;
+    const int jj  = 1;
+    const int i   = 1;
+    if (active_) pdlacp3(&m_, &i, val_.data(), desc_, src, &lda, &ii, &jj, &rev);
+#else
+    memcpy(&val_[0], src, lda * n_ * sizeof(double));
+#endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
 //
 // Generate a duplicated matrix from a distributed matrix
 //
