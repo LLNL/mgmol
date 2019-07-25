@@ -112,6 +112,13 @@ public:
         ptr_matrices_[iloc][m_ * j + i] = val;
     }
 
+    T getVal(const int i, const int j, const int iloc=0)
+    {
+        assert(i < m_);
+        assert(j < n_);
+        return ptr_matrices_[iloc][m_ * j + i];
+    }
+
 //    void setVal2zero(const int i, const int j, const int iloc=0)
 //    {
 //        setVal(i, j, 0., iloc);
