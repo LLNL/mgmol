@@ -43,14 +43,19 @@ private:
     static Timer energy_tm_;
     static Timer total_tm_;
 
-    void lforce_ion(Ion& ion, RHODTYPE* rho, std::vector<double>& loc_proj);
+    void lforce_ion(Ion& ion, RHODTYPE* rho, std::vector<double>& loc_proj, const char flag_filter);
     void get_loc_proj(RHODTYPE* rho,
         std::vector<std::vector<double>>& var_pot,
         std::vector<std::vector<double>>& var_charge,
         std::vector<double>& loc_proj);
     void evaluateShiftedFields(Ion& ion,
                 std::vector<std::vector<double>>& var_pot,
-                std::vector<std::vector<double>>& var_charge);
+                std::vector<std::vector<double>>& var_charge,
+                const char flag_filter);
+    void evaluateSupersampledRadialFunc(const std::vector<Vector3D>& positions,
+                     const double lrad,
+                     std::vector<std::vector<double>>& var,
+                     std::function<double(double)> const&);
     void evaluateRadialFunc(const std::vector<Vector3D>& positions,
                      const double lrad,
                      std::vector<std::vector<double>>& var,

@@ -318,7 +318,7 @@ int main(int argc, char** argv)
                 po::value<float>()->default_value(1.2),
                 "safety factor to use for static allocation of orbitals")(
                 "Potentials.filterPseudo",
-                po::value<bool>()->default_value(true),
+                po::value<char>()->default_value('f'),
                 "filter")("Poisson.solver",
                 po::value<string>()->default_value("CG"), "solver")(
                 "Poisson.rho0", po::value<float>()->default_value(0.0004),

@@ -125,13 +125,13 @@ private:
         kbp_[l][p].assign(x, kbproj);
     }
 
-    void initLocalPotential(const bool flag_filter, const double hmax,
+    void initLocalPotential(const char flag_filter, const double hmax,
         std::ofstream* tfile, const bool printFlag);
-    void initNonlocalKBPotentials(const bool flag_filter, const double hmax,
+    void initNonlocalKBPotentials(const char flag_filter, const double hmax,
         std::ofstream* tfile, const bool printFlag);
-    void initNonlocalGTHPotentials(const bool flag_filter, const double hmax,
+    void initNonlocalGTHPotentials(const char flag_filter, const double hmax,
         std::ofstream* tfile, const bool printFlag);
-    void initNonlocalMultiProjectorsPotentials(const bool flag_filter,
+    void initNonlocalMultiProjectorsPotentials(const char flag_filter,
         const double hmax, std::ofstream* tfile, const bool divide_by_r,
         const bool printFlag);
 
@@ -204,7 +204,7 @@ public:
         dim_l_ = (short)(2. * lradius_ / hgrid) + 1;
         if ((dim_l_ + 1) % 2) dim_l_++;
     }
-    void initPotentials(const bool, const double, const bool);
+    void initPotentials(const char, const double, const bool);
 
     double getVcomp(const double radius)const
     {

@@ -937,7 +937,7 @@ void MGmol<T>::initKBR()
     {
         if (counter % mpi_size == mpi_rank)
         {
-            isp->initPotentials((bool)pot.pot_type(counter), hmax, true);
+            isp->initPotentials(pot.pot_type(counter), hmax, true);
         }
         counter++;
     }
