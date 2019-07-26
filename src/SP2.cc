@@ -9,7 +9,6 @@
 #include "SP2.h"
 #include "linear_algebra/blas3_c.h"
 #include "DistMatrix.h"
-#include "LocalMatrices2DistMatrix.h"
 #include "MGmol_MPI.h"
 #include "MPIdata.h"
 
@@ -237,9 +236,7 @@ void SP2::getDM(dist_matrix::DistMatrix<DISTMATDTYPE>& submatM, // output
     dist_matrix::DistMatrix<DISTMATDTYPE> Xi("Xi", n, n);
 
     //Here Xi_ is assumed to be "replicated" by each MPI task
-    LocalMatrices2DistMatrix* lm2dm =
-        LocalMatrices2DistMatrix::instance();
-    lm2dm->convert(*Xi_, Xi, n);
+    Xi.initFromReplicated(Xi_->getSubMatrix(), n);
 
     submatM.gemm('n', 'n', 2., Xi, invS, 0.);
 
