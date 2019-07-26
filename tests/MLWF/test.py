@@ -6,15 +6,21 @@ import string
 
 print("Test MLWF...")
 
+nargs=len(sys.argv)
+
 mpicmd = sys.argv[1]+" "+sys.argv[2]+" "+sys.argv[3]
-exe = sys.argv[4]
-inp = sys.argv[5]
-coords = sys.argv[6]
+for i in range(4,nargs-4):
+  mpicmd = mpicmd + " "+sys.argv[i]
+print("MPI run command: {}".format(mpicmd))
+
+exe = sys.argv[nargs-4]
+inp = sys.argv[nargs-3]
+coords = sys.argv[nargs-2]
 print("coordinates file: %s"%coords)
 
 #create links to potentials files
 dst = 'pseudo.Si_ONCV_PBE_SG15'
-src = sys.argv[7] + '/' + dst
+src = sys.argv[-1] + '/' + dst
 
 if not os.path.exists(dst):
   print("Create link to %s"%dst)

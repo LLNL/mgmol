@@ -99,24 +99,24 @@ add_test(NAME testBlacsContext
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testBlacsContext)
 add_test(NAME testDistVector
-         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4
+         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testDistVector)
 add_test(NAME testReplicated2DistMatrix
-         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4
+         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testReplicated2DistMatrix)
 add_test(NAME testDistMatrix
-         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4
+         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testDistMatrix)
 add_test(NAME testConditionDistMatrix
-         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4
+         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testConditionDistMatrix)
 add_test(NAME testConditionDistMatrixPower
-         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4
+         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testConditionDistMatrixPower)
 add_test(NAME testPower
          COMMAND ${CMAKE_CURRENT_BINARY_DIR}/testPower)
 add_test(NAME testPowerDistMatrix
-         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4
+         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testPowerDistMatrix)
 add_test(NAME testDirectionalReduce
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
@@ -140,14 +140,14 @@ add_test(NAME testSiH4
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME testCl2
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Cl2_ONCVPSP_LDA/test.py
-         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
          ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
          ${CMAKE_CURRENT_SOURCE_DIR}/Cl2_ONCVPSP_LDA/mgmol.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/Cl2_ONCVPSP_LDA/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME BandGapN2
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/BandGapN2/test.py
-         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 3
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 3 ${MPIEXEC_PREFLAGS}
          ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
          ${CMAKE_CURRENT_SOURCE_DIR}/BandGapN2/mgmol.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/BandGapN2/coords.in
@@ -155,7 +155,7 @@ add_test(NAME BandGapN2
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME ReplicatedSP2
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ReplicatedSP2/test.py
-         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 3
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 3 ${MPIEXEC_PREFLAGS}
          ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
          ${CMAKE_CURRENT_SOURCE_DIR}/ReplicatedSP2/mgmol.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/ReplicatedSP2/coords.in
@@ -163,14 +163,14 @@ add_test(NAME ReplicatedSP2
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME testMLWF
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/MLWF/test.py
-         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
          ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
          ${CMAKE_CURRENT_SOURCE_DIR}/MLWF/mlwf.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/MLWF/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME testMD_D72
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/MD_D72/test.py
-         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 5
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 5 ${MPIEXEC_PREFLAGS}
          ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
          ${CMAKE_CURRENT_SOURCE_DIR}/MD_D72/mgmol_quench.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/MD_D72/mgmol_md.cfg
@@ -179,7 +179,7 @@ add_test(NAME testMD_D72
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME testLBFGS
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/LBFGS/test.py
-         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
          ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
          ${CMAKE_CURRENT_SOURCE_DIR}/LBFGS/lbfgs.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/LBFGS/coords.in

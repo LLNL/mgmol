@@ -6,16 +6,22 @@ import string
 
 print("Test LBFGS...")
 
+nargs=len(sys.argv)
+
 mpicmd = sys.argv[1]+" "+sys.argv[2]+" "+sys.argv[3]
-exe = sys.argv[4]
-inp = sys.argv[5]
-coords = sys.argv[6]
+for i in range(4,nargs-5):
+  mpicmd = mpicmd + " "+sys.argv[i]
+print("MPI run command: {}".format(mpicmd))
+
+exe = sys.argv[nargs-5]
+inp = sys.argv[nargs-4]
+coords = sys.argv[nargs-3]
 print("coordinates file: %s"%coords)
-lrs = sys.argv[7]
+lrs = sys.argv[-2]
 
 #create links to potentials files
 dst = 'pseudo.Si_ONCV_PBE_SG15'
-src = sys.argv[8] + '/' + dst
+src = sys.argv[-1] + '/' + dst
 
 if not os.path.exists(dst):
   print("Create link to %s"%dst)
