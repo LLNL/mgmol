@@ -19,8 +19,9 @@ cmake -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} \
       -DBLA_VENDOR=OpenBLAS \
       -DCMAKE_Fortran_COMPILER=mpif77 \
       -DSCALAPACK_LIBRARY=/usr/lib/x86_64-linux-gnu/libscalapack-openmpi.so.2.0 \
+      -DMPIEXEC_PREFLAGS="-report-bindings;--map-by;core;-bind-to;core" \
       ..
 
 # call make install
-make -j 
+make -j 4
 make install
