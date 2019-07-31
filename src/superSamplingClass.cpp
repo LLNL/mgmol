@@ -5,21 +5,8 @@
 
 double sincFunction(double x) { return (std::abs(x)<1e-14 ? 1 : std::sin(x*pi)/(x*pi));}
 
-std::array<double,3> computeLowGridBd(
-        const std::array<double,3> center,
-        const std::array<double,3> gridSpace, 
-        const double radius) {
-    std::array<double,3> lowGridBd;
-    int nX = std::round(radius / gridSpace[0]);
-    int nY = std::round(radius / gridSpace[1]);
-    int nZ = std::round(radius / gridSpace[2]);
-    lowGridBd[0] = center[0] - nX*gridSpace[0];
-    lowGridBd[1] = center[1] - nY*gridSpace[1];
-    lowGridBd[2] = center[2] - nZ*gridSpace[2];
-    return lowGridBd;
-}
-
-
+// Compute Weights to be used for convolution. Called by static member function setup,
+// with default filter function set to the sinc function
 std::vector<double> computeWeights(
                 const int numExtraPts,
                 const std::array<double,3> fineGridSpace,
@@ -28,8 +15,6 @@ std::vector<double> computeWeights(
     int offset=0;
     int convNumPts = 2*numExtraPts + 1;
     std::vector<double> weights(convNumPts*convNumPts*convNumPts);
-    //std::array<double,3> lowGridBd = computeLowGridBd(
-    //                {0.,0.,0.}, fineGridSpace, cutOffRadius);
     std::array<double,3> lowGridBd={-numExtraPts*fineGridSpace[0],
                                     -numExtraPts*fineGridSpace[1],
                                     -numExtraPts*fineGridSpace[2]};
@@ -56,6 +41,7 @@ std::vector<double> computeWeights(
     return weights;
 }
 
+
 template <int lMax>
 void superSampling<lMax>::setup(
             int sampleRate,
@@ -79,17 +65,17 @@ void superSampling<lMax>::setup(
                     filter);
 }
  
+
+// Stores value of Func on fine mesh points in a vector, which is passed to computeSupersampling
+// computeSupersampling so that we don't need to evaluate the fuction every single time
 template <int lMax>
 std::array<std::vector<double>,2*lMax + 1> superSampling<lMax>::getFuncValues(std::function<double(const double)> Func) {
-//std::array<std::vector<double>,2*lMax + 1> superSampling<lMax>::getFuncValues(const RadialInter& objectFunc) {
     int offset = 0;
     std::array<std::vector<double>,2*lMax + 1> FuncValues;
     for(int ll=0; ll<2*lMax+1; ++ll) {
             FuncValues[ll].resize(funcNumPts_[0]*funcNumPts_[1]*funcNumPts_[2]);
     }
-    //int extraPoints = std::round(cutOffRadius_/fineGridSpace_[0]);
     double idx = botMeshCorner_[0] - numExtraPts_*fineGridSpace_[0] - atomicCenter_[0];
-    //double idx = atomicCenter_[0] - (botMeshCorner_[0] - extraPoints*fineGridSpace_[0]);
 
     for(int i=0; i<funcNumPts_[0]; ++i) {
         double dx2 = idx*idx;
@@ -103,7 +89,6 @@ std::array<std::vector<double>,2*lMax + 1> superSampling<lMax>::getFuncValues(st
                 double dz2 = idz*idz;
                 double radius = std::sqrt(dx2 + dy2 + dz2);
                 double currentFuncValue = Func(radius);
-                //double currentFuncValue = objectFunc.cubint(radius);
                 if(harmonics_) {
                     if(lMax==0) {
                         FuncValues[0][offset] = setSProjector(
@@ -215,7 +200,7 @@ std::array<double,7> setFProjector(
 }
 
 
-
+// loop through the coarse mesh and compute the convolution at each of those points
 template <int lMax>
 std::vector<double> superSampling<lMax>::computeSuperSampling(
                 const std::vector<double>& fineMeshFuncValues
@@ -236,6 +221,7 @@ std::vector<double> superSampling<lMax>::computeSuperSampling(
     return superSampled;
 }
 
+// Actually do the convolution
 template <int lMax>
 double superSampling<lMax>::computeFiltering(
         const std::array<int,3> sampleIndex,

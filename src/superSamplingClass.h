@@ -74,6 +74,9 @@ class superSampling {
 public :
     std::array<std::vector<double>, 2*lMax + 1> values_;
 
+    // setup must always have been called before superSampling, but only needs to
+    // be called once. Note that using different lMax values means that setup needs
+    // to be called for each of them.
     static void setup(
              int sampleRate, 
              int numExtraPts,
@@ -81,13 +84,17 @@ public :
              double filter(double)=sincFunction
          );
     
+    // Constructor does the supersampling. top and bot MeshCorner allow us to 
+    // construct the subdomain mesh to supersample, atomicCenter is obvious,
+    // harmonics needs to be true if spherical harmonics is needed. If no harmonics,
+    // then should always call superSampling<0>. If harmonics, then lmax value is
+    // called in constructor superSampling<lMax>
     superSampling(
                      std::array<double,3> atomicCenter, 
                      std::array<double,3> botMeshCorner,
                      std::array<double,3> topMeshCorner,
                      bool harmonics,
                      std::function<double(double)> const& Func
-                     //const RadialInter& objectFunc 
                  ) : 
                      atomicCenter_(atomicCenter), botMeshCorner_(botMeshCorner),
                      topMeshCorner_(topMeshCorner), harmonics_(harmonics) {
@@ -101,7 +108,6 @@ public :
         coarNumPts_[2] = std::round((topMeshCorner_[2] - botMeshCorner_[2])/coarGridSpace_[2]) + 1;
         fineNumPts_[2] = std::round((topMeshCorner_[2] - botMeshCorner_[2])/fineGridSpace_[2]) + 1;
         funcNumPts_[2] = convNumPts_ + fineNumPts_[2] - 1;
-        //std::array<std::vector<double>,2*lMax + 1> fineMeshFuncValues = getFuncValues(objectFunc);
         std::array<std::vector<double>,2*lMax + 1> fineMeshFuncValues = getFuncValues(Func);
         for(int ll=0; ll<2*lMax + 1; ++ll) {
             values_[ll] = computeSuperSampling(fineMeshFuncValues[ll]);
@@ -110,13 +116,17 @@ public :
     
 private :
     
+    // Loop through coarse subdomain mesh and compute convolution at each of those points
     std::vector<double> computeSuperSampling(
                     const std::vector<double>& fineMeshFuncValues
                     );
 
+    // Store all the function values to be used in the algorithm in a single vector
+    // Accessing values in vector is quicker than evaluating a function every time
     std::array<std::vector<double>,2*lMax + 1> getFuncValues(std::function<double(const double)> Func);
-    //std::array<std::vector<double>,2*lMax + 1> getFuncValues(const RadialInter& objectFunc);
     
+    // At a given point in the coarse subdomain mesh, loop through the nearby points to compute
+    // the convolution
     double computeFiltering(
             const std::array<int,3> sampleIndex,
             const std::vector<double>& fineMeshFuncValues
