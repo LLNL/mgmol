@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.9)
 
 project (MGmol C CXX Fortran)
 
@@ -97,10 +97,7 @@ message("MPIEXEC :" ${MPIEXEC})
 # Use openMP if available
 find_package(OpenMP)
 if(${OPENMP_CXX_FOUND})
-  if(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
-    set(CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE_UPPER}
-        "${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE_UPPER}} -qopenmp")
-  endif()
+  message(STATUS "Building with OpenMP")
 else(${OPENMP_CXX_FOUND})
   message(STATUS "Building without OpenMP")
 endif(${OPENMP_CXX_FOUND})
@@ -118,7 +115,7 @@ endif (${HDF5_FOUND})
 # Boost (required)
 find_package(Boost COMPONENTS program_options REQUIRED)
 if(NOT ${Boost_FOUND})
-  message(FATAL_ERROR "Boost library requited")
+  message(FATAL_ERROR "Boost library required")
 endif(NOT ${Boost_FOUND})
 
 # blas/ lapack (required)
