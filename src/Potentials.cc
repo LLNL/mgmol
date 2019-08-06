@@ -631,9 +631,9 @@ void Potentials::initializeSupersampledRadialDataOnMesh(const Vector3D& position
     std::array<double,3> botMeshCorner={0,0,0};
     std::array<double,3> topMeshCorner={0,0,0};
     std::array<double,3> subDomainBotMeshCorner={start0,start1,start2};
-    std::array<double,3> subDomainTopMeshCorner={start0 + dim0*h0 - h0,
-                                                 start1 + dim1*h1 - h1,
-                                                 start2 + dim2*h2 - h2};
+    std::array<double,3> subDomainTopMeshCorner={start0 + dim0*h0,
+                                                 start1 + dim1*h1,
+                                                 start2 + dim2*h2};
     std::array<int,3> SSLRad={0,0,0};
     SSLRad[0] = std::ceil(lrad/h0)+1; // +1 just to be safe and make sure subdomain gets everything
     SSLRad[1] = std::ceil(lrad/h1)+1;
@@ -663,12 +663,16 @@ void Potentials::initializeSupersampledRadialDataOnMesh(const Vector3D& position
         for(int iy = yoffset; iy <= yoffset + ylimits; iy++) {
             int jstart = istart + iy*dim2;
             for(int iz = zoffset; iz <= zoffset + zlimits; iz++) {
-                v_nuc_[jstart + iz] += current.values_[0][offset];
+                const double r = position.minimage(point, lattice, ct.bcPoisson);
+                v_nuc_[jstart + iz]    += current.values_[0][offset];
+                rho_comp_[jstart + iz] += sp.getRhoComp(r);
+                v_comp_[jstart + iz]   += sp.getVcomp(r);
                 offset++;
             }
         }
     }
     
+    /*
     offset = 0;
     for (int ix = 0; ix < dim0; ix++)
     {
@@ -698,6 +702,7 @@ void Potentials::initializeSupersampledRadialDataOnMesh(const Vector3D& position
         }
     }
     //myfile.close();
+    */
 }
 
 void Potentials::initializeRadialDataOnMesh(const Vector3D& position,

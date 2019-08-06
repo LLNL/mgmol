@@ -230,7 +230,7 @@ void KBprojectorSparse::setProjectors(const short iloc, const int icount)
     }
 }
 
-
+/*
 void KBprojectorSparse::setSupersamplingSProjector(const short iloc, const int icount) {
     assert((int)ptr_projector_.size() > iloc);
     assert(ptr_projector_[iloc].size() > 0);
@@ -287,7 +287,7 @@ void KBprojectorSparse::setSupersamplingSProjector(const short iloc, const int i
                 }
             }
         }
-    
+*/  
     
 
 // Generates an s-projector
