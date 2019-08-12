@@ -212,12 +212,12 @@ FortranCInterface_HEADER(
         pdamax psamax
 )
 
-#FortranCInterface_HEADER(
-#    arpack_mangle.h
-#    MACRO_NAMESPACE "FC_"
-#    SYMBOLS
-#        PDSAUPD PDSEUPD DSAUPD DSEUPD
-#)
+FortranCInterface_HEADER(
+    arpack_mangle.h
+    MACRO_NAMESPACE "FC_"
+    SYMBOLS
+        PDSAUPD PDSEUPD DSAUPD DSEUPD
+)
 
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 
