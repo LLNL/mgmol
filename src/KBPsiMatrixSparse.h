@@ -74,16 +74,6 @@ class KBPsiMatrixSparse : public KBPsiMatrixInterface
         return (*kbBpsimat_).get_value(gid, st);
     }
 
-    void reset()
-    {
-        if (kbpsimat_ != 0) (*kbpsimat_).reset();
-
-        if (lapop_)
-            if (kbBpsimat_ != 0) (*kbBpsimat_).reset();
-    }
-
-    void globalSumKBpsi();
-
     void computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi, const Ion&,
         dist_matrix::SparseDistMatrix<DISTMATDTYPE>&) const;
     void computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi2,
@@ -94,8 +84,8 @@ class KBPsiMatrixSparse : public KBPsiMatrixInterface
     void getPsiKBPsiSym(const Ions& ions, VariableSizeMatrix<sparserow>& sm);
     void getPsiKBPsiSym(const Ion& ion, VariableSizeMatrix<sparserow>& sm);
     template <class T>
-    void computeKBpsi(Ions& ions, T& orbitals,
-        const int first_color, const int nb_colors, const bool flag);
+    void computeKBpsi(Ions& ions, T& orbitals, const int first_color,
+        const int nb_colors, const bool flag);
     void clearData();
 
 public:
@@ -105,12 +95,22 @@ public:
 
     void printTimers(std::ostream& os);
 
+    void reset()
+    {
+        if (kbpsimat_ != 0) (*kbpsimat_).reset();
+
+        if (lapop_)
+            if (kbBpsimat_ != 0) (*kbBpsimat_).reset();
+    }
+
+    void globalSumKBpsi();
+
     template <class T>
-    double getEvnl(const Ions& ions, T& orbitals,
-        ProjectedMatricesSparse* proj_matrices);
+    double getEvnl(
+        const Ions& ions, T& orbitals, ProjectedMatricesSparse* proj_matrices);
     template <class T>
-    double getEvnl(const Ions& ions, T& orbitals,
-        ProjectedMatrices* proj_matrices);
+    double getEvnl(
+        const Ions& ions, T& orbitals, ProjectedMatrices* proj_matrices);
     void computeKBpsi(
         Ions& ions, pb::GridFunc<ORBDTYPE>*, const int, const bool flag);
     double getValIonState(const int gid, const int st) const
