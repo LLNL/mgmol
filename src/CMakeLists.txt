@@ -165,6 +165,9 @@ target_link_libraries(mgmol-opt ${BLAS_LIBRARIES})
 target_link_libraries(mgmol-opt ${LAPACK_LIBRARIES})
 target_link_libraries(mgmol-opt ${Boost_LIBRARIES})
 target_link_libraries(mgmol-opt ${MPI_CXX_LIBRARIES})
+if (${OPENMP_CXX_FOUND})
+  target_link_libraries(mgmol-opt OpenMP::OpenMP_CXX)
+endif()
 
 install(TARGETS mgmol-opt DESTINATION bin)
 
