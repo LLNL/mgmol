@@ -13,11 +13,6 @@ endif()
 
 set(ARPACK_NAMES parpack arpack )
 
-# Try each search configuration.
-foreach(search ${_ARPACK_SEARCHES})
-  find_path(ARPACK_INCLUDE_DIR NAMES ARPACK.h ${${search}} PATH_SUFFIXES include)
-endforeach()
-
 # Allow ARPACK_LIBRARY to be set manually, as the location of the ARPACK library
 if(NOT ARPACK_LIBRARY)
   foreach(search ${_ARPACK_SEARCHES})
@@ -27,14 +22,12 @@ endif()
 
 unset(ARPACK_NAMES)
 
-mark_as_advanced(ARPACK_LIBRARY ARPACK_INCLUDE_DIR)
+mark_as_advanced(ARPACK_LIBRARY)
 
 include(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(ARPACK REQUIRED_VARS ARPACK_LIBRARY)
 
 if(ARPACK_FOUND)
-  set(ARPACK_INCLUDE_DIRS ${ARPACK_INCLUDE_DIR})
-  
   if(NOT ARPACK_LIBRARIES)
     set(ARPACK_LIBRARIES ${ARPACK_LIBRARY})
   endif(NOT ARPACK_LIBRARIES)

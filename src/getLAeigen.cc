@@ -57,20 +57,23 @@ extern "C"
 
 extern Hamiltonian* hamiltonian;
 
-void get_kbpsi(KBPsiMatrixSparse& kbpsi, Ions& ions, pb::GridFunc<ORBDTYPE>* phi)
+void get_kbpsi(
+    KBPsiMatrixSparse& kbpsi, Ions& ions, pb::GridFunc<ORBDTYPE>* phi)
 {
     kbpsi.reset();
 
     kbpsi.computeKBpsi(ions, phi, 0, 0);
     kbpsi.computeKBpsi(ions, phi, 0, 1);
 
-    kbpsi.global_sum_kbpsi();
+    kbpsi.globalSumKBpsi();
 
     kbpsi.scaleWithKBcoeff(ions);
 }
 
-void matvec(pb::GridFunc<ORBDTYPE>& gfpsi, double* hpsi, KBPsiMatrixSparse& kbpsi,
-    Ions& ions, Preconditioning* precond, const double shift)
+template <typename T>
+void matvec(pb::GridFunc<ORBDTYPE>& gfpsi, double* hpsi,
+    KBPsiMatrixSparse& kbpsi, Ions& ions, Preconditioning<T>* precond,
+    const double shift)
 {
     Control& ct            = *(Control::instance());
     Mesh* mymesh           = Mesh::instance();
@@ -88,7 +91,7 @@ void matvec(pb::GridFunc<ORBDTYPE>& gfpsi, double* hpsi, KBPsiMatrixSparse& kbps
 
     gf_work.init_vect(hpsi, 'd');
 
-    pb::my_daxpy(numpt, shift, work, hpsi);
+    my_daxpy(numpt, shift, work, hpsi);
 #if 1
     // gf_work_v = Vtot*psi
     const double* const vtot = pot.vtot();
@@ -102,7 +105,7 @@ void matvec(pb::GridFunc<ORBDTYPE>& gfpsi, double* hpsi, KBPsiMatrixSparse& kbps
     hamiltonian->lapOper()->rhs(gfvw1, gf_work_v);
     gf_work_v.init_vect(work, 'd');
 
-    pb::my_daxpy(numpt, 1., work, hpsi);
+    my_daxpy(numpt, 1., work, hpsi);
 #endif
 
 #if 1
@@ -110,7 +113,7 @@ void matvec(pb::GridFunc<ORBDTYPE>& gfpsi, double* hpsi, KBPsiMatrixSparse& kbps
     get_kbpsi(kbpsi, ions, &gfpsi);
 
     vector<int> ptr_func(mymesh->subdivx(), 0);
-    get_vnlpsi(ions.list_ions(), ptr_func, kbpsi, work);
+    get_vnlpsi(ions, ptr_func, kbpsi, work);
     pb::GridFunc<ORBDTYPE> gf_worknl(mygrid, ct.bc[0], ct.bc[1], ct.bc[2]);
     gf_worknl.assign(work);
 
@@ -118,7 +121,7 @@ void matvec(pb::GridFunc<ORBDTYPE>& gfpsi, double* hpsi, KBPsiMatrixSparse& kbps
     hamiltonian->lapOper()->rhs(gf_worknl, work);
 
     // Add the contribution of the non-local potential to H phi
-    pb::my_daxpy(numpt, 2., work, hpsi);
+    my_daxpy(numpt, 2., work, hpsi);
 #endif
     delete[] work;
 
@@ -133,6 +136,7 @@ void matvec(pb::GridFunc<ORBDTYPE>& gfpsi, double* hpsi, KBPsiMatrixSparse& kbps
     }
 }
 
+template <typename T>
 double getLAeigen(const double tol, const int maxit, Ions& ions)
 {
     if (onpe0)
@@ -169,10 +173,10 @@ double getLAeigen(const double tol, const int maxit, Ions& ions)
 
     int ldv = numpt;
 
-    Preconditioning* precond
-        = new Preconditioning(ct.lap_type, ct.mg_levels, mygrid, ct.bc);
+    Preconditioning<T>* precond
+        = new Preconditioning<T>(ct.lap_type, ct.mg_levels_, mygrid, ct.bc);
     vector<vector<int>> ptr_func;
-    vector<GridMask<masktype>*> st2mask;
+    vector<GridMask*> st2mask;
     extern LocGridOrbitals* current_orbitals;
     precond->setup(st2mask, ptr_func);
     precond->setGamma(current_orbitals->get_gamma());
