@@ -6,7 +6,13 @@ if(DEFINED ENV{SCALAPACK_ROOT})
   list(APPEND _SCALAPACK_SEARCHES ${_SCALAPACK_SEARCH_DIR})
 endif(DEFINED ENV{SCALAPACK_ROOT})
 
-set(SCALAPACK_NAMES scalapack mkl_scalapack_lp64 )
+if(SCALAPACK_ROOT)
+  set(_SCALAPACK_SEARCH_DIR ${SCALAPACK_ROOT})
+  list(APPEND _SCALAPACK_SEARCHES ${_SCALAPACK_SEARCH_DIR})
+endif(SCALAPACK_ROOT)
+
+set(SCALAPACK_NAMES scalapack mkl_scalapack_lp64 scalapack-openmpi scalapack-pvm
+  scalapack-mpi scalapack-mpich scalapack-mpich2 scalapack-lam)
 
 # Try each search configuration.
 if(NOT SCALAPACK_INCLUDE_DIR)
@@ -20,7 +26,6 @@ endif(NOT SCALAPACK_INCLUDE_DIR)
 if(NOT SCALAPACK_LIBRARY)
   foreach(search ${_SCALAPACK_SEARCHES})
     find_library(SCALAPACK_LIBRARY NAMES ${SCALAPACK_NAMES} PATHS ${search} PATH_SUFFIXES lib NO_DEFAULT_PATH)
-#    message(STATUS "SCALAPACK_LIBRARY: ${SCALAPACK_LIBRARY}")
   endforeach()
 endif()
 
@@ -32,7 +37,10 @@ include(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(SCALAPACK REQUIRED_VARS SCALAPACK_LIBRARY)
 
 if(SCALAPACK_FOUND)
-  set(SCALAPACK_INCLUDE_DIRS ${SCALAPACK_INCLUDE_DIR})
+  # Only Intel's scalapack requires an include directory
+  if(SCALAPACK_INCLUDE_DIR)
+    set(SCALAPACK_INCLUDE_DIRS ${SCALAPACK_INCLUDE_DIR})
+  endif(SCALAPACK_INCLUDE_DIR)
   
   if(NOT SCALAPACK_LIBRARIES)
     set(SCALAPACK_LIBRARIES ${SCALAPACK_LIBRARY})
