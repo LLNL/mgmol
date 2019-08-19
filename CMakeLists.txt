@@ -175,6 +175,19 @@ if(${MGMOL_WITH_TRICUBIC} OR DEFINED TRICUBIC_ROOT)
   endif(${TRICUBIC_FOUND})
 endif(${MGMOL_WITH_TRICUBIC} OR DEFINED TRICUBIC_ROOT)
 
+# clang-format (optional)
+set(MGMOL_WITH_CLANG_FORMAT FALSE CACHE BOOL "Indent code with clang-format")
+if(${MGMOL_WITH_CLANG_FORMAT})
+  find_package(CLANG_FORMAT)
+  if(${CLANG_FORMAT_FOUND})
+    message(STATUS "Indent with clang-format")
+    file(GLOB_RECURSE FORMAT_SOURCES src/*.cc src/*.h tests/*.cc tests/*.h)
+    add_custom_target(format
+      COMMAND ${CLANG_FORMAT_EXECUTABLE} -i -style=file ${FORMAT_SOURCES}
+      DEPENDS ${FORMAT_SOURCES})
+  endif(${CLANG_FORMAT_FOUND})
+endif()
+
 enable_testing()
 
 # additional definitions
