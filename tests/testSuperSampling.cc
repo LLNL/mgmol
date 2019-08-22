@@ -21,25 +21,60 @@ double gaussianFuncScaled(double radius) { return exp(-radius*radius/200); }
 double deltaFilter(double point) { return (abs(point)<1e-10 ? 3 : 0); }
 double highFreq(double radius) { return exp(-radius*radius/2) + sin(100*radius); }
 
-int main() {
+int main()
+{
+    int ret = 0;
+
     int deltTest = unitTestSuperSamplingDelta();
-    cout << "Delta Test: " << deltTest << '\n';
+    if(deltTest > 0)
+    {
+        cout << "SuperSampling Delta Test failed!!!" << endl;
+        ret = 1;
+    }
+
     int freqTest = unitTestSuperSamplingGausHighFreq();
-    cout << "Frequency Test: " << freqTest << '\n';
+    if(freqTest > 0)
+    {
+        cout << "SuperSampling Frequency Test failed!!!" << endl;
+        ret = 1;
+    }
+
     int gausTest = unitTestSuperSamplingGaussian();
-    cout << "Gaussian Test: " << gausTest << '\n';
+    if(gausTest > 0)
+    {
+        cout << "SuperSampling Gaussian Test failed!!!" << endl;
+        ret = 1;
+    }
     //int consTest = unitTestSuperSamplingConstant();
     //cout << "Constant Test: " << consTest << '\n';
     int scalTest = unitTestSuperSamplingScale();
-    cout << "Scale Test: " << scalTest << '\n';
+    if(scalTest > 0)
+    {
+        cout << "SuperSampling Scale Test failed!!!" << endl;
+        ret = 1;
+    }
+
     int otherTest = unitTestSuperSamplingHarmonics();
-    cout << "Other Test: " << otherTest << '\n';
+    if(otherTest > 0)
+    {
+        cout << "SuperSampling Harmonics Test failed!!!" << endl;
+        ret = 1;
+    }
     int filterTest = unitTestSuperSamplingFiltering();
-    return 1;
+    if(filterTest > 0)
+    {
+        cout << "SuperSampling Filtering Test failed!!!" << endl;
+        ret = 1;
+    }
+
+    return ret;
 }
 
 
-int unitTestSuperSamplingFiltering() {
+int unitTestSuperSamplingFiltering()
+{
+    std::cout << "unitTestSuperSamplingFiltering...\n";
+
     int result=0;
     
     //array<double,3> atomicCenter={.06,-.06,.1};
@@ -89,7 +124,9 @@ int unitTestSuperSamplingFiltering() {
 }
 
 
-int unitTestSuperSamplingHarmonics() {
+int unitTestSuperSamplingHarmonics()
+{
+    std::cout << "unitTestSuperSamplingHarmonics...\n";
     int result=0;
     
     array<double,3> atomicCenter={0,0,0};
@@ -107,7 +144,10 @@ int unitTestSuperSamplingHarmonics() {
     return result;
 }
 
-int unitTestSuperSamplingScale() {
+int unitTestSuperSamplingScale()
+{
+    std::cout << "unitTestSuperSamplingScale...\n";
+
     int result=0;
     
     array<double,3> atomicCenter={0,0,0};
@@ -159,7 +199,9 @@ int unitTestSuperSamplingScale() {
     return result;
 }
 
-int unitTestSuperSamplingGausHighFreq(void) {
+int unitTestSuperSamplingGausHighFreq(void)
+{
+    std::cout << "unitTestSuperSamplingGausHighFreq...\n";
     int result=0;
 
     //array<double,3> atomicCenter={.601,-.65,.1};
@@ -212,7 +254,10 @@ int unitTestSuperSamplingGausHighFreq(void) {
     return result;
 }
 
-int unitTestSuperSamplingConstant() {
+int unitTestSuperSamplingConstant()
+{
+    std::cout << "unitTestSuperSamplingConstant...\n";
+
     int result=0;
     
     array<double,3> atomicCenter={.6,-.6,.1};
@@ -258,7 +303,10 @@ int unitTestSuperSamplingConstant() {
     return result;
 }
 
-int unitTestSuperSamplingGaussian() {
+int unitTestSuperSamplingGaussian()
+{
+    std::cout << "unitTestSuperSamplingGaussian...\n";
+
     int result=0;
     
     array<double,3> atomicCenter={.6,-.6,.1};
@@ -291,7 +339,7 @@ int unitTestSuperSamplingGaussian() {
                                      (idz-atomicCenter[2])*(idz-atomicCenter[2]) );
                 //cout << i << '\t' << j << '\t' << k << '\n';
                 //cout << uniTest.values_[0][offset] - gaussianFunc(radius) << "\n\n";
-                if(abs( uniTest.values_[0][offset] - gaussianFunc(radius)) > .1) {
+                if(abs( uniTest.values_[0][offset] - gaussianFunc(radius)) > 0.1) {
                         result=1;
                         cout << i << '\t' << j << '\t' << k << '\n';
                         cout << uniTest.values_[0][offset] - gaussianFunc(radius) << "\n\n";
@@ -306,7 +354,10 @@ int unitTestSuperSamplingGaussian() {
     return result;
 }
 
-int unitTestSuperSamplingDelta() {
+int unitTestSuperSamplingDelta()
+{
+    std::cout << "unitTestSuperSamplingDelta...\n";
+
     int result=0;
     
     array<double,3> atomicCenter={0,0,0};

@@ -86,6 +86,9 @@ add_executable(testAndersonMix
                ${CMAKE_SOURCE_DIR}/tests/Anderson/Solution.cc
                ${CMAKE_SOURCE_DIR}/src/AndersonMix.cc
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc)
+add_executable(testSuperSampling
+               ${CMAKE_SOURCE_DIR}/tests/testSuperSampling.cc
+               ${CMAKE_SOURCE_DIR}/src/SuperSampling.cc)
 
 target_compile_definitions(testAndersonMix PUBLIC TESTING)
 
@@ -123,6 +126,8 @@ add_test(NAME testDirectionalReduce
                  ${CMAKE_CURRENT_BINARY_DIR}/testDirectionalReduce)
 add_test(NAME testAndersonMix
          COMMAND ${CMAKE_CURRENT_BINARY_DIR}/testAndersonMix 20 2)
+add_test(NAME testSuperSampling
+         COMMAND ${CMAKE_CURRENT_BINARY_DIR}/testSuperSampling)
 
 add_test(NAME testFatom
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Fatom/test.py
