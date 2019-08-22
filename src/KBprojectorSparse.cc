@@ -230,6 +230,66 @@ void KBprojectorSparse::setProjectors(const short iloc, const int icount)
     }
 }
 
+/*
+void KBprojectorSparse::setSupersamplingSProjector(const short iloc, const int icount) {
+    assert((int)ptr_projector_.size() > iloc);
+    assert(ptr_projector_[iloc].size() > 0);
+    assert(ptr_projector_[iloc][0].size() > 0);
+        std::array<double,3> botMeshCorner={0,0,0};
+        std::array<double,3> topMeshCorner={0,0,0};
+        std::array<double,3> subDomainBotMeshCorner={start0,start1,start2};
+        std::array<double,3> subDomainTopMeshCorner={start0 + dim0*h0,
+                                                     start1 + dim1*h1,
+                                                     start2 + dim2*h2};
+        std::array<int,3> SSLRad={0,0,0};
+
+    for (short p = 0; p < multiplicity_[0]; ++p)
+    {
+        assert(ptr_projector_[iloc][0][p].size() > 0);
+
+        int jcount = 0;
+        const RadialInter& nlproj(species_.getRadialKBP(0, p));
+        auto lambda_lpot = [&nlproj] (double radius) {return nlproj.cubint(radius); }
+
+        KBPROJDTYPE* rtptr = ptr_projector_[iloc][0][p][0];
+        // Construct subdomain containing molecule
+        std::array<double,3> atomicCenter={center_[0], center_[1], center_[2]};
+        SSLRad[0] = std::ceil(lrad/h0)+1; // +1 just to be safe and make sure subdomain gets everything
+        SSLRad[1] = std::ceil(lrad/h1)+1;
+        SSLRad[2] = std::ceil(lrad/h2)+1;
+        botMeshCorner[0] = std::max(std::round((atomicCenter[0]-start0)/h0)*h0 + start0 - SSLRad[0]*h0,
+                        subDomainBotMeshCorner[0]);
+        botMeshCorner[1] = std::max(std::round((atomicCenter[1]-start1)/h1)*h1 + start1 - SSLRad[1]*h1,
+                        subDomainBotMeshCorner[1]);
+        botMeshCorner[2] = std::max(std::round((atomicCenter[2]-start2)/h2)*h2 + start2 - SSLRad[2]*h2,
+                        subDomainBotMeshCorner[2]);
+        topMeshCorner[0] = std::min(botMeshCorner[0] + 2*h0*SSLRad[0], subDomainTopMeshCorner[0]);
+        topMeshCorner[1] = std::min(botMeshCorner[1] + 2*h1*SSLRad[1], subDomainTopMeshCorner[1]);
+        topMeshCorner[2] = std::min(botMeshCorner[2] + 2*h2*SSLRad[2], subDomainTopMeshCorner[2]);
+        const bool harmonics=true;
+        
+        superSampling<0> current(atomicCenter, botMeshCorner, topMeshCorner, harmonics, lambda_lpot);
+        int xlimits = std::round((topMeshCorner[0]-botMeshCorner[0])/h0);
+        int ylimits = std::round((topMeshCorner[1]-botMeshCorner[1])/h1);
+        int zlimits = std::round((topMeshCorner[2]-botMeshCorner[2])/h2);
+        int xoffset = std::round((botMeshCorner[0]-start0)/h0);
+        int yoffset = std::round((botMeshCorner[1]-start1)/h1);
+        int zoffset = std::round((botMeshCorner[2]-start2)/h2);
+        int offset=0;
+
+        for(int ix = xoffset; ix <= xoffset + xlimits; ix++) {
+            int istart = ix*dim1*dim2;
+            for(int iy = yoffset; iy <= yoffset + ylimits; iy++) {
+                int jstart = istart + iy*dim2;
+                for(int iz = zoffset; iz <= zoffset + zlimits; iz++) {
+                    v_nuc_[jstart + iz]    += current.values_[0][offset];
+                    offset++;
+                }
+            }
+        }
+*/  
+    
+
 // Generates an s-projector
 void KBprojectorSparse::setSProjector(const short iloc, const int icount)
 {

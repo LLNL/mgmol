@@ -23,6 +23,7 @@
 
 #include "TriCubic.h"
 #include "mputils.h"
+#include "superSamplingClass.h"
 
 #include <fstream>
 using namespace std;
@@ -276,7 +277,7 @@ void Potentials::getVofRho(vector<POTDTYPE>& vrho) const
 // type:
 // 2->text
 // 3->binary
-void Potentials::readExternalPot(const string filename, const short type)
+void Potentials::readExternalPot(const string filename, const char type)
 {
     assert(type == 2 || type == 3);
 
@@ -532,7 +533,7 @@ void Potentials::readAll(vector<Species>& sp)
     int isp                                    = 0;
     while (it_filename != pot_filenames_.end())
     {
-        if (pot_types_[isp] == 0 || pot_types_[isp] == 1)
+        if (pot_types_[isp] == 'n' || pot_types_[isp] == 's' || pot_types_[isp] == 'f')
         {
             assert(isp < (int)sp.size());
 
@@ -589,6 +590,119 @@ void Potentials::axpVcompToVh(const double alpha)
 void Potentials::axpVcomp(POTDTYPE* v, const double alpha)
 {
     MPaxpy(size_, alpha, &v_comp_[0], v);
+}
+
+
+void Potentials::initializeSupersampledRadialDataOnMesh(const Vector3D& position,
+    const Species& sp)
+{
+    Control& ct     = *(Control::instance());
+
+    Mesh* mymesh           = Mesh::instance();
+    const pb::Grid& mygrid = mymesh->grid();
+
+    const int dim0 = mygrid.dim(0);
+    const int dim1 = mygrid.dim(1);
+    const int dim2 = mygrid.dim(2);
+
+    const double start0 = mygrid.start(0);
+    const double start1 = mygrid.start(1);
+    const double start2 = mygrid.start(2);
+
+    const double h0 = mygrid.hgrid(0);
+    const double h1 = mygrid.hgrid(1);
+    const double h2 = mygrid.hgrid(2);
+
+    Vector3D point( 0., 0., 0. );
+
+    const double lrad = sp.lradius();
+
+    const RadialInter& lpot(sp.local_pot());
+    auto lambda_lpot = [&lpot] (double radius) { return lpot.cubint(radius); };
+    const Vector3D lattice( mygrid.ll(0), mygrid.ll(1), mygrid.ll(2) );
+
+    // Debug stuff
+    //ofstream myfile;
+    //myfile.open("SuperSamplingDebug7-25.txt");
+    // Debug stuff
+
+    // Construct subdomain containing molecule
+    std::array<double,3> atomicCenter={position[0], position[1], position[2]};
+    std::array<double,3> botMeshCorner={0,0,0};
+    std::array<double,3> topMeshCorner={0,0,0};
+    std::array<double,3> subDomainBotMeshCorner={start0,start1,start2};
+    std::array<double,3> subDomainTopMeshCorner={start0 + dim0*h0,
+                                                 start1 + dim1*h1,
+                                                 start2 + dim2*h2};
+    std::array<int,3> SSLRad={0,0,0};
+    SSLRad[0] = std::ceil(lrad/h0)+1; // +1 just to be safe and make sure subdomain gets everything
+    SSLRad[1] = std::ceil(lrad/h1)+1;
+    SSLRad[2] = std::ceil(lrad/h2)+1;
+    botMeshCorner[0] = std::max(std::round((atomicCenter[0]-start0)/h0)*h0 + start0 - SSLRad[0]*h0,
+                    subDomainBotMeshCorner[0]);
+    botMeshCorner[1] = std::max(std::round((atomicCenter[1]-start1)/h1)*h1 + start1 - SSLRad[1]*h1,
+                    subDomainBotMeshCorner[1]);
+    botMeshCorner[2] = std::max(std::round((atomicCenter[2]-start2)/h2)*h2 + start2 - SSLRad[2]*h2,
+                    subDomainBotMeshCorner[2]);
+    topMeshCorner[0] = std::min(botMeshCorner[0] + 2*h0*SSLRad[0], subDomainTopMeshCorner[0]);
+    topMeshCorner[1] = std::min(botMeshCorner[1] + 2*h1*SSLRad[1], subDomainTopMeshCorner[1]);
+    topMeshCorner[2] = std::min(botMeshCorner[2] + 2*h2*SSLRad[2], subDomainTopMeshCorner[2]);
+    const bool harmonics=false;
+    
+    superSampling<0> current(atomicCenter, botMeshCorner, topMeshCorner, harmonics, lambda_lpot);
+    int xlimits = std::round((topMeshCorner[0]-botMeshCorner[0])/h0);
+    int ylimits = std::round((topMeshCorner[1]-botMeshCorner[1])/h1);
+    int zlimits = std::round((topMeshCorner[2]-botMeshCorner[2])/h2);
+    int xoffset = std::round((botMeshCorner[0]-start0)/h0);
+    int yoffset = std::round((botMeshCorner[1]-start1)/h1);
+    int zoffset = std::round((botMeshCorner[2]-start2)/h2);
+    int offset=0;
+    
+    for(int ix = xoffset; ix <= xoffset + xlimits; ix++) {
+        int istart = ix*dim1*dim2;
+        for(int iy = yoffset; iy <= yoffset + ylimits; iy++) {
+            int jstart = istart + iy*dim2;
+            for(int iz = zoffset; iz <= zoffset + zlimits; iz++) {
+                const double r = position.minimage(point, lattice, ct.bcPoisson);
+                v_nuc_[jstart + iz]    += current.values_[0][offset];
+                rho_comp_[jstart + iz] += sp.getRhoComp(r);
+                v_comp_[jstart + iz]   += sp.getVcomp(r);
+                offset++;
+            }
+        }
+    }
+    
+    /*
+    offset = 0;
+    for (int ix = 0; ix < dim0; ix++)
+    {
+        point[0]   = start0 + ix * h0;
+
+        for (int iy = 0; iy < dim1; iy++)
+        {
+            point[1]   = start1 + iy * h1;
+
+            for (int iz = 0; iz < dim2; iz++)
+            {
+            point[2] = start2 + iz * h2;
+
+                const double r
+                    = position.minimage(point, lattice, ct.bcPoisson);
+
+                if (r < lrad)
+                {
+                    rho_comp_[offset] += sp.getRhoComp(r);
+                    v_comp_[offset]   += sp.getVcomp(r);
+                    //myfile << v_nuc_[offset] << ';' << lpot.cubint(r) << ',';
+                    //v_nuc_[offset]    += lpot.cubint(r);
+                }
+
+                offset++;
+            }
+        }
+    }
+    //myfile.close();
+    */
 }
 
 void Potentials::initializeRadialDataOnMesh(const Vector3D& position,
@@ -658,6 +772,8 @@ void Potentials::initialize(Ions& ions)
     memset(&rho_comp_[0], 0, numpt * sizeof(RHODTYPE));
     memset(&v_nuc_[0], 0, numpt * sizeof(RHODTYPE));
 
+    char flag_filter = pot_type(0);
+
     // Loop over ions
     for(auto& ion : ions.overlappingVL_ions() )
     {
@@ -665,7 +781,18 @@ void Potentials::initialize(Ions& ions)
 
         Vector3D position(ion->position(0), ion->position(1), ion->position(2));
 
-        initializeRadialDataOnMesh(position, sp);
+        if (flag_filter=='s') {
+            const int sampleRate = 3;
+            const int numExtraPts = 40;
+            const std::array<double,3> coarGridSpace={mygrid.hgrid(0),
+                                                      mygrid.hgrid(1),
+                                                      mygrid.hgrid(2)};
+            superSampling<0>::setup(sampleRate,numExtraPts,coarGridSpace);
+
+            initializeSupersampledRadialDataOnMesh(position,sp);
+        } else {
+            initializeRadialDataOnMesh(position, sp);
+        }
     }
 }
 

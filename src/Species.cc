@@ -438,7 +438,7 @@ void Species::gauss_filter_kbp(
     kbp_[l][p].gauss_filter(rcut);
 }
 
-void Species::initLocalPotential(const bool flag_filter, const double hmax,
+void Species::initLocalPotential(const char flag_filter, const double hmax,
     ofstream* tfile, const bool printFlag)
 {
     Control& ct = *(Control::instance());
@@ -479,7 +479,7 @@ void Species::initLocalPotential(const bool flag_filter, const double hmax,
         (*tfile) << endl;
     }
 
-    if (flag_filter)
+    if (flag_filter == 'f')
     {
         // Filter it
         RadialInter rfunc(rps);
@@ -504,9 +504,9 @@ void Species::initLocalPotential(const bool flag_filter, const double hmax,
 }
 
 void Species::initPotentials(
-    const bool flag_filter, const double hmax, const bool printFlag)
+    const char flag_filter, const double hmax, const bool printFlag)
 {
-    assert(flag_filter == 0 || flag_filter == 1);
+    assert(flag_filter == 'n' || flag_filter == 's' || flag_filter == 'f');
     assert(n_rad_points_ < 10000);
     assert(n_rad_points_ > 0);
 
@@ -550,7 +550,7 @@ void Species::initPotentials(
     }
 }
 
-void Species::initNonlocalKBPotentials(const bool flag_filter,
+void Species::initNonlocalKBPotentials(const char flag_filter,
     const double hmax, ofstream* tfile, const bool printFlag)
 {
     assert(max_l_ >= 0);
@@ -594,7 +594,7 @@ void Species::initNonlocalKBPotentials(const bool flag_filter,
                 (*tfile) << endl;
             }
 
-            if (flag_filter)
+            if (flag_filter == 'f')
             {
                 // Filter it
                 RadialInter rfunc(rps);
@@ -627,7 +627,7 @@ void Species::initNonlocalKBPotentials(const bool flag_filter,
     }
 }
 
-void Species::initNonlocalMultiProjectorsPotentials(const bool flag_filter,
+void Species::initNonlocalMultiProjectorsPotentials(const char flag_filter,
     const double hmax, ofstream* tfile, const bool divide_by_r,
     const bool printFlag)
 {
@@ -695,7 +695,7 @@ void Species::initNonlocalMultiProjectorsPotentials(const bool flag_filter,
                     (*tfile) << endl;
                 }
 
-                if (flag_filter)
+                if (flag_filter == 'f')
                 {
                     // Filter it
                     RadialInter rfunc(rps);
@@ -711,7 +711,7 @@ void Species::initNonlocalMultiProjectorsPotentials(const bool flag_filter,
                 }
 
                 // output non-local projector
-                if (printFlag && (tfile != NULL) && flag_filter)
+                if (printFlag && (tfile != NULL) && flag_filter == 'f')
                 {
                     (*tfile) << "# " << name_ << " filtered, l=" << ll
                              << ", p=" << p << endl;
@@ -732,7 +732,7 @@ void Species::initNonlocalMultiProjectorsPotentials(const bool flag_filter,
     }
 }
 
-void Species::initNonlocalGTHPotentials(const bool flag_filter,
+void Species::initNonlocalGTHPotentials(const char flag_filter,
     const double hmax, ofstream* tfile, const bool printFlag)
 {
     assert(max_l_ >= 0);
@@ -760,7 +760,7 @@ void Species::initNonlocalGTHPotentials(const bool flag_filter,
                 work[idx] = potl[idx];
             }
 
-            if (flag_filter)
+            if (flag_filter == 'f')
             {
                 // Filter it
                 RadialInter rfunc(rps);

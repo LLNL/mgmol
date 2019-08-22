@@ -1292,7 +1292,7 @@ void Control::setSpecies(Potentials& pot)
          it != pot_filenames_.end(); ++it)
     {
 
-        if (pot.pot_type(i) == 0 || pot.pot_type(i) == 1)
+        if (pot.pot_type(i) == 'n' || pot.pot_type(i) == 's' || pot.pot_type(i) == 'f')
         {
             // if(onpe0)(*MPIdata::sout)<<" pot_type="<<pot.pot_type(i)<<endl;
             Species s(comm_global_);
@@ -1411,7 +1411,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         if (vm.count("Potentials.pseudopotential"))
         {
             short filter_flag
-                = vm["Potentials.filterPseudo"].as<bool>() ? 1 : 0;
+                = vm["Potentials.filterPseudo"].as<char>();
 
             pot_filenames_
                 = vm["Potentials.pseudopotential"].as<vector<string>>();
@@ -1421,7 +1421,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
 
         if (vm.count("Potentials.external"))
         {
-            short bin_flag = vm["Potentials.binExternal"].as<bool>() ? 3 : 2;
+            char bin_flag = vm["Potentials.binExternal"].as<bool>() ? 'a' : 'b';
             std::vector<std::string> pot_filenames
                 = vm["Potentials.external"].as<vector<string>>();
 

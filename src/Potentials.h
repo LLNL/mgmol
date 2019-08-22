@@ -73,11 +73,12 @@ class Potentials
     // 1 = filtered radial potential
     // 2 = xyz potential
     std::vector<std::string> pot_filenames_;
-    std::vector<short> pot_types_;
+    std::vector<char> pot_types_;
 
     void evalNormDeltaVtotRho(const vector<vector<RHODTYPE>>& rho);
 
     void initializeRadialDataOnMesh(const Vector3D& position, const Species& sp);
+    void initializeSupersampledRadialDataOnMesh(const Vector3D& position, const Species& sp);
 
 public:
     Potentials(const bool vh_frozen = false);
@@ -86,7 +87,7 @@ public:
 
     void setVerbosity(const short vlevel) { verbosity_level_ = vlevel; }
 
-    void registerName(const std::string filename, const short flag)
+    void registerName(const std::string filename, const char flag)
     {
         pot_filenames_.push_back(filename);
         pot_types_.push_back(flag);
@@ -102,7 +103,7 @@ public:
         }
     }
 
-    short pot_type(const int isp) const
+    char pot_type(const int isp) const
     {
         assert(isp < (int)pot_types_.size());
         return pot_types_[isp];
@@ -175,7 +176,7 @@ public:
     void addBackgroundToRhoComp();
 
 #ifdef HAVE_TRICUBIC
-    void readExternalPot(const string filename, const short type);
+    void readExternalPot(const string filename, const char type);
     void setupVextTricubic();
     bool withVext() const;
     void getGradVext(const double[3], double[3]) const;
