@@ -228,6 +228,7 @@ target_link_libraries(testAndersonMix ${LAPACK_LIBRARIES}
                                       ${BLAS_LIBRARIES}
                                       ${Boost_LIBRARIES}
                                       ${MPI_CXX_LIBRARIES})
+target_link_libraries(testSuperSampling ${MPI_CXX_LIBRARIES})
 
 set_tests_properties(testSiH4 PROPERTIES REQUIRED_FILES
                      ${CMAKE_SOURCE_DIR}/potentials/pseudo.Si)

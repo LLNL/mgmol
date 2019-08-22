@@ -4,8 +4,6 @@
 #include <iostream>
 #include <functional>
 
-#include "RadialInter.h"
-
 const double pi=3.14159265358979323846;
 
 double sincFunction(double point);
