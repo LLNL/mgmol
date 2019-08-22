@@ -27,6 +27,8 @@ template <class T>
 Timer Rho<T>::compute_tm_("Rho::compute");
 template <class T>
 Timer Rho<T>::compute_blas_tm_("Rho::compute_usingBlas");
+//template <class T>
+//Timer Rho<T>::compute_offdiag_tm_("Rho::compute_offdiag");
 
 template <class T>
 Rho<T>::Rho()
@@ -39,8 +41,8 @@ Rho<T>::Rho()
     nspin_          = mmpi.nspin();
 
     // default values for block sizes
-    block_functions_ = 8;
-    block_space_     = 256;
+//    block_functions_ = 8;
+//    block_space_     = 256;
 
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
@@ -227,82 +229,82 @@ void Rho<T>::rescaleTotalCharge()
 #endif
 }
 
-template <class T>
-int Rho<T>::setupSubdomainData(const int iloc,
-    const vector<const T*>& vorbitals,
-    const ProjectedMatricesInterface* const projmatrices,
-    vector<MATDTYPE>& melements, vector<vector<const ORBDTYPE*>>& vmpsi)
-{
-    // printWithTimeStamp("Rho<T>::setupSubdomainData()...",cout);
-
-    const short norb = (short)vorbitals.size();
-    vmpsi.resize(norb);
-
-    const vector<int>& loc_indexes(orbitals_indexes_[iloc]);
-    const int n_colors = (int)loc_indexes.size();
-
-    if (n_colors == 0) return 0;
-
-    vector<int> mycolors;
-    mycolors.reserve(n_colors);
-    for (int icolor = 0; icolor < n_colors; icolor++)
-        if (loc_indexes[icolor] != -1) mycolors.push_back(icolor);
-    const int nmycolors = (int)mycolors.size();
-
-    for (short j = 0; j < norb; j++)
-        vmpsi[j].resize(nmycolors);
-
-    short j = 0;
-    for (typename vector<const T*>::const_iterator it = vorbitals.begin();
-         it != vorbitals.end(); ++it)
-    {
-        for (int color = 0; color < nmycolors; color++)
-        {
-            vmpsi[j][color] = (*it)->getPsi(mycolors[color], iloc);
-            assert(vmpsi[j][color] != NULL);
-        }
-        j++;
-    }
-
-#ifndef USE_DIS_MAT
-    const int numst = vorbitals[0]->numst();
-#else
-    SquareLocalMatrices<MATDTYPE>& localX(projmatrices->getLocalX());
-    const MATDTYPE* const localX_iloc = localX.getSubMatrix(iloc);
-#endif
-    melements.clear();
-    melements.resize(nmycolors * nmycolors);
-
-    for (int i = 0; i < nmycolors; i++)
-    {
-        const int icolor = mycolors[i];
-        if (norb == 1)
-        {
-#ifdef USE_DIS_MAT
-            melements[i * nmycolors + i]
-                = localX_iloc[icolor + n_colors * icolor];
-#else
-            const int iist               = loc_indexes[icolor] * numst;
-            const int index_X            = loc_indexes[icolor] * (numst + 1);
-            melements[i * nmycolors + i] = dm_.getVal(index_X);
-#endif
-        }
-        const int jmax = (norb == 1) ? i : nmycolors;
-        for (int j = 0; j < jmax; j++)
-        {
-            int jcolor = mycolors[j];
-#ifdef USE_DIS_MAT
-            melements[j * nmycolors + i]
-                = localX_iloc[icolor + n_colors * jcolor];
-#else
-            melements[j * nmycolors + i]
-                = dm_.getVal(iist + loc_indexes[jcolor]);
-#endif
-        }
-    }
-
-    return nmycolors;
-}
+//template <class T>
+//int Rho<T>::setupSubdomainData(const int iloc,
+//    const vector<const T*>& vorbitals,
+//    const ProjectedMatricesInterface* const projmatrices,
+//    vector<MATDTYPE>& melements, vector<vector<const ORBDTYPE*>>& vmpsi)
+//{
+//    // printWithTimeStamp("Rho<T>::setupSubdomainData()...",cout);
+//
+//    const short norb = (short)vorbitals.size();
+//    vmpsi.resize(norb);
+//
+//    const vector<int>& loc_indexes(orbitals_indexes_[iloc]);
+//    const int n_colors = (int)loc_indexes.size();
+//
+//    if (n_colors == 0) return 0;
+//
+//    vector<int> mycolors;
+//    mycolors.reserve(n_colors);
+//    for (int icolor = 0; icolor < n_colors; icolor++)
+//        if (loc_indexes[icolor] != -1) mycolors.push_back(icolor);
+//    const int nmycolors = (int)mycolors.size();
+//
+//    for (short j = 0; j < norb; j++)
+//        vmpsi[j].resize(nmycolors);
+//
+//    short j = 0;
+//    for (typename vector<const T*>::const_iterator it = vorbitals.begin();
+//         it != vorbitals.end(); ++it)
+//    {
+//        for (int color = 0; color < nmycolors; color++)
+//        {
+//            vmpsi[j][color] = (*it)->getPsi(mycolors[color], iloc);
+//            assert(vmpsi[j][color] != NULL);
+//        }
+//        j++;
+//    }
+//
+//#ifndef USE_DIS_MAT
+//    const int numst = vorbitals[0]->numst();
+//#else
+//    SquareLocalMatrices<MATDTYPE>& localX(projmatrices->getLocalX());
+//    const MATDTYPE* const localX_iloc = localX.getSubMatrix(iloc);
+//#endif
+//    melements.clear();
+//    melements.resize(nmycolors * nmycolors);
+//
+//    for (int i = 0; i < nmycolors; i++)
+//    {
+//        const int icolor = mycolors[i];
+//        if (norb == 1)
+//        {
+//#ifdef USE_DIS_MAT
+//            melements[i * nmycolors + i]
+//                = localX_iloc[icolor + n_colors * icolor];
+//#else
+//            const int iist               = loc_indexes[icolor] * numst;
+//            const int index_X            = loc_indexes[icolor] * (numst + 1);
+//            melements[i * nmycolors + i] = dm_.getVal(index_X);
+//#endif
+//        }
+//        const int jmax = (norb == 1) ? i : nmycolors;
+//        for (int j = 0; j < jmax; j++)
+//        {
+//            int jcolor = mycolors[j];
+//#ifdef USE_DIS_MAT
+//            melements[j * nmycolors + i]
+//                = localX_iloc[icolor + n_colors * jcolor];
+//#else
+//            melements[j * nmycolors + i]
+//                = dm_.getVal(iist + loc_indexes[jcolor]);
+//#endif
+//        }
+//    }
+//
+//    return nmycolors;
+//}
 
 template <class T>
 void Rho<T>::accumulateCharge(const double alpha, const short ix_max,
@@ -313,225 +315,229 @@ void Rho<T>::accumulateCharge(const double alpha, const short ix_max,
         plrho[ix] += (RHODTYPE)(alpha * (double)psii[ix] * (double)psij[ix]);
 }
 
-template <class T>
-void Rho<T>::computeRhoSubdomain(
-    const int iloc_init, const int iloc_end, const T& orbitals)
-{
-    assert(orbitals_type_ == OrbitalsType::Eigenfunctions
-        || orbitals_type_ == OrbitalsType::Nonorthogonal);
+//template <class T>
+//void Rho<T>::computeRhoSubdomain(
+//    const int iloc_init, const int iloc_end, const T& orbitals)
+//{
+//    assert(orbitals_type_ == OrbitalsType::Eigenfunctions
+//        || orbitals_type_ == OrbitalsType::Nonorthogonal);
+//
+//    compute_tm_.start();
+//
+//    Mesh* mymesh = Mesh::instance();
+//
+//    const int loc_numpt = mymesh->locNumpt();
+//
+//    RHODTYPE* const prho = &rho_[myspin_][0];
+//
+//    vector<const T*> vorbitals;
+//    vorbitals.push_back(&orbitals);
+//
+//    const double nondiagfactor = 2.;
+//
+//    for (int iloc = iloc_init; iloc < iloc_end; iloc++)
+//    {
+//        const int istart = iloc * loc_numpt;
+//
+//        RHODTYPE* const lrho = &prho[istart];
+//
+//        vector<MATDTYPE> melements;
+//        vector<vector<const ORBDTYPE*>> vmpsi;
+//
+//        const int nmycolors = setupSubdomainData(
+//            iloc, vorbitals, orbitals.projMatrices(), melements, vmpsi);
+//        assert(vmpsi.size() == 1);
+//        vector<const ORBDTYPE*> mpsi = vmpsi[0];
+//
+//        const int nblocks_color = nmycolors / block_functions_;
+//        const int max_icolor    = (nmycolors % block_functions_ == 0)
+//                                   ? nmycolors
+//                                   : nblocks_color * block_functions_;
+//        const int missed_rows = nmycolors - max_icolor;
+//        //(*MPIdata::sout)<<"max_icolor="<<max_icolor<<endl;
+//        //(*MPIdata::sout)<<"Rho<T>::computeRhoSubdomain:
+//        //missed_rows="<<missed_rows<<endl;
+//        //(*MPIdata::sout)<<"nblocks_color="<<nblocks_color<<endl;
+//
+//#ifdef _OPENMP
+//#pragma omp parallel for
+//#endif
+//        for (int idx = 0; idx < loc_numpt; idx += block_space_)
+//        {
+//            const short ix_max = min(block_space_, loc_numpt - idx);
+//            // RHODTYPE* const plrho=lrho+idx;
+//
+//            // non-diagonal blocks
+//            for (int icolor = 0; icolor < max_icolor;
+//                 icolor += block_functions_)
+//                for (int jcolor = 0; jcolor < icolor;
+//                     jcolor += block_functions_)
+//                {
+//
+//                    nonOrthoRhoKernel(icolor, block_functions_, jcolor,
+//                        block_functions_, idx, ix_max, &melements[0], nmycolors,
+//                        mpsi, nondiagfactor, lrho);
+//                }
+//            // finish missing rows ()
+//            if (missed_rows)
+//                for (int jcolor = 0; jcolor < max_icolor;
+//                     jcolor += block_functions_)
+//                {
+//                    nonOrthoRhoKernel(max_icolor, missed_rows, jcolor,
+//                        block_functions_, idx, ix_max, &melements[0], nmycolors,
+//                        mpsi, nondiagfactor, lrho);
+//                }
+//
+//            // diagonal blocks (jcolor=icolor)
+//            for (int icolor = 0; icolor < max_icolor;
+//                 icolor += block_functions_)
+//            {
+//                nonOrthoRhoKernelDiagonalBlock(icolor, block_functions_, idx,
+//                    ix_max, &melements[0], nmycolors, mpsi, lrho);
+//            }
+//            // finish missing rows () for diagonal blocks
+//            if (missed_rows)
+//            {
+//                nonOrthoRhoKernelDiagonalBlock(max_icolor, missed_rows, idx,
+//                    ix_max, &melements[0], nmycolors, mpsi, lrho);
+//            }
+//        }
+//    }
+//
+//    compute_tm_.stop();
+//}
 
-    compute_tm_.start();
-
-    Mesh* mymesh = Mesh::instance();
-
-    const int loc_numpt = mymesh->locNumpt();
-
-    RHODTYPE* const prho = &rho_[myspin_][0];
-
-    vector<const T*> vorbitals;
-    vorbitals.push_back(&orbitals);
-
-    const double nondiagfactor = 2.;
-
-    for (int iloc = iloc_init; iloc < iloc_end; iloc++)
-    {
-        const int istart = iloc * loc_numpt;
-
-        RHODTYPE* const lrho = &prho[istart];
-
-        vector<MATDTYPE> melements;
-        vector<vector<const ORBDTYPE*>> vmpsi;
-
-        const int nmycolors = setupSubdomainData(
-            iloc, vorbitals, orbitals.projMatrices(), melements, vmpsi);
-        assert(vmpsi.size() == 1);
-        vector<const ORBDTYPE*> mpsi = vmpsi[0];
-
-        const int nblocks_color = nmycolors / block_functions_;
-        const int max_icolor    = (nmycolors % block_functions_ == 0)
-                                   ? nmycolors
-                                   : nblocks_color * block_functions_;
-        const int missed_rows = nmycolors - max_icolor;
-        //(*MPIdata::sout)<<"max_icolor="<<max_icolor<<endl;
-        //(*MPIdata::sout)<<"Rho<T>::computeRhoSubdomain:
-        //missed_rows="<<missed_rows<<endl;
-        //(*MPIdata::sout)<<"nblocks_color="<<nblocks_color<<endl;
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-        for (int idx = 0; idx < loc_numpt; idx += block_space_)
-        {
-            const short ix_max = min(block_space_, loc_numpt - idx);
-            // RHODTYPE* const plrho=lrho+idx;
-
-            // non-diagonal blocks
-            for (int icolor = 0; icolor < max_icolor;
-                 icolor += block_functions_)
-                for (int jcolor = 0; jcolor < icolor;
-                     jcolor += block_functions_)
-                {
-
-                    nonOrthoRhoKernel(icolor, block_functions_, jcolor,
-                        block_functions_, idx, ix_max, &melements[0], nmycolors,
-                        mpsi, nondiagfactor, lrho);
-                }
-            // finish missing rows ()
-            if (missed_rows)
-                for (int jcolor = 0; jcolor < max_icolor;
-                     jcolor += block_functions_)
-                {
-                    nonOrthoRhoKernel(max_icolor, missed_rows, jcolor,
-                        block_functions_, idx, ix_max, &melements[0], nmycolors,
-                        mpsi, nondiagfactor, lrho);
-                }
-
-            // diagonal blocks (jcolor=icolor)
-            for (int icolor = 0; icolor < max_icolor;
-                 icolor += block_functions_)
-            {
-                nonOrthoRhoKernelDiagonalBlock(icolor, block_functions_, idx,
-                    ix_max, &melements[0], nmycolors, mpsi, lrho);
-            }
-            // finish missing rows () for diagonal blocks
-            if (missed_rows)
-            {
-                nonOrthoRhoKernelDiagonalBlock(max_icolor, missed_rows, idx,
-                    ix_max, &melements[0], nmycolors, mpsi, lrho);
-            }
-        }
-    }
-
-    compute_tm_.stop();
-}
-
-template <class T>
-void Rho<T>::computeRhoSubdomainOffDiagBlock(const int iloc_init,
-    const int iloc_end, const vector<const T*>& vorbitals,
-    const ProjectedMatricesInterface* const projmatrices)
-{
-    assert(orbitals_type_ == OrbitalsType::Eigenfunctions
-        || orbitals_type_ == OrbitalsType::Nonorthogonal);
-    assert(vorbitals.size() == 2);
-
-    // printWithTimeStamp("Rho<T>::computeRhoSubdomainOffDiagBlock()...",cout);
-
-    Mesh* mymesh = Mesh::instance();
-
-    const int loc_numpt = mymesh->locNumpt();
-
-    RHODTYPE* const prho = &rho_[myspin_][0];
-
-    for (int iloc = iloc_init; iloc < iloc_end; iloc++)
-    {
-        const int istart = iloc * loc_numpt;
-
-        RHODTYPE* const lrho = &prho[istart];
-
-        vector<MATDTYPE> melements;
-        vector<vector<const ORBDTYPE*>> vmpsi;
-
-        const int nmycolors = setupSubdomainData(
-            iloc, vorbitals, projmatrices, melements, vmpsi);
-        const int nblocks_color = nmycolors / block_functions_;
-        const int max_icolor    = (nmycolors % block_functions_ == 0)
-                                   ? nmycolors
-                                   : nblocks_color * block_functions_;
-        const int missed_rows = nmycolors - max_icolor;
-        //(*MPIdata::sout)<<"max_icolor="<<max_icolor<<endl;
-        //(*MPIdata::sout)<<"Rho<T>::computeRhoSubdomainOffDiagBlock:
-        //missed_rows="<<missed_rows<<endl;
-        //(*MPIdata::sout)<<"nblocks_color="<<nblocks_color<<endl;
-
-        for (int idx = 0; idx < loc_numpt; idx += block_space_)
-        {
-            const short ix_max    = min(block_space_, loc_numpt - idx);
-            RHODTYPE* const plrho = lrho + idx;
-
-            for (int istart = 0; istart < max_icolor;
-                 istart += block_functions_)
-                for (int jstart = 0; jstart < max_icolor;
-                     jstart += block_functions_)
-                {
-                    for (short jcolor = jstart;
-                         jcolor < jstart + block_functions_; jcolor++)
-                    {
-                        const int jld              = jcolor * nmycolors;
-                        const ORBDTYPE* const psij = &vmpsi[1][jcolor][idx];
-                        for (short icolor = istart;
-                             icolor < istart + block_functions_; icolor++)
-                        {
-                            const ORBDTYPE* const psii = &vmpsi[0][icolor][idx];
-                            const double alpha
-                                = (double)melements[jld + icolor];
-                            accumulateCharge(alpha, ix_max, psii, psij, plrho);
-                        }
-                    }
-                }
-            // finish missing rows and cols
-            if (missed_rows)
-            {
-                int icolor = max_icolor;
-                int imax   = nmycolors % block_functions_;
-                for (int jcolor = 0; jcolor < max_icolor;
-                     jcolor += block_functions_)
-                {
-                    for (short j = 0; j < block_functions_; j++)
-                    {
-                        const int jstart = (jcolor + j) * nmycolors + icolor;
-                        const ORBDTYPE* const psij = &vmpsi[1][jcolor + j][idx];
-                        for (short i = 0; i < imax; i++)
-                        {
-                            const ORBDTYPE* const psii
-                                = &vmpsi[0][icolor + i][idx];
-                            const double alpha = (double)melements[jstart + i];
-                            accumulateCharge(alpha, ix_max, psii, psij, plrho);
-                        }
-                    }
-                }
-            }
-            if (missed_rows)
-            {
-                int jcolor = max_icolor;
-                int jmax   = nmycolors % block_functions_;
-                for (int icolor = 0; icolor < max_icolor;
-                     icolor += block_functions_)
-                {
-                    for (short j = 0; j < jmax; j++)
-                    {
-                        const int jstart = (jcolor + j) * nmycolors + icolor;
-                        const ORBDTYPE* const psij = &vmpsi[1][jcolor + j][idx];
-                        for (short i = 0; i < block_functions_; i++)
-                        {
-                            const ORBDTYPE* const psii
-                                = &vmpsi[0][icolor + i][idx];
-                            const double alpha = (double)melements[jstart + i];
-                            accumulateCharge(alpha, ix_max, psii, psij, plrho);
-                        }
-                    }
-                }
-            }
-            if (missed_rows)
-            {
-                int icolor = max_icolor;
-                int imax   = nmycolors % block_functions_;
-                int jcolor = max_icolor;
-                int jmax   = nmycolors % block_functions_;
-                for (short j = 0; j < jmax; j++)
-                {
-                    const int jstart = (jcolor + j) * nmycolors + icolor;
-                    const ORBDTYPE* const psij = &vmpsi[1][jcolor + j][idx];
-                    for (short i = 0; i < imax; i++)
-                    {
-                        const ORBDTYPE* const psii = &vmpsi[0][icolor + i][idx];
-                        const double alpha = (double)melements[jstart + i];
-                        accumulateCharge(alpha, ix_max, psii, psij, plrho);
-                    }
-                }
-            }
-        }
-    }
-}
+//template <class T>
+//void Rho<T>::computeRhoSubdomainOffDiagBlock(const int iloc_init,
+//    const int iloc_end, const vector<const T*>& vorbitals,
+//    const ProjectedMatricesInterface* const projmatrices)
+//{
+//    assert(orbitals_type_ == OrbitalsType::Eigenfunctions
+//        || orbitals_type_ == OrbitalsType::Nonorthogonal);
+//    assert(vorbitals.size() == 2);
+//
+//    compute_offdiag_tm_.start();
+//
+//    // printWithTimeStamp("Rho<T>::computeRhoSubdomainOffDiagBlock()...",cout);
+//
+//    Mesh* mymesh = Mesh::instance();
+//
+//    const int loc_numpt = mymesh->locNumpt();
+//
+//    RHODTYPE* const prho = &rho_[myspin_][0];
+//
+//    for (int iloc = iloc_init; iloc < iloc_end; iloc++)
+//    {
+//        const int istart = iloc * loc_numpt;
+//
+//        RHODTYPE* const lrho = &prho[istart];
+//
+//        vector<MATDTYPE> melements;
+//        vector<vector<const ORBDTYPE*>> vmpsi;
+//
+//        const int nmycolors = setupSubdomainData(
+//            iloc, vorbitals, projmatrices, melements, vmpsi);
+//        const int nblocks_color = nmycolors / block_functions_;
+//        const int max_icolor    = (nmycolors % block_functions_ == 0)
+//                                   ? nmycolors
+//                                   : nblocks_color * block_functions_;
+//        const int missed_rows = nmycolors - max_icolor;
+//        //(*MPIdata::sout)<<"max_icolor="<<max_icolor<<endl;
+//        //(*MPIdata::sout)<<"Rho<T>::computeRhoSubdomainOffDiagBlock:
+//        //missed_rows="<<missed_rows<<endl;
+//        //(*MPIdata::sout)<<"nblocks_color="<<nblocks_color<<endl;
+//
+//        for (int idx = 0; idx < loc_numpt; idx += block_space_)
+//        {
+//            const short ix_max    = min(block_space_, loc_numpt - idx);
+//            RHODTYPE* const plrho = lrho + idx;
+//
+//            for (int istart = 0; istart < max_icolor;
+//                 istart += block_functions_)
+//                for (int jstart = 0; jstart < max_icolor;
+//                     jstart += block_functions_)
+//                {
+//                    for (short jcolor = jstart;
+//                         jcolor < jstart + block_functions_; jcolor++)
+//                    {
+//                        const int jld              = jcolor * nmycolors;
+//                        const ORBDTYPE* const psij = &vmpsi[1][jcolor][idx];
+//                        for (short icolor = istart;
+//                             icolor < istart + block_functions_; icolor++)
+//                        {
+//                            const ORBDTYPE* const psii = &vmpsi[0][icolor][idx];
+//                            const double alpha
+//                                = (double)melements[jld + icolor];
+//                            accumulateCharge(alpha, ix_max, psii, psij, plrho);
+//                        }
+//                    }
+//                }
+//            // finish missing rows and cols
+//            if (missed_rows)
+//            {
+//                int icolor = max_icolor;
+//                int imax   = nmycolors % block_functions_;
+//                for (int jcolor = 0; jcolor < max_icolor;
+//                     jcolor += block_functions_)
+//                {
+//                    for (short j = 0; j < block_functions_; j++)
+//                    {
+//                        const int jstart = (jcolor + j) * nmycolors + icolor;
+//                        const ORBDTYPE* const psij = &vmpsi[1][jcolor + j][idx];
+//                        for (short i = 0; i < imax; i++)
+//                        {
+//                            const ORBDTYPE* const psii
+//                                = &vmpsi[0][icolor + i][idx];
+//                            const double alpha = (double)melements[jstart + i];
+//                            accumulateCharge(alpha, ix_max, psii, psij, plrho);
+//                        }
+//                    }
+//                }
+//            }
+//            if (missed_rows)
+//            {
+//                int jcolor = max_icolor;
+//                int jmax   = nmycolors % block_functions_;
+//                for (int icolor = 0; icolor < max_icolor;
+//                     icolor += block_functions_)
+//                {
+//                    for (short j = 0; j < jmax; j++)
+//                    {
+//                        const int jstart = (jcolor + j) * nmycolors + icolor;
+//                        const ORBDTYPE* const psij = &vmpsi[1][jcolor + j][idx];
+//                        for (short i = 0; i < block_functions_; i++)
+//                        {
+//                            const ORBDTYPE* const psii
+//                                = &vmpsi[0][icolor + i][idx];
+//                            const double alpha = (double)melements[jstart + i];
+//                            accumulateCharge(alpha, ix_max, psii, psij, plrho);
+//                        }
+//                    }
+//                }
+//            }
+//            if (missed_rows)
+//            {
+//                int icolor = max_icolor;
+//                int imax   = nmycolors % block_functions_;
+//                int jcolor = max_icolor;
+//                int jmax   = nmycolors % block_functions_;
+//                for (short j = 0; j < jmax; j++)
+//                {
+//                    const int jstart = (jcolor + j) * nmycolors + icolor;
+//                    const ORBDTYPE* const psij = &vmpsi[1][jcolor + j][idx];
+//                    for (short i = 0; i < imax; i++)
+//                    {
+//                        const ORBDTYPE* const psii = &vmpsi[0][icolor + i][idx];
+//                        const double alpha = (double)melements[jstart + i];
+//                        accumulateCharge(alpha, ix_max, psii, psij, plrho);
+//                    }
+//                }
+//            }
+//        }
+//    }
+//
+//    compute_offdiag_tm_.stop();
+//}
 
 template <class T>
 void Rho<T>::computeRhoSubdomain(const int iloc_init, const int iloc_end,
@@ -646,7 +652,7 @@ void Rho<T>::computeRho(T& orbitals1, T& orbitals2,
 #else
     dm_ = dm11;
 #endif
-    computeRhoSubdomain(0, subdivx, orbitals1);
+    computeRhoSubdomainUsingBlas3(0, subdivx, orbitals1);
 
     // 22 diagonal block
 #ifdef USE_DIS_MAT
@@ -656,12 +662,12 @@ void Rho<T>::computeRho(T& orbitals1, T& orbitals2,
 #else
     dm_ = dm22;
 #endif
-    computeRhoSubdomain(0, subdivx, orbitals2);
+    computeRhoSubdomainUsingBlas3(0, subdivx, orbitals2);
 
     // non diagonal blocks
-    vector<const T*> vorbitals;
-    vorbitals.push_back(&orbitals1);
-    vorbitals.push_back(&orbitals2);
+    //vector<const T*> vorbitals;
+    //vorbitals.push_back(&orbitals1);
+    //vorbitals.push_back(&orbitals2);
 
     dist_matrix::DistMatrix<DISTMATDTYPE> dm(dm12);
     dm.scal(2.); // use symmetry to reduce work
@@ -670,13 +676,18 @@ void Rho<T>::computeRho(T& orbitals1, T& orbitals2,
 #else
     dm_ = dm;
 #endif
-    computeRhoSubdomainOffDiagBlock(0, subdivx, vorbitals, projmatrices1);
+//    computeRhoSubdomainOffDiagBlock(0, subdivx, vorbitals, projmatrices1);
+    computeRhoSubdomainUsingBlas3(0, subdivx, orbitals1, orbitals2);
 }
 
 template <class T>
 void Rho<T>::computeRhoSubdomainUsingBlas3(
-    const int iloc_init, const int iloc_end, const T& orbitals)
+    const int iloc_init, const int iloc_end, const T& orbitals1,
+    const T& orbitals2)
 {
+    assert(orbitals1.getLda() == orbitals2.getLda());
+    assert(orbitals1.chromatic_number() == orbitals2.chromatic_number());
+
     compute_blas_tm_.start();
 
     Mesh* mymesh    = Mesh::instance();
@@ -684,10 +695,10 @@ void Rho<T>::computeRhoSubdomainUsingBlas3(
 
     RHODTYPE* const prho = &rho_[myspin_][0];
 
-    SquareLocalMatrices<MATDTYPE>& localX((orbitals.projMatrices())->getLocalX());
+    SquareLocalMatrices<MATDTYPE>& localX((orbitals1.projMatrices())->getLocalX());
 
-    const int ld = orbitals.getLda();
-    const int ncols = orbitals.chromatic_number();
+    const int ld = orbitals1.getLda();
+    const int ncols = orbitals1.chromatic_number();
     ORBDTYPE* product = new ORBDTYPE[nrows * ncols];
 
     for (int iloc = iloc_init; iloc < iloc_end; iloc++)
@@ -697,10 +708,11 @@ void Rho<T>::computeRhoSubdomainUsingBlas3(
         RHODTYPE* const lrho = &prho[istart];
 
         const MATDTYPE* const mat = localX.getSubMatrix(iloc);
-        ORBDTYPE* phi             = orbitals.getPsi(0, iloc);
+        ORBDTYPE* phi1            = orbitals1.getPsi(0, iloc);
+        ORBDTYPE* phi2            = orbitals2.getPsi(0, iloc);
 
         // O(N^3) part
-        MPgemmNN(nrows, ncols, ncols, 1., phi,
+        MPgemmNN(nrows, ncols, ncols, 1., phi1,
                  ld, mat, ncols, 0., product, nrows);
 
         // O(N^2) part
@@ -710,7 +722,7 @@ void Rho<T>::computeRhoSubdomainUsingBlas3(
             int index2 = j*ld;
             for(int i=0; i<nrows; i++)
             {
-                lrho[i] += product[index1]*phi[index2];
+                lrho[i] += product[index1]*phi2[index2];
                 index1++;
                 index2++;
             }
@@ -741,7 +753,7 @@ void Rho<T>::computeRho(
         = dynamic_cast<ProjectedMatrices*>(orbitals.getProjMatrices());
     projmatrices->updateSubMatX(dm);
 
-    computeRhoSubdomain(0, subdivx, orbitals);
+    computeRhoSubdomainUsingBlas3(0, subdivx, orbitals);
 }
 
 template <class T>
@@ -834,6 +846,7 @@ void Rho<T>::printTimers(std::ostream& os)
     update_tm_.print(os);
     compute_tm_.print(os);
     compute_blas_tm_.print(os);
+    //compute_offdiag_tm_.print(os);
 }
 
 template class Rho<LocGridOrbitals>;
