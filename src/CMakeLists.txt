@@ -137,7 +137,7 @@ set(SOURCES
  SP2.cc
  Power.cc
  PowerGen.cc
- superSamplingClass.cpp
+ SuperSampling.cc
 )
 
 add_library(mgmol_src ${SOURCES})

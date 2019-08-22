@@ -3,7 +3,7 @@
 #include <vector>
 #include <cmath>
 #include <array>
-#include "superSamplingClass.h"
+#include "SuperSampling.h"
 using namespace std;
 
 
@@ -54,8 +54,8 @@ int unitTestSuperSamplingFiltering() {
     array<double,3> topMeshCorner={.1,.1,.1};
     bool harmonics=false;
     
-    superSampling<lMax>::setup(sampleRate, numExtraPts, coarGridSpace);
-    superSampling<lMax> uniTest(atomicCenter, botMeshCorner, topMeshCorner, harmonics, gaussianFunc);
+    SuperSampling<lMax>::setup(sampleRate, numExtraPts, coarGridSpace);
+    SuperSampling<lMax> uniTest(atomicCenter, botMeshCorner, topMeshCorner, harmonics, gaussianFunc);
     
     int numPts=round((topMeshCorner[0]-botMeshCorner[0])/coarGridSpace[0]) + 1;
     int offset=0;
@@ -101,8 +101,8 @@ int unitTestSuperSamplingHarmonics() {
     array<double,3> topMeshCorner={10,10,10};
     bool harmonics=true;
     
-    superSampling<lMax>::setup(sampleRate, numExtraPts, coarGridSpace);
-    superSampling<lMax> uniTestScaled(atomicCenter, botMeshCorner, topMeshCorner, harmonics, gaussianFuncScaled);
+    SuperSampling<lMax>::setup(sampleRate, numExtraPts, coarGridSpace);
+    SuperSampling<lMax> uniTestScaled(atomicCenter, botMeshCorner, topMeshCorner, harmonics, gaussianFuncScaled);
 
     return result;
 }
@@ -120,15 +120,15 @@ int unitTestSuperSamplingScale() {
     array<double,3> topMeshCorner={10,10,10};
     bool harmonics=false;
     
-    superSampling<lMax>::setup(sampleRate, numExtraPts, coarGridSpace);
-    superSampling<lMax> uniTestScaled(atomicCenter, botMeshCorner, topMeshCorner, harmonics, gaussianFuncScaled);
+    SuperSampling<lMax>::setup(sampleRate, numExtraPts, coarGridSpace);
+    SuperSampling<lMax> uniTestScaled(atomicCenter, botMeshCorner, topMeshCorner, harmonics, gaussianFuncScaled);
     
     coarGridSpace={.1,.1,.1};
     botMeshCorner={-1,-1,-1};
     topMeshCorner={1,1,1};
     
-    superSampling<lMax>::setup(sampleRate, numExtraPts, coarGridSpace);
-    superSampling<lMax> uniTestCompare(atomicCenter, botMeshCorner, topMeshCorner, harmonics, gaussianFunc);
+    SuperSampling<lMax>::setup(sampleRate, numExtraPts, coarGridSpace);
+    SuperSampling<lMax> uniTestCompare(atomicCenter, botMeshCorner, topMeshCorner, harmonics, gaussianFunc);
     
     int numPts=round((topMeshCorner[0]-botMeshCorner[0])/coarGridSpace[0]) + 1;
     double idx=botMeshCorner[0];
@@ -175,8 +175,8 @@ int unitTestSuperSamplingGausHighFreq(void) {
     array<double,3> topMeshCorner={1,1,1};
     bool harmonics=false;
     
-    superSampling<lMax>::setup(sampleRate, numExtraPts, coarGridSpace);
-    superSampling<lMax> uniTest(atomicCenter, botMeshCorner, topMeshCorner, harmonics, highFreq);
+    SuperSampling<lMax>::setup(sampleRate, numExtraPts, coarGridSpace);
+    SuperSampling<lMax> uniTest(atomicCenter, botMeshCorner, topMeshCorner, harmonics, highFreq);
     
     int numPts=round((topMeshCorner[0]-botMeshCorner[0])/coarGridSpace[0]) + 1;
     int offset=0;
@@ -227,8 +227,8 @@ int unitTestSuperSamplingConstant() {
     array<double,3> topMeshCorner={0,1,1};
     bool harmonics=false;
     
-    superSampling<lMax>::setup(sampleRate, numExtraPts, coarGridSpace);
-    superSampling<lMax> uniTest(atomicCenter, botMeshCorner, topMeshCorner, harmonics, constantFunc);
+    SuperSampling<lMax>::setup(sampleRate, numExtraPts, coarGridSpace);
+    SuperSampling<lMax> uniTest(atomicCenter, botMeshCorner, topMeshCorner, harmonics, constantFunc);
     
     int numPts=round((topMeshCorner[0]-botMeshCorner[0])/coarGridSpace[0]) + 1;
     int offset=0;
@@ -273,8 +273,8 @@ int unitTestSuperSamplingGaussian() {
     array<double,3> topMeshCorner={0,1,1};
     bool harmonics=false;
     
-    superSampling<lMax>::setup(sampleRate, numExtraPts, coarGridSpace);
-    superSampling<lMax> uniTest(atomicCenter, botMeshCorner, topMeshCorner, harmonics, gaussianFunc);
+    SuperSampling<lMax>::setup(sampleRate, numExtraPts, coarGridSpace);
+    SuperSampling<lMax> uniTest(atomicCenter, botMeshCorner, topMeshCorner, harmonics, gaussianFunc);
     
     int numPtsX=round((topMeshCorner[0]-botMeshCorner[0])/coarGridSpace[0]) + 1;
     int numPtsY=round((topMeshCorner[1]-botMeshCorner[1])/coarGridSpace[1]) + 1;
@@ -320,8 +320,8 @@ int unitTestSuperSamplingDelta() {
     array<double,3> topMeshCorner={1,1,1};
     bool harmonics=false;
     
-    superSampling<lMax>::setup(sampleRate, numExtraPts, coarGridSpace, deltaFilter);
-    superSampling<lMax> uniTest(atomicCenter, botMeshCorner, topMeshCorner, harmonics, gaussianFunc);
+    SuperSampling<lMax>::setup(sampleRate, numExtraPts, coarGridSpace, deltaFilter);
+    SuperSampling<lMax> uniTest(atomicCenter, botMeshCorner, topMeshCorner, harmonics, gaussianFunc);
     
     int numPts=round((topMeshCorner[0]-botMeshCorner[0])/coarGridSpace[0]) + 1;
     double idx=botMeshCorner[0];

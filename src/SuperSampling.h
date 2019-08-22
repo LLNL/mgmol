@@ -41,7 +41,7 @@ std::vector<double> computeWeights(
         double filter(double));
 
 template <int lMax>
-class superSampling {
+class SuperSampling {
     const bool harmonics_;
     const std::array<double,3> atomicCenter_;
     const std::array<double,3> botMeshCorner_;
@@ -74,7 +74,7 @@ class superSampling {
 public :
     std::array<std::vector<double>, 2*lMax + 1> values_;
 
-    // setup must always have been called before superSampling, but only needs to
+    // setup must always have been called before SuperSampling, but only needs to
     // be called once. Note that using different lMax values means that setup needs
     // to be called for each of them.
     static void setup(
@@ -87,9 +87,9 @@ public :
     // Constructor does the supersampling. top and bot MeshCorner allow us to 
     // construct the subdomain mesh to supersample, atomicCenter is obvious,
     // harmonics needs to be true if spherical harmonics is needed. If no harmonics,
-    // then should always call superSampling<0>. If harmonics, then lmax value is
-    // called in constructor superSampling<lMax>
-    superSampling(
+    // then should always call SuperSampling<0>. If harmonics, then lmax value is
+    // called in constructor SuperSampling<lMax>
+    SuperSampling(
                      std::array<double,3> atomicCenter, 
                      std::array<double,3> botMeshCorner,
                      std::array<double,3> topMeshCorner,
@@ -133,19 +133,19 @@ private :
             );
 };
 
-template class superSampling<0>;
-template class superSampling<1>;
-template class superSampling<2>;
-template class superSampling<3>;
+template class SuperSampling<0>;
+template class SuperSampling<1>;
+template class SuperSampling<2>;
+template class SuperSampling<3>;
 
 
 template <int lMax>
-int superSampling<lMax>::sampleRate_=0;
+int SuperSampling<lMax>::sampleRate_=0;
 template <int lMax>
-int superSampling<lMax>::numExtraPts_=0;
+int SuperSampling<lMax>::numExtraPts_=0;
 template <int lMax>
-std::array<double,3> superSampling<lMax>::coarGridSpace_={0,0,0};
+std::array<double,3> SuperSampling<lMax>::coarGridSpace_={0,0,0};
 template <int lMax>
-std::array<double,3> superSampling<lMax>::fineGridSpace_={0,0,0};
+std::array<double,3> SuperSampling<lMax>::fineGridSpace_={0,0,0};
 template <int lMax>
-std::vector<double> superSampling<lMax>::weights_;
+std::vector<double> SuperSampling<lMax>::weights_;

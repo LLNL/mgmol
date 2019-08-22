@@ -26,8 +26,7 @@
 #include "VariableSizeMatrix.h"
 #include "Vector3D.h"
 #include "tools.h"
-
-#include "superSamplingClass.h"
+#include "SuperSampling.h"
 
 #include <iostream>
 
@@ -102,8 +101,6 @@ void Forces<T>::evaluateSupersampledRadialFunc(const std::vector<Vector3D>& posi
                             std::vector<std::vector<double>>& var,
                             std::function<double(double)> const& lambda_radial)
 {
-    Control& ct     = *(Control::instance());
-
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
 
@@ -151,7 +148,7 @@ void Forces<T>::evaluateSupersampledRadialFunc(const std::vector<Vector3D>& posi
         topMeshCorner[2] = std::min(botMeshCorner[2] + 2*h2*SSLRad[2], subDomainTopMeshCorner[2]);
         const bool harmonics=false;
         
-        superSampling<0> current(atomicCenter, botMeshCorner, topMeshCorner, harmonics, lambda_radial);
+        SuperSampling<0> current(atomicCenter, botMeshCorner, topMeshCorner, harmonics, lambda_radial);
         int xlimits = std::round((topMeshCorner[0]-botMeshCorner[0])/h0);
         int ylimits = std::round((topMeshCorner[1]-botMeshCorner[1])/h1);
         int zlimits = std::round((topMeshCorner[2]-botMeshCorner[2])/h2);

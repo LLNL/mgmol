@@ -1,7 +1,7 @@
 #include <vector>
 #include <array>
 #include <cmath>
-#include "superSamplingClass.h"
+#include "SuperSampling.h"
 
 double sincFunction(double x) { return (std::abs(x)<1e-14 ? 1 : std::sin(x*pi)/(x*pi));}
 
@@ -43,7 +43,7 @@ std::vector<double> computeWeights(
 
 
 template <int lMax>
-void superSampling<lMax>::setup(
+void SuperSampling<lMax>::setup(
             int sampleRate,
             int numExtraPts,
             std::array<double,3> coarGridSpace,
@@ -56,8 +56,6 @@ void superSampling<lMax>::setup(
     fineGridSpace_[0] = coarGridSpace_[0] / sampleRate_;
     fineGridSpace_[1] = coarGridSpace_[1] / sampleRate_;
     fineGridSpace_[2] = coarGridSpace_[2] / sampleRate_;
-    //int convNumPts = 2 * std::round(cutOffRadius_ / fineGridSpace_[0]) + 1;
-    int convNumPts = 2 * numExtraPts + 1;
     weights_ = computeWeights(
                     numExtraPts,
                     fineGridSpace_,
@@ -69,7 +67,7 @@ void superSampling<lMax>::setup(
 // Stores value of Func on fine mesh points in a vector, which is passed to computeSupersampling
 // computeSupersampling so that we don't need to evaluate the fuction every single time
 template <int lMax>
-std::array<std::vector<double>,2*lMax + 1> superSampling<lMax>::getFuncValues(std::function<double(const double)> Func) {
+std::array<std::vector<double>,2*lMax + 1> SuperSampling<lMax>::getFuncValues(std::function<double(const double)> Func) {
     int offset = 0;
     std::array<std::vector<double>,2*lMax + 1> FuncValues;
     for(int ll=0; ll<2*lMax+1; ++ll) {
@@ -202,7 +200,7 @@ std::array<double,7> setFProjector(
 
 // loop through the coarse mesh and compute the convolution at each of those points
 template <int lMax>
-std::vector<double> superSampling<lMax>::computeSuperSampling(
+std::vector<double> SuperSampling<lMax>::computeSuperSampling(
                 const std::vector<double>& fineMeshFuncValues
         ) {
     int offset = 0;
@@ -211,7 +209,7 @@ std::vector<double> superSampling<lMax>::computeSuperSampling(
     for(int i=0; i < coarNumPts_[0]; ++i) {
         for(int j=0; j < coarNumPts_[1]; ++j) {
             for(int k=0; k < coarNumPts_[2]; ++k) {
-                superSampled[offset] = superSampling<lMax>::computeFiltering(
+                superSampled[offset] = SuperSampling<lMax>::computeFiltering(
                                 {i,j,k},
                                 fineMeshFuncValues);
                 offset += 1;
@@ -223,7 +221,7 @@ std::vector<double> superSampling<lMax>::computeSuperSampling(
 
 // Actually do the convolution
 template <int lMax>
-double superSampling<lMax>::computeFiltering(
+double SuperSampling<lMax>::computeFiltering(
         const std::array<int,3> sampleIndex,
         const std::vector<double>& fineMeshFuncValues
         ) {

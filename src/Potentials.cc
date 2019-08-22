@@ -23,7 +23,7 @@
 
 #include "TriCubic.h"
 #include "mputils.h"
-#include "superSamplingClass.h"
+#include "SuperSampling.h"
 
 #include <fstream>
 using namespace std;
@@ -649,7 +649,7 @@ void Potentials::initializeSupersampledRadialDataOnMesh(const Vector3D& position
     topMeshCorner[2] = std::min(botMeshCorner[2] + 2*h2*SSLRad[2], subDomainTopMeshCorner[2]);
     const bool harmonics=false;
     
-    superSampling<0> current(atomicCenter, botMeshCorner, topMeshCorner, harmonics, lambda_lpot);
+    SuperSampling<0> current(atomicCenter, botMeshCorner, topMeshCorner, harmonics, lambda_lpot);
     int xlimits = std::round((topMeshCorner[0]-botMeshCorner[0])/h0);
     int ylimits = std::round((topMeshCorner[1]-botMeshCorner[1])/h1);
     int zlimits = std::round((topMeshCorner[2]-botMeshCorner[2])/h2);
@@ -787,7 +787,7 @@ void Potentials::initialize(Ions& ions)
             const std::array<double,3> coarGridSpace={mygrid.hgrid(0),
                                                       mygrid.hgrid(1),
                                                       mygrid.hgrid(2)};
-            superSampling<0>::setup(sampleRate,numExtraPts,coarGridSpace);
+            SuperSampling<0>::setup(sampleRate,numExtraPts,coarGridSpace);
 
             initializeSupersampledRadialDataOnMesh(position,sp);
         } else {
