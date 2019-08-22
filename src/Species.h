@@ -146,6 +146,8 @@ private:
         tfile << std::endl;
     }
 
+    void checkLRadius()const;
+
 public:
     Species(MPI_Comm comm):
         name_("undefined"), atomic_number_(-1), zion_(-1), n_rad_points_(0),

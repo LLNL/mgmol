@@ -281,6 +281,8 @@ void Species::read_1species(const string& filename)
         if (l != llocal_) kbp_[l].resize(multiplicity_[l]);
     }
 
+    checkLRadius();
+
     assert(zion_ < 50);
     assert(llocal_ < num_potentials_);
     assert(num_potentials_ > 0);
@@ -813,4 +815,27 @@ void Species::setRcDependentData()
     assert(rcnorm > 1.e-8);
 
     comp_charge_factor_ = (double)zion_ / rcnorm;
+}
+
+void Species::checkLRadius()const
+{
+    const double rtol = 1.e-4;
+
+    double rhoc0 = getRhoComp(0.);
+    double rhocr = getRhoComp(lradius_);
+    if( fabs(rhocr/rhoc0)>rtol )
+    {
+        std::cout<<"WARNING: radius for species "<<name_<<" is too small\n";
+        std::cout<<"WARNING: rhoc("<<lradius_<<") = "<<rhocr<<std::endl;
+    }
+
+    // check neutralizing potential close to Z/r at lradius_
+    double vcr = getVcomp(lradius_);
+    double zor = (double)zion_ / lradius_;
+    if( fabs((vcr-zor)/zor)>rtol )
+    {
+        std::cout<<"WARNING: radius for species "<<name_<<" is too small\n";
+        std::cout<<"WARNING: vc("<<lradius_<<") = "<<vcr
+                 <<" z/r = "<< zor <<std::endl;
+    }
 }
