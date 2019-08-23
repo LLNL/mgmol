@@ -188,6 +188,25 @@ if(${MGMOL_WITH_CLANG_FORMAT})
   endif(${CLANG_FORMAT_FOUND})
 endif()
 
+# code coverage
+if(${MGMOL_WITH_COVERAGE})
+  find_package(COVERAGE)
+  if(${COVERAGE_FOUND})
+    set(COVERAGE_FILE ${CMAKE_BINARY_DIR}/lcov.info)
+    set(COVERAGE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/html_coverage)
+    add_custom_target(coverage
+      COMMAND ${LCOV_EXECUTABLE}
+      --capture
+      --directory ${CMAKE_BINARY_DIR}
+      --output-file=${COVERAGE_FILE}
+      COMMAND ${GENHTML_EXECUTABLE}
+      ${COVERAGE_FILE}
+      --output-directory
+      ${COVERAGE_OUTPUT_DIRECTORY}
+      )
+  endif(${COVERAGE_FOUND})
+endif(${MGMOL_WITH_COVERAGE})
+
 enable_testing()
 
 # additional definitions
