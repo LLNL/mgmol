@@ -63,7 +63,7 @@ class Ions
     void readRestartPositions(HDFrestart& h5_file);
     int read1atom(std::ifstream* tfile, const bool cell_relative);
 
-    //void associate2PE();
+    // void associate2PE();
     void setupInteractingIons();
     void setupListOverlappingIons();
     void setMapVL();
@@ -140,18 +140,18 @@ class Ions
         std::vector<double>& positions, const int root = 0) const;
     void gatherForces(std::vector<double>& forces, const int root = 0) const;
 
-    void gatherNames(
-        std::vector<std::string>& names, const int root, const MPI_Comm comm) const;
-    void gatherPositions(
-        std::vector<double>& positions, const int root, const MPI_Comm comm) const;
-    void gatherLockedNames(
-        std::vector<std::string>& names, const int root, const MPI_Comm comm) const;
+    void gatherNames(std::vector<std::string>& names, const int root,
+        const MPI_Comm comm) const;
+    void gatherPositions(std::vector<double>& positions, const int root,
+        const MPI_Comm comm) const;
+    void gatherLockedNames(std::vector<std::string>& names, const int root,
+        const MPI_Comm comm) const;
     void gatherIndexes(
         std::vector<int>& indexes, const int root, const MPI_Comm comm) const;
     void gatherNLprojIds(
         std::vector<int>& nlprojids, const int root, const MPI_Comm comm) const;
-    void gatherVelocities(
-        std::vector<double>& velocities, const int root, const MPI_Comm comm) const;
+    void gatherVelocities(std::vector<double>& velocities, const int root,
+        const MPI_Comm comm) const;
     void gatherAtomicNumbers(
         std::vector<int>& atnumbers, const int root, const MPI_Comm comm) const;
     void gatherRandStates(std::vector<unsigned short>& rstates, const int root,
@@ -334,7 +334,7 @@ public:
      */
     double computeMinLocalSpacing() const;
 
-    //void checkUnicityLocalIons();
+    // void checkUnicityLocalIons();
 };
 
 #endif

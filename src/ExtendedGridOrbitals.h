@@ -26,8 +26,8 @@
 #include "hdf5.h"
 #include <iostream>
 #include <memory>
-#include <vector>
 #include <string>
+#include <vector>
 
 template <class T>
 class LocalMatrices;
@@ -41,8 +41,8 @@ class ExtendedGridOrbitals;
 class MasksSet;
 class MasksSet;
 
-typedef double (ExtendedGridOrbitals::*ExtendedGridOrbitalsPtrFunc)
-    (const ExtendedGridOrbitals&);
+typedef double (ExtendedGridOrbitals::*ExtendedGridOrbitalsPtrFunc)(
+    const ExtendedGridOrbitals&);
 
 class ExtendedGridOrbitals : public Orbitals
 {
@@ -69,7 +69,8 @@ private:
     static int numpt_;
     static int loc_numpt_;
 
-    // static double (ExtendedGridOrbitals::*dotProduct_)(const ExtendedGridOrbitals&);
+    // static double (ExtendedGridOrbitals::*dotProduct_)(const
+    // ExtendedGridOrbitals&);
     static ExtendedGridOrbitalsPtrFunc dotProduct_;
 
     static int data_wghosts_index_;
@@ -95,8 +96,8 @@ private:
     //
     void projectOut(ORBDTYPE* const, const int, const double scale = 1.);
 
-    void multiply_by_matrix(const DISTMATDTYPE* const,
-        ORBDTYPE*, const int) const;
+    void multiply_by_matrix(
+        const DISTMATDTYPE* const, ORBDTYPE*, const int) const;
     void multiply_by_matrix(const dist_matrix::DistMatrix<DISTMATDTYPE>& matrix,
         ORBDTYPE* const product, const int ldp);
     void scal(const int i, const double alpha) { block_vector_.scal(i, alpha); }
@@ -131,9 +132,8 @@ private:
     void precond_smooth(
         ORBDTYPE*, const int, const int, const int, const int, const double);
     void app_mask(const int, ORBDTYPE*, const short level) const;
-    void multiplyByMatrix(
-        const SquareLocalMatrices<MATDTYPE>& matrix, ORBDTYPE* product,
-        const int ldp) const;
+    void multiplyByMatrix(const SquareLocalMatrices<MATDTYPE>& matrix,
+        ORBDTYPE* product, const int ldp) const;
     void setup();
 
     /* Data distribution objects */
@@ -160,19 +160,21 @@ public:
     {
         return overlapping_gids_[0];
     }
-    const std::vector<int>& getLocalGids() const { return overlapping_gids_[0]; }
+    const std::vector<int>& getLocalGids() const
+    {
+        return overlapping_gids_[0];
+    }
 
-    ExtendedGridOrbitals(std::string name,
-        const pb::Grid& my_grid, const short subdivx,
-        const int numst, const short bc[3], ProjectedMatricesInterface*,
-        LocalizationRegions*, MasksSet* masks, MasksSet* corrmasks,
-        ClusterOrbitals* local_cluster, const bool setup_flag = true);
+    ExtendedGridOrbitals(std::string name, const pb::Grid& my_grid,
+        const short subdivx, const int numst, const short bc[3],
+        ProjectedMatricesInterface*, LocalizationRegions*, MasksSet* masks,
+        MasksSet* corrmasks, ClusterOrbitals* local_cluster,
+        const bool setup_flag = true);
 
-    ExtendedGridOrbitals(std::string name,
-        const ExtendedGridOrbitals& A, const bool copy_data = true);
     ExtendedGridOrbitals(std::string name, const ExtendedGridOrbitals& A,
-        ProjectedMatricesInterface* proj_matrices,
         const bool copy_data = true);
+    ExtendedGridOrbitals(std::string name, const ExtendedGridOrbitals& A,
+        ProjectedMatricesInterface* proj_matrices, const bool copy_data = true);
 
     ~ExtendedGridOrbitals();
 
@@ -286,8 +288,7 @@ public:
     short subdivx(void) const { return subdivx_; }
     void printChromaticNumber(std::ostream& os) const
     {
-        if (onpe0)
-            os << " Max. chromatic_number: " << numst_ << std::endl;
+        if (onpe0) os << " Max. chromatic_number: " << numst_ << std::endl;
     }
     void printNumst(std::ostream& os) const
     {
@@ -313,21 +314,21 @@ public:
     double dotProduct(const ExtendedGridOrbitals&, const short dot_type);
 
     static void setDotProduct(const short dot_type);
-    void computeDiagonalElementsDotProduct(
-        const ExtendedGridOrbitals& orbitals, std::vector<DISTMATDTYPE>& ss)const;
+    void computeDiagonalElementsDotProduct(const ExtendedGridOrbitals& orbitals,
+        std::vector<DISTMATDTYPE>& ss) const;
 
     const dist_matrix::DistMatrix<DISTMATDTYPE> product(
         const ExtendedGridOrbitals&, const bool transpose = false);
-    void computeLocalProduct(const ExtendedGridOrbitals&, LocalMatrices<MATDTYPE>&,
-        const bool transpose = false);
+    void computeLocalProduct(const ExtendedGridOrbitals&,
+        LocalMatrices<MATDTYPE>&, const bool transpose = false);
     void getLocalOverlap(SquareLocalMatrices<MATDTYPE>&);
     void getLocalOverlap(
         const ExtendedGridOrbitals& orbitals, SquareLocalMatrices<MATDTYPE>&);
 
     void addDotWithNcol2Matrix(const int, const int, ExtendedGridOrbitals&,
         dist_matrix::SparseDistMatrix<DISTMATDTYPE>&) const;
-    void addDotWithNcol2Matrix(
-        ExtendedGridOrbitals&, dist_matrix::SparseDistMatrix<DISTMATDTYPE>&) const;
+    void addDotWithNcol2Matrix(ExtendedGridOrbitals&,
+        dist_matrix::SparseDistMatrix<DISTMATDTYPE>&) const;
 
     void scal(const double alpha)
     {
@@ -357,8 +358,7 @@ public:
     void applyCorrMask(const bool first_time = false);
 
     void multiplyByMatrix(const SquareLocalMatrices<MATDTYPE>& matrix);
-    void multiplyByMatrix(
-        const SquareLocalMatrices<MATDTYPE>& matrix,
+    void multiplyByMatrix(const SquareLocalMatrices<MATDTYPE>& matrix,
         ExtendedGridOrbitals& product) const;
     void multiply_by_matrix(
         const DISTMATDTYPE* const matrix, ExtendedGridOrbitals& product) const;
@@ -386,11 +386,8 @@ public:
         assert(color < overlapping_gids_[iloc].size());
         return overlapping_gids_[iloc][color];
     }
-    int getColor(const int gid)const
-    {
-        return gid;
-    }
-    void augmentLocalData(VariableSizeMatrix<sparserow>& mat)const
+    int getColor(const int gid) const { return gid; }
+    void augmentLocalData(VariableSizeMatrix<sparserow>& mat) const
     {
         distributor_->augmentLocalData(mat, true);
     }

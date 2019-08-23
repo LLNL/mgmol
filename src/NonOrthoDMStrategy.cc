@@ -17,8 +17,8 @@
 using namespace std;
 
 template <class T>
-NonOrthoDMStrategy<T>::NonOrthoDMStrategy(T* orbitals,
-    ProjectedMatricesInterface* proj_matrices, const double mix)
+NonOrthoDMStrategy<T>::NonOrthoDMStrategy(
+    T* orbitals, ProjectedMatricesInterface* proj_matrices, const double mix)
     : orbitals_(orbitals), proj_matrices_(proj_matrices), mix_(mix)
 {
 }

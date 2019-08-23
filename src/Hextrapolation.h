@@ -29,20 +29,17 @@ class Hextrapolation
     dist_matrix::DistMatrix<DISTMATDTYPE>* work_;
 
 public:
-
-    Hextrapolation(const int ndim)
-        : ndim_(ndim)
+    Hextrapolation(const int ndim) : ndim_(ndim)
     {
-        work_  = new dist_matrix::DistMatrix<DISTMATDTYPE>("work", ndim, ndim);
+        work_ = new dist_matrix::DistMatrix<DISTMATDTYPE>("work", ndim, ndim);
     }
 
-    ~Hextrapolation()
-    {
-        delete work_;
-    }
+    ~Hextrapolation() { delete work_; }
 
     void initExtrapolationH(const dist_matrix::DistMatrix<DISTMATDTYPE>& matHB)
-    { *new_h_ = matHB; }
+    {
+        *new_h_ = matHB;
+    }
 
     void extrapolateHorder2(dist_matrix::DistMatrix<DISTMATDTYPE> matQ,
         dist_matrix::DistMatrix<DISTMATDTYPE>& yyt, std::ostream& os)
@@ -103,7 +100,9 @@ public:
     }
 
     void saveH(dist_matrix::DistMatrix<DISTMATDTYPE>& matHB)
-    { matHB = *new_h_; }
+    {
+        matHB = *new_h_;
+    }
 
     void updateHminus1(const dist_matrix::DistMatrix<DISTMATDTYPE>& matHB)
     {
@@ -131,8 +130,6 @@ public:
         }
         *h_minus1_ = matHB;
     }
-
 };
 
 #endif
-

@@ -14,8 +14,8 @@
 #include "Delh4.h"
 #include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
-#include "Mesh.h"
 #include "MGmol_MPI.h"
+#include "Mesh.h"
 #include "PBh4.h"
 
 #include "Potentials.h"

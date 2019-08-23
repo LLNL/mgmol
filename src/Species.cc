@@ -806,36 +806,39 @@ void Species::syncKBP(const int root)
 
 void Species::setRcDependentData()
 {
-    assert(rc_ > 0. );
+    assert(rc_ > 0.);
 
-    invrc_ = 1./rc_;
+    invrc_ = 1. / rc_;
 
     const double pi3half = M_PI * sqrt(M_PI);
-    const double rcnorm = rc_ * rc_ * rc_ * pi3half;
+    const double rcnorm  = rc_ * rc_ * rc_ * pi3half;
     assert(rcnorm > 1.e-8);
 
     comp_charge_factor_ = (double)zion_ / rcnorm;
 }
 
-void Species::checkLRadius()const
+void Species::checkLRadius() const
 {
     const double rtol = 1.e-4;
 
     double rhoc0 = getRhoComp(0.);
     double rhocr = getRhoComp(lradius_);
-    if( fabs(rhocr/rhoc0)>rtol )
+    if (fabs(rhocr / rhoc0) > rtol)
     {
-        std::cout<<"WARNING: radius for species "<<name_<<" is too small\n";
-        std::cout<<"WARNING: rhoc("<<lradius_<<") = "<<rhocr<<std::endl;
+        std::cout << "WARNING: radius for species " << name_
+                  << " is too small\n";
+        std::cout << "WARNING: rhoc(" << lradius_ << ") = " << rhocr
+                  << std::endl;
     }
 
     // check neutralizing potential close to Z/r at lradius_
     double vcr = getVcomp(lradius_);
     double zor = (double)zion_ / lradius_;
-    if( fabs((vcr-zor)/zor)>rtol )
+    if (fabs((vcr - zor) / zor) > rtol)
     {
-        std::cout<<"WARNING: radius for species "<<name_<<" is too small\n";
-        std::cout<<"WARNING: vc("<<lradius_<<") = "<<vcr
-                 <<" z/r = "<< zor <<std::endl;
+        std::cout << "WARNING: radius for species " << name_
+                  << " is too small\n";
+        std::cout << "WARNING: vc(" << lradius_ << ") = " << vcr
+                  << " z/r = " << zor << std::endl;
     }
 }

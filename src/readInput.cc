@@ -19,8 +19,8 @@ using namespace std;
 
 #include "Control.h"
 #include "Ions.h"
-#include "LocalizationRegions.h"
 #include "LocGridOrbitals.h"
+#include "LocalizationRegions.h"
 #include "MGmol.h"
 #include "Mesh.h"
 #include "Species.h"
@@ -93,8 +93,7 @@ int MGmol<T>::readLRsFromInput(ifstream* tfile)
             if (!flag)
             {
                 if (ct.verbose > 1)
-                    os_ << "Use atomic position for center "
-                        << i << endl;
+                    os_ << "Use atomic position for center " << i << endl;
 
                 for (int k = 0; k < 3; k++)
                     crds[k] = (*ion)->position(k);

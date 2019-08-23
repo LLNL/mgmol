@@ -80,7 +80,7 @@ ostream& operator<<(ostream& os, const vector<T>& v)
 
 int main(int argc, char** argv)
 {
-    //change handling of memory allocation errors
+    // change handling of memory allocation errors
     set_new_handler(noMoreMemory);
 
     cout.sync_with_stdio();
@@ -392,8 +392,8 @@ int main(int argc, char** argv)
                 "DensityMatrix.algo",
                 po::value<string>()->default_value("Diagonalization"),
                 "Algorithm for computing Density Matrix. "
-                "Diagonalization or SP2.")(
-                "DensityMatrix.use_old", po::value<bool>()->default_value(true),
+                "Diagonalization or SP2.")("DensityMatrix.use_old",
+                po::value<bool>()->default_value(true),
                 "Start DM optimization with matrix of previous WF step");
 
             po::options_description cmdline_options;
@@ -533,7 +533,8 @@ int main(int argc, char** argv)
         if (ct.isLocMode())
             mgmol = new MGmol<LocGridOrbitals>(global_comm, *MPIdata::sout);
         else
-            mgmol= new MGmol<ExtendedGridOrbitals>(global_comm, *MPIdata::sout);
+            mgmol
+                = new MGmol<ExtendedGridOrbitals>(global_comm, *MPIdata::sout);
 
         unsigned ngpts[3]    = { ct.ngpts_[0], ct.ngpts_[1], ct.ngpts_[2] };
         double origin[3]     = { ct.ox_, ct.oy_, ct.oz_ };
@@ -674,4 +675,3 @@ int main(int argc, char** argv)
 
     return 0;
 }
-

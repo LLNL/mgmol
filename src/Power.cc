@@ -8,31 +8,29 @@
 
 #include "Power.h"
 
+#include "DistVector.h"
 #include "GramMatrix.h"
+#include "LocalVector.h"
+#include "SquareLocalMatrices.h"
 #include "mputils.h"
 #include "random.h"
-#include "DistVector.h"
-#include "SquareLocalMatrices.h"
-#include "LocalVector.h"
-
 
 // compute sum of squares of elements of vector y-theta*v
-template<class VECTOR>
-double diff2(
-    VECTOR& y, VECTOR& v, const double theta,
-    const bool verbose)
+template <class VECTOR>
+double diff2(VECTOR& y, VECTOR& v, const double theta, const bool verbose)
 {
     double diff = y.scaledDiff2(v, theta);
 
-    if ( verbose)
-        std::cout << "Power method: theta=" << theta << ", diff2=" << diff << '\n';
+    if (verbose)
+        std::cout << "Power method: theta=" << theta << ", diff2=" << diff
+                  << '\n';
 
     return diff;
 }
 
-template<class VECTOR, class MATRIX>
-double power(MATRIX& A, VECTOR& y,
-    const int maxits, const double epsilon, const bool verbose)
+template <class VECTOR, class MATRIX>
+double power(MATRIX& A, VECTOR& y, const int maxits, const double epsilon,
+    const bool verbose)
 {
     VECTOR v(A.m());
     double theta = 0.;
@@ -42,14 +40,15 @@ double power(MATRIX& A, VECTOR& y,
         y.normalize();
         v.swap(y);
         A.matvec(v, y);
-        theta = y.dot(v);
+        theta            = y.dot(v);
         const double tol = epsilon * fabs(theta);
         // do at least 2 iterations before checking for convergence
         if (i > 1)
             if (diff2(y, v, theta, verbose) <= tol * tol)
             {
                 if (verbose)
-                    std::cout << "Power method converge in " << i << " iterations\n";
+                    std::cout << "Power method converge in " << i
+                              << " iterations\n";
                 break;
             }
     }
@@ -58,14 +57,13 @@ double power(MATRIX& A, VECTOR& y,
 }
 
 // compute extreme eigenvalues of A by power method
-template<class VECTOR, class MATRIX>
-void Power<VECTOR,MATRIX>::computeEigenInterval(
-    const MATRIX& A, double& emin, double& emax,
-    const double epsilon, const bool verbose)
+template <class VECTOR, class MATRIX>
+void Power<VECTOR, MATRIX>::computeEigenInterval(const MATRIX& A, double& emin,
+    double& emax, const double epsilon, const bool verbose)
 {
     compute_tm_.start();
 
-    int maxits     = 100;
+    int maxits = 100;
 
     MATRIX B(A);
     B.shift(shift_);
@@ -99,4 +97,4 @@ void Power<VECTOR,MATRIX>::computeEigenInterval(
 
 template class Power<LocalVector<double>, SquareLocalMatrices<double>>;
 template class Power<dist_matrix::DistVector<double>,
-                     dist_matrix::DistMatrix<double>>;
+    dist_matrix::DistMatrix<double>>;

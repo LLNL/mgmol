@@ -25,8 +25,7 @@ template <class T>
 DFTsolver<T>::DFTsolver(Hamiltonian<T>* hamiltonian,
     ProjectedMatricesInterface* proj_matrices, Energy<T>* energy,
     Electrostatic* electrostat, MGmol<T>* mgmol_strategy, Ions& ions,
-    Rho<T>* rho,
-    DMStrategy* dm_strategy, std::ostream& os)
+    Rho<T>* rho, DMStrategy* dm_strategy, std::ostream& os)
     : hamiltonian_(hamiltonian),
       proj_matrices_(proj_matrices),
       energy_(energy),
@@ -43,17 +42,15 @@ DFTsolver<T>::DFTsolver(Hamiltonian<T>* hamiltonian,
     {
         case OuterSolverType::ABPG:
         {
-            orbitals_stepper_
-                = new ABPG<T>(hamiltonian_, proj_matrices_,
-                                            mgmol_strategy, os_);
+            orbitals_stepper_ = new ABPG<T>(
+                hamiltonian_, proj_matrices_, mgmol_strategy, os_);
             break;
         }
 
         case OuterSolverType::NLCG:
         {
-            orbitals_stepper_ = GrassmanCGFactory<T>::create(
-                hamiltonian_, proj_matrices_, mgmol_strategy, ions, os_,
-                ct.short_sighted);
+            orbitals_stepper_ = GrassmanCGFactory<T>::create(hamiltonian_,
+                proj_matrices_, mgmol_strategy, ions, os_, ct.short_sighted);
 
             break;
         }
@@ -70,7 +67,10 @@ DFTsolver<T>::DFTsolver(Hamiltonian<T>* hamiltonian,
 }
 
 template <class T>
-DFTsolver<T>::~DFTsolver() { delete orbitals_stepper_; }
+DFTsolver<T>::~DFTsolver()
+{
+    delete orbitals_stepper_;
+}
 
 template <class T>
 void DFTsolver<T>::printEnergy(const short step) const
@@ -163,7 +163,8 @@ bool DFTsolver<T>::checkConvPot() const
 // -1 if not reaching minimum convergence
 // -2 if failing to converge
 template <class T>
-int DFTsolver<T>::checkConvergenceEnergy(const short step, const short max_steps)
+int DFTsolver<T>::checkConvergenceEnergy(
+    const short step, const short max_steps)
 {
     Control& ct(*(Control::instance()));
 
@@ -215,8 +216,7 @@ int DFTsolver<T>::checkConvergenceEnergy(const short step, const short max_steps
 }
 
 template <class T>
-double DFTsolver<T>::evaluateEnergy(
-    const T& orbitals, const bool print_flag)
+double DFTsolver<T>::evaluateEnergy(const T& orbitals, const bool print_flag)
 {
     // save energy recent history
     eks_history_[1] = eks_history_[0];
@@ -233,8 +233,8 @@ double DFTsolver<T>::evaluateEnergy(
 }
 
 template <class T>
-int DFTsolver<T>::solve(T& orbitals, T& work_orbitals,
-    Ions& ions, const short max_steps, const short iprint, double& last_eks)
+int DFTsolver<T>::solve(T& orbitals, T& work_orbitals, Ions& ions,
+    const short max_steps, const short iprint, double& last_eks)
 {
     solve_tm_.start();
 
@@ -409,7 +409,10 @@ int DFTsolver<T>::solve(T& orbitals, T& work_orbitals,
 }
 
 template <class T>
-void DFTsolver<T>::printTimers(ostream& os) { solve_tm_.print(os); }
+void DFTsolver<T>::printTimers(ostream& os)
+{
+    solve_tm_.print(os);
+}
 
 template class DFTsolver<LocGridOrbitals>;
 template class DFTsolver<ExtendedGridOrbitals>;

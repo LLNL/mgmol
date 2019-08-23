@@ -28,11 +28,11 @@ void OrbitalsExtrapolationOrder2<T>::extrapolate_orbitals(
 #if EXTRAPOLATE_H
     ProjectedMatricesInterface* proj_matrices = (*orbitals)->getProjMatrices();
     ProjectedMatrices* projmat                = 0;
-    if (ct.OuterSolver() != OuterSolverType::ABPG &&
-        ct.OuterSolver() != OuterSolverType::NLCG )
+    if (ct.OuterSolver() != OuterSolverType::ABPG
+        && ct.OuterSolver() != OuterSolverType::NLCG)
     {
         projmat = dynamic_cast<ProjectedMatrices*>(proj_matrices);
-        if( projmat )use_dense_proj_mat = true;
+        if (projmat) use_dense_proj_mat = true;
     }
 #endif
 
@@ -106,7 +106,8 @@ void OrbitalsExtrapolationOrder2<T>::extrapolate_orbitals(
         if (use_dense_proj_mat)
         {
 #if EXTRAPOLATE_H
-            OrbitalsExtrapolation<T>::hextrapol_->updateHminus1( projmat->getMatHB() );
+            OrbitalsExtrapolation<T>::hextrapol_->updateHminus1(
+                projmat->getMatHB());
 #endif
         }
     }

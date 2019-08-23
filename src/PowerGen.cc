@@ -8,15 +8,14 @@
 
 #include "PowerGen.h"
 
+#include "DistVector.h"
 #include "GramMatrix.h"
 #include "mputils.h"
 #include "random.h"
-#include "DistVector.h"
 
 #include <vector>
 
 Timer PowerGen::compute_tm_("PowerGen::compute");
-
 
 /* Use the power method to compute the extents of the spectrum of the
  * generalized eigenproblem. In order to use a residual-based convergence
@@ -25,8 +24,7 @@ Timer PowerGen::compute_tm_("PowerGen::compute");
  * final eigenvector may not be normalized.
  */
 void PowerGen::computeGenEigenInterval(dist_matrix::DistMatrix<double>& mat,
-    GramMatrix& gm,
-    std::vector<double>& interval, const int maxits,
+    GramMatrix& gm, std::vector<double>& interval, const int maxits,
     const double pad)
 {
     srand(13579);
@@ -57,7 +55,8 @@ void PowerGen::computeGenEigenInterval(dist_matrix::DistMatrix<double>& mat,
     // get norm of initial sol
     double alpha = sol.nrm2();
     double gamma = 1. / alpha;
-    std::cout << "e1:: ITER 0:: = " << alpha << " shift = " << shift_ << std::endl;
+    std::cout << "e1:: ITER 0:: = " << alpha << " shift = " << shift_
+              << std::endl;
 
     // residual
     dist_matrix::DistVector<double> res(new_sol);
@@ -159,8 +158,8 @@ void PowerGen::computeGenEigenInterval(dist_matrix::DistMatrix<double>& mat,
     double padding = pad * (e2 - e1);
 
     std::cout << "Power method Eigen intervals********************  = ( " << e1
-           << ", " << e2 << ")\n"
-           << "iter1 = " << iter1 << ", iter2 = " << iter2 << std::endl;
+              << ", " << e2 << ")\n"
+              << "iter1 = " << iter1 << ", iter2 = " << iter2 << std::endl;
 
     e1 -= padding;
     e2 += padding;

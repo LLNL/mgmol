@@ -564,10 +564,10 @@ int PreconILU<T>::ilu0(LinearSolverMatrix<T2>& csmat_)
         /*-------------------- unpack L & U-parts of column of A */
         std::vector<int>::iterator iL = iU.begin() + i;
         TvecIterator wL               = wU.begin() + i;
-        T dd                          = 1.0e-6; // MAT_TOL; /* initialize diagonal entry */
-        int lenl                      = 0;
-        int lenu                      = 0;
-        iw[i]                         = i;
+        T dd     = 1.0e-6; // MAT_TOL; /* initialize diagonal entry */
+        int lenl = 0;
+        int lenu = 0;
+        iw[i]    = i;
         /*-------------------- scan & unwrap column */
         start = csmat_.getColumnIterator(k1);
         end   = csmat_.getColumnIterator(k2);
@@ -718,10 +718,10 @@ int PreconILU<T>::milut(LinearSolverMatrix<lsdatatype>& csmat_)
         /*-------------------- unpack L & U-parts of column of A */
         std::vector<int>::iterator iL = iU.begin() + i;
         TvecIterator wL               = wU.begin() + i;
-        T dd                          = 1.0e-6; // MAT_TOL; /* initialize diagonal entry */
-        int lenl                      = 0;
-        int lenu                      = 0;
-        iw[i]                         = i;
+        T dd     = 1.0e-6; // MAT_TOL; /* initialize diagonal entry */
+        int lenl = 0;
+        int lenu = 0;
+        iw[i]    = i;
 
         /*-------------------- scan & unwrap column */
         start = csmat_.getColumnIterator(k1);
@@ -985,10 +985,10 @@ int PreconILU<T>::ilut(LinearSolverMatrix<lsdatatype>& csmat_)
         /*-------------------- unpack L & U-parts of column of A */
         std::vector<int>::iterator iL = iU.begin() + i;
         TvecIterator wL               = wU.begin() + i;
-        T dd                          = 1.0e-6; // MAT_TOL; /* initialize diagonal entry */
-        int lenl                      = 0;
-        int lenu                      = 0;
-        iw[i]                         = i;
+        T dd     = 1.0e-6; // MAT_TOL; /* initialize diagonal entry */
+        int lenl = 0;
+        int lenu = 0;
+        iw[i]    = i;
 
         /*-------------------- scan & unwrap column */
         start = csmat_.getColumnIterator(k1);

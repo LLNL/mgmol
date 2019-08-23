@@ -14,7 +14,6 @@
 
 #include <iostream>
 
-
 Timer dgemm_tm("dgemm");
 Timer sgemm_tm("sgemm");
 Timer mpgemm_tm("mpgemm");
@@ -27,8 +26,6 @@ Timer tttsyrk_tm("tttsyrk");
 
 Timer mpdot_tm("mpdot");
 Timer ttdot_tm("ttdot");
-
-
 
 /* Function definitions. See mputils.h for comments */
 

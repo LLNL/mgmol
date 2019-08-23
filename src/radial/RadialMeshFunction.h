@@ -60,7 +60,8 @@ public:
         y_ = y;
     }
 
-    RadialMeshFunction(const std::vector<double>& x, const std::vector<double>& y)
+    RadialMeshFunction(
+        const std::vector<double>& x, const std::vector<double>& y)
     {
         drlin_ = x[1] - x[0];
         assert(drlin_ > 1.e-15);

@@ -36,7 +36,7 @@ class SP2
 
     const double tol_;
 
-    //distributed computation of trace (vs. serial/replicated)
+    // distributed computation of trace (vs. serial/replicated)
     const bool distributed_;
 
     //  double trace1_; //Trace[Xi_]
@@ -64,12 +64,12 @@ public:
     void solve(const int nel, const bool verbose);
 
     // Map variable size matrix to square matrix
-    template<class T>
-    void initializeLocalMat(const T& submatM,
-        const double emin, const double emax, const std::vector<int>& loc_ids);
+    template <class T>
+    void initializeLocalMat(const T& submatM, const double emin,
+        const double emax, const std::vector<int>& loc_ids);
 
     // Map local dm (internal) into global one, and multiply by inverse(S)
-    template<class T>
+    template <class T>
     void getDM(T& submatM, const T& invS,
 #ifdef HAVE_BML
         bml_matrix_t* sDM

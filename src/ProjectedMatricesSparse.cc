@@ -128,8 +128,7 @@ void ProjectedMatricesSparse::setup(
     // assert( (short)global_indexes[0].size()>0 );
     Control& ct = *(Control::instance());
 
-    setupBase(kbt, nel, global_indexes.size(),
-        global_indexes[0].size());
+    setupBase(kbt, nel, global_indexes.size(), global_indexes[0].size());
 
     global_indexes_ = global_indexes;
 

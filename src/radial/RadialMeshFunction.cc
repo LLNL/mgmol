@@ -198,8 +198,8 @@ double RadialMeshFunction::radintf2(const int j)
 }
 
 // compute the inverse FT
-void RadialMeshFunction::inv_ft(const vector<double>& rgrid, vector<double>& rfunc,
-    const int lval, const int j)
+void RadialMeshFunction::inv_ft(const vector<double>& rgrid,
+    vector<double>& rfunc, const int lval, const int j)
 {
     assert(rgrid.size() == rfunc.size());
 

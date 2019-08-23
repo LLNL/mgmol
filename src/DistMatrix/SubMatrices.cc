@@ -86,7 +86,7 @@ void SubMatrices<double>::sendrecv(double* sendbuf, double* recvbuf,
 {
     MPI_Request req;
     bool irecv = false;
-    int src = mype_;
+    int src    = mype_;
 
     for (int p = 0; p < npes_ - 1; p++)
     {
@@ -128,7 +128,7 @@ void SubMatrices<float>::sendrecv(float* sendbuf, float* recvbuf,
 {
     MPI_Request req;
     bool irecv = false;
-    int src = mype_;
+    int src    = mype_;
 
     for (int p = 0; p < npes_ - 1; p++)
     {
@@ -144,8 +144,8 @@ void SubMatrices<float>::sendrecv(float* sendbuf, float* recvbuf,
         int mysize = submat_indexing_.getMySize(src);
         if (mysize)
         {
-            MPI_Irecv(recvbuf + my_displ[src], mysize, MPI_FLOAT, src, p,
-                comm_, &req);
+            MPI_Irecv(recvbuf + my_displ[src], mysize, MPI_FLOAT, src, p, comm_,
+                &req);
             irecv = true;
         }
         else
@@ -250,9 +250,9 @@ void SubMatrices<T>::gather(const DistMatrix<T>& mat)
         memcpy(recvbuf + my_displ[mype_], sendbuf + remote_displ[mype_],
             nelements * sizeof(T));
 
-//    int src = mype_;
+    //    int src = mype_;
 
-    sendrecv(sendbuf,recvbuf,my_displ,remote_displ);
+    sendrecv(sendbuf, recvbuf, my_displ, remote_displ);
 
 #endif
 
@@ -296,7 +296,7 @@ void SubMatrices<T>::gather(const DistMatrix<T>& mat)
 
 ////////////////////////////////////////////////////////////////////////////////
 template <class T>
-void SubMatrices<T>::print(ostream& os)const
+void SubMatrices<T>::print(ostream& os) const
 {
     for (int im = 0; im < nb_local_matrices_; im++)
     {

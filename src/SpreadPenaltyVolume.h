@@ -26,15 +26,15 @@ private:
 
     double volume_target_;
 
-    void computeAndAddResidualSpreadPenalty(const std::vector<float>& lagrangemult,
-        const float factor, const std::vector<Vector3D>& centers,
-        const std::vector<int>& gids, T& orbitals,
-        T& res);
+    void computeAndAddResidualSpreadPenalty(
+        const std::vector<float>& lagrangemult, const float factor,
+        const std::vector<Vector3D>& centers, const std::vector<int>& gids,
+        T& orbitals, T& res);
 
 public:
     SpreadPenaltyVolume(SpreadsAndCenters<T>* spreadf,
-        const double spread_target,
-        const double alpha, const double dampingFactor)
+        const double spread_target, const double alpha,
+        const double dampingFactor)
         : spreadf_(spreadf),
           spread_target_(spread_target),
           alpha_(alpha),

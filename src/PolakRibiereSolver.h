@@ -88,14 +88,12 @@ public:
     PolakRibiereSolver(Hamiltonian<T>* hamiltonian,
         ProjectedMatricesInterface* proj_matrices, Energy<T>* energy,
         Electrostatic* electrostat, MGmol<T>* mgmol_strategy, Ions& ions,
-        Rho<T>* rho,
-        DMStrategy* dm_strategy, std::ostream& os);
+        Rho<T>* rho, DMStrategy* dm_strategy, std::ostream& os);
 
     ~PolakRibiereSolver();
 
-    int solve(T& orbitals, T& work_orbitals,
-        Ions& ions, const short max_steps, const short iprint,
-        double& last_eks);
+    int solve(T& orbitals, T& work_orbitals, Ions& ions, const short max_steps,
+        const short iprint, double& last_eks);
 
     static void resetItCount() { it_scf_ = 0; }
     static void setItCountLarge() { it_scf_ = 1000; }

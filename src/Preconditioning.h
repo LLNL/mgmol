@@ -16,8 +16,8 @@
 #include "Lap.h"
 #include "tools.h"
 
-#include <vector>
 #include <map>
+#include <vector>
 
 template <typename T>
 class Preconditioning

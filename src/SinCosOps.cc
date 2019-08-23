@@ -10,16 +10,15 @@
 
 #include "SinCosOps.h"
 
-#include "FunctionsPacking.h"
 #include "ExtendedGridOrbitals.h"
+#include "FunctionsPacking.h"
 #include "LocGridOrbitals.h"
 #include "MGmol_MPI.h"
 
 using namespace std;
 
 template <class T>
-void SinCosOps<T>::compute(
-    const T& orbitals, vector<vector<double>>& a)
+void SinCosOps<T>::compute(const T& orbitals, vector<vector<double>>& a)
 {
     assert(a.size() == 6);
 
@@ -122,8 +121,7 @@ void SinCosOps<T>::compute(
 }
 
 template <class T>
-void SinCosOps<T>::computeSquare(
-    const T& orbitals, vector<vector<double>>& a)
+void SinCosOps<T>::computeSquare(const T& orbitals, vector<vector<double>>& a)
 {
     assert(a.size() == 6);
     for (short i = 0; i < 6; i++)
@@ -241,8 +239,8 @@ void SinCosOps<T>::computeSquare(
 }
 
 template <class T>
-void SinCosOps<T>::computeSquare1D(const T& orbitals,
-    vector<vector<double>>& a, const int dim_index)
+void SinCosOps<T>::computeSquare1D(
+    const T& orbitals, vector<vector<double>>& a, const int dim_index)
 {
     assert(a.size() == 2);
     for (short i = 0; i < 2; i++)
@@ -332,8 +330,8 @@ void SinCosOps<T>::computeSquare1D(const T& orbitals,
 }
 
 template <class T>
-void SinCosOps<T>::compute1D(const T& orbitals,
-    vector<vector<double>>& a, const int dim_index)
+void SinCosOps<T>::compute1D(
+    const T& orbitals, vector<vector<double>>& a, const int dim_index)
 {
     assert(a.size() == 2);
     for (short i = 0; i < 2; i++)
@@ -429,8 +427,8 @@ void SinCosOps<T>::compute1D(const T& orbitals,
 }
 
 template <class T>
-void SinCosOps<T>::computeDiag2states(const T& orbitals,
-    vector<vector<double>>& a, const int st1, const int st2)
+void SinCosOps<T>::computeDiag2states(
+    const T& orbitals, vector<vector<double>>& a, const int st1, const int st2)
 {
     assert(st1 >= 0);
     assert(st2 >= 0);
@@ -520,8 +518,8 @@ void SinCosOps<T>::computeDiag2states(const T& orbitals,
 }
 
 template <class T>
-void SinCosOps<T>::compute2states(const T& orbitals,
-    vector<vector<double>>& a, const int st1, const int st2)
+void SinCosOps<T>::compute2states(
+    const T& orbitals, vector<vector<double>>& a, const int st1, const int st2)
 {
     assert(a.size() == 6);
     assert(st1 >= 0);
@@ -627,8 +625,8 @@ void SinCosOps<T>::compute2states(const T& orbitals,
 }
 
 template <class T>
-void SinCosOps<T>::compute(const T& orbitals1,
-    const T& orbitals2, vector<vector<double>>& a)
+void SinCosOps<T>::compute(
+    const T& orbitals1, const T& orbitals2, vector<vector<double>>& a)
 {
     assert(a.size() == 6);
 

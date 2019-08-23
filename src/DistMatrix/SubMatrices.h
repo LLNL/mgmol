@@ -23,12 +23,11 @@ typedef int MPI_Comm;
 #include "Timer.h"
 // template <class T> class SubMatricesIndexing;
 
+#include <cstring>
 #include <iostream>
 #include <vector>
-#include <cstring>
 
 typedef unsigned int type_displ;
-
 
 namespace dist_matrix
 {
@@ -72,14 +71,14 @@ public:
     }
 
     SubMatrices<T>(const std::string& name,
-        const std::vector<std::vector<int>>& indexes,
-        MPI_Comm comm, const DistMatrix<T>& mat, const SubMatricesIndexing<T>&);
+        const std::vector<std::vector<int>>& indexes, MPI_Comm comm,
+        const DistMatrix<T>& mat, const SubMatricesIndexing<T>&);
 
     ~SubMatrices<T>() { delete[] storage_; }
 
     void scal(const double alpha);
     void gather(const DistMatrix<T>& mat);
-    void print(std::ostream&)const;
+    void print(std::ostream&) const;
     void get_array(const int im, std::vector<T>& val);
 
     T val(const int i, const int j, const int im) const

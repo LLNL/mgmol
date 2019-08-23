@@ -1,14 +1,14 @@
 #include "GrassmanCGFactory.h"
-#include "GrassmanCGSparse.h"
 #include "GrassmanCG.h"
+#include "GrassmanCGSparse.h"
 #include "LocGridOrbitals.h"
 
 template <>
 OrbitalsStepper<LocGridOrbitals>* GrassmanCGFactory<LocGridOrbitals>::create(
     Hamiltonian<LocGridOrbitals>* hamiltonian,
     ProjectedMatricesInterface* proj_matrices,
-    MGmol<LocGridOrbitals>* mgmol_strategy,
-    Ions& ions, std::ostream& os, const bool short_sighted)
+    MGmol<LocGridOrbitals>* mgmol_strategy, Ions& ions, std::ostream& os,
+    const bool short_sighted)
 {
     OrbitalsStepper<LocGridOrbitals>* stepper;
 
@@ -31,8 +31,8 @@ OrbitalsStepper<ExtendedGridOrbitals>*
 GrassmanCGFactory<ExtendedGridOrbitals>::create(
     Hamiltonian<ExtendedGridOrbitals>* hamiltonian,
     ProjectedMatricesInterface* proj_matrices,
-    MGmol<ExtendedGridOrbitals>* mgmol_strategy,
-    Ions& ions, std::ostream& os, const bool short_sighted)
+    MGmol<ExtendedGridOrbitals>* mgmol_strategy, Ions& ions, std::ostream& os,
+    const bool short_sighted)
 {
     OrbitalsStepper<ExtendedGridOrbitals>* stepper
         = new GrassmanCG<ExtendedGridOrbitals>(
@@ -40,4 +40,3 @@ GrassmanCGFactory<ExtendedGridOrbitals>::create(
 
     return stepper;
 }
-

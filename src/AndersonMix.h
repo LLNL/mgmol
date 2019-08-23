@@ -15,8 +15,8 @@
 #include "Timer.h"
 
 #include <cassert>
-#include <vector>
 #include <iostream>
+#include <vector>
 
 template <class T>
 class AndersonMix : public Mixing<T>
@@ -40,8 +40,7 @@ class AndersonMix : public Mixing<T>
 public:
     static Timer update_tm() { return update_tm_; }
 
-    AndersonMix(
-        const int m, const double beta, T& x);
+    AndersonMix(const int m, const double beta, T& x);
 
     virtual ~AndersonMix();
 

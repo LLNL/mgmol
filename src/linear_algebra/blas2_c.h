@@ -22,8 +22,8 @@ extern "C"
         double*, Pint);
     void DGEMV(Pchar, Pint, Pint, Pdouble, Pdouble, Pint, Pdouble, Pint,
         Pdouble, double*, Pint);
-    void SGEMV(Pchar, Pint, Pint, Pfloat, Pfloat, Pint, Pfloat, Pint,
-        Pfloat, float*, Pint);
+    void SGEMV(Pchar, Pint, Pint, Pfloat, Pfloat, Pint, Pfloat, Pint, Pfloat,
+        float*, Pint);
 }
 
 #endif

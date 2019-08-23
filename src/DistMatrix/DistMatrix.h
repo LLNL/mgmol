@@ -11,9 +11,9 @@
 #ifndef MGMOL_DISTMATRIX_H
 #define MGMOL_DISTMATRIX_H
 
+#include "MGmol_scalapack.h"
 #include "Timer.h"
 #include "mputils.h"
-#include "MGmol_scalapack.h"
 
 #include <cassert>
 #include <complex>
@@ -31,7 +31,8 @@ typedef double DISTMATDTYPE;
 
 namespace dist_matrix
 {
-template <class T> class DistVector;
+template <class T>
+class DistVector;
 
 class BlacsContext;
 
@@ -71,7 +72,6 @@ private:
     double dot(const DistMatrix<T>& a) const;
 
 protected:
-
     // local array
     std::vector<T> val_;
 
@@ -114,11 +114,11 @@ public:
     // input: global index (i,j)
     void addval(const int i, const int j, const T val)
     {
-        int dummy=0;
-        int ig = i + 1;
-        const int il = INDXG2L(&ig, &mb_, &dummy, &dummy, &nprow_)-1;
-        int jg = j + 1;
-        const int jl = INDXG2L(&jg, &nb_, &dummy, &dummy, &npcol_)-1;
+        int dummy    = 0;
+        int ig       = i + 1;
+        const int il = INDXG2L(&ig, &mb_, &dummy, &dummy, &nprow_) - 1;
+        int jg       = j + 1;
+        const int jl = INDXG2L(&jg, &nb_, &dummy, &dummy, &npcol_) - 1;
         val_[il + jl * mloc_] += val;
     }
 
@@ -251,7 +251,7 @@ public:
         return *this;
     }
 
-    ~DistMatrix(){}
+    ~DistMatrix() {}
 
     void identity(void);
 
@@ -346,9 +346,8 @@ public:
 
     // get value for global index (i,j)
     // assuming we are on the right processor to get it!
-    T getVal(
-        const int i, const int j) const;
-    T getValOnPE(const int i, const int j)const;
+    T getVal(const int i, const int j) const;
+    T getValOnPE(const int i, const int j) const;
 
     void assign(const T* const v, const int n)
     {
@@ -367,10 +366,10 @@ public:
         }
     }
 
-    //assign data only on first MPI task
+    // assign data only on first MPI task
     void assign0(const std::vector<T>& v)
     {
-        if (myrow_==0 && mycol_==0)
+        if (myrow_ == 0 && mycol_ == 0)
         {
             assert(v.size() <= size_);
             memcpy(val_.data(), v.data(), v.size() * sizeof(T));
@@ -379,10 +378,7 @@ public:
 
     void swapColumns(const int j1, const int j2);
 
-    void swap(DistMatrix<T>& dm)
-    {
-        val_.swap(dm.val_);
-    }
+    void swap(DistMatrix<T>& dm) { val_.swap(dm.val_); }
 
     void axpyColumn(const int icol, const double alpha, const DistMatrix<T>& x);
     void scalColumn(const int icol, const double alpha);

@@ -10,8 +10,8 @@
 
 #include "PCGSolver.h"
 
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 using namespace std;
 
 template <class T, typename T2>
@@ -186,13 +186,13 @@ bool PCGSolver<T, T2>::solve(pb::GridFunc<T2>& gf_phi, pb::GridFunc<T2>& gf_rhs)
 
     double init_rnorm = res.norm2();
     assert(init_rnorm == init_rnorm);
-    //cout<<"init_rnorm="<<init_rnorm<<endl;
+    // cout<<"init_rnorm="<<init_rnorm<<endl;
 
-    //Early return if rhs is 0.
-    //Not doing that can cause numerical issues
-    if(init_rnorm < 1.e-24)return true;
+    // Early return if rhs is 0.
+    // Not doing that can cause numerical issues
+    if (init_rnorm < 1.e-24) return true;
 
-    double rnorm      = init_rnorm;
+    double rnorm = init_rnorm;
 
     /* preconditioned residual as type POISSONPRECONDTYPE */
     pb::GridFunc<POISSONPRECONDTYPE> prec_z(finegrid, bc_[0], bc_[1], bc_[2]);

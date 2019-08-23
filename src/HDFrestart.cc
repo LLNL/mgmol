@@ -349,7 +349,7 @@ void HDFrestart::addMDstep2File(const int md_step)
 
 float HDFrestart::getMDTimeFromFile() const
 {
-    float run_time       = 0.;
+    float run_time            = 0.;
     std::string function_name = "HDFrestart::getMDTimeFromFile()";
     if (onpe0)
     {
@@ -400,8 +400,8 @@ int HDFrestart::getMDstepFromFile() const { return getFromFile("MD_step"); }
 
 int HDFrestart::getFromFile(std::string attname) const
 {
-    int data             = 1;
-   std:: string function_name = "HDFrestart::getFromFile()";
+    int data                  = 1;
+    std::string function_name = "HDFrestart::getFromFile()";
     if (onpe0)
     {
         htri_t exists = H5Aexists(file_id_, attname.c_str());
@@ -1053,8 +1053,8 @@ int HDFrestart::getLRCenters(std::multimap<std::string, Vector3D>& centers,
                 {
                     Vector3D center(attr_data[4 * i], attr_data[4 * i + 1],
                         attr_data[4 * i + 2]);
-                    centers.insert(std::pair<std::string, Vector3D>(
-                        datasetname, center));
+                    centers.insert(
+                        std::pair<std::string, Vector3D>(datasetname, center));
                     if (verbosity_ > 2 && onpe0)
                     {
                         (*MPIdata::sout) << setprecision(8);
@@ -1339,7 +1339,7 @@ int HDFrestart::read_1func_hdf5(double* vv, std::string datasetname)
             {
                 assert(active_);
                 //(*MPIdata::sout)<<"PE: "<<pes_.mytask()<<", Send "<<bsize_<<"
-                //data to "<<dest<<endl;
+                // data to "<<dest<<endl;
                 MPI_Send(work_space_double_ + i * bsize_, bsize_, MPI_DOUBLE,
                     dest, tag, comm_data_);
             }
@@ -1485,7 +1485,7 @@ int HDFrestart::read_1func_hdf5(float* vv, std::string datasetname)
             {
                 assert(active_);
                 //(*MPIdata::sout)<<"PE: "<<pes_.mytask()<<", Send "<<bsize_<<"
-                //data to "<<dest<<endl;
+                // data to "<<dest<<endl;
                 MPI_Send(work_space_float_ + i * bsize_, bsize_, MPI_FLOAT,
                     dest, tag, comm_data_);
             }
@@ -1774,7 +1774,7 @@ int HDFrestart::readData(
                 else if (pes_.my_mpi(0) == i)
                 {
                     //(*MPIdata::sout)<<"PE: "<<pes_.mytask()<<", Receive data
-                    //from "<<ipe<<endl;
+                    // from "<<ipe<<endl;
                     MPI_Recv(work_space_double_, bsize_, MPI_DOUBLE, source,
                         tag, comm_data_, &mpistatus);
                 }
@@ -1794,7 +1794,7 @@ int HDFrestart::readData(
                 else if (pes_.my_mpi(0) == i)
                 {
                     //(*MPIdata::sout)<<"PE: "<<pes_.mytask()<<", Receive data
-                    //from "<<ipe<<endl;
+                    // from "<<ipe<<endl;
                     MPI_Recv(work_space_float_, bsize_, MPI_FLOAT, source, tag,
                         comm_data_, &mpistatus);
                 }
@@ -1934,7 +1934,7 @@ int HDFrestart::writeData(double* data, hid_t space_id, hid_t memspace,
                 else if (pes_.my_mpi(0) == 0)
                 {
                     //(*MPIdata::sout)<<"PE: "<<pes_.mytask()<<", Receive data
-                    //from "<<ipe<<endl;
+                    // from "<<ipe<<endl;
                     MPI_Recv(work_space_double_ + i * bsize_, bsize_,
                         MPI_DOUBLE, ipe, i, comm_data_, &mpistatus);
                 }
@@ -1953,7 +1953,7 @@ int HDFrestart::writeData(double* data, hid_t space_id, hid_t memspace,
                 else if (pes_.my_mpi(0) == 0)
                 {
                     //(*MPIdata::sout)<<"PE: "<<pes_.mytask()<<", Receive data
-                    //from "<<ipe<<endl;
+                    // from "<<ipe<<endl;
                     MPI_Recv(work_space_float_ + i * bsize_, bsize_, MPI_FLOAT,
                         ipe, i, comm_data_, &mpistatus);
                 }

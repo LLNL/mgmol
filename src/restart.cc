@@ -168,8 +168,8 @@ int MGmol<T>::write_hdf5(HDFrestart& h5f_file, vector<vector<RHODTYPE>>& rho,
         int ierr = orbitals.write_hdf5(h5f_file);
         if (ierr < 0) return ierr;
 
-        if (ct.isLocMode() &&
-            ct.WFExtrapolation() == WFExtrapolationType::Reversible)
+        if (ct.isLocMode()
+            && ct.WFExtrapolation() == WFExtrapolationType::Reversible)
         {
             lrs.writeOldCenters(h5f_file);
         }
@@ -207,12 +207,12 @@ int MGmol<T>::read_restart_lrs(HDFrestart& h5f_file, const string& dset_name)
 
 // Reads the restart information from restart files.
 template <class T>
-int MGmol<T>::read_restart_data(
-    HDFrestart& h5f_file, Rho<T>& rho, T& orbitals)
+int MGmol<T>::read_restart_data(HDFrestart& h5f_file, Rho<T>& rho, T& orbitals)
 {
     Control& ct = *(Control::instance());
     if (ct.verbose > 0)
-        printWithTimeStamp("MGmol<T>::read_restart_data()...", (*MPIdata::sout));
+        printWithTimeStamp(
+            "MGmol<T>::read_restart_data()...", (*MPIdata::sout));
 
     Timer timer("ReadRestart");
     timer.start();
@@ -227,8 +227,8 @@ int MGmol<T>::read_restart_data(
         int ierr = orbitals.read_hdf5(h5f_file);
         if (ierr < 0)
         {
-            (*MPIdata::serr) << "MGmol<T>::read_restart_data(): error in reading "
-                             << endl;
+            (*MPIdata::serr)
+                << "MGmol<T>::read_restart_data(): error in reading " << endl;
             return ierr;
         }
     }

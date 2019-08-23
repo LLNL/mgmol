@@ -10,8 +10,8 @@
 
 #include "ReplicatedWorkSpace.h"
 
-#include "MGmol_blas1.h"
 #include "MGmol_MPI.h"
+#include "MGmol_blas1.h"
 
 #ifdef USE_MPI
 #include <mpi.h>
@@ -52,4 +52,3 @@ void ReplicatedWorkSpace<T>::setUpperTriangularSquareMatrixToZero()
 }
 
 template class ReplicatedWorkSpace<double>;
-

@@ -47,8 +47,7 @@ public:
 
     void initializeMatB(const SquareLocalMatrices<MATDTYPE>& ss)
     {
-        LocalMatrices2DistMatrix* sl2dm =
-            LocalMatrices2DistMatrix::instance();
+        LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
 
         sl2dm->accumulate(ss, *work_, dim_);
 

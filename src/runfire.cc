@@ -10,10 +10,10 @@
 
 #include "Control.h"
 #include "DFTsolver.h"
+#include "ExtendedGridOrbitals.h"
 #include "FIRE.h"
 #include "FIRE_IonicStepper.h"
 #include "Ions.h"
-#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "MGmol.h"
 #include "MPIdata.h"
@@ -29,8 +29,7 @@ void MGmol<T>::runfire(T** orbitals, Ions& ions)
 
     Control& ct = *(Control::instance());
 
-    FIRE<T> fire(orbitals, ions, *rho_, *constraints_, *lrs_,
-        *currentMasks_,
+    FIRE<T> fire(orbitals, ions, *rho_, *constraints_, *lrs_, *currentMasks_,
         *electrostat_, ct.dt, *this);
 
     DFTsolver<T>::resetItCount();
@@ -127,4 +126,3 @@ template void MGmol<LocGridOrbitals>::runfire(
     LocGridOrbitals** orbitals, Ions& ions);
 template void MGmol<ExtendedGridOrbitals>::runfire(
     ExtendedGridOrbitals** orbitals, Ions& ions);
-

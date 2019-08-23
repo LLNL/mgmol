@@ -14,12 +14,12 @@
 #include "GridFunc.h"
 #include "IonData.h"
 #include "KBprojector.h"
-#include "Species.h"
 #include "Mesh.h"
+#include "Species.h"
 
 #include <cstring>
-#include <vector>
 #include <memory>
+#include <vector>
 
 // Ion structure
 class Ion
@@ -124,10 +124,7 @@ public:
         return radius;
     }
 
-    const Species& getSpecies()const
-    {
-        return species_;
-    }
+    const Species& getSpecies() const { return species_; }
 
     double getRadiusLocalPot() const { return species_.lradius(); }
 
@@ -168,10 +165,7 @@ public:
     bool here(void) const { return here_; }
     void set_here(bool val) { here_ = val; }
 
-    double eself() const
-    {
-        return species_.eself();
-    }
+    double eself() const { return species_.eself(); }
 
     double getZion() const
     {
@@ -307,7 +301,7 @@ public:
     }
     void setFromIonData(const IonData& data);
 
-    void getIonData(IonData& data)const;
+    void getIonData(IonData& data) const;
 
     void getGidsNLprojs(std::vector<int>& gids) const;
     void getKBsigns(std::vector<short>& kbsigns) const;

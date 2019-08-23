@@ -39,9 +39,9 @@ private:
     const MGmol<T>& mgmol_strategy_;
 
 public:
-    FIRE(T** orbitals, Ions& ions, Rho<T>& rho,
-        ConstraintSet& constraints, LocalizationRegions& lrs, MasksSet& masks,
-        Electrostatic& electrostat, const double dt, MGmol<T>&);
+    FIRE(T** orbitals, Ions& ions, Rho<T>& rho, ConstraintSet& constraints,
+        LocalizationRegions& lrs, MasksSet& masks, Electrostatic& electrostat,
+        const double dt, MGmol<T>&);
 
     ~FIRE(){};
 };

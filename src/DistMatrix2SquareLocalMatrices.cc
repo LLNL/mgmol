@@ -11,10 +11,10 @@
 #include "DistMatrix2SquareLocalMatrices.h"
 
 DistMatrix2SquareLocalMatrices* DistMatrix2SquareLocalMatrices::pinstance_ = 0;
-MPI_Comm DistMatrix2SquareLocalMatrices::comm_   = MPI_COMM_NULL;
-std::unique_ptr< dist_matrix::SubMatricesIndexing<DISTMATDTYPE> >
+MPI_Comm DistMatrix2SquareLocalMatrices::comm_ = MPI_COMM_NULL;
+std::unique_ptr<dist_matrix::SubMatricesIndexing<DISTMATDTYPE>>
     DistMatrix2SquareLocalMatrices::submat_indexing_;
-std::unique_ptr< dist_matrix::SubMatrices<DISTMATDTYPE> >
+std::unique_ptr<dist_matrix::SubMatrices<DISTMATDTYPE>>
     DistMatrix2SquareLocalMatrices::submatWork_;
 
 Timer DistMatrix2SquareLocalMatrices::convert_tm_(
@@ -29,23 +29,23 @@ void DistMatrix2SquareLocalMatrices::convert(
     submatWork_->gather(dmat);
 
     const short nd = lmat.subdiv();
-    const int dim = lmat.n();
+    const int dim  = lmat.n();
 
     for (short i = 0; i < nd; i++)
     {
         DISTMATDTYPE* local = lmat.getSubMatrix(i);
 
         for (int ii = 0; ii < dim; ii++)
-        for (int jj = 0; jj < dim; jj++)
-            local[ii + dim * jj] = submatWork_->val(ii, jj, i);
+            for (int jj = 0; jj < dim; jj++)
+                local[ii + dim * jj] = submatWork_->val(ii, jj, i);
     }
 
     convert_tm_.stop();
 }
 
 const dist_matrix::SubMatrices<DISTMATDTYPE>&
-    DistMatrix2SquareLocalMatrices::convert(
-        const dist_matrix::DistMatrix<DISTMATDTYPE>& dmat)
+DistMatrix2SquareLocalMatrices::convert(
+    const dist_matrix::DistMatrix<DISTMATDTYPE>& dmat)
 {
     submatWork_->gather(dmat);
 

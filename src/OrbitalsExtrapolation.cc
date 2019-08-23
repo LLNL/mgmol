@@ -10,9 +10,9 @@
 
 #include "OrbitalsExtrapolation.h"
 #include "ClusterOrbitals.h"
-#include "LocalizationRegions.h"
 #include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
+#include "LocalizationRegions.h"
 #include "MPIdata.h"
 #include "MasksSet.h"
 #include "Mesh.h"
@@ -20,10 +20,13 @@
 
 using namespace std;
 
-template<class T>
-OrbitalsExtrapolation<T>::~OrbitalsExtrapolation() { clearOldOrbitals(); }
+template <class T>
+OrbitalsExtrapolation<T>::~OrbitalsExtrapolation()
+{
+    clearOldOrbitals();
+}
 
-template<class T>
+template <class T>
 void OrbitalsExtrapolation<T>::clearOldOrbitals()
 {
     if (orbitals_minus1_ != 0)
@@ -36,7 +39,7 @@ void OrbitalsExtrapolation<T>::clearOldOrbitals()
 #endif
 }
 
-template<class T>
+template <class T>
 bool OrbitalsExtrapolation<T>::getRestartData(T& orbitals)
 {
     if (orbitals_minus1_ != 0)
@@ -50,7 +53,7 @@ bool OrbitalsExtrapolation<T>::getRestartData(T& orbitals)
     }
 }
 
-template<class T>
+template <class T>
 void OrbitalsExtrapolation<T>::setupPreviousOrbitals(T** orbitals,
     ProjectedMatricesInterface* proj_matrices, LocalizationRegions* lrs,
     ClusterOrbitals* local_cluster, MasksSet* currentMasks, MasksSet* corrMasks,
@@ -64,8 +67,7 @@ void OrbitalsExtrapolation<T>::setupPreviousOrbitals(T** orbitals,
     const pb::Grid& mygrid = mymesh->grid();
 
     T* new_orbitals
-        = new T("ForExtraploation", mygrid, mymesh->subdivx(),
-            ct.numst, ct.bc,
+        = new T("ForExtraploation", mygrid, mymesh->subdivx(), ct.numst, ct.bc,
             proj_matrices, lrs, currentMasks, corrMasks, local_cluster);
 
     new_orbitals->read_func_hdf5(h5f_file, "ExtrapolatedFunction");

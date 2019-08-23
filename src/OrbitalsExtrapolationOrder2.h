@@ -17,12 +17,9 @@ template <class T>
 class OrbitalsExtrapolationOrder2 : public OrbitalsExtrapolation<T>
 {
 public:
-    OrbitalsExtrapolationOrder2()
-        : extrapolated_H_(false)
-    {}
+    OrbitalsExtrapolationOrder2() : extrapolated_H_(false) {}
 
-    void extrapolate_orbitals(
-        T** orbitals, T* new_orbitals);
+    void extrapolate_orbitals(T** orbitals, T* new_orbitals);
 
     bool extrapolatedH() const { return extrapolated_H_; }
 

@@ -11,8 +11,8 @@
 #include "Energy.h"
 #include "Control.h"
 #include "Electrostatic.h"
-#include "Ions.h"
 #include "ExtendedGridOrbitals.h"
+#include "Ions.h"
 #include "LocGridOrbitals.h"
 #include "Mesh.h"
 #include "Potentials.h"
@@ -27,10 +27,9 @@ using namespace std;
 #define RY2HA 0.5
 
 template <class T>
-Energy<T>::Energy(const pb::Grid& mygrid, const Ions& ions, const Potentials& pot,
-    const Electrostatic& es, const Rho<T>& rho,
-    const XConGrid& xc,
-    SpreadPenaltyInterface<T>* spread_penalty)
+Energy<T>::Energy(const pb::Grid& mygrid, const Ions& ions,
+    const Potentials& pot, const Electrostatic& es, const Rho<T>& rho,
+    const XConGrid& xc, SpreadPenaltyInterface<T>* spread_penalty)
     : mygrid_(mygrid),
       ions_(ions),
       pot_(pot),
@@ -104,7 +103,7 @@ double Energy<T>::evaluateEnergyIonsInVext()
     }
 
     //(*MPIdata::sout)<<"Energy<T>::evaluateEnergyIonsInVext(),
-    //energy="<<energy<<endl;
+    // energy="<<energy<<endl;
     double tmp      = 0.;
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     mmpi.allreduce(&energy, &tmp, 1, MPI_SUM);
@@ -115,8 +114,8 @@ double Energy<T>::evaluateEnergyIonsInVext()
 
 template <class T>
 double Energy<T>::evaluateTotal(const double ts, // in [Ha]
-    ProjectedMatricesInterface* projmatrices, const T& phi,
-    const int verbosity, ostream& os)
+    ProjectedMatricesInterface* projmatrices, const T& phi, const int verbosity,
+    ostream& os)
 {
     eval_te_tm_.start();
 
@@ -195,4 +194,3 @@ double Energy<T>::evaluateTotal(const double ts, // in [Ha]
 
 template class Energy<LocGridOrbitals>;
 template class Energy<ExtendedGridOrbitals>;
-

@@ -18,7 +18,8 @@
 
 #include <iostream>
 
-template <class T> class MGmol;
+template <class T>
+class MGmol;
 
 template <class T>
 class GrassmanLineMinimization : public OrbitalsStepper<T>
@@ -48,8 +49,8 @@ protected:
     static Timer comp_res_tm_;
     static Timer update_states_tm_;
 
-    void update_states(T& orbitals, T& res,
-        T& work_orbitals, const double precond_factor);
+    void update_states(
+        T& orbitals, T& res, T& work_orbitals, const double precond_factor);
 
 public:
     GrassmanLineMinimization(Hamiltonian<T>* hamiltonian,
@@ -60,7 +61,7 @@ public:
           mgmol_strategy_(mgmol_strategy),
           os_(os)
     {
-        ptr2ions_ = &ions;
+        ptr2ions_  = &ions;
         conjugate_ = false;
     }
 
@@ -75,20 +76,20 @@ public:
 
     void setup(T&){};
 
-    int update(T& orbitals, Ions& ions,
-        const double precond_factor, const bool orthof,
-        T& work_orbitals, const bool accelerate,
+    int update(T& orbitals, Ions& ions, const double precond_factor,
+        const bool orthof, T& work_orbitals, const bool accelerate,
         const bool print_res, const double atol);
 
-    virtual void conjugate()                                  = 0;
-    virtual double computeStepSize(T& orbitals) = 0;
-    virtual void parallelTransportUpdate(
-        const double lambda, T& orbitals)
-        = 0;
+    virtual void conjugate()                                               = 0;
+    virtual double computeStepSize(T& orbitals)                            = 0;
+    virtual void parallelTransportUpdate(const double lambda, T& orbitals) = 0;
     static void printTimers(std::ostream& os);
 };
 // Instantiate static variables here to avoid clang warnings
-template <class T> bool GrassmanLineMinimization<T>::pbset_ = false;
-template <class T> bool GrassmanLineMinimization<T>::accelerate_ = false;
-template <class T> bool GrassmanLineMinimization<T>::conjugate_  = false;
+template <class T>
+bool GrassmanLineMinimization<T>::pbset_ = false;
+template <class T>
+bool GrassmanLineMinimization<T>::accelerate_ = false;
+template <class T>
+bool GrassmanLineMinimization<T>::conjugate_ = false;
 #endif

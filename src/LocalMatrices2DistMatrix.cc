@@ -12,18 +12,18 @@
 #include "MGmol_MPI.h"
 
 LocalMatrices2DistMatrix* LocalMatrices2DistMatrix::pinstance_ = nullptr;
-MPI_Comm LocalMatrices2DistMatrix::comm_   = MPI_COMM_NULL;
+MPI_Comm LocalMatrices2DistMatrix::comm_                       = MPI_COMM_NULL;
 std::vector<std::vector<int>> LocalMatrices2DistMatrix::global_indexes_;
 double LocalMatrices2DistMatrix::tol_mat_elements = 1.e-14;
 dist_matrix::RemoteTasksDistMatrix<DISTMATDTYPE>*
-    LocalMatrices2DistMatrix::remote_tasks_DistMatrix_ = nullptr;
-short LocalMatrices2DistMatrix::sparse_distmatrix_nb_tasks_per_partitions_ = 256;
+    LocalMatrices2DistMatrix::remote_tasks_DistMatrix_
+    = nullptr;
+short LocalMatrices2DistMatrix::sparse_distmatrix_nb_tasks_per_partitions_
+    = 256;
 
 template <class T>
-void LocalMatrices2DistMatrix::convert(
-    const LocalMatrices<T>& src,
-    dist_matrix::SparseDistMatrix<T>& dst,
-    const int numst,
+void LocalMatrices2DistMatrix::convert(const LocalMatrices<T>& src,
+    dist_matrix::SparseDistMatrix<T>& dst, const int numst,
     const double tol) const
 {
     const int subdiv = (int)global_indexes_.size();
@@ -91,13 +91,11 @@ void LocalMatrices2DistMatrix::convert(
     delete[] ist;
 }
 
-//Sum up all the local contributions (in LocalMatrices) into 
-//one DistMatrix
-template<class T>
+// Sum up all the local contributions (in LocalMatrices) into
+// one DistMatrix
+template <class T>
 void LocalMatrices2DistMatrix::accumulate(const LocalMatrices<T>& src,
-        dist_matrix::DistMatrix<T>& dst,
-        const int numst,
-        const double tol)const
+    dist_matrix::DistMatrix<T>& dst, const int numst, const double tol) const
 {
     assert(remote_tasks_DistMatrix_ != nullptr);
 #ifdef USE_MPI
@@ -110,16 +108,18 @@ void LocalMatrices2DistMatrix::accumulate(const LocalMatrices<T>& src,
         0, dst, remote_tasks_DistMatrix_);
 #endif
 
-    //convert into a SparseDistMatrix
+    // convert into a SparseDistMatrix
     convert(src, sm, numst, tol);
 
-    //accumulate into a DistMatrix
+    // accumulate into a DistMatrix
     sm.parallelSumToDistMatrix();
 }
 
 template void LocalMatrices2DistMatrix::convert(
-    const LocalMatrices<DISTMATDTYPE>& src, dist_matrix::SparseDistMatrix<DISTMATDTYPE>& dst,
-    const int numst, const double tol)const;
+    const LocalMatrices<DISTMATDTYPE>& src,
+    dist_matrix::SparseDistMatrix<DISTMATDTYPE>& dst, const int numst,
+    const double tol) const;
 template void LocalMatrices2DistMatrix::accumulate(
-    const LocalMatrices<DISTMATDTYPE>& src, dist_matrix::DistMatrix<DISTMATDTYPE>& dst,
-    const int numst, const double tol)const;
+    const LocalMatrices<DISTMATDTYPE>& src,
+    dist_matrix::DistMatrix<DISTMATDTYPE>& dst, const int numst,
+    const double tol) const;

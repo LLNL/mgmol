@@ -39,7 +39,7 @@ class KBprojectorSparse : public KBprojector
     std::vector<std::vector<std::vector<std::vector<KBPROJDTYPE*>>>>
         ptr_projector_;
 
-    //storage for each 'iloc' i sstored in a std::vector
+    // storage for each 'iloc' i sstored in a std::vector
     std::vector<std::vector<KBPROJDTYPE>> projectors_storage_;
 
     std::vector<int> size_nl_;
@@ -72,14 +72,13 @@ class KBprojectorSparse : public KBprojector
     void setDProjector(const short iloc, const int icount);
     void setFProjector(const short iloc, const int icount);
 
-    void setNLindex(const short iloc, const int size,
-        const std::vector<int>& pvec);
+    void setNLindex(
+        const short iloc, const int size, const std::vector<int>& pvec);
 
     void setKBProjStart();
     void setProjIndices(const short dir);
     int get_index_array(std::vector<int>& pvec, const short iloc,
-        const short index_low[3],
-        const short index_high[3]);
+        const short index_low[3], const short index_high[3]);
     bool overlapWithBox(const short index_low[3], const short index_high[3]);
 
     // get projector l,m in pieces corresponding to subdivisions
@@ -115,16 +114,14 @@ class KBprojectorSparse : public KBprojector
     void axpySKetT(const short iloc, const double alpha, T* const dst) const;
 
     template <typename T>
-    void axpyKetT(const short iloc, const std::vector<double>&  alpha, T* const dst) const;
+    void axpyKetT(
+        const short iloc, const std::vector<double>& alpha, T* const dst) const;
 
 public:
     KBprojectorSparse(const Species& sp);
     KBprojectorSparse(const KBprojectorSparse& kbp);
 
-    ~KBprojectorSparse()
-    {
-        clear();
-    }
+    ~KBprojectorSparse() { clear(); }
 
     void clear()
     {
@@ -140,7 +137,7 @@ public:
             proj_indices_[dir].clear();
     }
 
-    //setup data that depends on atomic position
+    // setup data that depends on atomic position
     void setup(const double center[3]);
 
     double maxRadius() const;
@@ -152,18 +149,27 @@ public:
     double dotPsi(const short iloc, const short index) const;
 
     // axpySket for templated destination type
-    virtual void axpySKet(const short iloc, const double alpha, double* const dst) const
-    { axpySKetT(iloc, alpha, dst); }
-    virtual void axpySKet(const short iloc, const double alpha, float* const dst) const
-    { axpySKetT(iloc, alpha, dst); }
+    virtual void axpySKet(
+        const short iloc, const double alpha, double* const dst) const
+    {
+        axpySKetT(iloc, alpha, dst);
+    }
+    virtual void axpySKet(
+        const short iloc, const double alpha, float* const dst) const
+    {
+        axpySKetT(iloc, alpha, dst);
+    }
 
-    virtual void axpyKet(
-        const short iloc, const std::vector<double>& alpha, double* const dst) const
-    { axpyKetT(iloc, alpha, dst); }
-    virtual void axpyKet(
-        const short iloc, const std::vector<double>& alpha, float* const dst) const
-    { axpyKetT(iloc, alpha, dst); }
-
+    virtual void axpyKet(const short iloc, const std::vector<double>& alpha,
+        double* const dst) const
+    {
+        axpyKetT(iloc, alpha, dst);
+    }
+    virtual void axpyKet(const short iloc, const std::vector<double>& alpha,
+        float* const dst) const
+    {
+        axpyKetT(iloc, alpha, dst);
+    }
 
     void getKBsigns(std::vector<short>& kbsigns) const;
     void getKBcoeffs(std::vector<double>& coeffs) const;

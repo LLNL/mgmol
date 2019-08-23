@@ -18,7 +18,8 @@
 
 #include <iostream>
 
-template <class T> class MGmol;
+template <class T>
+class MGmol;
 
 template <class T>
 class GrassmanCGSparse : public GrassmanLineMinimization<T>
@@ -35,12 +36,10 @@ public:
 
     void conjugate();
     double computeStepSize(T& orbitals);
-    void computeOrbitalsProdWithH(T& orbitals1,
-        T& orbitals2, VariableSizeMatrix<sparserow>& mat,
-        const bool consolidate);
+    void computeOrbitalsProdWithH(T& orbitals1, T& orbitals2,
+        VariableSizeMatrix<sparserow>& mat, const bool consolidate);
     void computeOrbitalsProdWithH(T& orbitals,
         VariableSizeMatrix<sparserow>& mat, const bool consolidate);
-    void parallelTransportUpdate(
-        const double lambda, T& orbitals);
+    void parallelTransportUpdate(const double lambda, T& orbitals);
 };
 #endif

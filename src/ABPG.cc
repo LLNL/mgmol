@@ -9,13 +9,13 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "ABPG.h"
-#include "OrthoAndersonMix.h"
 #include "Control.h"
 #include "Ions.h"
+#include "LocGridOrbitals.h"
 #include "MGmol.h"
+#include "OrthoAndersonMix.h"
 #include "Potentials.h"
 #include "ProjectedMatricesInterface.h"
-#include "LocGridOrbitals.h"
 
 #include <iostream>
 using namespace std;
@@ -27,12 +27,11 @@ void ABPG<T>::setup(T& orbitals)
 
     if (ct.wf_dyn == 1) // use Anderson extrapolation
     {
-        if( ct.getOrbitalsType() == OrbitalsType::Orthonormal )
-        wf_mix_ = new OrthoAndersonMix<T>(
-            ct.wf_m, ct.betaAnderson, orbitals);
+        if (ct.getOrbitalsType() == OrbitalsType::Orthonormal)
+            wf_mix_
+                = new OrthoAndersonMix<T>(ct.wf_m, ct.betaAnderson, orbitals);
         else
-            wf_mix_ = new AndersonMix<T>(
-                ct.wf_m, ct.betaAnderson, orbitals);
+            wf_mix_ = new AndersonMix<T>(ct.wf_m, ct.betaAnderson, orbitals);
     }
 }
 
@@ -41,10 +40,9 @@ void ABPG<T>::setup(T& orbitals)
 //
 // orthof=true: wants orthonormalized updated wave functions
 template <class T>
-int ABPG<T>::update(T& orbitals, Ions& ions,
-    const double precond_factor, const bool orthof,
-    T& work_orbitals, const bool accelerate, const bool print_res,
-    const double atol)
+int ABPG<T>::update(T& orbitals, Ions& ions, const double precond_factor,
+    const bool orthof, T& work_orbitals, const bool accelerate,
+    const bool print_res, const double atol)
 {
     abpg_nl_update_tm_.start();
 
@@ -119,9 +117,8 @@ int ABPG<T>::update(T& orbitals, Ions& ions,
 //////////////////////////////////////////////////////////////////////////////
 // Update orbitals using MG preconditioning and Anderson extrapolation
 template <class T>
-void ABPG<T>::update_states(T& orbitals, T& res,
-    T& work_orbitals, const double precond_factor,
-    const bool accelerate)
+void ABPG<T>::update_states(T& orbitals, T& res, T& work_orbitals,
+    const double precond_factor, const bool accelerate)
 {
     assert(orbitals.getIterativeIndex() >= 0);
 
@@ -173,8 +170,8 @@ void ABPG<T>::update_states(T& orbitals, T& res,
         // Extrapolation scheme
         assert(wf_mix_ != 0);
         ostream os(nullptr);
-        if(onpe0)os.rdbuf(cout.rdbuf());
-        wf_mix_->update(res, work_orbitals, os, (ct.verbose>0));
+        if (onpe0) os.rdbuf(cout.rdbuf());
+        wf_mix_->update(res, work_orbitals, os, (ct.verbose > 0));
     }
     else
     {

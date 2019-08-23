@@ -29,8 +29,7 @@ class Hamiltonian
 
     static Timer apply_Hloc_tm_;
 
-    void applyLocal(const int istate, const int nstates, T& phi,
-        T& hphi);
+    void applyLocal(const int istate, const int nstates, T& phi, T& hphi);
 
 public:
     static Timer apply_Hloc_tm() { return apply_Hloc_tm_; }
@@ -44,19 +43,16 @@ public:
     void setHlOutdated() { itindex_ = -1; }
     pb::Lap<ORBDTYPE>* lapOper() { return lapOper_; }
 
-    const T& applyLocal(
-        T& phi, const bool force = false);
+    const T& applyLocal(T& phi, const bool force = false);
 
-    void addHlocal2matrix(T& orbitals1,
-        T& orbitals2,
+    void addHlocal2matrix(T& orbitals1, T& orbitals2,
         dist_matrix::SparseDistMatrix<DISTMATDTYPE>& mat,
         const bool force = false);
-    void addHlocal2matrix(T& orbitals1,
-        T& orbitals2, VariableSizeMatrix<sparserow>& mat,
-        const bool force = false);
-    void addHlocalij(T& orbitals1, T& orbitals2,
-        ProjectedMatricesInterface*);
+    void addHlocal2matrix(T& orbitals1, T& orbitals2,
+        VariableSizeMatrix<sparserow>& mat, const bool force = false);
+    void addHlocalij(T& orbitals1, T& orbitals2, ProjectedMatricesInterface*);
 };
 // Instantiate static variable here to avoid clang warnings
-template <class T> Timer Hamiltonian<T>::apply_Hloc_tm_("Hamiltonian::apply_Hloc");
+template <class T>
+Timer Hamiltonian<T>::apply_Hloc_tm_("Hamiltonian::apply_Hloc");
 #endif

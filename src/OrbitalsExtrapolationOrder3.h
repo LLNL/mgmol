@@ -25,9 +25,7 @@ public:
     OrbitalsExtrapolationOrder3()
         : initial_orbitals_minus2_(0),
           orbitals_minus1_(0),
-          orbitals_minus2_(0)
-    {
-    };
+          orbitals_minus2_(0){};
 
     ~OrbitalsExtrapolationOrder3()
     {
@@ -43,8 +41,7 @@ public:
         }
     }
 
-    void extrapolate_orbitals(
-        T** orbitals, T* new_orbitals);
+    void extrapolate_orbitals(T** orbitals, T* new_orbitals);
 
     void clearOldOrbitals()
     {

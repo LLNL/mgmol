@@ -345,7 +345,7 @@ double NOLMOTransform::nolmo(int maxsweep, double tol)
             oldtspread = tspread;
             tspread    = getFunctionalValue(ara, aba, inv_alphan);
             //(*MPIdata::sout) << " average spread (trial step):   " <<
-            //sqrt(tspread/nst_) << endl;
+            // sqrt(tspread/nst_) << endl;
 
             delta = tspread - oldtspread;
 
@@ -644,7 +644,7 @@ double NOLMOTransform::nolmo_fixedCenters(const int maxsweep, const double tol)
             oldtspread = tspread;
             tspread    = getFunctionalValueFixedCenters(ara, aba, inv_alphan);
             //(*MPIdata::sout) << " average spread (trial step):   " <<
-            //sqrt(tspread/nst_) << endl;
+            // sqrt(tspread/nst_) << endl;
 
             delta = tspread - oldtspread;
 

@@ -27,8 +27,8 @@ template <class T>
 Timer Rho<T>::compute_tm_("Rho::compute");
 template <class T>
 Timer Rho<T>::compute_blas_tm_("Rho::compute_usingBlas");
-//template <class T>
-//Timer Rho<T>::compute_offdiag_tm_("Rho::compute_offdiag");
+// template <class T>
+// Timer Rho<T>::compute_offdiag_tm_("Rho::compute_offdiag");
 
 template <class T>
 Rho<T>::Rho()
@@ -41,8 +41,8 @@ Rho<T>::Rho()
     nspin_          = mmpi.nspin();
 
     // default values for block sizes
-//    block_functions_ = 8;
-//    block_space_     = 256;
+    //    block_functions_ = 8;
+    //    block_space_     = 256;
 
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
@@ -60,8 +60,8 @@ Rho<T>::Rho()
 };
 
 template <class T>
-void Rho<T>::setup(
-    const OrbitalsType orbitals_type, const vector<vector<int>>& orbitals_indexes)
+void Rho<T>::setup(const OrbitalsType orbitals_type,
+    const vector<vector<int>>& orbitals_indexes)
 {
     if (verbosity_level_ > 2 && onpe0)
         (*MPIdata::sout) << " Rho<T>::setup()" << endl;
@@ -200,7 +200,8 @@ void Rho<T>::rescaleTotalCharge()
         if (mmpi.PE0() && fabs(t1 - 1.) > 0.001)
         {
             (*MPIdata::sout)
-                << " Rho<T>::rescaleTotalCharge(), charge = " << tcharge << endl;
+                << " Rho<T>::rescaleTotalCharge(), charge = " << tcharge
+                << endl;
             (*MPIdata::sout) << " Rescaling factor: " << t1 << endl;
             (*MPIdata::sout) << " Num. electrons: " << nel << endl;
         }
@@ -229,8 +230,8 @@ void Rho<T>::rescaleTotalCharge()
 #endif
 }
 
-//template <class T>
-//int Rho<T>::setupSubdomainData(const int iloc,
+// template <class T>
+// int Rho<T>::setupSubdomainData(const int iloc,
 //    const vector<const T*>& vorbitals,
 //    const ProjectedMatricesInterface* const projmatrices,
 //    vector<MATDTYPE>& melements, vector<vector<const ORBDTYPE*>>& vmpsi)
@@ -315,8 +316,8 @@ void Rho<T>::accumulateCharge(const double alpha, const short ix_max,
         plrho[ix] += (RHODTYPE)(alpha * (double)psii[ix] * (double)psij[ix]);
 }
 
-//template <class T>
-//void Rho<T>::computeRhoSubdomain(
+// template <class T>
+// void Rho<T>::computeRhoSubdomain(
 //    const int iloc_init, const int iloc_end, const T& orbitals)
 //{
 //    assert(orbitals_type_ == OrbitalsType::Eigenfunctions
@@ -375,8 +376,8 @@ void Rho<T>::accumulateCharge(const double alpha, const short ix_max,
 //                {
 //
 //                    nonOrthoRhoKernel(icolor, block_functions_, jcolor,
-//                        block_functions_, idx, ix_max, &melements[0], nmycolors,
-//                        mpsi, nondiagfactor, lrho);
+//                        block_functions_, idx, ix_max, &melements[0],
+//                        nmycolors, mpsi, nondiagfactor, lrho);
 //                }
 //            // finish missing rows ()
 //            if (missed_rows)
@@ -384,8 +385,8 @@ void Rho<T>::accumulateCharge(const double alpha, const short ix_max,
 //                     jcolor += block_functions_)
 //                {
 //                    nonOrthoRhoKernel(max_icolor, missed_rows, jcolor,
-//                        block_functions_, idx, ix_max, &melements[0], nmycolors,
-//                        mpsi, nondiagfactor, lrho);
+//                        block_functions_, idx, ix_max, &melements[0],
+//                        nmycolors, mpsi, nondiagfactor, lrho);
 //                }
 //
 //            // diagonal blocks (jcolor=icolor)
@@ -407,8 +408,8 @@ void Rho<T>::accumulateCharge(const double alpha, const short ix_max,
 //    compute_tm_.stop();
 //}
 
-//template <class T>
-//void Rho<T>::computeRhoSubdomainOffDiagBlock(const int iloc_init,
+// template <class T>
+// void Rho<T>::computeRhoSubdomainOffDiagBlock(const int iloc_init,
 //    const int iloc_end, const vector<const T*>& vorbitals,
 //    const ProjectedMatricesInterface* const projmatrices)
 //{
@@ -418,7 +419,8 @@ void Rho<T>::accumulateCharge(const double alpha, const short ix_max,
 //
 //    compute_offdiag_tm_.start();
 //
-//    // printWithTimeStamp("Rho<T>::computeRhoSubdomainOffDiagBlock()...",cout);
+//    //
+//    printWithTimeStamp("Rho<T>::computeRhoSubdomainOffDiagBlock()...",cout);
 //
 //    Mesh* mymesh = Mesh::instance();
 //
@@ -465,10 +467,11 @@ void Rho<T>::accumulateCharge(const double alpha, const short ix_max,
 //                        for (short icolor = istart;
 //                             icolor < istart + block_functions_; icolor++)
 //                        {
-//                            const ORBDTYPE* const psii = &vmpsi[0][icolor][idx];
-//                            const double alpha
+//                            const ORBDTYPE* const psii =
+//                            &vmpsi[0][icolor][idx]; const double alpha
 //                                = (double)melements[jld + icolor];
-//                            accumulateCharge(alpha, ix_max, psii, psij, plrho);
+//                            accumulateCharge(alpha, ix_max, psii, psij,
+//                            plrho);
 //                        }
 //                    }
 //                }
@@ -483,13 +486,14 @@ void Rho<T>::accumulateCharge(const double alpha, const short ix_max,
 //                    for (short j = 0; j < block_functions_; j++)
 //                    {
 //                        const int jstart = (jcolor + j) * nmycolors + icolor;
-//                        const ORBDTYPE* const psij = &vmpsi[1][jcolor + j][idx];
-//                        for (short i = 0; i < imax; i++)
+//                        const ORBDTYPE* const psij = &vmpsi[1][jcolor +
+//                        j][idx]; for (short i = 0; i < imax; i++)
 //                        {
 //                            const ORBDTYPE* const psii
 //                                = &vmpsi[0][icolor + i][idx];
-//                            const double alpha = (double)melements[jstart + i];
-//                            accumulateCharge(alpha, ix_max, psii, psij, plrho);
+//                            const double alpha = (double)melements[jstart +
+//                            i]; accumulateCharge(alpha, ix_max, psii, psij,
+//                            plrho);
 //                        }
 //                    }
 //                }
@@ -504,13 +508,14 @@ void Rho<T>::accumulateCharge(const double alpha, const short ix_max,
 //                    for (short j = 0; j < jmax; j++)
 //                    {
 //                        const int jstart = (jcolor + j) * nmycolors + icolor;
-//                        const ORBDTYPE* const psij = &vmpsi[1][jcolor + j][idx];
-//                        for (short i = 0; i < block_functions_; i++)
+//                        const ORBDTYPE* const psij = &vmpsi[1][jcolor +
+//                        j][idx]; for (short i = 0; i < block_functions_; i++)
 //                        {
 //                            const ORBDTYPE* const psii
 //                                = &vmpsi[0][icolor + i][idx];
-//                            const double alpha = (double)melements[jstart + i];
-//                            accumulateCharge(alpha, ix_max, psii, psij, plrho);
+//                            const double alpha = (double)melements[jstart +
+//                            i]; accumulateCharge(alpha, ix_max, psii, psij,
+//                            plrho);
 //                        }
 //                    }
 //                }
@@ -527,9 +532,10 @@ void Rho<T>::accumulateCharge(const double alpha, const short ix_max,
 //                    const ORBDTYPE* const psij = &vmpsi[1][jcolor + j][idx];
 //                    for (short i = 0; i < imax; i++)
 //                    {
-//                        const ORBDTYPE* const psii = &vmpsi[0][icolor + i][idx];
-//                        const double alpha = (double)melements[jstart + i];
-//                        accumulateCharge(alpha, ix_max, psii, psij, plrho);
+//                        const ORBDTYPE* const psii = &vmpsi[0][icolor +
+//                        i][idx]; const double alpha = (double)melements[jstart
+//                        + i]; accumulateCharge(alpha, ix_max, psii, psij,
+//                        plrho);
 //                    }
 //                }
 //            }
@@ -590,8 +596,7 @@ void Rho<T>::computeRho(T& orbitals)
 }
 
 template <class T>
-void Rho<T>::computeRho(
-    T& orbitals, ProjectedMatricesInterface& proj_matrices)
+void Rho<T>::computeRho(T& orbitals, ProjectedMatricesInterface& proj_matrices)
 {
     assert(rho_.size() > 0);
     assert(rho_[myspin_].size() > 0);
@@ -617,11 +622,12 @@ void Rho<T>::computeRho(
 #else
         dm_ = proj_matrices.dm();
 #endif
-        if( dynamic_cast<LocGridOrbitals*>(&orbitals) )
+        if (dynamic_cast<LocGridOrbitals*>(&orbitals))
         {
-            SquareLocalMatrices<MATDTYPE>& localX((orbitals.projMatrices())->getLocalX());
+            SquareLocalMatrices<MATDTYPE>& localX(
+                (orbitals.projMatrices())->getLocalX());
 
-            //if (verbosity_level_ > 1 && onpe0)
+            // if (verbosity_level_ > 1 && onpe0)
             //    (*MPIdata::sout) << "Mask DM..." << endl;
             localX.applySymmetricMask(orbitals_indexes_);
         }
@@ -665,9 +671,9 @@ void Rho<T>::computeRho(T& orbitals1, T& orbitals2,
     computeRhoSubdomainUsingBlas3(0, subdivx, orbitals2);
 
     // non diagonal blocks
-    //vector<const T*> vorbitals;
-    //vorbitals.push_back(&orbitals1);
-    //vorbitals.push_back(&orbitals2);
+    // vector<const T*> vorbitals;
+    // vorbitals.push_back(&orbitals1);
+    // vorbitals.push_back(&orbitals2);
 
     dist_matrix::DistMatrix<DISTMATDTYPE> dm(dm12);
     dm.scal(2.); // use symmetry to reduce work
@@ -676,14 +682,13 @@ void Rho<T>::computeRho(T& orbitals1, T& orbitals2,
 #else
     dm_ = dm;
 #endif
-//    computeRhoSubdomainOffDiagBlock(0, subdivx, vorbitals, projmatrices1);
+    //    computeRhoSubdomainOffDiagBlock(0, subdivx, vorbitals, projmatrices1);
     computeRhoSubdomainUsingBlas3(0, subdivx, orbitals1, orbitals2);
 }
 
 template <class T>
-void Rho<T>::computeRhoSubdomainUsingBlas3(
-    const int iloc_init, const int iloc_end, const T& orbitals1,
-    const T& orbitals2)
+void Rho<T>::computeRhoSubdomainUsingBlas3(const int iloc_init,
+    const int iloc_end, const T& orbitals1, const T& orbitals2)
 {
     assert(orbitals1.getLda() == orbitals2.getLda());
     assert(orbitals1.chromatic_number() == orbitals2.chromatic_number());
@@ -695,10 +700,11 @@ void Rho<T>::computeRhoSubdomainUsingBlas3(
 
     RHODTYPE* const prho = &rho_[myspin_][0];
 
-    SquareLocalMatrices<MATDTYPE>& localX((orbitals1.projMatrices())->getLocalX());
+    SquareLocalMatrices<MATDTYPE>& localX(
+        (orbitals1.projMatrices())->getLocalX());
 
-    const int ld = orbitals1.getLda();
-    const int ncols = orbitals1.chromatic_number();
+    const int ld      = orbitals1.getLda();
+    const int ncols   = orbitals1.chromatic_number();
     ORBDTYPE* product = new ORBDTYPE[nrows * ncols];
 
     for (int iloc = iloc_init; iloc < iloc_end; iloc++)
@@ -712,22 +718,21 @@ void Rho<T>::computeRhoSubdomainUsingBlas3(
         ORBDTYPE* phi2            = orbitals2.getPsi(0, iloc);
 
         // O(N^3) part
-        MPgemmNN(nrows, ncols, ncols, 1., phi1,
-                 ld, mat, ncols, 0., product, nrows);
+        MPgemmNN(
+            nrows, ncols, ncols, 1., phi1, ld, mat, ncols, 0., product, nrows);
 
         // O(N^2) part
-        for(int j=0; j<ncols; j++)
+        for (int j = 0; j < ncols; j++)
         {
-            int index1 = j*nrows;
-            int index2 = j*ld;
-            for(int i=0; i<nrows; i++)
+            int index1 = j * nrows;
+            int index2 = j * ld;
+            for (int i = 0; i < nrows; i++)
             {
-                lrho[i] += product[index1]*phi2[index2];
+                lrho[i] += product[index1] * phi2[index2];
                 index1++;
                 index2++;
             }
         }
-
     }
 
     delete[] product;
@@ -836,7 +841,8 @@ void Rho<T>::gatherSpin()
     if (nspin_ < 2) return;
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    // if(mmpi.instancePE0())cout<<"Rho<T>::gatherSpin(), myspin_="<<myspin_<<endl;
+    // if(mmpi.instancePE0())cout<<"Rho<T>::gatherSpin(),
+    // myspin_="<<myspin_<<endl;
     mmpi.exchangeDataSpin(&rho_[myspin_][0], &rho_[(myspin_ + 1) % 2][0], np_);
 }
 
@@ -846,7 +852,7 @@ void Rho<T>::printTimers(std::ostream& os)
     update_tm_.print(os);
     compute_tm_.print(os);
     compute_blas_tm_.print(os);
-    //compute_offdiag_tm_.print(os);
+    // compute_offdiag_tm_.print(os);
 }
 
 template class Rho<LocGridOrbitals>;

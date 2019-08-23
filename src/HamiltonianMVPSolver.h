@@ -18,7 +18,8 @@
 #include "Timer.h"
 
 class Ions;
-template <class T> class MGmol;
+template <class T>
+class MGmol;
 class Electrostatic;
 class ProjectedMatrices2N;
 class ProjectedMatrices;
@@ -65,11 +66,9 @@ private:
 
 public:
     HamiltonianMVPSolver(MPI_Comm comm, std::ostream& os, Ions& ions,
-        Rho<T4>* rho,
-        Energy<T4>* energy, Electrostatic* electrostat,
-        MGmol<T4>* mgmol_strategy,
-        const int numst, const double kbT, const int nel,
-        const std::vector<std::vector<int>>& global_indexes,
+        Rho<T4>* rho, Energy<T4>* energy, Electrostatic* electrostat,
+        MGmol<T4>* mgmol_strategy, const int numst, const double kbT,
+        const int nel, const std::vector<std::vector<int>>& global_indexes,
         const short n_inner_steps, const T1& hinit,
         const bool try_shorter_intervals = false);
     ~HamiltonianMVPSolver();

@@ -59,7 +59,7 @@ void KBprojectorSparse::setup(const double center[3])
 {
     assert(subdivx_ > 0);
 
-    //if(onpe0)cout<<"KBprojectorSparse::setup()..."<<endl;
+    // if(onpe0)cout<<"KBprojectorSparse::setup()..."<<endl;
 
     KBprojector::setup(center);
 
@@ -122,8 +122,7 @@ void KBprojectorSparse::setNLindex(
             work_nlindex_[it].resize(size_nl);
 }
 
-void KBprojectorSparse::registerPsi(
-    const short iloc, const ORBDTYPE* const psi)
+void KBprojectorSparse::registerPsi(const short iloc, const ORBDTYPE* const psi)
 {
     assert(iloc < subdivx_);
     assert(iloc < (int)nlindex_.size());
@@ -161,15 +160,15 @@ void KBprojectorSparse::allocateProjectors(const short iloc, const int icount)
 {
     const int nprojs = nProjectors();
 
-    //projector may not overlap with all local patches, so add empty
-    //vector in slots associated with smaller iloc if they have not been
-    //filled
-    while(projectors_storage_.size()<iloc)
-        projectors_storage_.push_back( std::vector<KBPROJDTYPE>(0) );
-    projectors_storage_.push_back( std::vector<KBPROJDTYPE>(nprojs*icount) );
-    assert(projectors_storage_.size()==(iloc+1));
+    // projector may not overlap with all local patches, so add empty
+    // vector in slots associated with smaller iloc if they have not been
+    // filled
+    while (projectors_storage_.size() < iloc)
+        projectors_storage_.push_back(std::vector<KBPROJDTYPE>(0));
+    projectors_storage_.push_back(std::vector<KBPROJDTYPE>(nprojs * icount));
+    assert(projectors_storage_.size() == (iloc + 1));
 
-    KBPROJDTYPE* pstorage( &projectors_storage_[iloc][0] );
+    KBPROJDTYPE* pstorage(&projectors_storage_[iloc][0]);
 
     // Loop over radial projectors
     for (short l = 0; l <= maxl_; l++)
@@ -179,7 +178,7 @@ void KBprojectorSparse::allocateProjectors(const short iloc, const int icount)
         {
             for (short p = 0; p < multiplicity_[l]; ++p)
             {
-                for (short m = 0; m < 2*l+1; m++)
+                for (short m = 0; m < 2 * l + 1; m++)
                 {
                     ptr_projector_[iloc][l][p][m] = pstorage;
                     pstorage += icount;
@@ -223,7 +222,8 @@ void KBprojectorSparse::setProjectors(const short iloc, const int icount)
                 default:
                     (*MPIdata::sout)
                         << "KBprojectorSparse::setProjectors(): "
-                        << "Angular momentum state not implemented!!!" << std::endl;
+                        << "Angular momentum state not implemented!!!"
+                        << std::endl;
                     exit(1);
             }
         }
@@ -231,8 +231,8 @@ void KBprojectorSparse::setProjectors(const short iloc, const int icount)
 }
 
 /*
-void KBprojectorSparse::setSupersamplingSProjector(const short iloc, const int icount) {
-    assert((int)ptr_projector_.size() > iloc);
+void KBprojectorSparse::setSupersamplingSProjector(const short iloc, const int
+icount) { assert((int)ptr_projector_.size() > iloc);
     assert(ptr_projector_[iloc].size() > 0);
     assert(ptr_projector_[iloc][0].size() > 0);
         std::array<double,3> botMeshCorner={0,0,0};
@@ -249,33 +249,35 @@ void KBprojectorSparse::setSupersamplingSProjector(const short iloc, const int i
 
         int jcount = 0;
         const RadialInter& nlproj(species_.getRadialKBP(0, p));
-        auto lambda_lpot = [&nlproj] (double radius) {return nlproj.cubint(radius); }
+        auto lambda_lpot = [&nlproj] (double radius) {return
+nlproj.cubint(radius); }
 
         KBPROJDTYPE* rtptr = ptr_projector_[iloc][0][p][0];
         // Construct subdomain containing molecule
         std::array<double,3> atomicCenter={center_[0], center_[1], center_[2]};
-        SSLRad[0] = std::ceil(lrad/h0)+1; // +1 just to be safe and make sure subdomain gets everything
-        SSLRad[1] = std::ceil(lrad/h1)+1;
-        SSLRad[2] = std::ceil(lrad/h2)+1;
-        botMeshCorner[0] = std::max(std::round((atomicCenter[0]-start0)/h0)*h0 + start0 - SSLRad[0]*h0,
+        SSLRad[0] = std::ceil(lrad/h0)+1; // +1 just to be safe and make sure
+subdomain gets everything SSLRad[1] = std::ceil(lrad/h1)+1; SSLRad[2] =
+std::ceil(lrad/h2)+1; botMeshCorner[0] =
+std::max(std::round((atomicCenter[0]-start0)/h0)*h0 + start0 - SSLRad[0]*h0,
                         subDomainBotMeshCorner[0]);
-        botMeshCorner[1] = std::max(std::round((atomicCenter[1]-start1)/h1)*h1 + start1 - SSLRad[1]*h1,
-                        subDomainBotMeshCorner[1]);
-        botMeshCorner[2] = std::max(std::round((atomicCenter[2]-start2)/h2)*h2 + start2 - SSLRad[2]*h2,
+        botMeshCorner[1] = std::max(std::round((atomicCenter[1]-start1)/h1)*h1 +
+start1 - SSLRad[1]*h1, subDomainBotMeshCorner[1]); botMeshCorner[2] =
+std::max(std::round((atomicCenter[2]-start2)/h2)*h2 + start2 - SSLRad[2]*h2,
                         subDomainBotMeshCorner[2]);
-        topMeshCorner[0] = std::min(botMeshCorner[0] + 2*h0*SSLRad[0], subDomainTopMeshCorner[0]);
-        topMeshCorner[1] = std::min(botMeshCorner[1] + 2*h1*SSLRad[1], subDomainTopMeshCorner[1]);
-        topMeshCorner[2] = std::min(botMeshCorner[2] + 2*h2*SSLRad[2], subDomainTopMeshCorner[2]);
-        const bool harmonics=true;
-        
-        superSampling<0> current(atomicCenter, botMeshCorner, topMeshCorner, harmonics, lambda_lpot);
-        int xlimits = std::round((topMeshCorner[0]-botMeshCorner[0])/h0);
-        int ylimits = std::round((topMeshCorner[1]-botMeshCorner[1])/h1);
-        int zlimits = std::round((topMeshCorner[2]-botMeshCorner[2])/h2);
-        int xoffset = std::round((botMeshCorner[0]-start0)/h0);
-        int yoffset = std::round((botMeshCorner[1]-start1)/h1);
-        int zoffset = std::round((botMeshCorner[2]-start2)/h2);
-        int offset=0;
+        topMeshCorner[0] = std::min(botMeshCorner[0] + 2*h0*SSLRad[0],
+subDomainTopMeshCorner[0]); topMeshCorner[1] = std::min(botMeshCorner[1] +
+2*h1*SSLRad[1], subDomainTopMeshCorner[1]); topMeshCorner[2] =
+std::min(botMeshCorner[2] + 2*h2*SSLRad[2], subDomainTopMeshCorner[2]); const
+bool harmonics=true;
+
+        superSampling<0> current(atomicCenter, botMeshCorner, topMeshCorner,
+harmonics, lambda_lpot); int xlimits =
+std::round((topMeshCorner[0]-botMeshCorner[0])/h0); int ylimits =
+std::round((topMeshCorner[1]-botMeshCorner[1])/h1); int zlimits =
+std::round((topMeshCorner[2]-botMeshCorner[2])/h2); int xoffset =
+std::round((botMeshCorner[0]-start0)/h0); int yoffset =
+std::round((botMeshCorner[1]-start1)/h1); int zoffset =
+std::round((botMeshCorner[2]-start2)/h2); int offset=0;
 
         for(int ix = xoffset; ix <= xoffset + xlimits; ix++) {
             int istart = ix*dim1*dim2;
@@ -287,8 +289,7 @@ void KBprojectorSparse::setSupersamplingSProjector(const short iloc, const int i
                 }
             }
         }
-*/  
-    
+*/
 
 // Generates an s-projector
 void KBprojectorSparse::setSProjector(const short iloc, const int icount)
@@ -375,7 +376,7 @@ void KBprojectorSparse::setPProjector(const short iloc, const int icount)
     {
         assert(ptr_projector_[iloc][1][p].size() > 0);
 
-        int jcount = 0;
+        int jcount         = 0;
         KBPROJDTYPE* projx = ptr_projector_[iloc][1][p][0];
         KBPROJDTYPE* projy = ptr_projector_[iloc][1][p][1];
         KBPROJDTYPE* projz = ptr_projector_[iloc][1][p][2];
@@ -464,7 +465,7 @@ void KBprojectorSparse::setDProjector(const short iloc, const int icount)
 
     for (short p = 0; p < multiplicity_[2]; p++)
     {
-        int jcount = 0;
+        int jcount      = 0;
         KBPROJDTYPE* r1 = ptr_projector_[iloc][2][p][0];
         KBPROJDTYPE* r2 = ptr_projector_[iloc][2][p][1];
         KBPROJDTYPE* r3 = ptr_projector_[iloc][2][p][2];
@@ -544,7 +545,8 @@ void KBprojectorSparse::setDProjector(const short iloc, const int icount)
         if (jcount != icount)
         {
             (*MPIdata::sout)
-                << "setDProjector: Problem with non-local generation" << std::endl;
+                << "setDProjector: Problem with non-local generation"
+                << std::endl;
             exit(2);
         }
 
@@ -570,7 +572,7 @@ void KBprojectorSparse::setFProjector(const short iloc, const int icount)
 
     for (short p = 0; p < multiplicity_[3]; p++)
     {
-        int jcount = 0;
+        int jcount      = 0;
         KBPROJDTYPE* r1 = ptr_projector_[iloc][3][p][0];
         KBPROJDTYPE* r2 = ptr_projector_[iloc][3][p][1];
         KBPROJDTYPE* r3 = ptr_projector_[iloc][3][p][2];
@@ -668,7 +670,8 @@ void KBprojectorSparse::setFProjector(const short iloc, const int icount)
         if (jcount != icount)
         {
             (*MPIdata::sout)
-                << "setDProjector: Problem with non-local generation" << std::endl;
+                << "setDProjector: Problem with non-local generation"
+                << std::endl;
             exit(2);
         }
 
@@ -869,7 +872,7 @@ void KBprojectorSparse::axpySKetT(
 
     const KBPROJDTYPE* const proj(ptr_projector_[iloc][0][0][0]);
     const std::vector<int>& pidx = nlindex_[iloc];
-    const int size_nl       = size_nl_[iloc];
+    const int size_nl            = size_nl_[iloc];
     for (int idx = 0; idx < size_nl; idx++)
     {
         dst[pidx[idx]] += (T)(proj[idx] * alpha);
@@ -1021,19 +1024,26 @@ bool KBprojectorSparse::setIndexesAndProjectors()
                     for (short p = 0; p < multiplicity_[1]; ++p)
                     {
                         cout << "Norm2 F-projector, p=" << p << " ="
-                             << norm2_[3][7 * p + 0] * mygrid.vel() << std::endl;
+                             << norm2_[3][7 * p + 0] * mygrid.vel()
+                             << std::endl;
                         cout << "Norm2 F-projector, p=" << p << " ="
-                             << norm2_[3][7 * p + 1] * mygrid.vel() << std::endl;
+                             << norm2_[3][7 * p + 1] * mygrid.vel()
+                             << std::endl;
                         cout << "Norm2 F-projector, p=" << p << " ="
-                             << norm2_[3][7 * p + 2] * mygrid.vel() << std::endl;
+                             << norm2_[3][7 * p + 2] * mygrid.vel()
+                             << std::endl;
                         cout << "Norm2 F-projector, p=" << p << " ="
-                             << norm2_[3][7 * p + 3] * mygrid.vel() << std::endl;
+                             << norm2_[3][7 * p + 3] * mygrid.vel()
+                             << std::endl;
                         cout << "Norm2 F-projector, p=" << p << " ="
-                             << norm2_[3][7 * p + 4] * mygrid.vel() << std::endl;
+                             << norm2_[3][7 * p + 4] * mygrid.vel()
+                             << std::endl;
                         cout << "Norm2 F-projector, p=" << p << " ="
-                             << norm2_[3][7 * p + 5] * mygrid.vel() << std::endl;
+                             << norm2_[3][7 * p + 5] * mygrid.vel()
+                             << std::endl;
                         cout << "Norm2 F-projector, p=" << p << " ="
-                             << norm2_[3][7 * p + 6] * mygrid.vel() << std::endl;
+                             << norm2_[3][7 * p + 6] * mygrid.vel()
+                             << std::endl;
                     }
             }
         }
@@ -1149,13 +1159,12 @@ double KBprojectorSparse::maxRadius() const
     return radius;
 }
 
-
 template void KBprojectorSparse::axpySKetT<double>(
     const short iloc, const double alpha, double* const dst) const;
 template void KBprojectorSparse::axpySKetT<float>(
     const short iloc, const double alpha, float* const dst) const;
 
-template void KBprojectorSparse::axpyKetT<double>(
-    const short iloc, const std::vector<double>& alpha, double* const dst) const;
+template void KBprojectorSparse::axpyKetT<double>(const short iloc,
+    const std::vector<double>& alpha, double* const dst) const;
 template void KBprojectorSparse::axpyKetT<float>(
     const short iloc, const std::vector<double>& alpha, float* const dst) const;

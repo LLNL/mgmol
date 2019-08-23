@@ -67,6 +67,5 @@ public:
             = out_restart_info > 3 ? H5T_NATIVE_DOUBLE : H5T_NATIVE_FLOAT;
         return dtype_id;
     }
-
 };
 #endif

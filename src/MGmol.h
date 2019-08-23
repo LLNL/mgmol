@@ -49,13 +49,13 @@ class IonicAlgorithm;
 #include "Ions.h"
 #include "LocGridOrbitals.h"
 #include "MGmolInterface.h"
-#include "OrbitalsPreconditioning.h"
 #include "OrbitalsExtrapolation.h"
+#include "OrbitalsPreconditioning.h"
 #include "RemoteTasksDistMatrix.h"
 #include "Rho.h"
 #include "SparseDistMatrix.h"
-#include "SpreadsAndCenters.h"
 #include "SpreadPenaltyInterface.h"
+#include "SpreadsAndCenters.h"
 
 template <class T>
 class MGmol : public MGmolInterface
@@ -119,46 +119,36 @@ private:
     void check_anisotropy();
     double get_charge(RHODTYPE* rho);
     void printTimers();
-    void computeLocKBPsiIonProjL(T& orbitals, Ion& ion,
-        const int ion_index,
+    void computeLocKBPsiIonProjL(T& orbitals, Ion& ion, const int ion_index,
         dist_matrix::SparseDistMatrix<DISTMATDTYPE>*** prjsum, const int l);
-    void computeLocKBPsiIon(T& orbitals, Ion& ion,
-        const int ion_index,
+    void computeLocKBPsiIon(T& orbitals, Ion& ion, const int ion_index,
         dist_matrix::SparseDistMatrix<DISTMATDTYPE>*** loc_kbpsi);
     void computeLocKBPsi(T& orbitals, std::vector<Ion*>& ions_nl,
         dist_matrix::SparseDistMatrix<DISTMATDTYPE>*** prjsum);
     int read_rho_and_pot_hdf5(HDFrestart& file, Rho<T>& rho);
     int read_restart_lrs(HDFrestart& h5f_file, const std::string& dset_name);
-    int read_restart_data(
-        HDFrestart& h5f_file, Rho<T>& rho,
-        T& orbitals);
+    int read_restart_data(HDFrestart& h5f_file, Rho<T>& rho, T& orbitals);
     void write_header();
-    void getKBPsiAndHij(T& orbitals_i,
-        T& orbitals_j, Ions& ions, KBPsiMatrixSparse* kbpsi,
-        ProjectedMatricesInterface* projmatrices,
+    void getKBPsiAndHij(T& orbitals_i, T& orbitals_j, Ions& ions,
+        KBPsiMatrixSparse* kbpsi, ProjectedMatricesInterface* projmatrices,
         dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sh);
-    void computeHij(T& orbitals_i, T& orbitals_j,
-        const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
+    void computeHij(T& orbitals_i, T& orbitals_j, const Ions& ions,
+        const KBPsiMatrixSparse* const kbpsi,
         dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sparseH);
-    void getKBPsiAndHij(T& orbitals_i,
-        T& orbitals_j, Ions& ions, KBPsiMatrixSparse* kbpsi,
-        ProjectedMatricesInterface* projmatrices);
-    void getKBPsiAndHij(T& orbitals_i,
-        T& orbitals_j, Ions& ions, KBPsiMatrixSparse* kbpsi,
-        ProjectedMatricesInterface* projmatrices,
+    void getKBPsiAndHij(T& orbitals_i, T& orbitals_j, Ions& ions,
+        KBPsiMatrixSparse* kbpsi, ProjectedMatricesInterface* projmatrices);
+    void getKBPsiAndHij(T& orbitals_i, T& orbitals_j, Ions& ions,
+        KBPsiMatrixSparse* kbpsi, ProjectedMatricesInterface* projmatrices,
         dist_matrix::DistMatrix<DISTMATDTYPE>& hij);
-    void getKBPsiAndHij(T& orbitals, Ions& ions,
-        KBPsiMatrixSparse* kbpsi,
+    void getKBPsiAndHij(T& orbitals, Ions& ions, KBPsiMatrixSparse* kbpsi,
         dist_matrix::DistMatrix<DISTMATDTYPE>& hij);
-    void computeHnlPhiAndAdd2HPhi(Ions& ions, T& phi,
-        T& hphi, const KBPsiMatrixSparse* const kbpsi);
-    void addHlocalij(T& orbitalsi, T& orbitalsj,
-        ProjectedMatricesInterface* projmatrices);
-    void addHlocal2matrix(T& orbitalsi,
-        T& orbitalsj,
+    void computeHnlPhiAndAdd2HPhi(
+        Ions& ions, T& phi, T& hphi, const KBPsiMatrixSparse* const kbpsi);
+    void addHlocalij(
+        T& orbitalsi, T& orbitalsj, ProjectedMatricesInterface* projmatrices);
+    void addHlocal2matrix(T& orbitalsi, T& orbitalsj,
         dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sparseH);
-    int dumprestartFile(T** orbitals, Ions& ions,
-                        Rho<T>& rho,
+    int dumprestartFile(T** orbitals, Ions& ions, Rho<T>& rho,
         const bool write_extrapolated_wf, const short count);
 
     void swapColumnsVect(dist_matrix::DistMatrix<DISTMATDTYPE>& evect,
@@ -169,9 +159,8 @@ private:
     int readLRsFromInput(std::ifstream* tfile);
     void preWFextrapolation();
     void postWFextrapolation(T* orbitals);
-    void computeResidualUsingHPhi(T& psi,
-        const T& hphi, T& res,
-        const bool applyB = true);
+    void computeResidualUsingHPhi(
+        T& psi, const T& hphi, T& res, const bool applyB = true);
 
     int initial();
 
@@ -222,74 +211,65 @@ public:
 
     int readCoordinates(std::ifstream* tfile, const bool cell_relative);
     int readCoordinates(const std::string filename, const bool cell_relative);
-    double computeConstraintResidual(T& orbitals,
-        const T& hphi, T& res,
+    double computeConstraintResidual(T& orbitals, const T& hphi, T& res,
         const bool print_residual, const bool norm_res);
 
     void md(T** orbitals, Ions& ions);
     void lbfgsrlx(T** orbitals, Ions& ions);
 
     template <class T2>
-    void computeHij(T& orbitals_i, T& orbitals_j,
-        const Ions& ions, const KBPsiMatrixSparse* const kbpsi_i,
-        const KBPsiMatrixSparse* const kbpsi_j,
-        T2& mat, const bool consolidate);
+    void computeHij(T& orbitals_i, T& orbitals_j, const Ions& ions,
+        const KBPsiMatrixSparse* const kbpsi_i,
+        const KBPsiMatrixSparse* const kbpsi_j, T2& mat,
+        const bool consolidate);
 
-    void computeHij_private(T& orbitals_i, T& orbitals_j,
-        const Ions& ions, const KBPsiMatrixSparse* const kbpsi_i,
+    void computeHij_private(T& orbitals_i, T& orbitals_j, const Ions& ions,
+        const KBPsiMatrixSparse* const kbpsi_i,
         const KBPsiMatrixSparse* const kbpsi_j,
         dist_matrix::DistMatrix<DISTMATDTYPE>& mat);
 
     template <class T2>
-    void computeHij(T& orbitals_i, T& orbitals_j,
-        const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
-        T2& mat, const bool consolidate);
+    void computeHij(T& orbitals_i, T& orbitals_j, const Ions& ions,
+        const KBPsiMatrixSparse* const kbpsi, T2& mat, const bool consolidate);
 
-   void computeHij_private(T& orbitals_i, T& orbitals_j,
-        const Ions& ions, const KBPsiMatrixSparse* const kbpsi_i,
+    void computeHij_private(T& orbitals_i, T& orbitals_j, const Ions& ions,
+        const KBPsiMatrixSparse* const kbpsi_i,
         dist_matrix::DistMatrix<DISTMATDTYPE>& mat);
 
-    void computeHij(T& orbitals_i, T& orbitals_j,
-        const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
-        ProjectedMatricesInterface*);
-    void addHlocal2matrix(T& orbitalsi,
-        T& orbitalsj,
+    void computeHij(T& orbitals_i, T& orbitals_j, const Ions& ions,
+        const KBPsiMatrixSparse* const kbpsi, ProjectedMatricesInterface*);
+    void addHlocal2matrix(T& orbitalsi, T& orbitalsj,
         dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE>& mat);
     template <class T2>
-    void addHlocal2matrix(T& orbitalsi,
-        T& orbitalsj, T2& mat);
+    void addHlocal2matrix(T& orbitalsi, T& orbitalsj, T2& mat);
     void update_pot(const pb::GridFunc<POTDTYPE>& vh_init, const Ions& ions);
     void update_pot(const Ions& ions);
-    int quench(T* orbitals, Ions& ions, const int max_steps,
-        const int iprint, double& last_eks);
+    int quench(T* orbitals, Ions& ions, const int max_steps, const int iprint,
+        double& last_eks);
     void runfire(T** orbitals, Ions& ions);
     void moveVnuc(Ions& ions);
     void resetProjectedMatricesAndDM(T& orbitals, Ions& ions);
-    int getMLWF(MLWFTransform& mlwft, T& orbitals,
-        T& work_orbitals, const double dd, const bool apply_flag);
-    bool rotateStatesPairsCommonCenter(
-        T& orbitals, T& work_orbitals);
-    bool rotateStatesPairsOverlap(T& orbitals,
-        T& work_orbitals, const double);
-    void disentangleOrbitals(
-        T& orbitals, T& work_orbitals, Ions&, int&);
+    int getMLWF(MLWFTransform& mlwft, T& orbitals, T& work_orbitals,
+        const double dd, const bool apply_flag);
+    bool rotateStatesPairsCommonCenter(T& orbitals, T& work_orbitals);
+    bool rotateStatesPairsOverlap(T& orbitals, T& work_orbitals, const double);
+    void disentangleOrbitals(T& orbitals, T& work_orbitals, Ions&, int&);
     void updateHmatrix(T& orbitals, Ions& ions);
-    void getHpsiAndTheta(Ions& ions, T& phi,
-        T& hphi, const KBPsiMatrixSparse* const kbpsi);
     void getHpsiAndTheta(
-        Ions& ions, T& phi, T& hphi);
-    double computePrecondResidual(T& phi, T& hphi,
-        T& res, Ions& ions, KBPsiMatrixSparse* kbpsi,
-        const bool print_residual, const bool norm_res);
+        Ions& ions, T& phi, T& hphi, const KBPsiMatrixSparse* const kbpsi);
+    void getHpsiAndTheta(Ions& ions, T& phi, T& hphi);
+    double computePrecondResidual(T& phi, T& hphi, T& res, Ions& ions,
+        KBPsiMatrixSparse* kbpsi, const bool print_residual,
+        const bool norm_res);
     void addResidualSpreadPenalty(T& phi, T& res);
-    int get_NOLMO(NOLMOTransform& noot, T& orbitals,
-        T& work_orbitals, const double dd, const bool apply_flag);
-    void adaptLR(const SpreadsAndCenters<T>* spreadf,
-                 const OrbitalsTransform* ot);
+    int get_NOLMO(NOLMOTransform& noot, T& orbitals, T& work_orbitals,
+        const double dd, const bool apply_flag);
+    void adaptLR(
+        const SpreadsAndCenters<T>* spreadf, const OrbitalsTransform* ot);
     int update_masks();
     void move_orbitals(T** orbitals);
-    int getMLWF2states(const int st1, const int st2, T& orbitals,
-        T& work_orbitals);
+    int getMLWF2states(
+        const int st1, const int st2, T& orbitals, T& work_orbitals);
     void extrapolate_centers(bool small_move);
     void compute_centers(bool small_move, T** orbitals);
     void extrapolate_orbitals(T** orbitals);
@@ -297,10 +277,12 @@ public:
     void update_orbitals_LRs(T** orbitals);
     void clearOldOrbitals();
     void getKBPsiAndHij(T& orbitals, Ions& ions);
-    int write_hdf5(const std::string filename, std::vector<std::vector<RHODTYPE>>& rho,
-        Ions& ions, T& orbitals, LocalizationRegions& lrs);
-    int write_hdf5(HDFrestart& h5f_file, std::vector<std::vector<RHODTYPE>>& rho,
-        Ions& ions, T& orbitals, LocalizationRegions& lrs);
+    int write_hdf5(const std::string filename,
+        std::vector<std::vector<RHODTYPE>>& rho, Ions& ions, T& orbitals,
+        LocalizationRegions& lrs);
+    int write_hdf5(HDFrestart& h5f_file,
+        std::vector<std::vector<RHODTYPE>>& rho, Ions& ions, T& orbitals,
+        LocalizationRegions& lrs);
     double get_evnl(const Ions& ions, T& orbitals);
     void sebprintPositions();
     void sebprintForces();
@@ -330,27 +312,38 @@ public:
 
     void precond_mg(T& orbitals);
     void setGamma(const pb::Lap<ORBDTYPE>& lapOper, const Potentials& pot);
-    double computeResidual(T& orbitals,
-        T& work_orbitals, T& res,
+    double computeResidual(T& orbitals, T& work_orbitals, T& res,
         const bool print_residual, const bool norm_res);
     void applyAOMMprojection(T&);
-    void force(T& orbitals, Ions& ions)
-    {
-        forces_->force(orbitals, ions);
-    }
+    void force(T& orbitals, Ions& ions) { forces_->force(orbitals, ions); }
 };
 // Instantiate static variables here to avoid clang warnings
-template <class T> dist_matrix::RemoteTasksDistMatrix<DISTMATDTYPE>* MGmol<T>::remote_tasks_DistMatrix_ptr_ = 0;
-template <class T> Timer MGmol<T>::adaptLR_tm_("MGmol::adaptLR");
-template <class T> Timer MGmol<T>::dump_tm_("MGmol::dump");
-template <class T> Timer MGmol<T>::total_tm_("MGmol::total");
-template <class T> Timer MGmol<T>::setup_tm_("MGmol::setup");
-template <class T> Timer MGmol<T>::closing_tm_("MGmol::closing");
-template <class T> Timer MGmol<T>::init_tm_("MGmol::init");
-template <class T> Timer MGmol<T>::evnl_tm_("MGmol::evnl");
-template <class T> Timer MGmol<T>::get_res_tm_("MGmol::comp_res_from_Hphi");
-template <class T> Timer MGmol<T>::computeHij_tm_("MGmol::computeHij");
-template <class T> Timer MGmol<T>::get_Hpsi_and_Hij_tm_("MGmol::get_Hpsi_and_Hij");
-template <class T> Timer MGmol<T>::comp_res_tm_("MGmol::comp_res");
-template <class T> Timer MGmol<T>::init_nuc_tm_("MGmol::init_nuc");
+template <class T>
+dist_matrix::RemoteTasksDistMatrix<DISTMATDTYPE>*
+    MGmol<T>::remote_tasks_DistMatrix_ptr_
+    = 0;
+template <class T>
+Timer MGmol<T>::adaptLR_tm_("MGmol::adaptLR");
+template <class T>
+Timer MGmol<T>::dump_tm_("MGmol::dump");
+template <class T>
+Timer MGmol<T>::total_tm_("MGmol::total");
+template <class T>
+Timer MGmol<T>::setup_tm_("MGmol::setup");
+template <class T>
+Timer MGmol<T>::closing_tm_("MGmol::closing");
+template <class T>
+Timer MGmol<T>::init_tm_("MGmol::init");
+template <class T>
+Timer MGmol<T>::evnl_tm_("MGmol::evnl");
+template <class T>
+Timer MGmol<T>::get_res_tm_("MGmol::comp_res_from_Hphi");
+template <class T>
+Timer MGmol<T>::computeHij_tm_("MGmol::computeHij");
+template <class T>
+Timer MGmol<T>::get_Hpsi_and_Hij_tm_("MGmol::get_Hpsi_and_Hij");
+template <class T>
+Timer MGmol<T>::comp_res_tm_("MGmol::comp_res");
+template <class T>
+Timer MGmol<T>::init_nuc_tm_("MGmol::init_nuc");
 #endif

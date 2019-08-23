@@ -15,7 +15,7 @@
 
 #define NPRINT_ROWS_AND_COLS 10
 
-template<class T>
+template <class T>
 SubspaceProjector<T>::SubspaceProjector(T& subspace)
     : subspace_(subspace), proj_matrices_(*subspace_.getProjMatrices())
 {
@@ -26,7 +26,7 @@ SubspaceProjector<T>::SubspaceProjector(T& subspace)
 }
 
 // compute [I-P*(S^-1)*P^T]*orbitals
-template<class T>
+template <class T>
 void SubspaceProjector<T>::projectOut(
     T& orbitals, SquareLocalMatrices<MATDTYPE>* mask)
 {

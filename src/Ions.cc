@@ -192,9 +192,9 @@ void Ions::setup()
 
     updateListIons();
 
-//#ifndef NDEBUG
-//    checkUnicityLocalIons();
-//#endif
+    //#ifndef NDEBUG
+    //    checkUnicityLocalIons();
+    //#endif
 
     setupInteractingIons();
 
@@ -537,7 +537,7 @@ double Ions::energyDiff(const short bc[3]) const
 
 // Associate each ion with the PE where they are centered
 // by setting a flag "here"
-//void Ions::associate2PE()
+// void Ions::associate2PE()
 //{
 //    Control& ct(*(Control::instance()));
 //    Mesh* mymesh             = Mesh::instance();
@@ -587,7 +587,8 @@ double Ions::energyDiff(const short bc[3]) const
 //        }
 //
 //#if DEBUG
-//        (*MPIdata::sout) << " t=(" << t[0] << "," << t[1] << "," << t[2] << ")"
+//        (*MPIdata::sout) << " t=(" << t[0] << "," << t[1] << "," << t[2] <<
+//        ")"
 //                         << endl;
 //#endif
 //
@@ -609,7 +610,8 @@ double Ions::energyDiff(const short bc[3]) const
 //#ifndef NDEBUG
 //        if ((*ion)->here())
 //        {
-//            (*MPIdata::sout) << " Ion " << (*ion)->name() << " centered on PE "
+//            (*MPIdata::sout) << " Ion " << (*ion)->name() << " centered on PE
+//            "
 //                             << myPEenv.mytask() << endl;
 //        }
 //#endif
@@ -1224,9 +1226,9 @@ void Ions::initFromRestartFile(HDFrestart& h5_file)
     // update list ions
     updateListIons();
 
-//#ifndef NDEBUG
-//    checkUnicityLocalIons();
-//#endif
+    //#ifndef NDEBUG
+    //    checkUnicityLocalIons();
+    //#endif
 }
 
 void Ions::readRestartPositions(HDFrestart& h5_file)
@@ -2197,7 +2199,7 @@ int Ions::readAtomsFromXYZ(const string filename, const bool cell_relative)
         else
         {
             //(*MPIdata::sout)<<"Ion "<<aname<<" NOT added to the list... on
-            //PE"<<mmpi.mype() <<endl;
+            // PE"<<mmpi.mype() <<endl;
             delete new_ion;
         }
     }
@@ -3285,7 +3287,7 @@ bool Ions::inListIons(const double x, const double y, const double z)
 
 bool Ions::inLocalIons(const double x, const double y, const double z)
 {
-    //cout<<"inLocalIons..."<<endl;
+    // cout<<"inLocalIons..."<<endl;
     Mesh* mymesh             = Mesh::instance();
     const pb::PEenv& myPEenv = mymesh->peenv();
     const pb::Grid& mygrid   = mymesh->grid();
@@ -3322,7 +3324,7 @@ bool Ions::inLocalIons(const double x, const double y, const double z)
     return inList;
 }
 
-//void Ions::checkUnicityLocalIons()
+// void Ions::checkUnicityLocalIons()
 //{
 //    //cout<<"Ions::checkUnicityLocalIons()..."<<endl;
 //    MGmol_MPI& mmpi(*(MGmol_MPI::instance()));

@@ -7,15 +7,15 @@
 // All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
-#include "Control.h"
 #include "BlockVector.h"
+#include "Control.h"
 #include "global.h"
 
 // Increase memory slots in BlockVector as needed based on runtime
 // options
 void increaseMemorySlotsForOrbitals()
 {
-    Control& ct     = *(Control::instance());
+    Control& ct = *(Control::instance());
 
     switch (ct.OuterSolver())
     {
@@ -33,7 +33,6 @@ void increaseMemorySlotsForOrbitals()
         }
         default:
             break;
-
     }
 
     switch (ct.WFExtrapolation())
@@ -55,14 +54,13 @@ void increaseMemorySlotsForOrbitals()
         }
         default:
             break;
-
     }
 
     for (short i = 1; i < ct.wf_m; i++)
         BlockVector<ORBDTYPE>::incMaxAllocInstances(2);
     if (ct.use_kernel_functions) BlockVector<ORBDTYPE>::incMaxAllocInstances(1);
 
-    switch (ct.AtomsDynamic() )
+    switch (ct.AtomsDynamic())
     {
         case AtomsDynamicType::LBFGS:
             BlockVector<ORBDTYPE>::incMaxAllocInstances(1);
@@ -71,4 +69,3 @@ void increaseMemorySlotsForOrbitals()
             break;
     }
 }
-

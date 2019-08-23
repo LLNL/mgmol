@@ -17,9 +17,9 @@
 #include "Mesh.h"
 
 template <class T>
-FIRE<T>::FIRE(T** orbitals, Ions& ions, Rho<T>& rho,
-    ConstraintSet& constraints, LocalizationRegions& lrs, MasksSet& masks,
-    Electrostatic& electrostat, const double dt, MGmol<T>& strategy)
+FIRE<T>::FIRE(T** orbitals, Ions& ions, Rho<T>& rho, ConstraintSet& constraints,
+    LocalizationRegions& lrs, MasksSet& masks, Electrostatic& electrostat,
+    const double dt, MGmol<T>& strategy)
     : IonicAlgorithm<T>(orbitals, ions, rho, constraints, lrs, masks, strategy),
       orbitals_(orbitals),
       ions_(ions),
@@ -30,10 +30,8 @@ FIRE<T>::FIRE(T** orbitals, Ions& ions, Rho<T>& rho,
       mgmol_strategy_(strategy)
 {
     stepper_ = new FIRE_IonicStepper(dt, IonicAlgorithm<T>::atmove_,
-                                     IonicAlgorithm<T>::tau0_,
-                                     IonicAlgorithm<T>::taup_,
-                                     IonicAlgorithm<T>::fion_,
-                                     IonicAlgorithm<T>::pmass_);
+        IonicAlgorithm<T>::tau0_, IonicAlgorithm<T>::taup_,
+        IonicAlgorithm<T>::fion_, IonicAlgorithm<T>::pmass_);
 
     IonicAlgorithm<T>::registerStepper(stepper_);
 }

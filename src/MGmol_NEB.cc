@@ -17,9 +17,15 @@
 using namespace std;
 
 template <class T>
-void MGmol<T>::sebprintForces() { ions_->printForces(os_); }
+void MGmol<T>::sebprintForces()
+{
+    ions_->printForces(os_);
+}
 template <class T>
-void MGmol<T>::sebprintPositions() { ions_->printPositions(os_); }
+void MGmol<T>::sebprintPositions()
+{
+    ions_->printPositions(os_);
+}
 
 template <class T>
 void MGmol<T>::geomOptimSetup()
@@ -29,16 +35,14 @@ void MGmol<T>::geomOptimSetup()
     switch (ct.AtomsDynamic())
     {
         case AtomsDynamicType::LBFGS:
-            geom_optimizer_ = new LBFGS<T>(&current_orbitals_,
-                *ions_, *rho_,
+            geom_optimizer_ = new LBFGS<T>(&current_orbitals_, *ions_, *rho_,
                 *constraints_, *lrs_, local_cluster_, *currentMasks_,
                 *corrMasks_, *electrostat_, ct.dt, *this);
             break;
 
         case AtomsDynamicType::FIRE:
             geom_optimizer_
-                = new FIRE<T>(&current_orbitals_, *ions_, *rho_,
-                    *constraints_,
+                = new FIRE<T>(&current_orbitals_, *ions_, *rho_, *constraints_,
                     *lrs_, *currentMasks_, *electrostat_, ct.dt, *this);
             break;
 
@@ -78,7 +82,10 @@ void MGmol<T>::geomOptimQuench()
 }
 
 template <class T>
-void MGmol<T>::geomOptimComputeForces() { geom_optimizer_->computeForces(); }
+void MGmol<T>::geomOptimComputeForces()
+{
+    geom_optimizer_->computeForces();
+}
 
 template <class T>
 void MGmol<T>::geomOptimSetForces(const vector<vector<double>>& f)
@@ -87,7 +94,10 @@ void MGmol<T>::geomOptimSetForces(const vector<vector<double>>& f)
 }
 
 template <class T>
-void MGmol<T>::geomOptimDumpRestart() { geom_optimizer_->dumpRestart(); }
+void MGmol<T>::geomOptimDumpRestart()
+{
+    geom_optimizer_->dumpRestart();
+}
 
 template <class T>
 int MGmol<T>::geomOptimRun1Step()

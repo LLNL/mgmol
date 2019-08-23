@@ -687,5 +687,4 @@ int whatisopen(hid_t fid)
 
     return howmany;
 }
-
 }

@@ -23,8 +23,8 @@ private:
     const double mix_;
 
 public:
-    NonOrthoDMStrategy(T* orbitals,
-        ProjectedMatricesInterface* proj_matrices, const double mix);
+    NonOrthoDMStrategy(T* orbitals, ProjectedMatricesInterface* proj_matrices,
+        const double mix);
 
     void initialize();
     int update();
@@ -35,10 +35,7 @@ public:
 
     void dressDM();
 
-    void reset()
-    {
-        proj_matrices_->resetDM();
-    }
+    void reset() { proj_matrices_->resetDM(); }
 };
 
 #endif

@@ -24,6 +24,7 @@ using namespace std;
 #include "DFTsolver.h"
 #include "DMStrategyFactory.h"
 #include "DistMatrix.h"
+#include "DistMatrix2SquareLocalMatrices.h"
 #include "Electrostatic.h"
 #include "Energy.h"
 #include "EnergySpreadPenalty.h"
@@ -54,16 +55,15 @@ using namespace std;
 #include "ProjectedMatricesMehrstellen.h"
 #include "ProjectedMatricesSparse.h"
 #include "Rho.h"
+#include "SP2.h"
 #include "SparseDistMatrix.h"
 #include "SpreadPenalty.h"
 #include "SpreadPenaltyVolume.h"
 #include "SpreadsAndCenters.h"
 #include "SubMatrices.h"
 #include "SubspaceProjector.h"
-#include "XConGrid.h"
 #include "XCfunctionalFactory.h"
-#include "DistMatrix2SquareLocalMatrices.h"
-#include "SP2.h"
+#include "XConGrid.h"
 #include "manage_memory.h"
 
 namespace mgmol
@@ -275,7 +275,8 @@ int MGmol<T>::initial()
     if (!ct.short_sighted)
     {
         printWithTimeStamp(
-            "MGmol<T>::initial(), create MatricesBlacsContext and misc...", os_);
+            "MGmol<T>::initial(), create MatricesBlacsContext and misc...",
+            os_);
 
         dist_matrix::DistMatrix<DISTMATDTYPE> tmp("tmp", ct.numst, ct.numst);
         remote_tasks_DistMatrix_
@@ -285,8 +286,7 @@ int MGmol<T>::initial()
         remote_tasks_DistMatrix_ptr_ = remote_tasks_DistMatrix_;
     }
 
-    current_orbitals_ = new T("Primary", mygrid,
-        mymesh->subdivx(), ct.numst,
+    current_orbitals_ = new T("Primary", mygrid, mymesh->subdivx(), ct.numst,
         ct.bc, proj_matrices_, lrs_, currentMasks_, corrMasks_, local_cluster_,
         true);
 
@@ -324,7 +324,8 @@ int MGmol<T>::initial()
     if (ct.restart_info <= 2)
     {
         if (ct.verbose > 0)
-            printWithTimeStamp("MGmol<T>::initial(), init wf and masks...", os_);
+            printWithTimeStamp(
+                "MGmol<T>::initial(), init wf and masks...", os_);
 
         // Make temp mask for initial random wave functions
         if (ct.init_loc == 1)
@@ -381,9 +382,9 @@ int MGmol<T>::initial()
     }
 
     if (ct.verbose > 0) printWithTimeStamp("Initialize XC functional...", os_);
-    xcongrid_ = XCfunctionalFactory<T>::create(
-                    ct.xctype, mmpi.nspin(), *rho_, pot);
-    assert( xcongrid_ != 0 );
+    xcongrid_
+        = XCfunctionalFactory<T>::create(ct.xctype, mmpi.nspin(), *rho_, pot);
+    assert(xcongrid_ != 0);
 
     // initialize nl potentials with restart values if possible
     //    if( ct.restart_info>1 )
@@ -442,9 +443,8 @@ int MGmol<T>::initial()
         else if (ct.isSpreadFunctionalEnergy())
         {
             energy_with_spread_penalty = true;
-            spread_penalty_            =
-                new EnergySpreadPenalty<T>(spreadf_,
-                    ct.spreadPenaltyTarget(), ct.spreadPenaltyAlphaFactor());
+            spread_penalty_            = new EnergySpreadPenalty<T>(spreadf_,
+                ct.spreadPenaltyTarget(), ct.spreadPenaltyAlphaFactor());
         }
         else
             spread_penalty_ = new SpreadPenalty<T>(spreadf_,
@@ -462,9 +462,8 @@ int MGmol<T>::initial()
     updateHmatrix(*current_orbitals_, *ions_);
 
     // HMVP algorithm requires that H is initialized
-    dm_strategy_ = DMStrategyFactory<T>::create(
-        comm_, os_, *ions_, rho_, energy_,
-        electrostat_, this, proj_matrices_, current_orbitals_);
+    dm_strategy_ = DMStrategyFactory<T>::create(comm_, os_, *ions_, rho_,
+        energy_, electrostat_, this, proj_matrices_, current_orbitals_);
 
     // theta = invB * Hij
     proj_matrices_->updateThetaAndHB();
@@ -582,7 +581,7 @@ void MGmol<T>::write_header()
     time(&tt);
     char* timeptr = ctime(&tt);
 
-    Control& ct = *(Control::instance());
+    Control& ct     = *(Control::instance());
     Potentials& pot = hamiltonian_->potential();
 
     if (onpe0)
@@ -982,7 +981,10 @@ double MGmol<T>::get_evnl(const Ions& ions, T& orbitals)
 }
 
 template <class T>
-double MGmol<T>::getTotalEnergy() { return total_energy_; }
+double MGmol<T>::getTotalEnergy()
+{
+    return total_energy_;
+}
 
 template <class T>
 void MGmol<T>::setup()
@@ -1097,8 +1099,7 @@ void MGmol<T>::precond_mg(T& phi)
 }
 
 template <class T>
-double MGmol<T>::computeResidual(T& orbitals,
-    T& work_orbitals, T& res,
+double MGmol<T>::computeResidual(T& orbitals, T& work_orbitals, T& res,
     const bool print_residual, const bool norm_res)
 
 {
@@ -1133,8 +1134,8 @@ double MGmol<T>::computeResidual(T& orbitals,
 //////////////////////////////////////////////////////////////////////////////
 // compute res using psi and hpsi
 template <class T>
-void MGmol<T>::computeResidualUsingHPhi(T& psi,
-    const T& hphi, T& res, const bool applyB)
+void MGmol<T>::computeResidualUsingHPhi(
+    T& psi, const T& hphi, T& res, const bool applyB)
 {
     assert(psi.isCompatibleWith(hphi));
     assert(psi.isCompatibleWith(res));
@@ -1195,8 +1196,7 @@ void MGmol<T>::computeResidualUsingHPhi(T& psi,
 //////////////////////////////////////////////////////////////////////////////
 
 template <class T>
-double MGmol<T>::computeConstraintResidual(T& orbitals,
-    const T& hphi, T& res,
+double MGmol<T>::computeConstraintResidual(T& orbitals, const T& hphi, T& res,
     const bool print_residual, const bool compute_norm_res)
 {
     Control& ct(*(Control::instance()));
@@ -1236,8 +1236,7 @@ double MGmol<T>::computeConstraintResidual(T& orbitals,
 //////////////////////////////////////////////////////////////////////////////
 // Get preconditioned residual in res_orbitals
 template <class T>
-double MGmol<T>::computePrecondResidual(T& phi,
-    T& hphi, T& res, Ions& ions,
+double MGmol<T>::computePrecondResidual(T& phi, T& hphi, T& res, Ions& ions,
     KBPsiMatrixSparse* kbpsi, const bool print_residual, const bool norm_res)
 
 {
@@ -1276,7 +1275,8 @@ double MGmol<T>::computePrecondResidual(T& phi,
 //    of the old ones (input "vh" and "vxc") and the ones
 //    corresponding to the input "rho".
 template <class T>
-void MGmol<T>::update_pot(const pb::GridFunc<POTDTYPE>& vh_init, const Ions& ions)
+void MGmol<T>::update_pot(
+    const pb::GridFunc<POTDTYPE>& vh_init, const Ions& ions)
 {
     electrostat_->setupInitialVh(vh_init);
     update_pot(ions);

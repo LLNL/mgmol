@@ -23,15 +23,14 @@ private:
     double spread2_target_;
     double alpha_;
 
-    void computeAndAddResidualSpreadPenalty(const std::vector<float>& lagrangemult,
+    void computeAndAddResidualSpreadPenalty(
+        const std::vector<float>& lagrangemult,
         const std::vector<float>& factors, const std::vector<Vector3D>& centers,
-        const std::vector<int>& gids, T& orbitals,
-        T& res);
+        const std::vector<int>& gids, T& orbitals, T& res);
 
 public:
     EnergySpreadPenalty(SpreadsAndCenters<T>* spreadf,
-        const double spread_target,
-        const double alpha)
+        const double spread_target, const double alpha)
         : spreadf_(spreadf),
           spread2_target_(spread_target * spread_target),
           alpha_(alpha)

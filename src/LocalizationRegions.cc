@@ -10,15 +10,15 @@
 
 #include "global.h"
 
-#include "LocalizationRegions.h"
 #include "LocGridOrbitals.h"
+#include "LocalizationRegions.h"
 #include "Mesh.h"
 #include "OrbitalsTransform.h"
 #include "SpreadsAndCenters.h"
 #include "SquareLocalMatrices.h"
 #include "SymmetricPair.h"
-#include "tools.h"
 #include "hdf_tools.h"
+#include "tools.h"
 
 #include <algorithm>
 #include <iomanip>
@@ -313,8 +313,7 @@ void LocalizationRegions::resetOldCenters()
 }
 
 template <class T>
-float LocalizationRegions::move(const SpreadsAndCenters<T>& sc,
-                                const bool flag)
+float LocalizationRegions::move(const SpreadsAndCenters<T>& sc, const bool flag)
 {
     vector<Vector3D> centers;
     sc.computeCenters(centers);
@@ -362,8 +361,7 @@ float LocalizationRegions::updateRadii(
 }
 
 template <class T>
-float LocalizationRegions::updateRadiiConstVol(
-    const SpreadsAndCenters<T>& sc)
+float LocalizationRegions::updateRadiiConstVol(const SpreadsAndCenters<T>& sc)
 {
     assert(volume_ > 0.);
 
@@ -862,7 +860,7 @@ bool LocalizationRegions::isLRcenterLocal(const LRData& lr) const
 
 void LocalizationRegions::setupLocalRegionsFromOverlapRegions()
 {
-    assert (overlap_regions_.size() > 0);
+    assert(overlap_regions_.size() > 0);
 
     setupLocalRegionsFromOverlapRegions_tm_.start();
 
@@ -1837,11 +1835,8 @@ double LocalizationRegions::computeMinDistBetweenLocalPairs(
 //}
 
 template float LocalizationRegions::move(
-    const SpreadsAndCenters<LocGridOrbitals>& sc,
-    const bool flag);
+    const SpreadsAndCenters<LocGridOrbitals>& sc, const bool flag);
 template float LocalizationRegions::updateRadiiConstVol(
     const SpreadsAndCenters<LocGridOrbitals>& sc);
 template float LocalizationRegions::updateRadii(
-   const SpreadsAndCenters<LocGridOrbitals>& sc,
-   const float ratio);
-
+    const SpreadsAndCenters<LocGridOrbitals>& sc, const float ratio);

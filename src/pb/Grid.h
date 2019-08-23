@@ -65,7 +65,7 @@ public:
     unsigned gdim(const short i) const { return gdim_[i]; }
     int inc(const short i) const { return inc_[i]; }
     double ll(const short i) const { return ll_[i]; }
-    double maxDomainSize()const
+    double maxDomainSize() const
     {
         double maxd = ll_[0];
         if (ll_[1] > maxd) maxd = ll_[1];
@@ -116,9 +116,7 @@ public:
 
     Vector3D closestGridPt(Vector3D coords) const;
 
-    ~Grid()
-    {
-    }
+    ~Grid() {}
 
     template <typename T>
     void getSinCosFunctions(std::vector<T>& sinx, std::vector<T>& siny,

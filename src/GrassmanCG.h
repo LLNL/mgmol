@@ -20,7 +20,8 @@
 
 #include <iostream>
 
-template <class T> class MGmol;
+template <class T>
+class MGmol;
 
 template <class T>
 class GrassmanCG : public GrassmanLineMinimization<T>
@@ -37,11 +38,10 @@ public:
 
     void conjugate();
     double computeStepSize(T& orbitals);
-    void computeOrbitalsProdWithH(T& orbitals1,
-        T& orbitals2, dist_matrix::DistMatrix<DISTMATDTYPE>& mat);
+    void computeOrbitalsProdWithH(
+        T& orbitals1, T& orbitals2, dist_matrix::DistMatrix<DISTMATDTYPE>& mat);
     void computeOrbitalsProdWithH(
         T& orbitals, dist_matrix::DistMatrix<DISTMATDTYPE>& mat);
-    void parallelTransportUpdate(
-        const double lambda, T& orbitals);
+    void parallelTransportUpdate(const double lambda, T& orbitals);
 };
 #endif

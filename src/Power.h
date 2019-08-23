@@ -13,7 +13,7 @@
 
 #include <iostream>
 
-template<class VECTOR, class MATRIX>
+template <class VECTOR, class MATRIX>
 class Power
 {
 private:
@@ -29,20 +29,15 @@ public:
     Power(const int n)
         : shift_(0.), vec1_(generate_rand(n)), vec2_(generate_rand(n))
     {
-        
     }
 
-    void computeEigenInterval(
-        const MATRIX& A, double& emin, double& emax,
+    void computeEigenInterval(const MATRIX& A, double& emin, double& emax,
         const double epsilon = 1.e-2, const bool verbose = false);
 
-    static void printTimers(std::ostream& os)
-    {
-        compute_tm_.print(os);
-    }
+    static void printTimers(std::ostream& os) { compute_tm_.print(os); }
 };
 
-template<class VECTOR, class MATRIX>
+template <class VECTOR, class MATRIX>
 Timer Power<VECTOR, MATRIX>::compute_tm_("Power::compute");
 
 #endif

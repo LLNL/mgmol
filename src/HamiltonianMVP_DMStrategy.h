@@ -19,7 +19,8 @@
 
 class Ions;
 class Electrostatic;
-template <class T> class MGmol;
+template <class T>
+class MGmol;
 
 template <class T1, class T2, class T3, class T4>
 class HamiltonianMVP_DMStrategy : public DMStrategy
@@ -41,8 +42,7 @@ private:
 
 public:
     HamiltonianMVP_DMStrategy(MPI_Comm comm, std::ostream& os, Ions& ions,
-        Rho<T4>* rho, Energy<T4>* energy,
-        Electrostatic* electrostat,
+        Rho<T4>* rho, Energy<T4>* energy, Electrostatic* electrostat,
         MGmol<T4>* mgmol_strategy, T4* orbitals);
 
     ~HamiltonianMVP_DMStrategy();

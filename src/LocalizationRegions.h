@@ -15,12 +15,12 @@
 #include "HDFrestart.h"
 #include "MGmol_MPI.h"
 #include "MPIdata.h"
+#include "SpreadsAndCenters.h"
 #include "Timer.h"
 #include "Vector3D.h"
 #include "global.h"
 #include "mgmol_mpi_tools.h"
 #include "tools.h"
-#include "SpreadsAndCenters.h"
 
 #include <iostream>
 #include <set>
@@ -408,12 +408,10 @@ public:
     }
 
     template <class T>
-    float move(const SpreadsAndCenters<T>& sc,
-               const bool flag = false);
+    float move(const SpreadsAndCenters<T>& sc, const bool flag = false);
     float updateRadii(const OrbitalsTransform* ot, const float ratio);
     template <class T>
-    float updateRadii(const SpreadsAndCenters<T>& sc,
-                      const float ratio);
+    float updateRadii(const SpreadsAndCenters<T>& sc, const float ratio);
     template <class T>
     float updateRadiiConstVol(const SpreadsAndCenters<T>& sc);
 

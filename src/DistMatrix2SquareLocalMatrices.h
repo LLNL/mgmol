@@ -12,9 +12,9 @@
 #define MGMOL_DistMatrix2SquareLocalMatrices_H
 
 #include "DistMatrix.h"
-#include "SubMatricesIndexing.h"
-#include "SubMatrices.h"
 #include "SquareLocalMatrices.h"
+#include "SubMatrices.h"
+#include "SubMatricesIndexing.h"
 #include "Timer.h"
 
 #include <memory>
@@ -30,9 +30,9 @@ class DistMatrix2SquareLocalMatrices
 
     static MPI_Comm comm_;
 
-    static std::unique_ptr< dist_matrix::SubMatricesIndexing<DISTMATDTYPE> >
+    static std::unique_ptr<dist_matrix::SubMatricesIndexing<DISTMATDTYPE>>
         submat_indexing_;
-    static std::unique_ptr< dist_matrix::SubMatrices<DISTMATDTYPE> > submatWork_;
+    static std::unique_ptr<dist_matrix::SubMatrices<DISTMATDTYPE>> submatWork_;
 
 public:
     static DistMatrix2SquareLocalMatrices* instance()
@@ -46,38 +46,30 @@ public:
 
     DistMatrix2SquareLocalMatrices()
     {
-        assert( comm_!=MPI_COMM_NULL );
-        assert( submat_indexing_ );
-        assert( submatWork_ );
+        assert(comm_ != MPI_COMM_NULL);
+        assert(submat_indexing_);
+        assert(submatWork_);
     }
 
-    static void setup(
-        MPI_Comm comm,
-        const std::vector<std::vector<int>>& gids,
+    static void setup(MPI_Comm comm, const std::vector<std::vector<int>>& gids,
         const dist_matrix::DistMatrix<DISTMATDTYPE>& empty_mat)
     {
         comm_ = comm;
         submat_indexing_.reset(
             new dist_matrix::SubMatricesIndexing<DISTMATDTYPE>(
-                gids, comm, empty_mat) );
-        submatWork_.reset( new dist_matrix::SubMatrices<DISTMATDTYPE>(
-            "Work", gids, comm, empty_mat, *submat_indexing_) );
+                gids, comm, empty_mat));
+        submatWork_.reset(new dist_matrix::SubMatrices<DISTMATDTYPE>(
+            "Work", gids, comm, empty_mat, *submat_indexing_));
     }
 
-    ~DistMatrix2SquareLocalMatrices()
-    {
-    }
+    ~DistMatrix2SquareLocalMatrices() {}
 
     void convert(const dist_matrix::DistMatrix<DISTMATDTYPE>& dmat,
-                SquareLocalMatrices<MATDTYPE>& lmat);
+        SquareLocalMatrices<MATDTYPE>& lmat);
     const dist_matrix::SubMatrices<DISTMATDTYPE>& convert(
         const dist_matrix::DistMatrix<DISTMATDTYPE>& dmat);
 
-    static void printTimers(std::ostream& os)
-    {
-        convert_tm_.print(os);
-    }
+    static void printTimers(std::ostream& os) { convert_tm_.print(os); }
 };
 
 #endif
-

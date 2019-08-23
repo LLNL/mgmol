@@ -25,16 +25,14 @@ private:
 public:
     PowerGen(const int n)
         : shift_(0.), vec1_(generate_rand(n)), vec2_(generate_rand(n))
-    {}
-
-    void computeGenEigenInterval(
-        dist_matrix::DistMatrix<double>& mat, GramMatrix& gm,
-        std::vector<double>& interval, const int maxits, const double pad);
-
-    static void printTimers(std::ostream& os)
     {
-        compute_tm_.print(os);
     }
+
+    void computeGenEigenInterval(dist_matrix::DistMatrix<double>& mat,
+        GramMatrix& gm, std::vector<double>& interval, const int maxits,
+        const double pad);
+
+    static void printTimers(std::ostream& os) { compute_tm_.print(os); }
 };
 
 #endif

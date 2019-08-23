@@ -22,8 +22,8 @@ private:
     ProjectedMatricesInterface* proj_matrices_;
 
 public:
-    EigenDMStrategy(T* current_orbitals,
-        ProjectedMatricesInterface* proj_matrices);
+    EigenDMStrategy(
+        T* current_orbitals, ProjectedMatricesInterface* proj_matrices);
 
     void initialize();
     int update();

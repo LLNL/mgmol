@@ -30,8 +30,7 @@ template <class T>
 PolakRibiereSolver<T>::PolakRibiereSolver(Hamiltonian<T>* hamiltonian,
     ProjectedMatricesInterface* proj_matrices, Energy<T>* energy,
     Electrostatic* electrostat, MGmol<T>* mgmol_strategy, Ions& ions,
-    Rho<T>* rho,
-    DMStrategy* dm_strategy, std::ostream& os)
+    Rho<T>* rho, DMStrategy* dm_strategy, std::ostream& os)
     : hamiltonian_(hamiltonian),
       proj_matrices_(proj_matrices),
       energy_(energy),
@@ -61,7 +60,9 @@ PolakRibiereSolver<T>::PolakRibiereSolver(Hamiltonian<T>* hamiltonian,
 }
 
 template <class T>
-PolakRibiereSolver<T>::~PolakRibiereSolver() {}
+PolakRibiereSolver<T>::~PolakRibiereSolver()
+{
+}
 
 template <class T>
 void PolakRibiereSolver<T>::printEnergy(const short step) const
@@ -269,9 +270,8 @@ double PolakRibiereSolver<T>::computeBeta(T& work_orbitals) const
 }
 
 template <class T>
-int PolakRibiereSolver<T>::solve(T& orbitals,
-    T& work_orbitals, Ions& ions, const short max_steps,
-    const short iprint, double& last_eks)
+int PolakRibiereSolver<T>::solve(T& orbitals, T& work_orbitals, Ions& ions,
+    const short max_steps, const short iprint, double& last_eks)
 {
     Control& ct(*(Control::instance()));
     assert(ct.getOrbitalsType() != OrbitalsType::Eigenfunctions);

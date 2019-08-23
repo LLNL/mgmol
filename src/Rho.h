@@ -11,9 +11,9 @@
 #ifndef MGMOL_RHO_H
 #define MGMOL_RHO_H
 
-#include "Timer.h"
-#include "DistMatrix.h"
 #include "Control.h"
+#include "DistMatrix.h"
+#include "Timer.h"
 #include "global.h"
 
 #include <vector>
@@ -42,45 +42,42 @@ class Rho
     int verbosity_level_;
 
     // parameters for "blocking" in loops over functions and space
-    //int block_functions_;
-    //int block_space_;
+    // int block_functions_;
+    // int block_space_;
 
     static Timer update_tm_;
     static Timer compute_tm_;
     static Timer compute_blas_tm_;
-    //static Timer compute_offdiag_tm_;
+    // static Timer compute_offdiag_tm_;
 
     double computeTotalCharge();
-    //void computeRhoSubdomain(const int iloc_init, const int iloc_end,
+    // void computeRhoSubdomain(const int iloc_init, const int iloc_end,
     //    const T& orbitals);
     void computeRhoSubdomain(const int iloc_init, const int iloc_end,
         const T& orbitals, const std::vector<DISTMATDTYPE>& occ);
-    //void computeRhoSubdomainOffDiagBlock(const int iloc_init,
+    // void computeRhoSubdomainOffDiagBlock(const int iloc_init,
     //    const int iloc_end,
     //    const std::vector<const T*>& vorbitals,
     //    const ProjectedMatricesInterface* const);
-    void computeRhoSubdomainUsingBlas3(
-        const int iloc_init, const int iloc_end, const T& orbitals1,
-        const T& orbitals2);
+    void computeRhoSubdomainUsingBlas3(const int iloc_init, const int iloc_end,
+        const T& orbitals1, const T& orbitals2);
     void computeRhoSubdomainUsingBlas3(
         const int iloc_init, const int iloc_end, const T& orbitals)
     {
-        computeRhoSubdomainUsingBlas3(iloc_init, iloc_end, orbitals,
-            orbitals);
+        computeRhoSubdomainUsingBlas3(iloc_init, iloc_end, orbitals, orbitals);
     }
 
     void accumulateCharge(const double alpha, const short ix_max,
         const ORBDTYPE* const psii, const ORBDTYPE* const psij,
         RHODTYPE* const plrho);
-    //int setupSubdomainData(const int iloc,
+    // int setupSubdomainData(const int iloc,
     //    const std::vector<const T*>& vorbitals,
     //    const ProjectedMatricesInterface* const projmatrices,
     //    std::vector<MATDTYPE>& melements,
     //    std::vector<std::vector<const ORBDTYPE*>>& mpsi);
 
     void computeRho(T& orbitals);
-    void computeRho(
-        T& orbitals, ProjectedMatricesInterface& proj_matrices);
+    void computeRho(T& orbitals, ProjectedMatricesInterface& proj_matrices);
 
 public:
     // electronic density on grid
@@ -91,8 +88,8 @@ public:
     ~Rho(){};
 
     void rescaleTotalCharge();
-    void setup(const OrbitalsType orbitals_type,
-               const std::vector<std::vector<int>>&);
+    void setup(
+        const OrbitalsType orbitals_type, const std::vector<std::vector<int>>&);
     void setVerbosityLevel(const int vlevel) { verbosity_level_ = vlevel; }
 
     void update(T& current_orbitals);
@@ -105,8 +102,8 @@ public:
         const dist_matrix::DistMatrix<DISTMATDTYPE>& dm22);
 
     // compute rho using density matrix specified in arguments
-    void computeRho(T& orbitals,
-        const dist_matrix::DistMatrix<DISTMATDTYPE>& dm);
+    void computeRho(
+        T& orbitals, const dist_matrix::DistMatrix<DISTMATDTYPE>& dm);
 
     void init(const RHODTYPE* const rhoc);
     void initUniform();
@@ -120,7 +117,7 @@ public:
 
     void gatherSpin();
 
-    //void setupBlockSizes(const int block_functions, const int block_space)
+    // void setupBlockSizes(const int block_functions, const int block_space)
     //{
     //    block_functions_ = block_functions;
     //    block_space_     = block_space;

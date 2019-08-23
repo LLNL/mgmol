@@ -14,17 +14,16 @@
 using namespace std;
 
 #include "DistMatrix2SquareLocalMatrices.h"
+#include "DistVector.h"
 #include "GramMatrix.h"
 #include "MGmol_MPI.h"
 #include "Power.h"
-#include "DistVector.h"
 
 void rotateSym(dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
     const dist_matrix::DistMatrix<DISTMATDTYPE>& rotation_matrix,
     dist_matrix::DistMatrix<DISTMATDTYPE>& work);
 
-GramMatrix::GramMatrix(const int ndim)
-    : dim_(ndim)
+GramMatrix::GramMatrix(const int ndim) : dim_(ndim)
 {
     if (dim_ > 0)
     {
@@ -47,8 +46,7 @@ GramMatrix::GramMatrix(const int ndim)
     isInvSuptodate_ = false;
 }
 
-GramMatrix::GramMatrix(const GramMatrix& gm)
-    : dim_(gm.dim_)
+GramMatrix::GramMatrix(const GramMatrix& gm) : dim_(gm.dim_)
 {
     if (dim_ > 0)
     {
@@ -155,10 +153,11 @@ double GramMatrix::computeCond()
     // static object so that eigenvectors inside Power
     // are saved from one call to the next
     static Power<dist_matrix::DistVector<double>,
-                 dist_matrix::DistMatrix<double>> power(dim_);
+        dist_matrix::DistMatrix<double>>
+        power(dim_);
 
     power.computeEigenInterval(*matS_, emin, emax, 1.e-3);
-    const double cond = emax/emin;
+    const double cond = emax / emin;
 #endif
 
     return cond;
@@ -251,8 +250,8 @@ const dist_matrix::SubMatrices<DISTMATDTYPE>& GramMatrix::getSubMatLS(
     assert(ls_ != NULL);
     assert(isLSuptodate_);
 
-    DistMatrix2SquareLocalMatrices* dm2sl =
-        DistMatrix2SquareLocalMatrices::instance();
+    DistMatrix2SquareLocalMatrices* dm2sl
+        = DistMatrix2SquareLocalMatrices::instance();
 
     return dm2sl->convert(*ls_);
 }

@@ -10,9 +10,9 @@
 
 #include "MGmol_scalapack.h"
 
+#include "BlacsContext.h"
 #include "DistMatrix.h"
 #include "DistVector.h"
-#include "BlacsContext.h"
 #include "MGmol_MPI.h"
 
 #include <cassert>
@@ -28,7 +28,6 @@
 #ifdef SCALAPACK
 #include "blacs.h"
 #endif
-
 
 namespace dist_matrix
 {
@@ -95,8 +94,8 @@ DistMatrix<T>::DistMatrix(const std::string& name, const BlacsContext& bc,
 
 // Construct a DistMatrix of dimensions m,n
 template <class T>
-DistMatrix<T>::DistMatrix(
-    const std::string& name, const int m, const int n, const int mb, const int nb)
+DistMatrix<T>::DistMatrix(const std::string& name, const int m, const int n,
+    const int mb, const int nb)
     : object_name_(name),
       comm_global_(default_bc_->comm_global()),
       bc_(*default_bc_)
@@ -345,7 +344,8 @@ DistMatrix<double>& DistMatrix<double>::operator=(const DistMatrix<double>& src)
     // "<<a.object_name_ << std::endl;
     if (src.m() != m_ || src.n() != n_)
     {
-        std::cerr << " DistMatrix<double>::operator=: size inconsistency" << std::endl;
+        std::cerr << " DistMatrix<double>::operator=: size inconsistency"
+                  << std::endl;
         exit(1);
     }
 
@@ -359,10 +359,12 @@ DistMatrix<double>& DistMatrix<double>::operator=(const DistMatrix<double>& src)
             for (int i = 0; i < 9; i++)
             {
                 // cout << " desc_[" << i << "] = " << desc_[i] << " / "
-                //     << " src.desc_[" << i << "] = " << src.desc_[i] << std::endl;
+                //     << " src.desc_[" << i << "] = " << src.desc_[i] <<
+                //     std::endl;
                 assert(desc_[i] == src.desc_[i]);
             }
-            // cout << " DistMatrix<double>::operator=: simple copy" << std::endl;
+            // cout << " DistMatrix<double>::operator=: simple copy" <<
+            // std::endl;
             memcpy(&val_[0], &src.val_[0], size_ * sizeof(double));
         }
     }
@@ -377,8 +379,8 @@ DistMatrix<double>& DistMatrix<double>::operator=(const DistMatrix<double>& src)
         BlacsContext bc(comm_global_);
         int gictxt = bc.ictxt();
         pdgemr2d_tm_.start();
-        pdgemr2d(&m_, &n_, src.val_.data(), &ione, &ione, src.desc(), &val_[0], &ione,
-            &ione, desc_, &gictxt);
+        pdgemr2d(&m_, &n_, src.val_.data(), &ione, &ione, src.desc(), &val_[0],
+            &ione, &ione, desc_, &gictxt);
         pdgemr2d_tm_.stop();
     }
 #endif
@@ -394,7 +396,8 @@ DistMatrix<float>& DistMatrix<float>::operator=(const DistMatrix<float>& src)
     // "<<a.object_name_ << std::endl;
     if (src.m() != m_ || src.n() != n_)
     {
-        std::cerr << " DistMatrix<float>::operator=: size inconsistency" << std::endl;
+        std::cerr << " DistMatrix<float>::operator=: size inconsistency"
+                  << std::endl;
         exit(1);
     }
 
@@ -408,10 +411,12 @@ DistMatrix<float>& DistMatrix<float>::operator=(const DistMatrix<float>& src)
             for (int i = 0; i < 9; i++)
             {
                 // cout << " desc_[" << i << "] = " << desc_[i] << " / "
-                //     << " src.desc_[" << i << "] = " << src.desc_[i] << std::endl;
+                //     << " src.desc_[" << i << "] = " << src.desc_[i] <<
+                //     std::endl;
                 assert(desc_[i] == src.desc_[i]);
             }
-            // cout << " DistMatrix<double>::operator=: simple copy" << std::endl;
+            // cout << " DistMatrix<double>::operator=: simple copy" <<
+            // std::endl;
             memcpy(&val_[0], &src.val_[0], size_ * sizeof(float));
         }
     }
@@ -426,8 +431,8 @@ DistMatrix<float>& DistMatrix<float>::operator=(const DistMatrix<float>& src)
         BlacsContext bc(comm_global_);
         int gictxt = bc.ictxt();
         pdgemr2d_tm_.start();
-        psgemr2d(&m_, &n_, src.val_.data(), &ione, &ione, src.desc(), &val_[0], &ione,
-            &ione, desc_, &gictxt);
+        psgemr2d(&m_, &n_, src.val_.data(), &ione, &ione, src.desc(), &val_[0],
+            &ione, &ione, desc_, &gictxt);
         pdgemr2d_tm_.stop();
     }
 #endif
@@ -446,7 +451,8 @@ DistMatrix<double>& DistMatrix<double>::assign(
 
     if (ib + m > m_ || jb + n > n_)
     {
-        std::cerr << " DistMatrix<double>::assign: size inconsistency" << std::endl;
+        std::cerr << " DistMatrix<double>::assign: size inconsistency"
+                  << std::endl;
         exit(1);
     }
 
@@ -477,8 +483,8 @@ DistMatrix<double>& DistMatrix<double>::assign(
         int gictxt = bc.ictxt();
         assert(m + ib <= m_);
         assert(n + jb <= n_);
-        pdgemr2d(&m, &n, src.val_.data(), &ione, &ione, src.desc(), val_.data(), &pib, &pjb,
-            desc_, &gictxt);
+        pdgemr2d(&m, &n, src.val_.data(), &ione, &ione, src.desc(), val_.data(),
+            &pib, &pjb, desc_, &gictxt);
     }
 #endif
     return *this;
@@ -495,7 +501,8 @@ DistMatrix<float>& DistMatrix<float>::assign(
 
     if (ib + m > m_ || jb + n > n_)
     {
-        std::cerr << " DistMatrix<float>::assign: size inconsistency" << std::endl;
+        std::cerr << " DistMatrix<float>::assign: size inconsistency"
+                  << std::endl;
         exit(1);
     }
 
@@ -526,8 +533,8 @@ DistMatrix<float>& DistMatrix<float>::assign(
         int gictxt = bc.ictxt();
         assert(m + ib <= m_);
         assert(n + jb <= n_);
-        psgemr2d(&m, &n, src.val_.data(), &ione, &ione, src.desc(), val_.data(), &pib, &pjb,
-            desc_, &gictxt);
+        psgemr2d(&m, &n, src.val_.data(), &ione, &ione, src.desc(), val_.data(),
+            &pib, &pjb, desc_, &gictxt);
     }
 #endif
     return *this;
@@ -537,7 +544,7 @@ DistMatrix<float>& DistMatrix<float>::assign(
 // matrix-vector multiplication
 // this = alpha*op(A)*b+beta*this
 ////////////////////////////////////////////////////////////////////////////////
-template<>
+template <>
 void DistMatrix<double>::gemv(const char transa, const double alpha,
     const DistMatrix<double>& a, const DistMatrix<double>& b, const double beta)
 {
@@ -566,7 +573,7 @@ void DistMatrix<double>::gemv(const char transa, const double alpha,
             &b.val_[0], &ione, &ione, b.desc(), &ione, &beta, &val_[0], &ione,
             &ione, desc_, &ione);
 #else
-        int ione = 1;
+        int ione            = 1;
         DGEMV(&transa, &m, &n, &alpha, &a.val_[0], &a.lld_, &b.val_[0], &ione,
             &beta, &val_[0], &ione);
 #endif
@@ -574,20 +581,20 @@ void DistMatrix<double>::gemv(const char transa, const double alpha,
 }
 
 // y = *this * v
-template<>
-void DistMatrix<double>::matvec(dist_matrix::DistVector<double>& v,
-                                dist_matrix::DistVector<double>& y)
+template <>
+void DistMatrix<double>::matvec(
+    dist_matrix::DistVector<double>& v, dist_matrix::DistVector<double>& y)
 {
     if (active_)
     {
-        char transa = 'N';
+        char transa  = 'N';
         double alpha = 1.;
-        double beta = 0.;
+        double beta  = 0.;
 #ifdef SCALAPACK
         int ione = 1;
         pdgemv(&transa, &m_, &n_, &alpha, &val_[0], &ione, &ione, desc(),
-            &v.val_[0], &ione, &ione, v.desc(), &ione, &beta, &y.val_[0],
-            &ione, &ione, y.desc_, &ione);
+            &v.val_[0], &ione, &ione, v.desc(), &ione, &beta, &y.val_[0], &ione,
+            &ione, y.desc_, &ione);
 #else
         int ione = 1;
         DGEMV(&transa, &m_, &n_, &alpha, &val_[0], &lld_, &v.val_[0], &ione,
@@ -1065,7 +1072,7 @@ int DistMatrix<double>::potrf(char uplo)
         if (info != 0)
         {
             std::cerr << " DistMatrix::potrf, object " << object_name_
-                 << ", info=" << info << std::endl;
+                      << ", info=" << info << std::endl;
         }
     }
 
@@ -1093,7 +1100,7 @@ int DistMatrix<float>::potrf(char uplo)
         if (info != 0)
         {
             std::cerr << " DistMatrix::potrf, object " << object_name_
-                 << ", info=" << info << std::endl;
+                      << ", info=" << info << std::endl;
         }
     }
 
@@ -1180,7 +1187,7 @@ void DistMatrix<double>::potrs(char uplo, DistMatrix<double>& b)
         if (info != 0)
         {
             std::cerr << " DistMatrix::potrs, object " << object_name_
-                 << ", info=" << info << std::endl;
+                      << ", info=" << info << std::endl;
 #ifdef USE_MPI
             MPI_Abort(comm_global_, 2);
 #else
@@ -1209,7 +1216,7 @@ void DistMatrix<float>::potrs(char uplo, DistMatrix<float>& b)
         if (info != 0)
         {
             std::cerr << " DistMatrix::potrs, object " << object_name_
-                 << ", info=" << info << std::endl;
+                      << ", info=" << info << std::endl;
 #ifdef USE_MPI
             MPI_Abort(comm_global_, 2);
 #else
@@ -1245,7 +1252,7 @@ void DistMatrix<double>::getrs(
         if (info != 0)
         {
             std::cerr << " DistMatrix::getrs, object " << object_name_
-                 << ", info=" << info << std::endl;
+                      << ", info=" << info << std::endl;
 #ifdef USE_MPI
             MPI_Abort(comm_global_, 2);
 #else
@@ -1278,7 +1285,7 @@ void DistMatrix<float>::getrs(
         if (info != 0)
         {
             std::cerr << " DistMatrix::getrs, object " << object_name_
-                 << ", info=" << info << std::endl;
+                      << ", info=" << info << std::endl;
 #ifdef USE_MPI
             MPI_Abort(comm_global_, 2);
 #else
@@ -1311,7 +1318,7 @@ int DistMatrix<double>::potri(char uplo)
         if (info != 0)
         {
             std::cerr << " DistMatrix::potri, object " << object_name_
-                 << ", info=" << info << std::endl;
+                      << ", info=" << info << std::endl;
         }
     }
     potri_tm_.stop();
@@ -1338,7 +1345,7 @@ int DistMatrix<float>::potri(char uplo)
         if (info != 0)
         {
             std::cerr << " DistMatrix::potri, object " << object_name_
-                 << ", info=" << info << std::endl;
+                      << ", info=" << info << std::endl;
         }
     }
     potri_tm_.stop();
@@ -1366,7 +1373,7 @@ int DistMatrix<double>::trtri(char uplo, char diag)
         if (info != 0)
         {
             std::cerr << " DistMatrix::trtri, object " << object_name_
-                 << ", info=" << info << std::endl;
+                      << ", info=" << info << std::endl;
         }
     }
     trtri_tm_.stop();
@@ -1467,11 +1474,12 @@ double DistMatrix<double>::pocon(char uplo, double anorm)
         if (info != 0)
         {
             std::cerr << "mloc_=" << mloc_ << ", nloc_=" << nloc_ << std::endl;
-            std::cerr << "npcol_=" << npcol_ << ", nprow_=" << nprow_ << std::endl;
-            std::cerr << "lwork=" << lwork << ", but should be at least " << work[0]
-                 << std::endl;
+            std::cerr << "npcol_=" << npcol_ << ", nprow_=" << nprow_
+                      << std::endl;
+            std::cerr << "lwork=" << lwork << ", but should be at least "
+                      << work[0] << std::endl;
             std::cerr << "liwork=" << liwork << ", but should be at least "
-                 << iwork[0] << std::endl;
+                      << iwork[0] << std::endl;
         }
         delete[] iwork;
         delete[] work;
@@ -1516,11 +1524,12 @@ double DistMatrix<float>::pocon(char uplo, float anorm)
         if (info != 0)
         {
             std::cerr << "mloc_=" << mloc_ << ", nloc_=" << nloc_ << std::endl;
-            std::cerr << "npcol_=" << npcol_ << ", nprow_=" << nprow_ << std::endl;
-            std::cerr << "lwork=" << lwork << ", but should be at least " << work[0]
-                 << std::endl;
+            std::cerr << "npcol_=" << npcol_ << ", nprow_=" << nprow_
+                      << std::endl;
+            std::cerr << "lwork=" << lwork << ", but should be at least "
+                      << work[0] << std::endl;
             std::cerr << "liwork=" << liwork << ", but should be at least "
-                 << iwork[0] << std::endl;
+                      << iwork[0] << std::endl;
         }
         delete[] iwork;
         delete[] work;
@@ -1631,8 +1640,8 @@ void DistMatrix<double>::getsub(
     BlacsContext bc(comm_global_);
     int gictxt = bc.ictxt();
     // int gictxt = ictxt_;
-    pdgemr2d(&m, &n, a.val_.data(), &iap, &jap, a.desc_, val_.data(), &ione, &ione, desc_,
-        &gictxt);
+    pdgemr2d(&m, &n, a.val_.data(), &iap, &jap, a.desc_, val_.data(), &ione,
+        &ione, desc_, &gictxt);
 #else
     for (int j = 0; j < n; j++)
         for (int i = 0; i < m; i++)
@@ -1655,8 +1664,8 @@ void DistMatrix<float>::getsub(
     BlacsContext bc(comm_global_);
     int gictxt = bc.ictxt();
     // int gictxt = ictxt_;
-    psgemr2d(&m, &n, a.val_.data(), &iap, &jap, a.desc_, val_.data(), &ione, &ione, desc_,
-        &gictxt);
+    psgemr2d(&m, &n, a.val_.data(), &iap, &jap, a.desc_, val_.data(), &ione,
+        &ione, desc_, &gictxt);
 #else
     for (int j = 0; j < n; j++)
         for (int i = 0; i < m; i++)
@@ -1678,8 +1687,8 @@ void DistMatrix<int>::getsub(
     int ione = 1;
     BlacsContext bc(comm_global_);
     int gictxt = bc.ictxt();
-    pigemr2d(&m, &n, a.val_.data(), &iap, &jap, a.desc(), val_.data(), &ione, &ione, desc_,
-        &gictxt);
+    pigemr2d(&m, &n, a.val_.data(), &iap, &jap, a.desc(), val_.data(), &ione,
+        &ione, desc_, &gictxt);
 #else
     for (int j = 0; j < n; j++)
         for (int i = 0; i < m; i++)
@@ -1902,12 +1911,13 @@ template <>
 void DistMatrix<double>::initFromReplicated(double* const src, const int lda)
 {
 #ifdef SCALAPACK
-    //all the nodes send data
+    // all the nodes send data
     const int rev = 1;
     const int ii  = 1;
     const int jj  = 1;
     const int i   = 1;
-    if (active_) pdlacp3(&m_, &i, val_.data(), desc_, src, &lda, &ii, &jj, &rev);
+    if (active_)
+        pdlacp3(&m_, &i, val_.data(), desc_, src, &lda, &ii, &jj, &rev);
 #else
     memcpy(&val_[0], src, lda * n_ * sizeof(double));
 #endif
@@ -1926,7 +1936,7 @@ void DistMatrix<double>::allgather(double* const a, const int lda) const
     assert(m_ == n_);
 
 #ifdef SCALAPACK
-    //all the nodes receive the data
+    // all the nodes receive the data
     const int ii  = -1;
     const int jj  = -1;
     const int rev = 0;
@@ -1956,8 +1966,9 @@ void DistMatrix<double>::allgather(double* const a, const int lda) const
             mpirc = MPI_Send(a, size, MPI_DOUBLE, mype + (i + 1) * n_active, 0,
                 comm_global_);
         if (mpirc != MPI_SUCCESS)
-            std::cerr << "DistMatrix<T>::allgather: MPI Send/Recv failed for PE "
-                 << mype << std::endl;
+            std::cerr
+                << "DistMatrix<T>::allgather: MPI Send/Recv failed for PE "
+                << mype << std::endl;
     }
 #else
     memcpy(a, &val_[0], lda * n_ * sizeof(double));
@@ -2002,8 +2013,9 @@ void DistMatrix<float>::allgather(float* const a, const int lda) const
             mpirc = MPI_Send(
                 a, size, MPI_FLOAT, mype + (i + 1) * n_active, 0, comm_global_);
         if (mpirc != MPI_SUCCESS)
-            std::cerr << "DistMatrix<T>::allgather: MPI Send/Recv failed for PE "
-                 << mype << std::endl;
+            std::cerr
+                << "DistMatrix<T>::allgather: MPI Send/Recv failed for PE "
+                << mype << std::endl;
     }
 #else
     memcpy(a, &val_[0], lda * n_ * sizeof(float));
@@ -2614,8 +2626,8 @@ void DistMatrix<T>::scalColumn(const int icol, const double alpha)
 
 ////////////////////////////////////////////////////////////////////////////////
 template <class T>
-void DistMatrix<T>::print(
-    std::ostream& os, const int ia, const int ja, const int ma, const int na) const
+void DistMatrix<T>::print(std::ostream& os, const int ia, const int ja,
+    const int ma, const int na) const
 {
     const int m = std::min(ma, std::max(m_ - ia, 0));
     const int n = std::min(na, std::max(n_ - ja, 0));
@@ -2642,18 +2654,16 @@ void DistMatrix<T>::print(
 }
 ////////////////////////////////////////////////////////////////////////////////
 template <>
-float DistMatrix<float>::getVal(
-    const int i, const int j) const
+float DistMatrix<float>::getVal(const int i, const int j) const
 {
     char scope = 'A';
-    char top = ' '; // default topology
+    char top   = ' '; // default topology
     // C -> Fortran
-    int ia = i+1;
-    int ja = j+1;
+    int ia = i + 1;
+    int ja = j + 1;
 
     float val;
-    if(active_)
-        pselget(&scope, &top, &val, val_.data(), &ia, &ja, desc_);
+    if (active_) pselget(&scope, &top, &val, val_.data(), &ia, &ja, desc_);
 #ifdef USE_MPI
     MPI_Bcast(&val, 1, MPI_DOUBLE, 0, comm_global_);
 #endif
@@ -2661,18 +2671,16 @@ float DistMatrix<float>::getVal(
 }
 
 template <>
-double DistMatrix<double>::getVal(
-    const int i, const int j) const
+double DistMatrix<double>::getVal(const int i, const int j) const
 {
     char scope = 'A';
-    char top = ' '; // default topology
+    char top   = ' '; // default topology
     // C -> Fortran
-    int ia = i+1;
-    int ja = j+1;
+    int ia = i + 1;
+    int ja = j + 1;
 
     double val;
-    if(active_)
-        pdelget(&scope, &top, &val, val_.data(), &ia, &ja, desc_);
+    if (active_) pdelget(&scope, &top, &val, val_.data(), &ia, &ja, desc_);
 #ifdef USE_MPI
     MPI_Bcast(&val, 1, MPI_FLOAT, 0, comm_global_);
 #endif
@@ -2713,22 +2721,22 @@ std::ostream& operator<<(std::ostream& os, const DistMatrix<T>& a)
     return os;
 }
 
-template<>
+template <>
 void DistMatrix<double>::setVal(const int i, const int j, const double val)
 {
     // C -> Fortran
-    int ii = i+1;
-    int jj = j+1;
+    int ii = i + 1;
+    int jj = j + 1;
 
     pdelset(val_.data(), &ii, &jj, desc_, &val);
 }
 
-template<>
+template <>
 void DistMatrix<float>::setVal(const int i, const int j, const float val)
 {
     // C -> Fortran
-    int ia = i+1;
-    int ja = j+1;
+    int ia = i + 1;
+    int ja = j + 1;
 
     pselset(val_.data(), &ia, &ja, desc_, &val);
 }

@@ -30,9 +30,7 @@ static const double min_theta   = -3.;
 //#define DEBUG 0
 
 template <class T>
-AndersonMix<T>::AndersonMix(
-    const int m, const double beta, T& x)
-    : m_(m), x_(x)
+AndersonMix<T>::AndersonMix(const int m, const double beta, T& x) : m_(m), x_(x)
 {
     mm_   = -1;
     beta_ = beta;
@@ -82,7 +80,7 @@ void AndersonMix<T>::update(T& f, T& work, ostream& os, const bool verbose)
 
     if (mm_ < m_) mm_++;
 
-    //os<<"mm_="<<mm_<<endl;
+    // os<<"mm_="<<mm_<<endl;
 
     if (mm_ > 0)
     {
@@ -166,8 +164,8 @@ void AndersonMix<T>::update(T& f, T& work, ostream& os, const bool verbose)
                 // "volume" = sqrt( determinant )
                 if (det < min_det_mat)
                 {
-                    os << "Det. Anderson matrix=" << det
-                       << ", set m=" << mm_ << endl;
+                    os << "Det. Anderson matrix=" << det << ", set m=" << mm_
+                       << endl;
                     mm_--;
                 }
                 else
@@ -203,10 +201,8 @@ void AndersonMix<T>::update(T& f, T& work, ostream& os, const bool verbose)
                     if (mm_ > 1)
                     {
                         mm_--;
-                        os
-                            << "Warning: theta[" << j << "]=" << theta_[j]
-                            << " > " << max_theta << ", set m=" << mm_
-                            << endl;
+                        os << "Warning: theta[" << j << "]=" << theta_[j]
+                           << " > " << max_theta << ", set m=" << mm_ << endl;
                         flag = true;
                         break;
                     }
@@ -219,9 +215,8 @@ void AndersonMix<T>::update(T& f, T& work, ostream& os, const bool verbose)
                     {
                         alpha = 0.; // simple SD
                     }
-                    os
-                        << "Warning: theta[" << j << "]=" << theta_[j]
-                        << " --> reset theta to " << alpha << endl;
+                    os << "Warning: theta[" << j << "]=" << theta_[j]
+                       << " --> reset theta to " << alpha << endl;
                     theta_[j] = alpha;
                 }
                 else if (theta_[j] < min_theta)
@@ -229,24 +224,21 @@ void AndersonMix<T>::update(T& f, T& work, ostream& os, const bool verbose)
                     if (mm_ > 1)
                     {
                         mm_--;
-                        os
-                            << "Warning: theta[" << j << "]=" << theta_[j]
-                            << " < " << min_theta << ", set m=" << mm_
-                            << endl;
+                        os << "Warning: theta[" << j << "]=" << theta_[j]
+                           << " < " << min_theta << ", set m=" << mm_ << endl;
                         flag = true;
                         break;
                     }
                     double alpha = min_theta;
-                    os
-                        << "Warning: theta[" << j << "]=" << theta_[j]
-                        << " --> reset theta to " << alpha << endl;
+                    os << "Warning: theta[" << j << "]=" << theta_[j]
+                       << " --> reset theta to " << alpha << endl;
                     theta_[j] = alpha;
                 }
             }
         }
 
         //#ifdef DEBUG
-        if ( os.good() && mm_ > 0 && verbose )
+        if (os.good() && mm_ > 0 && verbose)
         {
             os << "Anderson extrapolation:";
             for (int j = 0; j < mm_; j++)
@@ -285,7 +277,7 @@ void AndersonMix<T>::update(T& f, T& work, ostream& os, const bool verbose)
     }
 
     // compute f bar
-    if (m_ > 0 )
+    if (m_ > 0)
     {
         // save current f
         work.assign(f);

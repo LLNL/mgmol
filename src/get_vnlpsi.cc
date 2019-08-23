@@ -23,8 +23,7 @@ Timer get_kbpsi_tm("get_kbpsi");
 Timer vnlpsi_tm("vnlpsi");
 
 void get_vnlpsi(const Ions& ions, const vector<vector<int>>& subdomain_gids,
-    const int color, const KBPsiMatrixSparse* const kbpsi,
-    ORBDTYPE* const vpsi)
+    const int color, const KBPsiMatrixSparse* const kbpsi, ORBDTYPE* const vpsi)
 {
     vnlpsi_tm.start();
 

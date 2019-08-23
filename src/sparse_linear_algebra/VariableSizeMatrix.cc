@@ -215,7 +215,7 @@ VariableSizeMatrix<T>::VariableSizeMatrix(
         data_.reserve(n);
         int j = 0;
         for (int i = 0; i < n; i++) //(const_T2vecIterator arow=A.data_.begin();
-                                    //arow!=A.data_.end(); arow++)
+                                    // arow!=A.data_.end(); arow++)
         {
             T* new_row = new T(A.getRow(i)); //(**arow);
             data_.push_back(new_row);
@@ -231,7 +231,7 @@ VariableSizeMatrix<T>::VariableSizeMatrix(
 
         data_.reserve(n);
         for (int i = 0; i < n; i++) //(const_T2vecIterator arow=A.data_.begin();
-                                    //arow!=A.data_.end(); arow++)
+                                    // arow!=A.data_.end(); arow++)
         {
             T* new_row = new T(A.getRow(i)); //(**arow);
             data_.push_back(new_row);

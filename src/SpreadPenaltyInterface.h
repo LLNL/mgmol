@@ -20,7 +20,7 @@ public:
     virtual ~SpreadPenaltyInterface() {}
 
     // add penalty functional contribution to residual
-    virtual void addResidual(T& phi, T& res) = 0;
+    virtual void addResidual(T& phi, T& res)    = 0;
     virtual double evaluateEnergy(const T& phi) = 0;
 };
 

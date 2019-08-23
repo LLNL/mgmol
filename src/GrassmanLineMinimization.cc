@@ -31,9 +31,8 @@ Timer GrassmanLineMinimization<T>::update_states_tm_("Grassman_update_states");
 // orthof=true: wants orthonormalized updated wave functions
 template <class T>
 int GrassmanLineMinimization<T>::update(T& orbitals, Ions& ions,
-    const double precond_factor, const bool orthof,
-    T& work_orbitals, const bool accelerate, const bool print_res,
-    const double atol)
+    const double precond_factor, const bool orthof, T& work_orbitals,
+    const bool accelerate, const bool print_res, const double atol)
 {
     nl_update_tm_.start();
 
@@ -81,9 +80,8 @@ int GrassmanLineMinimization<T>::update(T& orbitals, Ions& ions,
 //////////////////////////////////////////////////////////////////////////////
 
 template <class T>
-void GrassmanLineMinimization<T>::update_states(T& orbitals,
-    T& grad, T& work_orbitals,
-    const double precond_factor)
+void GrassmanLineMinimization<T>::update_states(
+    T& orbitals, T& grad, T& work_orbitals, const double precond_factor)
 {
     assert(orbitals.getIterativeIndex() >= 0);
 
