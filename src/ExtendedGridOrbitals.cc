@@ -16,11 +16,11 @@
 
 #include "Control.h"
 #include "DistMatrix.h"
+#include "ExtendedGridOrbitals.h"
 #include "GridFunc.h"
 #include "HDFrestart.h"
 #include "Laph2.h"
 #include "Laph4M.h"
-#include "ExtendedGridOrbitals.h"
 #include "LocalizationRegions.h"
 #include "MPIdata.h"
 #include "Mesh.h"
@@ -38,15 +38,15 @@ using namespace std;
 #define ORBITAL_OCCUPATION 2.
 string getDatasetName(const string& name, const int color);
 
-short ExtendedGridOrbitals::subdivx_          = 0;
-int ExtendedGridOrbitals::lda_                = 0;
-int ExtendedGridOrbitals::numpt_              = 0;
-int ExtendedGridOrbitals::loc_numpt_          = 0;
-short ExtendedGridOrbitals::bc_[3]            = { 1, 1, 1 };
+short ExtendedGridOrbitals::subdivx_ = 0;
+int ExtendedGridOrbitals::lda_       = 0;
+int ExtendedGridOrbitals::numpt_     = 0;
+int ExtendedGridOrbitals::loc_numpt_ = 0;
+short ExtendedGridOrbitals::bc_[3]   = { 1, 1, 1 };
 ExtendedGridOrbitalsPtrFunc ExtendedGridOrbitals::dotProduct_
     = &ExtendedGridOrbitals::dotProductDiagonal;
 int ExtendedGridOrbitals::data_wghosts_index_ = -1;
-int ExtendedGridOrbitals::numst_=-1;
+int ExtendedGridOrbitals::numst_              = -1;
 std::vector<std::vector<int>> ExtendedGridOrbitals::overlapping_gids_;
 std::shared_ptr<DataDistribution> ExtendedGridOrbitals::distributor_;
 
@@ -54,19 +54,20 @@ Timer ExtendedGridOrbitals::get_dm_tm_("ExtendedGridOrbitals::get_dm");
 Timer ExtendedGridOrbitals::matB_tm_("ExtendedGridOrbitals::matB");
 Timer ExtendedGridOrbitals::invBmat_tm_("ExtendedGridOrbitals::invBmat");
 Timer ExtendedGridOrbitals::overlap_tm_("ExtendedGridOrbitals::overlap");
-Timer ExtendedGridOrbitals::dot_product_tm_("ExtendedGridOrbitals::dot_product");
+Timer ExtendedGridOrbitals::dot_product_tm_(
+    "ExtendedGridOrbitals::dot_product");
 Timer ExtendedGridOrbitals::addDot_tm_("ExtendedGridOrbitals::addDot");
-Timer ExtendedGridOrbitals::prod_matrix_tm_("ExtendedGridOrbitals::prod_matrix");
+Timer ExtendedGridOrbitals::prod_matrix_tm_(
+    "ExtendedGridOrbitals::prod_matrix");
 Timer ExtendedGridOrbitals::assign_tm_("ExtendedGridOrbitals::assign");
 Timer ExtendedGridOrbitals::normalize_tm_("ExtendedGridOrbitals::normalize");
 Timer ExtendedGridOrbitals::axpy_tm_("ExtendedGridOrbitals::axpy");
 
 ExtendedGridOrbitals::ExtendedGridOrbitals(std::string name,
-    const pb::Grid& my_grid, const short subdivx,
-    const int numst, const short bc[3],
-    ProjectedMatricesInterface* proj_matrices, LocalizationRegions* lrs,
-    MasksSet* masks, MasksSet* corrmasks, ClusterOrbitals* local_cluster,
-    const bool setup_flag)
+    const pb::Grid& my_grid, const short subdivx, const int numst,
+    const short bc[3], ProjectedMatricesInterface* proj_matrices,
+    LocalizationRegions* lrs, MasksSet* masks, MasksSet* corrmasks,
+    ClusterOrbitals* local_cluster, const bool setup_flag)
     : name_(name),
       grid_(my_grid),
       proj_matrices_(proj_matrices),
@@ -74,8 +75,8 @@ ExtendedGridOrbitals::ExtendedGridOrbitals(std::string name,
       lrs_(lrs),
       local_cluster_(local_cluster)
 {
-    (void) masks;
-    (void) corrmasks;
+    (void)masks;
+    (void)corrmasks;
 
     // preconditions
     assert(subdivx > 0);
@@ -96,13 +97,10 @@ ExtendedGridOrbitals::ExtendedGridOrbitals(std::string name,
     if (setup_flag) setup();
 }
 
-ExtendedGridOrbitals::~ExtendedGridOrbitals()
-{
-    assert(proj_matrices_ != 0);
-}
+ExtendedGridOrbitals::~ExtendedGridOrbitals() { assert(proj_matrices_ != 0); }
 
-ExtendedGridOrbitals::ExtendedGridOrbitals(const std::string name,
-    const ExtendedGridOrbitals& A, const bool copy_data)
+ExtendedGridOrbitals::ExtendedGridOrbitals(
+    const std::string name, const ExtendedGridOrbitals& A, const bool copy_data)
     : Orbitals(A, copy_data),
       name_(name),
       grid_(A.grid_),
@@ -111,15 +109,14 @@ ExtendedGridOrbitals::ExtendedGridOrbitals(const std::string name,
       lrs_(A.lrs_),
       local_cluster_(A.local_cluster_)
 {
-    // if(onpe0)cout<<"call ExtendedGridOrbitals(const ExtendedGridOrbitals &A, const bool
-    // copy_data)"<<endl;
+    // if(onpe0)cout<<"call ExtendedGridOrbitals(const ExtendedGridOrbitals &A,
+    // const bool copy_data)"<<endl;
 
     assert(A.proj_matrices_ != 0);
 }
 
 ExtendedGridOrbitals::ExtendedGridOrbitals(const std::string name,
-    const ExtendedGridOrbitals& A,
-    ProjectedMatricesInterface* proj_matrices,
+    const ExtendedGridOrbitals& A, ProjectedMatricesInterface* proj_matrices,
     const bool copy_data)
     : Orbitals(A, copy_data),
       name_(name),
@@ -165,7 +162,8 @@ void ExtendedGridOrbitals::setup()
     assert(proj_matrices_ != 0);
 
     if (ct.verbose > 0)
-        printWithTimeStamp("ExtendedGridOrbitals::setup()...", (*MPIdata::sout));
+        printWithTimeStamp(
+            "ExtendedGridOrbitals::setup()...", (*MPIdata::sout));
 
     computeGlobalIndexes();
 
@@ -181,9 +179,8 @@ void ExtendedGridOrbitals::setup()
     double domain[3]         = { mygrid.ll(0), mygrid.ll(1), mygrid.ll(2) };
 
     const double maxr = mygrid.maxDomainSize();
-    distributor_.reset(
-        new DataDistribution("DistributorExtendedGridOrbitals",
-                             maxr, myPEenv, domain));
+    distributor_.reset(new DataDistribution(
+        "DistributorExtendedGridOrbitals", maxr, myPEenv, domain));
 
     if (ct.verbose > 0)
         printWithTimeStamp(
@@ -193,9 +190,9 @@ void ExtendedGridOrbitals::setup()
 void ExtendedGridOrbitals::reset(
     MasksSet* masks, MasksSet* corrmasks, LocalizationRegions* lrs)
 {
-    (void) masks;
-    (void) corrmasks;
-    (void) lrs;
+    (void)masks;
+    (void)corrmasks;
+    (void)lrs;
 
     // free some old data
     block_vector_.clear();
@@ -216,7 +213,8 @@ void ExtendedGridOrbitals::assign(const ExtendedGridOrbitals& orbitals)
     assign_tm_.stop();
 }
 
-void ExtendedGridOrbitals::axpy(const double alpha, const ExtendedGridOrbitals& orbitals)
+void ExtendedGridOrbitals::axpy(
+    const double alpha, const ExtendedGridOrbitals& orbitals)
 {
     axpy_tm_.start();
 
@@ -227,15 +225,9 @@ void ExtendedGridOrbitals::axpy(const double alpha, const ExtendedGridOrbitals& 
     axpy_tm_.stop();
 }
 
-void ExtendedGridOrbitals::applyMask(const bool first_time)
-{
-    return;
-}
+void ExtendedGridOrbitals::applyMask(const bool first_time) { return; }
 
-void ExtendedGridOrbitals::applyCorrMask(const bool first_time)
-{
-    return;
-}
+void ExtendedGridOrbitals::applyCorrMask(const bool first_time) { return; }
 
 void ExtendedGridOrbitals::app_mask(
     const int color, ORBDTYPE* u, const short level) const
@@ -252,10 +244,11 @@ void ExtendedGridOrbitals::app_mask(
 void ExtendedGridOrbitals::init2zero()
 {
     ORBDTYPE* ipsi = psi(0);
-    memset(ipsi, 0, numst_*numpt_ * sizeof(ORBDTYPE));
+    memset(ipsi, 0, numst_ * numpt_ * sizeof(ORBDTYPE));
 }
 
-void ExtendedGridOrbitals::initGauss(const double rc, const LocalizationRegions& lrs)
+void ExtendedGridOrbitals::initGauss(
+    const double rc, const LocalizationRegions& lrs)
 {
     assert(numst_ >= 0);
     assert(subdivx_ > 0);
@@ -319,7 +312,6 @@ void ExtendedGridOrbitals::initGauss(const double rc, const LocalizationRegions&
                 }
                 xc[0] += hgrid[0];
             }
-         
         }
     }
     resetIterativeIndex();
@@ -378,9 +370,8 @@ void ExtendedGridOrbitals::initFourier()
                     double z = start2;
                     for (int iz = 0; iz < dim2; iz++)
                     {
-                        ipsi[ix * incx + iy * incy + iz]
-                            = (ORBDTYPE)(cos(kk[0] * x) * cos(kk[1] * y)
-                                         * cos(kk[2] * z));
+                        ipsi[ix * incx + iy * incy + iz] = (ORBDTYPE)(
+                            cos(kk[0] * x) * cos(kk[1] * y) * cos(kk[2] * z));
 
                         z += hgrid[2];
                     }
@@ -388,7 +379,6 @@ void ExtendedGridOrbitals::initFourier()
                 }
                 x += hgrid[0];
             }
-         
         }
     }
     resetIterativeIndex();
@@ -422,7 +412,8 @@ void ExtendedGridOrbitals::multiply_by_matrix(
     (*MPIdata::sout)<<"self multiply_by_matrix"<<endl;
 #endif
 
-    ReplicatedWorkSpace<DISTMATDTYPE>& wspace(ReplicatedWorkSpace<DISTMATDTYPE>::instance());
+    ReplicatedWorkSpace<DISTMATDTYPE>& wspace(
+        ReplicatedWorkSpace<DISTMATDTYPE>::instance());
     DISTMATDTYPE* work_matrix = wspace.square_matrix();
 
     // build a local complete matrix from a distributed matrix
@@ -432,8 +423,7 @@ void ExtendedGridOrbitals::multiply_by_matrix(
 }
 
 void ExtendedGridOrbitals::multiply_by_matrix(
-    const DISTMATDTYPE* const matrix, ORBDTYPE* product,
-    const int ldp) const
+    const DISTMATDTYPE* const matrix, ORBDTYPE* product, const int ldp) const
 {
     prod_matrix_tm_.start();
 
@@ -449,9 +439,8 @@ void ExtendedGridOrbitals::multiply_by_matrix(
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
         // Compute product for subdomain iloc
-        MPgemmNN(loc_numpt_, numst_, numst_, 1., getPsi(0, iloc),
-            lda_, matrix, numst_, 0.,
-            product + iloc * loc_numpt_, ldp);
+        MPgemmNN(loc_numpt_, numst_, numst_, 1., getPsi(0, iloc), lda_, matrix,
+            numst_, 0., product + iloc * loc_numpt_, ldp);
     }
 
     prod_matrix_tm_.stop();
@@ -473,9 +462,8 @@ void ExtendedGridOrbitals::multiplyByMatrix(
         const MATDTYPE* const mat = matrix.getSubMatrix(iloc);
 
         // Compute product for subdomain iloc
-        MPgemmNN(loc_numpt_, numst_, numst_, 1.,
-            getPsi(0, iloc), lda_, mat, numst_, 0.,
-            product + iloc * loc_numpt_, ldp);
+        MPgemmNN(loc_numpt_, numst_, numst_, 1., getPsi(0, iloc), lda_, mat,
+            numst_, 0., product + iloc * loc_numpt_, ldp);
     }
 
     prod_matrix_tm_.stop();
@@ -499,12 +487,11 @@ void ExtendedGridOrbitals::multiplyByMatrix(
         ORBDTYPE* phi             = getPsi(0, iloc);
 
         // Compute product for subdomain iloc
-        MPgemmNN(loc_numpt_, numst_, numst_, 1., phi,
-            lda_, mat, numst_, 0., product, loc_numpt_);
+        MPgemmNN(loc_numpt_, numst_, numst_, 1., phi, lda_, mat, numst_, 0.,
+            product, loc_numpt_);
 
         for (int color = 0; color < numst_; color++)
-            memcpy(
-                phi + color * lda_, product + color * loc_numpt_, slnumpt);
+            memcpy(phi + color * lda_, product + color * loc_numpt_, slnumpt);
     }
 
     delete[] product;
@@ -513,7 +500,8 @@ void ExtendedGridOrbitals::multiplyByMatrix(
 }
 
 void ExtendedGridOrbitals::multiplyByMatrix(
-    const SquareLocalMatrices<MATDTYPE>& matrix, ExtendedGridOrbitals& product) const
+    const SquareLocalMatrices<MATDTYPE>& matrix,
+    ExtendedGridOrbitals& product) const
 {
     multiplyByMatrix(matrix, product.psi(0), product.lda_);
 }
@@ -521,8 +509,7 @@ void ExtendedGridOrbitals::multiplyByMatrix(
 void ExtendedGridOrbitals::multiply_by_matrix(
     const DISTMATDTYPE* const matrix, ExtendedGridOrbitals& product) const
 {
-    multiply_by_matrix(
-        matrix, product.psi(0), product.lda_);
+    multiply_by_matrix(matrix, product.psi(0), product.lda_);
 }
 
 void ExtendedGridOrbitals::multiply_by_matrix(
@@ -537,7 +524,8 @@ void ExtendedGridOrbitals::multiply_by_matrix(
     ORBDTYPE* product = new ORBDTYPE[loc_numpt_ * numst_];
     memset(product, 0, loc_numpt_ * numst_ * sizeof(ORBDTYPE));
 
-    ReplicatedWorkSpace<DISTMATDTYPE>& wspace(ReplicatedWorkSpace<DISTMATDTYPE>::instance());
+    ReplicatedWorkSpace<DISTMATDTYPE>& wspace(
+        ReplicatedWorkSpace<DISTMATDTYPE>::instance());
     DISTMATDTYPE* work_matrix = wspace.square_matrix();
 
     matrix.allgather(work_matrix, numst_);
@@ -550,8 +538,8 @@ void ExtendedGridOrbitals::multiply_by_matrix(
         ORBDTYPE* phi = getPsi(0, iloc);
 
         // Compute loc_numpt_ rows (for subdomain iloc)
-        MPgemmNN(loc_numpt_, numst_, numst_, 1., phi,
-            lda_, work_matrix, numst_, 0., product, loc_numpt_);
+        MPgemmNN(loc_numpt_, numst_, numst_, 1., phi, lda_, work_matrix, numst_,
+            0., product, loc_numpt_);
 
         for (int color = 0; color < numst_; color++)
             memcpy(phi + color * lda_, product + color * loc_numpt_, slnumpt);
@@ -573,8 +561,9 @@ int ExtendedGridOrbitals::read_hdf5(HDFrestart& h5f_file)
     int ierr      = read_func_hdf5(h5f_file, name);
     if (ierr < 0)
     {
-        (*MPIdata::serr) << "ExtendedGridOrbitals::read_hdf5(): error in reading "
-                         << name << ", size=" << name.size() << endl;
+        (*MPIdata::serr)
+            << "ExtendedGridOrbitals::read_hdf5(): error in reading " << name
+            << ", size=" << name.size() << endl;
         return ierr;
     }
     else if (onpe0 && ct.verbose > 2)
@@ -590,7 +579,8 @@ int ExtendedGridOrbitals::read_hdf5(HDFrestart& h5f_file)
         if (ierr < 0)
         {
             (*MPIdata::serr)
-                << "ExtendedGridOrbitals::read_hdf5(): error in reading DM" << endl;
+                << "ExtendedGridOrbitals::read_hdf5(): error in reading DM"
+                << endl;
             return ierr;
         }
     }
@@ -719,9 +709,9 @@ int ExtendedGridOrbitals::write_func_hdf5(HDFrestart& h5f_file, string name)
             herr_t status = H5Dclose(dset_id);
             if (status < 0)
             {
-                (*MPIdata::serr)
-                    << "ExtendedGridOrbitals::write_func_hdf5:H5Dclose failed!!!"
-                    << endl;
+                (*MPIdata::serr) << "ExtendedGridOrbitals::write_func_hdf5:"
+                                    "H5Dclose failed!!!"
+                                 << endl;
                 return -1;
             }
         }
@@ -751,7 +741,7 @@ int ExtendedGridOrbitals::write_func_hdf5(HDFrestart& h5f_file, string name)
     return 0;
 }
 
-//read all the data sets with names starting with "name"
+// read all the data sets with names starting with "name"
 int ExtendedGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, string name)
 {
     assert(numst_ >= 0);
@@ -782,17 +772,18 @@ int ExtendedGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, string name)
     {
         if (h5f_file.gatherDataX())
         {
-            (*MPIdata::sout) << "ExtendedGridOrbitals::read_func_hdf5(): Read wave "
-                                "functions from "
-                             << grid_.mype_env().n_mpi_task(1)
-                                    * grid_.mype_env().n_mpi_task(2)
-                             << " PEs" << endl;
+            (*MPIdata::sout)
+                << "ExtendedGridOrbitals::read_func_hdf5(): Read wave "
+                   "functions from "
+                << grid_.mype_env().n_mpi_task(1)
+                       * grid_.mype_env().n_mpi_task(2)
+                << " PEs" << endl;
         }
         else
         {
-            (*MPIdata::sout)
-                << "ExtendedGridOrbitals::read_func_hdf5(): Read wave functions "
-                << name << " from all tasks..." << endl;
+            (*MPIdata::sout) << "ExtendedGridOrbitals::read_func_hdf5(): Read "
+                                "wave functions "
+                             << name << " from all tasks..." << endl;
         }
     }
 
@@ -824,9 +815,9 @@ int ExtendedGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, string name)
         herr_t status = h5f_file.readData(buffer, memspace, dset_id, precision);
         if (status < 0)
         {
-            (*MPIdata::serr)
-                << "ExtendedGridOrbitals::read_func_hdf5() --- H5Dread failed!!!"
-                << endl;
+            (*MPIdata::serr) << "ExtendedGridOrbitals::read_func_hdf5() --- "
+                                "H5Dread failed!!!"
+                             << endl;
             return -1;
         }
 
@@ -839,10 +830,8 @@ int ExtendedGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, string name)
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
             const int shift = iloc * loc_numpt_;
-            block_vector_.assignLocal(
-                icolor, iloc, buffer + shift);
+            block_vector_.assignLocal(icolor, iloc, buffer + shift);
         }
-
     }
 
     delete[] buffer;
@@ -872,7 +861,8 @@ void ExtendedGridOrbitals::computeMatB(
 
     matB_tm_.start();
 #if DEBUG
-    if (onpe0) (*MPIdata::sout) << "ExtendedGridOrbitals::computeMatB()" << endl;
+    if (onpe0)
+        (*MPIdata::sout) << "ExtendedGridOrbitals::computeMatB()" << endl;
 #endif
 
     const short bcolor = 32;
@@ -907,8 +897,8 @@ void ExtendedGridOrbitals::computeMatB(
             // calculate nf columns of ssiloc
             MPgemmTN(numst_, nf, loc_numpt_, 1.,
                 orbitals_psi + iloc * loc_numpt_, lda_,
-                work + iloc * loc_numpt_, lda_, 0.,
-                ssiloc + icolor * numst_, numst_);
+                work + iloc * loc_numpt_, lda_, 0., ssiloc + icolor * numst_,
+                numst_);
         }
     }
 
@@ -976,8 +966,9 @@ void ExtendedGridOrbitals::getLocalOverlap(
     }
 }
 
-void ExtendedGridOrbitals::computeLocalProduct(const ExtendedGridOrbitals& orbitals,
-    LocalMatrices<MATDTYPE>& ss, const bool transpose)
+void ExtendedGridOrbitals::computeLocalProduct(
+    const ExtendedGridOrbitals& orbitals, LocalMatrices<MATDTYPE>& ss,
+    const bool transpose)
 {
     // assert( orbitals.numst_>=0 );
     assert(orbitals.lda_ > 1);
@@ -1021,7 +1012,7 @@ void ExtendedGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
 }
 
 void ExtendedGridOrbitals::computeDiagonalElementsDotProduct(
-    const ExtendedGridOrbitals& orbitals, vector<DISTMATDTYPE>& ss)const
+    const ExtendedGridOrbitals& orbitals, vector<DISTMATDTYPE>& ss) const
 {
     assert(numst_ > 0);
     assert(grid_.vel() > 0.);
@@ -1035,7 +1026,6 @@ void ExtendedGridOrbitals::computeDiagonalElementsDotProduct(
                 getPsi(icolor, iloc));
 
             ss[icolor] += (DISTMATDTYPE)(alpha * grid_.vel());
-         
         }
     }
     vector<DISTMATDTYPE> tmp(ss);
@@ -1080,7 +1070,8 @@ void ExtendedGridOrbitals::computeGram(const int verbosity)
     overlap_tm_.start();
 
 #ifdef PRINT_OPERATIONS
-    if (onpe0) (*MPIdata::sout) << "ExtendedGridOrbitals::computeGram()" << endl;
+    if (onpe0)
+        (*MPIdata::sout) << "ExtendedGridOrbitals::computeGram()" << endl;
 #endif
 
     assert(subdivx_ > 0);
@@ -1115,7 +1106,8 @@ void ExtendedGridOrbitals::checkCond(const double tol, const bool flag_stop)
     proj_matrices_->checkCond(tol, flag_stop);
 }
 
-double ExtendedGridOrbitals::dotProductWithDM(const ExtendedGridOrbitals& orbitals)
+double ExtendedGridOrbitals::dotProductWithDM(
+    const ExtendedGridOrbitals& orbitals)
 {
     assert(proj_matrices_ != 0);
 
@@ -1126,7 +1118,8 @@ double ExtendedGridOrbitals::dotProductWithDM(const ExtendedGridOrbitals& orbita
     return proj_matrices_->dotProductWithDM(ss);
 }
 
-double ExtendedGridOrbitals::dotProductWithInvS(const ExtendedGridOrbitals& orbitals)
+double ExtendedGridOrbitals::dotProductWithInvS(
+    const ExtendedGridOrbitals& orbitals)
 {
     assert(proj_matrices_ != 0);
 
@@ -1137,7 +1130,8 @@ double ExtendedGridOrbitals::dotProductWithInvS(const ExtendedGridOrbitals& orbi
     return proj_matrices_->dotProductWithInvS(ss);
 }
 
-double ExtendedGridOrbitals::dotProductDiagonal(const ExtendedGridOrbitals& orbitals)
+double ExtendedGridOrbitals::dotProductDiagonal(
+    const ExtendedGridOrbitals& orbitals)
 {
     assert(proj_matrices_ != 0);
 
@@ -1147,7 +1141,8 @@ double ExtendedGridOrbitals::dotProductDiagonal(const ExtendedGridOrbitals& orbi
     return proj_matrices_->getTraceDiagProductWithInvS(ss);
 }
 
-double ExtendedGridOrbitals::dotProductSimple(const ExtendedGridOrbitals& orbitals)
+double ExtendedGridOrbitals::dotProductSimple(
+    const ExtendedGridOrbitals& orbitals)
 {
     assert(proj_matrices_ != 0);
 
@@ -1191,9 +1186,9 @@ double ExtendedGridOrbitals::dotProduct(
     }
     else
     {
-        (*MPIdata::serr)
-            << "ExtendedGridOrbitals::dot_product() --- unknown dot product type"
-            << endl;
+        (*MPIdata::serr) << "ExtendedGridOrbitals::dot_product() --- unknown "
+                            "dot product type"
+                         << endl;
         Control& ct = *(Control::instance());
         ct.global_exit(2);
     }
@@ -1210,8 +1205,7 @@ const dist_matrix::DistMatrix<DISTMATDTYPE> ExtendedGridOrbitals::product(
     assert(subdivx_ > 0);
     assert(subdivx_ < 1000);
 
-    return product(
-        orbitals.psi(0), numst_, orbitals.lda_, transpose);
+    return product(orbitals.psi(0), numst_, orbitals.lda_, transpose);
 }
 
 const dist_matrix::DistMatrix<DISTMATDTYPE> ExtendedGridOrbitals::product(
@@ -1250,7 +1244,7 @@ void ExtendedGridOrbitals::orthonormalize(const bool overlap_uptodate)
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
     const dist_matrix::SubMatrices<DISTMATDTYPE>& submatLS(
         projmatrices->getSubMatLS(mmpi.commSameSpin(), overlapping_gids_));
-    //submatLS.print((*MPIdata::sout));
+    // submatLS.print((*MPIdata::sout));
 
     if (onpe0 && ct.verbose > 1)
         (*MPIdata::sout) << "ExtendedGridOrbitals::orthonormalize()" << endl;
@@ -1263,20 +1257,18 @@ void ExtendedGridOrbitals::orthonormalize(const bool overlap_uptodate)
             // compute non-diagonal elements
             for (int icolor = 0; icolor < jcolor; icolor++)
             {
-                double beta
-                    = (double)(-1.
-                               * submatLS.val(numst_ - jcolor - 1,
-                                     numst_ - icolor - 1, iloc));
+                double beta = (double)(-1.
+                                       * submatLS.val(numst_ - jcolor - 1,
+                                             numst_ - icolor - 1, iloc));
                 //(*MPIdata::sout)<<"beta="<<beta<<endl;
-                block_vector_.axpy(beta, numst_ - icolor - 1,
-                    numst_ - jcolor - 1, iloc);
+                block_vector_.axpy(
+                    beta, numst_ - icolor - 1, numst_ - jcolor - 1, iloc);
             }
 
             // normalize state
-            double alpha
-                = (double)(1.
-                           / submatLS.val(numst_ - jcolor - 1,
-                                 numst_ - jcolor - 1, iloc));
+            double alpha = (double)(1.
+                                    / submatLS.val(numst_ - jcolor - 1,
+                                          numst_ - jcolor - 1, iloc));
             //(*MPIdata::sout)<<"alpha="<<alpha<<endl;
             block_vector_.scal(alpha, numst_ - jcolor - 1, iloc);
         }
@@ -1292,7 +1284,8 @@ void ExtendedGridOrbitals::orthonormalizeLoewdin(
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 1)
-        (*MPIdata::sout) << "ExtendedGridOrbitals::orthonormalizeLoewdin()" << endl;
+        (*MPIdata::sout) << "ExtendedGridOrbitals::orthonormalizeLoewdin()"
+                         << endl;
 
     ProjectedMatrices* projmatrices
         = dynamic_cast<ProjectedMatrices*>(proj_matrices_);
@@ -1338,7 +1331,7 @@ double ExtendedGridOrbitals::normState(const int gid) const
 
     double tmp = 0.;
     for (short iloc = 0; iloc < subdivx_; iloc++)
-    { 
+    {
         // diagonal element
         tmp += block_vector_.dot(gid, gid, iloc);
         // cout<<"gid="<<gid<<", tmp="<<tmp<<endl;
@@ -1358,8 +1351,8 @@ void ExtendedGridOrbitals::orthonormalize2states(const int st1, const int st2)
 
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 2)
-        (*MPIdata::sout) << "ExtendedGridOrbitals::orthonormalize2states(): " << st1
-                         << " and " << st2 << endl;
+        (*MPIdata::sout) << "ExtendedGridOrbitals::orthonormalize2states(): "
+                         << st1 << " and " << st2 << endl;
     const int st[2] = { st1, st2 };
 
     double tmp[3]    = { 0., 0., 0. };
@@ -1369,18 +1362,15 @@ void ExtendedGridOrbitals::orthonormalize2states(const int st1, const int st2)
         for (int ic = 0; ic < 2; ic++)
         {
             const int color_ic = st[ic];
-         
+
             // diagonal element
-            tmp[2 * ic]
-                += vel * block_vector_.dot(color_ic, color_ic, iloc);
+            tmp[2 * ic] += vel * block_vector_.dot(color_ic, color_ic, iloc);
 
             if (ic == 1)
             {
                 const int color_jc = st[0];
-             
-                tmp[1] += vel
-                          * block_vector_.dot(
-                                color_ic, color_jc, iloc);
+
+                tmp[1] += vel * block_vector_.dot(color_ic, color_jc, iloc);
             }
         }
 
@@ -1401,8 +1391,8 @@ void ExtendedGridOrbitals::orthonormalize2states(const int st1, const int st2)
         = 1. / sqrt(overlap[2] - overlap[1] * overlap[1] / overlap[0]);
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
-       block_vector_.scal(alpha1, st[0], iloc);
-       block_vector_.scal(alpha2, st[1], iloc);
+        block_vector_.scal(alpha1, st[0], iloc);
+        block_vector_.scal(alpha2, st[1], iloc);
     }
 
 #if 1 // testing orthonormality
@@ -1413,20 +1403,16 @@ void ExtendedGridOrbitals::orthonormalize2states(const int st1, const int st2)
         for (int ic = 0; ic < 2; ic++)
         {
             const int color_ic = st[ic];
-         
+
             // diagonal element
-            tmp[2 * ic]
-                += vel * block_vector_.dot(color_ic, color_ic, iloc);
+            tmp[2 * ic] += vel * block_vector_.dot(color_ic, color_ic, iloc);
 
             if (ic == 1)
             {
                 const int color_jc = st[0];
-             
-                tmp[1] += vel
-                          * block_vector_.dot(
-                                color_ic, color_jc, iloc);
+
+                tmp[1] += vel * block_vector_.dot(color_ic, color_jc, iloc);
             }
-         
         }
 
     mmpi.allreduce(&tmp[0], &overlap[0], 3, MPI_SUM);
@@ -1436,8 +1422,8 @@ void ExtendedGridOrbitals::orthonormalize2states(const int st1, const int st2)
 #endif
 }
 
-void ExtendedGridOrbitals::multiplyByMatrix2states(
-    const int st1, const int st2, const double* mat, ExtendedGridOrbitals& product)
+void ExtendedGridOrbitals::multiplyByMatrix2states(const int st1, const int st2,
+    const double* mat, ExtendedGridOrbitals& product)
 {
     assert(st1 >= 0);
     assert(st2 >= 0);
@@ -1450,22 +1436,18 @@ void ExtendedGridOrbitals::multiplyByMatrix2states(
         product.block_vector_.set_zero(st1, iloc);
         product.block_vector_.set_zero(st2, iloc);
     }
-     
 
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
-        product.block_vector_.axpy(
-            mat[0], block_vector_, st1, st1, iloc);
-        product.block_vector_.axpy(
-            mat[3], block_vector_, st2, st2, iloc);
-        product.block_vector_.axpy(
-            mat[2], block_vector_, st1, st2, iloc);
-        product.block_vector_.axpy(
-            mat[1], block_vector_, st2, st1, iloc);
+        product.block_vector_.axpy(mat[0], block_vector_, st1, st1, iloc);
+        product.block_vector_.axpy(mat[3], block_vector_, st2, st2, iloc);
+        product.block_vector_.axpy(mat[2], block_vector_, st1, st2, iloc);
+        product.block_vector_.axpy(mat[1], block_vector_, st2, st1, iloc);
     }
 }
 
-void ExtendedGridOrbitals::computeInvNorms2(vector<vector<double>>& inv_norms2) const
+void ExtendedGridOrbitals::computeInvNorms2(
+    vector<vector<double>>& inv_norms2) const
 {
     vector<double> diagS(numst_);
 
@@ -1496,7 +1478,7 @@ void ExtendedGridOrbitals::normalize()
     // if( onpe0 && ct.verbose>2 )
     //        (*MPIdata::sout)<<"Normalize ExtendedGridOrbitals"<<endl;
 
-//    const double vel = grid_.vel();
+    //    const double vel = grid_.vel();
     vector<double> diagS(numst_);
 
     computeDiagonalElementsDotProduct(*this, diagS);
@@ -1525,7 +1507,8 @@ void ExtendedGridOrbitals::normalize()
 
 // modify argument orbitals, by projecting out its component
 // along ExtendedGridOrbitals
-void ExtendedGridOrbitals::projectOut(ExtendedGridOrbitals& orbitals, const double scale)
+void ExtendedGridOrbitals::projectOut(
+    ExtendedGridOrbitals& orbitals, const double scale)
 {
     projectOut(orbitals.psi(0), lda_, scale);
 
@@ -1573,8 +1556,8 @@ void ExtendedGridOrbitals::projectOut(
         MATDTYPE* localMat_iloc = pmatrix.getSubMatrix(iloc);
 
         // Compute loc_numpt_ rows (for subdomain iloc)
-        MPgemmNN(loc_numpt_, numst_, numst_, 1., phi,
-            lda_, localMat_iloc, numst_, 0., tproduct, loc_numpt_);
+        MPgemmNN(loc_numpt_, numst_, numst_, 1., phi, lda_, localMat_iloc,
+            numst_, 0., tproduct, loc_numpt_);
 
         double minus = -1. * scale;
         for (int j = 0; j < numst_; j++)
@@ -1629,8 +1612,8 @@ void ExtendedGridOrbitals::initRand()
         {
             for (short iloc = 0; iloc < subdivx_; iloc++)
             {
-                for (int ix = loc_length * iloc;
-                     ix < loc_length * (iloc + 1); ix++)
+                for (int ix = loc_length * iloc; ix < loc_length * (iloc + 1);
+                     ix++)
                     for (int iy = 0; iy < dim[1]; iy++)
                         for (int iz = 0; iz < dim[2]; iz++)
                         {
@@ -1668,9 +1651,9 @@ void ExtendedGridOrbitals::addDotWithNcol2Matrix(const int first_color,
 #ifdef DEBUG
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 2)
-        (*MPIdata::sout) << "ExtendedGridOrbitals::addDotWithNcol2Matrix for states "
-                         << first_color << " to " << first_color + ncolors - 1
-                         << endl;
+        (*MPIdata::sout)
+            << "ExtendedGridOrbitals::addDotWithNcol2Matrix for states "
+            << first_color << " to " << first_color + ncolors - 1 << endl;
     for (short icolor = 0; icolor < ncolors; icolor++)
     {
         block_vector_.hasnan(icolor);
@@ -1691,19 +1674,16 @@ void ExtendedGridOrbitals::addDotWithNcol2Matrix(const int first_color,
     {
         MPgemmTN(numst_, ncolors, loc_numpt_, 1.,
             block_vector_.vect(0) + iloc * loc_numpt_, lda_,
-            Apsi.getPsi(first_color, iloc), lda_, 0., work_cols,
-            numst_);
+            Apsi.getPsi(first_color, iloc), lda_, 0., work_cols, numst_);
 
         for (short icolor = 0; icolor < ncolors; icolor++)
         {
-            for (int jcolor = first_color;
-                 jcolor < first_color + numst_; jcolor++)
+            for (int jcolor = first_color; jcolor < first_color + numst_;
+                 jcolor++)
             {
-                 sparse_matrix.push_back(icolor, jcolor,
-                     work_cols[icolor + jcolor * numst_]
-                         * vel);
+                sparse_matrix.push_back(
+                    icolor, jcolor, work_cols[icolor + jcolor * numst_] * vel);
             }
-         
         }
     }
 
@@ -1833,6 +1813,7 @@ template void ExtendedGridOrbitals::setPsi(
 template void ExtendedGridOrbitals::setPsi(
     const pb::GridFunc<double>& gf_work, const int ist);
 
-template void ExtendedGridOrbitals::setPsi(const pb::GridFuncVector<float>& gf_work);
+template void ExtendedGridOrbitals::setPsi(
+    const pb::GridFuncVector<float>& gf_work);
 template void ExtendedGridOrbitals::setPsi(
     const pb::GridFuncVector<double>& gf_work);

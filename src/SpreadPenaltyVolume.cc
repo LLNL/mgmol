@@ -8,16 +8,15 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
+#include "SpreadPenaltyVolume.h"
 #include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
-#include "SpreadPenaltyVolume.h"
 #include "Mesh.h"
 
 using namespace std;
 
 template <class T>
-void SpreadPenaltyVolume<T>::addResidual(
-    T& phi, T& res)
+void SpreadPenaltyVolume<T>::addResidual(T& phi, T& res)
 {
     Control& ct     = *(Control::instance());
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
@@ -140,8 +139,8 @@ void SpreadPenaltyVolume<T>::addResidual(
 template <class T>
 void SpreadPenaltyVolume<T>::computeAndAddResidualSpreadPenalty(
     const vector<float>& sigma, const float eta,
-    const vector<Vector3D>& centers, const vector<int>& gids,
-    T& orbitals, T& res)
+    const vector<Vector3D>& centers, const vector<int>& gids, T& orbitals,
+    T& res)
 {
     assert(gids.size() == centers.size());
 

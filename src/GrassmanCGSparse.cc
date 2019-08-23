@@ -35,7 +35,7 @@ void GrassmanCGSparse<T>::conjugate()
     {
         ProjectedMatricesSparse* projmatrices
             = dynamic_cast<ProjectedMatricesSparse*>(
-                  GrassmanLineMinimization<T>::proj_matrices_);
+                GrassmanLineMinimization<T>::proj_matrices_);
 
         // compute G-G_old
         const double m_one = -1.;
@@ -78,12 +78,12 @@ void GrassmanCGSparse<T>::conjugate()
     else
     {
         // initialize history data
-        GrassmanLineMinimization<T>::grad_   =
-            new T("G", *GrassmanLineMinimization<T>::new_grad_, true);
-        GrassmanLineMinimization<T>::pcgrad_ =
-            new T("P", *GrassmanLineMinimization<T>::new_pcgrad_, true);
-        GrassmanLineMinimization<T>::sdir_   =
-            new T("S", *GrassmanLineMinimization<T>::new_pcgrad_, true);
+        GrassmanLineMinimization<T>::grad_
+            = new T("G", *GrassmanLineMinimization<T>::new_grad_, true);
+        GrassmanLineMinimization<T>::pcgrad_
+            = new T("P", *GrassmanLineMinimization<T>::new_pcgrad_, true);
+        GrassmanLineMinimization<T>::sdir_
+            = new T("S", *GrassmanLineMinimization<T>::new_pcgrad_, true);
     }
 }
 
@@ -111,20 +111,27 @@ double GrassmanCGSparse<T>::computeStepSize(T& orbitals)
     Control& ct = *(Control::instance());
 
     // Compute Z^T*H*Phi
-    VariableSizeMatrix<sparserow> zHphiMat("zHphi", GrassmanLineMinimization<T>::sdir_->chromatic_number());
-    computeOrbitalsProdWithH(*GrassmanLineMinimization<T>::sdir_, orbitals, zHphiMat, false);
+    VariableSizeMatrix<sparserow> zHphiMat(
+        "zHphi", GrassmanLineMinimization<T>::sdir_->chromatic_number());
+    computeOrbitalsProdWithH(
+        *GrassmanLineMinimization<T>::sdir_, orbitals, zHphiMat, false);
     // Compute Phi^T*H*Z
     VariableSizeMatrix<sparserow> phiHzMat(
         "phiHz", orbitals.chromatic_number());
-    computeOrbitalsProdWithH(orbitals, *GrassmanLineMinimization<T>::sdir_, phiHzMat, false);
+    computeOrbitalsProdWithH(
+        orbitals, *GrassmanLineMinimization<T>::sdir_, phiHzMat, false);
     // compute Zo^T*H*Zo
-    VariableSizeMatrix<sparserow> zHzMat("zHz", GrassmanLineMinimization<T>::sdir_->chromatic_number());
-    computeOrbitalsProdWithH(*GrassmanLineMinimization<T>::sdir_, zHzMat, false);
+    VariableSizeMatrix<sparserow> zHzMat(
+        "zHz", GrassmanLineMinimization<T>::sdir_->chromatic_number());
+    computeOrbitalsProdWithH(
+        *GrassmanLineMinimization<T>::sdir_, zHzMat, false);
     // Compute Zo^T*Phi
     SquareLocalMatrices<MATDTYPE> ss(
-        GrassmanLineMinimization<T>::sdir_->subdivx(), GrassmanLineMinimization<T>::sdir_->chromatic_number());
+        GrassmanLineMinimization<T>::sdir_->subdivx(),
+        GrassmanLineMinimization<T>::sdir_->chromatic_number());
     GrassmanLineMinimization<T>::sdir_->getLocalOverlap(orbitals, ss);
-    VariableSizeMatrix<sparserow> zTphiMat("zTphi", GrassmanLineMinimization<T>::sdir_->chromatic_number());
+    VariableSizeMatrix<sparserow> zTphiMat(
+        "zTphi", GrassmanLineMinimization<T>::sdir_->chromatic_number());
     zTphiMat.initializeMatrixElements(
         ss, GrassmanLineMinimization<T>::sdir_->getOverlappingGids(), ct.numst);
     // Compute Phi^T*Zo
@@ -137,8 +144,10 @@ double GrassmanCGSparse<T>::computeStepSize(T& orbitals)
     // Compute Zo^T*Zo
     ss.reset();
     GrassmanLineMinimization<T>::sdir_->getLocalOverlap(ss);
-    VariableSizeMatrix<sparserow> zTzMat("zTz", GrassmanLineMinimization<T>::sdir_->chromatic_number());
-    zTzMat.initializeMatrixElements(ss, GrassmanLineMinimization<T>::sdir_->getOverlappingGids(), ct.numst);
+    VariableSizeMatrix<sparserow> zTzMat(
+        "zTz", GrassmanLineMinimization<T>::sdir_->chromatic_number());
+    zTzMat.initializeMatrixElements(
+        ss, GrassmanLineMinimization<T>::sdir_->getOverlappingGids(), ct.numst);
 
     // Now compute Tr[S^{-1}*Z^T*G] =
     // Tr[S^{-1}*Zo^T*H*Phi]-Tr[S^{-1}*Zo^T*Phi*S^{-1}*Phi^T*H*Phi]
@@ -272,39 +281,42 @@ Tr[S^{-1}*Zo^T*Phi*S^{-1}*Phi^T*Zo*S^{-1}*Phi^T*H*Phi]
 // consolidate flag with either gather data or else return local partial
 // contributions
 template <class T>
-void GrassmanCGSparse<T>::computeOrbitalsProdWithH(T& orbitals1,
-    T& orbitals2, VariableSizeMatrix<sparserow>& mat,
-    const bool consolidate)
+void GrassmanCGSparse<T>::computeOrbitalsProdWithH(T& orbitals1, T& orbitals2,
+    VariableSizeMatrix<sparserow>& mat, const bool consolidate)
 {
     // initialize KBPsiMatrices
-    KBPsiMatrixSparse kbpsi_1(GrassmanLineMinimization<T>::hamiltonian_->lapOper());
+    KBPsiMatrixSparse kbpsi_1(
+        GrassmanLineMinimization<T>::hamiltonian_->lapOper());
     kbpsi_1.setup(*GrassmanLineMinimization<T>::ptr2ions_, orbitals1);
     kbpsi_1.computeAll(*GrassmanLineMinimization<T>::ptr2ions_, orbitals1);
 
-    KBPsiMatrixSparse kbpsi_2(GrassmanLineMinimization<T>::hamiltonian_->lapOper());
+    KBPsiMatrixSparse kbpsi_2(
+        GrassmanLineMinimization<T>::hamiltonian_->lapOper());
     kbpsi_2.setup(*GrassmanLineMinimization<T>::ptr2ions_, orbitals2);
     kbpsi_2.computeAll(*GrassmanLineMinimization<T>::ptr2ions_, orbitals2);
 
     // compute P^T*H*Q (orbitals1=P; orbitals2=Q)
-    GrassmanLineMinimization<T>::mgmol_strategy_->computeHij(
-        orbitals1, orbitals2, *GrassmanLineMinimization<T>::ptr2ions_, &kbpsi_1, &kbpsi_2, mat, consolidate);
+    GrassmanLineMinimization<T>::mgmol_strategy_->computeHij(orbitals1,
+        orbitals2, *GrassmanLineMinimization<T>::ptr2ions_, &kbpsi_1, &kbpsi_2,
+        mat, consolidate);
 }
 
 // Compute P^T*H*P for orbitals1-->P and return result in mat.
 // consolidate flag with either gather data or else return local partial
 // contributions
 template <class T>
-void GrassmanCGSparse<T>::computeOrbitalsProdWithH(T& orbitals,
-    VariableSizeMatrix<sparserow>& mat, const bool consolidate)
+void GrassmanCGSparse<T>::computeOrbitalsProdWithH(
+    T& orbitals, VariableSizeMatrix<sparserow>& mat, const bool consolidate)
 {
     // initialize KBPsiMatrices
-    KBPsiMatrixSparse kbpsi(GrassmanLineMinimization<T>::hamiltonian_->lapOper());
+    KBPsiMatrixSparse kbpsi(
+        GrassmanLineMinimization<T>::hamiltonian_->lapOper());
     kbpsi.setup(*GrassmanLineMinimization<T>::ptr2ions_, orbitals);
     kbpsi.computeAll(*GrassmanLineMinimization<T>::ptr2ions_, orbitals);
 
     // compute P^T*H*Q (orbitals1=P; orbitals2=Q)
-    GrassmanLineMinimization<T>::mgmol_strategy_->computeHij(
-        orbitals, orbitals, *GrassmanLineMinimization<T>::ptr2ions_, &kbpsi, mat, consolidate);
+    GrassmanLineMinimization<T>::mgmol_strategy_->computeHij(orbitals, orbitals,
+        *GrassmanLineMinimization<T>::ptr2ions_, &kbpsi, mat, consolidate);
 
     return;
 }

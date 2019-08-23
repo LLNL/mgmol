@@ -15,14 +15,17 @@
 #include "ProjectedMatrices.h"
 
 template <class T>
-EigenDMStrategy<T>::EigenDMStrategy(T* current_orbitals,
-    ProjectedMatricesInterface* proj_matrices)
+EigenDMStrategy<T>::EigenDMStrategy(
+    T* current_orbitals, ProjectedMatricesInterface* proj_matrices)
     : current_orbitals_(current_orbitals), proj_matrices_(proj_matrices)
 {
 }
 
 template <class T>
-void EigenDMStrategy<T>::initialize() { update(); }
+void EigenDMStrategy<T>::initialize()
+{
+    update();
+}
 
 template <class T>
 int EigenDMStrategy<T>::update()

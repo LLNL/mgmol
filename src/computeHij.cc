@@ -49,8 +49,8 @@ void MGmol<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals& orbitalsi,
 template <>
 template <>
 void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i,
-    LocGridOrbitals& orbitals_j,
-    const Ions& ions, const KBPsiMatrixSparse* const kbpsi_i,
+    LocGridOrbitals& orbitals_j, const Ions& ions,
+    const KBPsiMatrixSparse* const kbpsi_i,
     const KBPsiMatrixSparse* const kbpsi_j, VariableSizeMatrix<sparserow>& mat,
     const bool consolidate)
 {
@@ -103,9 +103,9 @@ void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i,
 template <>
 template <>
 void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i,
-    LocGridOrbitals& orbitals_j,
-    const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
-    VariableSizeMatrix<sparserow>& mat, const bool consolidate)
+    LocGridOrbitals& orbitals_j, const Ions& ions,
+    const KBPsiMatrixSparse* const kbpsi, VariableSizeMatrix<sparserow>& mat,
+    const bool consolidate)
 {
 #ifdef PRINT_OPERATIONS
     if (onpe0) os_ << "computeHij()" << endl;
@@ -154,12 +154,13 @@ void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i,
 
 template <>
 template <>
-void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i, LocGridOrbitals& orbitals_j,
-    const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
+void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i,
+    LocGridOrbitals& orbitals_j, const Ions& ions,
+    const KBPsiMatrixSparse* const kbpsi,
     const KBPsiMatrixSparse* const kbpsi_j,
     dist_matrix::DistMatrix<DISTMATDTYPE>& hij, const bool consolidate)
 {
-    (void) consolidate;
+    (void)consolidate;
 
     computeHij_private(orbitals_i, orbitals_j, ions, kbpsi, kbpsi_j, hij);
 }
@@ -167,16 +168,15 @@ void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i, LocGridOrbi
 template <>
 template <>
 void MGmol<ExtendedGridOrbitals>::computeHij(ExtendedGridOrbitals& orbitals_i,
-    ExtendedGridOrbitals& orbitals_j,
-    const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
+    ExtendedGridOrbitals& orbitals_j, const Ions& ions,
+    const KBPsiMatrixSparse* const kbpsi,
     const KBPsiMatrixSparse* const kbpsi_j,
     dist_matrix::DistMatrix<DISTMATDTYPE>& hij, const bool consolidate)
 {
-    (void) consolidate;
+    (void)consolidate;
 
     computeHij_private(orbitals_i, orbitals_j, ions, kbpsi, kbpsi_j, hij);
 }
-
 
 template <class T>
 void MGmol<T>::computeHij_private(T& orbitals_i, T& orbitals_j,
@@ -210,11 +210,11 @@ void MGmol<T>::computeHij_private(T& orbitals_i, T& orbitals_j,
 template <>
 template <>
 void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i,
-    LocGridOrbitals& orbitals_j,
-    const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
+    LocGridOrbitals& orbitals_j, const Ions& ions,
+    const KBPsiMatrixSparse* const kbpsi,
     dist_matrix::DistMatrix<DISTMATDTYPE>& hij, const bool consolidate)
 {
-    (void) consolidate;
+    (void)consolidate;
 
     computeHij_private(orbitals_i, orbitals_j, ions, kbpsi, hij);
 }
@@ -222,11 +222,11 @@ void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i,
 template <>
 template <>
 void MGmol<ExtendedGridOrbitals>::computeHij(ExtendedGridOrbitals& orbitals_i,
-    ExtendedGridOrbitals& orbitals_j,
-    const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
+    ExtendedGridOrbitals& orbitals_j, const Ions& ions,
+    const KBPsiMatrixSparse* const kbpsi,
     dist_matrix::DistMatrix<DISTMATDTYPE>& hij, const bool consolidate)
 {
-    (void) consolidate;
+    (void)consolidate;
 
     computeHij_private(orbitals_i, orbitals_j, ions, kbpsi, hij);
 }
@@ -260,8 +260,8 @@ void MGmol<T>::computeHij_private(T& orbitals_i, T& orbitals_j,
 }
 
 template <class T>
-void MGmol<T>::computeHij(T& orbitals_i, T& orbitals_j,
-    const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
+void MGmol<T>::computeHij(T& orbitals_i, T& orbitals_j, const Ions& ions,
+    const KBPsiMatrixSparse* const kbpsi,
     dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sparseH)
 {
 #ifdef PRINT_OPERATIONS
@@ -278,8 +278,8 @@ void MGmol<T>::computeHij(T& orbitals_i, T& orbitals_j,
 }
 
 template <class T>
-void MGmol<T>::computeHij(T& orbitals_i, T& orbitals_j,
-    const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
+void MGmol<T>::computeHij(T& orbitals_i, T& orbitals_j, const Ions& ions,
+    const KBPsiMatrixSparse* const kbpsi,
     ProjectedMatricesInterface* projmatrices)
 {
 #ifdef PRINT_OPERATIONS
@@ -295,9 +295,8 @@ void MGmol<T>::computeHij(T& orbitals_i, T& orbitals_j,
 }
 
 template <class T>
-void MGmol<T>::getKBPsiAndHij(T& orbitals_i,
-    T& orbitals_j, Ions& ions, KBPsiMatrixSparse* kbpsi,
-    ProjectedMatricesInterface* projmatrices,
+void MGmol<T>::getKBPsiAndHij(T& orbitals_i, T& orbitals_j, Ions& ions,
+    KBPsiMatrixSparse* kbpsi, ProjectedMatricesInterface* projmatrices,
     dist_matrix::DistMatrix<DISTMATDTYPE>& hij)
 {
     kbpsi->computeAll(ions, orbitals_i);
@@ -309,9 +308,8 @@ void MGmol<T>::getKBPsiAndHij(T& orbitals_i,
 }
 
 template <class T>
-void MGmol<T>::getKBPsiAndHij(T& orbitals_i,
-    T& orbitals_j, Ions& ions, KBPsiMatrixSparse* kbpsi,
-    ProjectedMatricesInterface* projmatrices,
+void MGmol<T>::getKBPsiAndHij(T& orbitals_i, T& orbitals_j, Ions& ions,
+    KBPsiMatrixSparse* kbpsi, ProjectedMatricesInterface* projmatrices,
     dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sh)
 {
     kbpsi->computeAll(ions, orbitals_i);
@@ -324,9 +322,8 @@ void MGmol<T>::getKBPsiAndHij(T& orbitals_i,
 }
 
 template <class T>
-void MGmol<T>::getKBPsiAndHij(T& orbitals_i,
-    T& orbitals_j, Ions& ions, KBPsiMatrixSparse* kbpsi,
-    ProjectedMatricesInterface* projmatrices)
+void MGmol<T>::getKBPsiAndHij(T& orbitals_i, T& orbitals_j, Ions& ions,
+    KBPsiMatrixSparse* kbpsi, ProjectedMatricesInterface* projmatrices)
 {
     kbpsi->computeAll(ions, orbitals_i);
 
@@ -339,8 +336,8 @@ void MGmol<T>::getKBPsiAndHij(T& orbitals_i,
 }
 
 template <class T>
-void MGmol<T>::getKBPsiAndHij(T& orbitals, Ions& ions,
-    KBPsiMatrixSparse* kbpsi, dist_matrix::DistMatrix<DISTMATDTYPE>& hij)
+void MGmol<T>::getKBPsiAndHij(T& orbitals, Ions& ions, KBPsiMatrixSparse* kbpsi,
+    dist_matrix::DistMatrix<DISTMATDTYPE>& hij)
 {
     getKBPsiAndHij(orbitals, orbitals, ions, kbpsi, proj_matrices_, hij);
 }
@@ -352,8 +349,8 @@ void MGmol<T>::getKBPsiAndHij(T& orbitals, Ions& ions)
 }
 
 template <class T>
-void MGmol<T>::computeHnlPhiAndAdd2HPhi(Ions& ions, T& phi,
-    T& hphi, const KBPsiMatrixSparse* const kbpsi)
+void MGmol<T>::computeHnlPhiAndAdd2HPhi(
+    Ions& ions, T& phi, T& hphi, const KBPsiMatrixSparse* const kbpsi)
 {
     // H_nl
 #ifdef PRINT_OPERATIONS
@@ -426,8 +423,7 @@ void MGmol<T>::computeHnlPhiAndAdd2HPhi(Ions& ions, T& phi,
 }
 
 template <class T>
-void MGmol<T>::addHlocal2matrix(T& orbitalsi,
-    T& orbitalsj,
+void MGmol<T>::addHlocal2matrix(T& orbitalsi, T& orbitalsj,
     dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sparseH)
 {
     computeHij_tm_.start();
@@ -442,8 +438,7 @@ void MGmol<T>::addHlocal2matrix(T& orbitalsi,
 }
 
 template <class T>
-void MGmol<T>::addHlocal2matrix(T& orbitalsi,
-    T& orbitalsj,
+void MGmol<T>::addHlocal2matrix(T& orbitalsi, T& orbitalsj,
     dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE>& mat)
 {
     computeHij_tm_.start();
@@ -466,8 +461,8 @@ void MGmol<T>::addHlocal2matrix(T& orbitalsi,
 }
 
 template <class T>
-void MGmol<T>::addHlocalij(T& orbitalsi, T& orbitalsj,
-    ProjectedMatricesInterface* pmat)
+void MGmol<T>::addHlocalij(
+    T& orbitalsi, T& orbitalsj, ProjectedMatricesInterface* pmat)
 {
     computeHij_tm_.start();
 
@@ -481,15 +476,14 @@ void MGmol<T>::addHlocalij(T& orbitalsi, T& orbitalsj,
 }
 
 template <class T>
-void MGmol<T>::getHpsiAndTheta(
-    Ions& ions, T& phi, T& hphi)
+void MGmol<T>::getHpsiAndTheta(Ions& ions, T& phi, T& hphi)
 {
     getHpsiAndTheta(ions, phi, hphi, g_kbpsi_);
 }
 
 template <class T>
-void MGmol<T>::getHpsiAndTheta(Ions& ions, T& phi,
-    T& hphi, const KBPsiMatrixSparse* const kbpsi)
+void MGmol<T>::getHpsiAndTheta(
+    Ions& ions, T& phi, T& hphi, const KBPsiMatrixSparse* const kbpsi)
 {
     get_Hpsi_and_Hij_tm_.start();
 

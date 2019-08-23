@@ -7,10 +7,10 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "SP2.h"
-#include "linear_algebra/blas3_c.h"
 #include "DistMatrix.h"
 #include "MGmol_MPI.h"
 #include "MPIdata.h"
+#include "linear_algebra/blas3_c.h"
 
 using namespace std;
 
@@ -36,8 +36,8 @@ double computePartialTrace(bml_matrix_t* A, const vector<int>& ids)
 }
 #endif
 
-SP2::SP2(const double tol, const bool distributed) : tol_(tol),
-    distributed_(distributed)
+SP2::SP2(const double tol, const bool distributed)
+    : tol_(tol), distributed_(distributed)
 {
     // cout<<"SP2 with tol = "<<tol_<<endl;
     // Get user defined ratio and tolerance
@@ -68,13 +68,15 @@ int SP2::calcA(const int nel)
     double lhs = abs(trace_[1] - (double)nel * 0.5);
     double rhs = abs(2. * trace_[0] - trace_[1] - (double)nel * 0.5);
 
-    if (lhs < rhs) return 1;
-    else           return 0;
+    if (lhs < rhs)
+        return 1;
+    else
+        return 0;
 }
 
 void SP2::reduceSumTrace()
 {
-    if(distributed_)
+    if (distributed_)
     {
         MGmol_MPI& mmpi = *(MGmol_MPI::instance());
         mmpi.allreduce(&trace_[0], 2, MPI_SUM);
@@ -116,7 +118,7 @@ void SP2::iterate(int A)
 #else
     trace_[0] = Xi_->computePartialTrace(loc_ids_);
 
-    trace_[1] = Xi_sq_->computePartialTrace(loc_ids_);
+    trace_[1]             = Xi_sq_->computePartialTrace(loc_ids_);
 #endif
 
     reduceSumTrace();
@@ -125,7 +127,7 @@ void SP2::iterate(int A)
 void SP2::solve(const int nel, const bool verbose)
 {
 #ifdef PRINT_OPERATIONS
-    cout<<"SP2::solve()..."<<endl;
+    cout << "SP2::solve()..." << endl;
 #endif
 
     int i     = 0;
@@ -153,7 +155,7 @@ void SP2::solve(const int nel, const bool verbose)
     }
 }
 
-template<>
+template <>
 void SP2::initializeLocalMat(const SquareLocalMatrices<MATDTYPE>& submatM,
     const double emin, const double emax, const vector<int>& loc_ids)
 {
@@ -220,7 +222,7 @@ void SP2::initializeLocalMat(const SquareLocalMatrices<MATDTYPE>& submatM,
     reduceSumTrace();
 }
 
-template<>
+template <>
 void SP2::getDM(dist_matrix::DistMatrix<DISTMATDTYPE>& submatM, // output
     const dist_matrix::DistMatrix<DISTMATDTYPE>& invS,
 #ifdef HAVE_BML
@@ -235,7 +237,7 @@ void SP2::getDM(dist_matrix::DistMatrix<DISTMATDTYPE>& submatM, // output
     const int n = invS.n();
     dist_matrix::DistMatrix<DISTMATDTYPE> Xi("Xi", n, n);
 
-    //Here Xi_ is assumed to be "replicated" by each MPI task
+    // Here Xi_ is assumed to be "replicated" by each MPI task
     Xi.initFromReplicated(Xi_->getSubMatrix(), n);
 
     submatM.gemm('n', 'n', 2., Xi, invS, 0.);

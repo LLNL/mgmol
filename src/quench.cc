@@ -66,8 +66,7 @@ void MGmol<ExtendedGridOrbitals>::adaptLR(
 // 2 -> center and radius
 template <class T>
 void MGmol<T>::adaptLR(
-    const SpreadsAndCenters<T>* spreadf,
-    const OrbitalsTransform* ot)
+    const SpreadsAndCenters<T>* spreadf, const OrbitalsTransform* ot)
 {
     Control& ct = *(Control::instance());
     if (ct.verbose > 0)
@@ -179,8 +178,7 @@ void MGmol<T>::resetProjectedMatricesAndDM(T& orbitals, Ions& ions)
 
 // try to use some rotations to avoid degeneracies
 template <class T>
-bool MGmol<T>::rotateStatesPairsCommonCenter(
-    T& orbitals, T& work_orbitals)
+bool MGmol<T>::rotateStatesPairsCommonCenter(T& orbitals, T& work_orbitals)
 {
     Control& ct        = *(Control::instance());
     bool wannier_pairs = false;
@@ -264,8 +262,8 @@ bool MGmol<T>::rotateStatesPairsCommonCenter(
 
 // try to use some rotations to avoid degeneracies
 template <class T>
-bool MGmol<T>::rotateStatesPairsOverlap(T& orbitals,
-    T& work_orbitals, const double threshold)
+bool MGmol<T>::rotateStatesPairsOverlap(
+    T& orbitals, T& work_orbitals, const double threshold)
 {
     Control& ct     = *(Control::instance());
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
@@ -366,8 +364,8 @@ bool MGmol<T>::rotateStatesPairsOverlap(T& orbitals,
 }
 
 template <class T>
-void MGmol<T>::disentangleOrbitals(T& orbitals,
-    T& work_orbitals, Ions& ions, int& max_steps)
+void MGmol<T>::disentangleOrbitals(
+    T& orbitals, T& work_orbitals, Ions& ions, int& max_steps)
 {
     Control& ct = *(Control::instance());
 
@@ -410,8 +408,8 @@ void MGmol<T>::applyAOMMprojection(T& orbitals)
 }
 
 template <class T>
-int MGmol<T>::quench(T* orbitals, Ions& ions,
-    const int max_inner_steps, const int iprint, double& last_eks)
+int MGmol<T>::quench(T* orbitals, Ions& ions, const int max_inner_steps,
+    const int iprint, double& last_eks)
 {
     assert(max_inner_steps > -1);
 
@@ -463,8 +461,7 @@ int MGmol<T>::quench(T* orbitals, Ions& ions,
     {
         case OuterSolverType::ABPG:
         {
-            DFTsolver<T> solver(hamiltonian_, proj_matrices_,
-                energy_,
+            DFTsolver<T> solver(hamiltonian_, proj_matrices_, energy_,
                 electrostat_, this, ions, rho_, dm_strategy_, os_);
 
             retval = solver.solve(
@@ -475,8 +472,7 @@ int MGmol<T>::quench(T* orbitals, Ions& ions,
 
         case OuterSolverType::NLCG:
         {
-            DFTsolver<T> solver(hamiltonian_, proj_matrices_,
-                energy_,
+            DFTsolver<T> solver(hamiltonian_, proj_matrices_, energy_,
                 electrostat_, this, ions, rho_, dm_strategy_, os_);
 
             retval = solver.solve(
@@ -487,8 +483,7 @@ int MGmol<T>::quench(T* orbitals, Ions& ions,
 
         case OuterSolverType::PolakRibiere:
         {
-            PolakRibiereSolver<T> solver(hamiltonian_,
-                proj_matrices_, energy_,
+            PolakRibiereSolver<T> solver(hamiltonian_, proj_matrices_, energy_,
                 electrostat_, this, ions, rho_, dm_strategy_, os_);
 
             retval = solver.solve(

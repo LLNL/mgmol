@@ -21,17 +21,15 @@ private:
     T& x_; // current trial solution
 
 protected:
-
     virtual void postprocessUpdate();
 
 public:
-
     OrthoAndersonMix(const int m, const double beta, T& x)
-        : m_(m), x_(x), AndersonMix<T>(m,beta,x)
-    {}
+        : m_(m), x_(x), AndersonMix<T>(m, beta, x)
+    {
+    }
 
     virtual ~OrthoAndersonMix(){};
 };
 
 #endif
-

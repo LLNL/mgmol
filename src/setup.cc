@@ -9,8 +9,8 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "ConstraintSet.h"
-#include "Hamiltonian.h"
 #include "ExtendedGridOrbitals.h"
+#include "Hamiltonian.h"
 #include "LocGridOrbitals.h"
 #include "MGmol.h"
 #include "Potentials.h"
@@ -19,7 +19,8 @@ template <class T>
 int MGmol<T>::setupFromInput(const string filename)
 {
     Control& ct = *(Control::instance());
-    if (ct.verbose > 0) printWithTimeStamp("MGmol<T>::setupFromInput()...", cout);
+    if (ct.verbose > 0)
+        printWithTimeStamp("MGmol<T>::setupFromInput()...", cout);
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
@@ -61,10 +62,10 @@ int MGmol<T>::setupFromInput(const string filename)
 template <class T>
 int MGmol<T>::setupLRsFromInput(const string filename)
 {
-    MGmol_MPI& mmpi        = *(MGmol_MPI::instance());
-//    Mesh* mymesh           = Mesh::instance();
-//    const pb::Grid& mygrid = mymesh->grid();
-//    Control& ct            = *(Control::instance());
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    //    Mesh* mymesh           = Mesh::instance();
+    //    const pb::Grid& mygrid = mymesh->grid();
+    //    Control& ct            = *(Control::instance());
 
     ifstream* tfile = 0;
     if (mmpi.instancePE0() && !filename.empty())
@@ -129,4 +130,3 @@ int MGmol<T>::setupConstraintsFromInput(const string filename)
 
 template class MGmol<LocGridOrbitals>;
 template class MGmol<ExtendedGridOrbitals>;
-

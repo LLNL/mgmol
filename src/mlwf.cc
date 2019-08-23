@@ -9,8 +9,8 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "Control.h"
-#include "LocalizationRegions.h"
 #include "LocGridOrbitals.h"
+#include "LocalizationRegions.h"
 #include "MGmol.h"
 #include "MLWFTransform.h"
 #include "Mesh.h"
@@ -48,8 +48,8 @@ void distributeColumns(
 }
 
 template <class T>
-int MGmol<T>::getMLWF(MLWFTransform& mlwft, T& orbitals,
-    T& work_orbitals, const double dd, const bool apply_flag)
+int MGmol<T>::getMLWF(MLWFTransform& mlwft, T& orbitals, T& work_orbitals,
+    const double dd, const bool apply_flag)
 {
     Control& ct = *(Control::instance());
     assert(!ct.isLocMode());
@@ -114,8 +114,8 @@ int MGmol<T>::getMLWF(MLWFTransform& mlwft, T& orbitals,
 }
 
 template <class T>
-int MGmol<T>::getMLWF2states(const int st1, const int st2,
-    T& orbitals, T& work_orbitals)
+int MGmol<T>::getMLWF2states(
+    const int st1, const int st2, T& orbitals, T& work_orbitals)
 {
     get_MLWF_tm.start();
 
@@ -167,8 +167,7 @@ int MGmol<T>::getMLWF2states(const int st1, const int st2,
 }
 
 template <class T>
-void MGmol<T>::wftransform(
-    T* orbitals, T* work_orbitals, Ions& ions)
+void MGmol<T>::wftransform(T* orbitals, T* work_orbitals, Ions& ions)
 {
     Control& ct            = *(Control::instance());
     Mesh* mymesh           = Mesh::instance();
@@ -235,8 +234,8 @@ void MGmol<T>::wftransform(
 }
 
 template <class T>
-int MGmol<T>::get_NOLMO(NOLMOTransform& noot, T& orbitals,
-    T& work_orbitals, const double dd, const bool apply_flag)
+int MGmol<T>::get_NOLMO(NOLMOTransform& noot, T& orbitals, T& work_orbitals,
+    const double dd, const bool apply_flag)
 {
     get_NOLMO_tm.start();
 
@@ -296,7 +295,8 @@ int MGmol<T>::get_NOLMO(NOLMOTransform& noot, T& orbitals,
         DISTMATDTYPE* a = &noot.mat()[0];
 
         // include initial a0 into transformation a
-        ReplicatedWorkSpace<DISTMATDTYPE>& wspace(ReplicatedWorkSpace<DISTMATDTYPE>::instance());
+        ReplicatedWorkSpace<DISTMATDTYPE>& wspace(
+            ReplicatedWorkSpace<DISTMATDTYPE>::instance());
         wspace.initSquareMatrix(projmatrices->getLS());
         wspace.setUpperTriangularSquareMatrixToZero();
 

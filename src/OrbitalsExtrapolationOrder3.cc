@@ -17,7 +17,7 @@
 #define EXTRAPOLATE_H 1
 using namespace std;
 
-template<class T>
+template <class T>
 void OrbitalsExtrapolationOrder3<T>::extrapolate_orbitals(
     T** orbitals, T* new_orbitals)
 {
@@ -29,8 +29,8 @@ void OrbitalsExtrapolationOrder3<T>::extrapolate_orbitals(
 #if EXTRAPOLATE_H
     ProjectedMatricesInterface* proj_matrices = (*orbitals)->getProjMatrices();
     ProjectedMatrices* projmat                = 0;
-    if (ct.OuterSolver() != OuterSolverType::ABPG &&
-        ct.OuterSolver() != OuterSolverType::NLCG )
+    if (ct.OuterSolver() != OuterSolverType::ABPG
+        && ct.OuterSolver() != OuterSolverType::NLCG)
     {
         projmat = dynamic_cast<ProjectedMatrices*>(proj_matrices);
         assert(projmat);
@@ -141,7 +141,8 @@ void OrbitalsExtrapolationOrder3<T>::extrapolate_orbitals(
     if (use_dense_proj_mat)
     {
 #if EXTRAPOLATE_H
-        OrbitalsExtrapolation<T>::hextrapol_->updateHminus2(projmat->getMatHB());
+        OrbitalsExtrapolation<T>::hextrapol_->updateHminus2(
+            projmat->getMatHB());
 #endif
     }
 

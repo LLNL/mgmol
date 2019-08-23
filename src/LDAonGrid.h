@@ -45,8 +45,7 @@ class LDAonGrid : public XConGrid
     Potentials& pot_;
 
 public:
-    LDAonGrid(Rho<T>& rho, Potentials& pot) :
-        rho_(rho), pot_(pot)
+    LDAonGrid(Rho<T>& rho, Potentials& pot) : rho_(rho), pot_(pot)
     {
 #ifdef USE_LIBXC
         int func_id = XC_LDA_X;

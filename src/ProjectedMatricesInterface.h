@@ -63,11 +63,12 @@ public:
     virtual ~ProjectedMatricesInterface(){};
 
     virtual void setup(const double kbt, const int nel,
-        const std::vector<std::vector<int>>& global_indexes)=0;
+        const std::vector<std::vector<int>>& global_indexes)
+        = 0;
 
     // initial setup function
-    void setupBase(const double kbt, const int num_el,
-        const int subdiv, const int chromatic_number)
+    void setupBase(const double kbt, const int num_el, const int subdiv,
+        const int chromatic_number)
     {
         width_            = kbt;
         nel_              = num_el;

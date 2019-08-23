@@ -15,11 +15,11 @@
 #endif
 
 #include "GridFunc.h"
+#include "Laph4M.h"
 #include "PBh4M.h"
 #include "PEenv.h"
-#include "SolverPB.h"
-#include "Laph4M.h"
 #include "SolverLap.h"
+#include "SolverPB.h"
 
 // parameters for continuum solvation model
 double e0    = 78.36;

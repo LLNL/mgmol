@@ -154,9 +154,8 @@ private:
     void precond_smooth(
         ORBDTYPE*, const int, const int, const int, const int, const double);
     void app_mask(const int, ORBDTYPE*, const short level) const;
-    void multiplyByMatrix(
-        const SquareLocalMatrices<MATDTYPE>& matrix, ORBDTYPE* product,
-        const int ldp) const;
+    void multiplyByMatrix(const SquareLocalMatrices<MATDTYPE>& matrix,
+        ORBDTYPE* product, const int ldp) const;
     void setup(MasksSet* masks, MasksSet* corrmasks, LocalizationRegions* lrs);
 
     /* Data distribution objects */
@@ -196,14 +195,14 @@ public:
     }
     const std::vector<int>& getLocalGids() const { return local_gids_; }
 
-    LocGridOrbitals(std::string name,
-        const pb::Grid& my_grid, const short subdivx,
-        const int numst, const short bc[3], ProjectedMatricesInterface*,
-        LocalizationRegions*, MasksSet* masks, MasksSet* corrmasks,
-        ClusterOrbitals* local_cluster, const bool setup_flag = true);
+    LocGridOrbitals(std::string name, const pb::Grid& my_grid,
+        const short subdivx, const int numst, const short bc[3],
+        ProjectedMatricesInterface*, LocalizationRegions*, MasksSet* masks,
+        MasksSet* corrmasks, ClusterOrbitals* local_cluster,
+        const bool setup_flag = true);
 
-    LocGridOrbitals(std::string name,
-        const LocGridOrbitals& A, const bool copy_data = true);
+    LocGridOrbitals(std::string name, const LocGridOrbitals& A,
+        const bool copy_data = true);
     LocGridOrbitals(std::string name, const LocGridOrbitals& A,
         ProjectedMatricesInterface* proj_matrices, MasksSet* masks,
         MasksSet* corrmasks, const bool copy_data = true);
@@ -327,11 +326,12 @@ public:
         mmpi.allreduce(
             &local_chromatic_number, &max_chromatic_number, 1, MPI_MAX);
         if (onpe0)
-            os << " Max. chromatic_number: " << max_chromatic_number << std::endl;
+            os << " Max. chromatic_number: " << max_chromatic_number
+               << std::endl;
     }
     void printNumst(std::ostream& os) const
     {
-        if (onpe0) os << " Number of states   = " << numst_ <<std:: endl;
+        if (onpe0) os << " Number of states   = " << numst_ << std::endl;
     }
     void computeBAndInvB(const pb::Lap<ORBDTYPE>& LapOper);
 
@@ -399,8 +399,7 @@ public:
     void applyCorrMask(const bool first_time = false);
 
     void multiplyByMatrix(const SquareLocalMatrices<MATDTYPE>& matrix);
-    void multiplyByMatrix(
-        const SquareLocalMatrices<MATDTYPE>& matrix,
+    void multiplyByMatrix(const SquareLocalMatrices<MATDTYPE>& matrix,
         LocGridOrbitals& product) const;
     void multiply_by_matrix(
         const DISTMATDTYPE* const matrix, LocGridOrbitals& product) const;
@@ -430,11 +429,8 @@ public:
         assert(color < overlapping_gids_[iloc].size());
         return overlapping_gids_[iloc][color];
     }
-    int getColor(const int gid)const
-    {
-        return pack_->getColor(gid);
-    }
-    void augmentLocalData(VariableSizeMatrix<sparserow>& mat)const
+    int getColor(const int gid) const { return pack_->getColor(gid); }
+    void augmentLocalData(VariableSizeMatrix<sparserow>& mat) const
     {
         distributor_normalize_->augmentLocalData(mat, true);
     }

@@ -13,9 +13,9 @@
 
 #include "Grid.h"
 #include "Rho.h"
+#include "SpreadPenaltyInterface.h"
 #include "Timer.h"
 #include "global.h"
-#include "SpreadPenaltyInterface.h"
 
 #include <ostream>
 #include <vector>

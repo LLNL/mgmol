@@ -9,9 +9,9 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "OrthoAndersonMix.h"
-#include "SquareLocalMatrices.h"
 #include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
+#include "SquareLocalMatrices.h"
 
 template <class T>
 void OrthoAndersonMix<T>::postprocessUpdate()
@@ -21,11 +21,10 @@ void OrthoAndersonMix<T>::postprocessUpdate()
     x_.orthonormalizeLoewdin(false, &ortho_transform);
     for (int j = 0; j < m_; j++)
     {
-        //xi_[j]->multiplyByMatrix(ortho_transform);
-        //fi_[j]->multiplyByMatrix(ortho_transform);
+        // xi_[j]->multiplyByMatrix(ortho_transform);
+        // fi_[j]->multiplyByMatrix(ortho_transform);
     }
 }
 
 template class OrthoAndersonMix<ExtendedGridOrbitals>;
 template class OrthoAndersonMix<LocGridOrbitals>;
-

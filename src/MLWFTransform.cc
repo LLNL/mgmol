@@ -24,7 +24,6 @@
 #include <mpi.h>
 #endif
 
-
 using namespace std;
 
 double MLWFTransform::spread2(int i, int j) const

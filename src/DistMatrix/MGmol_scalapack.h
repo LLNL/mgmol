@@ -64,8 +64,8 @@ extern "C"
     // SCALAPACK
     void pdelset(double*, Pint, Pint, int*, Pdouble);
     void pselset(float*, Pint, Pint, int*, Pfloat);
-    float pselget(Pchar, Pchar, float*, Pfloat,  Pint, Pint, Pint);
-    double pdelget(Pchar, Pchar, double*, Pdouble,  Pint, Pint, Pint);
+    float pselget(Pchar, Pchar, float*, Pfloat, Pint, Pint, Pint);
+    double pdelget(Pchar, Pchar, double*, Pdouble, Pint, Pint, Pint);
     double pdlatra(Pint, Pdouble, Pint, Pint, Pint);
     double pslatra(Pint, Pfloat, Pint, Pint, Pint);
     double pdlaset(
@@ -73,8 +73,10 @@ extern "C"
     float pslaset(char*, int*, int*, float*, float*, float*, int*, int*, int*);
     // note: values of data pointed to by 3rd and 5th arguments of p?lacp3
     // may not actually be const, depending on the value of the last argument
-    double pdlacp3(Pint, Pint, const double* const, Pint, const double* const, Pint, Pint, Pint, Pint);
-    float pslacp3(Pint, Pint, const float* const, Pint, const float* const, Pint, Pint, Pint, Pint);
+    double pdlacp3(Pint, Pint, const double* const, Pint, const double* const,
+        Pint, Pint, Pint, Pint);
+    float pslacp3(Pint, Pint, const float* const, Pint, const float* const,
+        Pint, Pint, Pint, Pint);
     double pdlange(Pchar, int*, int*, double*, int*, int*, int*, double*);
     float pslange(Pchar, int*, int*, float*, int*, int*, int*, float*);
     void pdtrtrs(Pchar, Pchar, Pchar, Pint, Pint, Pdouble, Pint, Pint, Pint,

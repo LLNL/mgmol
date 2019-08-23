@@ -11,9 +11,9 @@
 #ifndef MGMOL_LocalMatrices2DistMatrix_H
 #define MGMOL_LocalMatrices2DistMatrix_H
 
-#include "SparseDistMatrix.h"
 #include "LocalMatrices.h"
 #include "RemoteTasksDistMatrix.h"
+#include "SparseDistMatrix.h"
 
 #include <vector>
 
@@ -47,35 +47,28 @@ public:
         return pinstance_;
     }
 
-    LocalMatrices2DistMatrix()
-    {
-        assert( comm_!=MPI_COMM_NULL );
-    }
+    LocalMatrices2DistMatrix() { assert(comm_ != MPI_COMM_NULL); }
 
-    static void setup(
-        MPI_Comm comm,
-        const std::vector<std::vector<int>>& gids,
+    static void setup(MPI_Comm comm, const std::vector<std::vector<int>>& gids,
         dist_matrix::RemoteTasksDistMatrix<DISTMATDTYPE>*
             remote_tasks_DistMatrix)
     {
         assert(remote_tasks_DistMatrix != 0);
 
-        comm_ = comm;
-        global_indexes_ = gids;
+        comm_                    = comm;
+        global_indexes_          = gids;
         remote_tasks_DistMatrix_ = remote_tasks_DistMatrix;
     }
 
-    template<class T>
+    template <class T>
     void convert(const LocalMatrices<T>& lmat,
-        dist_matrix::SparseDistMatrix<T>& dst,
-        const int numst,
-        const double tol = tol_mat_elements)const;
+        dist_matrix::SparseDistMatrix<T>& dst, const int numst,
+        const double tol = tol_mat_elements) const;
 
-    template<class T>
+    template <class T>
     void accumulate(const LocalMatrices<T>& lmat,
-        dist_matrix::DistMatrix<T>& dst,
-        const int numst,
-        const double tol = tol_mat_elements)const;
+        dist_matrix::DistMatrix<T>& dst, const int numst,
+        const double tol = tol_mat_elements) const;
 };
 
 #endif

@@ -54,8 +54,8 @@ public:
 
     ~OrbitalsPreconditioning();
 
-    void setup(T& orbitals, const short mg_levels,
-        const short lap_type, MasksSet*, LocalizationRegions*);
+    void setup(T& orbitals, const short mg_levels, const short lap_type,
+        MasksSet*, LocalizationRegions*);
     void precond_mg(T& orbitals);
     void setGamma(const pb::Lap<ORBDTYPE>& lapOper, const Potentials& pot,
         const short mg_levels, ProjectedMatricesInterface* proj_matrices);
@@ -63,6 +63,7 @@ public:
 };
 
 template <class T>
-Timer OrbitalsPreconditioning<T>::precond_tm_("OrbitalsPreconditioning::precond");
+Timer OrbitalsPreconditioning<T>::precond_tm_(
+    "OrbitalsPreconditioning::precond");
 
 #endif

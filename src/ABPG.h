@@ -13,8 +13,8 @@
 
 #include "Energy.h"
 #include "Hamiltonian.h"
-#include "Mixing.h"
 #include "MGmol.h"
+#include "Mixing.h"
 #include "OrbitalsStepper.h"
 #include "Timer.h"
 
@@ -40,9 +40,8 @@ class ABPG : public OrbitalsStepper<T>
     static Timer comp_res_tm_;
     static Timer update_states_tm_;
 
-    void update_states(T& orbitals, T& res,
-        T& work_orbitals, const double precond_factor,
-        const bool accelerate);
+    void update_states(T& orbitals, T& res, T& work_orbitals,
+        const double precond_factor, const bool accelerate);
 
 public:
     ABPG(Hamiltonian<T>* hamiltonian, ProjectedMatricesInterface* proj_matrices,
@@ -66,9 +65,8 @@ public:
 
     void setup(T&);
 
-    int update(T& orbitals, Ions& ions,
-        const double precond_factor, const bool orthof,
-        T& work_orbitals, const bool accelerate,
+    int update(T& orbitals, Ions& ions, const double precond_factor,
+        const bool orthof, T& work_orbitals, const bool accelerate,
         const bool print_res, const double atol);
 
     static void printTimers(std::ostream& os);

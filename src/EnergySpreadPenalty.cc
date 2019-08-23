@@ -16,8 +16,7 @@
 using namespace std;
 
 template <class T>
-void EnergySpreadPenalty<T>::addResidual(
-    T& phi, T& res)
+void EnergySpreadPenalty<T>::addResidual(T& phi, T& res)
 {
     assert(spreadf_ != 0);
     assert(spread2_target_ >= 0.);
@@ -78,8 +77,8 @@ void EnergySpreadPenalty<T>::addResidual(
 template <class T>
 void EnergySpreadPenalty<T>::computeAndAddResidualSpreadPenalty(
     const vector<float>& spread2, const vector<float>& factors,
-    const vector<Vector3D>& centers, const vector<int>& gids,
-    T& orbitals, T& res)
+    const vector<Vector3D>& centers, const vector<int>& gids, T& orbitals,
+    T& res)
 {
     assert(spread2.size() == centers.size());
     assert(factors.size() == centers.size());

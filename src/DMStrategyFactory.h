@@ -17,8 +17,8 @@
 #include "EigenDMStrategy.h"
 #include "FullyOccupiedNonOrthoDMStrategy.h"
 #include "HamiltonianMVP_DMStrategy.h"
-#include "MVP_DMStrategy.h"
 #include "MGmol.h"
+#include "MVP_DMStrategy.h"
 #include "NonOrthoDMStrategy.h"
 #include "ProjectedMatrices.h"
 #include "ProjectedMatricesSparse.h"
@@ -37,16 +37,15 @@ public:
         DMStrategy* dm_strategy;
         if (ct.DM_solver() == DMNonLinearSolverType::MVP)
         {
-            dm_strategy
-                = new MVP_DMStrategy<T>(comm, os, ions, rho,
-                    energy, electrostat,
-                    mgmol_strategy, orbitals, proj_matrices, ct.use_old_dm());
+            dm_strategy = new MVP_DMStrategy<T>(comm, os, ions, rho, energy,
+                electrostat, mgmol_strategy, orbitals, proj_matrices,
+                ct.use_old_dm());
         }
         else if (ct.DM_solver() == DMNonLinearSolverType::HMVP)
         {
-            dm_strategy = createHamiltonianMVP_DMStrategy(
-                comm, os, ions, rho, energy, electrostat, mgmol_strategy,
-                proj_matrices, orbitals, ct.short_sighted);
+            dm_strategy = createHamiltonianMVP_DMStrategy(comm, os, ions, rho,
+                energy, electrostat, mgmol_strategy, proj_matrices, orbitals,
+                ct.short_sighted);
         }
         else
         {
@@ -59,8 +58,8 @@ public:
             {
                 if (ct.getOrbitalsType() == OrbitalsType::Eigenfunctions)
                 {
-                    dm_strategy = new EigenDMStrategy<T>(
-                        orbitals, proj_matrices);
+                    dm_strategy
+                        = new EigenDMStrategy<T>(orbitals, proj_matrices);
                 }
                 else
                 {
@@ -77,13 +76,10 @@ public:
     }
 
 private:
-
-    static DMStrategy* createHamiltonianMVP_DMStrategy(
-        MPI_Comm comm, std::ostream& os, Ions& ions,
-        Rho<T>* rho, Energy<T>* energy, Electrostatic* electrostat,
-        MGmol<T>* mgmol_strategy, ProjectedMatricesInterface* proj_matrices, T*,
-        const bool);
-
+    static DMStrategy* createHamiltonianMVP_DMStrategy(MPI_Comm comm,
+        std::ostream& os, Ions& ions, Rho<T>* rho, Energy<T>* energy,
+        Electrostatic* electrostat, MGmol<T>* mgmol_strategy,
+        ProjectedMatricesInterface* proj_matrices, T*, const bool);
 };
 
 #endif

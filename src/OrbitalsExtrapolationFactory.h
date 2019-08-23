@@ -20,19 +20,16 @@ class OrbitalsExtrapolationFactory
 {
 public:
     static OrbitalsExtrapolation<T>* create(
-        const WFExtrapolationType type,
-        SpreadPenalty<T>* spread_penalty)
+        const WFExtrapolationType type, SpreadPenalty<T>* spread_penalty)
     {
         OrbitalsExtrapolation<T>* orbitals_extrapol;
         switch (type)
         {
             case WFExtrapolationType::Order2:
-                orbitals_extrapol =
-                    new OrbitalsExtrapolationOrder2<T>();
+                orbitals_extrapol = new OrbitalsExtrapolationOrder2<T>();
                 break;
             case WFExtrapolationType::Order3:
-                orbitals_extrapol =
-                    new OrbitalsExtrapolationOrder3<T>();
+                orbitals_extrapol = new OrbitalsExtrapolationOrder3<T>();
                 break;
             default:
                 (*MPIdata::serr)

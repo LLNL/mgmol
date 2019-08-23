@@ -23,8 +23,7 @@ private:
     static Timer compute_tm_;
 
 public:
-    static void compute(
-        const T& orbitals, std::vector<std::vector<double>>& a);
+    static void compute(const T& orbitals, std::vector<std::vector<double>>& a);
     static void computeSquare(
         const T& orbitals, std::vector<std::vector<double>>& a);
     static void compute1D(const T& orbitals,
@@ -35,8 +34,8 @@ public:
         std::vector<std::vector<double>>& a, const int st1, const int st2);
     static void computeDiag2states(const T& orbitals,
         std::vector<std::vector<double>>& a, const int st1, const int st2);
-    static void compute(const T& orbitals1,
-        const T& orbitals2, std::vector<std::vector<double>>& a);
+    static void compute(const T& orbitals1, const T& orbitals2,
+        std::vector<std::vector<double>>& a);
     static void computeDiag(const T& orbitals,
         VariableSizeMatrix<sparserow>& mat, const bool normalized_functions);
 

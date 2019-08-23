@@ -19,8 +19,8 @@
 #include "Power.h"
 #include "PowerGen.h"
 #include "ReplicatedWorkSpace.h"
-#include "SparseDistMatrix.h"
 #include "SP2.h"
+#include "SparseDistMatrix.h"
 #include "fermi.h"
 #include "tools.h"
 
@@ -59,11 +59,11 @@ static int sparse_distmatrix_nb_partitions = 128;
 ProjectedMatrices::ProjectedMatrices(const int ndim, const bool with_spin)
     : with_spin_(with_spin),
       dim_(ndim),
-      dm_(new DensityMatrix(ndim) ),
-      gm_(new GramMatrix(ndim) )
+      dm_(new DensityMatrix(ndim)),
+      gm_(new GramMatrix(ndim))
 {
-    width_           = 0.;
-    min_val_         = 0.25;
+    width_   = 0.;
+    min_val_ = 0.25;
 
     sH_ = 0;
 
@@ -74,10 +74,13 @@ ProjectedMatrices::ProjectedMatrices(const int ndim, const bool with_spin)
 
     if (dim_ > 0)
     {
-        matH_.reset( new dist_matrix::DistMatrix<DISTMATDTYPE>("H", ndim, ndim) );
-        matHB_.reset( new dist_matrix::DistMatrix<DISTMATDTYPE>("HB", ndim, ndim) );
-        theta_.reset( new dist_matrix::DistMatrix<DISTMATDTYPE>("Theta", ndim, ndim) );
-        work_.reset( new dist_matrix::DistMatrix<DISTMATDTYPE>("work", ndim, ndim) );
+        matH_.reset(new dist_matrix::DistMatrix<DISTMATDTYPE>("H", ndim, ndim));
+        matHB_.reset(
+            new dist_matrix::DistMatrix<DISTMATDTYPE>("HB", ndim, ndim));
+        theta_.reset(
+            new dist_matrix::DistMatrix<DISTMATDTYPE>("Theta", ndim, ndim));
+        work_.reset(
+            new dist_matrix::DistMatrix<DISTMATDTYPE>("work", ndim, ndim));
     }
 
     if (onpe0)
@@ -112,8 +115,7 @@ void ProjectedMatrices::setup(
 {
     assert(global_indexes.size() > 0);
 
-    setupBase(kbt, nel, global_indexes.size(),
-        global_indexes[0].size());
+    setupBase(kbt, nel, global_indexes.size(), global_indexes[0].size());
 
     global_indexes_ = global_indexes;
 
@@ -125,15 +127,17 @@ void ProjectedMatrices::setup(
 
     if (dim_ > 0)
     {
-        DistMatrix2SquareLocalMatrices::setup( comm, global_indexes, dm_->getMatrix() );
-        LocalMatrices2DistMatrix::setup( comm, global_indexes, remote_tasks_DistMatrix_);
+        DistMatrix2SquareLocalMatrices::setup(
+            comm, global_indexes, dm_->getMatrix());
+        LocalMatrices2DistMatrix::setup(
+            comm, global_indexes, remote_tasks_DistMatrix_);
 
         localX_.reset(
-            new SquareLocalMatrices<MATDTYPE>(subdiv_, chromatic_number_) );
+            new SquareLocalMatrices<MATDTYPE>(subdiv_, chromatic_number_));
         localT_.reset(
-            new SquareLocalMatrices<MATDTYPE>(subdiv_, chromatic_number_) );
+            new SquareLocalMatrices<MATDTYPE>(subdiv_, chromatic_number_));
     }
- 
+
 #endif
 
 #ifdef USE_MPI
@@ -187,19 +191,18 @@ void ProjectedMatrices::rotateAll(
 
 void ProjectedMatrices::applyInvS(SquareLocalMatrices<MATDTYPE>& mat)
 {
-    //build DistMatrix from SquareLocalMatrices
+    // build DistMatrix from SquareLocalMatrices
     dist_matrix::DistMatrix<DISTMATDTYPE> pmatrix("pmatrix", dim_, dim_);
 
-    LocalMatrices2DistMatrix* sl2dm =
-        LocalMatrices2DistMatrix::instance();
+    LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
 
     sl2dm->accumulate(mat, pmatrix, dim_);
 
     gm_->applyInv(pmatrix);
 
-    //convert result back into a SquareLocalMatrices
-    DistMatrix2SquareLocalMatrices* dm2sl =
-            DistMatrix2SquareLocalMatrices::instance();
+    // convert result back into a SquareLocalMatrices
+    DistMatrix2SquareLocalMatrices* dm2sl
+        = DistMatrix2SquareLocalMatrices::instance();
     dm2sl->convert(pmatrix, mat);
 }
 
@@ -273,8 +276,8 @@ void ProjectedMatrices::updateDMwithEigenstates(const int iterative_index)
 }
 
 //"replicated" implementation of SP2.
-//Theta is replicated on each MPI task, and SP2 solve run independently
-//by each MPI task
+// Theta is replicated on each MPI task, and SP2 solve run independently
+// by each MPI task
 void ProjectedMatrices::updateDMwithSP2(const int iterative_index)
 {
     Control& ct = *(Control::instance());
@@ -284,7 +287,7 @@ void ProjectedMatrices::updateDMwithSP2(const int iterative_index)
 
     updateThetaAndHB();
 
-    //generate replicated copy of theta_
+    // generate replicated copy of theta_
     SquareLocalMatrices<double> theta(1, dim_);
     double* work_matrix = theta.getSubMatrix();
     theta_->allgather(work_matrix, dim_);
@@ -295,18 +298,21 @@ void ProjectedMatrices::updateDMwithSP2(const int iterative_index)
 
     static Power<LocalVector<double>, SquareLocalMatrices<double>> power(dim_);
 
-    power.computeEigenInterval(theta, emin, emax, epsilon, (onpe0 && ct.verbose > 1));
-    if (onpe0 && ct.verbose > 1) cout<<"emin="<<emin<<", emax="<<emax<<endl;
+    power.computeEigenInterval(
+        theta, emin, emax, epsilon, (onpe0 && ct.verbose > 1));
+    if (onpe0 && ct.verbose > 1)
+        cout << "emin=" << emin << ", emax=" << emax << endl;
 
     const bool distributed = false;
     SP2 sp2(ct.dm_tol, distributed);
     {
-    //include all the indexes so that traces are computed for the whole
-    //replicated matrix
-    std::vector<int> ids(dim_);
-    for(int i = 0; i < dim_; i++)ids[i]=i;
-    double buffer = 0.1;
-    sp2.initializeLocalMat(theta, emin - buffer, emax + buffer, ids);
+        // include all the indexes so that traces are computed for the whole
+        // replicated matrix
+        std::vector<int> ids(dim_);
+        for (int i = 0; i < dim_; i++)
+            ids[i] = i;
+        double buffer = 0.1;
+        sp2.initializeLocalMat(theta, emin - buffer, emax + buffer, ids);
     }
 
     sp2.solve(nel_, (ct.verbose > 1));
@@ -333,20 +339,20 @@ void ProjectedMatrices::updateDM(const int iterative_index)
 
     if (ct.DMEigensolver() == DMEigensolverType::Eigensolver)
         updateDMwithEigenstates(iterative_index);
-    else if(ct.DMEigensolver() == DMEigensolverType::SP2)
+    else if (ct.DMEigensolver() == DMEigensolverType::SP2)
         updateDMwithSP2(iterative_index);
     else
     {
-        cerr<<"Eigensolver not available in ProjectedMatrices::updateDM()\n";
+        cerr << "Eigensolver not available in ProjectedMatrices::updateDM()\n";
         ct.global_exit(2);
     }
 
 #ifndef NDEBUG
     double nel = getNel();
-    cout<<"ProjectedMatrices::updateDM(), nel = "<<nel<<std::endl;
-    assert( fabs(nel-nel)<1.e-2 );
+    cout << "ProjectedMatrices::updateDM(), nel = " << nel << std::endl;
+    assert(fabs(nel - nel) < 1.e-2);
     double energy = getExpectationH();
-    cout<<"ProjectedMatrices::updateDM(), energy = "<<energy<<std::endl;
+    cout << "ProjectedMatrices::updateDM(), energy = " << energy << std::endl;
 #endif
 }
 
@@ -370,9 +376,9 @@ void ProjectedMatrices::computeOccupationsFromDM()
 #ifdef PRINT_OPERATIONS
     if (onpe0)
         (*MPIdata::sout) << "ProjectedMatrices::computeOccupationsFromDM()"
-            <<std::endl;
+                         << std::endl;
 #endif
-    if ( dim_ > 0)
+    if (dim_ > 0)
     {
         assert(dm_);
         dm_->computeOccupations(gm_->getCholeskyL());
@@ -386,8 +392,8 @@ void ProjectedMatrices::getOccupations(vector<DISTMATDTYPE>& occ) const
 void ProjectedMatrices::setOccupations(const vector<DISTMATDTYPE>& occ)
 {
 #ifdef PRINT_OPERATIONS
-    if (onpe0) (*MPIdata::sout) << "ProjectedMatrices::setOccupations()"
-        << endl;
+    if (onpe0)
+        (*MPIdata::sout) << "ProjectedMatrices::setOccupations()" << endl;
 #endif
     dm_->setOccupations(occ);
 }
@@ -532,7 +538,8 @@ int ProjectedMatrices::writeDM_hdf5(HDFrestart& h5f_file)
 {
     hid_t file_id = h5f_file.file_id();
 
-    ReplicatedWorkSpace<double>& wspace(ReplicatedWorkSpace<double>::instance());
+    ReplicatedWorkSpace<double>& wspace(
+        ReplicatedWorkSpace<double>::instance());
 
     wspace.initSquareMatrix(dm_->getMatrix());
 
@@ -584,7 +591,8 @@ int ProjectedMatrices::writeDM_hdf5(HDFrestart& h5f_file)
 ////// TEMPLATE THIS FOR FLOAT OPTION ??
 int ProjectedMatrices::read_dm_hdf5(hid_t file_id)
 {
-    ReplicatedWorkSpace<double>& wspace(ReplicatedWorkSpace<double>::instance());
+    ReplicatedWorkSpace<double>& wspace(
+        ReplicatedWorkSpace<double>::instance());
     DISTMATDTYPE* work_matrix = wspace.square_matrix();
 
     int ierr        = 0;
@@ -835,8 +843,8 @@ void ProjectedMatrices::getLoewdinTransform(
     mat.symm('r', 'l', 1., matP, vect, 0.);
     matP.gemm('n', 't', 1., mat, vect, 0.);
 
-    DistMatrix2SquareLocalMatrices* dm2sl =
-        DistMatrix2SquareLocalMatrices::instance();
+    DistMatrix2SquareLocalMatrices* dm2sl
+        = DistMatrix2SquareLocalMatrices::instance();
     dm2sl->convert(matP, localP);
 }
 
@@ -863,8 +871,7 @@ double ProjectedMatrices::dotProductWithInvS(
     assert(gram_4dotProducts_ != 0);
 
     dist_matrix::DistMatrix<DISTMATDTYPE> ds("ds", dim_, dim_);
-    LocalMatrices2DistMatrix* sl2dm =
-        LocalMatrices2DistMatrix::instance();
+    LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
 
     sl2dm->accumulate(local_product, ds, dim_);
 
@@ -878,8 +885,7 @@ double ProjectedMatrices::dotProductWithDM(
     const SquareLocalMatrices<MATDTYPE>& local_product)
 {
     dist_matrix::DistMatrix<DISTMATDTYPE> ds("ds", dim_, dim_);
-    LocalMatrices2DistMatrix* sl2dm =
-        LocalMatrices2DistMatrix::instance();
+    LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
 
     sl2dm->accumulate(local_product, ds, dim_);
 
@@ -895,8 +901,7 @@ double ProjectedMatrices::dotProductSimple(
     assert(dm_4dot_product_ != 0);
 
     dist_matrix::DistMatrix<DISTMATDTYPE> ds("ds", dim_, dim_);
-    LocalMatrices2DistMatrix* sl2dm =
-        LocalMatrices2DistMatrix::instance();
+    LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
 
     sl2dm->accumulate(local_product, ds, dim_);
 
@@ -922,8 +927,7 @@ double ProjectedMatrices::computeTraceInvSmultMat(
 {
     dist_matrix::DistMatrix<DISTMATDTYPE> pmatrix("pmatrix", dim_, dim_);
 
-    LocalMatrices2DistMatrix* sl2dm =
-        LocalMatrices2DistMatrix::instance();
+    LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
     sl2dm->accumulate(mat, pmatrix, dim_);
 
     gm_->applyInv(pmatrix);

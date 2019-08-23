@@ -10,11 +10,11 @@
 
 #include "Electrostatic.h"
 #include "Control.h"
+#include "ExtendedGridOrbitals.h"
 #include "GridFactory.h"
 #include "Hartree.h"
 #include "Hartree_CG.h"
 #include "Ions.h"
-#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "Mesh.h"
 #include "PBdiel.h"
@@ -447,8 +447,7 @@ void Electrostatic::computeVh(const pb::GridFunc<POTDTYPE>& vh_init,
 }
 
 template <class T>
-void Electrostatic::computeVh(const Ions& ions, Rho<T>& rho,
-                              Potentials& pot)
+void Electrostatic::computeVh(const Ions& ions, Rho<T>& rho, Potentials& pot)
 {
     solve_tm_.start();
 #ifdef PRINT_OPERATIONS
@@ -514,14 +513,13 @@ void Electrostatic::computeVh(const Ions& ions, Rho<T>& rho,
 }
 
 template void Electrostatic::computeVhRho(Rho<LocGridOrbitals>& rho);
-template void Electrostatic::computeVh(const Ions& ions,
-    Rho<LocGridOrbitals>& rho, Potentials& pot);
+template void Electrostatic::computeVh(
+    const Ions& ions, Rho<LocGridOrbitals>& rho, Potentials& pot);
 template void Electrostatic::computeVh(const pb::GridFunc<POTDTYPE>& vhinit,
     const Ions& ions, Rho<LocGridOrbitals>& rho, Potentials& pot);
 
 template void Electrostatic::computeVhRho(Rho<ExtendedGridOrbitals>& rho);
-template void Electrostatic::computeVh(const Ions& ions,
-    Rho<ExtendedGridOrbitals>& rho, Potentials& pot);
+template void Electrostatic::computeVh(
+    const Ions& ions, Rho<ExtendedGridOrbitals>& rho, Potentials& pot);
 template void Electrostatic::computeVh(const pb::GridFunc<POTDTYPE>& vhinit,
     const Ions& ions, Rho<ExtendedGridOrbitals>& rho, Potentials& pot);
-

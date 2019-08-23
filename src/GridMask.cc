@@ -146,7 +146,7 @@ int GridMask::init(const Vector3D& center, const double rcut,
     init_tm_.start();
 
     //(*MPIdata::sout)<<"GridMask::init(), center="<<center<<",
-    //rcut="<<rcut<<endl;
+    // rcut="<<rcut<<endl;
     Control& ct = *(Control::instance());
     center_     = center;
     radius_     = rcut;

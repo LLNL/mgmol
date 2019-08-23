@@ -8,30 +8,30 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
+#include "Forces.h"
 #include "Control.h"
 #include "DataDistribution.h"
-#include "Forces.h"
 #include "Grid.h"
 #include "Ions.h"
 #include "KBPsiMatrixSparse.h"
+#include "LocGridOrbitals.h"
 #include "MGmol.h"
 #include "MGmol_blas1.h"
 #include "MPIdata.h"
-#include "LocGridOrbitals.h"
 #include "Mesh.h"
 #include "Potentials.h"
 #include "ProjectedMatrices.h"
 #include "ProjectedMatricesSparse.h"
 #include "ReplicatedWorkSpace.h"
+#include "SuperSampling.h"
 #include "VariableSizeMatrix.h"
 #include "Vector3D.h"
 #include "tools.h"
-#include "SuperSampling.h"
 
 #include <iostream>
 
 #define Ry2Ha 0.5;
-double shift_R[3*NPTS][3];
+double shift_R[3 * NPTS][3];
 
 double get_trilinval(const double xc, const double yc, const double zc,
     const double h0, const double h1, const double h2, const Vector3D& ref,
@@ -52,8 +52,8 @@ double get_deriv2(double value[2])
 }
 
 template <class T>
-void Forces<T>::evaluateShiftedFields(
-    Ion& ion, std::vector<std::vector<double>>& var_pot,
+void Forces<T>::evaluateShiftedFields(Ion& ion,
+    std::vector<std::vector<double>>& var_pot,
     std::vector<std::vector<double>>& var_charge, const char flag_filter)
 {
     evaluateShiftedFields_tm_.start();
@@ -61,15 +61,15 @@ void Forces<T>::evaluateShiftedFields(
     const Species& sp(ion.getSpecies());
     const RadialInter& lpot = ion.getLocalPot();
 
-    auto lambda_radiallpot = [&lpot] (double r) { return lpot.cubint(r); };
-    auto lambda_rhocomp = [&sp] (double r) { return sp.getRhoComp(r); };
+    auto lambda_radiallpot = [&lpot](double r) { return lpot.cubint(r); };
+    auto lambda_rhocomp    = [&sp](double r) { return sp.getRhoComp(r); };
 
     Vector3D ref_position(ion.position(0), ion.position(1), ion.position(2));
 
     // generate shifted atomic positions
     // (NPTS in each direction)
     std::vector<Vector3D> positions;
-    for (short ishift = 0; ishift < 3*NPTS; ishift++)
+    for (short ishift = 0; ishift < 3 * NPTS; ishift++)
     {
         Vector3D shifted_point(ref_position);
         shifted_point[0] += shift_R[ishift][0];
@@ -83,9 +83,13 @@ void Forces<T>::evaluateShiftedFields(
 
     // evaluate filtered/unfiltered potential on mesh
     // for shifted atomic poistions
-    if (flag_filter=='s') {
-        evaluateSupersampledRadialFunc(positions, lrad, var_pot, lambda_radiallpot);
-    } else {
+    if (flag_filter == 's')
+    {
+        evaluateSupersampledRadialFunc(
+            positions, lrad, var_pot, lambda_radiallpot);
+    }
+    else
+    {
         evaluateRadialFunc(positions, lrad, var_pot, lambda_radiallpot);
     }
     // evaluate Gaussian compensating charge on mesh
@@ -96,10 +100,10 @@ void Forces<T>::evaluateShiftedFields(
 };
 
 template <class T>
-void Forces<T>::evaluateSupersampledRadialFunc(const std::vector<Vector3D>& positions,
-                            const double lrad,
-                            std::vector<std::vector<double>>& var,
-                            std::function<double(double)> const& lambda_radial)
+void Forces<T>::evaluateSupersampledRadialFunc(
+    const std::vector<Vector3D>& positions, const double lrad,
+    std::vector<std::vector<double>>& var,
+    std::function<double(double)> const& lambda_radial)
 {
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
@@ -118,50 +122,68 @@ void Forces<T>::evaluateSupersampledRadialFunc(const std::vector<Vector3D>& posi
 
     Vector3D ll(mygrid.ll(0), mygrid.ll(1), mygrid.ll(2));
 
-    Vector3D point( 0., 0., 0. );
+    Vector3D point(0., 0., 0.);
 
     point[0] = mygrid.start(0);
 
-    short ishift=0;
-    // Loop over all the ishifts first, doing supersampling for each individually
-    for(auto& position : positions) {
+    short ishift = 0;
+    // Loop over all the ishifts first, doing supersampling for each
+    // individually
+    for (auto& position : positions)
+    {
         // Construct subDomain containing molecule
-        std::array<double,3> atomicCenter={position[0], position[1], position[2]};
-        std::array<double,3> botMeshCorner={0,0,0};
-        std::array<double,3> topMeshCorner={0,0,0};
-        std::array<double,3> subDomainBotMeshCorner={start0,start1,start2};
-        std::array<double,3> subDomainTopMeshCorner={start0 + dim0*h0,
-                                                     start1 + dim1*h1,
-                                                     start2 + dim2*h2};
-        std::array<int,3> SSLRad={0,0,0};
-        SSLRad[0] = std::ceil(lrad/h0)+1; // +1 just to be safe and make sure subdomain gets everything
-        SSLRad[1] = std::ceil(lrad/h1)+1;
-        SSLRad[2] = std::ceil(lrad/h2)+1;
-        botMeshCorner[0] = std::max(std::round((atomicCenter[0]-start0)/h0)*h0 + start0 - SSLRad[0]*h0,
-                        subDomainBotMeshCorner[0]);
-        botMeshCorner[1] = std::max(std::round((atomicCenter[1]-start1)/h1)*h1 + start1 - SSLRad[1]*h1,
-                        subDomainBotMeshCorner[1]);
-        botMeshCorner[2] = std::max(std::round((atomicCenter[2]-start2)/h2)*h2 + start2 - SSLRad[2]*h2,
-                        subDomainBotMeshCorner[2]);
-        topMeshCorner[0] = std::min(botMeshCorner[0] + 2*h0*SSLRad[0], subDomainTopMeshCorner[0]);
-        topMeshCorner[1] = std::min(botMeshCorner[1] + 2*h1*SSLRad[1], subDomainTopMeshCorner[1]);
-        topMeshCorner[2] = std::min(botMeshCorner[2] + 2*h2*SSLRad[2], subDomainTopMeshCorner[2]);
-        const bool harmonics=false;
-        
-        SuperSampling<0> current(atomicCenter, botMeshCorner, topMeshCorner, harmonics, lambda_radial);
-        int xlimits = std::round((topMeshCorner[0]-botMeshCorner[0])/h0);
-        int ylimits = std::round((topMeshCorner[1]-botMeshCorner[1])/h1);
-        int zlimits = std::round((topMeshCorner[2]-botMeshCorner[2])/h2);
-        int xoffset = std::round((botMeshCorner[0]-start0)/h0);
-        int yoffset = std::round((botMeshCorner[1]-start1)/h1);
-        int zoffset = std::round((botMeshCorner[2]-start2)/h2);
-        int offset=0;
+        std::array<double, 3> atomicCenter
+            = { position[0], position[1], position[2] };
+        std::array<double, 3> botMeshCorner = { 0, 0, 0 };
+        std::array<double, 3> topMeshCorner = { 0, 0, 0 };
+        std::array<double, 3> subDomainBotMeshCorner
+            = { start0, start1, start2 };
+        std::array<double, 3> subDomainTopMeshCorner
+            = { start0 + dim0 * h0, start1 + dim1 * h1, start2 + dim2 * h2 };
+        std::array<int, 3> SSLRad = { 0, 0, 0 };
+        SSLRad[0]
+            = std::ceil(lrad / h0)
+              + 1; // +1 just to be safe and make sure subdomain gets everything
+        SSLRad[1] = std::ceil(lrad / h1) + 1;
+        SSLRad[2] = std::ceil(lrad / h2) + 1;
+        botMeshCorner[0]
+            = std::max(std::round((atomicCenter[0] - start0) / h0) * h0 + start0
+                           - SSLRad[0] * h0,
+                subDomainBotMeshCorner[0]);
+        botMeshCorner[1]
+            = std::max(std::round((atomicCenter[1] - start1) / h1) * h1 + start1
+                           - SSLRad[1] * h1,
+                subDomainBotMeshCorner[1]);
+        botMeshCorner[2]
+            = std::max(std::round((atomicCenter[2] - start2) / h2) * h2 + start2
+                           - SSLRad[2] * h2,
+                subDomainBotMeshCorner[2]);
+        topMeshCorner[0] = std::min(
+            botMeshCorner[0] + 2 * h0 * SSLRad[0], subDomainTopMeshCorner[0]);
+        topMeshCorner[1] = std::min(
+            botMeshCorner[1] + 2 * h1 * SSLRad[1], subDomainTopMeshCorner[1]);
+        topMeshCorner[2] = std::min(
+            botMeshCorner[2] + 2 * h2 * SSLRad[2], subDomainTopMeshCorner[2]);
+        const bool harmonics = false;
 
-        for(int ix = xoffset; ix <= xoffset + xlimits; ix++) {
-            int istart = ix*dim1*dim2;
-            for(int iy = yoffset; iy <= yoffset + ylimits; iy++) {
-                int jstart = istart + iy*dim2;
-                for(int iz = zoffset; iz <= zoffset + zlimits; iz++) {
+        SuperSampling<0> current(atomicCenter, botMeshCorner, topMeshCorner,
+            harmonics, lambda_radial);
+        int xlimits = std::round((topMeshCorner[0] - botMeshCorner[0]) / h0);
+        int ylimits = std::round((topMeshCorner[1] - botMeshCorner[1]) / h1);
+        int zlimits = std::round((topMeshCorner[2] - botMeshCorner[2]) / h2);
+        int xoffset = std::round((botMeshCorner[0] - start0) / h0);
+        int yoffset = std::round((botMeshCorner[1] - start1) / h1);
+        int zoffset = std::round((botMeshCorner[2] - start2) / h2);
+        int offset  = 0;
+
+        for (int ix = xoffset; ix <= xoffset + xlimits; ix++)
+        {
+            int istart = ix * dim1 * dim2;
+            for (int iy = yoffset; iy <= yoffset + ylimits; iy++)
+            {
+                int jstart = istart + iy * dim2;
+                for (int iz = zoffset; iz <= zoffset + zlimits; iz++)
+                {
                     var[ishift][jstart + iz] += current.values_[0][offset];
                     offset++;
                 }
@@ -173,11 +195,10 @@ void Forces<T>::evaluateSupersampledRadialFunc(const std::vector<Vector3D>& posi
 
 template <class T>
 void Forces<T>::evaluateRadialFunc(const std::vector<Vector3D>& positions,
-                            const double lrad,
-                            std::vector<std::vector<double>>& var,
-                            std::function<double(double)> const& lambda_radial)
+    const double lrad, std::vector<std::vector<double>>& var,
+    std::function<double(double)> const& lambda_radial)
 {
-    Control& ct     = *(Control::instance());
+    Control& ct = *(Control::instance());
 
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
@@ -194,7 +215,7 @@ void Forces<T>::evaluateRadialFunc(const std::vector<Vector3D>& positions,
 
     Vector3D ll(mygrid.ll(0), mygrid.ll(1), mygrid.ll(2));
 
-    Vector3D point( 0., 0., 0. );
+    Vector3D point(0., 0., 0.);
 
     point[0] = mygrid.start(0);
 
@@ -211,8 +232,7 @@ void Forces<T>::evaluateRadialFunc(const std::vector<Vector3D>& positions,
 
                 for (auto& position : positions)
                 {
-                    const double r
-                        = position.minimage(point, ll, ct.bcPoisson);
+                    const double r = position.minimage(point, ll, ct.bcPoisson);
                     if (r < lrad)
                     {
                         var[ishift][offset] = lambda_radial(r);
@@ -237,14 +257,12 @@ void Forces<T>::evaluateRadialFunc(const std::vector<Vector3D>& positions,
         point[0] += h0;
 
     } // end for ix
-
 }
 
 template <class T>
 void Forces<T>::get_loc_proj(RHODTYPE* rho,
     std::vector<std::vector<double>>& var_pot,
-    std::vector<std::vector<double>>& var_charge,
-    std::vector<double>& loc_proj)
+    std::vector<std::vector<double>>& var_charge, std::vector<double>& loc_proj)
 {
     get_loc_proj_tm_.start();
 
@@ -261,8 +279,9 @@ void Forces<T>::get_loc_proj(RHODTYPE* rho,
         // - delta rhoc * vh
         for (short ishift = 0; ishift < NPTS; ishift++)
         {
-            const std::vector<double>& vpot      = var_pot[NPTS*dir+ishift];
-            const std::vector<double>& drhoc_ptr = var_charge[NPTS*dir+ishift];
+            const std::vector<double>& vpot = var_pot[NPTS * dir + ishift];
+            const std::vector<double>& drhoc_ptr
+                = var_charge[NPTS * dir + ishift];
 
             for (int idx = 0; idx < numpt; idx++)
             {
@@ -276,7 +295,8 @@ void Forces<T>::get_loc_proj(RHODTYPE* rho,
 }
 
 template <class T>
-void Forces<T>::lforce_ion(Ion& ion, RHODTYPE* rho, std::vector<double>& loc_proj, const char flag_filter)
+void Forces<T>::lforce_ion(Ion& ion, RHODTYPE* rho,
+    std::vector<double>& loc_proj, const char flag_filter)
 {
     Mesh* mymesh    = Mesh::instance();
     const int numpt = mymesh->numpt();
@@ -284,9 +304,9 @@ void Forces<T>::lforce_ion(Ion& ion, RHODTYPE* rho, std::vector<double>& loc_pro
     std::vector<std::vector<double>> var_pot;
     std::vector<std::vector<double>> var_charge;
 
-    var_pot.resize(3*NPTS);
-    var_charge.resize(3*NPTS);
-    for(short i = 0; i < 3*NPTS; i++)
+    var_pot.resize(3 * NPTS);
+    var_charge.resize(3 * NPTS);
+    for (short i = 0; i < 3 * NPTS; i++)
     {
         var_pot[i].resize(numpt);
         var_charge[i].resize(numpt);
@@ -311,7 +331,7 @@ void Forces<T>::lforce(Ions& ions, RHODTYPE* rho)
     //    {
     // cout<<"max Vl radius = "<<ions.getMaxVlRadius()<<endl;
 
-    int buffer_size  = 3 * NPTS;
+    int buffer_size = 3 * NPTS;
     std::vector<double> loc_proj(buffer_size);
 
     lforce_local_tm_.start();
@@ -323,7 +343,7 @@ void Forces<T>::lforce(Ions& ions, RHODTYPE* rho)
     VariableSizeMatrix<sparserow> loc_proj_mat(
         "locProj", ions.overlappingVL_ions().size());
     // Loop over ions with potential overlaping with local subdomain
-    
+
     // Hack filter type
     const char flag_filter = (hamiltonian_->potential()).pot_type(0);
 
@@ -335,8 +355,8 @@ void Forces<T>::lforce(Ions& ions, RHODTYPE* rho)
         lforce_ion(*ion, rho, loc_proj, flag_filter);
 
         /* insert row into 2D matrix */
-        loc_proj_mat.insertNewRow(buffer_size, index, &cols[0], &loc_proj[0],
-                                  true);
+        loc_proj_mat.insertNewRow(
+            buffer_size, index, &cols[0], &loc_proj[0], true);
     }
 
     lforce_local_tm_.stop();
@@ -363,19 +383,18 @@ void Forces<T>::lforce(Ions& ions, RHODTYPE* rho)
 
     consolidate_data_.stop();
 
-    for(auto& lion : ions.local_ions())
+    for (auto& lion : ions.local_ions())
     {
         // Forces opposed to the gradient
         int index   = lion->index();
         int* rindex = (int*)loc_proj_mat.getTableValue(index);
         assert(rindex != NULL);
         std::fill(loc_proj.begin(), loc_proj.end(), 0.);
-        loc_proj_mat.row_daxpy(*rindex, buffer_size, mygrid.vel(),
-                               &loc_proj[0]);
+        loc_proj_mat.row_daxpy(
+            *rindex, buffer_size, mygrid.vel(), &loc_proj[0]);
 
         lion->add_force(-get_deriv2(&loc_proj[0]),
-            -get_deriv2(&(loc_proj[NPTS])), 
-            -get_deriv2(&(loc_proj[2 * NPTS])));
+            -get_deriv2(&(loc_proj[NPTS])), -get_deriv2(&(loc_proj[2 * NPTS])));
     }
 //    }
 //    else
@@ -475,7 +494,7 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
             kbpsi[dir][npt] = new KBPsiMatrixSparse(NULL, false);
 
             double shift[3] = { 0., 0., 0. };
-            shift[dir]      = shift_R[dir*NPTS+npt][dir];
+            shift[dir]      = shift_R[dir * NPTS + npt][dir];
             Ions shifted_ions(ions, shift); ///***
 
             kbpsi[dir][npt]->setup(shifted_ions, orbitals);
@@ -535,7 +554,8 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
     }
     else
     {
-        ReplicatedWorkSpace<DISTMATDTYPE>& wspace(ReplicatedWorkSpace<DISTMATDTYPE>::instance());
+        ReplicatedWorkSpace<DISTMATDTYPE>& wspace(
+            ReplicatedWorkSpace<DISTMATDTYPE>::instance());
         const int ndim               = wspace.getDim();
         DISTMATDTYPE* work_DM_matrix = wspace.square_matrix();
 
@@ -588,7 +608,7 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
     delete[] kbpsi;
 
     // compute forces on each ion by finite differences
-    const double factor                     = -1. * Ry2Ha;
+    const double factor = -1. * Ry2Ha;
     for (auto& ion : ions.local_ions())
     {
         std::vector<int> gids;
@@ -613,7 +633,6 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
 
             ion->add_force(ff[0], ff[1], ff[2]);
         }
-
     }
 
     map<int, double*>::iterator ierg = erg.begin();
@@ -648,19 +667,21 @@ void Forces<T>::force(T& orbitals, Ions& ions)
         MPaxpy(numpt, one, &rho_->rho_[1][0], &rho_tmp[0]);
     }
 
-    std::vector<RHODTYPE>& rho = (rho_->rho_.size() > 1) ? rho_tmp : rho_->rho_[0];
+    std::vector<RHODTYPE>& rho
+        = (rho_->rho_.size() > 1) ? rho_tmp : rho_->rho_[0];
 
-    for(int i = 0; i<3*NPTS; i++)
+    for (int i = 0; i < 3 * NPTS; i++)
     {
-        for(int j = 0; j<3; j++) shift_R[i][j] = 0.;
+        for (int j = 0; j < 3; j++)
+            shift_R[i][j] = 0.;
     }
-    for(int i = 0; i<3; i++)
+    for (int i = 0; i < 3; i++)
     {
-        shift_R[NPTS*i+0][i] = -DELTAC;
-        shift_R[NPTS*i+1][i] = DELTAC;
+        shift_R[NPTS * i + 0][i] = -DELTAC;
+        shift_R[NPTS * i + 1][i] = DELTAC;
 #if NPTS > 3
-        shift_R[NPTS*i+2][i] = -2. * DELTAC;
-        shift_R[NPTS*i+3][i] = 2. * DELTAC;
+        shift_R[NPTS * i + 2][i] = -2. * DELTAC;
+        shift_R[NPTS * i + 3][i] = 2. * DELTAC;
 #endif
     }
     Control& ct = *(Control::instance());

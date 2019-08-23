@@ -11,8 +11,8 @@
 #ifndef MGMOL_KBPROJECTOR_H
 #define MGMOL_KBPROJECTOR_H
 
-#include "global.h"
 #include "Mesh.h"
+#include "global.h"
 
 #include <cassert>
 #include <vector>
@@ -44,8 +44,8 @@ protected:
     }
 
 public:
-    KBprojector(const Species& sp):
-        species_(sp), maxl_(species_.max_l()), llocal_(species_.llocal())
+    KBprojector(const Species& sp)
+        : species_(sp), maxl_(species_.max_l()), llocal_(species_.llocal())
     {
         for (short l = 0; l <= maxl_; l++)
             multiplicity_.push_back(sp.getMultiplicity(l));
@@ -55,7 +55,7 @@ public:
 
         Mesh* mymesh           = Mesh::instance();
         const pb::Grid& mygrid = mymesh->grid();
-        for(short i=0; i<3; i++)
+        for (short i = 0; i < 3; i++)
             h_[i] = mygrid.hgrid(i);
         subdivx_ = mymesh->subdivx();
 
@@ -69,10 +69,12 @@ public:
             assert(multiplicity_[l] > 0 || l == llocal_);
     }
 
-    KBprojector(const KBprojector& kb):
-        species_(kb.species_), subdivx_(kb.subdivx_),
-        maxl_(kb.maxl_), llocal_(kb.llocal_),
-        multiplicity_(kb.multiplicity_)
+    KBprojector(const KBprojector& kb)
+        : species_(kb.species_),
+          subdivx_(kb.subdivx_),
+          maxl_(kb.maxl_),
+          llocal_(kb.llocal_),
+          multiplicity_(kb.multiplicity_)
     {
         for (short i = 0; i < 3; i++)
         {
@@ -84,34 +86,31 @@ public:
         assert(species_.dim_nl() < 1000);
     }
 
-    ~KBprojector()
-    {
-    }
+    ~KBprojector() {}
 
-    virtual void clear()=0;
+    virtual void clear() = 0;
 
-    //setup data that depends on atomic position
-    virtual void setup(const double center[3])
-    {
-        initCenter(center);
-    }
+    // setup data that depends on atomic position
+    virtual void setup(const double center[3]) { initCenter(center); }
 
-    virtual double maxRadius() const=0;
+    virtual double maxRadius() const = 0;
 
-    virtual bool overlapPE() const=0;
-    virtual void registerPsi(const short iloc, const ORBDTYPE* const psi)=0;
+    virtual bool overlapPE() const                                        = 0;
+    virtual void registerPsi(const short iloc, const ORBDTYPE* const psi) = 0;
 
-    virtual bool overlaps(const short iloc) const=0;
-    virtual double dotPsi(const short iloc, const short index) const=0;
+    virtual bool overlaps(const short iloc) const                    = 0;
+    virtual double dotPsi(const short iloc, const short index) const = 0;
 
     // axpySket for templated destination type
-    virtual void axpySKet(const short iloc, const double alpha, double* const) const=0;
-    virtual void axpySKet(const short iloc, const double alpha, float* const) const=0;
+    virtual void axpySKet(
+        const short iloc, const double alpha, double* const) const = 0;
+    virtual void axpySKet(
+        const short iloc, const double alpha, float* const) const = 0;
 
-    virtual void axpyKet(
-        const short iloc, const std::vector<double>& alpha, double* const dst) const=0;
-        virtual void axpyKet(
-        const short iloc, const std::vector<double>& alpha, float* const dst) const=0;
+    virtual void axpyKet(const short iloc, const std::vector<double>& alpha,
+        double* const dst) const = 0;
+    virtual void axpyKet(const short iloc, const std::vector<double>& alpha,
+        float* const dst) const  = 0;
 
     bool onlyOneProjector() const
     {
@@ -135,8 +134,8 @@ public:
         return nproj;
     }
 
-    virtual void getKBsigns(std::vector<short>& kbsigns) const=0;
-    virtual void getKBcoeffs(std::vector<double>& coeffs) const=0;
+    virtual void getKBsigns(std::vector<short>& kbsigns) const  = 0;
+    virtual void getKBcoeffs(std::vector<double>& coeffs) const = 0;
 };
 
 #endif

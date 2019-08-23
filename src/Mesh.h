@@ -121,18 +121,22 @@ public:
         assert(numpt_ < 1000000000);
         return loc_numpt_;
     }
-    short ilow0(const short iloc)const
-    { return myGrid_->istart(0) + iloc * myGrid_->dim(0) / subdivx_; }
+    short ilow0(const short iloc) const
+    {
+        return myGrid_->istart(0) + iloc * myGrid_->dim(0) / subdivx_;
+    }
 
-    short ihigh0(const short iloc)const
-    { return ilow0(iloc) + myGrid_->dim(0) / subdivx_ -1; }
-    short ihigh1()const
-    { return myGrid_->istart(1) + myGrid_->dim(1) -1; }
-    short ihigh2()const
-    { return myGrid_->istart(2) + myGrid_->dim(2) -1; }
+    short ihigh0(const short iloc) const
+    {
+        return ilow0(iloc) + myGrid_->dim(0) / subdivx_ - 1;
+    }
+    short ihigh1() const { return myGrid_->istart(1) + myGrid_->dim(1) - 1; }
+    short ihigh2() const { return myGrid_->istart(2) + myGrid_->dim(2) - 1; }
 
     int npointsPatch()
-    { return myGrid_->dim(0) * myGrid_->dim(1) * myGrid_->dim(2) / subdivx_; }
+    {
+        return myGrid_->dim(0) * myGrid_->dim(1) * myGrid_->dim(2) / subdivx_;
+    }
 };
 
 #endif

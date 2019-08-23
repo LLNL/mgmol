@@ -98,12 +98,12 @@ public:
 #ifdef _OPENMP
         if (omp_get_thread_num() == 0)
 #endif
-        if (running_)
-        {
-            total_cpu_ += ((double)(clock() - clk_)) / CLOCKS_PER_SEC;
-            total_real_ += gtod() - t_;
-            running_ = false;
-        }
+            if (running_)
+            {
+                total_cpu_ += ((double)(clock() - clk_)) / CLOCKS_PER_SEC;
+                total_real_ += gtod() - t_;
+                running_ = false;
+            }
     };
 
     void print(std::ostream& os) const;

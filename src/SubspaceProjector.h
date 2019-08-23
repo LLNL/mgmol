@@ -11,12 +11,12 @@
 #ifndef MGMOL_SUBSPACEPROJ_H
 #define MGMOL_SUBSPACEPROJ_H
 
-#include "global.h"
 #include "SquareLocalMatrices.h"
+#include "global.h"
 
 class ProjectedMatricesInterface;
 
-template<class T>
+template <class T>
 class SubspaceProjector
 {
 private:

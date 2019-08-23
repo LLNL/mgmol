@@ -87,8 +87,8 @@ public:
         int nrows = NUM_PRINT_ROWS) const;
     void printMatCSR(const char* fname); /* print CSR matrix */
     void printMatBlock2(const int gid0, const int gid1, std::ostream& os);
-    //    void printMatMM(ofstream& outfile);				/* print MM
-    //    matrix */
+    //    void printMatMM(ofstream& outfile);				/* print
+    //    MM matrix */
     void reset(); /* reset CSR matrix to be reused */
     void clear();
     void setupSparseRows(const std::vector<int>&
@@ -512,7 +512,8 @@ public:
     double pnorm(const int row, const int p) { return data_[row]->pnorm(p); }
 
     // fill "non-local" rows wit data from other MPI tasks
-    void consolidate(const std::vector<int>& gids, DataDistribution& distributor);
+    void consolidate(
+        const std::vector<int>& gids, DataDistribution& distributor);
 
     VariableSizeMatrix<T>& operator+=(const VariableSizeMatrix<T>& a)
     {

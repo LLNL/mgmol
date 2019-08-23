@@ -1,3 +1,3 @@
 #include "Solution.h"
 
-double Solution::invs_=1.;
+double Solution::invs_ = 1.;

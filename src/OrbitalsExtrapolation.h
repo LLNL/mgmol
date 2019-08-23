@@ -13,8 +13,8 @@
 
 #define EXTRAPOLATE_H 1
 
-#include "Hextrapolation.h"
 #include "Control.h"
+#include "Hextrapolation.h"
 class LocalizationRegions;
 class ClusterOrbitals;
 class MasksSet;
@@ -25,14 +25,13 @@ template <class T>
 class OrbitalsExtrapolation
 {
 public:
-    OrbitalsExtrapolation()
-        : orbitals_minus1_(0), hextrapol_(0)
+    OrbitalsExtrapolation() : orbitals_minus1_(0), hextrapol_(0)
     {
 #if EXTRAPOLATE_H
         Control& ct = *(Control::instance());
 
-        if (ct.OuterSolver() != OuterSolverType::ABPG &&
-            ct.OuterSolver() != OuterSolverType::NLCG )
+        if (ct.OuterSolver() != OuterSolverType::ABPG
+            && ct.OuterSolver() != OuterSolverType::NLCG)
             hextrapol_ = new Hextrapolation(ct.numst);
 #endif
     }
@@ -42,7 +41,7 @@ public:
 #if EXTRAPOLATE_H
     void initExtrapolationH(const dist_matrix::DistMatrix<DISTMATDTYPE>& mat)
     {
-        assert( hextrapol_ );
+        assert(hextrapol_);
 
         hextrapol_->initExtrapolationH(mat);
     }
@@ -57,9 +56,7 @@ public:
         ClusterOrbitals* local_cluster, MasksSet* currentMasks,
         MasksSet* corrtMasks, HDFrestart& h5f_file);
 
-    virtual void extrapolate_orbitals(
-        T** orbitals, T* new_orbitals)
-        = 0;
+    virtual void extrapolate_orbitals(T** orbitals, T* new_orbitals) = 0;
 
     virtual short getNumAuxiliaryOrbitals() { return 0; }
     virtual short getNumOrbitalExtrapolations() { return 0; }

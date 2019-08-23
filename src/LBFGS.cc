@@ -43,12 +43,9 @@ LBFGS<T>::LBFGS(T** orbitals, Ions& ions, Rho<T>& rho,
     etot_i_[1] = 10000.;
     etot_i_[2] = 10000.;
 
-    stepper_ = new LBFGS_IonicStepper(
-        dt, IonicAlgorithm<T>::atmove_,
-            IonicAlgorithm<T>::tau0_,
-            IonicAlgorithm<T>::taup_,
-            IonicAlgorithm<T>::fion_,
-            IonicAlgorithm<T>::gid_, 20, &etot_i_[0]);
+    stepper_ = new LBFGS_IonicStepper(dt, IonicAlgorithm<T>::atmove_,
+        IonicAlgorithm<T>::tau0_, IonicAlgorithm<T>::taup_,
+        IonicAlgorithm<T>::fion_, IonicAlgorithm<T>::gid_, 20, &etot_i_[0]);
     IonicAlgorithm<T>::registerStepper(stepper_);
 
     ref_masks_     = new MasksSet(lrs, false, ct.getMGlevels());

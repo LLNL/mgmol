@@ -239,7 +239,8 @@ public:
     /* print the Theta matrix -- for diagnostics */
     void printTheta(std::ostream& os) const
     {
-        if (onpe0) os << " Matrix Theta ... n = " << (*submatT_).n() << std::endl;
+        if (onpe0)
+            os << " Matrix Theta ... n = " << (*submatT_).n() << std::endl;
 
         std::vector<int> locfcns;
         (*lrs_).getLocalSubdomainIndices(locfcns);

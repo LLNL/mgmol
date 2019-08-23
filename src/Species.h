@@ -146,14 +146,25 @@ private:
         tfile << std::endl;
     }
 
-    void checkLRadius()const;
+    void checkLRadius() const;
 
 public:
-    Species(MPI_Comm comm):
-        name_("undefined"), atomic_number_(-1), zion_(-1), n_rad_points_(0),
-        rc_(-1.), invrc_(-1.), mass_(0.), lradius_(0.), nlradius_(0.),
-        dim_nl_(-1), dim_l_(-1), max_l_(-1), llocal_(0), num_potentials_(0),
-        comm_(comm)
+    Species(MPI_Comm comm)
+        : name_("undefined"),
+          atomic_number_(-1),
+          zion_(-1),
+          n_rad_points_(0),
+          rc_(-1.),
+          invrc_(-1.),
+          mass_(0.),
+          lradius_(0.),
+          nlradius_(0.),
+          dim_nl_(-1),
+          dim_l_(-1),
+          max_l_(-1),
+          llocal_(0),
+          num_potentials_(0),
+          comm_(comm)
     {
 #ifdef DEBUG
         (*MPIdata::sout) << " Construct 1 undefined Species" << endl;
@@ -208,7 +219,7 @@ public:
     }
     void initPotentials(const char, const double, const bool);
 
-    double getVcomp(const double radius)const
+    double getVcomp(const double radius) const
     {
         if (radius > 1e-8)
             return (double)zion_ * erf(radius * invrc_) / radius;
@@ -216,9 +227,9 @@ public:
             return (double)zion_ * M_2_SQRTPI * invrc_;
     }
 
-    double getRhoComp(const double radius)const
+    double getRhoComp(const double radius) const
     {
-        return comp_charge_factor_ * exp(-radius *radius * invrc_ * invrc_);
+        return comp_charge_factor_ * exp(-radius * radius * invrc_ * invrc_);
     }
 
     void getKBsigns(std::vector<short>& kbsigns) const;
@@ -244,12 +255,12 @@ public:
         return zion * zion * invrc_;
     }
 
-    double ediff(const Species& sp, const double distance)const
+    double ediff(const Species& sp, const double distance) const
     {
-        const double t1 = sqrt(rc_*rc_+sp.rc_*sp.rc_);
+        const double t1 = sqrt(rc_ * rc_ + sp.rc_ * sp.rc_);
 
         return (double)zion_ * (double)sp.zion_ * erfc(distance / t1)
-            / distance;
+               / distance;
     }
 
     void syncKBP(const int root);

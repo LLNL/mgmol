@@ -29,7 +29,7 @@ const double am_ = (1.0 / im_);
 void noMoreMemory()
 {
     std::cerr << "Unable to satisfy request for memory for MPI task " << mype
-         << std::endl;
+              << std::endl;
     Control& ct = *(Control::instance());
     ct.global_exit(3);
 }
@@ -384,7 +384,7 @@ bool isOverlaping(const Vector3D& center, const float radius)
 void exitWithErrorMessage(const std::string name)
 {
     std::cerr << "Function " << name
-         << " not implemented and should not be called!!!" << std::endl;
+              << " not implemented and should not be called!!!" << std::endl;
     MPI_Finalize();
     exit(0);
     // MPI_Abort(MPI_COMM_WORLD,0);

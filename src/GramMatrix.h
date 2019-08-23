@@ -94,7 +94,8 @@ public:
         {
             print(*MPIdata::serr);
             if (onpe0)
-                (*MPIdata::serr) << "ERROR in GramMatrix::updateLS()" << std::endl;
+                (*MPIdata::serr)
+                    << "ERROR in GramMatrix::updateLS()" << std::endl;
             sleep(5);
             Control& ct = *(Control::instance());
             ct.global_exit(2);
@@ -119,8 +120,8 @@ public:
         ls_->potrs('l', mat);
     }
 
-    const dist_matrix::SubMatrices<DISTMATDTYPE>& getSubMatLS(MPI_Comm comm,
-        const std::vector<std::vector<int>>& global_indexes);
+    const dist_matrix::SubMatrices<DISTMATDTYPE>& getSubMatLS(
+        MPI_Comm comm, const std::vector<std::vector<int>>& global_indexes);
 
     void printMM(std::ofstream& tfile) { matS_->printMM(tfile); }
 

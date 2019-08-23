@@ -1161,7 +1161,7 @@ void LBFGS_IonicStepper::mcsrch(const double f, double* s, double& stp)
         double ftest1 = finit_ + stp * dgtest;
 
         //(*MPIdata::sout)<<"ftest1="<<ftest1<<", f="<<f<<",
-        //dginit_="<<dginit_<<", dg="<<dg
+        // dginit_="<<dginit_<<", dg="<<dg
         //<<", stp="<<stp<<endl;
 
         // test for convergence.

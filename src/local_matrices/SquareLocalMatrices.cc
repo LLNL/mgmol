@@ -113,10 +113,10 @@ void SquareLocalMatrices<T>::shift(const T shift)
     }
 }
 
-//set matrix elements to zero in rows/columns
-//not associated with any orbital
+// set matrix elements to zero in rows/columns
+// not associated with any orbital
 template <class T>
-void SquareLocalMatrices<T>::applySymmetricMask(const vector< vector<int>>& gids)
+void SquareLocalMatrices<T>::applySymmetricMask(const vector<vector<int>>& gids)
 {
     const int m = LocalMatrices<T>::m_;
     const int n = LocalMatrices<T>::n_;
@@ -129,12 +129,12 @@ void SquareLocalMatrices<T>::applySymmetricMask(const vector< vector<int>>& gids
         for (int j = 0; j < n; j++)
         {
             const bool jvalid = (loc_gids[j] != -1);
-            const int offset = j*m;
+            const int offset  = j * m;
 
             for (int i = 0; i < m; i++)
             {
                 const bool ivalid = (loc_gids[i] != -1);
-                if ( !(ivalid && jvalid) )mat[offset + i] = 0.;
+                if (!(ivalid && jvalid)) mat[offset + i] = 0.;
             }
         }
     }

@@ -18,9 +18,8 @@ template <class T>
 class XCfunctionalFactory
 {
 public:
-    static XConGrid* create(const int xctype, const int nspin,
-                            Rho<T>& rho,
-                            Potentials& pot)
+    static XConGrid* create(
+        const int xctype, const int nspin, Rho<T>& rho, Potentials& pot)
     {
         if (xctype == 0)
         {
@@ -40,4 +39,3 @@ public:
         }
     }
 };
-

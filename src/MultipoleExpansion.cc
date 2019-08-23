@@ -10,8 +10,8 @@
 
 // Convention: a positive charge generates a positive potential
 
-#include "MGmol_MPI.h"
 #include "MultipoleExpansion.h"
+#include "MGmol_MPI.h"
 
 #include <iomanip>
 

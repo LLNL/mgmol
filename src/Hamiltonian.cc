@@ -41,8 +41,7 @@ void Hamiltonian<T>::setup(const pb::Grid& myGrid, const int lap_type)
 }
 
 template <class T>
-const T& Hamiltonian<T>::applyLocal(
-    T& phi, const bool force)
+const T& Hamiltonian<T>::applyLocal(T& phi, const bool force)
 {
     assert(phi.getIterativeIndex() >= 0);
     assert(pot_->getIterativeIndex() >= 0);
@@ -61,8 +60,8 @@ const T& Hamiltonian<T>::applyLocal(
     {
         (*MPIdata::sout) << "Hamiltonian<T>::applyLocal(), new_index ="
                          << new_index << endl;
-        (*MPIdata::sout) << "Hamiltonian<T>::applyLocal(), itindex_  =" << itindex_
-                         << endl;
+        (*MPIdata::sout) << "Hamiltonian<T>::applyLocal(), itindex_  ="
+                         << itindex_ << endl;
     }
 #endif
     if (force || new_index != itindex_)
@@ -84,8 +83,8 @@ const T& Hamiltonian<T>::applyLocal(
 }
 
 template <class T>
-void Hamiltonian<T>::applyLocal(const int first_state, const int ncolors,
-    T& phi, T& hphi)
+void Hamiltonian<T>::applyLocal(
+    const int first_state, const int ncolors, T& phi, T& hphi)
 {
     apply_Hloc_tm_.start();
 #ifdef PRINT_OPERATIONS
@@ -176,8 +175,8 @@ void Hamiltonian<T>::addHlocal2matrix(T& phi1, T& phi2,
 }
 
 template <class T>
-void Hamiltonian<T>::addHlocalij(T& phi1, T& phi2,
-    ProjectedMatricesInterface* proj_matrices)
+void Hamiltonian<T>::addHlocalij(
+    T& phi1, T& phi2, ProjectedMatricesInterface* proj_matrices)
 {
     applyLocal(phi2);
 
@@ -193,8 +192,8 @@ void Hamiltonian<T>::addHlocalij(T& phi1, T& phi2,
 }
 
 template <class T>
-void Hamiltonian<T>::addHlocal2matrix(T& phi1, T& phi2,
-    VariableSizeMatrix<sparserow>& mat, const bool force)
+void Hamiltonian<T>::addHlocal2matrix(
+    T& phi1, T& phi2, VariableSizeMatrix<sparserow>& mat, const bool force)
 {
     Control& ct = *(Control::instance());
 
@@ -222,13 +221,13 @@ template void Hamiltonian<ExtendedGridOrbitals>::setup(pb::Grid const&, int);
 
 template const LocGridOrbitals& Hamiltonian<LocGridOrbitals>::applyLocal(
     LocGridOrbitals&, const bool);
-template const ExtendedGridOrbitals& Hamiltonian<ExtendedGridOrbitals>::applyLocal(
+template const ExtendedGridOrbitals&
+Hamiltonian<ExtendedGridOrbitals>::applyLocal(
     ExtendedGridOrbitals&, const bool);
 template void Hamiltonian<LocGridOrbitals>::addHlocalij(LocGridOrbitals&,
-    LocGridOrbitals&,
-    ProjectedMatricesInterface* proj_matrices);
-template void Hamiltonian<ExtendedGridOrbitals>::addHlocalij(ExtendedGridOrbitals&,
-    ExtendedGridOrbitals&,
+    LocGridOrbitals&, ProjectedMatricesInterface* proj_matrices);
+template void Hamiltonian<ExtendedGridOrbitals>::addHlocalij(
+    ExtendedGridOrbitals&, ExtendedGridOrbitals&,
     ProjectedMatricesInterface* proj_matrices);
 template void Hamiltonian<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals&,
     LocGridOrbitals&, VariableSizeMatrix<sparserow>& mat, const bool force);
@@ -238,6 +237,4 @@ template void Hamiltonian<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals&,
 
 template void Hamiltonian<ExtendedGridOrbitals>::addHlocal2matrix(
     ExtendedGridOrbitals&, ExtendedGridOrbitals&,
-    dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sparseH,
-    const bool);
-
+    dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sparseH, const bool);

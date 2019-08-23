@@ -69,9 +69,8 @@ Timer LocGridOrbitals::assign_tm_("LocGridOrbitals::assign");
 Timer LocGridOrbitals::normalize_tm_("LocGridOrbitals::normalize");
 Timer LocGridOrbitals::axpy_tm_("LocGridOrbitals::axpy");
 
-LocGridOrbitals::LocGridOrbitals(std::string name,
-    const pb::Grid& my_grid, const short subdivx,
-    const int numst, const short bc[3],
+LocGridOrbitals::LocGridOrbitals(std::string name, const pb::Grid& my_grid,
+    const short subdivx, const int numst, const short bc[3],
     ProjectedMatricesInterface* proj_matrices, LocalizationRegions* lrs,
     MasksSet* masks, MasksSet* corrmasks, ClusterOrbitals* local_cluster,
     const bool setup_flag)
@@ -124,8 +123,8 @@ LocGridOrbitals::~LocGridOrbitals()
     gidToStorage_ = 0;
 }
 
-LocGridOrbitals::LocGridOrbitals(const std::string name,
-    const LocGridOrbitals& A, const bool copy_data)
+LocGridOrbitals::LocGridOrbitals(
+    const std::string name, const LocGridOrbitals& A, const bool copy_data)
     : Orbitals(A, copy_data),
       name_(name),
       grid_(A.grid_),
@@ -150,9 +149,8 @@ LocGridOrbitals::LocGridOrbitals(const std::string name,
 }
 
 LocGridOrbitals::LocGridOrbitals(const std::string name,
-    const LocGridOrbitals& A,
-    ProjectedMatricesInterface* proj_matrices, MasksSet* masks,
-    MasksSet* corrmasks, const bool copy_data)
+    const LocGridOrbitals& A, ProjectedMatricesInterface* proj_matrices,
+    MasksSet* masks, MasksSet* corrmasks, const bool copy_data)
     : Orbitals(A, copy_data),
       name_(name),
       grid_(A.grid_),
@@ -753,7 +751,8 @@ void LocGridOrbitals::multiply_by_matrix(
     (*MPIdata::sout)<<"self multiply_by_matrix"<<endl;
 #endif
 
-    ReplicatedWorkSpace<DISTMATDTYPE>& wspace(ReplicatedWorkSpace<DISTMATDTYPE>::instance());
+    ReplicatedWorkSpace<DISTMATDTYPE>& wspace(
+        ReplicatedWorkSpace<DISTMATDTYPE>::instance());
     DISTMATDTYPE* work_matrix = wspace.square_matrix();
 
     // build a local complete matrix from a distributed matrix
@@ -873,8 +872,7 @@ void LocGridOrbitals::multiplyByMatrix(
 void LocGridOrbitals::multiplyByMatrix(
     const SquareLocalMatrices<MATDTYPE>& matrix, LocGridOrbitals& product) const
 {
-    multiplyByMatrix(
-        matrix, product.psi(0), product.lda_);
+    multiplyByMatrix(matrix, product.psi(0), product.lda_);
 }
 
 void LocGridOrbitals::multiply_by_matrix(const int first_color,
@@ -904,7 +902,8 @@ void LocGridOrbitals::multiply_by_matrix(
     ORBDTYPE* product = new ORBDTYPE[loc_numpt_ * chromatic_number_];
     memset(product, 0, loc_numpt_ * chromatic_number_ * sizeof(ORBDTYPE));
 
-    ReplicatedWorkSpace<DISTMATDTYPE>& wspace(ReplicatedWorkSpace<DISTMATDTYPE>::instance());
+    ReplicatedWorkSpace<DISTMATDTYPE>& wspace(
+        ReplicatedWorkSpace<DISTMATDTYPE>::instance());
     DISTMATDTYPE* work_matrix = wspace.square_matrix();
 
     matrix.allgather(work_matrix, numst_);
@@ -1331,7 +1330,7 @@ int LocGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, string name)
                                         mycolor, iloc, buffer + shift);
                                     filled[iloc].insert(mycolor);
                                     //(*MPIdata::sout)<<"Center "<<center<<",
-                                    //radius "<<read_radius<<", iloc="<<iloc
+                                    // radius "<<read_radius<<", iloc="<<iloc
                                 }
                             } // gid!=-1
                             //(*MPIdata::sout)<<" Put data into mycolor

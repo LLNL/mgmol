@@ -406,8 +406,7 @@ void SpreadsAndCenters<T>::setSinCosData(vector<vector<double>>& a, const int n)
 }
 
 template <class T>
-void SpreadsAndCenters<T>::computePositionMatrix(
-    T& orbitals, T& work_orbitals)
+void SpreadsAndCenters<T>::computePositionMatrix(T& orbitals, T& work_orbitals)
 {
     // copy into work array before normalizing
     work_orbitals.copyDataFrom(orbitals);
@@ -505,8 +504,7 @@ void SpreadsAndCenters<T>::computeSinCosDiag2states(
 }
 
 template <class T>
-void SpreadsAndCenters<T>::computeSinCos1D(
-    const T& orbitals, const int dir)
+void SpreadsAndCenters<T>::computeSinCos1D(const T& orbitals, const int dir)
 {
     vector<vector<double>> a;
     a.resize(2);
@@ -522,8 +520,7 @@ void SpreadsAndCenters<T>::computeSinCos1D(
 }
 
 template <class T>
-void SpreadsAndCenters<T>::computeSinCos(
-    const T& orbitals1, const T& orbitals2)
+void SpreadsAndCenters<T>::computeSinCos(const T& orbitals1, const T& orbitals2)
 {
     vector<vector<double>> a;
     a.resize(6);

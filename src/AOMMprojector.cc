@@ -34,7 +34,7 @@ AOMMprojector::AOMMprojector(LocGridOrbitals& phi, LocalizationRegions& lrs)
 
     if (onpe0)
         std::cout << "AOMM: setup with radius " << radius << " and threshold "
-             << threshold << std::endl;
+                  << threshold << std::endl;
 
     kernelMasks_ = new MasksSet(false);
     kernelMasks_->setup(lrs, radius);
@@ -45,8 +45,8 @@ AOMMprojector::AOMMprojector(LocGridOrbitals& phi, LocalizationRegions& lrs)
         kernel_proj_matrices_ = new ProjectedMatrices(ct.numst, with_spin);
 
     // kernel functions use their own projected matrices and masks
-    kernel_phi_
-        = new LocGridOrbitals("AOMM", phi, kernel_proj_matrices_, kernelMasks_, 0);
+    kernel_phi_ = new LocGridOrbitals(
+        "AOMM", phi, kernel_proj_matrices_, kernelMasks_, 0);
     kernel_phi_->initGauss(0.5 * radius, lrs);
 
     kernel_phi_->setIterativeIndex(phi.getIterativeIndex() * 10);
@@ -116,4 +116,3 @@ AOMMprojector::~AOMMprojector()
     delete matrix_mask_;
     matrix_mask_ = 0;
 }
-

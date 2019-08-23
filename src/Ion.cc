@@ -31,14 +31,11 @@ static unsigned int _index      = 0;
 
 Ion::Ion(const Species& species, const string& name, const double crds[3],
     const double velocity[3], const bool lock)
-    : name_(name),
-      species_(species),
-      index_(_index),
-      nlproj_gid_(_nlproj_gid)
+    : name_(name), species_(species), index_(_index), nlproj_gid_(_nlproj_gid)
 {
     assert(name.size() > 0);
 
-    kbproj_.reset( new KBprojectorSparse(species) );
+    kbproj_.reset(new KBprojectorSparse(species));
 
     _index++;
     _nlproj_gid += nProjectors();
@@ -49,14 +46,11 @@ Ion::Ion(const Species& species, const string& name, const double crds[3],
 Ion::Ion(const Species& species, const string& name, const double crds[3],
     const double velocity[3], const unsigned int index,
     const unsigned int nlproj_gid, const bool lock)
-    : name_(name),
-      species_(species),
-      index_(index),
-      nlproj_gid_(nlproj_gid)
+    : name_(name), species_(species), index_(index), nlproj_gid_(nlproj_gid)
 {
     assert(name.size() > 0);
 
-    kbproj_.reset( new KBprojectorSparse(species) );
+    kbproj_.reset(new KBprojectorSparse(species));
 
     init(crds, velocity, lock);
 }
@@ -67,7 +61,7 @@ Ion::Ion(const Species& species, IonData data)
       index_(data.index),
       nlproj_gid_(data.nlproj_id)
 {
-    kbproj_.reset( new KBprojectorSparse(species) );
+    kbproj_.reset(new KBprojectorSparse(species));
 
     const bool lock = data.atmove ? false : true;
     init(data.current_position, data.velocity, lock);
@@ -79,7 +73,7 @@ Ion::Ion(const Ion& ion)
       index_(ion.index_),
       nlproj_gid_(ion.nlproj_gid_)
 {
-    kbproj_.reset( new KBprojectorSparse(species_) );
+    kbproj_.reset(new KBprojectorSparse(species_));
 
     for (short i = 0; i < 3; i++)
     {
@@ -281,7 +275,7 @@ void Ion::printPositionAndForce(ostream& os) const
        << force_[0] << setw(16) << force_[1] << setw(16) << force_[2] << endl;
 }
 
-void Ion::getIonData(IonData& idata)const
+void Ion::getIonData(IonData& idata) const
 {
     idata.ion_name   = name_;
     idata.atomic_num = atomic_number();

@@ -14,10 +14,10 @@
 #ifndef MGMOL__SPARSEROW_H_
 #define MGMOL__SPARSEROW_H_
 
-#include "MGmol_blas1.h"
-#include "Table.h"
 #include "MGmol_MPI.h"
+#include "MGmol_blas1.h"
 #include "MPIdata.h"
+#include "Table.h"
 
 #include <algorithm>
 #include <cassert>

@@ -10,8 +10,8 @@
 
 #include "KBPsiMatrixSparse.h"
 #include "Control.h"
-#include "Ions.h"
 #include "ExtendedGridOrbitals.h"
+#include "Ions.h"
 #include "LocGridOrbitals.h"
 #include "MGmol_MPI.h"
 #include "Mesh.h"
@@ -304,9 +304,8 @@ void KBPsiMatrixSparse::computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi2,
         const int nnzrow1 = kbBpsimat_->nnzrow(lrindex);
         for (int p1 = 0; p1 < nnzrow1; p1++)
         {
-            const int st1 = kbBpsimat_->getColumnIndex(lrindex, p1);
-            const double kbpsi1
-                = coeff * kbBpsimat_->getRowEntry(lrindex, p1);
+            const int st1       = kbBpsimat_->getColumnIndex(lrindex, p1);
+            const double kbpsi1 = coeff * kbBpsimat_->getRowEntry(lrindex, p1);
             if (fabs(kbpsi1) > tolKBpsi)
             {
                 const int nnzrow2 = (*kbpsi2->kbpsimat_).nnzrow(lrindex);
@@ -530,14 +529,12 @@ void KBPsiMatrixSparse::getPsiKBPsiSym(
         for (int p1 = 0; p1 < nnzrow1; p1++)
         {
             double kbpsielement1 = kbpsimat_->getRowEntry(lrindex, p1);
-            if (fabs(kbpsielement1) <= tolKBpsi)
-                continue;
+            if (fabs(kbpsielement1) <= tolKBpsi) continue;
             const int st1 = kbpsimat_->getColumnIndex(lrindex, p1);
             for (int p2 = 0; p2 < nnzrow1; p2++)
             {
                 double kbpsielement2 = kbpsimat_->getRowEntry(lrindex, p2);
-                if (fabs(kbpsielement2) <= tolKBpsi)
-                    continue;
+                if (fabs(kbpsielement2) <= tolKBpsi) continue;
                 const double alpha = coeff * kbpsielement1 * kbpsielement2;
                 /* set hnlij */
                 if (fabs(alpha) > tolKBpsi)
@@ -615,8 +612,8 @@ void KBPsiMatrixSparse::printTimers(ostream& os)
 }
 
 template <class T>
-double KBPsiMatrixSparse::getEvnl(const Ions& ions, T& orbitals,
-    ProjectedMatricesSparse* proj_matrices)
+double KBPsiMatrixSparse::getEvnl(
+    const Ions& ions, T& orbitals, ProjectedMatricesSparse* proj_matrices)
 {
     const int numst = orbitals.numst();
     if (numst == 0) return 0.;
@@ -648,8 +645,8 @@ double KBPsiMatrixSparse::getEvnl(const Ions& ions, T& orbitals,
 }
 
 template <class T>
-double KBPsiMatrixSparse::getEvnl(const Ions& ions, T& orbitals,
-    ProjectedMatrices* proj_matrices)
+double KBPsiMatrixSparse::getEvnl(
+    const Ions& ions, T& orbitals, ProjectedMatrices* proj_matrices)
 {
     const int numst = orbitals.numst();
     if (numst == 0) return 0.;
@@ -695,17 +692,15 @@ double KBPsiMatrixSparse::getTraceDM(
     const int nnzrow1 = kbpsimat_->nnzrow(lrindex);
     for (int p1 = 0; p1 < nnzrow1; p1++)
     {
-        const int st1 = kbpsimat_->getColumnIndex(lrindex, p1);
-        const double t1
-            = (*kbpsimat_).getRowEntry(lrindex, p1);
+        const int st1                  = kbpsimat_->getColumnIndex(lrindex, p1);
+        const double t1                = (*kbpsimat_).getRowEntry(lrindex, p1);
         const DISTMATDTYPE* const pmat = &mat_X[st1 * numst];
 
         for (int p2 = 0; p2 < nnzrow1; p2++)
         {
             const int st2 = kbpsimat_->getColumnIndex(lrindex, p2);
 
-            trace += t1 * (*kbpsimat_).getRowEntry(lrindex, p2)
-                     * pmat[st2];
+            trace += t1 * (*kbpsimat_).getRowEntry(lrindex, p2) * pmat[st2];
         }
     }
 
@@ -734,7 +729,7 @@ double KBPsiMatrixSparse::getTraceDM(
     kbpsimat_->getColumnIndexes(lrindex, cols);
     assert(cols.size() == nnzrow1);
 
-    //get values in row of kbpsimat_
+    // get values in row of kbpsimat_
     vector<double> vval;
     vval.reserve(nnzrow1);
     kbpsimat_->getRowEntries(lrindex, vval);
@@ -742,10 +737,10 @@ double KBPsiMatrixSparse::getTraceDM(
 
     for (int p1 = 0; p1 < nnzrow1; p1++)
     {
-        const int st1 = cols[p1];
+        const int st1   = cols[p1];
         const double t1 = vval[p1];
 
-        //get values in row of DM for specific columns
+        // get values in row of DM for specific columns
         vector<double> row_values;
         dm.getEntries(st1, cols, row_values);
         assert(row_values.size() == cols.size());
@@ -762,26 +757,22 @@ double KBPsiMatrixSparse::getTraceDM(
 }
 
 template void KBPsiMatrixSparse::computeKBpsi(Ions& ions,
-        LocGridOrbitals& orbitals,
-        const int first_color, const int nb_colors, const bool flag);
+    LocGridOrbitals& orbitals, const int first_color, const int nb_colors,
+    const bool flag);
 template double KBPsiMatrixSparse::getEvnl(const Ions& ions,
-        LocGridOrbitals& orbitals,
-        ProjectedMatricesSparse* proj_matrices);
+    LocGridOrbitals& orbitals, ProjectedMatricesSparse* proj_matrices);
 template double KBPsiMatrixSparse::getEvnl(const Ions& ions,
-        LocGridOrbitals& orbitals,
-        ProjectedMatrices* proj_matrices);
+    LocGridOrbitals& orbitals, ProjectedMatrices* proj_matrices);
 template void KBPsiMatrixSparse::setup(const Ions&, const LocGridOrbitals&);
 template void KBPsiMatrixSparse::computeAll(Ions&, LocGridOrbitals&);
 
 template void KBPsiMatrixSparse::computeKBpsi(Ions& ions,
-        ExtendedGridOrbitals& orbitals,
-        const int first_color, const int nb_colors, const bool flag);
+    ExtendedGridOrbitals& orbitals, const int first_color, const int nb_colors,
+    const bool flag);
 template double KBPsiMatrixSparse::getEvnl(const Ions& ions,
-        ExtendedGridOrbitals& orbitals,
-        ProjectedMatricesSparse* proj_matrices);
+    ExtendedGridOrbitals& orbitals, ProjectedMatricesSparse* proj_matrices);
 template double KBPsiMatrixSparse::getEvnl(const Ions& ions,
-        ExtendedGridOrbitals& orbitals,
-        ProjectedMatrices* proj_matrices);
-template void KBPsiMatrixSparse::setup(const Ions&, const ExtendedGridOrbitals&);
+    ExtendedGridOrbitals& orbitals, ProjectedMatrices* proj_matrices);
+template void KBPsiMatrixSparse::setup(
+    const Ions&, const ExtendedGridOrbitals&);
 template void KBPsiMatrixSparse::computeAll(Ions&, ExtendedGridOrbitals&);
-

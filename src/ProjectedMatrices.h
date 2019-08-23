@@ -20,15 +20,14 @@
 #include "tools.h"
 
 #include "DistMatrix.h"
-#include "RemoteTasksDistMatrix.h"
-#include "SparseDistMatrix.h"
 #include "DistMatrix2SquareLocalMatrices.h"
 #include "LocalMatrices2DistMatrix.h"
+#include "RemoteTasksDistMatrix.h"
+#include "SparseDistMatrix.h"
 
 #include "hdf5.h"
 
 #include <iostream>
-
 
 // const double tol_matrix_elements=1.e-14;
 // const double tol_matrix_elements=0.;
@@ -77,7 +76,8 @@ class ProjectedMatrices : public ProjectedMatricesInterface
      * (dimension equal to number of local colors)
      */
     std::unique_ptr<SquareLocalMatrices<MATDTYPE>> localX_; // density matrix
-    std::unique_ptr<SquareLocalMatrices<MATDTYPE>> localT_; // theta=inv(S)*H_phi
+    std::unique_ptr<SquareLocalMatrices<MATDTYPE>>
+        localT_; // theta=inv(S)*H_phi
 
     dist_matrix::SparseDistMatrix<DISTMATDTYPE>* sH_;
 
@@ -144,8 +144,7 @@ public:
     {
         Control& ct = *(Control::instance());
 
-       LocalMatrices2DistMatrix* sl2dm =
-            LocalMatrices2DistMatrix::instance();
+        LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
 
         sl2dm->convert(slH, *sH_, ct.numst);
     }
@@ -165,8 +164,8 @@ public:
 
     SquareLocalMatrices<MATDTYPE>& getLocalT() const { return *localT_; }
 
-    const dist_matrix::SubMatrices<DISTMATDTYPE>& getSubMatLS(
-        MPI_Comm comm, const std::vector<std::vector<int>>& global_indexes) const
+    const dist_matrix::SubMatrices<DISTMATDTYPE>& getSubMatLS(MPI_Comm comm,
+        const std::vector<std::vector<int>>& global_indexes) const
     {
         return gm_->getSubMatLS(comm, global_indexes);
     }
@@ -175,15 +174,15 @@ public:
 
     void updateSubMatX(const dist_matrix::DistMatrix<DISTMATDTYPE>& dm)
     {
-        DistMatrix2SquareLocalMatrices* dm2sl =
-            DistMatrix2SquareLocalMatrices::instance();
+        DistMatrix2SquareLocalMatrices* dm2sl
+            = DistMatrix2SquareLocalMatrices::instance();
         dm2sl->convert(dm, *localX_);
     }
 
     void updateSubMatT()
     {
-        DistMatrix2SquareLocalMatrices* dm2sl =
-            DistMatrix2SquareLocalMatrices::instance();
+        DistMatrix2SquareLocalMatrices* dm2sl
+            = DistMatrix2SquareLocalMatrices::instance();
         dm2sl->convert(*theta_, *localT_);
     }
 
@@ -198,8 +197,7 @@ public:
 
         init_gram_matrix_tm_.start();
 
-        LocalMatrices2DistMatrix* sl2dm =
-            LocalMatrices2DistMatrix::instance();
+        LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
 
         sl2dm->accumulate(ss, *work_, dim_);
 
@@ -362,8 +360,7 @@ public:
     {
         dist_matrix::DistMatrix<DISTMATDTYPE> tmp("tmp", dim_, dim_);
 
-        LocalMatrices2DistMatrix* sl2dm =
-            LocalMatrices2DistMatrix::instance();
+        LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
 
         sl2dm->accumulate(ss, tmp, dim_);
 
@@ -377,8 +374,8 @@ public:
         {
             mat_X_old_.reset(
                 new dist_matrix::DistMatrix<DISTMATDTYPE>(dm_->getMatrix()));
-            mat_L_old_.reset( new dist_matrix::DistMatrix<DISTMATDTYPE>(
-                gm_->getCholeskyL()) );
+            mat_L_old_.reset(
+                new dist_matrix::DistMatrix<DISTMATDTYPE>(gm_->getCholeskyL()));
         }
         else
         {
@@ -428,9 +425,10 @@ public:
     virtual void initializeMatB(const SquareLocalMatrices<MATDTYPE>& ss)
     {
         (void)ss;
-        std::cerr << "ERROR: ProjectedMatrices::initializeMatB() should never be "
-                "called!!!"
-             << std::endl;
+        std::cerr
+            << "ERROR: ProjectedMatrices::initializeMatB() should never be "
+               "called!!!"
+            << std::endl;
     }
 
     void resetDotProductMatrices();

@@ -13,9 +13,9 @@
 #include "DFTsolver.h"
 #include "DMStrategy.h"
 #include "Energy.h"
+#include "ExtendedGridOrbitals.h"
 #include "Hamiltonian.h"
 #include "Ions.h"
-#include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "LocalizationRegions.h"
 #include "MD_IonicStepper.h"
@@ -71,8 +71,8 @@ template <class T>
 void MGmol<T>::preWFextrapolation()
 {
     Control& ct = *(Control::instance());
-    if (ct.OuterSolver() == OuterSolverType::ABPG ||
-        ct.OuterSolver() == OuterSolverType::NLCG )
+    if (ct.OuterSolver() == OuterSolverType::ABPG
+        || ct.OuterSolver() == OuterSolverType::NLCG)
     {
         if (ct.dm_mix < 1.) proj_matrices_->stripDM();
     }
@@ -82,7 +82,7 @@ void MGmol<T>::preWFextrapolation()
         ProjectedMatrices* projmat
             = dynamic_cast<ProjectedMatrices*>(proj_matrices_);
         assert(projmat);
-        orbitals_extrapol_->initExtrapolationH( projmat->getMatHB() );
+        orbitals_extrapol_->initExtrapolationH(projmat->getMatHB());
 #endif
     }
 }
@@ -96,8 +96,8 @@ void MGmol<T>::postWFextrapolation(T* orbitals)
         orbitals->computeGramAndInvS();
     }
 
-    if (ct.OuterSolver() == OuterSolverType::ABPG || 
-        ct.OuterSolver() == OuterSolverType::NLCG )
+    if (ct.OuterSolver() == OuterSolverType::ABPG
+        || ct.OuterSolver() == OuterSolverType::NLCG)
     {
         if (ct.dm_mix < 1.)
             proj_matrices_->dressupDM();
@@ -145,9 +145,9 @@ T* MGmol<T>::new_orbitals_with_current_LRs(bool setup)
     if (ct.lr_update) update_masks();
 
     // need to build new orbitals as masks have changed
-    T* new_orbitals = new T("NewMasks", mygrid,
-        mymesh->subdivx(), ct.numst, ct.bc, proj_matrices_, lrs_, currentMasks_,
-        corrMasks_, local_cluster_, setup);
+    T* new_orbitals = new T("NewMasks", mygrid, mymesh->subdivx(), ct.numst,
+        ct.bc, proj_matrices_, lrs_, currentMasks_, corrMasks_, local_cluster_,
+        setup);
 
     return new_orbitals;
 }
@@ -238,8 +238,7 @@ void checkMaxForces(
 }
 
 template <class T>
-int MGmol<T>::dumprestartFile(T** orbitals, Ions& ions,
-    Rho<T>& rho,
+int MGmol<T>::dumprestartFile(T** orbitals, Ions& ions, Rho<T>& rho,
     const bool write_extrapolated_wf, const short count)
 {
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
@@ -325,8 +324,7 @@ void MGmol<T>::md(T** orbitals, Ions& ions)
     DFTsolver<T>::resetItCount();
 
     orbitals_extrapol_
-        = OrbitalsExtrapolationFactory<T>::create(
-              ct.WFExtrapolation(), NULL);
+        = OrbitalsExtrapolationFactory<T>::create(ct.WFExtrapolation(), NULL);
 
     MD_IonicStepper* stepper = new MD_IonicStepper(
         ct.dt, atmove, tau0, taup, taum, fion, pmass, rand_states);
@@ -604,8 +602,8 @@ void MGmol<T>::md(T** orbitals, Ions& ions)
 
         preWFextrapolation();
 
-        if (ct.dt > 0. ||
-            ct.WFExtrapolation() == WFExtrapolationType::Reversible)
+        if (ct.dt > 0.
+            || ct.WFExtrapolation() == WFExtrapolationType::Reversible)
         {
             if (ct.lrs_extrapolation > 0) extrapolate_centers(small_move);
 
@@ -676,4 +674,3 @@ void MGmol<T>::md(T** orbitals, Ions& ions)
 
 template class MGmol<LocGridOrbitals>;
 template class MGmol<ExtendedGridOrbitals>;
-

@@ -25,7 +25,7 @@ Timer MGmol_MPI::split_allreduce_sums_double_tm_("split_allreduce_sums_double");
 Timer MGmol_MPI::split_allreduce_sums_float_tm_("split_allreduce_sums_float");
 
 MGmol_MPI* MGmol_MPI::pinstance_ = 0;
-std::ostream* MGmol_MPI::os_ = NULL;
+std::ostream* MGmol_MPI::os_     = NULL;
 
 MPI_Comm MGmol_MPI::comm_global_         = MPI_COMM_NULL;
 MPI_Comm MGmol_MPI::comm_spin_           = MPI_COMM_NULL;
@@ -50,8 +50,7 @@ MGmol_MPI::MGmol_MPI()
     MPI_Comm_size(comm_spin_, &size_);
     MPI_Comm_rank(comm_spin_, &mype_spin_);
     if (mype_spin_ == 0)
-        *os_ << "MGmol instance using " << size_ << " MPI tasks"
-            << std::endl;
+        *os_ << "MGmol instance using " << size_ << " MPI tasks" << std::endl;
 #endif
 }
 
@@ -167,10 +166,11 @@ int MGmol_MPI::bcast(double* val, int size, int root) const
     int mpi_err = MPI_Bcast(val, size, MPI_DOUBLE, root, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR("ERROR in MPI_Bcast(double*, int) of size " << size<< "!!!");
+        MGMOL_MPI_ERROR(
+            "ERROR in MPI_Bcast(double*, int) of size " << size << "!!!");
     }
 #else
-    int mpi_err =  0;
+    int mpi_err = 0;
 #endif
     return mpi_err;
 }
@@ -181,8 +181,8 @@ int MGmol_MPI::bcast(float* val, int size, int root) const
     int mpi_err = MPI_Bcast(val, size, MPI_FLOAT, root, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR("ERROR in MPI_Bcast(float*, int) of size " << size
-                         << "!!!");
+        MGMOL_MPI_ERROR(
+            "ERROR in MPI_Bcast(float*, int) of size " << size << "!!!");
     }
 #else
     int mpi_err = 0;
@@ -196,8 +196,7 @@ int MGmol_MPI::bcast(int* val, int size, int root) const
     int mpi_err = MPI_Bcast(val, size, MPI_INT, root, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Bcast(int*, int) of size " << size
-                         << "!!!");
+        MGMOL_MPI_ERROR("MPI_Bcast(int*, int) of size " << size << "!!!");
     }
 #else
     int mpi_err = 0;
@@ -211,8 +210,7 @@ int MGmol_MPI::bcast(short* val, int size, int root) const
     int mpi_err = MPI_Bcast(val, size, MPI_SHORT, root, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Bcast(short*, int) of size " << size
-                         << "!!!" );
+        MGMOL_MPI_ERROR("MPI_Bcast(short*, int) of size " << size << "!!!");
     }
 #else
     int mpi_err = 0;
@@ -226,8 +224,7 @@ int MGmol_MPI::bcastGlobal(double* val, int size, int root) const
     int mpi_err = MPI_Bcast(val, size, MPI_DOUBLE, root, comm_global_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Bcast(double*, int) of size " << size
-                         << "!!!");
+        MGMOL_MPI_ERROR("MPI_Bcast(double*, int) of size " << size << "!!!");
     }
 #else
     int mpi_err = 0;
@@ -241,8 +238,7 @@ int MGmol_MPI::bcastGlobal(short* val, int size, int root) const
     int mpi_err = MPI_Bcast(val, size, MPI_SHORT, root, comm_global_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Bcast(short*, int) of size " << size
-                         << "!!!");
+        MGMOL_MPI_ERROR("MPI_Bcast(short*, int) of size " << size << "!!!");
     }
 #else
     int mpi_err = 0;
@@ -256,8 +252,7 @@ int MGmol_MPI::bcastGlobal(int* val, int size, int root) const
     int mpi_err = MPI_Bcast(val, size, MPI_INT, root, comm_global_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Bcast(short*, int) of size " << size
-                         << "!!!");
+        MGMOL_MPI_ERROR("MPI_Bcast(short*, int) of size " << size << "!!!");
     }
 #else
     int mpi_err = 0;
@@ -271,8 +266,7 @@ int MGmol_MPI::bcast(char* val, int size, int root) const
     int mpi_err = MPI_Bcast(val, size, MPI_CHAR, root, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Bcast(char*, int) of size " << size
-                         << "!!!");
+        MGMOL_MPI_ERROR("MPI_Bcast(char*, int) of size " << size << "!!!");
     }
 #else
     int mpi_err = 0;
@@ -312,8 +306,8 @@ int MGmol_MPI::allreduce(
         = MPI_Allreduce(sendbuf, recvbuf, count, MPI_DOUBLE, op, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Allreduce(double*, double*) of size "
-                         << count << "!!!");
+        MGMOL_MPI_ERROR(
+            "MPI_Allreduce(double*, double*) of size " << count << "!!!");
     }
     return mpi_err;
 #else
@@ -329,8 +323,8 @@ int MGmol_MPI::allreduce(
         = MPI_Allreduce(sendbuf, recvbuf, count, MPI_FLOAT, op, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Allreduce(float*, float*) of size "
-                         << count << "!!!");
+        MGMOL_MPI_ERROR(
+            "MPI_Allreduce(float*, float*) of size " << count << "!!!");
     }
     return mpi_err;
 #else
@@ -345,8 +339,7 @@ int MGmol_MPI::allreduce(int* sendbuf, int* recvbuf, int count, MPI_Op op) const
         = MPI_Allreduce(sendbuf, recvbuf, count, MPI_INT, op, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Allreduce(int*, int*) of size "
-                         << count << "!!!");
+        MGMOL_MPI_ERROR("MPI_Allreduce(int*, int*) of size " << count << "!!!");
     }
     return mpi_err;
 #else
@@ -362,8 +355,7 @@ int MGmol_MPI::allreduce(
         = MPI_Allreduce(sendbuf, recvbuf, count, MPI_SHORT, op, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Allreduce(int*, int*) of size "
-                         << count << "!!!");
+        MGMOL_MPI_ERROR("MPI_Allreduce(int*, int*) of size " << count << "!!!");
     }
     return mpi_err;
 #else
@@ -379,8 +371,7 @@ int MGmol_MPI::allreduceGlobal(
         = MPI_Allreduce(sendbuf, recvbuf, count, MPI_INT, op, comm_global_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Allreduce(int*, int*) of size "
-                         << count << "!!!");
+        MGMOL_MPI_ERROR("MPI_Allreduce(int*, int*) of size " << count << "!!!");
     }
     return mpi_err;
 #else
@@ -396,8 +387,7 @@ int MGmol_MPI::allreduceGlobal(
         = MPI_Allreduce(sendbuf, recvbuf, count, MPI_DOUBLE, op, comm_global_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Allreduce(int*, int*) of size "
-                         << count << "!!!");
+        MGMOL_MPI_ERROR("MPI_Allreduce(int*, int*) of size " << count << "!!!");
     }
     return mpi_err;
 #else
@@ -455,8 +445,8 @@ int MGmol_MPI::allreduceImages(
         = MPI_Allreduce(sendbuf, recvbuf, count, MPI_DOUBLE, op, comm_images_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Allreduce(double*, double*) of size "
-                         << count << "!!!");
+        MGMOL_MPI_ERROR(
+            "MPI_Allreduce(double*, double*) of size " << count << "!!!");
     }
     return mpi_err;
 #else
@@ -596,8 +586,8 @@ int MGmol_MPI::allreduceSpin(
         sendbuf, recvbuf, count, MPI_DOUBLE, op, comm_different_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Allreduce(double*, double*) of size "
-                         << count << "!!!");
+        MGMOL_MPI_ERROR(
+            "MPI_Allreduce(double*, double*) of size " << count << "!!!");
     }
     return mpi_err;
 #else
@@ -616,8 +606,8 @@ int MGmol_MPI::allreduceSpin(
         sendbuf, recvbuf, count, MPI_FLOAT, op, comm_different_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Allreduce(double*, double*) of size "
-                         << count << "!!!");
+        MGMOL_MPI_ERROR(
+            "MPI_Allreduce(double*, double*) of size " << count << "!!!");
     }
     return mpi_err;
 #else
@@ -644,20 +634,20 @@ int MGmol_MPI::exchangeDataSpin(
         comm_different_spin_, &requestr);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MGmol_MPI::exchangeDataSpin(), MPI_Irecv failed!!!");
+        MGMOL_MPI_ERROR("MGmol_MPI::exchangeDataSpin(), MPI_Irecv failed!!!");
     }
     MPI_Request requests;
     mpi_err = MPI_Isend(localdata, count, MPI_DOUBLE, dst, (myspin_ + 1) % 2,
         comm_different_spin_, &requests);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MGmol_MPI::exchangeDataSpin(), MPI_Isend failed!!!");
+        MGMOL_MPI_ERROR("MGmol_MPI::exchangeDataSpin(), MPI_Isend failed!!!");
     }
 
     mpi_err = MPI_Wait(&requestr, MPI_STATUS_IGNORE);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MGmol_MPI::exchangeDataSpin() !!!");
+        MGMOL_MPI_ERROR("MGmol_MPI::exchangeDataSpin() !!!");
     }
     // barrier();
 
@@ -693,13 +683,13 @@ int MGmol_MPI::exchangeDataSpin(
         comm_different_spin_, &requests);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "exchangeDataSpin(), MPI_Isend failed!!!");
+        MGMOL_MPI_ERROR("exchangeDataSpin(), MPI_Isend failed!!!");
     }
 
     mpi_err = MPI_Wait(&requestr, MPI_STATUS_IGNORE);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MGmol_MPI::exchangeDataSpin() !!!");
+        MGMOL_MPI_ERROR("MGmol_MPI::exchangeDataSpin() !!!");
     }
     // barrier();
 
@@ -717,7 +707,7 @@ bool MGmol_MPI::compareSpin(const double val)
     if (fabs(val - otherval) > 1.e-8)
     {
         if (instancePE0())
-            MGMOL_MPI_ERROR( "val=" << val << ", other val=" << otherval);
+            MGMOL_MPI_ERROR("val=" << val << ", other val=" << otherval);
     }
     return true;
 }
@@ -728,7 +718,7 @@ int MGmol_MPI::send(double* sendbuf, int count, int dest) const
     int mpi_err = MPI_Send(sendbuf, count, MPI_DOUBLE, dest, 0, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Send() of size " << count << "!!!");
+        MGMOL_MPI_ERROR("MPI_Send() of size " << count << "!!!");
     }
     return mpi_err;
 #else
@@ -744,7 +734,7 @@ int MGmol_MPI::recv(double* recvbuf, int count, int src) const
         = MPI_Recv(recvbuf, count, MPI_DOUBLE, src, 0, comm_spin_, &status);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Recv() of size " << count << "!!!");
+        MGMOL_MPI_ERROR("MPI_Recv() of size " << count << "!!!");
     }
     return mpi_err;
 #else
@@ -758,7 +748,7 @@ int MGmol_MPI::send(float* sendbuf, int count, int dest) const
     int mpi_err = MPI_Send(sendbuf, count, MPI_FLOAT, dest, 0, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Send() of size " << count << "!!!");
+        MGMOL_MPI_ERROR("MPI_Send() of size " << count << "!!!");
     }
     return mpi_err;
 #else
@@ -774,7 +764,7 @@ int MGmol_MPI::recv(float* recvbuf, int count, int src) const
         = MPI_Recv(recvbuf, count, MPI_FLOAT, src, 0, comm_spin_, &status);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Recv() of size " << count << "!!!");
+        MGMOL_MPI_ERROR("MPI_Recv() of size " << count << "!!!");
     }
     return mpi_err;
 #else
@@ -788,7 +778,7 @@ int MGmol_MPI::send(int* sendbuf, int count, int dest) const
     int mpi_err = MPI_Send(sendbuf, count, MPI_INT, dest, 0, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Send() of size " << count << "!!!");
+        MGMOL_MPI_ERROR("MPI_Send() of size " << count << "!!!");
     }
     return mpi_err;
 #else
@@ -804,7 +794,7 @@ int MGmol_MPI::recv(int* recvbuf, int count, int src) const
         = MPI_Recv(recvbuf, count, MPI_INT, src, 0, comm_spin_, &status);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Recv() of size " << count << "!!!");
+        MGMOL_MPI_ERROR("MPI_Recv() of size " << count << "!!!");
     }
     return mpi_err;
 #else
@@ -829,7 +819,7 @@ int MGmol_MPI::bcast(string& common_string, MPI_Comm comm) const
     int mpi_err    = MPI_Bcast(&size_str, 1, MPI_SHORT, 0, comm);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MGmol_MPI::bcast(), ERROR in bcast of 1 short!!!");
+        MGMOL_MPI_ERROR("MGmol_MPI::bcast(), ERROR in bcast of 1 short!!!");
     }
     assert(size_str < 256);
 
@@ -842,8 +832,7 @@ int MGmol_MPI::bcast(string& common_string, MPI_Comm comm) const
     mpi_err = MPI_Bcast(buffer, size_str + 1, MPI_CHAR, 0, comm);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Bcast(char*, int) of size "
-                         << size_str << "!!!");
+        MGMOL_MPI_ERROR("MPI_Bcast(char*, int) of size " << size_str << "!!!");
     }
 
     common_string.assign(&buffer[0], size_str);
@@ -883,7 +872,7 @@ int MGmol_MPI::gather(
         sendbuf, count, MPI_FLOAT, recvbuf, count, MPI_FLOAT, root, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_gather for int in MGmol_MPI::gather() !!!");
+        MGMOL_MPI_ERROR("MPI_gather for int in MGmol_MPI::gather() !!!");
     }
 
     return mpi_err;
@@ -902,7 +891,7 @@ int MGmol_MPI::gather(
         sendbuf, count, MPI_INT, recvbuf, count, MPI_INT, root, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_gather for int in MGmol_MPI::gather() !!!");
+        MGMOL_MPI_ERROR("MPI_gather for int in MGmol_MPI::gather() !!!");
     }
 
     return mpi_err;
@@ -920,7 +909,8 @@ int MGmol_MPI::allGather(vector<double>& sendbuf, vector<double>& recvbuf)
         count, MPI_DOUBLE, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Allgather for double in MGmol_MPI::allGather() !!!");
+        MGMOL_MPI_ERROR(
+            "MPI_Allgather for double in MGmol_MPI::allGather() !!!");
     }
 
     return mpi_err;
@@ -938,7 +928,7 @@ int MGmol_MPI::allGather(vector<int>& sendbuf, vector<int>& recvbuf)
         &sendbuf[0], count, MPI_INT, &recvbuf[0], count, MPI_INT, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Allgather for int in MGmol_MPI::allGather() !!!");
+        MGMOL_MPI_ERROR("MPI_Allgather for int in MGmol_MPI::allGather() !!!");
     }
 
     return mpi_err;
@@ -957,7 +947,7 @@ int MGmol_MPI::allGather(
         sendbuf, count, MPI_DOUBLE, recvbuf, count, MPI_DOUBLE, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Allgather for int in MGmol_MPI::allGather() !!!");
+        MGMOL_MPI_ERROR("MPI_Allgather for int in MGmol_MPI::allGather() !!!");
     }
 
     return mpi_err;
@@ -976,7 +966,7 @@ int MGmol_MPI::allGather(
         sendbuf, count, MPI_FLOAT, recvbuf, count, MPI_FLOAT, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Allgather for int in MGmol_MPI::allGather() !!!");
+        MGMOL_MPI_ERROR("MPI_Allgather for int in MGmol_MPI::allGather() !!!");
     }
 
     return mpi_err;
@@ -995,7 +985,7 @@ int MGmol_MPI::allGather(
         sendbuf, count, MPI_INT, recvbuf, count, MPI_INT, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Allgather for int in MGmol_MPI::allGather() !!!");
+        MGMOL_MPI_ERROR("MPI_Allgather for int in MGmol_MPI::allGather() !!!");
     }
 
     return mpi_err;
@@ -1014,7 +1004,8 @@ int MGmol_MPI::allGatherImages(vector<double>& sendbuf, vector<double>& recvbuf)
         count, MPI_DOUBLE, comm_images_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Allgather for double in MGmol_MPI::allGather() !!!");
+        MGMOL_MPI_ERROR(
+            "MPI_Allgather for double in MGmol_MPI::allGather() !!!");
     }
 
     return mpi_err;
@@ -1039,7 +1030,7 @@ int MGmol_MPI::allGatherImages(vector<int>& sendbuf, vector<int>& recvbuf)
         &sendbuf[0], count, MPI_INT, &recvbuf[0], count, MPI_INT, comm_images_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Allgather for int in MGmol_MPI::allGather() !!!");
+        MGMOL_MPI_ERROR("MPI_Allgather for int in MGmol_MPI::allGather() !!!");
     }
 
     return mpi_err;
@@ -1064,7 +1055,7 @@ int MGmol_MPI::allGatherImages(vector<short>& sendbuf, vector<short>& recvbuf)
         count, MPI_SHORT, comm_images_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Allgather for int in MGmol_MPI::allGather() !!!");
+        MGMOL_MPI_ERROR("MPI_Allgather for int in MGmol_MPI::allGather() !!!");
     }
 
     return mpi_err;
@@ -1082,7 +1073,7 @@ int MGmol_MPI::allGatherV(vector<double>& sendbuf, vector<double>& recvbuf)
         &sendcount, 1, MPI_INT, recvcounts, 1, MPI_INT, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Allgather in MGmol_MPI::allGatherV() !!!");
+        MGMOL_MPI_ERROR("MPI_Allgather in MGmol_MPI::allGatherV() !!!");
     }
 
     int* displs = new int[size_];
@@ -1099,7 +1090,7 @@ int MGmol_MPI::allGatherV(vector<double>& sendbuf, vector<double>& recvbuf)
         recvcounts, displs, MPI_DOUBLE, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Allgatherv in MGmol_MPI::allGatherV() !!!");
+        MGMOL_MPI_ERROR("MPI_Allgatherv in MGmol_MPI::allGatherV() !!!");
     }
 
     delete[] displs;
@@ -1120,7 +1111,7 @@ int MGmol_MPI::allGatherV(vector<float>& sendbuf, vector<float>& recvbuf)
         &sendcount, 1, MPI_INT, recvcounts, 1, MPI_INT, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Allgather in MGmol_MPI::allGatherV() !!!");
+        MGMOL_MPI_ERROR("MPI_Allgather in MGmol_MPI::allGatherV() !!!");
     }
 
     int* displs = new int[size_];
@@ -1137,7 +1128,7 @@ int MGmol_MPI::allGatherV(vector<float>& sendbuf, vector<float>& recvbuf)
         recvcounts, displs, MPI_FLOAT, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Allgatherv in MGmol_MPI::allGatherV() !!!");
+        MGMOL_MPI_ERROR("MPI_Allgatherv in MGmol_MPI::allGatherV() !!!");
     }
 
     delete[] displs;
@@ -1158,7 +1149,7 @@ int MGmol_MPI::allGatherV(vector<int>& sendbuf, vector<int>& recvbuf)
         &sendcount, 1, MPI_INT, recvcounts, 1, MPI_INT, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Allgather in MGmol_MPI::allGatherV() !!!");
+        MGMOL_MPI_ERROR("MPI_Allgather in MGmol_MPI::allGatherV() !!!");
     }
 
     int* displs = new int[size_];
@@ -1175,7 +1166,7 @@ int MGmol_MPI::allGatherV(vector<int>& sendbuf, vector<int>& recvbuf)
         recvcounts, displs, MPI_INT, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Allgatherv in MGmol_MPI::allGatherV() !!!");
+        MGMOL_MPI_ERROR("MPI_Allgatherv in MGmol_MPI::allGatherV() !!!");
     }
 
     delete[] displs;
@@ -1196,7 +1187,7 @@ int MGmol_MPI::allGatherV(vector<short>& sendbuf, vector<short>& recvbuf)
         &sendcount, 1, MPI_INT, recvcounts, 1, MPI_INT, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Allgather in MGmol_MPI::allGatherV() !!!");
+        MGMOL_MPI_ERROR("MPI_Allgather in MGmol_MPI::allGatherV() !!!");
     }
 
     int* displs = new int[size_];
@@ -1213,7 +1204,7 @@ int MGmol_MPI::allGatherV(vector<short>& sendbuf, vector<short>& recvbuf)
         recvcounts, displs, MPI_SHORT, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Allgatherv in MGmol_MPI::allGatherV() !!!");
+        MGMOL_MPI_ERROR("MPI_Allgatherv in MGmol_MPI::allGatherV() !!!");
     }
 
     delete[] displs;
@@ -1235,7 +1226,7 @@ int MGmol_MPI::allGatherV(
         &sendcount, 1, MPI_INT, recvcounts, 1, MPI_INT, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Allgather in MGmol_MPI::allGatherV() !!!");
+        MGMOL_MPI_ERROR("MPI_Allgather in MGmol_MPI::allGatherV() !!!");
     }
 
     int* displs = new int[size_];
@@ -1252,7 +1243,7 @@ int MGmol_MPI::allGatherV(
         &recvbuf[0], recvcounts, displs, MPI_UNSIGNED_SHORT, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Allgatherv in MGmol_MPI::allGatherV() !!!");
+        MGMOL_MPI_ERROR("MPI_Allgatherv in MGmol_MPI::allGatherV() !!!");
     }
 
     delete[] displs;
@@ -1317,7 +1308,7 @@ int MGmol_MPI::allGatherV(vector<string>& sendbuf, vector<string>& recvbuf)
         recvcounts, displs, MPI_CHAR, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_Allgatherv in MGmol_MPI::allGatherV() !!!");
+        MGMOL_MPI_ERROR("MPI_Allgatherv in MGmol_MPI::allGatherV() !!!");
     }
 
     // reset recvbuf
@@ -1372,7 +1363,7 @@ int MGmol_MPI::scatter(
         MPI_DOUBLE, root, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_gather for int in MGmol_MPI::scatter() !!!");
+        MGMOL_MPI_ERROR("MPI_gather for int in MGmol_MPI::scatter() !!!");
     }
 
     return mpi_err;
@@ -1390,7 +1381,7 @@ int MGmol_MPI::scatter(
         sendbuf, count, MPI_FLOAT, recvbuf, count, MPI_FLOAT, root, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_gather for int in MGmol_MPI::scatter() !!!");
+        MGMOL_MPI_ERROR("MPI_gather for int in MGmol_MPI::scatter() !!!");
     }
 
     return mpi_err;
@@ -1408,7 +1399,7 @@ int MGmol_MPI::scatter(
         sendbuf, count, MPI_INT, recvbuf, count, MPI_INT, root, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR( "MPI_gather for int in MGmol_MPI::scatter() !!!");
+        MGMOL_MPI_ERROR("MPI_gather for int in MGmol_MPI::scatter() !!!");
     }
 
     return mpi_err;
@@ -1439,9 +1430,9 @@ void MGmol_MPI::split_allreduce_sums_float(float* array, const int nelements)
             array_ptr, work_float, newsize, MPI_FLOAT, MPI_SUM, commSpin());
         if (rc != MPI_SUCCESS)
         {
-            MGMOL_MPI_ERROR( "MPI_allreduce float sum failed!!!");
+            MGMOL_MPI_ERROR("MPI_allreduce float sum failed!!!");
         }
-        memcpy(array_ptr, work_float, newsize*sizeof(float));
+        memcpy(array_ptr, work_float, newsize * sizeof(float));
 
         array_ptr += newsize;
     }
@@ -1455,7 +1446,7 @@ void MGmol_MPI::split_allreduce_sums_float(float* array, const int nelements)
         {
             MGMOL_MPI_ERROR("MPI_allreduce float sum failed!!!");
         }
-        memcpy(array_ptr, work_float, remainder*sizeof(float));
+        memcpy(array_ptr, work_float, remainder * sizeof(float));
     }
 
     delete[] work_float;
@@ -1483,9 +1474,9 @@ void MGmol_MPI::split_allreduce_sums_double(double* array, const int nelements)
             array_ptr, work_double, newsize, MPI_DOUBLE, MPI_SUM, commSpin());
         if (rc != MPI_SUCCESS)
         {
-            MGMOL_MPI_ERROR( "MPI_allreduce double sum failed!!!");
+            MGMOL_MPI_ERROR("MPI_allreduce double sum failed!!!");
         }
-        memcpy(array_ptr, work_double, newsize*sizeof(double));
+        memcpy(array_ptr, work_double, newsize * sizeof(double));
 
         array_ptr += newsize;
     }
@@ -1497,9 +1488,9 @@ void MGmol_MPI::split_allreduce_sums_double(double* array, const int nelements)
             array_ptr, work_double, remainder, MPI_DOUBLE, MPI_SUM, commSpin());
         if (rc != MPI_SUCCESS)
         {
-            MGMOL_MPI_ERROR( "MPI_allreduce double sum failed!!!");
+            MGMOL_MPI_ERROR("MPI_allreduce double sum failed!!!");
         }
-        memcpy(array_ptr, work_double, remainder*sizeof(double));
+        memcpy(array_ptr, work_double, remainder * sizeof(double));
     }
 
     delete[] work_double;
@@ -1524,7 +1515,7 @@ void MGmol_MPI::split_allreduce_sums_int(int* array, const int nelements)
             array_ptr, work_int, newsize, MPI_INT, MPI_SUM, commSpin());
         if (rc != MPI_SUCCESS)
         {
-            MGMOL_MPI_ERROR( "MPI_allreduce int sum failed!!!");
+            MGMOL_MPI_ERROR("MPI_allreduce int sum failed!!!");
         }
         memcpy(array_ptr, work_int, newsize * sizeof(int));
 
@@ -1538,7 +1529,7 @@ void MGmol_MPI::split_allreduce_sums_int(int* array, const int nelements)
             array_ptr, work_int, remainder, MPI_INT, MPI_SUM, commSpin());
         if (rc != MPI_SUCCESS)
         {
-            MGMOL_MPI_ERROR( "MPI_allreduce int sum failed!!!");
+            MGMOL_MPI_ERROR("MPI_allreduce int sum failed!!!");
         }
         memcpy(array_ptr, work_int, remainder * sizeof(int));
     }
@@ -1566,8 +1557,8 @@ void MGmol_MPI::split_allreduce_sums_short(
             array_ptr, work_short, newsize, MPI_SHORT, MPI_SUM, commSpin());
         if (rc != MPI_SUCCESS)
         {
-            MGMOL_MPI_ERROR( "ERROR MGmol_MPI::split_allreduce_sums_short: "
-                             "MPI_allreduce int sum failed!!!")
+            MGMOL_MPI_ERROR("ERROR MGmol_MPI::split_allreduce_sums_short: "
+                            "MPI_allreduce int sum failed!!!")
         }
         memcpy(array_ptr, work_short, newsize * sizeof(short));
 
@@ -1581,8 +1572,8 @@ void MGmol_MPI::split_allreduce_sums_short(
             array_ptr, work_short, remainder, MPI_SHORT, MPI_SUM, commSpin());
         if (rc != MPI_SUCCESS)
         {
-            MGMOL_MPI_ERROR( "ERROR MGmol_MPI::split_allreduce_sums_short: "
-                             "MPI_allreduce int sum failed!!!");
+            MGMOL_MPI_ERROR("ERROR MGmol_MPI::split_allreduce_sums_short: "
+                            "MPI_allreduce int sum failed!!!");
         }
         memcpy(array_ptr, work_short, remainder * sizeof(short));
     }

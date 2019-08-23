@@ -323,7 +323,7 @@ Vector3D Grid::closestGridPt(Vector3D coords) const
     return coords;
 }
 
-double Grid::integralOverMesh(const double* const func)const
+double Grid::integralOverMesh(const double* const func) const
 {
     assert(vel_ > 0.000001);
     assert(vel_ < 1000.);
@@ -340,11 +340,12 @@ double Grid::integralOverMesh(const double* const func)const
 }
 
 template void Grid::getSinCosFunctions(std::vector<float>& sinx,
-    std::vector<float>& siny,
-    std::vector<float>& sinz, std::vector<float>& cosx, std::vector<float>& cosy,
+    std::vector<float>& siny, std::vector<float>& sinz,
+    std::vector<float>& cosx, std::vector<float>& cosy,
     std::vector<float>& cosz) const;
 template void Grid::getSinCosFunctions(std::vector<double>& sinx,
-    std::vector<double>& siny, std::vector<double>& sinz, std::vector<double>& cosx,
-    std::vector<double>& cosy, std::vector<double>& cosz) const;
+    std::vector<double>& siny, std::vector<double>& sinz,
+    std::vector<double>& cosx, std::vector<double>& cosy,
+    std::vector<double>& cosz) const;
 
 } // namespace pb

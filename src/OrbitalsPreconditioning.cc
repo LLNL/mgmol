@@ -20,7 +20,6 @@
 #include "Preconditioning.h"
 #include "ProjectedMatricesInterface.h"
 
-
 template <class T>
 OrbitalsPreconditioning<T>::~OrbitalsPreconditioning()
 {
@@ -41,9 +40,8 @@ OrbitalsPreconditioning<T>::~OrbitalsPreconditioning()
 }
 
 template <class T>
-void OrbitalsPreconditioning<T>::setup(T& orbitals,
-    const short mg_levels, const short lap_type, MasksSet* currentMasks,
-    LocalizationRegions* lrs)
+void OrbitalsPreconditioning<T>::setup(T& orbitals, const short mg_levels,
+    const short lap_type, MasksSet* currentMasks, LocalizationRegions* lrs)
 {
     assert(!is_set_);
 
@@ -144,8 +142,9 @@ void OrbitalsPreconditioning<T>::precond_mg(T& orbitals)
     }
 
 #ifdef PRINT_OPERATIONS
-    if (onpe0) (*MPIdata::sout)
-        << "OrbitalsPreconditioning<T>::precond_mg() done" << endl;
+    if (onpe0)
+        (*MPIdata::sout) << "OrbitalsPreconditioning<T>::precond_mg() done"
+                         << endl;
 #endif
     precond_tm_.stop();
 }

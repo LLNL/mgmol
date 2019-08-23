@@ -22,8 +22,7 @@ void SpreadPenalty<T>::addResidual(T& phi, T& res)
 }
 
 template <class T>
-void SpreadPenalty<T>::addResidual(
-    T& phi, T& res, bool xlbomd)
+void SpreadPenalty<T>::addResidual(T& phi, T& res, bool xlbomd)
 {
     Control& ct = *(Control::instance());
 
@@ -136,8 +135,8 @@ float SpreadPenalty<T>::computeSpreadPenaltyFactorXLBOMD(const float spread2)
 template <class T>
 void SpreadPenalty<T>::computeAndAddResidualSpreadPenalty(
     const vector<float>& lagrangemult, const vector<float>& factors,
-    const vector<Vector3D>& centers, const vector<int>& gids,
-    T& orbitals, T& res)
+    const vector<Vector3D>& centers, const vector<int>& gids, T& orbitals,
+    T& res)
 {
     assert(lagrangemult.size() == centers.size());
     assert(factors.size() == centers.size());

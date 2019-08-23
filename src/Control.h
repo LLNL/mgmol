@@ -40,7 +40,7 @@ enum class OuterSolverType
     PolakRibiere,
     NLCG,
     Davidson,
-    UNDEFINED    
+    UNDEFINED
 };
 
 enum class WFExtrapolationType
@@ -48,7 +48,7 @@ enum class WFExtrapolationType
     Order2,
     Order3,
     Reversible,
-    UNDEFINED    
+    UNDEFINED
 };
 
 enum class AtomsDynamicType
@@ -600,7 +600,7 @@ public:
 
     OuterSolverType OuterSolver()
     {
-        switch(it_algo_type_)
+        switch (it_algo_type_)
         {
             case 0:
                 return OuterSolverType::ABPG;
@@ -617,7 +617,7 @@ public:
 
     WFExtrapolationType WFExtrapolation()
     {
-        switch(wf_extrapolation_)
+        switch (wf_extrapolation_)
         {
             case 0:
                 return WFExtrapolationType::Reversible;
@@ -632,7 +632,7 @@ public:
 
     AtomsDynamicType AtomsDynamic()
     {
-        switch(atoms_dyn_)
+        switch (atoms_dyn_)
         {
             case 0:
                 return AtomsDynamicType::Quench;
@@ -649,7 +649,7 @@ public:
 
     DMNonLinearSolverType DM_solver() const
     {
-        switch(DM_solver_)
+        switch (DM_solver_)
         {
             case 0:
                 return DMNonLinearSolverType::Mixing;
@@ -664,7 +664,7 @@ public:
 
     DMEigensolverType DMEigensolver() const
     {
-        switch(dm_algo_)
+        switch (dm_algo_)
         {
             case 0:
                 return DMEigensolverType::Eigensolver;
@@ -675,13 +675,13 @@ public:
             case 2:
                 return DMEigensolverType::SP2;
             default:
-                return DMEigensolverType::UNDEFINED;                
+                return DMEigensolverType::UNDEFINED;
         }
     }
 
     OrbitalsType getOrbitalsType()
     {
-        switch(orbital_type_)
+        switch (orbital_type_)
         {
             case 0:
                 return OrbitalsType::Eigenfunctions;
@@ -694,10 +694,7 @@ public:
         }
     }
 
-    bool AtomsMove()
-    {
-        return (atoms_dyn_!=0);
-    }
+    bool AtomsMove() { return (atoms_dyn_ != 0); }
 };
 
 #endif
