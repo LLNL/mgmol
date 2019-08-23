@@ -4,10 +4,12 @@ cd $1
 rm -rf build
 mkdir build && cd build
 ARGS=(
-  -D SCALAPACK_LIBRARY=/usr/lib/x86_64-linux-gnu/libscalapack-openmpi.so.2.0
+  -D SCALAPACK_ROOT=/usr/lib/x86_64-linux-gnu
+  -D MGMOL_WITH_CLANG_FORMAT=ON
   )
 cmake "${ARGS[@]}" ../
 make -j8
 ctest --no-compress-output -T Test
+make format && git diff --exit-code
 
 exit 0

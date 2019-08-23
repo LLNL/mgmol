@@ -8,6 +8,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
       gcc \
       gfortran \
       build-essential \
+      clang-format \
       wget \
       curl \
       bison \
