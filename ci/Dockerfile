@@ -11,6 +11,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
       clang-format \
       wget \
       curl \
+      lcov \
       bison \
       git \
       pkg-config \
