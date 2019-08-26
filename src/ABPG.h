@@ -50,24 +50,29 @@ public:
           proj_matrices_(proj_matrices),
           mgmol_strategy_(mgmol_strategy),
           os_(os),
-          wf_mix_(0)
+          wf_mix_(nullptr)
     {
     }
 
     ~ABPG()
     {
-        if (wf_mix_ != 0)
+        if (wf_mix_ != nullptr)
         {
             delete wf_mix_;
-            wf_mix_ = 0;
+            wf_mix_ = nullptr;
         }
     }
 
     void setup(T&);
 
-    int update(T& orbitals, Ions& ions, const double precond_factor,
+    int updateWF(T& orbitals, Ions& ions, const double precond_factor,
         const bool orthof, T& work_orbitals, const bool accelerate,
         const bool print_res, const double atol);
+
+    void restartMixing()
+    {
+        if (wf_mix_ != nullptr) wf_mix_->restart();
+    }
 
     static void printTimers(std::ostream& os);
 };

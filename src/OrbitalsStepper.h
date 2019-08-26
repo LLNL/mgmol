@@ -23,10 +23,12 @@ public:
 
     virtual void setup(T&) = 0;
 
-    virtual int update(T& orbitals, Ions& ions, const double precond_factor,
+    virtual int updateWF(T& orbitals, Ions& ions, const double precond_factor,
         const bool orthof, T& work_orbitals, const bool accelerate,
         const bool print_res, const double atol)
         = 0;
+
+    virtual void restartMixing(){};
 };
 
 #endif
