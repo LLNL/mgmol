@@ -40,7 +40,7 @@ void ABPG<T>::setup(T& orbitals)
 //
 // orthof=true: wants orthonormalized updated wave functions
 template <class T>
-int ABPG<T>::update(T& orbitals, Ions& ions, const double precond_factor,
+int ABPG<T>::updateWF(T& orbitals, Ions& ions, const double precond_factor,
     const bool orthof, T& work_orbitals, const bool accelerate,
     const bool print_res, const double atol)
 {
@@ -63,35 +63,6 @@ int ABPG<T>::update(T& orbitals, Ions& ions, const double precond_factor,
 
     // update wavefunctions
     update_states(orbitals, res, work_orbitals, precond_factor, accelerate);
-
-    bool flag_ortho = false;
-    if (ct.getOrbitalsType() == OrbitalsType::Eigenfunctions || orthof)
-    {
-        if (ct.isLocMode())
-        {
-            // orbitals.ortho_norm_local();
-            orbitals.normalize();
-        }
-        else
-        {
-            orbitals.orthonormalizeLoewdin();
-            flag_ortho = true;
-        }
-        if (ct.wf_dyn) // restart mixing after (ortho-)normalization
-        {
-            if (wf_mix_ != 0) wf_mix_->restart();
-        }
-    }
-    else if (ct.getOrbitalsType() != OrbitalsType::Orthonormal)
-    {
-        orbitals.normalize();
-    }
-
-    // if orthonorm() not called, recompute overlap
-    if (!flag_ortho && ct.getOrbitalsType() != OrbitalsType::Orthonormal)
-    {
-        orbitals.computeGramAndInvS();
-    }
 
 #if 0
     int msize=ct.numst;

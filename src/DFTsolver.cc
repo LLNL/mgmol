@@ -340,18 +340,45 @@ int DFTsolver<T>::solve(T& orbitals, T& work_orbitals, Ions& ions,
 
         bool print_res = checkPrintResidual(step);
 
-        // strip dm from the overlap contribution
-        // dm <- Ls**T * dm * Ls
-        dm_strategy_->stripDM();
+        const bool ortho
+            = (ct.getOrbitalsType() == OrbitalsType::Eigenfunctions || orthof);
+
+        if (!ortho)
+        {
+            // strip dm from the overlap contribution
+            // dm <- Ls**T * dm * Ls
+            dm_strategy_->stripDM();
+        }
 
         // one step wave functions update
         // S and S^-1 should be up to date after that call
         const double restol = ct.checkResidual() ? ct.conv_tol : -1.;
-        retval = orbitals_stepper_->update(orbitals, ions, ct.precond_factor,
+        retval = orbitals_stepper_->updateWF(orbitals, ions, ct.precond_factor,
             orthof, work_orbitals, accelerate_, print_res, restol);
 
-        // rebuild dm with new overlap matrix
-        dm_strategy_->dressDM();
+        if (ortho)
+        {
+            if (ct.isLocMode())
+            {
+                orbitals.normalize();
+            }
+            else
+            {
+                orbitals.orthonormalizeLoewdin();
+
+                orbitals_stepper_->restartMixing();
+            }
+        }
+        else
+        {
+            orbitals.normalize();
+
+            // if orthonorm() not called, recompute overlap
+            orbitals.computeGramAndInvS();
+
+            // rebuild dm with new overlap matrix
+            dm_strategy_->dressDM();
+        }
 
         if (retval == 0)
         {

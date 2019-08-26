@@ -76,7 +76,7 @@ public:
 
     void setup(T&){};
 
-    int update(T& orbitals, Ions& ions, const double precond_factor,
+    int updateWF(T& orbitals, Ions& ions, const double precond_factor,
         const bool orthof, T& work_orbitals, const bool accelerate,
         const bool print_res, const double atol);
 
