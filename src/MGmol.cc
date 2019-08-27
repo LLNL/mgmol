@@ -997,8 +997,8 @@ void MGmol<T>::setup()
     if (ct.verbose > 0) printWithTimeStamp("MGmol<T>::setup()...", os_);
 
     if (ct.verbose > 0) printWithTimeStamp("Setup VH...", os_);
-    electrostat_
-        = new Electrostatic(ct.lap_type, ct.bcPoisson, ct.screening_const);
+    electrostat_ = new Electrostatic(
+        ct.getPoissonFDtype(), ct.bcPoisson, ct.screening_const);
     electrostat_->setup(ct.vh_init);
 
     rho_ = new Rho<T>();

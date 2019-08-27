@@ -323,7 +323,7 @@ void Control::sync(void)
     if (onpe0 && verbose > 0) (*MPIdata::sout) << "Control::sync()" << endl;
 #ifdef USE_MPI
     // pack
-    const short size_short_buffer = 89;
+    const short size_short_buffer = 91;
     short* short_buffer           = new short[size_short_buffer];
     if (mype_ == 0)
     {
@@ -411,6 +411,7 @@ void Control::sync(void)
         short_buffer[85] = dm_use_old_;
         short_buffer[86] = max_electronic_steps_tight_;
         short_buffer[88] = hartree_reset_;
+        short_buffer[90] = (short)static_cast<int>(poisson_lap_type_);
     }
     else
     {
@@ -611,6 +612,7 @@ void Control::sync(void)
     dm_use_old_                      = short_buffer[85];
     max_electronic_steps_tight_      = short_buffer[86];
     hartree_reset_                   = short_buffer[88];
+    poisson_lap_type_ = static_cast<PoissonFDtype>(short_buffer[90]);
 
     numst    = int_buffer[0];
     nel_     = int_buffer[1];
@@ -1479,6 +1481,16 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         rescale_v_ = vm["Restart.rescale_v"].as<double>();
 
         // Poisson solver
+        str = vm["Poisson.FDtype"].as<string>();
+        if (str.compare("2nd") == 0) poisson_lap_type_ = PoissonFDtype::h2;
+        if (str.compare("4th") == 0) poisson_lap_type_ = PoissonFDtype::h4;
+        if (str.compare("6th") == 0) poisson_lap_type_ = PoissonFDtype::h6;
+        if (str.compare("8th") == 0) poisson_lap_type_ = PoissonFDtype::h8;
+        if (str.compare("Mehrstellen") == 0)
+            poisson_lap_type_ = PoissonFDtype::h4M;
+        if (str.compare("Mehrstellen2") == 0)
+            poisson_lap_type_ = PoissonFDtype::h4MP;
+
         str = vm["Poisson.bcx"].as<string>();
         if (str.compare("0") == 0) bcPoisson[0] = 0;
         if (str.compare("periodic") == 0) bcPoisson[0] = 1;

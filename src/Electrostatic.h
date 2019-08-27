@@ -11,6 +11,7 @@
 #ifndef MGMOL_ELECTROSTATIC_H
 #define MGMOL_ELECTROSTATIC_H
 
+#include "Control.h"
 #include "GridFunc.h"
 #include "Poisson.h"
 #include "Rho.h"
@@ -21,7 +22,7 @@ class Potentials;
 
 class Electrostatic
 {
-    short laptype_;
+    PoissonFDtype laptype_;
     short bc_[3];
     pb::Grid* pbGrid_;
     bool diel_flag_;
@@ -41,7 +42,7 @@ class Electrostatic
     static Timer solve_tm_;
 
 public:
-    Electrostatic(const short lap_type, const short bc[3],
+    Electrostatic(PoissonFDtype lap_type, const short bc[3],
         const double screening_const = 0.);
     ~Electrostatic();
     static Timer solve_tm() { return solve_tm_; }
