@@ -1297,11 +1297,11 @@ void ExtendedGridOrbitals::orthonormalizeLoewdin(
     if (matrixTransform == 0)
         localP = new SquareLocalMatrices<MATDTYPE>(subdivx_, numst_);
 
-    projmatrices->getLoewdinTransform(*localP);
+    incrementIterativeIndex();
+
+    projmatrices->computeLoewdinTransform(*localP, getIterativeIndex());
 
     multiplyByMatrix(*localP);
-
-    incrementIterativeIndex();
 
 #if 0 // test
     computeGram(0);
