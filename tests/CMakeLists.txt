@@ -196,39 +196,37 @@ target_include_directories(testAndersonMix PRIVATE
                            ${CMAKE_SOURCE_DIR}/tests/Anderson
                            ${HDF5_INCLUDE_DIRS})
 
-target_link_libraries(testHDF5P ${HDF5_LIBRARIES}
-                                ${MPI_CXX_LIBRARIES})
-target_link_libraries(testMPI ${MPI_CXX_LIBRARIES})
+target_link_libraries(testHDF5P ${HDF5_LIBRARIES} MPI::MPI_CXX)
+target_link_libraries(testMPI MPI::MPI_CXX)
 target_link_libraries(testBlacsContext ${SCALAPACK_LIBRARIES}
                                        ${BLAS_LIBRARIES}
-                                       ${MPI_CXX_LIBRARIES})
+                                       MPI::MPI_CXX)
 target_link_libraries(testDistVector ${SCALAPACK_LIBRARIES}
                                      ${BLAS_LIBRARIES}
-                                     ${MPI_CXX_LIBRARIES})
+                                     MPI::MPI_CXX)
 target_link_libraries(testReplicated2DistMatrix ${SCALAPACK_LIBRARIES}
-                                     ${BLAS_LIBRARIES}
-                                     ${MPI_CXX_LIBRARIES})
+                                                ${BLAS_LIBRARIES}
+                                                MPI::MPI_CXX)
 target_link_libraries(testDistMatrix ${SCALAPACK_LIBRARIES}
                                      ${BLAS_LIBRARIES}
-                                     ${MPI_CXX_LIBRARIES})
+                                     MPI::MPI_CXX)
 target_link_libraries(testConditionDistMatrix ${SCALAPACK_LIBRARIES}
                                               ${BLAS_LIBRARIES}
-                                              ${MPI_CXX_LIBRARIES})
+                                              MPI::MPI_CXX)
 target_link_libraries(testConditionDistMatrixPower ${SCALAPACK_LIBRARIES}
-                                              ${BLAS_LIBRARIES}
-                                              ${MPI_CXX_LIBRARIES})
+                                                   ${BLAS_LIBRARIES}
+                                                   MPI::MPI_CXX)
 target_link_libraries(testPower ${BLAS_LIBRARIES}
                                 ${SCALAPACK_LIBRARIES}
-                                ${MPI_CXX_LIBRARIES})
+                                MPI::MPI_CXX)
 target_link_libraries(testPowerDistMatrix ${BLAS_LIBRARIES}
-                                ${SCALAPACK_LIBRARIES}
-                                ${MPI_CXX_LIBRARIES})
-target_link_libraries(testDirectionalReduce ${MPI_CXX_LIBRARIES})
+                                          ${SCALAPACK_LIBRARIES}
+                                          MPI::MPI_CXX)
+target_link_libraries(testDirectionalReduce MPI::MPI_CXX)
 target_link_libraries(testAndersonMix ${LAPACK_LIBRARIES}
                                       ${BLAS_LIBRARIES}
                                       ${Boost_LIBRARIES}
-                                      ${MPI_CXX_LIBRARIES})
-target_link_libraries(testSuperSampling ${MPI_CXX_LIBRARIES})
+                                      MPI::MPI_CXX)
 
 set_tests_properties(testSiH4 PROPERTIES REQUIRED_FILES
                      ${CMAKE_SOURCE_DIR}/potentials/pseudo.Si)
