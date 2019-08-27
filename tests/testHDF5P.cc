@@ -10,6 +10,7 @@
 
 #include "hdf5.h"
 #include "stdlib.h"
+#include <boost/test/unit_test.hpp>
 #include <mpi.h>
 
 #define H5FILE_NAME "SDS_chnk.h5"
@@ -20,7 +21,7 @@
 #define CH_NY 2
 #define RANK 2
 
-int main(int argc, char** argv)
+BOOST_AUTO_TEST_CASE(hdf5)
 {
     /*
      * HDF5 APIs definitions
@@ -48,23 +49,12 @@ int main(int argc, char** argv)
     /*
      * Initialize MPI
      */
-    int mpi_ret = MPI_Init(&argc, &argv);
-    if (mpi_ret != MPI_SUCCESS)
-    {
-        printf("Error in MPI_Init...\n");
-        return 1;
-    }
     MPI_Comm_size(comm, &mpi_size);
     MPI_Comm_rank(comm, &mpi_rank);
     /*
      * Exit if number of processes is not 4.
      */
-    if (mpi_size != 4)
-    {
-        printf("This example to set up to use only 4 processes \n");
-        printf("Quitting...\n");
-        return 1;
-    }
+    BOOST_TEST(mpi_size == 4, "This example to set up to use only 4 processes");
 
     /*
      * Set up file access property list with parallel I/O access
@@ -76,12 +66,7 @@ int main(int argc, char** argv)
      * Create a new file collectively and release property list identifier.
      */
     file_id = H5Fcreate(H5FILE_NAME, H5F_ACC_TRUNC, H5P_DEFAULT, plist_id);
-    if (file_id < 0)
-    {
-        printf("H5Fcreate failed \n");
-        printf("Quitting...\n");
-        return 1;
-    }
+    BOOST_TEST(file_id >= 0, "H5Fcreate failed");
     H5Pclose(plist_id);
 
     /*
@@ -169,8 +154,4 @@ int main(int argc, char** argv)
     H5Sclose(memspace);
     H5Pclose(plist_id);
     H5Fclose(file_id);
-
-    MPI_Finalize();
-
-    return 0;
 }

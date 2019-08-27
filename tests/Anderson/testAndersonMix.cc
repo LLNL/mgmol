@@ -1,3 +1,14 @@
+// Copyright (c) 2017, Lawrence Livermore National Security, LLC and
+// UT-Battelle, LLC.
+// Produced at the Lawrence Livermore National Laboratory and the Oak Ridge
+// National Laboratory.
+// Written by J.-L. Fattebert, D. Osei-Kuffuor and I.S. Dunn.
+// LLNL-CODE-743438
+// All rights reserved.
+// This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
+// Please also read this link https://github.com/llnl/mgmol/LICENSE
+
+#include <boost/test/unit_test.hpp>
 #include <cmath>
 #include <iostream>
 #include <vector>
@@ -24,6 +35,7 @@ double residual(vector<double> diag_op, Solution& x, Solution& r)
     return normR;
 }
 
+// TODO this test does not check anything
 int main(int argc, char** argv)
 {
     int n = atoi(argv[1]);
@@ -103,7 +115,6 @@ int main(int argc, char** argv)
         else
             cout << endl;
     }
+
     return 0;
 }
-
-// template class AndersonMix<Solution>;

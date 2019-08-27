@@ -1,18 +1,24 @@
+// Copyright (c) 2017, Lawrence Livermore National Security, LLC and
+// UT-Battelle, LLC.
+// Produced at the Lawrence Livermore National Laboratory and the Oak Ridge
+// National Laboratory.
+// Written by J.-L. Fattebert, D. Osei-Kuffuor and I.S. Dunn.
+// LLNL-CODE-743438
+// All rights reserved.
+// This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
+// Please also read this link https://github.com/llnl/mgmol/LICENSE
 #include "SuperSampling.h"
+
+#include <boost/test/unit_test.hpp>
+
 #include <array>
 #include <cmath>
 #include <fstream>
 #include <iostream>
 #include <vector>
-using namespace std;
 
-int unitTestSuperSamplingGaussian(void);
-int unitTestSuperSamplingConstant(void);
-int unitTestSuperSamplingGausHighFreq(void);
-int unitTestSuperSamplingScale(void);
-int unitTestSuperSamplingDelta(void);
-int unitTestSuperSamplingHarmonics(void);
-int unitTestSuperSamplingFiltering(void);
+using namespace std;
+namespace utf = boost::unit_test;
 
 double gaussianFunc(double radius) { return exp(-radius * radius / 2); }
 double constantFunc(double radius) { return 1; }
@@ -20,64 +26,11 @@ double gaussianFuncScaled(double radius) { return exp(-radius * radius / 200); }
 double deltaFilter(double point) { return (abs(point) < 1e-10 ? 3 : 0); }
 double highFreq(double radius)
 {
-    return exp(-radius * radius / 2) + sin(100 * radius);
+    return std::exp(-radius * radius / 2) + std::sin(100 * radius);
 }
 
-int main()
+BOOST_AUTO_TEST_CASE(super_sampling_filtering, *utf::tolerance(0.1))
 {
-    int ret = 0;
-
-    int deltTest = unitTestSuperSamplingDelta();
-    if (deltTest > 0)
-    {
-        cout << "SuperSampling Delta Test failed!!!" << endl;
-        ret = 1;
-    }
-
-    int freqTest = unitTestSuperSamplingGausHighFreq();
-    if (freqTest > 0)
-    {
-        cout << "SuperSampling Frequency Test failed!!!" << endl;
-        ret = 1;
-    }
-
-    int gausTest = unitTestSuperSamplingGaussian();
-    if (gausTest > 0)
-    {
-        cout << "SuperSampling Gaussian Test failed!!!" << endl;
-        ret = 1;
-    }
-    // int consTest = unitTestSuperSamplingConstant();
-    // cout << "Constant Test: " << consTest << '\n';
-    int scalTest = unitTestSuperSamplingScale();
-    if (scalTest > 0)
-    {
-        cout << "SuperSampling Scale Test failed!!!" << endl;
-        ret = 1;
-    }
-
-    int otherTest = unitTestSuperSamplingHarmonics();
-    if (otherTest > 0)
-    {
-        cout << "SuperSampling Harmonics Test failed!!!" << endl;
-        ret = 1;
-    }
-    int filterTest = unitTestSuperSamplingFiltering();
-    if (filterTest > 0)
-    {
-        cout << "SuperSampling Filtering Test failed!!!" << endl;
-        ret = 1;
-    }
-
-    return ret;
-}
-
-int unitTestSuperSamplingFiltering()
-{
-    std::cout << "unitTestSuperSamplingFiltering...\n";
-
-    int result = 0;
-
     // array<double,3> atomicCenter={.06,-.06,.1};
     array<double, 3> atomicCenter = { 0, 0, 0 };
     // double cutOffRadius=.5;
@@ -110,19 +63,7 @@ int unitTestSuperSamplingFiltering()
                     = sqrt((idx - atomicCenter[0]) * (idx - atomicCenter[0])
                            + (idy - atomicCenter[1]) * (idy - atomicCenter[1])
                            + (idz - atomicCenter[2]) * (idz - atomicCenter[2]));
-                // cout << i << '\t' << j << '\t' << k << '\n';
-                // cout << uniTest.values_[0][offset] - gaussianFunc(radius) <<
-                // "\n\n";
-                if (abs(uniTest.values_[0][offset] - gaussianFunc(radius)) > .1)
-                {
-                    result = 1;
-                    cout << i << '\t' << j << '\t' << k << '\n';
-                    cout << uniTest.values_[0][offset] - gaussianFunc(radius)
-                         << "\n\n";
-                    cout << uniTest.values_[0][offset] << '\n';
-                    cout << gaussianFunc(radius) << '\n';
-                    cout << idx << ',' << idy << ',' << idz << '\n';
-                }
+                BOOST_TEST(uniTest.values_[0][offset] == gaussianFunc(radius));
                 offset += 1;
                 idz += coarGridSpace[2];
             }
@@ -130,14 +71,10 @@ int unitTestSuperSamplingFiltering()
         }
         idx += coarGridSpace[0];
     }
-    return result;
 }
 
-int unitTestSuperSamplingHarmonics()
+BOOST_AUTO_TEST_CASE(super_sampling_harmonics)
 {
-    std::cout << "unitTestSuperSamplingHarmonics...\n";
-    int result = 0;
-
     array<double, 3> atomicCenter  = { 0, 0, 0 };
     int numExtraPts                = 10;
     int sampleRate                 = 3;
@@ -151,15 +88,11 @@ int unitTestSuperSamplingHarmonics()
     SuperSampling<lMax> uniTestScaled(atomicCenter, botMeshCorner,
         topMeshCorner, harmonics, gaussianFuncScaled);
 
-    return result;
+    // TODO: there is no check here
 }
 
-int unitTestSuperSamplingScale()
+BOOST_AUTO_TEST_CASE(super_sampling_scale, *utf::tolerance(1e-10))
 {
-    std::cout << "unitTestSuperSamplingScale...\n";
-
-    int result = 0;
-
     array<double, 3> atomicCenter = { 0, 0, 0 };
     // double cutOffRadius=5;
     int numExtraPts                = 10;
@@ -193,45 +126,25 @@ int unitTestSuperSamplingScale()
             double idz = botMeshCorner[2];
             for (int k = 0; k < numPts; ++k)
             {
-                // cout << idx << ",\t" << idy << ",\t" << idz << '\n';
-                // cout <<
-                //    uniTestScaled.values_ [0][numPts*numPts*i + numPts*j + k]
-                //    - uniTestCompare.values_[0][numPts*numPts*i + numPts*j +
-                //    k] << "\n\n";
-                if (abs(uniTestScaled
-                            .values_[0][numPts * numPts * i + numPts * j + k]
-                        - uniTestCompare
-                              .values_[0][numPts * numPts * i + numPts * j + k])
-                    > 1e-10)
-                {
-                    result = 1;
-                    // cout <<
-                    //    uniTestScaled.values_ [0][numPts*numPts*i + numPts*j +
-                    //    k] - uniTestCompare.values_[0][numPts*numPts*i +
-                    //    numPts*j + k] << "\n\n";
-                }
+                BOOST_TEST(
+                    uniTestScaled
+                        .values_[0][numPts * numPts * i + numPts * j + k]
+                    == uniTestCompare
+                           .values_[0][numPts * numPts * i + numPts * j + k]);
                 idz += coarGridSpace[2];
             }
             idy += coarGridSpace[1];
         }
         idx += coarGridSpace[0];
     }
-    return result;
 }
 
-int unitTestSuperSamplingGausHighFreq(void)
+BOOST_AUTO_TEST_CASE(super_sampling_gaus_high_freq, *utf::tolerance(0.25))
 {
-    std::cout << "unitTestSuperSamplingGausHighFreq...\n";
-    int result = 0;
-
-    // array<double,3> atomicCenter={.601,-.65,.1};
-    // array<double,3> atomicCenter={0,0,0};
-    array<double, 3> atomicCenter = { 0.001, 0.0, -.001 };
-    // double cutOffRadius=.5;
-    int numExtraPts = 10;
-    int sampleRate  = 3;
-    const int lMax  = 0;
-    // array<double,3> coarGridSpace={.099,.099,.105};
+    array<double, 3> atomicCenter  = { 0.001, 0.0, -.001 };
+    int numExtraPts                = 10;
+    int sampleRate                 = 3;
+    const int lMax                 = 0;
     array<double, 3> coarGridSpace = { .1, .1, .1 };
     array<double, 3> botMeshCorner = { -1, -1, -1 };
     array<double, 3> topMeshCorner = { 1, 1, 1 };
@@ -260,19 +173,9 @@ int unitTestSuperSamplingGausHighFreq(void)
                     = sqrt((idx - atomicCenter[0]) * (idx - atomicCenter[0])
                            + (idy - atomicCenter[1]) * (idy - atomicCenter[1])
                            + (idz - atomicCenter[2]) * (idz - atomicCenter[2]));
-                // cout << i << '\t' << j << '\t' << k << '\n';
-                // cout << uniTest.values_[0][offset] - gaussianFunc(radius) <<
-                // "\n\n";
                 myfile << radius << ';' << uniTest.values_[0][offset] << ',';
                 myfile2 << radius << ';' << highFreq(radius) << ',';
-                if (abs(uniTest.values_[0][offset] - gaussianFunc(radius))
-                    > .25)
-                {
-                    result = 1;
-                    cout << i << '\t' << j << '\t' << k << '\n';
-                    cout << uniTest.values_[0][offset] - gaussianFunc(radius)
-                         << "\n\n";
-                }
+                BOOST_TEST(uniTest.values_[0][offset] == gaussianFunc(radius));
                 offset += 1;
                 idz += coarGridSpace[2];
             }
@@ -281,22 +184,15 @@ int unitTestSuperSamplingGausHighFreq(void)
         idx += coarGridSpace[0];
     }
     myfile.close();
-    return result;
 }
 
-int unitTestSuperSamplingConstant()
+// TODO this test does not pass, so disable it for now
+BOOST_AUTO_TEST_CASE(super_sampling_constant, *utf::disabled())
 {
-    std::cout << "unitTestSuperSamplingConstant...\n";
-
-    int result = 0;
-
-    array<double, 3> atomicCenter = { .6, -.6, .1 };
-    // array<double,3> atomicCenter={0,0,0};
-    // double cutOffRadius=.5;
-    int numExtraPts = 40;
-    int sampleRate  = 3;
-    const int lMax  = 0;
-    // array<double,3> coarGridSpace={.099,.099,.105};
+    array<double, 3> atomicCenter  = { .6, -.6, .1 };
+    int numExtraPts                = 40;
+    int sampleRate                 = 3;
+    const int lMax                 = 0;
     array<double, 3> coarGridSpace = { .1, .1, .1 };
     array<double, 3> botMeshCorner = { -1, -1, -1 };
     array<double, 3> topMeshCorner = { 0, 1, 1 };
@@ -322,17 +218,7 @@ int unitTestSuperSamplingConstant()
                     = sqrt((idx - atomicCenter[0]) * (idx - atomicCenter[0])
                            + (idy - atomicCenter[1]) * (idy - atomicCenter[1])
                            + (idz - atomicCenter[2]) * (idz - atomicCenter[2]));
-                // cout << i << '\t' << j << '\t' << k << '\n';
-                // cout << uniTest.values_[0][offset] - gaussianFunc(radius) <<
-                // "\n\n";
-                if (abs(uniTest.values_[0][offset] - constantFunc(radius))
-                    > 1e-10)
-                {
-                    result = 1;
-                    cout << i << '\t' << j << '\t' << k << '\n';
-                    cout << uniTest.values_[0][offset] - constantFunc(radius)
-                         << "\n\n";
-                }
+                BOOST_TEST(uniTest.values_[0][offset] == constantFunc(radius));
                 offset += 1;
                 idz += coarGridSpace[2];
             }
@@ -340,22 +226,14 @@ int unitTestSuperSamplingConstant()
         }
         idx += coarGridSpace[0];
     }
-    return result;
 }
 
-int unitTestSuperSamplingGaussian()
+BOOST_AUTO_TEST_CASE(super_sampling_gaussian, *utf::tolerance(0.1))
 {
-    std::cout << "unitTestSuperSamplingGaussian...\n";
-
-    int result = 0;
-
-    array<double, 3> atomicCenter = { .6, -.6, .1 };
-    // array<double,3> atomicCenter={0,0,0};
-    // double cutOffRadius=.5;
-    int numExtraPts = 10;
-    int sampleRate  = 3;
-    const int lMax  = 0;
-    // array<double,3> coarGridSpace={.099,.099,.105};
+    array<double, 3> atomicCenter  = { .6, -.6, .1 };
+    int numExtraPts                = 10;
+    int sampleRate                 = 3;
+    const int lMax                 = 0;
     array<double, 3> coarGridSpace = { .1, .1, .1 };
     array<double, 3> botMeshCorner = { -1, -1, -1 };
     array<double, 3> topMeshCorner = { 0, 1, 1 };
@@ -385,17 +263,7 @@ int unitTestSuperSamplingGaussian()
                     = sqrt((idx - atomicCenter[0]) * (idx - atomicCenter[0])
                            + (idy - atomicCenter[1]) * (idy - atomicCenter[1])
                            + (idz - atomicCenter[2]) * (idz - atomicCenter[2]));
-                // cout << i << '\t' << j << '\t' << k << '\n';
-                // cout << uniTest.values_[0][offset] - gaussianFunc(radius) <<
-                // "\n\n";
-                if (abs(uniTest.values_[0][offset] - gaussianFunc(radius))
-                    > 0.1)
-                {
-                    result = 1;
-                    cout << i << '\t' << j << '\t' << k << '\n';
-                    cout << uniTest.values_[0][offset] - gaussianFunc(radius)
-                         << "\n\n";
-                }
+                BOOST_TEST(uniTest.values_[0][offset] == gaussianFunc(radius));
                 offset += 1;
                 idz += coarGridSpace[2];
             }
@@ -403,15 +271,10 @@ int unitTestSuperSamplingGaussian()
         }
         idx += coarGridSpace[0];
     }
-    return result;
 }
 
-int unitTestSuperSamplingDelta()
+BOOST_AUTO_TEST_CASE(super_sampling_delta, *utf::tolerance(1e-10))
 {
-    std::cout << "unitTestSuperSamplingDelta...\n";
-
-    int result = 0;
-
     array<double, 3> atomicCenter = { 0, 0, 0 };
     // array<double,3> atomicCenter={.5,.45,-.43};
     // double cutOffRadius=.5;
@@ -443,21 +306,13 @@ int unitTestSuperSamplingDelta()
                     = sqrt((idx - atomicCenter[0]) * (idx - atomicCenter[0])
                            + (idy - atomicCenter[1]) * (idy - atomicCenter[1])
                            + (idz - atomicCenter[2]) * (idz - atomicCenter[2]));
-                if (std::abs(
-                        uniTest.values_[0][numPts * numPts * i + numPts * j + k]
-                        - gaussianFunc(radius))
-                    > 1e-10)
-                {
-                    result = 1;
-                    // cout << idx << ",\t" << idy << ",\t" << idz << '\n';
-                    // cout << uniTest.values_[0][numPts*numPts*i + numPts*j +
-                    // k]; cout << gaussianFunc(radius)/(2*sqrt(pi)) << "\n\n";
-                }
+                BOOST_TEST(
+                    uniTest.values_[0][numPts * numPts * i + numPts * j + k]
+                    == gaussianFunc(radius));
                 idz += coarGridSpace[2];
             }
             idy += coarGridSpace[1];
         }
         idx += coarGridSpace[0];
     }
-    return result;
 }
