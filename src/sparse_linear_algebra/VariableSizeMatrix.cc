@@ -114,7 +114,7 @@ void quickSortIR(int* a, double* b, const int lo, const int hi)
 //*/
 template <class T>
 VariableSizeMatrix<T>::VariableSizeMatrix(
-    const string name, const int alloc_size, const MPI_Comm comm)
+    const string& name, const int alloc_size, const MPI_Comm comm)
     : name_(name)
 {
     (void)comm; // comm is currently unused

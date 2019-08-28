@@ -21,7 +21,7 @@ using namespace std;
 namespace pb
 {
 
-FILE* open_file(const string filename, const string mode)
+FILE* open_file(const string& filename, const string& mode)
 {
     FILE* file_ptr;
 

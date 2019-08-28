@@ -15,24 +15,24 @@
 
 namespace mgmol_tools
 {
-void write1d(hid_t file_id, std::string datasetname, std::vector<int>& data,
+void write1d(hid_t file_id, const std::string& datasetname, std::vector<int>& data,
     size_t length);
-void write2d(hid_t file_id, std::string datasetname, std::vector<int>& data,
+void write2d(hid_t file_id, const std::string& datasetname, std::vector<int>& data,
     size_t* dims);
-void write2d(hid_t file_id, std::string datasetname,
+void write2d(hid_t file_id, const std::string& datasetname,
     std::vector<unsigned short>& data, size_t* dims);
-void write2d(hid_t file_id, std::string datasetname, std::vector<double>& data,
+void write2d(hid_t file_id, const std::string& datasetname, std::vector<double>& data,
     size_t* dims);
-void write2d(hid_t file_id, std::string datasetname,
+void write2d(hid_t file_id, const std::string& datasetname,
     std::vector<std::string>& data, size_t* dims);
 
-void parallelWrite2d(hid_t file_id, std::string datasetname,
+void parallelWrite2d(hid_t file_id, const std::string& datasetname,
     std::vector<int>& data, size_t* dims, MPI_Comm comm);
-void parallelWrite2d(hid_t file_id, std::string datasetname,
+void parallelWrite2d(hid_t file_id, const std::string& datasetname,
     std::vector<unsigned short>& data, size_t* dims, MPI_Comm comm);
-void parallelWrite2d(hid_t file_id, std::string datasetname,
+void parallelWrite2d(hid_t file_id, const std::string& datasetname,
     std::vector<double>& data, size_t* dims, MPI_Comm comm);
-void parallelWrite2d(hid_t file_id, std::string datasetname,
+void parallelWrite2d(hid_t file_id, const std::string& datasetname,
     std::vector<std::string>& data, size_t* dims, MPI_Comm comm);
 
 void addAttribute2Dataset(

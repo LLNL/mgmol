@@ -19,6 +19,7 @@
 #include <unistd.h>
 
 #include <boost/program_options.hpp>
+#include <utility>
 
 #ifdef USE_MPI
 #include <mpi.h>
@@ -162,7 +163,7 @@ void Control::setup(const MPI_Comm comm_global, const bool with_spin,
     with_spin_   = with_spin;
     total_spin_  = total_spin;
 
-    run_directory_ = run_directory;
+    run_directory_ = std::move(run_directory);
 
     if (run_directory_.compare(".") != 0)
     {

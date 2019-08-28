@@ -283,7 +283,7 @@ void arrayops(const double* const a, const double* const b, const double s,
     }
 }
 
-void printWithTimeStamp(const std::string string2print, std::ostream& os)
+void printWithTimeStamp(const std::string& string2print, std::ostream& os)
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     mmpi.barrier();
@@ -381,7 +381,7 @@ bool isOverlaping(const Vector3D& center, const float radius)
     return false;
 }
 
-void exitWithErrorMessage(const std::string name)
+void exitWithErrorMessage(const std::string& name)
 {
     std::cerr << "Function " << name
               << " not implemented and should not be called!!!" << std::endl;

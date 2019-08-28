@@ -43,6 +43,7 @@
 
 #include <cmath>
 #include <fstream>
+#include <utility>
 #include <vector>
 using namespace std;
 
@@ -74,7 +75,7 @@ LocGridOrbitals::LocGridOrbitals(std::string name, const pb::Grid& my_grid,
     ProjectedMatricesInterface* proj_matrices, LocalizationRegions* lrs,
     MasksSet* masks, MasksSet* corrmasks, ClusterOrbitals* local_cluster,
     const bool setup_flag)
-    : name_(name),
+    : name_(std::move(name)),
       grid_(my_grid),
       proj_matrices_(proj_matrices),
       block_vector_(my_grid, subdivx, bc),
@@ -124,7 +125,7 @@ LocGridOrbitals::~LocGridOrbitals()
 }
 
 LocGridOrbitals::LocGridOrbitals(
-    const std::string name, const LocGridOrbitals& A, const bool copy_data)
+    const std::string& name, const LocGridOrbitals& A, const bool copy_data)
     : Orbitals(A, copy_data),
       name_(name),
       grid_(A.grid_),
@@ -148,7 +149,7 @@ LocGridOrbitals::LocGridOrbitals(
     setGids2Storage();
 }
 
-LocGridOrbitals::LocGridOrbitals(const std::string name,
+LocGridOrbitals::LocGridOrbitals(const std::string& name,
     const LocGridOrbitals& A, ProjectedMatricesInterface* proj_matrices,
     MasksSet* masks, MasksSet* corrmasks, const bool copy_data)
     : Orbitals(A, copy_data),
@@ -984,12 +985,12 @@ int LocGridOrbitals::write_hdf5(HDFrestart& h5f_file, string name)
         if (ierr < 0) return ierr;
     }
 
-    int ierr = write_func_hdf5(h5f_file, name);
+    int ierr = write_func_hdf5(h5f_file, std::move(name));
 
     return ierr;
 }
 
-int LocGridOrbitals::write_func_hdf5(HDFrestart& h5f_file, string name)
+int LocGridOrbitals::write_func_hdf5(HDFrestart& h5f_file, const string& name)
 {
     Control& ct   = *(Control::instance());
     hid_t file_id = h5f_file.file_id();
@@ -1154,7 +1155,7 @@ int LocGridOrbitals::write_func_hdf5(HDFrestart& h5f_file, string name)
     return 0;
 }
 
-int LocGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, string name)
+int LocGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, const string& name)
 {
     assert(chromatic_number_ >= 0);
     assert(name.size() > 0);

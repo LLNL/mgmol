@@ -164,9 +164,9 @@ class DataDistribution
         const VariableSizeMatrix<sparserow>& lmat, int* maxsize, int* nzmax);
 
 public:
-    DataDistribution(const std::string name, const double s_radius,
+    DataDistribution(const std::string& name, const double s_radius,
         const pb::PEenv& myPEenv, const double domain[]);
-    DataDistribution(const std::string name, const int max_steps[3],
+    DataDistribution(const std::string& name, const int max_steps[3],
         const pb::PEenv& myPEenv, const double domain[]);
     ~DataDistribution() { delete dir_reduce_; }
 

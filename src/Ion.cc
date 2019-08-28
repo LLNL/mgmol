@@ -246,7 +246,7 @@ double Ion::minimage(
     return rmin;
 }
 
-bool operator<(Ion A, Ion B) { return (A.position(0) < B.position(0)); }
+bool operator<(const Ion& A, const Ion& B) { return (A.position(0) < B.position(0)); }
 
 bool operator==(Ion A, Ion B) { return (&A == &B); }
 

@@ -410,7 +410,7 @@ void ConstraintSet::setup(Ions& ions)
     setup(names, pmass, atmove, tau0, taup, fion, local_names);
 }
 
-int ConstraintSet::readConstraints(const string filename)
+int ConstraintSet::readConstraints(const string& filename)
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 

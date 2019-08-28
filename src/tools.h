@@ -28,9 +28,9 @@ void setSparseDistMatriConsolidationNumber(const int npes);
 void reduceBytes(std::vector<char>& val, const MPI_Comm comm);
 void arrayops(const double* const a, const double* const b, const double s,
     const double e, const int dim, double* result);
-void printWithTimeStamp(const std::string string2print, std::ostream& os);
+void printWithTimeStamp(const std::string& string2print, std::ostream& os);
 bool isOverlaping(const Vector3D& center, const float radius);
-void exitWithErrorMessage(const std::string name);
+void exitWithErrorMessage(const std::string& name);
 bool fileExists(const char* file);
 void stripName(std::string& stringToModify);
 void appendNumber(std::string& name, const int number);

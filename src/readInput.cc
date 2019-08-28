@@ -211,7 +211,7 @@ int MGmol<T>::readCoordinates(ifstream* tfile, const bool cell_relative)
 }
 
 template <class T>
-int MGmol<T>::readCoordinates(const string filename, const bool cell_relative)
+int MGmol<T>::readCoordinates(const string& filename, const bool cell_relative)
 {
     Control& ct = *(Control::instance());
     if (ct.verbose > 0) printWithTimeStamp("Read atomic coordinates...", os_);

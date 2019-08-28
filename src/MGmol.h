@@ -210,7 +210,7 @@ public:
     void printEigAndOcc();
 
     int readCoordinates(std::ifstream* tfile, const bool cell_relative);
-    int readCoordinates(const std::string filename, const bool cell_relative);
+    int readCoordinates(const std::string& filename, const bool cell_relative);
     double computeConstraintResidual(T& orbitals, const T& hphi, T& res,
         const bool print_residual, const bool norm_res);
 
@@ -277,7 +277,7 @@ public:
     void update_orbitals_LRs(T** orbitals);
     void clearOldOrbitals();
     void getKBPsiAndHij(T& orbitals, Ions& ions);
-    int write_hdf5(const std::string filename,
+    int write_hdf5(const std::string& filename,
         std::vector<std::vector<RHODTYPE>>& rho, Ions& ions, T& orbitals,
         LocalizationRegions& lrs);
     int write_hdf5(HDFrestart& h5f_file,

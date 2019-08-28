@@ -5,6 +5,7 @@
 
 #include <cmath>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "boost/shared_ptr.hpp"
@@ -36,7 +37,7 @@ public:
 
     Solution(std::string name, const Solution& y)
     {
-        name_ = name;
+        name_ = std::move(name);
         n_    = y.n_;
         u_    = y.u_;
     }

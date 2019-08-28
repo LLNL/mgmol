@@ -41,7 +41,7 @@ public:
         *new_h_ = matHB;
     }
 
-    void extrapolateHorder2(dist_matrix::DistMatrix<DISTMATDTYPE> matQ,
+    void extrapolateHorder2(const dist_matrix::DistMatrix<DISTMATDTYPE>& matQ,
         dist_matrix::DistMatrix<DISTMATDTYPE>& yyt, std::ostream& os)
     {
         rotateSym(*h_minus1_, matQ, *work_);
@@ -54,7 +54,7 @@ public:
         new_h_->axpy(-1., *h_minus1_);
     }
 
-    void updateHminus1tmp(dist_matrix::DistMatrix<DISTMATDTYPE> matQ,
+    void updateHminus1tmp(const dist_matrix::DistMatrix<DISTMATDTYPE>& matQ,
         dist_matrix::DistMatrix<DISTMATDTYPE>& yyt, std::ostream& os)
     {
         if (h_minus1_ != 0)
@@ -69,7 +69,7 @@ public:
         }
     }
 
-    void updateHminus2(dist_matrix::DistMatrix<DISTMATDTYPE> matQ,
+    void updateHminus2(const dist_matrix::DistMatrix<DISTMATDTYPE>& matQ,
         dist_matrix::DistMatrix<DISTMATDTYPE>& yyt, std::ostream& os)
     {
         if (h_minus2_ != 0)

@@ -33,6 +33,7 @@
 
 #include <cmath>
 #include <fstream>
+#include <utility>
 using namespace std;
 
 #define ORBITAL_OCCUPATION 2.
@@ -68,7 +69,7 @@ ExtendedGridOrbitals::ExtendedGridOrbitals(std::string name,
     const short bc[3], ProjectedMatricesInterface* proj_matrices,
     LocalizationRegions* lrs, MasksSet* masks, MasksSet* corrmasks,
     ClusterOrbitals* local_cluster, const bool setup_flag)
-    : name_(name),
+    : name_(std::move(name)),
       grid_(my_grid),
       proj_matrices_(proj_matrices),
       block_vector_(my_grid, subdivx, bc),
@@ -100,7 +101,7 @@ ExtendedGridOrbitals::ExtendedGridOrbitals(std::string name,
 ExtendedGridOrbitals::~ExtendedGridOrbitals() { assert(proj_matrices_ != 0); }
 
 ExtendedGridOrbitals::ExtendedGridOrbitals(
-    const std::string name, const ExtendedGridOrbitals& A, const bool copy_data)
+    const std::string& name, const ExtendedGridOrbitals& A, const bool copy_data)
     : Orbitals(A, copy_data),
       name_(name),
       grid_(A.grid_),
@@ -115,7 +116,7 @@ ExtendedGridOrbitals::ExtendedGridOrbitals(
     assert(A.proj_matrices_ != 0);
 }
 
-ExtendedGridOrbitals::ExtendedGridOrbitals(const std::string name,
+ExtendedGridOrbitals::ExtendedGridOrbitals(const std::string& name,
     const ExtendedGridOrbitals& A, ProjectedMatricesInterface* proj_matrices,
     const bool copy_data)
     : Orbitals(A, copy_data),
@@ -604,12 +605,12 @@ int ExtendedGridOrbitals::write_hdf5(HDFrestart& h5f_file, string name)
         if (ierr < 0) return ierr;
     }
 
-    int ierr = write_func_hdf5(h5f_file, name);
+    int ierr = write_func_hdf5(h5f_file, std::move(name));
 
     return ierr;
 }
 
-int ExtendedGridOrbitals::write_func_hdf5(HDFrestart& h5f_file, string name)
+int ExtendedGridOrbitals::write_func_hdf5(HDFrestart& h5f_file, const string& name)
 {
     Control& ct   = *(Control::instance());
     hid_t file_id = h5f_file.file_id();
@@ -742,7 +743,7 @@ int ExtendedGridOrbitals::write_func_hdf5(HDFrestart& h5f_file, string name)
 }
 
 // read all the data sets with names starting with "name"
-int ExtendedGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, string name)
+int ExtendedGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, const string& name)
 {
     assert(numst_ >= 0);
     assert(name.size() > 0);

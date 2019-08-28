@@ -56,7 +56,7 @@ short DataDistribution::count_computeMaxDataSize_    = 0;
 short DataDistribution::maxcount_computeMaxDataSize_ = 500;
 
 /* Constructor */
-DataDistribution::DataDistribution(const std::string name,
+DataDistribution::DataDistribution(const std::string& name,
     const int max_steps[3], const pb::PEenv& myPEenv, const double domain[])
     : name_(name), spread_radius_(0.0), mypeenv_(myPEenv)
 {
@@ -77,7 +77,7 @@ DataDistribution::DataDistribution(const std::string name,
 }
 
 /* Constructor */
-DataDistribution::DataDistribution(const std::string name,
+DataDistribution::DataDistribution(const std::string& name,
     const double s_radius, const pb::PEenv& myPEenv, const double domain[])
     : name_(name), spread_radius_(s_radius), mypeenv_(myPEenv)
 {

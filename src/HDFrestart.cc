@@ -306,7 +306,7 @@ void HDFrestart::addMDTime2File(const float run_time)
     }
 }
 
-void HDFrestart::add2File(const int data, std::string attname)
+void HDFrestart::add2File(const int data, const std::string& attname)
 {
     if (active_)
     {
@@ -398,7 +398,7 @@ float HDFrestart::getMDTimeFromFile() const
 
 int HDFrestart::getMDstepFromFile() const { return getFromFile("MD_step"); }
 
-int HDFrestart::getFromFile(std::string attname) const
+int HDFrestart::getFromFile(const std::string& attname) const
 {
     int data                  = 1;
     std::string function_name = "HDFrestart::getFromFile()";
@@ -494,7 +494,7 @@ void HDFrestart::addReleaseNumber2File(const char* release)
 }
 
 // constructor for one layer of PEs writing data
-HDFrestart::HDFrestart(const std::string filename, const pb::PEenv& pes,
+HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
     const unsigned gdim[3], const short option_number)
     : pes_(pes), filename_(filename)
 {
@@ -629,7 +629,7 @@ HDFrestart::HDFrestart(const std::string filename, const pb::PEenv& pes,
 
 // constructor reading data (existing file)
 HDFrestart::HDFrestart(
-    const std::string filename, const pb::PEenv& pes, const short option_number)
+    const std::string& filename, const pb::PEenv& pes, const short option_number)
     : pes_(pes), file_id_(-1)
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
@@ -1211,7 +1211,7 @@ int HDFrestart::getLRs(LocalizationRegions& lrs, const int max_nb_lrs,
 
 /////////////////////////////////////////////////////////////////////////////
 
-int HDFrestart::read_1func_hdf5(double* vv, std::string datasetname)
+int HDFrestart::read_1func_hdf5(double* vv, const std::string& datasetname)
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 0)
@@ -1358,7 +1358,7 @@ int HDFrestart::read_1func_hdf5(double* vv, std::string datasetname)
     return 0;
 }
 
-int HDFrestart::read_1func_hdf5(float* vv, std::string datasetname)
+int HDFrestart::read_1func_hdf5(float* vv, const std::string& datasetname)
 {
     if (onpe0)
         (*MPIdata::sout) << "HDFrestart::read_1func_hdf5(). Try to read data "
@@ -1505,7 +1505,7 @@ int HDFrestart::read_1func_hdf5(float* vv, std::string datasetname)
 }
 
 int HDFrestart::write_1func_hdf5(
-    double* vv, std::string datasetname, double* ll, double* cell_origin)
+    double* vv, const std::string& datasetname, double* ll, double* cell_origin)
 {
     assert(ll != NULL);
     assert(cell_origin != NULL);
@@ -1603,7 +1603,7 @@ int HDFrestart::write_1func_hdf5(
 }
 
 int HDFrestart::write_1func_hdf5(
-    float* vv, string datasetname, double* ll, double* cell_origin)
+    float* vv, const string& datasetname, double* ll, double* cell_origin)
 {
     assert(ll != NULL);
     assert(cell_origin != NULL);
@@ -2092,7 +2092,7 @@ int HDFrestart::writeData(float* data, hid_t space_id, hid_t memspace,
 }
 
 int HDFrestart::read_att(
-    const hid_t dset_id, std::string attname, vector<double>& attr_data)
+    const hid_t dset_id, const std::string& attname, vector<double>& attr_data)
 {
     assert(attr_data.size() > 0);
 

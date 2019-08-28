@@ -49,7 +49,7 @@ public:
     void setup(Ions&);
 
     // read all constraints from PE 0
-    int readConstraints(const std::string filename);
+    int readConstraints(const std::string& filename);
     int readConstraints(std::ifstream* tfile);
 
     // add all constraints to the list of constraints,

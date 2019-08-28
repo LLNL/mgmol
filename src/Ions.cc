@@ -1977,7 +1977,7 @@ void Ions::set_forces(const vector<vector<double>>& ff)
     }
 }
 
-int Ions::readAtoms(const string filename, const bool cell_relative)
+int Ions::readAtoms(const string& filename, const bool cell_relative)
 {
 
     Control& ct(*(Control::instance()));
@@ -2033,7 +2033,7 @@ int Ions::readAtoms(ifstream* tfile, const bool cell_relative)
     return num_ions_;
 }
 
-int Ions::readAtomsFromXYZ(const string filename, const bool cell_relative)
+int Ions::readAtomsFromXYZ(const string& filename, const bool cell_relative)
 {
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
     Control& ct(*(Control::instance()));
@@ -2211,7 +2211,7 @@ int Ions::readAtomsFromXYZ(const string filename, const bool cell_relative)
     return natoms;
 }
 
-int Ions::readNatoms(const string filename, const bool cell_relative)
+int Ions::readNatoms(const string& filename, const bool cell_relative)
 {
     Control& ct(*(Control::instance()));
 
@@ -3749,7 +3749,7 @@ void Ions::updateIons()
     setup_ = false;
 }
 
-void Ions::shiftIons(Vector3D shift)
+void Ions::shiftIons(const Vector3D& shift)
 {
     // update local_ions data
     vector<Ion*>::iterator ion = local_ions_.begin();
