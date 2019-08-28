@@ -35,17 +35,17 @@
 
 Timer Electrostatic::solve_tm_("Electrostatic::solve");
 
-Electrostatic::Electrostatic(const short lap_type, const short bcPoisson[3],
+Electrostatic::Electrostatic(PoissonFDtype lap_type, const short bcPoisson[3],
     const double screening_const)
+    : laptype_(lap_type)
 {
     assert(bcPoisson[0] >= 0);
     assert(bcPoisson[1] >= 0);
     assert(bcPoisson[2] >= 0);
 
-    laptype_ = lap_type;
-    bc_[0]   = bcPoisson[0];
-    bc_[1]   = bcPoisson[1];
-    bc_[2]   = bcPoisson[2];
+    bc_[0] = bcPoisson[0];
+    bc_[1] = bcPoisson[1];
+    bc_[2] = bcPoisson[2];
 
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& myGrid = mymesh->grid();
@@ -57,7 +57,7 @@ Electrostatic::Electrostatic(const short lap_type, const short bcPoisson[3],
         {
             switch (lap_type)
             {
-                case 0:
+                case PoissonFDtype::h4M:
                     poisson_solver_
                         = new ShiftedHartree<pb::ShiftedLaph4M<POTDTYPE>>(
                             myGrid, bc_, screening_const);
@@ -65,41 +65,40 @@ Electrostatic::Electrostatic(const short lap_type, const short bcPoisson[3],
                 default:
                     (*MPIdata::sout)
                         << "Electrostatic, shifted, Undefined option: "
-                        << lap_type << endl;
+                        << static_cast<int>(lap_type) << endl;
             }
         }
         else
         {
             switch (lap_type)
             {
-                case 0:
+                case PoissonFDtype::h4M:
                     poisson_solver_
                         = new Hartree<pb::Laph4M<POTDTYPE>>(myGrid, bc_);
                     break;
-                case 1:
+                case PoissonFDtype::h2:
                     poisson_solver_
                         = new Hartree<pb::Laph2<POTDTYPE>>(myGrid, bc_);
                     break;
-                case 2:
+                case PoissonFDtype::h4:
                     poisson_solver_
                         = new Hartree<pb::Laph4<POTDTYPE>>(myGrid, bc_);
                     break;
-                case 3:
+                case PoissonFDtype::h6:
                     poisson_solver_
                         = new Hartree<pb::Laph6<POTDTYPE>>(myGrid, bc_);
                     break;
-                case 4:
+                case PoissonFDtype::h8:
                     poisson_solver_
                         = new Hartree<pb::Laph8<POTDTYPE>>(myGrid, bc_);
                     break;
-                case 10:
+                case PoissonFDtype::h4MP:
                     poisson_solver_
                         = new Hartree<pb::Laph4MP<POTDTYPE>>(myGrid, bc_);
                     break;
                 default:
-                    (*MPIdata::sout)
-                        << "Electrostatic, Undefined option: " << lap_type
-                        << endl;
+                    (*MPIdata::sout) << "Electrostatic, Undefined option: "
+                                     << static_cast<int>(lap_type) << endl;
             }
         }
     }
@@ -109,7 +108,7 @@ Electrostatic::Electrostatic(const short lap_type, const short bcPoisson[3],
         {
             switch (lap_type)
             {
-                case 0:
+                case PoissonFDtype::h4M:
                     poisson_solver_
                         = new ShiftedHartree<pb::ShiftedLaph4M<POTDTYPE>>(
                             myGrid, bc_, screening_const);
@@ -117,41 +116,40 @@ Electrostatic::Electrostatic(const short lap_type, const short bcPoisson[3],
                 default:
                     (*MPIdata::sout)
                         << "PCG Electrostatic, shifted, Undefined option: "
-                        << lap_type << endl;
+                        << static_cast<int>(lap_type) << endl;
             }
         }
         else
         {
             switch (lap_type)
             {
-                case 0:
+                case PoissonFDtype::h4M:
                     poisson_solver_
                         = new Hartree_CG<pb::Laph4M<POTDTYPE>>(myGrid, bc_);
                     break;
-                case 1:
+                case PoissonFDtype::h2:
                     poisson_solver_
                         = new Hartree_CG<pb::Laph2<POTDTYPE>>(myGrid, bc_);
                     break;
-                case 2:
+                case PoissonFDtype::h4:
                     poisson_solver_
                         = new Hartree_CG<pb::Laph4<POTDTYPE>>(myGrid, bc_);
                     break;
-                case 3:
+                case PoissonFDtype::h6:
                     poisson_solver_
                         = new Hartree_CG<pb::Laph6<POTDTYPE>>(myGrid, bc_);
                     break;
-                case 4:
+                case PoissonFDtype::h8:
                     poisson_solver_
                         = new Hartree_CG<pb::Laph8<POTDTYPE>>(myGrid, bc_);
                     break;
-                case 10:
+                case PoissonFDtype::h4MP:
                     poisson_solver_
                         = new Hartree_CG<pb::Laph4MP<POTDTYPE>>(myGrid, bc_);
                     break;
                 default:
-                    (*MPIdata::sout)
-                        << "PCG Electrostatic, Undefined option: " << lap_type
-                        << endl;
+                    (*MPIdata::sout) << "PCG Electrostatic, Undefined option: "
+                                     << static_cast<int>(lap_type) << endl;
             }
         }
     }
@@ -241,8 +239,8 @@ void Electrostatic::setupPB(
     double origin[3] = { myGrid.origin(0), myGrid.origin(1), myGrid.origin(2) };
     double cell[3]   = { myGrid.ll(0), myGrid.ll(1), myGrid.ll(2) };
 
-    pbGrid_
-        = GridFactory::createGrid(ngpts, origin, cell, laptype_, true, myPEenv);
+    pbGrid_ = GridFactory::createGrid(
+        ngpts, origin, cell, static_cast<int>(laptype_), true, myPEenv);
     if (poisson_solver_ != NULL) delete poisson_solver_;
 
     Control& ct = *(Control::instance());
@@ -250,26 +248,26 @@ void Electrostatic::setupPB(
     {
         switch (laptype_)
         {
-            case 0:
+            case PoissonFDtype::h4M:
                 poisson_solver_ = new PBdiel<pb::PBh4M<POTDTYPE>>(
                     *pbGrid_, bc_, e0, rho0, drho0);
                 break;
-            case 1:
+            case PoissonFDtype::h2:
                 poisson_solver_ = new PBdiel<pb::PBh2<POTDTYPE>>(
                     *pbGrid_, bc_, e0, rho0, drho0);
                 break;
-            case 2:
+            case PoissonFDtype::h4:
                 poisson_solver_ = new PBdiel<pb::PBh4<POTDTYPE>>(
                     *pbGrid_, bc_, e0, rho0, drho0);
                 break;
-            case 3:
+            case PoissonFDtype::h6:
                 poisson_solver_ = new PBdiel<pb::PBh6<POTDTYPE>>(
                     *pbGrid_, bc_, e0, rho0, drho0);
-            case 4:
+            case PoissonFDtype::h8:
                 poisson_solver_ = new PBdiel<pb::PBh8<POTDTYPE>>(
                     *pbGrid_, bc_, e0, rho0, drho0);
                 break;
-            case 10:
+            case PoissonFDtype::h4MP:
                 poisson_solver_ = new PBdiel<pb::PBh4MP<POTDTYPE>>(
                     *pbGrid_, bc_, e0, rho0, drho0);
                 break;
@@ -281,26 +279,26 @@ void Electrostatic::setupPB(
     {
         switch (laptype_)
         {
-            case 0:
+            case PoissonFDtype::h4M:
                 poisson_solver_ = new PBdiel_CG<pb::PBh4M<POTDTYPE>>(
                     *pbGrid_, bc_, e0, rho0, drho0);
                 break;
-            case 1:
+            case PoissonFDtype::h2:
                 poisson_solver_ = new PBdiel_CG<pb::PBh2<POTDTYPE>>(
                     *pbGrid_, bc_, e0, rho0, drho0);
                 break;
-            case 2:
+            case PoissonFDtype::h4:
                 poisson_solver_ = new PBdiel_CG<pb::PBh4<POTDTYPE>>(
                     *pbGrid_, bc_, e0, rho0, drho0);
                 break;
-            case 3:
+            case PoissonFDtype::h6:
                 poisson_solver_ = new PBdiel_CG<pb::PBh6<POTDTYPE>>(
                     *pbGrid_, bc_, e0, rho0, drho0);
-            case 4:
+            case PoissonFDtype::h8:
                 poisson_solver_ = new PBdiel_CG<pb::PBh8<POTDTYPE>>(
                     *pbGrid_, bc_, e0, rho0, drho0);
                 break;
-            case 10:
+            case PoissonFDtype::h4MP:
                 poisson_solver_ = new PBdiel_CG<pb::PBh4MP<POTDTYPE>>(
                     *pbGrid_, bc_, e0, rho0, drho0);
                 break;

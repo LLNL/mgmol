@@ -86,6 +86,16 @@ enum class OrbitalsType
     UNDEFINED
 };
 
+enum class PoissonFDtype
+{
+    h4M,
+    h2,
+    h4,
+    h6,
+    h8,
+    h4MP
+};
+
 // Main control structure
 class Control
 {
@@ -343,6 +353,8 @@ public:
 
     bool Mehrstellen() const { return (lap_type == 0 || lap_type == 10); }
 
+    PoissonFDtype getPoissonFDtype() const { return poisson_lap_type_; }
+
     void setColoringAlgo(const short coloring_algo)
     {
         coloring_algo_ = coloring_algo;
@@ -391,6 +403,8 @@ public:
     short poisson_pc_nu1;
     short poisson_pc_nu2;
     short poisson_pc_nlev;
+
+    PoissonFDtype poisson_lap_type_;
 
     short lap_type;
 

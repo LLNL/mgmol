@@ -324,7 +324,8 @@ int main(int argc, char** argv)
                 "Poisson.rho0", po::value<float>()->default_value(0.0004),
                 "continuum solvent: rho0")("Poisson.beta",
                 po::value<float>()->default_value(1.3),
-                "continuum solvent: beta")(
+                "continuum solvent: beta")("Poisson.FDtype",
+                po::value<string>()->default_value("Mehrstellen"), "FDtype")(
                 "Poisson.nu1", po::value<short>()->default_value(2), "nu_1")(
                 "Poisson.nu2", po::value<short>()->default_value(2), "nu_2")(
                 "Poisson.max_steps", po::value<short>()->default_value(20),
