@@ -18,9 +18,6 @@
 
 namespace utf = boost::unit_test;
 
-int aa(int i, int j) { return i + 2 * j; }
-int bb(int i, int j) { return i - j - 3; }
-
 BOOST_AUTO_TEST_CASE(replicated_to_dist_matrix, *utf::tolerance(1e-8))
 {
     int mype;
