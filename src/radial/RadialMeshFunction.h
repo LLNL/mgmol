@@ -11,6 +11,8 @@
 #ifndef MGMOL_RADIALMESHFUNCTION_H
 #define MGMOL_RADIALMESHFUNCTION_H
 
+#include <mpi.h>
+
 #include <cassert>
 #include <fstream>
 #include <iostream>

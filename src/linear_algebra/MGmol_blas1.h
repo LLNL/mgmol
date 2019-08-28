@@ -16,12 +16,6 @@
 #include <cmath>
 #include <string.h>
 
-#ifdef USE_MPI
-#include <mpi.h>
-#else
-typedef int MPI_Comm;
-#endif
-
 #define MY_VERSION 0
 #define EPSILON 1.e-12
 
@@ -54,15 +48,6 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
-
-double my_ddot(int, const double* const, const double* const);
-double my_pddot(int, const double* const, const double* const, MPI_Comm);
-
-inline void my_dcopy(const int n, const double* const a, double* b)
-{
-    int ione = 1;
-    DCOPY(&n, a, &ione, b, &ione);
-}
 
 inline void my_daxpy(
     const int n, const double alpha, const double* const a, double* b)
@@ -99,18 +84,6 @@ inline void my_dscal(const int n, const double alpha, double* a)
 
     DSCAL(&n, &alpha, a, &ione);
 #endif
-}
-
-inline double my_dnrm2(int n, double* a)
-{
-    double dot = my_ddot(n, a, a);
-    return sqrt(dot);
-}
-
-inline double my_pdnrm2(int n, double* a, MPI_Comm comm)
-{
-    double dot = my_pddot(n, a, a, comm);
-    return sqrt(dot);
 }
 
 #endif
