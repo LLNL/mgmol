@@ -122,6 +122,9 @@ public:
     void dressUpS(const dist_matrix::DistMatrix<DISTMATDTYPE>& ls,
         const int new_orbitals_index);
 
+    // dm_ -> u*dm_*u^T
+    void transform(const dist_matrix::DistMatrix<DISTMATDTYPE>& u);
+
     void buildFromBlock(const dist_matrix::DistMatrix<DISTMATDTYPE>& block00);
 
     double computeEntropy() const;

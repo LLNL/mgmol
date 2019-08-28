@@ -1916,7 +1916,7 @@ void LocGridOrbitals::orthonormalizeLoewdin(
     if (matrixTransform == 0)
         localP = new SquareLocalMatrices<MATDTYPE>(subdivx_, chromatic_number_);
 
-    projmatrices->getLoewdinTransform(*localP);
+    projmatrices->computeLoewdinTransform(*localP, getIterativeIndex());
 
     multiplyByMatrix(*localP);
 
@@ -1928,7 +1928,6 @@ void LocGridOrbitals::orthonormalizeLoewdin(
         (*MPIdata::sout)<<"LocGridOrbitals::orthonormalizeLoewdin() --- Gram matrix (after):"<<endl;
     proj_matrices_->printS(*MPIdata::sout);
 #endif
-    projmatrices->setGram2Id(getIterativeIndex());
 
     if (matrixTransform == 0) delete localP;
 }

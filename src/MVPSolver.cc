@@ -126,6 +126,8 @@ void MVPSolver<T>::buildTarget_MVP(dist_matrix::DistMatrix<DISTMATDTYPE>& h11,
 {
     target_tm_.start();
 
+    if (onpe0) std::cout << "buildTarget_MVP()..." << std::endl;
+
     Control& ct = *(Control::instance());
 
     proj_mat_work_->assignH(h11);
@@ -139,7 +141,7 @@ void MVPSolver<T>::buildTarget_MVP(dist_matrix::DistMatrix<DISTMATDTYPE>& h11,
     // if( onpe0 )os_<<"Compute XN..."<<endl;
     proj_mat_work_->setHB2H();
 
-    // if( onpe0 )os_<<"Compute F with Nel="<<ct.getNel()<<endl;
+    // if( onpe0 )os_<<"Compute DM..."<<endl;
     proj_mat_work_->updateDM(orbitals_index);
 
     target = proj_mat_work_->dm();
@@ -250,7 +252,10 @@ int MVPSolver<T>::solve(T& orbitals)
                 projmatrices->assignH(h11);
                 projmatrices->setHB2H();
 
-                if (use_old_dm_) dmInit = projmatrices->dm();
+                if (use_old_dm_)
+                {
+                    dmInit = projmatrices->dm();
+                }
 
                 ts0 = evalEntropyMVP(projmatrices, true, os_);
                 e0  = energy_->evaluateTotal(

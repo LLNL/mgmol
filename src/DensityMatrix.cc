@@ -432,6 +432,19 @@ void DensityMatrix::dressUpS(const dist_matrix::DistMatrix<DISTMATDTYPE>& ls,
     stripped_       = false;
 }
 
+// dm_ -> u*dm_*u^T
+// note: may lead to a dm with eigenvalues slightly outside [0.,1.]
+// for u far from identity
+void DensityMatrix::transform(const dist_matrix::DistMatrix<DISTMATDTYPE>& u)
+{
+    work_->gemm('n', 't', 1., *dm_, u, 0.);
+    dm_->gemm('n', 'n', 1., u, *work_, 0.);
+
+    // dist_matrix::DistMatrix<DISTMATDTYPE> tmp("tmp", dim_, dim_);
+    // tmp.identity();
+    // computeOccupations(tmp);
+}
+
 double DensityMatrix::getExpectation(
     const dist_matrix::DistMatrix<DISTMATDTYPE>& A)
 {
