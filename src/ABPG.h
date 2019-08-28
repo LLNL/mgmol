@@ -54,7 +54,7 @@ public:
     {
     }
 
-    ~ABPG()
+    ~ABPG() override
     {
         if (wf_mix_ != nullptr)
         {
@@ -63,13 +63,13 @@ public:
         }
     }
 
-    void setup(T&);
+    void setup(T&) override;
 
     int updateWF(T& orbitals, Ions& ions, const double precond_factor,
         const bool orthof, T& work_orbitals, const bool accelerate,
-        const bool print_res, const double atol);
+        const bool print_res, const double atol) override;
 
-    void restartMixing()
+    void restartMixing() override
     {
         if (wf_mix_ != nullptr) wf_mix_->restart();
     }

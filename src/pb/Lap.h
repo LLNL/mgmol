@@ -30,7 +30,7 @@ public:
     Lap(const Grid& mygrid) : FDoper<T>(mygrid) {}
 
     // A->B
-    virtual void apply(GridFunc<T>& A, GridFunc<T>& B) = 0;
+    void apply(GridFunc<T>& A, GridFunc<T>& B) override = 0;
     virtual void applyWithPot(GridFunc<T>& A, const double* const, T*)
     {
         std::cerr << "ERROR: Lap::applyWithPot() not implemented" << std::endl;
@@ -59,7 +59,7 @@ public:
     virtual double invDiagEl(void) const = 0;
     virtual void setLowerOrderGrid(void) = 0;
 
-    virtual ~Lap() {}
+    ~Lap() override {}
 };
 
 } // namespace pb

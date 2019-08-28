@@ -19,9 +19,9 @@ class OrbitalsExtrapolationOrder2 : public OrbitalsExtrapolation<T>
 public:
     OrbitalsExtrapolationOrder2() : extrapolated_H_(false) {}
 
-    void extrapolate_orbitals(T** orbitals, T* new_orbitals);
+    void extrapolate_orbitals(T** orbitals, T* new_orbitals) override;
 
-    bool extrapolatedH() const { return extrapolated_H_; }
+    bool extrapolatedH() const override { return extrapolated_H_; }
 
 private:
     bool extrapolated_H_;

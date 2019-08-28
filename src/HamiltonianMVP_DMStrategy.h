@@ -45,19 +45,19 @@ public:
         Rho<T4>* rho, Energy<T4>* energy, Electrostatic* electrostat,
         MGmol<T4>* mgmol_strategy, T4* orbitals);
 
-    ~HamiltonianMVP_DMStrategy();
+    ~HamiltonianMVP_DMStrategy() override;
 
-    void initialize();
-    int update();
+    void initialize() override;
+    int update() override;
 
     // H is updated with HamiltonianMVP loop, so no need to compute it outside
-    bool needH() const { return false; }
+    bool needH() const override { return false; }
 
-    void stripDM();
+    void stripDM() override;
 
-    void dressDM();
+    void dressDM() override;
 
-    void reset();
+    void reset() override;
 };
 
 #endif

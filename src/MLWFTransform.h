@@ -23,12 +23,12 @@ private:
     double jade(int maxsweep, double tol);
 
 public:
-    double spread2(int i, int j) const;
+    double spread2(int i, int j) const override;
 
     void setia(std::vector<int>&);
 
     // compute MLWF transform
-    void compute_transform(const int maxsweep, const double tol);
+    void compute_transform(const int maxsweep, const double tol) override;
 
     MLWFTransform(const int nst, const Vector3D& origin, const Vector3D& ll)
         : OrbitalsTransform(nst, origin, ll)
@@ -65,7 +65,7 @@ public:
         }
     };
 
-    ~MLWFTransform() {}
+    ~MLWFTransform() override {}
 
     void printTransform();
 };

@@ -61,7 +61,7 @@ public:
         return replicated_A;
     }
 
-    void setLowerOrderGrid()
+    void setLowerOrderGrid() override
     {
         this->setFDLowerOrderGrid(ShiftedLaph4M::minNumberGhosts());
     }
@@ -71,25 +71,25 @@ public:
     static int minNumberGhosts() { return 1; }
 
     // A->B
-    void apply(GridFunc<T>& A, GridFunc<T>& B);
-    void apply(GridFuncVector<T>& A, GridFuncVector<T>& B);
+    void apply(GridFunc<T>& A, GridFunc<T>& B) override;
+    void apply(GridFuncVector<T>& A, GridFuncVector<T>& B) override;
 
-    void rhs(GridFunc<T>& A, GridFunc<T>& B) const
+    void rhs(GridFunc<T>& A, GridFunc<T>& B) const override
     {
         this->rhs_4th_Mehr1(A, B);
         B.set_bc(A.bc(0), A.bc(1), A.bc(2));
     }
-    void rhs(GridFunc<T>& A, T* const B) const { this->rhs_4th_Mehr1(A, B); }
+    void rhs(GridFunc<T>& A, T* const B) const override { this->rhs_4th_Mehr1(A, B); }
 
-    void jacobi(GridFunc<T>&, const GridFunc<T>&, GridFunc<T>&);
-    void jacobi(GridFuncVector<T>&, const GridFuncVector<T>&, GridFunc<T>&);
+    void jacobi(GridFunc<T>&, const GridFunc<T>&, GridFunc<T>&) override;
+    void jacobi(GridFuncVector<T>&, const GridFuncVector<T>&, GridFunc<T>&) override;
     void jacobi(
-        GridFuncVector<T>&, const GridFuncVector<T>&, GridFuncVector<T>&);
+        GridFuncVector<T>&, const GridFuncVector<T>&, GridFuncVector<T>&) override;
 
     double lambda2() const { return lambda2_; }
 
-    double diagEl(void) const { return diagEl_; };
-    double invDiagEl(void) const { return invDiagEl_; };
+    double diagEl(void) const override { return diagEl_; };
+    double invDiagEl(void) const override { return invDiagEl_; };
 };
 
 } // namespace pb

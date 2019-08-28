@@ -96,7 +96,7 @@ public:
     void copyData(const VariableSizeMatrix<T>& A,
         const int n); /* Copy data from matrix A. Copies n rows of A */
     void set2Identity(); /* Set matrix to identity */
-    ~VariableSizeMatrix(); // destructor
+    ~VariableSizeMatrix() override; // destructor
 
     void printMat(const char* fname,
         std::vector<int>& lvec); /* print select rows of CSR matrix */

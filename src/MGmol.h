@@ -188,9 +188,9 @@ public:
 
     MGmol(MPI_Comm comm, std::ostream& os);
 
-    ~MGmol();
+    ~MGmol() override;
 
-    void run();
+    void run() override;
     void initNuc(Ions& ions);
     void initKBR();
 
@@ -293,9 +293,9 @@ public:
     int nions() { return ions_->getNumIons(); }
     double getTotalEnergy();
     void setup();
-    int setupFromInput(const std::string input_file);
-    int setupLRsFromInput(const std::string input_file);
-    int setupConstraintsFromInput(const std::string input_file);
+    int setupFromInput(const std::string input_file) override;
+    int setupLRsFromInput(const std::string input_file) override;
+    int setupConstraintsFromInput(const std::string input_file) override;
     void cleanup();
     void geomOptimSetup();
     void geomOptimQuench();

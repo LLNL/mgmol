@@ -29,18 +29,18 @@ public:
     };
 
     // Destructor
-    ~Hartree_CG() { delete poisson_solver_; }
+    ~Hartree_CG() override { delete poisson_solver_; }
 
     void setup(const short nu1, const short nu2, const short max_sweeps,
         const double tol, const short max_nlevels,
-        const bool gather_coarse_level = true)
+        const bool gather_coarse_level = true) override
     {
         (void)gather_coarse_level;
         poisson_solver_->setup(nu1, nu2, max_sweeps, tol, max_nlevels);
     }
 
     void solve(
-        const pb::GridFunc<RHODTYPE>& rho, const pb::GridFunc<RHODTYPE>& rhoc);
+        const pb::GridFunc<RHODTYPE>& rho, const pb::GridFunc<RHODTYPE>& rhoc) override;
 };
 
 #endif

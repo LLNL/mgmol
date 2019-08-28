@@ -49,7 +49,7 @@ class PBEonGridSpin : public XConGrid
 public:
     PBEonGridSpin(Rho<T>& rho, Potentials& pot);
 
-    ~PBEonGridSpin()
+    ~PBEonGridSpin() override
     {
 #ifdef USE_LIBXC
         xc_func_end(&xfunc_);
@@ -59,9 +59,9 @@ public:
 #endif
     }
 
-    void update();
+    void update() override;
 
-    double getExc() const;
+    double getExc() const override;
 };
 
 #endif

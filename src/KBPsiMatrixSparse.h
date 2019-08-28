@@ -55,12 +55,12 @@ class KBPsiMatrixSparse : public KBPsiMatrixInterface
 
     int count_proj_subdomain_;
 
-    void addKBPsi(const int gid, const int st, const double val)
+    void addKBPsi(const int gid, const int st, const double val) override
     {
         assert(st < numst_);
         (*kbpsimat_).insertMatrixElement(gid, st, val, ADD, true);
     }
-    void addKBBPsi(const int gid, const int st, const double val)
+    void addKBBPsi(const int gid, const int st, const double val) override
     {
         assert(st < numst_);
         (*kbBpsimat_).insertMatrixElement(gid, st, val, ADD, true);
@@ -91,9 +91,9 @@ class KBPsiMatrixSparse : public KBPsiMatrixInterface
 public:
     KBPsiMatrixSparse(pb::Lap<ORBDTYPE>* lapop, const bool need2radius = true);
 
-    ~KBPsiMatrixSparse();
+    ~KBPsiMatrixSparse() override;
 
-    void printTimers(std::ostream& os);
+    void printTimers(std::ostream& os) override;
 
     void reset()
     {

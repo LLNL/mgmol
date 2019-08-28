@@ -43,7 +43,7 @@ public:
         LocalizationRegions& lrs, MasksSet& masks, Electrostatic& electrostat,
         const double dt, MGmol<T>&);
 
-    ~FIRE(){};
+    ~FIRE() override{};
 };
 
 #endif

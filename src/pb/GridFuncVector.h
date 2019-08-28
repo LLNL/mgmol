@@ -146,7 +146,7 @@ public:
         setup();
     }
 
-    ~GridFuncVector()
+    ~GridFuncVector() override
     {
         assert(functions_.size() == nfunc_);
         if (allocate_functions_)

@@ -129,18 +129,18 @@ protected:
 
 public:
     ProjectedMatrices(const int, const bool with_spin);
-    virtual ~ProjectedMatrices();
+    ~ProjectedMatrices() override;
 
-    virtual void setup(const double kbt, const int nel,
-        const std::vector<std::vector<int>>& global_indexes);
+    void setup(const double kbt, const int nel,
+        const std::vector<std::vector<int>>& global_indexes) override;
 
-    void addMatrixElementSparseH(const int st1, const int st2, const double val)
+    void addMatrixElementSparseH(const int st1, const int st2, const double val) override
     {
         sH_->push_back(st1, st2, val);
     }
 
     // fill SparseDistMatrix sH_ with values in slH
-    void addMatrixElementsSparseH(const SquareLocalMatrices<MATDTYPE>& slH)
+    void addMatrixElementsSparseH(const SquareLocalMatrices<MATDTYPE>& slH) override
     {
         Control& ct = *(Control::instance());
 
@@ -148,21 +148,21 @@ public:
 
         sl2dm->convert(slH, *sH_, ct.numst);
     }
-    void clearSparseH() { sH_->clearData(); }
-    void scaleSparseH(const double scale) { sH_->scal(scale); }
+    void clearSparseH() override { sH_->clearData(); }
+    void scaleSparseH(const double scale) override { sH_->scal(scale); }
 
-    void consolidateH()
+    void consolidateH() override
     {
         consolidate_H_tm_.start();
         sH_->parallelSumToDistMatrix();
         consolidate_H_tm_.stop();
     }
 
-    double getTraceDiagProductWithInvS(std::vector<DISTMATDTYPE>& ddiag);
+    double getTraceDiagProductWithInvS(std::vector<DISTMATDTYPE>& ddiag) override;
 
-    SquareLocalMatrices<MATDTYPE>& getLocalX() const { return *localX_; }
+    SquareLocalMatrices<MATDTYPE>& getLocalX() const override { return *localX_; }
 
-    SquareLocalMatrices<MATDTYPE>& getLocalT() const { return *localT_; }
+    SquareLocalMatrices<MATDTYPE>& getLocalT() const override { return *localT_; }
 
     const dist_matrix::SubMatrices<DISTMATDTYPE>& getSubMatLS(MPI_Comm comm,
         const std::vector<std::vector<int>>& global_indexes) const
@@ -170,7 +170,7 @@ public:
         return gm_->getSubMatLS(comm, global_indexes);
     }
 
-    void updateSubMatX() { updateSubMatX(dm_->getMatrix()); }
+    void updateSubMatX() override { updateSubMatX(dm_->getMatrix()); }
 
     void updateSubMatX(const dist_matrix::DistMatrix<DISTMATDTYPE>& dm)
     {
@@ -179,7 +179,7 @@ public:
         dm2sl->convert(dm, *localX_);
     }
 
-    void updateSubMatT()
+    void updateSubMatT() override
     {
         DistMatrix2SquareLocalMatrices* dm2sl
             = DistMatrix2SquareLocalMatrices::instance();
@@ -189,10 +189,10 @@ public:
     void computeLoewdinTransform(
         SquareLocalMatrices<MATDTYPE>& localPi, const int orb_index);
 
-    void printTimers(std::ostream& os);
+    void printTimers(std::ostream& os) override;
 
     void initializeGramMatrix(
-        const SquareLocalMatrices<MATDTYPE>& ss, const int orbitals_index)
+        const SquareLocalMatrices<MATDTYPE>& ss, const int orbitals_index) override
     {
         assert(gm_);
 
@@ -205,14 +205,14 @@ public:
         gm_->setMatrix(*work_, orbitals_index);
         init_gram_matrix_tm_.stop();
     }
-    void printGramMM(std::ofstream& tfile) { gm_->printMM(tfile); }
+    void printGramMM(std::ofstream& tfile) override { gm_->printMM(tfile); }
     void printHamiltonianMM(std::ofstream& tfile) { matH_->printMM(tfile); }
-    int getDMMatrixIndex() const
+    int getDMMatrixIndex() const override
     {
         assert(dm_);
         return dm_->getOrbitalsIndex();
     }
-    void setDMuniform(const DISTMATDTYPE nel, const int orbitals_index)
+    void setDMuniform(const DISTMATDTYPE nel, const int orbitals_index) override
     {
         dm_->setUniform(nel, orbitals_index);
     }
@@ -220,16 +220,16 @@ public:
 
     bool withSpin() const { return with_spin_; }
 
-    void computeInvS();
+    void computeInvS() override;
 
-    virtual void computeInvB()
+    void computeInvB() override
     {
         compute_invB_tm_.start();
         computeInvS();
         compute_invB_tm_.stop();
     }
 
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& dm() const;
+    const dist_matrix::DistMatrix<DISTMATDTYPE>& dm() const override;
     const dist_matrix::DistMatrix<DISTMATDTYPE>& kernel4dot() const;
 
     bool occupationsUptodate() const { return dm_->occupationsUptodate(); }
@@ -241,7 +241,7 @@ public:
 
     void updateLS() { gm_->updateLS(); }
 
-    virtual void updateTheta()
+    void updateTheta() override
     {
         // theta = invB * Hij
         update_theta_tm_.start();
@@ -250,7 +250,7 @@ public:
         update_theta_tm_.stop();
     }
 
-    void updateThetaAndHB()
+    void updateThetaAndHB() override
     {
         updateTheta();
 
@@ -263,7 +263,7 @@ public:
     }
     const dist_matrix::DistMatrix<DISTMATDTYPE>& getH() { return *matH_; }
 
-    void setHB2H()
+    void setHB2H() override
     {
         // if( onpe0 )
         //    (*MPIdata::sout)<<"ProjectedMatrices::setHB2H()..."<<endl;
@@ -287,29 +287,29 @@ public:
         return gm_->getMatrix();
     }
 
-    void getOccupations(std::vector<DISTMATDTYPE>& occ) const;
+    void getOccupations(std::vector<DISTMATDTYPE>& occ) const override;
     void setOccupations(const std::vector<DISTMATDTYPE>& occ);
 
-    void stripDM();
-    void dressupDM();
+    void stripDM() override;
+    void dressupDM() override;
 
-    void applyInvS(SquareLocalMatrices<MATDTYPE>& mat);
+    void applyInvS(SquareLocalMatrices<MATDTYPE>& mat) override;
     void applyInvS(dist_matrix::DistMatrix<DISTMATDTYPE>& mat)
     {
         assert(gm_ != 0);
         gm_->applyInv(mat);
     }
 
-    void setDMto2InvS();
+    void setDMto2InvS() override;
     void buildDM(const dist_matrix::DistMatrix<DISTMATDTYPE>& z,
         const int orbitals_index);
     void buildDM(const dist_matrix::DistMatrix<DISTMATDTYPE>& z,
         const std::vector<DISTMATDTYPE>&, const int orbitals_index);
     void buildDM(const std::vector<DISTMATDTYPE>&, const int orbitals_index);
 
-    double getEigSum();
+    double getEigSum() override;
     double getExpectation(const dist_matrix::DistMatrix<DISTMATDTYPE>& A);
-    double getExpectationH();
+    double getExpectationH() override;
 
     void solveGenEigenProblem(dist_matrix::DistMatrix<DISTMATDTYPE>& zz,
         std::vector<DISTMATDTYPE>& val, char job = 'v');
@@ -319,13 +319,13 @@ public:
         const dist_matrix::DistMatrix<DISTMATDTYPE>& rotation_matrix,
         const bool flag_eigen);
 
-    double getNel() const;
+    double getNel() const override;
 
-    double getLowestEigenvalue() const { return eigenvalues_[0]; }
+    double getLowestEigenvalue() const override { return eigenvalues_[0]; }
 
-    void printS(std::ostream& os) const { gm_->print(os); }
+    void printS(std::ostream& os) const override { gm_->print(os); }
 
-    virtual void printMatrices(std::ostream& os) const
+    void printMatrices(std::ostream& os) const override
     {
         printS(os);
         printH(os);
@@ -333,18 +333,18 @@ public:
         printHB(os);
     }
 
-    void printDM(std::ostream& os) const;
-    void printOccupations(std::ostream& os) const;
+    void printDM(std::ostream& os) const override;
+    void printOccupations(std::ostream& os) const override;
 
-    double computeCond() { return gm_->computeCond(); }
+    double computeCond() override { return gm_->computeCond(); }
 
     double computeEntropy(const double kbt);
-    double computeEntropy();
-    double checkCond(const double tol, const bool flag = true);
-    int writeDM_hdf5(HDFrestart& h5f_file);
-    int read_dm_hdf5(hid_t file_id);
+    double computeEntropy() override;
+    double checkCond(const double tol, const bool flag = true) override;
+    int writeDM_hdf5(HDFrestart& h5f_file) override;
+    int read_dm_hdf5(hid_t file_id) override;
     void printEigenvalues(std::ostream& os) const;
-    void updateDM(const int iterative_index);
+    void updateDM(const int iterative_index) override;
     void updateDMwithEigenstates(const int iterative_index);
     void updateDMwithSP2(const int iterative_index);
     void updateDMwithEigenstatesAndRotate(
@@ -368,7 +368,7 @@ public:
         return tmp;
     }
 
-    void saveDM()
+    void saveDM() override
     {
         if (onpe0) std::cout << "ProjectedMatrices::saveDM()" << std::endl;
         if (!mat_X_old_)
@@ -385,13 +385,13 @@ public:
         }
     }
 
-    void resetDM()
+    void resetDM() override
     {
         dm_->setMatrix(*mat_X_old_, 0);
         dm_->stripS(*mat_L_old_, 0);
     }
 
-    void updateDMwithRelax(const double mix, const int itindex)
+    void updateDMwithRelax(const double mix, const int itindex) override
     {
         // cout<<"ProjectedMatrices::updateDMwithRelax()..."<<endl;
         assert(mat_X_old_);
@@ -411,7 +411,7 @@ public:
         dm.allgather(replicated_DM_matrix, dim_);
     }
 
-    double getLinDependent2states(int& st1, int& st2, const bool flag) const
+    double getLinDependent2states(int& st1, int& st2, const bool flag) const override
     {
         return gm_->getLinDependent2states(st1, st2);
     }
@@ -423,7 +423,7 @@ public:
         assert(remote_tasks_DistMatrix != 0);
         remote_tasks_DistMatrix_ = remote_tasks_DistMatrix;
     }
-    virtual void initializeMatB(const SquareLocalMatrices<MATDTYPE>& ss)
+    void initializeMatB(const SquareLocalMatrices<MATDTYPE>& ss) override
     {
         (void)ss;
         std::cerr
@@ -432,10 +432,10 @@ public:
             << std::endl;
     }
 
-    void resetDotProductMatrices();
-    double dotProductWithInvS(const SquareLocalMatrices<MATDTYPE>& ss);
-    double dotProductWithDM(const SquareLocalMatrices<MATDTYPE>& ss);
-    double dotProductSimple(const SquareLocalMatrices<MATDTYPE>& ss);
+    void resetDotProductMatrices() override;
+    double dotProductWithInvS(const SquareLocalMatrices<MATDTYPE>& ss) override;
+    double dotProductWithDM(const SquareLocalMatrices<MATDTYPE>& ss) override;
+    double dotProductSimple(const SquareLocalMatrices<MATDTYPE>& ss) override;
     double computeTraceInvSmultMat(const SquareLocalMatrices<MATDTYPE>& mat);
     double computeTraceInvSmultMat(
         const dist_matrix::DistMatrix<DISTMATDTYPE>& mat)

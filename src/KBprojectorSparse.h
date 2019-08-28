@@ -123,7 +123,7 @@ public:
 
     ~KBprojectorSparse() { clear(); }
 
-    void clear()
+    void clear() override
     {
         if (is_in_domain_ != nullptr)
         {
@@ -138,41 +138,41 @@ public:
     }
 
     // setup data that depends on atomic position
-    void setup(const double center[3]);
+    void setup(const double center[3]) override;
 
-    double maxRadius() const;
+    double maxRadius() const override;
 
-    bool overlapPE() const;
-    void registerPsi(const short iloc, const ORBDTYPE* const psi);
+    bool overlapPE() const override;
+    void registerPsi(const short iloc, const ORBDTYPE* const psi) override;
 
-    bool overlaps(const short iloc) const { return (size_nl_[iloc] > 0); }
-    double dotPsi(const short iloc, const short index) const;
+    bool overlaps(const short iloc) const override { return (size_nl_[iloc] > 0); }
+    double dotPsi(const short iloc, const short index) const override;
 
     // axpySket for templated destination type
-    virtual void axpySKet(
-        const short iloc, const double alpha, double* const dst) const
+    void axpySKet(
+        const short iloc, const double alpha, double* const dst) const override
     {
         axpySKetT(iloc, alpha, dst);
     }
-    virtual void axpySKet(
-        const short iloc, const double alpha, float* const dst) const
+    void axpySKet(
+        const short iloc, const double alpha, float* const dst) const override
     {
         axpySKetT(iloc, alpha, dst);
     }
 
-    virtual void axpyKet(const short iloc, const std::vector<double>& alpha,
-        double* const dst) const
+    void axpyKet(const short iloc, const std::vector<double>& alpha,
+        double* const dst) const override
     {
         axpyKetT(iloc, alpha, dst);
     }
-    virtual void axpyKet(const short iloc, const std::vector<double>& alpha,
-        float* const dst) const
+    void axpyKet(const short iloc, const std::vector<double>& alpha,
+        float* const dst) const override
     {
         axpyKetT(iloc, alpha, dst);
     }
 
-    void getKBsigns(std::vector<short>& kbsigns) const;
-    void getKBcoeffs(std::vector<double>& coeffs) const;
+    void getKBsigns(std::vector<short>& kbsigns) const override;
+    void getKBcoeffs(std::vector<double>& coeffs) const override;
 };
 
 #endif

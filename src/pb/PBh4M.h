@@ -72,7 +72,7 @@ public:
 
     PBh4M replicatedOp(const Grid&);
 
-    void setLowerOrderGrid()
+    void setLowerOrderGrid() override
     {
         FDoper<T>::setFDLowerOrderGrid(minNumberGhosts());
     }
@@ -80,7 +80,7 @@ public:
     PBh4M& getLowerOrderOp() { return *this; }
 
     // A->B
-    void apply(GridFunc<T>& A, GridFunc<T>& B)
+    void apply(GridFunc<T>& A, GridFunc<T>& B) override
     {
         FDoper<T>::del2_4th_Mehr(A, B);
         PB<T>::work1_.prod(pp_, A);
@@ -90,13 +90,13 @@ public:
 
     void init(GridFunc<T>&);
 
-    void transform(GridFunc<T>& A) const { A *= inv_sqrt_a_; }
+    void transform(GridFunc<T>& A) const override { A *= inv_sqrt_a_; }
 
-    void inv_transform(GridFunc<T>& A) const { A /= inv_sqrt_a_; }
+    void inv_transform(GridFunc<T>& A) const override { A /= inv_sqrt_a_; }
 
     static short minNumberGhosts() { return 2; }
 
-    void rhs(GridFunc<T>& A, GridFunc<T>& B) const
+    void rhs(GridFunc<T>& A, GridFunc<T>& B) const override
     {
         assert(A.grid().sizeg() == PB<T>::grid_.sizeg());
         assert(B.grid().sizeg() == PB<T>::grid_.sizeg());
@@ -104,16 +104,16 @@ public:
         FDoper<T>::rhs_4th_Mehr1(A, B);
         B.set_bc(A.bc(0), A.bc(1), A.bc(2));
     }
-    void rhs(GridFunc<T>& A, T* const B) const
+    void rhs(GridFunc<T>& A, T* const B) const override
     {
         FDoper<T>::rhs_4th_Mehr1(A, B);
     }
 
-    void jacobi(GridFunc<T>&, const GridFunc<T>&, GridFunc<T>&);
+    void jacobi(GridFunc<T>&, const GridFunc<T>&, GridFunc<T>&) override;
 
-    void get_vepsilon(GridFunc<T>&, GridFunc<T>&, GridFunc<T>&);
+    void get_vepsilon(GridFunc<T>&, GridFunc<T>&, GridFunc<T>&) override;
 
-    ~PBh4M()
+    ~PBh4M() override
     {
         // std::cout<<"destroy PBh4M"<<endl;
     }

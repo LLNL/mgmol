@@ -26,16 +26,16 @@ public:
     NonOrthoDMStrategy(T* orbitals, ProjectedMatricesInterface* proj_matrices,
         const double mix);
 
-    void initialize();
-    int update();
+    void initialize() override;
+    int update() override;
 
-    bool needH() const { return true; }
+    bool needH() const override { return true; }
 
-    void stripDM();
+    void stripDM() override;
 
-    void dressDM();
+    void dressDM() override;
 
-    void reset() { proj_matrices_->resetDM(); }
+    void reset() override { proj_matrices_->resetDM(); }
 };
 
 #endif

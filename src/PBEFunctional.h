@@ -50,9 +50,9 @@ class PBEFunctional : public XCFunctional
 public:
     PBEFunctional(std::vector<std::vector<RHODTYPE>>& rhoe);
 
-    bool isGGA() const { return true; };
-    std::string name() const { return "PBE"; };
-    void computeXC(void);
+    bool isGGA() const override { return true; };
+    std::string name() const override { return "PBE"; };
+    void computeXC(void) override;
     void setGradRho(const int i, const RHODTYPE* drho)
     {
         memcpy(pgrad_rho_[i], drho, np_ * sizeof(RHODTYPE));

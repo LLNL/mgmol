@@ -58,7 +58,7 @@ public:
         return *b_[i];
     }
 
-    double spread2(int i, int j) const;
+    double spread2(int i, int j) const override;
 
     void setia(std::vector<int>&);
 
@@ -66,7 +66,7 @@ public:
         const bool reset_positions = false);
 
     // compute NOLMO transform
-    void compute_transform(const int maxsweep, const double tol);
+    void compute_transform(const int maxsweep, const double tol) override;
 
     NOLMOTransform(const int nst, const Vector3D& origin, const Vector3D& ll)
         : OrbitalsTransform(nst, origin, ll)
@@ -119,7 +119,7 @@ public:
         set_positions_ = false;
     };
 
-    ~NOLMOTransform()
+    ~NOLMOTransform() override
     {
         for (int k = 0; k < 2 * NDIM; k++)
         {

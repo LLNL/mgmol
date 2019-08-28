@@ -111,7 +111,7 @@ public:
         return work;
     }
 
-    virtual ~FDoper()
+    ~FDoper() override
     {
         if (lower_order_grid_ != nullptr)
         {

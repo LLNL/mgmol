@@ -25,14 +25,14 @@ public:
     EigenDMStrategy(
         T* current_orbitals, ProjectedMatricesInterface* proj_matrices);
 
-    void initialize();
-    int update();
+    void initialize() override;
+    int update() override;
 
-    bool needH() const { return true; }
+    bool needH() const override { return true; }
 
-    void stripDM() {}
-    void dressDM() {}
-    void reset() {}
+    void stripDM() override {}
+    void dressDM() override {}
+    void reset() override {}
 };
 
 #endif

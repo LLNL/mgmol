@@ -65,7 +65,7 @@ public:
         conjugate_ = false;
     }
 
-    ~GrassmanLineMinimization()
+    ~GrassmanLineMinimization() override
     {
         delete new_grad_;
         delete new_pcgrad_;
@@ -74,11 +74,11 @@ public:
         delete sdir_;
     }
 
-    void setup(T&){};
+    void setup(T&) override{};
 
     int updateWF(T& orbitals, Ions& ions, const double precond_factor,
         const bool orthof, T& work_orbitals, const bool accelerate,
-        const bool print_res, const double atol);
+        const bool print_res, const double atol) override;
 
     virtual void conjugate()                                               = 0;
     virtual double computeStepSize(T& orbitals)                            = 0;

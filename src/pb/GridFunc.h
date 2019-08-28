@@ -192,7 +192,7 @@ public:
 
     void set_max(const T val);
 
-    virtual ~GridFunc();
+    ~GridFunc() override;
 
     int count_threshold(const T);
 

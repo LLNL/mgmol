@@ -26,7 +26,7 @@ public:
     {
     }
 
-    ~RadialInter() {}
+    ~RadialInter() override {}
 
     double linint(const double x, const int j = 0) const;
     double cubint(const double x, const int j = 0) const;

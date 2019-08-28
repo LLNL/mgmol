@@ -27,7 +27,7 @@ public:
           orbitals_minus1_(nullptr),
           orbitals_minus2_(nullptr){};
 
-    ~OrbitalsExtrapolationOrder3()
+    ~OrbitalsExtrapolationOrder3() override
     {
         if (orbitals_minus2_ != nullptr)
         {
@@ -41,9 +41,9 @@ public:
         }
     }
 
-    void extrapolate_orbitals(T** orbitals, T* new_orbitals);
+    void extrapolate_orbitals(T** orbitals, T* new_orbitals) override;
 
-    void clearOldOrbitals()
+    void clearOldOrbitals() override
     {
         OrbitalsExtrapolation<T>::clearOldOrbitals();
 

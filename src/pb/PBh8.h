@@ -42,7 +42,7 @@ public:
         lower_order_op_     = nullptr;
     };
 
-    ~PBh8()
+    ~PBh8() override
     {
         if (lower_order_op_ != nullptr)
         {
@@ -65,7 +65,7 @@ public:
 
     PBh8 replicatedOp(const Grid&);
 
-    void setLowerOrderGrid()
+    void setLowerOrderGrid() override
     {
         FDoper<T>::setFDLowerOrderGrid(PBh6<T>::minNumberGhosts());
     }
@@ -84,7 +84,7 @@ public:
     static short minNumberGhosts() { return 4; }
 
     // A->B
-    void apply(GridFunc<T>& A, GridFunc<T>& B)
+    void apply(GridFunc<T>& A, GridFunc<T>& B) override
     {
         pb_8th(A, B);
         B.set_bc(A.bc(0), A.bc(1), A.bc(2));
@@ -96,9 +96,9 @@ public:
         PB<T>::initialized_ = true;
     };
 
-    void jacobi(GridFunc<T>& A, const GridFunc<T>& B, GridFunc<T>& W);
+    void jacobi(GridFunc<T>& A, const GridFunc<T>& B, GridFunc<T>& W) override;
 
-    void get_vepsilon(GridFunc<T>&, GridFunc<T>&, GridFunc<T>&);
+    void get_vepsilon(GridFunc<T>&, GridFunc<T>&, GridFunc<T>&) override;
 };
 
 } // namespace pb

@@ -69,13 +69,13 @@ public:
 
     double temperature();
     double kineticEnergy();
-    int run();
+    int run() override;
     void updateTau();
-    double etol(void) const;
-    int write_hdf5(HDFrestart&);
+    double etol(void) const override;
+    int write_hdf5(HDFrestart&) override;
     int writeForces(HDFrestart& h5f_file);
     int writeTaum(HDFrestart& h5f_file);
-    int init(HDFrestart&);
+    int init(HDFrestart&) override;
     void printVelocities(std::ostream& os) const;
 
     void getVelocities(std::vector<float>& velocities) const;

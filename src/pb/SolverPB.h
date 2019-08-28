@@ -54,7 +54,7 @@ public:
 
     void setup(const short nu1, const short nu2, const short max_sweeps,
         const double tol, const short max_nlevels,
-        const bool gather_coarse_level = true)
+        const bool gather_coarse_level = true) override
     {
         nu1_                 = nu1;
         nu2_                 = nu2;
@@ -67,14 +67,14 @@ public:
     bool solve(T2* phi, T2* rhs, T2* rhod, T2* vks, const char dis);
     bool solve(GridFunc<T2>& gf_phi, GridFunc<T2>& gf_rhs,
         GridFunc<T2>& gf_rhod, GridFunc<T2>& gf_vks);
-    bool solve(GridFunc<T2>& gf_phi, GridFunc<T2>& gf_rhs);
+    bool solve(GridFunc<T2>& gf_phi, GridFunc<T2>& gf_rhs) override;
 
-    ~SolverPB(){};
+    ~SolverPB() override{};
 
-    short getNbSweeps() const { return nb_sweeps_; }
-    double getFinalResidual() const { return final_residual_; }
-    double getFinalRelativeResidual() const { return final_relative_residual_; }
-    double getResidualReduction() const { return residual_reduction_; }
+    short getNbSweeps() const override { return nb_sweeps_; }
+    double getFinalResidual() const override { return final_residual_; }
+    double getFinalRelativeResidual() const override { return final_relative_residual_; }
+    double getResidualReduction() const override { return residual_reduction_; }
 };
 
 } // namespace pb
