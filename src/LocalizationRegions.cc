@@ -105,7 +105,9 @@ void LocalizationRegions::extrapolateCentersLinear(
 
     vector<vector<Vector3D>::iterator> it_old;
 
-    for (int i = 0; i < old_centers_.size(); i++)
+    const int old_centers_size = old_centers_.size();
+    it_old.reserve(old_centers_size);
+    for (int i = 0; i < old_centers_size; i++)
     {
         it_old.push_back(old_centers_[i].begin());
     }
@@ -190,7 +192,9 @@ void LocalizationRegions::extrapolateCentersVerlet(
 
     vector<vector<Vector3D>::iterator> it_old;
 
-    for (int i = 0; i < old_centers_.size(); i++)
+    const int old_centers_size = old_centers_.size();
+    it_old.reserve(old_centers_size);
+    for (int i = 0; i < old_centers_size; i++)
     {
         it_old.push_back(old_centers_[i].begin());
     }

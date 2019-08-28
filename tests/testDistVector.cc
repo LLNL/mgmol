@@ -55,6 +55,7 @@ BOOST_AUTO_TEST_CASE(dist_vector)
         dist_matrix::DistVector<double> distv("v", m);
 
         std::vector<double> stdv;
+        stdv.reserve(m);
         for (int i = 0; i < m; i++)
             stdv.push_back(1.);
 
