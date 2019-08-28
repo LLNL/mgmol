@@ -9,15 +9,12 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 // $Id: MPI_AllToSome.h 7 2011-03-08 18:50:31Z jeanluc $
-int MPI_AlltofirstN(double* sendbuf, const int blocksize, double* recvbuf,
-    const int nfirst, MPI_Comm comm);
-int MPI_AlltofirstN(int* sendbuf, const int blocksize, int* recvbuf,
-    const int nfirst, MPI_Comm comm);
-int MPI_AlltofirstN(unsigned short* sendbuf, const int blocksize,
-    unsigned short* recvbuf, const int nfirst, MPI_Comm comm);
 
-int MPI_AlltofirstNv(int* sendbuf, int* sendcnts, int* sdispls, int* recvbuf,
-    int* recvcnts, int* rdispls, const int nfirst, MPI_Comm comm);
-int MPI_AlltofirstNv(unsigned short* sendbuf, int* sendcnts, int* sdispls,
-    unsigned short* recvbuf, int* recvcnts, int* rdispls, const int nfirst,
+template <typename ScalarType>
+int MPI_AlltofirstN(ScalarType* sendbuf, const int blocksize,
+    ScalarType* recvbuf, const int nfirst, MPI_Comm comm);
+
+template <typename ScalarType>
+int MPI_AlltofirstNv(ScalarType* sendbuf, int* sendcnts, int* sdispls,
+    ScalarType* recvbuf, int* recvcnts, int* rdispls, const int nfirst,
     MPI_Comm comm);

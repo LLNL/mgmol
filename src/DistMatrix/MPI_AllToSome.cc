@@ -15,13 +15,54 @@
 #include <cassert>
 #include <iostream>
 #include <string.h>
-using namespace std;
 
-int MPI_AlltofirstN(double* sendbuf, const int blocksize, double* recvbuf,
-    const int nfirst, MPI_Comm comm)
+namespace
+{
+void MPI_Irecv(double* precv, const int blocksize, const int src, const int i,
+    MPI_Comm comm, MPI_Request& rr)
+{
+    MPI_Irecv(precv, blocksize, MPI_DOUBLE, src, i, comm, &rr);
+}
+
+void MPI_Irecv(int* precv, const int blocksize, const int src, const int i,
+    MPI_Comm comm, MPI_Request& rr)
+{
+    MPI_Irecv(precv, blocksize, MPI_INT, src, i, comm, &rr);
+}
+
+void MPI_Irecv(unsigned short* precv, const int blocksize, const int src,
+    const int i, MPI_Comm comm, MPI_Request& rr)
+{
+    MPI_Irecv(precv, blocksize, MPI_UNSIGNED_SHORT, src, i, comm, &rr);
+}
+
+void MPI_Isend(double* psend, const int blocksize, const int dst, const int i,
+    MPI_Comm comm)
+{
+    MPI_Request sr;
+    MPI_Isend(psend, blocksize, MPI_DOUBLE, dst, i, comm, &sr);
+}
+
+void MPI_Isend(
+    int* psend, const int blocksize, const int dst, const int i, MPI_Comm comm)
+{
+    MPI_Request sr;
+    MPI_Isend(psend, blocksize, MPI_INT, dst, i, comm, &sr);
+}
+
+void MPI_Isend(unsigned short* psend, const int blocksize, const int dst,
+    const int i, MPI_Comm comm)
+{
+    MPI_Request sr;
+    MPI_Isend(psend, blocksize, MPI_UNSIGNED_SHORT, dst, i, comm, &sr);
+}
+}
+
+template <typename ScalarType>
+int MPI_AlltofirstN(ScalarType* sendbuf, const int blocksize,
+    ScalarType* recvbuf, const int nfirst, MPI_Comm comm)
 {
     MPI_Request rr;
-    MPI_Request sr;
 
     int npes_send;
     MPI_Comm_size(comm, &npes_send);
@@ -30,11 +71,11 @@ int MPI_AlltofirstN(double* sendbuf, const int blocksize, double* recvbuf,
     MPI_Comm_rank(comm, &src);
     int dst         = src;
     const bool recv = (src < nfirst);
-    if (recv) assert(recvbuf != NULL);
+    if (recv) assert(recvbuf != nullptr);
 
     if (recv)
         memcpy(recvbuf + src * blocksize, sendbuf + dst * blocksize,
-            blocksize * sizeof(double));
+            blocksize * sizeof(ScalarType));
 
     for (int i = 1; i < npes_send; i++)
     {
@@ -48,13 +89,13 @@ int MPI_AlltofirstN(double* sendbuf, const int blocksize, double* recvbuf,
         // recv data from src
         if (recv)
         {
-            double* precv = recvbuf + src * blocksize;
-            MPI_Irecv(precv, blocksize, MPI_DOUBLE, src, i, comm, &rr);
+            ScalarType* precv = recvbuf + src * blocksize;
+            MPI_Irecv(precv, blocksize, src, i, comm, rr);
         }
         if (dst < nfirst)
         {
-            double* psend = sendbuf + dst * blocksize;
-            MPI_Isend(psend, blocksize, MPI_DOUBLE, dst, i, comm, &sr);
+            ScalarType* psend = sendbuf + dst * blocksize;
+            MPI_Isend(psend, blocksize, dst, i, comm);
         }
 
         if (recv) MPI_Wait(&rr, MPI_STATUS_IGNORE);
@@ -64,157 +105,12 @@ int MPI_AlltofirstN(double* sendbuf, const int blocksize, double* recvbuf,
     return 0;
 }
 
-int MPI_AlltofirstN(int* sendbuf, const int blocksize, int* recvbuf,
-    const int nfirst, MPI_Comm comm)
-{
-    MPI_Request rr;
-    MPI_Request sr;
-
-    int npes_send;
-    MPI_Comm_size(comm, &npes_send);
-
-    int src;
-    MPI_Comm_rank(comm, &src);
-    int dst         = src;
-    const bool recv = (src < nfirst);
-    if (recv) assert(recvbuf != NULL);
-    // if( src==0 )cout<<"MPI_AlltofirstN with nfirst="<<nfirst<<endl;
-
-    if (recv)
-        memcpy(recvbuf + src * blocksize, sendbuf + dst * blocksize,
-            blocksize * sizeof(int));
-
-    for (int i = 1; i < npes_send; i++)
-    {
-        // increment source
-        src++;
-        if (src >= npes_send) src = 0;
-
-        dst--;
-        if (dst < 0) dst = npes_send - 1;
-
-        // recv data from src
-        if (recv)
-        {
-            int* precv = recvbuf + src * blocksize;
-            MPI_Irecv(precv, blocksize, MPI_INT, src, i, comm, &rr);
-        }
-        if (dst < nfirst)
-        {
-            int* psend = sendbuf + dst * blocksize;
-            MPI_Isend(psend, blocksize, MPI_INT, dst, i, comm, &sr);
-        }
-
-        if (recv) MPI_Wait(&rr, MPI_STATUS_IGNORE);
-    }
-    MPI_Barrier(comm);
-
-    return 0;
-}
-
-int MPI_AlltofirstN(unsigned short* sendbuf, const int blocksize,
-    unsigned short* recvbuf, const int nfirst, MPI_Comm comm)
-{
-    MPI_Request rr;
-    MPI_Request sr;
-
-    int npes_send;
-    MPI_Comm_size(comm, &npes_send);
-
-    int src;
-    MPI_Comm_rank(comm, &src);
-    int dst         = src;
-    const bool recv = (src < nfirst);
-    if (recv) assert(recvbuf != NULL);
-    // if( src==0 )cout<<"MPI_AlltofirstN with nfirst="<<nfirst<<endl;
-
-    if (recv)
-        memcpy(recvbuf + src * blocksize, sendbuf + dst * blocksize,
-            blocksize * sizeof(unsigned short));
-
-    for (int i = 1; i < npes_send; i++)
-    {
-        // increment source
-        src++;
-        if (src >= npes_send) src = 0;
-
-        dst--;
-        if (dst < 0) dst = npes_send - 1;
-
-        // recv data from src
-        if (recv)
-        {
-            unsigned short* precv = recvbuf + src * blocksize;
-            MPI_Irecv(precv, blocksize, MPI_UNSIGNED_SHORT, src, i, comm, &rr);
-        }
-        if (dst < nfirst)
-        {
-            unsigned short* psend = sendbuf + dst * blocksize;
-            MPI_Isend(psend, blocksize, MPI_UNSIGNED_SHORT, dst, i, comm, &sr);
-        }
-
-        if (recv) MPI_Wait(&rr, MPI_STATUS_IGNORE);
-    }
-    MPI_Barrier(comm);
-
-    return 0;
-}
-
-int MPI_AlltofirstNv(int* sendbuf, int* sendcnts, int* sdispls, int* recvbuf,
-    int* recvcnts, int* rdispls, const int nfirst, MPI_Comm comm)
-{
-    MPI_Request rr;
-    MPI_Request sr;
-
-    int npes_send;
-    MPI_Comm_size(comm, &npes_send);
-
-    int src;
-    MPI_Comm_rank(comm, &src);
-    int dst         = src;
-    const bool recv = (src < nfirst);
-    if (recv) assert(recvbuf != NULL);
-    // if( src==0 )cout<<"MPI_AlltofirstNv with nfirst="<<nfirst<<endl;
-
-    if (recv)
-        memcpy(recvbuf + rdispls[src], sendbuf + sdispls[dst],
-            recvcnts[src] * sizeof(int));
-
-    for (int i = 1; i < npes_send; i++)
-    {
-        // increment source
-        src++;
-        if (src >= npes_send) src = 0;
-
-        dst--;
-        if (dst < 0) dst = npes_send - 1;
-
-        // recv data from src
-        if (recv)
-        {
-            int* precv = recvbuf + rdispls[src];
-            if (recvcnts[src] > 0)
-                MPI_Irecv(precv, recvcnts[src], MPI_INT, src, i, comm, &rr);
-        }
-        if (dst < nfirst)
-        {
-            int* psend = sendbuf + sdispls[dst];
-            if (sendcnts[dst] > 0)
-                MPI_Isend(psend, sendcnts[dst], MPI_INT, dst, i, comm, &sr);
-        }
-        if (recv && recvcnts[src] > 0) MPI_Wait(&rr, MPI_STATUS_IGNORE);
-    }
-    MPI_Barrier(comm);
-
-    return 0;
-}
-
-int MPI_AlltofirstNv(unsigned short* sendbuf, int* sendcnts, int* sdispls,
-    unsigned short* recvbuf, int* recvcnts, int* rdispls, const int nfirst,
+template <typename ScalarType>
+int MPI_AlltofirstNv(ScalarType* sendbuf, int* sendcnts, int* sdispls,
+    ScalarType* recvbuf, int* recvcnts, int* rdispls, const int nfirst,
     MPI_Comm comm)
 {
     MPI_Request rr;
-    MPI_Request sr;
 
     int npes_send;
     MPI_Comm_size(comm, &npes_send);
@@ -223,12 +119,11 @@ int MPI_AlltofirstNv(unsigned short* sendbuf, int* sendcnts, int* sdispls,
     MPI_Comm_rank(comm, &src);
     int dst         = src;
     const bool recv = (src < nfirst);
-    if (recv) assert(recvbuf != NULL);
-    // if( src==0 )cout<<"MPI_AlltofirstNv with nfirst="<<nfirst<<endl;
+    if (recv) assert(recvbuf != nullptr);
 
     if (recv)
         memcpy(recvbuf + rdispls[src], sendbuf + sdispls[dst],
-            recvcnts[src] * sizeof(unsigned short));
+            recvcnts[src] * sizeof(ScalarType));
 
     for (int i = 1; i < npes_send; i++)
     {
@@ -242,17 +137,15 @@ int MPI_AlltofirstNv(unsigned short* sendbuf, int* sendcnts, int* sdispls,
         // recv data from src
         if (recv)
         {
-            unsigned short* precv = recvbuf + rdispls[src];
+            ScalarType* precv = recvbuf + rdispls[src];
             if (recvcnts[src] > 0)
-                MPI_Irecv(precv, recvcnts[src], MPI_UNSIGNED_SHORT, src, i,
-                    comm, &rr);
+                MPI_Irecv(precv, recvcnts[src], src, i, comm, rr);
         }
         if (dst < nfirst)
         {
-            unsigned short* psend = sendbuf + sdispls[dst];
+            ScalarType* psend = sendbuf + sdispls[dst];
             if (sendcnts[dst] > 0)
-                MPI_Isend(psend, sendcnts[dst], MPI_UNSIGNED_SHORT, dst, i,
-                    comm, &sr);
+                MPI_Isend(psend, sendcnts[dst], dst, i, comm);
         }
         if (recv && recvcnts[src] > 0) MPI_Wait(&rr, MPI_STATUS_IGNORE);
     }
@@ -260,5 +153,23 @@ int MPI_AlltofirstNv(unsigned short* sendbuf, int* sendcnts, int* sdispls,
 
     return 0;
 }
+
+// Explicit instantiation
+template int MPI_AlltofirstN<double>(double* sendbuf, const int blocksize,
+    double* recvbuf, const int nfirst, MPI_Comm comm);
+
+template int MPI_AlltofirstN<int>(int* sendbuf, const int blocksize,
+    int* recvbuf, const int nfirst, MPI_Comm comm);
+
+template int MPI_AlltofirstN<unsigned short>(unsigned short* sendbuf,
+    const int blocksize, unsigned short* recvbuf, const int nfirst,
+    MPI_Comm comm);
+
+template int MPI_AlltofirstNv<int>(int* sendbuf, int* sendcnts, int* sdispls,
+    int* recvbuf, int* recvcnts, int* rdispls, const int nfirst, MPI_Comm comm);
+
+template int MPI_AlltofirstNv<unsigned short>(unsigned short* sendbuf,
+    int* sendcnts, int* sdispls, unsigned short* recvbuf, int* recvcnts,
+    int* rdispls, const int nfirst, MPI_Comm comm);
 
 #endif
