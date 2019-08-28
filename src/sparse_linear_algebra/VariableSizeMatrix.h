@@ -351,7 +351,7 @@ public:
             /* check if row exists */
             int* rindex = (int*)getTableValue(row);
 
-            if (rindex != NULL) /* row exists */
+            if (rindex != nullptr) /* row exists */
             {
                 /* insert column */
                 updateLocalRow(*rindex, col, val, mode);
@@ -369,7 +369,7 @@ public:
         double value = 0.0;
 
         int* rindex = (int*)getTableValue(row);
-        if (rindex != NULL) value = data_[*rindex]->getColumnEntry(col);
+        if (rindex != nullptr) value = data_[*rindex]->getColumnEntry(col);
 
         return value;
     }
@@ -391,7 +391,7 @@ public:
         std::vector<double>& vals) const
     {
         int* rindex = (int*)getTableValue(row);
-        if (rindex != NULL)
+        if (rindex != nullptr)
         {
             const int lrindex = *rindex;
             getLocalRowValues(lrindex, cols, vals);
@@ -421,7 +421,7 @@ public:
         std::vector<double>& vals) const
     {
         int* rindex = (int*)getTableValue(row);
-        if (rindex != NULL)
+        if (rindex != nullptr)
         {
             T* data = data_[*rindex];
             vals.reserve(cols.size());
@@ -453,7 +453,7 @@ public:
     void scaleRow(const int row, const double coeff)
     {
         int* rindex = (int*)getTableValue(row);
-        if (rindex == NULL) return;
+        if (rindex == nullptr) return;
 
         data_[*rindex]->scale(coeff);
     }

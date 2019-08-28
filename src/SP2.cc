@@ -41,8 +41,8 @@ SP2::SP2(const double tol, const bool distributed)
 {
     // cout<<"SP2 with tol = "<<tol_<<endl;
     // Get user defined ratio and tolerance
-    Xi_       = 0;
-    Xi_sq_    = 0;
+    Xi_       = nullptr;
+    Xi_sq_    = nullptr;
     trace_[0] = 0;
     trace_[1] = 0;
 }

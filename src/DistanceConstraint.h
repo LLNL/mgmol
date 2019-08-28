@@ -63,7 +63,7 @@ public:
     {
         names_.push_back(name1);
         names_.push_back(name2);
-        tau1_ = tau1p_ = tau2_ = tau2p_ = fion1_ = fion2_ = 0;
+        tau1_ = tau1p_ = tau2_ = tau2p_ = fion1_ = fion2_ = nullptr;
         locally_active_                                   = false;
         locally_owned_                                    = false;
     };

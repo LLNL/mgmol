@@ -341,7 +341,7 @@ public:
     void orthonormalize(const bool cholesky_uptodate = false);
     void orthonormalize2states(const int st1, const int st2);
     void orthonormalizeLoewdin(const bool overlap_uptodate = false,
-        SquareLocalMatrices<MATDTYPE>* matrixTransform     = 0);
+        SquareLocalMatrices<MATDTYPE>* matrixTransform     = nullptr);
 
     ExtendedGridOrbitals& operator-=(const ExtendedGridOrbitals& orbitals)
     {

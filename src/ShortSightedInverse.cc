@@ -87,7 +87,7 @@ ShortSightedInverse::ShortSightedInverse(LocalizationRegions& lrs,
     /* set local data size */
     lsize_ = (int)locvars.size();
     /* Get local functions centered on this processor */
-    if (local_cluster != 0)
+    if (local_cluster != nullptr)
         locfcns_ = local_cluster->getClusterIndices();
     else
         lrs.getLocalSubdomainIndices(locfcns_);
@@ -106,7 +106,7 @@ ShortSightedInverse::ShortSightedInverse(LocalizationRegions& lrs,
     isInvSUpToDate_ = false;
 
     resnorm_ = 0.0;
-    precon_  = 0;
+    precon_  = nullptr;
     recompute_pc_
         = true; /* recompute the preconditioner or not - initially true */
 }
@@ -115,14 +115,14 @@ ShortSightedInverse::~ShortSightedInverse()
 {
     // if(onpe0)cout<<"delete gramMat_"<<endl;
     delete gramMat_;
-    gramMat_ = 0;
+    gramMat_ = nullptr;
     // if(onpe0)cout<<"delete invS"<<endl;
     delete invS_;
-    invS_ = 0;
+    invS_ = nullptr;
     delete matLS_;
-    matLS_ = 0;
+    matLS_ = nullptr;
     delete precon_;
-    precon_ = 0;
+    precon_ = nullptr;
     //    delete distributor_;
 }
 
@@ -136,10 +136,10 @@ void ShortSightedInverse::reset()
     /* reset preconditioner */
     if (recompute_pc_ == true)
     {
-        if (precon_ != 0)
+        if (precon_ != nullptr)
         {
             delete precon_;
-            precon_ = 0;
+            precon_ = nullptr;
         }
     }
 
@@ -193,7 +193,7 @@ int ShortSightedInverse::solve()
 
             /* Update invS */
             const int* row = (int*)(*invS_).getTableValue(locfcns_[i]);
-            if (row == NULL) cout << "Row index is NULL !!!" << endl;
+            if (row == nullptr) cout << "Row index is NULL !!!" << endl;
             const int* cols = (*gramMat_).rowIndexes();
             (*invS_).initializeLocalRow(m, *row, cols, solptr);
         }
@@ -236,7 +236,7 @@ int ShortSightedInverse::solve()
     if (recompute_pc_ == false)
     {
         delete precon_;
-        precon_       = 0;
+        precon_       = nullptr;
         recompute_pc_ = true;
         if (onpe0)
             printf(

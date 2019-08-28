@@ -38,15 +38,15 @@ PEenv::PEenv(MPI_Comm comm, ostream* os)
         mpi_neighbors_[i] = 0;
 
     color_       = 0;
-    comm_active_ = 0;
-    cart_comm_   = 0;
-    comm_x_      = 0;
-    comm_y_      = 0;
-    comm_z_      = 0;
+    comm_active_ = nullptr;
+    cart_comm_   = nullptr;
+    comm_x_      = nullptr;
+    comm_y_      = nullptr;
+    comm_z_      = nullptr;
 
     onpe0_ = true;
     for (int i = 0; i < 3; i++)
-        other_tasks_dir_[i] = NULL;
+        other_tasks_dir_[i] = nullptr;
 #ifdef USE_MPI
     comm_active_ = MPI_COMM_SELF;
     int ltask;
@@ -220,19 +220,19 @@ PEenv::~PEenv()
         // cout<<"MPI_Comm_free: "<<comm_active_<<endl;
         assert(comm_active_ != NULL);
         int mpirc    = MPI_Comm_free(&comm_active_);
-        comm_active_ = 0;
+        comm_active_ = nullptr;
         if (mpirc != MPI_SUCCESS)
         {
             cerr << "MPI_Comm_free failed!" << endl;
             MPI_Abort(comm_, 2);
         }
     }
-    if (cart_comm_ != 0) MPI_Comm_free(&cart_comm_);
-    if (comm_x_ != 0) MPI_Comm_free(&comm_x_);
+    if (cart_comm_ != nullptr) MPI_Comm_free(&cart_comm_);
+    if (comm_x_ != nullptr) MPI_Comm_free(&comm_x_);
 #endif
     for (int i = 0; i < 3; i++)
     {
-        if (other_tasks_dir_[i] != NULL) delete[] other_tasks_dir_[i];
+        if (other_tasks_dir_[i] != nullptr) delete[] other_tasks_dir_[i];
     }
 }
 
@@ -399,7 +399,7 @@ int PEenv::geom(const int nx, const int ny, const int nz, const int bias)
         for (int j = 0; j < pmax + 1; j++)
             fac[i][j] = 0;
 
-    if (onpe0_ && os_ != 0)
+    if (onpe0_ && os_ != nullptr)
         (*os_) << "Factorization of mesh dimensions and number of cpus:"
                << endl;
     for (int i = 0; i < 4; i++)
@@ -423,7 +423,7 @@ int PEenv::geom(const int nx, const int ny, const int nz, const int bias)
         }
 
         fac[i][pmax] = n[i];
-        if (onpe0_ && os_ != 0)
+        if (onpe0_ && os_ != nullptr)
             (*os_) << ni << "="
                    << " 2^" << fac[i][0] << "*3^" << fac[i][1] << "*5^"
                    << fac[i][2] << "*7^" << fac[i][3] << "*11^" << fac[i][4]
@@ -440,7 +440,7 @@ int PEenv::geom(const int nx, const int ny, const int nz, const int bias)
         }
         else
         {
-            if (onpe0_ && os_ != 0)
+            if (onpe0_ && os_ != nullptr)
             {
                 (*os_) << "Direction " << i << ": ";
                 (*os_) << "Poisson Solver Requires grid size to be divisible "

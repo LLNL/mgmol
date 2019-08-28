@@ -25,7 +25,7 @@ template <class T>
 class OrbitalsExtrapolation
 {
 public:
-    OrbitalsExtrapolation() : orbitals_minus1_(0), hextrapol_(0)
+    OrbitalsExtrapolation() : orbitals_minus1_(nullptr), hextrapol_(nullptr)
     {
 #if EXTRAPOLATE_H
         Control& ct = *(Control::instance());

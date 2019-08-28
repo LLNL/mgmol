@@ -47,7 +47,7 @@ public:
         bc_[2] = bc[2];
 
         vh_       = new pb::GridFunc<POTDTYPE>(grid_, bc[0], bc[1], bc[2]);
-        vepsilon_ = NULL;
+        vepsilon_ = nullptr;
     };
 
     // Destructor

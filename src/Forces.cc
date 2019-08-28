@@ -491,7 +491,7 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
         kbpsi[dir] = new KBPsiMatrixSparse*[NPTS];
         for (int npt = 0; npt < NPTS; npt++)
         {
-            kbpsi[dir][npt] = new KBPsiMatrixSparse(NULL, false);
+            kbpsi[dir][npt] = new KBPsiMatrixSparse(nullptr, false);
 
             double shift[3] = { 0., 0., 0. };
             shift[dir]      = shift_R[dir * NPTS + npt][dir];

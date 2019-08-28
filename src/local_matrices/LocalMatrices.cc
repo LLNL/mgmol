@@ -35,7 +35,7 @@ LocalMatrices<T>::LocalMatrices(const short subdiv, const int m, const int n)
     }
     else
     {
-        storage_ = 0;
+        storage_ = nullptr;
     }
 }
 
@@ -57,7 +57,7 @@ LocalMatrices<T>::LocalMatrices(const LocalMatrices& mat)
     }
     else
     {
-        storage_ = 0;
+        storage_ = nullptr;
     }
 }
 

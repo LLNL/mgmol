@@ -36,15 +36,15 @@ public:
         invDiagEl_    = 1. / diagEl_;
         Lap<T>::name_ = "Classical 4th order";
 
-        lower_order_op_ = NULL;
+        lower_order_op_ = nullptr;
     }
 
     ~Laph4()
     {
-        if (lower_order_op_ != NULL)
+        if (lower_order_op_ != nullptr)
         {
             delete lower_order_op_;
-            lower_order_op_ = NULL;
+            lower_order_op_ = nullptr;
         }
     }
 
@@ -72,7 +72,7 @@ public:
 
     Laph2<T>& getLowerOrderOp()
     {
-        if (lower_order_op_ == NULL)
+        if (lower_order_op_ == nullptr)
         {
             this->setFDLowerOrderGrid(Laph2<T>::minNumberGhosts());
             lower_order_op_ = new Laph2<T>(Lap<T>::getLowerOrderGrid());

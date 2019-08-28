@@ -46,13 +46,13 @@ void MultiDistanceConstraint::setup(const vector<string>& names_known_locally,
     // loop over all the distances making up this constraint
     for (int i = 0; i < nc; i++)
     {
-        m_tau1_[i]  = NULL;
-        m_tau1p_[i] = NULL;
-        m_fion1_[i] = NULL;
+        m_tau1_[i]  = nullptr;
+        m_tau1p_[i] = nullptr;
+        m_fion1_[i] = nullptr;
 
-        m_tau2_[i]  = NULL;
-        m_tau2p_[i] = NULL;
-        m_fion2_[i] = NULL;
+        m_tau2_[i]  = nullptr;
+        m_tau2p_[i] = nullptr;
+        m_fion2_[i] = nullptr;
 
         for (int ia = 0; ia < (int)names_known_locally.size(); ia++)
         {

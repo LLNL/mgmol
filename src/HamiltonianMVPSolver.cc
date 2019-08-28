@@ -99,7 +99,7 @@ int HamiltonianMVPSolver<T1, T2, T3, T4>::solve(T4& orbitals)
     // save initial matrix to enable reset
     (*initial_hmatrix_) = (*hmatrix_);
 
-    KBPsiMatrixSparse kbpsi(0);
+    KBPsiMatrixSparse kbpsi(nullptr);
     kbpsi.setup(ions_, orbitals);
 
     T3* projmatrices = dynamic_cast<T3*>(orbitals.getProjMatrices());

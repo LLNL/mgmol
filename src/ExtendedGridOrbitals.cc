@@ -874,7 +874,7 @@ void ExtendedGridOrbitals::computeMatB(
     memset(work, 0, lda_ * bcolor * sizeof(ORBDTYPE));
 
     const ORBDTYPE* const orbitals_psi
-        = (numst_ > 0) ? orbitals.block_vector_.vect(0) : 0;
+        = (numst_ > 0) ? orbitals.block_vector_.vect(0) : nullptr;
 
     setDataWithGhosts();
     trade_boundaries();
@@ -1295,7 +1295,7 @@ void ExtendedGridOrbitals::orthonormalizeLoewdin(
     if (!overlap_uptodate) computeGram(0);
 
     SquareLocalMatrices<MATDTYPE>* localP = matrixTransform;
-    if (matrixTransform == 0)
+    if (matrixTransform == nullptr)
         localP = new SquareLocalMatrices<MATDTYPE>(subdivx_, numst_);
 
     incrementIterativeIndex();
@@ -1312,7 +1312,7 @@ void ExtendedGridOrbitals::orthonormalizeLoewdin(
 #endif
     projmatrices->setGram2Id(getIterativeIndex());
 
-    if (matrixTransform == 0) delete localP;
+    if (matrixTransform == nullptr) delete localP;
 }
 
 double ExtendedGridOrbitals::norm() const

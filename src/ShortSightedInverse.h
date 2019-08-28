@@ -99,7 +99,7 @@ class ShortSightedInverse
 public:
     ShortSightedInverse(LocalizationRegions& lrs,
         const std::vector<int>& locvars,
-        ClusterOrbitals* local_cluster = 0); // constructor
+        ClusterOrbitals* local_cluster = nullptr); // constructor
     void initGramMatrix(const LocalMatrices<MATDTYPE>& ss,
         const std::vector<std::vector<int>>& global_indexes,
         const int orbitals_index); // initialize local Gram matrix

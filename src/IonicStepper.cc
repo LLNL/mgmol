@@ -65,7 +65,7 @@ int IonicStepper::writeAtomicFields(HDFrestart& h5f_file,
     {
         // Create the data space for new datasets
         hsize_t dims[2] = { (hsize_t)data.size() / 3, 3 };
-        dataspace_id    = H5Screate_simple(2, dims, NULL);
+        dataspace_id    = H5Screate_simple(2, dims, nullptr);
         if (dataspace_id < 0)
         {
             (*MPIdata::serr)
@@ -151,7 +151,7 @@ int IonicStepper::writeVelocities(HDFrestart& h5f_file) const
     // Create the data space for new datasets
     hsize_t dims[2] = { (hsize_t)tau0_.size() / 3, 3 };
 
-    hid_t dataspace_id = H5Screate_simple(2, dims, NULL);
+    hid_t dataspace_id = H5Screate_simple(2, dims, nullptr);
     if (dataspace_id < 0)
     {
         (*MPIdata::serr) << "IonicStepper: H5Screate_simple failed!!!" << endl;
@@ -261,7 +261,7 @@ int IonicStepper::writeRandomStates(
 
         // Create the data space for the dataset
         hsize_t dims[2] = { (hsize_t)data.size() / 3, 3 };
-        dataspace_id    = H5Screate_simple(2, dims, NULL);
+        dataspace_id    = H5Screate_simple(2, dims, nullptr);
         if (dataspace_id < 0)
         {
             (*MPIdata::serr)

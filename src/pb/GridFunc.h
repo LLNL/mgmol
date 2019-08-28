@@ -291,7 +291,7 @@ double norm(const GridFunc<T>& A)
 }
 
 template <typename T>
-GridFunc<T>* GridFunc<T>::bc_func_ = NULL;
+GridFunc<T>* GridFunc<T>::bc_func_ = nullptr;
 
 } // namespace pb
 

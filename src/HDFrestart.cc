@@ -104,7 +104,7 @@ int HDFrestart::close()
     closed_ = true;
 
     // Turn off error handling
-    H5Eset_auto2(H5E_DEFAULT, NULL, NULL);
+    H5Eset_auto2(H5E_DEFAULT, nullptr, nullptr);
 
     if (onpe0)
         (*MPIdata::sout) << "~HDFrestart() --- H5Fclose " << filename_ << endl;
@@ -274,7 +274,7 @@ void HDFrestart::addMDTime2File(const float run_time)
 
         //  Open a dataset attribute.
         hsize_t dims[1]    = { 1 };
-        hid_t dataspace_id = H5Screate_simple(1, dims, NULL);
+        hid_t dataspace_id = H5Screate_simple(1, dims, nullptr);
         hid_t attribute_id = H5Acreate2(file_id_, attname.c_str(),
             H5T_NATIVE_FLOAT, dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
         if (attribute_id < 0)
@@ -312,7 +312,7 @@ void HDFrestart::add2File(const int data, const std::string& attname)
     {
         //  Open a dataset attribute.
         hsize_t dims[1]    = { 1 };
-        hid_t dataspace_id = H5Screate_simple(1, dims, NULL);
+        hid_t dataspace_id = H5Screate_simple(1, dims, nullptr);
         hid_t attribute_id = H5Acreate2(file_id_, attname.c_str(),
             H5T_NATIVE_INT, dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
         if (attribute_id < 0)
@@ -456,7 +456,7 @@ void HDFrestart::addReleaseNumber2File(const char* release)
         std::string attname("MGmol Release");
         //  Open a dataset attribute.
         hsize_t dims[1]    = { 1 };
-        hid_t dataspace_id = H5Screate_simple(1, dims, NULL);
+        hid_t dataspace_id = H5Screate_simple(1, dims, nullptr);
         hid_t attribute_id = H5Acreate2(file_id_, attname.c_str(), strtype,
             dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
         if (attribute_id < 0)
@@ -798,7 +798,7 @@ int writeListCentersAndRadii(
 
     std::string attname("List of centers and radii");
     //  Open a dataset attribute.
-    hid_t dataspace_id = H5Screate_simple(2, dims, 0);
+    hid_t dataspace_id = H5Screate_simple(2, dims, nullptr);
     hid_t attribute_id = H5Acreate2(dset_id, attname.c_str(), H5T_NATIVE_DOUBLE,
         dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
     if (attribute_id < 0)
@@ -1541,7 +1541,7 @@ int HDFrestart::write_1func_hdf5(
         releasePlist(plist_id);
 
         // Write the attribute "Lattice parameters"
-        if (ll != NULL)
+        if (ll != nullptr)
         {
             // Create the data space for the attribute "Lattice parameters".
             vector<double> attr_data(3);
@@ -1554,7 +1554,7 @@ int HDFrestart::write_1func_hdf5(
                 dset_id, attname.c_str(), attr_data);
         }
 
-        if (cell_origin != NULL)
+        if (cell_origin != nullptr)
         {
             vector<double> attr_data(3);
             attr_data[0] = cell_origin[0];
@@ -1638,7 +1638,7 @@ int HDFrestart::write_1func_hdf5(
         releasePlist(plist_id);
 
         // Write the attribute "Lattice parameters"
-        if (ll != NULL)
+        if (ll != nullptr)
         {
             // Create the data space for the attribute "Lattice parameters".
             vector<double> attr_data(3);
@@ -1651,7 +1651,7 @@ int HDFrestart::write_1func_hdf5(
                 dset_id, attname.c_str(), attr_data);
         }
 
-        if (cell_origin != NULL)
+        if (cell_origin != nullptr)
         {
             vector<double> attr_data(3);
             attr_data[0] = cell_origin[0];

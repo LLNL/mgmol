@@ -216,7 +216,7 @@ void LinearSolverMatrix<T>::init(
             {
                 const int key = vsmat.getColumnIndex(i, j);
                 int* cindex   = (int*)vsmat.getTableValue(key);
-                if (cindex == NULL) continue;
+                if (cindex == nullptr) continue;
                 const int lcindex = *cindex;
                 i_.push_back(lcindex);
                 T val = (T)vsmat.getRowEntry(i, j);
@@ -267,7 +267,7 @@ void LinearSolverMatrix<T>::init(
             {
                 const int key = vsmat.getColumnIndex(i, j);
                 int* cindex   = (int*)vsmat.getTableValue(key);
-                if (cindex == NULL) continue;
+                if (cindex == nullptr) continue;
                 const int lcindex = *cindex;
                 i_.push_back(lcindex);
                 T val = (T)vsmat.getRowEntry(i, j);
@@ -316,7 +316,7 @@ void LinearSolverMatrix<T>::initSquareMat(
             {
                 const int key = vsmat.getColumnIndex(i, j);
                 int* cindex   = (int*)vsmat.getTableValue(key);
-                if (cindex == NULL) continue;
+                if (cindex == nullptr) continue;
                 const int lcindex = *cindex;
                 if (lcindex >= n) continue;
                 i_.push_back(lcindex);
@@ -365,7 +365,7 @@ void LinearSolverMatrix<T>::initSquareMat(
             {
                 const int key = vsmat.getColumnIndex(i, j);
                 int* cindex   = (int*)vsmat.getTableValue(key);
-                if (cindex == NULL) continue;
+                if (cindex == nullptr) continue;
                 const int lcindex = *cindex;
                 if (lcindex >= n) continue;
                 i_.push_back(lcindex);

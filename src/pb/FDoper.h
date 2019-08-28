@@ -96,7 +96,7 @@ public:
 
     void setFDLowerOrderGrid(const short nghosts)
     {
-        if (lower_order_grid_ == NULL)
+        if (lower_order_grid_ == nullptr)
             lower_order_grid_ = new Grid(grid_, nghosts);
     }
 
@@ -113,10 +113,10 @@ public:
 
     virtual ~FDoper()
     {
-        if (lower_order_grid_ != NULL)
+        if (lower_order_grid_ != nullptr)
         {
             delete lower_order_grid_;
-            lower_order_grid_ = NULL;
+            lower_order_grid_ = nullptr;
         }
     }
 };

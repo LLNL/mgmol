@@ -81,7 +81,7 @@ Table::Table(const int tsize)
     Slots_ = new Slot*[space_];
     for (i = 0; i < space; i++)
     {
-        Slots_[i] = NULL;
+        Slots_[i] = nullptr;
     }
 
     // Allocate memory for storing data
@@ -125,7 +125,7 @@ void* Table::get_value(int key)
         counter++;
 #endif
     }
-    return NULL;
+    return nullptr;
     //  get_value_tm_.stop();
 }
 
@@ -249,7 +249,7 @@ int Table::insert(int key, int value)
             break;
         }
     }
-    if (p == NULL)
+    if (p == nullptr)
     { /* new entry */
         // reallocate storage if needed
 #ifdef USE_POWERS2
@@ -309,7 +309,7 @@ void Table::reset()
     //  reset_tm_.start();
     for (int i = 0; i < space_; i++)
     {
-        Slots_[i] = NULL;
+        Slots_[i] = nullptr;
     }
     size_ = 0;
     freeStorage();

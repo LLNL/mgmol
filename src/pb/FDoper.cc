@@ -43,7 +43,7 @@ void lap3d_4thmehr_(const int&, const int&, const int&,
 template <class T>
 FDoper<T>::FDoper(const Grid& mygrid) : grid_(mygrid)
 {
-    lower_order_grid_ = NULL;
+    lower_order_grid_ = nullptr;
     if (grid_.active())
     {
         for (int i = 0; i < 3; i++)

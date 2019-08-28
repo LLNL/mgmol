@@ -62,7 +62,7 @@ public:
     static Mesh* instance()
     {
         assert(lap_type_ >= 0);
-        if (pinstance_ == 0)
+        if (pinstance_ == nullptr)
         {
             pinstance_ = new Mesh();
         }
@@ -72,7 +72,7 @@ public:
     static void deleteInstance()
     {
         delete pinstance_;
-        pinstance_ = 0;
+        pinstance_ = nullptr;
     }
 
     static void setup(MPI_Comm comm, const unsigned ngpts[3],

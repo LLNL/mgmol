@@ -43,7 +43,7 @@ void Masks4Orbitals::associateGids2Masks(const vector<int>& overlap_gids)
         gid_to_mask_.insert(pair<int, GridMask*>(gid, maski));
     }
 
-    if (corrmasks_ != 0)
+    if (corrmasks_ != nullptr)
         for (vector<int>::const_iterator it = overlap_gids.begin();
              it != overlap_gids.end(); it++)
         {

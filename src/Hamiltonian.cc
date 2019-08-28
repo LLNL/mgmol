@@ -20,23 +20,23 @@ template <class T>
 Hamiltonian<T>::Hamiltonian()
 {
     itindex_ = -1;
-    lapOper_ = NULL;
-    hlphi_   = NULL;
+    lapOper_ = nullptr;
+    hlphi_   = nullptr;
     pot_     = new Potentials();
 };
 
 template <class T>
 Hamiltonian<T>::~Hamiltonian()
 {
-    if (hlphi_ != NULL) delete hlphi_;
-    if (lapOper_ != NULL) delete lapOper_;
+    if (hlphi_ != nullptr) delete hlphi_;
+    if (lapOper_ != nullptr) delete lapOper_;
     delete pot_;
 }
 
 template <class T>
 void Hamiltonian<T>::setup(const pb::Grid& myGrid, const int lap_type)
 {
-    if (lapOper_ != NULL) delete lapOper_;
+    if (lapOper_ != nullptr) delete lapOper_;
     lapOper_ = LapFactory<ORBDTYPE>::createLap(myGrid, lap_type);
 }
 
@@ -46,7 +46,7 @@ const T& Hamiltonian<T>::applyLocal(T& phi, const bool force)
     assert(phi.getIterativeIndex() >= 0);
     assert(pot_->getIterativeIndex() >= 0);
 
-    if (hlphi_ == NULL) hlphi_ = new T("Hphi", phi, false);
+    if (hlphi_ == nullptr) hlphi_ = new T("Hphi", phi, false);
     if (!hlphi_->isCompatibleWith(phi))
     {
         delete hlphi_;

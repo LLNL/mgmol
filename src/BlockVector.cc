@@ -38,7 +38,7 @@ BlockVector<T>::BlockVector(
 
     ld_instance_ = ld_;
 
-    storage_       = 0;
+    storage_       = nullptr;
     my_allocation_ = -1;
 
     n_instances_++;
@@ -50,7 +50,7 @@ BlockVector<double>::~BlockVector()
     if (n_instances_ == 1)
     {
         delete data_wghosts_;
-        data_wghosts_ = 0;
+        data_wghosts_ = nullptr;
         allocated_.clear();
         for (vector<double*>::iterator it = class_storage_.begin();
              it != class_storage_.end(); ++it)
@@ -65,7 +65,7 @@ BlockVector<float>::~BlockVector()
     if (n_instances_ == 1)
     {
         delete data_wghosts_;
-        data_wghosts_ = 0;
+        data_wghosts_ = nullptr;
         allocated_.clear();
         for (vector<float*>::iterator it = class_storage_.begin();
              it != class_storage_.end(); ++it)
@@ -201,17 +201,17 @@ void BlockVector<T>::deallocate_storage()
         assert(my_allocation_ >= 0);
         allocated_[my_allocation_] = 0;
         my_allocation_             = -1;
-        storage_                   = 0;
+        storage_                   = nullptr;
 #else
         delete[] storage_;
 #endif
-        storage_ = 0;
+        storage_ = nullptr;
     }
 }
 template <typename T>
 void BlockVector<T>::setup(const BlockVector& bv)
 {
-    storage_       = 0;
+    storage_       = nullptr;
     my_allocation_ = -1;
     for (short i = 0; i < 3; i++)
         bc_[i] = bv.bc_[i];
@@ -315,10 +315,10 @@ void BlockVector<T>::initialize(
     }
 
     // rebuild data_wghosts_ with new gid
-    if (data_wghosts_ != 0)
+    if (data_wghosts_ != nullptr)
     {
         delete data_wghosts_;
-        data_wghosts_ = 0;
+        data_wghosts_ = nullptr;
     }
 
     data_wghosts_ = new pb::GridFuncVector<T>(

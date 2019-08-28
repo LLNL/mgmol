@@ -29,10 +29,10 @@ OrbitalsExtrapolation<T>::~OrbitalsExtrapolation()
 template <class T>
 void OrbitalsExtrapolation<T>::clearOldOrbitals()
 {
-    if (orbitals_minus1_ != 0)
+    if (orbitals_minus1_ != nullptr)
     {
         delete orbitals_minus1_;
-        orbitals_minus1_ = 0;
+        orbitals_minus1_ = nullptr;
     }
 #if EXTRAPOLATE_H
     delete hextrapol_;
@@ -42,7 +42,7 @@ void OrbitalsExtrapolation<T>::clearOldOrbitals()
 template <class T>
 bool OrbitalsExtrapolation<T>::getRestartData(T& orbitals)
 {
-    if (orbitals_minus1_ != 0)
+    if (orbitals_minus1_ != nullptr)
     {
         orbitals.assign(*orbitals_minus1_);
         return true;

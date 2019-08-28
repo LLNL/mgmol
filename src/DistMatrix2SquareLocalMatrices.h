@@ -37,7 +37,7 @@ class DistMatrix2SquareLocalMatrices
 public:
     static DistMatrix2SquareLocalMatrices* instance()
     {
-        if (pinstance_ == 0)
+        if (pinstance_ == nullptr)
         {
             pinstance_ = new DistMatrix2SquareLocalMatrices();
         }

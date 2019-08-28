@@ -16,27 +16,27 @@
 #include "Control.h"
 #include "LocalizationRegions.h"
 
-DataDistribution* BasicDataDistributors::orbitalsProdWithHDistributor_ = 0;
-DataDistribution* BasicDataDistributors::gramMatrixDistributor_        = 0;
+DataDistribution* BasicDataDistributors::orbitalsProdWithHDistributor_ = nullptr;
+DataDistribution* BasicDataDistributors::gramMatrixDistributor_        = nullptr;
 DataDistribution* BasicDataDistributors::centeredOrbitalsOverlapDistributor_
-    = 0;
+    = nullptr;
 
 /* constructor */
 BasicDataDistributors::BasicDataDistributors()
 {
-    orbitalsProdWithHDistributor_       = 0;
-    gramMatrixDistributor_              = 0;
-    centeredOrbitalsOverlapDistributor_ = 0;
+    orbitalsProdWithHDistributor_       = nullptr;
+    gramMatrixDistributor_              = nullptr;
+    centeredOrbitalsOverlapDistributor_ = nullptr;
 }
 /* destructor */
 BasicDataDistributors::~BasicDataDistributors()
 {
     delete orbitalsProdWithHDistributor_;
-    orbitalsProdWithHDistributor_ = 0;
+    orbitalsProdWithHDistributor_ = nullptr;
     delete gramMatrixDistributor_;
-    gramMatrixDistributor_ = 0;
+    gramMatrixDistributor_ = nullptr;
     delete centeredOrbitalsOverlapDistributor_;
-    centeredOrbitalsOverlapDistributor_ = 0;
+    centeredOrbitalsOverlapDistributor_ = nullptr;
 }
 /* initialize */
 void BasicDataDistributors::initialize(

@@ -321,7 +321,7 @@ public:
 template <class T>
 dist_matrix::RemoteTasksDistMatrix<DISTMATDTYPE>*
     MGmol<T>::remote_tasks_DistMatrix_ptr_
-    = 0;
+    = nullptr;
 template <class T>
 Timer MGmol<T>::adaptLR_tm_("MGmol::adaptLR");
 template <class T>

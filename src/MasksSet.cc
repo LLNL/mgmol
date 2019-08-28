@@ -166,7 +166,7 @@ void MasksSet::allocate(const vector<int>& gids)
     // Build masks for functions
     for (vector<int>::const_iterator it = gids.begin(); it != gids.end(); it++)
     {
-        GridMask* grid_mask = 0;
+        GridMask* grid_mask = nullptr;
         if (!type_corr_mask_)
         {
 #if USE_MASKMAX

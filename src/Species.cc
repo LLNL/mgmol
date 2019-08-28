@@ -33,7 +33,7 @@ void Species::read_1species(const string& filename)
     char buf_ignored[size_buf];
     memset(buf_name, 0, size_buf * sizeof(char));
 
-    ifstream* tfile = NULL;
+    ifstream* tfile = nullptr;
     if (mmpi.instancePE0())
     {
         tfile = new ifstream(filename.data(), ios::in);
@@ -450,7 +450,7 @@ void Species::initLocalPotential(const char flag_filter, const double hmax,
     const vector<double>& rps(input_kbp_[llocal_].x());
 
     // output local pseudopotential
-    if (printFlag && (tfile != 0))
+    if (printFlag && (tfile != nullptr))
     {
         input_kbp_[llocal_].printLocalPot(name_, llocal_, tfile);
     }
@@ -467,7 +467,7 @@ void Species::initLocalPotential(const char flag_filter, const double hmax,
     }
 
     // output local projector
-    if (printFlag && (tfile != NULL))
+    if (printFlag && (tfile != nullptr))
     {
         (*tfile) << "# " << name_ << ", neutralized potential, l=" << llocal_
                  << endl;
@@ -487,7 +487,7 @@ void Species::initLocalPotential(const char flag_filter, const double hmax,
         assignLocalPot(rfunc.x(), rfunc.y());
         // Now cut it off smoothly in real space
         gauss_filter_local_pot(lrcut, (printFlag && ct.verbose > 2));
-        if (printFlag && (tfile != NULL))
+        if (printFlag && (tfile != nullptr))
         {
             if (ct.verbose > 0)
                 cout << "Write local potential in file..." << endl;
@@ -511,7 +511,7 @@ void Species::initPotentials(
     assert(n_rad_points_ > 0);
 
     Control& ct     = *(Control::instance());
-    ofstream* tfile = 0;
+    ofstream* tfile = nullptr;
     if (printFlag)
     {
         int mpi_rank;
@@ -583,7 +583,7 @@ void Species::initNonlocalKBPotentials(const char flag_filter,
             {
                 work[idx] = refl[idx] * (potl[idx] - potloc[idx]);
             }
-            if (printFlag && (tfile != NULL))
+            if (printFlag && (tfile != nullptr))
             {
                 (*tfile) << "# " << name_ << ", projector l=" << ll << endl;
                 // output non-local projector
@@ -608,7 +608,7 @@ void Species::initNonlocalKBPotentials(const char flag_filter,
                 assign_kbp(ll, 0, rps, work);
             }
             // output non-local projector
-            if (printFlag && (tfile != NULL))
+            if (printFlag && (tfile != nullptr))
             {
                 (*tfile) << "# " << name_ << " filtered projector, l=" << ll
                          << endl;
@@ -683,7 +683,7 @@ void Species::initNonlocalMultiProjectorsPotentials(const char flag_filter,
                     }
                 }
 
-                if (printFlag && (tfile != NULL))
+                if (printFlag && (tfile != nullptr))
                 {
                     (*tfile) << "# " << name_ << ", projector, l=" << ll
                              << ", p=" << p << endl;
@@ -711,7 +711,7 @@ void Species::initNonlocalMultiProjectorsPotentials(const char flag_filter,
                 }
 
                 // output non-local projector
-                if (printFlag && (tfile != NULL) && flag_filter == 'f')
+                if (printFlag && (tfile != nullptr) && flag_filter == 'f')
                 {
                     (*tfile) << "# " << name_ << " filtered, l=" << ll
                              << ", p=" << p << endl;
@@ -775,7 +775,7 @@ void Species::initNonlocalGTHPotentials(const char flag_filter,
             }
 
             // output non-local projector
-            if (printFlag && (tfile != NULL))
+            if (printFlag && (tfile != nullptr))
             {
                 (*tfile) << "# " << name_ << " filtered, l=" << ll << endl;
                 print_kbp(*tfile, ll);

@@ -97,10 +97,10 @@ public:
 
     void reset()
     {
-        if (kbpsimat_ != 0) (*kbpsimat_).reset();
+        if (kbpsimat_ != nullptr) (*kbpsimat_).reset();
 
         if (lapop_)
-            if (kbBpsimat_ != 0) (*kbBpsimat_).reset();
+            if (kbBpsimat_ != nullptr) (*kbBpsimat_).reset();
     }
 
     void globalSumKBpsi();

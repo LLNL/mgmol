@@ -290,12 +290,12 @@ void printWithTimeStamp(const std::string& string2print, std::ostream& os)
     if (onpe0)
     {
         struct tm* local_tm;
-        time_t t = time(NULL);
+        time_t t = time(nullptr);
         local_tm = localtime(&t);
 
         char* dateString = asctime(local_tm);
         char* c          = index(dateString, '\n');
-        if (c != NULL) *c = (char)'\0';
+        if (c != nullptr) *c = (char)'\0';
         std::string date(dateString);
 
         os << date << ": " << string2print << std::endl;

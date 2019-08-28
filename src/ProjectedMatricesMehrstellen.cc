@@ -32,9 +32,9 @@ ProjectedMatricesMehrstellen::~ProjectedMatricesMehrstellen()
     if (dim_ > 0)
     {
         delete matB_;
-        matB_ = 0;
+        matB_ = nullptr;
         delete invB_;
-        invB_ = 0;
+        invB_ = nullptr;
     }
 }
 

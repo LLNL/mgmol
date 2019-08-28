@@ -67,9 +67,9 @@ SubMatrices<T>::SubMatrices(const string& name,
     }
     else
     {
-        storage_ = 0;
+        storage_ = nullptr;
         for (int im = 0; im < nb_local_matrices_; im++)
-            local_data_[im] = 0;
+            local_data_[im] = nullptr;
     }
 }
 

@@ -32,22 +32,22 @@ public:
     PBh6(const Grid& mygrid, DielFunc<T>& myepsilon) : PB<T>(mygrid, myepsilon)
     {
         PB<T>::initialized_ = true;
-        lower_order_op_     = NULL;
+        lower_order_op_     = nullptr;
     };
     PBh6(const Grid& mygrid, const double e0, const double rho0,
         const double drho0)
         : PB<T>(mygrid, e0, rho0, drho0)
     {
         PB<T>::initialized_ = false;
-        lower_order_op_     = NULL;
+        lower_order_op_     = nullptr;
     };
 
     ~PBh6()
     {
-        if (lower_order_op_ != NULL)
+        if (lower_order_op_ != nullptr)
         {
             delete lower_order_op_;
-            lower_order_op_ = NULL;
+            lower_order_op_ = nullptr;
         }
     }
 
@@ -72,7 +72,7 @@ public:
 
     PBh4<T>& getLowerOrderOp()
     {
-        if (lower_order_op_ == NULL)
+        if (lower_order_op_ == nullptr)
         {
             FDoper<T>::setFDLowerOrderGrid(PBh4<T>::minNumberGhosts());
             lower_order_op_

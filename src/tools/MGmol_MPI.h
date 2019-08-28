@@ -74,7 +74,7 @@ public:
     static MGmol_MPI* instance()
     {
         assert(comm_global_ != MPI_COMM_NULL);
-        if (pinstance_ == 0)
+        if (pinstance_ == nullptr)
         {
             pinstance_ = new MGmol_MPI();
         }
@@ -84,7 +84,7 @@ public:
     static void deleteInstance()
     {
         delete pinstance_;
-        pinstance_ = 0;
+        pinstance_ = nullptr;
     }
 
     static void setup(const MPI_Comm comm, std::ostream& os,

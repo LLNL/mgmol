@@ -23,21 +23,21 @@ private:
 
 public:
     OrbitalsExtrapolationOrder3()
-        : initial_orbitals_minus2_(0),
-          orbitals_minus1_(0),
-          orbitals_minus2_(0){};
+        : initial_orbitals_minus2_(nullptr),
+          orbitals_minus1_(nullptr),
+          orbitals_minus2_(nullptr){};
 
     ~OrbitalsExtrapolationOrder3()
     {
-        if (orbitals_minus2_ != 0)
+        if (orbitals_minus2_ != nullptr)
         {
             delete orbitals_minus2_;
-            orbitals_minus2_ = 0;
+            orbitals_minus2_ = nullptr;
         }
-        if (initial_orbitals_minus2_ != 0)
+        if (initial_orbitals_minus2_ != nullptr)
         {
             delete initial_orbitals_minus2_;
-            initial_orbitals_minus2_ = 0;
+            initial_orbitals_minus2_ = nullptr;
         }
     }
 
@@ -47,10 +47,10 @@ public:
     {
         OrbitalsExtrapolation<T>::clearOldOrbitals();
 
-        if (orbitals_minus2_ != 0)
+        if (orbitals_minus2_ != nullptr)
         {
             delete orbitals_minus2_;
-            orbitals_minus2_ = 0;
+            orbitals_minus2_ = nullptr;
         }
     }
 };

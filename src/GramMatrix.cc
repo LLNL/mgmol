@@ -35,10 +35,10 @@ GramMatrix::GramMatrix(const int ndim) : dim_(ndim)
     }
     else
     {
-        matS_ = 0;
-        ls_   = 0;
-        invS_ = 0;
-        work_ = 0;
+        matS_ = nullptr;
+        ls_   = nullptr;
+        invS_ = nullptr;
+        work_ = nullptr;
     }
 
     orbitals_index_ = -1;
@@ -58,10 +58,10 @@ GramMatrix::GramMatrix(const GramMatrix& gm) : dim_(gm.dim_)
     }
     else
     {
-        matS_ = 0;
-        ls_   = 0;
-        invS_ = 0;
-        work_ = 0;
+        matS_ = nullptr;
+        ls_   = nullptr;
+        invS_ = nullptr;
+        work_ = nullptr;
     }
 
     orbitals_index_ = gm.orbitals_index_;
@@ -84,10 +84,10 @@ GramMatrix& GramMatrix::operator=(const GramMatrix& gm)
     }
     else
     {
-        matS_ = 0;
-        ls_   = 0;
-        invS_ = 0;
-        work_ = 0;
+        matS_ = nullptr;
+        ls_   = nullptr;
+        invS_ = nullptr;
+        work_ = nullptr;
     }
 
     orbitals_index_ = gm.orbitals_index_;

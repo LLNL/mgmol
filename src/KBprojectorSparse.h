@@ -125,12 +125,12 @@ public:
 
     void clear()
     {
-        if (is_in_domain_ != NULL)
+        if (is_in_domain_ != nullptr)
         {
             for (short iloc = 0; iloc < subdivx_; iloc++)
                 delete[] is_in_domain_[iloc];
             delete[] is_in_domain_;
-            is_in_domain_ = NULL;
+            is_in_domain_ = nullptr;
         }
 
         for (short dir = 0; dir < 3; dir++)

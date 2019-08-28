@@ -61,8 +61,8 @@ public:
 
     static void deleteStorage()
     {
-        if (storage_ != 0) delete[] storage_;
-        storage_ = 0;
+        if (storage_ != nullptr) delete[] storage_;
+        storage_ = nullptr;
     }
 
     /* initialize send buffer with local matrix */

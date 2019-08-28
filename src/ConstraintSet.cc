@@ -118,8 +118,8 @@ bool ConstraintSet::addConstraint(Ions& ions, const vector<string>& argv)
         Ion* ion2 = ions.findIon(name2);
 
         short found_ion_local = 1;
-        if (ion1 == 0) found_ion_local = 0;
-        if (ion2 == 0) found_ion_local = 0;
+        if (ion1 == nullptr) found_ion_local = 0;
+        if (ion2 == nullptr) found_ion_local = 0;
 
         short found_ion = found_ion_local;
         mmpi.allreduce(&found_ion, 1, MPI_MAX);
@@ -220,8 +220,8 @@ bool ConstraintSet::addConstraint(Ions& ions, const vector<string>& argv)
             Ion* ion2 = ions.findIon(name2);
 
             short found_ion_local = 1;
-            if (ion1 == 0) found_ion_local = 0;
-            if (ion2 == 0) found_ion_local = 0;
+            if (ion1 == nullptr) found_ion_local = 0;
+            if (ion2 == nullptr) found_ion_local = 0;
 
             // check if the two names have at least been found by one MPI task
             short found_ion = found_ion_local;
@@ -414,7 +414,7 @@ int ConstraintSet::readConstraints(const string& filename)
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
-    ifstream* tfile = 0;
+    ifstream* tfile = nullptr;
     if (mmpi.instancePE0())
     {
         tfile = new ifstream(filename.data(), ios::in);
@@ -451,7 +451,7 @@ int ConstraintSet::readConstraints(ifstream* tfile)
 
     // read constraints into msav_ from PE 0
     msav_.clear();
-    if (mmpi.instancePE0() && tfile != 0)
+    if (mmpi.instancePE0() && tfile != nullptr)
     {
         // if(onpe0)cout<<"readInput: Read constraints..."<<endl;
         read_comments(*tfile);

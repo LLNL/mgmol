@@ -101,7 +101,7 @@ LocGridOrbitals::LocGridOrbitals(std::string name, const pb::Grid& my_grid,
 
     assert(numst_ >= 0);
 
-    gidToStorage_ = 0;
+    gidToStorage_ = nullptr;
 
     overlapping_gids_.clear();
 
@@ -121,7 +121,7 @@ LocGridOrbitals::~LocGridOrbitals()
     // delete gidToStorage here. This is OK since it is not a shared data
     // else there would be a memory leak.
     delete gidToStorage_;
-    gidToStorage_ = 0;
+    gidToStorage_ = nullptr;
 }
 
 LocGridOrbitals::LocGridOrbitals(
@@ -144,7 +144,7 @@ LocGridOrbitals::LocGridOrbitals(
 
     copySharedData(A);
 
-    gidToStorage_ = 0;
+    gidToStorage_ = nullptr;
 
     setGids2Storage();
 }
@@ -167,7 +167,7 @@ LocGridOrbitals::LocGridOrbitals(const std::string& name,
 
     copySharedData(A);
 
-    gidToStorage_ = 0;
+    gidToStorage_ = nullptr;
 
     setGids2Storage();
 
@@ -229,7 +229,7 @@ void LocGridOrbitals::setGids2Storage()
     assert(chromatic_number_ >= 0);
     assert(subdivx_ > 0);
 
-    if (gidToStorage_ != 0)
+    if (gidToStorage_ != nullptr)
         gidToStorage_->clear();
     else
         gidToStorage_ = new vector<map<int, ORBDTYPE*>>();
@@ -262,7 +262,7 @@ const ORBDTYPE* LocGridOrbitals::getGidStorage(
     if (p != (*gidToStorage_)[iloc].end())
         return p->second;
     else
-        return 0;
+        return nullptr;
 }
 
 void LocGridOrbitals::setup(
@@ -374,7 +374,7 @@ void LocGridOrbitals::assign(const LocGridOrbitals& orbitals)
                     const ORBDTYPE* const val
                         = orbitals.getGidStorage(gid, iloc);
                     // copy into new psi_
-                    if (val != 0)
+                    if (val != nullptr)
                     {
                         block_vector_.assignLocal(color, iloc, val);
                     }
@@ -415,7 +415,7 @@ void LocGridOrbitals::axpy(const double alpha, const LocGridOrbitals& orbitals)
                     const ORBDTYPE* const val
                         = orbitals.getGidStorage(gid, iloc);
                     // copy into new psi_
-                    if (val != 0)
+                    if (val != nullptr)
                     {
                         MPaxpy(loc_numpt_, alpha, val, getPsi(color, iloc));
                     }
@@ -1427,7 +1427,7 @@ void LocGridOrbitals::computeMatB(
     memset(work, 0, lda_ * bcolor * sizeof(ORBDTYPE));
 
     const ORBDTYPE* const orbitals_psi
-        = (chromatic_number_ > 0) ? orbitals.block_vector_.vect(0) : 0;
+        = (chromatic_number_ > 0) ? orbitals.block_vector_.vect(0) : nullptr;
 
     setDataWithGhosts();
     trade_boundaries();
@@ -1596,7 +1596,7 @@ void LocGridOrbitals::computeDiagonalElementsDotProductLocal(
 
     /* get locally centered functions */
     std::vector<int> locfcns;
-    if (local_cluster_ != 0)
+    if (local_cluster_ != nullptr)
     {
         locfcns = local_cluster_->getClusterIndices();
     }
@@ -1914,7 +1914,7 @@ void LocGridOrbitals::orthonormalizeLoewdin(
     if (!overlap_uptodate) computeGram(0);
 
     SquareLocalMatrices<MATDTYPE>* localP = matrixTransform;
-    if (matrixTransform == 0)
+    if (matrixTransform == nullptr)
         localP = new SquareLocalMatrices<MATDTYPE>(subdivx_, chromatic_number_);
 
     projmatrices->computeLoewdinTransform(*localP, getIterativeIndex());
@@ -1930,7 +1930,7 @@ void LocGridOrbitals::orthonormalizeLoewdin(
     proj_matrices_->printS(*MPIdata::sout);
 #endif
 
-    if (matrixTransform == 0) delete localP;
+    if (matrixTransform == nullptr) delete localP;
 }
 
 double LocGridOrbitals::norm() const

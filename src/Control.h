@@ -227,7 +227,7 @@ public:
     static Control* instance()
     {
         assert(comm_global_ != MPI_COMM_NULL);
-        if (pinstance_ == 0)
+        if (pinstance_ == nullptr)
         {
             pinstance_ = new Control();
         }
@@ -235,10 +235,10 @@ public:
     }
     static void deleteInstance()
     {
-        if (pinstance_ != 0)
+        if (pinstance_ != nullptr)
         {
             delete pinstance_;
-            pinstance_ = 0;
+            pinstance_ = nullptr;
         }
     }
     static void setup(const MPI_Comm comm, const bool with_spin,

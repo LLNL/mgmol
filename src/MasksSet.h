@@ -64,7 +64,7 @@ public:
         assert(pgrid_masks_.size() > 0);
         std::map<int, GridMask*>::const_iterator it = pgrid_masks_.find(i);
         if (it == pgrid_masks_.end())
-            return 0;
+            return nullptr;
         else
             return it->second;
     }

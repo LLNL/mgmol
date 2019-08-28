@@ -37,7 +37,7 @@ void MGmol<T>::runfire(T** orbitals, Ions& ions)
     fire.init(h5f_file_);
 
     delete h5f_file_;
-    h5f_file_ = 0;
+    h5f_file_ = nullptr;
 
     // additional quench to compensate random start
     if (ct.restart_info < 3)

@@ -95,7 +95,7 @@ int LBFGS_IonicStepper::writeDoubleAtt(hid_t dataset_id) const
     hsize_t dim    = 16;
 
     // Create dataset attribute.
-    hid_t dataspace_id = H5Screate_simple(1, &dim, NULL);
+    hid_t dataspace_id = H5Screate_simple(1, &dim, nullptr);
     if (dataspace_id < 0)
     {
         (*MPIdata::serr) << "Attribute " << attname << ": H5Screate failed!!!"
@@ -167,7 +167,7 @@ int LBFGS_IonicStepper::writeIntAtt(hid_t dataset_id) const
     hsize_t dim    = nb_attri;
 
     // Create dataspace and attribute
-    hid_t dataspace_id = H5Screate_simple(1, &dim, NULL);
+    hid_t dataspace_id = H5Screate_simple(1, &dim, nullptr);
     if (dataspace_id < 0)
     {
         (*MPIdata::serr) << "Attribute " << attname << ": H5Screate failed!!!"
@@ -235,7 +235,7 @@ int LBFGS_IonicStepper::writeLBFGSinfo(HDFrestart& h5f_file)
     hsize_t dim = work_.size() + 2 * gndofs_;
 
     // Create the data space for the dataset.
-    hid_t dataspace_id = H5Screate_simple(1, &dim, NULL);
+    hid_t dataspace_id = H5Screate_simple(1, &dim, nullptr);
     if (dataspace_id < 0)
     {
         (*MPIdata::serr) << "LBFGS_IonicStepper::writeLBFGSinfo(), "

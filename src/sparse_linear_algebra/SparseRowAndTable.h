@@ -113,7 +113,7 @@ public:
     double getColumnEntry(const int col) const
     {
         int* pos = (int*)pos_->get_value(col);
-        if (pos == NULL)
+        if (pos == nullptr)
             return 0.0;
         else
             return SparseRow::getEntryFromPosition(*pos);
@@ -123,7 +123,7 @@ public:
     int getColumnPosition(const int col)
     {
         int* pos = (int*)pos_->get_value(col);
-        return (pos != NULL) ? *pos : -1;
+        return (pos != nullptr) ? *pos : -1;
     }
 };
 

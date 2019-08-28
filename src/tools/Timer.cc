@@ -15,7 +15,7 @@ using namespace std;
 double Timer::gtod(void) const
 {
     struct timeval tv;
-    gettimeofday(&tv, (struct timezone*)NULL);
+    gettimeofday(&tv, (struct timezone*)nullptr);
     return tv.tv_sec + 1.e-6 * tv.tv_usec;
 }
 

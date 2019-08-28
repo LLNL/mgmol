@@ -40,7 +40,7 @@ private:
 public:
     static LocalMatrices2DistMatrix* instance()
     {
-        if (pinstance_ == 0)
+        if (pinstance_ == nullptr)
         {
             pinstance_ = new LocalMatrices2DistMatrix();
         }

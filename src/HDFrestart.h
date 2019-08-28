@@ -195,10 +195,10 @@ public:
 
         hid_t filespace;
         if (use_hdf5p_)
-            filespace = H5Screate_simple(3, dimsf_, NULL);
+            filespace = H5Screate_simple(3, dimsf_, nullptr);
         else
         {
-            filespace = H5Screate_simple(3, block_, NULL);
+            filespace = H5Screate_simple(3, block_, nullptr);
             // hsize_t dims[1]={block_[0]*block_[1]*block_[2]};
             // filespace = H5Screate_simple(1, dims, NULL);
         }
@@ -213,10 +213,10 @@ public:
 
         hid_t memspace;
         if (use_hdf5p_)
-            memspace = H5Screate_simple(3, block_, NULL);
+            memspace = H5Screate_simple(3, block_, nullptr);
         else
         {
-            memspace = H5Screate_simple(3, block_, NULL);
+            memspace = H5Screate_simple(3, block_, nullptr);
             // hsize_t dims[1]={block_[0]*block_[1]*block_[2]};
             // memspace=H5Screate_simple(1, dims, NULL);
         }
@@ -233,9 +233,9 @@ public:
     int read_1func_hdf5(double*, const std::string&);
     int read_1func_hdf5(float*, const std::string&);
     int write_1func_hdf5(
-        double*, const std::string&, double* ll = NULL, double* origin = NULL);
+        double*, const std::string&, double* ll = nullptr, double* origin = nullptr);
     int write_1func_hdf5(
-        float*, const std::string&, double* ll = NULL, double* origin = NULL);
+        float*, const std::string&, double* ll = nullptr, double* origin = nullptr);
     int read_att(const hid_t dset_id, const std::string& attname,
         std::vector<double>& attr_data);
 

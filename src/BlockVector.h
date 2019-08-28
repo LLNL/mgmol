@@ -265,7 +265,7 @@ std::vector<short> BlockVector<T>::allocated_;
 template <typename T>
 short BlockVector<T>::max_alloc_instances_ = 4;
 template <typename T>
-pb::GridFuncVector<T>* BlockVector<T>::data_wghosts_ = 0;
+pb::GridFuncVector<T>* BlockVector<T>::data_wghosts_ = nullptr;
 
 template <typename T>
 int BlockVector<T>::size_storage_ = 0;

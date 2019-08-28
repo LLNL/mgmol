@@ -114,12 +114,12 @@ class DataDistribution
     /* Reset data pointer positions on recv buffer to NULL*/
     void resetPointersToRecvDataToNULL()
     {
-        rbuf_nrows_ptr_            = NULL;
-        rbuf_start_double_pos_ptr_ = NULL;
-        rbuf_nnzrow_ptr_           = NULL;
-        rbuf_lvars_ptr_            = NULL;
-        rbuf_pj_ptr_               = NULL;
-        rbuf_pa_ptr_               = NULL;
+        rbuf_nrows_ptr_            = nullptr;
+        rbuf_start_double_pos_ptr_ = nullptr;
+        rbuf_nnzrow_ptr_           = nullptr;
+        rbuf_lvars_ptr_            = nullptr;
+        rbuf_pj_ptr_               = nullptr;
+        rbuf_pa_ptr_               = nullptr;
 
         rbuf_data_size_ = 0;
     }

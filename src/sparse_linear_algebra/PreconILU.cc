@@ -43,8 +43,8 @@ PreconILU<T>::PreconILU(LinearSolverMatrix<lsdatatype>& csmat,
     }
     else
     {
-        L_ = 0;
-        U_ = 0;
+        L_ = nullptr;
+        U_ = nullptr;
     }
 }
 

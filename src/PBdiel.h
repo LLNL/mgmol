@@ -40,7 +40,7 @@ public:
         T oper(Poisson::grid_, e0, rho0, drho0);
         Poisson::vepsilon_
             = new pb::GridFunc<POTDTYPE>(Poisson::grid_, bc[0], bc[1], bc[2]);
-        rhod_ = NULL;
+        rhod_ = nullptr;
         poisson_solver_
             = new pb::SolverPB<T, POTDTYPE>(oper, bc[0], bc[1], bc[2]);
     };

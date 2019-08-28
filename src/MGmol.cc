@@ -68,7 +68,7 @@ using namespace std;
 
 namespace mgmol
 {
-std::ostream* out = NULL;
+std::ostream* out = nullptr;
 }
 
 string description;
@@ -114,27 +114,27 @@ MGmol<T>::MGmol(MPI_Comm comm, std::ostream& os) : os_(os)
 
     mgmol::out = &os;
 
-    geom_optimizer_ = 0;
-    lrs_            = 0;
-    local_cluster_  = 0;
-    proj_matrices_  = 0;
-    dm_strategy_    = 0;
+    geom_optimizer_ = nullptr;
+    lrs_            = nullptr;
+    local_cluster_  = nullptr;
+    proj_matrices_  = nullptr;
+    dm_strategy_    = nullptr;
 
-    h5f_file_ = 0;
+    h5f_file_ = nullptr;
 
-    aomm_ = 0;
+    aomm_ = nullptr;
 
-    spreadf_ = 0;
+    spreadf_ = nullptr;
 
-    spread_penalty_ = 0;
+    spread_penalty_ = nullptr;
 
     data_distributor_ = new BasicDataDistributors();
 
-    orbitals_precond_ = 0;
+    orbitals_precond_ = nullptr;
 
-    forces_ = 0;
+    forces_ = nullptr;
 
-    energy_ = 0;
+    energy_ = nullptr;
 }
 
 template <class T>
@@ -147,17 +147,17 @@ MGmol<T>::~MGmol()
     if (!ct.short_sighted)
     {
         delete remote_tasks_DistMatrix_;
-        remote_tasks_DistMatrix_ = 0;
+        remote_tasks_DistMatrix_ = nullptr;
     }
     delete xcongrid_;
     delete energy_;
-    if (hamiltonian_ != 0) delete hamiltonian_;
-    if (geom_optimizer_ != 0) delete geom_optimizer_;
+    if (hamiltonian_ != nullptr) delete hamiltonian_;
+    if (geom_optimizer_ != nullptr) delete geom_optimizer_;
 
     delete currentMasks_;
     delete corrMasks_;
 
-    if (aomm_ != 0) delete aomm_;
+    if (aomm_ != nullptr) delete aomm_;
 
     delete current_orbitals_;
     delete ions_;
@@ -165,18 +165,18 @@ MGmol<T>::~MGmol()
 
     delete proj_matrices_;
     delete lrs_;
-    if (local_cluster_ != 0) delete local_cluster_;
+    if (local_cluster_ != nullptr) delete local_cluster_;
 
-    if (h5f_file_ != 0) delete h5f_file_;
+    if (h5f_file_ != nullptr) delete h5f_file_;
 
-    if (spreadf_ != 0) delete spreadf_;
+    if (spreadf_ != nullptr) delete spreadf_;
 
-    if (spread_penalty_ != 0) delete spread_penalty_;
+    if (spread_penalty_ != nullptr) delete spread_penalty_;
 
     delete data_distributor_;
 
     delete forces_;
-    if (dm_strategy_ != 0) delete dm_strategy_;
+    if (dm_strategy_ != nullptr) delete dm_strategy_;
 }
 
 template <class T>
@@ -196,7 +196,7 @@ int MGmol<T>::initial()
 
     hamiltonian_->setup(mygrid, ct.lap_type);
 
-    pb::Lap<ORBDTYPE>* lapop = ct.Mehrstellen() ? hamiltonian_->lapOper() : 0;
+    pb::Lap<ORBDTYPE>* lapop = ct.Mehrstellen() ? hamiltonian_->lapOper() : nullptr;
     g_kbpsi_                 = new KBPsiMatrixSparse(lapop);
 
     check_anisotropy();
@@ -453,7 +453,7 @@ int MGmol<T>::initial()
     }
 
     SpreadPenaltyInterface<T>* spread_penalty
-        = energy_with_spread_penalty ? spread_penalty_ : 0;
+        = energy_with_spread_penalty ? spread_penalty_ : nullptr;
     energy_ = new Energy<T>(
         mygrid, *ions_, pot, *electrostat_, *rho_, *xcongrid_, spread_penalty);
 
@@ -636,7 +636,7 @@ void MGmol<T>::write_header()
         }
     } // onpe0
 
-    if (current_orbitals_ != NULL && ct.verbose > 0)
+    if (current_orbitals_ != nullptr && ct.verbose > 0)
     {
         current_orbitals_->printNumst(os_);
         current_orbitals_->printChromaticNumber(os_);
@@ -696,7 +696,7 @@ void MGmol<T>::write_header()
     // Write out the ionic postions and displacements
     ions_->printPositions(os_);
 
-    if (current_orbitals_ != NULL && ct.verbose > 3) lrs_->printAllRegions(os_);
+    if (current_orbitals_ != nullptr && ct.verbose > 3) lrs_->printAllRegions(os_);
 }
 
 template <class T>
@@ -1151,7 +1151,7 @@ void MGmol<T>::computeResidualUsingHPhi(
     if (ncolors > 0)
     {
         // compute B*psi and store in tmp
-        ORBDTYPE* old_storage = 0;
+        ORBDTYPE* old_storage = nullptr;
         vector<ORBDTYPE> tmp;
         if (applyB)
         {

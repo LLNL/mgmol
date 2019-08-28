@@ -88,7 +88,7 @@ void DielFunc<T>::Gepsilon_rho(GridFunc<T>& rho)
     assert(GridFunc<T>::grid().inc(2) == 1);
     assert(rho.grid().inc(2) == 1);
 
-    if (rho.uu() != NULL)
+    if (rho.uu() != nullptr)
     {
 
         const int dim0 = GridFunc<T>::dim(0);
@@ -151,7 +151,7 @@ void DielFunc<T>::Gepsilon_rho(GridFunc<T>& rho, const T rho0, const T drho0)
     assert(GridFunc<T>::grid().inc(2) == 1);
     assert(rho.grid().inc(2) == 1);
 
-    if (rho.uu() != NULL)
+    if (rho.uu() != nullptr)
     {
 
         const int dim0 = GridFunc<T>::dim(0);
@@ -217,7 +217,7 @@ void DielFunc<T>::Gdepsilon_rho(
     assert(GridFunc<T>::grid().inc(2) == 1);
     assert(rho.grid().inc(2) == 1);
 
-    if (rho.uu() != NULL)
+    if (rho.uu() != nullptr)
     {
 
         const int dim0 = GridFunc<T>::dim(0);
@@ -283,7 +283,7 @@ void DielFunc<T>::Gdepsilon_rho(GridFunc<T>& rho, GridFunc<T>& depsilon)
     assert(GridFunc<T>::grid().inc(2) == 1);
     assert(rho.grid().inc(2) == 1);
 
-    if (rho.uu() != NULL)
+    if (rho.uu() != nullptr)
     {
 
         const int dim0 = GridFunc<T>::dim(0);

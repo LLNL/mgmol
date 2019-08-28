@@ -31,7 +31,7 @@
 
 #define max(a, b) (((a) < (b)) ? (b) : (a))
 
-Control* Control::pinstance_   = 0;
+Control* Control::pinstance_   = nullptr;
 MPI_Comm Control::comm_global_ = MPI_COMM_NULL;
 float Control::total_spin_     = 0.;
 string Control::run_directory_(".");
@@ -910,7 +910,7 @@ void Control::setTolEnergy()
 void Control::readRestartInfo(ifstream* tfile)
 {
     string zero = "0";
-    if (tfile != NULL)
+    if (tfile != nullptr)
     {
         // Read in the restart file names
         string filename;
@@ -963,7 +963,7 @@ void Control::readRestartOutputInfo(ifstream* tfile)
 {
     const string zero = "0";
     const string one  = "1";
-    if (tfile != NULL)
+    if (tfile != nullptr)
     {
         // Read in the output restart filename
         string filename;

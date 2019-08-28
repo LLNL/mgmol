@@ -25,9 +25,9 @@ const static double uk = 0.804;
 PBEFunctional::PBEFunctional(vector<vector<RHODTYPE>>& rhoe)
     : XCFunctional(rhoe)
 {
-    pgrad_rho_[0] = pgrad_rho_[1] = pgrad_rho_[2] = 0;
-    pgrad_rho_up_[0] = pgrad_rho_up_[1] = pgrad_rho_up_[2] = 0;
-    pgrad_rho_dn_[0] = pgrad_rho_dn_[1] = pgrad_rho_dn_[2] = 0;
+    pgrad_rho_[0] = pgrad_rho_[1] = pgrad_rho_[2] = nullptr;
+    pgrad_rho_up_[0] = pgrad_rho_up_[1] = pgrad_rho_up_[2] = nullptr;
+    pgrad_rho_dn_[0] = pgrad_rho_dn_[1] = pgrad_rho_dn_[2] = nullptr;
     if (nspin_ == 1)
     {
         exc_.resize(np_);

@@ -86,23 +86,23 @@ public:
         if (nspin_ > 1) assert(rhoe[0].size() == rhoe[1].size());
         np_ = rhoe[0].size();
 
-        pexc_ = pexc_up_ = pexc_dn_ = 0;
-        pvxc1_ = pvxc1_up_ = pvxc1_dn_ = 0;
-        pvxc2_ = pvxc2_upup_ = pvxc2_dndn_ = pvxc2_updn_ = pvxc2_dnup_ = 0;
+        pexc_ = pexc_up_ = pexc_dn_ = nullptr;
+        pvxc1_ = pvxc1_up_ = pvxc1_dn_ = nullptr;
+        pvxc2_ = pvxc2_upup_ = pvxc2_dndn_ = pvxc2_updn_ = pvxc2_dnup_ = nullptr;
 
         if (nspin_ == 1)
         {
             prho_ = &rhoe[0][0];
 
-            prho_up_ = NULL;
-            prho_dn_ = NULL;
+            prho_up_ = nullptr;
+            prho_dn_ = nullptr;
         }
         else
         {
             prho_up_ = &rhoe[0][0];
             prho_dn_ = &rhoe[1][0];
 
-            prho_ = NULL;
+            prho_ = nullptr;
         }
     }
 

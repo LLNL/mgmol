@@ -27,15 +27,15 @@ OrbitalsPreconditioning<T>::~OrbitalsPreconditioning()
     assert(precond_ != 0);
 
     delete precond_;
-    if (gfv_work_ != 0)
+    if (gfv_work_ != nullptr)
     {
         delete gfv_work_;
-        gfv_work_ = 0;
+        gfv_work_ = nullptr;
     }
-    if (data_wghosts_ != 0 && mixed_precision_)
+    if (data_wghosts_ != nullptr && mixed_precision_)
     {
         delete data_wghosts_;
-        data_wghosts_ = 0;
+        data_wghosts_ = nullptr;
     }
 }
 

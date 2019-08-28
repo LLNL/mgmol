@@ -45,9 +45,9 @@ public:
     OrbitalsPreconditioning()
     {
         is_set_       = false;
-        precond_      = 0;
-        gfv_work_     = 0;
-        data_wghosts_ = 0;
+        precond_      = nullptr;
+        gfv_work_     = nullptr;
+        data_wghosts_ = nullptr;
 
         mixed_precision_ = (sizeof(MGPRECONDTYPE) != sizeof(ORBDTYPE));
     };

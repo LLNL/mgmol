@@ -106,7 +106,7 @@ class ProjectedMatricesSparse : public ProjectedMatricesInterface
 
 public:
     ProjectedMatricesSparse(const int ndim, LocalizationRegions* lrs,
-        ClusterOrbitals* local_cluster = 0);
+        ClusterOrbitals* local_cluster = nullptr);
     ~ProjectedMatricesSparse();
 
     virtual void setup(const double kbt, const int nel,

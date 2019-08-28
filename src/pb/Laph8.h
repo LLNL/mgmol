@@ -41,15 +41,15 @@ public:
                   * (Lap<T>::inv_h2(0) + Lap<T>::inv_h2(1) + Lap<T>::inv_h2(2));
         invDiagEl_      = 1. / diagEl_;
         Lap<T>::name_   = "8th order";
-        lower_order_op_ = NULL;
+        lower_order_op_ = nullptr;
     }
 
     ~Laph8()
     {
-        if (lower_order_op_ != NULL)
+        if (lower_order_op_ != nullptr)
         {
             delete lower_order_op_;
-            lower_order_op_ = NULL;
+            lower_order_op_ = nullptr;
         }
     }
 
@@ -77,7 +77,7 @@ public:
 
     Laph6<T>& getLowerOrderOp()
     {
-        if (lower_order_op_ == NULL)
+        if (lower_order_op_ == nullptr)
         {
             FDoper<T>::setFDLowerOrderGrid(Laph6<T>::minNumberGhosts());
             lower_order_op_ = new Laph6<T>(Lap<T>::getLowerOrderGrid());
