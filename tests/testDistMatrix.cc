@@ -15,6 +15,8 @@
 #include "DistMatrix.h"
 #include "MGmol_MPI.h"
 
+#include <boost/test/unit_test.hpp>
+
 #include <mpi.h>
 
 #include <cassert>
@@ -23,23 +25,19 @@
 #include <iomanip>
 #include <iostream>
 
+namespace tt = boost::test_tools;
+
 int aa(int i, int j) { return i + 2 * j; }
 int bb(int i, int j) { return i - j - 3; }
 
-int main(int argc, char** argv)
+BOOST_AUTO_TEST_CASE(distributed_matrix)
 {
     int mype;
     int npes;
-
-    MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &npes);
-    if (npes != 4)
-    {
-        std::cout << "Number of processors in MPI: " << npes << std::endl;
-        std::cout << "This example to set up to use only 4 processes \n";
-        std::cout << "Quitting..." << std::endl;
-        return 1;
-    }
+
+    BOOST_TEST(npes == 4, "This example to set up to use only 4 processes");
+
     MPI_Comm_rank(MPI_COMM_WORLD, &mype);
 
     int nprow = 2;
@@ -153,13 +151,7 @@ int main(int argc, char** argv)
                         int iii  = x + l * c.mb();
                         int jjj  = y + m * c.nb();
                         int ival = iii + jjj * c.mloc();
-                        if (fabs(c.val(ival) - sum) > 1.e-8)
-                        {
-                            std::cout << " error at element (" << i << "," << j
-                                      << ") " << c.val(ival) << " " << sum
-                                      << std::endl;
-                            return 1;
-                        }
+                        BOOST_TEST(c.val(ival) == sum, tt::tolerance(1.e-8));
                     }
 
         std::cout << " results checked" << std::endl;
@@ -173,11 +165,7 @@ int main(int argc, char** argv)
         b.init(aa, a.m());
         double norm = b.norm('F');
         if (mype == 0) std::cout << "Norm(b)=" << norm << std::endl;
-        if (fabs(norm - norma) > 0.000001)
-        {
-            std::cout << "DistMatrix: problem with allgather/init" << std::endl;
-            return -1;
-        }
+        BOOST_TEST(norm == norma, tt::tolerance(0.000001));
         if (mype == 0) std::cout << "DistMatrix::transpose..." << std::endl;
         c.transpose(b);
         norm = c.norm('F');
@@ -194,6 +182,4 @@ int main(int argc, char** argv)
         norm = c.norm('F');
         if (mype == 0) std::cout << "Norm=" << norm << std::endl;
     }
-
-    MPI_Finalize();
 }

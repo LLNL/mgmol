@@ -16,6 +16,8 @@
 #include "DistVector.h"
 #include "MGmol_MPI.h"
 
+#include <boost/test/unit_test.hpp>
+
 #include <mpi.h>
 
 #include <cassert>
@@ -24,20 +26,16 @@
 #include <iomanip>
 #include <iostream>
 
-int main(int argc, char** argv)
+namespace tt = boost::test_tools;
+
+BOOST_AUTO_TEST_CASE(dist_vector)
 {
     int mype;
     int npes;
 
-    MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &npes);
-    if (npes != 4)
-    {
-        std::cout << "Number of processors in MPI: " << npes << std::endl;
-        std::cout << "This example to set up to use only 4 processes \n";
-        std::cout << "Quitting..." << std::endl;
-        return 1;
-    }
+
+    BOOST_TEST(npes == 4, "This example to set up to use only 4 processes");
     MPI_Comm_rank(MPI_COMM_WORLD, &mype);
 
     int nprow = 2;
@@ -66,35 +64,18 @@ int main(int argc, char** argv)
         double expected_norm2 = std::sqrt((double)m);
 
         if (mype == 0) std::cout << "Norm(v)=" << norm2 << std::endl;
-        if (fabs(norm2 - expected_norm2) > 0.000001)
-        {
-            std::cout << "DistVector: problem with nrm2()" << std::endl;
-            return 1;
-        }
+        BOOST_TEST(norm2 == expected_norm2, tt::tolerance(0.000001));
 
         distv.normalize();
 
         double normn = distv.nrm2();
         if (mype == 0) std::cout << "Norm(v)=" << normn << std::endl;
-        if (fabs(normn - 1.) > 0.000001)
-        {
-            std::cout << "DistVector: problem with normalize()" << std::endl;
-            return 1;
-        }
+        BOOST_TEST(normn == 1., tt::tolerance(0.000001));
 
         dist_matrix::DistVector<double> distv2(stdv);
 
         double diff2 = distv2.scaledDiff2(distv, norm2);
         if (mype == 0) std::cout << "diff2=" << diff2 << std::endl;
-        if (fabs(diff2) > 0.000001)
-        {
-            std::cout << "DistVector: problem with scaledDiff2()" << std::endl;
-            return 1;
-        }
+        BOOST_TEST(diff2 == 0., tt::tolerance(0.000001));
     }
-
-    MPI_Finalize();
-
-    if (mype == 0) std::cout << "Test SUCCESSFUL!" << std::endl;
-    return 0;
 }

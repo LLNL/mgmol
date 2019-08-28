@@ -1,12 +1,16 @@
 find_package(PythonInterp 3.2 REQUIRED)
+find_package(Boost REQUIRED COMPONENTS unit_test_framework)
 
 add_executable(testHDF5P
-               ${CMAKE_SOURCE_DIR}/tests/testHDF5P.cc)
+               ${CMAKE_SOURCE_DIR}/tests/testHDF5P.cc
+               ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 add_executable(testMPI
-               ${CMAKE_SOURCE_DIR}/tests/testMPI.cc)
+               ${CMAKE_SOURCE_DIR}/tests/testMPI.cc
+               ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 add_executable(testBlacsContext
                ${CMAKE_SOURCE_DIR}/tests/testBlacsContext.cc
-               ${CMAKE_SOURCE_DIR}/src/DistMatrix/BlacsContext.cc)
+               ${CMAKE_SOURCE_DIR}/src/DistMatrix/BlacsContext.cc
+               ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 add_executable(testDistVector
                ${CMAKE_SOURCE_DIR}/tests/testDistVector.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/DistMatrix.cc
@@ -14,7 +18,8 @@ add_executable(testDistVector
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
-               ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc)
+               ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
+               ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 add_executable(testReplicated2DistMatrix
                ${CMAKE_SOURCE_DIR}/tests/testReplicated2DistMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/DistMatrix.cc
@@ -24,7 +29,8 @@ add_executable(testReplicated2DistMatrix
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
-               ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc)
+               ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
+               ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 add_executable(testDistMatrix
                ${CMAKE_SOURCE_DIR}/tests/testDistMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/DistMatrix.cc
@@ -32,7 +38,8 @@ add_executable(testDistMatrix
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
-               ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc)
+               ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
+               ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 add_executable(testConditionDistMatrix
                ${CMAKE_SOURCE_DIR}/tests/testConditionDistMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/DistMatrix.cc
@@ -40,7 +47,8 @@ add_executable(testConditionDistMatrix
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
-               ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc)
+               ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
+               ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 add_executable(testConditionDistMatrixPower
                ${CMAKE_SOURCE_DIR}/tests/testConditionDistMatrixPower.cc
                ${CMAKE_SOURCE_DIR}/src/Power.cc
@@ -52,7 +60,8 @@ add_executable(testConditionDistMatrixPower
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
-               ${CMAKE_SOURCE_DIR}/src/tools/random.cc)
+               ${CMAKE_SOURCE_DIR}/src/tools/random.cc
+               ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 add_executable(testPower
                ${CMAKE_SOURCE_DIR}/tests/testPower.cc
                ${CMAKE_SOURCE_DIR}/src/Power.cc
@@ -64,7 +73,8 @@ add_executable(testPower
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
-               ${CMAKE_SOURCE_DIR}/src/tools/random.cc)
+               ${CMAKE_SOURCE_DIR}/src/tools/random.cc
+               ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 add_executable(testPowerDistMatrix
                ${CMAKE_SOURCE_DIR}/tests/testPowerDistMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/Power.cc
@@ -76,11 +86,13 @@ add_executable(testPowerDistMatrix
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
-               ${CMAKE_SOURCE_DIR}/src/tools/random.cc)
+               ${CMAKE_SOURCE_DIR}/src/tools/random.cc
+               ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 add_executable(testDirectionalReduce
                ${CMAKE_SOURCE_DIR}/tests/testDirectionalReduce.cc
                ${CMAKE_SOURCE_DIR}/src/sparse_linear_algebra/DirectionalReduce.cc
-               ${CMAKE_SOURCE_DIR}/src/pb/PEenv.cc)
+               ${CMAKE_SOURCE_DIR}/src/pb/PEenv.cc
+               ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 add_executable(testAndersonMix
                ${CMAKE_SOURCE_DIR}/tests/Anderson/testAndersonMix.cc
                ${CMAKE_SOURCE_DIR}/tests/Anderson/Solution.cc
@@ -88,7 +100,8 @@ add_executable(testAndersonMix
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc)
 add_executable(testSuperSampling
                ${CMAKE_SOURCE_DIR}/tests/testSuperSampling.cc
-               ${CMAKE_SOURCE_DIR}/src/SuperSampling.cc)
+               ${CMAKE_SOURCE_DIR}/src/SuperSampling.cc
+               ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 
 target_compile_definitions(testAndersonMix PUBLIC TESTING)
 
@@ -196,37 +209,31 @@ target_include_directories(testAndersonMix PRIVATE
                            ${CMAKE_SOURCE_DIR}/tests/Anderson
                            ${HDF5_INCLUDE_DIRS})
 
-target_link_libraries(testHDF5P ${HDF5_LIBRARIES} MPI::MPI_CXX)
-target_link_libraries(testMPI MPI::MPI_CXX)
-target_link_libraries(testBlacsContext ${SCALAPACK_LIBRARIES}
-                                       ${BLAS_LIBRARIES}
-                                       MPI::MPI_CXX)
-target_link_libraries(testDistVector ${SCALAPACK_LIBRARIES}
-                                     ${BLAS_LIBRARIES}
-                                     MPI::MPI_CXX)
-target_link_libraries(testReplicated2DistMatrix ${SCALAPACK_LIBRARIES}
-                                                ${BLAS_LIBRARIES}
-                                                MPI::MPI_CXX)
-target_link_libraries(testDistMatrix ${SCALAPACK_LIBRARIES}
-                                     ${BLAS_LIBRARIES}
-                                     MPI::MPI_CXX)
-target_link_libraries(testConditionDistMatrix ${SCALAPACK_LIBRARIES}
-                                              ${BLAS_LIBRARIES}
-                                              MPI::MPI_CXX)
-target_link_libraries(testConditionDistMatrixPower ${SCALAPACK_LIBRARIES}
-                                                   ${BLAS_LIBRARIES}
-                                                   MPI::MPI_CXX)
-target_link_libraries(testPower ${BLAS_LIBRARIES}
-                                ${SCALAPACK_LIBRARIES}
-                                MPI::MPI_CXX)
-target_link_libraries(testPowerDistMatrix ${BLAS_LIBRARIES}
-                                          ${SCALAPACK_LIBRARIES}
-                                          MPI::MPI_CXX)
-target_link_libraries(testDirectionalReduce MPI::MPI_CXX)
+target_link_libraries(testHDF5P PRIVATE ${HDF5_LIBRARIES}
+  Boost::unit_test_framework MPI::MPI_CXX)
+target_link_libraries(testMPI PRIVATE Boost::unit_test_framework MPI::MPI_CXX)
+target_link_libraries(testBlacsContext PRIVATE ${SCALAPACK_LIBRARIES}
+  ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX)
+target_link_libraries(testDistVector PRIVATE ${SCALAPACK_LIBRARIES}
+  ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX)
+target_link_libraries(testReplicated2DistMatrix PRIVATE ${SCALAPACK_LIBRARIES}
+  ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX)
+target_link_libraries(testDistMatrix PRIVATE ${SCALAPACK_LIBRARIES}
+  ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX)
+target_link_libraries(testConditionDistMatrix PRIVATE ${SCALAPACK_LIBRARIES}
+  ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX)
+target_link_libraries(testConditionDistMatrixPower PRIVATE
+  ${SCALAPACK_LIBRARIES} ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX)
+target_link_libraries(testPower PRIVATE ${BLAS_LIBRARIES} ${SCALAPACK_LIBRARIES}
+  Boost::unit_test_framework MPI::MPI_CXX)
+target_link_libraries(testPowerDistMatrix PRIVATE ${BLAS_LIBRARIES}
+  ${SCALAPACK_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX)
+target_link_libraries(testDirectionalReduce PRIVATE Boost::unit_test_framework MPI::MPI_CXX)
 target_link_libraries(testAndersonMix ${LAPACK_LIBRARIES}
                                       ${BLAS_LIBRARIES}
                                       ${Boost_LIBRARIES}
                                       MPI::MPI_CXX)
+target_link_libraries(testSuperSampling PRIVATE Boost::unit_test_framework MPI::MPI_CXX)
 
 set_tests_properties(testSiH4 PROPERTIES REQUIRED_FILES
                      ${CMAKE_SOURCE_DIR}/potentials/pseudo.Si)

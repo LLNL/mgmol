@@ -7,28 +7,16 @@
 // All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
+
+#include <boost/test/unit_test.hpp>
 #include <iostream>
 #include <mpi.h>
 
-int main(int argc, char** argv)
+BOOST_AUTO_TEST_CASE(mpi_sanity_check)
 {
-    /*
-     * Initialize MPI
-     */
-    int mpi_ret = MPI_Init(&argc, &argv);
-    if (mpi_ret != MPI_SUCCESS)
-    {
-        std::cerr << "Error in MPI_Init..." << std::endl;
-        return 1;
-    }
-
     int nprocs;
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-    if (nprocs != 4)
-    {
-        std::cerr << "Expected 4 MPI ranks. Got " << nprocs << std::endl;
-        return 1;
-    }
+    BOOST_TEST(nprocs == 4);
 
     int myproc;
     MPI_Comm_rank(MPI_COMM_WORLD, &myproc);
@@ -36,28 +24,8 @@ int main(int argc, char** argv)
     int sendbuff = myproc;
     int recvbuf  = 0;
     int sum      = nprocs * (nprocs + 1) / 2 - nprocs;
-    mpi_ret      = MPI_Allreduce(
+    int mpi_ret  = MPI_Allreduce(
         &sendbuff, &recvbuf, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (mpi_ret == MPI_ERR_COMM)
-    {
-        std::cerr << "Invalid communicator!" << std::endl;
-        return 1;
-    }
-    if (recvbuf != sum)
-    {
-        std::cerr << "Incorrect sum for myproc()!!" << std::endl;
-        return 1;
-    }
-
-    mpi_ret = MPI_Finalize();
-    if (mpi_ret != MPI_SUCCESS)
-    {
-        std::cerr << "Error in MPI_Finalize..." << std::endl;
-        ;
-        return 1;
-    }
-
-    std::cout << "SUCESSFUL test!" << std::endl;
-
-    return 0;
+    BOOST_TEST(mpi_ret != MPI_ERR_COMM, "Invalid communicator");
+    BOOST_TEST(recvbuf == sum);
 }
