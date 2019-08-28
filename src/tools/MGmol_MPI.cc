@@ -707,7 +707,9 @@ bool MGmol_MPI::compareSpin(const double val)
     if (fabs(val - otherval) > 1.e-8)
     {
         if (instancePE0())
+        {
             MGMOL_MPI_ERROR("val=" << val << ", other val=" << otherval);
+        }
     }
     return true;
 }

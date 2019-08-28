@@ -410,7 +410,7 @@ public:
         else
         {
             vals.resize(cols.size());
-            memset(&vals[0], vals.size() * sizeof(double), 0);
+            memset(&vals[0], 0, vals.size() * sizeof(double));
         }
 
         assert(vals.size() == cols.size());
@@ -443,7 +443,7 @@ public:
         else
         {
             vals.resize(cols.size());
-            memset(&vals[0], vals.size() * sizeof(double), 0);
+            memset(&vals[0], 0, vals.size() * sizeof(double));
         }
 
         assert(vals.size() == cols.size());
