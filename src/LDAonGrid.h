@@ -65,7 +65,7 @@ public:
 #endif
     }
 
-    ~LDAonGrid()
+    ~LDAonGrid() override
     {
 #ifdef USE_LIBXC
         xc_func_end(&xfunc_);
@@ -75,9 +75,9 @@ public:
 #endif
     }
 
-    void update();
+    void update() override;
 
-    double getExc() const // in [Ha]
+    double getExc() const override // in [Ha]
     {
         Mesh* mymesh           = Mesh::instance();
         const pb::Grid& mygrid = mymesh->grid();

@@ -47,11 +47,11 @@ public:
         bc_[2] = bc[2];
 
         vh_       = new pb::GridFunc<POTDTYPE>(grid_, bc[0], bc[1], bc[2]);
-        vepsilon_ = NULL;
+        vepsilon_ = nullptr;
     };
 
     // Destructor
-    virtual ~Poisson() { delete vh_; };
+    ~Poisson() override { delete vh_; };
 
     virtual void setup(const short nu1, const short nu2, const short max_sweeps,
         const double tol, const short max_nlevels,

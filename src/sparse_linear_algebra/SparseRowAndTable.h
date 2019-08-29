@@ -42,18 +42,19 @@ public:
         buildRowTable(*pos_);
     }
     // destructor
-    ~SparseRowAndTable() { delete pos_; }
+    ~SparseRowAndTable() override { delete pos_; }
     void assign(std::vector<int>& coldata, std::vector<double>& colvals);
     void assign(const int nnzrow, const int* coldata, const double* colvals);
 
-    void insertEntry(const int col, const double val)
+    void insertEntry(const int col, const double val) override
     {
         //       assert((int *)pos_->get_value(col) == NULL);
         SparseRow::insertEntry(col, val);
         pos_->insert(col);
     }
 
-    int updateRow(const int col, const double val, const INSERTMODE mode)
+    int updateRow(
+        const int col, const double val, const INSERTMODE mode) override
     {
         int newentry    = 0;
         const int index = getColumnPosition(col);
@@ -69,7 +70,7 @@ public:
         return newentry;
     }
 
-    int updateRowAdd(const int col, const double val)
+    int updateRowAdd(const int col, const double val) override
     {
         int newentry    = 0;
         const int index = getColumnPosition(col);
@@ -85,7 +86,7 @@ public:
         return newentry;
     }
 
-    int updateRowInsert(const int col, const double val)
+    int updateRowInsert(const int col, const double val) override
     {
         int newentry    = 0;
         const int index = getColumnPosition(col);
@@ -102,18 +103,18 @@ public:
     }
 
     int updateRow(const int count, const int* const cols,
-        const double* const vals, const INSERTMODE mode);
-    int updateRowAdd(
-        const int count, const int* const cols, const double* const vals);
-    int updateRowInsert(
-        const int count, const int* const cols, const double* const vals);
+        const double* const vals, const INSERTMODE mode) override;
+    int updateRowAdd(const int count, const int* const cols,
+        const double* const vals) override;
+    int updateRowInsert(const int count, const int* const cols,
+        const double* const vals) override;
     void reset();
 
     /* get value on local row */
-    double getColumnEntry(const int col) const
+    double getColumnEntry(const int col) const override
     {
         int* pos = (int*)pos_->get_value(col);
-        if (pos == NULL)
+        if (pos == nullptr)
             return 0.0;
         else
             return SparseRow::getEntryFromPosition(*pos);
@@ -123,7 +124,7 @@ public:
     int getColumnPosition(const int col)
     {
         int* pos = (int*)pos_->get_value(col);
-        return (pos != NULL) ? *pos : -1;
+        return (pos != nullptr) ? *pos : -1;
     }
 };
 

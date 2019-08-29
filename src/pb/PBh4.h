@@ -32,22 +32,22 @@ public:
     PBh4(const Grid& mygrid, DielFunc<T>& myepsilon) : PB<T>(mygrid, myepsilon)
     {
         PB<T>::initialized_ = true;
-        lower_order_op_     = NULL;
+        lower_order_op_     = nullptr;
     };
     PBh4(const Grid& mygrid, const double e0, const double rho0,
         const double drho0)
         : PB<T>(mygrid, e0, rho0, drho0)
     {
         PB<T>::initialized_ = false;
-        lower_order_op_     = NULL;
+        lower_order_op_     = nullptr;
     };
 
-    ~PBh4()
+    ~PBh4() override
     {
-        if (lower_order_op_ != NULL)
+        if (lower_order_op_ != nullptr)
         {
             delete lower_order_op_;
-            lower_order_op_ = NULL;
+            lower_order_op_ = nullptr;
         }
     }
 
@@ -64,14 +64,14 @@ public:
         return A;
     }
 
-    void setLowerOrderGrid()
+    void setLowerOrderGrid() override
     {
         this->setFDLowerOrderGrid(PBh2<T>::minNumberGhosts());
     }
 
     PBh2<T>& getLowerOrderOp()
     {
-        if (lower_order_op_ == NULL)
+        if (lower_order_op_ == nullptr)
         {
             this->setFDLowerOrderGrid(PBh2<T>::minNumberGhosts());
             lower_order_op_
@@ -85,7 +85,7 @@ public:
     PBh4 replicatedOp(const Grid&);
 
     // A->B
-    void apply(GridFunc<T>& A, GridFunc<T>& B)
+    void apply(GridFunc<T>& A, GridFunc<T>& B) override
     {
         pb_4th(A, B);
         B.set_bc(A.bc(0), A.bc(1), A.bc(2));
@@ -97,9 +97,9 @@ public:
         PB<T>::initialized_ = true;
     };
 
-    void jacobi(GridFunc<T>& A, const GridFunc<T>& B, GridFunc<T>& W);
+    void jacobi(GridFunc<T>& A, const GridFunc<T>& B, GridFunc<T>& W) override;
 
-    void get_vepsilon(GridFunc<T>&, GridFunc<T>&, GridFunc<T>&);
+    void get_vepsilon(GridFunc<T>&, GridFunc<T>&, GridFunc<T>&) override;
 };
 
 } // namespace pb

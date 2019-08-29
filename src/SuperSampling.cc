@@ -65,7 +65,8 @@ void SuperSampling<lMax>::setup(int sampleRate, int numExtraPts,
 // the fuction every single time
 template <int lMax>
 std::array<std::vector<double>, 2 * lMax + 1>
-SuperSampling<lMax>::getFuncValues(std::function<double(const double)> Func)
+SuperSampling<lMax>::getFuncValues(
+    const std::function<double(const double)>& Func)
 {
     int offset = 0;
     std::array<std::vector<double>, 2 * lMax + 1> FuncValues;

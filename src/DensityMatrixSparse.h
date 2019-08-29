@@ -36,7 +36,8 @@ class DensityMatrixSparse
 
 public:
     DensityMatrixSparse(LocalizationRegions& lrs, const int ndim,
-        const std::vector<int>& locvars, ClusterOrbitals* local_cluster = 0);
+        const std::vector<int>& locvars,
+        ClusterOrbitals* local_cluster = nullptr);
     DensityMatrixSparse(const DensityMatrixSparse&);
 
     ~DensityMatrixSparse();

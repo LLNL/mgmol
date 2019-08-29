@@ -15,7 +15,7 @@
 using namespace std;
 
 MPI_Comm Mesh::comm_   = MPI_COMM_NULL;
-Mesh* Mesh::pinstance_ = 0;
+Mesh* Mesh::pinstance_ = nullptr;
 
 unsigned Mesh::ngpts_[3] = { 0, 0, 0 };
 double Mesh::origin_[3]  = { 0., 0., 0. };

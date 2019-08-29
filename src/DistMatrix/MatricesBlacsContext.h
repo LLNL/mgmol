@@ -23,13 +23,13 @@
 class MatricesBlacsContext
 {
     MatricesBlacsContext()
-        : blactxt_(0), comm_(MPI_COMM_NULL), size_(-1), n_(-1)
+        : blactxt_(nullptr), comm_(MPI_COMM_NULL), size_(-1), n_(-1)
     {
     }
 
     ~MatricesBlacsContext()
     {
-        if (blactxt_ != 0) delete blactxt_;
+        if (blactxt_ != nullptr) delete blactxt_;
     };
 
     dist_matrix::BlacsContext* blactxt_;
@@ -55,10 +55,10 @@ public:
 
     void clear()
     {
-        if (blactxt_ != 0)
+        if (blactxt_ != nullptr)
         {
             delete blactxt_;
-            blactxt_ = 0;
+            blactxt_ = nullptr;
         }
         comm_ = MPI_COMM_NULL;
         size_ = -1;

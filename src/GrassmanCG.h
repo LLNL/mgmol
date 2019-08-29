@@ -36,12 +36,12 @@ public:
     {
     }
 
-    void conjugate();
-    double computeStepSize(T& orbitals);
+    void conjugate() override;
+    double computeStepSize(T& orbitals) override;
     void computeOrbitalsProdWithH(
         T& orbitals1, T& orbitals2, dist_matrix::DistMatrix<DISTMATDTYPE>& mat);
     void computeOrbitalsProdWithH(
         T& orbitals, dist_matrix::DistMatrix<DISTMATDTYPE>& mat);
-    void parallelTransportUpdate(const double lambda, T& orbitals);
+    void parallelTransportUpdate(const double lambda, T& orbitals) override;
 };
 #endif

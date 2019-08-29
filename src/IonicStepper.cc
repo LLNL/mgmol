@@ -53,7 +53,7 @@ IonicStepper::IonicStepper(const double dt, const std::vector<short>& atmove,
 }
 
 int IonicStepper::writeAtomicFields(HDFrestart& h5f_file,
-    const vector<double>& data, const string name, const bool create) const
+    const vector<double>& data, const string& name, const bool create) const
 {
     hid_t file_id = h5f_file.file_id();
     if (file_id < 0) return 0;
@@ -65,7 +65,7 @@ int IonicStepper::writeAtomicFields(HDFrestart& h5f_file,
     {
         // Create the data space for new datasets
         hsize_t dims[2] = { (hsize_t)data.size() / 3, 3 };
-        dataspace_id    = H5Screate_simple(2, dims, NULL);
+        dataspace_id    = H5Screate_simple(2, dims, nullptr);
         if (dataspace_id < 0)
         {
             (*MPIdata::serr)
@@ -137,7 +137,7 @@ int IonicStepper::writeAtomicFields(HDFrestart& h5f_file,
     return 0;
 }
 
-int IonicStepper::writePositions(HDFrestart& h5f_file, const string name) const
+int IonicStepper::writePositions(HDFrestart& h5f_file, const string& name) const
 {
     return writeAtomicFields(h5f_file, tau0_, name, false);
 }
@@ -151,7 +151,7 @@ int IonicStepper::writeVelocities(HDFrestart& h5f_file) const
     // Create the data space for new datasets
     hsize_t dims[2] = { (hsize_t)tau0_.size() / 3, 3 };
 
-    hid_t dataspace_id = H5Screate_simple(2, dims, NULL);
+    hid_t dataspace_id = H5Screate_simple(2, dims, nullptr);
     if (dataspace_id < 0)
     {
         (*MPIdata::serr) << "IonicStepper: H5Screate_simple failed!!!" << endl;
@@ -205,7 +205,7 @@ int IonicStepper::writeVelocities(HDFrestart& h5f_file) const
 }
 
 int IonicStepper::readAtomicFields(
-    HDFrestart& h5f_file, vector<double>& data, const string name)
+    HDFrestart& h5f_file, vector<double>& data, const string& name)
 {
     hid_t file_id = h5f_file.file_id();
 
@@ -240,13 +240,13 @@ int IonicStepper::readAtomicFields(
     return 0;
 }
 
-int IonicStepper::readPositions_hdf5(HDFrestart& h5f_file, const string name)
+int IonicStepper::readPositions_hdf5(HDFrestart& h5f_file, const string& name)
 {
     return readAtomicFields(h5f_file, tau0_, name);
 }
 
-int IonicStepper::writeRandomStates(
-    HDFrestart& h5f_file, vector<unsigned short>& data, const string name) const
+int IonicStepper::writeRandomStates(HDFrestart& h5f_file,
+    vector<unsigned short>& data, const string& name) const
 {
     hid_t file_id = h5f_file.file_id();
     bool create   = false;
@@ -261,7 +261,7 @@ int IonicStepper::writeRandomStates(
 
         // Create the data space for the dataset
         hsize_t dims[2] = { (hsize_t)data.size() / 3, 3 };
-        dataspace_id    = H5Screate_simple(2, dims, NULL);
+        dataspace_id    = H5Screate_simple(2, dims, nullptr);
         if (dataspace_id < 0)
         {
             (*MPIdata::serr)
@@ -322,7 +322,7 @@ int IonicStepper::writeRandomStates(
 }
 
 int IonicStepper::readRandomStates(
-    HDFrestart& h5f_file, vector<unsigned short>& data, const string name)
+    HDFrestart& h5f_file, vector<unsigned short>& data, const string& name)
 {
     hid_t file_id = h5f_file.file_id();
 

@@ -60,15 +60,15 @@ ProjectedMatricesSparse::ProjectedMatricesSparse(
         = BasicDataDistributors::centeredOrbitalsOverlapDistributor();
     distributor_sH_ = BasicDataDistributors::orbitalsProdWithHDistributor();
 
-    invS_ = 0;
+    invS_ = nullptr;
 
-    dm_ = 0;
+    dm_ = nullptr;
 
-    sH_      = 0;
-    matHB_   = 0;
-    submatT_ = 0;
-    localX_  = 0;
-    localT_  = 0;
+    sH_      = nullptr;
+    matHB_   = nullptr;
+    submatT_ = nullptr;
+    localX_  = nullptr;
+    localT_  = nullptr;
 
     isDataSetup_ = false;
 }
@@ -82,19 +82,19 @@ void ProjectedMatricesSparse::clearData()
     //       delete dm_; dm_ = 0;
     // if(onpe0)cout<<"delete localX"<<endl;
     delete localX_;
-    localX_ = 0;
+    localX_ = nullptr;
     // if(onpe0)cout<<"delete localT"<<endl;
     delete localT_;
-    localT_ = 0;
+    localT_ = nullptr;
     // if(onpe0)cout<<"delete sH"<<endl;
     delete sH_;
-    sH_ = 0;
+    sH_ = nullptr;
     // if(onpe0)cout<<"delete HB"<<endl;
     delete matHB_;
-    matHB_ = 0;
+    matHB_ = nullptr;
     // if(onpe0)cout<<"delete T"<<endl;
     delete submatT_;
-    submatT_ = 0;
+    submatT_ = nullptr;
 
     isDataSetup_ = false;
     //    }
@@ -115,9 +115,9 @@ ProjectedMatricesSparse::~ProjectedMatricesSparse()
 
     // if(onpe0)cout<<"delete invS"<<endl;
     delete invS_;
-    invS_ = 0;
+    invS_ = nullptr;
     delete dm_;
-    dm_ = 0;
+    dm_ = nullptr;
     clearData();
 };
 
@@ -142,9 +142,9 @@ void ProjectedMatricesSparse::setup(
     if (ct.AtomsDynamic() == AtomsDynamicType::MD)
     {
         delete invS_;
-        invS_ = 0;
+        invS_ = nullptr;
         delete dm_;
-        dm_ = 0;
+        dm_ = nullptr;
     }
 
     // printf("setup is called ...\n");
@@ -164,7 +164,8 @@ void ProjectedMatricesSparse::setup(
         lsize_ = locvars_.size(); // table.get_size();
 
         // reset invS and DM data
-        if (invS_ == 0 || dm_ == 0 || ct.AtomsDynamic() == AtomsDynamicType::MD)
+        if (invS_ == nullptr || dm_ == nullptr
+            || ct.AtomsDynamic() == AtomsDynamicType::MD)
         {
             invS_ = new ShortSightedInverse((*lrs_), locvars_, local_cluster_);
             dm_   = new DensityMatrixSparse(

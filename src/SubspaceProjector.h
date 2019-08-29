@@ -32,7 +32,7 @@ public:
 
     ~SubspaceProjector() {}
 
-    void projectOut(T&, SquareLocalMatrices<MATDTYPE>* mask = 0);
+    void projectOut(T&, SquareLocalMatrices<MATDTYPE>* mask = nullptr);
 };
 
 #endif

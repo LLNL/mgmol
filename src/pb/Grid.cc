@@ -292,17 +292,17 @@ void Grid::getSinCosFunctions(std::vector<T>& sinx, std::vector<T>& siny,
     const int zoff = istart_[2];
 
     for (int i = 0; i < dim_[0]; i++)
-        sinx[i] = sin(T(xoff + i) * hhx) * alphax;
+        sinx[i] = std::sin(T(xoff + i) * hhx) * alphax;
     for (int i = 0; i < dim_[0]; i++)
-        cosx[i] = cos(T(xoff + i) * hhx) * alphax;
+        cosx[i] = std::cos(T(xoff + i) * hhx) * alphax;
     for (int i = 0; i < dim_[1]; i++)
-        siny[i] = sin(T(yoff + i) * hhy) * alphay;
+        siny[i] = std::sin(T(yoff + i) * hhy) * alphay;
     for (int i = 0; i < dim_[1]; i++)
-        cosy[i] = cos(T(yoff + i) * hhy) * alphay;
+        cosy[i] = std::cos(T(yoff + i) * hhy) * alphay;
     for (int i = 0; i < dim_[2]; i++)
-        sinz[i] = sin(T(zoff + i) * hhz) * alphaz;
+        sinz[i] = std::sin(T(zoff + i) * hhz) * alphaz;
     for (int i = 0; i < dim_[2]; i++)
-        cosz[i] = cos(T(zoff + i) * hhz) * alphaz;
+        cosz[i] = std::cos(T(zoff + i) * hhz) * alphaz;
 }
 
 Vector3D Grid::closestGridPt(Vector3D coords) const

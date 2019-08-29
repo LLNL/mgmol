@@ -123,9 +123,9 @@ class Ions
 
     void gatherLockedData(std::vector<int>& locked_data, const int root) const;
     void computeNumIons(void);
-    int readNatoms(const std::string input_file, const bool cell_relative);
+    int readNatoms(const std::string& input_file, const bool cell_relative);
     int readNatoms(std::ifstream* tfile, const bool cell_relative);
-    int readAtomsFromXYZ(const std::string filename, const bool cell_relative);
+    int readAtomsFromXYZ(const std::string& filename, const bool cell_relative);
     void setupContraintsData(std::vector<Ion*>&);
     void clearStepperData();
     void initStepperData();
@@ -258,7 +258,7 @@ public:
 
     // functions to initialize atomic coordinates
     // either from input file, or restart file
-    int readAtoms(const std::string filename, const bool cell_relative);
+    int readAtoms(const std::string& filename, const bool cell_relative);
     int readAtoms(std::ifstream* tfile, const bool cell_relative);
     void initFromRestartFile(HDFrestart& h5_file);
 
@@ -283,7 +283,7 @@ public:
     }
     double getMaxListRadius() const;
     void updateIons();
-    void shiftIons(Vector3D shift);
+    void shiftIons(const Vector3D& shift);
 
     const std::vector<double>& getMassesInteractingIons() const
     {

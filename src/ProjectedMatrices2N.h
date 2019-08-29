@@ -21,7 +21,7 @@ class ProjectedMatrices2N : public ProjectedMatrices
 public:
     ProjectedMatrices2N(const int ndim, const bool with_spin);
 
-    ~ProjectedMatrices2N();
+    ~ProjectedMatrices2N() override;
 
     void assignBlocksH(dist_matrix::DistMatrix<DISTMATDTYPE>&,
         dist_matrix::DistMatrix<DISTMATDTYPE>&,

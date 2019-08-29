@@ -58,10 +58,10 @@ public:
 
     virtual ~LocalMatrices()
     {
-        if (storage_ != 0)
+        if (storage_ != nullptr)
         {
             delete[] storage_;
-            storage_ = 0;
+            storage_ = nullptr;
         }
     };
 

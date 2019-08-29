@@ -21,7 +21,7 @@ private:
     T& x_; // current trial solution
 
 protected:
-    virtual void postprocessUpdate();
+    void postprocessUpdate() override;
 
 public:
     OrthoAndersonMix(const int m, const double beta, T& x)
@@ -29,7 +29,7 @@ public:
     {
     }
 
-    virtual ~OrthoAndersonMix(){};
+    ~OrthoAndersonMix() override{};
 };
 
 #endif

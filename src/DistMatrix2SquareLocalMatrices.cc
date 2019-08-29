@@ -10,7 +10,8 @@
 
 #include "DistMatrix2SquareLocalMatrices.h"
 
-DistMatrix2SquareLocalMatrices* DistMatrix2SquareLocalMatrices::pinstance_ = 0;
+DistMatrix2SquareLocalMatrices* DistMatrix2SquareLocalMatrices::pinstance_
+    = nullptr;
 MPI_Comm DistMatrix2SquareLocalMatrices::comm_ = MPI_COMM_NULL;
 std::unique_ptr<dist_matrix::SubMatricesIndexing<DISTMATDTYPE>>
     DistMatrix2SquareLocalMatrices::submat_indexing_;

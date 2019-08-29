@@ -323,8 +323,8 @@ void MGmol<T>::md(T** orbitals, Ions& ions)
     int size_tau = (int)tau0.size();
     DFTsolver<T>::resetItCount();
 
-    orbitals_extrapol_
-        = OrbitalsExtrapolationFactory<T>::create(ct.WFExtrapolation(), NULL);
+    orbitals_extrapol_ = OrbitalsExtrapolationFactory<T>::create(
+        ct.WFExtrapolation(), nullptr);
 
     MD_IonicStepper* stepper = new MD_IonicStepper(
         ct.dt, atmove, tau0, taup, taum, fion, pmass, rand_states);
@@ -404,7 +404,7 @@ void MGmol<T>::md(T** orbitals, Ions& ions)
         }
 
         delete h5f_file_;
-        h5f_file_ = 0;
+        h5f_file_ = nullptr;
     }
 
     // additional SC steps to compensate random start
@@ -442,7 +442,7 @@ void MGmol<T>::md(T** orbitals, Ions& ions)
             // update localization regions
             if (ct.adaptiveLRs())
             {
-                adaptLR(spreadf_, 0);
+                adaptLR(spreadf_, nullptr);
 
                 // update cluster for load balancing
                 if (ct.load_balancing_alpha > 0.0

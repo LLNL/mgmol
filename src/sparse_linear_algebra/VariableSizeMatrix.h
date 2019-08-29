@@ -58,7 +58,7 @@ class VariableSizeMatrix : public VariableSizeMatrixInterface
     std::vector<T*> data_;
 
 public:
-    VariableSizeMatrix(const std::string name, const int alloc_size,
+    VariableSizeMatrix(const std::string& name, const int alloc_size,
         const MPI_Comm comm = MPI_COMM_NULL); // setup data structures
     VariableSizeMatrix(const VariableSizeMatrix& A,
         const bool copy_table = true); // Copy constructor
@@ -96,7 +96,7 @@ public:
     void copyData(const VariableSizeMatrix<T>& A,
         const int n); /* Copy data from matrix A. Copies n rows of A */
     void set2Identity(); /* Set matrix to identity */
-    ~VariableSizeMatrix(); // destructor
+    ~VariableSizeMatrix() override; // destructor
 
     void printMat(const char* fname,
         std::vector<int>& lvec); /* print select rows of CSR matrix */
@@ -351,7 +351,7 @@ public:
             /* check if row exists */
             int* rindex = (int*)getTableValue(row);
 
-            if (rindex != NULL) /* row exists */
+            if (rindex != nullptr) /* row exists */
             {
                 /* insert column */
                 updateLocalRow(*rindex, col, val, mode);
@@ -369,7 +369,7 @@ public:
         double value = 0.0;
 
         int* rindex = (int*)getTableValue(row);
-        if (rindex != NULL) value = data_[*rindex]->getColumnEntry(col);
+        if (rindex != nullptr) value = data_[*rindex]->getColumnEntry(col);
 
         return value;
     }
@@ -391,7 +391,7 @@ public:
         std::vector<double>& vals) const
     {
         int* rindex = (int*)getTableValue(row);
-        if (rindex != NULL)
+        if (rindex != nullptr)
         {
             const int lrindex = *rindex;
             getLocalRowValues(lrindex, cols, vals);
@@ -410,7 +410,7 @@ public:
         else
         {
             vals.resize(cols.size());
-            memset(&vals[0], vals.size() * sizeof(double), 0);
+            memset(&vals[0], 0, vals.size() * sizeof(double));
         }
 
         assert(vals.size() == cols.size());
@@ -421,7 +421,7 @@ public:
         std::vector<double>& vals) const
     {
         int* rindex = (int*)getTableValue(row);
-        if (rindex != NULL)
+        if (rindex != nullptr)
         {
             T* data = data_[*rindex];
             vals.reserve(cols.size());
@@ -443,7 +443,7 @@ public:
         else
         {
             vals.resize(cols.size());
-            memset(&vals[0], vals.size() * sizeof(double), 0);
+            memset(&vals[0], 0, vals.size() * sizeof(double));
         }
 
         assert(vals.size() == cols.size());
@@ -453,7 +453,7 @@ public:
     void scaleRow(const int row, const double coeff)
     {
         int* rindex = (int*)getTableValue(row);
-        if (rindex == NULL) return;
+        if (rindex == nullptr) return;
 
         data_[*rindex]->scale(coeff);
     }

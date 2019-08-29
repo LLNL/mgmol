@@ -188,9 +188,9 @@ public:
 
     MGmol(MPI_Comm comm, std::ostream& os);
 
-    ~MGmol();
+    ~MGmol() override;
 
-    void run();
+    void run() override;
     void initNuc(Ions& ions);
     void initKBR();
 
@@ -210,7 +210,7 @@ public:
     void printEigAndOcc();
 
     int readCoordinates(std::ifstream* tfile, const bool cell_relative);
-    int readCoordinates(const std::string filename, const bool cell_relative);
+    int readCoordinates(const std::string& filename, const bool cell_relative);
     double computeConstraintResidual(T& orbitals, const T& hphi, T& res,
         const bool print_residual, const bool norm_res);
 
@@ -277,7 +277,7 @@ public:
     void update_orbitals_LRs(T** orbitals);
     void clearOldOrbitals();
     void getKBPsiAndHij(T& orbitals, Ions& ions);
-    int write_hdf5(const std::string filename,
+    int write_hdf5(const std::string& filename,
         std::vector<std::vector<RHODTYPE>>& rho, Ions& ions, T& orbitals,
         LocalizationRegions& lrs);
     int write_hdf5(HDFrestart& h5f_file,
@@ -293,9 +293,9 @@ public:
     int nions() { return ions_->getNumIons(); }
     double getTotalEnergy();
     void setup();
-    int setupFromInput(const std::string input_file);
-    int setupLRsFromInput(const std::string input_file);
-    int setupConstraintsFromInput(const std::string input_file);
+    int setupFromInput(const std::string input_file) override;
+    int setupLRsFromInput(const std::string input_file) override;
+    int setupConstraintsFromInput(const std::string input_file) override;
     void cleanup();
     void geomOptimSetup();
     void geomOptimQuench();
@@ -321,7 +321,7 @@ public:
 template <class T>
 dist_matrix::RemoteTasksDistMatrix<DISTMATDTYPE>*
     MGmol<T>::remote_tasks_DistMatrix_ptr_
-    = 0;
+    = nullptr;
 template <class T>
 Timer MGmol<T>::adaptLR_tm_("MGmol::adaptLR");
 template <class T>

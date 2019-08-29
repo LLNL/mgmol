@@ -89,7 +89,7 @@ public:
 
     void setVerbosity(const short vlevel) { verbosity_level_ = vlevel; }
 
-    void registerName(const std::string filename, const char flag)
+    void registerName(const std::string& filename, const char flag)
     {
         pot_filenames_.push_back(filename);
         pot_types_.push_back(flag);

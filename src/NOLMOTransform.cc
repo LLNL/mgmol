@@ -29,7 +29,7 @@ void NOLMOTransform::init_transform(
     if (bcr_->onpe0())
         (*MPIdata::sout) << "NOLMOTransform::init_transform()" << endl;
 
-    dist_matrix::DistMatrix<DISTMATDTYPE> work(ls);
+    const dist_matrix::DistMatrix<DISTMATDTYPE>& work(ls);
     dist_matrix::DistMatrix<DISTMATDTYPE> tmp(ls);
     tmp.transpose(work);
     tmp.trset('u'); // set to zero lower part of upper triangular matrix

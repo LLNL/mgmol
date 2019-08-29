@@ -119,7 +119,7 @@ private:
     // vector Accessing values in vector is quicker than evaluating a function
     // every time
     std::array<std::vector<double>, 2 * lMax + 1> getFuncValues(
-        std::function<double(const double)> Func);
+        const std::function<double(const double)>& Func);
 
     // At a given point in the coarse subdomain mesh, loop through the nearby
     // points to compute the convolution

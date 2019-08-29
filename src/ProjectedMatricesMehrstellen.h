@@ -39,13 +39,13 @@ class ProjectedMatricesMehrstellen : public ProjectedMatrices
 
 public:
     ProjectedMatricesMehrstellen(const int ndim, const bool with_spin);
-    ~ProjectedMatricesMehrstellen();
+    ~ProjectedMatricesMehrstellen() override;
 
-    void computeInvB();
+    void computeInvB() override;
     void rotateAll(const dist_matrix::DistMatrix<DISTMATDTYPE>& rotation_matrix,
-        const bool flag_eigen);
+        const bool flag_eigen) override;
 
-    void initializeMatB(const SquareLocalMatrices<MATDTYPE>& ss)
+    void initializeMatB(const SquareLocalMatrices<MATDTYPE>& ss) override
     {
         LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
 
@@ -54,13 +54,13 @@ public:
         *matB_ = *work_;
     }
 
-    void updateTheta()
+    void updateTheta() override
     {
         // theta = invB * Hij
         theta_->symm('l', 'l', 1., *invB_, *matH_, 0.);
     }
 
-    void updateHB()
+    void updateHB() override
     {
         // if( onpe0 )
         //    (*MPIdata::sout)<<"ProjectedMatrices::updateHB()..."<<endl;
@@ -69,7 +69,7 @@ public:
         matHB_->transpose(0.5, work_dis, 0.5);
     }
 
-    virtual void printMatrices(std::ostream& os) const
+    void printMatrices(std::ostream& os) const override
     {
         printS(os);
         printB(os);

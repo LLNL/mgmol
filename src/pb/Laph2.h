@@ -34,15 +34,15 @@ public:
         invDiagEl_    = 1. / diagEl_;
         Lap<T>::name_ = "2nd order";
 
-        lower_order_op_ = NULL;
+        lower_order_op_ = nullptr;
     }
 
-    ~Laph2()
+    ~Laph2() override
     {
-        if (lower_order_op_ != NULL)
+        if (lower_order_op_ != nullptr)
         {
             delete lower_order_op_;
-            lower_order_op_ = NULL;
+            lower_order_op_ = nullptr;
         }
     }
 
@@ -63,11 +63,14 @@ public:
         return replicated_A;
     }
 
-    void setLowerOrderGrid() { this->setFDLowerOrderGrid(minNumberGhosts()); }
+    void setLowerOrderGrid() override
+    {
+        this->setFDLowerOrderGrid(minNumberGhosts());
+    }
 
     Laph2& getLowerOrderOp()
     {
-        if (lower_order_op_ == NULL)
+        if (lower_order_op_ == nullptr)
         {
             this->setFDLowerOrderGrid(Laph2::minNumberGhosts());
             lower_order_op_ = new Laph2(Lap<T>::getLowerOrderGrid());
@@ -78,13 +81,13 @@ public:
     static short minNumberGhosts() { return 1; }
 
     // A->B
-    void apply(GridFunc<T>& A, GridFunc<T>& B)
+    void apply(GridFunc<T>& A, GridFunc<T>& B) override
     {
         // if(grid_.mype_env().mytask()==0)cout<<Lap<T>::name_<<endl;
         this->del2_2nd(A, B);
         B.set_bc(A.bc(0), A.bc(1), A.bc(2));
     }
-    void apply(GridFuncVector<T>& A, GridFuncVector<T>& B)
+    void apply(GridFuncVector<T>& A, GridFuncVector<T>& B) override
     {
         assert(A.size() == B.size());
         A.trade_boundaries();
@@ -95,13 +98,14 @@ public:
         }
     }
 
-    void jacobi(GridFunc<T>&, const GridFunc<T>&, GridFunc<T>&);
-    void jacobi(GridFuncVector<T>&, const GridFuncVector<T>&, GridFunc<T>&);
+    void jacobi(GridFunc<T>&, const GridFunc<T>&, GridFunc<T>&) override;
     void jacobi(
-        GridFuncVector<T>&, const GridFuncVector<T>&, GridFuncVector<T>&);
+        GridFuncVector<T>&, const GridFuncVector<T>&, GridFunc<T>&) override;
+    void jacobi(GridFuncVector<T>&, const GridFuncVector<T>&,
+        GridFuncVector<T>&) override;
 
-    double diagEl(void) const { return diagEl_; };
-    double invDiagEl(void) const { return invDiagEl_; };
+    double diagEl(void) const override { return diagEl_; };
+    double invDiagEl(void) const override { return invDiagEl_; };
 };
 
 } // namespace pb

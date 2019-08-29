@@ -183,9 +183,9 @@ void MGmol<T>::wftransform(T* orbitals, T* work_orbitals, Ions& ions)
     Vector3D origin(mygrid.origin(0), mygrid.origin(1), mygrid.origin(2));
     Vector3D ll(mygrid.ll(0), mygrid.ll(1), mygrid.ll(2));
 
-    OrbitalsTransform* ot = 0;
-    MLWFTransform* mlwt   = 0;
-    NOLMOTransform* noot  = 0;
+    OrbitalsTransform* ot = nullptr;
+    MLWFTransform* mlwt   = nullptr;
+    NOLMOTransform* noot  = nullptr;
     if (numst > 0)
     {
         mlwt = new MLWFTransform(numst, origin, ll);

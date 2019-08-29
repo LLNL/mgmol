@@ -34,9 +34,9 @@ Timer PackedCommunicationBuffer::copy_and_insert_new_rows_tm_(
     "PackedCommunicationBuffer::copyAndInsertNewRows");
 
 int PackedCommunicationBuffer::storage_size_  = 0;
-char* PackedCommunicationBuffer::storage_     = 0;
-char* PackedCommunicationBuffer::send_buffer_ = 0;
-char* PackedCommunicationBuffer::recv_buffer_ = 0;
+char* PackedCommunicationBuffer::storage_     = nullptr;
+char* PackedCommunicationBuffer::send_buffer_ = nullptr;
+char* PackedCommunicationBuffer::recv_buffer_ = nullptr;
 
 PackedCommunicationBuffer::PackedCommunicationBuffer(const int bsize)
 {
@@ -49,7 +49,7 @@ PackedCommunicationBuffer::PackedCommunicationBuffer(const int bsize)
                  << endl;
         storage_size_ = 2 * bsize;
 
-        if (storage_ != 0) delete[] storage_;
+        if (storage_ != nullptr) delete[] storage_;
         storage_ = new char[storage_size_];
 
         send_buffer_ = &storage_[0];
@@ -57,10 +57,10 @@ PackedCommunicationBuffer::PackedCommunicationBuffer(const int bsize)
     }
     memset(storage_, 0, storage_size_ * sizeof(char));
 
-    packed_nnzrow_ptr_ = 0;
-    packed_lvars_ptr_  = 0;
-    packed_pj_ptr_     = 0;
-    packed_pa_ptr_     = 0;
+    packed_nnzrow_ptr_ = nullptr;
+    packed_lvars_ptr_  = nullptr;
+    packed_pj_ptr_     = nullptr;
+    packed_pa_ptr_     = nullptr;
     packed_data_size_  = 0;
 }
 
@@ -168,7 +168,7 @@ void PackedCommunicationBuffer::mergeRecvDataToMatrix(
             const int k = packed_nnzrow_ptr_[i + 1] - packed_nnzrow_ptr_[i];
             row_size[i] = k;
 
-            if (rindex != 0)
+            if (rindex != nullptr)
             {
                 const int lrindex = *rindex;
                 /* insert columns */
@@ -212,7 +212,7 @@ void PackedCommunicationBuffer::updateMatrixEntriesWithRecvBuf(
     {
         int* rindex = (int*)amat.getTableValue(packed_lvars_ptr_[i]);
         /* row on this proc. */
-        if (rindex != 0)
+        if (rindex != nullptr)
         {
             const int lrindex = *rindex;
             /* insert columns */
@@ -237,7 +237,7 @@ void PackedCommunicationBuffer::insertRowsFromRecvBuf(
         const int start = packed_nnzrow_ptr_[i];
         const int ncols = packed_nnzrow_ptr_[i + 1] - start;
         /* row on this proc. */
-        if (rindex != 0)
+        if (rindex != nullptr)
         {
             /* insert columns */
             amat.initializeLocalRow(

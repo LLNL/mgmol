@@ -29,25 +29,25 @@ public:
         : GridMask(nclevels, subdivx, mygrid){};
 
     void apply(float* u, const unsigned short level, const unsigned short iloc,
-        const bool first_application = false)
+        const bool first_application = false) override
     {
         applyPrivate(u, level, iloc, first_application);
     }
 
     void apply(double* u, const unsigned short level, const unsigned short iloc,
-        const bool first_application = false)
+        const bool first_application = false) override
     {
         applyPrivate(u, level, iloc, first_application);
     }
 
     void apply(pb::GridFunc<double>& gu, const unsigned short level,
-        const unsigned short iloc)
+        const unsigned short iloc) override
     {
         applyPrivate(gu, level, iloc);
     }
 
     void apply(pb::GridFunc<float>& gu, const unsigned short level,
-        const unsigned short iloc)
+        const unsigned short iloc) override
     {
         applyPrivate(gu, level, iloc);
     }

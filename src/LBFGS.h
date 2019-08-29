@@ -57,9 +57,9 @@ public:
         MasksSet& masks, MasksSet& corrmasks, Electrostatic& electrostat,
         const double dt, MGmol<T>&);
 
-    ~LBFGS();
+    ~LBFGS() override;
 
-    int quenchElectrons(const int itmax, double& etot);
+    int quenchElectrons(const int itmax, double& etot) override;
     void updateRefs();
     void setQuenchTol() const;
     void updatePotAndMasks();

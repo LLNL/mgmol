@@ -49,17 +49,17 @@ public:
         T* orbitals, ProjectedMatricesInterface* proj_matrices,
         const bool use_old_dm);
 
-    void initialize(){};
-    int update();
+    void initialize() override{};
+    int update() override;
 
     // H is updated with MVP loop, so no need to compute it outside
-    bool needH() const { return false; }
+    bool needH() const override { return false; }
 
-    void stripDM();
+    void stripDM() override;
 
-    void dressDM();
+    void dressDM() override;
 
-    void reset() {}
+    void reset() override {}
 };
 
 #endif

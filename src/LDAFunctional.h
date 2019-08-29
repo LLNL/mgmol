@@ -59,9 +59,9 @@ public:
         }
     };
 
-    bool isGGA() const { return false; };
-    std::string name() const { return "LDA"; };
-    void computeXC(void);
+    bool isGGA() const override { return false; };
+    std::string name() const override { return "LDA"; };
+    void computeXC(void) override;
 
     double computeRhoDotExc() const;
 };

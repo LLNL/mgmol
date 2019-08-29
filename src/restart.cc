@@ -72,7 +72,7 @@ int MGmol<T>::read_rho_and_pot_hdf5(HDFrestart& file, Rho<T>& rho)
 
 // Writes restart information in a file.
 template <class T>
-int MGmol<T>::write_hdf5(const string filename, vector<vector<RHODTYPE>>& rho,
+int MGmol<T>::write_hdf5(const string& filename, vector<vector<RHODTYPE>>& rho,
     Ions& ions, T& orbitals, LocalizationRegions& lrs)
 {
     Mesh* mymesh             = Mesh::instance();

@@ -21,11 +21,11 @@ using namespace std;
 namespace pb
 {
 
-FILE* open_file(const string filename, const string mode)
+FILE* open_file(const string& filename, const string& mode)
 {
     FILE* file_ptr;
 
-    if ((file_ptr = fopen(filename.data(), mode.data())) == NULL)
+    if ((file_ptr = fopen(filename.data(), mode.data())) == nullptr)
     {
         cout << "\n cannot open " << filename << endl;
         exit(2);
@@ -42,7 +42,7 @@ double timer(void)
 {
     struct timeval tt;
 
-    gettimeofday(&tt, NULL);
+    gettimeofday(&tt, nullptr);
     double val1 = (double)tt.tv_usec;
     val1 /= 1000000.;
     double val = (double)tt.tv_sec;

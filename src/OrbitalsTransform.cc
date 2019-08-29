@@ -27,7 +27,7 @@ OrbitalsTransform::OrbitalsTransform(
     const int npcol = bcr_->npcol();
 
     const int ndir = 6;
-    r_.resize(ndir, NULL);
+    r_.resize(ndir, nullptr);
 
     bsize_ = nst_ / npcol;
     if (bsize_ * bcr_->npcol() < nst_) bsize_++;

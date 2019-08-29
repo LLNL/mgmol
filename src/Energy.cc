@@ -149,7 +149,7 @@ double Energy<T>::evaluateTotal(const double ts, // in [Ha]
     }
 
     double spread_penalty_energy = 0.;
-    if (spread_penalty_ != 0)
+    if (spread_penalty_ != nullptr)
     {
         spread_penalty_energy = 0.5 * spread_penalty_->evaluateEnergy(phi);
         energy_sc += spread_penalty_energy;
@@ -178,7 +178,7 @@ double Energy<T>::evaluateTotal(const double ts, // in [Ha]
             os << " ELECTROSTATIC  [Ha] = " << ees << endl;
             os << " XC             [Ha] = " << exc << endl;
             os << " -TS            [Ha] = " << -ts << endl;
-            if (spread_penalty_ != 0)
+            if (spread_penalty_ != nullptr)
                 os << " Spread Penalty [Ha] = " << spread_penalty_energy
                    << endl;
             os << " Ions Ext. Pot. [Ha] = " << eipot << endl;

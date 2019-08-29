@@ -23,9 +23,12 @@ public:
     Delxh4(const Grid& mygrid) : FDoper<T>(mygrid) {}
 
     // A->B
-    void apply(GridFunc<T>& A, GridFunc<T>& B) { this->del1_4th(A, B, 0); }
+    void apply(GridFunc<T>& A, GridFunc<T>& B) override
+    {
+        this->del1_4th(A, B, 0);
+    }
 
-    ~Delxh4(){};
+    ~Delxh4() override{};
 
     static short minNumberGhosts() { return 2; }
 };
@@ -36,9 +39,12 @@ public:
     Delyh4(const Grid& mygrid) : FDoper<T>(mygrid) {}
 
     // A->B
-    void apply(GridFunc<T>& A, GridFunc<T>& B) { this->del1_4th(A, B, 1); }
+    void apply(GridFunc<T>& A, GridFunc<T>& B) override
+    {
+        this->del1_4th(A, B, 1);
+    }
 
-    ~Delyh4(){};
+    ~Delyh4() override{};
 
     static short minNumberGhosts() { return 2; }
 };
@@ -49,9 +55,12 @@ public:
     Delzh4(const Grid& mygrid) : FDoper<T>(mygrid) {}
 
     // A->B
-    void apply(GridFunc<T>& A, GridFunc<T>& B) { this->del1_4th(A, B, 2); }
+    void apply(GridFunc<T>& A, GridFunc<T>& B) override
+    {
+        this->del1_4th(A, B, 2);
+    }
 
-    ~Delzh4(){};
+    ~Delzh4() override{};
 
     static short minNumberGhosts() { return 2; }
 };

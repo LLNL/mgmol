@@ -27,7 +27,7 @@ void OrbitalsExtrapolationOrder2<T>::extrapolate_orbitals(
     bool use_dense_proj_mat = false;
 #if EXTRAPOLATE_H
     ProjectedMatricesInterface* proj_matrices = (*orbitals)->getProjMatrices();
-    ProjectedMatrices* projmat                = 0;
+    ProjectedMatrices* projmat                = nullptr;
     if (ct.OuterSolver() != OuterSolverType::ABPG
         && ct.OuterSolver() != OuterSolverType::NLCG)
     {
@@ -41,7 +41,7 @@ void OrbitalsExtrapolationOrder2<T>::extrapolate_orbitals(
     extrapolated_H_ = false;
     // do the extrapolation if previous orbitals exist (not at first step)
     {
-        if (OrbitalsExtrapolation<T>::orbitals_minus1_ != 0)
+        if (OrbitalsExtrapolation<T>::orbitals_minus1_ != nullptr)
         {
             T* orbitals_minus1 = OrbitalsExtrapolation<T>::orbitals_minus1_;
             if (ct.verbose > 1 && onpe0)

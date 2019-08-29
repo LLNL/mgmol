@@ -106,28 +106,28 @@ class ProjectedMatricesSparse : public ProjectedMatricesInterface
 
 public:
     ProjectedMatricesSparse(const int ndim, LocalizationRegions* lrs,
-        ClusterOrbitals* local_cluster = 0);
-    ~ProjectedMatricesSparse();
+        ClusterOrbitals* local_cluster = nullptr);
+    ~ProjectedMatricesSparse() override;
 
-    virtual void setup(const double kbt, const int nel,
-        const std::vector<std::vector<int>>& global_indexes);
+    void setup(const double kbt, const int nel,
+        const std::vector<std::vector<int>>& global_indexes) override;
 
-    void updateSubMatT();
-    void updateTheta();
-    double getExpectationH();
-    void consolidateH();
+    void updateSubMatT() override;
+    void updateTheta() override;
+    double getExpectationH() override;
+    void consolidateH() override;
     void consolidateOrbitalsOverlapMat(VariableSizeMatrix<sparserow>& mat);
-    double dotProductWithInvS(const SquareLocalMatrices<MATDTYPE>& ss);
-    double dotProductSimple(const SquareLocalMatrices<MATDTYPE>& ss);
-    double dotProductWithDM(const SquareLocalMatrices<MATDTYPE>& ss);
-    void applyInvS(SquareLocalMatrices<MATDTYPE>& mat);
-    double getEigSum();
+    double dotProductWithInvS(const SquareLocalMatrices<MATDTYPE>& ss) override;
+    double dotProductSimple(const SquareLocalMatrices<MATDTYPE>& ss) override;
+    double dotProductWithDM(const SquareLocalMatrices<MATDTYPE>& ss) override;
+    void applyInvS(SquareLocalMatrices<MATDTYPE>& mat) override;
+    double getEigSum() override;
     double getLinDependent2states(
-        int& st1, int& st2, const bool print_flag = false) const;
-    void printMatrices(std::ostream& os) const;
-    void printTimers(std::ostream& os);
-    double getNel() const;
-    double getLowestEigenvalue() const
+        int& st1, int& st2, const bool print_flag = false) const override;
+    void printMatrices(std::ostream& os) const override;
+    void printTimers(std::ostream& os) override;
+    double getNel() const override;
+    double getLowestEigenvalue() const override
     {
         assert(eigenvalue0_ == eigenvalue0_);
         return eigenvalue0_;
@@ -135,8 +135,8 @@ public:
     void printGramMatrix2states(
         const int st1, const int st2, std::ostream& os) const;
 
-    void initializeGramMatrix(
-        const SquareLocalMatrices<MATDTYPE>& ss, const int orbitals_index)
+    void initializeGramMatrix(const SquareLocalMatrices<MATDTYPE>& ss,
+        const int orbitals_index) override
     {
         assert(invS_ != NULL);
         MGmol_MPI& mmpi = *(MGmol_MPI::instance());
@@ -147,11 +147,17 @@ public:
         init_gram_matrix_tm_.stop();
     }
 
-    SquareLocalMatrices<MATDTYPE>& getLocalX() const { return *localX_; }
+    SquareLocalMatrices<MATDTYPE>& getLocalX() const override
+    {
+        return *localX_;
+    }
 
-    SquareLocalMatrices<MATDTYPE>& getLocalT() const { return *localT_; }
+    SquareLocalMatrices<MATDTYPE>& getLocalT() const override
+    {
+        return *localT_;
+    }
 
-    void updateSubMatX()
+    void updateSubMatX() override
     {
         assert(dm_ != NULL);
         update_submatX_tm_.start();
@@ -164,12 +170,12 @@ public:
         /* scale H */
         //    (*matHB_).scale(vel_);
     }
-    void setDMuniform(const PROJMATDTYPE nel, const int orbitals_index)
+    void setDMuniform(const PROJMATDTYPE nel, const int orbitals_index) override
     {
         dm_->setUniform(nel, orbitals_index);
     }
 
-    int getDMMatrixIndex() const
+    int getDMMatrixIndex() const override
     {
         assert(dm_ != 0);
         return (*dm_).getOrbitalsIndex();
@@ -179,13 +185,14 @@ public:
         assert(invS_ != 0);
         return (*invS_).getGramMatrixOrbitalsIndex();
     }
-    double computeEntropy() { return 0.; }
+    double computeEntropy() override { return 0.; }
 
     // This call assumes sH has not been consolidated and its row ordering on
     // the local subdomain (locvars_) has been defined by calling
     // setupSparseRows(locvars_). NOTE: We restrict only to contributions
     // computed/ belonging in the local subdomain
-    void addMatrixElementSparseH(const int st1, const int st2, const double val)
+    void addMatrixElementSparseH(
+        const int st1, const int st2, const double val) override
     {
         assert(sH_->n() == (int)locvars_.size());
 
@@ -196,7 +203,8 @@ public:
 
     // Add data from square local matrix (only contributions from functions
     // overlapping subdomain)
-    void addMatrixElementsSparseH(const SquareLocalMatrices<MATDTYPE>& slH)
+    void addMatrixElementsSparseH(
+        const SquareLocalMatrices<MATDTYPE>& slH) override
     {
 
         Control& ct = *(Control::instance());
@@ -206,7 +214,7 @@ public:
         return;
     }
 
-    void clearSparseH()
+    void clearSparseH() override
     {
         (*sH_).reset();
         /* initialize sparse H */
@@ -214,7 +222,7 @@ public:
         return;
     }
 
-    void scaleSparseH(const double scale)
+    void scaleSparseH(const double scale) override
     {
         (*sH_).scale(scale);
 
@@ -263,7 +271,7 @@ public:
     }
 
     /* print the inverse Gram matrix -- for diagnostics */
-    void printDM(std::ostream& os) const
+    void printDM(std::ostream& os) const override
     {
         assert(dm_ != NULL);
         (*dm_).printDM(os);
@@ -271,7 +279,7 @@ public:
         return;
     }
 
-    void setDMto2InvS()
+    void setDMto2InvS() override
     {
         assert(invS_ != NULL);
         (*dm_).setto2InvS(
@@ -280,7 +288,7 @@ public:
         return;
     }
 
-    void computeInvS()
+    void computeInvS() override
     {
         assert(invS_ != NULL);
         assert(distributor_invS_ != NULL);
@@ -293,14 +301,14 @@ public:
         //   if(onpe0)cout<<"RCOND = "<<rcond<<endl;
         compute_inverse_tm_.stop();
     }
-    void updateThetaAndHB()
+    void updateThetaAndHB() override
     {
         updateTheta();
         updateHB();
         return;
     }
 
-    void printGramMM(std::ofstream& tfile)
+    void printGramMM(std::ofstream& tfile) override
     {
         assert(invS_ != NULL);
         (*invS_).printGramMM(tfile);
@@ -309,7 +317,7 @@ public:
     }
 
     /* print (part of) the (global) Gram matrix -- for diagnostics */
-    void printS(std::ostream& os) const
+    void printS(std::ostream& os) const override
     {
         assert(invS_ != NULL);
         (*invS_).printGramMat(os);
@@ -330,14 +338,14 @@ public:
         return;
     }
 
-    void resetDotProductMatrices()
+    void resetDotProductMatrices() override
     {
         assert((*invS_).gramMat() != 0);
 
         return;
     }
 
-    void computeInvB()
+    void computeInvB() override
     {
         assert(invS_ != NULL);
         compute_invB_tm_.start();
@@ -346,14 +354,14 @@ public:
         return;
     }
 
-    double computeCond()
+    double computeCond() override
     {
         assert(invS_ != NULL);
 
         return (*invS_).computeGramMatCond();
     }
 
-    double checkCond(const double tol, const bool flag = true)
+    double checkCond(const double tol, const bool flag = true) override
     {
         double rcond = computeCond();
 
@@ -376,7 +384,8 @@ public:
         return rcond;
     }
 
-    double getTraceDiagProductWithInvS(std::vector<PROJMATDTYPE>& ddiag)
+    double getTraceDiagProductWithInvS(
+        std::vector<PROJMATDTYPE>& ddiag) override
     {
         assert(invS_ != NULL);
         return (*invS_).getTraceDiagProductWithInvS(ddiag);
@@ -394,14 +403,14 @@ public:
         SquareLocalMatrices<MATDTYPE>& mat, const bool consolidate);
     double computeTraceInvSmultMat(
         VariableSizeMatrix<sparserow>& vsmat, const bool consolidate);
-    virtual void stripDM() { return; };
-    virtual void dressupDM() { return; };
+    void stripDM() override { return; };
+    void dressupDM() override { return; };
 
     const VariableSizeMatrix<sparserow>& getH() { return *matHB_; }
     void assignH(const VariableSizeMatrix<sparserow>& matH) { *matHB_ = matH; }
     void printEigenvalues(std::ostream& os) const {}
-    void printOccupations(std::ostream& os) const {}
-    void setHB2H() {}
+    void printOccupations(std::ostream& os) const override {}
+    void setHB2H() override {}
 
     DensityMatrixSparse& getDM() { return *dm_; }
 };

@@ -54,7 +54,7 @@ void SubspaceProjector<T>::projectOut(
     // compute <xi,xi>^{-1}*<xi,orbitals>
     proj_matrices_.applyInvS(pmatrix);
 
-    if (mask != 0) pmatrix.applyMask(*mask);
+    if (mask != nullptr) pmatrix.applyMask(*mask);
 
     ORBDTYPE* tproduct = new ORBDTYPE[loc_numpt_ * chromatic_number_];
     memset(tproduct, 0, loc_numpt_ * chromatic_number_ * sizeof(ORBDTYPE));

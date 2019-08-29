@@ -44,13 +44,13 @@ PolakRibiereSolver<T>::PolakRibiereSolver(Hamiltonian<T>* hamiltonian,
     Control& ct(*(Control::instance()));
 
     alpha_ = ct.precond_factor;
-    r_k_   = 0;
-    r_km1_ = 0;
+    r_k_   = nullptr;
+    r_km1_ = nullptr;
 
-    p_k_ = 0;
+    p_k_ = nullptr;
 
-    z_k_   = 0;
-    z_km1_ = 0;
+    z_k_   = nullptr;
+    z_km1_ = nullptr;
 
     sigma_a_ = 1.e-4;
     sigma_b_ = 1.e-1;
@@ -549,11 +549,11 @@ int PolakRibiereSolver<T>::solve(T& orbitals, T& work_orbitals, Ions& ions,
 
     } // end iterations
 
-    if (r_k_ != 0) delete r_k_;
-    if (r_km1_ != 0) delete r_km1_;
-    if (p_k_ != 0) delete p_k_;
-    if (z_k_ != 0) delete z_k_;
-    if (z_km1_ != 0) delete z_km1_;
+    if (r_k_ != nullptr) delete r_k_;
+    if (r_km1_ != nullptr) delete r_km1_;
+    if (p_k_ != nullptr) delete p_k_;
+    if (z_k_ != nullptr) delete z_k_;
+    if (z_km1_ != nullptr) delete z_km1_;
 
     if (iprint && !ct.short_sighted) mgmol_strategy_->printEigAndOcc();
 

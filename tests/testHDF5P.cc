@@ -76,8 +76,8 @@ BOOST_AUTO_TEST_CASE(hdf5)
     dimsf[1]      = NY;
     chunk_dims[0] = CH_NX;
     chunk_dims[1] = CH_NY;
-    filespace     = H5Screate_simple(RANK, dimsf, NULL);
-    memspace      = H5Screate_simple(RANK, chunk_dims, NULL);
+    filespace     = H5Screate_simple(RANK, dimsf, nullptr);
+    memspace      = H5Screate_simple(RANK, chunk_dims, nullptr);
 
     /*
      * Create chunked dataset.

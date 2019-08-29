@@ -171,9 +171,9 @@ public:
         MasksSet* corrmasks, ClusterOrbitals* local_cluster,
         const bool setup_flag = true);
 
-    ExtendedGridOrbitals(std::string name, const ExtendedGridOrbitals& A,
+    ExtendedGridOrbitals(const std::string& name, const ExtendedGridOrbitals& A,
         const bool copy_data = true);
-    ExtendedGridOrbitals(std::string name, const ExtendedGridOrbitals& A,
+    ExtendedGridOrbitals(const std::string& name, const ExtendedGridOrbitals& A,
         ProjectedMatricesInterface* proj_matrices, const bool copy_data = true);
 
     ~ExtendedGridOrbitals();
@@ -341,7 +341,7 @@ public:
     void orthonormalize(const bool cholesky_uptodate = false);
     void orthonormalize2states(const int st1, const int st2);
     void orthonormalizeLoewdin(const bool overlap_uptodate = false,
-        SquareLocalMatrices<MATDTYPE>* matrixTransform     = 0);
+        SquareLocalMatrices<MATDTYPE>* matrixTransform     = nullptr);
 
     ExtendedGridOrbitals& operator-=(const ExtendedGridOrbitals& orbitals)
     {
@@ -367,9 +367,9 @@ public:
         const double* mat, ExtendedGridOrbitals& product);
 
     int write_hdf5(HDFrestart& h5f_file, std::string name = "Function");
-    int write_func_hdf5(HDFrestart&, std::string name = "Function");
+    int write_func_hdf5(HDFrestart&, const std::string& name = "Function");
     int read_hdf5(HDFrestart& h5f_file);
-    int read_func_hdf5(HDFrestart&, std::string name = "Function");
+    int read_func_hdf5(HDFrestart&, const std::string& name = "Function");
 
     void initWF(const LocalizationRegions& lrs);
     void checkCond(const double tol, const bool flag_stop);

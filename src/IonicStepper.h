@@ -37,19 +37,19 @@ public:
         std::vector<double>& tau0, std::vector<double>& taup);
 
     int writeAtomicFields(HDFrestart& h5f_file, const std::vector<double>&,
-        const std::string name, const bool) const;
+        const std::string& name, const bool) const;
     int writePositions(HDFrestart& h5f_file,
-        const std::string name = "/Ionic_positions") const;
-    int readPositions_hdf5(HDFrestart& h5f_file, const std::string name);
+        const std::string& name = "/Ionic_positions") const;
+    int readPositions_hdf5(HDFrestart& h5f_file, const std::string& name);
     int readRandomStates(HDFrestart& h5f_file,
         std::vector<unsigned short>& data,
-        const std::string name = "/Ionic_RandomStates");
+        const std::string& name = "/Ionic_RandomStates");
     int writeRandomStates(HDFrestart& h5f_file,
         std::vector<unsigned short>& data,
-        const std::string name = "/Ionic_RandomStates") const;
+        const std::string& name = "/Ionic_RandomStates") const;
     int writeVelocities(HDFrestart& h5f_file) const;
     int readAtomicFields(
-        HDFrestart& h5f_file, std::vector<double>&, const std::string name);
+        HDFrestart& h5f_file, std::vector<double>&, const std::string& name);
 
     virtual bool check_last_step_accepted() const { return true; }
     virtual int run()                   = 0;

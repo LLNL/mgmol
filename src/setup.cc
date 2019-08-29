@@ -67,7 +67,7 @@ int MGmol<T>::setupLRsFromInput(const string filename)
     //    const pb::Grid& mygrid = mymesh->grid();
     //    Control& ct            = *(Control::instance());
 
-    ifstream* tfile = 0;
+    ifstream* tfile = nullptr;
     if (mmpi.instancePE0() && !filename.empty())
     {
         os_ << "Read LRs from file " << filename << endl;
@@ -85,7 +85,7 @@ int MGmol<T>::setupLRsFromInput(const string filename)
 
     readLRsFromInput(tfile);
 
-    if (!(tfile == 0))
+    if (!(tfile == nullptr))
     {
         os_ << "Close " << filename << endl;
         tfile->close();
@@ -100,7 +100,7 @@ int MGmol<T>::setupConstraintsFromInput(const string filename)
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
-    ifstream* tfile = 0;
+    ifstream* tfile = nullptr;
     if (mmpi.instancePE0() && !filename.empty())
     {
         os_ << "Read constraints from file " << filename << endl;
@@ -118,7 +118,7 @@ int MGmol<T>::setupConstraintsFromInput(const string filename)
 
     constraints_->readConstraints(tfile);
 
-    if (!(tfile == 0))
+    if (!(tfile == nullptr))
     {
         os_ << "Close " << filename.data() << endl;
         tfile->close();

@@ -37,6 +37,6 @@ void MatricesBlacsContext::setup(const MPI_Comm comm, const int size)
     }
     else
     {
-        blactxt_ = 0;
+        blactxt_ = nullptr;
     }
 };

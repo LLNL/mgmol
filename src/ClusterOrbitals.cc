@@ -584,7 +584,7 @@ void ClusterOrbitals::writeVTKHeader(
 }
 
 void ClusterOrbitals::writeVTKDataset(
-    const std::string name, const pb::PEenv& myPEenv, std::ofstream& os)
+    const std::string& name, const pb::PEenv& myPEenv, std::ofstream& os)
 {
     const int npts = myPEenv.n_mpi_tasks();
     if (onpe0 && os.is_open())

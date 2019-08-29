@@ -77,18 +77,18 @@ public:
         locally_active_ = false;
         locally_owned_  = false;
     }
-    bool enforce(void);
-    bool project_out_forces(void);
+    bool enforce(void) override;
+    bool project_out_forces(void) override;
 
     void setup(const std::vector<std::string>& names,
         const std::vector<double>& pmass, const std::vector<short>& imove,
         std::vector<double*>& tau, std::vector<double*>& taup,
         std::vector<double*>& fion,
-        const std::vector<std::string>& local_names);
+        const std::vector<std::string>& local_names) override;
 
-    std::string type(void) const { return "multidistance"; };
+    std::string type(void) const override { return "multidistance"; };
     double distance(void) const { return distance_; };
-    void print(std::ostream& os) const;
-    void printForce(std::ostream& os) const;
+    void print(std::ostream& os) const override;
+    void printForce(std::ostream& os) const override;
 };
 #endif

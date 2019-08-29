@@ -101,15 +101,15 @@ class HDFrestart
     void setupWorkSpace();
 
 public:
-    HDFrestart(const std::string filename, const pb::PEenv& pes,
+    HDFrestart(const std::string& filename, const pb::PEenv& pes,
         const short option_number);
-    HDFrestart(const std::string filename, const pb::PEenv& pes,
+    HDFrestart(const std::string& filename, const pb::PEenv& pes,
         const unsigned gdim[3], const short option_number);
 
     bool gatherDataX() const { return gather_data_x_; }
     bool useHdf5p() const { return use_hdf5p_; }
 
-    hid_t open_dset(const std::string datasetname) const
+    hid_t open_dset(const std::string& datasetname) const
     {
         return open_dset(datasetname.c_str());
     }
@@ -145,7 +145,7 @@ public:
         return 0;
     }
 
-    hid_t dset_exists(const std::string datasetname) const
+    hid_t dset_exists(const std::string& datasetname) const
     {
         if (active_)
         {
@@ -195,10 +195,10 @@ public:
 
         hid_t filespace;
         if (use_hdf5p_)
-            filespace = H5Screate_simple(3, dimsf_, NULL);
+            filespace = H5Screate_simple(3, dimsf_, nullptr);
         else
         {
-            filespace = H5Screate_simple(3, block_, NULL);
+            filespace = H5Screate_simple(3, block_, nullptr);
             // hsize_t dims[1]={block_[0]*block_[1]*block_[2]};
             // filespace = H5Screate_simple(1, dims, NULL);
         }
@@ -213,10 +213,10 @@ public:
 
         hid_t memspace;
         if (use_hdf5p_)
-            memspace = H5Screate_simple(3, block_, NULL);
+            memspace = H5Screate_simple(3, block_, nullptr);
         else
         {
-            memspace = H5Screate_simple(3, block_, NULL);
+            memspace = H5Screate_simple(3, block_, nullptr);
             // hsize_t dims[1]={block_[0]*block_[1]*block_[2]};
             // memspace=H5Screate_simple(1, dims, NULL);
         }
@@ -230,13 +230,13 @@ public:
         const std::string& name);
     int getLRs(LocalizationRegions& lrs, const int max_nb,
         const std::string& name, const bool add = false);
-    int read_1func_hdf5(double*, std::string);
-    int read_1func_hdf5(float*, std::string);
-    int write_1func_hdf5(
-        double*, std::string, double* ll = NULL, double* origin = NULL);
-    int write_1func_hdf5(
-        float*, std::string, double* ll = NULL, double* origin = NULL);
-    int read_att(const hid_t dset_id, std::string attname,
+    int read_1func_hdf5(double*, const std::string&);
+    int read_1func_hdf5(float*, const std::string&);
+    int write_1func_hdf5(double*, const std::string&, double* ll = nullptr,
+        double* origin = nullptr);
+    int write_1func_hdf5(float*, const std::string&, double* ll = nullptr,
+        double* origin = nullptr);
+    int read_att(const hid_t dset_id, const std::string& attname,
         std::vector<double>& attr_data);
 
     int writeData(double* vv, hid_t filespace, hid_t memspace, hid_t dset_id,
@@ -264,11 +264,11 @@ public:
     void addDateToFilename();
     void addMDTime2File(const float run_time);
     void addMDstep2File(const int md_step);
-    void add2File(const int data, std::string attname);
+    void add2File(const int data, const std::string& attname);
 
     float getMDTimeFromFile() const;
     int getMDstepFromFile() const;
-    int getFromFile(std::string attname) const;
+    int getFromFile(const std::string& attname) const;
 
     hid_t createPlist()
     {

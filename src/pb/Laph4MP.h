@@ -42,12 +42,12 @@ public:
         return replicated_A;
     }
 
-    void rhs(GridFunc<T>& A, GridFunc<T>& B) const
+    void rhs(GridFunc<T>& A, GridFunc<T>& B) const override
     {
         FDoper<T>::rhs_4th_Mehr2(A, B);
         B.set_bc(A.bc(0), A.bc(1), A.bc(2));
     }
-    void rhs(GridFunc<T>& A, T* const B) const
+    void rhs(GridFunc<T>& A, T* const B) const override
     {
         FDoper<T>::rhs_4th_Mehr2(A, B);
     }

@@ -46,7 +46,7 @@ AOMMprojector::AOMMprojector(LocGridOrbitals& phi, LocalizationRegions& lrs)
 
     // kernel functions use their own projected matrices and masks
     kernel_phi_ = new LocGridOrbitals(
-        "AOMM", phi, kernel_proj_matrices_, kernelMasks_, 0);
+        "AOMM", phi, kernel_proj_matrices_, kernelMasks_, nullptr);
     kernel_phi_->initGauss(0.5 * radius, lrs);
 
     kernel_phi_->setIterativeIndex(phi.getIterativeIndex() * 10);
@@ -106,13 +106,13 @@ AOMMprojector::~AOMMprojector()
     assert(kernel_phi_ != 0);
 
     delete kernelprojector_;
-    kernelprojector_ = 0;
+    kernelprojector_ = nullptr;
     delete kernel_phi_;
-    kernel_phi_ = 0;
+    kernel_phi_ = nullptr;
     delete kernel_proj_matrices_;
-    kernel_proj_matrices_ = 0;
+    kernel_proj_matrices_ = nullptr;
     delete kernelMasks_;
-    kernelMasks_ = 0;
+    kernelMasks_ = nullptr;
     delete matrix_mask_;
-    matrix_mask_ = 0;
+    matrix_mask_ = nullptr;
 }

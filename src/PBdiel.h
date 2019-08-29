@@ -40,31 +40,31 @@ public:
         T oper(Poisson::grid_, e0, rho0, drho0);
         Poisson::vepsilon_
             = new pb::GridFunc<POTDTYPE>(Poisson::grid_, bc[0], bc[1], bc[2]);
-        rhod_ = NULL;
+        rhod_ = nullptr;
         poisson_solver_
             = new pb::SolverPB<T, POTDTYPE>(oper, bc[0], bc[1], bc[2]);
     };
 
     // Destructor
-    ~PBdiel()
+    ~PBdiel() override
     {
         delete Poisson::vepsilon_;
         delete poisson_solver_;
     }
 
-    void set_rhod(pb::GridFunc<RHODTYPE>*);
+    void set_rhod(pb::GridFunc<RHODTYPE>*) override;
     void set_vh(pb::GridFunc<POTDTYPE>&);
 
     void setup(const short nu1, const short nu2, const short max_sweeps,
         const double tol, const short max_nlevels,
-        const bool gather_coarse_level = true)
+        const bool gather_coarse_level = true) override
     {
         poisson_solver_->setup(
             nu1, nu2, max_sweeps, tol, max_nlevels, gather_coarse_level);
     }
 
-    void solve(
-        const pb::GridFunc<RHODTYPE>& rho, const pb::GridFunc<RHODTYPE>& rhoc);
+    void solve(const pb::GridFunc<RHODTYPE>& rho,
+        const pb::GridFunc<RHODTYPE>& rhoc) override;
 };
 
 #endif

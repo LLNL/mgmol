@@ -88,9 +88,9 @@ public:
         return other_tasks_dir_[dir][itask];
     }
 
-    PEenv(MPI_Comm comm, std::ostream* os = 0); // default constructor
+    PEenv(MPI_Comm comm, std::ostream* os = nullptr); // default constructor
     explicit PEenv(MPI_Comm comm, const int nx, const int ny, const int nz,
-        const int bias = 4, std::ostream* os = 0);
+        const int bias = 4, std::ostream* os = nullptr);
     // explicit PEenv(MPI_Comm comm, const int mytask,
     //               const int taskx, const int tasky, const int taskz, ostream*
     //               os=0);

@@ -23,34 +23,34 @@ private:
 
 public:
     OrbitalsExtrapolationOrder3()
-        : initial_orbitals_minus2_(0),
-          orbitals_minus1_(0),
-          orbitals_minus2_(0){};
+        : initial_orbitals_minus2_(nullptr),
+          orbitals_minus1_(nullptr),
+          orbitals_minus2_(nullptr){};
 
-    ~OrbitalsExtrapolationOrder3()
+    ~OrbitalsExtrapolationOrder3() override
     {
-        if (orbitals_minus2_ != 0)
+        if (orbitals_minus2_ != nullptr)
         {
             delete orbitals_minus2_;
-            orbitals_minus2_ = 0;
+            orbitals_minus2_ = nullptr;
         }
-        if (initial_orbitals_minus2_ != 0)
+        if (initial_orbitals_minus2_ != nullptr)
         {
             delete initial_orbitals_minus2_;
-            initial_orbitals_minus2_ = 0;
+            initial_orbitals_minus2_ = nullptr;
         }
     }
 
-    void extrapolate_orbitals(T** orbitals, T* new_orbitals);
+    void extrapolate_orbitals(T** orbitals, T* new_orbitals) override;
 
-    void clearOldOrbitals()
+    void clearOldOrbitals() override
     {
         OrbitalsExtrapolation<T>::clearOldOrbitals();
 
-        if (orbitals_minus2_ != 0)
+        if (orbitals_minus2_ != nullptr)
         {
             delete orbitals_minus2_;
-            orbitals_minus2_ = 0;
+            orbitals_minus2_ = nullptr;
         }
     }
 };

@@ -154,9 +154,9 @@ Electrostatic::Electrostatic(PoissonFDtype lap_type, const short bcPoisson[3],
         }
     }
 
-    grhoc_     = NULL;
+    grhoc_     = nullptr;
     diel_flag_ = false;
-    grhod_     = NULL;
+    grhod_     = nullptr;
 
     Evh_rho_         = 0.;
     Evh_rhoc_        = 0.;
@@ -168,8 +168,8 @@ Electrostatic::Electrostatic(PoissonFDtype lap_type, const short bcPoisson[3],
 Electrostatic::~Electrostatic()
 {
     delete poisson_solver_;
-    if (grhod_ != NULL) delete grhod_;
-    if (grhoc_ != NULL) delete grhoc_;
+    if (grhod_ != nullptr) delete grhod_;
+    if (grhoc_ != nullptr) delete grhoc_;
 }
 
 void Electrostatic::setupInitialVh(const POTDTYPE* const vh_init)
@@ -241,7 +241,7 @@ void Electrostatic::setupPB(
 
     pbGrid_ = GridFactory::createGrid(
         ngpts, origin, cell, static_cast<int>(laptype_), true, myPEenv);
-    if (poisson_solver_ != NULL) delete poisson_solver_;
+    if (poisson_solver_ != nullptr) delete poisson_solver_;
 
     Control& ct = *(Control::instance());
     if (ct.MGPoissonSolver()) // use MG for Poisson Solver
@@ -307,12 +307,12 @@ void Electrostatic::setupPB(
         }
     }
 
-    if (grhoc_ != NULL)
+    if (grhoc_ != nullptr)
     {
         RHODTYPE* rhoc = new RHODTYPE[pbGrid_->size()];
         grhoc_->init_vect(rhoc, 'd');
         delete grhoc_;
-        grhoc_ = NULL;
+        grhoc_ = nullptr;
 
         setupRhoc(rhoc);
         delete[] rhoc;
@@ -415,7 +415,7 @@ void Electrostatic::setupRhoc(RHODTYPE* rhoc)
     Mesh* mymesh = Mesh::instance();
 
     const pb::Grid& grid = diel_flag_ ? *pbGrid_ : mymesh->grid();
-    if (grhoc_ == NULL)
+    if (grhoc_ == nullptr)
         grhoc_ = new pb::GridFunc<RHODTYPE>(rhoc, grid, bc_[0], bc_[1], bc_[2]);
     else
         grhoc_->assign(rhoc);

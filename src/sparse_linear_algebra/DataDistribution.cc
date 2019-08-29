@@ -56,7 +56,7 @@ short DataDistribution::count_computeMaxDataSize_    = 0;
 short DataDistribution::maxcount_computeMaxDataSize_ = 500;
 
 /* Constructor */
-DataDistribution::DataDistribution(const std::string name,
+DataDistribution::DataDistribution(const std::string& name,
     const int max_steps[3], const pb::PEenv& myPEenv, const double domain[])
     : name_(name), spread_radius_(0.0), mypeenv_(myPEenv)
 {
@@ -65,19 +65,19 @@ DataDistribution::DataDistribution(const std::string name,
 
     dir_reduce_ = new DirectionalReduce(myPEenv.cart_comm(), max_steps);
 
-    rbuf_nrows_ptr_            = NULL;
-    rbuf_start_double_pos_ptr_ = NULL;
-    rbuf_nnzrow_ptr_           = NULL;
-    rbuf_lvars_ptr_            = NULL;
-    rbuf_pj_ptr_               = NULL;
-    rbuf_pa_ptr_               = NULL;
+    rbuf_nrows_ptr_            = nullptr;
+    rbuf_start_double_pos_ptr_ = nullptr;
+    rbuf_nnzrow_ptr_           = nullptr;
+    rbuf_lvars_ptr_            = nullptr;
+    rbuf_pj_ptr_               = nullptr;
+    rbuf_pa_ptr_               = nullptr;
     rbuf_data_size_            = 0;
 
     lsize_ = -1;
 }
 
 /* Constructor */
-DataDistribution::DataDistribution(const std::string name,
+DataDistribution::DataDistribution(const std::string& name,
     const double s_radius, const pb::PEenv& myPEenv, const double domain[])
     : name_(name), spread_radius_(s_radius), mypeenv_(myPEenv)
 {
@@ -93,12 +93,12 @@ DataDistribution::DataDistribution(const std::string name,
 
     assert(spread_radius_ > 0.0);
 
-    rbuf_nrows_ptr_            = NULL;
-    rbuf_start_double_pos_ptr_ = NULL;
-    rbuf_nnzrow_ptr_           = NULL;
-    rbuf_lvars_ptr_            = NULL;
-    rbuf_pj_ptr_               = NULL;
-    rbuf_pa_ptr_               = NULL;
+    rbuf_nrows_ptr_            = nullptr;
+    rbuf_start_double_pos_ptr_ = nullptr;
+    rbuf_nnzrow_ptr_           = nullptr;
+    rbuf_lvars_ptr_            = nullptr;
+    rbuf_pj_ptr_               = nullptr;
+    rbuf_pa_ptr_               = nullptr;
     rbuf_data_size_            = 0;
 
     lsize_ = -1;
@@ -125,7 +125,7 @@ void DataDistribution::mergeDataFromNeighborToLocalData(
         int* rindex = (int*)amat.getTableValue(rbuf_lvars_ptr_[i]);
         const int k = rbuf_nnzrow_ptr_[i + 1] - rbuf_nnzrow_ptr_[i];
         /* row on this proc. */
-        if (rindex != NULL)
+        if (rindex != nullptr)
         {
             const int lrindex = *rindex;
             /* insert columns */
@@ -163,7 +163,7 @@ void DataDistribution::updateExistingLocalDataEntriesWithRecvBuf(
     {
         int* rindex = (int*)amat.getTableValue(rbuf_lvars_ptr_[i]);
         /* row on this proc. */
-        if (rindex != NULL)
+        if (rindex != nullptr)
         {
             const int lrindex = *rindex;
             /* insert columns */
@@ -195,7 +195,7 @@ void DataDistribution::copyRowsFromRecvBuf(
         const int start = rbuf_nnzrow_ptr_[i];
         const int ncols = rbuf_nnzrow_ptr_[i + 1] - start;
         /* row on this proc. */
-        if (rindex != NULL)
+        if (rindex != nullptr)
         {
             /* insert columns */
             amat.initializeLocalRow(

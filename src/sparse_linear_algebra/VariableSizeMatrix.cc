@@ -114,7 +114,7 @@ void quickSortIR(int* a, double* b, const int lo, const int hi)
 //*/
 template <class T>
 VariableSizeMatrix<T>::VariableSizeMatrix(
-    const string name, const int alloc_size, const MPI_Comm comm)
+    const string& name, const int alloc_size, const MPI_Comm comm)
     : name_(name)
 {
     (void)comm; // comm is currently unused
@@ -183,7 +183,7 @@ VariableSizeMatrix<T>::VariableSizeMatrix(
     else
     {
         /* copy matrix data only */
-        table_ = 0;
+        table_ = nullptr;
 
         data_.reserve(n);
         for (const_TvecIterator arow = A.data_.begin(); arow != A.data_.end();
@@ -227,7 +227,7 @@ VariableSizeMatrix<T>::VariableSizeMatrix(
     else
     {
         /* copy matrix data only */
-        table_ = 0;
+        table_ = nullptr;
 
         data_.reserve(n);
         for (int i = 0; i < n; i++) //(const_T2vecIterator arow=A.data_.begin();
@@ -508,7 +508,7 @@ void VariableSizeMatrix<T>::reset()
     totnnz_ = 0;
 
     /* Reset table object */
-    if (table_ != 0) (*table_).reset();
+    if (table_ != nullptr) (*table_).reset();
 
     // reset matrix data
     TvecIterator rowptr = data_.begin();
@@ -593,7 +593,7 @@ void VariableSizeMatrix<T>::printMat(const char* fname, vector<int>& lvec)
     for (int row = 0; row < nrows; row++)
     {
         int* rindex = (int*)getTableValue(lvec[row]);
-        if (rindex == NULL) continue;
+        if (rindex == nullptr) continue;
         const int i        = *rindex;
         const int nnzrow_i = nnzrow(i);
         for (int j = 0; j < nnzrow_i; j++)
@@ -624,7 +624,7 @@ double VariableSizeMatrix<T>::AmultSymBdiag(
     int* cindex = (int*)(*B).getTableValue(row);
 
     /* return zero if row/col does not exist */
-    if ((cindex == NULL) || (rindex == NULL))
+    if ((cindex == nullptr) || (rindex == nullptr))
     {
         AmultSymBdiag_tm_.stop();
         return 0.;
@@ -681,7 +681,7 @@ double VariableSizeMatrix<T>::AmultSymB_ij(
     int* cindex = (int*)(*B).getTableValue(col);
 
     /* return zero if row/col does not exist */
-    if ((cindex == NULL) || (rindex == NULL))
+    if ((cindex == nullptr) || (rindex == nullptr))
     {
         AmultSymB_ij_tm_.stop();
         return 0.;
@@ -832,7 +832,7 @@ void VariableSizeMatrix<T>::AmultSymBLocal(VariableSizeMatrix<T>* B,
 
                 const int* pos = (int*)pattern.getTableValue(
                     jrow); // check if corresponding column entry exists.
-                if (pos != NULL)
+                if (pos != nullptr)
                     val += data_[i]->getEntryFromPosition(*pos)
                            * (*B).getRowEntry(j, k);
             }

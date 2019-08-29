@@ -104,7 +104,7 @@ int HDFrestart::close()
     closed_ = true;
 
     // Turn off error handling
-    H5Eset_auto2(H5E_DEFAULT, NULL, NULL);
+    H5Eset_auto2(H5E_DEFAULT, nullptr, nullptr);
 
     if (onpe0)
         (*MPIdata::sout) << "~HDFrestart() --- H5Fclose " << filename_ << endl;
@@ -274,7 +274,7 @@ void HDFrestart::addMDTime2File(const float run_time)
 
         //  Open a dataset attribute.
         hsize_t dims[1]    = { 1 };
-        hid_t dataspace_id = H5Screate_simple(1, dims, NULL);
+        hid_t dataspace_id = H5Screate_simple(1, dims, nullptr);
         hid_t attribute_id = H5Acreate2(file_id_, attname.c_str(),
             H5T_NATIVE_FLOAT, dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
         if (attribute_id < 0)
@@ -306,13 +306,13 @@ void HDFrestart::addMDTime2File(const float run_time)
     }
 }
 
-void HDFrestart::add2File(const int data, std::string attname)
+void HDFrestart::add2File(const int data, const std::string& attname)
 {
     if (active_)
     {
         //  Open a dataset attribute.
         hsize_t dims[1]    = { 1 };
-        hid_t dataspace_id = H5Screate_simple(1, dims, NULL);
+        hid_t dataspace_id = H5Screate_simple(1, dims, nullptr);
         hid_t attribute_id = H5Acreate2(file_id_, attname.c_str(),
             H5T_NATIVE_INT, dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
         if (attribute_id < 0)
@@ -398,7 +398,7 @@ float HDFrestart::getMDTimeFromFile() const
 
 int HDFrestart::getMDstepFromFile() const { return getFromFile("MD_step"); }
 
-int HDFrestart::getFromFile(std::string attname) const
+int HDFrestart::getFromFile(const std::string& attname) const
 {
     int data                  = 1;
     std::string function_name = "HDFrestart::getFromFile()";
@@ -456,7 +456,7 @@ void HDFrestart::addReleaseNumber2File(const char* release)
         std::string attname("MGmol Release");
         //  Open a dataset attribute.
         hsize_t dims[1]    = { 1 };
-        hid_t dataspace_id = H5Screate_simple(1, dims, NULL);
+        hid_t dataspace_id = H5Screate_simple(1, dims, nullptr);
         hid_t attribute_id = H5Acreate2(file_id_, attname.c_str(), strtype,
             dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
         if (attribute_id < 0)
@@ -494,7 +494,7 @@ void HDFrestart::addReleaseNumber2File(const char* release)
 }
 
 // constructor for one layer of PEs writing data
-HDFrestart::HDFrestart(const std::string filename, const pb::PEenv& pes,
+HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
     const unsigned gdim[3], const short option_number)
     : pes_(pes), filename_(filename)
 {
@@ -628,8 +628,8 @@ HDFrestart::HDFrestart(const std::string filename, const pb::PEenv& pes,
 };
 
 // constructor reading data (existing file)
-HDFrestart::HDFrestart(
-    const std::string filename, const pb::PEenv& pes, const short option_number)
+HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
+    const short option_number)
     : pes_(pes), file_id_(-1)
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
@@ -798,7 +798,7 @@ int writeListCentersAndRadii(
 
     std::string attname("List of centers and radii");
     //  Open a dataset attribute.
-    hid_t dataspace_id = H5Screate_simple(2, dims, 0);
+    hid_t dataspace_id = H5Screate_simple(2, dims, nullptr);
     hid_t attribute_id = H5Acreate2(dset_id, attname.c_str(), H5T_NATIVE_DOUBLE,
         dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
     if (attribute_id < 0)
@@ -1211,7 +1211,7 @@ int HDFrestart::getLRs(LocalizationRegions& lrs, const int max_nb_lrs,
 
 /////////////////////////////////////////////////////////////////////////////
 
-int HDFrestart::read_1func_hdf5(double* vv, std::string datasetname)
+int HDFrestart::read_1func_hdf5(double* vv, const std::string& datasetname)
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 0)
@@ -1358,7 +1358,7 @@ int HDFrestart::read_1func_hdf5(double* vv, std::string datasetname)
     return 0;
 }
 
-int HDFrestart::read_1func_hdf5(float* vv, std::string datasetname)
+int HDFrestart::read_1func_hdf5(float* vv, const std::string& datasetname)
 {
     if (onpe0)
         (*MPIdata::sout) << "HDFrestart::read_1func_hdf5(). Try to read data "
@@ -1505,7 +1505,7 @@ int HDFrestart::read_1func_hdf5(float* vv, std::string datasetname)
 }
 
 int HDFrestart::write_1func_hdf5(
-    double* vv, std::string datasetname, double* ll, double* cell_origin)
+    double* vv, const std::string& datasetname, double* ll, double* cell_origin)
 {
     assert(ll != NULL);
     assert(cell_origin != NULL);
@@ -1541,7 +1541,7 @@ int HDFrestart::write_1func_hdf5(
         releasePlist(plist_id);
 
         // Write the attribute "Lattice parameters"
-        if (ll != NULL)
+        if (ll != nullptr)
         {
             // Create the data space for the attribute "Lattice parameters".
             vector<double> attr_data(3);
@@ -1554,7 +1554,7 @@ int HDFrestart::write_1func_hdf5(
                 dset_id, attname.c_str(), attr_data);
         }
 
-        if (cell_origin != NULL)
+        if (cell_origin != nullptr)
         {
             vector<double> attr_data(3);
             attr_data[0] = cell_origin[0];
@@ -1603,7 +1603,7 @@ int HDFrestart::write_1func_hdf5(
 }
 
 int HDFrestart::write_1func_hdf5(
-    float* vv, string datasetname, double* ll, double* cell_origin)
+    float* vv, const string& datasetname, double* ll, double* cell_origin)
 {
     assert(ll != NULL);
     assert(cell_origin != NULL);
@@ -1638,7 +1638,7 @@ int HDFrestart::write_1func_hdf5(
         releasePlist(plist_id);
 
         // Write the attribute "Lattice parameters"
-        if (ll != NULL)
+        if (ll != nullptr)
         {
             // Create the data space for the attribute "Lattice parameters".
             vector<double> attr_data(3);
@@ -1651,7 +1651,7 @@ int HDFrestart::write_1func_hdf5(
                 dset_id, attname.c_str(), attr_data);
         }
 
-        if (cell_origin != NULL)
+        if (cell_origin != nullptr)
         {
             vector<double> attr_data(3);
             attr_data[0] = cell_origin[0];
@@ -2092,7 +2092,7 @@ int HDFrestart::writeData(float* data, hid_t space_id, hid_t memspace,
 }
 
 int HDFrestart::read_att(
-    const hid_t dset_id, std::string attname, vector<double>& attr_data)
+    const hid_t dset_id, const std::string& attname, vector<double>& attr_data)
 {
     assert(attr_data.size() > 0);
 

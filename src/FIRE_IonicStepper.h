@@ -47,10 +47,10 @@ public:
         std::vector<double>& tau0, std::vector<double>& taup,
         std::vector<double>& fion, const std::vector<double>& pmass);
 
-    int run();
-    double etol(void) const;
-    int write_hdf5(HDFrestart&);
-    int init(HDFrestart&);
+    int run() override;
+    double etol(void) const override;
+    int write_hdf5(HDFrestart&) override;
+    int init(HDFrestart&) override;
 };
 
 #endif

@@ -138,7 +138,7 @@ int MD_IonicStepper::writeForces(HDFrestart& h5f_file)
     // Create the data space for new datasets
     hsize_t dims[2] = { (hsize_t)tau0_.size() / 3, 3 };
 
-    hid_t dataspace_id = H5Screate_simple(2, dims, NULL);
+    hid_t dataspace_id = H5Screate_simple(2, dims, nullptr);
     if (dataspace_id < 0)
     {
         (*MPIdata::serr) << "MD_IonicStepper: H5Screate_simple failed!!!"
@@ -190,7 +190,7 @@ int MD_IonicStepper::writeTaum(HDFrestart& h5f_file)
     // Create the data space for new datasets
     hsize_t dims[2] = { (hsize_t)taum_.size() / 3, 3 };
 
-    hid_t dataspace_id = H5Screate_simple(2, dims, NULL);
+    hid_t dataspace_id = H5Screate_simple(2, dims, nullptr);
     if (dataspace_id < 0)
     {
         (*MPIdata::serr) << "MD_IonicStepper: H5Screate_simple failed!!!"

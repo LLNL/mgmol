@@ -114,12 +114,12 @@ class DataDistribution
     /* Reset data pointer positions on recv buffer to NULL*/
     void resetPointersToRecvDataToNULL()
     {
-        rbuf_nrows_ptr_            = NULL;
-        rbuf_start_double_pos_ptr_ = NULL;
-        rbuf_nnzrow_ptr_           = NULL;
-        rbuf_lvars_ptr_            = NULL;
-        rbuf_pj_ptr_               = NULL;
-        rbuf_pa_ptr_               = NULL;
+        rbuf_nrows_ptr_            = nullptr;
+        rbuf_start_double_pos_ptr_ = nullptr;
+        rbuf_nnzrow_ptr_           = nullptr;
+        rbuf_lvars_ptr_            = nullptr;
+        rbuf_pj_ptr_               = nullptr;
+        rbuf_pa_ptr_               = nullptr;
 
         rbuf_data_size_ = 0;
     }
@@ -164,9 +164,9 @@ class DataDistribution
         const VariableSizeMatrix<sparserow>& lmat, int* maxsize, int* nzmax);
 
 public:
-    DataDistribution(const std::string name, const double s_radius,
+    DataDistribution(const std::string& name, const double s_radius,
         const pb::PEenv& myPEenv, const double domain[]);
-    DataDistribution(const std::string name, const int max_steps[3],
+    DataDistribution(const std::string& name, const int max_steps[3],
         const pb::PEenv& myPEenv, const double domain[]);
     ~DataDistribution() { delete dir_reduce_; }
 

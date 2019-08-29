@@ -36,9 +36,9 @@ KBPsiMatrixSparse::KBPsiMatrixSparse(
     pb::Lap<ORBDTYPE>* lapop, const bool need2radius)
     : lapop_(lapop), need2radius_(need2radius)
 {
-    kbpsimat_    = 0;
-    kbBpsimat_   = 0;
-    distributor_ = 0;
+    kbpsimat_    = nullptr;
+    kbBpsimat_   = nullptr;
+    distributor_ = nullptr;
 
     isDataSetup_ = false;
 };
@@ -50,14 +50,14 @@ void KBPsiMatrixSparse::clearData()
     if (isDataSetup_)
     {
         delete kbpsimat_;
-        kbpsimat_ = 0;
+        kbpsimat_ = nullptr;
         if (lapop_)
         {
             delete kbBpsimat_;
         }
-        kbBpsimat_ = 0;
+        kbBpsimat_ = nullptr;
         delete distributor_;
-        distributor_ = 0;
+        distributor_ = nullptr;
 
         isDataSetup_ = false;
     }
@@ -147,7 +147,7 @@ void KBPsiMatrixSparse::computeKBpsi(Ions& ions, T& orbitals,
 
     compute_kbpsi_tm_.start();
 
-    ORBDTYPE* ppsi   = 0;
+    ORBDTYPE* ppsi   = nullptr;
     const int ldsize = orbitals.getLda();
     assert(ldsize > 0);
     assert(ldsize < 1e8);
@@ -299,7 +299,7 @@ void KBPsiMatrixSparse::computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi2,
         // double loop over states to fill hnlij[st1][st2] (in general not
         // symmetric... )
         int* rindex = (int*)(*kbBpsimat_).getTableValue(gid);
-        if (rindex == NULL) continue;
+        if (rindex == nullptr) continue;
         const int lrindex = *rindex;
         const int nnzrow1 = kbBpsimat_->nnzrow(lrindex);
         for (int p1 = 0; p1 < nnzrow1; p1++)
@@ -347,7 +347,7 @@ void KBPsiMatrixSparse::computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi2,
         // double loop over states to fill hnlij[st1][st2] (in general not
         // symmetric... )
         int* rindex = (int*)(*kbBpsimat_).getTableValue(gid);
-        if (rindex == NULL) continue;
+        if (rindex == nullptr) continue;
         const int lrindex = *rindex;
         const int nnzrow1 = kbBpsimat_->nnzrow(lrindex);
         for (int p1 = 0; p1 < nnzrow1; p1++)
@@ -397,7 +397,7 @@ void KBPsiMatrixSparse::computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi2,
         // double loop over states to fill hnlij[st1][st2] (in general not
         // symmetric... )
         int* rindex = (int*)(*kbBpsimat_).getTableValue(gid);
-        if (rindex == NULL) continue;
+        if (rindex == nullptr) continue;
         const int lrindex = *rindex;
         const int nnzrow1 = (*kbBpsimat_).nnzrow(lrindex);
         for (int p1 = 0; p1 < nnzrow1; p1++)
@@ -523,7 +523,7 @@ void KBPsiMatrixSparse::getPsiKBPsiSym(
         const int gid      = gids[i];
         const double coeff = (double)kbsigns[i];
         int* rindex        = (int*)(kbpsimat_->getTableValue(gid));
-        if (rindex == NULL) continue;
+        if (rindex == nullptr) continue;
         const int lrindex = *rindex;
         const int nnzrow1 = kbpsimat_->nnzrow(lrindex);
         for (int p1 = 0; p1 < nnzrow1; p1++)
@@ -686,7 +686,7 @@ double KBPsiMatrixSparse::getTraceDM(
     double trace = 0.;
 
     int* rindex = (int*)(*kbpsimat_).getTableValue(gid);
-    if (rindex == NULL) return trace;
+    if (rindex == nullptr) return trace;
 
     const int lrindex = *rindex;
     const int nnzrow1 = kbpsimat_->nnzrow(lrindex);
@@ -715,7 +715,7 @@ double KBPsiMatrixSparse::getTraceDM(
     double trace = 0.;
 
     int* rindex = (int*)(*kbpsimat_).getTableValue(gid);
-    if (rindex == NULL)
+    if (rindex == nullptr)
     {
         trace_tm_.stop();
         return trace;

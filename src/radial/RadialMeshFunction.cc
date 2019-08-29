@@ -468,7 +468,7 @@ void RadialMeshFunction::compute_ft(const vector<double>& ggrid,
         gcof[ik] = rwork.radint();
     }
 
-    if (tfile != NULL)
+    if (tfile != nullptr)
         for (int ik = 0; ik < ikmax; ik++)
         {
             (*tfile) << ggrid[ik] << "\t" << gcof[ik] << endl;

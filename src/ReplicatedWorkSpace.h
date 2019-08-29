@@ -34,7 +34,7 @@ class ReplicatedWorkSpace
     ReplicatedWorkSpace()
     {
         ndim_          = 0;
-        square_matrix_ = 0;
+        square_matrix_ = nullptr;
     }
     ReplicatedWorkSpace(const ReplicatedWorkSpace&);
 

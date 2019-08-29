@@ -68,7 +68,7 @@ public:
 #endif
     }
 
-    ~PBEonGrid()
+    ~PBEonGrid() override
     {
 #ifdef USE_LIBXC
         xc_func_end(&xfunc_);
@@ -78,9 +78,9 @@ public:
 #endif
     }
 
-    void update();
+    void update() override;
 
-    double getExc() const;
+    double getExc() const override;
 };
 
 #endif

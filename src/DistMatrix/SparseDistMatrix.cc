@@ -72,7 +72,7 @@ SparseDistMatrix<T>::SparseDistMatrix(MPI_Comm comm, DistMatrix<T>& mat,
     index_and_val_.resize(ntasks_mat_);
     map_val_.resize(ntasks_mat_);
 
-    if (rtasks_distmatrix_ == NULL)
+    if (rtasks_distmatrix_ == nullptr)
     {
         rtasks_distmatrix_     = new RemoteTasksDistMatrix<T>(mat);
         own_rtasks_distmatrix_ = true;
@@ -114,7 +114,7 @@ SparseDistMatrix<T>::SparseDistMatrix(MPI_Comm comm, DistMatrix<T>& mat)
     map_val_.resize(ntasks_mat_);
 
     rtasks_distmatrix_ = *def_rtasks_DistMatrix_ptr_;
-    if (rtasks_distmatrix_ == NULL)
+    if (rtasks_distmatrix_ == nullptr)
     {
         rtasks_distmatrix_     = new RemoteTasksDistMatrix<T>(mat);
         own_rtasks_distmatrix_ = true;
@@ -1165,9 +1165,9 @@ void SparseDistMatrix<double>::sendRecvData()
     double* sbuf1_val = tmp_val;
     double* sbuf2_val = tmp_val + newsize;
 
-    double* tbuf_val = NULL;
+    double* tbuf_val = nullptr;
     ;
-    double* rbuf_val = NULL;
+    double* rbuf_val = nullptr;
     if (recv)
     {
         rbuf_val = tmp_val + 2 * newsize;
@@ -1370,9 +1370,9 @@ void SparseDistMatrix<float>::sendRecvData()
     float* sbuf1_val = tmp_val;
     float* sbuf2_val = tmp_val + newsize;
 
-    float* tbuf_val = NULL;
+    float* tbuf_val = nullptr;
     ;
-    float* rbuf_val = NULL;
+    float* rbuf_val = nullptr;
     if (recv)
     {
         rbuf_val = tmp_val + 2 * newsize;

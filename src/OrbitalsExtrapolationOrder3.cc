@@ -28,7 +28,7 @@ void OrbitalsExtrapolationOrder3<T>::extrapolate_orbitals(
     bool use_dense_proj_mat = false;
 #if EXTRAPOLATE_H
     ProjectedMatricesInterface* proj_matrices = (*orbitals)->getProjMatrices();
-    ProjectedMatrices* projmat                = 0;
+    ProjectedMatrices* projmat                = nullptr;
     if (ct.OuterSolver() != OuterSolverType::ABPG
         && ct.OuterSolver() != OuterSolverType::NLCG)
     {
@@ -40,7 +40,7 @@ void OrbitalsExtrapolationOrder3<T>::extrapolate_orbitals(
 
     // do the extrapolation if previous orbitals exist (not at first step)
 
-    if (orbitals_minus1_ != 0)
+    if (orbitals_minus1_ != nullptr)
     {
         T tmp_orbitals_minus1("minus1", *new_orbitals, false);
 
@@ -69,7 +69,7 @@ void OrbitalsExtrapolationOrder3<T>::extrapolate_orbitals(
                 matQ, yyt, (*MPIdata::sout));
 #endif
 
-            if (orbitals_minus2_ != 0)
+            if (orbitals_minus2_ != nullptr)
             {
 #if 0
                 T tmp(*orbitals_minus2_);
@@ -110,14 +110,14 @@ void OrbitalsExtrapolationOrder3<T>::extrapolate_orbitals(
         else
         {
             tmp_orbitals_minus1.assign(*orbitals_minus1_);
-            if (orbitals_minus2_ != 0)
+            if (orbitals_minus2_ != nullptr)
                 orbitals_minus2_->axpy(-1., *orbitals_minus1_);
             if (ct.verbose > 1 && onpe0)
                 (*MPIdata::sout) << "Compute tmp_orbitals_minus1..." << endl;
             tmp_orbitals_minus1.axpy(-1., *new_orbitals);
         }
 
-        if (orbitals_minus2_ != 0)
+        if (orbitals_minus2_ != nullptr)
         {
             new_orbitals->axpy(-2., tmp_orbitals_minus1);
             new_orbitals->axpy(1., *orbitals_minus2_);

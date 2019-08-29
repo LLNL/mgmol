@@ -87,7 +87,7 @@ private:
     void writeVTKHeader(
         const int npx, const int npy, const int npz, std::ofstream& os);
     void writeVTKDataset(
-        const std::string name, const pb::PEenv& myPEenv, std::ofstream& os);
+        const std::string& name, const pb::PEenv& myPEenv, std::ofstream& os);
 
 public:
     ClusterOrbitals(LocalizationRegions* lrs); // constructor

@@ -1857,7 +1857,7 @@ Ion* Ions::findIon(const string& name) const
     }
 
     // return 0 if name not found in list_ions_
-    return 0;
+    return nullptr;
 }
 
 bool Ions::isLocal(const string& name) const
@@ -1882,7 +1882,7 @@ Ion* Ions::findIon(const int index) const
 
         ion++;
     }
-    return NULL;
+    return nullptr;
 }
 
 Ion* Ions::findLocalIon(const int index) const
@@ -1894,7 +1894,7 @@ Ion* Ions::findLocalIon(const int index) const
 
         ion++;
     }
-    return NULL;
+    return nullptr;
 }
 
 void Ions::setPositions(const vector<double>& tau)
@@ -1977,7 +1977,7 @@ void Ions::set_forces(const vector<vector<double>>& ff)
     }
 }
 
-int Ions::readAtoms(const string filename, const bool cell_relative)
+int Ions::readAtoms(const string& filename, const bool cell_relative)
 {
 
     Control& ct(*(Control::instance()));
@@ -2033,7 +2033,7 @@ int Ions::readAtoms(ifstream* tfile, const bool cell_relative)
     return num_ions_;
 }
 
-int Ions::readAtomsFromXYZ(const string filename, const bool cell_relative)
+int Ions::readAtomsFromXYZ(const string& filename, const bool cell_relative)
 {
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
     Control& ct(*(Control::instance()));
@@ -2050,7 +2050,7 @@ int Ions::readAtomsFromXYZ(const string filename, const bool cell_relative)
 
     int natoms = -1;
 
-    ifstream* tfile = 0;
+    ifstream* tfile = nullptr;
     if (mmpi.PE0())
     {
         tfile = new ifstream(filename.data(), ios::in);
@@ -2211,7 +2211,7 @@ int Ions::readAtomsFromXYZ(const string filename, const bool cell_relative)
     return natoms;
 }
 
-int Ions::readNatoms(const string filename, const bool cell_relative)
+int Ions::readNatoms(const string& filename, const bool cell_relative)
 {
     Control& ct(*(Control::instance()));
 
@@ -2221,7 +2221,7 @@ int Ions::readNatoms(const string filename, const bool cell_relative)
 
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
 
-    ifstream* tfile = 0;
+    ifstream* tfile = nullptr;
     if (mmpi.instancePE0())
     {
         tfile = new ifstream(filename.data(), ios::in);
@@ -3749,7 +3749,7 @@ void Ions::updateIons()
     setup_ = false;
 }
 
-void Ions::shiftIons(Vector3D shift)
+void Ions::shiftIons(const Vector3D& shift)
 {
     // update local_ions data
     vector<Ion*>::iterator ion = local_ions_.begin();

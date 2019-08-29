@@ -48,8 +48,8 @@ public:
     }
 
     // add penalty functional contribution to residual
-    void addResidual(T& phi, T& res);
-    double evaluateEnergy(const T& phi);
+    void addResidual(T& phi, T& res) override;
+    double evaluateEnergy(const T& phi) override;
 };
 
 #endif

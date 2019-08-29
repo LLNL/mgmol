@@ -50,9 +50,9 @@ short ProjectedMatrices::n_instances_                               = 0;
 
 dist_matrix::RemoteTasksDistMatrix<DISTMATDTYPE>*
     ProjectedMatrices::remote_tasks_DistMatrix_
-    = 0;
-GramMatrix* ProjectedMatrices::gram_4dotProducts_  = 0;
-DensityMatrix* ProjectedMatrices::dm_4dot_product_ = 0;
+    = nullptr;
+GramMatrix* ProjectedMatrices::gram_4dotProducts_  = nullptr;
+DensityMatrix* ProjectedMatrices::dm_4dot_product_ = nullptr;
 
 static int sparse_distmatrix_nb_partitions = 128;
 
@@ -65,7 +65,7 @@ ProjectedMatrices::ProjectedMatrices(const int ndim, const bool with_spin)
     width_   = 0.;
     min_val_ = 0.25;
 
-    sH_ = 0;
+    sH_ = nullptr;
 
     if (dim_ > 0)
     {
@@ -95,15 +95,15 @@ ProjectedMatrices::~ProjectedMatrices()
     if (dim_ > 0)
     {
         delete sH_;
-        sH_ = 0;
+        sH_ = nullptr;
     }
 
     if (n_instances_ == 1)
     {
-        if (gram_4dotProducts_ != 0)
+        if (gram_4dotProducts_ != nullptr)
         {
             delete gram_4dotProducts_;
-            gram_4dotProducts_ = 0;
+            gram_4dotProducts_ = nullptr;
         }
     }
 
@@ -123,7 +123,7 @@ void ProjectedMatrices::setup(
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     MPI_Comm comm   = mmpi.commSpin();
 
-    if (sH_ != NULL) delete sH_;
+    if (sH_ != nullptr) delete sH_;
 
     if (dim_ > 0)
     {
@@ -548,7 +548,7 @@ int ProjectedMatrices::writeDM_hdf5(HDFrestart& h5f_file)
     hsize_t dims[2] = { dim_, dim_ };
 
     // filespace identifier
-    hid_t dataspace = H5Screate_simple(2, dims, NULL);
+    hid_t dataspace = H5Screate_simple(2, dims, nullptr);
 
     hid_t dset_id = H5Dcreate2(file_id, "/Density_Matrix", H5T_NATIVE_DOUBLE,
         dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
@@ -881,7 +881,7 @@ double ProjectedMatrices::getTraceDiagProductWithInvS(
 
 void ProjectedMatrices::resetDotProductMatrices()
 {
-    if (gram_4dotProducts_ != 0) delete gram_4dotProducts_;
+    if (gram_4dotProducts_ != nullptr) delete gram_4dotProducts_;
     gram_4dotProducts_ = new GramMatrix(*gm_);
 }
 

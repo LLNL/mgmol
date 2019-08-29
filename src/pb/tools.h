@@ -17,7 +17,7 @@
 namespace pb
 {
 
-FILE* open_file(const std::string, const std::string);
+FILE* open_file(const std::string&, const std::string&);
 double timer(void);
 }
 

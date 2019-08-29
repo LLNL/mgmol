@@ -102,14 +102,17 @@ public:
         std::vector<double>& fion, const std::vector<int>& gid, const int m,
         double* etot);
 
-    int run();
-    double etol(void) const;
-    int write_hdf5(HDFrestart&);
-    int init(HDFrestart&);
+    int run() override;
+    double etol(void) const override;
+    int write_hdf5(HDFrestart&) override;
+    int init(HDFrestart&) override;
     void restart();
     int writeLBFGSinfo(HDFrestart&);
 
-    bool check_last_step_accepted() const { return (bool)last_step_accepted_; }
+    bool check_last_step_accepted() const override
+    {
+        return (bool)last_step_accepted_;
+    }
 };
 
 #endif

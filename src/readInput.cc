@@ -61,7 +61,7 @@ int MGmol<T>::readLRsFromInput(ifstream* tfile)
         const vector<Ion*>& list_ions(ions_->list_ions());
         vector<Ion*>::const_iterator ion = list_ions.begin();
 
-        if (tfile != 0) read_comments(*tfile);
+        if (tfile != nullptr) read_comments(*tfile);
         int count = 0;
 
         // read as many centers as there are functions
@@ -70,7 +70,7 @@ int MGmol<T>::readLRsFromInput(ifstream* tfile)
             double crds[3] = { 0., 0., 0. };
             bool flag      = false;
 
-            if (tfile != 0)
+            if (tfile != nullptr)
                 for (short j = 0; j < 3; j++)
                 {
                     string sread;
@@ -211,7 +211,7 @@ int MGmol<T>::readCoordinates(ifstream* tfile, const bool cell_relative)
 }
 
 template <class T>
-int MGmol<T>::readCoordinates(const string filename, const bool cell_relative)
+int MGmol<T>::readCoordinates(const string& filename, const bool cell_relative)
 {
     Control& ct = *(Control::instance());
     if (ct.verbose > 0) printWithTimeStamp("Read atomic coordinates...", os_);

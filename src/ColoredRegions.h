@@ -42,7 +42,7 @@ public:
     ColoredRegions(
         FunctionsPacking& pack, LocalizationRegions& lrs, const bool global);
 
-    void getPossibleColors(const Vector3D center, std::set<int>& colors)
+    void getPossibleColors(const Vector3D& center, std::set<int>& colors)
     {
         colors.clear();
         std::multimap<short, Sphere>::iterator p = loc_regions_.begin();

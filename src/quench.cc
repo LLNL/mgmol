@@ -72,7 +72,7 @@ void MGmol<T>::adaptLR(
     if (ct.verbose > 0)
         printWithTimeStamp(" Adapt localization regions...", os_);
 
-    if (spreadf == NULL)
+    if (spreadf == nullptr)
     {
         if (onpe0)
             os_ << "WARNING: Cannot adapt LRs: needs SpreadsAndCenters" << endl;
@@ -500,10 +500,10 @@ int MGmol<T>::quench(T* orbitals, Ions& ions, const int max_inner_steps,
     if (ct.use_kernel_functions)
     {
         delete aomm_;
-        aomm_ = 0;
+        aomm_ = nullptr;
     }
     delete orbitals_precond_;
-    orbitals_precond_ = 0;
+    orbitals_precond_ = nullptr;
 
     // Get the n.l. energy
     // TODO: Fix bug where energy vs. time output is incorrect if get_evnl is

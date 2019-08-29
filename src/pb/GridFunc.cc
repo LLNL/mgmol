@@ -192,7 +192,7 @@ GridFunc<T>::GridFunc(
     }
     else
     {
-        uu_ = 0;
+        uu_ = nullptr;
     }
     const short shift = ghost_pt();
     const int dimxy   = (dim(1) + 2 * ghost_pt()) * dim(0);
@@ -231,7 +231,7 @@ GridFunc<T>::GridFunc(const GridFunc<double>& A) : grid_(A.grid())
     int n = grid_.sizeg();
 
     double* au = A.uu();
-    if (au != 0)
+    if (au != nullptr)
     {
         uu_ = new T[n];
         MPcpy(uu_, au, n);
@@ -240,7 +240,7 @@ GridFunc<T>::GridFunc(const GridFunc<double>& A) : grid_(A.grid())
     else
     {
         updated_boundaries_ = false;
-        uu_                 = 0;
+        uu_                 = nullptr;
     }
 }
 
@@ -260,7 +260,7 @@ GridFunc<T>::GridFunc(const GridFunc<float>& A) : grid_(A.grid())
     int n = grid_.sizeg();
 
     float* au = A.uu();
-    if (au != 0)
+    if (au != nullptr)
     {
         uu_ = new T[n];
         MPcpy(uu_, au, n);
@@ -269,7 +269,7 @@ GridFunc<T>::GridFunc(const GridFunc<float>& A) : grid_(A.grid())
     else
     {
         updated_boundaries_ = false;
-        uu_                 = 0;
+        uu_                 = nullptr;
     }
 }
 
@@ -298,7 +298,7 @@ GridFunc<T>::GridFunc(const GridFunc<T>& A, const Grid& new_grid)
     assert(grid_.inc(2) == 1);
     assert(A.grid_.inc(2) == 1);
 
-    if (A.uu_ != 0)
+    if (A.uu_ != nullptr)
     {
         uu_ = new T[grid_.sizeg()];
         memset(uu_, 0, grid_.sizeg() * sizeof(T));
@@ -357,7 +357,7 @@ GridFunc<T>::GridFunc(const T* const vv, const Grid& new_grid, const short px,
     assert(grid_.inc(2) == 1);
 
     const size_t sdim2 = dim_[2] * sizeof(T);
-    if (vv != 0)
+    if (vv != nullptr)
     {
         assert(grid_.sizeg() > 0);
         uu_ = new T[grid_.sizeg()];
@@ -384,7 +384,7 @@ GridFunc<T>::GridFunc(const T* const vv, const Grid& new_grid, const short px,
     else
     {
         updated_boundaries_ = false;
-        uu_                 = 0;
+        uu_                 = nullptr;
         // cout<<" Empty GridFunc<T>!!!"<<endl;
     }
 
@@ -831,7 +831,7 @@ void GridFunc<T>::assign(const T2* const vv, const char dis)
 
     assert(grid_.inc(2) == 1);
 
-    if (vv != 0)
+    if (vv != nullptr)
     {
         if (dis == 'g')
         {
@@ -1058,7 +1058,7 @@ void GridFunc<T>::print(ostream& tfile)
 
     T* vv = uu_;
 
-    if (uu_ != 0)
+    if (uu_ != nullptr)
     {
 #ifdef USE_MPI
         MGmol_MPI& mmpi = *(MGmol_MPI::instance());
@@ -1155,7 +1155,7 @@ void GridFunc<T>::write_xyz(ofstream& tfile) const
 
     const T* const vv = uu_;
 
-    if (uu_ != 0)
+    if (uu_ != nullptr)
     {
         for (int ix = 0; ix < dim(0); ix++)
         {
@@ -1499,7 +1499,7 @@ void GridFunc<T>::gather(T* global_func) const
 #ifdef USE_MPI
     // Compute and communicate displacements (used in MPI_Allgather)
     MGmol_MPI& mmpi  = *(MGmol_MPI::instance());
-    int* displs      = NULL;
+    int* displs      = nullptr;
     const int ntasks = mype_env().n_mpi_tasks();
     if (mype_env().onpe0())
     {
@@ -1522,7 +1522,7 @@ void GridFunc<T>::gather(T* global_func) const
     const int sizeg = grid_.sizeg();
     const int gsize = sizeg * ntasks;
 
-    T* buffer = NULL;
+    T* buffer = nullptr;
     if (mype_env().onpe0()) buffer = new T[gsize];
 
     mmpi.gather(uu_, sizeg, buffer, gsize, 0);
@@ -1590,7 +1590,7 @@ void GridFunc<T>::scatterFrom(const GridFunc<T>& src)
 #ifdef USE_MPI
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     // Compute and communicate displacements (used in MPI_Scatter)
-    int* displs      = NULL;
+    int* displs      = nullptr;
     const int ntasks = mype_env().n_mpi_tasks();
     if (mype_env().onpe0())
     {
@@ -1613,7 +1613,7 @@ void GridFunc<T>::scatterFrom(const GridFunc<T>& src)
     const int sizeg = grid_.sizeg();
     const int gsize = sizeg * ntasks;
 
-    T* buffer = NULL;
+    T* buffer = nullptr;
     if (mype_env().onpe0()) buffer = new T[gsize];
 
     if (mype_env().onpe0())
@@ -1755,7 +1755,7 @@ void GridFunc<T>::write_zyx(ofstream& tfile) const
 
     const T* const vv = uu_;
 
-    if (uu_ != 0)
+    if (uu_ != nullptr)
     {
         for (int iz = 0; iz < dim(2); iz++)
         {
@@ -4184,10 +4184,10 @@ double GridFunc<T>::get_bias()
 template <typename T>
 GridFunc<T>::~GridFunc<T>()
 {
-    if (uu_ != 0)
+    if (uu_ != nullptr)
     {
         delete[] uu_;
-        uu_ = 0;
+        uu_ = nullptr;
     }
 
     // cout<<"Destructor for function on grid "<<grid_.level()<<endl;

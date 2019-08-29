@@ -35,7 +35,7 @@ public:
         else
         {
             std::cerr << "Invalid XC option" << std::endl;
-            return 0;
+            return nullptr;
         }
     }
 };

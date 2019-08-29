@@ -24,8 +24,8 @@ using namespace std;
 Timer MGmol_MPI::split_allreduce_sums_double_tm_("split_allreduce_sums_double");
 Timer MGmol_MPI::split_allreduce_sums_float_tm_("split_allreduce_sums_float");
 
-MGmol_MPI* MGmol_MPI::pinstance_ = 0;
-std::ostream* MGmol_MPI::os_     = NULL;
+MGmol_MPI* MGmol_MPI::pinstance_ = nullptr;
+std::ostream* MGmol_MPI::os_     = nullptr;
 
 MPI_Comm MGmol_MPI::comm_global_         = MPI_COMM_NULL;
 MPI_Comm MGmol_MPI::comm_spin_           = MPI_COMM_NULL;
@@ -707,7 +707,9 @@ bool MGmol_MPI::compareSpin(const double val)
     if (fabs(val - otherval) > 1.e-8)
     {
         if (instancePE0())
+        {
             MGMOL_MPI_ERROR("val=" << val << ", other val=" << otherval);
+        }
     }
     return true;
 }

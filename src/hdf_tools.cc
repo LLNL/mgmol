@@ -20,7 +20,7 @@ using namespace std;
 namespace mgmol_tools
 {
 void write1d(
-    hid_t file_id, string datasetname, vector<int>& data, size_t length)
+    hid_t file_id, const string& datasetname, vector<int>& data, size_t length)
 {
     assert(file_id >= 0);
 
@@ -29,7 +29,7 @@ void write1d(
     hsize_t dim = length;
 
     // Create the data space for the datasets
-    hid_t dataspace_id = H5Screate_simple(1, &dim, NULL);
+    hid_t dataspace_id = H5Screate_simple(1, &dim, nullptr);
     if (dataspace_id < 0)
     {
         cerr << "write1d(), H5Screate_simple failed!!!" << endl;
@@ -62,7 +62,8 @@ void write1d(
     }
 }
 
-void write2d(hid_t file_id, string datasetname, vector<int>& data, size_t* dims)
+void write2d(
+    hid_t file_id, const string& datasetname, vector<int>& data, size_t* dims)
 {
     assert(file_id >= 0);
 
@@ -73,7 +74,7 @@ void write2d(hid_t file_id, string datasetname, vector<int>& data, size_t* dims)
     hsize_t dimsm[2] = { (hsize_t)dims[0], (hsize_t)dims[1] };
 
     // Create the data space for the datasets
-    hid_t dataspace_id = H5Screate_simple(2, dimsm, NULL);
+    hid_t dataspace_id = H5Screate_simple(2, dimsm, nullptr);
     if (dataspace_id < 0)
     {
         cerr << "write2d(), H5Screate_simple failed!!!" << endl;
@@ -106,8 +107,8 @@ void write2d(hid_t file_id, string datasetname, vector<int>& data, size_t* dims)
     }
 }
 
-void write2d(hid_t file_id, string datasetname, vector<unsigned short>& data,
-    size_t* dims)
+void write2d(hid_t file_id, const string& datasetname,
+    vector<unsigned short>& data, size_t* dims)
 {
     assert(file_id >= 0);
 
@@ -118,7 +119,7 @@ void write2d(hid_t file_id, string datasetname, vector<unsigned short>& data,
     hsize_t dimsm[2] = { (hsize_t)dims[0], (hsize_t)dims[1] };
 
     // Create the data space for the datasets
-    hid_t dataspace_id = H5Screate_simple(2, dimsm, NULL);
+    hid_t dataspace_id = H5Screate_simple(2, dimsm, nullptr);
     if (dataspace_id < 0)
     {
         cerr << "write2d(), H5Screate_simple failed!!!" << endl;
@@ -151,8 +152,8 @@ void write2d(hid_t file_id, string datasetname, vector<unsigned short>& data,
     }
 }
 
-void write2d(
-    hid_t file_id, string datasetname, vector<double>& data, size_t* dims)
+void write2d(hid_t file_id, const string& datasetname, vector<double>& data,
+    size_t* dims)
 {
     assert(file_id >= 0);
 
@@ -163,7 +164,7 @@ void write2d(
     hsize_t dimsm[2] = { (hsize_t)dims[0], (hsize_t)dims[1] };
 
     // Create the data space for the datasets
-    hid_t dataspace_id = H5Screate_simple(2, dimsm, NULL);
+    hid_t dataspace_id = H5Screate_simple(2, dimsm, nullptr);
     if (dataspace_id < 0)
     {
         cerr << "write2d(), H5Screate_simple failed!!!" << endl;
@@ -196,8 +197,8 @@ void write2d(
     }
 }
 
-void write2d(
-    hid_t file_id, string datasetname, vector<string>& data, size_t* dims)
+void write2d(hid_t file_id, const string& datasetname, vector<string>& data,
+    size_t* dims)
 {
     assert(file_id >= 0);
 
@@ -212,7 +213,7 @@ void write2d(
     hsize_t dimsm[2] = { (hsize_t)dims[0], (hsize_t)dims[1] };
 
     // Create the data space for the datasets
-    hid_t dataspace_id = H5Screate_simple(2, dimsm, NULL);
+    hid_t dataspace_id = H5Screate_simple(2, dimsm, nullptr);
     if (dataspace_id < 0)
     {
         cerr << "write2d(), H5Screate_simple failed!!!" << endl;
@@ -241,7 +242,7 @@ void write2d(
 
     string attname("String_Length");
     hsize_t dimsA[1]    = { 1 };
-    hid_t dataspaceA_id = H5Screate_simple(1, dimsA, NULL);
+    hid_t dataspaceA_id = H5Screate_simple(1, dimsA, nullptr);
     hid_t attribute_id = H5Acreate2(dataset_id, attname.c_str(), H5T_NATIVE_INT,
         dataspaceA_id, H5P_DEFAULT, H5P_DEFAULT);
     herr_t status
@@ -272,8 +273,8 @@ void write2d(
     }
 }
 
-void parallelWrite2d(hid_t file_id, string datasetname, vector<int>& data,
-    size_t* dims, MPI_Comm comm)
+void parallelWrite2d(hid_t file_id, const string& datasetname,
+    vector<int>& data, size_t* dims, MPI_Comm comm)
 {
     assert(file_id >= 0);
     assert(!data.empty());
@@ -285,14 +286,14 @@ void parallelWrite2d(hid_t file_id, string datasetname, vector<int>& data,
     hsize_t dimsm[2] = { (hsize_t)dims[0], (hsize_t)dims[1] };
     hsize_t dimsf[2] = { (hsize_t)(dimsm[0] * mpi_size), dimsm[1] };
 
-    hid_t filespace = H5Screate_simple(2, dimsf, NULL);
+    hid_t filespace = H5Screate_simple(2, dimsf, nullptr);
     if (filespace < 0)
     {
         cerr << "parallelWrite2d(), H5Screate_simple failed for filespace!!!"
              << endl;
         return;
     }
-    hid_t memspace = H5Screate_simple(2, dimsm, NULL);
+    hid_t memspace = H5Screate_simple(2, dimsm, nullptr);
     if (memspace < 0)
     {
         cerr << "parallelWrite2d(), H5Screate_simple failed for memspace!!!"
@@ -345,7 +346,7 @@ void parallelWrite2d(hid_t file_id, string datasetname, vector<int>& data,
     H5Sclose(memspace);
 }
 
-void parallelWrite2d(hid_t file_id, string datasetname,
+void parallelWrite2d(hid_t file_id, const string& datasetname,
     vector<unsigned short>& data, size_t* dims, MPI_Comm comm)
 {
     assert(file_id >= 0);
@@ -358,14 +359,14 @@ void parallelWrite2d(hid_t file_id, string datasetname,
     hsize_t dimsm[2] = { (hsize_t)dims[0], (hsize_t)dims[1] };
     hsize_t dimsf[2] = { (hsize_t)(dimsm[0] * mpi_size), dimsm[1] };
 
-    hid_t filespace = H5Screate_simple(2, dimsf, NULL);
+    hid_t filespace = H5Screate_simple(2, dimsf, nullptr);
     if (filespace < 0)
     {
         cerr << "parallelWrite2d(), H5Screate_simple failed for filespace!!!"
              << endl;
         return;
     }
-    hid_t memspace = H5Screate_simple(2, dimsm, NULL);
+    hid_t memspace = H5Screate_simple(2, dimsm, nullptr);
     if (memspace < 0)
     {
         cerr << "parallelWrite2d(), H5Screate_simple failed for memspace!!!"
@@ -418,8 +419,8 @@ void parallelWrite2d(hid_t file_id, string datasetname,
     H5Sclose(memspace);
 }
 
-void parallelWrite2d(hid_t file_id, string datasetname, vector<double>& data,
-    size_t* dims, MPI_Comm comm)
+void parallelWrite2d(hid_t file_id, const string& datasetname,
+    vector<double>& data, size_t* dims, MPI_Comm comm)
 {
     assert(file_id >= 0);
     assert(!data.empty());
@@ -431,14 +432,14 @@ void parallelWrite2d(hid_t file_id, string datasetname, vector<double>& data,
     hsize_t dimsm[2] = { (hsize_t)dims[0], (hsize_t)dims[1] };
     hsize_t dimsf[2] = { (hsize_t)(dimsm[0] * mpi_size), dimsm[1] };
 
-    hid_t filespace = H5Screate_simple(2, dimsf, NULL);
+    hid_t filespace = H5Screate_simple(2, dimsf, nullptr);
     if (filespace < 0)
     {
         cerr << "parallelWrite2d(), H5Screate_simple failed for filespace!!!"
              << endl;
         return;
     }
-    hid_t memspace = H5Screate_simple(2, dimsm, NULL);
+    hid_t memspace = H5Screate_simple(2, dimsm, nullptr);
     if (memspace < 0)
     {
         cerr << "parallelWrite2d(), H5Screate_simple failed for memspace!!!"
@@ -491,8 +492,8 @@ void parallelWrite2d(hid_t file_id, string datasetname, vector<double>& data,
     H5Sclose(memspace);
 }
 
-void parallelWrite2d(hid_t file_id, string datasetname, vector<string>& data,
-    size_t* dims, MPI_Comm comm)
+void parallelWrite2d(hid_t file_id, const string& datasetname,
+    vector<string>& data, size_t* dims, MPI_Comm comm)
 {
     assert(file_id >= 0);
     assert(!data.empty());
@@ -508,14 +509,14 @@ void parallelWrite2d(hid_t file_id, string datasetname, vector<string>& data,
     hsize_t dimsm[2] = { (hsize_t)dims[0], (hsize_t)dims[1] };
     hsize_t dimsf[2] = { (hsize_t)(dimsm[0] * mpi_size), dimsm[1] };
 
-    hid_t filespace = H5Screate_simple(2, dimsf, NULL);
+    hid_t filespace = H5Screate_simple(2, dimsf, nullptr);
     if (filespace < 0)
     {
         cerr << "parallelWrite2d(), H5Screate_simple failed for filespace!!!"
              << endl;
         return;
     }
-    hid_t memspace = H5Screate_simple(2, dimsm, NULL);
+    hid_t memspace = H5Screate_simple(2, dimsm, nullptr);
     if (memspace < 0)
     {
         cerr << "parallelWrite2d(), H5Screate_simple failed for memspace!!!"
@@ -585,7 +586,7 @@ void addAttribute2Dataset(
     hsize_t dim = (hsize_t)attr_data.size();
 
     //  Open a dataset attribute.
-    hid_t dataspace_id = H5Screate_simple(1, &dim, NULL);
+    hid_t dataspace_id = H5Screate_simple(1, &dim, nullptr);
     if (dataspace_id < 0)
     {
         cerr << "H5Screate failed!!!" << endl;
@@ -619,7 +620,7 @@ void addAttribute2Dataset(
     hsize_t dim = (hsize_t)attr_data.size();
 
     //  Open a dataset attribute.
-    hid_t dataspace_id = H5Screate_simple(1, &dim, NULL);
+    hid_t dataspace_id = H5Screate_simple(1, &dim, nullptr);
     if (dataspace_id < 0)
     {
         cerr << "H5Screate failed!!!" << endl;

@@ -42,12 +42,12 @@ public:
 
     AndersonMix(const int m, const double beta, T& x);
 
-    virtual ~AndersonMix();
+    ~AndersonMix() override;
 
     // update trial solution based on residual
     // need work array for temporary storage
-    void update(T& res, T& work, std::ostream& os, const bool verbose);
-    void restart(void);
+    void update(T& res, T& work, std::ostream& os, const bool verbose) override;
+    void restart(void) override;
 };
 
 template <class T>

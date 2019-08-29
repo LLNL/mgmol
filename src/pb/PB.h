@@ -88,7 +88,7 @@ public:
     }
 
     // A->B
-    virtual void apply(GridFunc<T>& A, GridFunc<T>& B) = 0;
+    void apply(GridFunc<T>& A, GridFunc<T>& B) override = 0;
 
     void init_epsilon(
         GridFunc<T>& gf_rhod, const double rho0, const double drho0)
@@ -115,7 +115,7 @@ public:
     virtual void get_vepsilon(GridFunc<T>&, GridFunc<T>&, GridFunc<T>&) = 0;
     virtual void setLowerOrderGrid()                                    = 0;
 
-    virtual ~PB()
+    ~PB() override
     {
         // std::cout<<"destroy PB"<<std::endl;
     }

@@ -100,7 +100,7 @@ public:
         drho0_       = drho0def_;
     }
 
-    virtual ~DielFunc(){};
+    ~DielFunc() override{};
 
     DielFunc& operator=(const T);
 
