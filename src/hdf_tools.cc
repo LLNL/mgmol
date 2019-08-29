@@ -62,7 +62,8 @@ void write1d(
     }
 }
 
-void write2d(hid_t file_id, const string& datasetname, vector<int>& data, size_t* dims)
+void write2d(
+    hid_t file_id, const string& datasetname, vector<int>& data, size_t* dims)
 {
     assert(file_id >= 0);
 
@@ -106,8 +107,8 @@ void write2d(hid_t file_id, const string& datasetname, vector<int>& data, size_t
     }
 }
 
-void write2d(hid_t file_id, const string& datasetname, vector<unsigned short>& data,
-    size_t* dims)
+void write2d(hid_t file_id, const string& datasetname,
+    vector<unsigned short>& data, size_t* dims)
 {
     assert(file_id >= 0);
 
@@ -151,8 +152,8 @@ void write2d(hid_t file_id, const string& datasetname, vector<unsigned short>& d
     }
 }
 
-void write2d(
-    hid_t file_id, const string& datasetname, vector<double>& data, size_t* dims)
+void write2d(hid_t file_id, const string& datasetname, vector<double>& data,
+    size_t* dims)
 {
     assert(file_id >= 0);
 
@@ -196,8 +197,8 @@ void write2d(
     }
 }
 
-void write2d(
-    hid_t file_id, const string& datasetname, vector<string>& data, size_t* dims)
+void write2d(hid_t file_id, const string& datasetname, vector<string>& data,
+    size_t* dims)
 {
     assert(file_id >= 0);
 
@@ -272,8 +273,8 @@ void write2d(
     }
 }
 
-void parallelWrite2d(hid_t file_id, const string& datasetname, vector<int>& data,
-    size_t* dims, MPI_Comm comm)
+void parallelWrite2d(hid_t file_id, const string& datasetname,
+    vector<int>& data, size_t* dims, MPI_Comm comm)
 {
     assert(file_id >= 0);
     assert(!data.empty());
@@ -418,8 +419,8 @@ void parallelWrite2d(hid_t file_id, const string& datasetname,
     H5Sclose(memspace);
 }
 
-void parallelWrite2d(hid_t file_id, const string& datasetname, vector<double>& data,
-    size_t* dims, MPI_Comm comm)
+void parallelWrite2d(hid_t file_id, const string& datasetname,
+    vector<double>& data, size_t* dims, MPI_Comm comm)
 {
     assert(file_id >= 0);
     assert(!data.empty());
@@ -491,8 +492,8 @@ void parallelWrite2d(hid_t file_id, const string& datasetname, vector<double>& d
     H5Sclose(memspace);
 }
 
-void parallelWrite2d(hid_t file_id, const string& datasetname, vector<string>& data,
-    size_t* dims, MPI_Comm comm)
+void parallelWrite2d(hid_t file_id, const string& datasetname,
+    vector<string>& data, size_t* dims, MPI_Comm comm)
 {
     assert(file_id >= 0);
     assert(!data.empty());

@@ -323,8 +323,8 @@ void MGmol<T>::md(T** orbitals, Ions& ions)
     int size_tau = (int)tau0.size();
     DFTsolver<T>::resetItCount();
 
-    orbitals_extrapol_
-        = OrbitalsExtrapolationFactory<T>::create(ct.WFExtrapolation(), nullptr);
+    orbitals_extrapol_ = OrbitalsExtrapolationFactory<T>::create(
+        ct.WFExtrapolation(), nullptr);
 
     MD_IonicStepper* stepper = new MD_IonicStepper(
         ct.dt, atmove, tau0, taup, taum, fion, pmass, rand_states);

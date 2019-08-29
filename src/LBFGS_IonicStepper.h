@@ -109,7 +109,10 @@ public:
     void restart();
     int writeLBFGSinfo(HDFrestart&);
 
-    bool check_last_step_accepted() const override { return (bool)last_step_accepted_; }
+    bool check_last_step_accepted() const override
+    {
+        return (bool)last_step_accepted_;
+    }
 };
 
 #endif

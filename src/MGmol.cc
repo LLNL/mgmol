@@ -196,8 +196,9 @@ int MGmol<T>::initial()
 
     hamiltonian_->setup(mygrid, ct.lap_type);
 
-    pb::Lap<ORBDTYPE>* lapop = ct.Mehrstellen() ? hamiltonian_->lapOper() : nullptr;
-    g_kbpsi_                 = new KBPsiMatrixSparse(lapop);
+    pb::Lap<ORBDTYPE>* lapop
+        = ct.Mehrstellen() ? hamiltonian_->lapOper() : nullptr;
+    g_kbpsi_ = new KBPsiMatrixSparse(lapop);
 
     check_anisotropy();
 
@@ -696,7 +697,8 @@ void MGmol<T>::write_header()
     // Write out the ionic postions and displacements
     ions_->printPositions(os_);
 
-    if (current_orbitals_ != nullptr && ct.verbose > 3) lrs_->printAllRegions(os_);
+    if (current_orbitals_ != nullptr && ct.verbose > 3)
+        lrs_->printAllRegions(os_);
 }
 
 template <class T>

@@ -232,10 +232,10 @@ public:
         const std::string& name, const bool add = false);
     int read_1func_hdf5(double*, const std::string&);
     int read_1func_hdf5(float*, const std::string&);
-    int write_1func_hdf5(
-        double*, const std::string&, double* ll = nullptr, double* origin = nullptr);
-    int write_1func_hdf5(
-        float*, const std::string&, double* ll = nullptr, double* origin = nullptr);
+    int write_1func_hdf5(double*, const std::string&, double* ll = nullptr,
+        double* origin = nullptr);
+    int write_1func_hdf5(float*, const std::string&, double* ll = nullptr,
+        double* origin = nullptr);
     int read_att(const hid_t dset_id, const std::string& attname,
         std::vector<double>& attr_data);
 

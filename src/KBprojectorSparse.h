@@ -145,7 +145,10 @@ public:
     bool overlapPE() const override;
     void registerPsi(const short iloc, const ORBDTYPE* const psi) override;
 
-    bool overlaps(const short iloc) const override { return (size_nl_[iloc] > 0); }
+    bool overlaps(const short iloc) const override
+    {
+        return (size_nl_[iloc] > 0);
+    }
     double dotPsi(const short iloc, const short index) const override;
 
     // axpySket for templated destination type

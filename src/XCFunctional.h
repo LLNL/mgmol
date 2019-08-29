@@ -88,7 +88,8 @@ public:
 
         pexc_ = pexc_up_ = pexc_dn_ = nullptr;
         pvxc1_ = pvxc1_up_ = pvxc1_dn_ = nullptr;
-        pvxc2_ = pvxc2_upup_ = pvxc2_dndn_ = pvxc2_updn_ = pvxc2_dnup_ = nullptr;
+        pvxc2_ = pvxc2_upup_ = pvxc2_dndn_ = pvxc2_updn_ = pvxc2_dnup_
+            = nullptr;
 
         if (nspin_ == 1)
         {

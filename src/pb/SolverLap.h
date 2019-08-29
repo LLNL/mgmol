@@ -69,7 +69,10 @@ public:
 
     short getNbSweeps() const override { return nb_sweeps_; }
     double getFinalResidual() const override { return final_residual_; }
-    double getFinalRelativeResidual() const override { return final_relative_residual_; }
+    double getFinalRelativeResidual() const override
+    {
+        return final_relative_residual_;
+    }
     double getResidualReduction() const override { return residual_reduction_; }
 };
 

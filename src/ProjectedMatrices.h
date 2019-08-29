@@ -134,13 +134,15 @@ public:
     void setup(const double kbt, const int nel,
         const std::vector<std::vector<int>>& global_indexes) override;
 
-    void addMatrixElementSparseH(const int st1, const int st2, const double val) override
+    void addMatrixElementSparseH(
+        const int st1, const int st2, const double val) override
     {
         sH_->push_back(st1, st2, val);
     }
 
     // fill SparseDistMatrix sH_ with values in slH
-    void addMatrixElementsSparseH(const SquareLocalMatrices<MATDTYPE>& slH) override
+    void addMatrixElementsSparseH(
+        const SquareLocalMatrices<MATDTYPE>& slH) override
     {
         Control& ct = *(Control::instance());
 
@@ -158,11 +160,18 @@ public:
         consolidate_H_tm_.stop();
     }
 
-    double getTraceDiagProductWithInvS(std::vector<DISTMATDTYPE>& ddiag) override;
+    double getTraceDiagProductWithInvS(
+        std::vector<DISTMATDTYPE>& ddiag) override;
 
-    SquareLocalMatrices<MATDTYPE>& getLocalX() const override { return *localX_; }
+    SquareLocalMatrices<MATDTYPE>& getLocalX() const override
+    {
+        return *localX_;
+    }
 
-    SquareLocalMatrices<MATDTYPE>& getLocalT() const override { return *localT_; }
+    SquareLocalMatrices<MATDTYPE>& getLocalT() const override
+    {
+        return *localT_;
+    }
 
     const dist_matrix::SubMatrices<DISTMATDTYPE>& getSubMatLS(MPI_Comm comm,
         const std::vector<std::vector<int>>& global_indexes) const
@@ -191,8 +200,8 @@ public:
 
     void printTimers(std::ostream& os) override;
 
-    void initializeGramMatrix(
-        const SquareLocalMatrices<MATDTYPE>& ss, const int orbitals_index) override
+    void initializeGramMatrix(const SquareLocalMatrices<MATDTYPE>& ss,
+        const int orbitals_index) override
     {
         assert(gm_);
 
@@ -411,7 +420,8 @@ public:
         dm.allgather(replicated_DM_matrix, dim_);
     }
 
-    double getLinDependent2states(int& st1, int& st2, const bool flag) const override
+    double getLinDependent2states(
+        int& st1, int& st2, const bool flag) const override
     {
         return gm_->getLinDependent2states(st1, st2);
     }

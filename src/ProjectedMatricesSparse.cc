@@ -164,7 +164,8 @@ void ProjectedMatricesSparse::setup(
         lsize_ = locvars_.size(); // table.get_size();
 
         // reset invS and DM data
-        if (invS_ == nullptr || dm_ == nullptr || ct.AtomsDynamic() == AtomsDynamicType::MD)
+        if (invS_ == nullptr || dm_ == nullptr
+            || ct.AtomsDynamic() == AtomsDynamicType::MD)
         {
             invS_ = new ShortSightedInverse((*lrs_), locvars_, local_cluster_);
             dm_   = new DensityMatrixSparse(

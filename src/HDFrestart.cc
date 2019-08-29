@@ -628,8 +628,8 @@ HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
 };
 
 // constructor reading data (existing file)
-HDFrestart::HDFrestart(
-    const std::string& filename, const pb::PEenv& pes, const short option_number)
+HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
+    const short option_number)
     : pes_(pes), file_id_(-1)
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());

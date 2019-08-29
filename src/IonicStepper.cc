@@ -245,8 +245,8 @@ int IonicStepper::readPositions_hdf5(HDFrestart& h5f_file, const string& name)
     return readAtomicFields(h5f_file, tau0_, name);
 }
 
-int IonicStepper::writeRandomStates(
-    HDFrestart& h5f_file, vector<unsigned short>& data, const string& name) const
+int IonicStepper::writeRandomStates(HDFrestart& h5f_file,
+    vector<unsigned short>& data, const string& name) const
 {
     hid_t file_id = h5f_file.file_id();
     bool create   = false;

@@ -100,8 +100,8 @@ ExtendedGridOrbitals::ExtendedGridOrbitals(std::string name,
 
 ExtendedGridOrbitals::~ExtendedGridOrbitals() { assert(proj_matrices_ != 0); }
 
-ExtendedGridOrbitals::ExtendedGridOrbitals(
-    const std::string& name, const ExtendedGridOrbitals& A, const bool copy_data)
+ExtendedGridOrbitals::ExtendedGridOrbitals(const std::string& name,
+    const ExtendedGridOrbitals& A, const bool copy_data)
     : Orbitals(A, copy_data),
       name_(name),
       grid_(A.grid_),
@@ -610,7 +610,8 @@ int ExtendedGridOrbitals::write_hdf5(HDFrestart& h5f_file, string name)
     return ierr;
 }
 
-int ExtendedGridOrbitals::write_func_hdf5(HDFrestart& h5f_file, const string& name)
+int ExtendedGridOrbitals::write_func_hdf5(
+    HDFrestart& h5f_file, const string& name)
 {
     Control& ct   = *(Control::instance());
     hid_t file_id = h5f_file.file_id();
@@ -743,7 +744,8 @@ int ExtendedGridOrbitals::write_func_hdf5(HDFrestart& h5f_file, const string& na
 }
 
 // read all the data sets with names starting with "name"
-int ExtendedGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, const string& name)
+int ExtendedGridOrbitals::read_func_hdf5(
+    HDFrestart& h5f_file, const string& name)
 {
     assert(numst_ >= 0);
     assert(name.size() > 0);

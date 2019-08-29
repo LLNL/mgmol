@@ -106,9 +106,10 @@ public:
     }
 
     void jacobi(GridFunc<T>&, const GridFunc<T>&, GridFunc<T>&) override;
-    void jacobi(GridFuncVector<T>&, const GridFuncVector<T>&, GridFunc<T>&) override;
     void jacobi(
-        GridFuncVector<T>&, const GridFuncVector<T>&, GridFuncVector<T>&) override;
+        GridFuncVector<T>&, const GridFuncVector<T>&, GridFunc<T>&) override;
+    void jacobi(GridFuncVector<T>&, const GridFuncVector<T>&,
+        GridFuncVector<T>&) override;
 
     double diagEl(void) const override { return diagEl_; };
     double invDiagEl(void) const override { return invDiagEl_; };

@@ -62,8 +62,8 @@ public:
         poisson_solver_->setup(nu1, nu2, max_sweeps, tol, max_nlevels);
     }
 
-    void solve(
-        const pb::GridFunc<RHODTYPE>& rho, const pb::GridFunc<RHODTYPE>& rhoc) override;
+    void solve(const pb::GridFunc<RHODTYPE>& rho,
+        const pb::GridFunc<RHODTYPE>& rhoc) override;
 };
 
 #endif

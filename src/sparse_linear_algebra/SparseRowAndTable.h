@@ -53,7 +53,8 @@ public:
         pos_->insert(col);
     }
 
-    int updateRow(const int col, const double val, const INSERTMODE mode) override
+    int updateRow(
+        const int col, const double val, const INSERTMODE mode) override
     {
         int newentry    = 0;
         const int index = getColumnPosition(col);
@@ -103,10 +104,10 @@ public:
 
     int updateRow(const int count, const int* const cols,
         const double* const vals, const INSERTMODE mode) override;
-    int updateRowAdd(
-        const int count, const int* const cols, const double* const vals) override;
-    int updateRowInsert(
-        const int count, const int* const cols, const double* const vals) override;
+    int updateRowAdd(const int count, const int* const cols,
+        const double* const vals) override;
+    int updateRowInsert(const int count, const int* const cols,
+        const double* const vals) override;
     void reset();
 
     /* get value on local row */

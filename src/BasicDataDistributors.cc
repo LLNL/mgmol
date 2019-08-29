@@ -16,8 +16,9 @@
 #include "Control.h"
 #include "LocalizationRegions.h"
 
-DataDistribution* BasicDataDistributors::orbitalsProdWithHDistributor_ = nullptr;
-DataDistribution* BasicDataDistributors::gramMatrixDistributor_        = nullptr;
+DataDistribution* BasicDataDistributors::orbitalsProdWithHDistributor_
+    = nullptr;
+DataDistribution* BasicDataDistributors::gramMatrixDistributor_ = nullptr;
 DataDistribution* BasicDataDistributors::centeredOrbitalsOverlapDistributor_
     = nullptr;
 

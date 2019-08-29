@@ -15,14 +15,14 @@
 
 namespace mgmol_tools
 {
-void write1d(hid_t file_id, const std::string& datasetname, std::vector<int>& data,
-    size_t length);
-void write2d(hid_t file_id, const std::string& datasetname, std::vector<int>& data,
-    size_t* dims);
+void write1d(hid_t file_id, const std::string& datasetname,
+    std::vector<int>& data, size_t length);
+void write2d(hid_t file_id, const std::string& datasetname,
+    std::vector<int>& data, size_t* dims);
 void write2d(hid_t file_id, const std::string& datasetname,
     std::vector<unsigned short>& data, size_t* dims);
-void write2d(hid_t file_id, const std::string& datasetname, std::vector<double>& data,
-    size_t* dims);
+void write2d(hid_t file_id, const std::string& datasetname,
+    std::vector<double>& data, size_t* dims);
 void write2d(hid_t file_id, const std::string& datasetname,
     std::vector<std::string>& data, size_t* dims);
 

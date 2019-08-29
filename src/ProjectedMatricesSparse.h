@@ -135,8 +135,8 @@ public:
     void printGramMatrix2states(
         const int st1, const int st2, std::ostream& os) const;
 
-    void initializeGramMatrix(
-        const SquareLocalMatrices<MATDTYPE>& ss, const int orbitals_index) override
+    void initializeGramMatrix(const SquareLocalMatrices<MATDTYPE>& ss,
+        const int orbitals_index) override
     {
         assert(invS_ != NULL);
         MGmol_MPI& mmpi = *(MGmol_MPI::instance());
@@ -147,9 +147,15 @@ public:
         init_gram_matrix_tm_.stop();
     }
 
-    SquareLocalMatrices<MATDTYPE>& getLocalX() const override { return *localX_; }
+    SquareLocalMatrices<MATDTYPE>& getLocalX() const override
+    {
+        return *localX_;
+    }
 
-    SquareLocalMatrices<MATDTYPE>& getLocalT() const override { return *localT_; }
+    SquareLocalMatrices<MATDTYPE>& getLocalT() const override
+    {
+        return *localT_;
+    }
 
     void updateSubMatX() override
     {
@@ -185,7 +191,8 @@ public:
     // the local subdomain (locvars_) has been defined by calling
     // setupSparseRows(locvars_). NOTE: We restrict only to contributions
     // computed/ belonging in the local subdomain
-    void addMatrixElementSparseH(const int st1, const int st2, const double val) override
+    void addMatrixElementSparseH(
+        const int st1, const int st2, const double val) override
     {
         assert(sH_->n() == (int)locvars_.size());
 
@@ -196,7 +203,8 @@ public:
 
     // Add data from square local matrix (only contributions from functions
     // overlapping subdomain)
-    void addMatrixElementsSparseH(const SquareLocalMatrices<MATDTYPE>& slH) override
+    void addMatrixElementsSparseH(
+        const SquareLocalMatrices<MATDTYPE>& slH) override
     {
 
         Control& ct = *(Control::instance());
@@ -376,7 +384,8 @@ public:
         return rcond;
     }
 
-    double getTraceDiagProductWithInvS(std::vector<PROJMATDTYPE>& ddiag) override
+    double getTraceDiagProductWithInvS(
+        std::vector<PROJMATDTYPE>& ddiag) override
     {
         assert(invS_ != NULL);
         return (*invS_).getTraceDiagProductWithInvS(ddiag);

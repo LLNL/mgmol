@@ -178,7 +178,8 @@ template <class T>
 unsigned short SparseDistMatrix<T>::consolidation_number_ = 8;
 
 template <class T>
-RemoteTasksDistMatrix<T>** SparseDistMatrix<T>::def_rtasks_DistMatrix_ptr_ = nullptr;
+RemoteTasksDistMatrix<T>** SparseDistMatrix<T>::def_rtasks_DistMatrix_ptr_
+    = nullptr;
 
 template <class T>
 Timer SparseDistMatrix<T>::pSumToDistMatrix_tm_(
