@@ -722,7 +722,7 @@ void KBprojectorSparse::setProjIndices(const short dir)
     assert(dir >= 0 && dir < 3);
     assert(range_kbproj_ >= 0);
     assert(range_kbproj_ < 256);
-    assert(!isnan(kb_proj_start_index_[dir]));
+    assert(!std::isnan(kb_proj_start_index_[dir]));
 
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
