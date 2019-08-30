@@ -774,7 +774,7 @@ void NOLMOTransform::gatherTransformMat()
         else
             recvcounts[i] = max(0, nst_ * (nst_ - i * bsize_));
     }
-    for (int i = 0; i < recvcounts.size(); i++)
+    for (unsigned int i = 0; i < recvcounts.size(); i++)
     {
         assert(recvcounts[i] <= bsize_ * nst_);
         assert(recvcounts[i] >= 0);

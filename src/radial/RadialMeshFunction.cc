@@ -543,7 +543,7 @@ void RadialMeshFunction::printLocalPot(
 
     (*tfile) << "# " << name << " local pseudopotential, l=" << ll << endl;
 
-    for (short idx = 0; idx < x_.size(); idx += 3)
+    for (unsigned short idx = 0; idx < x_.size(); idx += 3)
     {
         (*tfile) << x_[idx] << "\t" << potloc[idx] << endl;
     }

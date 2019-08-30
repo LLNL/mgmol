@@ -25,7 +25,7 @@ protected:
 
 public:
     OrthoAndersonMix(const int m, const double beta, T& x)
-        : m_(m), x_(x), AndersonMix<T>(m, beta, x)
+        : AndersonMix<T>(m, beta, x), m_(m), x_(x)
     {
     }
 

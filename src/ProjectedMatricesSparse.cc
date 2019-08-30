@@ -119,7 +119,7 @@ ProjectedMatricesSparse::~ProjectedMatricesSparse()
     delete dm_;
     dm_ = nullptr;
     clearData();
-};
+}
 
 void ProjectedMatricesSparse::setup(
     const double kbt, const int nel, const vector<vector<int>>& global_indexes)

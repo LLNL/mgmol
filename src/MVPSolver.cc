@@ -49,9 +49,9 @@ MVPSolver<T>::MVPSolver(MPI_Comm comm, ostream& os, Ions& ions, Rho<T>* rho,
     const bool use_old_dm)
     : comm_(comm),
       os_(os),
-      ions_(ions),
       n_inner_steps_(n_inner_steps),
-      use_old_dm_(use_old_dm)
+      use_old_dm_(use_old_dm),
+      ions_(ions)
 {
     history_length_ = 2;
     eks_history_.resize(history_length_, 100000.);

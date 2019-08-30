@@ -75,7 +75,8 @@ void GridMaskMult::applyPrivate(
                 for (int iz = 0; iz < dim2; iz++)
                 {
                     // assert( iy2+iz< gu.grid().size()/subdivx_ );
-                    assert(offset + iy1 + iz < gu.grid().sizeg());
+                    assert(offset + iy1 + iz
+                           < static_cast<int>(gu.grid().sizeg()));
                     ppu[iz] *= (T)pmask[iz];
                 }
                 iy1 += incy1;

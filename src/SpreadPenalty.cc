@@ -48,7 +48,7 @@ void SpreadPenalty<T>::addResidual(T& phi, T& res, bool xlbomd)
     vector<float> factors;
     float max_spread2 = 0.;
     // float second_max_spread2=0.;
-    int gid_max_spread = -1;
+    // int gid_max_spread = -1;
     // int   gid_second_max_spread=-1;
 
     vector<int>::const_iterator gid_it = gids.begin();
@@ -60,7 +60,7 @@ void SpreadPenalty<T>::addResidual(T& phi, T& res, bool xlbomd)
             // second_max_spread2=max_spread2;
             max_spread2 = *it;
             // gid_second_max_spread=gid_max_spread;
-            gid_max_spread = *gid_it;
+            // gid_max_spread = *gid_it;
         }
 
         // Compute appropriate spread penalty factor for either localized XLBOMD
@@ -223,7 +223,7 @@ void SpreadPenalty<T>::computeAndAddResidualSpreadPenalty(
                         const float x2 = (cosx[ix] - cx0) * (cosx[ix] - cx0)
                                          + (sinx[ix] - sx0) * (sinx[ix] - sx0);
 
-                        for (int iy = 0; iy < dim[1]; iy++)
+                        for (unsigned int iy = 0; iy < dim[1]; iy++)
                         {
                             const float sy0
                                 = sin(coeffy * center_gid[1]) * alphay;
@@ -234,7 +234,7 @@ void SpreadPenalty<T>::computeAndAddResidualSpreadPenalty(
                                 = (cosy[iy] - cy0) * (cosy[iy] - cy0)
                                   + (siny[iy] - sy0) * (siny[iy] - sy0);
 
-                            for (int iz = 0; iz < dim[2]; iz++)
+                            for (unsigned int iz = 0; iz < dim[2]; iz++)
                             {
                                 const int index = ix * incx + iy * incy + iz;
                                 const float cz0

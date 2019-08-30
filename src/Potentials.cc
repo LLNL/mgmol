@@ -130,7 +130,7 @@ void Potentials::evalNormDeltaVtotRho(const vector<vector<RHODTYPE>>& rho)
 
     scf_dvrho_ = 0.;
 
-    for (short is = 0; is < rho.size(); is++)
+    for (unsigned short is = 0; is < rho.size(); is++)
         for (int idx = 0; idx < size_; idx++)
         {
             scf_dvrho_ += fabs((double)dv_[idx] * (double)rho[is][idx]);

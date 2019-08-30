@@ -155,7 +155,7 @@ void BlockVector<T>::allocate_storage()
             *ia = 1;
         }
         my_allocation_ = ii;
-        if (my_allocation_ >= class_storage_.size())
+        if (my_allocation_ >= static_cast<int>(class_storage_.size()))
         {
             cerr << "Number of allocated blocks: " << class_storage_.size()
                  << ", Cannot allocate another BlockVector!!!" << endl;
@@ -169,8 +169,8 @@ void BlockVector<T>::allocate_storage()
         (*MPIdata::sout) << "allocation in slot " << my_allocation_ << endl;
         (*MPIdata::sout) << "high water mark: " << high_water_mark << endl;
     }
-    assert(my_allocation_ < class_storage_.size());
-    assert(my_allocation_ < class_storage_.size());
+    assert(my_allocation_ < static_cast<int>(class_storage_.size()));
+    assert(my_allocation_ < static_cast<int>(class_storage_.size()));
     assert(my_allocation_ >= 0);
 
     if (allocated_size_storage_ < size_storage_)
@@ -219,17 +219,17 @@ void BlockVector<T>::setup(const BlockVector& bv)
 
     // set vect_
     vect_.resize(bv.vect_.size());
-    for (int i = 0; i < vect_.size(); i++)
+    for (unsigned int i = 0; i < vect_.size(); i++)
     {
-        assert(i * ld_ < size_storage_);
+        assert(i * ld_ < static_cast<unsigned int>(size_storage_));
         vect_[i] = storage_ + i * ld_;
     }
 }
 template <typename T>
 BlockVector<T>::BlockVector(const BlockVector<T>& bv, const bool copy_data)
-    : mygrid_(bv.mygrid_),
-      size_storage_instance_(bv.size_storage_instance_),
-      ld_instance_(bv.ld_instance_)
+    : size_storage_instance_(bv.size_storage_instance_),
+      ld_instance_(bv.ld_instance_),
+      mygrid_(bv.mygrid_)
 {
     n_instances_++;
 
@@ -255,7 +255,7 @@ BlockVector<T>& BlockVector<T>::operator=(const BlockVector<T>& bv)
 template <typename T>
 BlockVector<T>& BlockVector<T>::operator-=(const BlockVector<T>& src)
 {
-    for (int i = 0; i < vect_.size(); i++)
+    for (unsigned int i = 0; i < vect_.size(); i++)
     {
         T* vi             = vect_[i];
         const T* const si = src.vect_[i];
@@ -268,7 +268,7 @@ template <typename T>
 template <typename T2>
 void BlockVector<T>::assign(const pb::GridFuncVector<T2>& src)
 {
-    for (int i = 0; i < vect_.size(); i++)
+    for (unsigned int i = 0; i < vect_.size(); i++)
     {
         T* dest = vect_[i];
         src.getValues(i, dest);
@@ -331,8 +331,8 @@ void BlockVector<T>::initialize(
 template <typename T>
 double BlockVector<T>::dot(const int i, const int j, const short iloc) const
 {
-    assert(i < vect_.size());
-    assert(j < vect_.size());
+    assert(i < static_cast<int>(vect_.size()));
+    assert(j < static_cast<int>(vect_.size()));
     assert(iloc < subdivx_);
     assert(vect_[i] != 0);
     assert(vect_[j] != 0);
@@ -343,7 +343,7 @@ double BlockVector<T>::dot(const int i, const int j, const short iloc) const
 template <typename T>
 void BlockVector<T>::scal(const int i, const double alpha)
 {
-    assert(i < vect_.size());
+    assert(i < static_cast<int>(vect_.size()));
     assert(vect_[i] != 0);
 
     MPscal(ld_, alpha, vect_[i]);
@@ -358,7 +358,7 @@ void BlockVector<T>::scal(const double alpha)
 template <typename T>
 void BlockVector<T>::scal(const double alpha, const int i, const short iloc)
 {
-    assert(i < vect_.size());
+    assert(static_cast<unsigned int>(i) < vect_.size());
     assert(vect_[i] != 0);
 
     const int shift = iloc * locnumel_;
@@ -368,8 +368,8 @@ template <typename T>
 void BlockVector<T>::axpy(
     const double alpha, const int ix, const int iy, const short iloc)
 {
-    assert(ix < vect_.size());
-    assert(iy < vect_.size());
+    assert(static_cast<unsigned int>(ix) < vect_.size());
+    assert(static_cast<unsigned int>(iy) < vect_.size());
     assert(vect_[ix] != 0);
     assert(vect_[iy] != 0);
     assert(vect_[ix] != vect_[iy]);

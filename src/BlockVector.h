@@ -174,7 +174,7 @@ public:
     pb::GridFunc<T>& getVectorWithGhosts(const int i)
     {
         assert(data_wghosts_ != 0);
-        assert(i < vect_.size());
+        assert(i < static_cast<int>(vect_.size()));
 
         return data_wghosts_->func(i);
     }
@@ -184,7 +184,7 @@ public:
         assert(new_storage != 0 || vect_.size() == 0);
 
         storage_ = new_storage;
-        for (int i = 0; i < vect_.size(); i++)
+        for (unsigned int i = 0; i < vect_.size(); i++)
         {
             vect_[i] = &storage_[0] + i * ld_;
         }
@@ -208,13 +208,13 @@ public:
     void set_zero() { memset(storage_, 0, size_storage_ * sizeof(T)); }
     void set_zero(const int i, const short iloc)
     {
-        assert(i < vect_.size());
+        assert(i < static_cast<int>(vect_.size()));
         assert(iloc < subdivx_);
         memset(vect_[i] + iloc * locnumel_, 0, locnumel_ * sizeof(T));
     }
     void set_zero(const int i)
     {
-        assert(i < vect_.size());
+        assert(i < static_cast<int>(vect_.size()));
 
         for (short iloc = 0; iloc < subdivx_; iloc++)
             memset(vect_[i] + iloc * locnumel_, 0, locnumel_ * sizeof(T));

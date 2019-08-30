@@ -172,20 +172,21 @@ void MultipoleExpansion::get_dipole(const pb::GridFunc<RHODTYPE>& rho)
     Vector3D gpoint(start[0], start[1], start[2]);
     double dipole[3] = { 0., 0., 0. };
 
-    for (int ix = istart[0]; ix < nghosts + dim[0]; ix++)
+    for (int ix = istart[0]; ix < static_cast<int>(nghosts + dim[0]); ix++)
     {
 
         const int iix = ix * incx;
         gpoint[0]     = start[0] + hspacing[0] * ix - origin_[0];
 
-        for (int iy = istart[1]; iy < nghosts + dim[1]; iy++)
+        for (int iy = istart[1]; iy < static_cast<int>(nghosts + dim[1]); iy++)
         {
 
             const int iiy = iy * incy + iix;
             gpoint[1]     = start[1] + hspacing[1] * iy - origin_[1];
 
             const RHODTYPE* const prho = rho.uu(iiy);
-            for (int iz = istart[2]; iz < nghosts + dim[2]; iz++)
+            for (int iz = istart[2]; iz < static_cast<int>(nghosts + dim[2]);
+                 iz++)
             {
                 gpoint[2] = start[2] + hspacing[2] * iz - origin_[2];
 
@@ -245,20 +246,21 @@ void MultipoleExpansion::computeQuadrupole(const pb::GridFunc<RHODTYPE>& rho)
     Vector3D gpoint(start[0], start[1], start[2]);
     double quadrupole[6] = { 0., 0., 0., 0., 0., 0. };
 
-    for (int ix = istart[0]; ix < nghosts + dim[0]; ix++)
+    for (int ix = istart[0]; ix < static_cast<int>(nghosts + dim[0]); ix++)
     {
 
         const int iix = ix * incx;
         gpoint[0]     = start[0] + hspacing[0] * ix - origin_[0];
 
-        for (int iy = istart[1]; iy < nghosts + dim[1]; iy++)
+        for (int iy = istart[1]; iy < static_cast<int>(nghosts + dim[1]); iy++)
         {
 
             const int iiy = iy * incy + iix;
             gpoint[1]     = start[1] + hspacing[1] * iy - origin_[1];
 
             const RHODTYPE* const prho = rho.uu(iiy);
-            for (int iz = istart[2]; iz < nghosts + dim[2]; iz++)
+            for (int iz = istart[2]; iz < static_cast<int>(nghosts + dim[2]);
+                 iz++)
             {
                 gpoint[2] = start[2] + hspacing[2] * iz - origin_[2];
                 const double ri2
@@ -325,20 +327,21 @@ void MultipoleExpansion::resetOriginToChargeCenter(
     Vector3D gpoint(start[0], start[1], start[2]);
     double charge_center[3] = { 0., 0., 0. };
 
-    for (int ix = istart[0]; ix < nghosts + dim[0]; ix++)
+    for (int ix = istart[0]; ix < static_cast<int>(nghosts + dim[0]); ix++)
     {
 
         const int iix = ix * incx;
         gpoint[0]     = start[0] + hspacing[0] * ix;
 
-        for (int iy = istart[1]; iy < nghosts + dim[1]; iy++)
+        for (int iy = istart[1]; iy < static_cast<int>(nghosts + dim[1]); iy++)
         {
 
             const int iiy = iy * incy + iix;
             gpoint[1]     = start[1] + hspacing[1] * iy;
 
             const RHODTYPE* const prho = rho.uu(iiy);
-            for (int iz = istart[2]; iz < nghosts + dim[2]; iz++)
+            for (int iz = istart[2]; iz < static_cast<int>(nghosts + dim[2]);
+                 iz++)
             {
 
                 gpoint[2] = start[2] + hspacing[2] * iz;

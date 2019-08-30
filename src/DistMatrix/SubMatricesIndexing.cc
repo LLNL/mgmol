@@ -263,8 +263,8 @@ SubMatricesIndexing<T>::SubMatricesIndexing(
                     // cout<<"PE:"<<mype_<<", (i,j)=("<<i<<","<<j<<")"<<endl;
                     // cout<<"PE:"<<mype_<<",
                     // buf_my_val["<<ii/2<<"]="<<buf_my_val[ii/2]<<endl;
-                    assert(
-                        colori + nlocal * colorj < vector_indexes_[im].size());
+                    assert(static_cast<unsigned int>(colori + nlocal * colorj)
+                           < vector_indexes_[im].size());
                     vector_indexes_[im][colori + nlocal * colorj] = ii;
                 }
             }

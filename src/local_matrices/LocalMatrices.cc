@@ -16,7 +16,7 @@ using namespace std;
 
 template <class T>
 LocalMatrices<T>::LocalMatrices(const short subdiv, const int m, const int n)
-    : subdiv_(subdiv), m_(m), n_(n)
+    : m_(m), n_(n), subdiv_(subdiv)
 {
     assert(m >= 0);
     assert(n >= 0);
@@ -41,7 +41,7 @@ LocalMatrices<T>::LocalMatrices(const short subdiv, const int m, const int n)
 
 template <class T>
 LocalMatrices<T>::LocalMatrices(const LocalMatrices& mat)
-    : subdiv_(mat.subdiv_), m_(mat.m_), n_(mat.n_)
+    : m_(mat.m_), n_(mat.n_), subdiv_(mat.subdiv_)
 {
     storage_size_ = mat.storage_size_;
 

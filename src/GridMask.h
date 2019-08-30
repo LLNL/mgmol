@@ -182,7 +182,7 @@ public:
         const int incx1   = gu.grid().inc(0);
         const int subdim0 = subdim0_[level];
         const int offset  = (shift + subdim0 * iloc) * incx1;
-        assert(offset + incx1 * subdim0 < gu.grid().sizeg());
+        assert(offset + incx1 * subdim0 < static_cast<int>(gu.grid().sizeg()));
 
         memset(gu.uu() + offset, 0, incx1 * subdim0 * sizeof(T));
     }

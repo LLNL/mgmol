@@ -291,17 +291,17 @@ void Grid::getSinCosFunctions(std::vector<T>& sinx, std::vector<T>& siny,
     const int yoff = istart_[1];
     const int zoff = istart_[2];
 
-    for (int i = 0; i < dim_[0]; i++)
+    for (unsigned int i = 0; i < dim_[0]; i++)
         sinx[i] = std::sin(T(xoff + i) * hhx) * alphax;
-    for (int i = 0; i < dim_[0]; i++)
+    for (unsigned int i = 0; i < dim_[0]; i++)
         cosx[i] = std::cos(T(xoff + i) * hhx) * alphax;
-    for (int i = 0; i < dim_[1]; i++)
+    for (unsigned int i = 0; i < dim_[1]; i++)
         siny[i] = std::sin(T(yoff + i) * hhy) * alphay;
-    for (int i = 0; i < dim_[1]; i++)
+    for (unsigned int i = 0; i < dim_[1]; i++)
         cosy[i] = std::cos(T(yoff + i) * hhy) * alphay;
-    for (int i = 0; i < dim_[2]; i++)
+    for (unsigned int i = 0; i < dim_[2]; i++)
         sinz[i] = std::sin(T(zoff + i) * hhz) * alphaz;
-    for (int i = 0; i < dim_[2]; i++)
+    for (unsigned int i = 0; i < dim_[2]; i++)
         cosz[i] = std::cos(T(zoff + i) * hhz) * alphaz;
 }
 
@@ -330,7 +330,7 @@ double Grid::integralOverMesh(const double* const func) const
 
     double value = 0.;
 
-    for (int idx = 0; idx < size_; idx++)
+    for (unsigned int idx = 0; idx < size_; idx++)
     {
         value += func[idx];
     }

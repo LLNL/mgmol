@@ -177,7 +177,8 @@ void FunctionsPacking::initOrbiOverlapLocal(LocalizationRegions* lrs,
 
     const vector<int>& local_gids(lrs->getOverlapGids());
 
-    assert(orbi_overlap.dimension() == local_gids.size());
+    assert(static_cast<unsigned int>(orbi_overlap.dimension())
+           == local_gids.size());
 
     // Initialization loop for orbi_overlap over all the states
     for (vector<int>::const_iterator it1 = local_gids.begin();

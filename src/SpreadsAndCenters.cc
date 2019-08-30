@@ -59,7 +59,7 @@ Vector3D SpreadsAndCenters<T>::computeCenter(const int index) const
 template <class T>
 double SpreadsAndCenters<T>::computeSpread2(int i) const
 {
-    assert(i >= 0 & i < ngids_);
+    assert((i >= 0) && (i < ngids_));
     return computeSpread2(i, 0) + computeSpread2(i, 1) + computeSpread2(i, 2);
 }
 

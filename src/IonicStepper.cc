@@ -19,7 +19,7 @@ using namespace std;
 
 IonicStepper::IonicStepper(const double dt, const std::vector<short>& atmove,
     std::vector<double>& tau0, std::vector<double>& taup)
-    : tau0_(tau0), taup_(taup), atmove_(atmove)
+    : atmove_(atmove), tau0_(tau0), taup_(taup)
 {
     assert(3 * atmove.size() == tau0.size());
     assert(taup.size() == tau0.size());
@@ -281,7 +281,7 @@ int IonicStepper::writeRandomStates(HDFrestart& h5f_file,
         create = true;
     }
 
-    herr_t status = status = H5Dwrite(
+    herr_t status = H5Dwrite(
         dataset_id, H5T_NATIVE_USHORT, H5S_ALL, H5S_ALL, H5P_DEFAULT, &data[0]);
 
     if (status < 0)

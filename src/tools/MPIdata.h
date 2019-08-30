@@ -24,7 +24,7 @@ extern int mype; // rank of this process
 extern bool onpe0;
 extern std::ostream* sout;
 extern std::ostream* serr;
-};
+}
 using namespace MPIdata;
 
 #else

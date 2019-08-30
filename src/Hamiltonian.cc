@@ -23,7 +23,7 @@ Hamiltonian<T>::Hamiltonian()
     lapOper_ = nullptr;
     hlphi_   = nullptr;
     pot_     = new Potentials();
-};
+}
 
 template <class T>
 Hamiltonian<T>::~Hamiltonian()

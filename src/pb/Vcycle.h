@@ -57,9 +57,9 @@ int Vcycle(T1& A, T2& x, const GridFunc<T3>& rhs, const short cogr,
         = ((!(level_grid.dim(0)
                & 1)) // cannot coarsen if mesh not divisible by 2
             && (!(level_grid.dim(1) & 1)) && (!(level_grid.dim(2) & 1))
-            && (level_grid.dim(0) >= 2 * nghosts)
-            && (level_grid.dim(1) >= 2 * nghosts)
-            && (level_grid.dim(2) >= 2 * nghosts));
+            && (static_cast<int>(level_grid.dim(0)) >= 2 * nghosts)
+            && (static_cast<int>(level_grid.dim(1)) >= 2 * nghosts)
+            && (static_cast<int>(level_grid.dim(2)) >= 2 * nghosts));
 #if VCYCLE_DEBUG
     if (level_grid.mype_env().onpe0())
         cout << "Vcycle: flag_coarsen=" << flag_coarsen << endl;

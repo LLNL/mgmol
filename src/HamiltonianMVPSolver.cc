@@ -44,8 +44,8 @@ HamiltonianMVPSolver<T1, T2, T3, T4>::HamiltonianMVPSolver(MPI_Comm comm,
     const bool try_shorter_intervals)
     : comm_(comm),
       os_(os),
-      ions_(ions),
       n_inner_steps_(n_inner_steps),
+      ions_(ions),
       try_shorter_intervals_(try_shorter_intervals)
 {
     assert(n_inner_steps > 0);

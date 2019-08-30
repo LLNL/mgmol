@@ -57,7 +57,7 @@ Rho<T>::Rho()
 
     assert(nspin_ == 1 || nspin_ == 2);
     assert(myspin_ == 0 || myspin_ == 1);
-};
+}
 
 template <class T>
 void Rho<T>::setup(const OrbitalsType orbitals_type,
@@ -622,7 +622,8 @@ void Rho<T>::computeRho(T& orbitals, ProjectedMatricesInterface& proj_matrices)
 #else
         dm_ = proj_matrices.dm();
 #endif
-        if (dynamic_cast<LocGridOrbitals*>(&orbitals))
+        // if (dynamic_cast<LocGridOrbitals*>(&orbitals)) but it
+        if (std::is_same<T, LocGridOrbitals>::value)
         {
             SquareLocalMatrices<MATDTYPE>& localX(
                 (orbitals.projMatrices())->getLocalX());

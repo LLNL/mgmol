@@ -84,28 +84,22 @@ void MDfiles::createSnapshotDir(const int mdstep, string& md_print_dir)
     // sprintf(extension, "%d", mdstep);
 
     md_print_dir = ct.md_print_filename;
-    short len    = 5;
     if (mdstep < 10000)
     {
         md_print_dir.append("0");
-        len = 4;
     }
     if (mdstep < 1000)
     {
         md_print_dir.append("0");
-        len = 3;
     }
     if (mdstep < 100)
     {
         md_print_dir.append("0");
-        len = 2;
     }
     if (mdstep < 10)
     {
         md_print_dir.append("0");
-        len = 1;
     }
-    // md_print_dir.append(extension,len);
     md_print_dir.append(extension.str());
 
     if (onpe0)

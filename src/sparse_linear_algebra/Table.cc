@@ -183,8 +183,9 @@ int Table::insert(const vector<int>& keys)
     //  insert_tm_.start();
 
     // reallocate storage if needed
-    const int diff
-        = keys.size() > (capacity_ - size_) ? (capacity_ - size_) : 0;
+    const int diff = static_cast<int>(keys.size()) > (capacity_ - size_)
+                         ? (capacity_ - size_)
+                         : 0;
     std::vector<int>::const_iterator key;
     if (diff)
     {

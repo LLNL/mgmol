@@ -75,7 +75,7 @@ public:
     }
     int getRemoteDoubleIndex(const int i) const
     {
-        assert(i < remote_double_indexes_.size());
+        assert(i < static_cast<int>(remote_double_indexes_.size()));
         return remote_double_indexes_[i];
     }
     int getVectorIndex(const int imat, const int index) const

@@ -371,7 +371,7 @@ public:
     {
         if (myrow_ == 0 && mycol_ == 0)
         {
-            assert(v.size() <= size_);
+            assert(v.size() <= static_cast<unsigned int>(size_));
             memcpy(val_.data(), v.data(), v.size() * sizeof(T));
         }
     }

@@ -74,10 +74,10 @@ public:
         std::array<double, 3> botMeshCorner,
         std::array<double, 3> topMeshCorner, bool harmonics,
         std::function<double(double)> const& Func)
-        : atomicCenter_(atomicCenter),
+        : harmonics_(harmonics),
+          atomicCenter_(atomicCenter),
           botMeshCorner_(botMeshCorner),
-          topMeshCorner_(topMeshCorner),
-          harmonics_(harmonics)
+          topMeshCorner_(topMeshCorner)
     {
         convNumPts_    = 2 * numExtraPts_ + 1;
         coarNumPts_[0] = std::round((topMeshCorner_[0] - botMeshCorner_[0])

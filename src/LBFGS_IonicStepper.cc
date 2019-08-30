@@ -86,7 +86,7 @@ LBFGS_IonicStepper::LBFGS_IonicStepper(const double dt,
     //(*MPIdata::sout)<<"gndofs_="<<gndofs_<<", m_="<<m_<<endl;
     assert(gndofs_ > 0);
     assert(m_ > 0);
-};
+}
 
 int LBFGS_IonicStepper::writeDoubleAtt(hid_t dataset_id) const
 {

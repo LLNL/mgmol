@@ -37,7 +37,6 @@ BOOST_AUTO_TEST_CASE(hdf5)
     hsize_t offset[2];
     hid_t plist_id; /* property list identifier */
     int i;
-    herr_t status;
 
     /*
      * MPI variables
@@ -124,14 +123,14 @@ BOOST_AUTO_TEST_CASE(hdf5)
      * Select hyperslab in the file.
      */
     filespace = H5Dget_space(dset_id);
-    status    = H5Sselect_hyperslab(
+    H5Sselect_hyperslab(
         filespace, H5S_SELECT_SET, offset, stride, count, block);
 
     /*
      * Initialize data buffer
      */
     data = (int*)malloc(sizeof(int) * chunk_dims[0] * chunk_dims[1]);
-    for (i = 0; i < (int)chunk_dims[0] * chunk_dims[1]; i++)
+    for (i = 0; i < static_cast<int>(chunk_dims[0] * chunk_dims[1]); i++)
     {
         data[i] = mpi_rank + 1;
     }
@@ -142,8 +141,7 @@ BOOST_AUTO_TEST_CASE(hdf5)
     plist_id = H5Pcreate(H5P_DATASET_XFER);
     H5Pset_dxpl_mpio(plist_id, H5FD_MPIO_COLLECTIVE);
 
-    status = H5Dwrite(
-        dset_id, H5T_NATIVE_INT, memspace, filespace, plist_id, data);
+    H5Dwrite(dset_id, H5T_NATIVE_INT, memspace, filespace, plist_id, data);
     free(data);
 
     /*

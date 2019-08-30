@@ -163,10 +163,10 @@ void KBprojectorSparse::allocateProjectors(const short iloc, const int icount)
     // projector may not overlap with all local patches, so add empty
     // vector in slots associated with smaller iloc if they have not been
     // filled
-    while (projectors_storage_.size() < iloc)
+    while (static_cast<int>(projectors_storage_.size()) < iloc)
         projectors_storage_.push_back(std::vector<KBPROJDTYPE>(0));
     projectors_storage_.push_back(std::vector<KBPROJDTYPE>(nprojs * icount));
-    assert(projectors_storage_.size() == (iloc + 1));
+    assert(static_cast<int>(projectors_storage_.size()) == (iloc + 1));
 
     KBPROJDTYPE* pstorage(&projectors_storage_[iloc][0]);
 
@@ -894,7 +894,7 @@ void KBprojectorSparse::axpyKetT(
     std::vector<const KBPROJDTYPE*> projectors;
     getProjectors(iloc, projectors);
 
-    for (short i = 0; i < alpha.size(); i++)
+    for (unsigned short i = 0; i < alpha.size(); i++)
     {
         MPaxpy(size_nl, alpha[i], projectors[i], loc_work_proj);
     }

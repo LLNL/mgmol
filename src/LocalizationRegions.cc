@@ -50,7 +50,7 @@ void LocalizationRegions::clearOldCenters()
     if (onpe0 && ct.verbose > 3)
         (*MPIdata::sout) << "LocalizationRegions::clearOldCenters()" << endl;
 
-    for (int i = 0; i < old_centers_.size(); i++)
+    for (unsigned int i = 0; i < old_centers_.size(); i++)
     {
         old_centers_[i].clear();
     }
@@ -126,7 +126,7 @@ void LocalizationRegions::extrapolateCentersLinear(
         d2 -= d1;
         double dev = length(d2);
 
-        for (int i = 0; i < old_centers_.size() - 2; i++)
+        for (unsigned int i = 0; i < old_centers_.size() - 2; i++)
         {
             *it_old[old_centers_.size() - 1 - i]
                 = *it_old[old_centers_.size() - 2 - i];
@@ -148,13 +148,14 @@ void LocalizationRegions::extrapolateCentersLinear(
             *it_old[0] = it->center;
         }
 
-        for (int i = 0; i < old_centers_.size(); i++)
+        for (unsigned int i = 0; i < old_centers_.size(); i++)
         {
             ++it_old[i];
         }
     }
 
-    if (num_extrapolations_ < old_centers_.size()) num_extrapolations_++;
+    if (num_extrapolations_ < static_cast<int>(old_centers_.size()))
+        num_extrapolations_++;
 
     if (move_centers)
     {
@@ -241,7 +242,7 @@ void LocalizationRegions::extrapolateCentersVerlet(
         // extrapolation)
         *it_old[1] = it->center;
 
-        for (int i = 0; i < old_centers_.size(); i++)
+        for (unsigned int i = 0; i < old_centers_.size(); i++)
         {
             ++it_old[i];
         }
@@ -298,7 +299,7 @@ void LocalizationRegions::resetOldCenters()
     if (onpe0 && ct.verbose > 1)
         (*MPIdata::sout) << "LocalizationRegions::resetOldCenters()..." << endl;
 
-    for (int i = 0; i < old_centers_.size(); i++)
+    for (unsigned int i = 0; i < old_centers_.size(); i++)
     {
         old_centers_[i].clear();
     }
@@ -306,7 +307,7 @@ void LocalizationRegions::resetOldCenters()
     for (vector<LRData>::const_iterator it = overlap_regions_.begin();
          it != overlap_regions_.end(); ++it)
     {
-        for (int i = 0; i < old_centers_.size(); i++)
+        for (unsigned int i = 0; i < old_centers_.size(); i++)
         {
             old_centers_[i].push_back(it->center);
         }
@@ -1318,7 +1319,7 @@ void LocalizationRegions::updateOverlapRegions()
     vector<vector<Vector3D>> ocm;
     vector<Vector3D> shifts;
 
-    for (int i = 0; i < old_centers_.size(); i++)
+    for (unsigned int i = 0; i < old_centers_.size(); i++)
     {
         oc.push_back(old_centers_[i]);
         old_centers_[i].clear();
@@ -1335,7 +1336,7 @@ void LocalizationRegions::updateOverlapRegions()
 
         if (ovlps)
         {
-            for (int i = 0; i < old_centers_.size(); i++)
+            for (unsigned int i = 0; i < old_centers_.size(); i++)
             {
                 old_centers_[i].push_back(oc[i][pos]);
             }
@@ -1352,7 +1353,7 @@ void LocalizationRegions::updateOverlapRegions()
         overlap_regions_.push_back(*it);
     }
 
-    for (int i = 0; i < old_centers_.size(); i++)
+    for (unsigned int i = 0; i < old_centers_.size(); i++)
     {
         for (vector<Vector3D>::const_iterator itc = oc[i].begin() + init_size;
              itc != oc[i].end(); ++itc)
@@ -1415,7 +1416,7 @@ void LocalizationRegions::augmentOverlapRegions(const short dir,
     vector<Vector3D>::iterator it;
 
     /* pack old centers */
-    for (int i = 0; i < old_centers_.size(); i++)
+    for (unsigned int i = 0; i < old_centers_.size(); i++)
     {
         for (it = old_centers_[i].begin(); it != old_centers_[i].end(); it++)
         {
@@ -1460,9 +1461,10 @@ void LocalizationRegions::augmentOverlapRegions(const short dir,
     const int offset        = (nrecv + 1) * sizeof(int) + nrecv * sizeof(float);
     const int padding       = offset % sizeof(double);
     double* const recv_centers = (double*)(rbuf + offset + padding);
-    assert(offset + padding + 6 * nrecv * sizeof(double) <= rsiz);
-    double* old_centers[old_centers_.size()];
-    for (int i = 0; i < old_centers_.size(); i++)
+    assert(offset + padding + 6 * nrecv * sizeof(double)
+           <= static_cast<unsigned int>(rsiz));
+    std::vector<double*> old_centers(old_centers_.size());
+    for (unsigned int i = 0; i < old_centers_.size(); i++)
     {
         old_centers[i]
             = (double*)(rbuf + offset + padding
@@ -1484,7 +1486,8 @@ void LocalizationRegions::augmentOverlapRegions(const short dir,
 
         // include potentially new overlap
         const int idx = 3 * i;
-        assert(offset + padding + (idx + 2) * sizeof(double) < rsiz);
+        assert(offset + padding + (idx + 2) * sizeof(double)
+               < static_cast<unsigned int>(rsiz));
         Vector3D region_center(
             recv_centers[idx], recv_centers[idx + 1], recv_centers[idx + 2]);
         LRData region;
@@ -1496,11 +1499,11 @@ void LocalizationRegions::augmentOverlapRegions(const short dir,
 
         /* update old centers */
         vector<Vector3D> oc;
-        for (int i = 0; i < old_centers_.size(); i++)
+        for (unsigned int i = 0; i < old_centers_.size(); i++)
         {
             assert(offset + padding + 3 * (i + 1) * nrecv * sizeof(double)
                        + (idx + 2) * sizeof(double)
-                   < rsiz);
+                   < static_cast<unsigned int>(rsiz));
             oc.push_back(Vector3D(old_centers[i][idx], old_centers[i][idx + 1],
                 old_centers[i][idx + 2]));
             if (overlaps) old_centers_[i].push_back(oc[i]);
@@ -1735,7 +1738,7 @@ void LocalizationRegions::setupOldCenters(HDFrestart& h5_file)
     h5_file.readGidsList(gids);
 
     map<int, int> gids_map;
-    for (int i = 0; i < gids.size(); i++)
+    for (unsigned int i = 0; i < gids.size(); i++)
     {
         gids_map[gids[i]] = i;
     }
@@ -1757,7 +1760,7 @@ void LocalizationRegions::setupOldCenters(HDFrestart& h5_file)
 
         int idx;
         int gid;
-        for (int j = 0; j < overlap_regions_.size(); j++)
+        for (unsigned int j = 0; j < overlap_regions_.size(); j++)
         {
             gid = overlap_regions_[j].gid[0];
             idx = gids_map[gid];

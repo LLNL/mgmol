@@ -30,9 +30,9 @@ MD_IonicStepper::MD_IonicStepper(const double dt, vector<short>& atmove,
     vector<double>& fion, const vector<double>& pmass,
     vector<unsigned short>& rand_states)
     : IonicStepper(dt, atmove, tau0, taup),
+      taum_(taum),
       pmass_(pmass),
       fion_(fion),
-      taum_(taum),
       rand_states_(rand_states)
 {
     assert(3 * pmass.size() == tau0.size());
@@ -51,7 +51,7 @@ MD_IonicStepper::MD_IonicStepper(const double dt, vector<short>& atmove,
     thtime_  = -1.;
     thwidth_ = -1.;
     gamma_   = -1.;
-};
+}
 
 void MD_IonicStepper::setThermostat(const int ttherm, const double tkel,
     const double thtime, const double thwidth, const int nconstraints)

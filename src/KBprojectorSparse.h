@@ -86,9 +86,9 @@ class KBprojectorSparse : public KBprojector
         const short iloc, const short l, const short p, const short m) const
     {
         assert(iloc < subdivx_);
-        assert(l < ptr_projector_[iloc].size());
-        assert(p < ptr_projector_[iloc][l].size());
-        assert(m < ptr_projector_[iloc][l][p].size());
+        assert(l < static_cast<int>(ptr_projector_[iloc].size()));
+        assert(p < static_cast<int>(ptr_projector_[iloc][l].size()));
+        assert(m < static_cast<int>(ptr_projector_[iloc][l][p].size()));
 
         return ptr_projector_[iloc][l][p][m];
     }
@@ -96,9 +96,9 @@ class KBprojectorSparse : public KBprojector
         const short iloc, const short l, const short p, const short m) const
     {
         assert(iloc < subdivx_);
-        assert(l < ptr_projector_[iloc].size());
-        assert(p < ptr_projector_[iloc][l].size());
-        assert(m < ptr_projector_[iloc][l][p].size());
+        assert(l < static_cast<int>(ptr_projector_[iloc].size()));
+        assert(p < static_cast<int>(ptr_projector_[iloc][l].size()));
+        assert(m < static_cast<int>(ptr_projector_[iloc][l][p].size()));
         assert(omp_get_thread_num() < work_nlindex_.size());
 
         return MPdot(size_nl_[iloc], &work_nlindex_[omp_get_thread_num()][0],

@@ -56,7 +56,7 @@ FIRE_IonicStepper::FIRE_IonicStepper(const double dt,
 
     for (int i = 0; i < (int)pmass.size(); i++)
         assert(pmass[i] > 0.);
-};
+}
 
 int FIRE_IonicStepper::init(HDFrestart& h5f_file)
 {

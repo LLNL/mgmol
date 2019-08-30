@@ -1358,7 +1358,7 @@ int Control::checkNLrange()
          ++it)
     {
         for (short i = 0; i < 3; i++)
-            if (it->dim_nl() > ngpts_[i])
+            if (it->dim_nl() > static_cast<int>(ngpts_[i]))
             {
                 cerr << "WARNING: Size of cell not large enough for Species "
                      << it->name() << " in direction " << i << endl;
@@ -1418,7 +1418,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
 
             pot_filenames_
                 = vm["Potentials.pseudopotential"].as<vector<string>>();
-            for (short i = 0; i < pot_filenames_.size(); i++)
+            for (unsigned short i = 0; i < pot_filenames_.size(); i++)
                 pseudopot_flags_.push_back(filter_flag);
         }
 
@@ -1428,7 +1428,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
             std::vector<std::string> pot_filenames
                 = vm["Potentials.external"].as<vector<string>>();
 
-            for (short i = 0; i < pot_filenames.size(); i++)
+            for (unsigned short i = 0; i < pot_filenames.size(); i++)
             {
                 pot_filenames_.push_back(pot_filenames[i]);
                 pseudopot_flags_.push_back(bin_flag);
