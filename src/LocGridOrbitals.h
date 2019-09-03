@@ -207,7 +207,7 @@ public:
         ProjectedMatricesInterface* proj_matrices, MasksSet* masks,
         MasksSet* corrmasks, const bool copy_data = true);
 
-    ~LocGridOrbitals();
+    virtual ~LocGridOrbitals();
 
     static void printTimers(std::ostream& os);
 
@@ -425,8 +425,8 @@ public:
     int getGlobalIndex(const short iloc, const short color) const
     {
         assert(overlapping_gids_.size() > 0);
-        assert(iloc < overlapping_gids_.size());
-        assert(color < overlapping_gids_[iloc].size());
+        assert(iloc < static_cast<int>(overlapping_gids_.size()));
+        assert(color < static_cast<int>(overlapping_gids_[iloc].size()));
         return overlapping_gids_[iloc][color];
     }
     int getColor(const int gid) const { return pack_->getColor(gid); }

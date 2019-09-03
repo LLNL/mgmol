@@ -86,7 +86,7 @@ SparseDistMatrix<T>::SparseDistMatrix(MPI_Comm comm, DistMatrix<T>& mat,
     if (target_nb_tasks <= 0) target_nb_tasks = npes_; // default
 
     setPartitioning(target_nb_tasks);
-};
+}
 
 template <class T>
 SparseDistMatrix<T>::SparseDistMatrix(MPI_Comm comm, DistMatrix<T>& mat)
@@ -128,7 +128,7 @@ SparseDistMatrix<T>::SparseDistMatrix(MPI_Comm comm, DistMatrix<T>& mat)
     if (target_nb_tasks <= 0) target_nb_tasks = npes_; // default
 
     setPartitioning(target_nb_tasks);
-};
+}
 
 template <class T>
 SparseDistMatrix<T>::SparseDistMatrix(const SparseDistMatrix<T>& spdistmat)
@@ -486,7 +486,8 @@ void SparseDistMatrix<double>::consolidateArray()
                 {
                     const int index = key * fraction_tasks + i - src_init;
                     // const int index=i;
-                    assert(index < index_and_val_.size());
+                    assert(static_cast<unsigned int>(index)
+                           < index_and_val_.size());
                     index_and_val_[index].push_back(precv_buffer[offset + j]);
                 }
                 offset += ndata;
@@ -666,7 +667,8 @@ void SparseDistMatrix<float>::consolidateArray()
                 {
                     const int index = key * fraction_tasks + i - src_init;
                     // const int index=i;
-                    assert(index < index_and_val_.size());
+                    assert(static_cast<unsigned int>(index)
+                           < index_and_val_.size());
                     index_and_val_[index].push_back(precv_buffer[offset + j]);
                 }
                 offset += ndata;
@@ -704,7 +706,6 @@ void SparseDistMatrix<T>::assign(const int size, const T* const val)
             const int i = (vi >> SHIFT);
             const int j = vi - (i << SHIFT);
 #ifndef NDEBUG
-            // cout<<"(i,j)=("<<i<<","<<j<<")"<<endl;
             const int mypr = mat_.myrow();
             const int mypc = mat_.mycol();
             const int pri  = mat_.pr(i);
@@ -716,8 +717,6 @@ void SparseDistMatrix<T>::assign(const int size, const T* const val)
                      << ", vv=" << vv << endl
                      << flush;
 #if USE_MPI
-                int errorcode;
-                // MPI_Abort( comm_, errorcode );
                 MPI_Barrier(comm_global_);
 #else
                 exit(2);
@@ -732,8 +731,6 @@ void SparseDistMatrix<T>::assign(const int size, const T* const val)
                      << ", vv=" << vv << endl
                      << flush;
 #if USE_MPI
-                int errorcode;
-                // MPI_Abort( comm_global_, errorcode );
                 MPI_Barrier(comm_global_);
 #else
                 exit(2);
@@ -1189,11 +1186,11 @@ void SparseDistMatrix<double>::sendRecvData()
 
             size_t size_index_and_val = index_and_val_[dst].size();
             assert(!(size_index_and_val % 2));
-            assert(size_index_and_val <= newsize);
+            assert(size_index_and_val <= static_cast<size_t>(newsize));
             if (size_index_and_val > 0)
                 memcpy(sbuf_val, &index_and_val_[dst][0],
                     size_index_and_val * sizeof(double));
-            if (size_index_and_val < newsize)
+            if (size_index_and_val < static_cast<size_t>(newsize))
             {
                 sbuf_val[size_index_and_val] = -1.;
             }
@@ -1264,7 +1261,7 @@ void SparseDistMatrix<double>::sendRecvData()
                 size_t size_index_and_val = index_and_val_[dst].size();
                 assert(!(size_index_and_val % 2));
                 assert(!(newsize % 2));
-                assert(size_index_and_val <= newsize);
+                assert(size_index_and_val <= static_cast<size_t>(newsize));
 
                 if (p % 2)
                 {
@@ -1284,7 +1281,7 @@ void SparseDistMatrix<double>::sendRecvData()
                 if (size_index_and_val > 0)
                     memcpy(&sbuf_val[0], &index_and_val_[dst][0],
                         size_index_and_val * sizeof(double));
-                if (size_index_and_val < newsize)
+                if (size_index_and_val < static_cast<size_t>(newsize))
                 {
                     sbuf_val[size_index_and_val] = -1.;
                 }
@@ -1394,11 +1391,11 @@ void SparseDistMatrix<float>::sendRecvData()
 
             size_t size_index_and_val = index_and_val_[dst].size();
             assert(!(size_index_and_val % 2));
-            assert(size_index_and_val <= newsize);
+            assert(size_index_and_val <= static_cast<size_t>(newsize));
             if (size_index_and_val > 0)
                 memcpy(sbuf_val, &index_and_val_[dst][0],
                     size_index_and_val * sizeof(float));
-            if (size_index_and_val < newsize)
+            if (size_index_and_val < static_cast<size_t>(newsize))
             {
                 sbuf_val[size_index_and_val] = -1.;
             }
@@ -1469,7 +1466,7 @@ void SparseDistMatrix<float>::sendRecvData()
                 size_t size_index_and_val = index_and_val_[dst].size();
                 assert(!(size_index_and_val % 2));
                 assert(!(newsize % 2));
-                assert(size_index_and_val <= newsize);
+                assert(size_index_and_val <= static_cast<size_t>(newsize));
 
                 if (p % 2)
                 {
@@ -1489,7 +1486,7 @@ void SparseDistMatrix<float>::sendRecvData()
                 if (size_index_and_val > 0)
                     memcpy(&sbuf_val[0], &index_and_val_[dst][0],
                         size_index_and_val * sizeof(float));
-                if (size_index_and_val < newsize)
+                if (size_index_and_val < static_cast<size_t>(newsize))
                 {
                     sbuf_val[size_index_and_val] = -1.;
                 }

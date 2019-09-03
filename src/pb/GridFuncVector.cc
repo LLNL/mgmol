@@ -432,9 +432,8 @@ void GridFuncVector<T>::finishNorthSouthComm()
                     }
                 }
             }
-            // cout<<"buf4_ptr-&comm_buf4[0]="<<buf4_ptr-&comm_buf4[0]<<endl;
-            // cout<<"sizeb="<<sizeb<<endl;
-            assert((buf4_ptr - &comm_buf4[0]) <= comm_buf4.size());
+            assert((buf4_ptr - &comm_buf4[0])
+                   <= static_cast<int>(comm_buf4.size()));
         }
 
         if (south_)
@@ -496,9 +495,8 @@ void GridFuncVector<T>::finishNorthSouthComm()
                     }
                 }
             }
-            // cout<<"buf3_ptr-&comm_buf3[0]="<<buf3_ptr-&comm_buf3[0]<<endl;
-            // cout<<"sizebuffer="<<sizebuffer<<endl;
-            assert((buf3_ptr - &comm_buf3[0]) <= comm_buf3.size());
+            assert((buf3_ptr - &comm_buf3[0])
+                   <= static_cast<int>(comm_buf3.size()));
         }
     }
     else
@@ -1038,13 +1036,13 @@ void GridFuncVector<T>::init_vect(const int k, T* vv, const char dis) const
 template <typename T>
 void GridFuncVector<T>::getValues(const int k, float* vv) const
 {
-    assert(k < functions_.size());
+    assert(k < static_cast<int>(functions_.size()));
     functions_[k]->getValues(vv);
 }
 template <typename T>
 void GridFuncVector<T>::getValues(const int k, double* vv) const
 {
-    assert(k < functions_.size());
+    assert(k < static_cast<int>(functions_.size()));
     functions_[k]->getValues(vv);
 }
 
@@ -1065,7 +1063,7 @@ void GridFuncVector<T>::communicateRemoteGids(
     {
         for (short iloc = 0; iloc < nsubdivx_; iloc++)
         {
-            if (color < gid_[iloc].size())
+            if (color < static_cast<int>(gid_[iloc].size()))
                 local_gids.push_back(gid_[iloc][color]);
             else
                 local_gids.push_back(-1);
@@ -1187,7 +1185,7 @@ void GridFuncVector<T>::trade_boundaries_colors(
                     const short rgid
                         = remote_gids_[SOUTH][nsubdivx_ * color + iloc];
                     const short k = gid2lid_[rgid];
-                    assert(k < functions_.size());
+                    assert(k < static_cast<int>(functions_.size()));
                     const T* uus = functions_[k]->uu(nghosts_ * (incy_ + 1));
                     *buf2_ptr    = (T)gid_[iloc][k];
                     buf2_ptr++;
@@ -1299,7 +1297,7 @@ void GridFuncVector<T>::trade_boundaries_colors(
             }
             // cout<<"buf4_ptr-&comm_buf4[0]="<<buf4_ptr-&comm_buf4[0]<<endl;
             // cout<<"sizeb="<<sizeb<<endl;
-            assert((buf4_ptr - &comm_buf4[0]) <= sizebuffer);
+            assert((buf4_ptr - &comm_buf4[0]) <= static_cast<int>(sizebuffer));
         }
 
         if (south_)
@@ -1363,7 +1361,7 @@ void GridFuncVector<T>::trade_boundaries_colors(
             }
             // cout<<"buf3_ptr-&comm_buf3[0]="<<buf3_ptr-&comm_buf3[0]<<endl;
             // cout<<"sizebuffer="<<sizebuffer<<endl;
-            assert((buf3_ptr - &comm_buf3[0]) <= sizebuffer);
+            assert((buf3_ptr - &comm_buf3[0]) <= static_cast<int>(sizebuffer));
         }
     }
     else
@@ -1397,7 +1395,7 @@ void GridFuncVector<T>::trade_boundaries_colors(
         const int sizebuffer = 1 + ncolors * up_down_size_;
         if (down_)
         {
-            assert(sizebuffer <= comm_buf3.size());
+            assert(sizebuffer <= static_cast<int>(comm_buf3.size()));
             grid_.mype_env().Irecv(
                 &comm_buf3[0], sizebuffer, DOWN, &req_up_down_[1]);
         }
@@ -1623,7 +1621,7 @@ void GridFuncVector<T>::trade_boundaries_colors(
                     const short k = gid2lid_[rgid];
                     *buf1_ptr     = (T)gid_[0][k];
                     buf1_ptr++;
-                    if (k < functions_.size())
+                    if (k < static_cast<int>(functions_.size()))
                     {
                         const T* const pu = functions_[k]->uu(initu);
                         memcpy(buf1_ptr, pu, east_west_size_data);
@@ -1655,7 +1653,7 @@ void GridFuncVector<T>::trade_boundaries_colors(
                     const short k = gid2lid_[rgid];
                     *buf2_ptr     = (T)gid_[nsubdivx_ - 1][k];
                     buf2_ptr++;
-                    if (k < functions_.size())
+                    if (k < static_cast<int>(functions_.size()))
                     {
                         const T* const pu = functions_[k]->uu(initu);
                         memcpy(buf2_ptr, pu, east_west_size_data);

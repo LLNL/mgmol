@@ -151,7 +151,7 @@ void Species::read_1species(const string& filename)
         {
             for (short l = 0; l < num_potentials_; l++)
             {
-                assert(l < multiplicity_.size());
+                assert(l < static_cast<int>(multiplicity_.size()));
                 if (l != llocal_)
                 {
                     string query;
@@ -163,12 +163,12 @@ void Species::read_1species(const string& filename)
                     assert(nproj > 0);
                     multiplicity_[ll] = nproj;
 
-                    assert(ll < ekb_.size());
+                    assert(ll < static_cast<int>(ekb_.size()));
 
                     ekb_[ll].resize(multiplicity_[ll]);
                     for (short p = 0; p < nproj; ++p)
                     {
-                        assert(p < ekb_[ll].size());
+                        assert(p < static_cast<int>(ekb_[ll].size()));
                         ss >> ekb_[ll][p];
                         cout << "Read ekb_[" << ll << "][" << p
                              << "]=" << ekb_[ll][p] << endl;
@@ -186,7 +186,7 @@ void Species::read_1species(const string& filename)
         {
             for (short l = 0; l < num_potentials_; l++)
             {
-                assert(l < multiplicity_.size());
+                assert(l < static_cast<int>(multiplicity_.size()));
                 if (l != llocal_)
                     multiplicity_[l] = 1;
                 else
@@ -406,7 +406,7 @@ void Species::print(ostream& os) const
 
 void Species::setKBcoeff(const short l, const short p, const double norm)
 {
-    assert(l < ekb_.size());
+    assert(l < static_cast<int>(ekb_.size()));
 
     ekb_[l][p] = norm;
     if (norm < 0.)
@@ -432,8 +432,8 @@ void Species::gauss_filter_kbp(
     const short l, const short p, const double rcut, const bool printFlag)
 {
     if (printFlag) (*MPIdata::sout) << "Filter non-local potential" << endl;
-    assert(l < kbp_.size());
-    assert(p < kbp_[l].size());
+    assert(l < static_cast<int>(kbp_.size()));
+    assert(p < static_cast<int>(kbp_[l].size()));
 
     kbp_[l][p].gauss_filter(rcut);
 }
@@ -652,7 +652,7 @@ void Species::initNonlocalMultiProjectorsPotentials(const char flag_filter,
             assert(multiplicity_[ll] > 0);
             for (short p = 0; p < multiplicity_[ll]; ++p)
             {
-                assert(ll < input_kbp_.size());
+                assert(ll < static_cast<int>(input_kbp_.size()));
 
                 const vector<double>& pot(input_kbp_[ll].y(p));
                 const vector<double>& rps(input_kbp_[ll].x());

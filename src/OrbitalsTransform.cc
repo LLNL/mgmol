@@ -16,7 +16,7 @@ using namespace std;
 
 OrbitalsTransform::OrbitalsTransform(
     const int nst, const Vector3D& origin, const Vector3D& ll)
-    : nst_(nst), origin_(origin), cell_(ll)
+    : nst_(nst), cell_(ll), origin_(origin)
 {
     assert(nst >= 0);
     assert(nst < 100000);
@@ -55,7 +55,7 @@ OrbitalsTransform::OrbitalsTransform(
 
     assert(lnst_ <= nst);
     assert(lnst_ >= 0);
-};
+}
 
 OrbitalsTransform::~OrbitalsTransform()
 {
@@ -158,7 +158,7 @@ Vector3D OrbitalsTransform::center(int i) const
 ////////////////////////////////////////////////////////////////////////////////
 double OrbitalsTransform::spread2(int i) const
 {
-    assert(i >= 0 & i < nst_);
+    assert((i >= 0) && (i < nst_));
     return spread2(i, 0) + spread2(i, 1) + spread2(i, 2);
 }
 
@@ -239,7 +239,7 @@ void OrbitalsTransform::distributeColumnsR(vector<vector<DISTMATDTYPE>>& vmm)
 
     // calculate number of elements to assign
     int count = bsize_ * nst_; // size of matrix block
-    if (vmm[0].size() < (mycol + 1) * bsize_ * nst_)
+    if (static_cast<int>(vmm[0].size()) < (mycol + 1) * bsize_ * nst_)
         count = vmm[0].size() - mycol * bsize_ * nst_;
     // cout<<"OrbitalsTransform::distributeColumnsR() -> assign "<<count<<"
     // elements"<<endl;
@@ -248,7 +248,7 @@ void OrbitalsTransform::distributeColumnsR(vector<vector<DISTMATDTYPE>>& vmm)
     {
         for (int i = 0; i < 6; i++)
         {
-            assert(vmm[i].size() > mycol * bsize_ * nst_);
+            assert(static_cast<int>(vmm[i].size()) > mycol * bsize_ * nst_);
             r_[i]->assign(&vmm[i][mycol * bsize_ * nst_], count);
         }
     }

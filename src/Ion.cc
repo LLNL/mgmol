@@ -41,7 +41,7 @@ Ion::Ion(const Species& species, const string& name, const double crds[3],
     _nlproj_gid += nProjectors();
 
     init(crds, velocity, lock);
-};
+}
 
 Ion::Ion(const Species& species, const string& name, const double crds[3],
     const double velocity[3], const unsigned int index,
@@ -119,7 +119,7 @@ void Ion::init(const double crds[3], const double velocity[3], const bool lock)
     rand_state_[0]      = root;
     rand_state_[1]      = root;
     rand_state_[2]      = rem;
-};
+}
 
 void Ion::setup()
 {

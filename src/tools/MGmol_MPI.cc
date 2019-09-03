@@ -15,6 +15,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <memory>
 #include <string.h>
 using namespace std;
 
@@ -1318,11 +1319,11 @@ int MGmol_MPI::allGatherV(vector<string>& sendbuf, vector<string>& recvbuf)
     int pos = 0;
     for (int i = 0; i < vcount; i++)
     {
-        char str[strLen[i] + 1];
+        std::unique_ptr<char[]> str(new char[strLen[i] + 1]);
         str[strLen[i]] = '\0';
-        memcpy(str, &recvdata[pos], strLen[i] * sizeof(char));
+        memcpy(str.get(), &recvdata[pos], strLen[i] * sizeof(char));
         string cstr;
-        cstr.assign(str);
+        cstr.assign(str.get());
         recvbuf.push_back(cstr);
         pos += strLen[i] * sizeof(char);
     }

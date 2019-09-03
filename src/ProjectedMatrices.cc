@@ -108,7 +108,7 @@ ProjectedMatrices::~ProjectedMatrices()
     }
 
     n_instances_--;
-};
+}
 
 void ProjectedMatrices::setup(
     const double kbt, const int nel, const vector<vector<int>>& global_indexes)
@@ -309,7 +309,7 @@ void ProjectedMatrices::updateDMwithSP2(const int iterative_index)
         // include all the indexes so that traces are computed for the whole
         // replicated matrix
         std::vector<int> ids(dim_);
-        for (int i = 0; i < dim_; i++)
+        for (unsigned int i = 0; i < dim_; i++)
             ids[i] = i;
         double buffer = 0.1;
         sp2.initializeLocalMat(theta, emin - buffer, emax + buffer, ids);
@@ -647,7 +647,7 @@ void ProjectedMatrices::printEigenvaluesEV(ostream& os) const
         os.setf(ios::right, ios::adjustfield);
         os.setf(ios::fixed, ios::floatfield);
         os << setprecision(3);
-        for (int i = 0; i < dim_; i++)
+        for (unsigned int i = 0; i < dim_; i++)
         {
             if ((i % 10) == 0) os << endl;
             os << setw(7) << RY2EV * eigenvalues_[i] << " ";
@@ -670,7 +670,7 @@ void ProjectedMatrices::printEigenvaluesHa(ostream& os) const
         os.setf(ios::right, ios::adjustfield);
         os.setf(ios::fixed, ios::floatfield);
         os << setprecision(3);
-        for (int i = 0; i < dim_; i++)
+        for (unsigned int i = 0; i < dim_; i++)
         {
             if ((i % 10) == 0) os << endl;
             os << setw(7) << 0.5 * eigenvalues_[i] << " ";
@@ -720,11 +720,11 @@ double ProjectedMatrices::computeChemicalPotentialAndOccupations(
 
     vector<DISTMATDTYPE> occ(dim_, 0.);
 
-    if (2 * dim_ <= nel)
+    if (2 * dim_ <= static_cast<unsigned int>(nel))
     {
         done = true;
         mu_  = mu2;
-        for (int i = 0; i < dim_; i++)
+        for (unsigned int i = 0; i < dim_; i++)
             occ[i] = 1.;
     }
 
@@ -832,7 +832,7 @@ void ProjectedMatrices::computeLoewdinTransform(
     mat.syev('v', 'l', eigenvalues, vect);
 
     vector<DISTMATDTYPE> diag_values(dim_);
-    for (int i = 0; i < dim_; i++)
+    for (unsigned int i = 0; i < dim_; i++)
         diag_values[i] = (DISTMATDTYPE)(1. / sqrt(eigenvalues[i]));
 
     dist_matrix::DistMatrix<DISTMATDTYPE> matP("P", dim_, dim_);
@@ -849,7 +849,7 @@ void ProjectedMatrices::computeLoewdinTransform(
     setGram2Id(orb_index);
 
     // transform DM to reflect Loewdin orthonormalization
-    for (int i = 0; i < dim_; i++)
+    for (unsigned int i = 0; i < dim_; i++)
         diag_values[i] = sqrt(eigenvalues[i]);
     dist_matrix::DistMatrix<DISTMATDTYPE> invLoewdin("invLoewdin", dim_, dim_);
     invLoewdin.clear();

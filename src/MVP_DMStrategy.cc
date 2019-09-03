@@ -25,15 +25,15 @@ MVP_DMStrategy<T>::MVP_DMStrategy(MPI_Comm comm, ostream& os, Ions& ions,
     Rho<T>* rho, Energy<T>* energy, Electrostatic* electrostat,
     MGmol<T>* mgmol_strategy, T* orbitals,
     ProjectedMatricesInterface* proj_matrices, const bool use_old_dm)
-    : comm_(comm),
+    : orbitals_(orbitals),
+      proj_matrices_(proj_matrices),
+      comm_(comm),
       os_(os),
       ions_(ions),
       rho_(rho),
       energy_(energy),
       electrostat_(electrostat),
       global_indexes_(orbitals->getOverlappingGids()),
-      orbitals_(orbitals),
-      proj_matrices_(proj_matrices),
       mgmol_strategy_(mgmol_strategy),
       use_old_dm_(use_old_dm)
 {

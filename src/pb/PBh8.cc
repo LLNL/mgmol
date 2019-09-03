@@ -44,7 +44,7 @@ void PBh8<T>::jacobi(GridFunc<T>& A, const GridFunc<T>& B, GridFunc<T>& W)
         = 1.5 * (1435. / 504.)
           * (PB<T>::inv_h2(0) + PB<T>::inv_h2(1) + PB<T>::inv_h2(2));
 
-    for (int j = 0; j < A.grid().sizeg(); j++)
+    for (unsigned int j = 0; j < A.grid().sizeg(); j++)
     {
         assert(e[j] > 0.);
         double uval = (double)u[j] - (1. / (c0 * (double)e[j])) * (double)v[j];

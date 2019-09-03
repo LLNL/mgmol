@@ -197,8 +197,6 @@ template <class T>
 void LinearSolverMatrix<T>::init(
     const VariableSizeMatrix<sparserow>& vsmat, const bool rescale)
 {
-    assert(&vsmat != NULL);
-
     const int n   = n_;
     const T dfact = 1.0e-2;
     /* begin */
@@ -297,8 +295,6 @@ template <class T>
 void LinearSolverMatrix<T>::initSquareMat(
     const VariableSizeMatrix<sparserow>& vsmat, const bool rescale)
 {
-    assert(&vsmat != NULL);
-
     const int n = n_;
     T dfact     = 1.0e-2;
     /* begin */

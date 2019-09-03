@@ -80,11 +80,11 @@ void Preconditioning<T>::clear()
     gf_rcoarse_.clear();
     gf_newv_.clear();
 
-    for (short l = 0; l < gfv_work_.size(); l++)
+    for (unsigned short l = 0; l < gfv_work_.size(); l++)
     {
         delete gfv_work_[l];
     }
-    for (short l = 0; l < gfv_rcoarse_.size(); l++)
+    for (unsigned short l = 0; l < gfv_rcoarse_.size(); l++)
     {
         delete gfv_rcoarse_[l];
         delete gfv_newv_[l];
@@ -317,7 +317,7 @@ void Preconditioning<T>::app_mask(
         else
         {
             int offset = (nghosts + dim0 * iloc) * incx;
-            assert(offset + lnumpt < lgrid.sizeg());
+            assert(offset + lnumpt < static_cast<int>(lgrid.sizeg()));
             T* pu = gu.uu() + offset;
             memset(pu, 0, lnumpt * sizeof(T));
         }

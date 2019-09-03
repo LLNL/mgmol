@@ -183,9 +183,8 @@ void MGmol<T>::wftransform(T* orbitals, T* work_orbitals, Ions& ions)
     Vector3D origin(mygrid.origin(0), mygrid.origin(1), mygrid.origin(2));
     Vector3D ll(mygrid.ll(0), mygrid.ll(1), mygrid.ll(2));
 
-    OrbitalsTransform* ot = nullptr;
-    MLWFTransform* mlwt   = nullptr;
-    NOLMOTransform* noot  = nullptr;
+    MLWFTransform* mlwt  = nullptr;
+    NOLMOTransform* noot = nullptr;
     if (numst > 0)
     {
         mlwt = new MLWFTransform(numst, origin, ll);
@@ -200,7 +199,6 @@ void MGmol<T>::wftransform(T* orbitals, T* work_orbitals, Ions& ions)
 
         if (ct.verbose > 1 || !ct.AtomsMove())
             mlwt->printCentersAndSpreads(os_);
-        ot = mlwt;
         if (ct.wannier_transform_type == 3)
         {
             if (onpe0) os_ << "NO orbitals centers and spread" << endl;
@@ -210,8 +208,6 @@ void MGmol<T>::wftransform(T* orbitals, T* work_orbitals, Ions& ions)
             get_NOLMO(*noot, *orbitals, *work_orbitals, dd, false);
             if (ct.verbose > 1 || !ct.AtomsMove())
                 noot->printCentersAndSpreads(os_);
-
-            ot = noot;
         }
     }
 

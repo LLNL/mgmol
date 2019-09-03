@@ -83,8 +83,8 @@ PEenv::PEenv(MPI_Comm comm, const int nx, const int ny, const int nz,
 #ifdef USE_MPI
     comm_active_ = comm_;
 
-    int mpirc = MPI_Comm_size(comm_, &n_mpi_tasks_);
-    mpirc     = MPI_Comm_rank(comm_, &mytask_);
+    MPI_Comm_size(comm_, &n_mpi_tasks_);
+    MPI_Comm_rank(comm_, &mytask_);
 
     if (mytask_ > 0) onpe0_ = false;
 
@@ -119,7 +119,7 @@ PEenv::PEenv(MPI_Comm comm, const int nx, const int ny, const int nz,
     {
         // create a unique color based on y and z coordinate in processor grid
         int color = n_mpi_tasks_dir_[2] * mytask_dir_[1] + mytask_dir_[2];
-        mpirc     = MPI_Comm_split(cart_comm_, color, mytask_dir_[0], &comm_x_);
+        MPI_Comm_split(cart_comm_, color, mytask_dir_[0], &comm_x_);
 
         int task = -1;
         if (mytask_dir_[0] == 0)
@@ -131,12 +131,12 @@ PEenv::PEenv(MPI_Comm comm, const int nx, const int ny, const int nz,
     {
         // create a unique color based on x and z coordinate in processor grid
         int color = n_mpi_tasks_dir_[2] * mytask_dir_[0] + mytask_dir_[2];
-        mpirc     = MPI_Comm_split(cart_comm_, color, mytask_dir_[1], &comm_y_);
+        MPI_Comm_split(cart_comm_, color, mytask_dir_[1], &comm_y_);
     }
     {
         // create a unique color based on x and y coordinate in processor grid
         int color = n_mpi_tasks_dir_[1] * mytask_dir_[0] + mytask_dir_[1];
-        mpirc     = MPI_Comm_split(cart_comm_, color, mytask_dir_[2], &comm_z_);
+        MPI_Comm_split(cart_comm_, color, mytask_dir_[2], &comm_z_);
     }
 
     MPI_Barrier(comm_);

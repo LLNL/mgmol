@@ -201,7 +201,7 @@ template <class T2>
 VariableSizeMatrix<T>::VariableSizeMatrix(
     const VariableSizeMatrix<T2>& A, const bool copy_table)
 {
-    typedef typename std::vector<T2*>::const_iterator const_T2vecIterator;
+    // typedef typename std::vector<T2*>::const_iterator const_T2vecIterator;
     n_      = A.n();
     nzmax_  = A.nzmax();
     totnnz_ = A.nnzmat();
@@ -313,7 +313,7 @@ void VariableSizeMatrix<T>::initializeMatrixElements(
     const vector<vector<int>>& global_indexes, const int numst,
     const double tol)
 {
-    assert(global_indexes.size() == ss.subdiv());
+    assert(static_cast<int>(global_indexes.size()) == ss.subdiv());
 
     short subdiv           = (short)global_indexes.size();
     short chromatic_number = (short)global_indexes[0].size();

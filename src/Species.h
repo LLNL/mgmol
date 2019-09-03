@@ -120,8 +120,8 @@ private:
     void assign_kbp(const short l, const short p, const std::vector<double>& x,
         const std::vector<double>& kbproj)
     {
-        assert(l < kbp_.size());
-        assert(p < kbp_[l].size());
+        assert(l < static_cast<int>(kbp_.size()));
+        assert(p < static_cast<int>(kbp_[l].size()));
         kbp_[l][p].assign(x, kbproj);
     }
 

@@ -25,14 +25,14 @@ template <class T1, class T2, class T3, class T4>
 HamiltonianMVP_DMStrategy<T1, T2, T3, T4>::HamiltonianMVP_DMStrategy(
     MPI_Comm comm, ostream& os, Ions& ions, Rho<T4>* rho, Energy<T4>* energy,
     Electrostatic* electrostat, MGmol<T4>* mgmol_strategy, T4* orbitals)
-    : comm_(comm),
+    : orbitals_(orbitals),
+      comm_(comm),
       os_(os),
       ions_(ions),
       rho_(rho),
       energy_(energy),
       electrostat_(electrostat),
       global_indexes_(orbitals->getOverlappingGids()),
-      orbitals_(orbitals),
       mgmol_strategy_(mgmol_strategy)
 {
     Control& ct = *(Control::instance());

@@ -527,12 +527,11 @@ double MLWFTransform::jade(int maxsweep, double tol)
 
 #ifdef SCALAPACK
             double in;
-            int mpirc;
 
-            in    = sum;
-            mpirc = MPI_Allreduce(&in, &sum, 1, MPI_DOUBLE, MPI_SUM, comm_);
-            in    = sum_off;
-            mpirc = MPI_Allreduce(&in, &sum_off, 1, MPI_DOUBLE, MPI_SUM, comm_);
+            in = sum;
+            MPI_Allreduce(&in, &sum, 1, MPI_DOUBLE, MPI_SUM, comm_);
+            in = sum_off;
+            MPI_Allreduce(&in, &sum_off, 1, MPI_DOUBLE, MPI_SUM, comm_);
 #endif
 #if DEBUG
             (*MPIdata::sout) << " Sum_off(A(k)):  " << sum_off << endl;

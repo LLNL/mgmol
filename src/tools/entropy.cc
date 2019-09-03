@@ -26,7 +26,7 @@ double entropy_eval(
     const std::vector<T>& f, std::vector<T>& s, const double occ_factor)
 {
     const int dim = f.size();
-    assert(s.size() == dim);
+    assert(s.size() == static_cast<unsigned int>(dim));
 
     const double tol = 1.e-15;
 

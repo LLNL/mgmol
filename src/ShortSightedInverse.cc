@@ -174,7 +174,7 @@ int ShortSightedInverse::solve()
 #ifdef _OPENMP
 #pragma omp for reduction(+ : conv)
 #endif
-        for (int i = 0; i < locfcns_.size(); i++)
+        for (unsigned int i = 0; i < locfcns_.size(); i++)
         {
             int* rindex       = (int*)(*gramMat_).getTableValue(locfcns_[i]);
             const int lrindex = *rindex;
@@ -201,11 +201,11 @@ int ShortSightedInverse::solve()
 
     } // end OpenMP region
 
-    for (int i = 0; i < locfcns_.size(); i++)
+    for (unsigned int i = 0; i < locfcns_.size(); i++)
     {
         maxits = (maxits > its[i]) ? maxits : its[i];
     }
-    for (int i = 0; i < locfcns_.size(); i++)
+    for (unsigned int i = 0; i < locfcns_.size(); i++)
     {
         maxrnrm = (maxrnrm > rnrm[i]) ? maxrnrm : rnrm[i];
     }
@@ -608,7 +608,7 @@ std::vector<int> ShortSightedInverse::centeredFcnLocalIds()
     assert(gramMat_->n() != 0);
 
     std::vector<int> local_cols;
-    for (int i = 0; i < locfcns_.size(); i++)
+    for (unsigned int i = 0; i < locfcns_.size(); i++)
     {
         int* rindex = (int*)(*gramMat_).getTableValue(locfcns_[i]);
         local_cols.push_back(*rindex);

@@ -149,7 +149,10 @@ public:
         return (name_.compare(name) == 0);
     }
     unsigned int index() const { return index_; }
-    bool compareIndex(const int index) const { return (index == index_); }
+    bool compareIndex(const unsigned int index) const
+    {
+        return (index == index_);
+    }
     unsigned int nlprojid() const { return nlproj_gid_; }
 
     int atomic_number() const { return species_.getAtomicNumber(); }

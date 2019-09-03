@@ -76,11 +76,11 @@ LocGridOrbitals::LocGridOrbitals(std::string name, const pb::Grid& my_grid,
     MasksSet* masks, MasksSet* corrmasks, ClusterOrbitals* local_cluster,
     const bool setup_flag)
     : name_(std::move(name)),
-      grid_(my_grid),
       proj_matrices_(proj_matrices),
+      local_cluster_(local_cluster),
       block_vector_(my_grid, subdivx, bc),
-      lrs_(lrs),
-      local_cluster_(local_cluster)
+      grid_(my_grid),
+      lrs_(lrs)
 {
     // preconditions
     assert(subdivx > 0);
@@ -128,12 +128,12 @@ LocGridOrbitals::LocGridOrbitals(
     const std::string& name, const LocGridOrbitals& A, const bool copy_data)
     : Orbitals(A, copy_data),
       name_(name),
-      grid_(A.grid_),
       proj_matrices_(A.proj_matrices_),
+      local_cluster_(A.local_cluster_),
       block_vector_(A.block_vector_, copy_data),
       masks4orbitals_(A.masks4orbitals_),
-      lrs_(A.lrs_),
-      local_cluster_(A.local_cluster_)
+      grid_(A.grid_),
+      lrs_(A.lrs_)
 {
     // if(onpe0)cout<<"call LocGridOrbitals(const LocGridOrbitals &A, const bool
     // copy_data)"<<endl;
@@ -154,11 +154,11 @@ LocGridOrbitals::LocGridOrbitals(const std::string& name,
     MasksSet* masks, MasksSet* corrmasks, const bool copy_data)
     : Orbitals(A, copy_data),
       name_(name),
-      grid_(A.grid_),
       proj_matrices_(proj_matrices),
+      local_cluster_(A.local_cluster_),
       block_vector_(A.block_vector_, copy_data),
-      lrs_(A.lrs_),
-      local_cluster_(A.local_cluster_)
+      grid_(A.grid_),
+      lrs_(A.lrs_)
 {
     assert(A.chromatic_number_ >= 0);
     assert(proj_matrices != 0);
@@ -533,7 +533,7 @@ void LocGridOrbitals::app_mask(
         else
         {
             int offset = (shift + dim0 * iloc) * incx;
-            assert(offset + lnumpt < gu.grid().sizeg());
+            assert(offset + lnumpt < static_cast<int>(gu.grid().sizeg()));
             ORBDTYPE* pu = gu.uu() + offset;
             memset(pu, 0, lnumpt * sizeof(ORBDTYPE));
         }
@@ -725,7 +725,7 @@ int LocGridOrbitals::packStates(LocalizationRegions* lrs)
 void LocGridOrbitals::precond_smooth(ORBDTYPE* rhs, const int ld,
     const int ifirst, const int nvect, const int npower, const double alpha)
 {
-    assert(ld >= grid_.size());
+    assert(ld >= static_cast<int>(grid_.size()));
 
     pb::Laph2<ORBDTYPE> myoper(grid_);
     pb::GridFunc<ORBDTYPE> gf_w(grid_, bc_[0], bc_[1], bc_[2]);
@@ -1066,7 +1066,7 @@ int LocGridOrbitals::write_func_hdf5(HDFrestart& h5f_file, const string& name)
         {
             nrec = colored_regions.getLocCentersAndRadii4color(
                 color, centers_and_radii);
-            assert(centers_and_radii.size() == 4 * nrec);
+            assert(static_cast<int>(centers_and_radii.size()) == 4 * nrec);
         }
 
         // for(int i=0;i<(int)centers_and_radii.size();i++)
@@ -1076,16 +1076,6 @@ int LocGridOrbitals::write_func_hdf5(HDFrestart& h5f_file, const string& name)
         //}
 
         vector<int> gids;
-        int ngids = 0;
-        if (h5f_file.useHdf5p())
-        {
-            ngids = colored_regions.getAllGids4color(color, gids);
-        }
-        else
-        {
-            ngids = colored_regions.getLocGids4color(color, gids);
-        }
-
         if (iwrite)
         {
             writeListCentersAndRadii(dset_id, nrec, centers_and_radii);
@@ -1167,13 +1157,10 @@ int LocGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, const string& name)
     const bool global = ct.globalColoring();
     ColoredRegions colored_regions(*pack_, *lrs_, global);
 
-    hsize_t block[3]  = { grid_.dim(0), grid_.dim(1), grid_.dim(2) };
-    hsize_t offset[3] = { 0, 0, 0 };
+    hsize_t block[3] = { grid_.dim(0), grid_.dim(1), grid_.dim(2) };
     if (h5f_file.gatherDataX())
     {
-        block[0]  = grid_.gdim(0);
-        offset[1] = grid_.istart(1);
-        offset[2] = grid_.istart(2);
+        block[0] = grid_.gdim(0);
     }
 
     // Each process defines dataset in memory and writes it to the hyperslab
@@ -1255,7 +1242,7 @@ int LocGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, const string& name)
         if (h5f_file.active())
         {
             int natt = readListCentersAndRadii(dset_id, attr_data);
-            assert(natt == centers_in_dataset.count(key));
+            assert(natt == static_cast<int>(centers_in_dataset.count(key)));
 
             if (natt < 0) return -1;
             dims[0]          = natt;
@@ -1288,7 +1275,8 @@ int LocGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, const string& name)
         for (int i = 0; i < intdims[0]; i++)
         {
             assert(attribute_length > 0);
-            assert(attr_data.size() > attribute_length * i);
+            assert(attr_data.size()
+                   > static_cast<unsigned int>(attribute_length * i));
             const Vector3D center(attr_data[attribute_length * i],
                 attr_data[attribute_length * i + 1],
                 attr_data[attribute_length * i + 2]);
@@ -2400,7 +2388,7 @@ void LocGridOrbitals::initRand()
 
     const int loc_length = dim[0] / subdivx_;
     assert(loc_length > 0);
-    assert(loc_length <= dim[0]);
+    assert(static_cast<unsigned int>(loc_length) <= dim[0]);
 
     const int xoff = grid_.istart(0);
     const int yoff = grid_.istart(1);
@@ -2420,11 +2408,11 @@ void LocGridOrbitals::initRand()
     for (int istate = 0; istate < numst_; istate++)
     {
         // Generate x, y, z random number sequences
-        for (int idx = 0; idx < grid_.gdim(0); idx++)
+        for (unsigned int idx = 0; idx < grid_.gdim(0); idx++)
             xrand[idx] = ran0() - 0.5;
-        for (int idx = 0; idx < grid_.gdim(1); idx++)
+        for (unsigned int idx = 0; idx < grid_.gdim(1); idx++)
             yrand[idx] = ran0() - 0.5;
-        for (int idx = 0; idx < grid_.gdim(2); idx++)
+        for (unsigned int idx = 0; idx < grid_.gdim(2); idx++)
             zrand[idx] = ran0() - 0.5;
 
         int n = 0;
@@ -2440,8 +2428,8 @@ void LocGridOrbitals::initRand()
 
                     for (int ix = loc_length * iloc;
                          ix < loc_length * (iloc + 1); ix++)
-                        for (int iy = 0; iy < dim[1]; iy++)
-                            for (int iz = 0; iz < dim[2]; iz++)
+                        for (unsigned int iy = 0; iy < dim[1]; iy++)
+                            for (unsigned int iz = 0; iz < dim[2]; iz++)
                             {
                                 const double alpha = xrand[xoff + ix]
                                                      * yrand[yoff + iy]
@@ -2449,7 +2437,8 @@ void LocGridOrbitals::initRand()
 
                                 psi(color)[ix * incx + iy * incy + iz]
                                     = alpha * alpha;
-                                assert((ix * incx + iy * incy + iz) < lda_);
+                                assert((ix * incx + iy * incy + iz)
+                                       < static_cast<unsigned int>(lda_));
                             }
                     n++;
 

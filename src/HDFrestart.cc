@@ -625,7 +625,7 @@ HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
                          << " x " << block_[1] << " x " << block_[2] << endl;
 
     create_file_tm_.stop();
-};
+}
 
 // constructor reading data (existing file)
 HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
@@ -780,7 +780,7 @@ HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
     assert(bsize_ >= 0);
 
     open_existing_tm_.stop();
-};
+}
 
 int writeListCentersAndRadii(
     hid_t dset_id, const unsigned natt, const vector<double>& attr_data)
@@ -896,7 +896,7 @@ int readListCentersAndRadii(hid_t dset_id, vector<double>& attr_data)
         (*MPIdata::serr) << "H5Aread failed!!!" << endl;
         return -1;
     }
-    for (int j = 0; j < dims[0] * dims[1]; j++)
+    for (unsigned int j = 0; j < dims[0] * dims[1]; j++)
         assert(fabs(attr_data[j]) < 1.e30);
     status = H5Sclose(attdataspace);
     if (status < 0)
@@ -1149,7 +1149,7 @@ int HDFrestart::getLRs(LocalizationRegions& lrs, const int max_nb_lrs,
             nlrs += natt;
 
             readGids(dset_id, gids);
-            assert(gids.size() == natt);
+            assert(gids.size() == static_cast<unsigned int>(natt));
 
             herr_t status = close_dset(dset_id);
             if (status < 0)
@@ -1174,7 +1174,7 @@ int HDFrestart::getLRs(LocalizationRegions& lrs, const int max_nb_lrs,
                 if (read_radius) rl = attr_data[attribute_length * i + 3];
 
                 assert(!gids.empty());
-                assert(gids.size() > i);
+                assert(gids.size() > static_cast<unsigned int>(i));
                 lrs.push_back_local(center, rl, gids[i]);
 
 #ifdef DEBUG
@@ -2848,7 +2848,7 @@ int HDFrestart::readLockedAtomNames(std::vector<std::string>& data)
 #endif
 
     data.clear();
-    for (short i = 0; i < buffer.size(); i += name_length)
+    for (unsigned short i = 0; i < buffer.size(); i += name_length)
     {
         std::string t(&buffer[i], name_length);
         assert(t.size() > 0);
@@ -2950,7 +2950,7 @@ int HDFrestart::readAtomicNames(std::vector<std::string>& data)
 #endif
 
     data.clear();
-    for (short i = 0; i < buffer.size(); i += name_length)
+    for (unsigned short i = 0; i < buffer.size(); i += name_length)
     {
         std::string t(&buffer[i], name_length);
         assert(t.size() > 0);

@@ -70,11 +70,11 @@ ExtendedGridOrbitals::ExtendedGridOrbitals(std::string name,
     LocalizationRegions* lrs, MasksSet* masks, MasksSet* corrmasks,
     ClusterOrbitals* local_cluster, const bool setup_flag)
     : name_(std::move(name)),
-      grid_(my_grid),
       proj_matrices_(proj_matrices),
+      local_cluster_(local_cluster),
       block_vector_(my_grid, subdivx, bc),
-      lrs_(lrs),
-      local_cluster_(local_cluster)
+      grid_(my_grid),
+      lrs_(lrs)
 {
     (void)masks;
     (void)corrmasks;
@@ -104,11 +104,11 @@ ExtendedGridOrbitals::ExtendedGridOrbitals(const std::string& name,
     const ExtendedGridOrbitals& A, const bool copy_data)
     : Orbitals(A, copy_data),
       name_(name),
-      grid_(A.grid_),
       proj_matrices_(A.proj_matrices_),
+      local_cluster_(A.local_cluster_),
       block_vector_(A.block_vector_, copy_data),
-      lrs_(A.lrs_),
-      local_cluster_(A.local_cluster_)
+      grid_(A.grid_),
+      lrs_(A.lrs_)
 {
     // if(onpe0)cout<<"call ExtendedGridOrbitals(const ExtendedGridOrbitals &A,
     // const bool copy_data)"<<endl;
@@ -121,11 +121,11 @@ ExtendedGridOrbitals::ExtendedGridOrbitals(const std::string& name,
     const bool copy_data)
     : Orbitals(A, copy_data),
       name_(name),
-      grid_(A.grid_),
       proj_matrices_(proj_matrices),
+      local_cluster_(A.local_cluster_),
       block_vector_(A.block_vector_, copy_data),
-      lrs_(A.lrs_),
-      local_cluster_(A.local_cluster_)
+      grid_(A.grid_),
+      lrs_(A.lrs_)
 {
     assert(proj_matrices != 0);
 
@@ -388,7 +388,7 @@ void ExtendedGridOrbitals::initFourier()
 void ExtendedGridOrbitals::precond_smooth(ORBDTYPE* rhs, const int ld,
     const int ifirst, const int nvect, const int npower, const double alpha)
 {
-    assert(ld >= grid_.size());
+    assert(ld >= static_cast<int>(grid_.size()));
 
     pb::Laph2<ORBDTYPE> myoper(grid_);
     pb::GridFunc<ORBDTYPE> gf_w(grid_, bc_[0], bc_[1], bc_[2]);
@@ -753,13 +753,10 @@ int ExtendedGridOrbitals::read_func_hdf5(
     Control& ct     = *(Control::instance());
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
-    hsize_t block[3]  = { grid_.dim(0), grid_.dim(1), grid_.dim(2) };
-    hsize_t offset[3] = { 0, 0, 0 };
+    hsize_t block[3] = { grid_.dim(0), grid_.dim(1), grid_.dim(2) };
     if (h5f_file.gatherDataX())
     {
-        block[0]  = grid_.gdim(0);
-        offset[1] = grid_.istart(1);
-        offset[2] = grid_.istart(2);
+        block[0] = grid_.gdim(0);
     }
 
     // Each process defines dataset in memory and writes it to the hyperslab
@@ -1583,7 +1580,7 @@ void ExtendedGridOrbitals::initRand()
 
     const int loc_length = dim[0] / subdivx_;
     assert(loc_length > 0);
-    assert(loc_length <= dim[0]);
+    assert(static_cast<unsigned int>(loc_length) <= dim[0]);
 
     const int xoff = grid_.istart(0);
     const int yoff = grid_.istart(1);
@@ -1603,11 +1600,11 @@ void ExtendedGridOrbitals::initRand()
     for (int istate = 0; istate < numst_; istate++)
     {
         // Generate x, y, z random number sequences
-        for (int idx = 0; idx < grid_.gdim(0); idx++)
+        for (unsigned int idx = 0; idx < grid_.gdim(0); idx++)
             xrand[idx] = ran0() - 0.5;
-        for (int idx = 0; idx < grid_.gdim(1); idx++)
+        for (unsigned int idx = 0; idx < grid_.gdim(1); idx++)
             yrand[idx] = ran0() - 0.5;
-        for (int idx = 0; idx < grid_.gdim(2); idx++)
+        for (unsigned int idx = 0; idx < grid_.gdim(2); idx++)
             zrand[idx] = ran0() - 0.5;
 
         int n = 0;
@@ -1617,8 +1614,8 @@ void ExtendedGridOrbitals::initRand()
             {
                 for (int ix = loc_length * iloc; ix < loc_length * (iloc + 1);
                      ix++)
-                    for (int iy = 0; iy < dim[1]; iy++)
-                        for (int iz = 0; iz < dim[2]; iz++)
+                    for (unsigned int iy = 0; iy < dim[1]; iy++)
+                        for (unsigned int iz = 0; iz < dim[2]; iz++)
                         {
                             const double alpha = xrand[xoff + ix]
                                                  * yrand[yoff + iy]
@@ -1626,7 +1623,8 @@ void ExtendedGridOrbitals::initRand()
 
                             psi(istate)[ix * incx + iy * incy + iz]
                                 = alpha * alpha;
-                            assert((ix * incx + iy * incy + iz) < lda_);
+                            assert((ix * incx + iy * incy + iz)
+                                   < static_cast<unsigned int>(lda_));
                         }
                 n++;
             }

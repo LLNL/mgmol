@@ -347,11 +347,11 @@ void Ions::setupContraintsData(vector<Ion*>& ions_for_constraints)
     {
         if (isLocal((*ion)->name()))
         {
-            assert(3 * ia < tau0_.size());
-            assert(3 * ia < taup_.size());
-            assert(3 * ia < fion_.size());
-            assert(ia < pmass_.size());
-            assert(ia < atmove_.size());
+            assert(3 * ia < static_cast<int>(tau0_.size()));
+            assert(3 * ia < static_cast<int>(taup_.size()));
+            assert(3 * ia < static_cast<int>(fion_.size()));
+            assert(ia < static_cast<int>(pmass_.size()));
+            assert(ia < static_cast<int>(atmove_.size()));
 
             // set reference to local data
             interacting_tau0_.push_back(&tau0_[3 * ia]);
@@ -368,9 +368,9 @@ void Ions::setupContraintsData(vector<Ion*>& ions_for_constraints)
         }
         else
         {
-            assert(3 * ib < tau0_dummy_.size());
-            assert(3 * ib < taup_dummy_.size());
-            assert(3 * ib < fion_dummy_.size());
+            assert(3 * ib < static_cast<int>(tau0_dummy_.size()));
+            assert(3 * ib < static_cast<int>(taup_dummy_.size()));
+            assert(3 * ib < static_cast<int>(fion_dummy_.size()));
 
             // fill up dummy data
             (*ion)->getPosition(&tau0_dummy_[3 * ib]);
@@ -387,9 +387,9 @@ void Ions::setupContraintsData(vector<Ion*>& ions_for_constraints)
 
             interacting_fion_.push_back(&fion_dummy_[3 * ib]);
 
-            assert(ib < names_dummy_.size());
-            assert(ib < pmass_dummy_.size());
-            assert(ib < atmove_dummy_.size());
+            assert(ib < static_cast<int>(names_dummy_.size()));
+            assert(ib < static_cast<int>(pmass_dummy_.size()));
+            assert(ib < static_cast<int>(atmove_dummy_.size()));
             interacting_names_.push_back(names_dummy_[ib]);
             interacting_pmass_.push_back(pmass_dummy_[ib]);
             interacting_atmove_.push_back(atmove_dummy_[ib]);
@@ -1166,12 +1166,12 @@ void Ions::initFromRestartFile(HDFrestart& h5_file)
     // (atomic indexes were not saved before)
     if (nidxs == -1 && at_numbers.size() > 0)
     {
-        for (int i = 0; i < at_numbers.size(); i++)
+        for (unsigned int i = 0; i < at_numbers.size(); i++)
             at_indexes.push_back(i);
     }
     if (npids == -1 && at_numbers.size() > 0)
     {
-        for (int i = 0; i < at_numbers.size(); i++)
+        for (unsigned int i = 0; i < at_numbers.size(); i++)
             at_nlprojIds.push_back(i);
     }
 
@@ -1193,7 +1193,7 @@ void Ions::initFromRestartFile(HDFrestart& h5_file)
     double default_vel[3]    = { 0., 0., 0. };
     double default_coords[3] = { 0., 0., 0. };
 
-    for (int i = 0; i < at_numbers.size(); i++)
+    for (unsigned int i = 0; i < at_numbers.size(); i++)
     {
         const int atnum                     = at_numbers[i];
         vector<Species>::const_iterator spi = species_.begin();
@@ -2024,7 +2024,7 @@ int Ions::readAtoms(ifstream* tfile, const bool cell_relative)
     {
         if (mmpi.PE0())
         {
-            for (short i = 0; i < first_string_read.size(); i++)
+            for (unsigned short i = 0; i < first_string_read.size(); i++)
                 tfile->unget();
         }
         num_ions_ = readNatoms(tfile, cell_relative);

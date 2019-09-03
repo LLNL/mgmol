@@ -50,7 +50,7 @@ bool ConstraintSet::addConstraint(Ions& ions, const vector<string>& argv)
     const double tolerance = 1.e-6;
 
     vector<int> len(argc);
-    int size_buf = 256;
+    const int size_buf = 256;
     char char_buf[size_buf];
     int shift = 0;
     if (onpe0)

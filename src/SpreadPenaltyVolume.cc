@@ -73,8 +73,8 @@ void SpreadPenaltyVolume<T>::addResidual(T& phi, T& res)
     float max_spread2 = 0.;
     float min_spread2 = 1.e10;
     // float second_max_spread2=0.;
-    int gid_max_spread = -1;
-    int gid_min_spread = -1;
+    // int gid_max_spread = -1;
+    // int gid_min_spread = -1;
     // int   gid_second_max_spread=-1;
 
     vector<float> sigma;
@@ -87,14 +87,14 @@ void SpreadPenaltyVolume<T>::addResidual(T& phi, T& res)
             // second_max_spread2=max_spread2;
             max_spread2 = *it;
             // gid_second_max_spread=gid_max_spread;
-            gid_max_spread = *gid_it;
+            //       gid_max_spread = *gid_it;
         }
         if (*it < min_spread2)
         {
             // second_max_spread2=max_spread2;
             min_spread2 = *it;
             // gid_second_max_spread=gid_max_spread;
-            gid_min_spread = *gid_it;
+            // gid_min_spread = *gid_it;
         }
 
         float lm = sqrt(*it);
@@ -234,7 +234,7 @@ void SpreadPenaltyVolume<T>::computeAndAddResidualSpreadPenalty(
                         const float x2 = (cosx[ix] - cx0) * (cosx[ix] - cx0)
                                          + (sinx[ix] - sx0) * (sinx[ix] - sx0);
 
-                        for (int iy = 0; iy < dim[1]; iy++)
+                        for (unsigned int iy = 0; iy < dim[1]; iy++)
                         {
                             const float sy0
                                 = sin(coeffy * center_gid[1]) * alphay;
@@ -245,7 +245,7 @@ void SpreadPenaltyVolume<T>::computeAndAddResidualSpreadPenalty(
                                 = (cosy[iy] - cy0) * (cosy[iy] - cy0)
                                   + (siny[iy] - sy0) * (siny[iy] - sy0);
 
-                            for (int iz = 0; iz < dim[2]; iz++)
+                            for (unsigned int iz = 0; iz < dim[2]; iz++)
                             {
                                 const int index = ix * incx + iy * incy + iz;
                                 const float cz0

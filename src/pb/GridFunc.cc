@@ -574,7 +574,7 @@ void GridFunc<T>::set_max(const T val)
 template <typename T>
 void GridFunc<T>::setValues(const int n, const T* src, const int pos)
 {
-    assert((pos + n) <= grid_.sizeg());
+    assert((pos + n) <= static_cast<int>(grid_.sizeg()));
 
     size_t ssize = n * sizeof(T);
     // int ione=1;
@@ -630,7 +630,7 @@ GridFunc<T> GridFunc<T>::operator+(const GridFunc<T>& A)
 {
     int n = grid_.sizeg();
 
-    assert(n == A.grid_.sizeg());
+    assert(n == static_cast<int>(A.grid_.sizeg()));
     GridFunc<T> tmp(A);
     T* __restrict__ tu       = &tmp.uu_[0];
     const T* __restrict__ pu = &uu_[0];
@@ -646,7 +646,7 @@ template <typename T>
 GridFunc<T> GridFunc<T>::operator-(const GridFunc<T>& A)
 {
     const int n = grid_.sizeg();
-    assert(n == A.grid_.sizeg());
+    assert(n == static_cast<int>(A.grid_.sizeg()));
     assert(grid_.size() == A.grid_.size());
 
     GridFunc<T> tmp(*this);
@@ -704,7 +704,7 @@ template <typename T>
 GridFunc<T>& GridFunc<T>::operator*=(const GridFunc<T>& B)
 {
     int n = grid_.sizeg();
-    assert(B.grid_.sizeg() == n);
+    assert(static_cast<int>(B.grid_.sizeg()) == n);
     const T* __restrict__ v = B.uu_;
     T* __restrict__ pu      = &uu_[0];
     for (int i = 0; i < n; i++)
@@ -720,7 +720,7 @@ template <typename T>
 GridFunc<T>& GridFunc<T>::operator/=(const GridFunc<T>& B)
 {
     int n = grid_.sizeg();
-    assert(B.grid_.sizeg() == n);
+    assert(static_cast<int>(B.grid_.sizeg()) == n);
     T* const pu = &uu_[0];
     T* const bu = &B.uu_[0];
 
@@ -1345,11 +1345,11 @@ void GridFunc<T>::write_global_x(const char str[])
     if (mype_env().onpe0())
     {
         int incx = grid_.gdim(1) * grid_.gdim(2);
-        for (int ix = 0; ix < grid_.gdim(0); ix++)
+        for (unsigned int ix = 0; ix < grid_.gdim(0); ix++)
         {
             T alpha = 0.;
-            for (int iy = 0; iy < grid_.gdim(1); iy++)
-                for (int iz = 0; iz < grid_.gdim(2); iz++)
+            for (unsigned int iy = 0; iy < grid_.gdim(1); iy++)
+                for (unsigned int iz = 0; iz < grid_.gdim(2); iz++)
                 {
                     alpha += global_func[ix * incx + iy * grid_.gdim(2) + iz];
                 }
@@ -1395,8 +1395,8 @@ void GridFunc<T>::allGather(T* global_func) const
 
     const int ntasks = mype_env().n_mpi_tasks();
     int* displs      = new int[ntasks];
-    int mpi_err;
 #if 0 // old version
+    int mpi_err;
     const int istart=grid_.istart(0);
     const int jstart=grid_.istart(1);
     const int kstart=grid_.istart(2);
@@ -1417,7 +1417,7 @@ void GridFunc<T>::allGather(T* global_func) const
         }
         displs[i]
             = other_start[0] * gincx + other_start[1] * gincy + other_start[2];
-        assert(displs[i] < grid_.gsize());
+        assert(displs[i] < static_cast<int>(grid_.gsize()));
     }
 #endif
 
@@ -1446,7 +1446,7 @@ void GridFunc<T>::allGather(T* global_func) const
     }
 #else
     T* buffer = new T[gsize];
-    mpi_err   = mmpi.allGather(uu_, sizeg, buffer, gsize);
+    mmpi.allGather(uu_, sizeg, buffer, gsize);
 
     for (int i = 0; i < ntasks; i++)
         for (int ii = 0; ii < ldim[0]; ii++)
@@ -1515,7 +1515,7 @@ void GridFunc<T>::gather(T* global_func) const
             }
             displs[i] = other_start[0] * gincx + other_start[1] * gincy
                         + other_start[2];
-            assert(displs[i] < grid_.gsize());
+            assert(displs[i] < static_cast<int>(grid_.gsize()));
         }
     }
 
@@ -1606,7 +1606,7 @@ void GridFunc<T>::scatterFrom(const GridFunc<T>& src)
             }
             displs[i] = other_start[0] * incx_src + other_start[1] * incy_src
                         + other_start[2];
-            assert(displs[i] < grid_.gsize());
+            assert(displs[i] < static_cast<int>(grid_.gsize()));
         }
     }
 
@@ -2181,11 +2181,11 @@ void GridFunc<T>::init_rand()
     T* zrand = new T[grid_.gdim(2)];
 
     // Generate x, y, z random number sequences
-    for (int idx = 0; idx < grid_.gdim(0); idx++)
+    for (unsigned int idx = 0; idx < grid_.gdim(0); idx++)
         xrand[idx] = ran0() - 0.5;
-    for (int idx = 0; idx < grid_.gdim(1); idx++)
+    for (unsigned int idx = 0; idx < grid_.gdim(1); idx++)
         yrand[idx] = ran0() - 0.5;
-    for (int idx = 0; idx < grid_.gdim(2); idx++)
+    for (unsigned int idx = 0; idx < grid_.gdim(2); idx++)
         zrand[idx] = ran0() - 0.5;
 
     for (int ix = 0; ix < dim_[0]; ix++)
@@ -2616,7 +2616,7 @@ void GridFunc<T>::setBoundaryValues(const T alpha, const bool direction[3])
                     const int kmax = init_ij + shift;
                     for (int k = init_ij; k <= kmax; k++)
                     {
-                        assert(k < grid_.sizeg());
+                        assert(k < static_cast<int>(grid_.sizeg()));
                         pu[k] = alpha;
                     }
                     icount += shift + 1;
@@ -2628,7 +2628,7 @@ void GridFunc<T>::setBoundaryValues(const T alpha, const bool direction[3])
                     T* const ppu = &pu[init_ij + dim_[2] + shift];
                     for (int k = 0; k < shift; k++)
                     {
-                        assert(k < grid_.sizeg());
+                        assert(k < static_cast<int>(grid_.sizeg()));
                         ppu[k] = alpha;
                     }
                     icount += shift;
@@ -2645,7 +2645,7 @@ void GridFunc<T>::setBoundaryValues(const T alpha, const bool direction[3])
                 const int kmax = incy_ * (shift + 1);
                 for (int k = 0; k < kmax; k++)
                 {
-                    assert(k < grid_.sizeg());
+                    assert(k < static_cast<int>(grid_.sizeg()));
                     ppu[k] = alpha;
                 }
                 icount += kmax;
@@ -2661,7 +2661,7 @@ void GridFunc<T>::setBoundaryValues(const T alpha, const bool direction[3])
                     T* const ppu = &pu[i + j];
                     for (int k = 0; k < incy_; k++)
                     {
-                        assert(k < grid_.sizeg());
+                        assert(k < static_cast<int>(grid_.sizeg()));
                         ppu[k] = alpha;
                     }
                     icount += incy_;
@@ -2691,7 +2691,7 @@ void GridFunc<T>::setBoundaryValues(const T alpha, const bool direction[3])
             const int imax   = incx_ * (2 * shift + dim_[0]);
             for (int i = istart; i < imax; i++)
             {
-                assert(i < grid_.sizeg());
+                assert(i < static_cast<int>(grid_.sizeg()));
                 pu[i] = alpha;
             }
             icount += (size - incx_);
@@ -2820,7 +2820,7 @@ void GridFunc<T>::setBoundaryValuesNeumannZ(const T alpha)
                     const int kmax = init_ij + shift;
                     for (int k = init_ij; k < kmax; k++)
                     {
-                        assert(k < grid_.sizeg());
+                        assert(k < static_cast<int>(grid_.sizeg()));
                         uu_[k] = uu_[kmax] - (T)((double)(kmax - k) * delta);
                     }
                 }
@@ -2831,7 +2831,7 @@ void GridFunc<T>::setBoundaryValuesNeumannZ(const T alpha)
                     T* const ppu = &uu_[init_ij + shift + dim_[2] - 1];
                     for (int k = 0; k < shift; k++)
                     {
-                        assert(k < grid_.sizeg());
+                        assert(k < static_cast<int>(grid_.sizeg()));
                         ppu[k + 1] = ppu[0] + (T)((double)(k + 1) * delta);
                     }
                 }
@@ -2869,7 +2869,7 @@ void GridFunc<T>::setBoundaryValuesNeumannY(const T alpha)
                     const T corrj = (T)((double)(shift - j) * delta);
                     for (int k = 0; k < incy_; k++)
                     {
-                        assert(k < grid_.sizeg());
+                        assert(k < static_cast<int>(grid_.sizeg()));
                         ppu[k] = uu_[i + shift * incy_ + k] - corrj;
                     }
                 }
@@ -2886,7 +2886,7 @@ void GridFunc<T>::setBoundaryValuesNeumannY(const T alpha)
                     const T corrj = (T)((double)(j - jmin + 1) * delta);
                     for (int k = 0; k < incy_; k++)
                     {
-                        assert(k < grid_.sizeg());
+                        assert(k < static_cast<int>(grid_.sizeg()));
                         ppu[k] = uu_[i + jmin * incy_ - incy_ + k] + corrj;
                     }
                 }
@@ -3021,7 +3021,7 @@ void GridFunc<T>::setBoundaryValues(
                     const int kmax = init_ij + shift;
                     for (int k = init_ij; k <= kmax; k++)
                     {
-                        assert(k < grid_.sizeg());
+                        assert(k < static_cast<int>(grid_.sizeg()));
                         pu[k] = pv[k];
                     }
                     icount += shift + 1;
@@ -3034,7 +3034,7 @@ void GridFunc<T>::setBoundaryValues(
                     const T* const ppv = &pv[init_ij + dim_[2] + shift];
                     for (int k = 0; k < shift; k++)
                     {
-                        assert(k < grid_.sizeg());
+                        assert(k < static_cast<int>(grid_.sizeg()));
                         ppu[k] = ppv[k];
                     }
                     icount += shift;
@@ -3052,7 +3052,7 @@ void GridFunc<T>::setBoundaryValues(
                 const int kmax     = incy_ * (shift + 1);
                 for (int k = 0; k < kmax; k++)
                 {
-                    assert(k < grid_.sizeg());
+                    assert(k < static_cast<int>(grid_.sizeg()));
                     ppu[k] = ppv[k];
                 }
                 icount += kmax;
@@ -3069,7 +3069,7 @@ void GridFunc<T>::setBoundaryValues(
                     const T* const ppv = &pv[i + j];
                     for (int k = 0; k < incy_; k++)
                     {
-                        assert(k < grid_.sizeg());
+                        assert(k < static_cast<int>(grid_.sizeg()));
                         ppu[k] = ppv[k];
                     }
                     icount += incy_;
@@ -3099,7 +3099,7 @@ void GridFunc<T>::setBoundaryValues(
             const int imax   = incx_ * (2 * shift + dim_[0]);
             for (int i = istart; i < imax; i++)
             {
-                assert(i < grid_.sizeg());
+                assert(i < static_cast<int>(grid_.sizeg()));
                 pu[i] = pv[i];
             }
             icount += (size - incx_);
@@ -3493,7 +3493,7 @@ void GridFunc<T>::extend3D(GridFunc<T>& ucoarse)
                 int izf = ify + iz;
 
                 uu_[izf] = 0.5 * (uu_[izf - 1] + uu_[izf + 1]);
-                assert(izf < grid_.sizeg());
+                assert(izf < static_cast<int>(grid_.sizeg()));
             }
         }
 
@@ -3511,7 +3511,7 @@ void GridFunc<T>::extend3D(GridFunc<T>& ucoarse)
 
                 uu_[izf] = 0.5 * (uu_[izf + incy_fine] + uu_[izf - incy_fine]);
 
-                assert(izf < grid_.sizeg());
+                assert(izf < static_cast<int>(grid_.sizeg()));
             }
 
             for (int iz = nghosts_fine + 1; iz < dim_[2] + nghosts_fine;
@@ -3526,7 +3526,7 @@ void GridFunc<T>::extend3D(GridFunc<T>& ucoarse)
                             + uu_[izf - 1 + incy_fine]
                             + uu_[izf - 1 - incy_fine]);
 
-                assert(izf < grid_.sizeg());
+                assert(izf < static_cast<int>(grid_.sizeg()));
             }
         }
     }
@@ -3740,9 +3740,9 @@ void GridFunc<T>::test_setBoundaryValues()
             Grid coarse_G = grid_.coarse_grid();
             GridFunc<T> ucoarse(coarse_G, bc_[0], bc_[1], bc_[2]);
 
-            if ((coarse_G.dim(0) >= ghost_pt())
-                && (coarse_G.dim(1) >= ghost_pt())
-                && (coarse_G.dim(2) >= ghost_pt()))
+            if ((static_cast<int>(coarse_G.dim(0)) >= ghost_pt())
+                && (static_cast<int>(coarse_G.dim(1)) >= ghost_pt())
+                && (static_cast<int>(coarse_G.dim(2)) >= ghost_pt()))
                 ucoarse.test_setBoundaryValues();
         }
 }
@@ -3754,9 +3754,9 @@ void GridFunc<T>::test_grid_transfer()
 
     GridFunc<T> rcoarse(coarse_G, bc_[0], bc_[1], bc_[2]);
 
-    if (coarse_G.dim(0) < ghost_pt()) return;
-    if (coarse_G.dim(1) < ghost_pt()) return;
-    if (coarse_G.dim(2) < ghost_pt()) return;
+    if (static_cast<int>(coarse_G.dim(0)) < ghost_pt()) return;
+    if (static_cast<int>(coarse_G.dim(1)) < ghost_pt()) return;
+    if (static_cast<int>(coarse_G.dim(2)) < ghost_pt()) return;
 
     if (mype_env().onpe0())
         cout << " Test grid transfer() between grids " << dim(0) << " and "
@@ -3803,8 +3803,9 @@ void GridFunc<T>::test_grid_transfer()
     if ((2 * (coarse_G.dim(0) >> 1) == coarse_G.dim(0))
         && (2 * (coarse_G.dim(1) >> 1) == coarse_G.dim(1))
         && (2 * (coarse_G.dim(2) >> 1) == coarse_G.dim(2)))
-        if ((coarse_G.dim(0) > ghost_pt()) && (coarse_G.dim(1) > ghost_pt())
-            && (coarse_G.dim(2) > ghost_pt()))
+        if ((static_cast<int>(coarse_G.dim(0)) > ghost_pt())
+            && (static_cast<int>(coarse_G.dim(1)) > ghost_pt())
+            && (static_cast<int>(coarse_G.dim(2)) > ghost_pt()))
         {
 
             rcoarse.test_grid_transfer();
@@ -4013,8 +4014,9 @@ void GridFunc<T>::test_trade_boundaries()
             Grid coarse_G = grid_.coarse_grid();
             GridFunc<T> ucoarse(coarse_G, bc_[0], bc_[1], bc_[2]);
 
-            if ((coarse_G.dim(0) > ghost_pt()) && (coarse_G.dim(1) > ghost_pt())
-                && (coarse_G.dim(2) > ghost_pt()))
+            if ((static_cast<int>(coarse_G.dim(0)) > ghost_pt())
+                && (static_cast<int>(coarse_G.dim(1)) > ghost_pt())
+                && (static_cast<int>(coarse_G.dim(2)) > ghost_pt()))
                 ucoarse.test_trade_boundaries();
         }
 }
@@ -4115,9 +4117,9 @@ void GridFunc<T>::add_bias(const double bias)
 
         const short shift = ghost_pt();
         int istart        = grid_.dim(0) * mype_env().my_mpi(0);
-        for (int i = 0; i < grid_.dim(0); i++)
-            for (int j = 0; j < grid_.dim(1); j++)
-                for (int k = 0; k < grid_.dim(2); k++)
+        for (unsigned int i = 0; i < grid_.dim(0); i++)
+            for (unsigned int j = 0; j < grid_.dim(1); j++)
+                for (unsigned int k = 0; k < grid_.dim(2); k++)
                     uu_[incx_ * (i + shift) + incy_ * (j + shift) + shift + k]
                         -= (T)(((double)(i + istart) / (double)(grid_.gdim(0)))
                                * bias);
@@ -4159,10 +4161,10 @@ double GridFunc<T>::get_bias()
         }
 #endif
 
-        for (int j = 0; j < grid_.dim(1); j++)
-            for (int k = 0; k < grid_.dim(2); k++)
+        for (unsigned int j = 0; j < grid_.dim(1); j++)
+            for (unsigned int k = 0; k < grid_.dim(2); k++)
             {
-                for (int i = i0; i < grid_.dim(0); i++)
+                for (unsigned int i = i0; i < grid_.dim(0); i++)
                 {
                     assert((i + istart) > 0);
                     bias -= (uu_[incx_ * (i + shift) + incy_ * (j + shift)

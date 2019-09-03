@@ -145,11 +145,11 @@ protected:
 
 public:
     LocalizationRegions(const Vector3D& cell, const float tol_displ = 1.e10)
-        : volume_(0.),
-          gid_local_regions_set_(false),
+        : gid_local_regions_set_(false),
+          nglobal_(-1),
+          volume_(0.),
           cell_(cell),
-          tol_displ_(tol_displ),
-          nglobal_(-1)
+          tol_displ_(tol_displ)
     {
         assert(cell_[0] > 0.01);
         assert(cell_[1] > 0.01);
@@ -264,7 +264,7 @@ public:
 
         const short iloc = 0;
 
-        for (int i = 0; i < subdiv_overlap_gids_[iloc].size(); i++)
+        for (unsigned int i = 0; i < subdiv_overlap_gids_[iloc].size(); i++)
         {
             if (subdiv_overlap_gids_[iloc][i] == gid) return i;
         }

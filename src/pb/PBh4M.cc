@@ -134,9 +134,9 @@ void PBh4M<T>::jacobi(GridFunc<T>& A, const GridFunc<T>& B, GridFunc<T>& W)
     T* aa             = A.uu();
 
     const int n = A.grid().sizeg();
-    assert(n == B.grid().sizeg());
-    assert(n == W.grid().sizeg());
-    assert(n == pp_.grid().sizeg());
+    assert(n == static_cast<int>(B.grid().sizeg()));
+    assert(n == static_cast<int>(W.grid().sizeg()));
+    assert(n == static_cast<int>(pp_.grid().sizeg()));
 
     for (int j = 0; j < n; j++)
     {

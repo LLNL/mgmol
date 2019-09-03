@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(condition_dist_matrix)
 
     double anorm   = S.norm('1');
     double invcond = LS.pocon('l', anorm);
-    double cond = cond = 1. / invcond;
+    double cond    = 1. / invcond;
 
     const double tol = 1.e-3;
     BOOST_TEST(cond == expected_cond, tt::tolerance(tol));

@@ -71,9 +71,9 @@ void PCGSolver_Diel<T, T2>::setupPrecon()
             = ((!(mygrid->dim(0)
                    & 1)) // cannot coarsen if mesh not divisible by 2
                 && (!(mygrid->dim(1) & 1)) && (!(mygrid->dim(2) & 1))
-                && (mygrid->dim(0) >= 2 * nghosts)
-                && (mygrid->dim(1) >= 2 * nghosts)
-                && (mygrid->dim(2) >= 2 * nghosts));
+                && (static_cast<int>(mygrid->dim(0)) >= 2 * nghosts)
+                && (static_cast<int>(mygrid->dim(1)) >= 2 * nghosts)
+                && (static_cast<int>(mygrid->dim(2)) >= 2 * nghosts));
 
         if (!flag_coarsen)
         {

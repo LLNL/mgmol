@@ -176,9 +176,9 @@ void FDoper<T>::del1_4th(
             assert(v != u);
             for (int iz = 0; iz < dim2; iz++)
             {
-                assert(iiz < B.grid().sizeg());
-                assert((iiz + incc) < A.grid().sizeg());
-                assert((iiz + incc2) < A.grid().sizeg());
+                assert(iiz < static_cast<int>(B.grid().sizeg()));
+                assert((iiz + incc) < static_cast<int>(A.grid().sizeg()));
+                assert((iiz + incc2) < static_cast<int>(A.grid().sizeg()));
                 assert((iiz - incc) >= 0);
                 assert((iiz - incc2) >= 0);
 

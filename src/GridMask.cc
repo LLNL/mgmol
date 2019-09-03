@@ -84,7 +84,7 @@ GridMask::GridMask(const unsigned short nclevels, const unsigned short subdivx,
     }
 
     ninstances_++;
-};
+}
 
 // Destructor
 GridMask::~GridMask()

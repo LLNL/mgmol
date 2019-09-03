@@ -41,7 +41,7 @@ KBPsiMatrixSparse::KBPsiMatrixSparse(
     distributor_ = nullptr;
 
     isDataSetup_ = false;
-};
+}
 
 KBPsiMatrixSparse::~KBPsiMatrixSparse() { clearData(); }
 
@@ -651,7 +651,7 @@ double KBPsiMatrixSparse::getEvnl(
     const int numst = orbitals.numst();
     if (numst == 0) return 0.;
 
-    DISTMATDTYPE* replicated_dm;
+    DISTMATDTYPE* replicated_dm = nullptr;
     proj_matrices->getReplicatedDM(replicated_dm);
 
     double trace = 0.0;
@@ -727,7 +727,7 @@ double KBPsiMatrixSparse::getTraceDM(
     vector<int> cols;
     cols.reserve(nnzrow1);
     kbpsimat_->getColumnIndexes(lrindex, cols);
-    assert(cols.size() == nnzrow1);
+    assert(static_cast<int>(cols.size()) == nnzrow1);
 
     // get values in row of kbpsimat_
     vector<double> vval;

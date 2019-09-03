@@ -297,9 +297,9 @@ public:
     int getSortedDataColumnPosition(
         const int begin, const int end, const int col) const
     {
-        assert((int)cols_.size() > 0);
-        assert(begin < (int)cols_.size());
-        assert(end <= cols_.size());
+        assert(static_cast<int>(cols_.size()) > 0);
+        assert(begin < static_cast<int>(cols_.size()));
+        assert(end <= static_cast<int>(cols_.size()));
         assert(end > 0);
         assert(begin >= 0);
 

@@ -41,6 +41,6 @@ int gatherV(std::vector<unsigned short>& sendbuf,
 
 int allreduce(
     short* sendbuf, short* recvbuf, int count, MPI_Op op, const MPI_Comm comm);
-};
+}
 
 #endif

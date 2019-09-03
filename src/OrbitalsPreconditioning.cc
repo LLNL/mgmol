@@ -64,8 +64,8 @@ void OrbitalsPreconditioning<T>::setup(T& orbitals, const short mg_levels,
     }
     precond_->setup(gid_to_mask, orbitals.getOverlappingGids());
 
-    assert(
-        orbitals.chromatic_number() == orbitals.getOverlappingGids()[0].size());
+    assert(orbitals.chromatic_number()
+           == static_cast<int>(orbitals.getOverlappingGids()[0].size()));
 
     if (ct.blockPrecond())
     {

@@ -366,19 +366,19 @@ void Electrostatic::fillFuncAroundIons(const Ions& ions)
                                  << " in a radius " << rc << endl;
             }
 #endif
-            for (int ix = 0; ix < pbGrid_->dim(0); ix++)
+            for (unsigned int ix = 0; ix < pbGrid_->dim(0); ix++)
             {
 
                 xc[1]         = pbGrid_->start(1);
                 const int ix1 = (ix + shift) * incx;
 
-                for (int iy = 0; iy < pbGrid_->dim(1); iy++)
+                for (unsigned int iy = 0; iy < pbGrid_->dim(1); iy++)
                 {
 
                     xc[2]         = pbGrid_->start(2);
                     const int iy1 = ix1 + (iy + shift) * incy;
 
-                    for (int iz = 0; iz < pbGrid_->dim(2); iz++)
+                    for (unsigned int iz = 0; iz < pbGrid_->dim(2); iz++)
                     {
 
                         const double r = (*ion)->minimage(xc, lattice, bc_);

@@ -14,7 +14,9 @@ using namespace std;
 
 template <class T>
 SquareLocalMatrices<T>::SquareLocalMatrices(const int subdiv, const int m)
-    : LocalMatrices<T>(subdiv, m, m){};
+    : LocalMatrices<T>(subdiv, m, m)
+{
+}
 
 template <class T>
 void SquareLocalMatrices<T>::fillUpperWithLower()

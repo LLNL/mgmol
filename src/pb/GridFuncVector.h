@@ -148,7 +148,7 @@ public:
 
     ~GridFuncVector() override
     {
-        assert(functions_.size() == nfunc_);
+        assert(static_cast<int>(functions_.size()) == nfunc_);
         if (allocate_functions_)
         {
             for (int i = 0; i < nfunc_; i++)
@@ -164,7 +164,7 @@ public:
     template <typename T2>
     void assign(const int i, const T2* const v, const char dis = 'd')
     {
-        assert(i < functions_.size());
+        assert(i < static_cast<int>(functions_.size()));
 
         functions_[i]->assign(v, dis);
         updated_boundaries_ = false;
@@ -177,7 +177,7 @@ public:
 
         functions_.push_back(function);
 
-        assert(functions_.size() <= nfunc_);
+        assert(static_cast<int>(functions_.size()) <= nfunc_);
     }
 
     GridFunc<T>& func(const int k) { return *functions_[k]; }
@@ -199,7 +199,7 @@ public:
     void restrict3D(GridFuncVector&);
     void resetData()
     {
-        assert(nfunc_ == functions_.size());
+        assert(nfunc_ == static_cast<int>(functions_.size()));
 
         for (short k = 0; k < nfunc_; k++)
             functions_[k]->resetData();

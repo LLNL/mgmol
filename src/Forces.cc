@@ -97,7 +97,7 @@ void Forces<T>::evaluateShiftedFields(Ion& ion,
     evaluateRadialFunc(positions, lrad, var_charge, lambda_rhocomp);
 
     evaluateShiftedFields_tm_.stop();
-};
+}
 
 template <class T>
 void Forces<T>::evaluateSupersampledRadialFunc(
@@ -336,7 +336,7 @@ void Forces<T>::lforce(Ions& ions, RHODTYPE* rho)
 
     lforce_local_tm_.start();
 
-    int cols[buffer_size];
+    std::vector<int> cols(buffer_size);
     for (int i = 0; i < buffer_size; i++)
         cols[i] = i;
 
@@ -356,7 +356,7 @@ void Forces<T>::lforce(Ions& ions, RHODTYPE* rho)
 
         /* insert row into 2D matrix */
         loc_proj_mat.insertNewRow(
-            buffer_size, index, &cols[0], &loc_proj[0], true);
+            buffer_size, index, cols.data(), &loc_proj[0], true);
     }
 
     lforce_local_tm_.stop();
