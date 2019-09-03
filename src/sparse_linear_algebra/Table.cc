@@ -25,7 +25,6 @@
 #include <iomanip>
 #include <iostream>
 #include <math.h>
-using namespace std;
 
 // Timer   Table::destructor_tm_("Table::destructor");
 // Timer   Table::reset_tm_("Table::reset");
@@ -45,7 +44,6 @@ using namespace std;
  */
 Table::Table(const int tsize)
 {
-    // if(onpe0)cout<<"tsize="<<tsize<<endl;
 #ifdef COUNT_LINKS
     maxlink_   = 0;
     init_size_ = tsize;
@@ -60,7 +58,6 @@ Table::Table(const int tsize)
         ;
     const int space     = powersof2[i - 1];
     space_power_minus1_ = pow(2, powers[i - 1]) - 1;
-    // if(onpe0)cout<<"space_power_minus1_="<<space_power_minus1_<<endl;
 #else
     static int primes[] = { 389, 389, 769, 1543, 3079, 6151, 12289, 24593,
         49157, 98317, 196613, 393241, 786433, 1572869, 3145739, 6291469,
@@ -178,7 +175,7 @@ int Table::insert(int key)
  *
  * @return 0 on success.
  */
-int Table::insert(const vector<int>& keys)
+int Table::insert(const std::vector<int>& keys)
 {
     //  insert_tm_.start();
 
@@ -295,8 +292,9 @@ Table::~Table()
     int maxsize = size_;
     //  mmpi.allreduce(&maxsize, 1, MPI_MAX);
     if (onpe0 && (maxsize > space_ || maxlink_ > 9))
-        cout << "maxlink=" << maxlink_ << ", maxsize=" << maxsize
-             << ", space=" << space_ << ", init_size_=" << init_size_ << endl;
+        std::cout << "maxlink=" << maxlink_ << ", maxsize=" << maxsize
+                  << ", space=" << space_ << ", init_size_=" << init_size_
+                  << std::endl;
 #endif
 
     // destructor_tm_.start();

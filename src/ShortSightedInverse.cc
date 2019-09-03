@@ -17,7 +17,6 @@
 #include <iostream>
 #include <string>
 #include <vector>
-using namespace std;
 
 #ifdef USE_MPI
 #include <mpi.h>
@@ -60,7 +59,7 @@ Timer ShortSightedInverse::linear_solver_matrix_init_tm_(
 
 // const double mat_tol = 1.0e-14;
 ShortSightedInverse::ShortSightedInverse(LocalizationRegions& lrs,
-    const vector<int>& locvars, ClusterOrbitals* local_cluster)
+    const std::vector<int>& locvars, ClusterOrbitals* local_cluster)
     : locvars_(locvars)
 {
     loc_radius_ = lrs.max_radii();
@@ -94,7 +93,7 @@ ShortSightedInverse::ShortSightedInverse(LocalizationRegions& lrs,
 
     /* Setup/ Initialize some local objects */
     /* setup Gram matrix */
-    if (onpe0 && ct.verbose > 0) cout << "lsize_=" << lsize_ << endl;
+    if (onpe0 && ct.verbose > 0) std::cout << "lsize_=" << lsize_ << std::endl;
     // estimate of size parameter (4096) needed for efficient table element
     // access
     gramMat_ = new VariableSizeMatrix<sparserowtab>("Gram", 4096);
@@ -113,17 +112,14 @@ ShortSightedInverse::ShortSightedInverse(LocalizationRegions& lrs,
 
 ShortSightedInverse::~ShortSightedInverse()
 {
-    // if(onpe0)cout<<"delete gramMat_"<<endl;
     delete gramMat_;
     gramMat_ = nullptr;
-    // if(onpe0)cout<<"delete invS"<<endl;
     delete invS_;
     invS_ = nullptr;
     delete matLS_;
     matLS_ = nullptr;
     delete precon_;
     precon_ = nullptr;
-    //    delete distributor_;
 }
 
 /* Reset/Setup local objects */
@@ -158,9 +154,10 @@ int ShortSightedInverse::solve()
     int conv       = 0;
     int maxits     = 0;
     double maxrnrm = 0.;
-    vector<int> its(locfcns_.size());
-    vector<double> rnrm(locfcns_.size());
+    std::vector<int> its(locfcns_.size());
+    std::vector<double> rnrm(locfcns_.size());
 
+    const unsigned locfcns_size = locfcns_.size();
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
@@ -174,7 +171,7 @@ int ShortSightedInverse::solve()
 #ifdef _OPENMP
 #pragma omp for reduction(+ : conv)
 #endif
-        for (unsigned int i = 0; i < locfcns_.size(); i++)
+        for (unsigned int i = 0; i < locfcns_size; i++)
         {
             int* rindex       = (int*)(*gramMat_).getTableValue(locfcns_[i]);
             const int lrindex = *rindex;
@@ -193,7 +190,8 @@ int ShortSightedInverse::solve()
 
             /* Update invS */
             const int* row = (int*)(*invS_).getTableValue(locfcns_[i]);
-            if (row == nullptr) cout << "Row index is NULL !!!" << endl;
+            if (row == nullptr)
+                std::cout << "Row index is NULL !!!" << std::endl;
             const int* cols = (*gramMat_).rowIndexes();
             (*invS_).initializeLocalRow(m, *row, cols, solptr);
         }
@@ -201,11 +199,11 @@ int ShortSightedInverse::solve()
 
     } // end OpenMP region
 
-    for (unsigned int i = 0; i < locfcns_.size(); i++)
+    for (unsigned int i = 0; i < locfcns_size; i++)
     {
         maxits = (maxits > its[i]) ? maxits : its[i];
     }
-    for (unsigned int i = 0; i < locfcns_.size(); i++)
+    for (unsigned int i = 0; i < locfcns_size; i++)
     {
         maxrnrm = (maxrnrm > rnrm[i]) ? maxrnrm : rnrm[i];
     }
@@ -336,9 +334,9 @@ void ShortSightedInverse::computeInvS(
             (*precon_).setup((*matLS_), ilutype_);
             if (onpe0 && (ct.verbose > 1))
                 (*MPIdata::sout)
-                    << scientific << "ILU preconditioner fill_factor = "
+                    << std::scientific << "ILU preconditioner fill_factor = "
                     << ((double)(*precon_).nnz_ilu()) / ((double)matLS_->nnz())
-                    << endl;
+                    << std::endl;
             new_pc_ = true;
             pc_setup_tm_.stop();
         }
@@ -359,7 +357,8 @@ void ShortSightedInverse::computeInvS(
 
 /* initialize the gram matrix */
 void ShortSightedInverse::initGramMatrix(const LocalMatrices<MATDTYPE>& ss,
-    const vector<vector<int>>& global_indexes, const int new_orbitals_index)
+    const std::vector<std::vector<int>>& global_indexes,
+    const int new_orbitals_index)
 {
     if ((*gramMat_).n() > 0 && gm_orbitals_index_ == new_orbitals_index) return;
 
@@ -400,7 +399,8 @@ void ShortSightedInverse::gather(DataDistribution& distributor_invS)
  * diagonal entries of the functions centered on the local processor.(ie.
  * functions in locfcns_)
  */
-double ShortSightedInverse::getTraceDiagProductWithInvS(vector<DMDTYPE>& ddiag)
+double ShortSightedInverse::getTraceDiagProductWithInvS(
+    std::vector<DMDTYPE>& ddiag)
 {
     assert((int)ddiag.size() == (int)locfcns_.size());
 
@@ -422,13 +422,13 @@ double ShortSightedInverse::getTraceDiagProductWithInvS(vector<DMDTYPE>& ddiag)
 }
 
 /* print a few rows of the Gram matrix */
-void ShortSightedInverse::printGramMat(ostream& os, int nrows) const
+void ShortSightedInverse::printGramMat(std::ostream& os, int nrows) const
 {
     if (isGramAugmented_ == true)
     {
         if (onpe0)
             os << " Local GramMatrix ... n = " << lsize_
-               << " augmented_size = " << aug_size_ << endl;
+               << " augmented_size = " << aug_size_ << std::endl;
         (*gramMat_).print(os, locfcns_, nrows);
     }
     else
@@ -450,7 +450,7 @@ void ShortSightedInverse::printGramMat(ostream& os, int nrows) const
             = false; /* gather in one dimension only - assumes symmetry */
         distributor.augmentLocalData(lmat, append);
 
-        if (onpe0) os << " Local GramMatrix size ... n = " << n << endl;
+        if (onpe0) os << " Local GramMatrix size ... n = " << n << std::endl;
 
         lmat.print(os, locfcns_, nrows);
     }
@@ -507,7 +507,8 @@ void ShortSightedInverse::augmentGramMatrix(
     const bool print_flag = (onpe0 && ct.verbose > 2);
     if (print_flag)
     {
-        cout << " Gram Matrix data distribution stats: distributor1 " << endl;
+        std::cout << " Gram Matrix data distribution stats: distributor1 "
+                  << std::endl;
         distributor1.printStats();
     }
 
@@ -517,7 +518,8 @@ void ShortSightedInverse::augmentGramMatrix(
 
     if (print_flag)
     {
-        cout << " Gram Matrix data distribution stats: distributor2 " << endl;
+        std::cout << " Gram Matrix data distribution stats: distributor2 "
+                  << std::endl;
         distributor2.printStats();
     }
 
@@ -527,7 +529,7 @@ void ShortSightedInverse::augmentGramMatrix(
     Gram_Matrix_data_distribution_tm_.stop();
 }
 
-void ShortSightedInverse::printTimers(ostream& os)
+void ShortSightedInverse::printTimers(std::ostream& os)
 {
     compute_invS_tm_.print(os);
     inverse_solve_tm_.print(os);
@@ -541,7 +543,7 @@ void ShortSightedInverse::printTimers(ostream& os)
     reset_tm_.print(os);
 }
 
-void ShortSightedInverse::printGramMM(ofstream& tfile)
+void ShortSightedInverse::printGramMM(std::ofstream& tfile)
 {
     assert(gramMat_ != 0);
 
@@ -572,7 +574,7 @@ void ShortSightedInverse::printGramMM(ofstream& tfile)
     }
     mmpi.allreduce(&nzmat, 1, MPI_SUM);
 
-    if (onpe0) tfile << n << " " << n << " " << nzmat << endl;
+    if (onpe0) tfile << n << " " << n << " " << nzmat << std::endl;
 
     lmat.print(tfile, locfcns_, n);
 

@@ -15,7 +15,6 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
-using namespace std;
 
 #ifdef USE_MPI
 #include <mpi.h>
@@ -43,7 +42,7 @@ int MGmol<T>::read_rho_and_pot_hdf5(HDFrestart& file, Rho<T>& rho)
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 0)
-        os_ << "Try to read density and potentials" << endl;
+        os_ << "Try to read density and potentials" << std::endl;
 
     Potentials& pot = hamiltonian_->potential();
 
@@ -72,8 +71,9 @@ int MGmol<T>::read_rho_and_pot_hdf5(HDFrestart& file, Rho<T>& rho)
 
 // Writes restart information in a file.
 template <class T>
-int MGmol<T>::write_hdf5(const string& filename, vector<vector<RHODTYPE>>& rho,
-    Ions& ions, T& orbitals, LocalizationRegions& lrs)
+int MGmol<T>::write_hdf5(const std::string& filename,
+    std::vector<std::vector<RHODTYPE>>& rho, Ions& ions, T& orbitals,
+    LocalizationRegions& lrs)
 {
     Mesh* mymesh             = Mesh::instance();
     const pb::PEenv& myPEenv = mymesh->peenv();
@@ -90,15 +90,16 @@ int MGmol<T>::write_hdf5(const string& filename, vector<vector<RHODTYPE>>& rho,
 
     int status = write_hdf5(h5f_file, rho, ions, orbitals, *lrs_);
     if (status < 0 && onpe0)
-        (*MPIdata::serr) << "restart.cc: write_hdf5 failed!!!" << endl;
+        (*MPIdata::serr) << "restart.cc: write_hdf5 failed!!!" << std::endl;
 
     return status;
 }
 
 // Writes restart information in a HDF5 file.
 template <class T>
-int MGmol<T>::write_hdf5(HDFrestart& h5f_file, vector<vector<RHODTYPE>>& rho,
-    Ions& ions, T& orbitals, LocalizationRegions& lrs)
+int MGmol<T>::write_hdf5(HDFrestart& h5f_file,
+    std::vector<std::vector<RHODTYPE>>& rho, Ions& ions, T& orbitals,
+    LocalizationRegions& lrs)
 {
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
@@ -180,14 +181,15 @@ int MGmol<T>::write_hdf5(HDFrestart& h5f_file, vector<vector<RHODTYPE>>& rho,
     timer.stop();
     if (onpe0)
     {
-        os_ << "Wrote restart data --- timing: " << endl;
+        os_ << "Wrote restart data --- timing: " << std::endl;
     }
     timer.print(os_);
     return 0;
 }
 
 template <class T>
-int MGmol<T>::read_restart_lrs(HDFrestart& h5f_file, const string& dset_name)
+int MGmol<T>::read_restart_lrs(
+    HDFrestart& h5f_file, const std::string& dset_name)
 {
     Control& ct = *(Control::instance());
     if (ct.verbose > 0)
@@ -228,14 +230,15 @@ int MGmol<T>::read_restart_data(HDFrestart& h5f_file, Rho<T>& rho, T& orbitals)
         if (ierr < 0)
         {
             (*MPIdata::serr)
-                << "MGmol<T>::read_restart_data(): error in reading " << endl;
+                << "MGmol<T>::read_restart_data(): error in reading "
+                << std::endl;
             return ierr;
         }
     }
 
     timer.stop();
 
-    if (onpe0) os_ << "Read restart data --- timing: " << endl;
+    if (onpe0) os_ << "Read restart data --- timing: " << std::endl;
     timer.print(os_);
 
     return 0;

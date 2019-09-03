@@ -10,8 +10,6 @@
 
 #include "Timer.h"
 
-using namespace std;
-
 double Timer::gtod(void) const
 {
     struct timeval tv;
@@ -19,7 +17,7 @@ double Timer::gtod(void) const
     return tv.tv_sec + 1.e-6 * tv.tv_usec;
 }
 
-void Timer::print(ostream& os) const
+void Timer::print(std::ostream& os) const
 {
     double tmin, tmax, tavg;
 
@@ -50,11 +48,13 @@ void Timer::print(ostream& os) const
 
     if (mype == 0)
     {
-        os.setf(ios::left, ios::adjustfield);
-        os << "Timer: " << setw(50) << name_ << scientific << setprecision(2)
-           << setw(9) << tmin << " / " << setprecision(2) << setw(9) << tavg
-           << " / " << setprecision(2) << setw(9) << tmax << " / "
-           << setprecision(2) << setw(7) << nmin << " / " << setw(7) << navg
-           << " / " << setw(7) << nmax << endl;
+        os.setf(std::ios::left, std::ios::adjustfield);
+        os << "Timer: " << std::setw(50) << name_ << std::scientific
+           << std::setprecision(2) << std::setw(9) << tmin << " / "
+           << std::setprecision(2) << std::setw(9) << tavg << " / "
+           << std::setprecision(2) << std::setw(9) << tmax << " / "
+           << std::setprecision(2) << std::setw(7) << nmin << " / "
+           << std::setw(7) << navg << " / " << std::setw(7) << nmax
+           << std::endl;
     }
 }

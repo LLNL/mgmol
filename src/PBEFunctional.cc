@@ -17,12 +17,11 @@
 #include <cmath>
 #include <iostream>
 #include <vector>
-using namespace std;
 
 const static double uk = 0.804;
 // const static double uk = 1.245;
 
-PBEFunctional::PBEFunctional(vector<vector<RHODTYPE>>& rhoe)
+PBEFunctional::PBEFunctional(std::vector<std::vector<RHODTYPE>>& rhoe)
     : XCFunctional(rhoe)
 {
     pgrad_rho_[0] = pgrad_rho_[1] = pgrad_rho_[2] = nullptr;
@@ -173,7 +172,7 @@ double PBEFunctional::computeRhoDotExc() const
     int rc          = mmpi.allreduce(&exc, &sum, 1, MPI_SUM);
     if (rc != MPI_SUCCESS)
     {
-        (*MPIdata::sout) << "MPI_Allreduce double sum failed!!!" << endl;
+        (*MPIdata::sout) << "MPI_Allreduce double sum failed!!!" << std::endl;
         Control& ct = *(Control::instance());
         ct.global_exit(2);
     }

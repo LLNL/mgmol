@@ -19,7 +19,6 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-using namespace std;
 
 #ifdef USE_MPI
 #include <mpi.h>
@@ -291,9 +290,9 @@ void DataDistribution::distributeLocalDataWithCommOvlp(const int nsteps,
         MPI_Waitall(2, request, MPI_STATUSES_IGNORE);
         if (remote_size > bsiz)
         {
-            cout << "ERROR: " << name_ << ", dir=" << dir
-                 << ", remote_size=" << remote_size << ", bsiz=" << bsiz
-                 << endl;
+            std::cout << "ERROR: " << name_ << ", dir=" << dir
+                      << ", remote_size=" << remote_size << ", bsiz=" << bsiz
+                      << std::endl;
             MPI_Abort(cart_comm_, 0);
         }
         // string stamp="DataDistribution ("+name_+"), buffer size checked...";
@@ -307,14 +306,14 @@ void DataDistribution::distributeLocalDataWithCommOvlp(const int nsteps,
             source, 0, cart_comm_, &request[0]);
         if (mpircv != MPI_SUCCESS)
         {
-            cout << "ERROR in MPI_Irecv, code=" << mpircv << endl;
+            std::cout << "ERROR in MPI_Irecv, code=" << mpircv << std::endl;
             MPI_Abort(cart_comm_, 0);
         }
         int mpisnd = MPI_Isend(packed_buffer.sendBuffer(), siz, MPI_CHAR, dest,
             0, cart_comm_, &request[1]);
         if (mpisnd != MPI_SUCCESS)
         {
-            cout << "ERROR in MPI_Isend, code=" << mpisnd << endl;
+            std::cout << "ERROR in MPI_Isend, code=" << mpisnd << std::endl;
             MPI_Abort(cart_comm_, 0);
         }
         /* wait to complete communication */
@@ -713,8 +712,8 @@ void DataDistribution::computeMaxDataSize(const short dir,
 
         Control& ct = *(Control::instance());
         if (onpe0 && ct.verbose > 0)
-            cout << "DataDistribution: Use maxsize=" << max_matsize_
-                 << ", nzmax=" << max_nnz_ << endl;
+            std::cout << "DataDistribution: Use maxsize=" << max_matsize_
+                      << ", nzmax=" << max_nnz_ << std::endl;
     }
 
     *maxsize = max_matsize_;
@@ -773,7 +772,7 @@ void DataDistribution::setPointersToRecvData(const char* rbuf)
     }
 }
 
-void DataDistribution::printTimers(ostream& os)
+void DataDistribution::printTimers(std::ostream& os)
 {
     gathersizes_tm_.print(os);
     reducesizes_tm_.print(os);

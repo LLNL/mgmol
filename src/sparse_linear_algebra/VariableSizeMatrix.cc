@@ -27,8 +27,6 @@
 #include <mpi.h>
 #endif
 
-using namespace std;
-
 Timer VariableSizeMatrixInterface::AmultSymBdiag_tm_(
     "VariableSizeMatrix::AmultSymBdiag");
 Timer VariableSizeMatrixInterface::AmultSymB_ij_tm_(
@@ -83,47 +81,17 @@ void quickSortIR(int* a, double* b, const int lo, const int hi)
     if (lo < j) quickSortIR(a, b, lo, j);
     if (i < hi) quickSortIR(a, b, i, hi);
 }
-//*/
-/* Binary search algorithm */
-///*
-// int binarySearchI(const int * const a, const int key, const int start, const
-// int end)
-//{
-//  // test if array is empty
-//  if (end < start)
-//    // set is empty, so return value showing not found
-//    return -1;
-//  else
-//  {
-//    // calculate midpoint to cut set in half
-//    int imid = start + ((end-start)>>1); //(int)floor(double((imax -
-//    imin)/2));
-//
-//      // three-way comparison
-//      if (a[imid] > key)
-//        // key is in lower subset
-//        return binarySearchI(a, key, start, imid-1);
-//      else if (a[imid] < key)
-//        // key is in upper subset
-//        return binarySearchI(a, key, imid+1, end);
-//      else
-//        // key has been found
-//        return imid;
-//  }
-//}
-//*/
+
 template <class T>
 VariableSizeMatrix<T>::VariableSizeMatrix(
-    const string& name, const int alloc_size, const MPI_Comm comm)
+    const std::string& name, const int alloc_size, const MPI_Comm /*comm*/)
     : name_(name)
 {
-    (void)comm; // comm is currently unused
     // reserve some memory for matrix data
     const int size = MIN_MAT_SIZE >= alloc_size ? MIN_MAT_SIZE : alloc_size;
     data_.reserve(size);
 
     /* Create table object */
-    // const int tsize = 1000 < size ? 1000 : size;
     table_  = new Table(alloc_size);
     n_      = 0;
     nzmax_  = 0;
@@ -166,7 +134,6 @@ VariableSizeMatrix<T>::VariableSizeMatrix(
     const int n = A.n_;
     if (copy_table)
     {
-        // const int tsize = 1000 < n ? 1000 : n;
         table_ = new Table(n);
         data_.reserve(n);
         int j = 0;
@@ -201,7 +168,6 @@ template <class T2>
 VariableSizeMatrix<T>::VariableSizeMatrix(
     const VariableSizeMatrix<T2>& A, const bool copy_table)
 {
-    // typedef typename std::vector<T2*>::const_iterator const_T2vecIterator;
     n_      = A.n();
     nzmax_  = A.nzmax();
     totnnz_ = A.nnzmat();
@@ -210,14 +176,12 @@ VariableSizeMatrix<T>::VariableSizeMatrix(
     const int n = n_;
     if (copy_table)
     {
-        // const int tsize = 1000 < n ? 1000 : n;
         table_ = new Table(n);
         data_.reserve(n);
         int j = 0;
-        for (int i = 0; i < n; i++) //(const_T2vecIterator arow=A.data_.begin();
-                                    // arow!=A.data_.end(); arow++)
+        for (int i = 0; i < n; i++)
         {
-            T* new_row = new T(A.getRow(i)); //(**arow);
+            T* new_row = new T(A.getRow(i));
             data_.push_back(new_row);
             /* copy table */
             (*table_).insert(lvars_[j]);
@@ -230,10 +194,9 @@ VariableSizeMatrix<T>::VariableSizeMatrix(
         table_ = nullptr;
 
         data_.reserve(n);
-        for (int i = 0; i < n; i++) //(const_T2vecIterator arow=A.data_.begin();
-                                    // arow!=A.data_.end(); arow++)
+        for (int i = 0; i < n; i++)
         {
-            T* new_row = new T(A.getRow(i)); //(**arow);
+            T* new_row = new T(A.getRow(i));
             data_.push_back(new_row);
         }
     }
@@ -252,7 +215,7 @@ void VariableSizeMatrix<T>::copyData(
         T* new_row = new T(*(A.data_[j]));
         data_.push_back(new_row);
 
-        totnnz_ += (int)A.data_[j]->nnz();
+        totnnz_ += static_cast<int>(A.data_[j]->nnz());
     }
 
     /* copy data vectors */
@@ -274,20 +237,11 @@ template <class T>
 void VariableSizeMatrix<T>::insertNewRow(const int ncols, const int row,
     const int* cols, const double* vals, const bool append)
 {
-    //    insertRow_tm_.start();
-
-    /* begin */
-    //    const int lrindex = (*table_).get_size();
-
     if (append == false) return;
 
     // update
     T* new_row = new T();
     new_row->assign(ncols, cols, vals);
-    //#ifdef _OPENMP
-    //#pragma omp critical
-    //#endif
-    //    {
     data_.push_back(new_row);
     /* insert row into table */
     updateTableValue(row);
@@ -297,9 +251,7 @@ void VariableSizeMatrix<T>::insertNewRow(const int ncols, const int row,
     n_++;
     /* update local variable index array */
     lvars_.push_back(row);
-    //    }
 
-    //    insertRow_tm_.stop();
     return;
 }
 
@@ -310,7 +262,7 @@ void VariableSizeMatrix<T>::insertNewRow(const int ncols, const int row,
 template <class T>
 void VariableSizeMatrix<T>::initializeMatrixElements(
     const LocalMatrices<MATDTYPE>& ss,
-    const vector<vector<int>>& global_indexes, const int numst,
+    const std::vector<std::vector<int>>& global_indexes, const int numst,
     const double tol)
 {
     assert(static_cast<int>(global_indexes.size()) == ss.subdiv());
@@ -325,7 +277,6 @@ void VariableSizeMatrix<T>::initializeMatrixElements(
 
     // double loop over colors
     initialize_tm_.start();
-    //#pragma omp parallel for
     for (int icolor = 0; icolor < chromatic_number; icolor++)
     {
 
@@ -388,7 +339,7 @@ void VariableSizeMatrix<T>::initializeMatrixElements(
 /* print a few rows and cols of a square matrix - mainly used for diagnostics */
 template <class T>
 void VariableSizeMatrix<T>::print(
-    ostream& os, const std::vector<int>& locfcns, int n) const
+    std::ostream& os, const std::vector<int>& locfcns, int n) const
 {
     int nrows = n < MAX_PRINT_ROWS ? n : MAX_PRINT_ROWS;
     int ncols = nrows;
@@ -402,7 +353,7 @@ void VariableSizeMatrix<T>::print(
     bool found;
 
     /* begin */
-    os << setprecision(5);
+    os << std::setprecision(5);
 #if 1
     for (int row = 0; row < nrows; row++)
     {
@@ -430,9 +381,9 @@ void VariableSizeMatrix<T>::print(
                     comm, &status);
 
             for (int i = 0; i < ncols; i++)
-                os << scientific << buf[i] << "\t";
+                os << std::scientific << buf[i] << "\t";
 
-            os << endl;
+            os << std::endl;
             os.flush();
         }
         mmpi.barrier();
@@ -465,7 +416,7 @@ void VariableSizeMatrix<T>::printMatCSR(const char* fname)
 /* Print 2x2 block*/
 template <class T>
 void VariableSizeMatrix<T>::printMatBlock2(
-    const int gid0, const int gid1, ostream& os)
+    const int gid0, const int gid1, std::ostream& os)
 {
     for (int i = 0; i < n_; i++)
     {
@@ -478,27 +429,13 @@ void VariableSizeMatrix<T>::printMatBlock2(
                 if (jindex == gid0 || jindex == gid1)
                     os << "S(" << lvars_[i] << ","
                        << data_[i]->getColumnIndex(j)
-                       << ")=" << data_[i]->getEntryFromPosition(j) << endl;
+                       << ")=" << data_[i]->getEntryFromPosition(j)
+                       << std::endl;
             }
         }
     }
 }
 
-/* Print the MM matrix */
-/*
-void VariableSizeMatrix<T>::printMatMM(ofstream& outfile)
-{
-
-
-     if( onpe0 )
-     {
-        os<<n_<<" "<<n_<<" "<<nnzmat()<<endl;
-        print(outfile, const std::vector<int>&locfcns,  int nrows=NUM_PRINT_ROWS
-)
-
-     return;
-}
-*/
 /* reset the CSR matrix to be reused */
 template <class T>
 void VariableSizeMatrix<T>::reset()
@@ -565,7 +502,7 @@ template <class T>
 void VariableSizeMatrix<T>::set2Identity()
 {
     assert(n_ > 0);
-    assert(n_ == (int)(*table_).get_size());
+    assert(n_ == static_cast<int>((*table_).get_size()));
 
     totnnz_ = n_;
 
@@ -585,11 +522,11 @@ void VariableSizeMatrix<T>::set2Identity()
 
 /* Print select rows of the CSR matrix */
 template <class T>
-void VariableSizeMatrix<T>::printMat(const char* fname, vector<int>& lvec)
+void VariableSizeMatrix<T>::printMat(const char* fname, std::vector<int>& lvec)
 {
     FILE* outfile = fopen(fname, "w");
 
-    const int nrows = (int)lvec.size();
+    const int nrows = static_cast<int>(lvec.size());
     for (int row = 0; row < nrows; row++)
     {
         int* rindex = (int*)getTableValue(lvec[row]);
@@ -637,11 +574,11 @@ double VariableSizeMatrix<T>::AmultSymBdiag(
 
     /* Loop over matrix with fewer non-zeros per row */
     const int nzcols = nzb < nnzrow_lrindex ? nzb : nnzrow_lrindex;
-    vector<int> colindexes;
+    std::vector<int> colindexes;
     colindexes.reserve(nzcols);
-    vector<double> vvals;
+    std::vector<double> vvals;
     vvals.reserve(nzcols);
-    vector<double> bvals;
+    std::vector<double> bvals;
     bvals.reserve(nzcols);
 
     if (nzcols == nzb)
@@ -761,7 +698,7 @@ double VariableSizeMatrix<T>::trace()
 /* compute sum_i ( ddiag[i]*Mat[i][i] ) */
 template <class T>
 double VariableSizeMatrix<T>::getTraceDiagProductWithMat(
-    const vector<double>& ddiag)
+    const std::vector<double>& ddiag)
 {
     double trace = 0.;
     const int n  = n_;
@@ -998,10 +935,10 @@ void VariableSizeMatrix<T>::gemv(const double alpha,
 
 template <class T>
 void VariableSizeMatrix<T>::consolidate(
-    const vector<int>& gids, DataDistribution& distributor)
+    const std::vector<int>& gids, DataDistribution& distributor)
 {
     // cout<<"Call VariableSizeMatrix<T>::consolidate()...\n";
-    vector<int> pattern(n_, 0);
+    std::vector<int> pattern(n_, 0);
     for (std::vector<int>::const_iterator it = gids.begin(); it != gids.end();
          ++it)
     {

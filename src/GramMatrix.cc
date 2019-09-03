@@ -11,7 +11,6 @@
 #include <iomanip>
 #include <iostream>
 #include <memory>
-using namespace std;
 
 #include "DistMatrix2SquareLocalMatrices.h"
 #include "DistVector.h"
@@ -193,7 +192,7 @@ void GramMatrix::setMatrix(
 
 double GramMatrix::getLinDependent2states(int& st1, int& st2) const
 {
-    vector<DISTMATDTYPE> eigenvalues(dim_);
+    std::vector<DISTMATDTYPE> eigenvalues(dim_);
     dist_matrix::DistMatrix<DISTMATDTYPE> u("u", dim_, dim_);
     // solve a standard symmetric eigenvalue problem
     dist_matrix::DistMatrix<DISTMATDTYPE> mat(*matS_);
@@ -203,13 +202,13 @@ double GramMatrix::getLinDependent2states(int& st1, int& st2) const
     st1 = u.iamax(0, val1);
     u.setVal(st1, 0, 0.);
     if (onpe0)
-        cout << "GramMatrix::getLinDependent2states... element val=" << val1
-             << endl;
+        std::cout << "GramMatrix::getLinDependent2states... element val="
+                  << val1 << std::endl;
     DISTMATDTYPE val2;
     st2 = u.iamax(0, val2);
     if (onpe0)
-        cout << "GramMatrix::getLinDependent2states... element val=" << val2
-             << endl;
+        std::cout << "GramMatrix::getLinDependent2states... element val="
+                  << val2 << std::endl;
 
     // look for 2nd largest coefficient with different sign
     while (val1 * val2 > 0.)
@@ -217,8 +216,8 @@ double GramMatrix::getLinDependent2states(int& st1, int& st2) const
         u.setVal(st2, 0, 0.);
         st2 = u.iamax(0, val2);
         if (onpe0)
-            cout << "GramMatrix::getLinDependent2states... element val=" << val2
-                 << endl;
+            std::cout << "GramMatrix::getLinDependent2states... element val="
+                      << val2 << std::endl;
     }
 
     return (double)eigenvalues[0];
@@ -226,7 +225,7 @@ double GramMatrix::getLinDependent2states(int& st1, int& st2) const
 
 double GramMatrix::getLinDependent2states(int& st1, int& st2, int& st3) const
 {
-    vector<DISTMATDTYPE> eigenvalues(dim_);
+    std::vector<DISTMATDTYPE> eigenvalues(dim_);
     dist_matrix::DistMatrix<DISTMATDTYPE> u("u", dim_, dim_);
     // solve a standard symmetric eigenvalue problem
     dist_matrix::DistMatrix<DISTMATDTYPE> mat(*matS_);

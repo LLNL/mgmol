@@ -66,14 +66,11 @@ void GrassmanCGSparse<T>::conjugate()
         alpha /= projmatrices->computeTraceInvSmultMat(matG, true);
 
         // compute conjugate direction
-        double tau       = max(0., alpha);
+        double tau       = std::max(0., alpha);
         const double one = 1.;
         GrassmanLineMinimization<T>::sdir_->scal(tau);
         GrassmanLineMinimization<T>::sdir_->axpy(
             one, *GrassmanLineMinimization<T>::new_pcgrad_);
-
-        //       if(onpe0)cout<<"conjugate: alpha = "<<alpha<<", tau =
-        //       "<<tau<<endl;
     }
     else
     {

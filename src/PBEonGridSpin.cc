@@ -53,7 +53,7 @@ void PBEonGridSpin<T>::update()
 
     int iterative_index = rho_.getIterativeIndex();
 
-    vector<vector<RHODTYPE>>& vrho = rho_.rho_;
+    std::vector<std::vector<RHODTYPE>>& vrho = rho_.rho_;
     //    int     ione=1;
     double one = 1.;
 

@@ -79,7 +79,7 @@ void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i,
 
         // sparsify matrix rows according to pattern/ clear rows corresponding
         // to non-centered data
-        vector<int> pattern(mat.n(), 0);
+        std::vector<int> pattern(mat.n(), 0);
         for (std::vector<int>::iterator it = locfcns.begin();
              it != locfcns.end(); ++it)
         {
@@ -131,7 +131,7 @@ void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i,
 
         // sparsify matrix rows according to pattern/ clear rows corresponding
         // to non-centered data
-        vector<int> pattern(mat.n(), 0);
+        std::vector<int> pattern(mat.n(), 0);
         for (std::vector<int>::iterator it = locfcns.begin();
              it != locfcns.end(); ++it)
         {
@@ -360,7 +360,7 @@ void MGmol<T>::computeHnlPhiAndAdd2HPhi(
     const pb::Grid& mygrid = mymesh->grid();
     const int numpt        = mygrid.size();
 
-    const vector<vector<int>>& gid(phi.getOverlappingGids());
+    const std::vector<std::vector<int>>& gid(phi.getOverlappingGids());
     const short ncolors = gid[0].size();
 
     {

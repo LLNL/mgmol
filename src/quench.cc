@@ -14,7 +14,6 @@
 #include <map>
 #include <time.h>
 #include <vector>
-using namespace std;
 
 #include "LocGridOrbitals.h"
 
@@ -75,7 +74,8 @@ void MGmol<T>::adaptLR(
     if (spreadf == nullptr)
     {
         if (onpe0)
-            os_ << "WARNING: Cannot adapt LRs: needs SpreadsAndCenters" << endl;
+            os_ << "WARNING: Cannot adapt LRs: needs SpreadsAndCenters"
+                << std::endl;
         return;
     }
 
@@ -86,7 +86,7 @@ void MGmol<T>::adaptLR(
     if (ct.lr_updates_type != 1)
     {
         if (onpe0 && ct.verbose > 1)
-            os_ << " Adapt localization centers..." << endl;
+            os_ << " Adapt localization centers..." << std::endl;
         lrs_->move(*spreadf);
     }
     updateCenters_tm.stop();
@@ -95,11 +95,11 @@ void MGmol<T>::adaptLR(
     {
 
         if (onpe0 && ct.verbose > 1)
-            os_ << " Adapt localization radii..." << endl;
+            os_ << " Adapt localization radii..." << std::endl;
         const double vol_lrs = lrs_->computeVolume();
         if (onpe0 && ct.verbose > 1)
         {
-            os_ << " current Volume LR = " << vol_lrs << endl;
+            os_ << " current Volume LR = " << vol_lrs << std::endl;
         }
 
         double avg;
@@ -112,8 +112,8 @@ void MGmol<T>::adaptLR(
             if (onpe0 && ct.verbose > 1)
             {
                 os_ << " vol. rotated localized orbitals = " << vol_rotated
-                    << endl;
-                os_ << " vol_spreads = " << vol_spreads << endl;
+                    << std::endl;
+                os_ << " vol_spreads = " << vol_spreads << std::endl;
             }
             // target volume is vol_rotated*(ct.cut_radius**3)
             const double ratio
@@ -123,19 +123,19 @@ void MGmol<T>::adaptLR(
         else if (ct.lr_volume_calc == 2)
         {
             assert(ot != NULL);
-            if (onpe0) os_ << " Adapt LR using NOLMO spreads" << endl;
+            if (onpe0) os_ << " Adapt LR using NOLMO spreads" << std::endl;
             const double ratio = ct.cut_radius;
             avg                = lrs_->updateRadii(ot, ratio);
         }
         else
         {
-            if (onpe0) os_ << " Adapt with constant LR volume" << endl;
+            if (onpe0) os_ << " Adapt with constant LR volume" << std::endl;
             avg = lrs_->updateRadiiConstVol(*spreadf);
         }
 
         if (onpe0 && ct.verbose > 1)
         {
-            os_ << " Average radius = " << avg << endl;
+            os_ << " Average radius = " << avg << std::endl;
         }
     }
     if (ct.verbose > 2) lrs_->printAllRegions(os_);
@@ -149,7 +149,7 @@ template <class T>
 void MGmol<T>::updateHmatrix(T& orbitals, Ions& ions)
 {
 #ifdef PRINT_OPERATIONS
-    if (onpe0) os_ << "updateHmatrix()" << endl;
+    if (onpe0) os_ << "updateHmatrix()" << std::endl;
 #endif
 
     // compute Hij
@@ -190,13 +190,13 @@ bool MGmol<T>::rotateStatesPairsCommonCenter(T& orbitals, T& work_orbitals)
     Vector3D origin(mygrid.origin(0), mygrid.origin(1), mygrid.origin(2));
 
     int st1, st2;
-    map<int, Vector3D> save_centers;
-    set<SymmetricPair> exclude_set;
+    std::map<int, Vector3D> save_centers;
+    std::set<SymmetricPair> exclude_set;
     double drmin = lrs_->getStatesWithClosestCenters(&st1, &st2, exclude_set);
     if (onpe0)
         os_ << "drmin=" << drmin
             << ", ct.getMinDistanceCenters()=" << ct.getMinDistanceCenters()
-            << endl;
+            << std::endl;
 
     // if one distance smaller than tolerance, increase
     // tolerance to deal with more close centers right now
@@ -208,15 +208,10 @@ bool MGmol<T>::rotateStatesPairsCommonCenter(T& orbitals, T& work_orbitals)
     {
         if (onpe0 && ct.verbose > 1)
             os_ << "Min. distance between centers " << st1 << " and " << st2
-                << " = " << drmin << endl;
+                << " = " << drmin << std::endl;
         SpreadsAndCenters<T> spreadf2st(origin, ll);
 
         orbitals.orthonormalize2states(st1, st2);
-
-        // double n1=orbitals.normState(st1);
-        // double n2=orbitals.normState(st2);
-        // if( onpe0 && ct.verbose>1 )
-        //    os_<<"n1="<<n1<<", n2="<<n2<<endl;
 
         spreadf2st.computeSinCosDiag2states(orbitals, st1, st2);
 
@@ -224,9 +219,9 @@ bool MGmol<T>::rotateStatesPairsCommonCenter(T& orbitals, T& work_orbitals)
 
         // save centers
         save_centers.insert(
-            pair<int, Vector3D>(st1, spreadf2st.computeCenter(0)));
+            std::pair<int, Vector3D>(st1, spreadf2st.computeCenter(0)));
         save_centers.insert(
-            pair<int, Vector3D>(st2, spreadf2st.computeCenter(1)));
+            std::pair<int, Vector3D>(st2, spreadf2st.computeCenter(1)));
 
         getMLWF2states(st1, st2, orbitals, work_orbitals);
         spreadf2st.computeSinCosDiag2states(orbitals, st1, st2);
@@ -250,7 +245,7 @@ bool MGmol<T>::rotateStatesPairsCommonCenter(T& orbitals, T& work_orbitals)
     {
         // now put back old centers into lrs_
         // to avoid inconsistencies with LR allocations
-        for (map<int, Vector3D>::iterator it = save_centers.begin();
+        for (std::map<int, Vector3D>::iterator it = save_centers.begin();
              it != save_centers.end(); it++)
             lrs_->setCenter(it->first, it->second);
 
@@ -279,27 +274,27 @@ bool MGmol<T>::rotateStatesPairsOverlap(
 
     if (onpe0 && ct.verbose > 2)
     {
-        os_ << "-------------------------" << endl;
+        os_ << "-------------------------" << std::endl;
         os_ << "rotateStatesPairsOverlap: compute smallest eigenvalue of S..."
-            << endl;
+            << std::endl;
     }
     double eigmin
         = proj_matrices_->getLinDependent2states(st1, st2, ct.verbose > 2);
 
     if (onpe0)
     {
-        os_ << setprecision(3) << scientific << "eigmin=" << eigmin
-            << ", threshold=" << threshold << endl;
+        os_ << std::setprecision(3) << std::scientific << "eigmin=" << eigmin
+            << ", threshold=" << threshold << std::endl;
     }
 
     while (eigmin < threshold)
     {
         if (onpe0 && ct.verbose > 1)
         {
-            os_ << "-------------------------" << endl;
-            os_ << setprecision(5) << scientific
+            os_ << "-------------------------" << std::endl;
+            os_ << std::setprecision(5) << std::scientific
                 << "Min. eigenvalue for states " << st1 << ", " << st2 << " = "
-                << eigmin << endl;
+                << eigmin << std::endl;
         }
 
         SpreadsAndCenters<T> spreadf2st(origin, ll);
@@ -312,10 +307,11 @@ bool MGmol<T>::rotateStatesPairsOverlap(
         {
             if (onpe0)
             {
-                cout << "Smallest eigenvalue not related to close LR centers..."
-                     << endl;
-                cout << "d=" << d << endl;
-                cout << "stop MLWF transforms..." << endl;
+                std::cout
+                    << "Smallest eigenvalue not related to close LR centers..."
+                    << std::endl;
+                std::cout << "d=" << d << std::endl;
+                std::cout << "stop MLWF transforms..." << std::endl;
             }
             break;
         }
@@ -329,14 +325,15 @@ bool MGmol<T>::rotateStatesPairsOverlap(
         ProjectedMatricesSparse* projmatrices
             = dynamic_cast<ProjectedMatricesSparse*>(proj_matrices_);
         if (onpe0)
-            cout << "Gram Matrix for pair of states after transformation:"
-                 << endl;
-        if (projmatrices) projmatrices->printGramMatrix2states(st1, st2, cout);
+            std::cout << "Gram Matrix for pair of states after transformation:"
+                      << std::endl;
+        if (projmatrices)
+            projmatrices->printGramMatrix2states(st1, st2, std::cout);
         mmpi.barrier();
         if (onpe0 && ct.verbose > 1)
         {
-            os_ << "-------------------------" << endl;
-            os_ << "compute new smallest eigenvalue..." << endl;
+            os_ << "-------------------------" << std::endl;
+            os_ << "compute new smallest eigenvalue..." << std::endl;
         }
 
         const int oldst1 = st1;
@@ -352,13 +349,13 @@ bool MGmol<T>::rotateStatesPairsOverlap(
         if (oldst1 == st1 && oldst2 == st2)
         {
             if (onpe0)
-                cout << "Same pair found twice in a row... stop MLWF "
-                        "transforms..."
-                     << endl;
+                std::cout << "Same pair found twice in a row... stop MLWF "
+                             "transforms..."
+                          << std::endl;
             break;
         }
     };
-    if (onpe0) cout << endl;
+    if (onpe0) std::cout << std::endl;
 
     return pairs;
 }
@@ -426,13 +423,13 @@ int MGmol<T>::quench(T* orbitals, Ions& ions, const int max_inner_steps,
 
     if (onpe0)
     {
-        os_ << "###########################" << endl;
-        os_ << "QUENCH ELECTRONS" << endl;
-        os_ << "###########################" << endl;
+        os_ << "###########################" << std::endl;
+        os_ << "QUENCH ELECTRONS" << std::endl;
+        os_ << "###########################" << std::endl;
     }
 
     // get actual indexes of stored functions
-    const vector<vector<int>>& gids(orbitals->getOverlappingGids());
+    const std::vector<std::vector<int>>& gids(orbitals->getOverlappingGids());
 
     g_kbpsi_->setup(*ions_, *orbitals);
     electrostat_->setup(ct.vh_its);
@@ -493,7 +490,7 @@ int MGmol<T>::quench(T* orbitals, Ions& ions, const int max_inner_steps,
         }
 
         default:
-            cerr << "Undefined iterative outer solver" << endl;
+            std::cerr << "Undefined iterative outer solver" << std::endl;
             return -1;
     }
 
@@ -514,8 +511,8 @@ int MGmol<T>::quench(T* orbitals, Ions& ions, const int max_inner_steps,
         const double evnl = get_evnl(ions, *orbitals);
         if (onpe0)
         {
-            os_ << setprecision(8) << fixed << " Enl            [Ha] = " << evnl
-                << endl;
+            os_ << std::setprecision(8) << std::fixed
+                << " Enl            [Ha] = " << evnl << std::endl;
         }
     }
 
@@ -524,8 +521,8 @@ int MGmol<T>::quench(T* orbitals, Ions& ions, const int max_inner_steps,
     {
         if (onpe0)
         {
-            os_ << setprecision(8) << fixed << " TS             [Ha] = " << ts
-                << endl;
+            os_ << std::setprecision(8) << std::fixed
+                << " TS             [Ha] = " << ts << std::endl;
         }
     }
     last_eks = energy_->evaluateTotal(ts, proj_matrices_, *orbitals, 2, os_);
@@ -534,8 +531,8 @@ int MGmol<T>::quench(T* orbitals, Ions& ions, const int max_inner_steps,
     {
         double condS = proj_matrices_->computeCond();
         if (onpe0)
-            os_ << setprecision(2) << scientific
-                << "Condition Number of S: " << condS << endl;
+            os_ << std::setprecision(2) << std::scientific
+                << "Condition Number of S: " << condS << std::endl;
     }
 
     if (ct.isLocMode() || ct.isSpreadFunctionalActive())

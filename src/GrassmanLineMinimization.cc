@@ -57,7 +57,7 @@ int GrassmanLineMinimization<T>::updateWF(T& orbitals, Ions& ions,
 
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 2)
-        os_ << "GrassmanLineMinimization<T>::update() ..." << endl;
+        os_ << "GrassmanLineMinimization<T>::update() ..." << std::endl;
 
     // Update wavefunctions
     const bool check_res = (atol > 0.);
@@ -100,9 +100,9 @@ void GrassmanLineMinimization<T>::update_states(
 
     // Update wavefuntion
 #ifdef PRINT_OPERATIONS
-    if (onpe0) os_ << "Update states" << endl;
+    if (onpe0) os_ << "Update states" << std::endl;
 #else
-    if (onpe0 && ct.verbose > 2) os_ << "Update states" << endl;
+    if (onpe0 && ct.verbose > 2) os_ << "Update states" << std::endl;
 #endif
 
     // do conjugation
@@ -117,7 +117,7 @@ void GrassmanLineMinimization<T>::update_states(
         // recompute overlap and inverse for new wavefunctions
         orbitals.computeGramAndInvS();
         if (onpe0 && ct.verbose > 1)
-            cout << "Grassman CG: lambda = " << lambda << endl;
+            std::cout << "Grassman CG: lambda = " << lambda << std::endl;
         // now do parallel transport update of history data
         parallelTransportUpdate(lambda, orbitals);
     }
@@ -140,7 +140,7 @@ void GrassmanLineMinimization<T>::update_states(
 }
 
 template <class T>
-void GrassmanLineMinimization<T>::printTimers(ostream& os)
+void GrassmanLineMinimization<T>::printTimers(std::ostream& os)
 {
     line_min_tm_.print(os);
     nl_update_tm_.print(os);

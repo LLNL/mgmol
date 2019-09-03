@@ -69,26 +69,26 @@ void PolakRibiereSolver<T>::printEnergy(const short step) const
 {
     if (onpe0)
     {
-        os_ << setprecision(12) << fixed << "%%    " << step
+        os_ << std::setprecision(12) << std::fixed << "%%    " << step
             << " SC ENERGY = " << eks_history_[0];
         if (step > 0)
         {
             if (testUpdatePot())
             {
-                os_ << setprecision(2) << scientific << ", delta Eks = " << de_
-                    << endl;
+                os_ << std::setprecision(2) << std::scientific
+                    << ", delta Eks = " << de_ << std::endl;
             }
             else
             {
-                os_ << setprecision(2) << scientific
-                    << ", delta Eig. sum = " << deig_ << endl;
-                os_ << setprecision(12) << fixed
-                    << "Sum eigenvalues = " << sum_eig_[0] << endl;
+                os_ << std::setprecision(2) << std::scientific
+                    << ", delta Eig. sum = " << deig_ << std::endl;
+                os_ << std::setprecision(12) << std::fixed
+                    << "Sum eigenvalues = " << sum_eig_[0] << std::endl;
             }
         }
         else
         {
-            os_ << endl;
+            os_ << std::endl;
         }
     }
 }
@@ -127,7 +127,7 @@ void PolakRibiereSolver<T>::dielON()
 
     if (pot.diel() && !pbset)
         if (onpe0 && ct.verbose > 1)
-            os_ << " Solvation turned off for this step" << endl;
+            os_ << " Solvation turned off for this step" << std::endl;
 }
 
 template <class T>
@@ -166,15 +166,15 @@ bool PolakRibiereSolver<T>::checkWolfeConditions(
     // const bool wolfe1 = ( dk >= sigma_b_*dkm1 );
     const bool wolfe1 = true;
 
-    os_ << setprecision(10);
+    os_ << std::setprecision(10);
     if (!wolfe0 && onpe0)
     {
-        os_ << "wolfe0 is not satisfied:" << endl;
+        os_ << "wolfe0 is not satisfied:" << std::endl;
         os_ << "trial_step_energy                     =" << trial_step_energy
-            << endl;
-        os_ << "eks_history_[0]=" << eks_history_[0] << endl;
+            << std::endl;
+        os_ << "eks_history_[0]=" << eks_history_[0] << std::endl;
         os_ << "eks_history_[0]+sigma_a_*alpha_k*dkm1="
-            << eks_history_[0] + sigma_a_ * alpha_k * dkm1 << endl;
+            << eks_history_[0] + sigma_a_ * alpha_k * dkm1 << std::endl;
     }
     // if( !wolfe1 && onpe0 )os_<<"wolfe1 is not satisfied: dk="<<dk
     //                         <<", dkm1="<<dkm1<<endl;
@@ -197,13 +197,13 @@ int PolakRibiereSolver<T>::checkConvergenceEnergy(
     if (step > 0)
     {
         double deig_old = deig_;
-        deig_           = fabs(sum_eig_[1] - sum_eig_[0]);
-        deig2_          = max(deig_, deig_old);
+        deig_           = std::abs(sum_eig_[1] - sum_eig_[0]);
+        deig2_          = std::max(deig_, deig_old);
 
         // energy variation during last iteration
         double de_old = de_;
-        de_           = fabs(eks_history_[0] - eks_history_[1]);
-        de2_          = max(de_, de_old);
+        de_           = std::abs(eks_history_[0] - eks_history_[1]);
+        de2_          = std::max(de_, de_old);
 
         if (testUpdatePot())
             dtol2 = de2_;
@@ -223,12 +223,12 @@ int PolakRibiereSolver<T>::checkConvergenceEnergy(
     {
         if (onpe0)
         {
-            os_ << endl
+            os_ << std::endl
                 << "MGmol ERROR, electronic iterations are not converging at "
                    "all: DV ="
-                << pot.scf_dv() << endl
-                << endl;
-            os_ << flush;
+                << pot.scf_dv() << std::endl
+                << std::endl;
+            os_ << std::flush;
         }
         mmpi.barrier();
         return -2;
@@ -300,15 +300,15 @@ int PolakRibiereSolver<T>::solve(T& orbitals, T& work_orbitals, Ions& ions,
 #else
     if (ct.precond_factor_computed)
     {
-        os_ << "Needs ARPACK to compute Preconditioner factor" << endl;
+        os_ << "Needs ARPACK to compute Preconditioner factor" << std::endl;
         return -1;
     }
 #endif
     if (onpe0)
     {
-        os_ << "### PolakRibiereSolver Polak-Ribiere###" << endl;
+        os_ << "### PolakRibiereSolver Polak-Ribiere###" << std::endl;
         if (ct.verbose > 1 && ct.precond_factor_computed)
-            os_ << "Preconditioning factor: " << ct.precond_factor << endl;
+            os_ << "Preconditioning factor: " << ct.precond_factor << std::endl;
     }
 
     r_k_   = new T("PR_rk", orbitals, false);
@@ -431,11 +431,11 @@ int PolakRibiereSolver<T>::solve(T& orbitals, T& work_orbitals, Ions& ions,
             if (retval == 0 && !ct.checkResidual())
             {
                 if (onpe0)
-                    os_ << endl
-                        << endl
+                    os_ << std::endl
+                        << std::endl
                         << " PolakRibiereSolver: convergence achieved for "
                            "delta E..."
-                        << endl;
+                        << std::endl;
                 break;
             }
 
@@ -448,7 +448,7 @@ int PolakRibiereSolver<T>::solve(T& orbitals, T& work_orbitals, Ions& ions,
                 if (beta < 0.) beta = 0.;
                 // const double beta=0.;
                 if (onpe0 && ct.verbose > 1)
-                    os_ << " PolakRibiereSolver: beta=" << beta << endl;
+                    os_ << " PolakRibiereSolver: beta=" << beta << std::endl;
                 p_k_->scal(beta);
                 p_k_->axpy(1., *z_k_);
 
@@ -474,7 +474,7 @@ int PolakRibiereSolver<T>::solve(T& orbitals, T& work_orbitals, Ions& ions,
             if (onpe0)
                 os_ << "PolakRibiereSolver: Wolfe conditions not satisfied, "
                        "reduce alpha to "
-                    << alpha_k << "..." << endl;
+                    << alpha_k << "..." << std::endl;
 
             // half step back
             orbitals.axpy(-1. * alpha_k, *p_k_);
@@ -510,7 +510,8 @@ int PolakRibiereSolver<T>::solve(T& orbitals, T& work_orbitals, Ions& ions,
                 eks_history_[0] = 1.e8;
                 eks_history_[1] = 1.e8;
                 if (onpe0)
-                    os_ << "PolakRibiereSolver: reset reference energy" << endl;
+                    os_ << "PolakRibiereSolver: reset reference energy"
+                        << std::endl;
             }
         }
 
@@ -529,8 +530,8 @@ int PolakRibiereSolver<T>::solve(T& orbitals, T& work_orbitals, Ions& ions,
         {
             double condS = proj_matrices_->computeCond();
             if (onpe0)
-                os_ << setprecision(2) << scientific
-                    << "Condition Number of S: " << condS << endl;
+                os_ << std::setprecision(2) << std::scientific
+                    << "Condition Number of S: " << condS << std::endl;
         }
 
         if (testUpdatePot())

@@ -476,7 +476,7 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
     // first check if any NL forces computation necessary
     if (!ions.hasNLprojectors())
     {
-        if (onpe0) cout << "No nl forces!!" << endl;
+        if (onpe0) std::cout << "No nl forces!!" << std::endl;
         return;
     }
 
@@ -504,7 +504,7 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
     kbpsi_tm_.stop();
 
     energy_tm_.start();
-    map<int, double*> erg;
+    std::map<int, double*> erg;
     if (ct.short_sighted)
     {
         ProjectedMatricesSparse* projmatrices
@@ -529,7 +529,7 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
 
                 double* zeros = new double[3 * NPTS];
                 memset(zeros, 0, 3 * NPTS * sizeof(double));
-                erg.insert(pair<int, double*>(gid, zeros));
+                erg.insert(std::pair<int, double*>(gid, zeros));
             }
 
 #ifdef _OPENMP
@@ -582,7 +582,7 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
 
                 double* zeros = new double[3 * NPTS];
                 memset(zeros, 0, 3 * NPTS * sizeof(double));
-                erg.insert(pair<int, double*>(gid, zeros));
+                erg.insert(std::pair<int, double*>(gid, zeros));
 
                 for (short dir = 0; dir < 3; dir++)
                     for (short ishift = 0; ishift < NPTS; ishift++)
@@ -635,7 +635,7 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
         }
     }
 
-    map<int, double*>::iterator ierg = erg.begin();
+    std::map<int, double*>::iterator ierg = erg.begin();
     while (ierg != erg.end())
     {
         delete[] ierg->second;

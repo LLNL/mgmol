@@ -14,12 +14,11 @@
 
 #include <cassert>
 #include <stdlib.h>
-using namespace std;
 
 namespace pb
 {
 
-PEenv::PEenv(MPI_Comm comm, ostream* os)
+PEenv::PEenv(MPI_Comm comm, std::ostream* os)
     : // default constructor
       comm_(comm),
       os_(os)
@@ -52,14 +51,13 @@ PEenv::PEenv(MPI_Comm comm, ostream* os)
     int ltask;
     MPI_Comm_rank(comm_, &ltask);
     if (ltask > 0) onpe0_ = false;
-        // cout<<"ltask="<<ltask<<", comm_="<<comm_<<endl;
 #endif
 }
 
 // Constructor for a global grid nx by ny by nz
 // Must be called from all the PEs simultaneously!
 PEenv::PEenv(MPI_Comm comm, const int nx, const int ny, const int nz,
-    const int bias, ostream* os)
+    const int bias, std::ostream* os)
     : comm_(comm), os_(os)
 {
     assert(nx > 0);
@@ -223,7 +221,7 @@ PEenv::~PEenv()
         comm_active_ = MPI_COMM_NULL;
         if (mpirc != MPI_SUCCESS)
         {
-            cerr << "MPI_Comm_free failed!" << endl;
+            std::cerr << "MPI_Comm_free failed!" << std::endl;
             MPI_Abort(comm_, 2);
         }
     }
@@ -251,7 +249,8 @@ double PEenv::double_max_all(double x) const
     int mpirc = MPI_Allreduce(&x, &out, 1, MPI_DOUBLE, MPI_MAX, comm_active_);
     if (mpirc != MPI_SUCCESS)
     {
-        cerr << "real_max_all:MPI_Allreduce double max failed!!!" << endl;
+        std::cerr << "real_max_all:MPI_Allreduce double max failed!!!"
+                  << std::endl;
         exit(1);
     }
     return out;
@@ -268,7 +267,8 @@ double PEenv::double_min_all(double x) const
     int mpirc = MPI_Allreduce(&x, &out, 1, MPI_DOUBLE, MPI_MIN, comm_active_);
     if (mpirc != MPI_SUCCESS)
     {
-        cerr << "real_max_all:MPI_Allreduce double max failed!!!" << endl;
+        std::cerr << "real_max_all:MPI_Allreduce double max failed!!!"
+                  << std::endl;
         exit(1);
     }
     return out;
@@ -285,7 +285,8 @@ int PEenv::int_max_all(int x)
     int mpirc = MPI_Allreduce(&x, &out, 1, MPI_INT, MPI_MAX, comm_active_);
     if (mpirc != MPI_SUCCESS)
     {
-        cerr << "int_max_all: MPI_Allreduce int max failed!!!" << endl;
+        std::cerr << "int_max_all: MPI_Allreduce int max failed!!!"
+                  << std::endl;
         globalExit(2);
     }
     return out;
@@ -302,7 +303,8 @@ double PEenv::double_sum_all(double x) const
     int mpirc = MPI_Allreduce(&x, &out, 1, MPI_DOUBLE, MPI_SUM, comm_active_);
     if (mpirc != MPI_SUCCESS)
     {
-        cerr << "double_sum_all: MPI_allreduce double sum failed!!!" << endl;
+        std::cerr << "double_sum_all: MPI_allreduce double sum failed!!!"
+                  << std::endl;
         globalExit(2);
     }
     return out;
@@ -325,7 +327,7 @@ void PEenv::task2xyz()
         int rc = MPI_Cart_coords(cart_comm_, mytask_, 3, mytask_dir_);
         if (rc != MPI_SUCCESS)
         {
-            cerr << " error in MPI_Cart_coords()!!!" << endl;
+            std::cerr << " error in MPI_Cart_coords()!!!" << std::endl;
             MPI_Abort(comm_, 1);
         }
 #else
@@ -343,9 +345,6 @@ void PEenv::task2xyz()
         assert(my_mpi(0) >= 0);
         assert(my_mpi(1) >= 0);
         assert(my_mpi(2) >= 0);
-
-        // cout<<" task "<<mytask_<<" ->
-        // ("<<my_mpi(0)<<","<<my_mpi(1)<<","<<my_mpi(2)<<")\n";
     }
 }
 
@@ -374,9 +373,9 @@ void PEenv::setup_my_neighbors()
         {
             if (mpi_neighbors(i) >= n_mpi_tasks())
             {
-                cout << "mpi_neighbors(" << i << ")=" << mpi_neighbors(i)
-                     << endl;
-                cout << "n_mpi_tasks()=" << n_mpi_tasks() << endl;
+                std::cout << "mpi_neighbors(" << i << ")=" << mpi_neighbors(i)
+                          << std::endl;
+                std::cout << "n_mpi_tasks()=" << n_mpi_tasks() << std::endl;
             }
             assert(mpi_neighbors(i) >= 0);
             assert(mpi_neighbors(i) < n_mpi_tasks());
@@ -401,7 +400,7 @@ int PEenv::geom(const int nx, const int ny, const int nz, const int bias)
 
     if (onpe0_ && os_ != nullptr)
         (*os_) << "Factorization of mesh dimensions and number of cpus:"
-               << endl;
+               << std::endl;
     for (int i = 0; i < 4; i++)
     {
         const int ni = n[i];
@@ -429,7 +428,7 @@ int PEenv::geom(const int nx, const int ny, const int nz, const int bias)
                    << fac[i][2] << "*7^" << fac[i][3] << "*11^" << fac[i][4]
                    << "*13^" << fac[i][5] << "*17^" << fac[i][6] << "*19^"
                    << fac[i][7] << "*23^" << fac[i][8] << "*" << fac[i][9]
-                   << endl;
+                   << std::endl;
     }
 
     for (int i = 0; i < 3; i++)
@@ -445,7 +444,7 @@ int PEenv::geom(const int nx, const int ny, const int nz, const int bias)
                 (*os_) << "Direction " << i << ": ";
                 (*os_) << "Poisson Solver Requires grid size to be divisible "
                           "by 4!!!"
-                       << endl;
+                       << std::endl;
             }
             return 0;
         }
@@ -458,7 +457,7 @@ int PEenv::geom(const int nx, const int ny, const int nz, const int bias)
 #ifndef NDEBUG
     if (onpe0_ && os_ != 0)
         (*os_) << "n=" << n[0] << ", " << n[1] << ", " << n[2] << ", " << n[3]
-               << endl;
+               << std::endl;
 #endif
 
     bool div = true;
@@ -599,7 +598,7 @@ int PEenv::geom(const int nx, const int ny, const int nz, const int bias)
 #ifndef NDEBUG
                     if (onpe0_ && os_ != 0)
                         (*os_) << "Divide domain along direction " << imax0
-                               << endl;
+                               << std::endl;
 #endif
                     n_mpi_tasks_dir_[imax0] *= coeff[k];
                     fac[imax0][k]--;
@@ -618,7 +617,7 @@ int PEenv::geom(const int nx, const int ny, const int nz, const int bias)
 #ifndef NDEBUG
                     if (onpe0_ && os_ != 0)
                         (*os_) << "Divide domain along direction " << imax1
-                               << endl;
+                               << std::endl;
 #endif
                     n_mpi_tasks_dir_[imax1] *= coeff[k];
                     fac[imax1][k]--;
@@ -637,7 +636,7 @@ int PEenv::geom(const int nx, const int ny, const int nz, const int bias)
 #ifndef NDEBUG
                     if (onpe0_ && os_ != 0)
                         (*os_) << "Divide domain along direction " << imax2
-                               << endl;
+                               << std::endl;
 #endif
                     n_mpi_tasks_dir_[imax2] *= coeff[k];
                     fac[imax2][k]--;
@@ -654,9 +653,10 @@ int PEenv::geom(const int nx, const int ny, const int nz, const int bias)
     if (onpe0_ && os_ != 0)
     {
         (*os_) << " Subdomain: " << n[0] << " * " << n[1] << " * " << n[2]
-               << endl;
+               << std::endl;
         (*os_) << " MPI: " << n_mpi_tasks_dir_[0] << " * "
-               << n_mpi_tasks_dir_[1] << " * " << n_mpi_tasks_dir_[2] << endl;
+               << n_mpi_tasks_dir_[1] << " * " << n_mpi_tasks_dir_[2]
+               << std::endl;
     }
 #endif
 
@@ -690,7 +690,8 @@ void PEenv::split_comm(const int nx, const int ny, const int nz, const int bias)
             if (nmpi < n_mpi_tasks_
                 && nmpi > 0) // reduces communicator size by 1
             {
-                (*os_) << "WARNING!!! reduces communicator size by 1" << endl;
+                (*os_) << "WARNING!!! reduces communicator size by 1"
+                       << std::endl;
                 if (mytask_ == (n_mpi_tasks_ - 1)) color_ = 1;
             }
         }
@@ -700,14 +701,15 @@ void PEenv::split_comm(const int nx, const int ny, const int nz, const int bias)
         //    <<", comm_active_="<<comm_active_<<endl;
         if (mpirc != MPI_SUCCESS)
         {
-            cerr << "MPI_Comm_split failed!, my color_=" << color_ << endl;
+            std::cerr << "MPI_Comm_split failed!, my color_=" << color_
+                      << std::endl;
             MPI_Abort(comm_, 0);
         }
         MPI_Comm_size(comm_active_, &n_mpi_tasks_);
 #ifndef NDEBUG
         if (color_ == 0 && onpe0_ && os_ != 0)
         {
-            (*os_) << n_mpi_tasks_ << " MPI tasks" << endl;
+            (*os_) << n_mpi_tasks_ << " MPI tasks" << std::endl;
         }
 #endif
 
@@ -725,14 +727,14 @@ void PEenv::split_comm(const int nx, const int ny, const int nz, const int bias)
 }
 
 // Print list of node names
-void PEenv::printPEnames(ostream& os) const
+void PEenv::printPEnames(std::ostream& os) const
 {
     char processor_name[MPI_MAX_PROCESSOR_NAME];
     char buf[MPI_MAX_PROCESSOR_NAME];
     int namelen;
     PMPI_Get_processor_name(processor_name, &namelen);
     if (mytask_ == 0)
-        os << " Process " << mytask_ << " on " << processor_name << endl;
+        os << " Process " << mytask_ << " on " << processor_name << std::endl;
 
     if (color_ == 0)
         for (int ip = 1; ip < n_mpi_tasks_; ip++)
@@ -745,7 +747,8 @@ void PEenv::printPEnames(ostream& os) const
                     ip, ip, comm_active_, &status);
                 if (mpirc != MPI_SUCCESS)
                 {
-                    cerr << "PEenv::printPEnames, MPI_Recv() failed!!!" << endl;
+                    std::cerr << "PEenv::printPEnames, MPI_Recv() failed!!!"
+                              << std::endl;
                     MPI_Abort(comm_, 0);
                 }
             }
@@ -756,13 +759,15 @@ void PEenv::printPEnames(ostream& os) const
                     MPI_CHAR, 0, mytask_, comm_active_);
                 if (mpirc != MPI_SUCCESS)
                 {
-                    cerr << "PEenv::printPEnames, MPI_Send() failed!!!" << endl;
+                    std::cerr << "PEenv::printPEnames, MPI_Send() failed!!!"
+                              << std::endl;
                     MPI_Abort(comm_, 0);
                 }
             }
-            if (mytask_ == 0) os << " Process " << ip << " on " << buf << endl;
+            if (mytask_ == 0)
+                os << " Process " << ip << " on " << buf << std::endl;
         }
-    if (mytask_ == 0) os << endl;
+    if (mytask_ == 0) os << std::endl;
 }
 
 void PEenv::globalExit(const int i) const

@@ -107,7 +107,8 @@ bool SolverPB<T, T2>::solve(GridFunc<T2>& gf_phi, GridFunc<T2>& gf_rhs)
 
     if (!oper_.initialized())
     {
-        cout << "Error in SolverPB<T>::solve: operator not initialized" << endl;
+        std::cout << "Error in SolverPB<T>::solve: operator not initialized"
+                  << std::endl;
         return 0.;
     }
 

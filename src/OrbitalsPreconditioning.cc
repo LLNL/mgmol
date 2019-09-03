@@ -53,14 +53,14 @@ void OrbitalsPreconditioning<T>::setup(T& orbitals, const short mg_levels,
         lap_type, mg_levels, mygrid, ct.bc);
 
     std::map<int, GridMask*> gid_to_mask;
-    const vector<int>& overlap_gids(lrs->getOverlapGids());
-    for (vector<int>::const_iterator it = overlap_gids.begin();
+    const std::vector<int>& overlap_gids(lrs->getOverlapGids());
+    for (std::vector<int>::const_iterator it = overlap_gids.begin();
          it != overlap_gids.end(); it++)
     {
         int gid         = (*it);
         GridMask* maski = currentMasks->get_pmask(gid);
         assert(maski != 0);
-        gid_to_mask.insert(pair<int, GridMask*>(gid, maski));
+        gid_to_mask.insert(std::pair<int, GridMask*>(gid, maski));
     }
     precond_->setup(gid_to_mask, orbitals.getOverlappingGids());
 
@@ -178,7 +178,7 @@ void OrbitalsPreconditioning<T>::setGamma(const pb::Lap<ORBDTYPE>& lapOper,
 }
 
 template <class T>
-void OrbitalsPreconditioning<T>::printTimers(ostream& os)
+void OrbitalsPreconditioning<T>::printTimers(std::ostream& os)
 {
     precond_tm_.print(os);
 }

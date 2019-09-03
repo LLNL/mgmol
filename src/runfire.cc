@@ -20,12 +20,11 @@
 
 #include <iomanip>
 #include <iostream>
-using namespace std;
 
 template <class T>
 void MGmol<T>::runfire(T** orbitals, Ions& ions)
 {
-    printWithTimeStamp("Run FIRE algorithm...", cout);
+    printWithTimeStamp("Run FIRE algorithm...", std::cout);
 
     Control& ct = *(Control::instance());
 
@@ -61,8 +60,8 @@ void MGmol<T>::runfire(T** orbitals, Ions& ions)
         fire.quenchElectrons(ct.max_electronic_steps, eks);
 
         if (onpe0)
-            os_ << setprecision(12) << fixed << "%%  " << steps
-                << "  IONIC CONFIGURATION ENERGY = " << eks << endl;
+            os_ << std::setprecision(12) << std::fixed << "%%  " << steps
+                << "  IONIC CONFIGURATION ENERGY = " << eks << std::endl;
 
         fire.computeForces();
 
@@ -74,11 +73,11 @@ void MGmol<T>::runfire(T** orbitals, Ions& ions)
 
             if (onpe0)
             {
-                os_ << endl
-                    << endl
+                os_ << std::endl
+                    << std::endl
                     << "FIRE: convergence in forces has been achieved. "
                        "stopping ..."
-                    << endl;
+                    << std::endl;
             }
             conv = 1;
         }
@@ -91,7 +90,7 @@ void MGmol<T>::runfire(T** orbitals, Ions& ions)
             if (onpe0)
             {
                 os_ << "FIRE: update atomic configuration dependent stuff..."
-                    << endl;
+                    << std::endl;
             }
             // update stuff that depends on atomic positions
             fire.updatePotAndMasks();
@@ -109,7 +108,7 @@ void MGmol<T>::runfire(T** orbitals, Ions& ions)
 
         if (conv != 0)
         {
-            if (onpe0) os_ << "Geometry optimization stopped" << endl;
+            if (onpe0) os_ << "Geometry optimization stopped" << std::endl;
             break;
         }
 

@@ -15,8 +15,6 @@
 #include <cmath>
 #include <iostream>
 
-using namespace std;
-
 /* Evaluate the entropy function from occupations, f:
    s(f) = -f ln(f) - (1-f) ln(1-f).
    Returns the entropy = trace[s(f)] = sum {s(f)}_i
@@ -39,8 +37,6 @@ double entropy_eval(
     for (int st = 0; st < dim; st++)
     {
         const double fi = (double)f[st];
-        //        if( fi>1.+tol_interval )
-        //            (*MPIdata::sout)<<setprecision(15)<<scientific<<"f["<<st<<"]="<<fi<<endl;
         assert(fi >= 0. - tol_interval);
         assert(fi <= 1. + tol_interval);
         if (fi < tol)
@@ -56,11 +52,9 @@ double entropy_eval(
             s[st] = (T)(fi * log(fi) + (1. - fi) * log(1. - fi));
         }
         entropy += s[st];
-
-        //        if(onpe0)std::cout<<"("<<f[st]<<", "<<s[st]<<")"<<std::endl;
     }
-    //    if(onpe0)std::cout<<"entropy_val = "<<entropy<<endl;
-    return (double)(-occ_factor) * entropy; // in units of kbt
+
+    return (-occ_factor) * entropy; // in units of kbt
 }
 
 // Evaluate entropy given 'energies'

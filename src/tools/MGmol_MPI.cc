@@ -17,7 +17,6 @@
 #include <iostream>
 #include <memory>
 #include <string.h>
-using namespace std;
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define MAX_SIZE (262144)
@@ -55,7 +54,7 @@ MGmol_MPI::MGmol_MPI()
 #endif
 }
 
-void MGmol_MPI::printTimers(ostream& os)
+void MGmol_MPI::printTimers(std::ostream& os)
 {
     split_allreduce_sums_double_tm_.print(os);
     split_allreduce_sums_float_tm_.print(os);
@@ -110,9 +109,10 @@ void MGmol_MPI::setupComm(
         {
             if (npes % 2 != 0 && mype_ == 0)
             {
-                cerr << " Calculation with spin requires even number of MPI "
-                        "tasks!!!"
-                     << endl;
+                std::cerr
+                    << " Calculation with spin requires even number of MPI "
+                       "tasks!!!"
+                    << std::endl;
                 MPI_Abort(comm, 1);
             }
 
@@ -126,7 +126,8 @@ void MGmol_MPI::setupComm(
             int mpierr = MPI_Comm_split(comm_global_, color, key, &comm_spin_);
             if (mpierr != MPI_SUCCESS)
             {
-                cerr << " Error in creating spin subcommunicator!!!" << endl;
+                std::cerr << " Error in creating spin subcommunicator!!!"
+                          << std::endl;
                 MPI_Abort(comm, 1);
             }
 
@@ -141,8 +142,8 @@ void MGmol_MPI::setupComm(
                 comm_global_, color, key, &comm_different_spin_);
             if (mpierr != MPI_SUCCESS)
             {
-                cerr << " Error in creating across spin subcommunicator!!!"
-                     << endl;
+                std::cerr << " Error in creating across spin subcommunicator!!!"
+                          << std::endl;
                 MPI_Abort(comm, 1);
             }
             nspin_  = 2;
@@ -805,17 +806,17 @@ int MGmol_MPI::recv(int* recvbuf, int count, int src) const
 #endif
 }
 
-int MGmol_MPI::bcast(string& common_string) const
+int MGmol_MPI::bcast(std::string& common_string) const
 {
     return bcast(common_string, comm_spin_);
 }
 
-int MGmol_MPI::bcastGlobal(string& common_string) const
+int MGmol_MPI::bcastGlobal(std::string& common_string) const
 {
     return bcast(common_string, comm_global_);
 }
 
-int MGmol_MPI::bcast(string& common_string, MPI_Comm comm) const
+int MGmol_MPI::bcast(std::string& common_string, MPI_Comm comm) const
 {
 #ifdef USE_MPI
     short size_str = (short)common_string.size();
@@ -829,7 +830,7 @@ int MGmol_MPI::bcast(string& common_string, MPI_Comm comm) const
     char* buffer = new char[size_str + 1];
     if (mype_spin_ == 0)
     {
-        common_string.copy(buffer, string::npos);
+        common_string.copy(buffer, std::string::npos);
         buffer[common_string.length()] = 0;
     }
     mpi_err = MPI_Bcast(buffer, size_str + 1, MPI_CHAR, 0, comm);
@@ -903,7 +904,8 @@ int MGmol_MPI::gather(
 #endif
 }
 
-int MGmol_MPI::allGather(vector<double>& sendbuf, vector<double>& recvbuf)
+int MGmol_MPI::allGather(
+    std::vector<double>& sendbuf, std::vector<double>& recvbuf)
 {
 #ifdef USE_MPI
     assert(sendbuf.size() * size_ == recvbuf.size());
@@ -922,7 +924,7 @@ int MGmol_MPI::allGather(vector<double>& sendbuf, vector<double>& recvbuf)
 #endif
 }
 
-int MGmol_MPI::allGather(vector<int>& sendbuf, vector<int>& recvbuf)
+int MGmol_MPI::allGather(std::vector<int>& sendbuf, std::vector<int>& recvbuf)
 {
 #ifdef USE_MPI
     assert(sendbuf.size() * size_ == recvbuf.size());
@@ -997,7 +999,8 @@ int MGmol_MPI::allGather(
 #endif
 }
 
-int MGmol_MPI::allGatherImages(vector<double>& sendbuf, vector<double>& recvbuf)
+int MGmol_MPI::allGatherImages(
+    std::vector<double>& sendbuf, std::vector<double>& recvbuf)
 {
 #ifdef USE_MPI
     assert(comm_images_ != MPI_COMM_NULL);
@@ -1017,15 +1020,16 @@ int MGmol_MPI::allGatherImages(vector<double>& sendbuf, vector<double>& recvbuf)
 #endif
 }
 
-int MGmol_MPI::allGatherImages(vector<int>& sendbuf, vector<int>& recvbuf)
+int MGmol_MPI::allGatherImages(
+    std::vector<int>& sendbuf, std::vector<int>& recvbuf)
 {
 #ifdef USE_MPI
     assert(comm_images_ != MPI_COMM_NULL);
     if (sendbuf.size() * nimages_ != recvbuf.size())
     {
-        cerr << "sendbuf.size()=" << sendbuf.size()
-             << ", recvbuf.size()=" << recvbuf.size()
-             << ", nimages_=" << nimages_ << endl;
+        std::cerr << "sendbuf.size()=" << sendbuf.size()
+                  << ", recvbuf.size()=" << recvbuf.size()
+                  << ", nimages_=" << nimages_ << std::endl;
     }
     assert(sendbuf.size() * nimages_ == recvbuf.size());
     int count   = (int)sendbuf.size();
@@ -1042,15 +1046,16 @@ int MGmol_MPI::allGatherImages(vector<int>& sendbuf, vector<int>& recvbuf)
 #endif
 }
 
-int MGmol_MPI::allGatherImages(vector<short>& sendbuf, vector<short>& recvbuf)
+int MGmol_MPI::allGatherImages(
+    std::vector<short>& sendbuf, std::vector<short>& recvbuf)
 {
 #ifdef USE_MPI
     assert(comm_images_ != MPI_COMM_NULL);
     if (sendbuf.size() * nimages_ != recvbuf.size())
     {
-        cerr << "sendbuf.size()=" << sendbuf.size()
-             << ", recvbuf.size()=" << recvbuf.size()
-             << ", nimages_=" << nimages_ << endl;
+        std::cerr << "sendbuf.size()=" << sendbuf.size()
+                  << ", recvbuf.size()=" << recvbuf.size()
+                  << ", nimages_=" << nimages_ << std::endl;
     }
     assert(sendbuf.size() * nimages_ == recvbuf.size());
     int count   = (int)sendbuf.size();
@@ -1067,7 +1072,8 @@ int MGmol_MPI::allGatherImages(vector<short>& sendbuf, vector<short>& recvbuf)
 #endif
 }
 
-int MGmol_MPI::allGatherV(vector<double>& sendbuf, vector<double>& recvbuf)
+int MGmol_MPI::allGatherV(
+    std::vector<double>& sendbuf, std::vector<double>& recvbuf)
 {
 #ifdef USE_MPI
     int sendcount   = (int)sendbuf.size();
@@ -1105,7 +1111,8 @@ int MGmol_MPI::allGatherV(vector<double>& sendbuf, vector<double>& recvbuf)
 #endif
 }
 
-int MGmol_MPI::allGatherV(vector<float>& sendbuf, vector<float>& recvbuf)
+int MGmol_MPI::allGatherV(
+    std::vector<float>& sendbuf, std::vector<float>& recvbuf)
 {
 #ifdef USE_MPI
     int sendcount   = (int)sendbuf.size();
@@ -1143,7 +1150,7 @@ int MGmol_MPI::allGatherV(vector<float>& sendbuf, vector<float>& recvbuf)
 #endif
 }
 
-int MGmol_MPI::allGatherV(vector<int>& sendbuf, vector<int>& recvbuf)
+int MGmol_MPI::allGatherV(std::vector<int>& sendbuf, std::vector<int>& recvbuf)
 {
 #ifdef USE_MPI
     int sendcount   = (int)sendbuf.size();
@@ -1181,7 +1188,8 @@ int MGmol_MPI::allGatherV(vector<int>& sendbuf, vector<int>& recvbuf)
 #endif
 }
 
-int MGmol_MPI::allGatherV(vector<short>& sendbuf, vector<short>& recvbuf)
+int MGmol_MPI::allGatherV(
+    std::vector<short>& sendbuf, std::vector<short>& recvbuf)
 {
 #ifdef USE_MPI
     int sendcount   = (int)sendbuf.size();
@@ -1220,7 +1228,7 @@ int MGmol_MPI::allGatherV(vector<short>& sendbuf, vector<short>& recvbuf)
 }
 
 int MGmol_MPI::allGatherV(
-    vector<unsigned short>& sendbuf, vector<unsigned short>& recvbuf)
+    std::vector<unsigned short>& sendbuf, std::vector<unsigned short>& recvbuf)
 {
 #ifdef USE_MPI
     int sendcount   = (int)sendbuf.size();
@@ -1258,7 +1266,8 @@ int MGmol_MPI::allGatherV(
 #endif
 }
 
-int MGmol_MPI::allGatherV(vector<string>& sendbuf, vector<string>& recvbuf)
+int MGmol_MPI::allGatherV(
+    std::vector<std::string>& sendbuf, std::vector<std::string>& recvbuf)
 {
 #ifdef USE_MPI
     ////
@@ -1268,13 +1277,13 @@ int MGmol_MPI::allGatherV(vector<string>& sendbuf, vector<string>& recvbuf)
     int sendcount;
     int totchars;
     // first get length of each string
-    vector<int> locstrlen;
-    vector<int> strLen(vcount, 0);
+    std::vector<int> locstrlen;
+    std::vector<int> strLen(vcount, 0);
     sendcount = 0;
-    for (vector<string>::iterator str = sendbuf.begin(); str != sendbuf.end();
-         ++str)
+    for (std::vector<std::string>::iterator str = sendbuf.begin();
+         str != sendbuf.end(); ++str)
     {
-        string s = *str;
+        std::string s = *str;
         sendcount += s.length();
         locstrlen.push_back(s.length());
     }
@@ -1284,10 +1293,10 @@ int MGmol_MPI::allGatherV(vector<string>& sendbuf, vector<string>& recvbuf)
     //    vector<char>charStr(sendcount);
     char* charStr = new char[sendcount];
     int idx       = 0;
-    for (vector<string>::iterator str = sendbuf.begin(); str != sendbuf.end();
-         ++str)
+    for (std::vector<std::string>::iterator str = sendbuf.begin();
+         str != sendbuf.end(); ++str)
     {
-        string s = *str;
+        std::string s = *str;
         memcpy(&charStr[idx], s.c_str(), s.size());
         idx += s.size();
     }
@@ -1322,7 +1331,7 @@ int MGmol_MPI::allGatherV(vector<string>& sendbuf, vector<string>& recvbuf)
         std::unique_ptr<char[]> str(new char[strLen[i] + 1]);
         str[strLen[i]] = '\0';
         memcpy(str.get(), &recvdata[pos], strLen[i] * sizeof(char));
-        string cstr;
+        std::string cstr;
         cstr.assign(str.get());
         recvbuf.push_back(cstr);
         pos += strLen[i] * sizeof(char);
@@ -1340,19 +1349,19 @@ int MGmol_MPI::allGatherV(vector<string>& sendbuf, vector<string>& recvbuf)
 }
 
 int MGmol_MPI::gatherV(
-    vector<int>& sendbuf, vector<int>& recvbuf, const int root)
+    std::vector<int>& sendbuf, std::vector<int>& recvbuf, const int root)
+{
+    return mgmol_tools::gatherV(sendbuf, recvbuf, root, comm_spin_);
+}
+
+int MGmol_MPI::gatherV(std::vector<std::string>& sendbuf,
+    std::vector<std::string>& recvbuf, const int root)
 {
     return mgmol_tools::gatherV(sendbuf, recvbuf, root, comm_spin_);
 }
 
 int MGmol_MPI::gatherV(
-    vector<string>& sendbuf, vector<string>& recvbuf, const int root)
-{
-    return mgmol_tools::gatherV(sendbuf, recvbuf, root, comm_spin_);
-}
-
-int MGmol_MPI::gatherV(
-    vector<double>& sendbuf, vector<double>& recvbuf, const int root)
+    std::vector<double>& sendbuf, std::vector<double>& recvbuf, const int root)
 {
     return mgmol_tools::gatherV(sendbuf, recvbuf, root, comm_spin_);
 }

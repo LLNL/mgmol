@@ -29,8 +29,6 @@
 
 #define RY2EV 13.605804
 
-using namespace std;
-
 Timer ProjectedMatrices::sygv_tm_("ProjectedMatrices::sygv");
 Timer ProjectedMatrices::compute_inverse_tm_(
     "ProjectedMatrices::computeInverse");
@@ -83,7 +81,7 @@ ProjectedMatrices::ProjectedMatrices(const int ndim, const bool with_spin)
     if (onpe0)
         (*MPIdata::sout)
             << "ProjectedMatrices: sparse_distmatrix_nb_tasks_per_partitions_="
-            << sparse_distmatrix_nb_tasks_per_partitions_ << endl;
+            << sparse_distmatrix_nb_tasks_per_partitions_ << std::endl;
     n_instances_++;
 }
 
@@ -107,8 +105,8 @@ ProjectedMatrices::~ProjectedMatrices()
     n_instances_--;
 }
 
-void ProjectedMatrices::setup(
-    const double kbt, const int nel, const vector<vector<int>>& global_indexes)
+void ProjectedMatrices::setup(const double kbt, const int nel,
+    const std::vector<std::vector<int>>& global_indexes)
 {
     assert(global_indexes.size() > 0);
 
@@ -152,7 +150,8 @@ void ProjectedMatrices::computeInvS()
 {
     compute_inverse_tm_.start();
 #ifdef PRINT_OPERATIONS
-    if (onpe0) (*MPIdata::sout) << "ProjectedMatrices::computeInvS()" << endl;
+    if (onpe0)
+        (*MPIdata::sout) << "ProjectedMatrices::computeInvS()" << std::endl;
 #endif
     gm_->computeInverse();
     compute_inverse_tm_.stop();
@@ -172,7 +171,7 @@ void ProjectedMatrices::rotateAll(
     {
         gm_->rotateAll(rotation_matrix);
     }
-    //(*MPIdata::sout)<<"matS"<<endl;
+    //(*MPIdata::sout)<<"matS"<<std::endl;
     // matS_->print((*MPIdata::sout),0,0,5,5);
 
     // rotate matH_
@@ -211,7 +210,7 @@ void ProjectedMatrices::setDMto2InvS()
 }
 
 void ProjectedMatrices::solveGenEigenProblem(
-    dist_matrix::DistMatrix<DISTMATDTYPE>& z, vector<DISTMATDTYPE>& val,
+    dist_matrix::DistMatrix<DISTMATDTYPE>& z, std::vector<DISTMATDTYPE>& val,
     char job)
 {
     assert(val.size() == eigenvalues_.size());
@@ -242,13 +241,13 @@ void ProjectedMatrices::buildDM(
 }
 
 void ProjectedMatrices::buildDM(const dist_matrix::DistMatrix<DISTMATDTYPE>& z,
-    const vector<DISTMATDTYPE>& occ, const int orbitals_index)
+    const std::vector<DISTMATDTYPE>& occ, const int orbitals_index)
 {
     dm_->build(z, occ, orbitals_index);
 }
 
 void ProjectedMatrices::buildDM(
-    const vector<DISTMATDTYPE>& occ, const int orbitals_index)
+    const std::vector<DISTMATDTYPE>& occ, const int orbitals_index)
 {
     dm_->build(occ, orbitals_index);
 }
@@ -261,13 +260,14 @@ void ProjectedMatrices::updateDMwithEigenstates(const int iterative_index)
         (*MPIdata::sout) << "ProjectedMatrices: Compute DM using eigenstates\n";
 
     dist_matrix::DistMatrix<DISTMATDTYPE> zz("Z", dim_, dim_);
-    vector<DISTMATDTYPE> val(dim_);
+    std::vector<DISTMATDTYPE> val(dim_);
 
     // solves generalized eigenvalue problem
     // and return solution in zz and val
     solveGenEigenProblem(zz, val);
     double final_mu = computeChemicalPotentialAndOccupations();
-    if (onpe0 && ct.verbose > 1) cout << "Final mu_ = " << final_mu << endl;
+    if (onpe0 && ct.verbose > 1)
+        std::cout << "Final mu_ = " << final_mu << std::endl;
 
     // Build the density matrix X
     // X = Z * gamma * Z^T
@@ -300,7 +300,7 @@ void ProjectedMatrices::updateDMwithSP2(const int iterative_index)
     power.computeEigenInterval(
         theta, emin, emax, epsilon, (onpe0 && ct.verbose > 1));
     if (onpe0 && ct.verbose > 1)
-        cout << "emin=" << emin << ", emax=" << emax << endl;
+        std::cout << "emin=" << emin << ", emax=" << emax << std::endl;
 
     const bool distributed = false;
     SP2 sp2(ct.dm_tol, distributed);
@@ -342,23 +342,25 @@ void ProjectedMatrices::updateDM(const int iterative_index)
         updateDMwithSP2(iterative_index);
     else
     {
-        cerr << "Eigensolver not available in ProjectedMatrices::updateDM()\n";
+        std::cerr
+            << "Eigensolver not available in ProjectedMatrices::updateDM()\n";
         ct.global_exit(2);
     }
 
 #ifndef NDEBUG
     double nel = getNel();
-    cout << "ProjectedMatrices::updateDM(), nel = " << nel << std::endl;
+    std::cout << "ProjectedMatrices::updateDM(), nel = " << nel << std::endl;
     assert(fabs(nel - nel) < 1.e-2);
     double energy = getExpectationH();
-    cout << "ProjectedMatrices::updateDM(), energy = " << energy << std::endl;
+    std::cout << "ProjectedMatrices::updateDM(), energy = " << energy
+              << std::endl;
 #endif
 }
 
 void ProjectedMatrices::updateDMwithEigenstatesAndRotate(
     const int iterative_index, dist_matrix::DistMatrix<DISTMATDTYPE>& zz)
 {
-    vector<DISTMATDTYPE> val(dim_);
+    std::vector<DISTMATDTYPE> val(dim_);
 
     // solves generalized eigenvalue problem
     // and return solution in zz and val
@@ -384,11 +386,11 @@ void ProjectedMatrices::computeOccupationsFromDM()
     }
 }
 
-void ProjectedMatrices::getOccupations(vector<DISTMATDTYPE>& occ) const
+void ProjectedMatrices::getOccupations(std::vector<DISTMATDTYPE>& occ) const
 {
     dm_->getOccupations(occ);
 }
-void ProjectedMatrices::setOccupations(const vector<DISTMATDTYPE>& occ)
+void ProjectedMatrices::setOccupations(const std::vector<DISTMATDTYPE>& occ)
 {
 #ifdef PRINT_OPERATIONS
     if (onpe0)
@@ -396,7 +398,7 @@ void ProjectedMatrices::setOccupations(const vector<DISTMATDTYPE>& occ)
 #endif
     dm_->setOccupations(occ);
 }
-void ProjectedMatrices::printDM(ostream& os) const { dm_->print(os); }
+void ProjectedMatrices::printDM(std::ostream& os) const { dm_->print(os); }
 
 const dist_matrix::DistMatrix<DISTMATDTYPE>& ProjectedMatrices::dm() const
 {
@@ -455,11 +457,11 @@ double ProjectedMatrices::getExpectation(
 void ProjectedMatrices::stripDM()
 {
 #ifdef PRINT_OPERATIONS
-    if (onpe0) cout << "ProjectedMatrices::stripDM()" << endl;
+    if (onpe0) std::cout << "ProjectedMatrices::stripDM()" << endl;
 #endif
 #ifdef DEBUG // TEST
     double dd = dm_->getMatrix().trace();
-    if (onpe0) cout << "test:  Trace DM = " << dd << endl;
+    if (onpe0) std::cout << "test:  Trace DM = " << dd << endl;
     if (dm_->getMatrix().active()) assert(dd > 0.);
 #endif
     dm_->stripS(gm_->getCholeskyL(), gm_->getAssociatedOrbitalsIndex());
@@ -468,7 +470,7 @@ void ProjectedMatrices::stripDM()
 void ProjectedMatrices::dressupDM()
 {
 #ifdef PRINT_OPERATIONS
-    if (onpe0) cout << "ProjectedMatrices::dressupDM()" << endl;
+    if (onpe0) std::cout << "ProjectedMatrices::dressupDM()" << endl;
 #endif
     dm_->dressUpS(gm_->getCholeskyL(), gm_->getAssociatedOrbitalsIndex());
 }
@@ -498,14 +500,14 @@ double ProjectedMatrices::computeEntropy()
         {
             if (onpe0 && ct.verbose > 1)
                 (*MPIdata::sout)
-                    << "occupations uptodate, skip computation..." << endl;
+                    << "occupations uptodate, skip computation..." << std::endl;
         }
         entropy = computeEntropy(width_);
     }
     return entropy;
 }
 
-void ProjectedMatrices::printOccupations(ostream& os) const
+void ProjectedMatrices::printOccupations(std::ostream& os) const
 {
     if (dm_->occupationsUptodate()) dm_->printOccupations(os);
 }
@@ -526,7 +528,7 @@ double ProjectedMatrices::checkCond(const double tol, const bool flag)
         if (onpe0)
             (*MPIdata::sout)
                 << " CONDITION NUMBER OF THE OVERLAP MATRIX EXCEEDS TOL: "
-                << rcond << "!!!" << endl;
+                << rcond << "!!!" << std::endl;
         Control& ct = *(Control::instance());
         if (flag) ct.global_exit(2);
     }
@@ -554,7 +556,8 @@ int ProjectedMatrices::writeDM_hdf5(HDFrestart& h5f_file)
     if (dset_id < 0)
     {
         (*MPIdata::serr)
-            << "ProjectedMatrices::write_dm_hdf5: H5Dcreate2 failed!!!" << endl;
+            << "ProjectedMatrices::write_dm_hdf5: H5Dcreate2 failed!!!"
+            << std::endl;
         return -1;
     }
 
@@ -566,7 +569,7 @@ int ProjectedMatrices::writeDM_hdf5(HDFrestart& h5f_file)
         H5P_DEFAULT, work_matrix);
     if (status < 0)
     {
-        (*MPIdata::serr) << "Orbitals: H5Dwrite failed!!!" << endl;
+        (*MPIdata::serr) << "Orbitals: H5Dwrite failed!!!" << std::endl;
         return -1;
     }
 
@@ -574,14 +577,16 @@ int ProjectedMatrices::writeDM_hdf5(HDFrestart& h5f_file)
     if (status < 0)
     {
         (*MPIdata::serr)
-            << "ProjectedMatrices::write_dm_hdf5(), H5Dclose failed!!!" << endl;
+            << "ProjectedMatrices::write_dm_hdf5(), H5Dclose failed!!!"
+            << std::endl;
         return -1;
     }
     status = H5Sclose(dataspace);
     if (status < 0)
     {
         (*MPIdata::serr)
-            << "ProjectedMatrices::write_dm_hdf5(), H5Sclose failed!!!" << endl;
+            << "ProjectedMatrices::write_dm_hdf5(), H5Sclose failed!!!"
+            << std::endl;
         return -1;
     }
 
@@ -601,7 +606,8 @@ int ProjectedMatrices::read_dm_hdf5(hid_t file_id)
         hid_t dset_id = H5Dopen2(file_id, "/Density_Matrix", H5P_DEFAULT);
         if (dset_id < 0)
         {
-            (*MPIdata::serr) << "H5Dopen failed for /Density_Matrix!!!" << endl;
+            (*MPIdata::serr)
+                << "H5Dopen failed for /Density_Matrix!!!" << std::endl;
         }
         else
         {
@@ -611,14 +617,14 @@ int ProjectedMatrices::read_dm_hdf5(hid_t file_id)
             if (status < 0)
             {
                 (*MPIdata::serr)
-                    << "H5Dread failed for /Density_Matrix!!!" << endl;
+                    << "H5Dread failed for /Density_Matrix!!!" << std::endl;
                 return -1;
             }
 
             status = H5Dclose(dset_id);
             if (status < 0)
             {
-                (*MPIdata::serr) << "H5Dclose failed!!!" << endl;
+                (*MPIdata::serr) << "H5Dclose failed!!!" << std::endl;
                 return -1;
             }
         }
@@ -630,54 +636,54 @@ int ProjectedMatrices::read_dm_hdf5(hid_t file_id)
     return ierr;
 }
 
-void ProjectedMatrices::printEigenvalues(ostream& os) const
+void ProjectedMatrices::printEigenvalues(std::ostream& os) const
 {
     printEigenvaluesHa(os);
 }
 
-void ProjectedMatrices::printEigenvaluesEV(ostream& os) const
+void ProjectedMatrices::printEigenvaluesEV(std::ostream& os) const
 {
     Control& ct = *(Control::instance());
     if (ct.DMEigensolver() == DMEigensolverType::Eigensolver && onpe0)
     {
-        os << endl << " Eigenvalues [eV]:";
+        os << std::endl << " Eigenvalues [eV]:";
 
         // Print ten to a row.
-        os.setf(ios::right, ios::adjustfield);
-        os.setf(ios::fixed, ios::floatfield);
-        os << setprecision(3);
+        os.setf(std::ios::right, std::ios::adjustfield);
+        os.setf(std::ios::fixed, std::ios::floatfield);
+        os << std::setprecision(3);
         for (unsigned int i = 0; i < dim_; i++)
         {
-            if ((i % 10) == 0) os << endl;
-            os << setw(7) << RY2EV * eigenvalues_[i] << " ";
+            if ((i % 10) == 0) os << std::endl;
+            os << std::setw(7) << RY2EV * eigenvalues_[i] << " ";
         }
-        os << endl;
+        os << std::endl;
 
         if (width_ > 1.e-10)
-            os << " FERMI ENERGY   = " << RY2EV * mu_ << "[eV]" << endl;
+            os << " FERMI ENERGY   = " << RY2EV * mu_ << "[eV]" << std::endl;
     }
 }
 
-void ProjectedMatrices::printEigenvaluesHa(ostream& os) const
+void ProjectedMatrices::printEigenvaluesHa(std::ostream& os) const
 {
     Control& ct = *(Control::instance());
     if (ct.DMEigensolver() == DMEigensolverType::Eigensolver && onpe0)
     {
-        os << endl << " Eigenvalues [Ha]:";
+        os << std::endl << " Eigenvalues [Ha]:";
 
         // Print ten to a row.
-        os.setf(ios::right, ios::adjustfield);
-        os.setf(ios::fixed, ios::floatfield);
-        os << setprecision(3);
+        os.setf(std::ios::right, std::ios::adjustfield);
+        os.setf(std::ios::fixed, std::ios::floatfield);
+        os << std::setprecision(3);
         for (unsigned int i = 0; i < dim_; i++)
         {
-            if ((i % 10) == 0) os << endl;
-            os << setw(7) << 0.5 * eigenvalues_[i] << " ";
+            if ((i % 10) == 0) os << std::endl;
+            os << std::setw(7) << 0.5 * eigenvalues_[i] << " ";
         }
-        os << endl;
+        os << std::endl;
 
         if (width_ > 1.e-10)
-            os << " FERMI ENERGY   = " << 0.5 * mu_ << "[Ha]" << endl;
+            os << " FERMI ENERGY   = " << 0.5 * mu_ << "[Ha]" << std::endl;
     }
 }
 
@@ -695,7 +701,7 @@ double ProjectedMatrices::computeChemicalPotentialAndOccupations(
     if (onpe0 && ct.verbose > 1)
         (*MPIdata::sout)
             << "computeChemicalPotentialAndOccupations() with width=" << width
-            << ", for " << nel << " electrons" << endl;
+            << ", for " << nel << " electrons" << std::endl;
 
     const int maxit         = 100;
     const double charge_tol = 1.0e-12;
@@ -717,7 +723,7 @@ double ProjectedMatrices::computeChemicalPotentialAndOccupations(
         mu2 = 10000.;
     }
 
-    vector<DISTMATDTYPE> occ(dim_, 0.);
+    std::vector<DISTMATDTYPE> occ(dim_, 0.);
 
     if (2 * dim_ <= static_cast<unsigned int>(nel))
     {
@@ -746,7 +752,8 @@ double ProjectedMatrices::computeChemicalPotentialAndOccupations(
              - (double)nel;
         if (fabs(f1) < charge_tol)
         {
-            if (onpe0) (*MPIdata::sout) << "only unoccupied states" << endl;
+            if (onpe0)
+                (*MPIdata::sout) << "only unoccupied states" << std::endl;
             done = true;
             mu_  = mu1;
         }
@@ -756,9 +763,12 @@ double ProjectedMatrices::computeChemicalPotentialAndOccupations(
     {
         if (f1 * f2 > 0.)
         {
-            (*MPIdata::sout) << "ERROR: mu1=" << mu1 << ", mu2=" << mu2 << endl;
-            (*MPIdata::sout) << "ERROR: f1=" << f1 << ", f2=" << f2 << endl;
-            (*MPIdata::sout) << "nel=" << nel << ", width=" << width << endl;
+            (*MPIdata::sout)
+                << "ERROR: mu1=" << mu1 << ", mu2=" << mu2 << std::endl;
+            (*MPIdata::sout)
+                << "ERROR: f1=" << f1 << ", f2=" << f2 << std::endl;
+            (*MPIdata::sout)
+                << "nel=" << nel << ", width=" << width << std::endl;
             Control& ct = *(Control::instance());
             ct.global_exit(2);
         }
@@ -802,11 +812,11 @@ double ProjectedMatrices::computeChemicalPotentialAndOccupations(
                 (*MPIdata::sout) << "WARNING: "
                                     "ProjectedMatrices::"
                                     "computeChemicalPotentialAndOccupations()"
-                                 << endl;
+                                 << std::endl;
                 (*MPIdata::sout) << "Iterations did not converge to tolerance "
-                                 << scientific << charge_tol << endl;
+                                 << std::scientific << charge_tol << std::endl;
                 (*MPIdata::sout) << "f= " << f << ", nel=" << nel
-                                 << ", max_numst=" << max_numst << endl;
+                                 << ", max_numst=" << max_numst << std::endl;
             }
         }
     }
@@ -828,10 +838,10 @@ void ProjectedMatrices::computeLoewdinTransform(
 
     dist_matrix::DistMatrix<DISTMATDTYPE> mat(gm_->getMatrix());
     dist_matrix::DistMatrix<DISTMATDTYPE> vect("eigenvectors", dim_, dim_);
-    vector<DISTMATDTYPE> eigenvalues(dim_);
+    std::vector<DISTMATDTYPE> eigenvalues(dim_);
     mat.syev('v', 'l', eigenvalues, vect);
 
-    vector<DISTMATDTYPE> diag_values(dim_);
+    std::vector<DISTMATDTYPE> diag_values(dim_);
     for (unsigned int i = 0; i < dim_; i++)
         diag_values[i] = (DISTMATDTYPE)(1. / sqrt(eigenvalues[i]));
 
@@ -873,7 +883,7 @@ void ProjectedMatrices::computeLoewdinTransform(
 }
 
 double ProjectedMatrices::getTraceDiagProductWithInvS(
-    vector<DISTMATDTYPE>& ddiag)
+    std::vector<DISTMATDTYPE>& ddiag)
 {
     dist_matrix::DistMatrix<DISTMATDTYPE> diag("diag", dim_, dim_);
     diag.setDiagonal(ddiag);
@@ -932,7 +942,7 @@ double ProjectedMatrices::dotProductSimple(
     return ds.trace();
 }
 
-void ProjectedMatrices::printTimers(ostream& os)
+void ProjectedMatrices::printTimers(std::ostream& os)
 {
     sygv_tm_.print(os);
     compute_inverse_tm_.print(os);
@@ -963,7 +973,7 @@ double ProjectedMatrices::computeTraceInvSmultMat(
 
         dist_matrix::DistMatrix<DISTMATDTYPE> pm =
        gm_->getInverse();//("pmatrix",dim_,dim_); double itrace = pm.trace();
-        if(onpe0)cout<<"INVERSE trace = "<<itrace<<endl;
+        if(onpe0)std::cout<<"INVERSE trace = "<<itrace<<endl;
 
         return work_matrix.trace();
     */

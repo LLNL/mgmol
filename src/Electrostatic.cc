@@ -65,7 +65,7 @@ Electrostatic::Electrostatic(PoissonFDtype lap_type, const short bcPoisson[3],
                 default:
                     (*MPIdata::sout)
                         << "Electrostatic, shifted, Undefined option: "
-                        << static_cast<int>(lap_type) << endl;
+                        << static_cast<int>(lap_type) << std::endl;
             }
         }
         else
@@ -98,7 +98,7 @@ Electrostatic::Electrostatic(PoissonFDtype lap_type, const short bcPoisson[3],
                     break;
                 default:
                     (*MPIdata::sout) << "Electrostatic, Undefined option: "
-                                     << static_cast<int>(lap_type) << endl;
+                                     << static_cast<int>(lap_type) << std::endl;
             }
         }
     }
@@ -116,7 +116,7 @@ Electrostatic::Electrostatic(PoissonFDtype lap_type, const short bcPoisson[3],
                 default:
                     (*MPIdata::sout)
                         << "PCG Electrostatic, shifted, Undefined option: "
-                        << static_cast<int>(lap_type) << endl;
+                        << static_cast<int>(lap_type) << std::endl;
             }
         }
         else
@@ -149,7 +149,7 @@ Electrostatic::Electrostatic(PoissonFDtype lap_type, const short bcPoisson[3],
                     break;
                 default:
                     (*MPIdata::sout) << "PCG Electrostatic, Undefined option: "
-                                     << static_cast<int>(lap_type) << endl;
+                                     << static_cast<int>(lap_type) << std::endl;
             }
         }
     }
@@ -194,7 +194,7 @@ void Electrostatic::computeVhRho(Rho<T>& rho)
     Mesh* mymesh = Mesh::instance();
 
     RHODTYPE* work_rho;
-    vector<vector<RHODTYPE>>& vrho = rho.rho_;
+    std::vector<std::vector<RHODTYPE>>& vrho = rho.rho_;
     if (vrho.size() > 1)
     {
         work_rho = new RHODTYPE[vrho[0].size()];
@@ -231,7 +231,7 @@ void Electrostatic::setupPB(
 
     if (onpe0)
         (*MPIdata::sout) << "Setup PB solver with rho0=" << rho0
-                         << " and beta=" << drho0 << endl;
+                         << " and beta=" << drho0 << std::endl;
 
     diel_flag_ = true;
 
@@ -272,7 +272,8 @@ void Electrostatic::setupPB(
                     *pbGrid_, bc_, e0, rho0, drho0);
                 break;
             default:
-                (*MPIdata::sout) << "Electrostatic, Undefined option" << endl;
+                (*MPIdata::sout)
+                    << "Electrostatic, Undefined option" << std::endl;
         }
     }
     else // use PCG for Poisson Solver
@@ -303,7 +304,8 @@ void Electrostatic::setupPB(
                     *pbGrid_, bc_, e0, rho0, drho0);
                 break;
             default:
-                (*MPIdata::sout) << "Electrostatic, Undefined option" << endl;
+                (*MPIdata::sout)
+                    << "Electrostatic, Undefined option" << std::endl;
         }
     }
 
@@ -342,9 +344,9 @@ void Electrostatic::fillFuncAroundIons(const Ions& ions)
     // here we are assuming the radius of the local potential is larger than
     // the species parameter rc
     // (otherwise we would need to track another list of ions...)
-    const vector<Ion*>& rc_ions(ions.overlappingVL_ions());
+    const std::vector<Ion*>& rc_ions(ions.overlappingVL_ions());
 
-    vector<Ion*>::const_iterator ion = rc_ions.begin();
+    std::vector<Ion*>::const_iterator ion = rc_ions.begin();
     while (ion != rc_ions.end())
     {
 
@@ -363,7 +365,7 @@ void Electrostatic::fillFuncAroundIons(const Ions& ions)
             if (pbGrid_->mype_env().mytask() == 0)
             {
                 (*MPIdata::sout) << " Fill func. around ion " << (*ion)->name()
-                                 << " in a radius " << rc << endl;
+                                 << " in a radius " << rc << std::endl;
             }
 #endif
             for (unsigned int ix = 0; ix < pbGrid_->dim(0); ix++)
@@ -457,8 +459,8 @@ void Electrostatic::computeVh(const Ions& ions, Rho<T>& rho, Potentials& pot)
     Mesh* mymesh             = Mesh::instance();
     const pb::PEenv& myPEenv = mymesh->peenv();
 
-    vector<vector<RHODTYPE>>& vrho = rho.rho_;
-    const int ngridpts             = (int)vrho[0].size();
+    std::vector<std::vector<RHODTYPE>>& vrho = rho.rho_;
+    const int ngridpts                       = (int)vrho[0].size();
 
     RHODTYPE* work;
     if (vrho.size() > 1)

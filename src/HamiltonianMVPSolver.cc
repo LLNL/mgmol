@@ -24,7 +24,7 @@
 
 #include <iomanip>
 double evalEntropyMVP(ProjectedMatricesInterface* projmatrices,
-    const bool print_flag, ostream& os);
+    const bool print_flag, std::ostream& os);
 
 template <class T1, class T2, class T3, class T4>
 Timer HamiltonianMVPSolver<T1, T2, T3, T4>::solve_tm_(
@@ -37,9 +37,10 @@ Timer HamiltonianMVPSolver<T1, T2, T3, T4>::target_tm_(
 
 template <class T1, class T2, class T3, class T4>
 HamiltonianMVPSolver<T1, T2, T3, T4>::HamiltonianMVPSolver(MPI_Comm comm,
-    ostream& os, Ions& ions, Rho<T4>* rho, Energy<T4>* energy,
+    std::ostream& os, Ions& ions, Rho<T4>* rho, Energy<T4>* energy,
     Electrostatic* electrostat, MGmol<T4>* mgmol_strategy, const int numst,
-    const double kbT, const int nel, const vector<vector<int>>& global_indexes,
+    const double kbT, const int nel,
+    const std::vector<std::vector<int>>& global_indexes,
     const short n_inner_steps, const T1& hinit,
     const bool try_shorter_intervals)
     : comm_(comm),
@@ -89,11 +90,12 @@ int HamiltonianMVPSolver<T1, T2, T3, T4>::solve(T4& orbitals)
     {
         os_ << "---------------------------------------------------------------"
                "-"
-            << endl;
-        os_ << "Update DM functions using Hamiltonian MVP Solver..." << endl;
+            << std::endl;
+        os_ << "Update DM functions using Hamiltonian MVP Solver..."
+            << std::endl;
         os_ << "---------------------------------------------------------------"
                "-"
-            << endl;
+            << std::endl;
     }
 
     // save initial matrix to enable reset
@@ -123,9 +125,9 @@ int HamiltonianMVPSolver<T1, T2, T3, T4>::solve(T4& orbitals)
     {
         if (onpe0 && ct.verbose > 1)
         {
-            os_ << "---------------------------" << endl;
-            os_ << "Inner iteration " << inner_it << endl;
-            os_ << "---------------------------" << endl;
+            os_ << "---------------------------" << std::endl;
+            os_ << "Inner iteration " << inner_it << std::endl;
+            os_ << "---------------------------" << std::endl;
         }
 
         //
@@ -229,11 +231,11 @@ int HamiltonianMVPSolver<T1, T2, T3, T4>::solve(T4& orbitals)
 
         if (onpe0 && ct.verbose > 0)
         {
-            os_ << setprecision(12);
-            os_ << fixed << "Inner iteration " << inner_it << ", E0=" << e0
+            os_ << std::setprecision(12);
+            os_ << std::fixed << "Inner iteration " << inner_it << ", E0=" << e0
                 << ", E(1/2)=" << ei << ", E1=" << e1;
-            os_ << scientific << " -> beta=" << beta;
-            os_ << endl;
+            os_ << std::scientific << " -> beta=" << beta;
+            os_ << std::endl;
         }
 
         if (try_shorter_intervals_)
@@ -245,7 +247,7 @@ int HamiltonianMVPSolver<T1, T2, T3, T4>::solve(T4& orbitals)
                 if (onpe0 && ct.verbose > 1)
                 {
                     os_ << "HMVP: Reduce interval by factor " << factor
-                        << " ..." << endl;
+                        << " ..." << std::endl;
                 }
                 ts1 = tsi;
                 e1  = ei;
@@ -286,11 +288,11 @@ int HamiltonianMVPSolver<T1, T2, T3, T4>::solve(T4& orbitals)
 
                 if (onpe0 && ct.verbose > 0)
                 {
-                    os_ << setprecision(12);
-                    os_ << fixed << "Inner iteration " << inner_it
+                    os_ << std::setprecision(12);
+                    os_ << std::fixed << "Inner iteration " << inner_it
                         << ", E0=" << e0 << ", E(1/2)=" << ei << ", E1=" << e1;
-                    os_ << scientific << " -> beta=" << beta;
-                    os_ << endl;
+                    os_ << std::scientific << " -> beta=" << beta;
+                    os_ << std::endl;
                 }
 
                 beta *= factor;
@@ -303,7 +305,7 @@ int HamiltonianMVPSolver<T1, T2, T3, T4>::solve(T4& orbitals)
             if (beta < 0.)
             {
                 if (onpe0)
-                    os_ << "!!! HMVP iteration failed: beta<0 !!!" << endl;
+                    os_ << "!!! HMVP iteration failed: beta<0 !!!" << std::endl;
                 projmatrices->assignH(*hmatrix_);
                 projmatrices->setHB2H();
 
@@ -329,11 +331,11 @@ int HamiltonianMVPSolver<T1, T2, T3, T4>::solve(T4& orbitals)
     {
         os_ << "---------------------------------------------------------------"
                "-"
-            << endl;
-        os_ << "End Hamiltonian MVP Solver..." << endl;
+            << std::endl;
+        os_ << "End Hamiltonian MVP Solver..." << std::endl;
         os_ << "---------------------------------------------------------------"
                "-"
-            << endl;
+            << std::endl;
     }
     solve_tm_.stop();
 
@@ -341,11 +343,11 @@ int HamiltonianMVPSolver<T1, T2, T3, T4>::solve(T4& orbitals)
 }
 
 template <class T1, class T2, class T3, class T4>
-void HamiltonianMVPSolver<T1, T2, T3, T4>::printTimers(ostream& os)
+void HamiltonianMVPSolver<T1, T2, T3, T4>::printTimers(std::ostream& os)
 {
     if (onpe0)
     {
-        os << setprecision(2) << fixed << endl;
+        os << std::setprecision(2) << std::fixed << std::endl;
         solve_tm_.print(os);
         target_tm_.print(os);
     }

@@ -13,12 +13,10 @@
 #include <boost/random/uniform_real.hpp>
 #include <boost/random/variate_generator.hpp>
 
-using namespace std;
-
 class Solution
 {
     std::string name_;
-    vector<double> u_;
+    std::vector<double> u_;
     int n_;
 
     static double invs_;

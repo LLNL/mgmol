@@ -11,7 +11,6 @@
 #include <cassert>
 #include <iostream>
 #include <string>
-using namespace std;
 
 #ifdef USE_MPI
 #include <mpi.h>
@@ -31,7 +30,7 @@ using namespace std;
 //#define DEBUG 1
 
 template <class T>
-int MGmol<T>::readLRsFromInput(ifstream* tfile)
+int MGmol<T>::readLRsFromInput(std::ifstream* tfile)
 {
     Control& ct(*(Control::instance()));
 
@@ -57,9 +56,9 @@ int MGmol<T>::readLRsFromInput(ifstream* tfile)
     {
         if (ct.verbose > 0)
             os_ << "Trying to read " << ct.numst
-                << " orbital centers from input file..." << endl;
-        const vector<Ion*>& list_ions(ions_->list_ions());
-        vector<Ion*>::const_iterator ion = list_ions.begin();
+                << " orbital centers from input file..." << std::endl;
+        const std::vector<Ion*>& list_ions(ions_->list_ions());
+        std::vector<Ion*>::const_iterator ion = list_ions.begin();
 
         if (tfile != nullptr) read_comments(*tfile);
         int count = 0;
@@ -73,12 +72,12 @@ int MGmol<T>::readLRsFromInput(ifstream* tfile)
             if (tfile != nullptr)
                 for (short j = 0; j < 3; j++)
                 {
-                    string sread;
+                    std::string sread;
                     (*tfile) >> sread;
                     if (tfile->fail())
                     {
                         os_ << "WARNING: Failed reading Localization center... "
-                            << endl;
+                            << std::endl;
                         flag = false;
                         break;
                     }
@@ -93,7 +92,7 @@ int MGmol<T>::readLRsFromInput(ifstream* tfile)
             if (!flag)
             {
                 if (ct.verbose > 1)
-                    os_ << "Use atomic position for center " << i << endl;
+                    os_ << "Use atomic position for center " << i << std::endl;
 
                 for (int k = 0; k < 3; k++)
                     crds[k] = (*ion)->position(k);
@@ -122,7 +121,7 @@ int MGmol<T>::readLRsFromInput(ifstream* tfile)
                 {
                     os_ << "WARNING: Failed reading Localization radius!!! Use "
                            "uniform radius..."
-                        << endl;
+                        << std::endl;
                 }
                 else
                 {
@@ -135,7 +134,7 @@ int MGmol<T>::readLRsFromInput(ifstream* tfile)
             lrs_->push_back_global(tmp_center, radius);
             if (ct.verbose > 2)
                 (*MPIdata::sout) << "Added LR with center " << tmp_center
-                                 << " and radius " << radius << endl;
+                                 << " and radius " << radius << std::endl;
             count++;
 
             // finish reading line
@@ -144,18 +143,18 @@ int MGmol<T>::readLRsFromInput(ifstream* tfile)
                     ;
 #ifdef DEBUG
             os_ << " Read orbital center (" << crds[0] << "," << crds[1] << ","
-                << crds[2] << ")" << endl;
+                << crds[2] << ")" << std::endl;
 #endif
         }
 
-        if (ct.verbose > 1 && onpe0) os_ << "Randomize gids..." << endl;
+        if (ct.verbose > 1 && onpe0) os_ << "Randomize gids..." << std::endl;
         lrs_->randomizeGids();
 
         lrs_->fillWithZeroCenters(ct.numst);
 
         if (onpe0 && ct.verbose > 0)
             os_ << "readInput: Read " << count
-                << " orbital centers from input file" << endl;
+                << " orbital centers from input file" << std::endl;
     } // mmpi.instancePE0()
 
     if (ct.verbose > 0) printWithTimeStamp("setup LRs...", os_);
@@ -170,7 +169,7 @@ int MGmol<T>::readLRsFromInput(ifstream* tfile)
 }
 
 template <class T>
-int MGmol<T>::readCoordinates(ifstream* tfile, const bool cell_relative)
+int MGmol<T>::readCoordinates(std::ifstream* tfile, const bool cell_relative)
 {
     Control& ct = *(Control::instance());
     if (ct.verbose > 0) printWithTimeStamp("Read atomic coordinates...", os_);
@@ -191,7 +190,7 @@ int MGmol<T>::readCoordinates(ifstream* tfile, const bool cell_relative)
             if (onpe0 && ct.verbose > 0)
             {
                 os_ << "Initialize ionic positions from restart file "
-                    << ct.restart_file << endl;
+                    << ct.restart_file << std::endl;
             }
             ions_->initFromRestartFile(*h5f_file_);
         }
@@ -205,13 +204,14 @@ int MGmol<T>::readCoordinates(ifstream* tfile, const bool cell_relative)
     }
 
     const int num_ions = ions_->getNumIons();
-    if (onpe0) os_ << num_ions << " ions in simulation" << endl;
+    if (onpe0) os_ << num_ions << " ions in simulation" << std::endl;
 
     return 0;
 }
 
 template <class T>
-int MGmol<T>::readCoordinates(const string& filename, const bool cell_relative)
+int MGmol<T>::readCoordinates(
+    const std::string& filename, const bool cell_relative)
 {
     Control& ct = *(Control::instance());
     if (ct.verbose > 0) printWithTimeStamp("Read atomic coordinates...", os_);
@@ -232,7 +232,7 @@ int MGmol<T>::readCoordinates(const string& filename, const bool cell_relative)
             if (onpe0 && ct.verbose > 0)
             {
                 os_ << "Initialize ionic positions from restart file "
-                    << ct.restart_file << endl;
+                    << ct.restart_file << std::endl;
             }
             ions_->initFromRestartFile(*h5f_file_);
         }
@@ -246,7 +246,7 @@ int MGmol<T>::readCoordinates(const string& filename, const bool cell_relative)
     }
 
     const int num_ions = ions_->getNumIons();
-    if (onpe0) os_ << num_ions << " ions in simulation" << endl;
+    if (onpe0) os_ << num_ions << " ions in simulation" << std::endl;
 
     return 0;
 }

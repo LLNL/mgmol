@@ -75,7 +75,7 @@ class Potentials
     std::vector<std::string> pot_filenames_;
     std::vector<char> pot_types_;
 
-    void evalNormDeltaVtotRho(const vector<vector<RHODTYPE>>& rho);
+    void evalNormDeltaVtotRho(const std::vector<std::vector<RHODTYPE>>& rho);
 
     void initializeRadialDataOnMesh(
         const Vector3D& position, const Species& sp);
@@ -95,12 +95,12 @@ public:
         pot_types_.push_back(flag);
     }
 
-    void writeNames(ostream& os)
+    void writeNames(std::ostream& os)
     {
-        vector<string>::iterator p = pot_filenames_.begin();
+        std::vector<std::string>::iterator p = pot_filenames_.begin();
         while (p != pot_filenames_.end())
         {
-            os << " Potential file: " << *p << endl;
+            os << " Potential file: " << *p << std::endl;
             p++;
         }
     }
@@ -132,7 +132,7 @@ public:
     POTDTYPE* vxc_rho() { return &vxc_rho_[0]; }
     RHODTYPE* rho_comp() { return &rho_comp_[0]; }
 
-    const vector<POTDTYPE>& vnuc() const { return v_nuc_; }
+    const std::vector<POTDTYPE>& vnuc() const { return v_nuc_; }
     POTDTYPE* vnuc() { return &v_nuc_[0]; }
     POTDTYPE* vext() { return &v_ext_[0]; }
     POTDTYPE* vepsilon() { return &vepsilon_[0]; }
@@ -157,14 +157,14 @@ public:
 
     void initWithVnuc();
 
-    void getVofRho(vector<POTDTYPE>& vrho) const;
+    void getVofRho(std::vector<POTDTYPE>& vrho) const;
 
-    double delta_v(const vector<vector<RHODTYPE>>&);
-    double update(const vector<vector<RHODTYPE>>&);
+    double delta_v(const std::vector<std::vector<RHODTYPE>>&);
+    double update(const std::vector<std::vector<RHODTYPE>>&);
     void update(const double);
     double max() const;
     double min() const;
-    void readAll(vector<Species>& sp);
+    void readAll(std::vector<Species>& sp);
 
     template <typename T>
     void setVxc(const T* const vxc, const int iterativeIndex);
@@ -182,7 +182,8 @@ public:
     void setupVextTricubic();
     bool withVext() const;
     void getGradVext(const double[3], double[3]) const;
-    void getValVext(const vector<double>& r, vector<double>& val) const;
+    void getValVext(
+        const std::vector<double>& r, std::vector<double>& val) const;
 #endif
 };
 

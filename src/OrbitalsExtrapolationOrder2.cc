@@ -16,7 +16,6 @@
 #include "ProjectedMatrices.h"
 
 #define EXTRAPOLATE_H 1
-using namespace std;
 
 template <class T>
 void OrbitalsExtrapolationOrder2<T>::extrapolate_orbitals(
@@ -45,7 +44,8 @@ void OrbitalsExtrapolationOrder2<T>::extrapolate_orbitals(
         {
             T* orbitals_minus1 = OrbitalsExtrapolation<T>::orbitals_minus1_;
             if (ct.verbose > 1 && onpe0)
-                (*MPIdata::sout) << "Extrapolate orbitals order 2..." << endl;
+                (*MPIdata::sout)
+                    << "Extrapolate orbitals order 2..." << std::endl;
 
             // align orbitals_minus1_ with new_orbitals
             if (use_dense_proj_mat)
@@ -58,7 +58,7 @@ void OrbitalsExtrapolationOrder2<T>::extrapolate_orbitals(
                 tmp.computeGram(matQ);
                 double normQ=matQ.trace();
                 if( onpe0 )
-                    (*MPIdata::sout)<<"||Phi_old-Phi_new|| before Procrustes = "<<normQ<<endl;
+                    (*MPIdata::sout)<<"||Phi_old-Phi_new|| before Procrustes = "<<normQ<<std::endl;
 #endif
                 orbitals_minus1->computeGram(*new_orbitals, matQ);
 
@@ -72,7 +72,7 @@ void OrbitalsExtrapolationOrder2<T>::extrapolate_orbitals(
 
 #if EXTRAPOLATE_H
                 if (ct.verbose > 2 && onpe0)
-                    (*MPIdata::sout) << "Extrapolate H..." << endl;
+                    (*MPIdata::sout) << "Extrapolate H..." << std::endl;
                 OrbitalsExtrapolation<T>::hextrapol_->extrapolateHorder2(
                     matQ, yyt, (*MPIdata::sout));
                 extrapolated_H_ = true;
@@ -84,7 +84,7 @@ void OrbitalsExtrapolationOrder2<T>::extrapolate_orbitals(
                 tmp.computeGram(matQ);
                 normQ=matQ.trace();
                 if( onpe0 )
-                    (*MPIdata::sout)<<"||Phi_old-Phi_new|| after Procrustes = "<<normQ<<endl;
+                    (*MPIdata::sout)<<"||Phi_old-Phi_new|| after Procrustes = "<<normQ<<std::endl;
 #endif
             }
             else
@@ -100,7 +100,7 @@ void OrbitalsExtrapolationOrder2<T>::extrapolate_orbitals(
         // save data for next extrapolation
         if (ct.verbose > 1 && onpe0)
             (*MPIdata::sout)
-                << "Set orbitals_minus1_ to values of orbitals" << endl;
+                << "Set orbitals_minus1_ to values of orbitals" << std::endl;
         OrbitalsExtrapolation<T>::orbitals_minus1_ = *orbitals;
 
         if (use_dense_proj_mat)

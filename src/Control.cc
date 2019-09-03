@@ -34,10 +34,10 @@
 Control* Control::pinstance_   = nullptr;
 MPI_Comm Control::comm_global_ = MPI_COMM_NULL;
 float Control::total_spin_     = 0.;
-string Control::run_directory_(".");
+std::string Control::run_directory_(".");
 bool Control::with_spin_ = false;
 
-static void finishRead(ifstream& tfile)
+static void finishRead(std::ifstream& tfile)
 {
     // while( tfile.get()!='\n');
     // string str;
@@ -156,7 +156,7 @@ Control::Control()
 }
 
 void Control::setup(const MPI_Comm comm_global, const bool with_spin,
-    const float total_spin, string run_directory)
+    const float total_spin, std::string run_directory)
 {
     assert(pinstance_ == NULL);
 
@@ -170,63 +170,66 @@ void Control::setup(const MPI_Comm comm_global, const bool with_spin,
     {
         mode_t mode = (S_IRWXU | S_IRWXG | S_IRWXO);
         mkdir(run_directory_.c_str(), mode);
-        (*MPIdata::sout) << "Create dir " << run_directory_ << endl;
+        (*MPIdata::sout) << "Create dir " << run_directory_ << std::endl;
     }
 }
 
-void Control::print(ostream& os)
+void Control::print(std::ostream& os)
 {
-    if (restart_info == 0) os << " Initial run" << endl;
+    if (restart_info == 0) os << " Initial run" << std::endl;
 
-    os << " Files used:" << endl;
+    os << " Files used:" << std::endl;
     if (restart_info > 0)
-        os << " Restart input file:  " << restart_file << endl;
-    os << " Restart output file: " << out_restart_file << endl;
+        os << " Restart input file:  " << restart_file << std::endl;
+    os << " Restart output file: " << out_restart_file << std::endl;
 
     if (diel)
     {
         os << " With dielectric medium:";
-        os << setprecision(4) << scientific << " rho0=" << rho0
-           << ", drho0=" << drho0 << endl;
+        os << std::setprecision(4) << std::scientific << " rho0=" << rho0
+           << ", drho0=" << drho0 << std::endl;
     }
 
     os << " Boundary conditions for Poisson: " << bcPoisson[0] << ", "
-       << bcPoisson[1] << ", " << bcPoisson[2] << endl;
+       << bcPoisson[1] << ", " << bcPoisson[2] << std::endl;
 
     switch (getOrbitalsType())
     {
         case OrbitalsType::Eigenfunctions:
-            os << " Works in Eigenfunctions basis" << endl;
+            os << " Works in Eigenfunctions basis" << std::endl;
             break;
         case OrbitalsType::Nonorthogonal:
-            os << " Works in Nonorthogonal orbitals basis" << endl;
+            os << " Works in Nonorthogonal orbitals basis" << std::endl;
             break;
         case OrbitalsType::Orthonormal:
-            os << " Works in Orthonormal orbitals basis" << endl;
+            os << " Works in Orthonormal orbitals basis" << std::endl;
             break;
         default:
-            os << " Orbitals type undefined!!!" << endl;
+            os << " Orbitals type undefined!!!" << std::endl;
             return;
     }
 
     switch (xctype)
     {
         case 0: // LDA Perdew Zunger 81
-            os << "    XC using LDA with Perdew-Zunger 81" << endl;
+            os << "    XC using LDA with Perdew-Zunger 81" << std::endl;
             break;
         case 2:
-            os << "    XC using PBE" << endl;
+            os << "    XC using PBE" << std::endl;
             break;
         default:
-            os << "output: Unknown exchange-correlation functional" << endl;
+            os << "output: Unknown exchange-correlation functional"
+               << std::endl;
             break;
     }
-    os << " Number of species  = " << sp_.size() << endl;
+    os << " Number of species  = " << sp_.size() << std::endl;
 
-    os << " Hartree: number initial sweeps            : " << vh_init << endl;
-    os << " Hartree: number of sweeps for each Poisson: " << vh_its << endl;
+    os << " Hartree: number initial sweeps            : " << vh_init
+       << std::endl;
+    os << " Hartree: number of sweeps for each Poisson: " << vh_its
+       << std::endl;
 
-    string str("");
+    std::string str("");
     switch (conv_criterion_)
     {
         case 0:
@@ -239,90 +242,98 @@ void Control::print(ostream& os)
             str = "maxResidual";
             break;
     }
-    os << " KS convergence criterion: " << str << endl;
-    os << " KS convergence value: " << scientific << setprecision(2) << conv_tol
-       << endl;
-    os << fixed;
-    os << " Density matrix mixing = " << dm_mix << endl;
+    os << " KS convergence criterion: " << str << std::endl;
+    os << " KS convergence value: " << std::scientific << std::setprecision(2)
+       << conv_tol << std::endl;
+    os << std::fixed;
+    os << " Density matrix mixing = " << dm_mix << std::endl;
     if (DMEigensolver() == DMEigensolverType::Eigensolver)
     {
         os << " Density matrix computation algorithm = "
-           << " Diagonalization " << endl;
+           << " Diagonalization " << std::endl;
     }
     os << " Load balancing alpha for computing bias = " << load_balancing_alpha
-       << endl;
+       << std::endl;
     os << " Load balancing parameter for damping bias updates = "
-       << load_balancing_damping_tol << endl;
+       << load_balancing_damping_tol << std::endl;
     os << " Load balancing max. number of iterations = "
-       << load_balancing_max_iterations << endl;
+       << load_balancing_max_iterations << std::endl;
     os << " Control parameter for recomputing load balancing = "
-       << load_balancing_modulo << endl;
+       << load_balancing_modulo << std::endl;
     os << " Load balancing output filename = " << load_balancing_output_file
-       << endl;
-    if (loc_mode_) os << " Localization radius       = " << cut_radius << endl;
-    os << endl;
+       << std::endl;
+    if (loc_mode_)
+        os << " Localization radius       = " << cut_radius << std::endl;
+    os << std::endl;
 
-    os << " preconditioner factor:" << precond_factor << endl;
+    os << " preconditioner factor:" << precond_factor << std::endl;
     if (precond_type_ % 10 == 0)
     {
-        os << " Multigrid preconditioning for wave functions:" << endl;
-        os << " # of Multigrid levels   : " << mg_levels_ << endl;
+        os << " Multigrid preconditioning for wave functions:" << std::endl;
+        os << " # of Multigrid levels   : " << mg_levels_ << std::endl;
     }
     else
     {
-        os << " Undefined preconditioning" << endl;
+        os << " Undefined preconditioning" << std::endl;
     }
-    os << " Richardson time-step    :" << precond_factor << endl;
+    os << " Richardson time-step    :" << precond_factor << std::endl;
     if (wf_dyn == 1)
         os << " Anderson extrapolation scheme for wave functions with beta="
-           << betaAnderson << endl;
-    os << "Mix potentials with beta=" << mix_pot << endl;
+           << betaAnderson << std::endl;
+    os << "Mix potentials with beta=" << mix_pot << std::endl;
     if (atoms_dyn_)
     {
         switch (AtomsDynamic())
         {
             case AtomsDynamicType::Quench:
-                os << endl << endl << " Quench the electrons" << endl;
+                os << std::endl
+                   << std::endl
+                   << " Quench the electrons" << std::endl;
                 break;
             case AtomsDynamicType::MD:
-                os << endl << endl << " Verlet MD" << endl;
+                os << std::endl << std::endl << " Verlet MD" << std::endl;
                 break;
             case AtomsDynamicType::LBFGS:
-                os << endl << endl << " LBFGS geometry optimization" << endl;
+                os << std::endl
+                   << std::endl
+                   << " LBFGS geometry optimization" << std::endl;
                 break;
             case AtomsDynamicType::FIRE:
-                os << endl << endl << " FIRE geometry optimization" << endl;
+                os << std::endl
+                   << std::endl
+                   << " FIRE geometry optimization" << std::endl;
                 break;
             default:
-                os << "UNKNOWN MOLECULAR DYNAMICS METHOD" << endl;
+                os << "UNKNOWN MOLECULAR DYNAMICS METHOD" << std::endl;
         }
     }
 
     if (!(AtomsDynamic() == AtomsDynamicType::Quench))
     {
-        os << " Timestep for molecular dynamics = " << dt << endl;
-        if (dt <= 0.) os << " Warning: time step <= 0. !!!" << endl;
+        os << " Timestep for molecular dynamics = " << dt << std::endl;
+        if (dt <= 0.) os << " Warning: time step <= 0. !!!" << std::endl;
         os << " Max. # of SC it. per MD step = " << max_electronic_steps
-           << endl;
+           << std::endl;
     }
 
     printThermostatInfo(os);
 
     if (isSpreadFunctionalActive())
     {
-        os << " Includes spread penalty functional" << endl;
+        os << " Includes spread penalty functional" << std::endl;
         if (spread_penalty_type_ != 2)
-            os << setprecision(2) << scientific
+            os << std::setprecision(2) << std::scientific
                << " Penalty damping factor: " << spread_penalty_damping_
-               << endl;
-        os << " Target spread: " << spread_penalty_target_ << endl;
-        os << " Spread Penalty factor: " << spread_penalty_alpha_ << endl;
+               << std::endl;
+        os << " Target spread: " << spread_penalty_target_ << std::endl;
+        os << " Spread Penalty factor: " << spread_penalty_alpha_ << std::endl;
     }
 }
 
 void Control::sync(void)
 {
-    if (onpe0 && verbose > 0) (*MPIdata::sout) << "Control::sync()" << endl;
+    if (onpe0 && verbose > 0)
+        (*MPIdata::sout) << "Control::sync()" << std::endl;
 #ifdef USE_MPI
     // pack
     const short size_short_buffer = 91;
@@ -512,7 +523,7 @@ void Control::sync(void)
         char* buffer = new char[size_str + 1];
         if (mype_ == 0)
         {
-            pot_filenames_[i].copy(buffer, string::npos);
+            pot_filenames_[i].copy(buffer, std::string::npos);
             buffer[pot_filenames_[i].length()] = 0;
         }
         mpirc = MPI_Bcast(buffer, size_str + 1, MPI_CHAR, 0, comm_global_);
@@ -525,7 +536,7 @@ void Control::sync(void)
 
     if (mpirc != MPI_SUCCESS)
     {
-        (*MPIdata::sout) << "MPI Bcast of Control failed!!!" << endl;
+        (*MPIdata::sout) << "MPI Bcast of Control failed!!!" << std::endl;
         MPI_Abort(comm_global_, 2);
     }
 
@@ -711,55 +722,55 @@ int Control::checkState()
         {
             (*MPIdata::sout)
                 << "Control::checkState() -> invalid boundary conditions"
-                << endl;
+                << std::endl;
             return -1;
         }
 
     if (diel != 0 && diel != 1)
     {
-        (*MPIdata::sout) << "Flag diel should be 0 or 1" << endl;
+        (*MPIdata::sout) << "Flag diel should be 0 or 1" << std::endl;
         return -1;
     }
     if (vh_init < 0 || vh_init > 100)
     {
-        (*MPIdata::sout) << "Invalid parameter vh_init" << endl;
+        (*MPIdata::sout) << "Invalid parameter vh_init" << std::endl;
         return -1;
     }
     if (vh_its < 0 || vh_its > 100)
     {
-        (*MPIdata::sout) << "Invalid parameter vh_its" << endl;
+        (*MPIdata::sout) << "Invalid parameter vh_its" << std::endl;
         return -1;
     }
     if (rho0 > .1)
     {
-        (*MPIdata::sout) << "rho0=" << rho0 << " is too large" << endl;
+        (*MPIdata::sout) << "rho0=" << rho0 << " is too large" << std::endl;
         return -1;
     }
     if (short_sighted != 0 && short_sighted != 1)
     {
         (*MPIdata::sout) << "Control::checkState() -> Short-sighted option "
                             "should be 0 (off) or 1 (on)"
-                         << endl;
+                         << std::endl;
         return -1;
     }
     if (AtomsDynamic() == AtomsDynamicType::UNDEFINED)
     {
         (*MPIdata::sout)
             << "Control::checkState() -> invalid parameter for md method"
-            << endl;
+            << std::endl;
         return -1;
     }
     if (thermostat_type != 0 && thermostat_type != 1 && thermostat_type != 2
         && thermostat_type != 3)
     {
         (*MPIdata::sout) << "Control::checkState() -> Invalid thermostat option"
-                         << endl;
+                         << std::endl;
         return -1;
     }
     if (wf_dyn != 0 && wf_dyn != 1)
     {
         (*MPIdata::sout) << "Control::checkState() -> Invalid quench method"
-                         << endl;
+                         << std::endl;
         return -1;
     }
     if (AtomsDynamic() == AtomsDynamicType::MD)
@@ -769,27 +780,27 @@ int Control::checkState()
         {
             (*MPIdata::sout) << "Control::checkState() -> Invalid option for "
                                 "WF extrapolation in MD!!!"
-                             << endl;
+                             << std::endl;
             return -1;
         }
     if (init_loc != 0 && init_loc != 1)
     {
         (*MPIdata::sout)
             << "Control::checkState() -> Invalid orbital initialization flag"
-            << endl;
+            << std::endl;
         return -1;
     }
     if (init_type != 0 && init_type != 1 && init_type != 2)
     {
         (*MPIdata::sout)
             << "Control::checkState() -> Invalid orbital initialization shape"
-            << endl;
+            << std::endl;
         return -1;
     }
     if (numst < 0)
     {
         (*MPIdata::sout) << "Control::checkState() -> Invalid number of states"
-                         << endl;
+                         << std::endl;
         return -1;
     }
     assert(xctype == 0 || xctype == 2);
@@ -818,17 +829,17 @@ int Control::checkState()
             || lap_type == 4 || lap_type == 10))
     {
         (*MPIdata::sout) << "Control::checkState() -> Invalid Laplacian type"
-                         << endl;
+                         << std::endl;
         return -1;
     }
     if (lr_update > 0 && lr_volume_calc > 0 && wannier_transform_type != 2)
     {
-        (*MPIdata::sout) << "Control::lr_update=" << lr_update << endl;
+        (*MPIdata::sout) << "Control::lr_update=" << lr_update << std::endl;
         (*MPIdata::sout) << "Control::lr_volume_calc =" << lr_volume_calc
-                         << endl;
+                         << std::endl;
         (*MPIdata::sout) << "Control::checkState(): NOLMO centers required for "
                             "LR adaptation!"
-                         << endl;
+                         << std::endl;
         return -1;
     }
 
@@ -836,7 +847,7 @@ int Control::checkState()
     {
         (*MPIdata::serr) << "ERROR in Control: local coloring algorithm "
                             "requires block preconditioner!!!"
-                         << endl;
+                         << std::endl;
         return -1;
     }
 
@@ -858,7 +869,8 @@ void Control::setNumst(const short myspin, const int neval)
     if (with_spin_) // 1 electrons/orbital
     {
         if (mype_ == 0)
-            cout << "spin=" << total_spin_ << ", nel=" << nel_ << endl;
+            std::cout << "spin=" << total_spin_ << ", nel=" << nel_
+                      << std::endl;
         assert((nel_ - (int)(2. * total_spin_)) % 2 == 0);
 
         numst = (nel_ - (int)(2. * total_spin_)) / 2;
@@ -885,8 +897,8 @@ void Control::setNumst(const short myspin, const int neval)
     nelspin_ = numst - nempty_;
 
     if (mype_ == 0)
-        cout << "spin=" << total_spin_ << ", nel=" << neval
-             << ", numst=" << numst << ", nempty=" << nempty_ << endl;
+        std::cout << "spin=" << total_spin_ << ", nel=" << neval
+                  << ", numst=" << numst << ", nempty=" << nempty_ << std::endl;
 }
 
 void Control::setTolEnergy()
@@ -897,24 +909,26 @@ void Control::setTolEnergy()
         conv_tol = conv_rtol_ * nel_;
         if (mype_ == 0)
             (*MPIdata::sout)
-                << "Tolerance on energy based on relative tolerance" << endl;
+                << "Tolerance on energy based on relative tolerance"
+                << std::endl;
     }
     if (conv_tol_stop >= 999.) conv_tol_stop = 100. * conv_tol;
     MPI_Bcast(&conv_tol, 1, MPI_FLOAT, 0, comm_global_);
     MPI_Bcast(&conv_tol_stop, 1, MPI_FLOAT, 0, comm_global_);
     if (mype_ == 0)
-        (*MPIdata::sout) << "Tolerance on energy set to " << conv_tol << endl;
+        (*MPIdata::sout) << "Tolerance on energy set to " << conv_tol
+                         << std::endl;
 
     assert(conv_tol > 0.);
 }
 
-void Control::readRestartInfo(ifstream* tfile)
+void Control::readRestartInfo(std::ifstream* tfile)
 {
-    string zero = "0";
+    std::string zero = "0";
     if (tfile != nullptr)
     {
         // Read in the restart file names
-        string filename;
+        std::string filename;
         (*tfile) >> filename;
 
         restart_file.assign(run_directory_);
@@ -932,7 +946,7 @@ void Control::readRestartInfo(ifstream* tfile)
             restart_file_type     = 0; // no hdf5p available if no mpi
 #endif
         }
-        (*MPIdata::sout) << "Input restart file: " << restart_file << endl;
+        (*MPIdata::sout) << "Input restart file: " << restart_file << std::endl;
     }
     else
     {
@@ -955,19 +969,19 @@ void Control::readRestartInfo(ifstream* tfile)
     {
         (*MPIdata::sout)
             << "Control::readRestartInfo(): MPI Bcast of restart_file failed!!!"
-            << endl;
+            << std::endl;
     }
 #endif
 }
 
-void Control::readRestartOutputInfo(ifstream* tfile)
+void Control::readRestartOutputInfo(std::ifstream* tfile)
 {
-    const string zero = "0";
-    const string one  = "1";
+    const std::string zero = "0";
+    const std::string one  = "1";
     if (tfile != nullptr)
     {
         // Read in the output restart filename
-        string filename;
+        std::string filename;
         (*tfile) >> filename;
         // int dpcs_chkpoint=0;
         if (zero.compare(filename) == 0) // no restart dump
@@ -993,7 +1007,8 @@ void Control::readRestartOutputInfo(ifstream* tfile)
         out_restart_file.append("/");
         out_restart_file.append(filename);
         (*MPIdata::sout) << "Output restart file: " << out_restart_file
-                         << " with info level " << out_restart_info << endl;
+                         << " with info level " << out_restart_info
+                         << std::endl;
         //(*MPIdata::sout)<<"Time for DPCS checkpoint:
         //"<<dpcs_chkpoint<<"[s]"<<endl;
     }
@@ -1004,15 +1019,16 @@ int Control::setPreconditionerParameters(const short type, const float factor,
 {
     if ((type % 10) != 0)
     {
-        (*MPIdata::sout) << type << ": Invalid preconditioner type" << endl;
+        (*MPIdata::sout) << type << ": Invalid preconditioner type"
+                         << std::endl;
         return -1;
     }
 
     precond_type_ = type;
     if (precond_type_ % 10 == 0)
-        (*MPIdata::sout) << "MG preconditioner" << endl;
+        (*MPIdata::sout) << "MG preconditioner" << std::endl;
     if (precond_type_ / 10 == 1)
-        (*MPIdata::sout) << "Preconditioner: block implementation" << endl;
+        (*MPIdata::sout) << "Preconditioner: block implementation" << std::endl;
 
     precond_factor = factor;
     if (factor < 0.)
@@ -1033,11 +1049,11 @@ int Control::setPreconditionerParameters(const short type, const float factor,
     if (mg_levels_ > maxlevels)
     {
         (*MPIdata::sout) << "Set MG levels number to maxlevels=" << maxlevels
-                         << endl;
+                         << std::endl;
         mg_levels_ = maxlevels;
     }
     (*MPIdata::sout) << "MG preconditioner: number of levels =" << mg_levels_
-                     << endl;
+                     << std::endl;
     return 0;
 }
 
@@ -1049,21 +1065,21 @@ int Control::setShortSightedSolverParameters(const float fact, const float stol,
     {
         (*MPIdata::sout)
             << "Invalid fill level parameter for ILU preconditioner: lof = "
-            << lfil << endl;
+            << lfil << std::endl;
         return -1;
     }
     if (itmax < 0)
     {
         (*MPIdata::sout)
             << "Invalid maxits parameter for fgmres solver: maxits = " << itmax
-            << endl;
+            << std::endl;
         return -1;
     }
     if (kim < 0)
     {
         (*MPIdata::sout)
             << "Invalid Krylov dimension parameter for fgmres solver: kim = "
-            << kim << endl;
+            << kim << std::endl;
         return -1;
     }
 
@@ -1079,11 +1095,11 @@ int Control::setShortSightedSolverParameters(const float fact, const float stol,
     return 0;
 }
 
-int Control::readLRupdateInfo(ifstream* tfile)
+int Control::readLRupdateInfo(std::ifstream* tfile)
 {
     (*tfile) >> lr_update;
     (*MPIdata::sout) << "Control::readLRupdateInfo(), input lr_update="
-                     << lr_update << endl;
+                     << lr_update << std::endl;
     if (lr_update > 0)
     {
 
@@ -1091,22 +1107,24 @@ int Control::readLRupdateInfo(ifstream* tfile)
         if (lr_updates_type != 0 && lr_updates_type != 1
             && lr_updates_type != 2)
         {
-            (*MPIdata::sout) << "Control::readLRupdateInfo(), "
-                             << "Invalid value for lr_updates_type" << endl;
+            (*MPIdata::sout)
+                << "Control::readLRupdateInfo(), "
+                << "Invalid value for lr_updates_type" << std::endl;
             return -1;
         }
         (*tfile) >> tol_orb_centers_move;
         (*MPIdata::sout)
             << "Control::readLRupdateInfo(), input tol_orb_centers_move="
-            << tol_orb_centers_move << endl;
+            << tol_orb_centers_move << std::endl;
         if (lr_updates_type > 0)
         {
             (*tfile) >> lr_volume_calc;
             if (lr_volume_calc != 0 && lr_volume_calc != 1
                 && lr_volume_calc != 2)
             {
-                (*MPIdata::sout) << "Control::readLRupdateInfo(), "
-                                 << "Invalid value for lr_volume_calc" << endl;
+                (*MPIdata::sout)
+                    << "Control::readLRupdateInfo(), "
+                    << "Invalid value for lr_volume_calc" << std::endl;
                 return -1;
             }
         }
@@ -1114,13 +1132,13 @@ int Control::readLRupdateInfo(ifstream* tfile)
     return 0;
 }
 
-int Control::readThermostatInfo(ifstream* tfile)
+int Control::readThermostatInfo(std::ifstream* tfile)
 {
     (*tfile) >> thermostat_type;
     if (thermostat_type != 0 && thermostat_type != 1 && thermostat_type != 2
         && thermostat_type != 3)
     {
-        (*MPIdata::sout) << "Invalid thermostat option" << endl;
+        (*MPIdata::sout) << "Invalid thermostat option" << std::endl;
         return -1;
     }
     if (thermostat_type > 0)
@@ -1129,33 +1147,33 @@ int Control::readThermostatInfo(ifstream* tfile)
         if (thtime <= 0.)
         {
             (*MPIdata::sout)
-                << "Invalid thermostat option: time should be >0." << endl;
+                << "Invalid thermostat option: time should be >0." << std::endl;
             return -1;
         }
     }
     return 0;
 }
 
-void Control::printThermostatInfo(ostream& os) const
+void Control::printThermostatInfo(std::ostream& os) const
 {
     if (thermostat_type > 0 && mype_ == 0)
     {
         os << "Thermostat type: ";
         if (thermostat_type == 1)
-            os << "Berendsen" << endl;
+            os << "Berendsen" << std::endl;
         else if (thermostat_type == 2)
-            os << "Langevin" << endl;
+            os << "Langevin" << std::endl;
         else if (thermostat_type == 3)
-            os << "SCALING" << endl;
+            os << "SCALING" << std::endl;
         else
-            os << endl;
-        os << "Thermostat target T: " << tkel << endl;
-        os << "Thermostat trelaxation time: " << thtime << endl;
-        os << "Thermostat trelaxation width: " << thwidth << endl;
+            os << std::endl;
+        os << "Thermostat target T: " << tkel << std::endl;
+        os << "Thermostat trelaxation time: " << thtime << std::endl;
+        os << "Thermostat trelaxation width: " << thwidth << std::endl;
     }
 }
 
-int Control::readOccupations(ifstream* tfile)
+int Control::readOccupations(std::ifstream* tfile)
 {
     int count = 0;
     float nel = 0.;
@@ -1166,25 +1184,25 @@ int Control::readOccupations(ifstream* tfile)
         if (mype_ == 0)
         {
 #ifdef DEBUG
-            (*MPIdata::sout) << " Occupations of states..." << endl;
+            (*MPIdata::sout) << " Occupations of states..." << std::endl;
 #endif
             (*tfile) >> nst;
             if (nst <= 0)
             {
                 (*MPIdata::sout)
-                    << "Control::readOccupations: numst=" << numst << endl;
+                    << "Control::readOccupations: numst=" << numst << std::endl;
                 (*MPIdata::sout) << "Control::readOccupations: nst=" << nst
-                                 << ", count=" << count << endl;
+                                 << ", count=" << count << std::endl;
                 (*MPIdata::sout) << "Control::readOccupations: Bad repeat "
                                     "count for state occupations"
-                                 << endl;
+                                 << std::endl;
                 return -1;
             }
             if ((count + nst) > numst)
             {
                 (*MPIdata::sout) << "Control::readOccupations: Occupations "
                                     "specified for too many states"
-                                 << endl;
+                                 << std::endl;
                 return -1;
             }
 
@@ -1192,10 +1210,11 @@ int Control::readOccupations(ifstream* tfile)
             if (t1 < 0.)
             {
                 (*MPIdata::sout)
-                    << "Control::readOccupations: occupation=" << t1 << endl;
+                    << "Control::readOccupations: occupation=" << t1
+                    << std::endl;
                 (*MPIdata::sout) << "Control::readOccupations: occupation "
                                     "should be a positive number"
-                                 << endl;
+                                 << std::endl;
                 return -1;
             }
             finishRead(*tfile);
@@ -1205,13 +1224,14 @@ int Control::readOccupations(ifstream* tfile)
         if (mpirc != MPI_SUCCESS)
         {
             (*MPIdata::sout)
-                << "MPI Bcast of occupation numbers failed!!!" << endl;
+                << "MPI Bcast of occupation numbers failed!!!" << std::endl;
             return -1;
         }
         mpirc = MPI_Bcast(&t1, 1, MPI_FLOAT, 0, comm_global_);
         if (mpirc != MPI_SUCCESS)
         {
-            (*MPIdata::sout) << "MPI Bcast of occupation failed!!!" << endl;
+            (*MPIdata::sout)
+                << "MPI Bcast of occupation failed!!!" << std::endl;
             return -1;
         }
 #endif
@@ -1252,7 +1272,7 @@ void Control::setLocMode(const float radius, const float lx, const float ly,
     if (loc_mode_) project_out_psd = 0;
 #ifdef DEBUG
     if (mype_ == 0)
-        (*MPIdata::sout) << " Localization radius=" << cut_radius << endl;
+        (*MPIdata::sout) << " Localization radius=" << cut_radius << std::endl;
 #endif
 }
 
@@ -1274,7 +1294,7 @@ void Control::setTolEigenvalueGram(const float tol)
     threshold_eigenvalue_gram_ = tol;
     if (onpe0)
         (*MPIdata::sout) << "Tol. Eigenvalue Gram="
-                         << threshold_eigenvalue_gram_ << endl;
+                         << threshold_eigenvalue_gram_ << std::endl;
 }
 
 void Control::global_exit(int i)
@@ -1292,7 +1312,7 @@ void Control::setSpecies(Potentials& pot)
 
     int i = 0;
 
-    for (vector<string>::iterator it = pot_filenames_.begin();
+    for (std::vector<std::string>::iterator it = pot_filenames_.begin();
          it != pot_filenames_.end(); ++it)
     {
 
@@ -1311,13 +1331,13 @@ void Control::setSpecies(Potentials& pot)
     pot.readAll(sp_);
 }
 
-void Control::readPotFilenames(ifstream* tfile)
+void Control::readPotFilenames(std::ifstream* tfile)
 {
     assert(pot_filenames_.empty());
 
     for (int i = 0; i < num_species; i++)
     {
-        string pot_filename;
+        std::string pot_filename;
         short flag = -1;
         if (mype_ == 0)
         {
@@ -1331,8 +1351,8 @@ void Control::readPotFilenames(ifstream* tfile)
         {
             read_comments(*tfile);
             if (onpe0)
-                (*MPIdata::sout)
-                    << "Potential file name: " << pot_filenames_[i] << endl;
+                (*MPIdata::sout) << "Potential file name: " << pot_filenames_[i]
+                                 << std::endl;
         }
     }
 }
@@ -1342,7 +1362,7 @@ void Control::registerPotentials(Potentials& pot)
     assert(pot_filenames_.size() == pseudopot_flags_.size());
 
     short i = 0;
-    for (vector<string>::iterator it = pot_filenames_.begin();
+    for (std::vector<std::string>::iterator it = pot_filenames_.begin();
          it != pot_filenames_.end(); ++it)
     {
         // just make sure every process does the same thing...
@@ -1355,16 +1375,17 @@ void Control::registerPotentials(Potentials& pot)
 
 int Control::checkNLrange()
 {
-    for (vector<Species>::const_iterator it = sp_.begin(); it != sp_.end();
+    for (std::vector<Species>::const_iterator it = sp_.begin(); it != sp_.end();
          ++it)
     {
         for (short i = 0; i < 3; i++)
             if (it->dim_nl() > static_cast<int>(ngpts_[i]))
             {
-                cerr << "WARNING: Size of cell not large enough for Species "
-                     << it->name() << " in direction " << i << endl;
-                cerr << " dim nl=" << it->dim_nl()
-                     << " larger than n=" << ngpts_[i] << endl;
+                std::cerr
+                    << "WARNING: Size of cell not large enough for Species "
+                    << it->name() << " in direction " << i << std::endl;
+                std::cerr << " dim nl=" << it->dim_nl()
+                          << " larger than n=" << ngpts_[i] << std::endl;
                 return -1;
             }
     }
@@ -1375,7 +1396,7 @@ int Control::checkNLrange()
 // set internal flags from read boost options
 void Control::setOptions(const boost::program_options::variables_map& vm)
 {
-    printWithTimeStamp("Control::setOptions()...", cout);
+    printWithTimeStamp("Control::setOptions()...", std::cout);
 
     if (onpe0)
     {
@@ -1383,15 +1404,15 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         assert(vm.count("Poisson.bcx"));
         assert(vm.count("xcFunctional"));
 
-        string str;
+        std::string str;
 
         verbose = vm["verbosity"].as<short>();
 
-        str = vm["xcFunctional"].as<string>();
+        str = vm["xcFunctional"].as<std::string>();
         if (str.compare("LDA") == 0) xctype = 0;
         if (str.compare("PBE") == 0) xctype = 2;
 
-        str = vm["FDtype"].as<string>();
+        str = vm["FDtype"].as<std::string>();
         if (str.compare("Mehrstellen") == 0) lap_type = 0;
         if (str.compare("2nd") == 0) lap_type = 1;
         if (str.compare("4th") == 0) lap_type = 2;
@@ -1417,8 +1438,8 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         {
             short filter_flag = vm["Potentials.filterPseudo"].as<char>();
 
-            pot_filenames_
-                = vm["Potentials.pseudopotential"].as<vector<string>>();
+            pot_filenames_ = vm["Potentials.pseudopotential"]
+                                 .as<std::vector<std::string>>();
             for (unsigned short i = 0; i < pot_filenames_.size(); i++)
                 pseudopot_flags_.push_back(filter_flag);
         }
@@ -1427,7 +1448,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         {
             char bin_flag = vm["Potentials.binExternal"].as<bool>() ? 'a' : 'b';
             std::vector<std::string> pot_filenames
-                = vm["Potentials.external"].as<vector<string>>();
+                = vm["Potentials.external"].as<std::vector<std::string>>();
 
             for (unsigned short i = 0; i < pot_filenames.size(); i++)
             {
@@ -1436,7 +1457,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
             }
         }
 
-        restart_file = vm["Restart.input_filename"].as<string>();
+        restart_file = vm["Restart.input_filename"].as<std::string>();
         if (restart_file.compare("") == 0)
         {
             restart_info = 0;
@@ -1446,14 +1467,14 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
             printRestartLink();
             restart_info = vm["Restart.input_level"].as<short>();
         }
-        str = vm["Restart.input_type"].as<string>();
+        str = vm["Restart.input_type"].as<std::string>();
         if (str.compare("distributed") == 0)
             restart_file_type = 0;
         else
             restart_file_type = 1;
 
-        string filename(vm["Restart.output_filename"].as<string>());
-        string autoname("auto");
+        std::string filename(vm["Restart.output_filename"].as<std::string>());
+        std::string autoname("auto");
         if (autoname.compare(filename) == 0) // automatic naming of dump
         {
             filename                         = "snapshot";
@@ -1464,26 +1485,27 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         out_restart_file.append(filename);
 
         out_restart_info = vm["Restart.output_level"].as<short>();
-        str              = vm["Restart.output_type"].as<string>();
+        str              = vm["Restart.output_type"].as<std::string>();
         if (str.compare("distributed") == 0) out_restart_file_type = 0;
         if (str.compare("single_file") == 0) out_restart_file_type = 1;
         if (out_restart_file_type < 0)
         {
             (*MPIdata::serr)
                 << "ERROR in Control::setOptions: Invalid restart dump type"
-                << endl;
+                << std::endl;
             MPI_Abort(comm_global_, 2);
         }
 
         (*MPIdata::sout) << "Output restart file: " << out_restart_file
-                         << " with info level " << out_restart_info << endl;
+                         << " with info level " << out_restart_info
+                         << std::endl;
 
         checkpoint = vm["Restart.interval"].as<short>();
 
         rescale_v_ = vm["Restart.rescale_v"].as<double>();
 
         // Poisson solver
-        str = vm["Poisson.FDtype"].as<string>();
+        str = vm["Poisson.FDtype"].as<std::string>();
         if (str.compare("2nd") == 0) poisson_lap_type_ = PoissonFDtype::h2;
         if (str.compare("4th") == 0) poisson_lap_type_ = PoissonFDtype::h4;
         if (str.compare("6th") == 0) poisson_lap_type_ = PoissonFDtype::h6;
@@ -1493,26 +1515,26 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         if (str.compare("Mehrstellen2") == 0)
             poisson_lap_type_ = PoissonFDtype::h4MP;
 
-        str = vm["Poisson.bcx"].as<string>();
+        str = vm["Poisson.bcx"].as<std::string>();
         if (str.compare("0") == 0) bcPoisson[0] = 0;
         if (str.compare("periodic") == 0) bcPoisson[0] = 1;
         if (str.compare("charge") == 0) bcPoisson[0] = 2;
 
-        str = vm["Poisson.bcy"].as<string>();
+        str = vm["Poisson.bcy"].as<std::string>();
         if (str.compare("0") == 0) bcPoisson[1] = 0;
         if (str.compare("periodic") == 0) bcPoisson[1] = 1;
         if (str.compare("charge") == 0) bcPoisson[1] = 2;
 
-        str = vm["Poisson.bcz"].as<string>();
+        str = vm["Poisson.bcz"].as<std::string>();
         if (str.compare("0") == 0) bcPoisson[2] = 0;
         if (str.compare("periodic") == 0) bcPoisson[2] = 1;
         if (str.compare("charge") == 0) bcPoisson[2] = 2;
 
-        str = vm["Poisson.solver"].as<string>();
+        str = vm["Poisson.solver"].as<std::string>();
         if (str.compare("CG") == 0) diel_flag_ = 10;
         if (str.compare("MG") == 0) diel_flag_ = 0;
 
-        str = vm["Poisson.diel"].as<string>();
+        str = vm["Poisson.diel"].as<std::string>();
         if (str.compare("on") == 0 || str.compare("ON") == 0) diel = 1;
         if (str.compare("off") == 0 || str.compare("OFF") == 0) diel = 0;
 
@@ -1527,7 +1549,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         rho0            = vm["Poisson.rho0"].as<float>();
         drho0           = vm["Poisson.beta"].as<float>();
 
-        str = vm["ProjectedMatrices.solver"].as<string>();
+        str = vm["ProjectedMatrices.solver"].as<std::string>();
         if (str.compare("short_sighted") == 0) short_sighted = 1;
         if (str.compare("exact") == 0) short_sighted = 0;
 
@@ -1543,7 +1565,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
                 = vm["ShortSightedInverse.max_iterations"].as<short>();
             ilu_lof = vm["ShortSightedInverse.ilu_filling_level"].as<short>();
             ilu_maxfil = vm["ShortSightedInverse.ilut_max_fill"].as<int>();
-            str        = vm["ShortSightedInverse.ilu_type"].as<string>();
+            str        = vm["ShortSightedInverse.ilu_type"].as<std::string>();
             if (str.compare("ILU") == 0)
                 ilu_type = 0;
             else
@@ -1554,7 +1576,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
             spread_factor = 1000.;
         }
 
-        str = vm["Quench.solver"].as<string>();
+        str = vm["Quench.solver"].as<std::string>();
         if (str.compare("ABPG") == 0)
         {
             it_algo_type_ = 0;
@@ -1579,7 +1601,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         {
             it_algo_type_ = 3;
         }
-        cout << "Outer solver type: " << str << endl;
+        std::cout << "Outer solver type: " << str << std::endl;
         assert(it_algo_type_ >= 0);
 
         mg_levels_     = vm["Quench.preconditioner_num_levels"].as<short>() - 1;
@@ -1609,7 +1631,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         conv_tol        = vm["Quench.atol"].as<float>();
         conv_rtol_      = vm["Quench.rtol"].as<float>();
 
-        str = vm["Quench.conv_criterion"].as<string>();
+        str = vm["Quench.conv_criterion"].as<std::string>();
         if (str.compare("deltaE") == 0) conv_criterion_ = 0;
         if (str.compare("residual") == 0) conv_criterion_ = 1;
         if (str.compare("maxResidual") == 0) conv_criterion_ = 2;
@@ -1630,7 +1652,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         spread_penalty_alpha_ = vm["SpreadPenalty.alpha"].as<float>();
         if (spread_penalty_alpha_ > 0.)
         {
-            str = vm["SpreadPenalty.type"].as<string>();
+            str = vm["SpreadPenalty.type"].as<std::string>();
             if (str.compare("volume") == 0)
             {
                 // new interface
@@ -1660,14 +1682,14 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
             }
             else
             {
-                cerr << "ERROR: Spread Penalty needs a type" << endl;
+                std::cerr << "ERROR: Spread Penalty needs a type" << std::endl;
                 MPI_Abort(comm_global_, 0);
             }
 
             if (spread_penalty_target_ <= 0.)
             {
                 (*MPIdata::sout) << "Invalid value for Spread Penalty target: "
-                                 << spread_penalty_target_ << endl;
+                                 << spread_penalty_target_ << std::endl;
                 MPI_Abort(comm_global_, 0);
             }
         }
@@ -1677,14 +1699,14 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
 
         aomm_threshold_factor_ = vm["AOMM.threshold_factor"].as<float>();
 
-        str = vm["Coloring.algo"].as<string>();
+        str = vm["Coloring.algo"].as<std::string>();
         if (str.compare("RLF") == 0) coloring_algo_ = 0;
         if (str.compare("Greedy") == 0) coloring_algo_ = 1;
 
-        str = vm["Coloring.scope"].as<string>();
+        str = vm["Coloring.scope"].as<std::string>();
         if (str.compare("local") == 0) coloring_algo_ += 10;
 
-        str                         = vm["Run.type"].as<string>();
+        str                         = vm["Run.type"].as<std::string>();
         max_electronic_steps        = vm["Quench.max_steps"].as<short>();
         max_electronic_steps_loose_ = max_electronic_steps;
         max_electronic_steps_tight_ = vm["Quench.max_steps_tight"].as<short>();
@@ -1698,18 +1720,18 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
             dt                = vm["MD.dt"].as<float>();
             num_MD_steps      = vm["MD.num_steps"].as<short>();
             md_print_freq     = vm["MD.print_interval"].as<short>();
-            md_print_filename = vm["MD.print_directory"].as<string>();
-            str               = vm["MD.thermostat"].as<string>();
+            md_print_filename = vm["MD.print_directory"].as<std::string>();
+            str               = vm["MD.thermostat"].as<std::string>();
             if (str.compare("ON") == 0 || str.compare("on") == 0)
             {
-                str = vm["Thermostat.type"].as<string>();
+                str = vm["Thermostat.type"].as<std::string>();
                 if (str.compare("Berendsen") == 0) thermostat_type = 1;
                 if (str.compare("Langevin") == 0) thermostat_type = 2;
                 if (str.compare("SCALING") == 0) thermostat_type = 3;
                 if (thermostat_type < 0)
                 {
                     (*MPIdata::sout) << "Invalid value for Thermostat.type: "
-                                     << thermostat_type << endl;
+                                     << thermostat_type << std::endl;
                     MPI_Abort(comm_global_, 0);
                 }
 
@@ -1718,7 +1740,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
                 {
                     (*MPIdata::sout)
                         << "Invalid value for Thermostat.temperature: " << tkel
-                        << endl;
+                        << std::endl;
                     MPI_Abort(comm_global_, 0);
                 }
                 thtime = vm["Thermostat.relax_time"].as<float>();
@@ -1726,7 +1748,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
                 {
                     (*MPIdata::sout)
                         << "Invalid value for Thermostat.relax_time: " << thtime
-                        << endl;
+                        << std::endl;
                     MPI_Abort(comm_global_, 0);
                 }
 
@@ -1737,7 +1759,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
                     {
                         (*MPIdata::sout)
                             << "Invalid value for Thermostat.width: " << thwidth
-                            << endl;
+                            << std::endl;
                         MPI_Abort(comm_global_, 0);
                     }
                 }
@@ -1754,7 +1776,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
                 = vm["MD.min_Gram_eigenvalue"].as<float>();
 
             // override value of wf_extrapolation for XL-BOMD
-            str = vm["MD.type"].as<string>();
+            str = vm["MD.type"].as<std::string>();
         } // MD
         else
         {
@@ -1763,7 +1785,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
 
         if (str.compare("GeomOpt") == 0)
         {
-            str = vm["GeomOpt.type"].as<string>();
+            str = vm["GeomOpt.type"].as<std::string>();
             if (str.compare("LBFGS") == 0) atoms_dyn_ = 6;
             if (str.compare("FIRE") == 0) atoms_dyn_ = 7;
             dt = vm["GeomOpt.dt"].as<float>();
@@ -1774,20 +1796,20 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         }
 
         nempty_ = vm["Orbitals.nempty"].as<short>();
-        str     = vm["Orbitals.type"].as<string>();
+        str     = vm["Orbitals.type"].as<std::string>();
         if (str.compare("NO") == 0) orbital_type_ = 1;
         if (str.compare("Orthonormal") == 0) orbital_type_ = 2;
-        cout << "Orbitals type: " << str << endl;
+        std::cout << "Orbitals type: " << str << std::endl;
         float etemp = vm["Orbitals.temperature"].as<float>();
         // K_B*T in Rydberg
         occ_width = 2. * 3.166811429e-6 * etemp;
 
-        str = vm["Orbitals.dotProduct"].as<string>();
+        str = vm["Orbitals.dotProduct"].as<std::string>();
         if (str.compare("diagonal") == 0)
             dot_product_type = 0; // use diag(inverse(S))
         if (str.compare("exact") == 0) dot_product_type = 1; // use inverse(S)
 
-        str = vm["Orbitals.initial_type"].as<string>();
+        str = vm["Orbitals.initial_type"].as<std::string>();
         if (str.compare("random") == 0) init_type = 0;
         if (str.compare("Gaussian") == 0) init_type = 1;
         if (str.compare("Fourier") == 0) init_type = 2;
@@ -1797,13 +1819,14 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         init_rc = vm["Orbitals.initial_width"].as<float>();
         if (init_type == 1 && init_rc > 100.)
         {
-            cout << endl
-                 << "!!!WARNING: Gaussian orbitals with large spreads may lead "
-                    "to bad condition number for S!!!"
-                 << endl;
-            cout << "Try using a smaller value for Orbitals.initial_width"
-                 << endl
-                 << endl;
+            std::cout
+                << std::endl
+                << "!!!WARNING: Gaussian orbitals with large spreads may lead "
+                   "to bad condition number for S!!!"
+                << std::endl;
+            std::cout << "Try using a smaller value for Orbitals.initial_width"
+                      << std::endl
+                      << std::endl;
         }
 
         overallocate_factor_ = vm["Orbitals.overallocate_factor"].as<float>();
@@ -1819,7 +1842,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         min_distance_centers_
             = vm["LocalizationRegions.min_distance"].as<float>();
         lrs_compute = vm["LocalizationRegions.computation"].as<short>();
-        str = vm["LocalizationRegions.extrapolation_scheme"].as<string>();
+        str = vm["LocalizationRegions.extrapolation_scheme"].as<std::string>();
 
         if (lrs_compute > 0 || str.compare("none") == 0)
             lrs_extrapolation = 0;
@@ -1833,7 +1856,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         dm_mix         = vm["DensityMatrix.mixing"].as<float>();
         dm_inner_steps = vm["DensityMatrix.nb_inner_it"].as<short>();
         dm_use_old_    = vm["DensityMatrix.use_old"].as<bool>() ? 1 : 0;
-        str            = vm["DensityMatrix.algo"].as<string>();
+        str            = vm["DensityMatrix.algo"].as<std::string>();
         if (str.compare("Diagonalization") == 0)
             dm_algo_ = 0;
         else
@@ -1841,7 +1864,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
 
         dm_tol = vm["DensityMatrix.tol"].as<float>();
 
-        str = vm["DensityMatrix.solver"].as<string>();
+        str = vm["DensityMatrix.solver"].as<std::string>();
         if (str.compare("Mixing") == 0) DM_solver_ = 0;
         if (str.compare("MVP") == 0) DM_solver_ = 1;
         if (str.compare("HMVP") == 0) DM_solver_ = 2;
@@ -1853,7 +1876,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
             = vm["LoadBalancing.max_iterations"].as<short>();
         load_balancing_modulo = vm["LoadBalancing.modulo"].as<short>();
         load_balancing_output_file
-            = vm["LoadBalancing.output_file"].as<string>();
+            = vm["LoadBalancing.output_file"].as<std::string>();
         if (load_balancing_output_file.compare("") == 0)
             write_clusters = 0;
         else
@@ -1904,59 +1927,60 @@ int Control::checkOptions()
 {
     if (it_algo_type_ > 3)
     {
-        cerr << "ERROR: specified inner solver not implemented" << endl;
+        std::cerr << "ERROR: specified inner solver not implemented"
+                  << std::endl;
         return -1;
     }
 
     if (getOrbitalsType() == OrbitalsType::UNDEFINED)
     {
-        cerr << "ERROR: unknown orbitals type\n";
+        std::cerr << "ERROR: unknown orbitals type\n";
         return -1;
     }
 
     if (short_sighted && lap_type == 0)
     {
-        cerr
+        std::cerr
             << "ERROR: Mehrstellen not compatible with Short-sighted algorithm!"
-            << endl;
+            << std::endl;
         return -1;
     }
 
     if (it_algo_type_ == 3 && lap_type == 0)
     {
-        cerr
+        std::cerr
             << "ERROR: Mehrstellen not compatible with Polak-Ribiere algorithm!"
-            << endl;
+            << std::endl;
         return -1;
     }
 
     if (out_restart_file_type == 1 && !globalColoring() && out_restart_info > 2)
     {
-        cerr << "ERROR: writing single restart file with wave functions "
-                "requires global coloring!!!"
-             << endl;
+        std::cerr << "ERROR: writing single restart file with wave functions "
+                     "requires global coloring!!!"
+                  << std::endl;
         return -1;
     }
 
     if (restart_file_type == 1 && !globalColoring() && restart_info > 2)
     {
-        cerr << "ERROR: reading single restart file with wave functions "
-                "requires global coloring!!!"
-             << endl;
+        std::cerr << "ERROR: reading single restart file with wave functions "
+                     "requires global coloring!!!"
+                  << std::endl;
         return -1;
     }
     if (short_sighted > 0 && !loc_mode_)
     {
         (*MPIdata::sout)
             << "ERROR: Short-sighted algorithm requires localization mode!!"
-            << endl;
+            << std::endl;
         return -1;
     }
     if (lrs_extrapolation > 0 && lrs_compute > 0)
     {
         (*MPIdata::sout) << "ERROR: must choose either extrapolation or "
                             "computation of centers."
-                         << endl;
+                         << std::endl;
     }
     return 0;
 }
