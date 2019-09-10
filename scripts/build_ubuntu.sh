@@ -18,8 +18,10 @@ cmake -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} \
       -DLAPACK_LIBRARIES=/usr/lib/x86_64-linux-gnu/openblas/liblapack.so.3 \
       -DBLA_VENDOR=OpenBLAS \
       -DCMAKE_Fortran_COMPILER=mpif77 \
-      -DSCALAPACK_ROOT=/usr/lib/x86_64-linux-gnu \
+      -DSCALAPACK_LIBRARY=/usr/lib/x86_64-linux-gnu/libscalapack-openmpi.so.2.0 \
       -DMPIEXEC_PREFLAGS="-report-bindings;--map-by;core;-bind-to;core" \
+      -DMGMOL_WITH_CLANG_FORMAT=ON \
+      -DCMAKE_PREFIX_PATH=${HOME}/bin \
       ..
 
 # call make install
