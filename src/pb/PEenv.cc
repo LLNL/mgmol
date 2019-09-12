@@ -38,11 +38,11 @@ PEenv::PEenv(MPI_Comm comm, ostream* os)
         mpi_neighbors_[i] = 0;
 
     color_       = 0;
-    comm_active_ = nullptr;
-    cart_comm_   = nullptr;
-    comm_x_      = nullptr;
-    comm_y_      = nullptr;
-    comm_z_      = nullptr;
+    comm_active_ = MPI_COMM_NULL;
+    cart_comm_   = MPI_COMM_NULL;
+    comm_x_      = MPI_COMM_NULL;
+    comm_y_      = MPI_COMM_NULL;
+    comm_z_      = MPI_COMM_NULL;
 
     onpe0_ = true;
     for (int i = 0; i < 3; i++)
@@ -218,17 +218,17 @@ PEenv::~PEenv()
     if (comm_active_ != comm_ && comm_active_ != MPI_COMM_SELF)
     {
         // cout<<"MPI_Comm_free: "<<comm_active_<<endl;
-        assert(comm_active_ != NULL);
+        assert(comm_active_ != MPI_COMM_NULL);
         int mpirc    = MPI_Comm_free(&comm_active_);
-        comm_active_ = nullptr;
+        comm_active_ = MPI_COMM_NULL;
         if (mpirc != MPI_SUCCESS)
         {
             cerr << "MPI_Comm_free failed!" << endl;
             MPI_Abort(comm_, 2);
         }
     }
-    if (cart_comm_ != nullptr) MPI_Comm_free(&cart_comm_);
-    if (comm_x_ != nullptr) MPI_Comm_free(&comm_x_);
+    if (cart_comm_ != MPI_COMM_NULL) MPI_Comm_free(&cart_comm_);
+    if (comm_x_ != MPI_COMM_NULL) MPI_Comm_free(&comm_x_);
 #endif
     for (int i = 0; i < 3; i++)
     {
