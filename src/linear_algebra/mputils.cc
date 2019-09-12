@@ -12,6 +12,7 @@
 #include "MPIdata.h"
 #include "Timer.h"
 
+#include <cassert>
 #include <iostream>
 
 Timer dgemm_tm("dgemm");
@@ -300,209 +301,29 @@ void Tgemv(const char trans, const int m, const int n, const float alpha,
     SGEMV(&trans, &m, &n, &alpha, a, &lda, x, &incx, &beta, y, &incy);
 }
 
-void MPgemm(const char transa, const char transb, const int m, const int n,
-    const int k, const double alpha, const double* const a, const int lda,
-    const double* const b, const int ldb, const double beta, double* const c,
-    const int ldc)
-{
-    dgemm_tm.start();
-    DGEMM(
-        &transa, &transb, &m, &n, &k, &alpha, a, &lda, b, &ldb, &beta, c, &ldc);
-    dgemm_tm.stop();
-}
+/////////////////////////////
+//          MPgemm         //
+/////////////////////////////
 
-// input/output in float, computation in double
-void MPgemmNN(const int m, const int n, const int k, const double alpha,
-    const float* const a, const int lda, const double* const b, const int ldb,
-    const double beta, float* const c, const int ldc)
-{
-    // if(onpe0)cout<<"MPgemmNN..."<<endl;
-
-    char transa = 'n';
-    char transb = 'n';
-
-    MPgemm(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
-}
-
-// input in float, computation in double
-void MPgemmTN(const int m, const int n, const int k, const double alpha,
-    const float* const a, const int lda, const float* const b, const int ldb,
-    const double beta, double* const c, const int ldc)
-{
-    char transa = 't';
-    char transb = 'n';
-
-    MPgemm(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
-}
-
-// input in float, computation in double
-void MPgemmTN(const int m, const int n, const int k, const double alpha,
-    const float* const a, const int lda, const float* const b, const int ldb,
-    const double beta, float* const c, const int ldc)
-{
-    char transa = 't';
-    char transb = 'n';
-
-    MPgemm(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
-}
-
-// input/output in float, computation in double
-void MPgemm(const char transa, const char transb, const int m, const int n,
-    const int k, const double alpha, const float* const a, const int lda,
-    const float* const b, const int ldb, const double beta, float* const c,
-    const int ldc)
-{
-    mpgemm_tm.start();
-
-    if (beta == 1. && (alpha == 0. || m == 0 || n == 0 || k == 0)) return;
-
-    /* case transb == 'N' and transa == 'N' */
-    if (transb == 'N' || transb == 'n')
-    {
-        if (transa == 'N' || transa == 'n')
-        {
-            /* buffer to hold accumulation in double */
-            double* buff = new double[m];
-            for (int j = 0; j < n; j++)
-            {
-                memset(buff, 0, m * sizeof(double));
-                for (int l = 0; l < k; l++)
-                {
-                    /* pointer to beginning of column l in matrix a */
-                    const float* colL = a + lda * l;
-                    /* get multiplier */
-                    double mult = (double)(alpha * b[ldb * j + l]);
-                    MPaxpy(m, mult, colL, buff);
-                }
-                /* Update col j of of result matrix C. */
-                /* Get pointer to beginning of column j in C. */
-                float* cj = c + ldc * j;
-                MPscal(m, beta, cj);
-                for (int i = 0; i < m; i++)
-                    cj[i] += (float)buff[i];
-            }
-        }
-        else /* transa == 'T'/'C' */
-        {
-            for (int j = 0; j < n; j++)
-            {
-                const float* __restrict__ bj = b + ldb * j;
-                for (int i = 0; i < m; i++)
-                {
-                    const int pos                = ldc * j + i;
-                    double bc                    = (double)c[pos] * beta;
-                    const float* __restrict__ ai = a + lda * i;
-                    c[pos] = (float)(alpha * MPdot(k, ai, bj) + bc);
-                }
-            }
-        }
-    }
-    else /* transb == 'T'/'C' */
-    {
-        if (transa == 'N' || transa == 'n')
-        {
-            /* buffer to hold accumulation in double */
-            double* buff = new double[m];
-            for (int j = 0; j < n; j++)
-            {
-                memset(buff, 0, m * sizeof(double));
-                for (int l = 0; l < k; l++)
-                {
-                    /* pointer to beginning of column l in matrix a */
-                    const float* colL = a + lda * l;
-                    /* get multiplier */
-                    double mult = (double)(alpha * b[ldb * l + j]);
-                    MPaxpy(m, mult, colL, buff);
-                }
-                /* Update col j of of result matrix C. */
-                /* Get pointer to beginning of column j in C. */
-                float* cj = c + ldc * j;
-                MPscal(m, beta, cj);
-                for (int i = 0; i < m; i++)
-                    cj[i] += (float)buff[i];
-            }
-        }
-        else /* transa == 'T'/'C' */
-        {
-            for (int j = 0; j < n; j++)
-            {
-                for (int i = 0; i < m; i++)
-                {
-                    const int pos   = ldc * j + i;
-                    const float* ai = a + lda * i;
-                    double sum      = 0.;
-                    for (int l = 0; l < k; l++)
-                    {
-                        sum += alpha * ai[l] * b[ldb * l + j];
-                    }
-                    sum += (double)(beta * c[pos]);
-                    c[pos] = (float)sum;
-                }
-            }
-        }
-    }
-
-    mpgemm_tm.stop();
-}
-
-/////// additional calls ... may be removed later if unused
-template <typename T1, typename T2>
-double MPdot(
-    const int len, const T1* __restrict__ xptr, const T2* __restrict__ yptr)
-{
-    ttdot_tm.start();
-
-    double dot = 0.;
-    for (int k = 0; k < len; k++)
-    {
-        double val1 = (double)xptr[k];
-        double val2 = (double)yptr[k];
-        dot += val1 * val2;
-    }
-
-    ttdot_tm.stop();
-
-    return dot;
-}
-template <typename T1, typename T2>
-void MPaxpy(const int len, double scal, const T1* __restrict__ xptr,
-    T2* __restrict__ yptr)
-{
-    for (int k = 0; k < len; k++)
-    {
-        yptr[k] += (T2)(scal * (double)xptr[k]);
-    }
-}
-
+// MemorySpaceType
+template <typename MemorySpaceType>
 template <typename T1, typename T2, typename T3>
-void MPgemmNN(const int m, const int n, const int k, const double alpha,
-    const T1* const a, const int lda, const T2* const b, const int ldb,
-    const double beta, T3* const c, const int ldc)
+void LinearAlgebraUtils<MemorySpaceType>::MPgemm(const char transa,
+    const char transb, const int m, const int n, const int k,
+    const double alpha, const T1* const a, const int lda, const T2* const b,
+    const int ldb, const double beta, T3* const c, const int ldc)
 {
-    // if(onpe0)cout<<"template MPgemmNN..."<<endl;
-    char transa = 'n';
-    char transb = 'n';
-    MPgemm(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
+    assert(false);
 }
 
+// MemorySpace::Host
+template <>
 template <typename T1, typename T2, typename T3>
-void MPgemmTN(const int m, const int n, const int k, const double alpha,
-    const T1* const a, const int lda, const T2* const b, const int ldb,
-    const double beta, T3* const c, const int ldc)
+void LinearAlgebraUtils<MemorySpace::Host>::MPgemm(const char transa,
+    const char transb, const int m, const int n, const int k,
+    const double alpha, const T1* const a, const int lda, const T2* const b,
+    const int ldb, const double beta, T3* const c, const int ldc)
 {
-    // if(onpe0)cout<<"template MPgemmNN..."<<endl;
-    char transa = 't';
-    char transb = 'n';
-    MPgemm(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
-}
-
-template <typename T1, typename T2, typename T3>
-void MPgemm(const char transa, const char transb, const int m, const int n,
-    const int k, const double alpha, const T1* const a, const int lda,
-    const T2* const b, const int ldb, const double beta, T3* const c,
-    const int ldc)
-{
-
     tttgemm_tm.start();
     // if(onpe0)cout<<"template MPgemm..."<<endl;
 
@@ -599,6 +420,212 @@ void MPgemm(const char transa, const char transb, const int m, const int n,
     }
 
     tttgemm_tm.stop();
+}
+
+// input/output in double, computation in double
+template <>
+template <>
+void LinearAlgebraUtils<MemorySpace::Host>::MPgemm<double, double, double>(
+    const char transa, const char transb, const int m, const int n, const int k,
+    const double alpha, const double* const a, const int lda,
+    const double* const b, const int ldb, const double beta, double* const c,
+    const int ldc)
+{
+    dgemm_tm.start();
+    DGEMM(
+        &transa, &transb, &m, &n, &k, &alpha, a, &lda, b, &ldb, &beta, c, &ldc);
+    dgemm_tm.stop();
+}
+
+// input/output in float, computation in double
+template <>
+template <>
+void LinearAlgebraUtils<MemorySpace::Host>::MPgemm<float, float, float>(
+    const char transa, const char transb, const int m, const int n, const int k,
+    const double alpha, const float* const a, const int lda,
+    const float* const b, const int ldb, const double beta, float* const c,
+    const int ldc)
+{
+    mpgemm_tm.start();
+
+    if (beta == 1. && (alpha == 0. || m == 0 || n == 0 || k == 0)) return;
+
+    /* case transb == 'N' and transa == 'N' */
+    if (transb == 'N' || transb == 'n')
+    {
+        if (transa == 'N' || transa == 'n')
+        {
+            /* buffer to hold accumulation in double */
+            double* buff = new double[m];
+            for (int j = 0; j < n; j++)
+            {
+                memset(buff, 0, m * sizeof(double));
+                for (int l = 0; l < k; l++)
+                {
+                    /* pointer to beginning of column l in matrix a */
+                    const float* colL = a + lda * l;
+                    /* get multiplier */
+                    double mult = (double)(alpha * b[ldb * j + l]);
+                    MPaxpy(m, mult, colL, buff);
+                }
+                /* Update col j of of result matrix C. */
+                /* Get pointer to beginning of column j in C. */
+                float* cj = c + ldc * j;
+                MPscal(m, beta, cj);
+                for (int i = 0; i < m; i++)
+                    cj[i] += (float)buff[i];
+            }
+        }
+        else /* transa == 'T'/'C' */
+        {
+            for (int j = 0; j < n; j++)
+            {
+                const float* __restrict__ bj = b + ldb * j;
+                for (int i = 0; i < m; i++)
+                {
+                    const int pos                = ldc * j + i;
+                    double bc                    = (double)c[pos] * beta;
+                    const float* __restrict__ ai = a + lda * i;
+                    c[pos] = (float)(alpha * MPdot(k, ai, bj) + bc);
+                }
+            }
+        }
+    }
+    else /* transb == 'T'/'C' */
+    {
+        if (transa == 'N' || transa == 'n')
+        {
+            /* buffer to hold accumulation in double */
+            double* buff = new double[m];
+            for (int j = 0; j < n; j++)
+            {
+                memset(buff, 0, m * sizeof(double));
+                for (int l = 0; l < k; l++)
+                {
+                    /* pointer to beginning of column l in matrix a */
+                    const float* colL = a + lda * l;
+                    /* get multiplier */
+                    double mult = (double)(alpha * b[ldb * l + j]);
+                    MPaxpy(m, mult, colL, buff);
+                }
+                /* Update col j of of result matrix C. */
+                /* Get pointer to beginning of column j in C. */
+                float* cj = c + ldc * j;
+                MPscal(m, beta, cj);
+                for (int i = 0; i < m; i++)
+                    cj[i] += (float)buff[i];
+            }
+        }
+        else /* transa == 'T'/'C' */
+        {
+            for (int j = 0; j < n; j++)
+            {
+                for (int i = 0; i < m; i++)
+                {
+                    const int pos   = ldc * j + i;
+                    const float* ai = a + lda * i;
+                    double sum      = 0.;
+                    for (int l = 0; l < k; l++)
+                    {
+                        sum += alpha * ai[l] * b[ldb * l + j];
+                    }
+                    sum += (double)(beta * c[pos]);
+                    c[pos] = (float)sum;
+                }
+            }
+        }
+    }
+
+    mpgemm_tm.stop();
+}
+
+// input/output in float, computation in double
+void MPgemmNN(const int m, const int n, const int k, const double alpha,
+    const float* const a, const int lda, const double* const b, const int ldb,
+    const double beta, float* const c, const int ldc)
+{
+    char transa = 'n';
+    char transb = 'n';
+
+    LinearAlgebraUtils<MemorySpace::Host>::MPgemm(
+        transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
+}
+
+// input in float, computation in double
+void MPgemmTN(const int m, const int n, const int k, const double alpha,
+    const float* const a, const int lda, const float* const b, const int ldb,
+    const double beta, double* const c, const int ldc)
+{
+    char transa = 't';
+    char transb = 'n';
+
+    LinearAlgebraUtils<MemorySpace::Host>::MPgemm(
+        transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
+}
+
+// input in float, computation in double
+void MPgemmTN(const int m, const int n, const int k, const double alpha,
+    const float* const a, const int lda, const float* const b, const int ldb,
+    const double beta, float* const c, const int ldc)
+{
+    char transa = 't';
+    char transb = 'n';
+
+    LinearAlgebraUtils<MemorySpace::Host>::MPgemm(
+        transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
+}
+
+/////// additional calls ... may be removed later if unused
+template <typename T1, typename T2>
+double MPdot(
+    const int len, const T1* __restrict__ xptr, const T2* __restrict__ yptr)
+{
+    ttdot_tm.start();
+
+    double dot = 0.;
+    for (int k = 0; k < len; k++)
+    {
+        double val1 = (double)xptr[k];
+        double val2 = (double)yptr[k];
+        dot += val1 * val2;
+    }
+
+    ttdot_tm.stop();
+
+    return dot;
+}
+template <typename T1, typename T2>
+void MPaxpy(const int len, double scal, const T1* __restrict__ xptr,
+    T2* __restrict__ yptr)
+{
+    for (int k = 0; k < len; k++)
+    {
+        yptr[k] += (T2)(scal * (double)xptr[k]);
+    }
+}
+
+template <typename T1, typename T2, typename T3>
+void MPgemmNN(const int m, const int n, const int k, const double alpha,
+    const T1* const a, const int lda, const T2* const b, const int ldb,
+    const double beta, T3* const c, const int ldc)
+{
+    // if(onpe0)cout<<"template MPgemmNN..."<<endl;
+    char transa = 'n';
+    char transb = 'n';
+    LinearAlgebraUtils<MemorySpace::Host>::MPgemm(
+        transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
+}
+
+template <typename T1, typename T2, typename T3>
+void MPgemmTN(const int m, const int n, const int k, const double alpha,
+    const T1* const a, const int lda, const T2* const b, const int ldb,
+    const double beta, T3* const c, const int ldc)
+{
+    // if(onpe0)cout<<"template MPgemmNN..."<<endl;
+    char transa = 't';
+    char transb = 'n';
+    LinearAlgebraUtils<MemorySpace::Host>::MPgemm(
+        transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
 }
 
 template <typename T1, typename T2>
@@ -737,24 +764,42 @@ template void MPsyrk<float, double>(const char uplo, const char trans,
     const int n, const int k, const double alpha, const float* const a,
     const int lda, const double beta, double* c, const int ldc);
 
-template void MPgemm<double, float, double>(const char transa,
-    const char transb, const int m, const int n, const int k,
+template void
+LinearAlgebraUtils<MemorySpace::Host>::MPgemm<double, double, double>(
+    const char transa, const char transb, const int m, const int n, const int k,
+    const double alpha, const double* const a, const int lda,
+    const double* const b, const int ldb, const double beta, double* const c,
+    const int ldc);
+template void
+LinearAlgebraUtils<MemorySpace::Host>::MPgemm<float, float, float>(
+    const char transa, const char transb, const int m, const int n, const int k,
+    const double alpha, const float* const a, const int lda,
+    const float* const b, const int ldb, const double beta, float* const c,
+    const int ldc);
+template void
+LinearAlgebraUtils<MemorySpace::Host>::MPgemm<double, float, double>(
+    const char transa, const char transb, const int m, const int n, const int k,
     const double alpha, const double* const a, const int lda,
     const float* const b, const int ldb, const double beta, double* const c,
     const int ldc);
-template void MPgemm<float, double, float>(const char transa, const char transb,
-    const int m, const int n, const int k, const double alpha,
-    const float* const a, const int lda, const double* const b, const int ldb,
-    const double beta, float* const c, const int ldc);
-template void MPgemm<double, double, float>(const char transa,
-    const char transb, const int m, const int n, const int k,
+template void
+LinearAlgebraUtils<MemorySpace::Host>::MPgemm<float, double, float>(
+    const char transa, const char transb, const int m, const int n, const int k,
+    const double alpha, const float* const a, const int lda,
+    const double* const b, const int ldb, const double beta, float* const c,
+    const int ldc);
+template void
+LinearAlgebraUtils<MemorySpace::Host>::MPgemm<double, double, float>(
+    const char transa, const char transb, const int m, const int n, const int k,
     const double alpha, const double* const a, const int lda,
     const double* const b, const int ldb, const double beta, float* const c,
     const int ldc);
-template void MPgemm<float, float, double>(const char transa, const char transb,
-    const int m, const int n, const int k, const double alpha,
-    const float* const a, const int lda, const float* const b, const int ldb,
-    const double beta, double* const c, const int ldc);
+template void
+LinearAlgebraUtils<MemorySpace::Host>::MPgemm<float, float, double>(
+    const char transa, const char transb, const int m, const int n, const int k,
+    const double alpha, const float* const a, const int lda,
+    const float* const b, const int ldb, const double beta, double* const c,
+    const int ldc);
 template void MPgemmNN<double, double, double>(const int m, const int n,
     const int k, const double alpha, const double* const a, const int lda,
     const double* const b, const int ldb, const double beta, double* const c,

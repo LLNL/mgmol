@@ -15,6 +15,17 @@
 #include "blas2_c.h"
 #include "blas3_c.h"
 
+namespace MemorySpace
+{
+struct Host
+{
+};
+
+struct Device
+{
+};
+}
+
 /* scal */
 /* scalar times vector for use in templates.
  * Calls blas dscal or sscal depending on arguments
@@ -112,21 +123,15 @@ void Tgemv(const char trans, const int m, const int n, const float alpha,
     const float* const a, const int lda, const float* const x, const int incx,
     const float beta, float* const y, const int incy);
 
-/* Mixed precision gemm */
-void MPgemm(const char transa, const char transb, const int m, const int n,
-    const int k, const double alpha, const double* const a, const int lda,
-    const double* const b, const int ldb, const double beta, double* const c,
-    const int ldc);
-void MPgemm(const char transa, const char transb, const int m, const int n,
-    const int k, const double alpha, const float* const a, const int lda,
-    const float* const b, const int ldb, const double beta, float* const c,
-    const int ldc);
-
-template <typename T1, typename T2, typename T3>
-void MPgemm(const char transa, const char transb, const int m, const int n,
-    const int k, const double alpha, const T1* const a, const int lda,
-    const T2* const b, const int ldb, const double beta, T3* const c,
-    const int ldc);
+template <typename MemorySpaceType>
+struct LinearAlgebraUtils
+{
+    template <typename T1, typename T2, typename T3>
+    static void MPgemm(const char transa, const char transb, const int m,
+        const int n, const int k, const double alpha, const T1* const a,
+        const int lda, const T2* const b, const int ldb, const double beta,
+        T3* const c, const int ldc);
+};
 
 void MPgemmNN(const int m, const int n, const int k, const double alpha,
     const float* const a, const int lda, const double* const b, const int ldb,
