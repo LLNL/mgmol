@@ -170,7 +170,8 @@ void LocalMatrices<T>::gemm(const int iloc, const int ma, const double* const a,
     T* const c = ptr_matrices_[iloc];
     assert(c != 0);
 
-    MPgemm('t', 'n', m_, n_, ma, 1., a, lda, b, ldb, 0., c, m_);
+    LinearAlgebraUtils<MemorySpace::Host>::MPgemm(
+        't', 'n', m_, n_, ma, 1., a, lda, b, ldb, 0., c, m_);
 }
 
 template <class T>
@@ -185,7 +186,8 @@ void LocalMatrices<T>::gemm(const int iloc, const int ma, const float* const a,
     T* const c = ptr_matrices_[iloc];
     assert(c != 0);
 
-    MPgemm('t', 'n', m_, n_, ma, 1., a, lda, b, ldb, 0., c, m_);
+    LinearAlgebraUtils<MemorySpace::Host>::MPgemm(
+        't', 'n', m_, n_, ma, 1., a, lda, b, ldb, 0., c, m_);
 }
 
 // matrix multiplication
@@ -212,8 +214,8 @@ void LocalMatrices<T>::gemm(const char transa, const char transb,
         assert(c != 0);
 
         // do matrix multiplication
-        MPgemm(transa, transb, m_, n_, nca, alpha, amat, lda, bmat, ldb, beta,
-            c, m_);
+        LinearAlgebraUtils<MemorySpace::Host>::MPgemm(transa, transb, m_, n_,
+            nca, alpha, amat, lda, bmat, ldb, beta, c, m_);
     }
 }
 
