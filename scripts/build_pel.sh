@@ -3,16 +3,16 @@
 ## For now, this script assumes intel/ mkl libraries are being used.
 
 # load some modules
-module load cmake/3.8.2
+module load cmake
 module load intel/19.0.4 
 module load mkl
 module load hdf5-parallel
+module load boost
 
 # set some environment variables. Set them explicitly or use loaded module path (preferred)
 # Here we use an explicit path for scalapack to be consistent with the path for the blas libraries and avoid 
 # benign cmake warnings 
 setenv SCALAPACK_ROOT /usr/tce/packages/mkl/mkl-2019.0/
-#setenv SCALAPACK_ROOT ${MKLROOT}/../../..
 setenv HDF5_ROOT ${HDF5}
 
 # We need to define the cmake blas vendor option here to find the right one.
