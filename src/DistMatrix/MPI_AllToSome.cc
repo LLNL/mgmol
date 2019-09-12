@@ -8,7 +8,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id: MPI_AllToSome.C,v 1.3 2010/09/29 22:48:08 jeanluc Exp $
 #ifdef USE_MPI
 
 #include "mpi.h"
@@ -16,8 +15,6 @@
 #include <iostream>
 #include <string.h>
 
-namespace
-{
 void MPI_Irecv(double* precv, const int blocksize, const int src, const int i,
     MPI_Comm comm, MPI_Request& rr)
 {
@@ -55,7 +52,6 @@ void MPI_Isend(unsigned short* psend, const int blocksize, const int dst,
 {
     MPI_Request sr;
     MPI_Isend(psend, blocksize, MPI_UNSIGNED_SHORT, dst, i, comm, &sr);
-}
 }
 
 template <typename ScalarType>
