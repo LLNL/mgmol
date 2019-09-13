@@ -3,11 +3,7 @@
 ## For now, this script assumes intel/ mkl libraries are being used.
 
 # load some modules
-module load cmake
-module load intel/19.0.4 
-module load mkl
-module load hdf5-parallel
-module load boost
+source scripts/modules.pel
 
 # set some environment variables. Set them explicitly or use loaded module path (preferred)
 # Here we use an explicit path for scalapack to be consistent with the path for the blas libraries and avoid 
@@ -33,6 +29,7 @@ cd ${BUILD_DIR}
 # call cmake 
 cmake -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} \
       -DCMAKE_CXX_COMPILER=mpic++ \
+      -DCMAKE_Fortran_COMPILER=mpif77 \
       -DMPIEXEC_NUMPROC_FLAG="-n" \
       -DBLA_VENDOR=${BLAS_VENDOR} \
       -DSCALAPACK_BLACS_LIBRARY=${BLACS_LIB}/libmkl_blacs_intelmpi_lp64.so \
