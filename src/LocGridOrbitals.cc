@@ -1076,6 +1076,15 @@ int LocGridOrbitals::write_func_hdf5(HDFrestart& h5f_file, const string& name)
         //}
 
         vector<int> gids;
+        if (h5f_file.useHdf5p())
+        {
+            colored_regions.getAllGids4color(color, gids);
+        }
+        else
+        {
+            colored_regions.getLocGids4color(color, gids);
+        }
+
         if (iwrite)
         {
             writeListCentersAndRadii(dset_id, nrec, centers_and_radii);
