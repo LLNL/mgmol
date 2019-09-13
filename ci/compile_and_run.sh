@@ -3,6 +3,10 @@ set -e
 cd $1
 rm -rf build
 mkdir build && cd build
+# Get rid of Read -1, expected <someNumber>, errno =1 error
+# See https://github.com/open-mpi/ompi/issues/4948
+export OMPI_MCA_btl_vader_single_copy_mechanism=none
+
 ARGS=(
   -D SCALAPACK_ROOT=/usr/lib/x86_64-linux-gnu
   -D MGMOL_WITH_CLANG_FORMAT=ON
