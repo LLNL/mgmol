@@ -719,7 +719,7 @@ void Rho<T>::computeRhoSubdomainUsingBlas3(const int iloc_init,
         ORBDTYPE* phi2            = orbitals2.getPsi(0, iloc);
 
         // O(N^3) part
-        MPgemmNN(
+        LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(
             nrows, ncols, ncols, 1., phi1, ld, mat, ncols, 0., product, nrows);
 
         // O(N^2) part

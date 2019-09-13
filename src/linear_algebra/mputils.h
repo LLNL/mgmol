@@ -131,16 +131,12 @@ struct LinearAlgebraUtils
         const int n, const int k, const double alpha, const T1* const a,
         const int lda, const T2* const b, const int ldb, const double beta,
         T3* const c, const int ldc);
+
+    template <typename T1, typename T2, typename T3>
+    static void MPgemmNN(const int m, const int n, const int k,
+        const double alpha, const T1* const a, const int lda, const T2* const b,
+        const int ldb, const double beta, T3* const c, const int ldc);
 };
-
-void MPgemmNN(const int m, const int n, const int k, const double alpha,
-    const float* const a, const int lda, const double* const b, const int ldb,
-    const double beta, float* const c, const int ldc);
-
-template <typename T1, typename T2, typename T3>
-void MPgemmNN(const int m, const int n, const int k, const double alpha,
-    const T1* const a, const int lda, const T2* const b, const int ldb,
-    const double beta, T3* const c, const int ldc);
 
 void MPgemmTN(const int m, const int n, const int k, const double alpha,
     const float* const a, const int lda, const float* const b, const int ldb,

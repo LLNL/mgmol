@@ -66,8 +66,9 @@ void SubspaceProjector<T>::projectOut(
         MATDTYPE* localMat_iloc = pmatrix.getSubMatrix(iloc);
 
         // Compute loc_numpt_ rows (for subdomain iloc)
-        MPgemmNN(loc_numpt_, chromatic_number_, chromatic_number_, 1., xi, lda_,
-            localMat_iloc, chromatic_number_, 0., tproduct, loc_numpt_);
+        LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(loc_numpt_,
+            chromatic_number_, chromatic_number_, 1., xi, lda_, localMat_iloc,
+            chromatic_number_, 0., tproduct, loc_numpt_);
 
         double minus     = -1.;
         ORBDTYPE* parray = orbitals.getPsi(0, iloc);
