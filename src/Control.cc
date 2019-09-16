@@ -78,12 +78,13 @@ Control::Control()
     spread_factor          = 2.;
     conv_criterion_        = 0;
     steps                  = 0;
-    dm_algo_               = 0;
     dm_approx_order        = 500;
     dm_approx_ndigits      = 1;
     dm_approx_power_maxits = 100;
 
     // undefined values
+    dm_algo_                         = -1;
+    short_sighted                    = -1;
     it_algo_type_                    = -1;
     DM_solver_                       = -1;
     orbital_type_                    = -1;
@@ -1832,8 +1833,15 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         dm_mix         = vm["DensityMatrix.mixing"].as<float>();
         dm_inner_steps = vm["DensityMatrix.nb_inner_it"].as<short>();
         dm_use_old_    = vm["DensityMatrix.use_old"].as<bool>() ? 1 : 0;
-        str            = vm["DensityMatrix.solver"].as<string>();
+        str            = vm["DensityMatrix.algo"].as<string>();
+        if (str.compare("Diagonalization") == 0)
+            dm_algo_ = 0;
+        else
+            dm_algo_ = 2;
 
+        dm_tol = vm["DensityMatrix.tol"].as<float>();
+
+        str = vm["DensityMatrix.solver"].as<string>();
         if (str.compare("Mixing") == 0) DM_solver_ = 0;
         if (str.compare("MVP") == 0) DM_solver_ = 1;
         if (str.compare("HMVP") == 0) DM_solver_ = 2;

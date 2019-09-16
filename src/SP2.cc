@@ -238,7 +238,7 @@ void SP2::getDM(dist_matrix::DistMatrix<DISTMATDTYPE>& submatM, // output
     dist_matrix::DistMatrix<DISTMATDTYPE> Xi("Xi", n, n);
 
     // Here Xi_ is assumed to be "replicated" by each MPI task
-    Xi.initFromReplicated(Xi_->getSubMatrix(), n);
+    Xi.init(Xi_->getSubMatrix(), n);
 
     submatM.gemm('n', 'n', 2., Xi, invS, 0.);
 
