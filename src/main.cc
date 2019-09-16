@@ -395,7 +395,10 @@ int main(int argc, char** argv)
                 "Algorithm for computing Density Matrix. "
                 "Diagonalization or SP2.")("DensityMatrix.use_old",
                 po::value<bool>()->default_value(true),
-                "Start DM optimization with matrix of previous WF step");
+                "Start DM optimization with matrix of previous WF step")(
+                "DensityMatrix.tol", po::value<float>()->default_value(1.e-7),
+                "tolerance, used in iterative DM computation convergence "
+                "criteria");
 
             po::options_description cmdline_options;
             cmdline_options.add(generic);

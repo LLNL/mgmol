@@ -459,8 +459,7 @@ public:
     short dm_approx_power_maxits;
 
     // SP2 options
-    double dm_ratio;
-    double dm_tol;
+    float dm_tol;
 
     // Initial number of v-cycles for hartree solution
     short vh_init;
@@ -682,10 +681,6 @@ public:
         {
             case 0:
                 return DMEigensolverType::Eigensolver;
-#ifdef __MGMOL_CHEBYSHEV__
-            case 1:
-                return DMEigensolverType::Chebyshev;
-#endif
             case 2:
                 return DMEigensolverType::SP2;
             default:

@@ -36,6 +36,27 @@ output = subprocess.check_output(command,shell=True)
 #make sure sum forces is below tolerance
 lines=output.split(b'\n')
 
+print("Check SP2 convergence...")
+targetValue = 5.
+found = 0
+tol = 1.e-8
+for line in lines:
+  num_matches1 = line.count(b'Trace')
+  num_matches2 = line.count(b'SP2')
+  if num_matches1 and num_matches2:
+    found = found+1
+    print(line)
+    words=line.split()
+    dv = eval(words[4]) - targetValue
+    if abs(dv)>tol:
+      print("TEST FAILED: SP2 not converged!")
+      sys.exit(1)
+
+#make sure SP2 was actually used
+if found == 0:
+  print("TEST FAILED: SP2 Trace not found!")
+  sys.exit(1)
+
 print("Check forces...")
 tol = 1.e-5
 count = 0
