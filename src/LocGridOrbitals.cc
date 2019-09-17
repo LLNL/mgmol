@@ -787,9 +787,9 @@ void LocGridOrbitals::multiply_by_matrix(const int first_color,
         matrixToLocalMatrix(iloc, matrix, matrix_local, first_color, ncolors);
 
         // Compute product for subdomain iloc
-        MPgemmNN(loc_numpt_, ncolors, chromatic_number_, 1., getPsi(0, iloc),
-            lda_, matrix_local, chromatic_number_, 0.,
-            product + iloc * loc_numpt_, ldp);
+        LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(loc_numpt_, ncolors,
+            chromatic_number_, 1., getPsi(0, iloc), lda_, matrix_local,
+            chromatic_number_, 0., product + iloc * loc_numpt_, ldp);
     }
 
 #ifdef DEBUG
@@ -828,9 +828,9 @@ void LocGridOrbitals::multiplyByMatrix(
             const MATDTYPE* const mat = matrix.getSubMatrix(iloc);
 
             // Compute product for subdomain iloc
-            MPgemmNN(loc_numpt_, chromatic_number_, chromatic_number_, 1.,
-                getPsi(0, iloc), lda_, mat, chromatic_number_, 0.,
-                product + iloc * loc_numpt_, ldp);
+            LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(loc_numpt_,
+                chromatic_number_, chromatic_number_, 1., getPsi(0, iloc), lda_,
+                mat, chromatic_number_, 0., product + iloc * loc_numpt_, ldp);
         }
 
     prod_matrix_tm_.stop();
@@ -856,8 +856,9 @@ void LocGridOrbitals::multiplyByMatrix(
             ORBDTYPE* phi             = getPsi(0, iloc);
 
             // Compute product for subdomain iloc
-            MPgemmNN(loc_numpt_, chromatic_number_, chromatic_number_, 1., phi,
-                lda_, mat, chromatic_number_, 0., product, loc_numpt_);
+            LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(loc_numpt_,
+                chromatic_number_, chromatic_number_, 1., phi, lda_, mat,
+                chromatic_number_, 0., product, loc_numpt_);
 
             for (int color = 0; color < chromatic_number_; color++)
                 memcpy(
@@ -922,8 +923,9 @@ void LocGridOrbitals::multiply_by_matrix(
         matrixToLocalMatrix(iloc, work_matrix, matrix_local);
 
         // Compute loc_numpt_ rows (for subdomain iloc)
-        MPgemmNN(loc_numpt_, chromatic_number_, chromatic_number_, 1., phi,
-            lda_, matrix_local, chromatic_number_, 0., product, loc_numpt_);
+        LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(loc_numpt_,
+            chromatic_number_, chromatic_number_, 1., phi, lda_, matrix_local,
+            chromatic_number_, 0., product, loc_numpt_);
 
         for (int color = 0; color < chromatic_number_; color++)
             memcpy(phi + color * lda_, product + color * loc_numpt_, slnumpt);
@@ -2373,8 +2375,9 @@ void LocGridOrbitals::projectOut(
         MATDTYPE* localMat_iloc = pmatrix.getSubMatrix(iloc);
 
         // Compute loc_numpt_ rows (for subdomain iloc)
-        MPgemmNN(loc_numpt_, chromatic_number_, chromatic_number_, 1., phi,
-            lda_, localMat_iloc, chromatic_number_, 0., tproduct, loc_numpt_);
+        LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(loc_numpt_,
+            chromatic_number_, chromatic_number_, 1., phi, lda_, localMat_iloc,
+            chromatic_number_, 0., tproduct, loc_numpt_);
 
         double minus = -1. * scale;
         for (int j = 0; j < chromatic_number_; j++)

@@ -440,8 +440,9 @@ void ExtendedGridOrbitals::multiply_by_matrix(
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
         // Compute product for subdomain iloc
-        MPgemmNN(loc_numpt_, numst_, numst_, 1., getPsi(0, iloc), lda_, matrix,
-            numst_, 0., product + iloc * loc_numpt_, ldp);
+        LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(loc_numpt_, numst_,
+            numst_, 1., getPsi(0, iloc), lda_, matrix, numst_, 0.,
+            product + iloc * loc_numpt_, ldp);
     }
 
     prod_matrix_tm_.stop();
@@ -463,8 +464,9 @@ void ExtendedGridOrbitals::multiplyByMatrix(
         const MATDTYPE* const mat = matrix.getSubMatrix(iloc);
 
         // Compute product for subdomain iloc
-        MPgemmNN(loc_numpt_, numst_, numst_, 1., getPsi(0, iloc), lda_, mat,
-            numst_, 0., product + iloc * loc_numpt_, ldp);
+        LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(loc_numpt_, numst_,
+            numst_, 1., getPsi(0, iloc), lda_, mat, numst_, 0.,
+            product + iloc * loc_numpt_, ldp);
     }
 
     prod_matrix_tm_.stop();
@@ -488,8 +490,8 @@ void ExtendedGridOrbitals::multiplyByMatrix(
         ORBDTYPE* phi             = getPsi(0, iloc);
 
         // Compute product for subdomain iloc
-        MPgemmNN(loc_numpt_, numst_, numst_, 1., phi, lda_, mat, numst_, 0.,
-            product, loc_numpt_);
+        LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(loc_numpt_, numst_,
+            numst_, 1., phi, lda_, mat, numst_, 0., product, loc_numpt_);
 
         for (int color = 0; color < numst_; color++)
             memcpy(phi + color * lda_, product + color * loc_numpt_, slnumpt);
@@ -539,8 +541,9 @@ void ExtendedGridOrbitals::multiply_by_matrix(
         ORBDTYPE* phi = getPsi(0, iloc);
 
         // Compute loc_numpt_ rows (for subdomain iloc)
-        MPgemmNN(loc_numpt_, numst_, numst_, 1., phi, lda_, work_matrix, numst_,
-            0., product, loc_numpt_);
+        LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(loc_numpt_, numst_,
+            numst_, 1., phi, lda_, work_matrix, numst_, 0., product,
+            loc_numpt_);
 
         for (int color = 0; color < numst_; color++)
             memcpy(phi + color * lda_, product + color * loc_numpt_, slnumpt);
@@ -1556,8 +1559,9 @@ void ExtendedGridOrbitals::projectOut(
         MATDTYPE* localMat_iloc = pmatrix.getSubMatrix(iloc);
 
         // Compute loc_numpt_ rows (for subdomain iloc)
-        MPgemmNN(loc_numpt_, numst_, numst_, 1., phi, lda_, localMat_iloc,
-            numst_, 0., tproduct, loc_numpt_);
+        LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(loc_numpt_, numst_,
+            numst_, 1., phi, lda_, localMat_iloc, numst_, 0., tproduct,
+            loc_numpt_);
 
         double minus = -1. * scale;
         for (int j = 0; j < numst_; j++)

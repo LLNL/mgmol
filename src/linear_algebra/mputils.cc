@@ -539,15 +539,20 @@ void LinearAlgebraUtils<MemorySpace::Host>::MPgemm<float, float, float>(
     mpgemm_tm.stop();
 }
 
-// input/output in float, computation in double
-void MPgemmNN(const int m, const int n, const int k, const double alpha,
-    const float* const a, const int lda, const double* const b, const int ldb,
-    const double beta, float* const c, const int ldc)
+///////////////////////////////
+//          MPgemmNN         //
+///////////////////////////////
+
+template <typename MemorySpaceType>
+template <typename T1, typename T2, typename T3>
+void LinearAlgebraUtils<MemorySpaceType>::MPgemmNN(const int m, const int n,
+    const int k, const double alpha, const T1* const a, const int lda,
+    const T2* const b, const int ldb, const double beta, T3* const c,
+    const int ldc)
 {
     char transa = 'n';
     char transb = 'n';
-
-    LinearAlgebraUtils<MemorySpace::Host>::MPgemm(
+    LinearAlgebraUtils<MemorySpaceType>::MPgemm(
         transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
 }
 
@@ -602,18 +607,6 @@ void MPaxpy(const int len, double scal, const T1* __restrict__ xptr,
     {
         yptr[k] += (T2)(scal * (double)xptr[k]);
     }
-}
-
-template <typename T1, typename T2, typename T3>
-void MPgemmNN(const int m, const int n, const int k, const double alpha,
-    const T1* const a, const int lda, const T2* const b, const int ldb,
-    const double beta, T3* const c, const int ldc)
-{
-    // if(onpe0)cout<<"template MPgemmNN..."<<endl;
-    char transa = 'n';
-    char transb = 'n';
-    LinearAlgebraUtils<MemorySpace::Host>::MPgemm(
-        transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
 }
 
 template <typename T1, typename T2, typename T3>
@@ -800,10 +793,16 @@ LinearAlgebraUtils<MemorySpace::Host>::MPgemm<float, float, double>(
     const double alpha, const float* const a, const int lda,
     const float* const b, const int ldb, const double beta, double* const c,
     const int ldc);
-template void MPgemmNN<double, double, double>(const int m, const int n,
-    const int k, const double alpha, const double* const a, const int lda,
-    const double* const b, const int ldb, const double beta, double* const c,
-    const int ldc);
+template void
+LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN<float, double, float>(
+    const int m, const int n, const int k, const double alpha,
+    const float* const a, const int lda, const double* const b, const int ldb,
+    const double beta, float* const c, const int ldc);
+template void
+LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN<double, double, double>(
+    const int m, const int n, const int k, const double alpha,
+    const double* const a, const int lda, const double* const b, const int ldb,
+    const double beta, double* const c, const int ldc);
 template void MPgemmTN<double, double, double>(const int m, const int n,
     const int k, const double alpha, const double* const a, const int lda,
     const double* const b, const int ldb, const double beta, double* const c,
