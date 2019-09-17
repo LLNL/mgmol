@@ -1011,12 +1011,8 @@ void DistMatrix<double>::trtrs(const char uplo, const char trans,
 #endif
         if (info != 0)
         {
-            std::cerr << " DistMatrix::trtrs, info=" << info << std::endl;
-#ifdef USE_MPI
-            MPI_Abort(comm_global_, 2);
-#else
-            exit(2);
-#endif
+            MGMOL_DISTMATRIX_ERROR(
+                "trtrs, object " << object_name_ << ", info=" << info);
         }
     }
 }
@@ -1040,12 +1036,8 @@ void DistMatrix<float>::trtrs(const char uplo, const char trans,
 #endif
         if (info != 0)
         {
-            std::cerr << " DistMatrix::trtrs, info=" << info << std::endl;
-#ifdef USE_MPI
-            MPI_Abort(comm_global_, 2);
-#else
-            exit(2);
-#endif
+            MGMOL_DISTMATRIX_ERROR(
+                "trtrs, object " << object_name_ << ", info=" << info);
         }
     }
 }
@@ -1071,8 +1063,8 @@ int DistMatrix<double>::potrf(char uplo)
 #endif
         if (info != 0)
         {
-            std::cerr << " DistMatrix::potrf, object " << object_name_
-                      << ", info=" << info << std::endl;
+            MGMOL_DISTMATRIX_ERROR(
+                "potrf, object " << object_name_ << ", info=" << info);
         }
     }
 
@@ -1099,8 +1091,8 @@ int DistMatrix<float>::potrf(char uplo)
 #endif
         if (info != 0)
         {
-            std::cerr << " DistMatrix::potrf, object " << object_name_
-                      << ", info=" << info << std::endl;
+            MGMOL_DISTMATRIX_ERROR(
+                "potrf, object " << object_name_ << ", info=" << info);
         }
     }
 
@@ -1128,12 +1120,8 @@ void DistMatrix<double>::getrf(std::vector<int>& ipiv)
 #endif
         if (info != 0)
         {
-            std::cerr << " DistMatrix::getrf, info=" << info << std::endl;
-#ifdef USE_MPI
-            MPI_Abort(comm_global_, 2);
-#else
-            exit(2);
-#endif
+            MGMOL_DISTMATRIX_ERROR(
+                "getrf, object " << object_name_ << ", info=" << info);
         }
     }
 }
@@ -1154,12 +1142,8 @@ void DistMatrix<float>::getrf(std::vector<int>& ipiv)
 #endif
         if (info != 0)
         {
-            std::cerr << " DistMatrix::getrf, info=" << info << std::endl;
-#ifdef USE_MPI
-            MPI_Abort(comm_global_, 2);
-#else
-            exit(2);
-#endif
+            MGMOL_DISTMATRIX_ERROR(
+                "getrf, object " << object_name_ << ", info=" << info);
         }
     }
 }
@@ -1186,13 +1170,8 @@ void DistMatrix<double>::potrs(char uplo, DistMatrix<double>& b)
 #endif
         if (info != 0)
         {
-            std::cerr << " DistMatrix::potrs, object " << object_name_
-                      << ", info=" << info << std::endl;
-#ifdef USE_MPI
-            MPI_Abort(comm_global_, 2);
-#else
-            exit(2);
-#endif
+            MGMOL_DISTMATRIX_ERROR(
+                "potrs, object " << object_name_ << ", info = " << info);
         }
     }
 }
@@ -1215,13 +1194,8 @@ void DistMatrix<float>::potrs(char uplo, DistMatrix<float>& b)
 #endif
         if (info != 0)
         {
-            std::cerr << " DistMatrix::potrs, object " << object_name_
-                      << ", info=" << info << std::endl;
-#ifdef USE_MPI
-            MPI_Abort(comm_global_, 2);
-#else
-            exit(2);
-#endif
+            MGMOL_DISTMATRIX_ERROR(
+                "potrs, object " << object_name_ << ", info = " << info);
         }
     }
 }
@@ -1251,13 +1225,8 @@ void DistMatrix<double>::getrs(
 #endif
         if (info != 0)
         {
-            std::cerr << " DistMatrix::getrs, object " << object_name_
-                      << ", info=" << info << std::endl;
-#ifdef USE_MPI
-            MPI_Abort(comm_global_, 2);
-#else
-            exit(2);
-#endif
+            MGMOL_DISTMATRIX_ERROR(
+                "getrs, object " << object_name_ << ", info = " << info);
         }
     }
 }
@@ -1284,13 +1253,8 @@ void DistMatrix<float>::getrs(
 #endif
         if (info != 0)
         {
-            std::cerr << " DistMatrix::getrs, object " << object_name_
-                      << ", info=" << info << std::endl;
-#ifdef USE_MPI
-            MPI_Abort(comm_global_, 2);
-#else
-            exit(2);
-#endif
+            MGMOL_DISTMATRIX_ERROR(
+                "getrs, object " << object_name_ << ", info = " << info);
         }
     }
 }
@@ -1317,8 +1281,8 @@ int DistMatrix<double>::potri(char uplo)
 #endif
         if (info != 0)
         {
-            std::cerr << " DistMatrix::potri, object " << object_name_
-                      << ", info=" << info << std::endl;
+            MGMOL_DISTMATRIX_ERROR(
+                "potri, object " << object_name_ << ", info=" << info);
         }
     }
     potri_tm_.stop();
@@ -1344,8 +1308,8 @@ int DistMatrix<float>::potri(char uplo)
 #endif
         if (info != 0)
         {
-            std::cerr << " DistMatrix::potri, object " << object_name_
-                      << ", info=" << info << std::endl;
+            MGMOL_DISTMATRIX_ERROR(
+                "potri, object " << object_name_ << ", info=" << info);
         }
     }
     potri_tm_.stop();
@@ -1372,8 +1336,8 @@ int DistMatrix<double>::trtri(char uplo, char diag)
 #endif
         if (info != 0)
         {
-            std::cerr << " DistMatrix::trtri, object " << object_name_
-                      << ", info=" << info << std::endl;
+            MGMOL_DISTMATRIX_ERROR(
+                "trtri, object " << object_name_ << ", info=" << info);
         }
     }
     trtri_tm_.stop();
@@ -1492,12 +1456,8 @@ double DistMatrix<double>::pocon(char uplo, double anorm)
 #endif
         if (info != 0)
         {
-            std::cerr << " DistMatrix::pocon, info=" << info << std::endl;
-#ifdef USE_MPI
-            MPI_Abort(comm_global_, 2);
-#else
-            exit(2);
-#endif
+            MGMOL_DISTMATRIX_ERROR(
+                "pocon, object " << object_name_ << ", info=" << info);
         }
     }
     return rcond;
@@ -1542,12 +1502,8 @@ double DistMatrix<float>::pocon(char uplo, float anorm)
 #endif
         if (info != 0)
         {
-            std::cerr << " DistMatrix::pocon, info=" << info << std::endl;
-#ifdef USE_MPI
-            MPI_Abort(comm_global_, 2);
-#else
-            exit(2);
-#endif
+            MGMOL_DISTMATRIX_ERROR(
+                "pocon, object " << object_name_ << ", info=" << info);
         }
     }
     return (double)rcond;
@@ -2184,12 +2140,8 @@ void DistMatrix<double>::sygst(
 #endif
         if (info != 0)
         {
-            std::cerr << " DistMatrix::sygst, info=" << info << std::endl;
-#ifdef USE_MPI
-            MPI_Abort(comm_global_, 2);
-#else
-            exit(2);
-#endif
+            MGMOL_DISTMATRIX_ERROR(
+                "sygst, object " << object_name_ << ", info=" << info);
         }
     }
 }
@@ -2212,12 +2164,7 @@ void DistMatrix<float>::sygst(int itype, char uplo, const DistMatrix<float>& b)
 #endif
         if (info != 0)
         {
-            std::cerr << " DistMatrix::sygst, info=" << info << std::endl;
-#ifdef USE_MPI
-            MPI_Abort(comm_global_, 2);
-#else
-            exit(2);
-#endif
+            MGMOL_DISTMATRIX_ERROR("sygst, info=" << info);
         }
     }
 }
@@ -2249,12 +2196,8 @@ void DistMatrix<double>::syev(
 #endif
         if (info != 0)
         {
-            std::cerr << " DistMatrix::syev, info=" << info << std::endl;
-#ifdef USE_MPI
-            MPI_Abort(comm_global_, 2);
-#else
-            exit(2);
-#endif
+            MGMOL_DISTMATRIX_ERROR(
+                "syev, object " << object_name_ << ", info=" << info);
         }
         delete[] work;
     }
@@ -2291,12 +2234,8 @@ void DistMatrix<float>::syev(
 #endif
         if (info != 0)
         {
-            std::cerr << " DistMatrix::syev, info=" << info << std::endl;
-#ifdef USE_MPI
-            MPI_Abort(comm_global_, 2);
-#else
-            exit(2);
-#endif
+            MGMOL_DISTMATRIX_ERROR(
+                "syev, object " << object_name_ << ", info=" << info);
         }
         delete[] work;
     }
@@ -2340,12 +2279,8 @@ void DistMatrix<double>::gesvd(char jobu, char jobvt, std::vector<double>& s,
 #endif
         if (info != 0)
         {
-            std::cerr << " DistMatrix::gesvd, info=" << info << std::endl;
-#ifdef USE_MPI
-            MPI_Abort(comm_global_, 2);
-#else
-            exit(2);
-#endif
+            MGMOL_DISTMATRIX_ERROR(
+                "gesvd, object " << object_name_ << ", info=" << info);
         }
         delete[] work;
     }
@@ -2390,12 +2325,8 @@ void DistMatrix<float>::gesvd(char jobu, char jobvt, std::vector<float>& s,
 #endif
         if (info != 0)
         {
-            std::cerr << " DistMatrix::gesvd, info=" << info << std::endl;
-#ifdef USE_MPI
-            MPI_Abort(comm_global_, 2);
-#else
-            exit(2);
-#endif
+            MGMOL_DISTMATRIX_ERROR(
+                "gesvd, object " << object_name_ << ", info=" << info);
         }
         delete[] work;
     }
