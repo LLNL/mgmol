@@ -8,7 +8,6 @@
 
 #include "Power.h"
 
-#include "DistVector.h"
 #include "GramMatrix.h"
 #include "LocalVector.h"
 #include "SquareLocalMatrices.h"

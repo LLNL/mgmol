@@ -10,7 +10,7 @@
 
 #include "Timer.h"
 #include "random.h"
-
+#include "DistVector.h"
 #include <iostream>
 
 template <class VECTOR, class MATRIX>
