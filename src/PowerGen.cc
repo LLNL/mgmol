@@ -29,6 +29,8 @@ void PowerGen::computeGenEigenInterval(dist_matrix::DistMatrix<double>& mat,
 {
     srand(13579);
 
+    Control& ct = *(Control::instance());
+
     compute_tm_.start();
 
     interval.clear();
@@ -55,9 +57,13 @@ void PowerGen::computeGenEigenInterval(dist_matrix::DistMatrix<double>& mat,
     // get norm of initial sol
     double alpha = sol.nrm2();
     double gamma = 1. / alpha;
-    std::cout << "e1:: ITER 0:: = " << alpha << " shift = " << shift_
-              << std::endl;
-
+#ifdef DEBUG
+    if (onpe0)
+    {
+        std::cout << "e1:: ITER 0:: alpha = " << alpha << " beta  = " << beta
+                  << " shift = " << shift_ << std::endl;
+    }
+#endif
     // residual
     dist_matrix::DistVector<double> res(new_sol);
     // initial eigenvalue estimate (for shifted system)
@@ -114,7 +120,13 @@ void PowerGen::computeGenEigenInterval(dist_matrix::DistMatrix<double>& mat,
     beta  = sol.dot(new_sol);
 
     // loop
-    std::cout << "e2:: ITER 0:: = " << beta << std::endl;
+#ifdef DEBUG
+    if (onpe0)
+    {
+        std::cout << "e2:: ITER 0:: alpha = " << alpha << " beta = " << beta
+                  << std::endl;
+    }
+#endif
     int iter2 = 0;
     for (int i = 0; i < maxits; i++)
     {
@@ -157,10 +169,14 @@ void PowerGen::computeGenEigenInterval(dist_matrix::DistMatrix<double>& mat,
     e2             = std::max(tmp, e2);
     double padding = pad * (e2 - e1);
 
-    std::cout << "Power method Eigen intervals********************  = ( " << e1
-              << ", " << e2 << ")\n"
-              << "iter1 = " << iter1 << ", iter2 = " << iter2 << std::endl;
-
+    if (onpe0 && ct.verbose > 1)
+    {
+        std::cout << "'Generalized' Power method Eigen "
+                     "intervals********************  = ( "
+                  << e1 << ", " << e2 << ")\n"
+                  << "iter1 = " << iter1 << ", iter2 = " << iter2
+                  << ", padding = " << padding << std::endl;
+    }
     e1 -= padding;
     e2 += padding;
     interval.push_back(e1);
