@@ -51,6 +51,7 @@ using namespace std;
 #include "PoissonInterface.h"
 #include "Potentials.h"
 #include "Power.h"
+#include "PowerGen.h"
 #include "Preconditioning.h"
 #include "ProjectedMatricesMehrstellen.h"
 #include "ProjectedMatricesSparse.h"
@@ -884,6 +885,7 @@ void MGmol<T>::printTimers()
     Table::printTimers(os_);
     LocalMatrices<MATDTYPE>::printTimers(os_);
     Power<LocalVector<double>, SquareLocalMatrices<double>>::printTimers(os_);
+    PowerGen::printTimers(os_);
     SP2::printTimers(os_);
     lrs_->printTimers(os_);
     local_cluster_->printTimers(os_);
