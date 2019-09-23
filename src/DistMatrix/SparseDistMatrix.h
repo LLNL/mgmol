@@ -41,7 +41,6 @@ class SparseDistMatrix
 {
 private:
     static int sparse_distmatrix_nb_partitions_;
-    static RemoteTasksDistMatrix<T>** def_rtasks_DistMatrix_ptr_;
 
     static Timer pSumToDistMatrix_tm_;
     static Timer pSumSendRecv_tm_;
@@ -57,8 +56,7 @@ private:
     int nprow_; // number of PE row in ScaLapack split
     int ntasks_mat_;
 
-    bool own_rtasks_distmatrix_;
-    RemoteTasksDistMatrix<T>* rtasks_distmatrix_;
+    static std::shared_ptr<RemoteTasksDistMatrix<T>> rtasks_distmatrix_;
     // vector<short> other_tasks_indexes_;
 
     std::shared_ptr<MPI_DistMatrixCommunicator> partition_comm_;
@@ -86,18 +84,9 @@ public:
         sparse_distmatrix_nb_partitions_ = nb;
     }
 
-    static void setRemoteTasksDistMatrixPtr(
-        RemoteTasksDistMatrix<T>** rtasksDistMat)
-    {
-        def_rtasks_DistMatrix_ptr_ = rtasksDistMat;
-    }
     static int numTasksPerPartitioning()
     {
         return sparse_distmatrix_nb_partitions_;
-    }
-    static RemoteTasksDistMatrix<T>* defaultRemoteTasksDistMatrix()
-    {
-        return *def_rtasks_DistMatrix_ptr_;
     }
     static void printConsolidationNumber(std::ostream& os)
     {
@@ -109,14 +98,9 @@ public:
     {
         consolidation_number_ = number;
     }
-    RemoteTasksDistMatrix<T>* remoteTasksDistMatrix()
-    {
-        return rtasks_distmatrix_;
-    }
     // set rtasks_distmatrix = NULL to create one by default. Also
     // set target_nb_tasks_per_partition to <=0 to use npes by default
     SparseDistMatrix<T>(MPI_Comm comm, DistMatrix<T>& mat,
-        RemoteTasksDistMatrix<T>* rtasks_distmatrix,
         const int target_nb_tasks_per_partition);
     SparseDistMatrix<T>(MPI_Comm comm, DistMatrix<T>& mat);
     SparseDistMatrix<T>(const SparseDistMatrix<T>& spdistmat);
@@ -176,10 +160,6 @@ int SparseDistMatrix<T>::sparse_distmatrix_nb_partitions_ = 128;
 
 template <class T>
 unsigned short SparseDistMatrix<T>::consolidation_number_ = 8;
-
-template <class T>
-RemoteTasksDistMatrix<T>** SparseDistMatrix<T>::def_rtasks_DistMatrix_ptr_
-    = nullptr;
 
 template <class T>
 Timer SparseDistMatrix<T>::pSumToDistMatrix_tm_(

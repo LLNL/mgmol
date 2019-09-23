@@ -188,11 +188,10 @@ void MGmol<T>::computeHij_private(T& orbitals_i, T& orbitals_j,
     if (onpe0) os_ << "computeHij()" << endl;
 #endif
 #ifdef USE_MPI
-    assert(remote_tasks_DistMatrix_ != 0);
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     MPI_Comm comm   = mmpi.commSameSpin();
     dist_matrix::SparseDistMatrix<DISTMATDTYPE> sparseH(
-        comm, hij, remote_tasks_DistMatrix_, sparse_distmatrix_nb_partitions);
+        comm, hij, sparse_distmatrix_nb_partitions);
 #else
     dist_matrix::SparseDistMatrix<DISTMATDTYPE> sparseH(
         0, hij, rtasks_distmatrix);
@@ -240,11 +239,10 @@ void MGmol<T>::computeHij_private(T& orbitals_i, T& orbitals_j,
     if (onpe0) os_ << "computeHij()" << endl;
 #endif
 #ifdef USE_MPI
-    assert(remote_tasks_DistMatrix_ != 0);
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     MPI_Comm comm   = mmpi.commSameSpin();
     dist_matrix::SparseDistMatrix<DISTMATDTYPE> sparseH(
-        comm, hij, remote_tasks_DistMatrix_, sparse_distmatrix_nb_partitions);
+        comm, hij, sparse_distmatrix_nb_partitions);
 #else
     dist_matrix::SparseDistMatrix<DISTMATDTYPE> sparseH(
         0, hij, rtasks_distmatrix);

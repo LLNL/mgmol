@@ -11,14 +11,12 @@
 #ifndef MGMOL_GRAMMATRIX_H
 #define MGMOL_GRAMMATRIX_H
 
-#include "DistMatrix.h"
-#include "SubMatrices.h"
-#include <vector>
-
 #include "Control.h"
+#include "DistMatrix.h"
 #include "MPIdata.h"
 
 #include <unistd.h>
+#include <vector>
 
 #define NPRINT_ROWS_AND_COLS 5
 
@@ -119,9 +117,6 @@ public:
 
         ls_->potrs('l', mat);
     }
-
-    const dist_matrix::SubMatrices<DISTMATDTYPE>& getSubMatLS(
-        MPI_Comm comm, const std::vector<std::vector<int>>& global_indexes);
 
     void printMM(std::ofstream& tfile) { matS_->printMM(tfile); }
 

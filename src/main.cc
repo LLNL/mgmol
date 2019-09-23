@@ -570,9 +570,6 @@ int main(int argc, char** argv)
 
             dist_matrix::SparseDistMatrix<
                 DISTMATDTYPE>::setNumTasksPerPartitioning(128);
-            dist_matrix::SparseDistMatrix<DISTMATDTYPE>::
-                setRemoteTasksDistMatrixPtr(
-                    MGmol<LocGridOrbitals>::getRemoteTasksDistMatrixPtr());
 
             MGmol_MPI& mmpi = *(MGmol_MPI::instance());
             int npes        = mmpi.size();

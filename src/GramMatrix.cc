@@ -243,15 +243,3 @@ double GramMatrix::getLinDependent2states(int& st1, int& st2, int& st3) const
 
     return (double)eigenvalues[0];
 }
-
-const dist_matrix::SubMatrices<DISTMATDTYPE>& GramMatrix::getSubMatLS(
-    MPI_Comm comm, const vector<vector<int>>& global_indexes)
-{
-    assert(ls_ != NULL);
-    assert(isLSuptodate_);
-
-    DistMatrix2SquareLocalMatrices* dm2sl
-        = DistMatrix2SquareLocalMatrices::instance();
-
-    return dm2sl->convert(*ls_);
-}

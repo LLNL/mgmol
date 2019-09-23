@@ -25,8 +25,6 @@ private:
 
     dist_matrix::SparseDistMatrix<T>* sparse_;
 
-    RemoteTasksDistMatrix<T>* rtasks_distmatrix_;
-
     int target_nb_tasks_per_partition_;
 
     DistMatrixWithSparseComponent& operator=(
@@ -38,28 +36,23 @@ private:
 public:
     DistMatrixWithSparseComponent(const std::string& name,
         const BlacsContext& bc, const int m, const int n, MPI_Comm comm,
-        RemoteTasksDistMatrix<T>* rtasks_distmatrix = NULL,
-        const int target_nb_tasks_per_partition     = 0)
+        const int target_nb_tasks_per_partition = 0)
         : DistMatrix<T>(name, bc, m, n),
           comm_(comm),
-          rtasks_distmatrix_(rtasks_distmatrix),
           target_nb_tasks_per_partition_(target_nb_tasks_per_partition)
     {
         sparse_ = new SparseDistMatrix<T>(
-            comm, *this, rtasks_distmatrix, target_nb_tasks_per_partition);
+            comm, *this, target_nb_tasks_per_partition);
     }
 
     DistMatrixWithSparseComponent(const std::string& name, const int m,
-        const int n, MPI_Comm comm,
-        RemoteTasksDistMatrix<T>* rtasks_distmatrix = NULL,
-        const int target_nb_tasks_per_partition     = 0)
+        const int n, MPI_Comm comm, const int target_nb_tasks_per_partition = 0)
         : DistMatrix<T>(name, m, n),
           comm_(comm),
-          rtasks_distmatrix_(rtasks_distmatrix),
           target_nb_tasks_per_partition_(target_nb_tasks_per_partition)
     {
         sparse_ = new SparseDistMatrix<T>(
-            comm, *this, rtasks_distmatrix, target_nb_tasks_per_partition);
+            comm, *this, target_nb_tasks_per_partition);
     }
 
     DistMatrixWithSparseComponent(
@@ -68,7 +61,6 @@ public:
     {
         sparse_ = new SparseDistMatrix<T>(comm, *this);
 
-        rtasks_distmatrix_ = sparse_->remoteTasksDistMatrix();
         target_nb_tasks_per_partition_
             = SparseDistMatrix<T>::numTasksPerPartitioning();
     }

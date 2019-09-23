@@ -12,7 +12,6 @@
 #define MGMOL_LocalMatrices2DistMatrix_H
 
 #include "LocalMatrices.h"
-#include "RemoteTasksDistMatrix.h"
 #include "SparseDistMatrix.h"
 
 #include <vector>
@@ -33,8 +32,6 @@ private:
 
     static double tol_mat_elements;
 
-    static dist_matrix::RemoteTasksDistMatrix<DISTMATDTYPE>*
-        remote_tasks_DistMatrix_;
     static short sparse_distmatrix_nb_tasks_per_partitions_;
 
 public:
@@ -50,14 +47,12 @@ public:
     LocalMatrices2DistMatrix() { assert(comm_ != MPI_COMM_NULL); }
 
     static void setup(MPI_Comm comm, const std::vector<std::vector<int>>& gids,
-        dist_matrix::RemoteTasksDistMatrix<DISTMATDTYPE>*
-            remote_tasks_DistMatrix)
+        const int numst)
     {
-        assert(remote_tasks_DistMatrix != 0);
+        dist_matrix::DistMatrix<DISTMATDTYPE> tmp("tmp", numst, numst);
 
-        comm_                    = comm;
-        global_indexes_          = gids;
-        remote_tasks_DistMatrix_ = remote_tasks_DistMatrix;
+        comm_           = comm;
+        global_indexes_ = gids;
     }
 
     template <class T>

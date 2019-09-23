@@ -206,9 +206,8 @@ int MVPSolver<T>::solve(T& orbitals)
         if (use_old_dm_) rho_->update(orbitals);
 
         // compute linear component of H
-        dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE> h11("h11",
-            numst_, numst_, comm_, mgmol_strategy_->getRemoteTasksDistMatrix(),
-            sparse_distmatrix_nb_partitions);
+        dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE> h11(
+            "h11", numst_, numst_, comm_, sparse_distmatrix_nb_partitions);
 
         kbpsi.computeAll(ions_, orbitals);
 

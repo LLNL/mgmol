@@ -15,9 +15,6 @@ LocalMatrices2DistMatrix* LocalMatrices2DistMatrix::pinstance_ = nullptr;
 MPI_Comm LocalMatrices2DistMatrix::comm_                       = MPI_COMM_NULL;
 std::vector<std::vector<int>> LocalMatrices2DistMatrix::global_indexes_;
 double LocalMatrices2DistMatrix::tol_mat_elements = 1.e-14;
-dist_matrix::RemoteTasksDistMatrix<DISTMATDTYPE>*
-    LocalMatrices2DistMatrix::remote_tasks_DistMatrix_
-    = nullptr;
 short LocalMatrices2DistMatrix::sparse_distmatrix_nb_tasks_per_partitions_
     = 256;
 
@@ -97,15 +94,13 @@ template <class T>
 void LocalMatrices2DistMatrix::accumulate(const LocalMatrices<T>& src,
     dist_matrix::DistMatrix<T>& dst, const int numst, const double tol) const
 {
-    assert(remote_tasks_DistMatrix_ != nullptr);
 #ifdef USE_MPI
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     MPI_Comm comm   = mmpi.commSameSpin();
-    dist_matrix::SparseDistMatrix<DISTMATDTYPE> sm(comm, dst,
-        remote_tasks_DistMatrix_, sparse_distmatrix_nb_tasks_per_partitions_);
-#else
     dist_matrix::SparseDistMatrix<DISTMATDTYPE> sm(
-        0, dst, remote_tasks_DistMatrix_);
+        comm, dst, sparse_distmatrix_nb_tasks_per_partitions_);
+#else
+    dist_matrix::SparseDistMatrix<DISTMATDTYPE> sm(0, dst);
 #endif
 
     // convert into a SparseDistMatrix

@@ -48,9 +48,6 @@ Timer ProjectedMatrices::consolidate_H_tm_("ProjectedMatrices::consolidate_sH");
 short ProjectedMatrices::sparse_distmatrix_nb_tasks_per_partitions_ = 256;
 short ProjectedMatrices::n_instances_                               = 0;
 
-dist_matrix::RemoteTasksDistMatrix<DISTMATDTYPE>*
-    ProjectedMatrices::remote_tasks_DistMatrix_
-    = nullptr;
 GramMatrix* ProjectedMatrices::gram_4dotProducts_  = nullptr;
 DensityMatrix* ProjectedMatrices::dm_4dot_product_ = nullptr;
 
@@ -119,6 +116,8 @@ void ProjectedMatrices::setup(
 
     global_indexes_ = global_indexes;
 
+    Control& ct = *(Control::instance());
+
 #ifdef USE_DIS_MAT
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     MPI_Comm comm   = mmpi.commSpin();
@@ -129,8 +128,7 @@ void ProjectedMatrices::setup(
     {
         DistMatrix2SquareLocalMatrices::setup(
             comm, global_indexes, dm_->getMatrix());
-        LocalMatrices2DistMatrix::setup(
-            comm, global_indexes, remote_tasks_DistMatrix_);
+        LocalMatrices2DistMatrix::setup(comm, global_indexes, ct.numst);
 
         localX_.reset(
             new SquareLocalMatrices<MATDTYPE>(subdiv_, chromatic_number_));
@@ -141,11 +139,12 @@ void ProjectedMatrices::setup(
 #endif
 
 #ifdef USE_MPI
-    sH_ = new dist_matrix::SparseDistMatrix<DISTMATDTYPE>(comm, *matH_,
-        remote_tasks_DistMatrix_, sparse_distmatrix_nb_partitions);
-#else
+    dist_matrix::DistMatrix<DISTMATDTYPE> tmp("tmp", ct.numst, ct.numst);
+
     sH_ = new dist_matrix::SparseDistMatrix<DISTMATDTYPE>(
-        0, *matH_, remote_tasks_DistMatrix_);
+        comm, *matH_, sparse_distmatrix_nb_partitions);
+#else
+    sH_ = new dist_matrix::SparseDistMatrix<DISTMATDTYPE>(0, *matH_);
 #endif
 }
 
