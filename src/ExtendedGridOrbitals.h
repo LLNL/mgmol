@@ -12,7 +12,6 @@
 #define MGMOL_EXTENDEDGRIDORBITALS_H
 
 #include "BlockVector.h"
-#include "ClusterOrbitals.h"
 #include "DataDistribution.h"
 #include "GridFunc.h"
 #include "HDFrestart.h"
@@ -39,7 +38,7 @@ class ProjectedMatricesInterface;
 class LocalizationRegions;
 class ExtendedGridOrbitals;
 class MasksSet;
-class MasksSet;
+class ClusterOrbitals;
 
 typedef double (ExtendedGridOrbitals::*ExtendedGridOrbitalsPtrFunc)(
     const ExtendedGridOrbitals&);
@@ -83,7 +82,6 @@ private:
 
     // pointers to objects owned outside class
     ProjectedMatricesInterface* proj_matrices_;
-    ClusterOrbitals* local_cluster_;
 
     ////////////////////////////////////////////////////////
     // instance specific data
@@ -129,8 +127,6 @@ private:
 
     ORBDTYPE* psi(const int i) const { return block_vector_.vect(i); }
 
-    void precond_smooth(
-        ORBDTYPE*, const int, const int, const int, const int, const double);
     void app_mask(const int, ORBDTYPE*, const short level) const;
     void multiplyByMatrix(const SquareLocalMatrices<MATDTYPE>& matrix,
         ORBDTYPE* product, const int ldp) const;
@@ -141,8 +137,6 @@ private:
 
 protected:
     const pb::Grid& grid_;
-
-    LocalizationRegions* lrs_;
 
     static short subdivx_;
 
@@ -338,7 +332,6 @@ public:
     void projectOut(ExtendedGridOrbitals&, const double scale = 1.);
 
     void normalize();
-    void orthonormalize(const bool cholesky_uptodate = false);
     void orthonormalize2states(const int st1, const int st2);
     void orthonormalizeLoewdin(const bool overlap_uptodate = false,
         SquareLocalMatrices<MATDTYPE>* matrixTransform     = nullptr);

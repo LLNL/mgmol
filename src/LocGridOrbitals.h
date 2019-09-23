@@ -151,8 +151,6 @@ private:
 
     ORBDTYPE* psi(const int i) const { return block_vector_.vect(i); }
 
-    void precond_smooth(
-        ORBDTYPE*, const int, const int, const int, const int, const double);
     void app_mask(const int, ORBDTYPE*, const short level) const;
     void multiplyByMatrix(const SquareLocalMatrices<MATDTYPE>& matrix,
         ORBDTYPE* product, const int ldp) const;
@@ -379,7 +377,6 @@ public:
     void projectOut(LocGridOrbitals&, const double scale = 1.);
 
     void normalize();
-    void orthonormalize(const bool cholesky_uptodate = false);
     void orthonormalize2states(const int st1, const int st2);
     void orthonormalizeLoewdin(const bool overlap_uptodate = false,
         SquareLocalMatrices<MATDTYPE>* matrixTransform     = nullptr);
