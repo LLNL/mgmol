@@ -27,17 +27,15 @@
 #include "ProjectedMatrices.h"
 #include "ReplicatedWorkSpace.h"
 #include "SquareLocalMatrices.h"
-#include "SubMatrices.h"
 #include "hdf_tools.h"
 #include "lapack_c.h"
 
 #include <cmath>
 #include <fstream>
 #include <utility>
-using namespace std;
 
 #define ORBITAL_OCCUPATION 2.
-string getDatasetName(const string& name, const int color);
+std::string getDatasetName(const std::string& name, const int color);
 
 short ExtendedGridOrbitals::subdivx_ = 0;
 int ExtendedGridOrbitals::lda_       = 0;
@@ -71,13 +69,13 @@ ExtendedGridOrbitals::ExtendedGridOrbitals(std::string name,
     ClusterOrbitals* local_cluster, const bool setup_flag)
     : name_(std::move(name)),
       proj_matrices_(proj_matrices),
-      local_cluster_(local_cluster),
       block_vector_(my_grid, subdivx, bc),
-      grid_(my_grid),
-      lrs_(lrs)
+      grid_(my_grid)
 {
+    (void)lrs;
     (void)masks;
     (void)corrmasks;
+    (void)local_cluster;
 
     // preconditions
     assert(subdivx > 0);
@@ -105,10 +103,8 @@ ExtendedGridOrbitals::ExtendedGridOrbitals(const std::string& name,
     : Orbitals(A, copy_data),
       name_(name),
       proj_matrices_(A.proj_matrices_),
-      local_cluster_(A.local_cluster_),
       block_vector_(A.block_vector_, copy_data),
-      grid_(A.grid_),
-      lrs_(A.lrs_)
+      grid_(A.grid_)
 {
     // if(onpe0)cout<<"call ExtendedGridOrbitals(const ExtendedGridOrbitals &A,
     // const bool copy_data)"<<endl;
@@ -122,10 +118,8 @@ ExtendedGridOrbitals::ExtendedGridOrbitals(const std::string& name,
     : Orbitals(A, copy_data),
       name_(name),
       proj_matrices_(proj_matrices),
-      local_cluster_(A.local_cluster_),
       block_vector_(A.block_vector_, copy_data),
-      grid_(A.grid_),
-      lrs_(A.lrs_)
+      grid_(A.grid_)
 {
     assert(proj_matrices != 0);
 
@@ -258,7 +252,7 @@ void ExtendedGridOrbitals::initGauss(
     Control& ct     = *(Control::instance());
     if (mmpi.instancePE0() && ct.verbose > 2)
         (*MPIdata::sout) << "Initial orbitals: Gaussians of width " << rc
-                         << endl;
+                         << std::endl;
 
     const double invrc2 = 1. / (rc * rc);
 
@@ -322,7 +316,7 @@ void ExtendedGridOrbitals::initFourier()
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 2)
-        (*MPIdata::sout) << "Initial orbitals: Fourier " << endl;
+        (*MPIdata::sout) << "Initial orbitals: Fourier " << std::endl;
 
     const double start0 = grid_.start(0);
     const double start1 = grid_.start(1);
@@ -383,26 +377,6 @@ void ExtendedGridOrbitals::initFourier()
         }
     }
     resetIterativeIndex();
-}
-
-void ExtendedGridOrbitals::precond_smooth(ORBDTYPE* rhs, const int ld,
-    const int ifirst, const int nvect, const int npower, const double alpha)
-{
-    assert(ld >= static_cast<int>(grid_.size()));
-
-    pb::Laph2<ORBDTYPE> myoper(grid_);
-    pb::GridFunc<ORBDTYPE> gf_w(grid_, bc_[0], bc_[1], bc_[2]);
-
-    for (int i = 0; i < nvect; i++)
-    {
-        ORBDTYPE* rhsi = rhs + ld * i;
-
-        pb::GridFunc<ORBDTYPE> gf_sd(rhsi, grid_, bc_[0], bc_[1], bc_[2]);
-
-        myoper.smooth(gf_sd, gf_w, alpha);
-
-        gf_w.init_vect(rhsi, 'd');
-    }
 }
 
 void ExtendedGridOrbitals::multiply_by_matrix(
@@ -560,20 +534,20 @@ int ExtendedGridOrbitals::read_hdf5(HDFrestart& h5f_file)
 
     Control& ct = *(Control::instance());
 
-    hid_t file_id = h5f_file.file_id();
-    string name   = "Function";
-    int ierr      = read_func_hdf5(h5f_file, name);
+    hid_t file_id    = h5f_file.file_id();
+    std::string name = "Function";
+    int ierr         = read_func_hdf5(h5f_file, name);
     if (ierr < 0)
     {
         (*MPIdata::serr)
             << "ExtendedGridOrbitals::read_hdf5(): error in reading " << name
-            << ", size=" << name.size() << endl;
+            << ", size=" << name.size() << std::endl;
         return ierr;
     }
     else if (onpe0 && ct.verbose > 2)
     {
         (*MPIdata::sout) << "ExtendedGridOrbitals::read_hdf5(): Read " << ierr
-                         << " functions in restart file" << endl;
+                         << " functions in restart file" << std::endl;
     }
 
     // Read DM
@@ -584,7 +558,7 @@ int ExtendedGridOrbitals::read_hdf5(HDFrestart& h5f_file)
         {
             (*MPIdata::serr)
                 << "ExtendedGridOrbitals::read_hdf5(): error in reading DM"
-                << endl;
+                << std::endl;
             return ierr;
         }
     }
@@ -594,7 +568,7 @@ int ExtendedGridOrbitals::read_hdf5(HDFrestart& h5f_file)
     return ierr;
 }
 
-int ExtendedGridOrbitals::write_hdf5(HDFrestart& h5f_file, string name)
+int ExtendedGridOrbitals::write_hdf5(HDFrestart& h5f_file, std::string name)
 {
     assert(proj_matrices_ != 0);
     Control& ct = *(Control::instance());
@@ -614,7 +588,7 @@ int ExtendedGridOrbitals::write_hdf5(HDFrestart& h5f_file, string name)
 }
 
 int ExtendedGridOrbitals::write_func_hdf5(
-    HDFrestart& h5f_file, const string& name)
+    HDFrestart& h5f_file, const std::string& name)
 {
     Control& ct   = *(Control::instance());
     hid_t file_id = h5f_file.file_id();
@@ -639,13 +613,13 @@ int ExtendedGridOrbitals::write_func_hdf5(
 
     if (onpe0 && ct.verbose > 2)
         (*MPIdata::sout) << "Write ExtendedGridOrbitals " << name
-                         << " with precision " << precision << endl;
+                         << " with precision " << precision << std::endl;
     // loop over global (storage) functions
     for (int color = 0; color < numst_; color++)
     {
-        string datasetname(getDatasetName(name, color));
+        std::string datasetname(getDatasetName(name, color));
         if (onpe0 && ct.verbose > 2)
-            (*MPIdata::sout) << "Write " << datasetname << endl;
+            (*MPIdata::sout) << "Write " << datasetname << std::endl;
 
         // Create chunked dataset.
         hid_t dset_id = -1;
@@ -661,7 +635,7 @@ int ExtendedGridOrbitals::write_func_hdf5(
             {
                 (*MPIdata::serr) << "ExtendedGridOrbitals::write_func_hdf5(), "
                                     "H5Dcreate2 failed!!!"
-                                 << endl;
+                                 << std::endl;
                 return -1;
             }
         }
@@ -676,7 +650,7 @@ int ExtendedGridOrbitals::write_func_hdf5(
         // Write list of centers and radii
         // const int nst=pack_->nb_orb(color);
 
-        vector<int> gids;
+        std::vector<int> gids;
         gids.push_back(color);
 
         if (iwrite)
@@ -684,10 +658,10 @@ int ExtendedGridOrbitals::write_func_hdf5(
             writeGids(dset_id, gids);
 
             // Write the attribute "Lattice parameters" at "Cell origin"
-            string attname("Lattice parameters");
+            std::string attname("Lattice parameters");
 
             // Create the data space for the attribute "Lattice parameters".
-            vector<double> attr_data(3);
+            std::vector<double> attr_data(3);
             attr_data[0] = grid_.ll(0);
             attr_data[1] = grid_.ll(1);
             attr_data[2] = grid_.ll(2);
@@ -699,7 +673,7 @@ int ExtendedGridOrbitals::write_func_hdf5(
             attr_data[1] = grid_.origin(1);
             attr_data[2] = grid_.origin(2);
 
-            string attname2("Cell origin");
+            std::string attname2("Cell origin");
             mgmol_tools::addAttribute2Dataset(
                 dset_id, attname2.c_str(), attr_data);
         } // iwrite
@@ -716,7 +690,7 @@ int ExtendedGridOrbitals::write_func_hdf5(
             {
                 (*MPIdata::serr) << "ExtendedGridOrbitals::write_func_hdf5:"
                                     "H5Dclose failed!!!"
-                                 << endl;
+                                 << std::endl;
                 return -1;
             }
         }
@@ -731,12 +705,12 @@ int ExtendedGridOrbitals::write_func_hdf5(
         herr_t status = H5Sclose(filespace);
         if (status < 0)
         {
-            (*MPIdata::serr) << "H5Sclose filespace failed!!!" << endl;
+            (*MPIdata::serr) << "H5Sclose filespace failed!!!" << std::endl;
         }
         status = H5Sclose(memspace);
         if (status < 0)
         {
-            (*MPIdata::serr) << "H5Sclose memspace failed!!!" << endl;
+            (*MPIdata::serr) << "H5Sclose memspace failed!!!" << std::endl;
         }
     }
 
@@ -748,7 +722,7 @@ int ExtendedGridOrbitals::write_func_hdf5(
 
 // read all the data sets with names starting with "name"
 int ExtendedGridOrbitals::read_func_hdf5(
-    HDFrestart& h5f_file, const string& name)
+    HDFrestart& h5f_file, const std::string& name)
 {
     assert(numst_ >= 0);
     assert(name.size() > 0);
@@ -780,13 +754,13 @@ int ExtendedGridOrbitals::read_func_hdf5(
                    "functions from "
                 << grid_.mype_env().n_mpi_task(1)
                        * grid_.mype_env().n_mpi_task(2)
-                << " PEs" << endl;
+                << " PEs" << std::endl;
         }
         else
         {
             (*MPIdata::sout) << "ExtendedGridOrbitals::read_func_hdf5(): Read "
                                 "wave functions "
-                             << name << " from all tasks..." << endl;
+                             << name << " from all tasks..." << std::endl;
         }
     }
 
@@ -794,7 +768,7 @@ int ExtendedGridOrbitals::read_func_hdf5(
 
     for (int icolor = 0; icolor < numst_; icolor++)
     {
-        const string datasetname(getDatasetName(name, icolor));
+        const std::string datasetname(getDatasetName(name, icolor));
 
         // check if dataset exists...
         int err_id = h5f_file.dset_exists(datasetname);
@@ -803,7 +777,7 @@ int ExtendedGridOrbitals::read_func_hdf5(
 
         if (onpe0 && ct.verbose > 2)
             (*MPIdata::sout) << "Read Dataset " << datasetname
-                             << " with precision " << precision << endl;
+                             << " with precision " << precision << std::endl;
 
         // Open dataset.
         hid_t dset_id = h5f_file.open_dset(datasetname);
@@ -811,7 +785,7 @@ int ExtendedGridOrbitals::read_func_hdf5(
         {
             (*MPIdata::serr)
                 << "ExtendedGridOrbitals::read_func_hdf5() --- cannot open "
-                << datasetname << endl;
+                << datasetname << std::endl;
             return dset_id;
         }
 
@@ -820,7 +794,7 @@ int ExtendedGridOrbitals::read_func_hdf5(
         {
             (*MPIdata::serr) << "ExtendedGridOrbitals::read_func_hdf5() --- "
                                 "H5Dread failed!!!"
-                             << endl;
+                             << std::endl;
             return -1;
         }
 
@@ -845,7 +819,7 @@ int ExtendedGridOrbitals::read_func_hdf5(
         herr_t status = H5Sclose(memspace);
         if (status < 0)
         {
-            (*MPIdata::serr) << "H5Sclose failed!!!" << endl;
+            (*MPIdata::serr) << "H5Sclose failed!!!" << std::endl;
             return -1;
         }
     }
@@ -865,7 +839,7 @@ void ExtendedGridOrbitals::computeMatB(
     matB_tm_.start();
 #if DEBUG
     if (onpe0)
-        (*MPIdata::sout) << "ExtendedGridOrbitals::computeMatB()" << endl;
+        (*MPIdata::sout) << "ExtendedGridOrbitals::computeMatB()" << std::endl;
 #endif
 
     const short bcolor = 32;
@@ -1015,7 +989,7 @@ void ExtendedGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
 }
 
 void ExtendedGridOrbitals::computeDiagonalElementsDotProduct(
-    const ExtendedGridOrbitals& orbitals, vector<DISTMATDTYPE>& ss) const
+    const ExtendedGridOrbitals& orbitals, std::vector<DISTMATDTYPE>& ss) const
 {
     assert(numst_ > 0);
     assert(grid_.vel() > 0.);
@@ -1031,7 +1005,7 @@ void ExtendedGridOrbitals::computeDiagonalElementsDotProduct(
             ss[icolor] += (DISTMATDTYPE)(alpha * grid_.vel());
         }
     }
-    vector<DISTMATDTYPE> tmp(ss);
+    std::vector<DISTMATDTYPE> tmp(ss);
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     mmpi.allreduce(&tmp[0], &ss[0], numst_, MPI_SUM);
 }
@@ -1074,7 +1048,7 @@ void ExtendedGridOrbitals::computeGram(const int verbosity)
 
 #ifdef PRINT_OPERATIONS
     if (onpe0)
-        (*MPIdata::sout) << "ExtendedGridOrbitals::computeGram()" << endl;
+        (*MPIdata::sout) << "ExtendedGridOrbitals::computeGram()" << std::endl;
 #endif
 
     assert(subdivx_ > 0);
@@ -1138,7 +1112,7 @@ double ExtendedGridOrbitals::dotProductDiagonal(
 {
     assert(proj_matrices_ != 0);
 
-    vector<DISTMATDTYPE> ss(numst_);
+    std::vector<DISTMATDTYPE> ss(numst_);
     computeDiagonalElementsDotProduct(orbitals, ss);
 
     return proj_matrices_->getTraceDiagProductWithInvS(ss);
@@ -1191,7 +1165,7 @@ double ExtendedGridOrbitals::dotProduct(
     {
         (*MPIdata::serr) << "ExtendedGridOrbitals::dot_product() --- unknown "
                             "dot product type"
-                         << endl;
+                         << std::endl;
         Control& ct = *(Control::instance());
         ct.global_exit(2);
     }
@@ -1234,61 +1208,13 @@ const dist_matrix::DistMatrix<DISTMATDTYPE> ExtendedGridOrbitals::product(
     return tmp;
 }
 
-void ExtendedGridOrbitals::orthonormalize(const bool overlap_uptodate)
-{
-    Control& ct = *(Control::instance());
-
-    if (!overlap_uptodate) computeGram(0);
-
-    ProjectedMatrices* projmatrices
-        = dynamic_cast<ProjectedMatrices*>(proj_matrices_);
-    assert(projmatrices);
-
-    MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
-    const dist_matrix::SubMatrices<DISTMATDTYPE>& submatLS(
-        projmatrices->getSubMatLS(mmpi.commSameSpin(), overlapping_gids_));
-    // submatLS.print((*MPIdata::sout));
-
-    if (onpe0 && ct.verbose > 1)
-        (*MPIdata::sout) << "ExtendedGridOrbitals::orthonormalize()" << endl;
-
-    for (short iloc = 0; iloc < subdivx_; iloc++)
-    {
-        // Loop over the functions
-        for (int jcolor = 0; jcolor < numst_; jcolor++)
-        {
-            // compute non-diagonal elements
-            for (int icolor = 0; icolor < jcolor; icolor++)
-            {
-                double beta = (double)(-1.
-                                       * submatLS.val(numst_ - jcolor - 1,
-                                             numst_ - icolor - 1, iloc));
-                //(*MPIdata::sout)<<"beta="<<beta<<endl;
-                block_vector_.axpy(
-                    beta, numst_ - icolor - 1, numst_ - jcolor - 1, iloc);
-            }
-
-            // normalize state
-            double alpha = (double)(1.
-                                    / submatLS.val(numst_ - jcolor - 1,
-                                          numst_ - jcolor - 1, iloc));
-            //(*MPIdata::sout)<<"alpha="<<alpha<<endl;
-            block_vector_.scal(alpha, numst_ - jcolor - 1, iloc);
-        }
-    }
-
-    incrementIterativeIndex();
-
-    projmatrices->setGram2Id(getIterativeIndex());
-}
-
 void ExtendedGridOrbitals::orthonormalizeLoewdin(
     const bool overlap_uptodate, SquareLocalMatrices<MATDTYPE>* matrixTransform)
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 1)
         (*MPIdata::sout) << "ExtendedGridOrbitals::orthonormalizeLoewdin()"
-                         << endl;
+                         << std::endl;
 
     ProjectedMatrices* projmatrices
         = dynamic_cast<ProjectedMatrices*>(proj_matrices_);
@@ -1355,7 +1281,7 @@ void ExtendedGridOrbitals::orthonormalize2states(const int st1, const int st2)
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 2)
         (*MPIdata::sout) << "ExtendedGridOrbitals::orthonormalize2states(): "
-                         << st1 << " and " << st2 << endl;
+                         << st1 << " and " << st2 << std::endl;
     const int st[2] = { st1, st2 };
 
     double tmp[3]    = { 0., 0., 0. };
@@ -1421,7 +1347,7 @@ void ExtendedGridOrbitals::orthonormalize2states(const int st1, const int st2)
     mmpi.allreduce(&tmp[0], &overlap[0], 3, MPI_SUM);
     if (onpe0 && ct.verbose > 2)
         (*MPIdata::sout) << "Gram matrix = " << overlap[0] << "," << overlap[1]
-                         << "," << overlap[2] << endl;
+                         << "," << overlap[2] << std::endl;
 #endif
 }
 
@@ -1450,9 +1376,9 @@ void ExtendedGridOrbitals::multiplyByMatrix2states(const int st1, const int st2,
 }
 
 void ExtendedGridOrbitals::computeInvNorms2(
-    vector<vector<double>>& inv_norms2) const
+    std::vector<std::vector<double>>& inv_norms2) const
 {
-    vector<double> diagS(numst_);
+    std::vector<double> diagS(numst_);
 
     computeDiagonalElementsDotProduct(*this, diagS);
 
@@ -1482,7 +1408,7 @@ void ExtendedGridOrbitals::normalize()
     //        (*MPIdata::sout)<<"Normalize ExtendedGridOrbitals"<<endl;
 
     //    const double vel = grid_.vel();
-    vector<double> diagS(numst_);
+    std::vector<double> diagS(numst_);
 
     computeDiagonalElementsDotProduct(*this, diagS);
 
@@ -1492,7 +1418,7 @@ void ExtendedGridOrbitals::normalize()
         if (onpe0 && ct.verbose > 2)
             for (int i = 0; i < numst_; i++)
                 (*MPIdata::sout)
-                    << "i=" << i << ", diagS[i]=" << diagS[i] << endl;
+                    << "i=" << i << ", diagS[i]=" << diagS[i] << std::endl;
 #endif
         assert(diagS[color] > 1.e-15);
         diagS[color] = 1. / sqrt(diagS[color]);
@@ -1534,18 +1460,16 @@ void ExtendedGridOrbitals::projectOut(
     assert(numst_ >= 0);
     assert(lda_ > loc_numpt_);
 
-    SquareLocalMatrices<MATDTYPE> pmatrix(subdivx_, numst_);
+    SquareLocalMatrices<MATDTYPE> lmatrix(subdivx_, numst_);
 
-    if (numst_ != 0) computeLocalProduct(array, lda, pmatrix, false);
-
-        //    pmatrix.scal(grid_.vel());
+    if (numst_ != 0) computeLocalProduct(array, lda, lmatrix, false);
 
 #ifdef DEBUG
-    (*MPIdata::sout) << "ExtendedGridOrbitals::projectOut()" << endl;
-    (*MPIdata::sout) << "Product before projection" << endl;
+    (*MPIdata::sout) << "ExtendedGridOrbitals::projectOut()" << std::endl;
+    (*MPIdata::sout) << "Product before projection" << std::endl;
     pmatrix.print((*MPIdata::sout));
 #endif
-    proj_matrices_->applyInvS(pmatrix);
+    proj_matrices_->applyInvS(lmatrix);
 
     ORBDTYPE* tproduct = new ORBDTYPE[loc_numpt_ * numst_];
     memset(tproduct, 0, loc_numpt_ * numst_ * sizeof(ORBDTYPE));
@@ -1556,7 +1480,7 @@ void ExtendedGridOrbitals::projectOut(
         ORBDTYPE* phi    = getPsi(0, iloc);
         ORBDTYPE* parray = array + iloc * loc_numpt_;
 
-        MATDTYPE* localMat_iloc = pmatrix.getSubMatrix(iloc);
+        MATDTYPE* localMat_iloc = lmatrix.getSubMatrix(iloc);
 
         // Compute loc_numpt_ rows (for subdomain iloc)
         LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(loc_numpt_, numst_,
@@ -1592,7 +1516,7 @@ void ExtendedGridOrbitals::initRand()
 
     if (onpe0 && ct.verbose > 2)
         (*MPIdata::sout) << " Initialize " << numst_
-                         << " random global functions" << endl;
+                         << " random global functions" << std::endl;
 
     ran0();
 
@@ -1658,7 +1582,7 @@ void ExtendedGridOrbitals::addDotWithNcol2Matrix(const int first_color,
     if (onpe0 && ct.verbose > 2)
         (*MPIdata::sout)
             << "ExtendedGridOrbitals::addDotWithNcol2Matrix for states "
-            << first_color << " to " << first_color + ncolors - 1 << endl;
+            << first_color << " to " << first_color + ncolors - 1 << std::endl;
     for (short icolor = 0; icolor < ncolors; icolor++)
     {
         block_vector_.hasnan(icolor);
@@ -1717,7 +1641,7 @@ void ExtendedGridOrbitals::computeGlobalIndexes()
     }
 }
 
-void ExtendedGridOrbitals::printTimers(ostream& os)
+void ExtendedGridOrbitals::printTimers(std::ostream& os)
 {
     matB_tm_.print(os);
     invBmat_tm_.print(os);
@@ -1737,28 +1661,28 @@ void ExtendedGridOrbitals::initWF(const LocalizationRegions& lrs)
 
     if (onpe0 && ct.verbose > 1)
     {
-        (*MPIdata::sout) << " Initialize wave functions ..." << endl;
+        (*MPIdata::sout) << " Initialize wave functions ..." << std::endl;
     }
     switch (ct.init_type)
     {
         case 1:
             if (onpe0 && ct.verbose > 1)
             {
-                (*MPIdata::sout) << " with Gaussian functions..." << endl;
+                (*MPIdata::sout) << " with Gaussian functions..." << std::endl;
             }
             initGauss(ct.init_rc, lrs);
             break;
         case 2:
             if (onpe0 && ct.verbose > 1)
             {
-                (*MPIdata::sout) << " with Fourier basis ..." << endl;
+                (*MPIdata::sout) << " with Fourier basis ..." << std::endl;
             }
             initFourier();
             break;
         default:
             if (onpe0 && ct.verbose > 2)
             {
-                (*MPIdata::sout) << " with random values ..." << endl;
+                (*MPIdata::sout) << " with random values ..." << std::endl;
             }
             initRand();
 
@@ -1773,7 +1697,7 @@ void ExtendedGridOrbitals::initWF(const LocalizationRegions& lrs)
 
                 if (onpe0 && ct.verbose > 2)
                     (*MPIdata::sout)
-                        << " Apply B to initial wave functions" << endl;
+                        << " Apply B to initial wave functions" << std::endl;
                 for (short icolor = 0; icolor < numst_; icolor++)
                 {
                     gf_psi.assign(psi(icolor));
@@ -1787,7 +1711,8 @@ void ExtendedGridOrbitals::initWF(const LocalizationRegions& lrs)
 
     if (onpe0 && ct.verbose > 2)
         (*MPIdata::sout)
-            << " Normalize or Orthonormalize initial wave functions" << endl;
+            << " Normalize or Orthonormalize initial wave functions"
+            << std::endl;
     if (ct.isLocMode())
     {
         normalize();
@@ -1804,7 +1729,7 @@ void ExtendedGridOrbitals::initWF(const LocalizationRegions& lrs)
 
 #ifdef DEBUG
     if (onpe0 && ct.verbose > 2)
-        (*MPIdata::sout) << "ExtendedGridOrbitals::init_wf() done" << endl;
+        (*MPIdata::sout) << "ExtendedGridOrbitals::init_wf() done" << std::endl;
 #endif
 }
 
