@@ -185,8 +185,8 @@ public:
         dm2sl->convert(*theta_, *localT_);
     }
 
-    void computeLoewdinTransform(
-        SquareLocalMatrices<MATDTYPE>& localPi, const int orb_index);
+    void computeLoewdinTransform(SquareLocalMatrices<MATDTYPE>& localPi,
+        const int orb_index, const bool transform_matrices);
 
     void printTimers(std::ostream& os) override;
 

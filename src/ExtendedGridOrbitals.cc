@@ -1208,8 +1208,8 @@ const dist_matrix::DistMatrix<DISTMATDTYPE> ExtendedGridOrbitals::product(
     return tmp;
 }
 
-void ExtendedGridOrbitals::orthonormalizeLoewdin(
-    const bool overlap_uptodate, SquareLocalMatrices<MATDTYPE>* matrixTransform)
+void ExtendedGridOrbitals::orthonormalizeLoewdin(const bool overlap_uptodate,
+    SquareLocalMatrices<MATDTYPE>* matrixTransform, const bool update_matrices)
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 1)
@@ -1228,7 +1228,8 @@ void ExtendedGridOrbitals::orthonormalizeLoewdin(
 
     incrementIterativeIndex();
 
-    projmatrices->computeLoewdinTransform(*localP, getIterativeIndex());
+    projmatrices->computeLoewdinTransform(
+        *localP, getIterativeIndex(), update_matrices);
 
     multiplyByMatrix(*localP);
 

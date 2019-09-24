@@ -1822,8 +1822,8 @@ const dist_matrix::DistMatrix<DISTMATDTYPE> LocGridOrbitals::product(
     return tmp;
 }
 
-void LocGridOrbitals::orthonormalizeLoewdin(
-    const bool overlap_uptodate, SquareLocalMatrices<MATDTYPE>* matrixTransform)
+void LocGridOrbitals::orthonormalizeLoewdin(const bool overlap_uptodate,
+    SquareLocalMatrices<MATDTYPE>* matrixTransform, const bool update_matrices)
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 1)
@@ -1839,7 +1839,8 @@ void LocGridOrbitals::orthonormalizeLoewdin(
     if (matrixTransform == nullptr)
         localP = new SquareLocalMatrices<MATDTYPE>(subdivx_, chromatic_number_);
 
-    projmatrices->computeLoewdinTransform(*localP, getIterativeIndex());
+    projmatrices->computeLoewdinTransform(
+        *localP, getIterativeIndex(), update_matrices);
 
     multiplyByMatrix(*localP);
 
