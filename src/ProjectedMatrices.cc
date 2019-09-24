@@ -821,7 +821,8 @@ double ProjectedMatrices::computeChemicalPotentialAndOccupations(
 }
 
 void ProjectedMatrices::computeLoewdinTransform(
-    SquareLocalMatrices<MATDTYPE>& localP, const int orb_index)
+    SquareLocalMatrices<MATDTYPE>& localP, const int orb_index,
+    const bool transform_matrices)
 {
     // dm_->computeOccupations(gm_->getCholeskyL());
 
@@ -844,23 +845,27 @@ void ProjectedMatrices::computeLoewdinTransform(
     mat.symm('r', 'l', 1., matP, vect, 0.);
     matP.gemm('n', 't', 1., mat, vect, 0.);
 
-    // new Gram matrix is Identity
-    setGram2Id(orb_index);
+    if (transform_matrices)
+    {
+        // new Gram matrix is Identity
+        setGram2Id(orb_index);
 
-    // transform DM to reflect Loewdin orthonormalization
-    for (unsigned int i = 0; i < dim_; i++)
-        diag_values[i] = sqrt(eigenvalues[i]);
-    dist_matrix::DistMatrix<DISTMATDTYPE> invLoewdin("invLoewdin", dim_, dim_);
-    invLoewdin.clear();
-    invLoewdin.setDiagonal(diag_values);
-    mat.symm('r', 'l', 1., invLoewdin, vect, 0.);
-    invLoewdin.gemm('n', 't', 1., mat, vect, 0.);
+        // transform DM to reflect Loewdin orthonormalization
+        for (unsigned int i = 0; i < dim_; i++)
+            diag_values[i] = sqrt(eigenvalues[i]);
+        dist_matrix::DistMatrix<DISTMATDTYPE> invLoewdin(
+            "invLoewdin", dim_, dim_);
+        invLoewdin.clear();
+        invLoewdin.setDiagonal(diag_values);
+        mat.symm('r', 'l', 1., invLoewdin, vect, 0.);
+        invLoewdin.gemm('n', 't', 1., mat, vect, 0.);
 
-    dm_->transform(invLoewdin);
+        dm_->transform(invLoewdin);
 
-    // transform matHB_ to reflect Loewdin orthonormalization
-    mat.symm('r', 'l', 1., *matHB_, vect, 0.);
-    matHB_->gemm('n', 't', 1., mat, vect, 0.);
+        // transform matHB_ to reflect Loewdin orthonormalization
+        mat.symm('r', 'l', 1., *matHB_, vect, 0.);
+        matHB_->gemm('n', 't', 1., mat, vect, 0.);
+    }
 
     DistMatrix2SquareLocalMatrices* dm2sl
         = DistMatrix2SquareLocalMatrices::instance();
