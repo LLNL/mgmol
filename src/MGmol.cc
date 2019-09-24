@@ -145,11 +145,6 @@ MGmol<T>::~MGmol()
     delete electrostat_;
     delete rho_;
     delete constraints_;
-    if (!ct.short_sighted)
-    {
-        delete remote_tasks_DistMatrix_;
-        remote_tasks_DistMatrix_ = nullptr;
-    }
     delete xcongrid_;
     delete energy_;
     if (hamiltonian_ != nullptr) delete hamiltonian_;
@@ -273,20 +268,6 @@ int MGmol<T>::initial()
 
     if (ct.verbose > 0)
         printWithTimeStamp("MGmol<T>::initial(), create T...", os_);
-
-    if (!ct.short_sighted)
-    {
-        printWithTimeStamp(
-            "MGmol<T>::initial(), create MatricesBlacsContext and misc...",
-            os_);
-
-        dist_matrix::DistMatrix<DISTMATDTYPE> tmp("tmp", ct.numst, ct.numst);
-        remote_tasks_DistMatrix_
-            = new dist_matrix::RemoteTasksDistMatrix<DISTMATDTYPE>(tmp);
-        ProjectedMatrices::registerRemoteTasksDistMatrix(
-            remote_tasks_DistMatrix_);
-        remote_tasks_DistMatrix_ptr_ = remote_tasks_DistMatrix_;
-    }
 
     current_orbitals_ = new T("Primary", mygrid, mymesh->subdivx(), ct.numst,
         ct.bc, proj_matrices_, lrs_, currentMasks_, corrMasks_, local_cluster_,

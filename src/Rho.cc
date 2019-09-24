@@ -16,9 +16,7 @@
 #include "Mesh.h"
 #include "ProjectedMatrices.h"
 #include "SquareLocalMatrices.h"
-#include "SubMatrices.h"
 #include "mputils.h"
-#include "numerical_kernels.h"
 using namespace std;
 
 template <class T>

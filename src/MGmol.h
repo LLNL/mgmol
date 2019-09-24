@@ -51,7 +51,6 @@ class IonicAlgorithm;
 #include "MGmolInterface.h"
 #include "OrbitalsExtrapolation.h"
 #include "OrbitalsPreconditioning.h"
-#include "RemoteTasksDistMatrix.h"
 #include "Rho.h"
 #include "SparseDistMatrix.h"
 #include "SpreadPenaltyInterface.h"
@@ -64,10 +63,6 @@ private:
     std::ostream& os_;
 
     MPI_Comm comm_;
-
-    dist_matrix::RemoteTasksDistMatrix<DISTMATDTYPE>* remote_tasks_DistMatrix_;
-    static dist_matrix::RemoteTasksDistMatrix<DISTMATDTYPE>*
-        remote_tasks_DistMatrix_ptr_;
 
     XConGrid* xcongrid_;
 
@@ -194,18 +189,6 @@ public:
     void initNuc(Ions& ions);
     void initKBR();
 
-    dist_matrix::RemoteTasksDistMatrix<DISTMATDTYPE>* getRemoteTasksDistMatrix()
-    {
-        assert(remote_tasks_DistMatrix_ != 0);
-        return remote_tasks_DistMatrix_;
-    }
-
-    static dist_matrix::RemoteTasksDistMatrix<DISTMATDTYPE>**
-    getRemoteTasksDistMatrixPtr()
-    {
-        return &remote_tasks_DistMatrix_ptr_;
-    }
-
     void global_exit(int i);
     void printEigAndOcc();
 
@@ -318,10 +301,6 @@ public:
     void force(T& orbitals, Ions& ions) { forces_->force(orbitals, ions); }
 };
 // Instantiate static variables here to avoid clang warnings
-template <class T>
-dist_matrix::RemoteTasksDistMatrix<DISTMATDTYPE>*
-    MGmol<T>::remote_tasks_DistMatrix_ptr_
-    = nullptr;
 template <class T>
 Timer MGmol<T>::adaptLR_tm_("MGmol::adaptLR");
 template <class T>

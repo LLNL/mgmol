@@ -22,7 +22,6 @@
 #include "DistMatrix.h"
 #include "DistMatrix2SquareLocalMatrices.h"
 #include "LocalMatrices2DistMatrix.h"
-#include "RemoteTasksDistMatrix.h"
 #include "SparseDistMatrix.h"
 
 #include "hdf5.h"
@@ -64,9 +63,6 @@ class ProjectedMatrices : public ProjectedMatricesInterface
     static Timer update_submatX_tm_;
     static Timer eigsum_tm_;
     static Timer consolidate_H_tm_;
-
-    static dist_matrix::RemoteTasksDistMatrix<DISTMATDTYPE>*
-        remote_tasks_DistMatrix_;
 
     ProjectedMatrices& operator=(const ProjectedMatrices& src);
     ProjectedMatrices(const ProjectedMatrices& pm);
@@ -171,12 +167,6 @@ public:
     SquareLocalMatrices<MATDTYPE>& getLocalT() const override
     {
         return *localT_;
-    }
-
-    const dist_matrix::SubMatrices<DISTMATDTYPE>& getSubMatLS(MPI_Comm comm,
-        const std::vector<std::vector<int>>& global_indexes) const
-    {
-        return gm_->getSubMatLS(comm, global_indexes);
     }
 
     void updateSubMatX() override { updateSubMatX(dm_->getMatrix()); }
@@ -426,13 +416,6 @@ public:
         return gm_->getLinDependent2states(st1, st2);
     }
 
-    static void registerRemoteTasksDistMatrix(
-        dist_matrix::RemoteTasksDistMatrix<DISTMATDTYPE>*
-            remote_tasks_DistMatrix)
-    {
-        assert(remote_tasks_DistMatrix != 0);
-        remote_tasks_DistMatrix_ = remote_tasks_DistMatrix;
-    }
     void initializeMatB(const SquareLocalMatrices<MATDTYPE>& ss) override
     {
         (void)ss;

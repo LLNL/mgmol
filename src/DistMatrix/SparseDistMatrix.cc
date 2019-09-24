@@ -46,13 +46,14 @@ namespace dist_matrix
 const unsigned short reserve_size = 8;
 
 template <class T>
-SparseDistMatrix<T>::SparseDistMatrix(MPI_Comm comm, DistMatrix<T>& mat,
-    RemoteTasksDistMatrix<T>* rtasks_distmatrix,
-    const int target_nb_tasks_per_partition)
-    : comm_global_(comm), rtasks_distmatrix_(rtasks_distmatrix), mat_(mat)
-{
-    assert(&mat_ != NULL);
+std::shared_ptr<RemoteTasksDistMatrix<T>>
+    SparseDistMatrix<T>::rtasks_distmatrix_;
 
+template <class T>
+SparseDistMatrix<T>::SparseDistMatrix(
+    MPI_Comm comm, DistMatrix<T>& mat, const int target_nb_tasks_per_partition)
+    : comm_global_(comm), mat_(mat)
+{
     ntasks_per_partition_ = -1;
     npartitions_          = -1;
 
@@ -72,14 +73,9 @@ SparseDistMatrix<T>::SparseDistMatrix(MPI_Comm comm, DistMatrix<T>& mat,
     index_and_val_.resize(ntasks_mat_);
     map_val_.resize(ntasks_mat_);
 
-    if (rtasks_distmatrix_ == nullptr)
+    if (!rtasks_distmatrix_)
     {
-        rtasks_distmatrix_     = new RemoteTasksDistMatrix<T>(mat);
-        own_rtasks_distmatrix_ = true;
-    }
-    else
-    {
-        own_rtasks_distmatrix_ = false;
+        rtasks_distmatrix_.reset(new RemoteTasksDistMatrix<T>(mat));
     }
 
     int target_nb_tasks = target_nb_tasks_per_partition;
@@ -92,8 +88,6 @@ template <class T>
 SparseDistMatrix<T>::SparseDistMatrix(MPI_Comm comm, DistMatrix<T>& mat)
     : comm_global_(comm), mat_(mat)
 {
-    assert(&mat_ != NULL);
-
     ntasks_per_partition_ = -1;
     npartitions_          = -1;
 
@@ -113,15 +107,9 @@ SparseDistMatrix<T>::SparseDistMatrix(MPI_Comm comm, DistMatrix<T>& mat)
     index_and_val_.resize(ntasks_mat_);
     map_val_.resize(ntasks_mat_);
 
-    rtasks_distmatrix_ = *def_rtasks_DistMatrix_ptr_;
-    if (rtasks_distmatrix_ == nullptr)
+    if (!rtasks_distmatrix_)
     {
-        rtasks_distmatrix_     = new RemoteTasksDistMatrix<T>(mat);
-        own_rtasks_distmatrix_ = true;
-    }
-    else
-    {
-        own_rtasks_distmatrix_ = false;
+        rtasks_distmatrix_.reset(new RemoteTasksDistMatrix<T>(mat));
     }
 
     int target_nb_tasks = sparse_distmatrix_nb_partitions_;
@@ -139,9 +127,6 @@ SparseDistMatrix<T>::SparseDistMatrix(const SparseDistMatrix<T>& spdistmat)
     nprow_      = spdistmat.nprow_;
     ntasks_mat_ = spdistmat.ntasks_mat_;
 
-    own_rtasks_distmatrix_ = false;
-    rtasks_distmatrix_     = spdistmat.rtasks_distmatrix_;
-
     partition_comm_ = spdistmat.partition_comm_;
 
     ntasks_per_partition_ = spdistmat.ntasks_per_partition_;
@@ -154,11 +139,6 @@ SparseDistMatrix<T>::SparseDistMatrix(const SparseDistMatrix<T>& spdistmat)
 template <class T>
 SparseDistMatrix<T>::~SparseDistMatrix<T>()
 {
-    if (own_rtasks_distmatrix_)
-    {
-        assert(rtasks_distmatrix_ != NULL);
-        delete rtasks_distmatrix_;
-    }
 }
 
 TEMP_DECL

@@ -20,8 +20,6 @@
 #include "DistMatrix.h"
 #include "MGmol_MPI.h"
 #include "SquareLocalMatrices.h"
-#include "SubMatrices.h"
-#include "SubMatricesIndexing.h"
 #include "VariableSizeMatrix.h"
 #include "entropy.h"
 #include "fermi.h"
