@@ -141,7 +141,6 @@ MGmol<T>::MGmol(MPI_Comm comm, std::ostream& os) : os_(os)
 template <class T>
 MGmol<T>::~MGmol()
 {
-    Control& ct = *(Control::instance());
     delete electrostat_;
     delete rho_;
     delete constraints_;
@@ -617,6 +616,8 @@ void MGmol<T>::write_header()
             MatricesBlacsContext& mbc(MatricesBlacsContext::instance());
             mbc.print(os_);
         }
+
+        ct.printPoissonOptions(os_);
     } // onpe0
 
     if (current_orbitals_ != nullptr && ct.verbose > 0)
