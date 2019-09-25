@@ -1974,3 +1974,32 @@ void Control::printRestartLink()
         }
     }
 }
+
+void Control::printPoissonOptions(std::ostream& os)
+{
+    os << " Finite difference scheme for Poisson: ";
+    switch (poisson_lap_type_)
+    {
+        case PoissonFDtype::h2:
+            os << "2nd order";
+            break;
+        case PoissonFDtype::h4:
+            os << "4th order";
+            break;
+        case PoissonFDtype::h6:
+            os << "6th order";
+            break;
+        case PoissonFDtype::h8:
+            os << "8th order";
+            break;
+        case PoissonFDtype::h4M:
+            os << "Mehrstellen 4th order";
+            break;
+        case PoissonFDtype::h4MP:
+            os << "MehrstellenP 4th order";
+            break;
+        default:
+            os << "Undefined!!!";
+    }
+    os << std::endl;
+}

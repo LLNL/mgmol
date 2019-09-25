@@ -283,6 +283,8 @@ public:
     }
 
     void print(std::ostream&);
+    void printPoissonOptions(std::ostream& os);
+
     void sync(void);
     void adjust();
     int checkState();
