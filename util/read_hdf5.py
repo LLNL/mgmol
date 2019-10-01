@@ -173,7 +173,7 @@ def get_function(filename, datasetname, dims, origin,
         # Open HDF5 File
         try:
             
-            file_id = h5py.h5f.open(bytes(filename),
+            file_id = h5py.h5f.open(bytes(filename, encoding='utf-8'),
                           h5py.h5f.ACC_RDONLY, h5py.h5p.DEFAULT)
             
         except Exception:
@@ -184,7 +184,7 @@ def get_function(filename, datasetname, dims, origin,
         # Open Dataset  
         try:
             
-            dset_id = h5py.h5d.open(file_id, bytes(datasetname))
+            dset_id = h5py.h5d.open(file_id, bytes(datasetname, encoding='utf-8'))
 
         except Exception:
 
@@ -262,7 +262,7 @@ def get_function(filename, datasetname, dims, origin,
         # Open a Dataset Attribute
         try:
             
-            attribute_id = h5py.h5a.open(dset_id, bytes(attname))
+            attribute_id = h5py.h5a.open(dset_id, bytes(attname, encoding='utf-8'))
 
         except Exception:
 
@@ -303,7 +303,7 @@ def get_function(filename, datasetname, dims, origin,
         # Open a Dataset Attribute
         try:
             
-            attribute_id = h5py.h5a.open(dset_id, bytes(attname))
+            attribute_id = h5py.h5a.open(dset_id, bytes(attname, encoding='utf-8'))
 
         except Exception:
 
@@ -463,26 +463,22 @@ def get_function(filename, datasetname, dims, origin,
     return ( data, dims )
 
 # Read Ionic Positions Dataset in File - Function
-def read_ionic_positions_hdf5(file_id):
+def read_ionic_positions_hdf5(hdfile):
 
     print('\nRead Ionic Positions from HDF5 File')
 
     # Open Datatset
     try:
 
-        dataset_id = h5py.h5d.open(file_id, bytes('/Ionic_positions'))
+        dset = hdfile['/Ionic_positions']
 
     except Exception:
 
         print('\nIons::read_positions_hdf5() --- h5py.h5d.open Failed!!!')
         return None
 
-    # Get Size of the Dataset Inside of File
-    dim = int( dataset_id.get_storage_size() ) / dataset_id.dtype.itemsize 
-
     # Numpy Array for Storing Data
-    data = np.arange(0.0)
-    data.resize(dim, refcheck = False)
+    data = np.array(dset)
 
     # Numpy Array Must be C-Contiguous for h5py.h5d.DatasetID.read Method
     data = np.ascontiguousarray(data)
@@ -494,15 +490,15 @@ def read_ionic_positions_hdf5(file_id):
         return None
 
     # Ion i: data[3 * i], data[3 * i + 1], data[3 * i + 2]
-    try:
+#    try:
 
-        status = dataset_id.read(h5py.h5s.ALL, h5py.h5s.ALL, data,
-                                 h5py.h5t.NATIVE_DOUBLE, h5py.h5p.DEFAULT)
+#        status = dataset_id.read(h5py.h5s.ALL, h5py.h5s.ALL, data,
+#                                 h5py.h5t.NATIVE_DOUBLE, h5py.h5p.DEFAULT)
 
-    except Exception:
+#    except Exception:
 
-        print('\nread_ionic_positions_hdf5() --- dataset_id.read Failed!!!')
-        return None
+#        print('\nread_ionic_positions_hdf5() --- dataset_id.read Failed!!!')
+#        return None
 
     # Close Dataset ID
     # dataset_id._close()
@@ -562,40 +558,24 @@ def read_atomic_numbers_hdf5(file_id):
     return ( dim, data )
 
 # int Function - Read Atomic Names HDF5
-def read_atomic_names_hdf5(file_id, data):
+def read_atomic_names_hdf5(hdfile, data):
 
     print('\nRead Atomic Names from HDF5 File')
 
     # Open the Dataset
     try:
         
-        dataset_id = h5py.h5d.open(file_id, bytes('/Atomic_names'))
+        dset = hdfile['/Atomic_names']
 
     except Exception:
 
-        print('\nIons::read_atomic_names_hdf5() --- h5py.h5d.open Failed!!!')
+        print('\nIons::read_atomic_names_hdf5() --- open dataset Failed!!!')
         return 0
 
-    # Create Type for Strings of Length MaxStrLength
-    strtype = h5py.h5t.TypeID.copy(h5py.h5t.C_S1)
-
-    strtype.set_size( MaxStrLength )
-    # h5py.h5t.TypeID.set_size( strtype, MaxStrLength )
-
-    # Amount of Names to be Read from HDF5 File
-    dim = int( dataset_id.get_storage_size() ) / strtype.get_size()
-
-    print('\nRead ' + str( dim ) + ' Atomic Names from HDF5 File')
-
-    # Vector - tc (Using Numpy Arrays)
-    tc = np.array( [s.mystring] * dim )
-
+    # Read Data into Numpy Array
     try:
 
-        # Read Data into Numpy Array
-        status = dataset_id.read(h5py.h5s.ALL, h5py.h5s.ALL, tc, strtype,
-                                 h5py.h5p.DEFAULT)
-        # status = h5py.h5d.DatasetID.read(
+        tc = np.array(dset)
 
     except Exception:
 
@@ -605,13 +585,10 @@ def read_atomic_names_hdf5(file_id, data):
     # For Loop - Add Strings to Data
     count=0
     for i in range(0, len(tc)):
-        t = ''.join(tc[i])
-        data.append(t)
-        if len(t)>0:
+        data.append(tc[i])
+        if len(tc[i])>0:
           count=count+1
 
-    # Close Dataset ID
-    # dataset_id._close()
 
     return count
 
@@ -700,7 +677,7 @@ def write_map3d_header(tfile, filename, origin, lattice):
 
         try:
                 
-            file_id = h5py.h5f.open(bytes(filename),
+            file_id = h5py.h5f.open(bytes(filename, encoding='utf-8'),
                           h5py.h5f.ACC_RDONLY, h5py.h5p.DEFAULT)
         
         except Exception:
@@ -766,7 +743,6 @@ def writeAtomsXYZ(xyz_filename, filename, origin, lattice):
     with open(xyz_filename, 'w') as tfile:
 
         ''' Variables '''
-        # file_id = None
 
         # Check If Statement Executes Sucessfully
         try:
@@ -786,53 +762,51 @@ def writeAtomsXYZ(xyz_filename, filename, origin, lattice):
             print('\nInput File ' + filename + ' not in HDF5 Format. Stop')
             return
 
-        # If File Exists, Get File's ID
+        # If File Exists, Get File
         else:
 
             try:
                 
-                file_id = h5py.h5f.open(bytes(filename),
-                              h5py.h5f.ACC_RDONLY, h5py.h5p.DEFAULT)
+                hdfile = h5py.File(bytes(filename, encoding='utf-8'), 'r')
 
             except Exception:
 
                 print('\nh5py.h5f.open(...) Failed For ' + filename)
                 return
 
-        # Make a Set with Chemical Elements (Unordered - Python)
-        atomicsp = set()
-        atomicsp.add('H')
-        atomicsp.add('Li')
-        atomicsp.add('Be')
-        atomicsp.add('B')
-        atomicsp.add('C')
-        atomicsp.add('N')
-        atomicsp.add('O')
-        atomicsp.add('F')
-        atomicsp.add('Na')
-        atomicsp.add('Mg')
-        atomicsp.add('Al')
-        atomicsp.add('Si')
-        atomicsp.add('P')
-        atomicsp.add('S')
-        atomicsp.add('Cl')
-        atomicsp.add('K')
-        atomicsp.add('Ca')
-        atomicsp.add('Ni')
-        atomicsp.add('Cu')
-        atomicsp.add('Ga')
-        atomicsp.add('Ge')
-        atomicsp.add('Au')
-        atomicsp.add('Zn')
+        # Make a Set with Chemical Elements
+        atomicsp = []
+        atomicsp.append('H')
+        atomicsp.append('Li')
+        atomicsp.append('Be')
+        atomicsp.append('B')
+        atomicsp.append('C')
+        atomicsp.append('N')
+        atomicsp.append('O')
+        atomicsp.append('F')
+        atomicsp.append('Na')
+        atomicsp.append('Mg')
+        atomicsp.append('Al')
+        atomicsp.append('Si')
+        atomicsp.append('P')
+        atomicsp.append('S')
+        atomicsp.append('Cl')
+        atomicsp.append('K')
+        atomicsp.append('Ca')
+        atomicsp.append('Ni')
+        atomicsp.append('Cu')
+        atomicsp.append('Ga')
+        atomicsp.append('Ge')
+        atomicsp.append('Au')
+        atomicsp.append('Zn')
 
-        # Vector - at_names (Using Lists)
         at_names = []
 
         # Amount of Atomic Names Inside HDF5 File
-        natoms = read_atomic_names_hdf5(file_id, at_names)
+        natoms = read_atomic_names_hdf5(hdfile, at_names)
 
         # Get Data of Ionic Positions
-        coord = read_ionic_positions_hdf5(file_id)
+        coord = read_ionic_positions_hdf5(hdfile)
 
         # Number of Atoms
         tfile.write(str(natoms) + '\n')
@@ -846,29 +820,24 @@ def writeAtomsXYZ(xyz_filename, filename, origin, lattice):
         # Iterate Through at_names List
         i=-1
         for name in at_names:
-
             i=i+1
 
-            # Slicing List (substr (C++) - Slicing (Python))
-            if len(name)==0:
+            aname = name[0].decode()
+
+            # keep only actual atoms and drop buffer values
+            if len(aname)==0:
               continue
-            sp = name[0 : 2]
 
-            # Iterator (in - Boolean)
-            # p = sp in atomicsp   ->   (NOT NEEDED)
+            sp = aname[0 : 2]
 
-            # If Sliced Specie is the Same as Last Specie, Get First Letter
-            # of New Specie
-            #if( sp == list(atomicsp)[len(atomicsp) - 1] ):
             if sp not in atomicsp:
 
-                sp = name[0 : 1]
-                
-            #
+                sp = aname[0 : 1]
+
             if sp in atomicsp:
-              x = coord[3 * i] 
-              y = coord[3 * i + 1] 
-              z = coord[3 * i + 2] 
+              x = coord[i][0]
+              y = coord[i][1]
+              z = coord[i][2]
               #move atoms into cell using periodicity
               if x<origin[0]:
                 x = x + lattice[0]
