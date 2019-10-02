@@ -627,114 +627,6 @@ def writeBOVheader(bov_filename, data_filename, origin, ll, mesh):
                     str( (ll[1]) * bohr2ang ) + " " +
                     str( (ll[2]) * bohr2ang ) )
 
-def map3d_header(tfile, origin, ll):
-
-    print('\nWrite Down map3d Header...')
-
-    tfile.write(' 600 600              // pixels')
-
-    tfile.write('\n 0  -100    40        // viewPoint')
-
-    tfile.write('\n' + str(origin[0] + 0.5 * ll[0]) + '\t'
-                     + str(origin[1] + 0.5 * ll[1]) + '\t'
-                     + str(origin[2] + 0.5 * ll[2]) + ' // screenCenter')
-
-    tfile.write('\n 1     0     0        // horizontal direction')
-
-    tfile.write('\n 100 -100 100 0.2 0.5 // lightSource,ambient,diff')
-
-    tfile.write('\n 8.000000 8.000000    // hScreenSize, vScreenSize')
-
-    tfile.write('\n LightBlue 0.6 1.0    // background color')
-
-    tfile.write('\n 0.3  White           // bondradius, bond color')
-
-# Void Function
-def write_map3d_header(tfile, filename, origin, lattice):
-
-    ''' Variables '''
-    filename = ''.join(filename)
-
-    # Check If File is in HDF5 Format
-    try:
-
-        # If h5py.is_hdf Method Fails, Stop
-        ishdf = h5py.is_hdf5(filename)
-
-    except Exception:
-
-        print('\nh5py.is_hdf5 unsucessful')
-        return
-
-    # If File isn't an HDF5 File, Stop
-    if( not(ishdf) ):
-
-        print('\nInput File ' + filename + ' not in HDF5 Format. Stop.')
-        return
-
-    # If File is an HDF5 File, Proceed
-    else:
-
-        try:
-                
-            file_id = h5py.h5f.open(bytes(filename, encoding='utf-8'),
-                          h5py.h5f.ACC_RDONLY, h5py.h5p.DEFAULT)
-        
-        except Exception:
-
-            print('\nh5py.h5f.open(...) Failed For ' + filename)
-            return
-
-    # Vector - at_numbers (Lists)
-    # at_numbers = np.array(...)
-
-    # If Datasets, Atomic_numbers or Ionic_positions, are not Present
-    try: 
-
-        # Call read_atomic_numbers_hdf5
-        n, at_numbers = read_atomic_numbers_hdf5(file_id)
-        n = int(n)
-
-        # Read Ionic Positions
-        coord = read_ionic_positions_hdf5(file_id)
-
-    except Exception:
-
-        # if( n <= 0 or np.any(at_numbers) <= 0 or np.any(coord) == None ):
-        print('\nread_atomic_numbers_hdf5() or read_ionic_positions_hdf5() '
-              + '--- Read Failed')
-        return -1
-
-    # Call map3d_header
-    map3d_header(tfile, origin, lattice)
-
-    tfile.write('\n' + str(n) + '  // natoms')
-
-    for i in range(0, n):
-
-        ''' Variable '''
-        at = int(at_numbers[i])
-            
-        tfile.write( '\n' + str( coord[3 * i] ) + '\t'
-                         + str( coord[3 * i + 1] ) + '\t'
-                         + str( coord[3 * i + 2] ) + '\t'
-                         + str( ball_radii[at] ) + '\t'
-                         + str( cov_radii[at] ) + '\t'
-                         + str( colors[at] ) )
-
-    tfile.write('\n1  // nfunctions')
-
-    tfile.write('\n' + str(origin[0]) + '\t'
-                     + str(origin[1]) + '\t'
-                     + str(origin[2]) + '  // origin')
-
-    tfile.write('\n' + str(lattice[0]) + '\t'
-                     + str(lattice[1]) + '\t'
-                     + str(lattice[2]) + '  // lattice')
-
-    tfile.write('\nSteelBlue         // color')
-
-    tfile.write('\n0.0004  0.        // flevel,thresh')
 
 # Writes Text on .xyz File
 def writeAtomsXYZ(xyz_filename, filename, origin, lattice):
@@ -866,7 +758,7 @@ def writeAtomsXYZ(xyz_filename, filename, origin, lattice):
 
 # USAGE:
 # ssh -l user cab.llnl.gov (If Using Cab System)
-# python read_hdf5.py [ -bov | -map3d ] file.hdf5 datasetName
+# python read_hdf5.py [ -bov ] file.hdf5 datasetName
 
 def main():
 
@@ -890,16 +782,14 @@ def main():
     # Attributes (Numpy Array)
     attributes = np.arange(0.0, dtype = h5py.h5t.NATIVE_DOUBLE)
 
-    tmap3d = False
     tbov = False
 
     if( len(sys.argv) > 1 ):
-        tmap3d = not( (  sys.argv[1] > '-map3d' ) - ( sys.argv[1] < '-map3d' ) )
         tbov = not( ( sys.argv[1] > '-bov' ) - ( sys.argv[1] < '-bov' ) )
 
     index = 1
 
-    if( tmap3d or tbov ):
+    if( tbov ):
         index = 2
 
     h5filename = copy.deepcopy( ''.join( sys.argv[index] ) )
@@ -942,38 +832,23 @@ def main():
     incy = dim[2]
 
     # Header, Including Atoms List
-    if( tmap3d ):
-        
-        set_maps()
-        header_filename = base_filename
-        header_filename = header_filename + '_header.map3d'
 
-        with open(header_filename, 'w') as tfile:
+    xyz_filename = base_filename
+    xyz_filename = xyz_filename + '_atoms.xyz'
 
-            mapNum = write_map3d_header(tfile, h5filename, origin, lattice)
+    xyzNum = writeAtomsXYZ(xyz_filename, h5filename, origin, lattice)
 
-        if( mapNum == -1 ):
-            print('\nAtomic_numbers or Ionic_positions Datasets --- ' +
-                  'Read Failed. map3d_header File not Completed')
+    if( xyzNum == -1 ):
+        print('\nAtomic_names or Ionic_positions Datasets --- ' +
+               'Read Failed. _atoms.xyz File not Completed')
 
-    else:
+    if( tbov ):
 
-        xyz_filename = base_filename
-        xyz_filename = xyz_filename + '_atoms.xyz'
-
-        xyzNum = writeAtomsXYZ(xyz_filename, h5filename, origin, lattice)
-
-        if( xyzNum == -1 ):
-            print('\nAtomic_names or Ionic_positions Datasets --- ' +
-                  'Read Failed. _atoms.xyz File not Completed')
-
-        if( tbov ):
-
-            bov_filename = base_filename
-            bov_filename = bov_filename + '.bov'
-            print('\nbov_filename = ' + bov_filename)
-            writeBOVheader(bov_filename, output_data_filename,
-                                          origin, lattice, dim)
+        bov_filename = base_filename
+        bov_filename = bov_filename + '.bov'
+        print('\nbov_filename = ' + bov_filename)
+        writeBOVheader(bov_filename, output_data_filename,
+                                         origin, lattice, dim)
 
     ''' Function '''
     if( tbov ):
@@ -1016,15 +891,13 @@ def main():
 
         with open(output_data_filename, 'w') as tfile:
 
-            if( not( tmap3d ) ):
-
-                tfile.write('\n' + str( origin[0] ) + '\t'
-                                 + str( origin[1] ) + '\t'
-                                 + str( origin[2] ) + '\t'
-                                 + str( origin[0] + lattice[0] ) + '\t'
-                                 + str( origin[1] + lattice[1] ) + '\t'
-                                 + str( origin[2] + lattice[2] )
-                                 + '  // cell corners')
+            tfile.write('\n' + str( origin[0] ) + '\t'
+                             + str( origin[1] ) + '\t'
+                             + str( origin[2] ) + '\t'
+                             + str( origin[0] + lattice[0] ) + '\t'
+                             + str( origin[1] + lattice[1] ) + '\t'
+                             + str( origin[2] + lattice[2] )
+                             + '  // cell corners')
 
             tfile.write(str(dim[0]) + '\t' + str(dim[1]) + '\t'
                         + str(dim[2]) + ' // mesh')
