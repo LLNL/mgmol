@@ -12,6 +12,10 @@
 #include "MPIdata.h"
 #include "Timer.h"
 
+#ifdef HAVE_MAGMA
+#include <magma_v2.h>
+#endif
+
 #include <cassert>
 #include <iostream>
 
@@ -539,6 +543,77 @@ void LinearAlgebraUtils<MemorySpace::Host>::MPgemm<float, float, float>(
     mpgemm_tm.stop();
 }
 
+// MemorySpace::Device
+#ifdef HAVE_MAGMA
+template <>
+template <typename T1, typename T2, typename T3>
+void LinearAlgebraUtils<MemorySpace::Device>::MPgemm(const char transa,
+    const char transb, const int m, const int n, const int k,
+    const double alpha, const T1* const a, const int lda, const T2* const b,
+    const int ldb, const double beta, T3* const c, const int ldc)
+{
+    std::vector<T1> a_host(m * k);
+    std::vector<T2> b_host(k * n);
+    std::vector<T3> c_host(m * n);
+
+    // Move the data to the host
+    MemorySpace::copy_to_host(a, a_host);
+    MemorySpace::copy_to_host(b, b_host);
+    MemorySpace::copy_to_host(c, c_host);
+
+    LinearAlgebraUtils<MemorySpace::Host>::MPgemm(transa, transb, m, n, k,
+        alpha, a_host.data(), lda, b_host.data(), ldb, beta, c_host.data(),
+        ldc);
+
+    // Move the data to the device
+    MemorySpace::copy_to_dev(c_host, c);
+}
+
+// input/output in double, computation in double
+template <>
+template <>
+void LinearAlgebraUtils<MemorySpace::Device>::MPgemm(const char transa,
+    const char transb, const int m, const int n, const int k,
+    const double alpha, const double* const a, const int lda,
+    const double* const b, const int ldb, const double beta, double* const c,
+    const int ldc)
+{
+    // TODO this should be moved to a singleton but we should call the
+    // destructor by end before calling magma finalize
+    magma_device_t device;
+    magma_queue_t queue;
+    magma_getdevice(&device);
+    magma_queue_create(device, &queue);
+
+    dgemm_tm.start();
+    // Transform char to magma_trans_t
+    auto convert_to_magma_trans = [](const char trans) {
+        if ((trans == 'N') || trans == 'n')
+            return MagmaNoTrans;
+        else if ((trans == 'T') || trans == 't')
+            return MagmaTrans;
+        else if ((trans == 'C') || trans == 'c')
+            return MagmaConjTrans;
+        else
+        {
+            std::cerr << "Unknown tranpose operation: " << trans << std::endl;
+            return MagmaNoTrans;
+        }
+    };
+
+    magma_trans_t magma_transa = convert_to_magma_trans(transa);
+    magma_trans_t magma_transb = convert_to_magma_trans(transb);
+
+    // Perform dgemm
+    magmablas_dgemm(magma_transa, magma_transb, m, n, k, alpha, a, lda, b, ldb,
+        beta, c, ldc, queue);
+    dgemm_tm.stop();
+
+    // TODO this should be in the singleton
+    magma_queue_destroy(queue);
+}
+#endif
+
 ///////////////////////////////
 //          MPgemmNN         //
 ///////////////////////////////
@@ -807,3 +882,52 @@ template void MPgemmTN<double, double, double>(const int m, const int n,
     const int k, const double alpha, const double* const a, const int lda,
     const double* const b, const int ldb, const double beta, double* const c,
     const int ldc);
+
+#ifdef HAVE_MAGMA
+template void
+LinearAlgebraUtils<MemorySpace::Device>::MPgemm<double, double, double>(
+    const char transa, const char transb, const int m, const int n, const int k,
+    const double alpha, const double* const a, const int lda,
+    const double* const b, const int ldb, const double beta, double* const c,
+    const int ldc);
+template void
+LinearAlgebraUtils<MemorySpace::Device>::MPgemm<float, float, float>(
+    const char transa, const char transb, const int m, const int n, const int k,
+    const double alpha, const float* const a, const int lda,
+    const float* const b, const int ldb, const double beta, float* const c,
+    const int ldc);
+template void
+LinearAlgebraUtils<MemorySpace::Device>::MPgemm<double, float, double>(
+    const char transa, const char transb, const int m, const int n, const int k,
+    const double alpha, const double* const a, const int lda,
+    const float* const b, const int ldb, const double beta, double* const c,
+    const int ldc);
+template void
+LinearAlgebraUtils<MemorySpace::Device>::MPgemm<float, double, float>(
+    const char transa, const char transb, const int m, const int n, const int k,
+    const double alpha, const float* const a, const int lda,
+    const double* const b, const int ldb, const double beta, float* const c,
+    const int ldc);
+template void
+LinearAlgebraUtils<MemorySpace::Device>::MPgemm<double, double, float>(
+    const char transa, const char transb, const int m, const int n, const int k,
+    const double alpha, const double* const a, const int lda,
+    const double* const b, const int ldb, const double beta, float* const c,
+    const int ldc);
+template void
+LinearAlgebraUtils<MemorySpace::Device>::MPgemm<float, float, double>(
+    const char transa, const char transb, const int m, const int n, const int k,
+    const double alpha, const float* const a, const int lda,
+    const float* const b, const int ldb, const double beta, double* const c,
+    const int ldc);
+template void
+LinearAlgebraUtils<MemorySpace::Device>::MPgemmNN<float, double, float>(
+    const int m, const int n, const int k, const double alpha,
+    const float* const a, const int lda, const double* const b, const int ldb,
+    const double beta, float* const c, const int ldc);
+template void
+LinearAlgebraUtils<MemorySpace::Device>::MPgemmNN<double, double, double>(
+    const int m, const int n, const int k, const double alpha,
+    const double* const a, const int lda, const double* const b, const int ldb,
+    const double beta, double* const c, const int ldc);
+#endif
