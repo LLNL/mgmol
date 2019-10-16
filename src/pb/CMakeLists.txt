@@ -28,4 +28,7 @@ set(SOURCES GridFuncVector.cc
 add_library(mgmol_pb STATIC ${SOURCES})
 target_include_directories (mgmol_pb PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(mgmol_pb PUBLIC MPI::MPI_CXX)
+if(${MGMOL_WITH_MAGMA})
+  target_link_libraries(mgmol_pb PRIVATE PkgConfig::MAGMA)
+endif()
 install(TARGETS mgmol_pb DESTINATION lib)

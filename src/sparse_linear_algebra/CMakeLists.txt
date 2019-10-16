@@ -15,5 +15,8 @@ add_library(mgmol_sparse_linear_algebra STATIC ${SOURCES})
 
 target_include_directories(mgmol_sparse_linear_algebra PUBLIC ${HDF5_INCLUDE_DIRS})
 target_link_libraries(mgmol_sparse_linear_algebra PUBLIC MPI::MPI_CXX)
+if(${MGMOL_WITH_MAGMA})
+  target_link_libraries(mgmol_sparse_linear_algebra PRIVATE PkgConfig::MAGMA)
+endif()
 
 install(TARGETS mgmol_sparse_linear_algebra DESTINATION lib)

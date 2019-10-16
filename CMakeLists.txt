@@ -172,7 +172,7 @@ if(${MGMOL_WITH_MAGMA})
     message(STATUS "Build with MAGMA")
     add_definitions(-DHAVE_MAGMA)
   endif(${MAGMA_FOUND})
-endif(${MGMOL_WITH_MAGMA} OR DEFINED MAGMA_ROOT)
+endif(${MGMOL_WITH_MAGMA})
 
 
 # tricubic (optional)
