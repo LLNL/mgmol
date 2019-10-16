@@ -98,7 +98,7 @@ int main(int argc, char** argv)
     onpe0 = (mype == 0);
 #endif
 
-#ifdef USE_MAGMA
+#ifdef HAVE_MAGMA
     magma_int_t magmalog;
 
     magmalog = magma_init();
@@ -681,7 +681,7 @@ int main(int argc, char** argv)
     Control::deleteInstance();
     MGmol_MPI::deleteInstance();
 
-#ifdef USE_MAGMA
+#ifdef HAVE_MAGMA
     // Delete the data in the singleton before finalizing magma
     auto& magma_singleton = MagmaSinleton::get_magma_singleton();
     magma_singleton.free();

@@ -11,7 +11,7 @@
 #ifndef MGMOL_MEMORY_SPACE_H
 #define MGMOL_MEMORY_SPACE_H
 
-#ifdef USE_MAGMA
+#ifdef HAVE_MAGMA
 #include <magma_v2.h>
 #endif
 
@@ -28,7 +28,7 @@ struct Device
 {
 };
 
-#ifdef USE_MAGMA
+#ifdef HAVE_MAGMA
 template <typename T>
 void copy_to_dev(std::vector<T> const& vec, T* vec_dev)
 {
@@ -56,7 +56,7 @@ void copy_to_dev(std::vector<T> const& vec, std::shared_ptr<T[]>& vec_dev)
     copy_to_dev(vec, vec_dev.get());
 }
 
-#ifdef USE_MAGMA
+#ifdef HAVE_MAGMA
 template <typename T>
 void copy_to_host(T const* const vec_dev, std::vector<T>& vec)
 {
