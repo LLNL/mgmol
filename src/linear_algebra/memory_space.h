@@ -32,17 +32,9 @@ struct Device
 template <typename T>
 void copy_to_dev(std::vector<T> const& vec, T* vec_dev)
 {
-    // TODO this should be moved to a singleton but we should call the
-    // destructor before calling magma finalize
-    magma_device_t device;
-    magma_queue_t queue;
-    magma_getdevice(&device);
-    magma_queue_create(device, &queue);
-
-    magma_setvector(vec.size(), sizeof(T), vec.data(), 1, vec_dev, 1, queue);
-
-    // TODO this should be in the singleton
-    magma_queue_destroy(queue);
+    auto& magma_singleton = MagmaSinleton::get_magma_singleton();
+    magma_setvector(vec.size(), sizeof(T), vec.data(), 1, vec_dev, 1,
+        magma_singleton.queue);
 }
 #else
 template <typename T>
@@ -68,17 +60,9 @@ void copy_to_dev(std::vector<T> const& vec, std::shared_ptr<T[]>& vec_dev)
 template <typename T>
 void copy_to_host(T const* const vec_dev, std::vector<T>& vec)
 {
-    // TODO this should be moved to a singleton but we should call the
-    // destructor before calling magma finalize
-    magma_device_t device;
-    magma_queue_t queue;
-    magma_getdevice(&device);
-    magma_queue_create(device, &queue);
-
-    magma_getvector(vec.size(), sizeof(T), vec_dev, 1, vec.data(), 1, queue);
-
-    // TODO this should be in the singleton
-    magma_queue_destroy(queue);
+    auto& magma_singleton = MagmaSinleton::get_magma_singleton();
+    magma_getvector(vec.size(), sizeof(T), vec_dev, 1, vec.data(), 1,
+        magma_singleton.queue);
 }
 #else
 template <typename T>

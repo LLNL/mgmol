@@ -138,6 +138,7 @@ set(SOURCES
  Power.cc
  PowerGen.cc
  SuperSampling.cc
+ magma_singleton.cc
 )
 
 add_library(mgmol_src ${SOURCES})

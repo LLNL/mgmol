@@ -53,6 +53,7 @@ using namespace std;
 #include "Mesh.h"
 #include "PackedCommunicationBuffer.h"
 #include "ReplicatedWorkSpace.h"
+#include "magma_singleton.h"
 #include "tools.h"
 
 #include <fenv.h>
@@ -681,6 +682,10 @@ int main(int argc, char** argv)
     MGmol_MPI::deleteInstance();
 
 #ifdef USE_MAGMA
+    // Delete the data in the singleton before finalizing magma
+    auto& magma_singleton = MagmaSinleton::get_magma_singleton();
+    magma_singleton.free();
+
     magmalog = magma_finalize();
 
     if (magmalog == MAGMA_SUCCESS)
