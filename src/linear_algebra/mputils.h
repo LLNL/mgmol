@@ -14,17 +14,7 @@
 #include "MGmol_blas1.h"
 #include "blas2_c.h"
 #include "blas3_c.h"
-
-namespace MemorySpace
-{
-struct Host
-{
-};
-
-struct Device
-{
-};
-}
+#include "memory_space.h"
 
 /* scal */
 /* scalar times vector for use in templates.
