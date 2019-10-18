@@ -683,7 +683,7 @@ int main(int argc, char** argv)
 
 #ifdef HAVE_MAGMA
     // Delete the data in the singleton before finalizing magma
-    auto& magma_singleton = MagmaSinleton::get_magma_singleton();
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
     magma_singleton.free();
 
     magmalog = magma_finalize();

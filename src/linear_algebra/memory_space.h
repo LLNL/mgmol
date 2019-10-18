@@ -15,6 +15,8 @@
 #include <magma_v2.h>
 #endif
 
+#include <magma_singleton.h>
+
 #include <memory>
 #include <vector>
 
@@ -32,7 +34,7 @@ struct Device
 template <typename T>
 void copy_to_dev(std::vector<T> const& vec, T* vec_dev)
 {
-    auto& magma_singleton = MagmaSinleton::get_magma_singleton();
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
     magma_setvector(vec.size(), sizeof(T), vec.data(), 1, vec_dev, 1,
         magma_singleton.queue);
 }
@@ -60,7 +62,7 @@ void copy_to_dev(std::vector<T> const& vec, std::shared_ptr<T[]>& vec_dev)
 template <typename T>
 void copy_to_host(T const* const vec_dev, std::vector<T>& vec)
 {
-    auto& magma_singleton = MagmaSinleton::get_magma_singleton();
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
     magma_getvector(vec.size(), sizeof(T), vec_dev, 1, vec.data(), 1,
         magma_singleton.queue);
 }
