@@ -19,13 +19,13 @@ flag=0
 nst=0
 conv_energy=10000.
 for line in lines:
-  if string.count(line, 'Number of states'):
-    words=string.split(line)
+  if line.count( 'Number of states'):
+    words=line.split()
     nst=eval(words[4])
-  num_matches1 = string.count(line, 'ENERGY')
-  num_matches2 = string.count(line, '%%')
+  num_matches1 = line.count('ENERGY')
+  num_matches2 = line.count('%%')
   if num_matches1 & num_matches2:
-    words=string.split(line)
+    words=line.split()
     energy=eval(words[5][:-1])
     energies.append(energy)
     conv_energy=energy
