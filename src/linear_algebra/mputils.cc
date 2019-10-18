@@ -11,6 +11,7 @@
 #include "mputils.h"
 #include "MPIdata.h"
 #include "Timer.h"
+#include "magma_singleton.h"
 
 #ifdef HAVE_MAGMA
 #include <magma_v2.h>
@@ -578,13 +579,6 @@ void LinearAlgebraUtils<MemorySpace::Device>::MPgemm(const char transa,
     const double* const b, const int ldb, const double beta, double* const c,
     const int ldc)
 {
-    // TODO this should be moved to a singleton but we should call the
-    // destructor by end before calling magma finalize
-    magma_device_t device;
-    magma_queue_t queue;
-    magma_getdevice(&device);
-    magma_queue_create(device, &queue);
-
     dgemm_tm.start();
     // Transform char to magma_trans_t
     auto convert_to_magma_trans = [](const char trans) {
@@ -605,12 +599,10 @@ void LinearAlgebraUtils<MemorySpace::Device>::MPgemm(const char transa,
     magma_trans_t magma_transb = convert_to_magma_trans(transb);
 
     // Perform dgemm
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
     magmablas_dgemm(magma_transa, magma_transb, m, n, k, alpha, a, lda, b, ldb,
-        beta, c, ldc, queue);
+        beta, c, ldc, magma_singleton.queue);
     dgemm_tm.stop();
-
-    // TODO this should be in the singleton
-    magma_queue_destroy(queue);
 }
 #endif
 
