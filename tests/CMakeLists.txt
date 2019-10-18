@@ -13,6 +13,7 @@ add_executable(testBlacsContext
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 add_executable(testDistVector
                ${CMAKE_SOURCE_DIR}/tests/testDistVector.cc
+               ${CMAKE_SOURCE_DIR}/src/magma_singleton.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/DistMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/BlacsContext.cc
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
@@ -22,6 +23,7 @@ add_executable(testDistVector
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 add_executable(testReplicated2DistMatrix
                ${CMAKE_SOURCE_DIR}/tests/testReplicated2DistMatrix.cc
+               ${CMAKE_SOURCE_DIR}/src/magma_singleton.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/DistMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/BlacsContext.cc
                ${CMAKE_SOURCE_DIR}/src/local_matrices/LocalMatrices.cc
@@ -33,6 +35,7 @@ add_executable(testReplicated2DistMatrix
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 add_executable(testDistMatrix
                ${CMAKE_SOURCE_DIR}/tests/testDistMatrix.cc
+               ${CMAKE_SOURCE_DIR}/src/magma_singleton.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/DistMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/BlacsContext.cc
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
@@ -42,6 +45,7 @@ add_executable(testDistMatrix
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 add_executable(testConditionDistMatrix
                ${CMAKE_SOURCE_DIR}/tests/testConditionDistMatrix.cc
+               ${CMAKE_SOURCE_DIR}/src/magma_singleton.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/DistMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/BlacsContext.cc
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
@@ -52,6 +56,7 @@ add_executable(testConditionDistMatrix
 add_executable(testConditionDistMatrixPower
                ${CMAKE_SOURCE_DIR}/tests/testConditionDistMatrixPower.cc
                ${CMAKE_SOURCE_DIR}/src/Power.cc
+               ${CMAKE_SOURCE_DIR}/src/magma_singleton.cc
                ${CMAKE_SOURCE_DIR}/src/local_matrices/LocalMatrices.cc
                ${CMAKE_SOURCE_DIR}/src/local_matrices/SquareLocalMatrices.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/DistMatrix.cc
@@ -65,6 +70,7 @@ add_executable(testConditionDistMatrixPower
 add_executable(testPower
                ${CMAKE_SOURCE_DIR}/tests/testPower.cc
                ${CMAKE_SOURCE_DIR}/src/Power.cc
+               ${CMAKE_SOURCE_DIR}/src/magma_singleton.cc
                ${CMAKE_SOURCE_DIR}/src/local_matrices/LocalMatrices.cc
                ${CMAKE_SOURCE_DIR}/src/local_matrices/SquareLocalMatrices.cc
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
@@ -78,6 +84,7 @@ add_executable(testPower
 add_executable(testPowerDistMatrix
                ${CMAKE_SOURCE_DIR}/tests/testPowerDistMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/Power.cc
+               ${CMAKE_SOURCE_DIR}/src/magma_singleton.cc
                ${CMAKE_SOURCE_DIR}/src/local_matrices/LocalMatrices.cc
                ${CMAKE_SOURCE_DIR}/src/local_matrices/SquareLocalMatrices.cc
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
