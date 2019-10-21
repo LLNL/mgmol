@@ -34,5 +34,5 @@ cmake -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} \
       ..
 
 # call make install
-make -j 
+make
 make install
