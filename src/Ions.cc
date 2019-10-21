@@ -8,17 +8,9 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#include <cmath>
-#include <iostream>
-#include <iterator>
-#include <list>
-#include <map>
-using namespace std;
-
-//#include <H5LT.h>
+#include "Ions.h"
 #include "Control.h"
 #include "HDFrestart.h"
-#include "Ions.h"
 #include "MGmol_blas1.h"
 #include "MPIdata.h"
 #include "Mesh.h"
@@ -32,7 +24,11 @@ using namespace std;
 #include <mpi.h>
 #endif
 
-#define max(a, b) (((a) < (b)) ? (b) : (a))
+#include <cmath>
+#include <iostream>
+#include <iterator>
+#include <list>
+#include <map>
 
 Timer ions_setupInteractingIons_tm("ions_setupInteractingIons");
 Timer ions_setup_tm("ions::setup");
@@ -40,13 +36,19 @@ Timer ions_setup_tm("ions::setup");
 const double ang2bohr = 1.8897269;
 // const double rmax = 8.0;
 
-map<string, short> Ions::map_species_;
+std::map<std::string, short> Ions::map_species_ = { { "H", 1 }, { "Li", 3 },
+    { "Be", 4 }, { "B", 5 }, { "C", 6 }, { "N", 7 }, { "O", 8 }, { "F", 9 },
+    { "Na", 11 }, { "Mg", 12 }, { "Al", 13 }, { "Si", 14 }, { "P", 15 },
+    { "S", 16 }, { "Cl", 17 }, { "K", 19 }, { "Ca", 20 }, { "Cr", 24 },
+    { "Mn", 25 }, { "Fe", 26 }, { "Co", 27 }, { "Ni", 28 }, { "Cu", 29 },
+    { "Zn", 30 }, { "Ga", 31 }, { "Ge", 32 }, { "La", 57 }, { "Au", 79 } };
+
 int Ions::num_ions_          = -1;
 short Ions::max_num_proj_    = -1;
 double Ions::max_Vl_radius_  = -1.;
 double Ions::max_Vnl_radius_ = -1.;
 
-Ions::Ions(const double lat[3], const vector<Species>& sp) : species_(sp)
+Ions::Ions(const double lat[3], const std::vector<Species>& sp) : species_(sp)
 {
     for (short i = 0; i < 3; i++)
     {
@@ -54,41 +56,13 @@ Ions::Ions(const double lat[3], const vector<Species>& sp) : species_(sp)
         if (lat[i] > 10000.)
         {
             (*MPIdata::serr) << "Ions constructor: lattice[" << i
-                             << "]=" << lat[i] << "!!!" << endl;
+                             << "]=" << lat[i] << "!!!" << std::endl;
             exit(2);
         }
         lattice_[i] = lat[i];
     }
     setup_            = false;
     has_locked_atoms_ = false;
-
-    map_species_["H"]  = 1;
-    map_species_["Li"] = 3;
-    map_species_["Be"] = 4;
-    map_species_["B"]  = 5;
-    map_species_["C"]  = 6;
-    map_species_["N"]  = 7;
-    map_species_["O"]  = 8;
-    map_species_["F"]  = 9;
-    map_species_["Na"] = 11;
-    map_species_["Mg"] = 12;
-    map_species_["Al"] = 13;
-    map_species_["Si"] = 14;
-    map_species_["P"]  = 15;
-    map_species_["S"]  = 16;
-    map_species_["Cl"] = 17;
-    map_species_["K"]  = 19;
-    map_species_["Ca"] = 20;
-    map_species_["Cr"] = 24;
-    map_species_["Mn"] = 25;
-    map_species_["Fe"] = 26;
-    map_species_["Co"] = 27;
-    map_species_["Ni"] = 28;
-    map_species_["Cu"] = 29;
-    map_species_["Zn"] = 30;
-    map_species_["Ga"] = 31;
-    map_species_["Ge"] = 32;
-    map_species_["Au"] = 79;
 
     Mesh* mymesh             = Mesh::instance();
     const pb::PEenv& myPEenv = mymesh->peenv();
@@ -113,7 +87,7 @@ Ions::Ions(const double lat[3], const vector<Species>& sp) : species_(sp)
 
 Ions::Ions(const Ions& ions, const double shift[3]) : species_(ions.species_)
 {
-    vector<Ion*>::const_iterator ion = ions.list_ions_.begin();
+    std::vector<Ion*>::const_iterator ion = ions.list_ions_.begin();
     while (ion != ions.list_ions_.end())
     {
         Ion* newion = new Ion(**ion);
@@ -125,8 +99,8 @@ Ions::Ions(const Ions& ions, const double shift[3]) : species_(ions.species_)
     for (short i = 0; i < 3; ++i)
         lattice_[i] = ions.lattice_[i];
 
-    vector<Ion*>::iterator iion       = list_ions_.begin();
-    vector<Ion*>::const_iterator cion = ions.list_ions_.begin();
+    std::vector<Ion*>::iterator iion       = list_ions_.begin();
+    std::vector<Ion*>::const_iterator cion = ions.list_ions_.begin();
     while (iion != list_ions_.end())
     {
         (*iion)->set_here((*cion)->here());
@@ -167,13 +141,13 @@ void Ions::computeMaxNumProjs()
 #ifdef DEBUG
     if (onpe0)
         (*MPIdata::sout) << " list_ions of size " << list_ions_.size()
-                         << " initialized" << endl;
+                         << " initialized" << std::endl;
 #endif
 
-    vector<Ion*>::iterator ion = list_ions_.begin();
+    std::vector<Ion*>::iterator ion = list_ions_.begin();
     while (ion != list_ions_.end())
     {
-        max_num_proj_ = max(max_num_proj_, (*ion)->nProjectors());
+        max_num_proj_ = std::max(max_num_proj_, (*ion)->nProjectors());
 
         ion++;
     }
@@ -186,7 +160,7 @@ void Ions::setup()
 {
     Control& ct = *(Control::instance());
 
-    if (ct.verbose > 0) printWithTimeStamp("Ions::setup()...", cout);
+    if (ct.verbose > 0) printWithTimeStamp("Ions::setup()...", std::cout);
 
     ions_setup_tm.start();
 
@@ -209,9 +183,9 @@ void Ions::setup()
     computeMaxNumProjs();
 
     if (ct.verbose > 0)
-        printWithTimeStamp("Ions::setup()... individual ions...", cout);
+        printWithTimeStamp("Ions::setup()... individual ions...", std::cout);
 
-    vector<Ion*>::iterator ion = list_ions_.begin();
+    std::vector<Ion*>::iterator ion = list_ions_.begin();
     while (ion != list_ions_.end())
     {
         (*ion)->setup();
@@ -233,7 +207,7 @@ void Ions::setup()
 
 Ions::~Ions()
 {
-    vector<Ion*>::iterator ion = list_ions_.begin();
+    std::vector<Ion*>::iterator ion = list_ions_.begin();
     while (ion != list_ions_.end())
     {
         delete *ion;
@@ -245,29 +219,25 @@ void Ions::setupListOverlappingIons()
 {
     Control& ct = *(Control::instance());
     if (ct.verbose > 0)
-        printWithTimeStamp("Ions::setupListOverlappingIons()...", cout);
+        printWithTimeStamp("Ions::setupListOverlappingIons()...", std::cout);
 
     overlappingNL_ions_.clear();
     overlappingVL_ions_.clear();
 
-    vector<Ion*>::const_iterator ion = list_ions_.begin();
-    while (ion != list_ions_.end())
+    for (auto ion : list_ions_)
     {
-        if ((*ion)->map_nl())
+        if (ion->map_nl())
         {
-            overlappingNL_ions_.push_back(*ion);
+            overlappingNL_ions_.push_back(ion);
         }
-        ion++;
     }
 
-    ion = list_ions_.begin();
-    while (ion != list_ions_.end())
+    for (auto ion : list_ions_)
     {
-        if ((*ion)->map_l())
+        if (ion->map_l())
         {
-            overlappingVL_ions_.push_back(*ion);
+            overlappingVL_ions_.push_back(ion);
         }
-        ion++;
     }
 }
 
@@ -275,37 +245,32 @@ void Ions::setupInteractingIons()
 {
     Control& ct = *(Control::instance());
     if (ct.verbose > 0)
-        printWithTimeStamp("Ions::setupInteractingIons()...", cout);
+        printWithTimeStamp("Ions::setupInteractingIons()...", std::cout);
 
     ions_setupInteractingIons_tm.start();
     const double rmax = ct.maxDistanceAtomicInfo();
     if (onpe0 && ct.verbose > 1)
     {
         (*MPIdata::sout) << "Ions::setupInteractingIons() with radius " << rmax
-                         << endl;
+                         << std::endl;
     }
 
     interacting_ions_.clear();
 
-    vector<Ion*>::const_iterator ion1 = list_ions_.begin();
-    while (ion1 != list_ions_.end())
+    for (auto ion1 : list_ions_)
     {
         // is ion1 interacting with any local ions?
-        vector<Ion*>::const_iterator ion2 = local_ions_.begin();
-        while (ion2 != local_ions_.end())
+        for (auto ion2 : local_ions_)
         {
-            const double r12 = (*ion1)->minimage(**ion2, lattice_, ct.bc);
+            const double r12 = ion1->minimage(*ion2, lattice_, ct.bc);
 
             if (r12 < rmax)
             {
                 // ion1 is interacting with local ions
-                interacting_ions_.push_back(*ion1);
+                interacting_ions_.push_back(ion1);
                 break;
             }
-
-            ion2++;
         }
-        ion1++;
     }
 
     //(*MPIdata::sout)<<"Number of interacting ions =
@@ -315,15 +280,15 @@ void Ions::setupInteractingIons()
 
 // setup arrays to be used in constraints enforcement
 // using references to local_ions and extra "dummy" data
-void Ions::setupContraintsData(vector<Ion*>& ions_for_constraints)
+void Ions::setupContraintsData(std::vector<Ion*>& ions_for_constraints)
 {
     Control& ct = *(Control::instance());
 
     if (ct.verbose > 0)
-        printWithTimeStamp("Ions::setupContraintsData()...", cout);
+        printWithTimeStamp("Ions::setupContraintsData()...", std::cout);
     const int nnloc = ions_for_constraints.size() - local_ions_.size();
-    // cout<<"interacting_ions_.size()="<<interacting_ions_.size()<<endl;
-    // cout<<"local_ions_.size()="<<local_ions_.size()<<endl;
+    // std::cout<<"interacting_ions_.size()="<<interacting_ions_.size()<<endl;
+    // std::cout<<"local_ions_.size()="<<local_ions_.size()<<endl;
     assert(nnloc >= 0);
 
     tau0_dummy_.resize(3 * nnloc);
@@ -340,9 +305,9 @@ void Ions::setupContraintsData(vector<Ion*>& ions_for_constraints)
     interacting_atmove_.clear();
     interacting_pmass_.clear();
 
-    int ia                           = 0; // count local ions
-    int ib                           = 0; // count non-local ions
-    vector<Ion*>::const_iterator ion = ions_for_constraints.begin();
+    int ia                                = 0; // count local ions
+    int ib                                = 0; // count non-local ions
+    std::vector<Ion*>::const_iterator ion = ions_for_constraints.begin();
     while (ion != ions_for_constraints.end())
     {
         if (isLocal((*ion)->name()))
@@ -404,10 +369,10 @@ void Ions::setupContraintsData(vector<Ion*>& ions_for_constraints)
 void Ions::iiforce(const short bc[3])
 {
     const int nlions = local_ions_.size();
-    vector<double> forces(3 * nlions, 0.);
+    std::vector<double> forces(3 * nlions, 0.);
 
-    vector<Ion*>::const_iterator ion1 = local_ions_.begin();
-    int ion1_index                    = 0;
+    std::vector<Ion*>::const_iterator ion1 = local_ions_.begin();
+    int ion1_index                         = 0;
     ;
     while (ion1 != local_ions_.end())
     {
@@ -416,7 +381,7 @@ void Ions::iiforce(const short bc[3])
 
         const double rc1 = (*ion1)->getRC();
 
-        vector<Ion*>::const_iterator ion2 = interacting_ions_.begin();
+        std::vector<Ion*>::const_iterator ion2 = interacting_ions_.begin();
         while (ion2 != interacting_ions_.end())
         {
             if (*ion1 != *ion2)
@@ -452,8 +417,8 @@ void Ions::iiforce(const short bc[3])
         ion1++;
     }
 
-    vector<Ion*>::iterator lion = local_ions_.begin();
-    int ion_index               = 0;
+    std::vector<Ion*>::iterator lion = local_ions_.begin();
+    int ion_index                    = 0;
     while (lion != local_ions_.end())
     {
         (*lion)->add_force(forces[3 * ion_index + 0], forces[3 * ion_index + 1],
@@ -467,11 +432,9 @@ double Ions::energySelf() const
 {
     double energy = 0.;
 
-    vector<Ion*>::const_iterator ion = local_ions_.begin();
-    while (ion != local_ions_.end())
+    for (auto ion : local_ions_)
     {
-        energy += (*ion)->eself();
-        ion++;
+        energy += ion->eself();
     }
     // multiply by 0.5, 2/sqrt(pi) and 1/sqrt(2) to get 1./sqrt(2*pi)
     energy *= 0.5 * M_2_SQRTPI * M_SQRT1_2;
@@ -494,12 +457,12 @@ double Ions::energyDiff(const short bc[3]) const
     assert(lattice_[1] > 0.);
     assert(lattice_[2] > 0.);
 
-    vector<Ion*>::const_iterator ion1 = interacting_ions_.begin();
+    std::vector<Ion*>::const_iterator ion1 = interacting_ions_.begin();
     while (ion1 != interacting_ions_.end())
     {
         if ((*ion1)->here())
         {
-            vector<Ion*>::const_iterator ion2 = interacting_ions_.begin();
+            std::vector<Ion*>::const_iterator ion2 = interacting_ions_.begin();
             ;
             while (ion2 != ion1)
             {
@@ -555,7 +518,7 @@ double Ions::energyDiff(const short bc[3]) const
 //#ifdef DEBUG
 //    int isum2 = 0;
 //    (*MPIdata::sout) << " offset=(" << offset[0] << "," << offset[1] << ","
-//                     << offset[2] << ")" << endl;
+//                     << offset[2] << ")" << std::endl;
 //#endif
 //
 //    for (short i = 0; i < 3; i++)
@@ -571,7 +534,7 @@ double Ions::energyDiff(const short bc[3]) const
 //
 //    // Loop over ions
 //    local_ions_.clear();
-//    vector<Ion*>::iterator ion = list_ions_.begin();
+//    std::vector<Ion*>::iterator ion = list_ions_.begin();
 //    while (ion != list_ions_.end())
 //    {
 //        double t[3];
@@ -589,7 +552,7 @@ double Ions::energyDiff(const short bc[3]) const
 //#if DEBUG
 //        (*MPIdata::sout) << " t=(" << t[0] << "," << t[1] << "," << t[2] <<
 //        ")"
-//                         << endl;
+//                         << std::endl;
 //#endif
 //
 //        if ((t[0] >= 0. && t[0] < (div_lattice[0]))
@@ -612,7 +575,7 @@ double Ions::energyDiff(const short bc[3]) const
 //        {
 //            (*MPIdata::sout) << " Ion " << (*ion)->name() << " centered on PE
 //            "
-//                             << myPEenv.mytask() << endl;
+//                             << myPEenv.mytask() << std::endl;
 //        }
 //#endif
 //        ion++;
@@ -624,18 +587,18 @@ double Ions::energyDiff(const short bc[3]) const
 //    mmpi.allreduce(&isum, 1, MPI_SUM);
 //    if (onpe0)
 //    {
-//        (*MPIdata::sout) << " num_ions=" << num_ions_ << endl;
-//        (*MPIdata::sout) << " isum=" << isum << endl;
+//        (*MPIdata::sout) << " num_ions=" << num_ions_ << std::endl;
+//        (*MPIdata::sout) << " isum=" << isum << std::endl;
 //    }
 //    if (isum != num_ions_)
 //    {
-//        (*MPIdata::sout) << " num_ions != isum !!!!" << endl;
+//        (*MPIdata::sout) << " num_ions != isum !!!!" << std::endl;
 //        ct.global_exit(2);
 //    }
 //
 //#ifdef DEBUG
 //    mmpi.allreduce(&isum2, 1, MPI_SUM);
-//    (*MPIdata::sout) << " Isum2=" << isum2 << endl;
+//    (*MPIdata::sout) << " Isum2=" << isum2 << std::endl;
 //    assert(isum2 == num_ions_);
 //#endif
 //
@@ -645,12 +608,12 @@ double Ions::energyDiff(const short bc[3]) const
 
 // Writes out the positions of all the ions
 // PE root does the writing
-void Ions::printPositionsGlobal(ostream& os, const int root) const
+void Ions::printPositionsGlobal(std::ostream& os, const int root) const
 {
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
-    map<int, string> ion_names;
-    vector<double> positions;
-    vector<int> islocked;
+    std::map<int, std::string> ion_names;
+    std::vector<double> positions;
+    std::vector<int> islocked;
 
     gatherNames(ion_names, root, mmpi.commSameSpin());
     gatherPositions(positions, root);
@@ -659,16 +622,16 @@ void Ions::printPositionsGlobal(ostream& os, const int root) const
     if (mmpi.mypeGlobal() == root)
     {
 
-        os << endl << " IONIC POSITIONS:" << endl;
+        os << std::endl << " IONIC POSITIONS:" << std::endl;
 
-        os << setw(8) << "Atoms" << setw(8) << "X" << setw(10) << "Y"
-           << setw(10) << "Z" << endl;
+        os << std::setw(8) << "Atoms" << std::setw(8) << "X" << std::setw(10)
+           << "Y" << std::setw(10) << "Z" << std::endl;
 
-        os.setf(ios::right, ios::adjustfield);
-        os.setf(ios::fixed, ios::floatfield);
+        os.setf(std::ios::right, std::ios::adjustfield);
+        os.setf(std::ios::fixed, std::ios::floatfield);
 
-        int ion_index                           = 0;
-        map<int, string>::const_iterator ion_id = ion_names.begin();
+        int ion_index                                     = 0;
+        std::map<int, std::string>::const_iterator ion_id = ion_names.begin();
         while (ion_id != ion_names.end())
         {
             const int pos = 3 * ion_index;
@@ -678,49 +641,51 @@ void Ions::printPositionsGlobal(ostream& os, const int root) const
                 os << "*";
             else
                 os << " ";
-            os << setw(4) << ion_id->second << setw(10) << setprecision(4)
-               << fixed << positions[pos] << setw(10) << positions[pos + 1]
-               << setw(10) << positions[pos + 2] << endl;
+            os << std::setw(4) << ion_id->second << std::setw(10)
+               << std::setprecision(4) << std::fixed << positions[pos]
+               << std::setw(10) << positions[pos + 1] << std::setw(10)
+               << positions[pos + 2] << std::endl;
 
             ion_index++;
             ion_id++;
         }
 
-        os << endl;
+        os << std::endl;
     }
 }
 
 // Writes out the postions of the local ions and their displacements from their
 // initial postions.
-void Ions::printPositionsLocal(ostream& os, const int root) const
+void Ions::printPositionsLocal(std::ostream& os, const int root) const
 {
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
     if (mmpi.mypeGlobal() == root)
     {
 
-        os << endl
-           << " IONIC POSITIONS AND DISPLACEMENTS ON PE" << root << ":" << endl;
+        os << std::endl
+           << " IONIC POSITIONS AND DISPLACEMENTS ON PE" << root << ":"
+           << std::endl;
 
-        os << setw(8) << "Atoms" << setw(8) << "X" << setw(10) << "Y"
-           << setw(10) << "Z" << setw(10) << "dX" << setw(10) << "dY"
-           << setw(10) << "dZ" << endl;
+        os << std::setw(8) << "Atoms" << std::setw(8) << "X" << std::setw(10)
+           << "Y" << std::setw(10) << "Z" << std::setw(10) << "dX"
+           << std::setw(10) << "dY" << std::setw(10) << "dZ" << std::endl;
 
-        os.setf(ios::right, ios::adjustfield);
-        os.setf(ios::fixed, ios::floatfield);
+        os.setf(std::ios::right, std::ios::adjustfield);
+        os.setf(std::ios::fixed, std::ios::floatfield);
 
-        vector<Ion*>::const_iterator ion = local_ions_.begin();
+        std::vector<Ion*>::const_iterator ion = local_ions_.begin();
         while (ion != local_ions_.end())
         {
             (*ion)->printPosition(os);
             ion++;
         }
 
-        os << endl;
+        os << std::endl;
     }
 }
 // Writes out the postions of the ions and their displacements from their
 // initial postions.
-void Ions::printPositions(ostream& os, const int root) const
+void Ions::printPositions(std::ostream& os, const int root) const
 {
     Control& ct(*(Control::instance()));
     if (ct.verbose > 2)
@@ -738,9 +703,9 @@ void Ions::writeAtomicNumbers(HDFrestart& h5f_file)
 
     if (onpe0 && ct.verbose > 1)
     {
-        (*MPIdata::sout) << "Ions::writeAtomicNumbers()..." << endl;
+        (*MPIdata::sout) << "Ions::writeAtomicNumbers()..." << std::endl;
     }
-    vector<int> data;
+    std::vector<int> data;
     if (h5f_file.gatherDataX())
     {
         Mesh* mymesh             = Mesh::instance();
@@ -751,7 +716,7 @@ void Ions::writeAtomicNumbers(HDFrestart& h5f_file)
     }
     else
     {
-        vector<Ion*>::const_iterator ion = local_ions_.begin();
+        std::vector<Ion*>::const_iterator ion = local_ions_.begin();
         while (ion != local_ions_.end())
         {
             assert((*ion)->atomic_number() > 0);
@@ -774,15 +739,15 @@ void Ions::writeAtomicNumbers(HDFrestart& h5f_file)
             for (short i = s; i < ms; i++)
                 data.push_back(-1);
         }
-        // for(vector<int>::iterator it =data.begin();
+        // for(std::vector<int>::iterator it =data.begin();
         //                          it!=data.end();
         //                        ++it)
-        //    cout<<"Number="<<*it<<endl;
+        //    std::cout<<"Number="<<*it<<endl;
 
-        // cout<<"ms="<<ms<<endl;
+        // std::cout<<"ms="<<ms<<endl;
 
         // for(short i=0;i<ms;i++)data.push_back(-100*(mytask+1));
-        // vector<int> old(data);
+        // std::vector<int> old(data);
         // data.clear();
         // for(short i=0;i<ms;i++)
         //{
@@ -792,7 +757,7 @@ void Ions::writeAtomicNumbers(HDFrestart& h5f_file)
 
         size_t dims[2] = { data.size(), 1 };
 
-        string datasetname("/Atomic_numbers");
+        std::string datasetname("/Atomic_numbers");
         if (h5f_file.useHdf5p())
         {
             mgmol_tools::parallelWrite2d(
@@ -811,11 +776,11 @@ void Ions::writeAtomNames(HDFrestart& h5f_file)
 
     if (onpe0 && ct.verbose > 1)
     {
-        (*MPIdata::sout) << "Ions::writeAtomNames" << endl;
+        (*MPIdata::sout) << "Ions::writeAtomNames" << std::endl;
     }
 
-    // gather data to print locally into vector "data"
-    vector<string> data;
+    // gather data to print locally into std::vector "data"
+    std::vector<std::string> data;
     if (h5f_file.gatherDataX())
     {
         Mesh* mymesh             = Mesh::instance();
@@ -826,7 +791,7 @@ void Ions::writeAtomNames(HDFrestart& h5f_file)
     }
     else
     {
-        vector<Ion*>::const_iterator ion = local_ions_.begin();
+        std::vector<Ion*>::const_iterator ion = local_ions_.begin();
         while (ion != local_ions_.end())
         {
             data.push_back((*ion)->name());
@@ -845,14 +810,14 @@ void Ions::writeAtomNames(HDFrestart& h5f_file)
             short s = data.size();
             short ms;
             mgmol_tools::allreduce(&s, &ms, 1, MPI_MAX, h5f_file.comm_active());
-            string empty_string;
+            std::string empty_string;
             for (short i = s; i < ms; i++)
                 data.push_back(empty_string);
         }
 
         size_t dims[2] = { data.size(), 1 };
 
-        string datasetname("/Atomic_names");
+        std::string datasetname("/Atomic_names");
         if (h5f_file.useHdf5p())
         {
             mgmol_tools::parallelWrite2d(
@@ -865,16 +830,16 @@ void Ions::writeAtomNames(HDFrestart& h5f_file)
     }
 }
 
-void Ions::lockAtom(const string& name)
+void Ions::lockAtom(const std::string& name)
 {
-    vector<Ion*>::iterator ion = local_ions_.begin();
+    std::vector<Ion*>::iterator ion = local_ions_.begin();
     while (ion != local_ions_.end())
     {
-        string name_ion((*ion)->name());
+        std::string name_ion((*ion)->name());
         if (name.compare(name_ion) == 0)
         {
             (*ion)->lock();
-            if (onpe0) (*MPIdata::sout) << "Lock atom " << name << endl;
+            if (onpe0) (*MPIdata::sout) << "Lock atom " << name << std::endl;
             break;
         }
         ion++;
@@ -887,10 +852,11 @@ void Ions::readLockedAtomNames(HDFrestart& h5f_file)
 
     if (dim == 0) return;
 
-    vector<string> data;
+    std::vector<std::string> data;
     h5f_file.readLockedAtomNames(data);
 
-    for (vector<string>::const_iterator i = data.begin(), end = data.end();
+    for (std::vector<std::string>::const_iterator i   = data.begin(),
+                                                  end = data.end();
          i != end; ++i)
     {
         lockAtom(*i);
@@ -903,11 +869,11 @@ void Ions::writeLockedAtomNames(HDFrestart& h5f_file)
 
     if (onpe0 && ct.verbose > 1)
     {
-        (*MPIdata::sout) << "Ions::writeLockedAtomsNames" << endl;
+        (*MPIdata::sout) << "Ions::writeLockedAtomsNames" << std::endl;
     }
 
-    // gather data to print locally into vector "data"
-    vector<string> data;
+    // gather data to print locally into std::vector "data"
+    std::vector<std::string> data;
     if (h5f_file.gatherDataX())
     {
         Mesh* mymesh             = Mesh::instance();
@@ -918,7 +884,7 @@ void Ions::writeLockedAtomNames(HDFrestart& h5f_file)
     }
     else
     {
-        vector<Ion*>::const_iterator ion = local_ions_.begin();
+        std::vector<Ion*>::const_iterator ion = local_ions_.begin();
         while (ion != local_ions_.end())
         {
             if ((*ion)->locked()) data.push_back((*ion)->name());
@@ -935,7 +901,7 @@ void Ions::writeLockedAtomNames(HDFrestart& h5f_file)
             short s = data.size();
             short ms;
             mgmol_tools::allreduce(&s, &ms, 1, MPI_MAX, h5f_file.comm_active());
-            string empty_string;
+            std::string empty_string;
             for (short i = s; i < ms; i++)
                 data.push_back(empty_string);
             if (ms == 0) return;
@@ -943,7 +909,7 @@ void Ions::writeLockedAtomNames(HDFrestart& h5f_file)
 
         size_t dims[2] = { data.size(), 1 };
 
-        string datasetname("/LockedAtomsNames");
+        std::string datasetname("/LockedAtomsNames");
         if (h5f_file.useHdf5p())
         {
             mgmol_tools::parallelWrite2d(
@@ -961,11 +927,11 @@ void Ions::writeAtomicIDs(HDFrestart& h5f_file)
     Control& ct(*(Control::instance()));
     if (onpe0 && ct.verbose > 1)
     {
-        (*MPIdata::sout) << "Ions::writeAtomicIDs()..." << endl;
+        (*MPIdata::sout) << "Ions::writeAtomicIDs()..." << std::endl;
     }
 
-    // gather data to print locally into vector "data"
-    vector<int> data;
+    // gather data to print locally into std::vector "data"
+    std::vector<int> data;
     if (h5f_file.gatherDataX())
     {
         Mesh* mymesh             = Mesh::instance();
@@ -976,7 +942,7 @@ void Ions::writeAtomicIDs(HDFrestart& h5f_file)
     }
     else
     {
-        vector<Ion*>::const_iterator ion = local_ions_.begin();
+        std::vector<Ion*>::const_iterator ion = local_ions_.begin();
         while (ion != local_ions_.end())
         {
             data.push_back((*ion)->index());
@@ -999,7 +965,7 @@ void Ions::writeAtomicIDs(HDFrestart& h5f_file)
 
         size_t dims[2] = { data.size(), 1 };
 
-        string datasetname("/Atomic_IDs");
+        std::string datasetname("/Atomic_IDs");
         if (h5f_file.useHdf5p())
         {
             mgmol_tools::parallelWrite2d(
@@ -1018,11 +984,11 @@ void Ions::writeAtomicNLprojIDs(HDFrestart& h5f_file)
 
     if (onpe0 && ct.verbose > 1)
     {
-        (*MPIdata::sout) << "Ions::writeAtomicNLprojIDs()..." << endl;
+        (*MPIdata::sout) << "Ions::writeAtomicNLprojIDs()..." << std::endl;
     }
 
-    // gather data to print locally into vector "data"
-    vector<int> data;
+    // gather data to print locally into std::vector "data"
+    std::vector<int> data;
     if (h5f_file.gatherDataX())
     {
         Mesh* mymesh             = Mesh::instance();
@@ -1033,7 +999,7 @@ void Ions::writeAtomicNLprojIDs(HDFrestart& h5f_file)
     }
     else
     {
-        vector<Ion*>::const_iterator ion = local_ions_.begin();
+        std::vector<Ion*>::const_iterator ion = local_ions_.begin();
         while (ion != local_ions_.end())
         {
             data.push_back((*ion)->nlprojid());
@@ -1056,7 +1022,7 @@ void Ions::writeAtomicNLprojIDs(HDFrestart& h5f_file)
 
         size_t dims[2] = { data.size(), 1 };
 
-        string datasetname("/AtomicNLproj_IDs");
+        std::string datasetname("/AtomicNLproj_IDs");
         if (h5f_file.useHdf5p())
         {
             mgmol_tools::parallelWrite2d(
@@ -1075,10 +1041,10 @@ void Ions::writePositions(HDFrestart& h5f_file)
 
     if (onpe0 && ct.verbose > 1)
     {
-        (*MPIdata::sout) << "Ions::writePositions" << endl;
+        (*MPIdata::sout) << "Ions::writePositions" << std::endl;
     }
 
-    vector<double> data;
+    std::vector<double> data;
     if (h5f_file.gatherDataX())
     {
         Mesh* mymesh             = Mesh::instance();
@@ -1089,7 +1055,7 @@ void Ions::writePositions(HDFrestart& h5f_file)
     }
     else
     {
-        vector<Ion*>::const_iterator ion = local_ions_.begin();
+        std::vector<Ion*>::const_iterator ion = local_ions_.begin();
         while (ion != local_ions_.end())
         {
             data.push_back((*ion)->position(0));
@@ -1114,7 +1080,7 @@ void Ions::writePositions(HDFrestart& h5f_file)
 
         size_t dims[2] = { data.size() / 3, 3 };
 
-        string datasetname("/Ionic_positions");
+        std::string datasetname("/Ionic_positions");
         if (h5f_file.useHdf5p())
         {
             mgmol_tools::parallelWrite2d(
@@ -1137,7 +1103,7 @@ void Ions::initFromRestartFile(HDFrestart& h5_file)
     Control& ct(*(Control::instance()));
     if (onpe0 && ct.verbose > 1)
     {
-        (*MPIdata::sout) << "Ions::setFromRestartFile()..." << endl;
+        (*MPIdata::sout) << "Ions::setFromRestartFile()..." << std::endl;
     }
 
     // set up list boundaries
@@ -1146,20 +1112,21 @@ void Ions::initFromRestartFile(HDFrestart& h5_file)
     assert(rmax > 0.);
     setupListIonsBoundaries(rmax);
 
-    vector<int> at_numbers;
+    std::vector<int> at_numbers;
     h5_file.readAtomicNumbers(at_numbers);
-    vector<int> at_indexes;
+    std::vector<int> at_indexes;
     int nidxs = h5_file.readAtomicIDs(at_indexes);
-    vector<int> at_nlprojIds;
+    std::vector<int> at_nlprojIds;
     int npids = h5_file.readAtomicNLprojIDs(at_nlprojIds);
-    vector<string> at_names;
+    std::vector<std::string> at_names;
     h5_file.readAtomicNames(at_names);
     if (onpe0 && ct.verbose > 2)
     {
-        cout << "HDF file: at nb=" << at_numbers.size() << endl;
-        cout << "HDF file: names nb=" << at_names.size() << endl;
-        cout << "HDF file: indexes nb=" << at_indexes.size() << endl;
-        cout << "HDF file: at_nlprojIds nb=" << at_nlprojIds.size() << endl;
+        std::cout << "HDF file: at nb=" << at_numbers.size() << std::endl;
+        std::cout << "HDF file: names nb=" << at_names.size() << std::endl;
+        std::cout << "HDF file: indexes nb=" << at_indexes.size() << std::endl;
+        std::cout << "HDF file: at_nlprojIds nb=" << at_nlprojIds.size()
+                  << std::endl;
     }
 
     // if reading "old" format with replicated atoms, fill up empty arrays
@@ -1185,7 +1152,7 @@ void Ions::initFromRestartFile(HDFrestart& h5_file)
     if (onpe0 && ct.verbose > 0)
     {
         (*MPIdata::sout) << "Ions::setFromRestartFile(), read " << num_ions_
-                         << " names... on PE0" << flush << endl;
+                         << " names... on PE0" << std::endl;
     }
 
     assert(at_numbers.size() == at_names.size());
@@ -1195,15 +1162,16 @@ void Ions::initFromRestartFile(HDFrestart& h5_file)
 
     for (unsigned int i = 0; i < at_numbers.size(); i++)
     {
-        const int atnum                     = at_numbers[i];
-        vector<Species>::const_iterator spi = species_.begin();
+        const int atnum                          = at_numbers[i];
+        std::vector<Species>::const_iterator spi = species_.begin();
         while (spi != species_.end())
         {
             if (atnum == spi->getAtomicNumber()) break;
             spi++;
         }
         if (onpe0 && ct.verbose > 3)
-            (*MPIdata::sout) << "New Ion with name " << at_names[i] << endl;
+            (*MPIdata::sout)
+                << "New Ion with name " << at_names[i] << std::endl;
         if (at_indexes[i] >= 0)
         {
             Ion* new_ion = new Ion(*spi, at_names[i], default_coords,
@@ -1235,13 +1203,13 @@ void Ions::readRestartPositions(HDFrestart& h5_file)
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 0)
-        (*MPIdata::sout) << "Read ionic positions from hdf5 file" << endl;
+        (*MPIdata::sout) << "Read ionic positions from hdf5 file" << std::endl;
 
-    vector<double> data;
+    std::vector<double> data;
     h5_file.readAtomicPositions(data);
 
-    int i                      = 0;
-    vector<Ion*>::iterator ion = local_ions_.begin();
+    int i                           = 0;
+    std::vector<Ion*>::iterator ion = local_ions_.begin();
     while (ion != local_ions_.end())
     {
         (*ion)->setPosition(data[3 * i], data[3 * i + 1], data[3 * i + 2]);
@@ -1256,10 +1224,10 @@ void Ions::writeVelocities(HDFrestart& h5f_file)
 
     if (onpe0 && ct.verbose > 1)
     {
-        (*MPIdata::sout) << "Ions::writeVelocities" << endl;
+        (*MPIdata::sout) << "Ions::writeVelocities" << std::endl;
     }
 
-    vector<double> data;
+    std::vector<double> data;
     if (h5f_file.gatherDataX())
     {
         Mesh* mymesh             = Mesh::instance();
@@ -1270,7 +1238,7 @@ void Ions::writeVelocities(HDFrestart& h5f_file)
     }
     else
     {
-        vector<Ion*>::const_iterator ion = local_ions_.begin();
+        std::vector<Ion*>::const_iterator ion = local_ions_.begin();
         while (ion != local_ions_.end())
         {
             data.push_back((*ion)->velocity(0));
@@ -1295,7 +1263,7 @@ void Ions::writeVelocities(HDFrestart& h5f_file)
 
         size_t dims[2] = { data.size() / 3, 3 };
 
-        string datasetname("/Ionic_velocities");
+        std::string datasetname("/Ionic_velocities");
         if (h5f_file.useHdf5p())
         {
             mgmol_tools::parallelWrite2d(
@@ -1314,10 +1282,10 @@ void Ions::writeRandomStates(HDFrestart& h5f_file)
 
     if (onpe0 && ct.verbose > 1)
     {
-        (*MPIdata::sout) << "Ions::writeRandomStates()..." << endl;
+        (*MPIdata::sout) << "Ions::writeRandomStates()..." << std::endl;
     }
 
-    vector<unsigned short> data;
+    std::vector<unsigned short> data;
     if (h5f_file.gatherDataX())
     {
         Mesh* mymesh             = Mesh::instance();
@@ -1328,7 +1296,7 @@ void Ions::writeRandomStates(HDFrestart& h5f_file)
     }
     else
     {
-        vector<Ion*>::const_iterator ion = local_ions_.begin();
+        std::vector<Ion*>::const_iterator ion = local_ions_.begin();
         while (ion != local_ions_.end())
         {
             data.push_back((*ion)->randomState(0));
@@ -1343,7 +1311,7 @@ void Ions::writeRandomStates(HDFrestart& h5f_file)
         {
             (*MPIdata::sout)
                 << "WARNING: Ions::writeRandomStates: data[0]=" << data[0]
-                << endl;
+                << std::endl;
         }
 
     hid_t file_id = h5f_file.file_id();
@@ -1361,7 +1329,7 @@ void Ions::writeRandomStates(HDFrestart& h5f_file)
 
         size_t dims[2] = { data.size() / 3, 3 };
 
-        string datasetname("/Ionic_RandomStates");
+        std::string datasetname("/Ionic_RandomStates");
         if (h5f_file.useHdf5p())
         {
             mgmol_tools::parallelWrite2d(
@@ -1381,14 +1349,14 @@ void Ions::removeMassCenterMotion()
 
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 0)
-        (*MPIdata::sout) << "Remove mass center motion" << endl;
+        (*MPIdata::sout) << "Remove mass center motion" << std::endl;
 
-    vector<double> mass(local_ions_.size());
-    vector<double> velocities(3 * local_ions_.size());
+    std::vector<double> mass(local_ions_.size());
+    std::vector<double> velocities(3 * local_ions_.size());
 
-    vector<Ion*>::iterator ion = local_ions_.begin();
-    int i                      = 0;
-    double tmp[4]              = { 0., 0., 0., 0. };
+    std::vector<Ion*>::iterator ion = local_ions_.begin();
+    int i                           = 0;
+    double tmp[4]                   = { 0., 0., 0., 0. };
     while (ion != local_ions_.end())
     {
         const int threei       = 3 * i;
@@ -1413,8 +1381,8 @@ void Ions::removeMassCenterMotion()
     {
         tmp[j] *= tmass;
 #ifdef DEBUG
-        (*MPIdata::sout) << setprecision(12);
-        if (onpe0) (*MPIdata::sout) << "V[" << j << "]=" << tmp[j] << endl;
+        (*MPIdata::sout) << std::setprecision(12);
+        if (onpe0) (*MPIdata::sout) << "V[" << j << "]=" << tmp[j] << std::endl;
 #endif
     }
 
@@ -1449,7 +1417,7 @@ void Ions::removeMassCenterMotion()
     for (short j = 0; j < 3; j++)
     {
         mv[j] *= tmass;
-        if (onpe0) (*MPIdata::sout) << "V[" << j << "]=" << mv[j] << endl;
+        if (onpe0) (*MPIdata::sout) << "V[" << j << "]=" << mv[j] << std::endl;
     }
 #endif
 }
@@ -1458,13 +1426,14 @@ void Ions::readRestartVelocities(HDFrestart& h5_file)
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 0)
-        (*MPIdata::sout) << "Read atomic velocities from hdf5 file" << endl;
+        (*MPIdata::sout) << "Read atomic velocities from hdf5 file"
+                         << std::endl;
 
-    vector<double> data;
+    std::vector<double> data;
     h5_file.readAtomicVelocities(data);
 
-    vector<Ion*>::iterator ion = local_ions_.begin();
-    int i                      = 0;
+    std::vector<Ion*>::iterator ion = local_ions_.begin();
+    int i                           = 0;
     while (ion != local_ions_.end())
     {
         (*ion)->setVelocity(data[3 * i], data[3 * i + 1], data[3 * i + 2]);
@@ -1476,13 +1445,14 @@ void Ions::readRestartVelocities(HDFrestart& h5_file)
 void Ions::readRestartRandomStates(HDFrestart& h5f_file)
 {
     if (onpe0)
-        (*MPIdata::sout) << "Read atomic RandomStates from hdf5 file" << endl;
+        (*MPIdata::sout) << "Read atomic RandomStates from hdf5 file"
+                         << std::endl;
 
-    vector<unsigned short> data;
+    std::vector<unsigned short> data;
     h5f_file.readRestartRandomStates(data);
 
-    vector<Ion*>::iterator ion = local_ions_.begin();
-    int i                      = 0;
+    std::vector<Ion*>::iterator ion = local_ions_.begin();
+    int i                           = 0;
     while (ion != local_ions_.end())
     {
         (*ion)->setRandomState(data[3 * i], data[3 * i + 1], data[3 * i + 2]);
@@ -1496,9 +1466,9 @@ void Ions::writeForces(HDFrestart& h5f_file)
     Control& ct(*(Control::instance()));
 
     if (onpe0 && ct.verbose > 1)
-        (*MPIdata::sout) << "Write ionic forces in hdf5 file" << endl;
+        (*MPIdata::sout) << "Write ionic forces in hdf5 file" << std::endl;
 
-    vector<double> data;
+    std::vector<double> data;
     if (h5f_file.gatherDataX())
     {
         Mesh* mymesh             = Mesh::instance();
@@ -1509,7 +1479,7 @@ void Ions::writeForces(HDFrestart& h5f_file)
     }
     else
     {
-        vector<Ion*>::const_iterator ion = local_ions_.begin();
+        std::vector<Ion*>::const_iterator ion = local_ions_.begin();
         while (ion != local_ions().end())
         {
             // get position of local ion
@@ -1538,7 +1508,7 @@ void Ions::writeForces(HDFrestart& h5f_file)
 
         size_t dims[2] = { data.size() / 3, 3 };
 
-        string datasetname("/Ionic_forces");
+        std::string datasetname("/Ionic_forces");
         if (h5f_file.useHdf5p())
         {
             mgmol_tools::parallelWrite2d(
@@ -1552,7 +1522,7 @@ void Ions::writeForces(HDFrestart& h5f_file)
 }
 
 // Writes out the postions of the ions and the current forces on them by root
-void Ions::printForcesGlobal(ostream& os, const int root) const
+void Ions::printForcesGlobal(std::ostream& os, const int root) const
 {
     double maxf = 0., avfx = 0., avfy = 0., avfz = 0., maxfx = 0., maxfy = 0.,
            maxfz  = 0.;
@@ -1563,10 +1533,10 @@ void Ions::printForcesGlobal(ostream& os, const int root) const
 
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
 
-    map<int, string> ion_names;
-    vector<double> positions;
-    vector<double> forces;
-    vector<int> islocked;
+    std::map<int, std::string> ion_names;
+    std::vector<double> positions;
+    std::vector<double> forces;
+    std::vector<int> islocked;
 
     gatherNames(ion_names, root, mmpi.commSpin());
     gatherPositions(positions, root);
@@ -1575,15 +1545,16 @@ void Ions::printForcesGlobal(ostream& os, const int root) const
 
     if (mmpi.mypeGlobal() == root)
     {
-        os << "IONIC POSITIONS AND FORCES:" << endl;
+        os << "IONIC POSITIONS AND FORCES:" << std::endl;
 
-        os << setiosflags(ios::left) << setw(8) << "Atoms"
-           << resetiosflags(ios::left) << setw(8) << "X" << setw(10) << "Y"
-           << setw(10) << "Z" << setw(10) << "FX" << setw(10) << "FY"
-           << setw(10) << "FZ" << endl;
+        os << std::setiosflags(std::ios::left) << std::setw(8) << "Atoms"
+           << resetiosflags(std::ios::left) << std::setw(8) << "X"
+           << std::setw(10) << "Y" << std::setw(10) << "Z" << std::setw(10)
+           << "FX" << std::setw(10) << "FY" << std::setw(10) << "FZ"
+           << std::endl;
 
-        int ion_index                           = 0;
-        map<int, string>::const_iterator ion_id = ion_names.begin();
+        int ion_index                                     = 0;
+        std::map<int, std::string>::const_iterator ion_id = ion_names.begin();
         while (ion_id != ion_names.end())
         {
 
@@ -1593,12 +1564,14 @@ void Ions::printForcesGlobal(ostream& os, const int root) const
                 os << "*";
             else
                 os << " ";
-            os << setw(4) << ion_id->second << setiosflags(ios::right)
-               << setw(10) << setprecision(4) << fixed << positions[pos]
-               << setw(10) << positions[pos + 1] << setw(10)
-               << positions[pos + 2] << setprecision(7) << scientific
-               << setw(16) << forces[pos] << setw(16) << forces[pos + 1]
-               << setw(16) << forces[pos + 2] << endl;
+            os << std::setw(4) << ion_id->second
+               << std::setiosflags(std::ios::right) << std::setw(10)
+               << std::setprecision(4) << std::fixed << positions[pos]
+               << std::setw(10) << positions[pos + 1] << std::setw(10)
+               << positions[pos + 2] << std::setprecision(7) << std::scientific
+               << std::setw(16) << forces[pos] << std::setw(16)
+               << forces[pos + 1] << std::setw(16) << forces[pos + 2]
+               << std::endl;
 
             if (!islocked[ion_index])
             {
@@ -1611,11 +1584,11 @@ void Ions::printForcesGlobal(ostream& os, const int root) const
                             + forces[pos + 1] * forces[pos + 1]
                             + forces[pos + 2] * forces[pos + 2];
 
-                maxf = max(maxf, ff);
+                maxf = std::max(maxf, ff);
 
-                maxfx = max(maxfx, fabs(forces[pos]));
-                maxfy = max(maxfy, fabs(forces[pos + 1]));
-                maxfz = max(maxfz, fabs(forces[pos + 2]));
+                maxfx = std::max(maxfx, fabs(forces[pos]));
+                maxfy = std::max(maxfy, fabs(forces[pos + 1]));
+                maxfz = std::max(maxfz, fabs(forces[pos + 2]));
 
                 num_movable++;
             }
@@ -1630,8 +1603,8 @@ void Ions::printForcesGlobal(ostream& os, const int root) const
 
         if (num_atoms == 0) return;
         // global statistics
-        os << endl << "Global Statistics:" << endl;
-        os << "==========================" << endl;
+        os << std::endl << "Global Statistics:" << std::endl;
+        os << "==========================" << std::endl;
 
         const double inv_num_atoms = 1. / (double)num_atoms;
         for (short ii = 0; ii < 3; ii++)
@@ -1644,21 +1617,21 @@ void Ions::printForcesGlobal(ostream& os, const int root) const
             avfy                   = avfy * inv_num_movable;
             avfz                   = avfz * inv_num_movable;
 
-            os << scientific;
+            os << std::scientific;
             os << " mean F on movable ions  = (" << avfx << "," << avfy << ","
-               << avfz << ")" << endl;
+               << avfz << ")" << std::endl;
             os << " max F on movable ions   = (" << maxfx << "," << maxfy << ","
-               << maxfz << ")" << endl;
-            os << " max |F| on movable ions = " << sqrt(maxf) << endl;
+               << maxfz << ")" << std::endl;
+            os << " max |F| on movable ions = " << sqrt(maxf) << std::endl;
         }
         os << " Sum forces on all ions  = (" << sum_forces[0] << ","
-           << sum_forces[1] << "," << sum_forces[2] << ")" << endl;
-        os << fixed;
+           << sum_forces[1] << "," << sum_forces[2] << ")" << std::endl;
+        os << std::fixed;
     }
 }
 
 // Writes out the postions of the local ions and the current forces on them
-void Ions::printForcesLocal(ostream& os, const int root) const
+void Ions::printForcesLocal(std::ostream& os, const int root) const
 {
     int num_atoms   = 0;
     int num_movable = 0;
@@ -1677,17 +1650,18 @@ void Ions::printForcesLocal(ostream& os, const int root) const
 
     if (mmpi.mypeGlobal() == root)
     {
-        os << endl
-           << endl
+        os << std::endl
+           << std::endl
            << "IONIC POSITIONS AND FORCES ON CENTERED ON PE" << root << ":"
-           << endl;
+           << std::endl;
 
-        os << setiosflags(ios::left) << setw(8) << "Atoms"
-           << resetiosflags(ios::left) << setw(8) << "X" << setw(10) << "Y"
-           << setw(10) << "Z" << setw(10) << "FX" << setw(10) << "FY"
-           << setw(10) << "FZ" << endl;
+        os << std::setiosflags(std::ios::left) << std::setw(8) << "Atoms"
+           << std::resetiosflags(std::ios::left) << std::setw(8) << "X"
+           << std::setw(10) << "Y" << std::setw(10) << "Z" << std::setw(10)
+           << "FX" << std::setw(10) << "FY" << std::setw(10) << "FZ"
+           << std::endl;
 
-        vector<Ion*>::const_iterator ion = local_ions_.begin();
+        std::vector<Ion*>::const_iterator ion = local_ions_.begin();
         while (ion != local_ions_.end())
         {
 
@@ -1701,11 +1675,11 @@ void Ions::printForcesLocal(ostream& os, const int root) const
                 avg_forces[2] += fabs((*ion)->force(2));
 
                 double ff = (*ion)->norm2F();
-                maxf[0]   = max(maxf[0], ff);
+                maxf[0]   = std::max(maxf[0], ff);
 
-                max_forces[0] = max(max_forces[0], fabs((*ion)->force(0)));
-                max_forces[1] = max(max_forces[1], fabs((*ion)->force(1)));
-                max_forces[2] = max(max_forces[2], fabs((*ion)->force(2)));
+                max_forces[0] = std::max(max_forces[0], fabs((*ion)->force(0)));
+                max_forces[1] = std::max(max_forces[1], fabs((*ion)->force(1)));
+                max_forces[2] = std::max(max_forces[2], fabs((*ion)->force(2)));
 
                 num_movable++;
             }
@@ -1719,7 +1693,7 @@ void Ions::printForcesLocal(ostream& os, const int root) const
     }
     else
     {
-        vector<Ion*>::const_iterator ion = local_ions_.begin();
+        std::vector<Ion*>::const_iterator ion = local_ions_.begin();
         while (ion != local_ions_.end())
         {
 
@@ -1731,11 +1705,11 @@ void Ions::printForcesLocal(ostream& os, const int root) const
                 avg_forces[2] += fabs((*ion)->force(2));
 
                 double ff = (*ion)->norm2F();
-                maxf[0]   = max(maxf[0], ff);
+                maxf[0]   = std::max(maxf[0], ff);
 
-                max_forces[0] = max(max_forces[0], fabs((*ion)->force(0)));
-                max_forces[1] = max(max_forces[1], fabs((*ion)->force(1)));
-                max_forces[2] = max(max_forces[2], fabs((*ion)->force(2)));
+                max_forces[0] = std::max(max_forces[0], fabs((*ion)->force(0)));
+                max_forces[1] = std::max(max_forces[1], fabs((*ion)->force(1)));
+                max_forces[2] = std::max(max_forces[2], fabs((*ion)->force(2)));
 
                 num_movable++;
             }
@@ -1752,8 +1726,8 @@ void Ions::printForcesLocal(ostream& os, const int root) const
     if (num_atoms == 0) return;
     if (onpe0)
     {
-        os << endl << "Global Statistics:" << endl;
-        os << "==========================" << endl;
+        os << std::endl << "Global Statistics:" << std::endl;
+        os << "==========================" << std::endl;
     }
 
     mmpi.allreduce(&num_movable, 1, MPI_SUM);
@@ -1773,21 +1747,21 @@ void Ions::printForcesLocal(ostream& os, const int root) const
             avg_forces[1]          = avg_forces[1] * inv_num_movable;
             avg_forces[2]          = avg_forces[2] * inv_num_movable;
 
-            os << scientific;
+            os << std::scientific;
             os << " mean F on movable ions  = (" << avg_forces[0] << ","
-               << avg_forces[1] << "," << avg_forces[2] << ")" << endl;
+               << avg_forces[1] << "," << avg_forces[2] << ")" << std::endl;
             os << " max F on movable ions   = (" << max_forces[0] << ","
-               << max_forces[1] << "," << max_forces[2] << ")" << endl;
-            os << " max |F| on movable ions = " << sqrt(maxf[0]) << endl;
+               << max_forces[1] << "," << max_forces[2] << ")" << std::endl;
+            os << " max |F| on movable ions = " << sqrt(maxf[0]) << std::endl;
         }
         os << " Sum forces on all ions  = (" << sum_forces[0] << ","
-           << sum_forces[1] << "," << sum_forces[2] << ")" << endl;
-        os << fixed;
+           << sum_forces[1] << "," << sum_forces[2] << ")" << std::endl;
+        os << std::fixed;
     }
 }
 
 // Writes out the postions of the ions and the current forces on them
-void Ions::printForces(ostream& os, const int root) const
+void Ions::printForces(std::ostream& os, const int root) const
 {
 
     Control& ct(*(Control::instance()));
@@ -1802,8 +1776,8 @@ int Ions::countIonsHere() const { return (int)local_ions_.size(); }
 
 int Ions::countProjectorsHere() const
 {
-    int count                        = 0;
-    vector<Ion*>::const_iterator ion = local_ions_.begin();
+    int count                             = 0;
+    std::vector<Ion*>::const_iterator ion = local_ions_.begin();
     while (ion != local_ions_.end())
     {
         count += (*ion)->nProjectors();
@@ -1815,13 +1789,13 @@ int Ions::countProjectorsHere() const
 int Ions::countProjectors() const
 {
     //    assert( setup_ );
-    // cout<<"Num. local ions: "<<local_ions_.size()<<endl;
+    // std::cout<<"Num. local ions: "<<local_ions_.size()<<endl;
 
     Mesh* mymesh             = Mesh::instance();
     const pb::PEenv& myPEenv = mymesh->peenv();
 
-    int nproj                        = 0;
-    vector<Ion*>::const_iterator ion = local_ions_.begin();
+    int nproj                             = 0;
+    std::vector<Ion*>::const_iterator ion = local_ions_.begin();
     while (ion != local_ions_.end())
     {
         nproj += (*ion)->nProjectors();
@@ -1835,8 +1809,8 @@ int Ions::countProjectors() const
 
 int Ions::countProjectorsSubdomain() const
 {
-    int nproj                        = 0;
-    vector<Ion*>::const_iterator ion = overlappingNL_ions_.begin();
+    int nproj                             = 0;
+    std::vector<Ion*>::const_iterator ion = overlappingNL_ions_.begin();
     while (ion != overlappingNL_ions_.end())
     {
         nproj += (*ion)->nProjectorsSubdomain();
@@ -1845,9 +1819,9 @@ int Ions::countProjectorsSubdomain() const
     return nproj;
 }
 
-Ion* Ions::findIon(const string& name) const
+Ion* Ions::findIon(const std::string& name) const
 {
-    vector<Ion*>::const_iterator ion = list_ions_.begin();
+    std::vector<Ion*>::const_iterator ion = list_ions_.begin();
     while (ion != list_ions_.end())
     {
         bool same_name = (*ion)->compareName(name);
@@ -1860,49 +1834,40 @@ Ion* Ions::findIon(const string& name) const
     return nullptr;
 }
 
-bool Ions::isLocal(const string& name) const
+bool Ions::isLocal(const std::string& name) const
 {
-    vector<Ion*>::const_iterator ion = local_ions_.begin();
-    while (ion != local_ions_.end())
+    for (auto ion : local_ions_)
     {
-        bool same_name = (*ion)->compareName(name);
+        bool same_name = ion->compareName(name);
         if (same_name) return true;
-
-        ion++;
     }
     return false;
 }
 
 Ion* Ions::findIon(const int index) const
 {
-    vector<Ion*>::const_iterator ion = list_ions_.begin();
-    while (ion != list_ions_.end())
+    for (auto ion : list_ions_)
     {
-        if ((*ion)->compareIndex(index)) return (*ion);
-
-        ion++;
+        if (ion->compareIndex(index)) return ion;
     }
     return nullptr;
 }
 
 Ion* Ions::findLocalIon(const int index) const
 {
-    vector<Ion*>::const_iterator ion = local_ions_.begin();
-    while (ion != local_ions_.end())
+    for (auto ion : local_ions_)
     {
-        if ((*ion)->compareIndex(index)) return (*ion);
-
-        ion++;
+        if (ion->compareIndex(index)) return ion;
     }
     return nullptr;
 }
 
-void Ions::setPositions(const vector<double>& tau)
+void Ions::setPositions(const std::vector<double>& tau)
 {
     assert(tau.size() == 3 * local_ions_.size());
 
-    vector<Ion*>::iterator ion = local_ions_.begin();
-    int ia                     = 0;
+    std::vector<Ion*>::iterator ion = local_ions_.begin();
+    int ia                          = 0;
     while (ion != local_ions_.end())
     {
         (*ion)->setPosition(tau[3 * ia + 0], tau[3 * ia + 1], tau[3 * ia + 2]);
@@ -1914,13 +1879,13 @@ void Ions::setPositions(const vector<double>& tau)
     setup_ = false;
 }
 
-void Ions::get_positions(vector<vector<double>>& rr) const
+void Ions::get_positions(std::vector<std::vector<double>>& rr) const
 {
     assert(rr.size() == local_ions_.size());
     if (local_ions_.empty()) return;
-    vector<double> tau(3);
-    int i                            = 0;
-    vector<Ion*>::const_iterator ion = local_ions_.begin();
+    std::vector<double> tau(3);
+    int i                                 = 0;
+    std::vector<Ion*>::const_iterator ion = local_ions_.begin();
     while (ion != local_ions_.end())
     {
         tau[0] = (*ion)->position(0);
@@ -1931,13 +1896,13 @@ void Ions::get_positions(vector<vector<double>>& rr) const
         i++;
     }
 }
-void Ions::set_positions(const vector<vector<double>>& rr)
+void Ions::set_positions(const std::vector<std::vector<double>>& rr)
 {
     assert(rr.size() == local_ions_.size());
 
     if (local_ions_.empty()) return;
-    vector<Ion*>::iterator ion = local_ions_.begin();
-    int i                      = 0;
+    std::vector<Ion*>::iterator ion = local_ions_.begin();
+    int i                           = 0;
     while (ion != local_ions_.end())
     {
         assert(rr[i].size() == 3);
@@ -1946,13 +1911,13 @@ void Ions::set_positions(const vector<vector<double>>& rr)
         i++;
     }
 }
-void Ions::get_forces(vector<vector<double>>& ff) const
+void Ions::get_forces(std::vector<std::vector<double>>& ff) const
 {
     assert(ff.size() == local_ions_.size());
 
     if (local_ions_.empty()) return;
-    int i                            = 0;
-    vector<Ion*>::const_iterator ion = local_ions_.begin();
+    int i                                 = 0;
+    std::vector<Ion*>::const_iterator ion = local_ions_.begin();
     while (ion != local_ions_.end())
     {
         ff[i][0] = (*ion)->force(0);
@@ -1962,13 +1927,13 @@ void Ions::get_forces(vector<vector<double>>& ff) const
         i++;
     }
 }
-void Ions::set_forces(const vector<vector<double>>& ff)
+void Ions::set_forces(const std::vector<std::vector<double>>& ff)
 {
     assert(ff.size() == local_ions_.size());
 
     if (local_ions_.empty()) return;
-    vector<Ion*>::iterator ion = local_ions_.begin();
-    int i                      = 0;
+    std::vector<Ion*>::iterator ion = local_ions_.begin();
+    int i                           = 0;
     while (ion != local_ions_.end())
     {
         (*ion)->setForce(ff[i][0], ff[i][1], ff[i][2]);
@@ -1977,18 +1942,19 @@ void Ions::set_forces(const vector<vector<double>>& ff)
     }
 }
 
-int Ions::readAtoms(const string& filename, const bool cell_relative)
+int Ions::readAtoms(const std::string& filename, const bool cell_relative)
 {
 
     Control& ct(*(Control::instance()));
 
     if (onpe0 && ct.verbose > 0)
         (*MPIdata::sout) << "Ions::readAtoms() --- Read "
-                         << " atomic positions from file " << filename << endl;
+                         << " atomic positions from file " << filename
+                         << std::endl;
 
-    string strxyz(".xyz");
+    std::string strxyz(".xyz");
     size_t found = filename.find(strxyz);
-    if (found != string::npos)
+    if (found != std::string::npos)
     {
         num_ions_ = readAtomsFromXYZ(filename, cell_relative);
     }
@@ -2000,24 +1966,24 @@ int Ions::readAtoms(const string& filename, const bool cell_relative)
     return num_ions_;
 }
 
-int Ions::readAtoms(ifstream* tfile, const bool cell_relative)
+int Ions::readAtoms(std::ifstream* tfile, const bool cell_relative)
 {
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
 
-    string first_string_read = "";
+    std::string first_string_read = "";
     if (mmpi.PE0())
     {
         (*tfile) >> first_string_read;
     }
     mmpi.bcastGlobal(first_string_read);
 
-    string strxyz(".xyz");
+    std::string strxyz(".xyz");
     size_t found = first_string_read.find(strxyz);
-    if (found != string::npos)
+    if (found != std::string::npos)
     {
         if (mmpi.PE0())
             (*MPIdata::sout) << "Read atomic positions from file "
-                             << first_string_read << endl;
+                             << first_string_read << std::endl;
         num_ions_ = readAtomsFromXYZ(first_string_read, cell_relative);
     }
     else
@@ -2033,7 +1999,8 @@ int Ions::readAtoms(ifstream* tfile, const bool cell_relative)
     return num_ions_;
 }
 
-int Ions::readAtomsFromXYZ(const string& filename, const bool cell_relative)
+int Ions::readAtomsFromXYZ(
+    const std::string& filename, const bool cell_relative)
 {
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
     Control& ct(*(Control::instance()));
@@ -2043,47 +2010,47 @@ int Ions::readAtomsFromXYZ(const string& filename, const bool cell_relative)
     double rmax = getMaxListRadius();
     if (onpe0)
         (*MPIdata::sout) << "Max. radius for species in XYZ file: " << rmax
-                         << endl;
+                         << std::endl;
     assert(rmax > 0.);
 
     setupListIonsBoundaries(rmax);
 
     int natoms = -1;
 
-    ifstream* tfile = nullptr;
+    std::ifstream* tfile = nullptr;
     if (mmpi.PE0())
     {
-        tfile = new ifstream(filename.data(), ios::in);
+        tfile = new std::ifstream(filename.data(), std::ios::in);
         if (!(*tfile))
         {
             (*MPIdata::serr)
                 << "Ions::readAtomsFromXYZ() --- ERROR: cannot open "
-                << filename << endl;
+                << filename << std::endl;
         }
         else
         {
-            string query;
+            std::string query;
             if (getline(*tfile, query))
             {
-                stringstream na(query);
+                std::stringstream na(query);
                 na >> natoms;
             }
         }
         if (natoms < 1)
             (*MPIdata::sout)
                 << "WARNING: Ions::readAtomsFromXYZ(), number of atoms read = "
-                << natoms << endl;
+                << natoms << std::endl;
     }
     mmpi.bcastGlobal(&natoms);
     if (natoms < 0) return natoms;
 
-    vector<double> crds(3 * natoms);
-    vector<short> spec(natoms);
+    std::vector<double> crds(3 * natoms);
+    std::vector<short> spec(natoms);
 
     int count = 0;
     if (mmpi.PE0())
     {
-        string query;
+        std::string query;
         getline(*tfile, query); // read comment line
         // read atomic species and positions
         for (int ia = 0; ia < natoms; ++ia)
@@ -2092,8 +2059,8 @@ int Ions::readAtomsFromXYZ(const string& filename, const bool cell_relative)
             {
                 break;
             }
-            stringstream ss(query);
-            string name_read;
+            std::stringstream ss(query);
+            std::string name_read;
             ss >> name_read;
             spec[ia] = map_species_.find(name_read)->second;
             for (int j = 0; j < 3; j++)
@@ -2123,8 +2090,8 @@ int Ions::readAtomsFromXYZ(const string& filename, const bool cell_relative)
     bool locked        = false;
     for (int ia = 0; ia < natoms; ++ia)
     {
-        vector<Species>::const_iterator it = species_.begin();
-        int isp                            = -1;
+        std::vector<Species>::const_iterator it = species_.begin();
+        int isp                                 = -1;
         while (it != species_.end())
         {
             ++isp;
@@ -2134,8 +2101,8 @@ int Ions::readAtomsFromXYZ(const string& filename, const bool cell_relative)
             }
             ++it;
         }
-        string spname("");
-        for (map<string, short>::iterator itr = map_species_.begin();
+        std::string spname("");
+        for (std::map<std::string, short>::iterator itr = map_species_.begin();
              itr != map_species_.end(); ++itr)
         {
             if (itr->second == spec[ia])
@@ -2148,13 +2115,13 @@ int Ions::readAtomsFromXYZ(const string& filename, const bool cell_relative)
         {
             (*MPIdata::serr) << "Ions::readAtomsFromXYZ() --- ERROR: unknown "
                                 "species for atomic number "
-                             << spec[ia] << endl;
+                             << spec[ia] << std::endl;
             return -1;
         }
 
         // make a name for atom based on species and order of reading in
-        string aname(spname);
-        stringstream ss;
+        std::string aname(spname);
+        std::stringstream ss;
         ss << ia;
         if (ia < 10) aname.append("0");
         if (ia < 100) aname.append("0");
@@ -2168,7 +2135,7 @@ int Ions::readAtomsFromXYZ(const string& filename, const bool cell_relative)
 #endif
 
         // Populate list_ions_ list
-        // cout<<"crds: "<<crds[3*ia+0]<<", "<<crds[3*ia+1]<<",
+        // std::cout<<"crds: "<<crds[3*ia+0]<<", "<<crds[3*ia+1]<<",
         // "<<crds[3*ia+2]<<endl;
         if (inListIons(crds[3 * ia + 0], crds[3 * ia + 1], crds[3 * ia + 2]))
         {
@@ -2178,7 +2145,7 @@ int Ions::readAtomsFromXYZ(const string& filename, const bool cell_relative)
                     << "Ion " << aname << " at position " << crds[3 * ia + 0]
                     << "," << crds[3 * ia + 1] << "," << crds[3 * ia + 2]
                     << " added to the list... on PE" << mmpi.mypeGlobal()
-                    << endl;
+                    << std::endl;
             // populate local_ions_ list
             if (inLocalIons(
                     crds[3 * ia + 0], crds[3 * ia + 1], crds[3 * ia + 2]))
@@ -2191,7 +2158,7 @@ int Ions::readAtomsFromXYZ(const string& filename, const bool cell_relative)
                         << crds[3 * ia + 0] << "," << crds[3 * ia + 1] << ","
                         << crds[3 * ia + 2]
                         << " added to the list of local ions... on PE"
-                        << mmpi.mypeGlobal() << endl;
+                        << mmpi.mypeGlobal() << std::endl;
             }
             else
                 (new_ion)->set_here(false);
@@ -2203,37 +2170,38 @@ int Ions::readAtomsFromXYZ(const string& filename, const bool cell_relative)
             delete new_ion;
         }
     }
-    //    cout<<mmpi.mype()<<"...list size = "<<list_ions_.size()<<" local ions
-    //    size = "<<local_ions_.size()<<endl;
+    //    std::cout<<mmpi.mype()<<"...list size = "<<list_ions_.size()<<" local
+    //    ions size = "<<local_ions_.size()<<endl;
 
     if (mmpi.PE0()) delete tfile;
 
     return natoms;
 }
 
-int Ions::readNatoms(const string& filename, const bool cell_relative)
+int Ions::readNatoms(const std::string& filename, const bool cell_relative)
 {
     Control& ct(*(Control::instance()));
 
     if (onpe0 && ct.verbose > 0)
         (*MPIdata::sout) << "Ions::readNAtoms() --- Read "
-                         << " atomic positions from file " << filename << endl;
+                         << " atomic positions from file " << filename
+                         << std::endl;
 
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
 
-    ifstream* tfile = nullptr;
+    std::ifstream* tfile = nullptr;
     if (mmpi.instancePE0())
     {
-        tfile = new ifstream(filename.data(), ios::in);
+        tfile = new std::ifstream(filename.data(), std::ios::in);
         if (!tfile->is_open())
         {
             (*MPIdata::serr)
-                << " Unable to open file " << filename.data() << endl;
+                << " Unable to open file " << filename.data() << std::endl;
             return -1;
         }
         else
         {
-            (*MPIdata::sout) << "Open " << filename.data() << endl;
+            (*MPIdata::sout) << "Open " << filename.data() << std::endl;
         }
     }
 
@@ -2242,7 +2210,7 @@ int Ions::readNatoms(const string& filename, const bool cell_relative)
     if (mmpi.instancePE0())
     {
         if (ct.verbose > 0)
-            (*MPIdata::sout) << "Close " << filename.data() << endl;
+            (*MPIdata::sout) << "Close " << filename.data() << std::endl;
         tfile->close();
         delete tfile;
     }
@@ -2250,7 +2218,7 @@ int Ions::readNatoms(const string& filename, const bool cell_relative)
     return nread;
 }
 
-int Ions::readNatoms(ifstream* tfile, const bool cell_relative)
+int Ions::readNatoms(std::ifstream* tfile, const bool cell_relative)
 {
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
     if (mmpi.PE0()) assert(tfile != 0);
@@ -2268,7 +2236,7 @@ int Ions::readNatoms(ifstream* tfile, const bool cell_relative)
     Control& ct(*(Control::instance()));
     if (onpe0 && ct.verbose > 0)
         (*MPIdata::sout) << "Ions::readNatoms() --- Try to read "
-                         << " atomic positions..." << endl;
+                         << " atomic positions..." << std::endl;
     int nread = 0;
     int iread = 1;
     while (iread > 0)
@@ -2279,13 +2247,13 @@ int Ions::readNatoms(ifstream* tfile, const bool cell_relative)
         nread += iread;
         if (onpe0 && ct.verbose > 0 && (nread % 1000 == 0))
             (*MPIdata::sout) << "Ions::readNatoms() --- read " << nread
-                             << " atomic positions..." << endl;
+                             << " atomic positions..." << std::endl;
     }
     if (onpe0) read_comments(*tfile);
 
     if (onpe0 && ct.verbose > 0)
         (*MPIdata::sout) << "Ions::readNatoms() --- read " << nread
-                         << " atomic positions..." << endl;
+                         << " atomic positions..." << std::endl;
 
     int siz = local_ions_.size();
     mmpi.allreduce(&siz, 1, MPI_SUM);
@@ -2295,9 +2263,9 @@ int Ions::readNatoms(ifstream* tfile, const bool cell_relative)
 }
 
 // return number of atoms read, 0 if end of file, or -1 if failure occurs
-int Ions::read1atom(ifstream* tfile, const bool cell_relative)
+int Ions::read1atom(std::ifstream* tfile, const bool cell_relative)
 {
-    string name_read = "";
+    std::string name_read = "";
     // short  isp=0;
     double crds[3];
     double velocity[3] = { 0., 0., 0. };
@@ -2306,7 +2274,7 @@ int Ions::read1atom(ifstream* tfile, const bool cell_relative)
     Control& ct(*(Control::instance()));
 
     short movable = 0;
-    string query;
+    std::string query;
     short count = 1;
     if (mmpi.PE0())
     {
@@ -2315,7 +2283,7 @@ int Ions::read1atom(ifstream* tfile, const bool cell_relative)
             if (query[0] == '#') count = 0; // comment
             if (query.empty()) count = 0; // end of line only
             if (query.size() < 3) count = 0; // white spaces only
-            // cout<<"length="<<query.size()<<endl;
+            // std::cout<<"length="<<query.size()<<endl;
         }
         else
         {
@@ -2328,12 +2296,12 @@ int Ions::read1atom(ifstream* tfile, const bool cell_relative)
             {
                 (*MPIdata::serr)
                     << "ERROR: Ions::read1atom() --- getline() failed..."
-                    << endl;
+                    << std::endl;
                 count = -1;
             }
         }
-        // cout<<"query="<<query<<endl;
-        // cout<<"count="<<count<<endl;
+        // std::cout<<"query="<<query<<endl;
+        // std::cout<<"count="<<count<<endl;
     }
 
     mmpi.bcastGlobal(&count, 1);
@@ -2341,12 +2309,12 @@ int Ions::read1atom(ifstream* tfile, const bool cell_relative)
 
     if (mmpi.PE0())
     {
-        stringstream ss(query);
+        std::stringstream ss(query);
         ss >> name_read;
         if (!checkValidName(name_read))
         {
-            cerr << "ERROR: Invalid name read in input file: " << name_read
-                 << endl;
+            std::cerr << "ERROR: Invalid name read in input file: " << name_read
+                      << std::endl;
             ct.global_exit(2);
         }
         short dummy;
@@ -2369,12 +2337,13 @@ int Ions::read1atom(ifstream* tfile, const bool cell_relative)
         if (!(ss >> movable)) movable = 1; // default value
         if (movable != 0 && movable != 1)
         {
-            (*MPIdata::serr) << "Atom " << name_read
-                             << ", should be movable (1) or not(0)" << endl;
+            (*MPIdata::serr)
+                << "Atom " << name_read << ", should be movable (1) or not(0)"
+                << std::endl;
             return -1;
         }
 #ifdef DEBUG
-        (*MPIdata::sout) << "movable=" << movable << endl;
+        (*MPIdata::sout) << "movable=" << movable << std::endl;
 #endif
         int j = 0;
         if (movable)
@@ -2387,7 +2356,8 @@ int Ions::read1atom(ifstream* tfile, const bool cell_relative)
         (*MPIdata::sout) << "Ions::read1atom() --- Read Ion in position ("
                          << crds[0] << "," << crds[1] << "," << crds[2] << ")"
                          << " and velocity :(" << velocity[0] << ","
-                         << velocity[1] << "," << velocity[2] << ")" << endl;
+                         << velocity[1] << "," << velocity[2] << ")"
+                         << std::endl;
 #endif
 
     } // if onpe0
@@ -2408,12 +2378,12 @@ int Ions::read1atom(ifstream* tfile, const bool cell_relative)
     mmpi.bcastGlobal(name_read);
 
     // find species based on name
-    string name(name_read);
+    std::string name(name_read);
     stripName(name);
 
-    short spec_nb                      = map_species_.find(name)->second;
-    vector<Species>::const_iterator it = species_.begin();
-    int isp                            = -1;
+    short spec_nb                           = map_species_.find(name)->second;
+    std::vector<Species>::const_iterator it = species_.begin();
+    int isp                                 = -1;
     while (it != species_.end())
     {
         ++isp;
@@ -2434,7 +2404,7 @@ int Ions::read1atom(ifstream* tfile, const bool cell_relative)
     //}
 
 #ifdef DEBUG
-    if (onpe0) (*MPIdata::sout) << "Create new Ion..." << endl;
+    if (onpe0) (*MPIdata::sout) << "Create new Ion..." << std::endl;
 #endif
 
     // Ion needs to be created by each MPI task to set global ids
@@ -2443,7 +2413,7 @@ int Ions::read1atom(ifstream* tfile, const bool cell_relative)
     // assert( (new_ion->locked() == false) || (new_ion->locked() == true) );
 
 #ifdef DEBUG
-    if (onpe0) (*MPIdata::sout) << "Ion read..." << endl;
+    if (onpe0) (*MPIdata::sout) << "Ion read..." << std::endl;
 #endif
 
     // Populate list_ions_ list
@@ -2469,12 +2439,10 @@ int Ions::read1atom(ifstream* tfile, const bool cell_relative)
 
 int Ions::getNValenceElectrons() const
 {
-    vector<Ion*>::const_iterator ion = local_ions_.begin();
-    double val                       = 0.;
-    while (ion != local_ions_.end())
+    double val = 0.;
+    for (auto ion : local_ions_)
     {
-        val += (*ion)->getZion();
-        ion++;
+        val += ion->getZion();
     }
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
     mmpi.allreduce(&val, 1, MPI_SUM);
@@ -2484,26 +2452,24 @@ int Ions::getNValenceElectrons() const
 
 double Ions::computeIonicCharge() const
 {
-    double ionic_charge              = 0.;
-    vector<Ion*>::const_iterator ion = local_ions_.begin();
-    while (ion != local_ions_.end())
+    double ionic_charge = 0.;
+    for (auto ion : local_ions_)
     {
-        ionic_charge += (double)(*ion)->getZion();
-        ion++;
+        ionic_charge += (double)ion->getZion();
     }
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
     mmpi.allreduce(&ionic_charge, 1, MPI_SUM);
     return ionic_charge;
 }
 
-void Ions::setVelocities(
-    const vector<double>& tau0, const vector<double>& taup, const double dt)
+void Ions::setVelocities(const std::vector<double>& tau0,
+    const std::vector<double>& taup, const double dt)
 {
     assert(tau0.size() == 3 * local_ions_.size());
     assert(taup.size() == 3 * local_ions_.size());
 
-    int ia                      = 0;
-    vector<Ion*>::iterator iion = local_ions_.begin();
+    int ia                           = 0;
+    std::vector<Ion*>::iterator iion = local_ions_.begin();
     while (iion != local_ions_.end())
     {
         double v[3];
@@ -2519,12 +2485,12 @@ void Ions::setVelocities(
     }
 }
 
-void Ions::getPositions(vector<double>& tau) const
+void Ions::getPositions(std::vector<double>& tau) const
 {
     assert(tau.size() == 3 * local_ions_.size());
 
-    int ia                            = 0;
-    vector<Ion*>::const_iterator iion = local_ions_.begin();
+    int ia                                 = 0;
+    std::vector<Ion*>::const_iterator iion = local_ions_.begin();
     while (iion != local_ions_.end())
     {
         (*iion)->getPosition(&tau[3 * ia]);
@@ -2537,8 +2503,8 @@ void Ions::setTau0()
 {
     assert(tau0_.size() == 3 * local_ions_.size());
 
-    int ia                            = 0;
-    vector<Ion*>::const_iterator iion = local_ions_.begin();
+    int ia                                 = 0;
+    std::vector<Ion*>::const_iterator iion = local_ions_.begin();
     while (iion != local_ions_.end())
     {
         (*iion)->getPosition(&tau0_[3 * ia]);
@@ -2551,8 +2517,8 @@ void Ions::setPositionsToTau0()
 {
     assert(tau0_.size() == 3 * local_ions_.size());
 
-    int ia                            = 0;
-    vector<Ion*>::const_iterator iion = local_ions_.begin();
+    int ia                                 = 0;
+    std::vector<Ion*>::const_iterator iion = local_ions_.begin();
     while (iion != local_ions_.end())
     {
         (*iion)->setPosition(
@@ -2562,12 +2528,12 @@ void Ions::setPositionsToTau0()
     }
 }
 
-void Ions::getVelocities(vector<double>& tau) const
+void Ions::getVelocities(std::vector<double>& tau) const
 {
     assert(tau.size() == 3 * local_ions_.size());
 
-    int ia                            = 0;
-    vector<Ion*>::const_iterator iion = local_ions_.begin();
+    int ia                                 = 0;
+    std::vector<Ion*>::const_iterator iion = local_ions_.begin();
     while (iion != local_ions_.end())
     {
         for (short i = 0; i < 3; i++)
@@ -2579,12 +2545,12 @@ void Ions::getVelocities(vector<double>& tau) const
     }
 }
 
-void Ions::getForces(vector<double>& tau) const
+void Ions::getForces(std::vector<double>& tau) const
 {
     assert(tau.size() == 3 * local_ions_.size());
 
-    int ia                            = 0;
-    vector<Ion*>::const_iterator iion = local_ions_.begin();
+    int ia                                 = 0;
+    std::vector<Ion*>::const_iterator iion = local_ions_.begin();
     while (iion != local_ions_.end())
     {
         assert(3 * ia + 2 < (int)tau.size());
@@ -2621,7 +2587,7 @@ void Ions::setMapVL()
     const int khi  = klow + dim2 - 1;
 
     // Loop over list ions
-    vector<Ion*>::iterator ion = list_ions_.begin();
+    std::vector<Ion*>::iterator ion = list_ions_.begin();
     while (ion != list_ions_.end())
     {
         /* Generate range of indices over which the short-range difference */
@@ -2631,7 +2597,7 @@ void Ions::setMapVL()
         (*ion)->set_lstart(2, origin[2], h2);
 
         // Generate indices
-        vector<int> Ai0;
+        std::vector<int> Ai0;
         (*ion)->get_Ai(Ai0, gdim0, 0);
         const int dimlx = Ai0.size();
 
@@ -2650,7 +2616,7 @@ void Ions::setMapVL()
         if (map0)
         {
             bool map1 = false;
-            vector<int> Ai1;
+            std::vector<int> Ai1;
             (*ion)->get_Ai(Ai1, gdim1, 1);
             const int dimly = Ai1.size();
             for (int idx = 0; idx < dimly; idx++)
@@ -2664,7 +2630,7 @@ void Ions::setMapVL()
             if (map1)
             {
                 bool map2 = false;
-                vector<int> Ai2;
+                std::vector<int> Ai2;
                 (*ion)->get_Ai(Ai2, gdim2, 2);
                 const int dimlz = Ai2.size();
                 for (int idx = 0; idx < dimlz; idx++)
@@ -2690,7 +2656,7 @@ double Ions::computeMaxVlRadius() const
 {
     double radius = 0.;
 
-    vector<Ion*>::const_iterator iion = local_ions_.begin();
+    std::vector<Ion*>::const_iterator iion = local_ions_.begin();
     while (iion != local_ions_.end())
     {
         double r = (*iion)->computeRadiusVl();
@@ -2710,7 +2676,7 @@ double Ions::computeMaxNLprojRadius() const
 {
     double radius = 0.;
 
-    vector<Ion*>::const_iterator iion = local_ions_.begin();
+    std::vector<Ion*>::const_iterator iion = local_ions_.begin();
     while (iion != local_ions_.end())
     {
         double r = (*iion)->radiusNLproj();
@@ -2726,17 +2692,17 @@ double Ions::computeMaxNLprojRadius() const
     return radius;
 }
 
-void Ions::gatherNames(
-    map<int, string>& names, const int root, const MPI_Comm comm) const
+void Ions::gatherNames(std::map<int, std::string>& names, const int root,
+    const MPI_Comm comm) const
 {
     assert(comm != 0);
 
-    vector<int> indexes(num_ions_, 0);
-    vector<int> local_indexes;
-    vector<string> data;
-    vector<string> local_names;
+    std::vector<int> indexes(num_ions_, 0);
+    std::vector<int> local_indexes;
+    std::vector<std::string> data;
+    std::vector<std::string> local_names;
 
-    vector<Ion*>::const_iterator ion = local_ions_.begin();
+    std::vector<Ion*>::const_iterator ion = local_ions_.begin();
     while (ion != local_ions().end())
     {
         // get local name and index
@@ -2757,21 +2723,21 @@ void Ions::gatherNames(
         assert(num_ions = indexes.size());
         for (int i = 0; i < num_ions; i++)
         {
-            const int ion_index   = indexes[i];
-            const string ion_name = data[i];
-            names.insert(std::pair<int, string>(ion_index, ion_name));
+            const int ion_index        = indexes[i];
+            const std::string ion_name = data[i];
+            names.insert(std::pair<int, std::string>(ion_index, ion_name));
         }
     }
 }
 
 void Ions::gatherNames(
-    vector<string>& names, const int root, const MPI_Comm comm) const
+    std::vector<std::string>& names, const int root, const MPI_Comm comm) const
 {
     assert(comm != 0);
 
-    vector<string> local_names;
+    std::vector<std::string> local_names;
 
-    vector<Ion*>::const_iterator ion = local_ions_.begin();
+    std::vector<Ion*>::const_iterator ion = local_ions_.begin();
     while (ion != local_ions().end())
     {
         local_names.push_back((*ion)->name());
@@ -2779,7 +2745,7 @@ void Ions::gatherNames(
     }
 
     // gather data to PE root
-    vector<string> data;
+    std::vector<std::string> data;
     mgmol_tools::gatherV(local_names, data, root, comm);
 
     int mype = 0;
@@ -2789,11 +2755,11 @@ void Ions::gatherNames(
 }
 
 void Ions::gatherLockedNames(
-    vector<string>& names, const int root, const MPI_Comm comm) const
+    std::vector<std::string>& names, const int root, const MPI_Comm comm) const
 {
-    vector<string> local_names;
+    std::vector<std::string> local_names;
 
-    vector<Ion*>::const_iterator ion = local_ions_.begin();
+    std::vector<Ion*>::const_iterator ion = local_ions_.begin();
     while (ion != local_ions().end())
     {
         if ((*ion)->locked()) local_names.push_back((*ion)->name());
@@ -2801,7 +2767,7 @@ void Ions::gatherLockedNames(
     }
 
     // gather data to PE root
-    vector<string> data;
+    std::vector<std::string> data;
     mgmol_tools::gatherV(local_names, data, root, comm);
 
     int mype = 0;
@@ -2811,11 +2777,11 @@ void Ions::gatherLockedNames(
 }
 
 void Ions::gatherIndexes(
-    vector<int>& indexes, const int root, const MPI_Comm comm) const
+    std::vector<int>& indexes, const int root, const MPI_Comm comm) const
 {
-    vector<int> local_indexes;
+    std::vector<int> local_indexes;
 
-    vector<Ion*>::const_iterator ion = local_ions_.begin();
+    std::vector<Ion*>::const_iterator ion = local_ions_.begin();
     while (ion != local_ions_.end())
     {
         local_indexes.push_back((*ion)->index());
@@ -2823,7 +2789,7 @@ void Ions::gatherIndexes(
     }
 
     // gather data to PE root
-    vector<int> data;
+    std::vector<int> data;
     mgmol_tools::gatherV(local_indexes, data, root, comm);
 
     int mype = 0;
@@ -2833,11 +2799,11 @@ void Ions::gatherIndexes(
 }
 
 void Ions::gatherNLprojIds(
-    vector<int>& nlprojids, const int root, const MPI_Comm comm) const
+    std::vector<int>& nlprojids, const int root, const MPI_Comm comm) const
 {
-    vector<int> local_nlprojids;
+    std::vector<int> local_nlprojids;
 
-    vector<Ion*>::const_iterator ion = local_ions_.begin();
+    std::vector<Ion*>::const_iterator ion = local_ions_.begin();
     while (ion != local_ions_.end())
     {
         local_nlprojids.push_back((*ion)->nlprojid());
@@ -2845,7 +2811,7 @@ void Ions::gatherNLprojIds(
     }
 
     // gather data to PE root
-    vector<int> data;
+    std::vector<int> data;
     mgmol_tools::gatherV(local_nlprojids, data, root, comm);
 
     int mype = 0;
@@ -2855,13 +2821,13 @@ void Ions::gatherNLprojIds(
 }
 
 void Ions::gatherAtomicNumbers(
-    vector<int>& atnumbers, const int root, const MPI_Comm comm) const
+    std::vector<int>& atnumbers, const int root, const MPI_Comm comm) const
 {
     assert(comm != 0);
 
-    vector<int> local_atnumbers;
+    std::vector<int> local_atnumbers;
 
-    vector<Ion*>::const_iterator ion = local_ions_.begin();
+    std::vector<Ion*>::const_iterator ion = local_ions_.begin();
     while (ion != local_ions_.end())
     {
         local_atnumbers.push_back((*ion)->atomic_number());
@@ -2869,7 +2835,7 @@ void Ions::gatherAtomicNumbers(
     }
 
     // gather data to PE root
-    vector<int> data;
+    std::vector<int> data;
     mgmol_tools::gatherV(local_atnumbers, data, root, comm);
 
     int mype = 0;
@@ -2878,12 +2844,12 @@ void Ions::gatherAtomicNumbers(
     if (mype == root) atnumbers = data;
 }
 
-void Ions::gatherRandStates(
-    vector<unsigned short>& rstates, const int root, const MPI_Comm comm) const
+void Ions::gatherRandStates(std::vector<unsigned short>& rstates,
+    const int root, const MPI_Comm comm) const
 {
-    vector<unsigned short> local_rstates;
+    std::vector<unsigned short> local_rstates;
 
-    vector<Ion*>::const_iterator ion = local_ions_.begin();
+    std::vector<Ion*>::const_iterator ion = local_ions_.begin();
     while (ion != local_ions().end())
     {
         local_rstates.push_back((*ion)->randomState(0));
@@ -2893,7 +2859,7 @@ void Ions::gatherRandStates(
     }
 
     // gather data to PE root
-    vector<unsigned short> data;
+    std::vector<unsigned short> data;
     mgmol_tools::gatherV(local_rstates, data, root, comm);
 
     int mype = 0;
@@ -2903,11 +2869,11 @@ void Ions::gatherRandStates(
 }
 
 void Ions::gatherPositions(
-    vector<double>& positions, const int root, const MPI_Comm comm) const
+    std::vector<double>& positions, const int root, const MPI_Comm comm) const
 {
-    vector<double> local_positions;
+    std::vector<double> local_positions;
 
-    vector<Ion*>::const_iterator ion = local_ions_.begin();
+    std::vector<Ion*>::const_iterator ion = local_ions_.begin();
     while (ion != local_ions().end())
     {
         // get position of local ion
@@ -2921,7 +2887,7 @@ void Ions::gatherPositions(
     }
 
     // gather data to PE root
-    vector<double> data;
+    std::vector<double> data;
     mgmol_tools::gatherV(local_positions, data, root, comm);
 
     int mype = 0;
@@ -2931,11 +2897,11 @@ void Ions::gatherPositions(
 }
 
 void Ions::gatherForces(
-    vector<double>& forces, const int root, const MPI_Comm comm) const
+    std::vector<double>& forces, const int root, const MPI_Comm comm) const
 {
-    vector<double> local_forces;
+    std::vector<double> local_forces;
 
-    vector<Ion*>::const_iterator ion = local_ions_.begin();
+    std::vector<Ion*>::const_iterator ion = local_ions_.begin();
     while (ion != local_ions().end())
     {
         // get position of local ion
@@ -2949,7 +2915,7 @@ void Ions::gatherForces(
     }
 
     // gather data to PE root
-    vector<double> data;
+    std::vector<double> data;
     mgmol_tools::gatherV(local_forces, data, root, comm);
 
     int mype = 0;
@@ -2959,11 +2925,11 @@ void Ions::gatherForces(
 }
 
 void Ions::gatherVelocities(
-    vector<double>& velocities, const int root, const MPI_Comm comm) const
+    std::vector<double>& velocities, const int root, const MPI_Comm comm) const
 {
-    vector<double> local_velocities;
+    std::vector<double> local_velocities;
 
-    vector<Ion*>::const_iterator ion = local_ions_.begin();
+    std::vector<Ion*>::const_iterator ion = local_ions_.begin();
     while (ion != local_ions().end())
     {
         local_velocities.push_back((*ion)->velocity(0));
@@ -2974,7 +2940,7 @@ void Ions::gatherVelocities(
     }
 
     // gather data to PE root
-    vector<double> data;
+    std::vector<double> data;
     mgmol_tools::gatherV(local_velocities, data, root, comm);
 
     int mype = 0;
@@ -2983,13 +2949,13 @@ void Ions::gatherVelocities(
     if (mype == root) velocities = data;
 }
 
-void Ions::gatherPositions(vector<double>& positions, const int root) const
+void Ions::gatherPositions(std::vector<double>& positions, const int root) const
 {
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
 
     positions.resize(3 * num_ions_, 0.);
 
-    vector<Ion*>::const_iterator ion = local_ions_.begin();
+    std::vector<Ion*>::const_iterator ion = local_ions_.begin();
     while (ion != local_ions().end())
     {
         // get local positions
@@ -3002,13 +2968,13 @@ void Ions::gatherPositions(vector<double>& positions, const int root) const
     mmpi.reduce(&positions[0], 3 * num_ions_, MPI_SUM, root);
 }
 
-void Ions::gatherForces(vector<double>& forces, const int root) const
+void Ions::gatherForces(std::vector<double>& forces, const int root) const
 {
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
 
     forces.resize(3 * num_ions_, 0.);
 
-    vector<Ion*>::const_iterator ion = local_ions_.begin();
+    std::vector<Ion*>::const_iterator ion = local_ions_.begin();
     while (ion != local_ions().end())
     {
         // get local forces
@@ -3022,13 +2988,13 @@ void Ions::gatherForces(vector<double>& forces, const int root) const
     mmpi.reduce(&forces[0], size, MPI_SUM, root);
 }
 
-void Ions::gatherLockedData(vector<int>& locked_data, const int root) const
+void Ions::gatherLockedData(std::vector<int>& locked_data, const int root) const
 {
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
 
     locked_data.resize(num_ions_, 0);
 
-    vector<Ion*>::const_iterator ion = local_ions_.begin();
+    std::vector<Ion*>::const_iterator ion = local_ions_.begin();
     while (ion != local_ions().end())
     {
         // get local ion index
@@ -3046,7 +3012,7 @@ bool Ions::hasLockedAtoms() const
 {
     short flag = 0;
 
-    vector<Ion*>::const_iterator ion = local_ions_.begin();
+    std::vector<Ion*>::const_iterator ion = local_ions_.begin();
     while (ion != local_ions().end())
     {
         if ((*ion)->locked())
@@ -3064,37 +3030,37 @@ bool Ions::hasLockedAtoms() const
 }
 
 #if 0
-void Ions::syncNames(const int nions, vector<string>& local_names, vector<string>& names)
+void Ions::syncNames(const int nions, std::vector<std::string>& local_names, vector<string>& names)
 {
     MGmol_MPI& mmpi ( *(MGmol_MPI::instance()) );
     MPI_Comm& comm=mmpi.comm();  
     // prepare to gather data
     int npes = mmpi.size();
     int num_ions = nions;
-    vector<int>recvcnts(npes);
-    vector<int>::iterator rcv;
-    vector<int>disp(npes);   
-    vector<int>::iterator disp_it; 
+    std::vector<int>recvcnts(npes);
+    std::vector<int>::iterator rcv;
+    std::vector<int>disp(npes);   
+    std::vector<int>::iterator disp_it; 
     int tot = 0;
     int totchars;
     // Gather data for atom names
     // first get length of each name
-    vector<int>loc_name_len;
-    vector<int>nameLen(num_ions,0);
+    std::vector<int>loc_name_len;
+    std::vector<int>nameLen(num_ions,0);
     tot=0;
-    for(vector<string>::iterator str=local_names.begin(); str!=local_names.end(); ++str){
+    for(std::vector<std::string>::iterator str=local_names.begin(); str!=local_names.end(); ++str){
        //tot+= *str.size();
-       string s = *str;
+       std::string s = *str;
        tot+= s.length();
        loc_name_len.push_back(s.length());
     }
     mmpi.allGatherV(loc_name_len, nameLen);
 
-    vector<char>char_loc_names(tot);
+    std::vector<char>char_loc_names(tot);
     int idx = 0;
-    for(vector<string>::iterator str=local_names.begin(); str!=local_names.end(); ++str){
+    for(std::vector<std::string>::iterator str=local_names.begin(); str!=local_names.end(); ++str){
        //tot+= *str.size();
-       string s = *str;
+       std::string s = *str;
        memcpy(&char_loc_names[idx], s.c_str(), s.size());
        idx+=s.size();
     }    
@@ -3113,21 +3079,21 @@ void Ions::syncNames(const int nions, vector<string>& local_names, vector<string
        totchars+=recvcnts[pos-1];
     }
     // gather atomic names
-    vector<char> names_data(totchars);      
-    vector<char>::iterator locnames_it=char_loc_names.begin();
-    vector<char>::iterator names_it=names_data.begin();  
+    std::vector<char> names_data(totchars);      
+    std::vector<char>::iterator locnames_it=char_loc_names.begin();
+    std::vector<char>::iterator names_it=names_data.begin();  
     disp_it=disp.begin();
     rcv = recvcnts.begin();  
     MPI_Allgatherv(&(*locnames_it), tot, MPI_CHAR, &(*names_it), &(*rcv), &(*disp_it), MPI_CHAR, comm);
       
-//    vector<string> names;
+//    std::vector<std::string> names;
     int pos = 0;
     for(int i=0; i<num_ions; i++)
     {
        char str[nameLen[i]+1];
        str[nameLen[i]] = '\0';
        memcpy(str, &names_data[pos], nameLen[i]*sizeof(char));
-       string cstr;
+       std::string cstr;
        cstr.assign(str);
 //       if(onpe0)puts(str);
        names.push_back(cstr);
@@ -3140,8 +3106,8 @@ void Ions::syncNames(const int nions, vector<string>& local_names, vector<string
 
 double Ions::getMaxNLradius() const
 {
-    double radius                       = 0;
-    vector<Species>::const_iterator spi = species_.begin();
+    double radius                            = 0;
+    std::vector<Species>::const_iterator spi = species_.begin();
     while (spi != species_.end())
     {
         const double nlradius = spi->nlradius();
@@ -3156,8 +3122,8 @@ double Ions::getMaxNLradius() const
 
 double Ions::getMaxLradius() const
 {
-    double radius                       = 0;
-    vector<Species>::const_iterator spi = species_.begin();
+    double radius                            = 0;
+    std::vector<Species>::const_iterator spi = species_.begin();
     while (spi != species_.end())
     {
         const double lradius = spi->lradius();
@@ -3228,15 +3194,18 @@ void Ions::setupListIonsBoundaries(const double rmax)
 
     /* compute left and right steps in xyz directions */
     /* x-direction */
-    lstep_[0] = min((int)(ceil(rmax / (proc_width[0]))), (nproc_xyz[0] - 1));
-    rstep_[0] = min(lstep_[0], nproc_xyz[0] - lstep_[0] - 1);
+    lstep_[0]
+        = std::min((int)(ceil(rmax / (proc_width[0]))), (nproc_xyz[0] - 1));
+    rstep_[0] = std::min(lstep_[0], nproc_xyz[0] - lstep_[0] - 1);
 
     /* y-direction */
-    lstep_[1] = min((int)(ceil(rmax / (proc_width[1]))), (nproc_xyz[1] - 1));
-    rstep_[1] = min(lstep_[1], nproc_xyz[1] - lstep_[1] - 1);
+    lstep_[1]
+        = std::min((int)(ceil(rmax / (proc_width[1]))), (nproc_xyz[1] - 1));
+    rstep_[1] = std::min(lstep_[1], nproc_xyz[1] - lstep_[1] - 1);
     /* z-direction */
-    lstep_[2] = min((int)(ceil(rmax / (proc_width[2]))), (nproc_xyz[2] - 1));
-    rstep_[2] = min(lstep_[2], nproc_xyz[2] - lstep_[2] - 1);
+    lstep_[2]
+        = std::min((int)(ceil(rmax / (proc_width[2]))), (nproc_xyz[2] - 1));
+    rstep_[2] = std::min(lstep_[2], nproc_xyz[2] - lstep_[2] - 1);
 }
 
 // This function determines if an ion at position x,y,z is within range of
@@ -3287,7 +3256,7 @@ bool Ions::inListIons(const double x, const double y, const double z)
 
 bool Ions::inLocalIons(const double x, const double y, const double z)
 {
-    // cout<<"inLocalIons..."<<endl;
+    // std::cout<<"inLocalIons..."<<endl;
     Mesh* mymesh             = Mesh::instance();
     const pb::PEenv& myPEenv = mymesh->peenv();
     const pb::Grid& mygrid   = mymesh->grid();
@@ -3335,7 +3304,8 @@ bool Ions::inLocalIons(const double x, const double y, const double z)
 //        mmpi.allreduce(&here, 1, MPI_SUM);
 //        if(here != 1)
 //        {
-//            cout<<"Ion "<<ion->name()<<" is here on multiple tasks"<<endl;
+//            std::cout<<"Ion "<<ion->name()<<" is here on multiple
+//            tasks"<<endl;
 //        }
 //    }
 //}
@@ -3371,7 +3341,7 @@ double Ions::getMaxListRadius() const
 
 // augment Ions Data
 void Ions::augmentIonsData(const int nsteps, const int dir, const int disp,
-    const int locSize, const int maxLocSize, vector<IonData>& iondata,
+    const int locSize, const int maxLocSize, std::vector<IonData>& iondata,
     int* offset)
 {
     // setup buffers for data transfer
@@ -3430,7 +3400,7 @@ void Ions::augmentIonsData(const int nsteps, const int dir, const int disp,
         MPI_Isend(dbuff, dsize, MPI_DOUBLE, dst, 0, cart_comm_, &request3[1]);
 
         // update lists with most recent data
-        vector<IonData>::iterator idata = ions_data_.begin() + *offset;
+        std::vector<IonData>::iterator idata = ions_data_.begin() + *offset;
         while (idata != ions_data_.end())
         {
             addIon2Lists(*idata);
@@ -3516,7 +3486,8 @@ void Ions::updateForcesInteractingIons()
     }
 
     int ia = 0;
-    for (vector<string>::const_iterator it = interacting_names_.begin();
+    for (std::vector<std::string>::const_iterator it
+         = interacting_names_.begin();
          it != interacting_names_.end(); ++it)
     {
         double* force = interacting_fion_[ia];
@@ -3553,7 +3524,8 @@ void Ions::updateTaupInteractingIons()
     }
 
     int ia = 0;
-    for (vector<string>::const_iterator it = interacting_names_.begin();
+    for (std::vector<std::string>::const_iterator it
+         = interacting_names_.begin();
          it != interacting_names_.end(); ++it)
     {
         double* taup = interacting_taup_[ia];
@@ -3568,7 +3540,7 @@ void Ions::updateListIons()
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
 
     // collect local_ions data
-    // assume local_ions size is same as size of ions_names vector
+    // assume local_ions size is same as size of ions_names std::vector
     ions_data_.clear();
 
     {
@@ -3583,12 +3555,12 @@ void Ions::updateListIons()
     }
 
     // update list ions from current ion positions
-    // Note: this is based on data from MD vectors
+    // Note: this is based on data from MD std::vectors
 
     // First cleanup list_ions_
     local_ions_.clear();
     // delete current ions from list
-    vector<Ion*>::iterator ion = list_ions_.begin();
+    std::vector<Ion*>::iterator ion = list_ions_.begin();
     while (ion != list_ions_.end())
     {
         delete *ion;
@@ -3608,7 +3580,7 @@ void Ions::updateListIons()
         mmpi.allreduce(&maxsize, 1, MPI_MAX);
         // if(onpe0)cout<<"lsize = "<<ions_data_.size()<<" list size =
         // "<<list_ions_.size()<<endl;
-        vector<IonData> data2send(ions_data_);
+        std::vector<IonData> data2send(ions_data_);
 
         // send right to left
         int disp = -1;
@@ -3625,7 +3597,7 @@ void Ions::updateListIons()
     }
 
     // perform last data accumulation here
-    vector<IonData>::const_iterator idata = ions_data_.begin() + offset;
+    std::vector<IonData>::const_iterator idata = ions_data_.begin() + offset;
     while (idata != ions_data_.end())
     {
         addIon2Lists(*idata);
@@ -3682,7 +3654,7 @@ void Ions::initStepperData()
 {
     clearStepperData();
 
-    vector<Ion*>::iterator lion = local_ions_.begin();
+    std::vector<Ion*>::iterator lion = local_ions_.begin();
     while (lion != local_ions_.end())
     {
         local_names_.push_back((*lion)->name());
@@ -3722,8 +3694,8 @@ void Ions::updateIons()
     Control& ct(*(Control::instance()));
 
     // update local_ions data
-    vector<Ion*>::iterator ion = local_ions_.begin();
-    int ia                     = 0;
+    std::vector<Ion*>::iterator ion = local_ions_.begin();
+    int ia                          = 0;
     while (ion != local_ions_.end())
     {
         (*ion)->setPosition(
@@ -3752,7 +3724,7 @@ void Ions::updateIons()
 void Ions::shiftIons(const Vector3D& shift)
 {
     // update local_ions data
-    vector<Ion*>::iterator ion = local_ions_.begin();
+    std::vector<Ion*>::iterator ion = local_ions_.begin();
     while (ion != local_ions_.end())
     {
         (*ion)->shiftPositionXLBOMDTest(shift);
@@ -3771,9 +3743,10 @@ void Ions::rescaleVelocities(const double factor)
 
     if (onpe0)
     {
-        cout << "Ions::rescaleVelocities() with factor " << factor << endl;
+        std::cout << "Ions::rescaleVelocities() with factor " << factor
+                  << std::endl;
     }
-    vector<Ion*>::iterator ion = local_ions_.begin();
+    std::vector<Ion*>::iterator ion = local_ions_.begin();
     while (ion != local_ions_.end())
     {
         (*ion)->rescaleVelocity(factor);
@@ -3787,8 +3760,8 @@ double Ions::computeMinLocalSpacing() const
     Control& ct     = *(Control::instance());
     double distance = 1.e6;
 
-    vector<Ion*>::const_iterator ion1 = local_ions_.begin();
-    vector<Ion*>::const_iterator ion2 = local_ions_.begin();
+    std::vector<Ion*>::const_iterator ion1 = local_ions_.begin();
+    std::vector<Ion*>::const_iterator ion2 = local_ions_.begin();
     while (ion1 != local_ions_.end())
     {
         while (ion2 != local_ions_.end())
