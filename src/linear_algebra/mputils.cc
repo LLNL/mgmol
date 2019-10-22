@@ -553,14 +553,13 @@ void LinearAlgebraUtils<MemorySpace::Device>::MPgemm(const char transa,
     const double alpha, const T1* const a, const int lda, const T2* const b,
     const int ldb, const double beta, T3* const c, const int ldc)
 {
-    std::vector<T1> a_host(m * k);
-    std::vector<T2> b_host(k * n);
-    std::vector<T3> c_host(m * n);
+    std::vector<T1> a_host(lda * k);
+    std::vector<T2> b_host(ldb * n);
+    std::vector<T3> c_host(ldc * n);
 
     // Move the data to the host
     MemorySpace::copy_to_host(a, a_host);
     MemorySpace::copy_to_host(b, b_host);
-    MemorySpace::copy_to_host(c, c_host);
 
     LinearAlgebraUtils<MemorySpace::Host>::MPgemm(transa, transb, m, n, k,
         alpha, a_host.data(), lda, b_host.data(), ldb, beta, c_host.data(),
