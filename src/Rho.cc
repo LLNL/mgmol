@@ -17,6 +17,7 @@
 #include "ProjectedMatrices.h"
 #include "SquareLocalMatrices.h"
 #include "SubMatrices.h"
+#include "magma_singleton.h"
 #include "memory_space.h"
 #include "mputils.h"
 #include "numerical_kernels.h"
@@ -718,9 +719,42 @@ void Rho<T>::computeRhoSubdomainUsingBlas3(const int iloc_init,
         ORBDTYPE* phi1            = orbitals1.getPsi(0, iloc);
         ORBDTYPE* phi2            = orbitals2.getPsi(0, iloc);
 
-        // O(N^3) part
+// O(N^3) part
+#ifdef HAVE_MAGMA
+        {
+            std::unique_ptr<ORBDTYPE[], void (*)(ORBDTYPE*)> phi1_dev(
+                MemorySpace::allocate_data_dev<ORBDTYPE>(ld * ncols),
+                MemorySpace::delete_data_dev);
+            MemorySpace::copy_to_dev(phi1, ld * ncols, phi1_dev);
+
+            std::unique_ptr<MATDTYPE[], void (*)(MATDTYPE*)> mat_dev(
+                MemorySpace::allocate_data_dev<MATDTYPE>(ncols * ncols),
+                MemorySpace::delete_data_dev);
+            MemorySpace::copy_to_dev(mat, ncols * ncols, mat_dev);
+
+            std::unique_ptr<ORBDTYPE[], void (*)(ORBDTYPE*)> product_dev(
+                MemorySpace::allocate_data_dev<ORBDTYPE>(nrows * ncols),
+                MemorySpace::delete_data_dev);
+
+            auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+            magma_queue_sync(magma_singleton.queue);
+
+            LinearAlgebraUtils<MemorySpace::Device>::MPgemmNN(nrows, ncols,
+                ncols, 1., phi1_dev.get(), ld, mat_dev.get(), ncols, 0.,
+                product_dev.get(), nrows);
+
+            // Before we can copy the result to the host, we need to wait
+            // for the GPU to be done.
+            // auto& magma_singleton =
+            MagmaSingleton::get_magma_singleton();
+            magma_queue_sync(magma_singleton.queue);
+
+            MemorySpace::copy_to_host(product_dev, nrows * ncols, product);
+        }
+#else
         LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(
             nrows, ncols, ncols, 1., phi1, ld, mat, ncols, 0., product, nrows);
+#endif
 
         // O(N^2) part
         for (int j = 0; j < ncols; j++)
