@@ -20,7 +20,7 @@ nnn=nx*ny*nz
 # list possible species in a dictionary with their count
 species={'H':0,'He':0,'Li':0,'Be':0,'B':0,'C':0,'N':0,'O':0,'F':0,'Na':0,
          'Mg':0,'Al':0,'Si':0,'P':0,'S':0,'Cl':0,'K':0,'Ca':0,'D':0,'In':0,
-         'Au':0,'Mo':0}
+         'Au':0,'Mo':0,'La':0}
 
 lx=0.
 ly=0.
