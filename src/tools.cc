@@ -52,7 +52,7 @@ void stripLeadingAndTrailingBlanks(std::string& stringToModify)
 {
     if (stringToModify.empty()) return;
 
-    int startIndex = stringToModify.find_first_not_of(" ");
+    int startIndex = stringToModify.find_first_not_of(' ');
     // int endIndex   = stringToModify.find_last_not_of(" ");
     int endIndex = stringToModify.find_last_of("0123456789");
     // cerr<<"startIndex="<<startIndex<<endl;

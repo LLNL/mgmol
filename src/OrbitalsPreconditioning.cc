@@ -24,7 +24,7 @@ template <class T>
 OrbitalsPreconditioning<T>::~OrbitalsPreconditioning()
 {
     assert(is_set_);
-    assert(precond_ != 0);
+    assert(precond_ != nullptr);
 
     delete precond_;
     if (gfv_work_ != nullptr)
@@ -59,7 +59,7 @@ void OrbitalsPreconditioning<T>::setup(T& orbitals, const short mg_levels,
     {
         int gid         = (*it);
         GridMask* maski = currentMasks->get_pmask(gid);
-        assert(maski != 0);
+        assert(maski != nullptr);
         gid_to_mask.insert(std::pair<int, GridMask*>(gid, maski));
     }
     precond_->setup(gid_to_mask, orbitals.getOverlappingGids());
@@ -94,7 +94,7 @@ template <class T>
 void OrbitalsPreconditioning<T>::precond_mg(T& orbitals)
 {
     assert(is_set_);
-    assert(precond_ != 0);
+    assert(precond_ != nullptr);
     assert(gamma_ > 0.);
 
 #ifdef PRINT_OPERATIONS
@@ -131,7 +131,7 @@ void OrbitalsPreconditioning<T>::precond_mg(T& orbitals)
     else
     {
         // block-implemented preconditioner
-        assert(gfv_work_ != 0);
+        assert(gfv_work_ != nullptr);
 
         gfv_work_->resetData();
 
@@ -154,7 +154,7 @@ void OrbitalsPreconditioning<T>::setGamma(const pb::Lap<ORBDTYPE>& lapOper,
     const Potentials& pot, const short mg_levels,
     ProjectedMatricesInterface* proj_matrices)
 {
-    assert(precond_ != 0);
+    assert(precond_ != nullptr);
     assert(is_set_);
 
     const double small_eig = proj_matrices->getLowestEigenvalue();

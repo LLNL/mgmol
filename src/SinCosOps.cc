@@ -477,7 +477,7 @@ void SinCosOps<T>::computeDiag2states(
                 if (orbitals.overlapping_gids_[iloc][mycolor] == st[ic])
                 {
                     const ORBDTYPE* const ppsii = orbitals.psi(mycolor);
-                    assert(ppsii != 0);
+                    assert(ppsii != nullptr);
                     double atmp[6]  = { 0., 0., 0., 0., 0., 0. };
                     const int ixend = loc_length * (iloc + 1);
 
@@ -568,7 +568,7 @@ void SinCosOps<T>::compute2states(
                 if (orbitals.overlapping_gids_[iloc][mycolor] == st[ic])
                 {
                     const ORBDTYPE* const ppsii = orbitals.psi(mycolor);
-                    assert(ppsii != 0);
+                    assert(ppsii != nullptr);
                     for (int jc = 0; jc <= ic; jc++)
                         if (color_st[jc] >= 0)
                         {
@@ -577,7 +577,7 @@ void SinCosOps<T>::compute2states(
                             {
                                 const ORBDTYPE* const ppsij
                                     = orbitals.psi(color_st[jc]);
-                                assert(ppsij != 0);
+                                assert(ppsij != nullptr);
 
                                 double atmp[6]  = { 0., 0., 0., 0., 0., 0. };
                                 const int ixend = loc_length * (iloc + 1);

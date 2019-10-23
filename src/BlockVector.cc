@@ -112,7 +112,7 @@ template <typename T>
 void BlockVector<T>::allocate_storage()
 {
     assert(size_storage_ > 0);
-    assert(storage_ == 0);
+    assert(storage_ == nullptr);
 
     Control& ct                  = *(Control::instance());
     static short high_water_mark = 0;
@@ -181,12 +181,12 @@ void BlockVector<T>::allocate_storage()
         ct.global_exit(0);
     }
     storage_ = class_storage_[my_allocation_];
-    assert(storage_ != 0);
+    assert(storage_ != nullptr);
 #else
     storage_ = new T[size_storage_];
 #endif
 
-    assert(storage_ != 0);
+    assert(storage_ != nullptr);
     assert(class_storage_.size() > 0);
 }
 
@@ -196,7 +196,7 @@ void BlockVector<T>::deallocate_storage()
 {
     if (my_allocation_ >= 0)
     {
-        assert(storage_ != 0);
+        assert(storage_ != nullptr);
 #ifdef NEWSTORAGE
         assert(my_allocation_ >= 0);
         allocated_[my_allocation_] = 0;
@@ -296,7 +296,7 @@ template <typename T>
 void BlockVector<T>::initialize(
     const vector<vector<int>>& gid, const bool skinny_stencil)
 {
-    assert(storage_ == 0);
+    assert(storage_ == nullptr);
 
     int nbvect = (int)gid[0].size();
 
@@ -334,8 +334,8 @@ double BlockVector<T>::dot(const int i, const int j, const short iloc) const
     assert(i < static_cast<int>(vect_.size()));
     assert(j < static_cast<int>(vect_.size()));
     assert(iloc < subdivx_);
-    assert(vect_[i] != 0);
-    assert(vect_[j] != 0);
+    assert(vect_[i] != nullptr);
+    assert(vect_[j] != nullptr);
 
     const int shift = iloc * locnumel_;
     return MPdot(locnumel_, vect_[i] + shift, vect_[j] + shift);
@@ -344,14 +344,14 @@ template <typename T>
 void BlockVector<T>::scal(const int i, const double alpha)
 {
     assert(i < static_cast<int>(vect_.size()));
-    assert(vect_[i] != 0);
+    assert(vect_[i] != nullptr);
 
     MPscal(ld_, alpha, vect_[i]);
 }
 template <typename T>
 void BlockVector<T>::scal(const double alpha)
 {
-    assert(storage_ != 0);
+    assert(storage_ != nullptr);
 
     MPscal(size_storage_, alpha, storage_);
 }
@@ -359,7 +359,7 @@ template <typename T>
 void BlockVector<T>::scal(const double alpha, const int i, const short iloc)
 {
     assert(static_cast<unsigned int>(i) < vect_.size());
-    assert(vect_[i] != 0);
+    assert(vect_[i] != nullptr);
 
     const int shift = iloc * locnumel_;
     MPscal(locnumel_, alpha, vect_[i] + shift);
@@ -370,8 +370,8 @@ void BlockVector<T>::axpy(
 {
     assert(static_cast<unsigned int>(ix) < vect_.size());
     assert(static_cast<unsigned int>(iy) < vect_.size());
-    assert(vect_[ix] != 0);
-    assert(vect_[iy] != 0);
+    assert(vect_[ix] != nullptr);
+    assert(vect_[iy] != nullptr);
     assert(vect_[ix] != vect_[iy]);
 
     const int shift = iloc * locnumel_;
@@ -411,7 +411,7 @@ template <typename T>
 template <typename T2>
 void BlockVector<T>::setDataWithGhosts(pb::GridFuncVector<T2>* data_wghosts)
 {
-    assert(data_wghosts != 0);
+    assert(data_wghosts != nullptr);
 
     set_data_tm_.start();
 

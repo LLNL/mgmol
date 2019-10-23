@@ -114,12 +114,12 @@ void LocalMatrices<T>::syrk(
     assert(iloc < subdiv_);
     assert(iloc < (int)ptr_matrices_.size());
     assert(k <= lda);
-    assert(ptr_matrices_[iloc] != 0);
+    assert(ptr_matrices_[iloc] != nullptr);
     assert(m_ > 0);
     assert(m_ == n_);
 
     T* const ssiloc = ptr_matrices_[iloc];
-    assert(ssiloc != 0);
+    assert(ssiloc != nullptr);
 
     const double zero = 0.;
     const double one  = 1.;
@@ -139,12 +139,12 @@ void LocalMatrices<T>::syrk(
     assert(iloc < subdiv_);
     assert(iloc < (int)ptr_matrices_.size());
     assert(k <= lda);
-    assert(ptr_matrices_[iloc] != 0);
+    assert(ptr_matrices_[iloc] != nullptr);
     assert(m_ > 0);
     assert(m_ == n_);
 
     T* const ssiloc = ptr_matrices_[iloc];
-    assert(ssiloc != 0);
+    assert(ssiloc != nullptr);
 
     const double zero = 0.;
     const double one  = 1.;
@@ -163,10 +163,10 @@ void LocalMatrices<T>::gemm(const int iloc, const int ma, const double* const a,
     assert(iloc < subdiv_);
     assert(iloc < (int)ptr_matrices_.size());
     assert(ma <= lda);
-    assert(ptr_matrices_[iloc] != 0);
+    assert(ptr_matrices_[iloc] != nullptr);
 
     T* const c = ptr_matrices_[iloc];
-    assert(c != 0);
+    assert(c != nullptr);
 
     LinearAlgebraUtils<MemorySpace::Host>::MPgemm(
         't', 'n', m_, n_, ma, 1., a, lda, b, ldb, 0., c, m_);
@@ -179,10 +179,10 @@ void LocalMatrices<T>::gemm(const int iloc, const int ma, const float* const a,
     assert(iloc < subdiv_);
     assert(iloc < (int)ptr_matrices_.size());
     assert(ma <= lda);
-    assert(ptr_matrices_[iloc] != 0);
+    assert(ptr_matrices_[iloc] != nullptr);
 
     T* const c = ptr_matrices_[iloc];
-    assert(c != 0);
+    assert(c != nullptr);
 
     LinearAlgebraUtils<MemorySpace::Host>::MPgemm(
         't', 'n', m_, n_, ma, 1., a, lda, b, ldb, 0., c, m_);
@@ -209,7 +209,7 @@ void LocalMatrices<T>::gemm(const char transa, const char transb,
         const T* const bmat = matB.getSubMatrix(iloc);
         // get pointer to local storage
         T* const c = ptr_matrices_[iloc];
-        assert(c != 0);
+        assert(c != nullptr);
 
         // do matrix multiplication
         LinearAlgebraUtils<MemorySpace::Host>::MPgemm(transa, transb, m_, n_,

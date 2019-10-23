@@ -188,8 +188,7 @@ int ShortSightedInverse::solve()
 
             /* Update invS */
             const int* row = (int*)(*invS_).getTableValue(locfcns_[i]);
-            if (row == nullptr)
-                std::cout << "Row index is NULL !!!" << std::endl;
+            assert(row != nullptr);
             const int* cols = (*gramMat_).rowIndexes();
             (*invS_).initializeLocalRow(m, *row, cols, solptr);
         }
@@ -322,7 +321,7 @@ void ShortSightedInverse::computeInvS(
         if (recompute_pc_ == true)
         {
             pc_setup_tm_.start();
-            assert(precon_ == 0);
+            assert(precon_ == nullptr);
             //          precon_ = new
             //          PreconILU<pcdatatype>(LSMat,droptol_,MaxFil_,lof_);
             precon_
@@ -543,7 +542,7 @@ void ShortSightedInverse::printTimers(std::ostream& os)
 
 void ShortSightedInverse::printGramMM(std::ofstream& tfile)
 {
-    assert(gramMat_ != 0);
+    assert(gramMat_ != nullptr);
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     int n           = locfcns_.size();

@@ -21,17 +21,17 @@ void PCGSolver_Diel<T, T2>::clear()
     }
     for (short i = 0; i < (short)gf_work_.size(); i++)
     {
-        assert(gf_work_[i] != NULL);
+        assert(gf_work_[i] != nullptr);
         delete gf_work_[i];
     }
     for (short i = 0; i < (short)gf_rcoarse_.size(); i++)
     {
-        assert(gf_rcoarse_[i] != NULL);
+        assert(gf_rcoarse_[i] != nullptr);
         delete gf_rcoarse_[i];
     }
     for (short i = 0; i < (short)gf_newv_.size(); i++)
     {
-        assert(gf_newv_[i] != NULL);
+        assert(gf_newv_[i] != nullptr);
         delete gf_newv_[i];
     }
     // delete grids after pb::GridFunc<T2> objects since those

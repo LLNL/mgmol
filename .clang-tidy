@@ -1,0 +1,3 @@
+Checks: "-*,clang-analyzer-deadcode*,clang-analyzer-nullability*,clang-analyzer-unix*,clang-analyzer-core*,clang-analyzer-cplusplus*,clang-analyzer-optin*,performance-*,bugprone-*,modernize-use-nullptr*,modernize-use-override*,mpi*"
+
+WarningsAsErrors: '*'

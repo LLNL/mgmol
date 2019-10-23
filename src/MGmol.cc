@@ -366,7 +366,7 @@ int MGmol<T>::initial()
     if (ct.verbose > 0) printWithTimeStamp("Initialize XC functional...", os_);
     xcongrid_
         = XCfunctionalFactory<T>::create(ct.xctype, mmpi.nspin(), *rho_, pot);
-    assert(xcongrid_ != 0);
+    assert(xcongrid_ != nullptr);
 
     // initialize nl potentials with restart values if possible
     //    if( ct.restart_info>1 )
@@ -546,7 +546,7 @@ void MGmol<T>::printMM()
         std::ofstream tfileh("h.mm", std::ios::out);
         ProjectedMatrices* projmatrices
             = dynamic_cast<ProjectedMatrices*>(proj_matrices_);
-        assert(projmatrices != 0);
+        assert(projmatrices != nullptr);
         projmatrices->printHamiltonianMM(tfileh);
     }
 }
@@ -1059,7 +1059,7 @@ void MGmol<T>::cleanup()
 template <>
 void MGmol<LocGridOrbitals>::projectOutKernel(LocGridOrbitals& phi)
 {
-    assert(aomm_ != 0);
+    assert(aomm_ != nullptr);
     aomm_->projectOut(phi);
 }
 
@@ -1074,7 +1074,7 @@ void MGmol<T>::projectOutKernel(T& phi)
 template <class T>
 void MGmol<T>::setGamma(const pb::Lap<ORBDTYPE>& lapOper, const Potentials& pot)
 {
-    assert(orbitals_precond_ != 0);
+    assert(orbitals_precond_ != nullptr);
 
     Control& ct = *(Control::instance());
 
@@ -1084,7 +1084,7 @@ void MGmol<T>::setGamma(const pb::Lap<ORBDTYPE>& lapOper, const Potentials& pot)
 template <class T>
 void MGmol<T>::precond_mg(T& phi)
 {
-    assert(orbitals_precond_ != 0);
+    assert(orbitals_precond_ != nullptr);
 
     orbitals_precond_->precond_mg(phi);
 }
@@ -1312,7 +1312,7 @@ void MGmol<T>::update_pot(const Ions& ions)
 template <class T>
 void MGmol<T>::addResidualSpreadPenalty(T& phi, T& res)
 {
-    assert(spread_penalty_ != 0);
+    assert(spread_penalty_ != nullptr);
 
     spread_penalty_->addResidual(phi, res);
 }

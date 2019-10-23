@@ -91,8 +91,8 @@ void AOMMprojector::resetProjectors(LocGridOrbitals& phi)
 
 void AOMMprojector::projectOut(LocGridOrbitals& phi)
 {
-    assert(kernelprojector_ != 0);
-    assert(matrix_mask_ != 0);
+    assert(kernelprojector_ != nullptr);
+    assert(matrix_mask_ != nullptr);
 
     // if( counter_%10==0 )resetProjectors(phi);
 
@@ -103,7 +103,7 @@ void AOMMprojector::projectOut(LocGridOrbitals& phi)
 
 AOMMprojector::~AOMMprojector()
 {
-    assert(kernel_phi_ != 0);
+    assert(kernel_phi_ != nullptr);
 
     delete kernelprojector_;
     kernelprojector_ = nullptr;

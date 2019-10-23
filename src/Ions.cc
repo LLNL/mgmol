@@ -2215,7 +2215,7 @@ int Ions::readNatoms(const std::string& filename, const bool cell_relative)
 int Ions::readNatoms(std::ifstream* tfile, const bool cell_relative)
 {
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
-    if (mmpi.PE0()) assert(tfile != 0);
+    if (mmpi.PE0()) assert(tfile != nullptr);
 
     // set pointer to species object
     // set up list boundaries
@@ -2689,8 +2689,6 @@ double Ions::computeMaxNLprojRadius() const
 void Ions::gatherNames(std::map<int, std::string>& names, const int root,
     const MPI_Comm comm) const
 {
-    assert(comm != 0);
-
     std::vector<int> indexes(num_ions_, 0);
     std::vector<int> local_indexes;
     std::vector<std::string> data;
@@ -2713,9 +2711,9 @@ void Ions::gatherNames(std::map<int, std::string>& names, const int root,
     MPI_Comm_rank(comm, &mype);
     if (mype == root)
     {
-        int num_ions = data.size();
-        assert(num_ions = indexes.size());
-        for (int i = 0; i < num_ions; i++)
+        const unsigned int num_ions = data.size();
+        assert(num_ions == indexes.size());
+        for (unsigned int i = 0; i < num_ions; i++)
         {
             const int ion_index        = indexes[i];
             const std::string ion_name = data[i];
@@ -2727,8 +2725,6 @@ void Ions::gatherNames(std::map<int, std::string>& names, const int root,
 void Ions::gatherNames(
     std::vector<std::string>& names, const int root, const MPI_Comm comm) const
 {
-    assert(comm != 0);
-
     std::vector<std::string> local_names;
 
     std::vector<Ion*>::const_iterator ion = local_ions_.begin();
@@ -2817,8 +2813,6 @@ void Ions::gatherNLprojIds(
 void Ions::gatherAtomicNumbers(
     std::vector<int>& atnumbers, const int root, const MPI_Comm comm) const
 {
-    assert(comm != 0);
-
     std::vector<int> local_atnumbers;
 
     std::vector<Ion*>::const_iterator ion = local_ions_.begin();

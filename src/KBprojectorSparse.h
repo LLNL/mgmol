@@ -121,7 +121,7 @@ public:
     KBprojectorSparse(const Species& sp);
     KBprojectorSparse(const KBprojectorSparse& kbp);
 
-    ~KBprojectorSparse() { clear(); }
+    virtual ~KBprojectorSparse() { clear(); }
 
     void clear() override
     {

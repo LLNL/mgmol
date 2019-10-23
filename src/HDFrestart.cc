@@ -1485,8 +1485,8 @@ int HDFrestart::read_1func_hdf5(float* vv, const std::string& datasetname)
 int HDFrestart::write_1func_hdf5(
     double* vv, const std::string& datasetname, double* ll, double* cell_origin)
 {
-    assert(ll != NULL);
-    assert(cell_origin != NULL);
+    assert(ll != nullptr);
+    assert(cell_origin != nullptr);
 
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 0)
@@ -1583,8 +1583,8 @@ int HDFrestart::write_1func_hdf5(
 int HDFrestart::write_1func_hdf5(
     float* vv, const string& datasetname, double* ll, double* cell_origin)
 {
-    assert(ll != NULL);
-    assert(cell_origin != NULL);
+    assert(ll != nullptr);
+    assert(cell_origin != nullptr);
 
     if (onpe0)
         (*MPIdata::sout) << "HDFrestart::write_1func_hdf5(). Try to write data "
@@ -1881,7 +1881,7 @@ int HDFrestart::writeData(double* data, hid_t space_id, hid_t memspace,
     }
     else
     {
-        assert(work_space_double_ != 0);
+        assert(work_space_double_ != nullptr);
         memcpy(work_space_double_, data, bsize_ * sizeof(double));
     }
     // gather data on active PEs
@@ -1974,7 +1974,7 @@ int HDFrestart::writeData(double* data, hid_t space_id, hid_t memspace,
         }
 
         // Close/release resources.
-        if (use_hdf5p_ && pes_.n_mpi_tasks() > 1) status = H5Pclose(plist_id);
+        if (use_hdf5p_ && pes_.n_mpi_tasks() > 1) H5Pclose(plist_id);
     }
 
     return 0;
@@ -2055,7 +2055,7 @@ int HDFrestart::writeData(float* data, hid_t space_id, hid_t memspace,
         }
 
         // Close/release resources.
-        if (use_hdf5p_ && pes_.n_mpi_tasks() > 1) status = H5Pclose(plist_id);
+        if (use_hdf5p_ && pes_.n_mpi_tasks() > 1) H5Pclose(plist_id);
     }
 
     return 0;
@@ -2103,11 +2103,11 @@ void HDFrestart::setCommActive()
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     int mytask      = 0;
-    int mpirc       = MPI_Comm_rank(mmpi.commSameSpin(), &mytask);
+    MPI_Comm_rank(mmpi.commSameSpin(), &mytask);
     if (gather_data_x_)
     {
         int color = (int)active_;
-        mpirc
+        int mpirc
             = MPI_Comm_split(mmpi.commSameSpin(), color, mytask, &comm_active_);
         if (mpirc != MPI_SUCCESS)
         {
@@ -3105,14 +3105,14 @@ void HDFrestart::gatherDataXdir(vector<FixedLengthString>& data)
         {
             assert(active_);
             int datasize = data.size();
-            char* buffer = new char[datasize * IonData_MaxStrLength];
+            std::vector<char> buffer(datasize * IonData_MaxStrLength);
             for (int i = 0; i < datasize; i++)
                 memcpy(&buffer[i * IonData_MaxStrLength], &data[i],
                     IonData_MaxStrLength);
 
             MPI_Send(&datasize, 1, MPI_INT, dest, 2 * tag, comm_data_);
-            MPI_Send(buffer, datasize * IonData_MaxStrLength, MPI_CHAR, dest,
-                2 * tag + 1, comm_data_);
+            MPI_Send(buffer.data(), datasize * IonData_MaxStrLength, MPI_CHAR,
+                dest, 2 * tag + 1, comm_data_);
         }
         else if (pes_.my_mpi(0) == i)
         {
@@ -3120,9 +3120,9 @@ void HDFrestart::gatherDataXdir(vector<FixedLengthString>& data)
             int datasize;
             MPI_Recv(
                 &datasize, 1, MPI_INT, source, 2 * tag, comm_data_, &mpistatus);
-            char* buffer = new char[datasize * IonData_MaxStrLength];
-            MPI_Recv(buffer, datasize * IonData_MaxStrLength, MPI_CHAR, source,
-                2 * tag + 1, comm_data_, &mpistatus);
+            std::vector<char> buffer(datasize * IonData_MaxStrLength);
+            MPI_Recv(buffer.data(), datasize * IonData_MaxStrLength, MPI_CHAR,
+                source, 2 * tag + 1, comm_data_, &mpistatus);
             data.resize(datasize);
             for (int i = 0; i < datasize; i++)
                 memcpy(&data[i], &buffer[i * IonData_MaxStrLength],

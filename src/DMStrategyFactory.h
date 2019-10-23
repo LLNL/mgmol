@@ -34,7 +34,7 @@ public:
     {
         Control& ct = *(Control::instance());
 
-        DMStrategy* dm_strategy;
+        DMStrategy* dm_strategy = nullptr;
         if (ct.DM_solver() == DMNonLinearSolverType::MVP)
         {
             dm_strategy = new MVP_DMStrategy<T>(comm, os, ions, rho, energy,

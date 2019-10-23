@@ -18,7 +18,7 @@ using namespace std;
 template <class T>
 void EnergySpreadPenalty<T>::addResidual(T& phi, T& res)
 {
-    assert(spreadf_ != 0);
+    assert(spreadf_ != nullptr);
     assert(spread2_target_ >= 0.);
 
     // compute data to be used to evaluate spreads and centers
@@ -199,7 +199,7 @@ void EnergySpreadPenalty<T>::computeAndAddResidualSpreadPenalty(
 template <class T>
 double EnergySpreadPenalty<T>::evaluateEnergy(const T& phi)
 {
-    assert(spreadf_ != 0);
+    assert(spreadf_ != nullptr);
     assert(spread2_target_ >= 0.);
 
     // compute data to be used to evaluate spreads and centers

@@ -78,8 +78,8 @@ void KBPsiMatrixSparse::setup(const Ions& ions, const T& orbitals)
     // number of projectors overlapping with subdomain
     count_proj_subdomain_ = ions.countProjectorsSubdomain();
     /* setup matrices */
-    assert(kbpsimat_ == 0);
-    assert(kbBpsimat_ == 0);
+    assert(kbpsimat_ == nullptr);
+    assert(kbBpsimat_ == nullptr);
     kbpsimat_
         = new VariableSizeMatrix<sparserow>("KBpsi", count_proj_subdomain_);
     if (lapop_)
@@ -99,7 +99,7 @@ void KBPsiMatrixSparse::setup(const Ions& ions, const T& orbitals)
     //        "<<spread_radius_<<endl;
 
     /* construct data distribution object */
-    assert(distributor_ == 0);
+    assert(distributor_ == nullptr);
     Mesh* mymesh             = Mesh::instance();
     const pb::Grid& mygrid   = mymesh->grid();
     const pb::PEenv& myPEenv = mymesh->peenv();
@@ -154,7 +154,7 @@ void KBPsiMatrixSparse::computeKBpsi(Ions& ions, T& orbitals,
 
     if (flag)
     {
-        assert(lapop_ != NULL);
+        assert(lapop_ != nullptr);
         ppsi = new ORBDTYPE[nb_colors * ldsize];
         orbitals.setDataWithGhosts();
         orbitals.trade_boundaries();
@@ -210,7 +210,7 @@ void KBPsiMatrixSparse::computeKBpsi(Ions& ions, T& orbitals,
 void KBPsiMatrixSparse::computeKBpsi(
     Ions& ions, pb::GridFunc<ORBDTYPE>* phi, const int istate, const bool flag)
 {
-    assert(lapop_ != NULL);
+    assert(lapop_ != nullptr);
     compute_kbpsi_tm_.start();
 
     Mesh* mymesh           = Mesh::instance();
@@ -380,7 +380,7 @@ void KBPsiMatrixSparse::computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi2,
     const Ion& ion, ProjectedMatricesInterface* proj_matrices) const
 {
     assert(ion.here());
-    assert(proj_matrices != 0);
+    assert(proj_matrices != nullptr);
 
     vector<int> gids;
     ion.getGidsNLprojs(gids);

@@ -297,7 +297,7 @@ void PEenv::task2xyz()
 
 void PEenv::setup_my_neighbors()
 {
-    assert(cart_comm_ != 0);
+    assert(cart_comm_ != nullptr);
 
     if (color_ == 0)
     {
@@ -400,7 +400,7 @@ int PEenv::geom(const int nx, const int ny, const int nz, const int bias)
     n[1] = ny;
     n[2] = nz, n[3] = n_mpi_tasks_;
 #ifndef NDEBUG
-    if (onpe0_ && os_ != 0)
+    if (onpe0_ && os_ != nullptr)
         (*os_) << "n=" << n[0] << ", " << n[1] << ", " << n[2] << ", " << n[3]
                << std::endl;
 #endif
@@ -541,7 +541,7 @@ int PEenv::geom(const int nx, const int ny, const int nz, const int bias)
                 if (fac[imax0][k] > 0 && fac[3][k] > 0)
                 {
 #ifndef NDEBUG
-                    if (onpe0_ && os_ != 0)
+                    if (onpe0_ && os_ != nullptr)
                         (*os_) << "Divide domain along direction " << imax0
                                << std::endl;
 #endif
@@ -560,7 +560,7 @@ int PEenv::geom(const int nx, const int ny, const int nz, const int bias)
                 if (fac[imax1][k] > 0 && fac[3][k] > 0)
                 {
 #ifndef NDEBUG
-                    if (onpe0_ && os_ != 0)
+                    if (onpe0_ && os_ != nullptr)
                         (*os_) << "Divide domain along direction " << imax1
                                << std::endl;
 #endif
@@ -579,7 +579,7 @@ int PEenv::geom(const int nx, const int ny, const int nz, const int bias)
                 if (fac[imax2][k] > 0 && fac[3][k] > 0)
                 {
 #ifndef NDEBUG
-                    if (onpe0_ && os_ != 0)
+                    if (onpe0_ && os_ != nullptr)
                         (*os_) << "Divide domain along direction " << imax2
                                << std::endl;
 #endif
@@ -595,7 +595,7 @@ int PEenv::geom(const int nx, const int ny, const int nz, const int bias)
     }
 
 #ifndef NDEBUG
-    if (onpe0_ && os_ != 0)
+    if (onpe0_ && os_ != nullptr)
     {
         (*os_) << " Subdomain: " << n[0] << " * " << n[1] << " * " << n[2]
                << std::endl;
@@ -622,7 +622,7 @@ void PEenv::split_comm(const int nx, const int ny, const int nz, const int bias)
     {
         if (comm_active_ != comm_)
         {
-            assert(comm_active_ != NULL);
+            assert(comm_active_ != nullptr);
             MPI_Comm_free(&comm_active_);
         }
         for (int i = 0; i < 3; i++)
@@ -652,7 +652,7 @@ void PEenv::split_comm(const int nx, const int ny, const int nz, const int bias)
         }
         MPI_Comm_size(comm_active_, &n_mpi_tasks_);
 #ifndef NDEBUG
-        if (color_ == 0 && onpe0_ && os_ != 0)
+        if (color_ == 0 && onpe0_ && os_ != nullptr)
         {
             (*os_) << n_mpi_tasks_ << " MPI tasks" << std::endl;
         }

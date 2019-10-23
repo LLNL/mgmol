@@ -61,7 +61,7 @@ void MGmol_MPI::printTimers(std::ostream& os)
 void MGmol_MPI::setupComm(
     const MPI_Comm comm, const bool with_spin, const int nimages)
 {
-    assert(pinstance_ == 0);
+    assert(pinstance_ == nullptr);
 
     comm_global_ = comm;
 
@@ -552,8 +552,8 @@ int MGmol_MPI::exchangeDataSpin(
 {
     if (nspin_ == 1) return 0;
 
-    assert(localdata != 0);
-    assert(remotedata != 0);
+    assert(localdata != nullptr);
+    assert(remotedata != nullptr);
     assert(myspin_ == 0 || myspin_ == 1);
 
     assert(comm_different_spin_ != MPI_COMM_NULL);
@@ -590,8 +590,8 @@ int MGmol_MPI::exchangeDataSpin(
 {
     if (nspin_ == 1) return 0;
 
-    assert(localdata != 0);
-    assert(remotedata != 0);
+    assert(localdata != nullptr);
+    assert(remotedata != nullptr);
     assert(myspin_ == 0 || myspin_ == 1);
 
     assert(comm_different_spin_ != MPI_COMM_NULL);
@@ -1134,6 +1134,10 @@ int MGmol_MPI::allGatherV(
     int* recvcounts = new int[size_];
     int mpi_err     = MPI_Allgather(
         &sendcount, 1, MPI_INT, recvcounts, 1, MPI_INT, comm_spin_);
+    if (mpi_err != MPI_SUCCESS)
+    {
+        MGMOL_MPI_ERROR("MPI_Allgather in MGmol_MPI::allGatherV() !!!");
+    }
 
     int* displs = new int[size_];
     displs[0]   = 0;

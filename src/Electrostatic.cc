@@ -189,7 +189,7 @@ void Electrostatic::setupInitialVh(const pb::GridFunc<POTDTYPE>& vh_init)
 template <class T>
 void Electrostatic::computeVhRho(Rho<T>& rho)
 {
-    assert(grhoc_ != NULL);
+    assert(grhoc_ != nullptr);
 
     Mesh* mymesh = Mesh::instance();
 
@@ -212,7 +212,7 @@ void Electrostatic::computeVhRho(Rho<T>& rho)
     Evh_rho_  = poisson_solver_->IntVhRho();
     Evh_rhoc_ = poisson_solver_->IntVhRhoc();
 
-    if (vrho.size() > 1) delete work_rho;
+    if (vrho.size() > 1) delete[] work_rho;
 
     iterative_index_ = rho.getIterativeIndex();
 }
@@ -221,7 +221,7 @@ void Electrostatic::setupPB(
     const double rho0, const double drho0, Potentials& pot)
 {
     assert(rho0 > 0.);
-    assert(grhod_ == NULL);
+    assert(grhod_ == nullptr);
 
     Mesh* mymesh    = Mesh::instance();
     const double e0 = 78.36;
@@ -329,7 +329,7 @@ void Electrostatic::setupPB(
 
 void Electrostatic::fillFuncAroundIons(const Ions& ions)
 {
-    assert(grhod_ != NULL);
+    assert(grhod_ != nullptr);
     assert(diel_flag_);
 
     const short shift = pbGrid_->ghost_pt();
@@ -454,7 +454,7 @@ void Electrostatic::computeVh(const Ions& ions, Rho<T>& rho, Potentials& pot)
     if (onpe0) (*MPIdata::sout) << "Electrostatic::computeVh()" << endl;
 #endif
 
-    assert(grhoc_ != NULL);
+    assert(grhoc_ != nullptr);
 
     Mesh* mymesh             = Mesh::instance();
     const pb::PEenv& myPEenv = mymesh->peenv();
@@ -507,7 +507,7 @@ void Electrostatic::computeVh(const Ions& ions, Rho<T>& rho, Potentials& pot)
     Evh_rhoc_   = poisson_solver_->IntVhRhoc();
     Evhold_rho_ = poisson_solver_->IntVhRho_old();
 
-    if (vrho.size() > 1) delete work;
+    if (vrho.size() > 1) delete[] work;
 
     solve_tm_.stop();
 }

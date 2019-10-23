@@ -48,7 +48,7 @@ DistMatrix<T>::DistMatrix(const std::string& name)
       mb_(0),
       nb_(0)
 {
-    assert(default_bc_ != 0);
+    assert(default_bc_ != nullptr);
 }
 
 template <class T>
@@ -2581,7 +2581,7 @@ float DistMatrix<float>::getVal(const int i, const int j) const
 
     float val;
     if (active_) pselget(&scope, &top, &val, val_.data(), &ia, &ja, desc_);
-    MPI_Bcast(&val, 1, MPI_DOUBLE, 0, comm_global_);
+    MPI_Bcast(&val, 1, MPI_FLOAT, 0, comm_global_);
     return val;
 }
 
@@ -2596,7 +2596,7 @@ double DistMatrix<double>::getVal(const int i, const int j) const
 
     double val;
     if (active_) pdelget(&scope, &top, &val, val_.data(), &ia, &ja, desc_);
-    MPI_Bcast(&val, 1, MPI_FLOAT, 0, comm_global_);
+    MPI_Bcast(&val, 1, MPI_DOUBLE, 0, comm_global_);
     return val;
 }
 

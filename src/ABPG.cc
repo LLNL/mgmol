@@ -139,7 +139,7 @@ void ABPG<T>::update_states(T& orbitals, T& res, T& work_orbitals,
     {
         res.scal(alpha);
         // Extrapolation scheme
-        assert(wf_mix_ != 0);
+        assert(wf_mix_ != nullptr);
         ostream os(nullptr);
         if (onpe0) os.rdbuf(cout.rdbuf());
         wf_mix_->update(res, work_orbitals, os, (ct.verbose > 0));

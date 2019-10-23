@@ -21,7 +21,7 @@ void SpreadPenaltyVolume<T>::addResidual(T& phi, T& res)
     Control& ct     = *(Control::instance());
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
-    assert(spreadf_ != 0);
+    assert(spreadf_ != nullptr);
     assert(spread_target_ >= 0.);
     assert(dampingFactor_ > 0.);
 
@@ -276,7 +276,7 @@ void SpreadPenaltyVolume<T>::computeAndAddResidualSpreadPenalty(
 template <class T>
 double SpreadPenaltyVolume<T>::evaluateEnergy(const T& phi)
 {
-    assert(spreadf_ != 0);
+    assert(spreadf_ != nullptr);
     assert(spread_target_ >= 0.);
     assert(dampingFactor_ > 0.);
 

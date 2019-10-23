@@ -80,11 +80,12 @@ void PBEFunctional::computeXC(void)
 {
     if (nspin_ == 1)
     {
-        assert(prho_ != 0);
-        assert(pgrad_rho_[0] != 0 && pgrad_rho_[1] != 0 && pgrad_rho_[2] != 0);
-        assert(pexc_ != 0);
-        assert(pvxc1_ != 0);
-        assert(pvxc2_ != 0);
+        assert(prho_ != nullptr);
+        assert(pgrad_rho_[0] != nullptr && pgrad_rho_[1] != nullptr
+               && pgrad_rho_[2] != nullptr);
+        assert(pexc_ != nullptr);
+        assert(pvxc1_ != nullptr);
+        assert(pvxc2_ != nullptr);
 
         const RHODTYPE* const grad0 = pgrad_rho_[0];
         const RHODTYPE* const grad1 = pgrad_rho_[1];
@@ -106,20 +107,20 @@ void PBEFunctional::computeXC(void)
     }
     else
     {
-        assert(prho_up_ != 0);
-        assert(prho_dn_ != 0);
-        assert(pgrad_rho_up_[0] != 0 && pgrad_rho_up_[1] != 0
-               && pgrad_rho_up_[2] != 0);
-        assert(pgrad_rho_dn_[0] != 0 && pgrad_rho_dn_[1] != 0
-               && pgrad_rho_dn_[2] != 0);
-        assert(pexc_up_ != 0);
-        assert(pexc_dn_ != 0);
-        assert(pvxc1_up_ != 0);
-        assert(pvxc1_dn_ != 0);
-        assert(pvxc2_upup_ != 0);
-        assert(pvxc2_updn_ != 0);
-        assert(pvxc2_dnup_ != 0);
-        assert(pvxc2_dndn_ != 0);
+        assert(prho_up_ != nullptr);
+        assert(prho_dn_ != nullptr);
+        assert(pgrad_rho_up_[0] != nullptr && pgrad_rho_up_[1] != nullptr
+               && pgrad_rho_up_[2] != nullptr);
+        assert(pgrad_rho_dn_[0] != nullptr && pgrad_rho_dn_[1] != nullptr
+               && pgrad_rho_dn_[2] != nullptr);
+        assert(pexc_up_ != nullptr);
+        assert(pexc_dn_ != nullptr);
+        assert(pvxc1_up_ != nullptr);
+        assert(pvxc1_dn_ != nullptr);
+        assert(pvxc2_upup_ != nullptr);
+        assert(pvxc2_updn_ != nullptr);
+        assert(pvxc2_dnup_ != nullptr);
+        assert(pvxc2_dndn_ != nullptr);
 
         for (int i = 0; i < np_; i++)
         {

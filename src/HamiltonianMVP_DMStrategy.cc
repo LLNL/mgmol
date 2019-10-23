@@ -37,8 +37,8 @@ HamiltonianMVP_DMStrategy<T1, T2, T3, T4>::HamiltonianMVP_DMStrategy(
 {
     Control& ct = *(Control::instance());
 
-    assert(electrostat_ != 0);
-    assert(energy_ != 0);
+    assert(electrostat_ != nullptr);
+    assert(energy_ != nullptr);
     assert(ct.dm_inner_steps > 0);
 
     T3* projmatrices = dynamic_cast<T3*>(orbitals->getProjMatrices());
@@ -63,7 +63,7 @@ void HamiltonianMVP_DMStrategy<T1, T2, T3, T4>::initialize()
 template <class T1, class T2, class T3, class T4>
 int HamiltonianMVP_DMStrategy<T1, T2, T3, T4>::update()
 {
-    assert(solver_ != 0);
+    assert(solver_ != nullptr);
 
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 2)

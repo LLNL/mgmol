@@ -161,7 +161,7 @@ int MVPSolver<T>::solve(T& orbitals)
 {
     Control& ct = *(Control::instance());
 
-    assert(numst_ = (int)orbitals.numst());
+    assert(numst_ == (int)orbitals.numst());
     assert(n_inner_steps_ > 0);
 
     solve_tm_.start();

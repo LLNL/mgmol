@@ -106,7 +106,7 @@ void MGmol<T>::adaptLR(
         // if ct.lr_volume_calc true, calculate volume base on spreads
         if (ct.lr_volume_calc == 1)
         {
-            assert(ot != NULL);
+            assert(ot != nullptr);
             const double vol_rotated = ot->volume();
             const double vol_spreads = spreadf->volume();
             if (onpe0 && ct.verbose > 1)
@@ -122,7 +122,7 @@ void MGmol<T>::adaptLR(
         }
         else if (ct.lr_volume_calc == 2)
         {
-            assert(ot != NULL);
+            assert(ot != nullptr);
             if (onpe0) os_ << " Adapt LR using NOLMO spreads" << std::endl;
             const double ratio = ct.cut_radius;
             avg                = lrs_->updateRadii(ot, ratio);

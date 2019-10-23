@@ -154,7 +154,7 @@ Control::Control()
 void Control::setup(const MPI_Comm comm_global, const bool with_spin,
     const float total_spin, std::string run_directory)
 {
-    assert(pinstance_ == NULL);
+    assert(pinstance_ == nullptr);
 
     comm_global_ = comm_global;
     with_spin_   = with_spin;
@@ -490,13 +490,24 @@ void Control::sync(void)
         memset(&float_buffer[0], 0, size_float_buffer * sizeof(float));
     }
 
+    auto bcast_check = [](int mpirc) {
+        if (mpirc != MPI_SUCCESS)
+        {
+            (*MPIdata::sout) << "MPI Bcast of Control failed!!!" << std::endl;
+            MPI_Abort(comm_global_, 2);
+        }
+    };
+
     int mpirc;
     mpirc = MPI_Bcast(
         &short_buffer[0], size_short_buffer, MPI_SHORT, 0, comm_global_);
+    bcast_check(mpirc);
     mpirc
         = MPI_Bcast(&int_buffer[0], size_int_buffer, MPI_INT, 0, comm_global_);
+    bcast_check(mpirc);
     mpirc = MPI_Bcast(
         &float_buffer[0], size_float_buffer, MPI_FLOAT, 0, comm_global_);
+    bcast_check(mpirc);
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     mmpi.bcast(restart_file, comm_global_);
@@ -505,6 +516,7 @@ void Control::sync(void)
 
     short npot = pot_filenames_.size();
     mpirc      = MPI_Bcast(&npot, 1, MPI_SHORT, 0, comm_global_);
+    bcast_check(mpirc);
     if (mype_ > 0)
     {
         pot_filenames_.resize(npot);
@@ -514,6 +526,7 @@ void Control::sync(void)
     {
         short size_str = (short)pot_filenames_[i].size();
         mpirc          = MPI_Bcast(&size_str, 1, MPI_SHORT, 0, comm_global_);
+        bcast_check(mpirc);
 
         char* buffer = new char[size_str + 1];
         if (mype_ == 0)
@@ -522,17 +535,13 @@ void Control::sync(void)
             buffer[pot_filenames_[i].length()] = 0;
         }
         mpirc = MPI_Bcast(buffer, size_str + 1, MPI_CHAR, 0, comm_global_);
+        bcast_check(mpirc);
         pot_filenames_[i].assign(&buffer[0], size_str);
 
         delete[] buffer;
 
         mpirc = MPI_Bcast(&pseudopot_flags_[i], 1, MPI_SHORT, 0, comm_global_);
-    }
-
-    if (mpirc != MPI_SUCCESS)
-    {
-        (*MPIdata::sout) << "MPI Bcast of Control failed!!!" << std::endl;
-        MPI_Abort(comm_global_, 2);
+        bcast_check(mpirc);
     }
 
     // unpack

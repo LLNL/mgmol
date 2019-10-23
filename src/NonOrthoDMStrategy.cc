@@ -38,7 +38,7 @@ void NonOrthoDMStrategy<T>::initialize()
 template <class T>
 int NonOrthoDMStrategy<T>::update()
 {
-    assert(proj_matrices_ != 0);
+    assert(proj_matrices_ != nullptr);
 
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 2)

@@ -49,7 +49,7 @@ SP2::SP2(const double tol, const bool distributed)
 
 SP2::~SP2()
 {
-    assert(Xi_ != 0);
+    assert(Xi_ != nullptr);
 #ifdef HAVE_BML
     bml_deallocate(&Xi_);
     bml_deallocate(&Xi_sq_);

@@ -388,7 +388,7 @@ void Forces<T>::lforce(Ions& ions, RHODTYPE* rho)
         // Forces opposed to the gradient
         int index   = lion->index();
         int* rindex = (int*)loc_proj_mat.getTableValue(index);
-        assert(rindex != NULL);
+        assert(rindex != nullptr);
         std::fill(loc_proj.begin(), loc_proj.end(), 0.);
         loc_proj_mat.row_daxpy(
             *rindex, buffer_size, mygrid.vel(), &loc_proj[0]);

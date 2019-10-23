@@ -29,7 +29,7 @@ void PBdiel_CG<T>::solve(
     // Subtract compensating charges from rho
     work_rho -= rhoc;
 
-    assert(rhod_ != NULL);
+    assert(rhod_ != nullptr);
 
     /* Check for uniform precision before calling poisson_solver.
      * Downgrade or upgrade rhs (work_rho) and rhod_ to have precision of
@@ -71,7 +71,7 @@ template <class T>
 void PBdiel_CG<T>::set_rhod(pb::GridFunc<RHODTYPE>* rhod)
 {
     //(*MPIdata::sout)<<"set_rhod"<<endl;
-    assert(rhod != NULL);
+    assert(rhod != nullptr);
     rhod_ = rhod;
 }
 

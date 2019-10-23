@@ -204,7 +204,7 @@ void PBEonGridSpin<T>::update()
 
     if (myspin_ == 0)
     {
-        assert(pbe_->pvxc1_up_ != 0);
+        assert(pbe_->pvxc1_up_ != nullptr);
         //        Tcopy(&np_, pbe_->pvxc1_up_, &ione, &vxc_[0], &ione);
         MPcpy(&vxc_[0], pbe_->pvxc1_up_, np_);
         gf_vsigma[0] = new pb::GridFunc<POTDTYPE>(
@@ -214,7 +214,7 @@ void PBEonGridSpin<T>::update()
     }
     else
     {
-        assert(pbe_->pvxc1_dn_ != 0);
+        assert(pbe_->pvxc1_dn_ != nullptr);
         //        Tcopy(&np_, pbe_->pvxc1_dn_, &ione, &vxc_[np_], &ione);
         MPcpy(&vxc_[np_], pbe_->pvxc1_dn_, np_);
         gf_vsigma[0] = new pb::GridFunc<POTDTYPE>(
@@ -266,7 +266,7 @@ double PBEonGridSpin<T>::getExc() const
     mmpi.allreduce(&exc, &sum, 1, MPI_SUM);
     exc = sum;
 #else
-    assert(pbe_ != NULL);
+    assert(pbe_ != nullptr);
     double exc = pbe_->computeRhoDotExc();
 #endif
     return exc * mygrid.vel();

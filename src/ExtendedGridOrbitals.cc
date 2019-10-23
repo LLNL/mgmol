@@ -77,7 +77,7 @@ ExtendedGridOrbitals::ExtendedGridOrbitals(std::string name,
 
     // preconditions
     assert(subdivx > 0);
-    assert(proj_matrices != 0);
+    assert(proj_matrices != nullptr);
 
     for (short i = 0; i < 3; i++)
         assert(bc[i] == 0 || bc[i] == 1);
@@ -94,7 +94,10 @@ ExtendedGridOrbitals::ExtendedGridOrbitals(std::string name,
     if (setup_flag) setup();
 }
 
-ExtendedGridOrbitals::~ExtendedGridOrbitals() { assert(proj_matrices_ != 0); }
+ExtendedGridOrbitals::~ExtendedGridOrbitals()
+{
+    assert(proj_matrices_ != nullptr);
+}
 
 ExtendedGridOrbitals::ExtendedGridOrbitals(const std::string& name,
     const ExtendedGridOrbitals& A, const bool copy_data)
@@ -107,7 +110,7 @@ ExtendedGridOrbitals::ExtendedGridOrbitals(const std::string& name,
     // if(onpe0)cout<<"call ExtendedGridOrbitals(const ExtendedGridOrbitals &A,
     // const bool copy_data)"<<endl;
 
-    assert(A.proj_matrices_ != 0);
+    assert(A.proj_matrices_ != nullptr);
 }
 
 ExtendedGridOrbitals::ExtendedGridOrbitals(const std::string& name,
@@ -119,7 +122,7 @@ ExtendedGridOrbitals::ExtendedGridOrbitals(const std::string& name,
       block_vector_(A.block_vector_, copy_data),
       grid_(A.grid_)
 {
-    assert(proj_matrices != 0);
+    assert(proj_matrices != nullptr);
 
     // setup new projected_matrices object
     Control& ct = *(Control::instance());
@@ -128,7 +131,7 @@ ExtendedGridOrbitals::ExtendedGridOrbitals(const std::string& name,
 
 void ExtendedGridOrbitals::copyDataFrom(const ExtendedGridOrbitals& src)
 {
-    assert(proj_matrices_ != 0);
+    assert(proj_matrices_ != nullptr);
 
     block_vector_.copyDataFrom(src.block_vector_);
 
@@ -152,7 +155,7 @@ void ExtendedGridOrbitals::setup()
     Control& ct = *(Control::instance());
 
     // preconditions
-    assert(proj_matrices_ != 0);
+    assert(proj_matrices_ != nullptr);
 
     if (ct.verbose > 0)
         printWithTimeStamp(
@@ -528,7 +531,7 @@ void ExtendedGridOrbitals::multiply_by_matrix(
 
 int ExtendedGridOrbitals::read_hdf5(HDFrestart& h5f_file)
 {
-    assert(proj_matrices_ != 0);
+    assert(proj_matrices_ != nullptr);
 
     Control& ct = *(Control::instance());
 
@@ -566,9 +569,10 @@ int ExtendedGridOrbitals::read_hdf5(HDFrestart& h5f_file)
     return ierr;
 }
 
-int ExtendedGridOrbitals::write_hdf5(HDFrestart& h5f_file, std::string name)
+int ExtendedGridOrbitals::write_hdf5(
+    HDFrestart& h5f_file, const std::string& name)
 {
-    assert(proj_matrices_ != 0);
+    assert(proj_matrices_ != nullptr);
     Control& ct = *(Control::instance());
 
     if (!ct.fullyOccupied())
@@ -580,7 +584,7 @@ int ExtendedGridOrbitals::write_hdf5(HDFrestart& h5f_file, std::string name)
         if (ierr < 0) return ierr;
     }
 
-    int ierr = write_func_hdf5(h5f_file, std::move(name));
+    int ierr = write_func_hdf5(h5f_file, name);
 
     return ierr;
 }
@@ -832,7 +836,7 @@ void ExtendedGridOrbitals::computeMatB(
 {
     if (numst_ == 0) return;
 
-    assert(proj_matrices_ != 0);
+    assert(proj_matrices_ != nullptr);
 
     matB_tm_.start();
 #if DEBUG
@@ -889,7 +893,7 @@ void ExtendedGridOrbitals::computeMatB(
 // compute <Phi|B|Phi> and its inverse
 void ExtendedGridOrbitals::computeBAndInvB(const pb::Lap<ORBDTYPE>& LapOper)
 {
-    assert(proj_matrices_ != 0);
+    assert(proj_matrices_ != nullptr);
 
     Control& ct = *(Control::instance());
     if (!ct.Mehrstellen()) return;
@@ -957,7 +961,7 @@ void ExtendedGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
 {
     assert(loc_numpt_ > 0);
     assert(loc_numpt_ <= ld);
-    assert(array != 0);
+    assert(array != nullptr);
     assert(numst_ != 0);
     assert(grid_.vel() > 0.);
     assert(subdivx_ > 0);
@@ -1011,7 +1015,7 @@ void ExtendedGridOrbitals::computeDiagonalElementsDotProduct(
 void ExtendedGridOrbitals::computeGram(
     dist_matrix::DistMatrix<DISTMATDTYPE>& gram_mat)
 {
-    assert(proj_matrices_ != 0);
+    assert(proj_matrices_ != nullptr);
 
     SquareLocalMatrices<MATDTYPE> ss(subdivx_, numst_);
 
@@ -1025,7 +1029,7 @@ void ExtendedGridOrbitals::computeGram(
 void ExtendedGridOrbitals::computeGram(const ExtendedGridOrbitals& orbitals,
     dist_matrix::DistMatrix<DISTMATDTYPE>& gram_mat)
 {
-    assert(proj_matrices_ != 0);
+    assert(proj_matrices_ != nullptr);
 
     SquareLocalMatrices<MATDTYPE> ss(subdivx_, numst_);
 
@@ -1040,7 +1044,7 @@ void ExtendedGridOrbitals::computeGram(const ExtendedGridOrbitals& orbitals,
 // compute the lower-triangular part of the overlap matrix
 void ExtendedGridOrbitals::computeGram(const int verbosity)
 {
-    assert(proj_matrices_ != 0);
+    assert(proj_matrices_ != nullptr);
 
     overlap_tm_.start();
 
@@ -1066,7 +1070,7 @@ void ExtendedGridOrbitals::computeGram(const int verbosity)
 
 void ExtendedGridOrbitals::computeGramAndInvS(const int verbosity)
 {
-    assert(proj_matrices_ != 0);
+    assert(proj_matrices_ != nullptr);
 
     computeGram(verbosity);
 
@@ -1076,7 +1080,7 @@ void ExtendedGridOrbitals::computeGramAndInvS(const int verbosity)
 
 void ExtendedGridOrbitals::checkCond(const double tol, const bool flag_stop)
 {
-    assert(proj_matrices_ != 0);
+    assert(proj_matrices_ != nullptr);
 
     proj_matrices_->checkCond(tol, flag_stop);
 }
@@ -1084,7 +1088,7 @@ void ExtendedGridOrbitals::checkCond(const double tol, const bool flag_stop)
 double ExtendedGridOrbitals::dotProductWithDM(
     const ExtendedGridOrbitals& orbitals)
 {
-    assert(proj_matrices_ != 0);
+    assert(proj_matrices_ != nullptr);
 
     SquareLocalMatrices<MATDTYPE> ss(subdivx_, numst_);
 
@@ -1096,7 +1100,7 @@ double ExtendedGridOrbitals::dotProductWithDM(
 double ExtendedGridOrbitals::dotProductWithInvS(
     const ExtendedGridOrbitals& orbitals)
 {
-    assert(proj_matrices_ != 0);
+    assert(proj_matrices_ != nullptr);
 
     SquareLocalMatrices<MATDTYPE> ss(subdivx_, numst_);
 
@@ -1108,7 +1112,7 @@ double ExtendedGridOrbitals::dotProductWithInvS(
 double ExtendedGridOrbitals::dotProductDiagonal(
     const ExtendedGridOrbitals& orbitals)
 {
-    assert(proj_matrices_ != 0);
+    assert(proj_matrices_ != nullptr);
 
     std::vector<DISTMATDTYPE> ss(numst_);
     computeDiagonalElementsDotProduct(orbitals, ss);
@@ -1119,7 +1123,7 @@ double ExtendedGridOrbitals::dotProductDiagonal(
 double ExtendedGridOrbitals::dotProductSimple(
     const ExtendedGridOrbitals& orbitals)
 {
-    assert(proj_matrices_ != 0);
+    assert(proj_matrices_ != nullptr);
 
     SquareLocalMatrices<MATDTYPE> ss(subdivx_, numst_);
 

@@ -128,7 +128,7 @@ void PBEonGrid<T>::update()
 template <class T>
 double PBEonGrid<T>::getExc() const
 {
-    assert(pbe_ != NULL);
+    assert(pbe_ != nullptr);
 
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();

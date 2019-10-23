@@ -37,8 +37,8 @@ MVP_DMStrategy<T>::MVP_DMStrategy(MPI_Comm comm, ostream& os, Ions& ions,
       mgmol_strategy_(mgmol_strategy),
       use_old_dm_(use_old_dm)
 {
-    assert(electrostat_ != 0);
-    assert(energy_ != 0);
+    assert(electrostat_ != nullptr);
+    assert(energy_ != nullptr);
 }
 
 template <class T>

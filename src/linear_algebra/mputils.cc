@@ -19,6 +19,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <vector>
 
 Timer dgemm_tm("dgemm");
 Timer sgemm_tm("sgemm");
@@ -209,13 +210,13 @@ void MPsyrk(const char uplo, const char trans, const int n, const int k,
     if (trans == 'N' || trans == 'n')
     {
         /* buffer to hold accumulation in double */
-        double* buff = new double[n];
+        std::vector<double> buff(n);
         if (uplo == 'U' || uplo == 'u')
         {
             for (int j = 0; j < n; j++)
             {
                 const int len = j + 1;
-                memset(buff, 0, len * sizeof(double));
+                std::fill(buff.begin(), buff.begin() + len, 0.);
                 for (int l = 0; l < k; l++)
                 {
                     /* pointer to beginning of column l in matrix a */
@@ -224,7 +225,7 @@ void MPsyrk(const char uplo, const char trans, const int n, const int k,
                     double mult
                         = (double)(alpha
                                    * colL[j]); // same as alpha * a[lda*l + j];
-                    MPaxpy(len, mult, colL, buff);
+                    MPaxpy(len, mult, colL, buff.data());
                 }
                 /* Update col j of upper part of matrix C. */
                 /* Get pointer to beginning of column j in C. */
@@ -239,7 +240,7 @@ void MPsyrk(const char uplo, const char trans, const int n, const int k,
             for (int j = 0; j < n; j++)
             {
                 const int len = n - (j + 1);
-                memset(buff, 0, len * sizeof(double));
+                std::fill(buff.begin(), buff.begin() + len, 0.);
                 for (int l = 0; l < k; l++)
                 {
                     /* pointer to beginning of column l in matrix a */
@@ -248,7 +249,7 @@ void MPsyrk(const char uplo, const char trans, const int n, const int k,
                     double mult
                         = (double)(alpha
                                    * colL[0]); // same as alpha * a[lda*l + j];
-                    MPaxpy(len, mult, colL, buff);
+                    MPaxpy(len, mult, colL, buff.data());
                 }
                 /* Update col j of upper part of matrix C. */
                 /* Get pointer to beginning of column j in C. */
@@ -340,17 +341,17 @@ void LinearAlgebraUtils<MemorySpace::Host>::MPgemm(const char transa,
         if (transa == 'N' || transa == 'n')
         {
             /* buffer to hold accumulation in double */
-            double* buff = new double[m];
+            std::vector<double> buff(m);
             for (int j = 0; j < n; j++)
             {
-                memset(buff, 0, m * sizeof(double));
+                std::fill(buff.begin(), buff.end(), 0.);
                 for (int l = 0; l < k; l++)
                 {
                     /* pointer to beginning of column l in matrix a */
                     const T1* colL = a + lda * l;
                     /* get multiplier */
                     double mult = (double)(alpha * b[ldb * j + l]);
-                    MPaxpy(m, mult, colL, buff);
+                    MPaxpy(m, mult, colL, buff.data());
                 }
                 /* Update col j of of result matrix C. */
                 /* Get pointer to beginning of column j in C. */
@@ -382,17 +383,17 @@ void LinearAlgebraUtils<MemorySpace::Host>::MPgemm(const char transa,
         if (transa == 'N' || transa == 'n')
         {
             /* buffer to hold accumulation in double */
-            double* buff = new double[m];
+            std::vector<double> buff(m);
             for (int j = 0; j < n; j++)
             {
-                memset(buff, 0, m * sizeof(double));
+                std::fill(buff.begin(), buff.end(), 0.);
                 for (int l = 0; l < k; l++)
                 {
                     /* pointer to beginning of column l in matrix a */
                     const T1* colL = a + lda * l;
                     /* get multiplier */
                     double mult = (double)(alpha * b[ldb * l + j]);
-                    MPaxpy(m, mult, colL, buff);
+                    MPaxpy(m, mult, colL, buff.data());
                 }
                 /* Update col j of of result matrix C. */
                 /* Get pointer to beginning of column j in C. */
@@ -461,17 +462,17 @@ void LinearAlgebraUtils<MemorySpace::Host>::MPgemm<float, float, float>(
         if (transa == 'N' || transa == 'n')
         {
             /* buffer to hold accumulation in double */
-            double* buff = new double[m];
+            std::vector<double> buff(m);
             for (int j = 0; j < n; j++)
             {
-                memset(buff, 0, m * sizeof(double));
+                std::fill(buff.begin(), buff.end(), 0);
                 for (int l = 0; l < k; l++)
                 {
                     /* pointer to beginning of column l in matrix a */
                     const float* colL = a + lda * l;
                     /* get multiplier */
                     double mult = (double)(alpha * b[ldb * j + l]);
-                    MPaxpy(m, mult, colL, buff);
+                    MPaxpy(m, mult, colL, buff.data());
                 }
                 /* Update col j of of result matrix C. */
                 /* Get pointer to beginning of column j in C. */
@@ -501,17 +502,17 @@ void LinearAlgebraUtils<MemorySpace::Host>::MPgemm<float, float, float>(
         if (transa == 'N' || transa == 'n')
         {
             /* buffer to hold accumulation in double */
-            double* buff = new double[m];
+            std::vector<double> buff(m);
             for (int j = 0; j < n; j++)
             {
-                memset(buff, 0, m * sizeof(double));
+                std::fill(buff.begin(), buff.end(), 0);
                 for (int l = 0; l < k; l++)
                 {
                     /* pointer to beginning of column l in matrix a */
                     const float* colL = a + lda * l;
                     /* get multiplier */
                     double mult = (double)(alpha * b[ldb * l + j]);
-                    MPaxpy(m, mult, colL, buff);
+                    MPaxpy(m, mult, colL, buff.data());
                 }
                 /* Update col j of of result matrix C. */
                 /* Get pointer to beginning of column j in C. */
@@ -700,13 +701,13 @@ void MPsyrk(const char uplo, const char trans, const int n, const int k,
     if (trans == 'N' || trans == 'n')
     {
         /* buffer to hold accumulation in double */
-        double* buff = new double[n];
+        std::vector<double> buff(n);
         if (uplo == 'U' || uplo == 'u')
         {
             for (int j = 0; j < n; j++)
             {
                 const int len = j + 1;
-                memset(buff, 0, len * sizeof(double));
+                std::fill(buff.begin(), buff.begin() + len, 0.);
                 for (int l = 0; l < k; l++)
                 {
                     /* pointer to beginning of column l in matrix a */
@@ -715,7 +716,7 @@ void MPsyrk(const char uplo, const char trans, const int n, const int k,
                     double mult
                         = (double)(alpha
                                    * colL[j]); // same as alpha * a[lda*l + j];
-                    MPaxpy(len, mult, colL, buff);
+                    MPaxpy(len, mult, colL, buff.data());
                 }
                 /* Update col j of upper part of matrix C. */
                 /* Get pointer to beginning of column j in C. */
@@ -730,7 +731,7 @@ void MPsyrk(const char uplo, const char trans, const int n, const int k,
             for (int j = 0; j < n; j++)
             {
                 const int len = n - (j + 1);
-                memset(buff, 0, len * sizeof(double));
+                std::fill(buff.begin(), buff.begin() + len, 0.);
                 for (int l = 0; l < k; l++)
                 {
                     /* pointer to beginning of column l in matrix a */
@@ -739,7 +740,7 @@ void MPsyrk(const char uplo, const char trans, const int n, const int k,
                     double mult
                         = (double)(alpha
                                    * colL[0]); // same as alpha * a[lda*l + j];
-                    MPaxpy(len, mult, colL, buff);
+                    MPaxpy(len, mult, colL, buff.data());
                 }
                 /* Update col j of upper part of matrix C. */
                 /* Get pointer to beginning of column j in C. */

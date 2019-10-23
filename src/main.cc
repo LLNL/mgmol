@@ -700,6 +700,10 @@ int main(int argc, char** argv)
 #endif
 
     mpirc = MPI_Finalize();
+    if (mpirc != MPI_SUCCESS)
+    {
+        cerr << "MPI Finalize failed!!!" << endl;
+    }
 
     time_t tt;
     time(&tt);

@@ -420,7 +420,7 @@ GridFunc<T>::GridFunc(const T* const src, const Grid& new_grid, const short px,
     assert(grid_.sizeg() > 0);
     assert(grid_.inc(2) == 1);
     assert(dis == 'd' || dis == 'g' || dis == 's');
-    assert(src != 0);
+    assert(src != nullptr);
 
     if (!grid_.active()) return;
 
@@ -669,6 +669,7 @@ GridFunc<T> GridFunc<T>::operator*(const double val)
 
     T* __restrict__ tu       = &tmp.uu_[0];
     const T* __restrict__ pu = &uu_[0];
+    assert(tu != nullptr);
     for (int i = 0; i < n; i++)
         tu[i] = val * pu[i];
 
@@ -1765,7 +1766,7 @@ void GridFunc<T>::init_vect(T* vv, const char dis) const
     if (!grid_.active()) return;
 
     assert(grid_.inc(2) == 1);
-    assert(vv != 0);
+    assert(vv != nullptr);
 
     if (dis == 'g')
     {
@@ -1786,7 +1787,7 @@ void GridFunc<T>::getValues(T2* vv) const
     if (!grid_.active()) return;
 
     assert(grid_.inc(2) == 1);
-    assert(vv != 0);
+    assert(vv != nullptr);
 
     const short nghosts = ghost_pt();
 
@@ -2480,7 +2481,7 @@ void GridFunc<T>::setBoundaryValuesBeforeTrade()
     if (directionMultipole_[0] || directionMultipole_[1]
         || directionMultipole_[2])
     {
-        assert(bc_func_ != NULL);
+        assert(bc_func_ != nullptr);
         setBoundaryValues(*bc_func_, directionMultipole_);
     }
 }
@@ -3883,6 +3884,7 @@ void GridFunc<T>::test_trade_boundaries()
     MPI_Comm_size(mype_env().comm(), &ntasks);
     assert(ntasks == mype_env().n_mpi_tasks());
 
+    assert(uu_ != nullptr);
     memset(uu_, 0, grid_.sizeg() * sizeof(T));
 
     for (ix = ghost_pt(); ix < ghost_pt() + dim(0); ix++)

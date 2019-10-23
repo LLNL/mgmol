@@ -32,7 +32,7 @@ int MGmol<T>::readLRsFromInput(std::ifstream* tfile)
 {
     Control& ct(*(Control::instance()));
 
-    assert(lrs_ != 0);
+    assert(lrs_ != nullptr);
     assert(ct.restart_info < 3 || !ct.isLocMode());
 
     if (ct.verbose > 0) printWithTimeStamp("readLRsFromInput", os_);

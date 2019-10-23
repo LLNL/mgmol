@@ -81,8 +81,8 @@ LocGridOrbitals::LocGridOrbitals(std::string name, const pb::Grid& my_grid,
 {
     // preconditions
     assert(subdivx > 0);
-    assert(proj_matrices != 0);
-    assert(lrs != 0);
+    assert(proj_matrices != nullptr);
+    assert(lrs != nullptr);
 
     for (short i = 0; i < 3; i++)
         assert(bc[i] == 0 || bc[i] == 1);
@@ -111,9 +111,9 @@ LocGridOrbitals::LocGridOrbitals(std::string name, const pb::Grid& my_grid,
 
 LocGridOrbitals::~LocGridOrbitals()
 {
-    assert(proj_matrices_ != 0);
+    assert(proj_matrices_ != nullptr);
     assert(pack_);
-    assert(gidToStorage_ != 0);
+    assert(gidToStorage_ != nullptr);
 
     // delete gidToStorage here. This is OK since it is not a shared data
     // else there would be a memory leak.
@@ -136,8 +136,8 @@ LocGridOrbitals::LocGridOrbitals(
     // copy_data)"<<endl;
 
     assert(A.chromatic_number_ >= 0);
-    assert(A.proj_matrices_ != 0);
-    assert(A.lrs_ != 0);
+    assert(A.proj_matrices_ != nullptr);
+    assert(A.lrs_ != nullptr);
 
     copySharedData(A);
 
@@ -158,9 +158,9 @@ LocGridOrbitals::LocGridOrbitals(const std::string& name,
       lrs_(A.lrs_)
 {
     assert(A.chromatic_number_ >= 0);
-    assert(proj_matrices != 0);
-    assert(masks != 0);
-    assert(lrs_ != 0);
+    assert(proj_matrices != nullptr);
+    assert(masks != nullptr);
+    assert(lrs_ != nullptr);
 
     copySharedData(A);
 
@@ -181,7 +181,7 @@ void LocGridOrbitals::copySharedData(const LocGridOrbitals& A)
     // if(onpe0)cout<<"call LocGridOrbitals::copySharedData(const
     // LocGridOrbitals &A)"<<endl;
 
-    assert(A.gidToStorage_ != 0);
+    assert(A.gidToStorage_ != nullptr);
     assert(A.pack_);
 
     numst_ = A.numst_;
@@ -202,7 +202,7 @@ void LocGridOrbitals::copySharedData(const LocGridOrbitals& A)
 
 void LocGridOrbitals::copyDataFrom(const LocGridOrbitals& src)
 {
-    assert(proj_matrices_ != 0);
+    assert(proj_matrices_ != nullptr);
 
     block_vector_.copyDataFrom(src.block_vector_);
 
@@ -265,7 +265,7 @@ const ORBDTYPE* LocGridOrbitals::getGidStorage(
 void LocGridOrbitals::setup(
     MasksSet* masks, MasksSet* corrmasks, LocalizationRegions* lrs)
 {
-    assert(masks != 0);
+    assert(masks != nullptr);
     Control& ct = *(Control::instance());
     if (ct.verbose > 0)
         printWithTimeStamp("LocGridOrbitals::setup(MasksSet*, MasksSet*)...",
@@ -282,8 +282,8 @@ void LocGridOrbitals::setup(LocalizationRegions* lrs)
     Control& ct = *(Control::instance());
 
     // preconditions
-    assert(lrs != 0);
-    assert(proj_matrices_ != 0);
+    assert(lrs != nullptr);
+    assert(proj_matrices_ != nullptr);
 
     if (ct.verbose > 0)
         printWithTimeStamp("LocGridOrbitals::setup()...", (*MPIdata::sout));
@@ -340,7 +340,7 @@ void LocGridOrbitals::assign(const LocGridOrbitals& orbitals)
     mmpi.barrier();
 #endif
     assert(chromatic_number_ >= 0);
-    assert(proj_matrices_ != 0);
+    assert(proj_matrices_ != nullptr);
 
     setIterativeIndex(orbitals);
 
@@ -387,8 +387,8 @@ void LocGridOrbitals::axpy(const double alpha, const LocGridOrbitals& orbitals)
 {
     axpy_tm_.start();
 
-    assert(pack_ != 0);
-    assert(orbitals.pack_ != 0);
+    assert(pack_ != nullptr);
+    assert(orbitals.pack_ != nullptr);
     assert(overlapping_gids_.size() > 0);
 
     //    int ione=1;
@@ -695,7 +695,7 @@ void LocGridOrbitals::initFourier()
 
 int LocGridOrbitals::packStates(LocalizationRegions* lrs)
 {
-    assert(lrs != 0);
+    assert(lrs != nullptr);
 
     Control& ct = *(Control::instance());
 
@@ -914,7 +914,7 @@ void LocGridOrbitals::multiply_by_matrix(
 
 int LocGridOrbitals::read_hdf5(HDFrestart& h5f_file)
 {
-    assert(proj_matrices_ != 0);
+    assert(proj_matrices_ != nullptr);
 
     Control& ct = *(Control::instance());
 
@@ -948,9 +948,9 @@ int LocGridOrbitals::read_hdf5(HDFrestart& h5f_file)
     return ierr;
 }
 
-int LocGridOrbitals::write_hdf5(HDFrestart& h5f_file, string name)
+int LocGridOrbitals::write_hdf5(HDFrestart& h5f_file, const string& name)
 {
-    assert(proj_matrices_ != 0);
+    assert(proj_matrices_ != nullptr);
     Control& ct = *(Control::instance());
 
     if (!ct.fullyOccupied())
@@ -962,7 +962,7 @@ int LocGridOrbitals::write_hdf5(HDFrestart& h5f_file, string name)
         if (ierr < 0) return ierr;
     }
 
-    int ierr = write_func_hdf5(h5f_file, std::move(name));
+    int ierr = write_func_hdf5(h5f_file, name);
 
     return ierr;
 }
@@ -1384,7 +1384,7 @@ void LocGridOrbitals::computeMatB(
 {
     if (numst_ == 0) return;
 
-    assert(proj_matrices_ != 0);
+    assert(proj_matrices_ != nullptr);
 
     matB_tm_.start();
 #if DEBUG
@@ -1440,7 +1440,7 @@ void LocGridOrbitals::computeMatB(
 // compute <Phi|B|Phi> and its inverse
 void LocGridOrbitals::computeBAndInvB(const pb::Lap<ORBDTYPE>& LapOper)
 {
-    assert(proj_matrices_ != 0);
+    assert(proj_matrices_ != nullptr);
 
     Control& ct = *(Control::instance());
     if (!ct.Mehrstellen()) return;
@@ -1507,7 +1507,7 @@ void LocGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
 {
     assert(loc_numpt_ > 0);
     assert(loc_numpt_ <= ld);
-    assert(array != 0);
+    assert(array != nullptr);
     assert(chromatic_number_ != 0);
     assert(grid_.vel() > 0.);
     assert(subdivx_ > 0);
@@ -1611,7 +1611,7 @@ void LocGridOrbitals::computeDiagonalElementsDotProductLocal(
 void LocGridOrbitals::computeGram(
     dist_matrix::DistMatrix<DISTMATDTYPE>& gram_mat)
 {
-    assert(proj_matrices_ != 0);
+    assert(proj_matrices_ != nullptr);
 
     SquareLocalMatrices<MATDTYPE> ss(subdivx_, chromatic_number_);
 
@@ -1625,7 +1625,7 @@ void LocGridOrbitals::computeGram(
 void LocGridOrbitals::computeGram(const LocGridOrbitals& orbitals,
     dist_matrix::DistMatrix<DISTMATDTYPE>& gram_mat)
 {
-    assert(proj_matrices_ != 0);
+    assert(proj_matrices_ != nullptr);
 
     SquareLocalMatrices<MATDTYPE> ss(subdivx_, chromatic_number_);
 
@@ -1640,7 +1640,7 @@ void LocGridOrbitals::computeGram(const LocGridOrbitals& orbitals,
 // compute the lower-triangular part of the overlap matrix
 void LocGridOrbitals::computeGram(const int verbosity)
 {
-    assert(proj_matrices_ != 0);
+    assert(proj_matrices_ != nullptr);
 
     // if( chromatic_number_==0 )return;
 
@@ -1667,7 +1667,7 @@ void LocGridOrbitals::computeGram(const int verbosity)
 
 void LocGridOrbitals::computeGramAndInvS(const int verbosity)
 {
-    assert(proj_matrices_ != 0);
+    assert(proj_matrices_ != nullptr);
 
     computeGram(verbosity);
 
@@ -1677,14 +1677,14 @@ void LocGridOrbitals::computeGramAndInvS(const int verbosity)
 
 void LocGridOrbitals::checkCond(const double tol, const bool flag_stop)
 {
-    assert(proj_matrices_ != 0);
+    assert(proj_matrices_ != nullptr);
 
     proj_matrices_->checkCond(tol, flag_stop);
 }
 
 double LocGridOrbitals::dotProductWithDM(const LocGridOrbitals& orbitals)
 {
-    assert(proj_matrices_ != 0);
+    assert(proj_matrices_ != nullptr);
     assert(chromatic_number_ == orbitals.chromatic_number_);
 
     SquareLocalMatrices<MATDTYPE> ss(subdivx_, chromatic_number_);
@@ -1696,7 +1696,7 @@ double LocGridOrbitals::dotProductWithDM(const LocGridOrbitals& orbitals)
 
 double LocGridOrbitals::dotProductWithInvS(const LocGridOrbitals& orbitals)
 {
-    assert(proj_matrices_ != 0);
+    assert(proj_matrices_ != nullptr);
     assert(chromatic_number_ == orbitals.chromatic_number_);
 
     SquareLocalMatrices<MATDTYPE> ss(subdivx_, chromatic_number_);
@@ -1708,7 +1708,7 @@ double LocGridOrbitals::dotProductWithInvS(const LocGridOrbitals& orbitals)
 
 double LocGridOrbitals::dotProductDiagonal(const LocGridOrbitals& orbitals)
 {
-    assert(proj_matrices_ != 0);
+    assert(proj_matrices_ != nullptr);
     //(*MPIdata::sout)<<"call LocGridOrbitals::dotProductDiagonal()..."<<endl;
 
     vector<DISTMATDTYPE> ss;
@@ -1727,7 +1727,7 @@ double LocGridOrbitals::dotProductDiagonal(const LocGridOrbitals& orbitals)
 
 double LocGridOrbitals::dotProductSimple(const LocGridOrbitals& orbitals)
 {
-    assert(proj_matrices_ != 0);
+    assert(proj_matrices_ != nullptr);
     assert(chromatic_number_ == orbitals.chromatic_number_);
 
     SquareLocalMatrices<MATDTYPE> ss(subdivx_, chromatic_number_);

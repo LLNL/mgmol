@@ -40,8 +40,8 @@ ProjectedMatricesMehrstellen::~ProjectedMatricesMehrstellen()
 
 void ProjectedMatricesMehrstellen::computeInvB()
 {
-    assert(matB_ != 0);
-    assert(invB_ != 0);
+    assert(matB_ != nullptr);
+    assert(invB_ != nullptr);
     {
 
 #ifdef DEBUG

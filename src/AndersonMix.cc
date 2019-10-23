@@ -53,9 +53,9 @@ template <class T>
 AndersonMix<T>::~AndersonMix()
 {
     for (int i = 0; i < m_; i++)
-        assert(xi_[i] != 0);
+        assert(xi_[i] != nullptr);
     for (int i = 0; i < m_; i++)
-        assert(fi_[i] != 0);
+        assert(fi_[i] != nullptr);
 
     for (int i = 0; i < m_; i++)
         delete xi_[i];
@@ -88,7 +88,7 @@ void AndersonMix<T>::update(T& f, T& work, ostream& os, const bool verbose)
         for (int i = 0; i < mm_; i++)
         {
             work.assign(f);
-            assert(fi_[i] != 0);
+            assert(fi_[i] != nullptr);
             work -= (*fi_[i]);
 
             mat_[i * m_ + i] = work.dotProduct(work);
@@ -293,11 +293,11 @@ void AndersonMix<T>::update(T& f, T& work, ostream& os, const bool verbose)
         }
 
         // update fi_ for next step
-        assert(fi_[m_ - 1] != 0);
+        assert(fi_[m_ - 1] != nullptr);
         T* tf = fi_[m_ - 1];
         for (int j = m_ - 1; j > 0; j--)
         {
-            assert(fi_[j - 1] != 0);
+            assert(fi_[j - 1] != nullptr);
             fi_[j] = fi_[j - 1];
         }
         fi_[0] = tf;

@@ -539,7 +539,7 @@ void RadialMeshFunction::rft(RadialMeshFunction& filt_func, const int lval,
 void RadialMeshFunction::printLocalPot(
     const std::string& name, const short ll, std::ofstream* tfile)
 {
-    assert(tfile != 0);
+    assert(tfile != nullptr);
 
     const std::vector<double>& potloc = y_[0];
 
