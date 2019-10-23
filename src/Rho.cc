@@ -736,18 +736,9 @@ void Rho<T>::computeRhoSubdomainUsingBlas3(const int iloc_init,
                 MemorySpace::allocate_data_dev<ORBDTYPE>(nrows * ncols),
                 MemorySpace::delete_data_dev);
 
-            auto& magma_singleton = MagmaSingleton::get_magma_singleton();
-            magma_queue_sync(magma_singleton.queue);
-
             LinearAlgebraUtils<MemorySpace::Device>::MPgemmNN(nrows, ncols,
                 ncols, 1., phi1_dev.get(), ld, mat_dev.get(), ncols, 0.,
                 product_dev.get(), nrows);
-
-            // Before we can copy the result to the host, we need to wait
-            // for the GPU to be done.
-            // auto& magma_singleton =
-            MagmaSingleton::get_magma_singleton();
-            magma_queue_sync(magma_singleton.queue);
 
             MemorySpace::copy_to_host(product_dev, nrows * ncols, product);
         }
