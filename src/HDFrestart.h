@@ -180,9 +180,7 @@ public:
     hid_t file_id() const { return file_id_; }
     std::string filename() const { return filename_; }
     bool active() const { return active_; }
-#ifdef USE_MPI
     MPI_Comm& comm_active() { return comm_active_; }
-#endif
 
     ~HDFrestart();
     int close();

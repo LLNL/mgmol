@@ -209,14 +209,8 @@ void TriCubic<T>::getValues(
                  << endl;
         }
     }
-    //#ifdef USE_MPI
-    //    vector<double> tmp(val);
-    //    //cout<<"TriCubic::getValues(), MPI_Allreduce,
-    //    tmp.size()="<<tmp.size()<<endl; MPI_Allreduce(&tmp[0], &val[0], n,
-    //    MPI_DOUBLE, MPI_SUM, comm);
-    //#endif
-    return;
 }
+
 template <class T>
 void TriCubic<T>::getGradient(const double r[3], double dfdr[3], MPI_Comm comm)
 {
@@ -278,13 +272,6 @@ void TriCubic<T>::getGradient(const double r[3], double dfdr[3], MPI_Comm comm)
         cout << "WARNING: TriCubic::getGradient(), position outside domain..."
              << endl;
     }
-    //#ifdef USE_MPI
-    //    double tmp[3]={0.,0.,0.};
-    //    MPI_Allreduce(dfdr, tmp, 3, MPI_DOUBLE, MPI_SUM, comm);
-    //    for(short i=0;i<3;i++){
-    //        dfdr[i]=tmp[i];
-    //    }
-    //#endif
 }
 template class TriCubic<double>;
 template class TriCubic<float>;

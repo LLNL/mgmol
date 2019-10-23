@@ -211,7 +211,6 @@ void Species::read_1species(const string& filename)
 #endif
     }
 
-#ifdef USE_MPI
     int mpirc = MPI_Bcast(buf_name, size_buf, MPI_CHAR, 0, comm_);
     if (mpirc != MPI_SUCCESS)
     {
@@ -225,7 +224,6 @@ void Species::read_1species(const string& filename)
         MPI_Bcast(&h2s_, 1, MPI_DOUBLE, 0, comm_);
         MPI_Bcast(&h1p_, 1, MPI_DOUBLE, 0, comm_);
     }
-#endif
     assert(n_rad_points_ > 0);
     assert(num_potentials_ > 0);
     assert(llocal_ < num_potentials_);

@@ -30,7 +30,6 @@ typedef int LOGICAL;
 
 extern "C"
 {
-#ifdef USE_MPI
     void pdsaupd(int*, int*, const char* bmat, const int* const,
         const char* which, const int* const, const double* const, double* resid,
         const int* const, double* V, const int* const, int* iparam, int* ipntr,
@@ -41,18 +40,6 @@ extern "C"
         const double* const, double* resid, const int* const, double* V,
         const int* const, int* iparam, int* ipntr, double* workd, double* workl,
         const int* const, int* info);
-#else
-    void dsaupd(int*, const char* bmat, const int* const, const char* which,
-        const int* const, const double* const, double* resid, const int* const,
-        double* V, const int* const, int* iparam, int* ipntr, double* workd,
-        double* workl, const int* const, int* info);
-    void dseupd(LOGICAL&, const char* const, LOGICAL*, double*, double*,
-        const int* const, const double* const, const char* bmat,
-        const int* const, const char* which, const int* const,
-        const double* const, double* resid, const int* const, double* V,
-        const int* const, int* iparam, int* ipntr, double* workd, double* workl,
-        const int* const, int* info);
-#endif
 }
 
 extern Hamiltonian* hamiltonian;
@@ -187,23 +174,16 @@ double getLAeigen(const double tol, const int maxit, Ions& ions)
     pb::GridFunc<ORBDTYPE> gfpsi(mygrid, ct.bc[0], ct.bc[1], ct.bc[2]);
 
     // main loop
-    int ido = 0;
-    int it  = 1;
-#ifdef USE_MPI
+    int ido         = 0;
+    int it          = 1;
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     MPI_Comm comm   = mmpi.comm();
-#endif
     do
     {
 
         // if ( onpe0 )(*MPIdata::sout)<<"Iteration "<<it<<endl;
-#ifdef USE_MPI
         pdsaupd(&comm, &ido, &bmat, &numpt, &which[0], &nev, &tol, resid, &ncv,
             v, &ldv, iparam, ipntr, workd, workl, &lworkl, &info);
-#else
-        dsaupd(&ido, &bmat, &numpt, &which[0], &nev, &tol, resid, &ncv, v, &ldv,
-            &iparam[0], ipntr, workd, workl, &lworkl, &info);
-#endif
 
         assert(ido != 2);
         assert(ido != 3);
@@ -243,15 +223,9 @@ double getLAeigen(const double tol, const int maxit, Ions& ions)
         double* z = new double[1];
         int ldz   = 1;
         double sigma;
-#ifdef USE_MPI
         pdseupd(&comm, rvec, &howmny, select, d, z, &ldz, &sigma, &bmat, &numpt,
             &which[0], &nev, &tol, resid, &ncv, v, &ldv, iparam, ipntr, workd,
             workl, &lworkl, &info);
-#else
-        dseupd(rvec, &howmny, select, d, z, &ldz, &sigma, &bmat, &numpt,
-            &which[0], &nev, &tol, resid, &ncv, v, &ldv, &iparam[0], ipntr,
-            workd, workl, &lworkl, &info);
-#endif
         if (onpe0)
         {
             for (int i = 0; i < nev; i++)

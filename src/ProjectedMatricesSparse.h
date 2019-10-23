@@ -370,10 +370,8 @@ public:
             // ofstream tfile("s.mm", ios::out);;
             // gm_->printMM(tfile);
             // tfile.close();
-#ifdef USE_MPI
             MGmol_MPI& mgmolmpi = *(MGmol_MPI::instance());
             mgmolmpi.barrier();
-#endif
             if (onpe0)
                 (*MPIdata::sout)
                     << " CONDITION NUMBER OF THE OVERLAP MATRIX EXCEEDS TOL: "

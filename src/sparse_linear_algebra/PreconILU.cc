@@ -11,9 +11,7 @@
 #include <iostream>
 #include <vector>
 
-#ifdef USE_MPI
 #include <mpi.h>
-#endif
 
 #include "LinearSolverMatrix.h"
 #include "MPIdata.h"

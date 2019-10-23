@@ -8,8 +8,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifdef USE_MPI
-
 #include "mpi.h"
 #include <cassert>
 #include <iostream>
@@ -167,5 +165,3 @@ template int MPI_AlltofirstNv<int>(int* sendbuf, int* sendcnts, int* sdispls,
 template int MPI_AlltofirstNv<unsigned short>(unsigned short* sendbuf,
     int* sendcnts, int* sdispls, unsigned short* recvbuf, int* recvcnts,
     int* rdispls, const int nfirst, MPI_Comm comm);
-
-#endif

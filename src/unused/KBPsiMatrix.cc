@@ -44,7 +44,6 @@ KBPsiMatrix::KBPsiMatrix(pb::Lap<ORBDTYPE>* lapop) : lapop_(lapop)
     setIterativeIndex(-1);
     count_proj_subdomain_ = -1;
 
-#ifdef USE_MPI
     Mesh* mymesh             = Mesh::instance();
     const pb::PEenv& myPEenv = mymesh->peenv();
 
@@ -63,16 +62,13 @@ KBPsiMatrix::KBPsiMatrix(pb::Lap<ORBDTYPE>* lapop) : lapop_(lapop)
             exit(0);
         }
     }
-#endif
 };
 
 KBPsiMatrix::~KBPsiMatrix()
 {
     clear();
-#ifdef USE_MPI
     for (int dir = 0; dir < 3; dir++)
         MPI_Comm_free(&comm_dir_[dir]);
-#endif
 }
 
 void KBPsiMatrix::clear()
@@ -212,7 +208,6 @@ void KBPsiMatrix::globalSumKBpsi(const Ions& ions)
         &data_size_tmp, &data_size, 1, MPI_INT, MPI_SUM, myPEenv.comm());
 #endif
 
-#ifdef USE_MPI
     Control& ct = *(Control::instance());
 
 #ifdef USE_OLD_ALGO // old algorithm: communicate the whole <KB|psi> matrix
@@ -321,7 +316,6 @@ void KBPsiMatrix::globalSumKBpsi(const Ions& ions)
 
 #endif
 
-#endif
     global_sum_tm_.stop();
 
     return;
@@ -432,7 +426,6 @@ void KBPsiMatrix::computeKBpsi(
     compute_kbpsi_tm_.stop();
 }
 
-#ifdef USE_MPI
 void KBPsiMatrix::allGatherNonzeroElements(MPI_Comm comm, const int ntasks)
 {
     allGatherNonzeroElements_tm_.start();
@@ -472,7 +465,6 @@ void KBPsiMatrix::allGatherNonzeroElements(MPI_Comm comm, const int ntasks)
 
     allGatherNonzeroElements_tm_.stop();
 }
-#endif
 
 void KBPsiMatrix::computeSetNonZeroElements(
     const Ions& ions, const LocGridOrbitals& orbitals)
@@ -502,7 +494,6 @@ void KBPsiMatrix::computeSetNonZeroElements(
             }
         }
 
-#ifdef USE_MPI
     // complete with sets from other tasks
     const pb::PEenv& myPEenv = mymesh->peenv();
 
@@ -521,7 +512,6 @@ void KBPsiMatrix::computeSetNonZeroElements(
         // it--;
         //(*MPIdata::sout)<<"Largest element in nonzero_elements_: "<<*it<<endl;
     }
-#endif
 }
 
 void KBPsiMatrix::scaleWithKBcoeff(const Ions& ions)
@@ -745,16 +735,12 @@ void KBPsiMatrix::getPsiKBPsiSym(
 void KBPsiMatrix::getPsiKBPsiSym(
     const Ions& ions, dist_matrix::DistMatrix<DISTMATDTYPE>& Aij)
 {
-#ifdef USE_MPI
     assert(remote_tasks_DistMatrix_ != 0);
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     MPI_Comm comm   = mmpi.commSameSpin();
     dist_matrix::SparseDistMatrix<DISTMATDTYPE> sm(comm, Aij,
         remote_tasks_DistMatrix_, sparse_distmatrix_tasks_per_partitions);
-#else
-    dist_matrix::SparseDistMatrix<DISTMATDTYPE> sm(0, Aij);
-#endif
 
     getPsiKBPsiSym(ions, sm);
 

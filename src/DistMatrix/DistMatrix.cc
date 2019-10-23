@@ -21,9 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef USE_MPI
 #include <mpi.h>
-#endif
 
 #ifdef SCALAPACK
 #include "blacs.h"
@@ -1376,9 +1374,7 @@ double DistMatrix<double>::norm(char ty)
         norm_val = dlange(&ty, &m_, &n_, &val_[0], &m_, &work[0]);
 #endif
     }
-#ifdef USE_MPI
     MPI_Bcast(&norm_val, 1, MPI_DOUBLE, 0, comm_global_);
-#endif
     return norm_val;
 }
 
@@ -1404,9 +1400,7 @@ double DistMatrix<float>::norm(char ty)
         norm_val     = (double)slange(&ty, &m_, &n_, &val_[0], &m_, &work[0]);
 #endif
     }
-#ifdef USE_MPI
     MPI_Bcast(&norm_val, 1, MPI_FLOAT, 0, comm_global_);
-#endif
     return norm_val;
 }
 
@@ -2051,7 +2045,6 @@ void DistMatrix<T>::getDiagonalValues(T* const dmat) const
             }
         }
     }
-#ifdef USE_MPI
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     T* recvbuf      = new T[m_];
     mmpi.allreduce(dmat, recvbuf, m_, MPI_SUM);
@@ -2059,7 +2052,6 @@ void DistMatrix<T>::getDiagonalValues(T* const dmat) const
     //                   MPI_DOUBLE, MPI_SUM, comm_global_ );
     memcpy(dmat, recvbuf, m_ * sizeof(T));
     delete[] recvbuf;
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2083,9 +2075,7 @@ double DistMatrix<double>::trace(void) const
 #endif
     }
 
-#ifdef USE_MPI
     MPI_Bcast(&trace, 1, MPI_DOUBLE, 0, comm_global_);
-#endif
     return trace;
 }
 
@@ -2107,9 +2097,7 @@ double DistMatrix<float>::trace(void) const
 #endif
     }
 
-#ifdef USE_MPI
     MPI_Bcast(&trace, 1, MPI_DOUBLE, 0, comm_global_);
-#endif
     return trace;
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -2565,9 +2553,7 @@ void DistMatrix<T>::print(std::ostream& os, const int ia, const int ja,
     BlacsContext bcl(comm_global_, 1, 1);
     DistMatrix<T> t("DistMatrix<T>::print", bcl, m, n);
 
-#ifdef USE_MPI
     MPI_Barrier(comm_global_);
-#endif
     t.getsub(*this, m, n, ia, ja);
     if (t.active())
     {
@@ -2595,9 +2581,7 @@ float DistMatrix<float>::getVal(const int i, const int j) const
 
     float val;
     if (active_) pselget(&scope, &top, &val, val_.data(), &ia, &ja, desc_);
-#ifdef USE_MPI
     MPI_Bcast(&val, 1, MPI_DOUBLE, 0, comm_global_);
-#endif
     return val;
 }
 
@@ -2612,9 +2596,7 @@ double DistMatrix<double>::getVal(const int i, const int j) const
 
     double val;
     if (active_) pdelget(&scope, &top, &val, val_.data(), &ia, &ja, desc_);
-#ifdef USE_MPI
     MPI_Bcast(&val, 1, MPI_FLOAT, 0, comm_global_);
-#endif
     return val;
 }
 

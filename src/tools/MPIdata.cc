@@ -12,9 +12,7 @@
 
 #include "MPIdata.h"
 
-#ifdef USE_MPI
 int MPIdata::mype; // rank of this process
 bool MPIdata::onpe0;
 std::ostream* MPIdata::sout = &std::cout; // default value
 std::ostream* MPIdata::serr = &std::cerr; // default value
-#endif

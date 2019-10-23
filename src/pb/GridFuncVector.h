@@ -71,11 +71,9 @@ class GridFuncVector : public GridFuncVectorInterface
     static std::vector<std::vector<T>> comm_buf3_;
     static std::vector<std::vector<T>> comm_buf4_;
 
-#ifdef USE_MPI
     MPI_Request req_east_west_[4];
     MPI_Request req_north_south_[4];
     MPI_Request req_up_down_[4];
-#endif
 
     void wait_north_south();
     void wait_east_west();

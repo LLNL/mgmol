@@ -94,14 +94,10 @@ template <class T>
 void LocalMatrices2DistMatrix::accumulate(const LocalMatrices<T>& src,
     dist_matrix::DistMatrix<T>& dst, const int numst, const double tol) const
 {
-#ifdef USE_MPI
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     MPI_Comm comm   = mmpi.commSameSpin();
     dist_matrix::SparseDistMatrix<DISTMATDTYPE> sm(
         comm, dst, sparse_distmatrix_nb_tasks_per_partitions_);
-#else
-    dist_matrix::SparseDistMatrix<DISTMATDTYPE> sm(0, dst);
-#endif
 
     // convert into a SparseDistMatrix
     convert(src, sm, numst, tol);

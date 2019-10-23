@@ -250,13 +250,11 @@ bool GlobalLBFGS::checkTolForces(const double tol)
         (*MPIdata::sout) << setprecision(3) << scientific
                          << "global_lbfgs: Max. |force| for image = "
                          << sqrt(f2) << endl;
-    int flag_convF = (f2 < tol * tol);
-#if USE_MPI
+    int flag_convF           = (f2 < tol * tol);
     Mesh* mymesh             = Mesh::instance();
     const pb::PEenv& myPEenv = mymesh->peenv();
     // make sure flag_convF is the same on all pes
     MPI_Bcast(&flag_convF, 1, MPI_INT, 0, myPEenv.comm());
-#endif
 
     return (flag_convF);
 }

@@ -64,15 +64,10 @@ LBFGS_IonicStepper::LBFGS_IonicStepper(const double dt,
     gndofs_ = tmp;
 
     m_ = min(m, gndofs_);
-#if USE_MPI
-    if (onpe0)
-#endif
-        (*MPIdata::sout) << " LBFGS with m=" << m_ << endl;
+    if (onpe0) (*MPIdata::sout) << " LBFGS with m=" << m_ << endl;
 
     freeze_geom_center_ = (3 * na == gndofs_);
-#if USE_MPI
     if (onpe0)
-#endif
         if (freeze_geom_center_)
             (*MPIdata::sout) << " LBFGS with geometry center frozen" << endl;
 
@@ -407,17 +402,13 @@ int LBFGS_IonicStepper::read_lbfgs(HDFrestart& h5f_file)
             }
         }
     }
-#ifdef USE_MPI
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     mmpi.bcast(&check_data, 1);
-#endif
 
     // return 1 if no data read
     if (!check_data) return 1;
 
-#ifdef USE_MPI
     mmpi.bcast(&attr_d[0], 16);
-#endif
 
     if (onpe0) (*MPIdata::sout) << "Setup LBFGS using restart info" << endl;
 
@@ -498,9 +489,7 @@ int LBFGS_IonicStepper::read_lbfgs(HDFrestart& h5f_file)
             return -1;
         }
     }
-#ifdef USE_MPI
     mmpi.bcast(&attr_i[0], nb_attri);
-#endif
     iflag_              = attr_i[0];
     m_                  = attr_i[1];
     iter_               = attr_i[2];
@@ -550,9 +539,7 @@ int LBFGS_IonicStepper::read_lbfgs(HDFrestart& h5f_file)
         }
     }
 
-#ifdef USE_MPI
     mmpi.bcast(&u[0], dim);
-#endif
     int wsize = work_.size();
     int ione  = 1;
     DCOPY(&wsize, u, &ione, &work_[0], &ione);
@@ -623,11 +610,9 @@ int LBFGS_IonicStepper::init(HDFrestart& h5f_file)
     }
 
     int n = (int)tau0_.size(), ione = 1;
-#ifdef USE_MPI
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     mmpi.bcast(&tau0_[0], n);
     mmpi.bcast(&taup_[0], n);
-#endif
     DAXPY(&n, &dt_, &taup_[0], &ione, &tau0_[0], &ione);
 
     int rlbfgs = read_lbfgs(h5f_file);

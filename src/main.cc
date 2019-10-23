@@ -38,9 +38,7 @@ using namespace std;
 #include <mkl.h>
 #endif
 
-#ifdef USE_MPI
 #include <mpi.h>
-#endif
 
 #include "Control.h"
 #include "DistMatrix.h"
@@ -86,7 +84,6 @@ int main(int argc, char** argv)
 
     cout.sync_with_stdio();
 
-#ifdef USE_MPI
     int mpirc = MPI_Init(&argc, &argv);
     if (mpirc != MPI_SUCCESS)
     {
@@ -96,7 +93,6 @@ int main(int argc, char** argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &mype);
     assert(mype > -1);
     onpe0 = (mype == 0);
-#endif
 
 #ifdef HAVE_MAGMA
     magma_int_t magmalog;
@@ -703,9 +699,7 @@ int main(int argc, char** argv)
 
 #endif
 
-#ifdef USE_MPI
     mpirc = MPI_Finalize();
-#endif
 
     time_t tt;
     time(&tt);

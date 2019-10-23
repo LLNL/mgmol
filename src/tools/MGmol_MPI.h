@@ -13,9 +13,7 @@
 
 #include "Timer.h"
 
-#ifdef USE_MPI
 #include <mpi.h>
-#endif
 
 #include <cassert>
 #include <cstring>
@@ -123,12 +121,7 @@ public:
 
     int size() const { return size_; }
 
-    void barrier() const
-    {
-#ifdef USE_MPI
-        MPI_Barrier(comm_global_);
-#endif
-    }
+    void barrier() const { MPI_Barrier(comm_global_); }
     int bcast(std::string& common_string, MPI_Comm comm) const;
     int bcast(short* val, int size = 1, int root = 0) const;
     int bcast(int* val, int size = 1, int root = 0) const;

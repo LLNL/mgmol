@@ -12,9 +12,7 @@
 #include <iostream>
 #include <string>
 
-#ifdef USE_MPI
 #include <mpi.h>
-#endif
 
 #include "Control.h"
 #include "Ions.h"

@@ -48,21 +48,17 @@ void ProjectedMatricesMehrstellen::computeInvB()
         if (onpe0)
             (*MPIdata::sout) << "ProjectedMatrices::computeInvB()" << endl;
 #endif
-        *invB_    = *matB_;
-        int info1 = invB_->potrf('l');
-#ifdef USE_MPI
+        *invB_          = *matB_;
+        int info1       = invB_->potrf('l');
         MGmol_MPI& mmpi = *(MGmol_MPI::instance());
         mmpi.bcast(&info1, 1);
-#endif
         if (info1 != 0)
         {
             if (onpe0) (*MPIdata::serr) << "Matrix: " << matB_->name() << endl;
             matB_->printMM((*MPIdata::serr));
         }
         int info2 = invB_->potri('l');
-#ifdef USE_MPI
         mmpi.bcast(&info2, 1);
-#endif
         if (info2 != 0 && onpe0)
         {
             (*MPIdata::serr) << "Matrix: " << matB_->name() << endl;

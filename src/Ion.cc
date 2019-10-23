@@ -15,9 +15,7 @@
 #include <iomanip>
 #include <iostream>
 
-#ifdef USE_MPI
 #include <mpi.h>
-#endif
 
 unsigned short isqrt(unsigned value)
 {
@@ -128,15 +126,11 @@ void Ion::setup()
 
 void Ion::bcast(MPI_Comm comm)
 {
-#ifdef USE_MPI
     MPI_Bcast(old_position_, 3, MPI_DOUBLE, 0, comm);
     MPI_Bcast(position_, 3, MPI_DOUBLE, 0, comm);
     MPI_Bcast(force_, 3, MPI_DOUBLE, 0, comm);
     MPI_Bcast(velocity_, 3, MPI_DOUBLE, 0, comm);
     MPI_Bcast(&locked_, 1, MPI_CHAR, 0, comm);
-#else
-    return;
-#endif
 }
 
 void Ion::set_lstart(const int i, const double cell_origin, const double hgrid)

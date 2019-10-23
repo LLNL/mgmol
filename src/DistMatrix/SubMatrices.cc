@@ -27,13 +27,8 @@ SubMatrices<T>::SubMatrices(const string& name,
     const SubMatricesIndexing<T>& submat_indexing)
     : object_name_(name), comm_(comm), submat_indexing_(submat_indexing)
 {
-#if USE_MPI
     MPI_Comm_size(comm_, &npes_);
     MPI_Comm_rank(comm_, &mype_);
-#else
-    npes_ = 1;
-    mype_ = 0;
-#endif
     npes_distmat_ = mat.nprow() * mat.npcol();
 
 #ifdef DEBUG
@@ -223,8 +218,6 @@ void SubMatrices<T>::gather(const DistMatrix<T>& mat)
 
     vector<T> buf_my_val(my_size, 0.);
 
-#ifdef USE_MPI
-
 #if 0
   // send/recv data 
   MPI_Alltoallv(&buf_remote_val[0],&remote_sizes_[0],&remote_displ[0],MPI_DOUBLE,
@@ -255,12 +248,6 @@ void SubMatrices<T>::gather(const DistMatrix<T>& mat)
     sendrecv(sendbuf, recvbuf, my_displ, remote_displ);
 
 #endif
-
-#else
-    assert((int)buf_remote_val.size() == nb_local_matrices_ * n_ * n_);
-    assert((int)buf_my_val.size() == nb_local_matrices_ * n_ * n_);
-    buf_my_val = buf_remote_val;
-#endif // USE_MPI
 
     gather_comm_tm_.stop();
     gather_comp_tm_.start();

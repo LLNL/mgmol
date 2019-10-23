@@ -27,13 +27,8 @@ SubMatricesIndexing<T>::SubMatricesIndexing(
     MPI_Comm comm, const DistMatrix<T>& empty_mat)
     : comm_(comm), local_indexes_(indexes)
 {
-#if USE_MPI
     MPI_Comm_size(comm_, &npes_);
     MPI_Comm_rank(comm_, &mype_);
-#else
-    npes_                  = 1;
-    mype_                  = 0;
-#endif
 
     npes_distmat_ = empty_mat.nprow() * empty_mat.npcol();
     // npes_distmat_=npes_;
@@ -146,7 +141,6 @@ SubMatricesIndexing<T>::SubMatricesIndexing(
     for (int p = 0; p < npes_distmat_; p++)
         my_size += my_sizes_[p];
 
-#if USE_MPI
     // tell all the (DistMatrix)active PEs how many indexes I will need from
     // them
     // if( mype_<npes_distmat_ )
@@ -155,9 +149,6 @@ SubMatricesIndexing<T>::SubMatricesIndexing(
    MPI_Alltoall(&my_sizes_[0],1,MPI_INT,&remote_sizes_[0],1,MPI_INT,comm_);
 #else
     MPI_AlltofirstN(&my_sizes_[0], 1, &remote_sizes_[0], npes_distmat_, comm_);
-#endif
-#else
-    remote_sizes_          = my_sizes_;
 #endif
 
 #ifdef DEBUG
@@ -178,7 +169,6 @@ SubMatricesIndexing<T>::SubMatricesIndexing(
         assert(double_local_indexes_[i + 1] < empty_mat.n());
     }
 
-#if USE_MPI
     // tell remote PEs which indexes I need to exchange
     if (mype_ < npes_distmat_)
         remote_double_indexes_.resize(tot_remote_size, -1);
@@ -202,9 +192,6 @@ SubMatricesIndexing<T>::SubMatricesIndexing(
         npes_distmat_, comm_);
 #endif
     remote_displ.clear();
-#else
-    remote_double_indexes_ = double_local_indexes_;
-#endif
 
     // check received data
     for (int i = 0; i < (int)remote_double_indexes_.size(); i += 2)

@@ -19,9 +19,7 @@
 #include <iomanip>
 #include <iostream>
 
-#ifdef USE_MPI
 #include <mpi.h>
-#endif
 
 Timer PackedCommunicationBuffer::pack_local_data_tm_(
     "PackedCommunicationBuffer::packLocalData");

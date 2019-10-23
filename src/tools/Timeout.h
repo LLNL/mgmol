@@ -28,9 +28,7 @@ extern "C" int pcssig_register(int signal, time_t mintime, int* status);
 void sighandler(int sig);
 #endif
 
-#if USE_MPI
 #include "MPIdata.h"
-#endif
 
 class Timeout
 {

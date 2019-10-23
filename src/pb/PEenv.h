@@ -15,11 +15,7 @@
 #include <iostream>
 #include <unistd.h>
 
-#ifdef USE_MPI
 #include <mpi.h>
-#else
-typedef int MPI_Comm;
-#endif
 
 namespace pb
 {

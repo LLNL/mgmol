@@ -17,9 +17,7 @@
 #include <cassert>
 #include <ostream>
 
-#ifdef USE_MPI
 #include <mpi.h>
-#endif
 
 // Main Mesh structure
 class Mesh

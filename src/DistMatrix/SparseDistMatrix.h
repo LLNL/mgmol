@@ -17,11 +17,7 @@
 #ifndef MGMOL_SPARSEDISTMATRIX_H
 #define MGMOL_SPARSEDISTMATRIX_H
 
-#if USE_MPI
 #include <mpi.h>
-#else
-typedef int MPI_Comm;
-#endif
 
 #include "DistMatrix.h"
 #include "MPI_DistMatrixCommunicator.h"

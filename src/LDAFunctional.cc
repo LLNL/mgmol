@@ -115,7 +115,6 @@ double LDAFunctional::computeRhoDotExc() const
         }
         exc += (POTDTYPE)exc_temp;
     }
-#ifdef USE_MPI
     double sum      = 0.;
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     int rc          = mmpi.allreduce(&exc, &sum, 1, MPI_SUM);
@@ -126,7 +125,6 @@ double LDAFunctional::computeRhoDotExc() const
         ct.global_exit(2);
     }
     exc = (POTDTYPE)sum;
-#endif
     return exc;
 }
 

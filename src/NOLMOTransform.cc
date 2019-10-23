@@ -95,7 +95,6 @@ double NOLMOTransform::spread2(int i, int j) const
     }
 #endif
 
-#ifdef USE_MPI
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     if (offset_ > 0 && ii != -1)
     {
@@ -107,7 +106,6 @@ double NOLMOTransform::spread2(int i, int j) const
         mmpi.recv(&cs[0], 2, src);
     }
     if (bcr_->npcol() > 1) mmpi.bcast(cs, 2);
-#endif
 
     return lby2pi * lby2pi - (cs[0] * cs[0] + cs[1] * cs[1]);
     // return s2+c2 - (c*c + s*s);
@@ -316,14 +314,12 @@ double NOLMOTransform::nolmo(int maxsweep, double tol)
             double deriv = 0.;
             for (int i = 0; i < n; i++)
                 deriv += grads.dotColumns(i, i) * inv_alphan[i];
-#ifdef USE_MPI
             if (n < nst_)
             {
                 double recvbf;
                 MPI_Allreduce(&deriv, &recvbf, 1, MPI_DOUBLE, MPI_SUM, comm_);
                 deriv = recvbf;
             }
-#endif
             deriv *= fac;
 
             // update norms
@@ -615,14 +611,12 @@ double NOLMOTransform::nolmo_fixedCenters(const int maxsweep, const double tol)
             double deriv = 0.;
             for (int i = 0; i < n; i++)
                 deriv += grads.dotColumns(i, i) * inv_alphan[i];
-#ifdef USE_MPI
             if (n < nst_)
             {
                 double recvbf;
                 MPI_Allreduce(&deriv, &recvbf, 1, MPI_DOUBLE, MPI_SUM, comm_);
                 deriv = recvbf;
             }
-#endif
             deriv *= fac;
 
             // update norms
@@ -761,7 +755,6 @@ double NOLMOTransform::nolmo_fixedCenters(const int maxsweep, const double tol)
 
 void NOLMOTransform::gatherTransformMat()
 {
-#ifdef USE_MPI
     const int nloc   = (a_->active()) ? a_->nloc() : 0;
     const int nbccol = a_->npcol();
     const int npes   = bcr_->nprocs();
@@ -792,10 +785,6 @@ void NOLMOTransform::gatherTransformMat()
     MPI_Comm comm   = mmpi.commSameSpin();
     MPI_Allgatherv(&sendbuf[0], nst_ * nloc, MPI_DOUBLE, recvbuf,
         &recvcounts[0], &displs[0], MPI_DOUBLE, comm);
-
-#else
-    a_->copyDataToVector(mat_);
-#endif
 }
 
 double NOLMOTransform::getFunctionalValueFixedCenters(
@@ -823,7 +812,6 @@ double NOLMOTransform::getFunctionalValueFixedCenters(
         tspread += spread2;
     }
 
-#ifdef USE_MPI
     if (bcr_->npcol() > 1)
     {
         //(*MPIdata::sout) << "tspread="<<tspread<<std::endl;
@@ -831,7 +819,6 @@ double NOLMOTransform::getFunctionalValueFixedCenters(
         MPI_Allreduce(&tspread, &recvbf, 1, MPI_DOUBLE, MPI_SUM, comm_);
         tspread = recvbf;
     }
-#endif
     return tspread;
 }
 
@@ -858,14 +845,12 @@ double NOLMOTransform::getFunctionalValue(
         tspread += spread2;
     }
 
-#ifdef USE_MPI
     if (bcr_->npcol() > 1)
     {
         double recvbf;
         MPI_Allreduce(&tspread, &recvbf, 1, MPI_DOUBLE, MPI_SUM, comm_);
         tspread = recvbf;
     }
-#endif
     return tspread;
 }
 

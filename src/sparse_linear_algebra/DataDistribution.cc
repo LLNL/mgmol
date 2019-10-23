@@ -20,9 +20,7 @@
 #include <iomanip>
 #include <iostream>
 
-#ifdef USE_MPI
 #include <mpi.h>
-#endif
 
 Timer DataDistribution::gathersizes_tm_("DataDistribution::gatherDataSizes");
 Timer DataDistribution::reducesizes_tm_("DataDistribution::reduceDataSizes");

@@ -20,9 +20,7 @@
 #include <iostream>
 #include <vector>
 
-#ifdef USE_MPI
 #include <mpi.h>
-#endif
 
 int SparseRow::updateRow(const int count, const int* const cols,
     const double* const vals, const INSERTMODE mode)

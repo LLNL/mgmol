@@ -71,7 +71,6 @@ void RadialMeshFunction::read(
     invdr_ = 1. / drlin_;
 }
 
-#ifdef USE_MPI
 void RadialMeshFunction::bcast(MPI_Comm comm, const int root)
 {
     int mpi_rank;
@@ -116,9 +115,6 @@ void RadialMeshFunction::bcast(MPI_Comm comm, const int root)
         }
     }
 }
-#else
-void RadialMeshFunction::bcast(MPI_Comm comm, const int root) { return; }
-#endif
 
 // radial integratation of f
 double RadialMeshFunction::radint(const int j)

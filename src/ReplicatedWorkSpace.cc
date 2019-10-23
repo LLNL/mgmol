@@ -13,9 +13,7 @@
 #include "MGmol_MPI.h"
 #include "MGmol_blas1.h"
 
-#ifdef USE_MPI
 #include <mpi.h>
-#endif
 
 template <class T>
 Timer ReplicatedWorkSpace<T>::mpisum_tm_("ReplicatedWorkSpace::mpisum");
@@ -31,11 +29,9 @@ ReplicatedWorkSpace<T>& ReplicatedWorkSpace<T>::instance()
 template <class T>
 void ReplicatedWorkSpace<T>::mpiBcastSquareMatrix()
 {
-#ifdef USE_MPI
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     int n2          = ndim_ * ndim_;
     mmpi.bcast(square_matrix_, n2, 0);
-#endif
     return;
 }
 

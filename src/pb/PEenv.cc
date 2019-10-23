@@ -46,12 +46,10 @@ PEenv::PEenv(MPI_Comm comm, std::ostream* os)
     onpe0_ = true;
     for (int i = 0; i < 3; i++)
         other_tasks_dir_[i] = nullptr;
-#ifdef USE_MPI
     comm_active_ = MPI_COMM_SELF;
     int ltask;
     MPI_Comm_rank(comm_, &ltask);
     if (ltask > 0) onpe0_ = false;
-#endif
 }
 
 // Constructor for a global grid nx by ny by nz
@@ -76,9 +74,8 @@ PEenv::PEenv(MPI_Comm comm, const int nx, const int ny, const int nz,
     for (int i = 0; i < 6; i++)
         mpi_neighbors_[i] = 0;
 
-    color_ = 0;
-    onpe0_ = true;
-#ifdef USE_MPI
+    color_       = 0;
+    onpe0_       = true;
     comm_active_ = comm_;
 
     MPI_Comm_size(comm_, &n_mpi_tasks_);
@@ -138,12 +135,6 @@ PEenv::PEenv(MPI_Comm comm, const int nx, const int ny, const int nz,
     }
 
     MPI_Barrier(comm_);
-#else
-    (void)nx; // unused
-    (void)ny; // unused
-    (void)nz; // unused
-    comm_active_ = 0;
-#endif
 
     set_other_tasks_dir();
 }
@@ -153,7 +144,6 @@ void PEenv::set_other_tasks_dir()
     for (int i = 0; i < 3; i++)
         other_tasks_dir_[i] = new int[n_mpi_tasks_];
 
-#ifdef USE_MPI
     int* buffer = new int[3 * n_mpi_tasks_];
     MPI_Allgather(&mytask_dir_[0], 3, MPI_INT, buffer, 3, MPI_INT, comm());
     for (int j = 0; j < n_mpi_tasks_; j++)
@@ -164,10 +154,6 @@ void PEenv::set_other_tasks_dir()
         }
     }
     delete[] buffer;
-#else
-    for (int i = 0; i < 3; i++)
-        other_tasks_dir_[i][0] = 0;
-#endif
 }
 
 #if 0
@@ -190,7 +176,6 @@ PEenv::PEenv(MPI_Comm comm,
     
     color_=0;
     onpe0_= (mytask_==0);
-#ifdef USE_MPI
     comm_active_=comm;
 
     n_mpi_tasks_dir_[0]=taskx;
@@ -199,20 +184,11 @@ PEenv::PEenv(MPI_Comm comm,
 
     task2xyz();
     setup_my_neighbors();
-#else
-    comm_active_=0;
-    assert(n_mpi_tasks_==1);
-    assert(mytask==0);
-    assert(taskx==1);
-    assert(tasky==1);
-    assert(taskz==1);
-#endif
 }
 #endif
 
 PEenv::~PEenv()
 {
-#ifdef USE_MPI
     if (comm_active_ != comm_ && comm_active_ != MPI_COMM_SELF)
     {
         // cout<<"MPI_Comm_free: "<<comm_active_<<endl;
@@ -227,23 +203,12 @@ PEenv::~PEenv()
     }
     if (cart_comm_ != MPI_COMM_NULL) MPI_Comm_free(&cart_comm_);
     if (comm_x_ != MPI_COMM_NULL) MPI_Comm_free(&comm_x_);
-#endif
-    for (int i = 0; i < 3; i++)
-    {
-        if (other_tasks_dir_[i] != nullptr) delete[] other_tasks_dir_[i];
-    }
 }
 
-void PEenv::barrier(void) const
-{
-#ifdef USE_MPI
-    MPI_Barrier(comm_);
-#endif
-}
+void PEenv::barrier(void) const { MPI_Barrier(comm_); }
 
 double PEenv::double_max_all(double x) const
 {
-#ifdef USE_MPI
     double out;
 
     int mpirc = MPI_Allreduce(&x, &out, 1, MPI_DOUBLE, MPI_MAX, comm_active_);
@@ -254,14 +219,10 @@ double PEenv::double_max_all(double x) const
         exit(1);
     }
     return out;
-#else
-    return x;
-#endif
 }
 
 double PEenv::double_min_all(double x) const
 {
-#ifdef USE_MPI
     double out;
 
     int mpirc = MPI_Allreduce(&x, &out, 1, MPI_DOUBLE, MPI_MIN, comm_active_);
@@ -272,14 +233,10 @@ double PEenv::double_min_all(double x) const
         exit(1);
     }
     return out;
-#else
-    return x;
-#endif
 }
 
 int PEenv::int_max_all(int x)
 {
-#ifdef USE_MPI
     int out;
 
     int mpirc = MPI_Allreduce(&x, &out, 1, MPI_INT, MPI_MAX, comm_active_);
@@ -290,14 +247,10 @@ int PEenv::int_max_all(int x)
         globalExit(2);
     }
     return out;
-#else
-    return x;
-#endif
 }
 
 double PEenv::double_sum_all(double x) const
 {
-#ifdef USE_MPI
     double out;
 
     int mpirc = MPI_Allreduce(&x, &out, 1, MPI_DOUBLE, MPI_SUM, comm_active_);
@@ -308,12 +261,6 @@ double PEenv::double_sum_all(double x) const
         globalExit(2);
     }
     return out;
-
-#else
-
-    return x;
-
-#endif
 }
 
 void PEenv::task2xyz()
@@ -382,8 +329,6 @@ void PEenv::setup_my_neighbors()
         }
     }
 }
-
-#ifdef USE_MPI
 
 int PEenv::geom(const int nx, const int ny, const int nz, const int bias)
 {
@@ -770,35 +715,21 @@ void PEenv::printPEnames(std::ostream& os) const
     if (mytask_ == 0) os << std::endl;
 }
 
-void PEenv::globalExit(const int i) const
-{
-#ifdef USE_MPI
-    MPI_Abort(comm_, 2);
-#else
-    exit(i);
-#endif
-}
-#endif
+void PEenv::globalExit(const int i) const { MPI_Abort(comm_, 2); }
 
 void PEenv::bcast(int* val, const int n) const
 {
-#ifdef USE_MPI
     MPI_Bcast(val, n, MPI_INT, 0, comm_active_);
-#endif
 }
 
 void PEenv::bcast(char* val, const int n) const
 {
-#ifdef USE_MPI
     MPI_Bcast(val, n, MPI_CHAR, 0, comm_active_);
-#endif
 }
 
 void PEenv::bcast(double* val, const int n) const
 {
-#ifdef USE_MPI
     MPI_Bcast(val, n, MPI_DOUBLE, 0, comm_active_);
-#endif
 }
 
 } // namespace pb

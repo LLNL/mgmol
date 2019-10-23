@@ -20,9 +20,7 @@
 #include "mgmol_mpi_tools.h"
 #include "tools.h"
 
-#ifdef USE_MPI
 #include <mpi.h>
-#endif
 
 #include <cmath>
 #include <iostream>
@@ -484,7 +482,6 @@ double Ions::energyDiff(const short bc[3]) const
     }
     assert(energy == energy);
 
-#ifdef USE_MPI
     Mesh* mymesh             = Mesh::instance();
     const pb::PEenv& myPEenv = mymesh->peenv();
     double tenergy           = 0.;
@@ -493,7 +490,6 @@ double Ions::energyDiff(const short bc[3]) const
     // take half the result to account for double counting loop over
     // interacting_ions
     energy = 0.5 * tenergy;
-#endif
 
     return energy; // Hartree
 }
@@ -2130,9 +2126,7 @@ int Ions::readAtomsFromXYZ(
         aname.append(ss.str());
         Ion* new_ion
             = new Ion(species_[isp], aname, &crds[3 * ia], velocity, locked);
-#ifdef USE_MPI
         new_ion->bcast(mmpi.commGlobal());
-#endif
 
         // Populate list_ions_ list
         // std::cout<<"crds: "<<crds[3*ia+0]<<", "<<crds[3*ia+1]<<",

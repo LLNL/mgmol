@@ -11,11 +11,7 @@
 #ifndef MGMOL_BLACS_H
 #define MGMOL_BLACS_H
 
-#if USE_MPI
 #include <mpi.h>
-#else
-typedef int MPI_Comm;
-#endif
 
 extern "C"
 {

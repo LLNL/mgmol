@@ -61,10 +61,8 @@ bool ConstraintSet::addConstraint(Ions& ions, const vector<string>& argv)
                 char_buf + shift, argv[i].c_str(), sizeof(char) * (len[i] + 1));
             shift += len[i] + 1;
         }
-#ifdef USE_MPI
     mmpi.bcast(&len[0], argc);
     mmpi.bcast(char_buf, size_buf);
-#endif
     shift = 0;
     vector<char*> largv(argc);
     for (int i = 0; i < argc; i++)

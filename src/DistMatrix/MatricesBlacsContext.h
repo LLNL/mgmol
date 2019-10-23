@@ -16,9 +16,7 @@
 #include <cassert>
 #include <iostream>
 
-#ifdef USE_MPI
 #include <mpi.h>
-#endif
 
 class MatricesBlacsContext
 {

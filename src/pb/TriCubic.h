@@ -17,11 +17,7 @@
 
 #ifdef HAVE_TRICUBIC
 
-#ifdef USE_MPI
 #include <mpi.h>
-#else
-typedef int MPI_Comm;
-#endif
 
 namespace pb
 {

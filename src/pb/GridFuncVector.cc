@@ -55,11 +55,7 @@ void GridFuncVector<T>::setup()
     west_  = (bc_[0] == 1 || (grid_.mype_env().mpi_neighbors(WEST) < mytask));
 
     nfunc_ = (int)gid_[0].size();
-#ifdef USE_MPI
     MPI_Allreduce(&nfunc_, &nfunc_max_global_, 1, MPI_INT, MPI_MAX, comm_);
-#else
-    nfunc_max_global_ = nfunc_;
-#endif
     nsubdivx_ = (short)gid_.size();
 
     remote_gids_.resize(6);
@@ -1147,7 +1143,6 @@ void GridFuncVector<T>::trade_boundaries_colors(
 
     const size_t sdimz = dimz_ * sizeof(T);
 
-#ifdef USE_MPI
     communicateRemoteGids(first_color, last_color);
 
     const int ione = 1;
@@ -1364,9 +1359,7 @@ void GridFuncVector<T>::trade_boundaries_colors(
             assert((buf3_ptr - &comm_buf3[0]) <= static_cast<int>(sizebuffer));
         }
     }
-    else
-#endif
-        if (bc_[1] == 1)
+    else if (bc_[1] == 1)
     { // grid_.mype_env().n_mpi_task(1)==1
 
         // only for i already initialized
@@ -1388,7 +1381,6 @@ void GridFuncVector<T>::trade_boundaries_colors(
 
     int iinit = (dimy_ + 2 * nghosts_) * nghosts_;
 
-#ifdef USE_MPI
     if (grid_.mype_env().n_mpi_task(2) > 1)
     {
 
@@ -1564,9 +1556,7 @@ void GridFuncVector<T>::trade_boundaries_colors(
             }
         }
     }
-    else
-#endif
-        if (bc_[2] == 1)
+    else if (bc_[2] == 1)
     { /* grid_.mype_env().n_mpi_task(2)==1 */
 
         for (short color = first_color; color < end_color; color++)
@@ -1587,8 +1577,6 @@ void GridFuncVector<T>::trade_boundaries_colors(
 
     const int east_west_size_        = nghosts_ * incx_;
     const size_t east_west_size_data = east_west_size_ * sizeof(T);
-
-#ifdef USE_MPI
 
     if (grid_.mype_env().n_mpi_task(0) > 1)
     {
@@ -1727,9 +1715,7 @@ void GridFuncVector<T>::trade_boundaries_colors(
             }
         }
     }
-    else
-#endif
-        if (bc_[0] == 1)
+    else if (bc_[0] == 1)
     { /* grid_.mype_env().n_mpi_task(0)==1 */
 
         for (short color = first_color; color < end_color; color++)

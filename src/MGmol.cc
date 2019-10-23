@@ -695,11 +695,7 @@ void MGmol<T>::write_header()
 template <class T>
 void MGmol<T>::global_exit(int i)
 {
-#ifdef USE_MPI
     MPI_Abort(comm_, i);
-#else
-    abort();
-#endif
 }
 
 template <class T>
@@ -1005,14 +1001,12 @@ void MGmol<T>::setup()
 
     // Write header to stdout
     write_header();
-#ifdef USE_MPI
     if (ct.verbose > 5)
     {
         Mesh* mymesh             = Mesh::instance();
         const pb::PEenv& myPEenv = mymesh->peenv();
         myPEenv.printPEnames(os_);
     }
-#endif
 
     if (ct.verbose > 0) printWithTimeStamp("MGmol<T>::setup done...", os_);
 

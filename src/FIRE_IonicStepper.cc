@@ -121,11 +121,9 @@ int FIRE_IonicStepper::init(HDFrestart& h5f_file)
     }
 
     int n = (int)tau0_.size(), ione = 1;
-#ifdef USE_MPI
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     mmpi.bcast(&tau0_[0], n);
     mmpi.bcast(&taup_[0], n);
-#endif
     DAXPY(&n, &dt_, &taup_[0], &ione, &tau0_[0], &ione);
 
     return 0;

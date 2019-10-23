@@ -141,10 +141,8 @@ double GramMatrix::computeCond()
     double invcond = ls_->pocon('l', anorm);
     double cond    = 0.;
     if (onpe0) cond = 1. / invcond;
-#ifdef USE_MPI
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     mmpi.bcast(&cond, 1);
-#endif
 #else
     double emin;
     double emax;
