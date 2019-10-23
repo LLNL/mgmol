@@ -11,6 +11,8 @@ ARGS=(
   -D SCALAPACK_ROOT=/usr/lib/x86_64-linux-gnu
   -D MGMOL_WITH_CLANG_FORMAT=ON
   -D MGMOL_WITH_COVERAGE=ON
+  -D MGMOL_WITH_MAGMA=ON
+  -D CMAKE_PREFIX_PATH=/opt/magma
   )
 cmake "${ARGS[@]}" ../
 make -j8

@@ -13,6 +13,7 @@ add_executable(testBlacsContext
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 add_executable(testDistVector
                ${CMAKE_SOURCE_DIR}/tests/testDistVector.cc
+               ${CMAKE_SOURCE_DIR}/src/magma_singleton.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/DistMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/BlacsContext.cc
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
@@ -22,6 +23,7 @@ add_executable(testDistVector
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 add_executable(testReplicated2DistMatrix
                ${CMAKE_SOURCE_DIR}/tests/testReplicated2DistMatrix.cc
+               ${CMAKE_SOURCE_DIR}/src/magma_singleton.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/DistMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/BlacsContext.cc
                ${CMAKE_SOURCE_DIR}/src/local_matrices/LocalMatrices.cc
@@ -33,6 +35,7 @@ add_executable(testReplicated2DistMatrix
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 add_executable(testDistMatrix
                ${CMAKE_SOURCE_DIR}/tests/testDistMatrix.cc
+               ${CMAKE_SOURCE_DIR}/src/magma_singleton.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/DistMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/BlacsContext.cc
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
@@ -42,6 +45,7 @@ add_executable(testDistMatrix
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 add_executable(testConditionDistMatrix
                ${CMAKE_SOURCE_DIR}/tests/testConditionDistMatrix.cc
+               ${CMAKE_SOURCE_DIR}/src/magma_singleton.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/DistMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/BlacsContext.cc
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
@@ -52,6 +56,7 @@ add_executable(testConditionDistMatrix
 add_executable(testConditionDistMatrixPower
                ${CMAKE_SOURCE_DIR}/tests/testConditionDistMatrixPower.cc
                ${CMAKE_SOURCE_DIR}/src/Power.cc
+               ${CMAKE_SOURCE_DIR}/src/magma_singleton.cc
                ${CMAKE_SOURCE_DIR}/src/local_matrices/LocalMatrices.cc
                ${CMAKE_SOURCE_DIR}/src/local_matrices/SquareLocalMatrices.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/DistMatrix.cc
@@ -65,6 +70,7 @@ add_executable(testConditionDistMatrixPower
 add_executable(testPower
                ${CMAKE_SOURCE_DIR}/tests/testPower.cc
                ${CMAKE_SOURCE_DIR}/src/Power.cc
+               ${CMAKE_SOURCE_DIR}/src/magma_singleton.cc
                ${CMAKE_SOURCE_DIR}/src/local_matrices/LocalMatrices.cc
                ${CMAKE_SOURCE_DIR}/src/local_matrices/SquareLocalMatrices.cc
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
@@ -78,6 +84,7 @@ add_executable(testPower
 add_executable(testPowerDistMatrix
                ${CMAKE_SOURCE_DIR}/tests/testPowerDistMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/Power.cc
+               ${CMAKE_SOURCE_DIR}/src/magma_singleton.cc
                ${CMAKE_SOURCE_DIR}/src/local_matrices/LocalMatrices.cc
                ${CMAKE_SOURCE_DIR}/src/local_matrices/SquareLocalMatrices.cc
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
@@ -223,26 +230,45 @@ target_link_libraries(testHDF5P PRIVATE ${HDF5_LIBRARIES}
 target_link_libraries(testMPI PRIVATE Boost::unit_test_framework MPI::MPI_CXX)
 target_link_libraries(testBlacsContext PRIVATE ${SCALAPACK_LIBRARIES}
   ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX)
-target_link_libraries(testDistVector PRIVATE ${SCALAPACK_LIBRARIES}
-  ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX)
-target_link_libraries(testReplicated2DistMatrix PRIVATE ${SCALAPACK_LIBRARIES}
-  ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX)
-target_link_libraries(testDistMatrix PRIVATE ${SCALAPACK_LIBRARIES}
-  ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX)
-target_link_libraries(testConditionDistMatrix PRIVATE ${SCALAPACK_LIBRARIES}
-  ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX)
-target_link_libraries(testConditionDistMatrixPower PRIVATE
-  ${SCALAPACK_LIBRARIES} ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX)
-target_link_libraries(testPower PRIVATE ${BLAS_LIBRARIES} ${SCALAPACK_LIBRARIES}
-  Boost::unit_test_framework MPI::MPI_CXX)
-target_link_libraries(testPowerDistMatrix PRIVATE ${BLAS_LIBRARIES}
-  ${SCALAPACK_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX)
-target_link_libraries(testDirectionalReduce PRIVATE Boost::unit_test_framework MPI::MPI_CXX)
-target_link_libraries(testAndersonMix ${LAPACK_LIBRARIES}
-                                      ${BLAS_LIBRARIES}
-                                      ${Boost_LIBRARIES}
-                                      MPI::MPI_CXX)
 target_link_libraries(testSuperSampling PRIVATE Boost::unit_test_framework MPI::MPI_CXX)
+target_link_libraries(testDirectionalReduce PRIVATE Boost::unit_test_framework MPI::MPI_CXX)
+
+if(${MAGMA_FOUND})
+  target_link_libraries(testDistVector PRIVATE ${SCALAPACK_LIBRARIES}
+    ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX PkgConfig::MAGMA)
+  target_link_libraries(testReplicated2DistMatrix PRIVATE ${SCALAPACK_LIBRARIES}
+    ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX PkgConfig::MAGMA)
+  target_link_libraries(testDistMatrix PRIVATE ${SCALAPACK_LIBRARIES}
+    ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX PkgConfig::MAGMA)
+  target_link_libraries(testConditionDistMatrix PRIVATE ${SCALAPACK_LIBRARIES}
+    ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX PkgConfig::MAGMA)
+  target_link_libraries(testConditionDistMatrixPower PRIVATE
+    ${SCALAPACK_LIBRARIES} ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX PkgConfig::MAGMA)
+  target_link_libraries(testPower PRIVATE ${BLAS_LIBRARIES} ${SCALAPACK_LIBRARIES}
+    Boost::unit_test_framework MPI::MPI_CXX PkgConfig::MAGMA)
+  target_link_libraries(testPowerDistMatrix PRIVATE ${BLAS_LIBRARIES}
+    ${SCALAPACK_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX
+    PkgConfig::MAGMA)
+  target_link_libraries(testAndersonMix PRIVATE ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} 
+    ${Boost_LIBRARIES} MPI::MPI_CXX PkgConfig::MAGMA)
+else()
+  target_link_libraries(testDistVector PRIVATE ${SCALAPACK_LIBRARIES}
+    ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX)
+  target_link_libraries(testReplicated2DistMatrix PRIVATE ${SCALAPACK_LIBRARIES}
+    ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX)
+  target_link_libraries(testDistMatrix PRIVATE ${SCALAPACK_LIBRARIES}
+    ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX)
+  target_link_libraries(testConditionDistMatrix PRIVATE ${SCALAPACK_LIBRARIES}
+    ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX)
+  target_link_libraries(testConditionDistMatrixPower PRIVATE
+    ${SCALAPACK_LIBRARIES} ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX)
+  target_link_libraries(testPower PRIVATE ${BLAS_LIBRARIES} ${SCALAPACK_LIBRARIES}
+    Boost::unit_test_framework MPI::MPI_CXX)
+  target_link_libraries(testPowerDistMatrix PRIVATE ${BLAS_LIBRARIES}
+    ${SCALAPACK_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX)
+  target_link_libraries(testAndersonMix PRIVATE ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} 
+    ${Boost_LIBRARIES} MPI::MPI_CXX)
+endif()
 
 set_tests_properties(testSiH4 PROPERTIES REQUIRED_FILES
                      ${CMAKE_SOURCE_DIR}/potentials/pseudo.Si)

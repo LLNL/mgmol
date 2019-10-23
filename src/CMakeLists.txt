@@ -138,6 +138,7 @@ set(SOURCES
  Power.cc
  PowerGen.cc
  SuperSampling.cc
+ magma_singleton.cc
 )
 
 add_library(mgmol_src ${SOURCES})
@@ -147,6 +148,9 @@ target_include_directories(mgmol_src PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories (mgmol_src PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(mgmol_src ${link_libs})
+if(${MGMOL_WITH_MAGMA})
+  target_link_libraries(mgmol_src PkgConfig::MAGMA)
+endif()
 
 # compile definitions
 #target_compile_definitions (mgmol_src PUBLIC -DUSE_CNR_)

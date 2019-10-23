@@ -53,6 +53,7 @@ using namespace std;
 #include "Mesh.h"
 #include "PackedCommunicationBuffer.h"
 #include "ReplicatedWorkSpace.h"
+#include "magma_singleton.h"
 #include "tools.h"
 
 #include <fenv.h>
@@ -95,6 +96,24 @@ int main(int argc, char** argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &mype);
     assert(mype > -1);
     onpe0 = (mype == 0);
+#endif
+
+#ifdef HAVE_MAGMA
+    magma_int_t magmalog;
+
+    magmalog = magma_init();
+    if (magmalog == MAGMA_SUCCESS)
+    {
+        std::cout << "MAGMA Initialization: success" << std::endl;
+    }
+    else
+    {
+        if (magmalog == MAGMA_ERR_UNKNOWN)
+            std::cout << "MAGMA Initialization: unknown error" << std::endl;
+        if (magmalog == MAGMA_ERR_HOST_ALLOC)
+            std::cout << "MAGMA Initialization: fails host alloc" << std::endl;
+        return 1;
+    }
 #endif
 
     string input_file("");
@@ -661,6 +680,28 @@ int main(int argc, char** argv)
     Mesh::deleteInstance();
     Control::deleteInstance();
     MGmol_MPI::deleteInstance();
+
+#ifdef HAVE_MAGMA
+    // Delete the data in the singleton before finalizing magma
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+    magma_singleton.free();
+
+    magmalog = magma_finalize();
+
+    if (magmalog == MAGMA_SUCCESS)
+    {
+        std::cout << "MAGMA Finalize: success" << std::endl;
+    }
+    else
+    {
+        if (magmalog == MAGMA_ERR_UNKNOWN)
+            std::cout << "MAGMA Finalize: unknown error" << std::endl;
+        if (magmalog == MAGMA_ERR_HOST_ALLOC)
+            std::cout << "MAGMA FINALIZE: fails host alloc" << std::endl;
+        return 1;
+    }
+
+#endif
 
 #ifdef USE_MPI
     mpirc = MPI_Finalize();

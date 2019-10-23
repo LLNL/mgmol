@@ -164,6 +164,17 @@ if(${MGMOL_WITH_ARPACK} OR DEFINED ARPACK_ROOT)
   endif(${ARPACK_FOUND})
 endif(${MGMOL_WITH_ARPACK} OR DEFINED ARPACK_ROOT)
 
+# MAGMA (optional)
+set(MGMOL_WITH_MAGMA FALSE CACHE BOOL "Compile with MAGMA")
+if(${MGMOL_WITH_MAGMA})
+  find_package(MAGMA)
+  if(${MAGMA_FOUND})
+    message(STATUS "Build with MAGMA")
+    add_definitions(-DHAVE_MAGMA)
+  endif(${MAGMA_FOUND})
+endif(${MGMOL_WITH_MAGMA})
+
+
 # tricubic (optional)
 set(MGMOL_WITH_TRICUBIC FALSE CACHE BOOL "Compile with tricubic package")
 if(${MGMOL_WITH_TRICUBIC} OR DEFINED TRICUBIC_ROOT)

@@ -16,8 +16,11 @@
 #include "Mesh.h"
 #include "ProjectedMatrices.h"
 #include "SquareLocalMatrices.h"
+#include "SubMatrices.h"
+#include "magma_singleton.h"
+#include "memory_space.h"
 #include "mputils.h"
-using namespace std;
+#include "numerical_kernels.h"
 
 template <class T>
 Timer Rho<T>::update_tm_("Rho::update");
@@ -59,10 +62,10 @@ Rho<T>::Rho()
 
 template <class T>
 void Rho<T>::setup(const OrbitalsType orbitals_type,
-    const vector<vector<int>>& orbitals_indexes)
+    const std::vector<std::vector<int>>& orbitals_indexes)
 {
     if (verbosity_level_ > 2 && onpe0)
-        (*MPIdata::sout) << " Rho<T>::setup()" << endl;
+        (*MPIdata::sout) << " Rho<T>::setup()" << std::endl;
 
     orbitals_type_ = orbitals_type;
 
@@ -115,7 +118,7 @@ void Rho<T>::update(T& current_orbitals)
     update_tm_.start();
 
     if (verbosity_level_ > 2 && onpe0)
-        (*MPIdata::sout) << "Rho<T>::update()" << endl;
+        (*MPIdata::sout) << "Rho<T>::update()" << std::endl;
 
     const int new_iterative_index
         = ((1 + current_orbitals.getIterativeIndex()) % 100)
@@ -125,14 +128,14 @@ void Rho<T>::update(T& current_orbitals)
     {
         if (onpe0 && verbosity_level_ > 2)
             (*MPIdata::sout) << "Rho already up to date, iterative_index_="
-                             << iterative_index_ << endl;
+                             << iterative_index_ << std::endl;
         return;
     }
     iterative_index_ = new_iterative_index;
 #ifdef PRINT_OPERATIONS
     if (onpe0)
         (*MPIdata::sout) << "Rho<T>::update(), iterative_index_="
-                         << iterative_index_ << endl;
+                         << iterative_index_ << std::endl;
 #endif
 
     computeRho(current_orbitals);
@@ -174,7 +177,7 @@ double Rho<T>::computeTotalCharge()
 #ifdef DEBUG
     if (mmpi.instancePE0())
         (*MPIdata::sout) << fixed << setprecision(8) << " myspin=" << myspin_
-                         << ", Total charge = " << tcharge << endl;
+                         << ", Total charge = " << tcharge << std::endl;
 #endif
 
     return tcharge;
@@ -199,9 +202,9 @@ void Rho<T>::rescaleTotalCharge()
         {
             (*MPIdata::sout)
                 << " Rho<T>::rescaleTotalCharge(), charge = " << tcharge
-                << endl;
-            (*MPIdata::sout) << " Rescaling factor: " << t1 << endl;
-            (*MPIdata::sout) << " Num. electrons: " << nel << endl;
+                << std::endl;
+            (*MPIdata::sout) << " Rescaling factor: " << t1 << std::endl;
+            (*MPIdata::sout) << " Num. electrons: " << nel << std::endl;
         }
 
         for (int ispin = 0; ispin < nspin; ispin++)
@@ -222,9 +225,9 @@ void Rho<T>::rescaleTotalCharge()
     ttcharge *= mygrid.vel();
 
     if (mmpi.instancePE0())
-        (*MPIdata::sout) << fixed << setprecision(8)
+        (*MPIdata::sout) << std::fixed << std::setprecision(8)
                          << " Total charge after rescaling: " << ttcharge
-                         << endl;
+                         << std::endl;
 #endif
 }
 
@@ -545,12 +548,12 @@ void Rho<T>::accumulateCharge(const double alpha, const short ix_max,
 
 template <class T>
 void Rho<T>::computeRhoSubdomain(const int iloc_init, const int iloc_end,
-    const T& orbitals, const vector<PROJMATDTYPE>& occ)
+    const T& orbitals, const std::vector<PROJMATDTYPE>& occ)
 {
     assert(orbitals_type_ != OrbitalsType::UNDEFINED);
     if (verbosity_level_ > 2 && onpe0)
         (*MPIdata::sout) << "Rho<T>::computeRhoSubdomain, diagonal case..."
-                         << endl;
+                         << std::endl;
 
     Mesh* mymesh = Mesh::instance();
 
@@ -561,8 +564,8 @@ void Rho<T>::computeRhoSubdomain(const int iloc_init, const int iloc_end,
 
     for (int iloc = iloc_init; iloc < iloc_end; iloc++)
     {
-        const int istart         = iloc * loc_numpt;
-        vector<int>& loc_indexes = orbitals_indexes_[iloc];
+        const int istart              = iloc * loc_numpt;
+        std::vector<int>& loc_indexes = orbitals_indexes_[iloc];
 
         RHODTYPE* const lrho = prho + istart;
 
@@ -609,7 +612,7 @@ void Rho<T>::computeRho(T& orbitals, ProjectedMatricesInterface& proj_matrices)
     if (orbitals_type_ == OrbitalsType::Eigenfunctions
         || (orbitals_type_ == OrbitalsType::Orthonormal && ct.fullyOccupied()))
     {
-        vector<PROJMATDTYPE> occ(orbitals.numst());
+        std::vector<PROJMATDTYPE> occ(orbitals.numst());
         proj_matrices.getOccupations(occ);
         computeRhoSubdomain(0, subdivx, orbitals, occ);
     }
@@ -716,9 +719,33 @@ void Rho<T>::computeRhoSubdomainUsingBlas3(const int iloc_init,
         ORBDTYPE* phi1            = orbitals1.getPsi(0, iloc);
         ORBDTYPE* phi2            = orbitals2.getPsi(0, iloc);
 
-        // O(N^3) part
+// O(N^3) part
+#ifdef HAVE_MAGMA
+        {
+            std::unique_ptr<ORBDTYPE[], void (*)(ORBDTYPE*)> phi1_dev(
+                MemorySpace::allocate_data_dev<ORBDTYPE>(ld * ncols),
+                MemorySpace::delete_data_dev);
+            MemorySpace::copy_to_dev(phi1, ld * ncols, phi1_dev);
+
+            std::unique_ptr<MATDTYPE[], void (*)(MATDTYPE*)> mat_dev(
+                MemorySpace::allocate_data_dev<MATDTYPE>(ncols * ncols),
+                MemorySpace::delete_data_dev);
+            MemorySpace::copy_to_dev(mat, ncols * ncols, mat_dev);
+
+            std::unique_ptr<ORBDTYPE[], void (*)(ORBDTYPE*)> product_dev(
+                MemorySpace::allocate_data_dev<ORBDTYPE>(nrows * ncols),
+                MemorySpace::delete_data_dev);
+
+            LinearAlgebraUtils<MemorySpace::Device>::MPgemmNN(nrows, ncols,
+                ncols, 1., phi1_dev.get(), ld, mat_dev.get(), ncols, 0.,
+                product_dev.get(), nrows);
+
+            MemorySpace::copy_to_host(product_dev, nrows * ncols, product);
+        }
+#else
         LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(
             nrows, ncols, ncols, 1., phi1, ld, mat, ncols, 0., product, nrows);
+#endif
 
         // O(N^2) part
         for (int j = 0; j < ncols; j++)
@@ -769,8 +796,8 @@ void Rho<T>::init(const RHODTYPE* const rhoc)
     // Initialize the charge density
     if (verbosity_level_ > 2 && mmpi.instancePE0())
         (*MPIdata::sout) << "Rho: Initialize electronic density value with rhoc"
-                         << endl;
-    for (int i = 0; i < (int)rho_.size(); i++)
+                         << std::endl;
+    for (unsigned int i = 0; i < rho_.size(); i++)
     {
         Tcopy(&np_, rhoc, &ione, &rho_[i][0], &ione);
         if (rho_.size() == 2) MPscal(np_, 0.5, &rho_[i][0]);
@@ -787,8 +814,8 @@ void Rho<T>::initUniform()
     // Initialize the charge density
     if (mmpi.instancePE0())
         (*MPIdata::sout) << " Initialize electronic density with uniform value"
-                         << endl;
-    for (int i = 0; i < (int)rho_.size(); i++)
+                         << std::endl;
+    for (unsigned int i = 0; i < rho_.size(); i++)
     {
         for (int j = 0; j < np_; j++)
             rho_[i][j] = 1.;
@@ -805,7 +832,7 @@ int Rho<T>::readRestart(HDFrestart& file)
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 0)
-        (*MPIdata::sout) << "Try to read density" << endl;
+        (*MPIdata::sout) << "Try to read density" << std::endl;
 
     // Read the Density
     file.read_1func_hdf5(&rho_[myspin_][0], "Density");
