@@ -14,8 +14,8 @@
 
 MagmaSingleton::MagmaSingleton()
 {
-    magma_getdevice(&device);
-    magma_queue_create(device, &queue);
+    magma_getdevice(&device_);
+    magma_queue_create(device_, &queue_);
 }
 
 MagmaSingleton& MagmaSingleton::get_magma_singleton()
@@ -25,6 +25,6 @@ MagmaSingleton& MagmaSingleton::get_magma_singleton()
     return singleton;
 }
 
-void MagmaSingleton::free() { magma_queue_destroy(queue); }
+void MagmaSingleton::free() { magma_queue_destroy(queue_); }
 
 #endif

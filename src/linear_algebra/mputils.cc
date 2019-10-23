@@ -600,7 +600,7 @@ void LinearAlgebraUtils<MemorySpace::Device>::MPgemm(const char transa,
     // Perform dgemm
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
     magmablas_dgemm(magma_transa, magma_transb, m, n, k, alpha, a, lda, b, ldb,
-        beta, c, ldc, magma_singleton.queue);
+        beta, c, ldc, magma_singleton.queue_);
     dgemm_tm.stop();
 }
 #endif

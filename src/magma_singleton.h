@@ -27,8 +27,8 @@ public:
     // magma.
     void free();
 
-    magma_device_t device;
-    magma_queue_t queue;
+    magma_device_t device_;
+    magma_queue_t queue_;
 
 private:
     MagmaSingleton();

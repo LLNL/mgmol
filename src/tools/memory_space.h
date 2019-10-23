@@ -37,7 +37,7 @@ void copy_to_dev(T const* const vec, unsigned int size, T* vec_dev)
     int const increment   = 1;
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
     magma_setvector(size, sizeof(T), vec, increment, vec_dev, increment,
-        magma_singleton.queue);
+        magma_singleton.queue_);
 }
 #else
 
@@ -81,7 +81,7 @@ void copy_to_host(T const* const vec_dev, unsigned int size, T* vec)
     int const increment   = 1;
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
     magma_getvector(size, sizeof(T), vec_dev, increment, vec, increment,
-        magma_singleton.queue);
+        magma_singleton.queue_);
 }
 #else
 template <typename T>
