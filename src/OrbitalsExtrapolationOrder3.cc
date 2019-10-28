@@ -15,7 +15,6 @@
 #include "ProjectedMatrices.h"
 
 #define EXTRAPOLATE_H 1
-using namespace std;
 
 template <class T>
 void OrbitalsExtrapolationOrder3<T>::extrapolate_orbitals(
@@ -45,8 +44,8 @@ void OrbitalsExtrapolationOrder3<T>::extrapolate_orbitals(
         T tmp_orbitals_minus1("minus1", *new_orbitals, false);
 
         if (ct.verbose > 1 && onpe0)
-            (*MPIdata::sout)
-                << "Extrapolate orbitals using 3rd order scheme..." << endl;
+            (*MPIdata::sout) << "Extrapolate orbitals using 3rd order scheme..."
+                             << std::endl;
         // align orbitals_minus1 with new_orbitals
         if (use_dense_proj_mat)
         {
@@ -77,7 +76,7 @@ void OrbitalsExtrapolationOrder3<T>::extrapolate_orbitals(
                 tmp.computeGram(matQ);
                 double normQ=matQ.trace();
                 if( onpe0 )
-                    (*MPIdata::sout)<<"||Phi_old-Phi_new|| before Procrustes = "<<normQ<<endl;
+                    (*MPIdata::sout)<<"||Phi_old-Phi_new|| before Procrustes = "<<normQ<<std::endl;
 #endif
                 // alignement
                 orbitals_minus2_->computeGram(*new_orbitals, matQ);
@@ -97,13 +96,13 @@ void OrbitalsExtrapolationOrder3<T>::extrapolate_orbitals(
                 tmp.computeGram(matQ);
                 normQ=matQ.trace();
                 if( onpe0 )
-                    (*MPIdata::sout)<<"||Phi_old-Phi_new|| after Procrustes = "<<normQ<<endl;
+                    (*MPIdata::sout)<<"||Phi_old-Phi_new|| after Procrustes = "<<normQ<<std::endl;
 #endif
             }
 
 #if EXTRAPOLATE_H
             if (ct.verbose > 2 && onpe0)
-                (*MPIdata::sout) << "Extrapolate H..." << endl;
+                (*MPIdata::sout) << "Extrapolate H..." << std::endl;
             OrbitalsExtrapolation<T>::hextrapol_->extrapolateHorder3();
 #endif
         }
@@ -113,7 +112,8 @@ void OrbitalsExtrapolationOrder3<T>::extrapolate_orbitals(
             if (orbitals_minus2_ != nullptr)
                 orbitals_minus2_->axpy(-1., *orbitals_minus1_);
             if (ct.verbose > 1 && onpe0)
-                (*MPIdata::sout) << "Compute tmp_orbitals_minus1..." << endl;
+                (*MPIdata::sout)
+                    << "Compute tmp_orbitals_minus1..." << std::endl;
             tmp_orbitals_minus1.axpy(-1., *new_orbitals);
         }
 
@@ -129,7 +129,7 @@ void OrbitalsExtrapolationOrder3<T>::extrapolate_orbitals(
             if (ct.verbose > 1 && onpe0)
                 (*MPIdata::sout) << "Extrapolate orbitals using 2nd order "
                                     "scheme only for this step..."
-                                 << endl;
+                                 << std::endl;
             new_orbitals->axpy(-1., tmp_orbitals_minus1);
         }
 

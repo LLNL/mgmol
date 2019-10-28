@@ -10,7 +10,6 @@
 
 #include <cassert>
 #include <vector>
-using namespace std;
 
 #include "LinearSolverMatrix.h"
 #include "VariableSizeMatrix.h"

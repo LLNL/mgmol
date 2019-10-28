@@ -17,7 +17,6 @@
 #include "SubCell.h"
 
 //#define DEBUG 1
-using namespace std;
 
 Timer GridMask::init_tm_("GridMask::init");
 
@@ -156,7 +155,7 @@ int GridMask::init(const Vector3D& center, const double rcut,
     const int dim2 = (grid_.dim(2) >> level);
     const int size = loc_numpt_[level];
 
-    vector<lmasktype> mask(size);
+    std::vector<lmasktype> mask(size);
 
     double delta = delta_;
     for (unsigned short l = 0; l < level; l++)
@@ -250,7 +249,7 @@ int GridMask::init(const Vector3D& center, const double rcut,
     // consistent (e.g. in restart) even if no actual point was found in
     // sphere!!! Otherwise restart may attribute data to wrong orbital when
     // changing radius
-    if (level == 0) icount = max(1, icount);
+    if (level == 0) icount = std::max(1, icount);
 
 #if 0
     if( icount==0 && level==0){
@@ -283,7 +282,7 @@ void GridMask::plot(const unsigned short level, const int st)
     sprintf(extension, "%d", level);
     strcat(filename, extension);
 
-    ofstream ofile;
+    std::ofstream ofile;
     ofile.open(&filename[0]);
     const int lnumpt = loc_numpt_[level];
 
@@ -292,18 +291,18 @@ void GridMask::plot(const unsigned short level, const int st)
         if (mask_not_zero_[level][iloc] == 0)
         {
             for (int i = 0; i < lnumpt; i++)
-                ofile << 0 << endl;
+                ofile << 0 << std::endl;
         }
         else if (mask_not_zero_[level][iloc] == 1)
         {
             for (int i = 0; i < lnumpt; i++)
-                ofile << 1 << endl;
+                ofile << 1 << std::endl;
         }
         else if (mask_not_zero_[level][iloc] == 2)
         {
             lmasktype* pmask = &lmask_[level][iloc][0];
             for (int i = 0; i < lnumpt; i++)
-                ofile << (int)pmask[i] << endl;
+                ofile << (int)pmask[i] << std::endl;
         }
     }
     ofile.close();
@@ -317,7 +316,7 @@ void GridMask::apply(pb::GridFunc<T>& gu, const unsigned short level)
 }
 
 void GridMask::assign(const unsigned short iloc, const unsigned short level,
-    const int num, const int xnum, const vector<lmasktype>& val)
+    const int num, const int xnum, const std::vector<lmasktype>& val)
 {
     assert(xnum >= num);
     assert(iloc < subdivx_);
@@ -390,7 +389,7 @@ void GridMask::multiplyByMask(
     T* u, const unsigned short level, const unsigned short iloc) const
 {
     const int lnumpt = loc_numpt_[level];
-    const vector<lmasktype>& maskptr(lmask_[level][iloc]);
+    const std::vector<lmasktype>& maskptr(lmask_[level][iloc]);
     T* const pu = u + offset(level, iloc);
     for (int idx = 0; idx < lnumpt; idx++)
     {
@@ -404,7 +403,7 @@ void GridMask::cutWithMask(
     T* u, const unsigned short level, const unsigned short iloc) const
 {
     const int lnumpt = loc_numpt_[level];
-    const vector<lmasktype>& maskptr(lmask_[level][iloc]);
+    const std::vector<lmasktype>& maskptr(lmask_[level][iloc]);
     T* const pu = u + offset(level, iloc);
     for (int idx = 0; idx < lnumpt; idx++)
     {

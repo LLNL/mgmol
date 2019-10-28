@@ -10,7 +10,6 @@
 
 // $Id$
 #include "Vector3D.h"
-using namespace std;
 
 double Vector3D::minimage(
     const Vector3D& w, const Vector3D& l, const short bc[3]) const
@@ -67,10 +66,10 @@ Vector3D Vector3D::vminimage(
     return r;
 }
 
-void bcastvv3d(vector<Vector3D>& vv, MPI_Comm comm)
+void bcastvv3d(std::vector<Vector3D>& vv, MPI_Comm comm)
 {
 #ifdef USE_MPI
-    const int n    = (int)vv.size();
+    const int n    = vv.size();
     double* buffer = new double[3 * n];
     for (int j = 0; j < n; j++)
         for (short i = 0; i < 3; i++)
@@ -80,8 +79,9 @@ void bcastvv3d(vector<Vector3D>& vv, MPI_Comm comm)
     int retbcast = MPI_Bcast(buffer, 3 * n, MPI_DOUBLE, 0, comm);
     if (retbcast != MPI_SUCCESS)
     {
-        cerr << "ERROR!!!! bcastvv3d(), Failure in MPI_Bcast of 'radii_'!!!"
-             << endl;
+        std::cerr
+            << "ERROR!!!! bcastvv3d(), Failure in MPI_Bcast of 'radii_'!!!"
+            << std::endl;
         MPI_Abort(comm, 0);
     }
     for (int j = 0; j < n; j++)

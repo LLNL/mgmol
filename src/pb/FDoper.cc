@@ -16,8 +16,6 @@
 namespace pb
 {
 
-using namespace std;
-
 Timer FDoperInterface::del2_4th_Mehr_tm_("FDoper::del2_4th_Mehr");
 Timer FDoperInterface::rhs_4th_Mehr1_tm_("FDoper::rhs_4th_Mehr1");
 Timer FDoperInterface::rhs_tm_("FDoper::rhs_");

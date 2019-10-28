@@ -11,7 +11,6 @@
 #include <cassert>
 #include <iomanip>
 #include <iostream>
-using namespace std;
 
 #include "MGmol_MPI.h"
 #include "MGmol_blas1.h"
@@ -27,7 +26,7 @@ void NOLMOTransform::init_transform(
     const dist_matrix::DistMatrix<DISTMATDTYPE>& ls, const bool reset_positions)
 {
     if (bcr_->onpe0())
-        (*MPIdata::sout) << "NOLMOTransform::init_transform()" << endl;
+        (*MPIdata::sout) << "NOLMOTransform::init_transform()" << std::endl;
 
     const dist_matrix::DistMatrix<DISTMATDTYPE>& work(ls);
     dist_matrix::DistMatrix<DISTMATDTYPE> tmp(ls);
@@ -43,9 +42,9 @@ void NOLMOTransform::init_transform(
         if (reset_positions || !set_positions_)
         {
             int n = (int)ara0_[0].size();
-            if (bcr_->onpe0()) (*MPIdata::sout) << "set ara0..." << endl;
-            vector<double> alphan0(n);
-            vector<double> inv_alphan0(n);
+            if (bcr_->onpe0()) (*MPIdata::sout) << "set ara0..." << std::endl;
+            std::vector<double> alphan0(n);
+            std::vector<double> inv_alphan0(n);
             getNorms(alphan0, inv_alphan0);
 
             for (int k = 0; k < 2 * NDIM; k++)
@@ -91,8 +90,8 @@ double NOLMOTransform::spread2(int i, int j) const
     {
         double c2 = b_[2 * j]->val(ii) * inv_norm;
         double s2 = b_[2 * j + 1]->val(ii) * inv_norm;
-        (*MPIdata::sout) << "s2+c2=" << s2 + c2 << endl;
-        (*MPIdata::sout) << "lby2pi*lby2pi=" << lby2pi * lby2pi << endl;
+        (*MPIdata::sout) << "s2+c2=" << s2 + c2 << std::endl;
+        (*MPIdata::sout) << "lby2pi*lby2pi=" << lby2pi * lby2pi << std::endl;
     }
 #endif
 
@@ -115,7 +114,7 @@ double NOLMOTransform::spread2(int i, int j) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void NOLMOTransform::setia(vector<int>& iiu) { return; }
+void NOLMOTransform::setia(std::vector<int>& iiu) { return; }
 ////////////////////////////////////////////////////////////////////////////////
 void NOLMOTransform::compute_transform(const int maxsweep, const double tol)
 {
@@ -128,8 +127,8 @@ void NOLMOTransform::compute_transform(const int maxsweep, const double tol)
     if (bcr_->onpe0())
         if (delta > tol)
             (*MPIdata::sout)
-                << " NOLMOTransform: decrease was " << setprecision(8) << delta
-                << " after " << maxsweep << " iterations" << endl;
+                << " NOLMOTransform: decrease was " << std::setprecision(8)
+                << delta << " after " << maxsweep << " iterations" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -144,8 +143,8 @@ double NOLMOTransform::nolmo(int maxsweep, double tol)
 
     DISTMATDTYPE one = 1.;
 
-    vector<double> alphan(lnst_);
-    vector<double> inv_alphan(lnst_);
+    std::vector<double> alphan(lnst_);
+    std::vector<double> inv_alphan(lnst_);
 
     dist_matrix::DistMatrix<DISTMATDTYPE> grads(
         "grad", *bcr_, nst_, nst_, nst_, bsize_);
@@ -161,8 +160,8 @@ double NOLMOTransform::nolmo(int maxsweep, double tol)
     if (active)
     {
 
-        vector<vector<double>> ara(m);
-        vector<vector<double>> aba(m);
+        std::vector<std::vector<double>> ara(m);
+        std::vector<std::vector<double>> aba(m);
         for (int k = 0; k < m; k++)
         {
             ara[k].resize(n);
@@ -175,8 +174,8 @@ double NOLMOTransform::nolmo(int maxsweep, double tol)
             }
         }
 
-        vector<dist_matrix::DistMatrix<DISTMATDTYPE>*> ra(m);
-        vector<string> names(2 * NDIM);
+        std::vector<dist_matrix::DistMatrix<DISTMATDTYPE>*> ra(m);
+        std::vector<std::string> names(2 * NDIM);
         names[0] = "matrixRA_0";
         names[1] = "matrixRA_1";
         names[2] = "matrixRA_2";
@@ -225,7 +224,7 @@ double NOLMOTransform::nolmo(int maxsweep, double tol)
             r_[k]->trsm(side, uplo, trans, diag, 1., *a_);
         }
 
-        vector<dist_matrix::DistMatrix<DISTMATDTYPE>*> ba(m);
+        std::vector<dist_matrix::DistMatrix<DISTMATDTYPE>*> ba(m);
         names[0] = "matrixBA_0";
         names[1] = "matrixBA_1";
         names[2] = "matrixBA_2";
@@ -243,12 +242,12 @@ double NOLMOTransform::nolmo(int maxsweep, double tol)
 #ifdef DEBUG
         for (int k = 0; k < m; k++)
         {
-            (*MPIdata::sout) << "r_[" << k << "]:" << endl;
+            (*MPIdata::sout) << "r_[" << k << "]:" << std::endl;
             r_[k]->print((*MPIdata::sout));
         }
         for (int k = 0; k < m; k++)
         {
-            (*MPIdata::sout) << "b_[" << k << "]:" << endl;
+            (*MPIdata::sout) << "b_[" << k << "]:" << std::endl;
             b_[k]->print((*MPIdata::sout));
         }
 #endif
@@ -262,7 +261,7 @@ double NOLMOTransform::nolmo(int maxsweep, double tol)
         double trial_step = getDt();
 
 #ifdef DEBUG
-        (*MPIdata::sout) << "a initial:" << endl;
+        (*MPIdata::sout) << "a initial:" << std::endl;
         a_->print((*MPIdata::sout));
 #endif
 
@@ -278,7 +277,8 @@ double NOLMOTransform::nolmo(int maxsweep, double tol)
         tspread = getFunctionalValue(ara, aba, inv_alphan);
 
         assert(tspread >= 0.);
-        (*MPIdata::sout) << " initial functional value: " << tspread << endl;
+        (*MPIdata::sout) << " initial functional value: " << tspread
+                         << std::endl;
 
         // iterations
         while (isweep < maxsweep && delta > tol)
@@ -345,13 +345,13 @@ double NOLMOTransform::nolmo(int maxsweep, double tol)
             oldtspread = tspread;
             tspread    = getFunctionalValue(ara, aba, inv_alphan);
             //(*MPIdata::sout) << " average spread (trial step):   " <<
-            // sqrt(tspread/nst_) << endl;
+            // sqrt(tspread/nst_) << std::endl;
 
             delta = tspread - oldtspread;
 
             const double c2 = (delta - deriv);
             const double t  = -deriv / (2. * c2);
-            //(*MPIdata::sout) << " new trial t:    " << -1.*t*fac << endl;
+            //(*MPIdata::sout) << " new trial t:    " << -1.*t*fac << std::endl;
 
             double beta = (t - 1.) * fac;
             a_->axpy(beta, grads);
@@ -379,15 +379,15 @@ double NOLMOTransform::nolmo(int maxsweep, double tol)
             delta = fabs(delta);
             assert(tspread >= 0.);
             assert(nst_ > 0);
-            (*MPIdata::sout) << " functional value: " << tspread << endl;
+            (*MPIdata::sout) << " functional value: " << tspread << std::endl;
 
             isweep++;
         } // isweep
 
-        (*MPIdata::sout) << setprecision(12);
-        (*MPIdata::sout) << isweep << " sweeps in nolmo" << endl;
-        (*MPIdata::sout) << " tspread:   " << tspread << endl;
-        (*MPIdata::sout) << " delta: " << delta << endl;
+        (*MPIdata::sout) << std::setprecision(12);
+        (*MPIdata::sout) << isweep << " sweeps in nolmo" << std::endl;
+        (*MPIdata::sout) << " tspread:   " << tspread << std::endl;
+        (*MPIdata::sout) << " delta: " << delta << std::endl;
 
         // update r_ and b_ as ara and aba
         for (int k = 0; k < m; k++)
@@ -400,7 +400,7 @@ double NOLMOTransform::nolmo(int maxsweep, double tol)
         }
 
 #ifdef DEBUG
-        (*MPIdata::sout) << "a_ final:" << endl;
+        (*MPIdata::sout) << "a_ final:" << std::endl;
         a_->print((*MPIdata::sout));
 #endif
 
@@ -436,8 +436,8 @@ double NOLMOTransform::nolmo_fixedCenters(const int maxsweep, const double tol)
     const int m = 2 * NDIM;
     double one  = 1.;
 
-    vector<double> alphan(lnst_);
-    vector<double> inv_alphan(lnst_);
+    std::vector<double> alphan(lnst_);
+    std::vector<double> inv_alphan(lnst_);
 
     dist_matrix::DistMatrix<DISTMATDTYPE> grads(
         "grad", *bcr_, nst_, nst_, nst_, bsize_);
@@ -452,8 +452,8 @@ double NOLMOTransform::nolmo_fixedCenters(const int maxsweep, const double tol)
 
     if (active)
     {
-        vector<vector<double>> ara(m);
-        vector<vector<double>> aba(m);
+        std::vector<std::vector<double>> ara(m);
+        std::vector<std::vector<double>> aba(m);
         for (int k = 0; k < m; k++)
         {
             ara[k].resize(n);
@@ -466,8 +466,8 @@ double NOLMOTransform::nolmo_fixedCenters(const int maxsweep, const double tol)
             }
         }
 
-        vector<dist_matrix::DistMatrix<DISTMATDTYPE>*> ra(m);
-        vector<string> names(2 * NDIM);
+        std::vector<dist_matrix::DistMatrix<DISTMATDTYPE>*> ra(m);
+        std::vector<std::string> names(2 * NDIM);
         names[0] = "matrixRA_0";
         names[1] = "matrixRA_1";
         names[2] = "matrixRA_2";
@@ -516,7 +516,7 @@ double NOLMOTransform::nolmo_fixedCenters(const int maxsweep, const double tol)
             r_[k]->trsm(side, uplo, trans, diag, 1., *a_);
         }
 
-        vector<dist_matrix::DistMatrix<DISTMATDTYPE>*> ba(m);
+        std::vector<dist_matrix::DistMatrix<DISTMATDTYPE>*> ba(m);
         names[0] = "matrixBA_0";
         names[1] = "matrixBA_1";
         names[2] = "matrixBA_2";
@@ -532,16 +532,16 @@ double NOLMOTransform::nolmo_fixedCenters(const int maxsweep, const double tol)
         }
 
 #ifdef DEBUG
-        (*MPIdata::sout) << "a:" << endl;
+        (*MPIdata::sout) << "a:" << std::endl;
         a_->print((*MPIdata::sout));
         for (int k = 0; k < m; k++)
         {
-            (*MPIdata::sout) << "r_[" << k << "]:" << endl;
+            (*MPIdata::sout) << "r_[" << k << "]:" << std::endl;
             r_[k]->print((*MPIdata::sout));
         }
         for (int k = 0; k < m; k++)
         {
-            (*MPIdata::sout) << "b_[" << k << "]:" << endl;
+            (*MPIdata::sout) << "b_[" << k << "]:" << std::endl;
             b_[k]->print((*MPIdata::sout));
         }
 #endif
@@ -551,7 +551,7 @@ double NOLMOTransform::nolmo_fixedCenters(const int maxsweep, const double tol)
         double trial_step = getDt();
 
 #ifdef DEBUG
-        (*MPIdata::sout) << "a initial:" << endl;
+        (*MPIdata::sout) << "a initial:" << std::endl;
         a_->print((*MPIdata::sout));
 #endif
 
@@ -571,7 +571,7 @@ double NOLMOTransform::nolmo_fixedCenters(const int maxsweep, const double tol)
         if (bcr_->onpe0())
             (*MPIdata::sout)
                 << " initial functional value with fixed centers: " << tspread
-                << endl;
+                << std::endl;
 
         // iterations
         int isweep = 0;
@@ -604,7 +604,7 @@ double NOLMOTransform::nolmo_fixedCenters(const int maxsweep, const double tol)
 
 #ifdef DEBUG
             ra[0]->gemm('t', 'n', 1., grads, *a_, 0.);
-            (*MPIdata::sout) << "Test orthogonality of gradient:" << endl;
+            (*MPIdata::sout) << "Test orthogonality of gradient:" << std::endl;
             ra[0]->print((*MPIdata::sout));
 #endif
 
@@ -644,13 +644,13 @@ double NOLMOTransform::nolmo_fixedCenters(const int maxsweep, const double tol)
             oldtspread = tspread;
             tspread    = getFunctionalValueFixedCenters(ara, aba, inv_alphan);
             //(*MPIdata::sout) << " average spread (trial step):   " <<
-            // sqrt(tspread/nst_) << endl;
+            // sqrt(tspread/nst_) << std::endl;
 
             delta = tspread - oldtspread;
 
             const double c2 = (delta - deriv);
             const double t  = -deriv / (2. * c2);
-            //(*MPIdata::sout) << " new trial t: " << -1.*t*fac << endl;
+            //(*MPIdata::sout) << " new trial t: " << -1.*t*fac << std::endl;
 
             double beta = (t - 1.) * fac;
             a_->axpy(beta, grads);
@@ -681,18 +681,18 @@ double NOLMOTransform::nolmo_fixedCenters(const int maxsweep, const double tol)
             if (bcr_->onpe0())
                 (*MPIdata::sout)
                     << " functional value with fixed centers: " << tspread
-                    << endl;
+                    << std::endl;
 
             isweep++;
         } // isweep
 
         if (bcr_->onpe0())
         {
-            (*MPIdata::sout) << setprecision(12);
+            (*MPIdata::sout) << std::setprecision(12);
             (*MPIdata::sout)
-                << isweep << " sweeps in nolmo_fixedCenters" << endl;
-            (*MPIdata::sout) << " tspread:   " << tspread << endl;
-            (*MPIdata::sout) << " delta: " << delta << endl;
+                << isweep << " sweeps in nolmo_fixedCenters" << std::endl;
+            (*MPIdata::sout) << " tspread:   " << tspread << std::endl;
+            (*MPIdata::sout) << " delta: " << delta << std::endl;
         }
 
         // update r_ and b_ as ara and aba
@@ -706,7 +706,7 @@ double NOLMOTransform::nolmo_fixedCenters(const int maxsweep, const double tol)
         }
 
 #ifdef DEBUG
-        (*MPIdata::sout) << "a_ final:" << endl;
+        (*MPIdata::sout) << "a_ final:" << std::endl;
         a_->print((*MPIdata::sout));
 #endif
 
@@ -730,13 +730,13 @@ double NOLMOTransform::nolmo_fixedCenters(const int maxsweep, const double tol)
 
 #if 0
   if( nst_<20 ){
-    (*MPIdata::sout)<<"NOLMO Transformation matrix (before):"<<endl;
-    (*MPIdata::sout)<<setprecision(2)<<scientific;
+    (*MPIdata::sout)<<"NOLMO Transformation matrix (before):"<<std::endl;
+    (*MPIdata::sout)<<std::setprecision(2)<<scientific;
     for ( int i = 0; i < nst_; i++ ){
       for ( int j = 0; j < nst_; j++ ){
         (*MPIdata::sout)<<mat_[i+nst_*j]<<"\t";
       }
-      (*MPIdata::sout)<<endl;
+      (*MPIdata::sout)<<std::endl;
     }
   }
 #endif
@@ -745,13 +745,13 @@ double NOLMOTransform::nolmo_fixedCenters(const int maxsweep, const double tol)
 
 #if 0
   if( nst_<20 ){
-    (*MPIdata::sout)<<"NOLMO Transformation matrix:"<<endl;
-    (*MPIdata::sout)<<setprecision(2)<<scientific;
+    (*MPIdata::sout)<<"NOLMO Transformation matrix:"<<std::endl;
+    (*MPIdata::sout)<<std::setprecision(2)<<scientific;
     for ( int i = 0; i < nst_; i++ ){
       for ( int j = 0; j < nst_; j++ ){
         (*MPIdata::sout)<<mat_[i+nst_*j]<<"\t";
       }
-      (*MPIdata::sout)<<endl;
+      (*MPIdata::sout)<<std::endl;
     }
   }
 #endif
@@ -766,25 +766,25 @@ void NOLMOTransform::gatherTransformMat()
     const int nbccol = a_->npcol();
     const int npes   = bcr_->nprocs();
 
-    vector<int> recvcounts(npes, 0);
+    std::vector<int> recvcounts(npes, 0);
     for (int i = 0; i < nbccol; i++)
     {
         if ((i + 1) * bsize_ < nst_)
             recvcounts[i] = bsize_ * nst_;
         else
-            recvcounts[i] = max(0, nst_ * (nst_ - i * bsize_));
+            recvcounts[i] = std::max(0, nst_ * (nst_ - i * bsize_));
     }
     for (unsigned int i = 0; i < recvcounts.size(); i++)
     {
         assert(recvcounts[i] <= bsize_ * nst_);
         assert(recvcounts[i] >= 0);
     }
-    vector<int> displs(npes, 0);
+    std::vector<int> displs(npes, 0);
     for (int i = 0; i < nbccol; i++)
         displs[i] = i * bsize_ * nst_;
     // The block of data sent from the jth process is received by every
     // process and placed in the jth block of the buffer recvbuf.
-    vector<DISTMATDTYPE> sendbuf(nst_ * nloc);
+    std::vector<DISTMATDTYPE> sendbuf(nst_ * nloc);
     if (a_->active()) a_->copyDataToVector(sendbuf);
     DISTMATDTYPE* recvbuf = &mat_[0];
     assert(recvbuf != NULL);
@@ -799,8 +799,9 @@ void NOLMOTransform::gatherTransformMat()
 }
 
 double NOLMOTransform::getFunctionalValueFixedCenters(
-    const vector<vector<double>>& ara, const vector<vector<double>>& aba,
-    const vector<double>& inv_alphan)
+    const std::vector<std::vector<double>>& ara,
+    const std::vector<std::vector<double>>& aba,
+    const std::vector<double>& inv_alphan)
 {
     assert(ara0_[0].size() == ara[0].size());
     assert(ara0_[0].size() == aba[0].size());
@@ -818,14 +819,14 @@ double NOLMOTransform::getFunctionalValueFixedCenters(
             spread2 += ((aba[k][i] * inv_alphan[i]) + vtmp0 * vtmp0
                         - 2. * vtmp0 * vtmp);
         }
-        //(*MPIdata::sout) << " spread2["<<i<<"]:   " << spread2 << endl;
+        //(*MPIdata::sout) << " spread2["<<i<<"]:   " << spread2 << std::endl;
         tspread += spread2;
     }
 
 #ifdef USE_MPI
     if (bcr_->npcol() > 1)
     {
-        //(*MPIdata::sout) << "tspread="<<tspread<<endl;
+        //(*MPIdata::sout) << "tspread="<<tspread<<std::endl;
         double recvbf;
         MPI_Allreduce(&tspread, &recvbf, 1, MPI_DOUBLE, MPI_SUM, comm_);
         tspread = recvbf;
@@ -834,8 +835,10 @@ double NOLMOTransform::getFunctionalValueFixedCenters(
     return tspread;
 }
 
-double NOLMOTransform::getFunctionalValue(const vector<vector<double>>& ara,
-    const vector<vector<double>>& aba, const vector<double>& inv_alphan)
+double NOLMOTransform::getFunctionalValue(
+    const std::vector<std::vector<double>>& ara,
+    const std::vector<std::vector<double>>& aba,
+    const std::vector<double>& inv_alphan)
 {
     assert(ara0_[0].size() == ara[0].size());
     assert(ara0_[0].size() == aba[0].size());
@@ -851,7 +854,7 @@ double NOLMOTransform::getFunctionalValue(const vector<vector<double>>& ara,
             const double vtmp = ara[k][i] * inv_alphan[i];
             spread2 += ((aba[k][i] * inv_alphan[i]) - vtmp * vtmp);
         }
-        //(*MPIdata::sout) << " spread2["<<i<<"]:   " << spread2 << endl;
+        //(*MPIdata::sout) << " spread2["<<i<<"]:   " << spread2 << std::endl;
         tspread += spread2;
     }
 
@@ -867,7 +870,7 @@ double NOLMOTransform::getFunctionalValue(const vector<vector<double>>& ara,
 }
 
 void NOLMOTransform::getNorms(
-    vector<double>& alphan, vector<double>& inv_alphan)
+    std::vector<double>& alphan, std::vector<double>& inv_alphan)
 {
     int n = (int)inv_alphan.size();
 
@@ -889,7 +892,7 @@ double NOLMOTransform::getDt()
     trial_step *= trial_step;
     trial_step /= 12.;
 
-    //(*MPIdata::sout)<<"trial_step="<<trial_step<<endl;
+    //(*MPIdata::sout)<<"trial_step="<<trial_step<<std::endl;
 
     return trial_step;
 }

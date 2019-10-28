@@ -15,15 +15,16 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
-#include <vector>
 
-using namespace std;
 namespace utf = boost::unit_test;
 
-double gaussianFunc(double radius) { return exp(-radius * radius / 2); }
+double gaussianFunc(double radius) { return std::exp(-radius * radius / 2); }
 double constantFunc(double radius) { return 1; }
-double gaussianFuncScaled(double radius) { return exp(-radius * radius / 200); }
-double deltaFilter(double point) { return (abs(point) < 1e-10 ? 3 : 0); }
+double gaussianFuncScaled(double radius)
+{
+    return std::exp(-radius * radius / 200);
+}
+double deltaFilter(double point) { return (std::abs(point) < 1e-10 ? 3 : 0); }
 double highFreq(double radius)
 {
     return std::exp(-radius * radius / 2) + std::sin(100 * radius);
@@ -31,17 +32,14 @@ double highFreq(double radius)
 
 BOOST_AUTO_TEST_CASE(super_sampling_filtering, *utf::tolerance(0.1))
 {
-    // array<double,3> atomicCenter={.06,-.06,.1};
-    array<double, 3> atomicCenter = { 0, 0, 0 };
-    // double cutOffRadius=.5;
-    int numExtraPts = 10;
-    int sampleRate  = 3;
-    const int lMax  = 0;
-    // array<double,3> coarGridSpace={.099,.099,.105};
-    array<double, 3> coarGridSpace = { .1, .1, .1 };
-    array<double, 3> botMeshCorner = { -.1, -.1, -.1 };
-    array<double, 3> topMeshCorner = { .1, .1, .1 };
-    bool harmonics                 = false;
+    std::array<double, 3> atomicCenter  = { 0, 0, 0 };
+    int numExtraPts                     = 10;
+    int sampleRate                      = 3;
+    const int lMax                      = 0;
+    std::array<double, 3> coarGridSpace = { .1, .1, .1 };
+    std::array<double, 3> botMeshCorner = { -.1, -.1, -.1 };
+    std::array<double, 3> topMeshCorner = { .1, .1, .1 };
+    bool harmonics                      = false;
 
     SuperSampling<lMax>::setup(sampleRate, numExtraPts, coarGridSpace);
     SuperSampling<lMax> uniTest(
@@ -75,14 +73,14 @@ BOOST_AUTO_TEST_CASE(super_sampling_filtering, *utf::tolerance(0.1))
 
 BOOST_AUTO_TEST_CASE(super_sampling_harmonics)
 {
-    array<double, 3> atomicCenter  = { 0, 0, 0 };
-    int numExtraPts                = 10;
-    int sampleRate                 = 3;
-    const int lMax                 = 2;
-    array<double, 3> coarGridSpace = { 1, 1, 1 };
-    array<double, 3> botMeshCorner = { -10, -10, -10 };
-    array<double, 3> topMeshCorner = { 10, 10, 10 };
-    bool harmonics                 = true;
+    std::array<double, 3> atomicCenter  = { 0, 0, 0 };
+    int numExtraPts                     = 10;
+    int sampleRate                      = 3;
+    const int lMax                      = 2;
+    std::array<double, 3> coarGridSpace = { 1, 1, 1 };
+    std::array<double, 3> botMeshCorner = { -10, -10, -10 };
+    std::array<double, 3> topMeshCorner = { 10, 10, 10 };
+    bool harmonics                      = true;
 
     SuperSampling<lMax>::setup(sampleRate, numExtraPts, coarGridSpace);
     SuperSampling<lMax> uniTestScaled(atomicCenter, botMeshCorner,
@@ -93,15 +91,14 @@ BOOST_AUTO_TEST_CASE(super_sampling_harmonics)
 
 BOOST_AUTO_TEST_CASE(super_sampling_scale, *utf::tolerance(1e-10))
 {
-    array<double, 3> atomicCenter = { 0, 0, 0 };
-    // double cutOffRadius=5;
-    int numExtraPts                = 10;
-    int sampleRate                 = 3;
-    const int lMax                 = 0;
-    array<double, 3> coarGridSpace = { 1, 1, 1 };
-    array<double, 3> botMeshCorner = { -10, -10, -10 };
-    array<double, 3> topMeshCorner = { 10, 10, 10 };
-    bool harmonics                 = false;
+    std::array<double, 3> atomicCenter  = { 0, 0, 0 };
+    int numExtraPts                     = 10;
+    int sampleRate                      = 3;
+    const int lMax                      = 0;
+    std::array<double, 3> coarGridSpace = { 1, 1, 1 };
+    std::array<double, 3> botMeshCorner = { -10, -10, -10 };
+    std::array<double, 3> topMeshCorner = { 10, 10, 10 };
+    bool harmonics                      = false;
 
     SuperSampling<lMax>::setup(sampleRate, numExtraPts, coarGridSpace);
     SuperSampling<lMax> uniTestScaled(atomicCenter, botMeshCorner,
@@ -141,14 +138,14 @@ BOOST_AUTO_TEST_CASE(super_sampling_scale, *utf::tolerance(1e-10))
 
 BOOST_AUTO_TEST_CASE(super_sampling_gaus_high_freq, *utf::tolerance(0.25))
 {
-    array<double, 3> atomicCenter  = { 0.001, 0.0, -.001 };
-    int numExtraPts                = 10;
-    int sampleRate                 = 3;
-    const int lMax                 = 0;
-    array<double, 3> coarGridSpace = { .1, .1, .1 };
-    array<double, 3> botMeshCorner = { -1, -1, -1 };
-    array<double, 3> topMeshCorner = { 1, 1, 1 };
-    bool harmonics                 = false;
+    std::array<double, 3> atomicCenter  = { 0.001, 0.0, -.001 };
+    int numExtraPts                     = 10;
+    int sampleRate                      = 3;
+    const int lMax                      = 0;
+    std::array<double, 3> coarGridSpace = { .1, .1, .1 };
+    std::array<double, 3> botMeshCorner = { -1, -1, -1 };
+    std::array<double, 3> topMeshCorner = { 1, 1, 1 };
+    bool harmonics                      = false;
 
     SuperSampling<lMax>::setup(sampleRate, numExtraPts, coarGridSpace);
     SuperSampling<lMax> uniTest(
@@ -158,7 +155,7 @@ BOOST_AUTO_TEST_CASE(super_sampling_gaus_high_freq, *utf::tolerance(0.25))
         = round((topMeshCorner[0] - botMeshCorner[0]) / coarGridSpace[0]) + 1;
     int offset = 0;
     double idx = botMeshCorner[0];
-    ofstream myfile, myfile2;
+    std::ofstream myfile, myfile2;
     myfile.open("testSuperSamplingHighFreq.txt");
     myfile2.open("testSuperSamplingHighFreqAcutalFunc.txt");
     for (int i = 0; i < numPts; ++i)
@@ -189,14 +186,14 @@ BOOST_AUTO_TEST_CASE(super_sampling_gaus_high_freq, *utf::tolerance(0.25))
 // TODO this test does not pass, so disable it for now
 BOOST_AUTO_TEST_CASE(super_sampling_constant, *utf::disabled())
 {
-    array<double, 3> atomicCenter  = { .6, -.6, .1 };
-    int numExtraPts                = 40;
-    int sampleRate                 = 3;
-    const int lMax                 = 0;
-    array<double, 3> coarGridSpace = { .1, .1, .1 };
-    array<double, 3> botMeshCorner = { -1, -1, -1 };
-    array<double, 3> topMeshCorner = { 0, 1, 1 };
-    bool harmonics                 = false;
+    std::array<double, 3> atomicCenter  = { .6, -.6, .1 };
+    int numExtraPts                     = 40;
+    int sampleRate                      = 3;
+    const int lMax                      = 0;
+    std::array<double, 3> coarGridSpace = { .1, .1, .1 };
+    std::array<double, 3> botMeshCorner = { -1, -1, -1 };
+    std::array<double, 3> topMeshCorner = { 0, 1, 1 };
+    bool harmonics                      = false;
 
     SuperSampling<lMax>::setup(sampleRate, numExtraPts, coarGridSpace);
     SuperSampling<lMax> uniTest(
@@ -230,14 +227,14 @@ BOOST_AUTO_TEST_CASE(super_sampling_constant, *utf::disabled())
 
 BOOST_AUTO_TEST_CASE(super_sampling_gaussian, *utf::tolerance(0.1))
 {
-    array<double, 3> atomicCenter  = { .6, -.6, .1 };
-    int numExtraPts                = 10;
-    int sampleRate                 = 3;
-    const int lMax                 = 0;
-    array<double, 3> coarGridSpace = { .1, .1, .1 };
-    array<double, 3> botMeshCorner = { -1, -1, -1 };
-    array<double, 3> topMeshCorner = { 0, 1, 1 };
-    bool harmonics                 = false;
+    std::array<double, 3> atomicCenter  = { .6, -.6, .1 };
+    int numExtraPts                     = 10;
+    int sampleRate                      = 3;
+    const int lMax                      = 0;
+    std::array<double, 3> coarGridSpace = { .1, .1, .1 };
+    std::array<double, 3> botMeshCorner = { -1, -1, -1 };
+    std::array<double, 3> topMeshCorner = { 0, 1, 1 };
+    bool harmonics                      = false;
 
     SuperSampling<lMax>::setup(sampleRate, numExtraPts, coarGridSpace);
     SuperSampling<lMax> uniTest(
@@ -275,16 +272,14 @@ BOOST_AUTO_TEST_CASE(super_sampling_gaussian, *utf::tolerance(0.1))
 
 BOOST_AUTO_TEST_CASE(super_sampling_delta, *utf::tolerance(1e-10))
 {
-    array<double, 3> atomicCenter = { 0, 0, 0 };
-    // array<double,3> atomicCenter={.5,.45,-.43};
-    // double cutOffRadius=.5;
-    int numExtraPts                = 10;
-    int sampleRate                 = 3;
-    const int lMax                 = 0;
-    array<double, 3> coarGridSpace = { .1, .1, .1 };
-    array<double, 3> botMeshCorner = { -1, -1, -1 };
-    array<double, 3> topMeshCorner = { 1, 1, 1 };
-    bool harmonics                 = false;
+    std::array<double, 3> atomicCenter  = { 0, 0, 0 };
+    int numExtraPts                     = 10;
+    int sampleRate                      = 3;
+    const int lMax                      = 0;
+    std::array<double, 3> coarGridSpace = { .1, .1, .1 };
+    std::array<double, 3> botMeshCorner = { -1, -1, -1 };
+    std::array<double, 3> topMeshCorner = { 1, 1, 1 };
+    bool harmonics                      = false;
 
     SuperSampling<lMax>::setup(
         sampleRate, numExtraPts, coarGridSpace, deltaFilter);

@@ -15,8 +15,6 @@
 #include <memory>
 #include <string.h>
 
-using namespace std;
-
 namespace mgmol_tools
 {
 int reduce(int* sendbuf, int* recvbuf, int count, MPI_Op op, const int root,
@@ -27,8 +25,8 @@ int reduce(int* sendbuf, int* recvbuf, int count, MPI_Op op, const int root,
     int mpi_err = MPI_Reduce(sendbuf, recvbuf, count, MPI_INT, op, root, comm);
     if (mpi_err != MPI_SUCCESS)
     {
-        cerr << "ERROR in MPI_Reduce(int*, int*) of size " << count << "!!!"
-             << endl;
+        std::cerr << "ERROR in MPI_Reduce(int*, int*) of size " << count
+                  << "!!!" << std::endl;
     }
     return mpi_err;
 #else
@@ -62,8 +60,8 @@ int reduce(double* sendbuf, double* recvbuf, int count, MPI_Op op,
         = MPI_Reduce(sendbuf, recvbuf, count, MPI_DOUBLE, op, root, comm);
     if (mpi_err != MPI_SUCCESS)
     {
-        cerr << "ERROR in MPI_Reduce(double*, double*) of size " << count
-             << "!!!" << endl;
+        std::cerr << "ERROR in MPI_Reduce(double*, double*) of size " << count
+                  << "!!!" << std::endl;
     }
     return mpi_err;
 #else
@@ -80,8 +78,8 @@ int reduce(float* sendbuf, float* recvbuf, int count, MPI_Op op, const int root,
         = MPI_Reduce(sendbuf, recvbuf, count, MPI_FLOAT, op, root, comm);
     if (mpi_err != MPI_SUCCESS)
     {
-        cerr << "ERROR in MPI_Reduce(float*, float*) of size " << count << "!!!"
-             << endl;
+        std::cerr << "ERROR in MPI_Reduce(float*, float*) of size " << count
+                  << "!!!" << std::endl;
     }
     return mpi_err;
 #else
@@ -98,8 +96,8 @@ int reduce(short* sendbuf, short* recvbuf, int count, MPI_Op op, const int root,
         = MPI_Reduce(sendbuf, recvbuf, count, MPI_SHORT, op, root, comm);
     if (mpi_err != MPI_SUCCESS)
     {
-        cerr << "ERROR in MPI_Reduce(short*, short*) of size " << count << "!!!"
-             << endl;
+        std::cerr << "ERROR in MPI_Reduce(short*, short*) of size " << count
+                  << "!!!" << std::endl;
     }
     return mpi_err;
 #else
@@ -107,8 +105,8 @@ int reduce(short* sendbuf, short* recvbuf, int count, MPI_Op op, const int root,
 #endif
 }
 
-int gatherV(vector<string>& sendbuf, vector<string>& recvbuf, const int root,
-    const MPI_Comm comm)
+int gatherV(std::vector<std::string>& sendbuf,
+    std::vector<std::string>& recvbuf, const int root, const MPI_Comm comm)
 {
     int mype = 0;
     int size = 1;
@@ -123,26 +121,25 @@ int gatherV(vector<string>& sendbuf, vector<string>& recvbuf, const int root,
     int sendcount;
     int totchars = 0;
     // first get length of each string
-    vector<int> locstrlen;
-    vector<int> strLen(vcount, 0);
+    std::vector<int> locstrlen;
+    std::vector<int> strLen(vcount, 0);
     sendcount = 0;
-    for (vector<string>::iterator str = sendbuf.begin(); str != sendbuf.end();
-         ++str)
+    for (std::vector<std::string>::iterator str = sendbuf.begin();
+         str != sendbuf.end(); ++str)
     {
-        string s = *str;
+        std::string s = *str;
         sendcount += s.length();
         locstrlen.push_back(s.length());
     }
     gatherV(locstrlen, strLen, root, comm);
 
     // convert string to char array
-    //    vector<char>charStr(sendcount);
     char* charStr = new char[sendcount];
     int idx       = 0;
-    for (vector<string>::iterator str = sendbuf.begin(); str != sendbuf.end();
-         ++str)
+    for (std::vector<std::string>::iterator str = sendbuf.begin();
+         str != sendbuf.end(); ++str)
     {
-        string s = *str;
+        std::string s = *str;
         memcpy(&charStr[idx], s.c_str(), s.size());
         idx += s.size();
     }
@@ -168,7 +165,8 @@ int gatherV(vector<string>& sendbuf, vector<string>& recvbuf, const int root,
         recvcounts, displs, MPI_CHAR, root, comm);
     if (mpi_err != MPI_SUCCESS)
     {
-        cerr << "ERROR in MPI_Gatherv in MGmol_MPI::GatherV() !!!" << endl;
+        std::cerr << "ERROR in MPI_Gatherv in MGmol_MPI::GatherV() !!!"
+                  << std::endl;
     }
 
     // reset recvbuf
@@ -181,7 +179,7 @@ int gatherV(vector<string>& sendbuf, vector<string>& recvbuf, const int root,
             std::unique_ptr<char[]> str(new char[strLen[i] + 1]);
             str[strLen[i]] = '\0';
             memcpy(str.get(), &recvdata[pos], strLen[i] * sizeof(char));
-            string cstr;
+            std::string cstr;
             cstr.assign(str.get());
             recvbuf.push_back(cstr);
             pos += strLen[i] * sizeof(char);
@@ -199,51 +197,7 @@ int gatherV(vector<string>& sendbuf, vector<string>& recvbuf, const int root,
 #endif
 }
 
-int gatherV(vector<int>& sendbuf, vector<int>& recvbuf, const int root,
-    const MPI_Comm comm)
-{
-#ifdef USE_MPI
-    int mype = 0;
-    int size = 1;
-    MPI_Comm_rank(comm, &mype);
-    MPI_Comm_size(comm, &size);
-
-    int sendcount   = (int)sendbuf.size();
-    int* recvcounts = new int[size];
-    int mpi_err     = MPI_Gather(
-        &sendcount, 1, MPI_INT, recvcounts, 1, MPI_INT, root, comm);
-    if (mpi_err != MPI_SUCCESS)
-    {
-        cerr << "ERROR in MPI_Allgather in MGmol_MPI::gatherV() !!!" << endl;
-    }
-
-    vector<int> displs(size);
-    if (mype == root)
-    {
-        displs[0] = 0;
-        for (int i = 1; i < size; i++)
-        {
-            displs[i] = displs[i - 1] + recvcounts[i - 1];
-        }
-
-        recvbuf.resize(displs[size - 1] + recvcounts[size - 1]);
-    }
-    mpi_err = MPI_Gatherv(&sendbuf[0], sendcount, MPI_INT, &recvbuf[0],
-        recvcounts, &displs[0], MPI_INT, root, comm);
-    if (mpi_err != MPI_SUCCESS)
-    {
-        cerr << "ERROR in MPI_Gatherv in MGmol_MPI::gatherV() !!!" << endl;
-    }
-
-    delete[] recvcounts;
-
-    return mpi_err;
-#else
-    return 0;
-#endif
-}
-
-int gatherV(vector<unsigned short>& sendbuf, vector<unsigned short>& recvbuf,
+int gatherV(std::vector<int>& sendbuf, std::vector<int>& recvbuf,
     const int root, const MPI_Comm comm)
 {
 #ifdef USE_MPI
@@ -258,7 +212,54 @@ int gatherV(vector<unsigned short>& sendbuf, vector<unsigned short>& recvbuf,
         &sendcount, 1, MPI_INT, recvcounts, 1, MPI_INT, root, comm);
     if (mpi_err != MPI_SUCCESS)
     {
-        cerr << "ERROR in MPI_Allgather in MGmol_MPI::gatherV() !!!" << endl;
+        std::cerr << "ERROR in MPI_Allgather in MGmol_MPI::gatherV() !!!"
+                  << std::endl;
+    }
+
+    std::vector<int> displs(size);
+    if (mype == root)
+    {
+        displs[0] = 0;
+        for (int i = 1; i < size; i++)
+        {
+            displs[i] = displs[i - 1] + recvcounts[i - 1];
+        }
+
+        recvbuf.resize(displs[size - 1] + recvcounts[size - 1]);
+    }
+    mpi_err = MPI_Gatherv(&sendbuf[0], sendcount, MPI_INT, &recvbuf[0],
+        recvcounts, &displs[0], MPI_INT, root, comm);
+    if (mpi_err != MPI_SUCCESS)
+    {
+        std::cerr << "ERROR in MPI_Gatherv in MGmol_MPI::gatherV() !!!"
+                  << std::endl;
+    }
+
+    delete[] recvcounts;
+
+    return mpi_err;
+#else
+    return 0;
+#endif
+}
+
+int gatherV(std::vector<unsigned short>& sendbuf,
+    std::vector<unsigned short>& recvbuf, const int root, const MPI_Comm comm)
+{
+#ifdef USE_MPI
+    int mype = 0;
+    int size = 1;
+    MPI_Comm_rank(comm, &mype);
+    MPI_Comm_size(comm, &size);
+
+    int sendcount   = (int)sendbuf.size();
+    int* recvcounts = new int[size];
+    int mpi_err     = MPI_Gather(
+        &sendcount, 1, MPI_INT, recvcounts, 1, MPI_INT, root, comm);
+    if (mpi_err != MPI_SUCCESS)
+    {
+        std::cerr << "ERROR in MPI_Allgather in MGmol_MPI::gatherV() !!!"
+                  << std::endl;
     }
 
     int* displs = new int[size];
@@ -276,7 +277,8 @@ int gatherV(vector<unsigned short>& sendbuf, vector<unsigned short>& recvbuf,
         &recvbuf[0], recvcounts, displs, MPI_UNSIGNED_SHORT, root, comm);
     if (mpi_err != MPI_SUCCESS)
     {
-        cerr << "ERROR in MPI_Gatherv in MGmol_MPI::gatherV() !!!" << endl;
+        std::cerr << "ERROR in MPI_Gatherv in MGmol_MPI::gatherV() !!!"
+                  << std::endl;
     }
 
     delete[] displs;
@@ -288,8 +290,8 @@ int gatherV(vector<unsigned short>& sendbuf, vector<unsigned short>& recvbuf,
 #endif
 }
 
-int gatherV(vector<double>& sendbuf, vector<double>& recvbuf, const int root,
-    const MPI_Comm comm)
+int gatherV(std::vector<double>& sendbuf, std::vector<double>& recvbuf,
+    const int root, const MPI_Comm comm)
 {
 #ifdef USE_MPI
     int mype = 0;
@@ -303,7 +305,8 @@ int gatherV(vector<double>& sendbuf, vector<double>& recvbuf, const int root,
         &sendcount, 1, MPI_INT, recvcounts, 1, MPI_INT, root, comm);
     if (mpi_err != MPI_SUCCESS)
     {
-        cerr << "ERROR in MPI_Allgather in MGmol_MPI::gatherV() !!!" << endl;
+        std::cerr << "ERROR in MPI_Allgather in MGmol_MPI::gatherV() !!!"
+                  << std::endl;
     }
 
     int* displs = new int[size];
@@ -321,7 +324,8 @@ int gatherV(vector<double>& sendbuf, vector<double>& recvbuf, const int root,
         recvcounts, displs, MPI_DOUBLE, root, comm);
     if (mpi_err != MPI_SUCCESS)
     {
-        cerr << "ERROR in MPI_Gatherv in MGmol_MPI::gatherV() !!!" << endl;
+        std::cerr << "ERROR in MPI_Gatherv in MGmol_MPI::gatherV() !!!"
+                  << std::endl;
     }
 
     delete[] displs;
@@ -333,8 +337,8 @@ int gatherV(vector<double>& sendbuf, vector<double>& recvbuf, const int root,
 #endif
 }
 
-int gatherV(vector<float>& sendbuf, vector<float>& recvbuf, const int root,
-    const MPI_Comm comm)
+int gatherV(std::vector<float>& sendbuf, std::vector<float>& recvbuf,
+    const int root, const MPI_Comm comm)
 {
 #ifdef USE_MPI
     int mype = 0;
@@ -348,7 +352,8 @@ int gatherV(vector<float>& sendbuf, vector<float>& recvbuf, const int root,
         &sendcount, 1, MPI_INT, recvcounts, 1, MPI_INT, root, comm);
     if (mpi_err != MPI_SUCCESS)
     {
-        cerr << "ERROR in MPI_Allgather in MGmol_MPI::gatherV() !!!" << endl;
+        std::cerr << "ERROR in MPI_Allgather in MGmol_MPI::gatherV() !!!"
+                  << std::endl;
     }
 
     int* displs = new int[size];
@@ -366,7 +371,8 @@ int gatherV(vector<float>& sendbuf, vector<float>& recvbuf, const int root,
         recvcounts, displs, MPI_FLOAT, root, comm);
     if (mpi_err != MPI_SUCCESS)
     {
-        cerr << "ERROR in MPI_Gatherv in MGmol_MPI::gatherV() !!!" << endl;
+        std::cerr << "ERROR in MPI_Gatherv in MGmol_MPI::gatherV() !!!"
+                  << std::endl;
     }
 
     delete[] displs;
@@ -385,8 +391,8 @@ int allreduce(
     int mpi_err = MPI_Allreduce(sendbuf, recvbuf, count, MPI_SHORT, op, comm);
     if (mpi_err != MPI_SUCCESS)
     {
-        cerr << "ERROR in MPI_Allreduce(int*, int*) of size " << count << "!!!"
-             << endl;
+        std::cerr << "ERROR in MPI_Allreduce(int*, int*) of size " << count
+                  << "!!!" << std::endl;
     }
     return mpi_err;
 #else

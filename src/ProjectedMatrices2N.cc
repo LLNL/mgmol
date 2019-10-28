@@ -10,8 +10,6 @@
 
 #include "ProjectedMatrices2N.h"
 
-using namespace std;
-
 ProjectedMatrices2N::ProjectedMatrices2N(const int ndim, const bool with_spin)
     : ProjectedMatrices(ndim, with_spin)
 {
@@ -39,23 +37,25 @@ void ProjectedMatrices2N::iterativeUpdateDMwithEigenstates(
     const bool flag_reduce_T)
 {
     const int dim = this->dim();
-    vector<DISTMATDTYPE> eigenval(dim);
+    std::vector<DISTMATDTYPE> eigenval(dim);
 
     solveGenEigenProblem(*work2N_, eigenval);
 
     double kbT = occ_width;
-    vector<DISTMATDTYPE> occ(dim);
+    std::vector<DISTMATDTYPE> occ(dim);
     const DISTMATDTYPE tol = 1.e-6;
     double mu;
     do
     {
-        if (onpe0) (*MPIdata::sout) << "MVP target with kbT = " << kbT << endl;
+        if (onpe0)
+            (*MPIdata::sout) << "MVP target with kbT = " << kbT << std::endl;
         mu = computeChemicalPotentialAndOccupations(kbT, nel, dim);
         getOccupations(occ);
         kbT *= 0.5;
     } while (occ[bdim_] > tol && flag_reduce_T);
 
     if (onpe0)
-        (*MPIdata::sout) << "MVP target with mu = " << mu << " [Ry]" << endl;
+        (*MPIdata::sout) << "MVP target with mu = " << mu << " [Ry]"
+                         << std::endl;
     buildDM(*work2N_, iterative_index);
 }

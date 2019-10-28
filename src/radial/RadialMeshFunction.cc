@@ -16,8 +16,6 @@
 #include <iostream>
 #include <stdlib.h>
 
-using namespace std;
-
 const double inv48 = 1. / 48;
 
 // Gaussian cutoff function
@@ -47,7 +45,8 @@ void RadialMeshFunction::gauss_filter(const double rcut, const int j)
     }
 }
 
-void RadialMeshFunction::read(const int nrow, const int ncol, ifstream* tfile)
+void RadialMeshFunction::read(
+    const int nrow, const int ncol, std::ifstream* tfile)
 {
     assert(ncol > 1);
     assert(nrow > 1);
@@ -99,7 +98,8 @@ void RadialMeshFunction::bcast(MPI_Comm comm, const int root)
     int mpirc = MPI_Bcast(&x_[0], nn[0], MPI_DOUBLE, root, comm);
     if (mpirc != MPI_SUCCESS)
     {
-        (*MPIdata::sout) << "RadialMeshFunction::bcast() failed!!!" << endl;
+        (*MPIdata::sout) << "RadialMeshFunction::bcast() failed!!!"
+                         << std::endl;
         MPI_Abort(comm, 0);
     }
 
@@ -110,7 +110,8 @@ void RadialMeshFunction::bcast(MPI_Comm comm, const int root)
         mpirc = MPI_Bcast(&y_[i][0], nn[0], MPI_DOUBLE, root, comm);
         if (mpirc != MPI_SUCCESS)
         {
-            (*MPIdata::sout) << "RadialMeshFunction::bcast() failed!!!" << endl;
+            (*MPIdata::sout)
+                << "RadialMeshFunction::bcast() failed!!!" << std::endl;
             MPI_Abort(comm, 0);
         }
     }
@@ -122,8 +123,8 @@ void RadialMeshFunction::bcast(MPI_Comm comm, const int root) { return; }
 // radial integratation of f
 double RadialMeshFunction::radint(const int j)
 {
-    vector<double>& f = y_[j];
-    const int n       = (int)x_.size();
+    std::vector<double>& f = y_[j];
+    const int n            = (int)x_.size();
 
     // Alternativ extended Simpson rule
     // Numerical Recipes, p. 108
@@ -148,11 +149,12 @@ double RadialMeshFunction::radint(const int j)
 
     if (f[n - 1] * x_[n - 1] * x_[n - 1] > 5.e-3)
     {
-        (*MPIdata::sout) << "WARNING RadialMeshFunction" << endl;
+        (*MPIdata::sout) << "WARNING RadialMeshFunction" << std::endl;
         (*MPIdata::sout) << "WARNING radint(): f[n-1]*x_[n-1]*x_[n-1]="
-                         << f[n - 1] * x_[n - 1] * x_[n - 1] << endl;
-        (*MPIdata::sout) << "WARNING radint(): x_[n-1]=" << x_[n - 1] << endl;
-        (*MPIdata::sout) << "WARNING n=" << n << endl;
+                         << f[n - 1] * x_[n - 1] * x_[n - 1] << std::endl;
+        (*MPIdata::sout) << "WARNING radint(): x_[n-1]=" << x_[n - 1]
+                         << std::endl;
+        (*MPIdata::sout) << "WARNING n=" << n << std::endl;
     }
 
     return rval;
@@ -161,8 +163,8 @@ double RadialMeshFunction::radint(const int j)
 // radial integratation of f^2
 double RadialMeshFunction::radintf2(const int j)
 {
-    vector<double>& f = y_[j];
-    const int n       = (int)x_.size();
+    std::vector<double>& f = y_[j];
+    const int n            = (int)x_.size();
 
     // Alternativ extended Simpson rule
     // Numerical Recipes, p. 108
@@ -187,24 +189,26 @@ double RadialMeshFunction::radintf2(const int j)
 
     if (f[n - 1] * f[n - 1] * x_[n - 1] * x_[n - 1] > 5.e-3)
     {
-        (*MPIdata::sout) << "WARNING RadialMeshFunction" << endl;
+        (*MPIdata::sout) << "WARNING RadialMeshFunction" << std::endl;
         (*MPIdata::sout) << "WARNING radint(): f[n-1]*f[n-1]*x_[n-1]*x_[n-1]="
-                         << f[n - 1] * f[n - 1] * x_[n - 1] * x_[n - 1] << endl;
-        (*MPIdata::sout) << "WARNING radint(): x_[n-1]=" << x_[n - 1] << endl;
-        (*MPIdata::sout) << "WARNING n=" << n << endl;
+                         << f[n - 1] * f[n - 1] * x_[n - 1] * x_[n - 1]
+                         << std::endl;
+        (*MPIdata::sout) << "WARNING radint(): x_[n-1]=" << x_[n - 1]
+                         << std::endl;
+        (*MPIdata::sout) << "WARNING n=" << n << std::endl;
     }
 
     return rval;
 }
 
 // compute the inverse FT
-void RadialMeshFunction::inv_ft(const vector<double>& rgrid,
-    vector<double>& rfunc, const int lval, const int j)
+void RadialMeshFunction::inv_ft(const std::vector<double>& rgrid,
+    std::vector<double>& rfunc, const int lval, const int j)
 {
     assert(rgrid.size() == rfunc.size());
 
-    vector<double>& gfunc = y_[j];
-    const double dr       = rgrid[1] - rgrid[0];
+    std::vector<double>& gfunc = y_[j];
+    const double dr            = rgrid[1] - rgrid[0];
 
     const int irmax = (int)rgrid.size();
     const int ikmax = (int)x_.size();
@@ -212,13 +216,13 @@ void RadialMeshFunction::inv_ft(const vector<double>& rgrid,
     memset(&rfunc[0], 0, rfunc.size() * sizeof(double));
 
 #ifdef DEBUG
-    if (onpe0) (*MPIdata::sout) << " Inv. FT for l=" << lval << endl;
+    if (onpe0) (*MPIdata::sout) << " Inv. FT for l=" << lval << std::endl;
 #endif
 
     int irmin = 0;
     double ri = 0.;
     RadialMeshFunction rwork(x_);
-    vector<double>& work = rwork.y();
+    std::vector<double>& work = rwork.y();
 
     switch (lval)
     {
@@ -355,7 +359,8 @@ void RadialMeshFunction::inv_ft(const vector<double>& rgrid,
         default:
 
             (*MPIdata::serr)
-                << "invft: angular momentum state > 2 not implemented" << endl;
+                << "invft: angular momentum state > 2 not implemented"
+                << std::endl;
             exit(1);
     }
 
@@ -365,10 +370,11 @@ void RadialMeshFunction::inv_ft(const vector<double>& rgrid,
     DSCAL(&irmax, &alpha, &rfunc[0], &ione);
 }
 
-void RadialMeshFunction::compute_ft(const vector<double>& ggrid,
-    vector<double>& gcof, const int lval, ofstream* tfile, const int j)
+void RadialMeshFunction::compute_ft(const std::vector<double>& ggrid,
+    std::vector<double>& gcof, const int lval, std::ofstream* tfile,
+    const int j)
 {
-    vector<double>& func = y_[j];
+    std::vector<double>& func = y_[j];
 
     assert(x_.size() == func.size());
 
@@ -378,7 +384,7 @@ void RadialMeshFunction::compute_ft(const vector<double>& ggrid,
     memset(&gcof[0], 0, ikmax * sizeof(double));
 
     RadialMeshFunction rwork(x_);
-    vector<double>& work = rwork.y();
+    std::vector<double>& work = rwork.y();
 
     // Integrate work to get coeff. 0
     switch (lval)
@@ -471,7 +477,7 @@ void RadialMeshFunction::compute_ft(const vector<double>& ggrid,
     if (tfile != nullptr)
         for (int ik = 0; ik < ikmax; ik++)
         {
-            (*tfile) << ggrid[ik] << "\t" << gcof[ik] << endl;
+            (*tfile) << ggrid[ik] << "\t" << gcof[ik] << std::endl;
         }
 }
 
@@ -485,25 +491,25 @@ void RadialMeshFunction::rft(RadialMeshFunction& filt_func, const int lval,
     const double dg   = 0.005;
     const int ikmax   = (int)(gmax / dg);
 #ifdef DEBUG
-    (*MPIdata::sout) << "Uses " << ikmax << " points for FT" << endl;
+    (*MPIdata::sout) << "Uses " << ikmax << " points for FT" << std::endl;
 #endif
 
     // Arrays for FT of func and its grid
-    vector<double> ggrid(ikmax);
+    std::vector<double> ggrid(ikmax);
 
     // Generate ggrid
     for (int i = 0; i < ikmax; i++)
         ggrid[i] = (double)(i)*dg;
 
     RadialMeshFunction gfunc(ggrid);
-    vector<double>& gcof = gfunc.y();
+    std::vector<double>& gcof = gfunc.y();
 
     // compute FT of func
-    ofstream tfile;
+    std::ofstream tfile;
     if (print)
     {
-        string filename("Freq_init.dat");
-        tfile.open(filename.data(), ios::out);
+        std::string filename("Freq_init.dat");
+        tfile.open(filename.data(), std::ios::out);
     }
     compute_ft(ggrid, gcof, lval, &tfile, j);
 
@@ -514,7 +520,7 @@ void RadialMeshFunction::rft(RadialMeshFunction& filt_func, const int lval,
     if (printFlag && ct.verbose > 0)
         (*MPIdata::sout) << "RadialMeshFunction::rft(),"
                          << " Cutoff for pseudopotential: " << gcut * gcut
-                         << "[Ry]" << endl;
+                         << "[Ry]" << std::endl;
 
     for (int ik = 0; ik < ikmax; ik++)
     {
@@ -522,11 +528,11 @@ void RadialMeshFunction::rft(RadialMeshFunction& filt_func, const int lval,
     }
     if (print)
     {
-        string filename("Freq_filt.dat");
-        ofstream tfile(filename.data());
+        std::string filename("Freq_filt.dat");
+        std::ofstream tfile(filename.data());
         for (int ik = 0; ik < ikmax; ik++)
         {
-            tfile << ggrid[ik] << "\t" << gcof[ik] << endl;
+            tfile << ggrid[ik] << "\t" << gcof[ik] << std::endl;
         }
     }
 
@@ -535,17 +541,17 @@ void RadialMeshFunction::rft(RadialMeshFunction& filt_func, const int lval,
 }
 
 void RadialMeshFunction::printLocalPot(
-    const string& name, const short ll, ofstream* tfile)
+    const std::string& name, const short ll, std::ofstream* tfile)
 {
     assert(tfile != 0);
 
-    const vector<double>& potloc = y_[0];
+    const std::vector<double>& potloc = y_[0];
 
-    (*tfile) << "# " << name << " local pseudopotential, l=" << ll << endl;
+    (*tfile) << "# " << name << " local pseudopotential, l=" << ll << std::endl;
 
     for (unsigned short idx = 0; idx < x_.size(); idx += 3)
     {
-        (*tfile) << x_[idx] << "\t" << potloc[idx] << endl;
+        (*tfile) << x_[idx] << "\t" << potloc[idx] << std::endl;
     }
-    (*tfile) << endl;
+    (*tfile) << std::endl;
 }

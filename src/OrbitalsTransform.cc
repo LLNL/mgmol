@@ -12,7 +12,6 @@
 #include "MGmol_MPI.h"
 #include "MPIdata.h"
 #include <iomanip>
-using namespace std;
 
 OrbitalsTransform::OrbitalsTransform(
     const int nst, const Vector3D& origin, const Vector3D& ll)
@@ -36,13 +35,14 @@ OrbitalsTransform::OrbitalsTransform(
     if (onpe0)
         (*MPIdata::sout) << " OrbitalsTransform using " << bcr_->npcol()
                          << " parallel tasks,"
-                         << " with " << bsize_ << " columns per task" << endl;
+                         << " with " << bsize_ << " columns per task"
+                         << std::endl;
 
     if (bcr_->active())
     {
         const int mypecol = bcr_->mycol();
         offset_           = mypecol * bsize_;
-        lnst_             = min(bsize_, nst_ - offset_);
+        lnst_             = std::min(bsize_, nst_ - offset_);
         if (lnst_ < 0) lnst_ = 0;
         iu_.resize(nst_ * bsize_, 1);
     }
@@ -74,13 +74,13 @@ void OrbitalsTransform::printTransformationMatrix() const
     if (onpe0)
     {
 
-        (*MPIdata::sout) << "Transform matrix: " << endl;
-        (*MPIdata::sout) << setprecision(5);
+        (*MPIdata::sout) << "Transform matrix: " << std::endl;
+        (*MPIdata::sout) << std::setprecision(5);
         for (int i = 0; i < nst_; ++i)
         {
             for (int j = 0; j < nst_; ++j)
                 (*MPIdata::sout) << mat_[j * nst_ + i] << "  ";
-            (*MPIdata::sout) << endl;
+            (*MPIdata::sout) << std::endl;
         }
     }
 }
@@ -179,7 +179,7 @@ double OrbitalsTransform::spread2(void) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-double OrbitalsTransform::spread(void) const { return sqrt(spread2()); }
+double OrbitalsTransform::spread(void) const { return std::sqrt(spread2()); }
 
 ////////////////////////////////////////////////////////////////////////////////
 double OrbitalsTransform::volume() const
@@ -194,12 +194,13 @@ double OrbitalsTransform::volume() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void OrbitalsTransform::printCentersAndSpreads(ostream& os)
+void OrbitalsTransform::printCentersAndSpreads(std::ostream& os)
 {
     if (bcr_->onpe0() && nst_ > 0)
     {
-        os << "------------------------------------------------------" << endl;
-        os << " Orbitals centers and spreads " << endl << endl;
+        os << "------------------------------------------------------"
+           << std::endl;
+        os << " Orbitals centers and spreads " << std::endl << std::endl;
     }
     double max = 0.;
     double min = 1.e12;
@@ -210,25 +211,27 @@ void OrbitalsTransform::printCentersAndSpreads(ostream& os)
         double spreadi = spread(i);
         if (bcr_->onpe0())
         {
-            os << "&& " << setw(4) << i + 1 << "   ";
-            os.setf(ios::fixed, ios::floatfield);
-            os.setf(ios::right, ios::adjustfield);
-            os << setw(12) << setprecision(3) << centeri[0] << " " << setw(12)
-               << setprecision(3) << centeri[1] << " " << setw(12)
-               << setprecision(3) << centeri[2] << "         ";
-            os << setw(12) << setprecision(3) << spreadi << endl;
+            os << "&& " << std::setw(4) << i + 1 << "   ";
+            os.setf(std::ios::fixed, std::ios::floatfield);
+            os.setf(std::ios::right, std::ios::adjustfield);
+            os << std::setw(12) << std::setprecision(3) << centeri[0] << " "
+               << std::setw(12) << std::setprecision(3) << centeri[1] << " "
+               << std::setw(12) << std::setprecision(3) << centeri[2]
+               << "         ";
+            os << std::setw(12) << std::setprecision(3) << spreadi << std::endl;
         }
         if (spreadi > max) max = spreadi;
         if (spreadi < min) min = spreadi;
     }
 
     if (bcr_->onpe0())
-        os << "Min. spread = " << min << ", Max. spread = " << max << endl
-           << endl;
+        os << "Min. spread = " << min << ", Max. spread = " << max << std::endl
+           << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void OrbitalsTransform::distributeColumnsR(vector<vector<DISTMATDTYPE>>& vmm)
+void OrbitalsTransform::distributeColumnsR(
+    std::vector<std::vector<DISTMATDTYPE>>& vmm)
 {
     assert(vmm.size() == 6);
 
@@ -241,8 +244,6 @@ void OrbitalsTransform::distributeColumnsR(vector<vector<DISTMATDTYPE>>& vmm)
     int count = bsize_ * nst_; // size of matrix block
     if (static_cast<int>(vmm[0].size()) < (mycol + 1) * bsize_ * nst_)
         count = vmm[0].size() - mycol * bsize_ * nst_;
-    // cout<<"OrbitalsTransform::distributeColumnsR() -> assign "<<count<<"
-    // elements"<<endl;
 
     if (count > 0)
     {

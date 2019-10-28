@@ -56,9 +56,9 @@ DFTsolver<T>::DFTsolver(Hamiltonian<T>* hamiltonian,
         }
 
         default:
-            cerr << "DFTsolver: Undefined iterative electronic structure "
-                    "solver!!!"
-                 << endl;
+            std::cerr << "DFTsolver: Undefined iterative electronic structure "
+                         "solver!!!"
+                      << std::endl;
     }
 
     accelerate_ = false;
@@ -77,26 +77,26 @@ void DFTsolver<T>::printEnergy(const short step) const
 {
     if (onpe0)
     {
-        os_ << setprecision(12) << fixed << "%%    " << step
+        os_ << std::setprecision(12) << std::fixed << "%%    " << step
             << " SC ENERGY = " << eks_history_[0];
         if (step > 0)
         {
             if (testUpdatePot())
             {
-                os_ << setprecision(2) << scientific << ", delta Eks = " << de_
-                    << endl;
+                os_ << std::setprecision(2) << std::scientific
+                    << ", delta Eks = " << de_ << std::endl;
             }
             else
             {
-                os_ << setprecision(2) << scientific
-                    << ", delta Eig. sum = " << deig_ << endl;
-                os_ << setprecision(12) << fixed
-                    << "Sum eigenvalues = " << sum_eig_[0] << endl;
+                os_ << std::setprecision(2) << std::scientific
+                    << ", delta Eig. sum = " << deig_ << std::endl;
+                os_ << std::setprecision(12) << std::fixed
+                    << "Sum eigenvalues = " << sum_eig_[0] << std::endl;
             }
         }
         else
         {
-            os_ << endl;
+            os_ << std::endl;
         }
     }
 }
@@ -135,7 +135,7 @@ void DFTsolver<T>::dielON()
 
     if (pot.diel() && !pbset)
         if (onpe0 && ct.verbose > 1)
-            os_ << " Solvation turned off for this step" << endl;
+            os_ << " Solvation turned off for this step" << std::endl;
 }
 
 template <class T>
@@ -172,13 +172,13 @@ int DFTsolver<T>::checkConvergenceEnergy(
     if (step > 0)
     {
         double deig_old = deig_;
-        deig_           = fabs(sum_eig_[1] - sum_eig_[0]);
-        deig2_          = max(deig_, deig_old);
+        deig_           = std::abs(sum_eig_[1] - sum_eig_[0]);
+        deig2_          = std::max(deig_, deig_old);
 
         // energy variation during last iteration
         double de_old = de_;
-        de_           = fabs(eks_history_[0] - eks_history_[1]);
-        de2_          = max(de_, de_old);
+        de_           = std::abs(eks_history_[0] - eks_history_[1]);
+        de2_          = std::max(de_, de_old);
 
         if (testUpdatePot())
             dtol2 = de2_;
@@ -201,12 +201,12 @@ int DFTsolver<T>::checkConvergenceEnergy(
     {
         if (onpe0)
         {
-            os_ << endl
+            os_ << std::endl
                 << "MGmol ERROR, electronic iterations are not converging at "
                    "all: DV ="
-                << pot.scf_dv() << endl
-                << endl;
-            os_ << flush;
+                << pot.scf_dv() << std::endl
+                << std::endl;
+            os_ << std::flush;
         }
         mmpi.barrier();
         return -2;
@@ -265,22 +265,22 @@ int DFTsolver<T>::solve(T& orbitals, T& work_orbitals, Ions& ions,
 #else
     if (ct.precond_factor_computed)
     {
-        os_ << "Needs ARPACK to compute Preconditioner factor" << endl;
+        os_ << "Needs ARPACK to compute Preconditioner factor" << std::endl;
         return -1;
     }
 #endif
     if (onpe0)
     {
-        os_ << "### DFTsolver ###" << endl;
+        os_ << "### DFTsolver ###" << std::endl;
         if (ct.verbose > 1 && ct.precond_factor_computed)
-            os_ << "Preconditioning factor: " << ct.precond_factor << endl;
+            os_ << "Preconditioning factor: " << ct.precond_factor << std::endl;
     }
 
     orbitals_stepper_->setup(orbitals);
 
     if (ct.resetVH())
     {
-        if (onpe0) os_ << "DFTsolver: reset Hartree potential" << endl;
+        if (onpe0) os_ << "DFTsolver: reset Hartree potential" << std::endl;
         electrostat_->resetSolution();
     }
 
@@ -331,10 +331,10 @@ int DFTsolver<T>::solve(T& orbitals, T& work_orbitals, Ions& ions,
         if (retval == 0 && !ct.checkResidual())
         {
             if (onpe0)
-                os_ << endl
-                    << endl
+                os_ << std::endl
+                    << std::endl
                     << " DFTsolver: convergence achieved for delta E..."
-                    << endl;
+                    << std::endl;
             break;
         }
 
@@ -383,10 +383,10 @@ int DFTsolver<T>::solve(T& orbitals, T& work_orbitals, Ions& ions,
         if (retval == 0)
         {
             if (onpe0)
-                os_ << endl
-                    << endl
+                os_ << std::endl
+                    << std::endl
                     << " DFTsolver: convergence achieved for residual..."
-                    << endl;
+                    << std::endl;
             break;
         }
 
@@ -402,8 +402,8 @@ int DFTsolver<T>::solve(T& orbitals, T& work_orbitals, Ions& ions,
         {
             double condS = proj_matrices_->computeCond();
             if (onpe0)
-                os_ << setprecision(2) << scientific
-                    << "Condition Number of S: " << condS << endl;
+                os_ << std::setprecision(2) << std::scientific
+                    << "Condition Number of S: " << condS << std::endl;
         }
 
         // updated Hij needed to compute new DM
@@ -425,8 +425,9 @@ int DFTsolver<T>::solve(T& orbitals, T& work_orbitals, Ions& ions,
         const double alpha = 1. / getLAeigen(0., 500, ions);
         if (onpe0)
         {
-            os_ << "Quench electrons" << endl;
-            os_ << "A Posteriori Preconditioning factor: " << alpha << endl;
+            os_ << "Quench electrons" << std::endl;
+            os_ << "A Posteriori Preconditioning factor: " << alpha
+                << std::endl;
         }
     }
 #endif
@@ -436,7 +437,7 @@ int DFTsolver<T>::solve(T& orbitals, T& work_orbitals, Ions& ions,
 }
 
 template <class T>
-void DFTsolver<T>::printTimers(ostream& os)
+void DFTsolver<T>::printTimers(std::ostream& os)
 {
     solve_tm_.print(os);
 }

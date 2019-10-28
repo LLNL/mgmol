@@ -12,19 +12,18 @@
 #include <cmath>
 #include <iostream>
 #include <vector>
-using namespace std;
 
 #include "AndersonMix.h"
 #include "Solution.h"
 
-double residual(vector<double> diag_op, Solution& x, Solution& r)
+double residual(std::vector<double> diag_op, Solution& x, Solution& r)
 {
     for (int i = 0; i < (int)diag_op.size(); i++)
     {
         r.setVal(i, diag_op[i] * x[i]);
     }
     double lambda = x.dotProduct(r) / x.dotProduct(x);
-    cout << "lambda=" << lambda << endl;
+    std::cout << "lambda=" << lambda << std::endl;
     for (int i = 0; i < (int)diag_op.size(); i++)
     {
         r.setVal(i, lambda * x[i] - r[i]);
@@ -40,8 +39,8 @@ int main(int argc, char** argv)
 {
     int n = atoi(argv[1]);
     int m = atoi(argv[2]);
-    cout << "n=" << n << endl;
-    cout << "m=" << m << endl;
+    std::cout << "n=" << n << std::endl;
+    std::cout << "m=" << m << std::endl;
 
     const int maxit  = 100;
     const double tol = 1.e-8;
@@ -60,7 +59,7 @@ int main(int argc, char** argv)
 
     Solution r(n);
 
-    vector<double> diag(n);
+    std::vector<double> diag(n);
     double delta = 1. / (double)(n - 1);
     for (int i = 0; i < n; i++)
         diag[i] = i * delta;
@@ -71,49 +70,49 @@ int main(int argc, char** argv)
     double normF = 1.;
     int it       = 0;
 
-    cout << "Initial Solution:" << endl;
+    std::cout << "Initial Solution:" << std::endl;
     for (int i = 0; i < n; i++)
     {
-        cout << x[i];
+        std::cout << x[i];
         if (i < n - 1)
-            cout << ", ";
+            std::cout << ", ";
         else
-            cout << endl;
+            std::cout << std::endl;
     }
     do
     {
         it++;
         x.normalize();
 
-        cout << "Trial Solution:" << endl;
+        std::cout << "Trial Solution:" << std::endl;
         for (int i = 0; i < n; i++)
         {
-            cout << x[i];
+            std::cout << x[i];
             if (i < n - 1)
-                cout << ", ";
+                std::cout << ", ";
             else
-                cout << endl;
+                std::cout << std::endl;
         }
         normX = x.norm();
-        cout << "||X||=" << normX << endl;
+        std::cout << "||X||=" << normX << std::endl;
         x.setInvS(1. / (normX * normX));
         normF = residual(diag, x, r); // improve x
-        cout << "||F||=" << normF << endl;
+        std::cout << "||F||=" << normF << std::endl;
         r.scal(invMaxLambda);
-        andmix.update(r, work, cout, true);
+        andmix.update(r, work, std::cout, true);
     } while (normF > tol && it < maxit);
     if (normF <= tol)
-        cout << "Converged in " << it << " iterations" << endl;
+        std::cout << "Converged in " << it << " iterations" << std::endl;
     else
-        cout << "Not Converged after " << it << " iterations" << endl;
-    cout << "Solution:" << endl;
+        std::cout << "Not Converged after " << it << " iterations" << std::endl;
+    std::cout << "Solution:" << std::endl;
     for (int i = 0; i < n; i++)
     {
-        cout << x[i];
+        std::cout << x[i];
         if (i < n - 1)
-            cout << ", ";
+            std::cout << ", ";
         else
-            cout << endl;
+            std::cout << std::endl;
     }
 
     return 0;

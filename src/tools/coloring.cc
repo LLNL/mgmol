@@ -15,23 +15,17 @@
 
 #include "coloring.h"
 
-using namespace std;
-
 /* C version of greedy multicoloring algorithm adapted from SPARSKIT (LGPL) */
 void greedyMC(int n, int* ja, int* ia, int* num_colors, int* iord, int* colors)
 {
     int i, j, k, maxcol, mycol, ncols;
 
-    memset(colors, -1, n * sizeof(int));
-    // for(i=0; i<n; i++)
-    //   colors[i] = -1;
+    std::memset(colors, -1, n * sizeof(int));
 
     maxcol   = n;
     ncols    = 0;
     int* tmp = new int[n];
-    memset(tmp, 0, n * sizeof(int));
-    // for(i=0; i<n; i++)
-    //   tmp[i] = 0;
+    std::memset(tmp, 0, n * sizeof(int));
 
     /* scan all nodes */
     for (i = 0; i < maxcol; i++)
@@ -57,7 +51,7 @@ void greedyMC(int n, int* ja, int* ia, int* num_colors, int* iord, int* colors)
         for (mycol = 0; mycol <= mcol; mycol++)
             if (tmp[mycol] != -1) break;
         /* reset tmp array */
-        memset(tmp, 0, (mcol + 1) * sizeof(int));
+        std::memset(tmp, 0, (mcol + 1) * sizeof(int));
 
         /* assign color and update num_colors */
         colors[ii] = mycol;
@@ -86,20 +80,21 @@ void greedyMC(int n, int* ja, int* ia, int* num_colors, int* iord, int* colors)
 }
 
 void colorRLF(const SymmetricMatrix<char>& overlaps,
-    list<list<int>>& colored_gids, const bool verbose, ostream& os)
+    std::list<std::list<int>>& colored_gids, const bool verbose,
+    std::ostream& os)
 {
     const int dim = overlaps.dimension();
     if (verbose)
     {
         os << "Uses Recursive Largest First (RLF) algorithm"
-           << " for problem of size " << dim << endl;
+           << " for problem of size " << dim << std::endl;
     }
 
     colored_gids.clear();
 
     // initialize list of "uncolored" gids
-    list<int> uncolored;
-    const vector<int>& gids(overlaps.gids());
+    std::list<int> uncolored;
+    const std::vector<int>& gids(overlaps.gids());
     for (int i = 0; i < dim; i++)
         uncolored.push_back(gids[i]);
 
@@ -107,38 +102,36 @@ void colorRLF(const SymmetricMatrix<char>& overlaps,
     {
 
         // compute degrees of vertices
-        multimap<int, int> degrees;
-        list<int>::const_iterator pj = uncolored.begin();
+        std::multimap<int, int> degrees;
+        std::list<int>::const_iterator pj = uncolored.begin();
         while (pj != uncolored.end())
         {
-            const int j0                 = (*pj);
-            int degree                   = 0;
-            list<int>::const_iterator pi = uncolored.begin();
+            const int j0                      = (*pj);
+            int degree                        = 0;
+            std::list<int>::const_iterator pi = uncolored.begin();
             while (pi != uncolored.end())
             {
                 degree += overlaps.val(*pi, j0);
                 pi++;
             }
-            if (degree) degrees.insert(pair<int, int>(degree, j0));
+            if (degree) degrees.insert(std::pair<int, int>(degree, j0));
             pj++;
         }
 
         // find the 1st color: largest degree
-        multimap<int, int>::const_iterator p0 = degrees.end();
+        std::multimap<int, int>::const_iterator p0 = degrees.end();
         p0--;
         const int v0 = p0->second;
-        // if( verbose )
-        //    os<<"Color "<<v0<<" of degree "<<p0->first<<endl;
         uncolored.remove(v0);
 
         // start list of functions of same color
-        list<int> vi;
+        std::list<int> vi;
         vi.push_back(v0);
 
         // compute set u of vertices adjacents to v0
         // compute set v of vertices non-adjacents to v0
-        list<int> u;
-        list<int> v;
+        std::list<int> u;
+        std::list<int> v;
         pj = uncolored.begin();
         while (pj != uncolored.end())
         {
@@ -159,26 +152,26 @@ void colorRLF(const SymmetricMatrix<char>& overlaps,
         {
 
             // compute degrees in u for functions in v
-            multimap<int, int> udegrees;
-            list<int>::const_iterator pv = v.begin();
+            std::multimap<int, int> udegrees;
+            std::list<int>::const_iterator pv = v.begin();
             while (pv != v.end())
             {
-                const int j0                 = (*pv);
-                int degree                   = 0;
-                list<int>::const_iterator pu = u.begin();
+                const int j0                      = (*pv);
+                int degree                        = 0;
+                std::list<int>::const_iterator pu = u.begin();
                 while (pu != u.end())
                 {
                     int i0 = (*pu);
                     degree += overlaps.val(i0, j0);
                     pu++;
                 }
-                udegrees.insert(pair<int, int>(degree, j0));
+                udegrees.insert(std::pair<int, int>(degree, j0));
                 pv++;
             }
 
             // find the largest degree in udegrees
             assert(udegrees.size() > 0);
-            multimap<int, int>::const_iterator pu0 = udegrees.end();
+            std::multimap<int, int>::const_iterator pu0 = udegrees.end();
             pu0--;
             const int u0 = pu0->second;
 
@@ -190,13 +183,13 @@ void colorRLF(const SymmetricMatrix<char>& overlaps,
             if (verbose)
             {
                 os << "PE 0: Same color for index " << *vi.begin() << " and "
-                   << u0 << endl;
+                   << u0 << std::endl;
                 assert(!overlaps.val(*vi.begin(), u0));
             }
 #endif
 
             // add to list u adjacents to u0
-            list<int> vremove;
+            std::list<int> vremove;
             pj = v.begin();
             while (pj != v.end())
             {
@@ -262,16 +255,17 @@ void quicksortI_h2l(int* a, int* b, int lo, int hi)
 }
 
 void greedyColor(const SymmetricMatrix<char>& overlaps,
-    list<list<int>>& colored_gids, const bool verbose, ostream& os)
+    std::list<std::list<int>>& colored_gids, const bool verbose,
+    std::ostream& os)
 {
     if (verbose)
     {
-        os << "Uses greedy algorithm" << endl;
+        os << "Uses greedy algorithm" << std::endl;
     }
 
     const int dim = overlaps.dimension();
-    vector<int> vecia;
-    vector<int> vecja;
+    std::vector<int> vecia;
+    std::vector<int> vecja;
     vecia.reserve(dim + 1);
     vecja.reserve(dim);
 
@@ -287,9 +281,9 @@ void greedyColor(const SymmetricMatrix<char>& overlaps,
     /* sort degree of nodes from hi to lo */
     quicksortI_h2l(nnzrow, iord, 0, dim - 1);
     /* perform greedy multicoloring */
-    int num_colors           = 0;
-    vector<int>::iterator ia = vecia.begin();
-    vector<int>::iterator ja = vecja.begin();
+    int num_colors                = 0;
+    std::vector<int>::iterator ia = vecia.begin();
+    std::vector<int>::iterator ja = vecja.begin();
     /* overwrite nnzrow array -- no longer needed */
     int* colors = nnzrow;
     greedyMC(dim, &(*ja), &(*ia), &num_colors, iord, colors);
@@ -297,7 +291,7 @@ void greedyColor(const SymmetricMatrix<char>& overlaps,
     /* populate list of colored_grids */
     for (int color = 0; color < num_colors; color++)
     {
-        list<int> llist;
+        std::list<int> llist;
         for (int i = 0; i < dim; i++)
         {
             if (colors[i] == color) llist.push_back(i);

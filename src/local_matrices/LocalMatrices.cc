@@ -12,8 +12,6 @@
 #include "blas3_c.h"
 #include "mputils.h"
 
-using namespace std;
-
 template <class T>
 LocalMatrices<T>::LocalMatrices(const short subdiv, const int m, const int n)
     : m_(m), n_(n), subdiv_(subdiv)
@@ -260,12 +258,12 @@ void LocalMatrices<T>::setMaskThreshold(
 }
 
 template <class T>
-void LocalMatrices<T>::printBlock(ostream& os, const int blocksize)
+void LocalMatrices<T>::printBlock(std::ostream& os, const int blocksize)
 {
     for (short iloc = 0; iloc < subdiv_; iloc++)
     {
         T* local_mat = ptr_matrices_[iloc];
-        os << "iloc=" << iloc << endl;
+        os << "iloc=" << iloc << std::endl;
         for (int j = 0; j < blocksize; j++)
         {
             for (int i = 0; i < blocksize; i++)
@@ -273,7 +271,7 @@ void LocalMatrices<T>::printBlock(ostream& os, const int blocksize)
                 int index = i + j * m_;
                 os << local_mat[index] << " ";
             }
-            os << endl;
+            os << std::endl;
         }
     }
 }

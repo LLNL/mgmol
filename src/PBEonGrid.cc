@@ -26,7 +26,7 @@ void PBEonGrid<T>::update()
 {
     get_xc_tm_.start();
 
-    vector<vector<RHODTYPE>>& vrho = rho_.rho_;
+    std::vector<std::vector<RHODTYPE>>& vrho = rho_.rho_;
     //    int     ione=1;
     double one = 1.;
 
@@ -78,9 +78,9 @@ void PBEonGrid<T>::update()
 #ifdef USE_LIBXC
     xc_gga_exc_vxc(
         &xfunc_, np_, &rho_.rho_[0][0], sigma, &exc_[0], &vxc_[0], &vsigma_[0]);
-    vector<double> vtmp(np_);
-    vector<double> etmp(np_);
-    vector<double> stmp(np_);
+    std::vector<double> vtmp(np_);
+    std::vector<double> etmp(np_);
+    std::vector<double> stmp(np_);
     xc_gga_exc_vxc(
         &cfunc_, np_, &rho_.rho_[0][0], sigma, &etmp[0], &vtmp[0], &stmp[0]);
     delete[] sigma;

@@ -10,7 +10,6 @@
 
 #include <cassert>
 #include <vector>
-using namespace std;
 
 #include "LinearSolver.h"
 #include "LinearSolverMatrix.h"
@@ -393,8 +392,8 @@ double LinearSolver::computeEigMax(
     eigmax_tm_.start();
 
     // get pointer to evec
-    vector<double>::iterator it = evec.begin();
-    double* rhs                 = &(*it);
+    std::vector<double>::iterator it = evec.begin();
+    double* rhs                      = &(*it);
     // initialize sol vector
     double* solptr = new double[n];
     memset(solptr, 0, n * sizeof(double));

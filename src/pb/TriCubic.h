@@ -14,7 +14,6 @@
 
 #include "GridFunc.h"
 #include <vector>
-using namespace std;
 
 #ifdef HAVE_TRICUBIC
 
@@ -48,7 +47,7 @@ public:
         const GridFunc<T>& fxz, const GridFunc<T>& fyz,
         const GridFunc<T>& fxyz);
     void getGradient(const double r[3], double dfdr[3], MPI_Comm);
-    void getValues(const vector<double>&, vector<double>&, MPI_Comm);
+    void getValues(const std::vector<double>&, std::vector<double>&, MPI_Comm);
 };
 }
 #endif

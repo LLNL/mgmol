@@ -19,8 +19,6 @@
 #include <mpi.h>
 #endif
 
-using namespace std;
-
 unsigned short isqrt(unsigned value)
 {
     return static_cast<unsigned short>(sqrt(static_cast<double>(value)));
@@ -29,7 +27,7 @@ unsigned short isqrt(unsigned value)
 static unsigned int _nlproj_gid = 0;
 static unsigned int _index      = 0;
 
-Ion::Ion(const Species& species, const string& name, const double crds[3],
+Ion::Ion(const Species& species, const std::string& name, const double crds[3],
     const double velocity[3], const bool lock)
     : name_(name), species_(species), index_(_index), nlproj_gid_(_nlproj_gid)
 {
@@ -43,7 +41,7 @@ Ion::Ion(const Species& species, const string& name, const double crds[3],
     init(crds, velocity, lock);
 }
 
-Ion::Ion(const Species& species, const string& name, const double crds[3],
+Ion::Ion(const Species& species, const std::string& name, const double crds[3],
     const double velocity[3], const unsigned int index,
     const unsigned int nlproj_gid, const bool lock)
     : name_(name), species_(species), index_(index), nlproj_gid_(nlproj_gid)
@@ -105,8 +103,8 @@ void Ion::init(const double crds[3], const double velocity[3], const bool lock)
     locked_ = lock;
 #if DEBUG
     (*MPIdata::sout) << " position:" << position_[0] << "," << position_[1]
-                     << "," << position_[2] << endl;
-    if (locked_) (*MPIdata::sout) << name_ << " locked" << endl;
+                     << "," << position_[2] << std::endl;
+    if (locked_) (*MPIdata::sout) << name_ << " locked" << std::endl;
 #endif
     here_   = false;
     map_nl_ = false;
@@ -155,9 +153,9 @@ void Ion::set_lstart(const int i, const double cell_origin, const double hgrid)
 
     lpot_start_[i] = ic - (species_.dim_l() >> 1);
     lstart_[i]     = cell_origin + hgrid * lpot_start_[i];
-    //(*MPIdata::sout)<<"lpot_start_[i]="<<lpot_start_[i]<<endl;
-    //(*MPIdata::sout)<<"lstart_[i]    ="<<lstart_[i]<<endl;
-    //(*MPIdata::sout)<<"species_.dim_l()="<<species_.dim_l()<<endl;
+    //(*MPIdata::sout)<<"lpot_start_[i]="<<lpot_start_[i]<<std::endl;
+    //(*MPIdata::sout)<<"lstart_[i]    ="<<lstart_[i]<<std::endl;
+    //(*MPIdata::sout)<<"species_.dim_l()="<<species_.dim_l()<<std::endl;
 }
 
 double Ion::minimage(const Ion& ion2, const double cell[3],
@@ -253,29 +251,30 @@ bool operator<(const Ion& A, const Ion& B)
 
 bool operator==(Ion A, Ion B) { return (&A == &B); }
 
-void Ion::printPosition(ostream& os) const
+void Ion::printPosition(std::ostream& os) const
 {
     os << "$$ ";
     if (locked_)
         os << "*";
     else
         os << " ";
-    os << setw(4) << name_ << setw(10) << setprecision(4) << fixed
-       << position_[0] << setw(10) << position_[1] << setw(10) << position_[2]
-       << endl;
+    os << std::setw(4) << name_ << std::setw(10) << std::setprecision(4)
+       << std::fixed << position_[0] << std::setw(10) << position_[1]
+       << std::setw(10) << position_[2] << std::endl;
 }
 
-void Ion::printPositionAndForce(ostream& os) const
+void Ion::printPositionAndForce(std::ostream& os) const
 {
     os << "## ";
     if (locked_)
         os << "*";
     else
         os << " ";
-    os << setw(4) << name_ << setiosflags(ios::right) << setw(10)
-       << setprecision(4) << fixed << position_[0] << setw(10) << position_[1]
-       << setw(10) << position_[2] << setprecision(7) << scientific << setw(16)
-       << force_[0] << setw(16) << force_[1] << setw(16) << force_[2] << endl;
+    os << std::setw(4) << name_ << setiosflags(std::ios::right) << std::setw(10)
+       << std::setprecision(4) << std::fixed << position_[0] << std::setw(10)
+       << position_[1] << std::setw(10) << position_[2] << std::setprecision(7)
+       << std::scientific << std::setw(16) << force_[0] << std::setw(16)
+       << force_[1] << std::setw(16) << force_[2] << std::endl;
 }
 
 void Ion::getIonData(IonData& idata) const
@@ -317,7 +316,7 @@ void Ion::setFromIonData(const IonData& data)
 
 // get gids (row index for <KB,Psi> matrix) for all the projectors
 // of Ion
-void Ion::getGidsNLprojs(vector<int>& gids) const
+void Ion::getGidsNLprojs(std::vector<int>& gids) const
 {
     // get global indexes by adding nlproj_gid_
     gids.clear();
@@ -332,19 +331,22 @@ void Ion::getGidsNLprojs(vector<int>& gids) const
 
 // get sign factor for <KB,Psi> matrix for all the projectors
 // of Ion
-void Ion::getKBsigns(vector<short>& kbsigns) const
+void Ion::getKBsigns(std::vector<short>& kbsigns) const
 {
     kbproj_->getKBsigns(kbsigns);
 }
 
-void Ion::getKBcoeffs(vector<double>& coeffs) { kbproj_->getKBcoeffs(coeffs); }
+void Ion::getKBcoeffs(std::vector<double>& coeffs)
+{
+    kbproj_->getKBcoeffs(coeffs);
+}
 
-void Ion::get_Ai(vector<int>& Ai, const int gdim, const short dir) const
+void Ion::get_Ai(std::vector<int>& Ai, const int gdim, const short dir) const
 {
     int idx = lpot_start(dir);
 
     int diml = species_.dim_l();
-    diml     = min(diml, gdim - 1);
+    diml     = std::min(diml, gdim - 1);
     Ai.resize(diml);
 
     const int sizeAi = (int)Ai.size();

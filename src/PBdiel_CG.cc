@@ -10,7 +10,6 @@
 
 #include <iomanip>
 #include <iostream>
-using namespace std;
 
 #include "MGmol_blas1.h"
 #include "PBdiel_CG.h"
@@ -56,10 +55,11 @@ void PBdiel_CG<T>::solve(
     double final_residual     = poisson_solver_->getFinalResidual();
 
     if (onpe0)
-        (*MPIdata::sout) << setprecision(2) << scientific
+        (*MPIdata::sout) << std::setprecision(2) << std::scientific
                          << "PBdiel_CG: residual reduction = "
                          << residual_reduction
-                         << ", final residual = " << final_residual << endl;
+                         << ", final residual = " << final_residual
+                         << std::endl;
 
     Poisson::Int_vhrho_  = vel * Poisson::vh_->gdot(rho);
     Poisson::Int_vhrhoc_ = vel * Poisson::vh_->gdot(rhoc);

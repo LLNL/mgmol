@@ -57,13 +57,10 @@ void GrassmanCG<T>::conjugate()
         alpha /= projmatrices->computeTraceInvSmultMat(matG);
 
         // compute conjugate direction
-        double tau       = max(0., alpha);
+        double tau       = std::max(0., alpha);
         const double one = 1.;
         sdir->scal(tau);
         sdir->axpy(one, *new_pcgrad);
-
-        //       if(onpe0)cout<<"conjugate: alpha = "<<alpha<<", tau =
-        //       "<<tau<<endl;
     }
     else
     {

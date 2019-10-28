@@ -12,15 +12,13 @@
 #include <cassert>
 #include <cmath>
 
-using namespace std;
-
 // fill occupations according to the fermi-dirac distribution:
 //   f(x) = 1 / (1 + Exp[kB*(E-mu)])
 // states 0 to max_occ-1, set to 0 states above max_occ-1
 // returns the number of electrons
 template <typename T>
 double fermi_distribution(const double mu, const int max_occ, const double kBT,
-    const vector<T>& energies, vector<T>& occ)
+    const std::vector<T>& energies, std::vector<T>& occ)
 {
     assert(kBT >= 0.);
     assert(occ.size() == energies.size());
@@ -76,4 +74,5 @@ double fermi_distribution(const double mu, const int max_occ, const double kBT,
 }
 
 template double fermi_distribution(const double mu, const int max_occ,
-    const double kBT, const vector<double>& energies, vector<double>& occ);
+    const double kBT, const std::vector<double>& energies,
+    std::vector<double>& occ);

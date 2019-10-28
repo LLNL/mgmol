@@ -22,7 +22,6 @@
 #include "XConGrid.h"
 
 #include "Grid.h"
-using namespace std;
 
 #define RY2HA 0.5
 
@@ -45,7 +44,7 @@ template <class T>
 void Energy<T>::saveVofRho()
 {
 #ifdef PRINT_OPERATIONS
-    if (onpe0) (*MPIdata::sout) << "Energy<T>::saveVofRho()" << endl;
+    if (onpe0) (*MPIdata::sout) << "Energy<T>::saveVofRho()" << std::endl;
 #endif
     pot_.getVofRho(vofrho_);
 }
@@ -56,7 +55,7 @@ double Energy<T>::getEVrhoRho() const
 {
     double e = rho_.dotWithRho(&vofrho_[0]);
 
-    // if(onpe0)(*MPIdata::sout)<<"get_Evrhorho="<<e<<endl;
+    // if(onpe0)(*MPIdata::sout)<<"get_Evrhorho="<<e<<std::endl;
     return RY2HA * mygrid_.vel() * e;
 }
 
@@ -68,14 +67,14 @@ double Energy<T>::evaluateEnergyIonsInVext()
 #ifdef HAVE_TRICUBIC
     if (!pot_.withVext()) return energy;
 
-    //(*MPIdata::sout)<<"Energy<T>::evaluateEnergyIonsInVext()"<<endl;
+    //(*MPIdata::sout)<<"Energy<T>::evaluateEnergyIonsInVext()"<<std::endl;
     double position[3];
-    vector<double> positions;
+    std::vector<double> positions;
     positions.reserve(3 * ions_.local_ions().size());
 
     // loop over ions
-    int nions                        = 0;
-    vector<Ion*>::const_iterator ion = ions_.local_ions().begin();
+    int nions                             = 0;
+    std::vector<Ion*>::const_iterator ion = ions_.local_ions().begin();
     while (ion != ions_.local_ions().end())
     {
         (*ion)->getPosition(position);
@@ -86,7 +85,7 @@ double Energy<T>::evaluateEnergyIonsInVext()
         ion++;
     }
 
-    vector<double> val(nions);
+    std::vector<double> val(nions);
     pot_.getValVext(positions, val);
 
     // loop over ions again
@@ -103,7 +102,7 @@ double Energy<T>::evaluateEnergyIonsInVext()
     }
 
     //(*MPIdata::sout)<<"Energy<T>::evaluateEnergyIonsInVext(),
-    // energy="<<energy<<endl;
+    // energy="<<energy<<std::endl;
     double tmp      = 0.;
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     mmpi.allreduce(&energy, &tmp, 1, MPI_SUM);
@@ -115,7 +114,7 @@ double Energy<T>::evaluateEnergyIonsInVext()
 template <class T>
 double Energy<T>::evaluateTotal(const double ts, // in [Ha]
     ProjectedMatricesInterface* projmatrices, const T& phi, const int verbosity,
-    ostream& os)
+    std::ostream& os)
 {
     eval_te_tm_.start();
 
@@ -144,7 +143,7 @@ double Energy<T>::evaluateTotal(const double ts, // in [Ha]
     {
         energy_sc -= eepsilon;
 #ifdef DEBUG
-        os << "E epsilon=" << eepsilon << endl;
+        os << "E epsilon=" << eepsilon << std::endl;
 #endif
     }
 
@@ -157,33 +156,34 @@ double Energy<T>::evaluateTotal(const double ts, // in [Ha]
 
     if (verbosity > 1)
     {
-        const vector<POTDTYPE>& vnuc(pot_.vnuc()); // vnuc is in [Ha]
+        const std::vector<POTDTYPE>& vnuc(pot_.vnuc()); // vnuc is in [Ha]
         double evnuc = rho_.dotWithRho(&vnuc[0]);
         evnuc        = mygrid_.vel() * evnuc;
         if (onpe0)
         {
-            os << setprecision(8) << fixed << endl;
-            if (pot_.diel()) os << " E epsilon      [Ha] =" << eepsilon << endl;
-            os << " EIGENVALUE SUM [Ha] = " << eigsum << endl;
+            os << std::setprecision(8) << std::fixed << std::endl;
+            if (pot_.diel())
+                os << " E epsilon      [Ha] =" << eepsilon << std::endl;
+            os << " EIGENVALUE SUM [Ha] = " << eigsum << std::endl;
             if (verbosity > 2)
             { // terms independent of electronic structure
-                os << " Ions Eself     [Ha] = " << eself << endl;
-                os << " Ions Ediff     [Ha] = " << ediff << endl;
+                os << " Ions Eself     [Ha] = " << eself << std::endl;
+                os << " Ions Ediff     [Ha] = " << ediff << std::endl;
             }
             os << " Ees+Eps+Eii    [Ha] = " << ees + evnuc - eself + ediff
-               << endl;
-            os << " E VH*RHO       [Ha] = " << Evh_rho << endl;
-            os << " V*RHO          [Ha] = " << evrho << endl;
-            os << " V_l*Rho        [Ha] = " << evnuc << endl;
-            os << " ELECTROSTATIC  [Ha] = " << ees << endl;
-            os << " XC             [Ha] = " << exc << endl;
-            os << " -TS            [Ha] = " << -ts << endl;
+               << std::endl;
+            os << " E VH*RHO       [Ha] = " << Evh_rho << std::endl;
+            os << " V*RHO          [Ha] = " << evrho << std::endl;
+            os << " V_l*Rho        [Ha] = " << evnuc << std::endl;
+            os << " ELECTROSTATIC  [Ha] = " << ees << std::endl;
+            os << " XC             [Ha] = " << exc << std::endl;
+            os << " -TS            [Ha] = " << -ts << std::endl;
             if (spread_penalty_ != nullptr)
                 os << " Spread Penalty [Ha] = " << spread_penalty_energy
-                   << endl;
-            os << " Ions Ext. Pot. [Ha] = " << eipot << endl;
+                   << std::endl;
+            os << " Ions Ext. Pot. [Ha] = " << eipot << std::endl;
 
-            os << " SC ENERGY      [Ha] = " << energy_sc << endl;
+            os << " SC ENERGY      [Ha] = " << energy_sc << std::endl;
         }
     }
 

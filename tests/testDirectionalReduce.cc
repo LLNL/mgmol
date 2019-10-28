@@ -13,8 +13,6 @@
 #include <boost/test/unit_test.hpp>
 #include <iostream>
 
-using namespace std;
-
 BOOST_AUTO_TEST_CASE(directional_reduce)
 {
     int myrank;
@@ -44,9 +42,11 @@ BOOST_AUTO_TEST_CASE(directional_reduce)
     // direction for test
     const short dir = 1;
 
-    if (myrank == 0) cout << "nprocs[" << dir << "]=" << nprocs[dir] << endl;
     if (myrank == 0)
-        cout << "rstep[" << dir << "]=" << dir_reduce.rstep(dir) << endl;
+        std::cout << "nprocs[" << dir << "]=" << nprocs[dir] << std::endl;
+    if (myrank == 0)
+        std::cout << "rstep[" << dir << "]=" << dir_reduce.rstep(dir)
+                  << std::endl;
 
     // compute max. coord in direction dir with radius 'radius'
     int data[2] = { coords[dir], 1 };
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(directional_reduce)
     if (dir_reduce.lstep(dir) > coords[dir]) result = nprocs[dir] - 1;
 
     std::cout << "myrank = " << myrank << ", coords[dir] = " << coords[dir]
-              << ", data[0] = " << data[0] << endl;
+              << ", data[0] = " << data[0] << std::endl;
 
     BOOST_TEST(result == data[0]);
 }

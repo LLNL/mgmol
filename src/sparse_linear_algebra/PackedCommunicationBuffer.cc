@@ -18,7 +18,6 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-using namespace std;
 
 #ifdef USE_MPI
 #include <mpi.h>
@@ -45,8 +44,8 @@ PackedCommunicationBuffer::PackedCommunicationBuffer(const int bsize)
     if (bsize * 2 > storage_size_)
     {
         if (onpe0 && ct.verbose > 0)
-            cout << "PackedCommunicationBuffer: resize buffers to 2 x " << bsize
-                 << endl;
+            std::cout << "PackedCommunicationBuffer: resize buffers to 2 x "
+                      << bsize << std::endl;
         storage_size_ = 2 * bsize;
 
         if (storage_ != nullptr) delete[] storage_;
@@ -155,7 +154,7 @@ void PackedCommunicationBuffer::mergeRecvDataToMatrix(
         /* update existing rows and insert new rows. This part is written
          * this way to make it amenable to threading
          */
-        vector<int> row_size(packed_num_rows_, 0);
+        std::vector<int> row_size(packed_num_rows_, 0);
         /* update existing entries*/
 // Threading here leads to results slightly dependent on number of threads (jlf,
 // 07/15/2016)

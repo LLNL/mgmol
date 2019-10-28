@@ -24,16 +24,13 @@
 #include <mpi.h>
 #endif
 
-using namespace std;
-
-void SparseRowAndTable::assign(vector<int>& coldata, vector<double>& colvals)
+void SparseRowAndTable::assign(
+    std::vector<int>& coldata, std::vector<double>& colvals)
 {
     // copy data
     SparseRow::assign(coldata, colvals);
     // setup table for position data
     pos_->insert(coldata);
-    //   for(vector<int>::iterator it=coldata.begin(); it!=coldata.end(); it++)
-    //      pos_->insert(*it);
 }
 
 void SparseRowAndTable::assign(

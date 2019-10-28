@@ -109,7 +109,7 @@ void Hamiltonian<T>::applyLocal(
         pb::GridFunc<POTDTYPE> gfpot(mygrid, ct.bc[0], ct.bc[1], ct.bc[2]);
         gfpot.assign(vtot);
         if (ct.Mehrstellen()) gfpot.trade_boundaries();
-        const vector<vector<int>>& gid(phi.getOverlappingGids());
+        const std::vector<std::vector<int>>& gid(phi.getOverlappingGids());
         pb::GridFuncVector<ORBDTYPE> gfvw1(
             false, mygrid, ct.bc[0], ct.bc[1], ct.bc[2], gid);
         pb::GridFuncVector<ORBDTYPE> gfvw2(

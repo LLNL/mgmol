@@ -32,21 +32,22 @@ Timer MVPSolver<T>::target_tm_("MVPSolver::target");
 static int sparse_distmatrix_nb_partitions = 128;
 
 double evalEntropyMVP(ProjectedMatricesInterface* projmatrices,
-    const bool print_flag, ostream& os)
+    const bool print_flag, std::ostream& os)
 {
     const double ts = 0.5 * projmatrices->computeEntropy(); // in [Ha]
     if (onpe0 && print_flag)
-        os << setprecision(8) << "compute Entropy: TS=" << ts << "[Ha]" << endl;
+        os << std::setprecision(8) << "compute Entropy: TS=" << ts << "[Ha]"
+           << std::endl;
 
     return ts;
 }
 
 template <class T>
-MVPSolver<T>::MVPSolver(MPI_Comm comm, ostream& os, Ions& ions, Rho<T>* rho,
-    Energy<T>* energy, Electrostatic* electrostat, MGmol<T>* mgmol_strategy,
-    const int numst, const double kbT, const int nel,
-    const vector<vector<int>>& global_indexes, const short n_inner_steps,
-    const bool use_old_dm)
+MVPSolver<T>::MVPSolver(MPI_Comm comm, std::ostream& os, Ions& ions,
+    Rho<T>* rho, Energy<T>* energy, Electrostatic* electrostat,
+    MGmol<T>* mgmol_strategy, const int numst, const double kbT, const int nel,
+    const std::vector<std::vector<int>>& global_indexes,
+    const short n_inner_steps, const bool use_old_dm)
     : comm_(comm),
       os_(os),
       n_inner_steps_(n_inner_steps),
@@ -87,7 +88,7 @@ double MVPSolver<T>::evaluateDerivative(
     double de0  = 0.5 * work_->trace();
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 2)
-        os_ << "Derivative of U in 0 = " << de0 << endl;
+        os_ << "Derivative of U in 0 = " << de0 << std::endl;
 
     //
     // evaluate numerical derivative of entropy in beta=0
@@ -109,10 +110,9 @@ double MVPSolver<T>::evaluateDerivative(
 
     if (onpe0 && ct.verbose > 2)
     {
-        os_ << setprecision(8);
-        os_ << "Numerical derivative of -TS in 0 = " << scientific << -dts0e
-            << endl;
-        // os_<<"interval for finite differences = "<<dbeta<<endl;
+        os_ << std::setprecision(8);
+        os_ << "Numerical derivative of -TS in 0 = " << std::scientific
+            << -dts0e << std::endl;
     }
     de0 -= dts0e;
 
@@ -149,7 +149,7 @@ void MVPSolver<T>::buildTarget_MVP(dist_matrix::DistMatrix<DISTMATDTYPE>& h11,
     if (ct.verbose > 2)
     {
         double pnel = proj_mat_work_->getNel();
-        if (onpe0) os_ << "Number of electrons = " << pnel << endl;
+        if (onpe0) os_ << "Number of electrons = " << pnel << std::endl;
     }
 
     target_tm_.stop();
@@ -170,11 +170,11 @@ int MVPSolver<T>::solve(T& orbitals)
     {
         os_ << "---------------------------------------------------------------"
                "-"
-            << endl;
-        os_ << "Update DM functions using MVP Solver..." << endl;
+            << std::endl;
+        os_ << "Update DM functions using MVP Solver..." << std::endl;
         os_ << "---------------------------------------------------------------"
                "-"
-            << endl;
+            << std::endl;
     }
 
     // step for numerical derivative
@@ -217,9 +217,9 @@ int MVPSolver<T>::solve(T& orbitals)
         {
             if (onpe0 && ct.verbose > 1)
             {
-                os_ << "---------------------------" << endl;
-                os_ << "Inner iteration " << inner_it << endl;
-                os_ << "---------------------------" << endl;
+                os_ << "---------------------------" << std::endl;
+                os_ << "Inner iteration " << inner_it << std::endl;
+                os_ << "---------------------------" << std::endl;
             }
 
             // Update potential
@@ -294,13 +294,15 @@ int MVPSolver<T>::solve(T& orbitals)
                 //
                 // evaluate free energy at beta=1
                 //
-                if (onpe0 && ct.verbose > 2) cout << "Target energy..." << endl;
+                if (onpe0 && ct.verbose > 2)
+                    std::cout << "Target energy..." << std::endl;
                 proj_mat_work_->setDM(target, orbitals.getIterativeIndex());
                 proj_mat_work_->computeOccupationsFromDM();
                 if (ct.verbose > 2) current_proj_mat->printOccupations(os_);
                 double nel = proj_mat_work_->getNel();
                 if (onpe0 && ct.verbose > 1)
-                    os_ << "Number of electrons at beta=1 : " << nel << endl;
+                    os_ << "Number of electrons at beta=1 : " << nel
+                        << std::endl;
 
                 // if( onpe0 )os_<<"Rho..."<<endl;
                 rho_->computeRho(orbitals, target);
@@ -329,11 +331,12 @@ int MVPSolver<T>::solve(T& orbitals)
 
                 if (onpe0 && ct.verbose > 0)
                 {
-                    os_ << setprecision(12);
-                    os_ << fixed << "Inner iteration " << inner_it
+                    os_ << std::setprecision(12);
+                    os_ << std::fixed << "Inner iteration " << inner_it
                         << ", E0=" << e0 << ", E1=" << e1;
-                    os_ << scientific << ", E0'=" << de0 << " -> beta=" << beta;
-                    os_ << endl;
+                    os_ << std::scientific << ", E0'=" << de0
+                        << " -> beta=" << beta;
+                    os_ << std::endl;
                 }
 
                 // update DM
@@ -353,7 +356,7 @@ int MVPSolver<T>::solve(T& orbitals)
                     double pnel = proj_mat_work_->getNel();
                     if (onpe0)
                         os_ << "Number of electrons for interpolated DM = "
-                            << pnel << endl;
+                            << pnel << std::endl;
                 }
 
                 // if( onpe0 )os_<<"Rho..."<<endl;
@@ -375,11 +378,11 @@ int MVPSolver<T>::solve(T& orbitals)
     {
         os_ << "---------------------------------------------------------------"
                "-"
-            << endl;
-        os_ << "End MVP Solver..." << endl;
+            << std::endl;
+        os_ << "End MVP Solver..." << std::endl;
         os_ << "---------------------------------------------------------------"
                "-"
-            << endl;
+            << std::endl;
     }
     solve_tm_.stop();
 
@@ -387,11 +390,11 @@ int MVPSolver<T>::solve(T& orbitals)
 }
 
 template <class T>
-void MVPSolver<T>::printTimers(ostream& os)
+void MVPSolver<T>::printTimers(std::ostream& os)
 {
     if (onpe0)
     {
-        os << setprecision(2) << fixed << endl;
+        os << std::setprecision(2) << std::fixed << std::endl;
         solve_tm_.print(os);
         target_tm_.print(os);
     }

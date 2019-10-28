@@ -10,7 +10,6 @@
 
 #include <iostream>
 #include <vector>
-using namespace std;
 
 #ifdef USE_MPI
 #include <mpi.h>
@@ -344,9 +343,9 @@ int PreconILU<T>::lofC(LinearSolverMatrix<lsdatatype>& csmat_)
             /* now swap current column with smallest column index */
             if (jmin != jpiv)
             {
-                swap(*jpiv, *jmin); // swap in iU
-                swap(iw[*jpiv], iw[*jmin]); // swap in iw
-                swap(*uptr, levU[(jmin - iU.begin())]); // swap in levU
+                std::swap(*jpiv, *jmin); // swap in iU
+                std::swap(iw[*jpiv], iw[*jmin]); // swap in iw
+                std::swap(*uptr, levU[(jmin - iU.begin())]); // swap in levU
             }
             /* now perform symbolic linear combination of rows */
             int l_k1 = (*L_).nzptrval(*jpiv);
@@ -381,9 +380,9 @@ int PreconILU<T>::lofC(LinearSolverMatrix<lsdatatype>& csmat_)
                 else
                 {
                     if (*row < i)
-                        levU[ip] = min(levU[ip], it);
+                        levU[ip] = std::min(levU[ip], it);
                     else
-                        *(levL + ip) = min(*(levL + ip), it);
+                        *(levL + ip) = std::min(*(levL + ip), it);
                 }
             }
         }
@@ -603,9 +602,9 @@ int PreconILU<T>::ilu0(LinearSolverMatrix<T2>& csmat_)
             /* now swap current column with smallest column index */
             if (jmin != jpiv)
             {
-                swap(*jpiv, *jmin); // swap in iU
-                swap(iw[*jpiv], iw[*jmin]); // swap in iw
-                swap(*udptr, wU[(jmin - iU.begin())]); // swap in wU
+                std::swap(*jpiv, *jmin); // swap in iU
+                std::swap(iw[*jpiv], iw[*jmin]); // swap in iw
+                std::swap(*udptr, wU[(jmin - iU.begin())]); // swap in wU
             }
             /* zero out element - reset pivot */
             iw[*jpiv] = -1;
@@ -763,14 +762,14 @@ int PreconILU<T>::milut(LinearSolverMatrix<lsdatatype>& csmat_)
             /* now swap current column with smallest column index */
             if (jmin != jpiv)
             {
-                swap(*jpiv, *jmin); // swap in iU
-                swap(iw[*jpiv], iw[*jmin]); // swap in iw
-                swap(*udptr, wU[(jmin - iU.begin())]); // swap in wU
+                std::swap(*jpiv, *jmin); // swap in iU
+                std::swap(iw[*jpiv], iw[*jmin]); // swap in iw
+                std::swap(*udptr, wU[(jmin - iU.begin())]); // swap in wU
             }
             /* zero out element - reset pivot */
             iw[*jpiv] = -1;
             /* dropping in U */
-            if (fabs(*udptr) <= dnormL[*jpiv] * droptol_)
+            if (std::abs(*udptr) <= dnormL[*jpiv] * droptol_)
             {
                 dsum += (*udptr);
                 *udptr = 0.0;
@@ -838,7 +837,7 @@ int PreconILU<T>::milut(LinearSolverMatrix<lsdatatype>& csmat_)
 
         /*-------------------- update U-matrix      */
         /*-------------------- first prune col. of U to remove zeros ---*/
-        int len = min(lenu, (lenu - dropctrU));
+        int len = std::min(lenu, (lenu - dropctrU));
         qsplitC(wU, iU, lenu, len);
         (*U_).initRow(len, iU, wU);
 
@@ -854,7 +853,7 @@ int PreconILU<T>::milut(LinearSolverMatrix<lsdatatype>& csmat_)
             }
         }
 
-        len = min((lenl - dropctrL), MaxFil_);
+        len = std::min((lenl - dropctrL), MaxFil_);
         /*-------------------- scale column of L by t - then copy all*/
         qsplitC(&(*wL), &(*iL), lenl, len);
         /*---------- update dsum -----*/
@@ -1025,9 +1024,9 @@ int PreconILU<T>::ilut(LinearSolverMatrix<lsdatatype>& csmat_)
             /* now swap current column with smallest column index */
             if (jmin != jpiv)
             {
-                swap(*jpiv, *jmin); // swap in iU
-                swap(iw[*jpiv], iw[*jmin]); // swap in iw
-                swap(*udptr, wU[(jmin - iU.begin())]); // swap in wU
+                std::swap(*jpiv, *jmin); // swap in iU
+                std::swap(iw[*jpiv], iw[*jmin]); // swap in iw
+                std::swap(*udptr, wU[(jmin - iU.begin())]); // swap in wU
             }
             /* zero out element - reset pivot */
             iw[*jpiv] = -1;
@@ -1042,7 +1041,7 @@ int PreconILU<T>::ilut(LinearSolverMatrix<lsdatatype>& csmat_)
                 int ipos = iw[*row];
                 T lxu    = -((*ldptr) * (*udptr));
                 /* drop small fill-in elements */
-                if (fabs(lxu) < tolnorm && ipos == -1) continue;
+                if (std::abs(lxu) < tolnorm && ipos == -1) continue;
 
                 if (*row < i)
                 {
@@ -1093,17 +1092,17 @@ int PreconILU<T>::ilut(LinearSolverMatrix<lsdatatype>& csmat_)
 
         /*-------------------- update U-matrix      */
         /*-------------------- first prune col. of U to remove zeros ---*/
-        int len = min(lenu, MaxFil_);
+        int len = std::min(lenu, MaxFil_);
         qsplitC(wU, iU, lenu, len);
         (*U_).initRow(len, iU, wU);
 
         /*-------------------- update l-matrix */
-        len = min(lenl, MaxFil_);
+        len = std::min(lenl, MaxFil_);
         /*-------------------- scale column of L by t - then copy all*/
         qsplitC(&(*wL), &(*iL), lenl, len);
 
         /*----- update diagonal with modification ------ */
-        if (fabs(dd) < MAT_TOL) dd = tolnorm * 1.0e-6;
+        if (std::abs(dd) < MAT_TOL) dd = tolnorm * 1.0e-6;
         T dval = 1.0 / dd;
         D_.push_back(dval);
 
@@ -1134,7 +1133,7 @@ int PreconILU<T>::diag(LinearSolverMatrix<lsdatatype>& csmat)
     return (0);
 }
 template <class T>
-void PreconILU<T>::printTimers(ostream& os)
+void PreconILU<T>::printTimers(std::ostream& os)
 {
     pcilu_setup_tm_.print(os);
     pcilu_solve_tm_.print(os);

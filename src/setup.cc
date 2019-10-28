@@ -16,11 +16,11 @@
 #include "Potentials.h"
 
 template <class T>
-int MGmol<T>::setupFromInput(const string filename)
+int MGmol<T>::setupFromInput(const std::string filename)
 {
     Control& ct = *(Control::instance());
     if (ct.verbose > 0)
-        printWithTimeStamp("MGmol<T>::setupFromInput()...", cout);
+        printWithTimeStamp("MGmol<T>::setupFromInput()...", std::cout);
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
@@ -60,26 +60,26 @@ int MGmol<T>::setupFromInput(const string filename)
 }
 
 template <class T>
-int MGmol<T>::setupLRsFromInput(const string filename)
+int MGmol<T>::setupLRsFromInput(const std::string filename)
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     //    Mesh* mymesh           = Mesh::instance();
     //    const pb::Grid& mygrid = mymesh->grid();
     //    Control& ct            = *(Control::instance());
 
-    ifstream* tfile = nullptr;
+    std::ifstream* tfile = nullptr;
     if (mmpi.instancePE0() && !filename.empty())
     {
-        os_ << "Read LRs from file " << filename << endl;
-        tfile = new ifstream(filename.data(), ios::in);
+        os_ << "Read LRs from file " << filename << std::endl;
+        tfile = new std::ifstream(filename.data(), std::ios::in);
         if (!tfile->is_open())
         {
-            cerr << " Unable to open file " << filename << endl;
+            std::cerr << " Unable to open file " << filename << std::endl;
             global_exit(0);
         }
         else
         {
-            os_ << "Open " << filename << endl;
+            os_ << "Open " << filename << std::endl;
         }
     }
 
@@ -87,7 +87,7 @@ int MGmol<T>::setupLRsFromInput(const string filename)
 
     if (!(tfile == nullptr))
     {
-        os_ << "Close " << filename << endl;
+        os_ << "Close " << filename << std::endl;
         tfile->close();
         delete tfile;
     }
@@ -96,23 +96,23 @@ int MGmol<T>::setupLRsFromInput(const string filename)
 }
 
 template <class T>
-int MGmol<T>::setupConstraintsFromInput(const string filename)
+int MGmol<T>::setupConstraintsFromInput(const std::string filename)
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
-    ifstream* tfile = nullptr;
+    std::ifstream* tfile = nullptr;
     if (mmpi.instancePE0() && !filename.empty())
     {
-        os_ << "Read constraints from file " << filename << endl;
-        tfile = new ifstream(filename.data(), ios::in);
+        os_ << "Read constraints from file " << filename << std::endl;
+        tfile = new std::ifstream(filename.data(), std::ios::in);
         if (!tfile->is_open())
         {
-            cerr << " Unable to open file " << filename << endl;
+            std::cerr << " Unable to open file " << filename << std::endl;
             global_exit(0);
         }
         else
         {
-            os_ << "Open " << filename << endl;
+            os_ << "Open " << filename << std::endl;
         }
     }
 
@@ -120,7 +120,7 @@ int MGmol<T>::setupConstraintsFromInput(const string filename)
 
     if (!(tfile == nullptr))
     {
-        os_ << "Close " << filename.data() << endl;
+        os_ << "Close " << filename.data() << std::endl;
         tfile->close();
         delete tfile;
     }

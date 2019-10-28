@@ -17,7 +17,6 @@
 
 #include "GridFunc.h"
 #include <iostream>
-using namespace std;
 
 extern Timer vcycle_repwrk_tm;
 extern Timer vcycle_repinit_tm;
@@ -41,16 +40,17 @@ int Vcycle(T1& A, T2& x, const GridFunc<T3>& rhs, const short cogr,
 
 #if VCYCLE_DEBUG
     if (level_grid.mype_env().onpe0())
-        cout << " Vcycle at level " << level_grid.level()
-             << ", dim0=" << level_grid.dim(0) << ", nghosts=" << nghosts
-             << ", cogr=" << cogr << flush << endl;
+        std::cout << " Vcycle at level " << level_grid.level()
+                  << ", dim0=" << level_grid.dim(0) << ", nghosts=" << nghosts
+                  << ", cogr=" << cogr << std::flush << std::endl;
     level_grid.mype_env().barrier();
 
     double norm_tmp = norm(rhs);
     if (level_grid.mype_env().onpe0())
-        cout << "Vcycle: rhs=" << norm_tmp << endl;
+        std::cout << "Vcycle: rhs=" << norm_tmp << std::endl;
     norm_tmp = norm(x);
-    if (level_grid.mype_env().onpe0()) cout << "Vcycle: x=" << norm_tmp << endl;
+    if (level_grid.mype_env().onpe0())
+        std::cout << "Vcycle: x=" << norm_tmp << std::endl;
 #endif
 
     const bool flag_coarsen
@@ -62,7 +62,7 @@ int Vcycle(T1& A, T2& x, const GridFunc<T3>& rhs, const short cogr,
             && (static_cast<int>(level_grid.dim(2)) >= 2 * nghosts));
 #if VCYCLE_DEBUG
     if (level_grid.mype_env().onpe0())
-        cout << "Vcycle: flag_coarsen=" << flag_coarsen << endl;
+        std::cout << "Vcycle: flag_coarsen=" << flag_coarsen << std::endl;
 #endif
 
     const bool flag_gather = ((!flag_coarsen || (level_grid.level() <= (-cogr)))
@@ -155,8 +155,8 @@ int Vcycle(T1& A, T2& x, const GridFunc<T3>& rhs, const short cogr,
 #if VCYCLE_DEBUG
         norm_tmp = norm(res);
         if (level_grid.mype_env().onpe0())
-            cout << "pre-smoothing level " << level_grid.level()
-                 << ", residual=" << norm_tmp << endl;
+            std::cout << "pre-smoothing level " << level_grid.level()
+                      << ", residual=" << norm_tmp << std::endl;
 #endif
     }
 
@@ -211,8 +211,8 @@ int Vcycle(T1& A, T2& x, const GridFunc<T3>& rhs, const short cogr,
 #if VCYCLE_DEBUG
             level_grid.mype_env().barrier();
             if (level_grid.mype_env().onpe0())
-                cout << " Coarsest level: mesh " << x.dim(0) << "x" << x.dim(1)
-                     << "x" << x.dim(2) << " reached\n";
+                std::cout << " Coarsest level: mesh " << x.dim(0) << "x"
+                          << x.dim(1) << "x" << x.dim(2) << " reached\n";
 #endif
         }
     }
@@ -226,16 +226,16 @@ int Vcycle(T1& A, T2& x, const GridFunc<T3>& rhs, const short cogr,
 #if VCYCLE_DEBUG
         norm_tmp = norm(res);
         if (level_grid.mype_env().onpe0())
-            cout << "post-smoothing level " << level_grid.level()
-                 << ", residual=" << norm_tmp << endl;
+            std::cout << "post-smoothing level " << level_grid.level()
+                      << ", residual=" << norm_tmp << std::endl;
 #endif
     }
 #if VCYCLE_DEBUG
     norm_tmp = norm(res);
     if (level_grid.mype_env().onpe0())
         if (level_grid.level() == 0)
-            cout << "level " << level_grid.level() << ", residual=" << norm_tmp
-                 << endl;
+            std::cout << "level " << level_grid.level()
+                      << ", residual=" << norm_tmp << std::endl;
     norm_tmp = norm(x);
     if (level_grid.mype_env().onpe0())
         cout << "end of Vcycle: norm(x)=" << norm_tmp << endl;
@@ -243,7 +243,7 @@ int Vcycle(T1& A, T2& x, const GridFunc<T3>& rhs, const short cogr,
     res -= rhs;
     norm_tmp = norm(res);
     if (level_grid.mype_env().onpe0())
-        cout << "end of Vcycle: norm(res)=" << norm_tmp << endl;
+        std::cout << "end of Vcycle: norm(res)=" << norm_tmp << std::endl;
 #endif
 
     return 0;
