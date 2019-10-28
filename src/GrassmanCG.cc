@@ -27,9 +27,9 @@ void GrassmanCG<T>::conjugate()
     // compute conjugation
     T* new_pcgrad = GrassmanLineMinimization<T>::new_pcgrad_;
     T* new_grad   = GrassmanLineMinimization<T>::new_grad_;
-    T* grad       = GrassmanLineMinimization<T>::grad_;
-    T* pcgrad     = GrassmanLineMinimization<T>::pcgrad_;
-    T* sdir       = GrassmanLineMinimization<T>::sdir_;
+    T*& grad      = GrassmanLineMinimization<T>::grad_;
+    T*& pcgrad    = GrassmanLineMinimization<T>::pcgrad_;
+    T*& sdir      = GrassmanLineMinimization<T>::sdir_;
     if (GrassmanLineMinimization<T>::conjugate_)
     {
         // Numerator: compute matG = (MG^T*(G-G_old)) = MG^T*G - MG^T*G_old
