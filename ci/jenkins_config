@@ -1,0 +1,53 @@
+pipeline {
+    agent none
+
+    environment {
+        // Get rid of Read -1, expected <someNumber>, errno =1 error
+        // See https://github.com/open-mpi/ompi/issues/4948
+        OMPI_MCA_btl_vader_single_copy_mechanism = 'none'
+    }
+    
+    stages {
+        stage('Test') {
+            parallel {
+                stage('MAGMA') {
+                    agent {
+                        docker {
+                            image "rombur/mgmol-stack:latest"
+                            alwaysPull true
+                            label 'nvidia-docker && volta'
+                         }
+                    }
+                    steps {
+                        sh 'rm -rf build && mkdir -p build && cd build && cmake -D SCALAPACK_ROOT=/usr/lib/x86_64-linux-gnu  -D MGMOL_WITH_CLANG_FORMAT=OFF  -D MGMOL_WITH_COVERAGE=OFF  -D MGMOL_WITH_MAGMA=ON -D CMAKE_PREFIX_PATH=/opt/magma .. && make -j8 && ctest --no-compress-output -T Test'
+                    }
+                    post {
+                        always {
+                            xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                        }
+                    }
+                }      
+                stage('CPU') {
+                    agent {
+                        docker {
+                            image "rombur/mgmol-stack:latest"
+                            alwaysPull true
+                            label 'docker'
+                         }
+                    }
+                    environment {
+                        CODECOV_TOKEN = '80bcfd05-a1ae-4b65-b049-0ec96abad409'
+                    }
+                    steps {
+                        sh 'rm -rf build && mkdir -p build && cd build && cmake -D SCALAPACK_ROOT=/usr/lib/x86_64-linux-gnu  -D MGMOL_WITH_CLANG_FORMAT=ON  -D MGMOL_WITH_COVERAGE=ON -D MGMOL_WITH_MAGMA=OFF .. && make -j8 && ctest --no-compress-output -T Test && make format && git diff --exit-code && make coverage && curl -s https://codecov.io/bash -o codecov_bash_uploader && chmod +x codecov_bash_uploader && ./codecov_bash_uploader -Z -X gcov -f lcov.info'
+                    }
+                    post {
+                        always {
+                            xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                        }
+                    }      
+                }
+            }
+        }
+    }
+}
