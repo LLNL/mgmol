@@ -20,9 +20,7 @@
 #include "MGmol_MPI.h"
 #include "MLWFTransform.h"
 
-#ifdef USE_MPI
 #include <mpi.h>
-#endif
 
 using namespace std;
 
@@ -50,7 +48,6 @@ double MLWFTransform::spread2(int i, int j) const
         cs[1] = 0.;
     }
 
-#ifdef USE_MPI
     if (offset_ > 0 && ii != -1)
     {
         MPI_Send(&cs[0], 2, MPI_DOUBLE, 0, 0, comm_);
@@ -64,7 +61,6 @@ double MLWFTransform::spread2(int i, int j) const
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     mmpi.bcast(cs, 2);
-#endif
 
     return lby2pi * lby2pi - (cs[0] * cs[0] + cs[1] * cs[1]);
 }

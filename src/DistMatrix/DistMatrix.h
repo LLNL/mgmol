@@ -21,11 +21,7 @@
 #include <string.h>
 #include <vector>
 
-#if USE_MPI
 #include <mpi.h>
-#else
-typedef int MPI_Comm;
-#endif
 
 #ifndef MGMOL_DISTMATRIX_ERROR
 

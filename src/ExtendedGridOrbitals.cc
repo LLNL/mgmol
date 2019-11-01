@@ -10,9 +10,7 @@
 
 #include "global.h"
 
-#ifdef USE_MPI
 #include <mpi.h>
-#endif
 
 #include "Control.h"
 #include "DistMatrix.h"

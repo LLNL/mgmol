@@ -136,14 +136,10 @@ void ProjectedMatrices::setup(const double kbt, const int nel,
 
 #endif
 
-#ifdef USE_MPI
     dist_matrix::DistMatrix<DISTMATDTYPE> tmp("tmp", ct.numst, ct.numst);
 
     sH_ = new dist_matrix::SparseDistMatrix<DISTMATDTYPE>(
         comm, *matH_, sparse_distmatrix_nb_partitions);
-#else
-    sH_ = new dist_matrix::SparseDistMatrix<DISTMATDTYPE>(0, *matH_);
-#endif
 }
 
 void ProjectedMatrices::computeInvS()
@@ -521,10 +517,8 @@ double ProjectedMatrices::checkCond(const double tol, const bool flag)
         // ofstream tfile("s.mm", ios::out);
         // gm_->printMM(tfile);
         // tfile.close();
-#ifdef USE_MPI
         MGmol_MPI& mgmolmpi = *(MGmol_MPI::instance());
         mgmolmpi.barrier();
-#endif
         if (onpe0)
             (*MPIdata::sout)
                 << " CONDITION NUMBER OF THE OVERLAP MATRIX EXCEEDS TOL: "

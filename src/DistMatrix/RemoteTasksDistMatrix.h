@@ -16,9 +16,7 @@
 #include <cassert>
 #include <climits>
 
-#if USE_MPI
 #include <mpi.h>
-#endif
 
 namespace dist_matrix
 {
@@ -33,11 +31,9 @@ private:
 public:
     RemoteTasksDistMatrix(DistMatrix<T>& mat)
     {
-        int npes = 1;
-#if USE_MPI
+        int npes            = 1;
         const MPI_Comm comm = mat.comm_global();
         MPI_Comm_size(comm, &npes);
-#endif
         const short mypr  = mat.myrow();
         const short mypc  = mat.mycol();
         const short nprow = mat.nprow();
@@ -45,14 +41,12 @@ public:
         my_task_index_ = mypr + mypc * nprow;
 
         remote_tasks_indexes_.resize(npes);
-#if USE_MPI
         if (npes > 1)
         {
             MPI_Allgather(&my_task_index_, 1, MPI_SHORT,
                 &remote_tasks_indexes_[0], 1, MPI_SHORT, comm);
         }
         else
-#endif
         {
             remote_tasks_indexes_[0] = my_task_index_;
         }

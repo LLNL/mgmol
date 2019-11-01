@@ -87,11 +87,6 @@ list(APPEND LINK_LIBRARIES ${MGMOL_LINK_FLAGS})
 
 # Use MPI (required)
 find_package(MPI REQUIRED)
-if (${MPI_CXX_FOUND})
-  add_definitions(-DUSE_MPI)
-else(${MPI_CXX_FOUND})
-  message(FATAL_ERROR "Required MPI package not found. Please specify correct path to MPI.")  
-endif (${MPI_CXX_FOUND})
 message(STATUS "MPIEXEC :" ${MPIEXEC})
 # Use openMP if available
 find_package(OpenMP)

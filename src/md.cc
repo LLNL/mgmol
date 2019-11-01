@@ -373,9 +373,7 @@ void MGmol<T>::md(T** orbitals, Ions& ions)
                 flag_extrapolated_data
                     = h5f_file_->dset_exists("ExtrapolatedFunction0");
         }
-#ifdef USE_MPI
         MPI_Bcast(&flag_extrapolated_data, 1, MPI_INT, 0, comm_);
-#endif
 
         if (ct.restart_info > 2)
         {

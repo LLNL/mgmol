@@ -226,12 +226,7 @@ public:
         return is;
     }
 
-    void bcast(MPI_Comm comm)
-    {
-#ifdef USE_MPI
-        MPI_Bcast(&x_[0], 3, MPI_DOUBLE, 0, comm);
-#endif
-    }
+    void bcast(MPI_Comm comm) { MPI_Bcast(&x_[0], 3, MPI_DOUBLE, 0, comm); }
 
     friend void bcastvv3d(std::vector<Vector3D>& vv, MPI_Comm comm);
 };

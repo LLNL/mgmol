@@ -22,10 +22,8 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <vector>
-#ifdef USE_MPI
 #include <mpi.h>
-#endif
+#include <vector>
 
 Timer VariableSizeMatrixInterface::AmultSymBdiag_tm_(
     "VariableSizeMatrix::AmultSymBdiag");

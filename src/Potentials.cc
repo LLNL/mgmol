@@ -177,7 +177,6 @@ double Potentials::update(const vector<vector<RHODTYPE>>& rho)
 
     double dvdot = MPdot(size_, &dv_[0], &dv_[0]);
 
-#ifdef USE_MPI
     double sum = 0.;
     int rc
         = MPI_Allreduce(&dvdot, &sum, 1, MPI_DOUBLE, MPI_SUM, myPEenv.comm());
@@ -187,7 +186,6 @@ double Potentials::update(const vector<vector<RHODTYPE>>& rho)
         MPI_Abort(myPEenv.comm(), 2);
     }
     dvdot = sum;
-#endif
 
     scf_dv_            = 0.5 * sqrt(dvdot);
     const double gsize = (double)size_ * (double)myPEenv.n_mpi_tasks();
@@ -242,7 +240,6 @@ double Potentials::delta_v(const vector<vector<RHODTYPE>>& rho)
 
     double dvdot = MPdot(size_, &dv_[0], &dv_[0]);
 
-#ifdef USE_MPI
     double sum = 0.;
     int rc
         = MPI_Allreduce(&dvdot, &sum, 1, MPI_DOUBLE, MPI_SUM, myPEenv.comm());
@@ -252,7 +249,6 @@ double Potentials::delta_v(const vector<vector<RHODTYPE>>& rho)
         MPI_Abort(myPEenv.comm(), 2);
     }
     dvdot = sum;
-#endif
 
     scf_dv_            = 0.5 * sqrt(dvdot);
     const double gsize = (double)size_ * (double)myPEenv.n_mpi_tasks();

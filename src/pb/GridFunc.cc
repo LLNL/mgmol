@@ -22,9 +22,7 @@
 #include <iostream>
 using namespace std;
 
-#ifdef USE_MPI
 #include <mpi.h>
-#endif
 
 const double inv64 = 1. / 64.;
 
@@ -916,7 +914,6 @@ int GridFunc<T>::count_threshold(const T threshold)
     }
     assert(icount <= size());
 
-#ifdef USE_MPI
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     if (mype_env().n_mpi_tasks() > 1)
     {
@@ -929,7 +926,6 @@ int GridFunc<T>::count_threshold(const T threshold)
         }
         icount = sum;
     }
-#endif
 
     return icount;
 }
@@ -1060,7 +1056,6 @@ void GridFunc<T>::print(ostream& tfile)
 
     if (uu_ != nullptr)
     {
-#ifdef USE_MPI
         MGmol_MPI& mmpi = *(MGmol_MPI::instance());
         int mpirc;
 
@@ -1088,7 +1083,6 @@ void GridFunc<T>::print(ostream& tfile)
                     }
                 }
             }
-#endif
             if (mype_env().onpe0())
             {
                 for (int ix = 0; ix < dim_[0]; ix++)
@@ -1116,10 +1110,7 @@ void GridFunc<T>::print(ostream& tfile)
                     }
                 }
             }
-
-#ifdef USE_MPI
         }
-#endif
     }
     delete[] work;
 }
@@ -1198,7 +1189,6 @@ void GridFunc<T>::global_xyz_task0(T* global_func)
                 uu_ + (ii + shift) * incx_ + (jj + shift) * incy_ + shift,
                 dim(2) * sizeof(T));
 
-#ifdef USE_MPI
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     int mpirc;
 
@@ -1234,7 +1224,6 @@ void GridFunc<T>::global_xyz_task0(T* global_func)
 
                 MPI_Barrier(mype_env().comm());
             }
-#endif
 
     delete[] work;
 }
@@ -1266,7 +1255,6 @@ void GridFunc<T>::write_global_xyz(ofstream& tfile)
                 uu_ + (ii + shift) * incx_ + (jj + shift) * incy_ + shift,
                 sizez);
 
-#ifdef USE_MPI
     if (mype_env().onpe0())
         cout << "GridFunc<T>::write_global_xyz, Collect data on PE 0" << endl;
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
@@ -1311,7 +1299,6 @@ void GridFunc<T>::write_global_xyz(ofstream& tfile)
 
                 MPI_Barrier(mype_env().comm());
             }
-#endif
 
     delete[] work;
 
@@ -1324,9 +1311,7 @@ void GridFunc<T>::write_global_xyz(ofstream& tfile)
             tfile << global_func[ix] << endl;
         }
     }
-#ifdef USE_MPI
     MPI_Barrier(mype_env().comm());
-#endif
 
     delete[] global_func;
 }
@@ -1360,7 +1345,6 @@ void GridFunc<T>::write_global_x(const char str[])
     delete[] global_func;
 }
 
-#ifdef USE_MPI
 template <typename T>
 void GridFunc<T>::allGather(T* global_func) const
 {
@@ -1465,7 +1449,6 @@ void GridFunc<T>::allGather(T* global_func) const
 
     all_gather_tm_.stop();
 }
-#endif
 
 // gather GridFunc<T> into T* on PE 0
 template <typename T>
@@ -1496,7 +1479,6 @@ void GridFunc<T>::gather(T* global_func) const
         return;
     }
 
-#ifdef USE_MPI
     // Compute and communicate displacements (used in MPI_Allgather)
     MGmol_MPI& mmpi  = *(MGmol_MPI::instance());
     int* displs      = nullptr;
@@ -1549,7 +1531,6 @@ void GridFunc<T>::gather(T* global_func) const
         delete[] buffer;
         delete[] displs;
     }
-#endif
 
     gather_tm_.stop();
 }
@@ -1587,7 +1568,6 @@ void GridFunc<T>::scatterFrom(const GridFunc<T>& src)
         return;
     }
 
-#ifdef USE_MPI
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     // Compute and communicate displacements (used in MPI_Scatter)
     int* displs      = nullptr;
@@ -1644,7 +1624,6 @@ void GridFunc<T>::scatterFrom(const GridFunc<T>& src)
         delete[] buffer;
         delete[] displs;
     }
-#endif
 
     updated_boundaries_ = false;
 
@@ -1788,15 +1767,11 @@ void GridFunc<T>::init_vect(T* vv, const char dis) const
     assert(grid_.inc(2) == 1);
     assert(vv != 0);
 
-#ifdef USE_MPI
     if (dis == 'g')
     {
         allGather(vv);
     }
     else
-#else
-    (void)dis; // unused
-#endif
     {
         getValues(vv);
     }
@@ -3155,7 +3130,6 @@ double GridFunc<T>::gdot(const GridFunc<double>& vv) const
         }
     }
 
-#ifdef USE_MPI
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     if (mype_env().n_mpi_tasks() > 1)
     {
@@ -3168,7 +3142,6 @@ double GridFunc<T>::gdot(const GridFunc<double>& vv) const
         }
         my_dot = sum;
     }
-#endif
 
     return my_dot;
 }
@@ -3213,7 +3186,6 @@ double GridFunc<T>::gdot(const GridFunc<float>& vv) const
         }
     }
 
-#ifdef USE_MPI
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     if (mype_env().n_mpi_tasks() > 1)
     {
@@ -3226,7 +3198,6 @@ double GridFunc<T>::gdot(const GridFunc<float>& vv) const
         }
         my_dot = sum;
     }
-#endif
 
     return my_dot;
 }
@@ -3848,7 +3819,6 @@ void GridFunc<T>::test_newgrid()
 
     double my_dot = MPdot(dims, hu, hu);
 
-#ifdef USE_MPI
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     double sum      = 0.;
     int rc          = mmpi.allreduce(&my_dot, &sum, 1, MPI_SUM);
@@ -3858,8 +3828,7 @@ void GridFunc<T>::test_newgrid()
         mype_env().globalExit(2);
     }
     my_dot = sum;
-#endif
-    s2 = sqrt(grid_.vel() * my_dot);
+    s2     = sqrt(grid_.vel() * my_dot);
 
     // cout<<" norm 1="<<s1<<", norm 2="<<s2<<endl;
     // f.print_radial("s1.dat");
@@ -3910,11 +3879,9 @@ void GridFunc<T>::test_trade_boundaries()
          << "," << dim(2) << ", bc=" << bc(0) << "," << bc(1) << "," << bc(2)
          << endl;
 
-#ifdef USE_MPI
     int ntasks;
     MPI_Comm_size(mype_env().comm(), &ntasks);
     assert(ntasks == mype_env().n_mpi_tasks());
-#endif
 
     memset(uu_, 0, grid_.sizeg() * sizeof(T));
 
@@ -4151,7 +4118,6 @@ double GridFunc<T>::get_bias()
         {
             ref = new T[incx_];
         }
-#ifdef USE_MPI
         MGmol_MPI& mmpi = *(MGmol_MPI::instance());
         int rc          = mmpi.bcast(ref, incx_, 0);
         if (rc != MPI_SUCCESS)
@@ -4159,7 +4125,6 @@ double GridFunc<T>::get_bias()
             cout << "MPI_Bcast failed in get_bias()!!!" << endl;
             mype_env().globalExit(2);
         }
-#endif
 
         for (unsigned int j = 0; j < grid_.dim(1); j++)
             for (unsigned int k = 0; k < grid_.dim(2); k++)

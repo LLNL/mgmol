@@ -20,9 +20,7 @@
 #include <string>
 #include <vector>
 
-#ifdef USE_MPI
 #include <mpi.h>
-#endif
 
 class Potentials;
 

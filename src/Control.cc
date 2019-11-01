@@ -21,9 +21,7 @@
 #include <boost/program_options.hpp>
 #include <utility>
 
-#ifdef USE_MPI
 #include <mpi.h>
-#endif
 
 #include "MGmol_MPI.h"
 #include "Potentials.h"
@@ -58,9 +56,7 @@ Control::Control()
 {
     assert(comm_global_ != MPI_COMM_NULL);
 
-#ifdef USE_MPI
     MPI_Comm_rank(comm_global_, &mype_);
-#endif
 
     // default values
     lrs_extrapolation = 1; // default
@@ -334,7 +330,6 @@ void Control::sync(void)
 {
     if (onpe0 && verbose > 0)
         (*MPIdata::sout) << "Control::sync()" << std::endl;
-#ifdef USE_MPI
     // pack
     const short size_short_buffer = 91;
     short* short_buffer           = new short[size_short_buffer];
@@ -678,10 +673,6 @@ void Control::sync(void)
     delete[] short_buffer;
     delete[] int_buffer;
     delete[] float_buffer;
-
-#else
-    return;
-#endif
 }
 
 // function to set default values when boost interface not used
@@ -940,11 +931,7 @@ void Control::readRestartInfo(std::ifstream* tfile)
         else
         {
             (*tfile) >> restart_info;
-#ifdef USE_MPI
             (*tfile) >> restart_file_type;
-#else
-            restart_file_type     = 0; // no hdf5p available if no mpi
-#endif
         }
         (*MPIdata::sout) << "Input restart file: " << restart_file << std::endl;
     }
@@ -955,7 +942,6 @@ void Control::readRestartInfo(std::ifstream* tfile)
 
     printRestartLink();
 
-#ifdef USE_MPI
     MPI_Bcast(&restart_info, 1, MPI_SHORT, 0, comm_global_);
     MPI_Bcast(&restart_file_type, 1, MPI_SHORT, 0, comm_global_);
     char buffer[64];
@@ -971,7 +957,6 @@ void Control::readRestartInfo(std::ifstream* tfile)
             << "Control::readRestartInfo(): MPI Bcast of restart_file failed!!!"
             << std::endl;
     }
-#endif
 }
 
 void Control::readRestartOutputInfo(std::ifstream* tfile)
@@ -994,11 +979,7 @@ void Control::readRestartOutputInfo(std::ifstream* tfile)
                 out_restart_file_naming_strategy = 1;
             }
             (*tfile) >> out_restart_info;
-#ifdef USE_MPI
             (*tfile) >> out_restart_file_type;
-#else
-            out_restart_file_type = 0; // no hdf5p available if no mpi
-#endif
             //(*tfile)>>dpcs_chkpoint;
             // timeout_.set(dpcs_chkpoint);
         }
@@ -1219,7 +1200,6 @@ int Control::readOccupations(std::ifstream* tfile)
             }
             finishRead(*tfile);
         }
-#ifdef USE_MPI
         int mpirc = MPI_Bcast(&nst, 1, MPI_INT, 0, comm_global_);
         if (mpirc != MPI_SUCCESS)
         {
@@ -1234,7 +1214,6 @@ int Control::readOccupations(std::ifstream* tfile)
                 << "MPI Bcast of occupation failed!!!" << std::endl;
             return -1;
         }
-#endif
         nel += nst * t1;
         count += nst;
 
@@ -1297,14 +1276,7 @@ void Control::setTolEigenvalueGram(const float tol)
                          << threshold_eigenvalue_gram_ << std::endl;
 }
 
-void Control::global_exit(int i)
-{
-#ifdef USE_MPI
-    MPI_Abort(comm_global_, i);
-#else
-    abort();
-#endif
-}
+void Control::global_exit(int i) { MPI_Abort(comm_global_, i); }
 
 void Control::setSpecies(Potentials& pot)
 {

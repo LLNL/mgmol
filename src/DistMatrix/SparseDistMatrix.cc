@@ -57,13 +57,8 @@ SparseDistMatrix<T>::SparseDistMatrix(
     ntasks_per_partition_ = -1;
     npartitions_          = -1;
 
-#if USE_MPI
     MPI_Comm_rank(comm_global_, &mype_);
     MPI_Comm_size(comm_global_, &npes_);
-#else
-    mype_                   = 0;
-    npes_                   = 1;
-#endif
     nprow_          = mat_.nprow();
     const int npcol = mat_.npcol();
     assert(nprow_ > 0);
@@ -91,13 +86,8 @@ SparseDistMatrix<T>::SparseDistMatrix(MPI_Comm comm, DistMatrix<T>& mat)
     ntasks_per_partition_ = -1;
     npartitions_          = -1;
 
-#if USE_MPI
     MPI_Comm_rank(comm_global_, &mype_);
     MPI_Comm_size(comm_global_, &npes_);
-#else
-    mype_                   = 0;
-    npes_                   = 1;
-#endif
     nprow_          = mat_.nprow();
     const int npcol = mat_.npcol();
     assert(nprow_ > 0);
@@ -197,7 +187,6 @@ size_t SparseDistMatrix<T>::size() const
     return size_data;
 }
 
-#if USE_MPI
 void myMPI_AlltoallDouble(
     double* sendbuf, double* recvbuf, const int count, MPI_Comm comm)
 {
@@ -230,7 +219,6 @@ void myMPI_AlltoallDouble(
         MPI_Wait(&req[0], &status);
     }
 }
-#endif
 
 template <class T>
 void SparseDistMatrix<T>::push_back(
@@ -314,7 +302,6 @@ void SparseDistMatrix<double>::consolidateArray()
 {
     consolidateArray_tm_.start();
 
-#if USE_MPI
     // if( mype_==0 )
     //   cout<<"Consolidate,
     //   consolidation_number="<<consolidation_number_<<endl;
@@ -486,7 +473,6 @@ void SparseDistMatrix<double>::consolidateArray()
         array2map(); // to sum up elements with same index
     }
     MPI_Comm_free(&sub_comm);
-#endif
     consolidateArray_tm_.stop();
 }
 
@@ -495,7 +481,6 @@ void SparseDistMatrix<float>::consolidateArray()
 {
     consolidateArray_tm_.start();
 
-#if USE_MPI
     // if( mype_==0 )
     //   cout<<"Consolidate,
     //   consolidation_number="<<consolidation_number_<<endl;
@@ -667,7 +652,6 @@ void SparseDistMatrix<float>::consolidateArray()
         array2map(); // to sum up elements with same index
     }
     MPI_Comm_free(&sub_comm);
-#endif
     consolidateArray_tm_.stop();
 }
 
@@ -696,11 +680,7 @@ void SparseDistMatrix<T>::assign(const int size, const T* const val)
                      << ", j=" << j << ", pri=" << pri << ",mypr=" << mypr
                      << ", vv=" << vv << endl
                      << flush;
-#if USE_MPI
                 MPI_Barrier(comm_global_);
-#else
-                exit(2);
-#endif
             }
             const int pcj = mat_.pc(j);
             if (pcj != mypc)
@@ -710,11 +690,7 @@ void SparseDistMatrix<T>::assign(const int size, const T* const val)
                      << ", j=" << j << ", pcj=" << pcj << ",mypc=" << mypc
                      << ", vv=" << vv << endl
                      << flush;
-#if USE_MPI
                 MPI_Barrier(comm_global_);
-#else
-                exit(2);
-#endif
             }
 #endif
             mat_.addval(i, j, vv);
@@ -734,7 +710,6 @@ void SparseDistMatrix<T>::setPartitioning(
     const int target_nb_tasks_per_partition)
 {
     partition_comm_.reset(new MPI_DistMatrixCommunicator());
-#if USE_MPI
     int maxnpartitions = max(npes_ / target_nb_tasks_per_partition, 1);
 
     npartitions_ = maxnpartitions;
@@ -758,11 +733,6 @@ void SparseDistMatrix<T>::setPartitioning(
              << " color=" << color << ", key=" << key << endl;
         exit(0);
     }
-#else
-    partition_comm_->comm() = comm_global_;
-    npartitions_            = 1;
-    ntasks_per_partition_   = npes_;
-#endif
 }
 
 #if MPIALLTOALL
@@ -787,7 +757,6 @@ void SparseDistMatrix<double>::parallelSumToDistMatrix()
     int maxsize = max_val_size;
 
     mat_.clear();
-#if USE_MPI
     int rc;
     if (npes_ > 1)
         rc = MPI_Allreduce(
@@ -825,9 +794,6 @@ void SparseDistMatrix<double>::parallelSumToDistMatrix()
             assign(maxsize, &buf_val[i * maxsize]);
 
     delete[] buf_val;
-#else
-    assign(maxsize, &index_and_val_[my_task_index_][0]);
-#endif
 
     pSumToDistMatrix_tm_.stop();
 }
@@ -852,7 +818,6 @@ void SparseDistMatrix<float>::parallelSumToDistMatrix()
     int maxsize = max_val_size;
 
     mat_.clear();
-#if USE_MPI
     int rc;
     if (npes_ > 1)
         rc = MPI_Allreduce(
@@ -887,16 +852,13 @@ void SparseDistMatrix<float>::parallelSumToDistMatrix()
             assign(maxsize, &buf_val[i * maxsize]);
 
     delete[] buf_val;
-#else
-    assign(maxsize, &index_and_val_[my_task_index_][0]);
-#endif
 
     pSumToDistMatrix_tm_.stop();
 }
 
 #else
 
-#if ZOLTAN && USE_MPI
+#if ZOLTAN
 
 TEMP_DECL
 void SparseDistMatrix<double>::parallelSumToDistMatrix()
@@ -912,7 +874,7 @@ void SparseDistMatrix<double>::parallelSumToDistMatrix()
 
     maptoarray();
 
-    int max_index_and_val_size = 0;
+    int max_index_and_val_size   = 0;
     const int index_and_val_size = (int)index_and_val_.size();
     for (int i = 0; i < index_and_val_size; i++)
         max_index_and_val_size
@@ -935,7 +897,7 @@ void SparseDistMatrix<double>::parallelSumToDistMatrix()
     // Setup array of destination processor numbers for each of the objects to
     // be sent.
     int* proclist = new int[ntasks_mat_];
-    int nsend = 0;
+    int nsend     = 0;
     for (int dst = 0; dst < npes_; dst++)
     {
         const int dst_task_index = other_tasks_indexes_[dst];
@@ -950,7 +912,7 @@ void SparseDistMatrix<double>::parallelSumToDistMatrix()
     assert(nsend <= ntasks_mat_);
 
     const int tag = 17;
-    int nreturn = 0;
+    int nreturn   = 0;
     Zoltan_Comm zcom(nsend, proclist, comm_global_, tag, &nreturn);
     if (recv)
     {
@@ -966,7 +928,7 @@ void SparseDistMatrix<double>::parallelSumToDistMatrix()
     if (nsend > 0) sendbuf = new double[newsize * nsend];
     for (int i = 0; i < nsend; i++)
     {
-        const int dst = proclist[i];
+        const int dst            = proclist[i];
         const int dst_task_index = other_tasks_indexes_[dst];
         assert(dst_task_index < ntasks_mat_);
         memcpy(&sendbuf[i * newsize], &index_and_val_[dst_task_index][0],
@@ -1007,7 +969,7 @@ void SparseDistMatrix<float>::parallelSumToDistMatrix()
 
     maptoarray();
 
-    int max_index_and_val_size = 0;
+    int max_index_and_val_size   = 0;
     const int index_and_val_size = (int)index_and_val_.size();
     for (int i = 0; i < index_and_val_size; i++)
         max_index_and_val_size
@@ -1030,7 +992,7 @@ void SparseDistMatrix<float>::parallelSumToDistMatrix()
     // Setup array of destination processor numbers for each of the objects to
     // be sent.
     int* proclist = new int[ntasks_mat_];
-    int nsend = 0;
+    int nsend     = 0;
     for (int dst = 0; dst < npes_; dst++)
     {
         const int dst_task_index = other_tasks_indexes_[dst];
@@ -1045,7 +1007,7 @@ void SparseDistMatrix<float>::parallelSumToDistMatrix()
     assert(nsend <= ntasks_mat_);
 
     const int tag = 17;
-    int nreturn = 0;
+    int nreturn   = 0;
     Zoltan_Comm zcom(nsend, proclist, comm_global_, tag, &nreturn);
     if (recv)
     {
@@ -1061,7 +1023,7 @@ void SparseDistMatrix<float>::parallelSumToDistMatrix()
     if (nsend > 0) sendbuf = new float[newsize * nsend];
     for (int i = 0; i < nsend; i++)
     {
-        const int dst = proclist[i];
+        const int dst            = proclist[i];
         const int dst_task_index = other_tasks_indexes_[dst];
         assert(dst_task_index < ntasks_mat_);
         memcpy(&sendbuf[i * newsize], &index_and_val_[dst_task_index][0],
@@ -1111,9 +1073,8 @@ void SparseDistMatrix<double>::sendRecvData()
     for (int i = 0; i < val_size; i++)
         max_val_size = max(max_val_size, (int)index_and_val_[i].size());
 
-    int newsize          = max_val_size;
+    int newsize = max_val_size;
 
-#if USE_MPI
     int color            = mype_ / ntasks_per_partition_;
     const int first_task = ntasks_per_partition_ * color;
     if (ntasks_per_partition_ > 1)
@@ -1178,7 +1139,6 @@ void SparseDistMatrix<double>::sendRecvData()
                 partition_comm_->comm(), psr);
         }
     }
-#endif
 
     // local data
     if (recv)
@@ -1189,7 +1149,6 @@ void SparseDistMatrix<double>::sendRecvData()
                 &index_and_val_[mytask_index][0]);
     }
 
-#if USE_MPI
     for (int p = 0; p < ntasks_per_partition_ - 1; p++)
     {
 
@@ -1291,7 +1250,6 @@ void SparseDistMatrix<double>::sendRecvData()
     delete[] tmp_val;
 
     // MPI_Barrier(comm_global_);
-#endif
     pSumSendRecv_tm_.stop();
 }
 
@@ -1316,9 +1274,8 @@ void SparseDistMatrix<float>::sendRecvData()
     for (int i = 0; i < val_size; i++)
         max_val_size = max(max_val_size, (int)index_and_val_[i].size());
 
-    int newsize          = max_val_size;
+    int newsize = max_val_size;
 
-#if USE_MPI
     int color            = mype_ / ntasks_per_partition_;
     const int first_task = ntasks_per_partition_ * color;
     if (ntasks_per_partition_ > 1)
@@ -1383,7 +1340,6 @@ void SparseDistMatrix<float>::sendRecvData()
                 partition_comm_->comm(), psr);
         }
     }
-#endif
 
     // local data
     if (recv)
@@ -1394,7 +1350,6 @@ void SparseDistMatrix<float>::sendRecvData()
                 &index_and_val_[mytask_index][0]);
     }
 
-#if USE_MPI
     for (int p = 0; p < ntasks_per_partition_ - 1; p++)
     {
 
@@ -1496,7 +1451,6 @@ void SparseDistMatrix<float>::sendRecvData()
     delete[] tmp_val;
 
     // MPI_Barrier(comm_global_);
-#endif
     pSumSendRecv_tm_.stop();
 }
 
@@ -1531,7 +1485,6 @@ void SparseDistMatrix<double>::parallelSumToDistMatrix2()
 
     maptoarray();
 
-#if USE_MPI
     MPI_Request rr1 = MPI_REQUEST_NULL;
     MPI_Request rr2 = MPI_REQUEST_NULL;
     MPI_Request sr1 = MPI_REQUEST_NULL;
@@ -1628,7 +1581,6 @@ void SparseDistMatrix<double>::parallelSumToDistMatrix2()
         delete[] my_data;
         delete[] my_data_desc;
     }
-#endif
 
     sendRecvData();
 
@@ -1648,7 +1600,6 @@ void SparseDistMatrix<float>::parallelSumToDistMatrix2()
 
     maptoarray();
 
-#if USE_MPI
     MPI_Request rr1 = MPI_REQUEST_NULL;
     MPI_Request rr2 = MPI_REQUEST_NULL;
     MPI_Request sr1 = MPI_REQUEST_NULL;
@@ -1741,7 +1692,6 @@ void SparseDistMatrix<float>::parallelSumToDistMatrix2()
         delete[] my_data;
         delete[] my_data_desc;
     }
-#endif
 
     sendRecvData();
 

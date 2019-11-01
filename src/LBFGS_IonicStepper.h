@@ -18,9 +18,7 @@
 #ifndef LBFGS_IONICSTEPPER_H
 #define LBFGS_IONICSTEPPER_H
 
-#if USE_MPI
 #include "MPIdata.h"
-#endif
 
 #include "IonicStepper.h"
 #include "hdf5.h"

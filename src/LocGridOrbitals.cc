@@ -10,9 +10,7 @@
 
 #include "global.h"
 
-#ifdef USE_MPI
 #include <mpi.h>
-#endif
 
 #include "ColoredRegions.h"
 #include "Control.h"
@@ -1246,7 +1244,6 @@ int LocGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, const string& name)
 
         int intdims[2] = { dims[0], dims[1] };
 
-#ifdef USE_MPI
         if (h5f_file.gatherDataX())
         {
             // Bcast size of data and data
@@ -1257,7 +1254,6 @@ int LocGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, const string& name)
             if (!mmpi.instancePE0()) attr_data.resize(dim);
             mmpi.bcast(&attr_data[0], dim);
         }
-#endif
 
         // loop over centers just read
         for (int i = 0; i < intdims[0]; i++)
@@ -1602,7 +1598,6 @@ void LocGridOrbitals::computeDiagonalElementsDotProductLocal(
                 diag.insertMatrixElement(ifunc, ifunc, val, ADD, true);
             }
         }
-#ifdef USE_MPI
     /* do data distribution to update local sums */
     (*distributor_diagdotprod_).augmentLocalData(diag, false);
     /* collect data */
@@ -1611,7 +1606,6 @@ void LocGridOrbitals::computeDiagonalElementsDotProductLocal(
     {
         ss.push_back((DISTMATDTYPE)diag.getRowEntry(row, 0));
     }
-#endif
 }
 
 void LocGridOrbitals::computeGram(

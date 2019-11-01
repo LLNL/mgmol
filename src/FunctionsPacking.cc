@@ -227,8 +227,5 @@ void FunctionsPacking::initOrbiOverlapGlobal(LocalizationRegions* lrs,
             orbi_overlap.setVal(gid1, gid2, oo1);
         }
     }
-#ifdef USE_MPI
     orbi_overlap.mpiAllOr();
-
-#endif
 }

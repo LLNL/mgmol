@@ -105,7 +105,6 @@ namespace dist_matrix
 ////////////////////////////////////////////////////////////////////////////////
 void BlacsContext::buildCommunicator()
 {
-#if USE_MPI
     int* ranks = new int[size_];
     for (int i = 0; i < size_; i++)
         ranks[i] = i;
@@ -130,10 +129,6 @@ void BlacsContext::buildCommunicator()
     }
     MPI_Comm_create(comm_global_, subgroup, &comm_active_);
     delete[] ranks;
-
-#else
-    comm_active_ = 0;
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -144,13 +139,8 @@ BlacsContext::BlacsContext(MPI_Comm comm_global)
 
     // construct a single row global context
     char order = 'R';
-#if USE_MPI
     MPI_Comm_size(comm_global, &nprocs_);
     MPI_Comm_rank(comm_global, &mype_);
-#else
-    nprocs_      = 1;
-    mype_        = 0;
-#endif
 
     size_  = nprocs_;
     nprow_ = 1;
@@ -176,13 +166,8 @@ BlacsContext::BlacsContext(
     // largest square if type == 's'
 
     char order = 'R';
-#if USE_MPI
     MPI_Comm_size(comm_global, &nprocs_);
     MPI_Comm_rank(comm_global, &mype_);
-#else
-    nprocs_      = 1;
-    mype_        = 0;
-#endif
 
     size_ = std::min(nprocs_, max_cpus);
 
@@ -234,13 +219,8 @@ BlacsContext::BlacsContext(
       comm_global_(comm_global)
 {
     char order = 'R';
-#if USE_MPI
     MPI_Comm_size(comm_global_, &nprocs_);
     MPI_Comm_rank(comm_global_, &mype_);
-#else
-    nprocs_      = 1;
-    mype_        = 0;
-#endif
     if (nprocs_ < nprow * npcol)
     {
         std::cerr << " nprocs_=" << nprocs_ << std::endl;
@@ -268,13 +248,8 @@ BlacsContext::BlacsContext(
       npcol_(npcol),
       comm_global_(comm_global)
 {
-#if USE_MPI
     MPI_Comm_size(comm_global, &nprocs_);
     MPI_Comm_rank(comm_global, &mype_);
-#else
-    nprocs_      = 1;
-    mype_        = 0;
-#endif
 
     if (ipe < 0 || nprow <= 0 || npcol <= 0 || ipe + nprow * npcol > nprocs_)
     {
@@ -295,7 +270,6 @@ BlacsContext::BlacsContext(
     size_ = nprow_ * npcol_;
 
     // build MPI communicator for this context
-#if USE_MPI
     int* ranks = new int[size_];
     for (int i = 0; i < size_; i++)
         ranks[i] = ipe + i;
@@ -304,9 +278,6 @@ BlacsContext::BlacsContext(
     MPI_Group_incl(group_world, size_, ranks, &subgroup);
     MPI_Comm_create(comm_global, subgroup, &comm_active_);
     delete[] ranks;
-#else
-    comm_active_ = 0;
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -343,14 +314,10 @@ BlacsContext::BlacsContext(BlacsContext& bc, const int irow, const int icol,
     setup();
     size_ = nprow_ * npcol_;
 
-#if USE_MPI
     MPI_Group bc_group, subgroup;
     MPI_Comm_group(bc.comm_active(), &bc_group);
     MPI_Group_incl(bc_group, size_, pmap, &subgroup);
     MPI_Comm_create(bc.comm_active(), subgroup, &comm_active_);
-#else
-    comm_active_ = 0;
-#endif
     delete[] pmap;
 }
 
@@ -395,14 +362,10 @@ BlacsContext::BlacsContext(const BlacsContext& bc, const char type)
     setup();
     size_ = nprow_ * npcol_;
 
-#if USE_MPI
     MPI_Group bc_group, subgroup;
     MPI_Comm_group(bc.comm_active(), &bc_group);
     MPI_Group_incl(bc_group, size_, pmap, &subgroup);
     MPI_Comm_create(bc.comm_active(), subgroup, &comm_active_);
-#else
-    comm_        = 0;
-#endif
     delete[] pmap;
 }
 

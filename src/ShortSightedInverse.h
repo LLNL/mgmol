@@ -17,9 +17,7 @@
 
 #include <vector>
 
-#ifdef USE_MPI
 #include <mpi.h>
-#endif
 
 #include "ClusterOrbitals.h"
 #include "DataDistribution.h"

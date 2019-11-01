@@ -10,9 +10,7 @@
 
 #include <iostream>
 
-#ifdef USE_MPI
 #include <mpi.h>
-#endif
 
 #include "GridFunc.h"
 #include "Laph4M.h"
@@ -89,10 +87,6 @@ extern "C"
             return;
         }
 
-#ifdef USE_MPI
-//    int mype;
-//    MPI_Comm_rank(MPI_COMM_WORLD, &mype);
-#endif
         // leading dimension
         const int ldz = *nz;
 
@@ -166,7 +160,6 @@ extern "C"
             }
             delete myGrid;
         }
-#ifdef USE_MPI
         int npes;
         MPI_Comm_size(MPI_COMM_WORLD, &npes);
         // Send data to PE outside of solver partition
@@ -194,7 +187,6 @@ extern "C"
                     MPI_COMM_WORLD, &status);
             }
         }
-#endif
     }
 }
 

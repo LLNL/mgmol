@@ -485,7 +485,6 @@ void LocalizationRegions::bcastLRs()
     if (ct.verbose > 0)
         printWithTimeStamp("LocalizationRegions::bcast()...", cout);
 
-#ifdef USE_MPI
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
     MPI_Comm comm = mmpi.commSameSpin();
 
@@ -648,7 +647,6 @@ void LocalizationRegions::bcastLRs()
              << endl;
         MPI_Abort(comm, 0);
     }
-#endif
     if (ct.verbose > 0)
         printWithTimeStamp("LocalizationRegions::bcast() done...", cout);
 }
@@ -799,7 +797,6 @@ float LocalizationRegions::getStatesWithClosestCenters(
     }
 
     /* communicate info */
-#ifdef USE_MPI
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
     MPI_Comm comm = mmpi.commSameSpin();
     int npes;
@@ -812,7 +809,6 @@ float LocalizationRegions::getStatesWithClosestCenters(
     *st1 = st[0];
     *st2 = st[1];
     mmpi.bcast(&drmin2, 1, rank);
-#endif
 
     if (onpe0) (*MPIdata::sout) << "drmin2=" << drmin2 << endl;
     return sqrt(drmin2);
@@ -1189,7 +1185,6 @@ void LocalizationRegions::getGidsGlobal(std::vector<int>& gids)
 void LocalizationRegions::syncCenters()
 {
     syncCenter_tm_.start();
-#ifdef USE_MPI
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
     Control& ct = *(Control::instance());
     if (ct.verbose > 0)
@@ -1259,7 +1254,6 @@ void LocalizationRegions::syncCenters()
     /* compute volume */
     computeVolume();
 
-#endif
     if (ct.verbose > 0)
         printWithTimeStamp(
             "LocalizationRegions::syncCenters() done...", (*MPIdata::sout));

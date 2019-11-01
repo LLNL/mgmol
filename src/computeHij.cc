@@ -187,15 +187,10 @@ void MGmol<T>::computeHij_private(T& orbitals_i, T& orbitals_j,
 #ifdef PRINT_OPERATIONS
     if (onpe0) os_ << "computeHij()" << endl;
 #endif
-#ifdef USE_MPI
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     MPI_Comm comm   = mmpi.commSameSpin();
     dist_matrix::SparseDistMatrix<DISTMATDTYPE> sparseH(
         comm, hij, sparse_distmatrix_nb_partitions);
-#else
-    dist_matrix::SparseDistMatrix<DISTMATDTYPE> sparseH(
-        0, hij, rtasks_distmatrix);
-#endif
 
     kbpsi_i->computeHvnlMatrix(kbpsi_j, ions, sparseH);
 
@@ -238,15 +233,10 @@ void MGmol<T>::computeHij_private(T& orbitals_i, T& orbitals_j,
 #ifdef PRINT_OPERATIONS
     if (onpe0) os_ << "computeHij()" << endl;
 #endif
-#ifdef USE_MPI
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     MPI_Comm comm   = mmpi.commSameSpin();
     dist_matrix::SparseDistMatrix<DISTMATDTYPE> sparseH(
         comm, hij, sparse_distmatrix_nb_partitions);
-#else
-    dist_matrix::SparseDistMatrix<DISTMATDTYPE> sparseH(
-        0, hij, rtasks_distmatrix);
-#endif
 
     kbpsi->computeHvnlMatrix(ions, sparseH);
 

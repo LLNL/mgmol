@@ -19,10 +19,8 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <vector>
-#ifdef USE_MPI
 #include <mpi.h>
-#endif
+#include <vector>
 
 void SparseRowAndTable::assign(
     std::vector<int>& coldata, std::vector<double>& colvals)

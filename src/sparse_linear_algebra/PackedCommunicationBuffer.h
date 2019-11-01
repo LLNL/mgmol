@@ -13,9 +13,7 @@
 
 #include "VariableSizeMatrix.h"
 
-#ifdef USE_MPI
 #include <mpi.h>
-#endif
 
 class PackedCommunicationBuffer
 {

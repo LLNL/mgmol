@@ -89,9 +89,7 @@ class KBPsiMatrix : public KBPsiMatrixInterface
         ptr_kbBpsi_[gid][st] += val;
     }
 
-#ifdef USE_MPI
     void allGatherNonzeroElements(MPI_Comm comm, const int ntasks);
-#endif
 
     void clear();
 

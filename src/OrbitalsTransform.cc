@@ -141,7 +141,6 @@ Vector3D OrbitalsTransform::center(int i) const
             v[i] += origin_[i];
     }
 
-#ifdef USE_MPI
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     MPI_Status status;
     if (offset_ > 0 && ii != -1) MPI_Send(&v[0], NDIM, MPI_DOUBLE, 0, 0, comm_);
@@ -151,7 +150,6 @@ Vector3D OrbitalsTransform::center(int i) const
         MPI_Recv(&v[0], NDIM, MPI_DOUBLE, src, 0, comm_, &status);
     }
     mmpi.bcast(&v[0], NDIM);
-#endif
     return v;
 }
 

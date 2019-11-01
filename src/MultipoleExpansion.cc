@@ -63,12 +63,10 @@ void MultipoleExpansion::get_monopole(RHODTYPE* rho)
     const double h2 = grid_.hgrid(2);
 
     qtotal_ *= (h0 * h1 * h2);
-#ifdef USE_MPI
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     double tmp;
     mmpi.allreduce(&qtotal_, &tmp, 1, MPI_SUM);
     qtotal_ = tmp;
-#endif
     if (onpe0_)
         (*MPIdata::sout) << scientific
                          << "MultipoleExpansion::get_monopole(double*), Charge="
@@ -125,15 +123,8 @@ void MultipoleExpansion::get_dipole(RHODTYPE* rho)
         }
     }
 
-#ifdef USE_MPI
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     mmpi.allreduce(&dipole[0], &dipole_moment_[0], 3, MPI_SUM);
-#else
-    for (short d = 0; d < 3; d++)
-    {
-        dipole_moment_[d] = dipole[d];
-    }
-#endif
     for (short d = 0; d < 3; d++)
         dipole_moment_[d] *= (h0 * h1 * h2);
 
@@ -198,15 +189,8 @@ void MultipoleExpansion::get_dipole(const pb::GridFunc<RHODTYPE>& rho)
         }
     }
 
-#ifdef USE_MPI
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     mmpi.allreduce(&dipole[0], &dipole_moment_[0], 3, MPI_SUM);
-#else
-    for (short d = 0; d < 3; d++)
-    {
-        dipole_moment_[d] = dipole[d];
-    }
-#endif
     const double vel = (hspacing[0] * hspacing[1] * hspacing[2]);
     for (short d = 0; d < 3; d++)
         dipole_moment_[d] *= vel;
@@ -278,15 +262,8 @@ void MultipoleExpansion::computeQuadrupole(const pb::GridFunc<RHODTYPE>& rho)
         }
     }
 
-#ifdef USE_MPI
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     mmpi.allreduce(&quadrupole[0], &quadrupole_moment_[0], 6, MPI_SUM);
-#else
-    for (short d = 0; d < 6; d++)
-    {
-        quadrupole_moment_[d] = quadrupole[d];
-    }
-#endif
     const double vel = (hspacing[0] * hspacing[1] * hspacing[2]);
     for (short d = 0; d < 6; d++)
         quadrupole_moment_[d] *= vel;
@@ -362,7 +339,6 @@ void MultipoleExpansion::resetOriginToChargeCenter(
     }
 
     // update origin_
-#ifdef USE_MPI
     double tmp[3]   = { 0., 0., 0. };
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     mmpi.allreduce(&charge_center[0], &tmp[0], 3, MPI_SUM);
@@ -375,13 +351,6 @@ void MultipoleExpansion::resetOriginToChargeCenter(
     {
         origin_[d] = tmp[d];
     }
-#else
-    for (short d = 0; d < 3; d++)
-    {
-        double tmp = charge_center[d];
-        origin_[d] = tmp;
-    }
-#endif
     if (onpe0_)
         (*MPIdata::sout)
             << "MultipoleExpansion::resetOriginToChargeCenter(), new origin_=("

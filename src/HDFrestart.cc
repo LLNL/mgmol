@@ -83,9 +83,7 @@ HDFrestart::~HDFrestart()
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     mmpi.barrier();
 
-#ifdef USE_MPI
     if (comm_active_ != MPI_COMM_NULL) MPI_Comm_free(&comm_active_);
-#endif
 }
 
 int HDFrestart::close()
@@ -176,14 +174,12 @@ void HDFrestart::addDateToFilename()
         filename_.append("0");
     }
     filename_.append(extension);
-#ifdef USE_MPI
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     // make sure all the PEs use the same filename
     vector<char> name_buffer(filename_.begin(), filename_.end());
     mmpi.bcast(&name_buffer[0], name_buffer.size());
     const std::string name(name_buffer.begin(), name_buffer.end());
     filename_ = name;
-#endif
 }
 
 void HDFrestart::setActivity()
@@ -199,10 +195,8 @@ void HDFrestart::appendTaskNumberToFilename()
 {
     int mytask = 0;
     int npes   = 1;
-#ifdef USE_MPI
     MPI_Comm_rank(comm_data_, &mytask);
     MPI_Comm_size(comm_data_, &npes);
-#endif
     filename_.append(".");
     if (mytask < 1000000 && npes > 999999)
     {
@@ -547,12 +541,10 @@ HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
         filename_.append("/Task");
 
         appendTaskNumberToFilename();
-#ifdef USE_MPI
         // wait to make sure directory is created by task 0
         // before anybody tries to create a file inside that directory
         MPI_Barrier(comm_data_);
         sleep(1);
-#endif
     }
 
     if (active_)
@@ -560,7 +552,6 @@ HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
         if (onpe0)
             (*MPIdata::sout)
                 << "HDFrestart(): create file " << filename_ << endl;
-#ifdef USE_MPI
         hid_t access_plist
             = H5Pcreate(H5P_FILE_ACCESS); // property list identifier
         if (use_hdf5p_)
@@ -574,7 +565,6 @@ HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
             }
         }
         else
-#endif
         {
 #ifndef USE_HDF16
             // The H5FD_CORE driver enables an application to work with a file
@@ -680,7 +670,6 @@ HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
 
         hid_t access_plist
             = H5Pcreate(H5P_FILE_ACCESS); // property list identifier
-#ifdef USE_MPI
         if (use_hdf5p_)
         {
             // Set up file access property list with parallel I/O access
@@ -693,7 +682,6 @@ HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
             }
         }
         else
-#endif
         {
 #ifndef USE_HDF16
             herr_t err_id = H5Pset_fapl_core(access_plist, 1024, 1);
@@ -760,7 +748,6 @@ HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
             }
         }
     }
-#ifdef USE_MPI
     // Bcast size of data
     int dimsf[3] = { (int)dimsf_[0], (int)dimsf_[1], (int)dimsf_[2] };
     mmpi.bcast(&dimsf[0], 3);
@@ -768,7 +755,6 @@ HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
     dimsf_[0] = dimsf[0];
     dimsf_[1] = dimsf[1];
     dimsf_[2] = dimsf[2];
-#endif
 
     setupBlocks();
 
@@ -1251,7 +1237,6 @@ int HDFrestart::read_1func_hdf5(double* vv, const std::string& datasetname)
             return -1;
         }
 
-#ifdef USE_MPI
         if (use_hdf5p_)
         {
             // Select hyperslab in the file.
@@ -1274,7 +1259,6 @@ int HDFrestart::read_1func_hdf5(double* vv, const std::string& datasetname)
                 plist_id = H5P_DEFAULT;
             }
         }
-#endif
         herr_t status = H5Dread(dset_id, H5T_NATIVE_DOUBLE, memspace, filespace,
             plist_id, work_space_double_);
         if (status < 0)
@@ -1324,7 +1308,6 @@ int HDFrestart::read_1func_hdf5(double* vv, const std::string& datasetname)
     }
 
     // send data to inactive PEs
-#ifdef USE_MPI
     if (gather_data_x_)
     {
         int j      = pes_.my_mpi(1);
@@ -1353,7 +1336,6 @@ int HDFrestart::read_1func_hdf5(double* vv, const std::string& datasetname)
             }
         }
     }
-#endif
 
     return 0;
 }
@@ -1397,7 +1379,6 @@ int HDFrestart::read_1func_hdf5(float* vv, const std::string& datasetname)
             return -1;
         }
 
-#ifdef USE_MPI
         if (use_hdf5p_)
         {
             // Select hyperslab in the file.
@@ -1420,7 +1401,6 @@ int HDFrestart::read_1func_hdf5(float* vv, const std::string& datasetname)
                 plist_id = H5P_DEFAULT;
             }
         }
-#endif
         herr_t status = H5Dread(dset_id, H5T_NATIVE_FLOAT, memspace, filespace,
             plist_id, work_space_float_);
         if (status < 0)
@@ -1470,7 +1450,6 @@ int HDFrestart::read_1func_hdf5(float* vv, const std::string& datasetname)
     }
 
     // send data to inactive PEs
-#ifdef USE_MPI
     if (gather_data_x_)
     {
         int j      = pes_.my_mpi(1);
@@ -1499,7 +1478,6 @@ int HDFrestart::read_1func_hdf5(float* vv, const std::string& datasetname)
             }
         }
     }
-#endif
 
     return 0;
 }
@@ -1751,7 +1729,6 @@ int HDFrestart::readData(
 
         H5Sclose(filespace);
     }
-#ifdef USE_MPI
     if (gather_data_x_)
     {
         int j      = pes_.my_mpi(1);
@@ -1800,7 +1777,6 @@ int HDFrestart::readData(
                 }
             }
     }
-#endif
     if (precision == 1)
     {
         for (int i = 0; i < bsize_; i++)
@@ -1864,7 +1840,6 @@ int HDFrestart::readData(
 
         H5Sclose(filespace);
     }
-#ifdef USE_MPI
     if (gather_data_x_)
     {
         int j      = pes_.my_mpi(1);
@@ -1892,7 +1867,6 @@ int HDFrestart::readData(
             }
         }
     }
-#endif
     memcpy(data, work_space_float_, bsize_ * sizeof(float));
     return 0;
 }
@@ -1911,7 +1885,6 @@ int HDFrestart::writeData(double* data, hid_t space_id, hid_t memspace,
         memcpy(work_space_double_, data, bsize_ * sizeof(double));
     }
     // gather data on active PEs
-#ifdef USE_MPI
     if (gather_data_x_)
     {
         int j    = pes_.my_mpi(1);
@@ -1959,7 +1932,6 @@ int HDFrestart::writeData(double* data, hid_t space_id, hid_t memspace,
                 }
             }
     }
-#endif
 
     if (active_)
     {
@@ -2017,7 +1989,6 @@ int HDFrestart::writeData(float* data, hid_t space_id, hid_t memspace,
     memcpy(work_space_float_, data, bsize_ * sizeof(float));
 
     // gather data on active PEs
-#ifdef USE_MPI
     if (gather_data_x_)
     {
         int j    = pes_.my_mpi(1);
@@ -2045,7 +2016,6 @@ int HDFrestart::writeData(float* data, hid_t space_id, hid_t memspace,
             }
         }
     }
-#endif
 
     if (active_)
     {
@@ -2131,7 +2101,6 @@ int HDFrestart::read_att(
 
 void HDFrestart::setCommActive()
 {
-#ifdef USE_MPI
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     int mytask      = 0;
     int mpirc       = MPI_Comm_rank(mmpi.commSameSpin(), &mytask);
@@ -2148,7 +2117,6 @@ void HDFrestart::setCommActive()
         }
     }
     else
-#endif
     {
         comm_active_ = MPI_COMM_NULL;
     }
@@ -2299,10 +2267,8 @@ failed!!!"<<endl; return -1;
             }
         }
     }
-#ifdef USE_MPI
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     mmpi.bcast(&randst[0], 3);
-#endif
 
     for(short i=0;i<3;i++)rand_state[i]=(unsigned short)randst[i];
 
@@ -2365,9 +2331,7 @@ int HDFrestart::readAtomicNumbers(vector<int>& data)
         }
     } // if active_
     // send data to inactive PEs
-#ifdef USE_MPI
     if (gather_data_x_) gatherDataXdir(data);
-#endif
 
     return 0;
 }
@@ -2424,9 +2388,7 @@ int HDFrestart::readAtomicIDs(vector<int>& data)
             return -2;
         }
     }
-#ifdef USE_MPI
     if (gather_data_x_) gatherDataXdir(data);
-#endif
 
     return 0;
 }
@@ -2487,9 +2449,7 @@ int HDFrestart::readAtomicNLprojIDs(vector<int>& data)
         }
     }
 
-#ifdef USE_MPI
     if (gather_data_x_) gatherDataXdir(data);
-#endif
     return 0;
 }
 
@@ -2843,9 +2803,7 @@ int HDFrestart::readLockedAtomNames(std::vector<std::string>& data)
         }
     }
 
-#ifdef USE_MPI
     if (gather_data_x_) gatherDataXdir(buffer);
-#endif
 
     data.clear();
     for (unsigned short i = 0; i < buffer.size(); i += name_length)
@@ -2945,9 +2903,7 @@ int HDFrestart::readAtomicNames(std::vector<std::string>& data)
         }
     }
 
-#ifdef USE_MPI
     if (gather_data_x_) gatherDataXdir(buffer);
-#endif
 
     data.clear();
     for (unsigned short i = 0; i < buffer.size(); i += name_length)

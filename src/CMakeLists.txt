@@ -152,10 +152,6 @@ if(${MGMOL_WITH_MAGMA})
   target_link_libraries(mgmol_src PkgConfig::MAGMA)
 endif()
 
-# compile definitions
-#target_compile_definitions (mgmol_src PUBLIC -DUSE_CNR_)
-target_compile_definitions (mgmol_src PUBLIC -DUSE_MPI)
-
 install(TARGETS mgmol_src DESTINATION lib)
 
 # build executable

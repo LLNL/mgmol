@@ -20,7 +20,6 @@ namespace mgmol_tools
 int reduce(int* sendbuf, int* recvbuf, int count, MPI_Op op, const int root,
     const MPI_Comm comm)
 {
-#ifdef USE_MPI
     assert(comm != 0);
     int mpi_err = MPI_Reduce(sendbuf, recvbuf, count, MPI_INT, op, root, comm);
     if (mpi_err != MPI_SUCCESS)
@@ -29,18 +28,13 @@ int reduce(int* sendbuf, int* recvbuf, int count, MPI_Op op, const int root,
                   << "!!!" << std::endl;
     }
     return mpi_err;
-#else
-    return 0;
-#endif
 }
 
 int reduce(int* buf, int count, MPI_Op op, const int root, const MPI_Comm comm)
 {
     int mype = 0;
-#ifdef USE_MPI
     assert(comm != 0);
     MPI_Comm_rank(comm, &mype);
-#endif
 
     int* recvbuf = new int[count];
     int ret      = reduce(buf, recvbuf, count, op, root, comm);
@@ -54,7 +48,6 @@ int reduce(int* buf, int count, MPI_Op op, const int root, const MPI_Comm comm)
 int reduce(double* sendbuf, double* recvbuf, int count, MPI_Op op,
     const int root, const MPI_Comm comm)
 {
-#ifdef USE_MPI
     assert(comm != 0);
     int mpi_err
         = MPI_Reduce(sendbuf, recvbuf, count, MPI_DOUBLE, op, root, comm);
@@ -64,15 +57,11 @@ int reduce(double* sendbuf, double* recvbuf, int count, MPI_Op op,
                   << "!!!" << std::endl;
     }
     return mpi_err;
-#else
-    return 0;
-#endif
 }
 
 int reduce(float* sendbuf, float* recvbuf, int count, MPI_Op op, const int root,
     const MPI_Comm comm)
 {
-#ifdef USE_MPI
     assert(comm != 0);
     int mpi_err
         = MPI_Reduce(sendbuf, recvbuf, count, MPI_FLOAT, op, root, comm);
@@ -82,15 +71,11 @@ int reduce(float* sendbuf, float* recvbuf, int count, MPI_Op op, const int root,
                   << "!!!" << std::endl;
     }
     return mpi_err;
-#else
-    return 0;
-#endif
 }
 
 int reduce(short* sendbuf, short* recvbuf, int count, MPI_Op op, const int root,
     const MPI_Comm comm)
 {
-#ifdef USE_MPI
     assert(comm != 0);
     int mpi_err
         = MPI_Reduce(sendbuf, recvbuf, count, MPI_SHORT, op, root, comm);
@@ -100,9 +85,6 @@ int reduce(short* sendbuf, short* recvbuf, int count, MPI_Op op, const int root,
                   << "!!!" << std::endl;
     }
     return mpi_err;
-#else
-    return 0;
-#endif
 }
 
 int gatherV(std::vector<std::string>& sendbuf,
@@ -110,7 +92,6 @@ int gatherV(std::vector<std::string>& sendbuf,
 {
     int mype = 0;
     int size = 1;
-#ifdef USE_MPI
     assert(comm != 0);
     MPI_Comm_rank(comm, &mype);
     MPI_Comm_size(comm, &size);
@@ -192,15 +173,11 @@ int gatherV(std::vector<std::string>& sendbuf,
     delete[] recvdata;
 
     return mpi_err;
-#else
-    return 0;
-#endif
 }
 
 int gatherV(std::vector<int>& sendbuf, std::vector<int>& recvbuf,
     const int root, const MPI_Comm comm)
 {
-#ifdef USE_MPI
     int mype = 0;
     int size = 1;
     MPI_Comm_rank(comm, &mype);
@@ -238,15 +215,11 @@ int gatherV(std::vector<int>& sendbuf, std::vector<int>& recvbuf,
     delete[] recvcounts;
 
     return mpi_err;
-#else
-    return 0;
-#endif
 }
 
 int gatherV(std::vector<unsigned short>& sendbuf,
     std::vector<unsigned short>& recvbuf, const int root, const MPI_Comm comm)
 {
-#ifdef USE_MPI
     int mype = 0;
     int size = 1;
     MPI_Comm_rank(comm, &mype);
@@ -285,15 +258,11 @@ int gatherV(std::vector<unsigned short>& sendbuf,
     delete[] recvcounts;
 
     return mpi_err;
-#else
-    return 0;
-#endif
 }
 
 int gatherV(std::vector<double>& sendbuf, std::vector<double>& recvbuf,
     const int root, const MPI_Comm comm)
 {
-#ifdef USE_MPI
     int mype = 0;
     int size = 1;
     MPI_Comm_rank(comm, &mype);
@@ -332,15 +301,11 @@ int gatherV(std::vector<double>& sendbuf, std::vector<double>& recvbuf,
     delete[] recvcounts;
 
     return mpi_err;
-#else
-    return 0;
-#endif
 }
 
 int gatherV(std::vector<float>& sendbuf, std::vector<float>& recvbuf,
     const int root, const MPI_Comm comm)
 {
-#ifdef USE_MPI
     int mype = 0;
     int size = 1;
     MPI_Comm_rank(comm, &mype);
@@ -379,15 +344,11 @@ int gatherV(std::vector<float>& sendbuf, std::vector<float>& recvbuf,
     delete[] recvcounts;
 
     return mpi_err;
-#else
-    return 0;
-#endif
 }
 
 int allreduce(
     short* sendbuf, short* recvbuf, int count, MPI_Op op, const MPI_Comm comm)
 {
-#ifdef USE_MPI
     int mpi_err = MPI_Allreduce(sendbuf, recvbuf, count, MPI_SHORT, op, comm);
     if (mpi_err != MPI_SUCCESS)
     {
@@ -395,8 +356,5 @@ int allreduce(
                   << "!!!" << std::endl;
     }
     return mpi_err;
-#else
-    return 0;
-#endif
 }
 }

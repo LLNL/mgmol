@@ -11,11 +11,7 @@
 #ifndef MPI_DistMatrixCOMMUNICATOR_H
 #define MPI_DistMatrixCOMMUNICATOR_H
 
-#if USE_MPI
 #include <mpi.h>
-#else
-typedef int MPI_Comm;
-#endif
 
 namespace dist_matrix
 {

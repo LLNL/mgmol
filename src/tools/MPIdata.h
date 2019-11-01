@@ -13,8 +13,6 @@
 #ifndef MPIDATA_H
 #define MPIDATA_H
 
-#ifdef USE_MPI
-
 #include <fstream>
 #include <iostream>
 #include <mpi.h>
@@ -26,16 +24,5 @@ extern std::ostream* sout;
 extern std::ostream* serr;
 }
 using namespace MPIdata;
-
-#else
-
-const int mype     = 0;
-const bool onpe0   = true;
-std::ostream* sout = &std::cout;
-std::ostream* serr = &std::cerr;
-
-typedef int MPI_Comm;
-
-#endif
 
 #endif

@@ -166,7 +166,6 @@ double PBEFunctional::computeRhoDotExc() const
             exc += prho_dn_[i] * pexc_dn_[i];
         }
     }
-#ifdef USE_MPI
     double sum      = 0.;
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     int rc          = mmpi.allreduce(&exc, &sum, 1, MPI_SUM);
@@ -177,7 +176,6 @@ double PBEFunctional::computeRhoDotExc() const
         ct.global_exit(2);
     }
     exc = sum;
-#endif
     return exc;
 }
 
