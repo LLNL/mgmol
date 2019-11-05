@@ -256,3 +256,8 @@ double SuperSampling<lMax>::computeFiltering(
     }
     return samplePoint / (sampleRate_ * sampleRate_ * sampleRate_);
 }
+
+template class SuperSampling<0>;
+template class SuperSampling<1>;
+template class SuperSampling<2>;
+template class SuperSampling<3>;

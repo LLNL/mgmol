@@ -127,11 +127,6 @@ private:
         const std::vector<double>& fineMeshFuncValues);
 };
 
-template class SuperSampling<0>;
-template class SuperSampling<1>;
-template class SuperSampling<2>;
-template class SuperSampling<3>;
-
 template <int lMax>
 int SuperSampling<lMax>::sampleRate_ = 0;
 template <int lMax>

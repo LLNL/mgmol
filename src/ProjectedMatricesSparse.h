@@ -47,9 +47,6 @@ class ProjectedMatricesSparse : public ProjectedMatricesInterface
 
     double min_val_;
 
-    int iterative_index_h_;
-    int orbitals_index_;
-
     int index(const int phi_index, const int pot_index) const
     {
         return (phi_index % 100) + 100 * pot_index;
