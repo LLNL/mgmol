@@ -40,7 +40,7 @@ DensityMatrixSparse::~DensityMatrixSparse()
 {
     if (dim_ > 0)
     {
-        assert(dm_ != 0);
+        assert(dm_ != nullptr);
         delete dm_;
     }
 }
@@ -99,7 +99,7 @@ void DensityMatrixSparse::assembleMatrixFromCenteredData(
 double DensityMatrixSparse::getTraceDotProductWithMat(
     VariableSizeMatrix<sparserow>* vsmat)
 {
-    assert(dm_ != 0);
+    assert(dm_ != nullptr);
     //   assert(dm_->n() != 0);
     /* compute trace */
     double trace = 0.0;
@@ -118,7 +118,7 @@ double DensityMatrixSparse::getTraceDotProductWithMat(
 /* print a few rows of the density matrix */
 void DensityMatrixSparse::printDM(ostream& os, int nrows) const
 {
-    assert(dm_ != 0);
+    assert(dm_ != nullptr);
     //  assert( dm_->n() > 0);
 
     (*dm_).print(os, locfcns_, nrows);
@@ -129,7 +129,7 @@ void DensityMatrixSparse::printDM(ostream& os, int nrows) const
 void DensityMatrixSparse::getLocalMatrix(
     LocalMatrices<MATDTYPE>& localX, const vector<vector<int>>& global_indexes)
 {
-    assert(dm_ != 0);
+    assert(dm_ != nullptr);
 
     const short subdiv           = (short)global_indexes.size();
     const short chromatic_number = (short)global_indexes[0].size();

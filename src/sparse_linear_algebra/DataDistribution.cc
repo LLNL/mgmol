@@ -747,7 +747,7 @@ void DataDistribution::reduceDataSizes(const short dir,
 }
 void DataDistribution::setPointersToRecvData(const char* rbuf)
 {
-    assert(rbuf != NULL);
+    assert(rbuf != nullptr);
 
     rbuf_nrows_ptr_ = (int*)rbuf;
     /* check if matrix is nonzero */

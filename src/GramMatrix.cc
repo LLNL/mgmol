@@ -178,7 +178,7 @@ void GramMatrix::rotateAll(const dist_matrix::DistMatrix<DISTMATDTYPE>& matU)
 void GramMatrix::setMatrix(
     const dist_matrix::DistMatrix<DISTMATDTYPE>& mat, const int orbitals_index)
 {
-    assert(matS_ != 0);
+    assert(matS_ != nullptr);
 
     *matS_          = mat;
     orbitals_index_ = orbitals_index;

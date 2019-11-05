@@ -26,7 +26,7 @@ void SpreadPenalty<T>::addResidual(T& phi, T& res, bool xlbomd)
 {
     Control& ct = *(Control::instance());
 
-    assert(spreadf_ != 0);
+    assert(spreadf_ != nullptr);
     assert(spread2_target_ >= 0.);
 
     // compute data to be used to evaluate spreads and centers
@@ -263,7 +263,7 @@ void SpreadPenalty<T>::computeAndAddResidualSpreadPenalty(
 template <class T>
 double SpreadPenalty<T>::evaluateEnergy(const T& phi)
 {
-    assert(spreadf_ != 0);
+    assert(spreadf_ != nullptr);
     assert(spread2_target_ >= 0.);
     assert(dampingFactor_ > 0.);
 

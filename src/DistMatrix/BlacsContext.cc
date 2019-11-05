@@ -325,8 +325,8 @@ BlacsContext::BlacsContext(BlacsContext& bc, const int irow, const int icol,
 BlacsContext::BlacsContext(const BlacsContext& bc, const char type)
     : ictxt_(-1), myrow_(-1), mycol_(-1), comm_global_(bc.comm_global_)
 {
-    mype_ = bc.mype_;
-    int* pmap;
+    mype_     = bc.mype_;
+    int* pmap = nullptr;
     if (type == 'c')
     {
         // make context consisting of my column in context bc

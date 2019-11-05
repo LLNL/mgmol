@@ -264,12 +264,21 @@ void write2d(hid_t file_id, const string& datasetname, vector<string>& data,
     H5Tclose(strtype);
 
     status = H5Sclose(dataspaceA_id);
+    if (status < 0)
+    {
+        cerr << "write2d(), H5Sclose failed!!!" << endl;
+    }
+
     status = H5Aclose(attribute_id);
+    if (status < 0)
+    {
+        cerr << "write2d(), H5Aclose failed!!!" << endl;
+    }
+
     status = H5Dclose(dataset_id);
     if (status < 0)
     {
         cerr << "write2d(), H5Dclose failed!!!" << endl;
-        return;
     }
 }
 

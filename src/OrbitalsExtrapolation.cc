@@ -23,7 +23,14 @@ using namespace std;
 template <class T>
 OrbitalsExtrapolation<T>::~OrbitalsExtrapolation()
 {
-    clearOldOrbitals();
+    if (orbitals_minus1_ != nullptr)
+    {
+        delete orbitals_minus1_;
+        orbitals_minus1_ = nullptr;
+    }
+#if EXTRAPOLATE_H
+    delete hextrapol_;
+#endif
 }
 
 template <class T>

@@ -481,8 +481,8 @@ double ProjectedMatrices::computeEntropy()
     // if(onpe0)(*MPIdata::sout)<<"ProjectedMatrices::computeEntropy()"<<endl;
     // if(onpe0)(*MPIdata::sout)<<"width_="<<width_<<endl;
 
-    Control& ct = *(Control::instance());
-    double entropy;
+    Control& ct    = *(Control::instance());
+    double entropy = 0.;
 
     if (ct.DMEigensolver() == DMEigensolverType::Eigensolver
         || ct.DMEigensolver() == DMEigensolverType::SP2
@@ -896,7 +896,7 @@ void ProjectedMatrices::resetDotProductMatrices()
 double ProjectedMatrices::dotProductWithInvS(
     const SquareLocalMatrices<MATDTYPE>& local_product)
 {
-    assert(gram_4dotProducts_ != 0);
+    assert(gram_4dotProducts_ != nullptr);
 
     dist_matrix::DistMatrix<DISTMATDTYPE> ds("ds", dim_, dim_);
     LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
@@ -926,7 +926,7 @@ double ProjectedMatrices::dotProductWithDM(
 double ProjectedMatrices::dotProductSimple(
     const SquareLocalMatrices<MATDTYPE>& local_product)
 {
-    assert(dm_4dot_product_ != 0);
+    assert(dm_4dot_product_ != nullptr);
 
     dist_matrix::DistMatrix<DISTMATDTYPE> ds("ds", dim_, dim_);
     LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
@@ -976,7 +976,7 @@ double ProjectedMatrices::computeTraceInvSmultMat(
 double ProjectedMatrices::computeTraceInvSmultMatMultTheta(
     const dist_matrix::DistMatrix<DISTMATDTYPE>& mat)
 {
-    assert(theta_ != 0);
+    assert(theta_ != nullptr);
     dist_matrix::DistMatrix<DISTMATDTYPE> pmat("pmat", dim_, dim_);
 
     // compute mat*theta_

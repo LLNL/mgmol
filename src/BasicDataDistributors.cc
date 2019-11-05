@@ -48,9 +48,9 @@ void BasicDataDistributors::initialize(
     double spread_sH             = 3. * (*lrs).max_radii();
     double inverse_spread_radius = (*lrs).max_radii();
 
-    assert(gramMatrixDistributor_ == 0);
-    assert(centeredOrbitalsOverlapDistributor_ == 0);
-    assert(orbitalsProdWithHDistributor_ == 0);
+    assert(gramMatrixDistributor_ == nullptr);
+    assert(centeredOrbitalsOverlapDistributor_ == nullptr);
+    assert(orbitalsProdWithHDistributor_ == nullptr);
 
     gramMatrixDistributor_
         = new DataDistribution("gram", ct.spread_radius, myPEenv, domain);

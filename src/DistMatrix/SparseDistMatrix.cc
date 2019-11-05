@@ -866,7 +866,7 @@ void SparseDistMatrix<double>::parallelSumToDistMatrix()
     // if( my_task_index_==0 )cout<<"parallelSumToDistMatrix() using
     // ZOLTAN"<<endl;
 
-    assert(&mat_ != NULL);
+    assert(&mat_ != nullptr);
 #ifdef DEBUG
     print(cout);
 #endif
@@ -961,7 +961,7 @@ void SparseDistMatrix<float>::parallelSumToDistMatrix()
     // if( my_task_index_==0 )cout<<"parallelSumToDistMatrix() using
     // ZOLTAN"<<endl;
 
-    assert(&mat_ != NULL);
+    assert(&mat_ != nullptr);
 #ifdef DEBUG
     print(cout);
 #endif
@@ -1457,7 +1457,7 @@ void SparseDistMatrix<float>::sendRecvData()
 template <class T>
 void SparseDistMatrix<T>::parallelSumToDistMatrix1()
 {
-    assert(&mat_ != NULL);
+    assert(&mat_ != nullptr);
 #ifdef DEBUG
     print(cout);
 #endif
@@ -1475,7 +1475,7 @@ void SparseDistMatrix<T>::parallelSumToDistMatrix1()
 TEMP_DECL
 void SparseDistMatrix<double>::parallelSumToDistMatrix2()
 {
-    assert(&mat_ != NULL);
+    assert(&mat_ != nullptr);
     assert(npartitions_ >= 0);
     assert(npartitions_ <= npes_);
 #ifdef DEBUG
@@ -1590,7 +1590,7 @@ void SparseDistMatrix<double>::parallelSumToDistMatrix2()
 TEMP_DECL
 void SparseDistMatrix<float>::parallelSumToDistMatrix2()
 {
-    assert(&mat_ != NULL);
+    assert(&mat_ != nullptr);
     assert(npartitions_ >= 0);
     assert(npartitions_ <= npes_);
 #ifdef DEBUG

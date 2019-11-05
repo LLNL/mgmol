@@ -39,9 +39,9 @@ void LDAFunctional::computeXC(void)
 {
     if (nspin_ == 1)
     {
-        assert(prho_ != 0);
-        assert(pexc_ != 0);
-        assert(pvxc1_ != 0);
+        assert(prho_ != nullptr);
+        assert(pexc_ != nullptr);
+        assert(pvxc1_ != nullptr);
         for (int ir = 0; ir < np_; ir++)
         {
             xc_unpolarized(prho_[ir], pexc_[ir], pvxc1_[ir]);
@@ -50,11 +50,11 @@ void LDAFunctional::computeXC(void)
     else
     {
         // spin polarized
-        assert(prho_up_ != 0);
-        assert(prho_dn_ != 0);
-        assert(pexc_ != 0);
-        assert(pvxc1_up_ != 0);
-        assert(pvxc1_dn_ != 0);
+        assert(prho_up_ != nullptr);
+        assert(prho_dn_ != nullptr);
+        assert(pexc_ != nullptr);
+        assert(pvxc1_up_ != nullptr);
+        assert(pvxc1_dn_ != nullptr);
         const double fz_prefac  = 1.0 / (cbrt(2.0) * 2.0 - 2.0);
         const double dfz_prefac = (fourthird)*fz_prefac;
         for (int ir = 0; ir < np_; ir++)

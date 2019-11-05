@@ -780,7 +780,7 @@ void NOLMOTransform::gatherTransformMat()
     std::vector<DISTMATDTYPE> sendbuf(nst_ * nloc);
     if (a_->active()) a_->copyDataToVector(sendbuf);
     DISTMATDTYPE* recvbuf = &mat_[0];
-    assert(recvbuf != NULL);
+    assert(recvbuf != nullptr);
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     MPI_Comm comm   = mmpi.commSameSpin();
     MPI_Allgatherv(&sendbuf[0], nst_ * nloc, MPI_DOUBLE, recvbuf,

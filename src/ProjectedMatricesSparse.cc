@@ -48,7 +48,7 @@ Timer ProjectedMatricesSparse::eig_interval_tm_(
 ProjectedMatricesSparse::ProjectedMatricesSparse(
     const int ndim, LocalizationRegions* lrs, ClusterOrbitals* local_cluster)
 {
-    assert(lrs != 0);
+    assert(lrs != nullptr);
 
     dim_     = ndim;
     min_val_ = 0.25;
@@ -102,16 +102,16 @@ void ProjectedMatricesSparse::clearData()
 
 ProjectedMatricesSparse::~ProjectedMatricesSparse()
 {
-    assert(invS_ != 0);
-    assert(dm_ != 0);
-    assert(localX_ != 0);
-    assert(localT_ != 0);
-    assert(submatT_ != 0);
-    assert(sH_ != 0);
-    assert(matHB_ != 0);
-    assert(distributor_sH_ != 0);
-    assert(distributor_matS_ != 0);
-    assert(distributor_invS_ != 0);
+    assert(invS_ != nullptr);
+    assert(dm_ != nullptr);
+    assert(localX_ != nullptr);
+    assert(localT_ != nullptr);
+    assert(submatT_ != nullptr);
+    assert(sH_ != nullptr);
+    assert(matHB_ != nullptr);
+    assert(distributor_sH_ != nullptr);
+    assert(distributor_matS_ != nullptr);
+    assert(distributor_invS_ != nullptr);
 
     // if(onpe0)cout<<"delete invS"<<endl;
     delete invS_;
@@ -215,7 +215,7 @@ void ProjectedMatricesSparse::updateSubMatT()
 /* compute theta = invB * Hij */
 void ProjectedMatricesSparse::updateTheta()
 {
-    assert(invS_ != NULL);
+    assert(invS_ != nullptr);
 
     update_theta_tm_.start();
 
@@ -238,8 +238,8 @@ void ProjectedMatricesSparse::updateTheta()
 
 double ProjectedMatricesSparse::getExpectationH()
 {
-    assert(invS_ != NULL);
-    assert(matHB_ != 0);
+    assert(invS_ != nullptr);
+    assert(matHB_ != nullptr);
     //   assert(matHB_->n() != 0);
 
     return dm_->getTraceDotProductWithMat(matHB_);
@@ -248,8 +248,8 @@ double ProjectedMatricesSparse::getExpectationH()
 double ProjectedMatricesSparse::getExpectationMat(
     VariableSizeMatrix<sparserow>* mat)
 {
-    assert(invS_ != NULL);
-    assert(mat != 0);
+    assert(invS_ != nullptr);
+    assert(mat != nullptr);
     assert(mat->n() != 0);
 
     return dm_->getTraceDotProductWithMat(mat);
@@ -370,7 +370,7 @@ double ProjectedMatricesSparse::getNel() const { return 2. * dim_; }
 double ProjectedMatricesSparse::getEigSum()
 {
     if (dim_ == 0) return 0.;
-    assert(invS_ != NULL);
+    assert(invS_ != nullptr);
     eigsum_tm_.start();
     /* local functions for computing trace */
     std::vector<int> locfcns;
@@ -396,7 +396,7 @@ double ProjectedMatricesSparse::getEigSum()
 double ProjectedMatricesSparse::getLinDependent2states(
     int& st1, int& st2, const bool print_flag) const
 {
-    assert((*invS_).gramMat() != 0);
+    assert((*invS_).gramMat() != nullptr);
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     MPI_Comm comm   = mmpi.commSameSpin();
@@ -715,7 +715,7 @@ void ProjectedMatricesSparse::computeGenEigenInterval(
     std::vector<double>& interval, const int maxits, const double pad)
 {
     srand(13579);
-    assert(invS_ != 0);
+    assert(invS_ != nullptr);
     assert(sH_->n() == invS_->gramMat()->n());
 
     eig_interval_tm_.start();

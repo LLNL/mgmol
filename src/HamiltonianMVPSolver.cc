@@ -81,7 +81,7 @@ int HamiltonianMVPSolver<T1, T2, T3, T4>::solve(T4& orbitals)
 {
     Control& ct = *(Control::instance());
 
-    assert(numst_ = (int)orbitals.numst());
+    assert(numst_ == (int)orbitals.numst());
     assert(n_inner_steps_ > 0);
 
     solve_tm_.start();

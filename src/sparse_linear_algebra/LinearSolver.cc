@@ -36,7 +36,7 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
     const double tol, const int im, const int maxits)
 {
     int i, i1, ii, j, k, k1, its, im1, pti, pti1, ptih, one = 1;
-    double *hh, *c, *s, *rs, t;
+    double *c, *s, *rs, t;
     double negt, beta, eps1, gam, *vv, *z;
 
     const int n        = LSMat.n();
@@ -51,9 +51,8 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
     z    = new double[(imsz)];
     memset(z, 0, imsz * sizeof(double));
     imsz = im1 * (im + 3);
-    hh   = new double[(imsz)];
-    memset(hh, 0, imsz * sizeof(double));
-    c  = hh + im1 * im;
+    std::vector<double> hh(imsz, 0.);
+    c  = hh.data() + im1 * im;
     s  = c + im1;
     rs = s + im1;
     /*-------------------- outer loop starts here */
@@ -81,10 +80,8 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
         if (its == 0) eps1 = tol * beta;
         /*--------------------initialize 1-st term  of rhs of hessenberg mtx */
         rs[0] = beta;
-        i     = 0;
         /*-------------------- Krylov loop*/
-        i   = -1;
-        pti = pti1 = 0;
+        i = -1;
         while ((i < im - 1) && (beta > eps1) && (its++ < maxits))
         {
             i++;
@@ -177,7 +174,6 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
     resnorm_ = beta;
     delete[] vv;
     delete[] z;
-    delete[] hh;
     return (retval);
 }
 /*-----------------end of fgmres --------------------------------------- */
@@ -228,10 +224,9 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
         if (its == 0) eps1 = tol * beta;
         /*--------------------initialize 1-st term  of rhs of hessenberg mtx */
         rs[0] = beta;
-        i     = 0;
         /*-------------------- Krylov loop*/
-        i   = -1;
-        pti = pti1 = 0;
+        i    = -1;
+        pti1 = 0;
 
         while ((i < im - 1) && (beta > eps1) && (its++ < maxits))
         {

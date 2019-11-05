@@ -64,7 +64,7 @@ PackedCommunicationBuffer::PackedCommunicationBuffer(const int bsize)
 /* Set data pointer positions on recv buffer */
 void PackedCommunicationBuffer::setupPackedDataPointers(const char* data)
 {
-    assert(data != 0);
+    assert(data != nullptr);
 
     // setup_data_ptr_tm_.start();
     int* iptr        = (int*)data;

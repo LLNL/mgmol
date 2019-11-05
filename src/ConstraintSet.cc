@@ -146,7 +146,7 @@ bool ConstraintSet::addConstraint(Ions& ions, const vector<string>& argv)
         for (int i = 0; i < (int)vconstraints_.size(); i++)
         {
             Constraint* pc = vconstraints_[i];
-            assert(pc != 0);
+            assert(pc != nullptr);
             // check if a constraint (name1,name2) or (name2,name1) is defined
             if (pc->type() == "distance"
                 && ((pc->names(0) == name1 && pc->names(1) == name2)

@@ -360,7 +360,7 @@ public:
     void multiplyByMatrix2states(const int st1, const int st2,
         const double* mat, ExtendedGridOrbitals& product);
 
-    int write_hdf5(HDFrestart& h5f_file, std::string name = "Function");
+    int write_hdf5(HDFrestart& h5f_file, const std::string& name = "Function");
     int write_func_hdf5(HDFrestart&, const std::string& name = "Function");
     int read_hdf5(HDFrestart& h5f_file);
     int read_func_hdf5(HDFrestart&, const std::string& name = "Function");

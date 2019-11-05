@@ -137,12 +137,12 @@ void MultiDistanceConstraint::setup(const vector<string>& names_known_locally,
     if (locally_active_)
         for (int i = 0; i < nc; i++)
         {
-            assert(m_tau1_[i] != NULL);
-            assert(m_tau2_[i] != NULL);
-            assert(m_tau1p_[i] != NULL);
-            assert(m_tau2p_[i] != NULL);
-            assert(m_fion1_[i] != NULL);
-            assert(m_fion2_[i] != NULL);
+            assert(m_tau1_[i] != nullptr);
+            assert(m_tau2_[i] != nullptr);
+            assert(m_tau1p_[i] != nullptr);
+            assert(m_tau2p_[i] != nullptr);
+            assert(m_fion1_[i] != nullptr);
+            assert(m_fion2_[i] != nullptr);
         }
 
     short lactive = (short)locally_active_;

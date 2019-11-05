@@ -39,7 +39,7 @@ void Masks4Orbitals::associateGids2Masks(const vector<int>& overlap_gids)
     {
         int gid         = (*it);
         GridMask* maski = masks_->get_pmask(gid);
-        assert(maski != 0);
+        assert(maski != nullptr);
         gid_to_mask_.insert(pair<int, GridMask*>(gid, maski));
     }
 
@@ -49,7 +49,7 @@ void Masks4Orbitals::associateGids2Masks(const vector<int>& overlap_gids)
         {
             int gid          = (*it);
             GridMask* maskci = corrmasks_->get_pmask(gid);
-            assert(maskci != 0);
+            assert(maskci != nullptr);
             gid_to_corrmask_.insert(pair<int, GridMask*>(gid, maskci));
         }
 
@@ -69,8 +69,8 @@ short Masks4Orbitals::checkOverlap(
 
     GridMask* gm1 = it1->second;
     GridMask* gm2 = it2->second;
-    assert(gm1 != 0);
-    assert(gm2 != 0);
+    assert(gm1 != nullptr);
+    assert(gm2 != nullptr);
 
     return gm1->overlap_on_pe(*gm2, level);
 }

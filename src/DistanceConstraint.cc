@@ -71,13 +71,13 @@ void DistanceConstraint::setup(const vector<string>& names,
 
     if (locally_active_)
     {
-        assert(tau1_ != 0);
-        assert(tau1p_ != 0);
-        assert(fion1_ != 0);
+        assert(tau1_ != nullptr);
+        assert(tau1p_ != nullptr);
+        assert(fion1_ != nullptr);
         assert(m1_ > 0.0);
-        assert(tau2_ != 0);
-        assert(tau2p_ != 0);
-        assert(fion2_ != 0);
+        assert(tau2_ != nullptr);
+        assert(tau2p_ != nullptr);
+        assert(fion2_ != nullptr);
         assert(tau1p_ != tau2p_);
         assert(m2_ > 0.0);
     }

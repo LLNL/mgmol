@@ -104,9 +104,9 @@ DensityMatrix::~DensityMatrix()
 {
     if (dim_ > 0)
     {
-        assert(dm_ != 0);
-        assert(kernel4dot_ != 0);
-        assert(work_ != 0);
+        assert(dm_ != nullptr);
+        assert(kernel4dot_ != nullptr);
+        assert(work_ != nullptr);
 
         delete dm_;
         delete kernel4dot_;
@@ -158,7 +158,7 @@ void DensityMatrix::build(const dist_matrix::DistMatrix<DISTMATDTYPE>& zmat,
 void DensityMatrix::build(
     const vector<DISTMATDTYPE>& occ, const int new_orbitals_index)
 {
-    assert(dm_ != 0);
+    assert(dm_ != nullptr);
 
     setOccupations(occ);
 

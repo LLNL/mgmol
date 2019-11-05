@@ -21,7 +21,7 @@ void FullyOccupiedNonOrthoDMStrategy::initialize() { update(); }
 
 int FullyOccupiedNonOrthoDMStrategy::update()
 {
-    assert(proj_matrices_ != 0);
+    assert(proj_matrices_ != nullptr);
 
     proj_matrices_->setDMto2InvS();
 

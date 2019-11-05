@@ -263,8 +263,11 @@ void Species::read_1species(const string& filename)
 
     if (mmpi.instancePE0())
     {
-        tfile->close();
-        delete tfile;
+        if (tfile != nullptr)
+        {
+            tfile->close();
+            delete tfile;
+        }
     }
 #ifdef DEBUG
     (*MPIdata::sout) << "Potential read" << endl;
@@ -542,7 +545,7 @@ void Species::initPotentials(
 
     if (printFlag && !ct.restart_run)
     {
-        assert(tfile != 0);
+        assert(tfile != nullptr);
         tfile->close();
         delete tfile;
     }
