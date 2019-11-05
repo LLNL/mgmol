@@ -47,6 +47,30 @@ pipeline {
                         }
                     }      
                 }
+                stage('clang-sanitizer') {
+                    agent {
+                        docker {
+                            image "rombur/mgmol-stack:latest"
+                            alwaysPull true
+                            label 'docker'
+                         }
+                    }
+                    environment {
+                        ASAN_SYMBOLIZER_PATH = '/usr/lib/llvm-6.0/bin/llvm-symbolizer'
+                        LSAN_OPTIONS = "suppressions=$WORKSPACE/address_blacklist.txt"
+                        ASAN_OPTIONS = 'fast_unwind_on_malloc=0'
+                        OMPI_C = 'clang-6.0'
+                        OMPI_CXX = 'clang++-6.0'
+                    }
+                    steps {
+                        sh 'rm -rf build && mkdir -p build && cd build && cmake -D CMAKE_C_COMPILER=clang-6.0 -D CMAKE_CXX_COMPILER=clang++-6.0 -D SCALAPACK_ROOT=/usr/lib/x86_64-linux-gnu  -D MGMOL_WITH_CLANG_FORMAT=OFF  -D MGMOL_WITH_COVERAGE=OFF -D MGMOL_WITH_MAGMA=OFF  -D CMAKE_CXX_FLAGS="-Wall -pedantic -g -fsanitize=address" .. && make -j8 && ctest --no-compress-output -T Test'
+                    }
+                    post {
+                        always {
+                            xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                        }
+                    }      
+                }
             }
         }
     }
