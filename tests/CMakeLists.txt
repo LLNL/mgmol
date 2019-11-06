@@ -149,6 +149,15 @@ add_test(NAME testAndersonMix
 add_test(NAME testSuperSampling
          COMMAND ${CMAKE_CURRENT_BINARY_DIR}/testSuperSampling)
 
+ add_test(NAME testProjectedMatrices
+         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ProjectedMatrices/test.py
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+         ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
+         ${CMAKE_CURRENT_SOURCE_DIR}/ProjectedMatrices/quenchExact.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/ProjectedMatrices/quenchShortSighted.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/ProjectedMatrices/coords.in
+         ${CMAKE_CURRENT_SOURCE_DIR}/ProjectedMatrices/lrs.in
+         ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME testFatom
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Fatom/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
