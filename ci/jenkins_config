@@ -5,6 +5,10 @@ pipeline {
         // Get rid of Read -1, expected <someNumber>, errno =1 error
         // See https://github.com/open-mpi/ompi/issues/4948
         OMPI_MCA_btl_vader_single_copy_mechanism = 'none'
+        // Remove warning: "A high-performance Open MPI point-to-point 
+        // messaging module was unable to find any relevant network 
+        // interfaces."
+        OMPI_MCA_btl_base_warn_component_unused = '0'
     }
     
     stages {
@@ -51,6 +55,7 @@ pipeline {
                     agent {
                         docker {
                             image "rombur/mgmol-stack:latest"
+                            args '--cap-add SYS_PTRACE'
                             alwaysPull true
                             label 'docker'
                          }
