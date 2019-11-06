@@ -159,10 +159,10 @@ BOOST_AUTO_TEST_CASE(distributed_matrix)
         double norma = a.norm('F');
         if (mype == 0) std::cout << "Norm(a)=" << norma << std::endl;
         if (mype == 0) std::cout << "DistMatrix::allgather..." << std::endl;
-        double* aa = new double[a.m() * a.n()];
-        a.allgather(aa, a.m());
+        std::vector<double> aa(a.m() * a.n());
+        a.allgather(aa.data(), a.m());
         if (mype == 0) std::cout << "DistMatrix::init..." << std::endl;
-        b.init(aa, a.m());
+        b.init(aa.data(), a.m());
         double norm = b.norm('F');
         if (mype == 0) std::cout << "Norm(b)=" << norm << std::endl;
         BOOST_TEST(norm == norma, tt::tolerance(0.000001));
