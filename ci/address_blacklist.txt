@@ -6,3 +6,4 @@ leak:libltdl.so
 leak:mca_fcoll_two_phase.so
 leak:ld-linux-x86-64.so
 leak:libmpi.so
+leak:libscalapack-openmpi.so

@@ -62,7 +62,7 @@ pipeline {
                     }
                     environment {
                         ASAN_SYMBOLIZER_PATH = '/usr/lib/llvm-6.0/bin/llvm-symbolizer'
-                        LSAN_OPTIONS = "suppressions=$WORKSPACE/address_blacklist.txt"
+                        LSAN_OPTIONS = "suppressions=$WORKSPACE/ci/address_blacklist.txt"
                         ASAN_OPTIONS = 'fast_unwind_on_malloc=0'
                         OMPI_C = 'clang-6.0'
                         OMPI_CXX = 'clang++-6.0'
