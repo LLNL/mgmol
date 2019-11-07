@@ -34,12 +34,13 @@ Timer ions_setup_tm("ions::setup");
 const double ang2bohr = 1.8897269;
 // const double rmax = 8.0;
 
-std::map<std::string, short> Ions::map_species_ = { { "H", 1 }, { "Li", 3 },
-    { "Be", 4 }, { "B", 5 }, { "C", 6 }, { "N", 7 }, { "O", 8 }, { "F", 9 },
-    { "Na", 11 }, { "Mg", 12 }, { "Al", 13 }, { "Si", 14 }, { "P", 15 },
-    { "S", 16 }, { "Cl", 17 }, { "K", 19 }, { "Ca", 20 }, { "Cr", 24 },
-    { "Mn", 25 }, { "Fe", 26 }, { "Co", 27 }, { "Ni", 28 }, { "Cu", 29 },
-    { "Zn", 30 }, { "Ga", 31 }, { "Ge", 32 }, { "La", 57 }, { "Au", 79 } };
+std::map<std::string, short> Ions::map_species_
+    = { { "H", 1 }, { "D", 1 }, { "Li", 3 }, { "Be", 4 }, { "B", 5 },
+          { "C", 6 }, { "N", 7 }, { "O", 8 }, { "F", 9 }, { "Na", 11 },
+          { "Mg", 12 }, { "Al", 13 }, { "Si", 14 }, { "P", 15 }, { "S", 16 },
+          { "Cl", 17 }, { "K", 19 }, { "Ca", 20 }, { "Cr", 24 }, { "Mn", 25 },
+          { "Fe", 26 }, { "Co", 27 }, { "Ni", 28 }, { "Cu", 29 }, { "Zn", 30 },
+          { "Ga", 31 }, { "Ge", 32 }, { "La", 57 }, { "Au", 79 } };
 
 int Ions::num_ions_          = -1;
 short Ions::max_num_proj_    = -1;
@@ -2375,7 +2376,10 @@ int Ions::read1atom(std::ifstream* tfile, const bool cell_relative)
     std::string name(name_read);
     stripName(name);
 
-    short spec_nb                           = map_species_.find(name)->second;
+    auto search = map_species_.find(name);
+    assert(seach != map_species_.end());
+
+    short spec_nb                           = search->second;
     std::vector<Species>::const_iterator it = species_.begin();
     int isp                                 = -1;
     while (it != species_.end())
