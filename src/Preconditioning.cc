@@ -168,6 +168,9 @@ void Preconditioning<T>::mg(pb::GridFuncVector<T>& gfv_v,
     if (onpe0)
         (*MPIdata::sout) << "Preconditioning::mg() at level " << level << endl;
 #endif
+    assert(gfv_work_.size() > level);
+    assert(gfv_work_[level] != nullptr);
+
     short ncycl = 2;
     if (level == max_levels_) ncycl = 4;
 
@@ -293,6 +296,7 @@ void Preconditioning<T>::app_mask(
     pb::GridFunc<T>& gu, const short level, const int color) const
 {
     if (color == -1) return; // no mask applied
+    if (gid2mask_.empty()) return; // no mask applied
 
     assert(overlapping_gids_.size() > 0);
 

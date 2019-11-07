@@ -8,9 +8,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
-#ifndef MASKSSET_H
-#define MASKSSET_H
+#ifndef MGMOL_MASKSSET_H
+#define MGMOL_MASKSSET_H
 
 #include "GridMask.h"
 #include "MPIdata.h"

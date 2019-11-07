@@ -16,8 +16,6 @@
 #include "Mesh.h"
 #include "ProjectedMatrices.h"
 
-using namespace std;
-
 template <class T>
 LBFGS<T>::LBFGS(T** orbitals, Ions& ions, Rho<T>& rho,
     ConstraintSet& constraints, LocalizationRegions& lrs,
@@ -84,30 +82,45 @@ int LBFGS<T>::quenchElectrons(const int itmax, double& etot)
 template <class T>
 void LBFGS<T>::updateRefs()
 {
-    Control& ct = *(Control::instance());
     if (!stepper_->check_last_step_accepted())
     {
         if (onpe0)
             (*MPIdata::sout)
-                << "lbfgs: Reset orbitals to reference orbitals " << endl;
+                << "lbfgs: Reset orbitals to reference orbitals " << std::endl;
         (*orbitals_)->assign(*ref_orbitals_);
         electrostat_.setupInitialVh(*vh_init_);
     }
     else
     {
         // update references
-        if (ct.lr_update)
-        {
-            ref_lrs_        = lrs_;
-            *ref_masks_     = masks_;
-            *ref_corrmasks_ = corrmasks_;
-        }
-        ref_orbitals_->reset(ref_masks_, ref_corrmasks_, &lrs_);
+        updateRefMasks();
+
         if (onpe0)
-            (*MPIdata::sout) << "lbfgs: Update reference orbitals " << endl;
+            (*MPIdata::sout)
+                << "lbfgs: Update reference orbitals " << std::endl;
         ref_orbitals_->assign(**orbitals_);
         vh_init_->assign(electrostat_.getVh(), 'd');
     }
+}
+
+template <>
+void LBFGS<LocGridOrbitals>::updateRefMasks()
+{
+    Control& ct = *(Control::instance());
+
+    if (ct.lr_update)
+    {
+        ref_lrs_        = lrs_;
+        *ref_masks_     = masks_;
+        *ref_corrmasks_ = corrmasks_;
+    }
+
+    ref_orbitals_->reset(ref_masks_, ref_corrmasks_, &lrs_);
+}
+
+template <>
+void LBFGS<ExtendedGridOrbitals>::updateRefMasks()
+{
 }
 
 template <class T>
@@ -116,9 +129,9 @@ void LBFGS<T>::setQuenchTol() const
     Control& ct = *(Control::instance());
     ct.conv_tol = 0.1 * stepper_->etol();
     if (onpe0)
-        (*MPIdata::sout) << setprecision(12) << fixed
+        (*MPIdata::sout) << std::setprecision(12) << std::fixed
                          << "lbfgs: Set SC convergence criterion to "
-                         << ct.conv_tol << endl;
+                         << ct.conv_tol << std::endl;
 }
 
 template <class T>
