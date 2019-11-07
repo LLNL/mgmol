@@ -205,11 +205,7 @@ PEenv::~PEenv()
     if (comm_x_ != MPI_COMM_NULL) MPI_Comm_free(&comm_x_);
 
     for (int i = 0; i < 3; i++)
-        if (other_tasks_dir_[i] != nullptr)
-        {
-            delete[] other_tasks_dir_[i];
-            nullptr;
-        }
+        if (other_tasks_dir_[i] != nullptr) delete[] other_tasks_dir_[i];
 }
 
 void PEenv::barrier(void) const { MPI_Barrier(comm_); }
