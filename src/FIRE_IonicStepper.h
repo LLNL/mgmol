@@ -44,7 +44,7 @@ private:
 public:
     FIRE_IonicStepper(const double dt, const std::vector<short>& atmove,
         std::vector<double>& tau0, std::vector<double>& taup,
-        std::vector<double>& fion, const std::vector<double>& pmass);
+        std::vector<double>& fion);
 
     int run() override;
     double etol(void) const override;

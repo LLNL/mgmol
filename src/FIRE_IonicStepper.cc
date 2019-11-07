@@ -35,11 +35,9 @@
 
 FIRE_IonicStepper::FIRE_IonicStepper(const double dt,
     const std::vector<short>& atmove, std::vector<double>& tau0,
-    std::vector<double>& taup, std::vector<double>& fion,
-    const std::vector<double>& pmass)
-    : IonicStepper(dt, atmove, tau0, taup), pmass_(pmass), fion_(fion)
+    std::vector<double>& taup, std::vector<double>& fion)
+    : IonicStepper(dt, atmove, tau0, taup), fion_(fion)
 {
-    assert(3 * pmass.size() == tau0.size());
     assert(3 * atmove.size() == tau0.size());
     assert(taup.size() == tau0.size());
 
@@ -53,9 +51,6 @@ FIRE_IonicStepper::FIRE_IonicStepper(const double dt,
     fdec_       = 0.5;
     dt_         = dt;
     dtmax_      = 100.;
-
-    for (int i = 0; i < (int)pmass.size(); i++)
-        assert(pmass[i] > 0.);
 }
 
 int FIRE_IonicStepper::init(HDFrestart& h5f_file)
