@@ -28,7 +28,6 @@ private:
     // taum_ stores velocities if dt_<=0
     std::vector<double> taum_; // taum_[3*na_]
 
-    const std::vector<double>& pmass_; // pmass[ia]
     std::vector<double>& fion_;
 
     int nmin_;
