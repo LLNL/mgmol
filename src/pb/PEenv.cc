@@ -203,6 +203,13 @@ PEenv::~PEenv()
     }
     if (cart_comm_ != MPI_COMM_NULL) MPI_Comm_free(&cart_comm_);
     if (comm_x_ != MPI_COMM_NULL) MPI_Comm_free(&comm_x_);
+
+    for (int i = 0; i < 3; i++)
+        if (other_tasks_dir_[i] != nullptr)
+        {
+            delete[] other_tasks_dir_[i];
+            nullptr;
+        }
 }
 
 void PEenv::barrier(void) const { MPI_Barrier(comm_); }
