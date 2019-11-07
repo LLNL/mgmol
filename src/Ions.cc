@@ -2377,7 +2377,7 @@ int Ions::read1atom(std::ifstream* tfile, const bool cell_relative)
     stripName(name);
 
     auto search = map_species_.find(name);
-    assert(seach != map_species_.end());
+    assert(search != map_species_.end());
 
     short spec_nb                           = search->second;
     std::vector<Species>::const_iterator it = species_.begin();
