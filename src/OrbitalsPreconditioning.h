@@ -41,6 +41,9 @@ private:
     // timers
     static Timer precond_tm_;
 
+    std::map<int, GridMask*> getGid2Masks(
+        MasksSet* currentMasks, LocalizationRegions* lrs);
+
 public:
     OrbitalsPreconditioning()
     {

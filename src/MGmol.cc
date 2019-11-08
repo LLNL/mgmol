@@ -148,8 +148,8 @@ MGmol<T>::~MGmol()
     if (hamiltonian_ != nullptr) delete hamiltonian_;
     if (geom_optimizer_ != nullptr) delete geom_optimizer_;
 
-    delete currentMasks_;
-    delete corrMasks_;
+    if (currentMasks_ != nullptr) delete currentMasks_;
+    if (corrMasks_ != nullptr) delete corrMasks_;
 
     if (aomm_ != nullptr) delete aomm_;
 
@@ -171,6 +171,27 @@ MGmol<T>::~MGmol()
 
     delete forces_;
     if (dm_strategy_ != nullptr) delete dm_strategy_;
+}
+
+template <>
+void MGmol<LocGridOrbitals>::initialMasks()
+{
+    Control& ct = *(Control::instance());
+
+    if (ct.verbose > 0) printWithTimeStamp("MGmol<T>::initialMasks()...", os_);
+
+    currentMasks_ = new MasksSet(false, ct.getMGlevels());
+    currentMasks_->setup(*lrs_);
+
+    corrMasks_ = new MasksSet(true, 0);
+    corrMasks_->setup(*lrs_);
+}
+
+template <>
+void MGmol<ExtendedGridOrbitals>::initialMasks()
+{
+    currentMasks_ = nullptr;
+    corrMasks_    = nullptr;
 }
 
 template <class T>
@@ -255,11 +276,7 @@ int MGmol<T>::initial()
     if (ct.verbose > 0)
         printWithTimeStamp("MGmol<T>::initial(), create MasksSet...", os_);
 
-    currentMasks_ = new MasksSet(false, ct.getMGlevels());
-    currentMasks_->setup(*lrs_);
-
-    corrMasks_ = new MasksSet(true, 0);
-    corrMasks_->setup(*lrs_);
+    initialMasks();
 
     BlockVector<ORBDTYPE>::setOverAllocateFactor(
         ct.orbitalsOverallocateFactor());
@@ -309,7 +326,7 @@ int MGmol<T>::initial()
                 "MGmol<T>::initial(), init wf and masks...", os_);
 
         // Make temp mask for initial random wave functions
-        if (ct.init_loc == 1)
+        if (ct.init_loc == 1 && currentMasks_ != nullptr)
         {
             float cut_init = ct.initRadius();
             assert(cut_init > 0.);
@@ -320,7 +337,7 @@ int MGmol<T>::initial()
         current_orbitals_->initWF(*lrs_);
 
         // initialize masks again
-        if (ct.init_loc == 1)
+        if (ct.init_loc == 1 && currentMasks_ != nullptr)
         {
             currentMasks_->initialize(*lrs_, 0);
         }

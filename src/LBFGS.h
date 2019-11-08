@@ -51,6 +51,8 @@ private:
 
     MGmol<T>& mgmol_strategy_;
 
+    void updateRefMasks();
+
 public:
     LBFGS(T** orbitals, Ions& ions, Rho<T>& rho, ConstraintSet& constraints,
         LocalizationRegions& lrs, ClusterOrbitals* local_cluster,

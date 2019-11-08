@@ -158,6 +158,7 @@ private:
         T& psi, const T& hphi, T& res, const bool applyB = true);
 
     int initial();
+    void initialMasks();
 
     // timers
     static Timer total_tm_;
