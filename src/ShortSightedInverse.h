@@ -46,7 +46,6 @@ class ShortSightedInverse
 
     /* Local variables */
     int gm_orbitals_index_;
-    int dm_orbitals_index_;
     bool issetup_; // flag for initial data setup
     bool isInvSUpToDate_; // flag for checking if inverse is up to date
     bool isGramAugmented_; // flag for checking if gram matrix is augmented

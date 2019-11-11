@@ -30,7 +30,6 @@
 class LBFGS_IonicStepper : public IonicStepper
 {
 private:
-    MPI_Comm comm_;
     std::vector<double>& fion_;
     const std::vector<int>& gids_;
 

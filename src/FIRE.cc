@@ -31,7 +31,7 @@ FIRE<T>::FIRE(T** orbitals, Ions& ions, Rho<T>& rho, ConstraintSet& constraints,
 {
     stepper_ = new FIRE_IonicStepper(dt, IonicAlgorithm<T>::atmove_,
         IonicAlgorithm<T>::tau0_, IonicAlgorithm<T>::taup_,
-        IonicAlgorithm<T>::fion_, IonicAlgorithm<T>::pmass_);
+        IonicAlgorithm<T>::fion_);
 
     IonicAlgorithm<T>::registerStepper(stepper_);
 }

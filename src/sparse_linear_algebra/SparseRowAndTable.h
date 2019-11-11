@@ -121,7 +121,7 @@ public:
     }
 
     // return column position
-    int getColumnPosition(const int col)
+    int getColumnPosition(const int col) const override
     {
         int* pos = (int*)pos_->get_value(col);
         return (pos != nullptr) ? *pos : -1;

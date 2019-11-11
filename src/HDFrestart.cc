@@ -2852,7 +2852,7 @@ int HDFrestart::readAtomicNames(std::vector<std::string>& data)
             {
                 hid_t attribute_id = H5Aopen_name(dataset_id, attname.c_str());
                 herr_t status
-                    = H5Aread(attribute_id, H5T_NATIVE_INT, &name_length);
+                    = H5Aread(attribute_id, H5T_NATIVE_SHORT, &name_length);
                 // check validity of data just read
                 if (status < 0)
                 {

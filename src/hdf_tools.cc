@@ -246,7 +246,7 @@ void write2d(hid_t file_id, const string& datasetname, vector<string>& data,
     hid_t attribute_id = H5Acreate2(dataset_id, attname.c_str(), H5T_NATIVE_INT,
         dataspaceA_id, H5P_DEFAULT, H5P_DEFAULT);
     herr_t status
-        = H5Awrite(attribute_id, H5T_NATIVE_INT, &IonData_MaxStrLength);
+        = H5Awrite(attribute_id, H5T_NATIVE_USHORT, &IonData_MaxStrLength);
     if (status < 0)
     {
         cerr << "write2d(), Attribute: " << attname << " --- H5Awrite failed!!!"

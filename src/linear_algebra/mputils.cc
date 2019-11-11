@@ -825,18 +825,6 @@ template void MPsyrk<float, double>(const char uplo, const char trans,
     const int lda, const double beta, double* c, const int ldc);
 
 template void
-LinearAlgebraUtils<MemorySpace::Host>::MPgemm<double, double, double>(
-    const char transa, const char transb, const int m, const int n, const int k,
-    const double alpha, const double* const a, const int lda,
-    const double* const b, const int ldb, const double beta, double* const c,
-    const int ldc);
-template void
-LinearAlgebraUtils<MemorySpace::Host>::MPgemm<float, float, float>(
-    const char transa, const char transb, const int m, const int n, const int k,
-    const double alpha, const float* const a, const int lda,
-    const float* const b, const int ldb, const double beta, float* const c,
-    const int ldc);
-template void
 LinearAlgebraUtils<MemorySpace::Host>::MPgemm<double, float, double>(
     const char transa, const char transb, const int m, const int n, const int k,
     const double alpha, const double* const a, const int lda,
@@ -876,12 +864,6 @@ template void MPgemmTN<double, double, double>(const int m, const int n,
     const int ldc);
 
 #ifdef HAVE_MAGMA
-template void
-LinearAlgebraUtils<MemorySpace::Device>::MPgemm<double, double, double>(
-    const char transa, const char transb, const int m, const int n, const int k,
-    const double alpha, const double* const a, const int lda,
-    const double* const b, const int ldb, const double beta, double* const c,
-    const int ldc);
 template void
 LinearAlgebraUtils<MemorySpace::Device>::MPgemm<float, float, float>(
     const char transa, const char transb, const int m, const int n, const int k,

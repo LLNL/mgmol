@@ -9,6 +9,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
       gfortran \
       build-essential \
       clang-format \
+      clang \
       wget \
       curl \
       lcov \

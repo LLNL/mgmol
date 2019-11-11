@@ -28,7 +28,6 @@ private:
     // taum_ stores velocities if dt_<=0
     std::vector<double> taum_; // taum_[3*na_]
 
-    const std::vector<double>& pmass_; // pmass[ia]
     std::vector<double>& fion_;
 
     int nmin_;
@@ -45,7 +44,7 @@ private:
 public:
     FIRE_IonicStepper(const double dt, const std::vector<short>& atmove,
         std::vector<double>& tau0, std::vector<double>& taup,
-        std::vector<double>& fion, const std::vector<double>& pmass);
+        std::vector<double>& fion);
 
     int run() override;
     double etol(void) const override;

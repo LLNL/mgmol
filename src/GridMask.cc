@@ -90,7 +90,7 @@ GridMask::~GridMask()
 {
     if (ninstances_ == 1)
     {
-        for (unsigned short i = 0; i < nlevels_; i++)
+        for (unsigned short i = 0; i < sub_cell_.size(); i++)
             delete sub_cell_[i];
     }
     ninstances_--;

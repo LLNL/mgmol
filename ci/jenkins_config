@@ -5,6 +5,10 @@ pipeline {
         // Get rid of Read -1, expected <someNumber>, errno =1 error
         // See https://github.com/open-mpi/ompi/issues/4948
         OMPI_MCA_btl_vader_single_copy_mechanism = 'none'
+        // Remove warning: "A high-performance Open MPI point-to-point 
+        // messaging module was unable to find any relevant network 
+        // interfaces."
+        OMPI_MCA_btl_base_warn_component_unused = '0'
     }
     
     stages {
@@ -40,6 +44,31 @@ pipeline {
                     }
                     steps {
                         sh 'rm -rf build && mkdir -p build && cd build && cmake -D SCALAPACK_ROOT=/usr/lib/x86_64-linux-gnu  -D MGMOL_WITH_CLANG_FORMAT=ON  -D MGMOL_WITH_COVERAGE=ON -D MGMOL_WITH_MAGMA=OFF .. && make -j8 && ctest --no-compress-output -T Test && make format && git diff --exit-code && make coverage && curl -s https://codecov.io/bash -o codecov_bash_uploader && chmod +x codecov_bash_uploader && ./codecov_bash_uploader -Z -X gcov -f lcov.info'
+                    }
+                    post {
+                        always {
+                            xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                        }
+                    }      
+                }
+                stage('clang-sanitizer') {
+                    agent {
+                        docker {
+                            image "rombur/mgmol-stack:latest"
+                            args '--cap-add SYS_PTRACE'
+                            alwaysPull true
+                            label 'docker'
+                         }
+                    }
+                    environment {
+                        ASAN_SYMBOLIZER_PATH = '/usr/lib/llvm-6.0/bin/llvm-symbolizer'
+                        LSAN_OPTIONS = "suppressions=$WORKSPACE/ci/address_blacklist.txt"
+                        ASAN_OPTIONS = 'fast_unwind_on_malloc=0'
+                        OMPI_C = 'clang-6.0'
+                        OMPI_CXX = 'clang++-6.0'
+                    }
+                    steps {
+                        sh 'rm -rf build && mkdir -p build && cd build && cmake -D CMAKE_C_COMPILER=clang-6.0 -D CMAKE_CXX_COMPILER=clang++-6.0 -D SCALAPACK_ROOT=/usr/lib/x86_64-linux-gnu  -D MGMOL_WITH_CLANG_FORMAT=OFF  -D MGMOL_WITH_COVERAGE=OFF -D MGMOL_WITH_MAGMA=OFF  -D CMAKE_CXX_FLAGS="-Wall -pedantic -g -fsanitize=address" .. && make -j8 && ctest --no-compress-output -T Test'
                     }
                     post {
                         always {

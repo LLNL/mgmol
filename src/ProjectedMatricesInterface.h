@@ -176,23 +176,6 @@ public:
     {
         exitWithErrorMessage("setAuxilliaryEnergiesFromOccupations");
     }
-    virtual void buildDM(const int orbitals_index)
-    {
-        (void)orbitals_index;
-
-        exitWithErrorMessage("buildDM");
-    }
-    virtual double computeChemicalPotentialAndOccupations(
-        const double width, const double nel, const int max_numst)
-    {
-        (void)width;
-        (void)nel;
-        (void)max_numst;
-
-        exitWithErrorMessage("computeChemicalPotentialAndOccupations");
-
-        return 0;
-    }
     virtual const dist_matrix::DistMatrix<DISTMATDTYPE>& dm() const
     {
         exitWithErrorMessage("dm");

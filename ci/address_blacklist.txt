@@ -1,0 +1,10 @@
+leak:libopen-pal.so
+leak:mca_io_ompio.so
+leak:mca_pmix_pmix112.so
+leak:mca_sharedfp_sm.so
+leak:libltdl.so
+leak:mca_fcoll_two_phase.so
+leak:ld-linux-x86-64.so
+leak:libmpi.so
+leak:libscalapack-openmpi.so
+leak:libhdf5_openmpi.so

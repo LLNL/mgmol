@@ -910,7 +910,6 @@ void VariableSizeMatrix<T>::axpy(
     for (int i = 0; i < n; i++)
     {
         data_[i]->axpy(B.getRow(i), alpha);
-        i++;
     }
 }
 
