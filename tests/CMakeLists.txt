@@ -165,6 +165,13 @@ add_test(NAME Davidson
          ${CMAKE_CURRENT_SOURCE_DIR}/Davidson/davidson.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/Davidson/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+add_test(NAME testMVP
+         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/MVP/test.py
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+         ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
+         ${CMAKE_CURRENT_SOURCE_DIR}/MVP/mvp.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/MVP/coords.in
+         ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME testFatom
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Fatom/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
