@@ -31,6 +31,11 @@ void increaseMemorySlotsForOrbitals()
             BlockVector<ORBDTYPE>::incMaxAllocInstances(4);
             break;
         }
+        case OuterSolverType::Davidson:
+        {
+            BlockVector<ORBDTYPE>::incMaxAllocInstances(2);
+            break;
+        }
         default:
             break;
     }

@@ -1,0 +1,806 @@
+// Copyright (c) 2017, Lawrence Livermore National Security, LLC. Produced at
+// the Lawrence Livermore National Laboratory.
+// Written by J.-L. Fattebert, D. Osei-Kuffuor and I.S. Dunn.
+// LLNL-CODE-743438
+// All rights reserved.
+// This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
+// Please also read this link https://github.com/llnl/mgmol/LICENSE
+
+#include "DavidsonSolver.h"
+#include "Control.h"
+#include "DistMatrixWithSparseComponent.h"
+#include "Electrostatic.h"
+#include "Energy.h"
+#include "ExtendedGridOrbitals.h"
+#include "Hamiltonian.h"
+#include "Ions.h"
+#include "KBPsiMatrixSparse.h"
+#include "LocGridOrbitals.h"
+#include "MGmol.h"
+#include "Potentials.h"
+#include "ProjectedMatrices2N.h"
+#include "Rho.h"
+#include "tools.h"
+
+#include <iomanip>
+
+template <class T>
+Timer DavidsonSolver<T>::solve_tm_("DavidsonSolver::solve");
+template <class T>
+Timer DavidsonSolver<T>::target_tm_("DavidsonSolver::target");
+
+static int sparse_distmatrix_nb_partitions = 128;
+
+double evalEntropy(ProjectedMatricesInterface* projmatrices,
+    const bool print_flag, std::ostream& os)
+{
+    const double ts = 0.5 * projmatrices->computeEntropy(); // in [Ha]
+    if (onpe0 && print_flag)
+        os << std::setprecision(8) << "compute Entropy: TS=" << ts << "[Ha]"
+           << std::endl;
+
+    return ts;
+}
+
+template <class T>
+DavidsonSolver<T>::DavidsonSolver(MPI_Comm comm, std::ostream& os, Ions& ions,
+    Hamiltonian<T>* hamiltonian, Rho<T>* rho, Energy<T>* energy,
+    Electrostatic* electrostat, MGmol<T>* mgmol_strategy, const int numst,
+    const double kbT, const int nel,
+    const std::vector<std::vector<int>>& global_indexes)
+    : comm_(comm), os_(os), ions_(ions), hamiltonian_(hamiltonian),
+      rho_(rho), energy_(energy), electrostat_(electrostat),
+      mgmol_strategy_(mgmol_strategy)
+{
+    history_length_ = 2;
+    eks_history_.resize(history_length_, 100000.);
+
+    numst_  = numst;
+    work2N_.reset( new dist_matrix::DistMatrix<DISTMATDTYPE>(
+        "work2N", 2 * numst_, 2 * numst_));
+
+    proj_mat2N_.reset( new ProjectedMatrices2N(2 * numst_, false));
+    proj_mat2N_->setup(kbT, nel, global_indexes);
+}
+
+template <class T>
+DavidsonSolver<T>::~DavidsonSolver()
+{
+}
+
+template <class T>
+int DavidsonSolver<T>::checkConvergence(
+    const double e0, const int it, const double tol)
+{
+    // save energy recent history
+    for (int i = history_length_ - 1; i > 0; i--)
+        eks_history_[i] = eks_history_[i - 1];
+
+    eks_history_[0] = e0;
+    de_old_         = de_;
+    de_             = fabs(eks_history_[0] - eks_history_[1]);
+    double de2      = std::max(de_, de_old_);
+    if (onpe0)
+    {
+        os_ << std::setprecision(12) << std::fixed << "%%    " << it
+            << " SC ENERGY = " << eks_history_[0];
+        os_ << std::setprecision(2) << std::scientific
+            << ", delta Eks = " << de_ << std::endl;
+    }
+
+    // test if this iteration seems converged
+    int retval = 1;
+    if (it > 2 && de2 < tol)
+    {
+        if (onpe0)
+            os_ << std::endl
+                << std::endl
+                << " DavidsonSolver: convergence achieved..." << std::endl;
+        retval = 0;
+    }
+    return retval;
+}
+
+//template <class T>
+//void DavidsonSolver<T>::swapColumnsVect(
+//    dist_matrix::DistMatrix<DISTMATDTYPE>& evect,
+//    const dist_matrix::DistMatrix<DISTMATDTYPE>& hb2N,
+//    const std::vector<DISTMATDTYPE>& eval,
+//    dist_matrix::DistMatrix<DISTMATDTYPE>& work2N)
+//{
+//    const int two_numst = (int)eval.size();
+//    const int numst     = two_numst / 2;
+//
+//    Control& ct = *(Control::instance());
+//
+//    // count number of values smaller than tol
+//    int n            = 0;
+//    const double tol = 1.e-8;
+//    while (eval[n] < tol)
+//    {
+//        n++;
+//    }
+//#ifdef USE_MPI
+//    MPI_Bcast(&n, 1, MPI_INT, 0, comm_);
+//#endif
+//    if (n <= numst) return;
+//
+//    // build H matrix in basis of evect
+//    dist_matrix::DistMatrix<DISTMATDTYPE> hrot("hrot", two_numst, two_numst);
+//    hrot = hb2N;
+//    rotateSym(hrot, evect, work2N);
+//
+//    // compute eigenvalues of rotated H
+//    std::vector<DISTMATDTYPE> hdval(two_numst);
+//    hrot.getDiagonalValues(&hdval[0]);
+//
+//    while (n > numst)
+//    {
+//        int index           = n - 1;
+//        DISTMATDTYPE minval = hdval[index];
+//
+//        // find smallest diagonal values for hrot
+//        for (int i = 0; i < n - 1; i++)
+//        {
+//            if (hdval[i] < minval)
+//            {
+//                minval = hdval[i];
+//                index  = i;
+//            }
+//        }
+//#ifdef USE_MPI
+//        MPI_Bcast(&index, 1, MPI_INT, 0, comm_);
+//#endif
+//        if (index != n - 1)
+//        {
+//            if (onpe0 && ct.verbose > 2)
+//                os_ << "Swap vectors " << index << " and " << n - 1
+//                    << " with eigenvalues (for H) " << hdval[index] << " and "
+//                    << hdval[n - 1] << std::endl;
+//            evect.swapColumns(index, n - 1);
+//            const DISTMATDTYPE tmp = hdval[index];
+//            hdval[index]           = hdval[n - 1];
+//            hdval[n - 1]           = tmp;
+//        }
+//
+//        n--;
+//    }
+//}
+
+template <class T>
+double DavidsonSolver<T>::evaluateDerivative(
+    dist_matrix::DistMatrix<DISTMATDTYPE>& dm2Ninit,
+    dist_matrix::DistMatrix<DISTMATDTYPE>& delta_dm, const double ts0)
+{
+    work2N_->symm('l', 'l', 1., proj_mat2N_->getMatHB(), delta_dm, 0.);
+
+    // factor 0.5 to get value in Hartree (HB is in Rydberg)
+    double de0  = 0.5 * work2N_->trace();
+    Control& ct = *(Control::instance());
+    if (onpe0 && ct.verbose > 2)
+        os_ << "Derivative of U in 0 = " << de0 << std::endl;
+
+    //
+    // evaluate numerical derivative of entropy in beta=0
+    //
+    // if( onpe0 ) os_<<"evaluate numerical derivative of entropy in
+    // beta=0"<<endl;
+    const double dbeta = 0.0001;
+    *work2N_           = dm2Ninit;
+    work2N_->axpy(dbeta, delta_dm);
+    // proj_mat2N_->setDM(*work2N_,orbitals.getIterativeIndex());
+    proj_mat2N_->setDM(*work2N_, -1);
+    proj_mat2N_->computeOccupationsFromDM();
+
+    const double tsd0e = evalEntropy(proj_mat2N_.get(), false, os_);
+    const double dts0e = (tsd0e - ts0) / dbeta;
+    if (onpe0 && ct.verbose > 2)
+    {
+        os_ << "Numerical derivative of -TS in 0 = " << std::scientific
+            << -dts0e << std::endl;
+        os_ << "interval for finite differences = " << dbeta << std::endl;
+    }
+    de0 -= dts0e;
+
+    return de0;
+}
+
+template <class T>
+void DavidsonSolver<T>::buildTarget2N_MVP(
+    dist_matrix::DistMatrix<DISTMATDTYPE>& h11,
+    dist_matrix::DistMatrix<DISTMATDTYPE>& h12,
+    dist_matrix::DistMatrix<DISTMATDTYPE>& h21,
+    dist_matrix::DistMatrix<DISTMATDTYPE>& h22,
+    dist_matrix::DistMatrix<DISTMATDTYPE>& s11,
+    dist_matrix::DistMatrix<DISTMATDTYPE>& s22,
+    dist_matrix::DistMatrix<DISTMATDTYPE>& target)
+{
+    target_tm_.start();
+
+    Control& ct = *(Control::instance());
+
+    proj_mat2N_->assignBlocksH(h11, h12, h21, h22);
+
+    // if( onpe0 )os_<<"Build S2N..."<<endl;
+    dist_matrix::DistMatrix<DISTMATDTYPE> s2N("s2N", 2 * numst_, 2 * numst_);
+    s2N.assign(s11, 0, 0);
+    // s2N.assign(s12,0,numst_);
+    // s2N.assign(s21,numst_,0);
+    s2N.assign(s22, numst_, numst_);
+
+    int orbitals_index = 0;
+    proj_mat2N_->setGramMatrix(s2N, orbitals_index);
+
+    //
+    // compute target density matrix, with occupations>0 in numst only
+    //
+    // if( onpe0 )os_<<"Compute X2N..."<<endl;
+    proj_mat2N_->setHB2H();
+
+    if (onpe0 && ct.verbose > 2)
+        os_ << "Compute X2N with Nel=" << ct.getNel() << std::endl;
+
+    proj_mat2N_->updateDM(orbitals_index);
+
+    target = proj_mat2N_->dm();
+
+    if (ct.verbose > 2)
+    {
+        double pnel = proj_mat2N_->getNel();
+        if (onpe0) os_ << "Number of electrons = " << pnel << std::endl;
+    }
+
+    target_tm_.stop();
+}
+
+//template <class T>
+//void DavidsonSolver<T>::buildTarget2N_new(
+//    dist_matrix::DistMatrix<DISTMATDTYPE>& h11,
+//    dist_matrix::DistMatrix<DISTMATDTYPE>& h12,
+//    dist_matrix::DistMatrix<DISTMATDTYPE>& h21,
+//    dist_matrix::DistMatrix<DISTMATDTYPE>& h22,
+//    dist_matrix::DistMatrix<DISTMATDTYPE>& s11,
+//    dist_matrix::DistMatrix<DISTMATDTYPE>& s22,
+//    const std::vector<DISTMATDTYPE>& occ,
+//    const std::vector<DISTMATDTYPE>& auxenergies, const double kbT,
+//    const double eta, dist_matrix::DistMatrix<DISTMATDTYPE>& target)
+//{
+//    proj_mat2N_->assignBlocksH(h11, h12, h21, h22);
+//
+//    // if( onpe0 )os_<<"Build S2N..."<<endl;
+//    dist_matrix::DistMatrix<DISTMATDTYPE> s2N("s2N", 2 * numst_, 2 * numst_);
+//    s2N.assign(s11, 0, 0);
+//    // s2N.assign(s12,0,numst_);
+//    // s2N.assign(s21,numst_,0);
+//    s2N.assign(s22, numst_, numst_);
+//
+//    int orbitals_index = 0;
+//    proj_mat2N_->setGramMatrix(s2N, orbitals_index);
+//
+//    //
+//    // compute target density matrix, with occupations>0 in numst only
+//    //
+//    // if( onpe0 )os_<<"Compute X2N..."<<endl;
+//    std::vector<DISTMATDTYPE> eigenval(2 * numst_);
+//    proj_mat2N_->setHB2H();
+//    proj_mat2N_->solveGenEigenProblem(*work2N_, eigenval);
+//    // if( onpe0 )
+//    // for(int i=0;i<2*numst;i++)
+//    //    os_<<"eigenvalue of HB"<<i<<"="<<eigenval[i]<<endl;
+//
+//    std::vector<DISTMATDTYPE> dedf(numst_, 0.);
+//    const double tol = 1.e-12;
+//    double mu        = 0.;
+//    double mup       = 0.;
+//    for (int i = 0; i < numst_; i++)
+//    {
+//        os_ << std::scientific;
+//        os_ << std::setprecision(10);
+//        // if( onpe0 )os_<<"auxenergies[i]="<<auxenergies[i]<<endl;
+//        // if( onpe0 )os_<<"occ[i]="<<occ[i]<<endl;
+//        // if( onpe0 )os_<<"log(1.-occ[i])="<<log(1.-occ[i])<<endl;
+//        // if( onpe0 )os_<<"log(occ[i])="<<log(occ[i])<<endl;
+//        if (occ[i] > tol && occ[i] < (1. - tol))
+//            dedf[i]
+//                = -2. * (1. - occ[i]) * occ[i]
+//                  * (auxenergies[i] - kbT * (log(1. - occ[i]) - log(occ[i])))
+//                  / kbT;
+//        mu += dedf[i];
+//        mup += -2. * (1. - occ[i]) * occ[i] / kbT;
+//    }
+//    if (fabs(mup) > 1.e-6) mu /= mup;
+//    if (onpe0)
+//    {
+//        os_ << "mu=" << mu << std::endl;
+//        os_ << "mup=" << mup << std::endl;
+//    }
+//    for (int i = 0; i < numst_; i++)
+//        dedf[i] += 2. * mu * (1. - occ[i]) * occ[i] / kbT;
+//
+//    std::vector<DISTMATDTYPE> occ2N(2 * numst_, 0.);
+//
+//    if (onpe0)
+//    {
+//        os_ << "eta=" << eta << std::endl;
+//    }
+//    double sum = 0.;
+//    for (int i = 0; i < numst_; i++)
+//    {
+//        occ2N[numst_ - i - 1] = occ[i] + eta * dedf[i];
+//        sum += dedf[i];
+//        if (onpe0)
+//            os_ << "occ2N[numst-i-1]=" << occ2N[numst_ - i - 1] << std::endl;
+//    }
+//    if (onpe0) os_ << "sum=" << sum << std::endl;
+//
+//    // proj_mat2N_->updateAuxilliaryEnergies();
+//    // proj_mat2N_->computeChemicalPotentialAndOccupations(ct.occ_width,ct.getNel(),numst_);
+//    proj_mat2N_->buildDM(*work2N_, occ2N, orbitals_index);
+//
+//    Control& ct = *(Control::instance());
+//    if (ct.verbose > 2)
+//    {
+//        double pnel = proj_mat2N_->getNel();
+//        if (onpe0) os_ << "Number of electrons = " << pnel << std::endl;
+//    }
+//
+//    target = proj_mat2N_->dm();
+//}
+
+// update density matrix in 2N x 2N space
+template <class T>
+int DavidsonSolver<T>::solve(T& orbitals, T& work_orbitals)
+{
+    assert(numst_ = (int)orbitals.numst());
+
+    solve_tm_.start();
+
+    int retval = 1; // 0 -> converged
+
+    Control& ct = *(Control::instance());
+    if (onpe0 && ct.verbose > 1)
+    {
+        os_ << "---------------------------------------------------------------"
+               "-"
+            << std::endl;
+        os_ << "Update DM and wave functions using Davidson Solver..."
+            << std::endl;
+        os_ << "---------------------------------------------------------------"
+               "-"
+            << std::endl;
+    }
+    // step for numerical derivative
+
+    Potentials& pot = hamiltonian_->potential();
+
+    // double nel=orbitals.projMatrices()->getNel();
+    // if( onpe0 )
+    //    os_<<"NEW algorithm: Number of electrons at start = "<<nel<<endl;
+    de_old_ = 100000.;
+    de_     = 100000.;
+
+    KBPsiMatrixSparse kbpsi_1(0);
+    kbpsi_1.setup(ions_, orbitals);
+    KBPsiMatrixSparse kbpsi_2(0);
+    kbpsi_2.setup(ions_, orbitals);
+
+    dist_matrix::DistMatrix<DISTMATDTYPE> s11("s11", numst_, numst_);
+    dist_matrix::DistMatrix<DISTMATDTYPE> s22("s22", numst_, numst_);
+    s11.identity();
+    s22.identity();
+
+    for (int outer_it = 0; outer_it <= ct.max_electronic_steps; outer_it++)
+    {
+        ProjectedMatricesInterface* proj_matN = orbitals.getProjMatrices();
+        if (onpe0 && ct.verbose > 1)
+        {
+            os_ << "###########################" << std::endl;
+            os_ << "DavidsonSolver -> Iteration " << outer_it << std::endl;
+            os_ << "###########################" << std::endl;
+        }
+        T tmp_orbitals("Davidson_tmp", orbitals);
+        dist_matrix::DistMatrix<DISTMATDTYPE> dm2Ninit(
+            "dm2N", 2 * numst_, 2 * numst_);
+        std::vector<DISTMATDTYPE> eval(2 * numst_);
+        dist_matrix::DistMatrix<DISTMATDTYPE> evect(
+            "EigVect", 2 * numst_, 2 * numst_);
+
+        dist_matrix::DistMatrix<DISTMATDTYPE> dm11("dm11", numst_, numst_);
+        dist_matrix::DistMatrix<DISTMATDTYPE> dm12("dm12", numst_, numst_);
+        dist_matrix::DistMatrix<DISTMATDTYPE> dm21("dm21", numst_, numst_);
+        dist_matrix::DistMatrix<DISTMATDTYPE> dm22("dm22", numst_, numst_);
+
+        // save computed vh for a fair energy "comparison" with vh computed
+        // in close neigborhood
+        const pb::GridFunc<POTDTYPE> vh_init(electrostat_->getVh());
+
+        orbitals.setDataWithGhosts();
+
+        // Update density
+        rho_->update(orbitals);
+
+        dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE> h11(
+            "h11", numst_, numst_, comm_, sparse_distmatrix_nb_partitions);
+        dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE> h22(
+            "h22", numst_, numst_, comm_, sparse_distmatrix_nb_partitions);
+        dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE> h12(
+            "h12", numst_, numst_, comm_, sparse_distmatrix_nb_partitions);
+        dist_matrix::DistMatrix<DISTMATDTYPE> h21("h21", numst_, numst_);
+
+        kbpsi_1.computeAll(ions_, orbitals);
+
+        kbpsi_1.computeHvnlMatrix(&kbpsi_1, ions_, h11);
+
+        for (int inner_it = 0; inner_it < ct.dm_inner_steps; inner_it++)
+        {
+            if (onpe0 && ct.verbose > 1)
+            {
+                os_ << "---------------------------" << std::endl;
+                os_ << "Inner iteration " << inner_it << std::endl;
+                os_ << "---------------------------" << std::endl;
+            }
+
+            // Update potential
+            mgmol_strategy_->update_pot(vh_init, ions_);
+
+            energy_->saveVofRho();
+
+            ProjectedMatricesInterface* current_proj_mat
+                = (inner_it == 0) ? proj_matN : proj_mat2N_.get();
+            if (ct.verbose > 2) current_proj_mat->printOccupations(os_);
+
+            double ts0;
+            double e0        = 0.;
+            const int printE = (ct.verbose > 1 || outer_it % 10 == 0) ? 1 : 0;
+
+            if (inner_it == 0)
+            {
+                // orbitals are new, so a few things need to recomputed
+                ProjectedMatrices* projmatrices
+                    = dynamic_cast<ProjectedMatrices*>(
+                        orbitals.getProjMatrices());
+
+                // get H*psi stored in work_orbitals
+                // h11 computed at the same time
+                mgmol_strategy_->computePrecondResidual(orbitals, tmp_orbitals,
+                    work_orbitals, ions_, &kbpsi_1, false, false);
+
+                projmatrices->setHB2H();
+
+                h11 = projmatrices->getH();
+
+                // if( onpe0 )os_<<"H11..."<<endl;
+                // h11.print(os_,0,0,5,5);
+                // if( onpe0 )os_<<"Matrices..."<<endl;
+                // projmatrices->printMatrices(cout);
+
+                ts0 = evalEntropy(projmatrices, true, os_);
+                e0  = energy_->evaluateTotal(
+                    ts0, projmatrices, orbitals, printE, os_);
+                retval = checkConvergence(e0, outer_it, ct.conv_tol);
+                if (retval == 0 || (outer_it == ct.max_electronic_steps))
+                {
+                    break;
+                }
+
+                orbitals.projectOut(work_orbitals);
+                // normalize first as these vectors can become quite small...
+                work_orbitals.normalize();
+                work_orbitals.orthonormalizeLoewdin(false, nullptr, false);
+                work_orbitals.setIterativeIndex(
+                    orbitals.getIterativeIndex() + 1000);
+
+                work_orbitals.setDataWithGhosts();
+                kbpsi_2.computeAll(ions_, work_orbitals);
+
+                kbpsi_2.computeHvnlMatrix(&kbpsi_2, ions_, h22);
+                kbpsi_1.computeHvnlMatrix(&kbpsi_2, ions_, h12);
+            }
+            else
+            {
+                mgmol_strategy_->addHlocal2matrix(orbitals, orbitals, h11);
+            }
+
+            // update h22, h12 and h21
+            {
+                mgmol_strategy_->addHlocal2matrix(
+                    work_orbitals, work_orbitals, h22);
+
+                mgmol_strategy_->addHlocal2matrix(orbitals, work_orbitals, h12);
+            }
+
+            // mgmol_strategy_->computeHij(work_orbitals, work_orbitals, ions_,
+            //   &kbpsi_2, &kbpsi_2,
+            //   h22);
+
+            // mgmol_strategy_->computeHij(orbitals, work_orbitals, ions_,
+            //   &kbpsi_1, &kbpsi_2,
+            //   h12);
+
+            h21.transpose(1., h12, 0.);
+
+            if (inner_it == 0)
+            {
+                dm2Ninit.assign(current_proj_mat->dm(), 0, 0);
+            }
+            else
+            {
+                dm2Ninit = proj_mat2N_->dm();
+
+                proj_mat2N_->assignBlocksH(h11, h12, h21, h22);
+                proj_mat2N_->setHB2H();
+
+                ts0 = evalEntropy(proj_mat2N_.get(), true, os_);
+                e0  = energy_->evaluateTotal(
+                    ts0, proj_mat2N_.get(), orbitals, printE, os_);
+            }
+
+            // 2N x 2N target...
+            proj_mat2N_->setHiterativeIndex(
+                orbitals.getIterativeIndex(), pot.getIterativeIndex());
+
+            dist_matrix::DistMatrix<DISTMATDTYPE> target(
+                "target", 2 * numst_, 2 * numst_);
+
+            double de0 = 0.;
+            dist_matrix::DistMatrix<DISTMATDTYPE> delta_dm(
+                "delta_dm", 2 * numst_, 2 * numst_);
+
+            buildTarget2N_MVP(h11, h12, h21, h22, s11, s22, target);
+
+            delta_dm = target;
+            delta_dm -= dm2Ninit;
+
+            de0 = evaluateDerivative(dm2Ninit, delta_dm, ts0);
+
+            //
+            // evaluate free energy at beta=1
+            //
+            if (onpe0 && ct.verbose > 2)
+                std::cout << "Target energy..." << std::endl;
+            proj_mat2N_->setDM(target, orbitals.getIterativeIndex());
+            proj_mat2N_->computeOccupationsFromDM();
+            double nel = proj_mat2N_->getNel();
+            if (onpe0 && ct.verbose > 2)
+                os_ << "Number of electrons at beta=1 : " << nel << std::endl;
+
+            dm11.getsub(target, numst_, numst_, 0, 0);
+            dm12.getsub(target, numst_, numst_, 0, numst_);
+            dm21.getsub(target, numst_, numst_, numst_, 0);
+            dm22.getsub(target, numst_, numst_, numst_, numst_);
+
+            // if( onpe0 )os_<<"Rho..."<<endl;
+            rho_->computeRho(orbitals, work_orbitals, dm11, dm12, dm21, dm22);
+            rho_->rescaleTotalCharge();
+
+            mgmol_strategy_->update_pot(vh_init, ions_);
+
+            energy_->saveVofRho();
+
+            // update h11, h22, h12, and h21
+            mgmol_strategy_->addHlocal2matrix(orbitals, orbitals, h11);
+
+            mgmol_strategy_->addHlocal2matrix(
+                  work_orbitals, work_orbitals, h22);
+
+            mgmol_strategy_->addHlocal2matrix(orbitals, work_orbitals, h12);
+
+            h21.transpose(1., h12, 0.);
+
+            proj_mat2N_->assignBlocksH(h11, h12, h21, h22);
+            proj_mat2N_->setHB2H();
+
+            const double ts1 = evalEntropy(proj_mat2N_.get(), (ct.verbose > 2), os_);
+            const double e1  = energy_->evaluateTotal(
+                ts1, proj_mat2N_.get(), orbitals, ct.verbose - 1, os_);
+
+            // line minimization
+            double beta = minQuadPolynomial(e0, e1, de0, (ct.verbose > 2), os_);
+
+            if (onpe0 && ct.verbose > 1)
+            {
+                os_ << std::setprecision(12);
+                os_ << std::fixed << "Inner iteration " << inner_it
+                    << ", E0=" << e0 << ", E1=" << e1;
+                os_ << std::scientific << ", E0'=" << de0
+                    << " -> beta=" << beta;
+                // os_<<scientific<<", E1'="<<de1;
+                os_ << std::endl;
+            }
+
+            // update DM
+            *work2N_ = dm2Ninit;
+            work2N_->axpy(beta, delta_dm);
+            proj_mat2N_->setDM(*work2N_, orbitals.getIterativeIndex());
+
+            if (inner_it < ct.dm_inner_steps - 1)
+            {
+                dm11.getsub(*work2N_, numst_, numst_, 0, 0);
+                dm12.getsub(*work2N_, numst_, numst_, 0, numst_);
+                dm21.getsub(*work2N_, numst_, numst_, numst_, 0);
+                dm22.getsub(*work2N_, numst_, numst_, numst_, numst_);
+
+                if (ct.verbose > 2)
+                {
+                    double pnel = proj_mat2N_->getNel();
+                    if (onpe0)
+                        os_ << "Number of electrons for interpolated DM = "
+                            << pnel << std::endl;
+                }
+
+                // if( onpe0 )os_<<"Rho..."<<endl;
+                rho_->computeRho(
+                    orbitals, work_orbitals, dm11, dm12, dm21, dm22);
+                rho_->rescaleTotalCharge();
+            }
+
+        } // inner iterations
+
+        // update orbitals
+        proj_mat2N_->diagonalizeDM(eval, evect);
+#if 1
+        if (onpe0 && ct.verbose > 2)
+        {
+            os_ << "Eigenvalues of Interpolated DM: " << std::endl;
+            os_ << std::fixed << std::setprecision(4);
+            for (int i = 0; i < eval.size(); i++)
+            {
+                os_ << eval[i];
+                if (i % 10 == 9)
+                    os_ << std::endl;
+                else
+                    os_ << "  ";
+            }
+            os_ << std::endl;
+        }
+        // double tot=0.;
+        // for(int i=0;i<numst_;i++){
+        //    tot+=eval[numst_+i];
+        //}
+        // if( onpe0 && ct.verbose>2 )
+        //    os_<<"Total occupations for top half states=
+        //    "<<setprecision(15)<<tot<<endl;
+#endif
+
+        // to differentiate very low occupation vectors, extract those with
+        // lowest energy
+        //        dist_matrix::DistMatrix<DISTMATDTYPE>  z2N("z2N",2*numst_,
+        //        2*numst_); swapColumnsVect(evect, proj_mat2N_->getMatHB(),
+        //        eval, z2N );
+
+        dm12.getsub(evect, numst_, numst_, 0, numst_);
+        dm22.getsub(evect, numst_, numst_, numst_, numst_);
+
+        // replace orbitals with eigenvectors corresponding to largest
+        // eigenvalues of DM
+        orbitals.multiply_by_matrix(dm12);
+        work_orbitals.multiply_by_matrix(dm22);
+        orbitals.axpy(1., work_orbitals);
+        orbitals.incrementIterativeIndex();
+        orbitals.incrementIterativeIndex();
+        work_orbitals.incrementIterativeIndex(2);
+
+        std::vector<double> new_occ(numst_);
+        double tocc = 0.;
+        for (int i = 0; i < numst_; i++)
+        {
+            new_occ[i] = 0.5 * eval[numst_ + i];
+            tocc += new_occ[i];
+        }
+        if (onpe0 && ct.verbose > 2)
+            os_ << std::setprecision(15) << "N el. = " << ct.getNel()
+                << std::endl;
+        double kbT = ct.occ_width;
+        if (onpe0 && ct.verbose > 2)
+            os_ << "Total occupations for kbT = " << kbT << ": "
+                << std::setprecision(15) << 2. * tocc << std::endl;
+
+#if 0 // use lower T?
+        const double tol_sum_occ=1.e-2;
+        if( (0.5*ct.getNel()-tocc)>tol_sum_occ )
+        {
+            ProjectedMatrices* projmatrices=dynamic_cast<ProjectedMatrices*>( orbitals.getProjMatrices() );
+            assert( projmatrices!=0 );
+            projmatrices->setOccupations(new_occ);
+            projmatrices->setAuxilliaryEnergiesFromOccupations();
+            while( (0.5*ct.getNel()-tocc)>tol_sum_occ )
+            {
+                kbT*=0.5;
+                projmatrices->computeChemicalPotentialAndOccupations(kbT,ct.getNel(),numst_);
+                projmatrices->getOccupations(new_occ);
+            
+                tocc=0.;
+                for(int j=0;j<numst_;j++)
+                {
+                    tocc+=new_occ[j];
+                }
+                if( onpe0 && ct.verbose>2 )
+                    os_<<"Total occupations for kbT = "<<kbT<<": "<<setprecision(15)<<2.*tocc<<endl;
+            }
+        }
+        
+        //if( onpe0 && (it%10)==0 && ct.verbose>2 )
+        if( onpe0 )
+        {
+            os_<<"New occupations: "<<endl;
+            os_<<fixed<<setprecision(4);
+            for(int i=0;i<numst_;i++)
+            {
+                os_<<new_occ[i];
+                if( i%10==9 )os_<<endl;
+                else         os_<<"  ";
+            }
+            os_<<endl;
+        }
+#endif
+#if 1
+        // add occupation to lowest states until ct.getNel() is reached
+        if (onpe0 && ct.verbose > 2)
+            os_ << "Total occupations before correction = "
+                << std::setprecision(15) << 2. * tocc << std::endl;
+        int j = numst_ - 1;
+        while ((0.5 * ct.getNel() - tocc) > 1.e-8 && j >= 0)
+        {
+            const double delta = 0.5 * ct.getNel() - tocc;
+            tocc -= new_occ[j];
+            new_occ[j] = std::min(1., new_occ[j] + delta);
+            tocc += new_occ[j];
+            j--;
+            // if( onpe0 && ct.verbose>2 )
+            //    os_<<"Total occupations = "<<setprecision(15)<<2.*tocc<<endl;
+        }
+        if (onpe0 && ct.verbose > 2)
+            os_ << "Total occupations = " << std::setprecision(15) << 2. * tocc
+                << std::endl;
+
+        if (onpe0 && (outer_it % 10) == 0 && ct.verbose > 2)
+        {
+            os_ << "Final Occupations: " << std::endl;
+            os_ << std::fixed << std::setprecision(4);
+            for (int i = 0; i < numst_; i++)
+            {
+                os_ << new_occ[i];
+                if (i % 10 == 9)
+                    os_ << std::endl;
+                else
+                    os_ << "  ";
+            }
+            os_ << std::endl;
+        }
+#endif
+
+        // build diagonal DM (orbitals are now eigenvectors of DM)
+        ProjectedMatrices* pmat
+            = dynamic_cast<ProjectedMatrices*>(orbitals.getProjMatrices());
+        assert(pmat);
+        pmat->buildDM(new_occ, orbitals.getIterativeIndex());
+
+        if (retval == 0) break;
+
+    } // loop over wave functions updates
+
+    // Generate new density
+    rho_->update(orbitals);
+
+    if (onpe0 && ct.verbose > 1)
+    {
+        os_ << "------------------------------------------------------------"
+            << std::endl;
+        os_ << "End Davidson Solver..." << std::endl;
+        os_ << "------------------------------------------------------------"
+            << std::endl;
+    }
+    solve_tm_.stop();
+
+    return retval;
+}
+
+template <class T>
+void DavidsonSolver<T>::printTimers(std::ostream& os)
+{
+    solve_tm_.print(os);
+    target_tm_.print(os);
+}
+
+template class DavidsonSolver<LocGridOrbitals>;
+template class DavidsonSolver<ExtendedGridOrbitals>;

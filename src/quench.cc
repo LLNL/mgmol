@@ -22,6 +22,7 @@
 #include "Control.h"
 #include "DFTsolver.h"
 #include "DMStrategy.h"
+#include "DavidsonSolver.h"
 #include "Electrostatic.h"
 #include "Energy.h"
 #include "Hamiltonian.h"
@@ -486,6 +487,16 @@ int MGmol<T>::quench(T* orbitals, Ions& ions, const int max_inner_steps,
             retval = solver.solve(
                 *orbitals, work_orbitals, ions, max_steps, iprint, last_eks);
 
+            break;
+        }
+
+        case OuterSolverType::Davidson:
+        {
+            DavidsonSolver<T> solver(comm_, os_, *ions_, hamiltonian_, rho_,
+                energy_, electrostat_, this, ct.numst, ct.occ_width,
+                ct.getNel(), gids);
+
+            retval = solver.solve(*orbitals, work_orbitals);
             break;
         }
 

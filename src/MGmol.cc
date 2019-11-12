@@ -22,6 +22,7 @@
 #include "Control.h"
 #include "DFTsolver.h"
 #include "DMStrategyFactory.h"
+#include "DavidsonSolver.h"
 #include "DistMatrix.h"
 #include "DistMatrix2SquareLocalMatrices.h"
 #include "Electrostatic.h"
@@ -915,6 +916,7 @@ void MGmol<T>::printTimers()
     HDFrestart::printTimers(os_);
     BlockVector<ORBDTYPE>::printTimers(os_);
     OrbitalsPreconditioning<T>::printTimers(os_);
+    DavidsonSolver<ExtendedGridOrbitals>::printTimers(os_);
     MDfiles::printTimers(os_);
 }
 
