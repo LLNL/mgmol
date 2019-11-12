@@ -50,7 +50,7 @@ private:
     static Timer solve_tm_;
     static Timer target_tm_;
 
-    //void swapColumnsVect(dist_matrix::DistMatrix<DISTMATDTYPE>& evect,
+    // void swapColumnsVect(dist_matrix::DistMatrix<DISTMATDTYPE>& evect,
     //    const dist_matrix::DistMatrix<DISTMATDTYPE>& hb2N,
     //    const std::vector<DISTMATDTYPE>& eval,
     //    dist_matrix::DistMatrix<DISTMATDTYPE>& work2N);
@@ -64,7 +64,7 @@ private:
         dist_matrix::DistMatrix<DISTMATDTYPE>& s11,
         dist_matrix::DistMatrix<DISTMATDTYPE>& s22,
         dist_matrix::DistMatrix<DISTMATDTYPE>& target);
-    //void buildTarget2N_new(dist_matrix::DistMatrix<DISTMATDTYPE>& h11,
+    // void buildTarget2N_new(dist_matrix::DistMatrix<DISTMATDTYPE>& h11,
     //    dist_matrix::DistMatrix<DISTMATDTYPE>& h12,
     //    dist_matrix::DistMatrix<DISTMATDTYPE>& h21,
     //    dist_matrix::DistMatrix<DISTMATDTYPE>& h22,

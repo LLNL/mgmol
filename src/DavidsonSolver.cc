@@ -48,18 +48,23 @@ DavidsonSolver<T>::DavidsonSolver(MPI_Comm comm, std::ostream& os, Ions& ions,
     Electrostatic* electrostat, MGmol<T>* mgmol_strategy, const int numst,
     const double kbT, const int nel,
     const std::vector<std::vector<int>>& global_indexes)
-    : comm_(comm), os_(os), ions_(ions), hamiltonian_(hamiltonian),
-      rho_(rho), energy_(energy), electrostat_(electrostat),
+    : comm_(comm),
+      os_(os),
+      ions_(ions),
+      hamiltonian_(hamiltonian),
+      rho_(rho),
+      energy_(energy),
+      electrostat_(electrostat),
       mgmol_strategy_(mgmol_strategy)
 {
     history_length_ = 2;
     eks_history_.resize(history_length_, 100000.);
 
-    numst_  = numst;
-    work2N_.reset( new dist_matrix::DistMatrix<DISTMATDTYPE>(
+    numst_ = numst;
+    work2N_.reset(new dist_matrix::DistMatrix<DISTMATDTYPE>(
         "work2N", 2 * numst_, 2 * numst_));
 
-    proj_mat2N_.reset( new ProjectedMatrices2N(2 * numst_, false));
+    proj_mat2N_.reset(new ProjectedMatrices2N(2 * numst_, false));
     proj_mat2N_->setup(kbT, nel, global_indexes);
 }
 
@@ -101,8 +106,8 @@ int DavidsonSolver<T>::checkConvergence(
     return retval;
 }
 
-//template <class T>
-//void DavidsonSolver<T>::swapColumnsVect(
+// template <class T>
+// void DavidsonSolver<T>::swapColumnsVect(
 //    dist_matrix::DistMatrix<DISTMATDTYPE>& evect,
 //    const dist_matrix::DistMatrix<DISTMATDTYPE>& hb2N,
 //    const std::vector<DISTMATDTYPE>& eval,
@@ -253,8 +258,8 @@ void DavidsonSolver<T>::buildTarget2N_MVP(
     target_tm_.stop();
 }
 
-//template <class T>
-//void DavidsonSolver<T>::buildTarget2N_new(
+// template <class T>
+// void DavidsonSolver<T>::buildTarget2N_new(
 //    dist_matrix::DistMatrix<DISTMATDTYPE>& h11,
 //    dist_matrix::DistMatrix<DISTMATDTYPE>& h12,
 //    dist_matrix::DistMatrix<DISTMATDTYPE>& h21,
@@ -334,7 +339,8 @@ void DavidsonSolver<T>::buildTarget2N_MVP(
 //    if (onpe0) os_ << "sum=" << sum << std::endl;
 //
 //    // proj_mat2N_->updateAuxilliaryEnergies();
-//    // proj_mat2N_->computeChemicalPotentialAndOccupations(ct.occ_width,ct.getNel(),numst_);
+//    //
+//    proj_mat2N_->computeChemicalPotentialAndOccupations(ct.occ_width,ct.getNel(),numst_);
 //    proj_mat2N_->buildDM(*work2N_, occ2N, orbitals_index);
 //
 //    Control& ct = *(Control::instance());
@@ -581,7 +587,7 @@ int DavidsonSolver<T>::solve(T& orbitals, T& work_orbitals)
             mgmol_strategy_->addHlocal2matrix(orbitals, orbitals, h11);
 
             mgmol_strategy_->addHlocal2matrix(
-                  work_orbitals, work_orbitals, h22);
+                work_orbitals, work_orbitals, h22);
 
             mgmol_strategy_->addHlocal2matrix(orbitals, work_orbitals, h12);
 
@@ -590,8 +596,9 @@ int DavidsonSolver<T>::solve(T& orbitals, T& work_orbitals)
             proj_mat2N_->assignBlocksH(h11, h12, h21, h22);
             proj_mat2N_->setHB2H();
 
-            const double ts1 = evalEntropy(proj_mat2N_.get(), (ct.verbose > 2), os_);
-            const double e1  = energy_->evaluateTotal(
+            const double ts1
+                = evalEntropy(proj_mat2N_.get(), (ct.verbose > 2), os_);
+            const double e1 = energy_->evaluateTotal(
                 ts1, proj_mat2N_.get(), orbitals, ct.verbose - 1, os_);
 
             // line minimization

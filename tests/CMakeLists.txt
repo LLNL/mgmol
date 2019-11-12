@@ -158,6 +158,13 @@ add_test(NAME testSuperSampling
          ${CMAKE_CURRENT_SOURCE_DIR}/ProjectedMatrices/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/ProjectedMatrices/lrs.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+add_test(NAME Davidson
+         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Davidson/test.py
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+         ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
+         ${CMAKE_CURRENT_SOURCE_DIR}/Davidson/davidson.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/Davidson/coords.in
+         ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME testFatom
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Fatom/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
