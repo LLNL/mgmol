@@ -508,20 +508,10 @@ int DavidsonSolver<T>::solve(T& orbitals, T& work_orbitals)
             }
 
             // update h22, h12 and h21
-            {
-                mgmol_strategy_->addHlocal2matrix(
-                    work_orbitals, work_orbitals, h22);
+            mgmol_strategy_->addHlocal2matrix(
+                work_orbitals, work_orbitals, h22);
 
-                mgmol_strategy_->addHlocal2matrix(orbitals, work_orbitals, h12);
-            }
-
-            // mgmol_strategy_->computeHij(work_orbitals, work_orbitals, ions_,
-            //   &kbpsi_2, &kbpsi_2,
-            //   h22);
-
-            // mgmol_strategy_->computeHij(orbitals, work_orbitals, ions_,
-            //   &kbpsi_1, &kbpsi_2,
-            //   h12);
+            mgmol_strategy_->addHlocal2matrix(orbitals, work_orbitals, h12);
 
             h21.transpose(1., h12, 0.);
 
