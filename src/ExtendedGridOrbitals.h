@@ -12,11 +12,11 @@
 #define MGMOL_EXTENDEDGRIDORBITALS_H
 
 #include "BlockVector.h"
-#include "DataDistribution.h"
 #include "GridFunc.h"
 #include "HDFrestart.h"
 #include "Lap.h"
 #include "MPIdata.h"
+#include "Mesh.h"
 #include "Orbitals.h"
 #include "SinCosOps.h"
 #include "SparseDistMatrix.h"
@@ -96,8 +96,9 @@ private:
 
     void multiply_by_matrix(
         const DISTMATDTYPE* const, ORBDTYPE*, const int) const;
-    void multiply_by_matrix(const dist_matrix::DistMatrix<DISTMATDTYPE>& matrix,
-        ORBDTYPE* const product, const int ldp);
+    // void multiply_by_matrix(const dist_matrix::DistMatrix<DISTMATDTYPE>&
+    // matrix,
+    //    ORBDTYPE* const product, const int ldp);
     void scal(const int i, const double alpha) { block_vector_.scal(i, alpha); }
     virtual void assign(const int i, const ORBDTYPE* const v, const int n = 1)
     {
@@ -131,9 +132,6 @@ private:
     void multiplyByMatrix(const SquareLocalMatrices<MATDTYPE>& matrix,
         ORBDTYPE* product, const int ldp) const;
     void setup();
-
-    /* Data distribution objects */
-    static std::shared_ptr<DataDistribution> distributor_;
 
 protected:
     const pb::Grid& grid_;
@@ -357,6 +355,7 @@ public:
     void multiply_by_matrix(
         const DISTMATDTYPE* const matrix, ExtendedGridOrbitals& product) const;
     void multiply_by_matrix(const dist_matrix::DistMatrix<DISTMATDTYPE>&);
+    void multiply_by_matrix(const std::vector<double>& mat);
     void multiplyByMatrix2states(const int st1, const int st2,
         const double* mat, ExtendedGridOrbitals& product);
 
@@ -381,9 +380,11 @@ public:
         return overlapping_gids_[iloc][color];
     }
     int getColor(const int gid) const { return gid; }
-    void augmentLocalData(VariableSizeMatrix<sparserow>& mat) const
+    double getMaxR() const
     {
-        distributor_->augmentLocalData(mat, true);
+        Mesh* mymesh           = Mesh::instance();
+        const pb::Grid& mygrid = mymesh->grid();
+        return mygrid.maxDomainSize();
     }
 };
 

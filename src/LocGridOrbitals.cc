@@ -719,23 +719,23 @@ int LocGridOrbitals::packStates(LocalizationRegions* lrs)
     return pack_->chromatic_number();
 }
 
-void LocGridOrbitals::multiply_by_matrix(
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& dmatrix,
-    ORBDTYPE* const product, const int ldp)
-{
-#if 0
-    (*MPIdata::sout)<<"self multiply_by_matrix"<<endl;
-#endif
-
-    ReplicatedWorkSpace<DISTMATDTYPE>& wspace(
-        ReplicatedWorkSpace<DISTMATDTYPE>::instance());
-    DISTMATDTYPE* work_matrix = wspace.square_matrix();
-
-    // build a local complete matrix from a distributed matrix
-    dmatrix.allgather(work_matrix, numst_);
-
-    multiply_by_matrix(0, chromatic_number_, work_matrix, product, ldp);
-}
+// void LocGridOrbitals::multiply_by_matrix(
+//    const dist_matrix::DistMatrix<DISTMATDTYPE>& dmatrix,
+//    ORBDTYPE* const product, const int ldp)
+//{
+//#if 0
+//    (*MPIdata::sout)<<"self multiply_by_matrix"<<endl;
+//#endif
+//
+//    ReplicatedWorkSpace<DISTMATDTYPE>& wspace(
+//        ReplicatedWorkSpace<DISTMATDTYPE>::instance());
+//    DISTMATDTYPE* work_matrix = wspace.square_matrix();
+//
+//    // build a local complete matrix from a distributed matrix
+//    dmatrix.allgather(work_matrix, numst_);
+//
+//    multiply_by_matrix(0, chromatic_number_, work_matrix, product, ldp);
+//}
 
 void LocGridOrbitals::multiply_by_matrix(const int first_color,
     const int ncolors, const DISTMATDTYPE* const matrix, ORBDTYPE* product,
@@ -1782,39 +1782,41 @@ double LocGridOrbitals::dotProduct(
     return dot;
 }
 
-const dist_matrix::DistMatrix<DISTMATDTYPE> LocGridOrbitals::product(
-    const LocGridOrbitals& orbitals, const bool transpose)
-{
-    assert(chromatic_number_ > 0);
-    assert(subdivx_ > 0);
-    assert(subdivx_ < 1000);
-
-    return product(
-        orbitals.psi(0), orbitals.chromatic_number_, orbitals.lda_, transpose);
-}
-
-const dist_matrix::DistMatrix<DISTMATDTYPE> LocGridOrbitals::product(
-    const ORBDTYPE* const array, const int ncol, const int lda,
-    const bool transpose)
-{
-    assert(lda > 1);
-
-    dot_product_tm_.start();
-
-    LocalMatrices<MATDTYPE> ss(subdivx_, chromatic_number_, ncol);
-
-    if (chromatic_number_ != 0) computeLocalProduct(array, lda, ss, transpose);
-
-    ProjectedMatrices* projmatrices
-        = dynamic_cast<ProjectedMatrices*>(proj_matrices_);
-    assert(projmatrices);
-    dist_matrix::DistMatrix<DISTMATDTYPE> tmp(
-        projmatrices->getDistMatrixFromLocalMatrices(ss));
-
-    dot_product_tm_.stop();
-
-    return tmp;
-}
+// const dist_matrix::DistMatrix<DISTMATDTYPE> LocGridOrbitals::product(
+//    const LocGridOrbitals& orbitals, const bool transpose)
+//{
+//    assert(chromatic_number_ > 0);
+//    assert(subdivx_ > 0);
+//    assert(subdivx_ < 1000);
+//
+//    return product(
+//        orbitals.psi(0), orbitals.chromatic_number_, orbitals.lda_,
+//        transpose);
+//}
+//
+// const dist_matrix::DistMatrix<DISTMATDTYPE> LocGridOrbitals::product(
+//    const ORBDTYPE* const array, const int ncol, const int lda,
+//    const bool transpose)
+//{
+//    assert(lda > 1);
+//
+//    dot_product_tm_.start();
+//
+//    LocalMatrices<MATDTYPE> ss(subdivx_, chromatic_number_, ncol);
+//
+//    if (chromatic_number_ != 0) computeLocalProduct(array, lda, ss,
+//    transpose);
+//
+//    ProjectedMatrices* projmatrices
+//        = dynamic_cast<ProjectedMatrices*>(proj_matrices_);
+//    assert(projmatrices);
+//    dist_matrix::DistMatrix<DISTMATDTYPE> tmp(
+//        projmatrices->getDistMatrixFromLocalMatrices(ss));
+//
+//    dot_product_tm_.stop();
+//
+//    return tmp;
+//}
 
 void LocGridOrbitals::orthonormalizeLoewdin(const bool overlap_uptodate,
     SquareLocalMatrices<MATDTYPE>* matrixTransform, const bool update_matrices)

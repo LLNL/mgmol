@@ -670,8 +670,13 @@ int DavidsonSolver<T>::solve(T& orbitals, T& work_orbitals)
 
         // replace orbitals with eigenvectors corresponding to largest
         // eigenvalues of DM
-        orbitals.multiply_by_matrix(dm12);
-        work_orbitals.multiply_by_matrix(dm22);
+        std::vector<double> mat(numst_ * numst_);
+
+        dm12.allgather(mat.data(), numst_);
+        orbitals.multiply_by_matrix(mat);
+
+        dm22.allgather(mat.data(), numst_);
+        work_orbitals.multiply_by_matrix(mat);
         orbitals.axpy(1., work_orbitals);
         orbitals.incrementIterativeIndex();
         orbitals.incrementIterativeIndex();
@@ -799,5 +804,4 @@ void DavidsonSolver<T>::printTimers(std::ostream& os)
     target_tm_.print(os);
 }
 
-template class DavidsonSolver<LocGridOrbitals>;
 template class DavidsonSolver<ExtendedGridOrbitals>;

@@ -45,7 +45,6 @@ ExtendedGridOrbitalsPtrFunc ExtendedGridOrbitals::dotProduct_
 int ExtendedGridOrbitals::data_wghosts_index_ = -1;
 int ExtendedGridOrbitals::numst_              = -1;
 std::vector<std::vector<int>> ExtendedGridOrbitals::overlapping_gids_;
-std::shared_ptr<DataDistribution> ExtendedGridOrbitals::distributor_;
 
 Timer ExtendedGridOrbitals::get_dm_tm_("ExtendedGridOrbitals::get_dm");
 Timer ExtendedGridOrbitals::matB_tm_("ExtendedGridOrbitals::matB");
@@ -168,15 +167,6 @@ void ExtendedGridOrbitals::setup()
     block_vector_.initialize(overlapping_gids_, skinny_stencil);
 
     proj_matrices_->setup(ct.occ_width, ct.getNel(), overlapping_gids_);
-
-    Mesh* mymesh             = Mesh::instance();
-    const pb::Grid& mygrid   = mymesh->grid();
-    const pb::PEenv& myPEenv = mymesh->peenv();
-    double domain[3]         = { mygrid.ll(0), mygrid.ll(1), mygrid.ll(2) };
-
-    const double maxr = mygrid.maxDomainSize();
-    distributor_.reset(new DataDistribution(
-        "DistributorExtendedGridOrbitals", maxr, myPEenv, domain));
 
     if (ct.verbose > 0)
         printWithTimeStamp(
@@ -380,23 +370,23 @@ void ExtendedGridOrbitals::initFourier()
     resetIterativeIndex();
 }
 
-void ExtendedGridOrbitals::multiply_by_matrix(
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& dmatrix,
-    ORBDTYPE* const product, const int ldp)
-{
-#if 0
-    (*MPIdata::sout)<<"self multiply_by_matrix"<<endl;
-#endif
-
-    ReplicatedWorkSpace<DISTMATDTYPE>& wspace(
-        ReplicatedWorkSpace<DISTMATDTYPE>::instance());
-    DISTMATDTYPE* work_matrix = wspace.square_matrix();
-
-    // build a local complete matrix from a distributed matrix
-    dmatrix.allgather(work_matrix, numst_);
-
-    multiply_by_matrix(work_matrix, product, ldp);
-}
+// void ExtendedGridOrbitals::multiply_by_matrix(
+//    const dist_matrix::DistMatrix<DISTMATDTYPE>& dmatrix,
+//    ORBDTYPE* const product, const int ldp)
+//{
+//#if 0
+//    (*MPIdata::sout)<<"self multiply_by_matrix"<<endl;
+//#endif
+//
+//    ReplicatedWorkSpace<DISTMATDTYPE>& wspace(
+//        ReplicatedWorkSpace<DISTMATDTYPE>::instance());
+//    DISTMATDTYPE* work_matrix = wspace.square_matrix();
+//
+//    // build a local complete matrix from a distributed matrix
+//    dmatrix.allgather(work_matrix, numst_);
+//
+//    multiply_by_matrix(work_matrix, product, ldp);
+//}
 
 void ExtendedGridOrbitals::multiply_by_matrix(
     const DISTMATDTYPE* const matrix, ORBDTYPE* product, const int ldp) const
@@ -525,6 +515,35 @@ void ExtendedGridOrbitals::multiply_by_matrix(
     }
 
     delete[] product;
+
+    prod_matrix_tm_.stop();
+}
+
+void ExtendedGridOrbitals::multiply_by_matrix(const std::vector<double>& mat)
+{
+    assert((int)mat.size() == numst_ * numst_);
+
+    prod_matrix_tm_.start();
+
+    const size_t slnumpt = loc_numpt_ * sizeof(ORBDTYPE);
+
+    std::vector<ORBDTYPE> product(loc_numpt_ * numst_);
+    memset(product.data(), 0, numst_ * slnumpt);
+
+    // loop over subdomains
+    for (short iloc = 0; iloc < subdivx_; iloc++)
+    {
+        ORBDTYPE* phi = getPsi(0, iloc);
+
+        // Compute loc_numpt_ rows (for subdomain iloc)
+        LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(loc_numpt_, numst_,
+            numst_, 1., phi, lda_, mat.data(), numst_, 0., product.data(),
+            loc_numpt_);
+
+        // copy back into this object
+        for (int i = 0; i < numst_; i++)
+            memcpy(phi + i * lda_, product.data() + i * loc_numpt_, slnumpt);
+    }
 
     prod_matrix_tm_.stop();
 }
@@ -1177,38 +1196,38 @@ double ExtendedGridOrbitals::dotProduct(
     return dot;
 }
 
-const dist_matrix::DistMatrix<DISTMATDTYPE> ExtendedGridOrbitals::product(
-    const ExtendedGridOrbitals& orbitals, const bool transpose)
-{
-    assert(numst_ > 0);
-    assert(subdivx_ > 0);
-    assert(subdivx_ < 1000);
-
-    return product(orbitals.psi(0), numst_, orbitals.lda_, transpose);
-}
-
-const dist_matrix::DistMatrix<DISTMATDTYPE> ExtendedGridOrbitals::product(
-    const ORBDTYPE* const array, const int ncol, const int lda,
-    const bool transpose)
-{
-    assert(lda > 1);
-
-    dot_product_tm_.start();
-
-    LocalMatrices<MATDTYPE> ss(subdivx_, numst_, ncol);
-
-    computeLocalProduct(array, lda, ss, transpose);
-
-    ProjectedMatrices* projmatrices
-        = dynamic_cast<ProjectedMatrices*>(proj_matrices_);
-    assert(projmatrices);
-    dist_matrix::DistMatrix<DISTMATDTYPE> tmp(
-        projmatrices->getDistMatrixFromLocalMatrices(ss));
-
-    dot_product_tm_.stop();
-
-    return tmp;
-}
+// const dist_matrix::DistMatrix<DISTMATDTYPE> ExtendedGridOrbitals::product(
+//    const ExtendedGridOrbitals& orbitals, const bool transpose)
+//{
+//    assert(numst_ > 0);
+//    assert(subdivx_ > 0);
+//    assert(subdivx_ < 1000);
+//
+//    return product(orbitals.psi(0), numst_, orbitals.lda_, transpose);
+//}
+//
+// const dist_matrix::DistMatrix<DISTMATDTYPE> ExtendedGridOrbitals::product(
+//    const ORBDTYPE* const array, const int ncol, const int lda,
+//    const bool transpose)
+//{
+//    assert(lda > 1);
+//
+//    dot_product_tm_.start();
+//
+//    LocalMatrices<MATDTYPE> ss(subdivx_, numst_, ncol);
+//
+//    computeLocalProduct(array, lda, ss, transpose);
+//
+//    ProjectedMatrices* projmatrices
+//        = dynamic_cast<ProjectedMatrices*>(proj_matrices_);
+//    assert(projmatrices);
+//    dist_matrix::DistMatrix<DISTMATDTYPE> tmp(
+//        projmatrices->getDistMatrixFromLocalMatrices(ss));
+//
+//    dot_product_tm_.stop();
+//
+//    return tmp;
+//}
 
 void ExtendedGridOrbitals::orthonormalizeLoewdin(const bool overlap_uptodate,
     SquareLocalMatrices<MATDTYPE>* matrixTransform, const bool update_matrices)

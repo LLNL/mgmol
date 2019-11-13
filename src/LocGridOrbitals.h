@@ -114,8 +114,9 @@ private:
         const DISTMATDTYPE* const matrix, LocGridOrbitals& product) const;
     void multiply_by_matrix(const int, const int, const DISTMATDTYPE* const,
         ORBDTYPE*, const int) const;
-    void multiply_by_matrix(const dist_matrix::DistMatrix<DISTMATDTYPE>& matrix,
-        ORBDTYPE* const product, const int ldp);
+    // void multiply_by_matrix(const dist_matrix::DistMatrix<DISTMATDTYPE>&
+    // matrix,
+    //    ORBDTYPE* const product, const int ldp);
     void scal(const int i, const double alpha) { block_vector_.scal(i, alpha); }
     virtual void assign(const int i, const ORBDTYPE* const v, const int n = 1)
     {
@@ -146,8 +147,9 @@ private:
 
     void initFourier();
     void initRand();
-    const dist_matrix::DistMatrix<DISTMATDTYPE> product(const ORBDTYPE* const,
-        const int, const int, const bool transpose = false);
+    // const dist_matrix::DistMatrix<DISTMATDTYPE> product(const ORBDTYPE*
+    // const,
+    //    const int, const int, const bool transpose = false);
 
     ORBDTYPE* psi(const int i) const { return block_vector_.vect(i); }
 
@@ -356,8 +358,8 @@ public:
     void computeDiagonalElementsDotProductLocal(
         const LocGridOrbitals& orbitals, std::vector<DISTMATDTYPE>& ss);
 
-    const dist_matrix::DistMatrix<DISTMATDTYPE> product(
-        const LocGridOrbitals&, const bool transpose = false);
+    // const dist_matrix::DistMatrix<DISTMATDTYPE> product(
+    //    const LocGridOrbitals&, const bool transpose = false);
     void computeLocalProduct(const LocGridOrbitals&, LocalMatrices<MATDTYPE>&,
         const bool transpose = false);
     void getLocalOverlap(SquareLocalMatrices<MATDTYPE>&);
@@ -428,10 +430,7 @@ public:
         return overlapping_gids_[iloc][color];
     }
     int getColor(const int gid) const { return pack_->getColor(gid); }
-    void augmentLocalData(VariableSizeMatrix<sparserow>& mat) const
-    {
-        distributor_normalize_->augmentLocalData(mat, true);
-    }
+    double getMaxR() const { return 2. * lrs_->max_radii(); }
 };
 
 #endif
