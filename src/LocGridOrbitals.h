@@ -146,8 +146,6 @@ private:
 
     void initFourier();
     void initRand();
-    const dist_matrix::DistMatrix<DISTMATDTYPE> product(const ORBDTYPE* const,
-        const int, const int, const bool transpose = false);
 
     ORBDTYPE* psi(const int i) const { return block_vector_.vect(i); }
 
@@ -356,16 +354,14 @@ public:
     void computeDiagonalElementsDotProductLocal(
         const LocGridOrbitals& orbitals, std::vector<DISTMATDTYPE>& ss);
 
-    const dist_matrix::DistMatrix<DISTMATDTYPE> product(
-        const LocGridOrbitals&, const bool transpose = false);
+    // const dist_matrix::DistMatrix<DISTMATDTYPE> product(
+    //    const LocGridOrbitals&, const bool transpose = false);
     void computeLocalProduct(const LocGridOrbitals&, LocalMatrices<MATDTYPE>&,
         const bool transpose = false);
     void getLocalOverlap(SquareLocalMatrices<MATDTYPE>&);
     void getLocalOverlap(
         const LocGridOrbitals& orbitals, SquareLocalMatrices<MATDTYPE>&);
 
-    void addDotWithNcol2Matrix(const int, const int, LocGridOrbitals&,
-        dist_matrix::SparseDistMatrix<DISTMATDTYPE>&) const;
     void addDotWithNcol2Matrix(
         LocGridOrbitals&, dist_matrix::SparseDistMatrix<DISTMATDTYPE>&) const;
 
@@ -428,10 +424,7 @@ public:
         return overlapping_gids_[iloc][color];
     }
     int getColor(const int gid) const { return pack_->getColor(gid); }
-    void augmentLocalData(VariableSizeMatrix<sparserow>& mat) const
-    {
-        distributor_normalize_->augmentLocalData(mat, true);
-    }
+    double getMaxR() const { return 2. * lrs_->max_radii(); }
 };
 
 #endif

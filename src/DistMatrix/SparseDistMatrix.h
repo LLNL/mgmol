@@ -105,6 +105,9 @@ public:
 
     void push_back(const int index1, const int index2, const T val);
 
+    void addData(std::vector<T>& values, const int ld, const int ilow0,
+        const int ihi0, const int ilow1, const int ihi1);
+
     void parallelSumToDistMatrix();
 
     void print(std::ostream& os) const;
@@ -117,7 +120,7 @@ public:
         assign_tm_.print(os);
         consolidateArray_tm_.print(os);
     }
-    void scal(const double alpha);
+    void scal(const T alpha);
     void setPartitioning(const int target_nb_tasks_per_partition);
     void consolidateArray();
     size_t size() const;

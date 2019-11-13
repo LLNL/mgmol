@@ -131,32 +131,16 @@ SparseDistMatrix<T>::~SparseDistMatrix<T>()
 {
 }
 
-TEMP_DECL
-void SparseDistMatrix<double>::scal(const double alpha)
+template <class T>
+void SparseDistMatrix<T>::scal(const T alpha)
 {
     int n = (int)map_val_.size();
     for (int i = 0; i < n; i++)
     {
-        map<int, double>& ref_map_val(map_val_[i]);
-        for (map<int, double>::iterator p = ref_map_val.begin();
-             p != ref_map_val.end(); p++)
+        std::map<int, T>& ref_map_val(map_val_[i]);
+        for (auto p : ref_map_val)
         {
-            (p->second) *= alpha;
-        }
-    }
-}
-
-TEMP_DECL
-void SparseDistMatrix<float>::scal(const double alpha)
-{
-    int n = (int)map_val_.size();
-    for (int i = 0; i < n; i++)
-    {
-        map<int, float>& ref_map_val(map_val_[i]);
-        for (map<int, float>::iterator p = ref_map_val.begin();
-             p != ref_map_val.end(); p++)
-        {
-            (p->second) *= alpha;
+            p.second *= alpha;
         }
     }
 }
@@ -234,47 +218,32 @@ void SparseDistMatrix<T>::push_back(
     map_val_[pe][(index1 << SHIFT) + index2] += val;
 }
 
-TEMP_DECL
-void SparseDistMatrix<double>::maptoarray()
+template <class T>
+void SparseDistMatrix<T>::addData(std::vector<T>& values, const int ld,
+    const int ilow0, const int ihi0, const int ilow1, const int ihi1)
+{
+    for (int j = ilow1; j < ihi1; j++)
+        for (int i = ilow0; i < ihi0; i++)
+            push_back(i, j, values[i + j * ld]);
+}
+
+template <class T>
+void SparseDistMatrix<T>::maptoarray()
 {
     maptoarray_tm_.start();
     // cout<<"SparseDistMatrix<double>::maptoarray()"<<endl;
     const int imax = map_val_.size();
     for (int pe = 0; pe < imax; pe++)
     {
-        vector<double>& index_and_val_pe(index_and_val_[pe]);
+        std::vector<T>& index_and_val_pe(index_and_val_[pe]);
         index_and_val_pe.clear();
-        const map<int, double>& ref_map_val(map_val_[pe]);
+        const std::map<int, T>& ref_map_val(map_val_[pe]);
         if (ref_map_val.size() > 1) index_and_val_pe.reserve(reserve_size);
-        for (map<int, double>::const_iterator p = ref_map_val.begin();
-             p != ref_map_val.end(); p++)
+        for (auto p : ref_map_val)
         {
-            assert(p->first >= 0);
-            index_and_val_pe.push_back((double)p->first);
-            index_and_val_pe.push_back(p->second);
-        }
-    }
-    maptoarray_tm_.stop();
-}
-
-TEMP_DECL
-void SparseDistMatrix<float>::maptoarray()
-{
-    maptoarray_tm_.start();
-    // cout<<"SparseDistMatrix<float>::maptoarray()"<<endl;
-    const int imax = map_val_.size();
-    for (int pe = 0; pe < imax; pe++)
-    {
-        vector<float>& index_and_val_pe(index_and_val_[pe]);
-        index_and_val_pe.clear();
-        const map<int, float>& ref_map_val(map_val_[pe]);
-        if (ref_map_val.size() > 1) index_and_val_pe.reserve(reserve_size);
-        for (map<int, float>::const_iterator p = ref_map_val.begin();
-             p != ref_map_val.end(); p++)
-        {
-            assert(p->first >= 0);
-            index_and_val_pe.push_back((float)p->first);
-            index_and_val_pe.push_back(p->second);
+            assert(p.first >= 0);
+            index_and_val_pe.push_back((T)p.first);
+            index_and_val_pe.push_back(p.second);
         }
     }
     maptoarray_tm_.stop();
@@ -1734,12 +1703,6 @@ void SparseDistMatrix<T>::parallelSumToDistMatrix()
 
 #endif
 
-#ifdef __KCC
-// explicit instantiation declaration
-template void SparseDistMatrix<T>::assign(const int size, const T* const val);
-template void SparseDistMatrix<T>::parallelSumToDistMatrix();
-#else
 template class SparseDistMatrix<DISTMATDTYPE>;
-#endif
 
 } // namespace

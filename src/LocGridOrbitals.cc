@@ -1782,40 +1782,6 @@ double LocGridOrbitals::dotProduct(
     return dot;
 }
 
-const dist_matrix::DistMatrix<DISTMATDTYPE> LocGridOrbitals::product(
-    const LocGridOrbitals& orbitals, const bool transpose)
-{
-    assert(chromatic_number_ > 0);
-    assert(subdivx_ > 0);
-    assert(subdivx_ < 1000);
-
-    return product(
-        orbitals.psi(0), orbitals.chromatic_number_, orbitals.lda_, transpose);
-}
-
-const dist_matrix::DistMatrix<DISTMATDTYPE> LocGridOrbitals::product(
-    const ORBDTYPE* const array, const int ncol, const int lda,
-    const bool transpose)
-{
-    assert(lda > 1);
-
-    dot_product_tm_.start();
-
-    LocalMatrices<MATDTYPE> ss(subdivx_, chromatic_number_, ncol);
-
-    if (chromatic_number_ != 0) computeLocalProduct(array, lda, ss, transpose);
-
-    ProjectedMatrices* projmatrices
-        = dynamic_cast<ProjectedMatrices*>(proj_matrices_);
-    assert(projmatrices);
-    dist_matrix::DistMatrix<DISTMATDTYPE> tmp(
-        projmatrices->getDistMatrixFromLocalMatrices(ss));
-
-    dot_product_tm_.stop();
-
-    return tmp;
-}
-
 void LocGridOrbitals::orthonormalizeLoewdin(const bool overlap_uptodate,
     SquareLocalMatrices<MATDTYPE>* matrixTransform, const bool update_matrices)
 {
@@ -2411,35 +2377,33 @@ void LocGridOrbitals::initRand()
     resetIterativeIndex();
 }
 
-// Compute nstates column of Psi^T*A*Psi starting at column first_color
+// Compute nstates column of Psi^T*A*Psi starting at column 0
 // WARNING: values are added to sparse_matrix!!
-void LocGridOrbitals::addDotWithNcol2Matrix(const int first_color,
-    const int ncolors, LocGridOrbitals& Apsi,
+void LocGridOrbitals::addDotWithNcol2Matrix(LocGridOrbitals& Apsi,
     dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sparse_matrix) const
 {
     addDot_tm_.start();
 
-    assert(ncolors > 0);
     assert(chromatic_number_ > 0);
 
 #ifdef DEBUG
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 2)
-        (*MPIdata::sout) << "LocGridOrbitals::addDotWithNcol2Matrix for states "
-                         << first_color << " to " << first_color + ncolors - 1
-                         << endl;
-    for (short icolor = 0; icolor < ncolors; icolor++)
+        (*MPIdata::sout)
+            << "LocGridOrbitals::addDotWithNcol2Matrix for states 0"
+            << " to " << chromatic_number_ - 1 << endl;
+    for (short icolor = 0; icolor < chromatic_number_; icolor++)
     {
         block_vector_.hasnan(icolor);
     }
-    for (int icolor = 0; icolor < ncolors; icolor++)
+    for (int icolor = 0; icolor < chromatic_number_; icolor++)
     {
         Apsi.block_vector_.hasnan(icolor);
     }
 #endif
     const double vel = grid_.vel();
 
-    const int size_work_cols      = chromatic_number_ * ncolors;
+    const int size_work_cols      = chromatic_number_ * chromatic_number_;
     DISTMATDTYPE* const work_cols = new DISTMATDTYPE[size_work_cols];
     memset(work_cols, 0,
         size_work_cols * sizeof(DISTMATDTYPE)); // necessary on bgl!!
@@ -2447,18 +2411,16 @@ void LocGridOrbitals::addDotWithNcol2Matrix(const int first_color,
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
 
-        MPgemmTN(chromatic_number_, ncolors, loc_numpt_, 1.,
+        MPgemmTN(chromatic_number_, chromatic_number_, loc_numpt_, 1.,
             block_vector_.vect(0) + iloc * loc_numpt_, lda_,
-            Apsi.getPsi(first_color, iloc), lda_, 0., work_cols,
-            chromatic_number_);
+            Apsi.getPsi(0, iloc), lda_, 0., work_cols, chromatic_number_);
 
-        for (short icolor = 0; icolor < ncolors; icolor++)
+        for (short icolor = 0; icolor < chromatic_number_; icolor++)
         {
             const int gid1 = overlapping_gids_[iloc][icolor];
             if (gid1 != -1)
             {
-                for (int jcolor = first_color;
-                     jcolor < first_color + chromatic_number_; jcolor++)
+                for (int jcolor = 0; jcolor < chromatic_number_; jcolor++)
                 {
                     int gid2 = overlapping_gids_[iloc][jcolor];
                     if (gid2 != -1)
@@ -2475,12 +2437,6 @@ void LocGridOrbitals::addDotWithNcol2Matrix(const int first_color,
     delete[] work_cols;
 
     addDot_tm_.stop();
-}
-
-void LocGridOrbitals::addDotWithNcol2Matrix(LocGridOrbitals& Apsi,
-    dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sparse_matrix) const
-{
-    addDotWithNcol2Matrix(0, chromatic_number_, Apsi, sparse_matrix);
 }
 
 void LocGridOrbitals::computeGlobalIndexes(LocalizationRegions& lrs)

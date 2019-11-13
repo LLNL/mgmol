@@ -405,6 +405,105 @@ void MGmol<T>::applyAOMMprojection(T& orbitals)
     return;
 }
 
+template <>
+int MGmol<LocGridOrbitals>::outerSolve(LocGridOrbitals& orbitals,
+    LocGridOrbitals& work_orbitals, Ions& ions, const int max_steps,
+    const int iprint, double& last_eks)
+{
+    int retval
+        = 1; // 0 -> converged, -1 -> problem, -2 -> ( de>tol_energy_stop )
+    Control& ct = *(Control::instance());
+    // solve electronic structure problem
+    // (inner iterations)
+    switch (ct.OuterSolver())
+    {
+        case OuterSolverType::ABPG:
+        case OuterSolverType::NLCG:
+        {
+            DFTsolver<LocGridOrbitals> solver(hamiltonian_, proj_matrices_,
+                energy_, electrostat_, this, ions, rho_, dm_strategy_, os_);
+
+            retval = solver.solve(
+                orbitals, work_orbitals, ions, max_steps, iprint, last_eks);
+
+            break;
+        }
+
+        case OuterSolverType::PolakRibiere:
+        {
+            PolakRibiereSolver<LocGridOrbitals> solver(hamiltonian_,
+                proj_matrices_, energy_, electrostat_, this, ions, rho_,
+                dm_strategy_, os_);
+
+            retval = solver.solve(
+                orbitals, work_orbitals, ions, max_steps, iprint, last_eks);
+
+            break;
+        }
+
+        default:
+            std::cerr << "Undefined iterative outer solver" << std::endl;
+            return -1;
+    }
+
+    return retval;
+}
+
+template <class T>
+int MGmol<T>::outerSolve(T& orbitals, T& work_orbitals, Ions& ions,
+    const int max_steps, const int iprint, double& last_eks)
+{
+    int retval
+        = 1; // 0 -> converged, -1 -> problem, -2 -> ( de>tol_energy_stop )
+    Control& ct = *(Control::instance());
+    // solve electronic structure problem
+    // (inner iterations)
+    switch (ct.OuterSolver())
+    {
+        case OuterSolverType::ABPG:
+        case OuterSolverType::NLCG:
+        {
+            DFTsolver<T> solver(hamiltonian_, proj_matrices_, energy_,
+                electrostat_, this, ions, rho_, dm_strategy_, os_);
+
+            retval = solver.solve(
+                orbitals, work_orbitals, ions, max_steps, iprint, last_eks);
+
+            break;
+        }
+
+        case OuterSolverType::PolakRibiere:
+        {
+            PolakRibiereSolver<T> solver(hamiltonian_, proj_matrices_, energy_,
+                electrostat_, this, ions, rho_, dm_strategy_, os_);
+
+            retval = solver.solve(
+                orbitals, work_orbitals, ions, max_steps, iprint, last_eks);
+
+            break;
+        }
+
+        case OuterSolverType::Davidson:
+        {
+            const std::vector<std::vector<int>>& gids(
+                orbitals.getOverlappingGids());
+
+            DavidsonSolver<T> solver(comm_, os_, *ions_, hamiltonian_, rho_,
+                energy_, electrostat_, this, ct.numst, ct.occ_width,
+                ct.getNel(), gids);
+
+            retval = solver.solve(orbitals, work_orbitals);
+            break;
+        }
+
+        default:
+            std::cerr << "Undefined iterative outer solver" << std::endl;
+            return -1;
+    }
+
+    return retval;
+}
+
 template <class T>
 int MGmol<T>::quench(T* orbitals, Ions& ions, const int max_inner_steps,
     const int iprint, double& last_eks)
@@ -455,55 +554,9 @@ int MGmol<T>::quench(T* orbitals, Ions& ions, const int max_inner_steps,
 
     // solve electronic structure problem
     // (inner iterations)
-    switch (ct.OuterSolver())
-    {
-        case OuterSolverType::ABPG:
-        {
-            DFTsolver<T> solver(hamiltonian_, proj_matrices_, energy_,
-                electrostat_, this, ions, rho_, dm_strategy_, os_);
-
-            retval = solver.solve(
-                *orbitals, work_orbitals, ions, max_steps, iprint, last_eks);
-
-            break;
-        }
-
-        case OuterSolverType::NLCG:
-        {
-            DFTsolver<T> solver(hamiltonian_, proj_matrices_, energy_,
-                electrostat_, this, ions, rho_, dm_strategy_, os_);
-
-            retval = solver.solve(
-                *orbitals, work_orbitals, ions, max_steps, iprint, last_eks);
-
-            break;
-        }
-
-        case OuterSolverType::PolakRibiere:
-        {
-            PolakRibiereSolver<T> solver(hamiltonian_, proj_matrices_, energy_,
-                electrostat_, this, ions, rho_, dm_strategy_, os_);
-
-            retval = solver.solve(
-                *orbitals, work_orbitals, ions, max_steps, iprint, last_eks);
-
-            break;
-        }
-
-        case OuterSolverType::Davidson:
-        {
-            DavidsonSolver<T> solver(comm_, os_, *ions_, hamiltonian_, rho_,
-                energy_, electrostat_, this, ct.numst, ct.occ_width,
-                ct.getNel(), gids);
-
-            retval = solver.solve(*orbitals, work_orbitals);
-            break;
-        }
-
-        default:
-            std::cerr << "Undefined iterative outer solver" << std::endl;
-            return -1;
-    }
+    retval = outerSolve(
+        *orbitals, work_orbitals, ions, max_steps, iprint, last_eks);
+    if (retval == -1) return -1;
 
     if (ct.use_kernel_functions)
     {

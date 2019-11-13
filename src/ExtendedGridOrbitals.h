@@ -12,11 +12,11 @@
 #define MGMOL_EXTENDEDGRIDORBITALS_H
 
 #include "BlockVector.h"
-#include "DataDistribution.h"
 #include "GridFunc.h"
 #include "HDFrestart.h"
 #include "Lap.h"
 #include "MPIdata.h"
+#include "Mesh.h"
 #include "Orbitals.h"
 #include "SinCosOps.h"
 #include "SparseDistMatrix.h"
@@ -57,7 +57,6 @@ private:
     static Timer dot_product_tm_;
     static Timer addDot_tm_;
     static Timer prod_matrix_tm_;
-    static Timer get_dm_tm_;
     static Timer assign_tm_;
     static Timer normalize_tm_;
     static Timer axpy_tm_;
@@ -122,8 +121,6 @@ private:
 
     void initFourier();
     void initRand();
-    const dist_matrix::DistMatrix<DISTMATDTYPE> product(const ORBDTYPE* const,
-        const int, const int, const bool transpose = false);
 
     ORBDTYPE* psi(const int i) const { return block_vector_.vect(i); }
 
@@ -131,9 +128,6 @@ private:
     void multiplyByMatrix(const SquareLocalMatrices<MATDTYPE>& matrix,
         ORBDTYPE* product, const int ldp) const;
     void setup();
-
-    /* Data distribution objects */
-    static std::shared_ptr<DataDistribution> distributor_;
 
 protected:
     const pb::Grid& grid_;
@@ -311,16 +305,12 @@ public:
     void computeDiagonalElementsDotProduct(const ExtendedGridOrbitals& orbitals,
         std::vector<DISTMATDTYPE>& ss) const;
 
-    const dist_matrix::DistMatrix<DISTMATDTYPE> product(
-        const ExtendedGridOrbitals&, const bool transpose = false);
     void computeLocalProduct(const ExtendedGridOrbitals&,
         LocalMatrices<MATDTYPE>&, const bool transpose = false);
     void getLocalOverlap(SquareLocalMatrices<MATDTYPE>&);
     void getLocalOverlap(
         const ExtendedGridOrbitals& orbitals, SquareLocalMatrices<MATDTYPE>&);
 
-    void addDotWithNcol2Matrix(const int, const int, ExtendedGridOrbitals&,
-        dist_matrix::SparseDistMatrix<DISTMATDTYPE>&) const;
     void addDotWithNcol2Matrix(ExtendedGridOrbitals&,
         dist_matrix::SparseDistMatrix<DISTMATDTYPE>&) const;
 
@@ -381,9 +371,11 @@ public:
         return overlapping_gids_[iloc][color];
     }
     int getColor(const int gid) const { return gid; }
-    void augmentLocalData(VariableSizeMatrix<sparserow>& mat) const
+    double getMaxR() const
     {
-        distributor_->augmentLocalData(mat, true);
+        Mesh* mymesh           = Mesh::instance();
+        const pb::Grid& mygrid = mymesh->grid();
+        return mygrid.maxDomainSize();
     }
 };
 

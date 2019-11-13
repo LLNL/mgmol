@@ -1,5 +1,7 @@
-// Copyright (c) 2017, Lawrence Livermore National Security, LLC. Produced at
-// the Lawrence Livermore National Laboratory.
+// Copyright (c) 2017, Lawrence Livermore National Security, LLC and
+// UT-Battelle, LLC.
+// Produced at the Lawrence Livermore National Laboratory and the Oak Ridge
+// National Laboratory.
 // Written by J.-L. Fattebert, D. Osei-Kuffuor and I.S. Dunn.
 // LLNL-CODE-743438
 // All rights reserved.
@@ -672,6 +674,7 @@ int DavidsonSolver<T>::solve(T& orbitals, T& work_orbitals)
         // eigenvalues of DM
         orbitals.multiply_by_matrix(dm12);
         work_orbitals.multiply_by_matrix(dm22);
+
         orbitals.axpy(1., work_orbitals);
         orbitals.incrementIterativeIndex();
         orbitals.incrementIterativeIndex();
@@ -799,5 +802,4 @@ void DavidsonSolver<T>::printTimers(std::ostream& os)
     target_tm_.print(os);
 }
 
-template class DavidsonSolver<LocGridOrbitals>;
 template class DavidsonSolver<ExtendedGridOrbitals>;
