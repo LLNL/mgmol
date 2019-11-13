@@ -1578,6 +1578,10 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
             parallel_transport
                 = vm["NLCG.parallel_transport"].as<bool>() ? 1 : 0;
         }
+        if (str.compare("Davidson") == 0)
+        {
+            it_algo_type_ = 2;
+        }
         if (str.compare("PR") == 0) // Polak-Ribiere
         {
             it_algo_type_ = 3;
@@ -1948,6 +1952,12 @@ int Control::checkOptions()
         std::cerr << "ERROR: reading single restart file with wave functions "
                      "requires global coloring!!!"
                   << std::endl;
+        return -1;
+    }
+    if (it_algo_type_ == 2 && lap_type == 0)
+    {
+        (*MPIdata::sout) << "ERROR: Davidson and Mehrstellen incompatible!"
+                         << std::endl;
         return -1;
     }
     if (short_sighted > 0 && !loc_mode_)

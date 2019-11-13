@@ -138,6 +138,7 @@ set(SOURCES
  Power.cc
  PowerGen.cc
  SuperSampling.cc
+ DavidsonSolver.cc
  magma_singleton.cc
 )
 
