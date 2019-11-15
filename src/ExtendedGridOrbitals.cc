@@ -1004,30 +1004,30 @@ void ExtendedGridOrbitals::computeDiagonalElementsDotProduct(
 void ExtendedGridOrbitals::computeGram(
     dist_matrix::DistMatrix<DISTMATDTYPE>& gram_mat)
 {
-    assert(proj_matrices_ != nullptr);
-
     SquareLocalMatrices<MATDTYPE> ss(subdivx_, numst_);
 
     getLocalOverlap(ss);
 
-    ProjectedMatrices* projmatrices
-        = dynamic_cast<ProjectedMatrices*>(proj_matrices_);
-    gram_mat = projmatrices->getDistMatrixFromLocalMatrices(ss);
+    LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
+
+    gram_mat.clear();
+
+    sl2dm->accumulate(ss, gram_mat);
 }
 
 void ExtendedGridOrbitals::computeGram(const ExtendedGridOrbitals& orbitals,
     dist_matrix::DistMatrix<DISTMATDTYPE>& gram_mat)
 {
-    assert(proj_matrices_ != nullptr);
-
     SquareLocalMatrices<MATDTYPE> ss(subdivx_, numst_);
 
     getLocalOverlap(orbitals, ss);
 
     // make a DistMatrix out of ss
-    ProjectedMatrices* projmatrices
-        = dynamic_cast<ProjectedMatrices*>(proj_matrices_);
-    gram_mat = projmatrices->getDistMatrixFromLocalMatrices(ss);
+    LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
+
+    gram_mat.clear();
+
+    sl2dm->accumulate(ss, gram_mat);
 }
 
 // compute the lower-triangular part of the overlap matrix
@@ -1164,6 +1164,38 @@ double ExtendedGridOrbitals::dotProduct(
     dot_product_tm_.stop();
 
     return dot;
+}
+
+dist_matrix::DistMatrix<DISTMATDTYPE> ExtendedGridOrbitals::product(
+    const ExtendedGridOrbitals& orbitals, const bool transpose)
+{
+    assert(numst_ > 0);
+    assert(subdivx_ > 0);
+    assert(subdivx_ < 1000);
+
+    return product(orbitals.psi(0), numst_, orbitals.lda_, transpose);
+}
+
+dist_matrix::DistMatrix<DISTMATDTYPE> ExtendedGridOrbitals::product(
+    const ORBDTYPE* const array, const int ncol, const int lda,
+    const bool transpose)
+{
+    assert(lda > 1);
+
+    dot_product_tm_.start();
+
+    LocalMatrices<MATDTYPE> ss(subdivx_, numst_, ncol);
+
+    computeLocalProduct(array, lda, ss, transpose);
+
+    LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
+
+    dist_matrix::DistMatrix<DISTMATDTYPE> tmp("tmp", numst_, numst_);
+    sl2dm->accumulate(ss, tmp, numst_);
+
+    dot_product_tm_.stop();
+
+    return tmp;
 }
 
 void ExtendedGridOrbitals::orthonormalizeLoewdin(const bool overlap_uptodate,

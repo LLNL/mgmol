@@ -132,6 +132,36 @@ SparseDistMatrix<T>::~SparseDistMatrix<T>()
 }
 
 template <class T>
+void SparseDistMatrix<T>::addData(const std::vector<T>& data, const int ld,
+    const int ilow, const int ihi, const int jlow, const int jhi)
+{
+    for (int j = jlow; j < jhi; j++)
+    {
+        for (int i = ilow; i < ihi; i++)
+        {
+            push_back(i, j, data[i + j * ld]);
+        }
+    }
+}
+
+template <class T>
+void SparseDistMatrix<T>::addData(const std::vector<T>& data, const int ld,
+    const int ilow, const int ihi, const int jlow, const int jhi,
+    const std::vector<int>& gids)
+{
+    for (int j = jlow; j < jhi; j++)
+    {
+        int gidj = gids[j];
+        if (gidj > -1)
+            for (int i = ilow; i < ihi; i++)
+            {
+                int gidi = gids[j];
+                if (gidi > -1) push_back(gidi, gidj, data[i + j * ld]);
+            }
+    }
+}
+
+template <class T>
 void SparseDistMatrix<T>::scal(const T alpha)
 {
     int n = (int)map_val_.size();
@@ -216,15 +246,6 @@ void SparseDistMatrix<T>::push_back(
     assert(!std::isnan(val));
 
     map_val_[pe][(index1 << SHIFT) + index2] += val;
-}
-
-template <class T>
-void SparseDistMatrix<T>::addData(std::vector<T>& values, const int ld,
-    const int ilow0, const int ihi0, const int ilow1, const int ihi1)
-{
-    for (int j = ilow1; j < ihi1; j++)
-        for (int i = ilow0; i < ihi0; i++)
-            push_back(i, j, values[i + j * ld]);
 }
 
 template <class T>

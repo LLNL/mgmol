@@ -62,6 +62,7 @@ public:
 
     const dist_matrix::DistMatrix<DISTMATDTYPE>& getMatrix() const
     {
+        assert(matS_ != nullptr);
         return *matS_;
     }
 

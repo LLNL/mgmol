@@ -146,6 +146,8 @@ private:
 
     void initFourier();
     void initRand();
+    dist_matrix::DistMatrix<DISTMATDTYPE> product(const ORBDTYPE* const,
+        const int, const int, const bool transpose = false);
 
     ORBDTYPE* psi(const int i) const { return block_vector_.vect(i); }
 
@@ -354,8 +356,8 @@ public:
     void computeDiagonalElementsDotProductLocal(
         const LocGridOrbitals& orbitals, std::vector<DISTMATDTYPE>& ss);
 
-    // const dist_matrix::DistMatrix<DISTMATDTYPE> product(
-    //    const LocGridOrbitals&, const bool transpose = false);
+    dist_matrix::DistMatrix<DISTMATDTYPE> product(
+        const LocGridOrbitals&, const bool transpose = false);
     void computeLocalProduct(const LocGridOrbitals&, LocalMatrices<MATDTYPE>&,
         const bool transpose = false);
     void getLocalOverlap(SquareLocalMatrices<MATDTYPE>&);

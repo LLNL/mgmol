@@ -22,6 +22,7 @@
 #include "Laph2.h"
 #include "Laph4M.h"
 #include "LocGridOrbitals.h"
+#include "LocalMatrices2DistMatrix.h"
 #include "LocalizationRegions.h"
 #include "MPIdata.h"
 #include "Masks4Orbitals.h"
@@ -1611,30 +1612,29 @@ void LocGridOrbitals::computeDiagonalElementsDotProductLocal(
 void LocGridOrbitals::computeGram(
     dist_matrix::DistMatrix<DISTMATDTYPE>& gram_mat)
 {
-    assert(proj_matrices_ != nullptr);
-
     SquareLocalMatrices<MATDTYPE> ss(subdivx_, chromatic_number_);
 
     getLocalOverlap(ss);
 
-    ProjectedMatrices* projmatrices
-        = dynamic_cast<ProjectedMatrices*>(proj_matrices_);
-    gram_mat = projmatrices->getDistMatrixFromLocalMatrices(ss);
+    LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
+
+    gram_mat.clear();
+
+    sl2dm->accumulate(ss, gram_mat);
 }
 
 void LocGridOrbitals::computeGram(const LocGridOrbitals& orbitals,
     dist_matrix::DistMatrix<DISTMATDTYPE>& gram_mat)
 {
-    assert(proj_matrices_ != nullptr);
-
     SquareLocalMatrices<MATDTYPE> ss(subdivx_, chromatic_number_);
 
     getLocalOverlap(orbitals, ss);
 
-    // make a DistMatrix out of ss
-    ProjectedMatrices* projmatrices
-        = dynamic_cast<ProjectedMatrices*>(proj_matrices_);
-    gram_mat = projmatrices->getDistMatrixFromLocalMatrices(ss);
+    LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
+
+    gram_mat.clear();
+
+    sl2dm->accumulate(ss, gram_mat);
 }
 
 // compute the lower-triangular part of the overlap matrix
@@ -1782,6 +1782,39 @@ double LocGridOrbitals::dotProduct(
     return dot;
 }
 
+dist_matrix::DistMatrix<DISTMATDTYPE> LocGridOrbitals::product(
+    const LocGridOrbitals& orbitals, const bool transpose)
+{
+    assert(numst_ > 0);
+    assert(subdivx_ > 0);
+    assert(subdivx_ < 1000);
+
+    return product(
+        orbitals.psi(0), orbitals.chromatic_number_, orbitals.lda_, transpose);
+}
+
+dist_matrix::DistMatrix<DISTMATDTYPE> LocGridOrbitals::product(
+    const ORBDTYPE* const array, const int ncol, const int lda,
+    const bool transpose)
+{
+    assert(lda > 1);
+
+    dot_product_tm_.start();
+
+    LocalMatrices<MATDTYPE> ss(subdivx_, chromatic_number_, ncol);
+
+    if (chromatic_number_ != 0) computeLocalProduct(array, lda, ss, transpose);
+
+    LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
+
+    dist_matrix::DistMatrix<DISTMATDTYPE> tmp("tmp", numst_, numst_);
+    sl2dm->accumulate(ss, tmp, numst_);
+
+    dot_product_tm_.stop();
+
+    return tmp;
+}
+
 void LocGridOrbitals::orthonormalizeLoewdin(const bool overlap_uptodate,
     SquareLocalMatrices<MATDTYPE>* matrixTransform, const bool update_matrices)
 {
@@ -1789,16 +1822,16 @@ void LocGridOrbitals::orthonormalizeLoewdin(const bool overlap_uptodate,
     if (onpe0 && ct.verbose > 1)
         (*MPIdata::sout) << "LocGridOrbitals::orthonormalizeLoewdin()" << endl;
 
-    ProjectedMatrices* projmatrices
-        = dynamic_cast<ProjectedMatrices*>(proj_matrices_);
-    assert(projmatrices);
-
     if (!overlap_uptodate) computeGram(0);
 
     SquareLocalMatrices<MATDTYPE>* localP = matrixTransform;
     if (matrixTransform == nullptr)
         localP = new SquareLocalMatrices<MATDTYPE>(subdivx_, chromatic_number_);
 
+    ProjectedMatrices* projmatrices
+        = dynamic_cast<ProjectedMatrices*>(proj_matrices_);
+    assert(projmatrices != nullptr);
+    assert(localP);
     projmatrices->computeLoewdinTransform(
         *localP, getIterativeIndex(), update_matrices);
 
@@ -2403,38 +2436,21 @@ void LocGridOrbitals::addDotWithNcol2Matrix(LocGridOrbitals& Apsi,
 #endif
     const double vel = grid_.vel();
 
-    const int size_work_cols      = chromatic_number_ * chromatic_number_;
-    DISTMATDTYPE* const work_cols = new DISTMATDTYPE[size_work_cols];
-    memset(work_cols, 0,
+    const int size_work_cols = chromatic_number_ * chromatic_number_;
+    std::vector<DISTMATDTYPE> work_cols(size_work_cols);
+    memset(work_cols.data(), 0,
         size_work_cols * sizeof(DISTMATDTYPE)); // necessary on bgl!!
 
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
-
-        MPgemmTN(chromatic_number_, chromatic_number_, loc_numpt_, 1.,
+        MPgemmTN(chromatic_number_, chromatic_number_, loc_numpt_, vel,
             block_vector_.vect(0) + iloc * loc_numpt_, lda_,
-            Apsi.getPsi(0, iloc), lda_, 0., work_cols, chromatic_number_);
+            Apsi.getPsi(0, iloc), lda_, 0., work_cols.data(),
+            chromatic_number_);
 
-        for (short icolor = 0; icolor < chromatic_number_; icolor++)
-        {
-            const int gid1 = overlapping_gids_[iloc][icolor];
-            if (gid1 != -1)
-            {
-                for (int jcolor = 0; jcolor < chromatic_number_; jcolor++)
-                {
-                    int gid2 = overlapping_gids_[iloc][jcolor];
-                    if (gid2 != -1)
-                    {
-                        sparse_matrix.push_back(gid1, gid2,
-                            work_cols[icolor + jcolor * chromatic_number_]
-                                * vel);
-                    }
-                }
-            }
-        }
+        sparse_matrix.addData(work_cols, chromatic_number_, 0,
+            chromatic_number_, 0, chromatic_number_, overlapping_gids_[iloc]);
     }
-
-    delete[] work_cols;
 
     addDot_tm_.stop();
 }
@@ -2543,8 +2559,7 @@ void LocGridOrbitals::initWF(const LocalizationRegions& lrs)
         applyCorrMask(true);
 
     if (onpe0 && ct.verbose > 2)
-        (*MPIdata::sout)
-            << " Normalize or Orthonormalize initial wave functions" << endl;
+        (*MPIdata::sout) << " Orthonormalize initial wave functions" << endl;
     if (ct.isLocMode())
     {
         normalize();

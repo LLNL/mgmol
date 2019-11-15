@@ -1,4 +1,5 @@
 // Copyright (c) 2017, Lawrence Livermore National Security, LLC and
+// the Lawrence Livermore National Laboratory.
 // UT-Battelle, LLC.
 // Produced at the Lawrence Livermore National Laboratory and the Oak Ridge
 // National Laboratory.
@@ -674,7 +675,6 @@ int DavidsonSolver<T>::solve(T& orbitals, T& work_orbitals)
         // eigenvalues of DM
         orbitals.multiply_by_matrix(dm12);
         work_orbitals.multiply_by_matrix(dm22);
-
         orbitals.axpy(1., work_orbitals);
         orbitals.incrementIterativeIndex();
         orbitals.incrementIterativeIndex();

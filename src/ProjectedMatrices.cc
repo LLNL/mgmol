@@ -126,7 +126,7 @@ void ProjectedMatrices::setup(const double kbt, const int nel,
     {
         DistMatrix2SquareLocalMatrices::setup(
             comm, global_indexes, dm_->getMatrix());
-        LocalMatrices2DistMatrix::setup(comm, global_indexes, ct.numst);
+        LocalMatrices2DistMatrix::setup(comm, global_indexes);
 
         localX_.reset(
             new SquareLocalMatrices<MATDTYPE>(subdiv_, chromatic_number_));
@@ -190,7 +190,7 @@ void ProjectedMatrices::applyInvS(SquareLocalMatrices<MATDTYPE>& mat)
 
     LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
 
-    sl2dm->accumulate(mat, pmatrix, dim_);
+    sl2dm->accumulate(mat, pmatrix);
 
     gm_->applyInv(pmatrix);
 
@@ -828,6 +828,7 @@ void ProjectedMatrices::computeLoewdinTransform(
     SquareLocalMatrices<MATDTYPE>& localP, const int orb_index,
     const bool transform_matrices)
 {
+    assert(gm_ != nullptr);
     // dm_->computeOccupations(gm_->getCholeskyL());
 
     dist_matrix::DistMatrix<DISTMATDTYPE> mat(gm_->getMatrix());
@@ -901,7 +902,7 @@ double ProjectedMatrices::dotProductWithInvS(
     dist_matrix::DistMatrix<DISTMATDTYPE> ds("ds", dim_, dim_);
     LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
 
-    sl2dm->accumulate(local_product, ds, dim_);
+    sl2dm->accumulate(local_product, ds);
 
     dist_matrix::DistMatrix<DISTMATDTYPE> work("work", dim_, dim_);
     work.gemm('n', 'n', 1., ds, gram_4dotProducts_->getInverse(), 0.);
@@ -915,7 +916,7 @@ double ProjectedMatrices::dotProductWithDM(
     dist_matrix::DistMatrix<DISTMATDTYPE> ds("ds", dim_, dim_);
     LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
 
-    sl2dm->accumulate(local_product, ds, dim_);
+    sl2dm->accumulate(local_product, ds);
 
     dist_matrix::DistMatrix<DISTMATDTYPE> work("work", dim_, dim_);
     work.gemm('n', 'n', 0.5, ds, kernel4dot(), 0.);
@@ -931,7 +932,7 @@ double ProjectedMatrices::dotProductSimple(
     dist_matrix::DistMatrix<DISTMATDTYPE> ds("ds", dim_, dim_);
     LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
 
-    sl2dm->accumulate(local_product, ds, dim_);
+    sl2dm->accumulate(local_product, ds);
 
     return ds.trace();
 }
@@ -956,7 +957,7 @@ double ProjectedMatrices::computeTraceInvSmultMat(
     dist_matrix::DistMatrix<DISTMATDTYPE> pmatrix("pmatrix", dim_, dim_);
 
     LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
-    sl2dm->accumulate(mat, pmatrix, dim_);
+    sl2dm->accumulate(mat, pmatrix);
 
     gm_->applyInv(pmatrix);
     return pmatrix.trace();

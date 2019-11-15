@@ -199,7 +199,7 @@ public:
 
         LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
 
-        sl2dm->accumulate(ss, *work_, dim_);
+        sl2dm->accumulate(ss, *work_);
 
         gm_->setMatrix(*work_, orbitals_index);
         init_gram_matrix_tm_.stop();
@@ -362,7 +362,7 @@ public:
 
         LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
 
-        sl2dm->accumulate(ss, tmp, dim_);
+        sl2dm->accumulate(ss, tmp);
 
         return tmp;
     }

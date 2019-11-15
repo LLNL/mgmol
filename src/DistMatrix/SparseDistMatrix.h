@@ -103,10 +103,13 @@ public:
 
     ~SparseDistMatrix<T>();
 
-    void push_back(const int index1, const int index2, const T val);
+    void addData(const std::vector<T>& data, const int ld, const int ilow,
+        const int ihi, const int jlow, const int jhi);
+    void addData(const std::vector<T>& data, const int ld, const int ilow,
+        const int ihi, const int jlow, const int jhi,
+        const std::vector<int>& gids);
 
-    void addData(std::vector<T>& values, const int ld, const int ilow0,
-        const int ihi0, const int ilow1, const int ihi1);
+    void push_back(const int index1, const int index2, const T val);
 
     void parallelSumToDistMatrix();
 
