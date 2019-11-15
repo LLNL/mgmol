@@ -1,5 +1,8 @@
-// Copyright (c) 2017, Lawrence Livermore National Security, LLC. Produced at
+// Copyright (c) 2017, Lawrence Livermore National Security, LLC and
 // the Lawrence Livermore National Laboratory.
+// UT-Battelle, LLC.
+// Produced at the Lawrence Livermore National Laboratory and the Oak Ridge
+// National Laboratory.
 // Written by J.-L. Fattebert, D. Osei-Kuffuor and I.S. Dunn.
 // LLNL-CODE-743438
 // All rights reserved.
@@ -799,5 +802,4 @@ void DavidsonSolver<T>::printTimers(std::ostream& os)
     target_tm_.print(os);
 }
 
-template class DavidsonSolver<LocGridOrbitals>;
 template class DavidsonSolver<ExtendedGridOrbitals>;

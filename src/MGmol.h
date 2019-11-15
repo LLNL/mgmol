@@ -230,6 +230,8 @@ public:
     void update_pot(const Ions& ions);
     int quench(T* orbitals, Ions& ions, const int max_steps, const int iprint,
         double& last_eks);
+    int outerSolve(T& orbitals, T& work_orbitals, Ions& ions,
+        const int max_steps, const int iprint, double& last_eks);
     void runfire(T** orbitals, Ions& ions);
     void moveVnuc(Ions& ions);
     void resetProjectedMatricesAndDM(T& orbitals, Ions& ions);

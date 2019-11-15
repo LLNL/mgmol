@@ -791,7 +791,14 @@ void SinCosOps<T>::computeDiag(const T& orbitals,
     /* scale data */
     mat.scale(grid.vel());
     /* gather data */
-    orbitals.augmentLocalData(mat);
+    Mesh* mymesh             = Mesh::instance();
+    const pb::Grid& mygrid   = mymesh->grid();
+    const pb::PEenv& myPEenv = mymesh->peenv();
+    double domain[3]         = { mygrid.ll(0), mygrid.ll(1), mygrid.ll(2) };
+
+    double maxr = orbitals.getMaxR();
+    DataDistribution distributor("Distributor4SinCos", maxr, myPEenv, domain);
+    distributor.augmentLocalData(mat, true);
 
     compute_tm_.stop();
 }

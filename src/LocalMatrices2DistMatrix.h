@@ -46,11 +46,8 @@ public:
 
     LocalMatrices2DistMatrix() { assert(comm_ != MPI_COMM_NULL); }
 
-    static void setup(MPI_Comm comm, const std::vector<std::vector<int>>& gids,
-        const int numst)
+    static void setup(MPI_Comm comm, const std::vector<std::vector<int>>& gids)
     {
-        dist_matrix::DistMatrix<DISTMATDTYPE> tmp("tmp", numst, numst);
-
         comm_           = comm;
         global_indexes_ = gids;
     }
@@ -62,7 +59,7 @@ public:
 
     template <class T>
     void accumulate(const LocalMatrices<T>& lmat,
-        dist_matrix::DistMatrix<T>& dst, const int numst,
+        dist_matrix::DistMatrix<T>& dst,
         const double tol = tol_mat_elements) const;
 };
 

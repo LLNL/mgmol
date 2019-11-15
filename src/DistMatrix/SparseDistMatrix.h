@@ -103,6 +103,12 @@ public:
 
     ~SparseDistMatrix<T>();
 
+    void addData(const std::vector<T>& data, const int ld, const int ilow,
+        const int ihi, const int jlow, const int jhi);
+    void addData(const std::vector<T>& data, const int ld, const int ilow,
+        const int ihi, const int jlow, const int jhi,
+        const std::vector<int>& gids);
+
     void push_back(const int index1, const int index2, const T val);
 
     void parallelSumToDistMatrix();
@@ -117,7 +123,7 @@ public:
         assign_tm_.print(os);
         consolidateArray_tm_.print(os);
     }
-    void scal(const double alpha);
+    void scal(const T alpha);
     void setPartitioning(const int target_nb_tasks_per_partition);
     void consolidateArray();
     size_t size() const;

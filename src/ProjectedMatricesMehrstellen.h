@@ -49,7 +49,7 @@ public:
     {
         LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
 
-        sl2dm->accumulate(ss, *work_, dim_);
+        sl2dm->accumulate(ss, *work_);
 
         *matB_ = *work_;
     }

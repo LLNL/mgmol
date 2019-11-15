@@ -17,8 +17,6 @@
 #include "global.h"
 
 class MasksSet;
-class ProjectedMatricesInterface;
-class LocalizationRegions;
 
 // implements AOMM algorithm ("kernel" function projectors)
 // by E. Tsuchida, J. Phys. Soc. Japan 76 (3), 2007, p. 034708

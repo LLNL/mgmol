@@ -92,7 +92,7 @@ void LocalMatrices2DistMatrix::convert(const LocalMatrices<T>& src,
 // one DistMatrix
 template <class T>
 void LocalMatrices2DistMatrix::accumulate(const LocalMatrices<T>& src,
-    dist_matrix::DistMatrix<T>& dst, const int numst, const double tol) const
+    dist_matrix::DistMatrix<T>& dst, const double tol) const
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     MPI_Comm comm   = mmpi.commSameSpin();
@@ -100,7 +100,7 @@ void LocalMatrices2DistMatrix::accumulate(const LocalMatrices<T>& src,
         comm, dst, sparse_distmatrix_nb_tasks_per_partitions_);
 
     // convert into a SparseDistMatrix
-    convert(src, sm, numst, tol);
+    convert(src, sm, dst.m(), tol);
 
     // accumulate into a DistMatrix
     sm.parallelSumToDistMatrix();
@@ -112,5 +112,4 @@ template void LocalMatrices2DistMatrix::convert(
     const double tol) const;
 template void LocalMatrices2DistMatrix::accumulate(
     const LocalMatrices<DISTMATDTYPE>& src,
-    dist_matrix::DistMatrix<DISTMATDTYPE>& dst, const int numst,
-    const double tol) const;
+    dist_matrix::DistMatrix<DISTMATDTYPE>& dst, const double tol) const;
