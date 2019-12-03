@@ -53,7 +53,7 @@ int SparseDistMatrix<double>::Alltoallv(const void* sendbuf,
     const int* sendcounts, const int* sdispls, void* recvbuf,
     const int* recvcounts, const int* rdispls, MPI_Comm comm)
 {
-    MPI_Alltoallv(sendbuf, sendcounts, sdispls, MPI_DOUBLE, recvbuf, recvcounts,
+    return MPI_Alltoallv(sendbuf, sendcounts, sdispls, MPI_DOUBLE, recvbuf, recvcounts,
         rdispls, MPI_DOUBLE, comm);
 }
 
@@ -62,7 +62,7 @@ int SparseDistMatrix<float>::Alltoallv(const void* sendbuf,
     const int* sendcounts, const int* sdispls, void* recvbuf,
     const int* recvcounts, const int* rdispls, MPI_Comm comm)
 {
-    MPI_Alltoallv(sendbuf, sendcounts, sdispls, MPI_FLOAT, recvbuf, recvcounts,
+    return MPI_Alltoallv(sendbuf, sendcounts, sdispls, MPI_FLOAT, recvbuf, recvcounts,
         rdispls, MPI_FLOAT, comm);
 }
 
@@ -70,7 +70,7 @@ template <>
 int SparseDistMatrix<double>::Alltoall(const void* sendbuf, int sendcount,
     void* recvbuf, int recvcount, MPI_Comm comm)
 {
-    MPI_Alltoall(
+    return MPI_Alltoall(
         sendbuf, sendcount, MPI_DOUBLE, recvbuf, recvcount, MPI_DOUBLE, comm);
 }
 
@@ -78,7 +78,7 @@ template <>
 int SparseDistMatrix<float>::Alltoall(const void* sendbuf, int sendcount,
     void* recvbuf, int recvcount, MPI_Comm comm)
 {
-    MPI_Alltoall(
+    return MPI_Alltoall(
         sendbuf, sendcount, MPI_FLOAT, recvbuf, recvcount, MPI_FLOAT, comm);
 }
 
@@ -86,28 +86,28 @@ template <>
 int SparseDistMatrix<double>::Isend(const void* buf, int count, int dest,
     int tag, MPI_Comm comm, MPI_Request* request)
 {
-    MPI_Isend(buf, count, MPI_DOUBLE, dest, tag, comm, request);
+    return MPI_Isend(buf, count, MPI_DOUBLE, dest, tag, comm, request);
 }
 
 template <>
 int SparseDistMatrix<float>::Isend(const void* buf, int count, int dest,
     int tag, MPI_Comm comm, MPI_Request* request)
 {
-    MPI_Isend(buf, count, MPI_FLOAT, dest, tag, comm, request);
+    return MPI_Isend(buf, count, MPI_FLOAT, dest, tag, comm, request);
 }
 
 template <>
 int SparseDistMatrix<double>::Irecv(void* buf, int count, int source, int tag,
     MPI_Comm comm, MPI_Request* request)
 {
-    MPI_Irecv(buf, count, MPI_DOUBLE, source, tag, comm, request);
+    return MPI_Irecv(buf, count, MPI_DOUBLE, source, tag, comm, request);
 }
 
 template <>
 int SparseDistMatrix<float>::Irecv(void* buf, int count, int source, int tag,
     MPI_Comm comm, MPI_Request* request)
 {
-    MPI_Irecv(buf, count, MPI_FLOAT, source, tag, comm, request);
+    return MPI_Irecv(buf, count, MPI_FLOAT, source, tag, comm, request);
 }
 
 template <class T>
@@ -551,8 +551,7 @@ void SparseDistMatrix<T>::assign(const int size, const T* const val)
                 std::cerr << "mype_=" << mype_ << ", size=" << size
                           << ", vi=" << vi << ", val[" << k << "]=" << val[k]
                           << ", i=" << i << ", j=" << j << ", pri=" << pri
-                          << ",mypr=" << mypr << ", vv=" << vv << std::endl
-                          << flush;
+                          << ",mypr=" << mypr << ", vv=" << vv << std::endl;
                 MPI_Barrier(comm_global_);
             }
             const int pcj = mat_.pc(j);
@@ -561,8 +560,7 @@ void SparseDistMatrix<T>::assign(const int size, const T* const val)
                 std::cerr << "mype_=" << mype_ << ", size=" << size
                           << ", vi=" << vi << ", val[" << k << "]=" << val[k]
                           << ", i=" << i << ", j=" << j << ", pcj=" << pcj
-                          << ",mypc=" << mypc << ", vv=" << vv << std::endl
-                          << flush;
+                          << ",mypc=" << mypc << ", vv=" << vv << std::endl;
                 MPI_Barrier(comm_global_);
             }
 #endif
