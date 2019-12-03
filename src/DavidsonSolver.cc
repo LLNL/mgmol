@@ -389,9 +389,9 @@ int DavidsonSolver<T>::solve(T& orbitals, T& work_orbitals)
     de_     = 100000.;
 
     KBPsiMatrixSparse kbpsi_1(0);
-    kbpsi_1.setup(ions_, orbitals);
+    kbpsi_1.setup(ions_);
     KBPsiMatrixSparse kbpsi_2(0);
-    kbpsi_2.setup(ions_, orbitals);
+    kbpsi_2.setup(ions_);
 
     dist_matrix::DistMatrix<DISTMATDTYPE> s11("s11", numst_, numst_);
     dist_matrix::DistMatrix<DISTMATDTYPE> s22("s22", numst_, numst_);

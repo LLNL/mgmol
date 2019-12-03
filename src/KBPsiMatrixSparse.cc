@@ -63,14 +63,11 @@ void KBPsiMatrixSparse::clearData()
     }
 }
 
-template <class T>
-void KBPsiMatrixSparse::setup(const Ions& ions, const T& orbitals)
+void KBPsiMatrixSparse::setup(const Ions& ions)
 {
     setup_tm_.start();
 
     setOutdated();
-
-    numst_ = orbitals.numst();
 
     // clear old data
     clearData();
@@ -290,19 +287,32 @@ void KBPsiMatrixSparse::computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi2,
     std::vector<int> pgids;
     ion.getGidsNLprojs(pgids);
 
+    const short nprojs = (short)pgids.size();
+    if(nprojs==0)return;
+
     std::vector<short> kbsigns;
     ion.getKBsigns(kbsigns);
 
     VariableSizeMatrix<sparserow>* kbBpsimat2 = kbpsi2->kbpsimat_;
 
     // loop over projectors associated with ion
-    const short nprojs = (short)pgids.size();
+
+    int* rindex = (int*)(kbBpsimat_->getTableValue(pgids[0]));
+    assert( rindex != nullptr);
+    const int lrindex  = *rindex;
+
+    std::vector<int> gids1;
+    kbBpsimat_->getColumnIndexes(lrindex, gids1);
+
+    std::vector<int> gids2;
+    kbBpsimat2->getColumnIndexes(lrindex, gids2);
+
     for (short i = 0; i < nprojs; i++)
     {
         const int gid = pgids[i];
 
         int* rindex = (int*)(kbBpsimat_->getTableValue(gid));
-        if (rindex == nullptr) continue;
+        assert( rindex != nullptr);
 
         // double loop over states to fill hnlij[st1][st2] (in general not
         // symmetric... )
@@ -315,7 +325,6 @@ void KBPsiMatrixSparse::computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi2,
 
         for (int p1 = 0; p1 < nnzrow1; p1++)
         {
-            const int st1       = kbBpsimat_->getColumnIndex(lrindex, p1);
             const double kbpsi1 = coeff * kbBpsimat_->getRowEntry(lrindex, p1);
             if (fabs(kbpsi1) > tolKBpsi)
             {
@@ -326,8 +335,7 @@ void KBPsiMatrixSparse::computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi2,
                     // set hnlij
                     if (fabs(alpha) > tolKBpsi)
                     {
-                        const int st2 = kbBpsimat2->getColumnIndex(lrindex, p2);
-                        hnlij.push_back(st1, st2, alpha);
+                        hnlij.push_back(gids1[p1], gids2[p2], alpha);
                     }
                 }
             }
@@ -771,7 +779,6 @@ template double KBPsiMatrixSparse::getEvnl(const Ions& ions,
     LocGridOrbitals& orbitals, ProjectedMatricesSparse* proj_matrices);
 template double KBPsiMatrixSparse::getEvnl(const Ions& ions,
     LocGridOrbitals& orbitals, ProjectedMatrices* proj_matrices);
-template void KBPsiMatrixSparse::setup(const Ions&, const LocGridOrbitals&);
 template void KBPsiMatrixSparse::computeAll(Ions&, LocGridOrbitals&);
 
 template void KBPsiMatrixSparse::computeKBpsi(Ions& ions,
@@ -781,6 +788,4 @@ template double KBPsiMatrixSparse::getEvnl(const Ions& ions,
     ExtendedGridOrbitals& orbitals, ProjectedMatricesSparse* proj_matrices);
 template double KBPsiMatrixSparse::getEvnl(const Ions& ions,
     ExtendedGridOrbitals& orbitals, ProjectedMatrices* proj_matrices);
-template void KBPsiMatrixSparse::setup(
-    const Ions&, const ExtendedGridOrbitals&);
 template void KBPsiMatrixSparse::computeAll(Ions&, ExtendedGridOrbitals&);

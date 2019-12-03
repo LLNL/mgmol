@@ -51,18 +51,14 @@ class KBPsiMatrixSparse : public KBPsiMatrixInterface
     DataDistribution* distributor_; // data distribution object
     double spread_radius_; // radius for spreading data
 
-    int numst_; // global number of functions
-
     int count_proj_subdomain_;
 
     void addKBPsi(const int gid, const int st, const double val) override
     {
-        assert(st < numst_);
         (*kbpsimat_).insertMatrixElement(gid, st, val, ADD, true);
     }
     void addKBBPsi(const int gid, const int st, const double val) override
     {
-        assert(st < numst_);
         (*kbBpsimat_).insertMatrixElement(gid, st, val, ADD, true);
     }
     double getKBPsi(const int gid, const int st) const
@@ -115,7 +111,6 @@ public:
         Ions& ions, pb::GridFunc<ORBDTYPE>*, const int, const bool flag);
     double getValIonState(const int gid, const int st) const
     {
-        assert(st < numst_);
         return (*kbpsimat_).get_value(gid, st);
     }
     void scaleWithKBcoeff(const Ions& ions);
@@ -137,8 +132,7 @@ public:
 
     template <class T>
     void computeAll(Ions& ions, T& orbitals);
-    template <class T>
-    void setup(const Ions& ions, const T& orbitals);
+    void setup(const Ions& ions);
 
     double getTraceDM(
         const int gid, const DISTMATDTYPE* const mat_X, const int numst) const;

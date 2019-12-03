@@ -416,7 +416,7 @@ int MGmol<T>::initial()
     }
 
     if (ct.verbose > 0) printWithTimeStamp("Setup kbpsi...", os_);
-    g_kbpsi_->setup(*ions_, *current_orbitals_);
+    g_kbpsi_->setup(*ions_);
 
     if (ct.restart_info == 0)
     {
