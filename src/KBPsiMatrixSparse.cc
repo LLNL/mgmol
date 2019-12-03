@@ -286,39 +286,47 @@ void KBPsiMatrixSparse::computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi2,
 {
     assert(ion.here());
 
-    vector<int> gids;
-    ion.getGidsNLprojs(gids);
-    vector<short> kbsigns;
+    // get projectors ids
+    std::vector<int> pgids;
+    ion.getGidsNLprojs(pgids);
+
+    std::vector<short> kbsigns;
     ion.getKBsigns(kbsigns);
-    const short nprojs = (short)gids.size();
+
+    VariableSizeMatrix<sparserow>* kbBpsimat2 = kbpsi2->kbpsimat_;
+
+    // loop over projectors associated with ion
+    const short nprojs = (short)pgids.size();
     for (short i = 0; i < nprojs; i++)
     {
-        const int gid      = gids[i];
-        const double coeff = (double)kbsigns[i];
+        const int gid = pgids[i];
+
+        int* rindex = (int*)(kbBpsimat_->getTableValue(gid));
+        if (rindex == nullptr) continue;
 
         // double loop over states to fill hnlij[st1][st2] (in general not
         // symmetric... )
-        int* rindex = (int*)(*kbBpsimat_).getTableValue(gid);
-        if (rindex == nullptr) continue;
-        const int lrindex = *rindex;
+        const double coeff = (double)kbsigns[i];
+        const int lrindex  = *rindex;
+
+        // get number of functions that overlaps with projector
         const int nnzrow1 = kbBpsimat_->nnzrow(lrindex);
+        const int nnzrow2 = kbBpsimat2->nnzrow(lrindex);
+
         for (int p1 = 0; p1 < nnzrow1; p1++)
         {
             const int st1       = kbBpsimat_->getColumnIndex(lrindex, p1);
             const double kbpsi1 = coeff * kbBpsimat_->getRowEntry(lrindex, p1);
             if (fabs(kbpsi1) > tolKBpsi)
             {
-                const int nnzrow2 = (*kbpsi2->kbpsimat_).nnzrow(lrindex);
                 for (int p2 = 0; p2 < nnzrow2; p2++)
                 {
                     const double alpha
-                        = kbpsi1
-                          * (*kbpsi2->kbpsimat_).getRowEntry(lrindex, p2);
-                    /* set hnlij */
+                        = kbpsi1 * kbBpsimat2->getRowEntry(lrindex, p2);
+                    // set hnlij
                     if (fabs(alpha) > tolKBpsi)
                     {
-                        const int st2
-                            = (*kbpsi2->kbpsimat_).getColumnIndex(lrindex, p2);
+                        const int st2 = kbBpsimat2->getColumnIndex(lrindex, p2);
                         hnlij.push_back(st1, st2, alpha);
                     }
                 }
