@@ -20,6 +20,7 @@
 #include "DistMatrix.h"
 #include "MPI_DistMatrixCommunicator.h"
 #include "RemoteTasksDistMatrix.h"
+#include "SquareSubMatrix.h"
 #include "Timer.h"
 
 #include <iostream>
@@ -119,6 +120,7 @@ public:
     void addData(const std::vector<T>& data, const int ld, const int ilow,
         const int ihi, const int jlow, const int jhi,
         const std::vector<int>& gids);
+    void addData(SquareSubMatrix<T>& mat);
 
     void push_back(const int index1, const int index2, const T val);
 

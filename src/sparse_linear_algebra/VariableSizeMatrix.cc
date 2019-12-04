@@ -949,6 +949,21 @@ void VariableSizeMatrix<T>::consolidate(
     distributor.updateLocalRows(*this, true);
 }
 
+template <class T>
+void VariableSizeMatrix<T>::getAllColumnIndexes(std::vector<int>& indexes) const
+{
+    std::set<int> allindexes;
+    for (auto d : data_)
+    {
+        for (auto v : d->getColumnIndexes())
+            allindexes.insert(v);
+    }
+    indexes.clear();
+    indexes.reserve(allindexes.size());
+    for (auto e : allindexes)
+        indexes.push_back(e);
+}
+
 template class VariableSizeMatrix<SparseRow>;
 template class VariableSizeMatrix<SparseRowAndTable>;
 template VariableSizeMatrix<SparseRow>::VariableSizeMatrix(
@@ -959,6 +974,3 @@ template double VariableSizeMatrix<SparseRow>::AmultSymBdiag(
     VariableSizeMatrix<SparseRow>* B, const int row);
 template double VariableSizeMatrix<SparseRow>::AmultSymBdiag(
     VariableSizeMatrix<SparseRowAndTable>* B, const int row);
-// template double
-// VariableSizeMatrix<SparseRow>::AmultSymB_ij(VariableSizeMatrix<SparseRowAndTable>
-// *B, const int row, const int col, Table& indexT);

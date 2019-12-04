@@ -53,8 +53,8 @@ int SparseDistMatrix<double>::Alltoallv(const void* sendbuf,
     const int* sendcounts, const int* sdispls, void* recvbuf,
     const int* recvcounts, const int* rdispls, MPI_Comm comm)
 {
-    return MPI_Alltoallv(sendbuf, sendcounts, sdispls, MPI_DOUBLE, recvbuf, recvcounts,
-        rdispls, MPI_DOUBLE, comm);
+    return MPI_Alltoallv(sendbuf, sendcounts, sdispls, MPI_DOUBLE, recvbuf,
+        recvcounts, rdispls, MPI_DOUBLE, comm);
 }
 
 template <>
@@ -62,8 +62,8 @@ int SparseDistMatrix<float>::Alltoallv(const void* sendbuf,
     const int* sendcounts, const int* sdispls, void* recvbuf,
     const int* recvcounts, const int* rdispls, MPI_Comm comm)
 {
-    return MPI_Alltoallv(sendbuf, sendcounts, sdispls, MPI_FLOAT, recvbuf, recvcounts,
-        rdispls, MPI_FLOAT, comm);
+    return MPI_Alltoallv(sendbuf, sendcounts, sdispls, MPI_FLOAT, recvbuf,
+        recvcounts, rdispls, MPI_FLOAT, comm);
 }
 
 template <>
@@ -220,6 +220,19 @@ void SparseDistMatrix<T>::addData(const std::vector<T>& data, const int ld,
                 if (gidi > -1) push_back(gidi, gidj, data[i + j * ld]);
             }
     }
+}
+
+template <class T>
+void SparseDistMatrix<T>::addData(SquareSubMatrix<T>& mat)
+{
+    const std::vector<int>& gid(mat.getGids());
+    const int n = gid.size();
+
+    for (int j = 0; j < n; j++)
+        for (int i = 0; i < n; i++)
+        {
+            push_back(gid[i], gid[j], mat.getLocalValue(i, j));
+        }
 }
 
 template <class T>

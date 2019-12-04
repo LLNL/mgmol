@@ -15,6 +15,7 @@
 #include "DensityMatrixSparse.h"
 #include "DistMatrixWithSparseComponent.h"
 #include "KBPsiMatrixInterface.h"
+#include "SquareSubMatrix.h"
 #include "VariableSizeMatrix.h"
 
 #include "GridFunc.h"
@@ -70,8 +71,11 @@ class KBPsiMatrixSparse : public KBPsiMatrixInterface
         return (*kbBpsimat_).get_value(gid, st);
     }
 
+    //    void computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi, const
+    //    Ion&,
+    //        dist_matrix::SparseDistMatrix<DISTMATDTYPE>&) const;
     void computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi, const Ion&,
-        dist_matrix::SparseDistMatrix<DISTMATDTYPE>&) const;
+        SquareSubMatrix<double>& mat) const;
     void computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi2,
         const Ion& ion, VariableSizeMatrix<sparserow>& mat) const;
     void computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi2, const Ion&,
@@ -115,13 +119,12 @@ public:
     }
     void scaleWithKBcoeff(const Ions& ions);
 
-    void computeHvnlMatrix(
-        const Ions&, dist_matrix::SparseDistMatrix<DISTMATDTYPE>&) const;
+    SquareSubMatrix<double> computeHvnlMatrix(const Ions&) const;
     void computeHvnlMatrix(const Ions&, VariableSizeMatrix<sparserow>&) const;
     void computeHvnlMatrix(const Ions&, ProjectedMatricesInterface*) const;
 
-    void computeHvnlMatrix(const KBPsiMatrixInterface* const kbpsi, const Ions&,
-        dist_matrix::SparseDistMatrix<DISTMATDTYPE>&) const;
+    SquareSubMatrix<double> computeHvnlMatrix(
+        const KBPsiMatrixInterface* const kbpsi, const Ions&) const;
     void computeHvnlMatrix(const KBPsiMatrixInterface* const kbpsi2,
         const Ions& ions,
         dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE>& Aij) const;

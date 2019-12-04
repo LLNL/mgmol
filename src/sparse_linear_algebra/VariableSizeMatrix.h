@@ -21,6 +21,7 @@
 #include "VariableSizeMatrixInterface.h"
 
 #include <iostream>
+#include <set>
 #include <vector>
 
 // typedef enum INSERTMODE  {INSERT, ADD} INSERTMODE;
@@ -201,6 +202,8 @@ public:
     {
         indexes = data_[lrindex]->getColumnIndexes();
     }
+
+    void getAllColumnIndexes(std::vector<int>& indexes) const;
 
     /* get value on local row */
     double getRowEntry(const int lrindex, const int pos) const
