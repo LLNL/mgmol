@@ -531,7 +531,7 @@ int MGmol<T>::quench(T* orbitals, Ions& ions, const int max_inner_steps,
     // get actual indexes of stored functions
     const std::vector<std::vector<int>>& gids(orbitals->getOverlappingGids());
 
-    g_kbpsi_->setup(*ions_, *orbitals);
+    g_kbpsi_->setup(*ions_);
     electrostat_->setup(ct.vh_its);
     rho_->setup(ct.getOrbitalsType(), gids);
 

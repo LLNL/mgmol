@@ -15,6 +15,7 @@
 #include "DensityMatrixSparse.h"
 #include "DistMatrixWithSparseComponent.h"
 #include "KBPsiMatrixInterface.h"
+#include "SquareSubMatrix.h"
 #include "VariableSizeMatrix.h"
 
 #include "GridFunc.h"
@@ -51,18 +52,14 @@ class KBPsiMatrixSparse : public KBPsiMatrixInterface
     DataDistribution* distributor_; // data distribution object
     double spread_radius_; // radius for spreading data
 
-    int numst_; // global number of functions
-
     int count_proj_subdomain_;
 
     void addKBPsi(const int gid, const int st, const double val) override
     {
-        assert(st < numst_);
         (*kbpsimat_).insertMatrixElement(gid, st, val, ADD, true);
     }
     void addKBBPsi(const int gid, const int st, const double val) override
     {
-        assert(st < numst_);
         (*kbBpsimat_).insertMatrixElement(gid, st, val, ADD, true);
     }
     double getKBPsi(const int gid, const int st) const
@@ -74,8 +71,11 @@ class KBPsiMatrixSparse : public KBPsiMatrixInterface
         return (*kbBpsimat_).get_value(gid, st);
     }
 
+    //    void computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi, const
+    //    Ion&,
+    //        dist_matrix::SparseDistMatrix<DISTMATDTYPE>&) const;
     void computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi, const Ion&,
-        dist_matrix::SparseDistMatrix<DISTMATDTYPE>&) const;
+        SquareSubMatrix<double>& mat) const;
     void computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi2,
         const Ion& ion, VariableSizeMatrix<sparserow>& mat) const;
     void computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi2, const Ion&,
@@ -115,18 +115,16 @@ public:
         Ions& ions, pb::GridFunc<ORBDTYPE>*, const int, const bool flag);
     double getValIonState(const int gid, const int st) const
     {
-        assert(st < numst_);
         return (*kbpsimat_).get_value(gid, st);
     }
     void scaleWithKBcoeff(const Ions& ions);
 
-    void computeHvnlMatrix(
-        const Ions&, dist_matrix::SparseDistMatrix<DISTMATDTYPE>&) const;
+    SquareSubMatrix<double> computeHvnlMatrix(const Ions&) const;
     void computeHvnlMatrix(const Ions&, VariableSizeMatrix<sparserow>&) const;
     void computeHvnlMatrix(const Ions&, ProjectedMatricesInterface*) const;
 
-    void computeHvnlMatrix(const KBPsiMatrixInterface* const kbpsi, const Ions&,
-        dist_matrix::SparseDistMatrix<DISTMATDTYPE>&) const;
+    SquareSubMatrix<double> computeHvnlMatrix(
+        const KBPsiMatrixInterface* const kbpsi, const Ions&) const;
     void computeHvnlMatrix(const KBPsiMatrixInterface* const kbpsi2,
         const Ions& ions,
         dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE>& Aij) const;
@@ -137,8 +135,7 @@ public:
 
     template <class T>
     void computeAll(Ions& ions, T& orbitals);
-    template <class T>
-    void setup(const Ions& ions, const T& orbitals);
+    void setup(const Ions& ions);
 
     double getTraceDM(
         const int gid, const DISTMATDTYPE* const mat_X, const int numst) const;

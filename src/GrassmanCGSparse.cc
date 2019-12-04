@@ -284,12 +284,12 @@ void GrassmanCGSparse<T>::computeOrbitalsProdWithH(T& orbitals1, T& orbitals2,
     // initialize KBPsiMatrices
     KBPsiMatrixSparse kbpsi_1(
         GrassmanLineMinimization<T>::hamiltonian_->lapOper());
-    kbpsi_1.setup(*GrassmanLineMinimization<T>::ptr2ions_, orbitals1);
+    kbpsi_1.setup(*GrassmanLineMinimization<T>::ptr2ions_);
     kbpsi_1.computeAll(*GrassmanLineMinimization<T>::ptr2ions_, orbitals1);
 
     KBPsiMatrixSparse kbpsi_2(
         GrassmanLineMinimization<T>::hamiltonian_->lapOper());
-    kbpsi_2.setup(*GrassmanLineMinimization<T>::ptr2ions_, orbitals2);
+    kbpsi_2.setup(*GrassmanLineMinimization<T>::ptr2ions_);
     kbpsi_2.computeAll(*GrassmanLineMinimization<T>::ptr2ions_, orbitals2);
 
     // compute P^T*H*Q (orbitals1=P; orbitals2=Q)
@@ -308,7 +308,7 @@ void GrassmanCGSparse<T>::computeOrbitalsProdWithH(
     // initialize KBPsiMatrices
     KBPsiMatrixSparse kbpsi(
         GrassmanLineMinimization<T>::hamiltonian_->lapOper());
-    kbpsi.setup(*GrassmanLineMinimization<T>::ptr2ions_, orbitals);
+    kbpsi.setup(*GrassmanLineMinimization<T>::ptr2ions_);
     kbpsi.computeAll(*GrassmanLineMinimization<T>::ptr2ions_, orbitals);
 
     // compute P^T*H*Q (orbitals1=P; orbitals2=Q)

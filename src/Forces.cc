@@ -497,7 +497,7 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
             shift[dir]      = shift_R[dir * NPTS + npt][dir];
             Ions shifted_ions(ions, shift); ///***
 
-            kbpsi[dir][npt]->setup(shifted_ions, orbitals);
+            kbpsi[dir][npt]->setup(shifted_ions);
             kbpsi[dir][npt]->computeAll(shifted_ions, orbitals);
         }
     }

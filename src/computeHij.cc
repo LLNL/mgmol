@@ -192,7 +192,9 @@ void MGmol<T>::computeHij_private(T& orbitals_i, T& orbitals_j,
     dist_matrix::SparseDistMatrix<DISTMATDTYPE> sparseH(
         comm, hij, sparse_distmatrix_nb_partitions);
 
-    kbpsi_i->computeHvnlMatrix(kbpsi_j, ions, sparseH);
+    SquareSubMatrix<double> submat = kbpsi_i->computeHvnlMatrix(kbpsi_j, ions);
+
+    sparseH.addData(submat);
 
     // add local Hamiltonian part to phi^T*H*phi
     addHlocal2matrix(orbitals_i, orbitals_j, sparseH);
@@ -238,25 +240,9 @@ void MGmol<T>::computeHij_private(T& orbitals_i, T& orbitals_j,
     dist_matrix::SparseDistMatrix<DISTMATDTYPE> sparseH(
         comm, hij, sparse_distmatrix_nb_partitions);
 
-    kbpsi->computeHvnlMatrix(ions, sparseH);
+    SquareSubMatrix<double> submat = kbpsi->computeHvnlMatrix(ions);
 
-    // add local Hamiltonian part to phi^T*H*phi
-    addHlocal2matrix(orbitals_i, orbitals_j, sparseH);
-
-    // sum matrix elements among processors
-    sparseH.parallelSumToDistMatrix();
-}
-
-template <class T>
-void MGmol<T>::computeHij(T& orbitals_i, T& orbitals_j, const Ions& ions,
-    const KBPsiMatrixSparse* const kbpsi,
-    dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sparseH)
-{
-#ifdef PRINT_OPERATIONS
-    if (onpe0) os_ << "computeHij()" << endl;
-#endif
-
-    kbpsi->computeHvnlMatrix(ions, sparseH);
+    sparseH.addData(submat);
 
     // add local Hamiltonian part to phi^T*H*phi
     addHlocal2matrix(orbitals_i, orbitals_j, sparseH);
@@ -290,20 +276,6 @@ void MGmol<T>::getKBPsiAndHij(T& orbitals_i, T& orbitals_j, Ions& ions,
     kbpsi->computeAll(ions, orbitals_i);
 
     computeHij(orbitals_i, orbitals_j, ions, kbpsi, hij, true);
-
-    projmatrices->setHiterativeIndex(orbitals_j.getIterativeIndex(),
-        hamiltonian_->potential().getIterativeIndex());
-}
-
-template <class T>
-void MGmol<T>::getKBPsiAndHij(T& orbitals_i, T& orbitals_j, Ions& ions,
-    KBPsiMatrixSparse* kbpsi, ProjectedMatricesInterface* projmatrices,
-    dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sh)
-{
-    kbpsi->computeAll(ions, orbitals_i);
-
-    sh.clearData();
-    computeHij(orbitals_i, orbitals_j, ions, kbpsi, sh);
 
     projmatrices->setHiterativeIndex(orbitals_j.getIterativeIndex(),
         hamiltonian_->potential().getIterativeIndex());

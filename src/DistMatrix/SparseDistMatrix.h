@@ -17,16 +17,16 @@
 #ifndef MGMOL_SPARSEDISTMATRIX_H
 #define MGMOL_SPARSEDISTMATRIX_H
 
-#include <mpi.h>
-
 #include "DistMatrix.h"
 #include "MPI_DistMatrixCommunicator.h"
 #include "RemoteTasksDistMatrix.h"
+#include "SquareSubMatrix.h"
 #include "Timer.h"
 
 #include <iostream>
 #include <map>
 #include <memory>
+#include <mpi.h>
 #include <vector>
 
 namespace dist_matrix
@@ -53,7 +53,6 @@ private:
     int ntasks_mat_;
 
     static std::shared_ptr<RemoteTasksDistMatrix<T>> rtasks_distmatrix_;
-    // vector<short> other_tasks_indexes_;
 
     std::shared_ptr<MPI_DistMatrixCommunicator> partition_comm_;
     int ntasks_per_partition_;
@@ -73,6 +72,19 @@ private:
     void sendRecvData();
     void parallelSumToDistMatrix1();
     void parallelSumToDistMatrix2();
+
+    int Alltoallv(const void* sendbuf, const int* sendcounts,
+        const int* sdispls, void* recvbuf, const int* recvcounts,
+        const int* rdispls, MPI_Comm comm);
+
+    int Alltoall(const void* sendbuf, int sendcount, void* recvbuf,
+        int recvcount, MPI_Comm comm);
+
+    int Isend(const void* buf, int count, int dest, int tag, MPI_Comm comm,
+        MPI_Request* request);
+
+    int Irecv(void* buf, int count, int source, int tag, MPI_Comm comm,
+        MPI_Request* request);
 
 public:
     static void setNumTasksPerPartitioning(const int nb)
@@ -108,6 +120,7 @@ public:
     void addData(const std::vector<T>& data, const int ld, const int ilow,
         const int ihi, const int jlow, const int jhi,
         const std::vector<int>& gids);
+    void addData(SquareSubMatrix<T>& mat);
 
     void push_back(const int index1, const int index2, const T val);
 

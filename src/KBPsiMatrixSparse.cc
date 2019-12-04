@@ -63,14 +63,11 @@ void KBPsiMatrixSparse::clearData()
     }
 }
 
-template <class T>
-void KBPsiMatrixSparse::setup(const Ions& ions, const T& orbitals)
+void KBPsiMatrixSparse::setup(const Ions& ions)
 {
     setup_tm_.start();
 
     setOutdated();
-
-    numst_ = orbitals.numst();
 
     // clear old data
     clearData();
@@ -282,44 +279,68 @@ void KBPsiMatrixSparse::scaleWithKBcoeff(const Ions& ions)
 // Note: neglecting the small matrix elements reduces the size of hnlij and thus
 //       reduces the size of communications later on.
 void KBPsiMatrixSparse::computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi2,
-    const Ion& ion, dist_matrix::SparseDistMatrix<DISTMATDTYPE>& hnlij) const
+    const Ion& ion, SquareSubMatrix<double>& hnlij) const
 {
     assert(ion.here());
 
-    vector<int> gids;
-    ion.getGidsNLprojs(gids);
-    vector<short> kbsigns;
+    // get projectors ids
+    std::vector<int> pgids;
+    ion.getGidsNLprojs(pgids);
+
+    const short nprojs = (short)pgids.size();
+    if (nprojs == 0) return;
+
+    std::vector<short> kbsigns;
     ion.getKBsigns(kbsigns);
-    const short nprojs = (short)gids.size();
+
+    VariableSizeMatrix<sparserow>* kbBpsimat2 = kbpsi2->kbpsimat_;
+
+    // loop over projectors associated with ion
+
+    int* rindex0 = (int*)(kbBpsimat_->getTableValue(pgids[0]));
+    assert(rindex0 != nullptr);
+    const int lrindex0 = *rindex0;
+
+    // get number of functions that overlaps with projector
+    const int nnzrow = kbBpsimat_->nnzrow(lrindex0);
+    assert(kbBpsimat2->nnzrow(lrindex0) == nnzrow);
+
+    std::vector<int> gids1;
+    kbBpsimat_->getColumnIndexes(lrindex0, gids1);
+
+    std::vector<int> gids2;
+    kbBpsimat2->getColumnIndexes(lrindex0, gids2);
+
     for (short i = 0; i < nprojs; i++)
     {
-        const int gid      = gids[i];
-        const double coeff = (double)kbsigns[i];
+        const int gid = pgids[i];
+
+        int* rindex = (int*)(kbBpsimat_->getTableValue(gid));
+        assert(rindex != nullptr);
 
         // double loop over states to fill hnlij[st1][st2] (in general not
         // symmetric... )
-        int* rindex = (int*)(*kbBpsimat_).getTableValue(gid);
-        if (rindex == nullptr) continue;
-        const int lrindex = *rindex;
-        const int nnzrow1 = kbBpsimat_->nnzrow(lrindex);
-        for (int p1 = 0; p1 < nnzrow1; p1++)
+        const double coeff = (double)kbsigns[i];
+        const int lrindex  = *rindex;
+
+        // assume all rows associated with this atoms have the same
+        // number of non-zero elements
+        assert(nnzrow == kbBpsimat_->nnzrow(lrindex));
+
+        for (int p1 = 0; p1 < nnzrow; p1++)
         {
-            const int st1       = kbBpsimat_->getColumnIndex(lrindex, p1);
             const double kbpsi1 = coeff * kbBpsimat_->getRowEntry(lrindex, p1);
             if (fabs(kbpsi1) > tolKBpsi)
             {
-                const int nnzrow2 = (*kbpsi2->kbpsimat_).nnzrow(lrindex);
-                for (int p2 = 0; p2 < nnzrow2; p2++)
+                for (int p2 = 0; p2 < nnzrow; p2++)
                 {
                     const double alpha
-                        = kbpsi1
-                          * (*kbpsi2->kbpsimat_).getRowEntry(lrindex, p2);
-                    /* set hnlij */
+                        = kbpsi1 * kbBpsimat2->getRowEntry(lrindex, p2);
+                    // set hnlij
                     if (fabs(alpha) > tolKBpsi)
                     {
-                        const int st2
-                            = (*kbpsi2->kbpsimat_).getColumnIndex(lrindex, p2);
-                        hnlij.push_back(st1, st2, alpha);
+                        // hnlij.push_back(gids1[p1], gids2[p2], alpha);
+                        hnlij.addValue(gids1[p1], gids2[p2], alpha);
                     }
                 }
             }
@@ -426,10 +447,10 @@ void KBPsiMatrixSparse::computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi2,
     }
 }
 
-void KBPsiMatrixSparse::computeHvnlMatrix(
-    const Ions& ions, dist_matrix::SparseDistMatrix<DISTMATDTYPE>& Aij) const
+SquareSubMatrix<double> KBPsiMatrixSparse::computeHvnlMatrix(
+    const Ions& ions) const
 {
-    computeHvnlMatrix(this, ions, Aij);
+    return computeHvnlMatrix(this, ions);
 }
 
 void KBPsiMatrixSparse::computeHvnlMatrix(
@@ -448,26 +469,34 @@ void KBPsiMatrixSparse::computeHvnlMatrix(
     const KBPsiMatrixInterface* const kbpsi2, const Ions& ions,
     dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE>& Aij) const
 {
-    computeHvnlMatrix(kbpsi2, ions, Aij.sparse());
+    SquareSubMatrix<double> submat = computeHvnlMatrix(kbpsi2, ions);
+
+    dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sparseH(Aij.sparse());
+
+    sparseH.addData(submat);
 }
 
 // build <P|phi> elements, one atom at a time
-void KBPsiMatrixSparse::computeHvnlMatrix(
-    const KBPsiMatrixInterface* const kbpsi2, const Ions& ions,
-    dist_matrix::SparseDistMatrix<DISTMATDTYPE>& Aij) const
+SquareSubMatrix<double> KBPsiMatrixSparse::computeHvnlMatrix(
+    const KBPsiMatrixInterface* const kbpsi2, const Ions& ions) const
 {
     computeHvnlMatrix_tm_.start();
 
+    std::vector<int> indexes;
+    kbpsimat_->getAllColumnIndexes(indexes);
+
+    SquareSubMatrix<double> Aij(indexes);
+
     // Loop over ions centered on current PE only
     // (distribution of work AND Hvnlij contributions)
-    vector<Ion*>::const_iterator ion = ions.local_ions().begin();
-    while (ion != ions.local_ions().end())
+    for (auto ion : ions.local_ions())
     {
-        computeHvnlMatrix((KBPsiMatrixSparse*)kbpsi2, **ion, Aij);
-        ion++;
+        computeHvnlMatrix((KBPsiMatrixSparse*)kbpsi2, *ion, Aij);
     }
 
     computeHvnlMatrix_tm_.stop();
+
+    return Aij;
 }
 
 // build <P|phi> elements, one atom at a time
@@ -763,7 +792,6 @@ template double KBPsiMatrixSparse::getEvnl(const Ions& ions,
     LocGridOrbitals& orbitals, ProjectedMatricesSparse* proj_matrices);
 template double KBPsiMatrixSparse::getEvnl(const Ions& ions,
     LocGridOrbitals& orbitals, ProjectedMatrices* proj_matrices);
-template void KBPsiMatrixSparse::setup(const Ions&, const LocGridOrbitals&);
 template void KBPsiMatrixSparse::computeAll(Ions&, LocGridOrbitals&);
 
 template void KBPsiMatrixSparse::computeKBpsi(Ions& ions,
@@ -773,6 +801,4 @@ template double KBPsiMatrixSparse::getEvnl(const Ions& ions,
     ExtendedGridOrbitals& orbitals, ProjectedMatricesSparse* proj_matrices);
 template double KBPsiMatrixSparse::getEvnl(const Ions& ions,
     ExtendedGridOrbitals& orbitals, ProjectedMatrices* proj_matrices);
-template void KBPsiMatrixSparse::setup(
-    const Ions&, const ExtendedGridOrbitals&);
 template void KBPsiMatrixSparse::computeAll(Ions&, ExtendedGridOrbitals&);

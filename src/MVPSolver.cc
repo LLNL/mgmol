@@ -184,7 +184,7 @@ int MVPSolver<T>::solve(T& orbitals)
     //    os_<<"NEW algorithm: Number of electrons at start = "<<nel<<endl;
 
     KBPsiMatrixSparse kbpsi(nullptr);
-    kbpsi.setup(ions_, orbitals);
+    kbpsi.setup(ions_);
 
     dist_matrix::DistMatrix<DISTMATDTYPE> s11("s11", numst_, numst_);
     {
