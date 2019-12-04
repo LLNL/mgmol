@@ -19,7 +19,7 @@
 
 #include <vector>
 
-#define PAD 3
+#define PAD 0
 
 // memory allocation is done for the class and not for specific instances
 // thus the use of static variables and functions

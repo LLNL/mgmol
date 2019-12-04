@@ -14,12 +14,7 @@
 #include "MPIdata.h"
 #include "global.h"
 
-using namespace std;
-
-// Timer BlockVectorBase::set_data_tm_("BlockVector::set_data_wghosts");
-// Timer BlockVectorBase::trade_data_tm_("BlockVector::trade_data");
-
-#define NEWSTORAGE 1
+#define NEWSTORAGE 0
 
 template <typename T>
 BlockVector<T>::BlockVector(
@@ -43,8 +38,8 @@ BlockVector<T>::BlockVector(
 
     n_instances_++;
 }
-template <>
-BlockVector<double>::~BlockVector()
+template <typename T>
+BlockVector<T>::~BlockVector()
 {
     deallocate_storage();
     if (n_instances_ == 1)
@@ -52,27 +47,13 @@ BlockVector<double>::~BlockVector()
         delete data_wghosts_;
         data_wghosts_ = nullptr;
         allocated_.clear();
-        for (vector<double*>::iterator it = class_storage_.begin();
+        for (typename std::vector<T*>::iterator it = class_storage_.begin();
              it != class_storage_.end(); ++it)
             delete[] * it;
     }
     n_instances_--;
 }
-template <>
-BlockVector<float>::~BlockVector()
-{
-    deallocate_storage();
-    if (n_instances_ == 1)
-    {
-        delete data_wghosts_;
-        data_wghosts_ = nullptr;
-        allocated_.clear();
-        for (vector<float*>::iterator it = class_storage_.begin();
-             it != class_storage_.end(); ++it)
-            delete[] * it;
-    }
-    n_instances_--;
-}
+
 template <typename T>
 void BlockVector<T>::allocate1NewBlock()
 {
@@ -89,20 +70,20 @@ void BlockVector<T>::allocate1NewBlock()
     {
         (*MPIdata::sout)
             << "BlockVector::allocate1NewBlock(): allocated_size_storage_ = "
-            << allocated_size_storage_ << endl;
+            << allocated_size_storage_ << std::endl;
         (*MPIdata::sout)
             << "BlockVector::allocate1NewBlock(): size_storage_           = "
-            << size_storage_ << endl;
+            << size_storage_ << std::endl;
         (*MPIdata::sout)
             << "BlockVector::allocate1NewBlock(): size_storage_ too large!!!"
-            << endl;
+            << std::endl;
         exit(0);
     }
 
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 1)
         (*MPIdata::sout) << "BlockVector, allocate memory size "
-                         << allocated_size_storage_ << endl;
+                         << allocated_size_storage_ << std::endl;
 
     class_storage_.push_back(new T[allocated_size_storage_]);
 
@@ -117,18 +98,13 @@ void BlockVector<T>::allocate_storage()
     Control& ct                  = *(Control::instance());
     static short high_water_mark = 0;
 
-    // assert( allocated_.size()<=n_instances_ );
-
-    // if( onpe0 )
-    //    (*MPIdata::sout)<<"n_instances_="<<n_instances_<<endl;
-
 #ifdef NEWSTORAGE
     // firt time, allocate memory for max_alloc_instances_ objects
     if (allocated_.size() == 0)
     {
         if (onpe0 && ct.verbose > 1)
             (*MPIdata::sout) << "BlockVector, allocate " << max_alloc_instances_
-                             << " instances" << endl;
+                             << " instances" << std::endl;
         for (short i = 0; i < max_alloc_instances_; i++)
             allocate1NewBlock();
 
@@ -138,8 +114,8 @@ void BlockVector<T>::allocate_storage()
     }
     else
     {
-        vector<short>::iterator ia = allocated_.begin();
-        short ii                   = 0;
+        std::vector<short>::iterator ia = allocated_.begin();
+        short ii                        = 0;
         while (ia != allocated_.end())
         {
             if (*ia == 0) break;
@@ -157,8 +133,9 @@ void BlockVector<T>::allocate_storage()
         my_allocation_ = ii;
         if (my_allocation_ >= static_cast<int>(class_storage_.size()))
         {
-            cerr << "Number of allocated blocks: " << class_storage_.size()
-                 << ", Cannot allocate another BlockVector!!!" << endl;
+            std::cerr << "Number of allocated blocks: " << class_storage_.size()
+                      << ", Cannot allocate another BlockVector!!!"
+                      << std::endl;
             exit(0);
         }
     }
@@ -166,8 +143,9 @@ void BlockVector<T>::allocate_storage()
     if (my_allocation_ > high_water_mark) high_water_mark = my_allocation_;
     if (onpe0 && ct.verbose > 2)
     {
-        (*MPIdata::sout) << "allocation in slot " << my_allocation_ << endl;
-        (*MPIdata::sout) << "high water mark: " << high_water_mark << endl;
+        (*MPIdata::sout) << "allocation in slot " << my_allocation_
+                         << std::endl;
+        (*MPIdata::sout) << "high water mark: " << high_water_mark << std::endl;
     }
     assert(my_allocation_ < static_cast<int>(class_storage_.size()));
     assert(my_allocation_ < static_cast<int>(class_storage_.size()));
@@ -175,9 +153,9 @@ void BlockVector<T>::allocate_storage()
 
     if (allocated_size_storage_ < size_storage_)
     {
-        cerr << "ERROR BlockVector: trying to use allocation " << size_storage_
-             << " bigger than initialy preallocated " << allocated_size_storage_
-             << "!!!" << endl;
+        std::cerr << "ERROR BlockVector: trying to use allocation "
+                  << size_storage_ << " bigger than initialy preallocated "
+                  << allocated_size_storage_ << "!!!" << std::endl;
         ct.global_exit(0);
     }
     storage_ = class_storage_[my_allocation_];
@@ -294,7 +272,7 @@ void BlockVector<T>::assignComponent(
 
 template <typename T>
 void BlockVector<T>::initialize(
-    const vector<vector<int>>& gid, const bool skinny_stencil)
+    const std::vector<std::vector<int>>& gid, const bool skinny_stencil)
 {
     assert(storage_ == nullptr);
 
@@ -396,8 +374,8 @@ void BlockVector<T>::hasnan(const int j) const
     for (int i = 0; i < ld_; i++)
     {
         if (std::isnan(vect_[j][i]))
-            (*MPIdata::sout)
-                << "BlockVector: Nan in column " << j << ", row " << i << endl;
+            (*MPIdata::sout) << "BlockVector: Nan in column " << j << ", row "
+                             << i << std::endl;
     }
 }
 template <typename T>
@@ -419,8 +397,6 @@ void BlockVector<T>::setDataWithGhosts(pb::GridFuncVector<T2>* data_wghosts)
 
     data_wghosts->set_updated_boundaries(false);
 
-    // if( onpe0 )
-    //    (*MPIdata::sout)<<"BlockVector::set_data_with_ghosts()"<<endl;
     for (int i = 0; i < (int)vect_.size(); i++)
     {
         data_wghosts->assign(i, vect_[i]);
@@ -430,29 +406,18 @@ void BlockVector<T>::setDataWithGhosts(pb::GridFuncVector<T2>* data_wghosts)
 }
 
 template <typename T>
-void BlockVector<T>::printTimers(ostream& os)
+void BlockVector<T>::printTimers(std::ostream& os)
 {
     set_data_tm_.print(os);
     trade_data_tm_.print(os);
 }
 
-template <>
-float BlockVector<float>::maxAbsValue() const
+template <typename T>
+T BlockVector<T>::maxAbsValue() const
 {
-    int ione   = 1;
-    int imax   = ISAMAX(&size_storage_, storage_, &ione);
-    float maxv = fabs(storage_[imax - 1]);
-    MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
-    mmpi.allreduce(&maxv, 1, MPI_MAX);
-    return maxv;
-}
-
-template <>
-double BlockVector<double>::maxAbsValue() const
-{
-    int ione    = 1;
-    int imax    = IDAMAX(&size_storage_, storage_, &ione);
-    double maxv = fabs(storage_[imax - 1]);
+    int ione = 1;
+    int imax = IDAMAX(&size_storage_, storage_, &ione);
+    T maxv   = fabs(storage_[imax - 1]);
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
     mmpi.allreduce(&maxv, 1, MPI_MAX);
     return maxv;
