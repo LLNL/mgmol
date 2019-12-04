@@ -21,11 +21,11 @@
 
 #define PAD 0
 
-// memory allocation is done for the class and not for specific instances
-// thus the use of static variables and functions
-// this is done to avoid not finding blocks large enough later during run
-// due to memory fragmentation
-template <typename T>
+// When using NEWSTORAGE memory allocation is done for the class and not for
+// specific instances thus the use of static variables and functions this is
+// done to avoid not finding blocks large enough later during run due to memory
+// fragmentation
+template <typename ScalarType>
 class BlockVector
 {
     static Timer set_data_tm_;
@@ -34,10 +34,10 @@ class BlockVector
     static short n_instances_;
     static short subdivx_;
 
-    static pb::GridFuncVector<T>* data_wghosts_;
+    static pb::GridFuncVector<ScalarType>* data_wghosts_;
 
     // data allocator
-    static std::vector<T*> class_storage_;
+    static std::vector<ScalarType*> class_storage_;
 
     // tells which blocks are allocated (1) or not (0)
     // to a specific instantiated object
@@ -56,9 +56,9 @@ class BlockVector
     // for that object
     short my_allocation_;
 
-    T* storage_; // storage for data
+    ScalarType* storage_; // storage for data
 
-    std::vector<T*> vect_; // pointers to storage of vectors
+    std::vector<ScalarType*> vect_; // pointers to storage of vectors
 
     static int numel_; // nb elements in each vector
     static int locnumel_;
@@ -86,13 +86,13 @@ public:
 
     ~BlockVector();
 
-    const pb::GridFuncVector<T>& getDataWGhosts()
+    const pb::GridFuncVector<ScalarType>& getDataWGhosts()
     {
         assert(data_wghosts_ != 0);
         return *data_wghosts_;
     }
 
-    pb::GridFuncVector<T>* getPtDataWGhosts() { return data_wghosts_; }
+    pb::GridFuncVector<ScalarType>* getPtDataWGhosts() { return data_wghosts_; }
 
     void initialize(
         const std::vector<std::vector<int>>& gid, const bool skinny_stencil);
@@ -106,33 +106,33 @@ public:
 
     void axpy(const double alpha, const BlockVector& bv)
     {
-        assert(storage_ != 0);
-        assert(bv.storage_ != 0);
+        assert(storage_ != nullptr);
+        assert(bv.storage_ != nullptr);
         assert(storage_ != bv.storage_);
 
         MPaxpy(size_storage_, alpha, bv.storage_, storage_);
     }
 
-    void axpy(const double alpha, const T* const vy)
+    void axpy(const double alpha, const ScalarType* const vy)
     {
         MPaxpy(size_storage_, alpha, vy, storage_);
     }
 
-    T* vect(const int i) const
+    ScalarType* vect(const int i) const
     {
         assert(i < (int)vect_.size());
         assert(vect_[i] != 0);
         return vect_[i];
     }
 
-    T maxAbsValue() const;
+    ScalarType maxAbsValue() const;
 
-    template <typename T2>
-    void setDataWithGhosts(pb::GridFuncVector<T2>* data_wghosts);
+    template <typename ScalarType2>
+    void setDataWithGhosts(pb::GridFuncVector<ScalarType2>* data_wghosts);
 
     void setDataWithGhosts();
 
-    void assign(const int color, const T* const src, const int n = 1)
+    void assign(const int color, const ScalarType* const src, const int n = 1)
     {
         assert((color + n - 1) < (int)vect_.size());
         int ione   = 1;
@@ -140,38 +140,41 @@ public:
         Tcopy(&mysize, src, &ione, vect_[color], &ione);
     }
 
-    void assign(const T* const src)
+    void assign(const ScalarType* const src)
     {
-        memcpy(storage_, src, size_storage_ * sizeof(T));
+        memcpy(storage_, src, size_storage_ * sizeof(ScalarType));
     }
 
     /*
      * assign functions for source data with ghost values
      */
-    template <typename T2>
-    void assign(const pb::GridFuncVector<T2>& src);
-    template <typename T2>
-    void assignComponent(const pb::GridFunc<T2>& src, const int i);
-    template <typename T2>
-    void assignComponent(const pb::GridFuncVector<T2>& src, const int i);
+    template <typename ScalarType2>
+    void assign(const pb::GridFuncVector<ScalarType2>& src);
+    template <typename ScalarType2>
+    void assignComponent(const pb::GridFunc<ScalarType2>& src, const int i);
+    template <typename ScalarType2>
+    void assignComponent(
+        const pb::GridFuncVector<ScalarType2>& src, const int i);
 
-    void assignLocal(const int color, const short iloc, const T* const src)
+    void assignLocal(
+        const int color, const short iloc, const ScalarType* const src)
     {
         assert(color >= 0);
         assert(color < (int)vect_.size());
         assert(iloc < subdivx_);
-        memcpy(vect_[color] + iloc * locnumel_, src, locnumel_ * sizeof(T));
+        memcpy(vect_[color] + iloc * locnumel_, src,
+            locnumel_ * sizeof(ScalarType));
     }
 
     void copyDataFrom(const BlockVector& src)
     {
         assert(src.size_storage_ == size_storage_);
-        assert(storage_ != 0);
-        assert(src.storage_ != 0);
-        memcpy(storage_, src.storage_, size_storage_ * sizeof(T));
+        assert(storage_ != nullptr);
+        assert(src.storage_ != nullptr);
+        memcpy(storage_, src.storage_, size_storage_ * sizeof(ScalarType));
     }
 
-    pb::GridFunc<T>& getVectorWithGhosts(const int i)
+    pb::GridFunc<ScalarType>& getVectorWithGhosts(const int i)
     {
         assert(data_wghosts_ != 0);
         assert(i < static_cast<int>(vect_.size()));
@@ -179,7 +182,7 @@ public:
         return data_wghosts_->func(i);
     }
 
-    void setStorage(T* new_storage)
+    void setStorage(ScalarType* new_storage)
     {
         assert(new_storage != 0 || vect_.size() == 0);
 
@@ -205,19 +208,20 @@ public:
 
     void scal(const int i, const double alpha);
     void scal(const double alpha);
-    void set_zero() { memset(storage_, 0, size_storage_ * sizeof(T)); }
+    void set_zero() { memset(storage_, 0, size_storage_ * sizeof(ScalarType)); }
     void set_zero(const int i, const short iloc)
     {
         assert(i < static_cast<int>(vect_.size()));
         assert(iloc < subdivx_);
-        memset(vect_[i] + iloc * locnumel_, 0, locnumel_ * sizeof(T));
+        memset(vect_[i] + iloc * locnumel_, 0, locnumel_ * sizeof(ScalarType));
     }
     void set_zero(const int i)
     {
         assert(i < static_cast<int>(vect_.size()));
 
         for (short iloc = 0; iloc < subdivx_; iloc++)
-            memset(vect_[i] + iloc * locnumel_, 0, locnumel_ * sizeof(T));
+            memset(
+                vect_[i] + iloc * locnumel_, 0, locnumel_ * sizeof(ScalarType));
     }
     double dot(const int i, const int j, const short iloc) const;
     void scal(const double alpha, const int i, const short iloc);
@@ -256,39 +260,40 @@ public:
     static void printTimers(std::ostream& os);
 };
 
-template <typename T>
-std::vector<T*> BlockVector<T>::class_storage_;
-template <typename T>
-std::vector<short> BlockVector<T>::allocated_;
+template <typename ScalarType>
+std::vector<ScalarType*> BlockVector<ScalarType>::class_storage_;
+template <typename ScalarType>
+std::vector<short> BlockVector<ScalarType>::allocated_;
 
 // 4 slots for phi, residual, work, H*phi
-template <typename T>
-short BlockVector<T>::max_alloc_instances_ = 4;
-template <typename T>
-pb::GridFuncVector<T>* BlockVector<T>::data_wghosts_ = nullptr;
+template <typename ScalarType>
+short BlockVector<ScalarType>::max_alloc_instances_ = 4;
+template <typename ScalarType>
+pb::GridFuncVector<ScalarType>* BlockVector<ScalarType>::data_wghosts_
+    = nullptr;
 
-template <typename T>
-int BlockVector<T>::size_storage_ = 0;
-template <typename T>
-int BlockVector<T>::numel_ = -1;
-template <typename T>
-int BlockVector<T>::locnumel_ = -1;
-template <typename T>
-short BlockVector<T>::subdivx_ = -1;
-template <typename T>
-short BlockVector<T>::n_instances_ = 0;
-template <typename T>
-int BlockVector<T>::allocated_size_storage_ = 0;
-template <typename T>
-float BlockVector<T>::overallocate_factor_
+template <typename ScalarType>
+int BlockVector<ScalarType>::size_storage_ = 0;
+template <typename ScalarType>
+int BlockVector<ScalarType>::numel_ = -1;
+template <typename ScalarType>
+int BlockVector<ScalarType>::locnumel_ = -1;
+template <typename ScalarType>
+short BlockVector<ScalarType>::subdivx_ = -1;
+template <typename ScalarType>
+short BlockVector<ScalarType>::n_instances_ = 0;
+template <typename ScalarType>
+int BlockVector<ScalarType>::allocated_size_storage_ = 0;
+template <typename ScalarType>
+float BlockVector<ScalarType>::overallocate_factor_
     = 0.; // should be explicitly set to value >= 1
 
-template <typename T>
-int BlockVector<T>::ld_ = 0;
+template <typename ScalarType>
+int BlockVector<ScalarType>::ld_ = 0;
 
-template <typename T>
-Timer BlockVector<T>::set_data_tm_("BlockVector::set_data_wghosts");
+template <typename ScalarType>
+Timer BlockVector<ScalarType>::set_data_tm_("BlockVector::set_data_wghosts");
 
-template <typename T>
-Timer BlockVector<T>::trade_data_tm_("BlockVector::trade_data");
+template <typename ScalarType>
+Timer BlockVector<ScalarType>::trade_data_tm_("BlockVector::trade_data");
 #endif
