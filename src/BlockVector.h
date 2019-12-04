@@ -25,7 +25,7 @@
 // specific instances thus the use of static variables and functions this is
 // done to avoid not finding blocks large enough later during run due to memory
 // fragmentation
-template <typename ScalarType>
+template <typename ScalarType, typename MemorySpaceType>
 class BlockVector
 {
     static Timer set_data_tm_;
@@ -260,40 +260,44 @@ public:
     static void printTimers(std::ostream& os);
 };
 
-template <typename ScalarType>
-std::vector<ScalarType*> BlockVector<ScalarType>::class_storage_;
-template <typename ScalarType>
-std::vector<short> BlockVector<ScalarType>::allocated_;
+template <typename ScalarType, typename MemorySpaceType>
+std::vector<ScalarType*>
+    BlockVector<ScalarType, MemorySpaceType>::class_storage_;
+template <typename ScalarType, typename MemorySpaceType>
+std::vector<short> BlockVector<ScalarType, MemorySpaceType>::allocated_;
 
 // 4 slots for phi, residual, work, H*phi
-template <typename ScalarType>
-short BlockVector<ScalarType>::max_alloc_instances_ = 4;
-template <typename ScalarType>
-pb::GridFuncVector<ScalarType>* BlockVector<ScalarType>::data_wghosts_
+template <typename ScalarType, typename MemorySpaceType>
+short BlockVector<ScalarType, MemorySpaceType>::max_alloc_instances_ = 4;
+template <typename ScalarType, typename MemorySpaceType>
+pb::GridFuncVector<ScalarType>*
+    BlockVector<ScalarType, MemorySpaceType>::data_wghosts_
     = nullptr;
 
-template <typename ScalarType>
-int BlockVector<ScalarType>::size_storage_ = 0;
-template <typename ScalarType>
-int BlockVector<ScalarType>::numel_ = -1;
-template <typename ScalarType>
-int BlockVector<ScalarType>::locnumel_ = -1;
-template <typename ScalarType>
-short BlockVector<ScalarType>::subdivx_ = -1;
-template <typename ScalarType>
-short BlockVector<ScalarType>::n_instances_ = 0;
-template <typename ScalarType>
-int BlockVector<ScalarType>::allocated_size_storage_ = 0;
-template <typename ScalarType>
-float BlockVector<ScalarType>::overallocate_factor_
+template <typename ScalarType, typename MemorySpaceType>
+int BlockVector<ScalarType, MemorySpaceType>::size_storage_ = 0;
+template <typename ScalarType, typename MemorySpaceType>
+int BlockVector<ScalarType, MemorySpaceType>::numel_ = -1;
+template <typename ScalarType, typename MemorySpaceType>
+int BlockVector<ScalarType, MemorySpaceType>::locnumel_ = -1;
+template <typename ScalarType, typename MemorySpaceType>
+short BlockVector<ScalarType, MemorySpaceType>::subdivx_ = -1;
+template <typename ScalarType, typename MemorySpaceType>
+short BlockVector<ScalarType, MemorySpaceType>::n_instances_ = 0;
+template <typename ScalarType, typename MemorySpaceType>
+int BlockVector<ScalarType, MemorySpaceType>::allocated_size_storage_ = 0;
+template <typename ScalarType, typename MemorySpaceType>
+float BlockVector<ScalarType, MemorySpaceType>::overallocate_factor_
     = 0.; // should be explicitly set to value >= 1
 
-template <typename ScalarType>
-int BlockVector<ScalarType>::ld_ = 0;
+template <typename ScalarType, typename MemorySpaceType>
+int BlockVector<ScalarType, MemorySpaceType>::ld_ = 0;
 
-template <typename ScalarType>
-Timer BlockVector<ScalarType>::set_data_tm_("BlockVector::set_data_wghosts");
+template <typename ScalarType, typename MemorySpaceType>
+Timer BlockVector<ScalarType, MemorySpaceType>::set_data_tm_(
+    "BlockVector::set_data_wghosts");
 
-template <typename ScalarType>
-Timer BlockVector<ScalarType>::trade_data_tm_("BlockVector::trade_data");
+template <typename ScalarType, typename MemorySpaceType>
+Timer BlockVector<ScalarType, MemorySpaceType>::trade_data_tm_(
+    "BlockVector::trade_data");
 #endif
