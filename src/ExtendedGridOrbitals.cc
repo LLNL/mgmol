@@ -1557,45 +1557,35 @@ void ExtendedGridOrbitals::initRand()
     resetIterativeIndex();
 }
 
-// Compute nstates column of Psi^T*A*Psi starting at column first_color
-// WARNING: values are added to sparse_matrix!!
-void ExtendedGridOrbitals::addDotWithNcol2Matrix(ExtendedGridOrbitals& Apsi,
-    dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sparse_matrix) const
+void ExtendedGridOrbitals::addDotWithNcol2Matrix(
+    ExtendedGridOrbitals& Apsi, dist_matrix::DistMatrix<double>& matrix) const
 {
+    std::cout << "####### Call addDotWithNcol2Matrix ###########" << std::endl;
+
     addDot_tm_.start();
 
     assert(numst_ > 0);
 
-#ifdef DEBUG
-    Control& ct = *(Control::instance());
-    if (onpe0 && ct.verbose > 2)
-        (*MPIdata::sout)
-            << "ExtendedGridOrbitals::addDotWithNcol2Matrix for states 0 to "
-            << numst_ - 1 << std::endl;
-    for (short icolor = 0; icolor < numst_; icolor++)
-    {
-        block_vector_.hasnan(icolor);
-    }
-    for (int icolor = 0; icolor < numst_; icolor++)
-    {
-        Apsi.block_vector_.hasnan(icolor);
-    }
-#endif
     const double vel = grid_.vel();
 
-    const int size_work_cols = numst_ * numst_;
-    std::vector<DISTMATDTYPE> work_cols(size_work_cols);
-    memset(work_cols.data(), 0,
-        size_work_cols * sizeof(DISTMATDTYPE)); // necessary on bgl!!
+    // replicated matrix
+    const int size_work = numst_ * numst_;
+    std::vector<double> work(size_work);
+    memset(work.data(), 0, size_work * sizeof(double));
 
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
         MPgemmTN(numst_, numst_, loc_numpt_, vel,
             block_vector_.vect(0) + iloc * loc_numpt_, lda_,
-            Apsi.getPsi(0, iloc), lda_, 0., work_cols.data(), numst_);
-
-        sparse_matrix.addData(work_cols, numst_, 0, numst_, 0, numst_);
+            Apsi.getPsi(0, iloc), lda_, 1., work.data(), numst_);
     }
+
+    std::vector<double> work2(size_work);
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    mmpi.allreduce(work.data(), work2.data(), numst_ * numst_, MPI_SUM);
+
+    // replicated -> DistMatrix
+    matrix.add(work2.data(), numst_);
 
     addDot_tm_.stop();
 }

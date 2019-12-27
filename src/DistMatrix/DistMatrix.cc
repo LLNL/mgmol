@@ -1791,6 +1791,28 @@ void DistMatrix<T>::init(const T* const a, const int lda)
     }
 }
 
+template <class T>
+void DistMatrix<T>::add(const T* const a, const int lda)
+{
+    if (active_)
+    {
+        for (int li = 0; li < mblocks_; li++)
+        {
+            for (int lj = 0; lj < nblocks_; lj++)
+            {
+                for (int ii = 0; ii < mbs(li); ii++)
+                {
+                    for (int jj = 0; jj < nbs(lj); jj++)
+                    {
+                        val_[(ii + li * mb_) + (jj + lj * nb_) * mloc_]
+                            += a[i(li, ii) + j(lj, jj) * lda];
+                    }
+                }
+            }
+        }
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 template <class T>
 double DistMatrix<T>::sumProdElements(const DistMatrix<T>& a) const
