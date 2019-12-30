@@ -43,7 +43,6 @@ class IonicAlgorithm;
 #include "AOMMprojector.h"
 #include "BasicDataDistributors.h"
 #include "ClusterOrbitals.h"
-#include "DistMatrixWithSparseComponent.h"
 #include "ExtendedGridOrbitals.h"
 #include "Forces.h"
 #include "Ions.h"
@@ -225,8 +224,6 @@ public:
     void computeHij(T& orbitals_i, T& orbitals_j, const Ions& ions,
         const KBPsiMatrixSparse* const kbpsi, ProjectedMatricesInterface*);
 
-    void addHlocal2matrix(T& orbitalsi, T& orbitalsj,
-        dist_matrix::DistMatrixWithSparseComponent<double>& mat);
     void addHlocal2matrix(
         T& orbitalsi, T& orbitalsj, dist_matrix::DistMatrix<double>& mat);
     void addHlocal2matrix(

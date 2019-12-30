@@ -25,17 +25,17 @@
 double evalEntropyMVP(ProjectedMatricesInterface* projmatrices,
     const bool print_flag, std::ostream& os);
 
-template <class T1, class T3, class T4>
-Timer HamiltonianMVPSolver<T1, T3, T4>::solve_tm_(
+template <class T1, class T2, class T3>
+Timer HamiltonianMVPSolver<T1, T2, T3>::solve_tm_(
     "HamiltonianMVPSolver::solve");
-template <class T1, class T3, class T4>
-Timer HamiltonianMVPSolver<T1, T3, T4>::target_tm_(
+template <class T1, class T2, class T3>
+Timer HamiltonianMVPSolver<T1, T2, T3>::target_tm_(
     "HamiltonianMVPSolver::target");
 
-template <class T1, class T3, class T4>
-HamiltonianMVPSolver<T1, T3, T4>::HamiltonianMVPSolver(MPI_Comm comm,
-    std::ostream& os, Ions& ions, Rho<T4>* rho, Energy<T4>* energy,
-    Electrostatic* electrostat, MGmol<T4>* mgmol_strategy, const int numst,
+template <class T1, class T2, class T3>
+HamiltonianMVPSolver<T1, T2, T3>::HamiltonianMVPSolver(MPI_Comm comm,
+    std::ostream& os, Ions& ions, Rho<T3>* rho, Energy<T3>* energy,
+    Electrostatic* electrostat, MGmol<T3>* mgmol_strategy, const int numst,
     const double kbT, const int nel,
     const std::vector<std::vector<int>>& global_indexes,
     const short n_inner_steps, const T1& hinit,
@@ -59,22 +59,22 @@ HamiltonianMVPSolver<T1, T3, T4>::HamiltonianMVPSolver(MPI_Comm comm,
     initial_hmatrix_ = new T1(hinit);
 }
 
-template <class T1, class T3, class T4>
-HamiltonianMVPSolver<T1, T3, T4>::~HamiltonianMVPSolver()
+template <class T1, class T2, class T3>
+HamiltonianMVPSolver<T1, T2, T3>::~HamiltonianMVPSolver()
 {
     delete hmatrix_;
     delete initial_hmatrix_;
 }
 
-template <class T1, class T3, class T4>
-void HamiltonianMVPSolver<T1, T3, T4>::reset()
+template <class T1, class T2, class T3>
+void HamiltonianMVPSolver<T1, T2, T3>::reset()
 {
     (*hmatrix_) = (*initial_hmatrix_);
 }
 
 // update density matrix in N x N space
-template <class T1, class T3, class T4>
-int HamiltonianMVPSolver<T1, T3, T4>::solve(T4& orbitals)
+template <class T1, class T2, class T3>
+int HamiltonianMVPSolver<T1, T2, T3>::solve(T3& orbitals)
 {
     Control& ct = *(Control::instance());
 
@@ -101,7 +101,7 @@ int HamiltonianMVPSolver<T1, T3, T4>::solve(T4& orbitals)
     KBPsiMatrixSparse kbpsi(nullptr);
     kbpsi.setup(ions_);
 
-    T3* projmatrices = dynamic_cast<T3*>(orbitals.getProjMatrices());
+    T2* projmatrices = dynamic_cast<T2*>(orbitals.getProjMatrices());
 
     int iterative_index = 0;
 
@@ -345,8 +345,8 @@ int HamiltonianMVPSolver<T1, T3, T4>::solve(T4& orbitals)
     return 0;
 }
 
-template <class T1, class T3, class T4>
-void HamiltonianMVPSolver<T1, T3, T4>::printTimers(std::ostream& os)
+template <class T1, class T2, class T3>
+void HamiltonianMVPSolver<T1, T2, T3>::printTimers(std::ostream& os)
 {
     if (onpe0)
     {

@@ -14,7 +14,6 @@
 #include "MGmol_blas1.h"
 
 #include "Control.h"
-#include "DistMatrixWithSparseComponent.h"
 #include "Energy.h"
 #include "GridFuncVector.h"
 #include "Hamiltonian.h"
@@ -434,49 +433,6 @@ void MGmol<T>::computeHnlPhiAndAdd2HPhi(
     }
 
     hphi.setIterativeIndex(phi.getIterativeIndex());
-}
-
-template <>
-void MGmol<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals& orbitalsi,
-    LocGridOrbitals& orbitalsj,
-    dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE>& mat)
-{
-    computeHij_tm_.start();
-
-#if DEBUG
-    os_ << " addHlocal2matrix()" << std::endl;
-#endif
-
-    // create a new sparse data structure initialized with content of
-    // mat.sparse()
-    dist_matrix::SparseDistMatrix<DISTMATDTYPE> sparse(mat.sparse());
-
-    // add local H to sparse
-    hamiltonian_->addHlocal2matrix(orbitalsi, orbitalsj, sparse);
-
-    // sum up values in sparse into a DistMatrix (initialized with zeroes)
-    sparse.parallelSumToDistMatrix();
-
-    computeHij_tm_.stop();
-}
-
-template <>
-void MGmol<ExtendedGridOrbitals>::addHlocal2matrix(
-    ExtendedGridOrbitals& orbitalsi, ExtendedGridOrbitals& orbitalsj,
-    dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE>& mat)
-{
-    computeHij_tm_.start();
-
-#if DEBUG
-    os_ << "########## addHlocal2matrix() ##############" << std::endl;
-#endif
-    dist_matrix::SparseDistMatrix<DISTMATDTYPE> sparse(mat.sparse());
-
-    sparse.parallelSumToDistMatrix();
-
-    hamiltonian_->addHlocal2matrix(orbitalsi, orbitalsj, mat);
-
-    computeHij_tm_.stop();
 }
 
 template <class T>

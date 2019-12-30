@@ -18,10 +18,10 @@
 #include "ProjectedMatrices.h"
 #include "ProjectedMatricesSparse.h"
 
-template <class T1, class T3, class T4>
-HamiltonianMVP_DMStrategy<T1, T3, T4>::HamiltonianMVP_DMStrategy(MPI_Comm comm,
-    std::ostream& os, Ions& ions, Rho<T4>* rho, Energy<T4>* energy,
-    Electrostatic* electrostat, MGmol<T4>* mgmol_strategy, T4* orbitals)
+template <class T1, class T2, class T3>
+HamiltonianMVP_DMStrategy<T1, T2, T3>::HamiltonianMVP_DMStrategy(MPI_Comm comm,
+    std::ostream& os, Ions& ions, Rho<T3>* rho, Energy<T3>* energy,
+    Electrostatic* electrostat, MGmol<T3>* mgmol_strategy, T3* orbitals)
     : orbitals_(orbitals),
       comm_(comm),
       os_(os),
@@ -38,27 +38,27 @@ HamiltonianMVP_DMStrategy<T1, T3, T4>::HamiltonianMVP_DMStrategy(MPI_Comm comm,
     assert(energy_ != nullptr);
     assert(ct.dm_inner_steps > 0);
 
-    T3* projmatrices = dynamic_cast<T3*>(orbitals->getProjMatrices());
+    T2* projmatrices = dynamic_cast<T2*>(orbitals->getProjMatrices());
 
     solver_
-        = new HamiltonianMVPSolver<T1, T3, T4>(comm_, os_, ions_, rho_, energy_,
+        = new HamiltonianMVPSolver<T1, T2, T3>(comm_, os_, ions_, rho_, energy_,
             electrostat_, mgmol_strategy_, ct.numst, ct.occ_width, ct.getNel(),
             global_indexes_, ct.dm_inner_steps, projmatrices->getH(), true);
 }
 
-template <class T1, class T3, class T4>
-HamiltonianMVP_DMStrategy<T1, T3, T4>::~HamiltonianMVP_DMStrategy()
+template <class T1, class T2, class T3>
+HamiltonianMVP_DMStrategy<T1, T2, T3>::~HamiltonianMVP_DMStrategy()
 {
     delete solver_;
 }
 
-template <class T1, class T3, class T4>
-void HamiltonianMVP_DMStrategy<T1, T3, T4>::initialize()
+template <class T1, class T2, class T3>
+void HamiltonianMVP_DMStrategy<T1, T2, T3>::initialize()
 {
 }
 
-template <class T1, class T3, class T4>
-int HamiltonianMVP_DMStrategy<T1, T3, T4>::update()
+template <class T1, class T2, class T3>
+int HamiltonianMVP_DMStrategy<T1, T2, T3>::update()
 {
     assert(solver_ != nullptr);
 
@@ -72,18 +72,18 @@ int HamiltonianMVP_DMStrategy<T1, T3, T4>::update()
     return solver_->solve(*orbitals_);
 }
 
-template <class T1, class T3, class T4>
-void HamiltonianMVP_DMStrategy<T1, T3, T4>::stripDM()
+template <class T1, class T2, class T3>
+void HamiltonianMVP_DMStrategy<T1, T2, T3>::stripDM()
 {
 }
 
-template <class T1, class T3, class T4>
-void HamiltonianMVP_DMStrategy<T1, T3, T4>::dressDM()
+template <class T1, class T2, class T3>
+void HamiltonianMVP_DMStrategy<T1, T2, T3>::dressDM()
 {
 }
 
-template <class T1, class T3, class T4>
-void HamiltonianMVP_DMStrategy<T1, T3, T4>::reset()
+template <class T1, class T2, class T3>
+void HamiltonianMVP_DMStrategy<T1, T2, T3>::reset()
 {
     solver_->reset();
 }
