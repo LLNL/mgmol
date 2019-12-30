@@ -31,8 +31,6 @@ Timer DavidsonSolver<T>::solve_tm_("DavidsonSolver::solve");
 template <class T>
 Timer DavidsonSolver<T>::target_tm_("DavidsonSolver::target");
 
-static int sparse_distmatrix_nb_partitions = 128;
-
 double evalEntropy(ProjectedMatricesInterface* projmatrices,
     const bool print_flag, std::ostream& os)
 {

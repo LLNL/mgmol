@@ -28,8 +28,6 @@ Timer MVPSolver<T>::solve_tm_("MVPSolver::solve");
 template <class T>
 Timer MVPSolver<T>::target_tm_("MVPSolver::target");
 
-static int sparse_distmatrix_nb_partitions = 128;
-
 double evalEntropyMVP(ProjectedMatricesInterface* projmatrices,
     const bool print_flag, std::ostream& os)
 {

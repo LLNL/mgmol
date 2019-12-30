@@ -1560,8 +1560,6 @@ void ExtendedGridOrbitals::initRand()
 void ExtendedGridOrbitals::addDotWithNcol2Matrix(
     ExtendedGridOrbitals& Apsi, dist_matrix::DistMatrix<double>& matrix) const
 {
-    std::cout << "####### Call addDotWithNcol2Matrix ###########" << std::endl;
-
     addDot_tm_.start();
 
     assert(numst_ > 0);
