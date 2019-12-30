@@ -13,7 +13,7 @@
 
 #include "DataDistribution.h"
 #include "DensityMatrixSparse.h"
-#include "DistMatrixWithSparseComponent.h"
+#include "DistMatrix.h"
 #include "KBPsiMatrixInterface.h"
 #include "SquareSubMatrix.h"
 #include "VariableSizeMatrix.h"
@@ -126,8 +126,7 @@ public:
     SquareSubMatrix<double> computeHvnlMatrix(
         const KBPsiMatrixInterface* const kbpsi, const Ions&) const;
     void computeHvnlMatrix(const KBPsiMatrixInterface* const kbpsi2,
-        const Ions& ions,
-        dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE>& Aij) const;
+        const Ions& ions, dist_matrix::DistMatrix<DISTMATDTYPE>& Aij) const;
     void computeHvnlMatrix(const KBPsiMatrixInterface* const kbpsi, const Ions&,
         VariableSizeMatrix<sparserow>&) const;
     void computeHvnlMatrix(const KBPsiMatrixInterface* const kbpsi2,

@@ -11,19 +11,16 @@
 #include "HamiltonianMVP_DMStrategy.h"
 #include "Control.h"
 #include "DistMatrix.h"
-#include "DistMatrixWithSparseComponent.h"
 #include "HamiltonianMVPSolver.h"
 #include "Ions.h"
 #include "LocGridOrbitals.h"
 #include "MGmol.h"
 #include "ProjectedMatrices.h"
 #include "ProjectedMatricesSparse.h"
-#include <vector>
-using namespace std;
 
-template <class T1, class T2, class T3, class T4>
-HamiltonianMVP_DMStrategy<T1, T2, T3, T4>::HamiltonianMVP_DMStrategy(
-    MPI_Comm comm, ostream& os, Ions& ions, Rho<T4>* rho, Energy<T4>* energy,
+template <class T1, class T3, class T4>
+HamiltonianMVP_DMStrategy<T1, T3, T4>::HamiltonianMVP_DMStrategy(MPI_Comm comm,
+    std::ostream& os, Ions& ions, Rho<T4>* rho, Energy<T4>* energy,
     Electrostatic* electrostat, MGmol<T4>* mgmol_strategy, T4* orbitals)
     : orbitals_(orbitals),
       comm_(comm),
@@ -43,60 +40,59 @@ HamiltonianMVP_DMStrategy<T1, T2, T3, T4>::HamiltonianMVP_DMStrategy(
 
     T3* projmatrices = dynamic_cast<T3*>(orbitals->getProjMatrices());
 
-    solver_ = new HamiltonianMVPSolver<T1, T2, T3, T4>(comm_, os_, ions_, rho_,
-        energy_, electrostat_, mgmol_strategy_, ct.numst, ct.occ_width,
-        ct.getNel(), global_indexes_, ct.dm_inner_steps, projmatrices->getH(),
-        true);
+    solver_
+        = new HamiltonianMVPSolver<T1, T3, T4>(comm_, os_, ions_, rho_, energy_,
+            electrostat_, mgmol_strategy_, ct.numst, ct.occ_width, ct.getNel(),
+            global_indexes_, ct.dm_inner_steps, projmatrices->getH(), true);
 }
 
-template <class T1, class T2, class T3, class T4>
-HamiltonianMVP_DMStrategy<T1, T2, T3, T4>::~HamiltonianMVP_DMStrategy()
+template <class T1, class T3, class T4>
+HamiltonianMVP_DMStrategy<T1, T3, T4>::~HamiltonianMVP_DMStrategy()
 {
     delete solver_;
 }
 
-template <class T1, class T2, class T3, class T4>
-void HamiltonianMVP_DMStrategy<T1, T2, T3, T4>::initialize()
+template <class T1, class T3, class T4>
+void HamiltonianMVP_DMStrategy<T1, T3, T4>::initialize()
 {
 }
 
-template <class T1, class T2, class T3, class T4>
-int HamiltonianMVP_DMStrategy<T1, T2, T3, T4>::update()
+template <class T1, class T3, class T4>
+int HamiltonianMVP_DMStrategy<T1, T3, T4>::update()
 {
     assert(solver_ != nullptr);
 
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 2)
     {
-        (*MPIdata::sout) << "HamiltonianMVP_DMStrategy::update()..." << endl;
+        (*MPIdata::sout) << "HamiltonianMVP_DMStrategy::update()..."
+                         << std::endl;
     }
 
     return solver_->solve(*orbitals_);
 }
 
-template <class T1, class T2, class T3, class T4>
-void HamiltonianMVP_DMStrategy<T1, T2, T3, T4>::stripDM()
+template <class T1, class T3, class T4>
+void HamiltonianMVP_DMStrategy<T1, T3, T4>::stripDM()
 {
 }
 
-template <class T1, class T2, class T3, class T4>
-void HamiltonianMVP_DMStrategy<T1, T2, T3, T4>::dressDM()
+template <class T1, class T3, class T4>
+void HamiltonianMVP_DMStrategy<T1, T3, T4>::dressDM()
 {
 }
 
-template <class T1, class T2, class T3, class T4>
-void HamiltonianMVP_DMStrategy<T1, T2, T3, T4>::reset()
+template <class T1, class T3, class T4>
+void HamiltonianMVP_DMStrategy<T1, T3, T4>::reset()
 {
     solver_->reset();
 }
 
 template class HamiltonianMVP_DMStrategy<dist_matrix::DistMatrix<DISTMATDTYPE>,
-    dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE>, ProjectedMatrices,
-    LocGridOrbitals>;
+    ProjectedMatrices, LocGridOrbitals>;
 
 template class HamiltonianMVP_DMStrategy<VariableSizeMatrix<sparserow>,
-    VariableSizeMatrix<sparserow>, ProjectedMatricesSparse, LocGridOrbitals>;
+    ProjectedMatricesSparse, LocGridOrbitals>;
 
 template class HamiltonianMVP_DMStrategy<dist_matrix::DistMatrix<DISTMATDTYPE>,
-    dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE>, ProjectedMatrices,
-    ExtendedGridOrbitals>;
+    ProjectedMatrices, ExtendedGridOrbitals>;

@@ -23,6 +23,8 @@
 
 using namespace std;
 
+static int sparse_distmatrix_nb_partitions = 128;
+
 Timer KBPsiMatrixSparse::global_sum_tm_("KBPsiMatrixSparse::global_sum");
 Timer KBPsiMatrixSparse::compute_kbpsi_tm_("KBPsiMatrixSparse::compute_kbpsi");
 Timer KBPsiMatrixSparse::computeHvnlMatrix_tm_(
@@ -467,13 +469,19 @@ void KBPsiMatrixSparse::computeHvnlMatrix(
 
 void KBPsiMatrixSparse::computeHvnlMatrix(
     const KBPsiMatrixInterface* const kbpsi2, const Ions& ions,
-    dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE>& Aij) const
+    dist_matrix::DistMatrix<DISTMATDTYPE>& hij) const
 {
-    SquareSubMatrix<double> submat = computeHvnlMatrix(kbpsi2, ions);
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    MPI_Comm comm   = mmpi.commSameSpin();
+    dist_matrix::SparseDistMatrix<DISTMATDTYPE> sparseH(
+        comm, hij, sparse_distmatrix_nb_partitions);
 
-    dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sparseH(Aij.sparse());
+    SquareSubMatrix<double> submat(computeHvnlMatrix(kbpsi2, ions));
 
     sparseH.addData(submat);
+
+    // sum matrix elements among processors
+    sparseH.parallelSumToDistMatrix();
 }
 
 // build <P|phi> elements, one atom at a time

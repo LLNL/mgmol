@@ -81,6 +81,16 @@ DistMatrix<T>::DistMatrix(const std::string& name, const int m, const int n)
     resize(m, n, distmatrix_def_block_size_, distmatrix_def_block_size_);
 }
 
+template <class T>
+DistMatrix<T>::DistMatrix(
+    const std::string& name, const int m, const MPI_Comm comm)
+    : object_name_(name), bc_(*default_bc_), comm_global_(comm)
+{
+    assert(comm == default_bc_->comm_global());
+
+    resize(m, m, distmatrix_def_block_size_, distmatrix_def_block_size_);
+}
+
 // Construct a DistMatrix of dimensions m,n
 template <class T>
 DistMatrix<T>::DistMatrix(const std::string& name, const BlacsContext& bc,

@@ -22,7 +22,7 @@ class Electrostatic;
 template <class T>
 class MGmol;
 
-template <class T1, class T2, class T3, class T4>
+template <class T1, class T3, class T4>
 class HamiltonianMVP_DMStrategy : public DMStrategy
 {
 private:
@@ -38,7 +38,7 @@ private:
     const std::vector<std::vector<int>>& global_indexes_;
     MGmol<T4>* mgmol_strategy_;
 
-    HamiltonianMVPSolver<T1, T2, T3, T4>* solver_;
+    HamiltonianMVPSolver<T1, T3, T4>* solver_;
 
 public:
     HamiltonianMVP_DMStrategy(MPI_Comm comm, std::ostream& os, Ions& ions,

@@ -214,7 +214,7 @@ public:
     DistMatrix<T>(const std::string& name, const BlacsContext& bc, const int m,
         const int n);
 
-    DistMatrix<T>(const std::string& name, const int m, const int n);
+    explicit DistMatrix<T>(const std::string& name, const int m, const int n);
 
     // Construct a DistMatrix of dimensions m,n
     DistMatrix<T>(const std::string& name, const BlacsContext& bc, const int m,
@@ -222,6 +222,8 @@ public:
 
     DistMatrix<T>(const std::string& name, const int m, const int n,
         const int mb, const int nb);
+
+    explicit DistMatrix<T>(const std::string& name, const int m, MPI_Comm comm);
 
     // copy constructor
     DistMatrix<T>(const DistMatrix<T>& a);

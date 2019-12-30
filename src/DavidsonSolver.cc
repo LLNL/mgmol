@@ -11,7 +11,6 @@
 
 #include "DavidsonSolver.h"
 #include "Control.h"
-#include "DistMatrixWithSparseComponent.h"
 #include "Electrostatic.h"
 #include "Energy.h"
 #include "ExtendedGridOrbitals.h"
@@ -428,17 +427,18 @@ int DavidsonSolver<T>::solve(T& orbitals, T& work_orbitals)
         // Update density
         rho_->update(orbitals);
 
-        dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE> h11(
-            "h11", numst_, numst_, comm_, sparse_distmatrix_nb_partitions);
-        dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE> h22(
-            "h22", numst_, numst_, comm_, sparse_distmatrix_nb_partitions);
-        dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE> h12(
-            "h12", numst_, numst_, comm_, sparse_distmatrix_nb_partitions);
+        dist_matrix::DistMatrix<DISTMATDTYPE> h11("h11", numst_, numst_);
+        dist_matrix::DistMatrix<DISTMATDTYPE> h22("h22", numst_, numst_);
+        dist_matrix::DistMatrix<DISTMATDTYPE> h12("h12", numst_, numst_);
         dist_matrix::DistMatrix<DISTMATDTYPE> h21("h21", numst_, numst_);
+
+        dist_matrix::DistMatrix<DISTMATDTYPE> h11nl("h11nl", numst_, numst_);
+        dist_matrix::DistMatrix<DISTMATDTYPE> h22nl("h22nl", numst_, numst_);
+        dist_matrix::DistMatrix<DISTMATDTYPE> h12nl("h12nl", numst_, numst_);
 
         kbpsi_1.computeAll(ions_, orbitals);
 
-        kbpsi_1.computeHvnlMatrix(&kbpsi_1, ions_, h11);
+        kbpsi_1.computeHvnlMatrix(&kbpsi_1, ions_, h11nl);
 
         for (int inner_it = 0; inner_it < ct.dm_inner_steps; inner_it++)
         {
@@ -502,18 +502,21 @@ int DavidsonSolver<T>::solve(T& orbitals, T& work_orbitals)
                 work_orbitals.setDataWithGhosts();
                 kbpsi_2.computeAll(ions_, work_orbitals);
 
-                kbpsi_2.computeHvnlMatrix(&kbpsi_2, ions_, h22);
-                kbpsi_1.computeHvnlMatrix(&kbpsi_2, ions_, h12);
+                kbpsi_2.computeHvnlMatrix(&kbpsi_2, ions_, h22nl);
+                kbpsi_1.computeHvnlMatrix(&kbpsi_2, ions_, h12nl);
             }
             else
             {
+                h11 = h11nl;
                 mgmol_strategy_->addHlocal2matrix(orbitals, orbitals, h11);
             }
 
             // update h22, h12 and h21
+            h22 = h22nl;
             mgmol_strategy_->addHlocal2matrix(
                 work_orbitals, work_orbitals, h22);
 
+            h12 = h12nl;
             mgmol_strategy_->addHlocal2matrix(orbitals, work_orbitals, h12);
 
             h21.transpose(1., h12, 0.);
@@ -577,11 +580,14 @@ int DavidsonSolver<T>::solve(T& orbitals, T& work_orbitals)
             energy_->saveVofRho();
 
             // update h11, h22, h12, and h21
+            h11 = h11nl;
             mgmol_strategy_->addHlocal2matrix(orbitals, orbitals, h11);
 
+            h22 = h22nl;
             mgmol_strategy_->addHlocal2matrix(
                 work_orbitals, work_orbitals, h22);
 
+            h12 = h12nl;
             mgmol_strategy_->addHlocal2matrix(orbitals, work_orbitals, h12);
 
             h21.transpose(1., h12, 0.);
