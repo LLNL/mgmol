@@ -43,7 +43,6 @@ class IonicAlgorithm;
 #include "AOMMprojector.h"
 #include "BasicDataDistributors.h"
 #include "ClusterOrbitals.h"
-#include "DistMatrixWithSparseComponent.h"
 #include "ExtendedGridOrbitals.h"
 #include "Forces.h"
 #include "Ions.h"
@@ -141,8 +140,6 @@ private:
         Ions& ions, T& phi, T& hphi, const KBPsiMatrixSparse* const kbpsi);
     void addHlocalij(
         T& orbitalsi, T& orbitalsj, ProjectedMatricesInterface* projmatrices);
-    void addHlocal2matrix(T& orbitalsi, T& orbitalsj,
-        dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sparseH);
     int dumprestartFile(T** orbitals, Ions& ions, Rho<T>& rho,
         const bool write_extrapolated_wf, const short count);
 
@@ -212,20 +209,28 @@ public:
         const KBPsiMatrixSparse* const kbpsi_j,
         dist_matrix::DistMatrix<DISTMATDTYPE>& mat);
 
-    template <class T2>
     void computeHij(T& orbitals_i, T& orbitals_j, const Ions& ions,
-        const KBPsiMatrixSparse* const kbpsi, T2& mat, const bool consolidate);
+        const KBPsiMatrixSparse* const kbpsi,
+        dist_matrix::DistMatrix<double>& mat, const bool consolidate);
 
     void computeHij_private(T& orbitals_i, T& orbitals_j, const Ions& ions,
         const KBPsiMatrixSparse* const kbpsi_i,
         dist_matrix::DistMatrix<DISTMATDTYPE>& mat);
 
     void computeHij(T& orbitals_i, T& orbitals_j, const Ions& ions,
+        const KBPsiMatrixSparse* const kbpsi,
+        VariableSizeMatrix<sparserow>& mat, const bool consolidate);
+
+    void computeHij(T& orbitals_i, T& orbitals_j, const Ions& ions,
         const KBPsiMatrixSparse* const kbpsi, ProjectedMatricesInterface*);
+
+    void addHlocal2matrix(
+        T& orbitalsi, T& orbitalsj, dist_matrix::DistMatrix<double>& mat);
+    void addHlocal2matrix(
+        T& orbitalsi, T& orbitalsj, VariableSizeMatrix<SparseRow>& mat);
     void addHlocal2matrix(T& orbitalsi, T& orbitalsj,
-        dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE>& mat);
-    template <class T2>
-    void addHlocal2matrix(T& orbitalsi, T& orbitalsj, T2& mat);
+        dist_matrix::SparseDistMatrix<double>& sparseH);
+
     void update_pot(const pb::GridFunc<POTDTYPE>& vh_init, const Ions& ions);
     void update_pot(const Ions& ions);
     int quench(T* orbitals, Ions& ions, const int max_steps, const int iprint,

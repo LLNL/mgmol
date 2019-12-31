@@ -10,7 +10,6 @@
 
 #include "MVPSolver.h"
 #include "Control.h"
-#include "DistMatrixWithSparseComponent.h"
 #include "Electrostatic.h"
 #include "Energy.h"
 #include "Ions.h"
@@ -28,8 +27,6 @@ template <class T>
 Timer MVPSolver<T>::solve_tm_("MVPSolver::solve");
 template <class T>
 Timer MVPSolver<T>::target_tm_("MVPSolver::target");
-
-static int sparse_distmatrix_nb_partitions = 128;
 
 double evalEntropyMVP(ProjectedMatricesInterface* projmatrices,
     const bool print_flag, std::ostream& os)
@@ -205,13 +202,12 @@ int MVPSolver<T>::solve(T& orbitals)
         // Update density
         if (use_old_dm_) rho_->update(orbitals);
 
-        // compute linear component of H
-        dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE> h11(
-            "h11", numst_, numst_, comm_, sparse_distmatrix_nb_partitions);
+        // compute linear component of H (nonlocal potential)
+        dist_matrix::DistMatrix<DISTMATDTYPE> h11_nl("h11_nl", numst_, numst_);
 
         kbpsi.computeAll(ions_, orbitals);
 
-        kbpsi.computeHvnlMatrix(&kbpsi, ions_, h11);
+        kbpsi.computeHvnlMatrix(&kbpsi, ions_, h11_nl);
 
         for (int inner_it = 0; inner_it < n_inner_steps_; inner_it++)
         {
@@ -238,7 +234,8 @@ int MVPSolver<T>::solve(T& orbitals)
             const int printE = (ct.verbose > 1) ? 1 : 0;
 
             // compute h11 for the current potential by adding local part to
-            // nonlocal components (old local part reset to zero)
+            // nonlocal components
+            dist_matrix::DistMatrix<DISTMATDTYPE> h11(h11_nl);
             mgmol_strategy_->addHlocal2matrix(orbitals, orbitals, h11);
 
             if (inner_it == 0)
@@ -314,6 +311,7 @@ int MVPSolver<T>::solve(T& orbitals)
 
                 // update h11
                 {
+                    h11 = h11_nl;
                     mgmol_strategy_->addHlocal2matrix(orbitals, orbitals, h11);
                 }
 

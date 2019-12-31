@@ -81,6 +81,16 @@ DistMatrix<T>::DistMatrix(const std::string& name, const int m, const int n)
     resize(m, n, distmatrix_def_block_size_, distmatrix_def_block_size_);
 }
 
+template <class T>
+DistMatrix<T>::DistMatrix(
+    const std::string& name, const int m, const MPI_Comm comm)
+    : object_name_(name), bc_(*default_bc_), comm_global_(comm)
+{
+    assert(comm == default_bc_->comm_global());
+
+    resize(m, m, distmatrix_def_block_size_, distmatrix_def_block_size_);
+}
+
 // Construct a DistMatrix of dimensions m,n
 template <class T>
 DistMatrix<T>::DistMatrix(const std::string& name, const BlacsContext& bc,
@@ -1784,6 +1794,28 @@ void DistMatrix<T>::init(const T* const a, const int lda)
                     {
                         val_[(ii + li * mb_) + (jj + lj * nb_) * mloc_]
                             = a[i(li, ii) + j(lj, jj) * lda];
+                    }
+                }
+            }
+        }
+    }
+}
+
+template <class T>
+void DistMatrix<T>::add(const T* const a, const int lda)
+{
+    if (active_)
+    {
+        for (int li = 0; li < mblocks_; li++)
+        {
+            for (int lj = 0; lj < nblocks_; lj++)
+            {
+                for (int ii = 0; ii < mbs(li); ii++)
+                {
+                    for (int jj = 0; jj < nbs(lj); jj++)
+                    {
+                        val_[(ii + li * mb_) + (jj + lj * nb_) * mloc_]
+                            += a[i(li, ii) + j(lj, jj) * lda];
                     }
                 }
             }

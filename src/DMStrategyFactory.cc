@@ -12,18 +12,16 @@ DMStrategy* DMStrategyFactory<LocGridOrbitals>::createHamiltonianMVP_DMStrategy(
     {
         DMStrategy* dm_strategy
             = new HamiltonianMVP_DMStrategy<VariableSizeMatrix<sparserow>,
-                VariableSizeMatrix<sparserow>, ProjectedMatricesSparse,
-                LocGridOrbitals>(comm, os, ions, rho, energy, electrostat,
-                mgmol_strategy, orbitals);
+                ProjectedMatricesSparse, LocGridOrbitals>(comm, os, ions, rho,
+                energy, electrostat, mgmol_strategy, orbitals);
 
         return dm_strategy;
     }
     else
     {
         DMStrategy* dm_strategy = new HamiltonianMVP_DMStrategy<
-            dist_matrix::DistMatrix<DISTMATDTYPE>,
-            dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE>,
-            ProjectedMatrices, LocGridOrbitals>(
+            dist_matrix::DistMatrix<DISTMATDTYPE>, ProjectedMatrices,
+            LocGridOrbitals>(
             comm, os, ions, rho, energy, electrostat, mgmol_strategy, orbitals);
 
         return dm_strategy;
@@ -43,7 +41,6 @@ DMStrategyFactory<ExtendedGridOrbitals>::createHamiltonianMVP_DMStrategy(
 
     DMStrategy* dm_strategy
         = new HamiltonianMVP_DMStrategy<dist_matrix::DistMatrix<DISTMATDTYPE>,
-            dist_matrix::DistMatrixWithSparseComponent<DISTMATDTYPE>,
             ProjectedMatrices, ExtendedGridOrbitals>(
             comm, os, ions, rho, energy, electrostat, mgmol_strategy, orbitals);
 

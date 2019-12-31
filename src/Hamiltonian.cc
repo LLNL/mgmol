@@ -16,6 +16,8 @@
 #include "Potentials.h"
 #include "ProjectedMatrices.h"
 
+static int sparse_distmatrix_nb_partitions = 128;
+
 template <class T>
 Hamiltonian<T>::Hamiltonian()
 {
@@ -161,9 +163,10 @@ void Hamiltonian<T>::applyLocal(
 
 // add to hij the elements <phi1|Hloc|phi2>
 // corresponding to the local part of the Hamiltonian
-template <class T>
-void Hamiltonian<T>::addHlocal2matrix(T& phi1, T& phi2,
-    dist_matrix::SparseDistMatrix<DISTMATDTYPE>& hij, const bool force)
+template <>
+void Hamiltonian<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals& phi1,
+    LocGridOrbitals& phi2, dist_matrix::SparseDistMatrix<double>& hij,
+    const bool force)
 {
     applyLocal(phi2, force);
 
@@ -172,6 +175,38 @@ void Hamiltonian<T>::addHlocal2matrix(T& phi1, T& phi2,
 #endif
 
     phi1.addDotWithNcol2Matrix(*hlphi_, hij);
+}
+
+template <>
+void Hamiltonian<ExtendedGridOrbitals>::addHlocal2matrix(
+    ExtendedGridOrbitals& phi1, ExtendedGridOrbitals& phi2,
+    dist_matrix::DistMatrix<double>& hij, const bool force)
+{
+    applyLocal(phi2, force);
+
+#ifdef PRINT_OPERATIONS
+    if (onpe0) (*MPIdata::sout) << "Hamiltonian<T>::addHlocal2matrix()" << endl;
+#endif
+
+    // hij.print(std::cout, 0, 0, 5, 5);
+
+    phi1.addDotWithNcol2Matrix(*hlphi_, hij);
+
+    // hij.print(std::cout, 0, 0, 5, 5);
+}
+
+template <>
+void Hamiltonian<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals& phi1,
+    LocGridOrbitals& phi2, dist_matrix::DistMatrix<DISTMATDTYPE>& hij,
+    const bool force)
+{
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    dist_matrix::SparseDistMatrix<DISTMATDTYPE> sparse(
+        mmpi.commSameSpin(), hij, sparse_distmatrix_nb_partitions);
+
+    addHlocal2matrix(phi1, phi2, sparse, force);
+
+    sparse.parallelSumToDistMatrix();
 }
 
 template <class T>
@@ -231,10 +266,3 @@ template void Hamiltonian<ExtendedGridOrbitals>::addHlocalij(
     ProjectedMatricesInterface* proj_matrices);
 template void Hamiltonian<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals&,
     LocGridOrbitals&, VariableSizeMatrix<sparserow>& mat, const bool force);
-template void Hamiltonian<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals&,
-    LocGridOrbitals&, dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sparseH,
-    const bool);
-
-template void Hamiltonian<ExtendedGridOrbitals>::addHlocal2matrix(
-    ExtendedGridOrbitals&, ExtendedGridOrbitals&,
-    dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sparseH, const bool);

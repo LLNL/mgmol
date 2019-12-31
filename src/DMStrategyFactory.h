@@ -13,7 +13,6 @@
 
 #include "Control.h"
 #include "DistMatrix.h"
-#include "DistMatrixWithSparseComponent.h"
 #include "EigenDMStrategy.h"
 #include "FullyOccupiedNonOrthoDMStrategy.h"
 #include "HamiltonianMVP_DMStrategy.h"

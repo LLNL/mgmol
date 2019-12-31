@@ -49,6 +49,8 @@ public:
         dist_matrix::SparseDistMatrix<DISTMATDTYPE>& mat,
         const bool force = false);
     void addHlocal2matrix(T& orbitals1, T& orbitals2,
+        dist_matrix::DistMatrix<DISTMATDTYPE>& mat, const bool force = false);
+    void addHlocal2matrix(T& orbitals1, T& orbitals2,
         VariableSizeMatrix<sparserow>& mat, const bool force = false);
     void addHlocalij(T& orbitals1, T& orbitals2, ProjectedMatricesInterface*);
 };
