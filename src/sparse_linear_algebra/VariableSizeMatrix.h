@@ -17,6 +17,7 @@
 #include "LocalMatrices.h"
 #include "SparseRow.h"
 #include "SparseRowAndTable.h"
+#include "SquareSubMatrix.h"
 #include "Table.h"
 #include "VariableSizeMatrixInterface.h"
 
@@ -80,9 +81,11 @@ public:
         const double* vals,
         const bool append); /* Augment current matrix by inserting a new row */
     /* initialize matrix data from square local matrix object */
-    void initializeMatrixElements(const LocalMatrices<MATDTYPE>& ss,
+    void insertMatrixElements(const LocalMatrices<MATDTYPE>& ss,
         const std::vector<std::vector<int>>& global_indexes, const int numst,
         const double tol = MAT_TOL);
+    void insertMatrixElements(
+        const SquareSubMatrix<MATDTYPE>& ss, const double tol);
     void sparsify(const std::vector<int>& pattern);
     void print(std::ostream& os, const std::vector<int>& locfcns,
         int nrows = NUM_PRINT_ROWS) const;

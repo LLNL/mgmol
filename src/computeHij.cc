@@ -515,7 +515,7 @@ void MGmol<T>::getHpsiAndTheta(
 
         phi.computeLocalProduct(hphi, slh);
 
-        proj_matrices_->addMatrixElementsSparseH(slh);
+        proj_matrices_->setLocalMatrixElementsHl(slh);
 
         proj_matrices_->consolidateH();
 

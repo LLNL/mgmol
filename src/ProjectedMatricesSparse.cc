@@ -25,8 +25,6 @@
 #define ORBITAL_OCCUPATION 2.0
 #define RY2EV 13.605804
 
-using namespace std;
-
 Timer ProjectedMatricesSparse::compute_inverse_tm_(
     "ProjectedMatricesSparse::computeInverse");
 Timer ProjectedMatricesSparse::compute_invB_tm_(
@@ -121,8 +119,8 @@ ProjectedMatricesSparse::~ProjectedMatricesSparse()
     clearData();
 }
 
-void ProjectedMatricesSparse::setup(
-    const double kbt, const int nel, const vector<vector<int>>& global_indexes)
+void ProjectedMatricesSparse::setup(const double kbt, const int nel,
+    const std::vector<std::vector<int>>& global_indexes)
 {
     // assert( (short)global_indexes.size()>0 );
     // assert( (short)global_indexes[0].size()>0 );
@@ -195,8 +193,10 @@ void ProjectedMatricesSparse::setup(
 
     if (onpe0 && ct.verbose > 0)
     {
-        printf("Max. number of locally centered functions: %d \n", locmax);
-        printf("Min. number of locally centered functions: %d \n", locmin);
+        std::cout << "Max. number of locally centered functions: " << locmax
+                  << std::endl;
+        std::cout << "Min. number of locally centered functions: " << locmin
+                  << std::endl;
     }
     //*/
 
@@ -259,8 +259,9 @@ void ProjectedMatricesSparse::consolidateOrbitalsOverlapMat(
     VariableSizeMatrix<sparserow>& mat)
 {
     consolidate_H_tm_.start();
+
     std::vector<int> locfcns;
-    (*lrs_).getLocalSubdomainIndices(locfcns);
+    lrs_->getLocalSubdomainIndices(locfcns);
 
     // update locally centered row data
     Mesh* mymesh             = Mesh::instance();
@@ -289,11 +290,12 @@ void ProjectedMatricesSparse::consolidateH()
     assert(sH_->n() == (int)locvars_.size());
 
     consolidate_H_tm_.start();
+
     std::vector<int> locfcns;
-    (*lrs_).getLocalSubdomainIndices(locfcns);
+    lrs_->getLocalSubdomainIndices(locfcns);
 
     /* gather data for matH amd matHB */
-    (*distributor_sH_).augmentLocalData((*sH_), false);
+    distributor_sH_->augmentLocalData((*sH_), false);
 
     Mesh* mymesh             = Mesh::instance();
     const pb::Grid& mygrid   = mymesh->grid();
@@ -307,10 +309,9 @@ void ProjectedMatricesSparse::consolidateH()
 
     sH_->consolidate(locfcns, distributor);
 
-    (*matHB_).copyData((*sH_), lsize_);
+    matHB_->copyData((*sH_), lsize_);
 
     consolidate_H_tm_.stop();
-    return;
 }
 
 // computes the trace of the dotproduct with invS
@@ -349,7 +350,7 @@ double ProjectedMatricesSparse::dotProductSimple(
     return -1.;
 }
 
-void ProjectedMatricesSparse::printMatrices(ostream& os) const
+void ProjectedMatricesSparse::printMatrices(std::ostream& os) const
 {
     printS(os);
     printH(os);
@@ -360,7 +361,7 @@ void ProjectedMatricesSparse::printMatrices(ostream& os) const
     Control& ct = *(Control::instance());
     if ((ct.verbose > 1) && onpe0)
     {
-        cout << " Gram Matrix data distribution stats " << endl;
+        std::cout << " Gram Matrix data distribution stats " << std::endl;
         (*distributor_matS_).printStats();
     }
 }
@@ -467,21 +468,23 @@ double ProjectedMatricesSparse::getLinDependent2states(
 
     if (myid == out.rank && print_flag)
     {
-        cout << "" << endl;
-        cout << "ProjectedMatricesSparse::getLinDependent2states(): MPI task "
-             << myid << endl;
-        cout << "eigenvector size: " << evec.size() << endl;
-        // cout<<"locst1="<<locst1<<", locst2="<<locst2<<endl;
-        cout << "off-diagonal element: " << vmax2 << endl;
-        cout << "2x2 submatrix associated with small eigenvalue:" << endl;
-        mat->printMatBlock2(st1, st2, cout);
-        vector<double> tmp(bsize);
+        std::cout << "" << std::endl;
+        std::cout
+            << "ProjectedMatricesSparse::getLinDependent2states(): MPI task "
+            << myid << std::endl;
+        std::cout << "eigenvector size: " << evec.size() << std::endl;
+        // std::cout<<"locst1="<<locst1<<", locst2="<<locst2<<endl;
+        std::cout << "off-diagonal element: " << vmax2 << std::endl;
+        std::cout << "2x2 submatrix associated with small eigenvalue:"
+                  << std::endl;
+        mat->printMatBlock2(st1, st2, std::cout);
+        std::vector<double> tmp(bsize);
         LSMat.matvec(&evec[0], &tmp[0]);
         int one      = 1;
         double norme = DNRM2(&bsize, &evec[0], &one);
         double norma = DNRM2(&bsize, &tmp[0], &one);
-        cout << "eigenvalue: " << out.val << endl;
-        cout << "Norm S*v: " << norma / norme << endl;
+        std::cout << "eigenvalue: " << out.val << std::endl;
+        std::cout << "Norm S*v: " << norma / norme << std::endl;
     }
     if (print_flag) mmpi.barrier();
 
@@ -516,7 +519,7 @@ void ProjectedMatricesSparse::printGramMatrix2states(
     }
 }
 
-void ProjectedMatricesSparse::printTimers(ostream& os)
+void ProjectedMatricesSparse::printTimers(std::ostream& os)
 {
     compute_inverse_tm_.print(os);
     compute_invB_tm_.print(os);
@@ -559,7 +562,7 @@ double ProjectedMatricesSparse::computeTraceInvSmultMat(
     Control& ct = *(Control::instance());
     VariableSizeMatrix<sparserow> vsmat("VS", lsize_);
     vsmat.setupSparseRows(locvars_);
-    vsmat.initializeMatrixElements(mat, global_indexes_, ct.numst);
+    vsmat.insertMatrixElements(mat, global_indexes_, ct.numst);
 
     if (consolidate)
     {
@@ -582,7 +585,7 @@ double ProjectedMatricesSparse::computeTraceDMmultMat(
     Control& ct = *(Control::instance());
     VariableSizeMatrix<sparserow> vsmat("VS", lsize_);
     vsmat.setupSparseRows(locvars_);
-    vsmat.initializeMatrixElements(mat, global_indexes_, ct.numst);
+    vsmat.insertMatrixElements(mat, global_indexes_, ct.numst);
 
     if (consolidate)
     {
@@ -674,7 +677,7 @@ void ProjectedMatricesSparse::applyInvS(SquareLocalMatrices<MATDTYPE>& mat)
     // convert mat into variablesizematrix object
     VariableSizeMatrix<sparserow> vsmat("vs", lsize_);
     vsmat.setupSparseRows(locvars_);
-    vsmat.initializeMatrixElements(mat, global_indexes_, ct.numst);
+    vsmat.insertMatrixElements(mat, global_indexes_, ct.numst);
 
     // consolidate mat to gather data for matmult
     consolidateOrbitalsOverlapMat(vsmat);
@@ -697,8 +700,6 @@ void ProjectedMatricesSparse::applyInvS(SquareLocalMatrices<MATDTYPE>& mat)
     // gather result into square local matrix
     mat.reset();
     updateLocalMat(pmat, &mat);
-
-    return;
 }
 
 //-----------------------------------------------
@@ -749,7 +750,8 @@ void ProjectedMatricesSparse::computeGenEigenInterval(
     double alpha = Tnrm2(m, &sol[0]);
     double gamma = 1. / alpha;
     if (onpe0)
-        cout << "e1:: ITER 0:: = " << alpha << " shft = " << shft << endl;
+        std::cout << "e1:: ITER 0:: = " << alpha << " shft = " << shft
+                  << std::endl;
 
     // residual
     std::vector<double> res(new_sol);
@@ -810,7 +812,7 @@ void ProjectedMatricesSparse::computeGenEigenInterval(
     beta  = MPdot(m, &sol[0], &new_sol[0]);
 
     // loop
-    if (onpe0) cout << "e2:: ITER 0:: = " << beta << endl;
+    if (onpe0) std::cout << "e2:: ITER 0:: = " << beta << std::endl;
     int iter2 = 0;
     for (int i = 0; i < maxits; i++)
     {
@@ -851,8 +853,8 @@ void ProjectedMatricesSparse::computeGenEigenInterval(
 
     // Communicate to take global min and max and save results
     double tmp = e1;
-    e1         = min(tmp, e2);
-    e2         = max(tmp, e2);
+    e1         = std::min(tmp, e2);
+    e2         = std::max(tmp, e2);
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     mmpi.allreduce(&e1, 1, MPI_MIN);
@@ -863,9 +865,9 @@ void ProjectedMatricesSparse::computeGenEigenInterval(
     double padding = pad * (e2 - e1);
 
     if (onpe0)
-        cout << "Power method Eigen intervals********************  = ( " << e1
-             << ", " << e2 << ")"
-             << "iter1 = " << iter1 << ", iter2 = " << iter2 << endl;
+        std::cout << "Power method Eigen intervals********************  = ( "
+                  << e1 << ", " << e2 << ")"
+                  << "iter1 = " << iter1 << ", iter2 = " << iter2 << std::endl;
 
     e1 -= padding;
     e2 += padding;
@@ -873,7 +875,7 @@ void ProjectedMatricesSparse::computeGenEigenInterval(
     interval.push_back(e2);
 
     // update shft
-    shft = max(fabs(e1), fabs(e2));
+    shft = std::max(fabs(e1), fabs(e2));
 
     eig_interval_tm_.stop();
 }

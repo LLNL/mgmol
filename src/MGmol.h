@@ -113,12 +113,6 @@ private:
     void check_anisotropy();
     double get_charge(RHODTYPE* rho);
     void printTimers();
-    void computeLocKBPsiIonProjL(T& orbitals, Ion& ion, const int ion_index,
-        dist_matrix::SparseDistMatrix<DISTMATDTYPE>*** prjsum, const int l);
-    void computeLocKBPsiIon(T& orbitals, Ion& ion, const int ion_index,
-        dist_matrix::SparseDistMatrix<DISTMATDTYPE>*** loc_kbpsi);
-    void computeLocKBPsi(T& orbitals, std::vector<Ion*>& ions_nl,
-        dist_matrix::SparseDistMatrix<DISTMATDTYPE>*** prjsum);
     int read_rho_and_pot_hdf5(HDFrestart& file, Rho<T>& rho);
     int read_restart_lrs(HDFrestart& h5f_file, const std::string& dset_name);
     int read_restart_data(HDFrestart& h5f_file, Rho<T>& rho, T& orbitals);

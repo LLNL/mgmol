@@ -365,7 +365,7 @@ void ShortSightedInverse::initGramMatrix(const LocalMatrices<MATDTYPE>& ss,
     /* update Gram Matrix */
     Control& ct = *(Control::instance());
     (*gramMat_).setupSparseRows(locvars_);
-    (*gramMat_).initializeMatrixElements(
+    (*gramMat_).insertMatrixElements(
         ss, global_indexes, ct.numst); // should lsize_ be an argument here??
 
     /* set augmented gram matrix to false */
@@ -376,8 +376,6 @@ void ShortSightedInverse::initGramMatrix(const LocalMatrices<MATDTYPE>& ss,
 
     /* update orbitals_index_ */
     gm_orbitals_index_ = new_orbitals_index;
-
-    return;
 }
 
 /* gather inverse contributions for local Gram matrix */
@@ -388,7 +386,6 @@ void ShortSightedInverse::gather(DataDistribution& distributor_invS)
     /* Distribute local inverse and gather data */
     distributor_invS.updateLocalRows((*invS_));
     gather_invS_tm_.stop();
-    return;
 }
 
 /* perform the trace of the product of some diagonal matrix represented by the

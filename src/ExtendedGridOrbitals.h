@@ -12,6 +12,7 @@
 #define MGMOL_EXTENDEDGRIDORBITALS_H
 
 #include "BlockVector.h"
+#include "DistMatrix.h"
 #include "GridFunc.h"
 #include "HDFrestart.h"
 #include "Lap.h"
@@ -19,7 +20,6 @@
 #include "Mesh.h"
 #include "Orbitals.h"
 #include "SinCosOps.h"
-#include "SparseDistMatrix.h"
 #include "global.h"
 
 #include "hdf5.h"

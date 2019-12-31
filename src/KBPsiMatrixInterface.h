@@ -11,7 +11,6 @@
 #ifndef MGMOL_KBPSIMATRIX_INTERFACE_H
 #define MGMOL_KBPSIMATRIX_INTERFACE_H
 
-#include "SparseDistMatrix.h"
 #include "Timer.h"
 #include "VariableSizeMatrix.h"
 #include "tools.h"

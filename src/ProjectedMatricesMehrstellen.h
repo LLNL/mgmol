@@ -8,8 +8,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef PROJECTED_MATRICES_MEHR_H
-#define PROJECTED_MATRICES_MEHR_H
+#ifndef MGMOL_PROJECTED_MATRICES_MEHR_H
+#define MGMOL_PROJECTED_MATRICES_MEHR_H
 
 #include "DistMatrix.h"
 #include "ProjectedMatrices.h"
@@ -18,6 +18,7 @@
 
 class ProjectedMatricesMehrstellen : public ProjectedMatrices
 {
+private:
     dist_matrix::DistMatrix<DISTMATDTYPE>* matB_;
     dist_matrix::DistMatrix<DISTMATDTYPE>* invB_;
 

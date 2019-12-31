@@ -33,7 +33,7 @@ Timer VariableSizeMatrixInterface::AmultSymBLocal_tm_(
     "VariableSizeMatrix::AmultSymBLocal");
 Timer VariableSizeMatrixInterface::AmultSymB_tm_(
     "VariableSizeMatrix::AmultSymB");
-Timer VariableSizeMatrixInterface::initialize_tm_(
+Timer VariableSizeMatrixInterface::insert_tm_(
     "VariableSizeMatrix::Init_with_squareLocMat");
 Timer VariableSizeMatrixInterface::updateRow_tm_(
     "VariableSizeMatrix::updateRows");
@@ -258,7 +258,41 @@ void VariableSizeMatrix<T>::insertNewRow(const int ncols, const int row,
 // Important Note: Neglect contributions smaller than tol!
 // (may lead to results dependent on number of CPUs)
 template <class T>
-void VariableSizeMatrix<T>::initializeMatrixElements(
+void VariableSizeMatrix<T>::insertMatrixElements(
+    const SquareSubMatrix<MATDTYPE>& ss, const double tol)
+{
+    insert_tm_.start();
+
+    const std::vector<int>& global_indexes(ss.getGids());
+
+    short chromatic_number = (short)global_indexes.size();
+
+    // double loop over colors
+    for (int icolor = 0; icolor < chromatic_number; icolor++)
+    {
+        const int st1 = global_indexes[icolor];
+        if (st1 != -1)
+        {
+            for (int jcolor = 0; jcolor < chromatic_number; jcolor++)
+            {
+                const int st2 = global_indexes[jcolor];
+                if (st2 != -1)
+                {
+                    const MATDTYPE value = ss.getLocalValue(icolor, jcolor);
+                    if (fabs(value) > tol)
+                    {
+                        insertMatrixElement(st1, st2, value, ADD, true);
+                    }
+                }
+            }
+        }
+    }
+
+    insert_tm_.stop();
+}
+
+template <class T>
+void VariableSizeMatrix<T>::insertMatrixElements(
     const LocalMatrices<MATDTYPE>& ss,
     const std::vector<std::vector<int>>& global_indexes, const int numst,
     const double tol)
@@ -274,7 +308,7 @@ void VariableSizeMatrix<T>::initializeMatrixElements(
     double* val = new double[subdiv];
 
     // double loop over colors
-    initialize_tm_.start();
+    insert_tm_.start();
     for (int icolor = 0; icolor < chromatic_number; icolor++)
     {
 
@@ -329,7 +363,7 @@ void VariableSizeMatrix<T>::initializeMatrixElements(
         } // jcolor
     } // icolor
 
-    initialize_tm_.stop();
+    insert_tm_.stop();
     delete[] val;
     delete[] ist;
 }
