@@ -11,8 +11,8 @@
 /*!
  * Variable size csr/csc matrix used for data transfer operations
  */
-#ifndef _VARIABLESIZEMATRIXINTERFACE_H_
-#define _VARIABLESIZEMATRIXINTERFACE_H_
+#ifndef MGMOL_VARIABLESIZEMATRIXINTERFACE_H_
+#define MGMOL_VARIABLESIZEMATRIXINTERFACE_H_
 
 // typedef enum INSERTMODE  {INSERT, ADD} INSERTMODE;
 
@@ -29,7 +29,7 @@
 class VariableSizeMatrixInterface
 {
 protected:
-    static Timer initialize_tm_;
+    static Timer insert_tm_;
     static Timer updateRow_tm_;
     static Timer insertRow_tm_;
     static Timer sort_col_tm_;
@@ -47,7 +47,7 @@ public:
         AmultSymB_ij_tm_.print(os);
         AmultSymBLocal_tm_.print(os);
         AmultSymB_tm_.print(os);
-        initialize_tm_.print(os);
+        insert_tm_.print(os);
         updateRow_tm_.print(os);
         insertRow_tm_.print(os);
         sort_col_tm_.print(os);

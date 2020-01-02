@@ -60,8 +60,6 @@ ProjectedMatrices::ProjectedMatrices(const int ndim, const bool with_spin)
     width_   = 0.;
     min_val_ = 0.25;
 
-    sH_ = nullptr;
-
     if (dim_ > 0)
     {
         eigenvalues_.resize(dim_);
@@ -87,12 +85,6 @@ ProjectedMatrices::ProjectedMatrices(const int ndim, const bool with_spin)
 
 ProjectedMatrices::~ProjectedMatrices()
 {
-    if (dim_ > 0)
-    {
-        delete sH_;
-        sH_ = nullptr;
-    }
-
     if (n_instances_ == 1)
     {
         if (gram_4dotProducts_ != nullptr)
@@ -114,13 +106,9 @@ void ProjectedMatrices::setup(const double kbt, const int nel,
 
     global_indexes_ = global_indexes;
 
-    Control& ct = *(Control::instance());
-
 #ifdef USE_DIS_MAT
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     MPI_Comm comm   = mmpi.commSpin();
-
-    if (sH_ != nullptr) delete sH_;
 
     if (dim_ > 0)
     {
@@ -136,10 +124,8 @@ void ProjectedMatrices::setup(const double kbt, const int nel,
 
 #endif
 
-    dist_matrix::DistMatrix<DISTMATDTYPE> tmp("tmp", ct.numst, ct.numst);
-
-    sH_ = new dist_matrix::SparseDistMatrix<DISTMATDTYPE>(
-        comm, *matH_, sparse_distmatrix_nb_partitions);
+    localHl_.reset(new SquareLocalMatrices<MATDTYPE>(
+        global_indexes.size(), global_indexes[0].size()));
 }
 
 void ProjectedMatrices::computeInvS()
@@ -1000,4 +986,27 @@ void ProjectedMatrices::computeGenEigenInterval(
     static PowerGen power(dim_);
 
     power.computeGenEigenInterval(mat, *gm_, interval, maxits, pad);
+}
+
+void ProjectedMatrices::consolidateH()
+{
+    consolidate_H_tm_.start();
+
+    Control& ct = *(Control::instance());
+
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    MPI_Comm comm   = mmpi.commSpin();
+
+    dist_matrix::SparseDistMatrix<DISTMATDTYPE> slH(
+        comm, *matH_, sparse_distmatrix_nb_partitions);
+
+    LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
+    sl2dm->convert(*localHl_, slH, ct.numst);
+
+    SquareSubMatrix2DistMatrix* ss2dm = SquareSubMatrix2DistMatrix::instance();
+    ss2dm->convert(*localHnl_, slH);
+
+    slH.parallelSumToDistMatrix();
+
+    consolidate_H_tm_.stop();
 }

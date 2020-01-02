@@ -64,8 +64,10 @@ class ProjectedMatricesSparse : public ProjectedMatricesInterface
 
     ShortSightedInverse* invS_;
     VariableSizeMatrix<sparserow>* submatT_;
-    VariableSizeMatrix<sparserow>* sH_;
     VariableSizeMatrix<sparserow>* matHB_;
+
+    // local data structure to hold partial elements of H
+    VariableSizeMatrix<sparserow>* sH_;
 
     DensityMatrixSparse* dm_;
 
@@ -188,42 +190,32 @@ public:
     // the local subdomain (locvars_) has been defined by calling
     // setupSparseRows(locvars_). NOTE: We restrict only to contributions
     // computed/ belonging in the local subdomain
-    void addMatrixElementSparseH(
-        const int st1, const int st2, const double val) override
-    {
-        assert(sH_->n() == (int)locvars_.size());
-
-        (*sH_).insertMatrixElement(st1, st2, val, ADD, false);
-
-        return;
-    }
 
     // Add data from square local matrix (only contributions from functions
     // overlapping subdomain)
-    void addMatrixElementsSparseH(
+    void setLocalMatrixElementsHl(
         const SquareLocalMatrices<MATDTYPE>& slH) override
     {
-
+        // std::cout<<"Set Hl elements with matrix of size
+        // "<<slH.m()<<std::endl;
         Control& ct = *(Control::instance());
-        (*sH_).initializeMatrixElements(
+        sH_->insertMatrixElements(
             slH, global_indexes_, ct.numst, tol_matrix_elements);
+    }
 
-        return;
+    void setLocalMatrixElementsHnl(
+        const SquareSubMatrix<MATDTYPE>& slH) override
+    {
+        // std::cout<<"Set Hnl elements with matrix of size "
+        //         <<slH.getGids().size()<<std::endl;
+        sH_->insertMatrixElements(slH, tol_matrix_elements);
     }
 
     void clearSparseH() override
     {
         (*sH_).reset();
-        /* initialize sparse H */
+        // initialize sH_ with locvars_.size() empty rows
         (*sH_).setupSparseRows(locvars_);
-        return;
-    }
-
-    void scaleSparseH(const double scale) override
-    {
-        (*sH_).scale(scale);
-
-        return;
     }
 
     double getDMEntry(const int row, const int col) const
@@ -250,8 +242,6 @@ public:
         std::vector<int> locfcns;
         (*lrs_).getLocalSubdomainIndices(locfcns);
         (*submatT_).print(os, locfcns);
-
-        return;
     }
 
     /* print the HB matrix -- for diagnostics */
@@ -263,8 +253,6 @@ public:
         std::vector<int> locfcns;
         (*lrs_).getLocalSubdomainIndices(locfcns);
         (*matHB_).print(os, locfcns);
-
-        return;
     }
 
     /* print the inverse Gram matrix -- for diagnostics */
@@ -272,8 +260,6 @@ public:
     {
         assert(dm_ != NULL);
         (*dm_).printDM(os);
-
-        return;
     }
 
     void setDMto2InvS() override
@@ -281,8 +267,6 @@ public:
         assert(invS_ != NULL);
         (*dm_).setto2InvS(
             (*invS_).getInvS(), (*invS_).getGramMatrixOrbitalsIndex());
-
-        return;
     }
 
     void computeInvS() override
@@ -302,15 +286,12 @@ public:
     {
         updateTheta();
         updateHB();
-        return;
     }
 
     void printGramMM(std::ofstream& tfile) override
     {
         assert(invS_ != NULL);
         (*invS_).printGramMM(tfile);
-
-        return;
     }
 
     /* print (part of) the (global) Gram matrix -- for diagnostics */
@@ -331,16 +312,9 @@ public:
         std::vector<int> locfcns;
         (*lrs_).getLocalSubdomainIndices(locfcns);
         (*sH_).print(os, locfcns);
-
-        return;
     }
 
-    void resetDotProductMatrices() override
-    {
-        assert((*invS_).gramMat() != 0);
-
-        return;
-    }
+    void resetDotProductMatrices() override { assert((*invS_).gramMat() != 0); }
 
     void computeInvB() override
     {
@@ -348,7 +322,6 @@ public:
         compute_invB_tm_.start();
         (*invS_).computeInvS(*distributor_matS_, *distributor_invS_);
         compute_invB_tm_.stop();
-        return;
     }
 
     double computeCond() override

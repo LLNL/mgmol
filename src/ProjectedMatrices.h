@@ -12,17 +12,16 @@
 #define MGMOL_PROJECTED_MATRICES_H
 
 #include "DensityMatrix.h"
+#include "DistMatrix.h"
+#include "DistMatrix2SquareLocalMatrices.h"
 #include "GramMatrix.h"
+#include "LocalMatrices2DistMatrix.h"
 #include "MPIdata.h"
 #include "ProjectedMatricesInterface.h"
 #include "SquareLocalMatrices.h"
+#include "SquareSubMatrix2DistMatrix.h"
 #include "Timer.h"
 #include "tools.h"
-
-#include "DistMatrix.h"
-#include "DistMatrix2SquareLocalMatrices.h"
-#include "LocalMatrices2DistMatrix.h"
-#include "SparseDistMatrix.h"
 
 #include "hdf5.h"
 
@@ -75,7 +74,10 @@ class ProjectedMatrices : public ProjectedMatricesInterface
     std::unique_ptr<SquareLocalMatrices<MATDTYPE>>
         localT_; // theta=inv(S)*H_phi
 
-    dist_matrix::SparseDistMatrix<DISTMATDTYPE>* sH_;
+    // internal data structures to hold local contributions
+    // to matrix H
+    std::unique_ptr<SquareLocalMatrices<MATDTYPE>> localHl_;
+    std::unique_ptr<SquareSubMatrix<MATDTYPE>> localHnl_;
 
     void printEigenvaluesHa(std::ostream& os) const;
     void printEigenvaluesEV(std::ostream& os) const;
@@ -130,31 +132,19 @@ public:
     void setup(const double kbt, const int nel,
         const std::vector<std::vector<int>>& global_indexes) override;
 
-    void addMatrixElementSparseH(
-        const int st1, const int st2, const double val) override
+    void setLocalMatrixElementsHnl(
+        const SquareSubMatrix<MATDTYPE>& slH) override
     {
-        sH_->push_back(st1, st2, val);
+        localHnl_.reset(new SquareSubMatrix<MATDTYPE>(slH));
     }
-
-    // fill SparseDistMatrix sH_ with values in slH
-    void addMatrixElementsSparseH(
+    void setLocalMatrixElementsHl(
         const SquareLocalMatrices<MATDTYPE>& slH) override
     {
-        Control& ct = *(Control::instance());
-
-        LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
-
-        sl2dm->convert(slH, *sH_, ct.numst);
+        localHl_->copy(slH);
     }
-    void clearSparseH() override { sH_->clearData(); }
-    void scaleSparseH(const double scale) override { sH_->scal(scale); }
+    void clearSparseH() override {}
 
-    void consolidateH() override
-    {
-        consolidate_H_tm_.start();
-        sH_->parallelSumToDistMatrix();
-        consolidate_H_tm_.stop();
-    }
+    void consolidateH() override;
 
     double getTraceDiagProductWithInvS(
         std::vector<DISTMATDTYPE>& ddiag) override;

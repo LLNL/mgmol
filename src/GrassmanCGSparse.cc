@@ -129,21 +129,20 @@ double GrassmanCGSparse<T>::computeStepSize(T& orbitals)
     GrassmanLineMinimization<T>::sdir_->getLocalOverlap(orbitals, ss);
     VariableSizeMatrix<sparserow> zTphiMat(
         "zTphi", GrassmanLineMinimization<T>::sdir_->chromatic_number());
-    zTphiMat.initializeMatrixElements(
+    zTphiMat.insertMatrixElements(
         ss, GrassmanLineMinimization<T>::sdir_->getOverlappingGids(), ct.numst);
     // Compute Phi^T*Zo
     ss.reset();
     orbitals.getLocalOverlap(*GrassmanLineMinimization<T>::sdir_, ss);
     VariableSizeMatrix<sparserow> phiTzMat(
         "phiTz", orbitals.chromatic_number());
-    zTphiMat.initializeMatrixElements(
-        ss, orbitals.getOverlappingGids(), ct.numst);
+    zTphiMat.insertMatrixElements(ss, orbitals.getOverlappingGids(), ct.numst);
     // Compute Zo^T*Zo
     ss.reset();
     GrassmanLineMinimization<T>::sdir_->getLocalOverlap(ss);
     VariableSizeMatrix<sparserow> zTzMat(
         "zTz", GrassmanLineMinimization<T>::sdir_->chromatic_number());
-    zTzMat.initializeMatrixElements(
+    zTzMat.insertMatrixElements(
         ss, GrassmanLineMinimization<T>::sdir_->getOverlappingGids(), ct.numst);
 
     // Now compute Tr[S^{-1}*Z^T*G] =

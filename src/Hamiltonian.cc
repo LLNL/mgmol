@@ -223,7 +223,7 @@ void Hamiltonian<T>::addHlocalij(
 
     phi1.computeLocalProduct(*hlphi_, slm);
 
-    proj_matrices->addMatrixElementsSparseH(slm);
+    proj_matrices->setLocalMatrixElementsHl(slm);
 }
 
 template <class T>
@@ -242,7 +242,7 @@ void Hamiltonian<T>::addHlocal2matrix(
 
     phi1.computeLocalProduct(*hlphi_, ss);
 
-    mat.initializeMatrixElements(ss, phi1.getOverlappingGids(), ct.numst);
+    mat.insertMatrixElements(ss, phi1.getOverlappingGids(), ct.numst);
 }
 
 template Hamiltonian<LocGridOrbitals>::Hamiltonian();

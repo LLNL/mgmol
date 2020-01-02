@@ -20,6 +20,7 @@
 #include "DistMatrix.h"
 #include "MGmol_MPI.h"
 #include "SquareLocalMatrices.h"
+#include "SquareSubMatrix.h"
 #include "VariableSizeMatrix.h"
 #include "entropy.h"
 #include "fermi.h"
@@ -90,15 +91,14 @@ public:
         const SquareLocalMatrices<MATDTYPE>& ss, const int orbitals_index)
         = 0;
 
-    virtual void addMatrixElementSparseH(
-        const int st1, const int st2, const double val)
-        = 0;
-    virtual void addMatrixElementsSparseH(
+    virtual void setLocalMatrixElementsHl(
         const SquareLocalMatrices<MATDTYPE>& slH)
         = 0;
-    virtual void clearSparseH()                   = 0;
-    virtual void scaleSparseH(const double scale) = 0;
-    virtual void consolidateH()                   = 0;
+    virtual void setLocalMatrixElementsHnl(const SquareSubMatrix<MATDTYPE>& slH)
+        = 0;
+
+    virtual void clearSparseH() = 0;
+    virtual void consolidateH() = 0;
 
     // return density matrix (inverse Gram if no unoccupied states)
     virtual SquareLocalMatrices<MATDTYPE>& getLocalX() const = 0;

@@ -399,56 +399,6 @@ void KBPsiMatrixSparse::computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi2,
     }
 }
 
-void KBPsiMatrixSparse::computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi2,
-    const Ion& ion, ProjectedMatricesInterface* proj_matrices) const
-{
-    assert(ion.here());
-    assert(proj_matrices != nullptr);
-
-    vector<int> gids;
-    ion.getGidsNLprojs(gids);
-
-    vector<short> coeffs;
-    ion.getKBsigns(coeffs);
-
-    const short nprojs = (short)gids.size();
-    for (short i = 0; i < nprojs; i++)
-    {
-        const int gid      = gids[i];
-        const double coeff = (double)coeffs[i];
-
-        // double loop over states to fill hnlij[st1][st2] (in general not
-        // symmetric... )
-        int* rindex = (int*)(*kbBpsimat_).getTableValue(gid);
-        if (rindex == nullptr) continue;
-        const int lrindex = *rindex;
-        const int nnzrow1 = (*kbBpsimat_).nnzrow(lrindex);
-        for (int p1 = 0; p1 < nnzrow1; p1++)
-        {
-            const int st1 = (*kbBpsimat_).getColumnIndex(lrindex, p1);
-            const double kbpsi1
-                = coeff * (*kbBpsimat_).getRowEntry(lrindex, p1);
-            if (fabs(kbpsi1) > tolKBpsi)
-            {
-                const int nnzrow2 = (*kbpsi2->kbpsimat_).nnzrow(lrindex);
-                for (int p2 = 0; p2 < nnzrow2; p2++)
-                {
-                    const double alpha
-                        = kbpsi1
-                          * (*kbpsi2->kbpsimat_).getRowEntry(lrindex, p2);
-                    /* set hnlij */
-                    if (fabs(alpha) > tolKBpsi)
-                    {
-                        const int st2
-                            = (*kbpsi2->kbpsimat_).getColumnIndex(lrindex, p2);
-                        proj_matrices->addMatrixElementSparseH(st1, st2, alpha);
-                    }
-                }
-            }
-        }
-    }
-}
-
 SquareSubMatrix<double> KBPsiMatrixSparse::computeHvnlMatrix(
     const Ions& ions) const
 {
@@ -532,14 +482,8 @@ void KBPsiMatrixSparse::computeHvnlMatrix(
 {
     computeHvnlMatrix_tm_.start();
 
-    // Loop over ions centered on current PE only
-    // (distribution of work AND Hvnlij contributions)
-    vector<Ion*>::const_iterator ion = ions.local_ions().begin();
-    while (ion != ions.local_ions().end())
-    {
-        computeHvnlMatrix((KBPsiMatrixSparse*)kbpsi2, **ion, proj_matrices);
-        ion++;
-    }
+    SquareSubMatrix<double> hnlij(computeHvnlMatrix(kbpsi2, ions));
+    proj_matrices->setLocalMatrixElementsHnl(hnlij);
 
     computeHvnlMatrix_tm_.stop();
 }

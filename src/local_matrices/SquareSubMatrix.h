@@ -32,7 +32,7 @@ private:
 public:
     SquareSubMatrix(const std::vector<int>& gid);
 
-    const std::vector<int>& getGids() { return gids_; }
+    const std::vector<int>& getGids() const { return gids_; }
 
     void setLocalValue(const int i, const int j, const double val)
     {
@@ -49,7 +49,10 @@ public:
         data_[j * n_ + i] += val;
     }
 
-    T getLocalValue(const int i, const int j) { return data_[j * n_ + i]; }
+    T getLocalValue(const int i, const int j) const
+    {
+        return data_[j * n_ + i];
+    }
 };
 
 #endif
