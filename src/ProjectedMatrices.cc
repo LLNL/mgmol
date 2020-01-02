@@ -106,8 +106,6 @@ void ProjectedMatrices::setup(const double kbt, const int nel,
 
     global_indexes_ = global_indexes;
 
-    Control& ct = *(Control::instance());
-
 #ifdef USE_DIS_MAT
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     MPI_Comm comm   = mmpi.commSpin();

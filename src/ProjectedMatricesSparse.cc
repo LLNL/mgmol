@@ -159,7 +159,7 @@ void ProjectedMatricesSparse::setup(const double kbt, const int nel,
         /* setup matrix data */
         locvars_ = (*lrs_).getOverlapGids();
 
-        lsize_ = locvars_.size(); // table.get_size();
+        lsize_ = locvars_.size();
 
         // reset invS and DM data
         if (invS_ == nullptr || dm_ == nullptr
@@ -176,7 +176,6 @@ void ProjectedMatricesSparse::setup(const double kbt, const int nel,
         /* initialize Sparse H matrix -- this is necessary for efficient data
          * distribution */
         (*sH_).setupSparseRows(locvars_);
-        //         (*sH_).setupsparserows(locfcns);
 
         submatT_ = new VariableSizeMatrix<sparserow>("Theta", lsize_);
 
@@ -283,11 +282,14 @@ void ProjectedMatricesSparse::consolidateOrbitalsOverlapMat(
 
     consolidate_H_tm_.stop();
 }
+
+// Gather data to initialize matH and matHB
 void ProjectedMatricesSparse::consolidateH()
 {
-    /* Gather data to initialize matH and matHB */
-
-    assert(sH_->n() == (int)locvars_.size());
+    // matrix size is at least as large as the number of overlapping orbitals
+    // can be larger with nonlocal projectors that "couple"
+    // non-overlapping orbitals
+    assert(sH_->n() >= (int)locvars_.size());
 
     consolidate_H_tm_.start();
 

@@ -196,7 +196,8 @@ public:
     void setLocalMatrixElementsHl(
         const SquareLocalMatrices<MATDTYPE>& slH) override
     {
-
+        // std::cout<<"Set Hl elements with matrix of size
+        // "<<slH.m()<<std::endl;
         Control& ct = *(Control::instance());
         sH_->insertMatrixElements(
             slH, global_indexes_, ct.numst, tol_matrix_elements);
@@ -205,14 +206,15 @@ public:
     void setLocalMatrixElementsHnl(
         const SquareSubMatrix<MATDTYPE>& slH) override
     {
-
+        // std::cout<<"Set Hnl elements with matrix of size "
+        //         <<slH.getGids().size()<<std::endl;
         sH_->insertMatrixElements(slH, tol_matrix_elements);
     }
 
     void clearSparseH() override
     {
         (*sH_).reset();
-        /* initialize sparse H */
+        // initialize sH_ with locvars_.size() empty rows
         (*sH_).setupSparseRows(locvars_);
     }
 
