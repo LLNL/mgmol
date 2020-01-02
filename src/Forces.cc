@@ -184,7 +184,7 @@ void Forces<T>::evaluateSupersampledRadialFunc(
                 int jstart = istart + iy * dim2;
                 for (int iz = zoffset; iz <= zoffset + zlimits; iz++)
                 {
-                    var[ishift][jstart + iz] += current.values_[0][offset];
+                    var[jstart + iz][ishift] += current.values_[0][offset];
                     offset++;
                 }
             }
@@ -235,11 +235,11 @@ void Forces<T>::evaluateRadialFunc(const std::vector<Vector3D>& positions,
                     const double r = position.minimage(point, ll, ct.bcPoisson);
                     if (r < lrad)
                     {
-                        var[ishift][offset] = lambda_radial(r);
+                        var[offset][ishift] = lambda_radial(r);
                     }
                     else
                     {
-                        var[ishift][offset] = 0.;
+                        var[offset][ishift] = 0.;
                     }
                     ishift++;
                 }
@@ -270,23 +270,20 @@ void Forces<T>::get_loc_proj(RHODTYPE* rho,
     const int numpt = mymesh->numpt();
 
     Potentials& pot = hamiltonian_->potential();
-
-    for (short dir = 0; dir < 3; dir++)
+    for (int idx = 0; idx < numpt; idx++)
     {
-        double* lproj = &(loc_proj[dir * NPTS]);
 
-        // pseudopotential * rho
-        // - delta rhoc * vh
-        for (short ishift = 0; ishift < NPTS; ishift++)
+        for (short dir = 0; dir < 3; dir++)
         {
-            const std::vector<double>& vpot = var_pot[NPTS * dir + ishift];
-            const std::vector<double>& drhoc_ptr
-                = var_charge[NPTS * dir + ishift];
+            double* lproj = &(loc_proj[dir * NPTS]);
 
-            for (int idx = 0; idx < numpt; idx++)
+            // pseudopotential * rho
+            // - delta rhoc * vh
+            for (short ishift = 0; ishift < NPTS; ishift++)
             {
-                lproj[ishift] += vpot[idx] * rho[idx];
-                lproj[ishift] -= drhoc_ptr[idx] * pot.vh_rho(idx);
+                lproj[ishift] += var_pot[idx][NPTS * dir + ishift] * rho[idx];
+                lproj[ishift]
+                    -= var_charge[idx][NPTS * dir + ishift] * pot.vh_rho(idx);
             }
         }
     }
@@ -304,12 +301,12 @@ void Forces<T>::lforce_ion(Ion& ion, RHODTYPE* rho,
     std::vector<std::vector<double>> var_pot;
     std::vector<std::vector<double>> var_charge;
 
-    var_pot.resize(3 * NPTS);
-    var_charge.resize(3 * NPTS);
-    for (short i = 0; i < 3 * NPTS; i++)
+    var_pot.resize(numpt);
+    var_charge.resize(numpt);
+    for (int i = 0; i < numpt; i++)
     {
-        var_pot[i].resize(numpt);
-        var_charge[i].resize(numpt);
+        var_pot[i].resize(3 * NPTS);
+        var_charge[i].resize(3 * NPTS);
     }
 
     // generate var_pot and var_charge for this ion
