@@ -15,6 +15,7 @@
 #include "Rho.h"
 #include "global.h"
 
+#include <array>
 #include <functional>
 #include <vector>
 
@@ -43,19 +44,21 @@ private:
     static Timer energy_tm_;
     static Timer total_tm_;
 
-    void lforce_ion(Ion& ion, RHODTYPE* rho, std::vector<double>& loc_proj,
-        const char flag_filter);
-    void get_loc_proj(RHODTYPE* rho, std::vector<std::vector<double>>& var_pot,
-        std::vector<std::vector<double>>& var_charge,
-        std::vector<double>& loc_proj);
+    void lforce_ion(Ion& ion, RHODTYPE* rho,
+        std::array<double, 3 * NPTS>& loc_proj, const char flag_filter);
+    void get_loc_proj(RHODTYPE* rho,
+        std::vector<std::array<double, 3 * NPTS>>& var_pot,
+        std::vector<std::array<double, 3 * NPTS>>& var_charge,
+        std::array<double, 3 * NPTS>& loc_proj);
     void evaluateShiftedFields(Ion& ion,
-        std::vector<std::vector<double>>& var_pot,
-        std::vector<std::vector<double>>& var_charge, const char flag_filter);
+        std::vector<std::array<double, 3 * NPTS>>& var_pot,
+        std::vector<std::array<double, 3 * NPTS>>& var_charge,
+        const char flag_filter);
     void evaluateSupersampledRadialFunc(const std::vector<Vector3D>& positions,
-        const double lrad, std::vector<std::vector<double>>& var,
+        const double lrad, std::vector<std::array<double, 3 * NPTS>>& var,
         std::function<double(double)> const&);
     void evaluateRadialFunc(const std::vector<Vector3D>& positions,
-        const double lrad, std::vector<std::vector<double>>& var,
+        const double lrad, std::vector<std::array<double, 3 * NPTS>>& var,
         std::function<double(double)> const&);
 
 public:

@@ -53,8 +53,9 @@ double get_deriv2(double value[2])
 
 template <class T>
 void Forces<T>::evaluateShiftedFields(Ion& ion,
-    std::vector<std::vector<double>>& var_pot,
-    std::vector<std::vector<double>>& var_charge, const char flag_filter)
+    std::vector<std::array<double, 3 * NPTS>>& var_pot,
+    std::vector<std::array<double, 3 * NPTS>>& var_charge,
+    const char flag_filter)
 {
     evaluateShiftedFields_tm_.start();
 
@@ -102,7 +103,7 @@ void Forces<T>::evaluateShiftedFields(Ion& ion,
 template <class T>
 void Forces<T>::evaluateSupersampledRadialFunc(
     const std::vector<Vector3D>& positions, const double lrad,
-    std::vector<std::vector<double>>& var,
+    std::vector<std::array<double, 3 * NPTS>>& var,
     std::function<double(double)> const& lambda_radial)
 {
     Mesh* mymesh           = Mesh::instance();
@@ -195,7 +196,7 @@ void Forces<T>::evaluateSupersampledRadialFunc(
 
 template <class T>
 void Forces<T>::evaluateRadialFunc(const std::vector<Vector3D>& positions,
-    const double lrad, std::vector<std::vector<double>>& var,
+    const double lrad, std::vector<std::array<double, 3 * NPTS>>& var,
     std::function<double(double)> const& lambda_radial)
 {
     Control& ct = *(Control::instance());
@@ -229,17 +230,18 @@ void Forces<T>::evaluateRadialFunc(const std::vector<Vector3D>& positions,
             for (int iz = 0; iz < dim2; iz++)
             {
                 short ishift = 0;
+                std::array<double, 3 * NPTS>& varpoint(var[offset]);
 
                 for (auto& position : positions)
                 {
                     const double r = position.minimage(point, ll, ct.bcPoisson);
                     if (r < lrad)
                     {
-                        var[offset][ishift] = lambda_radial(r);
+                        varpoint[ishift] = lambda_radial(r);
                     }
                     else
                     {
-                        var[offset][ishift] = 0.;
+                        varpoint[ishift] = 0.;
                     }
                     ishift++;
                 }
@@ -261,8 +263,9 @@ void Forces<T>::evaluateRadialFunc(const std::vector<Vector3D>& positions,
 
 template <class T>
 void Forces<T>::get_loc_proj(RHODTYPE* rho,
-    std::vector<std::vector<double>>& var_pot,
-    std::vector<std::vector<double>>& var_charge, std::vector<double>& loc_proj)
+    std::vector<std::array<double, 3 * NPTS>>& var_pot,
+    std::vector<std::array<double, 3 * NPTS>>& var_charge,
+    std::array<double, 3 * NPTS>& loc_proj)
 {
     get_loc_proj_tm_.start();
 
@@ -272,18 +275,19 @@ void Forces<T>::get_loc_proj(RHODTYPE* rho,
     Potentials& pot = hamiltonian_->potential();
     for (int idx = 0; idx < numpt; idx++)
     {
-
+        const double vhrho = pot.vh_rho(idx);
         for (short dir = 0; dir < 3; dir++)
         {
             double* lproj = &(loc_proj[dir * NPTS]);
+            std::array<double, 3 * NPTS>& varpot(var_pot[idx]);
+            std::array<double, 3 * NPTS>& varcharge(var_charge[idx]);
 
             // pseudopotential * rho
             // - delta rhoc * vh
             for (short ishift = 0; ishift < NPTS; ishift++)
             {
-                lproj[ishift] += var_pot[idx][NPTS * dir + ishift] * rho[idx];
-                lproj[ishift]
-                    -= var_charge[idx][NPTS * dir + ishift] * pot.vh_rho(idx);
+                lproj[ishift] += varpot[NPTS * dir + ishift] * rho[idx];
+                lproj[ishift] -= varcharge[NPTS * dir + ishift] * vhrho;
             }
         }
     }
@@ -293,21 +297,13 @@ void Forces<T>::get_loc_proj(RHODTYPE* rho,
 
 template <class T>
 void Forces<T>::lforce_ion(Ion& ion, RHODTYPE* rho,
-    std::vector<double>& loc_proj, const char flag_filter)
+    std::array<double, 3 * NPTS>& loc_proj, const char flag_filter)
 {
     Mesh* mymesh    = Mesh::instance();
     const int numpt = mymesh->numpt();
 
-    std::vector<std::vector<double>> var_pot;
-    std::vector<std::vector<double>> var_charge;
-
-    var_pot.resize(numpt);
-    var_charge.resize(numpt);
-    for (int i = 0; i < numpt; i++)
-    {
-        var_pot[i].resize(3 * NPTS);
-        var_charge[i].resize(3 * NPTS);
-    }
+    std::vector<std::array<double, 3 * NPTS>> var_pot(numpt);
+    std::vector<std::array<double, 3 * NPTS>> var_charge(numpt);
 
     // generate var_pot and var_charge for this ion
     evaluateShiftedFields(ion, var_pot, var_charge, flag_filter);
@@ -324,17 +320,12 @@ void Forces<T>::lforce(Ions& ions, RHODTYPE* rho)
 
     lforce_tm_.start();
 
-    //    if(ct.short_sighted)
-    //    {
-    // cout<<"max Vl radius = "<<ions.getMaxVlRadius()<<endl;
-
-    int buffer_size = 3 * NPTS;
-    std::vector<double> loc_proj(buffer_size);
+    std::array<double, 3 * NPTS> loc_proj;
 
     lforce_local_tm_.start();
 
-    std::vector<int> cols(buffer_size);
-    for (int i = 0; i < buffer_size; i++)
+    std::array<int, 3 * NPTS> cols;
+    for (int i = 0; i < 3 * NPTS; i++)
         cols[i] = i;
 
     VariableSizeMatrix<sparserow> loc_proj_mat(
@@ -353,7 +344,7 @@ void Forces<T>::lforce(Ions& ions, RHODTYPE* rho)
 
         /* insert row into 2D matrix */
         loc_proj_mat.insertNewRow(
-            buffer_size, index, cols.data(), &loc_proj[0], true);
+            3 * NPTS, index, cols.data(), &loc_proj[0], true);
     }
 
     lforce_local_tm_.stop();
@@ -387,49 +378,12 @@ void Forces<T>::lforce(Ions& ions, RHODTYPE* rho)
         int* rindex = (int*)loc_proj_mat.getTableValue(index);
         assert(rindex != nullptr);
         std::fill(loc_proj.begin(), loc_proj.end(), 0.);
-        loc_proj_mat.row_daxpy(
-            *rindex, buffer_size, mygrid.vel(), &loc_proj[0]);
+        loc_proj_mat.row_daxpy(*rindex, 3 * NPTS, mygrid.vel(), &loc_proj[0]);
 
         lion->add_force(-get_deriv2(&loc_proj[0]),
             -get_deriv2(&(loc_proj[NPTS])), -get_deriv2(&(loc_proj[2 * NPTS])));
     }
-//    }
-//    else
-/*
-    {
-       double  **loc_proj;
 
-       DIM2(loc_proj, ions.getNumIons(), 3*NPTS, double);
-
-       init_loc_proj(loc_proj,ions.getNumIons());
-
-       // Loop over ions
-       std::vector<Ion*>::const_iterator ion=ions.overlappingVL_ions().begin();
-       while(ion!=ions.overlappingVL_ions().end()){
-
-           int index=(*ion)->index();
-           lforce_ion(**ion, rho, &loc_proj[index]);
-
-           ion++;
-       }
-
-       int      n = 3*NPTS*ions.getNumIons();
-       pb::my_dscal(n,mygrid.vel(),*loc_proj);
-       global_sums_double(*loc_proj, n);
-
-       std::vector<Ion*>::iterator lion=ions.local_ions().begin();
-       while(lion!=ions.local_ions().end()){
-           // Forces opposed to the gradient
-           int index=(*lion)->index();
-           (*lion)->add_force(-get_deriv2(&loc_proj[index][0]),
-                              -get_deriv2(&loc_proj[index][1*NPTS]),
-                              -get_deriv2(&loc_proj[index][2*NPTS]) );
-
-           lion++;
-       }
-       D2FREE(loc_proj);
-    }
-*/
 #ifdef HAVE_TRICUBIC
     Potentials& pot = hamiltonian_->potential();
     if (pot.withVext())
@@ -632,11 +586,9 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
         }
     }
 
-    std::map<int, double*>::iterator ierg = erg.begin();
-    while (ierg != erg.end())
+    for (auto ierg : erg)
     {
-        delete[] ierg->second;
-        ++ierg;
+        delete[] ierg.second;
     }
 
     nlforce_tm_.stop();
