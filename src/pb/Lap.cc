@@ -13,15 +13,14 @@
 namespace pb
 {
 
-using namespace std;
-
 template <class T>
 double Lap<T>::energyES(GridFunc<T>& v, GridFunc<T>& rho)
 {
 
     double g = 0.5 * dot(v, rho);
 
-    if (v.mype_env().mytask() == 0) cout << " ES Energy = " << g << endl;
+    if (v.mype_env().mytask() == 0)
+        std::cout << " ES Energy = " << g << std::endl;
 
     return g;
 }

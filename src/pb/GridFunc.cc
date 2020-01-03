@@ -20,19 +20,10 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
-using namespace std;
 
 #include <mpi.h>
 
 const double inv64 = 1. / 64.;
-
-#ifdef EXPLICIT_INSTANTIATION_VINT
-namespace std
-{
-template class vector<int>;
-template class vector<vector<int>>;
-}
-#endif
 
 namespace pb
 {
@@ -51,13 +42,13 @@ Timer GridFuncInterface::finishExchangeEastWest_tm_(
     "GridFunc::finishExEastWest");
 
 template <typename T>
-vector<T> GridFunc<T>::buf1_;
+std::vector<T> GridFunc<T>::buf1_;
 template <typename T>
-vector<T> GridFunc<T>::buf2_;
+std::vector<T> GridFunc<T>::buf2_;
 template <typename T>
-vector<T> GridFunc<T>::buf3_;
+std::vector<T> GridFunc<T>::buf3_;
 template <typename T>
-vector<T> GridFunc<T>::buf4_;
+std::vector<T> GridFunc<T>::buf4_;
 
 template <typename T>
 T GridFunc<T>::ran0()
@@ -177,11 +168,8 @@ GridFunc<T>::GridFunc(
         assert(grid_.dim(i) < 10000);
     }
 
-    // cout<<"Constructor with BC for GridFunc<T> at level
-    // "<<grid_.level()<<endl;
     updated_boundaries_ = true; // boundaries initialized
 
-    // cout<<"nn="<<grid_.sizeg<<endl;
     if (grid_.active())
     {
         const size_t n = grid_.sizeg();
@@ -199,8 +187,8 @@ GridFunc<T>::GridFunc(
     if (mype_env().n_mpi_tasks() > 1)
     {
         int size_max = shift * grid_.inc(0);
-        size_max     = max(size_max, shift * dimxy);
-        size_max     = max(size_max, shift * dim(0) * grid_.inc(1));
+        size_max     = std::max(size_max, shift * dimxy);
+        size_max     = std::max(size_max, shift * dim(0) * grid_.inc(1));
 
         if (size_max > (int)buf1_.size())
         {
@@ -322,11 +310,9 @@ GridFunc<T>::GridFunc(const GridFunc<T>& A, const Grid& new_grid)
     }
     else
     {
-        cout << "Invalid initialization" << endl;
+        std::cout << "Invalid initialization" << std::endl;
         exit(2);
     }
-
-    // cout<<"Copy constructor for function on grid "<<grid_.level()<<endl;
 }
 
 // Constructor
@@ -383,10 +369,7 @@ GridFunc<T>::GridFunc(const T* const vv, const Grid& new_grid, const short px,
     {
         updated_boundaries_ = false;
         uu_                 = nullptr;
-        // cout<<" Empty GridFunc<T>!!!"<<endl;
     }
-
-    // cout<<"Copy constructor for function on grid "<<grid_.level()<<endl;
 
     const short shift = ghost_pt();
     const int dimxy   = (dim(1) + 2 * ghost_pt()) * dim(0);
@@ -395,8 +378,8 @@ GridFunc<T>::GridFunc(const T* const vv, const Grid& new_grid, const short px,
     if (mype_env().n_mpi_tasks() > 1)
     {
         int size_max = shift * grid_.inc(0);
-        size_max     = max(size_max, shift * dimxy);
-        size_max     = max(size_max, shift * dim(0) * grid_.inc(1));
+        size_max     = std::max(size_max, shift * dimxy);
+        size_max     = std::max(size_max, shift * dim(0) * grid_.inc(1));
 
         if (size_max > (int)buf1_.size())
         {
@@ -445,7 +428,8 @@ GridFunc<T>::GridFunc(const T* const src, const Grid& new_grid, const short px,
     }
     else
     {
-        cout << "Undefined distribution to build GridFunc<T>!!" << endl;
+        std::cout << "Undefined distribution to build GridFunc<T>!!"
+                  << std::endl;
         mype_env().globalExit(2);
     }
 
@@ -526,8 +510,8 @@ GridFunc<T>::GridFunc(const T* const src, const Grid& new_grid, const short px,
     if (mype_env().n_mpi_tasks() > 1)
     {
         int size_max = shift * grid_.inc(0);
-        size_max     = max(size_max, shift * dimxy);
-        size_max     = max(size_max, shift * dim(0) * grid_.inc(1));
+        size_max     = std::max(size_max, shift * dimxy);
+        size_max     = std::max(size_max, shift * dim(0) * grid_.inc(1));
 
         if (size_max > (int)buf1_.size())
         {
@@ -922,7 +906,7 @@ int GridFunc<T>::count_threshold(const T threshold)
         int rc  = mmpi.allreduce(&icount, &sum, 1, MPI_SUM);
         if (rc != MPI_SUCCESS)
         {
-            cout << "MPI_Allreduce double sum failed!!!" << endl;
+            std::cout << "MPI_Allreduce double sum failed!!!" << std::endl;
             mype_env().globalExit(2);
         }
         icount = sum;
@@ -1032,7 +1016,7 @@ void GridFunc<T>::inv()
 // 2nd column: value of the function
 // Transfer datas to task 0 and print from task 0
 template <typename T>
-void GridFunc<T>::print(ostream& tfile)
+void GridFunc<T>::print(std::ostream& tfile)
 {
     if (!grid_.active()) return;
 
@@ -1042,9 +1026,9 @@ void GridFunc<T>::print(ostream& tfile)
 
     tfile << mype_env().n_mpi_task(0) * dim_[0] << "\t"
           << mype_env().n_mpi_task(1) * dim_[1] << "\t"
-          << mype_env().n_mpi_task(2) * dim_[2] << endl;
+          << mype_env().n_mpi_task(2) * dim_[2] << std::endl;
     tfile << grid_.hgrid(0) << "\t" << grid_.hgrid(1) << "\t" << grid_.hgrid(2)
-          << endl;
+          << std::endl;
 
     double size_x = grid_.hgrid(1) * grid_.hgrid(2) * dim_[1] * dim_[2];
     double size_y = grid_.hgrid(0) * grid_.hgrid(2) * dim_[2];
@@ -1068,7 +1052,8 @@ void GridFunc<T>::print(ostream& tfile)
                 {
                     mpirc = mmpi.send(uu_, grid_.sizeg(), 0);
                     mpirc = mmpi.send(start, 3, 0);
-                    cout << " Print GridFunc<T> from task " << mytask_ << endl;
+                    std::cout << " Print GridFunc<T> from task " << mytask_
+                              << std::endl;
                 }
                 else
                 {
@@ -1076,10 +1061,12 @@ void GridFunc<T>::print(ostream& tfile)
                     {
                         mpirc = mmpi.recv(work, grid_.sizeg(), i);
                         if (mpirc != MPI_SUCCESS)
-                            cout << "print: MPI_Recv work failed!!!" << endl;
+                            std::cout << "print: MPI_Recv work failed!!!"
+                                      << std::endl;
                         mpirc = mmpi.recv(start, 3, i);
                         if (mpirc != MPI_SUCCESS)
-                            cout << "print: MPI_Recv start[] failed!!!" << endl;
+                            std::cout << "print: MPI_Recv start[] failed!!!"
+                                      << std::endl;
                         vv = work;
                     }
                 }
@@ -1106,7 +1093,7 @@ void GridFunc<T>::print(ostream& tfile)
                                                * size_y
                                          + (start[2] + iz * grid_.hgrid(2))
                                                * size_z
-                                  << "\t" << vv[iz1] << endl;
+                                  << "\t" << vv[iz1] << std::endl;
                         }
                     }
                 }
@@ -1122,22 +1109,22 @@ void GridFunc<T>::write_plt(const char str[]) const
 {
     if (!grid_.active()) return;
 
-    ofstream tfile;
+    std::ofstream tfile;
     tfile.open(str);
 
-    tfile << 3 << " " << 2 << endl;
+    tfile << 3 << " " << 2 << std::endl;
 
-    tfile << dim(0) << " " << dim(1) << " " << dim(2) << endl;
+    tfile << dim(0) << " " << dim(1) << " " << dim(2) << std::endl;
 
     tfile << 0. << " " << (dim(0) - 1) * grid_.hgrid(0) << " ";
     tfile << 0. << " " << (dim(1) - 1) * grid_.hgrid(1) << " ";
-    tfile << 0. << " " << (dim(2) - 1) * grid_.hgrid(2) << endl;
+    tfile << 0. << " " << (dim(2) - 1) * grid_.hgrid(2) << std::endl;
 
     write_zyx(tfile);
 }
 
 template <typename T>
-void GridFunc<T>::write_xyz(ofstream& tfile) const
+void GridFunc<T>::write_xyz(std::ofstream& tfile) const
 {
     if (!grid_.active()) return;
 
@@ -1164,7 +1151,7 @@ void GridFunc<T>::write_xyz(ofstream& tfile) const
 
                     int iz1 = iy1 + iz;
 
-                    tfile << vv[iz1] << endl;
+                    tfile << vv[iz1] << std::endl;
                 }
             }
         }
@@ -1208,7 +1195,8 @@ void GridFunc<T>::global_xyz_task0(T* global_func)
                     {
                         mpirc = mmpi.recv(work, grid_.sizeg(), ipe);
                         if (mpirc != MPI_SUCCESS)
-                            cout << "print: MPI_Recv work failed!!!" << endl;
+                            std::cout << "print: MPI_Recv work failed!!!"
+                                      << std::endl;
                         for (int ii = 0; ii < dim(0); ii++)
                             for (int jj = 0; jj < dim(1); jj++)
                                 memcpy(global_func + (istart + ii) * gincx
@@ -1230,7 +1218,7 @@ void GridFunc<T>::global_xyz_task0(T* global_func)
 }
 
 template <typename T>
-void GridFunc<T>::write_global_xyz(ofstream& tfile)
+void GridFunc<T>::write_global_xyz(std::ofstream& tfile)
 {
     if (!grid_.active()) return;
 
@@ -1257,7 +1245,8 @@ void GridFunc<T>::write_global_xyz(ofstream& tfile)
                 sizez);
 
     if (mype_env().onpe0())
-        cout << "GridFunc<T>::write_global_xyz, Collect data on PE 0" << endl;
+        std::cout << "GridFunc<T>::write_global_xyz, Collect data on PE 0"
+                  << std::endl;
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     int mpirc;
     const int ldim2 = dim(2);
@@ -1277,9 +1266,10 @@ void GridFunc<T>::write_global_xyz(ofstream& tfile)
                     {
                         mpirc = mmpi.recv(work, grid_.sizeg(), ipe);
                         if (mpirc != MPI_SUCCESS)
-                            cout << "GridFunc<T>::write_global_xyz, MPI_Recv "
-                                    "work failed!!!"
-                                 << endl;
+                            std::cout
+                                << "GridFunc<T>::write_global_xyz, MPI_Recv "
+                                   "work failed!!!"
+                                << std::endl;
                         for (int ii = 0; ii < ldim0; ii++)
                             for (int jj = 0; jj < ldim1; jj++)
                                 memcpy(global_func + (istart + ii) * gincx
@@ -1292,9 +1282,10 @@ void GridFunc<T>::write_global_xyz(ofstream& tfile)
                     {
                         mpirc = mmpi.send(uu_, grid_.sizeg(), 0);
                         if (mpirc != MPI_SUCCESS)
-                            cout << "GridFunc<T>::write_global_xyz, MPI_Send "
-                                    "work failed!!!"
-                                 << endl;
+                            std::cout
+                                << "GridFunc<T>::write_global_xyz, MPI_Send "
+                                   "work failed!!!"
+                                << std::endl;
                     }
                 }
 
@@ -1306,10 +1297,11 @@ void GridFunc<T>::write_global_xyz(ofstream& tfile)
     // write from PE 0 only
     if (mype_env().onpe0())
     {
-        cout << "GridFunc<T>::write_global_xyz, Write data from PE 0" << endl;
+        std::cout << "GridFunc<T>::write_global_xyz, Write data from PE 0"
+                  << std::endl;
         for (long ix = 0; ix < gsize; ix++)
         {
-            tfile << global_func[ix] << endl;
+            tfile << global_func[ix] << std::endl;
         }
     }
     MPI_Barrier(mype_env().comm());
@@ -1322,7 +1314,7 @@ void GridFunc<T>::write_global_x(const char str[])
 {
     if (!grid_.active()) return;
 
-    ofstream tfile(str);
+    std::ofstream tfile(str);
 
     T* global_func = new T[grid_.gsize()];
 
@@ -1339,7 +1331,7 @@ void GridFunc<T>::write_global_x(const char str[])
                 {
                     alpha += global_func[ix * incx + iy * grid_.gdim(2) + iz];
                 }
-            tfile << alpha / ((T)incx_) << endl;
+            tfile << alpha / ((T)incx_) << std::endl;
         }
     }
 
@@ -1355,8 +1347,6 @@ void GridFunc<T>::allGather(T* global_func) const
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
-    // if(mype_env().onpe0())
-    //    cout<<"GridFunc<T>::allGather()"<<endl;
     if (!grid_.active()) return;
 
     const int gincx = grid_.gdim(1) * grid_.gdim(2);
@@ -1656,17 +1646,17 @@ void GridFunc<T>::init_vect_shift(T* global_func) const
     MGmol_MPI& mmpi   = *(MGmol_MPI::instance());
     const int bufsize = mype_env().n_mpi_tasks();
 
-    vector<vector<int>> displx;
+    std::vector<std::vector<int>> displx;
     displx.resize(2);
     displx[0].resize(bufsize);
     displx[1].resize(bufsize);
 
-    vector<vector<int>> disply;
+    std::vector<std::vector<int>> disply;
     disply.resize(2);
     disply[0].resize(bufsize);
     disply[1].resize(bufsize);
 
-    vector<vector<int>> displz;
+    std::vector<std::vector<int>> displz;
     displz.resize(2);
     displz[0].resize(bufsize);
     displz[1].resize(bufsize);
@@ -1727,7 +1717,7 @@ void GridFunc<T>::init_vect_shift(T* global_func) const
 }
 
 template <typename T>
-void GridFunc<T>::write_zyx(ofstream& tfile) const
+void GridFunc<T>::write_zyx(std::ofstream& tfile) const
 {
     if (!grid_.active()) return;
 
@@ -1752,7 +1742,7 @@ void GridFunc<T>::write_zyx(ofstream& tfile) const
 
                     int ix1 = iy1 + (ix + shift) * incx_;
 
-                    tfile << vv[ix1] << endl;
+                    tfile << vv[ix1] << std::endl;
                 }
             }
         }
@@ -1776,7 +1766,6 @@ void GridFunc<T>::init_vect(T* vv, const char dis) const
     {
         getValues(vv);
     }
-    // cout<<"Copy constructor for function on grid "<<grid_.level()<<endl;
 }
 
 // assign vv with values in member uu_
@@ -1971,7 +1960,6 @@ void GridFunc<T>::initCos3d(const T k[3])
 template <typename T>
 void GridFunc<T>::initTriLin(const T a[4], const bool wghosts)
 {
-    // cout<<"a[0]="<<a[0]<<",a[1]="<<a[1]<<",a[2]="<<a[2]<<",a[3]="<<a[3]<<endl;
     if (!grid_.active()) return;
 
     const short nghosts = ghost_pt();
@@ -2042,8 +2030,8 @@ void GridFunc<T>::init_radial(
     if (!grid_.active()) return;
 
     if (mype_env().onpe0())
-        cout << "Init_radial() at center (" << center[0] << "," << center[1]
-             << "," << center[2] << ")" << endl;
+        std::cout << "Init_radial() at center (" << center[0] << ","
+                  << center[1] << "," << center[2] << ")" << std::endl;
 
     int iix, iiy, iiz;
 
@@ -2095,7 +2083,7 @@ void GridFunc<T>::init_radial(
 
     updated_boundaries_ = false;
 
-    if (mype_env().onpe0()) cout << " init_radial done" << endl;
+    if (mype_env().onpe0()) std::cout << " init_radial done" << std::endl;
 }
 
 template <typename T>
@@ -2108,15 +2096,13 @@ void GridFunc<T>::print_radial(const char str[])
     sprintf(extension, "%d", mype_env().my_mpi(2));
     strcat(filename, extension);
 
-    ofstream tfile(filename);
+    std::ofstream tfile(filename);
 
     const int gpt = ghost_pt();
 
     // if(mype_env().my_mpi(2)>0)return;
     if (mype_env().my_mpi(1) != (mype_env().n_mpi_task(1) >> 1)) return;
     if (mype_env().my_mpi(0) != (mype_env().n_mpi_task(0) >> 1)) return;
-
-    // cout << " Print radial function...\n";
 
     int ix = gpt;
     int iy = gpt;
@@ -2134,7 +2120,7 @@ void GridFunc<T>::print_radial(const char str[])
         int iiz = iix + iz;
 
         tfile << grid_.start(2) + (iz - gpt) * grid_.hgrid(2) << "\t"
-              << uu_[iiz] << endl;
+              << uu_[iiz] << std::endl;
     }
 }
 
@@ -2144,7 +2130,7 @@ void GridFunc<T>::init_rand()
     if (!grid_.active()) return;
 
 #ifdef DEBUG
-    if (mype_env().onpe0()) cout << " Begin init_rand ...\n";
+    if (mype_env().onpe0()) std::cout << " Begin init_rand ...\n";
 #endif
     const int gpt = ghost_pt();
 
@@ -2190,7 +2176,7 @@ void GridFunc<T>::init_rand()
     delete[] yrand;
     delete[] zrand;
 #ifdef DEBUG
-    if (mype_env().onpe0()) cout << " init_rand done" << endl;
+    if (mype_env().onpe0()) std::cout << " init_rand done" << std::endl;
 #endif
 }
 
@@ -2201,7 +2187,6 @@ void GridFunc<T>::initiateExchangeNorthSouth()
 
     if (mype_env().n_mpi_task(1) > 1)
     {
-        // cout<<" 2 PEs in direction y\n";
         const int shift = ghost_pt();
 
         const size_t sizeb = shift * dim_[2] * dim_[0];
@@ -2370,8 +2355,6 @@ void GridFunc<T>::finishExchangeUpDown()
 
     if (mype_env().n_mpi_task(2) > 1)
     {
-        // cout<<icount<<" communications by task "<<mype_env().mytask_()<<endl;
-
         // MPI_Waitall(4, ud_mpireq_, MPI_STATUS_IGNORE);
         if (up_) MPI_Wait(ud_mpireq_, MPI_STATUS_IGNORE);
         if (down_)
@@ -2681,8 +2664,6 @@ void GridFunc<T>::setBoundaryValues(const T alpha, const bool direction[3])
     icount -= (grid_.dim(0) * (grid_.dim(2) - 1));
     icount -= ((grid_.dim(1) - 1) * (grid_.dim(2) - 1));
 
-    // cout<<" icount="<<icount<<endl;
-
     if (mype_env().my_mpi(0) != 0)
         icount += shift * (grid_.dim(1) - 1) * (grid_.dim(2) - 1);
     if (mype_env().my_mpi(1) != 0)
@@ -2755,9 +2736,6 @@ void GridFunc<T>::setBoundaryValues(const T alpha, const bool direction[3])
     if ((mype_env().my_mpi(2) != (mype_env().n_mpi_task(0) - 1))
         && (mype_env().my_mpi(1) != 0) && (mype_env().my_mpi(0) != 0))
         icount += (shift + 1) * (shift) * (shift);
-
-        // cout<<"icount="<<icount<<endl;
-        // assert(icount==0);
 #endif
 }
 
@@ -2910,7 +2888,6 @@ template <typename T>
 void GridFunc<T>::setBoundaryValuesNeumann(
     const T alpha[3], const bool direction[3])
 {
-    // cout<<"GridFunc<T>::setBoundaryValuesNeumann()"<<endl;
     if (!grid_.active()) return;
 
     if (direction[1]) setBoundaryValuesNeumannY(alpha[1]);
@@ -2927,8 +2904,6 @@ template <typename T>
 void GridFunc<T>::setBoundaryValues(
     const GridFunc<T>& values, const bool direction[3])
 {
-    // cout<<"GridFunc<T>::setBoundaryValues(const GridFunc<T>&, const bool
-    // direction[3])"<<endl;
     assert(dim_[0] == values.dim(0));
     assert(dim_[1] == values.dim(1));
     assert(dim_[2] == values.dim(2));
@@ -3088,9 +3063,9 @@ void GridFunc<T>::setBoundaryValues(
  * below. This is necessary to ensure that the underlying MPdot routine
  * that is called returns the same result whether T=float and vv is double
  * or T=double and vv is float. Otherwise the GridFunc copy constructor
- * would use a copy of vv of the same type as "this" GridFunc object (i.e. type
- * T). This could lead to different results for float-double and double-float
- * combinations of this function.
+ * would use a copy of vv of the same type as "this" GridFunc object (i.e.
+ * type T). This could lead to different results for float-double and
+ * double-float combinations of this function.
  */
 template <typename T>
 double GridFunc<T>::gdot(const GridFunc<double>& vv) const
@@ -3138,7 +3113,8 @@ double GridFunc<T>::gdot(const GridFunc<double>& vv) const
         int rc     = mmpi.allreduce(&my_dot, &sum, 1, MPI_SUM);
         if (rc != MPI_SUCCESS)
         {
-            cout << "MPI_Allreduce double sum failed in gdot!!!" << endl;
+            std::cout << "MPI_Allreduce double sum failed in gdot!!!"
+                      << std::endl;
             mype_env().globalExit(2);
         }
         my_dot = sum;
@@ -3194,7 +3170,8 @@ double GridFunc<T>::gdot(const GridFunc<float>& vv) const
         int rc     = mmpi.allreduce(&my_dot, &sum, 1, MPI_SUM);
         if (rc != MPI_SUCCESS)
         {
-            cout << "MPI_Allreduce double sum failed in gdot!!!" << endl;
+            std::cout << "MPI_Allreduce double sum failed in gdot!!!"
+                      << std::endl;
             mype_env().globalExit(2);
         }
         my_dot = sum;
@@ -3226,7 +3203,7 @@ bool GridFunc<T>::def_const() const
         int rc = mmpi.allreduce(&tmp, &sum, 1, MPI_SUM);
         if (rc != MPI_SUCCESS)
         {
-            cout << "MPI_Allreduce double sum failed!!!" << endl;
+            std::cout << "MPI_Allreduce double sum failed!!!" << std::endl;
             mype_env().globalExit(2);
         }
     }
@@ -3263,7 +3240,6 @@ double GridFunc<T>::get_average()
         }
     }
     sum /= (double)grid_.size();
-    // cout<<"sum="<<sum<<endl;
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     if (mype_env().n_mpi_tasks() > 1)
@@ -3272,7 +3248,7 @@ double GridFunc<T>::get_average()
         int rc     = mmpi.allreduce(&sum, &tmp, 1, MPI_SUM);
         if (rc != MPI_SUCCESS)
         {
-            cout << "MPI_Allreduce double sum failed!!!" << endl;
+            std::cout << "MPI_Allreduce double sum failed!!!" << std::endl;
             mype_env().globalExit(2);
         }
         sum = tmp / ((double)mype_env().n_mpi_tasks());
@@ -3286,11 +3262,10 @@ double GridFunc<T>::average0()
 {
     const double sum = get_average();
 
-    // cout<<"average to 0.\n";
     if (!def_const())
     {
 #ifdef DEBUG
-        cout << "substract " << sum << " to function" << endl;
+        std::cout << "substract " << sum << " to function" << std::endl;
 #endif
         *this -= sum;
     }
@@ -3340,8 +3315,8 @@ bool GridFunc<T>::isZero(const double tol, const bool wghosts)
 
                 if (fabs(uu_[iiz]) > tol)
                 {
-                    cout << "i=" << ix << ",j=" << iy << ",k=" << iz
-                         << ", u=" << uu_[iiz] << endl;
+                    std::cout << "i=" << ix << ",j=" << iy << ",k=" << iz
+                              << ", u=" << uu_[iiz] << std::endl;
                     return false;
                 }
             }
@@ -3375,7 +3350,6 @@ double GridFunc<T>::integral() const
             }
         }
     }
-    // cout<<"integral="<<integral<<endl;
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     if (grid_.mype_env().n_mpi_tasks() > 1)
@@ -3384,7 +3358,7 @@ double GridFunc<T>::integral() const
         int rc     = mmpi.allreduce(&integral, &tmp, 1, MPI_SUM);
         if (rc != MPI_SUCCESS)
         {
-            cout << "MPI_Allreduce double sum failed!!!" << endl;
+            std::cout << "MPI_Allreduce double sum failed!!!" << std::endl;
             mype_env().globalExit(2);
         }
         integral = tmp;
@@ -3582,7 +3556,6 @@ void GridFunc<T>::extend3D(GridFunc<T>& ucoarse)
 template <typename T>
 void GridFunc<T>::restrict3D(GridFunc<T>& ucoarse)
 {
-    // cout<<"GridFunc<T>::restrict3D()"<<endl;
     restrict3D_tm_.start();
 
     if (!grid_.active()) return;
@@ -3673,8 +3646,8 @@ void GridFunc<T>::restrict3D(GridFunc<T>& ucoarse)
 template <typename T>
 void GridFunc<T>::test_setBoundaryValues()
 {
-    cout << " test_setBoundariesValues() on grid " << dim(0) << "," << dim(1)
-         << "," << dim(2) << endl;
+    std::cout << " test_setBoundariesValues() on grid " << dim(0) << ","
+              << dim(1) << "," << dim(2) << std::endl;
 
     *this = 1.;
 
@@ -3689,20 +3662,20 @@ void GridFunc<T>::test_setBoundaryValues()
 
     double my_dot = gdot(*this);
 
-    cout << " gdim=" << grid_.gdim(0) << "," << grid_.gdim(1) << ","
-         << grid_.gdim(2) << endl;
+    std::cout << " gdim=" << grid_.gdim(0) << "," << grid_.gdim(1) << ","
+              << grid_.gdim(2) << std::endl;
 
-    cout << " dot=" << my_dot << endl;
-    cout << " grid="
-         << ((grid_.gsize() - grid_.gdim(0) * grid_.gdim(1)
-                - grid_.gdim(0) * (grid_.gdim(2) - 1)
-                - (grid_.gdim(1) - 1) * (grid_.gdim(2) - 1)))
-         << endl;
+    std::cout << " dot=" << my_dot << std::endl;
+    std::cout << " grid="
+              << ((grid_.gsize() - grid_.gdim(0) * grid_.gdim(1)
+                     - grid_.gdim(0) * (grid_.gdim(2) - 1)
+                     - (grid_.gdim(1) - 1) * (grid_.gdim(2) - 1)))
+              << std::endl;
 
-    assert(fabs(my_dot
-                - (grid_.gsize() - grid_.gdim(0) * grid_.gdim(1)
-                      - grid_.gdim(0) * (grid_.gdim(2) - 1)
-                      - (grid_.gdim(1) - 1) * (grid_.gdim(2) - 1)))
+    assert(std::abs(my_dot
+                    - (grid_.gsize() - grid_.gdim(0) * grid_.gdim(1)
+                          - grid_.gdim(0) * (grid_.gdim(2) - 1)
+                          - (grid_.gdim(1) - 1) * (grid_.gdim(2) - 1)))
            < 1.e-8);
 
     if ((2 * (dim(0) >> 1) == dim(0)) && (2 * (dim(1) >> 1) == dim(1))
@@ -3731,13 +3704,14 @@ void GridFunc<T>::test_grid_transfer()
     if (static_cast<int>(coarse_G.dim(2)) < ghost_pt()) return;
 
     if (mype_env().onpe0())
-        cout << " Test grid transfer() between grids " << dim(0) << " and "
-             << coarse_G.dim(0) << endl;
+        std::cout << " Test grid transfer() between grids " << dim(0) << " and "
+                  << coarse_G.dim(0) << std::endl;
 
     if (bc_[0] != 1 || bc_[1] != 1 || bc_[2] != 1)
     {
         if (mype_env().onpe0())
-            cout << " test_grid_transfer() requires periodic BC. skipped\n";
+            std::cout
+                << " test_grid_transfer() requires periodic BC. skipped\n";
         return;
     }
     *this = 2.11;
@@ -3761,8 +3735,9 @@ void GridFunc<T>::test_grid_transfer()
 
                 if (fabs(uu_[iiy + iz] - 2.11) > 0.000001)
                 {
-                    cout << "Test grid transfer: u[" << ix << " " << iy << " "
-                         << iz << "]=" << uu_[iiy + iz] << endl;
+                    std::cout << "Test grid transfer: u[" << ix << " " << iy
+                              << " " << iz << "]=" << uu_[iiy + iz]
+                              << std::endl;
 
                     std::exit(0);
                 }
@@ -3770,7 +3745,8 @@ void GridFunc<T>::test_grid_transfer()
         }
     }
 
-    if (mype_env().onpe0()) cout << " Testgrid transfer() passed" << endl;
+    if (mype_env().onpe0())
+        std::cout << " Testgrid transfer() passed" << std::endl;
 
     if ((2 * (coarse_G.dim(0) >> 1) == coarse_G.dim(0))
         && (2 * (coarse_G.dim(1) >> 1) == coarse_G.dim(1))
@@ -3798,11 +3774,11 @@ void GridFunc<T>::test_newgrid()
     double s1 = norm(f);
     double s2 = norm(g);
 
-    cout << " norm 1=" << s1 << ", norm 2=" << s2 << endl;
+    std::cout << " norm 1=" << s1 << ", norm 2=" << s2 << std::endl;
 
     assert(fabs(s1 - s2) < 1.e-15);
 
-    cout << " 1st Test OK " << endl;
+    std::cout << " 1st Test OK " << std::endl;
 
     int dims = dim(0) * dim(1) * dim(2);
     T* hu    = new T[dims];
@@ -3815,8 +3791,8 @@ void GridFunc<T>::test_newgrid()
     GridFunc<T> h(hu, grid_, bc_[0], bc_[1], bc_[2], 'l');
 
     s1 = norm(h);
-    cout << " h(hu): bc=" << h.bc(0) << "," << h.bc(1) << "," << h.bc(2)
-         << endl;
+    std::cout << " h(hu): bc=" << h.bc(0) << "," << h.bc(1) << "," << h.bc(2)
+              << std::endl;
 
     double my_dot = MPdot(dims, hu, hu);
 
@@ -3825,15 +3801,11 @@ void GridFunc<T>::test_newgrid()
     int rc          = mmpi.allreduce(&my_dot, &sum, 1, MPI_SUM);
     if (rc != MPI_SUCCESS)
     {
-        cout << "MPI_Allreduce double sum failed!!!" << endl;
+        std::cout << "MPI_Allreduce double sum failed!!!" << std::endl;
         mype_env().globalExit(2);
     }
     my_dot = sum;
     s2     = sqrt(grid_.vel() * my_dot);
-
-    // cout<<" norm 1="<<s1<<", norm 2="<<s2<<endl;
-    // f.print_radial("s1.dat");
-    // g.print_radial("s2.dat");
 
     assert(grid_.inc(2) == 1);
 
@@ -3842,7 +3814,7 @@ void GridFunc<T>::test_newgrid()
     // print hu
     const int incx1 = new_grid.inc(0);
     const int incy1 = new_grid.inc(1);
-    ofstream tfile("hu.dat");
+    std::ofstream tfile("hu.dat");
     for (int ix = 0; ix < dim(0); ix++)
     {
 
@@ -3861,14 +3833,14 @@ void GridFunc<T>::test_newgrid()
                 tfile << hu[iz1];
             }
 
-            tfile << endl;
+            tfile << std::endl;
         }
     }
 
-    assert(fabs(s1 - s2) < 1.e-15);
+    assert(std::abs(s1 - s2) < 1.e-15);
     delete[] hu;
 
-    cout << " 2nd Test OK " << endl;
+    std::cout << " 2nd Test OK " << std::endl;
 }
 
 template <typename T>
@@ -3876,9 +3848,9 @@ void GridFunc<T>::test_trade_boundaries()
 {
     int ix, iy, iz, iix, iiy;
 
-    cout << " Test trade_boundaries() on grid " << dim(0) << "," << dim(1)
-         << "," << dim(2) << ", bc=" << bc(0) << "," << bc(1) << "," << bc(2)
-         << endl;
+    std::cout << " Test trade_boundaries() on grid " << dim(0) << "," << dim(1)
+              << "," << dim(2) << ", bc=" << bc(0) << "," << bc(1) << ","
+              << bc(2) << std::endl;
 
     int ntasks;
     MPI_Comm_size(mype_env().comm(), &ntasks);
@@ -3944,9 +3916,6 @@ void GridFunc<T>::test_trade_boundaries()
     else
         endz = 2 * ghost_pt() + dim(2);
 
-    // cout<<" u["<<0<<" "<<0<<" "<<0<<"]="<<uu_[0]<<endl;
-    // cout<<" initx="<<initx<<endl;
-
     for (ix = initx; ix < endx; ix++)
     {
 
@@ -3962,12 +3931,12 @@ void GridFunc<T>::test_trade_boundaries()
 
                 if (fabs(uu_[iiy + iz] - 1.111) > 0.000001)
                 {
-                    cout << " u[" << ix << " " << iy << " " << iz
-                         << "]=" << uu_[iiy + iz] << endl;
-                    cout << "end=" << endx << "," << endy << "," << endz
-                         << endl;
-                    cout << "init=" << initx << "," << inity << "," << initz
-                         << endl;
+                    std::cout << " u[" << ix << " " << iy << " " << iz
+                              << "]=" << uu_[iiy + iz] << std::endl;
+                    std::cout << "end=" << endx << "," << endy << "," << endz
+                              << std::endl;
+                    std::cout << "init=" << initx << "," << inity << ","
+                              << initz << std::endl;
 
                     std::exit(0);
                 }
@@ -4004,7 +3973,7 @@ void GridFunc<T>::jacobi(
     for (int j = 0; j < sizeg; j++)
     {
 #ifdef DEBUG
-        if (ee[j] <= 0.) cout << "ee[" << j << "]=" << ee[j] << endl;
+        if (ee[j] <= 0.) std::cout << "ee[" << j << "]=" << ee[j] << std::endl;
         assert(ee[j] > 0.);
 #endif
         pu[j] -= (T)((1. / (c0 * ee[j])) * vv[j]);
@@ -4045,13 +4014,10 @@ void GridFunc<T>::substract_prod(const GridFunc<T>& v1, const GridFunc<T>& v2)
     const T* __restrict__ vv2 = &v2.uu_[0];
     const int sizeg           = grid_.sizeg();
 
-    // cout<<"begin substract...\n";
     for (int i = 0; i < sizeg; i++)
     {
         pu[i] -= (T)(vv1[i] * vv2[i]);
     }
-
-    // cout<<"end substract...\n"<<fflush;
 
     updated_boundaries_ = false;
 }
@@ -4082,7 +4048,7 @@ void GridFunc<T>::add_bias(const double bias)
 
     if (bc_[0] && bc_[1] && bc_[2])
     {
-        if (mype_env().onpe0()) cout << "Add bias " << bias << endl;
+        if (mype_env().onpe0()) std::cout << "Add bias " << bias << std::endl;
 
         const short shift = ghost_pt();
         int istart        = grid_.dim(0) * mype_env().my_mpi(0);
@@ -4104,8 +4070,6 @@ double GridFunc<T>::get_bias()
     double bias = 0;
     if (bc_[0] && bc_[1] && bc_[2])
     {
-        // cout<<"Compute bias "<<bias<<endl;
-
         const short shift = ghost_pt();
         int istart        = grid_.dim(0) * mype_env().my_mpi(0);
         int i0            = 1;
@@ -4124,7 +4088,7 @@ double GridFunc<T>::get_bias()
         int rc          = mmpi.bcast(ref, incx_, 0);
         if (rc != MPI_SUCCESS)
         {
-            cout << "MPI_Bcast failed in get_bias()!!!" << endl;
+            std::cout << "MPI_Bcast failed in get_bias()!!!" << std::endl;
             mype_env().globalExit(2);
         }
 
@@ -4158,8 +4122,6 @@ GridFunc<T>::~GridFunc<T>()
         delete[] uu_;
         uu_ = nullptr;
     }
-
-    // cout<<"Destructor for function on grid "<<grid_.level()<<endl;
 }
 
 template <typename T>
@@ -4218,7 +4180,6 @@ void GridFunc<T>::assign(const GridFunc<T>& src, const char dis)
 
         const size_t sdim2 = dim(2) * sizeof(T);
 
-        // if( dis=='d' )cout<<"expensive assign... "<<endl;
         for (int ix = 0; ix < dim_[0]; ix++)
         {
             const int ix_dst

@@ -39,7 +39,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-using namespace std;
 
 Timer md_iterations_tm("md_iterations");
 Timer md_tau_tm("md_tau");
@@ -114,7 +113,8 @@ template <class T>
 void MGmol<T>::extrapolate_centers(bool small_move)
 {
     Control& ct = *(Control::instance());
-    if (onpe0 && ct.verbose > 0) os_ << "Extrapolate LR centers..." << endl;
+    if (onpe0 && ct.verbose > 0)
+        os_ << "Extrapolate LR centers..." << std::endl;
 
     if (small_move && ct.lrs_extrapolation == 2)
     {
@@ -140,7 +140,7 @@ T* MGmol<T>::new_orbitals_with_current_LRs(bool setup)
     Control& ct            = *(Control::instance());
 
     if (ct.verbose > 1 && onpe0)
-        os_ << "Build new orbitals with new masks..." << endl;
+        os_ << "Build new orbitals with new masks..." << std::endl;
 
     if (ct.lr_update) update_masks();
 
@@ -182,7 +182,7 @@ void MGmol<T>::move_orbitals(T** orbitals)
 {
     Control& ct = *(Control::instance());
 
-    if (onpe0 && ct.verbose > 1) os_ << "Move orbitals..." << endl;
+    if (onpe0 && ct.verbose > 1) os_ << "Move orbitals..." << std::endl;
 
     T* new_orbitals = new_orbitals_with_current_LRs();
 
@@ -208,7 +208,7 @@ int MGmol<T>::update_masks()
 
     md_updateMasks_tm.start();
 
-    if (onpe0 && ct.verbose > 1) os_ << "update_masks()" << endl;
+    if (onpe0 && ct.verbose > 1) os_ << "update_masks()" << std::endl;
 
     currentMasks_->update(*lrs_);
     corrMasks_->update(*lrs_);
@@ -218,8 +218,8 @@ int MGmol<T>::update_masks()
     return 0;
 }
 
-void checkMaxForces(
-    const vector<double>& fion, const vector<short>& atmove, ostream& os)
+void checkMaxForces(const std::vector<double>& fion,
+    const std::vector<short>& atmove, std::ostream& os)
 {
     assert(3 * atmove.size() == fion.size());
 
@@ -228,13 +228,13 @@ void checkMaxForces(
     for (int i = 0; i < na; i++)
     {
         if (atmove[i])
-            f2 = max(f2, fion[3 * i + 0] * fion[3 * i + 0]
-                             + fion[3 * i + 1] * fion[3 * i + 1]
-                             + fion[3 * i + 2] * fion[3 * i + 2]);
+            f2 = std::max(f2, fion[3 * i + 0] * fion[3 * i + 0]
+                                  + fion[3 * i + 1] * fion[3 * i + 1]
+                                  + fion[3 * i + 2] * fion[3 * i + 2]);
     }
     if (onpe0)
-        os << "Max. |force| = " << setprecision(4) << scientific << sqrt(f2)
-           << endl;
+        os << "Max. |force| = " << std::setprecision(4) << std::scientific
+           << std::sqrt(f2) << std::endl;
 }
 
 template <class T>
@@ -248,10 +248,10 @@ int MGmol<T>::dumprestartFile(T** orbitals, Ions& ions, Rho<T>& rho,
     const pb::Grid& mygrid   = mymesh->grid();
     const unsigned gdim[3] = { mygrid.gdim(0), mygrid.gdim(1), mygrid.gdim(2) };
 
-    string filename(string(ct.out_restart_file));
+    std::string filename(std::string(ct.out_restart_file));
     // add an integer corresponding to attempt number/count
     // to allow several attempts at creating and writing file
-    stringstream s;
+    std::stringstream s;
     s << count;
     filename += s.str();
 
@@ -268,7 +268,7 @@ int MGmol<T>::dumprestartFile(T** orbitals, Ions& ions, Rho<T>& rho,
         if (onpe0)
             (*MPIdata::serr)
                 << "dumprestartFile: cannot write ...previous_orbitals..."
-                << endl;
+                << std::endl;
         return ierr;
     }
     // write_hdf5(h5file, rho.rho_, ions, *orbitals_minus1);
@@ -283,7 +283,7 @@ int MGmol<T>::dumprestartFile(T** orbitals, Ions& ions, Rho<T>& rho,
             if (onpe0)
                 (*MPIdata::serr) << "dumprestartFile: cannot write "
                                     "...ExtrapolatedFunction..."
-                                 << endl;
+                                 << std::endl;
             return ierr;
         }
     }
@@ -293,7 +293,8 @@ int MGmol<T>::dumprestartFile(T** orbitals, Ions& ions, Rho<T>& rho,
     if (ierr < 0)
     {
         if (onpe0)
-            (*MPIdata::serr) << "dumprestartFile: cannot close file..." << endl;
+            (*MPIdata::serr)
+                << "dumprestartFile: cannot close file..." << std::endl;
         return ierr;
     }
 
@@ -306,18 +307,18 @@ void MGmol<T>::md(T** orbitals, Ions& ions)
     Control& ct = *(Control::instance());
 
     // initialize stepper data
-    vector<string>& ions_names(ions.getLocalNames());
-    vector<double>& tau0(ions.getTau0()); // tau0[3*ia+j]
-    vector<double>& taup(ions.getTaup()); // taup[3*ia+j]
-    vector<double>& taum(ions.getTaum()); // taum[3*ia+j]
-    vector<double>& fion(ions.getFion()); // fion[3*ia+j]
-    vector<double>& pmass(ions.getPmass()); // pmass[ia]
-    vector<short>& atmove(ions.getAtmove()); // atmove[ia]
-    vector<unsigned short>& rand_states(
+    std::vector<std::string>& ions_names(ions.getLocalNames());
+    std::vector<double>& tau0(ions.getTau0()); // tau0[3*ia+j]
+    std::vector<double>& taup(ions.getTaup()); // taup[3*ia+j]
+    std::vector<double>& taum(ions.getTaum()); // taum[3*ia+j]
+    std::vector<double>& fion(ions.getFion()); // fion[3*ia+j]
+    std::vector<double>& pmass(ions.getPmass()); // pmass[ia]
+    std::vector<short>& atmove(ions.getAtmove()); // atmove[ia]
+    std::vector<unsigned short>& rand_states(
         ions.getRandStates()); // initial random states
 
     // initialize taum with velocities
-    vector<double>& vel(ions.getVelocities());
+    std::vector<double>& vel(ions.getVelocities());
     taum = vel;
 
     int size_tau = (int)tau0.size();
@@ -335,12 +336,12 @@ void MGmol<T>::md(T** orbitals, Ions& ions)
 
     if (ct.restart_info > 0 && !ct.override_restart)
     {
-        if (onpe0) os_ << "Use restart file to initialize MD..." << endl;
+        if (onpe0) os_ << "Use restart file to initialize MD..." << std::endl;
         stepper->init(*h5f_file_);
     }
     else
     {
-        if (onpe0) os_ << "Use input file to initialize MD..." << endl;
+        if (onpe0) os_ << "Use input file to initialize MD..." << std::endl;
 
         // tau0: velocities->displacements
         double dt = -ct.dt;
@@ -379,7 +380,7 @@ void MGmol<T>::md(T** orbitals, Ions& ions)
         {
             if (flag_extrapolated_data)
             {
-                if (onpe0) os_ << "Create new orbitals_minus1..." << endl;
+                if (onpe0) os_ << "Create new orbitals_minus1..." << std::endl;
 
                 orbitals_extrapol_->setupPreviousOrbitals(&current_orbitals_,
                     proj_matrices_, lrs_, local_cluster_, currentMasks_,
@@ -424,7 +425,8 @@ void MGmol<T>::md(T** orbitals, Ions& ions)
     {
         if (ct.checkTimeout())
         {
-            if (onpe0) os_ << "Signal caught: No more MD iterations" << endl;
+            if (onpe0)
+                os_ << "Signal caught: No more MD iterations" << std::endl;
             break;
         }
 
@@ -458,7 +460,7 @@ void MGmol<T>::md(T** orbitals, Ions& ions)
             if (!lrs_->moveIsSmall())
             {
                 printWithTimeStamp(
-                    "WARNING: large move->extra inner cycle...", cout);
+                    "WARNING: large move->extra inner cycle...", std::cout);
                 small_move = false;
                 move_orbitals(orbitals);
 
@@ -479,16 +481,17 @@ void MGmol<T>::md(T** orbitals, Ions& ions)
                 if (onpe0)
                 {
                     os_ << "WARNING md(): quench returned value " << retval
-                        << endl;
-                    os_ << "STOP md..." << endl;
+                        << std::endl;
+                    os_ << "STOP md..." << std::endl;
                 }
                 break;
             }
         }
 
         if (onpe0)
-            os_ << setprecision(12) << fixed << "%%  " << md_iteration_
-                << "  IONIC CONFIGURATION ENERGY = " << eks << endl;
+            os_ << std::setprecision(12) << std::fixed << "%%  "
+                << md_iteration_ << "  IONIC CONFIGURATION ENERGY = " << eks
+                << std::endl;
 
         // Compute forces
         force(**orbitals, ions);
@@ -509,12 +512,12 @@ void MGmol<T>::md(T** orbitals, Ions& ions)
         // Print atomic coordinates and forces
         if (md_iteration_ % ct.md_print_freq == 0)
         {
-            string zero = "0";
+            std::string zero = "0";
             if (zero.compare(ct.md_print_filename) != 0)
             {
-                vector<float> spreads;
-                vector<Vector3D> centers;
-                vector<int> lgids;
+                std::vector<float> spreads;
+                std::vector<Vector3D> centers;
+                std::vector<int> lgids;
                 if (ct.isLocMode())
                 {
                     spreadf_->computeLocalSpreads(spreads);
@@ -558,17 +561,17 @@ void MGmol<T>::md(T** orbitals, Ions& ions)
             ekin                     = stepper->kineticEnergy();
             if (onpe0)
             {
-                os_ << setprecision(6);
+                os_ << std::setprecision(6);
                 os_ << "Kinetic   Energy= " << ekin;
-                os_ << setprecision(5);
-                os_ << " (T= " << temperature << " )" << endl;
+                os_ << std::setprecision(5);
+                os_ << " (T= " << temperature << " )" << std::endl;
             }
         }
 
         if (onpe0)
         {
-            os_ << setprecision(10);
-            os_ << "Total     Energy= " << ekin + eks << endl;
+            os_ << std::setprecision(10);
+            os_ << "Total     Energy= " << ekin + eks << std::endl;
         }
 
         stepper->updateTau();
@@ -581,7 +584,7 @@ void MGmol<T>::md(T** orbitals, Ions& ions)
         ct.steps = md_iteration_;
 
 #if EXTRAPOLATE_RHO
-        if (onpe0) os_ << "Extrapolate rho..." << endl;
+        if (onpe0) os_ << "Extrapolate rho..." << std::endl;
         rho_->axpyRhoc(-1., rhoc_);
         rho_->extrapolate();
 #endif
@@ -632,13 +635,14 @@ void MGmol<T>::md(T** orbitals, Ions& ions)
                             orbitals, ions, *rho_, extrapolated_flag, count);
                         dump_tm_.stop();
                         if (onpe0 && ierr < 0 && count < (DUMP_MAX_NUM_TRY - 1))
-                            cout << "dumprestartFile() failed... try again..."
-                                 << endl;
+                            std::cout
+                                << "dumprestartFile() failed... try again..."
+                                << std::endl;
                         if (ierr < 0) sleep(1.);
                         count++;
                     }
 
-                    printWithTimeStamp("dumped restart file...", cout);
+                    printWithTimeStamp("dumped restart file...", std::cout);
                 }
 
         md_iterations_tm.stop();
@@ -658,12 +662,13 @@ void MGmol<T>::md(T** orbitals, Ions& ions)
             dump_tm_.stop();
 
             if (onpe0 && ierr < 0 && count < (DUMP_MAX_NUM_TRY - 1))
-                cout << "dumprestartFile() failed... try again..." << endl;
+                std::cout << "dumprestartFile() failed... try again..."
+                          << std::endl;
             if (ierr < 0) sleep(1.);
             count++;
         }
 
-        printWithTimeStamp("dumped last restart file...", cout);
+        printWithTimeStamp("dumped last restart file...", std::cout);
     }
 
     delete stepper;

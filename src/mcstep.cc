@@ -18,7 +18,6 @@
 #include "mcstep.h"
 #include <cmath>
 #include <vector>
-using namespace std;
 
 int mcstep(double& stx, double& fx, double& dx, double& sty, double& fy,
     double& dy, double& stp, const double fp, const double dp, bool& brackt,
@@ -73,12 +72,12 @@ int mcstep(double& stx, double& fx, double& dx, double& sty, double& fy,
     bool bound;
 
     // check the input parameters for errors.
-    if ((brackt && (stp <= min(stx, sty) || stp >= max(stx, sty)))
+    if ((brackt && (stp <= std::min(stx, sty) || stp >= std::max(stx, sty)))
         || dx * (stp - stx) >= 0. || stpmax < stpmin)
         return info;
 
     // determine if the derivatives have opposite sign.
-    double sgnd = dp * (dx / abs(dx));
+    double sgnd = dp * (dx / std::abs(dx));
 
     // first case. a higher function value.
     // the minimum is bracketed. if the cubic step is closer
@@ -89,8 +88,8 @@ int mcstep(double& stx, double& fx, double& dx, double& sty, double& fy,
         info         = 1;
         bound        = true;
         double theta = 3. * (fx - fp) / (stp - stx) + dx + dp;
-        double s     = max(fabs(theta), fabs(dx));
-        s            = max(s, fabs(dp));
+        double s     = std::max(std::abs(theta), std::abs(dx));
+        s            = std::max(s, std::abs(dp));
         double invs  = 1. / s;
         double ts    = theta * invs;
         double gamma = s * sqrt(ts * ts - (dx * invs) * (dp * invs));
@@ -101,7 +100,7 @@ int mcstep(double& stx, double& fx, double& dx, double& sty, double& fy,
         double stpc = stx + r * (stp - stx);
         double stpq
             = stx + (0.5 * (dx / ((fx - fp) / (stp - stx) + dx))) * (stp - stx);
-        if (fabs(stpc - stx) < fabs(stpq - stx))
+        if (std::abs(stpc - stx) < std::abs(stpq - stx))
         {
             stpf = stpc;
         }
@@ -121,8 +120,8 @@ int mcstep(double& stx, double& fx, double& dx, double& sty, double& fy,
         info         = 2;
         bound        = false;
         double theta = 3. * (fx - fp) / (stp - stx) + dx + dp;
-        double s     = max(fabs(theta), fabs(dx));
-        s            = max(s, fabs(dp));
+        double s     = std::max(std::abs(theta), std::abs(dx));
+        s            = std::max(s, std::abs(dp));
         double invs  = 1. / s;
         double ts    = theta * invs;
         double gamma = s * sqrt(ts * ts - (dx * invs) * (dp * invs));
@@ -132,7 +131,7 @@ int mcstep(double& stx, double& fx, double& dx, double& sty, double& fy,
         double r    = p / q;
         double stpc = stp + r * (stx - stp);
         double stpq = stp + (dp / (dp - dx)) * (stx - stp);
-        if (fabs(stpc - stp) > fabs(stpq - stp))
+        if (std::abs(stpc - stp) > std::abs(stpq - stp))
         {
             stpf = stpc;
         }
@@ -151,19 +150,20 @@ int mcstep(double& stx, double& fx, double& dx, double& sty, double& fy,
         // computed and if the minimum is bracketed then the the step
         // closest to stx is taken, else the step farthest away is taken.
     }
-    else if (fabs(dp) < fabs(dx))
+    else if (std::abs(dp) < std::abs(dx))
     {
         info         = 3;
         bound        = true;
         double theta = 3. * (fx - fp) / (stp - stx) + dx + dp;
-        double s     = max(fabs(theta), fabs(dx));
-        s            = max(s, fabs(dp));
+        double s     = std::max(std::abs(theta), std::abs(dx));
+        s            = std::max(s, std::abs(dp));
 
         // the case gamma = 0 only arises if the cubic does not tend
         // to infinity in the direction of the step.
-        double invs  = 1. / s;
-        double ts    = theta * invs;
-        double gamma = s * sqrt(max(0., ts * ts - (dx * invs) * (dp * invs)));
+        double invs = 1. / s;
+        double ts   = theta * invs;
+        double gamma
+            = s * std::sqrt(std::max(0., ts * ts - (dx * invs) * (dp * invs)));
         if (stp > stx) gamma = -gamma;
         double p = (gamma - dp) + theta;
         double q = (gamma + (dx - dp)) + gamma;
@@ -184,7 +184,7 @@ int mcstep(double& stx, double& fx, double& dx, double& sty, double& fy,
         double stpq = stp + (dp / (dp - dx)) * (stx - stp);
         if (brackt)
         {
-            if (fabs(stp - stpc) < fabs(stp - stpq))
+            if (std::abs(stp - stpc) < std::abs(stp - stpq))
             {
                 stpf = stpc;
             }
@@ -195,7 +195,7 @@ int mcstep(double& stx, double& fx, double& dx, double& sty, double& fy,
         }
         else
         {
-            if (fabs(stp - stpc) > fabs(stp - stpq))
+            if (std::abs(stp - stpc) > std::abs(stp - stpq))
             {
                 stpf = stpc;
             }
@@ -216,8 +216,8 @@ int mcstep(double& stx, double& fx, double& dx, double& sty, double& fy,
         if (brackt)
         {
             double theta = 3. * (fp - fy) / (sty - stp) + dy + dp;
-            double s     = max(fabs(theta), fabs(dy));
-            s            = max(s, fabs(dp));
+            double s     = std::max(std::abs(theta), std::abs(dy));
+            s            = std::max(s, std::abs(dp));
             double invs  = 1. / s;
             double ts    = theta * invs;
             double gamma = s * sqrt(ts * ts - (dy * invs) * (dp * invs));
@@ -260,18 +260,18 @@ int mcstep(double& stx, double& fx, double& dx, double& sty, double& fy,
     }
 
     // compute the new step and safeguard it.
-    stpf = min(stpmax, stpf);
-    stpf = max(stpmin, stpf);
+    stpf = std::min(stpmax, stpf);
+    stpf = std::max(stpmin, stpf);
     stp  = stpf;
     if (brackt && bound)
     {
         if (sty > stx)
         {
-            stp = min(stx + 0.66 * (sty - stx), stp);
+            stp = std::min(stx + 0.66 * (sty - stx), stp);
         }
         else
         {
-            stp = max(stx + 0.66 * (sty - stx), stp);
+            stp = std::max(stx + 0.66 * (sty - stx), stp);
         }
     }
     return info;

@@ -22,7 +22,6 @@
 #include "mputils.h"
 
 #include <vector>
-using namespace std;
 
 Timer get_NOLMO_tm("get_NOLMO");
 Timer get_MLWF_tm("get_MLWF");
@@ -35,7 +34,7 @@ void dtrsm_c(const char side, const char uplo, const char transa,
 }
 
 void distributeColumns(
-    vector<DISTMATDTYPE>& vmm, dist_matrix::DistMatrix<DISTMATDTYPE>& mat)
+    std::vector<DISTMATDTYPE>& vmm, dist_matrix::DistMatrix<DISTMATDTYPE>& mat)
 {
     assert(mat.nprow() == 1);
 
@@ -64,7 +63,7 @@ int MGmol<T>::getMLWF(MLWFTransform& mlwft, T& orbitals, T& work_orbitals,
     // orthonormalize work_orbitals before getting sin and cos matrices
     work_orbitals.orthonormalizeLoewdin(false);
 
-    vector<int> overlap(numst * numst);
+    std::vector<int> overlap(numst * numst);
     int icount = 0;
     for (int st1 = 0; st1 < numst; st1++)
     {
@@ -79,10 +78,10 @@ int MGmol<T>::getMLWF(MLWFTransform& mlwft, T& orbitals, T& work_orbitals,
     }
     if (onpe0 && ct.verbose > 1)
         os_ << "getMLWF(): Wannier rotations for " << icount << " pairs"
-            << endl;
+            << std::endl;
     mlwft.setia(overlap);
 
-    vector<vector<double>> sincos;
+    std::vector<std::vector<double>> sincos;
     sincos.resize(6);
     for (int i = 0; i < 6; i++)
         sincos[i].resize(numst * numst);
@@ -98,7 +97,8 @@ int MGmol<T>::getMLWF(MLWFTransform& mlwft, T& orbitals, T& work_orbitals,
 
     if (apply_flag)
     {
-        if (onpe0 && ct.verbose > 1) os_ << "Apply Wannier rotations" << endl;
+        if (onpe0 && ct.verbose > 1)
+            os_ << "Apply Wannier rotations" << std::endl;
 
         assert(&orbitals != &work_orbitals);
 
@@ -133,12 +133,12 @@ int MGmol<T>::getMLWF2states(
     // orthonormalize work_orbitals to get sin and cos matrices
     work_orbitals.orthonormalize2states(st1, st2);
 
-    vector<int> overlap(4, 1);
+    std::vector<int> overlap(4, 1);
     if (onpe0 && ct.verbose > 1)
-        os_ << "getMLWF2states(): Wannier rotations for 1 pair" << endl;
+        os_ << "getMLWF2states(): Wannier rotations for 1 pair" << std::endl;
     mlwft.setia(overlap);
 
-    vector<vector<double>> sincos;
+    std::vector<std::vector<double>> sincos;
     sincos.resize(6);
     for (int i = 0; i < 6; i++)
         sincos[i].resize(4);
@@ -151,7 +151,7 @@ int MGmol<T>::getMLWF2states(
 
     if (onpe0 && ct.verbose > 1)
     {
-        os_ << "Apply Wannier rotations for 2 states" << endl;
+        os_ << "Apply Wannier rotations for 2 states" << std::endl;
         if (ct.verbose > 2) mlwft.printTransformationMatrix();
     }
     assert(&orbitals != &work_orbitals);
@@ -201,7 +201,7 @@ void MGmol<T>::wftransform(T* orbitals, T* work_orbitals, Ions& ions)
             mlwt->printCentersAndSpreads(os_);
         if (ct.wannier_transform_type == 3)
         {
-            if (onpe0) os_ << "NO orbitals centers and spread" << endl;
+            if (onpe0) os_ << "NO orbitals centers and spread" << std::endl;
             noot       = new NOLMOTransform(numst, origin, ll);
             createNOOT = true;
 
@@ -241,7 +241,7 @@ int MGmol<T>::get_NOLMO(NOLMOTransform& noot, T& orbitals, T& work_orbitals,
     work_orbitals.copyDataFrom(orbitals);
 
     int numst = ct.numst;
-    vector<int> overlap(numst * numst);
+    std::vector<int> overlap(numst * numst);
     int icount = 0;
     for (int st1 = 0; st1 < numst; st1++)
     {
@@ -255,11 +255,11 @@ int MGmol<T>::get_NOLMO(NOLMOTransform& noot, T& orbitals, T& work_orbitals,
         }
     }
     if (onpe0 && ct.verbose > 1)
-        os_ << "get_NOLMO(): for " << icount << " pairs" << endl;
+        os_ << "get_NOLMO(): for " << icount << " pairs" << std::endl;
     noot.setia(overlap);
 
     // compute sin/cos matrices one dimension at a time
-    vector<vector<double>> sincos;
+    std::vector<std::vector<double>> sincos;
     sincos.resize(2);
     for (short i = 0; i < 2; i++)
         sincos[i].resize(numst * numst);
@@ -285,7 +285,7 @@ int MGmol<T>::get_NOLMO(NOLMOTransform& noot, T& orbitals, T& work_orbitals,
 
     if (apply_flag)
     {
-        if (onpe0) os_ << "Apply NOLMO rotations" << endl;
+        if (onpe0) os_ << "Apply NOLMO rotations" << std::endl;
 
         assert(&orbitals != &work_orbitals);
 
@@ -301,7 +301,7 @@ int MGmol<T>::get_NOLMO(NOLMOTransform& noot, T& orbitals, T& work_orbitals,
             numst, a, numst);
 
         // normalize columns of a to get normalized functions
-        vector<double> alphan(numst);
+        std::vector<double> alphan(numst);
         for (int p = 0; p < numst; p++)
         {
             alphan[p] = 0.;
