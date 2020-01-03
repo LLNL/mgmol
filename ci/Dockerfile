@@ -2,8 +2,7 @@ FROM nvidia/cuda:10.1-devel
 
 ENV N_PROCS=8
 
-# Note that libboost-all-dev automatically pull libopenmpi-dev. Thus we cannot
-# install our own MPI library.
+ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update && apt-get upgrade -y && apt-get install -y \
       gcc \
       gfortran \
@@ -14,68 +13,63 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
       curl \
       lcov \
       bison \
-      git \
-      pkg-config \
-      libopenblas-dev \
-      libboost-all-dev \
-      libscalapack-openmpi-dev \
-      libhdf5-openmpi-dev && \
+      python3 \
+      environment-modules \
+      tcl-dev \
+      libperlio-gzip-perl \
+      libjson-pp-perl \
+      git && \
       apt-get clean && rm -rf /var/lib/apt/lists/*
 
-ENV PREFIX=/scratch
-ENV ARCHIVE_DIR=${PREFIX}/archive
-ENV SOURCE_DIR=${PREFIX}/source
-ENV BUILD_DIR=${PREFIX}/build
-ENV INSTALL_DIR=/opt
+ENV PREFIX=/root
 
-RUN mkdir -p ${PREFIX} && \
-    cd ${PREFIX} && \
-    mkdir archive && \
-    mkdir source && \
-    mkdir build
+RUN export SPACK_HASH=ae52f4144872a281bc97596ecce17d9959c21086 && \
+    export SPACK_URL=https://github.com/spack/spack/archive/${SPACK_HASH}.tar.gz && \
+    export SPACK_ARCHIVE=${PREFIX}/spack.tar.gz && \
+    export SPACK_SOURCE_DIR=${PREFIX}/spack && \
+    wget --quiet ${SPACK_URL} --output-document=${SPACK_ARCHIVE} && \
+    mkdir -p ${SPACK_SOURCE_DIR} && \
+    tar xf ${SPACK_ARCHIVE} -C ${SPACK_SOURCE_DIR} --strip-components=1 && \
+    rm -rf ${SPACK_ARCHIVE}
+ENV PATH=${PREFIX}/spack/bin:$PATH
 
-# Install CMake
-RUN export CMAKE_VERSION=3.15.0 && \
-    export CMAKE_VERSION_SHORT=3.15 && \
-    export CMAKE_SHA256=5a681e37b142006ab44aef9b976db610dc5d94124da41743ff53412f4b36a7fe && \
-    export CMAKE_URL=https://cmake.org/files/v${CMAKE_VERSION_SHORT}/cmake-${CMAKE_VERSION}-Linux-x86_64.tar.gz && \
-    export CMAKE_ARCHIVE=${ARCHIVE_DIR}/cmake.tar.gz && \
-    export CMAKE_BUILD_DIR=${BUILD_DIR}/cmake && \
-    wget --quiet ${CMAKE_URL} --output-document=${CMAKE_ARCHIVE} && \
-    echo "${CMAKE_SHA256} ${CMAKE_ARCHIVE}" | sha256sum -c && \
-    mkdir -p ${CMAKE_BUILD_DIR} && \
-    tar xf ${CMAKE_ARCHIVE} -C ${CMAKE_BUILD_DIR} --strip-components=1 && \
-    mv ${CMAKE_BUILD_DIR} ${INSTALL_DIR} && \
-    rm -rf ${CMAKE_ARCHIVE} && \
-    rm -rf ${CMAKE_BUILD_DIR}
-ENV PATH=${INSTALL_DIR}/cmake/bin:$PATH
+# Register the compiler
+RUN spack compilers
 
-# Install MAGMA
-RUN export MAGMA_VERSION=2.5.0 && \
-    export MAGMA_URL=http://icl.utk.edu/projectsfiles/magma/downloads/magma-${MAGMA_VERSION}.tar.gz && \
-    export MAGMA_ARCHIVE=${ARCHIVE_DIR}/magma.tar.gz && \
-    export MAGMA_SOURCE_DIR=${SOURCE_DIR}/magma && \
-    export MAGMA_INSTALL_DIR=${INSTALL_DIR}/magma && \
-    export OPENBLASDIR=/usr/lib/x86_64-linux-gnu && \
-    export CUDADIR=/usr/local/cuda && \
-    wget --quiet ${MAGMA_URL} --output-document=${MAGMA_ARCHIVE} && \
-    mkdir -p ${MAGMA_SOURCE_DIR} && \
-    tar -xf ${MAGMA_ARCHIVE} -C ${MAGMA_SOURCE_DIR} --strip-components=1 && \
-    cd ${MAGMA_SOURCE_DIR} && \
-    cat make.check-openblas make.check-openblas > make.inc && \
-    echo "prefix=/opt/magma" >> make.inc && \
-    echo "FORT=gfortran" >> make.inc && \
-    echo "GPU_TARGET=sm_70" >> make.inc && \
-    sed -i "s/#FPIC/FPIC/" Makefile && \
-    make -j${N_PROCS} install && \
-    rm -rf ${MAGMA_ARCHIVE} && \
-    rm -rf ${MAGMA_SOURCE_DIR}
-ENV MAGMA_DIR=/opt/magma
+# Make sure we don't install CUDA
+RUN echo 'packages:' >> ${PREFIX}/.spack/packages.yaml && \
+    echo '  cuda:' >>  ${PREFIX}/.spack/packages.yaml && \
+    echo '    paths:' >>  ${PREFIX}/.spack/packages.yaml && \
+    echo '      cuda@10.1%gcc@7.4.0 arch=linux-ubuntu18.04-x86_64: /usr/local/cuda' >>  ${PREFIX}/.spack/packages.yaml && \
+    echo '    buildable: False' >>  ${PREFIX}/.spack/packages.yaml
 
-# Append the option flag --allow-run-as-root to mpiexec
-RUN echo '#!/usr/bin/env bash' > /usr/local/bin/mpiexec && \
-    echo '/usr/bin/mpiexec --allow-run-as-root "$@"' >> /usr/local/bin/mpiexec && \
-    chmod +x /usr/local/bin/mpiexec && \
-    echo '#!/usr/bin/env bash' > /usr/local/bin/mpirun && \
-    echo '/usr/bin/mpirun --allow-run-as-root "$@"' >> /usr/local/bin/mpirun && \
-    chmod +x /usr/local/bin/mpirun
+# Install MAGMA with nvcc and gcc 7.4 
+RUN spack install magma@2.5.1^openblas@0.3.7+virtual_machine arch=x86_64
+
+# Install gcc 9.2 with offloading support
+# Checksum is missing in spack release
+RUN spack install gcc@9.2.0+nvptx arch=x86_64 
+RUN spack compiler find $(spack location -i gcc)
+
+# Install all the libraries with gcc 9.2
+# Install boost
+RUN spack install boost@1.70.0 arch=x86_64
+# Install openmpi
+RUN spack install openmpi@4.0.2+thread_multiple arch=x86_64
+# Install hdf5 with mpi for some reason zlib does not respect the arch in this
+# case so we set it explicitly
+RUN spack install hdf5@1.10.5^openmpi@4.0.2+thread_multiple^zlib@1.2.11 arch=x86_64
+# Install scalapack using the version of openblas that we have installed
+RUN spack install netlib-scalapack@2.0.2%gcc@9.2.0^openmpi@4.0.2%gcc@9.2.0+thread_multiple^openblas@0.3.7%gcc@7.4.0+virtual_machine arch=x86_64
+
+# Install the development version of lcov because older versions are not
+# compatible with gcc 9
+RUN cd $PREFIX && git clone https://github.com/linux-test-project/lcov.git && \
+    cd lcov && make install && cd ../ && rm -rf lcov
+
+# Set the environment variables to be able to run mpi as root
+ENV OMPI_ALLOW_RUN_AS_ROOT=1
+ENV OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+
+RUN echo 'module() { eval `/usr/bin/modulecmd sh $*`; }' > ~/.module
+RUN echo '. /root/spack/share/spack/setup-env.sh' >> ~/.module
