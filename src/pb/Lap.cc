@@ -45,9 +45,7 @@ void Lap<T>::jacobi(GridFuncVector<T>& A, const GridFuncVector<T>& B,
     A.trade_boundaries();
 
     const int nfunc = (int)A.size();
-#ifdef _OPENMP
 #pragma omp parallel for
-#endif
     for (int k = 0; k < nfunc; k++)
     {
         apply(A.func(k), W);
@@ -67,9 +65,7 @@ void Lap<T>::jacobi(GridFuncVector<T>& A, const GridFuncVector<T>& B,
     A.trade_boundaries();
 
     const int nfunc = (int)A.size();
-#ifdef _OPENMP
 #pragma omp parallel for
-#endif
     for (int k = 0; k < nfunc; k++)
     {
         apply(A.func(k), W.func(k));

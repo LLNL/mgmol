@@ -238,38 +238,22 @@ int MasksSet::initialize(const LocalizationRegions& lrs,
     map<int, GridMask*>::iterator it;
     if (override_radius < 0.1)
     {
-#ifdef _OPENMP
-#pragma omp parallel private(it)
-#endif
         for (it = pgrid_masks_.begin(); it != pgrid_masks_.end(); it++)
         {
-#ifdef _OPENMP
-#pragma omp single nowait
-#endif
-            {
-                const int gid = it->first;
-                Vector3D center;
-                const double rc = lrs.getCenterAndRadius(gid, center);
-                // mask is created here
-                (it->second)->init(center, rc, ln, maskfunc);
-            }
+            const int gid = it->first;
+            Vector3D center;
+            const double rc = lrs.getCenterAndRadius(gid, center);
+            // mask is created here
+            (it->second)->init(center, rc, ln, maskfunc);
         }
     }
     else
     {
-#ifdef _OPENMP
-#pragma omp parallel private(it)
-#endif
         for (it = pgrid_masks_.begin(); it != pgrid_masks_.end(); it++)
         {
-#ifdef _OPENMP
-#pragma omp single nowait
-#endif
-            {
-                int gid = it->first;
-                (it->second)
-                    ->init(lrs.getCenter(gid), override_radius, ln, maskfunc);
-            }
+            int gid = it->first;
+            (it->second)
+                ->init(lrs.getCenter(gid), override_radius, ln, maskfunc);
         }
     }
 

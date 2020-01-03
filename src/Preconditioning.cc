@@ -282,9 +282,7 @@ void Preconditioning<T>::app_mask(
     pb::GridFuncVector<T>& gvu, const short level) const
 {
     const int nfunc = (int)gvu.size();
-#ifdef _OPENMP
 #pragma omp parallel for
-#endif
     for (int k = 0; k < nfunc; k++)
     {
         app_mask(gvu.func(k), level, k);

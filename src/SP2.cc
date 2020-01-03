@@ -23,9 +23,7 @@ double computePartialTrace(bml_matrix_t* A, const vector<int>& ids)
 
     double trace = 0.;
     const int n  = (int)ids.size();
-#ifdef _OPENMP
 #pragma omp parallel for reduction(+ : trace)
-#endif
     for (int i = 0; i < n; i++)
     {
         assert(ids[i] < m);
@@ -181,9 +179,7 @@ void SP2::initializeLocalMat(const SquareLocalMatrices<MATDTYPE>& submatM,
     // shift and scale Xi
     // We shift by -emin since we know it, instead of by the maximum
     // eigenvalue in magnitude as in original paper by Niklasson
-#ifdef _OPENMP
 #pragma omp parallel for
-#endif
     for (int i = 0; i < n; i++)
     {
         const int pos = i * n1;

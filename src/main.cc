@@ -539,15 +539,6 @@ int main(int argc, char** argv)
         sout = &std::cout;
         serr = &std::cerr;
 
-#ifdef _OPENMP
-#ifndef NDEBUG
-#pragma omp parallel
-        {
-            if (onpe0) cout << " Thread says hello on PE " << mype << endl;
-        }
-#endif
-#endif
-
         MGmolInterface* mgmol;
         if (ct.isLocMode())
             mgmol = new MGmol<LocGridOrbitals>(global_comm, *MPIdata::sout);

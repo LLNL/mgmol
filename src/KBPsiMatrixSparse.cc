@@ -157,9 +157,7 @@ void KBPsiMatrixSparse::computeKBpsi(Ions& ions, T& orbitals,
         ppsi = new ORBDTYPE[nb_colors * ldsize];
         orbitals.setDataWithGhosts();
         orbitals.trade_boundaries();
-#ifdef _OPENMP
 #pragma omp parallel for
-#endif
         for (int color = 0; color < nb_colors; color++)
         {
             lapop_->rhs(orbitals.getFuncWithGhosts(first_color + color),
@@ -179,9 +177,7 @@ void KBPsiMatrixSparse::computeKBpsi(Ions& ions, T& orbitals,
     {
 // Threading here leads to results slightly dependent on number of threads (jlf,
 // 07/15/2016)
-#ifdef _OPENMP
 #pragma omp parallel for
-#endif
         for (int color = 0; color < nb_colors; color++)
         {
             const int gid = orbitals.getGlobalIndex(iloc, first_color + color);

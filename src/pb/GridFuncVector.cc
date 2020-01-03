@@ -974,7 +974,6 @@ void GridFuncVector<T>::restrict3D(GridFuncVector& ucoarse)
 {
     if (!updated_boundaries_) trade_boundaries();
 
-    //    #pragma omp parallel for
     for (short k = 0; k < nfunc_; k++)
     {
         functions_[k]->restrict3D(*ucoarse.functions_[k]);
@@ -985,7 +984,6 @@ void GridFuncVector<T>::extend3D(GridFuncVector& ucoarse)
 {
     if (!ucoarse.updated_boundaries_) ucoarse.trade_boundaries();
 
-    //    #pragma omp parallel for
     for (short k = 0; k < nfunc_; k++)
     {
         functions_[k]->extend3D(*ucoarse.functions_[k]);
