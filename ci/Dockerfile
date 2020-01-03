@@ -58,7 +58,7 @@ RUN spack install boost@1.70.0 arch=x86_64
 RUN spack install openmpi@4.0.2+thread_multiple arch=x86_64
 # Install hdf5 with mpi for some reason zlib does not respect the arch in this
 # case so we set it explicitly
-RUN spack install hdf5@1.10.5^openmpi@4.0.2+thread_multiple^zlib@1.2.11 arch=x86_64
+RUN spack install hdf5@1.10.5+hl^openmpi@4.0.2+thread_multiple^zlib@1.2.11 arch=x86_64
 # Install scalapack using the version of openblas that we have installed
 RUN spack install netlib-scalapack@2.0.2%gcc@9.2.0^openmpi@4.0.2%gcc@9.2.0+thread_multiple^openblas@0.3.7%gcc@7.4.0+virtual_machine arch=x86_64
 

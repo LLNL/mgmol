@@ -1,82 +1,162 @@
 pipeline {
-    agent none
+  agent none
 
     environment {
-        // Get rid of Read -1, expected <someNumber>, errno =1 error
-        // See https://github.com/open-mpi/ompi/issues/4948
-        OMPI_MCA_btl_vader_single_copy_mechanism = 'none'
-        // Remove warning: "A high-performance Open MPI point-to-point 
-        // messaging module was unable to find any relevant network 
-        // interfaces."
-        OMPI_MCA_btl_base_warn_component_unused = '0'
+      // Get rid of Read -1, expected <someNumber>, errno =1 error
+      // See https://github.com/open-mpi/ompi/issues/4948
+      OMPI_MCA_btl_vader_single_copy_mechanism = 'none'
+      // Remove warning: "A high-performance Open MPI point-to-point 
+      // messaging module was unable to find any relevant network 
+      // interfaces."
+      OMPI_MCA_btl_base_warn_component_unused = '0'
+      // Only use two threads when using OpenMP
+      OMP_NUM_THREADS = 2
     }
-    
-    stages {
-        stage('Test') {
-            parallel {
-                stage('MAGMA') {
-                    agent {
-                        docker {
-                            image "rombur/mgmol-stack:latest"
-                            alwaysPull true
-                            label 'nvidia-docker && volta'
-                         }
-                    }
-                    steps {
-                        sh 'rm -rf build && mkdir -p build && cd build && cmake -D SCALAPACK_ROOT=/usr/lib/x86_64-linux-gnu  -D MGMOL_WITH_CLANG_FORMAT=OFF  -D MGMOL_WITH_COVERAGE=OFF  -D MGMOL_WITH_MAGMA=ON -D CMAKE_PREFIX_PATH=/opt/magma .. && make -j8 && ctest --no-compress-output -T Test'
-                    }
-                    post {
-                        always {
-                            xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
-                        }
-                    }
-                }      
-                stage('CPU') {
-                    agent {
-                        docker {
-                            image "rombur/mgmol-stack:latest"
-                            alwaysPull true
-                            label 'docker'
-                         }
-                    }
-                    environment {
-                        CODECOV_TOKEN = '80bcfd05-a1ae-4b65-b049-0ec96abad409'
-                    }
-                    steps {
-                        sh 'rm -rf build && mkdir -p build && cd build && cmake -D SCALAPACK_ROOT=/usr/lib/x86_64-linux-gnu  -D MGMOL_WITH_CLANG_FORMAT=ON  -D MGMOL_WITH_COVERAGE=ON -D MGMOL_WITH_MAGMA=OFF .. && make -j8 && ctest --no-compress-output -T Test && make format && git diff --exit-code && make coverage && curl -s https://codecov.io/bash -o codecov_bash_uploader && chmod +x codecov_bash_uploader && ./codecov_bash_uploader -Z -X gcov -f lcov.info'
-                    }
-                    post {
-                        always {
-                            xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
-                        }
-                    }      
-                }
-                stage('clang-sanitizer') {
-                    agent {
-                        docker {
-                            image "rombur/mgmol-stack:latest"
-                            args '--cap-add SYS_PTRACE'
-                            alwaysPull true
-                            label 'docker'
-                         }
-                    }
-                    environment {
-                        ASAN_SYMBOLIZER_PATH = '/usr/lib/llvm-6.0/bin/llvm-symbolizer'
-                        LSAN_OPTIONS = "suppressions=$WORKSPACE/ci/address_blacklist.txt"
-                        ASAN_OPTIONS = 'fast_unwind_on_malloc=0'
-                        OMPI_C = 'clang-6.0'
-                        OMPI_CXX = 'clang++-6.0'
-                    }
-                    steps {
-                        sh 'rm -rf build && mkdir -p build && cd build && cmake -D CMAKE_C_COMPILER=clang-6.0 -D CMAKE_CXX_COMPILER=clang++-6.0 -D SCALAPACK_ROOT=/usr/lib/x86_64-linux-gnu  -D MGMOL_WITH_CLANG_FORMAT=OFF  -D MGMOL_WITH_COVERAGE=OFF -D MGMOL_WITH_MAGMA=OFF  -D CMAKE_CXX_FLAGS="-Wall -pedantic -g -fsanitize=address" .. && make -j8 && ctest --no-compress-output -T Test'
-                    }
-                    post {
-                        always {
-                            xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
-                        }
-                    }      
-                }
+
+  stages {
+    stage('Test') {
+      parallel {
+        stage('MAGMA') {
+          agent {
+            docker {
+              image "rombur/mgmol-stack:latest"
+                alwaysPull true
+                label 'nvidia-docker && volta'
             }
+          }
+          steps {
+            sh 'rm -rf build && mkdir -p build'
+              dir('build') { 
+                sh '''#!/bin/bash 
+                  . /root/.module
+                  module load cmake-3.16.1-gcc-9.2.0-jxsh43n && \
+                  module load gcc-9.2.0-gcc-7.4.0-r5q7xfn && \
+                  module load openmpi-4.0.2-gcc-9.2.0-ypxb7h6 && \
+                  module load netlib-scalapack-2.0.2-gcc-9.2.0-c4ksygc && \
+                  module load magma-2.5.1-gcc-7.4.0-nnix327 && \
+                  module load boost-1.70.0-gcc-9.2.0-xfs7chm && \
+                  module load cuda-10.1-gcc-7.4.0-762mb4s && \
+                  module load hdf5-1.10.5-gcc-9.2.0-wnd7pao
+                  module load openblas-0.3.7-gcc-7.4.0-7pjtf4y
+                  module load pkgconf-1.6.3-gcc-9.2.0-jun6j25
+                  cmake \
+                  -D BUILD_SHARED_LIBS=ON \
+                  -D SCALAPACK_ROOT=$(spack location -i netlib-scalapack) \
+                  -D MGMOL_WITH_CLANG_FORMAT=OFF \
+                  -D MGMOL_WITH_COVERAGE=OFF \
+                  -D MGMOL_WITH_MAGMA=ON \
+                  -D CMAKE_CXX_FLAGS="-Wno-stringop-truncation" \
+                  ..
+                make -j8
+                ctest --no-compress-output -T Test
+                ''' 
+              }
+          }
+          post {
+            always {
+              xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+            }
+          }
+        }      
+        stage('CPU') {
+          agent {
+            docker {
+              image "rombur/mgmol-stack:latest"
+                alwaysPull true
+                label 'docker'
+            }
+          }
+          environment {
+            CODECOV_TOKEN = '80bcfd05-a1ae-4b65-b049-0ec96abad409'
+          }
+          steps {
+            sh 'rm -rf build && mkdir -p build'
+              dir('build') {
+                sh '''#!/bin/bash
+                  . /root/.module
+                  module load cmake-3.16.1-gcc-9.2.0-jxsh43n
+                  module load gcc-9.2.0-gcc-7.4.0-r5q7xfn
+                  module load openmpi-4.0.2-gcc-9.2.0-ypxb7h6
+                  module load netlib-scalapack-2.0.2-gcc-9.2.0-c4ksygc
+                  module load boost-1.70.0-gcc-9.2.0-xfs7chm
+                  module load hdf5-1.10.5-gcc-9.2.0-wnd7pao
+                  module load openblas-0.3.7-gcc-7.4.0-7pjtf4y
+                  cmake \
+                  -D BUILD_SHARED_LIBS=ON \
+                  -D SCALAPACK_ROOT=$(spack location -i netlib-scalapack) \
+                  -D SCALAPACK_ROOT=$(spack location -i netlib-scalapack) \
+                  -D MGMOL_WITH_CLANG_FORMAT=ON \
+                  -D MGMOL_WITH_COVERAGE=ON \
+                  -D MGMOL_WITH_MAGMA=OFF \
+                  -D CMAKE_CXX_FLAGS="-Wall -pedantic -Wextra" \
+                  .. 
+                make -j8
+                ctest --no-compress-output -T Test
+                make format 
+                git diff --exit-code
+                make coverage 
+                curl -s https://codecov.io/bash -o codecov_bash_uploader && chmod +x codecov_bash_uploader && ./codecov_bash_uploader -Z -X gcov -f lcov.info
+                '''
+              }
+          }
+          post {
+            always {
+              xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+            }
+          }      
         }
+        stage('clang-sanitizer') {
+          agent {
+            docker {
+              image "rombur/mgmol-stack:latest"
+                args '--cap-add SYS_PTRACE'
+                alwaysPull true
+                label 'docker'
+            }
+          }
+          environment {
+            ASAN_SYMBOLIZER_PATH = '/usr/lib/llvm-6.0/bin/llvm-symbolizer'
+              LSAN_OPTIONS = "suppressions=$WORKSPACE/ci/address_blacklist.txt"
+              ASAN_OPTIONS = 'fast_unwind_on_malloc=0'
+              OMPI_C = 'clang-6.0'
+              OMPI_CXX = 'clang++-6.0'
+          }
+          steps {
+            sh 'rm -rf build && mkdir -p build'
+              dir('build') {
+                 sh '''#!/bin/bash
+                  . /root/.module
+                  module load cmake-3.16.1-gcc-9.2.0-jxsh43n
+                  module load gcc-9.2.0-gcc-7.4.0-r5q7xfn
+                  module load openmpi-4.0.2-gcc-9.2.0-ypxb7h6
+                  module load netlib-scalapack-2.0.2-gcc-9.2.0-c4ksygc
+                  module load boost-1.70.0-gcc-9.2.0-xfs7chm
+                  module load hdf5-1.10.5-gcc-9.2.0-wnd7pao
+                  module load openblas-0.3.7-gcc-7.4.0-7pjtf4y
+                  cmake \
+                  -D BUILD_SHARED_LIBS=ON \
+                  -D CMAKE_BUILD_TYPE=Debug \
+                  -D CMAKE_C_COMPILER=clang-6.0 \
+                  -D SCALAPACK_ROOT=$(spack location -i netlib-scalapack) \
+                  -D CMAKE_CXX_COMPILER=clang++-6.0 \
+                  -D SCALAPACK_ROOT=$(spack location -i netlib-scalapack) \
+                  -D MGMOL_WITH_CLANG_FORMAT=OFF \
+                  -D MGMOL_WITH_COVERAGE=OFF \
+                  -D MGMOL_WITH_MAGMA=OFF \
+                  -D CMAKE_CXX_FLAGS="-Wall -pedantic -Wextra -ggdb" \
+                  .. 
+                make -j8
+                ctest --no-compress-output -T Test
+                '''  
+              }   
+          }
+          post {
+            always {
+              xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+            }
+          }      
+        }
+      }
     }
+  }
 }
