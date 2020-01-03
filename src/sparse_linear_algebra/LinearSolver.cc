@@ -35,9 +35,12 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
     const PreconILU<pcdatatype>& precon, const int lrindex, double* sol,
     const double tol, const int im, const int maxits)
 {
-    int i, i1, ii, j, k, k1, its, im1, pti, pti1, ptih, one = 1;
+    int i, i1, ii, j, k, k1, its, im1, pti, pti1;
+    int ptih = 0;
+    int one  = 1;
     double *c, *s, *rs, t;
-    double negt, beta, eps1, gam, *vv, *z;
+    double negt, eps1, gam, *vv, *z;
+    double beta = 0.;
 
     const int n        = LSMat.n();
     const double coeff = -1.0;
@@ -225,8 +228,7 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
         /*--------------------initialize 1-st term  of rhs of hessenberg mtx */
         rs[0] = beta;
         /*-------------------- Krylov loop*/
-        i    = -1;
-        pti1 = 0;
+        i = -1;
 
         while ((i < im - 1) && (beta > eps1) && (its++ < maxits))
         {
@@ -454,9 +456,10 @@ int LinearSolver::fgmres_mp(LinearSolverMatrix<lsdatatype>& LSMat,
     PreconILU<pcdatatype>& precon, const int lrindex, double* sol,
     const double tol, const int im, const int maxits)
 {
-    int i, i1, ii, j, k, k1, its, im1, pti, pti1, ptih;
+    int i, i1, ii, j, k, k1, its, im1, pti, pti1, ptih = 0;
 
-    double beta, eps1, gam, negt, t;
+    double eps1, gam, negt, t;
+    double beta = 0.;
 
     const int n        = LSMat.n();
     const double coeff = -1.0;
@@ -506,10 +509,8 @@ int LinearSolver::fgmres_mp(LinearSolverMatrix<lsdatatype>& LSMat,
         if (its == 0) eps1 = tol * beta;
         /*--------------------initialize 1-st term  of rhs of hessenberg mtx */
         rs[0] = (float)beta;
-        i     = 0;
         /*-------------------- Krylov loop*/
-        i   = -1;
-        pti = pti1 = 0;
+        i = -1;
         while ((i < im - 1) && (beta > eps1) && (its++ < maxits))
         {
             i++;

@@ -90,7 +90,8 @@ void KBprojectorSparse::setNLindex(
     assert(size_nl > 0);
     assert((int)nlindex_.size() > iloc);
     assert((int)size_nl_.size() > iloc);
-    assert(work_nlindex_.size() == omp_get_max_threads());
+    assert(work_nlindex_.size()
+           == static_cast<unsigned int>(omp_get_max_threads()));
 
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
@@ -134,8 +135,9 @@ void KBprojectorSparse::registerPsi(const short iloc, const ORBDTYPE* const psi)
     const std::vector<int>& rnlindex(nlindex_[iloc]);
     // cout<<"thread="<<thread<<endl;
     // cout<<"work_nlindex_.size()="<<work_nlindex_.size()<<endl;
-    assert(work_nlindex_.size() == omp_get_max_threads());
-    assert(thread < work_nlindex_.size());
+    assert(work_nlindex_.size()
+           == static_cast<unsigned int>(omp_get_max_threads()));
+    assert(static_cast<unsigned int>(thread) < work_nlindex_.size());
     std::vector<ORBDTYPE>& work(work_nlindex_[thread]);
     for (int i = 0; i < sizenl; i++)
     {

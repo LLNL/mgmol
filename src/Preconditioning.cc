@@ -168,7 +168,7 @@ void Preconditioning<T>::mg(pb::GridFuncVector<T>& gfv_v,
     if (onpe0)
         (*MPIdata::sout) << "Preconditioning::mg() at level " << level << endl;
 #endif
-    assert(gfv_work_.size() > level);
+    assert(static_cast<int>(gfv_work_.size()) > level);
     assert(gfv_work_[level] != nullptr);
 
     short ncycl = 2;
