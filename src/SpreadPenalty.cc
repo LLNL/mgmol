@@ -13,8 +13,6 @@
 #include "LocGridOrbitals.h"
 #include "Mesh.h"
 
-using namespace std;
-
 template <class T>
 void SpreadPenalty<T>::addResidual(T& phi, T& res)
 {
@@ -33,26 +31,26 @@ void SpreadPenalty<T>::addResidual(T& phi, T& res, bool xlbomd)
     spreadf_->computePositionMatrix(phi);
 
     // now compute spreads**2 and centers
-    vector<Vector3D> centers;
+    std::vector<Vector3D> centers;
     spreadf_->computeCenters(centers);
 
     // get spreads of overlapping orbitals
-    vector<float> spread2;
+    std::vector<float> spread2;
     spreadf_->computeSpreads2(spread2);
 
     // get gids of overlapping orbitals
-    const vector<int>& gids(spreadf_->getGids());
+    const std::vector<int>& gids(spreadf_->getGids());
 
     // setup factors for corrections proportional to gradient
     // of penalty spread functional
-    vector<float> factors;
+    std::vector<float> factors;
     float max_spread2 = 0.;
     // float second_max_spread2=0.;
     // int gid_max_spread = -1;
     // int   gid_second_max_spread=-1;
 
-    vector<int>::const_iterator gid_it = gids.begin();
-    for (vector<float>::const_iterator it = spread2.begin();
+    std::vector<int>::const_iterator gid_it = gids.begin();
+    for (std::vector<float>::const_iterator it = spread2.begin();
          it != spread2.end(); ++it)
     {
         if (*it > max_spread2)
@@ -85,7 +83,8 @@ void SpreadPenalty<T>::addResidual(T& phi, T& res, bool xlbomd)
 
     mmpi.allreduce(&max_spread2, 1, MPI_MAX);
     if (onpe0 && ct.verbose > 1)
-        cout << "Max. spread=" << setprecision(4) << sqrt(max_spread2) << endl;
+        std::cout << "Max. spread = " << std::setprecision(4)
+                  << sqrt(max_spread2) << std::endl;
 
     // max_spread2=second_max_spread2;
     // gid_max_spread=gid_second_max_spread;
@@ -134,9 +133,9 @@ float SpreadPenalty<T>::computeSpreadPenaltyFactorXLBOMD(const float spread2)
 // spread functional
 template <class T>
 void SpreadPenalty<T>::computeAndAddResidualSpreadPenalty(
-    const vector<float>& lagrangemult, const vector<float>& factors,
-    const vector<Vector3D>& centers, const vector<int>& gids, T& orbitals,
-    T& res)
+    const std::vector<float>& lagrangemult, const std::vector<float>& factors,
+    const std::vector<Vector3D>& centers, const std::vector<int>& gids,
+    T& orbitals, T& res)
 {
     assert(lagrangemult.size() == centers.size());
     assert(factors.size() == centers.size());
@@ -146,28 +145,31 @@ void SpreadPenalty<T>::computeAndAddResidualSpreadPenalty(
     const pb::Grid& mygrid = mymesh->grid();
     const int subdivx      = mymesh->subdivx();
 
-    // build maps: gid -> data
-    map<int, Vector3D> gids2centers;
+    // build std::maps: gid -> data
+    std::map<int, Vector3D> gids2centers;
     short i = 0;
-    for (vector<int>::const_iterator it = gids.begin(); it != gids.end(); ++it)
+    for (std::vector<int>::const_iterator it = gids.begin(); it != gids.end();
+         ++it)
     {
-        gids2centers.insert(pair<int, Vector3D>(*it, centers[i]));
+        gids2centers.insert(std::pair<int, Vector3D>(*it, centers[i]));
         i++;
     }
 
-    map<int, float> gids2lagrangemult;
+    std::map<int, float> gids2lagrangemult;
     i = 0;
-    for (vector<int>::const_iterator it = gids.begin(); it != gids.end(); ++it)
+    for (std::vector<int>::const_iterator it = gids.begin(); it != gids.end();
+         ++it)
     {
-        gids2lagrangemult.insert(pair<int, float>(*it, lagrangemult[i]));
+        gids2lagrangemult.insert(std::pair<int, float>(*it, lagrangemult[i]));
         i++;
     }
 
-    map<int, float> gids2factors;
+    std::map<int, float> gids2factors;
     i = 0;
-    for (vector<int>::const_iterator it = gids.begin(); it != gids.end(); ++it)
+    for (std::vector<int>::const_iterator it = gids.begin(); it != gids.end();
+         ++it)
     {
-        gids2factors.insert(pair<int, float>(*it, factors[i]));
+        gids2factors.insert(std::pair<int, float>(*it, factors[i]));
         i++;
     }
 
@@ -181,12 +183,12 @@ void SpreadPenalty<T>::computeAndAddResidualSpreadPenalty(
     float alphay        = mygrid.ll(1) * inv_2pi;
     float alphaz        = mygrid.ll(2) * inv_2pi;
 
-    vector<float> sinx;
-    vector<float> siny;
-    vector<float> sinz;
-    vector<float> cosx;
-    vector<float> cosy;
-    vector<float> cosz;
+    std::vector<float> sinx;
+    std::vector<float> siny;
+    std::vector<float> sinz;
+    std::vector<float> cosx;
+    std::vector<float> cosy;
+    std::vector<float> cosz;
     mygrid.getSinCosFunctions(sinx, siny, sinz, cosx, cosy, cosz);
 
     const float coeffx = 2. * M_PI / mygrid.ll(0);
@@ -196,7 +198,8 @@ void SpreadPenalty<T>::computeAndAddResidualSpreadPenalty(
     const float pbound = 0.5;
     const float mbound = -1. * pbound;
 
-    const vector<vector<int>>& global_indexes(orbitals.getOverlappingGids());
+    const std::vector<std::vector<int>>& global_indexes(
+        orbitals.getOverlappingGids());
 
     for (short icolor = 0; icolor < orbitals.chromatic_number(); icolor++)
     {
@@ -271,16 +274,16 @@ double SpreadPenalty<T>::evaluateEnergy(const T& phi)
     spreadf_->computePositionMatrix(phi);
 
     // now compute centers
-    vector<Vector3D> centers;
+    std::vector<Vector3D> centers;
     spreadf_->computeCenters(centers);
 
     // get spreads of functions centered in subdomain
-    vector<float> spread2;
+    std::vector<float> spread2;
     spreadf_->computeLocalSpreads2(spread2);
 
     double total_energy = 0.;
 
-    for (vector<float>::const_iterator it = spread2.begin();
+    for (std::vector<float>::const_iterator it = spread2.begin();
          it != spread2.end(); ++it)
     {
         double diff = (*it - spread2_target_);
