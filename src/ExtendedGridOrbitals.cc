@@ -308,9 +308,9 @@ void ExtendedGridOrbitals::initFourier()
     if (onpe0 && ct.verbose > 2)
         (*MPIdata::sout) << "Initial orbitals: Fourier " << std::endl;
 
-    const double start0 = grid_.start(0);
-    const double start1 = grid_.start(1);
-    const double start2 = grid_.start(2);
+    const double start0 = grid_.start(0) - grid_.origin(0);
+    const double start1 = grid_.start(1) - grid_.origin(1);
+    const double start2 = grid_.start(2) - grid_.origin(2);
 
     const int dim0 = grid_.dim(0) / subdivx_;
     const int dim1 = grid_.dim(1);
@@ -332,13 +332,12 @@ void ExtendedGridOrbitals::initFourier()
 
     for (int icolor = 0; icolor < numst_; icolor++)
     {
-        int k0 = icolor / (cbrtncolors * cbrtncolors);
-        int k1 = (icolor - k0 * cbrtncolors * cbrtncolors) / cbrtncolors;
-        int k2 = icolor % cbrtncolors;
-        // if( onpe0 )(*MPIdata::sout)<<" k=("<<k0<<","<<k1<<","<<k2<<")"<<endl;
+        int index = icolor + 1;
+        int kvector[3];
+        getkvector(icolor + 1, cbrtncolors, kvector);
 
-        const double kk[3]
-            = { dk[0] * (double)k0, dk[1] * (double)k1, dk[2] * (double)k2 };
+        const double kk[3] = { dk[0] * (double)kvector[0],
+            dk[1] * (double)kvector[1], dk[2] * (double)kvector[2] };
 
         ORBDTYPE* ipsi = psi(icolor);
         memset(ipsi, 0, numpt_ * sizeof(ORBDTYPE));
@@ -355,8 +354,10 @@ void ExtendedGridOrbitals::initFourier()
                     double z = start2;
                     for (int iz = 0; iz < dim2; iz++)
                     {
-                        ipsi[ix * incx + iy * incy + iz] = (ORBDTYPE)(
-                            cos(kk[0] * x) * cos(kk[1] * y) * cos(kk[2] * z));
+                        ipsi[ix * incx + iy * incy + iz]
+                            = 1.
+                              - (ORBDTYPE)(cos(kk[0] * x) * cos(kk[1] * y)
+                                           * cos(kk[2] * z));
 
                         z += hgrid[2];
                     }
