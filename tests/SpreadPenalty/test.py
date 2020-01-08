@@ -70,12 +70,17 @@ for line in lines:
     energy = eval(words[-1])
     print("energy = {}".format(energy))
 
-if spread>1.3:
+#make sure target spread is reached within 1%
+spread_target = 1.5
+tol = spread_target*0.01
+if (spread-spread_target) > tol:
   print("Test failed: last spread too large!")
   sys.exit(1)
 
+#we tolerate an energy difference since the initial wave functions
+#are very delocalized and the spread penalty remains active all along
 energy_ref = -17.16448
-tol = 1.e-4
+tol = 5.e-4
 if abs(energy-energy_ref) > tol:
   print("Test failed: last energy value incorrect!")
   sys.exit(1)
