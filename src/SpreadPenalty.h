@@ -43,6 +43,7 @@ public:
     {
         assert(spread2_target_ >= 0.);
         assert(alpha_ >= 0.);
+        assert(dampingFactor_ >= 0.);
     }
 
     // add penalty functional contribution to residual

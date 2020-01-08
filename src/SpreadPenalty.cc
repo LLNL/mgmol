@@ -30,7 +30,7 @@ void SpreadPenalty<T>::addResidual(T& phi, T& res, bool xlbomd)
     // compute data to be used to evaluate spreads and centers
     spreadf_->computePositionMatrix(phi);
 
-    // now compute spreads**2 and centers
+    // compute centers (within computational domain)
     std::vector<Vector3D> centers;
     spreadf_->computeCenters(centers);
 
@@ -44,31 +44,24 @@ void SpreadPenalty<T>::addResidual(T& phi, T& res, bool xlbomd)
     // setup factors for corrections proportional to gradient
     // of penalty spread functional
     std::vector<float> factors;
+    factors.reserve(spread2.size());
     float max_spread2 = 0.;
     // float second_max_spread2=0.;
     // int gid_max_spread = -1;
     // int   gid_second_max_spread=-1;
 
-    std::vector<int>::const_iterator gid_it = gids.begin();
-    for (std::vector<float>::const_iterator it = spread2.begin();
-         it != spread2.end(); ++it)
+    for (auto it : spread2)
     {
-        if (*it > max_spread2)
+        if (it > max_spread2)
         {
-            // second_max_spread2=max_spread2;
-            max_spread2 = *it;
-            // gid_second_max_spread=gid_max_spread;
-            // gid_max_spread = *gid_it;
+            max_spread2 = it;
         }
 
         // Compute appropriate spread penalty factor for either localized XLBOMD
         // or penalized optimization.
-        float coeff;
-        coeff = computeSpreadPenaltyFactor(*it);
+        float coeff = computeSpreadPenaltyFactor(it);
 
         factors.push_back(coeff);
-
-        gid_it++;
     }
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
@@ -105,7 +98,7 @@ template <class T>
 float SpreadPenalty<T>::computeSpreadPenaltyFactor(const float spread2)
 {
     // compute 2*F[\phi]-sigma_0^2
-    //(alpha ignored since it cancels out with teh one in eta)
+    //(alpha ignored since it cancels out with the one in eta)
     float factor = (spread2 - spread2_target_);
 
     factor = factor > 0. ? (2. * factor) : 0.;
@@ -179,9 +172,6 @@ void SpreadPenalty<T>::computeAndAddResidualSpreadPenalty(
     const int incy        = dim[2];
 
     const float inv_2pi = 0.5 * M_1_PI;
-    float alphax        = mygrid.ll(0) * inv_2pi;
-    float alphay        = mygrid.ll(1) * inv_2pi;
-    float alphaz        = mygrid.ll(2) * inv_2pi;
 
     std::vector<float> sinx;
     std::vector<float> siny;
@@ -191,9 +181,10 @@ void SpreadPenalty<T>::computeAndAddResidualSpreadPenalty(
     std::vector<float> cosz;
     mygrid.getSinCosFunctions(sinx, siny, sinz, cosx, cosy, cosz);
 
-    const float coeffx = 2. * M_PI / mygrid.ll(0);
-    const float coeffy = 2. * M_PI / mygrid.ll(1);
-    const float coeffz = 2. * M_PI / mygrid.ll(2);
+    const float l2rad[3] = { (float)(2. * M_PI / mygrid.ll(0)),
+        (float)(2. * M_PI / mygrid.ll(1)), (float)(2. * M_PI / mygrid.ll(2)) };
+    const float rad2l[3] = { (float)(mygrid.ll(0) * inv_2pi),
+        (float)(mygrid.ll(1) * inv_2pi), (float)(mygrid.ll(2) * inv_2pi) };
 
     const float pbound = 0.5;
     const float mbound = -1. * pbound;
@@ -213,25 +204,31 @@ void SpreadPenalty<T>::computeAndAddResidualSpreadPenalty(
             if (gid > -1)
             {
                 const float lambda = gids2lagrangemult[gid];
-                const Vector3D& center_gid(gids2centers[gid]);
+                Vector3D center(gids2centers[gid]);
                 const float factor = gids2factors[gid];
+
+                // map center into [0,2pi]
+                for (int i = 0; i < 3; i++)
+                {
+                    center[i] -= mygrid.origin(i);
+                    center[i] *= l2rad[i];
+                }
+                // std::cout<<"center = "<<center<<std::endl;
 
                 if (factor > 0.)
                     for (int ix = loc_length * iloc;
                          ix < loc_length * (iloc + 1); ix++)
                     {
-                        const float sx0 = sin(coeffx * center_gid[0]) * alphax;
-                        const float cx0 = cos(coeffx * center_gid[0]) * alphax;
+                        const float sx0 = std::sin(center[0]) * rad2l[0];
+                        const float cx0 = std::cos(center[0]) * rad2l[0];
 
                         const float x2 = (cosx[ix] - cx0) * (cosx[ix] - cx0)
                                          + (sinx[ix] - sx0) * (sinx[ix] - sx0);
 
                         for (unsigned int iy = 0; iy < dim[1]; iy++)
                         {
-                            const float sy0
-                                = sin(coeffy * center_gid[1]) * alphay;
-                            const float cy0
-                                = cos(coeffy * center_gid[1]) * alphay;
+                            const float sy0 = std::sin(center[1]) * rad2l[1];
+                            const float cy0 = std::cos(center[1]) * rad2l[1];
 
                             const float y2
                                 = (cosy[iy] - cy0) * (cosy[iy] - cy0)
@@ -241,9 +238,9 @@ void SpreadPenalty<T>::computeAndAddResidualSpreadPenalty(
                             {
                                 const int index = ix * incx + iy * incy + iz;
                                 const float cz0
-                                    = cos(coeffz * center_gid[2]) * alphaz;
+                                    = std::cos(center[2]) * rad2l[2];
                                 const float sz0
-                                    = sin(coeffz * center_gid[2]) * alphaz;
+                                    = std::sin(center[2]) * rad2l[2];
 
                                 const float z2
                                     = (cosz[iz] - cz0) * (cosz[iz] - cz0)
