@@ -114,11 +114,12 @@ void SpreadPenaltyVolume<T>::addResidual(T& phi, T& res)
     mmpi.allreduce(&max_spread2, 1, MPI_MAX);
     mmpi.allreduce(&min_spread2, 1, MPI_MIN);
     if (onpe0 && ct.verbose > 1)
-        cout << "Max. spread=" << setprecision(4) << sqrt(max_spread2)
-             << ", Min. spread=" << setprecision(4) << sqrt(min_spread2)
-             << ", Average spread Volume=" << setprecision(4)
+        cout << "Max. spread = " << setprecision(4) << sqrt(max_spread2)
+             << ", Min. spread = " << setprecision(4) << sqrt(min_spread2)
+             << ", Average spread Volume = " << setprecision(4)
              << sum_sigma3 / phi.numst()
-             << ", Target Volume=" << setprecision(4) << volume_target_ << endl;
+             << ", Target Volume = " << setprecision(4) << volume_target_
+             << endl;
 
     // max_spread2=second_max_spread2;
     // gid_max_spread=gid_second_max_spread;
