@@ -82,7 +82,7 @@ void quickSortIR(int* a, double* b, const int lo, const int hi)
 
 template <class T>
 VariableSizeMatrix<T>::VariableSizeMatrix(
-    const std::string& name, const int alloc_size, const MPI_Comm /*comm*/)
+    const std::string& name, const int alloc_size)
     : name_(name)
 {
     // reserve some memory for matrix data

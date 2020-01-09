@@ -33,15 +33,13 @@ Timer HamiltonianMVPSolver<T1, T2, T3>::target_tm_(
     "HamiltonianMVPSolver::target");
 
 template <class T1, class T2, class T3>
-HamiltonianMVPSolver<T1, T2, T3>::HamiltonianMVPSolver(MPI_Comm comm,
-    std::ostream& os, Ions& ions, Rho<T3>* rho, Energy<T3>* energy,
-    Electrostatic* electrostat, MGmol<T3>* mgmol_strategy, const int numst,
-    const double kbT, const int nel,
+HamiltonianMVPSolver<T1, T2, T3>::HamiltonianMVPSolver(std::ostream& os,
+    Ions& ions, Rho<T3>* rho, Energy<T3>* energy, Electrostatic* electrostat,
+    MGmol<T3>* mgmol_strategy, const int numst, const double kbT, const int nel,
     const std::vector<std::vector<int>>& global_indexes,
     const short n_inner_steps, const T1& hinit,
     const bool try_shorter_intervals)
-    : comm_(comm),
-      os_(os),
+    : os_(os),
       n_inner_steps_(n_inner_steps),
       ions_(ions),
       try_shorter_intervals_(try_shorter_intervals)
@@ -112,13 +110,13 @@ int HamiltonianMVPSolver<T1, T2, T3>::solve(T3& orbitals)
     orbitals.setDataWithGhosts();
 
     // compute linear component of H
-    T1 h11nl("h11nl", numst_, comm_);
+    T1 h11nl("h11nl", numst_);
 
     kbpsi.computeAll(ions_, orbitals);
 
     kbpsi.computeHvnlMatrix(&kbpsi, ions_, h11nl);
 
-    T1 h11("h11", numst_, comm_);
+    T1 h11("h11", numst_);
 
     for (int inner_it = 0; inner_it < n_inner_steps_; inner_it++)
     {
