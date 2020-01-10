@@ -216,6 +216,14 @@ add_test(NAME testMLWF
          ${CMAKE_CURRENT_SOURCE_DIR}/MLWF/mlwf.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/MLWF/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+add_test(NAME testSpreadPenalty
+         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/SpreadPenalty/test.py
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+         ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
+         ${CMAKE_CURRENT_SOURCE_DIR}/SpreadPenalty/mgmol.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/SpreadPenalty/coords.in
+         ${CMAKE_CURRENT_SOURCE_DIR}/SpreadPenalty/lrs.in
+         ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME testMD_D72
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/MD_D72/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 5 ${MPIEXEC_PREFLAGS}
