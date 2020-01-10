@@ -40,5 +40,6 @@ double minQuadPolynomial(const double e0, const double e1, const double de0,
     const bool print_flag, std::ostream& os);
 double minQuadPolynomialFrom3values(const double e0, const double e1,
     const double e12, const bool print_flag, std::ostream& os);
+void getkvector(const int index, const int kmax, int kvector[3]);
 
 #endif

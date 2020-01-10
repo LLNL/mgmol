@@ -82,12 +82,11 @@ DistMatrix<T>::DistMatrix(const std::string& name, const int m, const int n)
 }
 
 template <class T>
-DistMatrix<T>::DistMatrix(
-    const std::string& name, const int m, const MPI_Comm comm)
-    : object_name_(name), bc_(*default_bc_), comm_global_(comm)
+DistMatrix<T>::DistMatrix(const std::string& name, const int m)
+    : object_name_(name),
+      bc_(*default_bc_),
+      comm_global_(default_bc_->comm_global())
 {
-    assert(comm == default_bc_->comm_global());
-
     resize(m, m, distmatrix_def_block_size_, distmatrix_def_block_size_);
 }
 
