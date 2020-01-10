@@ -29,7 +29,6 @@ class HamiltonianMVPSolver
 {
 
 private:
-    MPI_Comm comm_;
     std::ostream& os_;
 
     short n_inner_steps_;
@@ -65,8 +64,8 @@ private:
     static Timer target_tm_;
 
 public:
-    HamiltonianMVPSolver(MPI_Comm comm, std::ostream& os, Ions& ions,
-        Rho<T3>* rho, Energy<T3>* energy, Electrostatic* electrostat,
+    HamiltonianMVPSolver(std::ostream& os, Ions& ions, Rho<T3>* rho,
+        Energy<T3>* energy, Electrostatic* electrostat,
         MGmol<T3>* mgmol_strategy, const int numst, const double kbT,
         const int nel, const std::vector<std::vector<int>>& global_indexes,
         const short n_inner_steps, const T1& hinit,

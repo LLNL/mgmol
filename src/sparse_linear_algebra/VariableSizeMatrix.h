@@ -60,8 +60,8 @@ class VariableSizeMatrix : public VariableSizeMatrixInterface
     std::vector<T*> data_;
 
 public:
-    VariableSizeMatrix(const std::string& name, const int alloc_size,
-        const MPI_Comm comm = MPI_COMM_NULL); // setup data structures
+    VariableSizeMatrix(
+        const std::string& name, const int alloc_size); // setup data structures
     VariableSizeMatrix(const VariableSizeMatrix& A,
         const bool copy_table = true); // Copy constructor
     template <class T2>

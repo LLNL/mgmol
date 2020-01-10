@@ -223,7 +223,7 @@ public:
     DistMatrix<T>(const std::string& name, const int m, const int n,
         const int mb, const int nb);
 
-    explicit DistMatrix<T>(const std::string& name, const int m, MPI_Comm comm);
+    explicit DistMatrix<T>(const std::string& name, const int m);
 
     // copy constructor
     DistMatrix<T>(const DistMatrix<T>& a);
