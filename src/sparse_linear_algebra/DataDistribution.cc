@@ -797,3 +797,7 @@ template void DataDistribution::updateLocalRows(
     VariableSizeMatrix<SparseRow>& vsmat, const bool append);
 template void DataDistribution::updateLocalRows(
     VariableSizeMatrix<SparseRowAndTable>& vsmat, const bool append);
+template void DataDistribution::consolidateMatrix(
+    const std::vector<int>& gids, VariableSizeMatrix<SparseRow>& mat);
+template void DataDistribution::consolidateMatrix(
+    const std::vector<int>& gids, VariableSizeMatrix<SparseRowAndTable>& mat);

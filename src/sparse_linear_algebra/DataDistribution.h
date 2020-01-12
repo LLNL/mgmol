@@ -193,6 +193,20 @@ public:
             dir_reduce_->printStats(std::cout);
         }
     }
+
+    /* Communicate and fill matrix data.
+     * Communicate data corresponding to gids and
+     * receive and assemble data from neighboring procs.
+     */
+    template <class T>
+    void consolidateMatrix(
+        const std::vector<int>& gids, VariableSizeMatrix<T>& mat)
+    {
+        // reset matrix keeping only nonzero rows specified by gids
+        mat.sparsify(gids);
+        // gather/ distribute data from neighbors
+        updateLocalRows(mat, true);
+    }
 };
 
 #endif
