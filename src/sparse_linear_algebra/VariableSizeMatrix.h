@@ -86,7 +86,8 @@ public:
         const double tol = MAT_TOL);
     void insertMatrixElements(
         const SquareSubMatrix<MATDTYPE>& ss, const double tol);
-    void sparsify(const std::vector<int>& pattern);
+    void sparsify(const std::vector<bool>& keeprow);
+    void sparsify(const std::vector<int>& gids);
     void print(std::ostream& os, const std::vector<int>& locfcns,
         int nrows = NUM_PRINT_ROWS) const;
     void printMatCSR(const char* fname); /* print CSR matrix */
@@ -516,10 +517,6 @@ public:
     }
 
     double pnorm(const int row, const int p) { return data_[row]->pnorm(p); }
-
-    // fill "non-local" rows wit data from other MPI tasks
-    void consolidate(
-        const std::vector<int>& gids, DataDistribution& distributor);
 
     VariableSizeMatrix<T>& operator+=(const VariableSizeMatrix<T>& a)
     {

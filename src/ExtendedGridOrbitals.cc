@@ -334,7 +334,7 @@ void ExtendedGridOrbitals::initFourier()
     {
         int index = icolor + 1;
         int kvector[3];
-        getkvector(icolor + 1, cbrtncolors, kvector);
+        getkvector(index, cbrtncolors, kvector);
 
         const double kk[3] = { dk[0] * (double)kvector[0],
             dk[1] * (double)kvector[1], dk[2] * (double)kvector[2] };

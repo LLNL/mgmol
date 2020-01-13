@@ -508,7 +508,7 @@ void ShortSightedInverse::augmentGramMatrix(
 
     DataDistribution distributor2(
         "overlap2", ct.spread_radius, myPEenv, domain);
-    gramMat_->consolidate(locfcns_, distributor2);
+    distributor2.consolidateMatrix(locfcns_, (*gramMat_));
 
     if (print_flag)
     {

@@ -278,7 +278,8 @@ void ProjectedMatricesSparse::consolidateOrbitalsOverlapMat(
     Control& ct(*Control::instance());
     DataDistribution distributor("overlap2", ct.spread_radius, myPEenv, domain);
 
-    mat.consolidate(locfcns, distributor);
+    //    mat.consolidate(locfcns, distributor);
+    distributor.consolidateMatrix(locfcns, mat);
 
     consolidate_H_tm_.stop();
 }
@@ -309,7 +310,7 @@ void ProjectedMatricesSparse::consolidateH()
     Control& ct(*(Control::instance()));
     DataDistribution distributor("H", ct.spread_radius, myPEenv, domain);
 
-    sH_->consolidate(locfcns, distributor);
+    distributor.consolidateMatrix(locfcns, (*sH_));
 
     matHB_->copyData((*sH_), lsize_);
 

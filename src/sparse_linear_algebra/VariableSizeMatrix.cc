@@ -861,18 +861,18 @@ void VariableSizeMatrix<T>::AmultSymB(VariableSizeMatrix<T>* B,
     return;
 }
 
-/* initialize local rows of the local matrix by copying in rows of matrix A */
-/* Assumes nnzrow is initially zero - matrix has been reset */
+/* Reset matrix to zero, keeping only rows specified by keeprow[row]==true as
+ * nonzero rows */
 template <class T>
-void VariableSizeMatrix<T>::sparsify(const std::vector<int>& pattern)
+void VariableSizeMatrix<T>::sparsify(const std::vector<bool>& keeprow)
 {
-    assert((int)pattern.size() == n_);
+    assert((int)keeprow.size() == n_);
 
     int row      = 0;
     int maxnzrow = 0;
     totnnz_      = 0;
-    for (std::vector<int>::const_iterator rp = pattern.begin();
-         rp != pattern.end(); ++rp)
+    for (std::vector<bool>::const_iterator rp = keeprow.begin();
+         rp != keeprow.end(); ++rp)
     {
         if (*rp)
         {
@@ -889,6 +889,20 @@ void VariableSizeMatrix<T>::sparsify(const std::vector<int>& pattern)
     nzmax_ = maxnzrow;
 
     return;
+}
+
+/* Reset matrix to zero, keeping only rows specified by gids as nonzero rows */
+template <class T>
+void VariableSizeMatrix<T>::sparsify(const std::vector<int>& gids)
+{
+    std::vector<bool> keeprow(n_, 0);
+    for (std::vector<int>::const_iterator it = gids.begin(); it != gids.end();
+         ++it)
+    {
+        const int* rindex = (int*)(table_->get_value(*it));
+        keeprow[*rindex]  = 1;
+    }
+    sparsify(keeprow);
 }
 
 template <class T>
@@ -962,25 +976,6 @@ void VariableSizeMatrix<T>::gemv(const double alpha,
         double val = (*row)->dotVec(x);
         y[k]       = beta * y[k] + alpha * val;
     }
-}
-
-template <class T>
-void VariableSizeMatrix<T>::consolidate(
-    const std::vector<int>& gids, DataDistribution& distributor)
-{
-    // cout<<"Call VariableSizeMatrix<T>::consolidate()...\n";
-    std::vector<int> pattern(n_, 0);
-    for (std::vector<int>::const_iterator it = gids.begin(); it != gids.end();
-         ++it)
-    {
-        const int* rindex = (int*)(table_->get_value(*it));
-        pattern[*rindex]  = 1;
-    }
-    sparsify(pattern);
-
-    // gather/ distribute data from neighbors whose centered functions
-    // overlap with functions centered on local subdomain
-    distributor.updateLocalRows(*this, true);
 }
 
 template <class T>

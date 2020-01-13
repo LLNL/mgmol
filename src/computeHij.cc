@@ -90,17 +90,6 @@ void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i,
         std::vector<int> locfcns;
         (*lrs_).getLocalSubdomainIndices(locfcns);
 
-        // sparsify matrix rows according to pattern/ clear rows corresponding
-        // to non-centered data
-        std::vector<int> pattern(mat.n(), 0);
-        for (std::vector<int>::iterator it = locfcns.begin();
-             it != locfcns.end(); ++it)
-        {
-            const int* rindex = (int*)mat.getTableValue(*it);
-            pattern[*rindex]  = 1;
-        }
-        mat.sparsify(pattern);
-
         // gather/ distribute data from neighbors whose centered functions
         // overlap with functions centered on local subdomain
         Mesh* mymesh             = Mesh::instance();
@@ -109,7 +98,8 @@ void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i,
         double domain[3]         = { mygrid.ll(0), mygrid.ll(1), mygrid.ll(2) };
         DataDistribution distributor(
             "Hij", 2 * (*lrs_).max_radii(), myPEenv, domain);
-        distributor.updateLocalRows(mat, true);
+
+        distributor.consolidateMatrix(locfcns, mat);
     }
 }
 
@@ -143,7 +133,7 @@ void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i,
 
         // sparsify matrix rows according to pattern/ clear rows corresponding
         // to non-centered data
-        std::vector<int> pattern(mat.n(), 0);
+        std::vector<bool> pattern(mat.n(), 0);
         for (std::vector<int>::iterator it = locfcns.begin();
              it != locfcns.end(); ++it)
         {
