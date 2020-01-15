@@ -528,6 +528,7 @@ public:
         axpy(-1.0, a);
         return *this;
     }
+    std::string name() { return name_; }
 };
 
 #endif

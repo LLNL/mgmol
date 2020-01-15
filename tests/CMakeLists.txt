@@ -109,7 +109,18 @@ add_executable(testSuperSampling
                ${CMAKE_SOURCE_DIR}/tests/testSuperSampling.cc
                ${CMAKE_SOURCE_DIR}/src/SuperSampling.cc
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
-
+add_executable(testVariableSizeMatrix
+               ${CMAKE_SOURCE_DIR}/tests/testVariableSizeMatrix.cc
+               ${CMAKE_SOURCE_DIR}/src/sparse_linear_algebra/VariableSizeMatrix.cc               
+               ${CMAKE_SOURCE_DIR}/src/sparse_linear_algebra/SparseRow.cc               
+               ${CMAKE_SOURCE_DIR}/src/sparse_linear_algebra/SparseRowAndTable.cc     
+               ${CMAKE_SOURCE_DIR}/src/sparse_linear_algebra/Table.cc                                        
+               ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
+               ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
+               
 target_compile_definitions(testAndersonMix PUBLIC TESTING)
 
 add_test(NAME testHDF5P
@@ -216,14 +227,6 @@ add_test(NAME testMLWF
          ${CMAKE_CURRENT_SOURCE_DIR}/MLWF/mlwf.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/MLWF/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
-add_test(NAME testSpreadPenalty
-         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/SpreadPenalty/test.py
-         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
-         ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
-         ${CMAKE_CURRENT_SOURCE_DIR}/SpreadPenalty/mgmol.cfg
-         ${CMAKE_CURRENT_SOURCE_DIR}/SpreadPenalty/coords.in
-         ${CMAKE_CURRENT_SOURCE_DIR}/SpreadPenalty/lrs.in
-         ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME testMD_D72
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/MD_D72/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 5 ${MPIEXEC_PREFLAGS}
@@ -250,6 +253,9 @@ add_test(NAME testLBFGS
          ${CMAKE_CURRENT_SOURCE_DIR}/LBFGS/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/LBFGS/lrs.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+add_test(NAME testVariableSizeMatrix
+         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+                 ${CMAKE_CURRENT_BINARY_DIR}/testVariableSizeMatrix)
 
 target_include_directories(testHDF5P PRIVATE ${HDF5_INCLUDE_DIRS})
 target_include_directories(testAndersonMix PRIVATE
@@ -263,6 +269,7 @@ target_link_libraries(testBlacsContext PRIVATE ${SCALAPACK_LIBRARIES}
   ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX)
 target_link_libraries(testSuperSampling PRIVATE Boost::unit_test_framework MPI::MPI_CXX)
 target_link_libraries(testDirectionalReduce PRIVATE Boost::unit_test_framework MPI::MPI_CXX)
+target_link_libraries(testVariableSizeMatrix PRIVATE ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX)
 
 if(${MAGMA_FOUND})
   target_link_libraries(testDistVector PRIVATE ${SCALAPACK_LIBRARIES}
