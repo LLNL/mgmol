@@ -18,6 +18,7 @@
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
+#include <numeric>
 
 namespace tt = boost::test_tools;
 
