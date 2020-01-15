@@ -296,6 +296,7 @@ if(${MAGMA_FOUND})
     ${SCALAPACK_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX
     OpenMP::OpenMP_CXX PkgConfig::MAGMA)
   target_link_libraries(testAndersonMix PRIVATE ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} 
+    Boost::unit_test_framework MPI::MPI_CXX PkgConfig::MAGMA)
     ${Boost_LIBRARIES} MPI::MPI_CXX PkgConfig::MAGMA)
   target_link_libraries(testVariableSizeMatrix PRIVATE ${BLAS_LIBRARIES} 
     Boost::unit_test_framework MPI::MPI_CXX PkgConfig::MAGMA)
@@ -316,6 +317,7 @@ else()
     ${SCALAPACK_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX
     OpenMP::OpenMP_CXX)
   target_link_libraries(testAndersonMix PRIVATE ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} 
+    Boost::unit_test_framework MPI::MPI_CXX)
     ${Boost_LIBRARIES} MPI::MPI_CXX)
   target_link_libraries(testVariableSizeMatrix PRIVATE ${BLAS_LIBRARIES} 
     Boost::unit_test_framework MPI::MPI_CXX)
