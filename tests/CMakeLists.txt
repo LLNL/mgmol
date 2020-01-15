@@ -254,7 +254,7 @@ add_test(NAME testLBFGS
          ${CMAKE_CURRENT_SOURCE_DIR}/LBFGS/lrs.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME testVariableSizeMatrix
-         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 1 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testVariableSizeMatrix)
 
 target_include_directories(testHDF5P PRIVATE ${HDF5_INCLUDE_DIRS})
