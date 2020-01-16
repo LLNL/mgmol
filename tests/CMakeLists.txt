@@ -160,8 +160,11 @@ add_test(NAME testAndersonMix
          COMMAND ${CMAKE_CURRENT_BINARY_DIR}/testAndersonMix 20 2)
 add_test(NAME testSuperSampling
          COMMAND ${CMAKE_CURRENT_BINARY_DIR}/testSuperSampling)
-
- add_test(NAME testProjectedMatrices
+add_test(NAME testVariableSizeMatrix
+         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 1 ${MPIEXEC_PREFLAGS}
+                 ${CMAKE_CURRENT_BINARY_DIR}/testVariableSizeMatrix)
+                 
+add_test(NAME testProjectedMatrices
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ProjectedMatrices/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
          ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
@@ -254,9 +257,6 @@ add_test(NAME testLBFGS
          ${CMAKE_CURRENT_SOURCE_DIR}/LBFGS/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/LBFGS/lrs.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
-add_test(NAME testVariableSizeMatrix
-         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 1 ${MPIEXEC_PREFLAGS}
-                 ${CMAKE_CURRENT_BINARY_DIR}/testVariableSizeMatrix)
 
 target_include_directories(testHDF5P PRIVATE ${HDF5_INCLUDE_DIRS})
 target_include_directories(testAndersonMix PRIVATE
