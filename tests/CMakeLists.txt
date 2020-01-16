@@ -112,6 +112,7 @@ add_executable(testSuperSampling
 add_executable(testVariableSizeMatrix
                ${CMAKE_SOURCE_DIR}/tests/testVariableSizeMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/sparse_linear_algebra/VariableSizeMatrix.cc               
+               ${CMAKE_SOURCE_DIR}/src/magma_singleton.cc
                ${CMAKE_SOURCE_DIR}/src/sparse_linear_algebra/SparseRow.cc               
                ${CMAKE_SOURCE_DIR}/src/sparse_linear_algebra/SparseRowAndTable.cc     
                ${CMAKE_SOURCE_DIR}/src/sparse_linear_algebra/Table.cc                                        
@@ -269,7 +270,6 @@ target_link_libraries(testBlacsContext PRIVATE ${SCALAPACK_LIBRARIES}
   ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX)
 target_link_libraries(testSuperSampling PRIVATE Boost::unit_test_framework MPI::MPI_CXX)
 target_link_libraries(testDirectionalReduce PRIVATE Boost::unit_test_framework MPI::MPI_CXX)
-target_link_libraries(testVariableSizeMatrix PRIVATE ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX)
 
 if(${MAGMA_FOUND})
   target_link_libraries(testDistVector PRIVATE ${SCALAPACK_LIBRARIES}
@@ -289,6 +289,8 @@ if(${MAGMA_FOUND})
     PkgConfig::MAGMA)
   target_link_libraries(testAndersonMix PRIVATE ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} 
     ${Boost_LIBRARIES} MPI::MPI_CXX PkgConfig::MAGMA)
+  target_link_libraries(testVariableSizeMatrix PRIVATE ${BLAS_LIBRARIES} 
+    Boost::unit_test_framework MPI::MPI_CXX PkgConfig::MAGMA)
 else()
   target_link_libraries(testDistVector PRIVATE ${SCALAPACK_LIBRARIES}
     ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX)
@@ -306,6 +308,8 @@ else()
     ${SCALAPACK_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX)
   target_link_libraries(testAndersonMix PRIVATE ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} 
     ${Boost_LIBRARIES} MPI::MPI_CXX)
+  target_link_libraries(testVariableSizeMatrix PRIVATE ${BLAS_LIBRARIES} 
+    Boost::unit_test_framework MPI::MPI_CXX)
 endif()
 
 set_tests_properties(testSiH4 PROPERTIES REQUIRED_FILES
