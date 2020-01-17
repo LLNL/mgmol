@@ -11,7 +11,7 @@ set(SOURCES DirectionalReduce.cc
        LinearSolver.cc
 )
 
-add_library(mgmol_sparse_linear_algebra STATIC ${SOURCES})
+add_library(mgmol_sparse_linear_algebra ${SOURCES})
 
 target_include_directories(mgmol_sparse_linear_algebra PUBLIC ${HDF5_INCLUDE_DIRS})
 target_link_libraries(mgmol_sparse_linear_algebra PUBLIC MPI::MPI_CXX)

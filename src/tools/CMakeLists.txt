@@ -10,6 +10,6 @@ set(SOURCES mgmol_mpi_tools.cc
        SymmetricMatrix.cc
 )
 
-add_library(mgmol_tools STATIC ${SOURCES})
+add_library(mgmol_tools ${SOURCES})
 target_link_libraries(mgmol_tools PUBLIC MPI::MPI_CXX)
 install(TARGETS mgmol_tools DESTINATION lib)
