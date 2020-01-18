@@ -109,7 +109,19 @@ add_executable(testSuperSampling
                ${CMAKE_SOURCE_DIR}/tests/testSuperSampling.cc
                ${CMAKE_SOURCE_DIR}/src/SuperSampling.cc
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
-
+add_executable(testVariableSizeMatrix
+               ${CMAKE_SOURCE_DIR}/tests/testVariableSizeMatrix.cc
+               ${CMAKE_SOURCE_DIR}/src/sparse_linear_algebra/VariableSizeMatrix.cc               
+               ${CMAKE_SOURCE_DIR}/src/magma_singleton.cc
+               ${CMAKE_SOURCE_DIR}/src/sparse_linear_algebra/SparseRow.cc               
+               ${CMAKE_SOURCE_DIR}/src/sparse_linear_algebra/SparseRowAndTable.cc     
+               ${CMAKE_SOURCE_DIR}/src/sparse_linear_algebra/Table.cc                                        
+               ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
+               ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
+               
 target_compile_definitions(testAndersonMix PUBLIC TESTING)
 
 add_test(NAME testHDF5P
@@ -148,8 +160,11 @@ add_test(NAME testAndersonMix
          COMMAND ${CMAKE_CURRENT_BINARY_DIR}/testAndersonMix 20 2)
 add_test(NAME testSuperSampling
          COMMAND ${CMAKE_CURRENT_BINARY_DIR}/testSuperSampling)
-
- add_test(NAME testProjectedMatrices
+add_test(NAME testVariableSizeMatrix
+         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 1 ${MPIEXEC_PREFLAGS}
+                 ${CMAKE_CURRENT_BINARY_DIR}/testVariableSizeMatrix)
+                 
+add_test(NAME testProjectedMatrices
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ProjectedMatrices/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
          ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
@@ -282,6 +297,8 @@ if(${MAGMA_FOUND})
     PkgConfig::MAGMA)
   target_link_libraries(testAndersonMix PRIVATE ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} 
     ${Boost_LIBRARIES} MPI::MPI_CXX PkgConfig::MAGMA)
+  target_link_libraries(testVariableSizeMatrix PRIVATE ${BLAS_LIBRARIES} 
+    Boost::unit_test_framework MPI::MPI_CXX PkgConfig::MAGMA)
 else()
   target_link_libraries(testDistVector PRIVATE ${SCALAPACK_LIBRARIES}
     ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX)
@@ -299,6 +316,8 @@ else()
     ${SCALAPACK_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX)
   target_link_libraries(testAndersonMix PRIVATE ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} 
     ${Boost_LIBRARIES} MPI::MPI_CXX)
+  target_link_libraries(testVariableSizeMatrix PRIVATE ${BLAS_LIBRARIES} 
+    Boost::unit_test_framework MPI::MPI_CXX)
 endif()
 
 set_tests_properties(testSiH4 PROPERTIES REQUIRED_FILES
