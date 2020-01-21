@@ -11,7 +11,6 @@
 #include <cassert>
 #include <iostream>
 #include <math.h>
-using namespace std;
 
 #include "radial_functions.h"
 
@@ -61,7 +60,7 @@ double nu4(const double r, const double rcav, const double rc)
     }
 
     assert(out + tol >= 0.);
-    return max(out, 0.);
+    return std::max(out, 0.);
 }
 
 double nu6(const double r, const double rcav, const double rc)

@@ -139,9 +139,7 @@ int GridMask::init(const Vector3D& center, const double rcut,
     assert((*func)(0) == 1.);
     assert(subdim0_[level] > 0);
 
-#ifdef _OPENMP
 #pragma omp master
-#endif
     init_tm_.start();
 
     //(*MPIdata::sout)<<"GridMask::init(), center="<<center<<",
@@ -263,9 +261,7 @@ int GridMask::init(const Vector3D& center, const double rcut,
 
     assign(iloc, level, ncount, icount, mask);
 
-#ifdef _OPENMP
 #pragma omp master
-#endif
     init_tm_.stop();
 
     return icount;

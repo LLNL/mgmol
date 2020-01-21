@@ -403,14 +403,10 @@ void MGmol<T>::computeHnlPhiAndAdd2HPhi(
         }
         else // no Mehrstellen
         {
-#ifdef _OPENMP
 #pragma omp parallel
-#endif
             {
                 ORBDTYPE* hnl = new ORBDTYPE[numpt];
-#ifdef _OPENMP
 #pragma omp for
-#endif
                 for (short icolor = 0; icolor < ncolors; icolor++)
                 {
                     get_vnlpsi(ions, gid, icolor, kbpsi, hnl);

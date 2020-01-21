@@ -10,9 +10,6 @@
 
 #include "RadialInter.h"
 
-#include <iostream>
-using namespace std;
-
 // Gregory-Newton cubic interpolation using forward differences
 double RadialInter::cubint(const double r, const int j) const
 {
@@ -20,8 +17,8 @@ double RadialInter::cubint(const double r, const int j) const
     assert(j < (int)y_.size());
     assert(invdr_ > 0.);
 
-    const vector<double>& yj = y_[j];
-    double d0                = r * invdr_;
+    const std::vector<double>& yj = y_[j];
+    double d0                     = r * invdr_;
     if (d0 < 1.)
     {
         return (1. - d0) * yj[0] + d0 * yj[1];
@@ -55,9 +52,9 @@ double RadialInter::linint(const double r, const int j) const
     assert(j < (int)y_.size());
     assert(invdr_ > 0.);
 
-    const vector<double>& yj = y_[j];
-    double b                 = r * invdr_;
-    int ic                   = (int)b;
+    const std::vector<double>& yj = y_[j];
+    double b                      = r * invdr_;
+    int ic                        = (int)b;
     if (ic >= (int)yj.size()) return 0.;
 
     b -= (double)(ic);

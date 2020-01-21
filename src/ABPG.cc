@@ -18,7 +18,6 @@
 #include "ProjectedMatricesInterface.h"
 
 #include <iostream>
-using namespace std;
 
 template <class T>
 void ABPG<T>::setup(T& orbitals)
@@ -47,7 +46,7 @@ int ABPG<T>::updateWF(T& orbitals, Ions& ions, const double precond_factor,
     abpg_nl_update_tm_.start();
 
     Control& ct = *(Control::instance());
-    if (onpe0 && ct.verbose > 2) os_ << "ABPG::update()..." << endl;
+    if (onpe0 && ct.verbose > 2) os_ << "ABPG::update()..." << std::endl;
 
     // temporary Orbitals to hold residual
     T res("Residual", orbitals, false);
@@ -95,8 +94,6 @@ void ABPG<T>::update_states(T& orbitals, T& res, T& work_orbitals,
 
     update_states_tm_.start();
 
-    // if(onpe0) os_<<"Update wave functions"<<endl;
-
     Control& ct = *(Control::instance());
 
     if ((ct.getPrecondType() % 10) == 0 && ct.getMGlevels() >= 0)
@@ -123,7 +120,7 @@ void ABPG<T>::update_states(T& orbitals, T& res, T& work_orbitals,
 
     if (ct.project_out_psd)
     {
-        if (onpe0) os_ << "Project out preconditioned gradient" << endl;
+        if (onpe0) os_ << "Project out preconditioned gradient" << std::endl;
         orbitals.projectOut(res);
     }
 
@@ -131,17 +128,17 @@ void ABPG<T>::update_states(T& orbitals, T& res, T& work_orbitals,
 
     // Update wavefuntion
 #ifdef PRINT_OPERATIONS
-    if (onpe0) os_ << "Update states" << endl;
+    if (onpe0) os_ << "Update states" << std::endl;
 #else
-    if (onpe0 && ct.verbose > 2) os_ << "Update states" << endl;
+    if (onpe0 && ct.verbose > 2) os_ << "Update states" << std::endl;
 #endif
     if (accelerate)
     {
         res.scal(alpha);
         // Extrapolation scheme
         assert(wf_mix_ != nullptr);
-        ostream os(nullptr);
-        if (onpe0) os.rdbuf(cout.rdbuf());
+        std::ostream os(nullptr);
+        if (onpe0) os.rdbuf(std::cout.rdbuf());
         wf_mix_->update(res, work_orbitals, os, (ct.verbose > 0));
     }
     else
@@ -160,7 +157,7 @@ void ABPG<T>::update_states(T& orbitals, T& res, T& work_orbitals,
 }
 
 template <class T>
-void ABPG<T>::printTimers(ostream& os)
+void ABPG<T>::printTimers(std::ostream& os)
 {
     abpg_tm_.print(os);
     abpg_nl_update_tm_.print(os);

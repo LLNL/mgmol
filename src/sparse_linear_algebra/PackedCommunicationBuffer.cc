@@ -156,9 +156,7 @@ void PackedCommunicationBuffer::mergeRecvDataToMatrix(
         /* update existing entries*/
 // Threading here leads to results slightly dependent on number of threads (jlf,
 // 07/15/2016)
-#ifdef _OPENMP
 #pragma omp parallel for
-#endif
         for (int i = 0; i < packed_num_rows_; i++)
         {
             int* rindex = (int*)amat.getTableValue(packed_lvars_ptr_[i]);
@@ -202,9 +200,7 @@ void PackedCommunicationBuffer::updateMatrixEntriesWithRecvBuf(
     VariableSizeMatrix<T>& amat)
 {
     merge_to_existing_rows_tm_.start();
-#ifdef _OPENMP
 #pragma omp parallel for
-#endif
     for (int i = 0; i < packed_num_rows_; i++)
     {
         int* rindex = (int*)amat.getTableValue(packed_lvars_ptr_[i]);

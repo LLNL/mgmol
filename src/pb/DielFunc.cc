@@ -15,8 +15,6 @@
 namespace pb
 {
 
-using namespace std;
-
 template <class T>
 DielFunc<T>& DielFunc<T>::operator=(const T val)
 {
@@ -124,11 +122,10 @@ void DielFunc<T>::Gepsilon_rho(GridFunc<T>& rho)
     }
     else
     {
-        cout << " Need a density to build dielectric function..." << endl;
+        std::cout << " Need a density to build dielectric function..."
+                  << std::endl;
         exit(0);
     }
-
-    // cout<<"Copy constructor for function on grid "<<grid_.level()<<endl;
 }
 template <class T>
 void DielFunc<T>::Gepsilon_rho(GridFunc<T>& rho, const T rho0, const T drho0)
@@ -188,11 +185,10 @@ void DielFunc<T>::Gepsilon_rho(GridFunc<T>& rho, const T rho0, const T drho0)
     }
     else
     {
-        cout << " Need a density to build dielectric function..." << endl;
+        std::cout << " Need a density to build dielectric function..."
+                  << std::endl;
         exit(0);
     }
-
-    // cout<<"Copy constructor for function on grid "<<grid_.level()<<endl;
 }
 template <class T>
 void DielFunc<T>::Gdepsilon_rho(
@@ -254,11 +250,10 @@ void DielFunc<T>::Gdepsilon_rho(
     }
     else
     {
-        cout << " Need a density to build dielectric function..." << endl;
+        std::cout << " Need a density to build dielectric function..."
+                  << std::endl;
         exit(0);
     }
-
-    // cout<<"Copy constructor for function on grid "<<grid_.level()<<endl;
 }
 
 template <class T>
@@ -319,7 +314,8 @@ void DielFunc<T>::Gdepsilon_rho(GridFunc<T>& rho, GridFunc<T>& depsilon)
     }
     else
     {
-        cout << " Need a density to build dielectric function..." << endl;
+        std::cout << " Need a density to build dielectric function..."
+                  << std::endl;
         exit(0);
     }
 }

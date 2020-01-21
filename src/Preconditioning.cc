@@ -168,7 +168,7 @@ void Preconditioning<T>::mg(pb::GridFuncVector<T>& gfv_v,
     if (onpe0)
         (*MPIdata::sout) << "Preconditioning::mg() at level " << level << endl;
 #endif
-    assert(gfv_work_.size() > level);
+    assert(static_cast<int>(gfv_work_.size()) > level);
     assert(gfv_work_[level] != nullptr);
 
     short ncycl = 2;
@@ -282,9 +282,7 @@ void Preconditioning<T>::app_mask(
     pb::GridFuncVector<T>& gvu, const short level) const
 {
     const int nfunc = (int)gvu.size();
-#ifdef _OPENMP
 #pragma omp parallel for
-#endif
     for (int k = 0; k < nfunc; k++)
     {
         app_mask(gvu.func(k), level, k);

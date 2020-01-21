@@ -87,9 +87,7 @@ double SquareLocalMatrices<T>::computePartialTrace(
 
     double trace = 0.;
     const int n  = (int)ids.size();
-#ifdef _OPENMP
 #pragma omp parallel for reduction(+ : trace)
-#endif
     for (int i = 0; i < n; i++)
     {
         assert(ids[i] < m);

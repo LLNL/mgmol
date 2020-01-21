@@ -665,17 +665,9 @@ double VariableSizeMatrix<T>::AmultSymB_ij(
     if (nzb < nnzrow_lrindex)
     {
         val = 0.0;
-        //#pragma omp parallel for reduction(+:val)
         for (int k = 0; k < nzb; k++)
         {
             const int jrow = (*B).getColumnIndex(lcindex, k);
-            /*
-                      const int *pos = (int *)indexT.get_value(jrow);
-
-                      if(pos != NULL)
-                         val += data_[lrindex]->getEntryFromPosition(*pos) *
-               (*B).getRowEntry(lcindex, k);
-            */
             val += data_[lrindex]->getColumnEntry(jrow)
                    * (*B).getRowEntry(lcindex, k);
         }
@@ -683,7 +675,6 @@ double VariableSizeMatrix<T>::AmultSymB_ij(
     else
     {
         val = 0.0;
-        //#pragma omp parallel for reduction(+:val)
         for (int k = 0; k < nnzrow_lrindex; k++)
         {
             const int jcol = data_[lrindex]->getColumnIndex(k);
@@ -706,7 +697,6 @@ template <class T>
 double VariableSizeMatrix<T>::trace(const std::vector<int>& rows)
 {
     double trace = 0.;
-    //#pragma omp parallel for reduction(+:trace)
     for (std::vector<int>::const_iterator i = rows.begin(); i != rows.end();
          ++i)
         trace += data_[*i]->getColumnEntry(lvars_[*i]);
@@ -720,7 +710,6 @@ double VariableSizeMatrix<T>::trace()
 {
     double trace = 0.;
     const int n  = n_;
-    //#pragma omp parallel for reduction(+:trace)
     for (int i = 0; i < n; i++)
         trace += data_[i]->getColumnEntry(lvars_[i]);
 
@@ -734,7 +723,6 @@ double VariableSizeMatrix<T>::getTraceDiagProductWithMat(
 {
     double trace = 0.;
     const int n  = n_;
-    //#pragma omp parallel for reduction(+:trace)
     for (int i = 0; i < n; i++)
         trace += ddiag[i] * data_[i]->getColumnEntry(lvars_[i]);
 
@@ -786,7 +774,6 @@ void VariableSizeMatrix<T>::AmultSymBLocal(VariableSizeMatrix<T>* B,
         const int i = *rindex;
         int* pidx   = (int*)pattern.getTableValue(*row);
 
-        //      #pragma omp parallel for
         for (int j = 0; j < nb; j++)
         {
             const int col = (*B).getLocalVariableGlobalIndex(j);
@@ -832,7 +819,6 @@ void VariableSizeMatrix<T>::AmultSymB(VariableSizeMatrix<T>* B,
 
     for (int i = 0; i < n_; i++)
     {
-        //#pragma omp parallel for
         for (int j = 0; j < nb; j++)
         {
             const int col = (*B).getLocalVariableGlobalIndex(j);

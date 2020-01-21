@@ -116,7 +116,6 @@ void DataDistribution::mergeDataFromNeighborToLocalData(
     /* set pointers to data in rbuf */
     setPointersToRecvData(rbuf);
 
-    //   #pragma omp parallel for
     for (int i = 0; i < *rbuf_nrows_ptr_; i++)
     {
         int* rindex = (int*)amat.getTableValue(rbuf_lvars_ptr_[i]);
@@ -155,7 +154,6 @@ void DataDistribution::updateExistingLocalDataEntriesWithRecvBuf(
     /* set pointers to data in rbuf */
     setPointersToRecvData(rbuf);
 
-    //   #pragma omp parallel for
     for (int i = 0; i < *rbuf_nrows_ptr_; i++)
     {
         int* rindex = (int*)amat.getTableValue(rbuf_lvars_ptr_[i]);

@@ -99,7 +99,8 @@ class KBprojectorSparse : public KBprojector
         assert(l < static_cast<int>(ptr_projector_[iloc].size()));
         assert(p < static_cast<int>(ptr_projector_[iloc][l].size()));
         assert(m < static_cast<int>(ptr_projector_[iloc][l][p].size()));
-        assert(omp_get_thread_num() < work_nlindex_.size());
+        assert(static_cast<unsigned int>(omp_get_thread_num())
+               < work_nlindex_.size());
 
         return MPdot(size_nl_[iloc], &work_nlindex_[omp_get_thread_num()][0],
             (ptr_projector_[iloc][l][p][m]));

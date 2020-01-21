@@ -15,8 +15,6 @@
 namespace pb
 {
 
-using namespace std;
-
 // constructor
 template <class T>
 PBh4M<T>::PBh4M(const Grid& mygrid, DielFunc<T>& myepsilon)
@@ -29,7 +27,8 @@ PBh4M<T>::PBh4M(const Grid& mygrid, DielFunc<T>& myepsilon)
     {
         if (mygrid.ghost_pt() < minNumberGhosts())
         {
-            cout << "Not enough ghosts points in PBh4M::PBh4M" << endl;
+            std::cout << "Not enough ghosts points in PBh4M::PBh4M"
+                      << std::endl;
             PB<T>::grid_.mype_env().globalExit(2);
         }
 
@@ -143,7 +142,7 @@ void PBh4M<T>::jacobi(GridFunc<T>& A, const GridFunc<T>& B, GridFunc<T>& W)
 #ifndef NDEBUG
         if (c0 + ee[j] <= 0.)
         {
-            cout << "c0+ee[" << j << "]=" << c0 + ee[j] << endl;
+            std::cout << "c0+ee[" << j << "]=" << c0 + ee[j] << std::endl;
             exit(1);
         }
 #endif
@@ -163,7 +162,7 @@ void PBh4M<T>::get_vepsilon(
 #ifndef NDEBUG
     if (vh.grid().mype_env().mytask() == 0)
     {
-        cout << "get_vepsilon " << endl;
+        std::cout << "get_vepsilon " << std::endl;
     }
 #endif
     PB<T>::work2_ = 0.;

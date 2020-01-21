@@ -156,9 +156,7 @@ int ShortSightedInverse::solve()
     std::vector<double> rnrm(locfcns_.size());
 
     const unsigned locfcns_size = locfcns_.size();
-#ifdef _OPENMP
 #pragma omp parallel
-#endif
     {
         // create Linear solver object
         LinearSolver solver;
@@ -166,9 +164,7 @@ int ShortSightedInverse::solve()
         const int m    = aug_size_;
         double* solptr = new double[m];
 
-#ifdef _OPENMP
 #pragma omp for reduction(+ : conv)
-#endif
         for (unsigned int i = 0; i < locfcns_size; i++)
         {
             int* rindex       = (int*)(*gramMat_).getTableValue(locfcns_[i]);
@@ -178,7 +174,7 @@ int ShortSightedInverse::solve()
             gmres_tm_.start();
 
             memset(solptr, 0, m * sizeof(double));
-            conv = solver.solve((*matLS_), (*precon_), lrindex, solptr,
+            conv += solver.solve((*matLS_), (*precon_), lrindex, solptr,
                 fgmres_tol_, im_, maxits_);
 
             its[i] = solver.iters();

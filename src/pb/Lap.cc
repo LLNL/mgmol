@@ -13,15 +13,14 @@
 namespace pb
 {
 
-using namespace std;
-
 template <class T>
 double Lap<T>::energyES(GridFunc<T>& v, GridFunc<T>& rho)
 {
 
     double g = 0.5 * dot(v, rho);
 
-    if (v.mype_env().mytask() == 0) cout << " ES Energy = " << g << endl;
+    if (v.mype_env().mytask() == 0)
+        std::cout << " ES Energy = " << g << std::endl;
 
     return g;
 }
@@ -46,9 +45,7 @@ void Lap<T>::jacobi(GridFuncVector<T>& A, const GridFuncVector<T>& B,
     A.trade_boundaries();
 
     const int nfunc = (int)A.size();
-#ifdef _OPENMP
 #pragma omp parallel for
-#endif
     for (int k = 0; k < nfunc; k++)
     {
         apply(A.func(k), W);
@@ -68,9 +65,7 @@ void Lap<T>::jacobi(GridFuncVector<T>& A, const GridFuncVector<T>& B,
     A.trade_boundaries();
 
     const int nfunc = (int)A.size();
-#ifdef _OPENMP
 #pragma omp parallel for
-#endif
     for (int k = 0; k < nfunc; k++)
     {
         apply(A.func(k), W.func(k));

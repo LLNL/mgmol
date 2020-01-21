@@ -41,8 +41,6 @@ std::vector<std::vector<T>> GridFuncVector<T>::comm_buf3_;
 template <typename T>
 std::vector<std::vector<T>> GridFuncVector<T>::comm_buf4_;
 
-using namespace std;
-
 template <typename T>
 void GridFuncVector<T>::setup()
 {
@@ -63,7 +61,7 @@ void GridFuncVector<T>::setup()
     for (short iloc = 0; iloc < nsubdivx_; iloc++)
         for (short k = 0; k < nfunc_; k++)
             if (gid_[iloc][k] >= 0)
-                gid2lid_.insert(pair<int, short>(gid_[iloc][k], k));
+                gid2lid_.insert(std::pair<int, short>(gid_[iloc][k], k));
 
     nghosts_ = grid_.ghost_pt();
 
@@ -248,8 +246,8 @@ void GridFuncVector<T>::allocate_buffers(const int nfunc)
     if (grid_.mype_env().n_mpi_tasks() > 1)
     {
         int size_max = nfunc * nghosts_ * incx_;
-        size_max     = max(size_max, nfunc * nghosts_ * dimxy_);
-        size_max     = max(size_max, nfunc * nghosts_ * dimx_ * incy_);
+        size_max     = std::max(size_max, nfunc * nghosts_ * dimxy_);
+        size_max     = std::max(size_max, nfunc * nghosts_ * dimx_ * incy_);
         size_max += nfunc * nsubdivx_; // to pack gids
         size_max += 1; // to pack number of functions (data) in buffer
 
@@ -382,7 +380,7 @@ void GridFuncVector<T>::finishNorthSouthComm()
 
                     if (gid >= 0)
                     {
-                        map<int, short>::const_iterator ilid
+                        std::map<int, short>::const_iterator ilid
                             = gid2lid_.find(gid);
                         if (ilid != gid2lid_.end())
                         {
@@ -446,7 +444,7 @@ void GridFuncVector<T>::finishNorthSouthComm()
                     buf3_ptr++;
                     if (gid >= 0)
                     {
-                        map<int, short>::const_iterator ilid
+                        std::map<int, short>::const_iterator ilid
                             = gid2lid_.find(gid);
                         if (ilid != gid2lid_.end())
                         {
@@ -625,7 +623,7 @@ void GridFuncVector<T>::finishUpDownComm()
                     buf3_ptr++;
                     if (gid >= 0)
                     {
-                        map<int, short>::const_iterator ilid
+                        std::map<int, short>::const_iterator ilid
                             = gid2lid_.find(gid);
                         if (ilid != gid2lid_.end())
                         {
@@ -674,7 +672,7 @@ void GridFuncVector<T>::finishUpDownComm()
                     buf4_ptr++;
                     if (gid >= 0)
                     {
-                        map<int, short>::const_iterator ilid
+                        std::map<int, short>::const_iterator ilid
                             = gid2lid_.find(gid);
                         if (ilid != gid2lid_.end())
                         {
@@ -751,8 +749,6 @@ void GridFuncVector<T>::initiateEastWestComm(
     const int xmax       = dimx_ * grid_.inc(0);
     const size_t east_west_size_data = east_west_size_ * sizeof(T);
 
-    // cout<<" 2 PEs in direction x\n";
-
     /* Non-blocking MPI */
     if (east_)
         grid_.mype_env().Irecv(
@@ -826,7 +822,8 @@ void GridFuncVector<T>::finishEastWestComm()
                 buf3_ptr++;
                 if (gid >= 0)
                 {
-                    map<int, short>::const_iterator ilid = gid2lid_.find(gid);
+                    std::map<int, short>::const_iterator ilid
+                        = gid2lid_.find(gid);
                     if (ilid != gid2lid_.end())
                     {
                         short lid = ilid->second;
@@ -853,7 +850,8 @@ void GridFuncVector<T>::finishEastWestComm()
                 buf4_ptr++;
                 if (gid >= 0)
                 {
-                    map<int, short>::const_iterator ilid = gid2lid_.find(gid);
+                    std::map<int, short>::const_iterator ilid
+                        = gid2lid_.find(gid);
                     if (ilid != gid2lid_.end())
                     {
                         short lid = ilid->second;
@@ -954,7 +952,6 @@ void GridFuncVector<T>::trade_boundaries()
 
     if (skinny_stencil_)
     {
-        // cout<<"Wait for skinny stencils ghosts filling to complete..."<<endl;
         wait_north_south();
         finishNorthSouthComm();
 
@@ -977,7 +974,6 @@ void GridFuncVector<T>::restrict3D(GridFuncVector& ucoarse)
 {
     if (!updated_boundaries_) trade_boundaries();
 
-    //    #pragma omp parallel for
     for (short k = 0; k < nfunc_; k++)
     {
         functions_[k]->restrict3D(*ucoarse.functions_[k]);
@@ -988,7 +984,6 @@ void GridFuncVector<T>::extend3D(GridFuncVector& ucoarse)
 {
     if (!ucoarse.updated_boundaries_) ucoarse.trade_boundaries();
 
-    //    #pragma omp parallel for
     for (short k = 0; k < nfunc_; k++)
     {
         functions_[k]->extend3D(*ucoarse.functions_[k]);
@@ -1052,7 +1047,7 @@ void GridFuncVector<T>::communicateRemoteGids(
     MPI_Request gid_req[6];
 
     // build list of local gids I need ghost values for
-    vector<int> local_gids;
+    std::vector<int> local_gids;
     const short ndata = ncolors * nsubdivx_;
     local_gids.reserve(ndata);
     for (short color = begin_color; color < end_color; color++)
@@ -1118,7 +1113,8 @@ void GridFuncVector<T>::trade_boundaries_colors(
 
     grid_.mype_env().barrier();
     if (onpe0)
-        cout << "Color " << first_color << " to " << last_color - 1 << endl;
+        std::cout << "Color " << first_color << " to " << last_color - 1
+                  << std::endl;
 
     if (!grid_.active()) return;
     if (updated_boundaries_) return;
@@ -1129,7 +1125,7 @@ void GridFuncVector<T>::trade_boundaries_colors(
     std::vector<T>& comm_buf4(comm_buf4_[0]);
 
     const short ncolors   = last_color - first_color;
-    const short end_color = min(last_color, (short)functions_.size());
+    const short end_color = std::min(last_color, (short)functions_.size());
 
     for (short color = first_color + 1; color < end_color; color++)
         assert(functions_[color]->updated_boundaries()
@@ -1244,7 +1240,7 @@ void GridFuncVector<T>::trade_boundaries_colors(
 
                     if (gid >= 0)
                     {
-                        map<int, short>::const_iterator ilid
+                        std::map<int, short>::const_iterator ilid
                             = gid2lid_.find(gid);
                         if (ilid != gid2lid_.end())
                         {
@@ -1290,8 +1286,6 @@ void GridFuncVector<T>::trade_boundaries_colors(
                     }
                 }
             }
-            // cout<<"buf4_ptr-&comm_buf4[0]="<<buf4_ptr-&comm_buf4[0]<<endl;
-            // cout<<"sizeb="<<sizeb<<endl;
             assert((buf4_ptr - &comm_buf4[0]) <= static_cast<int>(sizebuffer));
         }
 
@@ -1309,7 +1303,7 @@ void GridFuncVector<T>::trade_boundaries_colors(
                     buf3_ptr++;
                     if (gid >= 0)
                     {
-                        map<int, short>::const_iterator ilid
+                        std::map<int, short>::const_iterator ilid
                             = gid2lid_.find(gid);
                         if (ilid != gid2lid_.end())
                         {
@@ -1354,8 +1348,6 @@ void GridFuncVector<T>::trade_boundaries_colors(
                     }
                 }
             }
-            // cout<<"buf3_ptr-&comm_buf3[0]="<<buf3_ptr-&comm_buf3[0]<<endl;
-            // cout<<"sizebuffer="<<sizebuffer<<endl;
             assert((buf3_ptr - &comm_buf3[0]) <= static_cast<int>(sizebuffer));
         }
     }
@@ -1471,7 +1463,7 @@ void GridFuncVector<T>::trade_boundaries_colors(
                     buf3_ptr++;
                     if (gid >= 0)
                     {
-                        map<int, short>::const_iterator ilid
+                        std::map<int, short>::const_iterator ilid
                             = gid2lid_.find(gid);
                         if (ilid != gid2lid_.end())
                         {
@@ -1520,7 +1512,7 @@ void GridFuncVector<T>::trade_boundaries_colors(
                     buf4_ptr++;
                     if (gid >= 0)
                     {
-                        map<int, short>::const_iterator ilid
+                        std::map<int, short>::const_iterator ilid
                             = gid2lid_.find(gid);
                         if (ilid != gid2lid_.end())
                         {
@@ -1581,8 +1573,6 @@ void GridFuncVector<T>::trade_boundaries_colors(
     if (grid_.mype_env().n_mpi_task(0) > 1)
     {
         const int sizebuffer = 1 + ncolors * (east_west_size_ + 1);
-
-        // cout<<" 2 PEs in direction x\n";
 
         /* Non-blocking MPI */
         if (east_)
@@ -1673,7 +1663,8 @@ void GridFuncVector<T>::trade_boundaries_colors(
                 buf3_ptr++;
                 if (gid >= 0)
                 {
-                    map<int, short>::const_iterator ilid = gid2lid_.find(gid);
+                    std::map<int, short>::const_iterator ilid
+                        = gid2lid_.find(gid);
                     if (ilid != gid2lid_.end())
                     {
                         short lid = ilid->second;
@@ -1700,7 +1691,8 @@ void GridFuncVector<T>::trade_boundaries_colors(
                 buf4_ptr++;
                 if (gid >= 0)
                 {
-                    map<int, short>::const_iterator ilid = gid2lid_.find(gid);
+                    std::map<int, short>::const_iterator ilid
+                        = gid2lid_.find(gid);
                     if (ilid != gid2lid_.end())
                     {
                         short lid = ilid->second;

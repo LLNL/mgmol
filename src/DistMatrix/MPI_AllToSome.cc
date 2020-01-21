@@ -56,7 +56,6 @@ template <typename ScalarType>
 int MPI_AlltofirstN(ScalarType* sendbuf, const int blocksize,
     ScalarType* recvbuf, const int nfirst, MPI_Comm comm)
 {
-    MPI_Request rr;
 
     int npes_send;
     MPI_Comm_size(comm, &npes_send);
@@ -73,6 +72,8 @@ int MPI_AlltofirstN(ScalarType* sendbuf, const int blocksize,
 
     for (int i = 1; i < npes_send; i++)
     {
+        MPI_Request rr;
+
         // increment source
         src++;
         if (src >= npes_send) src = 0;

@@ -357,7 +357,7 @@ void DavidsonSolver<T>::buildTarget2N_MVP(
 template <class T>
 int DavidsonSolver<T>::solve(T& orbitals, T& work_orbitals)
 {
-    assert(numst_ = (int)orbitals.numst());
+    assert(numst_ == static_cast<int>(orbitals.numst()));
 
     solve_tm_.start();
 
@@ -385,9 +385,9 @@ int DavidsonSolver<T>::solve(T& orbitals, T& work_orbitals)
     de_old_ = 100000.;
     de_     = 100000.;
 
-    KBPsiMatrixSparse kbpsi_1(0);
+    KBPsiMatrixSparse kbpsi_1(nullptr);
     kbpsi_1.setup(ions_);
-    KBPsiMatrixSparse kbpsi_2(0);
+    KBPsiMatrixSparse kbpsi_2(nullptr);
     kbpsi_2.setup(ions_);
 
     dist_matrix::DistMatrix<DISTMATDTYPE> s11("s11", numst_, numst_);
@@ -647,7 +647,7 @@ int DavidsonSolver<T>::solve(T& orbitals, T& work_orbitals)
         {
             os_ << "Eigenvalues of Interpolated DM: " << std::endl;
             os_ << std::fixed << std::setprecision(4);
-            for (int i = 0; i < eval.size(); i++)
+            for (unsigned int i = 0; i < eval.size(); i++)
             {
                 os_ << eval[i];
                 if (i % 10 == 9)

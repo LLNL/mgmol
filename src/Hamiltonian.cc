@@ -147,12 +147,9 @@ void Hamiltonian<T>::applyLocal(
     }
     else
     {
-#ifdef _OPENMP
 #pragma omp parallel for
-#endif
         for (int i = 0; i < ncolors; i++)
         {
-            // work1 = -Lap*phi
             lapOper_->applyWithPot(phi.getFuncWithGhosts(first_state + i), vtot,
                 hphi.getPsi(i + first_state));
         }

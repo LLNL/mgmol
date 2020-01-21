@@ -12,27 +12,26 @@
 // $Id: tools.cc,v 1.6 2008/12/10 01:05:37 jeanluc Exp $
 #include <ctime>
 #include <iostream>
-#include <sys/time.h>
-using namespace std;
 #include <stdlib.h>
+#include <sys/time.h>
 
 #include "tools.h"
 
 namespace pb
 {
 
-FILE* open_file(const string& filename, const string& mode)
+FILE* open_file(const std::string& filename, const std::string& mode)
 {
     FILE* file_ptr;
 
     if ((file_ptr = fopen(filename.data(), mode.data())) == nullptr)
     {
-        cout << "\n cannot open " << filename << endl;
+        std::cout << "\n cannot open " << filename << std::endl;
         exit(2);
     }
     else
     {
-        cout << " open " << filename << endl;
+        std::cout << " open " << filename << std::endl;
     }
 
     return file_ptr;

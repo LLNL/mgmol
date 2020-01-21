@@ -141,9 +141,7 @@ void DensityMatrixSparse::getLocalMatrix(
     {
         MATDTYPE* const localX_iloc = localX.getSubMatrix(iloc);
         const vector<int>& gids(global_indexes[iloc]);
-#ifdef _OPENMP
 #pragma omp parallel for
-#endif
         for (int icolor = 0; icolor < chromatic_number; icolor++)
         {
             const int st1 = gids[icolor];

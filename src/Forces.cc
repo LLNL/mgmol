@@ -483,23 +483,17 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
                 erg.insert(std::pair<int, double*>(gid, zeros));
             }
 
-#ifdef _OPENMP
 #pragma omp parallel for
-#endif
             for (short ii = 0; ii < nprojs * 3 * NPTS; ii++)
             {
-                short ip            = ii / (3 * NPTS);
+                const short ip      = ii / (3 * NPTS);
                 const int gid       = gids[ip];
-                const double kbmult = (double)kbsigns[ip];
-
-                short it = ii % (3 * NPTS);
-                // for(short it=0;it<3*NPTS;it++)
-                {
-                    short dir    = it / NPTS;
-                    short ishift = it % NPTS;
-                    double alpha = kbpsi[dir][ishift]->getTraceDM(gid, dm);
-                    erg[gid][NPTS * dir + ishift] = alpha * kbmult;
-                }
+                const double kbmult = static_cast<double>(kbsigns[ip]);
+                const short it      = ii % (3 * NPTS);
+                const short dir     = it / NPTS;
+                const short ishift  = it % NPTS;
+                const double alpha  = kbpsi[dir][ishift]->getTraceDM(gid, dm);
+                erg[gid][NPTS * dir + ishift] = alpha * kbmult;
             }
         }
     }
