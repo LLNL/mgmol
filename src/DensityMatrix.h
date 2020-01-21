@@ -117,8 +117,7 @@ public:
     void setto2InvS(const dist_matrix::DistMatrix<DISTMATDTYPE>& invS,
         const int orbitals_index);
 
-    void stripS(const dist_matrix::DistMatrix<DISTMATDTYPE>& ls,
-        const int orbitals_index_gram);
+    void stripS(const dist_matrix::DistMatrix<DISTMATDTYPE>& ls);
     void dressUpS(const dist_matrix::DistMatrix<DISTMATDTYPE>& ls,
         const int new_orbitals_index);
 

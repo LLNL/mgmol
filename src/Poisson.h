@@ -70,7 +70,7 @@ public:
     double IntVhRhoc(void) const { return Int_vhrhoc_; }
     double IntVhRho_old(void) const { return Int_vhrho_old_; }
 
-    virtual void set_rhod(pb::GridFunc<RHODTYPE>* rhod){};
+    virtual void set_rhod(pb::GridFunc<RHODTYPE>* /*rhod*/){};
     void set_vh(const pb::GridFunc<POTDTYPE>& vh) { (*vh_) = vh; };
     void set_vh(const POTDTYPE* const vh) { vh_->assign(vh, 'd'); };
     void resetVh() { vh_->resetData(); }

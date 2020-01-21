@@ -247,7 +247,7 @@ int PEenv::int_max_all(int x)
     {
         std::cerr << "int_max_all: MPI_Allreduce int max failed!!!"
                   << std::endl;
-        globalExit(2);
+        globalExit();
     }
     return out;
 }
@@ -261,7 +261,7 @@ double PEenv::double_sum_all(double x) const
     {
         std::cerr << "double_sum_all: MPI_allreduce double sum failed!!!"
                   << std::endl;
-        globalExit(2);
+        globalExit();
     }
     return out;
 }
@@ -718,7 +718,7 @@ void PEenv::printPEnames(std::ostream& os) const
     if (mytask_ == 0) os << std::endl;
 }
 
-void PEenv::globalExit(const int i) const { MPI_Abort(comm_, 2); }
+void PEenv::globalExit() const { MPI_Abort(comm_, 2); }
 
 void PEenv::bcast(int* val, const int n) const
 {

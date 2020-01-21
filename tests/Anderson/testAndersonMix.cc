@@ -37,6 +37,7 @@ double residual(std::vector<double> diag_op, Solution& x, Solution& r)
 // TODO this test does not check anything
 int main(int argc, char** argv)
 {
+    assert(argc >= 3);
     int n = atoi(argv[1]);
     int m = atoi(argv[2]);
     std::cout << "n=" << n << std::endl;

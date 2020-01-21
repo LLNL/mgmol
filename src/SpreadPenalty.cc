@@ -16,12 +16,6 @@
 template <class T>
 void SpreadPenalty<T>::addResidual(T& phi, T& res)
 {
-    addResidual(phi, res, false);
-}
-
-template <class T>
-void SpreadPenalty<T>::addResidual(T& phi, T& res, bool xlbomd)
-{
     Control& ct = *(Control::instance());
 
     assert(spreadf_ != nullptr);
@@ -57,8 +51,7 @@ void SpreadPenalty<T>::addResidual(T& phi, T& res, bool xlbomd)
             max_spread2 = it;
         }
 
-        // Compute appropriate spread penalty factor for either localized XLBOMD
-        // or penalized optimization.
+        // Compute appropriate spread penalty factor
         float coeff = computeSpreadPenaltyFactor(it);
 
         factors.push_back(coeff);

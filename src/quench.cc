@@ -53,10 +53,9 @@ Timer updateCenters_tm("MGmol<T>::updateCenters");
 
 template <>
 void MGmol<ExtendedGridOrbitals>::adaptLR(
-    const SpreadsAndCenters<ExtendedGridOrbitals>* spreadf,
-    const OrbitalsTransform* ot)
+    const SpreadsAndCenters<ExtendedGridOrbitals>* /*spreadf*/,
+    const OrbitalsTransform* /*ot*/)
 {
-    return;
 }
 
 // depending on the value of ct.lr_updates_type, update
@@ -400,9 +399,8 @@ void MGmol<LocGridOrbitals>::applyAOMMprojection(LocGridOrbitals& orbitals)
 }
 
 template <class T>
-void MGmol<T>::applyAOMMprojection(T& orbitals)
+void MGmol<T>::applyAOMMprojection(T&)
 {
-    return;
 }
 
 template <>

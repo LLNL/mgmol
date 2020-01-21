@@ -263,8 +263,7 @@ public:
     void clearOldOrbitals();
     void getKBPsiAndHij(T& orbitals, Ions& ions);
     int write_hdf5(const std::string& filename,
-        std::vector<std::vector<RHODTYPE>>& rho, Ions& ions, T& orbitals,
-        LocalizationRegions& lrs);
+        std::vector<std::vector<RHODTYPE>>& rho, Ions& ions, T& orbitals);
     int write_hdf5(HDFrestart& h5f_file,
         std::vector<std::vector<RHODTYPE>>& rho, Ions& ions, T& orbitals,
         LocalizationRegions& lrs);

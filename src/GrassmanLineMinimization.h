@@ -49,8 +49,7 @@ protected:
     static Timer comp_res_tm_;
     static Timer update_states_tm_;
 
-    void update_states(
-        T& orbitals, T& res, T& work_orbitals, const double precond_factor);
+    void update_states(T& orbitals, const double precond_factor);
 
 public:
     GrassmanLineMinimization(Hamiltonian<T>* hamiltonian,

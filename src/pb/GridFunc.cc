@@ -430,7 +430,7 @@ GridFunc<T>::GridFunc(const T* const src, const Grid& new_grid, const short px,
     {
         std::cout << "Undefined distribution to build GridFunc<T>!!"
                   << std::endl;
-        mype_env().globalExit(2);
+        mype_env().globalExit();
     }
 
     int istart = 0;
@@ -907,7 +907,7 @@ int GridFunc<T>::count_threshold(const T threshold)
         if (rc != MPI_SUCCESS)
         {
             std::cout << "MPI_Allreduce double sum failed!!!" << std::endl;
-            mype_env().globalExit(2);
+            mype_env().globalExit();
         }
         icount = sum;
     }
@@ -3115,7 +3115,7 @@ double GridFunc<T>::gdot(const GridFunc<double>& vv) const
         {
             std::cout << "MPI_Allreduce double sum failed in gdot!!!"
                       << std::endl;
-            mype_env().globalExit(2);
+            mype_env().globalExit();
         }
         my_dot = sum;
     }
@@ -3172,7 +3172,7 @@ double GridFunc<T>::gdot(const GridFunc<float>& vv) const
         {
             std::cout << "MPI_Allreduce double sum failed in gdot!!!"
                       << std::endl;
-            mype_env().globalExit(2);
+            mype_env().globalExit();
         }
         my_dot = sum;
     }
@@ -3204,7 +3204,7 @@ bool GridFunc<T>::def_const() const
         if (rc != MPI_SUCCESS)
         {
             std::cout << "MPI_Allreduce double sum failed!!!" << std::endl;
-            mype_env().globalExit(2);
+            mype_env().globalExit();
         }
     }
 
@@ -3249,7 +3249,7 @@ double GridFunc<T>::get_average()
         if (rc != MPI_SUCCESS)
         {
             std::cout << "MPI_Allreduce double sum failed!!!" << std::endl;
-            mype_env().globalExit(2);
+            mype_env().globalExit();
         }
         sum = tmp / ((double)mype_env().n_mpi_tasks());
     }
@@ -3359,7 +3359,7 @@ double GridFunc<T>::integral() const
         if (rc != MPI_SUCCESS)
         {
             std::cout << "MPI_Allreduce double sum failed!!!" << std::endl;
-            mype_env().globalExit(2);
+            mype_env().globalExit();
         }
         integral = tmp;
     }
@@ -3802,7 +3802,7 @@ void GridFunc<T>::test_newgrid()
     if (rc != MPI_SUCCESS)
     {
         std::cout << "MPI_Allreduce double sum failed!!!" << std::endl;
-        mype_env().globalExit(2);
+        mype_env().globalExit();
     }
     my_dot = sum;
     s2     = sqrt(grid_.vel() * my_dot);
@@ -4089,7 +4089,7 @@ double GridFunc<T>::get_bias()
         if (rc != MPI_SUCCESS)
         {
             std::cout << "MPI_Bcast failed in get_bias()!!!" << std::endl;
-            mype_env().globalExit(2);
+            mype_env().globalExit();
         }
 
         for (unsigned int j = 0; j < grid_.dim(1); j++)

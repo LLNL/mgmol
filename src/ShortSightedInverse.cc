@@ -247,8 +247,7 @@ int ShortSightedInverse::solve()
 }
 
 /* compute the inverse of gramMat_ */
-void ShortSightedInverse::computeInvS(
-    DataDistribution& distributor_S, DataDistribution& distributor_invS)
+void ShortSightedInverse::computeInvS(DataDistribution& distributor_invS)
 {
     assert(issetup_ == true);
     if (isGramAugmented_ == true) assert((*gramMat_).nzmax() > 0);
@@ -264,8 +263,7 @@ void ShortSightedInverse::computeInvS(
     /* perform data distribution */
     if (isGramAugmented_ == false)
     {
-        bool append = true;
-        augmentGramMatrix(distributor_S, append);
+        augmentGramMatrix();
     }
 
     /* prepare invS_ for inverse data - match row pattern of local gram matrix
@@ -455,8 +453,7 @@ double ShortSightedInverse::getTraceDotProductWithInvS(
     for (std::vector<int>::iterator itr = locfcns_.begin();
          itr != locfcns_.end(); ++itr)
     {
-        trace += (*invS_).AmultSymB_ij(
-            mat, *itr, *itr, *((*gramMat_).getTable()));
+        trace += (*invS_).AmultSymB_ij(mat, *itr, *itr);
     }
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
@@ -468,12 +465,9 @@ double ShortSightedInverse::getTraceDotProductWithInvS(
     return val;
 }
 
-void ShortSightedInverse::augmentGramMatrix(
-    DataDistribution& distributor_S, const bool append)
+void ShortSightedInverse::augmentGramMatrix()
 {
     Gram_Matrix_data_distribution_tm_.start();
-
-    //   distributor_S.augmentLocalData((*gramMat_), append, true);
 
     // Alternate approach:
     // Gather to complete only locally centered rows/cols

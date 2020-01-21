@@ -17,8 +17,8 @@
 class GridMaskMax : public GridMask
 {
     template <typename T>
-    void applyPrivate(T*, const unsigned short, const unsigned short,
-        const bool first_application);
+    void applyPrivate(
+        T*, const unsigned short level, const unsigned short iloc);
     template <typename T>
     void applyPrivate(pb::GridFunc<T>& gu, const unsigned short level,
         const unsigned short iloc);
@@ -29,15 +29,15 @@ public:
         : GridMask(nclevels, subdivx, mygrid){};
 
     void apply(float* u, const unsigned short level, const unsigned short iloc,
-        const bool first_application = false) override
+        const bool /*first_application*/ = false) override
     {
-        applyPrivate(u, level, iloc, first_application);
+        applyPrivate(u, level, iloc);
     }
 
     void apply(double* u, const unsigned short level, const unsigned short iloc,
-        const bool first_application = false) override
+        const bool /*first_application*/ = false) override
     {
-        applyPrivate(u, level, iloc, first_application);
+        applyPrivate(u, level, iloc);
     }
 
     void apply(pb::GridFunc<double>& gu, const unsigned short level,

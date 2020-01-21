@@ -299,19 +299,9 @@ void ProjectedMatrices::updateDMwithSP2(const int iterative_index)
     sp2.solve(nel_, (ct.verbose > 1));
 
     dist_matrix::DistMatrix<DISTMATDTYPE> dm("dm", dim_, dim_);
-#ifdef HAVE_BML
-    bml_matrix_t* dummy = bml_zero_matrix(
-        dense, double_real, thetaSP2.n(), thetaSP2.n(), sequential);
-#else
-    SquareLocalMatrices<MATDTYPE> dummy(1, theta.n());
-#endif
 
-    sp2.getDM(dm, gm_->getInverse(), dummy);
+    sp2.getDM(dm, gm_->getInverse());
     dm_->setMatrix(dm, iterative_index);
-
-#ifdef HAVE_BML
-    bml_deallocate(&dummy);
-#endif
 }
 
 void ProjectedMatrices::updateDM(const int iterative_index)
@@ -446,7 +436,7 @@ void ProjectedMatrices::stripDM()
     if (onpe0) std::cout << "test:  Trace DM = " << dd << endl;
     if (dm_->getMatrix().active()) assert(dd > 0.);
 #endif
-    dm_->stripS(gm_->getCholeskyL(), gm_->getAssociatedOrbitalsIndex());
+    dm_->stripS(gm_->getCholeskyL());
 }
 
 void ProjectedMatrices::dressupDM()

@@ -108,8 +108,8 @@ public:
 
     template <typename T2>
     double AmultSymBdiag(VariableSizeMatrix<T2>* B, const int row);
-    double AmultSymB_ij(VariableSizeMatrix<T>* B, const int row, const int col,
-        Table& indexT); /* compute ij-th entry of A*B */
+    double AmultSymB_ij(VariableSizeMatrix<T>* B, const int row,
+        const int col); /* compute ij-th entry of A*B */
 
     double trace(); /* compute the trace of the matrix */
     double trace(const std::vector<int>&
@@ -289,15 +289,14 @@ public:
     }
     /* Update current local row by adding or inserting a new column. */
     void updateLocalRow(const int lrindex, const int col, const double val,
-        const INSERTMODE mode, const int pos = 0)
+        const INSERTMODE mode)
     {
         // updateRow_tm_.start();
         totnnz_ += data_[lrindex]->updateRow(col, val, mode);
         // updateRow_tm_.stop();
         return;
     }
-    void updateLocalRowAdd(
-        const int lrindex, const int col, const double val, const int pos = 0)
+    void updateLocalRowAdd(const int lrindex, const int col, const double val)
     {
         // updateRow_tm_.start();
         totnnz_ += data_[lrindex]->updateRowAdd(col, val);
@@ -305,7 +304,7 @@ public:
         return;
     }
     void updateLocalRowInsert(
-        const int lrindex, const int col, const double val, const int pos = 0)
+        const int lrindex, const int col, const double val)
     {
         // updateRow_tm_.start();
         totnnz_ += data_[lrindex]->updateRowInsert(col, val);

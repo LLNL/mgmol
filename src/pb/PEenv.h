@@ -123,7 +123,7 @@ public:
 
     void printPEnames(std::ostream&) const;
 
-    void globalExit(const int i) const;
+    void globalExit() const;
 
     void Isend(double* buf, int sizeb, const short dst, MPI_Request* req) const
     {

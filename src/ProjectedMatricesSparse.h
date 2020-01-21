@@ -276,7 +276,7 @@ public:
         assert(distributor_matS_ != NULL);
 
         compute_inverse_tm_.start();
-        (*invS_).computeInvS(*distributor_matS_, *distributor_invS_);
+        (*invS_).computeInvS(*distributor_invS_);
 
         //   double rcond = checkCond(1000.);
         //   if(onpe0)cout<<"RCOND = "<<rcond<<endl;
@@ -320,7 +320,7 @@ public:
     {
         assert(invS_ != NULL);
         compute_invB_tm_.start();
-        (*invS_).computeInvS(*distributor_matS_, *distributor_invS_);
+        (*invS_).computeInvS(*distributor_invS_);
         compute_invB_tm_.stop();
     }
 
@@ -367,8 +367,6 @@ public:
         const SquareLocalMatrices<MATDTYPE>& mat, const bool consolidate);
     double computeTraceDMmultMat(
         const SquareLocalMatrices<MATDTYPE>& mat, const bool consolidate);
-    double computeTraceInvSmultMatmultTheta(
-        SquareLocalMatrices<MATDTYPE>& mat, const bool consolidate);
     double computeTraceInvSmultMat(
         VariableSizeMatrix<sparserow>& vsmat, const bool consolidate);
     void stripDM() override { return; };
@@ -376,8 +374,8 @@ public:
 
     const VariableSizeMatrix<sparserow>& getH() { return *matHB_; }
     void assignH(const VariableSizeMatrix<sparserow>& matH) { *matHB_ = matH; }
-    void printEigenvalues(std::ostream& os) const {}
-    void printOccupations(std::ostream& os) const override {}
+    void printEigenvalues(std::ostream& /*os*/) const {}
+    void printOccupations(std::ostream& /*os*/) const override {}
     void setHB2H() override {}
 
     DensityMatrixSparse& getDM() { return *dm_; }

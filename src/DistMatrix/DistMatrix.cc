@@ -2358,8 +2358,8 @@ void DistMatrix<float>::gesvd(char jobu, char jobvt, std::vector<float>& s,
 
 ////////////////////////////////////////////////////////////////////////////////
 template <class T>
-void DistMatrix<T>::sygv(char jobz, char uplo, const char fac, DistMatrix<T>& b,
-    std::vector<T>& w, DistMatrix<T>& z)
+void DistMatrix<T>::sygv(char /*jobz*/, char uplo, const char fac,
+    DistMatrix<T>& b, std::vector<T>& w, DistMatrix<T>& z)
 {
     // compute Cholesky factorization of b if necessary
     if (fac != 'c') b.potrf(uplo);

@@ -166,8 +166,7 @@ void ProjectedMatricesSparse::setup(const double kbt, const int nel,
             || ct.AtomsDynamic() == AtomsDynamicType::MD)
         {
             invS_ = new ShortSightedInverse((*lrs_), locvars_, local_cluster_);
-            dm_   = new DensityMatrixSparse(
-                (*lrs_), dim_, locvars_, local_cluster_);
+            dm_   = new DensityMatrixSparse((*lrs_), dim_, locvars_);
         }
 
         matHB_ = new VariableSizeMatrix<sparserow>("HB", lsize_);
@@ -341,7 +340,7 @@ double ProjectedMatricesSparse::dotProductWithDM(
 }
 
 double ProjectedMatricesSparse::dotProductSimple(
-    const SquareLocalMatrices<MATDTYPE>& local_product)
+    const SquareLocalMatrices<MATDTYPE>& /*local_product*/)
 {
     std::cerr << "ERROR: ProjectedMatricesSparse::dotProductSimple() \
                not implemented!!!"
@@ -621,55 +620,6 @@ double ProjectedMatricesSparse::computeTraceInvSmultMat(
     }
 
     return invS_->getTraceDotProductWithInvS(&vsmat);
-}
-
-double ProjectedMatricesSparse::computeTraceInvSmultMatmultTheta(
-    SquareLocalMatrices<MATDTYPE>& mat, const bool consolidate)
-{
-    /*
-       assert(localT_ != 0);
-       assert(submatT_ != 0);
-
-       double trace = 0.;
-
-       if(localT_ != 0)
-       {
-          // compute prod = mat * theta
-          SquareLocalMatrices<MATDTYPE> prod(subdiv_, chromatic_number_);
-          prod.gemm('n', 'n', 1.0, mat, *localT_, 0.);
-
-          // compute invS * prod
-          VariableSizeMatrix<sparserow> vsmat(lsize_);
-          vsmat.setupSparseRows(locvars_);
-          vsmat.initializeMatrixElements(prod, global_indexes_);
-
-          if(consolidate)
-          {
-             //consolidate only locally centered data since trace is needed
-             DataDistribution distributor((*lrs_).max_radii());
-             distributor.augmentLocalData(vsmat, false);
-          }
-       }
-
-
-
-       std::vector<int>locfcns;
-       (*lrs_).getLocalSubdomainIndices(locfcns);
-       // try initializing with locfcns
-       VariableSizeMatrix<sparserow> Cmat(lsize_);
-       Cmat.setupSparseRows(locvars_);
-       // do product of mat with theta
-       // get pointer to new Gram matrix
-    //   VariableSizeMatrix<sparserowtab> *gmatptr = (*invS_).gramMat();
-    //   vsmat.AmultSymBLocal(submatT_, Cmat, locfcns, *gmatptr, false);
-
-       // compute trace with invS
-    //   double trace = 0.;
-
-
-       return getExpectationMat(&Cmat);
-    */
-    return 0.;
 }
 
 void ProjectedMatricesSparse::applyInvS(SquareLocalMatrices<MATDTYPE>& mat)

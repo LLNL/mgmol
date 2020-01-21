@@ -41,8 +41,8 @@ HamiltonianMVP_DMStrategy<T1, T2, T3>::HamiltonianMVP_DMStrategy(MPI_Comm comm,
     T2* projmatrices = dynamic_cast<T2*>(orbitals->getProjMatrices());
 
     solver_ = new HamiltonianMVPSolver<T1, T2, T3>(os_, ions_, rho_, energy_,
-        electrostat_, mgmol_strategy_, ct.numst, ct.occ_width, ct.getNel(),
-        global_indexes_, ct.dm_inner_steps, projmatrices->getH(), true);
+        electrostat_, mgmol_strategy_, ct.numst, ct.dm_inner_steps,
+        projmatrices->getH(), true);
 }
 
 template <class T1, class T2, class T3>

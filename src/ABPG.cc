@@ -39,8 +39,8 @@ void ABPG<T>::setup(T& orbitals)
 //
 // orthof=true: wants orthonormalized updated wave functions
 template <class T>
-int ABPG<T>::updateWF(T& orbitals, Ions& ions, const double precond_factor,
-    const bool orthof, T& work_orbitals, const bool accelerate,
+int ABPG<T>::updateWF(T& orbitals, Ions& /*ions*/, const double precond_factor,
+    const bool /*orthof*/, T& work_orbitals, const bool accelerate,
     const bool print_res, const double atol)
 {
     abpg_nl_update_tm_.start();

@@ -29,9 +29,11 @@ protected:
 public:
     Lap(const Grid& mygrid) : FDoper<T>(mygrid) {}
 
+    Lap& operator=(const Lap& v) = default;
+
     // A->B
     void apply(GridFunc<T>& A, GridFunc<T>& B) override = 0;
-    virtual void applyWithPot(GridFunc<T>& A, const double* const, T*)
+    virtual void applyWithPot(GridFunc<T>&, const double* const, T*)
     {
         std::cerr << "ERROR: Lap::applyWithPot() not implemented" << std::endl;
         MPI_Abort(MPI_COMM_WORLD, 0);

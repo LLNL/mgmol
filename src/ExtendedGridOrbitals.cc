@@ -210,22 +210,6 @@ void ExtendedGridOrbitals::axpy(
     axpy_tm_.stop();
 }
 
-void ExtendedGridOrbitals::applyMask(const bool first_time) { return; }
-
-void ExtendedGridOrbitals::applyCorrMask(const bool first_time) { return; }
-
-void ExtendedGridOrbitals::app_mask(
-    const int color, ORBDTYPE* u, const short level) const
-{
-    return;
-}
-
-void ExtendedGridOrbitals::app_mask(
-    const int color, pb::GridFunc<ORBDTYPE>& gu, const short level) const
-{
-    return;
-}
-
 void ExtendedGridOrbitals::init2zero()
 {
     ORBDTYPE* ipsi = psi(0);

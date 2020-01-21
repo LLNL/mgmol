@@ -5,7 +5,7 @@ DMStrategy* DMStrategyFactory<LocGridOrbitals>::createHamiltonianMVP_DMStrategy(
     MPI_Comm comm, std::ostream& os, Ions& ions, Rho<LocGridOrbitals>* rho,
     Energy<LocGridOrbitals>* energy, Electrostatic* electrostat,
     MGmol<LocGridOrbitals>* mgmol_strategy,
-    ProjectedMatricesInterface* proj_matrices, LocGridOrbitals* orbitals,
+    ProjectedMatricesInterface* /*proj_matrices*/, LocGridOrbitals* orbitals,
     const bool short_sighted)
 {
     if (short_sighted)
@@ -34,8 +34,8 @@ DMStrategyFactory<ExtendedGridOrbitals>::createHamiltonianMVP_DMStrategy(
     MPI_Comm comm, std::ostream& os, Ions& ions, Rho<ExtendedGridOrbitals>* rho,
     Energy<ExtendedGridOrbitals>* energy, Electrostatic* electrostat,
     MGmol<ExtendedGridOrbitals>* mgmol_strategy,
-    ProjectedMatricesInterface* proj_matrices, ExtendedGridOrbitals* orbitals,
-    const bool short_sighted)
+    ProjectedMatricesInterface* /*proj_matrices*/,
+    ExtendedGridOrbitals* orbitals, const bool short_sighted)
 {
     (void)short_sighted;
 
