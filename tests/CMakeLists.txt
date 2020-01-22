@@ -115,12 +115,18 @@ add_executable(testVariableSizeMatrix
                ${CMAKE_SOURCE_DIR}/src/magma_singleton.cc
                ${CMAKE_SOURCE_DIR}/src/sparse_linear_algebra/SparseRow.cc               
                ${CMAKE_SOURCE_DIR}/src/sparse_linear_algebra/SparseRowAndTable.cc     
-               ${CMAKE_SOURCE_DIR}/src/sparse_linear_algebra/Table.cc                                        
+               ${CMAKE_SOURCE_DIR}/src/sparse_linear_algebra/Table.cc
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
+
+if((${MAGMA_FOUND}) AND (${MGMOL_WITH_OPENMP_OFFLOAD}))
+  add_executable(testMagmaOpenmp
+                 ${CMAKE_SOURCE_DIR}/tests/testMagmaOpenmp.cc
+                 ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
+endif()
                
 target_compile_definitions(testAndersonMix PUBLIC TESTING)
 
@@ -163,6 +169,11 @@ add_test(NAME testSuperSampling
 add_test(NAME testVariableSizeMatrix
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 1 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testVariableSizeMatrix)
+
+if((${MAGMA_FOUND}) AND (${MGMOL_WITH_OPENMP_OFFLOAD}))
+  add_test(NAME testMagmaOpenmp
+           COMMAND ${CMAKE_CURRENT_BINARY_DIR}/testMagmaOpenmp)
+endif()
                  
 add_test(NAME testProjectedMatrices
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ProjectedMatrices/test.py
@@ -300,6 +311,10 @@ if(${MAGMA_FOUND})
     Boost::unit_test_framework MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
   target_link_libraries(testVariableSizeMatrix PRIVATE ${BLAS_LIBRARIES} 
     Boost::unit_test_framework MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
+if((${MAGMA_FOUND}) AND (${MGMOL_WITH_OPENMP_OFFLOAD}))
+  target_link_libraries(testMagmaOpenmp PRIVATE 
+    Boost::unit_test_framework MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
+endif()
 else()
   target_link_libraries(testDistVector PRIVATE ${SCALAPACK_LIBRARIES}
     ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX OpenMP::OpenMP_CXX)
