@@ -175,9 +175,9 @@ void KBPsiMatrixSparse::computeKBpsi(Ions& ions, T& orbitals,
     const int subdivx                       = mymesh->subdivx();
     for (int iloc = 0; iloc < subdivx; iloc++)
     {
-// Threading here leads to results slightly dependent on number of threads (jlf,
-// 07/15/2016)
-#pragma omp parallel for
+        // Threading here leads to results slightly dependent on number of
+        // threads (jlf, 07/15/2016)
+        // #pragma omp parallel for
         for (int color = 0; color < nb_colors; color++)
         {
             const int gid = orbitals.getGlobalIndex(iloc, first_color + color);
