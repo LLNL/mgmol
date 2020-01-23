@@ -21,6 +21,45 @@
 #include <numeric>
 
 namespace tt = boost::test_tools;
+namespace utf = boost::unit_test;
+
+BOOST_AUTO_TEST_CASE(variable_size_matrix_insert, *utf::tolerance(1.e-12))
+{
+    const int lsize          = 15;
+
+    // start with a matrix with only half of the rows we need
+    VariableSizeMatrix<sparserow> mat("A", lsize / 2);
+
+#ifdef _OPENMP
+    int numthreads = omp_get_max_threads();
+#else
+    int numthreads = 1;
+#endif
+    std::cout << "Number of threads = " << numthreads << std::endl;
+
+    // repeat insertions 10 times
+    for (int n = 0; n < 10; n++)
+    {
+
+#pragma omp parallel for
+        for (int j = 0; j < lsize; j++)
+        {
+            for (int i = 0; i < lsize; i++)
+                mat.insertMatrixElement(i, j, 1., ADD, true);
+        }
+    }
+
+    // verify values in matrix
+    for (int i = 0; i < lsize; i++)
+    {
+        for (int j = 0; j < lsize; j++)
+        {
+            double val = mat.get_value(i, j);
+            BOOST_TEST(val == 10.);
+        }
+    }
+
+}
 
 BOOST_AUTO_TEST_CASE(variable_size_matrix)
 {
