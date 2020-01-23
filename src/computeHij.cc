@@ -26,6 +26,7 @@
 #include "Potentials.h"
 #include "ProjectedMatricesInterface.h"
 #include "ProjectedMatricesSparse.h"
+#include "SquareSubMatrix2DistMatrix.h"
 
 static int sparse_distmatrix_nb_partitions = 128;
 
@@ -46,7 +47,7 @@ void MGmol<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals& orbitalsi,
 
 template <>
 void MGmol<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals& orbitalsi,
-    LocGridOrbitals& orbitalsj, dist_matrix::SparseDistMatrix<double>& sparseH)
+    LocGridOrbitals& orbitalsj, dist_matrix::DistMatrix<double>& H)
 {
     computeHij_tm_.start();
 
@@ -54,7 +55,7 @@ void MGmol<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals& orbitalsi,
     os_ << " addHlocal2matrix()" << endl;
 #endif
 
-    hamiltonian_->addHlocal2matrix(orbitalsi, orbitalsj, sparseH);
+    hamiltonian_->addHlocal2matrix(orbitalsi, orbitalsj, H);
 
     computeHij_tm_.stop();
 }
@@ -154,9 +155,8 @@ void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i,
     }
 }
 
-template <>
-void MGmol<ExtendedGridOrbitals>::computeHij_private(
-    ExtendedGridOrbitals& orbitals_i, ExtendedGridOrbitals& orbitals_j,
+template <class T>
+void MGmol<T>::computeHij_private(T& orbitals_i, T& orbitals_j,
     const Ions& ions, const KBPsiMatrixSparse* const kbpsi_i,
     const KBPsiMatrixSparse* const kbpsi_j,
     dist_matrix::DistMatrix<DISTMATDTYPE>& hij)
@@ -167,46 +167,13 @@ void MGmol<ExtendedGridOrbitals>::computeHij_private(
 
     hij.clear();
 
-    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    MPI_Comm comm   = mmpi.commSameSpin();
-    dist_matrix::SparseDistMatrix<DISTMATDTYPE> sparseH(
-        comm, hij, sparse_distmatrix_nb_partitions);
-
     SquareSubMatrix<double> submat(kbpsi_i->computeHvnlMatrix(kbpsi_j, ions));
 
-    sparseH.addData(submat);
-
-    // sum matrix elements among processors
-    sparseH.parallelSumToDistMatrix();
+    SquareSubMatrix2DistMatrix* ss2dm = SquareSubMatrix2DistMatrix::instance();
+    ss2dm->accumulate(submat, hij, 0.);
 
     // add local Hamiltonian part to phi^T*H*phi
     addHlocal2matrix(orbitals_i, orbitals_j, hij);
-}
-
-template <>
-void MGmol<LocGridOrbitals>::computeHij_private(LocGridOrbitals& orbitals_i,
-    LocGridOrbitals& orbitals_j, const Ions& ions,
-    const KBPsiMatrixSparse* const kbpsi_i,
-    const KBPsiMatrixSparse* const kbpsi_j,
-    dist_matrix::DistMatrix<DISTMATDTYPE>& hij)
-{
-#ifdef PRINT_OPERATIONS
-    if (onpe0) os_ << "computeHij()" << endl;
-#endif
-    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    MPI_Comm comm   = mmpi.commSameSpin();
-    dist_matrix::SparseDistMatrix<DISTMATDTYPE> sparseH(
-        comm, hij, sparse_distmatrix_nb_partitions);
-
-    SquareSubMatrix<double> submat = kbpsi_i->computeHvnlMatrix(kbpsi_j, ions);
-
-    sparseH.addData(submat);
-
-    // add local Hamiltonian part to phi^T*H*phi
-    addHlocal2matrix(orbitals_i, orbitals_j, sparseH);
-
-    // sum matrix elements among processors
-    sparseH.parallelSumToDistMatrix();
 }
 
 template <>
@@ -245,50 +212,19 @@ void MGmol<T>::computeHij(T& orbitals_i, T& orbitals_j, const Ions& ions,
     computeHij_private(orbitals_i, orbitals_j, ions, kbpsi, hij);
 }
 
-template <>
-void MGmol<LocGridOrbitals>::computeHij_private(LocGridOrbitals& orbitals_i,
-    LocGridOrbitals& orbitals_j, const Ions& ions,
-    const KBPsiMatrixSparse* const kbpsi, dist_matrix::DistMatrix<double>& hij)
-{
-#ifdef PRINT_OPERATIONS
-    if (onpe0) os_ << "computeHij()" << endl;
-#endif
-    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    MPI_Comm comm   = mmpi.commSameSpin();
-    dist_matrix::SparseDistMatrix<DISTMATDTYPE> sparseH(
-        comm, hij, sparse_distmatrix_nb_partitions);
-
-    SquareSubMatrix<double> submat = kbpsi->computeHvnlMatrix(ions);
-
-    sparseH.addData(submat);
-
-    // add local Hamiltonian part to phi^T*H*phi
-    addHlocal2matrix(orbitals_i, orbitals_j, sparseH);
-
-    // sum matrix elements among processors
-    sparseH.parallelSumToDistMatrix();
-}
-
-template <>
-void MGmol<ExtendedGridOrbitals>::computeHij_private(
-    ExtendedGridOrbitals& orbitals_i, ExtendedGridOrbitals& orbitals_j,
+template <class T>
+void MGmol<T>::computeHij_private(T& orbitals_i, T& orbitals_j,
     const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
     dist_matrix::DistMatrix<double>& hij)
 {
 #ifdef PRINT_OPERATIONS
     if (onpe0) os_ << "computeHij()" << endl;
 #endif
-    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    MPI_Comm comm   = mmpi.commSameSpin();
-    dist_matrix::SparseDistMatrix<double> sparseH(
-        comm, hij, sparse_distmatrix_nb_partitions);
 
-    SquareSubMatrix<double> submat = kbpsi->computeHvnlMatrix(ions);
+    SquareSubMatrix<double> submat(kbpsi->computeHvnlMatrix(ions));
 
-    sparseH.addData(submat);
-
-    // sum matrix elements among processors
-    sparseH.parallelSumToDistMatrix();
+    SquareSubMatrix2DistMatrix* ss2dm = SquareSubMatrix2DistMatrix::instance();
+    ss2dm->accumulate(submat, hij, 0.);
 
     // add local Hamiltonian part to phi^T*H*phi
     addHlocal2matrix(orbitals_i, orbitals_j, hij);

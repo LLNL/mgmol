@@ -71,9 +71,6 @@ class KBPsiMatrixSparse : public KBPsiMatrixInterface
         return (*kbBpsimat_).get_value(gid, st);
     }
 
-    //    void computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi, const
-    //    Ion&,
-    //        dist_matrix::SparseDistMatrix<DISTMATDTYPE>&) const;
     void computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi, const Ion&,
         SquareSubMatrix<double>& mat) const;
     void computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi2,

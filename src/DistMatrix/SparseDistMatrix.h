@@ -120,7 +120,7 @@ public:
     void addData(const std::vector<T>& data, const int ld, const int ilow,
         const int ihi, const int jlow, const int jhi,
         const std::vector<int>& gids);
-    void addData(SquareSubMatrix<T>& mat);
+    void addData(const SquareSubMatrix<T>& mat, const double tol = 0.);
 
     void push_back(const int index1, const int index2, const T val);
 

@@ -9,6 +9,7 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "KBPsiMatrixSparse.h"
+
 #include "Control.h"
 #include "ExtendedGridOrbitals.h"
 #include "Ions.h"
@@ -17,11 +18,10 @@
 #include "Mesh.h"
 #include "ProjectedMatrices.h"
 #include "ProjectedMatricesSparse.h"
+#include "SquareSubMatrix2DistMatrix.h"
 
 #include <limits.h>
 #define Ry2Ha 0.5;
-
-using namespace std;
 
 static int sparse_distmatrix_nb_partitions = 128;
 
@@ -170,9 +170,8 @@ void KBPsiMatrixSparse::computeKBpsi(Ions& ions, T& orbitals,
     }
 
     // Loop over functions, subdomains and ions
-    const vector<Ion*>::const_iterator iend = ions.overlappingNL_ions().end();
-    Mesh* mymesh                            = Mesh::instance();
-    const int subdivx                       = mymesh->subdivx();
+    Mesh* mymesh      = Mesh::instance();
+    const int subdivx = mymesh->subdivx();
     for (int iloc = 0; iloc < subdivx; iloc++)
     {
         // Threading here leads to results slightly dependent on number of
@@ -185,13 +184,10 @@ void KBPsiMatrixSparse::computeKBpsi(Ions& ions, T& orbitals,
             // Loop over the ions
             if (gid != -1)
             {
-                vector<Ion*>::const_iterator ion
-                    = ions.overlappingNL_ions().begin();
-                while (ion != iend)
+                for (auto ion : ions.overlappingNL_ions())
                 {
                     computeLocalElement(
-                        **ion, gid, iloc, ppsi + color * ldsize, flag);
-                    ion++;
+                        *ion, gid, iloc, ppsi + color * ldsize, flag);
                 }
             }
         }
@@ -225,16 +221,13 @@ void KBPsiMatrixSparse::computeKBpsi(
     }
 
     // Loop over states, subdomains and ions
-    const vector<Ion*>::const_iterator iend = ions.overlappingNL_ions().end();
-    const int subdivx                       = mymesh->subdivx();
+    const int subdivx = mymesh->subdivx();
     for (int iloc = 0; iloc < subdivx; iloc++)
     {
         // Loop over the ions
-        vector<Ion*>::const_iterator ion = ions.overlappingNL_ions().begin();
-        while (ion != iend)
+        for (auto ion : ions.overlappingNL_ions())
         {
-            computeLocalElement(**ion, istate, iloc, ppsi, flag);
-            ion++;
+            computeLocalElement(*ion, istate, iloc, ppsi, flag);
         }
     }
 
@@ -245,15 +238,12 @@ void KBPsiMatrixSparse::computeKBpsi(
 
 void KBPsiMatrixSparse::scaleWithKBcoeff(const Ions& ions)
 {
-    //    int ione=1;
-    vector<Ion*>::const_iterator ion  = ions.overlappingNL_ions().begin();
-    vector<Ion*>::const_iterator iend = ions.overlappingNL_ions().end();
-    while (ion != iend)
+    for (auto ion : ions.overlappingNL_ions())
     {
-        vector<int> gids;
-        (*ion)->getGidsNLprojs(gids);
-        vector<double> kbcoeffs;
-        (*ion)->getKBcoeffs(kbcoeffs);
+        std::vector<int> gids;
+        ion->getGidsNLprojs(gids);
+        std::vector<double> kbcoeffs;
+        ion->getKBcoeffs(kbcoeffs);
 
         const short nprojs = (short)gids.size();
         for (short i = 0; i < nprojs; i++)
@@ -266,8 +256,6 @@ void KBPsiMatrixSparse::scaleWithKBcoeff(const Ions& ions)
             (*kbpsimat_).scaleRow(gid, coeff);
             if (lapop_) (*kbBpsimat_).scaleRow(gid, coeff);
         }
-
-        ion++;
     }
 }
 
@@ -351,10 +339,10 @@ void KBPsiMatrixSparse::computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi2,
 {
     assert(ion.here());
 
-    vector<int> gids;
+    std::vector<int> gids;
     ion.getGidsNLprojs(gids);
 
-    vector<short> coeffs;
+    std::vector<short> coeffs;
     ion.getKBsigns(coeffs);
 
     const short nprojs = (short)gids.size();
@@ -417,17 +405,10 @@ void KBPsiMatrixSparse::computeHvnlMatrix(
     const KBPsiMatrixInterface* const kbpsi2, const Ions& ions,
     dist_matrix::DistMatrix<DISTMATDTYPE>& hij) const
 {
-    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    MPI_Comm comm   = mmpi.commSameSpin();
-    dist_matrix::SparseDistMatrix<DISTMATDTYPE> sparseH(
-        comm, hij, sparse_distmatrix_nb_partitions);
-
     SquareSubMatrix<double> submat(computeHvnlMatrix(kbpsi2, ions));
 
-    sparseH.addData(submat);
-
-    // sum matrix elements among processors
-    sparseH.parallelSumToDistMatrix();
+    SquareSubMatrix2DistMatrix* ss2dm = SquareSubMatrix2DistMatrix::instance();
+    ss2dm->accumulate(submat, hij, 0.);
 }
 
 // build <P|phi> elements, one atom at a time
@@ -462,11 +443,9 @@ void KBPsiMatrixSparse::computeHvnlMatrix(
 
     // Loop over ions centered on current PE only
     // (distribution of work AND Hvnlij contributions)
-    vector<Ion*>::const_iterator ion = ions.local_ions().begin();
-    while (ion != ions.local_ions().end())
+    for (auto ion : ions.local_ions())
     {
-        computeHvnlMatrix((KBPsiMatrixSparse*)kbpsi2, **ion, mat);
-        ion++;
+        computeHvnlMatrix((KBPsiMatrixSparse*)kbpsi2, *ion, mat);
     }
 
     computeHvnlMatrix_tm_.stop();
@@ -489,9 +468,9 @@ void KBPsiMatrixSparse::computeHvnlMatrix(
 void KBPsiMatrixSparse::getPsiKBPsiSym(
     const Ion& ion, VariableSizeMatrix<sparserow>& sm)
 {
-    vector<int> gids;
+    std::vector<int> gids;
     ion.getGidsNLprojs(gids);
-    vector<short> kbsigns;
+    std::vector<short> kbsigns;
     ion.getKBsigns(kbsigns);
 
     const short nprojs = (short)gids.size();
@@ -567,7 +546,7 @@ void KBPsiMatrixSparse::computeAll(Ions& ions, T& orbitals)
 
     for (int color = iinit; color < iend; color += bsize)
     {
-        int ncolors = min(bsize, iend - color);
+        int ncolors = std::min(bsize, iend - color);
         computeKBpsi(ions, orbitals, color, ncolors, 0);
         if (lapop_) computeKBpsi(ions, orbitals, color, ncolors, 1);
     }
@@ -578,7 +557,7 @@ void KBPsiMatrixSparse::computeAll(Ions& ions, T& orbitals)
     scaleWithKBcoeff(ions);
 }
 
-void KBPsiMatrixSparse::printTimers(ostream& os)
+void KBPsiMatrixSparse::printTimers(std::ostream& os)
 {
     computeHvnlMatrix_tm_.print(os);
     global_sum_tm_.print(os);
@@ -600,7 +579,7 @@ double KBPsiMatrixSparse::getEvnl(
     // parallelization over ions by including only those centered in subdomain
     for (auto& ion : ions.local_ions())
     {
-        vector<int> gids;
+        std::vector<int> gids;
         ion->getGidsNLprojs(gids);
 
         const short nprojs = (short)gids.size();
@@ -636,7 +615,7 @@ double KBPsiMatrixSparse::getEvnl(
     // parallelization over ions by including only those centered in subdomain
     for (auto& ion : ions.local_ions())
     {
-        vector<int> gids;
+        std::vector<int> gids;
         ion->getGidsNLprojs(gids);
 
         const short nprojs = (short)gids.size();
@@ -701,13 +680,13 @@ double KBPsiMatrixSparse::getTraceDM(
     const int lrindex = *rindex;
     const int nnzrow1 = (*kbpsimat_).nnzrow(lrindex);
 
-    vector<int> cols;
+    std::vector<int> cols;
     cols.reserve(nnzrow1);
     kbpsimat_->getColumnIndexes(lrindex, cols);
     assert(static_cast<int>(cols.size()) == nnzrow1);
 
     // get values in row of kbpsimat_
-    vector<double> vval;
+    std::vector<double> vval;
     vval.reserve(nnzrow1);
     kbpsimat_->getRowEntries(lrindex, vval);
     assert(vval.size() == cols.size());
@@ -718,7 +697,7 @@ double KBPsiMatrixSparse::getTraceDM(
         const double t1 = vval[p1];
 
         // get values in row of DM for specific columns
-        vector<double> row_values;
+        std::vector<double> row_values;
         dm.getEntries(st1, cols, row_values);
         assert(row_values.size() == cols.size());
 

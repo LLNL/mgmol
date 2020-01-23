@@ -223,16 +223,22 @@ void SparseDistMatrix<T>::addData(const std::vector<T>& data, const int ld,
 }
 
 template <class T>
-void SparseDistMatrix<T>::addData(SquareSubMatrix<T>& mat)
+void SparseDistMatrix<T>::addData(
+    const SquareSubMatrix<T>& mat, const double tol)
 {
     const std::vector<int>& gid(mat.getGids());
     const int n = gid.size();
 
     for (int j = 0; j < n; j++)
+    {
+        assert(gid[j] >= 0);
+
         for (int i = 0; i < n; i++)
         {
-            push_back(gid[i], gid[j], mat.getLocalValue(i, j));
+            const double val = mat.getLocalValue(i, j);
+            if (fabs(val) > tol) push_back(gid[i], gid[j], val);
         }
+    }
 }
 
 template <class T>

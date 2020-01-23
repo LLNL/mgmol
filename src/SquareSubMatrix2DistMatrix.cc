@@ -24,27 +24,7 @@ void SquareSubMatrix2DistMatrix::convert(const SquareSubMatrix<T>& src,
 
     const short chromatic_number = (short)gids.size();
 
-    // double loop over colors
-    for (short icolor = 0; icolor < chromatic_number; icolor++)
-    {
-        const int st1 = gids[icolor];
-        if (st1 != -1)
-        {
-            for (short jcolor = 0; jcolor < chromatic_number; jcolor++)
-            {
-                const int st2 = gids[jcolor];
-                if (st2 != -1)
-                {
-                    const T value = src.getLocalValue(icolor, jcolor);
-                    if (fabs(value) > tol)
-                    {
-                        dst.push_back(st1, st2, value);
-                    }
-                }
-            }
-
-        } // jcolor
-    } // icolor
+    dst.addData(src, tol);
 }
 
 // Sum up all the local contributions (in SquareSubMatrix) into

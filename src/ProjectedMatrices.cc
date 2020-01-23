@@ -21,6 +21,7 @@
 #include "ReplicatedWorkSpace.h"
 #include "SP2.h"
 #include "SparseDistMatrix.h"
+#include "SquareSubMatrix2DistMatrix.h"
 #include "fermi.h"
 #include "tools.h"
 

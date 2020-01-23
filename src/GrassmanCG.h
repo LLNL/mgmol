@@ -16,7 +16,6 @@
 #include "Hamiltonian.h"
 #include "Potentials.h"
 #include "ProjectedMatricesInterface.h"
-#include "SparseDistMatrix.h"
 
 #include <iostream>
 

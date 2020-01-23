@@ -13,7 +13,6 @@
 
 #include "LapFactory.h"
 #include "ProjectedMatricesInterface.h"
-#include "SparseDistMatrix.h"
 #include "Timer.h"
 #include "VariableSizeMatrix.h"
 
@@ -45,9 +44,6 @@ public:
 
     const T& applyLocal(T& phi, const bool force = false);
 
-    void addHlocal2matrix(T& orbitals1, T& orbitals2,
-        dist_matrix::SparseDistMatrix<DISTMATDTYPE>& mat,
-        const bool force = false);
     void addHlocal2matrix(T& orbitals1, T& orbitals2,
         dist_matrix::DistMatrix<DISTMATDTYPE>& mat, const bool force = false);
     void addHlocal2matrix(T& orbitals1, T& orbitals2,

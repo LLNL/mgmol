@@ -32,7 +32,6 @@
 #include "Preconditioning.h"
 #include "ProjectedMatrices.h"
 #include "ReplicatedWorkSpace.h"
-#include "SparseDistMatrix.h"
 #include "SquareLocalMatrices.h"
 #include "SubCell.h"
 #include "VariableSizeMatrix.h"
@@ -2410,9 +2409,8 @@ void LocGridOrbitals::initRand()
 }
 
 // Compute nstates column of Psi^T*A*Psi starting at column 0
-// WARNING: values are added to sparse_matrix!!
-void LocGridOrbitals::addDotWithNcol2Matrix(LocGridOrbitals& Apsi,
-    dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sparse_matrix) const
+void LocGridOrbitals::addDotWithNcol2Matrix(
+    LocGridOrbitals& Apsi, dist_matrix::DistMatrix<DISTMATDTYPE>& matrix) const
 {
     addDot_tm_.start();
 
@@ -2435,21 +2433,20 @@ void LocGridOrbitals::addDotWithNcol2Matrix(LocGridOrbitals& Apsi,
 #endif
     const double vel = grid_.vel();
 
-    const int size_work_cols = chromatic_number_ * chromatic_number_;
-    std::vector<DISTMATDTYPE> work_cols(size_work_cols);
-    memset(work_cols.data(), 0,
-        size_work_cols * sizeof(DISTMATDTYPE)); // necessary on bgl!!
+    SquareLocalMatrices<MATDTYPE> ss(subdivx_, chromatic_number_);
 
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
+        MATDTYPE* ssiloc = ss.getSubMatrix(iloc);
+
         MPgemmTN(chromatic_number_, chromatic_number_, loc_numpt_, vel,
             block_vector_.vect(0) + iloc * loc_numpt_, lda_,
-            Apsi.getPsi(0, iloc), lda_, 0., work_cols.data(),
-            chromatic_number_);
-
-        sparse_matrix.addData(work_cols, chromatic_number_, 0,
-            chromatic_number_, 0, chromatic_number_, overlapping_gids_[iloc]);
+            Apsi.getPsi(0, iloc), lda_, 0., ssiloc, chromatic_number_);
     }
+
+    LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
+
+    sl2dm->accumulate(ss, matrix);
 
     addDot_tm_.stop();
 }
