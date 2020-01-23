@@ -20,12 +20,36 @@
 #include <iostream>
 #include <numeric>
 
-namespace tt = boost::test_tools;
+namespace tt  = boost::test_tools;
 namespace utf = boost::unit_test;
+
+BOOST_AUTO_TEST_CASE(variable_size_matrix_gemv, *utf::tolerance(1.e-8))
+{
+    const int lsize = 15;
+
+    VariableSizeMatrix<sparserow> mat("mat", lsize);
+    std::vector<int> rows;
+    for (int i = 0; i < lsize; i++)
+    {
+        rows.push_back(i);
+    }
+
+    mat.setupSparseRows(rows);
+
+    mat.set2Identity();
+
+    // gemv
+    std::cout << "Check gemv ... " << std::endl;
+    std::vector<double> x(lsize, 1.0);
+    std::vector<double> y(lsize, 0.);
+    mat.gemv(1.0, x, 0., y);
+    double sum = std::accumulate(y.begin(), y.end(), 0.);
+    BOOST_TEST(sum == (double)(lsize));
+}
 
 BOOST_AUTO_TEST_CASE(variable_size_matrix_insert, *utf::tolerance(1.e-12))
 {
-    const int lsize          = 15;
+    const int lsize = 15;
 
     // start with a matrix with only half of the rows we need
     VariableSizeMatrix<sparserow> mat("A", lsize / 2);
@@ -58,7 +82,6 @@ BOOST_AUTO_TEST_CASE(variable_size_matrix_insert, *utf::tolerance(1.e-12))
             BOOST_TEST(val == 10.);
         }
     }
-
 }
 
 BOOST_AUTO_TEST_CASE(variable_size_matrix)
@@ -146,15 +169,7 @@ BOOST_AUTO_TEST_CASE(variable_size_matrix)
     BOOST_TEST(sum == 0.0, tt::tolerance(1.e-8));
 
     // set2Identity
-    std::cout << "set to identity ..." << std::endl;
     matB.set2Identity();
-    // gemv
-    std::cout << "Check gemv ... " << std::endl;
-    std::vector<double> x((lsize + 1), 1.0);
-    std::vector<double> y((lsize + 1), 0.);
-    matB.gemv(1.0, x, 0., y);
-    sum = std::accumulate(y.begin(), y.end(), 0.);
-    BOOST_TEST(sum == (double)(lsize + 1), tt::tolerance(1.e-8));
 
     // scale
     double scal = 2.0;
