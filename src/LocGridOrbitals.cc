@@ -1153,7 +1153,7 @@ int LocGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, const string& name)
     // in the file.
 
     // memory dataspace identifier
-    hid_t memspace;
+    hid_t memspace = H5P_DEFAULT;
     if (h5f_file.active()) memspace = h5f_file.createMemspace();
 
     ORBDTYPE* buffer = new ORBDTYPE[block[0] * block[1] * block[2]];

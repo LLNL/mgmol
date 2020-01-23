@@ -70,13 +70,7 @@ public:
 
     // Map local dm (internal) into global one, and multiply by inverse(S)
     template <class T>
-    void getDM(T& submatM, const T& invS,
-#ifdef HAVE_BML
-        bml_matrix_t* sDM
-#else
-        SquareLocalMatrices<MATDTYPE>& sDM
-#endif
-    );
+    void getDM(T& submatM, const T& invS);
 
     static void printTimers(std::ostream& os) { getdm_tm_.print(os); }
 };

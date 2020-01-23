@@ -88,7 +88,7 @@ class ShortSightedInverse
     void gather(DataDistribution& dtor); // gather inverse data
     void reset(); // Reset/ setup data
 
-    void augmentGramMatrix(DataDistribution& distributor_S, const bool append);
+    void augmentGramMatrix();
 
     //  int solve(LinearSolverMatrix<lsdatatype>& LSMat);
     int solve();
@@ -100,7 +100,7 @@ public:
     void initGramMatrix(const LocalMatrices<MATDTYPE>& ss,
         const std::vector<std::vector<int>>& global_indexes,
         const int orbitals_index); // initialize local Gram matrix
-    void computeInvS(DataDistribution& dtor_S,
+    void computeInvS(
         DataDistribution& dtor_invS); // Compute the local matrix inverse
     double getTraceDiagProductWithInvS(
         std::vector<DMDTYPE>& ddiag); // return sum_i ( ddiag[i]*S**(-1)[i][i] )
@@ -132,7 +132,7 @@ public:
         assert(invS_ != 0);
         assert((*invS_).n() != 0);
 
-        return (*invS_).AmultSymB_ij(B, row, col, *((*gramMat_).getTable()));
+        return (*invS_).AmultSymB_ij(B, row, col);
     }
 
     void printGramMM(std::ofstream& tfile);

@@ -12,8 +12,8 @@
 #include "GridMaskMult.h"
 
 template <typename T>
-void GridMaskMult::applyPrivate(T* u, const unsigned short level,
-    const unsigned short iloc, const bool first_application)
+void GridMaskMult::applyPrivate(
+    T* u, const unsigned short level, const unsigned short iloc)
 {
     // early return if nothing to do
     if (GridMask::maskIs1(level, iloc)) return;
@@ -93,7 +93,7 @@ template void GridMaskMult::applyPrivate(pb::GridFunc<double>& gu,
     const unsigned short level, const unsigned short iloc);
 template void GridMaskMult::applyPrivate(pb::GridFunc<float>& gu,
     const unsigned short level, const unsigned short iloc);
-template void GridMaskMult::applyPrivate(float* u, const unsigned short level,
-    const unsigned short iloc, const bool first_application);
-template void GridMaskMult::applyPrivate(double* u, const unsigned short level,
-    const unsigned short iloc, const bool first_application);
+template void GridMaskMult::applyPrivate(
+    float* u, const unsigned short level, const unsigned short iloc);
+template void GridMaskMult::applyPrivate(
+    double* u, const unsigned short level, const unsigned short iloc);

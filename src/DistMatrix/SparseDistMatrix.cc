@@ -420,6 +420,9 @@ void SparseDistMatrix<T>::consolidateArray()
         int rc = MPI_Alltoall(ndata2send, fraction_tasks, MPI_INT, ndata2recv,
             fraction_tasks, MPI_INT, sub_comm);
         assert(rc == MPI_SUCCESS);
+#ifndef NDEBUG
+        (void)rc;
+#endif
 
         int* sendcounts = new int[num_neighbors];
         for (int dst = 0; dst < num_neighbors; dst++)
@@ -499,6 +502,9 @@ void SparseDistMatrix<T>::consolidateArray()
         rc = Alltoallv(send_buffer, sendcounts, sdispls, recv_buffer,
             recvcounts, rdispls, sub_comm);
         assert(rc == MPI_SUCCESS);
+#ifndef NDEBUG
+        (void)rc;
+#endif
 
         delete[] send_buffer;
         delete[] sdispls;
@@ -705,11 +711,10 @@ void SparseDistMatrix<double>::parallelSumToDistMatrix()
     const bool recv = (my_task_index_ > -1);
 
     // make all data to transfer same size
-    int rc;
     int newsize = max_index_and_val_size;
     if (npes_ > 1)
-        rc = MPI_Allreduce(&max_index_and_val_size, &newsize, 1, MPI_INT,
-            MPI_MAX, comm_global_);
+        MPI_Allreduce(&max_index_and_val_size, &newsize, 1, MPI_INT, MPI_MAX,
+            comm_global_);
     assert(newsize > 0);
     for (int i = 0; i < index_and_val_size; i++)
     {
@@ -800,11 +805,10 @@ void SparseDistMatrix<float>::parallelSumToDistMatrix()
     const bool recv = (my_task_index_ > -1);
 
     // make all data to transfer same size
-    int rc;
     int newsize = max_index_and_val_size;
     if (npes_ > 1)
-        rc = MPI_Allreduce(&max_index_and_val_size, &newsize, 1, MPI_INT,
-            MPI_MAX, comm_global_);
+        MPI_Allreduce(&max_index_and_val_size, &newsize, 1, MPI_INT, MPI_MAX,
+            comm_global_);
     assert(newsize > 0);
     for (int i = 0; i < index_and_val_size; i++)
     {
@@ -1035,6 +1039,9 @@ void SparseDistMatrix<T>::sendRecvData()
                     psr, MPI_STATUS_IGNORE); // wait for previous send to
                                              // complete before reusing buffer
                 assert(rc == MPI_SUCCESS);
+#ifndef NDEBUG
+                (void)rc;
+#endif
 
                 if (size_index_and_val > 0)
                     memcpy(&sbuf_val[0], &index_and_val_[dst][0],
@@ -1048,6 +1055,9 @@ void SparseDistMatrix<T>::sendRecvData()
                 rc = Isend(sbuf_val, newsize, dest_key, tag,
                     partition_comm_->comm(), psr);
                 assert(rc == MPI_SUCCESS);
+#ifndef NDEBUG
+                (void)rc;
+#endif
             }
         }
 

@@ -228,7 +228,7 @@ void GrassmanCG<T>::computeOrbitalsProdWithH(
 // parallel transport of history data
 // update G=grad_, MG=pcgrad_ and Zo=sdir_
 template <class T>
-void GrassmanCG<T>::parallelTransportUpdate(const double lambda, T& phi)
+void GrassmanCG<T>::parallelTransportUpdate(const double /*lambda*/, T& phi)
 {
     Control& ct = *(Control::instance());
 

@@ -220,13 +220,7 @@ void SP2::initializeLocalMat(const SquareLocalMatrices<MATDTYPE>& submatM,
 
 template <>
 void SP2::getDM(dist_matrix::DistMatrix<DISTMATDTYPE>& submatM, // output
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& invS,
-#ifdef HAVE_BML
-    bml_matrix_t* dummy
-#else
-    SquareLocalMatrices<MATDTYPE>& dummy
-#endif
-)
+    const dist_matrix::DistMatrix<DISTMATDTYPE>& invS)
 {
     getdm_tm_.start();
 

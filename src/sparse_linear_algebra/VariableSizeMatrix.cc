@@ -638,7 +638,7 @@ double VariableSizeMatrix<T>::AmultSymBdiag(
  */
 template <class T>
 double VariableSizeMatrix<T>::AmultSymB_ij(
-    VariableSizeMatrix<T>* B, const int row, const int col, Table& indexT)
+    VariableSizeMatrix<T>* B, const int row, const int col)
 {
     double val = 0.0;
 
@@ -928,6 +928,9 @@ int VariableSizeMatrix<T>::getMaxAbsOffDiagonalRowEntry(
     }
 
     assert(found);
+#ifndef NDEBUG
+    (void)found;
+#endif
 
     value = maxVal;
     assert(maxj >= 0);

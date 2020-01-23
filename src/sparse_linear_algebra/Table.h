@@ -79,7 +79,7 @@ public:
 
     /* return current size of Table */
     int get_size() const { return size_; }
-    static void printTimers(std::ostream& os)
+    static void printTimers(std::ostream& /*os*/)
     {
         //         insert_tm_.print(os);
         //         get_value_tm_.print(os);

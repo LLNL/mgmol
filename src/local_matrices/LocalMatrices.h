@@ -193,7 +193,7 @@ public:
             print(os, iloc);
     }
 
-    static void printTimers(std::ostream& os) {}
+    static void printTimers(std::ostream& /*os*/) {}
 
     void applyMask(const LocalMatrices& mask);
 

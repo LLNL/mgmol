@@ -66,10 +66,8 @@ private:
 public:
     HamiltonianMVPSolver(std::ostream& os, Ions& ions, Rho<T3>* rho,
         Energy<T3>* energy, Electrostatic* electrostat,
-        MGmol<T3>* mgmol_strategy, const int numst, const double kbT,
-        const int nel, const std::vector<std::vector<int>>& global_indexes,
-        const short n_inner_steps, const T1& hinit,
-        const bool try_shorter_intervals = false);
+        MGmol<T3>* mgmol_strategy, const int numst, const short n_inner_steps,
+        const T1& hinit, const bool try_shorter_intervals = false);
     ~HamiltonianMVPSolver();
     int solve(T3& orbitals);
     void reset();

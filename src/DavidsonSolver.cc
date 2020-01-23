@@ -456,7 +456,7 @@ int DavidsonSolver<T>::solve(T& orbitals, T& work_orbitals)
                 = (inner_it == 0) ? proj_matN : proj_mat2N_.get();
             if (ct.verbose > 2) current_proj_mat->printOccupations(os_);
 
-            double ts0;
+            double ts0       = 0.;
             double e0        = 0.;
             const int printE = (ct.verbose > 1 || outer_it % 10 == 0) ? 1 : 0;
 

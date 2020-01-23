@@ -25,7 +25,7 @@ set(SOURCES GridFuncVector.cc
        PBh8.cc  
 )
 
-add_library(mgmol_pb STATIC ${SOURCES})
+add_library(mgmol_pb ${SOURCES})
 target_include_directories (mgmol_pb PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(mgmol_pb PUBLIC MPI::MPI_CXX)
 target_link_libraries(mgmol_pb PUBLIC OpenMP::OpenMP_CXX)

@@ -641,7 +641,7 @@ template <class T>
 void Rho<T>::computeRho(T& orbitals1, T& orbitals2,
     const dist_matrix::DistMatrix<DISTMATDTYPE>& dm11,
     const dist_matrix::DistMatrix<DISTMATDTYPE>& dm12,
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& dm21,
+    const dist_matrix::DistMatrix<DISTMATDTYPE>& /*dm21*/,
     const dist_matrix::DistMatrix<DISTMATDTYPE>& dm22)
 {
     assert(orbitals_type_ == OrbitalsType::Nonorthogonal);

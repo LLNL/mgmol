@@ -104,6 +104,17 @@ public:
 
     DielFunc& operator=(const T);
 
+    DielFunc& operator=(const DielFunc& A)
+    {
+        GridFunc<T>::bc_[0] = 1;
+        GridFunc<T>::bc_[1] = 1;
+        GridFunc<T>::bc_[2] = 1;
+        epsilon_max_        = A.epsilon_max_;
+        rho0_               = A.rho0_;
+        drho0_              = A.drho0_;
+        return *this;
+    }
+
     double epsilon_rho(const T, const T, const T, const T);
     double epsilon_rho(const T rho);
     double depsilon_rho(const T, const T, const T, const T);

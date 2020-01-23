@@ -126,7 +126,7 @@ private:
 
     ORBDTYPE* psi(const int i) const { return block_vector_.vect(i); }
 
-    void app_mask(const int, ORBDTYPE*, const short level) const;
+    void app_mask(const int, ORBDTYPE*, const short) const {};
     void multiplyByMatrix(const SquareLocalMatrices<MATDTYPE>& matrix,
         ORBDTYPE* product, const int ldp) const;
     void setup();
@@ -189,10 +189,7 @@ public:
     int getLda() const { return lda_; }
     int getLocNumpt() const { return loc_numpt_; }
 
-    bool isCompatibleWith(const ExtendedGridOrbitals& orbitals) const
-    {
-        return true;
-    }
+    bool isCompatibleWith(const ExtendedGridOrbitals&) const { return true; }
 
     void resetDataWithGhostsIndex() { data_wghosts_index_ = 0; }
 
@@ -340,10 +337,10 @@ public:
     void initGauss(const double, const LocalizationRegions&);
     virtual void axpy(const double alpha, const ExtendedGridOrbitals&);
 
-    void app_mask(const int, pb::GridFunc<ORBDTYPE>&, const short level) const;
+    void app_mask(const int, pb::GridFunc<ORBDTYPE>&, const short) const {};
 
-    void applyMask(const bool first_time = false);
-    void applyCorrMask(const bool first_time = false);
+    void applyMask(const bool = false){};
+    void applyCorrMask(const bool = false){};
 
     void multiplyByMatrix(const SquareLocalMatrices<MATDTYPE>& matrix);
     void multiplyByMatrix(const SquareLocalMatrices<MATDTYPE>& matrix,

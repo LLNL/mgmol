@@ -60,8 +60,6 @@ public:
 
     double spread2(int i, int j) const override;
 
-    void setia(std::vector<int>&);
-
     void init_transform(const dist_matrix::DistMatrix<DISTMATDTYPE>& ls,
         const bool reset_positions = false);
 

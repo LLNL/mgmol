@@ -19,7 +19,7 @@
 namespace utf = boost::unit_test;
 
 double gaussianFunc(double radius) { return std::exp(-radius * radius / 2); }
-double constantFunc(double radius) { return 1; }
+double constantFunc(double) { return 1; }
 double gaussianFuncScaled(double radius)
 {
     return std::exp(-radius * radius / 200);

@@ -321,7 +321,7 @@ void GrassmanCGSparse<T>::computeOrbitalsProdWithH(
 // update G=grad_, MG=pcgrad_ and Zo=sdir_
 template <class T>
 void GrassmanCGSparse<T>::parallelTransportUpdate(
-    const double lambda, T& orbitals)
+    const double /*lambda*/, T& /*orbitals*/)
 {
     // update gradient information
     //    SquareLocalMatrices<MATDTYPE> ss(grad->subdivx(),

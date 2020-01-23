@@ -185,9 +185,11 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
     const PreconILU<pcdatatype>& precon, const double* rhs, double* sol,
     const double tol, const int im, const int maxits)
 {
-    int i, i1, ii, j, k, k1, its, im1, pti, pti1, ptih, one = 1;
+    int i, i1, ii, j, k, k1, its, im1, pti, pti1, ptih = 0;
+    int one = 1;
     double *hh, *c, *s, *rs, t;
-    double negt, beta, eps1, gam, *vv, *z;
+    double negt, eps1, gam, *vv, *z;
+    double beta = 0.;
 
     const int n = LSMat.n();
 

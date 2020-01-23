@@ -32,7 +32,7 @@ GrassmanCGFactory<ExtendedGridOrbitals>::create(
     Hamiltonian<ExtendedGridOrbitals>* hamiltonian,
     ProjectedMatricesInterface* proj_matrices,
     MGmol<ExtendedGridOrbitals>* mgmol_strategy, Ions& ions, std::ostream& os,
-    const bool short_sighted)
+    const bool /*short_sighted*/)
 {
     OrbitalsStepper<ExtendedGridOrbitals>* stepper
         = new GrassmanCG<ExtendedGridOrbitals>(

@@ -42,6 +42,15 @@ public:
         x_[2] = v.x_[2];
     }
 
+    Vector3D& operator=(const Vector3D& v)
+    {
+        x_[0] = v.x_[0];
+        x_[1] = v.x_[1];
+        x_[2] = v.x_[2];
+
+        return *this;
+    }
+
     Vector3D sign()
     {
         Vector3D result;
@@ -68,14 +77,16 @@ public:
 
     bool operator==(const Vector3D& rhs) const
     {
-        return fabs(x_[0] - rhs.x_[0]) < tol && fabs(x_[1] - rhs.x_[1]) < tol
-               && fabs(x_[2] - rhs.x_[2]) < tol;
+        return std::abs(x_[0] - rhs.x_[0]) < tol
+               && std::abs(x_[1] - rhs.x_[1]) < tol
+               && std::abs(x_[2] - rhs.x_[2]) < tol;
     }
 
     bool operator!=(const Vector3D& rhs) const
     {
-        return fabs(x_[0] - rhs.x_[0]) >= tol || fabs(x_[1] - rhs.x_[1]) >= tol
-               || fabs(x_[2] - rhs.x_[2]) >= tol;
+        return std::abs(x_[0] - rhs.x_[0]) >= tol
+               || std::abs(x_[1] - rhs.x_[1]) >= tol
+               || std::abs(x_[2] - rhs.x_[2]) >= tol;
     }
 
     bool operator<(const Vector3D& rhs) const

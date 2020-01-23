@@ -104,7 +104,7 @@ double MD_IonicStepper::temperature()
     return kineticEnergy() / (0.5 * ndofs_ * kb_au);
 }
 
-int MD_IonicStepper::init(HDFrestart& h5f_file)
+int MD_IonicStepper::init(HDFrestart& /*h5f_file*/)
 {
     int size_tau = (int)tau0_.size();
     int ione     = 1;

@@ -377,7 +377,7 @@ public:
     void resetDM() override
     {
         dm_->setMatrix(*mat_X_old_, 0);
-        dm_->stripS(*mat_L_old_, 0);
+        dm_->stripS(*mat_L_old_);
     }
 
     void updateDMwithRelax(const double mix, const int itindex) override
@@ -401,7 +401,7 @@ public:
     }
 
     double getLinDependent2states(
-        int& st1, int& st2, const bool flag) const override
+        int& st1, int& st2, const bool /*flag*/) const override
     {
         return gm_->getLinDependent2states(st1, st2);
     }

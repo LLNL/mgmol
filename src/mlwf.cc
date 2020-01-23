@@ -256,7 +256,6 @@ int MGmol<T>::get_NOLMO(NOLMOTransform& noot, T& orbitals, T& work_orbitals,
     }
     if (onpe0 && ct.verbose > 1)
         os_ << "get_NOLMO(): for " << icount << " pairs" << std::endl;
-    noot.setia(overlap);
 
     // compute sin/cos matrices one dimension at a time
     std::vector<std::vector<double>> sincos;

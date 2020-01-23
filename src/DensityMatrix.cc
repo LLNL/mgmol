@@ -402,11 +402,9 @@ void DensityMatrix::setto2InvS(
     orbitals_index_ = orbitals_index;
 }
 
-void DensityMatrix::stripS(const dist_matrix::DistMatrix<DISTMATDTYPE>& ls,
-    const int orbitals_index_gram)
+void DensityMatrix::stripS(const dist_matrix::DistMatrix<DISTMATDTYPE>& ls)
 {
     assert(!stripped_);
-    // assert( orbitals_index_==orbitals_index_gram );
 
     dm_->trmm('l', 'l', 't', 'n', 1., ls);
     dm_->trmm('r', 'l', 'n', 'n', 1., ls);

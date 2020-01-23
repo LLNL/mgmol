@@ -310,7 +310,7 @@ int LBFGS_IonicStepper::read_lbfgs(HDFrestart& h5f_file)
 
     hsize_t dim_dset;
     hsize_t maxdim;
-    hid_t dataset_id;
+    hid_t dataset_id = H5P_DEFAULT;
     herr_t status;
     const string error_string
         = "!!!Error in LBFGS_IonicStepper::read_lbfgs(): ";

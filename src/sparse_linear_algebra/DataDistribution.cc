@@ -54,7 +54,7 @@ short DataDistribution::maxcount_computeMaxDataSize_ = 500;
 
 /* Constructor */
 DataDistribution::DataDistribution(const std::string& name,
-    const int max_steps[3], const pb::PEenv& myPEenv, const double domain[])
+    const int max_steps[3], const pb::PEenv& myPEenv, const double[])
     : name_(name), spread_radius_(0.0), mypeenv_(myPEenv)
 {
     /* get cartesian communicator */

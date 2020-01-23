@@ -13,14 +13,12 @@
 
 #include "OrbitalsExtrapolationOrder2.h"
 #include "OrbitalsExtrapolationOrder3.h"
-#include "SpreadPenalty.h"
 
 template <class T>
 class OrbitalsExtrapolationFactory
 {
 public:
-    static OrbitalsExtrapolation<T>* create(
-        const WFExtrapolationType type, SpreadPenalty<T>* spread_penalty)
+    static OrbitalsExtrapolation<T>* create(const WFExtrapolationType type)
     {
         OrbitalsExtrapolation<T>* orbitals_extrapol;
         switch (type)

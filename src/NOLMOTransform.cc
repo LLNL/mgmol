@@ -112,8 +112,6 @@ double NOLMOTransform::spread2(int i, int j) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void NOLMOTransform::setia(std::vector<int>& iiu) { return; }
-////////////////////////////////////////////////////////////////////////////////
 void NOLMOTransform::compute_transform(const int maxsweep, const double tol)
 {
     // sine and cosine operators only: compute NOLMO transform

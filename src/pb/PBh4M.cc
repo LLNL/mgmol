@@ -29,7 +29,7 @@ PBh4M<T>::PBh4M(const Grid& mygrid, DielFunc<T>& myepsilon)
         {
             std::cout << "Not enough ghosts points in PBh4M::PBh4M"
                       << std::endl;
-            PB<T>::grid_.mype_env().globalExit(2);
+            PB<T>::grid_.mype_env().globalExit();
         }
 
         // cout<<"Constructor for PBh4M"<<endl;

@@ -314,10 +314,11 @@ void Tgemv(const char trans, const int m, const int n, const float alpha,
 // MemorySpaceType
 template <typename MemorySpaceType>
 template <typename T1, typename T2, typename T3>
-void LinearAlgebraUtils<MemorySpaceType>::MPgemm(const char transa,
-    const char transb, const int m, const int n, const int k,
-    const double alpha, const T1* const a, const int lda, const T2* const b,
-    const int ldb, const double beta, T3* const c, const int ldc)
+void LinearAlgebraUtils<MemorySpaceType>::MPgemm(const char /*transa*/,
+    const char /*transb*/, const int /*m*/, const int /*n*/, const int /*k*/,
+    const double /*alpha*/, const T1* const /*a*/, const int /*lda*/,
+    const T2* const /*b*/, const int /*ldb*/, const double /*beta*/,
+    T3* const /*c*/, const int /*ldc*/)
 {
     assert(false);
 }

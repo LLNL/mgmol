@@ -43,7 +43,7 @@ set(XL_CXX_FLAGS_DEBUG -g -O0 -qsmp=omp:noopt -qcheck=all -qminimaltoc)
 set(XL_CXX_FLAGS_RELEASE -g -DNDEBUG -qstrict -qsmp=omp:auto -O3 -qinfo=cns:uni:ini:pro:ord -qminimaltoc)
 # Clang
 set(Clang_CXX_FLAGS_DEBUG -g -O0 -Wno-deprecated-register)
-set(Clang_CXX_FLAGS_RELEASE -g -DNDEBUG -O3 -qstrict -Wno-deprecated-register)
+set(Clang_CXX_FLAGS_RELEASE -g -DNDEBUG -O3 -Wno-deprecated-register)
 # default
 set(DEFAULT_CXX_FLAGS_DEBUG -g -O0)
 set(DEFAULT_CXX_FLAGS_RELEASE -g -DNDEBUG -O3)
