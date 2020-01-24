@@ -82,6 +82,12 @@ BOOST_AUTO_TEST_CASE(variable_size_matrix_insert, *utf::tolerance(1.e-12))
             BOOST_TEST(val == 10.);
         }
     }
+    // verify matrix statistics
+    const int nnz = lsize * lsize;
+    BOOST_TEST(mat.n() == lsize);
+    BOOST_TEST(mat.nnzmat() == nnz);
+    BOOST_TEST(mat.nzmin() == lsize);
+    BOOST_TEST(mat.nzmax() == lsize);    
 }
 
 BOOST_AUTO_TEST_CASE(variable_size_matrix)
