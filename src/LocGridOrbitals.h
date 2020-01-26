@@ -23,7 +23,6 @@
 #include "Orbitals.h"
 #include "SaveData.h"
 #include "SinCosOps.h"
-#include "SparseDistMatrix.h"
 #include "global.h"
 
 #include "hdf5.h"
@@ -365,7 +364,7 @@ public:
         const LocGridOrbitals& orbitals, SquareLocalMatrices<MATDTYPE>&);
 
     void addDotWithNcol2Matrix(
-        LocGridOrbitals&, dist_matrix::SparseDistMatrix<DISTMATDTYPE>&) const;
+        LocGridOrbitals&, dist_matrix::DistMatrix<DISTMATDTYPE>&) const;
 
     void scal(const double alpha)
     {

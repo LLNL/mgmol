@@ -19,7 +19,7 @@
 #include "MPIdata.h"
 #include "ProjectedMatricesInterface.h"
 #include "SquareLocalMatrices.h"
-#include "SquareSubMatrix2DistMatrix.h"
+#include "SquareSubMatrix.h"
 #include "Timer.h"
 #include "tools.h"
 

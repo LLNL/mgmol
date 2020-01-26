@@ -51,6 +51,7 @@ using namespace std;
 #include "Mesh.h"
 #include "PackedCommunicationBuffer.h"
 #include "ReplicatedWorkSpace.h"
+#include "SparseDistMatrix.h"
 #include "magma_singleton.h"
 #include "tools.h"
 

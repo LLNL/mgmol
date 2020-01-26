@@ -51,7 +51,6 @@ class IonicAlgorithm;
 #include "OrbitalsExtrapolation.h"
 #include "OrbitalsPreconditioning.h"
 #include "Rho.h"
-#include "SparseDistMatrix.h"
 #include "SpreadPenaltyInterface.h"
 #include "SpreadsAndCenters.h"
 
@@ -117,12 +116,6 @@ private:
     int read_restart_lrs(HDFrestart& h5f_file, const std::string& dset_name);
     int read_restart_data(HDFrestart& h5f_file, Rho<T>& rho, T& orbitals);
     void write_header();
-    void getKBPsiAndHij(T& orbitals_i, T& orbitals_j, Ions& ions,
-        KBPsiMatrixSparse* kbpsi, ProjectedMatricesInterface* projmatrices,
-        dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sh);
-    void computeHij(T& orbitals_i, T& orbitals_j, const Ions& ions,
-        const KBPsiMatrixSparse* const kbpsi,
-        dist_matrix::SparseDistMatrix<DISTMATDTYPE>& sparseH);
     void getKBPsiAndHij(T& orbitals_i, T& orbitals_j, Ions& ions,
         KBPsiMatrixSparse* kbpsi, ProjectedMatricesInterface* projmatrices);
     void getKBPsiAndHij(T& orbitals_i, T& orbitals_j, Ions& ions,
@@ -222,8 +215,6 @@ public:
         T& orbitalsi, T& orbitalsj, dist_matrix::DistMatrix<double>& mat);
     void addHlocal2matrix(
         T& orbitalsi, T& orbitalsj, VariableSizeMatrix<SparseRow>& mat);
-    void addHlocal2matrix(T& orbitalsi, T& orbitalsj,
-        dist_matrix::SparseDistMatrix<double>& sparseH);
 
     void update_pot(const pb::GridFunc<POTDTYPE>& vh_init, const Ions& ions);
     void update_pot(const Ions& ions);
