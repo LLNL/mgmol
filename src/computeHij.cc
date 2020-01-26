@@ -28,8 +28,6 @@
 #include "ProjectedMatricesSparse.h"
 #include "SquareSubMatrix2DistMatrix.h"
 
-static int sparse_distmatrix_nb_partitions = 128;
-
 template <>
 void MGmol<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals& orbitalsi,
     LocGridOrbitals& orbitalsj, VariableSizeMatrix<sparserow>& mat)

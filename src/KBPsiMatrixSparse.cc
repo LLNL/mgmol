@@ -23,8 +23,6 @@
 #include <limits.h>
 #define Ry2Ha 0.5;
 
-static int sparse_distmatrix_nb_partitions = 128;
-
 Timer KBPsiMatrixSparse::global_sum_tm_("KBPsiMatrixSparse::global_sum");
 Timer KBPsiMatrixSparse::compute_kbpsi_tm_("KBPsiMatrixSparse::compute_kbpsi");
 Timer KBPsiMatrixSparse::computeHvnlMatrix_tm_(

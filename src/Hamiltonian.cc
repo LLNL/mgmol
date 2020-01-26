@@ -16,8 +16,6 @@
 #include "Potentials.h"
 #include "ProjectedMatrices.h"
 
-static int sparse_distmatrix_nb_partitions = 128;
-
 template <class T>
 Hamiltonian<T>::Hamiltonian()
 {

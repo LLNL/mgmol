@@ -20,10 +20,6 @@ template <class T>
 void SquareSubMatrix2DistMatrix::convert(const SquareSubMatrix<T>& src,
     dist_matrix::SparseDistMatrix<T>& dst, const double tol) const
 {
-    const std::vector<int>& gids(src.getGids());
-
-    const short chromatic_number = (short)gids.size();
-
     dst.addData(src, tol);
 }
 
