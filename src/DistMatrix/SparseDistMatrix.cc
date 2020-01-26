@@ -236,7 +236,7 @@ void SparseDistMatrix<T>::addData(
         for (int i = 0; i < n; i++)
         {
             const double val = mat.getLocalValue(i, j);
-            if (fabs(val) > tol) push_back(gid[i], gid[j], val);
+            if (std::abs(val) > tol) push_back(gid[i], gid[j], val);
         }
     }
 }
