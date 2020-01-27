@@ -215,7 +215,6 @@ endif(${MGMOL_WITH_COVERAGE})
 enable_testing()
 
 # additional definitions
-add_definitions(-DUSE_DIS_MAT)
 
 include(FortranCInterface)
 FortranCInterface_HEADER(

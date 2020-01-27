@@ -583,15 +583,12 @@ int main(int argc, char** argv)
             setSparseDistMatriConsolidationNumber(npes);
         }
 
-#ifdef USE_DIS_MAT
         if (myPEenv.color() > 0)
         {
             cerr << "Code should be called with " << myPEenv.n_mpi_tasks()
                  << " MPI tasks only" << endl;
             ct.global_exit(2);
         }
-
-#endif
 
         assert(myPEenv.color() == 0);
 

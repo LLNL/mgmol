@@ -107,7 +107,6 @@ void ProjectedMatrices::setup(const double kbt, const int nel,
 
     global_indexes_ = global_indexes;
 
-#ifdef USE_DIS_MAT
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     MPI_Comm comm   = mmpi.commSpin();
 
@@ -122,8 +121,6 @@ void ProjectedMatrices::setup(const double kbt, const int nel,
         localT_.reset(
             new SquareLocalMatrices<MATDTYPE>(subdiv_, chromatic_number_));
     }
-
-#endif
 
     localHl_.reset(new SquareLocalMatrices<MATDTYPE>(
         global_indexes.size(), global_indexes[0].size()));
