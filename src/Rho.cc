@@ -268,12 +268,8 @@ void Rho<T>::rescaleTotalCharge()
 //        j++;
 //    }
 //
-//#ifndef USE_DIS_MAT
-//    const int numst = vorbitals[0]->numst();
-//#else
 //    SquareLocalMatrices<MATDTYPE>& localX(projmatrices->getLocalX());
 //    const MATDTYPE* const localX_iloc = localX.getSubMatrix(iloc);
-//#endif
 //    melements.clear();
 //    melements.resize(nmycolors * nmycolors);
 //
@@ -282,26 +278,15 @@ void Rho<T>::rescaleTotalCharge()
 //        const int icolor = mycolors[i];
 //        if (norb == 1)
 //        {
-//#ifdef USE_DIS_MAT
 //            melements[i * nmycolors + i]
 //                = localX_iloc[icolor + n_colors * icolor];
-//#else
-//            const int iist               = loc_indexes[icolor] * numst;
-//            const int index_X            = loc_indexes[icolor] * (numst + 1);
-//            melements[i * nmycolors + i] = dm_.getVal(index_X);
-//#endif
 //        }
 //        const int jmax = (norb == 1) ? i : nmycolors;
 //        for (int j = 0; j < jmax; j++)
 //        {
 //            int jcolor = mycolors[j];
-//#ifdef USE_DIS_MAT
 //            melements[j * nmycolors + i]
 //                = localX_iloc[icolor + n_colors * jcolor];
-//#else
-//            melements[j * nmycolors + i]
-//                = dm_.getVal(iist + loc_indexes[jcolor]);
-//#endif
 //        }
 //    }
 //
@@ -618,11 +603,8 @@ void Rho<T>::computeRho(T& orbitals, ProjectedMatricesInterface& proj_matrices)
     }
     else
     {
-#ifdef USE_DIS_MAT
         proj_matrices.updateSubMatX();
-#else
-        dm_ = proj_matrices.dm();
-#endif
+
         // if (dynamic_cast<LocGridOrbitals*>(&orbitals)) but it
         if (std::is_same<T, LocGridOrbitals>::value)
         {
@@ -653,23 +635,15 @@ void Rho<T>::computeRho(T& orbitals1, T& orbitals2,
     memset(&rho_[myspin_][0], 0, subdivx * loc_numpt * sizeof(RHODTYPE));
 
     // 11 diagonal block
-#ifdef USE_DIS_MAT
     ProjectedMatrices* projmatrices1
         = dynamic_cast<ProjectedMatrices*>(orbitals1.getProjMatrices());
     projmatrices1->updateSubMatX(dm11);
-#else
-    dm_ = dm11;
-#endif
     computeRhoSubdomainUsingBlas3(0, subdivx, orbitals1);
 
     // 22 diagonal block
-#ifdef USE_DIS_MAT
     ProjectedMatrices* projmatrices2
         = dynamic_cast<ProjectedMatrices*>(orbitals2.getProjMatrices());
     projmatrices2->updateSubMatX(dm22);
-#else
-    dm_ = dm22;
-#endif
     computeRhoSubdomainUsingBlas3(0, subdivx, orbitals2);
 
     // non diagonal blocks
@@ -679,11 +653,7 @@ void Rho<T>::computeRho(T& orbitals1, T& orbitals2,
 
     dist_matrix::DistMatrix<DISTMATDTYPE> dm(dm12);
     dm.scal(2.); // use symmetry to reduce work
-#ifdef USE_DIS_MAT
     projmatrices1->updateSubMatX(dm);
-#else
-    dm_ = dm;
-#endif
     //    computeRhoSubdomainOffDiagBlock(0, subdivx, vorbitals, projmatrices1);
     computeRhoSubdomainUsingBlas3(0, subdivx, orbitals1, orbitals2);
 }

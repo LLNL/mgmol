@@ -29,9 +29,6 @@ class Rho
     short myspin_;
 
     int np_;
-#ifndef USE_DIS_MAT
-    dist_matrix::DistMatrix<DISTMATDTYPE>& dm_;
-#endif
 
     OrbitalsType orbitals_type_;
 
