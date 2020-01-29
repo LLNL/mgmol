@@ -90,6 +90,20 @@ class HDFrestart
     void closeWorkSpace();
     void setupWorkSpace();
 
+    template <class T>
+    void getWorkspace(T* work_space);
+
+    template <class T>
+    int readDataset(hid_t dset_id, hid_t memspace, hid_t filespace,
+        hid_t plist_id, T* work_space);
+
+    template <class T>
+    void MPI_Send_data(
+        T*, const int n, const int dest, const int tag, MPI_Comm);
+
+    template <class T>
+    void MPI_Recv_data(T*, const int n, const int src, const int tag, MPI_Comm);
+
 public:
     HDFrestart(const std::string& filename, const pb::PEenv& pes,
         const short option_number);
@@ -214,12 +228,15 @@ public:
         const std::string& name);
     int getLRs(LocalizationRegions& lrs, const int max_nb,
         const std::string& name, const bool add = false);
-    int read_1func_hdf5(double*, const std::string&);
-    int read_1func_hdf5(float*, const std::string&);
+
+    template <class T>
+    int read_1func_hdf5(T*, const std::string&);
+
     int write_1func_hdf5(double*, const std::string&, double* ll = nullptr,
         double* origin = nullptr);
     int write_1func_hdf5(float*, const std::string&, double* ll = nullptr,
         double* origin = nullptr);
+
     int read_att(const hid_t dset_id, const std::string& attname,
         std::vector<double>& attr_data);
 
