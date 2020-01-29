@@ -26,23 +26,6 @@ Timer HDFrestart::open_existing_tm_("HDFrestart::open_existing");
 Timer HDFrestart::create_file_tm_("HDFrestart::create_file");
 Timer HDFrestart::close_file_tm_("HDFrestart::close_file");
 
-#ifdef USE_HDF16
-hid_t H5Dopen2(hid_t loc_id, const char* name, hid_t dapl_id)
-{
-    return H5Dopen(loc_id, name);
-}
-hid_t H5Dcreate2(hid_t loc_id, const char* name, hid_t dtype_id, hid_t space_id,
-    hid_t lcpl_id, hid_t dcpl_id, hid_t dapl_id)
-{
-    return H5Dcreate(loc_id, name, dtype_id, space_id, lcpl_id);
-}
-hid_t H5Acreate2(hid_t loc_id, const char* attr_name, hid_t type_id,
-    hid_t space_id, hid_t acpl_id, hid_t aapl_id)
-{
-    return H5Acreate(loc_id, attr_name, type_id, space_id, H5P_DEFAULT);
-}
-#endif
-
 const unsigned short MyHDFStrLength = 24;
 
 struct HDF_FixedLengthString
@@ -566,7 +549,6 @@ HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
         }
         else
         {
-#ifndef USE_HDF16
             // The H5FD_CORE driver enables an application to work with a file
             // in memory, speeding reads and writes as no disk access is made.
             // File contents are stored only in memory until the file is closed.
@@ -576,7 +558,6 @@ HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
             if (err_id < 0)
                 (*MPIdata::serr)
                     << "HDFrestart(): H5Pset_fapl_core failed!!!" << endl;
-#endif
         }
         /* create the file collectively */
         H5Pset_fclose_degree(access_plist, H5F_CLOSE_STRONG);
@@ -683,16 +664,14 @@ HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
         }
         else
         {
-#ifndef USE_HDF16
             herr_t err_id = H5Pset_fapl_core(access_plist, 1024, 1);
             if (err_id < 0)
                 (*MPIdata::serr)
                     << "HDFrestart(): H5Pset_fapl_core failed!!!" << endl;
-                // else
-                //    if( onpe0 )
-                //        (*MPIdata::sout)<<"HDFrestart(): call
-                //        H5Pset_fapl_core()"<<endl;
-#endif
+            // else
+            //    if( onpe0 )
+            //        (*MPIdata::sout)<<"HDFrestart(): call
+            //        H5Pset_fapl_core()"<<endl;
         }
         file_id_ = H5Fopen(filename_.c_str(), H5F_ACC_RDONLY, access_plist);
         H5Pclose(access_plist);

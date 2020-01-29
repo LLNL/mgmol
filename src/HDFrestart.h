@@ -19,9 +19,7 @@
 
 #include "hdf5.h"
 
-#ifndef USE_HDF16
 #include "H5LTpublic.h"
-#endif
 
 #include <iostream>
 #include <map>
@@ -30,15 +28,7 @@
 
 class LocalizationRegions;
 
-#ifdef USE_HDF16
-hid_t H5Dopen2(hid_t loc_id, const char* name, hid_t dapl_id);
-hid_t H5Dcreate2(hid_t loc_id, const char* name, hid_t dtype_id, hid_t space_id,
-    hid_t lcpl_id, hid_t dcpl_id, hid_t dapl_id);
-hid_t H5Acreate2(hid_t loc_id, const char* attr_name, hid_t type_id,
-    hid_t space_id, hid_t acpl_id, hid_t aapl_id);
-#else
 herr_t H5LTfind_dataset(hid_t file_id_, const char* datasetname);
-#endif
 
 int readListCentersAndRadii(hid_t dset_id, std::vector<double>& attr_data);
 int readGids(hid_t dset_id, std::vector<int>& gids);
@@ -155,9 +145,6 @@ public:
     }
     herr_t dset_exists(const char* const datasetname) const
     {
-#ifdef USE_HDF16
-        herr_t err_id = 1;
-#else
         herr_t err_id = 0;
         if (active_)
         {
@@ -171,7 +158,6 @@ public:
                         << datasetname << std::endl;
             }
         }
-#endif
         return err_id;
     }
 
