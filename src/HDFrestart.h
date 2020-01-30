@@ -81,11 +81,9 @@ class HDFrestart
     void setupBlocks();
     void setOptions(const short option_number);
     void addReleaseNumber2File(const char* release);
-    void gatherDataXdir(std::vector<int>& data);
-    void gatherDataXdir(std::vector<unsigned short>& data);
-    void gatherDataXdir(std::vector<double>& data);
-    void gatherDataXdir(std::vector<FixedLengthString>& data);
-    void gatherDataXdir(std::vector<char>& data);
+
+    template <class T>
+    void gatherDataXdir(std::vector<T>& data);
 
     void closeWorkSpace();
     void setupWorkSpace();
@@ -103,6 +101,10 @@ class HDFrestart
 
     template <class T>
     void MPI_Recv_data(T*, const int n, const int src, const int tag, MPI_Comm);
+
+    template <class T>
+    hid_t TH5Dcreate2(hid_t file_id, const std::string& datasetname,
+        hid_t filespace, hid_t plist_id);
 
 public:
     HDFrestart(const std::string& filename, const pb::PEenv& pes,
@@ -232,22 +234,20 @@ public:
     template <class T>
     int read_1func_hdf5(T*, const std::string&);
 
-    int write_1func_hdf5(double*, const std::string&, double* ll = nullptr,
-        double* origin = nullptr);
-    int write_1func_hdf5(float*, const std::string&, double* ll = nullptr,
-        double* origin = nullptr);
+    template <class T>
+    int write_1func_hdf5(
+        T*, const std::string&, double* ll = nullptr, double* origin = nullptr);
 
     int read_att(const hid_t dset_id, const std::string& attname,
         std::vector<double>& attr_data);
 
-    int writeData(double* vv, hid_t filespace, hid_t memspace, hid_t dset_id,
+    template <class T>
+    int writeData(T* vv, hid_t filespace, hid_t memspace, hid_t dset_id,
         const short precision);
-    int writeData(float* vv, hid_t filespace, hid_t memspace, hid_t dset_id,
-        const short precision);
-    int readData(
-        double* vv, hid_t memspace, hid_t dset_id, const short precision);
-    int readData(
-        float* vv, hid_t memspace, hid_t dset_id, const short precision);
+
+    template <class T>
+    int readData(T* vv, hid_t memspace, hid_t dset_id, const short precision);
+
     //    int writeRandomState(unsigned short int rand_state[3]);
     //    int readRandomState(unsigned short* rand_state);
     int readAtomicIDs(std::vector<int>& data);

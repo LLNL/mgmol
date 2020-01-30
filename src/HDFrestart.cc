@@ -422,9 +422,7 @@ void HDFrestart::addReleaseNumber2File(const char* release)
             herr_t status = H5Awrite(attribute_id, strtype, &t);
             if (status < 0)
             {
-                (*MPIdata::serr)
-                    << "HDFrestart::addReleaseNumber2File(), Attribute: "
-                    << attname << " --- H5Awrite failed!!!" << std::endl;
+                MGMOL_HDFRESTART_FAIL("H5Awrite failed for " << attname);
             }
         }
         herr_t status = H5Sclose(dataspace_id);
@@ -588,8 +586,8 @@ HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
     {
         if (!fileExists(filename_.c_str()))
         {
-            (*MPIdata::serr) << "ERROR MGmol: file " << filename_
-                             << " does not exists!!!" << std::endl;
+            MGMOL_HDFRESTART_FAIL(
+                "File " << filename_ << " does not exists!!!");
             ct.global_exit(2);
         }
         htri_t ishdf = H5Fis_hdf5(filename_.c_str());
@@ -628,10 +626,6 @@ HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
         {
             herr_t err_id = H5Pset_fapl_core(access_plist, 1024, 1);
             if (err_id < 0) MGMOL_HDFRESTART_FAIL("H5Pset_fapl_core failed!!!");
-            // else
-            //    if( onpe0 )
-            //        (*MPIdata::sout)<<"HDFrestart(): call
-            //        H5Pset_fapl_core()"<<endl;
         }
         file_id_ = H5Fopen(filename_.c_str(), H5F_ACC_RDONLY, access_plist);
         H5Pclose(access_plist);
@@ -1128,13 +1122,13 @@ int HDFrestart::getLRs(LocalizationRegions& lrs, const int max_nb_lrs,
 /////////////////////////////////////////////////////////////////////////////
 
 template <>
-void HDFrestart::getWorkspace(float* work_space)
+void HDFrestart::getWorkspace<float>(float* work_space)
 {
     work_space = work_space_float_;
 }
 
 template <>
-void HDFrestart::getWorkspace(double* work_space)
+void HDFrestart::getWorkspace<double>(double* work_space)
 {
     work_space = work_space_double_;
 }
@@ -1170,6 +1164,27 @@ void HDFrestart::MPI_Send_data(
 }
 
 template <>
+void HDFrestart::MPI_Send_data(
+    int* buffer, const int n, const int dest, const int tag, MPI_Comm comm)
+{
+    MPI_Send(buffer, n, MPI_INT, dest, tag, comm);
+}
+
+template <>
+void HDFrestart::MPI_Send_data(unsigned short* buffer, const int n,
+    const int dest, const int tag, MPI_Comm comm)
+{
+    MPI_Send(buffer, n, MPI_UNSIGNED_SHORT, dest, tag, comm);
+}
+
+template <>
+void HDFrestart::MPI_Send_data(
+    char* buffer, const int n, const int dest, const int tag, MPI_Comm comm)
+{
+    MPI_Send(buffer, n, MPI_CHAR, dest, tag, comm);
+}
+
+template <>
 void HDFrestart::MPI_Recv_data(
     float* buffer, const int n, const int src, const int tag, MPI_Comm comm)
 {
@@ -1183,6 +1198,84 @@ void HDFrestart::MPI_Recv_data(
 {
     MPI_Status mpistatus;
     MPI_Recv(buffer, n, MPI_DOUBLE, src, tag, comm, &mpistatus);
+}
+
+template <>
+void HDFrestart::MPI_Recv_data(
+    int* buffer, const int n, const int src, const int tag, MPI_Comm comm)
+{
+    MPI_Status mpistatus;
+    MPI_Recv(buffer, n, MPI_INT, src, tag, comm, &mpistatus);
+}
+
+template <>
+void HDFrestart::MPI_Recv_data(unsigned short* buffer, const int n,
+    const int src, const int tag, MPI_Comm comm)
+{
+    MPI_Status mpistatus;
+    MPI_Recv(buffer, n, MPI_UNSIGNED_SHORT, src, tag, comm, &mpistatus);
+}
+
+template <>
+void HDFrestart::MPI_Recv_data(
+    char* buffer, const int n, const int src, const int tag, MPI_Comm comm)
+{
+    MPI_Status mpistatus;
+    MPI_Recv(buffer, n, MPI_CHAR, src, tag, comm, &mpistatus);
+}
+
+template <>
+hid_t HDFrestart::TH5Dcreate2<double>(hid_t file_id,
+    const std::string& datasetname, hid_t filespace, hid_t plist_id)
+{
+    hid_t dset_id = H5Dcreate2(file_id, datasetname.c_str(), H5T_NATIVE_DOUBLE,
+        filespace, H5P_DEFAULT, plist_id, H5P_DEFAULT);
+    if (dset_id < 0)
+    {
+        MGMOL_HDFRESTART_FAIL("H5Dcreate failedi for " << datasetname << "!!!");
+    }
+    return dset_id;
+}
+
+template <>
+void HDFrestart::gatherDataXdir(std::vector<FixedLengthString>& data)
+{
+    int j      = pes_.my_mpi(1);
+    int k      = pes_.my_mpi(2);
+    int source = pes_.xyz2task(0, j, k);
+    MPI_Status mpistatus;
+    for (int i = 1; i < pes_.n_mpi_task(0); i++)
+    {
+        int dest = pes_.xyz2task(i, j, k);
+        int tag  = i;
+        if (pes_.my_mpi(0) == 0)
+        {
+            assert(active_);
+            int datasize = data.size();
+            std::vector<char> buffer(datasize * IonData_MaxStrLength);
+            for (int i = 0; i < datasize; i++)
+                memcpy(&buffer[i * IonData_MaxStrLength], &data[i],
+                    IonData_MaxStrLength);
+
+            MPI_Send(&datasize, 1, MPI_INT, dest, 2 * tag, comm_data_);
+            MPI_Send(buffer.data(), datasize * IonData_MaxStrLength, MPI_CHAR,
+                dest, 2 * tag + 1, comm_data_);
+        }
+        else if (pes_.my_mpi(0) == i)
+        {
+            assert(!active_);
+            int datasize;
+            MPI_Recv(
+                &datasize, 1, MPI_INT, source, 2 * tag, comm_data_, &mpistatus);
+            std::vector<char> buffer(datasize * IonData_MaxStrLength);
+            MPI_Recv(buffer.data(), datasize * IonData_MaxStrLength, MPI_CHAR,
+                source, 2 * tag + 1, comm_data_, &mpistatus);
+            data.resize(datasize);
+            for (int i = 0; i < datasize; i++)
+                memcpy(&data[i], &buffer[i * IonData_MaxStrLength],
+                    IonData_MaxStrLength);
+        }
+    }
 }
 
 template <class T>
@@ -1217,9 +1310,7 @@ int HDFrestart::read_1func_hdf5(T* vv, const std::string& datasetname)
         hid_t filespace = H5Dget_space(dset_id);
         if (filespace < 0)
         {
-            (*MPIdata::serr)
-                << "HDFrestart::read_1func_hdf5() --- H5Dget_space failed!!!"
-                << std::endl;
+            MGMOL_HDFRESTART_FAIL("H5Dget_space failed!!!");
             return -1;
         }
 
@@ -1230,9 +1321,7 @@ int HDFrestart::read_1func_hdf5(T* vv, const std::string& datasetname)
                 filespace, H5S_SELECT_SET, offset_, stride_, count_, block_);
             if (status < 0)
             {
-                (*MPIdata::serr) << "HDFrestart::read_1func_hdf5() --- "
-                                    "H5Sselect_hyperslab failed!!!"
-                                 << std::endl;
+                MGMOL_HDFRESTART_FAIL("H5Sselect_hyperslab failed!!!");
                 return -1;
             }
             // Create property list for collective dataset read.
@@ -1322,8 +1411,9 @@ int HDFrestart::read_1func_hdf5(T* vv, const std::string& datasetname)
     return 0;
 }
 
+template <class T>
 int HDFrestart::write_1func_hdf5(
-    double* vv, const std::string& datasetname, double* ll, double* cell_origin)
+    T* vv, const std::string& datasetname, double* ll, double* cell_origin)
 {
     assert(ll != nullptr);
     assert(cell_origin != nullptr);
@@ -1347,13 +1437,10 @@ int HDFrestart::write_1func_hdf5(
 
         hid_t plist_id = createPlist();
 
-        dset_id = H5Dcreate2(file_id_, datasetname.c_str(), H5T_NATIVE_DOUBLE,
-            filespace, H5P_DEFAULT, plist_id, H5P_DEFAULT);
+        dset_id = TH5Dcreate2<T>(
+            file_id_, datasetname.c_str(), filespace, plist_id);
         if (dset_id < 0)
         {
-            (*MPIdata::serr)
-                << "HDFrestart::write_1func_hdf5: H5Dcreate failed!!!"
-                << std::endl;
             return -1;
         }
 
@@ -1394,9 +1481,7 @@ int HDFrestart::write_1func_hdf5(
         herr_t status = H5Dclose(dset_id);
         if (status < 0)
         {
-            (*MPIdata::serr)
-                << "HDFrestart::write_1func_hdf5: H5Dclose failed!!!"
-                << std::endl;
+            MGMOL_HDFRESTART_FAIL("H5Dclose failed!!!");
             return -1;
         }
         // if( use_hdf5p_ )
@@ -1404,17 +1489,14 @@ int HDFrestart::write_1func_hdf5(
             status = H5Sclose(filespace);
             if (status < 0)
             {
-                (*MPIdata::serr) << "HDFrestart::write_1func_hdf5: H5Sclose "
-                                    "failed for filespace!!!"
-                                 << std::endl;
+                MGMOL_HDFRESTART_FAIL("H5Sclose failed for filespace!!!");
                 return -1;
             }
 
             status = H5Sclose(memspace);
             if (status < 0)
             {
-                (*MPIdata::serr)
-                    << "H5Sclose failed for memspace!!!" << std::endl;
+                MGMOL_HDFRESTART_FAIL("H5Sclose failed for memspace!!!");
                 return -1;
             }
         }
@@ -1423,108 +1505,9 @@ int HDFrestart::write_1func_hdf5(
     return 0;
 }
 
-int HDFrestart::write_1func_hdf5(
-    float* vv, const std::string& datasetname, double* ll, double* cell_origin)
-{
-    assert(ll != nullptr);
-    assert(cell_origin != nullptr);
-
-    if (onpe0)
-        (*MPIdata::sout) << "HDFrestart::write_1func_hdf5(). Try to write data "
-                         << datasetname << "..." << std::endl;
-
-    hid_t filespace = -1;
-    hid_t dset_id   = -1;
-    hid_t memspace  = -1;
-
-    if (active_)
-    {
-        // filespace identifier
-        filespace = createFilespace();
-
-        // memory dataspace identifier
-        memspace = createMemspace();
-
-        hid_t plist_id = createPlist();
-
-        dset_id = H5Dcreate2(file_id_, datasetname.c_str(), H5T_NATIVE_FLOAT,
-            filespace, H5P_DEFAULT, plist_id, H5P_DEFAULT);
-        if (dset_id < 0)
-        {
-            (*MPIdata::serr)
-                << "HDFrestart::write_1func_hdf5: H5Dcreate failed!!!"
-                << std::endl;
-            return -1;
-        }
-
-        releasePlist(plist_id);
-
-        // Write the attribute "Lattice parameters"
-        if (ll != nullptr)
-        {
-            // Create the data space for the attribute "Lattice parameters".
-            std::vector<double> attr_data(3);
-            attr_data[0] = ll[0];
-            attr_data[1] = ll[1];
-            attr_data[2] = ll[2];
-
-            std::string attname("Lattice parameters");
-            mgmol_tools::addAttribute2Dataset(
-                dset_id, attname.c_str(), attr_data);
-        }
-
-        if (cell_origin != nullptr)
-        {
-            std::vector<double> attr_data(3);
-            attr_data[0] = cell_origin[0];
-            attr_data[1] = cell_origin[1];
-            attr_data[2] = cell_origin[2];
-
-            std::string attname("Cell origin");
-            mgmol_tools::addAttribute2Dataset(
-                dset_id, attname.c_str(), attr_data);
-        }
-    }
-
-    int ierr = writeData(vv, filespace, memspace, dset_id, 1);
-    if (ierr < 0) return ierr;
-
-    if (active_)
-    {
-        herr_t status = H5Dclose(dset_id);
-        if (status < 0)
-        {
-            (*MPIdata::serr)
-                << "HDFrestart::write_1func_hdf5: H5Dclose failed!!!"
-                << std::endl;
-            return -1;
-        }
-        // if( use_hdf5p_ )
-        {
-            status = H5Sclose(filespace);
-            if (status < 0)
-            {
-                (*MPIdata::serr) << "HDFrestart::write_1func_hdf5: H5Sclose "
-                                    "failed for filespace!!!"
-                                 << std::endl;
-                return -1;
-            }
-
-            status = H5Sclose(memspace);
-            if (status < 0)
-            {
-                (*MPIdata::serr)
-                    << "H5Sclose failed for memspace!!!" << std::endl;
-                return -1;
-            }
-        }
-    }
-
-    return 0;
-}
-
+template <class T>
 int HDFrestart::readData(
-    double* data, hid_t memspace, hid_t dset_id, const short precision)
+    T* data, hid_t memspace, hid_t dset_id, const short precision)
 {
     if (active_)
     {
@@ -1533,8 +1516,7 @@ int HDFrestart::readData(
         hid_t filespace = H5Dget_space(dset_id);
         if (filespace < 0)
         {
-            (*MPIdata::serr)
-                << "HDFrestart::readData: H5Dget_space failed !!!" << std::endl;
+            MGMOL_HDFRESTART_FAIL("H5Dget_space failed !!!");
             return -1;
         }
         if (use_hdf5p_)
@@ -1544,9 +1526,7 @@ int HDFrestart::readData(
                 filespace, H5S_SELECT_SET, offset_, stride_, count_, block_);
             if (status < 0)
             {
-                (*MPIdata::serr)
-                    << "HDFrestart::readData: H5Sselect_hyperslab failed!!!"
-                    << std::endl;
+                MGMOL_HDFRESTART_FAIL("H5Sselect_hyperslab failed!!!");
                 return -1;
             }
 
@@ -1557,16 +1537,19 @@ int HDFrestart::readData(
             }
         }
         if (precision == 1)
+        {
             status = H5Dread(dset_id, H5T_NATIVE_FLOAT, memspace, filespace,
                 plist_id, work_space_float_);
+        }
         else
+        {
             status = H5Dread(dset_id, H5T_NATIVE_DOUBLE, memspace, filespace,
                 plist_id, work_space_double_);
+        }
 
         if (status < 0)
         {
-            (*MPIdata::serr)
-                << "HDFrestart::readData: H5Dread  failed !!!" << std::endl;
+            MGMOL_HDFRESTART_FAIL("H5Dread  failed !!!");
             return -1;
         }
 
@@ -1623,101 +1606,23 @@ int HDFrestart::readData(
                 }
             }
     }
+
+    // assign data array passed as argument to this function
     if (precision == 1)
     {
         for (int i = 0; i < bsize_; i++)
-            data[i] = (double)work_space_float_[i];
+            data[i] = (T)work_space_float_[i];
     }
     else
     {
-        memcpy(data, work_space_double_, bsize_ * sizeof(double));
+        for (int i = 0; i < bsize_; i++)
+            data[i] = (T)work_space_double_[i];
     }
     return 0;
 }
 
-// Note precision is ignored. It is left as a argument for convenience
-int HDFrestart::readData(
-    float* data, hid_t memspace, hid_t dset_id, const short precision)
-{
-    (void)precision;
-
-    if (active_)
-    {
-        hid_t plist_id = H5P_DEFAULT;
-        herr_t status;
-        hid_t filespace = H5Dget_space(dset_id);
-        if (filespace < 0)
-        {
-            (*MPIdata::serr)
-                << "HDFrestart::readData: H5Dget_space failed !!!" << std::endl;
-            return -1;
-        }
-        if (use_hdf5p_)
-        {
-            // Select hyperslab in the file.
-            status = H5Sselect_hyperslab(
-                filespace, H5S_SELECT_SET, offset_, stride_, count_, block_);
-            if (status < 0)
-            {
-                (*MPIdata::serr)
-                    << "HDFrestart::readData: H5Sselect_hyperslab failed!!!"
-                    << std::endl;
-                return -1;
-            }
-
-            // Create property list for collective dataset read.
-            if (pes_.n_mpi_tasks() > 1)
-            {
-                plist_id = H5Pcreate(H5P_DATASET_XFER);
-            }
-        }
-        status = H5Dread(dset_id, H5T_NATIVE_FLOAT, memspace, filespace,
-            plist_id, work_space_float_);
-
-        if (status < 0)
-        {
-            (*MPIdata::serr)
-                << "HDFrestart::readData: H5Dread  failed !!!" << std::endl;
-            return -1;
-        }
-
-        // Close/release resources.
-        if (use_hdf5p_ && pes_.n_mpi_tasks() > 1) H5Pclose(plist_id);
-
-        H5Sclose(filespace);
-    }
-    if (gather_data_x_)
-    {
-        int j      = pes_.my_mpi(1);
-        int k      = pes_.my_mpi(2);
-        int source = pes_.xyz2task(0, j, k);
-        MPI_Status mpistatus;
-
-        for (int i = 1; i < pes_.n_mpi_task(0); i++)
-        {
-            int dest = pes_.xyz2task(i, j, k);
-            int tag  = i;
-            if (pes_.my_mpi(0) == 0)
-            {
-                //(*MPIdata::sout)<<"PE: "<<pes_.mytask()<<", Send data to
-                //"<<dest<<endl;
-                MPI_Send(work_space_float_ + i * bsize_, bsize_, MPI_FLOAT,
-                    dest, tag, comm_data_);
-            }
-            else if (pes_.my_mpi(0) == i)
-            {
-                //(*MPIdata::sout)<<"PE: "<<pes_.mytask()<<", Receive data from
-                //"<<ipe<<endl;
-                MPI_Recv(work_space_float_, bsize_, MPI_FLOAT, source, tag,
-                    comm_data_, &mpistatus);
-            }
-        }
-    }
-    memcpy(data, work_space_float_, bsize_ * sizeof(float));
-    return 0;
-}
-
-int HDFrestart::writeData(double* data, hid_t space_id, hid_t memspace,
+template <class T>
+int HDFrestart::writeData(T* data, hid_t space_id, hid_t memspace,
     hid_t dset_id, const short precision)
 {
     if (precision == 1)
@@ -1727,9 +1632,10 @@ int HDFrestart::writeData(double* data, hid_t space_id, hid_t memspace,
     }
     else
     {
-        assert(work_space_double_ != nullptr);
-        memcpy(work_space_double_, data, bsize_ * sizeof(double));
+        for (int i = 0; i < bsize_; i++)
+            work_space_float_[i] = (double)data[i];
     }
+
     // gather data on active PEs
     if (gather_data_x_)
     {
@@ -1790,12 +1696,8 @@ int HDFrestart::writeData(double* data, hid_t space_id, hid_t memspace,
                 space_id, H5S_SELECT_SET, offset_, stride_, count_, block_);
             if (status < 0)
             {
-                (*MPIdata::serr)
-                    << "HDFrestart::write_data: H5Sselect_hyperslab failed!!!"
-                    << std::endl;
-                (*MPIdata::serr)
-                    << "HDFrestart::write_data: space_id=" << space_id
-                    << std::endl;
+                MGMOL_HDFRESTART_FAIL("H5Sselect_hyperslab failed for space_id="
+                                      << space_id << "!!!");
                 return -1;
             }
 
@@ -1815,90 +1717,7 @@ int HDFrestart::writeData(double* data, hid_t space_id, hid_t memspace,
                 plist_id, work_space_double_);
         if (status < 0)
         {
-            (*MPIdata::serr)
-                << "HDFrestart::write_data: H5Dwrite failed!!!" << std::endl;
-            return -1;
-        }
-
-        // Close/release resources.
-        if (use_hdf5p_ && pes_.n_mpi_tasks() > 1) H5Pclose(plist_id);
-    }
-
-    return 0;
-}
-
-// precision is ignored.
-int HDFrestart::writeData(float* data, hid_t space_id, hid_t memspace,
-    hid_t dset_id, const short precision)
-{
-    (void)precision;
-
-    memcpy(work_space_float_, data, bsize_ * sizeof(float));
-
-    // gather data on active PEs
-    if (gather_data_x_)
-    {
-        int j    = pes_.my_mpi(1);
-        int k    = pes_.my_mpi(2);
-        int dest = pes_.xyz2task(0, j, k);
-        MPI_Status mpistatus;
-
-        // blocking send/recv
-        for (int i = 1; i < pes_.n_mpi_task(0); i++)
-        {
-            int ipe = pes_.xyz2task(i, j, k);
-            if (pes_.my_mpi(0) == i)
-            {
-                //(*MPIdata::sout)<<"PE: "<<pes_.mytask()<<", Send data to
-                //"<<dest<<endl;
-                MPI_Send(
-                    work_space_float_, bsize_, MPI_FLOAT, dest, i, comm_data_);
-            }
-            else if (pes_.my_mpi(0) == 0)
-            {
-                //(*MPIdata::sout)<<"PE: "<<pes_.mytask()<<", Receive data from
-                //"<<ipe<<endl;
-                MPI_Recv(work_space_float_ + i * bsize_, bsize_, MPI_FLOAT, ipe,
-                    i, comm_data_, &mpistatus);
-            }
-        }
-    }
-
-    if (active_)
-    {
-        hid_t plist_id = H5P_DEFAULT;
-        herr_t status;
-        if (use_hdf5p_)
-        {
-            // Select hyperslab in the file.
-            status = H5Sselect_hyperslab(
-                space_id, H5S_SELECT_SET, offset_, stride_, count_, block_);
-            if (status < 0)
-            {
-                (*MPIdata::serr)
-                    << "HDFrestart::write_data: H5Sselect_hyperslab failed!!!"
-                    << std::endl;
-                (*MPIdata::serr)
-                    << "HDFrestart::write_data: space_id=" << space_id
-                    << std::endl;
-                return -1;
-            }
-
-            // Create property list for collective dataset write.
-            if (pes_.n_mpi_tasks() > 1)
-            {
-                plist_id = H5Pcreate(H5P_DATASET_XFER);
-            }
-        }
-
-        assert(dset_id >= 0);
-        status = H5Dwrite(dset_id, H5T_NATIVE_FLOAT, memspace, space_id,
-            plist_id, work_space_float_);
-
-        if (status < 0)
-        {
-            (*MPIdata::serr)
-                << "HDFrestart::write_data: H5Dwrite failed!!!" << std::endl;
+            MGMOL_HDFRESTART_FAIL("H5Dwrite failed!!!");
             return -1;
         }
 
@@ -1920,23 +1739,19 @@ int HDFrestart::read_att(const hid_t dset_id, const std::string& attname,
         hid_t attribute_id = H5Aopen_name(dset_id, attname.c_str());
         if (attribute_id < 0)
         {
-            (*MPIdata::serr)
-                << "HDFrestart::read_att() --- H5Aopen_name failed for "
-                << attname << std::endl;
+            MGMOL_HDFRESTART_FAIL("H5Aopen_name failed for " << attname);
             return -1;
         }
         herr_t status = H5Aread(attribute_id, H5T_NATIVE_DOUBLE, &attr_data[0]);
         if (status < 0)
         {
-            (*MPIdata::serr)
-                << "HDFrestart::read_att(), H5Aread failed!!!" << std::endl;
+            MGMOL_HDFRESTART_FAIL("H5Aread failed!!!");
             return -1;
         }
         status = H5Aclose(attribute_id);
         if (status < 0)
         {
-            (*MPIdata::serr)
-                << "HDFrestart::read_att(), H5Aclose failed!!!" << std::endl;
+            MGMOL_HDFRESTART_FAIL("H5Aclose failed!!!");
             return -1;
         }
     }
@@ -1959,7 +1774,7 @@ void HDFrestart::setCommActive()
             = MPI_Comm_split(mmpi.commSameSpin(), color, mytask, &comm_active_);
         if (mpirc != MPI_SUCCESS)
         {
-            (*MPIdata::serr) << "ERROR in MPI_Comm_split!!!" << std::endl;
+            MGMOL_HDFRESTART_FAIL("ERROR in MPI_Comm_split!!!");
             comm_active_ = MPI_COMM_NULL;
             return;
         }
@@ -1987,8 +1802,8 @@ void HDFrestart::setOptions(const short option_number)
             gather_data_x_ = true;
             break;
         default:
-            (*MPIdata::serr) << "HDFrestart::setOptions() --- type "
-                             << option_number << " undefined!!!" << std::endl;
+            MGMOL_HDFRESTART_FAIL(
+                "setOptions() --- type " << option_number << " undefined!!!");
             return;
     }
 }
@@ -2571,16 +2386,14 @@ int HDFrestart::readAtomicVelocities(std::vector<double>& data)
             H5P_DEFAULT, &data[0]);
         if (status < 0)
         {
-            (*MPIdata::serr)
-                << "HDFrestart::readAtomicVelocities() --- H5Dread failed!!!"
-                << std::endl;
+            MGMOL_HDFRESTART_FAIL("H5Dread failed!!!");
             return -2;
         }
 
         status = H5Dclose(dataset_id);
         if (status < 0)
         {
-            (*MPIdata::sout) << "H5Dclose failed!!!" << std::endl;
+            MGMOL_HDFRESTART_FAIL("H5Dclose failed!!!");
             return -2;
         }
     }
@@ -2624,7 +2437,7 @@ int HDFrestart::readLockedAtomNames(std::vector<std::string>& data)
             // check validity of data just read
             if (status < 0)
             {
-                (*MPIdata::serr) << "H5Aread failed!!!" << std::endl;
+                MGMOL_HDFRESTART_FAIL("H5Aread failed!!!");
                 return -1;
             }
         }
@@ -2697,9 +2510,7 @@ int HDFrestart::readAtomicNames(std::vector<std::string>& data)
             hid_t dataset_id = H5Dopen2(file_id_, "/Atomic_names", H5P_DEFAULT);
             if (dataset_id < 0)
             {
-                (*MPIdata::sout)
-                    << "HDFrestart::readAtomicNames() --- H5Dopen2 failed!!!"
-                    << std::endl;
+                MGMOL_HDFRESTART_FAIL("H5Dopen2 failed!!!");
                 return -1;
             }
 
@@ -2713,14 +2524,14 @@ int HDFrestart::readAtomicNames(std::vector<std::string>& data)
                 // check validity of data just read
                 if (status < 0)
                 {
-                    (*MPIdata::serr) << "H5Aread failed!!!" << std::endl;
+                    MGMOL_HDFRESTART_FAIL("H5Aread failed!!!");
                     return -1;
                 }
 
                 status = H5Aclose(attribute_id);
                 if (status < 0)
                 {
-                    (*MPIdata::serr) << "H5Aclose failed!!!" << std::endl;
+                    MGMOL_HDFRESTART_FAIL("H5Aclose failed!!!");
                     return -1;
                 }
             }
@@ -2728,10 +2539,7 @@ int HDFrestart::readAtomicNames(std::vector<std::string>& data)
             int dim = (int)H5Dget_storage_size(dataset_id) / name_length;
             if (dim == 0)
             {
-                if (onpe0)
-                    (*MPIdata::sout)
-                        << "HDFrestart::readAtomicNames() --- No names!!!"
-                        << std::endl;
+                if (onpe0) MGMOL_HDFRESTART_FAIL("No names!!!");
                 return -1;
             }
 
@@ -2744,17 +2552,13 @@ int HDFrestart::readAtomicNames(std::vector<std::string>& data)
                 dataset_id, strtype, H5S_ALL, H5S_ALL, H5P_DEFAULT, &buffer[0]);
             if (status < 0)
             {
-                (*MPIdata::sout)
-                    << "HDFrestart::readAtomicNames() --- H5Dread failed!!!"
-                    << std::endl;
+                MGMOL_HDFRESTART_FAIL("H5Dread failed!!!");
                 return -1;
             }
             status = H5Dclose(dataset_id);
             if (status < 0)
             {
-                (*MPIdata::sout)
-                    << "HDFrestart::readAtomicNames() --- H5Dclose failed!!!"
-                    << std::endl;
+                MGMOL_HDFRESTART_FAIL("H5Dclose failed!!!");
                 return -1;
             }
         }
@@ -2818,26 +2622,24 @@ int HDFrestart::readRestartRandomStates(std::vector<unsigned short>& data)
                     H5S_ALL, H5P_DEFAULT, &data[0]);
                 if (status < 0)
                 {
-                    (*MPIdata::serr) << "HDFrestart::readRestartRandomStates() "
-                                        "--- H5Dread failed!!!"
-                                     << std::endl;
+                    MGMOL_HDFRESTART_FAIL("H5Dread failed!!!");
                     return -2;
                 }
 
                 status = H5Dclose(dataset_id);
                 if (status < 0)
                 {
-                    (*MPIdata::sout) << "H5Dclose failed!!!" << std::endl;
+                    MGMOL_HDFRESTART_FAIL("H5Dclose failed!!!");
                     return -2;
                 }
 
                 if (!data.empty())
                     if (data[0] != data[0])
                     {
-                        (*MPIdata::serr)
-                            << "ERROR: HDFrestart::readRestartRandomStates() "
-                               "--- data[0]="
-                            << data[0] << std::endl;
+                        MGMOL_HDFRESTART_FAIL(
+                            "ERROR: HDFrestart::readRestartRandomStates() "
+                            "--- data[0]="
+                            << data[0]);
                         return -2;
                     }
             }
@@ -2849,73 +2651,9 @@ int HDFrestart::readRestartRandomStates(std::vector<unsigned short>& data)
     return 0;
 }
 
-void HDFrestart::gatherDataXdir(std::vector<unsigned short>& data)
+template <class T>
+void HDFrestart::gatherDataXdir(std::vector<T>& data)
 {
-
-    int j      = pes_.my_mpi(1);
-    int k      = pes_.my_mpi(2);
-    int source = pes_.xyz2task(0, j, k);
-    MPI_Status mpistatus;
-    for (int i = 1; i < pes_.n_mpi_task(0); i++)
-    {
-        int dest = pes_.xyz2task(i, j, k);
-        int tag  = i;
-        if (pes_.my_mpi(0) == 0)
-        {
-            assert(active_);
-            int datasize = data.size();
-            MPI_Send(&datasize, 1, MPI_INT, dest, 2 * tag, comm_data_);
-            MPI_Send(&data[0], datasize, MPI_UNSIGNED_SHORT, dest, 2 * tag + 1,
-                comm_data_);
-        }
-        else if (pes_.my_mpi(0) == i)
-        {
-            assert(!active_);
-            int datasize;
-            MPI_Recv(
-                &datasize, 1, MPI_INT, source, 2 * tag, comm_data_, &mpistatus);
-            data.resize(datasize);
-            MPI_Recv(&data[0], datasize, MPI_UNSIGNED_SHORT, source,
-                2 * tag + 1, comm_data_, &mpistatus);
-        }
-    }
-}
-
-void HDFrestart::gatherDataXdir(std::vector<int>& data)
-{
-
-    int j      = pes_.my_mpi(1);
-    int k      = pes_.my_mpi(2);
-    int source = pes_.xyz2task(0, j, k);
-    MPI_Status mpistatus;
-    for (int i = 1; i < pes_.n_mpi_task(0); i++)
-    {
-        int dest = pes_.xyz2task(i, j, k);
-        int tag  = i;
-        if (pes_.my_mpi(0) == 0)
-        {
-            assert(active_);
-            int datasize = data.size();
-            MPI_Send(&datasize, 1, MPI_INT, dest, 2 * tag, comm_data_);
-            MPI_Send(
-                &data[0], datasize, MPI_INT, dest, 2 * tag + 1, comm_data_);
-        }
-        else if (pes_.my_mpi(0) == i)
-        {
-            assert(!active_);
-            int datasize;
-            MPI_Recv(
-                &datasize, 1, MPI_INT, source, 2 * tag, comm_data_, &mpistatus);
-            data.resize(datasize);
-            MPI_Recv(&data[0], datasize, MPI_INT, source, 2 * tag + 1,
-                comm_data_, &mpistatus);
-        }
-    }
-}
-
-void HDFrestart::gatherDataXdir(std::vector<double>& data)
-{
-
     int j      = pes_.my_mpi(1);
     int k      = pes_.my_mpi(2);
     int source = pes_.xyz2task(0, j, k);
@@ -2930,8 +2668,8 @@ void HDFrestart::gatherDataXdir(std::vector<double>& data)
             int datasize = data.size();
             MPI_Send(&datasize, 1, MPI_INT, dest, 2 * tag, comm_data_);
             if (datasize > 0)
-                MPI_Send(&data[0], datasize, MPI_DOUBLE, dest, 2 * tag + 1,
-                    comm_data_);
+                MPI_Send_data(
+                    &data[0], datasize, dest, 2 * tag + 1, comm_data_);
         }
         else if (pes_.my_mpi(0) == i)
         {
@@ -2942,83 +2680,8 @@ void HDFrestart::gatherDataXdir(std::vector<double>& data)
             if (datasize > 0)
             {
                 data.resize(datasize);
-                MPI_Recv(&data[0], datasize, MPI_DOUBLE, source, 2 * tag + 1,
-                    comm_data_, &mpistatus);
-            }
-        }
-    }
-}
-
-void HDFrestart::gatherDataXdir(std::vector<FixedLengthString>& data)
-{
-    int j      = pes_.my_mpi(1);
-    int k      = pes_.my_mpi(2);
-    int source = pes_.xyz2task(0, j, k);
-    MPI_Status mpistatus;
-    for (int i = 1; i < pes_.n_mpi_task(0); i++)
-    {
-        int dest = pes_.xyz2task(i, j, k);
-        int tag  = i;
-        if (pes_.my_mpi(0) == 0)
-        {
-            assert(active_);
-            int datasize = data.size();
-            std::vector<char> buffer(datasize * IonData_MaxStrLength);
-            for (int i = 0; i < datasize; i++)
-                memcpy(&buffer[i * IonData_MaxStrLength], &data[i],
-                    IonData_MaxStrLength);
-
-            MPI_Send(&datasize, 1, MPI_INT, dest, 2 * tag, comm_data_);
-            MPI_Send(buffer.data(), datasize * IonData_MaxStrLength, MPI_CHAR,
-                dest, 2 * tag + 1, comm_data_);
-        }
-        else if (pes_.my_mpi(0) == i)
-        {
-            assert(!active_);
-            int datasize;
-            MPI_Recv(
-                &datasize, 1, MPI_INT, source, 2 * tag, comm_data_, &mpistatus);
-            std::vector<char> buffer(datasize * IonData_MaxStrLength);
-            MPI_Recv(buffer.data(), datasize * IonData_MaxStrLength, MPI_CHAR,
-                source, 2 * tag + 1, comm_data_, &mpistatus);
-            data.resize(datasize);
-            for (int i = 0; i < datasize; i++)
-                memcpy(&data[i], &buffer[i * IonData_MaxStrLength],
-                    IonData_MaxStrLength);
-        }
-    }
-}
-
-void HDFrestart::gatherDataXdir(std::vector<char>& data)
-{
-    int j      = pes_.my_mpi(1);
-    int k      = pes_.my_mpi(2);
-    int source = pes_.xyz2task(0, j, k);
-    MPI_Status mpistatus;
-    for (int i = 1; i < pes_.n_mpi_task(0); i++)
-    {
-        int dest = pes_.xyz2task(i, j, k);
-        int tag  = i;
-        if (pes_.my_mpi(0) == 0)
-        {
-            assert(active_);
-            int datasize = data.size();
-            MPI_Send(&datasize, 1, MPI_INT, dest, 2 * tag, comm_data_);
-            if (datasize > 0)
-                MPI_Send(&data[0], datasize, MPI_CHAR, dest, 2 * tag + 1,
-                    comm_data_);
-        }
-        else if (pes_.my_mpi(0) == i)
-        {
-            assert(!active_);
-            int datasize;
-            MPI_Recv(
-                &datasize, 1, MPI_INT, source, 2 * tag, comm_data_, &mpistatus);
-            if (datasize > 0)
-            {
-                data.resize(datasize);
-                MPI_Recv(&data[0], datasize, MPI_CHAR, source, 2 * tag + 1,
-                    comm_data_, &mpistatus);
+                MPI_Recv_data(
+                    &data[0], datasize, source, 2 * tag + 1, comm_data_);
             }
         }
     }
@@ -3026,3 +2689,11 @@ void HDFrestart::gatherDataXdir(std::vector<char>& data)
 
 template int HDFrestart::read_1func_hdf5(float*, const std::string&);
 template int HDFrestart::read_1func_hdf5(double*, const std::string&);
+
+template int HDFrestart::write_1func_hdf5(
+    double*, const std::string&, double* ll, double* origin);
+
+template int HDFrestart::readData(
+    double*, hid_t memspace, hid_t dset_id, const short precision);
+template int HDFrestart::writeData(double* vv, hid_t filespace, hid_t memspace,
+    hid_t dset_id, const short precision);
