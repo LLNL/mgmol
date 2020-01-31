@@ -17,6 +17,15 @@
 
 BOOST_AUTO_TEST_CASE(magma_openmp)
 {
+    // NOTE: It is very important that magma_queue_create is called before the
+    // first kernel is launched from OpenMP. Otherwise, we get the following
+    // error:
+    // libgomp: cuLaunchKernel error: invalid resource handle
+    magma_device_t device;
+    magma_queue_t queue;
+    magma_getdevice(&device);
+    magma_queue_create(device, &queue);
+
     int on_the_host = -1;
 #pragma omp target map(tofrom : on_the_host)
     on_the_host = omp_is_initial_device();
@@ -26,11 +35,6 @@ BOOST_AUTO_TEST_CASE(magma_openmp)
     const unsigned int size = 1000;
     magma_malloc(reinterpret_cast<void**>(&val_dev), size * sizeof(int));
     std::vector<int> val_host(size, 1);
-
-    magma_device_t device;
-    magma_queue_t queue;
-    magma_getdevice(&device);
-    magma_queue_create(device, &queue);
 
     // Copy the values to the device
     magma_setvector(size, sizeof(int), val_host.data(), 1, val_dev, 1, queue);
@@ -49,6 +53,7 @@ BOOST_AUTO_TEST_CASE(magma_openmp)
     for (unsigned int i = 0; i < size; ++i)
         BOOST_TEST(val_host[i] == i + 1);
 
+    magma_free(val_dev);
     magma_queue_destroy(queue);
 }
 #endif
