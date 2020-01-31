@@ -88,7 +88,7 @@ pipeline {
                   -D MGMOL_WITH_COVERAGE=OFF \
                   -D MGMOL_WITH_MAGMA=ON \
                   -D MGMOL_WITH_OPENMP_OFFLOAD=ON \
-                  -D CMAKE_CXX_FLAGS="-Wno-stringop-truncation" \
+                  -D CMAKE_CXX_FLAGS="-fopenmp -Wno-stringop-truncation" \
                   ..
                 make -j8
                 ctest --no-compress-output -T Test
