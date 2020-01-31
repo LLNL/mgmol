@@ -19,9 +19,7 @@
 
 #include "hdf5.h"
 
-#ifndef USE_HDF16
 #include "H5LTpublic.h"
-#endif
 
 #include <iostream>
 #include <map>
@@ -30,15 +28,7 @@
 
 class LocalizationRegions;
 
-#ifdef USE_HDF16
-hid_t H5Dopen2(hid_t loc_id, const char* name, hid_t dapl_id);
-hid_t H5Dcreate2(hid_t loc_id, const char* name, hid_t dtype_id, hid_t space_id,
-    hid_t lcpl_id, hid_t dcpl_id, hid_t dapl_id);
-hid_t H5Acreate2(hid_t loc_id, const char* attr_name, hid_t type_id,
-    hid_t space_id, hid_t acpl_id, hid_t aapl_id);
-#else
 herr_t H5LTfind_dataset(hid_t file_id_, const char* datasetname);
-#endif
 
 int readListCentersAndRadii(hid_t dset_id, std::vector<double>& attr_data);
 int readGids(hid_t dset_id, std::vector<int>& gids);
@@ -91,14 +81,30 @@ class HDFrestart
     void setupBlocks();
     void setOptions(const short option_number);
     void addReleaseNumber2File(const char* release);
-    void gatherDataXdir(std::vector<int>& data);
-    void gatherDataXdir(std::vector<unsigned short>& data);
-    void gatherDataXdir(std::vector<double>& data);
-    void gatherDataXdir(std::vector<FixedLengthString>& data);
-    void gatherDataXdir(std::vector<char>& data);
+
+    template <class T>
+    void gatherDataXdir(std::vector<T>& data);
 
     void closeWorkSpace();
     void setupWorkSpace();
+
+    template <class T>
+    void getWorkspace(T* work_space);
+
+    template <class T>
+    int readDataset(hid_t dset_id, hid_t memspace, hid_t filespace,
+        hid_t plist_id, T* work_space);
+
+    template <class T>
+    void MPI_Send_data(
+        T*, const int n, const int dest, const int tag, MPI_Comm);
+
+    template <class T>
+    void MPI_Recv_data(T*, const int n, const int src, const int tag, MPI_Comm);
+
+    template <class T>
+    hid_t TH5Dcreate2(hid_t file_id, const std::string& datasetname,
+        hid_t filespace, hid_t plist_id);
 
 public:
     HDFrestart(const std::string& filename, const pb::PEenv& pes,
@@ -155,9 +161,6 @@ public:
     }
     herr_t dset_exists(const char* const datasetname) const
     {
-#ifdef USE_HDF16
-        herr_t err_id = 1;
-#else
         herr_t err_id = 0;
         if (active_)
         {
@@ -171,7 +174,6 @@ public:
                         << datasetname << std::endl;
             }
         }
-#endif
         return err_id;
     }
 
@@ -228,23 +230,24 @@ public:
         const std::string& name);
     int getLRs(LocalizationRegions& lrs, const int max_nb,
         const std::string& name, const bool add = false);
-    int read_1func_hdf5(double*, const std::string&);
-    int read_1func_hdf5(float*, const std::string&);
-    int write_1func_hdf5(double*, const std::string&, double* ll = nullptr,
-        double* origin = nullptr);
-    int write_1func_hdf5(float*, const std::string&, double* ll = nullptr,
-        double* origin = nullptr);
+
+    template <class T>
+    int read_1func_hdf5(T*, const std::string&);
+
+    template <class T>
+    int write_1func_hdf5(
+        T*, const std::string&, double* ll = nullptr, double* origin = nullptr);
+
     int read_att(const hid_t dset_id, const std::string& attname,
         std::vector<double>& attr_data);
 
-    int writeData(double* vv, hid_t filespace, hid_t memspace, hid_t dset_id,
+    template <class T>
+    int writeData(T* vv, hid_t filespace, hid_t memspace, hid_t dset_id,
         const short precision);
-    int writeData(float* vv, hid_t filespace, hid_t memspace, hid_t dset_id,
-        const short precision);
-    int readData(
-        double* vv, hid_t memspace, hid_t dset_id, const short precision);
-    int readData(
-        float* vv, hid_t memspace, hid_t dset_id, const short precision);
+
+    template <class T>
+    int readData(T* vv, hid_t memspace, hid_t dset_id, const short precision);
+
     //    int writeRandomState(unsigned short int rand_state[3]);
     //    int readRandomState(unsigned short* rand_state);
     int readAtomicIDs(std::vector<int>& data);
