@@ -17,8 +17,15 @@
 
 #include <magma_singleton.h>
 
+#include <cstring>
 #include <memory>
 #include <vector>
+
+#if defined(HAVE_MAGMA) && defined(HAVE_OPENMP_OFFLOAD)
+bool constexpr mgmol_offload = true;
+#else
+bool constexpr mgmol_offload = false;
+#endif
 
 namespace MemorySpace
 {
@@ -29,6 +36,10 @@ struct Host
 struct Device
 {
 };
+
+//---------------------------------------------------------------------------//
+// Copy from the host/device to the device/host
+//---------------------------------------------------------------------------//
 
 #ifdef HAVE_MAGMA
 template <typename T>
@@ -117,21 +128,101 @@ void copy_to_host(std::unique_ptr<T[], void (*)(T*)> const& vec_dev,
     copy_to_host(vec_dev.get(), size, vec);
 }
 
+//---------------------------------------------------------------------------//
+// Allocate and deallocate memory
+//---------------------------------------------------------------------------//
+
+template <typename MemorySpaceType>
+struct Memory
+{
+    template <typename T>
+    static T* allocate(unsigned int size);
+
+    template <typename T>
+    static void free(T* ptr);
+
+    template <typename T>
+    static void copy(T const* in, unsigned int size, T* out);
+
+    template <typename T>
+    static void set(T* ptr, unsigned int size, int val);
+};
+
+template <>
+struct Memory<MemorySpace::Host>
+{
+    template <typename T>
+    static T* allocate(unsigned int size)
+    {
+        return std::malloc(size * sizeof(T));
+    }
+
+    template <typename T>
+    static void free(T* ptr)
+    {
+        std::free(ptr);
+        ptr = nullptr;
+    }
+
+    template <typename T>
+    static void copy(T const* in, unsigned int size, T* out)
+    {
+        std::memcpy(out, in, size * sizeof(T));
+    }
+
+    template <typename T>
+    static void set(T* ptr, unsigned int size, int val)
+    {
+        std::memset(ptr, val, size * sizeof(T));
+    }
+};
+
 #ifdef HAVE_MAGMA
-template <typename T>
-T* allocate_data_dev(unsigned int size)
+template <>
+struct Memory<MemorySpace::Device>
 {
-    T* ptr_dev;
-    magma_malloc(reinterpret_cast<void**>(&ptr_dev), size * sizeof(T));
+    template <typename T>
+    static T* allocate(unsigned int size)
+    {
+        T* ptr_dev;
+        magma_malloc(reinterpret_cast<void**>(&ptr_dev), size * sizeof(T));
 
-    return ptr_dev;
-}
+        return ptr_dev;
+    }
 
-template <typename T>
-void delete_data_dev(T* ptr_dev)
-{
-    magma_free(ptr_dev);
-}
+    template <typename T>
+    static void free(T* ptr_dev)
+    {
+        magma_free(ptr_dev);
+        ptr_dev = nullptr;
+    }
+
+    template <typename T>
+    static void copy(T const* in, unsigned int size, T* out)
+    {
+        int const increment   = 1;
+        auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+        magma_copyvector(size, sizeof(T), in, increment, out, increment,
+            magma_singleton.queue_);
+    }
+
+    template <typename T>
+    static void set(T* ptr, unsigned int size, int val)
+    {
+        // Cannot directly use cudaMemset and MAGMA does not have an equivalent
+        // function. If we have OpenMP with offloading, we directly set the
+        // value. Otherwise, we copy a vector from the host.
+#ifdef HAVE_OPENMP_OFFLOAD
+#pragma omp target teams distribute parallel for is_device_ptr(ptr)
+        for (unsigned int i = 0; i < size; ++i)
+            ptr[i] = val;
+#else
+        auto ptr_host = Memory<Host>::allocate<T>(size);
+        set(ptr_host, size, val);
+        copy_to_dev(ptr_host, size, ptr);
+#endif
+    }
+};
 #endif
 }
 #endif

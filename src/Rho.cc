@@ -693,18 +693,21 @@ void Rho<T>::computeRhoSubdomainUsingBlas3(const int iloc_init,
 #ifdef HAVE_MAGMA
         {
             std::unique_ptr<ORBDTYPE[], void (*)(ORBDTYPE*)> phi1_dev(
-                MemorySpace::allocate_data_dev<ORBDTYPE>(ld * ncols),
-                MemorySpace::delete_data_dev);
+                MemorySpace::Memory<MemorySpace::Device>::allocate<ORBDTYPE>(
+                    ld * ncols),
+                MemorySpace::Memory<MemorySpace::Device>::free);
             MemorySpace::copy_to_dev(phi1, ld * ncols, phi1_dev);
 
             std::unique_ptr<MATDTYPE[], void (*)(MATDTYPE*)> mat_dev(
-                MemorySpace::allocate_data_dev<MATDTYPE>(ncols * ncols),
-                MemorySpace::delete_data_dev);
+                MemorySpace::Memory<MemorySpace::Device>::allocate<MATDTYPE>(
+                    ncols * ncols),
+                MemorySpace::Memory<MemorySpace::Device>::free);
             MemorySpace::copy_to_dev(mat, ncols * ncols, mat_dev);
 
             std::unique_ptr<ORBDTYPE[], void (*)(ORBDTYPE*)> product_dev(
-                MemorySpace::allocate_data_dev<ORBDTYPE>(nrows * ncols),
-                MemorySpace::delete_data_dev);
+                MemorySpace::Memory<MemorySpace::Device>::allocate<ORBDTYPE>(
+                    nrows * ncols),
+                MemorySpace::Memory<MemorySpace::Device>::free);
 
             LinearAlgebraUtils<MemorySpace::Device>::MPgemmNN(nrows, ncols,
                 ncols, 1., phi1_dev.get(), ld, mat_dev.get(), ncols, 0.,
