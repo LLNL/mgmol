@@ -41,6 +41,7 @@ pipeline {
                   module load pkgconf-1.6.3-gcc-9.2.0-jun6j25
                   cmake \
                   -D BUILD_SHARED_LIBS=ON \
+                  -D CMAKE_BUILD_TYPE=Release \
                   -D SCALAPACK_ROOT=$(spack location -i netlib-scalapack) \
                   -D MGMOL_WITH_CLANG_FORMAT=OFF \
                   -D MGMOL_WITH_COVERAGE=OFF \
@@ -83,6 +84,7 @@ pipeline {
                   module load pkgconf-1.6.3-gcc-9.2.0-jun6j25
                   cmake \
                   -D BUILD_SHARED_LIBS=ON \
+                  -D CMAKE_BUILD_TYPE=Release \
                   -D SCALAPACK_ROOT=$(spack location -i netlib-scalapack) \
                   -D MGMOL_WITH_CLANG_FORMAT=OFF \
                   -D MGMOL_WITH_COVERAGE=OFF \
@@ -126,6 +128,7 @@ pipeline {
                   module load openblas-0.3.7-gcc-7.4.0-7pjtf4y
                   cmake \
                   -D BUILD_SHARED_LIBS=ON \
+                  -D CMAKE_BUILD_TYPE=Release \
                   -D SCALAPACK_ROOT=$(spack location -i netlib-scalapack) \
                   -D SCALAPACK_ROOT=$(spack location -i netlib-scalapack) \
                   -D MGMOL_WITH_CLANG_FORMAT=ON \
