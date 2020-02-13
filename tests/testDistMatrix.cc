@@ -15,7 +15,7 @@
 #include "DistMatrix.h"
 #include "MGmol_MPI.h"
 
-#include <boost/test/unit_test.hpp>
+#include "catch.hpp"
 
 #include <mpi.h>
 
@@ -25,18 +25,17 @@
 #include <iomanip>
 #include <iostream>
 
-namespace tt = boost::test_tools;
-
 int aa(int i, int j) { return i + 2 * j; }
 int bb(int i, int j) { return i - j - 3; }
 
-BOOST_AUTO_TEST_CASE(distributed_matrix)
+TEST_CASE("Check DistMatrix", "[distributed_matrix]")
 {
     int mype;
     int npes;
     MPI_Comm_size(MPI_COMM_WORLD, &npes);
 
-    BOOST_TEST(npes == 4, "This example to set up to use only 4 processes");
+    INFO("This example to set up to use only 4 processes");
+    REQUIRE(npes == 4);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &mype);
 
@@ -151,7 +150,7 @@ BOOST_AUTO_TEST_CASE(distributed_matrix)
                         int iii  = x + l * c.mb();
                         int jjj  = y + m * c.nb();
                         int ival = iii + jjj * c.mloc();
-                        BOOST_TEST(c.val(ival) == sum, tt::tolerance(1.e-8));
+                        CHECK(c.val(ival) == Approx(sum).epsilon(1.e-8));
                     }
 
         std::cout << " results checked" << std::endl;
@@ -165,7 +164,8 @@ BOOST_AUTO_TEST_CASE(distributed_matrix)
         b.init(aa.data(), a.m());
         double norm = b.norm('F');
         if (mype == 0) std::cout << "Norm(b)=" << norm << std::endl;
-        BOOST_TEST(norm == norma, tt::tolerance(0.000001));
+        CHECK(norm == Approx(norm).epsilon(0.000001));
+        // TODO we should check the result of the operations
         if (mype == 0) std::cout << "DistMatrix::transpose..." << std::endl;
         c.transpose(b);
         norm = c.norm('F');

@@ -16,7 +16,7 @@
 #include "DistVector.h"
 #include "MGmol_MPI.h"
 
-#include <boost/test/unit_test.hpp>
+#include "catch.hpp"
 
 #include <mpi.h>
 
@@ -26,16 +26,15 @@
 #include <iomanip>
 #include <iostream>
 
-namespace tt = boost::test_tools;
-
-BOOST_AUTO_TEST_CASE(dist_vector)
+TEST_CASE("Check DistVector", "[dist_vector]")
 {
     int mype;
     int npes;
 
     MPI_Comm_size(MPI_COMM_WORLD, &npes);
 
-    BOOST_TEST(npes == 4, "This example to set up to use only 4 processes");
+    INFO("This example to set up to use only 4 processes");
+    REQUIRE(npes == 4);
     MPI_Comm_rank(MPI_COMM_WORLD, &mype);
 
     int nprow = 2;
@@ -64,19 +63,16 @@ BOOST_AUTO_TEST_CASE(dist_vector)
         double norm2          = distv.nrm2();
         double expected_norm2 = std::sqrt((double)m);
 
-        if (mype == 0) std::cout << "Norm(v)=" << norm2 << std::endl;
-        BOOST_TEST(norm2 == expected_norm2, tt::tolerance(0.000001));
+        CHECK(norm2 == Approx(expected_norm2).epsilon(0.000001));
 
         distv.normalize();
 
         double normn = distv.nrm2();
-        if (mype == 0) std::cout << "Norm(v)=" << normn << std::endl;
-        BOOST_TEST(normn == 1., tt::tolerance(0.000001));
+        CHECK(normn == Approx(1.).epsilon(0.000001));
 
         dist_matrix::DistVector<double> distv2(stdv);
 
         double diff2 = distv2.scaledDiff2(distv, norm2);
-        if (mype == 0) std::cout << "diff2=" << diff2 << std::endl;
-        BOOST_TEST(diff2 == 0., tt::tolerance(0.000001));
+        CHECK(diff2 == Approx(0.).margin(0.000001));
     }
 }

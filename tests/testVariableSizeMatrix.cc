@@ -9,7 +9,7 @@
 #include "MGmol_MPI.h"
 #include "VariableSizeMatrix.h"
 
-#include <boost/test/unit_test.hpp>
+#include "catch.hpp"
 
 #include <mpi.h>
 
@@ -20,10 +20,7 @@
 #include <iostream>
 #include <numeric>
 
-namespace tt  = boost::test_tools;
-namespace utf = boost::unit_test;
-
-BOOST_AUTO_TEST_CASE(variable_size_matrix_gemv, *utf::tolerance(1.e-8))
+TEST_CASE("Check VariableSizeMatrix gemv", "[gemv]")
 {
     const int lsize = 15;
 
@@ -43,11 +40,12 @@ BOOST_AUTO_TEST_CASE(variable_size_matrix_gemv, *utf::tolerance(1.e-8))
     std::vector<double> x(lsize, 1.0);
     std::vector<double> y(lsize, 0.);
     mat.gemv(1.0, x, 0., y);
-    double sum = std::accumulate(y.begin(), y.end(), 0.);
-    BOOST_TEST(sum == (double)(lsize));
+    double sum     = std::accumulate(y.begin(), y.end(), 0.);
+    double lsize_d = static_cast<double>(lsize);
+    CHECK(sum == Approx(lsize_d).epsilon(1e-8));
 }
 
-BOOST_AUTO_TEST_CASE(variable_size_matrix_insert, *utf::tolerance(1.e-12))
+TEST_CASE("Check inserting elements in VariableSizeMatrix", "[insert]")
 {
     const int lsize = 15;
 
@@ -79,18 +77,18 @@ BOOST_AUTO_TEST_CASE(variable_size_matrix_insert, *utf::tolerance(1.e-12))
         for (int j = 0; j < lsize; j++)
         {
             double val = mat.get_value(i, j);
-            BOOST_TEST(val == 10.);
+            CHECK(val == Approx(10.).epsilon(1e-12));
         }
     }
     // verify matrix statistics
     const int nnz = lsize * lsize;
-    BOOST_TEST(mat.n() == lsize);
-    BOOST_TEST(mat.nnzmat() == nnz);
-    BOOST_TEST(mat.nzmin() == lsize);
-    BOOST_TEST(mat.nzmax() == lsize);    
+    CHECK(mat.n() == lsize);
+    CHECK(mat.nnzmat() == nnz);
+    CHECK(mat.nzmin() == lsize);
+    CHECK(mat.nzmax() == lsize);
 }
 
-BOOST_AUTO_TEST_CASE(variable_size_matrix)
+TEST_CASE("Check VariableSizeMatrix", "[variable_size_matrix]")
 {
     int mype;
     int npes;
@@ -98,8 +96,8 @@ BOOST_AUTO_TEST_CASE(variable_size_matrix)
     const int num_print_rows = 5;
     MPI_Comm_size(MPI_COMM_WORLD, &npes);
 
-    BOOST_TEST(
-        npes == 1, "ERROR: This example is set up to use only 1 process");
+    INFO("This example is set up to use only 1 process");
+    CHECK(npes == 1);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &mype);
 
@@ -172,7 +170,7 @@ BOOST_AUTO_TEST_CASE(variable_size_matrix)
     {
         sum += matB.pnorm(i, 0);
     }
-    BOOST_TEST(sum == 0.0, tt::tolerance(1.e-8));
+    CHECK(sum == Approx(0.0).margin(1e-8));
 
     // set2Identity
     matB.set2Identity();
@@ -195,8 +193,8 @@ BOOST_AUTO_TEST_CASE(variable_size_matrix)
         sumc += matC.pnorm(i, 0);
     }
     sum *= scal;
-    BOOST_TEST(sum == sumc, tt::tolerance(1.e-8));
+    CHECK(sum == Approx(sumc).epsilon(1.e-8));
     // Check trace
     std::cout << "Check trace ..." << std::endl;
-    BOOST_TEST(matC.trace() == (scal * matA.trace()), tt::tolerance(1.e-8));
+    CHECK(matC.trace() == Approx(scal * matA.trace()).epsilon(1.e-8));
 }

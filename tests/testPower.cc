@@ -12,12 +12,10 @@
 
 #include "Power.h"
 
-#include <boost/test/unit_test.hpp>
+#include "catch.hpp"
 #include <iostream>
 
-namespace utf = boost::unit_test;
-
-BOOST_AUTO_TEST_CASE(power, *utf::tolerance(1e-3))
+TEST_CASE("Compute eigenvalues using the power method", "[power]")
 {
     // construct diagonal 10x10 matrix
     const int n        = 10;
@@ -33,8 +31,8 @@ BOOST_AUTO_TEST_CASE(power, *utf::tolerance(1e-3))
 
     power.computeEigenInterval(A, emin, emax, 1.e-3, true);
 
-    BOOST_TEST(emin == shift);
+    CHECK(emin == Approx(shift).epsilon(1e-3));
 
     const double expected_emax = 10. * (n - 1) + shift;
-    BOOST_TEST(emax == expected_emax);
+    CHECK(emax == Approx(expected_emax).epsilon(1e-3));
 }

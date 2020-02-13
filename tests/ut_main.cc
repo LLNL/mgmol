@@ -1,24 +1,17 @@
-#define BOOST_TEST_NO_MAIN
-#define BOOST_TEST_ALTERNATIVE_INIT_API
-#include <boost/test/unit_test.hpp>
+#define CATCH_CONFIG_RUNNER
+// Disable colored output because it doesn't play well with ctest
+#define CATCH_CONFIG_COLOUR_NONE
+#include "catch.hpp"
 
 #include <mpi.h>
 
-struct ExecutionEnvironmentScopeGuard
-{
-    ExecutionEnvironmentScopeGuard(int argc, char* argv[])
-    {
-        MPI_Init(&argc, &argv);
-    }
-
-    ~ExecutionEnvironmentScopeGuard() { MPI_Finalize(); }
-};
-
-bool init_function() { return true; }
-
 int main(int argc, char* argv[])
 {
-    ExecutionEnvironmentScopeGuard scope_guard(argc, argv);
+    MPI_Init(&argc, &argv);
 
-    return boost::unit_test::unit_test_main(&init_function, argc, argv);
+    int result = Catch::Session().run(argc, argv);
+
+    MPI_Finalize();
+
+    return result;
 }

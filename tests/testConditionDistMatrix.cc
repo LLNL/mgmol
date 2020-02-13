@@ -11,12 +11,11 @@
 #include "DistMatrix.h"
 #include "MGmol_MPI.h"
 
-#include <boost/test/unit_test.hpp>
+#include "catch.hpp"
 #include <iostream>
 
-namespace tt = boost::test_tools;
-
-BOOST_AUTO_TEST_CASE(condition_dist_matrix)
+TEST_CASE("Check condition number of DistMatrix using Cholesky decomposition",
+    "[condition_dist_matrix]")
 {
     MGmol_MPI::setup(MPI_COMM_WORLD, std::cout);
 
@@ -42,12 +41,12 @@ BOOST_AUTO_TEST_CASE(condition_dist_matrix)
     // Cholesky decomposition of S
     LS       = S;
     int info = LS.potrf('l');
-    BOOST_TEST(info == 0, "Cholesky decomposition of S failed!");
+    REQUIRE(info == 0);
 
     double anorm   = S.norm('1');
     double invcond = LS.pocon('l', anorm);
     double cond    = 1. / invcond;
 
     const double tol = 1.e-3;
-    BOOST_TEST(cond == expected_cond, tt::tolerance(tol));
+    CHECK(cond == Approx(expected_cond).epsilon(tol));
 }

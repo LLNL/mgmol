@@ -6,7 +6,7 @@
 #include "MGmol_MPI.h"
 #include "SquareLocalMatrices.h"
 
-#include <boost/test/unit_test.hpp>
+#include "catch.hpp"
 
 #include <mpi.h>
 
@@ -16,15 +16,16 @@
 #include <iomanip>
 #include <iostream>
 
-namespace utf = boost::unit_test;
-
-BOOST_AUTO_TEST_CASE(replicated_to_dist_matrix, *utf::tolerance(1e-8))
+TEST_CASE(
+    "Check that distributed matrices can be build from replicated matrices",
+    "[replicated_to_dist_matrix]")
 {
     int mype;
     int npes;
 
     MPI_Comm_size(MPI_COMM_WORLD, &npes);
-    BOOST_TEST(npes == 4, "This example to set up to use only 4 processes.");
+    INFO("This example to set up to use only 4 processes.");
+    REQUIRE(npes == 4);
     MPI_Comm_rank(MPI_COMM_WORLD, &mype);
 
     int nprow = 2;
@@ -74,6 +75,6 @@ BOOST_AUTO_TEST_CASE(replicated_to_dist_matrix, *utf::tolerance(1e-8))
         {
             double valbefore = replicated.getVal(i, j);
             double valafter  = result.getVal(i, j);
-            BOOST_TEST(valbefore == valafter);
+            CHECK(valbefore == Approx(valafter).epsilon(1e-8));
         }
 }
