@@ -1434,7 +1434,7 @@ void ExtendedGridOrbitals::projectOut(
     assert(lda > 1);
     assert(loc_numpt_ > 0);
     assert(numst_ >= 0);
-    assert(lda_ > loc_numpt_);
+    assert(lda_ >= loc_numpt_);
 
     SquareLocalMatrices<MATDTYPE> lmatrix(subdivx_, numst_);
 

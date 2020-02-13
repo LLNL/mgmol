@@ -279,7 +279,7 @@ int MGmol<T>::initial()
 
     initialMasks();
 
-    BlockVector<ORBDTYPE>::setOverAllocateFactor(
+    BlockVector<ORBDTYPE, MemorySpace::Host>::setOverAllocateFactor(
         ct.orbitalsOverallocateFactor());
 
     if (ct.verbose > 0)
@@ -914,7 +914,7 @@ void MGmol<T>::printTimers()
     dump_tm_.print(os_);
     setup_tm_.print(os_);
     HDFrestart::printTimers(os_);
-    BlockVector<ORBDTYPE>::printTimers(os_);
+    BlockVector<ORBDTYPE, MemorySpace::Host>::printTimers(os_);
     OrbitalsPreconditioning<T>::printTimers(os_);
     DavidsonSolver<ExtendedGridOrbitals>::printTimers(os_);
     MDfiles::printTimers(os_);

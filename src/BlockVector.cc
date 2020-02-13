@@ -13,16 +13,12 @@
 #include "MGmol_MPI.h"
 #include "MPIdata.h"
 #include "global.h"
+#include "memory_space.h"
 
-using namespace std;
+#define NEWSTORAGE 0
 
-// Timer BlockVectorBase::set_data_tm_("BlockVector::set_data_wghosts");
-// Timer BlockVectorBase::trade_data_tm_("BlockVector::trade_data");
-
-#define NEWSTORAGE 1
-
-template <typename T>
-BlockVector<T>::BlockVector(
+template <typename ScalarType, typename MemorySpaceType>
+BlockVector<ScalarType, MemorySpaceType>::BlockVector(
     const pb::Grid& my_grid, const short subdivx, const short bc[3])
     : mygrid_(my_grid)
 {
@@ -43,8 +39,8 @@ BlockVector<T>::BlockVector(
 
     n_instances_++;
 }
-template <>
-BlockVector<double>::~BlockVector()
+template <typename ScalarType, typename MemorySpaceType>
+BlockVector<ScalarType, MemorySpaceType>::~BlockVector()
 {
     deallocate_storage();
     if (n_instances_ == 1)
@@ -52,29 +48,16 @@ BlockVector<double>::~BlockVector()
         delete data_wghosts_;
         data_wghosts_ = nullptr;
         allocated_.clear();
-        for (vector<double*>::iterator it = class_storage_.begin();
+        for (typename std::vector<ScalarType*>::iterator it
+             = class_storage_.begin();
              it != class_storage_.end(); ++it)
             delete[] * it;
     }
     n_instances_--;
 }
-template <>
-BlockVector<float>::~BlockVector()
-{
-    deallocate_storage();
-    if (n_instances_ == 1)
-    {
-        delete data_wghosts_;
-        data_wghosts_ = nullptr;
-        allocated_.clear();
-        for (vector<float*>::iterator it = class_storage_.begin();
-             it != class_storage_.end(); ++it)
-            delete[] * it;
-    }
-    n_instances_--;
-}
-template <typename T>
-void BlockVector<T>::allocate1NewBlock()
+
+template <typename ScalarType, typename MemorySpaceType>
+void BlockVector<ScalarType, MemorySpaceType>::allocate1NewBlock()
 {
     assert(size_storage_ > 0);
     assert(overallocate_factor_ >= 1.);
@@ -82,34 +65,35 @@ void BlockVector<T>::allocate1NewBlock()
     // size of allocation is based on first call to this function
     if (allocated_size_storage_ == 0)
         allocated_size_storage_
-            = (int)((T)(size_storage_)*overallocate_factor_);
+            = (int)((ScalarType)(size_storage_)*overallocate_factor_);
 
     // check if storage required is not bigger than initial allocation
     if (size_storage_ > allocated_size_storage_)
     {
         (*MPIdata::sout)
             << "BlockVector::allocate1NewBlock(): allocated_size_storage_ = "
-            << allocated_size_storage_ << endl;
+            << allocated_size_storage_ << std::endl;
         (*MPIdata::sout)
             << "BlockVector::allocate1NewBlock(): size_storage_           = "
-            << size_storage_ << endl;
+            << size_storage_ << std::endl;
         (*MPIdata::sout)
             << "BlockVector::allocate1NewBlock(): size_storage_ too large!!!"
-            << endl;
+            << std::endl;
         exit(0);
     }
 
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 1)
         (*MPIdata::sout) << "BlockVector, allocate memory size "
-                         << allocated_size_storage_ << endl;
+                         << allocated_size_storage_ << std::endl;
 
-    class_storage_.push_back(new T[allocated_size_storage_]);
+    class_storage_.push_back(new ScalarType[allocated_size_storage_]);
 
-    memset((class_storage_.back()), 0, allocated_size_storage_ * sizeof(T));
+    memset((class_storage_.back()), 0,
+        allocated_size_storage_ * sizeof(ScalarType));
 }
-template <typename T>
-void BlockVector<T>::allocate_storage()
+template <typename ScalarType, typename MemorySpaceType>
+void BlockVector<ScalarType, MemorySpaceType>::allocate_storage()
 {
     assert(size_storage_ > 0);
     assert(storage_ == nullptr);
@@ -117,18 +101,13 @@ void BlockVector<T>::allocate_storage()
     Control& ct                  = *(Control::instance());
     static short high_water_mark = 0;
 
-    // assert( allocated_.size()<=n_instances_ );
-
-    // if( onpe0 )
-    //    (*MPIdata::sout)<<"n_instances_="<<n_instances_<<endl;
-
 #ifdef NEWSTORAGE
     // firt time, allocate memory for max_alloc_instances_ objects
     if (allocated_.size() == 0)
     {
         if (onpe0 && ct.verbose > 1)
             (*MPIdata::sout) << "BlockVector, allocate " << max_alloc_instances_
-                             << " instances" << endl;
+                             << " instances" << std::endl;
         for (short i = 0; i < max_alloc_instances_; i++)
             allocate1NewBlock();
 
@@ -138,8 +117,8 @@ void BlockVector<T>::allocate_storage()
     }
     else
     {
-        vector<short>::iterator ia = allocated_.begin();
-        short ii                   = 0;
+        std::vector<short>::iterator ia = allocated_.begin();
+        short ii                        = 0;
         while (ia != allocated_.end())
         {
             if (*ia == 0) break;
@@ -157,8 +136,9 @@ void BlockVector<T>::allocate_storage()
         my_allocation_ = ii;
         if (my_allocation_ >= static_cast<int>(class_storage_.size()))
         {
-            cerr << "Number of allocated blocks: " << class_storage_.size()
-                 << ", Cannot allocate another BlockVector!!!" << endl;
+            std::cerr << "Number of allocated blocks: " << class_storage_.size()
+                      << ", Cannot allocate another BlockVector!!!"
+                      << std::endl;
             exit(0);
         }
     }
@@ -166,8 +146,9 @@ void BlockVector<T>::allocate_storage()
     if (my_allocation_ > high_water_mark) high_water_mark = my_allocation_;
     if (onpe0 && ct.verbose > 2)
     {
-        (*MPIdata::sout) << "allocation in slot " << my_allocation_ << endl;
-        (*MPIdata::sout) << "high water mark: " << high_water_mark << endl;
+        (*MPIdata::sout) << "allocation in slot " << my_allocation_
+                         << std::endl;
+        (*MPIdata::sout) << "high water mark: " << high_water_mark << std::endl;
     }
     assert(my_allocation_ < static_cast<int>(class_storage_.size()));
     assert(my_allocation_ < static_cast<int>(class_storage_.size()));
@@ -175,15 +156,15 @@ void BlockVector<T>::allocate_storage()
 
     if (allocated_size_storage_ < size_storage_)
     {
-        cerr << "ERROR BlockVector: trying to use allocation " << size_storage_
-             << " bigger than initialy preallocated " << allocated_size_storage_
-             << "!!!" << endl;
+        std::cerr << "ERROR BlockVector: trying to use allocation "
+                  << size_storage_ << " bigger than initialy preallocated "
+                  << allocated_size_storage_ << "!!!" << std::endl;
         ct.global_exit(0);
     }
     storage_ = class_storage_[my_allocation_];
     assert(storage_ != nullptr);
 #else
-    storage_ = new T[size_storage_];
+    storage_ = new ScalarType[size_storage_];
 #endif
 
     assert(storage_ != nullptr);
@@ -191,8 +172,8 @@ void BlockVector<T>::allocate_storage()
 }
 
 // free slot of memory allocated to particular object
-template <typename T>
-void BlockVector<T>::deallocate_storage()
+template <typename ScalarType, typename MemorySpaceType>
+void BlockVector<ScalarType, MemorySpaceType>::deallocate_storage()
 {
     if (my_allocation_ >= 0)
     {
@@ -208,8 +189,8 @@ void BlockVector<T>::deallocate_storage()
         storage_ = nullptr;
     }
 }
-template <typename T>
-void BlockVector<T>::setup(const BlockVector& bv)
+template <typename ScalarType, typename MemorySpaceType>
+void BlockVector<ScalarType, MemorySpaceType>::setup(const BlockVector& bv)
 {
     storage_       = nullptr;
     my_allocation_ = -1;
@@ -225,8 +206,9 @@ void BlockVector<T>::setup(const BlockVector& bv)
         vect_[i] = storage_ + i * ld_;
     }
 }
-template <typename T>
-BlockVector<T>::BlockVector(const BlockVector<T>& bv, const bool copy_data)
+template <typename ScalarType, typename MemorySpaceType>
+BlockVector<ScalarType, MemorySpaceType>::BlockVector(
+    const BlockVector<ScalarType, MemorySpaceType>& bv, const bool copy_data)
     : size_storage_instance_(bv.size_storage_instance_),
       ld_instance_(bv.ld_instance_),
       mygrid_(bv.mygrid_)
@@ -237,10 +219,13 @@ BlockVector<T>::BlockVector(const BlockVector<T>& bv, const bool copy_data)
 
     setup(bv);
 
-    if (copy_data) memcpy(storage_, bv.storage_, size_storage_ * sizeof(T));
+    if (copy_data)
+        memcpy(storage_, bv.storage_, size_storage_ * sizeof(ScalarType));
 }
-template <typename T>
-BlockVector<T>& BlockVector<T>::operator=(const BlockVector<T>& bv)
+template <typename ScalarType, typename MemorySpaceType>
+BlockVector<ScalarType, MemorySpaceType>&
+BlockVector<ScalarType, MemorySpaceType>::operator=(
+    const BlockVector<ScalarType, MemorySpaceType>& bv)
 {
     if (this == &bv) return *this;
 
@@ -248,53 +233,57 @@ BlockVector<T>& BlockVector<T>::operator=(const BlockVector<T>& bv)
 
     setup(bv);
 
-    memcpy(storage_, bv.storage_, size_storage_ * sizeof(T));
+    memcpy(storage_, bv.storage_, size_storage_ * sizeof(ScalarType));
 
     return *this;
 }
-template <typename T>
-BlockVector<T>& BlockVector<T>::operator-=(const BlockVector<T>& src)
+template <typename ScalarType, typename MemorySpaceType>
+BlockVector<ScalarType, MemorySpaceType>&
+BlockVector<ScalarType, MemorySpaceType>::operator-=(
+    const BlockVector<ScalarType, MemorySpaceType>& src)
 {
     for (unsigned int i = 0; i < vect_.size(); i++)
     {
-        T* vi             = vect_[i];
-        const T* const si = src.vect_[i];
+        ScalarType* vi             = vect_[i];
+        const ScalarType* const si = src.vect_[i];
         for (int j = 0; j < numel_; j++)
             vi[j] -= si[j];
     }
     return *this;
 }
-template <typename T>
-template <typename T2>
-void BlockVector<T>::assign(const pb::GridFuncVector<T2>& src)
+template <typename ScalarType, typename MemorySpaceType>
+template <typename ScalarType2>
+void BlockVector<ScalarType, MemorySpaceType>::assign(
+    const pb::GridFuncVector<ScalarType2>& src)
 {
     for (unsigned int i = 0; i < vect_.size(); i++)
     {
-        T* dest = vect_[i];
+        ScalarType* dest = vect_[i];
         src.getValues(i, dest);
     }
 }
 
-template <typename T>
-template <typename T2>
-void BlockVector<T>::assignComponent(const pb::GridFunc<T2>& src, const int i)
+template <typename ScalarType, typename MemorySpaceType>
+template <typename ScalarType2>
+void BlockVector<ScalarType, MemorySpaceType>::assignComponent(
+    const pb::GridFunc<ScalarType2>& src, const int i)
 {
-    T* dest = vect_[i];
+    ScalarType* dest = vect_[i];
     src.getValues(dest);
 }
 
-template <typename T>
-template <typename T2>
-void BlockVector<T>::assignComponent(
-    const pb::GridFuncVector<T2>& src, const int i)
+template <typename ScalarType, typename MemorySpaceType>
+template <typename ScalarType2>
+void BlockVector<ScalarType, MemorySpaceType>::assignComponent(
+    const pb::GridFuncVector<ScalarType2>& src, const int i)
 {
-    T* dest = vect_[i];
+    ScalarType* dest = vect_[i];
     src.getValues(i, dest);
 }
 
-template <typename T>
-void BlockVector<T>::initialize(
-    const vector<vector<int>>& gid, const bool skinny_stencil)
+template <typename ScalarType, typename MemorySpaceType>
+void BlockVector<ScalarType, MemorySpaceType>::initialize(
+    const std::vector<std::vector<int>>& gid, const bool skinny_stencil)
 {
     assert(storage_ == nullptr);
 
@@ -306,7 +295,7 @@ void BlockVector<T>::initialize(
     size_storage_instance_ = size_storage_;
 
     allocate_storage();
-    memset(storage_, 0, size_storage_ * sizeof(T));
+    memset(storage_, 0, size_storage_ * sizeof(ScalarType));
 
     vect_.resize(nbvect);
     for (int i = 0; i < nbvect; i++)
@@ -321,15 +310,16 @@ void BlockVector<T>::initialize(
         data_wghosts_ = nullptr;
     }
 
-    data_wghosts_ = new pb::GridFuncVector<T>(
+    data_wghosts_ = new pb::GridFuncVector<ScalarType>(
         true, mygrid_, bc_[0], bc_[1], bc_[2], gid, skinny_stencil);
 
     data_wghosts_->resetData();
 
     data_wghosts_->set_updated_boundaries(false);
 }
-template <typename T>
-double BlockVector<T>::dot(const int i, const int j, const short iloc) const
+template <typename ScalarType, typename MemorySpaceType>
+double BlockVector<ScalarType, MemorySpaceType>::dot(
+    const int i, const int j, const short iloc) const
 {
     assert(i < static_cast<int>(vect_.size()));
     assert(j < static_cast<int>(vect_.size()));
@@ -340,23 +330,25 @@ double BlockVector<T>::dot(const int i, const int j, const short iloc) const
     const int shift = iloc * locnumel_;
     return MPdot(locnumel_, vect_[i] + shift, vect_[j] + shift);
 }
-template <typename T>
-void BlockVector<T>::scal(const int i, const double alpha)
+template <typename ScalarType, typename MemorySpaceType>
+void BlockVector<ScalarType, MemorySpaceType>::scal(
+    const int i, const double alpha)
 {
     assert(i < static_cast<int>(vect_.size()));
     assert(vect_[i] != nullptr);
 
     MPscal(ld_, alpha, vect_[i]);
 }
-template <typename T>
-void BlockVector<T>::scal(const double alpha)
+template <typename ScalarType, typename MemorySpaceType>
+void BlockVector<ScalarType, MemorySpaceType>::scal(const double alpha)
 {
     assert(storage_ != nullptr);
 
     MPscal(size_storage_, alpha, storage_);
 }
-template <typename T>
-void BlockVector<T>::scal(const double alpha, const int i, const short iloc)
+template <typename ScalarType, typename MemorySpaceType>
+void BlockVector<ScalarType, MemorySpaceType>::scal(
+    const double alpha, const int i, const short iloc)
 {
     assert(static_cast<unsigned int>(i) < vect_.size());
     assert(vect_[i] != nullptr);
@@ -364,8 +356,8 @@ void BlockVector<T>::scal(const double alpha, const int i, const short iloc)
     const int shift = iloc * locnumel_;
     MPscal(locnumel_, alpha, vect_[i] + shift);
 }
-template <typename T>
-void BlockVector<T>::axpy(
+template <typename ScalarType, typename MemorySpaceType>
+void BlockVector<ScalarType, MemorySpaceType>::axpy(
     const double alpha, const int ix, const int iy, const short iloc)
 {
     assert(static_cast<unsigned int>(ix) < vect_.size());
@@ -378,9 +370,10 @@ void BlockVector<T>::axpy(
 
     MPaxpy(locnumel_, alpha, vect_[ix] + shift, vect_[iy] + shift);
 }
-template <typename T>
-void BlockVector<T>::axpy(const double alpha, BlockVector<T>& bv, const int ix,
-    const int iy, const short iloc)
+template <typename ScalarType, typename MemorySpaceType>
+void BlockVector<ScalarType, MemorySpaceType>::axpy(const double alpha,
+    BlockVector<ScalarType, MemorySpaceType>& bv, const int ix, const int iy,
+    const short iloc)
 {
     assert(ix < (int)bv.vect_.size());
     assert(iy < (int)vect_.size());
@@ -390,26 +383,27 @@ void BlockVector<T>::axpy(const double alpha, BlockVector<T>& bv, const int ix,
 
     MPaxpy(locnumel_, alpha, bv.vect_[ix] + shift, vect_[iy] + shift);
 }
-template <typename T>
-void BlockVector<T>::hasnan(const int j) const
+template <typename ScalarType, typename MemorySpaceType>
+void BlockVector<ScalarType, MemorySpaceType>::hasnan(const int j) const
 {
     for (int i = 0; i < ld_; i++)
     {
         if (std::isnan(vect_[j][i]))
-            (*MPIdata::sout)
-                << "BlockVector: Nan in column " << j << ", row " << i << endl;
+            (*MPIdata::sout) << "BlockVector: Nan in column " << j << ", row "
+                             << i << std::endl;
     }
 }
-template <typename T>
-void BlockVector<T>::setDataWithGhosts()
+template <typename ScalarType, typename MemorySpaceType>
+void BlockVector<ScalarType, MemorySpaceType>::setDataWithGhosts()
 {
     // set internal data
     setDataWithGhosts(data_wghosts_);
 }
 
-template <typename T>
-template <typename T2>
-void BlockVector<T>::setDataWithGhosts(pb::GridFuncVector<T2>* data_wghosts)
+template <typename ScalarType, typename MemorySpaceType>
+template <typename ScalarType2>
+void BlockVector<ScalarType, MemorySpaceType>::setDataWithGhosts(
+    pb::GridFuncVector<ScalarType2>* data_wghosts)
 {
     assert(data_wghosts != nullptr);
 
@@ -419,8 +413,6 @@ void BlockVector<T>::setDataWithGhosts(pb::GridFuncVector<T2>* data_wghosts)
 
     data_wghosts->set_updated_boundaries(false);
 
-    // if( onpe0 )
-    //    (*MPIdata::sout)<<"BlockVector::set_data_with_ghosts()"<<endl;
     for (int i = 0; i < (int)vect_.size(); i++)
     {
         data_wghosts->assign(i, vect_[i]);
@@ -429,64 +421,56 @@ void BlockVector<T>::setDataWithGhosts(pb::GridFuncVector<T2>* data_wghosts)
     set_data_tm_.stop();
 }
 
-template <typename T>
-void BlockVector<T>::printTimers(ostream& os)
+template <typename ScalarType, typename MemorySpaceType>
+void BlockVector<ScalarType, MemorySpaceType>::printTimers(std::ostream& os)
 {
     set_data_tm_.print(os);
     trade_data_tm_.print(os);
 }
 
-template <>
-float BlockVector<float>::maxAbsValue() const
+template <typename ScalarType, typename MemorySpaceType>
+ScalarType BlockVector<ScalarType, MemorySpaceType>::maxAbsValue() const
 {
-    int ione   = 1;
-    int imax   = ISAMAX(&size_storage_, storage_, &ione);
-    float maxv = fabs(storage_[imax - 1]);
+    int ione        = 1;
+    int imax        = IDAMAX(&size_storage_, storage_, &ione);
+    ScalarType maxv = fabs(storage_[imax - 1]);
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
     mmpi.allreduce(&maxv, 1, MPI_MAX);
     return maxv;
 }
 
-template <>
-double BlockVector<double>::maxAbsValue() const
-{
-    int ione    = 1;
-    int imax    = IDAMAX(&size_storage_, storage_, &ione);
-    double maxv = fabs(storage_[imax - 1]);
-    MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
-    mmpi.allreduce(&maxv, 1, MPI_MAX);
-    return maxv;
-}
-
-template <typename T>
-void BlockVector<T>::set_ld_and_size_storage()
+template <typename ScalarType, typename MemorySpaceType>
+void BlockVector<ScalarType, MemorySpaceType>::set_ld_and_size_storage()
 {
     size_storage_ = size_storage_instance_;
     ld_           = ld_instance_;
 }
 
-template class BlockVector<double>;
-template void BlockVector<double>::assign(const pb::GridFuncVector<float>& src);
-template void BlockVector<double>::assign(
+template class BlockVector<double, MemorySpace::Host>;
+template void BlockVector<double, MemorySpace::Host>::assign(
+    const pb::GridFuncVector<float>& src);
+template void BlockVector<double, MemorySpace::Host>::assign(
     const pb::GridFuncVector<double>& src);
-template void BlockVector<double>::assignComponent(
+template void BlockVector<double, MemorySpace::Host>::assignComponent(
     const pb::GridFunc<float>& src, const int i);
-template void BlockVector<double>::assignComponent(
+template void BlockVector<double, MemorySpace::Host>::assignComponent(
     const pb::GridFunc<double>& src, const int i);
-template void BlockVector<double>::setDataWithGhosts(
+template void BlockVector<double, MemorySpace::Host>::setDataWithGhosts(
     pb::GridFuncVector<float>* data_wghosts);
-template void BlockVector<double>::setDataWithGhosts(
+template void BlockVector<double, MemorySpace::Host>::setDataWithGhosts(
     pb::GridFuncVector<double>* data_wghosts);
 #ifdef USE_MP
-template class BlockVector<float>;
-template void BlockVector<float>::assign(const pb::GridFuncVector<float>& src);
-template void BlockVector<float>::assign(const pb::GridFuncVector<double>& src);
-template void BlockVector<float>::assignComponent(
+template class BlockVector<float, MemorySpace::Host>;
+template void BlockVector<float, MemorySpace::Host>::assign(
+    const pb::GridFuncVector<float>& src);
+template void BlockVector<float, MemorySpace::Host>::assign(
+    const pb::GridFuncVector<double>& src);
+template void BlockVector<float, MemorySpace::Host>::assignComponent(
     const pb::GridFunc<float>& src, const int i);
-template void BlockVector<float>::assignComponent(
+template void BlockVector<float, MemorySpace::Host>::assignComponent(
     const pb::GridFunc<double>& src, const int i);
-template void BlockVector<float>::setDataWithGhosts(
+template void BlockVector<float, MemorySpace::Host>::setDataWithGhosts(
     pb::GridFuncVector<float>* data_wghosts);
-template void BlockVector<float>::setDataWithGhosts(
+template void BlockVector<float, MemorySpace::Host>::setDataWithGhosts(
     pb::GridFuncVector<double>* data_wghosts);
 #endif
