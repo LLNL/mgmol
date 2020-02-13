@@ -8,15 +8,15 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#include <boost/test/unit_test.hpp>
+#include "catch.hpp"
 #include <iostream>
 #include <mpi.h>
 
-BOOST_AUTO_TEST_CASE(mpi_sanity_check)
+TEST_CASE("MPI sanity check", "[MPI]")
 {
     int nprocs;
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-    BOOST_TEST(nprocs == 4);
+    CHECK(nprocs == 4);
 
     int myproc;
     MPI_Comm_rank(MPI_COMM_WORLD, &myproc);
@@ -26,6 +26,6 @@ BOOST_AUTO_TEST_CASE(mpi_sanity_check)
     int sum      = nprocs * (nprocs + 1) / 2 - nprocs;
     int mpi_ret  = MPI_Allreduce(
         &sendbuff, &recvbuf, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    BOOST_TEST(mpi_ret != MPI_ERR_COMM, "Invalid communicator");
-    BOOST_TEST(recvbuf == sum);
+    CHECK(mpi_ret != MPI_ERR_COMM);
+    CHECK(recvbuf == sum);
 }

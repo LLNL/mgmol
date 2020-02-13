@@ -13,12 +13,11 @@
 #include "MGmol_MPI.h"
 #include "Power.h"
 
-#include <boost/test/unit_test.hpp>
+#include "catch.hpp"
 #include <iostream>
 
-namespace tt = boost::test_tools;
-
-BOOST_AUTO_TEST_CASE(condition_dist_matrix_power)
+TEST_CASE("Check condition number of DistMatrix using Power method",
+    "[condition_dist_matrix_power]")
 {
     int myrank;
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
@@ -63,5 +62,5 @@ BOOST_AUTO_TEST_CASE(condition_dist_matrix_power)
               << std::endl;
     std::cout << "Expected condition number   = " << expected_cond << std::endl;
     const double tolpower = 0.06;
-    BOOST_TEST(cond == expected_cond, tt::tolerance(tolpower));
+    CHECK(cond == Approx(expected_cond).epsilon(tolpower));
 }

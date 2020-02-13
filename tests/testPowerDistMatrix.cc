@@ -13,12 +13,11 @@
 #include "MGmol_MPI.h"
 #include "Power.h"
 
-#include <boost/test/unit_test.hpp>
+#include "catch.hpp"
 #include <iostream>
 
-namespace utf = boost::unit_test;
-
-BOOST_AUTO_TEST_CASE(power_dist_matrix, *utf::tolerance(1e-3))
+TEST_CASE("Compute eigenvalues of distributed matrix using the Power method",
+    "[power_dist_matrix]")
 {
     int myrank;
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
@@ -50,8 +49,8 @@ BOOST_AUTO_TEST_CASE(power_dist_matrix, *utf::tolerance(1e-3))
 
     power.computeEigenInterval(A, emin, emax, 1.e-3, (myrank == 0));
 
-    BOOST_TEST(emin == shift);
+    CHECK(emin == Approx(shift).epsilon(1e-3));
 
     const double expected_emax = 10. * (n - 1) + shift;
-    BOOST_TEST(emax == expected_emax);
+    CHECK(emax == Approx(expected_emax).epsilon(1e-3));
 }

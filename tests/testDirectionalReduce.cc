@@ -10,10 +10,10 @@
 #include "DirectionalReduce.h"
 #include "PEenv.h"
 
-#include <boost/test/unit_test.hpp>
+#include "catch.hpp"
 #include <iostream>
 
-BOOST_AUTO_TEST_CASE(directional_reduce)
+TEST_CASE("Check DirectionalReduce", "[directional_reduce]")
 {
     int myrank;
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
@@ -58,5 +58,5 @@ BOOST_AUTO_TEST_CASE(directional_reduce)
     std::cout << "myrank = " << myrank << ", coords[dir] = " << coords[dir]
               << ", data[0] = " << data[0] << std::endl;
 
-    BOOST_TEST(result == data[0]);
+    CHECK(result == data[0]);
 }

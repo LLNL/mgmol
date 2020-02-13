@@ -1,5 +1,4 @@
 find_package(PythonInterp 3.2 REQUIRED)
-find_package(Boost REQUIRED COMPONENTS unit_test_framework)
 
 add_executable(testHDF5P
                ${CMAKE_SOURCE_DIR}/tests/testHDF5P.cc
@@ -283,59 +282,59 @@ target_include_directories(testAndersonMix PRIVATE
                            ${HDF5_INCLUDE_DIRS})
 
 target_link_libraries(testHDF5P PRIVATE ${HDF5_LIBRARIES}
-  Boost::unit_test_framework MPI::MPI_CXX)
-target_link_libraries(testMPI PRIVATE Boost::unit_test_framework MPI::MPI_CXX)
+  MPI::MPI_CXX)
+target_link_libraries(testMPI PRIVATE MPI::MPI_CXX)
 target_link_libraries(testBlacsContext PRIVATE ${SCALAPACK_LIBRARIES}
-  ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX)
-target_link_libraries(testSuperSampling PRIVATE Boost::unit_test_framework MPI::MPI_CXX)
-target_link_libraries(testDirectionalReduce PRIVATE Boost::unit_test_framework MPI::MPI_CXX)
+  ${BLAS_LIBRARIES} MPI::MPI_CXX)
+target_link_libraries(testSuperSampling PRIVATE MPI::MPI_CXX)
+target_link_libraries(testDirectionalReduce PRIVATE MPI::MPI_CXX)
 
 if(${MAGMA_FOUND})
   target_link_libraries(testDistVector PRIVATE ${SCALAPACK_LIBRARIES}
-    ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
+    ${BLAS_LIBRARIES} MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
   target_link_libraries(testReplicated2DistMatrix PRIVATE ${SCALAPACK_LIBRARIES}
-    ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
+    ${BLAS_LIBRARIES} MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
   target_link_libraries(testDistMatrix PRIVATE ${SCALAPACK_LIBRARIES}
-    ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
+    ${BLAS_LIBRARIES} MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
   target_link_libraries(testConditionDistMatrix PRIVATE ${SCALAPACK_LIBRARIES}
-    ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
+    ${BLAS_LIBRARIES} MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
   target_link_libraries(testConditionDistMatrixPower PRIVATE
-    ${SCALAPACK_LIBRARIES} ${BLAS_LIBRARIES} Boost::unit_test_framework 
+    ${SCALAPACK_LIBRARIES} ${BLAS_LIBRARIES} 
     MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
   target_link_libraries(testPower PRIVATE ${BLAS_LIBRARIES} ${SCALAPACK_LIBRARIES}
-    Boost::unit_test_framework MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
+    MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
   target_link_libraries(testPowerDistMatrix PRIVATE ${BLAS_LIBRARIES}
-    ${SCALAPACK_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX
+    ${SCALAPACK_LIBRARIES} MPI::MPI_CXX
     OpenMP::OpenMP_CXX PkgConfig::MAGMA)
   target_link_libraries(testAndersonMix PRIVATE ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} 
-    Boost::unit_test_framework MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
+    MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
   target_link_libraries(testVariableSizeMatrix PRIVATE ${BLAS_LIBRARIES} 
-    Boost::unit_test_framework MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
+    MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
 if((${MAGMA_FOUND}) AND (${MGMOL_WITH_OPENMP_OFFLOAD}))
   target_link_libraries(testMagmaOpenmp PRIVATE 
-    Boost::unit_test_framework MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
+    MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
 endif()
 else()
   target_link_libraries(testDistVector PRIVATE ${SCALAPACK_LIBRARIES}
-    ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX OpenMP::OpenMP_CXX)
+    ${BLAS_LIBRARIES} MPI::MPI_CXX OpenMP::OpenMP_CXX)
   target_link_libraries(testReplicated2DistMatrix PRIVATE ${SCALAPACK_LIBRARIES}
-    ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX OpenMP::OpenMP_CXX)
+    ${BLAS_LIBRARIES} MPI::MPI_CXX OpenMP::OpenMP_CXX)
   target_link_libraries(testDistMatrix PRIVATE ${SCALAPACK_LIBRARIES}
-    ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX OpenMP::OpenMP_CXX)
+    ${BLAS_LIBRARIES} MPI::MPI_CXX OpenMP::OpenMP_CXX)
   target_link_libraries(testConditionDistMatrix PRIVATE ${SCALAPACK_LIBRARIES}
-    ${BLAS_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX OpenMP::OpenMP_CXX)
+    ${BLAS_LIBRARIES} MPI::MPI_CXX OpenMP::OpenMP_CXX)
   target_link_libraries(testConditionDistMatrixPower PRIVATE
-    ${SCALAPACK_LIBRARIES} ${BLAS_LIBRARIES} Boost::unit_test_framework 
+    ${SCALAPACK_LIBRARIES} ${BLAS_LIBRARIES} 
     MPI::MPI_CXX OpenMP::OpenMP_CXX)
   target_link_libraries(testPower PRIVATE ${BLAS_LIBRARIES} ${SCALAPACK_LIBRARIES}
-    Boost::unit_test_framework MPI::MPI_CXX OpenMP::OpenMP_CXX)
+    MPI::MPI_CXX OpenMP::OpenMP_CXX)
   target_link_libraries(testPowerDistMatrix PRIVATE ${BLAS_LIBRARIES}
-    ${SCALAPACK_LIBRARIES} Boost::unit_test_framework MPI::MPI_CXX
+    ${SCALAPACK_LIBRARIES} MPI::MPI_CXX
     OpenMP::OpenMP_CXX)
   target_link_libraries(testAndersonMix PRIVATE ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} 
-    Boost::unit_test_framework MPI::MPI_CXX OpenMP::OpenMP_CXX)
+    MPI::MPI_CXX OpenMP::OpenMP_CXX)
   target_link_libraries(testVariableSizeMatrix PRIVATE ${BLAS_LIBRARIES} 
-    Boost::unit_test_framework MPI::MPI_CXX OpenMP::OpenMP_CXX)
+    MPI::MPI_CXX OpenMP::OpenMP_CXX)
 endif()
 
 set_tests_properties(testSiH4 PROPERTIES REQUIRED_FILES

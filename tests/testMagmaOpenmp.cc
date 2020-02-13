@@ -10,12 +10,12 @@
 #if defined(HAVE_MAGMA) && defined(HAVE_OPENMP_OFFLOAD)
 #include "magma_v2.h"
 
-#include <boost/test/unit_test.hpp>
+#include "catch.hpp"
 #include <omp.h>
 
 #include <vector>
 
-BOOST_AUTO_TEST_CASE(magma_openmp)
+TEST_CASE("Check that MAGMA and OpenMP offload work together", "[magma_openmp]")
 {
     // NOTE: It is very important that magma_queue_create is called before the
     // first kernel is launched from OpenMP. Otherwise, we get the following
@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(magma_openmp)
     int on_the_host = -1;
 #pragma omp target map(tofrom : on_the_host)
     on_the_host = omp_is_initial_device();
-    BOOST_REQUIRE(on_the_host == 0);
+    REQUIRE(on_the_host == 0);
 
     int* val_dev;
     const unsigned int size = 1000;
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(magma_openmp)
 
     // Check the result
     for (unsigned int i = 0; i < size; ++i)
-        BOOST_TEST(val_host[i] == i + 1);
+        CHECK(val_host[i] == i + 1);
 
     magma_free(val_dev);
     magma_queue_destroy(queue);

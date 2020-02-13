@@ -8,9 +8,9 @@
  *  Number of processes is assumed to be 4.
  */
 
+#include "catch.hpp"
 #include "hdf5.h"
 #include "stdlib.h"
-#include <boost/test/unit_test.hpp>
 #include <mpi.h>
 
 #define H5FILE_NAME "SDS_chnk.h5"
@@ -21,7 +21,7 @@
 #define CH_NY 2
 #define RANK 2
 
-BOOST_AUTO_TEST_CASE(hdf5)
+TEST_CASE("Check HDF5P", "[hdf5]")
 {
     /*
      * HDF5 APIs definitions
@@ -53,7 +53,8 @@ BOOST_AUTO_TEST_CASE(hdf5)
     /*
      * Exit if number of processes is not 4.
      */
-    BOOST_TEST(mpi_size == 4, "This example to set up to use only 4 processes");
+    INFO("This example to set up to use only 4 processes");
+    REQUIRE(mpi_size == 4);
 
     /*
      * Set up file access property list with parallel I/O access
@@ -65,7 +66,8 @@ BOOST_AUTO_TEST_CASE(hdf5)
      * Create a new file collectively and release property list identifier.
      */
     file_id = H5Fcreate(H5FILE_NAME, H5F_ACC_TRUNC, H5P_DEFAULT, plist_id);
-    BOOST_TEST(file_id >= 0, "H5Fcreate failed");
+    // TODO This is the only check in this test
+    CHECK(file_id >= 0);
     H5Pclose(plist_id);
 
     /*

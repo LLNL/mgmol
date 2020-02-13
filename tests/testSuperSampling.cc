@@ -9,14 +9,12 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 #include "SuperSampling.h"
 
-#include <boost/test/unit_test.hpp>
+#include "catch.hpp"
 
 #include <array>
 #include <cmath>
 #include <fstream>
 #include <iostream>
-
-namespace utf = boost::unit_test;
 
 double gaussianFunc(double radius) { return std::exp(-radius * radius / 2); }
 double constantFunc(double) { return 1; }
@@ -30,7 +28,7 @@ double highFreq(double radius)
     return std::exp(-radius * radius / 2) + std::sin(100 * radius);
 }
 
-BOOST_AUTO_TEST_CASE(super_sampling_filtering, *utf::tolerance(0.1))
+TEST_CASE("Check super sampling filtering", "[filtering]")
 {
     std::array<double, 3> atomicCenter  = { 0, 0, 0 };
     int numExtraPts                     = 10;
@@ -61,7 +59,8 @@ BOOST_AUTO_TEST_CASE(super_sampling_filtering, *utf::tolerance(0.1))
                     = sqrt((idx - atomicCenter[0]) * (idx - atomicCenter[0])
                            + (idy - atomicCenter[1]) * (idy - atomicCenter[1])
                            + (idz - atomicCenter[2]) * (idz - atomicCenter[2]));
-                BOOST_TEST(uniTest.values_[0][offset] == gaussianFunc(radius));
+                CHECK(uniTest.values_[0][offset]
+                      == Approx(gaussianFunc(radius)).epsilon(0.1));
                 offset += 1;
                 idz += coarGridSpace[2];
             }
@@ -71,7 +70,7 @@ BOOST_AUTO_TEST_CASE(super_sampling_filtering, *utf::tolerance(0.1))
     }
 }
 
-BOOST_AUTO_TEST_CASE(super_sampling_harmonics)
+TEST_CASE("Check super sampling harmonics", "[harmonics]")
 {
     std::array<double, 3> atomicCenter  = { 0, 0, 0 };
     int numExtraPts                     = 10;
@@ -89,7 +88,7 @@ BOOST_AUTO_TEST_CASE(super_sampling_harmonics)
     // TODO: there is no check here
 }
 
-BOOST_AUTO_TEST_CASE(super_sampling_scale, *utf::tolerance(1e-10))
+TEST_CASE("Check super sampling scale", "[scale]")
 {
     std::array<double, 3> atomicCenter  = { 0, 0, 0 };
     int numExtraPts                     = 10;
@@ -123,11 +122,11 @@ BOOST_AUTO_TEST_CASE(super_sampling_scale, *utf::tolerance(1e-10))
             double idz = botMeshCorner[2];
             for (int k = 0; k < numPts; ++k)
             {
-                BOOST_TEST(
-                    uniTestScaled
-                        .values_[0][numPts * numPts * i + numPts * j + k]
-                    == uniTestCompare
-                           .values_[0][numPts * numPts * i + numPts * j + k]);
+                CHECK(uniTestScaled
+                          .values_[0][numPts * numPts * i + numPts * j + k]
+                      == Approx(uniTestCompare.values_[0][numPts * numPts * i
+                                                          + numPts * j + k])
+                             .epsilon(1e-10));
                 idz += coarGridSpace[2];
             }
             idy += coarGridSpace[1];
@@ -136,7 +135,7 @@ BOOST_AUTO_TEST_CASE(super_sampling_scale, *utf::tolerance(1e-10))
     }
 }
 
-BOOST_AUTO_TEST_CASE(super_sampling_gaus_high_freq, *utf::tolerance(0.25))
+TEST_CASE("Check super sampling gaussian high frequency", "[gaus_high_freq]")
 {
     std::array<double, 3> atomicCenter  = { 0.001, 0.0, -.001 };
     int numExtraPts                     = 10;
@@ -172,7 +171,8 @@ BOOST_AUTO_TEST_CASE(super_sampling_gaus_high_freq, *utf::tolerance(0.25))
                            + (idz - atomicCenter[2]) * (idz - atomicCenter[2]));
                 myfile << radius << ';' << uniTest.values_[0][offset] << ',';
                 myfile2 << radius << ';' << highFreq(radius) << ',';
-                BOOST_TEST(uniTest.values_[0][offset] == gaussianFunc(radius));
+                CHECK(uniTest.values_[0][offset]
+                      == Approx(gaussianFunc(radius)).epsilon(0.25));
                 offset += 1;
                 idz += coarGridSpace[2];
             }
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(super_sampling_gaus_high_freq, *utf::tolerance(0.25))
 }
 
 // TODO this test does not pass, so disable it for now
-BOOST_AUTO_TEST_CASE(super_sampling_constant, *utf::disabled())
+TEST_CASE("Check super_sampling_constant", "[!hide]")
 {
     std::array<double, 3> atomicCenter  = { .6, -.6, .1 };
     int numExtraPts                     = 40;
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(super_sampling_constant, *utf::disabled())
                     = sqrt((idx - atomicCenter[0]) * (idx - atomicCenter[0])
                            + (idy - atomicCenter[1]) * (idy - atomicCenter[1])
                            + (idz - atomicCenter[2]) * (idz - atomicCenter[2]));
-                BOOST_TEST(uniTest.values_[0][offset] == constantFunc(radius));
+                CHECK(uniTest.values_[0][offset] == constantFunc(radius));
                 offset += 1;
                 idz += coarGridSpace[2];
             }
@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(super_sampling_constant, *utf::disabled())
     }
 }
 
-BOOST_AUTO_TEST_CASE(super_sampling_gaussian, *utf::tolerance(0.1))
+TEST_CASE("Check super_sampling_gaussian", "[gaussian]")
 {
     std::array<double, 3> atomicCenter  = { .6, -.6, .1 };
     int numExtraPts                     = 10;
@@ -260,7 +260,8 @@ BOOST_AUTO_TEST_CASE(super_sampling_gaussian, *utf::tolerance(0.1))
                     = sqrt((idx - atomicCenter[0]) * (idx - atomicCenter[0])
                            + (idy - atomicCenter[1]) * (idy - atomicCenter[1])
                            + (idz - atomicCenter[2]) * (idz - atomicCenter[2]));
-                BOOST_TEST(uniTest.values_[0][offset] == gaussianFunc(radius));
+                CHECK(uniTest.values_[0][offset]
+                      == Approx(gaussianFunc(radius)).epsilon(0.1));
                 offset += 1;
                 idz += coarGridSpace[2];
             }
@@ -270,7 +271,7 @@ BOOST_AUTO_TEST_CASE(super_sampling_gaussian, *utf::tolerance(0.1))
     }
 }
 
-BOOST_AUTO_TEST_CASE(super_sampling_delta, *utf::tolerance(1e-10))
+TEST_CASE("Check super_sampling_delta", "[delta]")
 {
     std::array<double, 3> atomicCenter  = { 0, 0, 0 };
     int numExtraPts                     = 10;
@@ -301,9 +302,8 @@ BOOST_AUTO_TEST_CASE(super_sampling_delta, *utf::tolerance(1e-10))
                     = sqrt((idx - atomicCenter[0]) * (idx - atomicCenter[0])
                            + (idy - atomicCenter[1]) * (idy - atomicCenter[1])
                            + (idz - atomicCenter[2]) * (idz - atomicCenter[2]));
-                BOOST_TEST(
-                    uniTest.values_[0][numPts * numPts * i + numPts * j + k]
-                    == gaussianFunc(radius));
+                CHECK(uniTest.values_[0][numPts * numPts * i + numPts * j + k]
+                      == Approx(gaussianFunc(radius)).epsilon(1e-10));
                 idz += coarGridSpace[2];
             }
             idy += coarGridSpace[1];
