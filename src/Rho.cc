@@ -687,51 +687,70 @@ void Rho<T>::computeRhoSubdomainUsingBlas3(const int iloc_init,
 
         const MATDTYPE* const mat = localX.getSubMatrix(iloc);
         ORBDTYPE* phi1            = orbitals1.getPsi(0, iloc);
-        ORBDTYPE* phi2            = orbitals2.getPsi(0, iloc);
 
-// O(N^3) part
+        // O(N^3) part
 #ifdef HAVE_MAGMA
-        {
-            std::unique_ptr<ORBDTYPE[], void (*)(ORBDTYPE*)> phi1_dev(
-                MemorySpace::Memory<MemorySpace::Device>::allocate<ORBDTYPE>(
-                    ld * ncols),
-                MemorySpace::Memory<MemorySpace::Device>::free);
-            MemorySpace::copy_to_dev(phi1, ld * ncols, phi1_dev);
+        // If we have magma, we move all the data on the device
+        using MemoryDev = typename MemorySpace::Memory<MemorySpace::Device>;
+        std::unique_ptr<ORBDTYPE[], void (*)(ORBDTYPE*)> phi1_dev(
+            MemoryDev::allocate<ORBDTYPE>(ld * ncols), MemoryDev::free);
+        MemorySpace::copy_to_dev(phi1, ld * ncols, phi1_dev);
 
-            std::unique_ptr<MATDTYPE[], void (*)(MATDTYPE*)> mat_dev(
-                MemorySpace::Memory<MemorySpace::Device>::allocate<MATDTYPE>(
-                    ncols * ncols),
-                MemorySpace::Memory<MemorySpace::Device>::free);
-            MemorySpace::copy_to_dev(mat, ncols * ncols, mat_dev);
+        std::unique_ptr<MATDTYPE[], void (*)(MATDTYPE*)> mat_dev(
+            MemoryDev::allocate<MATDTYPE>(ncols * ncols), MemoryDev::free);
+        MemorySpace::copy_to_dev(mat, ncols * ncols, mat_dev);
 
-            std::unique_ptr<ORBDTYPE[], void (*)(ORBDTYPE*)> product_dev(
-                MemorySpace::Memory<MemorySpace::Device>::allocate<ORBDTYPE>(
-                    nrows * ncols),
-                MemorySpace::Memory<MemorySpace::Device>::free);
+        std::unique_ptr<ORBDTYPE[], void (*)(ORBDTYPE*)> product_dev(
+            MemoryDev::allocate<ORBDTYPE>(nrows * ncols), MemoryDev::free);
 
-            LinearAlgebraUtils<MemorySpace::Device>::MPgemmNN(nrows, ncols,
-                ncols, 1., phi1_dev.get(), ld, mat_dev.get(), ncols, 0.,
-                product_dev.get(), nrows);
+        LinearAlgebraUtils<MemorySpace::Device>::MPgemmNN(nrows, ncols, ncols,
+            1., phi1_dev.get(), ld, mat_dev.get(), ncols, 0., product_dev.get(),
+            nrows);
 
-            MemorySpace::copy_to_host(product_dev, nrows * ncols, product);
-        }
-#else
+        // Move the data back on the host
+        MemorySpace::copy_to_host(product_dev, nrows * ncols, product);
+#else // MAGMA is not installed
         LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(
             nrows, ncols, ncols, 1., phi1, ld, mat, ncols, 0., product, nrows);
 #endif
 
-        // O(N^2) part
-        for (int j = 0; j < ncols; j++)
+        // O(N^2) part: if we have MAGMA and we can offload with OpenMP, we
+        // perform the operation on the device. Otherwise, we do it on the host.
+#ifdef HAVE_OPENMP_OFFLOAD
+        ORBDTYPE* product_alias = product_dev.get();
+        // Copy phi2 to the device
+        ORBDTYPE* phi2_host = orbitals2.getPsi(0, iloc);
+        std::unique_ptr<ORBDTYPE[], void (*)(ORBDTYPE*)> phi2_dev(
+            MemoryDev::allocate<ORBDTYPE>(ld * ncols + nrows), MemoryDev::free);
+        MemorySpace::copy_to_dev(phi2_host, ld * ncols + nrows, phi2_dev);
+        ORBDTYPE* phi2 = phi2_dev.get();
+        // Copy lrho to the device
+        std::unique_ptr<RHODTYPE[], void (*)(RHODTYPE*)> lrho_dev(
+            MemoryDev::allocate<RHODTYPE>(nrows), MemoryDev::free);
+        MemorySpace::copy_to_dev(lrho, nrows, lrho_dev);
+        RHODTYPE* const lrho_alias = lrho_dev.get();
+#else
+        ORBDTYPE* product_alias    = product;
+        ORBDTYPE* phi2             = orbitals2.getPsi(0, iloc);
+        RHODTYPE* const lrho_alias = lrho;
+#endif
+        // clang-format off
+#pragma omp target if (mgmol_offload) is_device_ptr(lrho_alias, product_alias, phi2)
+#pragma omp teams distribute parallel for collapse(2)
+        // clang-format on
+        for (int j = 0; j < ncols; ++j)
         {
-            int index1 = j * nrows;
-            int index2 = j * ld;
-            for (int i = 0; i < nrows; i++)
+            for (int i = 0; i < nrows; ++i)
             {
-                lrho[i] += product[index1] * phi2[index2];
-                index1++;
-                index2++;
+#pragma omp atomic update
+                lrho_alias[i]
+                    += product_alias[j * nrows + i] * phi2[j * ld + i];
             }
         }
+#if defined(HAVE_MAGMA) && defined(HAVE_OPENMP_OFFLOAD)
+        // Move lrho back to the host
+        MemorySpace::copy_to_host(lrho_alias, nrows, lrho);
+#endif
     }
 
     delete[] product;
