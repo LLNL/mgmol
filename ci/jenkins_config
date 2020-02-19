@@ -40,13 +40,13 @@ pipeline {
                   module load openblas-0.3.7-gcc-7.4.0-7pjtf4y
                   module load pkgconf-1.6.3-gcc-9.2.0-jun6j25
                   cmake \
-                  -D BUILD_SHARED_LIBS=ON \
+                  -D BUILD_SHARED_LIBS=OFF \
                   -D CMAKE_BUILD_TYPE=Release \
                   -D SCALAPACK_ROOT=$(spack location -i netlib-scalapack) \
                   -D MGMOL_WITH_CLANG_FORMAT=OFF \
                   -D MGMOL_WITH_COVERAGE=OFF \
                   -D MGMOL_WITH_MAGMA=ON \
-                  -D CMAKE_CXX_FLAGS="-Wno-stringop-truncation" \
+                  -D CMAKE_CXX_FLAGS="-fopenmp -Wno-stringop-truncation" \
                   ..
                 make -j8
                 ctest --no-compress-output -T Test
@@ -83,7 +83,7 @@ pipeline {
                   module load openblas-0.3.7-gcc-7.4.0-7pjtf4y
                   module load pkgconf-1.6.3-gcc-9.2.0-jun6j25
                   cmake \
-                  -D BUILD_SHARED_LIBS=ON \
+                  -D BUILD_SHARED_LIBS=OFF \
                   -D CMAKE_BUILD_TYPE=Release \
                   -D SCALAPACK_ROOT=$(spack location -i netlib-scalapack) \
                   -D MGMOL_WITH_CLANG_FORMAT=OFF \
