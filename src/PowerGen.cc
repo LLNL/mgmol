@@ -8,6 +8,7 @@
 
 #include "PowerGen.h"
 
+#include "Control.h"
 #include "DistVector.h"
 #include "GramMatrix.h"
 #include "mputils.h"

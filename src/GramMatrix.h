@@ -11,12 +11,8 @@
 #ifndef MGMOL_GRAMMATRIX_H
 #define MGMOL_GRAMMATRIX_H
 
-#include "Control.h"
 #include "DistMatrix.h"
 #include "MPIdata.h"
-
-#include <unistd.h>
-#include <vector>
 
 #define NPRINT_ROWS_AND_COLS 5
 
@@ -84,34 +80,10 @@ public:
     void setMatrix(const dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
         const int orbitals_index);
 
-    void updateLS()
-    {
-        // Cholesky decomposition of s
-        *ls_     = *matS_;
-        int info = ls_->potrf('l');
-        if (info != 0)
-        {
-            print(*MPIdata::serr);
-            if (onpe0)
-                (*MPIdata::serr)
-                    << "ERROR in GramMatrix::updateLS()" << std::endl;
-            sleep(5);
-            Control& ct = *(Control::instance());
-            ct.global_exit(2);
-        }
+    void updateLS();
 
-        isLSuptodate_ = true;
-    }
-    void set2Id(const int orbitals_index)
-    {
-        matS_->identity();
-        invS_->identity();
-        ls_->identity();
+    void set2Id(const int orbitals_index);
 
-        orbitals_index_ = orbitals_index;
-        isLSuptodate_   = true;
-        isInvSuptodate_ = true;
-    }
     void applyInv(dist_matrix::DistMatrix<DISTMATDTYPE>& mat)
     {
         assert(isLSuptodate_);
