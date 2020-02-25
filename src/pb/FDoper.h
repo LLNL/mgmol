@@ -63,8 +63,6 @@ public:
     FDoper(const Grid&);
     FDoper(const FDoper& oper, const Grid&);
 
-    FDoper& operator=(const FDoper& oper);
-
     int dim(const int i) const { return dim_[i]; }
     short ghosts() const { return grid_.ghost_pt(); };
     double inv_h(const short i) const { return inv_h_[i]; }
