@@ -8,15 +8,18 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
+#include "GramMatrix.h"
+#include "Control.h"
+#include "DistMatrix2SquareLocalMatrices.h"
+#include "DistVector.h"
+#include "MGmol_MPI.h"
+#include "Power.h"
+
 #include <iomanip>
 #include <iostream>
 #include <memory>
-
-#include "DistMatrix2SquareLocalMatrices.h"
-#include "DistVector.h"
-#include "GramMatrix.h"
-#include "MGmol_MPI.h"
-#include "Power.h"
+#include <unistd.h>
+#include <vector>
 
 void rotateSym(dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
     const dist_matrix::DistMatrix<DISTMATDTYPE>& rotation_matrix,
@@ -24,21 +27,11 @@ void rotateSym(dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
 
 GramMatrix::GramMatrix(const int ndim) : dim_(ndim)
 {
-    if (dim_ > 0)
-    {
-        matS_ = new dist_matrix::DistMatrix<DISTMATDTYPE>("S", ndim, ndim);
-        ls_   = new dist_matrix::DistMatrix<DISTMATDTYPE>("LS", ndim, ndim);
-        invS_ = new dist_matrix::DistMatrix<DISTMATDTYPE>("invS", ndim, ndim);
+    matS_ = new dist_matrix::DistMatrix<DISTMATDTYPE>("S", ndim, ndim);
+    ls_   = new dist_matrix::DistMatrix<DISTMATDTYPE>("LS", ndim, ndim);
+    invS_ = new dist_matrix::DistMatrix<DISTMATDTYPE>("invS", ndim, ndim);
 
-        work_ = new dist_matrix::DistMatrix<DISTMATDTYPE>("work", ndim, ndim);
-    }
-    else
-    {
-        matS_ = nullptr;
-        ls_   = nullptr;
-        invS_ = nullptr;
-        work_ = nullptr;
-    }
+    work_ = new dist_matrix::DistMatrix<DISTMATDTYPE>("work", ndim, ndim);
 
     orbitals_index_ = -1;
     isLSuptodate_   = false;
@@ -47,21 +40,11 @@ GramMatrix::GramMatrix(const int ndim) : dim_(ndim)
 
 GramMatrix::GramMatrix(const GramMatrix& gm) : dim_(gm.dim_)
 {
-    if (dim_ > 0)
-    {
-        matS_ = new dist_matrix::DistMatrix<DISTMATDTYPE>(*gm.matS_);
-        ls_   = new dist_matrix::DistMatrix<DISTMATDTYPE>(*gm.ls_);
-        invS_ = new dist_matrix::DistMatrix<DISTMATDTYPE>(*gm.invS_);
+    matS_ = new dist_matrix::DistMatrix<DISTMATDTYPE>(*gm.matS_);
+    ls_   = new dist_matrix::DistMatrix<DISTMATDTYPE>(*gm.ls_);
+    invS_ = new dist_matrix::DistMatrix<DISTMATDTYPE>(*gm.invS_);
 
-        work_ = new dist_matrix::DistMatrix<DISTMATDTYPE>(*gm.work_);
-    }
-    else
-    {
-        matS_ = nullptr;
-        ls_   = nullptr;
-        invS_ = nullptr;
-        work_ = nullptr;
-    }
+    work_ = new dist_matrix::DistMatrix<DISTMATDTYPE>(*gm.work_);
 
     orbitals_index_ = gm.orbitals_index_;
     isLSuptodate_   = gm.isLSuptodate_;
@@ -74,20 +57,10 @@ GramMatrix& GramMatrix::operator=(const GramMatrix& gm)
 
     dim_ = gm.dim_;
 
-    if (dim_ > 0)
-    {
-        *matS_ = *gm.matS_;
-        *ls_   = *gm.ls_;
-        *invS_ = *gm.invS_;
-        *work_ = *gm.work_;
-    }
-    else
-    {
-        matS_ = nullptr;
-        ls_   = nullptr;
-        invS_ = nullptr;
-        work_ = nullptr;
-    }
+    *matS_ = *gm.matS_;
+    *ls_   = *gm.ls_;
+    *invS_ = *gm.invS_;
+    *work_ = *gm.work_;
 
     orbitals_index_ = gm.orbitals_index_;
     isLSuptodate_   = gm.isLSuptodate_;
@@ -98,13 +71,10 @@ GramMatrix& GramMatrix::operator=(const GramMatrix& gm)
 
 GramMatrix::~GramMatrix()
 {
-    if (dim_ > 0)
-    {
-        delete matS_;
-        delete invS_;
-        delete ls_;
-        delete work_;
-    }
+    delete matS_;
+    delete invS_;
+    delete ls_;
+    delete work_;
 }
 
 void GramMatrix::computeInverse()
@@ -186,6 +156,35 @@ void GramMatrix::setMatrix(
     isInvSuptodate_ = false;
 
     updateLS();
+}
+
+void GramMatrix::updateLS()
+{
+    // Cholesky decomposition of s
+    *ls_     = *matS_;
+    int info = ls_->potrf('l');
+    if (info != 0)
+    {
+        print(*MPIdata::serr);
+        if (onpe0)
+            (*MPIdata::serr) << "ERROR in GramMatrix::updateLS()" << std::endl;
+        sleep(5);
+        Control& ct = *(Control::instance());
+        ct.global_exit(2);
+    }
+
+    isLSuptodate_ = true;
+}
+
+void GramMatrix::set2Id(const int orbitals_index)
+{
+    matS_->identity();
+    invS_->identity();
+    ls_->identity();
+
+    orbitals_index_ = orbitals_index;
+    isLSuptodate_   = true;
+    isInvSuptodate_ = true;
 }
 
 double GramMatrix::getLinDependent2states(int& st1, int& st2) const

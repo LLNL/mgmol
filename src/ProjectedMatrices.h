@@ -21,14 +21,10 @@
 #include "SquareLocalMatrices.h"
 #include "SquareSubMatrix.h"
 #include "Timer.h"
+#include "hdf5.h"
 #include "tools.h"
 
-#include "hdf5.h"
-
 #include <iostream>
-
-// const double tol_matrix_elements=1.e-14;
-// const double tol_matrix_elements=0.;
 
 class HDFrestart;
 

@@ -176,13 +176,13 @@ public:
 
     int getDMMatrixIndex() const override
     {
-        assert(dm_ != 0);
-        return (*dm_).getOrbitalsIndex();
+        assert(dm_ != nullptr);
+        return dm_->getOrbitalsIndex();
     }
     int getGramMatrixIndex() const
     {
-        assert(invS_ != 0);
-        return (*invS_).getGramMatrixOrbitalsIndex();
+        assert(invS_ != nullptr);
+        return invS_->getGramMatrixOrbitalsIndex();
     }
     double computeEntropy() override { return 0.; }
 
@@ -218,21 +218,6 @@ public:
         (*sH_).setupSparseRows(locvars_);
     }
 
-    double getDMEntry(const int row, const int col) const
-    {
-        assert(dm_ != 0);
-
-        return (*dm_).getEntry(row, col);
-    }
-
-    void getDMEntries(const int row, const std::vector<int>& cols,
-        std::vector<double>& values) const
-    {
-        assert(dm_ != 0);
-
-        return dm_->getEntries(row, cols, values);
-    }
-
     /* print the Theta matrix -- for diagnostics */
     void printTheta(std::ostream& os) const
     {
@@ -258,15 +243,14 @@ public:
     /* print the inverse Gram matrix -- for diagnostics */
     void printDM(std::ostream& os) const override
     {
-        assert(dm_ != NULL);
-        (*dm_).printDM(os);
+        assert(dm_ != nullptr);
+        dm_->printDM(os);
     }
 
     void setDMto2InvS() override
     {
-        assert(invS_ != NULL);
-        (*dm_).setto2InvS(
-            (*invS_).getInvS(), (*invS_).getGramMatrixOrbitalsIndex());
+        assert(invS_ != nullptr);
+        dm_->setto2InvS(invS_->getInvS(), invS_->getGramMatrixOrbitalsIndex());
     }
 
     void computeInvS() override
