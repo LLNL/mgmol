@@ -138,9 +138,11 @@ pipeline {
                   .. 
                 make -j8
                 ctest --no-compress-output -T Test
-                make format 
+                '''
+                 sh '''make format 
                 git diff --exit-code
-                make coverage 
+                '''
+                sh '''make coverage 
                 curl -s https://codecov.io/bash -o codecov_bash_uploader && chmod +x codecov_bash_uploader && ./codecov_bash_uploader -Z -X gcov -f lcov.info
                 '''
               }
