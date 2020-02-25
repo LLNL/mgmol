@@ -120,7 +120,7 @@ public:
     short nProjectors() const
     {
         short nproj = 0;
-        assert(llocal_ < 4);
+        assert(llocal_ < 5);
         for (short l = 0; l <= maxl_; l++)
             if (llocal_ != l) nproj += (2 * l + 1) * multiplicity_[l];
         return nproj;
@@ -129,7 +129,7 @@ public:
     short nProjectorsSubdomain() const
     {
         short nproj = 0;
-        assert(llocal_ < 4);
+        assert(llocal_ < 5);
         if (overlapPE()) nproj = nProjectors();
         return nproj;
     }
