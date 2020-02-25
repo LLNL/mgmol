@@ -21,10 +21,17 @@
 #include <memory>
 #include <vector>
 
+#define MGMOL_STRINGIFY_(...) #__VA_ARGS__
+#define MGMOL_STRINGIFY(...) MGMOL_STRINGIFY_(__VA_ARGS__)
+
 #if defined(HAVE_MAGMA) && defined(HAVE_OPENMP_OFFLOAD)
-bool constexpr mgmol_offload = true;
+#define MGMOL_PARALLEL_FOR(...)                                                \
+  _Pragma(MGMOL_STRINGIFY(omp target teams distribute parallel for is_device_ptr(__VA_ARGS__)))
+#define MGMOL_PARALLEL_FOR_COLLAPSE(n, ...)                                    \
+  _Pragma(MGMOL_STRINGIFY(omp target teams distribute parallel for collapse(n) is_device_ptr(__VA_ARGS__)))
 #else
-bool constexpr mgmol_offload = false;
+#define MGMOL_PARALLEL_FOR(...) _Pragma(MGMOL_STRINGIFY(omp parallel for))
+#define MGMOL_PARALLEL_FOR_COLLAPSE(n, ...) _Pragma(MGMOL_STRINGIFY(omp parallel for collapse (n)))
 #endif
 
 namespace MemorySpace
