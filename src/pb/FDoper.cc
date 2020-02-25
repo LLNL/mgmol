@@ -69,24 +69,6 @@ FDoper<T>::FDoper(const Grid& mygrid) : grid_(mygrid)
 }
 
 template <class T>
-FDoper<T>& FDoper<T>::operator=(const FDoper& oper)
-{
-    if (this != &oper)
-    {
-        grid_ = oper.grid_;
-        for (int i = 0; i < 3; i++)
-        {
-            inv_h_[i]  = oper.inv_h_[i];
-            inv_h2_[i] = oper.inv_h2_[i];
-            assert(dim_[i] > 0);
-        }
-        incx_ = oper.incx_;
-        incy_ = oper.incy_;
-    }
-    return *this;
-}
-
-template <class T>
 void FDoper<T>::del1_2nd(
     GridFunc<T>& A, GridFunc<T>& B, const short direction) const
 {

@@ -8,9 +8,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id: Laph6.h,v 1.11 2010/01/28 22:56:47 jeanluc Exp $
-#ifndef LAPH6_H
-#define LAPH6_H
+#ifndef PB_LAPH6_H
+#define PB_LAPH6_H
 
 #include "Laph4.h"
 
@@ -57,7 +56,7 @@ public:
     // construct a coarse grid operator
     Laph6 coarseOp(const Grid& mygrid)
     {
-        Grid coarse_G = mygrid.coarse_grid();
+        Grid coarse_G(mygrid.coarse_grid(), 3);
 
         Laph6 A(coarse_G);
 

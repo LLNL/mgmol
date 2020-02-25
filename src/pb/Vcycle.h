@@ -8,7 +8,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id: Vcycle.h,v 1.19 2010/01/28 22:56:47 jeanluc Exp $
 #ifndef PB_VCYCLE_H
 #define PB_VCYCLE_H
 
@@ -179,9 +178,10 @@ int Vcycle(T1& A, T2& x, const GridFunc<T3>& rhs, const short cogr,
             // GridFunc<T3>  rcoarse(B.grid(),x.bc(0),x.bc(1),x.bc(2));
 #if USE_LOWER_ORDER
             B.setLowerOrderGrid();
-            const Grid& coarse_grid(B.getLowerOrderGrid());
+            int ng = std::max(level_grid.ghost_pt() - 1, 1);
+            const Grid coarse_grid(B.getLowerOrderGrid(), ng);
 #else
-            const Grid& coarse_grid(B.grid());
+            const Grid coarse_grid(B.grid());
 #endif
             assert(coarse_grid.dim(0) < 10000);
             assert(coarse_grid.dim(1) < 10000);

@@ -263,6 +263,7 @@ void Electrostatic::setupPB(
             case PoissonFDtype::h6:
                 poisson_solver_ = new PBdiel<pb::PBh6<POTDTYPE>>(
                     *pbGrid_, bc_, e0, rho0, drho0);
+                break;
             case PoissonFDtype::h8:
                 poisson_solver_ = new PBdiel<pb::PBh8<POTDTYPE>>(
                     *pbGrid_, bc_, e0, rho0, drho0);
@@ -295,6 +296,7 @@ void Electrostatic::setupPB(
             case PoissonFDtype::h6:
                 poisson_solver_ = new PBdiel_CG<pb::PBh6<POTDTYPE>>(
                     *pbGrid_, bc_, e0, rho0, drho0);
+                break;
             case PoissonFDtype::h8:
                 poisson_solver_ = new PBdiel_CG<pb::PBh8<POTDTYPE>>(
                     *pbGrid_, bc_, e0, rho0, drho0);

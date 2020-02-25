@@ -130,6 +130,10 @@ Grid::Grid(const Grid& my_grid, const short nghosts)
 
     if (nghosts == -1)
     {
+        assert(my_grid.ghost_pt_ <= dim_[0]);
+        assert(my_grid.ghost_pt_ <= dim_[1]);
+        assert(my_grid.ghost_pt_ <= dim_[2]);
+
         ghost_pt_ = my_grid.ghost_pt_; // default
         inc_[0]   = my_grid.inc_[0];
         inc_[1]   = my_grid.inc_[1];
@@ -138,6 +142,10 @@ Grid::Grid(const Grid& my_grid, const short nghosts)
     }
     else
     {
+        assert(nghosts <= dim_[0]);
+        assert(nghosts <= dim_[1]);
+        assert(nghosts <= dim_[2]);
+
         ghost_pt_ = nghosts;
         inc_[0]   = (dim_[1] + 2 * ghost_pt_) * (dim_[2] + 2 * ghost_pt_);
         inc_[1]   = (dim_[2] + 2 * ghost_pt_);
