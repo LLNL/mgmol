@@ -8,7 +8,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id: ShiftedLaph4M.h,v 1.12 2009/07/17 00:07:45 jeanluc Exp $
 #ifndef ShiftedLaph4M_H
 #define ShiftedLaph4M_H
 
@@ -47,7 +46,7 @@ public:
     // construct a coarse grid operator
     ShiftedLaph4M coarseOp(const Grid& mygrid)
     {
-        Grid coarse_G = mygrid.coarse_grid();
+        Grid coarse_G(mygrid.coarse_grid(), 1);
 
         ShiftedLaph4M A(coarse_G, lambda2_);
 

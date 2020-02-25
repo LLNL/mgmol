@@ -8,7 +8,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id: Laph2.h,v 1.12 2010/01/28 22:56:47 jeanluc Exp $
 #ifndef PB_LAPH2_H
 #define PB_LAPH2_H
 
@@ -49,7 +48,7 @@ public:
     // construct a coarse grid operator
     Laph2 coarseOp(const Grid& mygrid)
     {
-        Grid coarse_G = mygrid.coarse_grid();
+        Grid coarse_G(mygrid.coarse_grid(), 1);
 
         Laph2 A(coarse_G);
 

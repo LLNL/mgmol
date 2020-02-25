@@ -8,7 +8,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id: Laph4MP.h,v 1.7 2009/07/17 00:07:45 jeanluc Exp $
 #ifndef PB_LAPH4MP_H
 #define PB_LAPH4MP_H
 
@@ -28,7 +27,7 @@ public:
     // construct a coarse grid operator
     Laph4MP coarseOp(const Grid& mygrid)
     {
-        Grid coarse_G = mygrid.coarse_grid();
+        Grid coarse_G(mygrid.coarse_grid(), 1);
 
         Laph4MP A(coarse_G);
 

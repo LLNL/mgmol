@@ -8,9 +8,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id: Laph8.h,v 1.6 2009/07/16 23:36:28 jeanluc Exp $
-#ifndef LAPH8_H
-#define LAPH8_H
+#ifndef PB_LAPH8_H
+#define PB_LAPH8_H
 
 #include "Laph6.h"
 
@@ -56,7 +55,7 @@ public:
     // construct a coarse grid operator
     Laph8 coarseOp(const Grid& mygrid)
     {
-        Grid coarse_G = mygrid.coarse_grid();
+        Grid coarse_G(mygrid.coarse_grid(), 4);
 
         Laph8 A(coarse_G);
 
