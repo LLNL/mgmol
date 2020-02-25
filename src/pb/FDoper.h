@@ -90,12 +90,13 @@ public:
 
     const Grid& getLowerOrderGrid() const
     {
-        assert(lower_order_grid_ != NULL);
+        assert(lower_order_grid_);
         return *lower_order_grid_;
     }
 
     void setFDLowerOrderGrid(const short nghosts)
     {
+        assert(nghosts >= 1);
         if (lower_order_grid_ == nullptr)
             lower_order_grid_ = new Grid(grid_, nghosts);
     }
