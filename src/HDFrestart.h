@@ -89,7 +89,7 @@ class HDFrestart
     void setupWorkSpace();
 
     template <class T>
-    void getWorkspace(T* work_space);
+    void getWorkspace(T*& work_space);
 
     template <class T>
     int readDataset(hid_t dset_id, hid_t memspace, hid_t filespace,
