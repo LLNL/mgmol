@@ -22,6 +22,7 @@ cmake -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} \
       -DMPIEXEC_PREFLAGS="-report-bindings;--map-by;core;-bind-to;core" \
       -DMGMOL_WITH_CLANG_FORMAT=ON \
       -DCMAKE_PREFIX_PATH=${HOME}/bin \
+      -D CMAKE_CXX_FLAGS="-Wall -pedantic -Wextra" \
       ..
 
 # call make install
