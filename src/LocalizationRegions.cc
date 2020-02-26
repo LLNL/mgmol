@@ -403,11 +403,9 @@ float LocalizationRegions::updateRadii(
     return getMeanRadius();
 }
 
-float LocalizationRegions::moveTo(
-    const vector<Vector3D>& target_centers, const vector<Vector3D>& shifts)
+float LocalizationRegions::moveTo(const vector<Vector3D>& target_centers)
 {
     assert(overlap_regions_.size() == target_centers.size());
-    assert(overlap_regions_.size() == shifts.size());
 
     float max_displ = 0.;
     assert(nglobal_ > 0);
@@ -1310,8 +1308,6 @@ void LocalizationRegions::updateOverlapRegions()
     overlap_regions_.clear();
 
     vector<vector<Vector3D>> oc;
-    vector<vector<Vector3D>> ocm;
-    vector<Vector3D> shifts;
 
     for (unsigned int i = 0; i < old_centers_.size(); i++)
     {

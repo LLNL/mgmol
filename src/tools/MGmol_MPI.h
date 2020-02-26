@@ -23,10 +23,13 @@
 #ifndef MGMOL_MPI_ERROR
 
 #define MGMOL_MPI_ERROR(X)                                                     \
-    std::cerr << "ERROR in file " << __FILE__ << " at line " << __LINE__       \
-              << std::endl;                                                    \
-    std::cerr << "Error Message: " << X << std::endl;                          \
-    abort();
+    do                                                                         \
+    {                                                                          \
+        std::cerr << "ERROR in file " << __FILE__ << " at line " << __LINE__   \
+                  << std::endl;                                                \
+        std::cerr << "Error Message: " << X << std::endl;                      \
+        abort();                                                               \
+    } while (0)
 
 #endif
 

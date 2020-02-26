@@ -1407,7 +1407,7 @@ void MGmol_MPI::split_allreduce_sums_short(
         if (rc != MPI_SUCCESS)
         {
             MGMOL_MPI_ERROR("ERROR MGmol_MPI::split_allreduce_sums_short: "
-                            "MPI_allreduce int sum failed!!!")
+                            "MPI_allreduce int sum failed!!!");
         }
         memcpy(array_ptr, work_short, newsize * sizeof(short));
 
