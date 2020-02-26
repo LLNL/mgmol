@@ -716,8 +716,7 @@ int ExtendedGridOrbitals::read_func_hdf5(
     // in the file.
 
     // memory dataspace identifier
-    hid_t memspace;
-    if (h5f_file.active()) memspace = h5f_file.createMemspace();
+    hid_t memspace = (h5f_file.active()) ? h5f_file.createMemspace() : 0;
 
     ORBDTYPE* buffer = new ORBDTYPE[block[0] * block[1] * block[2]];
 
