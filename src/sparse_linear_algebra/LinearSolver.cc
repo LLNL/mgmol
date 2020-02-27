@@ -185,30 +185,32 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
     const PreconILU<pcdatatype>& precon, const double* rhs, double* sol,
     const double tol, const int im, const int maxits)
 {
-    int i, i1, ii, j, k, k1, its, im1, pti, pti1, ptih = 0;
+    int i, i1, ii, j, k, k1, pti, pti1, ptih = 0;
     int one = 1;
-    double *hh, *c, *s, *rs, t;
-    double negt, eps1, gam, *vv, *z;
+    double t;
+    double negt;
+    double eps1 = 0.;
+    double gam;
     double beta = 0.;
 
     const int n = LSMat.n();
 
-    im1      = im + 1;
-    int imsz = im1 * n;
-    vv       = new double[(imsz)];
+    int im1    = im + 1;
+    int imsz   = im1 * n;
+    double* vv = new double[(imsz)];
     memset(vv, 0, imsz * sizeof(double));
-    imsz = im * n;
-    z    = new double[(imsz)];
+    imsz      = im * n;
+    double* z = new double[(imsz)];
     memset(z, 0, imsz * sizeof(double));
-    imsz = im1 * (im + 3);
-    hh   = new double[(imsz)];
+    imsz       = im1 * (im + 3);
+    double* hh = new double[(imsz)];
     memset(hh, 0, imsz * sizeof(double));
-    c  = hh + im1 * im;
-    s  = c + im1;
-    rs = s + im1;
+    double* c  = hh + im1 * im;
+    double* s  = c + im1;
+    double* rs = s + im1;
     /*-------------------- outer loop starts here */
     int retval = 0;
-    its        = 0;
+    int its    = 0;
     memset(sol, 0, n * sizeof(double));
     /*-------------------- Outer loop */
     while (its < maxits)

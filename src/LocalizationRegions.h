@@ -220,16 +220,7 @@ public:
         }
     }
 
-    float moveTo(const std::vector<Vector3D>& target_centers)
-    {
-        std::vector<Vector3D> empty_vector;
-
-        empty_vector.resize(target_centers.size());
-
-        return moveTo(target_centers, empty_vector);
-    }
-    float moveTo(const std::vector<Vector3D>& target_centers,
-        const std::vector<Vector3D>& shifts);
+    float moveTo(const std::vector<Vector3D>& target_centers);
 
     bool moveIsSmall() { return (max_displ_ < tol_displ_); }
 

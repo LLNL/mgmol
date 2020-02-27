@@ -898,7 +898,9 @@ int VariableSizeMatrix<T>::getMaxAbsOffDiagonalRowEntry(
     double maxVal = 0.;
     int maxj      = -1;
 
+#ifndef NDEBUG
     bool found = false;
+#endif
 
     // loop over rows until row gid is found
     for (int i = 0; i < n_; i++)
@@ -922,15 +924,14 @@ int VariableSizeMatrix<T>::getMaxAbsOffDiagonalRowEntry(
                     }
                 }
             }
+#ifndef NDEBUG
             found = true;
+#endif
             break;
         }
     }
 
     assert(found);
-#ifndef NDEBUG
-    (void)found;
-#endif
 
     value = maxVal;
     assert(maxj >= 0);

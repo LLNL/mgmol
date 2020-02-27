@@ -744,7 +744,9 @@ int MGmol_MPI::bcast(std::string& common_string, MPI_Comm comm) const
 int MGmol_MPI::gather(
     double* sendbuf, int s_count, double* recvbuf, int recvbufsize, int root)
 {
-    assert(s_count * size_ == recvbufsize);
+    if (s_count * size_ != recvbufsize)
+        MGMOL_MPI_ERROR("incorrect array sizes!");
+
     int count   = s_count;
     int mpi_err = MPI_Gather(sendbuf, count, MPI_DOUBLE, recvbuf, count,
         MPI_DOUBLE, root, comm_spin_);
@@ -759,7 +761,9 @@ int MGmol_MPI::gather(
 int MGmol_MPI::gather(
     float* sendbuf, int s_count, float* recvbuf, int recvbufsize, int root)
 {
-    assert(s_count * size_ == recvbufsize);
+    if (s_count * size_ != recvbufsize)
+        MGMOL_MPI_ERROR("incorrect array sizes!");
+
     int count   = s_count;
     int mpi_err = MPI_Gather(
         sendbuf, count, MPI_FLOAT, recvbuf, count, MPI_FLOAT, root, comm_spin_);
@@ -774,7 +778,9 @@ int MGmol_MPI::gather(
 int MGmol_MPI::gather(
     int* sendbuf, int s_count, int* recvbuf, int recvbufsize, int root)
 {
-    assert(s_count * size_ == recvbufsize);
+    if (s_count * size_ != recvbufsize)
+        MGMOL_MPI_ERROR("incorrect array sizes!");
+
     int count   = s_count;
     int mpi_err = MPI_Gather(
         sendbuf, count, MPI_INT, recvbuf, count, MPI_INT, root, comm_spin_);
@@ -789,7 +795,8 @@ int MGmol_MPI::gather(
 int MGmol_MPI::allGather(
     std::vector<double>& sendbuf, std::vector<double>& recvbuf)
 {
-    assert(sendbuf.size() * size_ == recvbuf.size());
+    if (sendbuf.size() * size_ != recvbuf.size())
+        MGMOL_MPI_ERROR("incorrect array sizes!");
     int count   = (int)sendbuf.size();
     int mpi_err = MPI_Allgather(&sendbuf[0], count, MPI_DOUBLE, &recvbuf[0],
         count, MPI_DOUBLE, comm_spin_);
@@ -804,7 +811,9 @@ int MGmol_MPI::allGather(
 
 int MGmol_MPI::allGather(std::vector<int>& sendbuf, std::vector<int>& recvbuf)
 {
-    assert(sendbuf.size() * size_ == recvbuf.size());
+    if (sendbuf.size() * size_ != recvbuf.size())
+        MGMOL_MPI_ERROR("incorrect array sizes!");
+
     int count   = (int)sendbuf.size();
     int mpi_err = MPI_Allgather(
         &sendbuf[0], count, MPI_INT, &recvbuf[0], count, MPI_INT, comm_spin_);
@@ -819,7 +828,9 @@ int MGmol_MPI::allGather(std::vector<int>& sendbuf, std::vector<int>& recvbuf)
 int MGmol_MPI::allGather(
     double* sendbuf, int s_count, double* recvbuf, int recvbufsize)
 {
-    assert(s_count * size_ == recvbufsize);
+    if (s_count * size_ != recvbufsize)
+        MGMOL_MPI_ERROR("incorrect array sizes!");
+
     int count   = s_count;
     int mpi_err = MPI_Allgather(
         sendbuf, count, MPI_DOUBLE, recvbuf, count, MPI_DOUBLE, comm_spin_);
@@ -834,7 +845,9 @@ int MGmol_MPI::allGather(
 int MGmol_MPI::allGather(
     float* sendbuf, int s_count, float* recvbuf, int recvbufsize)
 {
-    assert(s_count * size_ == recvbufsize);
+    if (s_count * size_ != recvbufsize)
+        MGMOL_MPI_ERROR("incorrect array sizes!");
+
     int count   = s_count;
     int mpi_err = MPI_Allgather(
         sendbuf, count, MPI_FLOAT, recvbuf, count, MPI_FLOAT, comm_spin_);
@@ -849,7 +862,9 @@ int MGmol_MPI::allGather(
 int MGmol_MPI::allGather(
     int* sendbuf, int s_count, int* recvbuf, int recvbufsize)
 {
-    assert(s_count * size_ == recvbufsize);
+    if (s_count * size_ != recvbufsize)
+        MGMOL_MPI_ERROR("incorrect array sizes!");
+
     int count   = s_count;
     int mpi_err = MPI_Allgather(
         sendbuf, count, MPI_INT, recvbuf, count, MPI_INT, comm_spin_);
@@ -1199,7 +1214,9 @@ int MGmol_MPI::gatherV(
 int MGmol_MPI::scatter(
     double* sendbuf, int sendbufsize, double* recvbuf, int count, int root)
 {
-    assert(count * size_ == sendbufsize);
+    if (count * size_ != sendbufsize)
+        MGMOL_MPI_ERROR("incorrect scatter size!!!");
+
     int mpi_err = MPI_Scatter(sendbuf, count, MPI_DOUBLE, recvbuf, count,
         MPI_DOUBLE, root, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
@@ -1213,7 +1230,9 @@ int MGmol_MPI::scatter(
 int MGmol_MPI::scatter(
     float* sendbuf, int sendbufsize, float* recvbuf, int count, int root)
 {
-    assert(count * size_ == sendbufsize);
+    if (count * size_ != sendbufsize)
+        MGMOL_MPI_ERROR("incorrect scatter size!!!");
+
     int mpi_err = MPI_Scatter(
         sendbuf, count, MPI_FLOAT, recvbuf, count, MPI_FLOAT, root, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
@@ -1227,12 +1246,14 @@ int MGmol_MPI::scatter(
 int MGmol_MPI::scatter(
     int* sendbuf, int sendbufsize, int* recvbuf, int count, int root)
 {
-    assert(count * size_ == sendbufsize);
+    if (count * size_ != sendbufsize)
+        MGMOL_MPI_ERROR("incorrect scatter size!!!");
+
     int mpi_err = MPI_Scatter(
         sendbuf, count, MPI_INT, recvbuf, count, MPI_INT, root, comm_spin_);
     if (mpi_err != MPI_SUCCESS)
     {
-        MGMOL_MPI_ERROR("MPI_gather for int in MGmol_MPI::scatter() !!!");
+        MGMOL_MPI_ERROR("MPI_scatter for int in MGmol_MPI::scatter() !!!");
     }
 
     return mpi_err;
@@ -1386,7 +1407,7 @@ void MGmol_MPI::split_allreduce_sums_short(
         if (rc != MPI_SUCCESS)
         {
             MGMOL_MPI_ERROR("ERROR MGmol_MPI::split_allreduce_sums_short: "
-                            "MPI_allreduce int sum failed!!!")
+                            "MPI_allreduce int sum failed!!!");
         }
         memcpy(array_ptr, work_short, newsize * sizeof(short));
 

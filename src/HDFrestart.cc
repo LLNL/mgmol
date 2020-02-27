@@ -1122,13 +1122,13 @@ int HDFrestart::getLRs(LocalizationRegions& lrs, const int max_nb_lrs,
 /////////////////////////////////////////////////////////////////////////////
 
 template <>
-void HDFrestart::getWorkspace<float>(float* work_space)
+void HDFrestart::getWorkspace<float>(float*& work_space)
 {
     work_space = work_space_float_;
 }
 
 template <>
-void HDFrestart::getWorkspace<double>(double* work_space)
+void HDFrestart::getWorkspace<double>(double*& work_space)
 {
     work_space = work_space_double_;
 }
