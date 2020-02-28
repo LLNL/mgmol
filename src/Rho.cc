@@ -734,10 +734,7 @@ void Rho<T>::computeRhoSubdomainUsingBlas3(const int iloc_init,
         ORBDTYPE* phi2             = orbitals2.getPsi(0, iloc);
         RHODTYPE* const lrho_alias = lrho;
 #endif
-        // clang-format off
-#pragma omp target if (mgmol_offload) is_device_ptr(lrho_alias, product_alias, phi2)
-#pragma omp teams distribute parallel for collapse(2)
-        // clang-format on
+        MGMOL_PARALLEL_FOR_COLLAPSE(2, lrho_alias, product_alias, phi2)
         for (int j = 0; j < ncols; ++j)
         {
             for (int i = 0; i < nrows; ++i)
