@@ -8,12 +8,11 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#include <iomanip>
-#include <iostream>
-using namespace std;
-
 #include "DensityMatrix.h"
 #include "MGmol_MPI.h"
+
+#include <iomanip>
+#include <iostream>
 #include <string.h>
 
 const double factor_kernel4dot = 10.;
@@ -38,22 +37,11 @@ DensityMatrix::DensityMatrix(const int ndim)
 
     orbitals_index_ = -1;
 
-    if (dim_ > 0)
-    {
-        dm_ = new dist_matrix::DistMatrix<DISTMATDTYPE>("DM", ndim, ndim);
-        kernel4dot_
-            = new dist_matrix::DistMatrix<DISTMATDTYPE>("K4dot", ndim, ndim);
-        work_ = new dist_matrix::DistMatrix<DISTMATDTYPE>("work", ndim, ndim);
-        occupation_.resize(dim_);
-    }
-    else
-    {
-        occ_uptodate_ = true;
-    }
-
-    // if( onpe0 )
-    //    (*MPIdata::sout)<<"DensityMatrix:
-    //    factor_kernel4dot="<<factor_kernel4dot<<endl;
+    dm_ = new dist_matrix::DistMatrix<DISTMATDTYPE>("DM", ndim, ndim);
+    kernel4dot_
+        = new dist_matrix::DistMatrix<DISTMATDTYPE>("K4dot", ndim, ndim);
+    work_ = new dist_matrix::DistMatrix<DISTMATDTYPE>("work", ndim, ndim);
+    occupation_.resize(dim_);
 }
 
 DensityMatrix::DensityMatrix(const DensityMatrix& dm)
@@ -66,18 +54,10 @@ DensityMatrix::DensityMatrix(const DensityMatrix& dm)
 
     orbitals_index_ = dm.orbitals_index_;
 
-    if (dim_ > 0)
-    {
-        dm_ = new dist_matrix::DistMatrix<DISTMATDTYPE>(*dm.dm_);
-        kernel4dot_
-            = new dist_matrix::DistMatrix<DISTMATDTYPE>(*dm.kernel4dot_);
-        work_ = new dist_matrix::DistMatrix<DISTMATDTYPE>(*dm.work_);
-        occupation_.resize(dim_);
-    }
-
-    // if( onpe0 )
-    //    (*MPIdata::sout)<<"DensityMatrix:
-    //    factor_kernel4dot="<<factor_kernel4dot<<endl;
+    dm_         = new dist_matrix::DistMatrix<DISTMATDTYPE>(*dm.dm_);
+    kernel4dot_ = new dist_matrix::DistMatrix<DISTMATDTYPE>(*dm.kernel4dot_);
+    work_       = new dist_matrix::DistMatrix<DISTMATDTYPE>(*dm.work_);
+    occupation_.resize(dim_);
 }
 
 DensityMatrix& DensityMatrix::operator=(const DensityMatrix& dm)
@@ -102,27 +82,24 @@ DensityMatrix& DensityMatrix::operator=(const DensityMatrix& dm)
 
 DensityMatrix::~DensityMatrix()
 {
-    if (dim_ > 0)
-    {
-        assert(dm_ != nullptr);
-        assert(kernel4dot_ != nullptr);
-        assert(work_ != nullptr);
+    assert(dm_ != nullptr);
+    assert(kernel4dot_ != nullptr);
+    assert(work_ != nullptr);
 
-        delete dm_;
-        delete kernel4dot_;
-        delete work_;
-    }
+    delete dm_;
+    delete kernel4dot_;
+    delete work_;
 }
 
 void DensityMatrix::build(const dist_matrix::DistMatrix<DISTMATDTYPE>& zmat,
-    const vector<DISTMATDTYPE>& occ, const int new_orbitals_index)
+    const std::vector<DISTMATDTYPE>& occ, const int new_orbitals_index)
 {
 #ifdef PRINT_OPERATIONS
     if (onpe0)
         (*MPIdata::sout)
             << "DensityMatrix::build(const DistMatrix<DISTMATDTYPE>&,const "
                "vector<DISTMATDTYPE>&,const int)"
-            << endl;
+            << std::endl;
 #endif
 
     // diagonal matrix with occ values in diagonal
@@ -135,10 +112,10 @@ void DensityMatrix::build(const dist_matrix::DistMatrix<DISTMATDTYPE>& zmat,
     // dm_ = work_ * zmat^T
     dm_->gemm('n', 't', 1., *work_, zmat, 0.);
 
-    vector<DISTMATDTYPE> w(dim_);
+    std::vector<DISTMATDTYPE> w(dim_);
     for (int i = 0; i < dim_; i++)
         w[i] = (DISTMATDTYPE)(
-            orbital_occupation_ * min(1., factor_kernel4dot * occ[i]));
+            orbital_occupation_ * std::min(1., factor_kernel4dot * occ[i]));
     gamma.setDiagonal(w);
 
     work_->symm('r', 'l', 1., gamma, zmat, 0.);
@@ -156,7 +133,7 @@ void DensityMatrix::build(const dist_matrix::DistMatrix<DISTMATDTYPE>& zmat,
 
 // build diagonal matrix
 void DensityMatrix::build(
-    const vector<DISTMATDTYPE>& occ, const int new_orbitals_index)
+    const std::vector<DISTMATDTYPE>& occ, const int new_orbitals_index)
 {
     assert(dm_ != nullptr);
 
@@ -170,11 +147,11 @@ void DensityMatrix::build(const int new_orbitals_index)
     //#ifdef PRINT_OPERATIONS
     if (onpe0)
         (*MPIdata::sout) << "DensityMatrix::build() for diagonal occupation..."
-                         << endl;
+                         << std::endl;
     //#endif
     if (!occ_uptodate_ && onpe0)
         (*MPIdata::sout) << "Warning: occupations not up to date to build DM!!!"
-                         << endl;
+                         << std::endl;
 
     dist_matrix::DistMatrix<DISTMATDTYPE> gamma(
         "Gamma", &occupation_[0], dim_, dim_);
@@ -183,10 +160,11 @@ void DensityMatrix::build(const int new_orbitals_index)
     *dm_ = gamma;
 
     kernel4dot_->clear();
-    vector<DISTMATDTYPE> w(dim_);
+    std::vector<DISTMATDTYPE> w(dim_);
     for (int i = 0; i < dim_; i++)
         w[i] = (DISTMATDTYPE)(
-            orbital_occupation_ * min(1., factor_kernel4dot * occupation_[i]));
+            orbital_occupation_
+            * std::min(1., factor_kernel4dot * occupation_[i]));
     kernel4dot_->setDiagonal(w);
 
     stripped_       = false;
@@ -226,7 +204,7 @@ void DensityMatrix::rotate(
     if (!flag_eigen)
     {
         dist_matrix::DistMatrix<DISTMATDTYPE> invU(rotation_matrix);
-        vector<int> ipiv;
+        std::vector<int> ipiv;
         invU.getrf(ipiv);
 
         // dm -> u**-1 * dm
@@ -243,23 +221,23 @@ void DensityMatrix::rotate(
     }
 }
 
-void DensityMatrix::printOccupations(ostream& os) const
+void DensityMatrix::printOccupations(std::ostream& os) const
 {
     if (onpe0)
     {
-        os << endl << " Occupation numbers: ";
+        os << std::endl << " Occupation numbers: ";
 
         // Print ten to a row.
-        os.setf(ios::right, ios::adjustfield);
-        os.setf(ios::fixed, ios::floatfield);
-        os << setprecision(3);
+        os.setf(std::ios::right, std::ios::adjustfield);
+        os.setf(std::ios::fixed, std::ios::floatfield);
+        os << std::setprecision(3);
         for (int i = 0; i < dim_; i++)
         {
-            if ((i % 10) == 0) os << endl;
-            os << setw(7) << occupation_[i] * orbital_occupation_ << " ";
+            if ((i % 10) == 0) os << std::endl;
+            os << std::setw(7) << occupation_[i] * orbital_occupation_ << " ";
         }
 
-        os << endl;
+        os << std::endl;
     }
 }
 
@@ -276,8 +254,8 @@ void DensityMatrix::printOccupations(ostream& os) const
 
 // solve the eigenvalue problem L^T*dm_*L*V=occ*V
 // using the LL^T decomposition of S to get occ
-void DensityMatrix::diagonalize(
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& ls, vector<DISTMATDTYPE>& occ)
+void DensityMatrix::diagonalize(const dist_matrix::DistMatrix<DISTMATDTYPE>& ls,
+    std::vector<DISTMATDTYPE>& occ)
 {
     dist_matrix::DistMatrix<DISTMATDTYPE> evect("EigVect", dim_, dim_);
 
@@ -292,7 +270,7 @@ void DensityMatrix::diagonalize(
     work_->syev('n', 'l', occ, evect);
 }
 
-void DensityMatrix::diagonalize(const char eigv, vector<DISTMATDTYPE>& occ,
+void DensityMatrix::diagonalize(const char eigv, std::vector<DISTMATDTYPE>& occ,
     dist_matrix::DistMatrix<DISTMATDTYPE>& vect)
 {
     *work_ = (*dm_);
@@ -306,10 +284,10 @@ void DensityMatrix::computeOccupations(
 {
 #ifdef PRINT_OPERATIONS
     if (onpe0)
-        (*MPIdata::sout) << "DensityMatrix::computeOccupations()" << endl;
+        (*MPIdata::sout) << "DensityMatrix::computeOccupations()" << std::endl;
 #endif
 
-    vector<DISTMATDTYPE> occ(dim_);
+    std::vector<DISTMATDTYPE> occ(dim_);
 
     diagonalize(ls, occ);
     const double occinv = 1. / orbital_occupation_;
@@ -319,7 +297,7 @@ void DensityMatrix::computeOccupations(
     for (int i = 0; i < dim_; i++)
     {
         double occ_val = (double)occ[i] * occinv;
-        (*MPIdata::sout) << setprecision(16);
+        (*MPIdata::sout) << std::setprecision(16);
         if (onpe0 && (occ_val < 0. - tol || occ_val > 1. + tol))
         {
             (*MPIdata::sout)
@@ -327,13 +305,13 @@ void DensityMatrix::computeOccupations(
                 << "]=" << occ_val;
             // if( occ_uptodate_)(*MPIdata::sout)<<" vs.
             // "<<occupation_[dim_-i-1];
-            (*MPIdata::sout) << endl;
+            (*MPIdata::sout) << std::endl;
             flag = true;
         }
         assert(occ_val > 0. - tol);
         assert(occ_val < 1. + tol);
-        occ[i] = (DISTMATDTYPE)max(0., occ_val);
-        occ[i] = (DISTMATDTYPE)min(1., occ_val);
+        occ[i] = (DISTMATDTYPE)std::max(0., occ_val);
+        occ[i] = (DISTMATDTYPE)std::min(1., occ_val);
     }
     if (flag) printOccupations((*MPIdata::sout));
 
@@ -344,10 +322,11 @@ void DensityMatrix::computeOccupations(
     occ_uptodate_ = true;
 }
 
-void DensityMatrix::setOccupations(const vector<DISTMATDTYPE>& occ)
+void DensityMatrix::setOccupations(const std::vector<DISTMATDTYPE>& occ)
 {
 #ifdef PRINT_OPERATIONS
-    if (onpe0) (*MPIdata::sout) << "DensityMatrix::setOccupations()" << endl;
+    if (onpe0)
+        (*MPIdata::sout) << "DensityMatrix::setOccupations()" << std::endl;
 #endif
     assert((int)occ.size() == dim_);
     memcpy(&occupation_[0], &occ[0], dim_ * sizeof(DISTMATDTYPE));
@@ -365,8 +344,8 @@ double DensityMatrix::computeEntropy() const
     {
         const double fi = (double)occupation_[st];
         if (fi > 1. + tol_interval)
-            (*MPIdata::sout) << setprecision(15) << scientific << "f[" << st
-                             << "]=" << fi << endl;
+            (*MPIdata::sout) << std::setprecision(15) << std::scientific << "f["
+                             << st << "]=" << fi << std::endl;
         assert(fi >= 0. - tol_interval);
         assert(fi <= 1. + tol_interval);
         if (fi < tol)
@@ -437,10 +416,6 @@ void DensityMatrix::transform(const dist_matrix::DistMatrix<DISTMATDTYPE>& u)
 {
     work_->gemm('n', 't', 1., *dm_, u, 0.);
     dm_->gemm('n', 'n', 1., u, *work_, 0.);
-
-    // dist_matrix::DistMatrix<DISTMATDTYPE> tmp("tmp", dim_, dim_);
-    // tmp.identity();
-    // computeOccupations(tmp);
 }
 
 double DensityMatrix::getExpectation(

@@ -32,7 +32,6 @@ class ProjectedMatrices : public ProjectedMatricesInterface
 {
     static short n_instances_;
 
-    static short sparse_distmatrix_nb_tasks_per_partitions_;
     static GramMatrix* gram_4dotProducts_;
     static DensityMatrix* dm_4dot_product_;
 
