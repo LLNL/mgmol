@@ -464,7 +464,7 @@ void getkvector(const int index, const int kmax, int kvector[3])
     kvector[1] = (index - kvector[0] * kmax * kmax) / kmax;
     kvector[2] = index % kmax;
 
-    if (onpe0)
-        std::cout << " k=(" << kvector[0] << "," << kvector[1] << ","
-                  << kvector[2] << ")" << std::endl;
+    // if (onpe0)
+    //    std::cout << " k=(" << kvector[0] << "," << kvector[1] << ","
+    //              << kvector[2] << ")" << std::endl;
 }

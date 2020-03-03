@@ -757,7 +757,7 @@ int DavidsonSolver<T>::solve(T& orbitals, T& work_orbitals)
             os_ << "Total occupations = " << std::setprecision(15) << 2. * tocc
                 << std::endl;
 
-        if (onpe0 && (outer_it % 10) == 0 && ct.verbose > 2)
+        if (onpe0 && ((outer_it % 10) == 0 || (retval == 0)) && ct.verbose > 2)
         {
             os_ << "Final Occupations: " << std::endl;
             os_ << std::fixed << std::setprecision(4);
@@ -785,6 +785,15 @@ int DavidsonSolver<T>::solve(T& orbitals, T& work_orbitals)
 
     // Generate new density
     rho_->update(orbitals);
+
+    if (onpe0 && ct.verbose > 0)
+    {
+        ProjectedMatrices* pmat
+            = dynamic_cast<ProjectedMatrices*>(orbitals.getProjMatrices());
+        assert(pmat);
+
+        pmat->printOccupations(os_);
+    }
 
     if (onpe0 && ct.verbose > 1)
     {

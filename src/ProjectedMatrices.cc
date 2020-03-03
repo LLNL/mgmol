@@ -42,10 +42,7 @@ Timer ProjectedMatrices::update_submatX_tm_("ProjectedMatrices::updateSubmatX");
 Timer ProjectedMatrices::eigsum_tm_("ProjectedMatrices::eigsum");
 Timer ProjectedMatrices::consolidate_H_tm_("ProjectedMatrices::consolidate_sH");
 
-// const short LocGridOrbitals::sparse_distmatrix_nb_tasks_per_partitions_=96;
-// const short LocGridOrbitals::sparse_distmatrix_nb_tasks_per_partitions_=256;
-short ProjectedMatrices::sparse_distmatrix_nb_tasks_per_partitions_ = 256;
-short ProjectedMatrices::n_instances_                               = 0;
+short ProjectedMatrices::n_instances_ = 0;
 
 GramMatrix* ProjectedMatrices::gram_4dotProducts_  = nullptr;
 DensityMatrix* ProjectedMatrices::dm_4dot_product_ = nullptr;
@@ -61,26 +58,14 @@ ProjectedMatrices::ProjectedMatrices(const int ndim, const bool with_spin)
     width_   = 0.;
     min_val_ = 0.25;
 
-    if (dim_ > 0)
-    {
-        eigenvalues_.resize(dim_);
-    }
+    eigenvalues_.resize(dim_);
 
-    if (dim_ > 0)
-    {
-        matH_.reset(new dist_matrix::DistMatrix<DISTMATDTYPE>("H", ndim, ndim));
-        matHB_.reset(
-            new dist_matrix::DistMatrix<DISTMATDTYPE>("HB", ndim, ndim));
-        theta_.reset(
-            new dist_matrix::DistMatrix<DISTMATDTYPE>("Theta", ndim, ndim));
-        work_.reset(
-            new dist_matrix::DistMatrix<DISTMATDTYPE>("work", ndim, ndim));
-    }
+    matH_.reset(new dist_matrix::DistMatrix<DISTMATDTYPE>("H", ndim, ndim));
+    matHB_.reset(new dist_matrix::DistMatrix<DISTMATDTYPE>("HB", ndim, ndim));
+    theta_.reset(
+        new dist_matrix::DistMatrix<DISTMATDTYPE>("Theta", ndim, ndim));
+    work_.reset(new dist_matrix::DistMatrix<DISTMATDTYPE>("work", ndim, ndim));
 
-    if (onpe0)
-        (*MPIdata::sout)
-            << "ProjectedMatrices: sparse_distmatrix_nb_tasks_per_partitions_="
-            << sparse_distmatrix_nb_tasks_per_partitions_ << std::endl;
     n_instances_++;
 }
 
@@ -110,17 +95,14 @@ void ProjectedMatrices::setup(const double kbt, const int nel,
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     MPI_Comm comm   = mmpi.commSpin();
 
-    if (dim_ > 0)
-    {
-        DistMatrix2SquareLocalMatrices::setup(
-            comm, global_indexes, dm_->getMatrix());
-        LocalMatrices2DistMatrix::setup(comm, global_indexes);
+    DistMatrix2SquareLocalMatrices::setup(
+        comm, global_indexes, dm_->getMatrix());
+    LocalMatrices2DistMatrix::setup(comm, global_indexes);
 
-        localX_.reset(
-            new SquareLocalMatrices<MATDTYPE>(subdiv_, chromatic_number_));
-        localT_.reset(
-            new SquareLocalMatrices<MATDTYPE>(subdiv_, chromatic_number_));
-    }
+    localX_.reset(
+        new SquareLocalMatrices<MATDTYPE>(subdiv_, chromatic_number_));
+    localT_.reset(
+        new SquareLocalMatrices<MATDTYPE>(subdiv_, chromatic_number_));
 
     localHl_.reset(new SquareLocalMatrices<MATDTYPE>(
         global_indexes.size(), global_indexes[0].size()));
@@ -349,11 +331,8 @@ void ProjectedMatrices::computeOccupationsFromDM()
         (*MPIdata::sout) << "ProjectedMatrices::computeOccupationsFromDM()"
                          << std::endl;
 #endif
-    if (dim_ > 0)
-    {
-        assert(dm_);
-        dm_->computeOccupations(gm_->getCholeskyL());
-    }
+    assert(dm_);
+    dm_->computeOccupations(gm_->getCholeskyL());
 }
 
 void ProjectedMatrices::getOccupations(std::vector<DISTMATDTYPE>& occ) const
@@ -397,8 +376,6 @@ double ProjectedMatrices::getNel() const
 
 double ProjectedMatrices::getEigSum()
 {
-    if (dim_ == 0) return 0.;
-
     eigsum_tm_.start();
     work_->symm('l', 'l', 1., *matHB_, gm_->getInverse(), 0.);
 
@@ -409,12 +386,7 @@ double ProjectedMatrices::getEigSum()
     return val;
 }
 
-double ProjectedMatrices::getExpectationH()
-{
-    if (dim_ == 0) return 0.;
-
-    return getExpectation(*matHB_);
-}
+double ProjectedMatrices::getExpectationH() { return getExpectation(*matHB_); }
 
 double ProjectedMatrices::getExpectation(
     const dist_matrix::DistMatrix<DISTMATDTYPE>& A)
@@ -684,9 +656,6 @@ double ProjectedMatrices::computeChemicalPotentialAndOccupations(
 
     if (nel <= 0)
     {
-        // if( onpe0 )
-        //    (*MPIdata::sout)<<"computeChemicalPotentialAndOccupations() with
-        //    nel="<<nel<<endl;
         mu1 = -10000.;
         mu2 = 10000.;
     }
@@ -803,7 +772,6 @@ void ProjectedMatrices::computeLoewdinTransform(
     const bool transform_matrices)
 {
     assert(gm_ != nullptr);
-    // dm_->computeOccupations(gm_->getCholeskyL());
 
     dist_matrix::DistMatrix<DISTMATDTYPE> mat(gm_->getMatrix());
     dist_matrix::DistMatrix<DISTMATDTYPE> vect("eigenvectors", dim_, dim_);
@@ -901,8 +869,6 @@ double ProjectedMatrices::dotProductWithDM(
 double ProjectedMatrices::dotProductSimple(
     const SquareLocalMatrices<MATDTYPE>& local_product)
 {
-    assert(dm_4dot_product_ != nullptr);
-
     dist_matrix::DistMatrix<DISTMATDTYPE> ds("ds", dim_, dim_);
     LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
 
@@ -935,17 +901,6 @@ double ProjectedMatrices::computeTraceInvSmultMat(
 
     gm_->applyInv(pmatrix);
     return pmatrix.trace();
-    /*
-        dist_matrix::DistMatrix<DISTMATDTYPE>
-       work_matrix("work_matrix",dim_,dim_); work_matrix.symm('l', 'l', 1.,
-       gm_->getInverse(), pmatrix, 0.);
-
-        dist_matrix::DistMatrix<DISTMATDTYPE> pm =
-       gm_->getInverse();//("pmatrix",dim_,dim_); double itrace = pm.trace();
-        if(onpe0)std::cout<<"INVERSE trace = "<<itrace<<endl;
-
-        return work_matrix.trace();
-    */
 }
 
 double ProjectedMatrices::computeTraceInvSmultMatMultTheta(

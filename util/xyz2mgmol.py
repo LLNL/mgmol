@@ -13,8 +13,12 @@ lines=myfile.readlines()
 
 # list possible species in a dictionary
 list_species={'H':0,'He':0,'Li':0,'Be':0,'B':0,'C':0,'N':0,'O':0,'F':0,'Na':0,
-              'Mg':0,'Al':0,'Si':0,'P':0,'S':0,'Cl':0,'Ca':0,'Zn':0,
+              'Mg':0,'Al':0,'Si':0,'P':0,'S':0,'Cl':0,'Ca':0,'Zn':0,'Mo':0,
               'noname':0}
+
+charges={'H':1,'Li':3,'Be':4,'B':3,'C':4,'N':5,'O':6,'F':7,'Na':7,
+         'Mg':-1,'Al':3,'Si':4,'P':5,'S':6,'Cl':7,'Zn':12,'Mo':14}
+
 numbers_list=['0','1','2','3','4','5','6','7','8','9']
 
 nel=0
@@ -38,37 +42,16 @@ for line in lines: ## loop over lines of file
   count=count+1
   if count>2:
     number=number+1
-    words=string.split(line)
+    words=line.split()
 
     species = words[0]
     if words[0]=='SOD':
         species="Na"
 
-    ne=-1
-    if species=='H':
-      ne=1
-    if species=='C':
-        ne=4
-    if species=='Cl':
-        ne=7
-    if species=='N':
-      ne=5
-    if species=='O':
-      ne=6
-    if species=='F':
-      ne=7
-    if species=='P':
-      ne=5
-    if species=='S':
-      ne=6
-    if species=='Si':
-      ne=4
-    if species=='Si':
-      ne=4
-    if species=='Na':
-      ne=7
-    if species=='Zn':
-      ne=12
+    ne=charges[species]
+    if ne<0:
+      print("ERROR: unknown number of electrons for species {}".format(species))
+      break
 
     if species in list_species.keys():
       sp=list_species[species]
@@ -77,18 +60,18 @@ for line in lines: ## loop over lines of file
         list_species[species]=nsp
         sp=nsp
     else:
-      print "ERROR: unknown species", species
+      print("ERROR: unknown species {}".format(species))
       break
 
     if ne<0:
-      print "ERROR: unknown number of electrons for species ", species
+      print("ERROR: unknown number of electrons for species {}".format(species))
       break
 
     x = eval(words[1])*ang2bohr
     y = eval(words[2])*ang2bohr
     z = eval(words[3])*ang2bohr
 
-    name=species+`number`
+    name=species+str(number)
 
     if x>max_x: max_x=x
     if y>max_y: max_y=y
@@ -98,23 +81,24 @@ for line in lines: ## loop over lines of file
     if z<min_z: min_z=z
 
     if ne<0:
-      print "could not determine species for atom ", name
+      print("could not determine species for atom {}".format(name))
       break
 
     nel=nel+ne
     na=na+1
 
-    print name.ljust(7),str(sp).rjust(3),str(x).rjust(16),str(y).rjust(16),str(z).rjust(16)
+    print(name.ljust(7), str(sp).rjust(3), \
+          str(x).rjust(16),str(y).rjust(16),str(z).rjust(16))
 
-print "#Number of atoms     =",na
-print "#Number of electrons =",nel
-print "#Max. x=", max_x
-print "#Max. y=", max_y
-print "#Max. z=", max_z
-print "#Min. x=", min_x
-print "#Min. y=", min_y
-print "#Min. z=", min_z
-print "#lx[Bohr]=", max_x-min_x
-print "#ly[Bohr]=", max_y-min_y
-print "#lz[Bohr]=", max_z-min_z
+print("#Number of atoms     = {}".format(na))
+print("#Number of electrons = {}".format(nel))
+print("#Max. x={}".format(max_x))
+print("#Max. y={}".format(max_y))
+print("#Max. z={}".format(max_z))
+print("#Min. x={}".format(min_x))
+print("#Min. y={}".format(min_y))
+print("#Min. z={}".format(min_z))
+print("#lx[Bohr]={}".format(max_x-min_x))
+print("#ly[Bohr]={}".format(max_y-min_y))
+print("#lz[Bohr]={}".format(max_z-min_z))
 
