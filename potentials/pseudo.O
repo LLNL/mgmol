@@ -6,7 +6,6 @@
 # This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 # Please also read this link https://github.com/llnl/mgmol/LICENSE
 #
-# $Id: pseudo.O,v 1.1 2002/07/25 00:45:23 jeanluc Exp $
 # from oxygen (jeep), Revision 1.2  1998/06/24 20:01:11  fgygi
 # Hamann-Oxygen-08-09
 # Short description of the species type. One line only!

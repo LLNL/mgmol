@@ -6,7 +6,6 @@
 # This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 # Please also read this link https://github.com/llnl/mgmol/LICENSE
 #
-# $Id: pseudo.S,v 1.2 2004/08/24 18:15:39 jeanluc Exp $
 # from sulfur (jeep), sulfur,v 1.2 1998/06/24 20:01:11 fgygi
 # Short description of the species type. One line only!
 sulfur

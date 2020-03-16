@@ -6,7 +6,6 @@
 # This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 # Please also read this link https://github.com/llnl/mgmol/LICENSE
 #
-# $Id: pseudo.D_tm_pbe,v 1.1 2004/02/02 23:51:01 jeanluc Exp $
 # obtained from Stanimir Bonev, 10/7/03
 #1.00  0  1  6  0.00 : z  nc  nv iexc rnlc                                      
 #    1  0   1.00     : n  l   f                                                 

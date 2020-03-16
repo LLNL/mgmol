@@ -6,19 +6,10 @@
 # This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 # Please also read this link https://github.com/llnl/mgmol/LICENSE
 #
-# $Id:$
-# Imported sources
-#
-# Revision 1.2  1998/06/24  20:01:11  fgygi
-#
-#   401  1    1.4  1.0  1   BHS_Hydrogen Green 0.4 1.0
-#
 #   Pseudopotential input file for H.
 #
-#   Comment lines begin with a #. Blank lines are allowed
-#
 # Short description of the species type. One line only!
-Hydrogen_PBE_with_mass 2
+BHS_Hydrogen_PBE_with_mass 2
 #
 White 
 #radii of balls and covalent bonds

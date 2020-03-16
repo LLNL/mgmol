@@ -1,15 +1,7 @@
-# Copyright (c) 2017, Lawrence Livermore National Security, LLC. Produced at
-# the Lawrence Livermore National Laboratory. 
-# Written by J.-L. Fattebert, D. Osei-Kuffuor and I.S. Dunn.
-# LLNL-CODE-743438
-# All rights reserved. 
-# This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
-# Please also read this link https://github.com/llnl/mgmol/LICENSE
+# Pseudopotential input file for Al.
+# Adapted from www.abinit.org
+# aluminium, fhi98PP : Trouiller-Martins-type, LDA Ceperley/Alder Perdew/Wang (1992), l= 2 local
 #
-# $Id: pseudo.Al_LDA_FHI,v 1.1 2005/07/13 22:49:26 jeanluc Exp $
-#   Pseudopotential input file for Al.
-#   from www.abinit.org
-# points: 493
 Al_LDA_FHI
 #color
 Red 

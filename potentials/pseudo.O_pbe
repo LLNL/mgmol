@@ -6,20 +6,6 @@
 # This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 # Please also read this link https://github.com/llnl/mgmol/LICENSE
 #
-# $Id: pseudo.O_pbe,v 1.3 2003/05/20 00:19:33 jeanluc Exp $
-# $Log: pseudo.O_pbe,v $
-# Revision 1.3  2003/05/20 00:19:33  jeanluc
-# *** empty log message ***
-#
-# Revision 1.2  2002/12/19 18:01:01  jeanluc
-# Change color
-#
-# Revision 1.1.1.1  2001/07/04 01:41:40  jeanluc
-# Imported sources
-#
-# Revision 1.2  1998/06/24  20:01:11  fgygi
-# ident lines
-#
 # Short description of the species type. One line only!
 oxygen_pbe
 #color

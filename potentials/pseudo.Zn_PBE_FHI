@@ -1,13 +1,6 @@
-# Copyright (c) 2017, Lawrence Livermore National Security, LLC. Produced at
-# the Lawrence Livermore National Laboratory. 
-# Written by J.-L. Fattebert, D. Osei-Kuffuor and I.S. Dunn.
-# LLNL-CODE-743438
-# All rights reserved. 
-# This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
-# Please also read this link https://github.com/llnl/mgmol/LICENSE
-#
-#adapted form abinit website, 1/20/2015
-#zinc, fhi98PP : Trouiller-Martins-type, GGA Perdew/Burke/Ernzerhof (1996), l= 0 local
+# Pseudopotential file for Zn
+# Adapted form abinit website, 1/20/2015a
+# zinc, fhi98PP : Trouiller-Martins-type, GGA Perdew/Burke/Ernzerhof (1996), l= 0 local
 # 30.000 12.000    011001              zatom,zion,pspdat
 #   6        11    3   0    527     0       pspcod,pspxc,lmax,lloc,mmax,r2well
 # Short description of the species type. One line only!

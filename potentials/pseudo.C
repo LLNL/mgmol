@@ -6,7 +6,6 @@
 # This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 # Please also read this link https://github.com/llnl/mgmol/LICENSE
 #
-# $Id: pseudo.C,v 1.1 2003/01/22 02:12:01 jeanluc Exp $
 #   Pseudopotential file for carbon.
 #   Adapted from Jeep "carbon,v 1.3 1999/03/02 01:24:00 fgygi Exp" 
 #

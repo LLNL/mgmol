@@ -6,7 +6,6 @@
 # This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 # Please also read this link https://github.com/llnl/mgmol/LICENSE
 #
-# $Id: pseudo.S_TM_pbe,v 1.1 2009/01/14 23:43:34 jeanluc Exp $
 # adapted from QBox potential provided by E. Schweger (01/13/09)
 # Short description of the species type. One line only!
 TM PBEGGA S

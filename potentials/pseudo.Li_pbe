@@ -6,7 +6,6 @@
 # This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 # Please also read this link https://github.com/llnl/mgmol/LICENSE
 #
-# $Id: pseudo.li_tm_pbe,v 1.1 2003/07/09 18:44:16 jeanluc Exp $
 # obtained from Tadashi, 6/26/03
 # 3.00  1  2  6  1.80 : z  nc  nv iexc rnlc                                     
 #    1  0   2.00      : n  l   f                                                

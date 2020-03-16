@@ -6,8 +6,7 @@
 # This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 # Please also read this link https://github.com/llnl/mgmol/LICENSE
 #
-# $Id: pseudo.F_pbe,v 1.2 2008/03/18 17:53:38 jeanluc Exp $
-# from fluorine_pbe,v 1.3 1998/08/26 00:23:00 fgygi
+# Adapted from fluorine_pbe,v 1.3 1998/08/26 00:23:00 fgygi
 # 9  1 2  1 4 0.4  /* z, nc, nv, irelat, iexct, rcsmooth */
 # 1 0 2       /* n, l, f */
 # 2 0 2       /* n, l, f */

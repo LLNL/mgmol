@@ -6,7 +6,6 @@
 # This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 # Please also read this link https://github.com/llnl/mgmol/LICENSE
 #
-# $Id:$
 # from Qbox format (from T. Ogitsu, October 2014)
 # Short description of the species type. One line only!
 TM PBEGGA B
