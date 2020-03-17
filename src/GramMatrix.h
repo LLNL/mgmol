@@ -105,7 +105,6 @@ public:
     void computeLoewdinTransform(
         dist_matrix::DistMatrix<DISTMATDTYPE>& loewdinMat,
         std::shared_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> invLoewdin,
-        std::shared_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> vect,
         const int orb_index);
 };
 

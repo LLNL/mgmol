@@ -243,12 +243,12 @@ double GramMatrix::getLinDependent2states(int& st1, int& st2, int& st3) const
 void GramMatrix::computeLoewdinTransform(
     dist_matrix::DistMatrix<DISTMATDTYPE>& loewdinMat,
     std::shared_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> invLoewdin,
-    std::shared_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> vect,
     const int orb_index)
 {
     dist_matrix::DistMatrix<DISTMATDTYPE> mat(*matS_);
+    dist_matrix::DistMatrix<DISTMATDTYPE> vect("vect", dim_, dim_);
     std::vector<DISTMATDTYPE> eigenvalues(dim_);
-    mat.syev('v', 'l', eigenvalues, *vect);
+    mat.syev('v', 'l', eigenvalues, vect);
 
     std::vector<DISTMATDTYPE> diag_values(dim_);
     for (int i = 0; i < dim_; i++)
@@ -258,8 +258,8 @@ void GramMatrix::computeLoewdinTransform(
     loewdinMat.setDiagonal(diag_values);
 
     //  loewdinMat = vect * D * vect^T, using mat as temporary storage
-    mat.symm('r', 'l', 1., loewdinMat, *vect, 0.);
-    loewdinMat.gemm('n', 't', 1., mat, *vect, 0.);
+    mat.symm('r', 'l', 1., loewdinMat, vect, 0.);
+    loewdinMat.gemm('n', 't', 1., mat, vect, 0.);
 
     if (invLoewdin) // compute inverse Loewdin matrix
     {
@@ -271,7 +271,7 @@ void GramMatrix::computeLoewdinTransform(
         invLoewdin->clear();
         invLoewdin->setDiagonal(diag_values);
         // invLoewdin = vect * D^-1 * vect^T, using mat as temporary storage
-        mat.symm('r', 'l', 1., *invLoewdin, *vect, 0.);
-        invLoewdin->gemm('n', 't', 1., mat, *vect, 0.);
+        mat.symm('r', 'l', 1., *invLoewdin, vect, 0.);
+        invLoewdin->gemm('n', 't', 1., mat, vect, 0.);
     }
 }

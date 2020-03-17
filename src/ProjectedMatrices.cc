@@ -773,35 +773,34 @@ void ProjectedMatrices::computeLoewdinTransform(
 {
     assert(gm_ != nullptr);
 
-    dist_matrix::DistMatrix<DISTMATDTYPE> matP("P", dim_, dim_);
+    dist_matrix::DistMatrix<DISTMATDTYPE> invSqrtMat("invSqrtMat", dim_, dim_);
 
-    std::shared_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> invLoewdin;
-    std::shared_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> vect(
-        new dist_matrix::DistMatrix<DISTMATDTYPE>("eigen", dim_, dim_));
+    std::shared_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> sqrtMat;
     if (transform_matrices)
     {
-        invLoewdin.reset(new dist_matrix::DistMatrix<DISTMATDTYPE>(
-            "invLoewdin", dim_, dim_));
+        sqrtMat.reset(
+            new dist_matrix::DistMatrix<DISTMATDTYPE>("sqrtMat", dim_, dim_));
     }
 
-    gm_->computeLoewdinTransform(matP, invLoewdin, vect, orb_index);
+    gm_->computeLoewdinTransform(invSqrtMat, sqrtMat, orb_index);
 
     if (transform_matrices)
     {
-        assert(invLoewdin);
+        assert(sqrtMat);
 
         // transform DM to reflect Loewdin orthonormalization
-        dm_->transform(*invLoewdin);
+        dm_->transform(*sqrtMat);
 
         // transform matHB_ to reflect Loewdin orthonormalization
-        dist_matrix::DistMatrix<DISTMATDTYPE>& mat(*invLoewdin);
-        mat.symm('r', 'l', 1., *matHB_, *vect, 0.);
-        matHB_->gemm('n', 't', 1., mat, *vect, 0.);
+        // (we reuse sqrtMat since we are done with it)
+        dist_matrix::DistMatrix<DISTMATDTYPE>& mat(*sqrtMat);
+        mat.symm('r', 'l', 1., *matHB_, invSqrtMat, 0.);
+        matHB_->gemm('n', 't', 1., mat, invSqrtMat, 0.);
     }
 
     DistMatrix2SquareLocalMatrices* dm2sl
         = DistMatrix2SquareLocalMatrices::instance();
-    dm2sl->convert(matP, localP);
+    dm2sl->convert(invSqrtMat, localP);
 }
 
 double ProjectedMatrices::getTraceDiagProductWithInvS(
