@@ -293,7 +293,10 @@ void DensityMatrix::computeOccupations(
     const double occinv = 1. / orbital_occupation_;
 
     const double tol = 1.e-5;
-    bool flag        = false;
+#ifndef NDEBUG
+    const double tol_fail = 1.e-3;
+#endif
+    bool flag = false;
     for (int i = 0; i < dim_; i++)
     {
         double occ_val = (double)occ[i] * occinv;
@@ -308,8 +311,8 @@ void DensityMatrix::computeOccupations(
             (*MPIdata::sout) << std::endl;
             flag = true;
         }
-        assert(occ_val > 0. - tol);
-        assert(occ_val < 1. + tol);
+        assert(occ_val > 0. - tol_fail);
+        assert(occ_val < 1. + tol_fail);
         occ[i] = (DISTMATDTYPE)std::max(0., occ_val);
         occ[i] = (DISTMATDTYPE)std::min(1., occ_val);
     }
