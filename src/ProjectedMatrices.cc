@@ -773,45 +773,30 @@ void ProjectedMatrices::computeLoewdinTransform(
 {
     assert(gm_ != nullptr);
 
-    dist_matrix::DistMatrix<DISTMATDTYPE> mat(gm_->getMatrix());
-    dist_matrix::DistMatrix<DISTMATDTYPE> vect("eigenvectors", dim_, dim_);
-    std::vector<DISTMATDTYPE> eigenvalues(dim_);
-    mat.syev('v', 'l', eigenvalues, vect);
-
-    std::vector<DISTMATDTYPE> diag_values(dim_);
-    for (unsigned int i = 0; i < dim_; i++)
-        diag_values[i] = (DISTMATDTYPE)(1. / sqrt(eigenvalues[i]));
-
     dist_matrix::DistMatrix<DISTMATDTYPE> matP("P", dim_, dim_);
-    matP.clear();
-    matP.setDiagonal(diag_values);
-    // if( onpe0 )
-    //  (*MPIdata::sout)<<"ProjectedMatrices::getLoewdinTransform() ---
-    //  matP"<<endl;
-    // matP.print((*MPIdata::sout),0,0,5,5);
-    mat.symm('r', 'l', 1., matP, vect, 0.);
-    matP.gemm('n', 't', 1., mat, vect, 0.);
+
+    std::shared_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> invLoewdin;
+    std::shared_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> vect(
+        new dist_matrix::DistMatrix<DISTMATDTYPE>("eigen", dim_, dim_));
+    if (transform_matrices)
+    {
+        invLoewdin.reset(new dist_matrix::DistMatrix<DISTMATDTYPE>(
+            "invLoewdin", dim_, dim_));
+    }
+
+    gm_->computeLoewdinTransform(matP, invLoewdin, vect, orb_index);
 
     if (transform_matrices)
     {
-        // new Gram matrix is Identity
-        setGram2Id(orb_index);
+        assert(invLoewdin);
 
         // transform DM to reflect Loewdin orthonormalization
-        for (unsigned int i = 0; i < dim_; i++)
-            diag_values[i] = sqrt(eigenvalues[i]);
-        dist_matrix::DistMatrix<DISTMATDTYPE> invLoewdin(
-            "invLoewdin", dim_, dim_);
-        invLoewdin.clear();
-        invLoewdin.setDiagonal(diag_values);
-        mat.symm('r', 'l', 1., invLoewdin, vect, 0.);
-        invLoewdin.gemm('n', 't', 1., mat, vect, 0.);
-
-        dm_->transform(invLoewdin);
+        dm_->transform(*invLoewdin);
 
         // transform matHB_ to reflect Loewdin orthonormalization
-        mat.symm('r', 'l', 1., *matHB_, vect, 0.);
-        matHB_->gemm('n', 't', 1., mat, vect, 0.);
+        dist_matrix::DistMatrix<DISTMATDTYPE>& mat(*invLoewdin);
+        mat.symm('r', 'l', 1., *matHB_, *vect, 0.);
+        matHB_->gemm('n', 't', 1., mat, *vect, 0.);
     }
 
     DistMatrix2SquareLocalMatrices* dm2sl
