@@ -2,7 +2,6 @@
 // UT-Battelle, LLC.
 // Produced at the Lawrence Livermore National Laboratory and the Oak Ridge
 // National Laboratory.
-// Written by J.-L. Fattebert, D. Osei-Kuffuor and I.S. Dunn.
 // LLNL-CODE-743438
 // All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
@@ -599,10 +598,6 @@ void MGmol<T>::write_header()
         os_ << " Compiled: " << __DATE__ << ", " << __TIME__ << std::endl;
         os_ << " Real-space finite difference ab initio calculations\n";
         os_ << std::endl;
-        os_ << " authors: J.-L. Fattebert, Oak Ridge National Laboratory\n";
-        os_ << "          D. Osei-Kuffuor, Lawrence Livermore National "
-               "Laboratory\n";
-        os_ << "          I.S. Dunn, Columbia University\n\n";
         os_ << "//////////////////////////////////////////////////////////"
             << std::endl;
 
