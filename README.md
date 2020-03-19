@@ -9,7 +9,7 @@ Authors
  * Jean-Luc Fattebert (fattebertj@ornl.gov)
  * Daniel Osei-Kuffuor (oseikuffuor1@llnl.gov)
  * Ian S. Dunn (iansdunn@gmail.com)
-
+ * Bruno Turcksin (turcksinbr@ornl.gov)
 
 References
 ----------
@@ -65,4 +65,3 @@ It is also linked here:
 - [LICENSE](./LICENSE)
 
 `LLNL-CODE-743438`  `OCEC-17-203`
-
