@@ -102,9 +102,9 @@ void copy_to_host(T const* const vec_dev, unsigned int size, T* vec)
 }
 #else
 template <typename T>
-void copy_to_host(T const* const /*vec_dev*/, unsigned int /*size*/, T* /*vec*/)
+void copy_to_host(T const* const vec_dev, unsigned int size, T* vec)
 {
-    // TODO
+    std::memcpy(vec, vec_dev, size * sizeof(T));
 }
 #endif
 
@@ -138,45 +138,59 @@ void copy_to_host(std::unique_ptr<T[], void (*)(T*)> const& vec_dev,
 // Allocate and deallocate memory
 //---------------------------------------------------------------------------//
 
-template <typename MemorySpaceType>
+template <typename T, typename MemorySpaceType>
 struct Memory
 {
-    template <typename T>
     static T* allocate(unsigned int size);
 
-    template <typename T>
+    static T* allocate_host_view(unsigned int size);
+
     static void free(T* ptr);
 
-    template <typename T>
+    static void free_host_view(T* ptr);
+
     static void copy(T const* in, unsigned int size, T* out);
 
-    template <typename T>
+    static void copy_view_to_host(T* vec_dev, unsigned int size, T*& vec);
+
+    static void copy_view_to_dev(T const* vec, unsigned int size, T* vec_dev);
+
     static void set(T* ptr, unsigned int size, int val);
 };
 
-template <>
-struct Memory<MemorySpace::Host>
+template <typename T>
+struct Memory<T, MemorySpace::Host>
 {
-    template <typename T>
     static T* allocate(unsigned int size)
     {
         return std::malloc(size * sizeof(T));
     }
 
-    template <typename T>
+    static T* allocate_host_view(unsigned int size) { return nullptr; }
+
     static void free(T* ptr)
     {
         std::free(ptr);
         ptr = nullptr;
     }
 
-    template <typename T>
+    static void free_host_view(T* /*ptr*/) {}
+
     static void copy(T const* in, unsigned int size, T* out)
     {
         std::memcpy(out, in, size * sizeof(T));
     }
 
-    template <typename T>
+    static void copy_view_to_host(T* vec_dev, unsigned int /*size*/, T*& vec)
+    {
+        vec = vec_dev;
+    }
+
+    static void copy_view_to_dev(T const*, unsigned int, T*)
+    {
+        // no-op
+    }
+
     static void set(T* ptr, unsigned int size, int val)
     {
         std::memset(ptr, val, size * sizeof(T));
@@ -184,10 +198,9 @@ struct Memory<MemorySpace::Host>
 };
 
 #ifdef HAVE_MAGMA
-template <>
-struct Memory<MemorySpace::Device>
+template <typename T>
+struct Memory<T, MemorySpace::Device>
 {
-    template <typename T>
     static T* allocate(unsigned int size)
     {
         T* ptr_dev;
@@ -196,14 +209,24 @@ struct Memory<MemorySpace::Device>
         return ptr_dev;
     }
 
-    template <typename T>
+    static T* allocate_host_view(unsigned int size)
+    {
+        T* ptr = new T[size];
+        return ptr;
+    }
+
     static void free(T* ptr_dev)
     {
         magma_free(ptr_dev);
         ptr_dev = nullptr;
     }
 
-    template <typename T>
+    static void free_host_view(T* ptr)
+    {
+        delete ptr;
+        ptr = nullptr;
+    }
+
     static void copy(T const* in, unsigned int size, T* out)
     {
         int const increment   = 1;
@@ -212,7 +235,22 @@ struct Memory<MemorySpace::Device>
             magma_singleton.queue_);
     }
 
-    template <typename T>
+    static void copy_view_to_host(T* vec_dev, unsigned int size, T*& vec)
+    {
+        int const increment   = 1;
+        auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+        magma_getvector(size, sizeof(T), vec_dev, increment, vec, increment,
+            magma_singleton.queue_);
+    }
+
+    static void copy_view_to_dev(T const* vec, unsigned int size, T* vec_dev)
+    {
+        int const increment   = 1;
+        auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+        magma_setvector(size, sizeof(T), vec, increment, vec_dev, increment,
+            magma_singleton.queue_);
+    }
+
     static void set(T* ptr, unsigned int size, int val)
     {
         // Cannot directly use cudaMemset and MAGMA does not have an equivalent

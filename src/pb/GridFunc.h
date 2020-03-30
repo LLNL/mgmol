@@ -114,7 +114,7 @@ public:
 
     double fmax();
 
-    template <typename T2>
+    template <typename T2, typename MemorySpaceType>
     void getValues(T2*) const;
 
     void init_vect(T*, const char) const;

@@ -487,7 +487,8 @@ void Electrostatic::computeVh(const Ions& ions, Rho<T>& rho, Potentials& pot)
 
         //        int ione=1;
         int n     = ngridpts;
-        eepsilon_ = MPdot(n, work, pot.vepsilon());
+        eepsilon_ = LinearAlgebraUtils<MemorySpace::Host>::MPdot(
+            n, work, pot.vepsilon());
         eepsilon_ = pbGrid_->vel() * myPEenv.double_sum_all(eepsilon_);
     }
     else

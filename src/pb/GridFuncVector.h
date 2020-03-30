@@ -207,8 +207,8 @@ public:
     void axpy(const double alpha, const GridFuncVector<T>& func);
 
     void init_vect(const int k, T* vv, const char dis) const;
-    void getValues(const int k, double* vv) const;
-    void getValues(const int k, float* vv) const;
+    template <typename T2, typename MemorySpaceType>
+    void getValues(const int k, T2* vv) const;
 };
 
 } // namespace pb

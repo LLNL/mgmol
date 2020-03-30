@@ -239,17 +239,15 @@ bool PCGSolver<T, T2>::solve(pb::GridFunc<T2>& gf_phi, pb::GridFunc<T2>& gf_rhs)
         double bet     = rtz_new / rtz;
         p *= bet;
         p += z;
-        //      p = z + p*bet;
         rtz = rtz_new;
-        //      printf("iter %d: rnorm = %f, bet = %f \n", k, rnorm, bet);
     }
     oper_.transform(gf_phi);
     final_residual_     = rnorm;
     residual_reduction_ = rnorm / init_rnorm;
-    //   printf("Iters = %d. Residual NORM Info := %2.8e, %2.8e, %2.8e \n", k,
-    //   init_rnorm, final_residual_,residual_reduction_ );
 
     if (fully_periodic_) gf_phi.average0();
+
+    std::cout << "Converged " << converged << std::endl;
 
     return converged;
 }

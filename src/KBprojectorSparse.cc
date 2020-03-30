@@ -897,7 +897,8 @@ void KBprojectorSparse::axpyKetT(
 
     for (unsigned short i = 0; i < alpha.size(); i++)
     {
-        MPaxpy(size_nl, alpha[i], projectors[i], loc_work_proj);
+        LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
+            size_nl, alpha[i], projectors[i], loc_work_proj);
     }
 
     const int* const pidx = &nlindex_[iloc][0];
@@ -909,7 +910,6 @@ void KBprojectorSparse::axpyKetT(
 
 bool KBprojectorSparse::setIndexesAndProjectors()
 {
-    // if(onpe0)cout<<"KBprojectorSparse::setIndexesAndProjectors()..."<<endl;
     clear();
 
     Mesh* mymesh           = Mesh::instance();

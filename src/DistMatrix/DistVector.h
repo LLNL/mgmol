@@ -92,7 +92,8 @@ public:
         if (DistMatrix<T>::active())
         {
             assert(v.size_ == DistMatrix<T>::size_);
-            tsum = MPdot(DistMatrix<T>::val_.size(), DistMatrix<T>::val_.data(),
+            tsum = LinearAlgebraUtils<MemorySpace::Host>::MPdot(
+                DistMatrix<T>::val_.size(), DistMatrix<T>::val_.data(),
                 v.val_.data());
         }
 #ifdef SCALAPACK

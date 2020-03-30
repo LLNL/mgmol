@@ -327,7 +327,8 @@ void MGmol<T>::computeHnlPhiAndAdd2HPhi(
 
                 // Add the contribution of the non-local potential to H phi
                 ORBDTYPE* hpsi = hphi.getPsi(icolor);
-                MPaxpy(numpt, 1., hnl, hpsi);
+                LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
+                    numpt, 1., hnl, hpsi);
             }
             delete[] hnl;
 
@@ -343,7 +344,8 @@ void MGmol<T>::computeHnlPhiAndAdd2HPhi(
                 for (short icolor = 0; icolor < ncolors; icolor++)
                 {
                     get_vnlpsi(ions, gid, icolor, kbpsi, hnl);
-                    MPaxpy(numpt, 1., hnl, hphi.getPsi(icolor));
+                    LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
+                        numpt, 1., hnl, hphi.getPsi(icolor));
                 }
 
                 delete[] hnl;

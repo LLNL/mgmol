@@ -72,21 +72,11 @@ void SubspaceProjector<T>::projectOut(
         double minus     = -1.;
         ORBDTYPE* parray = orbitals.getPsi(0, iloc);
         for (int j = 0; j < chromatic_number_; j++)
-            MPaxpy(loc_numpt_, minus, tproduct + j * loc_numpt_,
-                parray + j * lda_);
+            LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(loc_numpt_, minus,
+                tproduct + j * loc_numpt_, parray + j * lda_);
     }
 
     delete[] tproduct;
-
-#if 0
-    {
-    // test if projection is now 0
-    dist_matrix::DistMatrix<DISTMATDTYPE> tmatrix(subspace_.product(orbitals));
-    if( onpe0 )
-        (*MPIdata::sout)<<"SubspaceProjector: Product after projection"<<endl;
-    tmatrix.print((*MPIdata::sout),0,0,NPRINT_ROWS_AND_COLS,NPRINT_ROWS_AND_COLS);
-    }
-#endif
 
     orbitals.incrementIterativeIndex();
 }

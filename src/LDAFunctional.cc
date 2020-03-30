@@ -101,7 +101,8 @@ double LDAFunctional::computeRhoDotExc() const
     double exc = 0.;
     if (nspin_ == 1)
     {
-        exc = MPdot(np_, prho_, &exc_[0]);
+        exc = LinearAlgebraUtils<MemorySpace::Host>::MPdot(
+            np_, prho_, &exc_[0]);
     }
     else
     {

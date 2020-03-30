@@ -413,7 +413,8 @@ void LocGridOrbitals::axpy(const double alpha, const LocGridOrbitals& orbitals)
                     // copy into new psi_
                     if (val != nullptr)
                     {
-                        MPaxpy(loc_numpt_, alpha, val, getPsi(color, iloc));
+                        LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
+                            loc_numpt_, alpha, val, getPsi(color, iloc));
                     }
                 }
             }
@@ -1548,8 +1549,9 @@ void LocGridOrbitals::computeDiagonalElementsDotProduct(
             const int gid = overlapping_gids_[iloc][icolor];
             if (gid > -1)
             {
-                double alpha = MPdot(loc_numpt_, orbitals.getPsi(icolor, iloc),
-                    getPsi(icolor, iloc));
+                double alpha
+                    = LinearAlgebraUtils<MemorySpace::Host>::MPdot(loc_numpt_,
+                        orbitals.getPsi(icolor, iloc), getPsi(icolor, iloc));
 
                 ss[gid] += (DISTMATDTYPE)(alpha * grid_.vel());
             }
@@ -1589,8 +1591,9 @@ void LocGridOrbitals::computeDiagonalElementsDotProductLocal(
             const int ifunc = overlapping_gids_[iloc][icolor];
             if (ifunc > -1)
             {
-                double alpha = MPdot(loc_numpt_, orbitals.getPsi(icolor, iloc),
-                    getPsi(icolor, iloc));
+                double alpha
+                    = LinearAlgebraUtils<MemorySpace::Host>::MPdot(loc_numpt_,
+                        orbitals.getPsi(icolor, iloc), getPsi(icolor, iloc));
 
                 double val = alpha * grid_.vel();
                 diag.insertMatrixElement(ifunc, ifunc, val, ADD, true);
@@ -2295,7 +2298,7 @@ void LocGridOrbitals::projectOut(
 
         double minus = -1. * scale;
         for (int j = 0; j < chromatic_number_; j++)
-            MPaxpy(
+            LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
                 loc_numpt_, minus, tproduct + j * loc_numpt_, parray + j * lda);
     }
 

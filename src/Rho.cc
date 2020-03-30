@@ -30,6 +30,11 @@ Timer Rho<T>::compute_blas_tm_("Rho::compute_usingBlas");
 // template <class T>
 // Timer Rho<T>::compute_offdiag_tm_("Rho::compute_offdiag");
 
+#ifdef HAVE_MAGMA
+template <typename ScalarType>
+using MemoryDev = MemorySpace::Memory<ScalarType, MemorySpace::Device>;
+#endif
+
 template <class T>
 Rho<T>::Rho()
     : orbitals_type_(OrbitalsType::UNDEFINED),
@@ -75,8 +80,7 @@ template <class T>
 void Rho<T>::extrapolate()
 {
     double minus = -1;
-    //    int ione=1;
-    double two = 2.;
+    double two   = 2.;
     if (rho_minus1_.empty())
     {
         rho_minus1_.resize(nspin_);
@@ -88,8 +92,9 @@ void Rho<T>::extrapolate()
     RHODTYPE* tmp = new RHODTYPE[np_];
     memcpy(tmp, &rho_[myspin_][0], np_ * sizeof(RHODTYPE));
 
-    MPscal(np_, two, &rho_[myspin_][0]);
-    MPaxpy(np_, minus, &rho_minus1_[myspin_][0], &rho_[myspin_][0]);
+    LinearAlgebraUtils<MemorySpace::Host>::MPscal(np_, two, &rho_[myspin_][0]);
+    LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
+        np_, minus, &rho_minus1_[myspin_][0], &rho_[myspin_][0]);
 
     memcpy(&rho_minus1_[myspin_][0], tmp, np_ * sizeof(RHODTYPE));
 
@@ -99,10 +104,9 @@ void Rho<T>::extrapolate()
 template <class T>
 void Rho<T>::axpyRhoc(const double alpha, RHODTYPE* rhoc)
 {
-    //    int ione=1;
-
     double factor = (nspin_ > 1) ? 0.5 * alpha : alpha;
-    MPaxpy(np_, factor, &rhoc[0], &rho_[myspin_][0]);
+    LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
+        np_, factor, &rhoc[0], &rho_[myspin_][0]);
 }
 
 template <class T>
@@ -207,7 +211,8 @@ void Rho<T>::rescaleTotalCharge()
         }
 
         for (int ispin = 0; ispin < nspin; ispin++)
-            MPscal(np_, t1, &rho_[ispin][0]);
+            LinearAlgebraUtils<MemorySpace::Host>::MPscal(
+                np_, t1, &rho_[ispin][0]);
     }
 #ifdef DEBUG
     Mesh* mymesh = Mesh::instance();
@@ -690,17 +695,19 @@ void Rho<T>::computeRhoSubdomainUsingBlas3(const int iloc_init,
         // O(N^3) part
 #ifdef HAVE_MAGMA
         // If we have magma, we move all the data on the device
-        using MemoryDev = typename MemorySpace::Memory<MemorySpace::Device>;
         std::unique_ptr<ORBDTYPE[], void (*)(ORBDTYPE*)> phi1_dev(
-            MemoryDev::allocate<ORBDTYPE>(ld * ncols), MemoryDev::free);
+            MemoryDev<ORBDTYPE>::allocate(ld * ncols),
+            MemoryDev<ORBDTYPE>::free);
         MemorySpace::copy_to_dev(phi1, ld * ncols, phi1_dev);
 
         std::unique_ptr<MATDTYPE[], void (*)(MATDTYPE*)> mat_dev(
-            MemoryDev::allocate<MATDTYPE>(ncols * ncols), MemoryDev::free);
+            MemoryDev<MATDTYPE>::allocate(ncols * ncols),
+            MemoryDev<MATDTYPE>::free);
         MemorySpace::copy_to_dev(mat, ncols * ncols, mat_dev);
 
         std::unique_ptr<ORBDTYPE[], void (*)(ORBDTYPE*)> product_dev(
-            MemoryDev::allocate<ORBDTYPE>(nrows * ncols), MemoryDev::free);
+            MemoryDev<ORBDTYPE>::allocate(nrows * ncols),
+            MemoryDev<ORBDTYPE>::free);
 
         LinearAlgebraUtils<MemorySpace::Device>::MPgemmNN(nrows, ncols, ncols,
             1., phi1_dev.get(), ld, mat_dev.get(), ncols, 0., product_dev.get(),
@@ -720,12 +727,13 @@ void Rho<T>::computeRhoSubdomainUsingBlas3(const int iloc_init,
         // Copy phi2 to the device
         ORBDTYPE* phi2_host = orbitals2.getPsi(0, iloc);
         std::unique_ptr<ORBDTYPE[], void (*)(ORBDTYPE*)> phi2_dev(
-            MemoryDev::allocate<ORBDTYPE>(ld * ncols + nrows), MemoryDev::free);
+            MemoryDev<ORBDTYPE>::allocate(ld * ncols + nrows),
+            MemoryDev<ORBDTYPE>::free);
         MemorySpace::copy_to_dev(phi2_host, ld * ncols + nrows, phi2_dev);
         ORBDTYPE* phi2 = phi2_dev.get();
         // Copy lrho to the device
         std::unique_ptr<RHODTYPE[], void (*)(RHODTYPE*)> lrho_dev(
-            MemoryDev::allocate<RHODTYPE>(nrows), MemoryDev::free);
+            MemoryDev<RHODTYPE>::allocate(nrows), MemoryDev<RHODTYPE>::free);
         MemorySpace::copy_to_dev(lrho, nrows, lrho_dev);
         RHODTYPE* const lrho_alias = lrho_dev.get();
 #else
@@ -788,7 +796,9 @@ void Rho<T>::init(const RHODTYPE* const rhoc)
     for (unsigned int i = 0; i < rho_.size(); i++)
     {
         Tcopy(&np_, rhoc, &ione, &rho_[i][0], &ione);
-        if (rho_.size() == 2) MPscal(np_, 0.5, &rho_[i][0]);
+        if (rho_.size() == 2)
+            LinearAlgebraUtils<MemorySpace::Host>::MPscal(
+                np_, 0.5, &rho_[i][0]);
     }
     iterative_index_ = 0;
 
@@ -807,7 +817,9 @@ void Rho<T>::initUniform()
     {
         for (int j = 0; j < np_; j++)
             rho_[i][j] = 1.;
-        if (rho_.size() == 2) MPscal(np_, 0.5, &rho_[i][0]);
+        if (rho_.size() == 2)
+            LinearAlgebraUtils<MemorySpace::Host>::MPscal(
+                np_, 0.5, &rho_[i][0]);
     }
     iterative_index_ = 0;
 
@@ -834,10 +846,9 @@ template <typename T2>
 double Rho<T>::dotWithRho(const T2* const func) const
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    //    int ione=1;
 
-    double val = MPdot(np_, &rho_[mmpi.myspin()][0], func);
-    //    double val=ddot(&np_, &rho_[mmpi.myspin()][0], &ione, func, &ione);
+    double val = LinearAlgebraUtils<MemorySpace::Host>::MPdot(
+        np_, &rho_[mmpi.myspin()][0], func);
 
     double esum = 0.;
     mmpi.allreduce(&val, &esum, 1, MPI_SUM);

@@ -973,8 +973,9 @@ void ExtendedGridOrbitals::computeDiagonalElementsDotProduct(
         ss[icolor] = 0.;
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
-            double alpha = MPdot(loc_numpt_, orbitals.getPsi(icolor, iloc),
-                getPsi(icolor, iloc));
+            double alpha
+                = LinearAlgebraUtils<MemorySpace::Host>::MPdot(loc_numpt_,
+                    orbitals.getPsi(icolor, iloc), getPsi(icolor, iloc));
 
             ss[icolor] += (DISTMATDTYPE)(alpha * grid_.vel());
         }
@@ -1463,7 +1464,7 @@ void ExtendedGridOrbitals::projectOut(
 
         double minus = -1. * scale;
         for (int j = 0; j < numst_; j++)
-            MPaxpy(
+            LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
                 loc_numpt_, minus, tproduct + j * loc_numpt_, parray + j * lda);
     }
 

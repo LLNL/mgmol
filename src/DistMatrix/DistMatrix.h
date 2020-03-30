@@ -402,11 +402,13 @@ public:
     }
     double dotColumns(const int i, const int j) const
     {
-        return MPdot(mloc_, &val_[mloc_ * i], &val_[mloc_ * j]);
+        return LinearAlgebraUtils<MemorySpace::Host>::MPdot(
+            mloc_, &val_[mloc_ * i], &val_[mloc_ * j]);
     }
     double dotColumns(const int i, const DistMatrix<T>& a, const int j) const
     {
-        return MPdot(mloc_, &val_[mloc_ * i], &a.val_[mloc_ * j]);
+        return LinearAlgebraUtils<MemorySpace::Host>::MPdot(
+            mloc_, &val_[mloc_ * i], &a.val_[mloc_ * j]);
     }
     double sumProdElements(const DistMatrix<T>& a) const;
     void getDiagonalValues(T* const dmat) const;
