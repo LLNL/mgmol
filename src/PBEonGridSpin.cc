@@ -245,7 +245,8 @@ void PBEonGridSpin<T>::update()
         myoper.apply(gf_lhs, gf_tmp_pot);
         // convert gf_vxc back into a POTDTYPE*
         gf_tmp_pot.init_vect(tmp, 'd');
-        MPaxpy(np_, one, tmp, &vxc_[np_ * myspin_]);
+        LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
+            np_, one, tmp, &vxc_[np_ * myspin_]);
     }
 
     pot_.setVxc(&vxc_[np_ * myspin_], iterative_index);

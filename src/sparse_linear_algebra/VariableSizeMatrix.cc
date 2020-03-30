@@ -624,7 +624,8 @@ double VariableSizeMatrix<T>::AmultSymBdiag(
         vvals      = data_[lrindex]->getColumnEntries();
         (*B).getLocalRowValues(lcindex, colindexes, bvals);
     }
-    val = MPdot(nzcols, &vvals[0], &bvals[0]);
+    val = LinearAlgebraUtils<MemorySpace::Host>::MPdot(
+        nzcols, &vvals[0], &bvals[0]);
 
     AmultSymBdiag_tm_.stop();
 

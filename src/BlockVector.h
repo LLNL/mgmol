@@ -12,6 +12,7 @@
 
 #include "MGmol_blas1.h"
 #include "MPIdata.h"
+#include "memory_space.h"
 #include "mputils.h"
 
 #include "GridFuncVector.h"
@@ -109,12 +110,14 @@ public:
         assert(bv.storage_ != nullptr);
         assert(storage_ != bv.storage_);
 
-        MPaxpy(size_storage_, alpha, bv.storage_, storage_);
+        LinearAlgebraUtils<MemorySpaceType>::MPaxpy(
+            size_storage_, alpha, bv.storage_, storage_);
     }
 
     void axpy(const double alpha, const ScalarType* const vy)
     {
-        MPaxpy(size_storage_, alpha, vy, storage_);
+        LinearAlgebraUtils<MemorySpaceType>::MPaxpy(
+            size_storage_, alpha, vy, storage_);
     }
 
     ScalarType* vect(const int i) const

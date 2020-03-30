@@ -101,7 +101,8 @@ class KBprojectorSparse : public KBprojector
         assert(static_cast<unsigned int>(omp_get_thread_num())
                < work_nlindex_.size());
 
-        return MPdot(size_nl_[iloc], &work_nlindex_[omp_get_thread_num()][0],
+        return LinearAlgebraUtils<MemorySpace::Host>::MPdot(size_nl_[iloc],
+            &work_nlindex_[omp_get_thread_num()][0],
             (ptr_projector_[iloc][l][p][m]));
     }
     bool setIndexesAndProjectors();

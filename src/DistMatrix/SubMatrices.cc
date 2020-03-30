@@ -71,7 +71,7 @@ template <class T>
 void SubMatrices<T>::scal(const double alpha)
 {
     int n2 = nb_local_matrices_ * n_ * n_;
-    MPscal(n2, alpha, storage_);
+    LinearAlgebraUtils<MemorySpace::Host>::MPscal(n2, alpha, storage_);
 }
 
 template <>

@@ -99,9 +99,10 @@ void Potentials::initWithVnuc()
     int ione     = 1;
     Tcopy(&size_, &v_nuc_[0], &ione, &vtot_[0], &ione);
     double one = 1.;
-    MPaxpy(size_, one, &v_ext_[0], &vtot_[0]);
+    LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
+        size_, one, &v_ext_[0], &vtot_[0]);
     // factor 2 to get total potential in [Ry] for calculations
-    MPscal(size_, ha2ry, &vtot_[0]);
+    LinearAlgebraUtils<MemorySpace::Host>::MPscal(size_, ha2ry, &vtot_[0]);
 }
 
 double Potentials::max() const
@@ -166,15 +167,19 @@ double Potentials::update(const vector<vector<RHODTYPE>>& rho)
                                + (double)vh_rho_[idx] + (double)vxc_rho_[idx]));
     }
     double two = ha2ry;
-    if (diel_) MPaxpy(size_, two, &vepsilon_[0], &vtot_[0]);
+    if (diel_)
+        LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
+            size_, two, &vepsilon_[0], &vtot_[0]);
 
     // evaluate correction of vtot
     double minus = -1.;
-    MPaxpy(size_, minus, &vtot_[0], &dv_[0]);
+    LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
+        size_, minus, &vtot_[0], &dv_[0]);
 
     evalNormDeltaVtotRho(rho);
 
-    double dvdot = MPdot(size_, &dv_[0], &dv_[0]);
+    double dvdot
+        = LinearAlgebraUtils<MemorySpace::Host>::MPdot(size_, &dv_[0], &dv_[0]);
 
     double sum = 0.;
     int rc
@@ -202,7 +207,8 @@ void Potentials::update(const double mix)
 #endif
     //    int ione=1;
     double potmix = mix;
-    MPaxpy(size_, potmix, &dv_[0], &vtot_[0]);
+    LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
+        size_, potmix, &dv_[0], &vtot_[0]);
 }
 
 double Potentials::delta_v(const vector<vector<RHODTYPE>>& rho)
@@ -229,15 +235,19 @@ double Potentials::delta_v(const vector<vector<RHODTYPE>>& rho)
                                + (double)vh_rho_[idx] + (double)vxc_rho_[idx]));
     }
     double two = ha2ry;
-    if (diel_) MPaxpy(size_, two, &vepsilon_[0], &dv_[0]);
+    if (diel_)
+        LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
+            size_, two, &vepsilon_[0], &dv_[0]);
 
     // evaluate correction of vtot
     double minus = -1.;
-    MPaxpy(size_, minus, &vtot_old_[0], &dv_[0]);
+    LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
+        size_, minus, &vtot_old_[0], &dv_[0]);
 
     evalNormDeltaVtotRho(rho);
 
-    double dvdot = MPdot(size_, &dv_[0], &dv_[0]);
+    double dvdot
+        = LinearAlgebraUtils<MemorySpace::Host>::MPdot(size_, &dv_[0], &dv_[0]);
 
     double sum = 0.;
     int rc
@@ -264,8 +274,10 @@ void Potentials::getVofRho(vector<POTDTYPE>& vrho) const
     double minustwo = -2.;
 
     Tcopy(&size_, &vtot_[0], &ione, &vrho[0], &ione);
-    MPaxpy(size_, minustwo, &v_nuc_[0], &vrho[0]);
-    MPaxpy(size_, minustwo, &v_ext_[0], &vrho[0]);
+    LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
+        size_, minustwo, &v_nuc_[0], &vrho[0]);
+    LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
+        size_, minustwo, &v_ext_[0], &vrho[0]);
 }
 
 #ifdef HAVE_TRICUBIC
@@ -580,12 +592,13 @@ void Potentials::setVh(
 
 void Potentials::axpVcompToVh(const double alpha)
 {
-    MPaxpy(size_, alpha, &v_comp_[0], &vh_rho_[0]);
+    LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
+        size_, alpha, &v_comp_[0], &vh_rho_[0]);
 }
 
 void Potentials::axpVcomp(POTDTYPE* v, const double alpha)
 {
-    MPaxpy(size_, alpha, &v_comp_[0], v);
+    LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(size_, alpha, &v_comp_[0], v);
 }
 
 void Potentials::initializeSupersampledRadialDataOnMesh(
@@ -823,7 +836,7 @@ void Potentials::rescaleRhoComp()
     {
         const int numpt = mygrid.size();
         double t        = ionic_charge_ / comp_rho;
-        MPscal(numpt, t, &rho_comp_[0]);
+        LinearAlgebraUtils<MemorySpace::Host>::MPscal(numpt, t, &rho_comp_[0]);
 
         // Check new compensating charges
         comp_rho = getCharge(&rho_comp_[0]);

@@ -609,7 +609,8 @@ void Forces<T>::force(T& orbitals, Ions& ions)
         rho_tmp.resize(numpt);
 
         memcpy(&rho_tmp[0], &(rho_->rho_[0][0]), numpt * sizeof(RHODTYPE));
-        MPaxpy(numpt, one, &rho_->rho_[1][0], &rho_tmp[0]);
+        LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
+            numpt, one, &rho_->rho_[1][0], &rho_tmp[0]);
     }
 
     std::vector<RHODTYPE>& rho

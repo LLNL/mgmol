@@ -1035,16 +1035,18 @@ void GridFuncVector<ScalarType>::init_vect(
     functions_[k]->init_vect(vv, dis);
 }
 template <typename ScalarType>
+template <typename MemorySpaceTypupe>
 void GridFuncVector<ScalarType>::getValues(const int k, float* vv) const
 {
     assert(k < static_cast<int>(functions_.size()));
-    functions_[k]->getValues(vv);
+    functions_[k]->template getValues<MemorySpaceType>(vv);
 }
 template <typename ScalarType>
+template <typename MemorySpaceType>
 void GridFuncVector<ScalarType>::getValues(const int k, double* vv) const
 {
     assert(k < static_cast<int>(functions_.size()));
-    functions_[k]->getValues(vv);
+    functions_[k]->template getValues<MemorySpaceType>(vv);
 }
 
 // build list of local gids I need ghost values for
@@ -1747,5 +1749,23 @@ template void GridFuncVector<double>::assign(
     const int i, const float* const v, const char dis);
 template void GridFuncVector<double>::assign(
     const int i, const double* const v, const char dis);
+template void GridFuncVector<float>::getValues<MemorySpace::Host>(
+    const int, float*) const;
+template void GridFuncVector<float>::getValues<MemorySpace::Host>(
+    const int, double*) const;
+template void GridFuncVector<double>::getValues<MemorySpace::Host>(
+    const int, float*) const;
+template void GridFuncVector<double>::getValues<MemorySpace::Host>(
+    const int, double*) const;
+#ifdef HAVE_MAGMA
+template void GridFuncVector<float>::getValues<MemorySpace::Device>(
+    const int, float*) const;
+template void GridFuncVector<float>::getValues<MemorySpace::Device>(
+    const int, double*) const;
+template void GridFuncVector<double>::getValues<MemorySpace::Device>(
+    const int, float*) const;
+template void GridFuncVector<double>::getValues<MemorySpace::Device>(
+    const int, double*) const;
+#endif
 
 } // namespace pb

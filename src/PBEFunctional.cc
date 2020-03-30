@@ -154,9 +154,8 @@ double PBEFunctional::computeRhoDotExc() const
     double exc = 0.;
     if (nspin_ == 1)
     {
-        //        int ione=1;
-        exc = MPdot(np_, prho_, &exc_[0]);
-        //        exc=ddot(&np_, prho_, &ione, &exc_[0], &ione);
+        exc = LinearAlgebraUtils<MemorySpace::Host>::MPdot(
+            np_, prho_, &exc_[0]);
     }
     else
     {

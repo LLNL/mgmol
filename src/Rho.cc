@@ -80,8 +80,7 @@ template <class OrbitalsType>
 void Rho<OrbitalsType>::extrapolate()
 {
     double minus = -1;
-    //    int ione=1;
-    double two = 2.;
+    double two   = 2.;
     if (rho_minus1_.empty())
     {
         rho_minus1_.resize(nspin_);
@@ -93,8 +92,9 @@ void Rho<OrbitalsType>::extrapolate()
     RHODTYPE* tmp = new RHODTYPE[np_];
     memcpy(tmp, &rho_[myspin_][0], np_ * sizeof(RHODTYPE));
 
-    MPscal(np_, two, &rho_[myspin_][0]);
-    MPaxpy(np_, minus, &rho_minus1_[myspin_][0], &rho_[myspin_][0]);
+    LinearAlgebraUtils<MemorySpace::Host>::MPscal(np_, two, &rho_[myspin_][0]);
+    LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
+        np_, minus, &rho_minus1_[myspin_][0], &rho_[myspin_][0]);
 
     memcpy(&rho_minus1_[myspin_][0], tmp, np_ * sizeof(RHODTYPE));
 
@@ -104,10 +104,9 @@ void Rho<OrbitalsType>::extrapolate()
 template <class OrbitalsType>
 void Rho<OrbitalsType>::axpyRhoc(const double alpha, RHODTYPE* rhoc)
 {
-    //    int ione=1;
-
     double factor = (nspin_ > 1) ? 0.5 * alpha : alpha;
-    MPaxpy(np_, factor, &rhoc[0], &rho_[myspin_][0]);
+    LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
+        np_, factor, &rhoc[0], &rho_[myspin_][0]);
 }
 
 template <class OrbitalsType>
@@ -212,7 +211,8 @@ void Rho<OrbitalsType>::rescaleTotalCharge()
         }
 
         for (int ispin = 0; ispin < nspin; ispin++)
-            MPscal(np_, t1, &rho_[ispin][0]);
+            LinearAlgebraUtils<MemorySpace::Host>::MPscal(
+                np_, t1, &rho_[ispin][0]);
     }
 #ifdef DEBUG
     Mesh* mymesh = Mesh::instance();
@@ -802,7 +802,9 @@ void Rho<OrbitalsType>::init(const RHODTYPE* const rhoc)
     for (unsigned int i = 0; i < rho_.size(); i++)
     {
         Tcopy(&np_, rhoc, &ione, &rho_[i][0], &ione);
-        if (rho_.size() == 2) MPscal(np_, 0.5, &rho_[i][0]);
+        if (rho_.size() == 2)
+            LinearAlgebraUtils<MemorySpace::Host>::MPscal(
+                np_, 0.5, &rho_[i][0]);
     }
     iterative_index_ = 0;
 
@@ -821,7 +823,9 @@ void Rho<OrbitalsType>::initUniform()
     {
         for (int j = 0; j < np_; j++)
             rho_[i][j] = 1.;
-        if (rho_.size() == 2) MPscal(np_, 0.5, &rho_[i][0]);
+        if (rho_.size() == 2)
+            LinearAlgebraUtils<MemorySpace::Host>::MPscal(
+                np_, 0.5, &rho_[i][0]);
     }
     iterative_index_ = 0;
 
@@ -848,10 +852,9 @@ template <typename T2>
 double Rho<OrbitalsType>::dotWithRho(const T2* const func) const
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    //    int ione=1;
 
-    double val = MPdot(np_, &rho_[mmpi.myspin()][0], func);
-    //    double val=ddot(&np_, &rho_[mmpi.myspin()][0], &ione, func, &ione);
+    double val = LinearAlgebraUtils<MemorySpace::Host>::MPdot(
+        np_, &rho_[mmpi.myspin()][0], func);
 
     double esum = 0.;
     mmpi.allreduce(&val, &esum, 1, MPI_SUM);

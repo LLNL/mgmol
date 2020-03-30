@@ -155,7 +155,10 @@ public:
     T getScale(const int i) const { return scale_vec_[i]; }
 
     /* scale the matrix */
-    void scal(const double alpha) { MPscal(n_, alpha, &x_[0]); }
+    void scal(const double alpha)
+    {
+        LinearAlgebraUtils<MemorySpace::Host>::MPscal(n_, alpha, &x_[0]);
+    }
 
     /* ilu factorization - we need templates to allow the precon to be of a
      * different datatype than the matrix */

@@ -272,15 +272,13 @@ double DistMatrix<T>::traceProduct(const DistMatrix<T>& x) const
         assert(n_ == x.n());
         assert(mloc_ == x.mloc());
         assert(nloc_ == x.nloc());
-        //    int ione=1;
         assert(x.size_ == size_);
-        tsum = MPdot(size_, &val_[0], &x.val_[0]);
-        //    tsum=ddot(&size_, &val_[0], &ione, &x.val_[0], &ione);
+        tsum = LinearAlgebraUtils<MemorySpace::Host>::MPdot(
+            size_, &val_[0], &x.val_[0]);
     }
 #ifdef SCALAPACK
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     mmpi.allreduce(&tsum, &sum, 1, MPI_SUM);
-//  MPI_Allreduce(&tsum, &sum, 1, MPI_DOUBLE, MPI_SUM, comm_global_ );
 #else
     sum = tsum;
 #endif
@@ -297,7 +295,8 @@ void DistMatrix<T>::scal(const double alpha)
         clear();
         return;
     }
-    if (active_) MPscal(size_, alpha, &val_[0]);
+    if (active_)
+        LinearAlgebraUtils<MemorySpace::Host>::MPscal(size_, alpha, &val_[0]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -311,7 +310,9 @@ void DistMatrix<T>::axpy(const double alpha, const DistMatrix<T>& x)
     assert(mloc_ == x.mloc_);
     assert(nloc_ == x.nloc_);
     assert(size_ == x.size_);
-    if (active_) MPaxpy(size_, alpha, &x.val_[0], &val_[0]);
+    if (active_)
+        LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
+            size_, alpha, &x.val_[0], &val_[0]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2563,7 +2564,8 @@ void DistMatrix<T>::axpyColumn(
     const int icol, const double alpha, const DistMatrix<T>& x)
 {
     const int ni = mloc_ * icol;
-    MPaxpy(mloc_, alpha, &x.val_[ni], &val_[ni]);
+    LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
+        mloc_, alpha, &x.val_[ni], &val_[ni]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2571,7 +2573,7 @@ template <class T>
 void DistMatrix<T>::scalColumn(const int icol, const double alpha)
 {
     const int ni = mloc_ * icol;
-    MPscal(mloc_, alpha, &val_[ni]);
+    LinearAlgebraUtils<MemorySpace::Host>::MPscal(mloc_, alpha, &val_[ni]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
