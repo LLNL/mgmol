@@ -1,6 +1,7 @@
 Building MGmol using CMake:
 ==========================
 
+
 mkdir build
 
 cd build
