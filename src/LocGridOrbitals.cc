@@ -36,15 +36,15 @@
 #include "VariableSizeMatrix.h"
 #include "hdf_tools.h"
 #include "lapack_c.h"
+#include "memory_space.h"
 
 #include <cmath>
 #include <fstream>
 #include <utility>
 #include <vector>
-using namespace std;
 
 #define ORBITAL_OCCUPATION 2.
-string getDatasetName(const string& name, const int color);
+std::string getDatasetName(const std::string& name, const int color);
 
 short LocGridOrbitals::subdivx_          = 0;
 int LocGridOrbitals::lda_                = 0;
@@ -130,9 +130,6 @@ LocGridOrbitals::LocGridOrbitals(
       grid_(A.grid_),
       lrs_(A.lrs_)
 {
-    // if(onpe0)cout<<"call LocGridOrbitals(const LocGridOrbitals &A, const bool
-    // copy_data)"<<endl;
-
     assert(A.chromatic_number_ >= 0);
     assert(A.proj_matrices_ != nullptr);
     assert(A.lrs_);
@@ -176,9 +173,6 @@ LocGridOrbitals::LocGridOrbitals(const std::string& name,
 
 void LocGridOrbitals::copySharedData(const LocGridOrbitals& A)
 {
-    // if(onpe0)cout<<"call LocGridOrbitals::copySharedData(const
-    // LocGridOrbitals &A)"<<endl;
-
     assert(A.gidToStorage_ != nullptr);
     assert(A.pack_);
 
@@ -227,17 +221,18 @@ void LocGridOrbitals::setGids2Storage()
     if (gidToStorage_ != nullptr)
         gidToStorage_->clear();
     else
-        gidToStorage_ = new vector<map<int, ORBDTYPE*>>();
+        gidToStorage_ = new std::vector<std::map<int, ORBDTYPE*>>();
     gidToStorage_->resize(subdivx_);
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
-        map<int, ORBDTYPE*>& gid2st((*gidToStorage_)[iloc]);
+        std::map<int, ORBDTYPE*>& gid2st((*gidToStorage_)[iloc]);
         for (int color = 0; color < chromatic_number_; color++)
         {
             const int gid = overlapping_gids_[iloc][color];
             if (gid != -1)
             {
-                gid2st.insert(pair<int, ORBDTYPE*>(gid, getPsi(color, iloc)));
+                gid2st.insert(
+                    std::pair<int, ORBDTYPE*>(gid, getPsi(color, iloc)));
             }
         }
     }
@@ -253,7 +248,8 @@ const ORBDTYPE* LocGridOrbitals::getGidStorage(
     assert(gid < numst_);
     assert(iloc < (short)gidToStorage_->size());
 
-    map<int, ORBDTYPE*>::const_iterator p = (*gidToStorage_)[iloc].find(gid);
+    std::map<int, ORBDTYPE*>::const_iterator p
+        = (*gidToStorage_)[iloc].find(gid);
     if (p != (*gidToStorage_)[iloc].end())
         return p->second;
     else
@@ -342,10 +338,6 @@ void LocGridOrbitals::assign(const LocGridOrbitals& orbitals)
 
     setIterativeIndex(orbitals);
 
-    // if( onpe0 && ct.verbose>2 )
-    //    (*MPIdata::sout)<<"LocGridOrbitals::Assign orbitals up to
-    //    "<<chromatic_number_<<endl;
-
     if (pack_ == orbitals.pack_)
     {
 
@@ -356,7 +348,8 @@ void LocGridOrbitals::assign(const LocGridOrbitals& orbitals)
         Control& ct = *(Control::instance());
         if (onpe0 && ct.verbose > 2)
             (*MPIdata::sout)
-                << "LocGridOrbitals::Assign orbitals to different LR" << endl;
+                << "LocGridOrbitals::Assign orbitals to different LR"
+                << std::endl;
         for (int color = 0; color < chromatic_number_; color++)
         {
             // assign state
@@ -412,7 +405,7 @@ void LocGridOrbitals::axpy(const double alpha, const LocGridOrbitals& orbitals)
                     // copy into new psi_
                     if (val != nullptr)
                     {
-                        LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
+                        LinearAlgebraUtils<memory_space_type>::MPaxpy(
                             loc_numpt_, alpha, val, getPsi(color, iloc));
                     }
                 }
@@ -464,17 +457,29 @@ void LocGridOrbitals::applyCorrMask(const bool first_time)
     mask_tm_.start();
 
     for (int color = 0; color < chromatic_number_; color++)
+    {
+        const unsigned int size  = block_vector_.get_allocated_size_storage();
+        ORBDTYPE* ipsi_host_view = MemorySpace::Memory<ORBDTYPE,
+            memory_space_type>::allocate_host_view(size);
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+            psi(color), size, ipsi_host_view);
+
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
             const int gid = overlapping_gids_[iloc][color];
             if (gid != -1)
             {
                 (masks4orbitals_->getCorrMask(gid))
-                    .apply(psi(color), 0, iloc, first_time);
+                    .apply(ipsi_host_view, 0, iloc, first_time);
             }
             else
                 block_vector_.set_zero(color, iloc);
         }
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_dev(
+            ipsi_host_view, size, psi(color));
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+            ipsi_host_view);
+    }
     incrementIterativeIndex();
 
     mask_tm_.stop();
@@ -556,7 +561,7 @@ void LocGridOrbitals::initGauss(
     Control& ct     = *(Control::instance());
     if (mmpi.instancePE0() && ct.verbose > 2)
         (*MPIdata::sout) << "Initial orbitals: Gaussians of width " << rc
-                         << endl;
+                         << std::endl;
 
     const double invrc2 = 1. / (rc * rc);
 
@@ -580,8 +585,13 @@ void LocGridOrbitals::initGauss(
     const double rmax = 6. * rc;
     for (int icolor = 0; icolor < chromatic_number_; icolor++)
     {
-        ORBDTYPE* ipsi = psi(icolor);
-        memset(ipsi, 0, numpt_ * sizeof(ORBDTYPE));
+        const unsigned int size  = block_vector_.get_allocated_size_storage();
+        ORBDTYPE* ipsi_host_view = MemorySpace::Memory<ORBDTYPE,
+            memory_space_type>::allocate_host_view(size);
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+            psi(icolor), size, ipsi_host_view);
+
+        memset(ipsi_host_view, 0, numpt_ * sizeof(ORBDTYPE));
 
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
@@ -603,10 +613,10 @@ void LocGridOrbitals::initGauss(
                         {
                             const double r = xc.minimage(center, ll, ct.bcWF);
                             if (r < rmax)
-                                ipsi[ix * incx + iy * incy + iz]
+                                ipsi_host_view[ix * incx + iy * incy + iz]
                                     = (ORBDTYPE)exp(-r * r * invrc2);
                             else
-                                ipsi[ix * incx + iy * incy + iz] = 0.;
+                                ipsi_host_view[ix * incx + iy * incy + iz] = 0.;
 
                             xc[2] += hgrid[2];
                         }
@@ -616,6 +626,10 @@ void LocGridOrbitals::initGauss(
                 }
             }
         }
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_dev(
+            ipsi_host_view, size, psi(icolor));
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+            ipsi_host_view);
     }
     resetIterativeIndex();
 }
@@ -624,7 +638,7 @@ void LocGridOrbitals::initFourier()
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 2)
-        (*MPIdata::sout) << "Initial orbitals: Fourier " << endl;
+        (*MPIdata::sout) << "Initial orbitals: Fourier " << std::endl;
 
     const double start0 = grid_.start(0) - grid_.origin(0);
     const double start1 = grid_.start(1) - grid_.origin(1);
@@ -699,13 +713,14 @@ int LocGridOrbitals::packStates(std::shared_ptr<LocalizationRegions> lrs)
     Control& ct = *(Control::instance());
 
     if (onpe0 && ct.verbose > 2)
-        (*MPIdata::sout) << " PACK STATES " << 0 << " to " << numst_ << endl;
+        (*MPIdata::sout) << " PACK STATES " << 0 << " to " << numst_
+                         << std::endl;
 
     // compute overlap for all the orbitals on all PEs
     const int dim = ct.globalColoring() ? numst_ : lrs->getNumOverlapGids();
 
     if (onpe0 && ct.verbose > 2)
-        (*MPIdata::sout) << " PACK " << dim << " STATES" << endl;
+        (*MPIdata::sout) << " PACK " << dim << " STATES" << std::endl;
 
     const bool global = ct.globalColoring();
 
@@ -722,9 +737,6 @@ void LocGridOrbitals::multiply_by_matrix(
     const dist_matrix::DistMatrix<DISTMATDTYPE>& dmatrix,
     ORBDTYPE* const product, const int ldp)
 {
-#if 0
-    (*MPIdata::sout)<<"self multiply_by_matrix"<<endl;
-#endif
 
     ReplicatedWorkSpace<DISTMATDTYPE>& wspace(
         ReplicatedWorkSpace<DISTMATDTYPE>::instance());
@@ -748,10 +760,6 @@ void LocGridOrbitals::multiply_by_matrix(const int first_color,
 
     memset(product, 0, ldp * ncolors * sizeof(ORBDTYPE));
 
-#if 0
-    (*MPIdata::sout)<<" multiply_by_matrix, first_color="<<first_color<<endl;
-#endif
-
     DISTMATDTYPE* matrix_local = new DISTMATDTYPE[chromatic_number_ * ncolors];
 
     // loop over subdomains
@@ -761,7 +769,7 @@ void LocGridOrbitals::multiply_by_matrix(const int first_color,
         matrixToLocalMatrix(iloc, matrix, matrix_local, first_color, ncolors);
 
         // Compute product for subdomain iloc
-        LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(loc_numpt_, ncolors,
+        LinearAlgebraUtils<memory_space_type>::MPgemmNN(loc_numpt_, ncolors,
             chromatic_number_, 1., getPsi(0, iloc), lda_, matrix_local,
             chromatic_number_, 0., product + iloc * loc_numpt_, ldp);
     }
@@ -791,10 +799,6 @@ void LocGridOrbitals::multiplyByMatrix(
 
     assert(subdivx_ > 0);
 
-#if 0
-    (*MPIdata::sout)<<" multiplyByMatrix, first_color="<<first_color<<endl;
-#endif
-
     // loop over subdomains
     if (chromatic_number_ > 0)
         for (short iloc = 0; iloc < subdivx_; iloc++)
@@ -802,7 +806,7 @@ void LocGridOrbitals::multiplyByMatrix(
             const MATDTYPE* const mat = matrix.getSubMatrix(iloc);
 
             // Compute product for subdomain iloc
-            LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(loc_numpt_,
+            LinearAlgebraUtils<memory_space_type>::MPgemmNN(loc_numpt_,
                 chromatic_number_, chromatic_number_, 1., getPsi(0, iloc), lda_,
                 mat, chromatic_number_, 0., product + iloc * loc_numpt_, ldp);
         }
@@ -830,7 +834,7 @@ void LocGridOrbitals::multiplyByMatrix(
             ORBDTYPE* phi             = getPsi(0, iloc);
 
             // Compute product for subdomain iloc
-            LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(loc_numpt_,
+            LinearAlgebraUtils<memory_space_type>::MPgemmNN(loc_numpt_,
                 chromatic_number_, chromatic_number_, 1., phi, lda_, mat,
                 chromatic_number_, 0., product, loc_numpt_);
 
@@ -871,10 +875,6 @@ void LocGridOrbitals::multiply_by_matrix(
 {
     prod_matrix_tm_.start();
 
-#if 0
-    (*MPIdata::sout)<<"self multiply_by_matrix"<<endl;
-#endif
-
     ORBDTYPE* product = new ORBDTYPE[loc_numpt_ * chromatic_number_];
     memset(product, 0, loc_numpt_ * chromatic_number_ * sizeof(ORBDTYPE));
 
@@ -892,6 +892,8 @@ void LocGridOrbitals::multiply_by_matrix(
     // loop over subdomains
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
+        // TODO
+        assert(false);
         ORBDTYPE* phi = getPsi(0, iloc);
 
         matrixToLocalMatrix(iloc, work_matrix, matrix_local);
@@ -917,19 +919,19 @@ int LocGridOrbitals::read_hdf5(HDFrestart& h5f_file)
 
     Control& ct = *(Control::instance());
 
-    hid_t file_id = h5f_file.file_id();
-    string name   = "Function";
-    int ierr      = read_func_hdf5(h5f_file, name);
+    hid_t file_id    = h5f_file.file_id();
+    std::string name = "Function";
+    int ierr         = read_func_hdf5(h5f_file, name);
     if (ierr < 0)
     {
         (*MPIdata::serr) << "LocGridOrbitals::read_hdf5(): error in reading "
-                         << name << ", size=" << name.size() << endl;
+                         << name << ", size=" << name.size() << std::endl;
         return ierr;
     }
     else if (onpe0 && ct.verbose > 2)
     {
         (*MPIdata::sout) << "LocGridOrbitals::read_hdf5(): Read " << ierr
-                         << " functions in restart file" << endl;
+                         << " functions in restart file" << std::endl;
     }
 
     // Read DM
@@ -939,7 +941,8 @@ int LocGridOrbitals::read_hdf5(HDFrestart& h5f_file)
         if (ierr < 0)
         {
             (*MPIdata::serr)
-                << "LocGridOrbitals::read_hdf5(): error in reading DM" << endl;
+                << "LocGridOrbitals::read_hdf5(): error in reading DM"
+                << std::endl;
             return ierr;
         }
     }
@@ -947,7 +950,7 @@ int LocGridOrbitals::read_hdf5(HDFrestart& h5f_file)
     return ierr;
 }
 
-int LocGridOrbitals::write_hdf5(HDFrestart& h5f_file, const string& name)
+int LocGridOrbitals::write_hdf5(HDFrestart& h5f_file, const std::string& name)
 {
     assert(proj_matrices_ != nullptr);
     Control& ct = *(Control::instance());
@@ -966,7 +969,8 @@ int LocGridOrbitals::write_hdf5(HDFrestart& h5f_file, const string& name)
     return ierr;
 }
 
-int LocGridOrbitals::write_func_hdf5(HDFrestart& h5f_file, const string& name)
+int LocGridOrbitals::write_func_hdf5(
+    HDFrestart& h5f_file, const std::string& name)
 {
     Control& ct   = *(Control::instance());
     hid_t file_id = h5f_file.file_id();
@@ -994,13 +998,13 @@ int LocGridOrbitals::write_func_hdf5(HDFrestart& h5f_file, const string& name)
 
     if (onpe0 && ct.verbose > 2)
         (*MPIdata::sout) << "Write LocGridOrbitals " << name
-                         << " with precision " << precision << endl;
+                         << " with precision " << precision << std::endl;
     // loop over global (storage) functions
     for (int color = 0; color < chromatic_number_; color++)
     {
-        string datasetname(getDatasetName(name, color));
+        std::string datasetname(getDatasetName(name, color));
         if (onpe0 && ct.verbose > 2)
-            (*MPIdata::sout) << "Write " << datasetname << endl;
+            (*MPIdata::sout) << "Write " << datasetname << std::endl;
 
         // Create chunked dataset.
         hid_t dset_id = -1;
@@ -1016,7 +1020,7 @@ int LocGridOrbitals::write_func_hdf5(HDFrestart& h5f_file, const string& name)
             {
                 (*MPIdata::serr) << "LocGridOrbitals::write_func_hdf5(), "
                                     "H5Dcreate2 failed!!!"
-                                 << endl;
+                                 << std::endl;
                 return -1;
             }
         }
@@ -1031,7 +1035,7 @@ int LocGridOrbitals::write_func_hdf5(HDFrestart& h5f_file, const string& name)
         // Write list of centers and radii
         // const int nst=pack_->nb_orb(color);
 
-        vector<double> centers_and_radii;
+        std::vector<double> centers_and_radii;
         int nrec = 0;
         if (h5f_file.useHdf5p())
         {
@@ -1045,13 +1049,7 @@ int LocGridOrbitals::write_func_hdf5(HDFrestart& h5f_file, const string& name)
             assert(static_cast<int>(centers_and_radii.size()) == 4 * nrec);
         }
 
-        // for(int i=0;i<(int)centers_and_radii.size();i++)
-        //    (*MPIdata::sout)<<"centers_and_radii["<<i<<"]="<<centers_and_radii[i]<<endl;
-        // if( nrec != nst ){
-        //    (*MPIdata::serr)<<"Wrong number of loc_centers in pack_!!!"<<endl;
-        //}
-
-        vector<int> gids;
+        std::vector<int> gids;
         if (h5f_file.useHdf5p())
         {
             colored_regions.getAllGids4color(color, gids);
@@ -1068,10 +1066,10 @@ int LocGridOrbitals::write_func_hdf5(HDFrestart& h5f_file, const string& name)
             writeGids(dset_id, gids);
 
             // Write the attribute "Lattice parameters" at "Cell origin"
-            string attname("Lattice parameters");
+            std::string attname("Lattice parameters");
 
             // Create the data space for the attribute "Lattice parameters".
-            vector<double> attr_data(3);
+            std::vector<double> attr_data(3);
             attr_data[0] = grid_.ll(0);
             attr_data[1] = grid_.ll(1);
             attr_data[2] = grid_.ll(2);
@@ -1083,7 +1081,7 @@ int LocGridOrbitals::write_func_hdf5(HDFrestart& h5f_file, const string& name)
             attr_data[1] = grid_.origin(1);
             attr_data[2] = grid_.origin(2);
 
-            string attname2("Cell origin");
+            std::string attname2("Cell origin");
             mgmol_tools::addAttribute2Dataset(
                 dset_id, attname2.c_str(), attr_data);
         } // iwrite
@@ -1100,7 +1098,7 @@ int LocGridOrbitals::write_func_hdf5(HDFrestart& h5f_file, const string& name)
             {
                 (*MPIdata::serr)
                     << "LocGridOrbitals::write_func_hdf5:H5Dclose failed!!!"
-                    << endl;
+                    << std::endl;
                 return -1;
             }
         }
@@ -1115,12 +1113,12 @@ int LocGridOrbitals::write_func_hdf5(HDFrestart& h5f_file, const string& name)
         herr_t status = H5Sclose(filespace);
         if (status < 0)
         {
-            (*MPIdata::serr) << "H5Sclose filespace failed!!!" << endl;
+            (*MPIdata::serr) << "H5Sclose filespace failed!!!" << std::endl;
         }
         status = H5Sclose(memspace);
         if (status < 0)
         {
-            (*MPIdata::serr) << "H5Sclose memspace failed!!!" << endl;
+            (*MPIdata::serr) << "H5Sclose memspace failed!!!" << std::endl;
         }
     }
 
@@ -1130,7 +1128,8 @@ int LocGridOrbitals::write_func_hdf5(HDFrestart& h5f_file, const string& name)
     return 0;
 }
 
-int LocGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, const string& name)
+int LocGridOrbitals::read_func_hdf5(
+    HDFrestart& h5f_file, const std::string& name)
 {
     assert(chromatic_number_ >= 0);
     assert(name.size() > 0);
@@ -1165,22 +1164,23 @@ int LocGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, const string& name)
                                 "functions from "
                              << grid_.mype_env().n_mpi_task(1)
                                     * grid_.mype_env().n_mpi_task(2)
-                             << " PEs" << endl;
+                             << " PEs" << std::endl;
         }
         else
         {
             (*MPIdata::sout)
                 << "LocGridOrbitals::read_func_hdf5(): Read wave functions "
-                << name << " from all tasks..." << endl;
+                << name << " from all tasks..." << std::endl;
         }
     }
 
-    vector<set<int>> filled; // set of functions already filled by data
+    std::vector<std::set<int>>
+        filled; // set of functions already filled by data
     filled.resize(subdivx_);
     int dims[2] = { 0, 0 };
 
     // get centers corresponding to dataset (stored function) from input file
-    multimap<string, Vector3D> centers_in_dataset;
+    std::multimap<std::string, Vector3D> centers_in_dataset;
     int ncenters = h5f_file.getLRCenters(centers_in_dataset, numst_, name);
     if (ncenters < 0) return ncenters;
 
@@ -1188,13 +1188,14 @@ int LocGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, const string& name)
     const short precision = ct.restart_info > 3 ? 2 : 1;
 
     // read one color/dataset at a time
-    multimap<string, Vector3D>::iterator itcenter = centers_in_dataset.begin();
+    std::multimap<std::string, Vector3D>::iterator itcenter
+        = centers_in_dataset.begin();
     while (itcenter != centers_in_dataset.end())
     {
-        vector<double> attr_data;
+        std::vector<double> attr_data;
         short attribute_length = 0;
 
-        const string key(itcenter->first);
+        const std::string key(itcenter->first);
 
         // checkif dataset exists...
         int err_id = h5f_file.dset_exists(key);
@@ -1203,7 +1204,7 @@ int LocGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, const string& name)
 
         if (onpe0 && ct.verbose > 2)
             (*MPIdata::sout) << "Read Dataset " << key << " with precision "
-                             << precision << endl;
+                             << precision << std::endl;
 
         // Open dataset.
         hid_t dset_id = h5f_file.open_dset(key);
@@ -1211,7 +1212,7 @@ int LocGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, const string& name)
         {
             (*MPIdata::serr)
                 << "LocGridOrbitals::read_func_hdf5() --- cannot open " << key
-                << endl;
+                << std::endl;
             return dset_id;
         }
 
@@ -1220,7 +1221,7 @@ int LocGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, const string& name)
         {
             (*MPIdata::serr)
                 << "LocGridOrbitals::read_func_hdf5() --- H5Dread failed!!!"
-                << endl;
+                << std::endl;
             return -1;
         }
 
@@ -1266,12 +1267,8 @@ int LocGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, const string& name)
             const double read_radius = attr_data[attribute_length * i + 3];
 
             // get possible colors for function centered at center
-            set<int> possible_colors;
+            std::set<int> possible_colors;
             colored_regions.getPossibleColors(center, possible_colors);
-            // if( possible_colors.size()!=1 ){
-            //    (*MPIdata::serr)<<"possible_colors.size()="<<possible_colors.size()<<endl;
-            //    (*MPIdata::serr)<<"center: "<<center<<endl;
-            //}
             if (possible_colors.size()
                 > 0) // read center could not be local anymore...
                 for (short iloc = 0; iloc < subdivx_; iloc++)
@@ -1280,7 +1277,7 @@ int LocGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, const string& name)
                     if (sub_cell.spherePossibleOverlap(
                             center, read_radius, iloc, ct.bcPoisson))
                     {
-                        set<int> result;
+                        std::set<int> result;
                         // Difference of two sorted ranges
                         set_difference(possible_colors.begin(),
                             possible_colors.end(), filled[iloc].begin(),
@@ -1305,15 +1302,14 @@ int LocGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, const string& name)
                                     // radius "<<read_radius<<", iloc="<<iloc
                                 }
                             } // gid!=-1
-                            //(*MPIdata::sout)<<" Put data into mycolor
-                            //"<<mycolor<<endl;
                         }
                         else
                         {
                             (*MPIdata::serr)
                                 << "result.size()=" << result.size()
                                 << ", possible_color="
-                                << *possible_colors.begin() << "!!!" << endl;
+                                << *possible_colors.begin() << "!!!"
+                                << std::endl;
                         }
                     } // overlap
                 }
@@ -1334,7 +1330,7 @@ int LocGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, const string& name)
         herr_t status = H5Sclose(memspace);
         if (status < 0)
         {
-            (*MPIdata::serr) << "H5Sclose failed!!!" << endl;
+            (*MPIdata::serr) << "H5Sclose failed!!!" << std::endl;
             return -1;
         }
     }
@@ -1387,7 +1383,8 @@ void LocGridOrbitals::computeMatB(
 
     matB_tm_.start();
 #if DEBUG
-    if (onpe0) (*MPIdata::sout) << "LocGridOrbitals::computeMatB()" << endl;
+    if (onpe0)
+        (*MPIdata::sout) << "LocGridOrbitals::computeMatB()" << std::endl;
 #endif
 
     const short bcolor = 32;
@@ -1536,7 +1533,7 @@ void LocGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
 }
 
 void LocGridOrbitals::computeDiagonalElementsDotProduct(
-    const LocGridOrbitals& orbitals, vector<DISTMATDTYPE>& ss)
+    const LocGridOrbitals& orbitals, std::vector<DISTMATDTYPE>& ss)
 {
     assert(numst_ > 0);
     assert(grid_.vel() > 0.);
@@ -1550,19 +1547,19 @@ void LocGridOrbitals::computeDiagonalElementsDotProduct(
             if (gid > -1)
             {
                 double alpha
-                    = LinearAlgebraUtils<MemorySpace::Host>::MPdot(loc_numpt_,
+                    = LinearAlgebraUtils<memory_space_type>::MPdot(loc_numpt_,
                         orbitals.getPsi(icolor, iloc), getPsi(icolor, iloc));
 
                 ss[gid] += (DISTMATDTYPE)(alpha * grid_.vel());
             }
         }
-    vector<DISTMATDTYPE> tmp(ss);
+    std::vector<DISTMATDTYPE> tmp(ss);
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     mmpi.allreduce(&tmp[0], &ss[0], numst_, MPI_SUM);
 }
 
 void LocGridOrbitals::computeDiagonalElementsDotProductLocal(
-    const LocGridOrbitals& orbitals, vector<DISTMATDTYPE>& ss)
+    const LocGridOrbitals& orbitals, std::vector<DISTMATDTYPE>& ss)
 {
     assert(grid_.vel() > 0.);
 
@@ -1592,7 +1589,7 @@ void LocGridOrbitals::computeDiagonalElementsDotProductLocal(
             if (ifunc > -1)
             {
                 double alpha
-                    = LinearAlgebraUtils<MemorySpace::Host>::MPdot(loc_numpt_,
+                    = LinearAlgebraUtils<memory_space_type>::MPdot(loc_numpt_,
                         orbitals.getPsi(icolor, iloc), getPsi(icolor, iloc));
 
                 double val = alpha * grid_.vel();
@@ -1647,7 +1644,8 @@ void LocGridOrbitals::computeGram(const int verbosity)
     overlap_tm_.start();
 
 #ifdef PRINT_OPERATIONS
-    if (onpe0) (*MPIdata::sout) << "LocGridOrbitals::computeGram()" << endl;
+    if (onpe0)
+        (*MPIdata::sout) << "LocGridOrbitals::computeGram()" << std::endl;
 #endif
 
     assert(subdivx_ > 0);
@@ -1709,9 +1707,8 @@ double LocGridOrbitals::dotProductWithInvS(const LocGridOrbitals& orbitals)
 double LocGridOrbitals::dotProductDiagonal(const LocGridOrbitals& orbitals)
 {
     assert(proj_matrices_ != nullptr);
-    //(*MPIdata::sout)<<"call LocGridOrbitals::dotProductDiagonal()..."<<endl;
 
-    vector<DISTMATDTYPE> ss;
+    std::vector<DISTMATDTYPE> ss;
     Control& ct = *(Control::instance());
     if (ct.short_sighted)
     {
@@ -1772,7 +1769,7 @@ double LocGridOrbitals::dotProduct(
     {
         (*MPIdata::serr)
             << "LocGridOrbitals::dot_product() --- unknown dot product type"
-            << endl;
+            << std::endl;
         Control& ct = *(Control::instance());
         ct.global_exit(2);
     }
@@ -1820,7 +1817,8 @@ void LocGridOrbitals::orthonormalizeLoewdin(const bool overlap_uptodate,
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 1)
-        (*MPIdata::sout) << "LocGridOrbitals::orthonormalizeLoewdin()" << endl;
+        (*MPIdata::sout) << "LocGridOrbitals::orthonormalizeLoewdin()"
+                         << std::endl;
 
     if (!overlap_uptodate) computeGram(0);
 
@@ -1844,7 +1842,7 @@ void LocGridOrbitals::orthonormalizeLoewdin(const bool overlap_uptodate,
 #if 0 // test
     computeGram(0);
     if( onpe0 && ct.verbose>2 )
-        (*MPIdata::sout)<<"LocGridOrbitals::orthonormalizeLoewdin() --- Gram matrix (after):"<<endl;
+        (*MPIdata::sout)<<"LocGridOrbitals::orthonormalizeLoewdin() --- Gram matrix (after):"<<std::endl;
     proj_matrices_->printS(*MPIdata::sout);
 #endif
 
@@ -1887,7 +1885,6 @@ double LocGridOrbitals::normState(const int gid) const
             {
                 // diagonal element
                 tmp += block_vector_.dot(color_gid, color_gid, iloc);
-                // cout<<"gid="<<gid<<", tmp="<<tmp<<endl;
             }
 
     double norm     = 0.;
@@ -1905,7 +1902,7 @@ void LocGridOrbitals::orthonormalize2states(const int st1, const int st2)
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 2)
         (*MPIdata::sout) << "LocGridOrbitals::orthonormalize2states(): " << st1
-                         << " and " << st2 << endl;
+                         << " and " << st2 << std::endl;
     const int st[2] = { st1, st2 };
 
     // find color of 2 states
@@ -2000,7 +1997,7 @@ void LocGridOrbitals::orthonormalize2states(const int st1, const int st2)
                 block_vector_.scal(alpha2, color_st[1], iloc);
     }
 
-#if 1 // testing orthonormality
+#ifdef DEBUG // testing orthonormality
     tmp[0] = 0.;
     tmp[1] = 0.;
     tmp[2] = 0.;
@@ -2034,7 +2031,7 @@ void LocGridOrbitals::orthonormalize2states(const int st1, const int st2)
     mmpi.allreduce(&tmp[0], &overlap[0], 3, MPI_SUM);
     if (onpe0 && ct.verbose > 2)
         (*MPIdata::sout) << "Gram matrix = " << overlap[0] << "," << overlap[1]
-                         << "," << overlap[2] << endl;
+                         << "," << overlap[2] << std::endl;
 #endif
 }
 
@@ -2045,9 +2042,6 @@ void LocGridOrbitals::multiplyByMatrix2states(
     assert(st2 >= 0);
 
     if (chromatic_number_ == 0) return;
-
-    // if( onpe0 && ct.verbose>2 )
-    //  (*MPIdata::sout)<<"LocGridOrbitals::multiplyByMatrix2states()"<<endl;
 
     int color_st1 = -1;
     int color_st2 = -1;
@@ -2117,11 +2111,12 @@ void LocGridOrbitals::computeDiagonalGram(
         for (int i = 0; i < lsize; i++)
             (*MPIdata::sout)
                 << "i=" << i << ", diagS[i]=" << diagS.getRowEntry(i, 0)
-                << endl;
+                << std::endl;
 #endif
 }
 
-void LocGridOrbitals::computeInvNorms2(vector<vector<double>>& inv_norms2) const
+void LocGridOrbitals::computeInvNorms2(
+    std::vector<std::vector<double>>& inv_norms2) const
 {
     const int initTabSize = 4096;
     VariableSizeMatrix<sparserow> diagS("diagS", initTabSize);
@@ -2159,9 +2154,6 @@ void LocGridOrbitals::normalize()
     assert(grid_.vel() > 1.e-8);
     assert(chromatic_number_ >= 0);
 
-    // if( onpe0 && ct.verbose>2 )
-    //        (*MPIdata::sout)<<"Normalize LocGridOrbitals"<<endl;
-
     Control& ct = *(Control::instance());
 
     if (ct.short_sighted)
@@ -2182,7 +2174,6 @@ void LocGridOrbitals::normalize()
                 {
                     // normalize state
                     double alpha = 1. / sqrt(diagS.get_value(gid, gid));
-                    //(*MPIdata::sout)<<"alpha="<<alpha<<endl;
                     block_vector_.scal(alpha, color, iloc);
                 }
             }
@@ -2191,7 +2182,7 @@ void LocGridOrbitals::normalize()
     else
     {
         const double vel = grid_.vel();
-        vector<double> diagS(numst_, 0.);
+        std::vector<double> diagS(numst_, 0.);
         for (int color = 0; color < chromatic_number_; color++)
         {
             for (short iloc = 0; iloc < subdivx_; iloc++)
@@ -2200,8 +2191,9 @@ void LocGridOrbitals::normalize()
                 const int gid = overlapping_gids_[iloc][color];
                 if (gid != -1)
                 {
-                    diagS[gid]
-                        += vel * (double)block_vector_.dot(color, color, iloc);
+                    diagS[gid] += vel
+                                  * static_cast<double>(
+                                        block_vector_.dot(color, color, iloc));
                 }
             }
         }
@@ -2212,7 +2204,7 @@ void LocGridOrbitals::normalize()
         if (onpe0 && ct.verbose > 2)
             for (int i = 0; i < numst_; i++)
                 (*MPIdata::sout)
-                    << "i=" << i << ", diagS[i]=" << diagS[i] << endl;
+                    << "i=" << i << ", diagS[i]=" << diagS[i] << std::endl;
 #endif
         for (int i = 0; i < numst_; i++)
         {
@@ -2232,7 +2224,6 @@ void LocGridOrbitals::normalize()
                 {
                     // normalize state
                     double alpha = diagS[gid];
-                    //(*MPIdata::sout)<<"alpha="<<alpha<<endl;
                     block_vector_.scal(alpha, color, iloc);
                 }
             }
@@ -2254,7 +2245,7 @@ void LocGridOrbitals::projectOut(LocGridOrbitals& orbitals, const double scale)
     // test if projection is now 0
     dist_matrix::DistMatrix<DISTMATDTYPE> tmatrix(product(orbitals));
     if( onpe0 )
-        (*MPIdata::sout)<<"LocGridOrbitals::projectOut(), Product after projection:"<<endl;
+        (*MPIdata::sout)<<"LocGridOrbitals::projectOut(), Product after projection:"<<std::endl;
     tmatrix.print((*MPIdata::sout),0,0,5,5);
 #endif
 
@@ -2276,8 +2267,8 @@ void LocGridOrbitals::projectOut(
         //    pmatrix.scal(grid_.vel());
 
 #ifdef DEBUG
-    (*MPIdata::sout) << "LocGridOrbitals::projectOut()" << endl;
-    (*MPIdata::sout) << "Product before projection" << endl;
+    (*MPIdata::sout) << "LocGridOrbitals::projectOut()" << std::endl;
+    (*MPIdata::sout) << "Product before projection" << std::endl;
     pmatrix.print((*MPIdata::sout));
 #endif
     proj_matrices_->applyInvS(pmatrix);
@@ -2327,7 +2318,7 @@ void LocGridOrbitals::initRand()
 
     if (onpe0 && ct.verbose > 2)
         (*MPIdata::sout) << " Initialize " << chromatic_number_
-                         << " random global functions" << endl;
+                         << " random global functions" << std::endl;
 
     ran0();
 
@@ -2381,7 +2372,7 @@ void LocGridOrbitals::initRand()
                         (*MPIdata::sout)
                             << "color=" << color << ", iloc=" << iloc
                             << ", val=" << psi(color)[iloc * loc_length]
-                            << endl;
+                            << std::endl;
                     assert(fabs(psi(color)[iloc * loc_length * incx]) < 1.e-15);
 #endif
                 }
@@ -2393,13 +2384,13 @@ void LocGridOrbitals::initRand()
         if (n <= 0)
         {
             (*MPIdata::serr)
-                << "ERROR: state " << istate << " not allocated" << endl;
+                << "ERROR: state " << istate << " not allocated" << std::endl;
             (*MPIdata::serr)
-                << "    chromatic_number_=" << chromatic_number_ << endl;
+                << "    chromatic_number_=" << chromatic_number_ << std::endl;
             for (short iloc = 0; iloc < subdivx_; iloc++)
                 (*MPIdata::serr)
                     << "    overlapping_gids_[" << iloc << "][" << 0
-                    << "]=" << overlapping_gids_[iloc][0] << endl;
+                    << "]=" << overlapping_gids_[iloc][0] << std::endl;
             ct.global_exit(2);
         }
 #endif
@@ -2425,7 +2416,7 @@ void LocGridOrbitals::addDotWithNcol2Matrix(
     if (onpe0 && ct.verbose > 2)
         (*MPIdata::sout)
             << "LocGridOrbitals::addDotWithNcol2Matrix for states 0"
-            << " to " << chromatic_number_ - 1 << endl;
+            << " to " << chromatic_number_ - 1 << std::endl;
     for (short icolor = 0; icolor < chromatic_number_; icolor++)
     {
         block_vector_.hasnan(icolor);
@@ -2443,6 +2434,7 @@ void LocGridOrbitals::addDotWithNcol2Matrix(
     {
         MATDTYPE* ssiloc = ss.getSubMatrix(iloc);
 
+        // TODO
         MPgemmTN(chromatic_number_, chromatic_number_, loc_numpt_, vel,
             block_vector_.vect(0) + iloc * loc_numpt_, lda_,
             Apsi.getPsi(0, iloc), lda_, 0., ssiloc, chromatic_number_);
@@ -2468,7 +2460,7 @@ void LocGridOrbitals::computeGlobalIndexes(
     {
         overlapping_gids_[iloc].resize(chromatic_number_, -1);
     }
-    for (vector<int>::const_iterator it = all_overlapping_gids_.begin();
+    for (std::vector<int>::const_iterator it = all_overlapping_gids_.begin();
          it != all_overlapping_gids_.end(); it++)
     {
         const int gid = *it;
@@ -2484,7 +2476,7 @@ void LocGridOrbitals::computeGlobalIndexes(
     }
 }
 
-void LocGridOrbitals::printTimers(ostream& os)
+void LocGridOrbitals::printTimers(std::ostream& os)
 {
     matB_tm_.print(os);
     invBmat_tm_.print(os);
@@ -2505,28 +2497,28 @@ void LocGridOrbitals::initWF(const std::shared_ptr<LocalizationRegions> lrs)
 
     if (onpe0 && ct.verbose > 1)
     {
-        (*MPIdata::sout) << " Initialize wave functions ..." << endl;
+        (*MPIdata::sout) << " Initialize wave functions ..." << std::endl;
     }
     switch (ct.init_type)
     {
         case 1:
             if (onpe0 && ct.verbose > 1)
             {
-                (*MPIdata::sout) << " with Gaussian functions..." << endl;
+                (*MPIdata::sout) << " with Gaussian functions..." << std::endl;
             }
             initGauss(ct.init_rc, lrs);
             break;
         case 2:
             if (onpe0 && ct.verbose > 1)
             {
-                (*MPIdata::sout) << " with Fourier basis ..." << endl;
+                (*MPIdata::sout) << " with Fourier basis ..." << std::endl;
             }
             initFourier();
             break;
         default:
             if (onpe0 && ct.verbose > 2)
             {
-                (*MPIdata::sout) << " with random values ..." << endl;
+                (*MPIdata::sout) << " with random values ..." << std::endl;
             }
             initRand();
 
@@ -2541,7 +2533,7 @@ void LocGridOrbitals::initWF(const std::shared_ptr<LocalizationRegions> lrs)
 
                 if (onpe0 && ct.verbose > 2)
                     (*MPIdata::sout)
-                        << " Apply B to initial wave functions" << endl;
+                        << " Apply B to initial wave functions" << std::endl;
                 for (short icolor = 0; icolor < chromatic_number_; icolor++)
                 {
                     gf_psi.assign(psi(icolor));
@@ -2560,7 +2552,8 @@ void LocGridOrbitals::initWF(const std::shared_ptr<LocalizationRegions> lrs)
         applyCorrMask(true);
 
     if (onpe0 && ct.verbose > 2)
-        (*MPIdata::sout) << " Orthonormalize initial wave functions" << endl;
+        (*MPIdata::sout) << " Orthonormalize initial wave functions"
+                         << std::endl;
     if (ct.isLocMode())
     {
         normalize();
@@ -2575,7 +2568,7 @@ void LocGridOrbitals::initWF(const std::shared_ptr<LocalizationRegions> lrs)
 
 #ifdef DEBUG
     if (onpe0 && ct.verbose > 2)
-        (*MPIdata::sout) << "LocGridOrbitals::init_wf() done" << endl;
+        (*MPIdata::sout) << "LocGridOrbitals::init_wf() done" << std::endl;
 #endif
 }
 

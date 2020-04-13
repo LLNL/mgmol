@@ -16,9 +16,6 @@
 
 #include <cassert>
 
-// The new storage does not support GPU
-#define NEWSTORAGE 0
-
 namespace
 {
 template <typename ScalarType, typename MemorySpaceType>
@@ -100,7 +97,7 @@ BlockVector<ScalarType, MemorySpaceType>::~BlockVector()
         for (typename std::vector<ScalarType*>::iterator it
              = class_storage_.begin();
              it != class_storage_.end(); ++it)
-            delete[] * it;
+            MemorySpace::Memory<ScalarType, MemorySpaceType>::free(*it);
     }
     n_instances_--;
 }
@@ -113,8 +110,8 @@ void BlockVector<ScalarType, MemorySpaceType>::allocate1NewBlock()
 
     // size of allocation is based on first call to this function
     if (allocated_size_storage_ == 0)
-        allocated_size_storage_
-            = (int)((ScalarType)(size_storage_)*overallocate_factor_);
+        allocated_size_storage_ = static_cast<int>(
+            static_cast<ScalarType>(size_storage_) * overallocate_factor_);
 
     // check if storage required is not bigger than initial allocation
     if (size_storage_ > allocated_size_storage_)
@@ -136,10 +133,12 @@ void BlockVector<ScalarType, MemorySpaceType>::allocate1NewBlock()
         (*MPIdata::sout) << "BlockVector, allocate memory size "
                          << allocated_size_storage_ << std::endl;
 
-    class_storage_.push_back(new ScalarType[allocated_size_storage_]);
+    class_storage_.push_back(
+        MemorySpace::Memory<ScalarType, MemorySpaceType>::allocate(
+            allocated_size_storage_));
 
-    memset((class_storage_.back()), 0,
-        allocated_size_storage_ * sizeof(ScalarType));
+    MemorySpace::Memory<ScalarType, MemorySpaceType>::set(
+        class_storage_.back(), allocated_size_storage_, 0);
 }
 
 template <typename ScalarType, typename MemorySpaceType>
@@ -151,7 +150,6 @@ void BlockVector<ScalarType, MemorySpaceType>::allocate_storage()
     Control& ct                  = *(Control::instance());
     static short high_water_mark = 0;
 
-#ifdef NEWSTORAGE
     // firt time, allocate memory for max_alloc_instances_ objects
     if (allocated_.size() == 0)
     {
@@ -212,21 +210,15 @@ void BlockVector<ScalarType, MemorySpaceType>::allocate_storage()
         ct.global_exit(0);
     }
     storage_ = class_storage_[my_allocation_];
-    assert(storage_ != nullptr);
-#else
-    storage_ = MemorySpace::Memory<MemorySpaceType>::allocate<ScalarType>(
-        size_storage_);
-#endif
+    assert(class_storage_.size() > 0);
 
     assert(storage_ != nullptr);
-    assert(class_storage_.size() > 0);
 }
 
 // free slot of memory allocated to particular object
 template <typename ScalarType, typename MemorySpaceType>
 void BlockVector<ScalarType, MemorySpaceType>::deallocate_storage()
 {
-#ifdef NEWSTORAGE
     if (my_allocation_ >= 0)
     {
         assert(storage_ != nullptr);
@@ -235,11 +227,6 @@ void BlockVector<ScalarType, MemorySpaceType>::deallocate_storage()
         my_allocation_             = -1;
         storage_                   = nullptr;
     }
-#else
-    assert(storage_ != nullptr);
-    MemorySpace::Memory<MemorySpaceType>::free(storage_);
-    storage_ = nullptr;
-#endif
 }
 
 template <typename ScalarType, typename MemorySpaceType>
@@ -399,7 +386,6 @@ void BlockVector<ScalarType, MemorySpaceType>::scal(
     assert(i < static_cast<int>(vect_.size()));
     assert(vect_[i] != nullptr);
 
-    // TODO check
     LinearAlgebraUtils<MemorySpaceType>::MPscal(ld_, alpha, vect_[i]);
 }
 
@@ -408,7 +394,6 @@ void BlockVector<ScalarType, MemorySpaceType>::scal(const double alpha)
 {
     assert(storage_ != nullptr);
 
-    // TODO check
     LinearAlgebraUtils<MemorySpaceType>::MPscal(size_storage_, alpha, storage_);
 }
 
@@ -420,9 +405,35 @@ void BlockVector<ScalarType, MemorySpaceType>::scal(
     assert(vect_[i] != nullptr);
 
     const int shift = iloc * locnumel_;
-    // TODO check
     LinearAlgebraUtils<MemorySpaceType>::MPscal(
         locnumel_, alpha, vect_[i] + shift);
+}
+
+template <typename ScalarType, typename MemorySpaceType>
+void BlockVector<ScalarType, MemorySpaceType>::set_zero()
+{
+    MemorySpace::Memory<ScalarType, MemorySpaceType>::set(
+        storage_, size_storage_, 0);
+}
+
+template <typename ScalarType, typename MemorySpaceType>
+void BlockVector<ScalarType, MemorySpaceType>::set_zero(
+    const int i, const short iloc)
+{
+    assert(i < static_cast<int>(vect_.size()));
+    assert(iloc < subdivx_);
+    MemorySpace::Memory<ScalarType, MemorySpaceType>::set(
+        vect_[i] + iloc * locnumel_, locnumel_, 0);
+}
+
+template <typename ScalarType, typename MemorySpaceType>
+void BlockVector<ScalarType, MemorySpaceType>::set_zero(const int i)
+{
+    assert(i < static_cast<int>(vect_.size()));
+
+    for (short iloc = 0; iloc < subdivx_; iloc++)
+        MemorySpace::Memory<ScalarType, MemorySpaceType>::set(
+            vect_[i] + iloc * locnumel_, locnumel_, 0);
 }
 
 template <typename ScalarType, typename MemorySpaceType>
