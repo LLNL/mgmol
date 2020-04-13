@@ -83,27 +83,7 @@ public:
         assert(ptr_matrices_[iloc] != NULL);
         return ptr_matrices_[iloc];
     }
-#if 0
-    void addVal(const int index, const T val, const int iloc=0)
-    {
-        ptr_matrices_[iloc][index] += val;
-    }
 
-    void addVal(const int i, const int j, const T val, const int iloc=0)
-    {
-        assert(i < m_);
-        assert(j < n_);
-        ptr_matrices_[iloc][m_ * j + i] += val;
-    }
-
-    // use fortran convention to be compatible with BLAS
-    T getVal(const int i, const int j, const int iloc=0) const
-    {
-        assert(i < m_);
-        assert(j < n_);
-        return ptr_matrices_[iloc][m_ * j + i];
-    }
-#endif
     void setVal(const int i, const int j, const T val, const int iloc = 0)
     {
         assert(i < m_);
@@ -117,11 +97,6 @@ public:
         assert(j < n_);
         return ptr_matrices_[iloc][m_ * j + i];
     }
-
-    //    void setVal2zero(const int i, const int j, const int iloc=0)
-    //    {
-    //        setVal(i, j, 0., iloc);
-    //    }
 
     void scal(const double alpha) { Tscal(storage_size_, alpha, storage_); }
     void axpy(const double alpha, const LocalMatrices& matA)
