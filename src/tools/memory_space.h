@@ -17,6 +17,7 @@
 #include <magma_singleton.h>
 
 #include <cstring>
+#include <iostream>
 #include <memory>
 #include <vector>
 
@@ -51,6 +52,7 @@ struct Device
 template <typename T>
 void copy_to_dev(T const* const vec, unsigned int size, T* vec_dev)
 {
+    assert(magma_is_devptr(vec_dev) == 1);
     int const increment   = 1;
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
     magma_setvector(size, sizeof(T), vec, increment, vec_dev, increment,
@@ -95,6 +97,7 @@ void copy_to_dev(T const* const vec, unsigned int size,
 template <typename T>
 void copy_to_host(T const* const vec_dev, unsigned int size, T* vec)
 {
+    assert(magma_is_devptr(vec_dev) == 1);
     int const increment   = 1;
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
     magma_getvector(size, sizeof(T), vec_dev, increment, vec, increment,
@@ -163,7 +166,7 @@ struct Memory<T, MemorySpace::Host>
 {
     static T* allocate(unsigned int size)
     {
-        return std::malloc(size * sizeof(T));
+        return reinterpret_cast<T*>(std::malloc(size * sizeof(T)));
     }
 
     static T* allocate_host_view(unsigned int size) { return nullptr; }
@@ -217,6 +220,7 @@ struct Memory<T, MemorySpace::Device>
 
     static void free(T* ptr_dev)
     {
+        assert(magma_is_devptr(ptr_dev) == 1);
         magma_free(ptr_dev);
         ptr_dev = nullptr;
     }
@@ -229,6 +233,8 @@ struct Memory<T, MemorySpace::Device>
 
     static void copy(T const* in, unsigned int size, T* out)
     {
+        assert(magma_is_devptr(in) == 1);
+        assert(magma_is_devptr(out) == 1);
         int const increment   = 1;
         auto& magma_singleton = MagmaSingleton::get_magma_singleton();
         magma_copyvector(size, sizeof(T), in, increment, out, increment,
@@ -237,6 +243,7 @@ struct Memory<T, MemorySpace::Device>
 
     static void copy_view_to_host(T* vec_dev, unsigned int size, T*& vec)
     {
+        assert(magma_is_devptr(vec_dev) == 1);
         int const increment   = 1;
         auto& magma_singleton = MagmaSingleton::get_magma_singleton();
         magma_getvector(size, sizeof(T), vec_dev, increment, vec, increment,
@@ -245,6 +252,7 @@ struct Memory<T, MemorySpace::Device>
 
     static void copy_view_to_dev(T const* vec, unsigned int size, T* vec_dev)
     {
+        assert(magma_is_devptr(vec_dev) == 1);
         int const increment   = 1;
         auto& magma_singleton = MagmaSingleton::get_magma_singleton();
         magma_setvector(size, sizeof(T), vec, increment, vec_dev, increment,
@@ -253,6 +261,7 @@ struct Memory<T, MemorySpace::Device>
 
     static void set(T* ptr, unsigned int size, int val)
     {
+        assert(magma_is_devptr(ptr) == 1);
         // Cannot directly use cudaMemset and MAGMA does not have an equivalent
         // function. If we have OpenMP with offloading, we directly set the
         // value. Otherwise, we copy a vector from the host.
