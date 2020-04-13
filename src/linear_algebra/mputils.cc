@@ -52,6 +52,10 @@ using MemoryD = MemorySpace::Memory<ScalarType, MemorySpace::Device>;
 template <>
 void LAU_H::MPscal(const int len, const double scal, double* dptr)
 {
+#ifdef HAVE_MAGMA
+    assert(magma_is_devptr(dptr) == 0);
+#endif
+
     const int one = 1;
     DSCAL(&len, &scal, dptr, &one);
 }
@@ -59,6 +63,10 @@ void LAU_H::MPscal(const int len, const double scal, double* dptr)
 template <>
 void LAU_H::MPscal(const int len, const double scal, float* dptr)
 {
+#ifdef HAVE_MAGMA
+    assert(magma_is_devptr(dptr) == 0);
+#endif
+
     if (scal == 1.)
         return;
     else if (scal == 0.)
@@ -80,6 +88,8 @@ void LAU_H::MPscal(const int len, const double scal, float* dptr)
 template <>
 void LAU_D::MPscal(const int len, const double scal, double* dptr)
 {
+    assert(magma_is_devptr(dptr) == 1);
+
     int const increment   = 1;
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
     magma_dscal(len, scal, dptr, increment, magma_singleton.queue_);
@@ -88,6 +98,8 @@ void LAU_D::MPscal(const int len, const double scal, double* dptr)
 template <>
 void LAU_D::MPscal(const int len, const double scal, float* dptr)
 {
+    assert(magma_is_devptr(dptr) == 1);
+
     if (scal == 1.)
         return;
     else if (scal == 0)
@@ -127,6 +139,11 @@ template <>
 double LAU_H::MPdot<double, double>(
     const int len, const double* const xptr, const double* const yptr)
 {
+#ifdef HAVE_MAGMA
+    assert(magma_is_devptr(xptr) == 0);
+    assert(magma_is_devptr(yptr) == 0);
+#endif
+
     const int one = 1;
     return DDOT(&len, xptr, &one, yptr, &one);
 }
@@ -136,6 +153,11 @@ template <typename T1, typename T2>
 double LAU_H::MPdot(
     const int len, const T1* __restrict__ xptr, const T2* __restrict__ yptr)
 {
+#ifdef HAVE_MAGMA
+    assert(magma_is_devptr(xptr) == 0);
+    assert(magma_is_devptr(yptr) == 0);
+#endif
+
     mpdot_tm.start();
 
     double dot = 0.;
@@ -158,6 +180,9 @@ template <>
 double LAU_D::MPdot<double, double>(
     const int len, const double* const xptr, const double* const yptr)
 {
+    assert(magma_is_devptr(xptr) == 1);
+    assert(magma_is_devptr(yptr) == 1);
+
     const int increment   = 1;
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
     return magma_ddot(
@@ -169,11 +194,14 @@ template <typename T1, typename T2>
 double LAU_D::MPdot(
     const int len, const T1* __restrict__ xptr, const T2* __restrict__ yptr)
 {
+    assert(magma_is_devptr(xptr) == 1);
+    assert(magma_is_devptr(yptr) == 1);
+
 #ifndef HAVE_OPENMP_OFFLOAD
     std::unique_ptr<T1[], void (*)(T1*)> xptr_host(
         MemoryH<T1>::allocate(len), MemoryH<T1>::free);
     std::unique_ptr<T2[], void (*)(T2*)> yptr_host(
-        MemoryH<T2>::allocate(len), MemoryH<T2float>::free);
+        MemoryH<T2>::allocate(len), MemoryH<T2>::free);
     copy_to_host(xptr, xptr_host, len);
     copy_to_host(yptr, yptr_host, len);
     return LAU_H::MPdot(len, x_ptr_host.get(), y_ptr_host.get());
@@ -202,6 +230,11 @@ template <>
 void LAU_H::MPaxpy(const int len, double scal, const double* __restrict__ xptr,
     double* __restrict__ yptr)
 {
+#ifdef HAVE_MAGMA
+    assert(magma_is_devptr(xptr) == 0);
+    assert(magma_is_devptr(yptr) == 0);
+#endif
+
     const int one = 1;
     DAXPY(&len, &scal, xptr, &one, yptr, &one);
 }
@@ -211,6 +244,11 @@ template <typename T1, typename T2>
 void LAU_H::MPaxpy(const int len, double scal, const T1* __restrict__ xptr,
     T2* __restrict__ yptr)
 {
+#ifdef HAVE_MAGMA
+    assert(magma_is_devptr(xptr) == 0);
+    assert(magma_is_devptr(yptr) == 0);
+#endif
+
 #pragma omp parallel for simd
     for (int k = 0; k < len; k++)
     {
@@ -224,6 +262,9 @@ template <>
 void LAU_D::MPaxpy(const int len, double scal, const double* __restrict__ xptr,
     double* __restrict__ yptr)
 {
+    assert(magma_is_devptr(xptr) == 1);
+    assert(magma_is_devptr(yptr) == 1);
+
     const int increment   = 1;
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
     return magma_daxpy(
@@ -235,6 +276,9 @@ template <typename T1, typename T2>
 void LAU_D::MPaxpy(const int len, double scal, const T1* __restrict__ xptr,
     T2* __restrict__ yptr)
 {
+    assert(magma_is_devptr(xptr) == 1);
+    assert(magma_is_devptr(yptr) == 1);
+
 #ifndef HAVE_OPENMP_OFFLOAD
     std::unique_ptr<T1[], void (*)(double*)> xptr_host(
         MemoryH<T1>::allocate(len), MemoryH<T1>::free);
@@ -497,6 +541,12 @@ void LAU_H::MPgemm(const char transa, const char transb, const int m,
     const int lda, const T2* const b, const int ldb, const double beta,
     T3* const c, const int ldc)
 {
+#ifdef HAVE_MAGMA
+    assert(magma_is_devptr(a) == 0);
+    assert(magma_is_devptr(b) == 0);
+    assert(magma_is_devptr(c) == 0);
+#endif
+
     tttgemm_tm.start();
     // if(onpe0)cout<<"template MPgemm..."<<endl;
 
@@ -604,6 +654,12 @@ void LAU_H::MPgemm<double, double, double>(const char transa, const char transb,
     const double* const a, const int lda, const double* const b, const int ldb,
     const double beta, double* const c, const int ldc)
 {
+#ifdef HAVE_MAGMA
+    assert(magma_is_devptr(a) == 0);
+    assert(magma_is_devptr(b) == 0);
+    assert(magma_is_devptr(c) == 0);
+#endif
+
     dgemm_tm.start();
     DGEMM(
         &transa, &transb, &m, &n, &k, &alpha, a, &lda, b, &ldb, &beta, c, &ldc);
@@ -618,6 +674,12 @@ void LAU_H::MPgemm<float, float, float>(const char transa, const char transb,
     const float* const a, const int lda, const float* const b, const int ldb,
     const double beta, float* const c, const int ldc)
 {
+#ifdef HAVE_MAGMA
+    assert(magma_is_devptr(a) == 0);
+    assert(magma_is_devptr(b) == 0);
+    assert(magma_is_devptr(c) == 0);
+#endif
+
     mpgemm_tm.start();
 
     if (beta == 1. && (alpha == 0. || m == 0 || n == 0 || k == 0)) return;
@@ -720,6 +782,10 @@ void LAU_D::MPgemm(const char transa, const char transb, const int m,
     const int lda, const T2* const b, const int ldb, const double beta,
     T3* const c, const int ldc)
 {
+    assert(magma_is_devptr(a) == 1);
+    assert(magma_is_devptr(b) == 1);
+    assert(magma_is_devptr(c) == 1);
+
     std::vector<T1> a_host(lda * k);
     std::vector<T2> b_host(ldb * n);
     std::vector<T3> c_host(ldc * n);
@@ -743,6 +809,10 @@ void LAU_D::MPgemm(const char transa, const char transb, const int m,
     const int lda, const double* const b, const int ldb, const double beta,
     double* const c, const int ldc)
 {
+    assert(magma_is_devptr(a) == 1);
+    assert(magma_is_devptr(b) == 1);
+    assert(magma_is_devptr(c) == 1);
+
     dgemm_tm.start();
     // Transform char to magma_trans_t
     auto convert_to_magma_trans = [](const char trans) {
