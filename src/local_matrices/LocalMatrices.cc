@@ -111,7 +111,7 @@ void LocalMatrices<T>::syrk(
     const int iloc, const int k, const double* const a, const int lda)
 {
     assert(iloc < subdiv_);
-    assert(iloc < (int)ptr_matrices_.size());
+    assert(iloc < static_cast<int>(ptr_matrices_.size()));
     assert(k <= lda);
     assert(ptr_matrices_[iloc] != nullptr);
     assert(m_ > 0);
@@ -124,9 +124,8 @@ void LocalMatrices<T>::syrk(
     const double one  = 1.;
     const char uplo   = 'l'; // fill lower triangular part
     const char trans  = 't';
+
     MPsyrk(uplo, trans, m_, k, one, a, lda, zero, ssiloc, m_);
-    //    dsyrk(&uplo, &trans, &m_, &k, &one, a, &lda,
-    //          &zero, ssiloc, &m_);
 }
 
 // perform the symmetric operation
