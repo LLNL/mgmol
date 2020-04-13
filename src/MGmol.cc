@@ -195,6 +195,7 @@ void MGmol<ExtendedGridOrbitals>::initialMasks()
 }
 
 template <class T>
+template <typename MemorySpaceType>
 int MGmol<T>::initial()
 {
     Control& ct     = *(Control::instance());
@@ -278,7 +279,7 @@ int MGmol<T>::initial()
 
     initialMasks();
 
-    BlockVector<ORBDTYPE, MemorySpace::Host>::setOverAllocateFactor(
+    BlockVector<ORBDTYPE, MemorySpaceType>::setOverAllocateFactor(
         ct.orbitalsOverallocateFactor());
 
     if (ct.verbose > 0)
@@ -288,7 +289,7 @@ int MGmol<T>::initial()
         ct.bc, proj_matrices_, lrs_, currentMasks_, corrMasks_, local_cluster_,
         true);
 
-    increaseMemorySlotsForOrbitals();
+    increaseMemorySlotsForOrbitals<MemorySpaceType>();
 
     Potentials& pot            = hamiltonian_->potential();
     pb::Lap<ORBDTYPE>* lapOper = hamiltonian_->lapOper();
@@ -909,7 +910,11 @@ void MGmol<T>::printTimers()
     dump_tm_.print(os_);
     setup_tm_.print(os_);
     HDFrestart::printTimers(os_);
+#ifdef HAVE_MAGMA
+    BlockVector<ORBDTYPE, MemorySpace::Device>::printTimers(os_);
+#else
     BlockVector<ORBDTYPE, MemorySpace::Host>::printTimers(os_);
+#endif
     OrbitalsPreconditioning<T>::printTimers(os_);
     DavidsonSolver<ExtendedGridOrbitals>::printTimers(os_);
     MDfiles::printTimers(os_);
@@ -1012,7 +1017,11 @@ void MGmol<T>::setup()
     rho_ = new Rho<T>();
     rho_->setVerbosityLevel(ct.verbose);
 
-    int ierr = initial();
+#ifdef HAVE_MAGMA
+    int ierr = initial<MemorySpace::Device>();
+#else
+    int ierr = initial<MemorySpace::Host>();
+#endif
     if (ierr < 0) global_exit(0);
 
     // Write header to stdout
@@ -1315,14 +1324,6 @@ void MGmol<T>::update_pot(const Ions& ions)
     }
     else
         pot.update(rho_->rho_);
-
-#if 0
-    if ( onpe0 )
-    {
-        os_<<setprecision(3);
-        os_<<" <rho dv>/nb_ions = "<<pot.scf_dvrho()/ions.num_ions()<<endl;
-    }
-#endif
 }
 
 template <class T>
@@ -1335,3 +1336,9 @@ void MGmol<T>::addResidualSpreadPenalty(T& phi, T& res)
 
 template class MGmol<LocGridOrbitals>;
 template class MGmol<ExtendedGridOrbitals>;
+template int MGmol<LocGridOrbitals>::initial<MemorySpace::Host>();
+template int MGmol<ExtendedGridOrbitals>::initial<MemorySpace::Host>();
+#ifdef HAVE_MAGMA
+template int MGmol<LocGridOrbitals>::initial<MemorySpace::Device>();
+template int MGmol<ExtendedGridOrbitals>::initial<MemorySpace::Device>();
+#endif

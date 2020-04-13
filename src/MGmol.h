@@ -140,6 +140,7 @@ private:
     void computeResidualUsingHPhi(
         T& psi, const T& hphi, T& res, const bool applyB = true);
 
+    template <typename MemorySpaceType>
     int initial();
     void initialMasks();
 

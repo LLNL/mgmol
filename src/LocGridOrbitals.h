@@ -95,7 +95,12 @@ private:
     ////////////////////////////////////////////////////////
     // instance specific data
     ////////////////////////////////////////////////////////
-    BlockVector<ORBDTYPE, MemorySpace::Host> block_vector_;
+#ifdef HAVE_MAGMA
+    using memory_space_type = MemorySpace::Device;
+#else
+    using memory_space_type = MemorySpace::Host;
+#endif
+    BlockVector<ORBDTYPE, memory_space_type> block_vector_;
 
     ////////////////////////////////////////////////////////
     //
@@ -208,7 +213,6 @@ public:
     static void printTimers(std::ostream& os);
 
     void resetDotProductMatrices();
-    void init2zero();
 
     void setup(LocalizationRegions* lrs);
     void reset(MasksSet* masks, MasksSet* corrmasks, LocalizationRegions* lrs);

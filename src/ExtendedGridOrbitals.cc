@@ -26,6 +26,7 @@
 #include "SquareLocalMatrices.h"
 #include "hdf_tools.h"
 #include "lapack_c.h"
+#include "memory_space.h"
 
 #include <cmath>
 #include <fstream>
@@ -209,12 +210,6 @@ void ExtendedGridOrbitals::axpy(
     axpy_tm_.stop();
 }
 
-void ExtendedGridOrbitals::init2zero()
-{
-    ORBDTYPE* ipsi = psi(0);
-    memset(ipsi, 0, numst_ * numpt_ * sizeof(ORBDTYPE));
-}
-
 void ExtendedGridOrbitals::initGauss(
     const double rc, const LocalizationRegions& lrs)
 {
@@ -250,7 +245,14 @@ void ExtendedGridOrbitals::initGauss(
     for (int icolor = 0; icolor < numst_; icolor++)
     {
         ORBDTYPE* ipsi = psi(icolor);
-        memset(ipsi, 0, numpt_ * sizeof(ORBDTYPE));
+        unsigned int const ipsi_size
+            = block_vector_.get_allocated_size_storage();
+        ORBDTYPE* ipsi_host_view = MemorySpace::Memory<ORBDTYPE,
+            memory_space_type>::allocate_host_view(ipsi_size);
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+            ipsi, ipsi_size, ipsi_host_view);
+        MemorySpace::Memory<ORBDTYPE, MemorySpace::Host>::set(
+            ipsi_host_view, numpt_, 0);
 
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
@@ -269,10 +271,10 @@ void ExtendedGridOrbitals::initGauss(
                     {
                         const double r = xc.minimage(center, ll, bc_);
                         if (r < rmax)
-                            ipsi[ix * incx + iy * incy + iz]
-                                = (ORBDTYPE)exp(-r * r * invrc2);
+                            ipsi_host_view[ix * incx + iy * incy + iz]
+                                = static_cast<ORBDTYPE>(exp(-r * r * invrc2));
                         else
-                            ipsi[ix * incx + iy * incy + iz] = 0.;
+                            ipsi_host_view[ix * incx + iy * incy + iz] = 0.;
 
                         xc[2] += hgrid[2];
                     }
@@ -281,6 +283,11 @@ void ExtendedGridOrbitals::initGauss(
                 xc[0] += hgrid[0];
             }
         }
+
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_dev(
+            ipsi_host_view, ipsi_size, ipsi);
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+            ipsi_host_view);
     }
     resetIterativeIndex();
 }
@@ -323,8 +330,16 @@ void ExtendedGridOrbitals::initFourier()
             dk[1] * (double)kvector[1], dk[2] * (double)kvector[2] };
 
         ORBDTYPE* ipsi = psi(icolor);
-        memset(ipsi, 0, numpt_ * sizeof(ORBDTYPE));
+        unsigned int const ipsi_size
+            = block_vector_.get_allocated_size_storage();
+        ORBDTYPE* ipsi_host_view = MemorySpace::Memory<ORBDTYPE,
+            memory_space_type>::allocate_host_view(ipsi_size);
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+            ipsi, ipsi_size, ipsi_host_view);
+        MemorySpace::Memory<ORBDTYPE, MemorySpace::Host>::set(
+            ipsi_host_view, numpt_, 0);
 
+        // TODO this can be done on the GPU with OpenMP
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
             double x = start0 + iloc * dim0 * hgrid[0];
@@ -337,10 +352,11 @@ void ExtendedGridOrbitals::initFourier()
                     double z = start2;
                     for (int iz = 0; iz < dim2; iz++)
                     {
-                        ipsi[ix * incx + iy * incy + iz]
+                        ipsi_host_view[ix * incx + iy * incy + iz]
                             = 1.
-                              - (ORBDTYPE)(cos(kk[0] * x) * cos(kk[1] * y)
-                                           * cos(kk[2] * z));
+                              - static_cast<ORBDTYPE>(std::cos(kk[0] * x)
+                                                      * std::cos(kk[1] * y)
+                                                      * std::cos(kk[2] * z));
 
                         z += hgrid[2];
                     }
@@ -349,6 +365,11 @@ void ExtendedGridOrbitals::initFourier()
                 x += hgrid[0];
             }
         }
+
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_dev(
+            ipsi_host_view, ipsi_size, ipsi);
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+            ipsi_host_view);
     }
     resetIterativeIndex();
 }
@@ -380,17 +401,23 @@ void ExtendedGridOrbitals::multiply_by_matrix(
 
     memset(product, 0, ldp * numst_ * sizeof(ORBDTYPE));
 
-#if 0
-    (*MPIdata::sout)<<" multiply_by_matrix, first_color="<<first_color<<endl;
-#endif
-
     // loop over subdomains
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
+        unsigned int const phi_size = loc_numpt_ * numst_;
+        ORBDTYPE* phi_host_view     = MemorySpace::Memory<ORBDTYPE,
+            memory_space_type>::allocate_host_view(phi_size);
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+            getPsi(0, iloc), phi_size, phi_host_view);
+
+        // TODO this can be done on the GPU
         // Compute product for subdomain iloc
         LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(loc_numpt_, numst_,
-            numst_, 1., getPsi(0, iloc), lda_, matrix, numst_, 0.,
+            numst_, 1., phi_host_view, lda_, matrix, numst_, 0.,
             product + iloc * loc_numpt_, ldp);
+
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+            phi_host_view);
     }
 
     prod_matrix_tm_.stop();
@@ -402,19 +429,24 @@ void ExtendedGridOrbitals::multiplyByMatrix(
 {
     prod_matrix_tm_.start();
 
-#if 0
-    (*MPIdata::sout)<<" multiplyByMatrix, first_color="<<first_color<<endl;
-#endif
-
     // loop over subdomains
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
-        const MATDTYPE* const mat = matrix.getSubMatrix(iloc);
+        const MATDTYPE* const mat   = matrix.getSubMatrix(iloc);
+        unsigned int const phi_size = loc_numpt_ * numst_;
+        ORBDTYPE* phi_host_view     = MemorySpace::Memory<ORBDTYPE,
+            memory_space_type>::allocate_host_view(phi_size);
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+            getPsi(0, iloc), phi_size, phi_host_view);
 
+        // TODO this can be done on the GPU
         // Compute product for subdomain iloc
         LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(loc_numpt_, numst_,
-            numst_, 1., getPsi(0, iloc), lda_, mat, numst_, 0.,
+            numst_, 1., phi_host_view, lda_, mat, numst_, 0.,
             product + iloc * loc_numpt_, ldp);
+
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+            phi_host_view);
     }
 
     prod_matrix_tm_.stop();
@@ -434,15 +466,27 @@ void ExtendedGridOrbitals::multiplyByMatrix(
     // loop over subdomains
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
-        const MATDTYPE* const mat = matrix.getSubMatrix(iloc);
-        ORBDTYPE* phi             = getPsi(0, iloc);
+        const MATDTYPE* const mat   = matrix.getSubMatrix(iloc);
+        unsigned int const phi_size = loc_numpt_ * numst_;
+        ORBDTYPE* phi_host_view     = MemorySpace::Memory<ORBDTYPE,
+            memory_space_type>::allocate_host_view(phi_size);
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+            getPsi(0, iloc), phi_size, phi_host_view);
 
+        // TODO this can be done on the GPU
         // Compute product for subdomain iloc
         LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(loc_numpt_, numst_,
-            numst_, 1., phi, lda_, mat, numst_, 0., product, loc_numpt_);
+            numst_, 1., phi_host_view, lda_, mat, numst_, 0., product,
+            loc_numpt_);
 
         for (int color = 0; color < numst_; color++)
-            memcpy(phi + color * lda_, product + color * loc_numpt_, slnumpt);
+            memcpy(phi_host_view + color * lda_, product + color * loc_numpt_,
+                slnumpt);
+
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_dev(
+            phi_host_view, phi_size, getPsi(0, iloc));
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+            phi_host_view);
     }
 
     delete[] product;
@@ -468,10 +512,6 @@ void ExtendedGridOrbitals::multiply_by_matrix(
 {
     prod_matrix_tm_.start();
 
-#if 0
-    (*MPIdata::sout)<<"self multiply_by_matrix"<<endl;
-#endif
-
     ORBDTYPE* product = new ORBDTYPE[loc_numpt_ * numst_];
     memset(product, 0, loc_numpt_ * numst_ * sizeof(ORBDTYPE));
 
@@ -486,15 +526,26 @@ void ExtendedGridOrbitals::multiply_by_matrix(
     // loop over subdomains
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
-        ORBDTYPE* phi = getPsi(0, iloc);
+        unsigned int const phi_size = loc_numpt_ * numst_;
+        ORBDTYPE* phi_host_view     = MemorySpace::Memory<ORBDTYPE,
+            memory_space_type>::allocate_host_view(phi_size);
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+            getPsi(0, iloc), phi_size, phi_host_view);
 
+        // TODO this can be done on the GPU
         // Compute loc_numpt_ rows (for subdomain iloc)
         LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(loc_numpt_, numst_,
-            numst_, 1., phi, lda_, work_matrix, numst_, 0., product,
+            numst_, 1., phi_host_view, lda_, work_matrix, numst_, 0., product,
             loc_numpt_);
 
         for (int color = 0; color < numst_; color++)
-            memcpy(phi + color * lda_, product + color * loc_numpt_, slnumpt);
+            memcpy(phi_host_view + color * lda_, product + color * loc_numpt_,
+                slnumpt);
+
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_dev(
+            phi_host_view, phi_size, getPsi(0, iloc));
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+            phi_host_view);
     }
 
     delete[] product;
@@ -890,12 +941,20 @@ void ExtendedGridOrbitals::getLocalOverlap(SquareLocalMatrices<MATDTYPE>& ss)
 #ifdef USE_MP
         getLocalOverlap(*this, ss);
 #else
-        const ORBDTYPE* const psi = block_vector_.vect(0);
+        ORBDTYPE* psi           = block_vector_.vect(0);
+        unsigned int const size = block_vector_.get_allocated_size_storage();
+        ORBDTYPE* psi_host_view = MemorySpace::Memory<ORBDTYPE,
+            memory_space_type>::allocate_host_view(size);
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+            psi, size, psi_host_view);
 
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
-            ss.syrk(iloc, loc_numpt_, psi + iloc * loc_numpt_, lda_);
+            ss.syrk(iloc, loc_numpt_, psi_host_view + iloc * loc_numpt_, lda_);
         }
+
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+            psi_host_view);
 
         // We may need the full matrix
         ss.fillUpperWithLower();
@@ -974,7 +1033,7 @@ void ExtendedGridOrbitals::computeDiagonalElementsDotProduct(
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
             double alpha
-                = LinearAlgebraUtils<MemorySpace::Host>::MPdot(loc_numpt_,
+                = LinearAlgebraUtils<memory_space_type>::MPdot(loc_numpt_,
                     orbitals.getPsi(icolor, iloc), getPsi(icolor, iloc));
 
             ss[icolor] += (DISTMATDTYPE)(alpha * grid_.vel());
@@ -1207,12 +1266,6 @@ void ExtendedGridOrbitals::orthonormalizeLoewdin(const bool overlap_uptodate,
 
     multiplyByMatrix(*localP);
 
-#if 0 // test
-    computeGram(0);
-    if( onpe0 && ct.verbose>2 )
-        (*MPIdata::sout)<<"ExtendedGridOrbitals::orthonormalizeLoewdin() --- Gram matrix (after):"<<endl;
-    proj_matrices_->printS(*MPIdata::sout);
-#endif
     projmatrices->setGram2Id(getIterativeIndex());
 
     if (matrixTransform == nullptr) delete localP;
@@ -1452,15 +1505,24 @@ void ExtendedGridOrbitals::projectOut(
     // loop over subdomains
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
-        ORBDTYPE* phi    = getPsi(0, iloc);
+        unsigned int const phi_size = loc_numpt_ * numst_;
+        ORBDTYPE* phi_host_view     = MemorySpace::Memory<ORBDTYPE,
+            memory_space_type>::allocate_host_view(phi_size);
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+            getPsi(0, iloc), phi_size, phi_host_view);
+
         ORBDTYPE* parray = array + iloc * loc_numpt_;
 
         MATDTYPE* localMat_iloc = lmatrix.getSubMatrix(iloc);
 
+        // TODO this can be done on the GPU
         // Compute loc_numpt_ rows (for subdomain iloc)
         LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(loc_numpt_, numst_,
-            numst_, 1., phi, lda_, localMat_iloc, numst_, 0., tproduct,
-            loc_numpt_);
+            numst_, 1., phi_host_view, lda_, localMat_iloc, numst_, 0.,
+            tproduct, loc_numpt_);
+
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+            phi_host_view);
 
         double minus = -1. * scale;
         for (int j = 0; j < numst_; j++)
@@ -1477,9 +1539,9 @@ void ExtendedGridOrbitals::initRand()
 
     const unsigned dim[3] = { grid_.dim(0), grid_.dim(1), grid_.dim(2) };
 
-    double* xrand = new double[grid_.gdim(0)];
-    double* yrand = new double[grid_.gdim(1)];
-    double* zrand = new double[grid_.gdim(2)];
+    std::vector<double> xrand(grid_.gdim(0));
+    std::vector<double> yrand(grid_.gdim(1));
+    std::vector<double> zrand(grid_.gdim(2));
 
     const int loc_length = dim[0] / subdivx_;
     assert(loc_length > 0);
@@ -1510,33 +1572,34 @@ void ExtendedGridOrbitals::initRand()
         for (unsigned int idx = 0; idx < grid_.gdim(2); idx++)
             zrand[idx] = ran0() - 0.5;
 
-        int n = 0;
+        unsigned int const size  = BlockVector<ORBDTYPE,
+            memory_space_type>::get_allocated_size_storage();
+        ORBDTYPE* psi_state_view = MemorySpace::Memory<ORBDTYPE,
+            memory_space_type>::allocate_host_view(size);
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+            psi(istate), size, psi_state_view);
 
+        for (short iloc = 0; iloc < subdivx_; iloc++)
         {
-            for (short iloc = 0; iloc < subdivx_; iloc++)
-            {
-                for (int ix = loc_length * iloc; ix < loc_length * (iloc + 1);
-                     ix++)
-                    for (unsigned int iy = 0; iy < dim[1]; iy++)
-                        for (unsigned int iz = 0; iz < dim[2]; iz++)
-                        {
-                            const double alpha = xrand[xoff + ix]
-                                                 * yrand[yoff + iy]
-                                                 * zrand[zoff + iz];
+            for (int ix = loc_length * iloc; ix < loc_length * (iloc + 1); ix++)
+                for (unsigned int iy = 0; iy < dim[1]; iy++)
+                    for (unsigned int iz = 0; iz < dim[2]; iz++)
+                    {
+                        const double alpha = xrand[xoff + ix] * yrand[yoff + iy]
+                                             * zrand[zoff + iz];
 
-                            psi(istate)[ix * incx + iy * incy + iz]
-                                = alpha * alpha;
-                            assert((ix * incx + iy * incy + iz)
-                                   < static_cast<unsigned int>(lda_));
-                        }
-                n++;
-            }
+                        psi_state_view[ix * incx + iy * incy + iz]
+                            = alpha * alpha;
+
+                        assert((ix * incx + iy * incy + iz)
+                               < static_cast<unsigned int>(lda_));
+                    }
         }
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_dev(
+            psi_state_view, size, psi(istate));
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+            psi_state_view);
     }
-
-    delete[] xrand;
-    delete[] yrand;
-    delete[] zrand;
 
     resetIterativeIndex();
 }
@@ -1557,9 +1620,19 @@ void ExtendedGridOrbitals::addDotWithNcol2Matrix(
 
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
+        unsigned int const phi_size = loc_numpt_ * numst_;
+        ORBDTYPE* phi_host_view     = MemorySpace::Memory<ORBDTYPE,
+            memory_space_type>::allocate_host_view(phi_size);
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+            getPsi(0, iloc), phi_size, phi_host_view);
+
+        // TODO this can be done on the GPU
         MPgemmTN(numst_, numst_, loc_numpt_, vel,
-            block_vector_.vect(0) + iloc * loc_numpt_, lda_,
-            Apsi.getPsi(0, iloc), lda_, 1., work.data(), numst_);
+            block_vector_.vect(0) + iloc * loc_numpt_, lda_, phi_host_view,
+            lda_, 1., work.data(), numst_);
+
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+            phi_host_view);
     }
 
     std::vector<double> work2(size_work);
