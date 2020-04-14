@@ -695,11 +695,6 @@ void Rho<T>::computeRhoSubdomainUsingBlas3(const int iloc_init,
         // O(N^3) part
 #ifdef HAVE_MAGMA
         // If we have magma, we move all the data on the device
-        std::unique_ptr<ORBDTYPE[], void (*)(ORBDTYPE*)> phi1_dev(
-            MemoryDev<ORBDTYPE>::allocate(ld * ncols),
-            MemoryDev<ORBDTYPE>::free);
-        MemorySpace::copy_to_dev(phi1, ld * ncols, phi1_dev);
-
         std::unique_ptr<MATDTYPE[], void (*)(MATDTYPE*)> mat_dev(
             MemoryDev<MATDTYPE>::allocate(ncols * ncols),
             MemoryDev<MATDTYPE>::free);
@@ -710,8 +705,7 @@ void Rho<T>::computeRhoSubdomainUsingBlas3(const int iloc_init,
             MemoryDev<ORBDTYPE>::free);
 
         LinearAlgebraUtils<MemorySpace::Device>::MPgemmNN(nrows, ncols, ncols,
-            1., phi1_dev.get(), ld, mat_dev.get(), ncols, 0., product_dev.get(),
-            nrows);
+            1., phi1, ld, mat_dev.get(), ncols, 0., product_dev.get(), nrows);
 
         // Move the data back on the host
         MemorySpace::copy_to_host(product_dev, nrows * ncols, product);
@@ -724,36 +718,38 @@ void Rho<T>::computeRhoSubdomainUsingBlas3(const int iloc_init,
         // perform the operation on the device. Otherwise, we do it on the host.
 #ifdef HAVE_OPENMP_OFFLOAD
         ORBDTYPE* product_alias = product_dev.get();
-        // Copy phi2 to the device
-        ORBDTYPE* phi2_host = orbitals2.getPsi(0, iloc);
-        std::unique_ptr<ORBDTYPE[], void (*)(ORBDTYPE*)> phi2_dev(
-            MemoryDev<ORBDTYPE>::allocate(ld * ncols + nrows),
-            MemoryDev<ORBDTYPE>::free);
-        MemorySpace::copy_to_dev(phi2_host, ld * ncols + nrows, phi2_dev);
-        ORBDTYPE* phi2 = phi2_dev.get();
+        ORBDTYPE* phi2_alias    = orbitals2.getPsi(0, iloc);
         // Copy lrho to the device
         std::unique_ptr<RHODTYPE[], void (*)(RHODTYPE*)> lrho_dev(
             MemoryDev<RHODTYPE>::allocate(nrows), MemoryDev<RHODTYPE>::free);
         MemorySpace::copy_to_dev(lrho, nrows, lrho_dev);
         RHODTYPE* const lrho_alias = lrho_dev.get();
 #else
-        ORBDTYPE* product_alias    = product;
-        ORBDTYPE* phi2             = orbitals2.getPsi(0, iloc);
+        ORBDTYPE* product_alias = product;
+        ORBDTYPE* phi2          = orbitals2.getPsi(0, iloc);
+        using memory_space_type = typename T::memory_space_type;
+        ORBDTYPE* phi2_alias    = MemorySpace::Memory<ORBDTYPE,
+            memory_space_type>::allocate_host_view(ld * ncols + nrows);
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+            phi2, ld * ncols + nrows, phi2_alias);
         RHODTYPE* const lrho_alias = lrho;
 #endif
-        MGMOL_PARALLEL_FOR_COLLAPSE(2, lrho_alias, product_alias, phi2)
+        MGMOL_PARALLEL_FOR_COLLAPSE(2, lrho_alias, product_alias, phi2_alias)
         for (int j = 0; j < ncols; ++j)
         {
             for (int i = 0; i < nrows; ++i)
             {
 #pragma omp atomic update
                 lrho_alias[i]
-                    += product_alias[j * nrows + i] * phi2[j * ld + i];
+                    += product_alias[j * nrows + i] * phi2_alias[j * ld + i];
             }
         }
 #if defined(HAVE_MAGMA) && defined(HAVE_OPENMP_OFFLOAD)
         // Move lrho back to the host
         MemorySpace::copy_to_host(lrho_alias, nrows, lrho);
+#else
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+            phi2_alias);
 #endif
     }
 

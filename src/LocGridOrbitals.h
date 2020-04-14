@@ -95,11 +95,6 @@ private:
     ////////////////////////////////////////////////////////
     // instance specific data
     ////////////////////////////////////////////////////////
-#ifdef HAVE_MAGMA
-    using memory_space_type = MemorySpace::Device;
-#else
-    using memory_space_type = MemorySpace::Host;
-#endif
     BlockVector<ORBDTYPE, memory_space_type> block_vector_;
 
     ////////////////////////////////////////////////////////
