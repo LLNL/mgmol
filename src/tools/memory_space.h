@@ -270,8 +270,8 @@ struct Memory<T, MemorySpace::Device>
         for (unsigned int i = 0; i < size; ++i)
             ptr[i] = val;
 #else
-        auto ptr_host = Memory<Host>::allocate<T>(size);
-        set(ptr_host, size, val);
+        auto ptr_host = Memory<T, Host>::allocate(size);
+        Memory<T, Host>::set(ptr_host, size, val);
         copy_to_dev(ptr_host, size, ptr);
 #endif
     }

@@ -113,7 +113,7 @@ void LAU_D::MPscal(const int len, const double scal, float* dptr)
 #else
         std::unique_ptr<float[], void (*)(float*)> dptr_alias(
             MemoryH<float>::allocate(len), MemoryH<float>::free);
-        MemorySpace::copy_to_host(dptr, dptr_alias);
+        MemorySpace::copy_to_host(dptr, len, dptr_alias.get());
 #endif
 
         MGMOL_PARALLEL_FOR(dptr_alias)
@@ -124,7 +124,7 @@ void LAU_D::MPscal(const int len, const double scal, float* dptr)
         }
 
 #ifndef HAVE_OPENMP_OFFLOAD
-        MemorySpace::copy_to_dev(dptr_alias, len, dptr);
+        MemorySpace::copy_to_dev(dptr_alias.get(), len, dptr);
 #endif
     }
 }
@@ -202,9 +202,9 @@ double LAU_D::MPdot(
         MemoryH<T1>::allocate(len), MemoryH<T1>::free);
     std::unique_ptr<T2[], void (*)(T2*)> yptr_host(
         MemoryH<T2>::allocate(len), MemoryH<T2>::free);
-    copy_to_host(xptr, xptr_host, len);
-    copy_to_host(yptr, yptr_host, len);
-    return LAU_H::MPdot(len, x_ptr_host.get(), y_ptr_host.get());
+    MemorySpace::copy_to_host(xptr, len, xptr_host.get());
+    MemorySpace::copy_to_host(yptr, len, yptr_host.get());
+    return LAU_H::MPdot(len, xptr_host.get(), yptr_host.get());
 #else
     double dot = 0.;
     // clang-format off
@@ -280,14 +280,14 @@ void LAU_D::MPaxpy(const int len, double scal, const T1* __restrict__ xptr,
     assert(magma_is_devptr(yptr) == 1);
 
 #ifndef HAVE_OPENMP_OFFLOAD
-    std::unique_ptr<T1[], void (*)(double*)> xptr_host(
+    std::unique_ptr<T1[], void (*)(T1*)> xptr_host(
         MemoryH<T1>::allocate(len), MemoryH<T1>::free);
-    std::unique_ptr<T2[], void (*)(float*)> yptr_host(
+    std::unique_ptr<T2[], void (*)(T2*)> yptr_host(
         MemoryH<T2>::allocate(len), MemoryH<T2>::free);
-    copy_to_host(xptr, xptr_host, len);
-    copy_to_host(yptr, yptr_host, len);
+    MemorySpace::copy_to_host(xptr, len, xptr_host.get());
+    MemorySpace::copy_to_host(yptr, len, yptr_host.get());
     LAU_H::MPaxpy(len, scal, xptr_host.get(), yptr_host.get());
-    copy_to_dev(yptr_host, yptr, len);
+    MemorySpace::copy_to_dev(yptr_host.get(), len, yptr);
 #else
     // clang-format off
 #pragma omp target teams distribute parallel for map(to: scal) is_device_ptr(xptr, yptr)
