@@ -52,6 +52,7 @@ struct Device
 template <typename T>
 void copy_to_dev(T const* const vec, unsigned int size, T* vec_dev)
 {
+    assert(magma_is_devptr(vec) == 0);
     assert(magma_is_devptr(vec_dev) == 1);
     int const increment   = 1;
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
@@ -98,6 +99,7 @@ template <typename T>
 void copy_to_host(T const* const vec_dev, unsigned int size, T* vec)
 {
     assert(magma_is_devptr(vec_dev) == 1);
+    assert(magma_is_devptr(vec) == 0);
     int const increment   = 1;
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
     magma_getvector(size, sizeof(T), vec_dev, increment, vec, increment,
@@ -227,6 +229,7 @@ struct Memory<T, MemorySpace::Device>
 
     static void free_host_view(T* ptr)
     {
+        assert(magma_is_devptr(ptr) == 0);
         delete ptr;
         ptr = nullptr;
     }
@@ -244,6 +247,7 @@ struct Memory<T, MemorySpace::Device>
     static void copy_view_to_host(T* vec_dev, unsigned int size, T*& vec)
     {
         assert(magma_is_devptr(vec_dev) == 1);
+        assert(magma_is_devptr(vec) == 0);
         int const increment   = 1;
         auto& magma_singleton = MagmaSingleton::get_magma_singleton();
         magma_getvector(size, sizeof(T), vec_dev, increment, vec, increment,
@@ -252,6 +256,7 @@ struct Memory<T, MemorySpace::Device>
 
     static void copy_view_to_dev(T const* vec, unsigned int size, T* vec_dev)
     {
+        assert(magma_is_devptr(vec) == 0);
         assert(magma_is_devptr(vec_dev) == 1);
         int const increment   = 1;
         auto& magma_singleton = MagmaSingleton::get_magma_singleton();
