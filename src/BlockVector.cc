@@ -37,6 +37,7 @@ struct BV<ScalarType, MemorySpace::Host>
 };
 
 // MemorySpace::Device
+#ifdef HAVE_MAGMA
 template <>
 struct BV<float, MemorySpace::Device>
 {
@@ -60,6 +61,7 @@ struct BV<double, MemorySpace::Device>
             numel, -1., s, increment, v, increment, magma_singleton.queue_);
     }
 };
+#endif
 }
 
 template <typename ScalarType, typename MemorySpaceType>
@@ -495,9 +497,17 @@ void BlockVector<ScalarType, MemorySpaceType>::setDataWithGhosts(
 
     data_wghosts->set_updated_boundaries(false);
 
-    for (int i = 0; i < (int)vect_.size(); i++)
+    for (unsigned int i = 0; i < vect_.size(); i++)
     {
-        data_wghosts->assign(i, vect_[i]);
+        ScalarType* ivect_host_view = MemorySpace::Memory<ScalarType,
+            MemorySpaceType>::allocate_host_view(allocated_size_storage_);
+        MemorySpace::Memory<ScalarType, MemorySpaceType>::copy_view_to_host(
+            vect_[i], allocated_size_storage_, ivect_host_view);
+
+        data_wghosts->assign(i, ivect_host_view);
+
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+            ivect_host_view);
     }
 
     set_data_tm_.stop();

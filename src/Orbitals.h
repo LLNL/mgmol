@@ -17,6 +17,12 @@ class Orbitals
     int iterative_index_;
 
 public:
+#ifdef HAVE_MAGMA
+    using memory_space_type = MemorySpace::Device;
+#else
+    using memory_space_type = MemorySpace::Host;
+#endif
+
     Orbitals() { iterative_index_ = -10; }
 
     Orbitals(const Orbitals& A, const bool copy_data)
