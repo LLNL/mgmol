@@ -246,7 +246,8 @@ void ExtendedGridOrbitals::initGauss(
     {
         ORBDTYPE* ipsi = psi(icolor);
         unsigned int const ipsi_size
-            = block_vector_.get_allocated_size_storage();
+            = numpt_;
+//block_vector_.get_allocated_size_storage();
         ORBDTYPE* ipsi_host_view = MemorySpace::Memory<ORBDTYPE,
             memory_space_type>::allocate_host_view(ipsi_size);
         MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
