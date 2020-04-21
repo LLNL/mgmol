@@ -7,4 +7,6 @@ module load hdf5
 module load boost
 module load cmake
 module load python
+module load cuda
+module load magma
 

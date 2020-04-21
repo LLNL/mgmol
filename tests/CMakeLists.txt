@@ -79,7 +79,7 @@ add_executable(testPower
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
                ${CMAKE_SOURCE_DIR}/src/tools/random.cc
-               ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
+               ${CMAKE_SOURCE_DIR}/tests/ut_serial_main.cc)
 add_executable(testPowerDistMatrix
                ${CMAKE_SOURCE_DIR}/tests/testPowerDistMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/Power.cc
@@ -107,7 +107,7 @@ add_executable(testAndersonMix
 add_executable(testSuperSampling
                ${CMAKE_SOURCE_DIR}/tests/testSuperSampling.cc
                ${CMAKE_SOURCE_DIR}/src/SuperSampling.cc
-               ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
+               ${CMAKE_SOURCE_DIR}/tests/ut_serial_main.cc)
 add_executable(testVariableSizeMatrix
                ${CMAKE_SOURCE_DIR}/tests/testVariableSizeMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/sparse_linear_algebra/VariableSizeMatrix.cc               

@@ -24,10 +24,11 @@ cd ${BUILD_DIR}
 
 cmake -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} \
       -DCMAKE_CXX_COMPILER=mpicxx \
-      -DMPIEXEC_EXECUTABLE="/sw/summit/xalt/1.1.3/bin/jsrun" \
+      -DMPIEXEC_EXECUTABLE="/sw/summit/xalt/1.2.0/bin/jsrun" \
       -DMPIEXEC_NUMPROCS_FLAG="-n" \
       -DMPIEXEC_PREFLAGS="-a1;-c7;-bpacked:2;-g1" \
       -DBLA_VENDOR=${BLA_VENDOR} \
+      -DMGMOL_WITH_MAGMA=ON \
       -DLAPACK_LIBRARIES=${OLCF_ESSL_ROOT}/lib64/libesslsmp.so \
       ..
 
