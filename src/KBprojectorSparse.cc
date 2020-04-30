@@ -125,15 +125,11 @@ void KBprojectorSparse::setNLindex(
 void KBprojectorSparse::registerPsi(const short iloc, const ORBDTYPE* const psi)
 {
     assert(iloc < subdivx_);
-    assert(iloc < (int)nlindex_.size());
+    assert(iloc < static_cast<int>(nlindex_.size()));
 
     const short thread = omp_get_thread_num();
     const int sizenl   = size_nl_[iloc];
-    // if( work_nlindex_[thread].size() < sizenl )
-    //    work_nlindex_[thread].resize(sizenl);
     const std::vector<int>& rnlindex(nlindex_[iloc]);
-    // cout<<"thread="<<thread<<endl;
-    // cout<<"work_nlindex_.size()="<<work_nlindex_.size()<<endl;
     assert(work_nlindex_.size()
            == static_cast<unsigned int>(omp_get_max_threads()));
     assert(static_cast<unsigned int>(thread) < work_nlindex_.size());
