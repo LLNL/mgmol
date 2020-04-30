@@ -328,10 +328,9 @@ void ExtendedGridOrbitals::initFourier()
         const double kk[3] = { dk[0] * (double)kvector[0],
             dk[1] * (double)kvector[1], dk[2] * (double)kvector[2] };
 
-        ORBDTYPE* ipsi = psi(icolor);
-        unsigned int const ipsi_size
-            = block_vector_.get_allocated_size_storage();
-        ORBDTYPE* ipsi_host_view = MemorySpace::Memory<ORBDTYPE,
+        ORBDTYPE* ipsi               = psi(icolor);
+        unsigned int const ipsi_size = numpt_;
+        ORBDTYPE* ipsi_host_view     = MemorySpace::Memory<ORBDTYPE,
             memory_space_type>::allocate_host_view(ipsi_size);
         MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
             ipsi, ipsi_size, ipsi_host_view);
