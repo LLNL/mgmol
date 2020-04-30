@@ -163,7 +163,15 @@ void KBPsiMatrixSparse::computeKBpsi(Ions& ions, T& orbitals,
     }
     else
     {
-        ppsi = orbitals.getPsi(first_color);
+        unsigned int ppsi_size    = 0;
+        ORBDTYPE* psi_first_color = orbitals.getPsi(first_color);
+        ppsi_size                 = orbitals.getNumpt();
+        ppsi                      = MemorySpace::Memory<ORBDTYPE,
+            typename T::memory_space_type>::allocate_host_view(ppsi_size);
+
+        MemorySpace::Memory<ORBDTYPE,
+            typename T::memory_space_type>::copy_view_to_host(psi_first_color,
+            ppsi_size, ppsi);
     }
 
     // Loop over functions, subdomains and ions
@@ -190,7 +198,15 @@ void KBPsiMatrixSparse::computeKBpsi(Ions& ions, T& orbitals,
         }
     }
 
-    if (flag) delete[] ppsi;
+    if (flag)
+    {
+        delete[] ppsi;
+    }
+    else
+    {
+        MemorySpace::Memory<ORBDTYPE,
+            typename T::memory_space_type>::free_host_view(ppsi);
+    }
 
     compute_kbpsi_tm_.stop();
 }

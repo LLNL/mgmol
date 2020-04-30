@@ -244,11 +244,9 @@ void ExtendedGridOrbitals::initGauss(
     const double rmax = 6. * rc;
     for (int icolor = 0; icolor < numst_; icolor++)
     {
-        ORBDTYPE* ipsi = psi(icolor);
-        unsigned int const ipsi_size
-            = numpt_;
-//block_vector_.get_allocated_size_storage();
-        ORBDTYPE* ipsi_host_view = MemorySpace::Memory<ORBDTYPE,
+        ORBDTYPE* ipsi               = psi(icolor);
+        unsigned int const ipsi_size = numpt_;
+        ORBDTYPE* ipsi_host_view     = MemorySpace::Memory<ORBDTYPE,
             memory_space_type>::allocate_host_view(ipsi_size);
         MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
             ipsi, ipsi_size, ipsi_host_view);
@@ -875,8 +873,15 @@ void ExtendedGridOrbitals::computeMatB(
     ORBDTYPE* work = new ORBDTYPE[lda_ * bcolor];
     memset(work, 0, lda_ * bcolor * sizeof(ORBDTYPE));
 
-    const ORBDTYPE* const orbitals_psi
+    ORBDTYPE* const orbitals_psi
         = (numst_ > 0) ? orbitals.block_vector_.vect(0) : nullptr;
+    const unsigned int orbitals_psi_size
+        = orbitals.block_vector_.get_allocated_size_storage();
+    ORBDTYPE* orbitals_psi_host_view
+        = MemorySpace::Memory<ORBDTYPE, memory_space_type>::allocate_host_view(
+            orbitals_psi_size);
+    MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+        orbitals_psi, orbitals_psi_size, orbitals_psi_host_view);
 
     setDataWithGhosts();
     trade_boundaries();
@@ -899,12 +904,14 @@ void ExtendedGridOrbitals::computeMatB(
 
             // calculate nf columns of ssiloc
             MPgemmTN(numst_, nf, loc_numpt_, 1.,
-                orbitals_psi + iloc * loc_numpt_, lda_,
+                orbitals_psi_host_view + iloc * loc_numpt_, lda_,
                 work + iloc * loc_numpt_, lda_, 0., ssiloc + icolor * numst_,
                 numst_);
         }
     }
 
+    MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+        orbitals_psi_host_view);
     delete[] work;
 
     const double vel = grid_.vel();

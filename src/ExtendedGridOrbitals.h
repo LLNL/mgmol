@@ -184,6 +184,7 @@ public:
     int numst(void) const { return numst_; }
     int getLda() const { return lda_; }
     int getLocNumpt() const { return loc_numpt_; }
+    int getNumpt() const { return numpt_; }
 
     bool isCompatibleWith(const ExtendedGridOrbitals&) const { return true; }
 
