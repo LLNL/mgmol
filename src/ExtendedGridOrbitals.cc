@@ -1633,7 +1633,7 @@ void ExtendedGridOrbitals::addDotWithNcol2Matrix(
         ORBDTYPE* phi_host_view     = MemorySpace::Memory<ORBDTYPE,
             memory_space_type>::allocate_host_view(phi_size);
         MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
-            getPsi(0, iloc), phi_size, phi_host_view);
+            Apsi.getPsi(0, iloc), phi_size, phi_host_view);
 
         // TODO this can be done on the GPU
         MPgemmTN(numst_, numst_, loc_numpt_, vel,
