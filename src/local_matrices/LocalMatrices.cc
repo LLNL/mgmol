@@ -166,6 +166,9 @@ void LocalMatrices<T>::gemm(const int iloc, const int ma, const double* const a,
     T* const c = ptr_matrices_[iloc];
     assert(c != nullptr);
 
+    MemorySpace::assert_is_host_ptr(a);
+    MemorySpace::assert_is_host_ptr(b);
+    MemorySpace::assert_is_host_ptr(c);
     LinearAlgebraUtils<MemorySpace::Host>::MPgemm(
         't', 'n', m_, n_, ma, 1., a, lda, b, ldb, 0., c, m_);
 }
@@ -182,6 +185,9 @@ void LocalMatrices<T>::gemm(const int iloc, const int ma, const float* const a,
     T* const c = ptr_matrices_[iloc];
     assert(c != nullptr);
 
+    MemorySpace::assert_is_host_ptr(a);
+    MemorySpace::assert_is_host_ptr(b);
+    MemorySpace::assert_is_host_ptr(c);
     LinearAlgebraUtils<MemorySpace::Host>::MPgemm(
         't', 'n', m_, n_, ma, 1., a, lda, b, ldb, 0., c, m_);
 }
@@ -210,6 +216,9 @@ void LocalMatrices<T>::gemm(const char transa, const char transb,
         assert(c != nullptr);
 
         // do matrix multiplication
+        MemorySpace::assert_is_host_ptr(amat);
+        MemorySpace::assert_is_host_ptr(bmat);
+        MemorySpace::assert_is_host_ptr(c);
         LinearAlgebraUtils<MemorySpace::Host>::MPgemm(transa, transb, m_, n_,
             nca, alpha, amat, lda, bmat, ldb, beta, c, m_);
     }
