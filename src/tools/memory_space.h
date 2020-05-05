@@ -79,7 +79,7 @@ void assert_is_dev_ptr(T*)
 }
 
 template <typename T>
-void assert_is_same_memory_space(T* ptr_1, T* ptr_2)
+void assert_is_same_memory_space(T*, T*)
 {
 }
 #endif
