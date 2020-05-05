@@ -397,7 +397,13 @@ void ExtendedGridOrbitals::multiply_by_matrix(
 
     assert(subdivx_ > 0);
 
-    memset(product, 0, ldp * numst_ * sizeof(ORBDTYPE));
+    unsigned int const product_size = numst_ * ldp;
+    ORBDTYPE* product_host_view
+        = MemorySpace::Memory<ORBDTYPE, memory_space_type>::allocate_host_view(
+            product_size);
+    MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+        product, product_size, product_host_view);
+    memset(product_host_view, 0, ldp * numst_ * sizeof(ORBDTYPE));
 
     // loop over subdomains
     for (short iloc = 0; iloc < subdivx_; iloc++)
@@ -412,11 +418,15 @@ void ExtendedGridOrbitals::multiply_by_matrix(
         // Compute product for subdomain iloc
         LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(loc_numpt_, numst_,
             numst_, 1., phi_host_view, lda_, matrix, numst_, 0.,
-            product + iloc * loc_numpt_, ldp);
+            product_host_view + iloc * loc_numpt_, ldp);
 
         MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
             phi_host_view);
     }
+    MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_dev(
+        product_host_view, product_size, product);
+    MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+        product_host_view);
 
     prod_matrix_tm_.stop();
 }
@@ -426,11 +436,18 @@ void ExtendedGridOrbitals::multiplyByMatrix(
     const int ldp) const
 {
     prod_matrix_tm_.start();
+    unsigned int const product_size = numst_ * ldp;
+    ORBDTYPE* product_host_view
+        = MemorySpace::Memory<ORBDTYPE, memory_space_type>::allocate_host_view(
+            product_size);
+    MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+        product, product_size, product_host_view);
 
     // loop over subdomains
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
-        const MATDTYPE* const mat   = matrix.getSubMatrix(iloc);
+        const MATDTYPE* const mat = matrix.getSubMatrix(iloc);
+
         unsigned int const phi_size = loc_numpt_ * numst_;
         ORBDTYPE* phi_host_view     = MemorySpace::Memory<ORBDTYPE,
             memory_space_type>::allocate_host_view(phi_size);
@@ -441,11 +458,13 @@ void ExtendedGridOrbitals::multiplyByMatrix(
         // Compute product for subdomain iloc
         LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(loc_numpt_, numst_,
             numst_, 1., phi_host_view, lda_, mat, numst_, 0.,
-            product + iloc * loc_numpt_, ldp);
-
-        MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
-            phi_host_view);
+            product_host_view + iloc * loc_numpt_, ldp);
     }
+
+    MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_dev(
+        product_host_view, product_size, product);
+    MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+        product_host_view);
 
     prod_matrix_tm_.stop();
 }
@@ -1010,6 +1029,19 @@ void ExtendedGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
     const int lda = transpose ? ld : lda_;
     const int ldb = transpose ? lda_ : ld;
 
+    unsigned int const a_size = loc_numpt_ * numpt_ * lda;
+    ORBDTYPE* a_host_view
+        = MemorySpace::Memory<ORBDTYPE, memory_space_type>::allocate_host_view(
+            a_size);
+    MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+        const_cast<ORBDTYPE*>(a), a_size, a_host_view);
+    unsigned int const b_size = loc_numpt_ * numpt_ * ldb;
+    ORBDTYPE* b_host_view
+        = MemorySpace::Memory<ORBDTYPE, memory_space_type>::allocate_host_view(
+            b_size);
+    MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+        const_cast<ORBDTYPE*>(b), b_size, b_host_view);
+
 #ifdef USE_MP
     // use temporary float data for matrix ss
     LocalMatrices<ORBDTYPE> ssf(ss.subdiv(), ss.m(), ss.n());
@@ -1018,9 +1050,13 @@ void ExtendedGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
 #endif
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
-        ssf.gemm(iloc, loc_numpt_, a + iloc * loc_numpt_, lda,
-            b + iloc * loc_numpt_, ldb);
+        ssf.gemm(iloc, loc_numpt_, a_host_view + iloc * loc_numpt_, lda,
+            b_host_view + iloc * loc_numpt_, ldb);
     }
+    MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+        a_host_view);
+    MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+        b_host_view);
 #ifdef USE_MP
     ss.copy(ssf);
 #endif
