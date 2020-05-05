@@ -302,6 +302,7 @@ void MGmol<T>::computeHnlPhiAndAdd2HPhi(
     const short ncolors = gid[0].size();
 
     {
+        using memory_space_type = typename T::memory_space_type;
         // compute Hnl*phi
         if (ct.Mehrstellen())
         {
@@ -326,9 +327,18 @@ void MGmol<T>::computeHnlPhiAndAdd2HPhi(
                 hamiltonian_->lapOper()->rhs(gfv.func(icolor), hnl);
 
                 // Add the contribution of the non-local potential to H phi
-                ORBDTYPE* hpsi = hphi.getPsi(icolor);
+                ORBDTYPE* hpsi           = hphi.getPsi(icolor);
+                ORBDTYPE* hpsi_host_view = MemorySpace::Memory<ORBDTYPE,
+                    memory_space_type>::allocate_host_view(numpt);
+                MemorySpace::Memory<ORBDTYPE,
+                    memory_space_type>::copy_view_to_host(hpsi, numpt,
+                    hpsi_host_view);
+
                 LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
-                    numpt, 1., hnl, hpsi);
+                    numpt, 1., hnl, hpsi_host_view);
+
+                MemorySpace::Memory<ORBDTYPE,
+                    memory_space_type>::free_host_view(hpsi_host_view);
             }
             delete[] hnl;
 
@@ -344,10 +354,20 @@ void MGmol<T>::computeHnlPhiAndAdd2HPhi(
                 for (short icolor = 0; icolor < ncolors; icolor++)
                 {
                     get_vnlpsi(ions, gid, icolor, kbpsi, hnl);
-                    LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
-                        numpt, 1., hnl, hphi.getPsi(icolor));
-                }
 
+                    ORBDTYPE* hpsi           = hphi.getPsi(icolor);
+                    ORBDTYPE* hpsi_host_view = MemorySpace::Memory<ORBDTYPE,
+                        memory_space_type>::allocate_host_view(numpt);
+                    MemorySpace::Memory<ORBDTYPE,
+                        memory_space_type>::copy_view_to_host(hpsi, numpt,
+                        hpsi_host_view);
+
+                    LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
+                        numpt, 1., hnl, hpsi_host_view);
+
+                    MemorySpace::Memory<ORBDTYPE,
+                        memory_space_type>::free_host_view(hpsi_host_view);
+                }
                 delete[] hnl;
             }
         }

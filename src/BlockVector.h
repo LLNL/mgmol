@@ -138,7 +138,7 @@ public:
 
     void assign(const int color, const ScalarType* const src, const int n = 1)
     {
-        assert((color + n - 1) < (int)vect_.size());
+        assert((color + n - 1) < static_cast<int>(vect_.size()));
         int ione   = 1;
         int mysize = n * ld_;
         Tcopy(&mysize, src, &ione, vect_[color], &ione);
@@ -146,7 +146,8 @@ public:
 
     void assign(const ScalarType* const src)
     {
-        memcpy(storage_, src, size_storage_ * sizeof(ScalarType));
+        MemorySpace::Memory<ScalarType, MemorySpaceType>::copy(
+            src, size_storage_, storage_);
     }
 
     /*
@@ -164,10 +165,10 @@ public:
         const int color, const short iloc, const ScalarType* const src)
     {
         assert(color >= 0);
-        assert(color < (int)vect_.size());
+        assert(color < static_cast<int>(vect_.size()));
         assert(iloc < subdivx_);
-        memcpy(vect_[color] + iloc * locnumel_, src,
-            locnumel_ * sizeof(ScalarType));
+        MemorySpace::Memory<ScalarType, MemorySpaceType>::copy(
+            src, locnumel_, vect_[color] + iloc * locnumel_);
     }
 
     void copyDataFrom(const BlockVector& src)
@@ -175,7 +176,8 @@ public:
         assert(src.size_storage_ == size_storage_);
         assert(storage_ != nullptr);
         assert(src.storage_ != nullptr);
-        memcpy(storage_, src.storage_, size_storage_ * sizeof(ScalarType));
+        MemorySpace::Memory<ScalarType, MemorySpaceType>::copy(
+            src.storage_, size_storage_, storage_);
     }
 
     pb::GridFunc<ScalarType>& getVectorWithGhosts(const int i)
@@ -189,6 +191,10 @@ public:
     void setStorage(ScalarType* new_storage)
     {
         assert(new_storage != 0 || vect_.size() == 0);
+        if (std::is_same<MemorySpaceType, MemorySpace::Host>::value)
+            MemorySpace::assert_is_host_ptr(new_storage);
+        else
+            MemorySpace::assert_is_dev_ptr(new_storage);
 
         storage_ = new_storage;
         for (unsigned int i = 0; i < vect_.size(); i++)

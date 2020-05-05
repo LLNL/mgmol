@@ -1169,6 +1169,9 @@ void MGmol<T>::computeResidualUsingHPhi(
         // compute B*psi and store in tmp
         ORBDTYPE* old_storage = nullptr;
         std::vector<ORBDTYPE> tmp;
+#ifdef HAVE_MAGMA
+        ORBDTYPE* tmp_dev;
+#endif
         if (applyB)
         {
             const int ld = psi.getLda();
@@ -1182,7 +1185,15 @@ void MGmol<T>::computeResidualUsingHPhi(
 
             // psi points to tmp temporarily
             old_storage = psi.getPsi(0);
+#ifdef HAVE_MAGMA
+            tmp_dev
+                = MemorySpace::Memory<ORBDTYPE, MemorySpace::Device>::allocate(
+                    ld * ncolors);
+            MemorySpace::copy_to_dev(tmp, tmp_dev);
+            psi.set_storage(tmp_dev);
+#else
             psi.set_storage(&tmp[0]);
+#endif
         }
 
         // get B*phi*theta and store it in res in [Ry]
@@ -1192,19 +1203,14 @@ void MGmol<T>::computeResidualUsingHPhi(
         if (applyB)
         {
             psi.set_storage(old_storage);
+#ifdef HAVE_MAGMA
+            MemorySpace::Memory<ORBDTYPE, MemorySpace::Device>::free(tmp_dev);
+#endif
         }
 
         // res = (B*phi*theta - H*phi) in [Ry]
         res.axpy(-1., hphi);
     }
-
-#if 0
-    dist_matrix::DistMatrix<DISTMATDTYPE> RPsi(psi.product(res));
-    if( onpe0 )
-        os_<<" matrix R**T * Psi\n";
-    RPsi.print(os_,0,0,5,5);
-    if(onpe0)os_<<"trace = "<<RPsi.trace()<<endl;;
-#endif
 
     get_res_tm_.stop();
 }

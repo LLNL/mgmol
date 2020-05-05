@@ -523,7 +523,9 @@ void BlockVector<ScalarType, MemorySpaceType>::printTimers(std::ostream& os)
 template <typename ScalarType, typename MemorySpaceType>
 ScalarType BlockVector<ScalarType, MemorySpaceType>::maxAbsValue() const
 {
-    int ione        = 1;
+    int ione = 1;
+    // TODO
+    MemorySpace::assert_is_host_ptr(storage_);
     int imax        = IDAMAX(&size_storage_, storage_, &ione);
     ScalarType maxv = fabs(storage_[imax - 1]);
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
