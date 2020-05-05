@@ -53,11 +53,15 @@ void Taxpy(const int len, float scal, const float* const xptr, float* yptr);
 inline void Tcopy(const int* const len, const double* const x,
     const int* const incx, double* y, const int* const incy)
 {
+    MemorySpace::assert_is_host_ptr(x);
+    MemorySpace::assert_is_host_ptr(x);
     DCOPY(len, x, incx, y, incy);
 }
 inline void Tcopy(const int* const len, const float* const x,
     const int* const incx, float* y, const int* const incy)
 {
+    MemorySpace::assert_is_host_ptr(x);
+    MemorySpace::assert_is_host_ptr(x);
     SCOPY(len, x, incx, y, incy);
 }
 
