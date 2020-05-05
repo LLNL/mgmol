@@ -45,6 +45,45 @@ struct Device
 };
 
 //---------------------------------------------------------------------------//
+// Assert pointer is on the device/host
+//---------------------------------------------------------------------------//
+#ifdef HAVE_MAGMA
+template <typename T>
+void assert_is_host_ptr(T* ptr)
+{
+    assert(magma_is_devptr(ptr) == 0);
+}
+
+template <typename T>
+void assert_is_dev_ptr(T* ptr)
+{
+    assert(magma_is_devptr(ptr) == 1);
+}
+
+template <typename T>
+void assert_is_same_memory_space(T* ptr_1, T* ptr_2)
+{
+    assert(magma_is_devptr(ptr_1) == magma_is_devptr(ptr_2));
+}
+#else
+template <typename T>
+void assert_is_host_ptr(T*)
+{
+}
+
+template <typename T>
+void assert_is_dev_ptr(T*)
+{
+    assert(false);
+}
+
+template <typename T>
+void assert_is_same_memory_space(T*, T*)
+{
+}
+#endif
+
+//---------------------------------------------------------------------------//
 // Copy from the host/device to the device/host
 //---------------------------------------------------------------------------//
 
@@ -52,8 +91,8 @@ struct Device
 template <typename T>
 void copy_to_dev(T const* const vec, unsigned int size, T* vec_dev)
 {
-    assert(magma_is_devptr(vec) == 0);
-    assert(magma_is_devptr(vec_dev) == 1);
+    assert_is_host_ptr(vec);
+    assert_is_dev_ptr(vec_dev);
     int const increment   = 1;
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
     magma_setvector(size, sizeof(T), vec, increment, vec_dev, increment,
@@ -98,8 +137,8 @@ void copy_to_dev(T const* const vec, unsigned int size,
 template <typename T>
 void copy_to_host(T const* const vec_dev, unsigned int size, T* vec)
 {
-    assert(magma_is_devptr(vec_dev) == 1);
-    assert(magma_is_devptr(vec) == 0);
+    assert_is_dev_ptr(vec_dev);
+    assert_is_host_ptr(vec);
     int const increment   = 1;
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
     magma_getvector(size, sizeof(T), vec_dev, increment, vec, increment,
@@ -222,22 +261,22 @@ struct Memory<T, MemorySpace::Device>
 
     static void free(T* ptr_dev)
     {
-        assert(magma_is_devptr(ptr_dev) == 1);
+        assert_is_dev_ptr(ptr_dev);
         magma_free(ptr_dev);
         ptr_dev = nullptr;
     }
 
     static void free_host_view(T* ptr)
     {
-        assert(magma_is_devptr(ptr) == 0);
+        assert_is_host_ptr(ptr);
         delete ptr;
         ptr = nullptr;
     }
 
     static void copy(T const* in, unsigned int size, T* out)
     {
-        assert(magma_is_devptr(in) == 1);
-        assert(magma_is_devptr(out) == 1);
+        assert_is_dev_ptr(in);
+        assert_is_dev_ptr(out);
         int const increment   = 1;
         auto& magma_singleton = MagmaSingleton::get_magma_singleton();
         magma_copyvector(size, sizeof(T), in, increment, out, increment,
@@ -246,8 +285,8 @@ struct Memory<T, MemorySpace::Device>
 
     static void copy_view_to_host(T* vec_dev, unsigned int size, T*& vec)
     {
-        assert(magma_is_devptr(vec_dev) == 1);
-        assert(magma_is_devptr(vec) == 0);
+        assert_is_dev_ptr(vec_dev);
+        assert_is_host_ptr(vec);
         int const increment   = 1;
         auto& magma_singleton = MagmaSingleton::get_magma_singleton();
         magma_getvector(size, sizeof(T), vec_dev, increment, vec, increment,
@@ -256,8 +295,8 @@ struct Memory<T, MemorySpace::Device>
 
     static void copy_view_to_dev(T const* vec, unsigned int size, T* vec_dev)
     {
-        assert(magma_is_devptr(vec) == 0);
-        assert(magma_is_devptr(vec_dev) == 1);
+        assert_is_host_ptr(vec);
+        assert_is_dev_ptr(vec_dev);
         int const increment   = 1;
         auto& magma_singleton = MagmaSingleton::get_magma_singleton();
         magma_setvector(size, sizeof(T), vec, increment, vec_dev, increment,
@@ -266,7 +305,7 @@ struct Memory<T, MemorySpace::Device>
 
     static void set(T* ptr, unsigned int size, int val)
     {
-        assert(magma_is_devptr(ptr) == 1);
+        assert_is_dev_ptr(ptr);
         // Cannot directly use cudaMemset and MAGMA does not have an equivalent
         // function. If we have OpenMP with offloading, we directly set the
         // value. Otherwise, we copy a vector from the host.
