@@ -299,7 +299,7 @@ void PEenv::task2xyz()
 
 void PEenv::setup_my_neighbors()
 {
-    assert(cart_comm_ != nullptr);
+    assert(cart_comm_ != MPI_COMM_NULL);
 
     if (color_ == 0)
     {
@@ -624,7 +624,7 @@ void PEenv::split_comm(const int nx, const int ny, const int nz, const int bias)
     {
         if (comm_active_ != comm_)
         {
-            assert(comm_active_ != nullptr);
+            assert(comm_active_ != MPI_COMM_NULL);
             MPI_Comm_free(&comm_active_);
         }
         for (int i = 0; i < 3; i++)
