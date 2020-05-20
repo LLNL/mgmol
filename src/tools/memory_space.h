@@ -211,7 +211,7 @@ struct Memory<T, MemorySpace::Host>
         return reinterpret_cast<T*>(std::malloc(size * sizeof(T)));
     }
 
-    static T* allocate_host_view(unsigned int size) { return nullptr; }
+    static T* allocate_host_view(unsigned int /*size*/) { return nullptr; }
 
     static void free(T* ptr)
     {
