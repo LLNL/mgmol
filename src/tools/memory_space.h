@@ -16,6 +16,7 @@
 
 #include <magma_singleton.h>
 
+#include <cassert>
 #include <cstring>
 #include <iostream>
 #include <memory>
