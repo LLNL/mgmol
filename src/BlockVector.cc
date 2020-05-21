@@ -497,12 +497,15 @@ void BlockVector<ScalarType, MemorySpaceType>::setDataWithGhosts(
 
     data_wghosts->set_updated_boundaries(false);
 
+    // get number of mesh points
+    const int numpts = mygrid_.size();
+
     for (unsigned int i = 0; i < vect_.size(); i++)
     {
         ScalarType* ivect_host_view = MemorySpace::Memory<ScalarType,
-            MemorySpaceType>::allocate_host_view(allocated_size_storage_);
+            MemorySpaceType>::allocate_host_view(numpts);
         MemorySpace::Memory<ScalarType, MemorySpaceType>::copy_view_to_host(
-            vect_[i], allocated_size_storage_, ivect_host_view);
+            vect_[i], numpts, ivect_host_view);
 
         data_wghosts->assign(i, ivect_host_view);
 
