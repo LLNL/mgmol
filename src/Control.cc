@@ -247,6 +247,24 @@ void Control::print(std::ostream& os)
         os << " Density matrix computation algorithm = "
            << " Diagonalization " << std::endl;
     }
+    else if (DMEigensolver() == DMEigensolverType::Chebyshev)
+    {
+        os << " Density matrix computation algorithm = "
+           << " Chebyshev approximation " << std::endl;
+        if (dm_approx_ndigits)
+        {
+            os << " Density matrix approximation precision digits = "
+               << dm_approx_ndigits << std::endl;
+        }
+        else
+        {
+            os << " Density matrix approximation order = " << dm_approx_order
+               << std::endl;
+        }
+        os << " Density matrix approximation: maxits for computing "
+              "approximation interval = "
+           << dm_approx_power_maxits << std::endl;
+    }
     os << " Load balancing alpha for computing bias = " << load_balancing_alpha
        << std::endl;
     os << " Load balancing parameter for damping bias updates = "
@@ -1843,6 +1861,17 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         str            = vm["DensityMatrix.algo"].as<std::string>();
         if (str.compare("Diagonalization") == 0)
             dm_algo_ = 0;
+        else if (str.compare("Chebyshev") == 0)
+        {
+            dm_algo_ = 1;
+            // options for Chebyshev
+            dm_approx_order
+                = vm["DensityMatrix.approximation_order"].as<short>();
+            dm_approx_ndigits
+                = vm["DensityMatrix.approximation_ndigits"].as<short>();
+            dm_approx_power_maxits
+                = vm["DensityMatrix.approximation_power_maxits"].as<short>();
+        }
         else
             dm_algo_ = 2;
 
@@ -1971,6 +2000,28 @@ int Control::checkOptions()
         (*MPIdata::sout) << "ERROR: must choose either extrapolation or "
                             "computation of centers."
                          << std::endl;
+    }
+    if (dm_approx_order < 0 && DMEigensolver() == DMEigensolverType::Chebyshev)
+    {
+        (*MPIdata::sout) << "ERROR: Order for Chebyshev approximation for the "
+                            "density matrix must be > 0"
+                         << std::endl;
+    }
+    if (dm_approx_ndigits < 1
+        && DMEigensolver() == DMEigensolverType::Chebyshev)
+    {
+        (*MPIdata::sout)
+            << "ERROR: Number of digits of precision for Chebyshev "
+               "approximation for the density matrix must be > 0"
+            << std::endl;
+    }
+    if (dm_approx_power_maxits < 1
+        && DMEigensolver() == DMEigensolverType::Chebyshev)
+    {
+        (*MPIdata::sout)
+            << "ERROR: Max. number of iterations for computing interval for "
+               "Chebyshev approximation for the density matrix must be > 0"
+            << std::endl;
     }
     return 0;
 }

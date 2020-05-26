@@ -141,6 +141,8 @@ set(SOURCES
  SuperSampling.cc
  DavidsonSolver.cc
  magma_singleton.cc
+ ChebyshevApproximation.cc
+ ChebyshevApproximationInterface.cc
 )
 
 add_library(mgmol_src ${SOURCES})

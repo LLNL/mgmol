@@ -16,6 +16,7 @@
 
 /* Currently only needed functions in ProjectedMatrices.h class. Must be
  * cleaned-up later */
+#include "ChebyshevApproximationFunction.h"
 #include "DistMatrix.h"
 #include "MGmol_MPI.h"
 #include "SquareLocalMatrices.h"
@@ -33,7 +34,7 @@ class HDFrestart;
 /* tolerance for matrix elements */
 const double tol_matrix_elements = 1.e-14;
 
-class ProjectedMatricesInterface
+class ProjectedMatricesInterface : public ChebyshevApproximationFunction
 {
 private:
     int iterative_index_h_;
@@ -50,13 +51,80 @@ protected:
     double mu_;
     int nel_;
 
+    // pointer to member function
+    std::vector<double> (ProjectedMatricesInterface::*funcptr_)(
+        const std::vector<double>& nodes);
+
 public:
     ProjectedMatricesInterface()
-        : iterative_index_h_(-1),
+        : ChebyshevApproximationFunction(),
+          iterative_index_h_(-1),
           subdiv_(-1),
           chromatic_number_(-1),
           width_(0.),
           nel_(0.){};
+
+    // define Fermi distribution function to be approximated by Chebyshev
+    // approximation f(x) = 1 / (1 + Exp[(E-mu)/kbT])
+    std::vector<double> chebfunDM(const std::vector<double>& nodes)
+    {
+        assert((int)nodes.size() > 0);
+
+        const int n = (int)nodes.size();
+        std::vector<double> fvals(n, 0.);
+        // compute fermi distribution function
+        fermi_distribution(mu_, n, width_, nodes, fvals);
+
+        return fvals;
+    }
+
+    // define entropy function to be approximated by Chebyshev approximation
+    // s(f) = -f ln(f) - (1-f) ln(1-f). Assumes primary variables are the
+    // occupations
+    std::vector<double> chebfunEntropyFromOcc(const std::vector<double>& nodes)
+    {
+        assert((int)nodes.size() > 0);
+
+        const int n = (int)nodes.size();
+        std::vector<double> fvals(n, 0.);
+        // compute entropy function
+        MGmol_MPI& mmpi           = *(MGmol_MPI::instance());
+        double orbital_occupation = mmpi.nspin() > 1 ? 1. : 2.;
+
+        // evaluate entropy function assuming primary variables given are the
+        // occupations
+        entropy_eval(nodes, fvals, orbital_occupation);
+
+        return fvals;
+    }
+
+    // define entropy function to be approximated by Chebyshev approximation
+    // s(f) = -f ln(f) - (1-f) ln(1-f). Assumes primary variables are the
+    // energies
+    std::vector<double> chebfunEntropyFromEnergies(
+        const std::vector<double>& nodes)
+    {
+        assert((int)nodes.size() > 0);
+
+        const int n = (int)nodes.size();
+        std::vector<double> fvals(n, 0.);
+        // compute entropy function
+        MGmol_MPI& mmpi           = *(MGmol_MPI::instance());
+        double orbital_occupation = mmpi.nspin() > 1 ? 1. : 2.;
+
+        // evaluate the entropy function assuming the primary variables given
+        // are the energies or eigenvalues of H. function-of-a-function approach
+        // for computing entropy.
+        entropy_evalFromEnergies(
+            mu_, n, width_, nodes, fvals, orbital_occupation);
+
+        return fvals;
+    }
+
+    std::vector<double> eval(const std::vector<double>& nodes)
+    {
+        return (this->*(funcptr_))(nodes);
+    }
 
     virtual ~ProjectedMatricesInterface(){};
 
@@ -208,6 +276,12 @@ public:
         exitWithErrorMessage("writeDM_hdf5");
 
         return 0;
+    }
+    virtual void updateDMwithChebApproximation(const int iterative_index)
+    {
+        (void)iterative_index;
+
+        exitWithErrorMessage("updateDMwithChebApproximation");
     }
     virtual void updateDM(const int iterative_index)
     {

@@ -68,9 +68,7 @@ enum class DMNonLinearSolverType
 enum class DMEigensolverType
 {
     Eigensolver,
-#ifdef __MGMOL_CHEBYSHEV__
     Chebyshev,
-#endif
     SP2,
     UNDEFINED
 };
@@ -680,6 +678,8 @@ public:
         {
             case 0:
                 return DMEigensolverType::Eigensolver;
+            case 1:
+                return DMEigensolverType::Chebyshev;
             case 2:
                 return DMEigensolverType::SP2;
             default:

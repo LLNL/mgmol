@@ -10,6 +10,7 @@
 #ifndef MGMOL_PROJECTED_MATRICES_H
 #define MGMOL_PROJECTED_MATRICES_H
 
+#include "ChebyshevApproximation.h"
 #include "DensityMatrix.h"
 #include "DistMatrix.h"
 #include "DistMatrix2SquareLocalMatrices.h"
@@ -22,7 +23,6 @@
 #include "Timer.h"
 #include "hdf5.h"
 #include "tools.h"
-
 #include <iostream>
 
 class HDFrestart;
@@ -56,6 +56,7 @@ class ProjectedMatrices : public ProjectedMatricesInterface
     static Timer update_submatX_tm_;
     static Timer eigsum_tm_;
     static Timer consolidate_H_tm_;
+    static Timer compute_entropy_tm_;
 
     ProjectedMatrices& operator=(const ProjectedMatrices& src);
     ProjectedMatrices(const ProjectedMatrices& pm);
@@ -84,6 +85,8 @@ class ProjectedMatrices : public ProjectedMatricesInterface
     {
         return computeChemicalPotentialAndOccupations(width_, nel_, dim_);
     }
+    double computeChemicalPotentialAndDMwithChebyshev(const int order,
+        const double emin, const double emax, const int iterative_index);
 
 protected:
     // indexes corresponding to valid function in each subdomain
@@ -101,6 +104,7 @@ protected:
     // work matrix for tmp usage
     std::unique_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> work_;
 
+    std::vector<double> cheb_interval_;
     void printTheta(std::ostream& os) const
     {
         if (onpe0) os << " Matrix Theta" << std::endl;
@@ -323,6 +327,7 @@ public:
 
     double computeEntropy(const double kbt);
     double computeEntropy() override;
+    double computeEntropyWithCheb(const double kbt);
     double checkCond(const double tol, const bool flag = true) override;
     int writeDM_hdf5(HDFrestart& h5f_file) override;
     int read_dm_hdf5(hid_t file_id) override;
@@ -332,6 +337,7 @@ public:
     void updateDMwithSP2(const int iterative_index);
     void updateDMwithEigenstatesAndRotate(
         const int iterative_index, dist_matrix::DistMatrix<DISTMATDTYPE>& zz);
+    void updateDMwithChebApproximation(const int iterative_index);
     double computeChemicalPotentialAndOccupations(
         const double width, const int nel, const int max_numst)
     {
@@ -444,6 +450,8 @@ public:
     {
         dm_->setMatrix(mat, orbitals_index);
     }
+    void updateDMwithChebApprox(
+        const double occ_width, const int nel, const int iterative_index);
     void computeGenEigenInterval(std::vector<double>& interval,
         const int maxits, const double padding = 0.01);
     DensityMatrix& getDM() { return *dm_; }

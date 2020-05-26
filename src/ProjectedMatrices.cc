@@ -40,6 +40,8 @@ Timer ProjectedMatrices::update_submatT_tm_("ProjectedMatrices::updateSubmatT");
 Timer ProjectedMatrices::update_submatX_tm_("ProjectedMatrices::updateSubmatX");
 Timer ProjectedMatrices::eigsum_tm_("ProjectedMatrices::eigsum");
 Timer ProjectedMatrices::consolidate_H_tm_("ProjectedMatrices::consolidate_sH");
+Timer ProjectedMatrices::compute_entropy_tm_(
+    "ProjectedMatrices::compute_entropy");
 
 short ProjectedMatrices::n_instances_ = 0;
 
@@ -212,7 +214,44 @@ void ProjectedMatrices::buildDM(
 {
     dm_->build(occ, orbitals_index);
 }
+// Use Chebyshev approximation to compute chemical potential and density matrix
+void ProjectedMatrices::updateDMwithChebApproximation(const int iterative_index)
+{
+    Control& ct = *(Control::instance());
+    if (onpe0)
+        (*MPIdata::sout)
+            << "ProjectedMatrices: Compute DM using Chebyshev approximation"
+            << std::endl;
 
+    // CHEBYSHEV APPROXIMATION
+    // set pointer to member function to evaluate fermi distribution function
+    funcptr_ = &ProjectedMatricesInterface::chebfunDM;
+
+    // Compute interval for Chebyshev approximation
+    computeGenEigenInterval(cheb_interval_, ct.dm_approx_power_maxits, 0.05);
+    double emin = cheb_interval_[0];
+    double emax = cheb_interval_[1];
+    //    if (onpe0 && ct.verbose > 1) cout<<"emin ="<<emin<<", emax
+    //    ="<<emax<<endl;
+
+    // compute approximation order
+    int order         = ct.dm_approx_order;
+    const int ndigits = ct.dm_approx_ndigits;
+    if (ndigits)
+    {
+        const double delE
+            = (emax - emin) / 2; // scaling factor into range [-1,1]
+        const double beta_s = delE / width_; // scale beta = 1/kbt into [-1, 1]
+        const double dp_order = 2 * (ndigits - 1) * beta_s / 3;
+        order                 = ceil(dp_order) < 2000 ? ceil(dp_order) : 2000;
+    }
+    // compute chemical potential and density matrix with Chebyshev
+    // approximation.
+    double final_mu = computeChemicalPotentialAndDMwithChebyshev(
+        order, emin, emax, iterative_index);
+    if (onpe0 && ct.verbose > 1)
+        std::cout << "Final mu_ = " << final_mu << std::endl;
+}
 void ProjectedMatrices::updateDMwithEigenstates(const int iterative_index)
 {
     Control& ct = *(Control::instance());
@@ -289,6 +328,8 @@ void ProjectedMatrices::updateDM(const int iterative_index)
 
     if (ct.DMEigensolver() == DMEigensolverType::Eigensolver)
         updateDMwithEigenstates(iterative_index);
+    else if (ct.DMEigensolver() == DMEigensolverType::Chebyshev)
+        updateDMwithChebApproximation(iterative_index);
     else if (ct.DMEigensolver() == DMEigensolverType::SP2)
         updateDMwithSP2(iterative_index);
     else
@@ -330,8 +371,12 @@ void ProjectedMatrices::computeOccupationsFromDM()
         (*MPIdata::sout) << "ProjectedMatrices::computeOccupationsFromDM()"
                          << std::endl;
 #endif
-    assert(dm_);
-    dm_->computeOccupations(gm_->getCholeskyL());
+    Control& ct = *(Control::instance());
+    if (ct.DMEigensolver() != DMEigensolverType::Chebyshev)
+    {
+        assert(dm_);
+        dm_->computeOccupations(gm_->getCholeskyL());
+    }
 }
 
 void ProjectedMatrices::getOccupations(std::vector<DISTMATDTYPE>& occ) const
@@ -342,7 +387,7 @@ void ProjectedMatrices::setOccupations(const std::vector<DISTMATDTYPE>& occ)
 {
 #ifdef PRINT_OPERATIONS
     if (onpe0)
-        (*MPIdata::sout) << "ProjectedMatrices::setOccupations()" << endl;
+        (*MPIdata::sout) << "ProjectedMatrices::setOccupations()" << std::endl;
 #endif
     dm_->setOccupations(occ);
 }
@@ -398,11 +443,11 @@ double ProjectedMatrices::getExpectation(
 void ProjectedMatrices::stripDM()
 {
 #ifdef PRINT_OPERATIONS
-    if (onpe0) std::cout << "ProjectedMatrices::stripDM()" << endl;
+    if (onpe0) std::cout << "ProjectedMatrices::stripDM()" << std::endl;
 #endif
 #ifdef DEBUG // TEST
     double dd = dm_->getMatrix().trace();
-    if (onpe0) std::cout << "test:  Trace DM = " << dd << endl;
+    if (onpe0) std::cout << "test:  Trace DM = " << dd << std::endl;
     if (dm_->getMatrix().active()) assert(dd > 0.);
 #endif
     dm_->stripS(gm_->getCholeskyL());
@@ -411,7 +456,7 @@ void ProjectedMatrices::stripDM()
 void ProjectedMatrices::dressupDM()
 {
 #ifdef PRINT_OPERATIONS
-    if (onpe0) std::cout << "ProjectedMatrices::dressupDM()" << endl;
+    if (onpe0) std::cout << "ProjectedMatrices::dressupDM()" << std::endl;
 #endif
     dm_->dressUpS(gm_->getCholeskyL(), gm_->getAssociatedOrbitalsIndex());
 }
@@ -423,8 +468,9 @@ double ProjectedMatrices::computeEntropy(const double kbt)
 
 double ProjectedMatrices::computeEntropy()
 {
-    // if(onpe0)(*MPIdata::sout)<<"ProjectedMatrices::computeEntropy()"<<endl;
-    // if(onpe0)(*MPIdata::sout)<<"width_="<<width_<<endl;
+    // if(onpe0)(*MPIdata::sout)<<"ProjectedMatrices::computeEntropy()"<<std::endl;
+    // if(onpe0)(*MPIdata::sout)<<"width_="<<width_<<std::endl;
+    compute_entropy_tm_.start();
 
     Control& ct    = *(Control::instance());
     double entropy = 0.;
@@ -445,7 +491,69 @@ double ProjectedMatrices::computeEntropy()
         }
         entropy = computeEntropy(width_);
     }
+    else
+    {
+        entropy = computeEntropyWithCheb(width_);
+    }
+
+    compute_entropy_tm_.stop();
+
     return entropy;
+}
+
+// compute entropy using Chebyshev Approximation
+double ProjectedMatrices::computeEntropyWithCheb(const double kbt)
+{
+
+    Control& ct = *(Control::instance());
+
+    // compute matrix variable X.S for Chebyshev
+    // scale with 1/spin
+    MGmol_MPI& mmpi           = *(MGmol_MPI::instance());
+    double orbital_occupation = mmpi.nspin() > 1 ? 1. : 2.;
+    const double scal         = 1 / orbital_occupation;
+    dist_matrix::DistMatrix<DISTMATDTYPE> pmat("DM-Gram", dim_, dim_);
+    pmat.gemm('N', 'N', scal, dm_->getMatrix(), gm_->getMatrix(), 0.);
+
+    // compute matrix variable S^{-1}H for Chebyshev
+    //    dist_matrix::DistMatrix<DISTMATDTYPE>  pmat(*matHB_);
+    //    gm_->applyInv(pmat);
+
+    //     set extents for computing Chebyshev approximation coefficients
+    //     get interval for Chebyshev approximation
+    //    std::vector<double> interval;
+    //    computeGenEigenInterval(cheb_interval_, ct.dm_approx_power_maxits,
+    //    0.05);
+
+    const double emin = 0.;
+    const double emax = 1.;
+
+    //    const double emin = cheb_interval_[0];
+    //    const double emax = cheb_interval_[1];
+
+    if (onpe0 && ct.verbose > 1)
+        (*MPIdata::sout) << "computeEntropyWithChebyshev "
+                         << "emin = " << emin << " emax = " << emax
+                         << std::endl;
+
+    // set pointer to member function to evaluate entropy function
+    funcptr_ = &ProjectedMatricesInterface::chebfunEntropyFromOcc;
+    // construct ChebyshevApproximation object
+    const int order = 1000;
+    static ChebyshevApproximation chebapp(emin, emax, order, this);
+    static bool recompute_entropy_coeffs = true;
+
+    // compute Chebyshev approximation
+    dist_matrix::DistMatrix<DISTMATDTYPE> mat
+        = chebapp.computeChebyshevApproximation(pmat, recompute_entropy_coeffs);
+
+    recompute_entropy_coeffs = false;
+    // compute entropy = trace
+    const double entropy = mat.trace();
+    //    if(onpe0 && ct.verbose > 1)(*MPIdata::sout)<<"entropy =
+    //    "<<orbital_occupation*kbt*entropy<<std::endl;
+
+    return -orbital_occupation * kbt * entropy;
 }
 
 void ProjectedMatrices::printOccupations(std::ostream& os) const
@@ -759,7 +867,7 @@ double ProjectedMatrices::computeChemicalPotentialAndOccupations(
 
     // if( onpe0 )
     //    (*MPIdata::sout)<<"computeChemicalPotentialAndOccupations() with mu="
-    //        <<mu_<<endl;
+    //        <<mu_<<std::endl;
 
     dm_->setOccupations(occ);
 
@@ -871,6 +979,7 @@ void ProjectedMatrices::printTimers(std::ostream& os)
     init_gram_matrix_tm_.print(os);
     eigsum_tm_.print(os);
     consolidate_H_tm_.print(os);
+    compute_entropy_tm_.print(os);
 }
 
 // Assumes SquareLocalMatrix object contains partial contributions
@@ -901,6 +1010,189 @@ double ProjectedMatrices::computeTraceInvSmultMatMultTheta(
     return pmat.trace();
 }
 
+double ProjectedMatrices::computeChemicalPotentialAndDMwithChebyshev(
+    const int order, const double emin, const double emax,
+    const int iterative_index)
+{
+    assert(emax > emin);
+    assert(nel_ >= 0);
+
+    Control& ct = *(Control::instance());
+
+    // create Chebyshev approximation object
+    ChebyshevApproximation chebapp(emin, emax, order, this);
+
+    if (onpe0 && ct.verbose > 0)
+        (*MPIdata::sout)
+            << "computeChemicalPotentialAndDMWithChebyshev(), order = "
+            << chebapp.order() << " with width=" << width_ << ", for " << nel_
+            << " electrons" << std::endl;
+
+    const int maxit         = 100;
+    const double charge_tol = 1.0e-12;
+
+    static double mu1 = emin - 0.001;
+    static double mu2 = emax + 10. * width_;
+
+    assert(mu1 < mu2);
+    bool done = false;
+
+    if (nel_ <= 0)
+    {
+        mu1 = -10000.;
+        mu2 = 10000.;
+    }
+
+    if (2 * dim_ <= nel_)
+    {
+        done = true;
+        mu_  = mu2;
+    }
+
+    // begin
+    // compute matrix variable S^{-1}H for Chebyshev
+    dist_matrix::DistMatrix<DISTMATDTYPE> mat(*matHB_);
+    gm_->applyInv(mat);
+    // build array of Chebyshev polynomials (Chebyshev Nodes)
+
+    /// print matrices
+    /*
+             ofstream tfile("s.mm", ios::out);
+             ofstream tfile2("h.mm", ios::out);
+             gm_->printMM(tfile);
+             matHB_->printMM(tfile2);
+             tfile.close();
+             tfile2.close();
+    */
+    //// end print
+
+    chebapp.buildChebyshevNodes(emin, emax, mat);
+
+    dist_matrix::DistMatrix<DISTMATDTYPE> tmp("TMP", dim_, dim_);
+    dist_matrix::DistMatrix<DISTMATDTYPE> dm("DM", dim_, dim_);
+
+    if (onpe0 && ct.verbose > 0)
+        std::cout << "emin = " << emin << " emax = " << emax << std::endl;
+
+    double f2 = 0.;
+    if (!done)
+    {
+        mu_ = mu2;
+        chebapp.computeChebyshevCoeffs();
+
+        // compute Chebyshev approximation
+        dm.gemm('N', 'N', 1., chebapp.computeChebyshevApproximation(),
+            gm_->getInverse(), 0.);
+        tmp.gemm('N', 'N', 1., dm, gm_->getMatrix(), 0.);
+        // compute trace and check convergence
+        f2 = 2 * tmp.trace() - (double)nel_;
+
+        // no unoccupied states
+        if (fabs(f2) < charge_tol)
+        {
+            done = true;
+        }
+    }
+    double f1 = 0.;
+    if (!done)
+    {
+        mu_ = mu1;
+        chebapp.computeChebyshevCoeffs();
+
+        // compute Chebyshev approximation
+        dm.gemm('N', 'N', 1., chebapp.computeChebyshevApproximation(),
+            gm_->getInverse(), 0.);
+        tmp.gemm('N', 'N', 1., dm, gm_->getMatrix(), 0.);
+        // compute trace and check convergence
+        f1 = 2 * tmp.trace() - (double)nel_;
+
+        // no unoccupied states
+        if (fabs(f1) < charge_tol)
+        {
+            done = true;
+        }
+    }
+
+    if (!done)
+    {
+        if (f1 * f2 > 0.)
+        {
+            (*MPIdata::sout)
+                << "ERROR: mu1=" << mu1 << ", mu2=" << mu2 << std::endl;
+            (*MPIdata::sout)
+                << "ERROR: f1=" << f1 << ", f2=" << f2 << std::endl;
+            (*MPIdata::sout)
+                << "nel=" << nel_ << ", width=" << width_ << std::endl;
+            Control& ct = *(Control::instance());
+            ct.global_exit(2);
+        }
+
+        double dmu;
+        if (f1 < 0.)
+        {
+            mu_ = mu1;
+            dmu = mu2 - mu1;
+        }
+        else
+        {
+            mu_ = mu2;
+            dmu = mu1 - mu2;
+        }
+
+        // main loop
+        int iter      = 0;
+        double f      = 0.;
+        double mu_old = mu_;
+        do
+        {
+            iter++;
+
+            dmu *= 0.5;
+            mu_ = mu_old + dmu;
+
+            chebapp.computeChebyshevCoeffs();
+            // compute Chebyshev approximation
+            tmp = chebapp.computeChebyshevApproximation();
+            // compute trace and check convergence
+            f = 2 * tmp.trace() - (double)nel_;
+            if (f <= 0.)
+            {
+                mu_old = mu_;
+                f      = -f;
+            }
+
+        } while ((iter < maxit) && (f > charge_tol));
+
+        // compute DM and occupations
+
+        if (f > charge_tol)
+        {
+            if (onpe0)
+            {
+                (*MPIdata::sout)
+                    << "WARNING: "
+                       "ProjectedMatrices::"
+                       "computeChemicalPotentialAndDMwithChebyshev()"
+                    << std::endl;
+                (*MPIdata::sout) << "Iterations did not converge to tolerance "
+                                 << std::scientific << charge_tol << std::endl;
+            }
+        }
+    }
+    // update mu1 and mu2
+    mu1 = mu_ - 10. * width_;
+    mu2 = mu_ + 10. * width_;
+
+    // set density matrix
+    dm.gemm('N', 'N', 1., tmp, gm_->getInverse(), 0.);
+    MGmol_MPI& mmpi           = *(MGmol_MPI::instance());
+    double orbital_occupation = mmpi.nspin() > 1 ? 1. : 2.;
+    dm.scal(orbital_occupation);
+    dm_->setMatrix(dm, iterative_index);
+
+    return mu_;
+}
+
 /* Use the power method to compute the extents of the spectrum of the
  * generalized eigenproblem.
  */
@@ -913,7 +1205,6 @@ void ProjectedMatrices::computeGenEigenInterval(
 
     power.computeGenEigenInterval(mat, *gm_, interval, maxits, pad);
 }
-
 void ProjectedMatrices::consolidateH()
 {
     consolidate_H_tm_.start();

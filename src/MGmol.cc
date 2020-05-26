@@ -913,6 +913,8 @@ void MGmol<T>::printTimers()
     OrbitalsPreconditioning<T>::printTimers(os_);
     DavidsonSolver<ExtendedGridOrbitals>::printTimers(os_);
     MDfiles::printTimers(os_);
+    ChebyshevApproximationInterface::printTimers(os_);
+    ChebyshevApproximation::printTimers(os_);
 }
 
 template <class T>
