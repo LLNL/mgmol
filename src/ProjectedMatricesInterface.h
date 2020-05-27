@@ -121,7 +121,7 @@ public:
         return fvals;
     }
 
-    std::vector<double> eval(const std::vector<double>& nodes)
+    std::vector<double> eval(const std::vector<double>& nodes) override
     {
         return (this->*(funcptr_))(nodes);
     }
