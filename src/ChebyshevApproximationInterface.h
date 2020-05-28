@@ -65,7 +65,7 @@ public:
         max_order_ = order;
         order_     = order;
     }
-    ~ChebyshevApproximationInterface(){};
+    virtual ~ChebyshevApproximationInterface(){};
 
     static void printTimers(std::ostream& os)
     {

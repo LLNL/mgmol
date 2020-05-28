@@ -20,7 +20,7 @@ class ChebyshevApproximation : public ChebyshevApproximationInterface
 {
 
 private:
-    std::vector<dist_matrix::DistMatrix<DISTMATDTYPE>>*
+    std::vector<dist_matrix::DistMatrix<DISTMATDTYPE>>
         nodesTk_; // Chebyshev nodes (polynomials)
 
     // Shift and scale matrix H so that spectrum is in range [-1, 1].
@@ -48,9 +48,8 @@ public:
         const dist_matrix::DistMatrix<DISTMATDTYPE>& H,
         const bool recompute_coeffs = true);
     // destructor
-    ~ChebyshevApproximation()
+    ~ChebyshevApproximation() override
     {
-        if (nodesTk_) delete nodesTk_;
         if (cmat_) delete cmat_;
     }
 

@@ -243,7 +243,7 @@ void ProjectedMatrices::updateDMwithChebApproximation(const int iterative_index)
             = (emax - emin) / 2; // scaling factor into range [-1,1]
         const double beta_s = delE / width_; // scale beta = 1/kbt into [-1, 1]
         const double dp_order = 2 * (ndigits - 1) * beta_s / 3;
-        order                 = ceil(dp_order) < 2000 ? ceil(dp_order) : 2000;
+        order = std::ceil(dp_order) < 2000 ? std::ceil(dp_order) : 2000;
     }
     // compute chemical potential and density matrix with Chebyshev
     // approximation.
@@ -515,21 +515,8 @@ double ProjectedMatrices::computeEntropyWithCheb(const double kbt)
     dist_matrix::DistMatrix<DISTMATDTYPE> pmat("DM-Gram", dim_, dim_);
     pmat.gemm('N', 'N', scal, dm_->getMatrix(), gm_->getMatrix(), 0.);
 
-    // compute matrix variable S^{-1}H for Chebyshev
-    //    dist_matrix::DistMatrix<DISTMATDTYPE>  pmat(*matHB_);
-    //    gm_->applyInv(pmat);
-
-    //     set extents for computing Chebyshev approximation coefficients
-    //     get interval for Chebyshev approximation
-    //    std::vector<double> interval;
-    //    computeGenEigenInterval(cheb_interval_, ct.dm_approx_power_maxits,
-    //    0.05);
-
     const double emin = 0.;
     const double emax = 1.;
-
-    //    const double emin = cheb_interval_[0];
-    //    const double emax = cheb_interval_[1];
 
     if (onpe0 && ct.verbose > 1)
         (*MPIdata::sout) << "computeEntropyWithChebyshev "
@@ -548,12 +535,12 @@ double ProjectedMatrices::computeEntropyWithCheb(const double kbt)
         = chebapp.computeChebyshevApproximation(pmat, recompute_entropy_coeffs);
 
     recompute_entropy_coeffs = false;
-    // compute entropy = trace
-    const double entropy = mat.trace();
+    // compute trace
+    const double ts = mat.trace();
     //    if(onpe0 && ct.verbose > 1)(*MPIdata::sout)<<"entropy =
     //    "<<orbital_occupation*kbt*entropy<<std::endl;
 
-    return -orbital_occupation * kbt * entropy;
+    return -orbital_occupation * kbt * ts;
 }
 
 void ProjectedMatrices::printOccupations(std::ostream& os) const
@@ -781,7 +768,7 @@ double ProjectedMatrices::computeChemicalPotentialAndOccupations(
     if (!done)
     {
         f2 = 2. * fermi_distribution(mu2, max_numst, width, energies, occ)
-             - (double)nel;
+             - static_cast<double>(nel);
         // no unoccupied states
         if (fabs(f2) < charge_tol)
         {
@@ -793,7 +780,7 @@ double ProjectedMatrices::computeChemicalPotentialAndOccupations(
     if (!done)
     {
         f1 = 2. * fermi_distribution(mu1, max_numst, width, energies, occ)
-             - (double)nel;
+             - static_cast<double>(nel);
         if (fabs(f1) < charge_tol)
         {
             if (onpe0)
@@ -839,7 +826,7 @@ double ProjectedMatrices::computeChemicalPotentialAndOccupations(
             dmu *= 0.5;
             mu1 = mu_ + dmu;
             f   = 2. * fermi_distribution(mu1, max_numst, width, energies, occ)
-                - (double)nel;
+                - static_cast<double>(nel);
 
             if (f <= 0.)
             {
@@ -1085,10 +1072,10 @@ double ProjectedMatrices::computeChemicalPotentialAndDMwithChebyshev(
             gm_->getInverse(), 0.);
         tmp.gemm('N', 'N', 1., dm, gm_->getMatrix(), 0.);
         // compute trace and check convergence
-        f2 = 2 * tmp.trace() - (double)nel_;
+        f2 = 2 * tmp.trace() - static_cast<double>(nel_);
 
         // no unoccupied states
-        if (fabs(f2) < charge_tol)
+        if (std::abs(f2) < charge_tol)
         {
             done = true;
         }
@@ -1104,10 +1091,10 @@ double ProjectedMatrices::computeChemicalPotentialAndDMwithChebyshev(
             gm_->getInverse(), 0.);
         tmp.gemm('N', 'N', 1., dm, gm_->getMatrix(), 0.);
         // compute trace and check convergence
-        f1 = 2 * tmp.trace() - (double)nel_;
+        f1 = 2 * tmp.trace() - static_cast<double>(nel_);
 
         // no unoccupied states
-        if (fabs(f1) < charge_tol)
+        if (std::abs(f1) < charge_tol)
         {
             done = true;
         }
@@ -1154,7 +1141,7 @@ double ProjectedMatrices::computeChemicalPotentialAndDMwithChebyshev(
             // compute Chebyshev approximation
             tmp = chebapp.computeChebyshevApproximation();
             // compute trace and check convergence
-            f = 2 * tmp.trace() - (double)nel_;
+            f = 2 * tmp.trace() - static_cast<double>(nel_);
             if (f <= 0.)
             {
                 mu_old = mu_;

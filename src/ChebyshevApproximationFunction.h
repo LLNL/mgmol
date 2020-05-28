@@ -18,7 +18,7 @@ class ChebyshevApproximationFunction
 private:
 public:
     ChebyshevApproximationFunction(){};
-    ~ChebyshevApproximationFunction(){}; // destructor
+    virtual ~ChebyshevApproximationFunction(){}; // destructor
 
     virtual std::vector<double> eval(const std::vector<double>& x) = 0;
 };

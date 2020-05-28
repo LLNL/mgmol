@@ -27,7 +27,7 @@ void ChebyshevApproximationInterface::computeChebyshevCoeffs()
     order_ = max_order_;
     int n  = order_;
     // define scaling variable here
-    const double fac = 2.0 / (double)n;
+    const double fac = 2.0 / static_cast<double>(n);
     // evaluate function at interpolation points
     std::vector<double> fvals;
     evaluateFunction(interp_points_, fvals);
@@ -38,11 +38,10 @@ void ChebyshevApproximationInterface::computeChebyshevCoeffs()
 
     // initialize first entry of coeffs_
     double fsum = 0.;
-    for (std::vector<double>::iterator it = fvals.begin(); it != fvals.end();
-         ++it)
-        fsum += *it;
+    for (const double& value : fvals)
+        fsum += value;
     // scale and store first coeff
-    fsum /= (double)n;
+    fsum /= static_cast<double>(n);
     coeffs_.push_back(fsum);
 
     // compute remaining coeffs_ values
@@ -73,7 +72,7 @@ void ChebyshevApproximationInterface::computeChebyshevCoeffs()
 void ChebyshevApproximationInterface::computeChebyshevApproximation(
     std::vector<double>& points, std::vector<double>& vals)
 {
-    assert((int)points.size() == order_);
+    assert(static_cast<int>(points.size()) == order_);
     vals.clear();
     // get extents of points
     const double a = points[0];
@@ -83,7 +82,7 @@ void ChebyshevApproximationInterface::computeChebyshevApproximation(
     scalePointsToChebyshevInterval(points, scaled_points);
 
     for (int j = 0; j < order_; j++)
-        assert(fabs(scaled_points[j]) <= 1.);
+        assert(std::abs(scaled_points[j]) <= 1.);
 
     // compute Chebyshev coefficients
     computeChebyshevCoeffs();
@@ -97,8 +96,8 @@ void ChebyshevApproximationInterface::computeChebyshevApproximation(
     {
         for (int j = 0; j < order_; j++)
         {
-            double prod = k * acos(scaled_points[j]);
-            double t_kj = cos(prod);
+            double prod = k * std::acos(scaled_points[j]);
+            double t_kj = std::cos(prod);
             vals[j] += coeffs_[k] * t_kj;
         }
     }
@@ -124,7 +123,7 @@ void ChebyshevApproximationInterface::computeInterpolationPoints()
     {
         double ang = (2. * (i + 1.) - 1.) * alpha;
         angles_.push_back(ang);
-        double x_i = cos(ang);
+        double x_i = std::cos(ang);
         // map node to interval [a, b]
         const double scaled_node = a + beta * (x_i - a1);
 
@@ -140,7 +139,7 @@ void ChebyshevApproximationInterface::computeInterpolationPoints()
         for (int k = 0; k < order_; k++)
         {
             double iang = i * angles_[k];
-            double val  = cos(iang);
+            double val  = std::cos(iang);
             cmat_->setVal(i, k, val);
         }
     }
@@ -161,10 +160,9 @@ void ChebyshevApproximationInterface::scalePointsToChebyshevInterval(
     scaled_points.clear();
     scaled_points.reserve(points.size());
 
-    for (std::vector<double>::const_iterator it = points.begin();
-         it != points.end(); ++it)
+    for (const double& val : points)
     {
-        double sp = a1 + alpha * (*it - a);
+        double sp = a1 + alpha * (val - a);
         assert(sp == sp);
 
         scaled_points.push_back(sp);

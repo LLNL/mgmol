@@ -28,8 +28,8 @@ ChebyshevApproximation::ChebyshevApproximation(const double a, const double b,
     chebfunc_   = func;
     coeffs_.reserve(order);
     angles_.reserve(order);
-    nodesTk_ = 0;
-    cmat_    = 0;
+    nodesTk_.reserve(order);
+    cmat_ = nullptr;
 
     // setup some data
     setup();
@@ -55,35 +55,27 @@ void ChebyshevApproximation::buildChebyshevNodes(
     dist_matrix::DistMatrix<DISTMATDTYPE> scaled_H(H);
     scaleMatrixToChebyshevInterval(a, b, scaled_H);
 
-    // reset nodesTk
-    if (nodesTk_)
-    {
-        delete nodesTk_;
-        nodesTk_ = 0;
-    }
-
     // prepare to build polynomials
     const int n = order_;
-
-    std::vector<dist_matrix::DistMatrix<DISTMATDTYPE>>* nodes
-        = new std::vector<dist_matrix::DistMatrix<DISTMATDTYPE>>(
-            n, dist_matrix::DistMatrix<DISTMATDTYPE>("Tk", m, m));
+    // reset nodesTk
+    nodesTk_.clear();
+    nodesTk_.resize(n, dist_matrix::DistMatrix<DISTMATDTYPE>("Tk", m, m));
     // Set node T_0 to identity
-    nodes->at(0).identity();
+    nodesTk_[0].identity();
     // set node T_1 = scaled_H
-    nodes->at(1) = scaled_H;
+    nodesTk_[1] = scaled_H;
 
     // define pointers for three-term recurrence
     std::vector<dist_matrix::DistMatrix<DISTMATDTYPE>>::iterator nodeT0, nodeT1,
         nodeT;
-    nodeT0 = nodes->begin();
-    nodeT1 = nodes->begin() + 1;
-    nodeT  = nodes->begin() + 2;
+    nodeT0 = nodesTk_.begin();
+    nodeT1 = nodesTk_.begin() + 1;
+    nodeT  = nodesTk_.begin() + 2;
 
     const double m_one = -1.;
     const double two   = 2.;
 
-    while (nodeT != nodes->end())
+    while (nodeT != nodesTk_.end())
     {
         (*nodeT) = (*nodeT0);
         (*nodeT).gemm('N', 'N', two, scaled_H, (*nodeT1), m_one);
@@ -93,8 +85,7 @@ void ChebyshevApproximation::buildChebyshevNodes(
         nodeT++;
     }
 
-    // done ... store pointer to nodes
-    nodesTk_ = nodes;
+    // done ...
 
     build_nodes_tm_.stop();
 }
@@ -112,9 +103,9 @@ void ChebyshevApproximation::scaleMatrixToChebyshevInterval(
     std::vector<double> idmat(m, shft);
     std::vector<double> dmat(m);
     // get diagonal of H
-    H.getDiagonalValues(&dmat[0]);
+    H.getDiagonalValues(dmat.data());
     // shift diagonal
-    MPaxpy(m, -1., &idmat[0], &dmat[0]);
+    MPaxpy(m, -1., idmat.data(), dmat.data());
     // set shifted diagonal
     H.setDiagonal(dmat);
     // scale matrix
@@ -128,18 +119,17 @@ ChebyshevApproximation::computeChebyshevApproximation()
 {
     compute_tm_.start();
 
-    assert(nodesTk_ != 0);
-    assert((int)coeffs_.size() == order_);
-    //    assert((int)nodesTk_->size() == order_);
+    assert(nodesTk_ != nullptr);
+    assert(static_cast<int>(coeffs_.size()) == order_);
 
     // set initial approximation matrix to first polynomial approx.
-    dist_matrix::DistMatrix<DISTMATDTYPE> matX(nodesTk_->at(0));
+    dist_matrix::DistMatrix<DISTMATDTYPE> matX(nodesTk_[0]);
     matX.scal(coeffs_[0]);
 
     // loop over polynomials and scale with coeffs and update matrix
     for (int k = 1; k < order_; k++)
     {
-        matX.axpy(coeffs_[k], nodesTk_->at(k));
+        matX.axpy(coeffs_[k], nodesTk_[k]);
     }
 
     compute_tm_.stop();
@@ -167,29 +157,28 @@ ChebyshevApproximation::computeChebyshevApproximation(
 
     // define array to hold polynomials for recurrence relation
     const int m = H.m();
-    std::vector<dist_matrix::DistMatrix<DISTMATDTYPE>>* nodesTk
-        = new std::vector<dist_matrix::DistMatrix<DISTMATDTYPE>>(
-            3, dist_matrix::DistMatrix<DISTMATDTYPE>("Tk", m, m));
+    std::vector<dist_matrix::DistMatrix<DISTMATDTYPE>> nodesTk(
+        3, dist_matrix::DistMatrix<DISTMATDTYPE>("Tk", m, m));
     // Set node T_0 to identity
-    nodesTk->at(0).identity();
+    nodesTk[0].identity();
     // set node T_1 = scaled_H
-    nodesTk->at(1) = scaled_H;
+    nodesTk[1] = scaled_H;
 
     // BEGIN:
     const double m_one = -1.;
     const double two   = 2.;
     // Compute first 2 terms here:
     // 0. set initial approximation matrix to first polynomial approx.
-    dist_matrix::DistMatrix<DISTMATDTYPE> mat(nodesTk->at(0));
+    dist_matrix::DistMatrix<DISTMATDTYPE> mat(nodesTk[0]);
     mat.scal(coeffs_[0]);
     // 1. update with second term of approximation
-    mat.axpy(coeffs_[1], nodesTk->at(1));
+    mat.axpy(coeffs_[1], nodesTk[1]);
 
     // define pointers for three-term recurrence
     std::vector<dist_matrix::DistMatrix<DISTMATDTYPE>>::iterator nodeT0, nodeT1,
         nodeT, begin;
     // initialize
-    begin  = nodesTk->begin();
+    begin  = nodesTk.begin();
     nodeT1 = begin;
     nodeT  = begin + 1;
 
@@ -211,7 +200,7 @@ ChebyshevApproximation::computeChebyshevApproximation(
         mat.axpy(coeffs_[k], (*nodeT));
     }
 
-    delete nodesTk;
+    // delete nodesTk;
 
     compute2_tm_.stop();
 

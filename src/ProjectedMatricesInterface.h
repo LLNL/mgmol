@@ -68,9 +68,9 @@ public:
     // approximation f(x) = 1 / (1 + Exp[(E-mu)/kbT])
     std::vector<double> chebfunDM(const std::vector<double>& nodes)
     {
-        assert((int)nodes.size() > 0);
+        assert(static_cast<int>(nodes.size()) > 0);
 
-        const int n = (int)nodes.size();
+        const int n = static_cast<int>(nodes.size());
         std::vector<double> fvals(n, 0.);
         // compute fermi distribution function
         fermi_distribution(mu_, n, width_, nodes, fvals);
@@ -83,9 +83,9 @@ public:
     // occupations
     std::vector<double> chebfunEntropyFromOcc(const std::vector<double>& nodes)
     {
-        assert((int)nodes.size() > 0);
+        assert(static_cast<int>(nodes.size()) > 0);
 
-        const int n = (int)nodes.size();
+        const int n = static_cast<int>(nodes.size());
         std::vector<double> fvals(n, 0.);
         // compute entropy function
         MGmol_MPI& mmpi           = *(MGmol_MPI::instance());
@@ -104,9 +104,9 @@ public:
     std::vector<double> chebfunEntropyFromEnergies(
         const std::vector<double>& nodes)
     {
-        assert((int)nodes.size() > 0);
+        assert(static_cast<int>(nodes.size()) > 0);
 
-        const int n = (int)nodes.size();
+        const int n = static_cast<int>(nodes.size());
         std::vector<double> fvals(n, 0.);
         // compute entropy function
         MGmol_MPI& mmpi           = *(MGmol_MPI::instance());
