@@ -29,6 +29,7 @@ public:
     }
 
     void swap(LocalVector<T>& v) { data_.swap(v.data_); }
+    void swap(std::vector<T>& v) { data_.swap(v); }
 
     T scaledDiff2(const LocalVector<T>& v, const double theta)
     {

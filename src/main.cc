@@ -408,10 +408,22 @@ int main(int argc, char** argv)
                 "DensityMatrix.algo",
                 po::value<string>()->default_value("Diagonalization"),
                 "Algorithm for computing Density Matrix. "
-                "Diagonalization or SP2.")("DensityMatrix.use_old",
+                "Diagonalization or SP2 or Chebyshev.")("DensityMatrix.use_old",
                 po::value<bool>()->default_value(true),
                 "Start DM optimization with matrix of previous WF step")(
-                "DensityMatrix.tol", po::value<float>()->default_value(1.e-7),
+                "DensityMatrix.approximation_order",
+                po::value<short>()->default_value(500),
+                "Polynomial order for Chebyshev approximation "
+                "of density matrix. ")("DensityMatrix.approximation_ndigits",
+                po::value<short>()->default_value(1),
+                "Number of digits of precision for Chebyshev "
+                "approximation of density matrix. ")(
+                "DensityMatrix.approximation_power_maxits",
+                po::value<short>()->default_value(100),
+                "Maximum number of iterations for power method "
+                "to compute interval for Chebyshev "
+                "approximation of density matrix. ")("DensityMatrix.tol",
+                po::value<float>()->default_value(1.e-7),
                 "tolerance, used in iterative DM computation convergence "
                 "criteria");
 
