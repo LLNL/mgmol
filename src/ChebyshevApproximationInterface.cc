@@ -74,9 +74,6 @@ void ChebyshevApproximationInterface::computeChebyshevApproximation(
 {
     assert(static_cast<int>(points.size()) == order_);
     vals.clear();
-    // get extents of points
-    const double a = points[0];
-    const double b = points[order_ - 1];
     // scale points to be in the range [-1, 1]
     std::vector<double> scaled_points;
     scalePointsToChebyshevInterval(points, scaled_points);
