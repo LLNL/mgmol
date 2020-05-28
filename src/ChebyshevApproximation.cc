@@ -119,7 +119,7 @@ ChebyshevApproximation::computeChebyshevApproximation()
 {
     compute_tm_.start();
 
-    assert(nodesTk_ != nullptr);
+    assert(!nodesTk_.empty());
     assert(static_cast<int>(coeffs_.size()) == order_);
 
     // set initial approximation matrix to first polynomial approx.
