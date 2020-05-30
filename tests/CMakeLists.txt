@@ -278,7 +278,7 @@ add_test(NAME testLBFGS
 
 add_test(NAME ChebyshevMVP
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Chebyshev/test.py
-         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 9 ${MPIEXEC_PREFLAGS}
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
          ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
          ${CMAKE_CURRENT_SOURCE_DIR}/Chebyshev/cheb.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/Chebyshev/coords.in
