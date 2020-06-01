@@ -337,7 +337,7 @@ public:
     void updateDMwithSP2(const int iterative_index);
     void updateDMwithEigenstatesAndRotate(
         const int iterative_index, dist_matrix::DistMatrix<DISTMATDTYPE>& zz);
-    void updateDMwithChebApproximation(const int iterative_index);
+    void updateDMwithChebApproximation(const int iterative_index) override;
     double computeChemicalPotentialAndOccupations(
         const double width, const int nel, const int max_numst)
     {

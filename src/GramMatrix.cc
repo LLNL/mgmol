@@ -250,7 +250,7 @@ void GramMatrix::computeLoewdinTransform(
     mat.syev('v', 'l', eigenvalues, vect);
 
     std::vector<DISTMATDTYPE> diag_values(dim_);
-    for (int i = 0; i < dim_; i++)
+    for (unsigned int i = 0; i < dim_; i++)
         diag_values[i] = (DISTMATDTYPE)(1. / sqrt(eigenvalues[i]));
 
     loewdinMat.clear();

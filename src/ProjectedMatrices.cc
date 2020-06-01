@@ -1018,8 +1018,8 @@ double ProjectedMatrices::computeChemicalPotentialAndDMwithChebyshev(
     const int maxit         = 100;
     const double charge_tol = 1.0e-12;
 
-    static double mu1 = emin - 0.001;
-    static double mu2 = emax + 10. * width_;
+    double mu1 = emin - 0.001;
+    double mu2 = emax + 10. * width_;
 
     assert(mu1 < mu2);
     bool done = false;
@@ -1030,7 +1030,7 @@ double ProjectedMatrices::computeChemicalPotentialAndDMwithChebyshev(
         mu2 = 10000.;
     }
 
-    if (2 * dim_ <= nel_)
+    if (2 * dim_ <= static_cast<unsigned int>(nel_))
     {
         done = true;
         mu_  = mu2;
