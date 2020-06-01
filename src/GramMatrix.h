@@ -17,7 +17,7 @@
 
 class GramMatrix
 {
-    int dim_;
+    unsigned int dim_;
 
     dist_matrix::DistMatrix<DISTMATDTYPE>* matS_;
     dist_matrix::DistMatrix<DISTMATDTYPE>* invS_;

@@ -1030,7 +1030,7 @@ double ProjectedMatrices::computeChemicalPotentialAndDMwithChebyshev(
         mu2 = 10000.;
     }
 
-    if (2 * dim_ <= nel_)
+    if (2 * dim_ <= static_cast<unsigned int>(nel_))
     {
         done = true;
         mu_  = mu2;
