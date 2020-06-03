@@ -585,7 +585,7 @@ void LocGridOrbitals::initGauss(
     const double rmax = 6. * rc;
     for (int icolor = 0; icolor < chromatic_number_; icolor++)
     {
-        const unsigned int size  = block_vector_.get_allocated_size_storage();
+        const unsigned int size  = numpt_;
         ORBDTYPE* ipsi_host_view = MemorySpace::Memory<ORBDTYPE,
             memory_space_type>::allocate_host_view(size);
         MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
