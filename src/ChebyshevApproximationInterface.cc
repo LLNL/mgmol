@@ -59,9 +59,7 @@ void ChebyshevApproximationInterface::computeChebyshevCoeffs()
 
     // scale only last n-1 coefficients
     const int n1 = n - 1;
-    MPscal(n1, fac, &coeffs_[1]);
-
-    //    for (int i = 1; i < n; i++)assert(coeffs_[i] == coeffs_[i]);
+    LinearAlgebraUtils<MemorySpace::Host>::MPscal(n1, fac, &coeffs_[1]);
 
     compute_coeffs_tm_.stop();
 }
