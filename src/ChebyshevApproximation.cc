@@ -105,7 +105,8 @@ void ChebyshevApproximation::scaleMatrixToChebyshevInterval(
     // get diagonal of H
     H.getDiagonalValues(dmat.data());
     // shift diagonal
-    MPaxpy(m, -1., idmat.data(), dmat.data());
+    LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
+        m, -1., idmat.data(), dmat.data());
     // set shifted diagonal
     H.setDiagonal(dmat);
     // scale matrix
