@@ -127,7 +127,7 @@ void LocalMatrices<T>::syrk(
     const char trans  = 't';
 
     // ssiloc is always on the host but a maybe on the device
-    const int size_a = lda * k;
+    const int size_a = lda * m_;
     double* a_host_view
         = MemorySpace::Memory<double, MemorySpaceType>::allocate_host_view(
             size_a);
@@ -136,6 +136,8 @@ void LocalMatrices<T>::syrk(
 
     LinearAlgebraUtils<MemorySpace::Host>::MPsyrk(
         uplo, trans, m_, k, one, a_host_view, lda, zero, ssiloc, m_);
+    for (int i = 0; i < m_ * m_; ++i)
+        assert(std::isfinite(ssiloc[i]));
 
     MemorySpace::Memory<double, MemorySpaceType>::free_host_view(a_host_view);
 }

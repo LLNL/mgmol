@@ -577,11 +577,13 @@ void LAU_D::MPsyrk(const char uplo, const char trans, const int n, const int k,
 
 void Tscal(const int len, const double scal, double* dptr)
 {
+    MemorySpace::assert_is_host_ptr(dptr);
     const int one = 1;
     DSCAL(&len, &scal, dptr, &one);
 }
 void Tscal(const int len, const float scal, float* dptr)
 {
+    MemorySpace::assert_is_host_ptr(dptr);
     const int one = 1;
     SSCAL(&len, &scal, dptr, &one);
 }
