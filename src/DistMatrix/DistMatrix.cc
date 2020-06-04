@@ -1072,7 +1072,6 @@ int DistMatrix<double>::potrf(char uplo)
     if (active_)
     {
         assert(m_ == n_);
-        MemorySpace::assert_is_host_ptr(val_.data());
 
 #ifdef SCALAPACK
         int ione = 1;
