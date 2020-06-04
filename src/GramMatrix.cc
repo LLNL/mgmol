@@ -265,8 +265,8 @@ void GramMatrix::computeLoewdinTransform(
         // new Gram matrix is Identity
         set2Id(orb_index);
 
-        for (int i = 0; i < dim_; i++)
-            diag_values[i] = sqrt(eigenvalues[i]);
+        for (unsigned int i = 0; i < dim_; i++)
+            diag_values[i] = std::sqrt(eigenvalues[i]);
         invLoewdin->clear();
         invLoewdin->setDiagonal(diag_values);
         // invLoewdin = vect * D^-1 * vect^T, using mat as temporary storage

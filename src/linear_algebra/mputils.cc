@@ -287,6 +287,294 @@ void LAU_D::MPaxpy(const int len, double scal, const T1* __restrict__ xptr,
 }
 #endif
 
+///////////////////////////////
+////          MPsyrk         //
+///////////////////////////////
+// MemorySpace::Host
+template <>
+void LAU_H::MPsyrk(const char uplo, const char trans, const int n, const int k,
+    const double alpha, const double* const a, const int lda, const double beta,
+    double* c, const int ldc)
+{
+    MemorySpace::assert_is_host_ptr(a);
+    MemorySpace::assert_is_host_ptr(c);
+
+    dsyrk_tm.start();
+    DSYRK(&uplo, &trans, &n, &k, &alpha, a, &lda, &beta, c, &ldc);
+    dsyrk_tm.stop();
+}
+
+template <>
+void LAU_H::MPsyrk(const char uplo, const char trans, const int n, const int k,
+    const double alpha, const float* const a, const int lda, const double beta,
+    float* c, const int ldc)
+{
+    MemorySpace::assert_is_host_ptr(a);
+    MemorySpace::assert_is_host_ptr(c);
+
+    mpsyrk_tm.start();
+
+    if (beta == 1. && (alpha == 0. || n == 0 || k == 0)) return;
+
+    /* case Trans == 'N' */
+    if (trans == 'N' || trans == 'n')
+    {
+        /* buffer to hold accumulation in double */
+        std::vector<double> buff(n);
+        if (uplo == 'U' || uplo == 'u')
+        {
+            for (int j = 0; j < n; j++)
+            {
+                const int len = j + 1;
+                std::fill(buff.begin(), buff.begin() + len, 0.);
+                for (int l = 0; l < k; l++)
+                {
+                    /* pointer to beginning of column l in matrix a */
+                    const float* colL = a + lda * l;
+                    /* get multiplier */
+                    double mult = static_cast<double>(
+                        alpha * colL[j]); // same as alpha * a[lda*l + j];
+                    LAU_H::MPaxpy(len, mult, colL, buff.data());
+                }
+                /* Update col j of upper part of matrix C. */
+                /* Get pointer to beginning of column j in C. */
+                float* cj = c + ldc * j;
+                LAU_H::MPscal(len, beta, cj);
+                for (int i = 0; i < len; i++)
+                    cj[i] += static_cast<float>(buff[i]);
+            }
+        }
+        else /* uplo = 'L' or 'l' */
+        {
+            for (int j = 0; j < n; j++)
+            {
+                const int len = n - (j + 1);
+                std::fill(buff.begin(), buff.begin() + len, 0.);
+                for (int l = 0; l < k; l++)
+                {
+                    /* pointer to beginning of column l in matrix a */
+                    const float* colL = a + lda * l + j;
+                    /* get multiplier */
+                    double mult = static_cast<double>(
+                        alpha * colL[0]); // same as alpha * a[lda*l + j];
+                    LAU_H::MPaxpy(len, mult, colL, buff.data());
+                }
+                /* Update col j of upper part of matrix C. */
+                /* Get pointer to beginning of column j in C. */
+                float* cj = c + ldc * j + j;
+                LAU_H::MPscal(len, beta, cj);
+                for (int i = 0; i < len; i++)
+                    cj[i] += static_cast<float>(buff[i]);
+            }
+        }
+    }
+    else /* Trans == 'T' or 'C' */
+    {
+        if (uplo == 'U' || uplo == 'u')
+        {
+            for (int j = 0; j < n; j++)
+            {
+                const float* __restrict__ aj = a + lda * j;
+                for (int i = 0; i < j; i++)
+                {
+                    const int pos                = ldc * j + i;
+                    const float* __restrict__ ai = a + lda * i;
+                    double bc = static_cast<double>(c[pos]) * beta;
+                    c[pos]    = static_cast<float>(
+                        alpha * LAU_H::MPdot(k, ai, aj) + bc);
+                }
+            }
+        }
+        else /* uplo = 'L' or 'l' */
+        {
+            for (int j = 0; j < n; j++)
+            {
+                const float* __restrict__ aj = a + lda * j;
+                for (int i = j; i < n; i++)
+                {
+                    const int pos                = ldc * j + i;
+                    const float* __restrict__ ai = a + lda * i;
+                    double bc = static_cast<double>(c[pos]) * beta;
+                    c[pos]    = static_cast<float>(
+                        alpha * LAU_H::MPdot(k, ai, aj) + bc);
+                }
+            }
+        }
+    }
+    mpsyrk_tm.stop();
+}
+
+template <>
+template <typename T1, typename T2>
+void LAU_H::MPsyrk(const char uplo, const char trans, const int n, const int k,
+    const double alpha, const T1* const a, const int lda, const double beta,
+    T2* c, const int ldc)
+{
+    MemorySpace::assert_is_host_ptr(a);
+    MemorySpace::assert_is_host_ptr(c);
+
+    tttsyrk_tm.start();
+
+    if (beta == 1. && (alpha == 0. || n == 0 || k == 0)) return;
+
+    /* case Trans == 'N' */
+    if (trans == 'N' || trans == 'n')
+    {
+        /* buffer to hold accumulation in double */
+        std::vector<double> buff(n);
+        if (uplo == 'U' || uplo == 'u')
+        {
+            for (int j = 0; j < n; j++)
+            {
+                const int len = j + 1;
+                std::fill(buff.begin(), buff.begin() + len, 0.);
+                for (int l = 0; l < k; l++)
+                {
+                    /* pointer to beginning of column l in matrix a */
+                    const T1* colL = a + lda * l;
+                    /* get multiplier */
+                    double mult = static_cast<double>(
+                        alpha * colL[j]); // same as alpha * a[lda*l + j];
+                    LAU_H::MPaxpy(len, mult, colL, buff.data());
+                }
+                /* Update col j of upper part of matrix C. */
+                /* Get pointer to beginning of column j in C. */
+                T2* cj = c + ldc * j;
+                LAU_H::MPscal(len, beta, cj);
+                for (int i = 0; i < len; i++)
+                    cj[i] += (T2)buff[i];
+            }
+        }
+        else /* uplo = 'L' or 'l' */
+        {
+            for (int j = 0; j < n; j++)
+            {
+                const int len = n - (j + 1);
+                std::fill(buff.begin(), buff.begin() + len, 0.);
+                for (int l = 0; l < k; l++)
+                {
+                    /* pointer to beginning of column l in matrix a */
+                    const T1* colL = a + lda * l + j;
+                    /* get multiplier */
+                    double mult = static_cast<double>(
+                        alpha * colL[0]); // same as alpha * a[lda*l + j];
+                    LAU_H::MPaxpy(len, mult, colL, buff.data());
+                }
+                /* Update col j of upper part of matrix C. */
+                /* Get pointer to beginning of column j in C. */
+                T2* cj = c + ldc * j + j;
+                LAU_H::MPscal(len, beta, cj);
+                for (int i = 0; i < len; i++)
+                    cj[i] += (T2)buff[i];
+            }
+        }
+    }
+    else /* Trans == 'T' or 'C' */
+    {
+        if (uplo == 'U' || uplo == 'u')
+        {
+            for (int j = 0; j < n; j++)
+            {
+                const T1* __restrict__ aj = a + lda * j;
+                for (int i = 0; i < j; i++)
+                {
+                    const int pos             = ldc * j + i;
+                    const T1* __restrict__ ai = a + lda * i;
+                    double bc = static_cast<double>(c[pos]) * beta;
+                    c[pos]
+                        = static_cast<T2>(alpha * LAU_H::MPdot(k, ai, aj) + bc);
+                }
+            }
+        }
+        else /* uplo = 'L' or 'l' */
+        {
+            for (int j = 0; j < n; j++)
+            {
+                const T1* __restrict__ aj = a + lda * j;
+                for (int i = j; i < n; i++)
+                {
+                    const int pos             = ldc * j + i;
+                    const T1* __restrict__ ai = a + lda * i;
+                    double bc = static_cast<double>(c[pos]) * beta;
+                    c[pos]
+                        = static_cast<T2>(alpha * LAU_H::MPdot(k, ai, aj) + bc);
+                }
+            }
+        }
+    }
+
+    tttsyrk_tm.stop();
+}
+
+// MemorySpace::Device
+#ifdef HAVE_MAGMA
+template <>
+void LAU_D::MPsyrk(const char uplo, const char trans, const int n, const int k,
+    const double alpha, const double* const a, const int lda, const double beta,
+    double* c, const int ldc)
+{
+    MemorySpace::assert_is_dev_ptr(a);
+    MemorySpace::assert_is_dev_ptr(c);
+
+    dsyrk_tm.start();
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+    magma_dsyrk(magma_uplo_const(uplo), magma_trans_const(trans), n, k, alpha,
+        a, lda, beta, c, ldc, magma_singleton.queue_);
+    dsyrk_tm.stop();
+}
+
+template <>
+void LAU_D::MPsyrk(const char uplo, const char trans, const int n, const int k,
+    const double alpha, const float* const a, const int lda, const double beta,
+    float* c, const int ldc)
+{
+    MemorySpace::assert_is_dev_ptr(a);
+    MemorySpace::assert_is_dev_ptr(c);
+
+    // Move the data on the host
+    const int size_a = lda * k;
+    std::vector<float> a_host(size_a);
+    MemorySpace::copy_to_host(a, a_host);
+
+    const int size_c = ldc * n;
+    std::vector<float> c_host(size_c);
+    MemorySpace::copy_to_host(c, c_host);
+
+    // Call the host function
+    LAU_H::MPsyrk(
+        uplo, trans, n, k, alpha, a_host.data(), lda, beta, c_host.data(), ldc);
+
+    // Move the result back to the
+    MemorySpace::copy_to_dev(c_host, c);
+}
+
+template <>
+template <typename T1, typename T2>
+void LAU_D::MPsyrk(const char uplo, const char trans, const int n, const int k,
+    const double alpha, const T1* const a, const int lda, const double beta,
+    T2* c, const int ldc)
+{
+    MemorySpace::assert_is_dev_ptr(a);
+    MemorySpace::assert_is_dev_ptr(c);
+
+    // Move the data on the host
+    const int size_a = lda * k;
+    std::vector<T1> a_host(size_a);
+    MemorySpace::copy_to_host(a, a_host);
+
+    const int size_c = ldc * n;
+    std::vector<T2> c_host(size_c);
+    MemorySpace::copy_to_host(c, c_host);
+
+    // Call the host function
+    LAU_H::MPsyrk(
+        uplo, trans, n, k, alpha, a_host.data(), lda, beta, c_host.data(), ldc);
+
+    // Move the result back to the
+    MemorySpace::copy_to_dev(c_host, c);
+}
+#endif
+
 void Tscal(const int len, const double scal, double* dptr)
 {
     const int one = 1;
@@ -382,113 +670,6 @@ void Tsyrk(const char uplo, const char trans, const int n, const int k,
     ssyrk_tm.start();
     SSYRK(&uplo, &trans, &n, &k, &alpha, a, &lda, &beta, c, &ldc);
     ssyrk_tm.stop();
-}
-
-void MPsyrk(const char uplo, const char trans, const int n, const int k,
-    const double alpha, const double* const a, const int lda, const double beta,
-    double* c, const int ldc)
-{
-    dsyrk_tm.start();
-    DSYRK(&uplo, &trans, &n, &k, &alpha, a, &lda, &beta, c, &ldc);
-    dsyrk_tm.stop();
-}
-
-void MPsyrk(const char uplo, const char trans, const int n, const int k,
-    const double alpha, const float* const a, const int lda, const double beta,
-    float* c, const int ldc)
-{
-    mpsyrk_tm.start();
-
-    if (beta == 1. && (alpha == 0. || n == 0 || k == 0)) return;
-
-    /* case Trans == 'N' */
-    if (trans == 'N' || trans == 'n')
-    {
-        /* buffer to hold accumulation in double */
-        std::vector<double> buff(n);
-        if (uplo == 'U' || uplo == 'u')
-        {
-            for (int j = 0; j < n; j++)
-            {
-                const int len = j + 1;
-                std::fill(buff.begin(), buff.begin() + len, 0.);
-                for (int l = 0; l < k; l++)
-                {
-                    /* pointer to beginning of column l in matrix a */
-                    const float* colL = a + lda * l;
-                    /* get multiplier */
-                    double mult
-                        = (double)(alpha
-                                   * colL[j]); // same as alpha * a[lda*l + j];
-                    LAU_H::MPaxpy(len, mult, colL, buff.data());
-                }
-                /* Update col j of upper part of matrix C. */
-                /* Get pointer to beginning of column j in C. */
-                float* cj = c + ldc * j;
-                LAU_H::MPscal(len, beta, cj);
-                for (int i = 0; i < len; i++)
-                    cj[i] += (float)buff[i];
-            }
-        }
-        else /* uplo = 'L' or 'l' */
-        {
-            for (int j = 0; j < n; j++)
-            {
-                const int len = n - (j + 1);
-                std::fill(buff.begin(), buff.begin() + len, 0.);
-                for (int l = 0; l < k; l++)
-                {
-                    /* pointer to beginning of column l in matrix a */
-                    const float* colL = a + lda * l + j;
-                    /* get multiplier */
-                    double mult
-                        = (double)(alpha
-                                   * colL[0]); // same as alpha * a[lda*l + j];
-                    LAU_H::MPaxpy(len, mult, colL, buff.data());
-                }
-                /* Update col j of upper part of matrix C. */
-                /* Get pointer to beginning of column j in C. */
-                float* cj = c + ldc * j + j;
-                LAU_H::MPscal(len, beta, cj);
-                for (int i = 0; i < len; i++)
-                    cj[i] += (float)buff[i];
-            }
-        }
-    }
-    else /* Trans == 'T' or 'C' */
-    {
-        if (uplo == 'U' || uplo == 'u')
-        {
-            for (int j = 0; j < n; j++)
-            {
-                const float* __restrict__ aj = a + lda * j;
-                for (int i = 0; i < j; i++)
-                {
-                    const int pos                = ldc * j + i;
-                    const float* __restrict__ ai = a + lda * i;
-                    double bc = static_cast<double>(c[pos]) * beta;
-                    c[pos]    = static_cast<float>(
-                        alpha * LAU_H::MPdot(k, ai, aj) + bc);
-                }
-            }
-        }
-        else /* uplo = 'L' or 'l' */
-        {
-            for (int j = 0; j < n; j++)
-            {
-                const float* __restrict__ aj = a + lda * j;
-                for (int i = j; i < n; i++)
-                {
-                    const int pos                = ldc * j + i;
-                    const float* __restrict__ ai = a + lda * i;
-                    double bc = static_cast<double>(c[pos]) * beta;
-                    c[pos]    = static_cast<float>(
-                        alpha * LAU_H::MPdot(k, ai, aj) + bc);
-                }
-            }
-        }
-    }
-    mpsyrk_tm.stop();
 }
 
 void Tgemv(const char trans, const int m, const int n, const double alpha,
@@ -873,106 +1054,6 @@ void MPgemmTN(const int m, const int n, const int k, const double alpha,
     LAU_H::MPgemm(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
 }
 
-template <typename T1, typename T2>
-void MPsyrk(const char uplo, const char trans, const int n, const int k,
-    const double alpha, const T1* const a, const int lda, const double beta,
-    T2* c, const int ldc)
-{
-    tttsyrk_tm.start();
-
-    if (beta == 1. && (alpha == 0. || n == 0 || k == 0)) return;
-
-    /* case Trans == 'N' */
-    if (trans == 'N' || trans == 'n')
-    {
-        /* buffer to hold accumulation in double */
-        std::vector<double> buff(n);
-        if (uplo == 'U' || uplo == 'u')
-        {
-            for (int j = 0; j < n; j++)
-            {
-                const int len = j + 1;
-                std::fill(buff.begin(), buff.begin() + len, 0.);
-                for (int l = 0; l < k; l++)
-                {
-                    /* pointer to beginning of column l in matrix a */
-                    const T1* colL = a + lda * l;
-                    /* get multiplier */
-                    double mult
-                        = (double)(alpha
-                                   * colL[j]); // same as alpha * a[lda*l + j];
-                    LAU_H::MPaxpy(len, mult, colL, buff.data());
-                }
-                /* Update col j of upper part of matrix C. */
-                /* Get pointer to beginning of column j in C. */
-                T2* cj = c + ldc * j;
-                LAU_H::MPscal(len, beta, cj);
-                for (int i = 0; i < len; i++)
-                    cj[i] += (T2)buff[i];
-            }
-        }
-        else /* uplo = 'L' or 'l' */
-        {
-            for (int j = 0; j < n; j++)
-            {
-                const int len = n - (j + 1);
-                std::fill(buff.begin(), buff.begin() + len, 0.);
-                for (int l = 0; l < k; l++)
-                {
-                    /* pointer to beginning of column l in matrix a */
-                    const T1* colL = a + lda * l + j;
-                    /* get multiplier */
-                    double mult
-                        = (double)(alpha
-                                   * colL[0]); // same as alpha * a[lda*l + j];
-                    LAU_H::MPaxpy(len, mult, colL, buff.data());
-                }
-                /* Update col j of upper part of matrix C. */
-                /* Get pointer to beginning of column j in C. */
-                T2* cj = c + ldc * j + j;
-                LAU_H::MPscal(len, beta, cj);
-                for (int i = 0; i < len; i++)
-                    cj[i] += (T2)buff[i];
-            }
-        }
-    }
-    else /* Trans == 'T' or 'C' */
-    {
-        if (uplo == 'U' || uplo == 'u')
-        {
-            for (int j = 0; j < n; j++)
-            {
-                const T1* __restrict__ aj = a + lda * j;
-                for (int i = 0; i < j; i++)
-                {
-                    const int pos             = ldc * j + i;
-                    const T1* __restrict__ ai = a + lda * i;
-                    double bc = static_cast<double>(c[pos]) * beta;
-                    c[pos]
-                        = static_cast<T2>(alpha * LAU_H::MPdot(k, ai, aj) + bc);
-                }
-            }
-        }
-        else /* uplo = 'L' or 'l' */
-        {
-            for (int j = 0; j < n; j++)
-            {
-                const T1* __restrict__ aj = a + lda * j;
-                for (int i = j; i < n; i++)
-                {
-                    const int pos             = ldc * j + i;
-                    const T1* __restrict__ ai = a + lda * i;
-                    double bc = static_cast<double>(c[pos]) * beta;
-                    c[pos]
-                        = static_cast<T2>(alpha * LAU_H::MPdot(k, ai, aj) + bc);
-                }
-            }
-        }
-    }
-
-    tttsyrk_tm.stop();
-}
-
 void MPcpy(double* const dest, const double* const src, const int n)
 {
     memcpy(dest, src, n * sizeof(double));
@@ -993,13 +1074,6 @@ void MPcpy(
     for (int i = 0; i < n; i++)
         dest[i] = src[i];
 }
-
-template void MPsyrk<double, float>(const char uplo, const char trans,
-    const int n, const int k, const double alpha, const double* const a,
-    const int lda, const double beta, float* c, const int ldc);
-template void MPsyrk<float, double>(const char uplo, const char trans,
-    const int n, const int k, const double alpha, const float* const a,
-    const int lda, const double beta, double* c, const int ldc);
 
 template void LAU_H::MPgemm<double, float, double>(const char transa,
     const char transb, const int m, const int n, const int k,
@@ -1043,6 +1117,12 @@ template void LAU_H::MPaxpy<float, double>(const int len, const double scal,
     const float* __restrict__ xptr, double* __restrict__ yptr);
 template void LAU_H::MPaxpy<float, float>(const int len, const double scal,
     const float* __restrict__ xptr, float* __restrict__ yptr);
+template void LAU_H::MPsyrk<double, float>(const char uplo, const char trans,
+    const int n, const int k, const double alpha, const double* const a,
+    const int lda, const double beta, float* c, const int ldc);
+template void LAU_H::MPsyrk<float, double>(const char uplo, const char trans,
+    const int n, const int k, const double alpha, const float* const a,
+    const int lda, const double beta, double* c, const int ldc);
 
 template void MPgemmTN<double, double, double>(const int m, const int n,
     const int k, const double alpha, const double* const a, const int lda,
@@ -1097,4 +1177,10 @@ template void LAU_D::MPaxpy<float, double>(const int len, const double scal,
     const float* __restrict__ xptr, double* __restrict__ yptr);
 template void LAU_D::MPaxpy<float, float>(const int len, const double scal,
     const float* __restrict__ xptr, float* __restrict__ yptr);
+template void LAU_D::MPsyrk<double, float>(const char uplo, const char trans,
+    const int n, const int k, const double alpha, const double* const a,
+    const int lda, const double beta, float* c, const int ldc);
+template void LAU_D::MPsyrk<float, double>(const char uplo, const char trans,
+    const int n, const int k, const double alpha, const float* const a,
+    const int lda, const double beta, double* c, const int ldc);
 #endif

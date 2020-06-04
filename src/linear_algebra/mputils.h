@@ -76,18 +76,6 @@ void Tsyrk(const char uplo, const char trans, const int n, const int k,
     const float alpha, const float* const a, const int lda, const float beta,
     float* c, const int ldc);
 
-/* Mixed precision syrk */
-void MPsyrk(const char uplo, const char trans, const int n, const int k,
-    const double alpha, const double* const a, const int lda, const double beta,
-    double* c, const int ldc);
-void MPsyrk(const char uplo, const char trans, const int n, const int k,
-    const double alpha, const float* const a, const int lda, const double beta,
-    float* c, const int ldc);
-template <typename T1, typename T2>
-void MPsyrk(const char uplo, const char trans, const int n, const int k,
-    const double alpha, const T1* const a, const int lda, const double beta,
-    T2* c, const int ldc);
-
 void Tgemv(const char trans, const int m, const int n, const double alpha,
     const double* const a, const int lda, const double* const x, const int incx,
     const double beta, double* const y, const int incy);
@@ -130,6 +118,17 @@ struct LinearAlgebraUtils
     template <typename T1, typename T2>
     static void MPaxpy(const int len, double scal, const T1* __restrict__ xptr,
         T2* __restrict__ yptr);
+
+    static void MPsyrk(const char uplo, const char trans, const int n,
+        const int k, const double alpha, const double* const a, const int lda,
+        const double beta, double* c, const int ldc);
+    static void MPsyrk(const char uplo, const char trans, const int n,
+        const int k, const double alpha, const float* const a, const int lda,
+        const double beta, float* c, const int ldc);
+    template <typename T1, typename T2>
+    static void MPsyrk(const char uplo, const char trans, const int n,
+        const int k, const double alpha, const T1* const a, const int lda,
+        const double beta, T2* c, const int ldc);
 };
 
 void MPgemmTN(const int m, const int n, const int k, const double alpha,
