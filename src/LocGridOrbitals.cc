@@ -1465,7 +1465,8 @@ void LocGridOrbitals::getLocalOverlap(SquareLocalMatrices<MATDTYPE>& ss)
 
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
-            ss.syrk(iloc, loc_numpt_, psi + iloc * loc_numpt_, lda_);
+            ss.syrk<memory_space_type>(
+                iloc, loc_numpt_, psi + iloc * loc_numpt_, lda_);
         }
 
         // We may need the full matrix

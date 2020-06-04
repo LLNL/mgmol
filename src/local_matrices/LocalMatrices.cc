@@ -107,6 +107,7 @@ void LocalMatrices<T>::copy(const bml_matrix_t* A)
 // C := A'*A
 // This one is for debug purposes, and can be removed if unused
 template <class T>
+template <typename MemorySpaceType>
 void LocalMatrices<T>::syrk(
     const int iloc, const int k, const double* const a, const int lda)
 {
@@ -125,12 +126,24 @@ void LocalMatrices<T>::syrk(
     const char uplo   = 'l'; // fill lower triangular part
     const char trans  = 't';
 
-    MPsyrk(uplo, trans, m_, k, one, a, lda, zero, ssiloc, m_);
+    // ssiloc is always on the host but a maybe on the device
+    const int size_a = lda * k;
+    double* a_host_view
+        = MemorySpace::Memory<double, MemorySpaceType>::allocate_host_view(
+            size_a);
+    MemorySpace::Memory<double, MemorySpaceType>::copy_view_to_host(
+        const_cast<double*>(a), size_a, a_host_view);
+
+    LinearAlgebraUtils<MemorySpace::Host>::MPsyrk(
+        uplo, trans, m_, k, one, a_host_view, lda, zero, ssiloc, m_);
+
+    MemorySpace::Memory<double, MemorySpaceType>::free_host_view(a_host_view);
 }
 
 // perform the symmetric operation
 // C := A'*A
 template <class T>
+template <typename MemorySpaceType>
 void LocalMatrices<T>::syrk(
     const int iloc, const int k, const float* const a, const int lda)
 {
@@ -148,9 +161,8 @@ void LocalMatrices<T>::syrk(
     const double one  = 1.;
     const char uplo   = 'l'; // fill lower triangular part
     const char trans  = 't';
-    MPsyrk(uplo, trans, m_, k, one, a, lda, zero, ssiloc, m_);
-    //    dsyrk(&uplo, &trans, &m_, &k, &one, a, &lda,
-    //          &zero, ssiloc, &m_);
+    LinearAlgebraUtils<MemorySpace::Host>::MPsyrk(
+        uplo, trans, m_, k, one, a, lda, zero, ssiloc, m_);
 }
 
 // This one is for debug purposes, and can be removed if unused
@@ -296,3 +308,22 @@ template class LocalMatrices<float>;
 
 template void LocalMatrices<double>::copy(const LocalMatrices<float>& mat);
 template void LocalMatrices<double>::copy(const LocalMatrices<double>& mat);
+
+template void LocalMatrices<double>::syrk<MemorySpace::Host>(
+    const int iloc, const int k, const double* const a, const int lda);
+template void LocalMatrices<double>::syrk<MemorySpace::Host>(
+    const int iloc, const int k, const float* const a, const int lda);
+template void LocalMatrices<float>::syrk<MemorySpace::Host>(
+    const int iloc, const int k, const double* const a, const int lda);
+template void LocalMatrices<float>::syrk<MemorySpace::Host>(
+    const int iloc, const int k, const float* const a, const int lda);
+#ifdef HAVE_MAGMA
+template void LocalMatrices<double>::syrk<MemorySpace::Device>(
+    const int iloc, const int k, const double* const a, const int lda);
+template void LocalMatrices<double>::syrk<MemorySpace::Device>(
+    const int iloc, const int k, const float* const a, const int lda);
+template void LocalMatrices<float>::syrk<MemorySpace::Device>(
+    const int iloc, const int k, const double* const a, const int lda);
+template void LocalMatrices<float>::syrk<MemorySpace::Device>(
+    const int iloc, const int k, const float* const a, const int lda);
+#endif

@@ -104,7 +104,9 @@ public:
         Taxpy(storage_size_, alpha, matA.storage_, storage_);
     }
 
+    template <typename MemorySpaceType>
     void syrk(const int iloc, const int m, const float* const a, const int lda);
+    template <typename MemorySpaceType>
     void syrk(
         const int iloc, const int m, const double* const a, const int lda);
     void gemm(const int iloc, const int ma, const float* const a, const int lda,

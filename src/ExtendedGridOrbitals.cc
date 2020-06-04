@@ -967,20 +967,12 @@ void ExtendedGridOrbitals::getLocalOverlap(SquareLocalMatrices<MATDTYPE>& ss)
 #ifdef USE_MP
         getLocalOverlap(*this, ss);
 #else
-        ORBDTYPE* psi           = block_vector_.vect(0);
-        unsigned int const size = block_vector_.get_allocated_size_storage();
-        ORBDTYPE* psi_host_view = MemorySpace::Memory<ORBDTYPE,
-            memory_space_type>::allocate_host_view(size);
-        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
-            psi, size, psi_host_view);
-
+        ORBDTYPE* psi = block_vector_.vect(0);
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
-            ss.syrk(iloc, loc_numpt_, psi_host_view + iloc * loc_numpt_, lda_);
+            ss.syrk<memory_space_type>(
+                iloc, loc_numpt_, psi + iloc * loc_numpt_, lda_);
         }
-
-        MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
-            psi_host_view);
 
         // We may need the full matrix
         ss.fillUpperWithLower();

@@ -1072,12 +1072,13 @@ int DistMatrix<double>::potrf(char uplo)
     if (active_)
     {
         assert(m_ == n_);
+        MemorySpace::assert_is_host_ptr(val_.data());
 
 #ifdef SCALAPACK
         int ione = 1;
-        pdpotrf(&uplo, &m_, &val_[0], &ione, &ione, desc_, &info);
+        pdpotrf(&uplo, &m_, val_.data(), &ione, &ione, desc_, &info);
 #else
-        dpotrf(&uplo, &m_, &val_[0], &m_, &info);
+        dpotrf(&uplo, &m_, val_.data(), &m_, &info);
 #endif
         if (info != 0)
         {
