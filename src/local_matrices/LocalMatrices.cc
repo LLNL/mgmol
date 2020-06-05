@@ -136,8 +136,6 @@ void LocalMatrices<T>::syrk(
 
     LinearAlgebraUtils<MemorySpace::Host>::MPsyrk(
         uplo, trans, m_, k, one, a_host_view, lda, zero, ssiloc, m_);
-    for (int i = 0; i < m_ * m_; ++i)
-        assert(std::isfinite(ssiloc[i]));
 
     MemorySpace::Memory<double, MemorySpaceType>::free_host_view(a_host_view);
 }

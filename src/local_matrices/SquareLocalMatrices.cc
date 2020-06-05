@@ -30,7 +30,6 @@ void SquareLocalMatrices<T>::fillUpperWithLower()
             const int istart = m * i;
             for (int j = 0; j < i; j++)
             {
-                assert(std::isfinite(ssiloc[i + m * j]));
                 ssiloc[istart + j] = ssiloc[i + m * j];
             }
         }

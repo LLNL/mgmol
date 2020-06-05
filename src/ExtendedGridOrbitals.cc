@@ -251,7 +251,7 @@ void ExtendedGridOrbitals::initGauss(
         MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
             ipsi, ipsi_size, ipsi_host_view);
         MemorySpace::Memory<ORBDTYPE, MemorySpace::Host>::set(
-            ipsi_host_view, numpt_, 0);
+            ipsi_host_view, ipsi_size, 0);
 
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
@@ -1609,8 +1609,7 @@ void ExtendedGridOrbitals::initRand()
         for (unsigned int idx = 0; idx < grid_.gdim(2); idx++)
             zrand[idx] = ran0() - 0.5;
 
-        unsigned int const size  = BlockVector<ORBDTYPE,
-            memory_space_type>::get_allocated_size_storage();
+        unsigned int const size  = loc_numpt_;
         ORBDTYPE* psi_state_view = MemorySpace::Memory<ORBDTYPE,
             memory_space_type>::allocate_host_view(size);
         MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
