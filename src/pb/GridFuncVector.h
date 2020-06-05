@@ -177,11 +177,19 @@ public:
         assert(static_cast<int>(functions_.size()) <= nfunc_);
     }
 
-    GridFunc<T>& func(const int k) { return *functions_[k]; }
-    const GridFunc<T>& func(const int k) const { return *functions_[k]; }
+    GridFunc<T>& func(const int k)
+    {
+        assert(k < static_cast<int>(functions_.size()));
+        return *functions_[k];
+    }
+    const GridFunc<T>& func(const int k) const
+    {
+        assert(k < static_cast<int>(functions_.size()));
+        return *functions_[k];
+    }
     const GridFunc<T>& ref_func(const int k)
     {
-        assert(k < (int)functions_.size());
+        assert(k < static_cast<int>(functions_.size()));
         return *(functions_[k]);
     }
     void trade_boundaries();
