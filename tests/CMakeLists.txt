@@ -120,6 +120,17 @@ add_executable(testVariableSizeMatrix
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
+add_executable(testTradeGhostValues
+               ${CMAKE_SOURCE_DIR}/tests/testTradeGhostValues.cc
+               ${CMAKE_SOURCE_DIR}/src/magma_singleton.cc
+               ${CMAKE_SOURCE_DIR}/src/pb/Grid.cc
+               ${CMAKE_SOURCE_DIR}/src/pb/PEenv.cc
+               ${CMAKE_SOURCE_DIR}/src/pb/GridFunc.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
+               ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 
 if((${MAGMA_FOUND}) AND (${MGMOL_WITH_OPENMP_OFFLOAD}))
   add_executable(testMagmaOpenmp
@@ -168,6 +179,9 @@ add_test(NAME testSuperSampling
 add_test(NAME testVariableSizeMatrix
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 1 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testVariableSizeMatrix)
+add_test(NAME testTradeGhostValues
+         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+                 ${CMAKE_CURRENT_BINARY_DIR}/testTradeGhostValues)
 
 if((${MAGMA_FOUND}) AND (${MGMOL_WITH_OPENMP_OFFLOAD}))
   add_test(NAME testMagmaOpenmp
@@ -318,6 +332,8 @@ if(${MAGMA_FOUND})
     MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
   target_link_libraries(testVariableSizeMatrix PRIVATE ${BLAS_LIBRARIES} 
     MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
+  target_link_libraries(testTradeGhostValues PRIVATE ${BLAS_LIBRARIES}
+    MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
 if((${MAGMA_FOUND}) AND (${MGMOL_WITH_OPENMP_OFFLOAD}))
   target_link_libraries(testMagmaOpenmp PRIVATE 
     MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
@@ -342,6 +358,8 @@ else()
   target_link_libraries(testAndersonMix PRIVATE ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} 
     MPI::MPI_CXX OpenMP::OpenMP_CXX)
   target_link_libraries(testVariableSizeMatrix PRIVATE ${BLAS_LIBRARIES} 
+    MPI::MPI_CXX OpenMP::OpenMP_CXX)
+  target_link_libraries(testTradeGhostValues PRIVATE ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES}
     MPI::MPI_CXX OpenMP::OpenMP_CXX)
 endif()
 

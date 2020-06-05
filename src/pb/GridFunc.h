@@ -221,7 +221,6 @@ public:
     double norm2() const;
     void extend3D(GridFunc<T>&);
     void restrict3D(GridFunc<T>&);
-    void test_trade_boundaries();
     void test_grid_transfer();
     void init_rand();
     void initTriLin(const T a[4], const bool wghosts = true);
