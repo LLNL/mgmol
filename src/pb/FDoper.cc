@@ -9,6 +9,7 @@
 
 // $Id: FDoper.cc,v 1.22 2010/01/28 22:56:31 jeanluc Exp $
 #include "FDoper.h"
+#include "memory_space.h"
 #include "tools.h"
 #include <iomanip>
 
