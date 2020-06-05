@@ -147,8 +147,21 @@ void Hamiltonian<T>::applyLocal(
 #pragma omp parallel for
         for (int i = 0; i < ncolors; i++)
         {
-            lapOper_->applyWithPot(phi.getFuncWithGhosts(first_state + i), vtot,
-                hphi.getPsi(i + first_state));
+            using memory_space_type   = typename T::memory_space_type;
+            ORBDTYPE* ihphi           = hphi.getPsi(i + first_state);
+            unsigned int const size   = hphi.getLocNumpt();
+            ORBDTYPE* ihphi_host_view = MemorySpace::Memory<ORBDTYPE,
+                memory_space_type>::allocate_host_view(size);
+            MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+                hphi.getPsi(i + first_state), size, ihphi_host_view);
+
+            lapOper_->applyWithPot(
+                phi.getFuncWithGhosts(first_state + i), vtot, ihphi_host_view);
+
+            MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_dev(
+                ihphi_host_view, size, ihphi);
+            MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+                ihphi_host_view);
         }
     }
 
