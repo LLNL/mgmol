@@ -163,10 +163,9 @@ void KBPsiMatrixSparse::computeKBpsi(Ions& ions, T& orbitals,
     }
     else
     {
-        unsigned int ppsi_size    = 0;
-        ORBDTYPE* psi_first_color = orbitals.getPsi(first_color);
-        ppsi_size                 = orbitals.getNumpt();
-        ppsi                      = MemorySpace::Memory<ORBDTYPE,
+        ORBDTYPE* psi_first_color    = orbitals.getPsi(first_color);
+        unsigned int const ppsi_size = nb_colors * ldsize;
+        ppsi                         = MemorySpace::Memory<ORBDTYPE,
             typename T::memory_space_type>::allocate_host_view(ppsi_size);
 
         MemorySpace::Memory<ORBDTYPE,
