@@ -1111,9 +1111,9 @@ void GridFuncVector<T>::trade_boundaries_colors(
     assert(comm_buf3_.size() > 0);
 
     grid_.mype_env().barrier();
-    if (onpe0)
-        std::cout << "Color " << first_color << " to " << last_color - 1
-                  << std::endl;
+    // if (onpe0)
+    //    std::cout << "Color " << first_color << " to " << last_color - 1
+    //              << std::endl;
 
     if (!grid_.active()) return;
     if (updated_boundaries_) return;
