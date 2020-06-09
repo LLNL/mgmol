@@ -128,8 +128,6 @@ MGmol<T>::MGmol(MPI_Comm comm, std::ostream& os) : os_(os)
 
     spread_penalty_ = nullptr;
 
-    data_distributor_ = new BasicDataDistributors();
-
     orbitals_precond_ = nullptr;
 
     forces_ = nullptr;
@@ -166,8 +164,6 @@ MGmol<T>::~MGmol()
     if (spreadf_ != nullptr) delete spreadf_;
 
     if (spread_penalty_ != nullptr) delete spread_penalty_;
-
-    delete data_distributor_;
 
     delete forces_;
     if (dm_strategy_ != nullptr) delete dm_strategy_;
@@ -260,7 +256,6 @@ int MGmol<T>::initial()
     // initialize data distribution objects
     const pb::PEenv& myPEenv = mymesh->peenv();
     double domain[3]         = { mygrid.ll(0), mygrid.ll(1), mygrid.ll(2) };
-    data_distributor_->initialize(lrs_, myPEenv, domain);
 
     bool with_spin = (mmpi.nspin() > 1);
     if (ct.Mehrstellen())

@@ -74,7 +74,6 @@ class ProjectedMatricesSparse : public ProjectedMatricesInterface
     SquareLocalMatrices<MATDTYPE>* localT_;
 
     /* Data distribution objects */
-    DataDistribution* distributor_sH_;
     DataDistribution* distributor_invS_;
 
     void clearData();

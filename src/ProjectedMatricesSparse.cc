@@ -12,7 +12,6 @@
 #include <fstream>
 #include <iomanip>
 
-#include "BasicDataDistributors.h"
 #include "Control.h"
 #include "HDFrestart.h"
 #include "MGmol_MPI.h"
@@ -52,9 +51,13 @@ ProjectedMatricesSparse::ProjectedMatricesSparse(
 
     lrs_           = lrs;
     local_cluster_ = local_cluster;
+
+    Mesh* mymesh             = Mesh::instance();
+    const pb::Grid& mygrid   = mymesh->grid();
+    const pb::PEenv& myPEenv = mymesh->peenv();
+    double domain[3]         = { mygrid.ll(0), mygrid.ll(1), mygrid.ll(2) };
     distributor_invS_
-        = BasicDataDistributors::centeredOrbitalsOverlapDistributor();
-    distributor_sH_ = BasicDataDistributors::orbitalsProdWithHDistributor();
+        = new DataDistribution("invS", lrs_->max_radii(), myPEenv, domain);
 
     invS_ = nullptr;
 
@@ -105,7 +108,6 @@ ProjectedMatricesSparse::~ProjectedMatricesSparse()
     assert(submatT_ != nullptr);
     assert(sH_ != nullptr);
     assert(matHB_ != nullptr);
-    assert(distributor_sH_ != nullptr);
     assert(distributor_invS_ != nullptr);
 
     // if(onpe0)cout<<"delete invS"<<endl;
@@ -293,13 +295,16 @@ void ProjectedMatricesSparse::consolidateH()
     std::vector<int> locfcns;
     lrs_->getLocalSubdomainIndices(locfcns);
 
-    /* gather data for matH amd matHB */
-    distributor_sH_->augmentLocalData((*sH_), false);
-
     Mesh* mymesh             = Mesh::instance();
     const pb::Grid& mygrid   = mymesh->grid();
     const pb::PEenv& myPEenv = mymesh->peenv();
     double domain[3]         = { mygrid.ll(0), mygrid.ll(1), mygrid.ll(2) };
+
+    /* gather data for matH amd matHB */
+    DataDistribution distributor_sH(
+        "prodH", 3. * lrs_->max_radii(), myPEenv, domain);
+    distributor_sH.augmentLocalData((*sH_), false);
+
     // now gather updated data from neighbors.
     // gather from neighbors that contain functions that overlap with locally
     // centered functions

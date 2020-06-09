@@ -40,7 +40,6 @@ template <class T>
 class IonicAlgorithm;
 
 #include "AOMMprojector.h"
-#include "BasicDataDistributors.h"
 #include "ClusterOrbitals.h"
 #include "ExtendedGridOrbitals.h"
 #include "Forces.h"
@@ -156,9 +155,6 @@ private:
     static Timer get_Hpsi_and_Hij_tm_;
     static Timer comp_res_tm_;
     static Timer init_nuc_tm_;
-
-    /* Data distribution objects */
-    BasicDataDistributors* data_distributor_;
 
     OrbitalsPreconditioning<T>* orbitals_precond_;
 

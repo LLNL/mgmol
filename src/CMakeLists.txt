@@ -128,7 +128,6 @@ set(SOURCES
  Forces.cc 
  computeHij.cc 
  Potentials.cc 
- BasicDataDistributors.cc 
  ShortSightedInverse.cc 
  PCGSolver_Diel.cc 
  PBdiel_CG.cc 
