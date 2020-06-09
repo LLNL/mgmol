@@ -75,7 +75,6 @@ class ProjectedMatricesSparse : public ProjectedMatricesInterface
 
     /* Data distribution objects */
     DataDistribution* distributor_sH_;
-    DataDistribution* distributor_matS_;
     DataDistribution* distributor_invS_;
 
     void clearData();
@@ -256,7 +255,6 @@ public:
     {
         assert(invS_ != NULL);
         assert(distributor_invS_ != NULL);
-        assert(distributor_matS_ != NULL);
 
         compute_inverse_tm_.start();
         (*invS_).computeInvS(*distributor_invS_);

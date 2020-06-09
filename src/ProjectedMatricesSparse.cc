@@ -50,9 +50,8 @@ ProjectedMatricesSparse::ProjectedMatricesSparse(
     dim_     = ndim;
     min_val_ = 0.25;
 
-    lrs_              = lrs;
-    local_cluster_    = local_cluster;
-    distributor_matS_ = BasicDataDistributors::gramMatrixDistributor();
+    lrs_           = lrs;
+    local_cluster_ = local_cluster;
     distributor_invS_
         = BasicDataDistributors::centeredOrbitalsOverlapDistributor();
     distributor_sH_ = BasicDataDistributors::orbitalsProdWithHDistributor();
@@ -107,7 +106,6 @@ ProjectedMatricesSparse::~ProjectedMatricesSparse()
     assert(sH_ != nullptr);
     assert(matHB_ != nullptr);
     assert(distributor_sH_ != nullptr);
-    assert(distributor_matS_ != nullptr);
     assert(distributor_invS_ != nullptr);
 
     // if(onpe0)cout<<"delete invS"<<endl;
@@ -357,14 +355,6 @@ void ProjectedMatricesSparse::printMatrices(std::ostream& os) const
     printH(os);
     printTheta(os);
     printHB(os);
-
-    /* print stats for Gram Matrix data distribution */
-    Control& ct = *(Control::instance());
-    if ((ct.verbose > 1) && onpe0)
-    {
-        std::cout << " Gram Matrix data distribution stats " << std::endl;
-        (*distributor_matS_).printStats();
-    }
 }
 
 double ProjectedMatricesSparse::getNel() const { return 2. * dim_; }
