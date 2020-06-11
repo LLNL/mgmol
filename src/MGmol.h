@@ -141,6 +141,7 @@ private:
 
     int initial();
     void initialMasks();
+    int setupLRsFromInput(const std::string input_file);
 
     // timers
     static Timer total_tm_;
@@ -263,8 +264,8 @@ public:
     int nions() { return ions_->getNumIons(); }
     double getTotalEnergy();
     void setup();
+    int setupLRs(const std::string input_file) override;
     int setupFromInput(const std::string input_file) override;
-    int setupLRsFromInput(const std::string input_file) override;
     int setupConstraintsFromInput(const std::string input_file) override;
     void cleanup();
     void geomOptimSetup();
