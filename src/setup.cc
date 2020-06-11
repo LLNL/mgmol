@@ -65,6 +65,8 @@ int MGmol<T>::setupLRs(const std::string filename)
     lrs_ = new LocalizationRegions(vcell, ct.tol_orb_centers_move);
 
     if (ct.restart_info < 3 || !ct.isLocMode()) setupLRsFromInput(filename);
+
+    return 0;
 }
 
 template <class T>

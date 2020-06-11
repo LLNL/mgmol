@@ -260,9 +260,6 @@ int MGmol<T>::initial()
     }
 
     // initialize data distribution objects
-    const pb::PEenv& myPEenv = mymesh->peenv();
-    double domain[3]         = { mygrid.ll(0), mygrid.ll(1), mygrid.ll(2) };
-
     bool with_spin = (mmpi.nspin() > 1);
     if (ct.Mehrstellen())
         proj_matrices_ = new ProjectedMatricesMehrstellen(ct.numst, with_spin);
