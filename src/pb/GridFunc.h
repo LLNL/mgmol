@@ -7,9 +7,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id: GridFunc.h,v 1.36 2010/01/28 22:56:47 jeanluc Exp $
-#ifndef GridFUNC_H
-#define GridFUNC_H
+#ifndef PB_GRIDFUNC_H
+#define PB_GRIDFUNC_H
 
 #include "Grid.h"
 #include "GridFuncInterface.h"
@@ -271,11 +270,6 @@ public:
 
     void setBoundaryValuesBeforeTrade();
 };
-
-// template <typename T>
-// double dot(const GridFunc<T>& A, const GridFunc<T>& B);
-// template <typename T>
-// double norm(const GridFunc<T>& A);
 
 template <typename T>
 double dot(const GridFunc<T>& A, const GridFunc<T>& B)

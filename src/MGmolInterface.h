@@ -20,7 +20,7 @@ public:
     virtual ~MGmolInterface() {}
 
     virtual int setupFromInput(const std::string input_file)            = 0;
-    virtual int setupLRsFromInput(const std::string input_file)         = 0;
+    virtual int setupLRs(const std::string input_file)                  = 0;
     virtual int setupConstraintsFromInput(const std::string input_file) = 0;
     virtual void run()                                                  = 0;
 };

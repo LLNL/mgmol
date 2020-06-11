@@ -50,10 +50,21 @@ int MGmol<T>::setupFromInput(const std::string filename)
     ct.setTolEnergy();
     ct.setSpreadRadius();
 
+    return 0;
+}
+
+template <class T>
+int MGmol<T>::setupLRs(const std::string filename)
+{
+    Control& ct = *(Control::instance());
+
     // create localization regions
+    Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
     Vector3D vcell(mygrid.ll(0), mygrid.ll(1), mygrid.ll(2));
     lrs_ = new LocalizationRegions(vcell, ct.tol_orb_centers_move);
+
+    if (ct.restart_info < 3 || !ct.isLocMode()) setupLRsFromInput(filename);
 
     return 0;
 }
@@ -62,9 +73,6 @@ template <class T>
 int MGmol<T>::setupLRsFromInput(const std::string filename)
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    //    Mesh* mymesh           = Mesh::instance();
-    //    const pb::Grid& mygrid = mymesh->grid();
-    //    Control& ct            = *(Control::instance());
 
     std::ifstream* tfile = nullptr;
     if (mmpi.instancePE0() && !filename.empty())

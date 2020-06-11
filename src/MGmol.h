@@ -40,7 +40,6 @@ template <class T>
 class IonicAlgorithm;
 
 #include "AOMMprojector.h"
-#include "BasicDataDistributors.h"
 #include "ClusterOrbitals.h"
 #include "ExtendedGridOrbitals.h"
 #include "Forces.h"
@@ -142,6 +141,7 @@ private:
 
     int initial();
     void initialMasks();
+    int setupLRsFromInput(const std::string input_file);
 
     // timers
     static Timer total_tm_;
@@ -156,9 +156,6 @@ private:
     static Timer get_Hpsi_and_Hij_tm_;
     static Timer comp_res_tm_;
     static Timer init_nuc_tm_;
-
-    /* Data distribution objects */
-    BasicDataDistributors* data_distributor_;
 
     OrbitalsPreconditioning<T>* orbitals_precond_;
 
@@ -267,8 +264,8 @@ public:
     int nions() { return ions_->getNumIons(); }
     double getTotalEnergy();
     void setup();
+    int setupLRs(const std::string input_file) override;
     int setupFromInput(const std::string input_file) override;
-    int setupLRsFromInput(const std::string input_file) override;
     int setupConstraintsFromInput(const std::string input_file) override;
     void cleanup();
     void geomOptimSetup();

@@ -9,10 +9,8 @@
 
 #include <cassert>
 
-#include "DistMatrix.h"
-#include "MGmol_blas1.h"
-
 #include "Control.h"
+#include "DistMatrix.h"
 #include "Energy.h"
 #include "GridFuncVector.h"
 #include "Hamiltonian.h"
@@ -21,6 +19,7 @@
 #include "Lap.h"
 #include "MGmol.h"
 #include "MGmol_MPI.h"
+#include "MGmol_blas1.h"
 #include "Mesh.h"
 #include "Potentials.h"
 #include "ProjectedMatricesInterface.h"
@@ -78,12 +77,6 @@ void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i,
     // sum matrix elements among processors
     if (consolidate)
     {
-        // get data distribution object
-        DataDistribution* distributorH
-            = BasicDataDistributors::orbitalsProdWithHDistributor();
-        // gather data for only centered data
-        distributorH->augmentLocalData(mat, false);
-
         // get indexes of centered data
         std::vector<int> locfcns;
         (*lrs_).getLocalSubdomainIndices(locfcns);
@@ -94,6 +87,11 @@ void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i,
         const pb::Grid& mygrid   = mymesh->grid();
         const pb::PEenv& myPEenv = mymesh->peenv();
         double domain[3]         = { mygrid.ll(0), mygrid.ll(1), mygrid.ll(2) };
+
+        DataDistribution distributorH(
+            "prodH", 3. * (*lrs_).max_radii(), myPEenv, domain);
+        distributorH.augmentLocalData(mat, false);
+
         DataDistribution distributor(
             "Hij", 2 * (*lrs_).max_radii(), myPEenv, domain);
 
@@ -119,11 +117,18 @@ void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i,
     // sum matrix elements among processors
     if (consolidate)
     {
+        // gather/ distribute data from neighbors whose centered functions
+        // overlap with functions centered on local subdomain
+        Mesh* mymesh             = Mesh::instance();
+        const pb::Grid& mygrid   = mymesh->grid();
+        const pb::PEenv& myPEenv = mymesh->peenv();
+        double domain[3]         = { mygrid.ll(0), mygrid.ll(1), mygrid.ll(2) };
+
         // get data distribution object
-        DataDistribution* distributorH
-            = BasicDataDistributors::orbitalsProdWithHDistributor();
+        DataDistribution distributorH(
+            "prodH", 3. * (*lrs_).max_radii(), myPEenv, domain);
         // gather data for only centered data
-        distributorH->augmentLocalData(mat, false);
+        distributorH.augmentLocalData(mat, false);
 
         // get indexes of centered data
         std::vector<int> locfcns;
@@ -140,12 +145,6 @@ void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i,
         }
         mat.sparsify(pattern);
 
-        // gather/ distribute data from neighbors whose centered functions
-        // overlap with functions centered on local subdomain
-        Mesh* mymesh             = Mesh::instance();
-        const pb::Grid& mygrid   = mymesh->grid();
-        const pb::PEenv& myPEenv = mymesh->peenv();
-        double domain[3]         = { mygrid.ll(0), mygrid.ll(1), mygrid.ll(2) };
         DataDistribution distributor(
             "Hij", 2 * (*lrs_).max_radii(), myPEenv, domain);
         distributor.updateLocalRows(mat, true);

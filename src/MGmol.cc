@@ -128,8 +128,6 @@ MGmol<T>::MGmol(MPI_Comm comm, std::ostream& os) : os_(os)
 
     spread_penalty_ = nullptr;
 
-    data_distributor_ = new BasicDataDistributors();
-
     orbitals_precond_ = nullptr;
 
     forces_ = nullptr;
@@ -167,8 +165,6 @@ MGmol<T>::~MGmol()
 
     if (spread_penalty_ != nullptr) delete spread_penalty_;
 
-    delete data_distributor_;
-
     delete forces_;
     if (dm_strategy_ != nullptr) delete dm_strategy_;
 }
@@ -176,6 +172,8 @@ MGmol<T>::~MGmol()
 template <>
 void MGmol<LocGridOrbitals>::initialMasks()
 {
+    assert(lrs_ != nullptr);
+
     Control& ct = *(Control::instance());
 
     if (ct.verbose > 0) printWithTimeStamp("MGmol<T>::initialMasks()...", os_);
@@ -241,27 +239,27 @@ int MGmol<T>::initial()
         if (n > 0) lrs_->setup();
     }
 
-    double dlrsmin
-        = lrs_->computeMinDistBetweenLocalPairs(std::cout, (ct.verbose > 2));
-    if (dlrsmin < 1.e-3)
+    if (ct.isLocMode())
     {
-        std::cout << "WARNING: Min. distance between LR centers is " << dlrsmin
-                  << "!!!" << std::endl;
+        double dlrsmin = lrs_->computeMinDistBetweenLocalPairs(
+            std::cout, (ct.verbose > 2));
+        if (dlrsmin < 1.e-3)
+        {
+            std::cout << "WARNING: Min. distance between LR centers is "
+                      << dlrsmin << "!!!" << std::endl;
+        }
+
+        // initialize and setup load balancing object
+        // set number of iterations to 10.
+        if (ct.load_balancing_alpha > 0.0)
+        {
+            local_cluster_ = new ClusterOrbitals(lrs_);
+            local_cluster_->setup();
+            local_cluster_->computeClusters(ct.load_balancing_max_iterations);
+        }
     }
 
-    // initialize and setup load balancing object
-    // set number of iterations to 10.
-    if (ct.load_balancing_alpha > 0.0)
-    {
-        local_cluster_ = new ClusterOrbitals(lrs_);
-        local_cluster_->setup();
-        local_cluster_->computeClusters(ct.load_balancing_max_iterations);
-    }
     // initialize data distribution objects
-    const pb::PEenv& myPEenv = mymesh->peenv();
-    double domain[3]         = { mygrid.ll(0), mygrid.ll(1), mygrid.ll(2) };
-    data_distributor_->initialize(lrs_, myPEenv, domain);
-
     bool with_spin = (mmpi.nspin() > 1);
     if (ct.Mehrstellen())
         proj_matrices_ = new ProjectedMatricesMehrstellen(ct.numst, with_spin);
@@ -701,8 +699,7 @@ void MGmol<T>::write_header()
     // Write out the ionic postions and displacements
     ions_->printPositions(os_);
 
-    if (current_orbitals_ != nullptr && ct.verbose > 3)
-        lrs_->printAllRegions(os_);
+    if (ct.isLocMode() && ct.verbose > 3) lrs_->printAllRegions(os_);
 }
 
 template <class T>
@@ -886,7 +883,7 @@ void MGmol<T>::printTimers()
     Power<LocalVector<double>, SquareLocalMatrices<double>>::printTimers(os_);
     PowerGen::printTimers(os_);
     SP2::printTimers(os_);
-    lrs_->printTimers(os_);
+    if (lrs_ != nullptr) lrs_->printTimers(os_);
     local_cluster_->printTimers(os_);
     forces_->printTimers(os_);
     if (ct.OuterSolver() == OuterSolverType::ABPG)

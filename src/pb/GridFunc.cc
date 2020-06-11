@@ -1369,19 +1369,6 @@ void GridFunc<T>::allGather(T* global_func) const
 
     const int ntasks = mype_env().n_mpi_tasks();
     int* displs      = new int[ntasks];
-#if 0 // old version
-    int mpi_err;
-    const int istart=grid_.istart(0);
-    const int jstart=grid_.istart(1);
-    const int kstart=grid_.istart(2);
-    int mydispl=istart*gincx+jstart*gincy+kstart;
-    //if(mype_env().onpe0())
-    //    cout<<"MPI_Allgather()"<<endl;
-    mpi_err=MPI_Allgather(&mydispl, 1, MPI_INT,
-                          displs,   1, MPI_INT, mype_env().comm());
-    if(mpi_err!=MPI_SUCCESS)
-        cout<<"GridFunc<T>::gather --- MPI_Allgather() call failed"<<endl;
-#else
     for (int i = 0; i < ntasks; i++)
     {
         int other_start[3];
@@ -1393,33 +1380,11 @@ void GridFunc<T>::allGather(T* global_func) const
             = other_start[0] * gincx + other_start[1] * gincy + other_start[2];
         assert(displs[i] < static_cast<int>(grid_.gsize()));
     }
-#endif
 
     const int sizeg    = grid_.sizeg();
     const int gsize    = sizeg * ntasks;
     const size_t sdim2 = ldim[2] * sizeof(T);
-#if 0 // old version
-    T* buffer=new T[sizeg];
-    T* tbuffer;
-    for(int i=0;i<ntasks;i++){
-        if(mytask_==i){
-            tbuffer=uu_;
-        }else{
-            tbuffer=buffer;
-        }
-        mmpi.bcast(tbuffer, sizeg, i);
-        for(int ii=0;ii<ldim[0];ii++){
-            T* dest=global_func+displs[i]+ii*gincx;
-            T* src=tbuffer+(ii+shift)*incx_+shift;
-            for(int jj=0;jj<ldim[1];jj++){
-                memcpy(dest+jj*gincy,
-                        src+(jj+shift)*incy,
-                        sdim2);
-            }
-        }
-    }
-#else
-    T* buffer = new T[gsize];
+    T* buffer          = new T[gsize];
     mmpi.allGather(uu_, sizeg, buffer, gsize);
 
     for (int i = 0; i < ntasks; i++)
@@ -1433,7 +1398,6 @@ void GridFunc<T>::allGather(T* global_func) const
                 memcpy(dest + jj * gincy, src + jj * incy_, sdim2);
             }
         }
-#endif
     delete[] buffer;
     delete[] displs;
 
