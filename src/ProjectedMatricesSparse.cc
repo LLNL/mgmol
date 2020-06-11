@@ -110,7 +110,8 @@ ProjectedMatricesSparse::~ProjectedMatricesSparse()
     assert(matHB_ != nullptr);
     assert(distributor_invS_ != nullptr);
 
-    // if(onpe0)cout<<"delete invS"<<endl;
+    delete distributor_invS_;
+    distributor_invS_ = nullptr;
     delete invS_;
     invS_ = nullptr;
     delete dm_;
