@@ -30,6 +30,11 @@ Timer Rho<T>::compute_blas_tm_("Rho::compute_usingBlas");
 // template <class T>
 // Timer Rho<T>::compute_offdiag_tm_("Rho::compute_offdiag");
 
+#ifdef HAVE_MAGMA
+template <typename ScalarType>
+using MemoryDev = MemorySpace::Memory<ScalarType, MemorySpace::Device>;
+#endif
+
 template <class T>
 Rho<T>::Rho()
     : orbitals_type_(OrbitalsType::UNDEFINED),
@@ -690,17 +695,19 @@ void Rho<T>::computeRhoSubdomainUsingBlas3(const int iloc_init,
         // O(N^3) part
 #ifdef HAVE_MAGMA
         // If we have magma, we move all the data on the device
-        using MemoryDev = typename MemorySpace::Memory<MemorySpace::Device>;
         std::unique_ptr<ORBDTYPE[], void (*)(ORBDTYPE*)> phi1_dev(
-            MemoryDev::allocate<ORBDTYPE>(ld * ncols), MemoryDev::free);
+            MemoryDev<ORBDTYPE>::allocate(ld * ncols),
+            MemoryDev<ORBDTYPE>::free);
         MemorySpace::copy_to_dev(phi1, ld * ncols, phi1_dev);
 
         std::unique_ptr<MATDTYPE[], void (*)(MATDTYPE*)> mat_dev(
-            MemoryDev::allocate<MATDTYPE>(ncols * ncols), MemoryDev::free);
+            MemoryDev<MATDTYPE>::allocate(ncols * ncols),
+            MemoryDev<MATDTYPE>::free);
         MemorySpace::copy_to_dev(mat, ncols * ncols, mat_dev);
 
         std::unique_ptr<ORBDTYPE[], void (*)(ORBDTYPE*)> product_dev(
-            MemoryDev::allocate<ORBDTYPE>(nrows * ncols), MemoryDev::free);
+            MemoryDev<ORBDTYPE>::allocate(nrows * ncols),
+            MemoryDev<ORBDTYPE>::free);
 
         LinearAlgebraUtils<MemorySpace::Device>::MPgemmNN(nrows, ncols, ncols,
             1., phi1_dev.get(), ld, mat_dev.get(), ncols, 0., product_dev.get(),
@@ -720,12 +727,13 @@ void Rho<T>::computeRhoSubdomainUsingBlas3(const int iloc_init,
         // Copy phi2 to the device
         ORBDTYPE* phi2_host = orbitals2.getPsi(0, iloc);
         std::unique_ptr<ORBDTYPE[], void (*)(ORBDTYPE*)> phi2_dev(
-            MemoryDev::allocate<ORBDTYPE>(ld * ncols + nrows), MemoryDev::free);
+            MemoryDev<ORBDTYPE>::allocate(ld * ncols + nrows),
+            MemoryDev<ORBDTYPE>::free);
         MemorySpace::copy_to_dev(phi2_host, ld * ncols + nrows, phi2_dev);
         ORBDTYPE* phi2 = phi2_dev.get();
         // Copy lrho to the device
         std::unique_ptr<RHODTYPE[], void (*)(RHODTYPE*)> lrho_dev(
-            MemoryDev::allocate<RHODTYPE>(nrows), MemoryDev::free);
+            MemoryDev<RHODTYPE>::allocate(nrows), MemoryDev<RHODTYPE>::free);
         MemorySpace::copy_to_dev(lrho, nrows, lrho_dev);
         RHODTYPE* const lrho_alias = lrho_dev.get();
 #else
