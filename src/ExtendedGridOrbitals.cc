@@ -1021,13 +1021,13 @@ void ExtendedGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
     const int lda = transpose ? ld : lda_;
     const int ldb = transpose ? lda_ : ld;
 
-    unsigned int const a_size = numpt_;
+    unsigned int const a_size = numpt_ * ss.m();
     ORBDTYPE* a_host_view
         = MemorySpace::Memory<ORBDTYPE, memory_space_type>::allocate_host_view(
             a_size);
     MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
         const_cast<ORBDTYPE*>(a), a_size, a_host_view);
-    unsigned int const b_size = numpt_;
+    unsigned int const b_size = numpt_ * ss.n();
     ORBDTYPE* b_host_view
         = MemorySpace::Memory<ORBDTYPE, memory_space_type>::allocate_host_view(
             b_size);
