@@ -16,6 +16,7 @@
 
 #include <magma_singleton.h>
 
+#include <cassert>
 #include <cstring>
 #include <memory>
 #include <vector>
@@ -44,6 +45,45 @@ struct Device
 };
 
 //---------------------------------------------------------------------------//
+// Assert pointer is on the device/host
+//---------------------------------------------------------------------------//
+#ifdef HAVE_MAGMA
+template <typename T>
+void assert_is_host_ptr(T* ptr)
+{
+    assert(magma_is_devptr(ptr) == 0);
+}
+
+template <typename T>
+void assert_is_dev_ptr(T* ptr)
+{
+    assert(magma_is_devptr(ptr) == 1);
+}
+
+template <typename T>
+void assert_is_same_memory_space(T* ptr_1, T* ptr_2)
+{
+    assert(magma_is_devptr(ptr_1) == magma_is_devptr(ptr_2));
+}
+#else
+template <typename T>
+void assert_is_host_ptr(T*)
+{
+}
+
+template <typename T>
+void assert_is_dev_ptr(T*)
+{
+    assert(false);
+}
+
+template <typename T>
+void assert_is_same_memory_space(T* ptr_1, T* ptr_2)
+{
+}
+#endif
+
+//---------------------------------------------------------------------------//
 // Copy from the host/device to the device/host
 //---------------------------------------------------------------------------//
 
@@ -51,6 +91,8 @@ struct Device
 template <typename T>
 void copy_to_dev(T const* const vec, unsigned int size, T* vec_dev)
 {
+    assert_is_host_ptr(vec);
+    assert_is_dev_ptr(vec_dev);
     int const increment   = 1;
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
     magma_setvector(size, sizeof(T), vec, increment, vec_dev, increment,
@@ -61,7 +103,7 @@ void copy_to_dev(T const* const vec, unsigned int size, T* vec_dev)
 template <typename T>
 void copy_to_dev(T* const, unsigned int, T*)
 {
-    // TODO
+    assert(false);
 }
 #endif
 
@@ -95,6 +137,8 @@ void copy_to_dev(T const* const vec, unsigned int size,
 template <typename T>
 void copy_to_host(T const* const vec_dev, unsigned int size, T* vec)
 {
+    assert_is_dev_ptr(vec_dev);
+    assert_is_host_ptr(vec);
     int const increment   = 1;
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
     magma_getvector(size, sizeof(T), vec_dev, increment, vec, increment,
@@ -104,7 +148,7 @@ void copy_to_host(T const* const vec_dev, unsigned int size, T* vec)
 template <typename T>
 void copy_to_host(T const* const /*vec_dev*/, unsigned int /*size*/, T* /*vec*/)
 {
-    // TODO
+    assert(false);
 }
 #endif
 
@@ -138,45 +182,60 @@ void copy_to_host(std::unique_ptr<T[], void (*)(T*)> const& vec_dev,
 // Allocate and deallocate memory
 //---------------------------------------------------------------------------//
 
-template <typename MemorySpaceType>
+template <typename T, typename MemorySpaceType>
 struct Memory
 {
-    template <typename T>
     static T* allocate(unsigned int size);
 
-    template <typename T>
+    static T* allocate_host_view(unsigned int size);
+
     static void free(T* ptr);
 
-    template <typename T>
+    static void free_host_view(T* ptr);
+
     static void copy(T const* in, unsigned int size, T* out);
 
-    template <typename T>
+    static void copy_view_to_host(T* vec_dev, unsigned int size, T*& vec);
+
+    static void copy_view_to_dev(T* vec, unsigned int size, T*& vec_dev);
+
     static void set(T* ptr, unsigned int size, int val);
 };
 
-template <>
-struct Memory<MemorySpace::Host>
+template <typename T>
+struct Memory<T, MemorySpace::Host>
 {
-    template <typename T>
     static T* allocate(unsigned int size)
     {
-        return std::malloc(size * sizeof(T));
+        T* ptr = new T[size];
+        return ptr;
     }
 
-    template <typename T>
+    static T* allocate_host_view(unsigned int /*size*/) { return nullptr; }
+
     static void free(T* ptr)
     {
         std::free(ptr);
         ptr = nullptr;
     }
 
-    template <typename T>
+    static void free_host_view(T* /*ptr*/) {}
+
     static void copy(T const* in, unsigned int size, T* out)
     {
         std::memcpy(out, in, size * sizeof(T));
     }
 
-    template <typename T>
+    static void copy_view_to_host(T* vec_dev, unsigned int /*size*/, T*& vec)
+    {
+        vec = vec_dev;
+    }
+
+    static void copy_view_to_dev(T const*, unsigned int, T*)
+    {
+        // no-op
+    }
+
     static void set(T* ptr, unsigned int size, int val)
     {
         std::memset(ptr, val, size * sizeof(T));
@@ -184,10 +243,9 @@ struct Memory<MemorySpace::Host>
 };
 
 #ifdef HAVE_MAGMA
-template <>
-struct Memory<MemorySpace::Device>
+template <typename T>
+struct Memory<T, MemorySpace::Device>
 {
-    template <typename T>
     static T* allocate(unsigned int size)
     {
         T* ptr_dev;
@@ -196,25 +254,59 @@ struct Memory<MemorySpace::Device>
         return ptr_dev;
     }
 
-    template <typename T>
+    static T* allocate_host_view(unsigned int size)
+    {
+        T* ptr = new T[size];
+        return ptr;
+    }
+
     static void free(T* ptr_dev)
     {
+        assert_is_dev_ptr(ptr_dev);
         magma_free(ptr_dev);
         ptr_dev = nullptr;
     }
 
-    template <typename T>
+    static void free_host_view(T* ptr)
+    {
+        assert_is_host_ptr(ptr);
+        delete ptr;
+        ptr = nullptr;
+    }
+
     static void copy(T const* in, unsigned int size, T* out)
     {
+        assert_is_dev_ptr(in);
+        assert_is_dev_ptr(out);
         int const increment   = 1;
         auto& magma_singleton = MagmaSingleton::get_magma_singleton();
         magma_copyvector(size, sizeof(T), in, increment, out, increment,
             magma_singleton.queue_);
     }
 
-    template <typename T>
+    static void copy_view_to_host(T* vec_dev, unsigned int size, T*& vec)
+    {
+        assert_is_dev_ptr(vec_dev);
+        assert_is_host_ptr(vec);
+        int const increment   = 1;
+        auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+        magma_getvector(size, sizeof(T), vec_dev, increment, vec, increment,
+            magma_singleton.queue_);
+    }
+
+    static void copy_view_to_dev(T* vec, unsigned int size, T*& vec_dev)
+    {
+        assert_is_host_ptr(vec);
+        assert_is_dev_ptr(vec_dev);
+        int const increment   = 1;
+        auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+        magma_setvector(size, sizeof(T), vec, increment, vec_dev, increment,
+            magma_singleton.queue_);
+    }
+
     static void set(T* ptr, unsigned int size, int val)
     {
+        assert_is_dev_ptr(ptr);
         // Cannot directly use cudaMemset and MAGMA does not have an equivalent
         // function. If we have OpenMP with offloading, we directly set the
         // value. Otherwise, we copy a vector from the host.
@@ -223,8 +315,8 @@ struct Memory<MemorySpace::Device>
         for (unsigned int i = 0; i < size; ++i)
             ptr[i] = val;
 #else
-        auto ptr_host = Memory<Host>::allocate<T>(size);
-        set(ptr_host, size, val);
+        auto ptr_host = Memory<T, Host>::allocate(size);
+        Memory<T, Host>::set(ptr_host, size, val);
         copy_to_dev(ptr_host, size, ptr);
 #endif
     }
