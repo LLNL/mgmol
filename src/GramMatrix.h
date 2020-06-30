@@ -11,7 +11,7 @@
 #define MGMOL_GRAMMATRIX_H
 
 #include "DistMatrix.h"
-#include "MPIdata.h"
+#include "MGmol_MPI.h"
 
 #define NPRINT_ROWS_AND_COLS 5
 
@@ -45,13 +45,15 @@ public:
     void print(std::ostream& os, int nprint_rows = NPRINT_ROWS_AND_COLS,
         int nprint_col = NPRINT_ROWS_AND_COLS) const
     {
-        if (onpe0) os << " GramMatrix" << std::endl;
+        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+        if (mmpi.instancePE0()) os << " GramMatrix" << std::endl;
         matS_->print(os, 0, 0, nprint_rows, nprint_col);
     }
 
     void printMM(std::ostream& os) const
     {
-        if (onpe0) os << "Gram Matrix" << std::endl;
+        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+        if (mmpi.instancePE0()) os << "Gram Matrix" << std::endl;
         matS_->printMM(os);
     }
 
@@ -90,7 +92,7 @@ public:
         ls_->potrs('l', mat);
     }
 
-    void printMM(std::ofstream& tfile) { matS_->printMM(tfile); }
+    void printMM(std::ostream& tfile) { matS_->printMM(tfile); }
 
     void computeInverse();
     void solveLST(dist_matrix::DistMatrix<DISTMATDTYPE>& z) const;

@@ -287,6 +287,7 @@ public:
 
     double trace(void) const;
     void setDiagonal(const std::vector<T>& diag_values);
+    void setRandom(const T minv, const T maxv);
 
     // matrix * matrix
     // this = alpha*op(A)*op(B)+beta*this

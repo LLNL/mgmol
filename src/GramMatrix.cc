@@ -8,10 +8,8 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "GramMatrix.h"
-#include "Control.h"
 #include "DistMatrix2SquareLocalMatrices.h"
 #include "DistVector.h"
-#include "MGmol_MPI.h"
 #include "Power.h"
 
 #include <iomanip>
@@ -164,14 +162,10 @@ void GramMatrix::updateLS()
     int info = ls_->potrf('l');
     if (info != 0)
     {
-        print(*MPIdata::serr);
-        if (onpe0)
-            (*MPIdata::serr) << "ERROR in GramMatrix::updateLS()" << std::endl;
-        sleep(5);
-        Control& ct = *(Control::instance());
-        ct.global_exit(2);
+        std::cerr << "ERROR in GramMatrix::updateLS()" << std::endl;
+        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+        mmpi.abort();
     }
-
     isLSuptodate_ = true;
 }
 
@@ -188,6 +182,8 @@ void GramMatrix::set2Id(const int orbitals_index)
 
 double GramMatrix::getLinDependent2states(int& st1, int& st2) const
 {
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+
     std::vector<DISTMATDTYPE> eigenvalues(dim_);
     dist_matrix::DistMatrix<DISTMATDTYPE> u("u", dim_, dim_);
     // solve a standard symmetric eigenvalue problem
@@ -197,12 +193,12 @@ double GramMatrix::getLinDependent2states(int& st1, int& st2) const
     DISTMATDTYPE val1;
     st1 = u.iamax(0, val1);
     u.setVal(st1, 0, 0.);
-    if (onpe0)
+    if (mmpi.instancePE0())
         std::cout << "GramMatrix::getLinDependent2states... element val="
                   << val1 << std::endl;
     DISTMATDTYPE val2;
     st2 = u.iamax(0, val2);
-    if (onpe0)
+    if (mmpi.instancePE0())
         std::cout << "GramMatrix::getLinDependent2states... element val="
                   << val2 << std::endl;
 
@@ -211,7 +207,7 @@ double GramMatrix::getLinDependent2states(int& st1, int& st2) const
     {
         u.setVal(st2, 0, 0.);
         st2 = u.iamax(0, val2);
-        if (onpe0)
+        if (mmpi.instancePE0())
             std::cout << "GramMatrix::getLinDependent2states... element val="
                       << val2 << std::endl;
     }
