@@ -7,22 +7,19 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef TOOLS_H
-#define TOOLS_H
-
-#include "DistMatrix.h"
+#ifndef MGMOL_TOOLS_H
+#define MGMOL_TOOLS_H
 
 #include <fstream>
+#include <mpi.h>
 #include <string>
+#include <vector>
 
 class Vector3D;
 
 void noMoreMemory();
 void stripLeadingAndTrailingBlanks(std::string& stringToModify);
 void read_comments(std::ifstream& tfile);
-void rotateSym(dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& rotation_matrix,
-    dist_matrix::DistMatrix<DISTMATDTYPE>& work);
 void setSparseDistMatriConsolidationNumber(const int npes);
 void reduceBytes(std::vector<char>& val, const MPI_Comm comm);
 void arrayops(const double* const a, const double* const b, const double s,

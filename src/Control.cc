@@ -13,7 +13,6 @@
 #include <cassert>
 #include <cmath>
 #include <cstring>
-//#include <iomanip>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -25,8 +24,6 @@
 #include "MGmol_MPI.h"
 #include "Potentials.h"
 #include "tools.h"
-
-#define max(a, b) (((a) < (b)) ? (b) : (a))
 
 Control* Control::pinstance_   = nullptr;
 MPI_Comm Control::comm_global_ = MPI_COMM_NULL;
@@ -728,7 +725,7 @@ void Control::adjust()
         orthof = 0;
     }
     if (loc_mode_ && lr_update)
-        wannier_transform_type = max(wannier_transform_type, 1);
+        wannier_transform_type = std::max(wannier_transform_type, (short)1);
     restart_run = (restart_info > 0) ? true : false;
 }
 

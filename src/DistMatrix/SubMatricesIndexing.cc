@@ -12,7 +12,6 @@
 
 #include <iostream>
 #include <limits.h>
-using namespace std;
 
 namespace dist_matrix
 {
@@ -21,7 +20,7 @@ namespace dist_matrix
 // to "local" matrix elements
 template <class T>
 SubMatricesIndexing<T>::SubMatricesIndexing(
-    const vector<vector<int>>&
+    const std::vector<std::vector<int>>&
         indexes, // functions ids for each subdomain on PE
     MPI_Comm comm, const DistMatrix<T>& empty_mat)
     : comm_(comm), local_indexes_(indexes)
@@ -35,7 +34,8 @@ SubMatricesIndexing<T>::SubMatricesIndexing(
 
 #ifdef DEBUG
     if (mype_ == 0)
-        cout << "SubMatrices with " << indexes[0].size() << " indexes" << endl;
+        cout << "SubMatrices with " << indexes[0].size() << " indexes"
+             << std::endl;
 #endif
 
     nb_local_matrices_ = (int)local_indexes_.size();
@@ -52,14 +52,14 @@ SubMatricesIndexing<T>::SubMatricesIndexing(
     map_indexes_.resize(nb_local_matrices_);
     for (int im = 0; im < nb_local_matrices_; im++)
     {
-        const vector<int>& local_indexes_im = local_indexes_[im];
+        const std::vector<int>& local_indexes_im = local_indexes_[im];
         // cout<<"Matrix "<<im;
         // for(int j=0;j<nlocal;j++)
         //  cout<<" index "<<local_indexes_im[j];
         // cout<<endl;
         for (short color = 0; color < nlocal; color++)
             map_indexes_[im].insert(
-                pair<int, short>(local_indexes_im[color], color));
+                std::pair<int, short>(local_indexes_im[color], color));
         assert((int)map_indexes_[im].size() <= nlocal);
     }
 
@@ -68,7 +68,7 @@ SubMatricesIndexing<T>::SubMatricesIndexing(
 
     // for each active pe (for DistMatrix), store local associated functions
     // indexes
-    vector<vector<int>> pe_double_local_indexes;
+    std::vector<std::vector<int>> pe_double_local_indexes;
     pe_double_local_indexes.resize(npes_distmat_);
     for (int i = 0; i < npes_distmat_; i++)
         pe_double_local_indexes[i].reserve(32);
@@ -77,7 +77,7 @@ SubMatricesIndexing<T>::SubMatricesIndexing(
     {
         assert((int)local_indexes_[im].size() == nlocal);
 
-        vector<int>::const_iterator p0 = local_indexes_[im].begin();
+        std::vector<int>::const_iterator p0 = local_indexes_[im].begin();
         while (p0 != local_indexes_[im].end())
         {
             const int i = (*p0);
@@ -86,7 +86,8 @@ SubMatricesIndexing<T>::SubMatricesIndexing(
             {
                 const int pr = empty_mat.pr(i);
 
-                vector<int>::const_iterator p1 = local_indexes_[im].begin();
+                std::vector<int>::const_iterator p1
+                    = local_indexes_[im].begin();
                 while (p1 != local_indexes_[im].end())
                 {
                     const int j = (*p1);
@@ -117,7 +118,7 @@ SubMatricesIndexing<T>::SubMatricesIndexing(
     my_sizes_.resize(npes_distmat_, 0);
     for (int pe_distmat = 0; pe_distmat < npes_distmat_; pe_distmat++)
     {
-        const vector<int>& pe_double_local_indexes_pe
+        const std::vector<int>& pe_double_local_indexes_pe
             = pe_double_local_indexes[pe_distmat];
         my_sizes_[pe_distmat] = (int)pe_double_local_indexes_pe.size();
         // cout<<"mype="<<mype_<<",
@@ -151,7 +152,7 @@ SubMatricesIndexing<T>::SubMatricesIndexing(
 #endif
 
 #ifdef DEBUG
-    cout << "mype=" << mype_ << ", my_sizes_[0]=" << my_sizes_[0] << endl;
+    cout << "mype=" << mype_ << ", my_sizes_[0]=" << my_sizes_[0] << std::endl;
 #endif
 
     int tot_remote_size = 0;
@@ -171,10 +172,10 @@ SubMatricesIndexing<T>::SubMatricesIndexing(
     // tell remote PEs which indexes I need to exchange
     if (mype_ < npes_distmat_)
         remote_double_indexes_.resize(tot_remote_size, -1);
-    vector<int> my_displ(npes_distmat_, 0);
+    std::vector<int> my_displ(npes_distmat_, 0);
     for (int pe = 1; pe < npes_distmat_; pe++)
         my_displ[pe] = my_sizes_[pe - 1] + my_displ[pe - 1];
-    vector<int> remote_displ;
+    std::vector<int> remote_displ;
     if (mype_ < npes_distmat_)
     {
         remote_displ.resize(npes_, 0);
@@ -217,8 +218,8 @@ SubMatricesIndexing<T>::SubMatricesIndexing(
                    <= nb_local_matrices_ * empty_mat.m() * empty_mat.n());
         }
 #ifdef DEBUG
-    cout << "mype=" << mype_ << ", remote_sizes_[0]=" << remote_sizes_[0]
-         << endl;
+    std::cout << "mype=" << mype_ << ", remote_sizes_[0]=" << remote_sizes_[0]
+              << std::endl;
 #endif
 
     // precompute mapping between index and position in local matrix
@@ -226,17 +227,17 @@ SubMatricesIndexing<T>::SubMatricesIndexing(
     const int maxii = (int)double_local_indexes_.size() / 2;
     for (int im = 0; im < nb_local_matrices_; im++)
     {
-        map<int, short>& mapind = map_indexes_[im];
+        std::map<int, short>& mapind = map_indexes_[im];
         vector_indexes_[im].resize(nlocal * nlocal, -1);
         // loop over indexes (2 int)
         // index ii and ii+1
         for (int ii = 0; ii < maxii; ii++)
         {
-            map<int, short>::const_iterator p0
+            std::map<int, short>::const_iterator p0
                 = mapind.find(double_local_indexes_[2 * ii]);
             if (p0 != mapind.end())
             {
-                map<int, short>::const_iterator p1
+                std::map<int, short>::const_iterator p1
                     = mapind.find(double_local_indexes_[2 * ii + 1]);
                 if (p1 != mapind.end())
                 {

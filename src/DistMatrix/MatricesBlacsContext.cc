@@ -7,11 +7,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #include "MatricesBlacsContext.h"
 #include "DistMatrix.h"
-
-using namespace std;
 
 // allows zero or one object
 MatricesBlacsContext& MatricesBlacsContext::instance()
@@ -31,7 +28,7 @@ void MatricesBlacsContext::setup(const MPI_Comm comm, const int size)
     {
         const int bsize = dist_matrix::DistMatrix<DISTMATDTYPE>::getBlockSize();
         n_              = (int)ceilf((float)size_ / (float)(3 * bsize));
-        if (size_ > 2 * bsize) n_ = max(n_, 2);
+        if (size_ > 2 * bsize) n_ = std::max(n_, 2);
         blactxt_ = new dist_matrix::BlacsContext(comm_, 's', n_ * n_);
     }
     else

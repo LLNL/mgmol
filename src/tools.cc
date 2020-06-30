@@ -15,7 +15,6 @@
 #include "SparseDistMatrix.h"
 #include "Vector3D.h"
 
-#include <string>
 #include <sys/stat.h>
 #include <time.h>
 
@@ -102,83 +101,6 @@ void read_comments(std::ifstream& tfile)
             ;
         cc = (char)tfile.peek(); // look at next character
     }
-}
-
-// rotate symmetric matrix mat
-void rotateSym(dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& rotation_matrix,
-    dist_matrix::DistMatrix<DISTMATDTYPE>& work)
-{
-    work.symm('l', 'l', 1., mat, rotation_matrix, 0.);
-    mat.gemm('t', 'n', 1., rotation_matrix, work, 0.);
-}
-
-void sqrtDistMatrix(dist_matrix::DistMatrix<DISTMATDTYPE>& u)
-{
-    (*MPIdata::sout) << "sqrtDistMatrix()" << std::endl;
-    const int nst = u.m();
-#if 0
-    dist_matrix::DistMatrix<DISTMATDTYPE> u0(u);
-    dist_matrix::DistMatrix<DISTMATDTYPE> test("t",bc,nst,nst);
-#endif
-#if 0
-    test.gemm('t','n',1.,u0,u,0.);
-    for(int i=0;i<test.mloc();i++)
-    for(int j=0;j<i;j++){
-        if( fabs( test.val(i+j*test.mloc()) )>1.e-8 )
-            (*MPIdata::sout)<<"test["<<i<<"]["<<j<<"]="
-                <<test.val(i+j*test.mloc())<<endl;
-    }
-    for(int i=0;i<test.mloc();i++){
-        if( fabs( test.val(i+i*test.mloc())-1. )>1.e-8 )
-            (*MPIdata::sout)<<"test["<<i<<"]["<<i<<"]="
-                <<test.val(i+i*test.mloc())<<endl;
-    }
-
-#endif
-
-    dist_matrix::DistMatrix<DISTMATDTYPE> w("w", nst, nst);
-    dist_matrix::DistMatrix<DISTMATDTYPE> z("z", nst, nst);
-
-    std::vector<DISTMATDTYPE> eigenvalues(nst);
-
-    // a = (u+Id).
-    dist_matrix::DistMatrix<DISTMATDTYPE> a(u);
-    w.identity();
-    a.axpy(1., w);
-
-    // w = ( (2*Id + u**T + u) )**(-1/2)
-    w.transpose(1., u, 2.);
-    w.axpy(1., u);
-    w.syev('v', 'l', eigenvalues, z);
-    for (int i = 0; i < nst; i++)
-    {
-        //(*MPIdata::sout)<<"eigenvalues="<<eigenvalues[i]<<endl;
-        eigenvalues[i] = 1. / sqrt(eigenvalues[i]);
-    }
-    // for(int i=0;i<nst;i++)
-    //    (*MPIdata::sout)<<"eigenvalues="<<eigenvalues[i]<<endl;
-    dist_matrix::DistMatrix<DISTMATDTYPE> g("g", &eigenvalues[0], nst, nst);
-
-    // u = z * g * z**T
-    w.symm('r', 'l', 1., g, z, 0.);
-    g.gemm('n', 't', 1., w, z, 0.);
-
-    // u = a * g
-    u.symm('r', 'l', 1., g, a, 0.);
-
-#if 0
-    // verification
-    test = u;
-    w.gemm('n','n',1.,u,test,0.);
-    w.axpy(-1.,u0);
-    for(int i=0;i<w.mloc();i++)
-    for(int j=0;j<w.nloc();j++){
-        if( fabs( w.val(i+j*w.mloc()) )>1.e-8 )
-            (*MPIdata::sout)<<"w["<<i<<"]["<<j<<"]="
-                <<w.val(i+j*w.mloc())<<endl;
-    }
-#endif
 }
 
 void setSparseDistMatriConsolidationNumber(const int npes)

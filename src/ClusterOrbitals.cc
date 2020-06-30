@@ -11,6 +11,8 @@
 #include "Control.h"
 #include "DataDistribution.h"
 #include "Mesh.h"
+
+#include <sstream>
 #include <vector>
 
 using namespace std;
