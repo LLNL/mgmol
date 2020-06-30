@@ -74,7 +74,7 @@ TEST_CASE("Laplacian 4th order", "[laph4]")
 
             for (int iz = nghosts; iz < endz; iz++)
             {
-                double z            = grid.start(12) + iz * h[2];
+                double z            = grid.start(2) + iz * h[2];
                 double expected_val = coeffx * coeffx * sin(x * coeffx)
                                       + coeffy * coeffy * sin(y * coeffy)
                                       + coeffz * coeffz * sin(z * coeffz);
