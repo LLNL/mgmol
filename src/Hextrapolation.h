@@ -10,7 +10,7 @@
 #ifndef MGMOL_HEXTRAPLOATION_H
 #define MGMOL_HEXTRAPLOATION_H
 
-#include "DistMatrix.h"
+#include "DistMatrixTools.h"
 #include "MPIdata.h"
 #include "tools.h"
 

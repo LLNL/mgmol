@@ -6,18 +6,16 @@
 // All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
+#include "BlacsContext.h"
 
 #include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <iostream>
-// using namespace std;
 
 #ifdef SCALAPACK
 #include "blacs.h"
 #endif
-
-#include "BlacsContext.h"
 
 #ifndef SCALAPACK
 

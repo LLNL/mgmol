@@ -11,6 +11,7 @@
 
 #include "Control.h"
 #include "DensityMatrix.h"
+#include "DistMatrixTools.h"
 #include "GramMatrix.h"
 #include "HDFrestart.h"
 #include "MGmol_MPI.h"
@@ -22,7 +23,6 @@
 #include "SparseDistMatrix.h"
 #include "SquareSubMatrix2DistMatrix.h"
 #include "fermi.h"
-#include "tools.h"
 
 #include <fstream>
 #include <iomanip>

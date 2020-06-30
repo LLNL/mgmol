@@ -19,7 +19,6 @@
 #include <sstream>
 using namespace std;
 
-#define max(a, b) (((a) < (b)) ? (b) : (a))
 #define Ha2Ry 2.
 
 void Species::read_1species(const string& filename)

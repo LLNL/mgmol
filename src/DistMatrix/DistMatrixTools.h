@@ -13,3 +13,7 @@ void getProcrustesTransform(dist_matrix::DistMatrix<DISTMATDTYPE>& q,
     dist_matrix::DistMatrix<DISTMATDTYPE>& yyt);
 void getAlignFrobeniusTransform(dist_matrix::DistMatrix<DISTMATDTYPE>& omatrix,
     dist_matrix::DistMatrix<DISTMATDTYPE>& rotation);
+void rotateSym(dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
+    const dist_matrix::DistMatrix<DISTMATDTYPE>& rotation_matrix,
+    dist_matrix::DistMatrix<DISTMATDTYPE>& work);
+void sqrtDistMatrix(dist_matrix::DistMatrix<DISTMATDTYPE>& u);

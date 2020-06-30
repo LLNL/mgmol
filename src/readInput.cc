@@ -6,13 +6,6 @@
 // All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
-
-#include <cassert>
-#include <iostream>
-#include <string>
-
-#include <mpi.h>
-
 #include "Control.h"
 #include "Ions.h"
 #include "LocGridOrbitals.h"
@@ -22,7 +15,11 @@
 #include "Species.h"
 #include "tools.h"
 
-#define max(a, b) (((a) < (b)) ? (b) : (a))
+#include <cassert>
+#include <iostream>
+#include <string>
+
+#include <mpi.h>
 
 //#define DEBUG 1
 

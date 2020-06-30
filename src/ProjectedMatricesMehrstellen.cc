@@ -8,8 +8,7 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "ProjectedMatricesMehrstellen.h"
-
-#include "tools.h"
+#include "DistMatrixTools.h"
 
 using namespace std;
 
