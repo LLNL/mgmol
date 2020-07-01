@@ -28,8 +28,8 @@ public:
     }
 
     void computeGenEigenInterval(dist_matrix::DistMatrix<double>& mat,
-        GramMatrix& gm, std::vector<double>& interval, const int maxits,
-        const double pad);
+        GramMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>& gm,
+        std::vector<double>& interval, const int maxits, const double pad);
 
     static void printTimers(std::ostream& os) { compute_tm_.print(os); }
 };

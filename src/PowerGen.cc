@@ -24,8 +24,8 @@ Timer PowerGen::compute_tm_("PowerGen::compute");
  * final eigenvector may not be normalized.
  */
 void PowerGen::computeGenEigenInterval(dist_matrix::DistMatrix<double>& mat,
-    GramMatrix& gm, std::vector<double>& interval, const int maxits,
-    const double pad)
+    GramMatrix<dist_matrix::DistMatrix<double>>& gm,
+    std::vector<double>& interval, const int maxits, const double pad)
 {
     srand(13579);
 

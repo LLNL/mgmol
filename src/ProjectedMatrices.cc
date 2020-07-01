@@ -45,7 +45,9 @@ Timer ProjectedMatrices::compute_entropy_tm_(
 
 short ProjectedMatrices::n_instances_ = 0;
 
-GramMatrix* ProjectedMatrices::gram_4dotProducts_  = nullptr;
+GramMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>*
+    ProjectedMatrices::gram_4dotProducts_
+    = nullptr;
 DensityMatrix* ProjectedMatrices::dm_4dot_product_ = nullptr;
 
 static int sparse_distmatrix_nb_partitions = 128;
@@ -54,7 +56,7 @@ ProjectedMatrices::ProjectedMatrices(const int ndim, const bool with_spin)
     : with_spin_(with_spin),
       dim_(ndim),
       dm_(new DensityMatrix(ndim)),
-      gm_(new GramMatrix(ndim))
+      gm_(new GramMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>(ndim))
 {
     width_   = 0.;
     min_val_ = 0.25;
@@ -911,7 +913,8 @@ double ProjectedMatrices::getTraceDiagProductWithInvS(
 void ProjectedMatrices::resetDotProductMatrices()
 {
     if (gram_4dotProducts_ != nullptr) delete gram_4dotProducts_;
-    gram_4dotProducts_ = new GramMatrix(*gm_);
+    gram_4dotProducts_
+        = new GramMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>(*gm_);
 }
 
 double ProjectedMatrices::dotProductWithInvS(
