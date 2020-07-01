@@ -14,6 +14,10 @@
 #include "DistVector.h"
 #include "MGmol_MPI.h"
 
+#include <boost/random/linear_congruential.hpp>
+#include <boost/random/uniform_real.hpp>
+#include <boost/random/variate_generator.hpp>
+
 #include <cassert>
 #include <iomanip>
 #include <iostream>
@@ -245,6 +249,27 @@ void DistMatrix<T>::shift(const T shift)
                 if (ig == jg) val_[i + j * mloc_] += shift;
             }
         }
+}
+
+template <class T>
+void DistMatrix<T>::setRandom(const T minv, const T maxv)
+{
+    typedef boost::minstd_rand rng_type;
+    typedef boost::uniform_real<> distribution_type;
+
+    int seed = 113;
+    rng_type rng(seed);
+    distribution_type nd(minv, maxv);
+    boost::variate_generator<rng_type, distribution_type> gen(rng, nd);
+
+    T* mat = new T[m_ * n_];
+    for (int j = 0; j < n_; j++)
+        for (int i = 0; i < m_; i++)
+            mat[i + j * m_] = gen();
+
+    this->init(mat, m_);
+
+    delete[] mat;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

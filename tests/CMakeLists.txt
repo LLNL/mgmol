@@ -147,6 +147,24 @@ add_executable(testLaph4
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
+add_executable(testGramMatrix
+               ${CMAKE_SOURCE_DIR}/tests/testGramMatrix.cc
+               ${CMAKE_SOURCE_DIR}/src/GramMatrix.cc
+               ${CMAKE_SOURCE_DIR}/src/Power.cc
+               ${CMAKE_SOURCE_DIR}/src/magma_singleton.cc
+               ${CMAKE_SOURCE_DIR}/src/local_matrices/LocalMatrices.cc
+               ${CMAKE_SOURCE_DIR}/src/local_matrices/SquareLocalMatrices.cc
+               ${CMAKE_SOURCE_DIR}/src/DistMatrix/DistMatrix.cc
+               ${CMAKE_SOURCE_DIR}/src/DistMatrix/BlacsContext.cc
+               ${CMAKE_SOURCE_DIR}/src/DistMatrix/MatricesBlacsContext.cc
+               ${CMAKE_SOURCE_DIR}/src/DistMatrix/DistMatrixTools.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/random.cc
+               ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
+
 
 if((${MAGMA_FOUND}) AND (${MGMOL_WITH_OPENMP_OFFLOAD}))
   add_executable(testMagmaOpenmp
@@ -201,6 +219,9 @@ add_test(NAME testTradeGhostValues
 add_test(NAME testLaph4
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testLaph4)
+add_test(NAME testGramMatrix
+         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+                 ${CMAKE_CURRENT_BINARY_DIR}/testGramMatrix)
 
 if((${MAGMA_FOUND}) AND (${MGMOL_WITH_OPENMP_OFFLOAD}))
   add_test(NAME testMagmaOpenmp
@@ -355,6 +376,8 @@ if(${MAGMA_FOUND})
     MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
   target_link_libraries(testLaph4 PRIVATE ${BLAS_LIBRARIES}
     MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
+  target_link_libraries(testGramMatrix PRIVATE ${SCALAPACK_LIBRARIES}
+    ${BLAS_LIBRARIES} MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
 if((${MAGMA_FOUND}) AND (${MGMOL_WITH_OPENMP_OFFLOAD}))
   target_link_libraries(testMagmaOpenmp PRIVATE 
     MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
@@ -384,7 +407,8 @@ else()
     MPI::MPI_CXX OpenMP::OpenMP_CXX)
   target_link_libraries(testLaph4 PRIVATE ${BLAS_LIBRARIES}
     MPI::MPI_CXX OpenMP::OpenMP_CXX)
-
+  target_link_libraries(testGramMatrix PRIVATE ${SCALAPACK_LIBRARIES}
+    ${BLAS_LIBRARIES} MPI::MPI_CXX OpenMP::OpenMP_CXX)
 endif()
 
 set_tests_properties(testSiH4 PROPERTIES REQUIRED_FILES

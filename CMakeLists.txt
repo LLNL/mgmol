@@ -61,7 +61,7 @@ else(${HDF5_FOUND})
 endif (${HDF5_FOUND})
 
 # Boost (required)
-find_package(Boost COMPONENTS program_options REQUIRED)
+find_package(Boost COMPONENTS program_options random REQUIRED)
 if(NOT ${Boost_FOUND})
   message(FATAL_ERROR "Boost library required")
 endif(NOT ${Boost_FOUND})
