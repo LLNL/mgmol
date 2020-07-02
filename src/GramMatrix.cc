@@ -9,6 +9,7 @@
 
 #include "GramMatrix.h"
 #include "DistMatrix2SquareLocalMatrices.h"
+#include "DistMatrixTools.h"
 #include "DistVector.h"
 #include "Power.h"
 
@@ -18,37 +19,38 @@
 #include <unistd.h>
 #include <vector>
 
-void rotateSym(dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& rotation_matrix,
-    dist_matrix::DistMatrix<DISTMATDTYPE>& work);
-
-GramMatrix::GramMatrix(const int ndim) : dim_(ndim)
+template <class MatrixType>
+GramMatrix<MatrixType>::GramMatrix(const int ndim) : dim_(ndim)
 {
-    matS_ = new dist_matrix::DistMatrix<DISTMATDTYPE>("S", ndim, ndim);
-    ls_   = new dist_matrix::DistMatrix<DISTMATDTYPE>("LS", ndim, ndim);
-    invS_ = new dist_matrix::DistMatrix<DISTMATDTYPE>("invS", ndim, ndim);
+    matS_ = new MatrixType("S", ndim, ndim);
+    ls_   = new MatrixType("LS", ndim, ndim);
+    invS_ = new MatrixType("invS", ndim, ndim);
 
-    work_ = new dist_matrix::DistMatrix<DISTMATDTYPE>("work", ndim, ndim);
+    work_ = new MatrixType("work", ndim, ndim);
 
     orbitals_index_ = -1;
     isLSuptodate_   = false;
     isInvSuptodate_ = false;
 }
 
-GramMatrix::GramMatrix(const GramMatrix& gm) : dim_(gm.dim_)
+template <class MatrixType>
+GramMatrix<MatrixType>::GramMatrix(const GramMatrix<MatrixType>& gm)
+    : dim_(gm.dim_)
 {
-    matS_ = new dist_matrix::DistMatrix<DISTMATDTYPE>(*gm.matS_);
-    ls_   = new dist_matrix::DistMatrix<DISTMATDTYPE>(*gm.ls_);
-    invS_ = new dist_matrix::DistMatrix<DISTMATDTYPE>(*gm.invS_);
+    matS_ = new MatrixType(*gm.matS_);
+    ls_   = new MatrixType(*gm.ls_);
+    invS_ = new MatrixType(*gm.invS_);
 
-    work_ = new dist_matrix::DistMatrix<DISTMATDTYPE>(*gm.work_);
+    work_ = new MatrixType(*gm.work_);
 
     orbitals_index_ = gm.orbitals_index_;
     isLSuptodate_   = gm.isLSuptodate_;
     isInvSuptodate_ = gm.isInvSuptodate_;
 }
 
-GramMatrix& GramMatrix::operator=(const GramMatrix& gm)
+template <class MatrixType>
+GramMatrix<MatrixType>& GramMatrix<MatrixType>::operator=(
+    const GramMatrix<MatrixType>& gm)
 {
     if (this == &gm) return *this;
 
@@ -66,7 +68,8 @@ GramMatrix& GramMatrix::operator=(const GramMatrix& gm)
     return *this;
 }
 
-GramMatrix::~GramMatrix()
+template <class MatrixType>
+GramMatrix<MatrixType>::~GramMatrix()
 {
     delete matS_;
     delete invS_;
@@ -74,11 +77,12 @@ GramMatrix::~GramMatrix()
     delete work_;
 }
 
-void GramMatrix::computeInverse()
+template <class MatrixType>
+void GramMatrix<MatrixType>::computeInverse()
 {
     assert(isLSuptodate_);
 
-    dist_matrix::DistMatrix<DISTMATDTYPE> zz(*ls_);
+    MatrixType zz(*ls_);
     zz.potri('l');
     work_->identity();
     invS_->symm('l', 'l', 1., zz, *work_, 0.);
@@ -86,8 +90,9 @@ void GramMatrix::computeInverse()
     isInvSuptodate_ = true;
 }
 
-void GramMatrix::transformLTML(
-    dist_matrix::DistMatrix<DISTMATDTYPE>& mat, const DISTMATDTYPE alpha) const
+template <class MatrixType>
+void GramMatrix<MatrixType>::transformLTML(
+    MatrixType& mat, const DISTMATDTYPE alpha) const
 {
     // mat = alpha* L**T * mat
     mat.trmm('l', 'l', 't', 'n', alpha, *ls_);
@@ -96,12 +101,14 @@ void GramMatrix::transformLTML(
 }
 
 // Solve Z<-L**(-T)*Z
-void GramMatrix::solveLST(dist_matrix::DistMatrix<DISTMATDTYPE>& z) const
+template <class MatrixType>
+void GramMatrix<MatrixType>::solveLST(MatrixType& z) const
 {
     ls_->trtrs('l', 't', 'n', z);
 }
 
-double GramMatrix::computeCond()
+template <class MatrixType>
+double GramMatrix<MatrixType>::computeCond()
 {
 #if 0
     double anorm   = matS_->norm('1');
@@ -128,12 +135,14 @@ double GramMatrix::computeCond()
 }
 
 // mat is overwritten by inv(ls)*mat*inv(ls**T)
-void GramMatrix::sygst(dist_matrix::DistMatrix<DISTMATDTYPE>& mat)
+template <class MatrixType>
+void GramMatrix<MatrixType>::sygst(MatrixType& mat)
 {
     mat.sygst(1, 'l', *ls_);
 }
 
-void GramMatrix::rotateAll(const dist_matrix::DistMatrix<DISTMATDTYPE>& matU)
+template <class MatrixType>
+void GramMatrix<MatrixType>::rotateAll(const MatrixType& matU)
 {
     rotateSym(*matS_, matU, *work_);
 
@@ -142,8 +151,9 @@ void GramMatrix::rotateAll(const dist_matrix::DistMatrix<DISTMATDTYPE>& matU)
     computeInverse();
 }
 
-void GramMatrix::setMatrix(
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& mat, const int orbitals_index)
+template <class MatrixType>
+void GramMatrix<MatrixType>::setMatrix(
+    const MatrixType& mat, const int orbitals_index)
 {
     assert(matS_ != nullptr);
 
@@ -155,21 +165,23 @@ void GramMatrix::setMatrix(
     updateLS();
 }
 
-void GramMatrix::updateLS()
+template <class MatrixType>
+void GramMatrix<MatrixType>::updateLS()
 {
     // Cholesky decomposition of s
     *ls_     = *matS_;
     int info = ls_->potrf('l');
     if (info != 0)
     {
-        std::cerr << "ERROR in GramMatrix::updateLS()" << std::endl;
+        std::cerr << "ERROR in GramMatrix<MatrixType>::updateLS()" << std::endl;
         MGmol_MPI& mmpi = *(MGmol_MPI::instance());
         mmpi.abort();
     }
     isLSuptodate_ = true;
 }
 
-void GramMatrix::set2Id(const int orbitals_index)
+template <class MatrixType>
+void GramMatrix<MatrixType>::set2Id(const int orbitals_index)
 {
     matS_->identity();
     invS_->identity();
@@ -180,27 +192,30 @@ void GramMatrix::set2Id(const int orbitals_index)
     isInvSuptodate_ = true;
 }
 
-double GramMatrix::getLinDependent2states(int& st1, int& st2) const
+template <class MatrixType>
+double GramMatrix<MatrixType>::getLinDependent2states(int& st1, int& st2) const
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
     std::vector<DISTMATDTYPE> eigenvalues(dim_);
-    dist_matrix::DistMatrix<DISTMATDTYPE> u("u", dim_, dim_);
+    MatrixType u("u", dim_, dim_);
     // solve a standard symmetric eigenvalue problem
-    dist_matrix::DistMatrix<DISTMATDTYPE> mat(*matS_);
+    MatrixType mat(*matS_);
     mat.syev('v', 'l', eigenvalues, u);
     // get the index of the two largest components of column 0 of u
     DISTMATDTYPE val1;
     st1 = u.iamax(0, val1);
     u.setVal(st1, 0, 0.);
     if (mmpi.instancePE0())
-        std::cout << "GramMatrix::getLinDependent2states... element val="
-                  << val1 << std::endl;
+        std::cout
+            << "GramMatrix<MatrixType>::getLinDependent2states... element val="
+            << val1 << std::endl;
     DISTMATDTYPE val2;
     st2 = u.iamax(0, val2);
     if (mmpi.instancePE0())
-        std::cout << "GramMatrix::getLinDependent2states... element val="
-                  << val2 << std::endl;
+        std::cout
+            << "GramMatrix<MatrixType>::getLinDependent2states... element val="
+            << val2 << std::endl;
 
     // look for 2nd largest coefficient with different sign
     while (val1 * val2 > 0.)
@@ -208,19 +223,22 @@ double GramMatrix::getLinDependent2states(int& st1, int& st2) const
         u.setVal(st2, 0, 0.);
         st2 = u.iamax(0, val2);
         if (mmpi.instancePE0())
-            std::cout << "GramMatrix::getLinDependent2states... element val="
+            std::cout << "GramMatrix<MatrixType>::getLinDependent2states... "
+                         "element val="
                       << val2 << std::endl;
     }
 
     return (double)eigenvalues[0];
 }
 
-double GramMatrix::getLinDependent2states(int& st1, int& st2, int& st3) const
+template <class MatrixType>
+double GramMatrix<MatrixType>::getLinDependent2states(
+    int& st1, int& st2, int& st3) const
 {
     std::vector<DISTMATDTYPE> eigenvalues(dim_);
-    dist_matrix::DistMatrix<DISTMATDTYPE> u("u", dim_, dim_);
+    MatrixType u("u", dim_, dim_);
     // solve a standard symmetric eigenvalue problem
-    dist_matrix::DistMatrix<DISTMATDTYPE> mat(*matS_);
+    MatrixType mat(*matS_);
     mat.syev('v', 'l', eigenvalues, u);
     // get the index of the two largest components of column 0 of u
     DISTMATDTYPE val1;
@@ -235,13 +253,12 @@ double GramMatrix::getLinDependent2states(int& st1, int& st2, int& st3) const
     return (double)eigenvalues[0];
 }
 
-void GramMatrix::computeLoewdinTransform(
-    dist_matrix::DistMatrix<DISTMATDTYPE>& loewdinMat,
-    std::shared_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> invLoewdin,
-    const int orb_index)
+template <class MatrixType>
+void GramMatrix<MatrixType>::computeLoewdinTransform(MatrixType& loewdinMat,
+    std::shared_ptr<MatrixType> invLoewdin, const int orb_index)
 {
-    dist_matrix::DistMatrix<DISTMATDTYPE> mat(*matS_);
-    dist_matrix::DistMatrix<DISTMATDTYPE> vect("vect", dim_, dim_);
+    MatrixType mat(*matS_);
+    MatrixType vect("vect", dim_, dim_);
     std::vector<DISTMATDTYPE> eigenvalues(dim_);
     mat.syev('v', 'l', eigenvalues, vect);
 
@@ -270,3 +287,5 @@ void GramMatrix::computeLoewdinTransform(
         invLoewdin->gemm('n', 't', 1., mat, vect, 0.);
     }
 }
+
+template class GramMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>;

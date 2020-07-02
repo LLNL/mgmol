@@ -15,23 +15,23 @@
 
 #define NPRINT_ROWS_AND_COLS 5
 
+template <class MatrixType>
 class GramMatrix
 {
     unsigned int dim_;
 
-    dist_matrix::DistMatrix<DISTMATDTYPE>* matS_;
-    dist_matrix::DistMatrix<DISTMATDTYPE>* invS_;
-    dist_matrix::DistMatrix<DISTMATDTYPE>* ls_;
+    MatrixType* matS_;
+    MatrixType* invS_;
+    MatrixType* ls_;
 
-    dist_matrix::DistMatrix<DISTMATDTYPE>* work_;
+    MatrixType* work_;
 
     // index of orbitals associated to object (for compatibility testing)
     int orbitals_index_;
     bool isLSuptodate_;
     bool isInvSuptodate_;
 
-    void transformLTML(dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
-        const DISTMATDTYPE alpha) const;
+    void transformLTML(MatrixType& mat, const DISTMATDTYPE alpha) const;
 
 public:
     GramMatrix(const int ndim);
@@ -57,20 +57,20 @@ public:
         matS_->printMM(os);
     }
 
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& getMatrix() const
+    const MatrixType& getMatrix() const
     {
         assert(matS_ != nullptr);
         return *matS_;
     }
 
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& getInverse() const
+    const MatrixType& getInverse() const
     {
         assert(isInvSuptodate_);
 
         return *invS_;
     }
 
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& getCholeskyL() const
+    const MatrixType& getCholeskyL() const
     {
         assert(ls_ != NULL);
         assert(isLSuptodate_);
@@ -78,14 +78,13 @@ public:
         return *ls_;
     }
 
-    void setMatrix(const dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
-        const int orbitals_index);
+    void setMatrix(const MatrixType& mat, const int orbitals_index);
 
     void updateLS();
 
     void set2Id(const int orbitals_index);
 
-    void applyInv(dist_matrix::DistMatrix<DISTMATDTYPE>& mat)
+    void applyInv(MatrixType& mat)
     {
         assert(isLSuptodate_);
 
@@ -95,18 +94,16 @@ public:
     void printMM(std::ostream& tfile) { matS_->printMM(tfile); }
 
     void computeInverse();
-    void solveLST(dist_matrix::DistMatrix<DISTMATDTYPE>& z) const;
+    void solveLST(MatrixType& z) const;
     double computeCond();
-    void sygst(dist_matrix::DistMatrix<DISTMATDTYPE>& mat);
-    void rotateAll(const dist_matrix::DistMatrix<DISTMATDTYPE>& matU);
+    void sygst(MatrixType& mat);
+    void rotateAll(const MatrixType& matU);
 
     double getLinDependent2states(int& st1, int& st2, int& st3) const;
     double getLinDependent2states(int& st1, int& st2) const;
 
-    void computeLoewdinTransform(
-        dist_matrix::DistMatrix<DISTMATDTYPE>& loewdinMat,
-        std::shared_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> invLoewdin,
-        const int orb_index);
+    void computeLoewdinTransform(MatrixType& loewdinMat,
+        std::shared_ptr<MatrixType> invLoewdin, const int orb_index);
 };
 
 #endif

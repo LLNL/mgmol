@@ -55,7 +55,7 @@ TEST_CASE("Check functionalities of class GramMatrix", "[functions_GramMatrix")
     if (myrank == 0) std::cout << "Norm B = " << normB << std::endl;
 
     // new Gram matrix
-    GramMatrix gram(n);
+    GramMatrix<dist_matrix::DistMatrix<double>> gram(n);
 
     // initialize Gram matrix with "matB"
     gram.setMatrix(matB, 0);

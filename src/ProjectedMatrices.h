@@ -31,7 +31,8 @@ class ProjectedMatrices : public ProjectedMatricesInterface
 {
     static short n_instances_;
 
-    static GramMatrix* gram_4dotProducts_;
+    static GramMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>*
+        gram_4dotProducts_;
     static DensityMatrix* dm_4dot_product_;
 
     // spin: 0 for ignoring spin, 1 for calculation with spin
@@ -99,7 +100,7 @@ protected:
     std::unique_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> matH_;
 
     std::unique_ptr<DensityMatrix> dm_;
-    std::unique_ptr<GramMatrix> gm_;
+    std::unique_ptr<GramMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>> gm_;
 
     // work matrix for tmp usage
     std::unique_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> work_;
