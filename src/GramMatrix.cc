@@ -12,6 +12,7 @@
 #include "DistMatrixTools.h"
 #include "DistVector.h"
 #include "Power.h"
+#include "ReplicatedMatrix.h"
 
 #include <iomanip>
 #include <iostream>
@@ -107,8 +108,8 @@ void GramMatrix<MatrixType>::solveLST(MatrixType& z) const
     ls_->trtrs('l', 't', 'n', z);
 }
 
-template <class MatrixType>
-double GramMatrix<MatrixType>::computeCond()
+template <>
+double GramMatrix<dist_matrix::DistMatrix<double>>::computeCond()
 {
 #if 0
     double anorm   = matS_->norm('1');
@@ -133,6 +134,15 @@ double GramMatrix<MatrixType>::computeCond()
 
     return cond;
 }
+
+#ifdef HAVE_MAGMA
+template <>
+double GramMatrix<ReplicatedMatrix>::computeCond()
+{
+    const double cond = 1;
+    return cond;
+}
+#endif
 
 // mat is overwritten by inv(ls)*mat*inv(ls**T)
 template <class MatrixType>
@@ -289,3 +299,6 @@ void GramMatrix<MatrixType>::computeLoewdinTransform(MatrixType& loewdinMat,
 }
 
 template class GramMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>;
+#ifdef HAVE_MAGMA
+template class GramMatrix<ReplicatedMatrix>;
+#endif
