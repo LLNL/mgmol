@@ -154,6 +154,7 @@ add_executable(testGramMatrix
                ${CMAKE_SOURCE_DIR}/src/magma_singleton.cc
                ${CMAKE_SOURCE_DIR}/src/local_matrices/LocalMatrices.cc
                ${CMAKE_SOURCE_DIR}/src/local_matrices/SquareLocalMatrices.cc
+               ${CMAKE_SOURCE_DIR}/src/ReplicatedMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/DistMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/BlacsContext.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/MatricesBlacsContext.cc

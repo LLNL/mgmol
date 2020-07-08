@@ -5,6 +5,13 @@
 #include "magma_v2.h"
 
 #include <iostream>
+void rotateSym(ReplicatedMatrix& mat,
+    const ReplicatedMatrix& rotation_matrix,
+    ReplicatedMatrix& work)
+{
+    work.symm('l', 'l', 1., mat, rotation_matrix, 0.);
+    mat.gemm('t', 'n', 1., rotation_matrix, work, 0.);
+}
 
 ReplicatedMatrix::ReplicatedMatrix(
     const std::string name, const int m, const int n)
@@ -14,9 +21,24 @@ ReplicatedMatrix::ReplicatedMatrix(
 
     ld_ = magma_roundup(m, .32);
 
-    magma_int_t ret = magma_dmalloc(&device_data_, n * ld);
+    magma_int_t ret = magma_dmalloc(&device_data_, n * ld_);
+    if(ret != MAGMA_SUCCESS)
+    {
+        std::cerr << "magma_dmalloc failed!" << std::endl;
+    }
+}
 
-    assert(ret == MAGMA_SUCCESS);
+ReplicatedMatrix::ReplicatedMatrix(
+    const std::string name, const int n)
+    : dim_(n)
+{
+    ld_ = magma_roundup(n, .32);
+
+    magma_int_t ret = magma_dmalloc(&device_data_, n * ld_);
+    if(ret != MAGMA_SUCCESS)
+    {
+        std::cerr << "magma_dmalloc failed!" << std::endl;
+    }
 }
 
 ReplicatedMatrix::ReplicatedMatrix(const ReplicatedMatrix& mat)
@@ -28,7 +50,10 @@ ReplicatedMatrix::ReplicatedMatrix(const ReplicatedMatrix& mat)
     magma_queue_create(device, &queue);
 
     magma_int_t ret = magma_dmalloc(&device_data_, dim_ * ld_);
-    assert(ret == MAGMA_SUCCESS);
+    if(ret != MAGMA_SUCCESS)
+    {
+        std::cerr << "magma_dmalloc failed!" << std::endl;
+    }
 
     magma_dcopymatrix(
         dim_, dim_, mat.device_data_, ld_, device_data_, ld_, queue);
@@ -38,7 +63,7 @@ ReplicatedMatrix::ReplicatedMatrix(const ReplicatedMatrix& mat)
 
 ReplicatedMatrix::~ReplicatedMatrix()
 {
-    ret = magma_free(device_inv_sqrt_diagonal_);
+    magma_int_t ret = magma_free(device_data_);
     if (ret == MAGMA_ERR_INVALID_PTR)
     {
         std::cerr << "magma free device_inv_sqrt_diagonal_: "
@@ -58,40 +83,121 @@ void ReplicatedMatrix::identity()
     magma_queue_destroy(queue);
 }
 
-void ReplicatedMatrix::gemm(const char transa, const char transb,
-    const double alpha, const ReplicatedMatrix& a, const ReplicatedMatrix& b,
-    const double beta)
+void ReplicatedMatrix::transpose(const double alpha, 
+const ReplicatedMatrix& a, const double beta)
 {
     magma_queue_t queue;
     int device;
     magma_getdevice(&device);
     magma_queue_create(device, &queue);
 
-    magmablas_dgemm(MagmaNoTrans, MagmaNoTrans, dim_, dim_, dim_, alpha,
+    magmablas_dtranspose(dim_, dim_, a.device_data_, ld_, device_data_, ld_, queue);
+
+    magma_queue_destroy(queue);
+}
+
+void ReplicatedMatrix::gemm(const char transa, const char transb,
+    const double alpha, const ReplicatedMatrix& a, const ReplicatedMatrix& b,
+    const double beta)
+{
+    magma_trans_t magma_transa = magma_trans_const(transa);	
+    magma_trans_t magma_transb = magma_trans_const(transb);
+
+    magma_queue_t queue;
+    int device;
+    magma_getdevice(&device);
+    magma_queue_create(device, &queue);
+
+    magmablas_dgemm(magma_transa, magma_transb, dim_, dim_, dim_, alpha,
         a.device_data_, ld_, b.device_data_, ld_, beta, device_data_, ld_,
         queue);
 
     magma_queue_destroy(queue);
 }
 
+void ReplicatedMatrix::symm(const char side, const char uplo, const double alpha,
+        const ReplicatedMatrix& a, const ReplicatedMatrix& b,
+        const double beta)
+{
+    magma_side_t magma_side = magma_side_const(side);
+    magma_uplo_t magma_uplo = magma_uplo_const(uplo);
+
+    magma_queue_t queue;
+    int device;
+    magma_getdevice(&device);
+    magma_queue_create(device, &queue);
+
+    magma_dsymm(magma_side, magma_uplo, dim_, dim_, alpha, a.device_data_, 
+          ld_, b.device_data_, ld_, beta, device_data_, ld_, queue);
+
+    magma_queue_destroy(queue);
+}
+
 int ReplicatedMatrix::potrf(char uplo)
 {
+    magma_uplo_t magma_uplo = magma_uplo_const(uplo);
+
     magma_queue_t queue;
     int device;
     magma_getdevice(&device);
     magma_queue_create(device, &queue);
 
     int info;
-    magma_dpotrf_gpu(MagmaLower, dim_, device_data_, ld_, &info);
+    magma_dpotrf_gpu(magma_uplo, dim_, device_data_, ld_, &info);
     if (info != 0)
         std::cerr << "magma_dpotrf_gpu failed, info = " << info << std::endl;
+
+    magma_queue_destroy(queue);
+
+    return info;
+}
+
+int ReplicatedMatrix::potri(char uplo)
+{
+    magma_uplo_t magma_uplo = magma_uplo_const(uplo);
+
+    magma_queue_t queue;
+    int device;
+    magma_getdevice(&device);
+    magma_queue_create(device, &queue);
+
+    int info;
+    magma_dpotri_gpu(magma_uplo, dim_, device_data_, ld_, &info);
+    if (info != 0)
+        std::cerr << "magma_dpotri_gpu failed, info = " << info << std::endl;
+
+    magma_queue_destroy(queue);
+
+    return info;
+}
+
+// Solve a system of linear equations A*X = B with a symmetric
+// positive definite matrix A using the Cholesky factorization
+// A = U**T*U or A = L*L**T computed by potrf
+void ReplicatedMatrix::potrs(char uplo, ReplicatedMatrix& b)
+{
+    magma_uplo_t magma_uplo = magma_uplo_const(uplo);
+
+    magma_queue_t queue;
+    int device;
+    magma_getdevice(&device);
+    magma_queue_create(device, &queue);
+
+    int info;
+    magma_dpotrs_gpu(magma_uplo, dim_, dim_, device_data_, ld_, 
+         b.device_data_, ld_, &info);
+    if (info != 0)
+        std::cerr << "magma_dpotrs_gpu failed, info = " << info << std::endl;
 
     magma_queue_destroy(queue);
 }
 
 void ReplicatedMatrix::syev(
-    char, char, std::vector<double>&, ReplicatedMatrix& z)
+    char jobz, char uplo, std::vector<double>& evals, ReplicatedMatrix& z)
 {
+    magma_vec_t magma_jobz = magma_vec_const(jobz);
+    magma_uplo_t magma_uplo = magma_uplo_const(uplo);
+
     magma_queue_t queue;
     int device;
     magma_getdevice(&device);
@@ -109,21 +215,146 @@ void ReplicatedMatrix::syev(
     std::vector<double> work(lwork);
     std::vector<int> iwork(liwork);
 
-    magma_dsyevd_gpu(MagmaVec, MagmaUpper, dim_, z.device_data_`, ld,
+    magma_queue_destroy(queue);
+
+    magma_dsyevd_gpu(magma_jobz, magma_uplo, dim_, z.device_data_, ld_,
         evals.data(), wa.data(), dim_, work.data(), lwork, iwork.data(), liwork,
         &info);
+    if (info != 0)
+        std::cerr << "magma_dsyevd_gpu failed, info = " << info << std::endl;
+}
+
+void ReplicatedMatrix::sygst(
+    int itype, char uplo, const ReplicatedMatrix& b)
+{
+    magma_uplo_t magma_uplo = magma_uplo_const(uplo);
+    magma_int_t  magma_itype = static_cast<magma_int_t>(itype);
+
+    int info;
+    magma_dsygst_gpu(magma_itype, magma_uplo, dim_, device_data_, ld_,
+                      b.device_data_, ld_,
+                     &info);
+    if (info != 0)
+        std::cerr << "magma_dsygst_gpu failed, info = " << info << std::endl;
+}
+
+void ReplicatedMatrix::trmm(const char side, const char uplo,
+    const char trans, const char diag, const double alpha,
+    const ReplicatedMatrix& a)
+{
+    magma_side_t magma_side = magma_side_const(side);
+    magma_uplo_t magma_uplo = magma_uplo_const(uplo);
+    magma_trans_t magma_trans = magma_trans_const(trans);
+    magma_diag_t magma_diag = magma_diag_const(diag);
+
+    magma_queue_t queue;
+    int device;
+    magma_getdevice(&device);
+    magma_queue_create(device, &queue);
+
+    magma_dtrmm(magma_side, magma_uplo, magma_trans, magma_diag,
+        dim_,
+        dim_, alpha, a.device_data_, ld_, device_data_, ld_, queue);
 
     magma_queue_destroy(queue);
 }
 
-void ReplicatedMatrix::setDiagonal(const std::vector<double>& diag_values);
+void ReplicatedMatrix::trtrs(const char uplo, const char trans, const char diag,
+                             ReplicatedMatrix& b) const
+{
+    magma_uplo_t magma_uplo = magma_uplo_const(uplo);
+    magma_trans_t magma_trans = magma_trans_const(trans);
+    magma_diag_t magma_diag = magma_diag_const(diag);
+
+    magma_queue_t queue;
+    int device;
+    magma_getdevice(&device);
+    magma_queue_create(device, &queue);
+
+    magma_dtrsm(MagmaLeft, magma_uplo, magma_trans, magma_diag, dim_, dim_,
+                1., device_data_, ld_, device_data_, ld_, queue);
+
+    magma_queue_destroy(queue);
+}
+
+// get max in absolute value of column j
+int ReplicatedMatrix::iamax(const int j, double& val)
 {
     magma_queue_t queue;
     int device;
     magma_getdevice(&device);
     magma_queue_create(device, &queue);
 
-    magma_dsetvector(dim_, diag_values.data(), 1, device_data_, ld + 1, queue);
+    int indx = magma_idamax(dim_, device_data_+j*ld_, 1, queue)-1;
+    magma_dgetvector(dim_, device_data_+j*ld_+indx, 1, &val, 1, queue);
+
     magma_queue_destroy(queue);
+
+    return indx;
+}
+
+void ReplicatedMatrix::setVal(const int i, const int j, const double val)
+{
+    magma_queue_t queue;
+    int device;
+    magma_getdevice(&device);
+    magma_queue_create(device, &queue);
+
+    magma_dsetvector(dim_, &val, 1, device_data_+j*ld_+i, 1, queue);
+
+    magma_queue_destroy(queue);
+}
+
+void ReplicatedMatrix::setDiagonal(const std::vector<double>& diag_values)
+{
+    magma_queue_t queue;
+    int device;
+    magma_getdevice(&device);
+    magma_queue_create(device, &queue);
+
+    magma_dsetvector(dim_, diag_values.data(), 1, device_data_, ld_ + 1, queue);
+
+    magma_queue_destroy(queue);
+}
+
+double ReplicatedMatrix::norm(char ty)
+{
+    magma_norm_t magma_ty = magma_norm_const(ty);
+
+    magma_queue_t queue;
+    int device;
+    magma_getdevice(&device);
+    magma_queue_create(device, &queue);
+
+    int lwork = dim_;
+    double* dwork;
+    magma_dmalloc(&dwork, lwork);
+    double norm_val = magmablas_dlange(magma_ty, dim_, dim_, device_data_, ld_, dwork, lwork, queue);
+
+    magma_queue_destroy(queue);
+    magma_free(dwork);
+
+    return norm_val;
+}
+
+void ReplicatedMatrix::clear()
+{
+    magma_queue_t queue;
+    int device;
+    magma_getdevice(&device);
+    magma_queue_create(device, &queue);
+
+    magmablas_dlaset(MagmaFull, dim_, dim_, 0.0, 0.0, device_data_, ld_, queue);
+
+    magma_queue_destroy(queue);
+}
+
+void ReplicatedMatrix::print(
+        std::ostream& os, const int, const int, const int, const int) const
+{
+}
+
+void ReplicatedMatrix::printMM(std::ostream& os) const
+{
 }
 #endif

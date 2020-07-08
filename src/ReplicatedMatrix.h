@@ -3,7 +3,8 @@
 
 #ifdef HAVE_MAGMA
 
-void rotateSym(ReplicatedMatrix&, const ReplicatedMatrix&, ReplicatedMatrix&);
+#include <vector>
+#include <string>
 
 class ReplicatedMatrix
 {
@@ -18,11 +19,14 @@ class ReplicatedMatrix
 
 public:
     ReplicatedMatrix(const std::string name, const int m, const int n);
+    ReplicatedMatrix(const std::string name, const int n);
 
     ReplicatedMatrix(const ReplicatedMatrix&);
 
-    void identity();
+    ~ReplicatedMatrix();
 
+    void identity();
+    void transpose(const double alpha, const ReplicatedMatrix&, const double beta);
     void trmm(const char, const char, const char, const char, const double,
         const ReplicatedMatrix&);
     void trtrs(const char, const char, const char, ReplicatedMatrix&) const;
@@ -42,6 +46,7 @@ public:
     void setVal(const int i, const int j, const double val);
     void setDiagonal(const std::vector<double>& diag_values);
     int iamax(const int j, double& val);
+    double norm(char ty);
 
     void print(
         std::ostream& os, const int, const int, const int, const int) const;
@@ -49,6 +54,8 @@ public:
 
     void clear(void);
 };
+
+void rotateSym(ReplicatedMatrix&, const ReplicatedMatrix&, ReplicatedMatrix&);
 
 #endif
 
