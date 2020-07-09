@@ -6,10 +6,13 @@
 // All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
-#include "BlacsContext.h"
-#include "DistMatrix.h"
 #include "ReplicatedMatrix.h"
 #include "GramMatrix.h"
+
+#ifndef HAVE_MAGMA
+#include "BlacsContext.h"
+#include "DistMatrix.h"
+#endif
 
 #include "catch.hpp"
 
@@ -28,18 +31,20 @@ TEST_CASE("Check functionalities of class GramMatrix", "[functions_GramMatrix")
     int npes;
     MPI_Comm_size(MPI_COMM_WORLD, &npes);
 
+    MGmol_MPI::setup(MPI_COMM_WORLD, std::cout);
+
+#ifndef HAVE_MAGMA
     INFO("This example to set up to use only 4 processes");
     REQUIRE(npes == 4);
-
-    MGmol_MPI::setup(MPI_COMM_WORLD, std::cout);
 
     int nprow = 2;
     int npcol = 2;
     dist_matrix::BlacsContext bc(MPI_COMM_WORLD, nprow, npcol);
     dist_matrix::DistMatrix<DISTMATDTYPE>::setDefaultBlacsContext(&bc);
-
+#endif
     const int n = 213;
-
+if (myrank == 0)
+{
     // build matrix with diagonal elements equal to 1.
     // and off diagonal elements such that its eigenvalues
     // are guaranteed to be between 0 and 2
@@ -90,8 +95,10 @@ TEST_CASE("Check functionalities of class GramMatrix", "[functions_GramMatrix")
     MatrixType loewdin("Loewdin", n);
     std::shared_ptr<MatrixType> invloewdin;
     invloewdin.reset(
-        new dist_matrix::DistMatrix<DISTMATDTYPE>("InvLoewdin", n));
+        new MatrixType("InvLoewdin", n));
     gram.computeLoewdinTransform(loewdin, invloewdin, 0);
+    if (myrank == 0) std::cout << "Loewdin"<< std::endl;
+    loewdin.print(std::cout, 0, 0, 5, 5);
 
     matA.gemm('N', 'N', 1., loewdin, *invloewdin, 0.);
     if (myrank == 0) std::cout << "B^-1/2*B^1/2:" << std::endl;
@@ -112,4 +119,5 @@ TEST_CASE("Check functionalities of class GramMatrix", "[functions_GramMatrix")
 
     normA = matA.norm('m');
     CHECK(normA == Approx(0.).margin(1.e-14));
+}
 }

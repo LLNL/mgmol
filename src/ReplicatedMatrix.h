@@ -25,6 +25,16 @@ public:
 
     ~ReplicatedMatrix();
 
+    ReplicatedMatrix& operator-=(const ReplicatedMatrix& rhs)
+    {
+        axpy(-1.0, rhs);
+        return *this;
+    }
+    ReplicatedMatrix& operator=(const ReplicatedMatrix& rhs);
+
+    void axpy(const double alpha, const ReplicatedMatrix& a);
+
+    void setRandom(const double minv, const double maxv);
     void identity();
     void transpose(const double alpha, const ReplicatedMatrix&, const double beta);
     void trmm(const char, const char, const char, const char, const double,
@@ -53,6 +63,7 @@ public:
     void printMM(std::ostream& os) const;
 
     void clear(void);
+    void trset(const char uplo);
 };
 
 void rotateSym(ReplicatedMatrix&, const ReplicatedMatrix&, ReplicatedMatrix&);

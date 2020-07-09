@@ -1,6 +1,7 @@
 #ifdef HAVE_MAGMA
 
 #include "ReplicatedMatrix.h"
+#include "random.h"
 
 #include "magma_v2.h"
 
@@ -19,9 +20,9 @@ ReplicatedMatrix::ReplicatedMatrix(
 {
     assert(m == n);
 
-    ld_ = magma_roundup(m, .32);
+    ld_ = magma_roundup(dim_, 32);
 
-    magma_int_t ret = magma_dmalloc(&device_data_, n * ld_);
+    magma_int_t ret = magma_dmalloc(&device_data_, dim_ * ld_);
     if(ret != MAGMA_SUCCESS)
     {
         std::cerr << "magma_dmalloc failed!" << std::endl;
@@ -32,9 +33,9 @@ ReplicatedMatrix::ReplicatedMatrix(
     const std::string name, const int n)
     : dim_(n)
 {
-    ld_ = magma_roundup(n, .32);
+    ld_ = magma_roundup(dim_, 32);
 
-    magma_int_t ret = magma_dmalloc(&device_data_, n * ld_);
+    magma_int_t ret = magma_dmalloc(&device_data_, dim_ * ld_);
     if(ret != MAGMA_SUCCESS)
     {
         std::cerr << "magma_dmalloc failed!" << std::endl;
@@ -56,9 +57,33 @@ ReplicatedMatrix::ReplicatedMatrix(const ReplicatedMatrix& mat)
     }
 
     magma_dcopymatrix(
-        dim_, dim_, mat.device_data_, ld_, device_data_, ld_, queue);
+        dim_, dim_, mat.device_data_, mat.ld_, device_data_, ld_, queue);
 
     magma_queue_destroy(queue);
+}
+
+ReplicatedMatrix& ReplicatedMatrix::operator=(const ReplicatedMatrix& rhs)
+{
+    if(this != &rhs)
+    {
+        ld_ = rhs.ld_;
+        dim_ = rhs.dim_;
+        magma_int_t ret = magma_dmalloc(&device_data_, dim_ * ld_);
+        if(ret != MAGMA_SUCCESS)
+        {
+            std::cerr << "magma_dmalloc failed!" << std::endl;
+        }
+        magma_queue_t queue;
+        int device;
+        magma_getdevice(&device);
+        magma_queue_create(device, &queue);
+
+        magma_dcopymatrix(
+            dim_, dim_, rhs.device_data_, rhs.ld_, device_data_, ld_, queue);
+
+        magma_queue_destroy(queue);
+    }
+    return *this;
 }
 
 ReplicatedMatrix::~ReplicatedMatrix()
@@ -66,9 +91,38 @@ ReplicatedMatrix::~ReplicatedMatrix()
     magma_int_t ret = magma_free(device_data_);
     if (ret == MAGMA_ERR_INVALID_PTR)
     {
-        std::cerr << "magma free device_inv_sqrt_diagonal_: "
-                  << "invalid ptr rep destr" << std::endl;
+        std::cerr << "~ReplicatedMatrix(), magma free device_data_: "
+                  << "invalid ptr" << std::endl;
     }
+}
+
+void ReplicatedMatrix::axpy(const double alpha, const ReplicatedMatrix& a)
+{
+    magma_queue_t queue;
+    int device;
+    magma_getdevice(&device);
+    magma_queue_create(device, &queue);
+
+    magmablas_dgeadd(dim_, dim_, alpha, a.device_data_, a.ld_,
+                     device_data_, ld_, queue);
+
+    magma_queue_destroy(queue);
+}
+
+void ReplicatedMatrix::setRandom(const double minv, const double maxv)
+{
+    std::vector<double> mat(dim_*dim_);
+
+    generateRandomData(mat, minv, maxv);
+
+    magma_queue_t queue;
+    int device;
+    magma_getdevice(&device);
+    magma_queue_create(device, &queue);
+
+    magma_dsetmatrix(dim_, dim_, mat.data(), dim_, device_data_, ld_, queue);
+
+    magma_queue_destroy(queue);
 }
 
 void ReplicatedMatrix::identity()
@@ -83,6 +137,7 @@ void ReplicatedMatrix::identity()
     magma_queue_destroy(queue);
 }
 
+// this = alpha * transpose(A) + beta * this
 void ReplicatedMatrix::transpose(const double alpha, 
 const ReplicatedMatrix& a, const double beta)
 {
@@ -91,9 +146,20 @@ const ReplicatedMatrix& a, const double beta)
     magma_getdevice(&device);
     magma_queue_create(device, &queue);
 
-    magmablas_dtranspose(dim_, dim_, a.device_data_, ld_, device_data_, ld_, queue);
+    double* dwork;
+    magma_int_t ret = magma_dmalloc(&dwork, dim_ * ld_);
+    if(ret != MAGMA_SUCCESS)
+    {
+        std::cerr << "magma_dmalloc failed!" << std::endl;
+    }
+
+    magmablas_dtranspose(dim_, dim_, a.device_data_, a.ld_, dwork, ld_, queue);
+
+    magmablas_dgeadd2(dim_, dim_, alpha, dwork, ld_, beta, device_data_, ld_, queue);
 
     magma_queue_destroy(queue);
+
+    magma_free(dwork);
 }
 
 void ReplicatedMatrix::gemm(const char transa, const char transb,
@@ -109,7 +175,7 @@ void ReplicatedMatrix::gemm(const char transa, const char transb,
     magma_queue_create(device, &queue);
 
     magmablas_dgemm(magma_transa, magma_transb, dim_, dim_, dim_, alpha,
-        a.device_data_, ld_, b.device_data_, ld_, beta, device_data_, ld_,
+        a.device_data_, a.ld_, b.device_data_, b.ld_, beta, device_data_, ld_,
         queue);
 
     magma_queue_destroy(queue);
@@ -128,7 +194,7 @@ void ReplicatedMatrix::symm(const char side, const char uplo, const double alpha
     magma_queue_create(device, &queue);
 
     magma_dsymm(magma_side, magma_uplo, dim_, dim_, alpha, a.device_data_, 
-          ld_, b.device_data_, ld_, beta, device_data_, ld_, queue);
+          a.ld_, b.device_data_, b.ld_, beta, device_data_, ld_, queue);
 
     magma_queue_destroy(queue);
 }
@@ -185,7 +251,7 @@ void ReplicatedMatrix::potrs(char uplo, ReplicatedMatrix& b)
 
     int info;
     magma_dpotrs_gpu(magma_uplo, dim_, dim_, device_data_, ld_, 
-         b.device_data_, ld_, &info);
+         b.device_data_, b.ld_, &info);
     if (info != 0)
         std::cerr << "magma_dpotrs_gpu failed, info = " << info << std::endl;
 
@@ -205,9 +271,9 @@ void ReplicatedMatrix::syev(
 
     // copy matrix into z
     magmablas_dlacpy(
-        MagmaFull, dim_, dim_, device_data_, ld_, z.device_data_, ld_, queue);
-
-    int lwork  = 2 * dim_ + dim_ * magma_get_ssytrd_nb(dim_);
+        MagmaFull, dim_, dim_, device_data_, ld_, z.device_data_, z.ld_, queue);
+    magma_int_t nb = magma_get_ssytrd_nb(dim_);
+    magma_int_t lwork  = std::max(2 * dim_ + dim_ * nb, 1 + 6*dim_+2*dim_*dim_);
     int liwork = 3 + 5 * dim_;
 
     int info;
@@ -217,11 +283,12 @@ void ReplicatedMatrix::syev(
 
     magma_queue_destroy(queue);
 
-    magma_dsyevd_gpu(magma_jobz, magma_uplo, dim_, z.device_data_, ld_,
+    magma_dsyevd_gpu(magma_jobz, magma_uplo, dim_, z.device_data_, z.ld_,
         evals.data(), wa.data(), dim_, work.data(), lwork, iwork.data(), liwork,
         &info);
     if (info != 0)
         std::cerr << "magma_dsyevd_gpu failed, info = " << info << std::endl;
+    //for(auto& d : evals)std::cout<<d<<std::endl;
 }
 
 void ReplicatedMatrix::sygst(
@@ -254,7 +321,7 @@ void ReplicatedMatrix::trmm(const char side, const char uplo,
 
     magma_dtrmm(magma_side, magma_uplo, magma_trans, magma_diag,
         dim_,
-        dim_, alpha, a.device_data_, ld_, device_data_, ld_, queue);
+        dim_, alpha, a.device_data_, a.ld_, device_data_, ld_, queue);
 
     magma_queue_destroy(queue);
 }
@@ -337,6 +404,33 @@ double ReplicatedMatrix::norm(char ty)
     return norm_val;
 }
 
+void ReplicatedMatrix::trset(const char uplo)
+{
+    magma_queue_t queue;
+    int device;
+    magma_getdevice(&device);
+    magma_queue_create(device, &queue);
+
+    std::vector<double> mat(dim_*dim_);
+
+    magma_dgetmatrix(dim_, dim_, device_data_, ld_, mat.data(), dim_, queue);
+
+    if (uplo == 'l' || uplo == 'L')
+    {
+        for (int j = 0; j < dim_; j++)
+        for (int i = 0; i < j; i++)
+            mat[i+j*dim_] = 0.;
+    }else{
+        for (int j = 0; j < dim_; j++)
+        for (int i = j+1; i < dim_; i++)
+            mat[i+j*dim_] = 0.;
+    }
+
+    magma_dsetmatrix(dim_, dim_, mat.data(), dim_, device_data_, ld_, queue);
+
+    magma_queue_destroy(queue);
+}
+
 void ReplicatedMatrix::clear()
 {
     magma_queue_t queue;
@@ -350,8 +444,25 @@ void ReplicatedMatrix::clear()
 }
 
 void ReplicatedMatrix::print(
-        std::ostream& os, const int, const int, const int, const int) const
+        std::ostream& os, const int ia, const int ja, const int ma, const int na) const
 {
+    const int m = std::min(ma, std::max(dim_ - ia, 0));
+    const int n = std::min(na, std::max(dim_ - ja, 0));
+
+    magma_queue_t queue;
+    int device;
+    magma_getdevice(&device);
+    magma_queue_create(device, &queue);
+
+    std::vector<double> mat(dim_*dim_);
+
+    magma_dgetmatrix(dim_, dim_, device_data_, ld_, mat.data(), dim_, queue);
+
+        for (int i = ia; i < m; i++){
+            for (int j = ja; j < n; j++)
+                os << mat[i+j*dim_] << "   ";
+            os<<std::endl;
+        }
 }
 
 void ReplicatedMatrix::printMM(std::ostream& os) const
