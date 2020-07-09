@@ -6,8 +6,8 @@
 // All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
-#include "ReplicatedMatrix.h"
 #include "GramMatrix.h"
+#include "ReplicatedMatrix.h"
 
 #ifndef HAVE_MAGMA
 #include "BlacsContext.h"
@@ -43,8 +43,7 @@ TEST_CASE("Check functionalities of class GramMatrix", "[functions_GramMatrix")
     dist_matrix::DistMatrix<DISTMATDTYPE>::setDefaultBlacsContext(&bc);
 #endif
     const int n = 213;
-if (myrank == 0)
-{
+
     // build matrix with diagonal elements equal to 1.
     // and off diagonal elements such that its eigenvalues
     // are guaranteed to be between 0 and 2
@@ -94,10 +93,9 @@ if (myrank == 0)
     // Loewdin
     MatrixType loewdin("Loewdin", n);
     std::shared_ptr<MatrixType> invloewdin;
-    invloewdin.reset(
-        new MatrixType("InvLoewdin", n));
+    invloewdin.reset(new MatrixType("InvLoewdin", n));
     gram.computeLoewdinTransform(loewdin, invloewdin, 0);
-    if (myrank == 0) std::cout << "Loewdin"<< std::endl;
+    if (myrank == 0) std::cout << "Loewdin" << std::endl;
     loewdin.print(std::cout, 0, 0, 5, 5);
 
     matA.gemm('N', 'N', 1., loewdin, *invloewdin, 0.);
@@ -119,5 +117,4 @@ if (myrank == 0)
 
     normA = matA.norm('m');
     CHECK(normA == Approx(0.).margin(1.e-14));
-}
 }

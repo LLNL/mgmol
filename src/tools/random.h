@@ -22,7 +22,7 @@ double generate_rand_num();
 std::vector<double> generate_rand(const int n);
 std::vector<double> generate_rand(const int n, const int a, const int b);
 
-template<typename DataType>
-void generateRandomData(std::vector<DataType>& data, const DataType a,
-    const DataType b);
+template <typename DataType>
+void generateRandomData(
+    std::vector<DataType>& data, const DataType a, const DataType b);
 #endif

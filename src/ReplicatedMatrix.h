@@ -3,8 +3,8 @@
 
 #ifdef HAVE_MAGMA
 
-#include <vector>
 #include <string>
+#include <vector>
 
 class ReplicatedMatrix
 {
@@ -36,7 +36,8 @@ public:
 
     void setRandom(const double minv, const double maxv);
     void identity();
-    void transpose(const double alpha, const ReplicatedMatrix&, const double beta);
+    void transpose(
+        const double alpha, const ReplicatedMatrix&, const double beta);
     void trmm(const char, const char, const char, const char, const double,
         const ReplicatedMatrix&);
     void trtrs(const char, const char, const char, ReplicatedMatrix&) const;

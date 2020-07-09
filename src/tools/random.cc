@@ -49,9 +49,9 @@ std::vector<double> generate_rand(const int n)
     return vec;
 }
 
-template<typename DataType>
-void generateRandomData(std::vector<DataType>& data, const DataType minv,
-    const DataType maxv)
+template <typename DataType>
+void generateRandomData(
+    std::vector<DataType>& data, const DataType minv, const DataType maxv)
 {
     typedef boost::minstd_rand rng_type;
     typedef boost::uniform_real<> distribution_type;
@@ -62,10 +62,10 @@ void generateRandomData(std::vector<DataType>& data, const DataType minv,
     boost::variate_generator<rng_type, distribution_type> gen(rng, nd);
 
     for (auto& d : data)
-      d = gen();
+        d = gen();
 }
 
-template void generateRandomData(std::vector<double>& data, const double minv,
-    const double maxv);
-template void generateRandomData(std::vector<float>& data, const float  minv, const float maxv);
-
+template void generateRandomData(
+    std::vector<double>& data, const double minv, const double maxv);
+template void generateRandomData(
+    std::vector<float>& data, const float minv, const float maxv);
