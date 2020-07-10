@@ -3,9 +3,9 @@
 
 #ifdef HAVE_MAGMA
 
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
 
 class ReplicatedMatrix
 {

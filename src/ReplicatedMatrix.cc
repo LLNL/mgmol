@@ -1,16 +1,14 @@
 #ifdef HAVE_MAGMA
 
 #include "ReplicatedMatrix.h"
-#include "random.h"
 #include "memory_space.h"
+#include "random.h"
 
 #include "magma_v2.h"
 
 #include <iostream>
 
-
 using MemoryDev = MemorySpace::Memory<double, MemorySpace::Device>;
-
 
 void rotateSym(ReplicatedMatrix& mat, const ReplicatedMatrix& rotation_matrix,
     ReplicatedMatrix& work)
@@ -21,54 +19,55 @@ void rotateSym(ReplicatedMatrix& mat, const ReplicatedMatrix& rotation_matrix,
 
 ReplicatedMatrix::ReplicatedMatrix(
     const std::string name, const int m, const int n)
-    : dim_(m), ld_( magma_roundup(dim_, 32)), device_data_( MemoryDev::allocate(dim_ * ld_), MemoryDev::free )
+    : dim_(m),
+      ld_(magma_roundup(dim_, 32)),
+      device_data_(MemoryDev::allocate(dim_ * ld_), MemoryDev::free)
 {
     assert(m == n);
 }
 
 ReplicatedMatrix::ReplicatedMatrix(const std::string name, const int n)
-    : dim_(n), ld_( magma_roundup(dim_, 32)), device_data_( MemoryDev::allocate(dim_ * ld_), MemoryDev::free )
+    : dim_(n),
+      ld_(magma_roundup(dim_, 32)),
+      device_data_(MemoryDev::allocate(dim_ * ld_), MemoryDev::free)
 {
 }
 
 ReplicatedMatrix::ReplicatedMatrix(const ReplicatedMatrix& mat)
-    : dim_(mat.dim_), ld_(mat.ld_), device_data_( MemoryDev::allocate(dim_ * ld_), MemoryDev::free )
+    : dim_(mat.dim_),
+      ld_(mat.ld_),
+      device_data_(MemoryDev::allocate(dim_ * ld_), MemoryDev::free)
 {
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
-    magma_dcopymatrix(
-        dim_, dim_, mat.device_data_.get(), mat.ld_, device_data_.get(), ld_,
-        magma_singleton.queue_);
+    magma_dcopymatrix(dim_, dim_, mat.device_data_.get(), mat.ld_,
+        device_data_.get(), ld_, magma_singleton.queue_);
 }
 
 ReplicatedMatrix& ReplicatedMatrix::operator=(const ReplicatedMatrix& rhs)
 {
     if (this != &rhs)
     {
-        ld_             = rhs.ld_;
-        dim_            = rhs.dim_;
-        device_data_.reset( MemoryDev::allocate(dim_ * ld_) );
- 
+        ld_  = rhs.ld_;
+        dim_ = rhs.dim_;
+        device_data_.reset(MemoryDev::allocate(dim_ * ld_));
+
         auto& magma_singleton = MagmaSingleton::get_magma_singleton();
-        
-        magma_dcopymatrix(
-            dim_, dim_, rhs.device_data_.get(), rhs.ld_, device_data_.get(),
-           ld_, magma_singleton.queue_);
+
+        magma_dcopymatrix(dim_, dim_, rhs.device_data_.get(), rhs.ld_,
+            device_data_.get(), ld_, magma_singleton.queue_);
     }
     return *this;
 }
 
-ReplicatedMatrix::~ReplicatedMatrix()
-{
-}
+ReplicatedMatrix::~ReplicatedMatrix() {}
 
 void ReplicatedMatrix::axpy(const double alpha, const ReplicatedMatrix& a)
 {
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
-    magmablas_dgeadd(
-        dim_, dim_, alpha, a.device_data_.get(), a.ld_, device_data_.get(), ld_,
-        magma_singleton.queue_);
+    magmablas_dgeadd(dim_, dim_, alpha, a.device_data_.get(), a.ld_,
+        device_data_.get(), ld_, magma_singleton.queue_);
 }
 
 void ReplicatedMatrix::setRandom(const double minv, const double maxv)
@@ -104,10 +103,11 @@ void ReplicatedMatrix::transpose(
         std::cerr << "magma_dmalloc failed!" << std::endl;
     }
 
-    magmablas_dtranspose(dim_, dim_, a.device_data_.get(), a.ld_, dwork, ld_, magma_singleton.queue_);
+    magmablas_dtranspose(dim_, dim_, a.device_data_.get(), a.ld_, dwork, ld_,
+        magma_singleton.queue_);
 
-    magmablas_dgeadd2(
-        dim_, dim_, alpha, dwork, ld_, beta, device_data_.get(), ld_, magma_singleton.queue_);
+    magmablas_dgeadd2(dim_, dim_, alpha, dwork, ld_, beta, device_data_.get(),
+        ld_, magma_singleton.queue_);
 
     magma_singleton.sync();
     magma_free(dwork);
@@ -123,8 +123,8 @@ void ReplicatedMatrix::gemm(const char transa, const char transb,
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
     magmablas_dgemm(magma_transa, magma_transb, dim_, dim_, dim_, alpha,
-        a.device_data_.get(), a.ld_, b.device_data_.get(), b.ld_, beta, device_data_.get(), ld_,
-         magma_singleton.queue_);
+        a.device_data_.get(), a.ld_, b.device_data_.get(), b.ld_, beta,
+        device_data_.get(), ld_, magma_singleton.queue_);
 }
 
 void ReplicatedMatrix::symm(const char side, const char uplo,
@@ -137,7 +137,8 @@ void ReplicatedMatrix::symm(const char side, const char uplo,
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
     magma_dsymm(magma_side, magma_uplo, dim_, dim_, alpha, a.device_data_.get(),
-        a.ld_, b.device_data_.get(), b.ld_, beta, device_data_.get(), ld_, magma_singleton.queue_);
+        a.ld_, b.device_data_.get(), b.ld_, beta, device_data_.get(), ld_,
+        magma_singleton.queue_);
 }
 
 int ReplicatedMatrix::potrf(char uplo)
@@ -172,8 +173,8 @@ void ReplicatedMatrix::potrs(char uplo, ReplicatedMatrix& b)
     magma_uplo_t magma_uplo = magma_uplo_const(uplo);
 
     int info;
-    magma_dpotrs_gpu(magma_uplo, dim_, dim_, device_data_.get(), ld_, b.device_data_.get(),
-        b.ld_, &info);
+    magma_dpotrs_gpu(magma_uplo, dim_, dim_, device_data_.get(), ld_,
+        b.device_data_.get(), b.ld_, &info);
     if (info != 0)
         std::cerr << "magma_dpotrs_gpu failed, info = " << info << std::endl;
 }
@@ -187,9 +188,8 @@ void ReplicatedMatrix::syev(
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
     // copy matrix into z
-    magmablas_dlacpy(
-        MagmaFull, dim_, dim_, device_data_.get(), ld_, z.device_data_.get(), z.ld_, 
-        magma_singleton.queue_);
+    magmablas_dlacpy(MagmaFull, dim_, dim_, device_data_.get(), ld_,
+        z.device_data_.get(), z.ld_, magma_singleton.queue_);
     magma_int_t nb = magma_get_ssytrd_nb(dim_);
     magma_int_t lwork
         = std::max(2 * dim_ + dim_ * nb, 1 + 6 * dim_ + 2 * dim_ * dim_);
@@ -231,7 +231,8 @@ void ReplicatedMatrix::trmm(const char side, const char uplo, const char trans,
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
     magma_dtrmm(magma_side, magma_uplo, magma_trans, magma_diag, dim_, dim_,
-        alpha, a.device_data_.get(), a.ld_, device_data_.get(), ld_, magma_singleton.queue_);
+        alpha, a.device_data_.get(), a.ld_, device_data_.get(), ld_,
+        magma_singleton.queue_);
 }
 
 void ReplicatedMatrix::trtrs(const char uplo, const char trans, const char diag,
@@ -244,7 +245,8 @@ void ReplicatedMatrix::trtrs(const char uplo, const char trans, const char diag,
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
     magma_dtrsm(MagmaLeft, magma_uplo, magma_trans, magma_diag, dim_, dim_, 1.,
-        device_data_.get(), ld_, device_data_.get(), ld_, magma_singleton.queue_);
+        device_data_.get(), ld_, device_data_.get(), ld_,
+        magma_singleton.queue_);
 }
 
 // get max in absolute value of column j
@@ -252,8 +254,11 @@ int ReplicatedMatrix::iamax(const int j, double& val)
 {
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
-    int indx = magma_idamax(dim_, device_data_.get() + j * ld_, 1, magma_singleton.queue_) - 1;
-    magma_dgetvector(dim_, device_data_.get() + j * ld_ + indx, 1, &val, 1, magma_singleton.queue_);
+    int indx = magma_idamax(dim_, device_data_.get() + j * ld_, 1,
+                   magma_singleton.queue_)
+               - 1;
+    magma_dgetvector(dim_, device_data_.get() + j * ld_ + indx, 1, &val, 1,
+        magma_singleton.queue_);
 
     return indx;
 }
@@ -262,14 +267,16 @@ void ReplicatedMatrix::setVal(const int i, const int j, const double val)
 {
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
-    magma_dsetvector(dim_, &val, 1, device_data_.get() + j * ld_ + i, 1, magma_singleton.queue_);
+    magma_dsetvector(dim_, &val, 1, device_data_.get() + j * ld_ + i, 1,
+        magma_singleton.queue_);
 }
 
 void ReplicatedMatrix::setDiagonal(const std::vector<double>& diag_values)
 {
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
-    magma_dsetvector(dim_, diag_values.data(), 1, device_data_.get(), ld_ + 1, magma_singleton.queue_);
+    magma_dsetvector(dim_, diag_values.data(), 1, device_data_.get(), ld_ + 1,
+        magma_singleton.queue_);
 }
 
 double ReplicatedMatrix::norm(char ty)
@@ -281,8 +288,8 @@ double ReplicatedMatrix::norm(char ty)
     int lwork = dim_;
     double* dwork;
     magma_dmalloc(&dwork, lwork);
-    double norm_val = magmablas_dlange(
-        magma_ty, dim_, dim_, device_data_.get(), ld_, dwork, lwork, magma_singleton.queue_);
+    double norm_val = magmablas_dlange(magma_ty, dim_, dim_, device_data_.get(),
+        ld_, dwork, lwork, magma_singleton.queue_);
 
     magma_singleton.sync();
     magma_free(dwork);
@@ -296,7 +303,8 @@ void ReplicatedMatrix::trset(const char uplo)
 
     std::vector<double> mat(dim_ * dim_);
 
-    magma_dgetmatrix(dim_, dim_, device_data_.get(), ld_, mat.data(), dim_, magma_singleton.queue_);
+    magma_dgetmatrix(dim_, dim_, device_data_.get(), ld_, mat.data(), dim_,
+        magma_singleton.queue_);
 
     if (uplo == 'l' || uplo == 'L')
     {
@@ -311,14 +319,16 @@ void ReplicatedMatrix::trset(const char uplo)
                 mat[i + j * dim_] = 0.;
     }
 
-    magma_dsetmatrix(dim_, dim_, mat.data(), dim_, device_data_.get(), ld_, magma_singleton.queue_);
+    magma_dsetmatrix(dim_, dim_, mat.data(), dim_, device_data_.get(), ld_,
+        magma_singleton.queue_);
 }
 
 void ReplicatedMatrix::clear()
 {
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
-    magmablas_dlaset(MagmaFull, dim_, dim_, 0.0, 0.0, device_data_.get(), ld_, magma_singleton.queue_);
+    magmablas_dlaset(MagmaFull, dim_, dim_, 0.0, 0.0, device_data_.get(), ld_,
+        magma_singleton.queue_);
 }
 
 void ReplicatedMatrix::print(std::ostream& os, const int ia, const int ja,
@@ -331,7 +341,8 @@ void ReplicatedMatrix::print(std::ostream& os, const int ia, const int ja,
 
     std::vector<double> mat(dim_ * dim_);
 
-    magma_dgetmatrix(dim_, dim_, device_data_.get(), ld_, mat.data(), dim_, magma_singleton.queue_);
+    magma_dgetmatrix(dim_, dim_, device_data_.get(), ld_, mat.data(), dim_,
+        magma_singleton.queue_);
 
     for (int i = ia; i < m; i++)
     {
