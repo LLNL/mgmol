@@ -121,6 +121,13 @@ void copy_to_dev(
 }
 
 template <typename T>
+void copy_to_dev(
+    std::vector<T> const& vec, std::unique_ptr<T, void (*)(T*)>& vec_dev)
+{
+    copy_to_dev(vec.data(), vec.size(), vec_dev.get());
+}
+
+template <typename T>
 void copy_to_dev(std::vector<T> const& vec, std::shared_ptr<T[]>& vec_dev)
 {
     copy_to_dev(vec, vec.size, vec_dev.get());
@@ -177,6 +184,13 @@ void copy_to_host(std::unique_ptr<T[], void (*)(T*)> const& vec_dev,
 {
     copy_to_host(vec_dev.get(), size, vec);
 }
+
+/*template <typename T>
+void copy_to_host(std::unique_ptr<T, void (*)(T*)> const& vec_dev,
+    std::vector<T> vec)
+{
+    copy_to_host(vec_dev.get(), vec.size(), vec.data());
+}*/
 
 //---------------------------------------------------------------------------//
 // Allocate and deallocate memory
