@@ -26,4 +26,5 @@ MagmaSingleton& MagmaSingleton::get_magma_singleton()
 
 void MagmaSingleton::free() { magma_queue_destroy(queue_); }
 
+void MagmaSingleton::sync() { magma_queue_sync(queue_); }
 #endif
