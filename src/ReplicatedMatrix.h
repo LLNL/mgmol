@@ -5,6 +5,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 class ReplicatedMatrix
 {
@@ -15,7 +16,7 @@ class ReplicatedMatrix
     size_t ld_;
 
     // matrix data
-    double* device_data_;
+    std::unique_ptr<double, void (*)(double*)> device_data_;
 
 public:
     ReplicatedMatrix(const std::string name, const int m, const int n);
