@@ -121,6 +121,13 @@ void copy_to_dev(
 }
 
 template <typename T>
+void copy_to_dev(
+    std::vector<T> const& vec, std::unique_ptr<T, void (*)(T*)>& vec_dev)
+{
+    copy_to_dev(vec.data(), vec.size(), vec_dev.get());
+}
+
+template <typename T>
 void copy_to_dev(std::vector<T> const& vec, std::shared_ptr<T[]>& vec_dev)
 {
     copy_to_dev(vec, vec.size, vec_dev.get());

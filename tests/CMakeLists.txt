@@ -165,11 +165,16 @@ add_executable(testGramMatrix
                ${CMAKE_SOURCE_DIR}/src/tools/random.cc
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 
-
-if((${MAGMA_FOUND}) AND (${MGMOL_WITH_OPENMP_OFFLOAD}))
-  add_executable(testMagmaOpenmp
-                 ${CMAKE_SOURCE_DIR}/tests/testMagmaOpenmp.cc
-                 ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
+if(${MAGMA_FOUND})
+  add_executable(testOpenmpOffload
+               ${CMAKE_SOURCE_DIR}/src/magma_singleton.cc
+               ${CMAKE_SOURCE_DIR}/tests/testOpenmpOffload.cc
+               ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
+  if(${MGMOL_WITH_OPENMP_OFFLOAD})
+    add_executable(testMagmaOpenmp
+                   ${CMAKE_SOURCE_DIR}/tests/testMagmaOpenmp.cc
+                   ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
+  endif()
 endif()
                
 target_compile_definitions(testAndersonMix PUBLIC TESTING)
@@ -223,9 +228,13 @@ add_test(NAME testGramMatrix
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testGramMatrix)
 
-if((${MAGMA_FOUND}) AND (${MGMOL_WITH_OPENMP_OFFLOAD}))
-  add_test(NAME testMagmaOpenmp
-           COMMAND ${CMAKE_CURRENT_BINARY_DIR}/testMagmaOpenmp)
+if(${MAGMA_FOUND})
+  add_test(NAME testOpenmpOffload
+           COMMAND ${CMAKE_CURRENT_BINARY_DIR}/testOpenmpOffload)
+  if(${MGMOL_WITH_OPENMP_OFFLOAD})
+    add_test(NAME testMagmaOpenmp
+             COMMAND ${CMAKE_CURRENT_BINARY_DIR}/testMagmaOpenmp)
+  endif()
 endif()
                  
 add_test(NAME testProjectedMatrices
@@ -378,10 +387,13 @@ if(${MAGMA_FOUND})
     MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
   target_link_libraries(testGramMatrix PRIVATE ${SCALAPACK_LIBRARIES}
     ${BLAS_LIBRARIES} MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
-if((${MAGMA_FOUND}) AND (${MGMOL_WITH_OPENMP_OFFLOAD}))
-  target_link_libraries(testMagmaOpenmp PRIVATE 
+  target_link_libraries(testOpenmpOffload PRIVATE 
     MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
-endif()
+
+  if(${MGMOL_WITH_OPENMP_OFFLOAD})
+    target_link_libraries(testMagmaOpenmp PRIVATE 
+      MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
+  endif()
 else()
   target_link_libraries(testDistVector PRIVATE ${SCALAPACK_LIBRARIES}
     ${BLAS_LIBRARIES} MPI::MPI_CXX OpenMP::OpenMP_CXX)
