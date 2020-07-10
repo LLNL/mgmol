@@ -185,13 +185,6 @@ void copy_to_host(std::unique_ptr<T[], void (*)(T*)> const& vec_dev,
     copy_to_host(vec_dev.get(), size, vec);
 }
 
-/*template <typename T>
-void copy_to_host(std::unique_ptr<T, void (*)(T*)> const& vec_dev,
-    std::vector<T> vec)
-{
-    copy_to_host(vec_dev.get(), vec.size(), vec.data());
-}*/
-
 //---------------------------------------------------------------------------//
 // Allocate and deallocate memory
 //---------------------------------------------------------------------------//

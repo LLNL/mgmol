@@ -25,12 +25,11 @@ TEST_CASE("Check OpenMP offload wrapper", "[openmp_wrapper]")
 
     const unsigned int size = 1024;
 
-    std::vector<int> val_host(size,1);
+    std::vector<int> val_host(size, 1);
 
 #ifdef HAVE_OPENMP_OFFLOAD
     std::unique_ptr<int, void (*)(int*)> val_dev(
-        MemoryDev<int>::allocate(size),
-        MemoryDev<int>::free);
+        MemoryDev<int>::allocate(size), MemoryDev<int>::free);
 
     MemorySpace::copy_to_dev(val_host, val_dev);
 
@@ -45,7 +44,6 @@ TEST_CASE("Check OpenMP offload wrapper", "[openmp_wrapper]")
     {
         val_alias[i] += i;
     }
-
 
 #ifdef HAVE_OPENMP_OFFLOAD
     // Copy the values back to the host
