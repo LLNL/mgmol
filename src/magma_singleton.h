@@ -26,6 +26,9 @@ public:
     // magma.
     void free();
 
+    // blocks CPU until all operations in queue_ are finished
+    void sync();
+
     magma_device_t device_;
     magma_queue_t queue_;
 

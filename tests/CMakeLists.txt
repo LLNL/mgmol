@@ -19,6 +19,7 @@ add_executable(testDistVector
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/random.cc
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 add_executable(testReplicated2DistMatrix
                ${CMAKE_SOURCE_DIR}/tests/testReplicated2DistMatrix.cc
@@ -31,6 +32,7 @@ add_executable(testReplicated2DistMatrix
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/random.cc
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 add_executable(testDistMatrix
                ${CMAKE_SOURCE_DIR}/tests/testDistMatrix.cc
@@ -41,6 +43,7 @@ add_executable(testDistMatrix
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/random.cc
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 add_executable(testConditionDistMatrix
                ${CMAKE_SOURCE_DIR}/tests/testConditionDistMatrix.cc
@@ -51,6 +54,7 @@ add_executable(testConditionDistMatrix
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/random.cc
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 add_executable(testConditionDistMatrixPower
                ${CMAKE_SOURCE_DIR}/tests/testConditionDistMatrixPower.cc
@@ -154,6 +158,7 @@ add_executable(testGramMatrix
                ${CMAKE_SOURCE_DIR}/src/magma_singleton.cc
                ${CMAKE_SOURCE_DIR}/src/local_matrices/LocalMatrices.cc
                ${CMAKE_SOURCE_DIR}/src/local_matrices/SquareLocalMatrices.cc
+               ${CMAKE_SOURCE_DIR}/src/ReplicatedMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/DistMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/BlacsContext.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/MatricesBlacsContext.cc
@@ -163,7 +168,7 @@ add_executable(testGramMatrix
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
                ${CMAKE_SOURCE_DIR}/src/tools/random.cc
-               ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
+               ${CMAKE_SOURCE_DIR}/tests/ut_magma_main.cc)
 
 if(${MAGMA_FOUND})
   add_executable(testOpenmpOffload

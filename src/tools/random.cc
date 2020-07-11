@@ -8,10 +8,15 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "random.h"
+
 #include <algorithm>
 #include <cstdlib>
 #include <iostream>
 #include <vector>
+
+#include <boost/random/linear_congruential.hpp>
+#include <boost/random/uniform_real.hpp>
+#include <boost/random/variate_generator.hpp>
 
 /* Generate random numbers between (a, b] */
 double generate_rand(const int a, const int b)
@@ -43,3 +48,24 @@ std::vector<double> generate_rand(const int n)
 
     return vec;
 }
+
+template <typename DataType>
+void generateRandomData(
+    std::vector<DataType>& data, const DataType minv, const DataType maxv)
+{
+    typedef boost::minstd_rand rng_type;
+    typedef boost::uniform_real<> distribution_type;
+
+    int seed = 113;
+    rng_type rng(seed);
+    distribution_type nd(minv, maxv);
+    boost::variate_generator<rng_type, distribution_type> gen(rng, nd);
+
+    for (auto& d : data)
+        d = gen();
+}
+
+template void generateRandomData(
+    std::vector<double>& data, const double minv, const double maxv);
+template void generateRandomData(
+    std::vector<float>& data, const float minv, const float maxv);

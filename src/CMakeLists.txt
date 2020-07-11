@@ -19,6 +19,7 @@ set(link_libs mgmol_distmatrix
    )
 
 set(SOURCES
+ ReplicatedMatrix.cc
  SquareSubMatrix2DistMatrix.cc
  LocalMatrices2DistMatrix.cc
  DistMatrix2SquareLocalMatrices.cc

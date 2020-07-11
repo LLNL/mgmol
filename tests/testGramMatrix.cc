@@ -6,9 +6,13 @@
 // All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
+#include "GramMatrix.h"
+#include "ReplicatedMatrix.h"
+
+#ifndef HAVE_MAGMA
 #include "BlacsContext.h"
 #include "DistMatrix.h"
-#include "GramMatrix.h"
+#endif
 
 #include "catch.hpp"
 
@@ -16,32 +20,38 @@
 
 TEST_CASE("Check functionalities of class GramMatrix", "[functions_GramMatrix")
 {
+#ifdef HAVE_MAGMA
+    typedef ReplicatedMatrix MatrixType;
+#else
+    typedef dist_matrix::DistMatrix<double> MatrixType;
+#endif
     int myrank;
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 
     int npes;
     MPI_Comm_size(MPI_COMM_WORLD, &npes);
 
+    MGmol_MPI::setup(MPI_COMM_WORLD, std::cout);
+
+#ifndef HAVE_MAGMA
     INFO("This example to set up to use only 4 processes");
     REQUIRE(npes == 4);
-
-    MGmol_MPI::setup(MPI_COMM_WORLD, std::cout);
 
     int nprow = 2;
     int npcol = 2;
     dist_matrix::BlacsContext bc(MPI_COMM_WORLD, nprow, npcol);
     dist_matrix::DistMatrix<DISTMATDTYPE>::setDefaultBlacsContext(&bc);
-
+#endif
     const int n = 213;
 
     // build matrix with diagonal elements equal to 1.
     // and off diagonal elements such that its eigenvalues
     // are guaranteed to be between 0 and 2
-    dist_matrix::DistMatrix<double> matA("A", n);
+    MatrixType matA("A", n);
 
     matA.setRandom(-1. / (double)n, 1. / (double)n);
 
-    dist_matrix::DistMatrix<double> matB("B", n);
+    MatrixType matB("B", n);
     matB = matA;
     matB.transpose(0.5, matA, 0.5);
 
@@ -55,7 +65,7 @@ TEST_CASE("Check functionalities of class GramMatrix", "[functions_GramMatrix")
     if (myrank == 0) std::cout << "Norm B = " << normB << std::endl;
 
     // new Gram matrix
-    GramMatrix<dist_matrix::DistMatrix<double>> gram(n);
+    GramMatrix<MatrixType> gram(n);
 
     // initialize Gram matrix with "matB"
     gram.setMatrix(matB, 0);
@@ -63,7 +73,7 @@ TEST_CASE("Check functionalities of class GramMatrix", "[functions_GramMatrix")
     // compute Cholesky decomposition
     gram.updateLS();
 
-    dist_matrix::DistMatrix<double> lmat(gram.getCholeskyL());
+    MatrixType lmat(gram.getCholeskyL());
     lmat.trset('l');
 
     // compute product L*L^T
@@ -81,17 +91,18 @@ TEST_CASE("Check functionalities of class GramMatrix", "[functions_GramMatrix")
     CHECK(normA == Approx(0.).margin(1.e-14));
 
     // Loewdin
-    dist_matrix::DistMatrix<double> loewdin("Loewdin", n);
-    std::shared_ptr<dist_matrix::DistMatrix<double>> invloewdin;
-    invloewdin.reset(
-        new dist_matrix::DistMatrix<DISTMATDTYPE>("InvLoewdin", n));
+    MatrixType loewdin("Loewdin", n);
+    std::shared_ptr<MatrixType> invloewdin;
+    invloewdin.reset(new MatrixType("InvLoewdin", n));
     gram.computeLoewdinTransform(loewdin, invloewdin, 0);
+    if (myrank == 0) std::cout << "Loewdin" << std::endl;
+    loewdin.print(std::cout, 0, 0, 5, 5);
 
     matA.gemm('N', 'N', 1., loewdin, *invloewdin, 0.);
     if (myrank == 0) std::cout << "B^-1/2*B^1/2:" << std::endl;
     matA.print(std::cout, 0, 0, 5, 5);
 
-    dist_matrix::DistMatrix<double> id("Id", n);
+    MatrixType id("Id", n);
     id.identity();
     matA -= id;
 
