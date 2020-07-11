@@ -10,6 +10,8 @@
 
 using MemoryDev = MemorySpace::Memory<double, MemorySpace::Device>;
 
+constexpr double gpuroundup = 32;
+
 void rotateSym(ReplicatedMatrix& mat, const ReplicatedMatrix& rotation_matrix,
     ReplicatedMatrix& work)
 {
@@ -20,7 +22,7 @@ void rotateSym(ReplicatedMatrix& mat, const ReplicatedMatrix& rotation_matrix,
 ReplicatedMatrix::ReplicatedMatrix(
     const std::string name, const int m, const int n)
     : dim_(m),
-      ld_(magma_roundup(dim_, 32)),
+      ld_(magma_roundup(dim_, gpuroundup)),
       device_data_(MemoryDev::allocate(dim_ * ld_), MemoryDev::free)
 {
     assert(m == n);
@@ -28,7 +30,7 @@ ReplicatedMatrix::ReplicatedMatrix(
 
 ReplicatedMatrix::ReplicatedMatrix(const std::string name, const int n)
     : dim_(n),
-      ld_(magma_roundup(dim_, 32)),
+      ld_(magma_roundup(dim_, gpuroundup)),
       device_data_(MemoryDev::allocate(dim_ * ld_), MemoryDev::free)
 {
 }
