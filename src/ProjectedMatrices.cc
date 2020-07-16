@@ -48,14 +48,16 @@ short ProjectedMatrices::n_instances_ = 0;
 GramMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>*
     ProjectedMatrices::gram_4dotProducts_
     = nullptr;
-DensityMatrix* ProjectedMatrices::dm_4dot_product_ = nullptr;
+DensityMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>*
+    ProjectedMatrices::dm_4dot_product_
+    = nullptr;
 
 static int sparse_distmatrix_nb_partitions = 128;
 
 ProjectedMatrices::ProjectedMatrices(const int ndim, const bool with_spin)
     : with_spin_(with_spin),
       dim_(ndim),
-      dm_(new DensityMatrix(ndim)),
+      dm_(new DensityMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>(ndim)),
       gm_(new GramMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>(ndim))
 {
     width_   = 0.;
@@ -399,11 +401,6 @@ const dist_matrix::DistMatrix<DISTMATDTYPE>& ProjectedMatrices::dm() const
 {
     assert(dm_);
     return dm_->getMatrix();
-}
-const dist_matrix::DistMatrix<DISTMATDTYPE>&
-ProjectedMatrices::kernel4dot() const
-{
-    return dm_->kernel4dot();
 }
 
 double ProjectedMatrices::getNel() const
@@ -942,7 +939,7 @@ double ProjectedMatrices::dotProductWithDM(
     sl2dm->accumulate(local_product, ds);
 
     dist_matrix::DistMatrix<DISTMATDTYPE> work("work", dim_, dim_);
-    work.gemm('n', 'n', 0.5, ds, kernel4dot(), 0.);
+    work.gemm('n', 'n', 0.5, ds, dm_->kernel4dot(), 0.);
 
     return work.trace();
 }

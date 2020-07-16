@@ -43,6 +43,18 @@ ReplicatedMatrix::ReplicatedMatrix(const std::string name, const int n)
 {
 }
 
+ReplicatedMatrix::ReplicatedMatrix(const std::string name,
+    const double* const diagonal, const int m, const int n)
+    : dim_(m),
+      ld_(magma_roundup(dim_, gpuroundup)),
+      device_data_(MemoryDev::allocate(dim_ * ld_), MemoryDev::free)
+{
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    magma_dsetvector(
+        dim_, diagonal, 1, device_data_.get(), ld_ + 1, magma_singleton.queue_);
+}
+
 ReplicatedMatrix::ReplicatedMatrix(const ReplicatedMatrix& mat)
     : dim_(mat.dim_),
       ld_(mat.ld_),
@@ -71,6 +83,17 @@ ReplicatedMatrix& ReplicatedMatrix::operator=(const ReplicatedMatrix& rhs)
 }
 
 ReplicatedMatrix::~ReplicatedMatrix() {}
+
+ReplicatedMatrix& ReplicatedMatrix::assign(
+    const ReplicatedMatrix& src, const int ib, const int jb)
+{
+    assert(this != &src);
+
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    magma_dcopymatrix(src.dim_, src.dim_, src.device_data_.get(), src.ld_,
+        device_data_.get() + jb * ld_ + ib, ld_, magma_singleton.queue_);
+}
 
 void ReplicatedMatrix::axpy(const double alpha, const ReplicatedMatrix& a)
 {
@@ -163,6 +186,18 @@ int ReplicatedMatrix::potrf(char uplo)
     return info;
 }
 
+int ReplicatedMatrix::getrf(std::vector<int>& ipiv)
+{
+    magma_uplo_t magma_uplo = magma_uplo_const(uplo);
+
+    int info;
+    magma_dgetrf_gpu(dim_, dim_, device_data_.get(), ld_, ipiv.get(), &info);
+    if (info != 0)
+        std::cerr << "magma_dgetrf_gpu failed, info = " << info << std::endl;
+
+    return info;
+}
+
 int ReplicatedMatrix::potri(char uplo)
 {
     magma_uplo_t magma_uplo = magma_uplo_const(uplo);
@@ -187,6 +222,17 @@ void ReplicatedMatrix::potrs(char uplo, ReplicatedMatrix& b)
         b.device_data_.get(), b.ld_, &info);
     if (info != 0)
         std::cerr << "magma_dpotrs_gpu failed, info = " << info << std::endl;
+}
+
+void ReplicatedMatrix::getrs(
+    char trans, ReplicatedMatrix& b, std::vector<int>& ipiv)
+{
+    magma_trans_t magma_trans = magma_trans_const(trans);
+
+    magma_dgetrs_gpu(magma_trans, dim_, dim_, device_data_.get(), ld_,
+        ipiv.get(), b.device_data_.get(), b.ld_);
+    if (info != 0)
+        std::cerr << "magma_dgetrs_gpu failed, info = " << info << std::endl;
 }
 
 void ReplicatedMatrix::syev(
