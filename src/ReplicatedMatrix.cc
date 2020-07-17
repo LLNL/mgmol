@@ -93,6 +93,16 @@ ReplicatedMatrix& ReplicatedMatrix::assign(
 
     magma_dcopymatrix(src.dim_, src.dim_, src.device_data_.get(), src.ld_,
         device_data_.get() + jb * ld_ + ib, ld_, magma_singleton.queue_);
+
+    return *this;
+}
+
+void ReplicatedMatrix::init(const double* const a, const int lda)
+{
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    magma_dsetmatrix(dim_, dim_, a, lda, device_data_.get(), ld_,
+        magma_singleton.queue_);
 }
 
 void ReplicatedMatrix::axpy(const double alpha, const ReplicatedMatrix& a)
@@ -121,6 +131,13 @@ void ReplicatedMatrix::identity()
 
     magmablas_dlaset(MagmaFull, dim_, dim_, 0.0, 1.0, device_data_.get(), ld_,
         magma_singleton.queue_);
+}
+
+void ReplicatedMatrix::scal(const double alpha)
+{
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    magma_dscal(dim_ * ld_, alpha, device_data_.get(), 1, magma_singleton.queue_);
 }
 
 // this = alpha * transpose(A) + beta * this
@@ -186,16 +203,12 @@ int ReplicatedMatrix::potrf(char uplo)
     return info;
 }
 
-int ReplicatedMatrix::getrf(std::vector<int>& ipiv)
+void ReplicatedMatrix::getrf(std::vector<int>& ipiv)
 {
-    magma_uplo_t magma_uplo = magma_uplo_const(uplo);
-
     int info;
-    magma_dgetrf_gpu(dim_, dim_, device_data_.get(), ld_, ipiv.get(), &info);
+    magma_dgetrf_gpu(dim_, dim_, device_data_.get(), ld_, ipiv.data(), &info);
     if (info != 0)
         std::cerr << "magma_dgetrf_gpu failed, info = " << info << std::endl;
-
-    return info;
 }
 
 int ReplicatedMatrix::potri(char uplo)
@@ -229,8 +242,9 @@ void ReplicatedMatrix::getrs(
 {
     magma_trans_t magma_trans = magma_trans_const(trans);
 
+    int info;
     magma_dgetrs_gpu(magma_trans, dim_, dim_, device_data_.get(), ld_,
-        ipiv.get(), b.device_data_.get(), b.ld_);
+        ipiv.data(), b.device_data_.get(), b.ld_, &info);
     if (info != 0)
         std::cerr << "magma_dgetrs_gpu failed, info = " << info << std::endl;
 }
@@ -333,6 +347,24 @@ void ReplicatedMatrix::setDiagonal(const std::vector<double>& diag_values)
 
     magma_dsetvector(dim_, diag_values.data(), 1, device_data_.get(), ld_ + 1,
         magma_singleton.queue_);
+}
+
+double ReplicatedMatrix::trace()const
+{
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    return magma_dasum(dim_, device_data_.get(), ld_+1, magma_singleton.queue_);
+}
+
+double ReplicatedMatrix::traceProduct(const ReplicatedMatrix& matrix) const
+{
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    double trace = 0.;
+    for(int i=0;i<dim_;i++)
+        trace+=magma_ddot(dim_, device_data_.get()+ld_*i, ld_, matrix.device_data_.get()+matrix.ld_*i, 1, magma_singleton.queue_);
+
+    return trace;
 }
 
 double ReplicatedMatrix::norm(char ty)

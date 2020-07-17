@@ -16,6 +16,7 @@
 #include <cassert>
 #include <ostream>
 #include <vector>
+#include <cstring>
 
 #define DM_NPRINT_ROWS_AND_COLS 5
 
