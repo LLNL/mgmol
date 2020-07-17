@@ -438,6 +438,16 @@ double DensityMatrix<MatrixType>::getExpectation(const MatrixType& A)
     return val;
 }
 
+template <class MatrixType>
+void DensityMatrix<MatrixType>::mix(
+    const double mix, const MatrixType& matA, const int new_orbitals_index)
+{
+    dm_->scal(1. - mix);
+
+    dm_->axpy(mix, matA);
+    orbitals_index_ = new_orbitals_index;
+}
+
 template class DensityMatrix<dist_matrix::DistMatrix<double>>;
 #ifdef HAVE_MAGMA
 template class DensityMatrix<ReplicatedMatrix>;

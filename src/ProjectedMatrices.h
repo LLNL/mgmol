@@ -374,12 +374,7 @@ public:
         // cout<<"ProjectedMatrices::updateDMwithRelax()..."<<endl;
         assert(mat_X_old_);
 
-        dist_matrix::DistMatrix<DISTMATDTYPE> tmp(dm_->getMatrix());
-        tmp.scal(mix);
-
-        double alpha = 1. - mix;
-        tmp.axpy(alpha, *mat_X_old_);
-        dm_->setMatrix(tmp, itindex);
+        dm_->mix(mix, *mat_X_old_, itindex);
     }
 
     void getReplicatedDM(DISTMATDTYPE* replicated_DM_matrix)

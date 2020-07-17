@@ -134,6 +134,8 @@ public:
     void diagonalize(
         const char eigv, std::vector<double>& occ, MatrixType& vect);
     double getExpectation(const MatrixType& A);
+    void mix(
+        const double mix, const MatrixType& matA, const int new_orbitals_index);
 };
 
 #endif
