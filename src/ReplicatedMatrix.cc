@@ -316,7 +316,7 @@ void ReplicatedMatrix::trtrs(const char uplo, const char trans, const char diag,
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
     magma_dtrsm(MagmaLeft, magma_uplo, magma_trans, magma_diag, dim_, dim_, 1.,
-        device_data_.get(), ld_, device_data_.get(), ld_,
+        device_data_.get(), ld_, b.device_data_.get(), b.ld_,
         magma_singleton.queue_);
 }
 
