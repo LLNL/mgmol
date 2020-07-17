@@ -64,8 +64,9 @@ void DensityMatrix<MatrixType>::build(const MatrixType& zmat,
     const std::vector<double>& occ, const int new_orbitals_index)
 {
 #ifdef PRINT_OPERATIONS
-    if (onpe0)
-        (*MPIdata::sout) << "template <class MatrixType> "
+MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    if (mmpi.instancePE0())
+        std::cout << "template <class MatrixType> "
                             "DensityMatrix<MatrixType>::build(const "
                             "MatrixType&, const "
                             "vector<double>&, const int)"
@@ -118,14 +119,15 @@ template <class MatrixType>
 void DensityMatrix<MatrixType>::build(const int new_orbitals_index)
 {
     //#ifdef PRINT_OPERATIONS
-    if (onpe0)
-        (*MPIdata::sout)
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    if (mmpi.instancePE0())
+        std::cout
             << "template <class MatrixType> "
                "DensityMatrix<MatrixType>::build() for diagonal occupation..."
             << std::endl;
     //#endif
-    if (!occ_uptodate_ && onpe0)
-        (*MPIdata::sout) << "Warning: occupations not up to date to build DM!!!"
+    if (!occ_uptodate_ && mmpi.instancePE0())
+        std::cout << "Warning: occupations not up to date to build DM!!!"
                          << std::endl;
 
     MatrixType gamma("Gamma", &occupation_[0], dim_, dim_);
@@ -149,8 +151,10 @@ void DensityMatrix<MatrixType>::setUniform(
     const double nel, const int new_orbitals_index)
 {
 #ifdef PRINT_OPERATIONS
-    if (onpe0)
-        (*MPIdata::sout) << "template <class MatrixType> "
+MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    if (mmpi.instancePE0())
+        std::cout
+         << "template <class MatrixType> "
                             "DensityMatrix<MatrixType>::setUniform()"
                          << std::endl;
 #endif
@@ -171,7 +175,7 @@ void DensityMatrix<MatrixType>::buildFromBlock(const MatrixType& block00)
 {
     dm_->clear();
     dm_->assign(block00, 0, 0);
-    dm_->print((*MPIdata::sout), 0, 0, 25, 25);
+    dm_->print(std::cout, 0, 0, 25, 25);
 }
 
 template <class MatrixType>
@@ -202,7 +206,9 @@ void DensityMatrix<MatrixType>::rotate(
 template <class MatrixType>
 void DensityMatrix<MatrixType>::printOccupations(std::ostream& os) const
 {
-    if (onpe0)
+MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+
+    if (mmpi.instancePE0())
     {
         os << std::endl << " Occupation numbers: ";
 
@@ -264,9 +270,11 @@ void DensityMatrix<MatrixType>::diagonalize(
 template <class MatrixType>
 void DensityMatrix<MatrixType>::computeOccupations(const MatrixType& ls)
 {
+MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 #ifdef PRINT_OPERATIONS
-    if (onpe0)
-        (*MPIdata::sout) << "template <class MatrixType> "
+    if (mmpi.instancePE0())
+        std::cout
+         << "template <class MatrixType> "
                             "DensityMatrix<MatrixType>::computeOccupations()"
                          << std::endl;
 #endif
@@ -284,16 +292,16 @@ void DensityMatrix<MatrixType>::computeOccupations(const MatrixType& ls)
     for (int i = 0; i < dim_; i++)
     {
         double occ_val = (double)occ[i] * occinv;
-        (*MPIdata::sout) << std::setprecision(16);
-        if (onpe0 && (occ_val < 0. - tol || occ_val > 1. + tol))
+        std::cout << std::setprecision(16);
+        if (mmpi.instancePE0() && (occ_val < 0. - tol || occ_val > 1. + tol))
         {
-            (*MPIdata::sout)
+            std::cout
                 << "WARNING: template <class MatrixType> "
                    "DensityMatrix<MatrixType>::computeOccupations(), occ["
                 << i << "]=" << occ_val;
-            // if( occ_uptodate_)(*MPIdata::sout)<<" vs.
+            // if( occ_uptodate_)std::cout<<" vs.
             // "<<occupation_[dim_-i-1];
-            (*MPIdata::sout) << std::endl;
+            std::cout << std::endl;
             flag = true;
         }
         assert(occ_val > 0. - tol_fail);
@@ -301,7 +309,7 @@ void DensityMatrix<MatrixType>::computeOccupations(const MatrixType& ls)
         occ[i] = (double)std::max(0., occ_val);
         occ[i] = (double)std::min(1., occ_val);
     }
-    if (flag) printOccupations((*MPIdata::sout));
+    if (flag) printOccupations(std::cout);
 
     for (int i = 0; i < dim_; i++)
     {
@@ -314,8 +322,9 @@ template <class MatrixType>
 void DensityMatrix<MatrixType>::setOccupations(const std::vector<double>& occ)
 {
 #ifdef PRINT_OPERATIONS
-    if (onpe0)
-        (*MPIdata::sout) << "template <class MatrixType> "
+MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    if (mmpi.instancePE0())
+        std::cout << "template <class MatrixType> "
                             "DensityMatrix<MatrixType>::setOccupations()"
                          << std::endl;
 #endif
@@ -336,7 +345,7 @@ double DensityMatrix<MatrixType>::computeEntropy() const
     {
         const double fi = (double)occupation_[st];
         if (fi > 1. + tol_interval)
-            (*MPIdata::sout) << std::setprecision(15) << std::scientific << "f["
+            std::cout << std::setprecision(15) << std::scientific << "f["
                              << st << "]=" << fi << std::endl;
         assert(fi >= 0. - tol_interval);
         assert(fi <= 1. + tol_interval);

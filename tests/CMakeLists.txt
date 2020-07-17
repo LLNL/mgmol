@@ -169,6 +169,25 @@ add_executable(testGramMatrix
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
                ${CMAKE_SOURCE_DIR}/src/tools/random.cc
                ${CMAKE_SOURCE_DIR}/tests/ut_magma_main.cc)
+add_executable(testDensityMatrix
+               ${CMAKE_SOURCE_DIR}/tests/testDensityMatrix.cc
+               ${CMAKE_SOURCE_DIR}/src/DensityMatrix.cc
+               ${CMAKE_SOURCE_DIR}/src/GramMatrix.cc
+               ${CMAKE_SOURCE_DIR}/src/Power.cc
+               ${CMAKE_SOURCE_DIR}/src/magma_singleton.cc
+               ${CMAKE_SOURCE_DIR}/src/local_matrices/LocalMatrices.cc
+               ${CMAKE_SOURCE_DIR}/src/local_matrices/SquareLocalMatrices.cc
+               ${CMAKE_SOURCE_DIR}/src/ReplicatedMatrix.cc
+               ${CMAKE_SOURCE_DIR}/src/DistMatrix/DistMatrix.cc
+               ${CMAKE_SOURCE_DIR}/src/DistMatrix/BlacsContext.cc
+               ${CMAKE_SOURCE_DIR}/src/DistMatrix/MatricesBlacsContext.cc
+               ${CMAKE_SOURCE_DIR}/src/DistMatrix/DistMatrixTools.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/random.cc
+               ${CMAKE_SOURCE_DIR}/tests/ut_magma_main.cc)
 
 if(${MAGMA_FOUND})
   add_executable(testOpenmpOffload
@@ -232,6 +251,9 @@ add_test(NAME testLaph4
 add_test(NAME testGramMatrix
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testGramMatrix)
+add_test(NAME testDensityMatrix
+         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+                 ${CMAKE_CURRENT_BINARY_DIR}/testDensityMatrix)
 
 if(${MAGMA_FOUND})
   add_test(NAME testOpenmpOffload
@@ -392,6 +414,8 @@ if(${MAGMA_FOUND})
     MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
   target_link_libraries(testGramMatrix PRIVATE ${SCALAPACK_LIBRARIES}
     ${BLAS_LIBRARIES} MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
+  target_link_libraries(testDensityMatrix PRIVATE ${SCALAPACK_LIBRARIES}
+    ${BLAS_LIBRARIES} MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
   target_link_libraries(testOpenmpOffload PRIVATE 
     MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
 
@@ -425,6 +449,8 @@ else()
   target_link_libraries(testLaph4 PRIVATE ${BLAS_LIBRARIES}
     MPI::MPI_CXX OpenMP::OpenMP_CXX)
   target_link_libraries(testGramMatrix PRIVATE ${SCALAPACK_LIBRARIES}
+    ${BLAS_LIBRARIES} MPI::MPI_CXX OpenMP::OpenMP_CXX)
+  target_link_libraries(testDensityMatrix PRIVATE ${SCALAPACK_LIBRARIES}
     ${BLAS_LIBRARIES} MPI::MPI_CXX OpenMP::OpenMP_CXX)
 endif()
 

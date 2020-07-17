@@ -10,8 +10,8 @@
 #ifndef MGMOL_DENSITYMATRIX_H
 #define MGMOL_DENSITYMATRIX_H
 
-#include "MPIdata.h"
 #include "global.h"
+#include "MGmol_MPI.h"
 
 #include <cassert>
 #include <ostream>
@@ -67,8 +67,10 @@ public:
 
     void print(std::ostream& os) const
     {
+        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+
         assert(!stripped_);
-        if (onpe0) os << " DensityMatrix" << std::endl;
+        if (mmpi.instancePE0()) os << " DensityMatrix" << std::endl;
         dm_->print(os, 0, 0, DM_NPRINT_ROWS_AND_COLS, DM_NPRINT_ROWS_AND_COLS);
     }
 
