@@ -167,13 +167,13 @@ TEST_CASE("Check DistMatrix", "[distributed_matrix]")
         CHECK(norm == Approx(norm).epsilon(0.000001));
         // TODO we should check the result of the operations
         if (mype == 0) std::cout << "DistMatrix::transpose..." << std::endl;
-        c.transpose(b);
+        c.transpose(1., b, 0.);
         norm = c.norm('F');
         if (mype == 0) std::cout << "Norm(c)=" << norm << std::endl;
         if (mype == 0) std::cout << "DistMatrix::scal..." << std::endl;
         c.scal(0.5);
         if (mype == 0) std::cout << "DistMatrix::transpose..." << std::endl;
-        b.transpose(c);
+        b.transpose(1., c, 0.);
         if (mype == 0) std::cout << "DistMatrix::axpy..." << std::endl;
         a.axpy(-2., b);
         if (mype == 0) std::cout << "DistMatrix::operator=..." << std::endl;

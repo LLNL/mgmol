@@ -29,7 +29,7 @@ void NOLMOTransform::init_transform(
 
     const dist_matrix::DistMatrix<DISTMATDTYPE>& work(ls);
     dist_matrix::DistMatrix<DISTMATDTYPE> tmp(ls);
-    tmp.transpose(work);
+    tmp.transpose(1., work, 0.);
     tmp.trset('u'); // set to zero lower part of upper triangular matrix
 
     tmp.allgather(&lst_[0], nst_);
