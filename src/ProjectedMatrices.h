@@ -47,8 +47,6 @@ class ProjectedMatrices : public ProjectedMatricesInterface
     std::unique_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> mat_X_old_;
     std::unique_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> mat_L_old_;
 
-    double min_val_;
-
     static Timer sygv_tm_;
     static Timer compute_inverse_tm_;
     static Timer compute_invB_tm_;

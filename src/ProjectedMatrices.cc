@@ -61,7 +61,6 @@ ProjectedMatrices::ProjectedMatrices(const int ndim, const bool with_spin)
       gm_(new GramMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>(ndim))
 {
     width_   = 0.;
-    min_val_ = 0.25;
 
     eigenvalues_.resize(dim_);
 
