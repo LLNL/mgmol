@@ -52,13 +52,7 @@ public:
 
     bool occupationsUptodate() const { return occ_uptodate_; }
     bool fromUniformOccupations() const { return uniform_occ_; }
-#if 0
-    double getVal(const int i) const
-    {
-        assert(!stripped_);
-        return dm_->val(i);
-    }
-#endif
+
     double dot(const MatrixType& mat)
     {
         assert(!stripped_);

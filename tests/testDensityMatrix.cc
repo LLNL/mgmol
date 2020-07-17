@@ -28,6 +28,8 @@ TEST_CASE(
 #else
     typedef dist_matrix::DistMatrix<double> MatrixType;
 #endif
+    int myrank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 
     int npes;
     MPI_Comm_size(MPI_COMM_WORLD, &npes);
@@ -60,6 +62,8 @@ TEST_CASE(
 
     MatrixType matK("K", n);
     matK.init(raw_mat.data(), n);
+    if (myrank == 0) std::cout << "K" << std::endl;
+    matK.print(std::cout, 0, 0, 5, 5);
 
     const double two_third = 2. / 3.;
     const double one_sixth = 1. / 6.;
@@ -76,6 +80,8 @@ TEST_CASE(
 
     MatrixType matM("M", n);
     matM.init(raw_mat.data(), n);
+    if (myrank == 0) std::cout << "M" << std::endl;
+    matM.print(std::cout, 0, 0, 5, 5);
 
     // new Gram matrix
     GramMatrix<MatrixType> gram(n);
@@ -84,7 +90,7 @@ TEST_CASE(
 
     // compute Cholesky decomposition
     gram.updateLS();
-    MatrixType ls = gram.getCholeskyL();
+    const MatrixType& ls = gram.getCholeskyL();
 
     // setup density matrix
     DensityMatrix<MatrixType> dm(n);
@@ -95,9 +101,11 @@ TEST_CASE(
     dm.dressUpS(ls, 1);
 
     const MatrixType& newM = dm.getMatrix();
+    if (myrank == 0) std::cout << "new M" << std::endl;
+    newM.print(std::cout, 0, 0, 5, 5);
 
-    matM -= newM;
+    matK -= newM;
 
-    double normM = matM.norm('m');
-    CHECK(normM == Approx(0.).margin(1.e-14));
+    double normK = matK.norm('m');
+    CHECK(normK == Approx(0.).margin(1.e-14));
 }
