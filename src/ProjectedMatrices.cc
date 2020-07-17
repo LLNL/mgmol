@@ -60,7 +60,7 @@ ProjectedMatrices::ProjectedMatrices(const int ndim, const bool with_spin)
       dm_(new DensityMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>(ndim)),
       gm_(new GramMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>(ndim))
 {
-    width_   = 0.;
+    width_ = 0.;
 
     eigenvalues_.resize(dim_);
 
