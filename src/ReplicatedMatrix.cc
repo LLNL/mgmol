@@ -101,8 +101,8 @@ void ReplicatedMatrix::init(const double* const a, const int lda)
 {
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
-    magma_dsetmatrix(dim_, dim_, a, lda, device_data_.get(), ld_,
-        magma_singleton.queue_);
+    magma_dsetmatrix(
+        dim_, dim_, a, lda, device_data_.get(), ld_, magma_singleton.queue_);
 }
 
 void ReplicatedMatrix::axpy(const double alpha, const ReplicatedMatrix& a)
@@ -137,7 +137,8 @@ void ReplicatedMatrix::scal(const double alpha)
 {
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
-    magma_dscal(dim_ * ld_, alpha, device_data_.get(), 1, magma_singleton.queue_);
+    magma_dscal(
+        dim_ * ld_, alpha, device_data_.get(), 1, magma_singleton.queue_);
 }
 
 // this = alpha * transpose(A) + beta * this
@@ -349,11 +350,12 @@ void ReplicatedMatrix::setDiagonal(const std::vector<double>& diag_values)
         magma_singleton.queue_);
 }
 
-double ReplicatedMatrix::trace()const
+double ReplicatedMatrix::trace() const
 {
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
-    return magma_dasum(dim_, device_data_.get(), ld_+1, magma_singleton.queue_);
+    return magma_dasum(
+        dim_, device_data_.get(), ld_ + 1, magma_singleton.queue_);
 }
 
 double ReplicatedMatrix::traceProduct(const ReplicatedMatrix& matrix) const
@@ -361,8 +363,10 @@ double ReplicatedMatrix::traceProduct(const ReplicatedMatrix& matrix) const
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
     double trace = 0.;
-    for(int i=0;i<dim_;i++)
-        trace+=magma_ddot(dim_, device_data_.get()+ld_*i, ld_, matrix.device_data_.get()+matrix.ld_*i, 1, magma_singleton.queue_);
+    for (int i = 0; i < dim_; i++)
+        trace += magma_ddot(dim_, device_data_.get() + ld_ * i, ld_,
+            matrix.device_data_.get() + matrix.ld_ * i, 1,
+            magma_singleton.queue_);
 
     return trace;
 }

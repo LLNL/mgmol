@@ -20,13 +20,17 @@
 
 #include <vector>
 
-TEST_CASE("Check functionalities of class DensityMatrix", "[functions_DensityMatrix")
+TEST_CASE(
+    "Check functionalities of class DensityMatrix", "[functions_DensityMatrix")
 {
 #ifdef HAVE_MAGMA
     typedef ReplicatedMatrix MatrixType;
 #else
     typedef dist_matrix::DistMatrix<double> MatrixType;
 #endif
+
+    int npes;
+    MPI_Comm_size(MPI_COMM_WORLD, &npes);
 
     MGmol_MPI::setup(MPI_COMM_WORLD, std::cout);
 
@@ -41,34 +45,34 @@ TEST_CASE("Check functionalities of class DensityMatrix", "[functions_DensityMat
 #endif
     const int n = 223;
 
-    std::vector<double> raw_mat(n*n, 0.);
+    std::vector<double> raw_mat(n * n, 0.);
 
-    raw_mat[0]=2.;
-    raw_mat[1]=-1.;
-    for(int i =1; i<n-1; i++)
+    raw_mat[0] = 2.;
+    raw_mat[1] = -1.;
+    for (int i = 1; i < n - 1; i++)
     {
-        raw_mat[(n+1)*i] = 2.;
-        raw_mat[(n+1)*i+1] = -1.;
-        raw_mat[(n+1)*i-1] = -1.;
+        raw_mat[(n + 1) * i]     = 2.;
+        raw_mat[(n + 1) * i + 1] = -1.;
+        raw_mat[(n + 1) * i - 1] = -1.;
     }
-    raw_mat[(n+1)*(n-1)]=2.;
-    raw_mat[(n+1)*(n-1)-1]=-1.;
+    raw_mat[(n + 1) * (n - 1)]     = 2.;
+    raw_mat[(n + 1) * (n - 1) - 1] = -1.;
 
     MatrixType matK("K", n);
     matK.init(raw_mat.data(), n);
 
-    const double two_third = 2./3.;
-    const double one_sixth = 1./6.;
-    raw_mat[0]=two_third;
-    raw_mat[1]=one_sixth;
-    for(int i =1; i<n-1; i++)
+    const double two_third = 2. / 3.;
+    const double one_sixth = 1. / 6.;
+    raw_mat[0]             = two_third;
+    raw_mat[1]             = one_sixth;
+    for (int i = 1; i < n - 1; i++)
     {
-        raw_mat[(n+1)*i] = two_third;
-        raw_mat[(n+1)*i+1] = one_sixth;
-        raw_mat[(n+1)*i-1] = one_sixth;
+        raw_mat[(n + 1) * i]     = two_third;
+        raw_mat[(n + 1) * i + 1] = one_sixth;
+        raw_mat[(n + 1) * i - 1] = one_sixth;
     }
-    raw_mat[(n+1)*(n-1)]=2.;
-    raw_mat[(n+1)*(n-1)-1]=one_sixth;
+    raw_mat[(n + 1) * (n - 1)]     = 2.;
+    raw_mat[(n + 1) * (n - 1) - 1] = one_sixth;
 
     MatrixType matM("M", n);
     matM.init(raw_mat.data(), n);
@@ -88,13 +92,12 @@ TEST_CASE("Check functionalities of class DensityMatrix", "[functions_DensityMat
     dm.setMatrix(matK, 0);
 
     dm.stripS(ls);
-    dm.dressUpS(ls,1);
+    dm.dressUpS(ls, 1);
 
     const MatrixType& newM = dm.getMatrix();
 
-    matM-=newM;
+    matM -= newM;
 
-    double normM=matM.norm('m');
+    double normM = matM.norm('m');
     CHECK(normM == Approx(0.).margin(1.e-14));
 }
-

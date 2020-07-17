@@ -10,13 +10,13 @@
 #ifndef MGMOL_DENSITYMATRIX_H
 #define MGMOL_DENSITYMATRIX_H
 
-#include "global.h"
 #include "MGmol_MPI.h"
+#include "global.h"
 
 #include <cassert>
+#include <cstring>
 #include <ostream>
 #include <vector>
-#include <cstring>
 
 #define DM_NPRINT_ROWS_AND_COLS 5
 
