@@ -33,7 +33,8 @@ class ProjectedMatrices : public ProjectedMatricesInterface
 
     static GramMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>*
         gram_4dotProducts_;
-    static DensityMatrix* dm_4dot_product_;
+    static DensityMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>*
+        dm_4dot_product_;
 
     // spin: 0 for ignoring spin, 1 for calculation with spin
     const bool with_spin_;
@@ -45,8 +46,6 @@ class ProjectedMatrices : public ProjectedMatricesInterface
      */
     std::unique_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> mat_X_old_;
     std::unique_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> mat_L_old_;
-
-    double min_val_;
 
     static Timer sygv_tm_;
     static Timer compute_inverse_tm_;
@@ -99,7 +98,7 @@ protected:
     std::unique_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> matHB_;
     std::unique_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> matH_;
 
-    std::unique_ptr<DensityMatrix> dm_;
+    std::unique_ptr<DensityMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>> dm_;
     std::unique_ptr<GramMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>> gm_;
 
     // work matrix for tmp usage
@@ -218,7 +217,6 @@ public:
     }
 
     const dist_matrix::DistMatrix<DISTMATDTYPE>& dm() const override;
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& kernel4dot() const;
 
     bool occupationsUptodate() const { return dm_->occupationsUptodate(); }
 
@@ -346,18 +344,6 @@ public:
             eigenvalues_, width, nel, max_numst);
     }
 
-    dist_matrix::DistMatrix<DISTMATDTYPE> getDistMatrixFromLocalMatrices(
-        const LocalMatrices<MATDTYPE>& ss)
-    {
-        dist_matrix::DistMatrix<DISTMATDTYPE> tmp("tmp", dim_, dim_);
-
-        LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
-
-        sl2dm->accumulate(ss, tmp);
-
-        return tmp;
-    }
-
     void saveDM() override
     {
         if (onpe0) std::cout << "ProjectedMatrices::saveDM()" << std::endl;
@@ -386,12 +372,7 @@ public:
         // cout<<"ProjectedMatrices::updateDMwithRelax()..."<<endl;
         assert(mat_X_old_);
 
-        dist_matrix::DistMatrix<DISTMATDTYPE> tmp(dm_->getMatrix());
-        tmp.scal(mix);
-
-        double alpha = 1. - mix;
-        tmp.axpy(alpha, *mat_X_old_);
-        dm_->setMatrix(tmp, itindex);
+        dm_->mix(mix, *mat_X_old_, itindex);
     }
 
     void getReplicatedDM(DISTMATDTYPE* replicated_DM_matrix)
@@ -455,7 +436,10 @@ public:
         const double occ_width, const int nel, const int iterative_index);
     void computeGenEigenInterval(std::vector<double>& interval,
         const int maxits, const double padding = 0.01);
-    DensityMatrix& getDM() { return *dm_; }
+    DensityMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>& getDM()
+    {
+        return *dm_;
+    }
 };
 
 #endif

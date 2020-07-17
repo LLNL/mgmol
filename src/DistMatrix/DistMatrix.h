@@ -316,7 +316,6 @@ public:
     // matrix transpose
     // this = alpha * transpose(A) + beta * this
     void transpose(const T alpha, const DistMatrix<T>& a, const T beta);
-    void transpose(const DistMatrix<T>& a);
 
     void trset(const char);
 

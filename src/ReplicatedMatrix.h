@@ -30,6 +30,10 @@ public:
     ReplicatedMatrix(const std::string name, const int m, const int n);
     ReplicatedMatrix(const std::string name, const int n);
 
+    // construct diagonal matrix from diagonal values
+    ReplicatedMatrix(const std::string name, const double* const diagonal,
+        const int m, const int n);
+
     ReplicatedMatrix(const ReplicatedMatrix&);
 
     ~ReplicatedMatrix();
@@ -41,10 +45,17 @@ public:
     }
     ReplicatedMatrix& operator=(const ReplicatedMatrix& rhs);
 
+    ReplicatedMatrix& assign(
+        const ReplicatedMatrix& src, const int ib, const int jb);
+
     void axpy(const double alpha, const ReplicatedMatrix& a);
 
+    void init(const double* const a, const int lda);
     void setRandom(const double minv, const double maxv);
     void identity();
+
+    void scal(const double alpha);
+    double trace(void) const;
     void transpose(
         const double alpha, const ReplicatedMatrix&, const double beta);
     void trmm(const char, const char, const char, const char, const double,
@@ -54,6 +65,10 @@ public:
     int potrf(char uplo);
     int potri(char uplo);
     void potrs(char, ReplicatedMatrix&);
+
+    void getrf(std::vector<int>& ipiv);
+    void getrs(char trans, ReplicatedMatrix& b, std::vector<int>& ipiv);
+
     void gemm(const char transa, const char transb, const double alpha,
         const ReplicatedMatrix& a, const ReplicatedMatrix& b,
         const double beta);
@@ -67,6 +82,7 @@ public:
     void setDiagonal(const std::vector<double>& diag_values);
     int iamax(const int j, double& val);
     double norm(char ty);
+    double traceProduct(const ReplicatedMatrix&) const;
 
     void print(
         std::ostream& os, const int, const int, const int, const int) const;

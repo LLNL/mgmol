@@ -8,8 +8,12 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "DensityMatrix.h"
-#include "MGmol_MPI.h"
 
+#include "DistMatrix.h"
+#include "MGmol_MPI.h"
+#include "ReplicatedMatrix.h"
+
+#include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <string.h>
@@ -21,7 +25,8 @@ const double factor_kernel4dot = 10.;
 // occupations in [0,1]
 // DM eigenvalues in [0,orbital_occupation]
 
-DensityMatrix::DensityMatrix(const int ndim)
+template <class MatrixType>
+DensityMatrix<MatrixType>::DensityMatrix(const int ndim)
 {
     assert(ndim >= 0);
 
@@ -36,50 +41,14 @@ DensityMatrix::DensityMatrix(const int ndim)
 
     orbitals_index_ = -1;
 
-    dm_ = new dist_matrix::DistMatrix<DISTMATDTYPE>("DM", ndim, ndim);
-    kernel4dot_
-        = new dist_matrix::DistMatrix<DISTMATDTYPE>("K4dot", ndim, ndim);
-    work_ = new dist_matrix::DistMatrix<DISTMATDTYPE>("work", ndim, ndim);
+    dm_         = new MatrixType("DM", ndim, ndim);
+    kernel4dot_ = new MatrixType("K4dot", ndim, ndim);
+    work_       = new MatrixType("work", ndim, ndim);
     occupation_.resize(dim_);
 }
 
-DensityMatrix::DensityMatrix(const DensityMatrix& dm)
-{
-    dim_ = dm.dim_;
-
-    uniform_occ_  = dm.uniform_occ_;
-    occ_uptodate_ = dm.occ_uptodate_;
-    stripped_     = dm.stripped_;
-
-    orbitals_index_ = dm.orbitals_index_;
-
-    dm_         = new dist_matrix::DistMatrix<DISTMATDTYPE>(*dm.dm_);
-    kernel4dot_ = new dist_matrix::DistMatrix<DISTMATDTYPE>(*dm.kernel4dot_);
-    work_       = new dist_matrix::DistMatrix<DISTMATDTYPE>(*dm.work_);
-    occupation_.resize(dim_);
-}
-
-DensityMatrix& DensityMatrix::operator=(const DensityMatrix& dm)
-{
-    if (this == &dm) return *this;
-
-    dim_ = dm.dim_;
-
-    occ_uptodate_ = dm.occ_uptodate_;
-    stripped_     = dm.stripped_;
-    uniform_occ_  = dm.uniform_occ_;
-
-    orbitals_index_ = dm.orbitals_index_;
-
-    *dm_         = *dm.dm_;
-    *kernel4dot_ = *dm.kernel4dot_;
-    *work_       = *dm.work_;
-    occupation_  = dm.occupation_;
-
-    return *this;
-}
-
-DensityMatrix::~DensityMatrix()
+template <class MatrixType>
+DensityMatrix<MatrixType>::~DensityMatrix()
 {
     assert(dm_ != nullptr);
     assert(kernel4dot_ != nullptr);
@@ -90,19 +59,22 @@ DensityMatrix::~DensityMatrix()
     delete work_;
 }
 
-void DensityMatrix::build(const dist_matrix::DistMatrix<DISTMATDTYPE>& zmat,
-    const std::vector<DISTMATDTYPE>& occ, const int new_orbitals_index)
+template <class MatrixType>
+void DensityMatrix<MatrixType>::build(const MatrixType& zmat,
+    const std::vector<double>& occ, const int new_orbitals_index)
 {
 #ifdef PRINT_OPERATIONS
-    if (onpe0)
-        (*MPIdata::sout)
-            << "DensityMatrix::build(const DistMatrix<DISTMATDTYPE>&,const "
-               "vector<DISTMATDTYPE>&,const int)"
-            << std::endl;
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    if (mmpi.instancePE0())
+        std::cout << "template <class MatrixType> "
+                     "DensityMatrix<MatrixType>::build(const "
+                     "MatrixType&, const "
+                     "vector<double>&, const int)"
+                  << std::endl;
 #endif
 
     // diagonal matrix with occ values in diagonal
-    dist_matrix::DistMatrix<DISTMATDTYPE> gamma("Gamma", &occ[0], dim_, dim_);
+    MatrixType gamma("Gamma", &occ[0], dim_, dim_);
     gamma.scal(orbital_occupation_); // rescale for spin
 
     // work_ = zmat*gamma with gamma symmetric
@@ -111,10 +83,10 @@ void DensityMatrix::build(const dist_matrix::DistMatrix<DISTMATDTYPE>& zmat,
     // dm_ = work_ * zmat^T
     dm_->gemm('n', 't', 1., *work_, zmat, 0.);
 
-    std::vector<DISTMATDTYPE> w(dim_);
+    std::vector<double> w(dim_);
     for (int i = 0; i < dim_; i++)
-        w[i] = (DISTMATDTYPE)(
-            orbital_occupation_ * std::min(1., factor_kernel4dot * occ[i]));
+        w[i] = (double)(orbital_occupation_
+                        * std::min(1., factor_kernel4dot * occ[i]));
     gamma.setDiagonal(w);
 
     work_->symm('r', 'l', 1., gamma, zmat, 0.);
@@ -124,15 +96,17 @@ void DensityMatrix::build(const dist_matrix::DistMatrix<DISTMATDTYPE>& zmat,
     orbitals_index_ = new_orbitals_index;
 }
 
-void DensityMatrix::build(const dist_matrix::DistMatrix<DISTMATDTYPE>& zmat,
-    const int new_orbitals_index)
+template <class MatrixType>
+void DensityMatrix<MatrixType>::build(
+    const MatrixType& zmat, const int new_orbitals_index)
 {
     build(zmat, occupation_, new_orbitals_index);
 }
 
 // build diagonal matrix
-void DensityMatrix::build(
-    const std::vector<DISTMATDTYPE>& occ, const int new_orbitals_index)
+template <class MatrixType>
+void DensityMatrix<MatrixType>::build(
+    const std::vector<double>& occ, const int new_orbitals_index)
 {
     assert(dm_ != nullptr);
 
@@ -141,41 +115,49 @@ void DensityMatrix::build(
     build(new_orbitals_index);
 }
 
-void DensityMatrix::build(const int new_orbitals_index)
+template <class MatrixType>
+void DensityMatrix<MatrixType>::build(const int new_orbitals_index)
 {
     //#ifdef PRINT_OPERATIONS
-    if (onpe0)
-        (*MPIdata::sout) << "DensityMatrix::build() for diagonal occupation..."
-                         << std::endl;
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    if (mmpi.instancePE0())
+        std::cout
+            << "template <class MatrixType> "
+               "DensityMatrix<MatrixType>::build() for diagonal occupation..."
+            << std::endl;
     //#endif
-    if (!occ_uptodate_ && onpe0)
-        (*MPIdata::sout) << "Warning: occupations not up to date to build DM!!!"
-                         << std::endl;
+    if (!occ_uptodate_ && mmpi.instancePE0())
+        std::cout << "Warning: occupations not up to date to build DM!!!"
+                  << std::endl;
 
-    dist_matrix::DistMatrix<DISTMATDTYPE> gamma(
-        "Gamma", &occupation_[0], dim_, dim_);
+    MatrixType gamma("Gamma", &occupation_[0], dim_, dim_);
     gamma.scal(orbital_occupation_); // rescale for spin
 
     *dm_ = gamma;
 
     kernel4dot_->clear();
-    std::vector<DISTMATDTYPE> w(dim_);
+    std::vector<double> w(dim_);
     for (int i = 0; i < dim_; i++)
-        w[i] = (DISTMATDTYPE)(
-            orbital_occupation_
-            * std::min(1., factor_kernel4dot * occupation_[i]));
+        w[i] = (double)(orbital_occupation_
+                        * std::min(1., factor_kernel4dot * occupation_[i]));
     kernel4dot_->setDiagonal(w);
 
     stripped_       = false;
     orbitals_index_ = new_orbitals_index;
 }
-void DensityMatrix::setUniform(
-    const DISTMATDTYPE nel, const int new_orbitals_index)
+
+template <class MatrixType>
+void DensityMatrix<MatrixType>::setUniform(
+    const double nel, const int new_orbitals_index)
 {
 #ifdef PRINT_OPERATIONS
-    if (onpe0) (*MPIdata::sout) << "DensityMatrix::setUniform()" << std::endl;
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    if (mmpi.instancePE0())
+        std::cout << "template <class MatrixType> "
+                     "DensityMatrix<MatrixType>::setUniform()"
+                  << std::endl;
 #endif
-    const DISTMATDTYPE occ = (DISTMATDTYPE)((double)nel / (double)dim_);
+    const double occ = (double)((double)nel / (double)dim_);
     assert(occ < 1.01);
     for (int i = 0; i < dim_; i++)
         occupation_[i] = occ;
@@ -187,22 +169,22 @@ void DensityMatrix::setUniform(
     build(occupation_, new_orbitals_index);
 }
 
-void DensityMatrix::buildFromBlock(
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& block00)
+template <class MatrixType>
+void DensityMatrix<MatrixType>::buildFromBlock(const MatrixType& block00)
 {
     dm_->clear();
     dm_->assign(block00, 0, 0);
-    dm_->print((*MPIdata::sout), 0, 0, 25, 25);
+    dm_->print(std::cout, 0, 0, 25, 25);
 }
 
-void DensityMatrix::rotate(
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& rotation_matrix,
-    const bool flag_eigen)
+template <class MatrixType>
+void DensityMatrix<MatrixType>::rotate(
+    const MatrixType& rotation_matrix, const bool flag_eigen)
 {
 
     if (!flag_eigen)
     {
-        dist_matrix::DistMatrix<DISTMATDTYPE> invU(rotation_matrix);
+        MatrixType invU(rotation_matrix);
         std::vector<int> ipiv;
         invU.getrf(ipiv);
 
@@ -210,8 +192,8 @@ void DensityMatrix::rotate(
         invU.getrs('n', *dm_, ipiv);
 
         // tmp = dm**T * u**-T
-        dist_matrix::DistMatrix<DISTMATDTYPE> tmp(rotation_matrix);
-        tmp.transpose(*dm_);
+        MatrixType tmp(rotation_matrix);
+        tmp.transpose(1., *dm_, 0.);
 
         // tmp = u**-1 * dm * u**-T
         invU.getrs('n', tmp, ipiv);
@@ -220,9 +202,12 @@ void DensityMatrix::rotate(
     }
 }
 
-void DensityMatrix::printOccupations(std::ostream& os) const
+template <class MatrixType>
+void DensityMatrix<MatrixType>::printOccupations(std::ostream& os) const
 {
-    if (onpe0)
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+
+    if (mmpi.instancePE0())
     {
         os << std::endl << " Occupation numbers: ";
 
@@ -240,7 +225,8 @@ void DensityMatrix::printOccupations(std::ostream& os) const
     }
 }
 
-// double DensityMatrix::getSumOccupations()const
+// double template <class MatrixType>
+// DensityMatrix<MatrixType>::getSumOccupations()const
 //{
 //    double sum=0.;
 //    for(int i=0;i<dim_;i++)
@@ -253,10 +239,11 @@ void DensityMatrix::printOccupations(std::ostream& os) const
 
 // solve the eigenvalue problem L^T*dm_*L*V=occ*V
 // using the LL^T decomposition of S to get occ
-void DensityMatrix::diagonalize(const dist_matrix::DistMatrix<DISTMATDTYPE>& ls,
-    std::vector<DISTMATDTYPE>& occ)
+template <class MatrixType>
+void DensityMatrix<MatrixType>::diagonalize(
+    const MatrixType& ls, std::vector<double>& occ)
 {
-    dist_matrix::DistMatrix<DISTMATDTYPE> evect("EigVect", dim_, dim_);
+    MatrixType evect("EigVect", dim_, dim_);
 
     *work_ = (*dm_);
 
@@ -269,8 +256,9 @@ void DensityMatrix::diagonalize(const dist_matrix::DistMatrix<DISTMATDTYPE>& ls,
     work_->syev('n', 'l', occ, evect);
 }
 
-void DensityMatrix::diagonalize(const char eigv, std::vector<DISTMATDTYPE>& occ,
-    dist_matrix::DistMatrix<DISTMATDTYPE>& vect)
+template <class MatrixType>
+void DensityMatrix<MatrixType>::diagonalize(
+    const char eigv, std::vector<double>& occ, MatrixType& vect)
 {
     *work_ = (*dm_);
 
@@ -278,15 +266,18 @@ void DensityMatrix::diagonalize(const char eigv, std::vector<DISTMATDTYPE>& occ,
     work_->syev(eigv, 'l', occ, vect);
 }
 
-void DensityMatrix::computeOccupations(
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& ls)
+template <class MatrixType>
+void DensityMatrix<MatrixType>::computeOccupations(const MatrixType& ls)
 {
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 #ifdef PRINT_OPERATIONS
-    if (onpe0)
-        (*MPIdata::sout) << "DensityMatrix::computeOccupations()" << std::endl;
+    if (mmpi.instancePE0())
+        std::cout << "template <class MatrixType> "
+                     "DensityMatrix<MatrixType>::computeOccupations()"
+                  << std::endl;
 #endif
 
-    std::vector<DISTMATDTYPE> occ(dim_);
+    std::vector<double> occ(dim_);
 
     diagonalize(ls, occ);
     const double occinv = 1. / orbital_occupation_;
@@ -299,23 +290,23 @@ void DensityMatrix::computeOccupations(
     for (int i = 0; i < dim_; i++)
     {
         double occ_val = (double)occ[i] * occinv;
-        (*MPIdata::sout) << std::setprecision(16);
-        if (onpe0 && (occ_val < 0. - tol || occ_val > 1. + tol))
+        std::cout << std::setprecision(16);
+        if (mmpi.instancePE0() && (occ_val < 0. - tol || occ_val > 1. + tol))
         {
-            (*MPIdata::sout)
-                << "WARNING: DensityMatrix::computeOccupations(), occ[" << i
-                << "]=" << occ_val;
-            // if( occ_uptodate_)(*MPIdata::sout)<<" vs.
+            std::cout << "WARNING: template <class MatrixType> "
+                         "DensityMatrix<MatrixType>::computeOccupations(), occ["
+                      << i << "]=" << occ_val;
+            // if( occ_uptodate_)std::cout<<" vs.
             // "<<occupation_[dim_-i-1];
-            (*MPIdata::sout) << std::endl;
+            std::cout << std::endl;
             flag = true;
         }
         assert(occ_val > 0. - tol_fail);
         assert(occ_val < 1. + tol_fail);
-        occ[i] = (DISTMATDTYPE)std::max(0., occ_val);
-        occ[i] = (DISTMATDTYPE)std::min(1., occ_val);
+        occ[i] = (double)std::max(0., occ_val);
+        occ[i] = (double)std::min(1., occ_val);
     }
-    if (flag) printOccupations((*MPIdata::sout));
+    if (flag) printOccupations(std::cout);
 
     for (int i = 0; i < dim_; i++)
     {
@@ -324,18 +315,23 @@ void DensityMatrix::computeOccupations(
     occ_uptodate_ = true;
 }
 
-void DensityMatrix::setOccupations(const std::vector<DISTMATDTYPE>& occ)
+template <class MatrixType>
+void DensityMatrix<MatrixType>::setOccupations(const std::vector<double>& occ)
 {
 #ifdef PRINT_OPERATIONS
-    if (onpe0)
-        (*MPIdata::sout) << "DensityMatrix::setOccupations()" << std::endl;
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    if (mmpi.instancePE0())
+        std::cout << "template <class MatrixType> "
+                     "DensityMatrix<MatrixType>::setOccupations()"
+                  << std::endl;
 #endif
     assert((int)occ.size() == dim_);
-    memcpy(&occupation_[0], &occ[0], dim_ * sizeof(DISTMATDTYPE));
+    memcpy(&occupation_[0], &occ[0], dim_ * sizeof(double));
     occ_uptodate_ = true;
 }
 
-double DensityMatrix::computeEntropy() const
+template <class MatrixType>
+double DensityMatrix<MatrixType>::computeEntropy() const
 {
     double s                  = 0.;
     const double tol          = 1.e-15;
@@ -346,29 +342,30 @@ double DensityMatrix::computeEntropy() const
     {
         const double fi = (double)occupation_[st];
         if (fi > 1. + tol_interval)
-            (*MPIdata::sout) << std::setprecision(15) << std::scientific << "f["
-                             << st << "]=" << fi << std::endl;
+            std::cout << std::setprecision(15) << std::scientific << "f[" << st
+                      << "]=" << fi << std::endl;
         assert(fi >= 0. - tol_interval);
         assert(fi <= 1. + tol_interval);
         if (fi < tol)
         {
-            s += (1. - fi) * log(1. - fi);
+            s += (1. - fi) * std::log(1. - fi);
         }
         else if (fi > 1. - tol)
         {
-            s += fi * log(fi);
+            s += fi * std::log(fi);
         }
         else
         {
-            s += fi * log(fi) + (1. - fi) * log(1. - fi);
+            s += fi * std::log(fi) + (1. - fi) * std::log(1. - fi);
         }
     }
 
     return (double)(-orbital_occupation_) * s; // in units of kbt
 }
 
-void DensityMatrix::setto2InvS(
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& invS, const int orbitals_index)
+template <class MatrixType>
+void DensityMatrix<MatrixType>::setto2InvS(
+    const MatrixType& invS, const int orbitals_index)
 {
     *dm_ = invS;
     dm_->scal(orbital_occupation_);
@@ -383,7 +380,8 @@ void DensityMatrix::setto2InvS(
     orbitals_index_ = orbitals_index;
 }
 
-void DensityMatrix::stripS(const dist_matrix::DistMatrix<DISTMATDTYPE>& ls)
+template <class MatrixType>
+void DensityMatrix<MatrixType>::stripS(const MatrixType& ls)
 {
     assert(!stripped_);
 
@@ -395,13 +393,14 @@ void DensityMatrix::stripS(const dist_matrix::DistMatrix<DISTMATDTYPE>& ls)
     stripped_     = true;
 }
 
-void DensityMatrix::dressUpS(const dist_matrix::DistMatrix<DISTMATDTYPE>& ls,
-    const int new_orbitals_index)
+template <class MatrixType>
+void DensityMatrix<MatrixType>::dressUpS(
+    const MatrixType& ls, const int new_orbitals_index)
 {
     assert(stripped_);
 
     ls.trtrs('l', 't', 'n', *dm_);
-    work_->transpose(*dm_);
+    work_->transpose(1., *dm_, 0.);
     *dm_ = *work_;
     ls.trtrs('l', 't', 'n', *dm_);
 
@@ -414,14 +413,15 @@ void DensityMatrix::dressUpS(const dist_matrix::DistMatrix<DISTMATDTYPE>& ls,
 // dm_ -> u*dm_*u^T
 // note: may lead to a dm with eigenvalues slightly outside [0.,1.]
 // for u far from identity
-void DensityMatrix::transform(const dist_matrix::DistMatrix<DISTMATDTYPE>& u)
+template <class MatrixType>
+void DensityMatrix<MatrixType>::transform(const MatrixType& u)
 {
     work_->gemm('n', 't', 1., *dm_, u, 0.);
     dm_->gemm('n', 'n', 1., u, *work_, 0.);
 }
 
-double DensityMatrix::getExpectation(
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& A)
+template <class MatrixType>
+double DensityMatrix<MatrixType>::getExpectation(const MatrixType& A)
 {
     work_->gemm('n', 'n', 1., A, *dm_, 0.);
     double val = work_->trace();
@@ -437,3 +437,18 @@ double DensityMatrix::getExpectation(
 
     return val;
 }
+
+template <class MatrixType>
+void DensityMatrix<MatrixType>::mix(
+    const double mix, const MatrixType& matA, const int new_orbitals_index)
+{
+    dm_->scal(1. - mix);
+
+    dm_->axpy(mix, matA);
+    orbitals_index_ = new_orbitals_index;
+}
+
+template class DensityMatrix<dist_matrix::DistMatrix<double>>;
+#ifdef HAVE_MAGMA
+template class DensityMatrix<ReplicatedMatrix>;
+#endif

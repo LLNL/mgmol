@@ -43,6 +43,18 @@ ReplicatedMatrix::ReplicatedMatrix(const std::string name, const int n)
 {
 }
 
+ReplicatedMatrix::ReplicatedMatrix(const std::string name,
+    const double* const diagonal, const int m, const int n)
+    : dim_(m),
+      ld_(magma_roundup(dim_, gpuroundup)),
+      device_data_(MemoryDev::allocate(dim_ * ld_), MemoryDev::free)
+{
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    magma_dsetvector(
+        dim_, diagonal, 1, device_data_.get(), ld_ + 1, magma_singleton.queue_);
+}
+
 ReplicatedMatrix::ReplicatedMatrix(const ReplicatedMatrix& mat)
     : dim_(mat.dim_),
       ld_(mat.ld_),
@@ -72,6 +84,27 @@ ReplicatedMatrix& ReplicatedMatrix::operator=(const ReplicatedMatrix& rhs)
 
 ReplicatedMatrix::~ReplicatedMatrix() {}
 
+ReplicatedMatrix& ReplicatedMatrix::assign(
+    const ReplicatedMatrix& src, const int ib, const int jb)
+{
+    assert(this != &src);
+
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    magma_dcopymatrix(src.dim_, src.dim_, src.device_data_.get(), src.ld_,
+        device_data_.get() + jb * ld_ + ib, ld_, magma_singleton.queue_);
+
+    return *this;
+}
+
+void ReplicatedMatrix::init(const double* const a, const int lda)
+{
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    magma_dsetmatrix(
+        dim_, dim_, a, lda, device_data_.get(), ld_, magma_singleton.queue_);
+}
+
 void ReplicatedMatrix::axpy(const double alpha, const ReplicatedMatrix& a)
 {
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
@@ -98,6 +131,14 @@ void ReplicatedMatrix::identity()
 
     magmablas_dlaset(MagmaFull, dim_, dim_, 0.0, 1.0, device_data_.get(), ld_,
         magma_singleton.queue_);
+}
+
+void ReplicatedMatrix::scal(const double alpha)
+{
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    magma_dscal(
+        dim_ * ld_, alpha, device_data_.get(), 1, magma_singleton.queue_);
 }
 
 // this = alpha * transpose(A) + beta * this
@@ -163,6 +204,14 @@ int ReplicatedMatrix::potrf(char uplo)
     return info;
 }
 
+void ReplicatedMatrix::getrf(std::vector<int>& ipiv)
+{
+    int info;
+    magma_dgetrf_gpu(dim_, dim_, device_data_.get(), ld_, ipiv.data(), &info);
+    if (info != 0)
+        std::cerr << "magma_dgetrf_gpu failed, info = " << info << std::endl;
+}
+
 int ReplicatedMatrix::potri(char uplo)
 {
     magma_uplo_t magma_uplo = magma_uplo_const(uplo);
@@ -187,6 +236,18 @@ void ReplicatedMatrix::potrs(char uplo, ReplicatedMatrix& b)
         b.device_data_.get(), b.ld_, &info);
     if (info != 0)
         std::cerr << "magma_dpotrs_gpu failed, info = " << info << std::endl;
+}
+
+void ReplicatedMatrix::getrs(
+    char trans, ReplicatedMatrix& b, std::vector<int>& ipiv)
+{
+    magma_trans_t magma_trans = magma_trans_const(trans);
+
+    int info;
+    magma_dgetrs_gpu(magma_trans, dim_, dim_, device_data_.get(), ld_,
+        ipiv.data(), b.device_data_.get(), b.ld_, &info);
+    if (info != 0)
+        std::cerr << "magma_dgetrs_gpu failed, info = " << info << std::endl;
 }
 
 void ReplicatedMatrix::syev(
@@ -255,7 +316,7 @@ void ReplicatedMatrix::trtrs(const char uplo, const char trans, const char diag,
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
     magma_dtrsm(MagmaLeft, magma_uplo, magma_trans, magma_diag, dim_, dim_, 1.,
-        device_data_.get(), ld_, device_data_.get(), ld_,
+        device_data_.get(), ld_, b.device_data_.get(), b.ld_,
         magma_singleton.queue_);
 }
 
@@ -287,6 +348,27 @@ void ReplicatedMatrix::setDiagonal(const std::vector<double>& diag_values)
 
     magma_dsetvector(dim_, diag_values.data(), 1, device_data_.get(), ld_ + 1,
         magma_singleton.queue_);
+}
+
+double ReplicatedMatrix::trace() const
+{
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    return magma_dasum(
+        dim_, device_data_.get(), ld_ + 1, magma_singleton.queue_);
+}
+
+double ReplicatedMatrix::traceProduct(const ReplicatedMatrix& matrix) const
+{
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    double trace = 0.;
+    for (int i = 0; i < dim_; i++)
+        trace += magma_ddot(dim_, device_data_.get() + ld_ * i, ld_,
+            matrix.device_data_.get() + matrix.ld_ * i, 1,
+            magma_singleton.queue_);
+
+    return trace;
 }
 
 double ReplicatedMatrix::norm(char ty)
