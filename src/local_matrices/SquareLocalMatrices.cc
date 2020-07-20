@@ -23,7 +23,6 @@ void SquareLocalMatrices<T>::fillUpperWithLower()
     for (short iloc = 0; iloc < LocalMatrices<T>::subdiv_; iloc++)
     {
         T* ssiloc = LocalMatrices<T>::getSubMatrix(iloc);
-        MemorySpace::assert_is_host_ptr(ssiloc);
 
         for (int i = 0; i < m; i++)
         {
@@ -44,7 +43,6 @@ void SquareLocalMatrices<T>::setDiagonal2Zero()
     for (short iloc = 0; iloc < LocalMatrices<T>::subdiv_; iloc++)
     {
         T* ssiloc = LocalMatrices<T>::getSubMatrix(iloc);
-        MemorySpace::assert_is_host_ptr(ssiloc);
         for (int i = 0; i < m; i++)
         {
             ssiloc[i + m * i] = 0.;

@@ -342,7 +342,7 @@ void ProjectedMatrices::updateDM(const int iterative_index)
 #ifndef NDEBUG
     double nel = getNel();
     std::cout << "ProjectedMatrices::updateDM(), nel = " << nel << std::endl;
-    assert(fabs(nel - nel) < 1.e-2);
+    assert(std::isfinite(nel));
     double energy = getExpectationH();
     std::cout << "ProjectedMatrices::updateDM(), energy = " << energy
               << std::endl;
