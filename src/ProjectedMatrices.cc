@@ -362,7 +362,7 @@ void ProjectedMatrices<MatrixType>::updateDM(const int iterative_index)
     double nel = getNel();
     std::cout << "ProjectedMatrices<MatrixType>::updateDM(), nel = " << nel
               << std::endl;
-    assert(fabs(nel - nel) < 1.e-2);
+    assert(std::isfinite(nel));
     double energy = getExpectationH();
     std::cout << "ProjectedMatrices<MatrixType>::updateDM(), energy = "
               << energy << std::endl;

@@ -66,11 +66,9 @@ void LocalMatrices<T1>::copy(const LocalMatrices<T2>& mat)
     {
         T1* dst_mat             = ptr_matrices_[iloc];
         const T2* const src_mat = mat.getSubMatrix(iloc);
-        MemorySpace::assert_is_host_ptr(src_mat);
-        const int nelements = n_ * m_;
+        const int nelements     = n_ * m_;
         for (int j = 0; j < nelements; j++)
         {
-            assert(std::isfinite(src_mat[j]));
             dst_mat[j] = src_mat[j];
         }
     }

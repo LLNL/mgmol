@@ -52,10 +52,8 @@ void LocalMatrices2DistMatrix::convert(const LocalMatrices<T>& src,
                         // unique id for current pair
                         const int pst         = st2 * numst + st1;
                         const T* const ssiloc = src.getSubMatrix(iloc);
-                        MemorySpace::assert_is_host_ptr(ssiloc);
                         const T tmp
                             = ssiloc[jcolor * chromatic_number + icolor];
-                        assert(std::isfinite(tmp));
 
                         // accumulate values
                         if (std::fabs(tmp) > tol)
