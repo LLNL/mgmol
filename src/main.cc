@@ -565,7 +565,7 @@ int main(int argc, char** argv)
 
         mgmol->setupFromInput(input_file);
 
-        mgmol->setupLRs(lrs_filename);
+        if (ct.isLocMode() || ct.init_loc == 1) mgmol->setupLRs(lrs_filename);
 
         mgmol->setupConstraintsFromInput(constraints_filename);
 
