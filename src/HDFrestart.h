@@ -227,7 +227,7 @@ public:
 
     int getLRCenters(std::multimap<std::string, Vector3D>&, const int,
         const std::string& name);
-    int getLRs(LocalizationRegions& lrs, const int max_nb,
+    int getLRs(LocalizationRegions* lrs, const int max_nb,
         const std::string& name, const bool add = false);
 
     template <class T>

@@ -996,7 +996,7 @@ int HDFrestart::getLRCenters(std::multimap<std::string, Vector3D>& centers,
 }
 
 // get distinct function centers and their multiplicities in file
-int HDFrestart::getLRs(LocalizationRegions& lrs, const int max_nb_lrs,
+int HDFrestart::getLRs(LocalizationRegions* lrs, const int max_nb_lrs,
     const std::string& name, const bool add)
 {
     Control& ct = *(Control::instance());
@@ -1009,7 +1009,7 @@ int HDFrestart::getLRs(LocalizationRegions& lrs, const int max_nb_lrs,
         (*MPIdata::sout) << "HDFrestart::getLRs() --- Read LRs from dataset "
                          << name << std::endl;
 
-    if (!add) lrs.clear();
+    if (!add) lrs->clear();
 
     const bool read_radius = (ct.lr_updates_type > 0 || ct.cut_radius < 0.);
     if (!read_radius && onpe0 && ct.verbose > 0)
@@ -1084,7 +1084,7 @@ int HDFrestart::getLRs(LocalizationRegions& lrs, const int max_nb_lrs,
 
                 assert(!gids.empty());
                 assert(gids.size() > static_cast<unsigned int>(i));
-                lrs.push_back_local(center, rl, gids[i]);
+                lrs->push_back_local(center, rl, gids[i]);
 
 #ifdef DEBUG
                 (*MPIdata::sout) << setprecision(16);
@@ -1099,7 +1099,7 @@ int HDFrestart::getLRs(LocalizationRegions& lrs, const int max_nb_lrs,
             }
         }
 
-        if (lrs.hasNcentersReachedNumber(max_nb_lrs)) done = 1;
+        if (lrs->hasNcentersReachedNumber(max_nb_lrs)) done = 1;
 
         color++;
 

@@ -17,7 +17,7 @@ using namespace std;
 
 Timer DensityMatrixSparse::gather_DM_tm_("DensityMatrixSparse::gather_DM");
 DensityMatrixSparse::DensityMatrixSparse(
-    LocalizationRegions& lrs, const int ndim, const std::vector<int>& locvars)
+    LocalizationRegions* lrs, const int ndim, const std::vector<int>& locvars)
     : dim_(ndim), locvars_(locvars)
 {
     assert(ndim >= 0);
@@ -31,7 +31,7 @@ DensityMatrixSparse::DensityMatrixSparse(
     {
         dm_ = new VariableSizeMatrix<sparserow>("DM", 4096);
     }
-    lrs.getLocalSubdomainIndices(locfcns_);
+    lrs->getLocalSubdomainIndices(locfcns_);
 }
 
 DensityMatrixSparse::~DensityMatrixSparse()

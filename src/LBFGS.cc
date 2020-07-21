@@ -17,7 +17,7 @@
 
 template <class T>
 LBFGS<T>::LBFGS(T** orbitals, Ions& ions, Rho<T>& rho,
-    ConstraintSet& constraints, LocalizationRegions& lrs,
+    ConstraintSet& constraints, LocalizationRegions* lrs,
     ClusterOrbitals* local_cluster, MasksSet& masks, MasksSet& corrmasks,
     Electrostatic& electrostat, const double dt, MGmol<T>& strategy)
     : IonicAlgorithm<T>(orbitals, ions, rho, constraints, lrs, masks, strategy),
@@ -29,7 +29,7 @@ LBFGS<T>::LBFGS(T** orbitals, Ions& ions, Rho<T>& rho,
       masks_(masks),
       corrmasks_(corrmasks),
       electrostat_(electrostat),
-      ref_lrs_(lrs),
+      ref_lrs_(*lrs),
       mgmol_strategy_(strategy)
 {
     Mesh* mymesh           = Mesh::instance();
@@ -109,12 +109,12 @@ void LBFGS<LocGridOrbitals>::updateRefMasks()
 
     if (ct.lr_update)
     {
-        ref_lrs_        = lrs_;
+        ref_lrs_        = *lrs_;
         *ref_masks_     = masks_;
         *ref_corrmasks_ = corrmasks_;
     }
 
-    ref_orbitals_->reset(ref_masks_, ref_corrmasks_, &lrs_);
+    ref_orbitals_->reset(ref_masks_, ref_corrmasks_, lrs_);
 }
 
 template <>

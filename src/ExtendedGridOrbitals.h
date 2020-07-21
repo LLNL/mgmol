@@ -333,7 +333,7 @@ public:
         return *this;
     }
 
-    void initGauss(const double, const LocalizationRegions&);
+    void initGauss(const double, const LocalizationRegions*);
     virtual void axpy(const double alpha, const ExtendedGridOrbitals&);
 
     void app_mask(const int, pb::GridFunc<ORBDTYPE>&, const short) const {};
@@ -355,7 +355,7 @@ public:
     int read_hdf5(HDFrestart& h5f_file);
     int read_func_hdf5(HDFrestart&, const std::string& name = "Function");
 
-    void initWF(const LocalizationRegions& lrs);
+    void initWF(const LocalizationRegions* lrs);
     void checkCond(const double tol, const bool flag_stop);
     double normState(const int st) const;
     const std::vector<std::vector<int>>& getOverlappingGids() const

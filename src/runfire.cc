@@ -27,7 +27,7 @@ void MGmol<T>::runfire(T** orbitals, Ions& ions)
 
     Control& ct = *(Control::instance());
 
-    FIRE<T> fire(orbitals, ions, *rho_, *constraints_, *lrs_, *currentMasks_,
+    FIRE<T> fire(orbitals, ions, *rho_, *constraints_, lrs_, *currentMasks_,
         *electrostat_, ct.dt, *this);
 
     DFTsolver<T>::resetItCount();

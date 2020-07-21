@@ -179,10 +179,10 @@ void MGmol<LocGridOrbitals>::initialMasks()
     if (ct.verbose > 0) printWithTimeStamp("MGmol<T>::initialMasks()...", os_);
 
     currentMasks_ = new MasksSet(false, ct.getMGlevels());
-    currentMasks_->setup(*lrs_);
+    currentMasks_->setup(lrs_);
 
     corrMasks_ = new MasksSet(true, 0);
-    corrMasks_->setup(*lrs_);
+    corrMasks_->setup(lrs_);
 }
 
 template <>
@@ -328,16 +328,16 @@ int MGmol<T>::initial()
         {
             float cut_init = ct.initRadius();
             assert(cut_init > 0.);
-            currentMasks_->initialize(*lrs_, 0, cut_init);
+            currentMasks_->initialize(lrs_, 0, cut_init);
         }
 
         // Initialize states
-        current_orbitals_->initWF(*lrs_);
+        current_orbitals_->initWF(lrs_);
 
         // initialize masks again
         if (ct.init_loc == 1 && currentMasks_ != nullptr)
         {
-            currentMasks_->initialize(*lrs_, 0);
+            currentMasks_->initialize(lrs_, 0);
         }
     }
 
@@ -1050,7 +1050,7 @@ void MGmol<T>::cleanup()
             filename, myPEenv, gdim, ct.out_restart_file_type);
 
         int ierr = write_hdf5(
-            h5restartfile, rho_->rho_, *ions_, *current_orbitals_, *lrs_);
+            h5restartfile, rho_->rho_, *ions_, *current_orbitals_, lrs_);
 
         if (ierr < 0)
             os_ << "WARNING: writing restart data failed!!!" << std::endl;

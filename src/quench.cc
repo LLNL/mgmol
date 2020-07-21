@@ -393,7 +393,7 @@ void MGmol<T>::disentangleOrbitals(
 template <>
 void MGmol<LocGridOrbitals>::applyAOMMprojection(LocGridOrbitals& orbitals)
 {
-    aomm_ = new AOMMprojector(orbitals, *lrs_);
+    aomm_ = new AOMMprojector(orbitals, lrs_);
     aomm_->projectOut(orbitals);
 }
 

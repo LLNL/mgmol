@@ -17,7 +17,7 @@
 
 template <class T>
 FIRE<T>::FIRE(T** orbitals, Ions& ions, Rho<T>& rho, ConstraintSet& constraints,
-    LocalizationRegions& lrs, MasksSet& masks, Electrostatic& electrostat,
+    LocalizationRegions* lrs, MasksSet& masks, Electrostatic& electrostat,
     const double dt, MGmol<T>& strategy)
     : IonicAlgorithm<T>(orbitals, ions, rho, constraints, lrs, masks, strategy),
       orbitals_(orbitals),

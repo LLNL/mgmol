@@ -41,7 +41,7 @@ public:
     {
     }
 
-    MasksSet(const LocalizationRegions& lrs, const bool type_corr_mask,
+    MasksSet(const LocalizationRegions* lrs, const bool type_corr_mask,
         const short levels = 0, const double override_radius = 0.)
         : type_corr_mask_(type_corr_mask), mg_levels_(levels)
     {
@@ -53,9 +53,9 @@ public:
     ~MasksSet() { clear(); }
 
     void clear();
-    void setup(const LocalizationRegions&, const double override_radius = 0.);
-    void update(const LocalizationRegions&);
-    int initialize(const LocalizationRegions&, const unsigned short,
+    void setup(const LocalizationRegions*, const double override_radius = 0.);
+    void update(const LocalizationRegions*);
+    int initialize(const LocalizationRegions*, const unsigned short,
         const double override_radius = 0.);
     GridMask* get_pmask(const int i)
     {

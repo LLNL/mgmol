@@ -35,11 +35,11 @@ private:
 
     FunctionsPacking& pack_;
 
-    void setup(LocalizationRegions& lrs, const bool global);
+    void setup(LocalizationRegions* lrs, const bool global);
 
 public:
     ColoredRegions(
-        FunctionsPacking& pack, LocalizationRegions& lrs, const bool global);
+        FunctionsPacking& pack, LocalizationRegions* lrs, const bool global);
 
     void getPossibleColors(const Vector3D& center, std::set<int>& colors)
     {

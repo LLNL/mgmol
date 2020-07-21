@@ -34,7 +34,7 @@ class DensityMatrixSparse
     double orbital_occupation_;
 
 public:
-    DensityMatrixSparse(LocalizationRegions& lrs, const int ndim,
+    DensityMatrixSparse(LocalizationRegions* lrs, const int ndim,
         const std::vector<int>& locvars);
     DensityMatrixSparse(const DensityMatrixSparse&);
 

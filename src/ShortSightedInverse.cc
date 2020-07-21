@@ -55,11 +55,11 @@ Timer ShortSightedInverse::linear_solver_matrix_init_tm_(
     "ShortSightedInverse::linear_solver_matrix_init");
 
 // const double mat_tol = 1.0e-14;
-ShortSightedInverse::ShortSightedInverse(LocalizationRegions& lrs,
+ShortSightedInverse::ShortSightedInverse(LocalizationRegions* lrs,
     const std::vector<int>& locvars, ClusterOrbitals* local_cluster)
     : locvars_(locvars)
 {
-    loc_radius_ = lrs.max_radii();
+    loc_radius_ = lrs->max_radii();
     max_size_   = MAX_MAT_SIZE;
 
     /* preconditioner and solver parameters */
@@ -86,7 +86,7 @@ ShortSightedInverse::ShortSightedInverse(LocalizationRegions& lrs,
     if (local_cluster != nullptr)
         locfcns_ = local_cluster->getClusterIndices();
     else
-        lrs.getLocalSubdomainIndices(locfcns_);
+        lrs->getLocalSubdomainIndices(locfcns_);
 
     /* Setup/ Initialize some local objects */
     /* setup Gram matrix */

@@ -216,7 +216,7 @@ void ExtendedGridOrbitals::init2zero()
 }
 
 void ExtendedGridOrbitals::initGauss(
-    const double rc, const LocalizationRegions& lrs)
+    const double rc, const LocalizationRegions* lrs)
 {
     assert(numst_ >= 0);
     assert(subdivx_ > 0);
@@ -254,7 +254,7 @@ void ExtendedGridOrbitals::initGauss(
 
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
-            const Vector3D& center(lrs.getCenter(icolor));
+            const Vector3D& center(lrs->getCenter(icolor));
             Vector3D xc;
 
             xc[0] = start0 + iloc * dim0 * hgrid[0];
@@ -1598,7 +1598,7 @@ void ExtendedGridOrbitals::printTimers(std::ostream& os)
     axpy_tm_.print(os);
 }
 
-void ExtendedGridOrbitals::initWF(const LocalizationRegions& lrs)
+void ExtendedGridOrbitals::initWF(const LocalizationRegions* lrs)
 {
     Control& ct = *(Control::instance());
 

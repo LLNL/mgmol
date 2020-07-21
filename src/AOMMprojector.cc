@@ -14,7 +14,7 @@
 #include "ProjectedMatricesSparse.h"
 #include "SubspaceProjector.h"
 
-AOMMprojector::AOMMprojector(LocGridOrbitals& phi, LocalizationRegions& lrs)
+AOMMprojector::AOMMprojector(LocGridOrbitals& phi, LocalizationRegions* lrs)
 {
     Control& ct     = *(Control::instance());
     Mesh* mymesh    = Mesh::instance();
@@ -39,7 +39,7 @@ AOMMprojector::AOMMprojector(LocGridOrbitals& phi, LocalizationRegions& lrs)
     kernelMasks_->setup(lrs, radius);
 
     if (ct.short_sighted)
-        kernel_proj_matrices_ = new ProjectedMatricesSparse(ct.numst, &lrs);
+        kernel_proj_matrices_ = new ProjectedMatricesSparse(ct.numst, lrs);
     else
         kernel_proj_matrices_ = new ProjectedMatrices(ct.numst, with_spin);
 
@@ -59,7 +59,7 @@ AOMMprojector::AOMMprojector(LocGridOrbitals& phi, LocalizationRegions& lrs)
 
     matrix_mask_ = new SquareLocalMatrices<MATDTYPE>(
         subdivx, kernel_phi_->chromatic_number());
-    lrs.getMatrixDistances(*matrix_mask_, phi.getOverlappingGids());
+    lrs->getMatrixDistances(*matrix_mask_, phi.getOverlappingGids());
 
 #if 0
     if( onpe0 )

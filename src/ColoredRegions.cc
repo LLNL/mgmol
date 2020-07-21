@@ -15,19 +15,19 @@
 using namespace std;
 
 ColoredRegions::ColoredRegions(
-    FunctionsPacking& pack, LocalizationRegions& lrs, const bool global)
+    FunctionsPacking& pack, LocalizationRegions* lrs, const bool global)
     : pack_(pack)
 {
     setup(lrs, global);
 }
 
-void ColoredRegions::setup(LocalizationRegions& lrs, const bool global)
+void ColoredRegions::setup(LocalizationRegions* lrs, const bool global)
 {
     std::vector<int> gids;
     if (global)
-        lrs.getGidsGlobal(gids);
+        lrs->getGidsGlobal(gids);
     else
-        gids = lrs.getOverlapGids();
+        gids = lrs->getOverlapGids();
 
     loc_regions_.clear();
     Control& ct = *(Control::instance());
@@ -36,7 +36,7 @@ void ColoredRegions::setup(LocalizationRegions& lrs, const bool global)
         printWithTimeStamp(" ColoredRegions::setLocRegions", cout);
 
     vector<int>::const_iterator ic = gids.begin();
-    if (lrs.globalNumLRs() > 1)
+    if (lrs->globalNumLRs() > 1)
     {
         // loop over gids
         while (ic != gids.end())
@@ -46,12 +46,12 @@ void ColoredRegions::setup(LocalizationRegions& lrs, const bool global)
             const short color = pack_.getColor(gid);
 
             assert(gid >= 0);
-            assert(gid < (int)lrs.globalNumLRs());
-            if (lrs.radius(gid) > 0.1) // radius=-1 if gid not know locally
+            assert(gid < (int)lrs->globalNumLRs());
+            if (lrs->radius(gid) > 0.1) // radius=-1 if gid not know locally
             {
                 Sphere lr;
-                lr.center = lrs.getCenter(gid);
-                lr.radii  = lrs.radius(gid);
+                lr.center = lrs->getCenter(gid);
+                lr.radii  = lrs->radius(gid);
                 assert(lr.radii > 0.);
                 lr.gid = gid;
                 loc_regions_.insert(pair<short, Sphere>(color, lr));
@@ -61,15 +61,15 @@ void ColoredRegions::setup(LocalizationRegions& lrs, const bool global)
     }
     else
     {
-        assert(lrs.globalNumLRs() == 0 || lrs.globalNumLRs() == 1);
+        assert(lrs->globalNumLRs() == 0 || lrs->globalNumLRs() == 1);
 
         short color = 0;
         while (ic != gids.end())
         {
 
             Sphere lr;
-            lr.center = lrs.getCenter(0);
-            lr.radii  = lrs.radius(0);
+            lr.center = lrs->getCenter(0);
+            lr.radii  = lrs->radius(0);
             lr.gid    = *ic;
             loc_regions_.insert(pair<short, Sphere>(color, lr));
 

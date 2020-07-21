@@ -253,7 +253,7 @@ public:
         std::vector<std::vector<RHODTYPE>>& rho, Ions& ions, T& orbitals);
     int write_hdf5(HDFrestart& h5f_file,
         std::vector<std::vector<RHODTYPE>>& rho, Ions& ions, T& orbitals,
-        LocalizationRegions& lrs);
+        LocalizationRegions* lrs);
     double get_evnl(const Ions& ions, T& orbitals);
     void sebprintPositions();
     void sebprintForces();

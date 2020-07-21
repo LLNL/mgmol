@@ -38,7 +38,7 @@ private:
     KBPsiMatrixInterface* g_kbpsi_;
     LBFGS_IonicStepper* stepper_;
     Energy& energy_;
-    LocalizationRegions& lrs_;
+    LocalizationRegions* lrs_;
     MasksSet& masks_;
     Electrostatic& electrostat_;
     LocalizationRegions ref_lrs_;
@@ -67,7 +67,7 @@ private:
 public:
     GlobalLBFGS(LocGridOrbitals** orbitals, Ions& ions, Rho& rho,
         ConstraintSet& constraints, KBPsiMatrixInterface* g_kbpsi,
-        Energy& energy, LocalizationRegions& lrs, MasksSet& masks,
+        Energy& energy, LocalizationRegions* lrs, MasksSet& masks,
         Electrostatic& electrostat, const double dt, MGmol&,
         const int local_image, const int nimages);
 

@@ -209,8 +209,8 @@ int MGmol<T>::update_masks()
 
     if (onpe0 && ct.verbose > 1) os_ << "update_masks()" << std::endl;
 
-    currentMasks_->update(*lrs_);
-    corrMasks_->update(*lrs_);
+    currentMasks_->update(lrs_);
+    corrMasks_->update(lrs_);
 
     md_updateMasks_tm.stop();
 
@@ -259,7 +259,7 @@ int MGmol<T>::dumprestartFile(T** orbitals, Ions& ions, Rho<T>& rho,
     T previous_orbitals("ForDumping", **orbitals, false);
     if (!orbitals_extrapol_->getRestartData(previous_orbitals))
         previous_orbitals.assign(**orbitals);
-    int ierr = write_hdf5(h5file, rho.rho_, ions, previous_orbitals, *lrs_);
+    int ierr = write_hdf5(h5file, rho.rho_, ions, previous_orbitals, lrs_);
     mmpi.allreduce(&ierr, 1, MPI_MIN);
 
     if (ierr < 0)

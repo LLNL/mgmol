@@ -293,7 +293,7 @@ void LocGridOrbitals::setup(LocalizationRegions* lrs)
 
     chromatic_number_ = packStates(lrs);
 
-    computeGlobalIndexes(*lrs);
+    computeGlobalIndexes(lrs);
 
     bool skinny_stencil = !ct.Mehrstellen();
 
@@ -546,7 +546,7 @@ void LocGridOrbitals::init2zero()
     }
 }
 
-void LocGridOrbitals::initGauss(const double rc, const LocalizationRegions& lrs)
+void LocGridOrbitals::initGauss(const double rc, const LocalizationRegions* lrs)
 {
     assert(chromatic_number_ >= 0);
     assert(subdivx_ > 0);
@@ -587,7 +587,7 @@ void LocGridOrbitals::initGauss(const double rc, const LocalizationRegions& lrs)
             const int gid = overlapping_gids_[iloc][icolor];
             if (gid > -1)
             {
-                const Vector3D& center(lrs.getCenter(gid));
+                const Vector3D& center(lrs->getCenter(gid));
                 Vector3D xc;
 
                 xc[0] = start0 + iloc * dim0 * hgrid[0];
@@ -972,7 +972,7 @@ int LocGridOrbitals::write_func_hdf5(HDFrestart& h5f_file, const string& name)
     bool iwrite   = h5f_file.active();
 
     const bool global = ct.globalColoring();
-    ColoredRegions colored_regions(*pack_, *lrs_, global);
+    ColoredRegions colored_regions(*pack_, lrs_, global);
 
     // Create the dataspace for the dataset.
 
@@ -1139,7 +1139,7 @@ int LocGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, const string& name)
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
     const bool global = ct.globalColoring();
-    ColoredRegions colored_regions(*pack_, *lrs_, global);
+    ColoredRegions colored_regions(*pack_, lrs_, global);
 
     hsize_t block[3] = { grid_.dim(0), grid_.dim(1), grid_.dim(2) };
     if (h5f_file.gatherDataX())
@@ -2450,11 +2450,11 @@ void LocGridOrbitals::addDotWithNcol2Matrix(
     addDot_tm_.stop();
 }
 
-void LocGridOrbitals::computeGlobalIndexes(LocalizationRegions& lrs)
+void LocGridOrbitals::computeGlobalIndexes(LocalizationRegions* lrs)
 {
-    all_overlapping_gids_ = lrs.getOverlapGids();
+    all_overlapping_gids_ = lrs->getOverlapGids();
 
-    lrs.getLocalSubdomainIndices(local_gids_);
+    lrs->getLocalSubdomainIndices(local_gids_);
 
     overlapping_gids_.clear();
     overlapping_gids_.resize(subdivx_);
@@ -2470,7 +2470,7 @@ void LocGridOrbitals::computeGlobalIndexes(LocalizationRegions& lrs)
         assert(color < chromatic_number_);
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
-            if (lrs.overlapSubdiv(gid, iloc))
+            if (lrs->overlapSubdiv(gid, iloc))
             {
                 overlapping_gids_[iloc][color] = gid;
             }
@@ -2493,7 +2493,7 @@ void LocGridOrbitals::printTimers(ostream& os)
     axpy_tm_.print(os);
 }
 
-void LocGridOrbitals::initWF(const LocalizationRegions& lrs)
+void LocGridOrbitals::initWF(const LocalizationRegions* lrs)
 {
     Control& ct = *(Control::instance());
 

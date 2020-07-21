@@ -34,7 +34,7 @@ private:
     Ions& ions_;
     Rho<T>& rho_;
     LBFGS_IonicStepper* stepper_;
-    LocalizationRegions& lrs_;
+    LocalizationRegions* lrs_;
     ClusterOrbitals* local_cluster_;
     MasksSet& masks_;
     MasksSet& corrmasks_;
@@ -54,7 +54,7 @@ private:
 
 public:
     LBFGS(T** orbitals, Ions& ions, Rho<T>& rho, ConstraintSet& constraints,
-        LocalizationRegions& lrs, ClusterOrbitals* local_cluster,
+        LocalizationRegions* lrs, ClusterOrbitals* local_cluster,
         MasksSet& masks, MasksSet& corrmasks, Electrostatic& electrostat,
         const double dt, MGmol<T>&);
 

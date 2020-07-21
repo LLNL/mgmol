@@ -84,7 +84,7 @@ int MGmol<T>::write_hdf5(const std::string& filename,
     // create restart file
     HDFrestart h5f_file(filename, myPEenv, gdim, ct.out_restart_file_type);
 
-    int status = write_hdf5(h5f_file, rho, ions, orbitals, *lrs_);
+    int status = write_hdf5(h5f_file, rho, ions, orbitals, lrs_);
     if (status < 0 && onpe0)
         (*MPIdata::serr) << "restart.cc: write_hdf5 failed!!!" << std::endl;
 
@@ -95,7 +95,7 @@ int MGmol<T>::write_hdf5(const std::string& filename,
 template <class T>
 int MGmol<T>::write_hdf5(HDFrestart& h5f_file,
     std::vector<std::vector<RHODTYPE>>& rho, Ions& ions, T& orbitals,
-    LocalizationRegions& lrs)
+    LocalizationRegions* lrs)
 {
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
@@ -168,7 +168,7 @@ int MGmol<T>::write_hdf5(HDFrestart& h5f_file,
         if (ct.isLocMode()
             && ct.WFExtrapolation() == WFExtrapolationType::Reversible)
         {
-            lrs.writeOldCenters(h5f_file);
+            lrs->writeOldCenters(h5f_file);
         }
     }
 
@@ -196,7 +196,7 @@ int MGmol<T>::read_restart_lrs(
     int n = 0;
     if (ct.restart_info >= 3)
     {
-        n = h5f_file.getLRs(*lrs_, ct.numst, dset_name);
+        n = h5f_file.getLRs(lrs_, ct.numst, dset_name);
     }
     mmpi.bcast(&n, 1);
 

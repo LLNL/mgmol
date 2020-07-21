@@ -19,7 +19,7 @@
 
 GlobalLBFGS::GlobalLBFGS(LocGridOrbitals** orbitals, Ions& ions, Rho& rho,
     ConstraintSet& constraints, KBPsiMatrixInterface* g_kbpsi, Energy& energy,
-    LocalizationRegions& lrs, MasksSet& masks, Electrostatic& electrostat,
+    LocalizationRegions* lrs, MasksSet& masks, Electrostatic& electrostat,
     const double dt, MGmol& strategy, const int local_image, const int nimages)
     : orbitals_(orbitals),
       ions_(ions),
