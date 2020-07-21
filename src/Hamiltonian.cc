@@ -135,7 +135,7 @@ void Hamiltonian<T>::applyLocal(const int ncolors, T& phi, T& hphi)
         {
             using memory_space_type   = typename T::memory_space_type;
             ORBDTYPE* ihphi           = hphi.getPsi(i);
-            unsigned int const size   = hphi.getLocNumpt();
+            unsigned int const size   = hphi.getNumpt();
             ORBDTYPE* ihphi_host_view = MemorySpace::Memory<ORBDTYPE,
                 memory_space_type>::allocate_host_view(size);
             MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
