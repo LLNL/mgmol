@@ -115,7 +115,6 @@ MGmol<T>::MGmol(MPI_Comm comm, std::ostream& os) : os_(os)
     mgmol::out = &os;
 
     geom_optimizer_ = nullptr;
-    lrs_            = nullptr;
     local_cluster_  = nullptr;
     proj_matrices_  = nullptr;
     dm_strategy_    = nullptr;
@@ -171,7 +170,7 @@ MGmol<T>::~MGmol()
 template <>
 void MGmol<LocGridOrbitals>::initialMasks()
 {
-    assert(lrs_ != nullptr);
+    assert(lrs_);
 
     Control& ct = *(Control::instance());
 
@@ -882,7 +881,7 @@ void MGmol<T>::printTimers()
     Power<LocalVector<double>, SquareLocalMatrices<double>>::printTimers(os_);
     PowerGen::printTimers(os_);
     SP2::printTimers(os_);
-    if (lrs_ != nullptr) lrs_->printTimers(os_);
+    if (lrs_) lrs_->printTimers(os_);
     local_cluster_->printTimers(os_);
     forces_->printTimers(os_);
     if (ct.OuterSolver() == OuterSolverType::ABPG)

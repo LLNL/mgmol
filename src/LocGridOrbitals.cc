@@ -81,7 +81,7 @@ LocGridOrbitals::LocGridOrbitals(std::string name, const pb::Grid& my_grid,
     // preconditions
     assert(subdivx > 0);
     assert(proj_matrices != nullptr);
-    assert(lrs != nullptr);
+    assert(lrs);
 
     for (short i = 0; i < 3; i++)
         assert(bc[i] == 0 || bc[i] == 1);
@@ -136,7 +136,7 @@ LocGridOrbitals::LocGridOrbitals(
 
     assert(A.chromatic_number_ >= 0);
     assert(A.proj_matrices_ != nullptr);
-    assert(A.lrs_ != nullptr);
+    assert(A.lrs_);
 
     copySharedData(A);
 
@@ -159,7 +159,7 @@ LocGridOrbitals::LocGridOrbitals(const std::string& name,
     assert(A.chromatic_number_ >= 0);
     assert(proj_matrices != nullptr);
     assert(masks != nullptr);
-    assert(lrs_ != nullptr);
+    assert(lrs_);
 
     copySharedData(A);
 
@@ -281,7 +281,7 @@ void LocGridOrbitals::setup(std::shared_ptr<LocalizationRegions> lrs)
     Control& ct = *(Control::instance());
 
     // preconditions
-    assert(lrs != nullptr);
+    assert(lrs);
     assert(proj_matrices_ != nullptr);
 
     if (ct.verbose > 0)
@@ -694,7 +694,7 @@ void LocGridOrbitals::initFourier()
 
 int LocGridOrbitals::packStates(std::shared_ptr<LocalizationRegions> lrs)
 {
-    assert(lrs != nullptr);
+    assert(lrs);
 
     Control& ct = *(Control::instance());
 

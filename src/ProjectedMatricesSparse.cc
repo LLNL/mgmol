@@ -44,7 +44,7 @@ Timer ProjectedMatricesSparse::eig_interval_tm_(
 ProjectedMatricesSparse::ProjectedMatricesSparse(const int ndim,
     std::shared_ptr<LocalizationRegions> lrs, ClusterOrbitals* local_cluster)
 {
-    assert(lrs != nullptr);
+    assert(lrs);
 
     dim_     = ndim;
     min_val_ = 0.25;
