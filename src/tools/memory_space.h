@@ -318,6 +318,7 @@ struct Memory<T, MemorySpace::Device>
         auto ptr_host = Memory<T, Host>::allocate(size);
         Memory<T, Host>::set(ptr_host, size, val);
         copy_to_dev(ptr_host, size, ptr);
+        Memory<T, Host>::free(ptr_host);
 #endif
     }
 };

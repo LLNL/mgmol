@@ -796,10 +796,24 @@ void LocGridOrbitals::multiplyByMatrix(
         {
             const MATDTYPE* const mat = matrix.getSubMatrix(iloc);
 
+#ifdef HAVE_MAGMA
+            int const mat_size = matrix.m() * matrix.n();
+            std::unique_ptr<MATDTYPE[], void (*)(MATDTYPE*)> mat_dev(
+                MemorySpace::Memory<MATDTYPE, memory_space_type>::allocate(
+                    mat_size),
+                MemorySpace::Memory<MATDTYPE, memory_space_type>::free);
+            MemorySpace::copy_to_dev<MATDTYPE>(mat, mat_size, mat_dev.get());
+            const MATDTYPE* const mat_alias = mat_dev.get();
+
+#else
+            const MATDTYPE* const mat_alias = mat;
+#endif
+
             // Compute product for subdomain iloc
             LinearAlgebraUtils<memory_space_type>::MPgemmNN(loc_numpt_,
                 chromatic_number_, chromatic_number_, 1., getPsi(0, iloc), lda_,
-                mat, chromatic_number_, 0., product + iloc * loc_numpt_, ldp);
+                mat_alias, chromatic_number_, 0., product + iloc * loc_numpt_,
+                ldp);
         }
 
     prod_matrix_tm_.stop();
@@ -814,27 +828,62 @@ void LocGridOrbitals::multiplyByMatrix(
 
     if (chromatic_number_ > 0)
     {
-        ORBDTYPE* product = new ORBDTYPE[loc_numpt_ * chromatic_number_];
-        memset(product, 0, loc_numpt_ * chromatic_number_ * sizeof(ORBDTYPE));
+        unsigned int const product_size = loc_numpt_ * chromatic_number_;
+        std::unique_ptr<ORBDTYPE[], void (*)(ORBDTYPE*)> product(
+            MemorySpace::Memory<ORBDTYPE, memory_space_type>::allocate(
+                product_size),
+            MemorySpace::Memory<ORBDTYPE, memory_space_type>::free);
+        // We want to to use:
+        // MemorySpace::Memory<ORBDTYPE, memory_space_type>::set(
+        //     product.get(), product_size, 0.);
+        // but we get an error at linking time from nvptx-none-gcc
+#ifdef HAVE_MAGMA
+#ifdef HAVE_OPENMP_OFFLOAD
+        ORBDTYPE* tmp = product.get();
+#pragma omp target teams distribute parallel for is_device_ptr(tmp)
+        for (unsigned int i = 0; i < product_size; ++i)
+            tmp[i] = 0;
+#else
+        ORBTYPE* product_host
+            = MemorySpace::Memory<ORBDTYPE, MemorySpace::Host>::allocate(
+                product_size);
+        std::memset(product_host, 0, product_size * sizeof(ORBDTYPE));
+        MemorySpace::copy_to_dev(product_host, product_size, product.get());
+        MemorySpace::Memory<ORBDTYPE, MemorySpaceHost>::free(product_host);
+#endif
+#else
+        std::memset(product.get(), 0, product_size * sizeof(ORBDTYPE));
+#endif
+
         const size_t slnumpt = loc_numpt_ * sizeof(ORBDTYPE);
 
         // loop over subdomains
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
-            const MATDTYPE* const mat = matrix.getSubMatrix(iloc);
             ORBDTYPE* phi             = getPsi(0, iloc);
+            const MATDTYPE* const mat = matrix.getSubMatrix(iloc);
+#ifdef HAVE_MAGMA
+            int const mat_size = matrix.m() * matrix.n();
+            std::unique_ptr<MATDTYPE[], void (*)(MATDTYPE*)> mat_dev(
+                MemorySpace::Memory<MATDTYPE, memory_space_type>::allocate(
+                    mat_size),
+                MemorySpace::Memory<MATDTYPE, memory_space_type>::free);
+            MemorySpace::copy_to_dev<MATDTYPE>(mat, mat_size, mat_dev.get());
+            const MATDTYPE* const mat_alias = mat_dev.get();
+
+#else
+            const MATDTYPE* const mat_alias = mat;
+#endif
 
             // Compute product for subdomain iloc
             LinearAlgebraUtils<memory_space_type>::MPgemmNN(loc_numpt_,
-                chromatic_number_, chromatic_number_, 1., phi, lda_, mat,
-                chromatic_number_, 0., product, loc_numpt_);
+                chromatic_number_, chromatic_number_, 1., phi, lda_, mat_alias,
+                chromatic_number_, 0., product.get(), loc_numpt_);
 
             for (int color = 0; color < chromatic_number_; color++)
-                memcpy(
-                    phi + color * lda_, product + color * loc_numpt_, slnumpt);
+                MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy(
+                    product.get() + color * loc_numpt_, slnumpt, phi + color);
         }
-
-        delete[] product;
     }
 
     prod_matrix_tm_.stop();
@@ -1506,6 +1555,19 @@ void LocGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
     const int lda = transpose ? ld : lda_;
     const int ldb = transpose ? lda_ : ld;
 
+    unsigned int const a_size = numpt_ * ss.m();
+    ORBDTYPE* a_host_view
+        = MemorySpace::Memory<ORBDTYPE, memory_space_type>::allocate_host_view(
+            a_size);
+    MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+        const_cast<ORBDTYPE*>(a), a_size, a_host_view);
+    unsigned int const b_size = numpt_ * ss.n();
+    ORBDTYPE* b_host_view
+        = MemorySpace::Memory<ORBDTYPE, memory_space_type>::allocate_host_view(
+            b_size);
+    MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+        const_cast<ORBDTYPE*>(b), b_size, b_host_view);
+
 #ifdef USE_MP
     // use temporary float data for matrix ss
     LocalMatrices<ORBDTYPE> ssf(ss.subdiv(), ss.m(), ss.n());
@@ -1514,9 +1576,13 @@ void LocGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
 #endif
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
-        ssf.gemm(iloc, loc_numpt_, a + iloc * loc_numpt_, lda,
-            b + iloc * loc_numpt_, ldb);
+        ssf.gemm(iloc, loc_numpt_, a_host_view + iloc * loc_numpt_, lda,
+            b_host_view + iloc * loc_numpt_, ldb);
     }
+    MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+        a_host_view);
+    MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+        b_host_view);
 #ifdef USE_MP
     ss.copy(ssf);
 #endif
