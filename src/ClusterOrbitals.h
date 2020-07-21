@@ -28,7 +28,8 @@ private:
     static Timer computeClusters_tm_;
     static Timer setupClusters_tm_;
 
-    LocalizationRegions* lrs_; // pointer to localizationRegions object
+    std::shared_ptr<LocalizationRegions>
+        lrs_; // pointer to localizationRegions object
 
     bool isswitched_; // check to see if local cluster size crosses average size
     float alpha_; // tuning paramemter for computing bias
@@ -89,7 +90,7 @@ private:
         const std::string& name, const pb::PEenv& myPEenv, std::ofstream& os);
 
 public:
-    ClusterOrbitals(LocalizationRegions* lrs); // constructor
+    ClusterOrbitals(std::shared_ptr<LocalizationRegions> lrs); // constructor
     void setup(); // setup some data structures and subdomain data communication
     int computeClusters(const short
             maxiters); // compute cluster of variables assigned to procs.

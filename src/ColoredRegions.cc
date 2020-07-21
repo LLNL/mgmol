@@ -14,14 +14,15 @@
 
 using namespace std;
 
-ColoredRegions::ColoredRegions(
-    FunctionsPacking& pack, LocalizationRegions* lrs, const bool global)
+ColoredRegions::ColoredRegions(FunctionsPacking& pack,
+    std::shared_ptr<LocalizationRegions> lrs, const bool global)
     : pack_(pack)
 {
     setup(lrs, global);
 }
 
-void ColoredRegions::setup(LocalizationRegions* lrs, const bool global)
+void ColoredRegions::setup(
+    std::shared_ptr<LocalizationRegions> lrs, const bool global)
 {
     std::vector<int> gids;
     if (global)

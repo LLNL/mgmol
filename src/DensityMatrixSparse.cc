@@ -17,7 +17,8 @@ using namespace std;
 
 Timer DensityMatrixSparse::gather_DM_tm_("DensityMatrixSparse::gather_DM");
 DensityMatrixSparse::DensityMatrixSparse(
-    LocalizationRegions* lrs, const int ndim, const std::vector<int>& locvars)
+    std::shared_ptr<LocalizationRegions> lrs, const int ndim,
+    const std::vector<int>& locvars)
     : dim_(ndim), locvars_(locvars)
 {
     assert(ndim >= 0);

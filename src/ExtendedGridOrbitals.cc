@@ -60,8 +60,8 @@ Timer ExtendedGridOrbitals::axpy_tm_("ExtendedGridOrbitals::axpy");
 ExtendedGridOrbitals::ExtendedGridOrbitals(std::string name,
     const pb::Grid& my_grid, const short subdivx, const int numst,
     const short bc[3], ProjectedMatricesInterface* proj_matrices,
-    LocalizationRegions* lrs, MasksSet* masks, MasksSet* corrmasks,
-    ClusterOrbitals* local_cluster, const bool setup_flag)
+    std::shared_ptr<LocalizationRegions> lrs, MasksSet* masks,
+    MasksSet* corrmasks, ClusterOrbitals* local_cluster, const bool setup_flag)
     : name_(std::move(name)),
       proj_matrices_(proj_matrices),
       block_vector_(my_grid, subdivx, bc),
@@ -171,8 +171,8 @@ void ExtendedGridOrbitals::setup()
             "ExtendedGridOrbitals::setup() done...", (*MPIdata::sout));
 }
 
-void ExtendedGridOrbitals::reset(
-    MasksSet* masks, MasksSet* corrmasks, LocalizationRegions* lrs)
+void ExtendedGridOrbitals::reset(MasksSet* masks, MasksSet* corrmasks,
+    std::shared_ptr<LocalizationRegions> lrs)
 {
     (void)masks;
     (void)corrmasks;
@@ -216,7 +216,7 @@ void ExtendedGridOrbitals::init2zero()
 }
 
 void ExtendedGridOrbitals::initGauss(
-    const double rc, const LocalizationRegions* lrs)
+    const double rc, const std::shared_ptr<LocalizationRegions> lrs)
 {
     assert(numst_ >= 0);
     assert(subdivx_ > 0);
@@ -1598,7 +1598,8 @@ void ExtendedGridOrbitals::printTimers(std::ostream& os)
     axpy_tm_.print(os);
 }
 
-void ExtendedGridOrbitals::initWF(const LocalizationRegions* lrs)
+void ExtendedGridOrbitals::initWF(
+    const std::shared_ptr<LocalizationRegions> lrs)
 {
     Control& ct = *(Control::instance());
 

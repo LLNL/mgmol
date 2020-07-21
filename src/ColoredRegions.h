@@ -35,11 +35,11 @@ private:
 
     FunctionsPacking& pack_;
 
-    void setup(LocalizationRegions* lrs, const bool global);
+    void setup(std::shared_ptr<LocalizationRegions> lrs, const bool global);
 
 public:
-    ColoredRegions(
-        FunctionsPacking& pack, LocalizationRegions* lrs, const bool global);
+    ColoredRegions(FunctionsPacking& pack,
+        std::shared_ptr<LocalizationRegions> lrs, const bool global);
 
     void getPossibleColors(const Vector3D& center, std::set<int>& colors)
     {

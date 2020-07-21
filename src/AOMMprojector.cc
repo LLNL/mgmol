@@ -14,7 +14,8 @@
 #include "ProjectedMatricesSparse.h"
 #include "SubspaceProjector.h"
 
-AOMMprojector::AOMMprojector(LocGridOrbitals& phi, LocalizationRegions* lrs)
+AOMMprojector::AOMMprojector(
+    LocGridOrbitals& phi, std::shared_ptr<LocalizationRegions> lrs)
 {
     Control& ct     = *(Control::instance());
     Mesh* mymesh    = Mesh::instance();

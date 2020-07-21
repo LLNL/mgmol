@@ -41,8 +41,8 @@ Timer ProjectedMatricesSparse::consolidate_H_tm_(
 Timer ProjectedMatricesSparse::eig_interval_tm_(
     "ProjectedMatrices::computeEigenInterval");
 
-ProjectedMatricesSparse::ProjectedMatricesSparse(
-    const int ndim, LocalizationRegions* lrs, ClusterOrbitals* local_cluster)
+ProjectedMatricesSparse::ProjectedMatricesSparse(const int ndim,
+    std::shared_ptr<LocalizationRegions> lrs, ClusterOrbitals* local_cluster)
 {
     assert(lrs != nullptr);
 

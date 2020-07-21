@@ -996,8 +996,8 @@ int HDFrestart::getLRCenters(std::multimap<std::string, Vector3D>& centers,
 }
 
 // get distinct function centers and their multiplicities in file
-int HDFrestart::getLRs(LocalizationRegions* lrs, const int max_nb_lrs,
-    const std::string& name, const bool add)
+int HDFrestart::getLRs(std::shared_ptr<LocalizationRegions> lrs,
+    const int max_nb_lrs, const std::string& name, const bool add)
 {
     Control& ct = *(Control::instance());
     if (ct.verbose > 0)

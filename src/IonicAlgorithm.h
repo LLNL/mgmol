@@ -29,7 +29,7 @@ private:
     Ions& ions_;
     Rho<T>& rho_;
     ConstraintSet& constraints_;
-    LocalizationRegions* lrs_;
+    std::shared_ptr<LocalizationRegions> lrs_;
     MasksSet& masks_;
 
     MGmol<T>& mgmol_strategy_;
@@ -48,8 +48,8 @@ protected:
 
 public:
     IonicAlgorithm(T** orbitals, Ions& ions, Rho<T>& rho,
-        ConstraintSet& constraints, LocalizationRegions* lrs, MasksSet& masks,
-        MGmol<T>&);
+        ConstraintSet& constraints, std::shared_ptr<LocalizationRegions> lrs,
+        MasksSet& masks, MGmol<T>&);
 
     virtual ~IonicAlgorithm(){};
 

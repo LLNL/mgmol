@@ -95,7 +95,7 @@ int MGmol<T>::write_hdf5(const std::string& filename,
 template <class T>
 int MGmol<T>::write_hdf5(HDFrestart& h5f_file,
     std::vector<std::vector<RHODTYPE>>& rho, Ions& ions, T& orbitals,
-    LocalizationRegions* lrs)
+    std::shared_ptr<LocalizationRegions> lrs)
 {
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();

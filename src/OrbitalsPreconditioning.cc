@@ -40,7 +40,7 @@ OrbitalsPreconditioning<T>::~OrbitalsPreconditioning()
 
 template <class T>
 std::map<int, GridMask*> OrbitalsPreconditioning<T>::getGid2Masks(
-    MasksSet* currentMasks, LocalizationRegions* lrs)
+    MasksSet* currentMasks, std::shared_ptr<LocalizationRegions> lrs)
 {
     std::map<int, GridMask*> gid_to_mask;
     const std::vector<int>& overlap_gids(lrs->getOverlapGids());
@@ -58,7 +58,8 @@ std::map<int, GridMask*> OrbitalsPreconditioning<T>::getGid2Masks(
 
 template <class T>
 void OrbitalsPreconditioning<T>::setup(T& orbitals, const short mg_levels,
-    const short lap_type, MasksSet* currentMasks, LocalizationRegions* lrs)
+    const short lap_type, MasksSet* currentMasks,
+    std::shared_ptr<LocalizationRegions> lrs)
 {
     assert(!is_set_);
 

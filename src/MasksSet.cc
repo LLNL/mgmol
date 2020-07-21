@@ -134,8 +134,8 @@ void MasksSet::clear()
     pgrid_masks_.clear();
 }
 
-void MasksSet::setup(
-    const LocalizationRegions* lrs, const double override_radius)
+void MasksSet::setup(const std::shared_ptr<LocalizationRegions> lrs,
+    const double override_radius)
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 0)
@@ -205,7 +205,7 @@ MasksSet& MasksSet::operator=(const MasksSet& masks)
 }
 
 //
-void MasksSet::update(const LocalizationRegions* lrs)
+void MasksSet::update(const std::shared_ptr<LocalizationRegions> lrs)
 {
     assert(lrs->volume() > 0.);
 
@@ -218,7 +218,7 @@ void MasksSet::update(const LocalizationRegions* lrs)
 }
 
 // Initialize pgrid_masks_ centered on vector of positions
-int MasksSet::initialize(const LocalizationRegions* lrs,
+int MasksSet::initialize(const std::shared_ptr<LocalizationRegions> lrs,
     const unsigned short ln, const double override_radius)
 {
     Control& ct = *(Control::instance());

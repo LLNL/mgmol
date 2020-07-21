@@ -83,7 +83,7 @@ class ProjectedMatricesSparse : public ProjectedMatricesInterface
     /* local data size */
     int lsize_;
 
-    LocalizationRegions* lrs_;
+    std::shared_ptr<LocalizationRegions> lrs_;
     ClusterOrbitals* local_cluster_;
 
     // indexes corresponding to valid function in each subdomain
@@ -101,7 +101,8 @@ class ProjectedMatricesSparse : public ProjectedMatricesInterface
     double eigenvalue0_;
 
 public:
-    ProjectedMatricesSparse(const int ndim, LocalizationRegions* lrs,
+    ProjectedMatricesSparse(const int ndim,
+        std::shared_ptr<LocalizationRegions> lrs,
         ClusterOrbitals* local_cluster = nullptr);
     ~ProjectedMatricesSparse() override;
 

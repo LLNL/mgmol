@@ -156,7 +156,6 @@ MGmol<T>::~MGmol()
     delete g_kbpsi_;
 
     delete proj_matrices_;
-    delete lrs_;
     if (local_cluster_ != nullptr) delete local_cluster_;
 
     if (h5f_file_ != nullptr) delete h5f_file_;

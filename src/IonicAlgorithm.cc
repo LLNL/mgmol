@@ -17,8 +17,8 @@ using namespace std;
 
 template <class T>
 IonicAlgorithm<T>::IonicAlgorithm(T** orbitals, Ions& ions, Rho<T>& rho,
-    ConstraintSet& constraints, LocalizationRegions* lrs, MasksSet& masks,
-    MGmol<T>& strategy)
+    ConstraintSet& constraints, std::shared_ptr<LocalizationRegions> lrs,
+    MasksSet& masks, MGmol<T>& strategy)
     : orbitals_(orbitals),
       ions_(ions),
       rho_(rho),

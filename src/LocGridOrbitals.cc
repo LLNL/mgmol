@@ -68,9 +68,9 @@ Timer LocGridOrbitals::axpy_tm_("LocGridOrbitals::axpy");
 
 LocGridOrbitals::LocGridOrbitals(std::string name, const pb::Grid& my_grid,
     const short subdivx, const int numst, const short bc[3],
-    ProjectedMatricesInterface* proj_matrices, LocalizationRegions* lrs,
-    MasksSet* masks, MasksSet* corrmasks, ClusterOrbitals* local_cluster,
-    const bool setup_flag)
+    ProjectedMatricesInterface* proj_matrices,
+    std::shared_ptr<LocalizationRegions> lrs, MasksSet* masks,
+    MasksSet* corrmasks, ClusterOrbitals* local_cluster, const bool setup_flag)
     : name_(std::move(name)),
       proj_matrices_(proj_matrices),
       local_cluster_(local_cluster),
@@ -261,8 +261,8 @@ const ORBDTYPE* LocGridOrbitals::getGidStorage(
         return nullptr;
 }
 
-void LocGridOrbitals::setup(
-    MasksSet* masks, MasksSet* corrmasks, LocalizationRegions* lrs)
+void LocGridOrbitals::setup(MasksSet* masks, MasksSet* corrmasks,
+    std::shared_ptr<LocalizationRegions> lrs)
 {
     assert(masks != nullptr);
     Control& ct = *(Control::instance());
@@ -276,7 +276,7 @@ void LocGridOrbitals::setup(
     setup(lrs);
 }
 
-void LocGridOrbitals::setup(LocalizationRegions* lrs)
+void LocGridOrbitals::setup(std::shared_ptr<LocalizationRegions> lrs)
 {
     Control& ct = *(Control::instance());
 
@@ -319,8 +319,8 @@ void LocGridOrbitals::setup(LocalizationRegions* lrs)
             "LocGridOrbitals::setup() done...", (*MPIdata::sout));
 }
 
-void LocGridOrbitals::reset(
-    MasksSet* masks, MasksSet* corrmasks, LocalizationRegions* lrs)
+void LocGridOrbitals::reset(MasksSet* masks, MasksSet* corrmasks,
+    std::shared_ptr<LocalizationRegions> lrs)
 {
     // free some old data
     block_vector_.clear();
@@ -546,7 +546,8 @@ void LocGridOrbitals::init2zero()
     }
 }
 
-void LocGridOrbitals::initGauss(const double rc, const LocalizationRegions* lrs)
+void LocGridOrbitals::initGauss(
+    const double rc, const std::shared_ptr<LocalizationRegions> lrs)
 {
     assert(chromatic_number_ >= 0);
     assert(subdivx_ > 0);
@@ -691,7 +692,7 @@ void LocGridOrbitals::initFourier()
     resetIterativeIndex();
 }
 
-int LocGridOrbitals::packStates(LocalizationRegions* lrs)
+int LocGridOrbitals::packStates(std::shared_ptr<LocalizationRegions> lrs)
 {
     assert(lrs != nullptr);
 
@@ -2450,7 +2451,8 @@ void LocGridOrbitals::addDotWithNcol2Matrix(
     addDot_tm_.stop();
 }
 
-void LocGridOrbitals::computeGlobalIndexes(LocalizationRegions* lrs)
+void LocGridOrbitals::computeGlobalIndexes(
+    std::shared_ptr<LocalizationRegions> lrs)
 {
     all_overlapping_gids_ = lrs->getOverlapGids();
 
@@ -2493,7 +2495,7 @@ void LocGridOrbitals::printTimers(ostream& os)
     axpy_tm_.print(os);
 }
 
-void LocGridOrbitals::initWF(const LocalizationRegions* lrs)
+void LocGridOrbitals::initWF(const std::shared_ptr<LocalizationRegions> lrs)
 {
     Control& ct = *(Control::instance());
 

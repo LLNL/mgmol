@@ -35,7 +35,8 @@ private:
     short counter_;
 
 public:
-    AOMMprojector(LocGridOrbitals& phi, LocalizationRegions* lrs);
+    AOMMprojector(
+        LocGridOrbitals& phi, std::shared_ptr<LocalizationRegions> lrs);
     ~AOMMprojector();
 
     void projectOut(LocGridOrbitals& phi);

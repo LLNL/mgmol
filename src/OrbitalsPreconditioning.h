@@ -14,6 +14,8 @@
 #include "Lap.h"
 #include "Preconditioning.h"
 
+#include <memory>
+
 class Masks4Orbitals;
 class MasksSet;
 class ProjectedMatricesInterface;
@@ -41,7 +43,7 @@ private:
     static Timer precond_tm_;
 
     std::map<int, GridMask*> getGid2Masks(
-        MasksSet* currentMasks, LocalizationRegions* lrs);
+        MasksSet* currentMasks, std::shared_ptr<LocalizationRegions> lrs);
 
 public:
     OrbitalsPreconditioning()
@@ -57,7 +59,7 @@ public:
     ~OrbitalsPreconditioning();
 
     void setup(T& orbitals, const short mg_levels, const short lap_type,
-        MasksSet*, LocalizationRegions*);
+        MasksSet*, std::shared_ptr<LocalizationRegions>);
     void precond_mg(T& orbitals);
     void setGamma(const pb::Lap<ORBDTYPE>& lapOper, const Potentials& pot,
         const short mg_levels, ProjectedMatricesInterface* proj_matrices);

@@ -20,7 +20,7 @@ using namespace std;
 Timer ClusterOrbitals::computeClusters_tm_("ClusterOrbitals::ComputeClusters");
 Timer ClusterOrbitals::setupClusters_tm_("ClusterOrbitals::Setup");
 
-ClusterOrbitals::ClusterOrbitals(LocalizationRegions* lrs)
+ClusterOrbitals::ClusterOrbitals(std::shared_ptr<LocalizationRegions> lrs)
 {
     lrs_ = lrs;
 

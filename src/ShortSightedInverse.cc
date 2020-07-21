@@ -55,8 +55,9 @@ Timer ShortSightedInverse::linear_solver_matrix_init_tm_(
     "ShortSightedInverse::linear_solver_matrix_init");
 
 // const double mat_tol = 1.0e-14;
-ShortSightedInverse::ShortSightedInverse(LocalizationRegions* lrs,
-    const std::vector<int>& locvars, ClusterOrbitals* local_cluster)
+ShortSightedInverse::ShortSightedInverse(
+    std::shared_ptr<LocalizationRegions> lrs, const std::vector<int>& locvars,
+    ClusterOrbitals* local_cluster)
     : locvars_(locvars)
 {
     loc_radius_ = lrs->max_radii();
