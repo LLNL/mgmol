@@ -66,6 +66,8 @@ template <class T>
 void MGmol<T>::adaptLR(
     const SpreadsAndCenters<T>* spreadf, const OrbitalsTransform* ot)
 {
+    assert(lrs_);
+
     Control& ct = *(Control::instance());
     if (ct.verbose > 0)
         printWithTimeStamp(" Adapt localization regions...", os_);

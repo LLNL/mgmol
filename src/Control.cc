@@ -1843,7 +1843,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         lrs_compute = vm["LocalizationRegions.computation"].as<short>();
         str = vm["LocalizationRegions.extrapolation_scheme"].as<std::string>();
 
-        if (lrs_compute > 0 || str.compare("none") == 0)
+        if (lrs_compute > 0 || str.compare("none") == 0 || !loc_mode_)
             lrs_extrapolation = 0;
         else if (str.compare("linear") == 0)
             lrs_extrapolation = 1;

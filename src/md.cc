@@ -111,6 +111,8 @@ void MGmol<T>::postWFextrapolation(T* orbitals)
 template <class T>
 void MGmol<T>::extrapolate_centers(bool small_move)
 {
+    assert(lrs_);
+
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 0)
         os_ << "Extrapolate LR centers..." << std::endl;
@@ -202,6 +204,8 @@ void MGmol<T>::move_orbitals(T** orbitals)
 template <class T>
 int MGmol<T>::update_masks()
 {
+    assert(lrs_);
+
     Control& ct = *(Control::instance());
     if (!ct.isLocMode()) return 0;
 
@@ -431,9 +435,10 @@ void MGmol<T>::md(T** orbitals, Ions& ions)
 
         md_iterations_tm.start();
 
-        double eks      = 0.;
-        int retval      = 0;
-        bool small_move = true;
+        double eks              = 0.;
+        int retval              = 0;
+        bool small_move         = true;
+        bool last_move_is_small = true;
         do
         {
             retval = quench(*orbitals, ions, ct.max_electronic_steps, 0, eks);
@@ -441,7 +446,10 @@ void MGmol<T>::md(T** orbitals, Ions& ions)
             // update localization regions
             if (ct.adaptiveLRs())
             {
+                assert(lrs_);
                 adaptLR(spreadf_, nullptr);
+
+                last_move_is_small = lrs_->moveIsSmall();
 
                 // update cluster for load balancing
                 if (ct.load_balancing_alpha > 0.0
@@ -450,27 +458,28 @@ void MGmol<T>::md(T** orbitals, Ions& ions)
                     local_cluster_->computeClusters(
                         ct.load_balancing_max_iterations);
                 }
+
+                // printWithTimeStamp("quench done...",cout);
+
+                // do extra cycles if centers resulting from quench
+                // are "significantly" different from initial centers
+                if (!last_move_is_small)
+                {
+                    printWithTimeStamp(
+                        "WARNING: large move->extra inner cycle...", std::cout);
+                    small_move = false;
+                    move_orbitals(orbitals);
+
+                    (*orbitals)->computeGramAndInvS();
+                    dm_strategy_->update();
+
+                    // reduce number of steps to keep total run time about the
+                    // same
+                    ct.num_MD_steps--;
+                    // printWithTimeStamp("extra work done...",cout);
+                }
             }
-
-            // printWithTimeStamp("quench done...",cout);
-
-            // do extra cycles if centers resulting from quench
-            // are "significantly" different from initial centers
-            if (!lrs_->moveIsSmall())
-            {
-                printWithTimeStamp(
-                    "WARNING: large move->extra inner cycle...", std::cout);
-                small_move = false;
-                move_orbitals(orbitals);
-
-                (*orbitals)->computeGramAndInvS();
-                dm_strategy_->update();
-
-                // reduce number of steps to keep total run time about the same
-                ct.num_MD_steps--;
-                // printWithTimeStamp("extra work done...",cout);
-            }
-        } while (!lrs_->moveIsSmall());
+        } while (!last_move_is_small);
 
         if (retval < 0)
         {
