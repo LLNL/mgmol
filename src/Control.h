@@ -285,7 +285,6 @@ public:
     int checkState();
     void readRestartInfo(std::ifstream* tfile);
     void readRestartOutputInfo(std::ifstream* tfile);
-    int readLRupdateInfo(std::ifstream* tfile);
     int readThermostatInfo(std::ifstream* tfile);
     void printThermostatInfo(std::ostream& os) const;
     void setNumst(const short myspin, const int nval);
