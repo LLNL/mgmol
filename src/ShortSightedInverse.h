@@ -93,7 +93,7 @@ class ShortSightedInverse
     int solve();
 
 public:
-    ShortSightedInverse(LocalizationRegions& lrs,
+    ShortSightedInverse(std::shared_ptr<LocalizationRegions> lrs,
         const std::vector<int>& locvars,
         ClusterOrbitals* local_cluster = nullptr); // constructor
     void initGramMatrix(const LocalMatrices<MATDTYPE>& ss,

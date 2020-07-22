@@ -68,9 +68,9 @@ Timer LocGridOrbitals::axpy_tm_("LocGridOrbitals::axpy");
 
 LocGridOrbitals::LocGridOrbitals(std::string name, const pb::Grid& my_grid,
     const short subdivx, const int numst, const short bc[3],
-    ProjectedMatricesInterface* proj_matrices, LocalizationRegions* lrs,
-    MasksSet* masks, MasksSet* corrmasks, ClusterOrbitals* local_cluster,
-    const bool setup_flag)
+    ProjectedMatricesInterface* proj_matrices,
+    std::shared_ptr<LocalizationRegions> lrs, MasksSet* masks,
+    MasksSet* corrmasks, ClusterOrbitals* local_cluster, const bool setup_flag)
     : name_(std::move(name)),
       proj_matrices_(proj_matrices),
       local_cluster_(local_cluster),
@@ -81,7 +81,7 @@ LocGridOrbitals::LocGridOrbitals(std::string name, const pb::Grid& my_grid,
     // preconditions
     assert(subdivx > 0);
     assert(proj_matrices != nullptr);
-    assert(lrs != nullptr);
+    assert(lrs);
 
     for (short i = 0; i < 3; i++)
         assert(bc[i] == 0 || bc[i] == 1);
@@ -136,7 +136,7 @@ LocGridOrbitals::LocGridOrbitals(
 
     assert(A.chromatic_number_ >= 0);
     assert(A.proj_matrices_ != nullptr);
-    assert(A.lrs_ != nullptr);
+    assert(A.lrs_);
 
     copySharedData(A);
 
@@ -159,7 +159,7 @@ LocGridOrbitals::LocGridOrbitals(const std::string& name,
     assert(A.chromatic_number_ >= 0);
     assert(proj_matrices != nullptr);
     assert(masks != nullptr);
-    assert(lrs_ != nullptr);
+    assert(lrs_);
 
     copySharedData(A);
 
@@ -261,8 +261,8 @@ const ORBDTYPE* LocGridOrbitals::getGidStorage(
         return nullptr;
 }
 
-void LocGridOrbitals::setup(
-    MasksSet* masks, MasksSet* corrmasks, LocalizationRegions* lrs)
+void LocGridOrbitals::setup(MasksSet* masks, MasksSet* corrmasks,
+    std::shared_ptr<LocalizationRegions> lrs)
 {
     assert(masks != nullptr);
     Control& ct = *(Control::instance());
@@ -276,12 +276,12 @@ void LocGridOrbitals::setup(
     setup(lrs);
 }
 
-void LocGridOrbitals::setup(LocalizationRegions* lrs)
+void LocGridOrbitals::setup(std::shared_ptr<LocalizationRegions> lrs)
 {
     Control& ct = *(Control::instance());
 
     // preconditions
-    assert(lrs != nullptr);
+    assert(lrs);
     assert(proj_matrices_ != nullptr);
 
     if (ct.verbose > 0)
@@ -293,7 +293,7 @@ void LocGridOrbitals::setup(LocalizationRegions* lrs)
 
     chromatic_number_ = packStates(lrs);
 
-    computeGlobalIndexes(*lrs);
+    computeGlobalIndexes(lrs);
 
     bool skinny_stencil = !ct.Mehrstellen();
 
@@ -319,8 +319,8 @@ void LocGridOrbitals::setup(LocalizationRegions* lrs)
             "LocGridOrbitals::setup() done...", (*MPIdata::sout));
 }
 
-void LocGridOrbitals::reset(
-    MasksSet* masks, MasksSet* corrmasks, LocalizationRegions* lrs)
+void LocGridOrbitals::reset(MasksSet* masks, MasksSet* corrmasks,
+    std::shared_ptr<LocalizationRegions> lrs)
 {
     // free some old data
     block_vector_.clear();
@@ -546,7 +546,8 @@ void LocGridOrbitals::init2zero()
     }
 }
 
-void LocGridOrbitals::initGauss(const double rc, const LocalizationRegions& lrs)
+void LocGridOrbitals::initGauss(
+    const double rc, const std::shared_ptr<LocalizationRegions> lrs)
 {
     assert(chromatic_number_ >= 0);
     assert(subdivx_ > 0);
@@ -587,7 +588,7 @@ void LocGridOrbitals::initGauss(const double rc, const LocalizationRegions& lrs)
             const int gid = overlapping_gids_[iloc][icolor];
             if (gid > -1)
             {
-                const Vector3D& center(lrs.getCenter(gid));
+                const Vector3D& center(lrs->getCenter(gid));
                 Vector3D xc;
 
                 xc[0] = start0 + iloc * dim0 * hgrid[0];
@@ -691,9 +692,9 @@ void LocGridOrbitals::initFourier()
     resetIterativeIndex();
 }
 
-int LocGridOrbitals::packStates(LocalizationRegions* lrs)
+int LocGridOrbitals::packStates(std::shared_ptr<LocalizationRegions> lrs)
 {
-    assert(lrs != nullptr);
+    assert(lrs);
 
     Control& ct = *(Control::instance());
 
@@ -972,7 +973,7 @@ int LocGridOrbitals::write_func_hdf5(HDFrestart& h5f_file, const string& name)
     bool iwrite   = h5f_file.active();
 
     const bool global = ct.globalColoring();
-    ColoredRegions colored_regions(*pack_, *lrs_, global);
+    ColoredRegions colored_regions(*pack_, lrs_, global);
 
     // Create the dataspace for the dataset.
 
@@ -1139,7 +1140,7 @@ int LocGridOrbitals::read_func_hdf5(HDFrestart& h5f_file, const string& name)
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
     const bool global = ct.globalColoring();
-    ColoredRegions colored_regions(*pack_, *lrs_, global);
+    ColoredRegions colored_regions(*pack_, lrs_, global);
 
     hsize_t block[3] = { grid_.dim(0), grid_.dim(1), grid_.dim(2) };
     if (h5f_file.gatherDataX())
@@ -2450,11 +2451,12 @@ void LocGridOrbitals::addDotWithNcol2Matrix(
     addDot_tm_.stop();
 }
 
-void LocGridOrbitals::computeGlobalIndexes(LocalizationRegions& lrs)
+void LocGridOrbitals::computeGlobalIndexes(
+    std::shared_ptr<LocalizationRegions> lrs)
 {
-    all_overlapping_gids_ = lrs.getOverlapGids();
+    all_overlapping_gids_ = lrs->getOverlapGids();
 
-    lrs.getLocalSubdomainIndices(local_gids_);
+    lrs->getLocalSubdomainIndices(local_gids_);
 
     overlapping_gids_.clear();
     overlapping_gids_.resize(subdivx_);
@@ -2470,7 +2472,7 @@ void LocGridOrbitals::computeGlobalIndexes(LocalizationRegions& lrs)
         assert(color < chromatic_number_);
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
-            if (lrs.overlapSubdiv(gid, iloc))
+            if (lrs->overlapSubdiv(gid, iloc))
             {
                 overlapping_gids_[iloc][color] = gid;
             }
@@ -2493,7 +2495,7 @@ void LocGridOrbitals::printTimers(ostream& os)
     axpy_tm_.print(os);
 }
 
-void LocGridOrbitals::initWF(const LocalizationRegions& lrs)
+void LocGridOrbitals::initWF(const std::shared_ptr<LocalizationRegions> lrs)
 {
     Control& ct = *(Control::instance());
 

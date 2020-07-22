@@ -62,7 +62,7 @@ int MGmol<T>::setupLRs(const std::string filename)
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
     Vector3D vcell(mygrid.ll(0), mygrid.ll(1), mygrid.ll(2));
-    lrs_ = new LocalizationRegions(vcell, ct.tol_orb_centers_move);
+    lrs_.reset(new LocalizationRegions(vcell, ct.tol_orb_centers_move));
 
     if (ct.restart_info < 3 || !ct.isLocMode()) setupLRsFromInput(filename);
 

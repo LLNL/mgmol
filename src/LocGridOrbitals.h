@@ -104,7 +104,7 @@ private:
     void copySharedData(const LocGridOrbitals& A);
 
     const ORBDTYPE* getGidStorage(const int st, const short iloc) const;
-    int packStates(LocalizationRegions* lrs);
+    int packStates(std::shared_ptr<LocalizationRegions> lrs);
     void setAssignedIndexes();
     void projectOut(ORBDTYPE* const, const int, const double scale = 1.);
 
@@ -138,7 +138,7 @@ private:
     void computeLocalProduct(const ORBDTYPE* const, const int,
         LocalMatrices<MATDTYPE>&, const bool transpose = false);
 
-    void computeGlobalIndexes(LocalizationRegions& lrs);
+    void computeGlobalIndexes(std::shared_ptr<LocalizationRegions> lrs);
     void computeInvNorms2(std::vector<std::vector<double>>& inv_norms2) const;
     void computeDiagonalGram(VariableSizeMatrix<sparserow>& diagS) const;
 
@@ -152,7 +152,8 @@ private:
     void app_mask(const int, ORBDTYPE*, const short level) const;
     void multiplyByMatrix(const SquareLocalMatrices<MATDTYPE>& matrix,
         ORBDTYPE* product, const int ldp) const;
-    void setup(MasksSet* masks, MasksSet* corrmasks, LocalizationRegions* lrs);
+    void setup(MasksSet* masks, MasksSet* corrmasks,
+        std::shared_ptr<LocalizationRegions> lrs);
 
     /* Data distribution objects */
     std::shared_ptr<DataDistribution> distributor_diagdotprod_;
@@ -163,7 +164,7 @@ protected:
 
     const pb::Grid& grid_;
 
-    LocalizationRegions* lrs_;
+    std::shared_ptr<LocalizationRegions> lrs_;
 
     static short subdivx_;
 
@@ -193,8 +194,8 @@ public:
 
     LocGridOrbitals(std::string name, const pb::Grid& my_grid,
         const short subdivx, const int numst, const short bc[3],
-        ProjectedMatricesInterface*, LocalizationRegions*, MasksSet* masks,
-        MasksSet* corrmasks, ClusterOrbitals* local_cluster,
+        ProjectedMatricesInterface*, std::shared_ptr<LocalizationRegions>,
+        MasksSet* masks, MasksSet* corrmasks, ClusterOrbitals* local_cluster,
         const bool setup_flag = true);
 
     LocGridOrbitals(const std::string& name, const LocGridOrbitals& A,
@@ -210,8 +211,9 @@ public:
     void resetDotProductMatrices();
     void init2zero();
 
-    void setup(LocalizationRegions* lrs);
-    void reset(MasksSet* masks, MasksSet* corrmasks, LocalizationRegions* lrs);
+    void setup(std::shared_ptr<LocalizationRegions> lrs);
+    void reset(MasksSet* masks, MasksSet* corrmasks,
+        std::shared_ptr<LocalizationRegions> lrs);
 
     virtual void assign(const LocGridOrbitals& orbitals);
     void copyDataFrom(const LocGridOrbitals& src);
@@ -384,7 +386,7 @@ public:
         return *this;
     }
 
-    void initGauss(const double, const LocalizationRegions&);
+    void initGauss(const double, const std::shared_ptr<LocalizationRegions>);
     virtual void axpy(const double alpha, const LocGridOrbitals&);
 
     void app_mask(const int, pb::GridFunc<ORBDTYPE>&, const short level) const;
@@ -408,7 +410,7 @@ public:
 
     void setGids2Storage();
 
-    void initWF(const LocalizationRegions& lrs);
+    void initWF(const std::shared_ptr<LocalizationRegions> lrs);
     void checkCond(const double tol, const bool flag_stop);
     double normState(const int st) const;
     const std::vector<std::vector<int>>& getOverlappingGids() const

@@ -15,6 +15,7 @@
 
 #include <list>
 #include <map>
+#include <memory>
 #include <set>
 #include <vector>
 
@@ -29,20 +30,20 @@ private:
 
     MPI_Comm comm_;
 
-    void setup(LocalizationRegions* lrs, const bool global);
+    void setup(std::shared_ptr<LocalizationRegions> lrs, const bool global);
 
     void getColors(const SymmetricMatrix<char>& overlaps,
         std::list<std::list<int>>& colors);
-    short checkOverlapLRs(
-        LocalizationRegions* lrs, const int gid1, const int gid2) const;
-    void initOrbiOverlapLocal(LocalizationRegions* lrs, const short level,
-        SymmetricMatrix<char>& orbi_overlap);
-    void initOrbiOverlapGlobal(LocalizationRegions* lrs, const short level,
-        SymmetricMatrix<char>& orbi_overlap);
+    short checkOverlapLRs(std::shared_ptr<LocalizationRegions> lrs,
+        const int gid1, const int gid2) const;
+    void initOrbiOverlapLocal(std::shared_ptr<LocalizationRegions> lrs,
+        const short level, SymmetricMatrix<char>& orbi_overlap);
+    void initOrbiOverlapGlobal(std::shared_ptr<LocalizationRegions> lrs,
+        const short level, SymmetricMatrix<char>& orbi_overlap);
 
 public:
-    FunctionsPacking(
-        LocalizationRegions* lrs, const bool global, const MPI_Comm comm);
+    FunctionsPacking(std::shared_ptr<LocalizationRegions> lrs,
+        const bool global, const MPI_Comm comm);
     FunctionsPacking(const FunctionsPacking&);
 
     // return color of gid if exists locally, otherwise return -1

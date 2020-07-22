@@ -156,8 +156,8 @@ public:
 
     ExtendedGridOrbitals(std::string name, const pb::Grid& my_grid,
         const short subdivx, const int numst, const short bc[3],
-        ProjectedMatricesInterface*, LocalizationRegions*, MasksSet* masks,
-        MasksSet* corrmasks, ClusterOrbitals* local_cluster,
+        ProjectedMatricesInterface*, std::shared_ptr<LocalizationRegions>,
+        MasksSet* masks, MasksSet* corrmasks, ClusterOrbitals* local_cluster,
         const bool setup_flag = true);
 
     ExtendedGridOrbitals(const std::string& name, const ExtendedGridOrbitals& A,
@@ -172,7 +172,8 @@ public:
     void resetDotProductMatrices();
     void init2zero();
 
-    void reset(MasksSet* masks, MasksSet* corrmasks, LocalizationRegions* lrs);
+    void reset(MasksSet* masks, MasksSet* corrmasks,
+        std::shared_ptr<LocalizationRegions> lrs);
 
     virtual void assign(const ExtendedGridOrbitals& orbitals);
     void copyDataFrom(const ExtendedGridOrbitals& src);
@@ -333,7 +334,7 @@ public:
         return *this;
     }
 
-    void initGauss(const double, const LocalizationRegions&);
+    void initGauss(const double, const std::shared_ptr<LocalizationRegions>);
     virtual void axpy(const double alpha, const ExtendedGridOrbitals&);
 
     void app_mask(const int, pb::GridFunc<ORBDTYPE>&, const short) const {};
@@ -355,7 +356,7 @@ public:
     int read_hdf5(HDFrestart& h5f_file);
     int read_func_hdf5(HDFrestart&, const std::string& name = "Function");
 
-    void initWF(const LocalizationRegions& lrs);
+    void initWF(const std::shared_ptr<LocalizationRegions> lrs);
     void checkCond(const double tol, const bool flag_stop);
     double normState(const int st) const;
     const std::vector<std::vector<int>>& getOverlappingGids() const

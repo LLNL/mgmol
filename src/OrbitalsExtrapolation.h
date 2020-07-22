@@ -51,7 +51,8 @@ public:
     virtual void clearOldOrbitals();
     bool getRestartData(T& orbitals);
     virtual void setupPreviousOrbitals(T** orbitals,
-        ProjectedMatricesInterface* proj_matrices, LocalizationRegions* lrs,
+        ProjectedMatricesInterface* proj_matrices,
+        std::shared_ptr<LocalizationRegions> lrs,
         ClusterOrbitals* local_cluster, MasksSet* currentMasks,
         MasksSet* corrtMasks, HDFrestart& h5f_file);
 

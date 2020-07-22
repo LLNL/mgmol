@@ -84,7 +84,7 @@ private:
 
     IonicAlgorithm<T>* geom_optimizer_;
 
-    LocalizationRegions* lrs_;
+    std::shared_ptr<LocalizationRegions> lrs_;
 
     ClusterOrbitals* local_cluster_;
 
@@ -253,7 +253,7 @@ public:
         std::vector<std::vector<RHODTYPE>>& rho, Ions& ions, T& orbitals);
     int write_hdf5(HDFrestart& h5f_file,
         std::vector<std::vector<RHODTYPE>>& rho, Ions& ions, T& orbitals,
-        LocalizationRegions& lrs);
+        std::shared_ptr<LocalizationRegions> lrs);
     double get_evnl(const Ions& ions, T& orbitals);
     void sebprintPositions();
     void sebprintForces();

@@ -21,8 +21,8 @@
 #include <numeric>
 using namespace std;
 
-FunctionsPacking::FunctionsPacking(
-    LocalizationRegions* lrs, const bool global, const MPI_Comm comm)
+FunctionsPacking::FunctionsPacking(std::shared_ptr<LocalizationRegions> lrs,
+    const bool global, const MPI_Comm comm)
     : comm_(comm)
 {
     setup(lrs, global);
@@ -37,7 +37,8 @@ FunctionsPacking::FunctionsPacking(const FunctionsPacking& p)
 
 // Setup based on
 // Recursive Largest First (RLF) algorithm
-void FunctionsPacking::setup(LocalizationRegions* lrs, const bool global)
+void FunctionsPacking::setup(
+    std::shared_ptr<LocalizationRegions> lrs, const bool global)
 {
     Control& ct = *(Control::instance());
     list<list<int>> colored_gids;
@@ -158,7 +159,8 @@ void FunctionsPacking::getColors(
 }
 
 short FunctionsPacking::checkOverlapLRs(
-    LocalizationRegions* lrs, const int gid1, const int gid2) const
+    std::shared_ptr<LocalizationRegions> lrs, const int gid1,
+    const int gid2) const
 {
     return lrs->overlap(gid1, gid2) ? 1 : 0;
 }
@@ -166,8 +168,9 @@ short FunctionsPacking::checkOverlapLRs(
 //  Initialize the array orbi_overlap_[j][i] telling if
 //  the orbitals i and j overlap somewhere (on any PE or region)
 // at level "level"
-void FunctionsPacking::initOrbiOverlapLocal(LocalizationRegions* lrs,
-    const short level, SymmetricMatrix<char>& orbi_overlap)
+void FunctionsPacking::initOrbiOverlapLocal(
+    std::shared_ptr<LocalizationRegions> lrs, const short level,
+    SymmetricMatrix<char>& orbi_overlap)
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 2)
@@ -195,8 +198,9 @@ void FunctionsPacking::initOrbiOverlapLocal(LocalizationRegions* lrs,
     }
 }
 
-void FunctionsPacking::initOrbiOverlapGlobal(LocalizationRegions* lrs,
-    const short level, SymmetricMatrix<char>& orbi_overlap)
+void FunctionsPacking::initOrbiOverlapGlobal(
+    std::shared_ptr<LocalizationRegions> lrs, const short level,
+    SymmetricMatrix<char>& orbi_overlap)
 {
     Control& ct   = *(Control::instance());
     const int dim = orbi_overlap.dimension();

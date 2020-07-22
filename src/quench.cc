@@ -66,6 +66,8 @@ template <class T>
 void MGmol<T>::adaptLR(
     const SpreadsAndCenters<T>* spreadf, const OrbitalsTransform* ot)
 {
+    assert(lrs_);
+
     Control& ct = *(Control::instance());
     if (ct.verbose > 0)
         printWithTimeStamp(" Adapt localization regions...", os_);
@@ -393,7 +395,7 @@ void MGmol<T>::disentangleOrbitals(
 template <>
 void MGmol<LocGridOrbitals>::applyAOMMprojection(LocGridOrbitals& orbitals)
 {
-    aomm_ = new AOMMprojector(orbitals, *lrs_);
+    aomm_ = new AOMMprojector(orbitals, lrs_);
     aomm_->projectOut(orbitals);
 }
 

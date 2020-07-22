@@ -41,10 +41,10 @@ Timer ProjectedMatricesSparse::consolidate_H_tm_(
 Timer ProjectedMatricesSparse::eig_interval_tm_(
     "ProjectedMatrices::computeEigenInterval");
 
-ProjectedMatricesSparse::ProjectedMatricesSparse(
-    const int ndim, LocalizationRegions* lrs, ClusterOrbitals* local_cluster)
+ProjectedMatricesSparse::ProjectedMatricesSparse(const int ndim,
+    std::shared_ptr<LocalizationRegions> lrs, ClusterOrbitals* local_cluster)
 {
-    assert(lrs != nullptr);
+    assert(lrs);
 
     dim_     = ndim;
     min_val_ = 0.25;
@@ -165,8 +165,8 @@ void ProjectedMatricesSparse::setup(const double kbt, const int nel,
         if (invS_ == nullptr || dm_ == nullptr
             || ct.AtomsDynamic() == AtomsDynamicType::MD)
         {
-            invS_ = new ShortSightedInverse((*lrs_), locvars_, local_cluster_);
-            dm_   = new DensityMatrixSparse((*lrs_), dim_, locvars_);
+            invS_ = new ShortSightedInverse(lrs_, locvars_, local_cluster_);
+            dm_   = new DensityMatrixSparse(lrs_, dim_, locvars_);
         }
 
         matHB_ = new VariableSizeMatrix<sparserow>("HB", lsize_);
@@ -268,7 +268,7 @@ void ProjectedMatricesSparse::consolidateOrbitalsOverlapMat(
     double domain[3]         = { mygrid.ll(0), mygrid.ll(1), mygrid.ll(2) };
     // consolidate locally centered data
     DataDistribution distributor1(
-        "overlap", (*lrs_).max_radii(), myPEenv, domain);
+        "overlap", lrs_->max_radii(), myPEenv, domain);
     distributor1.augmentLocalData(mat, false);
 
     // now gather updated data from neighbors.

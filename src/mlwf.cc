@@ -62,22 +62,26 @@ int MGmol<T>::getMLWF(MLWFTransform& mlwft, T& orbitals, T& work_orbitals,
     // orthonormalize work_orbitals before getting sin and cos matrices
     work_orbitals.orthonormalizeLoewdin(false);
 
-    std::vector<int> overlap(numst * numst);
-    int icount = 0;
-    for (int st1 = 0; st1 < numst; st1++)
+    std::vector<int> overlap(numst * numst, 1);
+    if (dd < 1000.)
     {
-        overlap[st1 + numst * st1] = 1;
-        for (int st2 = 0; st2 < st1; st2++)
+        assert(lrs_);
+        int icount = 0;
+        for (int st1 = 0; st1 < numst; st1++)
         {
-            double d                   = lrs_->distanceBetweenCenters(st1, st2);
-            overlap[st1 + numst * st2] = overlap[st2 + numst * st1]
-                = (int)(d < dd);
-            icount += overlap[st2 + numst * st1];
+            overlap[st1 + numst * st1] = 1;
+            for (int st2 = 0; st2 < st1; st2++)
+            {
+                double d = lrs_->distanceBetweenCenters(st1, st2);
+                overlap[st1 + numst * st2] = overlap[st2 + numst * st1]
+                    = (int)(d < dd);
+                icount += overlap[st2 + numst * st1];
+            }
         }
+        if (onpe0 && ct.verbose > 1)
+            os_ << "getMLWF(): Wannier rotations for " << icount << " pairs"
+                << std::endl;
     }
-    if (onpe0 && ct.verbose > 1)
-        os_ << "getMLWF(): Wannier rotations for " << icount << " pairs"
-            << std::endl;
     mlwft.setia(overlap);
 
     std::vector<std::vector<double>> sincos;
@@ -172,11 +176,11 @@ void MGmol<T>::wftransform(T* orbitals, T* work_orbitals, Ions& ions)
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
 
-    assert(!ct.isLocMode());
-
     bool createMLWF = false;
     bool createNOOT = false;
-    double dd       = 1000.;
+    double dd       = 1.e6;
+    // set dd to small value to apply MLWF only to orbitals
+    // that share a center of localization
     if (ct.isLocMode()) dd = 0.1;
     const int numst = ct.numst;
     Vector3D origin(mygrid.origin(0), mygrid.origin(1), mygrid.origin(2));

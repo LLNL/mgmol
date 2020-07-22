@@ -36,7 +36,7 @@ void MGmol<T>::lbfgsrlx(T** orbitals, Ions& ions)
 {
     Control& ct = *(Control::instance());
 
-    LBFGS<T> lbfgs(orbitals, ions, *rho_, *constraints_, *lrs_, local_cluster_,
+    LBFGS<T> lbfgs(orbitals, ions, *rho_, *constraints_, lrs_, local_cluster_,
         *currentMasks_, *corrMasks_, *electrostat_, ct.dt, *this);
 
     DFTsolver<T>::resetItCount();

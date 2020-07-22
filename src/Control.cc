@@ -724,6 +724,7 @@ void Control::adjust()
     {
         orthof = 0;
     }
+    if (!loc_mode_) lr_update = 0;
     if (loc_mode_ && lr_update)
         wannier_transform_type = std::max(wannier_transform_type, (short)1);
     restart_run = (restart_info > 0) ? true : false;
@@ -1096,43 +1097,6 @@ int Control::setShortSightedSolverParameters(const float fact, const float stol,
     ilu_maxfil    = maxfill;
     ilu_type      = ilutype;
 
-    return 0;
-}
-
-int Control::readLRupdateInfo(std::ifstream* tfile)
-{
-    (*tfile) >> lr_update;
-    (*MPIdata::sout) << "Control::readLRupdateInfo(), input lr_update="
-                     << lr_update << std::endl;
-    if (lr_update > 0)
-    {
-
-        (*tfile) >> lr_updates_type;
-        if (lr_updates_type != 0 && lr_updates_type != 1
-            && lr_updates_type != 2)
-        {
-            (*MPIdata::sout)
-                << "Control::readLRupdateInfo(), "
-                << "Invalid value for lr_updates_type" << std::endl;
-            return -1;
-        }
-        (*tfile) >> tol_orb_centers_move;
-        (*MPIdata::sout)
-            << "Control::readLRupdateInfo(), input tol_orb_centers_move="
-            << tol_orb_centers_move << std::endl;
-        if (lr_updates_type > 0)
-        {
-            (*tfile) >> lr_volume_calc;
-            if (lr_volume_calc != 0 && lr_volume_calc != 1
-                && lr_volume_calc != 2)
-            {
-                (*MPIdata::sout)
-                    << "Control::readLRupdateInfo(), "
-                    << "Invalid value for lr_volume_calc" << std::endl;
-                return -1;
-            }
-        }
-    }
     return 0;
 }
 
@@ -1842,8 +1806,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
             = vm["LocalizationRegions.min_distance"].as<float>();
         lrs_compute = vm["LocalizationRegions.computation"].as<short>();
         str = vm["LocalizationRegions.extrapolation_scheme"].as<std::string>();
-
-        if (lrs_compute > 0 || str.compare("none") == 0)
+        if (str.compare("none") == 0)
             lrs_extrapolation = 0;
         else if (str.compare("linear") == 0)
             lrs_extrapolation = 1;
@@ -1894,6 +1857,8 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
 
         // derived flags
         loc_mode_ = cut_radius < 100. ? true : false;
+        if (lrs_compute > 0 || !loc_mode_) lrs_extrapolation = 0;
+
         if (coloring_algo_ >= 10)
         {
             precond_type_ = 10;

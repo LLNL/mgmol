@@ -61,9 +61,9 @@ bool OrbitalsExtrapolation<T>::getRestartData(T& orbitals)
 
 template <class T>
 void OrbitalsExtrapolation<T>::setupPreviousOrbitals(T** orbitals,
-    ProjectedMatricesInterface* proj_matrices, LocalizationRegions* lrs,
-    ClusterOrbitals* local_cluster, MasksSet* currentMasks, MasksSet* corrMasks,
-    HDFrestart& h5f_file)
+    ProjectedMatricesInterface* proj_matrices,
+    std::shared_ptr<LocalizationRegions> lrs, ClusterOrbitals* local_cluster,
+    MasksSet* currentMasks, MasksSet* corrMasks, HDFrestart& h5f_file)
 {
     if (onpe0)
         cout << "OrbitalsExtrapolation<T>::setupPreviousOrbitals()..." << endl;

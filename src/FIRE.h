@@ -31,7 +31,7 @@ private:
     const Ions& ions_;
     const Rho<T>& rho_;
     FIRE_IonicStepper* stepper_;
-    const LocalizationRegions& lrs_;
+    const std::shared_ptr<LocalizationRegions> lrs_;
     const MasksSet& masks_;
     const Electrostatic& electrostat_;
 
@@ -39,8 +39,8 @@ private:
 
 public:
     FIRE(T** orbitals, Ions& ions, Rho<T>& rho, ConstraintSet& constraints,
-        LocalizationRegions& lrs, MasksSet& masks, Electrostatic& electrostat,
-        const double dt, MGmol<T>&);
+        std::shared_ptr<LocalizationRegions> lrs, MasksSet& masks,
+        Electrostatic& electrostat, const double dt, MGmol<T>&);
 
     ~FIRE() override{};
 };
