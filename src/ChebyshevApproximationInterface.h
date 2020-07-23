@@ -11,8 +11,8 @@
 #define MGMOL_CHEBYSHEV_APPROX_INTERFACE_H
 
 #include "ChebyshevApproximationFunction.h"
-#include "DistMatrix/DistMatrix.h"
 #include "LocalMatrices.h"
+
 #include <vector>
 
 class ChebyshevApproximationInterface

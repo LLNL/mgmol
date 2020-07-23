@@ -298,6 +298,18 @@ void GramMatrix<MatrixType>::computeLoewdinTransform(MatrixType& loewdinMat,
     }
 }
 
+template <class MatrixType>
+double GramMatrix<MatrixType>::getTraceDiagProductWithInvS(
+    std::vector<DISTMATDTYPE>& ddiag)
+{
+    MatrixType diag("diag", dim_, dim_);
+    diag.setDiagonal(ddiag);
+
+    work_->gemm('n', 'n', 1., diag, *invS_, 0.);
+
+    return work_->trace();
+}
+
 template class GramMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>;
 #ifdef HAVE_MAGMA
 template class GramMatrix<ReplicatedMatrix>;

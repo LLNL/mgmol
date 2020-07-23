@@ -18,6 +18,7 @@
 #include "HDFrestart.h"
 #include "Laph2.h"
 #include "Laph4M.h"
+#include "LocalMatrices2DistMatrix.h"
 #include "LocalizationRegions.h"
 #include "MPIdata.h"
 #include "Mesh.h"

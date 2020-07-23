@@ -15,6 +15,7 @@
 #include "Ions.h"
 #include "KBPsiMatrixSparse.h"
 #include "LocGridOrbitals.h"
+#include "LocalMatrices2DistMatrix.h"
 #include "Mesh.h"
 #include "ProjectedMatrices.h"
 #include "ProjectedMatricesInterface.h"

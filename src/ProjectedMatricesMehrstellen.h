@@ -47,11 +47,7 @@ public:
 
     void initializeMatB(const SquareLocalMatrices<MATDTYPE>& ss) override
     {
-        LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
-
-        sl2dm->accumulate(ss, *work_);
-
-        *matB_ = *work_;
+        convert(ss, *matB_);
     }
 
     void updateTheta() override
