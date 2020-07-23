@@ -10,7 +10,6 @@
 #ifndef MGMOL_HAMILTONIANMVP_SOLVER_H_
 #define MGMOL_HAMILTONIANMVP_SOLVER_H_
 
-#include "DistMatrix.h"
 #include "Energy.h"
 #include "MGmol.h"
 #include "Rho.h"

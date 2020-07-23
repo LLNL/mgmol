@@ -104,6 +104,8 @@ public:
 
     void computeLoewdinTransform(MatrixType& loewdinMat,
         std::shared_ptr<MatrixType> invLoewdin, const int orb_index);
+
+    double getTraceDiagProductWithInvS(std::vector<DISTMATDTYPE>& ddiag);
 };
 
 #endif

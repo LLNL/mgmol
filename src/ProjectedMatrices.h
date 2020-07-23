@@ -13,9 +13,7 @@
 #include "ChebyshevApproximation.h"
 #include "DensityMatrix.h"
 #include "DistMatrix.h"
-#include "DistMatrix2SquareLocalMatrices.h"
 #include "GramMatrix.h"
-#include "LocalMatrices2DistMatrix.h"
 #include "MPIdata.h"
 #include "ProjectedMatricesInterface.h"
 #include "SquareLocalMatrices.h"
@@ -123,6 +121,14 @@ protected:
         matH_->print(os, 0, 0, NPRINT_ROWS_AND_COLS, NPRINT_ROWS_AND_COLS);
     }
 
+    // convert a SquareLocalMatrices obeject into a DistMatrix
+    void convert(const SquareLocalMatrices<MATDTYPE>& src,
+        dist_matrix::DistMatrix<DISTMATDTYPE>& dst);
+
+    // convert a DistMatrix obeject into a SquareLocalMatrices
+    void convert(const dist_matrix::DistMatrix<DISTMATDTYPE>& src,
+        SquareLocalMatrices<MATDTYPE>& dst);
+
 public:
     ProjectedMatrices(const int, const bool with_spin);
     ~ProjectedMatrices() override;
@@ -161,17 +167,10 @@ public:
 
     void updateSubMatX(const dist_matrix::DistMatrix<DISTMATDTYPE>& dm)
     {
-        DistMatrix2SquareLocalMatrices* dm2sl
-            = DistMatrix2SquareLocalMatrices::instance();
-        dm2sl->convert(dm, *localX_);
+        convert(dm, *localX_);
     }
 
-    void updateSubMatT() override
-    {
-        DistMatrix2SquareLocalMatrices* dm2sl
-            = DistMatrix2SquareLocalMatrices::instance();
-        dm2sl->convert(*theta_, *localT_);
-    }
+    void updateSubMatT() override { convert(*theta_, *localT_); }
 
     void computeLoewdinTransform(SquareLocalMatrices<MATDTYPE>& localPi,
         const int orb_index, const bool transform_matrices);
@@ -185,9 +184,7 @@ public:
 
         init_gram_matrix_tm_.start();
 
-        LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
-
-        sl2dm->accumulate(ss, *work_);
+        convert(ss, *work_);
 
         gm_->setMatrix(*work_, orbitals_index);
         init_gram_matrix_tm_.stop();

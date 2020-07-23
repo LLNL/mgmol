@@ -11,9 +11,10 @@
 
 #include "Control.h"
 #include "DensityMatrix.h"
+#include "DistMatrix2SquareLocalMatrices.h"
 #include "DistMatrixTools.h"
-#include "GramMatrix.h"
 #include "HDFrestart.h"
+#include "LocalMatrices2DistMatrix.h"
 #include "MGmol_MPI.h"
 #include "MPIdata.h"
 #include "Power.h"
@@ -87,6 +88,22 @@ ProjectedMatrices::~ProjectedMatrices()
     n_instances_--;
 }
 
+void ProjectedMatrices::convert(const SquareLocalMatrices<MATDTYPE>& src,
+    dist_matrix::DistMatrix<DISTMATDTYPE>& dst)
+{
+    LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
+    sl2dm->accumulate(src, dst);
+}
+
+void ProjectedMatrices::convert(
+    const dist_matrix::DistMatrix<DISTMATDTYPE>& src,
+    SquareLocalMatrices<MATDTYPE>& dst)
+{
+    DistMatrix2SquareLocalMatrices* dm2sl
+        = DistMatrix2SquareLocalMatrices::instance();
+    dm2sl->convert(src, dst);
+}
+
 void ProjectedMatrices::setup(const double kbt, const int nel,
     const std::vector<std::vector<int>>& global_indexes)
 {
@@ -156,18 +173,12 @@ void ProjectedMatrices::rotateAll(
 void ProjectedMatrices::applyInvS(SquareLocalMatrices<MATDTYPE>& mat)
 {
     // build DistMatrix from SquareLocalMatrices
-    dist_matrix::DistMatrix<DISTMATDTYPE> pmatrix("pmatrix", dim_, dim_);
+    convert(mat, *work_);
 
-    LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
-
-    sl2dm->accumulate(mat, pmatrix);
-
-    gm_->applyInv(pmatrix);
+    gm_->applyInv(*work_);
 
     // convert result back into a SquareLocalMatrices
-    DistMatrix2SquareLocalMatrices* dm2sl
-        = DistMatrix2SquareLocalMatrices::instance();
-    dm2sl->convert(pmatrix, mat);
+    convert(*work_, mat);
 }
 
 void ProjectedMatrices::setDMto2InvS()
@@ -502,7 +513,6 @@ double ProjectedMatrices::computeEntropy()
 // compute entropy using Chebyshev Approximation
 double ProjectedMatrices::computeEntropyWithCheb(const double kbt)
 {
-
     Control& ct = *(Control::instance());
 
     // compute matrix variable X.S for Chebyshev
@@ -890,20 +900,13 @@ void ProjectedMatrices::computeLoewdinTransform(
         matHB_->gemm('n', 't', 1., mat, invSqrtMat, 0.);
     }
 
-    DistMatrix2SquareLocalMatrices* dm2sl
-        = DistMatrix2SquareLocalMatrices::instance();
-    dm2sl->convert(invSqrtMat, localP);
+    convert(invSqrtMat, localP);
 }
 
 double ProjectedMatrices::getTraceDiagProductWithInvS(
     std::vector<DISTMATDTYPE>& ddiag)
 {
-    dist_matrix::DistMatrix<DISTMATDTYPE> diag("diag", dim_, dim_);
-    diag.setDiagonal(ddiag);
-
-    work_->gemm('n', 'n', 1., diag, gm_->getInverse(), 0.);
-
-    return work_->trace();
+    return gm_->getTraceDiagProductWithInvS(ddiag);
 }
 
 void ProjectedMatrices::resetDotProductMatrices()
@@ -919,39 +922,32 @@ double ProjectedMatrices::dotProductWithInvS(
     assert(gram_4dotProducts_ != nullptr);
 
     dist_matrix::DistMatrix<DISTMATDTYPE> ds("ds", dim_, dim_);
-    LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
 
-    sl2dm->accumulate(local_product, ds);
+    convert(local_product, ds);
 
-    dist_matrix::DistMatrix<DISTMATDTYPE> work("work", dim_, dim_);
-    work.gemm('n', 'n', 1., ds, gram_4dotProducts_->getInverse(), 0.);
+    work_->gemm('n', 'n', 1., ds, gram_4dotProducts_->getInverse(), 0.);
 
-    return work.trace();
+    return work_->trace();
 }
 
 double ProjectedMatrices::dotProductWithDM(
     const SquareLocalMatrices<MATDTYPE>& local_product)
 {
     dist_matrix::DistMatrix<DISTMATDTYPE> ds("ds", dim_, dim_);
-    LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
 
-    sl2dm->accumulate(local_product, ds);
+    convert(local_product, ds);
 
-    dist_matrix::DistMatrix<DISTMATDTYPE> work("work", dim_, dim_);
-    work.gemm('n', 'n', 0.5, ds, dm_->kernel4dot(), 0.);
+    work_->gemm('n', 'n', 0.5, ds, dm_->kernel4dot(), 0.);
 
-    return work.trace();
+    return work_->trace();
 }
 
 double ProjectedMatrices::dotProductSimple(
     const SquareLocalMatrices<MATDTYPE>& local_product)
 {
-    dist_matrix::DistMatrix<DISTMATDTYPE> ds("ds", dim_, dim_);
-    LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
+    convert(local_product, *work_);
 
-    sl2dm->accumulate(local_product, ds);
-
-    return ds.trace();
+    return work_->trace();
 }
 
 void ProjectedMatrices::printTimers(std::ostream& os)
@@ -972,28 +968,24 @@ void ProjectedMatrices::printTimers(std::ostream& os)
 double ProjectedMatrices::computeTraceInvSmultMat(
     const SquareLocalMatrices<MATDTYPE>& mat)
 {
-    dist_matrix::DistMatrix<DISTMATDTYPE> pmatrix("pmatrix", dim_, dim_);
+    convert(mat, *work_);
 
-    LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
-    sl2dm->accumulate(mat, pmatrix);
-
-    gm_->applyInv(pmatrix);
-    return pmatrix.trace();
+    gm_->applyInv(*work_);
+    return work_->trace();
 }
 
 double ProjectedMatrices::computeTraceInvSmultMatMultTheta(
     const dist_matrix::DistMatrix<DISTMATDTYPE>& mat)
 {
     assert(theta_ != nullptr);
-    dist_matrix::DistMatrix<DISTMATDTYPE> pmat("pmat", dim_, dim_);
 
     // compute mat*theta_
-    pmat.gemm('n', 'n', 1.0, mat, *theta_, 0.);
+    work_->gemm('n', 'n', 1.0, mat, *theta_, 0.);
 
     // compute invS*pmat = invS*(mat*theta)
-    gm_->applyInv(pmat);
+    gm_->applyInv(*work_);
 
-    return pmat.trace();
+    return work_->trace();
 }
 
 double ProjectedMatrices::computeChemicalPotentialAndDMwithChebyshev(
@@ -1195,8 +1187,6 @@ void ProjectedMatrices::consolidateH()
 {
     consolidate_H_tm_.start();
 
-    Control& ct = *(Control::instance());
-
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     MPI_Comm comm   = mmpi.commSpin();
 
@@ -1204,7 +1194,7 @@ void ProjectedMatrices::consolidateH()
         comm, *matH_, sparse_distmatrix_nb_partitions);
 
     LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
-    sl2dm->convert(*localHl_, slH, ct.numst);
+    sl2dm->convert(*localHl_, slH, dim_);
 
     SquareSubMatrix2DistMatrix* ss2dm = SquareSubMatrix2DistMatrix::instance();
     ss2dm->convert(*localHnl_, slH);

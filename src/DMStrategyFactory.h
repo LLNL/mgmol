@@ -11,7 +11,6 @@
 #define MGMOL_DMSTRATEGYFACTORY_H
 
 #include "Control.h"
-#include "DistMatrix.h"
 #include "EigenDMStrategy.h"
 #include "FullyOccupiedNonOrthoDMStrategy.h"
 #include "HamiltonianMVP_DMStrategy.h"

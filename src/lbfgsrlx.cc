@@ -10,7 +10,6 @@
 #include "ConstraintSet.h"
 #include "Control.h"
 #include "DFTsolver.h"
-#include "DistMatrix.h"
 #include "Electrostatic.h"
 #include "Energy.h"
 #include "Ions.h"
