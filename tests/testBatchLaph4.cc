@@ -71,7 +71,7 @@ TEST_CASE("Laplacian 4th order for a array of function", "[laph4_batch]")
     double* arrayofgf2 = new double[numgridfunc * grid.sizeg()];
 
     // apply FD (-Laplacian) operator to arrayofgf1, result in arrayofgf2
-    lap.apply(grid, arrayofgf1, arrayofgf2);
+    lap.apply(grid, arrayofgf1, arrayofgf2, numgridfunc);
 
     // check values in gf2
     double* u2 = gf2.uu();

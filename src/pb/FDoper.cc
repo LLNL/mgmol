@@ -469,7 +469,7 @@ void FDoper<T>::del2_4th(GridFunc<T>& A, GridFunc<T>& B) const
 }
 
 template <class T>
-void FDoper<T>::del2_4th(const Grid& Agrid, T* A, T* B) const
+void FDoper<T>::del2_4th(const Grid& Agrid, T* A, T* B, const size_t nfunc) const
 {
     if (!grid_.active()) return;
 
@@ -502,7 +502,7 @@ void FDoper<T>::del2_4th(const Grid& Agrid, T* A, T* B) const
     const int dim1 = Agrid.dim(1);
     const int dim2 = Agrid.dim(2);
 
-    const size_t nfunc = 10;
+
     const size_t ng    = grid_.sizeg();
 
 #ifdef HAVE_OPENMP_OFFLOAD

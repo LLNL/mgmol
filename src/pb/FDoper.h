@@ -50,7 +50,7 @@ protected:
     void del1_8th(GridFunc<T>&, GridFunc<T>&, const short) const;
     void del2_8th(GridFunc<T>&, GridFunc<T>&) const;
 
-    void del2_4th(const Grid&, T*, T*) const;
+    void del2_4th(const Grid&, T*, T*, const size_t) const;
 
     // Mehrstellenverfahren operators
     void del2_4th_Mehr(GridFunc<T>&, GridFunc<T>&) const;
