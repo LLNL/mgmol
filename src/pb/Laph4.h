@@ -28,6 +28,7 @@ public:
     {
         // cout<<" Create Laph4 operator\n";
 
+        //-1/12 16/12 -30/12 16/12 -1/12
         diagEl_ = 2.5
                   * (Lap<T>::inv_h2(0) + Lap<T>::inv_h2(1)
                         + Lap<T>::inv_h2(2)); // 2.5 = 30./12.
@@ -99,6 +100,10 @@ public:
         {
             this->del2_4th(A.func(k), B.func(k));
         }
+    }
+    void apply(Grid& Agrid, T* A, T* B, const size_t nfunc)
+    {
+        this->del2_4th(Agrid, A, B, nfunc);
     }
 
     void jacobi(GridFunc<T>&, const GridFunc<T>&, GridFunc<T>&) override;
