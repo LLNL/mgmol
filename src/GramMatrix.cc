@@ -8,12 +8,12 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "GramMatrix.h"
+#include "DistMatrix.h"
 #include "DistMatrix2SquareLocalMatrices.h"
 #include "DistMatrixTools.h"
 #include "DistVector.h"
 #include "Power.h"
 #include "ReplicatedMatrix.h"
-#include "DistMatrix.h"
 
 #include <iomanip>
 #include <iostream>
