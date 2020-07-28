@@ -84,7 +84,9 @@ public:
     // A->B
     void apply(GridFunc<T>& A, GridFunc<T>& B) override
     {
+        if (!A.updated_boundaries()) A.trade_boundaries();
         this->del2_4th(A.grid(), A.uu(), B.uu(), 1);
+        B.set_updated_boundaries(0);
         B.set_bc(A.bc(0), A.bc(1), A.bc(2));
     }
     void applyWithPot(GridFunc<T>& A, const double* pot, T* B) override
