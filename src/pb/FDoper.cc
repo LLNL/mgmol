@@ -432,8 +432,8 @@ void FDoper<T>::del2_4th(
     T* const A_alias = A_dev.get();
     T* B_alias       = B_dev.get();
 #else
-    T* const A_alias    = A;
-    T* B_alias          = B;
+    T* const A_alias = A;
+    T* B_alias       = B;
 #endif
 
     int incx = incx_;
@@ -769,7 +769,7 @@ void FDoper<T>::del2_4th_Mehr(GridFunc<T>& A, GridFunc<T>& B) const
                    c0mehr4_,czmehr4_,cymehr4_,cxmehr4_,cyzmehr4_,cxymehr4_,cxzmehr4_,
                    A.uu(0),B.uu(0));
 #else
-    const int iix0      = shift * incx_;
+    const int iix0   = shift * incx_;
 
     const T* const v = A.uu(0);
     T* u             = B.uu(0);
