@@ -379,93 +379,9 @@ void FDoper<T>::del2_4th(GridFunc<T>& A, GridFunc<T>& B) const
 
     if (!A.updated_boundaries()) A.trade_boundaries();
 
-    del2_4th_tm_.start();
-
-    const double cc0 = inv12 * inv_h2_[0];
-    const double c1x = -16. * cc0;
-    const double c2x = 1. * cc0;
-
-    const double cc1 = inv12 * inv_h2_[1];
-    const double c1y = -16. * cc1;
-    const double c2y = 1. * cc1;
-
-    const double cc2 = inv12 * inv_h2_[2];
-    const double c1z = -16. * cc2;
-    const double c2z = 1. * cc2;
-
-    const double c0 = -2. * (c1x + c2x + c1y + c2y + c1z + c2z);
-
-    const int gpt = grid_.ghost_pt();
-
-    const int incx2 = 2 * A.grid().inc(0);
-    const int incy2 = 2 * A.grid().inc(1);
-
-    int iix = gpt * incx_;
-
-    const int dim0 = A.dim(0);
-    const int dim1 = A.dim(1);
-    const int dim2 = A.dim(2);
-
-#ifdef HAVE_OPENMP_OFFLOAD
-    const size_t ng = grid_.sizeg();
-    std::unique_ptr<T, void (*)(T*)> A_uu_dev(
-        MemoryDev<T>::allocate(ng), MemoryDev<T>::free);
-    MemorySpace::copy_to_dev(A.uu(0), ng, A_uu_dev.get());
-
-    std::unique_ptr<T, void (*)(T*)> B_uu_dev(
-        MemoryDev<T>::allocate(ng), MemoryDev<T>::free);
-
-    T* const A_uu_alias = A_uu_dev.get();
-    T* B_uu_alias       = B_uu_dev.get();
-#else
-    T* const A_uu_alias = A.uu(0);
-    T* B_uu_alias       = B.uu(0);
-#endif
-
-    int incx = incx_;
-    int incy = incy_;
-
-    MGMOL_PARALLEL_FOR_COLLAPSE(3, A_uu_alias, B_uu_alias)
-    for (int ix = 0; ix < dim0; ix++)
-    {
-        for (int iy = 0; iy < dim1; iy++)
-        {
-            for (int iz = 0; iz < dim2; iz++)
-            {
-                int iiz = (iix + ix * incx + gpt * incy + iy * incy) + gpt;
-
-                const T* __restrict__ v0   = A_uu_alias + iiz;
-                const T* __restrict__ vmx  = A_uu_alias + (iiz - incx);
-                const T* __restrict__ vpx  = A_uu_alias + (iiz + incx);
-                const T* __restrict__ vmx2 = A_uu_alias + (iiz - incx2);
-                const T* __restrict__ vpx2 = A_uu_alias + (iiz + incx2);
-                const T* __restrict__ vmy  = A_uu_alias + (iiz - incy);
-                const T* __restrict__ vpy  = A_uu_alias + (iiz + incy);
-                const T* __restrict__ vmy2 = A_uu_alias + (iiz - incy2);
-                const T* __restrict__ vpy2 = A_uu_alias + (iiz + incy2);
-
-                T* __restrict__ u = B_uu_alias + iiz;
-
-                u[iz] = c0 * (double)v0[iz]
-
-                        + c1x * ((double)vmx[iz] + (double)vpx[iz])
-                        + c1y * ((double)vmy[iz] + (double)vpy[iz])
-                        + c1z * ((double)v0[iz - 1] + (double)v0[iz + 1])
-
-                        + c2x * ((double)vmx2[iz] + (double)vpx2[iz])
-                        + c2y * ((double)vmy2[iz] + (double)vpy2[iz])
-                        + c2z * ((double)v0[iz - 2] + (double)v0[iz + 2]);
-            }
-        }
-    }
-
-#ifdef HAVE_OPENMP_OFFLOAD
-    MemorySpace::copy_to_host(B_uu_alias, ng, B.uu(0));
-#endif
+    del2_4th(A.grid(), A.uu(), B.uu(), 1);
 
     B.set_updated_boundaries(0);
-
-    del2_4th_tm_.stop();
 }
 
 template <class T>
