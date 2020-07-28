@@ -10,17 +10,16 @@
 #ifndef MGMOL_PROJECTED_MATRICES_MEHR_H
 #define MGMOL_PROJECTED_MATRICES_MEHR_H
 
-#include "DistMatrix.h"
 #include "ProjectedMatrices.h"
 
 #include <iostream>
 
-class ProjectedMatricesMehrstellen
-    : public ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>
+template <class MatrixType>
+class ProjectedMatricesMehrstellen : public ProjectedMatrices<MatrixType>
 {
 private:
-    dist_matrix::DistMatrix<DISTMATDTYPE>* matB_;
-    dist_matrix::DistMatrix<DISTMATDTYPE>* invB_;
+    MatrixType* matB_;
+    MatrixType* invB_;
 
     void printB(std::ostream& os) const
     {
@@ -43,37 +42,40 @@ public:
     ~ProjectedMatricesMehrstellen() override;
 
     void computeInvB() override;
-    void rotateAll(const dist_matrix::DistMatrix<DISTMATDTYPE>& rotation_matrix,
-        const bool flag_eigen) override;
+    void rotateAll(
+        const MatrixType& rotation_matrix, const bool flag_eigen) override;
 
     void initializeMatB(const SquareLocalMatrices<MATDTYPE>& ss) override
     {
-        convert(ss, *matB_);
+        ProjectedMatrices<MatrixType>::convert(ss, *matB_);
     }
 
     void updateTheta() override
     {
         // theta = invB * Hij
-        theta_->symm('l', 'l', 1., *invB_, *matH_, 0.);
+        ProjectedMatrices<MatrixType>::theta_->symm(
+            'l', 'l', 1., *invB_, *ProjectedMatrices<MatrixType>::matH_, 0.);
     }
 
     void updateHB() override
     {
         // if( onpe0 )
         //    (*MPIdata::sout)<<"ProjectedMatrices::updateHB()..."<<endl;
-        matHB_->symm('l', 'l', 1., gm_->getMatrix(), *theta_, 0.);
-        dist_matrix::DistMatrix<DISTMATDTYPE> work_dis(*matHB_);
-        matHB_->transpose(0.5, work_dis, 0.5);
+        ProjectedMatrices<MatrixType>::matHB_->symm('l', 'l', 1.,
+            ProjectedMatrices<MatrixType>::gm_->getMatrix(),
+            *ProjectedMatrices<MatrixType>::theta_, 0.);
+        MatrixType work_dis(*ProjectedMatrices<MatrixType>::matHB_);
+        ProjectedMatrices<MatrixType>::matHB_->transpose(0.5, work_dis, 0.5);
     }
 
     void printMatrices(std::ostream& os) const override
     {
-        printS(os);
+        ProjectedMatrices<MatrixType>::printS(os);
         printB(os);
         printInvB(os);
-        printH(os);
-        printTheta(os);
-        printHB(os);
+        ProjectedMatrices<MatrixType>::printH(os);
+        ProjectedMatrices<MatrixType>::printTheta(os);
+        ProjectedMatrices<MatrixType>::printHB(os);
     }
 };
 

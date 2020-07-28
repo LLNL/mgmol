@@ -260,7 +260,8 @@ int MGmol<T>::initial()
     // initialize data distribution objects
     bool with_spin = (mmpi.nspin() > 1);
     if (ct.Mehrstellen())
-        proj_matrices_ = new ProjectedMatricesMehrstellen(ct.numst, with_spin);
+        proj_matrices_ = new ProjectedMatricesMehrstellen<
+            dist_matrix::DistMatrix<DISTMATDTYPE>>(ct.numst, with_spin);
     else if (ct.short_sighted)
         proj_matrices_
             = new ProjectedMatricesSparse(ct.numst, lrs_, local_cluster_);
