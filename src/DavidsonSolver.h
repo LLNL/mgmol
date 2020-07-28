@@ -4,8 +4,8 @@
 // All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
-
 #include "DistMatrix.h"
+#include "ProjectedMatrices2N.h"
 #include "Timer.h"
 
 class Ions;
@@ -18,7 +18,6 @@ class Energy;
 template <class T>
 class MGmol;
 class Electrostatic;
-class ProjectedMatrices2N;
 
 template <class T>
 class DavidsonSolver
@@ -44,7 +43,8 @@ private:
 
     int numst_;
     std::unique_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> work2N_;
-    std::unique_ptr<ProjectedMatrices2N> proj_mat2N_;
+    std::unique_ptr<ProjectedMatrices2N<dist_matrix::DistMatrix<DISTMATDTYPE>>>
+        proj_mat2N_;
 
     static Timer solve_tm_;
     static Timer target_tm_;

@@ -19,8 +19,9 @@ class Ions;
 template <class T>
 class MGmol;
 class Electrostatic;
+template <class MatrixType>
 class ProjectedMatrices2N;
-template <class T>
+template <class MatrixType>
 class ProjectedMatrices;
 
 template <class T1, class T2, class T3>

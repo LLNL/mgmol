@@ -12,30 +12,26 @@
 
 #include "ProjectedMatrices.h"
 
-class ProjectedMatrices2N
-    : public ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>
+template <class MatrixType>
+class ProjectedMatrices2N : public ProjectedMatrices<MatrixType>
 {
     int bdim_;
-    dist_matrix::DistMatrix<DISTMATDTYPE>* work2N_;
+    MatrixType* work2N_;
 
 public:
     ProjectedMatrices2N(const int ndim, const bool with_spin);
 
     ~ProjectedMatrices2N() override;
 
-    void assignBlocksH(dist_matrix::DistMatrix<DISTMATDTYPE>&,
-        dist_matrix::DistMatrix<DISTMATDTYPE>&,
-        dist_matrix::DistMatrix<DISTMATDTYPE>&,
-        dist_matrix::DistMatrix<DISTMATDTYPE>&);
-    double mu() const { return mu_; }
+    void assignBlocksH(MatrixType&, MatrixType&, MatrixType&, MatrixType&);
+    double mu() const { return ProjectedMatrices<MatrixType>::mu_; }
 
     void iterativeUpdateDMwithEigenstates(const double occ_width, const int nel,
         const int iterative_index, const bool flag_reduce_T = true);
-    void diagonalizeDM(std::vector<DISTMATDTYPE>& occ,
-        dist_matrix::DistMatrix<DISTMATDTYPE>& vect)
+    void diagonalizeDM(std::vector<DISTMATDTYPE>& occ, MatrixType& vect)
     {
         // we are assuming Gram matrix=identity
-        dm_->diagonalize('v', occ, vect);
+        ProjectedMatrices<MatrixType>::dm_->diagonalize('v', occ, vect);
     }
 };
 

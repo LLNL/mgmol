@@ -9,36 +9,41 @@
 
 #include "ProjectedMatrices2N.h"
 
-ProjectedMatrices2N::ProjectedMatrices2N(const int ndim, const bool with_spin)
-    : ProjectedMatrices(ndim, with_spin)
+template <class MatrixType>
+ProjectedMatrices2N<MatrixType>::ProjectedMatrices2N(
+    const int ndim, const bool with_spin)
+    : ProjectedMatrices<MatrixType>(ndim, with_spin)
 {
     bdim_ = ndim / 2;
 
-    work2N_ = new dist_matrix::DistMatrix<DISTMATDTYPE>("work2N", ndim, ndim);
+    work2N_ = new MatrixType("work2N", ndim, ndim);
 }
 
-ProjectedMatrices2N::~ProjectedMatrices2N() { delete work2N_; }
-
-void ProjectedMatrices2N::assignBlocksH(
-    dist_matrix::DistMatrix<DISTMATDTYPE>& h11,
-    dist_matrix::DistMatrix<DISTMATDTYPE>& h12,
-    dist_matrix::DistMatrix<DISTMATDTYPE>& h21,
-    dist_matrix::DistMatrix<DISTMATDTYPE>& h22)
+template <class MatrixType>
+ProjectedMatrices2N<MatrixType>::~ProjectedMatrices2N()
 {
-    matH_->assign(h11, 0, 0);
-    matH_->assign(h12, 0, bdim_);
-    matH_->assign(h21, bdim_, 0);
-    matH_->assign(h22, bdim_, bdim_);
+    delete work2N_;
 }
 
-void ProjectedMatrices2N::iterativeUpdateDMwithEigenstates(
+template <class MatrixType>
+void ProjectedMatrices2N<MatrixType>::assignBlocksH(
+    MatrixType& h11, MatrixType& h12, MatrixType& h21, MatrixType& h22)
+{
+    ProjectedMatrices<MatrixType>::matH_->assign(h11, 0, 0);
+    ProjectedMatrices<MatrixType>::matH_->assign(h12, 0, bdim_);
+    ProjectedMatrices<MatrixType>::matH_->assign(h21, bdim_, 0);
+    ProjectedMatrices<MatrixType>::matH_->assign(h22, bdim_, bdim_);
+}
+
+template <class MatrixType>
+void ProjectedMatrices2N<MatrixType>::iterativeUpdateDMwithEigenstates(
     const double occ_width, const int nel, const int iterative_index,
     const bool flag_reduce_T)
 {
     const int dim = this->dim();
     std::vector<DISTMATDTYPE> eigenval(dim);
 
-    solveGenEigenProblem(*work2N_, eigenval);
+    ProjectedMatrices<MatrixType>::solveGenEigenProblem(*work2N_, eigenval);
 
     double kbT = occ_width;
     std::vector<DISTMATDTYPE> occ(dim);
@@ -48,13 +53,16 @@ void ProjectedMatrices2N::iterativeUpdateDMwithEigenstates(
     {
         if (onpe0)
             (*MPIdata::sout) << "MVP target with kbT = " << kbT << std::endl;
-        mu = computeChemicalPotentialAndOccupations(kbT, nel, dim);
-        getOccupations(occ);
+        mu = ProjectedMatrices<
+            MatrixType>::computeChemicalPotentialAndOccupations(kbT, nel, dim);
+        ProjectedMatrices<MatrixType>::getOccupations(occ);
         kbT *= 0.5;
     } while (occ[bdim_] > tol && flag_reduce_T);
 
     if (onpe0)
         (*MPIdata::sout) << "MVP target with mu = " << mu << " [Ry]"
                          << std::endl;
-    buildDM(*work2N_, iterative_index);
+    ProjectedMatrices<MatrixType>::buildDM(*work2N_, iterative_index);
 }
+
+template class ProjectedMatrices2N<dist_matrix::DistMatrix<DISTMATDTYPE>>;

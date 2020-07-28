@@ -63,7 +63,9 @@ DavidsonSolver<T>::DavidsonSolver(MPI_Comm comm, std::ostream& os, Ions& ions,
     work2N_.reset(new dist_matrix::DistMatrix<DISTMATDTYPE>(
         "work2N", 2 * numst_, 2 * numst_));
 
-    proj_mat2N_.reset(new ProjectedMatrices2N(2 * numst_, false));
+    proj_mat2N_.reset(
+        new ProjectedMatrices2N<dist_matrix::DistMatrix<DISTMATDTYPE>>(
+            2 * numst_, false));
     proj_mat2N_->setup(kbT, nel, global_indexes);
 }
 
