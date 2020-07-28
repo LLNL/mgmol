@@ -87,10 +87,11 @@ void HamiltonianMVP_DMStrategy<T1, T2, T3>::reset()
 }
 
 template class HamiltonianMVP_DMStrategy<dist_matrix::DistMatrix<DISTMATDTYPE>,
-    ProjectedMatrices, LocGridOrbitals>;
+    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>, LocGridOrbitals>;
 
 template class HamiltonianMVP_DMStrategy<VariableSizeMatrix<sparserow>,
     ProjectedMatricesSparse, LocGridOrbitals>;
 
 template class HamiltonianMVP_DMStrategy<dist_matrix::DistMatrix<DISTMATDTYPE>,
-    ProjectedMatrices, ExtendedGridOrbitals>;
+    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>,
+    ExtendedGridOrbitals>;

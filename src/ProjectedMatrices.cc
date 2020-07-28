@@ -30,51 +30,69 @@
 
 #define RY2EV 13.605804
 
-Timer ProjectedMatrices::sygv_tm_("ProjectedMatrices::sygv");
-Timer ProjectedMatrices::compute_inverse_tm_(
-    "ProjectedMatrices::computeInverse");
-Timer ProjectedMatrices::compute_invB_tm_("ProjectedMatrices::computeInvB");
-Timer ProjectedMatrices::init_gram_matrix_tm_(
-    "ProjectedMatrices::initialize_Gram_Matrix");
-Timer ProjectedMatrices::update_theta_tm_("ProjectedMatrices::updateTheta");
-Timer ProjectedMatrices::update_submatT_tm_("ProjectedMatrices::updateSubmatT");
-Timer ProjectedMatrices::update_submatX_tm_("ProjectedMatrices::updateSubmatX");
-Timer ProjectedMatrices::eigsum_tm_("ProjectedMatrices::eigsum");
-Timer ProjectedMatrices::consolidate_H_tm_("ProjectedMatrices::consolidate_sH");
-Timer ProjectedMatrices::compute_entropy_tm_(
-    "ProjectedMatrices::compute_entropy");
+template <class MatrixType>
+Timer ProjectedMatrices<MatrixType>::sygv_tm_("ProjectedMatrices::sygv");
+template <class MatrixType>
+Timer ProjectedMatrices<MatrixType>::compute_inverse_tm_(
+    "ProjectedMatrices<MatrixType>::computeInverse");
+template <class MatrixType>
+Timer ProjectedMatrices<MatrixType>::compute_invB_tm_(
+    "ProjectedMatrices::computeInvB");
+template <class MatrixType>
+Timer ProjectedMatrices<MatrixType>::init_gram_matrix_tm_(
+    "ProjectedMatrices<MatrixType>::initialize_Gram_Matrix");
+template <class MatrixType>
+Timer ProjectedMatrices<MatrixType>::update_theta_tm_(
+    "ProjectedMatrices::updateTheta");
+template <class MatrixType>
+Timer ProjectedMatrices<MatrixType>::update_submatT_tm_(
+    "ProjectedMatrices::updateSubmatT");
+template <class MatrixType>
+Timer ProjectedMatrices<MatrixType>::update_submatX_tm_(
+    "ProjectedMatrices::updateSubmatX");
+template <class MatrixType>
+Timer ProjectedMatrices<MatrixType>::eigsum_tm_("ProjectedMatrices::eigsum");
+template <class MatrixType>
+Timer ProjectedMatrices<MatrixType>::consolidate_H_tm_(
+    "ProjectedMatrices::consolidate_sH");
+template <class MatrixType>
+Timer ProjectedMatrices<MatrixType>::compute_entropy_tm_(
+    "ProjectedMatrices<MatrixType>::compute_entropy");
 
-short ProjectedMatrices::n_instances_ = 0;
+template <class MatrixType>
+short ProjectedMatrices<MatrixType>::n_instances_ = 0;
 
-GramMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>*
-    ProjectedMatrices::gram_4dotProducts_
+template <class MatrixType>
+GramMatrix<MatrixType>* ProjectedMatrices<MatrixType>::gram_4dotProducts_
     = nullptr;
-DensityMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>*
-    ProjectedMatrices::dm_4dot_product_
+template <class MatrixType>
+DensityMatrix<MatrixType>* ProjectedMatrices<MatrixType>::dm_4dot_product_
     = nullptr;
 
 static int sparse_distmatrix_nb_partitions = 128;
 
-ProjectedMatrices::ProjectedMatrices(const int ndim, const bool with_spin)
+template <class MatrixType>
+ProjectedMatrices<MatrixType>::ProjectedMatrices(
+    const int ndim, const bool with_spin)
     : with_spin_(with_spin),
       dim_(ndim),
-      dm_(new DensityMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>(ndim)),
-      gm_(new GramMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>(ndim))
+      dm_(new DensityMatrix<MatrixType>(ndim)),
+      gm_(new GramMatrix<MatrixType>(ndim))
 {
     width_ = 0.;
 
     eigenvalues_.resize(dim_);
 
-    matH_.reset(new dist_matrix::DistMatrix<DISTMATDTYPE>("H", ndim, ndim));
-    matHB_.reset(new dist_matrix::DistMatrix<DISTMATDTYPE>("HB", ndim, ndim));
-    theta_.reset(
-        new dist_matrix::DistMatrix<DISTMATDTYPE>("Theta", ndim, ndim));
-    work_.reset(new dist_matrix::DistMatrix<DISTMATDTYPE>("work", ndim, ndim));
+    matH_.reset(new MatrixType("H", ndim, ndim));
+    matHB_.reset(new MatrixType("HB", ndim, ndim));
+    theta_.reset(new MatrixType("Theta", ndim, ndim));
+    work_.reset(new MatrixType("work", ndim, ndim));
 
     n_instances_++;
 }
 
-ProjectedMatrices::~ProjectedMatrices()
+template <class MatrixType>
+ProjectedMatrices<MatrixType>::~ProjectedMatrices()
 {
     if (n_instances_ == 1)
     {
@@ -88,23 +106,25 @@ ProjectedMatrices::~ProjectedMatrices()
     n_instances_--;
 }
 
-void ProjectedMatrices::convert(const SquareLocalMatrices<MATDTYPE>& src,
-    dist_matrix::DistMatrix<DISTMATDTYPE>& dst)
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::convert(
+    const SquareLocalMatrices<MATDTYPE>& src, MatrixType& dst)
 {
     LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
     sl2dm->accumulate(src, dst);
 }
 
-void ProjectedMatrices::convert(
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& src,
-    SquareLocalMatrices<MATDTYPE>& dst)
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::convert(
+    const MatrixType& src, SquareLocalMatrices<MATDTYPE>& dst)
 {
     DistMatrix2SquareLocalMatrices* dm2sl
         = DistMatrix2SquareLocalMatrices::instance();
     dm2sl->convert(src, dst);
 }
 
-void ProjectedMatrices::setup(const double kbt, const int nel,
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::setup(const double kbt, const int nel,
     const std::vector<std::vector<int>>& global_indexes)
 {
     assert(global_indexes.size() > 0);
@@ -129,20 +149,22 @@ void ProjectedMatrices::setup(const double kbt, const int nel,
         global_indexes.size(), global_indexes[0].size()));
 }
 
-void ProjectedMatrices::computeInvS()
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::computeInvS()
 {
     compute_inverse_tm_.start();
 #ifdef PRINT_OPERATIONS
     if (onpe0)
-        (*MPIdata::sout) << "ProjectedMatrices::computeInvS()" << std::endl;
+        (*MPIdata::sout) << "ProjectedMatrices<MatrixType>::computeInvS()"
+                         << std::endl;
 #endif
     gm_->computeInverse();
     compute_inverse_tm_.stop();
 }
 
-void ProjectedMatrices::rotateAll(
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& rotation_matrix,
-    const bool flag_eigen)
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::rotateAll(
+    const MatrixType& rotation_matrix, const bool flag_eigen)
 {
     // S -> U^T S U
     // rotate overlap and l_s
@@ -170,7 +192,9 @@ void ProjectedMatrices::rotateAll(
     dm_->rotate(rotation_matrix, flag_eigen);
 }
 
-void ProjectedMatrices::applyInvS(SquareLocalMatrices<MATDTYPE>& mat)
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::applyInvS(
+    SquareLocalMatrices<MATDTYPE>& mat)
 {
     // build DistMatrix from SquareLocalMatrices
     convert(mat, *work_);
@@ -181,20 +205,21 @@ void ProjectedMatrices::applyInvS(SquareLocalMatrices<MATDTYPE>& mat)
     convert(*work_, mat);
 }
 
-void ProjectedMatrices::setDMto2InvS()
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::setDMto2InvS()
 {
     dm_->setto2InvS(gm_->getInverse(), gm_->getAssociatedOrbitalsIndex());
 }
 
-void ProjectedMatrices::solveGenEigenProblem(
-    dist_matrix::DistMatrix<DISTMATDTYPE>& z, std::vector<DISTMATDTYPE>& val,
-    char job)
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::solveGenEigenProblem(
+    MatrixType& z, std::vector<DISTMATDTYPE>& val, char job)
 {
     assert(val.size() == eigenvalues_.size());
 
     sygv_tm_.start();
 
-    dist_matrix::DistMatrix<DISTMATDTYPE> mat(*matHB_);
+    MatrixType mat(*matHB_);
 
     // Transform the generalized eigenvalue problem to a standard form
     gm_->sygst(mat);
@@ -211,25 +236,31 @@ void ProjectedMatrices::solveGenEigenProblem(
     sygv_tm_.stop();
 }
 
-void ProjectedMatrices::buildDM(
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& z, const int orbitals_index)
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::buildDM(
+    const MatrixType& z, const int orbitals_index)
 {
     dm_->build(z, orbitals_index);
 }
 
-void ProjectedMatrices::buildDM(const dist_matrix::DistMatrix<DISTMATDTYPE>& z,
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::buildDM(const MatrixType& z,
     const std::vector<DISTMATDTYPE>& occ, const int orbitals_index)
 {
     dm_->build(z, occ, orbitals_index);
 }
 
-void ProjectedMatrices::buildDM(
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::buildDM(
     const std::vector<DISTMATDTYPE>& occ, const int orbitals_index)
 {
     dm_->build(occ, orbitals_index);
 }
+
 // Use Chebyshev approximation to compute chemical potential and density matrix
-void ProjectedMatrices::updateDMwithChebApproximation(const int iterative_index)
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::updateDMwithChebApproximation(
+    const int iterative_index)
 {
     Control& ct = *(Control::instance());
     if (onpe0)
@@ -266,14 +297,17 @@ void ProjectedMatrices::updateDMwithChebApproximation(const int iterative_index)
     if (onpe0 && ct.verbose > 1)
         std::cout << "Final mu_ = " << final_mu << std::endl;
 }
-void ProjectedMatrices::updateDMwithEigenstates(const int iterative_index)
+
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::updateDMwithEigenstates(
+    const int iterative_index)
 {
     Control& ct = *(Control::instance());
 
     if (onpe0 && ct.verbose > 1)
         (*MPIdata::sout) << "ProjectedMatrices: Compute DM using eigenstates\n";
 
-    dist_matrix::DistMatrix<DISTMATDTYPE> zz("Z", dim_, dim_);
+    MatrixType zz("Z", dim_, dim_);
     std::vector<DISTMATDTYPE> val(dim_);
 
     // solves generalized eigenvalue problem
@@ -291,7 +325,8 @@ void ProjectedMatrices::updateDMwithEigenstates(const int iterative_index)
 //"replicated" implementation of SP2.
 // Theta is replicated on each MPI task, and SP2 solve run independently
 // by each MPI task
-void ProjectedMatrices::updateDMwithSP2(const int iterative_index)
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::updateDMwithSP2(const int iterative_index)
 {
     Control& ct = *(Control::instance());
 
@@ -330,13 +365,14 @@ void ProjectedMatrices::updateDMwithSP2(const int iterative_index)
 
     sp2.solve(nel_, (ct.verbose > 1));
 
-    dist_matrix::DistMatrix<DISTMATDTYPE> dm("dm", dim_, dim_);
+    MatrixType dm("dm", dim_, dim_);
 
     sp2.getDM(dm, gm_->getInverse());
     dm_->setMatrix(dm, iterative_index);
 }
 
-void ProjectedMatrices::updateDM(const int iterative_index)
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::updateDM(const int iterative_index)
 {
     Control& ct = *(Control::instance());
 
@@ -348,23 +384,25 @@ void ProjectedMatrices::updateDM(const int iterative_index)
         updateDMwithSP2(iterative_index);
     else
     {
-        std::cerr
-            << "Eigensolver not available in ProjectedMatrices::updateDM()\n";
+        std::cerr << "Eigensolver not available in "
+                     "ProjectedMatrices<MatrixType>::updateDM()\n";
         ct.global_exit(2);
     }
 
 #ifndef NDEBUG
     double nel = getNel();
-    std::cout << "ProjectedMatrices::updateDM(), nel = " << nel << std::endl;
+    std::cout << "ProjectedMatrices<MatrixType>::updateDM(), nel = " << nel
+              << std::endl;
     assert(fabs(nel - nel) < 1.e-2);
     double energy = getExpectationH();
-    std::cout << "ProjectedMatrices::updateDM(), energy = " << energy
-              << std::endl;
+    std::cout << "ProjectedMatrices<MatrixType>::updateDM(), energy = "
+              << energy << std::endl;
 #endif
 }
 
-void ProjectedMatrices::updateDMwithEigenstatesAndRotate(
-    const int iterative_index, dist_matrix::DistMatrix<DISTMATDTYPE>& zz)
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::updateDMwithEigenstatesAndRotate(
+    const int iterative_index, MatrixType& zz)
 {
     std::vector<DISTMATDTYPE> val(dim_);
 
@@ -378,12 +416,14 @@ void ProjectedMatrices::updateDMwithEigenstatesAndRotate(
     dm_->build(iterative_index);
 }
 
-void ProjectedMatrices::computeOccupationsFromDM()
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::computeOccupationsFromDM()
 {
 #ifdef PRINT_OPERATIONS
     if (onpe0)
-        (*MPIdata::sout) << "ProjectedMatrices::computeOccupationsFromDM()"
-                         << std::endl;
+        (*MPIdata::sout)
+            << "ProjectedMatrices<MatrixType>::computeOccupationsFromDM()"
+            << std::endl;
 #endif
     Control& ct = *(Control::instance());
     if (ct.DMEigensolver() != DMEigensolverType::Chebyshev)
@@ -393,27 +433,40 @@ void ProjectedMatrices::computeOccupationsFromDM()
     }
 }
 
-void ProjectedMatrices::getOccupations(std::vector<DISTMATDTYPE>& occ) const
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::getOccupations(
+    std::vector<DISTMATDTYPE>& occ) const
 {
     dm_->getOccupations(occ);
 }
-void ProjectedMatrices::setOccupations(const std::vector<DISTMATDTYPE>& occ)
+
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::setOccupations(
+    const std::vector<DISTMATDTYPE>& occ)
 {
 #ifdef PRINT_OPERATIONS
     if (onpe0)
-        (*MPIdata::sout) << "ProjectedMatrices::setOccupations()" << std::endl;
+        (*MPIdata::sout) << "ProjectedMatrices<MatrixType>::setOccupations()"
+                         << std::endl;
 #endif
     dm_->setOccupations(occ);
 }
-void ProjectedMatrices::printDM(std::ostream& os) const { dm_->print(os); }
 
-const dist_matrix::DistMatrix<DISTMATDTYPE>& ProjectedMatrices::dm() const
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::printDM(std::ostream& os) const
+{
+    dm_->print(os);
+}
+
+template <class MatrixType>
+const MatrixType& ProjectedMatrices<MatrixType>::dm() const
 {
     assert(dm_);
     return dm_->getMatrix();
 }
 
-double ProjectedMatrices::getNel() const
+template <class MatrixType>
+double ProjectedMatrices<MatrixType>::getNel() const
 {
     double val = dm_->dot(gm_->getMatrix());
     if (with_spin_)
@@ -427,7 +480,8 @@ double ProjectedMatrices::getNel() const
     return val;
 }
 
-double ProjectedMatrices::getEigSum()
+template <class MatrixType>
+double ProjectedMatrices<MatrixType>::getEigSum()
 {
     eigsum_tm_.start();
     work_->symm('l', 'l', 1., *matHB_, gm_->getInverse(), 0.);
@@ -439,20 +493,26 @@ double ProjectedMatrices::getEigSum()
     return val;
 }
 
-double ProjectedMatrices::getExpectationH() { return getExpectation(*matHB_); }
+template <class MatrixType>
+double ProjectedMatrices<MatrixType>::getExpectationH()
+{
+    return getExpectation(*matHB_);
+}
 
-double ProjectedMatrices::getExpectation(
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& A)
+template <class MatrixType>
+double ProjectedMatrices<MatrixType>::getExpectation(const MatrixType& A)
 {
     return dm_->getExpectation(A);
 }
 
 // strip dm from the overlap contribution
 // dm <- Ls**T * dm * Ls
-void ProjectedMatrices::stripDM()
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::stripDM()
 {
 #ifdef PRINT_OPERATIONS
-    if (onpe0) std::cout << "ProjectedMatrices::stripDM()" << std::endl;
+    if (onpe0)
+        std::cout << "ProjectedMatrices<MatrixType>::stripDM()" << std::endl;
 #endif
 #ifdef DEBUG // TEST
     double dd = dm_->getMatrix().trace();
@@ -462,22 +522,26 @@ void ProjectedMatrices::stripDM()
     dm_->stripS(gm_->getCholeskyL());
 }
 
-void ProjectedMatrices::dressupDM()
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::dressupDM()
 {
 #ifdef PRINT_OPERATIONS
-    if (onpe0) std::cout << "ProjectedMatrices::dressupDM()" << std::endl;
+    if (onpe0)
+        std::cout << "ProjectedMatrices<MatrixType>::dressupDM()" << std::endl;
 #endif
     dm_->dressUpS(gm_->getCholeskyL(), gm_->getAssociatedOrbitalsIndex());
 }
 
-double ProjectedMatrices::computeEntropy(const double kbt)
+template <class MatrixType>
+double ProjectedMatrices<MatrixType>::computeEntropy(const double kbt)
 {
     return kbt * dm_->computeEntropy();
 }
 
-double ProjectedMatrices::computeEntropy()
+template <class MatrixType>
+double ProjectedMatrices<MatrixType>::computeEntropy()
 {
-    // if(onpe0)(*MPIdata::sout)<<"ProjectedMatrices::computeEntropy()"<<std::endl;
+    // if(onpe0)(*MPIdata::sout)<<"ProjectedMatrices<MatrixType>::computeEntropy()"<<std::endl;
     // if(onpe0)(*MPIdata::sout)<<"width_="<<width_<<std::endl;
     compute_entropy_tm_.start();
 
@@ -511,7 +575,8 @@ double ProjectedMatrices::computeEntropy()
 }
 
 // compute entropy using Chebyshev Approximation
-double ProjectedMatrices::computeEntropyWithCheb(const double kbt)
+template <class MatrixType>
+double ProjectedMatrices<MatrixType>::computeEntropyWithCheb(const double kbt)
 {
     Control& ct = *(Control::instance());
 
@@ -520,7 +585,7 @@ double ProjectedMatrices::computeEntropyWithCheb(const double kbt)
     MGmol_MPI& mmpi           = *(MGmol_MPI::instance());
     double orbital_occupation = mmpi.nspin() > 1 ? 1. : 2.;
     const double scal         = 1 / orbital_occupation;
-    dist_matrix::DistMatrix<DISTMATDTYPE> pmat("DM-Gram", dim_, dim_);
+    MatrixType pmat("DM-Gram", dim_, dim_);
     pmat.gemm('N', 'N', scal, dm_->getMatrix(), gm_->getMatrix(), 0.);
 
     const double emin = 0.;
@@ -539,7 +604,7 @@ double ProjectedMatrices::computeEntropyWithCheb(const double kbt)
     static bool recompute_entropy_coeffs = true;
 
     // compute Chebyshev approximation
-    dist_matrix::DistMatrix<DISTMATDTYPE> mat
+    MatrixType mat
         = chebapp.computeChebyshevApproximation(pmat, recompute_entropy_coeffs);
 
     recompute_entropy_coeffs = false;
@@ -551,12 +616,15 @@ double ProjectedMatrices::computeEntropyWithCheb(const double kbt)
     return -orbital_occupation * kbt * ts;
 }
 
-void ProjectedMatrices::printOccupations(std::ostream& os) const
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::printOccupations(std::ostream& os) const
 {
     if (dm_->occupationsUptodate()) dm_->printOccupations(os);
 }
 
-double ProjectedMatrices::checkCond(const double tol, const bool flag)
+template <class MatrixType>
+double ProjectedMatrices<MatrixType>::checkCond(
+    const double tol, const bool flag)
 {
     double rcond = computeCond();
 
@@ -576,8 +644,10 @@ double ProjectedMatrices::checkCond(const double tol, const bool flag)
     }
     return rcond;
 }
+
 ////// TEMPLATE THIS FOR FLOAT OPTION ??
-int ProjectedMatrices::writeDM_hdf5(HDFrestart& h5f_file)
+template <class MatrixType>
+int ProjectedMatrices<MatrixType>::writeDM_hdf5(HDFrestart& h5f_file)
 {
     hid_t file_id = h5f_file.file_id();
 
@@ -597,9 +667,9 @@ int ProjectedMatrices::writeDM_hdf5(HDFrestart& h5f_file)
         dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     if (dset_id < 0)
     {
-        (*MPIdata::serr)
-            << "ProjectedMatrices::write_dm_hdf5: H5Dcreate2 failed!!!"
-            << std::endl;
+        (*MPIdata::serr) << "ProjectedMatrices<MatrixType>::write_dm_hdf5: "
+                            "H5Dcreate2 failed!!!"
+                         << std::endl;
         return -1;
     }
 
@@ -618,24 +688,25 @@ int ProjectedMatrices::writeDM_hdf5(HDFrestart& h5f_file)
     status = H5Dclose(dset_id);
     if (status < 0)
     {
-        (*MPIdata::serr)
-            << "ProjectedMatrices::write_dm_hdf5(), H5Dclose failed!!!"
-            << std::endl;
+        (*MPIdata::serr) << "ProjectedMatrices<MatrixType>::write_dm_hdf5(), "
+                            "H5Dclose failed!!!"
+                         << std::endl;
         return -1;
     }
     status = H5Sclose(dataspace);
     if (status < 0)
     {
-        (*MPIdata::serr)
-            << "ProjectedMatrices::write_dm_hdf5(), H5Sclose failed!!!"
-            << std::endl;
+        (*MPIdata::serr) << "ProjectedMatrices<MatrixType>::write_dm_hdf5(), "
+                            "H5Sclose failed!!!"
+                         << std::endl;
         return -1;
     }
 
     return 0;
 }
 ////// TEMPLATE THIS FOR FLOAT OPTION ??
-int ProjectedMatrices::read_dm_hdf5(hid_t file_id)
+template <class MatrixType>
+int ProjectedMatrices<MatrixType>::read_dm_hdf5(hid_t file_id)
 {
     ReplicatedWorkSpace<double>& wspace(
         ReplicatedWorkSpace<double>::instance());
@@ -678,12 +749,14 @@ int ProjectedMatrices::read_dm_hdf5(hid_t file_id)
     return ierr;
 }
 
-void ProjectedMatrices::printEigenvalues(std::ostream& os) const
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::printEigenvalues(std::ostream& os) const
 {
     printEigenvaluesHa(os);
 }
 
-void ProjectedMatrices::printEigenvaluesEV(std::ostream& os) const
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::printEigenvaluesEV(std::ostream& os) const
 {
     Control& ct = *(Control::instance());
     if (ct.DMEigensolver() == DMEigensolverType::Eigensolver && onpe0)
@@ -706,7 +779,8 @@ void ProjectedMatrices::printEigenvaluesEV(std::ostream& os) const
     }
 }
 
-void ProjectedMatrices::printEigenvaluesHa(std::ostream& os) const
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::printEigenvaluesHa(std::ostream& os) const
 {
     Control& ct = *(Control::instance());
     if (ct.DMEigensolver() == DMEigensolverType::Eigensolver && onpe0)
@@ -732,7 +806,8 @@ void ProjectedMatrices::printEigenvaluesHa(std::ostream& os) const
 // find the Fermi level by a bisection
 // algorithm adapted from numerical recipes, 2nd edition
 // and fill orbitals accordingly (in fermi_distribution)
-double ProjectedMatrices::computeChemicalPotentialAndOccupations(
+template <class MatrixType>
+double ProjectedMatrices<MatrixType>::computeChemicalPotentialAndOccupations(
     const std::vector<DISTMATDTYPE>& energies, const double width,
     const int nel, const int max_numst)
 {
@@ -849,7 +924,7 @@ double ProjectedMatrices::computeChemicalPotentialAndOccupations(
             if (onpe0)
             {
                 (*MPIdata::sout) << "WARNING: "
-                                    "ProjectedMatrices::"
+                                    "ProjectedMatrices<MatrixType>::"
                                     "computeChemicalPotentialAndOccupations()"
                                  << std::endl;
                 (*MPIdata::sout) << "Iterations did not converge to tolerance "
@@ -869,19 +944,19 @@ double ProjectedMatrices::computeChemicalPotentialAndOccupations(
     return mu_;
 }
 
-void ProjectedMatrices::computeLoewdinTransform(
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::computeLoewdinTransform(
     SquareLocalMatrices<MATDTYPE>& localP, const int orb_index,
     const bool transform_matrices)
 {
     assert(gm_ != nullptr);
 
-    dist_matrix::DistMatrix<DISTMATDTYPE> invSqrtMat("invSqrtMat", dim_, dim_);
+    MatrixType invSqrtMat("invSqrtMat", dim_, dim_);
 
-    std::shared_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> sqrtMat;
+    std::shared_ptr<MatrixType> sqrtMat;
     if (transform_matrices)
     {
-        sqrtMat.reset(
-            new dist_matrix::DistMatrix<DISTMATDTYPE>("sqrtMat", dim_, dim_));
+        sqrtMat.reset(new MatrixType("sqrtMat", dim_, dim_));
     }
 
     gm_->computeLoewdinTransform(invSqrtMat, sqrtMat, orb_index);
@@ -895,7 +970,7 @@ void ProjectedMatrices::computeLoewdinTransform(
 
         // transform matHB_ to reflect Loewdin orthonormalization
         // (we reuse sqrtMat since we are done with it)
-        dist_matrix::DistMatrix<DISTMATDTYPE>& mat(*sqrtMat);
+        MatrixType& mat(*sqrtMat);
         mat.symm('r', 'l', 1., *matHB_, invSqrtMat, 0.);
         matHB_->gemm('n', 't', 1., mat, invSqrtMat, 0.);
     }
@@ -903,25 +978,27 @@ void ProjectedMatrices::computeLoewdinTransform(
     convert(invSqrtMat, localP);
 }
 
-double ProjectedMatrices::getTraceDiagProductWithInvS(
+template <class MatrixType>
+double ProjectedMatrices<MatrixType>::getTraceDiagProductWithInvS(
     std::vector<DISTMATDTYPE>& ddiag)
 {
     return gm_->getTraceDiagProductWithInvS(ddiag);
 }
 
-void ProjectedMatrices::resetDotProductMatrices()
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::resetDotProductMatrices()
 {
     if (gram_4dotProducts_ != nullptr) delete gram_4dotProducts_;
-    gram_4dotProducts_
-        = new GramMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>(*gm_);
+    gram_4dotProducts_ = new GramMatrix<MatrixType>(*gm_);
 }
 
-double ProjectedMatrices::dotProductWithInvS(
+template <class MatrixType>
+double ProjectedMatrices<MatrixType>::dotProductWithInvS(
     const SquareLocalMatrices<MATDTYPE>& local_product)
 {
     assert(gram_4dotProducts_ != nullptr);
 
-    dist_matrix::DistMatrix<DISTMATDTYPE> ds("ds", dim_, dim_);
+    MatrixType ds("ds", dim_, dim_);
 
     convert(local_product, ds);
 
@@ -930,10 +1007,11 @@ double ProjectedMatrices::dotProductWithInvS(
     return work_->trace();
 }
 
-double ProjectedMatrices::dotProductWithDM(
+template <class MatrixType>
+double ProjectedMatrices<MatrixType>::dotProductWithDM(
     const SquareLocalMatrices<MATDTYPE>& local_product)
 {
-    dist_matrix::DistMatrix<DISTMATDTYPE> ds("ds", dim_, dim_);
+    MatrixType ds("ds", dim_, dim_);
 
     convert(local_product, ds);
 
@@ -942,7 +1020,8 @@ double ProjectedMatrices::dotProductWithDM(
     return work_->trace();
 }
 
-double ProjectedMatrices::dotProductSimple(
+template <class MatrixType>
+double ProjectedMatrices<MatrixType>::dotProductSimple(
     const SquareLocalMatrices<MATDTYPE>& local_product)
 {
     convert(local_product, *work_);
@@ -950,7 +1029,8 @@ double ProjectedMatrices::dotProductSimple(
     return work_->trace();
 }
 
-void ProjectedMatrices::printTimers(std::ostream& os)
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::printTimers(std::ostream& os)
 {
     sygv_tm_.print(os);
     compute_inverse_tm_.print(os);
@@ -965,7 +1045,8 @@ void ProjectedMatrices::printTimers(std::ostream& os)
 }
 
 // Assumes SquareLocalMatrix object contains partial contributions
-double ProjectedMatrices::computeTraceInvSmultMat(
+template <class MatrixType>
+double ProjectedMatrices<MatrixType>::computeTraceInvSmultMat(
     const SquareLocalMatrices<MATDTYPE>& mat)
 {
     convert(mat, *work_);
@@ -974,8 +1055,9 @@ double ProjectedMatrices::computeTraceInvSmultMat(
     return work_->trace();
 }
 
-double ProjectedMatrices::computeTraceInvSmultMatMultTheta(
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& mat)
+template <class MatrixType>
+double ProjectedMatrices<MatrixType>::computeTraceInvSmultMatMultTheta(
+    const MatrixType& mat)
 {
     assert(theta_ != nullptr);
 
@@ -988,7 +1070,9 @@ double ProjectedMatrices::computeTraceInvSmultMatMultTheta(
     return work_->trace();
 }
 
-double ProjectedMatrices::computeChemicalPotentialAndDMwithChebyshev(
+template <class MatrixType>
+double
+ProjectedMatrices<MatrixType>::computeChemicalPotentialAndDMwithChebyshev(
     const int order, const double emin, const double emax,
     const int iterative_index)
 {
@@ -1029,7 +1113,7 @@ double ProjectedMatrices::computeChemicalPotentialAndDMwithChebyshev(
 
     // begin
     // compute matrix variable S^{-1}H for Chebyshev
-    dist_matrix::DistMatrix<DISTMATDTYPE> mat(*matHB_);
+    MatrixType mat(*matHB_);
     gm_->applyInv(mat);
     // build array of Chebyshev polynomials (Chebyshev Nodes)
 
@@ -1046,8 +1130,8 @@ double ProjectedMatrices::computeChemicalPotentialAndDMwithChebyshev(
 
     chebapp.buildChebyshevNodes(emin, emax, mat);
 
-    dist_matrix::DistMatrix<DISTMATDTYPE> tmp("TMP", dim_, dim_);
-    dist_matrix::DistMatrix<DISTMATDTYPE> dm("DM", dim_, dim_);
+    MatrixType tmp("TMP", dim_, dim_);
+    MatrixType dm("DM", dim_, dim_);
 
     if (onpe0 && ct.verbose > 0)
         std::cout << "emin = " << emin << " emax = " << emax << std::endl;
@@ -1149,7 +1233,7 @@ double ProjectedMatrices::computeChemicalPotentialAndDMwithChebyshev(
             {
                 (*MPIdata::sout)
                     << "WARNING: "
-                       "ProjectedMatrices::"
+                       "ProjectedMatrices<MatrixType>::"
                        "computeChemicalPotentialAndDMwithChebyshev()"
                     << std::endl;
                 (*MPIdata::sout) << "Iterations did not converge to tolerance "
@@ -1174,16 +1258,19 @@ double ProjectedMatrices::computeChemicalPotentialAndDMwithChebyshev(
 /* Use the power method to compute the extents of the spectrum of the
  * generalized eigenproblem.
  */
-void ProjectedMatrices::computeGenEigenInterval(
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::computeGenEigenInterval(
     std::vector<double>& interval, const int maxits, const double pad)
 {
-    dist_matrix::DistMatrix<DISTMATDTYPE> mat(*matHB_);
+    MatrixType mat(*matHB_);
 
     static PowerGen power(dim_);
 
     power.computeGenEigenInterval(mat, *gm_, interval, maxits, pad);
 }
-void ProjectedMatrices::consolidateH()
+
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::consolidateH()
 {
     consolidate_H_tm_.start();
 
@@ -1203,3 +1290,5 @@ void ProjectedMatrices::consolidateH()
 
     consolidate_H_tm_.stop();
 }
+
+template class ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>;

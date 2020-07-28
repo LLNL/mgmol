@@ -62,7 +62,9 @@ MVPSolver<T>::MVPSolver(MPI_Comm comm, std::ostream& os, Ions& ions,
     work_
         = new dist_matrix::DistMatrix<DISTMATDTYPE>("workMVP", numst_, numst_);
 
-    proj_mat_work_ = new ProjectedMatrices(numst_, false);
+    proj_mat_work_
+        = new ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>(
+            numst_, false);
     proj_mat_work_->setup(kbT, nel, global_indexes);
 }
 
@@ -184,8 +186,10 @@ int MVPSolver<T>::solve(T& orbitals)
 
     dist_matrix::DistMatrix<DISTMATDTYPE> s11("s11", numst_, numst_);
     {
-        ProjectedMatrices* projmatrices
-            = dynamic_cast<ProjectedMatrices*>(orbitals.getProjMatrices());
+        ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
+            = dynamic_cast<
+                ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
+                orbitals.getProjMatrices());
         s11 = projmatrices->getGramMatrix();
     }
 
@@ -240,8 +244,10 @@ int MVPSolver<T>::solve(T& orbitals)
             if (inner_it == 0)
             {
                 // orbitals are new, so a few things need to recomputed
-                ProjectedMatrices* projmatrices
-                    = dynamic_cast<ProjectedMatrices*>(
+                ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*
+                    projmatrices
+                    = dynamic_cast<ProjectedMatrices<
+                        dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
                         orbitals.getProjMatrices());
 
                 projmatrices->assignH(h11);
@@ -363,8 +369,10 @@ int MVPSolver<T>::solve(T& orbitals)
 
         } // inner iterations
 
-        ProjectedMatrices* projmatrices
-            = dynamic_cast<ProjectedMatrices*>(orbitals.getProjMatrices());
+        ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
+            = dynamic_cast<
+                ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
+                orbitals.getProjMatrices());
         projmatrices->setDM(*work_, orbitals.getIterativeIndex());
     }
 

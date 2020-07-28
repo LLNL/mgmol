@@ -12,7 +12,8 @@
 
 #include "ProjectedMatrices.h"
 
-class ProjectedMatrices2N : public ProjectedMatrices
+class ProjectedMatrices2N
+    : public ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>
 {
     int bdim_;
     dist_matrix::DistMatrix<DISTMATDTYPE>* work2N_;

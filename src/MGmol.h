@@ -29,6 +29,7 @@ class ConstraintSet;
 class MLWFTransform;
 class NOLMOTransform;
 class OrbitalsTransform;
+template <class T>
 class ProjectedMatrices;
 class ProjectedMatricesInterface;
 class KBPsiMatrix;

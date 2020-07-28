@@ -462,8 +462,10 @@ int DavidsonSolver<T>::solve(T& orbitals, T& work_orbitals)
             if (inner_it == 0)
             {
                 // orbitals are new, so a few things need to recomputed
-                ProjectedMatrices* projmatrices
-                    = dynamic_cast<ProjectedMatrices*>(
+                ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*
+                    projmatrices
+                    = dynamic_cast<ProjectedMatrices<
+                        dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
                         orbitals.getProjMatrices());
 
                 // get H*psi stored in work_orbitals
@@ -773,8 +775,10 @@ int DavidsonSolver<T>::solve(T& orbitals, T& work_orbitals)
 #endif
 
         // build diagonal DM (orbitals are now eigenvectors of DM)
-        ProjectedMatrices* pmat
-            = dynamic_cast<ProjectedMatrices*>(orbitals.getProjMatrices());
+        ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* pmat
+            = dynamic_cast<
+                ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
+                orbitals.getProjMatrices());
         assert(pmat);
         pmat->buildDM(new_occ, orbitals.getIterativeIndex());
 
@@ -787,8 +791,10 @@ int DavidsonSolver<T>::solve(T& orbitals, T& work_orbitals)
 
     if (onpe0 && ct.verbose > 0)
     {
-        ProjectedMatrices* pmat
-            = dynamic_cast<ProjectedMatrices*>(orbitals.getProjMatrices());
+        ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* pmat
+            = dynamic_cast<
+                ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
+                orbitals.getProjMatrices());
         assert(pmat);
 
         pmat->printOccupations(os_);

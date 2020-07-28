@@ -1826,8 +1826,10 @@ void LocGridOrbitals::orthonormalizeLoewdin(const bool overlap_uptodate,
     if (matrixTransform == nullptr)
         localP = new SquareLocalMatrices<MATDTYPE>(subdivx_, chromatic_number_);
 
-    ProjectedMatrices* projmatrices
-        = dynamic_cast<ProjectedMatrices*>(proj_matrices_);
+    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
+        = dynamic_cast<
+            ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
+            proj_matrices_);
     assert(projmatrices != nullptr);
     assert(localP);
     projmatrices->computeLoewdinTransform(

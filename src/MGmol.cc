@@ -265,7 +265,9 @@ int MGmol<T>::initial()
         proj_matrices_
             = new ProjectedMatricesSparse(ct.numst, lrs_, local_cluster_);
     else
-        proj_matrices_ = new ProjectedMatrices(ct.numst, with_spin);
+        proj_matrices_
+            = new ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>(
+                ct.numst, with_spin);
 
     forces_ = new Forces<T>(hamiltonian_, rho_, proj_matrices_);
 
@@ -557,8 +559,10 @@ void MGmol<T>::printMM()
         std::ofstream tfile("s.mm", std::ios::out);
         proj_matrices_->printGramMM(tfile);
         std::ofstream tfileh("h.mm", std::ios::out);
-        ProjectedMatrices* projmatrices
-            = dynamic_cast<ProjectedMatrices*>(proj_matrices_);
+        ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
+            = dynamic_cast<
+                ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
+                proj_matrices_);
         assert(projmatrices != nullptr);
         projmatrices->printHamiltonianMM(tfileh);
     }
@@ -733,8 +737,10 @@ void MGmol<T>::printEigAndOcc()
             && ct.occupationWidthIsZero())
         && onpe0)
     {
-        ProjectedMatrices* projmatrices
-            = dynamic_cast<ProjectedMatrices*>(proj_matrices_);
+        ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
+            = dynamic_cast<
+                ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
+                proj_matrices_);
         assert(projmatrices);
 
         projmatrices->printEigenvalues(os_);
@@ -971,8 +977,10 @@ double MGmol<T>::get_evnl(const Ions& ions, T& orbitals)
     }
     else
     {
-        ProjectedMatrices* projmatrices
-            = dynamic_cast<ProjectedMatrices*>(proj_matrices_);
+        ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
+            = dynamic_cast<
+                ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
+                proj_matrices_);
         assert(projmatrices);
 
         val = g_kbpsi_->getEvnl(ions, orbitals, projmatrices);

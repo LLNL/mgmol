@@ -15,7 +15,8 @@
 
 #include <iostream>
 
-class ProjectedMatricesMehrstellen : public ProjectedMatrices
+class ProjectedMatricesMehrstellen
+    : public ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>
 {
 private:
     dist_matrix::DistMatrix<DISTMATDTYPE>* matB_;

@@ -105,8 +105,9 @@ public:
     double getEvnl(
         const Ions& ions, T& orbitals, ProjectedMatricesSparse* proj_matrices);
     template <class T>
-    double getEvnl(
-        const Ions& ions, T& orbitals, ProjectedMatrices* proj_matrices);
+    double getEvnl(const Ions& ions, T& orbitals,
+        ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*
+            proj_matrices);
     void computeKBpsi(
         Ions& ions, pb::GridFunc<ORBDTYPE>*, const int, const bool flag);
     double getValIonState(const int gid, const int st) const

@@ -598,8 +598,8 @@ double KBPsiMatrixSparse::getEvnl(
 }
 
 template <class T>
-double KBPsiMatrixSparse::getEvnl(
-    const Ions& ions, T& orbitals, ProjectedMatrices* proj_matrices)
+double KBPsiMatrixSparse::getEvnl(const Ions& ions, T& orbitals,
+    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* proj_matrices)
 {
     const int numst = orbitals.numst();
     if (numst == 0) return 0.;
@@ -715,7 +715,8 @@ template void KBPsiMatrixSparse::computeKBpsi(Ions& ions,
 template double KBPsiMatrixSparse::getEvnl(const Ions& ions,
     LocGridOrbitals& orbitals, ProjectedMatricesSparse* proj_matrices);
 template double KBPsiMatrixSparse::getEvnl(const Ions& ions,
-    LocGridOrbitals& orbitals, ProjectedMatrices* proj_matrices);
+    LocGridOrbitals& orbitals,
+    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* proj_matrices);
 template void KBPsiMatrixSparse::computeAll(Ions&, LocGridOrbitals&);
 
 template void KBPsiMatrixSparse::computeKBpsi(Ions& ions,
@@ -724,5 +725,6 @@ template void KBPsiMatrixSparse::computeKBpsi(Ions& ions,
 template double KBPsiMatrixSparse::getEvnl(const Ions& ions,
     ExtendedGridOrbitals& orbitals, ProjectedMatricesSparse* proj_matrices);
 template double KBPsiMatrixSparse::getEvnl(const Ions& ions,
-    ExtendedGridOrbitals& orbitals, ProjectedMatrices* proj_matrices);
+    ExtendedGridOrbitals& orbitals,
+    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* proj_matrices);
 template void KBPsiMatrixSparse::computeAll(Ions&, ExtendedGridOrbitals&);

@@ -353,10 +353,11 @@ void HamiltonianMVPSolver<T1, T2, T3>::printTimers(std::ostream& os)
 
 // explicit instantiation of class
 template class HamiltonianMVPSolver<dist_matrix::DistMatrix<DISTMATDTYPE>,
-    ProjectedMatrices, LocGridOrbitals>;
+    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>, LocGridOrbitals>;
 
 template class HamiltonianMVPSolver<VariableSizeMatrix<sparserow>,
     ProjectedMatricesSparse, LocGridOrbitals>;
 
 template class HamiltonianMVPSolver<dist_matrix::DistMatrix<DISTMATDTYPE>,
-    ProjectedMatrices, ExtendedGridOrbitals>;
+    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>,
+    ExtendedGridOrbitals>;

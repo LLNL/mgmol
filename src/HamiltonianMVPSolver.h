@@ -20,6 +20,7 @@ template <class T>
 class MGmol;
 class Electrostatic;
 class ProjectedMatrices2N;
+template <class T>
 class ProjectedMatrices;
 
 template <class T1, class T2, class T3>

@@ -1190,8 +1190,10 @@ void ExtendedGridOrbitals::orthonormalizeLoewdin(const bool overlap_uptodate,
         (*MPIdata::sout) << "ExtendedGridOrbitals::orthonormalizeLoewdin()"
                          << std::endl;
 
-    ProjectedMatrices* projmatrices
-        = dynamic_cast<ProjectedMatrices*>(proj_matrices_);
+    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
+        = dynamic_cast<
+            ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
+            proj_matrices_);
     assert(projmatrices);
 
     if (!overlap_uptodate) computeGram(0);
