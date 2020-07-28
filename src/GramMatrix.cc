@@ -13,10 +13,10 @@
 #include "DistVector.h"
 #include "Power.h"
 #include "ReplicatedMatrix.h"
+#include "DistMatrix.h"
 
 #include <iomanip>
 #include <iostream>
-#include <memory>
 #include <unistd.h>
 #include <vector>
 

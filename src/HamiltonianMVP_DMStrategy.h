@@ -21,28 +21,29 @@ class Electrostatic;
 template <class T>
 class MGmol;
 
-template <class T1, class T2, class T3>
+template <class MatrixType, class ProjMatrixType, class OrbitalsType>
 class HamiltonianMVP_DMStrategy : public DMStrategy
 {
 private:
-    T3* orbitals_;
+    OrbitalsType* orbitals_;
 
     MPI_Comm comm_;
     std::ostream& os_;
 
     Ions& ions_;
-    Rho<T3>* rho_;
-    Energy<T3>* energy_;
+    Rho<OrbitalsType>* rho_;
+    Energy<OrbitalsType>* energy_;
     Electrostatic* electrostat_;
     const std::vector<std::vector<int>>& global_indexes_;
-    MGmol<T3>* mgmol_strategy_;
+    MGmol<OrbitalsType>* mgmol_strategy_;
 
-    HamiltonianMVPSolver<T1, T2, T3>* solver_;
+    HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>* solver_;
 
 public:
     HamiltonianMVP_DMStrategy(MPI_Comm comm, std::ostream& os, Ions& ions,
-        Rho<T3>* rho, Energy<T3>* energy, Electrostatic* electrostat,
-        MGmol<T3>* mgmol_strategy, T3* orbitals);
+        Rho<OrbitalsType>* rho, Energy<OrbitalsType>* energy,
+        Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy,
+        OrbitalsType* orbitals);
 
     ~HamiltonianMVP_DMStrategy() override;
 

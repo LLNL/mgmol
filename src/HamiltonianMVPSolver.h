@@ -24,7 +24,7 @@ class ProjectedMatrices2N;
 template <class MatrixType>
 class ProjectedMatrices;
 
-template <class T1, class T2, class T3>
+template <class MatrixType, class ProjMatrixType, class OrbitalsType>
 class HamiltonianMVPSolver
 {
 
@@ -35,10 +35,10 @@ private:
 
     Ions& ions_;
 
-    Rho<T3>* rho_;
-    Energy<T3>* energy_;
+    Rho<OrbitalsType>* rho_;
+    Energy<OrbitalsType>* energy_;
     Electrostatic* electrostat_;
-    MGmol<T3>* mgmol_strategy_;
+    MGmol<OrbitalsType>* mgmol_strategy_;
 
     int numst_;
 
@@ -52,24 +52,25 @@ private:
      * "variable" matrix defining "variable" DM through diagonalization
      * keep values from previous call to solve() function
      */
-    T1* hmatrix_;
+    MatrixType* hmatrix_;
 
     /*!
      * Initial natrix in last solve.
      * Used to reset hmatrix_ when move not accepted in outer solver
      */
-    T1* initial_hmatrix_;
+    MatrixType* initial_hmatrix_;
 
     static Timer solve_tm_;
     static Timer target_tm_;
 
 public:
-    HamiltonianMVPSolver(std::ostream& os, Ions& ions, Rho<T3>* rho,
-        Energy<T3>* energy, Electrostatic* electrostat,
-        MGmol<T3>* mgmol_strategy, const int numst, const short n_inner_steps,
-        const T1& hinit, const bool try_shorter_intervals = false);
+    HamiltonianMVPSolver(std::ostream& os, Ions& ions, Rho<OrbitalsType>* rho,
+        Energy<OrbitalsType>* energy, Electrostatic* electrostat,
+        MGmol<OrbitalsType>* mgmol_strategy, const int numst,
+        const short n_inner_steps, const MatrixType& hinit,
+        const bool try_shorter_intervals = false);
     ~HamiltonianMVPSolver();
-    int solve(T3& orbitals);
+    int solve(OrbitalsType& orbitals);
     void reset();
     void printTimers(std::ostream& os);
 };
