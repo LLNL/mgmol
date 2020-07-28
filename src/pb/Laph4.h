@@ -84,7 +84,8 @@ public:
     // A->B
     void apply(GridFunc<T>& A, GridFunc<T>& B) override
     {
-        this->del2_4th(A, B);
+        //this->del2_4th(A, B);
+        this->del2_4th(A.grid(), A.uu(), B.uu(), 1);
         B.set_bc(A.bc(0), A.bc(1), A.bc(2));
     }
     void applyWithPot(GridFunc<T>& A, const double* pot, T* B) override
