@@ -487,9 +487,9 @@ int MGmol<T>::outerSolve(T& orbitals, T& work_orbitals, Ions& ions,
             const std::vector<std::vector<int>>& gids(
                 orbitals.getOverlappingGids());
 
-            DavidsonSolver<T> solver(comm_, os_, *ions_, hamiltonian_, rho_,
-                energy_, electrostat_, this, ct.numst, ct.occ_width,
-                ct.getNel(), gids);
+            DavidsonSolver<T, dist_matrix::DistMatrix<DISTMATDTYPE>> solver(
+                comm_, os_, *ions_, hamiltonian_, rho_, energy_, electrostat_,
+                this, ct.numst, ct.occ_width, ct.getNel(), gids);
 
             retval = solver.solve(orbitals, work_orbitals);
             break;

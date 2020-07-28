@@ -25,10 +25,12 @@
 
 #include <iomanip>
 
-template <class T>
-Timer DavidsonSolver<T>::solve_tm_("DavidsonSolver::solve");
-template <class T>
-Timer DavidsonSolver<T>::target_tm_("DavidsonSolver::target");
+template <class OrbitalsType, class MatrixType>
+Timer DavidsonSolver<OrbitalsType, MatrixType>::solve_tm_(
+    "DavidsonSolver::solve");
+template <class OrbitalsType, class MatrixType>
+Timer DavidsonSolver<OrbitalsType, MatrixType>::target_tm_(
+    "DavidsonSolver::target");
 
 double evalEntropy(ProjectedMatricesInterface* projmatrices,
     const bool print_flag, std::ostream& os)
@@ -41,11 +43,12 @@ double evalEntropy(ProjectedMatricesInterface* projmatrices,
     return ts;
 }
 
-template <class T>
-DavidsonSolver<T>::DavidsonSolver(MPI_Comm comm, std::ostream& os, Ions& ions,
-    Hamiltonian<T>* hamiltonian, Rho<T>* rho, Energy<T>* energy,
-    Electrostatic* electrostat, MGmol<T>* mgmol_strategy, const int numst,
-    const double kbT, const int nel,
+template <class OrbitalsType, class MatrixType>
+DavidsonSolver<OrbitalsType, MatrixType>::DavidsonSolver(MPI_Comm comm,
+    std::ostream& os, Ions& ions, Hamiltonian<OrbitalsType>* hamiltonian,
+    Rho<OrbitalsType>* rho, Energy<OrbitalsType>* energy,
+    Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy,
+    const int numst, const double kbT, const int nel,
     const std::vector<std::vector<int>>& global_indexes)
     : comm_(comm),
       os_(os),
@@ -60,22 +63,19 @@ DavidsonSolver<T>::DavidsonSolver(MPI_Comm comm, std::ostream& os, Ions& ions,
     eks_history_.resize(history_length_, 100000.);
 
     numst_ = numst;
-    work2N_.reset(new dist_matrix::DistMatrix<DISTMATDTYPE>(
-        "work2N", 2 * numst_, 2 * numst_));
+    work2N_.reset(new MatrixType("work2N", 2 * numst_, 2 * numst_));
 
-    proj_mat2N_.reset(
-        new ProjectedMatrices2N<dist_matrix::DistMatrix<DISTMATDTYPE>>(
-            2 * numst_, false));
+    proj_mat2N_.reset(new ProjectedMatrices2N<MatrixType>(2 * numst_, false));
     proj_mat2N_->setup(kbT, nel, global_indexes);
 }
 
-template <class T>
-DavidsonSolver<T>::~DavidsonSolver()
+template <class OrbitalsType, class MatrixType>
+DavidsonSolver<OrbitalsType, MatrixType>::~DavidsonSolver()
 {
 }
 
-template <class T>
-int DavidsonSolver<T>::checkConvergence(
+template <class OrbitalsType, class MatrixType>
+int DavidsonSolver<OrbitalsType, MatrixType>::checkConvergence(
     const double e0, const int it, const double tol)
 {
     // save energy recent history
@@ -107,12 +107,12 @@ int DavidsonSolver<T>::checkConvergence(
     return retval;
 }
 
-// template <class T>
-// void DavidsonSolver<T>::swapColumnsVect(
-//    dist_matrix::DistMatrix<DISTMATDTYPE>& evect,
-//    const dist_matrix::DistMatrix<DISTMATDTYPE>& hb2N,
+// template <class OrbitalsType, class MatrixType>
+// void DavidsonSolver<OrbitalsType,MatrixType>::swapColumnsVect(
+//    MatrixType& evect,
+//    const MatrixType& hb2N,
 //    const std::vector<DISTMATDTYPE>& eval,
-//    dist_matrix::DistMatrix<DISTMATDTYPE>& work2N)
+//    MatrixType& work2N)
 //{
 //    const int two_numst = (int)eval.size();
 //    const int numst     = two_numst / 2;
@@ -132,7 +132,7 @@ int DavidsonSolver<T>::checkConvergence(
 //    if (n <= numst) return;
 //
 //    // build H matrix in basis of evect
-//    dist_matrix::DistMatrix<DISTMATDTYPE> hrot("hrot", two_numst, two_numst);
+//    MatrixType hrot("hrot", two_numst, two_numst);
 //    hrot = hb2N;
 //    rotateSym(hrot, evect, work2N);
 //
@@ -173,10 +173,9 @@ int DavidsonSolver<T>::checkConvergence(
 //    }
 //}
 
-template <class T>
-double DavidsonSolver<T>::evaluateDerivative(
-    dist_matrix::DistMatrix<DISTMATDTYPE>& dm2Ninit,
-    dist_matrix::DistMatrix<DISTMATDTYPE>& delta_dm, const double ts0)
+template <class OrbitalsType, class MatrixType>
+double DavidsonSolver<OrbitalsType, MatrixType>::evaluateDerivative(
+    MatrixType& dm2Ninit, MatrixType& delta_dm, const double ts0)
 {
     work2N_->symm('l', 'l', 1., proj_mat2N_->getMatHB(), delta_dm, 0.);
 
@@ -189,7 +188,7 @@ double DavidsonSolver<T>::evaluateDerivative(
     //
     // evaluate numerical derivative of entropy in beta=0
     //
-    // if( onpe0 ) os_<<"evaluate numerical derivative of entropy in
+    // if( onpe0 ) os_<<"ate numerical derivative of entropy in
     // beta=0"<<endl;
     const double dbeta = 0.0001;
     *work2N_           = dm2Ninit;
@@ -211,15 +210,10 @@ double DavidsonSolver<T>::evaluateDerivative(
     return de0;
 }
 
-template <class T>
-void DavidsonSolver<T>::buildTarget2N_MVP(
-    dist_matrix::DistMatrix<DISTMATDTYPE>& h11,
-    dist_matrix::DistMatrix<DISTMATDTYPE>& h12,
-    dist_matrix::DistMatrix<DISTMATDTYPE>& h21,
-    dist_matrix::DistMatrix<DISTMATDTYPE>& h22,
-    dist_matrix::DistMatrix<DISTMATDTYPE>& s11,
-    dist_matrix::DistMatrix<DISTMATDTYPE>& s22,
-    dist_matrix::DistMatrix<DISTMATDTYPE>& target)
+template <class OrbitalsType, class MatrixType>
+void DavidsonSolver<OrbitalsType, MatrixType>::buildTarget2N_MVP(
+    MatrixType& h11, MatrixType& h12, MatrixType& h21, MatrixType& h22,
+    MatrixType& s11, MatrixType& s22, MatrixType& target)
 {
     target_tm_.start();
 
@@ -228,7 +222,7 @@ void DavidsonSolver<T>::buildTarget2N_MVP(
     proj_mat2N_->assignBlocksH(h11, h12, h21, h22);
 
     // if( onpe0 )os_<<"Build S2N..."<<endl;
-    dist_matrix::DistMatrix<DISTMATDTYPE> s2N("s2N", 2 * numst_, 2 * numst_);
+    MatrixType s2N("s2N", 2 * numst_, 2 * numst_);
     s2N.assign(s11, 0, 0);
     // s2N.assign(s12,0,numst_);
     // s2N.assign(s21,numst_,0);
@@ -259,22 +253,22 @@ void DavidsonSolver<T>::buildTarget2N_MVP(
     target_tm_.stop();
 }
 
-// template <class T>
-// void DavidsonSolver<T>::buildTarget2N_new(
-//    dist_matrix::DistMatrix<DISTMATDTYPE>& h11,
-//    dist_matrix::DistMatrix<DISTMATDTYPE>& h12,
-//    dist_matrix::DistMatrix<DISTMATDTYPE>& h21,
-//    dist_matrix::DistMatrix<DISTMATDTYPE>& h22,
-//    dist_matrix::DistMatrix<DISTMATDTYPE>& s11,
-//    dist_matrix::DistMatrix<DISTMATDTYPE>& s22,
+// template <class OrbitalsType, class MatrixType>
+// void DavidsonSolver<OrbitalsType,MatrixType>::buildTarget2N_new(
+//    MatrixType& h11,
+//    MatrixType& h12,
+//    MatrixType& h21,
+//    MatrixType& h22,
+//    MatrixType& s11,
+//    MatrixType& s22,
 //    const std::vector<DISTMATDTYPE>& occ,
 //    const std::vector<DISTMATDTYPE>& auxenergies, const double kbT,
-//    const double eta, dist_matrix::DistMatrix<DISTMATDTYPE>& target)
+//    const double eta, MatrixType& target)
 //{
 //    proj_mat2N_->assignBlocksH(h11, h12, h21, h22);
 //
 //    // if( onpe0 )os_<<"Build S2N..."<<endl;
-//    dist_matrix::DistMatrix<DISTMATDTYPE> s2N("s2N", 2 * numst_, 2 * numst_);
+//    MatrixType s2N("s2N", 2 * numst_, 2 * numst_);
 //    s2N.assign(s11, 0, 0);
 //    // s2N.assign(s12,0,numst_);
 //    // s2N.assign(s21,numst_,0);
@@ -355,8 +349,9 @@ void DavidsonSolver<T>::buildTarget2N_MVP(
 //}
 
 // update density matrix in 2N x 2N space
-template <class T>
-int DavidsonSolver<T>::solve(T& orbitals, T& work_orbitals)
+template <class OrbitalsType, class MatrixType>
+int DavidsonSolver<OrbitalsType, MatrixType>::solve(
+    OrbitalsType& orbitals, OrbitalsType& work_orbitals)
 {
     assert(numst_ == static_cast<int>(orbitals.numst()));
 
@@ -391,8 +386,8 @@ int DavidsonSolver<T>::solve(T& orbitals, T& work_orbitals)
     KBPsiMatrixSparse kbpsi_2(nullptr);
     kbpsi_2.setup(ions_);
 
-    dist_matrix::DistMatrix<DISTMATDTYPE> s11("s11", numst_, numst_);
-    dist_matrix::DistMatrix<DISTMATDTYPE> s22("s22", numst_, numst_);
+    MatrixType s11("s11", numst_, numst_);
+    MatrixType s22("s22", numst_, numst_);
     s11.identity();
     s22.identity();
 
@@ -405,17 +400,15 @@ int DavidsonSolver<T>::solve(T& orbitals, T& work_orbitals)
             os_ << "DavidsonSolver -> Iteration " << outer_it << std::endl;
             os_ << "###########################" << std::endl;
         }
-        T tmp_orbitals("Davidson_tmp", orbitals);
-        dist_matrix::DistMatrix<DISTMATDTYPE> dm2Ninit(
-            "dm2N", 2 * numst_, 2 * numst_);
+        OrbitalsType tmp_orbitals("Davidson_tmp", orbitals);
+        MatrixType dm2Ninit("dm2N", 2 * numst_, 2 * numst_);
         std::vector<DISTMATDTYPE> eval(2 * numst_);
-        dist_matrix::DistMatrix<DISTMATDTYPE> evect(
-            "EigVect", 2 * numst_, 2 * numst_);
+        MatrixType evect("EigVect", 2 * numst_, 2 * numst_);
 
-        dist_matrix::DistMatrix<DISTMATDTYPE> dm11("dm11", numst_, numst_);
-        dist_matrix::DistMatrix<DISTMATDTYPE> dm12("dm12", numst_, numst_);
-        dist_matrix::DistMatrix<DISTMATDTYPE> dm21("dm21", numst_, numst_);
-        dist_matrix::DistMatrix<DISTMATDTYPE> dm22("dm22", numst_, numst_);
+        MatrixType dm11("dm11", numst_, numst_);
+        MatrixType dm12("dm12", numst_, numst_);
+        MatrixType dm21("dm21", numst_, numst_);
+        MatrixType dm22("dm22", numst_, numst_);
 
         // save computed vh for a fair energy "comparison" with vh computed
         // in close neigborhood
@@ -426,14 +419,14 @@ int DavidsonSolver<T>::solve(T& orbitals, T& work_orbitals)
         // Update density
         rho_->update(orbitals);
 
-        dist_matrix::DistMatrix<DISTMATDTYPE> h11("h11", numst_, numst_);
-        dist_matrix::DistMatrix<DISTMATDTYPE> h22("h22", numst_, numst_);
-        dist_matrix::DistMatrix<DISTMATDTYPE> h12("h12", numst_, numst_);
-        dist_matrix::DistMatrix<DISTMATDTYPE> h21("h21", numst_, numst_);
+        MatrixType h11("h11", numst_, numst_);
+        MatrixType h22("h22", numst_, numst_);
+        MatrixType h12("h12", numst_, numst_);
+        MatrixType h21("h21", numst_, numst_);
 
-        dist_matrix::DistMatrix<DISTMATDTYPE> h11nl("h11nl", numst_, numst_);
-        dist_matrix::DistMatrix<DISTMATDTYPE> h22nl("h22nl", numst_, numst_);
-        dist_matrix::DistMatrix<DISTMATDTYPE> h12nl("h12nl", numst_, numst_);
+        MatrixType h11nl("h11nl", numst_, numst_);
+        MatrixType h22nl("h22nl", numst_, numst_);
+        MatrixType h12nl("h12nl", numst_, numst_);
 
         kbpsi_1.computeAll(ions_, orbitals);
 
@@ -464,10 +457,8 @@ int DavidsonSolver<T>::solve(T& orbitals, T& work_orbitals)
             if (inner_it == 0)
             {
                 // orbitals are new, so a few things need to recomputed
-                ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*
-                    projmatrices
-                    = dynamic_cast<ProjectedMatrices<
-                        dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
+                ProjectedMatrices<MatrixType>* projmatrices
+                    = dynamic_cast<ProjectedMatrices<MatrixType>*>(
                         orbitals.getProjMatrices());
 
                 // get H*psi stored in work_orbitals
@@ -542,12 +533,10 @@ int DavidsonSolver<T>::solve(T& orbitals, T& work_orbitals)
             proj_mat2N_->setHiterativeIndex(
                 orbitals.getIterativeIndex(), pot.getIterativeIndex());
 
-            dist_matrix::DistMatrix<DISTMATDTYPE> target(
-                "target", 2 * numst_, 2 * numst_);
+            MatrixType target("target", 2 * numst_, 2 * numst_);
 
             double de0 = 0.;
-            dist_matrix::DistMatrix<DISTMATDTYPE> delta_dm(
-                "delta_dm", 2 * numst_, 2 * numst_);
+            MatrixType delta_dm("delta_dm", 2 * numst_, 2 * numst_);
 
             buildTarget2N_MVP(h11, h12, h21, h22, s11, s22, target);
 
@@ -671,7 +660,7 @@ int DavidsonSolver<T>::solve(T& orbitals, T& work_orbitals)
 
         // to differentiate very low occupation vectors, extract those with
         // lowest energy
-        //        dist_matrix::DistMatrix<DISTMATDTYPE>  z2N("z2N",2*numst_,
+        //        MatrixType  z2N("z2N",2*numst_,
         //        2*numst_); swapColumnsVect(evect, proj_mat2N_->getMatHB(),
         //        eval, z2N );
 
@@ -777,9 +766,8 @@ int DavidsonSolver<T>::solve(T& orbitals, T& work_orbitals)
 #endif
 
         // build diagonal DM (orbitals are now eigenvectors of DM)
-        ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* pmat
-            = dynamic_cast<
-                ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
+        ProjectedMatrices<MatrixType>* pmat
+            = dynamic_cast<ProjectedMatrices<MatrixType>*>(
                 orbitals.getProjMatrices());
         assert(pmat);
         pmat->buildDM(new_occ, orbitals.getIterativeIndex());
@@ -793,9 +781,8 @@ int DavidsonSolver<T>::solve(T& orbitals, T& work_orbitals)
 
     if (onpe0 && ct.verbose > 0)
     {
-        ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* pmat
-            = dynamic_cast<
-                ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
+        ProjectedMatrices<MatrixType>* pmat
+            = dynamic_cast<ProjectedMatrices<MatrixType>*>(
                 orbitals.getProjMatrices());
         assert(pmat);
 
@@ -815,11 +802,12 @@ int DavidsonSolver<T>::solve(T& orbitals, T& work_orbitals)
     return retval;
 }
 
-template <class T>
-void DavidsonSolver<T>::printTimers(std::ostream& os)
+template <class OrbitalsType, class MatrixType>
+void DavidsonSolver<OrbitalsType, MatrixType>::printTimers(std::ostream& os)
 {
     solve_tm_.print(os);
     target_tm_.print(os);
 }
 
-template class DavidsonSolver<ExtendedGridOrbitals>;
+template class DavidsonSolver<ExtendedGridOrbitals,
+    dist_matrix::DistMatrix<DISTMATDTYPE>>;

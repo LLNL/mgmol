@@ -912,7 +912,8 @@ void MGmol<T>::printTimers()
     HDFrestart::printTimers(os_);
     BlockVector<ORBDTYPE, MemorySpace::Host>::printTimers(os_);
     OrbitalsPreconditioning<T>::printTimers(os_);
-    DavidsonSolver<ExtendedGridOrbitals>::printTimers(os_);
+    DavidsonSolver<ExtendedGridOrbitals,
+        dist_matrix::DistMatrix<DISTMATDTYPE>>::printTimers(os_);
     MDfiles::printTimers(os_);
     ChebyshevApproximationInterface::printTimers(os_);
     ChebyshevApproximation::printTimers(os_);
