@@ -503,11 +503,12 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
         const int ndim               = wspace.getDim();
         DISTMATDTYPE* work_DM_matrix = wspace.square_matrix();
 
-        assert(dynamic_cast<ProjectedMatrices*>(proj_matrices_));
         ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
             = dynamic_cast<
                 ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
                 proj_matrices_);
+        assert(projmatrices);
+
         projmatrices->getReplicatedDM(work_DM_matrix);
 
         // loop over all the ions

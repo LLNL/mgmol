@@ -31,35 +31,6 @@
 #define RY2EV 13.605804
 
 template <class MatrixType>
-Timer ProjectedMatrices<MatrixType>::sygv_tm_("ProjectedMatrices::sygv");
-template <class MatrixType>
-Timer ProjectedMatrices<MatrixType>::compute_inverse_tm_(
-    "ProjectedMatrices<MatrixType>::computeInverse");
-template <class MatrixType>
-Timer ProjectedMatrices<MatrixType>::compute_invB_tm_(
-    "ProjectedMatrices::computeInvB");
-template <class MatrixType>
-Timer ProjectedMatrices<MatrixType>::init_gram_matrix_tm_(
-    "ProjectedMatrices<MatrixType>::initialize_Gram_Matrix");
-template <class MatrixType>
-Timer ProjectedMatrices<MatrixType>::update_theta_tm_(
-    "ProjectedMatrices::updateTheta");
-template <class MatrixType>
-Timer ProjectedMatrices<MatrixType>::update_submatT_tm_(
-    "ProjectedMatrices::updateSubmatT");
-template <class MatrixType>
-Timer ProjectedMatrices<MatrixType>::update_submatX_tm_(
-    "ProjectedMatrices::updateSubmatX");
-template <class MatrixType>
-Timer ProjectedMatrices<MatrixType>::eigsum_tm_("ProjectedMatrices::eigsum");
-template <class MatrixType>
-Timer ProjectedMatrices<MatrixType>::consolidate_H_tm_(
-    "ProjectedMatrices::consolidate_sH");
-template <class MatrixType>
-Timer ProjectedMatrices<MatrixType>::compute_entropy_tm_(
-    "ProjectedMatrices<MatrixType>::compute_entropy");
-
-template <class MatrixType>
 short ProjectedMatrices<MatrixType>::n_instances_ = 0;
 
 template <class MatrixType>

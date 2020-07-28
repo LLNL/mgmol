@@ -16,7 +16,7 @@ ProjectedMatricesMehrstellen<MatrixType>::ProjectedMatricesMehrstellen(
     const int ndim, const bool with_spin)
     : ProjectedMatrices<MatrixType>(ndim, with_spin)
 {
-    assert(dim_ > 0);
+    assert(ndim > 0);
 
     matB_ = new MatrixType("B", ndim, ndim);
     invB_ = new MatrixType("invB", ndim, ndim);
