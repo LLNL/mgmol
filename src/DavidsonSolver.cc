@@ -188,7 +188,7 @@ double DavidsonSolver<OrbitalsType, MatrixType>::evaluateDerivative(
     //
     // evaluate numerical derivative of entropy in beta=0
     //
-    // if( onpe0 ) os_<<"ate numerical derivative of entropy in
+    // if( onpe0 ) os_<<"evaluate numerical derivative of entropy in
     // beta=0"<<endl;
     const double dbeta = 0.0001;
     *work2N_           = dm2Ninit;
