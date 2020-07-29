@@ -12,8 +12,9 @@ TEST_CASE("Laplacian 4th order for a array of function", "[laph4_batch]")
     const unsigned ngpts[3] = { 32, 24, 20 };
     const short nghosts     = 2;
 
-    const double h[3] = { ll / (double(ngpts[0])), ll / (double(ngpts[1])),
-        ll / (double(ngpts[2])) };
+    const double h[3] = { ll / static_cast<double>(ngpts[0]),
+        ll / static_cast<double>(ngpts[1]),
+        ll / static_cast<double>(ngpts[2]) };
     pb::PEenv mype_env(MPI_COMM_WORLD, ngpts[0], ngpts[1], ngpts[2]);
     pb::Grid grid(origin, lattice, ngpts, mype_env, nghosts, 0);
 
@@ -21,7 +22,8 @@ TEST_CASE("Laplacian 4th order for a array of function", "[laph4_batch]")
 
     const size_t numgridfunc = 10;
 
-    double* arrayofgf1 = new double[numgridfunc * grid.sizeg()];
+    auto arrayofgf1
+        = std::unique_ptr<double[]>(new double[numgridfunc * grid.sizeg()]());
 
     const int endx = nghosts + grid.dim(0);
     const int endy = nghosts + grid.dim(1);
@@ -51,8 +53,8 @@ TEST_CASE("Laplacian 4th order for a array of function", "[laph4_batch]")
             {
                 double z = grid.start(2) + iz * h[2];
 
-                u1[iiy + iz]
-                    = sin(x * coeffx) + sin(y * coeffy) + sin(z * coeffz);
+                u1[iiy + iz] = std::sin(x * coeffx) + std::sin(y * coeffy)
+                               + std::sin(z * coeffz);
             }
         }
     }
@@ -65,21 +67,22 @@ TEST_CASE("Laplacian 4th order for a array of function", "[laph4_batch]")
     for (size_t inum = 0; inum < numgridfunc; inum++)
     {
         std::copy(gf1.uu(), gf1.uu() + grid.sizeg(),
-            arrayofgf1 + inum * grid.sizeg());
+            arrayofgf1.get() + inum * grid.sizeg());
     }
 
-    double* arrayofgf2 = new double[numgridfunc * grid.sizeg()];
+    auto arrayofgf2
+        = std::unique_ptr<double[]>(new double[numgridfunc * grid.sizeg()]());
 
     // apply FD (-Laplacian) operator to arrayofgf1, result in arrayofgf2
-    lap.apply(grid, arrayofgf1, arrayofgf2, numgridfunc);
+    lap.apply(grid, arrayofgf1.get(), arrayofgf2.get(), numgridfunc);
 
     // check values in gf2
     double* u2 = gf2.uu();
 
     for (size_t inum = 0; inum < numgridfunc; inum++)
     {
-        std::copy(arrayofgf2 + inum * grid.sizeg(),
-            arrayofgf2 + (inum + 1) * grid.sizeg(), u2);
+        std::copy(arrayofgf2.get() + inum * grid.sizeg(),
+            arrayofgf2.get() + (inum + 1) * grid.sizeg(), u2);
 
         for (int ix = nghosts; ix < endx; ix++)
         {
@@ -93,17 +96,15 @@ TEST_CASE("Laplacian 4th order for a array of function", "[laph4_batch]")
 
                 for (int iz = nghosts; iz < endz; iz++)
                 {
-                    double z            = grid.start(2) + iz * h[2];
-                    double expected_val = coeffx * coeffx * sin(x * coeffx)
-                                          + coeffy * coeffy * sin(y * coeffy)
-                                          + coeffz * coeffz * sin(z * coeffz);
+                    double z = grid.start(2) + iz * h[2];
+                    double expected_val
+                        = coeffx * coeffx * std::sin(x * coeffx)
+                          + coeffy * coeffy * std::sin(y * coeffy)
+                          + coeffz * coeffz * std::sin(z * coeffz);
 
                     CHECK(u2[iiy + iz] == Approx(expected_val).margin(2.e-3));
                 }
             }
         }
     }
-
-    delete arrayofgf1;
-    delete arrayofgf2;
 }
