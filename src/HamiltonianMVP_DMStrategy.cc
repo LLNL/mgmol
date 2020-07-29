@@ -17,10 +17,12 @@
 #include "ProjectedMatrices.h"
 #include "ProjectedMatricesSparse.h"
 
-template <class T1, class T2, class T3>
-HamiltonianMVP_DMStrategy<T1, T2, T3>::HamiltonianMVP_DMStrategy(MPI_Comm comm,
-    std::ostream& os, Ions& ions, Rho<T3>* rho, Energy<T3>* energy,
-    Electrostatic* electrostat, MGmol<T3>* mgmol_strategy, T3* orbitals)
+template <class MatrixType, class ProjMatrixType, class OrbitalsType>
+HamiltonianMVP_DMStrategy<MatrixType, ProjMatrixType,
+    OrbitalsType>::HamiltonianMVP_DMStrategy(MPI_Comm comm, std::ostream& os,
+    Ions& ions, Rho<OrbitalsType>* rho, Energy<OrbitalsType>* energy,
+    Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy,
+    OrbitalsType* orbitals)
     : orbitals_(orbitals),
       comm_(comm),
       os_(os),
@@ -37,26 +39,31 @@ HamiltonianMVP_DMStrategy<T1, T2, T3>::HamiltonianMVP_DMStrategy(MPI_Comm comm,
     assert(energy_ != nullptr);
     assert(ct.dm_inner_steps > 0);
 
-    T2* projmatrices = dynamic_cast<T2*>(orbitals->getProjMatrices());
+    ProjMatrixType* projmatrices
+        = dynamic_cast<ProjMatrixType*>(orbitals->getProjMatrices());
 
-    solver_ = new HamiltonianMVPSolver<T1, T2, T3>(os_, ions_, rho_, energy_,
-        electrostat_, mgmol_strategy_, ct.numst, ct.dm_inner_steps,
-        projmatrices->getH(), true);
+    solver_
+        = new HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>(
+            os_, ions_, rho_, energy_, electrostat_, mgmol_strategy_, ct.numst,
+            ct.dm_inner_steps, projmatrices->getH(), true);
 }
 
-template <class T1, class T2, class T3>
-HamiltonianMVP_DMStrategy<T1, T2, T3>::~HamiltonianMVP_DMStrategy()
+template <class MatrixType, class ProjMatrixType, class OrbitalsType>
+HamiltonianMVP_DMStrategy<MatrixType, ProjMatrixType,
+    OrbitalsType>::~HamiltonianMVP_DMStrategy()
 {
     delete solver_;
 }
 
-template <class T1, class T2, class T3>
-void HamiltonianMVP_DMStrategy<T1, T2, T3>::initialize()
+template <class MatrixType, class ProjMatrixType, class OrbitalsType>
+void HamiltonianMVP_DMStrategy<MatrixType, ProjMatrixType,
+    OrbitalsType>::initialize()
 {
 }
 
-template <class T1, class T2, class T3>
-int HamiltonianMVP_DMStrategy<T1, T2, T3>::update()
+template <class MatrixType, class ProjMatrixType, class OrbitalsType>
+int HamiltonianMVP_DMStrategy<MatrixType, ProjMatrixType,
+    OrbitalsType>::update()
 {
     assert(solver_ != nullptr);
 
@@ -70,27 +77,31 @@ int HamiltonianMVP_DMStrategy<T1, T2, T3>::update()
     return solver_->solve(*orbitals_);
 }
 
-template <class T1, class T2, class T3>
-void HamiltonianMVP_DMStrategy<T1, T2, T3>::stripDM()
+template <class MatrixType, class ProjMatrixType, class OrbitalsType>
+void HamiltonianMVP_DMStrategy<MatrixType, ProjMatrixType,
+    OrbitalsType>::stripDM()
 {
 }
 
-template <class T1, class T2, class T3>
-void HamiltonianMVP_DMStrategy<T1, T2, T3>::dressDM()
+template <class MatrixType, class ProjMatrixType, class OrbitalsType>
+void HamiltonianMVP_DMStrategy<MatrixType, ProjMatrixType,
+    OrbitalsType>::dressDM()
 {
 }
 
-template <class T1, class T2, class T3>
-void HamiltonianMVP_DMStrategy<T1, T2, T3>::reset()
+template <class MatrixType, class ProjMatrixType, class OrbitalsType>
+void HamiltonianMVP_DMStrategy<MatrixType, ProjMatrixType,
+    OrbitalsType>::reset()
 {
     solver_->reset();
 }
 
 template class HamiltonianMVP_DMStrategy<dist_matrix::DistMatrix<DISTMATDTYPE>,
-    ProjectedMatrices, LocGridOrbitals>;
+    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>, LocGridOrbitals>;
 
 template class HamiltonianMVP_DMStrategy<VariableSizeMatrix<sparserow>,
     ProjectedMatricesSparse, LocGridOrbitals>;
 
 template class HamiltonianMVP_DMStrategy<dist_matrix::DistMatrix<DISTMATDTYPE>,
-    ProjectedMatrices, ExtendedGridOrbitals>;
+    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>,
+    ExtendedGridOrbitals>;

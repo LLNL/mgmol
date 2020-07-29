@@ -62,22 +62,6 @@ int ABPG<T>::updateWF(T& orbitals, Ions& /*ions*/, const double precond_factor,
     // update wavefunctions
     update_states(orbitals, res, work_orbitals, precond_factor, accelerate);
 
-#if 0
-    int msize=ct.numst;
-    if( ct.loc_mode ){
-        // work matrices
-        dist_matrix::DistMatrix<DISTMATDTYPE>  u_dis("U", msize, msize);
-        u_dis=proj_matrices_->matS();
-        dist_matrix::DistMatrix<DISTMATDTYPE>  w_dis("W", msize, msize);
-        w_dis.identity();
-        u_dis.axpy(-1.,w_dis);
-        const double inorm=u_dis.norm('i');
-        if( onpe0 && inorm>1.e-8 )
-            os_<<setprecision(2)<<scientific
-                <<"Largest non diagonal element of S = "<<inorm<<endl;
-    }
-#endif
-
     abpg_nl_update_tm_.stop();
 
     return 1;

@@ -32,6 +32,7 @@ class LocalMatrices;
 template <class T>
 class SquareLocalMatrices;
 class Potentials;
+template <class T>
 class ProjectedMatrices;
 class ProjectedMatricesInterface;
 class LocalizationRegions;

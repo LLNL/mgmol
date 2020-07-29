@@ -278,8 +278,10 @@ int MGmol<T>::get_NOLMO(NOLMOTransform& noot, T& orbitals, T& work_orbitals,
     }
     sincos.clear();
 
-    ProjectedMatrices* projmatrices
-        = dynamic_cast<ProjectedMatrices*>(proj_matrices_);
+    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
+        = dynamic_cast<
+            ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
+            proj_matrices_);
     assert(projmatrices);
 
     noot.init_transform(projmatrices->getLS(), true);
@@ -323,8 +325,10 @@ int MGmol<T>::get_NOLMO(NOLMOTransform& noot, T& orbitals, T& work_orbitals,
         dist_matrix::DistMatrix<DISTMATDTYPE> u_dis("Udis", numst, numst);
         u_dis.init(a, numst);
 
-        ProjectedMatrices* proj_matrices
-            = dynamic_cast<ProjectedMatrices*>(orbitals.proj_matrices());
+        ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* proj_matrices
+            = dynamic_cast<
+                ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
+                orbitals.proj_matrices());
         proj_matrices->rotateAll(u_dis, false);
         // orbitals.rotateSubMatrices(u_dis);
     }

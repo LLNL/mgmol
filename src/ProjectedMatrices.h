@@ -12,27 +12,26 @@
 
 #include "ChebyshevApproximation.h"
 #include "DensityMatrix.h"
-#include "DistMatrix.h"
 #include "GramMatrix.h"
 #include "MPIdata.h"
 #include "ProjectedMatricesInterface.h"
 #include "SquareLocalMatrices.h"
 #include "SquareSubMatrix.h"
 #include "Timer.h"
+
 #include "hdf5.h"
 #include "tools.h"
 #include <iostream>
 
 class HDFrestart;
 
+template <class MatrixType>
 class ProjectedMatrices : public ProjectedMatricesInterface
 {
     static short n_instances_;
 
-    static GramMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>*
-        gram_4dotProducts_;
-    static DensityMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>*
-        dm_4dot_product_;
+    static GramMatrix<MatrixType>* gram_4dotProducts_;
+    static DensityMatrix<MatrixType>* dm_4dot_product_;
 
     // spin: 0 for ignoring spin, 1 for calculation with spin
     const bool with_spin_;
@@ -42,8 +41,8 @@ class ProjectedMatrices : public ProjectedMatricesInterface
     /*!
      * matrices to save old values and enable mixing or reset
      */
-    std::unique_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> mat_X_old_;
-    std::unique_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> mat_L_old_;
+    std::unique_ptr<MatrixType> mat_X_old_;
+    std::unique_ptr<MatrixType> mat_L_old_;
 
     static Timer sygv_tm_;
     static Timer compute_inverse_tm_;
@@ -92,15 +91,15 @@ protected:
 
     unsigned dim_;
 
-    std::unique_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> theta_;
-    std::unique_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> matHB_;
-    std::unique_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> matH_;
+    std::unique_ptr<MatrixType> theta_;
+    std::unique_ptr<MatrixType> matHB_;
+    std::unique_ptr<MatrixType> matH_;
 
-    std::unique_ptr<DensityMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>> dm_;
-    std::unique_ptr<GramMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>> gm_;
+    std::unique_ptr<DensityMatrix<MatrixType>> dm_;
+    std::unique_ptr<GramMatrix<MatrixType>> gm_;
 
     // work matrix for tmp usage
-    std::unique_ptr<dist_matrix::DistMatrix<DISTMATDTYPE>> work_;
+    std::unique_ptr<MatrixType> work_;
 
     std::vector<double> cheb_interval_;
     void printTheta(std::ostream& os) const
@@ -121,13 +120,11 @@ protected:
         matH_->print(os, 0, 0, NPRINT_ROWS_AND_COLS, NPRINT_ROWS_AND_COLS);
     }
 
-    // convert a SquareLocalMatrices obeject into a DistMatrix
-    void convert(const SquareLocalMatrices<MATDTYPE>& src,
-        dist_matrix::DistMatrix<DISTMATDTYPE>& dst);
+    // convert a SquareLocalMatrices object into a MatrixType
+    void convert(const SquareLocalMatrices<MATDTYPE>& src, MatrixType& dst);
 
-    // convert a DistMatrix obeject into a SquareLocalMatrices
-    void convert(const dist_matrix::DistMatrix<DISTMATDTYPE>& src,
-        SquareLocalMatrices<MATDTYPE>& dst);
+    // convert a MatrixType object into a SquareLocalMatrices
+    void convert(const MatrixType& src, SquareLocalMatrices<MATDTYPE>& dst);
 
 public:
     ProjectedMatrices(const int, const bool with_spin);
@@ -165,10 +162,7 @@ public:
 
     void updateSubMatX() override { updateSubMatX(dm_->getMatrix()); }
 
-    void updateSubMatX(const dist_matrix::DistMatrix<DISTMATDTYPE>& dm)
-    {
-        convert(dm, *localX_);
-    }
+    void updateSubMatX(const MatrixType& dm) { convert(dm, *localX_); }
 
     void updateSubMatT() override { convert(*theta_, *localT_); }
 
@@ -213,14 +207,11 @@ public:
         compute_invB_tm_.stop();
     }
 
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& dm() const override;
+    const MatrixType& dm() const override;
 
     bool occupationsUptodate() const { return dm_->occupationsUptodate(); }
 
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& getLS() const
-    {
-        return gm_->getCholeskyL();
-    }
+    const MatrixType& getLS() const { return gm_->getCholeskyL(); }
 
     void updateLS() { gm_->updateLS(); }
 
@@ -240,11 +231,8 @@ public:
         updateHB();
     }
 
-    void assignH(const dist_matrix::DistMatrix<DISTMATDTYPE>& matH)
-    {
-        *matH_ = matH;
-    }
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& getH() { return *matH_; }
+    void assignH(const MatrixType& matH) { *matH_ = matH; }
+    const MatrixType& getH() { return *matH_; }
 
     void setHB2H() override
     {
@@ -257,18 +245,14 @@ public:
 
     void setGram2Id(const int orbitals_index) { gm_->set2Id(orbitals_index); }
 
-    void setGramMatrix(const dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
-        const int orbitals_index)
+    void setGramMatrix(const MatrixType& mat, const int orbitals_index)
     {
         assert(gm_ != 0);
         gm_->setMatrix(mat, orbitals_index);
         gm_->computeInverse();
     }
 
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& getGramMatrix()
-    {
-        return gm_->getMatrix();
-    }
+    const MatrixType& getGramMatrix() { return gm_->getMatrix(); }
 
     void getOccupations(std::vector<DISTMATDTYPE>& occ) const override;
     void setOccupations(const std::vector<DISTMATDTYPE>& occ);
@@ -277,30 +261,28 @@ public:
     void dressupDM() override;
 
     void applyInvS(SquareLocalMatrices<MATDTYPE>& mat) override;
-    void applyInvS(dist_matrix::DistMatrix<DISTMATDTYPE>& mat)
+    void applyInvS(MatrixType& mat)
     {
         assert(gm_ != 0);
         gm_->applyInv(mat);
     }
 
     void setDMto2InvS() override;
-    void buildDM(const dist_matrix::DistMatrix<DISTMATDTYPE>& z,
+    void buildDM(const MatrixType& z, const int orbitals_index);
+    void buildDM(const MatrixType& z, const std::vector<DISTMATDTYPE>&,
         const int orbitals_index);
-    void buildDM(const dist_matrix::DistMatrix<DISTMATDTYPE>& z,
-        const std::vector<DISTMATDTYPE>&, const int orbitals_index);
     void buildDM(const std::vector<DISTMATDTYPE>&, const int orbitals_index);
 
     double getEigSum() override;
-    double getExpectation(const dist_matrix::DistMatrix<DISTMATDTYPE>& A);
+    double getExpectation(const MatrixType& A);
     double getExpectationH() override;
 
-    void solveGenEigenProblem(dist_matrix::DistMatrix<DISTMATDTYPE>& zz,
-        std::vector<DISTMATDTYPE>& val, char job = 'v');
+    void solveGenEigenProblem(
+        MatrixType& zz, std::vector<DISTMATDTYPE>& val, char job = 'v');
     void computeOccupationsFromDM();
 
     virtual void rotateAll(
-        const dist_matrix::DistMatrix<DISTMATDTYPE>& rotation_matrix,
-        const bool flag_eigen);
+        const MatrixType& rotation_matrix, const bool flag_eigen);
 
     double getNel() const override;
 
@@ -332,7 +314,7 @@ public:
     void updateDMwithEigenstates(const int iterative_index);
     void updateDMwithSP2(const int iterative_index);
     void updateDMwithEigenstatesAndRotate(
-        const int iterative_index, dist_matrix::DistMatrix<DISTMATDTYPE>& zz);
+        const int iterative_index, MatrixType& zz);
     void updateDMwithChebApproximation(const int iterative_index) override;
     double computeChemicalPotentialAndOccupations(
         const double width, const int nel, const int max_numst)
@@ -346,10 +328,8 @@ public:
         if (onpe0) std::cout << "ProjectedMatrices::saveDM()" << std::endl;
         if (!mat_X_old_)
         {
-            mat_X_old_.reset(
-                new dist_matrix::DistMatrix<DISTMATDTYPE>(dm_->getMatrix()));
-            mat_L_old_.reset(
-                new dist_matrix::DistMatrix<DISTMATDTYPE>(gm_->getCholeskyL()));
+            mat_X_old_.reset(new MatrixType(dm_->getMatrix()));
+            mat_L_old_.reset(new MatrixType(gm_->getCholeskyL()));
         }
         else
         {
@@ -374,7 +354,7 @@ public:
 
     void getReplicatedDM(DISTMATDTYPE* replicated_DM_matrix)
     {
-        const dist_matrix::DistMatrix<DISTMATDTYPE>& dm(dm_->getMatrix());
+        const MatrixType& dm(dm_->getMatrix());
 
         dm.allgather(replicated_DM_matrix, dim_);
     }
@@ -399,33 +379,28 @@ public:
     double dotProductWithDM(const SquareLocalMatrices<MATDTYPE>& ss) override;
     double dotProductSimple(const SquareLocalMatrices<MATDTYPE>& ss) override;
     double computeTraceInvSmultMat(const SquareLocalMatrices<MATDTYPE>& mat);
-    double computeTraceInvSmultMat(
-        const dist_matrix::DistMatrix<DISTMATDTYPE>& mat)
+    double computeTraceInvSmultMat(const MatrixType& mat)
     {
-        dist_matrix::DistMatrix<DISTMATDTYPE> pmatrix(mat);
+        MatrixType pmatrix(mat);
         gm_->applyInv(pmatrix);
 
         return pmatrix.trace();
     }
-    double computeTraceInvSmultMatMultTheta(
-        const dist_matrix::DistMatrix<DISTMATDTYPE>& mat);
-    double computeTraceMatMultTheta(
-        const dist_matrix::DistMatrix<DISTMATDTYPE>& mat)
+    double computeTraceInvSmultMatMultTheta(const MatrixType& mat);
+    double computeTraceMatMultTheta(const MatrixType& mat)
     {
         assert(theta_ != 0);
-        dist_matrix::DistMatrix<DISTMATDTYPE> pmatrix("pmatrix", dim_, dim_);
+        MatrixType pmatrix("pmatrix", dim_, dim_);
         pmatrix.gemm('n', 'n', 1.0, mat, *theta_, 0.);
         return pmatrix.trace();
     }
-    void computeMatMultTheta(const dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
-        dist_matrix::DistMatrix<DISTMATDTYPE>& pmat)
+    void computeMatMultTheta(const MatrixType& mat, MatrixType& pmat)
     {
         assert(theta_ != 0);
         pmat.gemm('n', 'n', 1.0, mat, *theta_, 0.);
     }
-    dist_matrix::DistMatrix<DISTMATDTYPE>& getMatHB() { return *matHB_; }
-    void setDM(const dist_matrix::DistMatrix<DISTMATDTYPE>& mat,
-        const int orbitals_index)
+    MatrixType& getMatHB() { return *matHB_; }
+    void setDM(const MatrixType& mat, const int orbitals_index)
     {
         dm_->setMatrix(mat, orbitals_index);
     }
@@ -433,10 +408,35 @@ public:
         const double occ_width, const int nel, const int iterative_index);
     void computeGenEigenInterval(std::vector<double>& interval,
         const int maxits, const double padding = 0.01);
-    DensityMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>& getDM()
-    {
-        return *dm_;
-    }
+    DensityMatrix<MatrixType>& getDM() { return *dm_; }
 };
 
+template <class MatrixType>
+Timer ProjectedMatrices<MatrixType>::init_gram_matrix_tm_(
+    "ProjectedMatrices<MatrixType>::initialize_Gram_Matrix");
+template <class MatrixType>
+Timer ProjectedMatrices<MatrixType>::sygv_tm_("ProjectedMatrices::sygv");
+template <class MatrixType>
+Timer ProjectedMatrices<MatrixType>::compute_inverse_tm_(
+    "ProjectedMatrices<MatrixType>::computeInverse");
+template <class MatrixType>
+Timer ProjectedMatrices<MatrixType>::compute_invB_tm_(
+    "ProjectedMatrices::computeInvB");
+template <class MatrixType>
+Timer ProjectedMatrices<MatrixType>::update_theta_tm_(
+    "ProjectedMatrices::updateTheta");
+template <class MatrixType>
+Timer ProjectedMatrices<MatrixType>::update_submatT_tm_(
+    "ProjectedMatrices::updateSubmatT");
+template <class MatrixType>
+Timer ProjectedMatrices<MatrixType>::update_submatX_tm_(
+    "ProjectedMatrices::updateSubmatX");
+template <class MatrixType>
+Timer ProjectedMatrices<MatrixType>::eigsum_tm_("ProjectedMatrices::eigsum");
+template <class MatrixType>
+Timer ProjectedMatrices<MatrixType>::consolidate_H_tm_(
+    "ProjectedMatrices::consolidate_sH");
+template <class MatrixType>
+Timer ProjectedMatrices<MatrixType>::compute_entropy_tm_(
+    "ProjectedMatrices<MatrixType>::compute_entropy");
 #endif

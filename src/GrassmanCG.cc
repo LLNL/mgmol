@@ -39,8 +39,10 @@ void GrassmanCG<T>::conjugate()
         new_pcgrad->getLocalOverlap(*new_grad,
             matG); // equivalent to pcgrad.computeLocalProduct(grad, matG);
         // compute trace(S^{-1}*matG
-        ProjectedMatrices* projmatrices = dynamic_cast<ProjectedMatrices*>(
-            GrassmanLineMinimization<T>::proj_matrices_);
+        ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
+            = dynamic_cast<
+                ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
+                GrassmanLineMinimization<T>::proj_matrices_);
         double alpha = projmatrices->computeTraceInvSmultMat(matG);
 
         // compute matG = MG^T*G_old
@@ -97,8 +99,10 @@ double GrassmanCG<T>::computeStepSize(T& orbitals)
     // 6. dot product Zo^T*Zo
     // We only need to compute and save partial contributions of these
     // matrices on the local subdomains, and consolidate them when needed
-    ProjectedMatrices* projmatrices = dynamic_cast<ProjectedMatrices*>(
-        GrassmanLineMinimization<T>::proj_matrices_);
+    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
+        = dynamic_cast<
+            ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
+            GrassmanLineMinimization<T>::proj_matrices_);
     assert(projmatrices);
 
     T* sdir = GrassmanLineMinimization<T>::sdir_;

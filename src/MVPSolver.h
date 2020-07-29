@@ -18,6 +18,7 @@
 class Ions;
 class Electrostatic;
 class ProjectedMatrices2N;
+template <class T>
 class ProjectedMatrices;
 
 template <class T>
@@ -46,7 +47,7 @@ private:
 
     int numst_;
     dist_matrix::DistMatrix<DISTMATDTYPE>* work_;
-    ProjectedMatrices* proj_mat_work_;
+    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* proj_mat_work_;
 
     static Timer solve_tm_;
     static Timer target_tm_;

@@ -10,8 +10,9 @@
 #ifndef MGMOL_GRAMMATRIX_H
 #define MGMOL_GRAMMATRIX_H
 
-#include "DistMatrix.h"
 #include "MGmol_MPI.h"
+
+#include <memory>
 
 #define NPRINT_ROWS_AND_COLS 5
 
@@ -31,7 +32,7 @@ class GramMatrix
     bool isLSuptodate_;
     bool isInvSuptodate_;
 
-    void transformLTML(MatrixType& mat, const DISTMATDTYPE alpha) const;
+    void transformLTML(MatrixType& mat, const double alpha) const;
 
 public:
     GramMatrix(const int ndim);
@@ -105,7 +106,7 @@ public:
     void computeLoewdinTransform(MatrixType& loewdinMat,
         std::shared_ptr<MatrixType> invLoewdin, const int orb_index);
 
-    double getTraceDiagProductWithInvS(std::vector<DISTMATDTYPE>& ddiag);
+    double getTraceDiagProductWithInvS(std::vector<double>& ddiag);
 };
 
 #endif

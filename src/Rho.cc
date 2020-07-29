@@ -639,14 +639,16 @@ void Rho<T>::computeRho(T& orbitals1, T& orbitals2,
     memset(&rho_[myspin_][0], 0, subdivx * loc_numpt * sizeof(RHODTYPE));
 
     // 11 diagonal block
-    ProjectedMatrices* projmatrices1
-        = dynamic_cast<ProjectedMatrices*>(orbitals1.getProjMatrices());
+    ProjectedMatrices<dist_matrix::DistMatrix<double>>* projmatrices1
+        = dynamic_cast<ProjectedMatrices<dist_matrix::DistMatrix<double>>*>(
+            orbitals1.getProjMatrices());
     projmatrices1->updateSubMatX(dm11);
     computeRhoSubdomainUsingBlas3(0, subdivx, orbitals1);
 
     // 22 diagonal block
-    ProjectedMatrices* projmatrices2
-        = dynamic_cast<ProjectedMatrices*>(orbitals2.getProjMatrices());
+    ProjectedMatrices<dist_matrix::DistMatrix<double>>* projmatrices2
+        = dynamic_cast<ProjectedMatrices<dist_matrix::DistMatrix<double>>*>(
+            orbitals2.getProjMatrices());
     projmatrices2->updateSubMatX(dm22);
     computeRhoSubdomainUsingBlas3(0, subdivx, orbitals2);
 
@@ -776,8 +778,10 @@ void Rho<T>::computeRho(
 
     memset(&rho_[myspin_][0], 0, subdivx * loc_numpt * sizeof(RHODTYPE));
 
-    ProjectedMatrices* projmatrices
-        = dynamic_cast<ProjectedMatrices*>(orbitals.getProjMatrices());
+    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
+        = dynamic_cast<
+            ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
+            orbitals.getProjMatrices());
     projmatrices->updateSubMatX(dm);
 
     computeRhoSubdomainUsingBlas3(0, subdivx, orbitals);

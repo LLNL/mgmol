@@ -8,85 +8,82 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "ProjectedMatricesMehrstellen.h"
+#include "DistMatrix.h"
 #include "DistMatrixTools.h"
 
-using namespace std;
-
-ProjectedMatricesMehrstellen::ProjectedMatricesMehrstellen(
+template <class MatrixType>
+ProjectedMatricesMehrstellen<MatrixType>::ProjectedMatricesMehrstellen(
     const int ndim, const bool with_spin)
-    : ProjectedMatrices(ndim, with_spin)
+    : ProjectedMatrices<MatrixType>(ndim, with_spin)
 {
-    if (dim_ > 0)
-    {
-        matB_ = new dist_matrix::DistMatrix<DISTMATDTYPE>("B", ndim, ndim);
-        invB_ = new dist_matrix::DistMatrix<DISTMATDTYPE>("invB", ndim, ndim);
-        matB_->identity();
-        invB_->identity();
-    }
+    assert(ndim > 0);
+
+    matB_ = new MatrixType("B", ndim, ndim);
+    invB_ = new MatrixType("invB", ndim, ndim);
+    matB_->identity();
+    invB_->identity();
 }
 
-ProjectedMatricesMehrstellen::~ProjectedMatricesMehrstellen()
+template <class MatrixType>
+ProjectedMatricesMehrstellen<MatrixType>::~ProjectedMatricesMehrstellen()
 {
-    if (dim_ > 0)
-    {
-        delete matB_;
-        matB_ = nullptr;
-        delete invB_;
-        invB_ = nullptr;
-    }
+    delete matB_;
+    matB_ = nullptr;
+    delete invB_;
+    invB_ = nullptr;
 }
 
-void ProjectedMatricesMehrstellen::computeInvB()
+template <class MatrixType>
+void ProjectedMatricesMehrstellen<MatrixType>::computeInvB()
 {
     assert(matB_ != nullptr);
     assert(invB_ != nullptr);
-    {
 
 #ifdef DEBUG
-        if (onpe0)
-            (*MPIdata::sout) << "ProjectedMatrices::computeInvB()" << endl;
+    if (onpe0)
+        (*MPIdata::sout) << "ProjectedMatrices::computeInvB()" << std::endl;
 #endif
-        *invB_          = *matB_;
-        int info1       = invB_->potrf('l');
-        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-        mmpi.bcast(&info1, 1);
-        if (info1 != 0)
-        {
-            if (onpe0) (*MPIdata::serr) << "Matrix: " << matB_->name() << endl;
-            matB_->printMM((*MPIdata::serr));
-        }
-        int info2 = invB_->potri('l');
-        mmpi.bcast(&info2, 1);
-        if (info2 != 0 && onpe0)
-        {
-            (*MPIdata::serr) << "Matrix: " << matB_->name() << endl;
-            matB_->printMM((*MPIdata::serr));
-        }
+    *invB_          = *matB_;
+    int info1       = invB_->potrf('l');
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    mmpi.bcast(&info1, 1);
+    if (info1 != 0)
+    {
+        if (onpe0) (*MPIdata::serr) << "Matrix: " << matB_->name() << std::endl;
+        matB_->printMM((*MPIdata::serr));
+    }
+    int info2 = invB_->potri('l');
+    mmpi.bcast(&info2, 1);
+    if (info2 != 0 && onpe0)
+    {
+        (*MPIdata::serr) << "Matrix: " << matB_->name() << std::endl;
+        matB_->printMM((*MPIdata::serr));
     }
 }
 
-void ProjectedMatricesMehrstellen::rotateAll(
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& rotation_matrix,
-    const bool flag_eigen)
+template <class MatrixType>
+void ProjectedMatricesMehrstellen<MatrixType>::rotateAll(
+    const MatrixType& rotation_matrix, const bool flag_eigen)
 {
     // S -> U^T S U
     // rotate overlap and l_s
     if (flag_eigen)
     {
-        gm_->set2Id(-1);
+        ProjectedMatrices<MatrixType>::gm_->set2Id(-1);
     }
     else
     {
-        gm_->rotateAll(rotation_matrix);
+        ProjectedMatrices<MatrixType>::gm_->rotateAll(rotation_matrix);
     }
     //(*MPIdata::sout)<<"matS"<<endl;
     // matS_->print((*MPIdata::sout),0,0,5,5);
 
     // rotate matH_
-    rotateSym(*matH_, rotation_matrix, *work_);
+    rotateSym(*ProjectedMatrices<MatrixType>::matH_, rotation_matrix,
+        *ProjectedMatrices<MatrixType>::work_);
 
     // rotate matB_
-    rotateSym(*matB_, rotation_matrix, *work_);
+    rotateSym(*matB_, rotation_matrix, *ProjectedMatrices<MatrixType>::work_);
 
     computeInvB();
 
@@ -95,5 +92,8 @@ void ProjectedMatricesMehrstellen::rotateAll(
 
     updateHB();
 
-    dm_->rotate(rotation_matrix, flag_eigen);
+    ProjectedMatrices<MatrixType>::dm_->rotate(rotation_matrix, flag_eigen);
 }
+
+template class ProjectedMatricesMehrstellen<
+    dist_matrix::DistMatrix<DISTMATDTYPE>>;

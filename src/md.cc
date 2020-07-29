@@ -77,8 +77,10 @@ void MGmol<T>::preWFextrapolation()
     else
     {
 #if EXTRAPOLATE_H
-        ProjectedMatrices* projmat
-            = dynamic_cast<ProjectedMatrices*>(proj_matrices_);
+        ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmat
+            = dynamic_cast<
+                ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
+                proj_matrices_);
         assert(projmat);
         orbitals_extrapol_->initExtrapolationH(projmat->getMatHB());
 #endif

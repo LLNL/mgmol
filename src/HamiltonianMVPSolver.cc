@@ -24,18 +24,21 @@
 double evalEntropyMVP(ProjectedMatricesInterface* projmatrices,
     const bool print_flag, std::ostream& os);
 
-template <class T1, class T2, class T3>
-Timer HamiltonianMVPSolver<T1, T2, T3>::solve_tm_(
+template <class MatrixType, class ProjMatrixType, class OrbitalsType>
+Timer HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>::solve_tm_(
     "HamiltonianMVPSolver::solve");
-template <class T1, class T2, class T3>
-Timer HamiltonianMVPSolver<T1, T2, T3>::target_tm_(
-    "HamiltonianMVPSolver::target");
+template <class MatrixType, class ProjMatrixType, class OrbitalsType>
+Timer
+    HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>::target_tm_(
+        "HamiltonianMVPSolver::target");
 
-template <class T1, class T2, class T3>
-HamiltonianMVPSolver<T1, T2, T3>::HamiltonianMVPSolver(std::ostream& os,
-    Ions& ions, Rho<T3>* rho, Energy<T3>* energy, Electrostatic* electrostat,
-    MGmol<T3>* mgmol_strategy, const int numst, const short n_inner_steps,
-    const T1& hinit, const bool try_shorter_intervals)
+template <class MatrixType, class ProjMatrixType, class OrbitalsType>
+HamiltonianMVPSolver<MatrixType, ProjMatrixType,
+    OrbitalsType>::HamiltonianMVPSolver(std::ostream& os, Ions& ions,
+    Rho<OrbitalsType>* rho, Energy<OrbitalsType>* energy,
+    Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy,
+    const int numst, const short n_inner_steps, const MatrixType& hinit,
+    const bool try_shorter_intervals)
     : os_(os),
       n_inner_steps_(n_inner_steps),
       ions_(ions),
@@ -50,26 +53,28 @@ HamiltonianMVPSolver<T1, T2, T3>::HamiltonianMVPSolver(std::ostream& os,
 
     numst_ = numst;
 
-    hmatrix_         = new T1(hinit);
-    initial_hmatrix_ = new T1(hinit);
+    hmatrix_         = new MatrixType(hinit);
+    initial_hmatrix_ = new MatrixType(hinit);
 }
 
-template <class T1, class T2, class T3>
-HamiltonianMVPSolver<T1, T2, T3>::~HamiltonianMVPSolver()
+template <class MatrixType, class ProjMatrixType, class OrbitalsType>
+HamiltonianMVPSolver<MatrixType, ProjMatrixType,
+    OrbitalsType>::~HamiltonianMVPSolver()
 {
     delete hmatrix_;
     delete initial_hmatrix_;
 }
 
-template <class T1, class T2, class T3>
-void HamiltonianMVPSolver<T1, T2, T3>::reset()
+template <class MatrixType, class ProjMatrixType, class OrbitalsType>
+void HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>::reset()
 {
     (*hmatrix_) = (*initial_hmatrix_);
 }
 
 // update density matrix in N x N space
-template <class T1, class T2, class T3>
-int HamiltonianMVPSolver<T1, T2, T3>::solve(T3& orbitals)
+template <class MatrixType, class ProjMatrixType, class OrbitalsType>
+int HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>::solve(
+    OrbitalsType& orbitals)
 {
     Control& ct = *(Control::instance());
 
@@ -96,7 +101,8 @@ int HamiltonianMVPSolver<T1, T2, T3>::solve(T3& orbitals)
     KBPsiMatrixSparse kbpsi(nullptr);
     kbpsi.setup(ions_);
 
-    T2* projmatrices = dynamic_cast<T2*>(orbitals.getProjMatrices());
+    ProjMatrixType* projmatrices
+        = dynamic_cast<ProjMatrixType*>(orbitals.getProjMatrices());
 
     int iterative_index = 0;
 
@@ -107,13 +113,13 @@ int HamiltonianMVPSolver<T1, T2, T3>::solve(T3& orbitals)
     orbitals.setDataWithGhosts();
 
     // compute linear component of H
-    T1 h11nl("h11nl", numst_);
+    MatrixType h11nl("h11nl", numst_);
 
     kbpsi.computeAll(ions_, orbitals);
 
     kbpsi.computeHvnlMatrix(&kbpsi, ions_, h11nl);
 
-    T1 h11("h11", numst_);
+    MatrixType h11("h11", numst_);
 
     for (int inner_it = 0; inner_it < n_inner_steps_; inner_it++)
     {
@@ -159,7 +165,7 @@ int HamiltonianMVPSolver<T1, T2, T3>::solve(T3& orbitals)
         //
         // compute energy at end for new H
         //
-        T1 htarget(projmatrices->getH());
+        MatrixType htarget(projmatrices->getH());
 
         iterative_index++;
 
@@ -188,7 +194,7 @@ int HamiltonianMVPSolver<T1, T2, T3>::solve(T3& orbitals)
         //
         // evaluate energy at mid-point
         //
-        T1 delta_h(htarget);
+        MatrixType delta_h(htarget);
         delta_h -= *hmatrix_;
 
         h11 = *hmatrix_;
@@ -340,8 +346,9 @@ int HamiltonianMVPSolver<T1, T2, T3>::solve(T3& orbitals)
     return 0;
 }
 
-template <class T1, class T2, class T3>
-void HamiltonianMVPSolver<T1, T2, T3>::printTimers(std::ostream& os)
+template <class MatrixType, class ProjMatrixType, class OrbitalsType>
+void HamiltonianMVPSolver<MatrixType, ProjMatrixType,
+    OrbitalsType>::printTimers(std::ostream& os)
 {
     if (onpe0)
     {
@@ -353,10 +360,11 @@ void HamiltonianMVPSolver<T1, T2, T3>::printTimers(std::ostream& os)
 
 // explicit instantiation of class
 template class HamiltonianMVPSolver<dist_matrix::DistMatrix<DISTMATDTYPE>,
-    ProjectedMatrices, LocGridOrbitals>;
+    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>, LocGridOrbitals>;
 
 template class HamiltonianMVPSolver<VariableSizeMatrix<sparserow>,
     ProjectedMatricesSparse, LocGridOrbitals>;
 
 template class HamiltonianMVPSolver<dist_matrix::DistMatrix<DISTMATDTYPE>,
-    ProjectedMatrices, ExtendedGridOrbitals>;
+    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>,
+    ExtendedGridOrbitals>;

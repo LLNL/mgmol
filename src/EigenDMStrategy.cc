@@ -33,7 +33,10 @@ int EigenDMStrategy<T>::update()
 
     dist_matrix::DistMatrix<DISTMATDTYPE> zz("Z", ct.numst, ct.numst);
 
-    ProjectedMatrices* pmat = dynamic_cast<ProjectedMatrices*>(proj_matrices_);
+    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* pmat
+        = dynamic_cast<
+            ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
+            proj_matrices_);
     pmat->updateDMwithEigenstatesAndRotate(
         current_orbitals_->getIterativeIndex(), zz);
 

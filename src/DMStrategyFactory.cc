@@ -20,7 +20,8 @@ DMStrategy* DMStrategyFactory<LocGridOrbitals>::createHamiltonianMVP_DMStrategy(
     else
     {
         DMStrategy* dm_strategy = new HamiltonianMVP_DMStrategy<
-            dist_matrix::DistMatrix<DISTMATDTYPE>, ProjectedMatrices,
+            dist_matrix::DistMatrix<DISTMATDTYPE>,
+            ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>,
             LocGridOrbitals>(
             comm, os, ions, rho, energy, electrostat, mgmol_strategy, orbitals);
 
@@ -41,7 +42,8 @@ DMStrategyFactory<ExtendedGridOrbitals>::createHamiltonianMVP_DMStrategy(
 
     DMStrategy* dm_strategy
         = new HamiltonianMVP_DMStrategy<dist_matrix::DistMatrix<DISTMATDTYPE>,
-            ProjectedMatrices, ExtendedGridOrbitals>(
+            ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>,
+            ExtendedGridOrbitals>(
             comm, os, ions, rho, energy, electrostat, mgmol_strategy, orbitals);
 
     return dm_strategy;

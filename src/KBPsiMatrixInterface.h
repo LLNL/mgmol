@@ -14,6 +14,7 @@
 #include "VariableSizeMatrix.h"
 #include "tools.h"
 
+template <class T>
 class ProjectedMatrices;
 class ProjectedMatricesInterface;
 class Ions;
