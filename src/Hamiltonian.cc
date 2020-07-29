@@ -107,19 +107,9 @@ void Hamiltonian<T>::applyLocal(const int ncolors, T& phi, T& hphi)
         if (ct.Mehrstellen()) gfpot.trade_boundaries();
         const std::vector<std::vector<int>>& gid(phi.getOverlappingGids());
         pb::GridFuncVector<ORBDTYPE> gfvw1(
-            false, mygrid, ct.bc[0], ct.bc[1], ct.bc[2], gid);
-        pb::GridFuncVector<ORBDTYPE> gfvw2(
-            false, mygrid, ct.bc[0], ct.bc[1], ct.bc[2], gid);
-        // if( onpe0 )(*MPIdata::sout)<<"Hamiltonian<T>::applyLocal,
-        // index="<<phi.getIterativeIndex()<<endl;
-        for (int i = 0; i < ncolors; i++)
-        {
-            pb::GridFunc<ORBDTYPE>* gfw = new pb::GridFunc<ORBDTYPE>(
-                mygrid, ct.bc[0], ct.bc[1], ct.bc[2]);
-            gfvw1.push_back(gfw);
-            gfvw2.push_back(&phi.getFuncWithGhosts(i));
-        }
-        gfvw1.prod(gfvw2, gfpot);
+            true, mygrid, ct.bc[0], ct.bc[1], ct.bc[2], gid);
+        pb::GridFuncVector<ORBDTYPE>& gfvphi(*phi.getPtDataWGhosts());
+        gfvw1.prod(gfvphi, gfpot);
 
         pb::GridFunc<ORBDTYPE> gf_work1(mygrid, ct.bc[0], ct.bc[1], ct.bc[2]);
         pb::GridFunc<ORBDTYPE> gf_work2(mygrid, ct.bc[0], ct.bc[1], ct.bc[2]);
@@ -133,10 +123,6 @@ void Hamiltonian<T>::applyLocal(const int ncolors, T& phi, T& hphi)
 
             gf_work1 += gf_work2;
             hphi.setPsi(gf_work1, i);
-        }
-        for (int i = 0; i < ncolors; i++)
-        {
-            delete &gfvw1.func(i);
         }
     }
     else

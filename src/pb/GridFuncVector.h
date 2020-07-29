@@ -144,17 +144,6 @@ public:
         functions_[i]->assign(v, dis);
         updated_boundaries_ = false;
     }
-
-    void push_back(GridFunc<ScalarType>* function)
-    {
-        assert(function != 0);
-        assert(!allocate_functions_);
-
-        functions_.push_back(function);
-
-        assert(static_cast<int>(functions_.size()) <= nfunc_);
-    }
-
     GridFunc<ScalarType>& func(const int k) { return *functions_[k]; }
     const GridFunc<ScalarType>& func(const int k) const
     {
