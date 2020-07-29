@@ -305,7 +305,7 @@ void MGmol<T>::computeHnlPhiAndAdd2HPhi(
         if (ct.Mehrstellen())
         {
             pb::GridFuncVector<ORBDTYPE> gfv(
-                true, mygrid, ct.bc[0], ct.bc[1], ct.bc[2], gid);
+                mygrid, ct.bc[0], ct.bc[1], ct.bc[2], gid);
             std::vector<ORBDTYPE> work(numpt);
             for (short icolor = 0; icolor < ncolors; icolor++)
             {

@@ -7,8 +7,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef FUNCVECTOR_H
-#define FUNCVECTOR_H
+#ifndef GRIDFUNCVECTOR_H
+#define GRIDFUNCVECTOR_H
 
 #include "GridFunc.h"
 #include "GridFuncVectorInterface.h"
@@ -48,7 +48,6 @@ class GridFuncVector : public GridFuncVectorInterface
 
     bool updated_boundaries_;
     int bc_[3];
-    bool allocate_functions_;
     short nghosts_;
 
     int dimx_;
@@ -97,12 +96,11 @@ class GridFuncVector : public GridFuncVectorInterface
             functions_[i]
                 = new GridFunc<ScalarType>(grid_, bc_[0], bc_[1], bc_[2]);
         }
-        allocate_functions_ = true;
     }
 
 public:
-    GridFuncVector(const bool allocate_flag, const Grid& my_grid, const int px,
-        const int py, const int pz, const std::vector<std::vector<int>>& gid,
+    GridFuncVector(const Grid& my_grid, const int px, const int py,
+        const int pz, const std::vector<std::vector<int>>& gid,
         const bool skinny_stencil = false)
         : gid_(gid),
           grid_(my_grid),
@@ -114,9 +112,8 @@ public:
         bc_[2] = pz;
 
         updated_boundaries_ = false; // boundaries not initialized
-        allocate_functions_ = false;
 
-        if (allocate_flag) allocate(gid[0].size());
+        allocate(gid[0].size());
 
         setup();
     }
@@ -124,13 +121,10 @@ public:
     ~GridFuncVector() override
     {
         assert(static_cast<int>(functions_.size()) == nfunc_);
-        if (allocate_functions_)
+        for (int i = 0; i < nfunc_; i++)
         {
-            for (int i = 0; i < nfunc_; i++)
-            {
-                assert(functions_[i] != 0);
-                delete functions_[i];
-            }
+            assert(functions_[i] != 0);
+            delete functions_[i];
         }
     }
 

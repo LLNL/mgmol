@@ -80,14 +80,14 @@ void OrbitalsPreconditioning<T>::setup(T& orbitals, const short mg_levels,
 
     if (ct.blockPrecond())
     {
-        gfv_work_ = new pb::GridFuncVector<MGPRECONDTYPE>(true, mygrid,
-            ct.bc[0], ct.bc[1], ct.bc[2], orbitals.getOverlappingGids());
+        gfv_work_ = new pb::GridFuncVector<MGPRECONDTYPE>(mygrid, ct.bc[0],
+            ct.bc[1], ct.bc[2], orbitals.getOverlappingGids());
     }
 
     if (mixed_precision_)
     {
-        data_wghosts_ = new pb::GridFuncVector<MGPRECONDTYPE>(true, mygrid,
-            ct.bc[0], ct.bc[1], ct.bc[2], orbitals.getOverlappingGids());
+        data_wghosts_ = new pb::GridFuncVector<MGPRECONDTYPE>(mygrid, ct.bc[0],
+            ct.bc[1], ct.bc[2], orbitals.getOverlappingGids());
     }
     else
     {

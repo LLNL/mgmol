@@ -107,7 +107,7 @@ void Hamiltonian<T>::applyLocal(const int ncolors, T& phi, T& hphi)
         if (ct.Mehrstellen()) gfpot.trade_boundaries();
         const std::vector<std::vector<int>>& gid(phi.getOverlappingGids());
         pb::GridFuncVector<ORBDTYPE> gfvw1(
-            true, mygrid, ct.bc[0], ct.bc[1], ct.bc[2], gid);
+            mygrid, ct.bc[0], ct.bc[1], ct.bc[2], gid);
         pb::GridFuncVector<ORBDTYPE>& gfvphi(*phi.getPtDataWGhosts());
         gfvw1.prod(gfvphi, gfpot);
 
