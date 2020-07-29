@@ -18,7 +18,7 @@
 
 namespace pb
 {
-template <typename T>
+template <typename ScalarType>
 class GridFuncVector : public GridFuncVectorInterface
 {
     // global id for functions in each subdivision
@@ -30,7 +30,7 @@ class GridFuncVector : public GridFuncVectorInterface
     const Grid& grid_;
     const MPI_Comm comm_;
 
-    std::vector<GridFunc<T>*> functions_;
+    std::vector<GridFunc<ScalarType>*> functions_;
     std::map<int, short> gid2lid_;
 
     // number of functions in functions_ (functions_.size())
@@ -65,10 +65,10 @@ class GridFuncVector : public GridFuncVectorInterface
 
     const bool skinny_stencil_;
 
-    static std::vector<std::vector<T>> comm_buf1_;
-    static std::vector<std::vector<T>> comm_buf2_;
-    static std::vector<std::vector<T>> comm_buf3_;
-    static std::vector<std::vector<T>> comm_buf4_;
+    static std::vector<std::vector<ScalarType>> comm_buf1_;
+    static std::vector<std::vector<ScalarType>> comm_buf2_;
+    static std::vector<std::vector<ScalarType>> comm_buf3_;
+    static std::vector<std::vector<ScalarType>> comm_buf4_;
 
     MPI_Request req_east_west_[4];
     MPI_Request req_north_south_[4];
@@ -94,35 +94,13 @@ class GridFuncVector : public GridFuncVectorInterface
         functions_.resize(n);
         for (int i = 0; i < n; i++)
         {
-            functions_[i] = new GridFunc<T>(grid_, bc_[0], bc_[1], bc_[2]);
+            functions_[i]
+                = new GridFunc<ScalarType>(grid_, bc_[0], bc_[1], bc_[2]);
         }
         allocate_functions_ = true;
     }
 
 public:
-    // Constructors
-    GridFuncVector(std::vector<GridFunc<T>*>& functions,
-        const std::vector<std::vector<int>>& gid,
-        const bool skinny_stencil = false)
-        : gid_(gid),
-          grid_(functions[0]->grid()),
-          comm_((functions[0]->grid()).mype_env().comm()),
-          skinny_stencil_(skinny_stencil)
-    {
-        assert(functions.size() > 0);
-
-        functions_ = functions;
-
-        bc_[0] = functions_[0]->bc(0);
-        bc_[1] = functions_[0]->bc(1);
-        bc_[2] = functions_[0]->bc(2);
-
-        updated_boundaries_ = false; // boundaries not initialized
-        allocate_functions_ = false;
-
-        setup();
-    }
-
     GridFuncVector(const bool allocate_flag, const Grid& my_grid, const int px,
         const int py, const int pz, const std::vector<std::vector<int>>& gid,
         const bool skinny_stencil = false)
@@ -158,8 +136,8 @@ public:
 
     void setup();
 
-    template <typename T2>
-    void assign(const int i, const T2* const v, const char dis = 'd')
+    template <typename ScalarType2>
+    void assign(const int i, const ScalarType2* const v, const char dis = 'd')
     {
         assert(i < static_cast<int>(functions_.size()));
 
@@ -167,7 +145,7 @@ public:
         updated_boundaries_ = false;
     }
 
-    void push_back(GridFunc<T>* function)
+    void push_back(GridFunc<ScalarType>* function)
     {
         assert(function != 0);
         assert(!allocate_functions_);
@@ -177,9 +155,12 @@ public:
         assert(static_cast<int>(functions_.size()) <= nfunc_);
     }
 
-    GridFunc<T>& func(const int k) { return *functions_[k]; }
-    const GridFunc<T>& func(const int k) const { return *functions_[k]; }
-    const GridFunc<T>& ref_func(const int k)
+    GridFunc<ScalarType>& func(const int k) { return *functions_[k]; }
+    const GridFunc<ScalarType>& func(const int k) const
+    {
+        return *functions_[k];
+    }
+    const GridFunc<ScalarType>& ref_func(const int k)
     {
         assert(k < (int)functions_.size());
         return *(functions_[k]);
@@ -189,11 +170,12 @@ public:
 
     size_t size() const { return functions_.size(); }
 
-    void prod(GridFuncVector& A, const GridFunc<double>& B);
-    void prod(GridFuncVector& A, const GridFunc<float>& B);
+    // pointwise products this=A*B for each vector in this
+    void prod(GridFuncVector<ScalarType>& A, const GridFunc<double>& B);
+    void prod(GridFuncVector<ScalarType>& A, const GridFunc<float>& B);
 
-    void extend3D(GridFuncVector&);
-    void restrict3D(GridFuncVector&);
+    void extend3D(GridFuncVector<ScalarType>&);
+    void restrict3D(GridFuncVector<ScalarType>&);
     void resetData()
     {
         assert(nfunc_ == static_cast<int>(functions_.size()));
@@ -203,10 +185,11 @@ public:
         updated_boundaries_ = true;
     }
     void set_updated_boundaries(const bool flag) { updated_boundaries_ = flag; }
-    GridFuncVector& operator-=(const GridFuncVector<T>& func);
-    void axpy(const double alpha, const GridFuncVector<T>& func);
+    GridFuncVector<ScalarType>& operator-=(
+        const GridFuncVector<ScalarType>& func);
+    void axpy(const double alpha, const GridFuncVector<ScalarType>& func);
 
-    void init_vect(const int k, T* vv, const char dis) const;
+    void init_vect(const int k, ScalarType* vv, const char dis) const;
     void getValues(const int k, double* vv) const;
     void getValues(const int k, float* vv) const;
 };
