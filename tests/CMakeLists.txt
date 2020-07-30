@@ -282,7 +282,8 @@ if(${MAGMA_FOUND})
              COMMAND ${CMAKE_CURRENT_BINARY_DIR}/testMagmaOpenmp)
   endif()
 endif()
-                 
+
+#Regression tests
 add_test(NAME testProjectedMatrices
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ProjectedMatrices/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
@@ -384,7 +385,6 @@ add_test(NAME testLBFGS
          ${CMAKE_CURRENT_SOURCE_DIR}/LBFGS/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/LBFGS/lrs.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
-
 add_test(NAME ChebyshevMVP
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Chebyshev/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
@@ -392,7 +392,16 @@ add_test(NAME ChebyshevMVP
          ${CMAKE_CURRENT_SOURCE_DIR}/Chebyshev/cheb.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/Chebyshev/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
-         
+add_test(NAME testContinuumSolvent
+         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ContinuumSolvent/test.py
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+         ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
+         ${CMAKE_CURRENT_SOURCE_DIR}/ContinuumSolvent/mgmol_diel.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/ContinuumSolvent/coords.in
+         ${CMAKE_CURRENT_SOURCE_DIR}/ContinuumSolvent/lrs.in
+         ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+
+
 target_include_directories(testHDF5P PRIVATE ${HDF5_INCLUDE_DIRS})
 target_include_directories(testAndersonMix PRIVATE
                            ${CMAKE_SOURCE_DIR}/tests/Anderson
