@@ -204,7 +204,8 @@ void Electrostatic::computeVhRho(Rho<T>& rho)
         work_rho = &vrho[0][0];
 
     const pb::Grid& grid = diel_flag_ ? *pbGrid_ : mymesh->grid();
-    pb::GridFunc<RHODTYPE> grho(work_rho, grid, bc_[0], bc_[1], bc_[2]);
+    pb::GridFunc<RHODTYPE> grho(grid, bc_[0], bc_[1], bc_[2]);
+    grho.assign(work_rho);
 
     poisson_solver_->computeVhRho(grho, *grhoc_);
 
@@ -323,8 +324,8 @@ void Electrostatic::setupPB(
     grhod_ = new pb::GridFunc<RHODTYPE>(*pbGrid_, bc_[0], bc_[1], bc_[2]);
 
     // initialize vh with last trial solution
-    pb::GridFunc<POTDTYPE> gf_vh(
-        pot.vh_rho(), *pbGrid_, bc_[0], bc_[1], bc_[2]);
+    pb::GridFunc<POTDTYPE> gf_vh(*pbGrid_, bc_[0], bc_[1], bc_[2]);
+    gf_vh.assign(pot.vh_rho());
     poisson_solver_->set_vh(gf_vh);
 }
 
@@ -419,7 +420,10 @@ void Electrostatic::setupRhoc(RHODTYPE* rhoc)
 
     const pb::Grid& grid = diel_flag_ ? *pbGrid_ : mymesh->grid();
     if (grhoc_ == nullptr)
-        grhoc_ = new pb::GridFunc<RHODTYPE>(rhoc, grid, bc_[0], bc_[1], bc_[2]);
+    {
+        grhoc_ = new pb::GridFunc<RHODTYPE>(grid, bc_[0], bc_[1], bc_[2]);
+        grhoc_->assign(rhoc);
+    }
     else
         grhoc_->assign(rhoc);
 }
@@ -474,7 +478,8 @@ void Electrostatic::computeVh(const Ions& ions, Rho<T>& rho, Potentials& pot)
         work = &vrho[0][0];
 
     const pb::Grid& grid = diel_flag_ ? *pbGrid_ : mymesh->grid();
-    pb::GridFunc<RHODTYPE> grho(work, grid, bc_[0], bc_[1], bc_[2]);
+    pb::GridFunc<RHODTYPE> grho(grid, bc_[0], bc_[1], bc_[2]);
+    grho.assign(work);
 
     if (diel_flag_)
     {
