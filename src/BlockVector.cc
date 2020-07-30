@@ -310,7 +310,7 @@ void BlockVector<ScalarType, MemorySpaceType>::initialize(
     }
 
     data_wghosts_ = new pb::GridFuncVector<ScalarType>(
-        true, mygrid_, bc_[0], bc_[1], bc_[2], gid, skinny_stencil);
+        mygrid_, bc_[0], bc_[1], bc_[2], gid, skinny_stencil);
 
     data_wghosts_->resetData();
 

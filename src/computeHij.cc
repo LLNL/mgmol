@@ -304,34 +304,25 @@ void MGmol<T>::computeHnlPhiAndAdd2HPhi(
         // compute Hnl*phi
         if (ct.Mehrstellen())
         {
-            ORBDTYPE* work1 = new ORBDTYPE[numpt];
             pb::GridFuncVector<ORBDTYPE> gfv(
-                false, mygrid, ct.bc[0], ct.bc[1], ct.bc[2], gid);
+                mygrid, ct.bc[0], ct.bc[1], ct.bc[2], gid);
+            std::vector<ORBDTYPE> work(numpt);
             for (short icolor = 0; icolor < ncolors; icolor++)
             {
-                get_vnlpsi(ions, gid, icolor, kbpsi, work1);
-                pb::GridFunc<ORBDTYPE>* gf_work = new pb::GridFunc<ORBDTYPE>(
-                    mygrid, ct.bc[0], ct.bc[1], ct.bc[2]);
-                gfv.push_back(gf_work);
-                gf_work->assign(work1);
+                get_vnlpsi(ions, gid, icolor, kbpsi, work.data());
+                gfv.assign(icolor, work.data());
             }
-            delete[] work1;
             gfv.trade_boundaries();
 
             // compute B*Hnl*phi and add it to H*phi
-            ORBDTYPE* hnl = new ORBDTYPE[numpt];
             for (int icolor = 0; icolor < ncolors; icolor++)
             {
-                hamiltonian_->lapOper()->rhs(gfv.func(icolor), hnl);
+                hamiltonian_->lapOper()->rhs(gfv.func(icolor), work.data());
 
                 // Add the contribution of the non-local potential to H phi
                 ORBDTYPE* hpsi = hphi.getPsi(icolor);
-                MPaxpy(numpt, 1., hnl, hpsi);
+                MPaxpy(numpt, 1., work.data(), hpsi);
             }
-            delete[] hnl;
-
-            for (short color = 0; color < ncolors; color++)
-                delete &gfv.func(color);
         }
         else // no Mehrstellen
         {

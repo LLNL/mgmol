@@ -116,7 +116,7 @@ void Preconditioning<T>::setup(map<int, GridMask*>& st_to_mask,
     gf_work_.push_back(gf_work);
 
     pb::GridFuncVector<T>* gfv_work = new pb::GridFuncVector<T>(
-        true, *grid_[0], bc_[0], bc_[1], bc_[2], overlapping_gids_);
+        *grid_[0], bc_[0], bc_[1], bc_[2], overlapping_gids_);
     gfv_work_.push_back(gfv_work);
 
     // coarse levels
@@ -143,15 +143,15 @@ void Preconditioning<T>::setup(map<int, GridMask*>& st_to_mask,
         mygrid = coarse_grid;
 
         gfv_work = new pb::GridFuncVector<T>(
-            true, *coarse_grid, bc_[0], bc_[1], bc_[2], overlapping_gids_);
+            *coarse_grid, bc_[0], bc_[1], bc_[2], overlapping_gids_);
         gfv_work_.push_back(gfv_work);
 
         pb::GridFuncVector<T>* gfv_rcoarse = new pb::GridFuncVector<T>(
-            true, *coarse_grid, bc_[0], bc_[1], bc_[2], overlapping_gids_);
+            *coarse_grid, bc_[0], bc_[1], bc_[2], overlapping_gids_);
         gfv_rcoarse_.push_back(gfv_rcoarse);
 
         pb::GridFuncVector<T>* gfv_newv = new pb::GridFuncVector<T>(
-            true, *coarse_grid, bc_[0], bc_[1], bc_[2], overlapping_gids_);
+            *coarse_grid, bc_[0], bc_[1], bc_[2], overlapping_gids_);
         gfv_newv_.push_back(gfv_newv);
     }
     gid2mask_ = st_to_mask;

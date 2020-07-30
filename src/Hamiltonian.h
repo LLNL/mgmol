@@ -27,7 +27,7 @@ class Hamiltonian
 
     static Timer apply_Hloc_tm_;
 
-    void applyLocal(const int istate, const int nstates, T& phi, T& hphi);
+    void applyLocal(const int nstates, T& phi, T& hphi);
 
 public:
     static Timer apply_Hloc_tm() { return apply_Hloc_tm_; }

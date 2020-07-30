@@ -65,7 +65,7 @@ const T& Hamiltonian<T>::applyLocal(T& phi, const bool force)
 #endif
     if (force || new_index != itindex_)
     {
-        applyLocal(0, phi.chromatic_number(), phi, *hlphi_);
+        applyLocal(phi.chromatic_number(), phi, *hlphi_);
 
         itindex_ = new_index;
 #ifdef PRINT_OPERATIONS
@@ -82,17 +82,14 @@ const T& Hamiltonian<T>::applyLocal(T& phi, const bool force)
 }
 
 template <class T>
-void Hamiltonian<T>::applyLocal(
-    const int first_state, const int ncolors, T& phi, T& hphi)
+void Hamiltonian<T>::applyLocal(const int ncolors, T& phi, T& hphi)
 {
     apply_Hloc_tm_.start();
 #ifdef PRINT_OPERATIONS
     if (onpe0)
-        (*MPIdata::sout) << "Hamiltonian<T>::applyLocal() for states "
-                         << first_state << " to " << first_state + ncolors - 1
-                         << endl;
+        (*MPIdata::sout) << "Hamiltonian<T>::applyLocal() for " << ncolors
+                         << " states" << endl;
 #endif
-    assert(first_state > -1);
 
     const Control& ct      = *(Control::instance());
     Mesh* mymesh           = Mesh::instance();
@@ -110,19 +107,9 @@ void Hamiltonian<T>::applyLocal(
         if (ct.Mehrstellen()) gfpot.trade_boundaries();
         const std::vector<std::vector<int>>& gid(phi.getOverlappingGids());
         pb::GridFuncVector<ORBDTYPE> gfvw1(
-            false, mygrid, ct.bc[0], ct.bc[1], ct.bc[2], gid);
-        pb::GridFuncVector<ORBDTYPE> gfvw2(
-            false, mygrid, ct.bc[0], ct.bc[1], ct.bc[2], gid);
-        // if( onpe0 )(*MPIdata::sout)<<"Hamiltonian<T>::applyLocal,
-        // index="<<phi.getIterativeIndex()<<endl;
-        for (int i = 0; i < ncolors; i++)
-        {
-            pb::GridFunc<ORBDTYPE>* gfw = new pb::GridFunc<ORBDTYPE>(
-                mygrid, ct.bc[0], ct.bc[1], ct.bc[2]);
-            gfvw1.push_back(gfw);
-            gfvw2.push_back(&phi.getFuncWithGhosts(first_state + i));
-        }
-        gfvw1.prod(gfvw2, gfpot);
+            mygrid, ct.bc[0], ct.bc[1], ct.bc[2], gid);
+        pb::GridFuncVector<ORBDTYPE>& gfvphi(*phi.getPtDataWGhosts());
+        gfvw1.prod(gfvphi, gfpot);
 
         pb::GridFunc<ORBDTYPE> gf_work1(mygrid, ct.bc[0], ct.bc[1], ct.bc[2]);
         pb::GridFunc<ORBDTYPE> gf_work2(mygrid, ct.bc[0], ct.bc[1], ct.bc[2]);
@@ -132,14 +119,10 @@ void Hamiltonian<T>::applyLocal(
             lapOper_->rhs(gfvw1.func(i), gf_work1);
 
             // work2 = -Lap*phi
-            lapOper_->apply(phi.getFuncWithGhosts(first_state + i), gf_work2);
+            lapOper_->apply(phi.getFuncWithGhosts(i), gf_work2);
 
             gf_work1 += gf_work2;
-            hphi.setPsi(gf_work1, i + first_state);
-        }
-        for (int i = 0; i < ncolors; i++)
-        {
-            delete &gfvw1.func(i);
+            hphi.setPsi(gf_work1, i);
         }
     }
     else
@@ -147,8 +130,8 @@ void Hamiltonian<T>::applyLocal(
 #pragma omp parallel for
         for (int i = 0; i < ncolors; i++)
         {
-            lapOper_->applyWithPot(phi.getFuncWithGhosts(first_state + i), vtot,
-                hphi.getPsi(i + first_state));
+            lapOper_->applyWithPot(
+                phi.getFuncWithGhosts(i), vtot, hphi.getPsi(i));
         }
     }
 
