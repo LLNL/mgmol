@@ -69,6 +69,8 @@ class GridFunc : public GridFuncInterface
 
     void setup();
 
+    void resizeBuffers();
+
 protected:
     const Grid& grid_;
 

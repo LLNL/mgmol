@@ -179,24 +179,9 @@ GridFunc<T>::GridFunc(
     {
         uu_ = nullptr;
     }
-    const short shift = ghost_pt();
-    const int dimxy   = (dim(1) + 2 * ghost_pt()) * dim(0);
 
     // resize static buffers if needed
-    if (mype_env().n_mpi_tasks() > 1)
-    {
-        int size_max = shift * grid_.inc(0);
-        size_max     = std::max(size_max, shift * dimxy);
-        size_max     = std::max(size_max, shift * dim(0) * grid_.inc(1));
-
-        if (size_max > (int)buf1_.size())
-        {
-            buf1_.resize(size_max);
-            buf2_.resize(size_max);
-            buf3_.resize(size_max);
-            buf4_.resize(size_max);
-        }
-    }
+    resizeBuffers();
 }
 
 // copy constructor
@@ -370,24 +355,8 @@ GridFunc<T>::GridFunc(const T* const vv, const Grid& new_grid, const short px,
         uu_                 = nullptr;
     }
 
-    const short shift = ghost_pt();
-    const int dimxy   = (dim(1) + 2 * ghost_pt()) * dim(0);
-
     // resize static buffers if needed
-    if (mype_env().n_mpi_tasks() > 1)
-    {
-        int size_max = shift * grid_.inc(0);
-        size_max     = std::max(size_max, shift * dimxy);
-        size_max     = std::max(size_max, shift * dim(0) * grid_.inc(1));
-
-        if (size_max > (int)buf1_.size())
-        {
-            buf1_.resize(size_max);
-            buf2_.resize(size_max);
-            buf3_.resize(size_max);
-            buf4_.resize(size_max);
-        }
-    }
+    resizeBuffers();
 }
 
 // Constructor
@@ -502,24 +471,8 @@ GridFunc<T>::GridFunc(const T* const src, const Grid& new_grid, const short px,
 
     updated_boundaries_ = false;
 
-    const short shift = ghost_pt();
-    const int dimxy   = (dim(1) + 2 * ghost_pt()) * dim(0);
-
     // resize static buffers if needed
-    if (mype_env().n_mpi_tasks() > 1)
-    {
-        int size_max = shift * grid_.inc(0);
-        size_max     = std::max(size_max, shift * dimxy);
-        size_max     = std::max(size_max, shift * dim(0) * grid_.inc(1));
-
-        if (size_max > (int)buf1_.size())
-        {
-            buf1_.resize(size_max);
-            buf2_.resize(size_max);
-            buf3_.resize(size_max);
-            buf4_.resize(size_max);
-        }
-    }
+    resizeBuffers();
 }
 
 template <typename T>
@@ -4046,6 +3999,29 @@ void GridFunc<T>::assign(const GridFunc<T>& src, const char dis)
 
     updated_boundaries_ = false;
 }
+
+template <typename T>
+void GridFunc<T>::resizeBuffers()
+{
+    // resize static buffers if needed
+    if (mype_env().n_mpi_tasks() > 1)
+    {
+        const short shift = ghost_pt();
+        const int dimxy   = (dim(1) + 2 * ghost_pt()) * dim(0);
+        int size_max      = shift * grid_.inc(0);
+        size_max          = std::max(size_max, shift * dimxy);
+        size_max          = std::max(size_max, shift * dim(0) * grid_.inc(1));
+
+        if (size_max > (int)buf1_.size())
+        {
+            buf1_.resize(size_max);
+            buf2_.resize(size_max);
+            buf3_.resize(size_max);
+            buf4_.resize(size_max);
+        }
+    }
+}
+
 template class GridFunc<double>;
 template class GridFunc<float>;
 
