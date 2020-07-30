@@ -34,8 +34,6 @@ public:
     // construct a coarse grid operator
     PBh4MP coarseOp(const Grid& mygrid)
     {
-        if (!mygrid.active()) return *this;
-
         Grid coarse_G = mygrid.coarse_grid();
         DielFunc<T> ecoarse(coarse_G, PBh4M<T>::epsilon_.epsilon_max());
         GridFunc<T> ppcoarse(coarse_G, 1, 1, 1);
@@ -50,8 +48,6 @@ public:
 
     PBh4MP replicatedOp(const Grid& replicated_grid)
     {
-        if (!PBh4M<T>::grid_.active()) return *this;
-
         T* replicated_func = new T[replicated_grid.gsize()];
 
         this->epsilon_.init_vect(replicated_func, 'g');

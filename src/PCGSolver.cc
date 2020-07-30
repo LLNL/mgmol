@@ -258,8 +258,6 @@ bool PCGSolver<T, T2>::solve(pb::GridFunc<T2>& gf_phi, pb::GridFunc<T2>& gf_rhs)
 template <class T, typename T2>
 bool PCGSolver<T, T2>::solve(T2* phi, T2* rhs, const char dis)
 {
-    if (!oper_.grid().active()) return 0.;
-
     pb::GridFunc<T2> gf_phi(phi, oper_.grid(), bc_[0], bc_[1], bc_[2], dis);
     pb::GridFunc<T2> gf_work(rhs, oper_.grid(), bc_[0], bc_[1], bc_[2], dis);
 

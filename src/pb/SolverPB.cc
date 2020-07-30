@@ -54,8 +54,6 @@ GridFunc<GFDTYPE> &, const short, const short, const short, const bool);
 template <class T, typename T2>
 bool SolverPB<T, T2>::solve(T2* phi, T2* rhs, T2* rhod, T2* vks, const char dis)
 {
-    if (!oper_.grid().active()) return 0.;
-
     GridFunc<T2> gf_phi(phi, oper_.grid(), Solver<T2>::bc_[0],
         Solver<T2>::bc_[1], Solver<T2>::bc_[2], dis);
     GridFunc<T2> gf_work(rhs, oper_.grid(), Solver<T2>::bc_[0],
@@ -85,8 +83,6 @@ template <class T, typename T2>
 bool SolverPB<T, T2>::solve(GridFunc<T2>& gf_phi, GridFunc<T2>& gf_rhs,
     GridFunc<T2>& gf_rhod, GridFunc<T2>& gf_vks)
 {
-    if (!oper_.grid().active()) return 0.;
-
     oper_.init(gf_rhod);
 
     bool conv = Mgm(oper_, gf_phi, gf_rhs, max_nlevels_, max_sweeps_, tol_,
@@ -102,8 +98,6 @@ bool SolverPB<T, T2>::solve(GridFunc<T2>& gf_phi, GridFunc<T2>& gf_rhs,
 template <class T, typename T2>
 bool SolverPB<T, T2>::solve(GridFunc<T2>& gf_phi, GridFunc<T2>& gf_rhs)
 {
-    if (!oper_.grid().active()) return 0.;
-
     if (!oper_.initialized())
     {
         std::cout << "Error in SolverPB<T>::solve: operator not initialized"

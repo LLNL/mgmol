@@ -42,81 +42,56 @@ Grid::Grid(const double origin[3], const double lattice[3],
 
     level_ = level;
 
-    if (mype_env.color() == 0)
+    assert(mype_env.n_mpi_task(0) > 0);
+    assert(mype_env.n_mpi_task(1) > 0);
+    assert(mype_env.n_mpi_task(2) > 0);
+
+    dim_[0] = ngpts[0] / mype_env.n_mpi_task(0);
+    dim_[1] = ngpts[1] / mype_env.n_mpi_task(1);
+    dim_[2] = ngpts[2] / mype_env.n_mpi_task(2);
+    assert(dim_[0] * mype_env.n_mpi_task(0) == ngpts[0]);
+    assert(dim_[1] * mype_env.n_mpi_task(1) == ngpts[1]);
+    assert(dim_[2] * mype_env.n_mpi_task(2) == ngpts[2]);
+
+    gdim_[0] = ngpts[0];
+    gdim_[1] = ngpts[1];
+    gdim_[2] = ngpts[2];
+
+    ghost_pt_ = nghosts;
+
+    // cout<< "Construct grid of
+    // dim"<<dim(0)<<","<<dim(1)<<","<<dim(2)<<endl;
+
+    size_  = dim_[0] * dim_[1] * dim_[2];
+    sizeg_ = (dim_[0] + 2 * nghosts) * (dim_[1] + 2 * nghosts)
+             * (dim_[2] + 2 * nghosts);
+
+    gsize_ = gdim_[0] * gdim_[1] * gdim_[2];
+
+    for (short i = 0; i < 3; i++)
     {
-        active_ = true;
-
-        assert(mype_env.n_mpi_task(0) > 0);
-        assert(mype_env.n_mpi_task(1) > 0);
-        assert(mype_env.n_mpi_task(2) > 0);
-
-        dim_[0] = ngpts[0] / mype_env.n_mpi_task(0);
-        dim_[1] = ngpts[1] / mype_env.n_mpi_task(1);
-        dim_[2] = ngpts[2] / mype_env.n_mpi_task(2);
-        assert(dim_[0] * mype_env.n_mpi_task(0) == ngpts[0]);
-        assert(dim_[1] * mype_env.n_mpi_task(1) == ngpts[1]);
-        assert(dim_[2] * mype_env.n_mpi_task(2) == ngpts[2]);
-
-        gdim_[0] = ngpts[0];
-        gdim_[1] = ngpts[1];
-        gdim_[2] = ngpts[2];
-
-        ghost_pt_ = nghosts;
-
-        // cout<< "Construct grid of
-        // dim"<<dim(0)<<","<<dim(1)<<","<<dim(2)<<endl;
-
-        size_  = dim_[0] * dim_[1] * dim_[2];
-        sizeg_ = (dim_[0] + 2 * nghosts) * (dim_[1] + 2 * nghosts)
-                 * (dim_[2] + 2 * nghosts);
-
-        gsize_ = gdim_[0] * gdim_[1] * gdim_[2];
-
-        for (short i = 0; i < 3; i++)
-        {
-            hgrid_[i] = ll_[i] / (double)gdim_[i];
-            assert(hgrid_[i] > 1.e-8);
-        }
-        // cout<<"h="<<hgrid(0)<<","<<hgrid(1)<<","<<hgrid(2)<<endl;
-
-        vel_ = hgrid_[0] * hgrid_[1] * hgrid_[2];
-
-        inc_[0] = (dim_[1] + 2 * ghost_pt_) * (dim_[2] + 2 * ghost_pt_);
-        inc_[1] = (dim_[2] + 2 * ghost_pt_);
-        inc_[2] = 1;
-
-        for (short i = 0; i < 3; i++)
-        {
-            start_[i]  = mype_env.my_mpi(i) * dim_[i] * hgrid_[i] + origin_[i];
-            istart_[i] = mype_env.my_mpi(i) * dim_[i];
-        }
+        hgrid_[i] = ll_[i] / (double)gdim_[i];
+        assert(hgrid_[i] > 1.e-8);
     }
-    else
-    {
-        active_ = false;
+    // cout<<"h="<<hgrid(0)<<","<<hgrid(1)<<","<<hgrid(2)<<endl;
 
-        for (short i = 0; i < 3; i++)
-        {
-            dim_[i]    = 0;
-            gdim_[i]   = 0;
-            start_[i]  = 0.;
-            istart_[i] = 0;
-            inc_[i]    = 1;
-            hgrid_[i]  = 0.;
-        }
-        vel_      = 0.;
-        size_     = 0;
-        sizeg_    = 0;
-        gsize_    = 0;
-        ghost_pt_ = 0;
+    vel_ = hgrid_[0] * hgrid_[1] * hgrid_[2];
+
+    inc_[0] = (dim_[1] + 2 * ghost_pt_) * (dim_[2] + 2 * ghost_pt_);
+    inc_[1] = (dim_[2] + 2 * ghost_pt_);
+    inc_[2] = 1;
+
+    for (short i = 0; i < 3; i++)
+    {
+        start_[i]  = mype_env.my_mpi(i) * dim_[i] * hgrid_[i] + origin_[i];
+        istart_[i] = mype_env.my_mpi(i) * dim_[i];
     }
 
-    if (active_)
-        for (short i = 0; i < 3; i++)
-        {
-            assert(dim_[i] > 0);
-            assert(dim_[i] < 10000);
-        }
+    for (short i = 0; i < 3; i++)
+    {
+        assert(dim_[i] > 0);
+        assert(dim_[i] < 10000);
+    }
 }
 
 // copy constructor
@@ -153,8 +128,6 @@ Grid::Grid(const Grid& my_grid, const short nghosts)
                  * (dim_[2] + 2 * ghost_pt_);
     }
 
-    active_ = my_grid.active_;
-
     // cout<<"Copy const. for grid\n";
     gdim_[0]   = my_grid.gdim(0);
     gdim_[1]   = my_grid.gdim(1);
@@ -180,12 +153,11 @@ Grid::Grid(const Grid& my_grid, const short nghosts)
     vel_   = my_grid.vel_;
     level_ = my_grid.level_;
 
-    if (active_)
-        for (short i = 0; i < 3; i++)
-        {
-            assert(dim_[i] > 0);
-            assert(dim_[i] < 10000);
-        }
+    for (short i = 0; i < 3; i++)
+    {
+        assert(dim_[i] > 0);
+        assert(dim_[i] < 10000);
+    }
 }
 
 Grid& Grid::operator=(const Grid& my_grid)
@@ -229,15 +201,12 @@ Grid& Grid::operator=(const Grid& my_grid)
         ghost_pt_ = my_grid.ghost_pt_;
         vel_      = my_grid.vel_;
         level_    = my_grid.level_;
-
-        active_ = my_grid.active_;
     }
-    if (active_)
-        for (short i = 0; i < 3; i++)
-        {
-            assert(dim_[i] > 0);
-            assert(dim_[i] < 10000);
-        }
+    for (short i = 0; i < 3; i++)
+    {
+        assert(dim_[i] > 0);
+        assert(dim_[i] < 10000);
+    }
 
     return *this;
 }

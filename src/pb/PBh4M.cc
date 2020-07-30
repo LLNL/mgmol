@@ -6,8 +6,6 @@
 // All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
-
-// $Id: PBh4M.cc,v 1.15 2010/01/28 22:56:31 jeanluc Exp $
 #include "PBh4M.h"
 #include "tools.h"
 
@@ -22,34 +20,30 @@ PBh4M<T>::PBh4M(const Grid& mygrid, DielFunc<T>& myepsilon)
       sqrt_a_(PB<T>::epsilon_),
       inv_sqrt_a_(PB<T>::epsilon_)
 {
-    if (mygrid.active())
+    if (mygrid.ghost_pt() < minNumberGhosts())
     {
-        if (mygrid.ghost_pt() < minNumberGhosts())
-        {
-            std::cout << "Not enough ghosts points in PBh4M::PBh4M"
-                      << std::endl;
-            PB<T>::grid_.mype_env().globalExit();
-        }
-
-        // cout<<"Constructor for PBh4M"<<endl;
-        sqrt_a_.sqrt_func();
-        sqrt_a_.trade_boundaries();
-
-        inv_sqrt_a_ = sqrt_a_;
-        inv_sqrt_a_.inv();
-        inv_sqrt_a_.trade_boundaries();
-
-        pp_ = 0.;
-        FDoper<T>::del2_4th(sqrt_a_, pp_); // -lap
-        pp_ *= -1.;
-        pp_ *= inv_sqrt_a_;
-
-        pp_.trade_boundaries();
-
-        dot_sqrt_a_ = sqrt_a_.gdot(sqrt_a_);
-
-        PB<T>::initialized_ = true;
+        std::cout << "Not enough ghosts points in PBh4M::PBh4M" << std::endl;
+        PB<T>::grid_.mype_env().globalExit();
     }
+
+    // cout<<"Constructor for PBh4M"<<endl;
+    sqrt_a_.sqrt_func();
+    sqrt_a_.trade_boundaries();
+
+    inv_sqrt_a_ = sqrt_a_;
+    inv_sqrt_a_.inv();
+    inv_sqrt_a_.trade_boundaries();
+
+    pp_ = 0.;
+    FDoper<T>::del2_4th(sqrt_a_, pp_); // -lap
+    pp_ *= -1.;
+    pp_ *= inv_sqrt_a_;
+
+    pp_.trade_boundaries();
+
+    dot_sqrt_a_ = sqrt_a_.gdot(sqrt_a_);
+
+    PB<T>::initialized_ = true;
 }
 
 // copy constructor
@@ -62,10 +56,7 @@ PBh4M<T>::PBh4M(const PBh4M& oper)
       inv_sqrt_a_(oper.inv_sqrt_a_, PB<T>::grid_)
 {
     // cout<<"Copy constructor for PBh4M"<<endl;
-    if (PB<T>::grid_.active())
-    {
-        assert(PB<T>::grid_.sizeg() > 1);
-    }
+    assert(PB<T>::grid_.sizeg() > 1);
     // sqrt_a_.set_grid(grid_);
     // inv_sqrt_a_.set_grid(grid_);
     // pp_.set_grid(grid_);
@@ -78,8 +69,6 @@ PBh4M<T>::PBh4M(const PBh4M& oper)
 template <class T>
 PBh4M<T> PBh4M<T>::coarseOp(const Grid& mygrid)
 {
-    if (!mygrid.active()) return *this;
-
     // cout<<"construct a coarse grid"<<endl;
     Grid coarse_G = mygrid.coarse_grid();
     DielFunc<T> ecoarse(coarse_G, PB<T>::epsilon_.epsilon_max());
@@ -97,8 +86,6 @@ PBh4M<T> PBh4M<T>::coarseOp(const Grid& mygrid)
 template <class T>
 PBh4M<T> PBh4M<T>::replicatedOp(const Grid& replicated_grid)
 {
-    if (!PB<T>::grid_.active()) return *this;
-
     T* replicated_func = new T[replicated_grid.gsize()];
 
     this->epsilon_.init_vect(replicated_func, 'g');
@@ -118,8 +105,6 @@ PBh4M<T> PBh4M<T>::replicatedOp(const Grid& replicated_grid)
 template <class T>
 void PBh4M<T>::jacobi(GridFunc<T>& A, const GridFunc<T>& B, GridFunc<T>& W)
 {
-    if (!A.grid().active()) return;
-
     apply(A, W);
     W -= B; // get residual
 
@@ -156,8 +141,6 @@ template <class T>
 void PBh4M<T>::get_vepsilon(
     GridFunc<T>& vh, GridFunc<T>& rhod, GridFunc<T>& vepsilon)
 {
-    if (!vh.grid().active()) return;
-
 #ifndef NDEBUG
     if (vh.grid().mype_env().mytask() == 0)
     {
@@ -178,8 +161,6 @@ void PBh4M<T>::get_vepsilon(
 template <class T>
 void PBh4M<T>::init(GridFunc<T>& gf_rhod)
 {
-    if (!gf_rhod.grid().active()) return;
-
     PB<T>::epsilon_.Gepsilon_rho(gf_rhod);
     sqrt_a_ = PB<T>::epsilon_;
 

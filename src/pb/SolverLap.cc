@@ -119,8 +119,6 @@ short, const bool);
 template <class T, typename T2>
 bool SolverLap<T, T2>::solve(T2* phi, T2* rhs, const char dis)
 {
-    if (!oper_.grid().active()) return 0.;
-
     GridFunc<T2> gf_phi(phi, oper_.grid(), Solver<T2>::bc_[0],
         Solver<T2>::bc_[1], Solver<T2>::bc_[2], dis);
     GridFunc<T2> gf_work(rhs, oper_.grid(), Solver<T2>::bc_[0],
@@ -141,8 +139,6 @@ bool SolverLap<T, T2>::solve(T2* phi, T2* rhs, const char dis)
 template <class T, typename T2>
 bool SolverLap<T, T2>::solve(GridFunc<T2>& gf_phi, GridFunc<T2>& gf_rhs)
 {
-    if (!oper_.grid().active()) return 0.;
-
     bool conv = Mgm(oper_, gf_phi, gf_rhs, max_nlevels_, max_sweeps_, tol_,
         nu1_, nu2_, gather_coarse_level_, final_residual_,
         final_relative_residual_, residual_reduction_, nb_sweeps_);

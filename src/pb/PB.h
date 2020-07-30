@@ -67,10 +67,7 @@ public:
           work2_(FDoper<T>::grid_, 0, 0, 0)
     {
         // std::cout<<"Copy constructor for PB"<<std::endl;
-        if (FDoper<T>::grid_.active())
-        {
-            assert(FDoper<T>::grid_.sizeg() > 1);
-        }
+        assert(FDoper<T>::grid_.sizeg() > 1);
         epsilon_     = oper.epsilon_;
         work1_       = oper.work1_;
         work2_       = oper.work2_;

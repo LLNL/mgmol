@@ -6,8 +6,6 @@
 // All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
-
-// $Id: PBh8.cc,v 1.4 2009/01/27 00:09:38 jeanluc Exp $
 #include "PBh8.h"
 
 namespace pb
@@ -72,8 +70,6 @@ void PBh8<T>::get_vepsilon(
 template <class T>
 PBh8<T> PBh8<T>::replicatedOp(const Grid& replicated_grid)
 {
-    if (!(PB<T>::grid_.active())) return *this;
-
     T* replicated_func = new T[replicated_grid.gsize()];
 
     this->epsilon_.init_vect(replicated_func, 'g');

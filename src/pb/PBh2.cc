@@ -76,8 +76,6 @@ void PBh2<T>::get_vepsilon(
 template <class T>
 PBh2<T> PBh2<T>::coarseOp(const Grid& mygrid)
 {
-    if (!(PB<T>::grid_.active())) return *this;
-
     Grid coarse_G = mygrid.coarse_grid();
     DielFunc<T> ecoarse(coarse_G, PB<T>::epsilon_.epsilon_max());
     PB<T>::epsilon_.restrict3D(ecoarse);
@@ -89,8 +87,6 @@ PBh2<T> PBh2<T>::coarseOp(const Grid& mygrid)
 template <class T>
 PBh2<T> PBh2<T>::replicatedOp(const Grid& replicated_grid)
 {
-    if (!PB<T>::grid_.active()) return *this;
-
     T* replicated_func = new T[replicated_grid.gsize()];
 
     this->epsilon_.init_vect(replicated_func, 'g');
