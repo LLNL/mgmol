@@ -183,6 +183,7 @@ GridFunc<T>::GridFunc(const GridFunc<double>& A) : grid_(A.grid())
 {
     assert(grid_.dim(0) > 0);
     assert(grid_.dim(0) < 10000);
+    assert(au != nullptr);
 
     bc_[0] = A.bc(0);
     bc_[1] = A.bc(1);
@@ -193,17 +194,9 @@ GridFunc<T>::GridFunc(const GridFunc<double>& A) : grid_(A.grid())
     int n = grid_.sizeg();
 
     double* au = A.uu();
-    if (au != nullptr)
-    {
-        uu_ = new T[n];
-        MPcpy(uu_, au, n);
-        updated_boundaries_ = A.updated_boundaries();
-    }
-    else
-    {
-        updated_boundaries_ = false;
-        uu_                 = nullptr;
-    }
+    uu_        = new T[n];
+    MPcpy(uu_, au, n);
+    updated_boundaries_ = A.updated_boundaries();
 }
 
 template <typename T>
@@ -211,6 +204,7 @@ GridFunc<T>::GridFunc(const GridFunc<float>& A) : grid_(A.grid())
 {
     assert(grid_.dim(0) > 0);
     assert(grid_.dim(0) < 10000);
+    assert(au != nullptr);
 
     bc_[0] = A.bc(0);
     bc_[1] = A.bc(1);
@@ -221,17 +215,9 @@ GridFunc<T>::GridFunc(const GridFunc<float>& A) : grid_(A.grid())
     int n = grid_.sizeg();
 
     float* au = A.uu();
-    if (au != nullptr)
-    {
-        uu_ = new T[n];
-        MPcpy(uu_, au, n);
-        updated_boundaries_ = A.updated_boundaries();
-    }
-    else
-    {
-        updated_boundaries_ = false;
-        uu_                 = nullptr;
-    }
+    uu_       = new T[n];
+    MPcpy(uu_, au, n);
+    updated_boundaries_ = A.updated_boundaries();
 }
 
 // copy constructor on different grid
@@ -240,6 +226,7 @@ GridFunc<T>::GridFunc(const GridFunc<T>& A, const Grid& new_grid)
     : grid_(new_grid)
 {
     assert(dim(0) >= 1);
+    assert(A.uu_ != nullptr);
 
     bc_[0] = A.bc_[0];
     bc_[1] = A.bc_[1];
@@ -257,35 +244,27 @@ GridFunc<T>::GridFunc(const GridFunc<T>& A, const Grid& new_grid)
     assert(grid_.inc(2) == 1);
     assert(A.grid_.inc(2) == 1);
 
-    if (A.uu_ != nullptr)
-    {
-        uu_ = new T[grid_.sizeg()];
-        memset(uu_, 0, grid_.sizeg() * sizeof(T));
-        size_t sdim2 = dim_[2] * sizeof(T);
+    uu_ = new T[grid_.sizeg()];
+    memset(uu_, 0, grid_.sizeg() * sizeof(T));
+    size_t sdim2 = dim_[2] * sizeof(T);
 
-        for (int ix = 0; ix < dim_[0]; ix++)
+    for (int ix = 0; ix < dim_[0]; ix++)
+    {
+
+        int ix1 = (ix + shift1) * incx_ + shift1;
+        int ix2 = (ix + shift2) * incx2 + shift2;
+
+        for (int iy = 0; iy < dim_[1]; iy++)
         {
 
-            int ix1 = (ix + shift1) * incx_ + shift1;
-            int ix2 = (ix + shift2) * incx2 + shift2;
+            int iy1 = ix1 + (iy + shift1) * incy_;
+            int iy2 = ix2 + (iy + shift2) * incy2;
 
-            for (int iy = 0; iy < dim_[1]; iy++)
-            {
-
-                int iy1 = ix1 + (iy + shift1) * incy_;
-                int iy2 = ix2 + (iy + shift2) * incy2;
-
-                memcpy(uu_ + iy1, vv + iy2, sdim2);
-            }
+            memcpy(uu_ + iy1, vv + iy2, sdim2);
         }
+    }
 
-        updated_boundaries_ = false;
-    }
-    else
-    {
-        std::cout << "Invalid initialization" << std::endl;
-        exit(2);
-    }
+    updated_boundaries_ = false;
 }
 
 // Constructor
@@ -294,6 +273,7 @@ GridFunc<T>::GridFunc(const T* const vv, const Grid& new_grid, const short px,
     const short py, const short pz)
     : grid_(new_grid)
 {
+    assert(vv != nullptr);
     assert(px == 0 || px == 1 || px == 2);
     assert(py == 0 || py == 1 || py == 2);
     assert(pz == 0 || pz == 1 || pz == 2);
@@ -312,35 +292,27 @@ GridFunc<T>::GridFunc(const T* const vv, const Grid& new_grid, const short px,
     assert(grid_.inc(2) == 1);
 
     const size_t sdim2 = dim_[2] * sizeof(T);
-    if (vv != nullptr)
-    {
-        assert(grid_.sizeg() > 0);
-        uu_ = new T[grid_.sizeg()];
-        memset(uu_, 0, grid_.sizeg() * sizeof(T));
+    assert(grid_.sizeg() > 0);
+    uu_ = new T[grid_.sizeg()];
+    memset(uu_, 0, grid_.sizeg() * sizeof(T));
 
-        for (int ix = 0; ix < dim_[0]; ix++)
+    for (int ix = 0; ix < dim_[0]; ix++)
+    {
+
+        const int ix1 = (ix + nghosts) * incx_ + nghosts * (1 + incy_);
+        const int ix2 = ix * incx2;
+
+        for (int iy = 0; iy < dim_[1]; iy++)
         {
 
-            const int ix1 = (ix + nghosts) * incx_ + nghosts * (1 + incy_);
-            const int ix2 = ix * incx2;
+            int iy1 = ix1 + iy * incy_;
+            int iy2 = ix2 + iy * incy2;
 
-            for (int iy = 0; iy < dim_[1]; iy++)
-            {
-
-                int iy1 = ix1 + iy * incy_;
-                int iy2 = ix2 + iy * incy2;
-
-                memcpy(uu_ + iy1, vv + iy2, sdim2);
-            }
+            memcpy(uu_ + iy1, vv + iy2, sdim2);
         }
+    }
 
-        updated_boundaries_ = false;
-    }
-    else
-    {
-        updated_boundaries_ = false;
-        uu_                 = nullptr;
-    }
+    updated_boundaries_ = false;
 
     // resize static buffers if needed
     resizeBuffers();
@@ -733,62 +705,57 @@ template <typename T>
 template <typename T2>
 void GridFunc<T>::assign(const T2* const vv, const char dis)
 {
+    assert(vv != nullptr);
+
     const short nghosts = ghost_pt();
 
     assert(grid_.inc(2) == 1);
 
-    if (vv != nullptr)
+    if (dis == 'g')
     {
-        if (dis == 'g')
+        const int ldz    = grid_.gdim(2);
+        const int istart = mype_env().my_mpi(0) * dim_[0];
+        const int jstart = mype_env().my_mpi(1) * dim_[1];
+        const int kstart = mype_env().my_mpi(2) * dim_[2];
+        const int gincx  = grid_.gdim(1) * ldz;
+        const int gincy  = ldz;
+
+        for (int ix = 0; ix < dim_[0]; ix++)
         {
-            const int ldz    = grid_.gdim(2);
-            const int istart = mype_env().my_mpi(0) * dim_[0];
-            const int jstart = mype_env().my_mpi(1) * dim_[1];
-            const int kstart = mype_env().my_mpi(2) * dim_[2];
-            const int gincx  = grid_.gdim(1) * ldz;
-            const int gincy  = ldz;
+            int ix1 = (ix + nghosts) * incx_;
+            int ix2 = (ix + istart) * gincx;
 
-            for (int ix = 0; ix < dim_[0]; ix++)
+            for (int iy = 0; iy < dim_[1]; iy++)
             {
-                int ix1 = (ix + nghosts) * incx_;
-                int ix2 = (ix + istart) * gincx;
+                int iy1 = ix1 + (iy + nghosts) * incy_;
+                int iy2 = ix2 + (iy + jstart) * gincy + kstart;
 
-                for (int iy = 0; iy < dim_[1]; iy++)
-                {
-                    int iy1 = ix1 + (iy + nghosts) * incy_;
-                    int iy2 = ix2 + (iy + jstart) * gincy + kstart;
-
-                    MPcpy(uu_ + iy1 + nghosts, vv + iy2, dim_[2]);
-                }
+                MPcpy(uu_ + iy1 + nghosts, vv + iy2, dim_[2]);
             }
         }
-        else
-        {
-            const int incx2 = dim_[2] * dim_[1];
-            const int incy2 = dim_[2];
-            for (int ix = 0; ix < dim_[0]; ix++)
-            {
-                int ix1 = (ix + nghosts) * incx_;
-                int ix2 = ix * incx2;
-
-                const T2* const pv = vv + ix2;
-                T* pu              = uu_ + ix1 + nghosts + nghosts * incy_;
-                for (int iy = 0; iy < dim_[1]; iy++)
-                {
-                    int iy1 = iy * incy_;
-                    int iy2 = iy * incy2;
-
-                    MPcpy(pu + iy1, pv + iy2, dim_[2]);
-                }
-            }
-        }
-
-        updated_boundaries_ = false;
     }
     else
     {
-        updated_boundaries_ = false;
+        const int incx2 = dim_[2] * dim_[1];
+        const int incy2 = dim_[2];
+        for (int ix = 0; ix < dim_[0]; ix++)
+        {
+            int ix1 = (ix + nghosts) * incx_;
+            int ix2 = ix * incx2;
+
+            const T2* const pv = vv + ix2;
+            T* pu              = uu_ + ix1 + nghosts + nghosts * incy_;
+            for (int iy = 0; iy < dim_[1]; iy++)
+            {
+                int iy1 = iy * incy_;
+                int iy2 = iy * incy2;
+
+                MPcpy(pu + iy1, pv + iy2, dim_[2]);
+            }
+        }
     }
+
+    updated_boundaries_ = false;
 }
 
 template <typename T>
@@ -933,6 +900,8 @@ void GridFunc<T>::inv()
 template <typename T>
 void GridFunc<T>::print(std::ostream& tfile)
 {
+    assert(uu_ != nullptr);
+
     const short nghosts = ghost_pt();
 
     assert(grid_.inc(2) == 1);
@@ -952,67 +921,63 @@ void GridFunc<T>::print(std::ostream& tfile)
 
     T* vv = uu_;
 
-    if (uu_ != nullptr)
-    {
-        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-        int mpirc;
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    int mpirc;
 
-        for (int i = 0; i < mype_env().n_mpi_tasks(); i++)
+    for (int i = 0; i < mype_env().n_mpi_tasks(); i++)
+    {
+        if (i > 0)
         {
-            if (i > 0)
+            if (i == mytask_)
             {
-                if (i == mytask_)
+                mpirc = mmpi.send(uu_, grid_.sizeg(), 0);
+                mpirc = mmpi.send(start, 3, 0);
+                std::cout << " Print GridFunc<T> from task " << mytask_
+                          << std::endl;
+            }
+            else
+            {
+                if (0 == mytask_)
                 {
-                    mpirc = mmpi.send(uu_, grid_.sizeg(), 0);
-                    mpirc = mmpi.send(start, 3, 0);
-                    std::cout << " Print GridFunc<T> from task " << mytask_
-                              << std::endl;
-                }
-                else
-                {
-                    if (0 == mytask_)
-                    {
-                        mpirc = mmpi.recv(work, grid_.sizeg(), i);
-                        if (mpirc != MPI_SUCCESS)
-                            std::cout << "print: MPI_Recv work failed!!!"
-                                      << std::endl;
-                        mpirc = mmpi.recv(start, 3, i);
-                        if (mpirc != MPI_SUCCESS)
-                            std::cout << "print: MPI_Recv start[] failed!!!"
-                                      << std::endl;
-                        vv = work;
-                    }
+                    mpirc = mmpi.recv(work, grid_.sizeg(), i);
+                    if (mpirc != MPI_SUCCESS)
+                        std::cout << "print: MPI_Recv work failed!!!"
+                                  << std::endl;
+                    mpirc = mmpi.recv(start, 3, i);
+                    if (mpirc != MPI_SUCCESS)
+                        std::cout << "print: MPI_Recv start[] failed!!!"
+                                  << std::endl;
+                    vv = work;
                 }
             }
-            if (mype_env().onpe0())
+        }
+        if (mype_env().onpe0())
+        {
+            for (int ix = 0; ix < dim_[0]; ix++)
             {
-                for (int ix = 0; ix < dim_[0]; ix++)
+
+                int ix1 = (ix + nghosts) * incx_ + nghosts;
+
+                for (int iy = 0; iy < dim_[1]; iy++)
                 {
 
-                    int ix1 = (ix + nghosts) * incx_ + nghosts;
+                    int iy1 = ix1 + (iy + nghosts) * incy_;
 
-                    for (int iy = 0; iy < dim_[1]; iy++)
+                    for (int iz = 0; iz < dim_[2]; iz++)
                     {
 
-                        int iy1 = ix1 + (iy + nghosts) * incy_;
+                        int iz1 = iy1 + iz;
 
-                        for (int iz = 0; iz < dim_[2]; iz++)
-                        {
-
-                            int iz1 = iy1 + iz;
-
-                            tfile << (start[0] + ix * grid_.hgrid(0)) * size_x
-                                         + (start[1] + iy * grid_.hgrid(1))
-                                               * size_y
-                                         + (start[2] + iz * grid_.hgrid(2))
-                                               * size_z
-                                  << "\t" << vv[iz1] << std::endl;
-                        }
+                        tfile << (start[0] + ix * grid_.hgrid(0)) * size_x
+                                     + (start[1] + iy * grid_.hgrid(1)) * size_y
+                                     + (start[2] + iz * grid_.hgrid(2)) * size_z
+                              << "\t" << vv[iz1] << std::endl;
                     }
                 }
             }
         }
     }
+
     delete[] work;
 }
 
@@ -1037,31 +1002,29 @@ void GridFunc<T>::write_plt(const char str[]) const
 template <typename T>
 void GridFunc<T>::write_xyz(std::ofstream& tfile) const
 {
-    const short shift = ghost_pt();
-
+    assert(uu_ != nullptr);
     assert(grid_.inc(2) == 1);
+
+    const short shift = ghost_pt();
 
     const T* const vv = uu_;
 
-    if (uu_ != nullptr)
+    for (int ix = 0; ix < dim(0); ix++)
     {
-        for (int ix = 0; ix < dim(0); ix++)
+
+        int ix1 = (ix + shift) * incx_ + shift;
+
+        for (int iy = 0; iy < dim(1); iy++)
         {
 
-            int ix1 = (ix + shift) * incx_ + shift;
+            int iy1 = ix1 + (iy + shift) * incy_;
 
-            for (int iy = 0; iy < dim(1); iy++)
+            for (int iz = 0; iz < dim(2); iz++)
             {
 
-                int iy1 = ix1 + (iy + shift) * incy_;
+                int iz1 = iy1 + iz;
 
-                for (int iz = 0; iz < dim(2); iz++)
-                {
-
-                    int iz1 = iy1 + iz;
-
-                    tfile << vv[iz1] << std::endl;
-                }
+                tfile << vv[iz1] << std::endl;
             }
         }
     }
@@ -1578,29 +1541,28 @@ void GridFunc<T>::init_vect_shift(T* global_func) const
 template <typename T>
 void GridFunc<T>::write_zyx(std::ofstream& tfile) const
 {
+    assert(uu_ != nullptr);
+
     const short shift = ghost_pt();
 
     const T* const vv = uu_;
 
-    if (uu_ != nullptr)
+    for (int iz = 0; iz < dim(2); iz++)
     {
-        for (int iz = 0; iz < dim(2); iz++)
+
+        int iz1 = (iz + shift);
+
+        for (int iy = 0; iy < dim(1); iy++)
         {
 
-            int iz1 = (iz + shift);
+            int iy1 = iz1 + (iy + shift) * incy_;
 
-            for (int iy = 0; iy < dim(1); iy++)
+            for (int ix = 0; ix < dim(0); ix++)
             {
 
-                int iy1 = iz1 + (iy + shift) * incy_;
+                int ix1 = iy1 + (ix + shift) * incx_;
 
-                for (int ix = 0; ix < dim(0); ix++)
-                {
-
-                    int ix1 = iy1 + (ix + shift) * incx_;
-
-                    tfile << vv[ix1] << std::endl;
-                }
+                tfile << vv[ix1] << std::endl;
             }
         }
     }
@@ -3807,11 +3769,10 @@ double GridFunc<T>::get_bias()
 template <typename T>
 GridFunc<T>::~GridFunc<T>()
 {
-    if (uu_ != nullptr)
-    {
-        delete[] uu_;
-        uu_ = nullptr;
-    }
+    assert(uu_ != nullptr);
+
+    delete[] uu_;
+    uu_ = nullptr;
 }
 
 template <typename T>
