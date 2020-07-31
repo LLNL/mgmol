@@ -758,8 +758,16 @@ void SinCosOps<T>::computeDiag(const T& orbitals,
             int gid = orbitals.overlapping_gids_[iloc][icolor];
             if (gid != -1)
             {
-                const ORBDTYPE* const psii = orbitals.psi(icolor);
-                double atmp[6]             = { 0., 0., 0., 0., 0., 0. };
+                const ORBDTYPE* const psii   = orbitals.psi(icolor);
+                using memory_space_type      = typename T::memory_space_type;
+                unsigned int const psii_size = orbitals.getLocNumpt();
+                ORBDTYPE* psii_host_view     = MemorySpace::Memory<ORBDTYPE,
+                    memory_space_type>::allocate_host_view(psii_size);
+                MemorySpace::Memory<ORBDTYPE, memory_space_type>::
+                    copy_view_to_host(
+                        const_cast<ORBDTYPE*>(psii), psii_size, psii_host_view);
+
+                double atmp[6] = { 0., 0., 0., 0., 0., 0. };
 
                 for (int ix = loc_length * iloc; ix < loc_length * (iloc + 1);
                      ix++)
@@ -769,7 +777,8 @@ void SinCosOps<T>::computeDiag(const T& orbitals,
 
                             const int index = ix * incx + iy * incy + iz;
                             const double alpha
-                                = (double)psii[index] * (double)psii[index];
+                                = static_cast<double>(psii_host_view[index])
+                                  * static_cast<double>(psii_host_view[index]);
                             atmp[0] += alpha * cosx[ix];
                             atmp[1] += alpha * sinx[ix];
                             atmp[2] += alpha * cosy[iy];
@@ -777,6 +786,8 @@ void SinCosOps<T>::computeDiag(const T& orbitals,
                             atmp[4] += alpha * cosz[iz];
                             atmp[5] += alpha * sinz[iz];
                         }
+                MemorySpace::Memory<ORBDTYPE,
+                    memory_space_type>::free_host_view(psii_host_view);
                 if (!normalized_functions)
                 {
                     for (int col = 0; col < 6; col++)
