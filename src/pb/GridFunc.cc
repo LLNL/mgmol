@@ -277,6 +277,7 @@ GridFunc<T>::GridFunc(const T* const vv, const Grid& new_grid, const short px,
     assert(px == 0 || px == 1 || px == 2);
     assert(py == 0 || py == 1 || py == 2);
     assert(pz == 0 || pz == 1 || pz == 2);
+    assert(grid_.sizeg() > 0);
 
     bc_[0] = px;
     bc_[1] = py;
@@ -284,33 +285,10 @@ GridFunc<T>::GridFunc(const T* const vv, const Grid& new_grid, const short px,
 
     setup();
 
-    const short nghosts = ghost_pt();
-
-    const int incx2 = dim(2) * dim(1);
-    const int incy2 = dim(2);
-
-    assert(grid_.inc(2) == 1);
-
-    const size_t sdim2 = dim_[2] * sizeof(T);
-    assert(grid_.sizeg() > 0);
     uu_ = new T[grid_.sizeg()];
     memset(uu_, 0, grid_.sizeg() * sizeof(T));
 
-    for (int ix = 0; ix < dim_[0]; ix++)
-    {
-
-        const int ix1 = (ix + nghosts) * incx_ + nghosts * (1 + incy_);
-        const int ix2 = ix * incx2;
-
-        for (int iy = 0; iy < dim_[1]; iy++)
-        {
-
-            int iy1 = ix1 + iy * incy_;
-            int iy2 = ix2 + iy * incy2;
-
-            memcpy(uu_ + iy1, vv + iy2, sdim2);
-        }
-    }
+    assign(vv, 'd');
 
     updated_boundaries_ = false;
 
