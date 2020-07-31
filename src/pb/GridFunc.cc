@@ -183,7 +183,7 @@ GridFunc<T>::GridFunc(const GridFunc<double>& A) : grid_(A.grid())
 {
     assert(grid_.dim(0) > 0);
     assert(grid_.dim(0) < 10000);
-    assert(au != nullptr);
+    assert(A.uu() != nullptr);
 
     bc_[0] = A.bc(0);
     bc_[1] = A.bc(1);
@@ -193,9 +193,8 @@ GridFunc<T>::GridFunc(const GridFunc<double>& A) : grid_(A.grid())
 
     int n = grid_.sizeg();
 
-    double* au = A.uu();
-    uu_        = new T[n];
-    MPcpy(uu_, au, n);
+    uu_ = new T[n];
+    MPcpy(uu_, A.uu(), n);
     updated_boundaries_ = A.updated_boundaries();
 }
 
@@ -204,7 +203,7 @@ GridFunc<T>::GridFunc(const GridFunc<float>& A) : grid_(A.grid())
 {
     assert(grid_.dim(0) > 0);
     assert(grid_.dim(0) < 10000);
-    assert(au != nullptr);
+    assert(A.uu() != nullptr);
 
     bc_[0] = A.bc(0);
     bc_[1] = A.bc(1);
@@ -214,9 +213,8 @@ GridFunc<T>::GridFunc(const GridFunc<float>& A) : grid_(A.grid())
 
     int n = grid_.sizeg();
 
-    float* au = A.uu();
-    uu_       = new T[n];
-    MPcpy(uu_, au, n);
+    uu_ = new T[n];
+    MPcpy(uu_, A.uu(), n);
     updated_boundaries_ = A.updated_boundaries();
 }
 
@@ -226,7 +224,7 @@ GridFunc<T>::GridFunc(const GridFunc<T>& A, const Grid& new_grid)
     : grid_(new_grid)
 {
     assert(dim(0) >= 1);
-    assert(A.uu_ != nullptr);
+    assert(A.uu() != nullptr);
 
     bc_[0] = A.bc_[0];
     bc_[1] = A.bc_[1];
@@ -234,7 +232,7 @@ GridFunc<T>::GridFunc(const GridFunc<T>& A, const Grid& new_grid)
 
     setup();
 
-    T* vv              = A.uu_;
+    T* vv              = A.uu();
     const short shift1 = ghost_pt();
     const short shift2 = A.ghost_pt();
 
@@ -276,7 +274,7 @@ GridFunc<T>& GridFunc<T>::operator-=(const GridFunc<T>& func)
 
     int n   = grid_.sizeg();
     T minus = -1.;
-    Taxpy(n, minus, func.uu_, uu_);
+    Taxpy(n, minus, func.uu(), uu_);
 
     updated_boundaries_ = (func.updated_boundaries() && updated_boundaries_);
 
@@ -310,7 +308,7 @@ void GridFunc<T>::setValues(const GridFunc<T>& src)
 {
     assert(src.grid_.sizeg() == grid_.sizeg());
 
-    setValues(src.grid_.sizeg(), src.uu_);
+    setValues(src.grid_.sizeg(), src.uu());
 }
 
 template <typename T>
@@ -325,7 +323,7 @@ GridFunc<T>& GridFunc<T>::operator=(const GridFunc<T>& func)
     bc_[2]              = func.bc_[2];
     updated_boundaries_ = func.updated_boundaries();
 
-    setValues(func.grid_.sizeg(), func.uu_);
+    setValues(func.grid_.sizeg(), func.uu());
 
     return *this;
 }
@@ -356,7 +354,7 @@ GridFunc<T> GridFunc<T>::operator+(const GridFunc<T>& A)
 
     assert(n == static_cast<int>(A.grid_.sizeg()));
     GridFunc<T> tmp(A);
-    T* __restrict__ tu       = &tmp.uu_[0];
+    T* __restrict__ tu       = tmp.uu();
     const T* __restrict__ pu = &uu_[0];
 
     for (int i = 0; i < n; i++)
@@ -375,7 +373,7 @@ GridFunc<T> GridFunc<T>::operator-(const GridFunc<T>& A)
 
     GridFunc<T> tmp(*this);
     const T* __restrict__ au = A.uu(0);
-    T* __restrict__ tu       = tmp.uu(0);
+    T* __restrict__ tu       = tmp.uu();
 
     for (int i = 0; i < n; i++)
     {
@@ -393,7 +391,7 @@ GridFunc<T> GridFunc<T>::operator*(const double val)
     int n = grid_.sizeg();
     GridFunc<T> tmp(grid_, bc_[0], bc_[1], bc_[2]);
 
-    T* __restrict__ tu       = &tmp.uu_[0];
+    T* __restrict__ tu       = tmp.uu();
     const T* __restrict__ pu = &uu_[0];
     assert(tu != nullptr);
     for (int i = 0; i < n; i++)
@@ -430,7 +428,7 @@ GridFunc<T>& GridFunc<T>::operator*=(const GridFunc<T>& B)
 {
     int n = grid_.sizeg();
     assert(static_cast<int>(B.grid_.sizeg()) == n);
-    const T* __restrict__ v = B.uu_;
+    const T* __restrict__ v = B.uu();
     T* __restrict__ pu      = &uu_[0];
     for (int i = 0; i < n; i++)
     {
@@ -446,8 +444,8 @@ GridFunc<T>& GridFunc<T>::operator/=(const GridFunc<T>& B)
 {
     int n = grid_.sizeg();
     assert(static_cast<int>(B.grid_.sizeg()) == n);
-    T* const pu = &uu_[0];
-    T* const bu = &B.uu_[0];
+    T* const pu = uu_;
+    T* const bu = B.uu();
 
     for (int i = 0; i < n; i++)
     {
@@ -463,7 +461,7 @@ GridFunc<T>& GridFunc<T>::operator+=(const GridFunc<T>& func)
 {
     assert(func.grid_.sizeg() == grid_.sizeg());
 
-    Taxpy(func.grid_.sizeg(), 1., func.uu_, uu_);
+    Taxpy(func.grid_.sizeg(), 1., func.uu(), uu_);
 
     updated_boundaries_ = (func.updated_boundaries() && updated_boundaries_);
 
@@ -490,7 +488,7 @@ void GridFunc<T>::axpy(const double alpha, const GridFunc<T>& vv)
     assert(vv.grid_.sizeg() == grid_.sizeg());
 
     int n = grid_.sizeg();
-    MPaxpy(n, alpha, vv.uu_, uu_);
+    MPaxpy(n, alpha, vv.uu(), uu_);
 
     updated_boundaries_ = (vv.updated_boundaries() && updated_boundaries_);
 }
@@ -503,8 +501,8 @@ void GridFunc<T>::prod(const GridFunc<T>& A, const GridFunc<T>& B)
 
     prod_tm_.start();
 
-    const T* const v1 = A.uu_;
-    const T* const v2 = B.uu_;
+    const T* const v1 = A.uu();
+    const T* const v2 = B.uu();
     T* const pu       = &uu_[0];
     const int n       = grid_.sizeg();
     for (int i = 0; i < n; i++)
@@ -523,8 +521,8 @@ void GridFunc<T>::diff(const GridFunc<T>& A, const GridFunc<T>& B)
     assert(A.grid_.sizeg() == grid_.sizeg());
     assert(B.grid_.sizeg() == grid_.sizeg());
 
-    const T* const v1 = A.uu_;
-    const T* const v2 = B.uu_;
+    const T* const v1 = A.uu();
+    const T* const v2 = B.uu();
     T* const pu       = &uu_[0];
     const int n       = grid_.sizeg();
     for (int i = 0; i < n; i++)
@@ -1208,7 +1206,7 @@ void GridFunc<T>::scatterFrom(const GridFunc<T>& src)
             for (int jj = 0; jj < ldim[1]; jj++)
                 memcpy(uu_ + (ii + ghosts_dst) * incx_
                            + (jj + ghosts_dst) * incy_ + ghosts_dst,
-                    src.uu_ + (ii + ghosts_src) * incx_src
+                    src.uu() + (ii + ghosts_src) * incx_src
                         + (jj + ghosts_src) * incy_src + ghosts_src,
                     ldim[2] * sizeof(T));
         return;
@@ -1248,7 +1246,7 @@ void GridFunc<T>::scatterFrom(const GridFunc<T>& src)
         for (int i = 0; i < ntasks; i++)
         {
             T* const pdst       = buffer + i * sizeg;
-            const T* const psrc = src.uu_ + displs[i];
+            const T* const psrc = src.uu() + displs[i];
             for (int ii = 0; ii < ldim[0]; ii++)
             {
                 T* const ldst = pdst + (ii + ghosts_dst) * incx_
@@ -2580,7 +2578,7 @@ void GridFunc<T>::setBoundaryValues(
         j1 = (2 * shift + dim_[1]) * incy_;
 
     T* const pu       = &uu_[0];
-    const T* const pv = &values.uu_[0];
+    const T* const pv = values.uu();
 
     // loop over "yz" layers
     for (int i = i0; i < i1; i += incx_)
@@ -3030,7 +3028,7 @@ void GridFunc<T>::extend3D(GridFunc<T>& ucoarse)
             const int icy = icx + incy_coarse * (iy + nghosts_coarse);
 
             int size = cdimz + 1;
-            Tcopy(&size, &ucoarse.uu_[icy], &ione, &uu_[ify], &itwo);
+            Tcopy(&size, ucoarse.uu(icy), &ione, &uu_[ify], &itwo);
         }
     }
 
@@ -3237,7 +3235,7 @@ void GridFunc<T>::restrict3D(GridFunc<T>& ucoarse)
                               + (double)umxmy[twoiz] + (double)upxmy[twoiz]
                               + (double)umxpy[twoiz] + (double)upxpy[twoiz];
 
-                ucoarse.uu_[iyc + iz + nghosts_coarse] = (T)(
+                ucoarse.uu()[iyc + iz + nghosts_coarse] = (T)(
                     inv64 * (8. * u0[twoiz] + 4. * face + 2. * edge + corner));
             }
 
@@ -3381,7 +3379,7 @@ void GridFunc<T>::test_newgrid()
     f.init_rand();
 
     GridFunc<T> g(grid_, bc_[0], bc_[1], bc_[2]);
-    g.assign(f.uu_, 'l');
+    g.assign(f.uu(), 'l');
 
     double s1 = norm(f);
     double s2 = norm(g);
@@ -3460,9 +3458,9 @@ template <typename T>
 void GridFunc<T>::jacobi(
     const GridFunc<T>& v, const GridFunc<T>& epsilon, const double c0)
 {
-    T* __restrict__ pu = &uu_[0];
-    T* __restrict__ vv = &v.uu_[0];
-    T* __restrict__ ee = &epsilon.uu_[0];
+    T* __restrict__ pu = uu_;
+    T* __restrict__ vv = v.uu();
+    T* __restrict__ ee = epsilon.uu();
     const int sizeg    = grid().sizeg();
 
     for (int j = 0; j < sizeg; j++)
@@ -3481,9 +3479,9 @@ void GridFunc<T>::add_prod(const GridFunc<T>& v1, const GridFunc<T>& v2)
     assert(v1.grid_.sizeg() == grid_.sizeg());
     assert(v2.grid_.sizeg() == grid_.sizeg());
 
-    T* __restrict__ pu        = &uu_[0];
-    const T* __restrict__ vv1 = &v1.uu_[0];
-    const T* __restrict__ vv2 = &v2.uu_[0];
+    T* __restrict__ pu        = uu_;
+    const T* __restrict__ vv1 = v1.uu();
+    const T* __restrict__ vv2 = v2.uu();
     const int sizeg           = grid_.sizeg();
 
     for (int i = 0; i < sizeg; i++)
@@ -3500,9 +3498,9 @@ void GridFunc<T>::substract_prod(const GridFunc<T>& v1, const GridFunc<T>& v2)
     assert(v1.grid_.sizeg() == grid_.sizeg());
     assert(v2.grid_.sizeg() == grid_.sizeg());
 
-    T* __restrict__ pu        = &uu_[0];
-    const T* __restrict__ vv1 = &v1.uu_[0];
-    const T* __restrict__ vv2 = &v2.uu_[0];
+    T* __restrict__ pu        = uu_;
+    const T* __restrict__ vv1 = v1.uu();
+    const T* __restrict__ vv2 = v2.uu();
     const int sizeg           = grid_.sizeg();
 
     for (int i = 0; i < sizeg; i++)
@@ -3632,7 +3630,7 @@ void GridFunc<T>::assign(const GridFunc<T>& src, const char dis)
 
     if ((&grid_ == &src.grid_) && dis == 'd')
     {
-        memcpy(uu_, src.uu_, grid_.sizeg() * sizeof(T));
+        memcpy(uu_, src.uu(), grid_.sizeg() * sizeof(T));
     }
     else // more expensive assign
     {
@@ -3658,7 +3656,7 @@ void GridFunc<T>::assign(const GridFunc<T>& src, const char dis)
         memset(uu_, 0, grid_.sizeg() * sizeof(T));
 
         const T* const u_src
-            = src.uu_ + kstart + jstart * incy_src + istart * incx_src;
+            = src.uu() + kstart + jstart * incy_src + istart * incx_src;
 
         const size_t sdim2 = dim(2) * sizeof(T);
 
