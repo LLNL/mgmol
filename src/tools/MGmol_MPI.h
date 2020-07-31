@@ -109,7 +109,7 @@ public:
     MPI_Comm commSpin() const { return comm_spin_; }
 
     int mypeSpin() const { return mype_spin_; }
-    int mypeGlobal() const { return mype_spin_; }
+    int mypeGlobal() const { return mype_; }
     int myspin() const { return myspin_; }
     int myimage() const
     {
