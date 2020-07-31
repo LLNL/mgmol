@@ -54,12 +54,17 @@ GridFunc<GFDTYPE> &, const short, const short, const short, const bool);
 template <class T, typename T2>
 bool SolverPB<T, T2>::solve(T2* phi, T2* rhs, T2* rhod, T2* vks, const char dis)
 {
-    GridFunc<T2> gf_phi(phi, oper_.grid(), Solver<T2>::bc_[0],
-        Solver<T2>::bc_[1], Solver<T2>::bc_[2], dis);
-    GridFunc<T2> gf_work(rhs, oper_.grid(), Solver<T2>::bc_[0],
-        Solver<T2>::bc_[1], Solver<T2>::bc_[2], dis);
-    GridFunc<T2> gf_rhod(rhod, oper_.grid(), Solver<T2>::bc_[0],
-        Solver<T2>::bc_[1], Solver<T2>::bc_[2], dis);
+    GridFunc<T2> gf_phi(oper_.grid(), Solver<T2>::bc_[0], Solver<T2>::bc_[1],
+        Solver<T2>::bc_[2]);
+    gf_phi.assign(phi, dis);
+
+    GridFunc<T2> gf_work(oper_.grid(), Solver<T2>::bc_[0], Solver<T2>::bc_[1],
+        Solver<T2>::bc_[2]);
+    gf_work.assign(rhs, dis);
+
+    GridFunc<T2> gf_rhod(oper_.grid(), Solver<T2>::bc_[0], Solver<T2>::bc_[1],
+        Solver<T2>::bc_[2]);
+    gf_rhod.assign(rhod, dis);
 
     oper_.init(gf_rhod);
 

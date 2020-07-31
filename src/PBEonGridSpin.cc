@@ -68,8 +68,11 @@ void PBEonGridSpin<T>::update()
 
     pb::GridFunc<RHODTYPE>* gf_rho[2];
     for (short is = 0; is < 2; is++)
-        gf_rho[is] = new pb::GridFunc<RHODTYPE>(
-            &vrho[is][0], newGrid, ct.bc[0], ct.bc[1], ct.bc[2], 'd');
+    {
+        gf_rho[is]
+            = new pb::GridFunc<RHODTYPE>(newGrid, ct.bc[0], ct.bc[1], ct.bc[2]);
+        gf_rho[is]->assign(&vrho[is][0], 'd');
+    }
 
     RHODTYPE* grad_rho[2];
     for (short is = 0; is < 2; is++)
@@ -206,20 +209,26 @@ void PBEonGridSpin<T>::update()
         assert(pbe_->pvxc1_up_ != nullptr);
         //        Tcopy(&np_, pbe_->pvxc1_up_, &ione, &vxc_[0], &ione);
         MPcpy(&vxc_[0], pbe_->pvxc1_up_, np_);
-        gf_vsigma[0] = new pb::GridFunc<POTDTYPE>(
-            pbe_->pvxc2_upup_, newGrid, ct.bc[0], ct.bc[1], ct.bc[2], 'd');
-        gf_vsigma[1] = new pb::GridFunc<POTDTYPE>(
-            pbe_->pvxc2_updn_, newGrid, ct.bc[0], ct.bc[1], ct.bc[2], 'd');
+        gf_vsigma[0]
+            = new pb::GridFunc<POTDTYPE>(newGrid, ct.bc[0], ct.bc[1], ct.bc[2]);
+        gf_vsigma[0]->assign(pbe_->pvxc2_upup_, 'd');
+
+        gf_vsigma[1]
+            = new pb::GridFunc<POTDTYPE>(newGrid, ct.bc[0], ct.bc[1], ct.bc[2]);
+        gf_vsigma[1]->assign(pbe_->pvxc2_updn_, 'd');
     }
     else
     {
         assert(pbe_->pvxc1_dn_ != nullptr);
         //        Tcopy(&np_, pbe_->pvxc1_dn_, &ione, &vxc_[np_], &ione);
         MPcpy(&vxc_[np_], pbe_->pvxc1_dn_, np_);
-        gf_vsigma[0] = new pb::GridFunc<POTDTYPE>(
-            pbe_->pvxc2_dnup_, newGrid, ct.bc[0], ct.bc[1], ct.bc[2], 'd');
-        gf_vsigma[1] = new pb::GridFunc<POTDTYPE>(
-            pbe_->pvxc2_dndn_, newGrid, ct.bc[0], ct.bc[1], ct.bc[2], 'd');
+        gf_vsigma[0]
+            = new pb::GridFunc<POTDTYPE>(newGrid, ct.bc[0], ct.bc[1], ct.bc[2]);
+        gf_vsigma[0]->assign(pbe_->pvxc2_dnup_, 'd');
+
+        gf_vsigma[1]
+            = new pb::GridFunc<POTDTYPE>(newGrid, ct.bc[0], ct.bc[1], ct.bc[2]);
+        gf_vsigma[1]->assign(pbe_->pvxc2_dndn_, 'd');
     }
     (*gf_vsigma[0]) *= -1.;
     (*gf_vsigma[1]) *= -1.;
