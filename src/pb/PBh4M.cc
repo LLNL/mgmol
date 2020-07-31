@@ -88,12 +88,14 @@ PBh4M<T> PBh4M<T>::replicatedOp(const Grid& replicated_grid)
 {
     T* replicated_func = new T[replicated_grid.gsize()];
 
-    this->epsilon_.init_vect(replicated_func, 'g');
+    this->epsilon_.init_vect(replicated_func, 0);
 
-    DielFunc<T> replicated_epsilon(replicated_func, replicated_grid, 0);
+    DielFunc<T> replicated_epsilon(replicated_grid);
+    replicated_epsilon.assign(replicated_func, 0);
 
     this->pp_.init_vect(replicated_func, 'g');
-    GridFunc<T> replicated_pp(replicated_func, replicated_grid, 1, 1, 1);
+    GridFunc<T> replicated_pp(replicated_grid, 1, 1, 1);
+    replicated_pp.assign(replicated_func, 0);
 
     // cout<<"construct a coarse grid operator"<<endl;
     PBh4M A(replicated_grid, replicated_epsilon, replicated_pp);

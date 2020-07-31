@@ -7,7 +7,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id: DielFunc.h,v 1.9 2010/01/28 22:56:47 jeanluc Exp $
 #ifndef DIEL_H
 #define DIEL_H
 
@@ -15,6 +14,7 @@
 // epsilon_max_, rho0_, drho0_
 // They also have member functions to build the dielectric function
 #include "GridFunc.h"
+
 #include <cmath>
 
 namespace pb
@@ -33,7 +33,7 @@ private:
 
 public:
     // Constructor
-    DielFunc(Grid& my_grid) : GridFunc<T>(my_grid, 1, 1, 1)
+    DielFunc(const Grid& my_grid) : GridFunc<T>(my_grid, 1, 1, 1)
     {
         epsilon_max_ = e0def_;
         rho0_        = rho0def_;
@@ -41,7 +41,7 @@ public:
         // cout<<"Constructor for DielFunc at level "<<grid_.level()<<endl;
     };
 
-    DielFunc(Grid& my_grid, const T emax) : GridFunc<T>(my_grid, 1, 1, 1)
+    DielFunc(const Grid& my_grid, const T emax) : GridFunc<T>(my_grid, 1, 1, 1)
     {
         epsilon_max_ = emax;
         rho0_        = rho0def_;
@@ -49,7 +49,7 @@ public:
         // cout<<"Constructor for DielFunc at level "<<grid_.level()<<endl;
     };
 
-    DielFunc(Grid& my_grid, const T emax, const T r0, const T dr0)
+    DielFunc(const Grid& my_grid, const T emax, const T r0, const T dr0)
         : GridFunc<T>(my_grid, 1, 1, 1)
     {
         epsilon_max_ = emax;
@@ -88,15 +88,6 @@ public:
         epsilon_max_        = A.epsilon_max_;
         rho0_               = A.rho0_;
         drho0_              = A.drho0_;
-    }
-
-    // Constructor
-    DielFunc(const T* const vv, const Grid& new_grid, const short tag = 0)
-        : GridFunc<T>(vv, new_grid, 1, 1, 1, tag)
-    {
-        epsilon_max_ = e0def_;
-        rho0_        = rho0def_;
-        drho0_       = drho0def_;
     }
 
     ~DielFunc() override{};

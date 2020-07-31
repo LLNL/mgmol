@@ -74,7 +74,9 @@ PBh6<T> PBh6<T>::replicatedOp(const Grid& replicated_grid)
 
     this->epsilon_.init_vect(replicated_func, 'g');
 
-    DielFunc<T> replicated_epsilon(replicated_func, replicated_grid, 0);
+    DielFunc<T> replicated_epsilon(replicated_grid);
+    replicated_epsilon.assign(replicated_func, 0);
+
     delete[] replicated_func;
 
     PBh6 A(replicated_grid, replicated_epsilon);
