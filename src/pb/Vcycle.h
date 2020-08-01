@@ -83,8 +83,8 @@ int Vcycle(T1& A, T2& x, const GridFunc<T3>& rhs, const short cogr,
 
         // gather rhs
         rhs.init_vect(replicated_func, 'g');
-        GridFunc<T3> replicated_rhs(
-            replicated_func, replicated_grid, x.bc(0), x.bc(1), x.bc(2));
+        GridFunc<T3> replicated_rhs(replicated_grid, x.bc(0), x.bc(1), x.bc(2));
+        replicated_rhs.assign(replicated_func);
 
         GridFunc<T3> replicated_x(replicated_grid, x.bc(0), x.bc(1), x.bc(2));
 

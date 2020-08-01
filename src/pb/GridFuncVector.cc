@@ -90,8 +90,6 @@ void GridFuncVector<ScalarType>::prod(
     assert(B.grid().sizeg() == grid_.sizeg());
     assert(A.size() == size());
 
-    if (!grid_.active()) return;
-
     prod_tm_.start();
 
     const int bsize = 64;
@@ -137,8 +135,6 @@ void GridFuncVector<ScalarType>::prod(
     assert(A.grid_.sizeg() == grid_.sizeg());
     assert(B.grid().sizeg() == grid_.sizeg());
     assert(A.size() == size());
-
-    if (!grid_.active()) return;
 
     prod_tm_.start();
 
@@ -892,7 +888,6 @@ void GridFuncVector<ScalarType>::finishEastWestComm()
 template <typename ScalarType>
 void GridFuncVector<ScalarType>::trade_boundaries()
 {
-    if (!grid_.active()) return;
     if (updated_boundaries_) return;
 
     for (int k = 0; k < nfunc_; k++)
@@ -1003,8 +998,6 @@ GridFuncVector<ScalarType>& GridFuncVector<ScalarType>::operator-=(
     assert(func.grid_.sizeg() == grid_.sizeg());
     assert(func.grid_.ghost_pt() == grid_.ghost_pt());
     assert(this != &func);
-
-    if (!grid_.active()) return *this;
 
     for (short k = 0; k < nfunc_; k++)
     {
@@ -1124,7 +1117,6 @@ void GridFuncVector<ScalarType>::trade_boundaries_colors(
     //    std::cout << "Color " << first_color << " to " << last_color - 1
     //              << std::endl;
 
-    if (!grid_.active()) return;
     if (updated_boundaries_) return;
 
     std::vector<ScalarType>& comm_buf1(comm_buf1_[0]);

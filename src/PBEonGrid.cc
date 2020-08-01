@@ -39,8 +39,8 @@ void PBEonGrid<T>::update()
     myoper_del[1] = new pb::Delyh4<RHODTYPE>(newGrid);
     myoper_del[2] = new pb::Delzh4<RHODTYPE>(newGrid);
 
-    pb::GridFunc<RHODTYPE> gf_rho(
-        &vrho[0][0], newGrid, ct.bc[0], ct.bc[1], ct.bc[2], 'd');
+    pb::GridFunc<RHODTYPE> gf_rho(newGrid, ct.bc[0], ct.bc[1], ct.bc[2]);
+    gf_rho.assign(&vrho[0][0]);
 
     pb::GridFunc<RHODTYPE> gf_tmp(newGrid, ct.bc[0], ct.bc[1], ct.bc[2]);
 #ifdef USE_LIBXC
@@ -90,14 +90,14 @@ void PBEonGrid<T>::update()
 
     vector<POTDTYPE> vstmp(np_);
     MPcpy(&vstmp[0], &vsigma_[0], np_);
-    pb::GridFunc<POTDTYPE> gf_vsigma(
-        &vstmp[0], newGrid, ct.bc[0], ct.bc[1], ct.bc[2], 'd');
+    pb::GridFunc<POTDTYPE> gf_vsigma(newGrid, ct.bc[0], ct.bc[1], ct.bc[2]);
+    gf_vsigma.assign(&vstmp[0]);
     gf_vsigma *= 2.;
 #else
     pbe_->computeXC();
 
-    pb::GridFunc<POTDTYPE> gf_vsigma(
-        pbe_->pvxc2_, newGrid, ct.bc[0], ct.bc[1], ct.bc[2], 'd');
+    pb::GridFunc<POTDTYPE> gf_vsigma(newGrid, ct.bc[0], ct.bc[1], ct.bc[2]);
+    gf_vsigma.assign(pbe_->pvxc2_);
     gf_vsigma *= -1.;
 #endif
 

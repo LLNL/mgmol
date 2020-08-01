@@ -154,8 +154,6 @@ template <class T, typename T2>
 bool PCGSolver_Diel<T, T2>::solve(
     pb::GridFunc<T2>& gf_phi, pb::GridFunc<T2>& gf_rhs)
 {
-    if (!oper_.grid().active()) return 0.;
-
     if (!oper_.initialized())
     {
         cout << "Error in PCGSolver_Diel<T>::solve: operator not initialized"
@@ -233,8 +231,6 @@ bool PCGSolver_Diel<T, T2>::solve(pb::GridFunc<T2>& gf_phi,
     pb::GridFunc<T2>& gf_rhs, pb::GridFunc<T2>& gf_rhod,
     pb::GridFunc<T2>& gf_vks)
 {
-    if (!oper_.grid().active()) return 0.;
-
     // initialize the linear system operator and the preconditioner
     oper_.init(gf_rhod);
 

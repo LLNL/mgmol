@@ -69,6 +69,8 @@ class GridFunc : public GridFuncInterface
 
     void setup();
 
+    void resizeBuffers();
+
 protected:
     const Grid& grid_;
 
@@ -90,11 +92,7 @@ protected:
 
 public:
     // Constructors
-    explicit GridFunc(const Grid&, const short, const short, const short);
-    explicit GridFunc(const T* const, const Grid&, const short, const short,
-        const short, const char dis);
-    explicit GridFunc(
-        const T* const, const Grid&, const short, const short, const short);
+    GridFunc(const Grid&, const short, const short, const short);
 
     // copy constructor
     GridFunc(const GridFunc<double>& A);

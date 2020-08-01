@@ -6,8 +6,6 @@
 // All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
-
-// $Id: PBh4.cc,v 1.8 2009/01/27 00:09:38 jeanluc Exp $
 #include "PBh4.h"
 
 namespace pb
@@ -65,13 +63,13 @@ void PBh4<T>::get_vepsilon(
 template <class T>
 PBh4<T> PBh4<T>::replicatedOp(const Grid& replicated_grid)
 {
-    if (!(PB<T>::grid_.active())) return *this;
-
     T* replicated_func = new T[replicated_grid.gsize()];
 
     this->epsilon_.init_vect(replicated_func, 'g');
 
-    DielFunc<T> replicated_epsilon(replicated_func, replicated_grid, 0);
+    DielFunc<T> replicated_epsilon(replicated_grid);
+    replicated_epsilon.assign(replicated_func, 0);
+
     delete[] replicated_func;
 
     PBh4 A(replicated_grid, replicated_epsilon);

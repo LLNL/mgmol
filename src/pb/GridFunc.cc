@@ -169,34 +169,12 @@ GridFunc<T>::GridFunc(
 
     updated_boundaries_ = true; // boundaries initialized
 
-    if (grid_.active())
-    {
-        const size_t n = grid_.sizeg();
-        uu_            = new T[n];
-        memset(uu_, 0, n * sizeof(T));
-    }
-    else
-    {
-        uu_ = nullptr;
-    }
-    const short shift = ghost_pt();
-    const int dimxy   = (dim(1) + 2 * ghost_pt()) * dim(0);
+    const size_t n = grid_.sizeg();
+    uu_            = new T[n];
+    memset(uu_, 0, n * sizeof(T));
 
     // resize static buffers if needed
-    if (mype_env().n_mpi_tasks() > 1)
-    {
-        int size_max = shift * grid_.inc(0);
-        size_max     = std::max(size_max, shift * dimxy);
-        size_max     = std::max(size_max, shift * dim(0) * grid_.inc(1));
-
-        if (size_max > (int)buf1_.size())
-        {
-            buf1_.resize(size_max);
-            buf2_.resize(size_max);
-            buf3_.resize(size_max);
-            buf4_.resize(size_max);
-        }
-    }
+    resizeBuffers();
 }
 
 // copy constructor
@@ -205,6 +183,7 @@ GridFunc<T>::GridFunc(const GridFunc<double>& A) : grid_(A.grid())
 {
     assert(grid_.dim(0) > 0);
     assert(grid_.dim(0) < 10000);
+    assert(A.uu() != nullptr);
 
     bc_[0] = A.bc(0);
     bc_[1] = A.bc(1);
@@ -212,21 +191,11 @@ GridFunc<T>::GridFunc(const GridFunc<double>& A) : grid_(A.grid())
 
     setup();
 
-    if (!grid_.active()) return;
     int n = grid_.sizeg();
 
-    double* au = A.uu();
-    if (au != nullptr)
-    {
-        uu_ = new T[n];
-        MPcpy(uu_, au, n);
-        updated_boundaries_ = A.updated_boundaries();
-    }
-    else
-    {
-        updated_boundaries_ = false;
-        uu_                 = nullptr;
-    }
+    uu_ = new T[n];
+    MPcpy(uu_, A.uu(), n);
+    updated_boundaries_ = A.updated_boundaries();
 }
 
 template <typename T>
@@ -234,6 +203,7 @@ GridFunc<T>::GridFunc(const GridFunc<float>& A) : grid_(A.grid())
 {
     assert(grid_.dim(0) > 0);
     assert(grid_.dim(0) < 10000);
+    assert(A.uu() != nullptr);
 
     bc_[0] = A.bc(0);
     bc_[1] = A.bc(1);
@@ -241,21 +211,11 @@ GridFunc<T>::GridFunc(const GridFunc<float>& A) : grid_(A.grid())
 
     setup();
 
-    if (!grid_.active()) return;
     int n = grid_.sizeg();
 
-    float* au = A.uu();
-    if (au != nullptr)
-    {
-        uu_ = new T[n];
-        MPcpy(uu_, au, n);
-        updated_boundaries_ = A.updated_boundaries();
-    }
-    else
-    {
-        updated_boundaries_ = false;
-        uu_                 = nullptr;
-    }
+    uu_ = new T[n];
+    MPcpy(uu_, A.uu(), n);
+    updated_boundaries_ = A.updated_boundaries();
 }
 
 // copy constructor on different grid
@@ -264,6 +224,7 @@ GridFunc<T>::GridFunc(const GridFunc<T>& A, const Grid& new_grid)
     : grid_(new_grid)
 {
     assert(dim(0) >= 1);
+    assert(A.uu() != nullptr);
 
     bc_[0] = A.bc_[0];
     bc_[1] = A.bc_[1];
@@ -271,9 +232,7 @@ GridFunc<T>::GridFunc(const GridFunc<T>& A, const Grid& new_grid)
 
     setup();
 
-    if (!grid_.active()) return;
-
-    T* vv              = A.uu_;
+    T* vv              = A.uu();
     const short shift1 = ghost_pt();
     const short shift2 = A.ghost_pt();
 
@@ -283,243 +242,27 @@ GridFunc<T>::GridFunc(const GridFunc<T>& A, const Grid& new_grid)
     assert(grid_.inc(2) == 1);
     assert(A.grid_.inc(2) == 1);
 
-    if (A.uu_ != nullptr)
-    {
-        uu_ = new T[grid_.sizeg()];
-        memset(uu_, 0, grid_.sizeg() * sizeof(T));
-        size_t sdim2 = dim_[2] * sizeof(T);
-
-        for (int ix = 0; ix < dim_[0]; ix++)
-        {
-
-            int ix1 = (ix + shift1) * incx_ + shift1;
-            int ix2 = (ix + shift2) * incx2 + shift2;
-
-            for (int iy = 0; iy < dim_[1]; iy++)
-            {
-
-                int iy1 = ix1 + (iy + shift1) * incy_;
-                int iy2 = ix2 + (iy + shift2) * incy2;
-
-                memcpy(uu_ + iy1, vv + iy2, sdim2);
-            }
-        }
-
-        updated_boundaries_ = false;
-    }
-    else
-    {
-        std::cout << "Invalid initialization" << std::endl;
-        exit(2);
-    }
-}
-
-// Constructor
-template <typename T>
-GridFunc<T>::GridFunc(const T* const vv, const Grid& new_grid, const short px,
-    const short py, const short pz)
-    : grid_(new_grid)
-{
-    assert(px == 0 || px == 1 || px == 2);
-    assert(py == 0 || py == 1 || py == 2);
-    assert(pz == 0 || pz == 1 || pz == 2);
-
-    bc_[0] = px;
-    bc_[1] = py;
-    bc_[2] = pz;
-
-    setup();
-
-    if (!grid_.active()) return;
-
-    const short nghosts = ghost_pt();
-
-    const int incx2 = dim(2) * dim(1);
-    const int incy2 = dim(2);
-
-    assert(grid_.inc(2) == 1);
-
-    const size_t sdim2 = dim_[2] * sizeof(T);
-    if (vv != nullptr)
-    {
-        assert(grid_.sizeg() > 0);
-        uu_ = new T[grid_.sizeg()];
-        memset(uu_, 0, grid_.sizeg() * sizeof(T));
-
-        for (int ix = 0; ix < dim_[0]; ix++)
-        {
-
-            const int ix1 = (ix + nghosts) * incx_ + nghosts * (1 + incy_);
-            const int ix2 = ix * incx2;
-
-            for (int iy = 0; iy < dim_[1]; iy++)
-            {
-
-                int iy1 = ix1 + iy * incy_;
-                int iy2 = ix2 + iy * incy2;
-
-                memcpy(uu_ + iy1, vv + iy2, sdim2);
-            }
-        }
-
-        updated_boundaries_ = false;
-    }
-    else
-    {
-        updated_boundaries_ = false;
-        uu_                 = nullptr;
-    }
-
-    const short shift = ghost_pt();
-    const int dimxy   = (dim(1) + 2 * ghost_pt()) * dim(0);
-
-    // resize static buffers if needed
-    if (mype_env().n_mpi_tasks() > 1)
-    {
-        int size_max = shift * grid_.inc(0);
-        size_max     = std::max(size_max, shift * dimxy);
-        size_max     = std::max(size_max, shift * dim(0) * grid_.inc(1));
-
-        if (size_max > (int)buf1_.size())
-        {
-            buf1_.resize(size_max);
-            buf2_.resize(size_max);
-            buf3_.resize(size_max);
-            buf4_.resize(size_max);
-        }
-    }
-}
-
-// Constructor
-template <typename T>
-GridFunc<T>::GridFunc(const T* const src, const Grid& new_grid, const short px,
-    const short py, const short pz, const char dis)
-    : grid_(new_grid)
-{
-    assert(px == 0 || px == 1 || px == 2);
-    assert(py == 0 || py == 1 || py == 2);
-    assert(pz == 0 || pz == 1 || pz == 2);
-    assert(grid_.sizeg() > 0);
-    assert(grid_.inc(2) == 1);
-    assert(dis == 'd' || dis == 'g' || dis == 's');
-    assert(src != nullptr);
-
-    if (!grid_.active()) return;
-
-    bc_[0] = px;
-    bc_[1] = py;
-    bc_[2] = pz;
-
-    setup();
-
-    const short nghosts = ghost_pt();
-
-    int incx_src = 0, incy_src = 0;
-    if (dis == 'g' || dis == 's')
-    {
-        incx_src = grid_.gdim(1) * grid_.gdim(2);
-        incy_src = grid_.gdim(2);
-    }
-    else if (dis == 'd')
-    {
-        incx_src = dim(2) * dim(1);
-        incy_src = dim(2);
-    }
-    else
-    {
-        std::cout << "Undefined distribution to build GridFunc<T>!!"
-                  << std::endl;
-        mype_env().globalExit();
-    }
-
-    int istart = 0;
-    int jstart = 0;
-    int kstart = 0;
-    if (dis == 'g')
-    {
-        istart = mype_env().my_mpi(0) * dim(0);
-        jstart = mype_env().my_mpi(1) * dim(1);
-        kstart = mype_env().my_mpi(2) * dim(2);
-    }
-    else if (dis == 's')
-    { // "shifted" option
-        istart = mype_env().my_mpi(0) * dim(0) + (grid_.gdim(0) >> 1);
-        jstart = mype_env().my_mpi(1) * dim(1) + (grid_.gdim(1) >> 1);
-        kstart = mype_env().my_mpi(2) * dim(2) + (grid_.gdim(2) >> 1);
-    }
-
     uu_ = new T[grid_.sizeg()];
     memset(uu_, 0, grid_.sizeg() * sizeof(T));
+    size_t sdim2 = dim_[2] * sizeof(T);
 
-    const size_t sdim2 = dim_[2] * sizeof(T);
-
-    if (dis == 'g' || dis == 'd')
+    for (int ix = 0; ix < dim_[0]; ix++)
     {
-        for (int ix = 0; ix < dim_[0]; ix++)
+
+        int ix1 = (ix + shift1) * incx_ + shift1;
+        int ix2 = (ix + shift2) * incx2 + shift2;
+
+        for (int iy = 0; iy < dim_[1]; iy++)
         {
 
-            int ix1 = (ix + nghosts) * incx_ + nghosts + nghosts * incy_;
-            int ix2 = (ix + istart) * incx_src + jstart * incy_src;
+            int iy1 = ix1 + (iy + shift1) * incy_;
+            int iy2 = ix2 + (iy + shift2) * incy2;
 
-            for (int iy = 0; iy < dim_[1]; iy++)
-            {
-
-                int iy1 = ix1 + iy * incy_;
-                int iy2 = ix2 + iy * incy_src;
-
-                memcpy(uu_ + iy1, src + kstart + iy2, sdim2);
-            }
-        }
-    }
-    else
-    {
-        const int gdim0 = grid_.gdim(0);
-        const int gdim1 = grid_.gdim(1);
-        const int gdim2 = grid_.gdim(2);
-
-        for (int ix = 0; ix < dim_[0]; ix++)
-        {
-
-            int ix1 = (ix + nghosts) * incx_ + nghosts;
-            int ix2 = ((ix + istart) % gdim0) * incx_src;
-
-            for (int iy = 0; iy < dim_[1]; iy++)
-            {
-
-                int iy1 = ix1 + (iy + nghosts) * incy_;
-                int iy2 = ix2 + ((iy + jstart) % gdim1) * incy_src;
-
-                const T* __restrict__ psrc = src + iy2;
-                T* __restrict__ puu        = uu_ + iy1;
-                for (int iz = 0; iz < dim_[2]; iz++)
-                {
-                    const int ii = (kstart + iz) % gdim2;
-                    puu[iz]      = psrc[ii];
-                }
-            }
+            memcpy(uu_ + iy1, vv + iy2, sdim2);
         }
     }
 
     updated_boundaries_ = false;
-
-    const short shift = ghost_pt();
-    const int dimxy   = (dim(1) + 2 * ghost_pt()) * dim(0);
-
-    // resize static buffers if needed
-    if (mype_env().n_mpi_tasks() > 1)
-    {
-        int size_max = shift * grid_.inc(0);
-        size_max     = std::max(size_max, shift * dimxy);
-        size_max     = std::max(size_max, shift * dim(0) * grid_.inc(1));
-
-        if (size_max > (int)buf1_.size())
-        {
-            buf1_.resize(size_max);
-            buf2_.resize(size_max);
-            buf3_.resize(size_max);
-            buf4_.resize(size_max);
-        }
-    }
 }
 
 template <typename T>
@@ -529,11 +272,9 @@ GridFunc<T>& GridFunc<T>::operator-=(const GridFunc<T>& func)
     assert(func.grid_.ghost_pt() == grid_.ghost_pt());
     assert(this != &func);
 
-    if (!grid_.active()) return *this;
-
     int n   = grid_.sizeg();
     T minus = -1.;
-    Taxpy(n, minus, func.uu_, uu_);
+    Taxpy(n, minus, func.uu(), uu_);
 
     updated_boundaries_ = (func.updated_boundaries() && updated_boundaries_);
 
@@ -567,7 +308,7 @@ void GridFunc<T>::setValues(const GridFunc<T>& src)
 {
     assert(src.grid_.sizeg() == grid_.sizeg());
 
-    setValues(src.grid_.sizeg(), src.uu_);
+    setValues(src.grid_.sizeg(), src.uu());
 }
 
 template <typename T>
@@ -582,7 +323,7 @@ GridFunc<T>& GridFunc<T>::operator=(const GridFunc<T>& func)
     bc_[2]              = func.bc_[2];
     updated_boundaries_ = func.updated_boundaries();
 
-    setValues(func.grid_.sizeg(), func.uu_);
+    setValues(func.grid_.sizeg(), func.uu());
 
     return *this;
 }
@@ -613,7 +354,7 @@ GridFunc<T> GridFunc<T>::operator+(const GridFunc<T>& A)
 
     assert(n == static_cast<int>(A.grid_.sizeg()));
     GridFunc<T> tmp(A);
-    T* __restrict__ tu       = &tmp.uu_[0];
+    T* __restrict__ tu       = tmp.uu();
     const T* __restrict__ pu = &uu_[0];
 
     for (int i = 0; i < n; i++)
@@ -632,7 +373,7 @@ GridFunc<T> GridFunc<T>::operator-(const GridFunc<T>& A)
 
     GridFunc<T> tmp(*this);
     const T* __restrict__ au = A.uu(0);
-    T* __restrict__ tu       = tmp.uu(0);
+    T* __restrict__ tu       = tmp.uu();
 
     for (int i = 0; i < n; i++)
     {
@@ -650,7 +391,7 @@ GridFunc<T> GridFunc<T>::operator*(const double val)
     int n = grid_.sizeg();
     GridFunc<T> tmp(grid_, bc_[0], bc_[1], bc_[2]);
 
-    T* __restrict__ tu       = &tmp.uu_[0];
+    T* __restrict__ tu       = tmp.uu();
     const T* __restrict__ pu = &uu_[0];
     assert(tu != nullptr);
     for (int i = 0; i < n; i++)
@@ -687,7 +428,7 @@ GridFunc<T>& GridFunc<T>::operator*=(const GridFunc<T>& B)
 {
     int n = grid_.sizeg();
     assert(static_cast<int>(B.grid_.sizeg()) == n);
-    const T* __restrict__ v = B.uu_;
+    const T* __restrict__ v = B.uu();
     T* __restrict__ pu      = &uu_[0];
     for (int i = 0; i < n; i++)
     {
@@ -703,8 +444,8 @@ GridFunc<T>& GridFunc<T>::operator/=(const GridFunc<T>& B)
 {
     int n = grid_.sizeg();
     assert(static_cast<int>(B.grid_.sizeg()) == n);
-    T* const pu = &uu_[0];
-    T* const bu = &B.uu_[0];
+    T* const pu = uu_;
+    T* const bu = B.uu();
 
     for (int i = 0; i < n; i++)
     {
@@ -720,9 +461,7 @@ GridFunc<T>& GridFunc<T>::operator+=(const GridFunc<T>& func)
 {
     assert(func.grid_.sizeg() == grid_.sizeg());
 
-    if (!grid_.active()) return *this;
-
-    Taxpy(func.grid_.sizeg(), 1., func.uu_, uu_);
+    Taxpy(func.grid_.sizeg(), 1., func.uu(), uu_);
 
     updated_boundaries_ = (func.updated_boundaries() && updated_boundaries_);
 
@@ -732,7 +471,7 @@ GridFunc<T>& GridFunc<T>::operator+=(const GridFunc<T>& func)
 template <typename T>
 GridFunc<T>& GridFunc<T>::operator*=(const double alpha)
 {
-    if (grid_.active()) MPscal(grid_.sizeg(), alpha, uu_);
+    MPscal(grid_.sizeg(), alpha, uu_);
 
     return *this;
 }
@@ -740,8 +479,6 @@ GridFunc<T>& GridFunc<T>::operator*=(const double alpha)
 template <typename T>
 void GridFunc<T>::scal(const double alpha)
 {
-    if (!grid_.active()) return;
-
     MPscal(grid_.sizeg(), alpha, uu_);
 }
 
@@ -750,10 +487,8 @@ void GridFunc<T>::axpy(const double alpha, const GridFunc<T>& vv)
 {
     assert(vv.grid_.sizeg() == grid_.sizeg());
 
-    if (!grid_.active()) return;
-
     int n = grid_.sizeg();
-    MPaxpy(n, alpha, vv.uu_, uu_);
+    MPaxpy(n, alpha, vv.uu(), uu_);
 
     updated_boundaries_ = (vv.updated_boundaries() && updated_boundaries_);
 }
@@ -766,10 +501,8 @@ void GridFunc<T>::prod(const GridFunc<T>& A, const GridFunc<T>& B)
 
     prod_tm_.start();
 
-    if (!grid_.active()) return;
-
-    const T* const v1 = A.uu_;
-    const T* const v2 = B.uu_;
+    const T* const v1 = A.uu();
+    const T* const v2 = B.uu();
     T* const pu       = &uu_[0];
     const int n       = grid_.sizeg();
     for (int i = 0; i < n; i++)
@@ -788,10 +521,8 @@ void GridFunc<T>::diff(const GridFunc<T>& A, const GridFunc<T>& B)
     assert(A.grid_.sizeg() == grid_.sizeg());
     assert(B.grid_.sizeg() == grid_.sizeg());
 
-    if (!grid_.active()) return;
-
-    const T* const v1 = A.uu_;
-    const T* const v2 = B.uu_;
+    const T* const v1 = A.uu();
+    const T* const v2 = B.uu();
     T* const pu       = &uu_[0];
     const int n       = grid_.sizeg();
     for (int i = 0; i < n; i++)
@@ -807,71 +538,62 @@ template <typename T>
 template <typename T2>
 void GridFunc<T>::assign(const T2* const vv, const char dis)
 {
-    if (!grid_.active()) return;
+    assert(vv != nullptr);
 
     const short nghosts = ghost_pt();
 
     assert(grid_.inc(2) == 1);
 
-    if (vv != nullptr)
+    if (dis == 'g')
     {
-        if (dis == 'g')
+        const int ldz    = grid_.gdim(2);
+        const int istart = mype_env().my_mpi(0) * dim_[0];
+        const int jstart = mype_env().my_mpi(1) * dim_[1];
+        const int kstart = mype_env().my_mpi(2) * dim_[2];
+        const int gincx  = grid_.gdim(1) * ldz;
+        const int gincy  = ldz;
+
+        for (int ix = 0; ix < dim_[0]; ix++)
         {
-            const int ldz    = grid_.gdim(2);
-            const int istart = mype_env().my_mpi(0) * dim_[0];
-            const int jstart = mype_env().my_mpi(1) * dim_[1];
-            const int kstart = mype_env().my_mpi(2) * dim_[2];
-            const int gincx  = grid_.gdim(1) * ldz;
-            const int gincy  = ldz;
+            int ix1 = (ix + nghosts) * incx_;
+            int ix2 = (ix + istart) * gincx;
 
-            for (int ix = 0; ix < dim_[0]; ix++)
+            for (int iy = 0; iy < dim_[1]; iy++)
             {
-                int ix1 = (ix + nghosts) * incx_;
-                int ix2 = (ix + istart) * gincx;
+                int iy1 = ix1 + (iy + nghosts) * incy_;
+                int iy2 = ix2 + (iy + jstart) * gincy + kstart;
 
-                for (int iy = 0; iy < dim_[1]; iy++)
-                {
-                    int iy1 = ix1 + (iy + nghosts) * incy_;
-                    int iy2 = ix2 + (iy + jstart) * gincy + kstart;
-
-                    MPcpy(uu_ + iy1 + nghosts, vv + iy2, dim_[2]);
-                }
+                MPcpy(uu_ + iy1 + nghosts, vv + iy2, dim_[2]);
             }
         }
-        else
-        {
-            const int incx2 = dim_[2] * dim_[1];
-            const int incy2 = dim_[2];
-            for (int ix = 0; ix < dim_[0]; ix++)
-            {
-                int ix1 = (ix + nghosts) * incx_;
-                int ix2 = ix * incx2;
-
-                const T2* const pv = vv + ix2;
-                T* pu              = uu_ + ix1 + nghosts + nghosts * incy_;
-                for (int iy = 0; iy < dim_[1]; iy++)
-                {
-                    int iy1 = iy * incy_;
-                    int iy2 = iy * incy2;
-
-                    MPcpy(pu + iy1, pv + iy2, dim_[2]);
-                }
-            }
-        }
-
-        updated_boundaries_ = false;
     }
     else
     {
-        updated_boundaries_ = false;
+        const int incx2 = dim_[2] * dim_[1];
+        const int incy2 = dim_[2];
+        for (int ix = 0; ix < dim_[0]; ix++)
+        {
+            int ix1 = (ix + nghosts) * incx_;
+            int ix2 = ix * incx2;
+
+            const T2* const pv = vv + ix2;
+            T* pu              = uu_ + ix1 + nghosts + nghosts * incy_;
+            for (int iy = 0; iy < dim_[1]; iy++)
+            {
+                int iy1 = iy * incy_;
+                int iy2 = iy * incy2;
+
+                MPcpy(pu + iy1, pv + iy2, dim_[2]);
+            }
+        }
     }
+
+    updated_boundaries_ = false;
 }
 
 template <typename T>
 int GridFunc<T>::count_threshold(const T threshold)
 {
-    if (!grid_.active()) return 0;
-
     const short nghosts = ghost_pt();
 
     trade_boundaries();
@@ -891,7 +613,6 @@ int GridFunc<T>::count_threshold(const T threshold)
             T* const pu = &uu_[iy1];
             for (int iz = 0; iz < dim_[2]; iz++)
             {
-
                 if (fabs(pu[iz]) > threshold) icount++;
             }
         }
@@ -917,8 +638,6 @@ int GridFunc<T>::count_threshold(const T threshold)
 template <typename T>
 void GridFunc<T>::sqrt_func()
 {
-    if (!grid_.active()) return;
-
     const short shift = ghost_pt();
 
     assert(grid_.inc(2) == 1);
@@ -936,7 +655,6 @@ void GridFunc<T>::sqrt_func()
 
             for (int iz = 0; iz < dim_[2]; iz++)
             {
-
                 assert(pu[iz] >= 0.);
                 pu[iz] = sqrt(pu[iz]);
             }
@@ -949,8 +667,6 @@ void GridFunc<T>::sqrt_func()
 template <typename T>
 void GridFunc<T>::inv_sqrt()
 {
-    if (!grid_.active()) return;
-
     const short shift = ghost_pt();
 
     assert(grid_.inc(2) == 1);
@@ -962,7 +678,6 @@ void GridFunc<T>::inv_sqrt()
 
         for (int iy = 0; iy < dim_[1]; iy++)
         {
-
             int iy1            = ix1 + (iy + shift) * incy_;
             T* __restrict__ pu = &uu_[iy1];
 
@@ -981,8 +696,6 @@ void GridFunc<T>::inv_sqrt()
 template <typename T>
 void GridFunc<T>::inv()
 {
-    if (!grid_.active()) return;
-
     const short shift = ghost_pt();
 
     assert(grid_.inc(2) == 1);
@@ -1000,7 +713,6 @@ void GridFunc<T>::inv()
 
             for (int iz = 0; iz < dim_[2]; iz++)
             {
-
                 assert(pu[iz] > 1.e-8);
                 pu[iz] = 1. / pu[iz];
             }
@@ -1017,7 +729,7 @@ void GridFunc<T>::inv()
 template <typename T>
 void GridFunc<T>::print(std::ostream& tfile)
 {
-    if (!grid_.active()) return;
+    assert(uu_ != nullptr);
 
     const short nghosts = ghost_pt();
 
@@ -1038,67 +750,63 @@ void GridFunc<T>::print(std::ostream& tfile)
 
     T* vv = uu_;
 
-    if (uu_ != nullptr)
-    {
-        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-        int mpirc;
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    int mpirc;
 
-        for (int i = 0; i < mype_env().n_mpi_tasks(); i++)
+    for (int i = 0; i < mype_env().n_mpi_tasks(); i++)
+    {
+        if (i > 0)
         {
-            if (i > 0)
+            if (i == mytask_)
             {
-                if (i == mytask_)
+                mpirc = mmpi.send(uu_, grid_.sizeg(), 0);
+                mpirc = mmpi.send(start, 3, 0);
+                std::cout << " Print GridFunc<T> from task " << mytask_
+                          << std::endl;
+            }
+            else
+            {
+                if (0 == mytask_)
                 {
-                    mpirc = mmpi.send(uu_, grid_.sizeg(), 0);
-                    mpirc = mmpi.send(start, 3, 0);
-                    std::cout << " Print GridFunc<T> from task " << mytask_
-                              << std::endl;
-                }
-                else
-                {
-                    if (0 == mytask_)
-                    {
-                        mpirc = mmpi.recv(work, grid_.sizeg(), i);
-                        if (mpirc != MPI_SUCCESS)
-                            std::cout << "print: MPI_Recv work failed!!!"
-                                      << std::endl;
-                        mpirc = mmpi.recv(start, 3, i);
-                        if (mpirc != MPI_SUCCESS)
-                            std::cout << "print: MPI_Recv start[] failed!!!"
-                                      << std::endl;
-                        vv = work;
-                    }
+                    mpirc = mmpi.recv(work, grid_.sizeg(), i);
+                    if (mpirc != MPI_SUCCESS)
+                        std::cout << "print: MPI_Recv work failed!!!"
+                                  << std::endl;
+                    mpirc = mmpi.recv(start, 3, i);
+                    if (mpirc != MPI_SUCCESS)
+                        std::cout << "print: MPI_Recv start[] failed!!!"
+                                  << std::endl;
+                    vv = work;
                 }
             }
-            if (mype_env().onpe0())
+        }
+        if (mype_env().onpe0())
+        {
+            for (int ix = 0; ix < dim_[0]; ix++)
             {
-                for (int ix = 0; ix < dim_[0]; ix++)
+
+                int ix1 = (ix + nghosts) * incx_ + nghosts;
+
+                for (int iy = 0; iy < dim_[1]; iy++)
                 {
 
-                    int ix1 = (ix + nghosts) * incx_ + nghosts;
+                    int iy1 = ix1 + (iy + nghosts) * incy_;
 
-                    for (int iy = 0; iy < dim_[1]; iy++)
+                    for (int iz = 0; iz < dim_[2]; iz++)
                     {
 
-                        int iy1 = ix1 + (iy + nghosts) * incy_;
+                        int iz1 = iy1 + iz;
 
-                        for (int iz = 0; iz < dim_[2]; iz++)
-                        {
-
-                            int iz1 = iy1 + iz;
-
-                            tfile << (start[0] + ix * grid_.hgrid(0)) * size_x
-                                         + (start[1] + iy * grid_.hgrid(1))
-                                               * size_y
-                                         + (start[2] + iz * grid_.hgrid(2))
-                                               * size_z
-                                  << "\t" << vv[iz1] << std::endl;
-                        }
+                        tfile << (start[0] + ix * grid_.hgrid(0)) * size_x
+                                     + (start[1] + iy * grid_.hgrid(1)) * size_y
+                                     + (start[2] + iz * grid_.hgrid(2)) * size_z
+                              << "\t" << vv[iz1] << std::endl;
                     }
                 }
             }
         }
     }
+
     delete[] work;
 }
 
@@ -1106,8 +814,6 @@ void GridFunc<T>::print(std::ostream& tfile)
 template <typename T>
 void GridFunc<T>::write_plt(const char str[]) const
 {
-    if (!grid_.active()) return;
-
     std::ofstream tfile;
     tfile.open(str);
 
@@ -1125,33 +831,29 @@ void GridFunc<T>::write_plt(const char str[]) const
 template <typename T>
 void GridFunc<T>::write_xyz(std::ofstream& tfile) const
 {
-    if (!grid_.active()) return;
+    assert(uu_ != nullptr);
+    assert(grid_.inc(2) == 1);
 
     const short shift = ghost_pt();
 
-    assert(grid_.inc(2) == 1);
-
     const T* const vv = uu_;
 
-    if (uu_ != nullptr)
+    for (int ix = 0; ix < dim(0); ix++)
     {
-        for (int ix = 0; ix < dim(0); ix++)
+
+        int ix1 = (ix + shift) * incx_ + shift;
+
+        for (int iy = 0; iy < dim(1); iy++)
         {
 
-            int ix1 = (ix + shift) * incx_ + shift;
+            int iy1 = ix1 + (iy + shift) * incy_;
 
-            for (int iy = 0; iy < dim(1); iy++)
+            for (int iz = 0; iz < dim(2); iz++)
             {
 
-                int iy1 = ix1 + (iy + shift) * incy_;
+                int iz1 = iy1 + iz;
 
-                for (int iz = 0; iz < dim(2); iz++)
-                {
-
-                    int iz1 = iy1 + iz;
-
-                    tfile << vv[iz1] << std::endl;
-                }
+                tfile << vv[iz1] << std::endl;
             }
         }
     }
@@ -1160,8 +862,6 @@ void GridFunc<T>::write_xyz(std::ofstream& tfile) const
 template <typename T>
 void GridFunc<T>::global_xyz_task0(T* global_func)
 {
-    if (!grid_.active()) return;
-
     const short shift = ghost_pt();
 
     T* work = new T[grid_.sizeg()];
@@ -1219,8 +919,6 @@ void GridFunc<T>::global_xyz_task0(T* global_func)
 template <typename T>
 void GridFunc<T>::write_global_xyz(std::ofstream& tfile)
 {
-    if (!grid_.active()) return;
-
     assert(grid_.inc(2) == 1);
 
     const short shift = ghost_pt();
@@ -1311,8 +1009,6 @@ void GridFunc<T>::write_global_xyz(std::ofstream& tfile)
 template <typename T>
 void GridFunc<T>::write_global_x(const char str[])
 {
-    if (!grid_.active()) return;
-
     std::ofstream tfile(str);
 
     T* global_func = new T[grid_.gsize()];
@@ -1345,8 +1041,6 @@ void GridFunc<T>::allGather(T* global_func) const
     all_gather_tm_.start();
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-
-    if (!grid_.active()) return;
 
     const int gincx = grid_.gdim(1) * grid_.gdim(2);
     const int gincy = grid_.gdim(2);
@@ -1414,8 +1108,6 @@ void GridFunc<T>::gather(T* global_func) const
 
     // if(mype_env().onpe0())
     //    cout<<"GridFunc<T>::gather()"<<endl;
-    if (!grid_.active()) return;
-
     const int gincx = grid_.gdim(1) * grid_.gdim(2);
     const int gincy = grid_.gdim(2);
 
@@ -1499,8 +1191,6 @@ void GridFunc<T>::scatterFrom(const GridFunc<T>& src)
 
     // if(mype_env().onpe0())
     //    cout<<"GridFunc<T>::scatterFrom()"<<endl;
-    if (!grid_.active()) return;
-
     const int incx_src = src.grid_.inc(0);
     const int incy_src = src.grid_.inc(1);
 
@@ -1516,7 +1206,7 @@ void GridFunc<T>::scatterFrom(const GridFunc<T>& src)
             for (int jj = 0; jj < ldim[1]; jj++)
                 memcpy(uu_ + (ii + ghosts_dst) * incx_
                            + (jj + ghosts_dst) * incy_ + ghosts_dst,
-                    src.uu_ + (ii + ghosts_src) * incx_src
+                    src.uu() + (ii + ghosts_src) * incx_src
                         + (jj + ghosts_src) * incy_src + ghosts_src,
                     ldim[2] * sizeof(T));
         return;
@@ -1556,7 +1246,7 @@ void GridFunc<T>::scatterFrom(const GridFunc<T>& src)
         for (int i = 0; i < ntasks; i++)
         {
             T* const pdst       = buffer + i * sizeg;
-            const T* const psrc = src.uu_ + displs[i];
+            const T* const psrc = src.uu() + displs[i];
             for (int ii = 0; ii < ldim[0]; ii++)
             {
                 T* const ldst = pdst + (ii + ghosts_dst) * incx_
@@ -1589,8 +1279,6 @@ void GridFunc<T>::scatterFrom(const GridFunc<T>& src)
 template <typename T>
 void GridFunc<T>::init_vect_shift(T* global_func) const
 {
-    if (!grid_.active()) return;
-
     const short shift = ghost_pt();
 
     assert(grid_.inc(2) == 1);
@@ -1682,31 +1370,28 @@ void GridFunc<T>::init_vect_shift(T* global_func) const
 template <typename T>
 void GridFunc<T>::write_zyx(std::ofstream& tfile) const
 {
-    if (!grid_.active()) return;
+    assert(uu_ != nullptr);
 
     const short shift = ghost_pt();
 
     const T* const vv = uu_;
 
-    if (uu_ != nullptr)
+    for (int iz = 0; iz < dim(2); iz++)
     {
-        for (int iz = 0; iz < dim(2); iz++)
+
+        int iz1 = (iz + shift);
+
+        for (int iy = 0; iy < dim(1); iy++)
         {
 
-            int iz1 = (iz + shift);
+            int iy1 = iz1 + (iy + shift) * incy_;
 
-            for (int iy = 0; iy < dim(1); iy++)
+            for (int ix = 0; ix < dim(0); ix++)
             {
 
-                int iy1 = iz1 + (iy + shift) * incy_;
+                int ix1 = iy1 + (ix + shift) * incx_;
 
-                for (int ix = 0; ix < dim(0); ix++)
-                {
-
-                    int ix1 = iy1 + (ix + shift) * incx_;
-
-                    tfile << vv[ix1] << std::endl;
-                }
+                tfile << vv[ix1] << std::endl;
             }
         }
     }
@@ -1716,8 +1401,6 @@ void GridFunc<T>::write_zyx(std::ofstream& tfile) const
 template <typename T>
 void GridFunc<T>::init_vect(T* vv, const char dis) const
 {
-    if (!grid_.active()) return;
-
     assert(grid_.inc(2) == 1);
     assert(vv != nullptr);
 
@@ -1736,8 +1419,6 @@ template <typename T>
 template <typename T2>
 void GridFunc<T>::getValues(T2* vv) const
 {
-    if (!grid_.active()) return;
-
     assert(grid_.inc(2) == 1);
     assert(vv != nullptr);
 
@@ -1768,8 +1449,6 @@ void GridFunc<T>::getValues(T2* vv) const
 template <typename T>
 void GridFunc<T>::initTrigo3d(const short bc[3], const int n[3])
 {
-    if (!grid_.active()) return;
-
     const short nghosts = ghost_pt();
 
     const int ilow = mype_env().my_mpi(0) * dim_[0];
@@ -1877,8 +1556,6 @@ void GridFunc<T>::initTrigo3d(const short bc[3], const int n[3])
 template <typename T>
 void GridFunc<T>::initCos3d(const T k[3])
 {
-    if (!grid_.active()) return;
-
     const short nghosts = ghost_pt();
 
     const int ilow = grid_.istart(0);
@@ -1923,8 +1600,6 @@ void GridFunc<T>::initCos3d(const T k[3])
 template <typename T>
 void GridFunc<T>::initTriLin(const T a[4], const bool wghosts)
 {
-    if (!grid_.active()) return;
-
     const short nghosts = ghost_pt();
 
     const unsigned dim[3] = { grid_.dim(0), grid_.dim(1), grid_.dim(2) };
@@ -1990,8 +1665,6 @@ template <typename T>
 void GridFunc<T>::init_radial(
     const double center[3], const double rcore, const short ftype)
 {
-    if (!grid_.active()) return;
-
     if (mype_env().onpe0())
         std::cout << "Init_radial() at center (" << center[0] << ","
                   << center[1] << "," << center[2] << ")" << std::endl;
@@ -2052,8 +1725,6 @@ void GridFunc<T>::init_radial(
 template <typename T>
 void GridFunc<T>::print_radial(const char str[])
 {
-    if (!grid_.active()) return;
-
     char filename[30], extension[10];
     strcpy(filename, str);
     sprintf(extension, "%d", mype_env().my_mpi(2));
@@ -2090,8 +1761,6 @@ void GridFunc<T>::print_radial(const char str[])
 template <typename T>
 void GridFunc<T>::init_rand()
 {
-    if (!grid_.active()) return;
-
 #ifdef DEBUG
     if (mype_env().onpe0()) std::cout << " Begin init_rand ...\n";
 #endif
@@ -2435,7 +2104,6 @@ void GridFunc<T>::setBoundaryValuesBeforeTrade()
 template <typename T>
 void GridFunc<T>::defaultTrade_boundaries()
 {
-    if (!grid_.active()) return;
     if (updated_boundaries_) return;
     if (ghost_pt() == 0) return;
 
@@ -2476,8 +2144,6 @@ void GridFunc<T>::setBoundaryValues(const T alpha, const bool direction[3])
 {
     // cout<<"GridFunc<T>::setBoundaryValues(const T, const bool
     // direction[3])"<<endl;
-    if (!grid_.active()) return;
-
     // early return if no direction to set BC
     if (!direction[0] && !direction[1] && !direction[2]) return;
 
@@ -2851,8 +2517,6 @@ template <typename T>
 void GridFunc<T>::setBoundaryValuesNeumann(
     const T alpha[3], const bool direction[3])
 {
-    if (!grid_.active()) return;
-
     if (direction[1]) setBoundaryValuesNeumannY(alpha[1]);
 
     if (direction[2]) setBoundaryValuesNeumannZ(alpha[2]);
@@ -2871,8 +2535,6 @@ void GridFunc<T>::setBoundaryValues(
     assert(dim_[1] == values.dim(1));
     assert(dim_[2] == values.dim(2));
     assert(ghost_pt() == values.grid().ghost_pt());
-
-    if (!grid_.active()) return;
 
     // early return if no direction to set BC
     if (!direction[0] && !direction[1] && !direction[2]) return;
@@ -2916,7 +2578,7 @@ void GridFunc<T>::setBoundaryValues(
         j1 = (2 * shift + dim_[1]) * incy_;
 
     T* const pu       = &uu_[0];
-    const T* const pv = &values.uu_[0];
+    const T* const pv = values.uu();
 
     // loop over "yz" layers
     for (int i = i0; i < i1; i += incx_)
@@ -3033,8 +2695,6 @@ void GridFunc<T>::setBoundaryValues(
 template <typename T>
 double GridFunc<T>::gdot(const GridFunc<double>& vv) const
 {
-    if (!grid_.active()) return 0.;
-
     const int nghosts = ghost_pt();
 
     int dimz = grid_.dim(2);
@@ -3090,8 +2750,6 @@ double GridFunc<T>::gdot(const GridFunc<double>& vv) const
 template <typename T>
 double GridFunc<T>::gdot(const GridFunc<float>& vv) const
 {
-    if (!grid_.active()) return 0.;
-
     const int nghosts = ghost_pt();
 
     int dimz = grid_.dim(2);
@@ -3154,8 +2812,6 @@ double GridFunc<T>::norm2() const
 template <typename T>
 bool GridFunc<T>::def_const() const
 {
-    if (!grid_.active()) return false;
-
     int tmp = 0;
     int sum = 0;
     if ((!bc_[0] || !bc_[1] || !bc_[2])) tmp = 1;
@@ -3180,8 +2836,6 @@ bool GridFunc<T>::def_const() const
 template <typename T>
 double GridFunc<T>::get_average()
 {
-    if (!grid_.active()) return 0.;
-
     double sum    = 0.;
     const int gpt = ghost_pt();
 
@@ -3240,8 +2894,6 @@ double GridFunc<T>::average0()
 template <typename T>
 bool GridFunc<T>::isZero(const double tol, const bool wghosts)
 {
-    if (!grid_.active()) return true;
-
     const short nghosts = ghost_pt();
 
     int init[3];
@@ -3291,8 +2943,6 @@ bool GridFunc<T>::isZero(const double tol, const bool wghosts)
 template <typename T>
 double GridFunc<T>::integral() const
 {
-    if (!grid_.active()) return 0.;
-
     double integral = 0.;
     const int gpt   = ghost_pt();
 
@@ -3334,8 +2984,6 @@ template <typename T>
 void GridFunc<T>::extend3D(GridFunc<T>& ucoarse)
 {
     extend3D_tm_.start();
-
-    if (!grid_.active()) return;
 
     // assert(bc_==ucoarse.bc());
     assert(mype_env().n_mpi_tasks() == ucoarse.grid().mype_env().n_mpi_tasks());
@@ -3380,7 +3028,7 @@ void GridFunc<T>::extend3D(GridFunc<T>& ucoarse)
             const int icy = icx + incy_coarse * (iy + nghosts_coarse);
 
             int size = cdimz + 1;
-            Tcopy(&size, &ucoarse.uu_[icy], &ione, &uu_[ify], &itwo);
+            Tcopy(&size, ucoarse.uu(icy), &ione, &uu_[ify], &itwo);
         }
     }
 
@@ -3521,8 +3169,6 @@ void GridFunc<T>::restrict3D(GridFunc<T>& ucoarse)
 {
     restrict3D_tm_.start();
 
-    if (!grid_.active()) return;
-
     assert(dim(0) == 2 * ucoarse.dim(0));
     assert(dim(1) == 2 * ucoarse.dim(1));
     assert(dim(2) == 2 * ucoarse.dim(2));
@@ -3589,7 +3235,7 @@ void GridFunc<T>::restrict3D(GridFunc<T>& ucoarse)
                               + (double)umxmy[twoiz] + (double)upxmy[twoiz]
                               + (double)umxpy[twoiz] + (double)upxpy[twoiz];
 
-                ucoarse.uu_[iyc + iz + nghosts_coarse] = (T)(
+                ucoarse.uu()[iyc + iz + nghosts_coarse] = (T)(
                     inv64 * (8. * u0[twoiz] + 4. * face + 2. * edge + corner));
             }
 
@@ -3732,7 +3378,8 @@ void GridFunc<T>::test_newgrid()
     GridFunc<T> f(new_grid, bc_[0], bc_[1], bc_[2]);
     f.init_rand();
 
-    GridFunc<T> g(f.uu_, grid_, bc_[0], bc_[1], bc_[2], 'l');
+    GridFunc<T> g(grid_, bc_[0], bc_[1], bc_[2]);
+    g.assign(f.uu(), 'l');
 
     double s1 = norm(f);
     double s2 = norm(g);
@@ -3751,7 +3398,8 @@ void GridFunc<T>::test_newgrid()
         hu[ix] = (T)(((double)std::rand()) / 32768.);
         // hu[ix]=1.;
     }
-    GridFunc<T> h(hu, grid_, bc_[0], bc_[1], bc_[2], 'l');
+    GridFunc<T> h(grid_, bc_[0], bc_[1], bc_[2]);
+    h.assign(hu, 'l');
 
     s1 = norm(h);
     std::cout << " h(hu): bc=" << h.bc(0) << "," << h.bc(1) << "," << h.bc(2)
@@ -3810,11 +3458,9 @@ template <typename T>
 void GridFunc<T>::jacobi(
     const GridFunc<T>& v, const GridFunc<T>& epsilon, const double c0)
 {
-    if (!grid_.active()) return;
-
-    T* __restrict__ pu = &uu_[0];
-    T* __restrict__ vv = &v.uu_[0];
-    T* __restrict__ ee = &epsilon.uu_[0];
+    T* __restrict__ pu = uu_;
+    T* __restrict__ vv = v.uu();
+    T* __restrict__ ee = epsilon.uu();
     const int sizeg    = grid().sizeg();
 
     for (int j = 0; j < sizeg; j++)
@@ -3830,14 +3476,12 @@ void GridFunc<T>::jacobi(
 template <typename T>
 void GridFunc<T>::add_prod(const GridFunc<T>& v1, const GridFunc<T>& v2)
 {
-    if (!grid_.active()) return;
-
     assert(v1.grid_.sizeg() == grid_.sizeg());
     assert(v2.grid_.sizeg() == grid_.sizeg());
 
-    T* __restrict__ pu        = &uu_[0];
-    const T* __restrict__ vv1 = &v1.uu_[0];
-    const T* __restrict__ vv2 = &v2.uu_[0];
+    T* __restrict__ pu        = uu_;
+    const T* __restrict__ vv1 = v1.uu();
+    const T* __restrict__ vv2 = v2.uu();
     const int sizeg           = grid_.sizeg();
 
     for (int i = 0; i < sizeg; i++)
@@ -3851,14 +3495,12 @@ void GridFunc<T>::add_prod(const GridFunc<T>& v1, const GridFunc<T>& v2)
 template <typename T>
 void GridFunc<T>::substract_prod(const GridFunc<T>& v1, const GridFunc<T>& v2)
 {
-    if (!grid_.active()) return;
-
     assert(v1.grid_.sizeg() == grid_.sizeg());
     assert(v2.grid_.sizeg() == grid_.sizeg());
 
-    T* __restrict__ pu        = &uu_[0];
-    const T* __restrict__ vv1 = &v1.uu_[0];
-    const T* __restrict__ vv2 = &v2.uu_[0];
+    T* __restrict__ pu        = uu_;
+    const T* __restrict__ vv1 = v1.uu();
+    const T* __restrict__ vv2 = v2.uu();
     const int sizeg           = grid_.sizeg();
 
     for (int i = 0; i < sizeg; i++)
@@ -3872,8 +3514,6 @@ void GridFunc<T>::substract_prod(const GridFunc<T>& v1, const GridFunc<T>& v2)
 template <typename T>
 void GridFunc<T>::smooth_by_coarsening(int nlevel)
 {
-    if (!grid_.active()) return;
-
     if (nlevel <= 0)
     {
         return;
@@ -3891,8 +3531,6 @@ void GridFunc<T>::smooth_by_coarsening(int nlevel)
 template <typename T>
 void GridFunc<T>::add_bias(const double bias)
 {
-    if (!grid_.active()) return;
-
     if (bc_[0] && bc_[1] && bc_[2])
     {
         if (mype_env().onpe0()) std::cout << "Add bias " << bias << std::endl;
@@ -3912,8 +3550,6 @@ void GridFunc<T>::add_bias(const double bias)
 template <typename T>
 double GridFunc<T>::get_bias()
 {
-    if (!grid_.active()) return 0.;
-
     double bias = 0;
     if (bc_[0] && bc_[1] && bc_[2])
     {
@@ -3964,11 +3600,10 @@ double GridFunc<T>::get_bias()
 template <typename T>
 GridFunc<T>::~GridFunc<T>()
 {
-    if (uu_ != nullptr)
-    {
-        delete[] uu_;
-        uu_ = nullptr;
-    }
+    assert(uu_ != nullptr);
+
+    delete[] uu_;
+    uu_ = nullptr;
 }
 
 template <typename T>
@@ -3993,11 +3628,9 @@ void GridFunc<T>::assign(const GridFunc<T>& src, const char dis)
 {
     assert(dis == 'd' || dis == 'g');
 
-    if (!grid_.active()) return;
-
     if ((&grid_ == &src.grid_) && dis == 'd')
     {
-        memcpy(uu_, src.uu_, grid_.sizeg() * sizeof(T));
+        memcpy(uu_, src.uu(), grid_.sizeg() * sizeof(T));
     }
     else // more expensive assign
     {
@@ -4023,7 +3656,7 @@ void GridFunc<T>::assign(const GridFunc<T>& src, const char dis)
         memset(uu_, 0, grid_.sizeg() * sizeof(T));
 
         const T* const u_src
-            = src.uu_ + kstart + jstart * incy_src + istart * incx_src;
+            = src.uu() + kstart + jstart * incy_src + istart * incx_src;
 
         const size_t sdim2 = dim(2) * sizeof(T);
 
@@ -4046,6 +3679,29 @@ void GridFunc<T>::assign(const GridFunc<T>& src, const char dis)
 
     updated_boundaries_ = false;
 }
+
+template <typename T>
+void GridFunc<T>::resizeBuffers()
+{
+    // resize static buffers if needed
+    if (mype_env().n_mpi_tasks() > 1)
+    {
+        const short shift = ghost_pt();
+        const int dimxy   = (dim(1) + 2 * ghost_pt()) * dim(0);
+        int size_max      = shift * grid_.inc(0);
+        size_max          = std::max(size_max, shift * dimxy);
+        size_max          = std::max(size_max, shift * dim(0) * grid_.inc(1));
+
+        if (size_max > (int)buf1_.size())
+        {
+            buf1_.resize(size_max);
+            buf2_.resize(size_max);
+            buf3_.resize(size_max);
+            buf4_.resize(size_max);
+        }
+    }
+}
+
 template class GridFunc<double>;
 template class GridFunc<float>;
 

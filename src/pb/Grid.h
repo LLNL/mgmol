@@ -41,8 +41,6 @@ private:
     double origin_[3];
     short level_;
 
-    bool active_;
-
 public:
     Grid(const double origin[3], const double lattice[3],
         const unsigned ngpts[3], const PEenv& mype_env, const short nghosts = 1,
@@ -53,7 +51,6 @@ public:
 
     Grid& operator=(const Grid&);
 
-    bool active() const { return active_; }
     const PEenv& mype_env() const { return mype_env_; }
     unsigned dim(const short i) const
     {

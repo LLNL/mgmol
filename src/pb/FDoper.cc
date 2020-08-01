@@ -50,30 +50,28 @@ template <class T>
 FDoper<T>::FDoper(const Grid& mygrid) : grid_(mygrid)
 {
     lower_order_grid_ = nullptr;
-    if (grid_.active())
+
+    for (int i = 0; i < 3; i++)
     {
-        for (int i = 0; i < 3; i++)
-        {
-            assert(grid_.hgrid(i) > 1.e-8);
-            inv_h_[i]  = 1. / grid_.hgrid(i);
-            inv_h2_[i] = 1. / (grid_.hgrid(i) * grid_.hgrid(i));
-            dim_[i]    = grid_.dim(i);
-        }
-        incx_ = grid_.inc(0);
-        incy_ = grid_.inc(1);
-        for (int i = 0; i < 3; i++)
-        {
-            assert(grid_.dim(i) > 0);
-            assert(grid_.dim(i) < 10000);
-        }
-        c0mehr4_  = 16. * inv12 * (inv_h2_[0] + inv_h2_[1] + inv_h2_[2]);
-        cxmehr4_  = -10. * inv12 * inv_h2_[0] + 0.125 * c0mehr4_;
-        cymehr4_  = -10. * inv12 * inv_h2_[1] + 0.125 * c0mehr4_;
-        czmehr4_  = -10. * inv12 * inv_h2_[2] + 0.125 * c0mehr4_;
-        cxymehr4_ = -inv12 * (inv_h2_[0] + inv_h2_[1]);
-        cyzmehr4_ = -inv12 * (inv_h2_[2] + inv_h2_[1]);
-        cxzmehr4_ = -inv12 * (inv_h2_[0] + inv_h2_[2]);
+        assert(grid_.hgrid(i) > 1.e-8);
+        inv_h_[i]  = 1. / grid_.hgrid(i);
+        inv_h2_[i] = 1. / (grid_.hgrid(i) * grid_.hgrid(i));
+        dim_[i]    = grid_.dim(i);
     }
+    incx_ = grid_.inc(0);
+    incy_ = grid_.inc(1);
+    for (int i = 0; i < 3; i++)
+    {
+        assert(grid_.dim(i) > 0);
+        assert(grid_.dim(i) < 10000);
+    }
+    c0mehr4_  = 16. * inv12 * (inv_h2_[0] + inv_h2_[1] + inv_h2_[2]);
+    cxmehr4_  = -10. * inv12 * inv_h2_[0] + 0.125 * c0mehr4_;
+    cymehr4_  = -10. * inv12 * inv_h2_[1] + 0.125 * c0mehr4_;
+    czmehr4_  = -10. * inv12 * inv_h2_[2] + 0.125 * c0mehr4_;
+    cxymehr4_ = -inv12 * (inv_h2_[0] + inv_h2_[1]);
+    cyzmehr4_ = -inv12 * (inv_h2_[2] + inv_h2_[1]);
+    cxzmehr4_ = -inv12 * (inv_h2_[0] + inv_h2_[2]);
 }
 
 template <class T>
@@ -81,8 +79,6 @@ void FDoper<T>::del1_2nd(
     GridFunc<T>& A, GridFunc<T>& B, const short direction) const
 {
     assert(grid_.ghost_pt() > 0);
-
-    if (!grid_.active()) return;
 
     if (!A.updated_boundaries()) A.trade_boundaries();
 
@@ -131,8 +127,6 @@ void FDoper<T>::del1_4th(
     assert(grid_.ghost_pt() > 1);
     assert(direction < 3);
     assert(direction >= 0);
-
-    if (!grid_.active()) return;
 
     assert(grid_.ghost_pt() == A.grid().ghost_pt());
 
@@ -195,8 +189,6 @@ void FDoper<T>::del1_6th(
     assert(direction >= 0);
     assert(grid_.ghost_pt() > 2);
 
-    if (!grid_.active()) return;
-
     if (!A.updated_boundaries()) A.trade_boundaries();
 
     const double e1 = (45. / 60.) * inv_h(direction);
@@ -250,8 +242,6 @@ template <class T>
 void FDoper<T>::del1_8th(
     GridFunc<T>& A, GridFunc<T>& B, const short direction) const
 {
-    if (!grid_.active()) return;
-
     assert(direction < 3);
     assert(direction >= 0);
     assert(grid_.ghost_pt() > 3);
@@ -314,8 +304,6 @@ void FDoper<T>::del1_8th(
 template <class T>
 void FDoper<T>::del2_2nd(GridFunc<T>& A, GridFunc<T>& B) const
 {
-    if (!grid_.active()) return;
-
     if (!A.updated_boundaries()) A.trade_boundaries();
 
     del2_2nd_tm_.start();
@@ -373,8 +361,6 @@ void FDoper<T>::del2_2nd(GridFunc<T>& A, GridFunc<T>& B) const
 template <class T>
 void FDoper<T>::del2_4th(GridFunc<T>& A, GridFunc<T>& B) const
 {
-    if (!grid_.active()) return;
-
     assert(grid_.ghost_pt() > 1);
 
     if (!A.updated_boundaries()) A.trade_boundaries();
@@ -388,8 +374,6 @@ template <class T>
 void FDoper<T>::del2_4th(
     const Grid& Agrid, T* A, T* B, const size_t nfunc) const
 {
-    if (!grid_.active()) return;
-
     assert(grid_.ghost_pt() > 1);
 
     del2_4th_tm_.start();
@@ -489,8 +473,6 @@ template <class T>
 void FDoper<T>::del2_4th_withPot(
     GridFunc<T>& A, const double* const pot, T* B) const
 {
-    if (!grid_.active()) return;
-
     assert(grid_.ghost_pt() > 1);
 
     if (!A.updated_boundaries()) A.trade_boundaries();
@@ -572,8 +554,6 @@ void FDoper<T>::del2_6th(GridFunc<T>& A, GridFunc<T>& B) const
 {
     assert(grid_.ghost_pt() > 2);
 
-    if (!grid_.active()) return;
-
     if (!A.updated_boundaries()) A.trade_boundaries();
 
     double cc        = (1. / 180.) * inv_h2(0);
@@ -649,8 +629,6 @@ template <class T>
 void FDoper<T>::del2_8th(GridFunc<T>& A, GridFunc<T>& B) const
 {
     assert(grid_.ghost_pt() > 3);
-
-    if (!grid_.active()) return;
 
     if (!A.updated_boundaries()) A.trade_boundaries();
 
@@ -735,8 +713,6 @@ void FDoper<T>::del2_8th(GridFunc<T>& A, GridFunc<T>& B) const
 template <class T>
 void FDoper<T>::del2_4th_Mehr(GridFunc<T>& A, GridFunc<T>& B) const
 {
-    if (!grid_.active()) return;
-
     if (!A.updated_boundaries()) A.trade_boundaries();
 
     del2_4th_Mehr_tm_.start();
@@ -828,8 +804,6 @@ void FDoper<T>::del2_4th_Mehr(GridFunc<T>& A, GridFunc<T>& B) const
 template <class T>
 void FDoper<T>::smooth(GridFunc<T>& A, GridFunc<T>& B, const double alpha)
 {
-    if (!grid_.active()) return;
-
     if (!A.updated_boundaries()) A.trade_boundaries();
 
     const double c0 = alpha;
@@ -880,8 +854,6 @@ void FDoper<T>::smooth(GridFunc<T>& A, GridFunc<T>& B, const double alpha)
 template <class T>
 void FDoper<T>::rhs_4th_Mehr1(GridFunc<T>& A, GridFunc<T>& B) const
 {
-    if (!grid_.active()) return;
-
     assert(grid_.ghost_pt() > 0);
 
     if (!A.updated_boundaries()) A.trade_boundaries();
@@ -941,8 +913,6 @@ void FDoper<T>::rhs_4th_Mehr1(GridFunc<T>& A, GridFunc<T>& B) const
 template <class T>
 void FDoper<T>::rhs_4th_Mehr1(GridFunc<T>& A, T* const u) const
 {
-    if (!grid_.active()) return;
-
     if (!A.updated_boundaries()) A.trade_boundaries();
 
     rhs_4th_Mehr1_tm_.start();
@@ -1000,8 +970,6 @@ void FDoper<T>::rhs_4th_Mehr1(GridFunc<T>& A, T* const u) const
 template <class T>
 void FDoper<T>::rhs_4th_Mehr2(GridFunc<T>& A, GridFunc<T>& B) const
 {
-    if (!grid_.active()) return;
-
     int iiy, iiz;
 
     const double c0 = 2. / 3.;
@@ -1067,8 +1035,6 @@ void FDoper<T>::rhs_4th_Mehr2(GridFunc<T>& A, GridFunc<T>& B) const
 template <class T>
 void FDoper<T>::rhs_4th_Mehr2(GridFunc<T>& A, T* const u) const
 {
-    if (!grid_.active()) return;
-
     int iiy, iiz;
 
     const double c0 = 2. / 3.;
