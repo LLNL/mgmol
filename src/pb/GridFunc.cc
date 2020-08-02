@@ -169,9 +169,8 @@ GridFunc<T>::GridFunc(
 
     updated_boundaries_ = true; // boundaries initialized
 
-    const size_t n = grid_.sizeg();
-    uu_            = new T[n];
-    memset(uu_, 0, n * sizeof(T));
+    alloc();
+    memset(uu_, 0, grid_.sizeg() * sizeof(T));
 
     // resize static buffers if needed
     resizeBuffers();
@@ -191,10 +190,11 @@ GridFunc<T>::GridFunc(const GridFunc<double>& A) : grid_(A.grid())
 
     setup();
 
-    int n = grid_.sizeg();
+    alloc();
 
-    uu_ = new T[n];
+    int n = grid_.sizeg();
     MPcpy(uu_, A.uu(), n);
+
     updated_boundaries_ = A.updated_boundaries();
 }
 
@@ -211,9 +211,9 @@ GridFunc<T>::GridFunc(const GridFunc<float>& A) : grid_(A.grid())
 
     setup();
 
-    int n = grid_.sizeg();
+    alloc();
 
-    uu_ = new T[n];
+    int n = grid_.sizeg();
     MPcpy(uu_, A.uu(), n);
     updated_boundaries_ = A.updated_boundaries();
 }
@@ -242,8 +242,8 @@ GridFunc<T>::GridFunc(const GridFunc<T>& A, const Grid& new_grid)
     assert(grid_.inc(2) == 1);
     assert(A.grid_.inc(2) == 1);
 
-    uu_ = new T[grid_.sizeg()];
-    memset(uu_, 0, grid_.sizeg() * sizeof(T));
+    alloc();
+
     size_t sdim2 = dim_[2] * sizeof(T);
 
     for (int ix = 0; ix < dim_[0]; ix++)
@@ -263,6 +263,15 @@ GridFunc<T>::GridFunc(const GridFunc<T>& A, const Grid& new_grid)
     }
 
     updated_boundaries_ = false;
+}
+
+template <typename T>
+void GridFunc<T>::alloc()
+{
+    assert(grid_.sizeg() > 0);
+
+    data_.reset(new T[grid_.sizeg()]);
+    uu_ = data_.get();
 }
 
 template <typename T>
@@ -3600,10 +3609,6 @@ double GridFunc<T>::get_bias()
 template <typename T>
 GridFunc<T>::~GridFunc<T>()
 {
-    assert(uu_ != nullptr);
-
-    delete[] uu_;
-    uu_ = nullptr;
 }
 
 template <typename T>

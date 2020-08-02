@@ -143,11 +143,6 @@ public:
     {
         return *functions_[k];
     }
-    const GridFunc<ScalarType>& ref_func(const int k)
-    {
-        assert(k < (int)functions_.size());
-        return *(functions_[k]);
-    }
     void trade_boundaries();
     void trade_boundaries_colors(const short, const short);
 
