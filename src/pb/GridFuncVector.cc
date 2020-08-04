@@ -44,9 +44,9 @@ template <typename ScalarType>
 void GridFuncVector<ScalarType>::allocate(const int n)
 {
 #ifdef HAVE_MAGMA
-make compiler fail!
+    make compiler fail !
 #endif
-    functions_.resize(n);
+        functions_.resize(n);
 
     // allocate memory for all GridFunc
     int alloc_size = grid_.sizeg();
@@ -54,12 +54,11 @@ make compiler fail!
 
     for (int i = 0; i < n; i++)
     {
-        //        ScalarType* alloc = memory_.get() + i * alloc_size;
+        ScalarType* alloc = memory_.get() + i * alloc_size;
         // ScalarType* alloc = new ScalarType[alloc_size];
         functions_[i]
-            //            = new GridFunc<ScalarType>(grid_, bc_[0], bc_[1],
-            //            bc_[2], alloc);
-            = new GridFunc<ScalarType>(grid_, bc_[0], bc_[1], bc_[2]);
+            = new GridFunc<ScalarType>(grid_, bc_[0], bc_[1], bc_[2], alloc);
+        //            = new GridFunc<ScalarType>(grid_, bc_[0], bc_[1], bc_[2]);
     }
 }
 
