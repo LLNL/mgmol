@@ -43,6 +43,9 @@ std::vector<std::vector<ScalarType>> GridFuncVector<ScalarType>::comm_buf4_;
 template <typename ScalarType>
 void GridFuncVector<ScalarType>::allocate(const int n)
 {
+#ifdef HAVE_MAGMA
+make compiler fail!
+#endif
     functions_.resize(n);
 
     // allocate memory for all GridFunc
