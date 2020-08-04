@@ -14,6 +14,7 @@
 #include "GridFuncVectorInterface.h"
 
 #include <map>
+#include <memory>
 #include <vector>
 
 namespace pb
@@ -21,6 +22,8 @@ namespace pb
 template <typename ScalarType>
 class GridFuncVector : public GridFuncVectorInterface
 {
+    std::unique_ptr<ScalarType> memory_;
+
     // global id for functions in each subdivision
     const std::vector<std::vector<int>>& gid_;
 
@@ -88,15 +91,7 @@ class GridFuncVector : public GridFuncVectorInterface
 
     void communicateRemoteGids(const int begin_color, const int end_color);
 
-    void allocate(const int n)
-    {
-        functions_.resize(n);
-        for (int i = 0; i < n; i++)
-        {
-            functions_[i]
-                = new GridFunc<ScalarType>(grid_, bc_[0], bc_[1], bc_[2]);
-        }
-    }
+    void allocate(const int n);
 
 public:
     GridFuncVector(const Grid& my_grid, const int px, const int py,
@@ -134,13 +129,24 @@ public:
     void assign(const int i, const ScalarType2* const v, const char dis = 'd')
     {
         assert(i < static_cast<int>(functions_.size()));
+        assert(functions_[i] != nullptr);
 
         functions_[i]->assign(v, dis);
         updated_boundaries_ = false;
     }
-    GridFunc<ScalarType>& func(const int k) { return *functions_[k]; }
-    const GridFunc<ScalarType>& func(const int k) const
+    GridFunc<ScalarType>& getGridFunc(const int k)
     {
+        assert(k < static_cast<int>(functions_.size()));
+        assert(functions_[k] != nullptr);
+
+        return *functions_[k];
+    }
+
+    const GridFunc<ScalarType>& getGridFunc(const int k) const
+    {
+        assert(k < static_cast<int>(functions_.size()));
+        assert(functions_[k] != nullptr);
+
         return *functions_[k];
     }
     void trade_boundaries();

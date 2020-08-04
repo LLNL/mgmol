@@ -6,8 +6,6 @@
 // All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
-
-// $Id: ShiftedLaph4M.cc,v 1.5 2009/02/19 00:14:26 jeanluc Exp $
 #include "ShiftedLaph4M.h"
 
 namespace pb
@@ -29,13 +27,13 @@ void ShiftedLaph4M<T>::apply(GridFuncVector<T>& A, GridFuncVector<T>& B)
     assert(A.size() == B.size());
     const int nfunc = (int)A.size();
     A.trade_boundaries();
-    GridFunc<T> C(
-        A.func(0).grid(), A.func(0).bc(0), A.func(0).bc(1), A.func(0).bc(2));
+    GridFunc<T> C(A.getGridFunc(0).grid(), A.getGridFunc(0).bc(0),
+        A.getGridFunc(0).bc(1), A.getGridFunc(0).bc(2));
     for (int k = 0; k < nfunc; k++)
     {
-        FDoper<T>::del2_4th_Mehr(A.func(k), B.func(k));
-        FDoper<T>::rhs_4th_Mehr1(A.func(k), C);
-        B.func(k).axpy(lambda2_, C);
+        FDoper<T>::del2_4th_Mehr(A.getGridFunc(k), B.getGridFunc(k));
+        FDoper<T>::rhs_4th_Mehr1(A.getGridFunc(k), C);
+        B.getGridFunc(k).axpy(lambda2_, C);
     }
 }
 template <class T>

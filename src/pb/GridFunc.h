@@ -79,7 +79,7 @@ protected:
     const Grid& grid_;
 
     // data storage
-    std::unique_ptr<T> data_;
+    std::unique_ptr<T> memory_;
 
     // raw pointer to data
     T* uu_;
@@ -100,6 +100,9 @@ protected:
 public:
     // Constructors
     GridFunc(const Grid&, const short, const short, const short);
+
+    // constructor with pointer to data allocation
+    GridFunc(const Grid&, const short, const short, const short, T*);
 
     // copy constructor
     GridFunc(const GridFunc<double>& A);

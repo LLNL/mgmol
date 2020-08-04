@@ -69,7 +69,7 @@ public:
         const int nfunc = (int)A.size();
         for (int k = 0; k < nfunc; k++)
         {
-            Lap<T>::del2_4th_Mehr(A.func(k), B.func(k));
+            Lap<T>::del2_4th_Mehr(A.getGridFunc(k), B.getGridFunc(k));
         }
     }
 

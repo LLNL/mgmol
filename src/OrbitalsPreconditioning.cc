@@ -132,8 +132,8 @@ void OrbitalsPreconditioning<T>::precond_mg(T& orbitals)
         {
             gf_work.resetData();
 
-            gf_work.axpy(gamma_, data_wghosts_->func(i));
-            precond_->mg(gf_work, data_wghosts_->func(i), 0, i);
+            gf_work.axpy(gamma_, data_wghosts_->getGridFunc(i));
+            precond_->mg(gf_work, data_wghosts_->getGridFunc(i), 0, i);
 
             // gf_work.init_vect(psi(i),'d');
             orbitals.setPsi(gf_work, i);

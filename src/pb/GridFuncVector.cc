@@ -41,6 +41,26 @@ template <typename ScalarType>
 std::vector<std::vector<ScalarType>> GridFuncVector<ScalarType>::comm_buf4_;
 
 template <typename ScalarType>
+void GridFuncVector<ScalarType>::allocate(const int n)
+{
+    functions_.resize(n);
+
+    // allocate memory for all GridFunc
+    int alloc_size = grid_.sizeg();
+    memory_.reset(new ScalarType[n * alloc_size]);
+
+    for (int i = 0; i < n; i++)
+    {
+        //        ScalarType* alloc = memory_.get() + i * alloc_size;
+        // ScalarType* alloc = new ScalarType[alloc_size];
+        functions_[i]
+            //            = new GridFunc<ScalarType>(grid_, bc_[0], bc_[1],
+            //            bc_[2], alloc);
+            = new GridFunc<ScalarType>(grid_, bc_[0], bc_[1], bc_[2]);
+    }
+}
+
+template <typename ScalarType>
 void GridFuncVector<ScalarType>::setup()
 {
     const int mytask = grid_.mype_env().mytask();

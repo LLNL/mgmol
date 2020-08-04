@@ -317,7 +317,8 @@ void MGmol<T>::computeHnlPhiAndAdd2HPhi(
             // compute B*Hnl*phi and add it to H*phi
             for (int icolor = 0; icolor < ncolors; icolor++)
             {
-                hamiltonian_->lapOper()->rhs(gfv.func(icolor), work.data());
+                hamiltonian_->lapOper()->rhs(
+                    gfv.getGridFunc(icolor), work.data());
 
                 // Add the contribution of the non-local potential to H phi
                 ORBDTYPE* hpsi = hphi.getPsi(icolor);

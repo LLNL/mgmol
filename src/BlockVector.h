@@ -178,7 +178,7 @@ public:
         assert(data_wghosts_ != 0);
         assert(i < static_cast<int>(vect_.size()));
 
-        return data_wghosts_->func(i);
+        return data_wghosts_->getGridFunc(i);
     }
 
     void setStorage(ScalarType* new_storage)

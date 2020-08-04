@@ -100,7 +100,7 @@ public:
         const int nfunc = (int)A.size();
         for (int k = 0; k < nfunc; k++)
         {
-            this->del2_4th(A.func(k), B.func(k));
+            this->del2_4th(A.getGridFunc(k), B.getGridFunc(k));
         }
     }
     void apply(Grid& Agrid, T* A, T* B, const size_t nfunc)
