@@ -50,7 +50,7 @@ if abs(ref_energy-energy) > 1.e-3:
   sys.exit(1)
 
 #make sure forces are below tolerance
-tol = 7.e-4
+tol = 4.e-4
 Fz  = -1.06e-2
 for line in lines:
   #find output lines with forces
@@ -65,7 +65,7 @@ for line in lines:
           print("force = {}".format(force))
           sys.exit(1)
       #check value of force in z direction
-      if abs(eval(words[7])-Fz)>4.e-4:
+      if abs(eval(words[7])-Fz)>tol:
           print("force in z dir = {}".format(eval(words[7])))
           sys.exit(1)
       else:
