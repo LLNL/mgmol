@@ -6,9 +6,10 @@
 // All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
-#include "GridFunc.h"
+#include "GridFuncVector.h"
 #include "MGmol_MPI.h"
 #include "PEenv.h"
+#include "mputils.h"
 
 #include "catch.hpp"
 
@@ -27,30 +28,35 @@ TEST_CASE("Trade ghost values", "[trade]")
     // periodic GridFunc
     pb::GridFunc<double> gf(grid, 1, 1, 1);
 
+    int nx = static_cast<int>(grid.dim(0));
+    int ny = static_cast<int>(grid.dim(1));
+    int nz = static_cast<int>(grid.dim(2));
+
     // set interior values to uniform value
-    double* uu          = gf.uu();
+    std::vector<double> inner_data(nx * ny * nz);
     const double uvalue = 1.111;
-    for (int ix = nghosts; ix < static_cast<int>(nghosts + grid.dim(0)); ix++)
+    for (int ix = 0; ix < nx; ix++)
     {
-        int iix = ix * grid.inc(0);
+        int iix = ix * ny * nz;
 
-        for (int iy = nghosts; iy < static_cast<int>(nghosts + grid.dim(1));
-             iy++)
+        for (int iy = 0; iy < ny; iy++)
         {
-            int iiy = iy * grid.inc(1) + iix;
+            int iiy = iy * nz + iix;
 
-            for (int iz = nghosts; iz < static_cast<int>(nghosts + grid.dim(2));
-                 iz++)
+            for (int iz = 0; iz < nz; iz++)
             {
-                uu[iiy + iz] = uvalue;
+                inner_data[iiy + iz] = uvalue;
             }
         }
     }
 
+    // initialize gf with inner_data
+    gf.assign(inner_data.data(), 'd');
     gf.set_updated_boundaries(false);
 
     double norm_before = gf.norm2();
 
+    // fill ghost values with data from neighboring subdomain
     gf.trade_boundaries();
 
     // check norm has not changed
@@ -66,6 +72,7 @@ TEST_CASE("Trade ghost values", "[trade]")
     const int endy = 2 * nghosts + grid.dim(1);
     const int endz = 2 * nghosts + grid.dim(2);
 
+    double* uu = gf.uu();
     for (int ix = initx; ix < endx; ix++)
     {
         int iix = ix * grid.inc(0);
@@ -77,6 +84,43 @@ TEST_CASE("Trade ghost values", "[trade]")
             for (int iz = initz; iz < endz; iz++)
             {
                 CHECK(uu[iiy + iz] == Approx(uvalue).epsilon(1.e-6));
+            }
+        }
+    }
+
+    // now test with GridFuncVector
+    const int nfunc = 10;
+    std::vector<std::vector<int>> gids;
+    gids.resize(1);
+    for (int i = 0; i < nfunc; i++)
+        gids[0].push_back((i + 3) % nfunc);
+
+    pb::GridFuncVector<double> gfv(grid, 1, 1, 1, gids);
+    for (int i = 0; i < nfunc; i++)
+    {
+        std::vector<double> scaled_data(inner_data);
+        MPscal(nx * ny * nz, (double)(i + 1), scaled_data.data());
+        gfv.assign(i, scaled_data.data(), 'd');
+    }
+    gfv.trade_boundaries();
+
+    for (int i = 0; i < nfunc; i++)
+    {
+        const pb::GridFunc<double>& gfi(gfv.func(i));
+        double* uu     = gfi.uu();
+        double ref_val = (i + 1) * uvalue;
+        for (int ix = initx; ix < endx; ix++)
+        {
+            int iix = ix * grid.inc(0);
+
+            for (int iy = inity; iy < endy; iy++)
+            {
+                int iiy = iy * grid.inc(1) + iix;
+
+                for (int iz = initz; iz < endz; iz++)
+                {
+                    CHECK(uu[iiy + iz] == Approx(ref_val).epsilon(1.e-6));
+                }
             }
         }
     }
