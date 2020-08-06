@@ -102,7 +102,8 @@ public:
     GridFunc(const Grid&, const short, const short, const short);
 
     // constructor with pointer to data allocation
-    GridFunc(const Grid&, const short, const short, const short, T*);
+    GridFunc(const Grid&, const short, const short, const short, T*,
+        const bool updated_boundaries = false);
 
     // copy constructor
     GridFunc(const GridFunc<double>& A);

@@ -177,8 +177,8 @@ GridFunc<T>::GridFunc(
 }
 
 template <typename T>
-GridFunc<T>::GridFunc(
-    const Grid& my_grid, const short px, const short py, const short pz, T* mem)
+GridFunc<T>::GridFunc(const Grid& my_grid, const short px, const short py,
+    const short pz, T* mem, const bool updated_boundaries)
     : grid_(my_grid), uu_(mem)
 {
     assert(px == 0 || px == 1 || px == 2);
@@ -197,7 +197,7 @@ GridFunc<T>::GridFunc(
         assert(grid_.dim(i) < 10000);
     }
 
-    updated_boundaries_ = false;
+    updated_boundaries_ = updated_boundaries;
 
     // resize static buffers if needed
     resizeBuffers();
@@ -270,6 +270,7 @@ GridFunc<T>::GridFunc(const GridFunc<T>& A, const Grid& new_grid)
     assert(A.grid_.inc(2) == 1);
 
     alloc();
+    memset(uu_, 0, grid_.sizeg() * sizeof(T));
 
     size_t sdim2 = dim_[2] * sizeof(T);
 

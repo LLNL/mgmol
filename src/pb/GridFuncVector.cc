@@ -43,23 +43,24 @@ std::vector<std::vector<ScalarType>> GridFuncVector<ScalarType>::comm_buf4_;
 template <typename ScalarType>
 void GridFuncVector<ScalarType>::allocate(const int n)
 {
-#ifdef HAVE_MAGMA
-    make compiler fail !
-#endif
-        functions_.resize(n);
+    functions_.resize(n);
 
     // allocate memory for all GridFunc
     int alloc_size = grid_.sizeg();
     memory_.reset(new ScalarType[n * alloc_size]);
 
+    memset(memory_.get(), 0, n * alloc_size * sizeof(ScalarType));
+
     for (int i = 0; i < n; i++)
     {
         ScalarType* alloc = memory_.get() + i * alloc_size;
-        // ScalarType* alloc = new ScalarType[alloc_size];
         functions_[i]
             = new GridFunc<ScalarType>(grid_, bc_[0], bc_[1], bc_[2], alloc);
-        //            = new GridFunc<ScalarType>(grid_, bc_[0], bc_[1], bc_[2]);
     }
+
+    // jlf, 8/6/2020: one should be able to set this flag to true
+    // but we may need to fix a few things for that to work
+    updated_boundaries_ = false;
 }
 
 template <typename ScalarType>
