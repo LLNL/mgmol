@@ -11,7 +11,6 @@
 #define GRIDFUNCVECTOR_H
 
 #include "GridFunc.h"
-#include "GridFuncVectorInterface.h"
 
 #include <map>
 #include <memory>
@@ -20,8 +19,19 @@
 namespace pb
 {
 template <typename ScalarType>
-class GridFuncVector : public GridFuncVectorInterface
+class GridFuncVector
 {
+    static Timer trade_bc_tm_;
+    static Timer trade_bc_colors_tm_;
+    static Timer prod_tm_;
+    static Timer finishExchangeNorthSouth_tm_;
+    static Timer finishExchangeUpDown_tm_;
+    static Timer finishExchangeEastWest_tm_;
+    static Timer wait_north_south_tm_;
+    static Timer wait_up_down_tm_;
+    static Timer wait_east_west_tm_;
+
+    // block of memory for all GridFunc
     std::unique_ptr<ScalarType> memory_;
 
     // global id for functions in each subdivision
@@ -113,7 +123,7 @@ public:
         setup();
     }
 
-    ~GridFuncVector() override
+    ~GridFuncVector()
     {
         assert(static_cast<int>(functions_.size()) == nfunc_);
         for (int i = 0; i < nfunc_; i++)
@@ -176,7 +186,44 @@ public:
     void init_vect(const int k, ScalarType* vv, const char dis) const;
     void getValues(const int k, double* vv) const;
     void getValues(const int k, float* vv) const;
+
+    static void printTimers(std::ostream& os)
+    {
+        trade_bc_tm_.print(os);
+        trade_bc_colors_tm_.print(os);
+        prod_tm_.print(os);
+        wait_north_south_tm_.print(os);
+        wait_up_down_tm_.print(os);
+        wait_east_west_tm_.print(os);
+        finishExchangeNorthSouth_tm_.print(os);
+        finishExchangeUpDown_tm_.print(os);
+        finishExchangeEastWest_tm_.print(os);
+    }
 };
+
+template <typename ScalarType>
+Timer GridFuncVector<ScalarType>::trade_bc_tm_("GridFuncVector::trade_bc");
+template <typename ScalarType>
+Timer GridFuncVector<ScalarType>::trade_bc_colors_tm_(
+    "GridFuncVector::trade_bc_colors");
+template <typename ScalarType>
+Timer GridFuncVector<ScalarType>::prod_tm_("GridFuncVector::prod");
+template <typename ScalarType>
+Timer GridFuncVector<ScalarType>::finishExchangeNorthSouth_tm_(
+    "GridFuncVector::finishExNorthSouth");
+template <typename ScalarType>
+Timer GridFuncVector<ScalarType>::finishExchangeUpDown_tm_(
+    "GridFuncVector::finishExUpDown");
+template <typename ScalarType>
+Timer GridFuncVector<ScalarType>::finishExchangeEastWest_tm_(
+    "GridFuncVector::finishExEastWest");
+template <typename ScalarType>
+Timer GridFuncVector<ScalarType>::wait_north_south_tm_(
+    "GridFuncVector::waitNS");
+template <typename ScalarType>
+Timer GridFuncVector<ScalarType>::wait_up_down_tm_("GridFuncVector::waitUD");
+template <typename ScalarType>
+Timer GridFuncVector<ScalarType>::wait_east_west_tm_("GridFuncVector::waitEW");
 
 } // namespace pb
 

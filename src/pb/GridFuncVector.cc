@@ -17,20 +17,6 @@
 
 namespace pb
 {
-Timer GridFuncVectorInterface::trade_bc_tm_("GridFuncVector::trade_bc");
-Timer GridFuncVectorInterface::trade_bc_colors_tm_(
-    "GridFuncVector::trade_bc_colors");
-Timer GridFuncVectorInterface::prod_tm_("GridFuncVector::prod");
-Timer GridFuncVectorInterface::finishExchangeNorthSouth_tm_(
-    "GridFuncVector::finishExNorthSouth");
-Timer GridFuncVectorInterface::finishExchangeUpDown_tm_(
-    "GridFuncVector::finishExUpDown");
-Timer GridFuncVectorInterface::finishExchangeEastWest_tm_(
-    "GridFuncVector::finishExEastWest");
-Timer GridFuncVectorInterface::wait_north_south_tm_("GridFuncVector::waitNS");
-Timer GridFuncVectorInterface::wait_up_down_tm_("GridFuncVector::waitUD");
-Timer GridFuncVectorInterface::wait_east_west_tm_("GridFuncVector::waitEW");
-
 template <typename ScalarType>
 std::vector<std::vector<ScalarType>> GridFuncVector<ScalarType>::comm_buf1_;
 template <typename ScalarType>
