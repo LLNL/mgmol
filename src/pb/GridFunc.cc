@@ -351,7 +351,6 @@ void GridFunc<T>::setValues(const GridFunc<T>& src)
 template <typename T>
 GridFunc<T>& GridFunc<T>::operator=(const GridFunc<T>& func)
 {
-    std::cout << "operator=" << std::endl;
     assert(func.grid_.sizeg() == grid_.sizeg());
 
     if (this == &func) return *this;
