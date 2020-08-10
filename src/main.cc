@@ -607,7 +607,7 @@ int main(int argc, char** argv)
         if (myPEenv.color() == 0)
         {
             assert(ct.getMGlevels() >= -1);
-            if (ct.getMGlevels() >= 0 && ct.getPrecondType() % 10 == 0)
+            if (ct.withPreconditioner())
             {
                 const pb::Grid& mygrid = mymesh->grid();
 

@@ -54,8 +54,7 @@ PolakRibiereSolver<T>::PolakRibiereSolver(Hamiltonian<T>* hamiltonian,
     sigma_a_ = 1.e-4;
     sigma_b_ = 1.e-1;
 
-    with_preconditioner_
-        = ((ct.getPrecondType() % 10) == 0 && ct.getMGlevels() >= 0);
+    with_preconditioner_ = (ct.withPreconditioner());
 }
 
 template <class T>

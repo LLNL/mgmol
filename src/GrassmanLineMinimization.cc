@@ -90,7 +90,7 @@ void GrassmanLineMinimization<T>::update_states(
 
     // compute preconditioned residual
     new_pcgrad_->assign(*new_grad_);
-    if ((ct.getPrecondType() % 10) == 0 && ct.getMGlevels() >= 0)
+    if (ct.withPreconditioner())
     {
         // PRECONDITIONING
         mgmol_strategy_->precond_mg(*new_pcgrad_);
