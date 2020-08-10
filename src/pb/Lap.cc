@@ -47,10 +47,10 @@ void Lap<T>::jacobi(GridFuncVector<T>& A, const GridFuncVector<T>& B,
 #pragma omp parallel for
     for (int k = 0; k < nfunc; k++)
     {
-        apply(A.func(k), W);
-        W -= (B.func(k));
-        A.func(k).axpy(scale, W);
-        A.func(k).set_updated_boundaries(false);
+        apply(A.getGridFunc(k), W);
+        W -= (B.getGridFunc(k));
+        A.getGridFunc(k).axpy(scale, W);
+        A.getGridFunc(k).set_updated_boundaries(false);
     }
 
     A.set_updated_boundaries(false);
@@ -67,10 +67,10 @@ void Lap<T>::jacobi(GridFuncVector<T>& A, const GridFuncVector<T>& B,
 #pragma omp parallel for
     for (int k = 0; k < nfunc; k++)
     {
-        apply(A.func(k), W.func(k));
-        W.func(k) -= (B.func(k));
-        A.func(k).axpy(scale, W.func(k));
-        A.func(k).set_updated_boundaries(false);
+        apply(A.getGridFunc(k), W.getGridFunc(k));
+        W.getGridFunc(k) -= (B.getGridFunc(k));
+        A.getGridFunc(k).axpy(scale, W.getGridFunc(k));
+        A.getGridFunc(k).set_updated_boundaries(false);
     }
 
     A.set_updated_boundaries(false);

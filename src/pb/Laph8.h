@@ -99,7 +99,7 @@ public:
         const int nfunc = (int)A.size();
         for (int k = 0; k < nfunc; k++)
         {
-            FDoper<T>::del2_8th(A.func(k), B.func(k));
+            FDoper<T>::del2_8th(A.getGridFunc(k), B.getGridFunc(k));
         }
     }
 

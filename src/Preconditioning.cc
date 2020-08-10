@@ -284,7 +284,7 @@ void Preconditioning<T>::app_mask(
 #pragma omp parallel for
     for (int k = 0; k < nfunc; k++)
     {
-        app_mask(gvu.func(k), level, k);
+        app_mask(gvu.getGridFunc(k), level, k);
     }
 }
 

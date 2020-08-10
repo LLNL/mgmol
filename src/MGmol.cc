@@ -830,7 +830,8 @@ void MGmol<T>::printTimers()
             << std::endl;
     }
     pb::GridFuncInterface::printTimers(os_);
-    pb::GridFuncVectorInterface::printTimers(os_);
+    pb::GridFuncVector<double>::printTimers(os_);
+    pb::GridFuncVector<float>::printTimers(os_);
     pb::FDoperInterface::printTimers(os_);
     T::printTimers(os_);
     SinCosOps<T>::printTimers(os_);

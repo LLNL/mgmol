@@ -84,18 +84,9 @@ void OrbitalsPreconditioning<T>::setup(T& orbitals, const short mg_levels,
             ct.bc[1], ct.bc[2], orbitals.getOverlappingGids());
     }
 
-    if (mixed_precision_)
-    {
-        data_wghosts_ = new pb::GridFuncVector<MGPRECONDTYPE>(mygrid, ct.bc[0],
-            ct.bc[1], ct.bc[2], orbitals.getOverlappingGids());
-    }
-    else
-    {
-        // cast to please compiler in mixed precision case (i.e. when this line
-        // is not actually executed)
-        data_wghosts_ = dynamic_cast<pb::GridFuncVector<MGPRECONDTYPE>*>(
-            orbitals.getPtDataWGhosts());
-    }
+    data_wghosts_ = new pb::GridFuncVector<MGPRECONDTYPE>(
+        mygrid, ct.bc[0], ct.bc[1], ct.bc[2], orbitals.getOverlappingGids());
+
     is_set_ = true;
 
     assert(data_wghosts_);
@@ -132,8 +123,8 @@ void OrbitalsPreconditioning<T>::precond_mg(T& orbitals)
         {
             gf_work.resetData();
 
-            gf_work.axpy(gamma_, data_wghosts_->func(i));
-            precond_->mg(gf_work, data_wghosts_->func(i), 0, i);
+            gf_work.axpy(gamma_, data_wghosts_->getGridFunc(i));
+            precond_->mg(gf_work, data_wghosts_->getGridFunc(i), 0, i);
 
             // gf_work.init_vect(psi(i),'d');
             orbitals.setPsi(gf_work, i);

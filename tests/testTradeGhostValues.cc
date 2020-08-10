@@ -106,7 +106,7 @@ TEST_CASE("Trade ghost values", "[trade]")
 
     for (int i = 0; i < nfunc; i++)
     {
-        const pb::GridFunc<double>& gfi(gfv.func(i));
+        const pb::GridFunc<double>& gfi(gfv.getGridFunc(i));
         double* uu     = gfi.uu();
         double ref_val = (i + 1) * uvalue;
         for (int ix = initx; ix < endx; ix++)

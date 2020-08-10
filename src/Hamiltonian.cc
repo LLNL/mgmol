@@ -116,7 +116,7 @@ void Hamiltonian<T>::applyLocal(const int ncolors, T& phi, T& hphi)
         for (int i = 0; i < ncolors; i++)
         {
             // work1 = B*V*psi
-            lapOper_->rhs(gfvw1.func(i), gf_work1);
+            lapOper_->rhs(gfvw1.getGridFunc(i), gf_work1);
 
             // work2 = -Lap*phi
             lapOper_->apply(phi.getFuncWithGhosts(i), gf_work2);

@@ -17,6 +17,7 @@
 #include <complex>
 #include <fstream>
 #include <list>
+#include <memory>
 #include <string.h>
 #include <vector>
 
@@ -67,6 +68,9 @@ class GridFunc : public GridFuncInterface
     T ran0();
     T radial_func(const double r, const double a, const short ftype = 0);
 
+    // allocate memory for function
+    void alloc();
+
     void setup();
 
     void resizeBuffers();
@@ -75,6 +79,9 @@ protected:
     const Grid& grid_;
 
     // data storage
+    std::unique_ptr<T> memory_;
+
+    // raw pointer to data
     T* uu_;
 
     bool updated_boundaries_;
@@ -93,6 +100,10 @@ protected:
 public:
     // Constructors
     GridFunc(const Grid&, const short, const short, const short);
+
+    // constructor with pointer to data allocation
+    GridFunc(const Grid&, const short, const short, const short, T*,
+        const bool updated_boundaries = false);
 
     // copy constructor
     GridFunc(const GridFunc<double>& A);
