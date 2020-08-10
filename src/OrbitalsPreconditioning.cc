@@ -78,11 +78,8 @@ void OrbitalsPreconditioning<T>::setup(T& orbitals, const short mg_levels,
     assert(orbitals.chromatic_number()
            == static_cast<int>(orbitals.getOverlappingGids()[0].size()));
 
-    if (ct.blockPrecond())
-    {
-        gfv_work_ = new pb::GridFuncVector<MGPRECONDTYPE>(mygrid, ct.bc[0],
-            ct.bc[1], ct.bc[2], orbitals.getOverlappingGids());
-    }
+    gfv_work_ = new pb::GridFuncVector<MGPRECONDTYPE>(
+        mygrid, ct.bc[0], ct.bc[1], ct.bc[2], orbitals.getOverlappingGids());
 
     data_wghosts_ = new pb::GridFuncVector<MGPRECONDTYPE>(
         mygrid, ct.bc[0], ct.bc[1], ct.bc[2], orbitals.getOverlappingGids());
@@ -112,36 +109,15 @@ void OrbitalsPreconditioning<T>::precond_mg(T& orbitals)
         orbitals.setDataWithGhosts();
     // trade_boundaries();
 
-    Control& ct(*(Control::instance()));
-    if (!ct.blockPrecond())
-    {
-        Mesh* mymesh = Mesh::instance();
-        const pb::Grid& mygrid(mymesh->grid());
-        pb::GridFunc<MGPRECONDTYPE> gf_work(
-            mygrid, ct.bc[0], ct.bc[1], ct.bc[2]);
-        for (int i = 0; i < orbitals.chromatic_number(); i++)
-        {
-            gf_work.resetData();
+    // block-implemented preconditioner
+    assert(gfv_work_ != nullptr);
 
-            gf_work.axpy(gamma_, data_wghosts_->getGridFunc(i));
-            precond_->mg(gf_work, data_wghosts_->getGridFunc(i), 0, i);
+    gfv_work_->resetData();
 
-            // gf_work.init_vect(psi(i),'d');
-            orbitals.setPsi(gf_work, i);
-        }
-    }
-    else
-    {
-        // block-implemented preconditioner
-        assert(gfv_work_ != nullptr);
+    gfv_work_->axpy(gamma_, *data_wghosts_);
+    precond_->mg(*gfv_work_, *data_wghosts_, 0);
 
-        gfv_work_->resetData();
-
-        gfv_work_->axpy(gamma_, *data_wghosts_);
-        precond_->mg(*gfv_work_, *data_wghosts_, 0);
-
-        orbitals.setPsi(*gfv_work_);
-    }
+    orbitals.setPsi(*gfv_work_);
 
 #ifdef PRINT_OPERATIONS
     if (onpe0)

@@ -277,7 +277,7 @@ void Control::print(std::ostream& os)
     os << std::endl;
 
     os << " preconditioner factor:" << precond_factor << std::endl;
-    if (precond_type_ % 10 == 0)
+    if (precond_type_ == 10)
     {
         os << " Multigrid preconditioning for wave functions:" << std::endl;
         os << " # of Multigrid levels   : " << mg_levels_ << std::endl;
@@ -820,7 +820,7 @@ int Control::checkState()
     }
     assert(xctype == 0 || xctype == 2);
     assert(mix_pot < 2. && mix_pot > 0.);
-    assert(precond_type_ % 10 == 0);
+    assert(precond_type_ == 10);
     assert(project_out_psd == 0 || project_out_psd == 1);
     assert(wannier_transform_type == 0 || wannier_transform_type == 1
            || wannier_transform_type == 2);
@@ -854,14 +854,6 @@ int Control::checkState()
                          << std::endl;
         (*MPIdata::sout) << "Control::checkState(): NOLMO centers required for "
                             "LR adaptation!"
-                         << std::endl;
-        return -1;
-    }
-
-    if (coloring_algo_ / 10 == 1 && precond_type_ / 10 == 0)
-    {
-        (*MPIdata::serr) << "ERROR in Control: local coloring algorithm "
-                            "requires block preconditioner!!!"
                          << std::endl;
         return -1;
     }
@@ -1022,7 +1014,7 @@ void Control::readRestartOutputInfo(std::ifstream* tfile)
 int Control::setPreconditionerParameters(const short type, const float factor,
     const bool project_out, const short nlevels, const float fgrid_hmax)
 {
-    if ((type % 10) != 0)
+    if (type != 10)
     {
         (*MPIdata::sout) << type << ": Invalid preconditioner type"
                          << std::endl;
@@ -1030,10 +1022,9 @@ int Control::setPreconditionerParameters(const short type, const float factor,
     }
 
     precond_type_ = type;
-    if (precond_type_ % 10 == 0)
+    if (precond_type_ == 10)
         (*MPIdata::sout) << "MG preconditioner" << std::endl;
-    if (precond_type_ / 10 == 1)
-        (*MPIdata::sout) << "Preconditioner: block implementation" << std::endl;
+    (*MPIdata::sout) << "Preconditioner: block implementation" << std::endl;
 
     precond_factor = factor;
     if (factor < 0.)
@@ -1859,14 +1850,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         loc_mode_ = cut_radius < 100. ? true : false;
         if (lrs_compute > 0 || !loc_mode_) lrs_extrapolation = 0;
 
-        if (coloring_algo_ >= 10)
-        {
-            precond_type_ = 10;
-        }
-        else
-        {
-            precond_type_ = 0;
-        }
+        precond_type_ = 10;
 
         if (vm.count("Quench.MLWC"))
         {

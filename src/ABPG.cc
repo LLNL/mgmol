@@ -79,7 +79,7 @@ void ABPG<T>::update_states(T& orbitals, T& res, T& work_orbitals,
 
     Control& ct = *(Control::instance());
 
-    if ((ct.getPrecondType() % 10) == 0 && ct.getMGlevels() >= 0)
+    if (ct.withPreconditioner())
     {
         // PRECONDITIONING
         // compute the preconditioned steepest descent direction

@@ -1269,7 +1269,7 @@ double MGmol<T>::computePrecondResidual(T& phi, T& hphi, T& res, Ions& ions,
     double norm2Res
         = computeConstraintResidual(phi, hphi, res, print_residual, norm_res);
 
-    if ((ct.getPrecondType() % 10) == 0 && ct.getMGlevels() >= 0)
+    if (ct.withPreconditioner())
     {
         // PRECONDITIONING
         // compute the preconditioned steepest descent direction

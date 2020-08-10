@@ -173,7 +173,6 @@ private:
     short mg_levels_;
 
     // preconditioning type
-    // 0  = MG
     // 10 = MG, block implementation
     short precond_type_;
 
@@ -263,9 +262,7 @@ public:
 
     short getMGlevels() { return mg_levels_; }
 
-    short getPrecondType() const { return precond_type_; }
-
-    bool blockPrecond() const { return (precond_type_ / 10 == 1); }
+    bool withPreconditioner() const { return (mg_levels_ >= 0); }
 
     void convergeTightly()
     {
