@@ -186,8 +186,6 @@ template <class MatrixType>
 void ProjectedMatrices<MatrixType>::solveGenEigenProblem(
     MatrixType& z, char job)
 {
-    assert(val.size() == eigenvalues_.size());
-
     sygv_tm_.start();
 
     MatrixType mat(*matHB_);
