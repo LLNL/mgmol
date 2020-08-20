@@ -450,10 +450,10 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
                 = (inner_it == 0) ? proj_matN : proj_mat2N_.get();
             if (ct.verbose > 2) current_proj_mat->printOccupations(os_);
 
-            double ts0       = 0.;
-            double e0        = 0.;
-            const int printE = (ct.verbose > 1 || outer_it % 10 == 0) ? 1 : 0;
-
+            double ts0         = 0.;
+            double e0          = 0.;
+            const int printE   = (ct.verbose > 1 || outer_it % 10 == 0) ? 1 : 0;
+            const int printEig = (ct.verbose > 2 || outer_it % 10 == 0) ? 1 : 0;
             if (inner_it == 0)
             {
                 // orbitals are new, so a few things need to recomputed
@@ -478,9 +478,13 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
                 ts0 = evalEntropy(projmatrices, true, os_);
                 e0  = energy_->evaluateTotal(
                     ts0, projmatrices, orbitals, printE, os_);
+                if (printEig) mgmol_strategy_->printEigAndOcc();
+
                 retval = checkConvergence(e0, outer_it, ct.conv_tol);
                 if (retval == 0 || (outer_it == ct.max_electronic_steps))
                 {
+                    if (ct.verbose > 0) mgmol_strategy_->printEigAndOcc();
+
                     break;
                 }
 
