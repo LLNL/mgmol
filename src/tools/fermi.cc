@@ -79,6 +79,7 @@ double fermi_distribution(const double mu, const int max_occ, const double kBT,
 // algorithm adapted from numerical recipes, 2nd edition
 // and fill orbitals accordingly (in fermi_distribution)
 // Output: return value of mu and fill occ with occupations
+//         between 0 and 1
 template <typename ScalarType>
 double compute_chemical_potential_and_occupations(
     const std::vector<ScalarType>& energies, const double width, const int nel,
@@ -107,6 +108,9 @@ double compute_chemical_potential_and_occupations(
     }
 
     double mu;
+
+    // if number of electrons larger or equal to twice
+    // the number of slots, all the slots are fully occupied
     if (2 * dim <= static_cast<unsigned int>(nel))
     {
         done = true;

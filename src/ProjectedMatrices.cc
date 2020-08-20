@@ -197,10 +197,6 @@ void ProjectedMatrices<MatrixType>::solveGenEigenProblem(
 
     // solve a standard symmetric eigenvalue problem
     mat.syev(job, 'l', eigenvalues_, z);
-    //    for (int i = 0; i < dim_; i++)
-    //        if (onpe0)
-    //            std::cout << "eigenvalue[" << i << "] = " << eigenvalues_[i]
-    //                      << std::endl;
 
     // Get the eigenvectors Z of the generalized eigenvalue problem
     // Solve Z=L**(-T)*U
@@ -285,7 +281,7 @@ void ProjectedMatrices<MatrixType>::updateDMwithEigenstates(
     // solves generalized eigenvalue problem
     // and return solution in zz and val
     solveGenEigenProblem(zz);
-    mu_ = computeChemicalPotentialAndOccupations();
+    computeChemicalPotentialAndOccupations();
     if (onpe0 && ct.verbose > 1)
         std::cout << "Final mu_ = " << 0.5 * mu_ << " [Ha]" << std::endl;
 
@@ -379,7 +375,7 @@ void ProjectedMatrices<MatrixType>::updateDMwithEigenstatesAndRotate(
     // solves generalized eigenvalue problem
     // and return solution in zz
     solveGenEigenProblem(zz);
-    mu_ = computeChemicalPotentialAndOccupations();
+    computeChemicalPotentialAndOccupations();
 
     rotateAll(zz, true);
 
@@ -776,7 +772,7 @@ void ProjectedMatrices<MatrixType>::printEigenvaluesHa(std::ostream& os) const
 // find the Fermi level
 // and fill orbitals accordingly (in fermi_distribution)
 template <class MatrixType>
-double ProjectedMatrices<MatrixType>::computeChemicalPotentialAndOccupations(
+void ProjectedMatrices<MatrixType>::computeChemicalPotentialAndOccupations(
     const std::vector<DISTMATDTYPE>& energies, const double width,
     const int nel, const int max_numst)
 {
@@ -791,7 +787,7 @@ double ProjectedMatrices<MatrixType>::computeChemicalPotentialAndOccupations(
 
     std::vector<DISTMATDTYPE> occ(dim_, 0.);
 
-    double mu = compute_chemical_potential_and_occupations(
+    mu_ = compute_chemical_potential_and_occupations(
         energies, width, nel, max_numst, onpe0, occ);
 
     // if( onpe0 )
@@ -799,8 +795,6 @@ double ProjectedMatrices<MatrixType>::computeChemicalPotentialAndOccupations(
     //        <<mu<<std::endl;
 
     dm_->setOccupations(occ);
-
-    return mu;
 }
 
 template <class MatrixType>
