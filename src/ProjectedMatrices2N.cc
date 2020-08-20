@@ -41,9 +41,8 @@ void ProjectedMatrices2N<MatrixType>::iterativeUpdateDMwithEigenstates(
     const bool flag_reduce_T)
 {
     const int dim = this->dim();
-    std::vector<DISTMATDTYPE> eigenval(dim);
 
-    ProjectedMatrices<MatrixType>::solveGenEigenProblem(*work2N_, eigenval);
+    ProjectedMatrices<MatrixType>::solveGenEigenProblem(*work2N_);
 
     double kbT = occ_width;
     std::vector<DISTMATDTYPE> occ(dim);

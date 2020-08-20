@@ -184,7 +184,7 @@ void ProjectedMatrices<MatrixType>::setDMto2InvS()
 
 template <class MatrixType>
 void ProjectedMatrices<MatrixType>::solveGenEigenProblem(
-    MatrixType& z, std::vector<DISTMATDTYPE>& val, char job)
+    MatrixType& z, char job)
 {
     assert(val.size() == eigenvalues_.size());
 
@@ -201,8 +201,6 @@ void ProjectedMatrices<MatrixType>::solveGenEigenProblem(
     // Get the eigenvectors Z of the generalized eigenvalue problem
     // Solve Z=L**(-T)*U
     gm_->solveLST(z);
-
-    val = eigenvalues_;
 
     sygv_tm_.stop();
 }
@@ -279,11 +277,10 @@ void ProjectedMatrices<MatrixType>::updateDMwithEigenstates(
         (*MPIdata::sout) << "ProjectedMatrices: Compute DM using eigenstates\n";
 
     MatrixType zz("Z", dim_, dim_);
-    std::vector<DISTMATDTYPE> val(dim_);
 
     // solves generalized eigenvalue problem
     // and return solution in zz and val
-    solveGenEigenProblem(zz, val);
+    solveGenEigenProblem(zz);
     double final_mu = computeChemicalPotentialAndOccupations();
     if (onpe0 && ct.verbose > 1)
         std::cout << "Final mu_ = " << final_mu << std::endl;
@@ -375,11 +372,9 @@ template <class MatrixType>
 void ProjectedMatrices<MatrixType>::updateDMwithEigenstatesAndRotate(
     const int iterative_index, MatrixType& zz)
 {
-    std::vector<DISTMATDTYPE> val(dim_);
-
     // solves generalized eigenvalue problem
     // and return solution in zz and val
-    solveGenEigenProblem(zz, val);
+    solveGenEigenProblem(zz);
     computeChemicalPotentialAndOccupations();
 
     rotateAll(zz, true);

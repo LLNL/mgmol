@@ -277,8 +277,7 @@ public:
     double getExpectation(const MatrixType& A);
     double getExpectationH() override;
 
-    void solveGenEigenProblem(
-        MatrixType& zz, std::vector<DISTMATDTYPE>& val, char job = 'v');
+    void solveGenEigenProblem(MatrixType& zz, char job = 'v');
     void computeOccupationsFromDM();
 
     virtual void rotateAll(
