@@ -24,7 +24,6 @@ public:
     ~ProjectedMatrices2N() override;
 
     void assignBlocksH(MatrixType&, MatrixType&, MatrixType&, MatrixType&);
-    double mu() const { return ProjectedMatrices<MatrixType>::mu_; }
 
     void iterativeUpdateDMwithEigenstates(const double occ_width, const int nel,
         const int iterative_index, const bool flag_reduce_T = true);
