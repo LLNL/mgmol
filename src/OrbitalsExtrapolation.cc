@@ -72,9 +72,9 @@ void OrbitalsExtrapolation<T>::setupPreviousOrbitals(T** orbitals,
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
 
-    T* new_orbitals
-        = new T("ForExtraploation", mygrid, mymesh->subdivx(), ct.numst, ct.bc,
-            proj_matrices, lrs, currentMasks, corrMasks, local_cluster);
+    T* new_orbitals = new T("ForExtraploation", mygrid, mymesh->subdivx(),
+        ct.numst, ct.bcWF, proj_matrices, lrs, currentMasks, corrMasks,
+        local_cluster);
 
     new_orbitals->read_func_hdf5(h5f_file, "ExtrapolatedFunction");
     new_orbitals->incrementIterativeIndex();

@@ -69,8 +69,8 @@ void PBEonGridSpin<T>::update()
     pb::GridFunc<RHODTYPE>* gf_rho[2];
     for (short is = 0; is < 2; is++)
     {
-        gf_rho[is]
-            = new pb::GridFunc<RHODTYPE>(newGrid, ct.bc[0], ct.bc[1], ct.bc[2]);
+        gf_rho[is] = new pb::GridFunc<RHODTYPE>(
+            newGrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
         gf_rho[is]->assign(&vrho[is][0], 'd');
     }
 
@@ -94,7 +94,7 @@ void PBEonGridSpin<T>::update()
     }
 #endif
 
-    pb::GridFunc<RHODTYPE> gf_tmp(newGrid, ct.bc[0], ct.bc[1], ct.bc[2]);
+    pb::GridFunc<RHODTYPE> gf_tmp(newGrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
     // compute grad rho, one direction at a time
     for (short dir = 0; dir < 3; dir++)
     {
@@ -178,13 +178,13 @@ void PBEonGridSpin<T>::update()
             vstmp[j] = vsigma_[3 * j];
         }
         gf_vsigma[0] = new pb::GridFunc<POTDTYPE>(
-            &vstmp[0], newGrid, ct.bc[0], ct.bc[1], ct.bc[2], 'd');
+            &vstmp[0], newGrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2], 'd');
         for (int j = 0; j < np_; j++)
         {
             vstmp[j] = vsigma_[3 * j + 1];
         }
         gf_vsigma[1] = new pb::GridFunc<POTDTYPE>(
-            &vstmp[0], newGrid, ct.bc[0], ct.bc[1], ct.bc[2], 'd');
+            &vstmp[0], newGrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2], 'd');
     }
     else
     {
@@ -193,13 +193,13 @@ void PBEonGridSpin<T>::update()
             vstmp[j] = vsigma_[3 * j + 1];
         }
         gf_vsigma[0] = new pb::GridFunc<POTDTYPE>(
-            &vstmp[0], newGrid, ct.bc[0], ct.bc[1], ct.bc[2], 'd');
+            &vstmp[0], newGrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2], 'd');
         for (int j = 0; j < np_; j++)
         {
             vstmp[j] = vsigma_[3 * j + 2];
         }
         gf_vsigma[1] = new pb::GridFunc<POTDTYPE>(
-            &vstmp[0], newGrid, ct.bc[0], ct.bc[1], ct.bc[2], 'd');
+            &vstmp[0], newGrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2], 'd');
     }
 #else
     pbe_->computeXC();
@@ -209,12 +209,12 @@ void PBEonGridSpin<T>::update()
         assert(pbe_->pvxc1_up_ != nullptr);
         //        Tcopy(&np_, pbe_->pvxc1_up_, &ione, &vxc_[0], &ione);
         MPcpy(&vxc_[0], pbe_->pvxc1_up_, np_);
-        gf_vsigma[0]
-            = new pb::GridFunc<POTDTYPE>(newGrid, ct.bc[0], ct.bc[1], ct.bc[2]);
+        gf_vsigma[0] = new pb::GridFunc<POTDTYPE>(
+            newGrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
         gf_vsigma[0]->assign(pbe_->pvxc2_upup_, 'd');
 
-        gf_vsigma[1]
-            = new pb::GridFunc<POTDTYPE>(newGrid, ct.bc[0], ct.bc[1], ct.bc[2]);
+        gf_vsigma[1] = new pb::GridFunc<POTDTYPE>(
+            newGrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
         gf_vsigma[1]->assign(pbe_->pvxc2_updn_, 'd');
     }
     else
@@ -222,12 +222,12 @@ void PBEonGridSpin<T>::update()
         assert(pbe_->pvxc1_dn_ != nullptr);
         //        Tcopy(&np_, pbe_->pvxc1_dn_, &ione, &vxc_[np_], &ione);
         MPcpy(&vxc_[np_], pbe_->pvxc1_dn_, np_);
-        gf_vsigma[0]
-            = new pb::GridFunc<POTDTYPE>(newGrid, ct.bc[0], ct.bc[1], ct.bc[2]);
+        gf_vsigma[0] = new pb::GridFunc<POTDTYPE>(
+            newGrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
         gf_vsigma[0]->assign(pbe_->pvxc2_dnup_, 'd');
 
-        gf_vsigma[1]
-            = new pb::GridFunc<POTDTYPE>(newGrid, ct.bc[0], ct.bc[1], ct.bc[2]);
+        gf_vsigma[1] = new pb::GridFunc<POTDTYPE>(
+            newGrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
         gf_vsigma[1]->assign(pbe_->pvxc2_dndn_, 'd');
     }
     (*gf_vsigma[0]) *= -1.;

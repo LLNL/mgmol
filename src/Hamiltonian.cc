@@ -102,17 +102,20 @@ void Hamiltonian<T>::applyLocal(const int ncolors, T& phi, T& hphi)
 
     if (ct.Mehrstellen())
     {
-        pb::GridFunc<POTDTYPE> gfpot(mygrid, ct.bc[0], ct.bc[1], ct.bc[2]);
+        pb::GridFunc<POTDTYPE> gfpot(
+            mygrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
         gfpot.assign(vtot);
         if (ct.Mehrstellen()) gfpot.trade_boundaries();
         const std::vector<std::vector<int>>& gid(phi.getOverlappingGids());
         pb::GridFuncVector<ORBDTYPE> gfvw1(
-            mygrid, ct.bc[0], ct.bc[1], ct.bc[2], gid);
+            mygrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2], gid);
         pb::GridFuncVector<ORBDTYPE>& gfvphi(*phi.getPtDataWGhosts());
         gfvw1.prod(gfvphi, gfpot);
 
-        pb::GridFunc<ORBDTYPE> gf_work1(mygrid, ct.bc[0], ct.bc[1], ct.bc[2]);
-        pb::GridFunc<ORBDTYPE> gf_work2(mygrid, ct.bc[0], ct.bc[1], ct.bc[2]);
+        pb::GridFunc<ORBDTYPE> gf_work1(
+            mygrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
+        pb::GridFunc<ORBDTYPE> gf_work2(
+            mygrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
         for (int i = 0; i < ncolors; i++)
         {
             // work1 = B*V*psi

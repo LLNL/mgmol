@@ -68,7 +68,7 @@ void OrbitalsPreconditioning<T>::setup(T& orbitals, const short mg_levels,
     const pb::Grid& mygrid(mymesh->grid());
 
     precond_ = new Preconditioning<MGPRECONDTYPE>(
-        lap_type, mg_levels, mygrid, ct.bc);
+        lap_type, mg_levels, mygrid, ct.bcWF);
 
     std::map<int, GridMask*> gid_to_mask;
     if (currentMasks != nullptr) gid_to_mask = getGid2Masks(currentMasks, lrs);
@@ -78,11 +78,11 @@ void OrbitalsPreconditioning<T>::setup(T& orbitals, const short mg_levels,
     assert(orbitals.chromatic_number()
            == static_cast<int>(orbitals.getOverlappingGids()[0].size()));
 
-    gfv_work_ = new pb::GridFuncVector<MGPRECONDTYPE>(
-        mygrid, ct.bc[0], ct.bc[1], ct.bc[2], orbitals.getOverlappingGids());
+    gfv_work_ = new pb::GridFuncVector<MGPRECONDTYPE>(mygrid, ct.bcWF[0],
+        ct.bcWF[1], ct.bcWF[2], orbitals.getOverlappingGids());
 
-    data_wghosts_ = new pb::GridFuncVector<MGPRECONDTYPE>(
-        mygrid, ct.bc[0], ct.bc[1], ct.bc[2], orbitals.getOverlappingGids());
+    data_wghosts_ = new pb::GridFuncVector<MGPRECONDTYPE>(mygrid, ct.bcWF[0],
+        ct.bcWF[1], ct.bcWF[2], orbitals.getOverlappingGids());
 
     is_set_ = true;
 

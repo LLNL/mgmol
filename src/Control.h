@@ -509,7 +509,7 @@ public:
     float thwidth;
 
     // boundary conditions
-    short bc[3];
+    short bcWF[3];
 
     // boundary conditions
     short bcPoisson[3];

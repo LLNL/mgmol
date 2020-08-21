@@ -72,7 +72,7 @@ void matvec(pb::GridFunc<ORBDTYPE>& gfpsi, double* hpsi,
     gfpsi.init_vect(work, 'd');
 
     // gf_work = -Lap*psi
-    pb::GridFunc<ORBDTYPE> gf_work(mygrid, ct.bc[0], ct.bc[1], ct.bc[2]);
+    pb::GridFunc<ORBDTYPE> gf_work(mygrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
     hamiltonian->lapOper()->apply(gfpsi, gf_work);
 
     gf_work.init_vect(hpsi, 'd');
@@ -81,10 +81,11 @@ void matvec(pb::GridFunc<ORBDTYPE>& gfpsi, double* hpsi,
 #if 1
     // gf_work_v = Vtot*psi
     const double* const vtot = pot.vtot();
-    pb::GridFunc<ORBDTYPE> gfpot(mygrid, ct.bc[0], ct.bc[1], ct.bc[2]);
+    pb::GridFunc<ORBDTYPE> gfpot(mygrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
     gfpot.assign(vtot);
-    pb::GridFunc<ORBDTYPE> gfvw1(mygrid, ct.bc[0], ct.bc[1], ct.bc[2]);
-    pb::GridFunc<ORBDTYPE> gf_work_v(mygrid, ct.bc[0], ct.bc[1], ct.bc[2]);
+    pb::GridFunc<ORBDTYPE> gfvw1(mygrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
+    pb::GridFunc<ORBDTYPE> gf_work_v(
+        mygrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
     gfvw1.prod(gfpsi, gfpot);
     gfvw1.trade_boundaries();
 
@@ -100,7 +101,8 @@ void matvec(pb::GridFunc<ORBDTYPE>& gfpsi, double* hpsi,
 
     vector<int> ptr_func(mymesh->subdivx(), 0);
     get_vnlpsi(ions, ptr_func, kbpsi, work);
-    pb::GridFunc<ORBDTYPE> gf_worknl(mygrid, ct.bc[0], ct.bc[1], ct.bc[2]);
+    pb::GridFunc<ORBDTYPE> gf_worknl(
+        mygrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
     gf_worknl.assign(work);
 
     gf_worknl.trade_boundaries();
@@ -170,7 +172,7 @@ double getLAeigen(const double tol, const int maxit, Ions& ions)
     KBPsiMatrixSparse kbpsi(hamiltonian->lapOper());
     kbpsi.allocate(ions, nev);
 
-    pb::GridFunc<ORBDTYPE> gfpsi(mygrid, ct.bc[0], ct.bc[1], ct.bc[2]);
+    pb::GridFunc<ORBDTYPE> gfpsi(mygrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
 
     // main loop
     int ido         = 0;

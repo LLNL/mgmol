@@ -55,13 +55,9 @@ Control::Control()
     MPI_Comm_rank(comm_global_, &mype_);
 
     // default values
-    lrs_extrapolation = 1; // default
-    lrs_compute       = 0;
-    system_charge_    = 0.;
-    for (short i = 0; i < 3; i++)
-    {
-        bc[i] = 1;
-    }
+    lrs_extrapolation      = 1; // default
+    lrs_compute            = 0;
+    system_charge_         = 0.;
     poisson_pc_nu1         = 2;
     poisson_pc_nu2         = 2;
     poisson_pc_nlev        = 10;
@@ -126,6 +122,9 @@ Control::Control()
     bcPoisson[0]                      = -1;
     bcPoisson[1]                      = -1;
     bcPoisson[2]                      = -1;
+    bcWF[0]                           = -1;
+    bcWF[1]                           = -1;
+    bcWF[2]                           = -1;
     out_restart_file_type             = -1;
     spread_radius                     = -1.;
     iprint_residual                   = -1;
@@ -184,6 +183,8 @@ void Control::print(std::ostream& os)
 
     os << " Boundary conditions for Poisson: " << bcPoisson[0] << ", "
        << bcPoisson[1] << ", " << bcPoisson[2] << std::endl;
+    os << " Boundary conditions for Wavefunctions: " << bcWF[0] << ", "
+       << bcWF[1] << ", " << bcWF[2] << std::endl;
 
     switch (getOrbitalsType())
     {
@@ -382,9 +383,9 @@ void Control::sync(void)
         short_buffer[30] = orbital_type_;
         short_buffer[31] = line_min;
         short_buffer[32] = thermostat_type;
-        short_buffer[33] = bc[0];
-        short_buffer[34] = bc[1];
-        short_buffer[35] = bc[2];
+        short_buffer[33] = bcWF[0];
+        short_buffer[34] = bcWF[1];
+        short_buffer[35] = bcWF[2];
         short_buffer[36] = bcPoisson[0];
         short_buffer[37] = bcPoisson[1];
         short_buffer[38] = bcPoisson[2];
@@ -592,9 +593,9 @@ void Control::sync(void)
     orbital_type_                    = short_buffer[30];
     line_min                         = short_buffer[31];
     thermostat_type                  = short_buffer[32];
-    bc[0]                            = short_buffer[33];
-    bc[1]                            = short_buffer[34];
-    bc[2]                            = short_buffer[35];
+    bcWF[0]                          = short_buffer[33];
+    bcWF[1]                          = short_buffer[34];
+    bcWF[2]                          = short_buffer[35];
     bcPoisson[0]                     = short_buffer[36];
     bcPoisson[1]                     = short_buffer[37];
     bcPoisson[2]                     = short_buffer[38];
@@ -737,6 +738,15 @@ int Control::checkState()
         {
             (*MPIdata::sout)
                 << "Control::checkState() -> invalid boundary conditions"
+                << std::endl;
+            return -1;
+        }
+
+    for (short i = 0; i < 3; i++)
+        if ((bcWF[i] != 0) && (bcWF[i] != 1))
+        {
+            (*MPIdata::sout)
+                << "Control::checkState() -> invalid WF boundary conditions"
                 << std::endl;
             return -1;
         }
@@ -1353,6 +1363,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         assert(vm.count("Domain.lx"));
         assert(vm.count("Poisson.bcx"));
         assert(vm.count("xcFunctional"));
+        assert(vm.count("Orbitals.bcx"));
 
         std::string str;
 
@@ -1479,6 +1490,18 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         if (str.compare("0") == 0) bcPoisson[2] = 0;
         if (str.compare("periodic") == 0) bcPoisson[2] = 1;
         if (str.compare("charge") == 0) bcPoisson[2] = 2;
+
+        str = vm["Orbitals.bcx"].as<std::string>();
+        if (str.compare("0") == 0) bcWF[0] = 0;
+        if (str.compare("periodic") == 0) bcWF[0] = 1;
+
+        str = vm["Orbitals.bcy"].as<std::string>();
+        if (str.compare("0") == 0) bcWF[1] = 0;
+        if (str.compare("periodic") == 0) bcWF[1] = 1;
+
+        str = vm["Orbitals.bcz"].as<std::string>();
+        if (str.compare("0") == 0) bcWF[2] = 0;
+        if (str.compare("periodic") == 0) bcWF[2] = 1;
 
         str = vm["Poisson.solver"].as<std::string>();
         if (str.compare("CG") == 0) diel_flag_ = 10;

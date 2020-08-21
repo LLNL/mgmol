@@ -65,8 +65,6 @@ private:
     static Timer normalize_tm_;
     static Timer axpy_tm_;
 
-    static short bc_[3];
-
     static int lda_; // leading dimension for storage
     static int numpt_;
     static int loc_numpt_;
