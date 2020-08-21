@@ -241,6 +241,7 @@ public:
     int read_att(const hid_t dset_id, const std::string& attname,
         std::vector<double>& attr_data);
 
+    // write data in file with precision "precision"
     template <class T>
     int writeData(T* vv, hid_t filespace, hid_t memspace, hid_t dset_id,
         const short precision);
