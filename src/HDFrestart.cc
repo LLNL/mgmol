@@ -1632,7 +1632,7 @@ int HDFrestart::writeData(T* data, hid_t space_id, hid_t memspace,
     else
     {
         for (int i = 0; i < bsize_; i++)
-            work_space_float_[i] = (double)data[i];
+            work_space_double_[i] = (double)data[i];
     }
 
     // gather data on active PEs
