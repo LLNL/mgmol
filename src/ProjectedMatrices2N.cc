@@ -41,26 +41,25 @@ void ProjectedMatrices2N<MatrixType>::iterativeUpdateDMwithEigenstates(
     const bool flag_reduce_T)
 {
     const int dim = this->dim();
-    std::vector<DISTMATDTYPE> eigenval(dim);
 
-    ProjectedMatrices<MatrixType>::solveGenEigenProblem(*work2N_, eigenval);
+    ProjectedMatrices<MatrixType>::solveGenEigenProblem(*work2N_);
 
     double kbT = occ_width;
     std::vector<DISTMATDTYPE> occ(dim);
     const DISTMATDTYPE tol = 1.e-6;
-    double mu;
     do
     {
         if (onpe0)
             (*MPIdata::sout) << "MVP target with kbT = " << kbT << std::endl;
-        mu = ProjectedMatrices<
-            MatrixType>::computeChemicalPotentialAndOccupations(kbT, nel, dim);
+        ProjectedMatrices<MatrixType>::computeChemicalPotentialAndOccupations(
+            kbT, nel, dim);
         ProjectedMatrices<MatrixType>::getOccupations(occ);
         kbT *= 0.5;
     } while (occ[bdim_] > tol && flag_reduce_T);
 
     if (onpe0)
-        (*MPIdata::sout) << "MVP target with mu = " << mu << " [Ry]"
+        (*MPIdata::sout) << "MVP target with mu = "
+                         << ProjectedMatricesInterface::mu_ << " [Ry]"
                          << std::endl;
     ProjectedMatrices<MatrixType>::buildDM(*work2N_, iterative_index);
 }

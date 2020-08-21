@@ -74,13 +74,13 @@ class ProjectedMatrices : public ProjectedMatricesInterface
     void printEigenvaluesHa(std::ostream& os) const;
     void printEigenvaluesEV(std::ostream& os) const;
 
-    double computeChemicalPotentialAndOccupations(
+    void computeChemicalPotentialAndOccupations(
         const std::vector<DISTMATDTYPE>& energies, const double width,
         const int nel, const int max_numst);
 
-    double computeChemicalPotentialAndOccupations()
+    void computeChemicalPotentialAndOccupations()
     {
-        return computeChemicalPotentialAndOccupations(width_, nel_, dim_);
+        computeChemicalPotentialAndOccupations(width_, nel_, dim_);
     }
     double computeChemicalPotentialAndDMwithChebyshev(const int order,
         const double emin, const double emax, const int iterative_index);
@@ -277,8 +277,7 @@ public:
     double getExpectation(const MatrixType& A);
     double getExpectationH() override;
 
-    void solveGenEigenProblem(
-        MatrixType& zz, std::vector<DISTMATDTYPE>& val, char job = 'v');
+    void solveGenEigenProblem(MatrixType& zz, char job = 'v');
     void computeOccupationsFromDM();
 
     virtual void rotateAll(
@@ -316,10 +315,10 @@ public:
     void updateDMwithEigenstatesAndRotate(
         const int iterative_index, MatrixType& zz);
     void updateDMwithChebApproximation(const int iterative_index) override;
-    double computeChemicalPotentialAndOccupations(
+    void computeChemicalPotentialAndOccupations(
         const double width, const int nel, const int max_numst)
     {
-        return computeChemicalPotentialAndOccupations(
+        computeChemicalPotentialAndOccupations(
             eigenvalues_, width, nel, max_numst);
     }
 

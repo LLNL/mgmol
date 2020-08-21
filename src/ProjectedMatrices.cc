@@ -184,10 +184,8 @@ void ProjectedMatrices<MatrixType>::setDMto2InvS()
 
 template <class MatrixType>
 void ProjectedMatrices<MatrixType>::solveGenEigenProblem(
-    MatrixType& z, std::vector<DISTMATDTYPE>& val, char job)
+    MatrixType& z, char job)
 {
-    assert(val.size() == eigenvalues_.size());
-
     sygv_tm_.start();
 
     MatrixType mat(*matHB_);
@@ -201,8 +199,6 @@ void ProjectedMatrices<MatrixType>::solveGenEigenProblem(
     // Get the eigenvectors Z of the generalized eigenvalue problem
     // Solve Z=L**(-T)*U
     gm_->solveLST(z);
-
-    val = eigenvalues_;
 
     sygv_tm_.stop();
 }
@@ -266,7 +262,7 @@ void ProjectedMatrices<MatrixType>::updateDMwithChebApproximation(
     double final_mu = computeChemicalPotentialAndDMwithChebyshev(
         order, emin, emax, iterative_index);
     if (onpe0 && ct.verbose > 1)
-        std::cout << "Final mu_ = " << final_mu << std::endl;
+        std::cout << "Final mu_ = " << final_mu << " [Ha]" << std::endl;
 }
 
 template <class MatrixType>
@@ -279,14 +275,13 @@ void ProjectedMatrices<MatrixType>::updateDMwithEigenstates(
         (*MPIdata::sout) << "ProjectedMatrices: Compute DM using eigenstates\n";
 
     MatrixType zz("Z", dim_, dim_);
-    std::vector<DISTMATDTYPE> val(dim_);
 
     // solves generalized eigenvalue problem
     // and return solution in zz and val
-    solveGenEigenProblem(zz, val);
-    double final_mu = computeChemicalPotentialAndOccupations();
+    solveGenEigenProblem(zz);
+    computeChemicalPotentialAndOccupations();
     if (onpe0 && ct.verbose > 1)
-        std::cout << "Final mu_ = " << final_mu << std::endl;
+        std::cout << "Final mu_ = " << 0.5 * mu_ << " [Ha]" << std::endl;
 
     // Build the density matrix X
     // X = Z * gamma * Z^T
@@ -375,11 +370,9 @@ template <class MatrixType>
 void ProjectedMatrices<MatrixType>::updateDMwithEigenstatesAndRotate(
     const int iterative_index, MatrixType& zz)
 {
-    std::vector<DISTMATDTYPE> val(dim_);
-
     // solves generalized eigenvalue problem
-    // and return solution in zz and val
-    solveGenEigenProblem(zz, val);
+    // and return solution in zz
+    solveGenEigenProblem(zz);
     computeChemicalPotentialAndOccupations();
 
     rotateAll(zz, true);
@@ -774,11 +767,10 @@ void ProjectedMatrices<MatrixType>::printEigenvaluesHa(std::ostream& os) const
     }
 }
 
-// find the Fermi level by a bisection
-// algorithm adapted from numerical recipes, 2nd edition
+// find the Fermi level
 // and fill orbitals accordingly (in fermi_distribution)
 template <class MatrixType>
-double ProjectedMatrices<MatrixType>::computeChemicalPotentialAndOccupations(
+void ProjectedMatrices<MatrixType>::computeChemicalPotentialAndOccupations(
     const std::vector<DISTMATDTYPE>& energies, const double width,
     const int nel, const int max_numst)
 {
@@ -791,128 +783,16 @@ double ProjectedMatrices<MatrixType>::computeChemicalPotentialAndOccupations(
             << "computeChemicalPotentialAndOccupations() with width=" << width
             << ", for " << nel << " electrons" << std::endl;
 
-    const int maxit         = 100;
-    const double charge_tol = 1.0e-12;
-
-    const double emin = *std::min_element(energies.begin(), energies.end());
-    const double emax = *std::max_element(energies.begin(), energies.end());
-
-    double mu1 = emin - 0.001;
-    double mu2 = emax + 10. * width;
-    assert(mu1 < mu2);
-    bool done = false;
-
-    if (nel <= 0)
-    {
-        mu1 = -10000.;
-        mu2 = 10000.;
-    }
-
     std::vector<DISTMATDTYPE> occ(dim_, 0.);
 
-    if (2 * dim_ <= static_cast<unsigned int>(nel))
-    {
-        done = true;
-        mu_  = mu2;
-        for (unsigned int i = 0; i < dim_; i++)
-            occ[i] = 1.;
-    }
-
-    double f2 = 0.;
-    if (!done)
-    {
-        f2 = 2. * fermi_distribution(mu2, max_numst, width, energies, occ)
-             - static_cast<double>(nel);
-        // no unoccupied states
-        if (fabs(f2) < charge_tol)
-        {
-            done = true;
-            mu_  = mu2;
-        }
-    }
-    double f1 = 0.;
-    if (!done)
-    {
-        f1 = 2. * fermi_distribution(mu1, max_numst, width, energies, occ)
-             - static_cast<double>(nel);
-        if (fabs(f1) < charge_tol)
-        {
-            if (onpe0)
-                (*MPIdata::sout) << "only unoccupied states" << std::endl;
-            done = true;
-            mu_  = mu1;
-        }
-    }
-
-    if (!done)
-    {
-        if (f1 * f2 > 0.)
-        {
-            (*MPIdata::sout)
-                << "ERROR: mu1=" << mu1 << ", mu2=" << mu2 << std::endl;
-            (*MPIdata::sout)
-                << "ERROR: f1=" << f1 << ", f2=" << f2 << std::endl;
-            (*MPIdata::sout)
-                << "nel=" << nel << ", width=" << width << std::endl;
-            Control& ct = *(Control::instance());
-            ct.global_exit(2);
-        }
-
-        double dmu;
-        if (f1 < 0.)
-        {
-            mu_ = mu1;
-            dmu = mu2 - mu1;
-        }
-        else
-        {
-            mu_ = mu2;
-            dmu = mu1 - mu2;
-        }
-
-        // main loop
-        int iter = 0;
-        double f = 0.;
-        do
-        {
-            iter++;
-
-            dmu *= 0.5;
-            mu1 = mu_ + dmu;
-            f   = 2. * fermi_distribution(mu1, max_numst, width, energies, occ)
-                - static_cast<double>(nel);
-
-            if (f <= 0.)
-            {
-                mu_ = mu1;
-                f   = -f;
-            }
-
-        } while ((iter < maxit) && (f > charge_tol));
-
-        if (f > charge_tol)
-        {
-            if (onpe0)
-            {
-                (*MPIdata::sout) << "WARNING: "
-                                    "ProjectedMatrices<MatrixType>::"
-                                    "computeChemicalPotentialAndOccupations()"
-                                 << std::endl;
-                (*MPIdata::sout) << "Iterations did not converge to tolerance "
-                                 << std::scientific << charge_tol << std::endl;
-                (*MPIdata::sout) << "f= " << f << ", nel=" << nel
-                                 << ", max_numst=" << max_numst << std::endl;
-            }
-        }
-    }
+    mu_ = compute_chemical_potential_and_occupations(
+        energies, width, nel, max_numst, onpe0, occ);
 
     // if( onpe0 )
     //    (*MPIdata::sout)<<"computeChemicalPotentialAndOccupations() with mu="
-    //        <<mu_<<std::endl;
+    //        <<mu<<std::endl;
 
     dm_->setOccupations(occ);
-
-    return mu_;
 }
 
 template <class MatrixType>
