@@ -284,8 +284,8 @@ int MGmol<T>::initial()
         printWithTimeStamp("MGmol<T>::initial(), create T...", os_);
 
     current_orbitals_ = new T("Primary", mygrid, mymesh->subdivx(), ct.numst,
-        ct.bc, proj_matrices_, lrs_, currentMasks_, corrMasks_, local_cluster_,
-        true);
+        ct.bcWF, proj_matrices_, lrs_, currentMasks_, corrMasks_,
+        local_cluster_, true);
 
     increaseMemorySlotsForOrbitals();
 

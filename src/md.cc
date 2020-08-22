@@ -149,8 +149,8 @@ T* MGmol<T>::new_orbitals_with_current_LRs(bool setup)
 
     // need to build new orbitals as masks have changed
     T* new_orbitals = new T("NewMasks", mygrid, mymesh->subdivx(), ct.numst,
-        ct.bc, proj_matrices_, lrs_, currentMasks_, corrMasks_, local_cluster_,
-        setup);
+        ct.bcWF, proj_matrices_, lrs_, currentMasks_, corrMasks_,
+        local_cluster_, setup);
 
     return new_orbitals;
 }

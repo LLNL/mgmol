@@ -50,7 +50,6 @@ short LocGridOrbitals::subdivx_          = 0;
 int LocGridOrbitals::lda_                = 0;
 int LocGridOrbitals::numpt_              = 0;
 int LocGridOrbitals::loc_numpt_          = 0;
-short LocGridOrbitals::bc_[3]            = { 1, 1, 1 };
 PtrFunc LocGridOrbitals::dotProduct_     = &LocGridOrbitals::dotProductDiagonal;
 int LocGridOrbitals::data_wghosts_index_ = -1;
 
@@ -601,7 +600,7 @@ void LocGridOrbitals::initGauss(
                         xc[2] = start2;
                         for (int iz = 0; iz < dim2; iz++)
                         {
-                            const double r = xc.minimage(center, ll, bc_);
+                            const double r = xc.minimage(center, ll, ct.bcWF);
                             if (r < rmax)
                                 ipsi[ix * incx + iy * incy + iz]
                                     = (ORBDTYPE)exp(-r * r * invrc2);
@@ -2533,9 +2532,9 @@ void LocGridOrbitals::initWF(const std::shared_ptr<LocalizationRegions> lrs)
                 // smooth out random functions
                 pb::Laph4M<ORBDTYPE> myoper(grid_);
                 pb::GridFunc<ORBDTYPE> gf_work(
-                    grid_, ct.bc[0], ct.bc[1], ct.bc[2]);
+                    grid_, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
                 pb::GridFunc<ORBDTYPE> gf_psi(
-                    grid_, ct.bc[0], ct.bc[1], ct.bc[2]);
+                    grid_, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
 
                 if (onpe0 && ct.verbose > 2)
                     (*MPIdata::sout)

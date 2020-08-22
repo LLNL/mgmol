@@ -14,12 +14,12 @@ using namespace std;
 
 template <typename T>
 Preconditioning<T>::Preconditioning(const short lap_type, const short maxlevels,
-    const pb::Grid& grid, const short bc[3])
+    const pb::Grid& grid, const short bcWF[3])
 {
     max_levels_ = maxlevels;
     lap_type_   = lap_type;
     for (short i = 0; i < 3; i++)
-        bc_[i] = bc[i];
+        bc_[i] = bcWF[i];
 
     pb::Grid* mygrid = new pb::Grid(grid);
     grid_.push_back(mygrid);

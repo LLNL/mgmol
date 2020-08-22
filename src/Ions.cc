@@ -260,7 +260,7 @@ void Ions::setupInteractingIons()
         // is ion1 interacting with any local ions?
         for (auto ion2 : local_ions_)
         {
-            const double r12 = ion1->minimage(*ion2, lattice_, ct.bc);
+            const double r12 = ion1->minimage(*ion2, lattice_, ct.bcPoisson);
 
             if (r12 < rmax)
             {
@@ -3759,7 +3759,7 @@ double Ions::computeMinLocalSpacing() const
         {
             if (ion1 != ion2)
             {
-                double d = (*ion1)->minimage(**ion2, lattice_, ct.bc);
+                double d = (*ion1)->minimage(**ion2, lattice_, ct.bcPoisson);
                 if (d < distance) distance = d;
             }
             ion2++;

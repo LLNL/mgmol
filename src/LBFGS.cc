@@ -51,7 +51,7 @@ LBFGS<T>::LBFGS(T** orbitals, Ions& ions, Rho<T>& rho,
     vh_init_ = new pb::GridFunc<POTDTYPE>(electrostat_.getVh());
 
     ref_orbitals_ = new T("LBFGS_ref", mygrid, mymesh->subdivx(), ct.numst,
-        ct.bc, (*orbitals_)->getProjMatrices(), ref_lrs_, ref_masks_,
+        ct.bcWF, (*orbitals_)->getProjMatrices(), ref_lrs_, ref_masks_,
         ref_corrmasks_, local_cluster_);
 
     ref_orbitals_->assign(**orbitals_);
