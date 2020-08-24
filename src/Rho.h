@@ -20,7 +20,7 @@
 class HDFrestart;
 class ProjectedMatricesInterface;
 
-template <class T>
+template <class OrbitalsType>
 class Rho
 {
 
@@ -50,15 +50,15 @@ class Rho
     // void computeRhoSubdomain(const int iloc_init, const int iloc_end,
     //    const T& orbitals);
     void computeRhoSubdomain(const int iloc_init, const int iloc_end,
-        const T& orbitals, const std::vector<DISTMATDTYPE>& occ);
+        const OrbitalsType& orbitals, const std::vector<DISTMATDTYPE>& occ);
     // void computeRhoSubdomainOffDiagBlock(const int iloc_init,
     //    const int iloc_end,
     //    const std::vector<const T*>& vorbitals,
     //    const ProjectedMatricesInterface* const);
     void computeRhoSubdomainUsingBlas3(const int iloc_init, const int iloc_end,
-        const T& orbitals1, const T& orbitals2);
+        const OrbitalsType& orbitals1, const OrbitalsType& orbitals2);
     void computeRhoSubdomainUsingBlas3(
-        const int iloc_init, const int iloc_end, const T& orbitals)
+        const int iloc_init, const int iloc_end, const OrbitalsType& orbitals)
     {
         computeRhoSubdomainUsingBlas3(iloc_init, iloc_end, orbitals, orbitals);
     }
@@ -72,8 +72,9 @@ class Rho
     //    std::vector<MATDTYPE>& melements,
     //    std::vector<std::vector<const ORBDTYPE*>>& mpsi);
 
-    void computeRho(T& orbitals);
-    void computeRho(T& orbitals, ProjectedMatricesInterface& proj_matrices);
+    void computeRho(OrbitalsType& orbitals);
+    void computeRho(
+        OrbitalsType& orbitals, ProjectedMatricesInterface& proj_matrices);
 
 public:
     // electronic density on grid
@@ -88,18 +89,18 @@ public:
         const OrthoType orbitals_type, const std::vector<std::vector<int>>&);
     void setVerbosityLevel(const int vlevel) { verbosity_level_ = vlevel; }
 
-    void update(T& current_orbitals);
+    void update(OrbitalsType& current_orbitals);
 
     // compute rho using density matrix specified in arguments
-    void computeRho(T& orbitals1, T& orbitals2,
+    void computeRho(OrbitalsType& orbitals1, OrbitalsType& orbitals2,
         const dist_matrix::DistMatrix<DISTMATDTYPE>& dm11,
         const dist_matrix::DistMatrix<DISTMATDTYPE>& dm12,
         const dist_matrix::DistMatrix<DISTMATDTYPE>& dm21,
         const dist_matrix::DistMatrix<DISTMATDTYPE>& dm22);
 
     // compute rho using density matrix specified in arguments
-    void computeRho(
-        T& orbitals, const dist_matrix::DistMatrix<DISTMATDTYPE>& dm);
+    void computeRho(OrbitalsType& orbitals,
+        const dist_matrix::DistMatrix<DISTMATDTYPE>& dm);
 
     void init(const RHODTYPE* const rhoc);
     void initUniform();
