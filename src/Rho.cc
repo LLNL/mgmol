@@ -627,11 +627,10 @@ void Rho<OrbitalsType>::computeRho(
 }
 
 template <class OrbitalsType>
+template <class MatrixType>
 void Rho<OrbitalsType>::computeRho(OrbitalsType& orbitals1,
-    OrbitalsType& orbitals2, const dist_matrix::DistMatrix<DISTMATDTYPE>& dm11,
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& dm12,
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& /*dm21*/,
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& dm22)
+    OrbitalsType& orbitals2, const MatrixType& dm11, const MatrixType& dm12,
+    const MatrixType& /*dm21*/, const MatrixType& dm22)
 {
     assert(orbitals_type_ == OrthoType::Nonorthogonal);
 
@@ -642,15 +641,15 @@ void Rho<OrbitalsType>::computeRho(OrbitalsType& orbitals1,
     memset(&rho_[myspin_][0], 0, subdivx * loc_numpt * sizeof(RHODTYPE));
 
     // 11 diagonal block
-    ProjectedMatrices<dist_matrix::DistMatrix<double>>* projmatrices1
-        = dynamic_cast<ProjectedMatrices<dist_matrix::DistMatrix<double>>*>(
+    ProjectedMatrices<MatrixType>* projmatrices1
+        = dynamic_cast<ProjectedMatrices<MatrixType>*>(
             orbitals1.getProjMatrices());
     projmatrices1->updateSubMatX(dm11);
     computeRhoSubdomainUsingBlas3(0, subdivx, orbitals1);
 
     // 22 diagonal block
     ProjectedMatrices<dist_matrix::DistMatrix<double>>* projmatrices2
-        = dynamic_cast<ProjectedMatrices<dist_matrix::DistMatrix<double>>*>(
+        = dynamic_cast<ProjectedMatrices<MatrixType>*>(
             orbitals2.getProjMatrices());
     projmatrices2->updateSubMatX(dm22);
     computeRhoSubdomainUsingBlas3(0, subdivx, orbitals2);
@@ -660,7 +659,7 @@ void Rho<OrbitalsType>::computeRho(OrbitalsType& orbitals1,
     // vorbitals.push_back(&orbitals1);
     // vorbitals.push_back(&orbitals2);
 
-    dist_matrix::DistMatrix<DISTMATDTYPE> dm(dm12);
+    MatrixType dm(dm12);
     dm.scal(2.); // use symmetry to reduce work
     projmatrices1->updateSubMatX(dm);
     //    computeRhoSubdomainOffDiagBlock(0, subdivx, vorbitals, projmatrices1);
@@ -769,8 +768,8 @@ void Rho<OrbitalsType>::computeRhoSubdomainUsingBlas3(const int iloc_init,
 }
 
 template <class OrbitalsType>
-void Rho<OrbitalsType>::computeRho(
-    OrbitalsType& orbitals, const dist_matrix::DistMatrix<DISTMATDTYPE>& dm)
+template <class MatrixType>
+void Rho<OrbitalsType>::computeRho(OrbitalsType& orbitals, const MatrixType& dm)
 {
     assert(orbitals_type_ == OrthoType::Nonorthogonal);
 
@@ -782,9 +781,8 @@ void Rho<OrbitalsType>::computeRho(
 
     memset(&rho_[myspin_][0], 0, subdivx * loc_numpt * sizeof(RHODTYPE));
 
-    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
-        = dynamic_cast<
-            ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
+    ProjectedMatrices<MatrixType>* projmatrices
+        = dynamic_cast<ProjectedMatrices<MatrixType>*>(
             orbitals.getProjMatrices());
     projmatrices->updateSubMatX(dm);
 
@@ -892,6 +890,18 @@ template double Rho<LocGridOrbitals>::dotWithRho<double>(
     const double* const func) const;
 template double Rho<ExtendedGridOrbitals>::dotWithRho<double>(
     const double* const func) const;
+template void
+Rho<ExtendedGridOrbitals>::computeRho<dist_matrix::DistMatrix<double>>(
+    ExtendedGridOrbitals&, ExtendedGridOrbitals&,
+    const dist_matrix::DistMatrix<double>&,
+    const dist_matrix::DistMatrix<double>&,
+    const dist_matrix::DistMatrix<double>&,
+    const dist_matrix::DistMatrix<double>&);
+template void
+Rho<ExtendedGridOrbitals>::computeRho<dist_matrix::DistMatrix<double>>(
+    ExtendedGridOrbitals&, const dist_matrix::DistMatrix<double>&);
+template void Rho<LocGridOrbitals>::computeRho<dist_matrix::DistMatrix<double>>(
+    LocGridOrbitals&, const dist_matrix::DistMatrix<double>&);
 #ifdef USE_MP
 template double Rho<LocGridOrbitals>::dotWithRho<float>(
     const float* const func) const;

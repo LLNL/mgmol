@@ -11,7 +11,6 @@
 #define MGMOL_RHO_H
 
 #include "Control.h"
-#include "DistMatrix.h"
 #include "Timer.h"
 #include "global.h"
 
@@ -23,7 +22,6 @@ class ProjectedMatricesInterface;
 template <class OrbitalsType>
 class Rho
 {
-
     short nspin_;
     short myspin_;
 
@@ -50,7 +48,7 @@ class Rho
     // void computeRhoSubdomain(const int iloc_init, const int iloc_end,
     //    const T& orbitals);
     void computeRhoSubdomain(const int iloc_init, const int iloc_end,
-        const OrbitalsType& orbitals, const std::vector<DISTMATDTYPE>& occ);
+        const OrbitalsType& orbitals, const std::vector<double>& occ);
     // void computeRhoSubdomainOffDiagBlock(const int iloc_init,
     //    const int iloc_end,
     //    const std::vector<const T*>& vorbitals,
@@ -92,15 +90,14 @@ public:
     void update(OrbitalsType& current_orbitals);
 
     // compute rho using density matrix specified in arguments
+    template <class MatrixType>
     void computeRho(OrbitalsType& orbitals1, OrbitalsType& orbitals2,
-        const dist_matrix::DistMatrix<DISTMATDTYPE>& dm11,
-        const dist_matrix::DistMatrix<DISTMATDTYPE>& dm12,
-        const dist_matrix::DistMatrix<DISTMATDTYPE>& dm21,
-        const dist_matrix::DistMatrix<DISTMATDTYPE>& dm22);
+        const MatrixType& dm11, const MatrixType& dm12, const MatrixType& dm21,
+        const MatrixType& dm22);
 
     // compute rho using density matrix specified in arguments
-    void computeRho(OrbitalsType& orbitals,
-        const dist_matrix::DistMatrix<DISTMATDTYPE>& dm);
+    template <class MatrixType>
+    void computeRho(OrbitalsType& orbitals, const MatrixType& dm);
 
     void init(const RHODTYPE* const rhoc);
     void initUniform();
