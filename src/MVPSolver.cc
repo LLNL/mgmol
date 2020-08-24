@@ -22,10 +22,10 @@
 
 #include <iomanip>
 
-template <class T>
-Timer MVPSolver<T>::solve_tm_("MVPSolver::solve");
-template <class T>
-Timer MVPSolver<T>::target_tm_("MVPSolver::target");
+template <class OrbitalsType>
+Timer MVPSolver<OrbitalsType>::solve_tm_("MVPSolver::solve");
+template <class OrbitalsType>
+Timer MVPSolver<OrbitalsType>::target_tm_("MVPSolver::target");
 
 double evalEntropyMVP(ProjectedMatricesInterface* projmatrices,
     const bool print_flag, std::ostream& os)
@@ -38,10 +38,11 @@ double evalEntropyMVP(ProjectedMatricesInterface* projmatrices,
     return ts;
 }
 
-template <class T>
-MVPSolver<T>::MVPSolver(MPI_Comm comm, std::ostream& os, Ions& ions,
-    Rho<T>* rho, Energy<T>* energy, Electrostatic* electrostat,
-    MGmol<T>* mgmol_strategy, const int numst, const double kbT, const int nel,
+template <class OrbitalsType>
+MVPSolver<OrbitalsType>::MVPSolver(MPI_Comm comm, std::ostream& os, Ions& ions,
+    Rho<OrbitalsType>* rho, Energy<OrbitalsType>* energy,
+    Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy,
+    const int numst, const double kbT, const int nel,
     const std::vector<std::vector<int>>& global_indexes,
     const short n_inner_steps, const bool use_old_dm)
     : comm_(comm),
@@ -68,15 +69,15 @@ MVPSolver<T>::MVPSolver(MPI_Comm comm, std::ostream& os, Ions& ions,
     proj_mat_work_->setup(kbT, nel, global_indexes);
 }
 
-template <class T>
-MVPSolver<T>::~MVPSolver()
+template <class OrbitalsType>
+MVPSolver<OrbitalsType>::~MVPSolver()
 {
     delete work_;
     delete proj_mat_work_;
 }
 
-template <class T>
-double MVPSolver<T>::evaluateDerivative(
+template <class OrbitalsType>
+double MVPSolver<OrbitalsType>::evaluateDerivative(
     dist_matrix::DistMatrix<DISTMATDTYPE>& dmInit,
     dist_matrix::DistMatrix<DISTMATDTYPE>& delta_dm, const double ts0)
 {
@@ -117,8 +118,9 @@ double MVPSolver<T>::evaluateDerivative(
     return de0;
 }
 
-template <class T>
-void MVPSolver<T>::buildTarget_MVP(dist_matrix::DistMatrix<DISTMATDTYPE>& h11,
+template <class OrbitalsType>
+void MVPSolver<OrbitalsType>::buildTarget_MVP(
+    dist_matrix::DistMatrix<DISTMATDTYPE>& h11,
     dist_matrix::DistMatrix<DISTMATDTYPE>& s11,
     dist_matrix::DistMatrix<DISTMATDTYPE>& target)
 {
@@ -154,8 +156,8 @@ void MVPSolver<T>::buildTarget_MVP(dist_matrix::DistMatrix<DISTMATDTYPE>& h11,
 }
 
 // update density matrix in N x N space
-template <class T>
-int MVPSolver<T>::solve(T& orbitals)
+template <class OrbitalsType>
+int MVPSolver<OrbitalsType>::solve(OrbitalsType& orbitals)
 {
     Control& ct = *(Control::instance());
 
@@ -394,8 +396,8 @@ int MVPSolver<T>::solve(T& orbitals)
     return 0;
 }
 
-template <class T>
-void MVPSolver<T>::printTimers(std::ostream& os)
+template <class OrbitalsType>
+void MVPSolver<OrbitalsType>::printTimers(std::ostream& os)
 {
     if (onpe0)
     {

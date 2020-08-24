@@ -18,10 +18,10 @@
 class Ions;
 class Electrostatic;
 class ProjectedMatrices2N;
-template <class T>
+template <class OrbitalsType>
 class ProjectedMatrices;
 
-template <class T>
+template <class OrbitalsType>
 class MVPSolver
 {
 private:
@@ -33,14 +33,14 @@ private:
     bool use_old_dm_;
     Ions& ions_;
 
-    Rho<T>* rho_;
-    Energy<T>* energy_;
+    Rho<OrbitalsType>* rho_;
+    Energy<OrbitalsType>* energy_;
     Electrostatic* electrostat_;
 
     int history_length_;
     std::vector<double> eks_history_;
 
-    MGmol<T>* mgmol_strategy_;
+    MGmol<OrbitalsType>* mgmol_strategy_;
 
     double de_old_;
     double de_;
@@ -59,14 +59,15 @@ private:
         dist_matrix::DistMatrix<DISTMATDTYPE>& target);
 
 public:
-    MVPSolver(MPI_Comm comm, std::ostream& os, Ions& ions, Rho<T>* rho,
-        Energy<T>* energy, Electrostatic* electrostat, MGmol<T>* mgmol_strategy,
+    MVPSolver(MPI_Comm comm, std::ostream& os, Ions& ions,
+        Rho<OrbitalsType>* rho, Energy<OrbitalsType>* energy,
+        Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy,
         const int numst, const double kbT, const int nel,
         const std::vector<std::vector<int>>& global_indexes,
         const short n_inner_steps, const bool use_old_dm);
     ~MVPSolver();
 
-    int solve(T& orbitals);
+    int solve(OrbitalsType& orbitals);
     void printTimers(std::ostream& os);
 };
 
