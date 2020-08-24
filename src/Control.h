@@ -73,7 +73,7 @@ enum class DMEigensolverType
     UNDEFINED
 };
 
-enum class OrbitalsType
+enum class OrthoType
 {
     Eigenfunctions,
     Nonorthogonal,
@@ -683,18 +683,18 @@ public:
         }
     }
 
-    OrbitalsType getOrbitalsType()
+    OrthoType getOrthoType()
     {
         switch (orbital_type_)
         {
             case 0:
-                return OrbitalsType::Eigenfunctions;
+                return OrthoType::Eigenfunctions;
             case 1:
-                return OrbitalsType::Nonorthogonal;
+                return OrthoType::Nonorthogonal;
             case 2:
-                return OrbitalsType::Orthonormal;
+                return OrthoType::Orthonormal;
             default:
-                return OrbitalsType::UNDEFINED;
+                return OrthoType::UNDEFINED;
         }
     }
 

@@ -37,7 +37,7 @@ using MemoryDev = MemorySpace::Memory<ScalarType, MemorySpace::Device>;
 
 template <class T>
 Rho<T>::Rho()
-    : orbitals_type_(OrbitalsType::UNDEFINED),
+    : orbitals_type_(OrthoType::UNDEFINED),
       iterative_index_(-10),
       verbosity_level_(0) // default value
 {
@@ -65,7 +65,7 @@ Rho<T>::Rho()
 }
 
 template <class T>
-void Rho<T>::setup(const OrbitalsType orbitals_type,
+void Rho<T>::setup(const OrthoType orbitals_type,
     const std::vector<std::vector<int>>& orbitals_indexes)
 {
     if (verbosity_level_ > 2 && onpe0)
@@ -310,8 +310,8 @@ void Rho<T>::accumulateCharge(const double alpha, const short ix_max,
 // void Rho<T>::computeRhoSubdomain(
 //    const int iloc_init, const int iloc_end, const T& orbitals)
 //{
-//    assert(orbitals_type_ == OrbitalsType::Eigenfunctions
-//        || orbitals_type_ == OrbitalsType::Nonorthogonal);
+//    assert(orbitals_type_ == OrthoType::Eigenfunctions
+//        || orbitals_type_ == OrthoType::Nonorthogonal);
 //
 //    compute_tm_.start();
 //
@@ -403,8 +403,8 @@ void Rho<T>::accumulateCharge(const double alpha, const short ix_max,
 //    const int iloc_end, const vector<const T*>& vorbitals,
 //    const ProjectedMatricesInterface* const projmatrices)
 //{
-//    assert(orbitals_type_ == OrbitalsType::Eigenfunctions
-//        || orbitals_type_ == OrbitalsType::Nonorthogonal);
+//    assert(orbitals_type_ == OrthoType::Eigenfunctions
+//        || orbitals_type_ == OrthoType::Nonorthogonal);
 //    assert(vorbitals.size() == 2);
 //
 //    compute_offdiag_tm_.start();
@@ -539,7 +539,7 @@ template <class T>
 void Rho<T>::computeRhoSubdomain(const int iloc_init, const int iloc_end,
     const T& orbitals, const std::vector<PROJMATDTYPE>& occ)
 {
-    assert(orbitals_type_ != OrbitalsType::UNDEFINED);
+    assert(orbitals_type_ != OrthoType::UNDEFINED);
     if (verbosity_level_ > 2 && onpe0)
         (*MPIdata::sout) << "Rho<T>::computeRhoSubdomain, diagonal case..."
                          << std::endl;
@@ -598,8 +598,8 @@ void Rho<T>::computeRho(T& orbitals, ProjectedMatricesInterface& proj_matrices)
 
     memset(&rho_[myspin_][0], 0, subdivx * loc_numpt * sizeof(RHODTYPE));
 
-    if (orbitals_type_ == OrbitalsType::Eigenfunctions
-        || (orbitals_type_ == OrbitalsType::Orthonormal && ct.fullyOccupied()))
+    if (orbitals_type_ == OrthoType::Eigenfunctions
+        || (orbitals_type_ == OrthoType::Orthonormal && ct.fullyOccupied()))
     {
         std::vector<PROJMATDTYPE> occ(orbitals.numst());
         proj_matrices.getOccupations(occ);
@@ -630,7 +630,7 @@ void Rho<T>::computeRho(T& orbitals1, T& orbitals2,
     const dist_matrix::DistMatrix<DISTMATDTYPE>& /*dm21*/,
     const dist_matrix::DistMatrix<DISTMATDTYPE>& dm22)
 {
-    assert(orbitals_type_ == OrbitalsType::Nonorthogonal);
+    assert(orbitals_type_ == OrthoType::Nonorthogonal);
 
     Mesh* mymesh        = Mesh::instance();
     const int subdivx   = mymesh->subdivx();
@@ -768,7 +768,7 @@ template <class T>
 void Rho<T>::computeRho(
     T& orbitals, const dist_matrix::DistMatrix<DISTMATDTYPE>& dm)
 {
-    assert(orbitals_type_ == OrbitalsType::Nonorthogonal);
+    assert(orbitals_type_ == OrthoType::Nonorthogonal);
 
     iterative_index_++;
 

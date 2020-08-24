@@ -29,7 +29,7 @@ class Rho
 
     int np_;
 
-    OrbitalsType orbitals_type_;
+    OrthoType orbitals_type_;
 
     std::vector<std::vector<int>> orbitals_indexes_;
 
@@ -85,7 +85,7 @@ public:
 
     void rescaleTotalCharge();
     void setup(
-        const OrbitalsType orbitals_type, const std::vector<std::vector<int>>&);
+        const OrthoType orbitals_type, const std::vector<std::vector<int>>&);
     void setVerbosityLevel(const int vlevel) { verbosity_level_ = vlevel; }
 
     void update(T& current_orbitals);

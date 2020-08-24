@@ -532,7 +532,7 @@ int MGmol<T>::quench(T* orbitals, Ions& ions, const int max_inner_steps,
 
     g_kbpsi_->setup(*ions_);
     electrostat_->setup(ct.vh_its);
-    rho_->setup(ct.getOrbitalsType(), gids);
+    rho_->setup(ct.getOrthoType(), gids);
 
     T work_orbitals("Work", *orbitals);
 

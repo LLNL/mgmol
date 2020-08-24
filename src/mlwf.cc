@@ -215,7 +215,7 @@ void MGmol<T>::wftransform(T* orbitals, T* work_orbitals, Ions& ions)
     }
 
     // print transformation matrix
-    if (ct.getOrbitalsType() == OrbitalsType::Eigenfunctions && !ct.AtomsMove())
+    if (ct.getOrthoType() == OrthoType::Eigenfunctions && !ct.AtomsMove())
     {
         assert(mlwt != nullptr);
         mlwt->printTransform();
