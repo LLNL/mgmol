@@ -23,29 +23,30 @@ class ProjectedMatricesInterface;
 class Ions;
 class Electrostatic;
 
-template <class T>
+template <class OrbitalsType>
 class MVP_DMStrategy : public DMStrategy
 {
 private:
-    T* orbitals_;
+    OrbitalsType* orbitals_;
     ProjectedMatricesInterface* proj_matrices_;
 
     MPI_Comm comm_;
     std::ostream& os_;
 
     Ions& ions_;
-    Rho<T>* rho_;
-    Energy<T>* energy_;
+    Rho<OrbitalsType>* rho_;
+    Energy<OrbitalsType>* energy_;
     Electrostatic* electrostat_;
     const std::vector<std::vector<int>>& global_indexes_;
-    MGmol<T>* mgmol_strategy_;
+    MGmol<OrbitalsType>* mgmol_strategy_;
 
     bool use_old_dm_;
 
 public:
-    MVP_DMStrategy(MPI_Comm comm, std::ostream& os, Ions& ions, Rho<T>* rho,
-        Energy<T>* energy, Electrostatic* electrostat, MGmol<T>* mgmol_strategy,
-        T* orbitals, ProjectedMatricesInterface* proj_matrices,
+    MVP_DMStrategy(MPI_Comm comm, std::ostream& os, Ions& ions,
+        Rho<OrbitalsType>* rho, Energy<OrbitalsType>* energy,
+        Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy,
+        OrbitalsType* orbitals, ProjectedMatricesInterface* proj_matrices,
         const bool use_old_dm);
 
     void initialize() override{};

@@ -9,7 +9,6 @@
 #ifndef MGMOL_MVPSOLVER_H
 #define MGMOL_MVPSOLVER_H
 
-#include "DistMatrix.h"
 #include "Energy.h"
 #include "MGmol.h"
 #include "Rho.h"
@@ -21,7 +20,7 @@ class ProjectedMatrices2N;
 template <class OrbitalsType>
 class ProjectedMatrices;
 
-template <class OrbitalsType>
+template <class OrbitalsType, class MatrixType>
 class MVPSolver
 {
 private:
@@ -46,17 +45,15 @@ private:
     double de_;
 
     int numst_;
-    dist_matrix::DistMatrix<DISTMATDTYPE>* work_;
-    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* proj_mat_work_;
+    MatrixType* work_;
+    ProjectedMatrices<MatrixType>* proj_mat_work_;
 
     static Timer solve_tm_;
     static Timer target_tm_;
 
-    double evaluateDerivative(dist_matrix::DistMatrix<DISTMATDTYPE>& dm2Ninit,
-        dist_matrix::DistMatrix<DISTMATDTYPE>& delta_dm, const double ts0);
-    void buildTarget_MVP(dist_matrix::DistMatrix<DISTMATDTYPE>& h11,
-        dist_matrix::DistMatrix<DISTMATDTYPE>& s11,
-        dist_matrix::DistMatrix<DISTMATDTYPE>& target);
+    double evaluateDerivative(
+        MatrixType& dm2Ninit, MatrixType& delta_dm, const double ts0);
+    void buildTarget_MVP(MatrixType& h11, MatrixType& s11, MatrixType& target);
 
 public:
     MVPSolver(MPI_Comm comm, std::ostream& os, Ions& ions,
