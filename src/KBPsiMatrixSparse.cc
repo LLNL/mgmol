@@ -398,6 +398,7 @@ void KBPsiMatrixSparse::computeHvnlMatrix(
     computeHvnlMatrix(this, ions, proj_matrices);
 }
 
+template <>
 void KBPsiMatrixSparse::computeHvnlMatrix(
     const KBPsiMatrixInterface* const kbpsi2, const Ions& ions,
     dist_matrix::DistMatrix<DISTMATDTYPE>& hij) const
@@ -564,13 +565,9 @@ void KBPsiMatrixSparse::printTimers(std::ostream& os)
     trace_tm_.print(os);
 }
 
-template <class T>
 double KBPsiMatrixSparse::getEvnl(
-    const Ions& ions, T& orbitals, ProjectedMatricesSparse* proj_matrices)
+    const Ions& ions, ProjectedMatricesSparse* proj_matrices)
 {
-    const int numst = orbitals.numst();
-    if (numst == 0) return 0.;
-
     double trace = 0.0;
     // loop over all the ions
     // parallelization over ions by including only those centered in subdomain
@@ -597,13 +594,10 @@ double KBPsiMatrixSparse::getEvnl(
     return evnl * Ry2Ha;
 }
 
-template <class T>
-double KBPsiMatrixSparse::getEvnl(const Ions& ions, T& orbitals,
+template <>
+double KBPsiMatrixSparse::getEvnl(const Ions& ions,
     ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* proj_matrices)
 {
-    const int numst = orbitals.numst();
-    if (numst == 0) return 0.;
-
     DISTMATDTYPE* replicated_dm = nullptr;
     proj_matrices->getReplicatedDM(replicated_dm);
 
@@ -619,7 +613,7 @@ double KBPsiMatrixSparse::getEvnl(const Ions& ions, T& orbitals,
         for (short i = 0; i < nprojs; i++)
         {
             const int gid = gids[i];
-            trace += getTraceDM(gid, replicated_dm, numst);
+            trace += getTraceDM(gid, replicated_dm, proj_matrices->dim());
         }
     }
 
@@ -712,19 +706,9 @@ double KBPsiMatrixSparse::getTraceDM(
 template void KBPsiMatrixSparse::computeKBpsi(Ions& ions,
     LocGridOrbitals& orbitals, const int first_color, const int nb_colors,
     const bool flag);
-template double KBPsiMatrixSparse::getEvnl(const Ions& ions,
-    LocGridOrbitals& orbitals, ProjectedMatricesSparse* proj_matrices);
-template double KBPsiMatrixSparse::getEvnl(const Ions& ions,
-    LocGridOrbitals& orbitals,
-    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* proj_matrices);
 template void KBPsiMatrixSparse::computeAll(Ions&, LocGridOrbitals&);
 
 template void KBPsiMatrixSparse::computeKBpsi(Ions& ions,
     ExtendedGridOrbitals& orbitals, const int first_color, const int nb_colors,
     const bool flag);
-template double KBPsiMatrixSparse::getEvnl(const Ions& ions,
-    ExtendedGridOrbitals& orbitals, ProjectedMatricesSparse* proj_matrices);
-template double KBPsiMatrixSparse::getEvnl(const Ions& ions,
-    ExtendedGridOrbitals& orbitals,
-    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* proj_matrices);
 template void KBPsiMatrixSparse::computeAll(Ions&, ExtendedGridOrbitals&);

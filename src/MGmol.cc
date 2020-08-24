@@ -963,7 +963,7 @@ void MGmol<T>::initKBR()
 }
 
 template <class T>
-double MGmol<T>::get_evnl(const Ions& ions, T& orbitals)
+double MGmol<T>::get_evnl(const Ions& ions)
 {
     evnl_tm_.start();
     Control& ct = *(Control::instance());
@@ -975,7 +975,7 @@ double MGmol<T>::get_evnl(const Ions& ions, T& orbitals)
             = dynamic_cast<ProjectedMatricesSparse*>(proj_matrices_);
         assert(projmatrices);
 
-        val = g_kbpsi_->getEvnl(ions, orbitals, projmatrices);
+        val = g_kbpsi_->getEvnl(ions, projmatrices);
     }
     else
     {
@@ -985,7 +985,7 @@ double MGmol<T>::get_evnl(const Ions& ions, T& orbitals)
                 proj_matrices_);
         assert(projmatrices);
 
-        val = g_kbpsi_->getEvnl(ions, orbitals, projmatrices);
+        val = g_kbpsi_->getEvnl(ions, projmatrices);
     }
 
     evnl_tm_.stop();
