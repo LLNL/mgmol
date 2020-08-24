@@ -648,7 +648,7 @@ void Rho<OrbitalsType>::computeRho(OrbitalsType& orbitals1,
     computeRhoSubdomainUsingBlas3(0, subdivx, orbitals1);
 
     // 22 diagonal block
-    ProjectedMatrices<dist_matrix::DistMatrix<double>>* projmatrices2
+    ProjectedMatrices<MatrixType>* projmatrices2
         = dynamic_cast<ProjectedMatrices<MatrixType>*>(
             orbitals2.getProjMatrices());
     projmatrices2->updateSubMatX(dm22);
