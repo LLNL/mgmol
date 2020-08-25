@@ -142,8 +142,6 @@ public:
 
     double norm() const;
 
-    ProjectedMatricesInterface* proj_matrices() const { return proj_matrices_; }
-
     const std::vector<int>& getAllOverlappingGids() const
     {
         return overlapping_gids_[0];

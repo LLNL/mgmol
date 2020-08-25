@@ -393,7 +393,9 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
 
     for (int outer_it = 0; outer_it <= ct.max_electronic_steps; outer_it++)
     {
-        ProjectedMatricesInterface* proj_matN = orbitals.getProjMatrices();
+        ProjectedMatrices<MatrixType>* proj_matN
+            = dynamic_cast<ProjectedMatrices<MatrixType>*>(
+                orbitals.getProjMatrices());
         if (onpe0 && ct.verbose > 1)
         {
             os_ << "###########################" << std::endl;
@@ -446,7 +448,7 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
 
             energy_->saveVofRho();
 
-            ProjectedMatricesInterface* current_proj_mat
+            ProjectedMatrices<MatrixType>* current_proj_mat
                 = (inner_it == 0) ? proj_matN : proj_mat2N_.get();
             if (ct.verbose > 2) current_proj_mat->printOccupations(os_);
 

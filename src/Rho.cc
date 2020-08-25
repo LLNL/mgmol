@@ -538,7 +538,7 @@ void Rho<OrbitalsType>::accumulateCharge(const double alpha, const short ix_max,
 template <class OrbitalsType>
 void Rho<OrbitalsType>::computeRhoSubdomain(const int iloc_init,
     const int iloc_end, const OrbitalsType& orbitals,
-    const std::vector<PROJMATDTYPE>& occ)
+    const std::vector<double>& occ)
 {
     assert(orbitals_type_ != OrthoType::UNDEFINED);
     if (verbosity_level_ > 2 && onpe0)
@@ -604,7 +604,7 @@ void Rho<OrbitalsType>::computeRho(
     if (orbitals_type_ == OrthoType::Eigenfunctions
         || (orbitals_type_ == OrthoType::Orthonormal && ct.fullyOccupied()))
     {
-        std::vector<PROJMATDTYPE> occ(orbitals.numst());
+        std::vector<double> occ(orbitals.numst());
         proj_matrices.getOccupations(occ);
         computeRhoSubdomain(0, subdivx, orbitals, occ);
     }

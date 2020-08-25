@@ -207,7 +207,7 @@ public:
         compute_invB_tm_.stop();
     }
 
-    const MatrixType& dm() const override;
+    const MatrixType& dm() const;
 
     bool occupationsUptodate() const { return dm_->occupationsUptodate(); }
 
@@ -364,7 +364,7 @@ public:
         return gm_->getLinDependent2states(st1, st2);
     }
 
-    void initializeMatB(const SquareLocalMatrices<MATDTYPE>& ss) override
+    virtual void initializeMatB(const SquareLocalMatrices<MATDTYPE>& ss)
     {
         (void)ss;
         std::cerr

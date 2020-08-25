@@ -17,17 +17,13 @@
 /* Currently only needed functions in ProjectedMatrices.h class. Must be
  * cleaned-up later */
 #include "ChebyshevApproximationFunction.h"
-#include "DistMatrix.h"
 #include "MGmol_MPI.h"
 #include "SquareLocalMatrices.h"
 #include "SquareSubMatrix.h"
-#include "VariableSizeMatrix.h"
 #include "entropy.h"
 #include "fermi.h"
 #include "hdf5.h"
 #include "tools.h"
-
-typedef DISTMATDTYPE PROJMATDTYPE;
 
 class HDFrestart;
 
@@ -184,17 +180,15 @@ public:
     virtual void updateSubMatT() = 0;
 
     // return sum_i ( ddiag[i]*S**(-1)[i][i] )
-    virtual double getTraceDiagProductWithInvS(std::vector<PROJMATDTYPE>& ddiag)
-        = 0;
+    virtual double getTraceDiagProductWithInvS(std::vector<double>& ddiag) = 0;
 
     virtual double computeEntropy() = 0;
     virtual double getEigSum()      = 0;
 
-    virtual void updateTheta()                     = 0;
-    virtual void computeInvB()                     = 0;
-    virtual void printGramMM(std::ofstream& tfile) = 0;
-    virtual void setDMuniform(const PROJMATDTYPE nel, const int orbitals_index)
-        = 0;
+    virtual void updateTheta()                                            = 0;
+    virtual void computeInvB()                                            = 0;
+    virtual void printGramMM(std::ofstream& tfile)                        = 0;
+    virtual void setDMuniform(const double nel, const int orbitals_index) = 0;
 
     virtual double dotProductWithInvS(const SquareLocalMatrices<MATDTYPE>& ss)
         = 0;
@@ -232,7 +226,7 @@ public:
         return 0;
     }
     virtual double computeCond() = 0;
-    virtual void getOccupations(std::vector<PROJMATDTYPE>& occ) const
+    virtual void getOccupations(std::vector<double>& occ) const
     {
         (void)occ;
 
@@ -242,15 +236,6 @@ public:
     virtual void setAuxilliaryEnergiesFromOccupations()
     {
         exitWithErrorMessage("setAuxilliaryEnergiesFromOccupations");
-    }
-    virtual const dist_matrix::DistMatrix<DISTMATDTYPE>& dm() const
-    {
-        exitWithErrorMessage("dm");
-
-        dist_matrix::DistMatrix<DISTMATDTYPE>* tmp
-            = new dist_matrix::DistMatrix<DISTMATDTYPE>("tmp");
-
-        return (*tmp);
     }
     virtual void saveDM() { exitWithErrorMessage("saveDM"); }
     virtual void resetDM() { exitWithErrorMessage("resetDM"); }
