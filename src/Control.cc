@@ -186,15 +186,15 @@ void Control::print(std::ostream& os)
     os << " Boundary conditions for Wavefunctions: " << bcWF[0] << ", "
        << bcWF[1] << ", " << bcWF[2] << std::endl;
 
-    switch (getOrbitalsType())
+    switch (getOrthoType())
     {
-        case OrbitalsType::Eigenfunctions:
+        case OrthoType::Eigenfunctions:
             os << " Works in Eigenfunctions basis" << std::endl;
             break;
-        case OrbitalsType::Nonorthogonal:
+        case OrthoType::Nonorthogonal:
             os << " Works in Nonorthogonal orbitals basis" << std::endl;
             break;
-        case OrbitalsType::Orthonormal:
+        case OrthoType::Orthonormal:
             os << " Works in Orthonormal orbitals basis" << std::endl;
             break;
         default:
@@ -715,13 +715,13 @@ void Control::adjust()
     {
         dm_mix = 1.;
     }
-    if (getOrbitalsType() == OrbitalsType::Eigenfunctions)
+    if (getOrthoType() == OrthoType::Eigenfunctions)
     {
         orthof = 0;
         dm_mix = 1.;
         wf_dyn = 0;
     }
-    if (getOrbitalsType() == OrbitalsType::Orthonormal)
+    if (getOrthoType() == OrthoType::Orthonormal)
     {
         orthof = 0;
     }
@@ -838,7 +838,7 @@ int Control::checkState()
     assert(mg_levels_ >= -1);
     assert(rho0 > 0.);
     assert(drho0 > 0.);
-    assert(getOrbitalsType() != OrbitalsType::UNDEFINED);
+    assert(getOrthoType() != OrthoType::UNDEFINED);
     assert(num_MD_steps >= 0);
     assert(dt >= 0.);
     if (short_sighted > 0)
@@ -1220,7 +1220,7 @@ void Control::setLocMode(const float radius, const float lx, const float ly,
     cut_radius            = radius;
     min_distance_centers_ = mind_centers;
     loc_mode_ = (cut_radius < lx || cut_radius < ly || cut_radius < lz);
-    if (getOrbitalsType() != OrbitalsType::Nonorthogonal)
+    if (getOrthoType() != OrthoType::Nonorthogonal)
     {
         cut_radius = 1000.;
         loc_mode_  = false;
@@ -1914,7 +1914,7 @@ int Control::checkOptions()
         return -1;
     }
 
-    if (getOrbitalsType() == OrbitalsType::UNDEFINED)
+    if (getOrthoType() == OrthoType::UNDEFINED)
     {
         std::cerr << "ERROR: unknown orbitals type\n";
         return -1;

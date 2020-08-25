@@ -144,6 +144,7 @@ void Hamiltonian<T>::applyLocal(const int ncolors, T& phi, T& hphi)
 // add to hij the elements <phi1|Hloc|phi2>
 // corresponding to the local part of the Hamiltonian
 template <>
+template <>
 void Hamiltonian<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals& phi1,
     LocGridOrbitals& phi2, dist_matrix::DistMatrix<double>& hij,
     const bool force)
@@ -157,6 +158,7 @@ void Hamiltonian<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals& phi1,
     phi1.addDotWithNcol2Matrix(*hlphi_, hij);
 }
 
+template <>
 template <>
 void Hamiltonian<ExtendedGridOrbitals>::addHlocal2matrix(
     ExtendedGridOrbitals& phi1, ExtendedGridOrbitals& phi2,
@@ -192,9 +194,10 @@ void Hamiltonian<T>::addHlocalij(
     proj_matrices->setLocalMatrixElementsHl(slm);
 }
 
-template <class T>
-void Hamiltonian<T>::addHlocal2matrix(
-    T& phi1, T& phi2, VariableSizeMatrix<sparserow>& mat, const bool force)
+template <>
+template <>
+void Hamiltonian<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals& phi1,
+    LocGridOrbitals& phi2, VariableSizeMatrix<sparserow>& mat, const bool force)
 {
     Control& ct = *(Control::instance());
 

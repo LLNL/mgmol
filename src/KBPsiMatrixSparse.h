@@ -12,7 +12,6 @@
 
 #include "DataDistribution.h"
 #include "DensityMatrixSparse.h"
-#include "DistMatrix.h"
 #include "KBPsiMatrixInterface.h"
 #include "SquareSubMatrix.h"
 #include "VariableSizeMatrix.h"
@@ -79,8 +78,8 @@ class KBPsiMatrixSparse : public KBPsiMatrixInterface
 
     void getPsiKBPsiSym(const Ions& ions, VariableSizeMatrix<sparserow>& sm);
     void getPsiKBPsiSym(const Ion& ion, VariableSizeMatrix<sparserow>& sm);
-    template <class T>
-    void computeKBpsi(Ions& ions, T& orbitals, const int first_color,
+    template <class OrbitalsType>
+    void computeKBpsi(Ions& ions, OrbitalsType& orbitals, const int first_color,
         const int nb_colors, const bool flag);
     void clearData();
 
@@ -101,13 +100,10 @@ public:
 
     void globalSumKBpsi();
 
-    template <class T>
+    double getEvnl(const Ions& ions, ProjectedMatricesSparse* proj_matrices);
+    template <class MatrixType>
     double getEvnl(
-        const Ions& ions, T& orbitals, ProjectedMatricesSparse* proj_matrices);
-    template <class T>
-    double getEvnl(const Ions& ions, T& orbitals,
-        ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*
-            proj_matrices);
+        const Ions& ions, ProjectedMatrices<MatrixType>* proj_matrices);
     void computeKBpsi(
         Ions& ions, pb::GridFunc<ORBDTYPE>*, const int, const bool flag);
     double getValIonState(const int gid, const int st) const
@@ -122,8 +118,9 @@ public:
 
     SquareSubMatrix<double> computeHvnlMatrix(
         const KBPsiMatrixInterface* const kbpsi, const Ions&) const;
+    template <class MatrixType>
     void computeHvnlMatrix(const KBPsiMatrixInterface* const kbpsi2,
-        const Ions& ions, dist_matrix::DistMatrix<DISTMATDTYPE>& Aij) const;
+        const Ions& ions, MatrixType& Aij) const;
     void computeHvnlMatrix(const KBPsiMatrixInterface* const kbpsi, const Ions&,
         VariableSizeMatrix<sparserow>&) const;
     void computeHvnlMatrix(const KBPsiMatrixInterface* const kbpsi2,
@@ -134,7 +131,7 @@ public:
     void setup(const Ions& ions);
 
     double getTraceDM(
-        const int gid, const DISTMATDTYPE* const mat_X, const int numst) const;
+        const int gid, const double* const mat_X, const int numst) const;
     double getTraceDM(const int gid, const DensityMatrixSparse& dm) const;
 };
 

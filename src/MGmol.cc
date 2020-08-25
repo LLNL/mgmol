@@ -365,7 +365,7 @@ int MGmol<T>::initial()
         proj_matrices_->setDMuniform(
             ct.getNelSpin(), current_orbitals_->getIterativeIndex());
 
-    rho_->setup(ct.getOrbitalsType(), current_orbitals_->getOverlappingGids());
+    rho_->setup(ct.getOrthoType(), current_orbitals_->getOverlappingGids());
 
     if (ct.restart_info <= 1)
     {
@@ -733,8 +733,7 @@ template <class T>
 void MGmol<T>::printEigAndOcc()
 {
     Control& ct = *(Control::instance());
-    if (!(ct.fullyOccupied()
-            && ct.getOrbitalsType() != OrbitalsType::Eigenfunctions
+    if (!(ct.fullyOccupied() && ct.getOrthoType() != OrthoType::Eigenfunctions
             && ct.occupationWidthIsZero())
         && onpe0)
     {
@@ -964,7 +963,7 @@ void MGmol<T>::initKBR()
 }
 
 template <class T>
-double MGmol<T>::get_evnl(const Ions& ions, T& orbitals)
+double MGmol<T>::get_evnl(const Ions& ions)
 {
     evnl_tm_.start();
     Control& ct = *(Control::instance());
@@ -976,7 +975,7 @@ double MGmol<T>::get_evnl(const Ions& ions, T& orbitals)
             = dynamic_cast<ProjectedMatricesSparse*>(proj_matrices_);
         assert(projmatrices);
 
-        val = g_kbpsi_->getEvnl(ions, orbitals, projmatrices);
+        val = g_kbpsi_->getEvnl(ions, projmatrices);
     }
     else
     {
@@ -986,7 +985,7 @@ double MGmol<T>::get_evnl(const Ions& ions, T& orbitals)
                 proj_matrices_);
         assert(projmatrices);
 
-        val = g_kbpsi_->getEvnl(ions, orbitals, projmatrices);
+        val = g_kbpsi_->getEvnl(ions, projmatrices);
     }
 
     evnl_tm_.stop();

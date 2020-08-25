@@ -53,14 +53,14 @@ public:
             }
             else
             {
-                if (ct.getOrbitalsType() == OrbitalsType::Eigenfunctions)
+                if (ct.getOrthoType() == OrthoType::Eigenfunctions)
                 {
                     dm_strategy
                         = new EigenDMStrategy<T>(orbitals, proj_matrices);
                 }
                 else
                 {
-                    if (ct.getOrbitalsType() == OrbitalsType::Nonorthogonal)
+                    if (ct.getOrthoType() == OrthoType::Nonorthogonal)
                     {
                         dm_strategy = new NonOrthoDMStrategy<T>(
                             orbitals, proj_matrices, ct.dm_mix);

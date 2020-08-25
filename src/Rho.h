@@ -11,7 +11,6 @@
 #define MGMOL_RHO_H
 
 #include "Control.h"
-#include "DistMatrix.h"
 #include "Timer.h"
 #include "global.h"
 
@@ -20,16 +19,15 @@
 class HDFrestart;
 class ProjectedMatricesInterface;
 
-template <class T>
+template <class OrbitalsType>
 class Rho
 {
-
     short nspin_;
     short myspin_;
 
     int np_;
 
-    OrbitalsType orbitals_type_;
+    OrthoType orbitals_type_;
 
     std::vector<std::vector<int>> orbitals_indexes_;
 
@@ -50,15 +48,15 @@ class Rho
     // void computeRhoSubdomain(const int iloc_init, const int iloc_end,
     //    const T& orbitals);
     void computeRhoSubdomain(const int iloc_init, const int iloc_end,
-        const T& orbitals, const std::vector<DISTMATDTYPE>& occ);
+        const OrbitalsType& orbitals, const std::vector<double>& occ);
     // void computeRhoSubdomainOffDiagBlock(const int iloc_init,
     //    const int iloc_end,
     //    const std::vector<const T*>& vorbitals,
     //    const ProjectedMatricesInterface* const);
     void computeRhoSubdomainUsingBlas3(const int iloc_init, const int iloc_end,
-        const T& orbitals1, const T& orbitals2);
+        const OrbitalsType& orbitals1, const OrbitalsType& orbitals2);
     void computeRhoSubdomainUsingBlas3(
-        const int iloc_init, const int iloc_end, const T& orbitals)
+        const int iloc_init, const int iloc_end, const OrbitalsType& orbitals)
     {
         computeRhoSubdomainUsingBlas3(iloc_init, iloc_end, orbitals, orbitals);
     }
@@ -72,8 +70,9 @@ class Rho
     //    std::vector<MATDTYPE>& melements,
     //    std::vector<std::vector<const ORBDTYPE*>>& mpsi);
 
-    void computeRho(T& orbitals);
-    void computeRho(T& orbitals, ProjectedMatricesInterface& proj_matrices);
+    void computeRho(OrbitalsType& orbitals);
+    void computeRho(
+        OrbitalsType& orbitals, ProjectedMatricesInterface& proj_matrices);
 
 public:
     // electronic density on grid
@@ -85,21 +84,20 @@ public:
 
     void rescaleTotalCharge();
     void setup(
-        const OrbitalsType orbitals_type, const std::vector<std::vector<int>>&);
+        const OrthoType orbitals_type, const std::vector<std::vector<int>>&);
     void setVerbosityLevel(const int vlevel) { verbosity_level_ = vlevel; }
 
-    void update(T& current_orbitals);
+    void update(OrbitalsType& current_orbitals);
 
     // compute rho using density matrix specified in arguments
-    void computeRho(T& orbitals1, T& orbitals2,
-        const dist_matrix::DistMatrix<DISTMATDTYPE>& dm11,
-        const dist_matrix::DistMatrix<DISTMATDTYPE>& dm12,
-        const dist_matrix::DistMatrix<DISTMATDTYPE>& dm21,
-        const dist_matrix::DistMatrix<DISTMATDTYPE>& dm22);
+    template <class MatrixType>
+    void computeRho(OrbitalsType& orbitals1, OrbitalsType& orbitals2,
+        const MatrixType& dm11, const MatrixType& dm12, const MatrixType& dm21,
+        const MatrixType& dm22);
 
     // compute rho using density matrix specified in arguments
-    void computeRho(
-        T& orbitals, const dist_matrix::DistMatrix<DISTMATDTYPE>& dm);
+    template <class MatrixType>
+    void computeRho(OrbitalsType& orbitals, const MatrixType& dm);
 
     void init(const RHODTYPE* const rhoc);
     void initUniform();

@@ -340,7 +340,7 @@ int DFTsolver<T>::solve(T& orbitals, T& work_orbitals, Ions& ions,
         bool print_res = checkPrintResidual(step);
 
         const bool ortho
-            = (ct.getOrbitalsType() == OrbitalsType::Eigenfunctions || orthof);
+            = (ct.getOrthoType() == OrthoType::Eigenfunctions || orthof);
 
         if (!ortho)
         {

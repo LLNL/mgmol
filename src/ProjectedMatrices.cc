@@ -77,25 +77,28 @@ ProjectedMatrices<MatrixType>::~ProjectedMatrices()
     n_instances_--;
 }
 
-template <class MatrixType>
-void ProjectedMatrices<MatrixType>::convert(
-    const SquareLocalMatrices<MATDTYPE>& src, MatrixType& dst)
+template <>
+void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::convert(
+    const SquareLocalMatrices<MATDTYPE>& src,
+    dist_matrix::DistMatrix<DISTMATDTYPE>& dst)
 {
     LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
     sl2dm->accumulate(src, dst);
 }
 
-template <class MatrixType>
-void ProjectedMatrices<MatrixType>::convert(
-    const MatrixType& src, SquareLocalMatrices<MATDTYPE>& dst)
+template <>
+void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::convert(
+    const dist_matrix::DistMatrix<DISTMATDTYPE>& src,
+    SquareLocalMatrices<MATDTYPE>& dst)
 {
     DistMatrix2SquareLocalMatrices* dm2sl
         = DistMatrix2SquareLocalMatrices::instance();
     dm2sl->convert(src, dst);
 }
 
-template <class MatrixType>
-void ProjectedMatrices<MatrixType>::setup(const double kbt, const int nel,
+template <>
+void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::setup(
+    const double kbt, const int nel,
     const std::vector<std::vector<int>>& global_indexes)
 {
     assert(global_indexes.size() > 0);
@@ -1120,8 +1123,8 @@ void ProjectedMatrices<MatrixType>::computeGenEigenInterval(
     power.computeGenEigenInterval(mat, *gm_, interval, maxits, pad);
 }
 
-template <class MatrixType>
-void ProjectedMatrices<MatrixType>::consolidateH()
+template <>
+void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::consolidateH()
 {
     consolidate_H_tm_.start();
 

@@ -532,7 +532,7 @@ int MGmol<T>::quench(T* orbitals, Ions& ions, const int max_inner_steps,
 
     g_kbpsi_->setup(*ions_);
     electrostat_->setup(ct.vh_its);
-    rho_->setup(ct.getOrbitalsType(), gids);
+    rho_->setup(ct.getOrthoType(), gids);
 
     T work_orbitals("Work", *orbitals);
 
@@ -571,7 +571,7 @@ int MGmol<T>::quench(T* orbitals, Ions& ions, const int max_inner_steps,
     // if( ct.verbose>1 && ct.short_sighted )
     if (ct.short_sighted)
     {
-        const double evnl = get_evnl(ions, *orbitals);
+        const double evnl = get_evnl(ions);
         if (onpe0)
         {
             os_ << std::setprecision(8) << std::fixed

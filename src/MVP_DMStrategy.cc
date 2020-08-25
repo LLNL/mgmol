@@ -19,11 +19,12 @@
 #include <vector>
 using namespace std;
 
-template <class T>
-MVP_DMStrategy<T>::MVP_DMStrategy(MPI_Comm comm, ostream& os, Ions& ions,
-    Rho<T>* rho, Energy<T>* energy, Electrostatic* electrostat,
-    MGmol<T>* mgmol_strategy, T* orbitals,
-    ProjectedMatricesInterface* proj_matrices, const bool use_old_dm)
+template <class OrbitalsType>
+MVP_DMStrategy<OrbitalsType>::MVP_DMStrategy(MPI_Comm comm, ostream& os,
+    Ions& ions, Rho<OrbitalsType>* rho, Energy<OrbitalsType>* energy,
+    Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy,
+    OrbitalsType* orbitals, ProjectedMatricesInterface* proj_matrices,
+    const bool use_old_dm)
     : orbitals_(orbitals),
       proj_matrices_(proj_matrices),
       comm_(comm),
@@ -40,30 +41,31 @@ MVP_DMStrategy<T>::MVP_DMStrategy(MPI_Comm comm, ostream& os, Ions& ions,
     assert(energy_ != nullptr);
 }
 
-template <class T>
-int MVP_DMStrategy<T>::update()
+template <class OrbitalsType>
+int MVP_DMStrategy<OrbitalsType>::update()
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 2)
     {
-        (*MPIdata::sout) << "MVP_DMStrategy<T>::update()..." << endl;
+        (*MPIdata::sout) << "MVP_DMStrategy<OrbitalsType>::update()..." << endl;
     }
 
-    MVPSolver<T> solver(comm_, os_, ions_, rho_, energy_, electrostat_,
-        mgmol_strategy_, ct.numst, ct.occ_width, ct.getNel(), global_indexes_,
-        ct.dm_inner_steps, use_old_dm_);
+    MVPSolver<OrbitalsType, dist_matrix::DistMatrix<DISTMATDTYPE>> solver(comm_,
+        os_, ions_, rho_, energy_, electrostat_, mgmol_strategy_, ct.numst,
+        ct.occ_width, ct.getNel(), global_indexes_, ct.dm_inner_steps,
+        use_old_dm_);
 
     return solver.solve(*orbitals_);
 }
 
-template <class T>
-void MVP_DMStrategy<T>::stripDM()
+template <class OrbitalsType>
+void MVP_DMStrategy<OrbitalsType>::stripDM()
 {
     if (use_old_dm_) proj_matrices_->stripDM();
 }
 
-template <class T>
-void MVP_DMStrategy<T>::dressDM()
+template <class OrbitalsType>
+void MVP_DMStrategy<OrbitalsType>::dressDM()
 {
     if (use_old_dm_) proj_matrices_->dressupDM();
 }

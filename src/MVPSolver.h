@@ -9,7 +9,6 @@
 #ifndef MGMOL_MVPSOLVER_H
 #define MGMOL_MVPSOLVER_H
 
-#include "DistMatrix.h"
 #include "Energy.h"
 #include "MGmol.h"
 #include "Rho.h"
@@ -18,10 +17,10 @@
 class Ions;
 class Electrostatic;
 class ProjectedMatrices2N;
-template <class T>
+template <class OrbitalsType>
 class ProjectedMatrices;
 
-template <class T>
+template <class OrbitalsType, class MatrixType>
 class MVPSolver
 {
 private:
@@ -33,40 +32,39 @@ private:
     bool use_old_dm_;
     Ions& ions_;
 
-    Rho<T>* rho_;
-    Energy<T>* energy_;
+    Rho<OrbitalsType>* rho_;
+    Energy<OrbitalsType>* energy_;
     Electrostatic* electrostat_;
 
     int history_length_;
     std::vector<double> eks_history_;
 
-    MGmol<T>* mgmol_strategy_;
+    MGmol<OrbitalsType>* mgmol_strategy_;
 
     double de_old_;
     double de_;
 
     int numst_;
-    dist_matrix::DistMatrix<DISTMATDTYPE>* work_;
-    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* proj_mat_work_;
+    MatrixType* work_;
+    ProjectedMatrices<MatrixType>* proj_mat_work_;
 
     static Timer solve_tm_;
     static Timer target_tm_;
 
-    double evaluateDerivative(dist_matrix::DistMatrix<DISTMATDTYPE>& dm2Ninit,
-        dist_matrix::DistMatrix<DISTMATDTYPE>& delta_dm, const double ts0);
-    void buildTarget_MVP(dist_matrix::DistMatrix<DISTMATDTYPE>& h11,
-        dist_matrix::DistMatrix<DISTMATDTYPE>& s11,
-        dist_matrix::DistMatrix<DISTMATDTYPE>& target);
+    double evaluateDerivative(
+        MatrixType& dm2Ninit, MatrixType& delta_dm, const double ts0);
+    void buildTarget_MVP(MatrixType& h11, MatrixType& s11, MatrixType& target);
 
 public:
-    MVPSolver(MPI_Comm comm, std::ostream& os, Ions& ions, Rho<T>* rho,
-        Energy<T>* energy, Electrostatic* electrostat, MGmol<T>* mgmol_strategy,
+    MVPSolver(MPI_Comm comm, std::ostream& os, Ions& ions,
+        Rho<OrbitalsType>* rho, Energy<OrbitalsType>* energy,
+        Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy,
         const int numst, const double kbT, const int nel,
         const std::vector<std::vector<int>>& global_indexes,
         const short n_inner_steps, const bool use_old_dm);
     ~MVPSolver();
 
-    int solve(T& orbitals);
+    int solve(OrbitalsType& orbitals);
     void printTimers(std::ostream& os);
 };
 
