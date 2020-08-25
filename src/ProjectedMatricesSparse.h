@@ -167,7 +167,7 @@ public:
         /* scale H */
         //    (*matHB_).scale(vel_);
     }
-    void setDMuniform(const PROJMATDTYPE nel, const int orbitals_index) override
+    void setDMuniform(const double nel, const int orbitals_index) override
     {
         dm_->setUniform(nel, orbitals_index);
     }
@@ -333,8 +333,7 @@ public:
         return rcond;
     }
 
-    double getTraceDiagProductWithInvS(
-        std::vector<PROJMATDTYPE>& ddiag) override
+    double getTraceDiagProductWithInvS(std::vector<double>& ddiag) override
     {
         assert(invS_ != NULL);
         return (*invS_).getTraceDiagProductWithInvS(ddiag);

@@ -328,7 +328,7 @@ int MGmol<T>::get_NOLMO(NOLMOTransform& noot, T& orbitals, T& work_orbitals,
         ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* proj_matrices
             = dynamic_cast<
                 ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
-                orbitals.proj_matrices());
+                orbitals.getProjMatrices());
         proj_matrices->rotateAll(u_dis, false);
         // orbitals.rotateSubMatrices(u_dis);
     }
