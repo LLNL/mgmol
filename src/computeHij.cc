@@ -333,15 +333,16 @@ void MGmol<T>::computeHnlPhiAndAdd2HPhi(
                     numpt, 1., hnl, hpsi_host_view);
 
                 MemorySpace::Memory<ORBDTYPE,
+                    memory_space_type>::copy_view_to_dev(hpsi_host_view, numpt,
+                    hpsi);
+                MemorySpace::Memory<ORBDTYPE,
                     memory_space_type>::free_host_view(hpsi_host_view);
             }
         }
         else // no Mehrstellen
         {
-#pragma omp parallel
             {
                 ORBDTYPE* hnl = new ORBDTYPE[numpt];
-#pragma omp for
                 for (short icolor = 0; icolor < ncolors; icolor++)
                 {
                     get_vnlpsi(ions, gid, icolor, kbpsi, hnl);
@@ -356,6 +357,9 @@ void MGmol<T>::computeHnlPhiAndAdd2HPhi(
                     LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
                         numpt, 1., hnl, hpsi_host_view);
 
+                    MemorySpace::Memory<ORBDTYPE,
+                        memory_space_type>::copy_view_to_dev(hpsi_host_view,
+                        numpt, hpsi);
                     MemorySpace::Memory<ORBDTYPE,
                         memory_space_type>::free_host_view(hpsi_host_view);
                 }
