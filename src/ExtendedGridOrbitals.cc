@@ -1660,7 +1660,7 @@ void ExtendedGridOrbitals::addDotWithNcol2Matrix(
     std::vector<double> work(size_work);
     memset(work.data(), 0, size_work * sizeof(double));
 
-    unsigned int const block_vector_size = numpt_;
+    unsigned int const block_vector_size = numpt_ * numst_;
     ORBDTYPE* block_vector_host_view
         = MemorySpace::Memory<ORBDTYPE, memory_space_type>::allocate_host_view(
             block_vector_size);
