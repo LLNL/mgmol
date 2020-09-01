@@ -13,8 +13,15 @@
 #include "FunctionsPacking.h"
 #include "LocGridOrbitals.h"
 #include "MGmol_MPI.h"
+#include "memory_space.h"
 
 using namespace std;
+
+#ifdef HAVE_MAGMA
+using memory_space_type = MemorySpace::Device;
+#else
+using memory_space_type = MemorySpace::Host;
+#endif
 
 template <class T>
 void SinCosOps<T>::compute(const T& orbitals, vector<vector<double>>& a)
@@ -49,6 +56,13 @@ void SinCosOps<T>::compute(const T& orbitals, vector<vector<double>>& a)
 
     const int size = orbitals.chromatic_number();
 
+    const int ld = orbitals.getLda();
+    unsigned int const size_psi  = size * ld;
+    ORBDTYPE* psi_view = MemorySpace::Memory<ORBDTYPE,
+        memory_space_type>::allocate_host_view(size_psi);
+    MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+        orbitals.psi(0), size_psi, psi_view);
+
     for (short iloc = 0; iloc < orbitals.subdivx_; iloc++)
     {
 
@@ -57,14 +71,14 @@ void SinCosOps<T>::compute(const T& orbitals, vector<vector<double>>& a)
             const int i = orbitals.overlapping_gids_[iloc][icolor];
             if (i != -1)
             {
-                const ORBDTYPE* const ppsii = orbitals.psi(icolor);
+                const ORBDTYPE* const ppsii = psi_view+ld*icolor;
                 for (int jstate = 0; jstate <= icolor; jstate++)
                 {
                     const int j = orbitals.overlapping_gids_[iloc][jstate];
                     if (j != -1)
                     {
 
-                        const ORBDTYPE* const ppsij = orbitals.psi(jstate);
+                        const ORBDTYPE* const ppsij = psi_view+ld*jstate;
 
                         double atmp[6]  = { 0., 0., 0., 0., 0., 0. };
                         const int ixend = loc_length * (iloc + 1);
@@ -108,6 +122,9 @@ void SinCosOps<T>::compute(const T& orbitals, vector<vector<double>>& a)
             }
         }
     }
+
+    MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+        psi_view);
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     for (short i = 0; i < 6; i++)
