@@ -11,6 +11,13 @@
 #include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "Mesh.h"
+#include "memory_space.h"
+
+#ifdef HAVE_MAGMA
+using memory_space_type = MemorySpace::Device;
+#else
+using memory_space_type = MemorySpace::Host;
+#endif
 
 template <class T>
 void SpreadPenalty<T>::addResidual(T& phi, T& res)
@@ -184,10 +191,23 @@ void SpreadPenalty<T>::computeAndAddResidualSpreadPenalty(
     const std::vector<std::vector<int>>& global_indexes(
         orbitals.getOverlappingGids());
 
+    unsigned int const phi_size = mygrid.size();
+    ORBDTYPE* phi_host_view     = MemorySpace::Memory<ORBDTYPE,
+        memory_space_type>::allocate_host_view(phi_size);
+    ORBDTYPE* res_host_view     = MemorySpace::Memory<ORBDTYPE,
+        memory_space_type>::allocate_host_view(phi_size);
+
     for (short icolor = 0; icolor < orbitals.chromatic_number(); icolor++)
     {
-        const ORBDTYPE* const iphi = orbitals.getPsi(icolor);
-        ORBDTYPE* ires             = res.getPsi(icolor);
+        ORBDTYPE* iphi = orbitals.getPsi(icolor);
+        ORBDTYPE* ires = res.getPsi(icolor);
+
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+            iphi, phi_size, phi_host_view);
+        // initialize res_host_view with current residual as we are going
+        // to add contributions to it
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+            ires, phi_size,  res_host_view);
 
         for (short iloc = 0; iloc < subdivx; iloc++)
         {
@@ -243,13 +263,21 @@ void SpreadPenalty<T>::computeAndAddResidualSpreadPenalty(
                                 val = val > pbound ? pbound : val;
                                 val = val < mbound ? mbound : val;
 
-                                ires[index] -= val * iphi[index];
+                                res_host_view[index] -= val * phi_host_view[index];
                             }
                         }
                     }
             }
         }
+
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_dev(
+            res_host_view, phi_size, ires);
     }
+
+    MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+        phi_host_view);
+    MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+        res_host_view);
 }
 
 template <class T>
