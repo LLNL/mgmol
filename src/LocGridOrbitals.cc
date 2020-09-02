@@ -844,12 +844,12 @@ void LocGridOrbitals::multiplyByMatrix(
         for (unsigned int i = 0; i < product_size; ++i)
             tmp[i] = 0;
 #else
-        ORBTYPE* product_host
+        ORBDTYPE* product_host
             = MemorySpace::Memory<ORBDTYPE, MemorySpace::Host>::allocate(
                 product_size);
         std::memset(product_host, 0, product_size * sizeof(ORBDTYPE));
         MemorySpace::copy_to_dev(product_host, product_size, product.get());
-        MemorySpace::Memory<ORBDTYPE, MemorySpaceHost>::free(product_host);
+        MemorySpace::Memory<ORBDTYPE, MemorySpace::Host>::free(product_host);
 #endif
 #else
         std::memset(product.get(), 0, product_size * sizeof(ORBDTYPE));
