@@ -1174,7 +1174,7 @@ dist_matrix::DistMatrix<DISTMATDTYPE> ExtendedGridOrbitals::product(
     LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
 
     dist_matrix::DistMatrix<DISTMATDTYPE> tmp("tmp", numst_, numst_);
-    sl2dm->accumulate(ss, tmp, numst_);
+    sl2dm->accumulate(ss, tmp);
 
     dot_product_tm_.stop();
 
