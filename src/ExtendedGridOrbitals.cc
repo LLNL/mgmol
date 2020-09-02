@@ -1571,6 +1571,9 @@ void ExtendedGridOrbitals::projectOut(
             LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(loc_numpt_, minus,
                 tproduct + j * loc_numpt_, parray_host_view + j * lda);
 
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_dev(
+            parray_host_view, parray_size, parray);
+
         MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
             parray_host_view);
     }
