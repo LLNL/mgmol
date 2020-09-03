@@ -721,8 +721,14 @@ int ExtendedGridOrbitals::write_func_hdf5(
                 dset_id, attname2.c_str(), attr_data);
         } // iwrite
 
+        unsigned int const psi_size = numpt_;
+        ORBDTYPE* psi_host_view     = MemorySpace::Memory<ORBDTYPE,
+            memory_space_type>::allocate_host_view(psi_size);
+        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+            psi(color), psi_size, psi_host_view);
+
         int ierr = h5f_file.writeData(
-            psi(color), filespace, memspace, dset_id, precision);
+            psi_host_view, filespace, memspace, dset_id, precision);
         if (ierr < 0) return ierr;
 
         // Close/release resources.
@@ -846,11 +852,21 @@ int ExtendedGridOrbitals::read_func_hdf5(
             return status;
         }
 
+#ifdef HAVE_MAGMA
+        ORBDTYPE* buffer_dev = MemorySpace::Memory<ORBDTYPE,
+            MemorySpace::Device>::allocate(numpt_);
+        MemorySpace::copy_to_dev(buffer, numpt_, buffer_dev);
+#else
+        ORBDTYPE* buffer_dev = buffer;
+#endif
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
             const int shift = iloc * loc_numpt_;
-            block_vector_.assignLocal(icolor, iloc, buffer + shift);
+            block_vector_.assignLocal(icolor, iloc, buffer_dev + shift);
         }
+#ifdef HAVE_MAGMA
+        MemorySpace::Memory<ORBDTYPE,MemorySpace::Device>::free(buffer_dev);
+#endif
     }
 
     delete[] buffer;
