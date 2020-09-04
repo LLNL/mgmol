@@ -208,6 +208,7 @@ public:
     static void printTimers(std::ostream& os);
 
     void resetDotProductMatrices();
+    void init2zero();
 
     void setup(std::shared_ptr<LocalizationRegions> lrs);
     void reset(MasksSet* masks, MasksSet* corrmasks,

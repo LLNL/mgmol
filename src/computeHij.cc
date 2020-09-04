@@ -330,7 +330,7 @@ void MGmol<T>::computeHnlPhiAndAdd2HPhi(
                     hpsi_host_view);
 
                 LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
-                    numpt, 1., hnl, hpsi_host_view);
+                    numpt, 1., work.data(), hpsi_host_view);
 
                 MemorySpace::Memory<ORBDTYPE,
                     memory_space_type>::copy_view_to_dev(hpsi_host_view, numpt,

@@ -205,7 +205,7 @@ struct Memory
 
     static void copy_view_to_host(T* vec_dev, unsigned int size, T*& vec);
 
-    static void copy_view_to_dev(T* vec, unsigned int size, T*& vec_dev);
+    static void copy_view_to_dev(T* vec, unsigned int size, T* vec_dev);
 
     static void set(T* ptr, unsigned int size, int val);
 };
@@ -302,7 +302,7 @@ struct Memory<T, MemorySpace::Device>
             magma_singleton.queue_);
     }
 
-    static void copy_view_to_dev(T* vec, unsigned int size, T*& vec_dev)
+    static void copy_view_to_dev(T* vec, unsigned int size, T* vec_dev)
     {
         assert_is_host_ptr(vec);
         assert_is_dev_ptr(vec_dev);

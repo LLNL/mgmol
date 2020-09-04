@@ -306,7 +306,7 @@ void BlockVector<ScalarType, MemorySpaceType>::assign(
     for (unsigned int i = 0; i < vect_.size(); i++)
     {
         ScalarType* dest = vect_[i];
-        src.template getValues<ScalarType, MemorySpaceType>(i, dest);
+        src.template getValues<MemorySpaceType>(i, dest);
     }
 }
 
@@ -325,7 +325,7 @@ void BlockVector<ScalarType, MemorySpaceType>::assignComponent(
     const pb::GridFuncVector<ScalarType2>& src, const int i)
 {
     ScalarType* dest = vect_[i];
-    src.template getValues<ScalarType, MemorySpaceType>(i, dest);
+    src.template getValues<MemorySpaceType>(i, dest);
 }
 
 template <typename ScalarType, typename MemorySpaceType>

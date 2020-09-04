@@ -1035,18 +1035,18 @@ void GridFuncVector<ScalarType>::init_vect(
     functions_[k]->init_vect(vv, dis);
 }
 template <typename ScalarType>
-template <typename MemorySpaceTypupe>
+template <typename MemorySpaceType>
 void GridFuncVector<ScalarType>::getValues(const int k, float* vv) const
 {
     assert(k < static_cast<int>(functions_.size()));
-    functions_[k]->template getValues<MemorySpaceType>(vv);
+    functions_[k]->template getValues<float, MemorySpaceType>(vv);
 }
 template <typename ScalarType>
 template <typename MemorySpaceType>
 void GridFuncVector<ScalarType>::getValues(const int k, double* vv) const
 {
     assert(k < static_cast<int>(functions_.size()));
-    functions_[k]->template getValues<MemorySpaceType>(vv);
+    functions_[k]->template getValues<double, MemorySpaceType>(vv);
 }
 
 // build list of local gids I need ghost values for
