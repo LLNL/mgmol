@@ -732,7 +732,7 @@ void Rho<OrbitalsType>::computeRhoSubdomainUsingBlas3(const int iloc_init,
 #else
         ORBDTYPE* product_alias = product;
         ORBDTYPE* phi2          = orbitals2.getPsi(0, iloc);
-        using memory_space_type = typename T::memory_space_type;
+        using memory_space_type = typename OrbitalsType::memory_space_type;
         ORBDTYPE* phi2_alias    = MemorySpace::Memory<ORBDTYPE,
             memory_space_type>::allocate_host_view(ld * ncols + nrows);
         MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
