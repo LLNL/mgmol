@@ -169,9 +169,21 @@ add_test(NAME testVariableSizeMatrix
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 1 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testVariableSizeMatrix)
 
-if((${MAGMA_FOUND}) AND (${MGMOL_WITH_OPENMP_OFFLOAD}))
-  add_test(NAME testMagmaOpenmp
-           COMMAND ${CMAKE_CURRENT_BINARY_DIR}/testMagmaOpenmp)
+if(${MAGMA_FOUND}) 
+  if(${MGMOL_WITH_OPENMP_OFFLOAD})
+    add_test(NAME testMagmaOpenmp
+             COMMAND ${CMAKE_CURRENT_BINARY_DIR}/testMagmaOpenmp)
+  endif()
+else()
+  add_test(NAME testShortSighted
+           COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ShortSighted/test.py
+           ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 5 ${MPIEXEC_PREFLAGS}
+           ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
+           ${CMAKE_CURRENT_SOURCE_DIR}/ShortSighted/quench.cfg
+           ${CMAKE_CURRENT_SOURCE_DIR}/ShortSighted/md.cfg
+           ${CMAKE_CURRENT_SOURCE_DIR}/ShortSighted/coords.in
+           ${CMAKE_CURRENT_SOURCE_DIR}/ShortSighted/lrs.in
+           ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 endif()
                  
 add_test(NAME testProjectedMatrices
@@ -257,15 +269,6 @@ add_test(NAME testMD_D72
          ${CMAKE_CURRENT_SOURCE_DIR}/MD_D72/mgmol_md.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/MD_D72/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/MD_D72/lrs.in
-         ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
-add_test(NAME testShortSighted
-         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ShortSighted/test.py
-         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 5 ${MPIEXEC_PREFLAGS}
-         ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
-         ${CMAKE_CURRENT_SOURCE_DIR}/ShortSighted/quench.cfg
-         ${CMAKE_CURRENT_SOURCE_DIR}/ShortSighted/md.cfg
-         ${CMAKE_CURRENT_SOURCE_DIR}/ShortSighted/coords.in
-         ${CMAKE_CURRENT_SOURCE_DIR}/ShortSighted/lrs.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME testLBFGS
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/LBFGS/test.py
