@@ -192,10 +192,12 @@ void SpreadPenalty<T>::computeAndAddResidualSpreadPenalty(
         orbitals.getOverlappingGids());
 
     unsigned int const phi_size = mygrid.size();
-    ORBDTYPE* phi_host_view     = MemorySpace::Memory<ORBDTYPE,
-        memory_space_type>::allocate_host_view(phi_size);
-    ORBDTYPE* res_host_view     = MemorySpace::Memory<ORBDTYPE,
-        memory_space_type>::allocate_host_view(phi_size);
+    ORBDTYPE* phi_host_view
+        = MemorySpace::Memory<ORBDTYPE, memory_space_type>::allocate_host_view(
+            phi_size);
+    ORBDTYPE* res_host_view
+        = MemorySpace::Memory<ORBDTYPE, memory_space_type>::allocate_host_view(
+            phi_size);
 
     for (short icolor = 0; icolor < orbitals.chromatic_number(); icolor++)
     {
@@ -207,7 +209,7 @@ void SpreadPenalty<T>::computeAndAddResidualSpreadPenalty(
         // initialize res_host_view with current residual as we are going
         // to add contributions to it
         MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
-            ires, phi_size,  res_host_view);
+            ires, phi_size, res_host_view);
 
         for (short iloc = 0; iloc < subdivx; iloc++)
         {
@@ -263,7 +265,8 @@ void SpreadPenalty<T>::computeAndAddResidualSpreadPenalty(
                                 val = val > pbound ? pbound : val;
                                 val = val < mbound ? mbound : val;
 
-                                res_host_view[index] -= val * phi_host_view[index];
+                                res_host_view[index]
+                                    -= val * phi_host_view[index];
                             }
                         }
                     }

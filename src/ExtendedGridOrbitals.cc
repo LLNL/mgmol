@@ -853,8 +853,9 @@ int ExtendedGridOrbitals::read_func_hdf5(
         }
 
 #ifdef HAVE_MAGMA
-        ORBDTYPE* buffer_dev = MemorySpace::Memory<ORBDTYPE,
-            MemorySpace::Device>::allocate(numpt_);
+        ORBDTYPE* buffer_dev
+            = MemorySpace::Memory<ORBDTYPE, MemorySpace::Device>::allocate(
+                numpt_);
         MemorySpace::copy_to_dev(buffer, numpt_, buffer_dev);
 #else
         ORBDTYPE* buffer_dev = buffer;
@@ -865,7 +866,7 @@ int ExtendedGridOrbitals::read_func_hdf5(
             block_vector_.assignLocal(icolor, iloc, buffer_dev + shift);
         }
 #ifdef HAVE_MAGMA
-        MemorySpace::Memory<ORBDTYPE,MemorySpace::Device>::free(buffer_dev);
+        MemorySpace::Memory<ORBDTYPE, MemorySpace::Device>::free(buffer_dev);
 #endif
     }
 
@@ -983,7 +984,7 @@ void ExtendedGridOrbitals::getLocalOverlap(SquareLocalMatrices<MATDTYPE>& ss)
 #ifdef USE_MP
         getLocalOverlap(*this, ss);
 #else
-        ORBDTYPE* psi = block_vector_.vect(0);
+        ORBDTYPE* psi        = block_vector_.vect(0);
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
             ss.syrk<memory_space_type>(

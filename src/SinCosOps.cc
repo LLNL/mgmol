@@ -56,10 +56,11 @@ void SinCosOps<T>::compute(const T& orbitals, vector<vector<double>>& a)
 
     const int size = orbitals.chromatic_number();
 
-    const int ld = orbitals.getLda();
-    unsigned int const size_psi  = size * ld;
-    ORBDTYPE* psi_view = MemorySpace::Memory<ORBDTYPE,
-        memory_space_type>::allocate_host_view(size_psi);
+    const int ld                = orbitals.getLda();
+    unsigned int const size_psi = size * ld;
+    ORBDTYPE* psi_view
+        = MemorySpace::Memory<ORBDTYPE, memory_space_type>::allocate_host_view(
+            size_psi);
     MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
         orbitals.psi(0), size_psi, psi_view);
 
@@ -71,14 +72,14 @@ void SinCosOps<T>::compute(const T& orbitals, vector<vector<double>>& a)
             const int i = orbitals.overlapping_gids_[iloc][icolor];
             if (i != -1)
             {
-                const ORBDTYPE* const ppsii = psi_view+ld*icolor;
+                const ORBDTYPE* const ppsii = psi_view + ld * icolor;
                 for (int jstate = 0; jstate <= icolor; jstate++)
                 {
                     const int j = orbitals.overlapping_gids_[iloc][jstate];
                     if (j != -1)
                     {
 
-                        const ORBDTYPE* const ppsij = psi_view+ld*jstate;
+                        const ORBDTYPE* const ppsij = psi_view + ld * jstate;
 
                         double atmp[6]  = { 0., 0., 0., 0., 0., 0. };
                         const int ixend = loc_length * (iloc + 1);
@@ -123,8 +124,7 @@ void SinCosOps<T>::compute(const T& orbitals, vector<vector<double>>& a)
         }
     }
 
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
-        psi_view);
+    MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(psi_view);
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     for (short i = 0; i < 6; i++)
