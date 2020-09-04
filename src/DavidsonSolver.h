@@ -4,6 +4,7 @@
 // All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
+#include "DielectricControl.h"
 #include "ProjectedMatrices2N.h"
 #include "Timer.h"
 
@@ -43,6 +44,8 @@ private:
     int numst_;
     std::unique_ptr<MatrixType> work2N_;
     std::unique_ptr<ProjectedMatrices2N<MatrixType>> proj_mat2N_;
+
+    DielectricControl diel_control_;
 
     static Timer solve_tm_;
     static Timer target_tm_;

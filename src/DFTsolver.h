@@ -10,12 +10,14 @@
 #ifndef MGMOL_DFTSOLVER_H
 #define MGMOL_DFTSOLVER_H
 
+#include "DielectricControl.h"
 #include "Energy.h"
 #include "Hamiltonian.h"
 #include "MGmol.h"
 #include "OrbitalsStepper.h"
 #include "Rho.h"
 #include "Timer.h"
+
 #include <iostream>
 
 class Ions;
@@ -56,12 +58,13 @@ private:
     double de_;
     double de2_;
 
+    DielectricControl diel_control_;
+
     void printEnergy(const short) const;
     int checkConvergenceEnergy(const short step, const short max_steps);
     double evaluateEnergy(const T& orbitals, const bool flag);
     void incInnerIt() { it_scf_++; }
     bool checkPrintResidual(const short step) const;
-    void dielON();
     bool testUpdatePot() const;
     bool checkConvPot() const;
 

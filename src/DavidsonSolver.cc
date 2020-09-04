@@ -57,7 +57,8 @@ DavidsonSolver<OrbitalsType, MatrixType>::DavidsonSolver(MPI_Comm comm,
       rho_(rho),
       energy_(energy),
       electrostat_(electrostat),
-      mgmol_strategy_(mgmol_strategy)
+      mgmol_strategy_(mgmol_strategy),
+      diel_control_(hamiltonian->potential(), electrostat, os, onpe0)
 {
     history_length_ = 2;
     eks_history_.resize(history_length_, 100000.);
@@ -393,6 +394,9 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
 
     for (int outer_it = 0; outer_it <= ct.max_electronic_steps; outer_it++)
     {
+        // turn on PB solver if necessary
+        diel_control_.activate(outer_it, de_);
+
         ProjectedMatrices<MatrixType>* proj_matN
             = dynamic_cast<ProjectedMatrices<MatrixType>*>(
                 orbitals.getProjMatrices());

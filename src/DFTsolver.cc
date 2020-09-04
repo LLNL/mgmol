@@ -33,7 +33,8 @@ DFTsolver<T>::DFTsolver(Hamiltonian<T>* hamiltonian,
       ions_(ions),
       rho_(rho),
       dm_strategy_(dm_strategy),
-      os_(os)
+      os_(os),
+      diel_control_(hamiltonian->potential(), electrostat, os, onpe0)
 {
     Control& ct(*(Control::instance()));
 
@@ -105,36 +106,6 @@ bool DFTsolver<T>::checkPrintResidual(const short step) const
 {
     Control& ct(*(Control::instance()));
     return (ct.iprint_residual > 0) ? !(step % ct.iprint_residual) : false;
-}
-
-template <class T>
-void DFTsolver<T>::dielON()
-{
-    Potentials& pot(hamiltonian_->potential());
-    bool isON = pot.diel();
-    if (!isON) return; // continuum solvent is OFF
-
-    static bool pbset = false;
-    if (pbset) return; // continuum solvent already set
-
-    Control& ct(*(Control::instance()));
-    const int diel_delay = (ct.restart_info < 3) ? 10 : 1;
-    if (it_scf_ < diel_delay)
-    {
-        isON = false;
-    }
-
-    // turn ON continuum solvent
-    if (isON && (ct.restart_info >= 3 || deig2_ < 2.e-2 * ct.numst))
-    {
-        electrostat_->setupPB(ct.rho0, ct.drho0, pot);
-        electrostat_->setup(ct.vh_its);
-        pbset = true;
-    }
-
-    if (pot.diel() && !pbset)
-        if (onpe0 && ct.verbose > 1)
-            os_ << " Solvation turned off for this step" << std::endl;
 }
 
 template <class T>
@@ -292,7 +263,7 @@ int DFTsolver<T>::solve(T& orbitals, T& work_orbitals, Ions& ions,
                       || ct.orthof == 1 || step == max_steps - 1);
 
         // turn on PB solver if necessary
-        dielON();
+        diel_control_.activate(it_scf_, deig2_);
 
         proj_matrices_->resetDotProductMatrices();
 
