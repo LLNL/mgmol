@@ -64,8 +64,8 @@ MVPSolver<OrbitalsType, MatrixType>::MVPSolver(MPI_Comm comm, std::ostream& os,
     numst_ = numst;
     work_  = new MatrixType("workMVP", numst_, numst_);
 
-    proj_mat_work_ = new ProjectedMatrices<MatrixType>(numst_, false);
-    proj_mat_work_->setup(kbT, nel, global_indexes);
+    proj_mat_work_ = new ProjectedMatrices<MatrixType>(numst_, false, nel, kbT);
+    proj_mat_work_->setup(global_indexes);
 }
 
 template <class OrbitalsType, class MatrixType>

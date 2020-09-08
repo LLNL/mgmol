@@ -66,8 +66,9 @@ DavidsonSolver<OrbitalsType, MatrixType>::DavidsonSolver(MPI_Comm comm,
     numst_ = numst;
     work2N_.reset(new MatrixType("work2N", 2 * numst_, 2 * numst_));
 
-    proj_mat2N_.reset(new ProjectedMatrices2N<MatrixType>(2 * numst_, false));
-    proj_mat2N_->setup(kbT, nel, global_indexes);
+    proj_mat2N_.reset(
+        new ProjectedMatrices2N<MatrixType>(2 * numst_, false, nel, kbT));
+    proj_mat2N_->setup(global_indexes);
 }
 
 template <class OrbitalsType, class MatrixType>

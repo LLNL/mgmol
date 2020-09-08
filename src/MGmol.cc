@@ -261,14 +261,15 @@ int MGmol<T>::initial()
     bool with_spin = (mmpi.nspin() > 1);
     if (ct.Mehrstellen())
         proj_matrices_ = new ProjectedMatricesMehrstellen<
-            dist_matrix::DistMatrix<DISTMATDTYPE>>(ct.numst, with_spin);
+            dist_matrix::DistMatrix<DISTMATDTYPE>>(
+            ct.numst, with_spin, ct.getNel(), ct.occ_width);
     else if (ct.short_sighted)
-        proj_matrices_
-            = new ProjectedMatricesSparse(ct.numst, lrs_, local_cluster_);
+        proj_matrices_ = new ProjectedMatricesSparse(
+            ct.numst, ct.getNel(), ct.occ_width, lrs_, local_cluster_);
     else
         proj_matrices_
             = new ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>(
-                ct.numst, with_spin);
+                ct.numst, with_spin, ct.getNel(), ct.occ_width);
 
     forces_ = new Forces<T>(hamiltonian_, rho_, proj_matrices_);
 

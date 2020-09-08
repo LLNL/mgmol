@@ -41,8 +41,10 @@ Timer ProjectedMatricesSparse::consolidate_H_tm_(
 Timer ProjectedMatricesSparse::eig_interval_tm_(
     "ProjectedMatrices::computeEigenInterval");
 
-ProjectedMatricesSparse::ProjectedMatricesSparse(const int ndim,
-    std::shared_ptr<LocalizationRegions> lrs, ClusterOrbitals* local_cluster)
+ProjectedMatricesSparse::ProjectedMatricesSparse(const int ndim, const int nel,
+    const double width, std::shared_ptr<LocalizationRegions> lrs,
+    ClusterOrbitals* local_cluster)
+    : ProjectedMatricesInterface(nel, width)
 {
     assert(lrs);
 
@@ -119,14 +121,14 @@ ProjectedMatricesSparse::~ProjectedMatricesSparse()
     clearData();
 }
 
-void ProjectedMatricesSparse::setup(const double kbt, const int nel,
+void ProjectedMatricesSparse::setup(
     const std::vector<std::vector<int>>& global_indexes)
 {
     // assert( (short)global_indexes.size()>0 );
     // assert( (short)global_indexes[0].size()>0 );
     Control& ct = *(Control::instance());
 
-    setupBase(kbt, nel, global_indexes.size(), global_indexes[0].size());
+    setupBase(global_indexes.size(), global_indexes[0].size());
 
     global_indexes_ = global_indexes;
 

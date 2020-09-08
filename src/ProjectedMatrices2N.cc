@@ -11,8 +11,8 @@
 
 template <class MatrixType>
 ProjectedMatrices2N<MatrixType>::ProjectedMatrices2N(
-    const int ndim, const bool with_spin)
-    : ProjectedMatrices<MatrixType>(ndim, with_spin)
+    const int ndim, const bool with_spin, const int nel, const double width)
+    : ProjectedMatrices<MatrixType>(ndim, with_spin, nel, width)
 {
     bdim_ = ndim / 2;
 

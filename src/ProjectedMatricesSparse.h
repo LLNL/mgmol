@@ -101,13 +101,12 @@ class ProjectedMatricesSparse : public ProjectedMatricesInterface
     double eigenvalue0_;
 
 public:
-    ProjectedMatricesSparse(const int ndim,
+    ProjectedMatricesSparse(const int ndim, const int nel, const double width,
         std::shared_ptr<LocalizationRegions> lrs,
         ClusterOrbitals* local_cluster = nullptr);
     ~ProjectedMatricesSparse() override;
 
-    void setup(const double kbt, const int nel,
-        const std::vector<std::vector<int>>& global_indexes) override;
+    void setup(const std::vector<std::vector<int>>& global_indexes) override;
 
     void updateSubMatT() override;
     void updateTheta() override;

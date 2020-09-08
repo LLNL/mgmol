@@ -127,11 +127,11 @@ protected:
     void convert(const MatrixType& src, SquareLocalMatrices<MATDTYPE>& dst);
 
 public:
-    ProjectedMatrices(const int, const bool with_spin);
+    ProjectedMatrices(
+        const int, const bool with_spin, const int nel, const double occ_width);
     ~ProjectedMatrices() override;
 
-    void setup(const double kbt, const int nel,
-        const std::vector<std::vector<int>>& global_indexes) override;
+    void setup(const std::vector<std::vector<int>>& global_indexes) override;
 
     void setLocalMatrixElementsHnl(
         const SquareSubMatrix<MATDTYPE>& slH) override
@@ -195,8 +195,6 @@ public:
         dm_->setUniform(nel, orbitals_index);
     }
     int dim() const { return dim_; }
-
-    bool withSpin() const { return with_spin_; }
 
     void computeInvS() override;
 

@@ -44,14 +44,13 @@ static int sparse_distmatrix_nb_partitions = 128;
 
 template <class MatrixType>
 ProjectedMatrices<MatrixType>::ProjectedMatrices(
-    const int ndim, const bool with_spin)
-    : with_spin_(with_spin),
+    const int ndim, const bool with_spin, const int nel, const double width)
+    : ProjectedMatricesInterface(nel, width),
+      with_spin_(with_spin),
       dim_(ndim),
       dm_(new DensityMatrix<MatrixType>(ndim)),
       gm_(new GramMatrix<MatrixType>(ndim))
 {
-    width_ = 0.;
-
     eigenvalues_.resize(dim_);
 
     matH_.reset(new MatrixType("H", ndim, ndim));
@@ -98,12 +97,11 @@ void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::convert(
 
 template <>
 void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::setup(
-    const double kbt, const int nel,
     const std::vector<std::vector<int>>& global_indexes)
 {
     assert(global_indexes.size() > 0);
 
-    setupBase(kbt, nel, global_indexes.size(), global_indexes[0].size());
+    setupBase(global_indexes.size(), global_indexes[0].size());
 
     global_indexes_ = global_indexes;
 
@@ -780,8 +778,9 @@ void ProjectedMatrices<MatrixType>::computeChemicalPotentialAndOccupations(
     assert(energies.size() > 0);
     assert(nel >= 0);
 
-    Control& ct = *(Control::instance());
-    if (onpe0 && ct.verbose > 1)
+    Control& ct     = *(Control::instance());
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    if (mmpi.instancePE0() && ct.verbose > 1)
         (*MPIdata::sout)
             << "computeChemicalPotentialAndOccupations() with width=" << width
             << ", for " << nel << " electrons" << std::endl;

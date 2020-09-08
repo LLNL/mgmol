@@ -41,24 +41,26 @@ private:
     }
 
 protected:
+    int nel_;
+    double width_;
+
     short subdiv_;
     short chromatic_number_;
-    double width_;
+
     double mu_;
-    int nel_;
 
     // pointer to member function
     std::vector<double> (ProjectedMatricesInterface::*funcptr_)(
         const std::vector<double>& nodes);
 
 public:
-    ProjectedMatricesInterface()
+    ProjectedMatricesInterface(const int nel, const double width)
         : ChebyshevApproximationFunction(),
           iterative_index_h_(-1),
+          nel_(nel),
+          width_(width),
           subdiv_(-1),
-          chromatic_number_(-1),
-          width_(0.),
-          nel_(0.){};
+          chromatic_number_(-1){};
 
     // define Fermi distribution function to be approximated by Chebyshev
     // approximation f(x) = 1 / (1 + Exp[(E-mu)/kbT])
@@ -124,16 +126,11 @@ public:
 
     virtual ~ProjectedMatricesInterface(){};
 
-    virtual void setup(const double kbt, const int nel,
-        const std::vector<std::vector<int>>& global_indexes)
-        = 0;
+    virtual void setup(const std::vector<std::vector<int>>& global_indexes) = 0;
 
     // initial setup function
-    void setupBase(const double kbt, const int num_el, const int subdiv,
-        const int chromatic_number)
+    void setupBase(const int subdiv, const int chromatic_number)
     {
-        width_            = kbt;
-        nel_              = num_el;
         subdiv_           = subdiv;
         chromatic_number_ = chromatic_number;
     }
