@@ -154,7 +154,7 @@ void copy_to_host(T const* const vec_dev, unsigned int size, T* vec)
 }
 #else
 template <typename T>
-void copy_to_host(T const* const vec_dev, unsigned int size, T* vec)
+void copy_to_host(T const* const, unsigned int, T*)
 {
     assert(false);
 }

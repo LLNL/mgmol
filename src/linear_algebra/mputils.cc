@@ -1105,8 +1105,6 @@ template void LAU_H::MPgemmNN<double, double, double>(const int m, const int n,
     const int k, const double alpha, const double* const a, const int lda,
     const double* const b, const int ldb, const double beta, double* const c,
     const int ldc);
-template void LAU_H::MPscal(const int len, const double scal, double* ptr);
-template void LAU_H::MPscal(const int len, const double scal, float* ptr);
 template double LAU_H::MPdot<double, double>(
     const int len, const double* const xptr, const double* const yptr);
 template double LAU_H::MPdot<float, float>(const int len,
@@ -1165,8 +1163,6 @@ template void LAU_D::MPgemmNN<double, double, double>(const int m, const int n,
     const int k, const double alpha, const double* const a, const int lda,
     const double* const b, const int ldb, const double beta, double* const c,
     const int ldc);
-template void LAU_D::MPscal(const int len, const double scal, double* ptr);
-template void LAU_D::MPscal(const int len, const double scal, float* ptr);
 template double LAU_D::MPdot<double, double>(
     const int len, const double* const xptr, const double* const yptr);
 template double LAU_D::MPdot<float, float>(const int len,

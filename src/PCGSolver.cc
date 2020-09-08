@@ -247,8 +247,6 @@ bool PCGSolver<T, T2>::solve(pb::GridFunc<T2>& gf_phi, pb::GridFunc<T2>& gf_rhs)
 
     if (fully_periodic_) gf_phi.average0();
 
-    std::cout << "Converged " << converged << std::endl;
-
     return converged;
 }
 
