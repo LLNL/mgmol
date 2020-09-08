@@ -101,7 +101,7 @@ class ProjectedMatricesSparse : public ProjectedMatricesInterface
     double eigenvalue0_;
 
 public:
-    ProjectedMatricesSparse(const int ndim, const int nel, const double width,
+    ProjectedMatricesSparse(const int ndim, const double width,
         std::shared_ptr<LocalizationRegions> lrs,
         ClusterOrbitals* local_cluster = nullptr);
     ~ProjectedMatricesSparse() override;

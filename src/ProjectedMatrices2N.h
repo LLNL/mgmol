@@ -19,8 +19,8 @@ class ProjectedMatrices2N : public ProjectedMatrices<MatrixType>
     MatrixType* work2N_;
 
 public:
-    ProjectedMatrices2N(const int ndim, const bool with_spin, const int nel,
-        const double width);
+    ProjectedMatrices2N(
+        const int ndim, const bool with_spin, const double width);
 
     ~ProjectedMatrices2N() override;
 

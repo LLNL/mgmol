@@ -44,8 +44,8 @@ static int sparse_distmatrix_nb_partitions = 128;
 
 template <class MatrixType>
 ProjectedMatrices<MatrixType>::ProjectedMatrices(
-    const int ndim, const bool with_spin, const int nel, const double width)
-    : ProjectedMatricesInterface(nel, width),
+    const int ndim, const bool with_spin, const double width)
+    : ProjectedMatricesInterface(with_spin, width),
       with_spin_(with_spin),
       dim_(ndim),
       dm_(new DensityMatrix<MatrixType>(ndim)),

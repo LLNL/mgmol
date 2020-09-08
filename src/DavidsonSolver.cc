@@ -48,7 +48,6 @@ DavidsonSolver<OrbitalsType, MatrixType>::DavidsonSolver(MPI_Comm comm,
     std::ostream& os, Ions& ions, Hamiltonian<OrbitalsType>* hamiltonian,
     Rho<OrbitalsType>* rho, Energy<OrbitalsType>* energy,
     Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy,
-    const int numst, const double kbT, const int nel,
     const std::vector<std::vector<int>>& global_indexes)
     : comm_(comm),
       os_(os),
@@ -60,14 +59,16 @@ DavidsonSolver<OrbitalsType, MatrixType>::DavidsonSolver(MPI_Comm comm,
       mgmol_strategy_(mgmol_strategy),
       diel_control_(hamiltonian->potential(), electrostat, os, onpe0)
 {
+    Control& ct = *(Control::instance());
+
     history_length_ = 2;
     eks_history_.resize(history_length_, 100000.);
 
-    numst_ = numst;
+    numst_ = ct.numst;
     work2N_.reset(new MatrixType("work2N", 2 * numst_, 2 * numst_));
 
     proj_mat2N_.reset(
-        new ProjectedMatrices2N<MatrixType>(2 * numst_, false, nel, kbT));
+        new ProjectedMatrices2N<MatrixType>(2 * ct.numst, false, ct.occ_width));
     proj_mat2N_->setup(global_indexes);
 }
 

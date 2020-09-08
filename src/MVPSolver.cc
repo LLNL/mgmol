@@ -44,7 +44,7 @@ template <class OrbitalsType, class MatrixType>
 MVPSolver<OrbitalsType, MatrixType>::MVPSolver(MPI_Comm comm, std::ostream& os,
     Ions& ions, Rho<OrbitalsType>* rho, Energy<OrbitalsType>* energy,
     Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy,
-    const int numst, const double kbT, const int nel,
+    const int numst, const double kbT,
     const std::vector<std::vector<int>>& global_indexes,
     const short n_inner_steps, const bool use_old_dm)
     : comm_(comm),
@@ -64,7 +64,7 @@ MVPSolver<OrbitalsType, MatrixType>::MVPSolver(MPI_Comm comm, std::ostream& os,
     numst_ = numst;
     work_  = new MatrixType("workMVP", numst_, numst_);
 
-    proj_mat_work_ = new ProjectedMatrices<MatrixType>(numst_, false, nel, kbT);
+    proj_mat_work_ = new ProjectedMatrices<MatrixType>(numst_, false, kbT);
     proj_mat_work_->setup(global_indexes);
 }
 

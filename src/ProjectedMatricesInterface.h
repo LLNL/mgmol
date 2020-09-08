@@ -17,6 +17,7 @@
 /* Currently only needed functions in ProjectedMatrices.h class. Must be
  * cleaned-up later */
 #include "ChebyshevApproximationFunction.h"
+#include "Control.h"
 #include "MGmol_MPI.h"
 #include "SquareLocalMatrices.h"
 #include "SquareSubMatrix.h"
@@ -41,8 +42,10 @@ private:
     }
 
 protected:
-    int nel_;
+    bool with_spin_;
     double width_;
+
+    int nel_;
 
     short subdiv_;
     short chromatic_number_;
@@ -54,13 +57,17 @@ protected:
         const std::vector<double>& nodes);
 
 public:
-    ProjectedMatricesInterface(const int nel, const double width)
+    ProjectedMatricesInterface(const bool with_spin, const double width)
         : ChebyshevApproximationFunction(),
           iterative_index_h_(-1),
-          nel_(nel),
+          with_spin_(with_spin),
           width_(width),
           subdiv_(-1),
-          chromatic_number_(-1){};
+          chromatic_number_(-1)
+    {
+        Control& ct = *(Control::instance());
+        nel_        = with_spin ? ct.getNelSpin() : ct.getNel();
+    };
 
     // define Fermi distribution function to be approximated by Chebyshev
     // approximation f(x) = 1 / (1 + Exp[(E-mu)/kbT])

@@ -40,12 +40,12 @@ AOMMprojector::AOMMprojector(
     kernelMasks_->setup(lrs, radius);
 
     if (ct.short_sighted)
-        kernel_proj_matrices_ = new ProjectedMatricesSparse(
-            ct.numst, ct.getNel(), ct.occ_width, lrs);
+        kernel_proj_matrices_
+            = new ProjectedMatricesSparse(ct.numst, ct.occ_width, lrs);
     else
         kernel_proj_matrices_
             = new ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>(
-                ct.numst, with_spin, ct.getNel(), ct.occ_width);
+                ct.numst, with_spin, ct.occ_width);
 
     // kernel functions use their own projected matrices and masks
     kernel_phi_ = new LocGridOrbitals(

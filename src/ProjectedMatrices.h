@@ -127,8 +127,7 @@ protected:
     void convert(const MatrixType& src, SquareLocalMatrices<MATDTYPE>& dst);
 
 public:
-    ProjectedMatrices(
-        const int, const bool with_spin, const int nel, const double occ_width);
+    ProjectedMatrices(const int, const bool with_spin, const double occ_width);
     ~ProjectedMatrices() override;
 
     void setup(const std::vector<std::vector<int>>& global_indexes) override;

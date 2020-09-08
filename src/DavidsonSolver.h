@@ -73,8 +73,8 @@ public:
     DavidsonSolver(MPI_Comm comm, std::ostream& os, Ions& ions,
         Hamiltonian<OrbitalsType>* hamiltonian, Rho<OrbitalsType>* rho,
         Energy<OrbitalsType>* energy, Electrostatic* electrostat,
-        MGmol<OrbitalsType>* mgmol_strategy, const int numst, const double kbT,
-        const int nel, const std::vector<std::vector<int>>& global_indexes);
+        MGmol<OrbitalsType>* mgmol_strategy,
+        const std::vector<std::vector<int>>& global_indexes);
     ~DavidsonSolver();
 
     int solve(OrbitalsType& orbitals, OrbitalsType& work_orbitals);
