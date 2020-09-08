@@ -114,9 +114,11 @@ void PBEonGrid<T>::update()
     gf_vxc.init_vect(tmp_pot, 'd');
 
 #ifdef USE_LIBXC
-    MPaxpy(&np_, &one, &vxc_[0], &ione, tmp_pot, &ione);
+    LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
+        &np_, &one, &vxc_[0], &ione, tmp_pot, &ione);
 #else
-    MPaxpy(np_, one, pbe_->pvxc1_, tmp_pot);
+    LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
+        np_, one, pbe_->pvxc1_, tmp_pot);
 #endif
 
     pot_.setVxc(tmp_pot, iterative_index);

@@ -12,6 +12,7 @@
 
 #include "MGmol_blas1.h"
 #include "MPIdata.h"
+#include "memory_space.h"
 #include "mputils.h"
 
 #include "GridFuncVector.h"
@@ -76,6 +77,8 @@ class BlockVector
     static void allocate1NewBlock();
 
 public:
+    using memory_space_type = MemorySpaceType;
+
     BlockVector(
         const pb::Grid& my_grid, const short subdivx, const short bc[3]);
 
@@ -109,12 +112,14 @@ public:
         assert(bv.storage_ != nullptr);
         assert(storage_ != bv.storage_);
 
-        MPaxpy(size_storage_, alpha, bv.storage_, storage_);
+        LinearAlgebraUtils<MemorySpaceType>::MPaxpy(
+            size_storage_, alpha, bv.storage_, storage_);
     }
 
     void axpy(const double alpha, const ScalarType* const vy)
     {
-        MPaxpy(size_storage_, alpha, vy, storage_);
+        LinearAlgebraUtils<MemorySpaceType>::MPaxpy(
+            size_storage_, alpha, vy, storage_);
     }
 
     ScalarType* vect(const int i) const
@@ -133,7 +138,7 @@ public:
 
     void assign(const int color, const ScalarType* const src, const int n = 1)
     {
-        assert((color + n - 1) < (int)vect_.size());
+        assert((color + n - 1) < static_cast<int>(vect_.size()));
         int ione   = 1;
         int mysize = n * ld_;
         Tcopy(&mysize, src, &ione, vect_[color], &ione);
@@ -141,7 +146,8 @@ public:
 
     void assign(const ScalarType* const src)
     {
-        memcpy(storage_, src, size_storage_ * sizeof(ScalarType));
+        MemorySpace::Memory<ScalarType, MemorySpaceType>::copy(
+            src, size_storage_, storage_);
     }
 
     /*
@@ -159,10 +165,10 @@ public:
         const int color, const short iloc, const ScalarType* const src)
     {
         assert(color >= 0);
-        assert(color < (int)vect_.size());
+        assert(color < static_cast<int>(vect_.size()));
         assert(iloc < subdivx_);
-        memcpy(vect_[color] + iloc * locnumel_, src,
-            locnumel_ * sizeof(ScalarType));
+        MemorySpace::Memory<ScalarType, MemorySpaceType>::copy(
+            src, locnumel_, vect_[color] + iloc * locnumel_);
     }
 
     void copyDataFrom(const BlockVector& src)
@@ -170,7 +176,8 @@ public:
         assert(src.size_storage_ == size_storage_);
         assert(storage_ != nullptr);
         assert(src.storage_ != nullptr);
-        memcpy(storage_, src.storage_, size_storage_ * sizeof(ScalarType));
+        MemorySpace::Memory<ScalarType, MemorySpaceType>::copy(
+            src.storage_, size_storage_, storage_);
     }
 
     pb::GridFunc<ScalarType>& getVectorWithGhosts(const int i)
@@ -184,6 +191,10 @@ public:
     void setStorage(ScalarType* new_storage)
     {
         assert(new_storage != 0 || vect_.size() == 0);
+        if (std::is_same<MemorySpaceType, MemorySpace::Host>::value)
+            MemorySpace::assert_is_host_ptr(new_storage);
+        else
+            MemorySpace::assert_is_dev_ptr(new_storage);
 
         storage_ = new_storage;
         for (unsigned int i = 0; i < vect_.size(); i++)
@@ -198,8 +209,6 @@ public:
 
         trade_data_tm_.start();
 
-        // if( onpe0 )
-        //    (*MPIdata::sout)<<"BlockVector::trade_boundaries()"<<endl;
         data_wghosts_->trade_boundaries();
 
         trade_data_tm_.stop();
@@ -207,21 +216,11 @@ public:
 
     void scal(const int i, const double alpha);
     void scal(const double alpha);
-    void set_zero() { memset(storage_, 0, size_storage_ * sizeof(ScalarType)); }
-    void set_zero(const int i, const short iloc)
-    {
-        assert(i < static_cast<int>(vect_.size()));
-        assert(iloc < subdivx_);
-        memset(vect_[i] + iloc * locnumel_, 0, locnumel_ * sizeof(ScalarType));
-    }
-    void set_zero(const int i)
-    {
-        assert(i < static_cast<int>(vect_.size()));
 
-        for (short iloc = 0; iloc < subdivx_; iloc++)
-            memset(
-                vect_[i] + iloc * locnumel_, 0, locnumel_ * sizeof(ScalarType));
-    }
+    void set_zero();
+    void set_zero(const int i, const short iloc);
+    void set_zero(const int i);
+
     double dot(const int i, const int j, const short iloc) const;
     void scal(const double alpha, const int i, const short iloc);
     void axpy(const double alpha, const int ix, const int iy, const short iloc);
@@ -257,6 +256,8 @@ public:
     void set_ld_and_size_storage();
 
     static void printTimers(std::ostream& os);
+
+    static int get_allocated_size_storage() { return allocated_size_storage_; }
 };
 
 template <typename ScalarType, typename MemorySpaceType>

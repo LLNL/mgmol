@@ -191,6 +191,7 @@ void MGmol<ExtendedGridOrbitals>::initialMasks()
 }
 
 template <class T>
+template <typename MemorySpaceType>
 int MGmol<T>::initial()
 {
     Control& ct     = *(Control::instance());
@@ -277,7 +278,7 @@ int MGmol<T>::initial()
 
     initialMasks();
 
-    BlockVector<ORBDTYPE, MemorySpace::Host>::setOverAllocateFactor(
+    BlockVector<ORBDTYPE, MemorySpaceType>::setOverAllocateFactor(
         ct.orbitalsOverallocateFactor());
 
     if (ct.verbose > 0)
@@ -287,7 +288,7 @@ int MGmol<T>::initial()
         ct.bcWF, proj_matrices_, lrs_, currentMasks_, corrMasks_,
         local_cluster_, true);
 
-    increaseMemorySlotsForOrbitals();
+    increaseMemorySlotsForOrbitals<MemorySpaceType>();
 
     Potentials& pot            = hamiltonian_->potential();
     pb::Lap<ORBDTYPE>* lapOper = hamiltonian_->lapOper();
@@ -911,7 +912,11 @@ void MGmol<T>::printTimers()
     dump_tm_.print(os_);
     setup_tm_.print(os_);
     HDFrestart::printTimers(os_);
+#ifdef HAVE_MAGMA
+    BlockVector<ORBDTYPE, MemorySpace::Device>::printTimers(os_);
+#else
     BlockVector<ORBDTYPE, MemorySpace::Host>::printTimers(os_);
+#endif
     OrbitalsPreconditioning<T>::printTimers(os_);
     DavidsonSolver<ExtendedGridOrbitals,
         dist_matrix::DistMatrix<DISTMATDTYPE>>::printTimers(os_);
@@ -1017,7 +1022,11 @@ void MGmol<T>::setup()
     rho_ = new Rho<T>();
     rho_->setVerbosityLevel(ct.verbose);
 
-    int ierr = initial();
+#ifdef HAVE_MAGMA
+    int ierr = initial<MemorySpace::Device>();
+#else
+    int ierr = initial<MemorySpace::Host>();
+#endif
     if (ierr < 0) global_exit(0);
 
     // Write header to stdout
@@ -1165,6 +1174,9 @@ void MGmol<T>::computeResidualUsingHPhi(
         // compute B*psi and store in tmp
         ORBDTYPE* old_storage = nullptr;
         std::vector<ORBDTYPE> tmp;
+#ifdef HAVE_MAGMA
+        ORBDTYPE* tmp_dev;
+#endif
         if (applyB)
         {
             const int ld = psi.getLda();
@@ -1178,7 +1190,15 @@ void MGmol<T>::computeResidualUsingHPhi(
 
             // psi points to tmp temporarily
             old_storage = psi.getPsi(0);
+#ifdef HAVE_MAGMA
+            tmp_dev
+                = MemorySpace::Memory<ORBDTYPE, MemorySpace::Device>::allocate(
+                    ld * ncolors);
+            MemorySpace::copy_to_dev(tmp, tmp_dev);
+            psi.set_storage(tmp_dev);
+#else
             psi.set_storage(&tmp[0]);
+#endif
         }
 
         // get B*phi*theta and store it in res in [Ry]
@@ -1188,19 +1208,14 @@ void MGmol<T>::computeResidualUsingHPhi(
         if (applyB)
         {
             psi.set_storage(old_storage);
+#ifdef HAVE_MAGMA
+            MemorySpace::Memory<ORBDTYPE, MemorySpace::Device>::free(tmp_dev);
+#endif
         }
 
         // res = (B*phi*theta - H*phi) in [Ry]
         res.axpy(-1., hphi);
     }
-
-#if 0
-    dist_matrix::DistMatrix<DISTMATDTYPE> RPsi(psi.product(res));
-    if( onpe0 )
-        os_<<" matrix R**T * Psi\n";
-    RPsi.print(os_,0,0,5,5);
-    if(onpe0)os_<<"trace = "<<RPsi.trace()<<endl;;
-#endif
 
     get_res_tm_.stop();
 }
@@ -1320,14 +1335,6 @@ void MGmol<T>::update_pot(const Ions& ions)
     }
     else
         pot.update(rho_->rho_);
-
-#if 0
-    if ( onpe0 )
-    {
-        os_<<setprecision(3);
-        os_<<" <rho dv>/nb_ions = "<<pot.scf_dvrho()/ions.num_ions()<<endl;
-    }
-#endif
 }
 
 template <class T>
@@ -1340,3 +1347,9 @@ void MGmol<T>::addResidualSpreadPenalty(T& phi, T& res)
 
 template class MGmol<LocGridOrbitals>;
 template class MGmol<ExtendedGridOrbitals>;
+template int MGmol<LocGridOrbitals>::initial<MemorySpace::Host>();
+template int MGmol<ExtendedGridOrbitals>::initial<MemorySpace::Host>();
+#ifdef HAVE_MAGMA
+template int MGmol<LocGridOrbitals>::initial<MemorySpace::Device>();
+template int MGmol<ExtendedGridOrbitals>::initial<MemorySpace::Device>();
+#endif

@@ -6,4 +6,5 @@
 // All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
+template <typename MemorySpaceType>
 void increaseMemorySlotsForOrbitals();

@@ -22,12 +22,13 @@ void LocalMatrices2DistMatrix::convert(const LocalMatrices<T>& src,
     dist_matrix::SparseDistMatrix<T>& dst, const int numst,
     const double tol) const
 {
-    const int subdiv = (int)global_indexes_.size();
+    const int subdiv = static_cast<int>(global_indexes_.size());
 
-    int* ist = new int[2 * subdiv];
-    T* val   = new T[subdiv];
+    std::vector<int> ist(2 * subdiv);
+    std::vector<T> val(subdiv);
 
-    const short chromatic_number = (short)global_indexes_[0].size();
+    const short chromatic_number
+        = static_cast<short>(global_indexes_[0].size());
 
     // double loop over colors
     for (short icolor = 0; icolor < chromatic_number; icolor++)
@@ -55,7 +56,7 @@ void LocalMatrices2DistMatrix::convert(const LocalMatrices<T>& src,
                             = ssiloc[jcolor * chromatic_number + icolor];
 
                         // accumulate values
-                        if (fabs(tmp) > tol)
+                        if (std::fabs(tmp) > tol)
                         {
                             if (pst == pst_old)
                             {
@@ -78,13 +79,11 @@ void LocalMatrices2DistMatrix::convert(const LocalMatrices<T>& src,
 
             // assign values
             for (int i = 0; i <= valindex; i++)
-                dst.push_back(ist[2 * i], ist[2 * i + 1], (double)val[i]);
+                dst.push_back(
+                    ist[2 * i], ist[2 * i + 1], static_cast<double>(val[i]));
 
         } // jcolor
     } // icolor
-
-    delete[] val;
-    delete[] ist;
 }
 
 // Sum up all the local contributions (in LocalMatrices) into

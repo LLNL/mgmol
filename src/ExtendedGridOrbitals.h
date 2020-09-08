@@ -83,7 +83,7 @@ private:
     ////////////////////////////////////////////////////////
     // instance specific data
     ////////////////////////////////////////////////////////
-    BlockVector<ORBDTYPE, MemorySpace::Host> block_vector_;
+    BlockVector<ORBDTYPE, memory_space_type> block_vector_;
 
     ////////////////////////////////////////////////////////
     //
@@ -167,7 +167,6 @@ public:
     static void printTimers(std::ostream& os);
 
     void resetDotProductMatrices();
-    void init2zero();
 
     void reset(MasksSet* masks, MasksSet* corrmasks,
         std::shared_ptr<LocalizationRegions> lrs);
@@ -185,6 +184,7 @@ public:
     int numst(void) const { return numst_; }
     int getLda() const { return lda_; }
     int getLocNumpt() const { return loc_numpt_; }
+    int getNumpt() const { return numpt_; }
 
     bool isCompatibleWith(const ExtendedGridOrbitals&) const { return true; }
 

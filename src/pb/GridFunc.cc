@@ -508,7 +508,7 @@ GridFunc<T>& GridFunc<T>::operator+=(const GridFunc<T>& func)
 template <typename T>
 GridFunc<T>& GridFunc<T>::operator*=(const double alpha)
 {
-    MPscal(grid_.sizeg(), alpha, uu_);
+    LinearAlgebraUtils<MemorySpace::Host>::MPscal(grid_.sizeg(), alpha, uu_);
 
     return *this;
 }
@@ -516,7 +516,8 @@ GridFunc<T>& GridFunc<T>::operator*=(const double alpha)
 template <typename T>
 void GridFunc<T>::scal(const double alpha)
 {
-    MPscal(grid_.sizeg(), alpha, uu_);
+
+    LinearAlgebraUtils<MemorySpace::Host>::MPscal(grid_.sizeg(), alpha, uu_);
 }
 
 template <typename T>
@@ -525,7 +526,7 @@ void GridFunc<T>::axpy(const double alpha, const GridFunc<T>& vv)
     assert(vv.grid_.sizeg() == grid_.sizeg());
 
     int n = grid_.sizeg();
-    MPaxpy(n, alpha, vv.uu(), uu_);
+    LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(n, alpha, vv.uu(), uu_);
 
     updated_boundaries_ = (vv.updated_boundaries() && updated_boundaries_);
 }
@@ -1446,17 +1447,24 @@ void GridFunc<T>::init_vect(T* vv, const char dis) const
     }
     else
     {
-        getValues(vv);
+        getValues<T, MemorySpace::Host>(vv);
     }
 }
 
 // assign vv with values in member uu_
 template <typename T>
-template <typename T2>
+template <typename T2, typename MemorySpaceType>
 void GridFunc<T>::getValues(T2* vv) const
 {
     assert(grid_.inc(2) == 1);
     assert(vv != nullptr);
+
+    // Get a view on the host of vv
+    unsigned int const vv_size = dim_[0] * dim_[1] * dim_[2];
+    T2* vv_host_view
+        = MemorySpace::Memory<T2, MemorySpaceType>::allocate_host_view(vv_size);
+    MemorySpace::Memory<T2, MemorySpaceType>::copy_view_to_host(
+        vv, vv_size, vv_host_view);
 
     const short nghosts = ghost_pt();
 
@@ -1469,7 +1477,7 @@ void GridFunc<T>::getValues(T2* vv) const
         int ix1 = ix0 + ix * incx_;
         int ix2 = ix * incx_dest;
 
-        T2* pdest   = vv + ix2;
+        T2* pdest   = vv_host_view + ix2;
         const T* pu = uu_ + ix1 + nghosts * incy_;
 
         for (int iy = 0; iy < dim_[1]; iy++)
@@ -1480,6 +1488,11 @@ void GridFunc<T>::getValues(T2* vv) const
             pu += incy_;
         }
     }
+
+    MemorySpace::Memory<T2, MemorySpaceType>::copy_view_to_dev(
+        vv_host_view, vv_size, vv);
+
+    MemorySpace::Memory<T2, MemorySpaceType>::free_host_view(vv_host_view);
 }
 
 template <typename T>
@@ -2761,7 +2774,8 @@ double GridFunc<T>::gdot(const GridFunc<double>& vv) const
         for (int iy = inity; iy < endy; iy += incy_)
         {
             int iz = ix + iy + initz;
-            my_dot += MPdot(dimz, &vv1[iz], &vv2[iz]);
+            my_dot += LinearAlgebraUtils<MemorySpace::Host>::MPdot(
+                dimz, &vv1[iz], &vv2[iz]);
         }
     }
 
@@ -2816,7 +2830,8 @@ double GridFunc<T>::gdot(const GridFunc<float>& vv) const
         for (int iy = inity; iy < endy; iy += incy_)
         {
             int iz = ix + iy + initz;
-            my_dot += MPdot(dimz, &vv1[iz], &vv2[iz]);
+            my_dot += LinearAlgebraUtils<MemorySpace::Host>::MPdot(
+                dimz, &vv1[iz], &vv2[iz]);
         }
     }
 
@@ -3441,7 +3456,7 @@ void GridFunc<T>::test_newgrid()
     std::cout << " h(hu): bc=" << h.bc(0) << "," << h.bc(1) << "," << h.bc(2)
               << std::endl;
 
-    double my_dot = MPdot(dims, hu, hu);
+    double my_dot = LinearAlgebraUtils<MemorySpace::Host>::MPdot(dims, hu, hu);
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     double sum      = 0.;
@@ -3737,14 +3752,29 @@ void GridFunc<T>::resizeBuffers()
 template class GridFunc<double>;
 template class GridFunc<float>;
 
-template void GridFunc<double>::getValues(double*) const;
-template void GridFunc<double>::getValues(float*) const;
-template void GridFunc<float>::getValues(double*) const;
-template void GridFunc<float>::getValues(float*) const;
+template void GridFunc<double>::getValues<double, MemorySpace::Host>(
+    double*) const;
+template void GridFunc<double>::getValues<float, MemorySpace::Host>(
+    float*) const;
+template void GridFunc<float>::getValues<double, MemorySpace::Host>(
+    double*) const;
+template void GridFunc<float>::getValues<float, MemorySpace::Host>(
+    float*) const;
 
 template void GridFunc<double>::assign(const double* const, const char dis);
 template void GridFunc<double>::assign(const float* const, const char dis);
 template void GridFunc<float>::assign(const double* const, const char dis);
 template void GridFunc<float>::assign(const float* const, const char dis);
+
+#ifdef HAVE_MAGMA
+template void GridFunc<double>::getValues<double, MemorySpace::Device>(
+    double*) const;
+template void GridFunc<double>::getValues<float, MemorySpace::Device>(
+    float*) const;
+template void GridFunc<float>::getValues<double, MemorySpace::Device>(
+    double*) const;
+template void GridFunc<float>::getValues<float, MemorySpace::Device>(
+    float*) const;
+#endif
 
 } // namespace pb

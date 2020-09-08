@@ -184,7 +184,9 @@ public:
     void axpy(const double alpha, const GridFuncVector<ScalarType>& func);
 
     void init_vect(const int k, ScalarType* vv, const char dis) const;
+    template <typename MemorySpaceType>
     void getValues(const int k, double* vv) const;
+    template <typename MemorySpaceType>
     void getValues(const int k, float* vv) const;
 
     static void printTimers(std::ostream& os)

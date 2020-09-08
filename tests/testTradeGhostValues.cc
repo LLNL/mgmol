@@ -99,7 +99,8 @@ TEST_CASE("Trade ghost values", "[trade]")
     for (int i = 0; i < nfunc; i++)
     {
         std::vector<double> scaled_data(inner_data);
-        MPscal(nx * ny * nz, (double)(i + 1), scaled_data.data());
+        LinearAlgebraUtils<MemorySpace::Host>::MPscal(
+            nx * ny * nz, (double)(i + 1), scaled_data.data());
         gfv.assign(i, scaled_data.data(), 'd');
     }
     gfv.trade_boundaries();

@@ -18,6 +18,7 @@
 
 #include <cassert>
 #include <cstring>
+#include <iostream>
 #include <memory>
 #include <vector>
 
@@ -78,7 +79,7 @@ void assert_is_dev_ptr(T*)
 }
 
 template <typename T>
-void assert_is_same_memory_space(T* ptr_1, T* ptr_2)
+void assert_is_same_memory_space(T*, T*)
 {
 }
 #endif
@@ -153,7 +154,7 @@ void copy_to_host(T const* const vec_dev, unsigned int size, T* vec)
 }
 #else
 template <typename T>
-void copy_to_host(T const* const /*vec_dev*/, unsigned int /*size*/, T* /*vec*/)
+void copy_to_host(T const* const, unsigned int, T*)
 {
     assert(false);
 }
@@ -204,7 +205,7 @@ struct Memory
 
     static void copy_view_to_host(T* vec_dev, unsigned int size, T*& vec);
 
-    static void copy_view_to_dev(T* vec, unsigned int size, T*& vec_dev);
+    static void copy_view_to_dev(T* vec, unsigned int size, T* vec_dev);
 
     static void set(T* ptr, unsigned int size, int val);
 };
@@ -301,7 +302,7 @@ struct Memory<T, MemorySpace::Device>
             magma_singleton.queue_);
     }
 
-    static void copy_view_to_dev(T* vec, unsigned int size, T*& vec_dev)
+    static void copy_view_to_dev(T* vec, unsigned int size, T* vec_dev)
     {
         assert_is_host_ptr(vec);
         assert_is_dev_ptr(vec_dev);
@@ -325,6 +326,7 @@ struct Memory<T, MemorySpace::Device>
         auto ptr_host = Memory<T, Host>::allocate(size);
         Memory<T, Host>::set(ptr_host, size, val);
         copy_to_dev(ptr_host, size, ptr);
+        Memory<T, Host>::free(ptr_host);
 #endif
     }
 };
