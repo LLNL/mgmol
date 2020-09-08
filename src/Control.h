@@ -120,7 +120,10 @@ private:
     // Number of electrons
     int nel_; // total
     int nempty_;
-    int nelspin_; // Number electrons for local spin
+
+    // Number electrons for local spin
+    // Could be a fraction if total number of e- is odd
+    double nelspin_;
 
     // total charge of system ions+electrons
     short system_charge_;
@@ -252,9 +255,9 @@ public:
 
     int getNel() const { return nel_; }
 
-    int getNelSpin() const
+    double getNelSpin() const
     {
-        assert(nelspin_ >= 0);
+        assert(nelspin_ >= 0.);
         return nelspin_;
     }
 
@@ -593,7 +596,10 @@ public:
     int checkNLrange();
     int checkOptions();
     void setOptions(const boost::program_options::variables_map& vm);
-    bool fullyOccupied() { return ((nelspin_ - numst) == 0); }
+    bool fullyOccupied()
+    {
+        return ((static_cast<double>(numst) - nelspin_) < 1.e-8);
+    }
 
     float AOMMradius() const { return aomm_radius_; }
     float AOMMthresholdFactor() const { return aomm_threshold_factor_; }

@@ -45,7 +45,7 @@ protected:
     bool with_spin_;
     double width_;
 
-    int nel_;
+    double nel_;
 
     short subdiv_;
     short chromatic_number_;
@@ -66,7 +66,8 @@ public:
           chromatic_number_(-1)
     {
         Control& ct = *(Control::instance());
-        nel_        = with_spin ? ct.getNelSpin() : ct.getNel();
+        nel_        = ct.getNelSpin();
+        std::cout << "ProjectedMatricesInterface: nel_=" << nel_ << std::endl;
     };
 
     // define Fermi distribution function to be approximated by Chebyshev

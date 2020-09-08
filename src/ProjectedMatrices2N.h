@@ -26,7 +26,7 @@ public:
 
     void assignBlocksH(MatrixType&, MatrixType&, MatrixType&, MatrixType&);
 
-    void iterativeUpdateDMwithEigenstates(const double occ_width, const int nel,
+    void iterativeUpdateDMwithEigenstates(const double occ_width,
         const int iterative_index, const bool flag_reduce_T = true);
     void diagonalizeDM(std::vector<DISTMATDTYPE>& occ, MatrixType& vect)
     {

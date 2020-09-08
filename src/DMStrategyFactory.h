@@ -48,6 +48,7 @@ public:
         {
             if (ct.fullyOccupied())
             {
+                std::cout << "Fully occupied strategy" << std::endl;
                 dm_strategy
                     = new FullyOccupiedNonOrthoDMStrategy(proj_matrices);
             }
@@ -55,6 +56,7 @@ public:
             {
                 if (ct.getOrthoType() == OrthoType::Eigenfunctions)
                 {
+                    std::cout << "EigenDMStrategy..." << std::endl;
                     dm_strategy
                         = new EigenDMStrategy<T>(orbitals, proj_matrices);
                 }
@@ -62,6 +64,7 @@ public:
                 {
                     if (ct.getOrthoType() == OrthoType::Nonorthogonal)
                     {
+                        std::cout << "NonOrthoDMStrategy..." << std::endl;
                         dm_strategy = new NonOrthoDMStrategy<T>(
                             orbitals, proj_matrices, ct.dm_mix);
                     }
@@ -69,6 +72,7 @@ public:
             }
         }
 
+        assert(dm_strategy != nullptr);
         return dm_strategy;
     }
 

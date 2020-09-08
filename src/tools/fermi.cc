@@ -82,12 +82,13 @@ double fermi_distribution(const double mu, const int max_occ, const double kBT,
 //         between 0 and 1
 template <typename ScalarType>
 double compute_chemical_potential_and_occupations(
-    const std::vector<ScalarType>& energies, const double width, const int nel,
-    const int max_numst, const bool onpe0, std::vector<ScalarType>& occ)
+    const std::vector<ScalarType>& energies, const double width,
+    const double nel, const int max_numst, const bool onpe0,
+    std::vector<ScalarType>& occ)
 {
     assert(energies.size() > 0);
     assert(energies.size() == occ.size());
-    assert(nel >= 0);
+    assert(nel >= 0.);
 
     const unsigned int dim  = energies.size();
     const int maxit         = 100;
@@ -101,7 +102,7 @@ double compute_chemical_potential_and_occupations(
     assert(mu1 < mu2);
     bool done = false;
 
-    if (nel <= 0)
+    if (nel <= 0.)
     {
         mu1 = -10000.;
         mu2 = 10000.;
@@ -111,7 +112,7 @@ double compute_chemical_potential_and_occupations(
 
     // if number of electrons larger or equal to twice
     // the number of slots, all the slots are fully occupied
-    if (2 * dim <= static_cast<unsigned int>(nel))
+    if (static_cast<double>(dim) <= nel)
     {
         done = true;
         mu   = mu2;
@@ -122,7 +123,7 @@ double compute_chemical_potential_and_occupations(
     double f2 = 0.;
     if (!done)
     {
-        f2 = 2. * fermi_distribution(mu2, max_numst, width, energies, occ)
+        f2 = fermi_distribution(mu2, max_numst, width, energies, occ)
              - static_cast<double>(nel);
         // no unoccupied states
         if (fabs(f2) < charge_tol)
@@ -134,7 +135,7 @@ double compute_chemical_potential_and_occupations(
     double f1 = 0.;
     if (!done)
     {
-        f1 = 2. * fermi_distribution(mu1, max_numst, width, energies, occ)
+        f1 = fermi_distribution(mu1, max_numst, width, energies, occ)
              - static_cast<double>(nel);
         if (fabs(f1) < charge_tol)
         {
@@ -175,8 +176,7 @@ double compute_chemical_potential_and_occupations(
 
             dmu *= 0.5;
             mu1 = mu + dmu;
-            f   = 2. * fermi_distribution(mu1, max_numst, width, energies, occ)
-                - static_cast<double>(nel);
+            f = fermi_distribution(mu1, max_numst, width, energies, occ) - nel;
 
             if (f <= 0.)
             {
@@ -209,5 +209,5 @@ template double fermi_distribution(const double mu, const int max_occ,
     const double kBT, const std::vector<double>& energies,
     std::vector<double>& occ);
 template double compute_chemical_potential_and_occupations(
-    const std::vector<double>& energies, const double width, const int nel,
+    const std::vector<double>& energies, const double width, const double nel,
     const int max_numst, const bool onpe0, std::vector<double>& occ);

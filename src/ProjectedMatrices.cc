@@ -330,7 +330,8 @@ void ProjectedMatrices<MatrixType>::updateDMwithSP2(const int iterative_index)
         sp2.initializeLocalMat(theta, emin - buffer, emax + buffer, ids);
     }
 
-    sp2.solve(nel_, (ct.verbose > 1));
+    const double nel = with_spin_ ? nel_ : 2. * nel_;
+    sp2.solve(nel, (ct.verbose > 1));
 
     MatrixType dm("dm", dim_, dim_);
 
@@ -342,7 +343,6 @@ template <class MatrixType>
 void ProjectedMatrices<MatrixType>::updateDM(const int iterative_index)
 {
     Control& ct = *(Control::instance());
-
     if (ct.DMEigensolver() == DMEigensolverType::Eigensolver)
         updateDMwithEigenstates(iterative_index);
     else if (ct.DMEigensolver() == DMEigensolverType::Chebyshev)
@@ -436,6 +436,7 @@ double ProjectedMatrices<MatrixType>::getNel() const
     double val = dm_->dot(gm_->getMatrix());
     if (with_spin_)
     {
+        std::cout << "nel for 1 spin = " << val << std::endl;
         double tmp      = 0.;
         MGmol_MPI& mmpi = *(MGmol_MPI::instance());
         mmpi.allreduceSpin(&val, &tmp, 1, MPI_SUM);
@@ -773,23 +774,22 @@ void ProjectedMatrices<MatrixType>::printEigenvaluesHa(std::ostream& os) const
 template <class MatrixType>
 void ProjectedMatrices<MatrixType>::computeChemicalPotentialAndOccupations(
     const std::vector<DISTMATDTYPE>& energies, const double width,
-    const int nel, const int max_numst)
+    const int max_numst)
 {
     assert(energies.size() > 0);
-    assert(nel >= 0);
+    assert(nel_ >= 0);
 
     Control& ct     = *(Control::instance());
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     if (mmpi.instancePE0() && ct.verbose > 1)
         (*MPIdata::sout)
             << "computeChemicalPotentialAndOccupations() with width=" << width
-            << ", for " << nel << " electrons" << std::endl;
+            << ", for " << nel_ << " electrons" << std::endl;
 
     std::vector<DISTMATDTYPE> occ(dim_, 0.);
 
     mu_ = compute_chemical_potential_and_occupations(
-        energies, width, nel, max_numst, onpe0, occ);
-
+        energies, width, nel_, max_numst, onpe0, occ);
     // if( onpe0 )
     //    (*MPIdata::sout)<<"computeChemicalPotentialAndOccupations() with mu="
     //        <<mu<<std::endl;
@@ -930,7 +930,7 @@ ProjectedMatrices<MatrixType>::computeChemicalPotentialAndDMwithChebyshev(
     const int iterative_index)
 {
     assert(emax > emin);
-    assert(nel_ >= 0);
+    assert(nel_ >= 0.);
 
     Control& ct = *(Control::instance());
 
@@ -952,13 +952,13 @@ ProjectedMatrices<MatrixType>::computeChemicalPotentialAndDMwithChebyshev(
     assert(mu1 < mu2);
     bool done = false;
 
-    if (nel_ <= 0)
+    if (nel_ <= 0.)
     {
         mu1 = -10000.;
         mu2 = 10000.;
     }
 
-    if (2 * dim_ <= static_cast<unsigned int>(nel_))
+    if (static_cast<double>(dim_) <= nel_)
     {
         done = true;
         mu_  = mu2;
@@ -1000,7 +1000,7 @@ ProjectedMatrices<MatrixType>::computeChemicalPotentialAndDMwithChebyshev(
             gm_->getInverse(), 0.);
         tmp.gemm('N', 'N', 1., dm, gm_->getMatrix(), 0.);
         // compute trace and check convergence
-        f2 = 2 * tmp.trace() - static_cast<double>(nel_);
+        f2 = tmp.trace() - nel_;
 
         // no unoccupied states
         if (std::abs(f2) < charge_tol)
@@ -1019,7 +1019,7 @@ ProjectedMatrices<MatrixType>::computeChemicalPotentialAndDMwithChebyshev(
             gm_->getInverse(), 0.);
         tmp.gemm('N', 'N', 1., dm, gm_->getMatrix(), 0.);
         // compute trace and check convergence
-        f1 = 2 * tmp.trace() - static_cast<double>(nel_);
+        f1 = tmp.trace() - nel_;
 
         // no unoccupied states
         if (std::abs(f1) < charge_tol)
@@ -1069,7 +1069,7 @@ ProjectedMatrices<MatrixType>::computeChemicalPotentialAndDMwithChebyshev(
             // compute Chebyshev approximation
             tmp = chebapp.computeChebyshevApproximation();
             // compute trace and check convergence
-            f = 2 * tmp.trace() - static_cast<double>(nel_);
+            f = tmp.trace() - nel_;
             if (f <= 0.)
             {
                 mu_old = mu_;

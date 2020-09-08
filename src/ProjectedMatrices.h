@@ -76,11 +76,11 @@ class ProjectedMatrices : public ProjectedMatricesInterface
 
     void computeChemicalPotentialAndOccupations(
         const std::vector<DISTMATDTYPE>& energies, const double width,
-        const int nel, const int max_numst);
+        const int max_numst);
 
     void computeChemicalPotentialAndOccupations()
     {
-        computeChemicalPotentialAndOccupations(width_, nel_, dim_);
+        computeChemicalPotentialAndOccupations(width_, dim_);
     }
     double computeChemicalPotentialAndDMwithChebyshev(const int order,
         const double emin, const double emax, const int iterative_index);
@@ -313,10 +313,9 @@ public:
         const int iterative_index, MatrixType& zz);
     void updateDMwithChebApproximation(const int iterative_index) override;
     void computeChemicalPotentialAndOccupations(
-        const double width, const int nel, const int max_numst)
+        const double width, const int max_numst)
     {
-        computeChemicalPotentialAndOccupations(
-            eigenvalues_, width, nel, max_numst);
+        computeChemicalPotentialAndOccupations(eigenvalues_, width, max_numst);
     }
 
     void saveDM() override
@@ -400,8 +399,6 @@ public:
     {
         dm_->setMatrix(mat, orbitals_index);
     }
-    void updateDMwithChebApprox(
-        const double occ_width, const int nel, const int iterative_index);
     void computeGenEigenInterval(std::vector<double>& interval,
         const int maxits, const double padding = 0.01);
     DensityMatrix<MatrixType>& getDM() { return *dm_; }
