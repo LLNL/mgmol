@@ -13,8 +13,8 @@
 
 template <class MatrixType>
 ProjectedMatricesMehrstellen<MatrixType>::ProjectedMatricesMehrstellen(
-    const int ndim, const bool with_spin)
-    : ProjectedMatrices<MatrixType>(ndim, with_spin)
+    const int ndim, const bool with_spin, const double width)
+    : ProjectedMatrices<MatrixType>(ndim, with_spin, width)
 {
     assert(ndim > 0);
 

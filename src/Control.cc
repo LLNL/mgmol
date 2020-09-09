@@ -83,7 +83,7 @@ Control::Control()
     thwidth                          = -1.;
     nel_                             = -1;
     nempty_                          = -1;
-    nelspin_                         = -1;
+    nelspin_                         = -1.;
     diel_flag_                       = -1;
     wf_dyn                           = -1;
     wf_m                             = -1;
@@ -892,6 +892,9 @@ void Control::setNumst(const short myspin, const int neval)
 
         numst = (nel_ - (int)(2. * total_spin_)) / 2;
         if (myspin == 0) numst += (int)(2. * total_spin_);
+
+        numst += nempty_;
+        nelspin_ = static_cast<double>(numst - nempty_);
     }
     else // no spin, 2 electrons/orbital
     {
@@ -907,15 +910,16 @@ void Control::setNumst(const short myspin, const int neval)
             {
                 if (2 * numst < nel_) numst++;
             }
+
+            numst += nempty_;
+            nelspin_ = 0.5 * static_cast<double>(nel_);
         }
     }
 
-    numst += nempty_;
-    nelspin_ = numst - nempty_;
-
     if (mype_ == 0)
         std::cout << "spin=" << total_spin_ << ", nel=" << neval
-                  << ", numst=" << numst << ", nempty=" << nempty_ << std::endl;
+                  << ", nelspin_ =" << nelspin_ << ", numst=" << numst
+                  << ", nempty=" << nempty_ << std::endl;
 }
 
 void Control::setTolEnergy()

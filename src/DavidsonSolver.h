@@ -23,7 +23,6 @@ template <class OrbitalsType, class MatrixType>
 class DavidsonSolver
 {
 private:
-    MPI_Comm comm_;
     std::ostream& os_;
 
     Ions& ions_;
@@ -70,11 +69,12 @@ private:
     //    const double eta, MatrixType& target);
 
 public:
-    DavidsonSolver(MPI_Comm comm, std::ostream& os, Ions& ions,
+    DavidsonSolver(std::ostream& os, Ions& ions,
         Hamiltonian<OrbitalsType>* hamiltonian, Rho<OrbitalsType>* rho,
         Energy<OrbitalsType>* energy, Electrostatic* electrostat,
-        MGmol<OrbitalsType>* mgmol_strategy, const int numst, const double kbT,
-        const int nel, const std::vector<std::vector<int>>& global_indexes);
+        MGmol<OrbitalsType>* mgmol_strategy,
+        const std::vector<std::vector<int>>& global_indexes,
+        const bool with_spin);
     ~DavidsonSolver();
 
     int solve(OrbitalsType& orbitals, OrbitalsType& work_orbitals);

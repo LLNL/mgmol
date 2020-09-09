@@ -38,7 +38,8 @@ private:
     ProjectedMatricesMehrstellen(const ProjectedMatricesMehrstellen& pm);
 
 public:
-    ProjectedMatricesMehrstellen(const int ndim, const bool with_spin);
+    ProjectedMatricesMehrstellen(
+        const int ndim, const bool with_spin, const double width);
     ~ProjectedMatricesMehrstellen() override;
 
     void computeInvB() override;

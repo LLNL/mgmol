@@ -11,8 +11,8 @@
 
 template <class MatrixType>
 ProjectedMatrices2N<MatrixType>::ProjectedMatrices2N(
-    const int ndim, const bool with_spin)
-    : ProjectedMatrices<MatrixType>(ndim, with_spin)
+    const int ndim, const bool with_spin, const double width)
+    : ProjectedMatrices<MatrixType>(ndim, with_spin, width)
 {
     bdim_ = ndim / 2;
 
@@ -37,8 +37,7 @@ void ProjectedMatrices2N<MatrixType>::assignBlocksH(
 
 template <class MatrixType>
 void ProjectedMatrices2N<MatrixType>::iterativeUpdateDMwithEigenstates(
-    const double occ_width, const int nel, const int iterative_index,
-    const bool flag_reduce_T)
+    const double occ_width, const int iterative_index, const bool flag_reduce_T)
 {
     const int dim = this->dim();
 
@@ -52,7 +51,7 @@ void ProjectedMatrices2N<MatrixType>::iterativeUpdateDMwithEigenstates(
         if (onpe0)
             (*MPIdata::sout) << "MVP target with kbT = " << kbT << std::endl;
         ProjectedMatrices<MatrixType>::computeChemicalPotentialAndOccupations(
-            kbT, nel, dim);
+            kbT, dim);
         ProjectedMatrices<MatrixType>::getOccupations(occ);
         kbT *= 0.5;
     } while (occ[bdim_] > tol && flag_reduce_T);

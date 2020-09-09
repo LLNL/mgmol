@@ -18,7 +18,7 @@ double fermi_distribution(const double mu, const int max_numst,
 
 template <typename T>
 double compute_chemical_potential_and_occupations(
-    const std::vector<T>& energies, const double width, const int nel,
+    const std::vector<T>& energies, const double width, const double nel,
     const int max_numst, const bool onpe0, std::vector<T>& occ);
 
 #endif

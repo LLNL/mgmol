@@ -123,8 +123,7 @@ ExtendedGridOrbitals::ExtendedGridOrbitals(const std::string& name,
     assert(proj_matrices != nullptr);
 
     // setup new projected_matrices object
-    Control& ct = *(Control::instance());
-    proj_matrices_->setup(ct.occ_width, ct.getNel(), overlapping_gids_);
+    proj_matrices_->setup(overlapping_gids_);
 }
 
 void ExtendedGridOrbitals::copyDataFrom(const ExtendedGridOrbitals& src)
@@ -165,7 +164,7 @@ void ExtendedGridOrbitals::setup()
 
     block_vector_.initialize(overlapping_gids_, skinny_stencil);
 
-    proj_matrices_->setup(ct.occ_width, ct.getNel(), overlapping_gids_);
+    proj_matrices_->setup(overlapping_gids_);
 
     if (ct.verbose > 0)
         printWithTimeStamp(

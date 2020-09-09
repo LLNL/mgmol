@@ -52,8 +52,7 @@ int MVP_DMStrategy<OrbitalsType>::update()
 
     MVPSolver<OrbitalsType, dist_matrix::DistMatrix<DISTMATDTYPE>> solver(comm_,
         os_, ions_, rho_, energy_, electrostat_, mgmol_strategy_, ct.numst,
-        ct.occ_width, ct.getNel(), global_indexes_, ct.dm_inner_steps,
-        use_old_dm_);
+        ct.occ_width, global_indexes_, ct.dm_inner_steps, use_old_dm_);
 
     return solver.solve(*orbitals_);
 }

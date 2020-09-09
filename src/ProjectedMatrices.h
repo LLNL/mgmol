@@ -76,11 +76,11 @@ class ProjectedMatrices : public ProjectedMatricesInterface
 
     void computeChemicalPotentialAndOccupations(
         const std::vector<DISTMATDTYPE>& energies, const double width,
-        const int nel, const int max_numst);
+        const int max_numst);
 
     void computeChemicalPotentialAndOccupations()
     {
-        computeChemicalPotentialAndOccupations(width_, nel_, dim_);
+        computeChemicalPotentialAndOccupations(width_, dim_);
     }
     double computeChemicalPotentialAndDMwithChebyshev(const int order,
         const double emin, const double emax, const int iterative_index);
@@ -127,11 +127,10 @@ protected:
     void convert(const MatrixType& src, SquareLocalMatrices<MATDTYPE>& dst);
 
 public:
-    ProjectedMatrices(const int, const bool with_spin);
+    ProjectedMatrices(const int, const bool with_spin, const double occ_width);
     ~ProjectedMatrices() override;
 
-    void setup(const double kbt, const int nel,
-        const std::vector<std::vector<int>>& global_indexes) override;
+    void setup(const std::vector<std::vector<int>>& global_indexes) override;
 
     void setLocalMatrixElementsHnl(
         const SquareSubMatrix<MATDTYPE>& slH) override
@@ -195,8 +194,6 @@ public:
         dm_->setUniform(nel, orbitals_index);
     }
     int dim() const { return dim_; }
-
-    bool withSpin() const { return with_spin_; }
 
     void computeInvS() override;
 
@@ -316,10 +313,9 @@ public:
         const int iterative_index, MatrixType& zz);
     void updateDMwithChebApproximation(const int iterative_index) override;
     void computeChemicalPotentialAndOccupations(
-        const double width, const int nel, const int max_numst)
+        const double width, const int max_numst)
     {
-        computeChemicalPotentialAndOccupations(
-            eigenvalues_, width, nel, max_numst);
+        computeChemicalPotentialAndOccupations(eigenvalues_, width, max_numst);
     }
 
     void saveDM() override
@@ -403,8 +399,6 @@ public:
     {
         dm_->setMatrix(mat, orbitals_index);
     }
-    void updateDMwithChebApprox(
-        const double occ_width, const int nel, const int iterative_index);
     void computeGenEigenInterval(std::vector<double>& interval,
         const int maxits, const double padding = 0.01);
     DensityMatrix<MatrixType>& getDM() { return *dm_; }

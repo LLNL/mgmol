@@ -19,13 +19,14 @@ class ProjectedMatrices2N : public ProjectedMatrices<MatrixType>
     MatrixType* work2N_;
 
 public:
-    ProjectedMatrices2N(const int ndim, const bool with_spin);
+    ProjectedMatrices2N(
+        const int ndim, const bool with_spin, const double width);
 
     ~ProjectedMatrices2N() override;
 
     void assignBlocksH(MatrixType&, MatrixType&, MatrixType&, MatrixType&);
 
-    void iterativeUpdateDMwithEigenstates(const double occ_width, const int nel,
+    void iterativeUpdateDMwithEigenstates(const double occ_width,
         const int iterative_index, const bool flag_reduce_T = true);
     void diagonalizeDM(std::vector<DISTMATDTYPE>& occ, MatrixType& vect)
     {

@@ -17,6 +17,7 @@
 /* Currently only needed functions in ProjectedMatrices.h class. Must be
  * cleaned-up later */
 #include "ChebyshevApproximationFunction.h"
+#include "Control.h"
 #include "MGmol_MPI.h"
 #include "SquareLocalMatrices.h"
 #include "SquareSubMatrix.h"
@@ -41,24 +42,33 @@ private:
     }
 
 protected:
+    bool with_spin_;
+    double width_;
+
+    double nel_;
+
     short subdiv_;
     short chromatic_number_;
-    double width_;
+
     double mu_;
-    int nel_;
 
     // pointer to member function
     std::vector<double> (ProjectedMatricesInterface::*funcptr_)(
         const std::vector<double>& nodes);
 
 public:
-    ProjectedMatricesInterface()
+    ProjectedMatricesInterface(const bool with_spin, const double width)
         : ChebyshevApproximationFunction(),
           iterative_index_h_(-1),
+          with_spin_(with_spin),
+          width_(width),
           subdiv_(-1),
-          chromatic_number_(-1),
-          width_(0.),
-          nel_(0.){};
+          chromatic_number_(-1)
+    {
+        Control& ct = *(Control::instance());
+        nel_        = ct.getNelSpin();
+        std::cout << "ProjectedMatricesInterface: nel_=" << nel_ << std::endl;
+    };
 
     // define Fermi distribution function to be approximated by Chebyshev
     // approximation f(x) = 1 / (1 + Exp[(E-mu)/kbT])
@@ -124,16 +134,11 @@ public:
 
     virtual ~ProjectedMatricesInterface(){};
 
-    virtual void setup(const double kbt, const int nel,
-        const std::vector<std::vector<int>>& global_indexes)
-        = 0;
+    virtual void setup(const std::vector<std::vector<int>>& global_indexes) = 0;
 
     // initial setup function
-    void setupBase(const double kbt, const int num_el, const int subdiv,
-        const int chromatic_number)
+    void setupBase(const int subdiv, const int chromatic_number)
     {
-        width_            = kbt;
-        nel_              = num_el;
         subdiv_           = subdiv;
         chromatic_number_ = chromatic_number;
     }

@@ -167,8 +167,7 @@ LocGridOrbitals::LocGridOrbitals(const std::string& name,
         new Masks4Orbitals(masks, corrmasks, A.all_overlapping_gids_));
 
     // setup new projected_matrices object
-    Control& ct = *(Control::instance());
-    proj_matrices_->setup(ct.occ_width, ct.getNel(), overlapping_gids_);
+    proj_matrices_->setup(overlapping_gids_);
 }
 
 void LocGridOrbitals::copySharedData(const LocGridOrbitals& A)
@@ -296,7 +295,7 @@ void LocGridOrbitals::setup(std::shared_ptr<LocalizationRegions> lrs)
 
     setGids2Storage();
 
-    proj_matrices_->setup(ct.occ_width, ct.getNel(), overlapping_gids_);
+    proj_matrices_->setup(overlapping_gids_);
 
     Mesh* mymesh             = Mesh::instance();
     const pb::Grid& mygrid   = mymesh->grid();
