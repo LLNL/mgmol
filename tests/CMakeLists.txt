@@ -283,6 +283,8 @@ if(${MAGMA_FOUND})
              COMMAND ${CMAKE_CURRENT_BINARY_DIR}/testMagmaOpenmp)
   endif()
 else()
+#[[
+
   add_test(NAME testShortSighted
            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ShortSighted/test.py
            ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 5 ${MPIEXEC_PREFLAGS}
@@ -292,9 +294,11 @@ else()
            ${CMAKE_CURRENT_SOURCE_DIR}/ShortSighted/coords.in
            ${CMAKE_CURRENT_SOURCE_DIR}/ShortSighted/lrs.in
            ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+]]
 endif()
 
 #Regression tests
+#[[
 add_test(NAME testProjectedMatrices
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ProjectedMatrices/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
@@ -318,6 +322,7 @@ add_test(NAME testMVP
          ${CMAKE_CURRENT_SOURCE_DIR}/MVP/mvp.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/MVP/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+]]
 add_test(NAME testFatom
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Fatom/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
@@ -339,6 +344,7 @@ add_test(NAME testCl2
          ${CMAKE_CURRENT_SOURCE_DIR}/Cl2_ONCVPSP_LDA/mgmol.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/Cl2_ONCVPSP_LDA/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+#[[
 add_test(NAME BandGapN2
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/BandGapN2/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 3 ${MPIEXEC_PREFLAGS}
@@ -387,6 +393,7 @@ add_test(NAME testLBFGS
          ${CMAKE_CURRENT_SOURCE_DIR}/LBFGS/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/LBFGS/lrs.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+]]
 add_test(NAME ChebyshevMVP
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Chebyshev/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
@@ -394,6 +401,7 @@ add_test(NAME ChebyshevMVP
          ${CMAKE_CURRENT_SOURCE_DIR}/Chebyshev/cheb.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/Chebyshev/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+#[[
 add_test(NAME testContinuumSolvent
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ContinuumSolvent/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
@@ -409,7 +417,7 @@ add_test(NAME testSpinO2
          ${CMAKE_CURRENT_SOURCE_DIR}/SpinO2/mgmol_spin1.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/SpinO2/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
-
+]]
 
 target_include_directories(testHDF5P PRIVATE ${HDF5_INCLUDE_DIRS})
 target_include_directories(testAndersonMix PRIVATE

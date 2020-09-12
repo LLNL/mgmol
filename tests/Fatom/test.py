@@ -37,6 +37,11 @@ output = subprocess.check_output(command,shell=True)
 #make sure force is below tolerance
 lines=output.split(b'\n')
 
+#check number of threads
+for line in lines:
+  if line.count(b'thread'):
+    print(line)
+
 print("Check force...")
 tol = 1.e-2
 for line in lines:
@@ -68,5 +73,5 @@ for i in range(len(lines)):
       if abs(eval(eigenvalues[1+ii])+0.409)>tole:
         print("ERROR Eigenvalue {} = {}".format(1+ii,eval(eigenvalues[1+ii])))
         sys.exit(1)
-    sys.exit(0)
+    sys.exit(1)
 

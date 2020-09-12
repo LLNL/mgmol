@@ -37,6 +37,10 @@ output = subprocess.check_output(command,shell=True)
 #make sure force is below tolerance
 lines=output.split(b'\n')
 
+for line in lines:
+  if line.count(b'Timer'):
+    print(line)
+
 convergence=0
 for line in lines:
   if line.count(b'DFTsolver:') and line.count(b'convergence'):
@@ -91,4 +95,4 @@ for line in lines:
     break
 
 print("Test PASSED")
-sys.exit(0)
+sys.exit(1)
