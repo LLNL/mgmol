@@ -48,7 +48,8 @@ DavidsonSolver<OrbitalsType, MatrixType>::DavidsonSolver(std::ostream& os,
     Ions& ions, Hamiltonian<OrbitalsType>* hamiltonian, Rho<OrbitalsType>* rho,
     Energy<OrbitalsType>* energy, Electrostatic* electrostat,
     MGmol<OrbitalsType>* mgmol_strategy,
-    const std::vector<std::vector<int>>& global_indexes, const bool with_spin)
+    const std::vector<std::vector<int>>& global_indexes, const double mixing,
+    const bool with_spin)
     : os_(os),
       ions_(ions),
       hamiltonian_(hamiltonian),
@@ -56,6 +57,7 @@ DavidsonSolver<OrbitalsType, MatrixType>::DavidsonSolver(std::ostream& os,
       energy_(energy),
       electrostat_(electrostat),
       mgmol_strategy_(mgmol_strategy),
+      mixing_(mixing),
       diel_control_(hamiltonian->potential(), electrostat, os, onpe0)
 {
     Control& ct = *(Control::instance());
@@ -543,7 +545,6 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
 
             MatrixType target("target", 2 * numst_, 2 * numst_);
 
-            double de0 = 0.;
             MatrixType delta_dm("delta_dm", 2 * numst_, 2 * numst_);
 
             buildTarget2N_MVP(h11, h12, h21, h22, s11, s22, target);
@@ -554,66 +555,77 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
             }
             delta_dm = target;
             delta_dm -= dm2Ninit;
-
-            de0 = evaluateDerivative(dm2Ninit, delta_dm, ts0);
-
-            //
-            // evaluate free energy at beta=1
-            //
-            if (onpe0 && ct.verbose > 2)
-                std::cout << "Target energy..." << std::endl;
-            proj_mat2N_->setDM(target, orbitals.getIterativeIndex());
-            proj_mat2N_->computeOccupationsFromDM();
-            double nel = proj_mat2N_->getNel();
-            if (onpe0 && ct.verbose > 2)
-                os_ << "Number of electrons at beta=1 : " << nel << std::endl;
-
-            dm11.getsub(target, numst_, numst_, 0, 0);
-            dm12.getsub(target, numst_, numst_, 0, numst_);
-            dm21.getsub(target, numst_, numst_, numst_, 0);
-            dm22.getsub(target, numst_, numst_, numst_, numst_);
-
-            // if( onpe0 )os_<<"Rho..."<<endl;
-            rho_->computeRho(orbitals, work_orbitals, dm11, dm12, dm21, dm22);
-            rho_->rescaleTotalCharge();
-
-            mgmol_strategy_->update_pot(vh_init, ions_);
-
-            energy_->saveVofRho();
-
-            // update h11, h22, h12, and h21
-            h11 = h11nl;
-            mgmol_strategy_->addHlocal2matrix(orbitals, orbitals, h11);
-
-            h22 = h22nl;
-            mgmol_strategy_->addHlocal2matrix(
-                work_orbitals, work_orbitals, h22);
-
-            h12 = h12nl;
-            mgmol_strategy_->addHlocal2matrix(orbitals, work_orbitals, h12);
-
-            h21.transpose(1., h12, 0.);
-
-            proj_mat2N_->assignBlocksH(h11, h12, h21, h22);
-            proj_mat2N_->setHB2H();
-
-            const double ts1
-                = evalEntropy(proj_mat2N_.get(), (ct.verbose > 2), os_);
-            const double e1 = energy_->evaluateTotal(
-                ts1, proj_mat2N_.get(), orbitals, ct.verbose - 1, os_);
-
-            // line minimization
-            double beta = minQuadPolynomial(e0, e1, de0, (ct.verbose > 2), os_);
-
-            if (onpe0 && ct.verbose > 1)
+            double beta = 0.;
+            if (mixing_ > 0.)
             {
-                os_ << std::setprecision(12);
-                os_ << std::fixed << "Inner iteration " << inner_it
-                    << ", E0=" << e0 << ", E1=" << e1;
-                os_ << std::scientific << ", E0'=" << de0
-                    << " -> beta=" << beta;
-                // os_<<scientific<<", E1'="<<de1;
-                os_ << std::endl;
+                beta = mixing_;
+                if (onpe0 && ct.verbose > 1)
+                    std::cout << "Davidson with beta = " << beta << std::endl;
+            }
+            else
+            {
+                double de0 = evaluateDerivative(dm2Ninit, delta_dm, ts0);
+
+                //
+                // evaluate free energy at beta=1
+                //
+                if (onpe0 && ct.verbose > 2)
+                    std::cout << "Target energy..." << std::endl;
+                proj_mat2N_->setDM(target, orbitals.getIterativeIndex());
+                proj_mat2N_->computeOccupationsFromDM();
+                double nel = proj_mat2N_->getNel();
+                if (onpe0 && ct.verbose > 2)
+                    os_ << "Number of electrons at beta=1 : " << nel
+                        << std::endl;
+
+                dm11.getsub(target, numst_, numst_, 0, 0);
+                dm12.getsub(target, numst_, numst_, 0, numst_);
+                dm21.getsub(target, numst_, numst_, numst_, 0);
+                dm22.getsub(target, numst_, numst_, numst_, numst_);
+
+                // if( onpe0 )os_<<"Rho..."<<endl;
+                rho_->computeRho(
+                    orbitals, work_orbitals, dm11, dm12, dm21, dm22);
+                rho_->rescaleTotalCharge();
+
+                mgmol_strategy_->update_pot(vh_init, ions_);
+
+                energy_->saveVofRho();
+
+                // update h11, h22, h12, and h21
+                h11 = h11nl;
+                mgmol_strategy_->addHlocal2matrix(orbitals, orbitals, h11);
+
+                h22 = h22nl;
+                mgmol_strategy_->addHlocal2matrix(
+                    work_orbitals, work_orbitals, h22);
+
+                h12 = h12nl;
+                mgmol_strategy_->addHlocal2matrix(orbitals, work_orbitals, h12);
+
+                h21.transpose(1., h12, 0.);
+
+                proj_mat2N_->assignBlocksH(h11, h12, h21, h22);
+                proj_mat2N_->setHB2H();
+
+                const double ts1
+                    = evalEntropy(proj_mat2N_.get(), (ct.verbose > 2), os_);
+                const double e1 = energy_->evaluateTotal(
+                    ts1, proj_mat2N_.get(), orbitals, ct.verbose - 1, os_);
+
+                // line minimization
+                beta = minQuadPolynomial(e0, e1, de0, (ct.verbose > 2), os_);
+
+                if (onpe0 && ct.verbose > 1)
+                {
+                    os_ << std::setprecision(12);
+                    os_ << std::fixed << "Inner iteration " << inner_it
+                        << ", E0=" << e0 << ", E1=" << e1;
+                    os_ << std::scientific << ", E0'=" << de0
+                        << " -> beta=" << beta;
+                    // os_<<scientific<<", E1'="<<de1;
+                    os_ << std::endl;
+                }
             }
 
             // update DM

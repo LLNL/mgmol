@@ -39,6 +39,14 @@ int NonOrthoDMStrategy<T>::update()
 {
     assert(proj_matrices_ != nullptr);
 
+    if (mix_ <= 0.)
+    {
+        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+        std::cerr << "NonOrthoDMStrategy, Invalid mixing value: " << mix_
+                  << std::endl;
+        MPI_Abort(mmpi.commSameSpin(), 0);
+    }
+
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 2)
     {

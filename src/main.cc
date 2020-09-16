@@ -404,7 +404,7 @@ int main(int argc, char** argv)
                 "LocalizationRegions.computation",
                 po::value<short>()->default_value(0),
                 "Flag for computing new centers from extrapolated orbitals.")(
-                "DensityMatrix.mixing", po::value<float>()->default_value(1.),
+                "DensityMatrix.mixing", po::value<float>()->default_value(-1.),
                 "Mixing coefficient for Density Matrix")("DensityMatrix.solver",
                 po::value<string>()->default_value("Mixing"),
                 "Algorithm for updating Density Matrix: Mixing, MVP, HMVP")(

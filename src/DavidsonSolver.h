@@ -39,6 +39,7 @@ private:
 
     double de_old_;
     double de_;
+    double mixing_;
 
     int numst_;
     std::unique_ptr<MatrixType> work2N_;
@@ -74,7 +75,7 @@ public:
         Energy<OrbitalsType>* energy, Electrostatic* electrostat,
         MGmol<OrbitalsType>* mgmol_strategy,
         const std::vector<std::vector<int>>& global_indexes,
-        const bool with_spin);
+        const double mixing, const bool with_spin);
     ~DavidsonSolver();
 
     int solve(OrbitalsType& orbitals, OrbitalsType& work_orbitals);
