@@ -711,6 +711,9 @@ void Control::setDefaultValues()
 
 void Control::adjust()
 {
+    // change dm_mix default to 1. if not using Davidson
+    if (it_algo_type_ != 2 && dm_mix < 0.) dm_mix = 1.;
+
     if (nel_ - 2 * numst == 0)
     {
         dm_mix = 1.;

@@ -491,7 +491,7 @@ int MGmol<T>::outerSolve(T& orbitals, T& work_orbitals, Ions& ions,
             const bool with_spin = (mmpi.nspin() > 1);
             DavidsonSolver<T, dist_matrix::DistMatrix<DISTMATDTYPE>> solver(os_,
                 *ions_, hamiltonian_, rho_, energy_, electrostat_, this, gids,
-                with_spin);
+                ct.dm_mix, with_spin);
 
             retval = solver.solve(orbitals, work_orbitals);
             break;
