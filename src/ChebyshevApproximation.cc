@@ -8,16 +8,24 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "ChebyshevApproximation.h"
+#include "DistMatrix.h"
 #include "MPIdata.h"
+
 #include <iostream>
 
-Timer ChebyshevApproximation::compute_tm_("ChebyshevApproximation::compute");
-Timer ChebyshevApproximation::compute2_tm_("ChebyshevApproximation::compute2");
-Timer ChebyshevApproximation::build_nodes_tm_(
+template <class MatrixType>
+Timer ChebyshevApproximation<MatrixType>::compute_tm_(
+    "ChebyshevApproximation::compute");
+template <class MatrixType>
+Timer ChebyshevApproximation<MatrixType>::compute2_tm_(
+    "ChebyshevApproximation::compute2");
+template <class MatrixType>
+Timer ChebyshevApproximation<MatrixType>::build_nodes_tm_(
     "ChebyshevApproximation::build_nodes");
 
-ChebyshevApproximation::ChebyshevApproximation(const double a, const double b,
-    const int order, ChebyshevApproximationFunction* func)
+template <class MatrixType>
+ChebyshevApproximation<MatrixType>::ChebyshevApproximation(const double a,
+    const double b, const int order, ChebyshevApproximationFunction* func)
 {
     assert(a < b);
 
@@ -35,14 +43,16 @@ ChebyshevApproximation::ChebyshevApproximation(const double a, const double b,
     setup();
 }
 
-void ChebyshevApproximation::setup()
+template <class MatrixType>
+void ChebyshevApproximation<MatrixType>::setup()
 {
     // compute interpolation points in extents_ [a, b] (mapped from [-1,1])
     computeInterpolationPoints();
 }
 
-void ChebyshevApproximation::buildChebyshevNodes(
-    const double a, const double b, dist_matrix::DistMatrix<DISTMATDTYPE>& H)
+template <class MatrixType>
+void ChebyshevApproximation<MatrixType>::buildChebyshevNodes(
+    const double a, const double b, MatrixType& H)
 {
     assert(order_ > 0);
 
@@ -52,22 +62,21 @@ void ChebyshevApproximation::buildChebyshevNodes(
 
     // Shift and scale matrix H so that spectrum is in range [-1, 1]
     // First make a copy of H
-    dist_matrix::DistMatrix<DISTMATDTYPE> scaled_H(H);
+    MatrixType scaled_H(H);
     scaleMatrixToChebyshevInterval(a, b, scaled_H);
 
     // prepare to build polynomials
     const int n = order_;
     // reset nodesTk
     nodesTk_.clear();
-    nodesTk_.resize(n, dist_matrix::DistMatrix<DISTMATDTYPE>("Tk", m, m));
+    nodesTk_.resize(n, MatrixType("Tk", m, m));
     // Set node T_0 to identity
     nodesTk_[0].identity();
     // set node T_1 = scaled_H
     nodesTk_[1] = scaled_H;
 
     // define pointers for three-term recurrence
-    std::vector<dist_matrix::DistMatrix<DISTMATDTYPE>>::iterator nodeT0, nodeT1,
-        nodeT;
+    typename std::vector<MatrixType>::iterator nodeT0, nodeT1, nodeT;
     nodeT0 = nodesTk_.begin();
     nodeT1 = nodesTk_.begin() + 1;
     nodeT  = nodesTk_.begin() + 2;
@@ -92,8 +101,9 @@ void ChebyshevApproximation::buildChebyshevNodes(
 
 // Shift and scale matrix H so that spectrum is in range [-1, 1].
 // NOTE: Matrix is modified on return
-void ChebyshevApproximation::scaleMatrixToChebyshevInterval(
-    const double a, const double b, dist_matrix::DistMatrix<DISTMATDTYPE>& H)
+template <class MatrixType>
+void ChebyshevApproximation<MatrixType>::scaleMatrixToChebyshevInterval(
+    const double a, const double b, MatrixType& H)
 {
     // Shift and scale matrix H so that spectrum is in range [-1, 1]
     const double scal = 2 / (b - a);
@@ -115,8 +125,8 @@ void ChebyshevApproximation::scaleMatrixToChebyshevInterval(
 
 // Compute Chebyshev approximation given vectors of coefficients and Chebyshev
 // nodes (polynomials)
-dist_matrix::DistMatrix<DISTMATDTYPE>
-ChebyshevApproximation::computeChebyshevApproximation()
+template <class MatrixType>
+MatrixType ChebyshevApproximation<MatrixType>::computeChebyshevApproximation()
 {
     compute_tm_.start();
 
@@ -124,7 +134,7 @@ ChebyshevApproximation::computeChebyshevApproximation()
     assert(static_cast<int>(coeffs_.size()) == order_);
 
     // set initial approximation matrix to first polynomial approx.
-    dist_matrix::DistMatrix<DISTMATDTYPE> matX(nodesTk_[0]);
+    MatrixType matX(nodesTk_[0]);
     matX.scal(coeffs_[0]);
 
     // loop over polynomials and scale with coeffs and update matrix
@@ -140,9 +150,9 @@ ChebyshevApproximation::computeChebyshevApproximation()
 
 // Compute Chebyshev approximation given extents of approximation and matrix
 // argument (for computing polynomials)
-dist_matrix::DistMatrix<DISTMATDTYPE>
-ChebyshevApproximation::computeChebyshevApproximation(
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& H, const bool recompute_coeffs)
+template <class MatrixType>
+MatrixType ChebyshevApproximation<MatrixType>::computeChebyshevApproximation(
+    const MatrixType& H, const bool recompute_coeffs)
 {
     compute2_tm_.start();
 
@@ -153,13 +163,12 @@ ChebyshevApproximation::computeChebyshevApproximation(
     }
     // Shift and scale matrix H so that spectrum is in range [-1, 1]
     // First make a copy of matrix
-    dist_matrix::DistMatrix<DISTMATDTYPE> scaled_H(H);
+    MatrixType scaled_H(H);
     scaleMatrixToChebyshevInterval(extents_[0], extents_[1], scaled_H);
 
     // define array to hold polynomials for recurrence relation
     const int m = H.m();
-    std::vector<dist_matrix::DistMatrix<DISTMATDTYPE>> nodesTk(
-        3, dist_matrix::DistMatrix<DISTMATDTYPE>("Tk", m, m));
+    std::vector<MatrixType> nodesTk(3, MatrixType("Tk", m, m));
     // Set node T_0 to identity
     nodesTk[0].identity();
     // set node T_1 = scaled_H
@@ -170,14 +179,13 @@ ChebyshevApproximation::computeChebyshevApproximation(
     const double two   = 2.;
     // Compute first 2 terms here:
     // 0. set initial approximation matrix to first polynomial approx.
-    dist_matrix::DistMatrix<DISTMATDTYPE> mat(nodesTk[0]);
+    MatrixType mat(nodesTk[0]);
     mat.scal(coeffs_[0]);
     // 1. update with second term of approximation
     mat.axpy(coeffs_[1], nodesTk[1]);
 
     // define pointers for three-term recurrence
-    std::vector<dist_matrix::DistMatrix<DISTMATDTYPE>>::iterator nodeT0, nodeT1,
-        nodeT, begin;
+    typename std::vector<MatrixType>::iterator nodeT0, nodeT1, nodeT, begin;
     // initialize
     begin  = nodesTk.begin();
     nodeT1 = begin;
@@ -207,3 +215,5 @@ ChebyshevApproximation::computeChebyshevApproximation(
 
     return mat;
 }
+
+template class ChebyshevApproximation<dist_matrix::DistMatrix<DISTMATDTYPE>>;

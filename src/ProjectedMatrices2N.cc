@@ -8,6 +8,7 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "ProjectedMatrices2N.h"
+#include "DistMatrix.h"
 
 template <class MatrixType>
 ProjectedMatrices2N<MatrixType>::ProjectedMatrices2N(
@@ -44,8 +45,8 @@ void ProjectedMatrices2N<MatrixType>::iterativeUpdateDMwithEigenstates(
     ProjectedMatrices<MatrixType>::solveGenEigenProblem(*work2N_);
 
     double kbT = occ_width;
-    std::vector<DISTMATDTYPE> occ(dim);
-    const DISTMATDTYPE tol = 1.e-6;
+    std::vector<double> occ(dim);
+    const double tol = 1.e-6;
     do
     {
         if (onpe0)
@@ -63,4 +64,4 @@ void ProjectedMatrices2N<MatrixType>::iterativeUpdateDMwithEigenstates(
     ProjectedMatrices<MatrixType>::buildDM(*work2N_, iterative_index);
 }
 
-template class ProjectedMatrices2N<dist_matrix::DistMatrix<DISTMATDTYPE>>;
+template class ProjectedMatrices2N<dist_matrix::DistMatrix<double>>;

@@ -923,7 +923,8 @@ void MGmol<T>::printTimers()
         dist_matrix::DistMatrix<DISTMATDTYPE>>::printTimers(os_);
     MDfiles::printTimers(os_);
     ChebyshevApproximationInterface::printTimers(os_);
-    ChebyshevApproximation::printTimers(os_);
+    ChebyshevApproximation<dist_matrix::DistMatrix<DISTMATDTYPE>>::printTimers(
+        os_);
 }
 
 template <class T>

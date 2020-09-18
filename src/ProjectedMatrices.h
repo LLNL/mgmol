@@ -36,7 +36,7 @@ class ProjectedMatrices : public ProjectedMatricesInterface
     // spin: 0 for ignoring spin, 1 for calculation with spin
     const bool with_spin_;
 
-    std::vector<DISTMATDTYPE> eigenvalues_;
+    std::vector<double> eigenvalues_;
 
     /*!
      * matrices to save old values and enable mixing or reset
@@ -62,20 +62,19 @@ class ProjectedMatrices : public ProjectedMatricesInterface
      * Matrices to be used to multiply orbitals on the right
      * (dimension equal to number of local colors)
      */
-    std::unique_ptr<SquareLocalMatrices<MATDTYPE>> localX_; // density matrix
-    std::unique_ptr<SquareLocalMatrices<MATDTYPE>>
-        localT_; // theta=inv(S)*H_phi
+    std::unique_ptr<SquareLocalMatrices<double>> localX_; // density matrix
+    std::unique_ptr<SquareLocalMatrices<double>> localT_; // theta=inv(S)*H_phi
 
     // internal data structures to hold local contributions
     // to matrix H
-    std::unique_ptr<SquareLocalMatrices<MATDTYPE>> localHl_;
-    std::unique_ptr<SquareSubMatrix<MATDTYPE>> localHnl_;
+    std::unique_ptr<SquareLocalMatrices<double>> localHl_;
+    std::unique_ptr<SquareSubMatrix<double>> localHnl_;
 
     void printEigenvaluesHa(std::ostream& os) const;
     void printEigenvaluesEV(std::ostream& os) const;
 
     void computeChemicalPotentialAndOccupations(
-        const std::vector<DISTMATDTYPE>& energies, const double width,
+        const std::vector<double>& energies, const double width,
         const int max_numst);
 
     void computeChemicalPotentialAndOccupations()
@@ -121,10 +120,10 @@ protected:
     }
 
     // convert a SquareLocalMatrices object into a MatrixType
-    void convert(const SquareLocalMatrices<MATDTYPE>& src, MatrixType& dst);
+    void convert(const SquareLocalMatrices<double>& src, MatrixType& dst);
 
     // convert a MatrixType object into a SquareLocalMatrices
-    void convert(const MatrixType& src, SquareLocalMatrices<MATDTYPE>& dst);
+    void convert(const MatrixType& src, SquareLocalMatrices<double>& dst);
 
 public:
     ProjectedMatrices(const int, const bool with_spin, const double occ_width);
@@ -132,13 +131,12 @@ public:
 
     void setup(const std::vector<std::vector<int>>& global_indexes) override;
 
-    void setLocalMatrixElementsHnl(
-        const SquareSubMatrix<MATDTYPE>& slH) override
+    void setLocalMatrixElementsHnl(const SquareSubMatrix<double>& slH) override
     {
-        localHnl_.reset(new SquareSubMatrix<MATDTYPE>(slH));
+        localHnl_.reset(new SquareSubMatrix<double>(slH));
     }
     void setLocalMatrixElementsHl(
-        const SquareLocalMatrices<MATDTYPE>& slH) override
+        const SquareLocalMatrices<double>& slH) override
     {
         localHl_->copy(slH);
     }
@@ -146,18 +144,11 @@ public:
 
     void consolidateH() override;
 
-    double getTraceDiagProductWithInvS(
-        std::vector<DISTMATDTYPE>& ddiag) override;
+    double getTraceDiagProductWithInvS(std::vector<double>& ddiag) override;
 
-    SquareLocalMatrices<MATDTYPE>& getLocalX() const override
-    {
-        return *localX_;
-    }
+    SquareLocalMatrices<double>& getLocalX() const override { return *localX_; }
 
-    SquareLocalMatrices<MATDTYPE>& getLocalT() const override
-    {
-        return *localT_;
-    }
+    SquareLocalMatrices<double>& getLocalT() const override { return *localT_; }
 
     void updateSubMatX() override { updateSubMatX(dm_->getMatrix()); }
 
@@ -165,12 +156,12 @@ public:
 
     void updateSubMatT() override { convert(*theta_, *localT_); }
 
-    void computeLoewdinTransform(SquareLocalMatrices<MATDTYPE>& localPi,
+    void computeLoewdinTransform(SquareLocalMatrices<double>& localPi,
         const int orb_index, const bool transform_matrices);
 
     void printTimers(std::ostream& os) override;
 
-    void initializeGramMatrix(const SquareLocalMatrices<MATDTYPE>& ss,
+    void initializeGramMatrix(const SquareLocalMatrices<double>& ss,
         const int orbitals_index) override
     {
         assert(gm_);
@@ -189,7 +180,7 @@ public:
         assert(dm_);
         return dm_->getOrbitalsIndex();
     }
-    void setDMuniform(const DISTMATDTYPE nel, const int orbitals_index) override
+    void setDMuniform(const double nel, const int orbitals_index) override
     {
         dm_->setUniform(nel, orbitals_index);
     }
@@ -251,13 +242,13 @@ public:
 
     const MatrixType& getGramMatrix() { return gm_->getMatrix(); }
 
-    void getOccupations(std::vector<DISTMATDTYPE>& occ) const override;
-    void setOccupations(const std::vector<DISTMATDTYPE>& occ);
+    void getOccupations(std::vector<double>& occ) const override;
+    void setOccupations(const std::vector<double>& occ);
 
     void stripDM() override;
     void dressupDM() override;
 
-    void applyInvS(SquareLocalMatrices<MATDTYPE>& mat) override;
+    void applyInvS(SquareLocalMatrices<double>& mat) override;
     void applyInvS(MatrixType& mat)
     {
         assert(gm_ != 0);
@@ -266,9 +257,9 @@ public:
 
     void setDMto2InvS() override;
     void buildDM(const MatrixType& z, const int orbitals_index);
-    void buildDM(const MatrixType& z, const std::vector<DISTMATDTYPE>&,
+    void buildDM(const MatrixType& z, const std::vector<double>&,
         const int orbitals_index);
-    void buildDM(const std::vector<DISTMATDTYPE>&, const int orbitals_index);
+    void buildDM(const std::vector<double>&, const int orbitals_index);
 
     double getEigSum() override;
     double getExpectation(const MatrixType& A);
@@ -347,7 +338,7 @@ public:
         dm_->mix(mix, *mat_X_old_, itindex);
     }
 
-    void getReplicatedDM(DISTMATDTYPE* replicated_DM_matrix)
+    void getReplicatedDM(double* replicated_DM_matrix)
     {
         const MatrixType& dm(dm_->getMatrix());
 
@@ -360,7 +351,7 @@ public:
         return gm_->getLinDependent2states(st1, st2);
     }
 
-    virtual void initializeMatB(const SquareLocalMatrices<MATDTYPE>& ss)
+    virtual void initializeMatB(const SquareLocalMatrices<double>& ss)
     {
         (void)ss;
         std::cerr
@@ -370,10 +361,10 @@ public:
     }
 
     void resetDotProductMatrices() override;
-    double dotProductWithInvS(const SquareLocalMatrices<MATDTYPE>& ss) override;
-    double dotProductWithDM(const SquareLocalMatrices<MATDTYPE>& ss) override;
-    double dotProductSimple(const SquareLocalMatrices<MATDTYPE>& ss) override;
-    double computeTraceInvSmultMat(const SquareLocalMatrices<MATDTYPE>& mat);
+    double dotProductWithInvS(const SquareLocalMatrices<double>& ss) override;
+    double dotProductWithDM(const SquareLocalMatrices<double>& ss) override;
+    double dotProductSimple(const SquareLocalMatrices<double>& ss) override;
+    double computeTraceInvSmultMat(const SquareLocalMatrices<double>& mat);
     double computeTraceInvSmultMat(const MatrixType& mat)
     {
         MatrixType pmatrix(mat);
