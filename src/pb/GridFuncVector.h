@@ -77,10 +77,13 @@ class GridFuncVector
 
     const bool skinny_stencil_;
 
-    static std::vector<std::vector<ScalarType>> comm_buf1_;
-    static std::vector<std::vector<ScalarType>> comm_buf2_;
-    static std::vector<std::vector<ScalarType>> comm_buf3_;
-    static std::vector<std::vector<ScalarType>> comm_buf4_;
+    // number of functions associated with buffers sizes
+    int nfunc4buffers_;
+
+    std::vector<std::vector<ScalarType>> comm_buf1_;
+    std::vector<std::vector<ScalarType>> comm_buf2_;
+    std::vector<std::vector<ScalarType>> comm_buf3_;
+    std::vector<std::vector<ScalarType>> comm_buf4_;
 
     MPI_Request req_east_west_[4];
     MPI_Request req_north_south_[4];
@@ -110,7 +113,8 @@ public:
         : gid_(gid),
           grid_(my_grid),
           comm_(my_grid.mype_env().comm()),
-          skinny_stencil_(skinny_stencil)
+          skinny_stencil_(skinny_stencil),
+          nfunc4buffers_(0)
     {
         bc_[0] = px;
         bc_[1] = py;

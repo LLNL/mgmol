@@ -18,15 +18,6 @@
 namespace pb
 {
 template <typename ScalarType>
-std::vector<std::vector<ScalarType>> GridFuncVector<ScalarType>::comm_buf1_;
-template <typename ScalarType>
-std::vector<std::vector<ScalarType>> GridFuncVector<ScalarType>::comm_buf2_;
-template <typename ScalarType>
-std::vector<std::vector<ScalarType>> GridFuncVector<ScalarType>::comm_buf3_;
-template <typename ScalarType>
-std::vector<std::vector<ScalarType>> GridFuncVector<ScalarType>::comm_buf4_;
-
-template <typename ScalarType>
 void GridFuncVector<ScalarType>::allocate(const int n)
 {
     functions_.resize(n);
@@ -247,9 +238,7 @@ void GridFuncVector<ScalarType>::wait_up_down()
 template <typename ScalarType>
 void GridFuncVector<ScalarType>::allocate_buffers(const int nfunc)
 {
-    static int last_nfunc = 0;
-
-    if (nfunc <= last_nfunc) return;
+    if (nfunc <= nfunc4buffers_) return;
 
     if (grid_.mype_env().n_mpi_tasks() > 1)
     {
@@ -272,7 +261,7 @@ void GridFuncVector<ScalarType>::allocate_buffers(const int nfunc)
             comm_buf4_[i].resize(size_max);
         }
 
-        last_nfunc = nfunc;
+        nfunc4buffers_ = nfunc;
     }
 }
 template <typename ScalarType>
