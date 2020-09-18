@@ -28,7 +28,7 @@ public:
 
     void iterativeUpdateDMwithEigenstates(const double occ_width,
         const int iterative_index, const bool flag_reduce_T = true);
-    void diagonalizeDM(std::vector<DISTMATDTYPE>& occ, MatrixType& vect)
+    void diagonalizeDM(std::vector<double>& occ, MatrixType& vect)
     {
         // we are assuming Gram matrix=identity
         ProjectedMatrices<MatrixType>::dm_->diagonalize('v', occ, vect);

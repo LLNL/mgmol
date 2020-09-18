@@ -19,6 +19,7 @@
 #include "MPIdata.h"
 #include "Power.h"
 #include "PowerGen.h"
+#include "ReplicatedMatrix.h"
 #include "ReplicatedWorkSpace.h"
 #include "SP2.h"
 #include "SparseDistMatrix.h"
@@ -566,7 +567,7 @@ double ProjectedMatrices<MatrixType>::computeEntropyWithCheb(const double kbt)
     funcptr_ = &ProjectedMatricesInterface::chebfunEntropyFromOcc;
     // construct ChebyshevApproximation object
     const int order = 1000;
-    static ChebyshevApproximation chebapp(emin, emax, order, this);
+    static ChebyshevApproximation<MatrixType> chebapp(emin, emax, order, this);
     static bool recompute_entropy_coeffs = true;
 
     // compute Chebyshev approximation
@@ -935,7 +936,7 @@ ProjectedMatrices<MatrixType>::computeChemicalPotentialAndDMwithChebyshev(
     Control& ct = *(Control::instance());
 
     // create Chebyshev approximation object
-    ChebyshevApproximation chebapp(emin, emax, order, this);
+    ChebyshevApproximation<MatrixType> chebapp(emin, emax, order, this);
 
     if (onpe0 && ct.verbose > 0)
         (*MPIdata::sout)
