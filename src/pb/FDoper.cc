@@ -9,7 +9,6 @@
 
 // $Id: FDoper.cc,v 1.22 2010/01/28 22:56:31 jeanluc Exp $
 #include "FDoper.h"
-#include "memory_space.h"
 #include "tools.h"
 #include <iomanip>
 
@@ -20,6 +19,8 @@
 
 template <typename ScalarType>
 using MemoryDev = MemorySpace::Memory<ScalarType, MemorySpace::Device>;
+template <typename ScalarType>
+using MemoryHost = MemorySpace::Memory<ScalarType, MemorySpace::Host>;
 #endif
 
 namespace pb
@@ -366,15 +367,112 @@ void FDoper<T>::del2_4th(GridFunc<T>& A, GridFunc<T>& B) const
 
     if (!A.updated_boundaries()) A.trade_boundaries();
 
-    del2_4th(A.grid(), A.uu(), B.uu(), 1);
+    del2_4th(A.grid(), A.uu(), B.uu(), 1, MemorySpace::Host());
 
     B.set_updated_boundaries(0);
 }
 
 template <class T>
 void FDoper<T>::del2_4th(
-    const Grid& Agrid, T* A, T* B, const size_t nfunc) const
+    const Grid& Agrid, T* A, T* B, const size_t nfunc, MemorySpace::Host) const
 {
+    assert(grid_.ghost_pt() > 1);
+    MemorySpace::assert_is_host_ptr(A);
+    MemorySpace::assert_is_host_ptr(B);
+
+    del2_4th_tm_.start();
+
+    const double cc0 = inv12 * inv_h2_[0];
+    const double c1x = -16. * cc0;
+    const double c2x = 1. * cc0;
+
+    const double cc1 = inv12 * inv_h2_[1];
+    const double c1y = -16. * cc1;
+    const double c2y = 1. * cc1;
+
+    const double cc2 = inv12 * inv_h2_[2];
+    const double c1z = -16. * cc2;
+    const double c2z = 1. * cc2;
+
+    const double c0 = -2. * (c1x + c2x + c1y + c2y + c1z + c2z);
+
+    const int gpt = grid_.ghost_pt();
+
+    const int incx2 = 2 * Agrid.inc(0);
+    const int incy2 = 2 * Agrid.inc(1);
+
+    int iix = gpt * incx_;
+
+    const int dim0 = Agrid.dim(0);
+    const int dim1 = Agrid.dim(1);
+    const int dim2 = Agrid.dim(2);
+
+    const size_t ng = grid_.sizeg();
+
+    int incx = incx_;
+    int incy = incy_;
+
+#pragma omp parallel for collapse(4)
+    for (size_t ifunc = 0; ifunc < nfunc; ifunc++)
+    {
+        for (int ix = 0; ix < dim0; ix++)
+        {
+            for (int iy = 0; iy < dim1; iy++)
+            {
+                for (int iz = 0; iz < dim2; iz++)
+                {
+                    int iiz = ifunc * ng
+                              + (iix + ix * incx + gpt * incy + iy * incy)
+                              + gpt;
+
+                    const T* __restrict__ v0   = A + iiz;
+                    const T* __restrict__ vmx  = A + (iiz - incx);
+                    const T* __restrict__ vpx  = A + (iiz + incx);
+                    const T* __restrict__ vmx2 = A + (iiz - incx2);
+                    const T* __restrict__ vpx2 = A + (iiz + incx2);
+                    const T* __restrict__ vmy  = A + (iiz - incy);
+                    const T* __restrict__ vpy  = A + (iiz + incy);
+                    const T* __restrict__ vmy2 = A + (iiz - incy2);
+                    const T* __restrict__ vpy2 = A + (iiz + incy2);
+
+                    T* __restrict__ u = B + iiz;
+
+                    u[iz] = c0 * (double)v0[iz]
+
+                            + c1x * ((double)vmx[iz] + (double)vpx[iz])
+                            + c1y * ((double)vmy[iz] + (double)vpy[iz])
+                            + c1z * ((double)v0[iz - 1] + (double)v0[iz + 1])
+
+                            + c2x * ((double)vmx2[iz] + (double)vpx2[iz])
+                            + c2y * ((double)vmy2[iz] + (double)vpy2[iz])
+                            + c2z * ((double)v0[iz - 2] + (double)v0[iz + 2]);
+                }
+            }
+        }
+    }
+
+    del2_4th_tm_.stop();
+}
+
+template <class T>
+void FDoper<T>::del2_4th(const Grid& Agrid, T* A, T* B, const size_t nfunc,
+    MemorySpace::Device) const
+{
+#ifdef HAVE_MAGMA
+    MemorySpace::assert_is_dev_ptr(A);
+    MemorySpace::assert_is_dev_ptr(B);
+#ifndef HAVE_OPENMP_OFFLOAD
+    const size_t ng = grid_.sizeg();
+    std::unique_ptr<T, void (*)(T*)> A_host(
+        MemoryHost<T>::allocate(nfunc * ng), MemoryHost<T>::free);
+    MemorySpace::copy_to_host(A, nfunc * ng, A_host.get());
+    std::unique_ptr<T, void (*)(T*)> B_host(
+        MemoryHost<T>::allocate(nfunc * ng), MemoryHost<T>::free);
+
+    del2_4th(Agrid, A_host.get(), B_host.get(), nfunc, MemorySpace::Host());
+
+    MemorySpace::copy_to_dev(B_host.get(), ng * nfunc, B);
+#else
     assert(grid_.ghost_pt() > 1);
 
     del2_4th_tm_.start();
@@ -406,25 +504,10 @@ void FDoper<T>::del2_4th(
 
     const size_t ng = grid_.sizeg();
 
-#ifdef HAVE_OPENMP_OFFLOAD
-    std::unique_ptr<T, void (*)(T*)> A_dev(
-        MemoryDev<T>::allocate(nfunc * ng), MemoryDev<T>::free);
-    MemorySpace::copy_to_dev(A, nfunc * ng, A_dev.get());
-
-    std::unique_ptr<T, void (*)(T*)> B_dev(
-        MemoryDev<T>::allocate(nfunc * ng), MemoryDev<T>::free);
-
-    T* const A_alias = A_dev.get();
-    T* B_alias       = B_dev.get();
-#else
-    T* const A_alias = A;
-    T* B_alias       = B;
-#endif
-
     int incx = incx_;
     int incy = incy_;
 
-    MGMOL_PARALLEL_FOR_COLLAPSE(4, A_alias, B_alias)
+    MGMOL_PARALLEL_FOR_COLLAPSE(4, A, B)
     for (size_t ifunc = 0; ifunc < nfunc; ifunc++)
     {
         for (int ix = 0; ix < dim0; ix++)
@@ -437,17 +520,17 @@ void FDoper<T>::del2_4th(
                               + (iix + ix * incx + gpt * incy + iy * incy)
                               + gpt;
 
-                    const T* __restrict__ v0   = A_alias + iiz;
-                    const T* __restrict__ vmx  = A_alias + (iiz - incx);
-                    const T* __restrict__ vpx  = A_alias + (iiz + incx);
-                    const T* __restrict__ vmx2 = A_alias + (iiz - incx2);
-                    const T* __restrict__ vpx2 = A_alias + (iiz + incx2);
-                    const T* __restrict__ vmy  = A_alias + (iiz - incy);
-                    const T* __restrict__ vpy  = A_alias + (iiz + incy);
-                    const T* __restrict__ vmy2 = A_alias + (iiz - incy2);
-                    const T* __restrict__ vpy2 = A_alias + (iiz + incy2);
+                    const T* __restrict__ v0   = A + iiz;
+                    const T* __restrict__ vmx  = A + (iiz - incx);
+                    const T* __restrict__ vpx  = A + (iiz + incx);
+                    const T* __restrict__ vmx2 = A + (iiz - incx2);
+                    const T* __restrict__ vpx2 = A + (iiz + incx2);
+                    const T* __restrict__ vmy  = A + (iiz - incy);
+                    const T* __restrict__ vpy  = A + (iiz + incy);
+                    const T* __restrict__ vmy2 = A + (iiz - incy2);
+                    const T* __restrict__ vpy2 = A + (iiz + incy2);
 
-                    T* __restrict__ u = B_alias + iiz;
+                    T* __restrict__ u = B + iiz;
 
                     u[iz] = c0 * (double)v0[iz]
 
@@ -463,11 +546,9 @@ void FDoper<T>::del2_4th(
         }
     }
 
-#ifdef HAVE_OPENMP_OFFLOAD
-    MemorySpace::copy_to_host(B_alias, ng * nfunc, B);
-#endif
-
     del2_4th_tm_.stop();
+#endif
+#endif
 }
 
 template <class T>
@@ -746,7 +827,7 @@ void FDoper<T>::del2_4th_Mehr(GridFunc<T>& A, GridFunc<T>& B) const
                    c0mehr4_,czmehr4_,cymehr4_,cxmehr4_,cyzmehr4_,cxymehr4_,cxzmehr4_,
                    A.uu(0),B.uu(0));
 #else
-    const int iix0   = shift * incx_;
+    const int iix0 = shift * incx_;
 
     const T* const v = A.uu(0);
     T* u             = B.uu(0);

@@ -85,7 +85,7 @@ public:
     void apply(GridFunc<T>& A, GridFunc<T>& B) override
     {
         if (!A.updated_boundaries()) A.trade_boundaries();
-        this->del2_4th(A.grid(), A.uu(), B.uu(), 1);
+        this->del2_4th(A.grid(), A.uu(), B.uu(), 1, MemorySpace::Host());
         B.set_updated_boundaries(0);
         B.set_bc(A.bc(0), A.bc(1), A.bc(2));
     }
@@ -105,7 +105,7 @@ public:
     }
     void apply(Grid& Agrid, T* A, T* B, const size_t nfunc)
     {
-        this->del2_4th(Agrid, A, B, nfunc);
+        this->del2_4th(Agrid, A, B, nfunc, MemorySpace::Host());
     }
 
     void jacobi(GridFunc<T>&, const GridFunc<T>&, GridFunc<T>&) override;
