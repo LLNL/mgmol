@@ -10,63 +10,41 @@
 #ifndef MGMOL_ORBITALSEXTRAPOLATION_H
 #define MGMOL_ORBITALSEXTRAPOLATION_H
 
-#define EXTRAPOLATE_H 1
+#include <memory>
 
-#include "Control.h"
-#include "Hextrapolation.h"
 class LocalizationRegions;
 class ClusterOrbitals;
 class MasksSet;
 class HDFrestart;
 class ProjectedMatricesInterface;
 
-template <class T>
+template <class OrbitalsType>
 class OrbitalsExtrapolation
 {
 public:
-    OrbitalsExtrapolation() : orbitals_minus1_(nullptr), hextrapol_(nullptr)
-    {
-#if EXTRAPOLATE_H
-        Control& ct = *(Control::instance());
-
-        if (ct.OuterSolver() != OuterSolverType::ABPG
-            && ct.OuterSolver() != OuterSolverType::NLCG)
-            hextrapol_ = new Hextrapolation(ct.numst);
-#endif
-    }
+    OrbitalsExtrapolation() : orbitals_minus1_(nullptr) {}
 
     virtual ~OrbitalsExtrapolation();
-
-#if EXTRAPOLATE_H
-    void initExtrapolationH(const dist_matrix::DistMatrix<DISTMATDTYPE>& mat)
-    {
-        assert(hextrapol_);
-
-        hextrapol_->initExtrapolationH(mat);
-    }
-#endif
 
     virtual bool extrapolatedH() const { return false; }
 
     virtual void clearOldOrbitals();
-    bool getRestartData(T& orbitals);
-    virtual void setupPreviousOrbitals(T** orbitals,
+    bool getRestartData(OrbitalsType& orbitals);
+    virtual void setupPreviousOrbitals(OrbitalsType** orbitals,
         ProjectedMatricesInterface* proj_matrices,
         std::shared_ptr<LocalizationRegions> lrs,
         ClusterOrbitals* local_cluster, MasksSet* currentMasks,
         MasksSet* corrtMasks, HDFrestart& h5f_file);
 
-    virtual void extrapolate_orbitals(T** orbitals, T* new_orbitals) = 0;
+    virtual void extrapolate_orbitals(
+        OrbitalsType** orbitals, OrbitalsType* new_orbitals)
+        = 0;
 
     virtual short getNumAuxiliaryOrbitals() { return 0; }
     virtual short getNumOrbitalExtrapolations() { return 0; }
 
 protected:
-    T* orbitals_minus1_;
-
-#if EXTRAPOLATE_H
-    Hextrapolation* hextrapol_;
-#endif
+    OrbitalsType* orbitals_minus1_;
 };
 
 #endif

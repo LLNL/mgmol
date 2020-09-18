@@ -17,36 +17,28 @@
 #include "Mesh.h"
 #include "ProjectedMatricesInterface.h"
 
-using namespace std;
-
-template <class T>
-OrbitalsExtrapolation<T>::~OrbitalsExtrapolation()
+template <class OrbitalsType>
+OrbitalsExtrapolation<OrbitalsType>::~OrbitalsExtrapolation()
 {
     if (orbitals_minus1_ != nullptr)
     {
         delete orbitals_minus1_;
         orbitals_minus1_ = nullptr;
     }
-#if EXTRAPOLATE_H
-    delete hextrapol_;
-#endif
 }
 
-template <class T>
-void OrbitalsExtrapolation<T>::clearOldOrbitals()
+template <class OrbitalsType>
+void OrbitalsExtrapolation<OrbitalsType>::clearOldOrbitals()
 {
     if (orbitals_minus1_ != nullptr)
     {
         delete orbitals_minus1_;
         orbitals_minus1_ = nullptr;
     }
-#if EXTRAPOLATE_H
-    delete hextrapol_;
-#endif
 }
 
-template <class T>
-bool OrbitalsExtrapolation<T>::getRestartData(T& orbitals)
+template <class OrbitalsType>
+bool OrbitalsExtrapolation<OrbitalsType>::getRestartData(OrbitalsType& orbitals)
 {
     if (orbitals_minus1_ != nullptr)
     {
@@ -59,22 +51,24 @@ bool OrbitalsExtrapolation<T>::getRestartData(T& orbitals)
     }
 }
 
-template <class T>
-void OrbitalsExtrapolation<T>::setupPreviousOrbitals(T** orbitals,
-    ProjectedMatricesInterface* proj_matrices,
+template <class OrbitalsType>
+void OrbitalsExtrapolation<OrbitalsType>::setupPreviousOrbitals(
+    OrbitalsType** orbitals, ProjectedMatricesInterface* proj_matrices,
     std::shared_ptr<LocalizationRegions> lrs, ClusterOrbitals* local_cluster,
     MasksSet* currentMasks, MasksSet* corrMasks, HDFrestart& h5f_file)
 {
     if (onpe0)
-        cout << "OrbitalsExtrapolation<T>::setupPreviousOrbitals()..." << endl;
+        std::cout
+            << "OrbitalsExtrapolation<OrbitalsType>::setupPreviousOrbitals()..."
+            << std::endl;
 
     Control& ct            = *(Control::instance());
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
 
-    T* new_orbitals = new T("ForExtraploation", mygrid, mymesh->subdivx(),
-        ct.numst, ct.bcWF, proj_matrices, lrs, currentMasks, corrMasks,
-        local_cluster);
+    OrbitalsType* new_orbitals = new OrbitalsType("ForExtraploation", mygrid,
+        mymesh->subdivx(), ct.numst, ct.bcWF, proj_matrices, lrs, currentMasks,
+        corrMasks, local_cluster);
 
     new_orbitals->read_func_hdf5(h5f_file, "ExtrapolatedFunction");
     new_orbitals->incrementIterativeIndex();

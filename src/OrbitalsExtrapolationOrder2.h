@@ -12,18 +12,14 @@
 
 #include "OrbitalsExtrapolation.h"
 
-template <class T>
-class OrbitalsExtrapolationOrder2 : public OrbitalsExtrapolation<T>
+template <class OrbitalsType>
+class OrbitalsExtrapolationOrder2 : public OrbitalsExtrapolation<OrbitalsType>
 {
 public:
-    OrbitalsExtrapolationOrder2() : extrapolated_H_(false) {}
+    OrbitalsExtrapolationOrder2() {}
 
-    void extrapolate_orbitals(T** orbitals, T* new_orbitals) override;
-
-    bool extrapolatedH() const override { return extrapolated_H_; }
-
-private:
-    bool extrapolated_H_;
+    void extrapolate_orbitals(
+        OrbitalsType** orbitals, OrbitalsType* new_orbitals) override;
 };
 
 #endif

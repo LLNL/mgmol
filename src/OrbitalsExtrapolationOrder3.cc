@@ -13,36 +13,31 @@
 #include "LocGridOrbitals.h"
 #include "ProjectedMatrices.h"
 
-#define EXTRAPOLATE_H 1
-
-template <class T>
-void OrbitalsExtrapolationOrder3<T>::extrapolate_orbitals(
-    T** orbitals, T* new_orbitals)
+template <class OrbitalsType>
+void OrbitalsExtrapolationOrder3<OrbitalsType>::extrapolate_orbitals(
+    OrbitalsType** orbitals, OrbitalsType* new_orbitals)
 {
     Control& ct = *(Control::instance());
 
     new_orbitals->assign(**orbitals);
 
     bool use_dense_proj_mat = false;
-#if EXTRAPOLATE_H
-    ProjectedMatricesInterface* proj_matrices = (*orbitals)->getProjMatrices();
-    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmat = nullptr;
     if (ct.OuterSolver() != OuterSolverType::ABPG
         && ct.OuterSolver() != OuterSolverType::NLCG)
     {
-        projmat = dynamic_cast<
-            ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
-            proj_matrices);
-        assert(projmat);
-        use_dense_proj_mat = true;
+        ProjectedMatricesInterface* proj_matrices
+            = (*orbitals)->getProjMatrices();
+        if (dynamic_cast<
+                ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
+                proj_matrices))
+            use_dense_proj_mat = true;
     }
-#endif
 
     // do the extrapolation if previous orbitals exist (not at first step)
 
     if (orbitals_minus1_ != nullptr)
     {
-        T tmp_orbitals_minus1("minus1", *new_orbitals, false);
+        OrbitalsType tmp_orbitals_minus1("minus1", *new_orbitals, false);
 
         if (ct.verbose > 1 && onpe0)
             (*MPIdata::sout) << "Extrapolate orbitals using 3rd order scheme..."
@@ -64,21 +59,8 @@ void OrbitalsExtrapolationOrder3<T>::extrapolate_orbitals(
             tmp_orbitals_minus1.axpy(-1., *new_orbitals);
             tmp_orbitals_minus1.multiply_by_matrix(yyt);
 
-#if EXTRAPOLATE_H
-            OrbitalsExtrapolation<T>::hextrapol_->updateHminus1tmp(
-                matQ, yyt, (*MPIdata::sout));
-#endif
-
             if (orbitals_minus2_ != nullptr)
             {
-#if 0
-                T tmp(*orbitals_minus2_);
-                tmp.axpy(-1.,*new_orbitals);
-                tmp.computeGram(matQ);
-                double normQ=matQ.trace();
-                if( onpe0 )
-                    (*MPIdata::sout)<<"||Phi_old-Phi_new|| before Procrustes = "<<normQ<<std::endl;
-#endif
                 // alignement
                 orbitals_minus2_->computeGram(*new_orbitals, matQ);
                 getProcrustesTransform(matQ, yyt);
@@ -87,25 +69,7 @@ void OrbitalsExtrapolationOrder3<T>::extrapolate_orbitals(
                 // compute delta Phi
                 orbitals_minus2_->axpy(-1., *orbitals_minus1_);
                 orbitals_minus2_->multiply_by_matrix(yyt);
-#if EXTRAPOLATE_H
-                OrbitalsExtrapolation<T>::hextrapol_->updateHminus2(
-                    matQ, yyt, (*MPIdata::sout));
-#endif
-
-#if 0        
-                tmp.assign(*orbitals_minus2_);
-                tmp.computeGram(matQ);
-                normQ=matQ.trace();
-                if( onpe0 )
-                    (*MPIdata::sout)<<"||Phi_old-Phi_new|| after Procrustes = "<<normQ<<std::endl;
-#endif
             }
-
-#if EXTRAPOLATE_H
-            if (ct.verbose > 2 && onpe0)
-                (*MPIdata::sout) << "Extrapolate H..." << std::endl;
-            OrbitalsExtrapolation<T>::hextrapol_->extrapolateHorder3();
-#endif
         }
         else
         {
@@ -141,19 +105,9 @@ void OrbitalsExtrapolationOrder3<T>::extrapolate_orbitals(
 
     if (use_dense_proj_mat)
     {
-#if EXTRAPOLATE_H
-        OrbitalsExtrapolation<T>::hextrapol_->updateHminus2(
-            projmat->getMatHB());
-#endif
     }
 
     *orbitals = new_orbitals;
-#if EXTRAPOLATE_H
-    if (use_dense_proj_mat)
-    {
-        OrbitalsExtrapolation<T>::hextrapol_->saveH(projmat->getMatHB());
-    }
-#endif
 
     (*orbitals)->incrementIterativeIndex();
 

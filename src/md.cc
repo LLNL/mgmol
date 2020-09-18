@@ -74,17 +74,6 @@ void MGmol<T>::preWFextrapolation()
     {
         if (ct.dm_mix < 1.) proj_matrices_->stripDM();
     }
-    else
-    {
-#if EXTRAPOLATE_H
-        ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmat
-            = dynamic_cast<
-                ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
-                proj_matrices_);
-        assert(projmat);
-        orbitals_extrapol_->initExtrapolationH(projmat->getMatHB());
-#endif
-    }
 }
 
 template <class T>
