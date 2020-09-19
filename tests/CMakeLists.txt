@@ -259,6 +259,7 @@ add_test(NAME testSuperSampling
 add_test(NAME testVariableSizeMatrix
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 1 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testVariableSizeMatrix)
+#[[
 add_test(NAME testTradeGhostValues
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testTradeGhostValues)
@@ -274,7 +275,7 @@ add_test(NAME testGramMatrix
 add_test(NAME testDensityMatrix
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testDensityMatrix)
-
+]]
 if(${MAGMA_FOUND}) 
   add_test(NAME testOpenmpOffload
            COMMAND ${CMAKE_CURRENT_BINARY_DIR}/testOpenmpOffload)
@@ -283,7 +284,6 @@ if(${MAGMA_FOUND})
              COMMAND ${CMAKE_CURRENT_BINARY_DIR}/testMagmaOpenmp)
   endif()
 else()
-#[[
 
   add_test(NAME testShortSighted
            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ShortSighted/test.py
@@ -294,7 +294,6 @@ else()
            ${CMAKE_CURRENT_SOURCE_DIR}/ShortSighted/coords.in
            ${CMAKE_CURRENT_SOURCE_DIR}/ShortSighted/lrs.in
            ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
-]]
 endif()
 
 #Regression tests
@@ -322,7 +321,7 @@ add_test(NAME testMVP
          ${CMAKE_CURRENT_SOURCE_DIR}/MVP/mvp.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/MVP/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
-]]
+
 add_test(NAME testFatom
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Fatom/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
@@ -344,7 +343,7 @@ add_test(NAME testCl2
          ${CMAKE_CURRENT_SOURCE_DIR}/Cl2_ONCVPSP_LDA/mgmol.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/Cl2_ONCVPSP_LDA/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
-#[[
+
 add_test(NAME BandGapN2
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/BandGapN2/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 3 ${MPIEXEC_PREFLAGS}
@@ -393,7 +392,7 @@ add_test(NAME testLBFGS
          ${CMAKE_CURRENT_SOURCE_DIR}/LBFGS/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/LBFGS/lrs.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
-]]
+
 add_test(NAME ChebyshevMVP
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Chebyshev/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
@@ -401,7 +400,7 @@ add_test(NAME ChebyshevMVP
          ${CMAKE_CURRENT_SOURCE_DIR}/Chebyshev/cheb.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/Chebyshev/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
-#[[
+
 add_test(NAME testContinuumSolvent
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ContinuumSolvent/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
@@ -503,5 +502,5 @@ else()
     ${BLAS_LIBRARIES} MPI::MPI_CXX OpenMP::OpenMP_CXX)
 endif()
 
-set_tests_properties(testSiH4 PROPERTIES REQUIRED_FILES
-                     ${CMAKE_SOURCE_DIR}/potentials/pseudo.Si)
+#set_tests_properties(testSiH4 PROPERTIES REQUIRED_FILES
+#                     ${CMAKE_SOURCE_DIR}/potentials/pseudo.Si)

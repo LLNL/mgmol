@@ -60,6 +60,10 @@ os.remove('wave.out')
 #analyse mgmol standard output
 lines=output2.split(b'\n')
 
+for line in lines:
+  if line.count(b'Timer'):
+    print(line)
+
 print("Check energies...")
 tol = 1.e-3
 count = 0
@@ -110,4 +114,4 @@ for line in lines:
         print("ERROR Temperature at MD step {}: {} != {}".format(count,temperature,temperature_ref))
         sys.exit(1)
 
-sys.exit(0)
+sys.exit(1)
