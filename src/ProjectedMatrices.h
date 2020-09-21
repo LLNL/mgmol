@@ -351,7 +351,7 @@ public:
         return gm_->getLinDependent2states(st1, st2);
     }
 
-    virtual void initializeMatB(const SquareLocalMatrices<double>& ss)
+    virtual void initializeMatB(const SquareLocalMatrices<double>& ss) override
     {
         (void)ss;
         std::cerr

@@ -12,13 +12,13 @@
 
 #include "OrbitalsExtrapolation.h"
 
-template <class T>
-class OrbitalsExtrapolationOrder3 : public OrbitalsExtrapolation<T>
+template <class OrbitalsType>
+class OrbitalsExtrapolationOrder3 : public OrbitalsExtrapolation<OrbitalsType>
 {
 private:
-    T* initial_orbitals_minus2_;
-    T* orbitals_minus1_;
-    T* orbitals_minus2_;
+    OrbitalsType* initial_orbitals_minus2_;
+    OrbitalsType* orbitals_minus1_;
+    OrbitalsType* orbitals_minus2_;
 
 public:
     OrbitalsExtrapolationOrder3()
@@ -40,11 +40,12 @@ public:
         }
     }
 
-    void extrapolate_orbitals(T** orbitals, T* new_orbitals) override;
+    void extrapolate_orbitals(
+        OrbitalsType** orbitals, OrbitalsType* new_orbitals) override;
 
     void clearOldOrbitals() override
     {
-        OrbitalsExtrapolation<T>::clearOldOrbitals();
+        OrbitalsExtrapolation<OrbitalsType>::clearOldOrbitals();
 
         if (orbitals_minus2_ != nullptr)
         {
