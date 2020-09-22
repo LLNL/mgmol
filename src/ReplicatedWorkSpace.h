@@ -15,18 +15,20 @@
 
 #include <cassert>
 
+class ReplicatedMatrix;
+
 #define MAX_SIZE (400000)
 
 // see S. Meyers, "More Effective C++", Item 26
 // (limiting the number of objects of a class)
 
-template <class T>
+template <class ScalarType>
 class ReplicatedWorkSpace
 {
-    T* square_matrix_;
+    ScalarType* square_matrix_;
     int ndim_;
 
-    T work_double[MAX_SIZE];
+    ScalarType work_double[MAX_SIZE];
 
     static Timer mpisum_tm_;
 
@@ -47,10 +49,10 @@ public:
     void setup(const int ndim)
     {
         ndim_          = ndim;
-        square_matrix_ = new T[ndim_ * ndim_];
+        square_matrix_ = new ScalarType[ndim_ * ndim_];
     }
 
-    T* square_matrix()
+    ScalarType* square_matrix()
     {
         assert(square_matrix_ != 0);
         return square_matrix_;
@@ -59,17 +61,18 @@ public:
     void resetmem()
     {
         assert(square_matrix_ != 0);
-        memset(square_matrix_, 0, ndim_ * ndim_ * sizeof(T));
+        memset(square_matrix_, 0, ndim_ * ndim_ * sizeof(ScalarType));
     }
 
     void mpiBcastSquareMatrix();
 
     void setUpperTriangularSquareMatrixToZero();
 
-    void initSquareMatrix(const dist_matrix::DistMatrix<T>& distmat)
-    {
-        distmat.allgather(square_matrix_, ndim_);
-    }
+    void initSquareMatrix(const dist_matrix::DistMatrix<ScalarType>& tmat);
+#ifdef HAVE_MAGMA
+    void initSquareMatrix(const ReplicatedMatrix& mat);
+#endif
+
     int getDim() { return ndim_; }
 };
 
