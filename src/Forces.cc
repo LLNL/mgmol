@@ -498,18 +498,16 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
     }
     else
     {
-        ReplicatedWorkSpace<DISTMATDTYPE>& wspace(
-            ReplicatedWorkSpace<DISTMATDTYPE>::instance());
-        const int ndim               = wspace.getDim();
-        DISTMATDTYPE* work_DM_matrix = wspace.square_matrix();
-
         ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
             = dynamic_cast<
                 ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
                 proj_matrices_);
         assert(projmatrices);
 
-        projmatrices->getReplicatedDM(work_DM_matrix);
+        const int ndim = projmatrices->dim();
+
+        SquareLocalMatrices<double> dm(projmatrices->getReplicatedDM());
+        const double* const work_DM_matrix = dm.getSubMatrix();
 
         // loop over all the ions
         // parallelization over ions by including only those centered in

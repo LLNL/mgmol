@@ -14,19 +14,20 @@
 
 #include <mpi.h>
 
-template <class T>
-Timer ReplicatedWorkSpace<T>::mpisum_tm_("ReplicatedWorkSpace::mpisum");
+template <class ScalarType>
+Timer ReplicatedWorkSpace<ScalarType>::mpisum_tm_(
+    "ReplicatedWorkSpace::mpisum");
 
 // allows zero or one object
-template <class T>
-ReplicatedWorkSpace<T>& ReplicatedWorkSpace<T>::instance()
+template <class ScalarType>
+ReplicatedWorkSpace<ScalarType>& ReplicatedWorkSpace<ScalarType>::instance()
 {
-    static ReplicatedWorkSpace<T> instance;
+    static ReplicatedWorkSpace<ScalarType> instance;
     return instance;
 }
 
-template <class T>
-void ReplicatedWorkSpace<T>::mpiBcastSquareMatrix()
+template <class ScalarType>
+void ReplicatedWorkSpace<ScalarType>::mpiBcastSquareMatrix()
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     int n2          = ndim_ * ndim_;
@@ -34,8 +35,8 @@ void ReplicatedWorkSpace<T>::mpiBcastSquareMatrix()
     return;
 }
 
-template <class T>
-void ReplicatedWorkSpace<T>::setUpperTriangularSquareMatrixToZero()
+template <class ScalarType>
+void ReplicatedWorkSpace<ScalarType>::setUpperTriangularSquareMatrixToZero()
 {
     for (int i = 0; i < ndim_; i++)
     {
@@ -44,6 +45,13 @@ void ReplicatedWorkSpace<T>::setUpperTriangularSquareMatrixToZero()
             square_matrix_[i + ndim_ * j] = 0.;
         }
     }
+}
+
+template <class ScalarType>
+void ReplicatedWorkSpace<ScalarType>::initSquareMatrix(
+    const dist_matrix::DistMatrix<ScalarType>& distmat)
+{
+    distmat.allgather(square_matrix_, ndim_);
 }
 
 template class ReplicatedWorkSpace<double>;

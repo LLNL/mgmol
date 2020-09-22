@@ -613,8 +613,8 @@ template <>
 double KBPsiMatrixSparse::getEvnl(const Ions& ions,
     ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* proj_matrices)
 {
-    DISTMATDTYPE* replicated_dm = nullptr;
-    proj_matrices->getReplicatedDM(replicated_dm);
+    SquareLocalMatrices<double> dm(proj_matrices->getReplicatedDM());
+    double* replicated_dm = dm.getSubMatrix();
 
     double trace = 0.0;
     // loop over all the ions

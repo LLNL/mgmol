@@ -6,10 +6,10 @@
 #ifndef MGMOL_POWERGEN_H
 #define MGMOL_POWERGEN_H
 
-#include "DistMatrix.h"
 #include "GramMatrix.h"
 #include "random.h"
 
+template <class MatrixType>
 class PowerGen
 {
 private:
@@ -27,11 +27,12 @@ public:
     {
     }
 
-    void computeGenEigenInterval(dist_matrix::DistMatrix<double>& mat,
-        GramMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>& gm,
+    void computeGenEigenInterval(MatrixType& mat, GramMatrix<MatrixType>& gm,
         std::vector<double>& interval, const int maxits, const double pad);
 
     static void printTimers(std::ostream& os) { compute_tm_.print(os); }
 };
 
+template <class MatrixType>
+Timer PowerGen<MatrixType>::compute_tm_("PowerGen::compute");
 #endif

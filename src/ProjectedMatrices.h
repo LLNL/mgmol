@@ -338,11 +338,13 @@ public:
         dm_->mix(mix, *mat_X_old_, itindex);
     }
 
-    void getReplicatedDM(double* replicated_DM_matrix)
+    SquareLocalMatrices<double> getReplicatedDM()
     {
+        SquareLocalMatrices<double> sldm(1, dim_);
         const MatrixType& dm(dm_->getMatrix());
+        dm.allgather(sldm.getSubMatrix(), dim_);
 
-        dm.allgather(replicated_DM_matrix, dim_);
+        return sldm;
     }
 
     double getLinDependent2states(

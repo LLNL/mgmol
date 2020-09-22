@@ -305,8 +305,7 @@ void ProjectedMatrices<MatrixType>::updateDMwithSP2(const int iterative_index)
 
     // generate replicated copy of theta_
     SquareLocalMatrices<double> theta(1, dim_);
-    double* work_matrix = theta.getSubMatrix();
-    theta_->allgather(work_matrix, dim_);
+    convert(*theta_, theta);
 
     double emin;
     double emax;
@@ -1118,7 +1117,7 @@ void ProjectedMatrices<MatrixType>::computeGenEigenInterval(
 {
     MatrixType mat(*matHB_);
 
-    static PowerGen power(dim_);
+    static PowerGen<MatrixType> power(dim_);
 
     power.computeGenEigenInterval(mat, *gm_, interval, maxits, pad);
 }
@@ -1146,3 +1145,6 @@ void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::consolidateH()
 }
 
 template class ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>;
+#ifdef HAVE_MAGMA
+// template class ProjectedMatrices<ReplicatedMatrix>;
+#endif

@@ -8,6 +8,7 @@
 #include "PowerGen.h"
 
 #include "Control.h"
+#include "DistMatrix.h"
 #include "DistVector.h"
 #include "GramMatrix.h"
 #include "mputils.h"
@@ -15,17 +16,16 @@
 
 #include <vector>
 
-Timer PowerGen::compute_tm_("PowerGen::compute");
-
 /* Use the power method to compute the extents of the spectrum of the
  * generalized eigenproblem. In order to use a residual-based convergence
  * criterion in an efficient way, we delay normalization of the vectors to avoid
  * multiple matvecs. NOTE: We are only interested in the eigenvalues, so the
  * final eigenvector may not be normalized.
  */
-void PowerGen::computeGenEigenInterval(dist_matrix::DistMatrix<double>& mat,
-    GramMatrix<dist_matrix::DistMatrix<double>>& gm,
-    std::vector<double>& interval, const int maxits, const double pad)
+template <class MatrixType>
+void PowerGen<MatrixType>::computeGenEigenInterval(MatrixType& mat,
+    GramMatrix<MatrixType>& gm, std::vector<double>& interval, const int maxits,
+    const double pad)
 {
     srand(13579);
 
@@ -35,7 +35,7 @@ void PowerGen::computeGenEigenInterval(dist_matrix::DistMatrix<double>& mat,
 
     interval.clear();
 
-    dist_matrix::DistMatrix<double> smat(gm.getMatrix());
+    MatrixType smat(gm.getMatrix());
 
     // use the power method to get the eigenvalue interval
     const int m      = mat.m(); // number of global rows
@@ -187,3 +187,5 @@ void PowerGen::computeGenEigenInterval(dist_matrix::DistMatrix<double>& mat,
 
     compute_tm_.stop();
 }
+
+template class PowerGen<dist_matrix::DistMatrix<DISTMATDTYPE>>;
