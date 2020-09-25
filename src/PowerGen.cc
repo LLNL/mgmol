@@ -14,16 +14,14 @@
 #include "mputils.h"
 #include "random.h"
 
-#include <vector>
-
 /* Use the power method to compute the extents of the spectrum of the
  * generalized eigenproblem. In order to use a residual-based convergence
  * criterion in an efficient way, we delay normalization of the vectors to avoid
  * multiple matvecs. NOTE: We are only interested in the eigenvalues, so the
  * final eigenvector may not be normalized.
  */
-template <class MatrixType>
-void PowerGen<MatrixType>::computeGenEigenInterval(MatrixType& mat,
+template <class MatrixType, class VectorType>
+void PowerGen<MatrixType, VectorType>::computeGenEigenInterval(MatrixType& mat,
     GramMatrix<MatrixType>& gm, std::vector<double>& interval, const int maxits,
     const double pad)
 {
@@ -39,7 +37,6 @@ void PowerGen<MatrixType>::computeGenEigenInterval(MatrixType& mat,
 
     // use the power method to get the eigenvalue interval
     const int m      = mat.m(); // number of global rows
-    const int mloc   = mat.mloc(); // number of local rows
     const double one = 1., zero = 0.;
 
     // shift
@@ -48,11 +45,9 @@ void PowerGen<MatrixType>::computeGenEigenInterval(MatrixType& mat,
     // initialize solution data
     // initial guess
     dist_matrix::DistVector<double> sol("sol", m);
-    sol.assign(vec1_); // initialize local solution data
+    sol = vec1_; // initialize local solution data
     // new solution
     dist_matrix::DistVector<double> new_sol("new_sol", m);
-    std::vector<double> vec(mloc, 0.);
-    new_sol.assign(vec);
 
     // get norm of initial sol
     double alpha = sol.nrm2();
@@ -105,7 +100,7 @@ void PowerGen<MatrixType>::computeGenEigenInterval(MatrixType& mat,
     }
     // compute first extent (eigenvalue)
     double e1 = beta - shift_;
-    sol.copyDataToVector(vec1_);
+    vec1_     = sol;
 
     // shift matrix by beta and compute second extent
     // store shift
@@ -113,8 +108,8 @@ void PowerGen<MatrixType>::computeGenEigenInterval(MatrixType& mat,
     mat.axpy(shft_e1, smat);
 
     // reset data and begin loop
-    sol.assign(vec2_);
-    new_sol.assign(vec);
+    sol = vec2_;
+    new_sol.clear();
     alpha = sol.nrm2();
     gamma = 1. / alpha;
     beta  = sol.dot(new_sol);
@@ -161,7 +156,7 @@ void PowerGen<MatrixType>::computeGenEigenInterval(MatrixType& mat,
     }
     // compute second extent
     double e2 = beta - shft_e1 - shift_;
-    sol.copyDataToVector(vec2_);
+    vec2_     = sol;
 
     // save results
     double tmp     = e1;
@@ -188,4 +183,5 @@ void PowerGen<MatrixType>::computeGenEigenInterval(MatrixType& mat,
     compute_tm_.stop();
 }
 
-template class PowerGen<dist_matrix::DistMatrix<DISTMATDTYPE>>;
+template class PowerGen<dist_matrix::DistMatrix<DISTMATDTYPE>,
+    dist_matrix::DistVector<DISTMATDTYPE>>;

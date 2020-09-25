@@ -9,7 +9,9 @@
 #include "GramMatrix.h"
 #include "random.h"
 
-template <class MatrixType>
+#include <vector>
+
+template <class MatrixType, class VectorType>
 class PowerGen
 {
 private:
@@ -18,8 +20,8 @@ private:
     // use shift to target highest or lowest eigenvalue
     double shift_;
 
-    std::vector<double> vec1_;
-    std::vector<double> vec2_;
+    VectorType vec1_;
+    VectorType vec2_;
 
 public:
     PowerGen(const int n)
@@ -33,6 +35,6 @@ public:
     static void printTimers(std::ostream& os) { compute_tm_.print(os); }
 };
 
-template <class MatrixType>
-Timer PowerGen<MatrixType>::compute_tm_("PowerGen::compute");
+template <class MatrixType, class VectorType>
+Timer PowerGen<MatrixType, VectorType>::compute_tm_("PowerGen::compute");
 #endif
