@@ -1118,7 +1118,8 @@ void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::
 {
     dist_matrix::DistMatrix<DISTMATDTYPE> mat(*matHB_);
 
-    static PowerGen<dist_matrix::DistMatrix<DISTMATDTYPE>, std::vector<double>>
+    static PowerGen<dist_matrix::DistMatrix<DISTMATDTYPE>,
+        dist_matrix::DistVector<DISTMATDTYPE>>
         power(dim_);
 
     power.computeGenEigenInterval(mat, *gm_, interval, maxits, pad);

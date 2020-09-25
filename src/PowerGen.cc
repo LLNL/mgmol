@@ -14,8 +14,6 @@
 #include "mputils.h"
 #include "random.h"
 
-#include <vector>
-
 /* Use the power method to compute the extents of the spectrum of the
  * generalized eigenproblem. In order to use a residual-based convergence
  * criterion in an efficient way, we delay normalization of the vectors to avoid
@@ -47,7 +45,7 @@ void PowerGen<MatrixType, VectorType>::computeGenEigenInterval(MatrixType& mat,
     // initialize solution data
     // initial guess
     dist_matrix::DistVector<double> sol("sol", m);
-    sol.assign(vec1_); // initialize local solution data
+    sol = vec1_; // initialize local solution data
     // new solution
     dist_matrix::DistVector<double> new_sol("new_sol", m);
 
@@ -102,7 +100,7 @@ void PowerGen<MatrixType, VectorType>::computeGenEigenInterval(MatrixType& mat,
     }
     // compute first extent (eigenvalue)
     double e1 = beta - shift_;
-    sol.copyDataToVector(vec1_);
+    vec1_     = sol;
 
     // shift matrix by beta and compute second extent
     // store shift
@@ -110,7 +108,7 @@ void PowerGen<MatrixType, VectorType>::computeGenEigenInterval(MatrixType& mat,
     mat.axpy(shft_e1, smat);
 
     // reset data and begin loop
-    sol.assign(vec2_);
+    sol = vec2_;
     new_sol.clear();
     alpha = sol.nrm2();
     gamma = 1. / alpha;
@@ -158,7 +156,7 @@ void PowerGen<MatrixType, VectorType>::computeGenEigenInterval(MatrixType& mat,
     }
     // compute second extent
     double e2 = beta - shft_e1 - shift_;
-    sol.copyDataToVector(vec2_);
+    vec2_     = sol;
 
     // save results
     double tmp     = e1;
@@ -186,4 +184,4 @@ void PowerGen<MatrixType, VectorType>::computeGenEigenInterval(MatrixType& mat,
 }
 
 template class PowerGen<dist_matrix::DistMatrix<DISTMATDTYPE>,
-    std::vector<double>>;
+    dist_matrix::DistVector<DISTMATDTYPE>>;

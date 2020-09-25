@@ -9,6 +9,8 @@
 #include "GramMatrix.h"
 #include "random.h"
 
+#include <vector>
+
 template <class MatrixType, class VectorType>
 class PowerGen
 {
