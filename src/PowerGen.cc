@@ -39,7 +39,6 @@ void PowerGen<MatrixType>::computeGenEigenInterval(MatrixType& mat,
 
     // use the power method to get the eigenvalue interval
     const int m      = mat.m(); // number of global rows
-    const int mloc   = mat.mloc(); // number of local rows
     const double one = 1., zero = 0.;
 
     // shift
@@ -51,8 +50,6 @@ void PowerGen<MatrixType>::computeGenEigenInterval(MatrixType& mat,
     sol.assign(vec1_); // initialize local solution data
     // new solution
     dist_matrix::DistVector<double> new_sol("new_sol", m);
-    std::vector<double> vec(mloc, 0.);
-    new_sol.assign(vec);
 
     // get norm of initial sol
     double alpha = sol.nrm2();
@@ -114,7 +111,7 @@ void PowerGen<MatrixType>::computeGenEigenInterval(MatrixType& mat,
 
     // reset data and begin loop
     sol.assign(vec2_);
-    new_sol.assign(vec);
+    new_sol.clear();
     alpha = sol.nrm2();
     gamma = 1. / alpha;
     beta  = sol.dot(new_sol);
