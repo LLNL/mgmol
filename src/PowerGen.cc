@@ -22,8 +22,8 @@
  * multiple matvecs. NOTE: We are only interested in the eigenvalues, so the
  * final eigenvector may not be normalized.
  */
-template <class MatrixType>
-void PowerGen<MatrixType>::computeGenEigenInterval(MatrixType& mat,
+template <class MatrixType, class VectorType>
+void PowerGen<MatrixType, VectorType>::computeGenEigenInterval(MatrixType& mat,
     GramMatrix<MatrixType>& gm, std::vector<double>& interval, const int maxits,
     const double pad)
 {
@@ -185,4 +185,5 @@ void PowerGen<MatrixType>::computeGenEigenInterval(MatrixType& mat,
     compute_tm_.stop();
 }
 
-template class PowerGen<dist_matrix::DistMatrix<DISTMATDTYPE>>;
+template class PowerGen<dist_matrix::DistMatrix<DISTMATDTYPE>,
+    std::vector<double>>;

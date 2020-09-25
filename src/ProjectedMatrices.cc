@@ -1111,13 +1111,15 @@ ProjectedMatrices<MatrixType>::computeChemicalPotentialAndDMwithChebyshev(
 /* Use the power method to compute the extents of the spectrum of the
  * generalized eigenproblem.
  */
-template <class MatrixType>
-void ProjectedMatrices<MatrixType>::computeGenEigenInterval(
-    std::vector<double>& interval, const int maxits, const double pad)
+template <>
+void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::
+    computeGenEigenInterval(
+        std::vector<double>& interval, const int maxits, const double pad)
 {
-    MatrixType mat(*matHB_);
+    dist_matrix::DistMatrix<DISTMATDTYPE> mat(*matHB_);
 
-    static PowerGen<MatrixType> power(dim_);
+    static PowerGen<dist_matrix::DistMatrix<DISTMATDTYPE>, std::vector<double>>
+        power(dim_);
 
     power.computeGenEigenInterval(mat, *gm_, interval, maxits, pad);
 }
