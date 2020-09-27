@@ -15,6 +15,8 @@
 #include <string>
 #include <vector>
 
+class ReplicatedVector;
+
 class ReplicatedMatrix
 {
     // matrix size
@@ -27,6 +29,8 @@ class ReplicatedMatrix
     std::unique_ptr<double, void (*)(double*)> device_data_;
 
 public:
+    friend class ReplicatedVector;
+
     ReplicatedMatrix(const std::string name, const int m, const int n);
     ReplicatedMatrix(const std::string name, const int n);
 
@@ -37,6 +41,8 @@ public:
     ReplicatedMatrix(const ReplicatedMatrix&);
 
     ~ReplicatedMatrix();
+
+    int m() const { return dim_; }
 
     ReplicatedMatrix& operator-=(const ReplicatedMatrix& rhs)
     {
@@ -50,7 +56,9 @@ public:
 
     void axpy(const double alpha, const ReplicatedMatrix& a);
 
-    void init(const double* const a, const int lda);
+    void init(const double* const ha, const int lda);
+    void get(double* ha, const int lda) const;
+    void getDiagonalValues(double* ha);
     void setRandom(const double minv, const double maxv);
     void identity();
 
@@ -65,6 +73,7 @@ public:
     int potrf(char uplo);
     int potri(char uplo);
     void potrs(char, ReplicatedMatrix&);
+    void potrs(char, ReplicatedVector&);
 
     void getrf(std::vector<int>& ipiv);
     void getrs(char trans, ReplicatedMatrix& b, std::vector<int>& ipiv);

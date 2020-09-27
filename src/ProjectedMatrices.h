@@ -125,6 +125,8 @@ protected:
     // convert a MatrixType object into a SquareLocalMatrices
     void convert(const MatrixType& src, SquareLocalMatrices<double>& dst);
 
+    void setupMPI(const std::vector<std::vector<int>>&);
+
 public:
     ProjectedMatrices(const int, const bool with_spin, const double occ_width);
     ~ProjectedMatrices() override;
@@ -152,7 +154,7 @@ public:
 
     void updateSubMatX() override { updateSubMatX(dm_->getMatrix()); }
 
-    void updateSubMatX(const MatrixType& dm) { convert(dm, *localX_); }
+    void updateSubMatX(const MatrixType& dm);
 
     void updateSubMatT() override { convert(*theta_, *localT_); }
 
@@ -338,14 +340,7 @@ public:
         dm_->mix(mix, *mat_X_old_, itindex);
     }
 
-    SquareLocalMatrices<double> getReplicatedDM()
-    {
-        SquareLocalMatrices<double> sldm(1, dim_);
-        const MatrixType& dm(dm_->getMatrix());
-        dm.allgather(sldm.getSubMatrix(), dim_);
-
-        return sldm;
-    }
+    SquareLocalMatrices<double> getReplicatedDM();
 
     double getLinDependent2states(
         int& st1, int& st2, const bool /*flag*/) const override

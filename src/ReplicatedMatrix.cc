@@ -9,6 +9,8 @@
 #ifdef HAVE_MAGMA
 
 #include "ReplicatedMatrix.h"
+
+#include "ReplicatedVector.h"
 #include "memory_space.h"
 #include "random.h"
 
@@ -97,12 +99,28 @@ ReplicatedMatrix& ReplicatedMatrix::assign(
     return *this;
 }
 
-void ReplicatedMatrix::init(const double* const a, const int lda)
+void ReplicatedMatrix::init(const double* const ha, const int lda)
 {
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
     magma_dsetmatrix(
-        dim_, dim_, a, lda, device_data_.get(), ld_, magma_singleton.queue_);
+        dim_, dim_, ha, lda, device_data_.get(), ld_, magma_singleton.queue_);
+}
+
+void ReplicatedMatrix::get(double* ha, const int lda) const
+{
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    magma_dgetmatrix(
+        dim_, dim_, device_data_.get(), ld_, ha, lda, magma_singleton.queue_);
+}
+
+void ReplicatedMatrix::getDiagonalValues(double* ha)
+{
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    magma_dgetvector(
+        dim_, device_data_.get(), ld_ + 1, ha, 1, magma_singleton.queue_);
 }
 
 void ReplicatedMatrix::axpy(const double alpha, const ReplicatedMatrix& a)
@@ -234,6 +252,17 @@ void ReplicatedMatrix::potrs(char uplo, ReplicatedMatrix& b)
     int info;
     magma_dpotrs_gpu(magma_uplo, dim_, dim_, device_data_.get(), ld_,
         b.device_data_.get(), b.ld_, &info);
+    if (info != 0)
+        std::cerr << "magma_dpotrs_gpu failed, info = " << info << std::endl;
+}
+
+void ReplicatedMatrix::potrs(char uplo, ReplicatedVector& b)
+{
+    magma_uplo_t magma_uplo = magma_uplo_const(uplo);
+
+    int info;
+    magma_dpotrs_gpu(magma_uplo, dim_, 1, device_data_.get(), ld_,
+        b.data(), dim_, &info);
     if (info != 0)
         std::cerr << "magma_dpotrs_gpu failed, info = " << info << std::endl;
 }

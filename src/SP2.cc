@@ -9,14 +9,13 @@
 #include "DistMatrix.h"
 #include "MGmol_MPI.h"
 #include "MPIdata.h"
+#include "ReplicatedMatrix.h"
 #include "linear_algebra/blas3_c.h"
-
-using namespace std;
 
 Timer SP2::getdm_tm_("SP2::getDM");
 
 #ifdef HAVE_BML
-double computePartialTrace(bml_matrix_t* A, const vector<int>& ids)
+double computePartialTrace(bml_matrix_t* A, const std::vector<int>& ids)
 {
     assert(A != 0);
 
@@ -36,7 +35,7 @@ double computePartialTrace(bml_matrix_t* A, const vector<int>& ids)
 SP2::SP2(const double tol, const bool distributed)
     : tol_(tol), distributed_(distributed)
 {
-    // cout<<"SP2 with tol = "<<tol_<<endl;
+    // std::cout<<"SP2 with tol = "<<tol_<<endl;
     // Get user defined ratio and tolerance
     Xi_       = nullptr;
     Xi_sq_    = nullptr;
@@ -124,7 +123,7 @@ void SP2::iterate(int A)
 void SP2::solve(const int nel, const bool verbose)
 {
 #ifdef PRINT_OPERATIONS
-    cout << "SP2::solve()..." << endl;
+    std::cout << "SP2::solve()..." << std::endl;
 #endif
 
     int i     = 0;
@@ -139,22 +138,22 @@ void SP2::solve(const int nel, const bool verbose)
         // Update Xi_ and Xi_sq_
         iterate(A);
 
-        cout << setprecision(10);
+        std::cout << std::setprecision(10);
         if (onpe0 && verbose)
-            cout << "Trace at step " << i << ":" << trace_[0] << endl;
+            std::cout << "Trace at step " << i << ":" << trace_[0] << std::endl;
 
         if (fabs(trace_[0] - trace_[1]) < tol_) flag = false;
         i++;
     }
     if (onpe0 && verbose)
     {
-        cout << "SP2 computed Trace = " << trace_[0] << endl;
+        std::cout << "SP2 computed Trace = " << trace_[0] << std::endl;
     }
 }
 
 template <>
 void SP2::initializeLocalMat(const SquareLocalMatrices<MATDTYPE>& submatM,
-    const double emin, const double emax, const vector<int>& loc_ids)
+    const double emin, const double emax, const std::vector<int>& loc_ids)
 {
     loc_ids_ = loc_ids;
 
@@ -233,3 +232,21 @@ void SP2::getDM(dist_matrix::DistMatrix<DISTMATDTYPE>& submatM, // output
 
     getdm_tm_.stop();
 }
+
+#ifdef HAVE_MAGMA
+template <>
+void SP2::getDM(ReplicatedMatrix& submatM, // output
+    const ReplicatedMatrix& invS)
+{
+    getdm_tm_.start();
+
+    const int n = Xi_->n();
+    ReplicatedMatrix Xi("Xi", n, n);
+
+    Xi.init(Xi_->getSubMatrix(), n);
+
+    submatM.gemm('n', 'n', 2., Xi, invS, 0.);
+
+    getdm_tm_.stop();
+}
+#endif

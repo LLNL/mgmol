@@ -20,6 +20,7 @@
 #include "Power.h"
 #include "PowerGen.h"
 #include "ReplicatedMatrix.h"
+#include "ReplicatedVector.h"
 #include "ReplicatedWorkSpace.h"
 #include "SP2.h"
 #include "SparseDistMatrix.h"
@@ -96,8 +97,44 @@ void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::convert(
     dm2sl->convert(src, dst);
 }
 
+#ifdef HAVE_MAGMA
 template <>
-void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::setup(
+void ProjectedMatrices<ReplicatedMatrix>::convert(
+    const SquareLocalMatrices<MATDTYPE>& src, ReplicatedMatrix& dst)
+{
+    dst.init(src.getSubMatrix(), dim_);
+}
+
+template <>
+void ProjectedMatrices<ReplicatedMatrix>::convert(
+    const ReplicatedMatrix& src, SquareLocalMatrices<MATDTYPE>& dst)
+{
+    src.get(dst.getSubMatrix(), dim_);
+}
+#endif
+
+template <>
+void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::setupMPI(
+    const std::vector<std::vector<int>>& global_indexes)
+{
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    MPI_Comm comm   = mmpi.commSpin();
+
+    DistMatrix2SquareLocalMatrices::setup(
+        comm, global_indexes, dm_->getMatrix());
+    LocalMatrices2DistMatrix::setup(comm, global_indexes);
+}
+
+#ifdef HAVE_MAGMA
+template <>
+void ProjectedMatrices<ReplicatedMatrix>::setupMPI(
+    const std::vector<std::vector<int>>& global_indexes)
+{
+}
+#endif
+
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::setup(
     const std::vector<std::vector<int>>& global_indexes)
 {
     assert(global_indexes.size() > 0);
@@ -106,12 +143,7 @@ void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::setup(
 
     global_indexes_ = global_indexes;
 
-    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    MPI_Comm comm   = mmpi.commSpin();
-
-    DistMatrix2SquareLocalMatrices::setup(
-        comm, global_indexes, dm_->getMatrix());
-    LocalMatrices2DistMatrix::setup(comm, global_indexes);
+    setupMPI(global_indexes);
 
     localX_.reset(
         new SquareLocalMatrices<MATDTYPE>(subdiv_, chromatic_number_));
@@ -1112,18 +1144,28 @@ ProjectedMatrices<MatrixType>::computeChemicalPotentialAndDMwithChebyshev(
  * generalized eigenproblem.
  */
 template <>
-void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::
-    computeGenEigenInterval(
-        std::vector<double>& interval, const int maxits, const double pad)
+void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::computeGenEigenInterval(
+    std::vector<double>& interval, const int maxits, const double pad)
 {
     dist_matrix::DistMatrix<DISTMATDTYPE> mat(*matHB_);
 
-    static PowerGen<dist_matrix::DistMatrix<DISTMATDTYPE>,
-        dist_matrix::DistVector<DISTMATDTYPE>>
-        power(dim_);
+    static PowerGen<dist_matrix::DistMatrix<DISTMATDTYPE>, dist_matrix::DistVector<DISTMATDTYPE>> power(dim_);
 
     power.computeGenEigenInterval(mat, *gm_, interval, maxits, pad);
 }
+
+#ifdef HAVE_MAGMA
+template <>
+void ProjectedMatrices<ReplicatedMatrix>::computeGenEigenInterval(
+    std::vector<double>& interval, const int maxits, const double pad)
+{
+    ReplicatedMatrix mat(*matHB_);
+
+    static PowerGen<ReplicatedMatrix, ReplicatedVector> power(dim_);
+
+    power.computeGenEigenInterval(mat, *gm_, interval, maxits, pad);
+}
+#endif
 
 template <>
 void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::consolidateH()
@@ -1147,7 +1189,38 @@ void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::consolidateH()
     consolidate_H_tm_.stop();
 }
 
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::updateSubMatX(const MatrixType& dm)
+{
+    convert(dm, *localX_);
+}
+
+template <>
+SquareLocalMatrices<double>
+ProjectedMatrices<dist_matrix::DistMatrix<double>>::getReplicatedDM()
+{
+    SquareLocalMatrices<double> sldm(1, dim_);
+    const dist_matrix::DistMatrix<double>& dm(dm_->getMatrix());
+    dm.allgather(sldm.getSubMatrix(), dim_);
+
+    return sldm;
+}
+
+#ifdef HAVE_MAGMA
+template <>
+SquareLocalMatrices<double>
+ProjectedMatrices<ReplicatedMatrix>::getReplicatedDM()
+{
+    SquareLocalMatrices<double> sldm(1, dim_);
+    const ReplicatedMatrix& dm(dm_->getMatrix());
+    dm.get(sldm.getSubMatrix(), dim_);
+
+    return sldm;
+}
+
+#endif
+
 template class ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>;
 #ifdef HAVE_MAGMA
-// template class ProjectedMatrices<ReplicatedMatrix>;
+template class ProjectedMatrices<ReplicatedMatrix>;
 #endif

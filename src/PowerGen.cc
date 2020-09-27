@@ -13,6 +13,8 @@
 #include "GramMatrix.h"
 #include "mputils.h"
 #include "random.h"
+#include "ReplicatedMatrix.h"
+#include "ReplicatedVector.h"
 
 /* Use the power method to compute the extents of the spectrum of the
  * generalized eigenproblem. In order to use a residual-based convergence
@@ -44,10 +46,10 @@ void PowerGen<MatrixType, VectorType>::computeGenEigenInterval(MatrixType& mat,
 
     // initialize solution data
     // initial guess
-    dist_matrix::DistVector<double> sol("sol", m);
+    VectorType sol("sol", m);
     sol = vec1_; // initialize local solution data
     // new solution
-    dist_matrix::DistVector<double> new_sol("new_sol", m);
+    VectorType new_sol("new_sol", m);
 
     // get norm of initial sol
     double alpha = sol.nrm2();
@@ -60,7 +62,7 @@ void PowerGen<MatrixType, VectorType>::computeGenEigenInterval(MatrixType& mat,
     }
 #endif
     // residual
-    dist_matrix::DistVector<double> res(new_sol);
+    VectorType res(new_sol);
     // initial eigenvalue estimate (for shifted system)
     double beta = sol.dot(new_sol);
 
@@ -77,7 +79,7 @@ void PowerGen<MatrixType, VectorType>::computeGenEigenInterval(MatrixType& mat,
         new_sol.clear();
         new_sol.axpy(gamma, res);
         // Compute residual: res = beta*S*x - mat*x
-        res.gemm('N', 'N', beta, smat, sol, -1.);
+        res.gemv('N', beta, smat, sol, -1.);
         // compute residual norm
         double resnorm = res.nrm2();
         // check for convergence
@@ -133,7 +135,7 @@ void PowerGen<MatrixType, VectorType>::computeGenEigenInterval(MatrixType& mat,
         new_sol.clear();
         new_sol.axpy(gamma, res);
         // Compute residual: res = beta*S*x - mat*x
-        res.gemm('N', 'N', beta, smat, sol, -1.);
+        res.gemv('N', beta, smat, sol, -1.);
         // compute residual norm
         double resnorm = res.nrm2();
         // check for convergence
@@ -185,3 +187,7 @@ void PowerGen<MatrixType, VectorType>::computeGenEigenInterval(MatrixType& mat,
 
 template class PowerGen<dist_matrix::DistMatrix<DISTMATDTYPE>,
     dist_matrix::DistVector<DISTMATDTYPE>>;
+#ifdef HAVE_MAGMA
+template class PowerGen<ReplicatedMatrix,ReplicatedVector>;
+#endif
+
