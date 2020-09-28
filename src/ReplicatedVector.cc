@@ -6,6 +6,8 @@
 // All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
+#ifdef HAVE_MAGMA
+
 #include "ReplicatedVector.h"
 
 #include "memory_space.h"
@@ -91,3 +93,5 @@ void ReplicatedVector::gemv(const char trans, const double alpha,
         b.device_data_.get(), 1, beta, device_data_.get(), 1,
         magma_singleton.queue_);
 }
+
+#endif
