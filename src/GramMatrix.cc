@@ -14,6 +14,7 @@
 #include "DistVector.h"
 #include "Power.h"
 #include "ReplicatedMatrix.h"
+#include "ReplicatedVector.h"
 
 #include <iomanip>
 #include <iostream>
@@ -310,7 +311,27 @@ double GramMatrix<MatrixType>::getTraceDiagProductWithInvS(
     return work_->trace();
 }
 
+template <class MatrixType>
+void GramMatrix<MatrixType>::applyInv(MatrixType& mat)
+{
+    assert(isLSuptodate_);
+
+    ls_->potrs('l', mat);
+}
+
+template <class MatrixType>
+template <class VectorType>
+void GramMatrix<MatrixType>::applyInv(VectorType& mat)
+{
+    assert(isLSuptodate_);
+
+    ls_->potrs('l', mat);
+}
+
 template class GramMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>;
+template void GramMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>::applyInv(
+    dist_matrix::DistVector<DISTMATDTYPE>&);
 #ifdef HAVE_MAGMA
 template class GramMatrix<ReplicatedMatrix>;
+template void GramMatrix<ReplicatedMatrix>::applyInv(ReplicatedVector&);
 #endif

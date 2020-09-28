@@ -21,6 +21,7 @@ set(link_libs mgmol_distmatrix
 set(SOURCES
  DielectricControl.cc
  ReplicatedMatrix.cc
+ ReplicatedVector.cc
  SquareSubMatrix2DistMatrix.cc
  LocalMatrices2DistMatrix.cc
  DistMatrix2SquareLocalMatrices.cc

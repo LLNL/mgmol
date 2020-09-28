@@ -54,4 +54,13 @@ void ReplicatedWorkSpace<ScalarType>::initSquareMatrix(
     distmat.allgather(square_matrix_, ndim_);
 }
 
+#ifdef HAVE_MAGMA
+template <class ScalarType>
+void ReplicatedWorkSpace<ScalarType>::initSquareMatrix(
+    const ReplicatedMatrix& mat)
+{
+    mat.get(square_matrix_, ndim_ * ndim_);
+}
+#endif
+
 template class ReplicatedWorkSpace<double>;

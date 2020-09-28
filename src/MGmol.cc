@@ -888,8 +888,8 @@ void MGmol<T>::printTimers()
     Table::printTimers(os_);
     LocalMatrices<MATDTYPE>::printTimers(os_);
     Power<LocalVector<double>, SquareLocalMatrices<double>>::printTimers(os_);
-    PowerGen<dist_matrix::DistMatrix<double>, std::vector<double>>::printTimers(
-        os_);
+    PowerGen<dist_matrix::DistMatrix<double>,
+        dist_matrix::DistVector<double>>::printTimers(os_);
     SP2::printTimers(os_);
     if (lrs_) lrs_->printTimers(os_);
     local_cluster_->printTimers(os_);

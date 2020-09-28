@@ -11,6 +11,7 @@
 #define MGMOL_REPLICATED_WORKSPACE_H
 
 #include "DistMatrix.h"
+#include "ReplicatedMatrix.h"
 #include "Timer.h"
 
 #include <cassert>

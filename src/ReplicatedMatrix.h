@@ -15,8 +15,14 @@
 #include <string>
 #include <vector>
 
+class ReplicatedVector;
+#include "SquareLocalMatrices.h"
+#include "SquareSubMatrix.h"
+
 class ReplicatedMatrix
 {
+    static MPI_Comm comm_;
+
     // matrix size
     int dim_;
 
@@ -27,6 +33,10 @@ class ReplicatedMatrix
     std::unique_ptr<double, void (*)(double*)> device_data_;
 
 public:
+    friend class ReplicatedVector;
+
+    static void setMPIcomm(MPI_Comm comm) { comm_ = comm; }
+
     ReplicatedMatrix(const std::string name, const int m, const int n);
     ReplicatedMatrix(const std::string name, const int n);
 
@@ -38,6 +48,8 @@ public:
 
     ~ReplicatedMatrix();
 
+    int m() const { return dim_; }
+
     ReplicatedMatrix& operator-=(const ReplicatedMatrix& rhs)
     {
         axpy(-1.0, rhs);
@@ -45,12 +57,19 @@ public:
     }
     ReplicatedMatrix& operator=(const ReplicatedMatrix& rhs);
 
-    ReplicatedMatrix& assign(
-        const ReplicatedMatrix& src, const int ib, const int jb);
+    void assign(const ReplicatedMatrix& src, const int ib, const int jb);
+
+    void assign(SquareLocalMatrices<double>& src);
+    void add(const SquareSubMatrix<double>& src);
+
+    // sum up values across MPI tasks
+    void consolidate();
 
     void axpy(const double alpha, const ReplicatedMatrix& a);
 
-    void init(const double* const a, const int lda);
+    void init(const double* const ha, const int lda);
+    void get(double* ha, const int lda) const;
+    void getDiagonalValues(double* ha);
     void setRandom(const double minv, const double maxv);
     void identity();
 
@@ -65,6 +84,7 @@ public:
     int potrf(char uplo);
     int potri(char uplo);
     void potrs(char, ReplicatedMatrix&);
+    void potrs(char, ReplicatedVector&);
 
     void getrf(std::vector<int>& ipiv);
     void getrs(char trans, ReplicatedMatrix& b, std::vector<int>& ipiv);

@@ -85,12 +85,9 @@ public:
 
     void set2Id(const int orbitals_index);
 
-    void applyInv(MatrixType& mat)
-    {
-        assert(isLSuptodate_);
-
-        ls_->potrs('l', mat);
-    }
+    void applyInv(MatrixType& mat);
+    template <class VectorType>
+    void applyInv(VectorType& v);
 
     void printMM(std::ostream& tfile) { matS_->printMM(tfile); }
 

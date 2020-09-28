@@ -9,6 +9,8 @@
 #ifdef HAVE_MAGMA
 
 #include "ReplicatedMatrix.h"
+
+#include "ReplicatedVector.h"
 #include "memory_space.h"
 #include "random.h"
 
@@ -19,6 +21,8 @@
 using MemoryDev = MemorySpace::Memory<double, MemorySpace::Device>;
 
 constexpr double gpuroundup = 32;
+
+MPI_Comm ReplicatedMatrix::comm_ = MPI_COMM_NULL;
 
 void rotateSym(ReplicatedMatrix& mat, const ReplicatedMatrix& rotation_matrix,
     ReplicatedMatrix& work)
@@ -84,7 +88,28 @@ ReplicatedMatrix& ReplicatedMatrix::operator=(const ReplicatedMatrix& rhs)
 
 ReplicatedMatrix::~ReplicatedMatrix() {}
 
-ReplicatedMatrix& ReplicatedMatrix::assign(
+void ReplicatedMatrix::consolidate()
+{
+    assert(comm_ != MPI_COMM_NULL);
+
+    std::vector<double> mat(dim_ * dim_);
+    std::vector<double> mat_sum(dim_ * dim_);
+
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    // copy from GPU to CPU
+    magma_dgetmatrix(dim_, dim_, device_data_.get(), ld_, mat.data(), dim_,
+        magma_singleton.queue_);
+
+    MPI_Allreduce(
+        mat.data(), mat_sum.data(), dim_ * dim_, MPI_DOUBLE, MPI_SUM, comm_);
+
+    // copy from CPU to GPU
+    magma_dsetmatrix(dim_, dim_, mat_sum.data(), dim_, device_data_.get(), ld_,
+        magma_singleton.queue_);
+}
+
+void ReplicatedMatrix::assign(
     const ReplicatedMatrix& src, const int ib, const int jb)
 {
     assert(this != &src);
@@ -93,16 +118,62 @@ ReplicatedMatrix& ReplicatedMatrix::assign(
 
     magma_dcopymatrix(src.dim_, src.dim_, src.device_data_.get(), src.ld_,
         device_data_.get() + jb * ld_ + ib, ld_, magma_singleton.queue_);
-
-    return *this;
 }
 
-void ReplicatedMatrix::init(const double* const a, const int lda)
+void ReplicatedMatrix::assign(SquareLocalMatrices<double>& src)
+{
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    magma_dsetmatrix(src.m(), src.n(), src.getSubMatrix(), src.n(),
+        device_data_.get(), ld_, magma_singleton.queue_);
+}
+
+void ReplicatedMatrix::add(const SquareSubMatrix<double>& mat)
+{
+    const std::vector<int>& gid(mat.getGids());
+    const int n = gid.size();
+    assert(n == dim_);
+
+    std::vector<double> src(n * n);
+
+    for (int j = 0; j < n; j++)
+    {
+        assert(gid[j] >= 0);
+
+        for (int i = 0; i < n; i++)
+        {
+            src[i + j * n] = mat.getLocalValue(i, j);
+        }
+    }
+
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    magma_dsetmatrix(dim_, dim_, src.data(), dim_, device_data_.get(), ld_,
+        magma_singleton.queue_);
+}
+
+void ReplicatedMatrix::init(const double* const ha, const int lda)
 {
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
     magma_dsetmatrix(
-        dim_, dim_, a, lda, device_data_.get(), ld_, magma_singleton.queue_);
+        dim_, dim_, ha, lda, device_data_.get(), ld_, magma_singleton.queue_);
+}
+
+void ReplicatedMatrix::get(double* ha, const int lda) const
+{
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    magma_dgetmatrix(
+        dim_, dim_, device_data_.get(), ld_, ha, lda, magma_singleton.queue_);
+}
+
+void ReplicatedMatrix::getDiagonalValues(double* ha)
+{
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    magma_dgetvector(
+        dim_, device_data_.get(), ld_ + 1, ha, 1, magma_singleton.queue_);
 }
 
 void ReplicatedMatrix::axpy(const double alpha, const ReplicatedMatrix& a)
@@ -234,6 +305,17 @@ void ReplicatedMatrix::potrs(char uplo, ReplicatedMatrix& b)
     int info;
     magma_dpotrs_gpu(magma_uplo, dim_, dim_, device_data_.get(), ld_,
         b.device_data_.get(), b.ld_, &info);
+    if (info != 0)
+        std::cerr << "magma_dpotrs_gpu failed, info = " << info << std::endl;
+}
+
+void ReplicatedMatrix::potrs(char uplo, ReplicatedVector& b)
+{
+    magma_uplo_t magma_uplo = magma_uplo_const(uplo);
+
+    int info;
+    magma_dpotrs_gpu(
+        magma_uplo, dim_, 1, device_data_.get(), ld_, b.data(), dim_, &info);
     if (info != 0)
         std::cerr << "magma_dpotrs_gpu failed, info = " << info << std::endl;
 }
