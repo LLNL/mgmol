@@ -11,10 +11,10 @@
 #include "DistMatrix.h"
 #include "DistVector.h"
 #include "GramMatrix.h"
-#include "mputils.h"
-#include "random.h"
 #include "ReplicatedMatrix.h"
 #include "ReplicatedVector.h"
+#include "mputils.h"
+#include "random.h"
 
 /* Use the power method to compute the extents of the spectrum of the
  * generalized eigenproblem. In order to use a residual-based convergence
@@ -188,6 +188,5 @@ void PowerGen<MatrixType, VectorType>::computeGenEigenInterval(MatrixType& mat,
 template class PowerGen<dist_matrix::DistMatrix<DISTMATDTYPE>,
     dist_matrix::DistVector<DISTMATDTYPE>>;
 #ifdef HAVE_MAGMA
-template class PowerGen<ReplicatedMatrix,ReplicatedVector>;
+template class PowerGen<ReplicatedMatrix, ReplicatedVector>;
 #endif
-

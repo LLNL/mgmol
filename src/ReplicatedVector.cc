@@ -15,14 +15,12 @@
 using MemoryDev = MemorySpace::Memory<double, MemorySpace::Device>;
 
 ReplicatedVector::ReplicatedVector(const std::string name, const int n)
-    : dim_(n),
-      device_data_(MemoryDev::allocate(dim_), MemoryDev::free)
+    : dim_(n), device_data_(MemoryDev::allocate(dim_), MemoryDev::free)
 {
 }
 
 ReplicatedVector::ReplicatedVector(const ReplicatedVector& v)
-    : dim_(v.dim_),
-      device_data_(MemoryDev::allocate(dim_), MemoryDev::free)
+    : dim_(v.dim_), device_data_(MemoryDev::allocate(dim_), MemoryDev::free)
 {
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
@@ -31,12 +29,12 @@ ReplicatedVector::ReplicatedVector(const ReplicatedVector& v)
 }
 
 ReplicatedVector::ReplicatedVector(const std::vector<double>& v)
-    : dim_(v.size()),
-      device_data_(MemoryDev::allocate(dim_), MemoryDev::free)
+    : dim_(v.size()), device_data_(MemoryDev::allocate(dim_), MemoryDev::free)
 {
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
-    magma_dsetvector(dim_, v.data(), 1, device_data_.get(), 1, magma_singleton.queue_);
+    magma_dsetvector(
+        dim_, v.data(), 1, device_data_.get(), 1, magma_singleton.queue_);
 }
 
 ReplicatedVector& ReplicatedVector::operator=(const ReplicatedVector& src)
@@ -61,9 +59,10 @@ void ReplicatedVector::clear()
 {
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
-    std::vector<double> zero(dim_,0.);
+    std::vector<double> zero(dim_, 0.);
 
-    magma_dsetvector(dim_, zero.data(), 1, device_data_.get(), 1, magma_singleton.queue_);
+    magma_dsetvector(
+        dim_, zero.data(), 1, device_data_.get(), 1, magma_singleton.queue_);
 }
 
 double ReplicatedVector::nrm2()
@@ -77,20 +76,18 @@ double ReplicatedVector::dot(const ReplicatedVector& v)
 {
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
-    return magma_ddot(dim_, device_data_.get(), 1, 
-                      v.device_data_.get(), 1, magma_singleton.queue_);
+    return magma_ddot(dim_, device_data_.get(), 1, v.device_data_.get(), 1,
+        magma_singleton.queue_);
 }
 
-void ReplicatedVector::gemv(const char trans,
-    const double alpha, const ReplicatedMatrix& a, const ReplicatedVector& b,
-    const double beta)
+void ReplicatedVector::gemv(const char trans, const double alpha,
+    const ReplicatedMatrix& a, const ReplicatedVector& b, const double beta)
 {
     magma_trans_t magma_trans = magma_trans_const(trans);
 
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
-    magmablas_dgemv(magma_trans, dim_, dim_, alpha,
-        a.device_data_.get(), a.ld_, b.device_data_.get(), 1, beta,
-        device_data_.get(), 1, magma_singleton.queue_);
+    magmablas_dgemv(magma_trans, dim_, dim_, alpha, a.device_data_.get(), a.ld_,
+        b.device_data_.get(), 1, beta, device_data_.get(), 1,
+        magma_singleton.queue_);
 }
-

@@ -22,7 +22,7 @@ using MemoryDev = MemorySpace::Memory<double, MemorySpace::Device>;
 
 constexpr double gpuroundup = 32;
 
-MPI_Comm ReplicatedMatrix::comm_=MPI_COMM_NULL;
+MPI_Comm ReplicatedMatrix::comm_ = MPI_COMM_NULL;
 
 void rotateSym(ReplicatedMatrix& mat, const ReplicatedMatrix& rotation_matrix,
     ReplicatedMatrix& work)
@@ -90,7 +90,7 @@ ReplicatedMatrix::~ReplicatedMatrix() {}
 
 void ReplicatedMatrix::consolidate()
 {
-    assert(comm_!=MPI_COMM_NULL);
+    assert(comm_ != MPI_COMM_NULL);
 
     std::vector<double> mat(dim_ * dim_);
     std::vector<double> mat_sum(dim_ * dim_);
@@ -99,14 +99,14 @@ void ReplicatedMatrix::consolidate()
 
     // copy from GPU to CPU
     magma_dgetmatrix(dim_, dim_, device_data_.get(), ld_, mat.data(), dim_,
-         magma_singleton.queue_) ;
+        magma_singleton.queue_);
 
-    MPI_Allreduce(mat.data(), mat_sum.data(), dim_ * dim_, MPI_DOUBLE, MPI_SUM,
-        comm_);
+    MPI_Allreduce(
+        mat.data(), mat_sum.data(), dim_ * dim_, MPI_DOUBLE, MPI_SUM, comm_);
 
     // copy from CPU to GPU
     magma_dsetmatrix(dim_, dim_, mat_sum.data(), dim_, device_data_.get(), ld_,
-        magma_singleton.queue_) ;
+        magma_singleton.queue_);
 }
 
 void ReplicatedMatrix::assign(
@@ -124,7 +124,7 @@ void ReplicatedMatrix::assign(SquareLocalMatrices<double>& src)
 {
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
-    magma_dsetmatrix(src.m(), src.n(), src.getSubMatrix(),  src.n(),
+    magma_dsetmatrix(src.m(), src.n(), src.getSubMatrix(), src.n(),
         device_data_.get(), ld_, magma_singleton.queue_);
 }
 
@@ -132,9 +132,9 @@ void ReplicatedMatrix::add(const SquareSubMatrix<double>& mat)
 {
     const std::vector<int>& gid(mat.getGids());
     const int n = gid.size();
-    assert(n==dim_);
+    assert(n == dim_);
 
-    std::vector<double> src(n*n);
+    std::vector<double> src(n * n);
 
     for (int j = 0; j < n; j++)
     {
@@ -142,14 +142,14 @@ void ReplicatedMatrix::add(const SquareSubMatrix<double>& mat)
 
         for (int i = 0; i < n; i++)
         {
-            src[i+j*n] = mat.getLocalValue(i, j);
+            src[i + j * n] = mat.getLocalValue(i, j);
         }
     }
 
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
-    magma_dsetmatrix(dim_, dim_, src.data(),  dim_,
-        device_data_.get(), ld_, magma_singleton.queue_);
+    magma_dsetmatrix(dim_, dim_, src.data(), dim_, device_data_.get(), ld_,
+        magma_singleton.queue_);
 }
 
 void ReplicatedMatrix::init(const double* const ha, const int lda)
@@ -314,8 +314,8 @@ void ReplicatedMatrix::potrs(char uplo, ReplicatedVector& b)
     magma_uplo_t magma_uplo = magma_uplo_const(uplo);
 
     int info;
-    magma_dpotrs_gpu(magma_uplo, dim_, 1, device_data_.get(), ld_,
-        b.data(), dim_, &info);
+    magma_dpotrs_gpu(
+        magma_uplo, dim_, 1, device_data_.get(), ld_, b.data(), dim_, &info);
     if (info != 0)
         std::cerr << "magma_dpotrs_gpu failed, info = " << info << std::endl;
 }

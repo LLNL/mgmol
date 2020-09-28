@@ -1144,12 +1144,15 @@ ProjectedMatrices<MatrixType>::computeChemicalPotentialAndDMwithChebyshev(
  * generalized eigenproblem.
  */
 template <>
-void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::computeGenEigenInterval(
-    std::vector<double>& interval, const int maxits, const double pad)
+void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::
+    computeGenEigenInterval(
+        std::vector<double>& interval, const int maxits, const double pad)
 {
     dist_matrix::DistMatrix<DISTMATDTYPE> mat(*matHB_);
 
-    static PowerGen<dist_matrix::DistMatrix<DISTMATDTYPE>, dist_matrix::DistVector<DISTMATDTYPE>> power(dim_);
+    static PowerGen<dist_matrix::DistMatrix<DISTMATDTYPE>,
+        dist_matrix::DistVector<DISTMATDTYPE>>
+        power(dim_);
 
     power.computeGenEigenInterval(mat, *gm_, interval, maxits, pad);
 }

@@ -9,6 +9,8 @@
 #ifndef MGMOL_REPLICATEDVECTOR_H
 #define MGMOL_REPLICATEDVECTOR_H
 
+#ifdef HAVE_MAGMA
+
 #include "ReplicatedMatrix.h"
 
 #include <vector>
@@ -24,16 +26,18 @@ public:
     ReplicatedVector(const ReplicatedVector&);
     ReplicatedVector(const std::vector<double>&);
     ReplicatedVector& operator=(const ReplicatedVector&);
-    double* data(){ return device_data_.get(); }
+    double* data() { return device_data_.get(); }
     void clear();
     double dot(const ReplicatedVector& v);
     double nrm2();
-    void copyDataToVector(std::vector<double>& dst)const;
+    void copyDataToVector(std::vector<double>& dst) const;
     void assign(const std::vector<double>& src);
     void axpy(const double alpha, const ReplicatedVector&);
-    void gemv(const char trans, const double alpha,
-        const ReplicatedMatrix&, const ReplicatedVector&, const double beta);
+    void gemv(const char trans, const double alpha, const ReplicatedMatrix&,
+        const ReplicatedVector&, const double beta);
     void gemm(const char transa, const char transb, const double alpha,
         const ReplicatedMatrix&, const ReplicatedVector&, const double beta);
 };
+#endif
+
 #endif

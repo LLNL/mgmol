@@ -329,7 +329,8 @@ void GramMatrix<MatrixType>::applyInv(VectorType& mat)
 }
 
 template class GramMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>;
-template void GramMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>::applyInv(dist_matrix::DistVector<DISTMATDTYPE>&);
+template void GramMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>::applyInv(
+    dist_matrix::DistVector<DISTMATDTYPE>&);
 #ifdef HAVE_MAGMA
 template class GramMatrix<ReplicatedMatrix>;
 template void GramMatrix<ReplicatedMatrix>::applyInv(ReplicatedVector&);

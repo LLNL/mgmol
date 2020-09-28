@@ -86,7 +86,7 @@ public:
     void set2Id(const int orbitals_index);
 
     void applyInv(MatrixType& mat);
-    template<class VectorType>
+    template <class VectorType>
     void applyInv(VectorType& v);
 
     void printMM(std::ostream& tfile) { matS_->printMM(tfile); }

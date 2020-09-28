@@ -33,10 +33,9 @@ class ReplicatedMatrix
     std::unique_ptr<double, void (*)(double*)> device_data_;
 
 public:
-
     friend class ReplicatedVector;
 
-    static void setMPIcomm(MPI_Comm comm){ comm_=comm;}
+    static void setMPIcomm(MPI_Comm comm) { comm_ = comm; }
 
     ReplicatedMatrix(const std::string name, const int m, const int n);
     ReplicatedMatrix(const std::string name, const int n);
@@ -58,8 +57,7 @@ public:
     }
     ReplicatedMatrix& operator=(const ReplicatedMatrix& rhs);
 
-    void assign(
-        const ReplicatedMatrix& src, const int ib, const int jb);
+    void assign(const ReplicatedMatrix& src, const int ib, const int jb);
 
     void assign(SquareLocalMatrices<double>& src);
     void add(const SquareSubMatrix<double>& src);
