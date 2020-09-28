@@ -16,6 +16,8 @@
 #include <vector>
 
 class ReplicatedVector;
+#include "SquareLocalMatrices.h"
+#include "SquareSubMatrix.h"
 
 class ReplicatedMatrix
 {
@@ -51,8 +53,14 @@ public:
     }
     ReplicatedMatrix& operator=(const ReplicatedMatrix& rhs);
 
-    ReplicatedMatrix& assign(
+    void assign(
         const ReplicatedMatrix& src, const int ib, const int jb);
+
+    void assign(SquareLocalMatrices<double>& src);
+    void add(const SquareSubMatrix<double>& src);
+
+    // sum up values across MPI tasks
+    void consolidate();
 
     void axpy(const double alpha, const ReplicatedMatrix& a);
 

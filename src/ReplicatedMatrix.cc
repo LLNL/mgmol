@@ -86,7 +86,25 @@ ReplicatedMatrix& ReplicatedMatrix::operator=(const ReplicatedMatrix& rhs)
 
 ReplicatedMatrix::~ReplicatedMatrix() {}
 
-ReplicatedMatrix& ReplicatedMatrix::assign(
+void ReplicatedMatrix::consolidate()
+{
+    std::vector<double> mat(dim_ * dim_);
+    std::vector<double> mat_sum(dim_ * dim_);
+
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    // copy from GPU to CPU
+    magma_dgetmatrix(dim_, dim_, device_data_.get(), ld_, mat.data(), dim_,
+         magma_singleton.queue_) ;
+
+    MPI_Allreduce(hC.data(), mat_sum.data(), dim_ * dim_, MPI_DOUBLE, MPI_SUM,
+        comm_);
+
+    magma_dsetmatrix(dim_, dim_, mat_sum.data(), dim_, device_data_.get(), ld_,
+        magma_singleton.queue_) ;
+}
+
+void ReplicatedMatrix::assign(
     const ReplicatedMatrix& src, const int ib, const int jb)
 {
     assert(this != &src);
@@ -95,8 +113,38 @@ ReplicatedMatrix& ReplicatedMatrix::assign(
 
     magma_dcopymatrix(src.dim_, src.dim_, src.device_data_.get(), src.ld_,
         device_data_.get() + jb * ld_ + ib, ld_, magma_singleton.queue_);
+}
 
-    return *this;
+void ReplicatedMatrix::assign(SquareLocalMatrices<double>& src)
+{
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    magma_dsetmatrix(src.m(), src.n(), src.getSubMatrix(),  src.n(),
+        device_data_.get(), ld_, magma_singleton.queue_);
+}
+
+void ReplicatedMatrix::add(const SquareSubMatrix<double>& mat)
+{
+    const std::vector<int>& gid(mat.getGids());
+    const int n = gid.size();
+    assert(n==dim_);
+
+    std::vector<double> src(n*n);
+
+    for (int j = 0; j < n; j++)
+    {
+        assert(gid[j] >= 0);
+
+        for (int i = 0; i < n; i++)
+        {
+            src[i+j*n] = mat.getLocalValue(i, j);
+        }
+    }
+
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    magma_dsetmatrix(dim_, dim_, src.data(),  dim_,
+        device_data_.get(), ld_, magma_singleton.queue_);
 }
 
 void ReplicatedMatrix::init(const double* const ha, const int lda)

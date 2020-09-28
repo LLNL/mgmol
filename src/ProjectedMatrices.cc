@@ -1189,6 +1189,22 @@ void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::consolidateH()
     consolidate_H_tm_.stop();
 }
 
+#ifdef HAVE_MAGMA
+template <>
+void ProjectedMatrices<ReplicatedMatrix>::consolidateH()
+{
+    consolidate_H_tm_.start();
+
+    matH_->assign(*localHl_);
+    matH_->add(*localHnl_);
+
+    // sum up across MPI tasks
+    matH_->consolidate();
+
+    consolidate_H_tm_.stop();
+}
+#endif
+
 template <class MatrixType>
 void ProjectedMatrices<MatrixType>::updateSubMatX(const MatrixType& dm)
 {
