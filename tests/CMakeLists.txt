@@ -216,6 +216,16 @@ if(${MAGMA_FOUND})
                    ${CMAKE_SOURCE_DIR}/tests/testMagmaOpenmp.cc
                    ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
   endif()
+  add_executable(testReplicatedMatrix
+                 ${CMAKE_SOURCE_DIR}/tests/testReplicatedMatrix.cc
+                 ${CMAKE_SOURCE_DIR}/src/ReplicatedMatrix.cc
+                 ${CMAKE_SOURCE_DIR}/src/local_matrices/LocalMatrices.cc
+                 ${CMAKE_SOURCE_DIR}/src/local_matrices/SquareLocalMatrices.cc
+                 ${CMAKE_SOURCE_DIR}/src/magma_singleton.cc
+                 ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
+                 ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
+                 ${CMAKE_SOURCE_DIR}/src/tools/random.cc
+                 ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 endif()
                
 target_compile_definitions(testAndersonMix PUBLIC TESTING)
@@ -282,6 +292,9 @@ if(${MAGMA_FOUND})
     add_test(NAME testMagmaOpenmp
              COMMAND ${CMAKE_CURRENT_BINARY_DIR}/testMagmaOpenmp)
   endif()
+  add_test(NAME testReplicatedMatrix
+           COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+                   ${CMAKE_CURRENT_BINARY_DIR}/testReplicatedMatrix)
 else()
   add_test(NAME testShortSighted
            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ShortSighted/test.py
@@ -435,6 +448,8 @@ if(${MAGMA_FOUND})
     ${BLAS_LIBRARIES} MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
   target_link_libraries(testConditionDistMatrixPower PRIVATE
     ${SCALAPACK_LIBRARIES} ${BLAS_LIBRARIES} 
+    MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
+  target_link_libraries(testReplicatedMatrix PRIVATE
     MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
   target_link_libraries(testPower PRIVATE ${BLAS_LIBRARIES} ${SCALAPACK_LIBRARIES}
     MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
