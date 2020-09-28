@@ -22,6 +22,8 @@ using MemoryDev = MemorySpace::Memory<double, MemorySpace::Device>;
 
 constexpr double gpuroundup = 32;
 
+MPI_Comm ReplicatedMatrix::comm_=MPI_COMM_NULL;
+
 void rotateSym(ReplicatedMatrix& mat, const ReplicatedMatrix& rotation_matrix,
     ReplicatedMatrix& work)
 {
@@ -88,6 +90,8 @@ ReplicatedMatrix::~ReplicatedMatrix() {}
 
 void ReplicatedMatrix::consolidate()
 {
+    assert(comm_!=MPI_COMM_NULL);
+
     std::vector<double> mat(dim_ * dim_);
     std::vector<double> mat_sum(dim_ * dim_);
 
@@ -97,9 +101,10 @@ void ReplicatedMatrix::consolidate()
     magma_dgetmatrix(dim_, dim_, device_data_.get(), ld_, mat.data(), dim_,
          magma_singleton.queue_) ;
 
-    MPI_Allreduce(hC.data(), mat_sum.data(), dim_ * dim_, MPI_DOUBLE, MPI_SUM,
+    MPI_Allreduce(mat.data(), mat_sum.data(), dim_ * dim_, MPI_DOUBLE, MPI_SUM,
         comm_);
 
+    // copy from CPU to GPU
     magma_dsetmatrix(dim_, dim_, mat_sum.data(), dim_, device_data_.get(), ld_,
         magma_singleton.queue_) ;
 }

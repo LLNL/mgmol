@@ -21,6 +21,8 @@ class ReplicatedVector;
 
 class ReplicatedMatrix
 {
+    static MPI_Comm comm_;
+
     // matrix size
     int dim_;
 
@@ -31,7 +33,10 @@ class ReplicatedMatrix
     std::unique_ptr<double, void (*)(double*)> device_data_;
 
 public:
+
     friend class ReplicatedVector;
+
+    static void setMPIcomm(MPI_Comm comm){ comm_=comm;}
 
     ReplicatedMatrix(const std::string name, const int m, const int n);
     ReplicatedMatrix(const std::string name, const int n);
