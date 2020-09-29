@@ -19,6 +19,7 @@
 #include "MGmol.h"
 #include "Potentials.h"
 #include "ProjectedMatrices.h"
+#include "ReplicatedMatrix.h"
 #include "Rho.h"
 #include "tools.h"
 
@@ -401,3 +402,6 @@ template class MVPSolver<LocGridOrbitals,
     dist_matrix::DistMatrix<DISTMATDTYPE>>;
 template class MVPSolver<ExtendedGridOrbitals,
     dist_matrix::DistMatrix<DISTMATDTYPE>>;
+#ifdef HAVE_MAGMA
+// template class MVPSolver<ExtendedGridOrbitals,ReplicatedMatrix>;
+#endif

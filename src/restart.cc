@@ -34,8 +34,9 @@
 #include "tools.h"
 
 // read rho and potentials form a hdf5 file
-template <class T>
-int MGmol<T>::read_rho_and_pot_hdf5(HDFrestart& file, Rho<T>& rho)
+template <class OrbitalsType>
+int MGmol<OrbitalsType>::read_rho_and_pot_hdf5(
+    HDFrestart& file, Rho<OrbitalsType>& rho)
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 0)
@@ -67,9 +68,9 @@ int MGmol<T>::read_rho_and_pot_hdf5(HDFrestart& file, Rho<T>& rho)
 }
 
 // Writes restart information in a file.
-template <class T>
-int MGmol<T>::write_hdf5(const std::string& filename,
-    std::vector<std::vector<RHODTYPE>>& rho, Ions& ions, T& orbitals)
+template <class OrbitalsType>
+int MGmol<OrbitalsType>::write_hdf5(const std::string& filename,
+    std::vector<std::vector<RHODTYPE>>& rho, Ions& ions, OrbitalsType& orbitals)
 {
     Mesh* mymesh             = Mesh::instance();
     const pb::PEenv& myPEenv = mymesh->peenv();
@@ -92,9 +93,9 @@ int MGmol<T>::write_hdf5(const std::string& filename,
 }
 
 // Writes restart information in a HDF5 file.
-template <class T>
-int MGmol<T>::write_hdf5(HDFrestart& h5f_file,
-    std::vector<std::vector<RHODTYPE>>& rho, Ions& ions, T& orbitals,
+template <class OrbitalsType>
+int MGmol<OrbitalsType>::write_hdf5(HDFrestart& h5f_file,
+    std::vector<std::vector<RHODTYPE>>& rho, Ions& ions, OrbitalsType& orbitals,
     std::shared_ptr<LocalizationRegions> lrs)
 {
     Mesh* mymesh           = Mesh::instance();
@@ -183,13 +184,14 @@ int MGmol<T>::write_hdf5(HDFrestart& h5f_file,
     return 0;
 }
 
-template <class T>
-int MGmol<T>::read_restart_lrs(
+template <class OrbitalsType>
+int MGmol<OrbitalsType>::read_restart_lrs(
     HDFrestart& h5f_file, const std::string& dset_name)
 {
     Control& ct = *(Control::instance());
     if (ct.verbose > 0)
-        printWithTimeStamp("MGmol<T>::read_restart_lrs()...", (*MPIdata::sout));
+        printWithTimeStamp(
+            "MGmol<OrbitalsType>::read_restart_lrs()...", (*MPIdata::sout));
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
@@ -204,13 +206,14 @@ int MGmol<T>::read_restart_lrs(
 }
 
 // Reads the restart information from restart files.
-template <class T>
-int MGmol<T>::read_restart_data(HDFrestart& h5f_file, Rho<T>& rho, T& orbitals)
+template <class OrbitalsType>
+int MGmol<OrbitalsType>::read_restart_data(
+    HDFrestart& h5f_file, Rho<OrbitalsType>& rho, OrbitalsType& orbitals)
 {
     Control& ct = *(Control::instance());
     if (ct.verbose > 0)
         printWithTimeStamp(
-            "MGmol<T>::read_restart_data()...", (*MPIdata::sout));
+            "MGmol<OrbitalsType>::read_restart_data()...", (*MPIdata::sout));
 
     Timer timer("ReadRestart");
     timer.start();
@@ -226,7 +229,7 @@ int MGmol<T>::read_restart_data(HDFrestart& h5f_file, Rho<T>& rho, T& orbitals)
         if (ierr < 0)
         {
             (*MPIdata::serr)
-                << "MGmol<T>::read_restart_data(): error in reading "
+                << "MGmol<OrbitalsType>::read_restart_data(): error in reading "
                 << std::endl;
             return ierr;
         }

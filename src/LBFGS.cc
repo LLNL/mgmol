@@ -15,12 +15,14 @@
 #include "Mesh.h"
 #include "ProjectedMatrices.h"
 
-template <class T>
-LBFGS<T>::LBFGS(T** orbitals, Ions& ions, Rho<T>& rho,
-    ConstraintSet& constraints, std::shared_ptr<LocalizationRegions> lrs,
-    ClusterOrbitals* local_cluster, MasksSet& masks, MasksSet& corrmasks,
-    Electrostatic& electrostat, const double dt, MGmol<T>& strategy)
-    : IonicAlgorithm<T>(orbitals, ions, rho, constraints, lrs, masks, strategy),
+template <class OrbitalsType>
+LBFGS<OrbitalsType>::LBFGS(OrbitalsType** orbitals, Ions& ions,
+    Rho<OrbitalsType>& rho, ConstraintSet& constraints,
+    std::shared_ptr<LocalizationRegions> lrs, ClusterOrbitals* local_cluster,
+    MasksSet& masks, MasksSet& corrmasks, Electrostatic& electrostat,
+    const double dt, MGmol<OrbitalsType>& strategy)
+    : IonicAlgorithm<OrbitalsType>(
+          orbitals, ions, rho, constraints, lrs, masks, strategy),
       orbitals_(orbitals),
       ions_(ions),
       rho_(rho),
@@ -40,25 +42,27 @@ LBFGS<T>::LBFGS(T** orbitals, Ions& ions, Rho<T>& rho,
     etot_i_[1] = 10000.;
     etot_i_[2] = 10000.;
 
-    stepper_ = new LBFGS_IonicStepper(dt, IonicAlgorithm<T>::atmove_,
-        IonicAlgorithm<T>::tau0_, IonicAlgorithm<T>::taup_,
-        IonicAlgorithm<T>::fion_, IonicAlgorithm<T>::gid_, 20, &etot_i_[0]);
-    IonicAlgorithm<T>::registerStepper(stepper_);
+    stepper_ = new LBFGS_IonicStepper(dt, IonicAlgorithm<OrbitalsType>::atmove_,
+        IonicAlgorithm<OrbitalsType>::tau0_,
+        IonicAlgorithm<OrbitalsType>::taup_,
+        IonicAlgorithm<OrbitalsType>::fion_, IonicAlgorithm<OrbitalsType>::gid_,
+        20, &etot_i_[0]);
+    IonicAlgorithm<OrbitalsType>::registerStepper(stepper_);
 
     ref_masks_     = new MasksSet(lrs, false, ct.getMGlevels());
     ref_corrmasks_ = new MasksSet(lrs, true, 0);
 
     vh_init_ = new pb::GridFunc<POTDTYPE>(electrostat_.getVh());
 
-    ref_orbitals_ = new T("LBFGS_ref", mygrid, mymesh->subdivx(), ct.numst,
-        ct.bcWF, (*orbitals_)->getProjMatrices(), ref_lrs_, ref_masks_,
-        ref_corrmasks_, local_cluster_);
+    ref_orbitals_ = new OrbitalsType("LBFGS_ref", mygrid, mymesh->subdivx(),
+        ct.numst, ct.bcWF, (*orbitals_)->getProjMatrices(), ref_lrs_,
+        ref_masks_, ref_corrmasks_, local_cluster_);
 
     ref_orbitals_->assign(**orbitals_);
 }
 
-template <class T>
-LBFGS<T>::~LBFGS()
+template <class OrbitalsType>
+LBFGS<OrbitalsType>::~LBFGS()
 {
     delete vh_init_;
     delete ref_masks_;
@@ -67,8 +71,8 @@ LBFGS<T>::~LBFGS()
     delete ref_orbitals_;
 }
 
-template <class T>
-int LBFGS<T>::quenchElectrons(const int itmax, double& etot)
+template <class OrbitalsType>
+int LBFGS<OrbitalsType>::quenchElectrons(const int itmax, double& etot)
 {
     etot_i_[0] = etot_i_[1];
     etot_i_[1] = etot_i_[2];
@@ -78,8 +82,8 @@ int LBFGS<T>::quenchElectrons(const int itmax, double& etot)
     return ret;
 }
 
-template <class T>
-void LBFGS<T>::updateRefs()
+template <class OrbitalsType>
+void LBFGS<OrbitalsType>::updateRefs()
 {
     if (!stepper_->check_last_step_accepted())
     {
@@ -122,8 +126,8 @@ void LBFGS<ExtendedGridOrbitals>::updateRefMasks()
 {
 }
 
-template <class T>
-void LBFGS<T>::setQuenchTol() const
+template <class OrbitalsType>
+void LBFGS<OrbitalsType>::setQuenchTol() const
 {
     Control& ct = *(Control::instance());
     ct.conv_tol = 0.1 * stepper_->etol();
@@ -133,17 +137,17 @@ void LBFGS<T>::setQuenchTol() const
                          << ct.conv_tol << std::endl;
 }
 
-template <class T>
-void LBFGS<T>::updatePotAndMasks()
+template <class OrbitalsType>
+void LBFGS<OrbitalsType>::updatePotAndMasks()
 {
     if (!stepper_->check_last_step_accepted())
         electrostat_.setupInitialVh(*vh_init_);
 
-    IonicAlgorithm<T>::updatePotAndMasks();
+    IonicAlgorithm<OrbitalsType>::updatePotAndMasks();
 }
 
-template <class T>
-bool LBFGS<T>::lbfgsLastStepNotAccepted() const
+template <class OrbitalsType>
+bool LBFGS<OrbitalsType>::lbfgsLastStepNotAccepted() const
 {
     return !stepper_->check_last_step_accepted();
 }

@@ -20,17 +20,17 @@
 #include <iomanip>
 #include <iostream>
 
-template <class T>
-void MGmol<T>::runfire(T** orbitals, Ions& ions)
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::runfire(OrbitalsType** orbitals, Ions& ions)
 {
     printWithTimeStamp("Run FIRE algorithm...", std::cout);
 
     Control& ct = *(Control::instance());
 
-    FIRE<T> fire(orbitals, ions, *rho_, *constraints_, lrs_, *currentMasks_,
-        *electrostat_, ct.dt, *this);
+    FIRE<OrbitalsType> fire(orbitals, ions, *rho_, *constraints_, lrs_,
+        *currentMasks_, *electrostat_, ct.dt, *this);
 
-    DFTsolver<T>::resetItCount();
+    DFTsolver<OrbitalsType>::resetItCount();
 
     fire.init(h5f_file_);
 
@@ -45,7 +45,7 @@ void MGmol<T>::runfire(T** orbitals, Ions& ions)
     }
     else
     {
-        DFTsolver<T>::setItCountLarge();
+        DFTsolver<OrbitalsType>::setItCountLarge();
     }
 
     // save computed vh for a fair energy "comparison" with vh computed

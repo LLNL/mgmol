@@ -20,22 +20,22 @@
 #include "ProjectedMatrices.h"
 #include "ProjectedMatricesSparse.h"
 
-template <class T>
+template <class OrbitalsType>
 class DMStrategyFactory
 {
 public:
     static DMStrategy* create(MPI_Comm comm, std::ostream& os, Ions& ions,
-        Rho<T>* rho, Energy<T>* energy, Electrostatic* electrostat,
-        MGmol<T>* mgmol_strategy, ProjectedMatricesInterface* proj_matrices,
-        T* orbitals)
+        Rho<OrbitalsType>* rho, Energy<OrbitalsType>* energy,
+        Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy,
+        ProjectedMatricesInterface* proj_matrices, OrbitalsType* orbitals)
     {
         Control& ct = *(Control::instance());
 
         DMStrategy* dm_strategy = nullptr;
         if (ct.DM_solver() == DMNonLinearSolverType::MVP)
         {
-            dm_strategy = new MVP_DMStrategy<T>(comm, os, ions, rho, energy,
-                electrostat, mgmol_strategy, orbitals, proj_matrices,
+            dm_strategy = new MVP_DMStrategy<OrbitalsType>(comm, os, ions, rho,
+                energy, electrostat, mgmol_strategy, orbitals, proj_matrices,
                 ct.use_old_dm());
         }
         else if (ct.DM_solver() == DMNonLinearSolverType::HMVP)
@@ -57,15 +57,15 @@ public:
                 if (ct.getOrthoType() == OrthoType::Eigenfunctions)
                 {
                     std::cout << "EigenDMStrategy..." << std::endl;
-                    dm_strategy
-                        = new EigenDMStrategy<T>(orbitals, proj_matrices);
+                    dm_strategy = new EigenDMStrategy<OrbitalsType>(
+                        orbitals, proj_matrices);
                 }
                 else
                 {
                     if (ct.getOrthoType() == OrthoType::Nonorthogonal)
                     {
                         std::cout << "NonOrthoDMStrategy..." << std::endl;
-                        dm_strategy = new NonOrthoDMStrategy<T>(
+                        dm_strategy = new NonOrthoDMStrategy<OrbitalsType>(
                             orbitals, proj_matrices, ct.dm_mix);
                     }
                 }
@@ -78,9 +78,10 @@ public:
 
 private:
     static DMStrategy* createHamiltonianMVP_DMStrategy(MPI_Comm comm,
-        std::ostream& os, Ions& ions, Rho<T>* rho, Energy<T>* energy,
-        Electrostatic* electrostat, MGmol<T>* mgmol_strategy,
-        ProjectedMatricesInterface* proj_matrices, T*, const bool);
+        std::ostream& os, Ions& ions, Rho<OrbitalsType>* rho,
+        Energy<OrbitalsType>* energy, Electrostatic* electrostat,
+        MGmol<OrbitalsType>* mgmol_strategy,
+        ProjectedMatricesInterface* proj_matrices, OrbitalsType*, const bool);
 };
 
 #endif

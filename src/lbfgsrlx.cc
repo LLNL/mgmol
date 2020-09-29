@@ -30,15 +30,16 @@
 #include <vector>
 using namespace std;
 
-template <class T>
-void MGmol<T>::lbfgsrlx(T** orbitals, Ions& ions)
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::lbfgsrlx(OrbitalsType** orbitals, Ions& ions)
 {
     Control& ct = *(Control::instance());
 
-    LBFGS<T> lbfgs(orbitals, ions, *rho_, *constraints_, lrs_, local_cluster_,
-        *currentMasks_, *corrMasks_, *electrostat_, ct.dt, *this);
+    LBFGS<OrbitalsType> lbfgs(orbitals, ions, *rho_, *constraints_, lrs_,
+        local_cluster_, *currentMasks_, *corrMasks_, *electrostat_, ct.dt,
+        *this);
 
-    DFTsolver<T>::resetItCount();
+    DFTsolver<OrbitalsType>::resetItCount();
 
     lbfgs.init(h5f_file_);
 
@@ -53,7 +54,7 @@ void MGmol<T>::lbfgsrlx(T** orbitals, Ions& ions)
     }
     else
     {
-        DFTsolver<T>::setItCountLarge();
+        DFTsolver<OrbitalsType>::setItCountLarge();
     }
 
     // save computed vh for a fair energy "comparison" with vh computed

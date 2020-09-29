@@ -48,7 +48,7 @@
 
 Timer quench_tm("quench");
 Timer quench_evnl_tm("quench_evnl");
-Timer updateCenters_tm("MGmol<T>::updateCenters");
+Timer updateCenters_tm("MGmol<OrbitalsType>::updateCenters");
 
 template <>
 void MGmol<ExtendedGridOrbitals>::adaptLR(
@@ -62,9 +62,9 @@ void MGmol<ExtendedGridOrbitals>::adaptLR(
 // 0 -> center only
 // 1 -> radius only
 // 2 -> center and radius
-template <class T>
-void MGmol<T>::adaptLR(
-    const SpreadsAndCenters<T>* spreadf, const OrbitalsTransform* ot)
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::adaptLR(
+    const SpreadsAndCenters<OrbitalsType>* spreadf, const OrbitalsTransform* ot)
 {
     assert(lrs_);
 
@@ -146,8 +146,8 @@ void MGmol<T>::adaptLR(
     adaptLR_tm_.stop();
 }
 
-template <class T>
-void MGmol<T>::updateHmatrix(T& orbitals, Ions& ions)
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::updateHmatrix(OrbitalsType& orbitals, Ions& ions)
 {
 #ifdef PRINT_OPERATIONS
     if (onpe0) os_ << "updateHmatrix()" << std::endl;
@@ -161,8 +161,9 @@ void MGmol<T>::updateHmatrix(T& orbitals, Ions& ions)
     energy_->saveVofRho();
 }
 
-template <class T>
-void MGmol<T>::resetProjectedMatricesAndDM(T& orbitals, Ions& ions)
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::resetProjectedMatricesAndDM(
+    OrbitalsType& orbitals, Ions& ions)
 {
     orbitals.computeGramAndInvS();
 
@@ -178,8 +179,9 @@ void MGmol<T>::resetProjectedMatricesAndDM(T& orbitals, Ions& ions)
 }
 
 // try to use some rotations to avoid degeneracies
-template <class T>
-bool MGmol<T>::rotateStatesPairsCommonCenter(T& orbitals, T& work_orbitals)
+template <class OrbitalsType>
+bool MGmol<OrbitalsType>::rotateStatesPairsCommonCenter(
+    OrbitalsType& orbitals, OrbitalsType& work_orbitals)
 {
     Control& ct        = *(Control::instance());
     bool wannier_pairs = false;
@@ -210,7 +212,7 @@ bool MGmol<T>::rotateStatesPairsCommonCenter(T& orbitals, T& work_orbitals)
         if (onpe0 && ct.verbose > 1)
             os_ << "Min. distance between centers " << st1 << " and " << st2
                 << " = " << drmin << std::endl;
-        SpreadsAndCenters<T> spreadf2st(origin, ll);
+        SpreadsAndCenters<OrbitalsType> spreadf2st(origin, ll);
 
         orbitals.orthonormalize2states(st1, st2);
 
@@ -257,9 +259,9 @@ bool MGmol<T>::rotateStatesPairsCommonCenter(T& orbitals, T& work_orbitals)
 }
 
 // try to use some rotations to avoid degeneracies
-template <class T>
-bool MGmol<T>::rotateStatesPairsOverlap(
-    T& orbitals, T& work_orbitals, const double threshold)
+template <class OrbitalsType>
+bool MGmol<OrbitalsType>::rotateStatesPairsOverlap(
+    OrbitalsType& orbitals, OrbitalsType& work_orbitals, const double threshold)
 {
     Control& ct     = *(Control::instance());
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
@@ -298,7 +300,7 @@ bool MGmol<T>::rotateStatesPairsOverlap(
                 << eigmin << std::endl;
         }
 
-        SpreadsAndCenters<T> spreadf2st(origin, ll);
+        SpreadsAndCenters<OrbitalsType> spreadf2st(origin, ll);
         spreadf2st.computeSinCosDiag2states(orbitals, st1, st2);
 
         spreadf2st.print(os_);
@@ -361,9 +363,9 @@ bool MGmol<T>::rotateStatesPairsOverlap(
     return pairs;
 }
 
-template <class T>
-void MGmol<T>::disentangleOrbitals(
-    T& orbitals, T& work_orbitals, Ions& ions, int& max_steps)
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::disentangleOrbitals(OrbitalsType& orbitals,
+    OrbitalsType& work_orbitals, Ions& ions, int& max_steps)
 {
     Control& ct = *(Control::instance());
 
@@ -399,8 +401,8 @@ void MGmol<LocGridOrbitals>::applyAOMMprojection(LocGridOrbitals& orbitals)
     aomm_->projectOut(orbitals);
 }
 
-template <class T>
-void MGmol<T>::applyAOMMprojection(T&)
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::applyAOMMprojection(OrbitalsType&)
 {
 }
 
@@ -448,9 +450,10 @@ int MGmol<LocGridOrbitals>::outerSolve(LocGridOrbitals& orbitals,
     return retval;
 }
 
-template <class T>
-int MGmol<T>::outerSolve(T& orbitals, T& work_orbitals, Ions& ions,
-    const int max_steps, const int iprint, double& last_eks)
+template <class OrbitalsType>
+int MGmol<OrbitalsType>::outerSolve(OrbitalsType& orbitals,
+    OrbitalsType& work_orbitals, Ions& ions, const int max_steps,
+    const int iprint, double& last_eks)
 {
     int retval
         = 1; // 0 -> converged, -1 -> problem, -2 -> ( de>tol_energy_stop )
@@ -462,8 +465,8 @@ int MGmol<T>::outerSolve(T& orbitals, T& work_orbitals, Ions& ions,
         case OuterSolverType::ABPG:
         case OuterSolverType::NLCG:
         {
-            DFTsolver<T> solver(hamiltonian_, proj_matrices_, energy_,
-                electrostat_, this, ions, rho_, dm_strategy_, os_);
+            DFTsolver<OrbitalsType> solver(hamiltonian_, proj_matrices_,
+                energy_, electrostat_, this, ions, rho_, dm_strategy_, os_);
 
             retval = solver.solve(
                 orbitals, work_orbitals, ions, max_steps, iprint, last_eks);
@@ -473,8 +476,9 @@ int MGmol<T>::outerSolve(T& orbitals, T& work_orbitals, Ions& ions,
 
         case OuterSolverType::PolakRibiere:
         {
-            PolakRibiereSolver<T> solver(hamiltonian_, proj_matrices_, energy_,
-                electrostat_, this, ions, rho_, dm_strategy_, os_);
+            PolakRibiereSolver<OrbitalsType> solver(hamiltonian_,
+                proj_matrices_, energy_, electrostat_, this, ions, rho_,
+                dm_strategy_, os_);
 
             retval = solver.solve(
                 orbitals, work_orbitals, ions, max_steps, iprint, last_eks);
@@ -489,9 +493,9 @@ int MGmol<T>::outerSolve(T& orbitals, T& work_orbitals, Ions& ions,
             MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
             const bool with_spin = (mmpi.nspin() > 1);
-            DavidsonSolver<T, dist_matrix::DistMatrix<DISTMATDTYPE>> solver(os_,
-                *ions_, hamiltonian_, rho_, energy_, electrostat_, this, gids,
-                ct.dm_mix, with_spin);
+            DavidsonSolver<OrbitalsType, dist_matrix::DistMatrix<DISTMATDTYPE>>
+                solver(os_, *ions_, hamiltonian_, rho_, energy_, electrostat_,
+                    this, gids, ct.dm_mix, with_spin);
 
             retval = solver.solve(orbitals, work_orbitals);
             break;
@@ -505,9 +509,9 @@ int MGmol<T>::outerSolve(T& orbitals, T& work_orbitals, Ions& ions,
     return retval;
 }
 
-template <class T>
-int MGmol<T>::quench(T* orbitals, Ions& ions, const int max_inner_steps,
-    const int iprint, double& last_eks)
+template <class OrbitalsType>
+int MGmol<OrbitalsType>::quench(OrbitalsType* orbitals, Ions& ions,
+    const int max_inner_steps, const int iprint, double& last_eks)
 {
     assert(max_inner_steps > -1);
 
@@ -519,7 +523,7 @@ int MGmol<T>::quench(T* orbitals, Ions& ions, const int max_inner_steps,
     Control& ct = *(Control::instance());
     if (ct.restart_info > 2)
     {
-        DFTsolver<T>::setItCountLarge();
+        DFTsolver<OrbitalsType>::setItCountLarge();
     }
 
     if (onpe0)
@@ -536,7 +540,7 @@ int MGmol<T>::quench(T* orbitals, Ions& ions, const int max_inner_steps,
     electrostat_->setup(ct.vh_its);
     rho_->setup(ct.getOrthoType(), gids);
 
-    T work_orbitals("Work", *orbitals);
+    OrbitalsType work_orbitals("Work", *orbitals);
 
     orbitals->setDataWithGhosts();
     orbitals->trade_boundaries();
@@ -549,7 +553,7 @@ int MGmol<T>::quench(T* orbitals, Ions& ions, const int max_inner_steps,
         applyAOMMprojection(*orbitals);
     }
 
-    orbitals_precond_ = new OrbitalsPreconditioning<T>();
+    orbitals_precond_ = new OrbitalsPreconditioning<OrbitalsType>();
     orbitals_precond_->setup(
         *orbitals, ct.getMGlevels(), ct.lap_type, currentMasks_, lrs_);
 

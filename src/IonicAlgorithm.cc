@@ -15,10 +15,11 @@
 
 using namespace std;
 
-template <class T>
-IonicAlgorithm<T>::IonicAlgorithm(T** orbitals, Ions& ions, Rho<T>& rho,
-    ConstraintSet& constraints, std::shared_ptr<LocalizationRegions> lrs,
-    MasksSet& masks, MGmol<T>& strategy)
+template <class OrbitalsType>
+IonicAlgorithm<OrbitalsType>::IonicAlgorithm(OrbitalsType** orbitals,
+    Ions& ions, Rho<OrbitalsType>& rho, ConstraintSet& constraints,
+    std::shared_ptr<LocalizationRegions> lrs, MasksSet& masks,
+    MGmol<OrbitalsType>& strategy)
     : orbitals_(orbitals),
       ions_(ions),
       rho_(rho),
@@ -39,16 +40,16 @@ IonicAlgorithm<T>::IonicAlgorithm(T** orbitals, Ions& ions, Rho<T>& rho,
     assert(3 * atmove_.size() == tau0_.size());
 }
 
-template <class T>
-void IonicAlgorithm<T>::registerStepper(IonicStepper* stepper)
+template <class OrbitalsType>
+void IonicAlgorithm<OrbitalsType>::registerStepper(IonicStepper* stepper)
 {
     stepper_ = stepper;
 }
 
-template <class T>
-void IonicAlgorithm<T>::init(HDFrestart* h5f_file)
+template <class OrbitalsType>
+void IonicAlgorithm<OrbitalsType>::init(HDFrestart* h5f_file)
 {
-    printWithTimeStamp("IonicAlgorithm<T>::init()...", cout);
+    printWithTimeStamp("IonicAlgorithm<OrbitalsType>::init()...", cout);
 
     Control& ct = *(Control::instance());
 
@@ -94,16 +95,16 @@ void IonicAlgorithm<T>::init(HDFrestart* h5f_file)
     }
 }
 
-template <class T>
-int IonicAlgorithm<T>::quenchElectrons(const int itmax, double& etot)
+template <class OrbitalsType>
+int IonicAlgorithm<OrbitalsType>::quenchElectrons(const int itmax, double& etot)
 {
     int ret = mgmol_strategy_.quench(*orbitals_, ions_, itmax, 0, etot);
 
     return ret;
 }
 
-template <class T>
-void IonicAlgorithm<T>::setupConstraints()
+template <class OrbitalsType>
+void IonicAlgorithm<OrbitalsType>::setupConstraints()
 {
     // constraints need to be added again and setup as atoms
     // may have moved and local atoms are not the same anymore
@@ -112,8 +113,8 @@ void IonicAlgorithm<T>::setupConstraints()
     constraints_.setup(ions_);
 }
 
-template <class T>
-int IonicAlgorithm<T>::run1step()
+template <class OrbitalsType>
+int IonicAlgorithm<OrbitalsType>::run1step()
 {
     // compute taup
     int conv = stepper_->run();
@@ -139,8 +140,8 @@ int IonicAlgorithm<T>::run1step()
     return conv;
 }
 
-template <class T>
-void IonicAlgorithm<T>::computeForces()
+template <class OrbitalsType>
+void IonicAlgorithm<OrbitalsType>::computeForces()
 {
     mgmol_strategy_.force(**orbitals_, ions_);
 
@@ -154,8 +155,8 @@ void IonicAlgorithm<T>::computeForces()
     ions_.printForcesGlobal((*MPIdata::sout));
 }
 
-template <class T>
-void IonicAlgorithm<T>::setForces(const vector<vector<double>>& f)
+template <class OrbitalsType>
+void IonicAlgorithm<OrbitalsType>::setForces(const vector<vector<double>>& f)
 {
     assert(3 * f.size() == fion_.size());
 
@@ -171,8 +172,8 @@ void IonicAlgorithm<T>::setForces(const vector<vector<double>>& f)
     constraints_.projectOutForces();
 }
 
-template <class T>
-bool IonicAlgorithm<T>::checkTolForces(const double tol)
+template <class OrbitalsType>
+bool IonicAlgorithm<OrbitalsType>::checkTolForces(const double tol)
 {
     assert(3 * atmove_.size() == fion_.size());
 
@@ -200,8 +201,8 @@ bool IonicAlgorithm<T>::checkTolForces(const double tol)
     return (flag_convF);
 }
 
-template <class T>
-void IonicAlgorithm<T>::dumpRestart()
+template <class OrbitalsType>
+void IonicAlgorithm<OrbitalsType>::dumpRestart()
 {
     Control& ct              = *(Control::instance());
     Mesh* mymesh             = Mesh::instance();
@@ -219,8 +220,8 @@ void IonicAlgorithm<T>::dumpRestart()
     stepper_->write_hdf5(h5file);
 }
 
-template <class T>
-void IonicAlgorithm<T>::updatePotAndMasks()
+template <class OrbitalsType>
+void IonicAlgorithm<OrbitalsType>::updatePotAndMasks()
 {
     // Update items that change when the ionic coordinates change
     mgmol_strategy_.moveVnuc(ions_);

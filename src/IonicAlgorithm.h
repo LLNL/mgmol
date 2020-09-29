@@ -21,18 +21,18 @@
 
 class MasksSet;
 
-template <class T>
+template <class OrbitalsType>
 class IonicAlgorithm
 {
 private:
-    T** orbitals_;
+    OrbitalsType** orbitals_;
     Ions& ions_;
-    Rho<T>& rho_;
+    Rho<OrbitalsType>& rho_;
     ConstraintSet& constraints_;
     std::shared_ptr<LocalizationRegions> lrs_;
     MasksSet& masks_;
 
-    MGmol<T>& mgmol_strategy_;
+    MGmol<OrbitalsType>& mgmol_strategy_;
     IonicStepper* stepper_;
     std::vector<std::string>& ions_names_;
 
@@ -47,9 +47,9 @@ protected:
     void registerStepper(IonicStepper* stepper);
 
 public:
-    IonicAlgorithm(T** orbitals, Ions& ions, Rho<T>& rho,
+    IonicAlgorithm(OrbitalsType** orbitals, Ions& ions, Rho<OrbitalsType>& rho,
         ConstraintSet& constraints, std::shared_ptr<LocalizationRegions> lrs,
-        MasksSet& masks, MGmol<T>&);
+        MasksSet& masks, MGmol<OrbitalsType>&);
 
     virtual ~IonicAlgorithm(){};
 
