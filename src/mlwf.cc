@@ -46,8 +46,8 @@ void distributeColumns(
 }
 
 template <class OrbitalsType>
-int MGmol<OrbitalsType>::getMLWF(MLWFTransform& mlwft, OrbitalsType& orbitals, OrbitalsType& work_orbitals,
-    const double dd, const bool apply_flag)
+int MGmol<OrbitalsType>::getMLWF(MLWFTransform& mlwft, OrbitalsType& orbitals,
+    OrbitalsType& work_orbitals, const double dd, const bool apply_flag)
 {
     Control& ct = *(Control::instance());
     assert(!ct.isLocMode());
@@ -117,8 +117,8 @@ int MGmol<OrbitalsType>::getMLWF(MLWFTransform& mlwft, OrbitalsType& orbitals, O
 }
 
 template <class OrbitalsType>
-int MGmol<OrbitalsType>::getMLWF2states(
-    const int st1, const int st2, OrbitalsType& orbitals, OrbitalsType& work_orbitals)
+int MGmol<OrbitalsType>::getMLWF2states(const int st1, const int st2,
+    OrbitalsType& orbitals, OrbitalsType& work_orbitals)
 {
     get_MLWF_tm.start();
 
@@ -170,7 +170,8 @@ int MGmol<OrbitalsType>::getMLWF2states(
 }
 
 template <class OrbitalsType>
-void MGmol<OrbitalsType>::wftransform(OrbitalsType* orbitals, OrbitalsType* work_orbitals, Ions& ions)
+void MGmol<OrbitalsType>::wftransform(
+    OrbitalsType* orbitals, OrbitalsType* work_orbitals, Ions& ions)
 {
     Control& ct            = *(Control::instance());
     Mesh* mymesh           = Mesh::instance();
@@ -234,8 +235,8 @@ void MGmol<OrbitalsType>::wftransform(OrbitalsType* orbitals, OrbitalsType* work
 }
 
 template <class OrbitalsType>
-int MGmol<OrbitalsType>::get_NOLMO(NOLMOTransform& noot, OrbitalsType& orbitals, OrbitalsType& work_orbitals,
-    const double dd, const bool apply_flag)
+int MGmol<OrbitalsType>::get_NOLMO(NOLMOTransform& noot, OrbitalsType& orbitals,
+    OrbitalsType& work_orbitals, const double dd, const bool apply_flag)
 {
     get_NOLMO_tm.start();
 

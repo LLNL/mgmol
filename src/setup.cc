@@ -19,7 +19,8 @@ int MGmol<OrbitalsType>::setupFromInput(const std::string filename)
 {
     Control& ct = *(Control::instance());
     if (ct.verbose > 0)
-        printWithTimeStamp("MGmol<OrbitalsType>::setupFromInput()...", std::cout);
+        printWithTimeStamp(
+            "MGmol<OrbitalsType>::setupFromInput()...", std::cout);
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 

@@ -49,8 +49,9 @@ DFTsolver<OrbitalsType>::DFTsolver(Hamiltonian<OrbitalsType>* hamiltonian,
 
         case OuterSolverType::NLCG:
         {
-            orbitals_stepper_ = GrassmanCGFactory<OrbitalsType>::create(hamiltonian_,
-                proj_matrices_, mgmol_strategy, ions, os_, ct.short_sighted);
+            orbitals_stepper_ = GrassmanCGFactory<OrbitalsType>::create(
+                hamiltonian_, proj_matrices_, mgmol_strategy, ions, os_,
+                ct.short_sighted);
 
             break;
         }
@@ -186,7 +187,8 @@ int DFTsolver<OrbitalsType>::checkConvergenceEnergy(
 }
 
 template <class OrbitalsType>
-double DFTsolver<OrbitalsType>::evaluateEnergy(const OrbitalsType& orbitals, const bool print_flag)
+double DFTsolver<OrbitalsType>::evaluateEnergy(
+    const OrbitalsType& orbitals, const bool print_flag)
 {
     // save energy recent history
     eks_history_[1] = eks_history_[0];
@@ -203,8 +205,9 @@ double DFTsolver<OrbitalsType>::evaluateEnergy(const OrbitalsType& orbitals, con
 }
 
 template <class OrbitalsType>
-int DFTsolver<OrbitalsType>::solve(OrbitalsType& orbitals, OrbitalsType& work_orbitals, Ions& ions,
-    const short max_steps, const short iprint, double& last_eks)
+int DFTsolver<OrbitalsType>::solve(OrbitalsType& orbitals,
+    OrbitalsType& work_orbitals, Ions& ions, const short max_steps,
+    const short iprint, double& last_eks)
 {
     solve_tm_.start();
 

@@ -38,9 +38,10 @@ private:
     const MGmol<OrbitalsType>& mgmol_strategy_;
 
 public:
-    FIRE(OrbitalsType** orbitals, Ions& ions, Rho<OrbitalsType>& rho, ConstraintSet& constraints,
-        std::shared_ptr<LocalizationRegions> lrs, MasksSet& masks,
-        Electrostatic& electrostat, const double dt, MGmol<OrbitalsType>&);
+    FIRE(OrbitalsType** orbitals, Ions& ions, Rho<OrbitalsType>& rho,
+        ConstraintSet& constraints, std::shared_ptr<LocalizationRegions> lrs,
+        MasksSet& masks, Electrostatic& electrostat, const double dt,
+        MGmol<OrbitalsType>&);
 
     ~FIRE() override{};
 };

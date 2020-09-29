@@ -16,11 +16,13 @@
 #include "ProjectedMatrices.h"
 
 template <class OrbitalsType>
-LBFGS<OrbitalsType>::LBFGS(OrbitalsType** orbitals, Ions& ions, Rho<OrbitalsType>& rho,
-    ConstraintSet& constraints, std::shared_ptr<LocalizationRegions> lrs,
-    ClusterOrbitals* local_cluster, MasksSet& masks, MasksSet& corrmasks,
-    Electrostatic& electrostat, const double dt, MGmol<OrbitalsType>& strategy)
-    : IonicAlgorithm<OrbitalsType>(orbitals, ions, rho, constraints, lrs, masks, strategy),
+LBFGS<OrbitalsType>::LBFGS(OrbitalsType** orbitals, Ions& ions,
+    Rho<OrbitalsType>& rho, ConstraintSet& constraints,
+    std::shared_ptr<LocalizationRegions> lrs, ClusterOrbitals* local_cluster,
+    MasksSet& masks, MasksSet& corrmasks, Electrostatic& electrostat,
+    const double dt, MGmol<OrbitalsType>& strategy)
+    : IonicAlgorithm<OrbitalsType>(
+          orbitals, ions, rho, constraints, lrs, masks, strategy),
       orbitals_(orbitals),
       ions_(ions),
       rho_(rho),
@@ -41,8 +43,10 @@ LBFGS<OrbitalsType>::LBFGS(OrbitalsType** orbitals, Ions& ions, Rho<OrbitalsType
     etot_i_[2] = 10000.;
 
     stepper_ = new LBFGS_IonicStepper(dt, IonicAlgorithm<OrbitalsType>::atmove_,
-        IonicAlgorithm<OrbitalsType>::tau0_, IonicAlgorithm<OrbitalsType>::taup_,
-        IonicAlgorithm<OrbitalsType>::fion_, IonicAlgorithm<OrbitalsType>::gid_, 20, &etot_i_[0]);
+        IonicAlgorithm<OrbitalsType>::tau0_,
+        IonicAlgorithm<OrbitalsType>::taup_,
+        IonicAlgorithm<OrbitalsType>::fion_, IonicAlgorithm<OrbitalsType>::gid_,
+        20, &etot_i_[0]);
     IonicAlgorithm<OrbitalsType>::registerStepper(stepper_);
 
     ref_masks_     = new MasksSet(lrs, false, ct.getMGlevels());
@@ -50,9 +54,9 @@ LBFGS<OrbitalsType>::LBFGS(OrbitalsType** orbitals, Ions& ions, Rho<OrbitalsType
 
     vh_init_ = new pb::GridFunc<POTDTYPE>(electrostat_.getVh());
 
-    ref_orbitals_ = new OrbitalsType("LBFGS_ref", mygrid, mymesh->subdivx(), ct.numst,
-        ct.bcWF, (*orbitals_)->getProjMatrices(), ref_lrs_, ref_masks_,
-        ref_corrmasks_, local_cluster_);
+    ref_orbitals_ = new OrbitalsType("LBFGS_ref", mygrid, mymesh->subdivx(),
+        ct.numst, ct.bcWF, (*orbitals_)->getProjMatrices(), ref_lrs_,
+        ref_masks_, ref_corrmasks_, local_cluster_);
 
     ref_orbitals_->assign(**orbitals_);
 }

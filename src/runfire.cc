@@ -27,8 +27,8 @@ void MGmol<OrbitalsType>::runfire(OrbitalsType** orbitals, Ions& ions)
 
     Control& ct = *(Control::instance());
 
-    FIRE<OrbitalsType> fire(orbitals, ions, *rho_, *constraints_, lrs_, *currentMasks_,
-        *electrostat_, ct.dt, *this);
+    FIRE<OrbitalsType> fire(orbitals, ions, *rho_, *constraints_, lrs_,
+        *currentMasks_, *electrostat_, ct.dt, *this);
 
     DFTsolver<OrbitalsType>::resetItCount();
 

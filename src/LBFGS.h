@@ -53,8 +53,8 @@ private:
     void updateRefMasks();
 
 public:
-    LBFGS(OrbitalsType** orbitals, Ions& ions, Rho<OrbitalsType>& rho, ConstraintSet& constraints,
-        std::shared_ptr<LocalizationRegions> lrs,
+    LBFGS(OrbitalsType** orbitals, Ions& ions, Rho<OrbitalsType>& rho,
+        ConstraintSet& constraints, std::shared_ptr<LocalizationRegions> lrs,
         ClusterOrbitals* local_cluster, MasksSet& masks, MasksSet& corrmasks,
         Electrostatic& electrostat, const double dt, MGmol<OrbitalsType>&);
 

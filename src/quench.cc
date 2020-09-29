@@ -162,7 +162,8 @@ void MGmol<OrbitalsType>::updateHmatrix(OrbitalsType& orbitals, Ions& ions)
 }
 
 template <class OrbitalsType>
-void MGmol<OrbitalsType>::resetProjectedMatricesAndDM(OrbitalsType& orbitals, Ions& ions)
+void MGmol<OrbitalsType>::resetProjectedMatricesAndDM(
+    OrbitalsType& orbitals, Ions& ions)
 {
     orbitals.computeGramAndInvS();
 
@@ -179,7 +180,8 @@ void MGmol<OrbitalsType>::resetProjectedMatricesAndDM(OrbitalsType& orbitals, Io
 
 // try to use some rotations to avoid degeneracies
 template <class OrbitalsType>
-bool MGmol<OrbitalsType>::rotateStatesPairsCommonCenter(OrbitalsType& orbitals, OrbitalsType& work_orbitals)
+bool MGmol<OrbitalsType>::rotateStatesPairsCommonCenter(
+    OrbitalsType& orbitals, OrbitalsType& work_orbitals)
 {
     Control& ct        = *(Control::instance());
     bool wannier_pairs = false;
@@ -362,8 +364,8 @@ bool MGmol<OrbitalsType>::rotateStatesPairsOverlap(
 }
 
 template <class OrbitalsType>
-void MGmol<OrbitalsType>::disentangleOrbitals(
-    OrbitalsType& orbitals, OrbitalsType& work_orbitals, Ions& ions, int& max_steps)
+void MGmol<OrbitalsType>::disentangleOrbitals(OrbitalsType& orbitals,
+    OrbitalsType& work_orbitals, Ions& ions, int& max_steps)
 {
     Control& ct = *(Control::instance());
 
@@ -449,8 +451,9 @@ int MGmol<LocGridOrbitals>::outerSolve(LocGridOrbitals& orbitals,
 }
 
 template <class OrbitalsType>
-int MGmol<OrbitalsType>::outerSolve(OrbitalsType& orbitals, OrbitalsType& work_orbitals, Ions& ions,
-    const int max_steps, const int iprint, double& last_eks)
+int MGmol<OrbitalsType>::outerSolve(OrbitalsType& orbitals,
+    OrbitalsType& work_orbitals, Ions& ions, const int max_steps,
+    const int iprint, double& last_eks)
 {
     int retval
         = 1; // 0 -> converged, -1 -> problem, -2 -> ( de>tol_energy_stop )
@@ -462,8 +465,8 @@ int MGmol<OrbitalsType>::outerSolve(OrbitalsType& orbitals, OrbitalsType& work_o
         case OuterSolverType::ABPG:
         case OuterSolverType::NLCG:
         {
-            DFTsolver<OrbitalsType> solver(hamiltonian_, proj_matrices_, energy_,
-                electrostat_, this, ions, rho_, dm_strategy_, os_);
+            DFTsolver<OrbitalsType> solver(hamiltonian_, proj_matrices_,
+                energy_, electrostat_, this, ions, rho_, dm_strategy_, os_);
 
             retval = solver.solve(
                 orbitals, work_orbitals, ions, max_steps, iprint, last_eks);
@@ -473,8 +476,9 @@ int MGmol<OrbitalsType>::outerSolve(OrbitalsType& orbitals, OrbitalsType& work_o
 
         case OuterSolverType::PolakRibiere:
         {
-            PolakRibiereSolver<OrbitalsType> solver(hamiltonian_, proj_matrices_, energy_,
-                electrostat_, this, ions, rho_, dm_strategy_, os_);
+            PolakRibiereSolver<OrbitalsType> solver(hamiltonian_,
+                proj_matrices_, energy_, electrostat_, this, ions, rho_,
+                dm_strategy_, os_);
 
             retval = solver.solve(
                 orbitals, work_orbitals, ions, max_steps, iprint, last_eks);
@@ -489,9 +493,9 @@ int MGmol<OrbitalsType>::outerSolve(OrbitalsType& orbitals, OrbitalsType& work_o
             MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
             const bool with_spin = (mmpi.nspin() > 1);
-            DavidsonSolver<OrbitalsType, dist_matrix::DistMatrix<DISTMATDTYPE>> solver(os_,
-                *ions_, hamiltonian_, rho_, energy_, electrostat_, this, gids,
-                ct.dm_mix, with_spin);
+            DavidsonSolver<OrbitalsType, dist_matrix::DistMatrix<DISTMATDTYPE>>
+                solver(os_, *ions_, hamiltonian_, rho_, energy_, electrostat_,
+                    this, gids, ct.dm_mix, with_spin);
 
             retval = solver.solve(orbitals, work_orbitals);
             break;
@@ -506,8 +510,8 @@ int MGmol<OrbitalsType>::outerSolve(OrbitalsType& orbitals, OrbitalsType& work_o
 }
 
 template <class OrbitalsType>
-int MGmol<OrbitalsType>::quench(OrbitalsType* orbitals, Ions& ions, const int max_inner_steps,
-    const int iprint, double& last_eks)
+int MGmol<OrbitalsType>::quench(OrbitalsType* orbitals, Ions& ions,
+    const int max_inner_steps, const int iprint, double& last_eks)
 {
     assert(max_inner_steps > -1);
 

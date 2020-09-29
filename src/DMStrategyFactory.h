@@ -25,17 +25,17 @@ class DMStrategyFactory
 {
 public:
     static DMStrategy* create(MPI_Comm comm, std::ostream& os, Ions& ions,
-        Rho<OrbitalsType>* rho, Energy<OrbitalsType>* energy, Electrostatic* electrostat,
-        MGmol<OrbitalsType>* mgmol_strategy, ProjectedMatricesInterface* proj_matrices,
-        OrbitalsType* orbitals)
+        Rho<OrbitalsType>* rho, Energy<OrbitalsType>* energy,
+        Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy,
+        ProjectedMatricesInterface* proj_matrices, OrbitalsType* orbitals)
     {
         Control& ct = *(Control::instance());
 
         DMStrategy* dm_strategy = nullptr;
         if (ct.DM_solver() == DMNonLinearSolverType::MVP)
         {
-            dm_strategy = new MVP_DMStrategy<OrbitalsType>(comm, os, ions, rho, energy,
-                electrostat, mgmol_strategy, orbitals, proj_matrices,
+            dm_strategy = new MVP_DMStrategy<OrbitalsType>(comm, os, ions, rho,
+                energy, electrostat, mgmol_strategy, orbitals, proj_matrices,
                 ct.use_old_dm());
         }
         else if (ct.DM_solver() == DMNonLinearSolverType::HMVP)
@@ -57,8 +57,8 @@ public:
                 if (ct.getOrthoType() == OrthoType::Eigenfunctions)
                 {
                     std::cout << "EigenDMStrategy..." << std::endl;
-                    dm_strategy
-                        = new EigenDMStrategy<OrbitalsType>(orbitals, proj_matrices);
+                    dm_strategy = new EigenDMStrategy<OrbitalsType>(
+                        orbitals, proj_matrices);
                 }
                 else
                 {
@@ -78,8 +78,9 @@ public:
 
 private:
     static DMStrategy* createHamiltonianMVP_DMStrategy(MPI_Comm comm,
-        std::ostream& os, Ions& ions, Rho<OrbitalsType>* rho, Energy<OrbitalsType>* energy,
-        Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy,
+        std::ostream& os, Ions& ions, Rho<OrbitalsType>* rho,
+        Energy<OrbitalsType>* energy, Electrostatic* electrostat,
+        MGmol<OrbitalsType>* mgmol_strategy,
         ProjectedMatricesInterface* proj_matrices, OrbitalsType*, const bool);
 };
 

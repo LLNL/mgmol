@@ -39,11 +39,13 @@ class ABPG : public OrbitalsStepper<OrbitalsType>
     static Timer comp_res_tm_;
     static Timer update_states_tm_;
 
-    void update_states(OrbitalsType& orbitals, OrbitalsType& res, OrbitalsType& work_orbitals,
-        const double precond_factor, const bool accelerate);
+    void update_states(OrbitalsType& orbitals, OrbitalsType& res,
+        OrbitalsType& work_orbitals, const double precond_factor,
+        const bool accelerate);
 
 public:
-    ABPG(Hamiltonian<OrbitalsType>* hamiltonian, ProjectedMatricesInterface* proj_matrices,
+    ABPG(Hamiltonian<OrbitalsType>* hamiltonian,
+        ProjectedMatricesInterface* proj_matrices,
         MGmol<OrbitalsType>* mgmol_strategy, std::ostream& os)
         : hamiltonian_(hamiltonian),
           proj_matrices_(proj_matrices),
@@ -64,8 +66,9 @@ public:
 
     void setup(OrbitalsType&) override;
 
-    int updateWF(OrbitalsType& orbitals, Ions& ions, const double precond_factor,
-        const bool orthof, OrbitalsType& work_orbitals, const bool accelerate,
+    int updateWF(OrbitalsType& orbitals, Ions& ions,
+        const double precond_factor, const bool orthof,
+        OrbitalsType& work_orbitals, const bool accelerate,
         const bool print_res, const double atol) override;
 
     void restartMixing() override

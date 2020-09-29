@@ -71,13 +71,14 @@ private:
 public:
     DFTsolver(Hamiltonian<OrbitalsType>* hamiltonian,
         ProjectedMatricesInterface* proj_matrices, Energy<OrbitalsType>* energy,
-        Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy, Ions& ions,
-        Rho<OrbitalsType>* rho, DMStrategy* dm_strategy, std::ostream& os);
+        Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy,
+        Ions& ions, Rho<OrbitalsType>* rho, DMStrategy* dm_strategy,
+        std::ostream& os);
 
     ~DFTsolver();
 
-    int solve(OrbitalsType& orbitals, OrbitalsType& work_orbitals, Ions& ions, const short max_steps,
-        const short iprint, double& last_eks);
+    int solve(OrbitalsType& orbitals, OrbitalsType& work_orbitals, Ions& ions,
+        const short max_steps, const short iprint, double& last_eks);
 
     static void resetItCount() { it_scf_ = 0; }
     static void setItCountLarge() { it_scf_ = 1000; }

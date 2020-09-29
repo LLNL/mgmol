@@ -16,10 +16,12 @@
 #include "Mesh.h"
 
 template <class OrbitalsType>
-FIRE<OrbitalsType>::FIRE(OrbitalsType** orbitals, Ions& ions, Rho<OrbitalsType>& rho, ConstraintSet& constraints,
+FIRE<OrbitalsType>::FIRE(OrbitalsType** orbitals, Ions& ions,
+    Rho<OrbitalsType>& rho, ConstraintSet& constraints,
     std::shared_ptr<LocalizationRegions> lrs, MasksSet& masks,
     Electrostatic& electrostat, const double dt, MGmol<OrbitalsType>& strategy)
-    : IonicAlgorithm<OrbitalsType>(orbitals, ions, rho, constraints, lrs, masks, strategy),
+    : IonicAlgorithm<OrbitalsType>(
+          orbitals, ions, rho, constraints, lrs, masks, strategy),
       orbitals_(orbitals),
       ions_(ions),
       rho_(rho),
@@ -29,7 +31,8 @@ FIRE<OrbitalsType>::FIRE(OrbitalsType** orbitals, Ions& ions, Rho<OrbitalsType>&
       mgmol_strategy_(strategy)
 {
     stepper_ = new FIRE_IonicStepper(dt, IonicAlgorithm<OrbitalsType>::atmove_,
-        IonicAlgorithm<OrbitalsType>::tau0_, IonicAlgorithm<OrbitalsType>::taup_,
+        IonicAlgorithm<OrbitalsType>::tau0_,
+        IonicAlgorithm<OrbitalsType>::taup_,
         IonicAlgorithm<OrbitalsType>::fion_);
 
     IonicAlgorithm<OrbitalsType>::registerStepper(stepper_);

@@ -26,7 +26,8 @@ template <class OrbitalsType>
 int PolakRibiereSolver<OrbitalsType>::it_scf_ = 0;
 
 template <class OrbitalsType>
-PolakRibiereSolver<OrbitalsType>::PolakRibiereSolver(Hamiltonian<OrbitalsType>* hamiltonian,
+PolakRibiereSolver<OrbitalsType>::PolakRibiereSolver(
+    Hamiltonian<OrbitalsType>* hamiltonian,
     ProjectedMatricesInterface* proj_matrices, Energy<OrbitalsType>* energy,
     Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy, Ions& ions,
     Rho<OrbitalsType>* rho, DMStrategy* dm_strategy, std::ostream& os)
@@ -92,7 +93,8 @@ void PolakRibiereSolver<OrbitalsType>::printEnergy(const short step) const
 }
 
 template <class OrbitalsType>
-bool PolakRibiereSolver<OrbitalsType>::checkPrintResidual(const short step) const
+bool PolakRibiereSolver<OrbitalsType>::checkPrintResidual(
+    const short step) const
 {
     Control& ct(*(Control::instance()));
     return (ct.iprint_residual > 0) ? !(step % ct.iprint_residual) : false;
@@ -255,7 +257,8 @@ double PolakRibiereSolver<OrbitalsType>::evaluateEnergy(
 
 // Polak-Ribiere
 template <class OrbitalsType>
-double PolakRibiereSolver<OrbitalsType>::computeBeta(OrbitalsType& work_orbitals) const
+double PolakRibiereSolver<OrbitalsType>::computeBeta(
+    OrbitalsType& work_orbitals) const
 {
     work_orbitals.assign(*r_k_);
     work_orbitals.axpy(-1., *r_km1_);
@@ -268,8 +271,9 @@ double PolakRibiereSolver<OrbitalsType>::computeBeta(OrbitalsType& work_orbitals
 }
 
 template <class OrbitalsType>
-int PolakRibiereSolver<OrbitalsType>::solve(OrbitalsType& orbitals, OrbitalsType& work_orbitals, Ions& ions,
-    const short max_steps, const short iprint, double& last_eks)
+int PolakRibiereSolver<OrbitalsType>::solve(OrbitalsType& orbitals,
+    OrbitalsType& work_orbitals, Ions& ions, const short max_steps,
+    const short iprint, double& last_eks)
 {
     Control& ct(*(Control::instance()));
     assert(ct.getOrthoType() != OrthoType::Eigenfunctions);

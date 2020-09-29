@@ -16,9 +16,10 @@
 using namespace std;
 
 template <class OrbitalsType>
-IonicAlgorithm<OrbitalsType>::IonicAlgorithm(OrbitalsType** orbitals, Ions& ions, Rho<OrbitalsType>& rho,
-    ConstraintSet& constraints, std::shared_ptr<LocalizationRegions> lrs,
-    MasksSet& masks, MGmol<OrbitalsType>& strategy)
+IonicAlgorithm<OrbitalsType>::IonicAlgorithm(OrbitalsType** orbitals,
+    Ions& ions, Rho<OrbitalsType>& rho, ConstraintSet& constraints,
+    std::shared_ptr<LocalizationRegions> lrs, MasksSet& masks,
+    MGmol<OrbitalsType>& strategy)
     : orbitals_(orbitals),
       ions_(ions),
       rho_(rho),

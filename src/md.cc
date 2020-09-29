@@ -137,9 +137,9 @@ OrbitalsType* MGmol<OrbitalsType>::new_orbitals_with_current_LRs(bool setup)
     if (ct.lr_update) update_masks();
 
     // need to build new orbitals as masks have changed
-    OrbitalsType* new_orbitals = new OrbitalsType("NewMasks", mygrid, mymesh->subdivx(), ct.numst,
-        ct.bcWF, proj_matrices_, lrs_, currentMasks_, corrMasks_,
-        local_cluster_, setup);
+    OrbitalsType* new_orbitals = new OrbitalsType("NewMasks", mygrid,
+        mymesh->subdivx(), ct.numst, ct.bcWF, proj_matrices_, lrs_,
+        currentMasks_, corrMasks_, local_cluster_, setup);
 
     return new_orbitals;
 }
@@ -232,8 +232,8 @@ void checkMaxForces(const std::vector<double>& fion,
 }
 
 template <class OrbitalsType>
-int MGmol<OrbitalsType>::dumprestartFile(OrbitalsType** orbitals, Ions& ions, Rho<OrbitalsType>& rho,
-    const bool write_extrapolated_wf, const short count)
+int MGmol<OrbitalsType>::dumprestartFile(OrbitalsType** orbitals, Ions& ions,
+    Rho<OrbitalsType>& rho, const bool write_extrapolated_wf, const short count)
 {
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
     Control& ct              = *(Control::instance());
@@ -318,8 +318,8 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
     int size_tau = (int)tau0.size();
     DFTsolver<OrbitalsType>::resetItCount();
 
-    orbitals_extrapol_
-        = OrbitalsExtrapolationFactory<OrbitalsType>::create(ct.WFExtrapolation());
+    orbitals_extrapol_ = OrbitalsExtrapolationFactory<OrbitalsType>::create(
+        ct.WFExtrapolation());
 
     MD_IonicStepper* stepper = new MD_IonicStepper(
         ct.dt, atmove, tau0, taup, taum, fion, pmass, rand_states);

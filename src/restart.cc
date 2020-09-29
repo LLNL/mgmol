@@ -35,7 +35,8 @@
 
 // read rho and potentials form a hdf5 file
 template <class OrbitalsType>
-int MGmol<OrbitalsType>::read_rho_and_pot_hdf5(HDFrestart& file, Rho<OrbitalsType>& rho)
+int MGmol<OrbitalsType>::read_rho_and_pot_hdf5(
+    HDFrestart& file, Rho<OrbitalsType>& rho)
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 0)
@@ -189,7 +190,8 @@ int MGmol<OrbitalsType>::read_restart_lrs(
 {
     Control& ct = *(Control::instance());
     if (ct.verbose > 0)
-        printWithTimeStamp("MGmol<OrbitalsType>::read_restart_lrs()...", (*MPIdata::sout));
+        printWithTimeStamp(
+            "MGmol<OrbitalsType>::read_restart_lrs()...", (*MPIdata::sout));
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
@@ -205,7 +207,8 @@ int MGmol<OrbitalsType>::read_restart_lrs(
 
 // Reads the restart information from restart files.
 template <class OrbitalsType>
-int MGmol<OrbitalsType>::read_restart_data(HDFrestart& h5f_file, Rho<OrbitalsType>& rho, OrbitalsType& orbitals)
+int MGmol<OrbitalsType>::read_restart_data(
+    HDFrestart& h5f_file, Rho<OrbitalsType>& rho, OrbitalsType& orbitals)
 {
     Control& ct = *(Control::instance());
     if (ct.verbose > 0)

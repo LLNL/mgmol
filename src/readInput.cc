@@ -163,7 +163,8 @@ int MGmol<OrbitalsType>::readLRsFromInput(std::ifstream* tfile)
 }
 
 template <class OrbitalsType>
-int MGmol<OrbitalsType>::readCoordinates(std::ifstream* tfile, const bool cell_relative)
+int MGmol<OrbitalsType>::readCoordinates(
+    std::ifstream* tfile, const bool cell_relative)
 {
     Control& ct = *(Control::instance());
     if (ct.verbose > 0) printWithTimeStamp("Read atomic coordinates...", os_);
