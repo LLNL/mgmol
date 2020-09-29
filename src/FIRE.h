@@ -23,24 +23,24 @@ class Electrostatic;
 class KBPsiMatrixInterface;
 class ConstraintSet;
 
-template <class T>
-class FIRE : public IonicAlgorithm<T>
+template <class OrbitalsType>
+class FIRE : public IonicAlgorithm<OrbitalsType>
 {
 private:
-    T** orbitals_;
+    OrbitalsType** orbitals_;
     const Ions& ions_;
-    const Rho<T>& rho_;
+    const Rho<OrbitalsType>& rho_;
     FIRE_IonicStepper* stepper_;
     const std::shared_ptr<LocalizationRegions> lrs_;
     const MasksSet& masks_;
     const Electrostatic& electrostat_;
 
-    const MGmol<T>& mgmol_strategy_;
+    const MGmol<OrbitalsType>& mgmol_strategy_;
 
 public:
-    FIRE(T** orbitals, Ions& ions, Rho<T>& rho, ConstraintSet& constraints,
+    FIRE(OrbitalsType** orbitals, Ions& ions, Rho<OrbitalsType>& rho, ConstraintSet& constraints,
         std::shared_ptr<LocalizationRegions> lrs, MasksSet& masks,
-        Electrostatic& electrostat, const double dt, MGmol<T>&);
+        Electrostatic& electrostat, const double dt, MGmol<OrbitalsType>&);
 
     ~FIRE() override{};
 };

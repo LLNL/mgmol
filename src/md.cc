@@ -47,8 +47,8 @@ Timer md_extrapolateOrbitals_tm("md_extrapolateOrbitals");
 
 #define DUMP_MAX_NUM_TRY 5
 
-template <class T>
-void MGmol<T>::moveVnuc(Ions& ions)
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::moveVnuc(Ions& ions)
 {
     md_moveVnuc_tm.start();
 
@@ -65,8 +65,8 @@ void MGmol<T>::moveVnuc(Ions& ions)
     md_moveVnuc_tm.stop();
 }
 
-template <class T>
-void MGmol<T>::preWFextrapolation()
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::preWFextrapolation()
 {
     Control& ct = *(Control::instance());
     if (ct.OuterSolver() == OuterSolverType::ABPG
@@ -76,8 +76,8 @@ void MGmol<T>::preWFextrapolation()
     }
 }
 
-template <class T>
-void MGmol<T>::postWFextrapolation(T* orbitals)
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::postWFextrapolation(OrbitalsType* orbitals)
 {
     Control& ct = *(Control::instance());
     if (ct.isLocMode())
@@ -99,8 +99,8 @@ void MGmol<T>::postWFextrapolation(T* orbitals)
     }
 }
 
-template <class T>
-void MGmol<T>::extrapolate_centers(bool small_move)
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::extrapolate_centers(bool small_move)
 {
     assert(lrs_);
 
@@ -124,8 +124,8 @@ void MGmol<T>::extrapolate_centers(bool small_move)
     }
 }
 
-template <class T>
-T* MGmol<T>::new_orbitals_with_current_LRs(bool setup)
+template <class OrbitalsType>
+OrbitalsType* MGmol<OrbitalsType>::new_orbitals_with_current_LRs(bool setup)
 {
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
@@ -137,17 +137,17 @@ T* MGmol<T>::new_orbitals_with_current_LRs(bool setup)
     if (ct.lr_update) update_masks();
 
     // need to build new orbitals as masks have changed
-    T* new_orbitals = new T("NewMasks", mygrid, mymesh->subdivx(), ct.numst,
+    OrbitalsType* new_orbitals = new OrbitalsType("NewMasks", mygrid, mymesh->subdivx(), ct.numst,
         ct.bcWF, proj_matrices_, lrs_, currentMasks_, corrMasks_,
         local_cluster_, setup);
 
     return new_orbitals;
 }
 
-template <class T>
-void MGmol<T>::update_orbitals_LRs(T** orbitals)
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::update_orbitals_LRs(OrbitalsType** orbitals)
 {
-    T* new_orbitals = new_orbitals_with_current_LRs();
+    OrbitalsType* new_orbitals = new_orbitals_with_current_LRs();
     new_orbitals->assign(**orbitals);
     delete (*orbitals);
     (*orbitals) = new_orbitals;
@@ -155,12 +155,12 @@ void MGmol<T>::update_orbitals_LRs(T** orbitals)
     (*orbitals)->applyMask();
 }
 
-template <class T>
-void MGmol<T>::extrapolate_orbitals(T** orbitals)
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::extrapolate_orbitals(OrbitalsType** orbitals)
 {
     md_extrapolateOrbitals_tm.start();
 
-    T* new_orbitals = new_orbitals_with_current_LRs();
+    OrbitalsType* new_orbitals = new_orbitals_with_current_LRs();
 
     orbitals_extrapol_->extrapolate_orbitals(orbitals, new_orbitals);
 
@@ -169,14 +169,14 @@ void MGmol<T>::extrapolate_orbitals(T** orbitals)
     md_extrapolateOrbitals_tm.stop();
 }
 
-template <class T>
-void MGmol<T>::move_orbitals(T** orbitals)
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::move_orbitals(OrbitalsType** orbitals)
 {
     Control& ct = *(Control::instance());
 
     if (onpe0 && ct.verbose > 1) os_ << "Move orbitals..." << std::endl;
 
-    T* new_orbitals = new_orbitals_with_current_LRs();
+    OrbitalsType* new_orbitals = new_orbitals_with_current_LRs();
 
     // copy old data
     new_orbitals->assign(**orbitals);
@@ -192,8 +192,8 @@ void MGmol<T>::move_orbitals(T** orbitals)
     (*orbitals)->incrementIterativeIndex();
 }
 
-template <class T>
-int MGmol<T>::update_masks()
+template <class OrbitalsType>
+int MGmol<OrbitalsType>::update_masks()
 {
     assert(lrs_);
 
@@ -231,8 +231,8 @@ void checkMaxForces(const std::vector<double>& fion,
            << std::sqrt(f2) << std::endl;
 }
 
-template <class T>
-int MGmol<T>::dumprestartFile(T** orbitals, Ions& ions, Rho<T>& rho,
+template <class OrbitalsType>
+int MGmol<OrbitalsType>::dumprestartFile(OrbitalsType** orbitals, Ions& ions, Rho<OrbitalsType>& rho,
     const bool write_extrapolated_wf, const short count)
 {
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
@@ -251,7 +251,7 @@ int MGmol<T>::dumprestartFile(T** orbitals, Ions& ions, Rho<T>& rho,
 
     HDFrestart h5file(filename, myPEenv, gdim, ct.out_restart_file_type);
 
-    T previous_orbitals("ForDumping", **orbitals, false);
+    OrbitalsType previous_orbitals("ForDumping", **orbitals, false);
     if (!orbitals_extrapol_->getRestartData(previous_orbitals))
         previous_orbitals.assign(**orbitals);
     int ierr = write_hdf5(h5file, rho.rho_, ions, previous_orbitals, lrs_);
@@ -295,8 +295,8 @@ int MGmol<T>::dumprestartFile(T** orbitals, Ions& ions, Rho<T>& rho,
     return 0;
 }
 
-template <class T>
-void MGmol<T>::md(T** orbitals, Ions& ions)
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
 {
     Control& ct = *(Control::instance());
 
@@ -316,10 +316,10 @@ void MGmol<T>::md(T** orbitals, Ions& ions)
     taum = vel;
 
     int size_tau = (int)tau0.size();
-    DFTsolver<T>::resetItCount();
+    DFTsolver<OrbitalsType>::resetItCount();
 
     orbitals_extrapol_
-        = OrbitalsExtrapolationFactory<T>::create(ct.WFExtrapolation());
+        = OrbitalsExtrapolationFactory<OrbitalsType>::create(ct.WFExtrapolation());
 
     MD_IonicStepper* stepper = new MD_IonicStepper(
         ct.dt, atmove, tau0, taup, taum, fion, pmass, rand_states);
@@ -385,7 +385,7 @@ void MGmol<T>::md(T** orbitals, Ions& ions)
                 dm_strategy_->update();
             }
 
-            DFTsolver<T>::setItCountLarge();
+            DFTsolver<OrbitalsType>::setItCountLarge();
         }
 
         // check if we are restarting from an MD dump

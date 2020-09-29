@@ -45,8 +45,8 @@ void distributeColumns(
     mat.assign(&vmm[mycol * nb * nst], count);
 }
 
-template <class T>
-int MGmol<T>::getMLWF(MLWFTransform& mlwft, T& orbitals, T& work_orbitals,
+template <class OrbitalsType>
+int MGmol<OrbitalsType>::getMLWF(MLWFTransform& mlwft, OrbitalsType& orbitals, OrbitalsType& work_orbitals,
     const double dd, const bool apply_flag)
 {
     Control& ct = *(Control::instance());
@@ -89,7 +89,7 @@ int MGmol<T>::getMLWF(MLWFTransform& mlwft, T& orbitals, T& work_orbitals,
     for (int i = 0; i < 6; i++)
         sincos[i].resize(numst * numst);
 
-    SinCosOps<T>::compute(work_orbitals, sincos);
+    SinCosOps<OrbitalsType>::compute(work_orbitals, sincos);
 
     mlwft.distributeColumnsR(sincos);
     // for(int i=0;i<6;i++)
@@ -116,9 +116,9 @@ int MGmol<T>::getMLWF(MLWFTransform& mlwft, T& orbitals, T& work_orbitals,
     return 0;
 }
 
-template <class T>
-int MGmol<T>::getMLWF2states(
-    const int st1, const int st2, T& orbitals, T& work_orbitals)
+template <class OrbitalsType>
+int MGmol<OrbitalsType>::getMLWF2states(
+    const int st1, const int st2, OrbitalsType& orbitals, OrbitalsType& work_orbitals)
 {
     get_MLWF_tm.start();
 
@@ -146,7 +146,7 @@ int MGmol<T>::getMLWF2states(
     for (int i = 0; i < 6; i++)
         sincos[i].resize(4);
 
-    SinCosOps<T>::compute2states(work_orbitals, sincos, st1, st2);
+    SinCosOps<OrbitalsType>::compute2states(work_orbitals, sincos, st1, st2);
 
     for (int i = 0; i < 6; i++)
         distributeColumns(sincos[i], mlwft.r(i));
@@ -169,8 +169,8 @@ int MGmol<T>::getMLWF2states(
     return 0;
 }
 
-template <class T>
-void MGmol<T>::wftransform(T* orbitals, T* work_orbitals, Ions& ions)
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::wftransform(OrbitalsType* orbitals, OrbitalsType* work_orbitals, Ions& ions)
 {
     Control& ct            = *(Control::instance());
     Mesh* mymesh           = Mesh::instance();
@@ -233,8 +233,8 @@ void MGmol<T>::wftransform(T* orbitals, T* work_orbitals, Ions& ions)
     }
 }
 
-template <class T>
-int MGmol<T>::get_NOLMO(NOLMOTransform& noot, T& orbitals, T& work_orbitals,
+template <class OrbitalsType>
+int MGmol<OrbitalsType>::get_NOLMO(NOLMOTransform& noot, OrbitalsType& orbitals, OrbitalsType& work_orbitals,
     const double dd, const bool apply_flag)
 {
     get_NOLMO_tm.start();
@@ -268,11 +268,11 @@ int MGmol<T>::get_NOLMO(NOLMOTransform& noot, T& orbitals, T& work_orbitals,
 
     for (short d = 0; d < 3; d++)
     {
-        SinCosOps<T>::compute1D(work_orbitals, sincos, d);
+        SinCosOps<OrbitalsType>::compute1D(work_orbitals, sincos, d);
         for (short i = 0; i < 2; i++)
             distributeColumns(sincos[i], noot.r(i + 2 * d));
 
-        SinCosOps<T>::computeSquare1D(work_orbitals, sincos, d);
+        SinCosOps<OrbitalsType>::computeSquare1D(work_orbitals, sincos, d);
         for (short i = 0; i < 2; i++)
             distributeColumns(sincos[i], noot.b(i + 2 * d));
     }

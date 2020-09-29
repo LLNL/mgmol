@@ -14,16 +14,16 @@
 #include "MGmol.h"
 #include "Potentials.h"
 
-template <class T>
-int MGmol<T>::setupFromInput(const std::string filename)
+template <class OrbitalsType>
+int MGmol<OrbitalsType>::setupFromInput(const std::string filename)
 {
     Control& ct = *(Control::instance());
     if (ct.verbose > 0)
-        printWithTimeStamp("MGmol<T>::setupFromInput()...", std::cout);
+        printWithTimeStamp("MGmol<OrbitalsType>::setupFromInput()...", std::cout);
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
-    hamiltonian_    = new Hamiltonian<T>();
+    hamiltonian_    = new Hamiltonian<OrbitalsType>();
     Potentials& pot = hamiltonian_->potential();
 
     ct.registerPotentials(pot);
@@ -53,8 +53,8 @@ int MGmol<T>::setupFromInput(const std::string filename)
     return 0;
 }
 
-template <class T>
-int MGmol<T>::setupLRs(const std::string filename)
+template <class OrbitalsType>
+int MGmol<OrbitalsType>::setupLRs(const std::string filename)
 {
     Control& ct = *(Control::instance());
 
@@ -69,8 +69,8 @@ int MGmol<T>::setupLRs(const std::string filename)
     return 0;
 }
 
-template <class T>
-int MGmol<T>::setupLRsFromInput(const std::string filename)
+template <class OrbitalsType>
+int MGmol<OrbitalsType>::setupLRsFromInput(const std::string filename)
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
@@ -102,8 +102,8 @@ int MGmol<T>::setupLRsFromInput(const std::string filename)
     return 0;
 }
 
-template <class T>
-int MGmol<T>::setupConstraintsFromInput(const std::string filename)
+template <class OrbitalsType>
+int MGmol<OrbitalsType>::setupConstraintsFromInput(const std::string filename)
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 

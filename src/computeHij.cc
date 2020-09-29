@@ -4,7 +4,7 @@
 // National Laboratory.
 // LLNL-CODE-743438
 // All rights reserved.
-// This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
+// OrbitalsType& This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include <cassert>
@@ -151,8 +151,8 @@ void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i,
     }
 }
 
-template <class T>
-void MGmol<T>::computeHij_private(T& orbitals_i, T& orbitals_j,
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::computeHij_private(OrbitalsType& orbitals_i, OrbitalsType& orbitals_j,
     const Ions& ions, const KBPsiMatrixSparse* const kbpsi_i,
     const KBPsiMatrixSparse* const kbpsi_j,
     dist_matrix::DistMatrix<DISTMATDTYPE>& hij)
@@ -198,8 +198,8 @@ void MGmol<ExtendedGridOrbitals>::computeHij(ExtendedGridOrbitals& orbitals_i,
     computeHij_private(orbitals_i, orbitals_j, ions, kbpsi, kbpsi_j, hij);
 }
 
-template <class T>
-void MGmol<T>::computeHij(T& orbitals_i, T& orbitals_j, const Ions& ions,
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::computeHij(OrbitalsType& orbitals_i, OrbitalsType& orbitals_j, const Ions& ions,
     const KBPsiMatrixSparse* const kbpsi, dist_matrix::DistMatrix<double>& hij,
     const bool consolidate)
 {
@@ -208,8 +208,8 @@ void MGmol<T>::computeHij(T& orbitals_i, T& orbitals_j, const Ions& ions,
     computeHij_private(orbitals_i, orbitals_j, ions, kbpsi, hij);
 }
 
-template <class T>
-void MGmol<T>::computeHij_private(T& orbitals_i, T& orbitals_j,
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::computeHij_private(OrbitalsType& orbitals_i, OrbitalsType& orbitals_j,
     const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
     dist_matrix::DistMatrix<double>& hij)
 {
@@ -226,8 +226,8 @@ void MGmol<T>::computeHij_private(T& orbitals_i, T& orbitals_j,
     addHlocal2matrix(orbitals_i, orbitals_j, hij);
 }
 
-template <class T>
-void MGmol<T>::computeHij(T& orbitals_i, T& orbitals_j, const Ions& ions,
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::computeHij(OrbitalsType& orbitals_i, OrbitalsType& orbitals_j, const Ions& ions,
     const KBPsiMatrixSparse* const kbpsi,
     ProjectedMatricesInterface* projmatrices)
 {
@@ -243,8 +243,8 @@ void MGmol<T>::computeHij(T& orbitals_i, T& orbitals_j, const Ions& ions,
     projmatrices->consolidateH();
 }
 
-template <class T>
-void MGmol<T>::getKBPsiAndHij(T& orbitals_i, T& orbitals_j, Ions& ions,
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::getKBPsiAndHij(OrbitalsType& orbitals_i, OrbitalsType& orbitals_j, Ions& ions,
     KBPsiMatrixSparse* kbpsi, ProjectedMatricesInterface* projmatrices,
     dist_matrix::DistMatrix<DISTMATDTYPE>& hij)
 {
@@ -256,8 +256,8 @@ void MGmol<T>::getKBPsiAndHij(T& orbitals_i, T& orbitals_j, Ions& ions,
         hamiltonian_->potential().getIterativeIndex());
 }
 
-template <class T>
-void MGmol<T>::getKBPsiAndHij(T& orbitals_i, T& orbitals_j, Ions& ions,
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::getKBPsiAndHij(OrbitalsType& orbitals_i, OrbitalsType& orbitals_j, Ions& ions,
     KBPsiMatrixSparse* kbpsi, ProjectedMatricesInterface* projmatrices)
 {
     kbpsi->computeAll(ions, orbitals_i);
@@ -270,22 +270,22 @@ void MGmol<T>::getKBPsiAndHij(T& orbitals_i, T& orbitals_j, Ions& ions,
         hamiltonian_->potential().getIterativeIndex());
 }
 
-template <class T>
-void MGmol<T>::getKBPsiAndHij(T& orbitals, Ions& ions, KBPsiMatrixSparse* kbpsi,
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::getKBPsiAndHij(OrbitalsType& orbitals, Ions& ions, KBPsiMatrixSparse* kbpsi,
     dist_matrix::DistMatrix<DISTMATDTYPE>& hij)
 {
     getKBPsiAndHij(orbitals, orbitals, ions, kbpsi, proj_matrices_, hij);
 }
 
-template <class T>
-void MGmol<T>::getKBPsiAndHij(T& orbitals, Ions& ions)
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::getKBPsiAndHij(OrbitalsType& orbitals, Ions& ions)
 {
     getKBPsiAndHij(orbitals, orbitals, ions, g_kbpsi_, proj_matrices_);
 }
 
-template <class T>
-void MGmol<T>::computeHnlPhiAndAdd2HPhi(
-    Ions& ions, T& phi, T& hphi, const KBPsiMatrixSparse* const kbpsi)
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::computeHnlPhiAndAdd2HPhi(
+    Ions& ions, OrbitalsType& phi, OrbitalsType& hphi, const KBPsiMatrixSparse* const kbpsi)
 {
     // H_nl
 #ifdef PRINT_OPERATIONS
@@ -301,7 +301,7 @@ void MGmol<T>::computeHnlPhiAndAdd2HPhi(
     const short ncolors = gid[0].size();
 
     {
-        using memory_space_type = typename T::memory_space_type;
+        using memory_space_type = typename OrbitalsType::memory_space_type;
         // compute Hnl*phi
         if (ct.Mehrstellen())
         {
@@ -371,9 +371,9 @@ void MGmol<T>::computeHnlPhiAndAdd2HPhi(
     hphi.setIterativeIndex(phi.getIterativeIndex());
 }
 
-template <class T>
-void MGmol<T>::addHlocal2matrix(
-    T& orbitalsi, T& orbitalsj, dist_matrix::DistMatrix<DISTMATDTYPE>& mat)
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::addHlocal2matrix(
+    OrbitalsType& orbitalsi, OrbitalsType& orbitalsj, dist_matrix::DistMatrix<DISTMATDTYPE>& mat)
 {
     computeHij_tm_.start();
 
@@ -387,9 +387,9 @@ void MGmol<T>::addHlocal2matrix(
     computeHij_tm_.stop();
 }
 
-template <class T>
-void MGmol<T>::addHlocalij(
-    T& orbitalsi, T& orbitalsj, ProjectedMatricesInterface* pmat)
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::addHlocalij(
+    OrbitalsType& orbitalsi, OrbitalsType& orbitalsj, ProjectedMatricesInterface* pmat)
 {
     computeHij_tm_.start();
 
@@ -402,15 +402,15 @@ void MGmol<T>::addHlocalij(
     computeHij_tm_.stop();
 }
 
-template <class T>
-void MGmol<T>::getHpsiAndTheta(Ions& ions, T& phi, T& hphi)
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::getHpsiAndTheta(Ions& ions, OrbitalsType& phi, OrbitalsType& hphi)
 {
     getHpsiAndTheta(ions, phi, hphi, g_kbpsi_);
 }
 
-template <class T>
-void MGmol<T>::getHpsiAndTheta(
-    Ions& ions, T& phi, T& hphi, const KBPsiMatrixSparse* const kbpsi)
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::getHpsiAndTheta(
+    Ions& ions, OrbitalsType& phi, OrbitalsType& hphi, const KBPsiMatrixSparse* const kbpsi)
 {
     get_Hpsi_and_Hij_tm_.start();
 

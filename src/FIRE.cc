@@ -15,11 +15,11 @@
 #include "MasksSet.h"
 #include "Mesh.h"
 
-template <class T>
-FIRE<T>::FIRE(T** orbitals, Ions& ions, Rho<T>& rho, ConstraintSet& constraints,
+template <class OrbitalsType>
+FIRE<OrbitalsType>::FIRE(OrbitalsType** orbitals, Ions& ions, Rho<OrbitalsType>& rho, ConstraintSet& constraints,
     std::shared_ptr<LocalizationRegions> lrs, MasksSet& masks,
-    Electrostatic& electrostat, const double dt, MGmol<T>& strategy)
-    : IonicAlgorithm<T>(orbitals, ions, rho, constraints, lrs, masks, strategy),
+    Electrostatic& electrostat, const double dt, MGmol<OrbitalsType>& strategy)
+    : IonicAlgorithm<OrbitalsType>(orbitals, ions, rho, constraints, lrs, masks, strategy),
       orbitals_(orbitals),
       ions_(ions),
       rho_(rho),
@@ -28,11 +28,11 @@ FIRE<T>::FIRE(T** orbitals, Ions& ions, Rho<T>& rho, ConstraintSet& constraints,
       electrostat_(electrostat),
       mgmol_strategy_(strategy)
 {
-    stepper_ = new FIRE_IonicStepper(dt, IonicAlgorithm<T>::atmove_,
-        IonicAlgorithm<T>::tau0_, IonicAlgorithm<T>::taup_,
-        IonicAlgorithm<T>::fion_);
+    stepper_ = new FIRE_IonicStepper(dt, IonicAlgorithm<OrbitalsType>::atmove_,
+        IonicAlgorithm<OrbitalsType>::tau0_, IonicAlgorithm<OrbitalsType>::taup_,
+        IonicAlgorithm<OrbitalsType>::fion_);
 
-    IonicAlgorithm<T>::registerStepper(stepper_);
+    IonicAlgorithm<OrbitalsType>::registerStepper(stepper_);
 }
 
 template class FIRE<LocGridOrbitals>;

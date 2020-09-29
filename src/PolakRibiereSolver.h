@@ -22,21 +22,21 @@ class Electrostatic;
 class ProjectedMatricesInterface;
 class DMStrategy;
 
-template <class T>
+template <class OrbitalsType>
 class PolakRibiereSolver
 {
 private:
     static Timer solve_tm_;
     static int it_scf_;
 
-    MGmol<T>* mgmol_strategy_;
+    MGmol<OrbitalsType>* mgmol_strategy_;
 
-    Hamiltonian<T>* hamiltonian_;
+    Hamiltonian<OrbitalsType>* hamiltonian_;
     ProjectedMatricesInterface* proj_matrices_;
-    Energy<T>* energy_;
+    Energy<OrbitalsType>* energy_;
     Electrostatic* electrostat_;
     Ions& ions_;
-    Rho<T>* rho_;
+    Rho<OrbitalsType>* rho_;
     DMStrategy* dm_strategy_;
 
     std::ostream& os_;
@@ -52,16 +52,16 @@ private:
     /*!
      * residual (gradient with negative sign)
      */
-    T* r_k_;
-    T* r_km1_;
+    OrbitalsType* r_k_;
+    OrbitalsType* r_km1_;
 
     /*!
      * preconditioned residual
      */
-    T* z_k_;
-    T* z_km1_;
+    OrbitalsType* z_k_;
+    OrbitalsType* z_km1_;
 
-    T* p_k_;
+    OrbitalsType* p_k_;
 
     double sum_eig_[2];
     double deig_;
@@ -71,7 +71,7 @@ private:
 
     void printEnergy(const short) const;
     int checkConvergenceEnergy(const short step, const short max_steps);
-    double evaluateEnergy(const T& orbitals, const bool flag);
+    double evaluateEnergy(const OrbitalsType& orbitals, const bool flag);
     void incInnerIt() { it_scf_++; }
     bool checkPrintResidual(const short step) const;
     void dielON();
@@ -81,17 +81,17 @@ private:
     bool checkWolfeConditions(
         const double trial_step_energy, const double alpha) const;
 
-    double computeBeta(T& work_orbitals) const;
+    double computeBeta(OrbitalsType& work_orbitals) const;
 
 public:
-    PolakRibiereSolver(Hamiltonian<T>* hamiltonian,
-        ProjectedMatricesInterface* proj_matrices, Energy<T>* energy,
-        Electrostatic* electrostat, MGmol<T>* mgmol_strategy, Ions& ions,
-        Rho<T>* rho, DMStrategy* dm_strategy, std::ostream& os);
+    PolakRibiereSolver(Hamiltonian<OrbitalsType>* hamiltonian,
+        ProjectedMatricesInterface* proj_matrices, Energy<OrbitalsType>* energy,
+        Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy, Ions& ions,
+        Rho<OrbitalsType>* rho, DMStrategy* dm_strategy, std::ostream& os);
 
     ~PolakRibiereSolver();
 
-    int solve(T& orbitals, T& work_orbitals, Ions& ions, const short max_steps,
+    int solve(OrbitalsType& orbitals, OrbitalsType& work_orbitals, Ions& ions, const short max_steps,
         const short iprint, double& last_eks);
 
     static void resetItCount() { it_scf_ = 0; }

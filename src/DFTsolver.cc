@@ -20,11 +20,11 @@
 #include "ProjectedMatricesInterface.h"
 #include "Rho.h"
 
-template <class T>
-DFTsolver<T>::DFTsolver(Hamiltonian<T>* hamiltonian,
-    ProjectedMatricesInterface* proj_matrices, Energy<T>* energy,
-    Electrostatic* electrostat, MGmol<T>* mgmol_strategy, Ions& ions,
-    Rho<T>* rho, DMStrategy* dm_strategy, std::ostream& os)
+template <class OrbitalsType>
+DFTsolver<OrbitalsType>::DFTsolver(Hamiltonian<OrbitalsType>* hamiltonian,
+    ProjectedMatricesInterface* proj_matrices, Energy<OrbitalsType>* energy,
+    Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy, Ions& ions,
+    Rho<OrbitalsType>* rho, DMStrategy* dm_strategy, std::ostream& os)
     : mgmol_strategy_(mgmol_strategy),
       hamiltonian_(hamiltonian),
       proj_matrices_(proj_matrices),
@@ -42,14 +42,14 @@ DFTsolver<T>::DFTsolver(Hamiltonian<T>* hamiltonian,
     {
         case OuterSolverType::ABPG:
         {
-            orbitals_stepper_ = new ABPG<T>(
+            orbitals_stepper_ = new ABPG<OrbitalsType>(
                 hamiltonian_, proj_matrices_, mgmol_strategy, os_);
             break;
         }
 
         case OuterSolverType::NLCG:
         {
-            orbitals_stepper_ = GrassmanCGFactory<T>::create(hamiltonian_,
+            orbitals_stepper_ = GrassmanCGFactory<OrbitalsType>::create(hamiltonian_,
                 proj_matrices_, mgmol_strategy, ions, os_, ct.short_sighted);
 
             break;
@@ -66,14 +66,14 @@ DFTsolver<T>::DFTsolver(Hamiltonian<T>* hamiltonian,
     // )accelerate_=true;
 }
 
-template <class T>
-DFTsolver<T>::~DFTsolver()
+template <class OrbitalsType>
+DFTsolver<OrbitalsType>::~DFTsolver()
 {
     delete orbitals_stepper_;
 }
 
-template <class T>
-void DFTsolver<T>::printEnergy(const short step) const
+template <class OrbitalsType>
+void DFTsolver<OrbitalsType>::printEnergy(const short step) const
 {
     if (onpe0)
     {
@@ -101,22 +101,22 @@ void DFTsolver<T>::printEnergy(const short step) const
     }
 }
 
-template <class T>
-bool DFTsolver<T>::checkPrintResidual(const short step) const
+template <class OrbitalsType>
+bool DFTsolver<OrbitalsType>::checkPrintResidual(const short step) const
 {
     Control& ct(*(Control::instance()));
     return (ct.iprint_residual > 0) ? !(step % ct.iprint_residual) : false;
 }
 
-template <class T>
-bool DFTsolver<T>::testUpdatePot() const
+template <class OrbitalsType>
+bool DFTsolver<OrbitalsType>::testUpdatePot() const
 {
     Control& ct(*(Control::instance()));
     return (it_scf_ > ct.max_changes_pot);
 }
 
-template <class T>
-bool DFTsolver<T>::checkConvPot() const
+template <class OrbitalsType>
+bool DFTsolver<OrbitalsType>::checkConvPot() const
 {
     Control& ct(*(Control::instance()));
     Potentials& pot(hamiltonian_->potential());
@@ -132,8 +132,8 @@ bool DFTsolver<T>::checkConvPot() const
 // 1 if not converged yet,
 // -1 if not reaching minimum convergence
 // -2 if failing to converge
-template <class T>
-int DFTsolver<T>::checkConvergenceEnergy(
+template <class OrbitalsType>
+int DFTsolver<OrbitalsType>::checkConvergenceEnergy(
     const short step, const short max_steps)
 {
     Control& ct(*(Control::instance()));
@@ -185,8 +185,8 @@ int DFTsolver<T>::checkConvergenceEnergy(
     return 1;
 }
 
-template <class T>
-double DFTsolver<T>::evaluateEnergy(const T& orbitals, const bool print_flag)
+template <class OrbitalsType>
+double DFTsolver<OrbitalsType>::evaluateEnergy(const OrbitalsType& orbitals, const bool print_flag)
 {
     // save energy recent history
     eks_history_[1] = eks_history_[0];
@@ -202,8 +202,8 @@ double DFTsolver<T>::evaluateEnergy(const T& orbitals, const bool print_flag)
     return eks_history_[0];
 }
 
-template <class T>
-int DFTsolver<T>::solve(T& orbitals, T& work_orbitals, Ions& ions,
+template <class OrbitalsType>
+int DFTsolver<OrbitalsType>::solve(OrbitalsType& orbitals, OrbitalsType& work_orbitals, Ions& ions,
     const short max_steps, const short iprint, double& last_eks)
 {
     solve_tm_.start();
@@ -406,8 +406,8 @@ int DFTsolver<T>::solve(T& orbitals, T& work_orbitals, Ions& ions,
     return retval;
 }
 
-template <class T>
-void DFTsolver<T>::printTimers(std::ostream& os)
+template <class OrbitalsType>
+void DFTsolver<OrbitalsType>::printTimers(std::ostream& os)
 {
     solve_tm_.print(os);
 }

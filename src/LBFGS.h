@@ -22,17 +22,17 @@
 
 class MasksSet;
 class Electrostatic;
-template <class T>
+template <class OrbitalsType>
 class MGmol;
 class KBPsiMatrixInterface;
 
-template <class T>
-class LBFGS : public IonicAlgorithm<T>
+template <class OrbitalsType>
+class LBFGS : public IonicAlgorithm<OrbitalsType>
 {
 private:
-    T** orbitals_;
+    OrbitalsType** orbitals_;
     Ions& ions_;
-    Rho<T>& rho_;
+    Rho<OrbitalsType>& rho_;
     LBFGS_IonicStepper* stepper_;
     std::shared_ptr<LocalizationRegions> lrs_;
     ClusterOrbitals* local_cluster_;
@@ -43,20 +43,20 @@ private:
     std::shared_ptr<LocalizationRegions> ref_lrs_;
     MasksSet* ref_masks_;
     MasksSet* ref_corrmasks_;
-    T* ref_orbitals_;
+    OrbitalsType* ref_orbitals_;
     pb::GridFunc<POTDTYPE>* vh_init_;
 
     double etot_i_[3];
 
-    MGmol<T>& mgmol_strategy_;
+    MGmol<OrbitalsType>& mgmol_strategy_;
 
     void updateRefMasks();
 
 public:
-    LBFGS(T** orbitals, Ions& ions, Rho<T>& rho, ConstraintSet& constraints,
+    LBFGS(OrbitalsType** orbitals, Ions& ions, Rho<OrbitalsType>& rho, ConstraintSet& constraints,
         std::shared_ptr<LocalizationRegions> lrs,
         ClusterOrbitals* local_cluster, MasksSet& masks, MasksSet& corrmasks,
-        Electrostatic& electrostat, const double dt, MGmol<T>&);
+        Electrostatic& electrostat, const double dt, MGmol<OrbitalsType>&);
 
     ~LBFGS() override;
 

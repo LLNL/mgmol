@@ -23,8 +23,8 @@
 
 //#define DEBUG 1
 
-template <class T>
-int MGmol<T>::readLRsFromInput(std::ifstream* tfile)
+template <class OrbitalsType>
+int MGmol<OrbitalsType>::readLRsFromInput(std::ifstream* tfile)
 {
     Control& ct(*(Control::instance()));
 
@@ -162,8 +162,8 @@ int MGmol<T>::readLRsFromInput(std::ifstream* tfile)
     return ct.numst;
 }
 
-template <class T>
-int MGmol<T>::readCoordinates(std::ifstream* tfile, const bool cell_relative)
+template <class OrbitalsType>
+int MGmol<OrbitalsType>::readCoordinates(std::ifstream* tfile, const bool cell_relative)
 {
     Control& ct = *(Control::instance());
     if (ct.verbose > 0) printWithTimeStamp("Read atomic coordinates...", os_);
@@ -203,8 +203,8 @@ int MGmol<T>::readCoordinates(std::ifstream* tfile, const bool cell_relative)
     return 0;
 }
 
-template <class T>
-int MGmol<T>::readCoordinates(
+template <class OrbitalsType>
+int MGmol<OrbitalsType>::readCoordinates(
     const std::string& filename, const bool cell_relative)
 {
     Control& ct = *(Control::instance());

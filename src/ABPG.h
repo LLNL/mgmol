@@ -21,17 +21,17 @@
 
 class ProjectedMatricesInterface;
 
-template <class T>
-class ABPG : public OrbitalsStepper<T>
+template <class OrbitalsType>
+class ABPG : public OrbitalsStepper<OrbitalsType>
 {
-    Hamiltonian<T>* hamiltonian_;
+    Hamiltonian<OrbitalsType>* hamiltonian_;
     ProjectedMatricesInterface* proj_matrices_;
-    Energy<T>* energy_;
-    MGmol<T>* mgmol_strategy_;
+    Energy<OrbitalsType>* energy_;
+    MGmol<OrbitalsType>* mgmol_strategy_;
 
     std::ostream& os_;
 
-    Mixing<T>* wf_mix_;
+    Mixing<OrbitalsType>* wf_mix_;
     static bool pbset_;
 
     static Timer abpg_tm_;
@@ -39,12 +39,12 @@ class ABPG : public OrbitalsStepper<T>
     static Timer comp_res_tm_;
     static Timer update_states_tm_;
 
-    void update_states(T& orbitals, T& res, T& work_orbitals,
+    void update_states(OrbitalsType& orbitals, OrbitalsType& res, OrbitalsType& work_orbitals,
         const double precond_factor, const bool accelerate);
 
 public:
-    ABPG(Hamiltonian<T>* hamiltonian, ProjectedMatricesInterface* proj_matrices,
-        MGmol<T>* mgmol_strategy, std::ostream& os)
+    ABPG(Hamiltonian<OrbitalsType>* hamiltonian, ProjectedMatricesInterface* proj_matrices,
+        MGmol<OrbitalsType>* mgmol_strategy, std::ostream& os)
         : hamiltonian_(hamiltonian),
           proj_matrices_(proj_matrices),
           mgmol_strategy_(mgmol_strategy),
@@ -62,10 +62,10 @@ public:
         }
     }
 
-    void setup(T&) override;
+    void setup(OrbitalsType&) override;
 
-    int updateWF(T& orbitals, Ions& ions, const double precond_factor,
-        const bool orthof, T& work_orbitals, const bool accelerate,
+    int updateWF(OrbitalsType& orbitals, Ions& ions, const double precond_factor,
+        const bool orthof, OrbitalsType& work_orbitals, const bool accelerate,
         const bool print_res, const double atol) override;
 
     void restartMixing() override
@@ -76,16 +76,16 @@ public:
     static void printTimers(std::ostream& os);
 };
 
-template <typename T>
-Timer ABPG<T>::abpg_tm_("abpg_line_min");
-template <typename T>
-Timer ABPG<T>::abpg_nl_update_tm_("abpg_nl_update");
-template <typename T>
-Timer ABPG<T>::comp_res_tm_("abpg_comp_residuals_st");
-template <typename T>
-Timer ABPG<T>::update_states_tm_("abpg_update_states");
+template <typename OrbitalsType>
+Timer ABPG<OrbitalsType>::abpg_tm_("abpg_line_min");
+template <typename OrbitalsType>
+Timer ABPG<OrbitalsType>::abpg_nl_update_tm_("abpg_nl_update");
+template <typename OrbitalsType>
+Timer ABPG<OrbitalsType>::comp_res_tm_("abpg_comp_residuals_st");
+template <typename OrbitalsType>
+Timer ABPG<OrbitalsType>::update_states_tm_("abpg_update_states");
 
-template <typename T>
-bool ABPG<T>::pbset_ = false;
+template <typename OrbitalsType>
+bool ABPG<OrbitalsType>::pbset_ = false;
 
 #endif
