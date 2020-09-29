@@ -58,7 +58,6 @@ OrbitalsTransform::OrbitalsTransform(
 
 OrbitalsTransform::~OrbitalsTransform()
 {
-    delete a_;
     for (int k = 0; k < 2 * NDIM; k++)
     {
         delete r_[k];

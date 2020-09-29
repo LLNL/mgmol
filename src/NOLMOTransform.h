@@ -118,6 +118,7 @@ public:
 
     ~NOLMOTransform() override
     {
+        delete a_;
         for (int k = 0; k < 2 * NDIM; k++)
         {
             assert(b_[k] != NULL);
