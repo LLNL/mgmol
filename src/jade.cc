@@ -502,7 +502,7 @@ double jade(std::vector<dist_matrix::DistMatrix<double>*>& rmat,
                 // update columns ip of r_
                 for (int k = 0; k < m; k++)
                 {
-                    assert(ip < r_[k]->nb());
+                    assert(ip < rmat[k]->nb());
                     rmat[k]->assignColumn(
                         &r_loc[k][m_loc * ip], actual[ip] - offset_);
                 }
