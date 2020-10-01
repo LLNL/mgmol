@@ -600,6 +600,9 @@ int main(int argc, char** argv)
             int npes        = mmpi.size();
             setSparseDistMatriConsolidationNumber(npes);
         }
+#ifdef HAVE_MAGMA
+        ReplicatedMatrix::setMPIcomm(mmpi.commSpin());
+#endif
 
         if (myPEenv.color() > 0)
         {

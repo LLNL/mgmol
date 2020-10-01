@@ -12,6 +12,7 @@
 #ifdef HAVE_MAGMA
 
 #include <memory>
+#include <mpi.h>
 #include <string>
 #include <vector>
 
@@ -22,6 +23,7 @@ class ReplicatedVector;
 class ReplicatedMatrix
 {
     static MPI_Comm comm_;
+    static bool onpe0_;
 
     // matrix size
     int dim_;
@@ -32,10 +34,21 @@ class ReplicatedMatrix
     // matrix data
     std::unique_ptr<double, void (*)(double*)> device_data_;
 
+    std::string name_;
+
 public:
     friend class ReplicatedVector;
 
-    static void setMPIcomm(MPI_Comm comm) { comm_ = comm; }
+    static void setMPIcomm(MPI_Comm comm)
+    {
+        comm_ = comm;
+        int mpi_rank;
+        MPI_Comm_rank(comm_, &mpi_rank);
+        if (mpi_rank == 0)
+            onpe0_ = true;
+        else
+            onpe0_ = false;
+    }
 
     ReplicatedMatrix(const std::string name, const int m, const int n);
     ReplicatedMatrix(const std::string name, const int n);
@@ -47,6 +60,8 @@ public:
     ReplicatedMatrix(const ReplicatedMatrix&);
 
     ~ReplicatedMatrix();
+
+    std::string name() { return name_; }
 
     int m() const { return dim_; }
 
