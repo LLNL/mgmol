@@ -940,8 +940,6 @@ void LocGridOrbitals::multiply_by_matrix(
     // loop over subdomains
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
-        // TODO
-        assert(false);
         ORBDTYPE* phi = getPsi(0, iloc);
 
         matrixToLocalMatrix(iloc, work_matrix, matrix_local);

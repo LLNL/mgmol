@@ -42,8 +42,8 @@ private:
     // timers
     static Timer precond_tm_;
 
-    std::map<int, GridMask*> getGid2Masks(
-        MasksSet* currentMasks, std::shared_ptr<LocalizationRegions> lrs);
+    std::map<int, GridMask*> getGid2Masks(MasksSet* currentMasks,
+        const std::shared_ptr<LocalizationRegions>& lrs);
 
 public:
     OrbitalsPreconditioning()
@@ -59,7 +59,7 @@ public:
     ~OrbitalsPreconditioning();
 
     void setup(T& orbitals, const short mg_levels, const short lap_type,
-        MasksSet*, std::shared_ptr<LocalizationRegions>);
+        MasksSet*, const std::shared_ptr<LocalizationRegions>&);
     void precond_mg(T& orbitals);
     void setGamma(const pb::Lap<ORBDTYPE>& lapOper, const Potentials& pot,
         const short mg_levels, ProjectedMatricesInterface* proj_matrices);

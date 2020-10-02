@@ -63,7 +63,7 @@ void EnergySpreadPenalty<T>::addResidual(T& phi, T& res)
     mmpi.allreduce(&max_spread2, 1, MPI_MAX);
     if (onpe0)
         std::cout << "Max. spread = " << std::setprecision(4)
-                  << sqrt(max_spread2) << std::endl;
+                  << std::sqrt(max_spread2) << std::endl;
 
     computeAndAddResidualSpreadPenalty(
         spread2, factors, centers, gids, phi, res);

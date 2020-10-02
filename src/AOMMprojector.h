@@ -36,7 +36,7 @@ private:
 
 public:
     AOMMprojector(
-        LocGridOrbitals& phi, std::shared_ptr<LocalizationRegions> lrs);
+        LocGridOrbitals& phi, const std::shared_ptr<LocalizationRegions>& lrs);
     ~AOMMprojector();
 
     void projectOut(LocGridOrbitals& phi);
