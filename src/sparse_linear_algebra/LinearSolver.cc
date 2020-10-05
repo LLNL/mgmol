@@ -134,7 +134,8 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
                 hh[ptih + k1] = c[k1] * t + s[k1] * hh[ptih + k];
                 hh[ptih + k]  = -s[k1] * t + c[k1] * hh[ptih + k];
             }
-            gam = sqrt(pow(hh[ptih + i], 2) + pow(hh[ptih + i1], 2));
+            gam = std::sqrt(
+                std::pow(hh[ptih + i], 2) + std::pow(hh[ptih + i1], 2));
             /*-------------------- check if gamma is zero */
             if (gam == 0.0) gam = epsmac;
             /*-------------------- get  next plane rotation    */
@@ -144,7 +145,7 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
             rs[i]  = c[i] * rs[i];
             /*-------------------- get residual norm + test convergence*/
             hh[ptih + i] = c[i] * hh[ptih + i] + s[i] * hh[ptih + i1];
-            beta         = fabs(rs[i1]);
+            beta         = std::abs(rs[i1]);
             //              if(onpe0 && fits != NULL && myid == 0 && DEBUG)
             //	               fprintf(fits,"%8d   %10.2e\n", its, beta) ;
             /*-------------------- end second while loop [Arnoldi] */
@@ -194,17 +195,17 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
 
     const int n = LSMat.n();
 
-    int im1    = im + 1;
-    int imsz   = im1 * n;
-    double* vv = new double[(imsz)];
-    memset(vv, 0, imsz * sizeof(double));
-    imsz      = im * n;
-    double* z = new double[(imsz)];
-    memset(z, 0, imsz * sizeof(double));
-    imsz       = im1 * (im + 3);
-    double* hh = new double[(imsz)];
-    memset(hh, 0, imsz * sizeof(double));
-    double* c  = hh + im1 * im;
+    int im1  = im + 1;
+    int imsz = im1 * n;
+    std::unique_ptr<double[]> vv(new double[imsz]);
+    memset(vv.get(), 0, imsz * sizeof(double));
+    imsz = im * n;
+    std::unique_ptr<double[]> z(new double[imsz]);
+    memset(z.get(), 0, imsz * sizeof(double));
+    imsz = im1 * (im + 3);
+    std::unique_ptr<double[]> hh(new double[imsz]);
+    memset(hh.get(), 0, imsz * sizeof(double));
+    double* c  = hh.get() + im1 * im;
     double* s  = c + im1;
     double* rs = s + im1;
     /*-------------------- outer loop starts here */
@@ -215,10 +216,10 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
     while (its < maxits)
     {
         /*-------------------- compute initial residual vector */
-        LSMat.matvec(sol, vv);
+        LSMat.matvec(sol, vv.get());
         for (j = 0; j < n; j++)
             vv[j] = rhs[j] - vv[j]; /*  vv[0]= initial residual */
-        beta = DNRM2(&n, vv, &one);
+        beta = DNRM2(&n, vv.get(), &one);
         /*-------------------- print info --------- */
         //       if (onpe0 && fits != NULL && its == 0 && myid == 0 && DEBUG)
         //         printf("%8d   %10.2e\n",its, beta) ;
@@ -226,7 +227,7 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
         if (beta == 0.0) break;
         t = 1.0 / beta;
         /*--------------------   normalize:  vv    =  vv   / beta */
-        DSCAL(&n, &t, vv, &one);
+        DSCAL(&n, &t, vv.get(), &one);
         if (its == 0) eps1 = tol * beta;
         /*--------------------initialize 1-st term  of rhs of hessenberg mtx */
         rs[0] = beta;
@@ -286,7 +287,8 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
                 hh[ptih + k]  = -s[k1] * t + c[k1] * hh[ptih + k];
             }
 
-            gam = sqrt(pow(hh[ptih + i], 2) + pow(hh[ptih + i1], 2));
+            gam = std::sqrt(
+                std::pow(hh[ptih + i], 2) + std::pow(hh[ptih + i1], 2));
             /*-------------------- check if gamma is zero */
             if (gam == 0.0) gam = epsmac;
             /*-------------------- get  next plane rotation    */
@@ -296,7 +298,7 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
             rs[i]  = c[i] * rs[i];
             /*-------------------- get residual norm + test convergence*/
             hh[ptih + i] = c[i] * hh[ptih + i] + s[i] * hh[ptih + i1];
-            beta         = fabs(rs[i1]);
+            beta         = std::abs(rs[i1]);
             //              if(onpe0 && fits != NULL && myid == 0 && DEBUG)
             //	               fprintf(fits,"%8d   %10.2e\n", its, beta) ;
             /*-------------------- end second while loop [Arnoldi] */
@@ -327,9 +329,6 @@ int LinearSolver::fgmres(const LinearSolverMatrix<lsdatatype>& LSMat,
     /*-------------------- prepare to return */
     iters_   = its;
     resnorm_ = beta;
-    delete[] vv;
-    delete[] z;
-    delete[] hh;
     return (retval);
 }
 /*-----------------end of fgmres ---------------------------------------*/
@@ -369,7 +368,7 @@ double LinearSolver::computeEigMin(
         memcpy(rhs, solptr, n * sizeof(double));
         // check for convergence
         beta -= eigmin;
-        if (fabs(beta) < 1.0e-3) break;
+        if (std::abs(beta) < 1.0e-3) break;
 
         // reset beta
         beta = eigmin;
@@ -411,7 +410,7 @@ double LinearSolver::computeEigMax(
         memcpy(rhs, solptr, n * sizeof(double));
         // check for convergence
         beta -= eigmax;
-        if (fabs(beta) < 1.0e-3) break;
+        if (std::abs(beta) < 1.0e-3) break;
 
         // reset beta
         beta = eigmax;
@@ -572,14 +571,13 @@ int LinearSolver::fgmres_mp(LinearSolverMatrix<lsdatatype>& LSMat,
             {
                 k1            = k - 1;
                 t             = (double)hh[ptih + k1];
-                t             = (double)hh[ptih + k1];
                 hh[ptih + k1] = (float)((double)c[k1] * t
                                         + (double)s[k1] * (double)hh[ptih + k]);
                 hh[ptih + k]  = (float)((double)-s[k1] * t
                                        + (double)c[k1] * (double)hh[ptih + k]);
             }
-            gam = sqrt(
-                pow((double)hh[ptih + i], 2) + pow((double)hh[ptih + i1], 2));
+            gam = std::sqrt(std::pow((double)hh[ptih + i], 2)
+                            + std::pow((double)hh[ptih + i1], 2));
             /*-------------------- check if gamma is zero */
             if (gam == 0.0) gam = epsmac;
             /*-------------------- get  next plane rotation    */
@@ -590,7 +588,7 @@ int LinearSolver::fgmres_mp(LinearSolverMatrix<lsdatatype>& LSMat,
             /*-------------------- get residual norm + test convergence*/
             hh[ptih + i] = (float)((double)c[i] * (double)hh[ptih + i]
                                    + (double)s[i] * (double)hh[ptih + i1]);
-            beta         = fabs((double)rs[i1]);
+            beta         = std::abs((double)rs[i1]);
             //              if(onpe0 && fits != NULL && myid == 0 && DEBUG)
             //	               fprintf(fits,"%8d   %10.2e\n", its, beta) ;
             /*-------------------- end second while loop [Arnoldi] */

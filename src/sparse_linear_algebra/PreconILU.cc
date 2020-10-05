@@ -176,10 +176,10 @@ void PreconILU<T>::qsplitC(T* a, int* ind, const int n, const int Ncut)
 /* outer loop -- while mid != ncut */
 label1:
     mid    = first;
-    abskey = fabs(a[mid]);
+    abskey = std::abs(a[mid]);
     for (int j = first + 1; j <= last; j++)
     {
-        if (fabs(a[j]) > abskey)
+        if (std::abs(a[j]) > abskey)
         {
             tmp      = a[++mid];
             itmp     = ind[mid];
@@ -228,10 +228,10 @@ void PreconILU<T>::qsplitC(
 /* outer loop -- while mid != ncut */
 label1:
     mid    = first;
-    abskey = fabs(a[mid]);
+    abskey = std::abs(a[mid]);
     for (int j = first + 1; j <= last; j++)
     {
-        if (fabs(a[j]) > abskey)
+        if (std::abs(a[j]) > abskey)
         {
             tmp      = a[++mid];
             itmp     = ind[mid];
@@ -647,7 +647,7 @@ int PreconILU<T>::ilu0(LinearSolverMatrix<T2>& csmat_)
         (*U_).initRow(lenu, iU, wU);
 
         /*----- update diagonal with modification ------ */
-        if (fabs(dd) < MAT_TOL) dd = 1.0e-6;
+        if (std::abs(dd) < MAT_TOL) dd = 1.0e-6;
         T dval = 1.0 / dd;
         D_.push_back(dval);
         /* perform scaling of L-part of column and update L matrix */
@@ -702,7 +702,7 @@ int PreconILU<T>::milut(LinearSolverMatrix<lsdatatype>& csmat_)
         dstart  = csmat_.getDataIterator(k1);
         dend    = csmat_.getDataIterator(k2);
         for (dptr = dstart; dptr != dend; ++dptr)
-            tnorm += (T)fabs(*dptr);
+            tnorm += (T)std::abs(*dptr);
         if (tnorm == 0.0)
         {
             printf("Zero row encountered in MILUT - row %d \n", i);
@@ -743,7 +743,7 @@ int PreconILU<T>::milut(LinearSolverMatrix<lsdatatype>& csmat_)
         T dsum       = 0.0;
         int dropctrU = 0;
         int dropctrL = 0;
-        T dd0        = fabs(dd);
+        T dd0        = std::abs(dd);
         T ddr        = dd0 / tnorm0;
         /*-------------------- eliminate column */
         ustart  = iU.begin();
@@ -842,7 +842,7 @@ int PreconILU<T>::milut(LinearSolverMatrix<lsdatatype>& csmat_)
         /*-------------------- first prune col. of L to remove small terms */
         for (row = iL, ldptr = wL; row != lend; ++row, ++ldptr)
         {
-            if (fabs(*ldptr) < droptol_)
+            if (std::abs(*ldptr) < droptol_)
             {
                 dsum += (*ldptr);
                 *ldptr = 0.0;
@@ -865,7 +865,7 @@ int PreconILU<T>::milut(LinearSolverMatrix<lsdatatype>& csmat_)
         /* ------ select diagonal modification using optimal spreading ----*/
         T alpha        = 0.0;
         T beta         = 0.0;
-        const T gamma  = fabs(dsum);
+        const T gamma  = std::abs(dsum);
         const short sr = dsum < 0.0 ? -1 : 1;
         const short sd = dd < 0.0 ? -1 : 1;
 
@@ -879,11 +879,15 @@ int PreconILU<T>::milut(LinearSolverMatrix<lsdatatype>& csmat_)
             {
                 if (sr * sd == 1)
                 {
-                    alpha = sr * (sqrt(tval) + ddr * (gamma - sqrt(tval)));
+                    alpha
+                        = sr
+                          * (std::sqrt(tval) + ddr * (gamma - std::sqrt(tval)));
                 }
                 else
                 {
-                    alpha = sr * (sqrt(tval) + droptol_ * (gamma - sqrt(tval)));
+                    alpha = sr
+                            * (std::sqrt(tval)
+                                  + droptol_ * (gamma - std::sqrt(tval)));
                 }
             }
             else
@@ -898,9 +902,9 @@ int PreconILU<T>::milut(LinearSolverMatrix<lsdatatype>& csmat_)
                 }
             }
             T bf = 1.0;
-            T mu = (-1 + sqrt((tnorm) / (gamma * gamma - alpha * alpha)))
-                   / pow(fabs(dd + alpha), 2.0);
-            beta = bf * (-1 / (1 + (mu * pow(fabs(dd + alpha), 2.0))));
+            T mu = (-1 + std::sqrt((tnorm) / (gamma * gamma - alpha * alpha)))
+                   / std::pow(std::abs(dd + alpha), 2.0);
+            beta = bf * (-1 / (1 + (mu * std::pow(std::abs(dd + alpha), 2.0))));
         }
         /*----- update diagonal with modification ------ */
         T dval = 1.0 / (dd + alpha);
@@ -914,7 +918,7 @@ int PreconILU<T>::milut(LinearSolverMatrix<lsdatatype>& csmat_)
         for (ldptr = wL; ldptr != ldend; ++ldptr)
         {
             (*ldptr) *= (1 + 1.0 * beta);
-            dnormL[i] += fabs((*ldptr));
+            dnormL[i] += std::abs((*ldptr));
         }
         /* perform scaling of L-part of column and update L matrix */
         const T t = D_[i];
@@ -969,7 +973,7 @@ int PreconILU<T>::ilut(LinearSolverMatrix<lsdatatype>& csmat_)
         dstart  = csmat_.getDataIterator(k1);
         dend    = csmat_.getDataIterator(k2);
         for (dptr = dstart; dptr != dend; ++dptr)
-            tnorm += (T)fabs(*dptr);
+            tnorm += (T)std::abs(*dptr);
         if (tnorm == 0.0)
         {
             printf("Zero row encountered in MILUT - row %d \n", i);
@@ -1121,7 +1125,7 @@ int PreconILU<T>::diag(LinearSolverMatrix<lsdatatype>& csmat)
         for (int j = k1; j < k2; j++)
         {
             T val = (T)csmat.getRowEntry(j);
-            tnorm += fabs(val);
+            tnorm += std::abs(val);
         }
         T dval = 1.0 / tnorm;
         D_.push_back(dval);

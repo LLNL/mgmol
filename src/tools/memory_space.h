@@ -223,7 +223,7 @@ struct Memory<T, MemorySpace::Host>
 
     static void free(T* ptr)
     {
-        std::free(ptr);
+        delete[] ptr;
         ptr = nullptr;
     }
 
