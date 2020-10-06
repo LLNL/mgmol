@@ -14,6 +14,7 @@
 
 #include "global.h"
 
+#include "ReplicatedMatrix.h"
 #include "ABPG.h"
 #include "AOMMprojector.h"
 #include "AndersonMix.h"
@@ -262,7 +263,23 @@ int MGmol<OrbitalsType>::initial()
 
     // initialize data distribution objects
     bool with_spin = (mmpi.nspin() > 1);
+
+    // we support using ReplicatedMatrix on GPU only for 
+    // a limited set of options
+    bool use_replicated_matrix = (
+        (ct.OuterSolver() == OuterSolverType::ABPG) &&
+        (ct.DM_solver() == DMNonLinearSolverType::Mixing)
+        && !ct.isLocMode() );
+//use_replicated_matrix = false;
+
     if (ct.Mehrstellen())
+#ifdef HAVE_MAGMA
+        if (use_replicated_matrix)
+        proj_matrices_ = new ProjectedMatricesMehrstellen<
+            ReplicatedMatrix>(
+            ct.numst, with_spin, ct.occ_width);
+        else
+#endif
         proj_matrices_ = new ProjectedMatricesMehrstellen<
             dist_matrix::DistMatrix<DISTMATDTYPE>>(
             ct.numst, with_spin, ct.occ_width);
@@ -270,6 +287,13 @@ int MGmol<OrbitalsType>::initial()
         proj_matrices_ = new ProjectedMatricesSparse(
             ct.numst, ct.occ_width, lrs_, local_cluster_);
     else
+#ifdef HAVE_MAGMA
+        if (use_replicated_matrix)
+        proj_matrices_
+            = new ProjectedMatrices<ReplicatedMatrix>(
+                ct.numst, with_spin, ct.occ_width);
+        else
+#endif
         proj_matrices_
             = new ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>(
                 ct.numst, with_spin, ct.occ_width);
@@ -742,6 +766,24 @@ void MGmol<OrbitalsType>::printEigAndOcc()
             && ct.occupationWidthIsZero())
         && onpe0)
     {
+    bool printflag = false;
+#ifdef HAVE_MAGMA
+    // try with ReplicatedMatrix first
+    {
+        ProjectedMatrices<ReplicatedMatrix>* projmatrices
+            = dynamic_cast<
+                ProjectedMatrices<ReplicatedMatrix>*>(
+                proj_matrices_);
+        if(projmatrices)
+        {
+        projmatrices->printEigenvalues(os_);
+        projmatrices->printOccupations(os_);
+        printflag = true;
+        }
+    }
+#endif
+    if(!printflag)
+    {
         ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
             = dynamic_cast<
                 ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
@@ -750,6 +792,7 @@ void MGmol<OrbitalsType>::printEigAndOcc()
 
         projmatrices->printEigenvalues(os_);
         projmatrices->printOccupations(os_);
+    }
     }
 }
 

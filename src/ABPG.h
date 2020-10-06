@@ -25,7 +25,6 @@ template <class OrbitalsType>
 class ABPG : public OrbitalsStepper<OrbitalsType>
 {
     Hamiltonian<OrbitalsType>* hamiltonian_;
-    ProjectedMatricesInterface* proj_matrices_;
     Energy<OrbitalsType>* energy_;
     MGmol<OrbitalsType>* mgmol_strategy_;
 
@@ -45,10 +44,8 @@ class ABPG : public OrbitalsStepper<OrbitalsType>
 
 public:
     ABPG(Hamiltonian<OrbitalsType>* hamiltonian,
-        ProjectedMatricesInterface* proj_matrices,
         MGmol<OrbitalsType>* mgmol_strategy, std::ostream& os)
         : hamiltonian_(hamiltonian),
-          proj_matrices_(proj_matrices),
           mgmol_strategy_(mgmol_strategy),
           os_(os),
           wf_mix_(nullptr)

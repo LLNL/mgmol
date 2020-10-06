@@ -12,9 +12,9 @@
 #ifdef HAVE_MAGMA
 
 #include <memory>
-#include <mpi.h>
 #include <string>
 #include <vector>
+#include <mpi.h>
 
 class ReplicatedVector;
 #include "SquareLocalMatrices.h"
@@ -44,10 +44,8 @@ public:
         comm_ = comm;
         int mpi_rank;
         MPI_Comm_rank(comm_, &mpi_rank);
-        if (mpi_rank == 0)
-            onpe0_ = true;
-        else
-            onpe0_ = false;
+        if(mpi_rank==0)onpe0_=true;
+        else onpe0_=false;
     }
 
     ReplicatedMatrix(const std::string name, const int m, const int n);
@@ -61,7 +59,7 @@ public:
 
     ~ReplicatedMatrix();
 
-    std::string name() { return name_; }
+    std::string name(){ return name_; }
 
     int m() const { return dim_; }
 

@@ -127,6 +127,8 @@ protected:
 
     void setupMPI(const std::vector<std::vector<int>>&);
 
+    std::string getMatrixType();
+
 public:
     ProjectedMatrices(const int, const bool with_spin, const double occ_width);
     ~ProjectedMatrices() override;

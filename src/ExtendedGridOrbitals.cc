@@ -1199,8 +1199,7 @@ double ExtendedGridOrbitals::dotProductDiagonal(
 
     std::vector<DISTMATDTYPE> ss(numst_);
     computeDiagonalElementsDotProduct(orbitals, ss);
-
-    return proj_matrices_->getTraceDiagProductWithInvS(ss);
+    return  proj_matrices_->getTraceDiagProductWithInvS(ss);
 }
 
 double ExtendedGridOrbitals::dotProductSimple(
@@ -1300,12 +1299,6 @@ void ExtendedGridOrbitals::orthonormalizeLoewdin(const bool overlap_uptodate,
         (*MPIdata::sout) << "ExtendedGridOrbitals::orthonormalizeLoewdin()"
                          << std::endl;
 
-    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
-        = dynamic_cast<
-            ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
-            proj_matrices_);
-    assert(projmatrices);
-
     if (!overlap_uptodate) computeGram(0);
 
     SquareLocalMatrices<MATDTYPE>* localP = matrixTransform;
@@ -1314,12 +1307,41 @@ void ExtendedGridOrbitals::orthonormalizeLoewdin(const bool overlap_uptodate,
 
     incrementIterativeIndex();
 
-    projmatrices->computeLoewdinTransform(
-        *localP, getIterativeIndex(), update_matrices);
+    bool multbymat = false;
+#ifdef HAVE_MAGMA
+    // try with ReplicatedMatrix first
+    {
+        ProjectedMatrices<ReplicatedMatrix>* projmatrices
+            = dynamic_cast<
+                ProjectedMatrices<ReplicatedMatrix>*>(
+                proj_matrices_);
+        if(projmatrices)
+        {
+            projmatrices->computeLoewdinTransform(
+                *localP, getIterativeIndex(), update_matrices);
+            multiplyByMatrix(*localP);
 
-    multiplyByMatrix(*localP);
+            projmatrices->setGram2Id(getIterativeIndex());
 
-    projmatrices->setGram2Id(getIterativeIndex());
+            multbymat=true;
+        }
+    }
+#endif
+    if(!multbymat)
+    {
+        ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
+            = dynamic_cast<
+                ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
+                proj_matrices_);
+        if(projmatrices)
+        {
+            projmatrices->computeLoewdinTransform(
+                *localP, getIterativeIndex(), update_matrices);
+            multiplyByMatrix(*localP);
+
+            projmatrices->setGram2Id(getIterativeIndex());
+        }
+    }
 
     if (matrixTransform == nullptr) delete localP;
 }

@@ -23,7 +23,7 @@ using MemoryDev = MemorySpace::Memory<double, MemorySpace::Device>;
 constexpr double gpuroundup = 32;
 
 MPI_Comm ReplicatedMatrix::comm_ = MPI_COMM_NULL;
-bool ReplicatedMatrix::onpe0_    = false;
+bool ReplicatedMatrix::onpe0_ = false;
 
 void rotateSym(ReplicatedMatrix& mat, const ReplicatedMatrix& rotation_matrix,
     ReplicatedMatrix& work)
@@ -149,8 +149,7 @@ void ReplicatedMatrix::add(const SquareSubMatrix<double>& mat)
         }
     }
 
-    std::unique_ptr<double, void (*)(double*)> src_dev(
-        MemoryDev::allocate(dim_ * ld_), MemoryDev::free);
+    std::unique_ptr<double, void (*)(double*)> src_dev(MemoryDev::allocate(dim_ * ld_), MemoryDev::free);
 
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
@@ -159,8 +158,8 @@ void ReplicatedMatrix::add(const SquareSubMatrix<double>& mat)
         magma_singleton.queue_);
 
     // add to object data
-    magmablas_dgeadd(dim_, dim_, 1., src_dev.get(), ld_, device_data_.get(),
-        ld_, magma_singleton.queue_);
+    magmablas_dgeadd(dim_, dim_, 1., src_dev.get(), ld_,
+        device_data_.get(), ld_, magma_singleton.queue_);
 }
 
 void ReplicatedMatrix::init(const double* const ha, const int lda)
@@ -305,6 +304,8 @@ int ReplicatedMatrix::potri(char uplo)
     if (info != 0)
         std::cerr << "magma_dpotri_gpu failed, info = " << info << std::endl;
 
+
+
     return info;
 }
 
@@ -439,6 +440,8 @@ void ReplicatedMatrix::setVal(const int i, const int j, const double val)
 
 void ReplicatedMatrix::setDiagonal(const std::vector<double>& diag_values)
 {
+    clear();
+
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
     magma_dsetvector(dim_, diag_values.data(), 1, device_data_.get(), ld_ + 1,
@@ -450,11 +453,11 @@ double ReplicatedMatrix::trace() const
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
     // this is a little contorted, but it works for now...
-    std::unique_ptr<double, void (*)(double*)> tmp_dev(
-        MemoryDev::allocate(dim_ * ld_), MemoryDev::free);
+    std::unique_ptr<double, void (*)(double*)> 
+        tmp_dev(MemoryDev::allocate(dim_ * ld_), MemoryDev::free);
     const std::vector<double> val(dim_, 1.);
-    magma_dsetvector(
-        dim_, val.data(), 1, tmp_dev.get(), 1, magma_singleton.queue_);
+    magma_dsetvector(dim_, val.data(), 1, tmp_dev.get(), 1,
+        magma_singleton.queue_);
 
     return magma_ddot(dim_, device_data_.get(), ld_ + 1, tmp_dev.get(), 1,
         magma_singleton.queue_);
@@ -466,7 +469,7 @@ double ReplicatedMatrix::traceProduct(const ReplicatedMatrix& matrix) const
 
     double trace = 0.;
     for (int i = 0; i < dim_; i++)
-        trace += magma_ddot(dim_, device_data_.get() + ld_ * i, ld_,
+        trace += magma_ddot(dim_, device_data_.get() + i, ld_,
             matrix.device_data_.get() + matrix.ld_ * i, 1,
             magma_singleton.queue_);
 
@@ -538,13 +541,13 @@ void ReplicatedMatrix::print(std::ostream& os, const int ia, const int ja,
     magma_dgetmatrix(dim_, dim_, device_data_.get(), ld_, mat.data(), dim_,
         magma_singleton.queue_);
 
-    if (onpe0_)
-        for (int i = ia; i < m; i++)
-        {
-            for (int j = ja; j < n; j++)
-                os << mat[i + j * dim_] << "   ";
-            os << std::endl;
-        }
+    if(onpe0_)
+    for (int i = ia; i < m; i++)
+    {
+        for (int j = ja; j < n; j++)
+            os << mat[i + j * dim_] << "   ";
+        os << std::endl;
+    }
 }
 
 void ReplicatedMatrix::printMM(std::ostream& os) const {}

@@ -305,9 +305,7 @@ double GramMatrix<MatrixType>::getTraceDiagProductWithInvS(
 {
     MatrixType diag("diag", dim_, dim_);
     diag.setDiagonal(ddiag);
-
     work_->gemm('n', 'n', 1., diag, *invS_, 0.);
-
     return work_->trace();
 }
 
