@@ -270,7 +270,6 @@ int MGmol<OrbitalsType>::initial()
         (ct.OuterSolver() == OuterSolverType::ABPG) &&
         (ct.DM_solver() == DMNonLinearSolverType::Mixing)
         && !ct.isLocMode() );
-//use_replicated_matrix = false;
 
     if (ct.Mehrstellen())
 #ifdef HAVE_MAGMA
