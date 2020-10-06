@@ -1199,7 +1199,7 @@ double ExtendedGridOrbitals::dotProductDiagonal(
 
     std::vector<DISTMATDTYPE> ss(numst_);
     computeDiagonalElementsDotProduct(orbitals, ss);
-    return  proj_matrices_->getTraceDiagProductWithInvS(ss);
+    return proj_matrices_->getTraceDiagProductWithInvS(ss);
 }
 
 double ExtendedGridOrbitals::dotProductSimple(
@@ -1312,10 +1312,9 @@ void ExtendedGridOrbitals::orthonormalizeLoewdin(const bool overlap_uptodate,
     // try with ReplicatedMatrix first
     {
         ProjectedMatrices<ReplicatedMatrix>* projmatrices
-            = dynamic_cast<
-                ProjectedMatrices<ReplicatedMatrix>*>(
+            = dynamic_cast<ProjectedMatrices<ReplicatedMatrix>*>(
                 proj_matrices_);
-        if(projmatrices)
+        if (projmatrices)
         {
             projmatrices->computeLoewdinTransform(
                 *localP, getIterativeIndex(), update_matrices);
@@ -1323,17 +1322,17 @@ void ExtendedGridOrbitals::orthonormalizeLoewdin(const bool overlap_uptodate,
 
             projmatrices->setGram2Id(getIterativeIndex());
 
-            multbymat=true;
+            multbymat = true;
         }
     }
 #endif
-    if(!multbymat)
+    if (!multbymat)
     {
         ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
             = dynamic_cast<
                 ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
                 proj_matrices_);
-        if(projmatrices)
+        if (projmatrices)
         {
             projmatrices->computeLoewdinTransform(
                 *localP, getIterativeIndex(), update_matrices);

@@ -42,8 +42,8 @@ DFTsolver<OrbitalsType>::DFTsolver(Hamiltonian<OrbitalsType>* hamiltonian,
     {
         case OuterSolverType::ABPG:
         {
-            orbitals_stepper_ = new ABPG<OrbitalsType>(
-                hamiltonian_, mgmol_strategy, os_);
+            orbitals_stepper_
+                = new ABPG<OrbitalsType>(hamiltonian_, mgmol_strategy, os_);
             break;
         }
 

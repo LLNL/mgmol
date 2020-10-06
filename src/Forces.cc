@@ -418,10 +418,9 @@ SquareLocalMatrices<double> Forces<T>::getReplicatedDM()
 #ifdef HAVE_MAGMA
     {
         ProjectedMatrices<ReplicatedMatrix>* projmatrices
-            = dynamic_cast<
-                ProjectedMatrices<ReplicatedMatrix>*>(
+            = dynamic_cast<ProjectedMatrices<ReplicatedMatrix>*>(
                 proj_matrices_);
-        if(projmatrices)return projmatrices->getReplicatedDM();
+        if (projmatrices) return projmatrices->getReplicatedDM();
     }
 #endif
     {
@@ -522,7 +521,7 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
     {
         SquareLocalMatrices<double> dm(getReplicatedDM());
 
-        const int ndim = dm.n();
+        const int ndim                     = dm.n();
         const double* const work_DM_matrix = dm.getSubMatrix();
 
         // loop over all the ions

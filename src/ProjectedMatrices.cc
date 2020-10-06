@@ -65,10 +65,10 @@ ProjectedMatrices<MatrixType>::ProjectedMatrices(
       dm_(new DensityMatrix<MatrixType>(ndim)),
       gm_(new GramMatrix<MatrixType>(ndim))
 {
-    if(onpe0)
+    if (onpe0)
     {
-        std::cout<<"New ProjectedMatrices with MatrixType: "
-        << getMatrixType()<<std::endl;
+        std::cout << "New ProjectedMatrices with MatrixType: "
+                  << getMatrixType() << std::endl;
     }
 
     eigenvalues_.resize(dim_);
