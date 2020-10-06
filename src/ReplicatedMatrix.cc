@@ -56,6 +56,8 @@ ReplicatedMatrix::ReplicatedMatrix(const std::string name,
       ld_(magma_roundup(dim_, gpuroundup)),
       device_data_(MemoryDev::allocate(dim_ * ld_), MemoryDev::free)
 {
+    clear();
+
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
     magma_dsetvector(
@@ -382,7 +384,7 @@ void ReplicatedMatrix::sygst(int itype, char uplo, const ReplicatedMatrix& b)
 
     int info;
     magma_dsygst_gpu(magma_itype, magma_uplo, dim_, device_data_.get(), ld_,
-        b.device_data_.get(), ld_, &info);
+        b.device_data_.get(), b.ld_, &info);
     if (info != 0)
         std::cerr << "magma_dsygst_gpu failed, info = " << info << std::endl;
 }
