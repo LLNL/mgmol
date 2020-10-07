@@ -41,6 +41,8 @@ class DensityMatrix
     DensityMatrix& operator=(const DensityMatrix&);
     DensityMatrix(const DensityMatrix&);
 
+    void build(const int new_orbitals_index);
+
 public:
     DensityMatrix(const int ndim);
 
@@ -122,7 +124,6 @@ public:
 
     double computeEntropy() const;
     void computeOccupations(const MatrixType& ls);
-    void build(const int new_orbitals_index);
     void build(const std::vector<double>& occ, const int new_orbitals_index);
     void build(const MatrixType& z, const int new_orbitals_index);
     void build(const MatrixType& z, const std::vector<double>& occ,

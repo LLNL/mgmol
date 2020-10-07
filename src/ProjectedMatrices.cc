@@ -44,6 +44,18 @@ DensityMatrix<MatrixType>* ProjectedMatrices<MatrixType>::dm_4dot_product_
 
 static int sparse_distmatrix_nb_partitions = 128;
 
+template <>
+std::string ProjectedMatrices<ReplicatedMatrix>::getMatrixType()
+{
+    return "ReplicatedMatrix";
+}
+
+template <>
+std::string ProjectedMatrices<dist_matrix::DistMatrix<double>>::getMatrixType()
+{
+    return "DistMatrix<double>";
+}
+
 template <class MatrixType>
 ProjectedMatrices<MatrixType>::ProjectedMatrices(
     const int ndim, const bool with_spin, const double width)
@@ -53,6 +65,12 @@ ProjectedMatrices<MatrixType>::ProjectedMatrices(
       dm_(new DensityMatrix<MatrixType>(ndim)),
       gm_(new GramMatrix<MatrixType>(ndim))
 {
+    if (onpe0)
+    {
+        std::cout << "New ProjectedMatrices with MatrixType: "
+                  << getMatrixType() << std::endl;
+    }
+
     eigenvalues_.resize(dim_);
 
     matH_.reset(new MatrixType("H", ndim, ndim));
@@ -103,13 +121,15 @@ void ProjectedMatrices<ReplicatedMatrix>::convert(
     const SquareLocalMatrices<MATDTYPE>& src, ReplicatedMatrix& dst)
 {
     dst.init(src.getSubMatrix(), dim_);
+
+    dst.consolidate();
 }
 
 template <>
 void ProjectedMatrices<ReplicatedMatrix>::convert(
     const ReplicatedMatrix& src, SquareLocalMatrices<MATDTYPE>& dst)
 {
-    src.get(dst.getSubMatrix(), dim_);
+    src.get(dst.getSubMatrix(), dst.m());
 }
 #endif
 
@@ -410,7 +430,7 @@ void ProjectedMatrices<MatrixType>::updateDMwithEigenstatesAndRotate(
 
     rotateAll(zz, true);
 
-    dm_->build(iterative_index);
+    dm_->build(zz, iterative_index);
 }
 
 template <class MatrixType>
@@ -1236,7 +1256,6 @@ ProjectedMatrices<ReplicatedMatrix>::getReplicatedDM()
 
     return sldm;
 }
-
 #endif
 
 template class ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>;

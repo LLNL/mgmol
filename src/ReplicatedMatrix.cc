@@ -56,6 +56,8 @@ ReplicatedMatrix::ReplicatedMatrix(const std::string name,
       ld_(magma_roundup(dim_, gpuroundup)),
       device_data_(MemoryDev::allocate(dim_ * ld_), MemoryDev::free)
 {
+    clear();
+
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
     magma_dsetvector(
@@ -381,7 +383,7 @@ void ReplicatedMatrix::sygst(int itype, char uplo, const ReplicatedMatrix& b)
 
     int info;
     magma_dsygst_gpu(magma_itype, magma_uplo, dim_, device_data_.get(), ld_,
-        b.device_data_.get(), ld_, &info);
+        b.device_data_.get(), b.ld_, &info);
     if (info != 0)
         std::cerr << "magma_dsygst_gpu failed, info = " << info << std::endl;
 }
@@ -439,6 +441,8 @@ void ReplicatedMatrix::setVal(const int i, const int j, const double val)
 
 void ReplicatedMatrix::setDiagonal(const std::vector<double>& diag_values)
 {
+    clear();
+
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
     magma_dsetvector(dim_, diag_values.data(), 1, device_data_.get(), ld_ + 1,
@@ -466,7 +470,7 @@ double ReplicatedMatrix::traceProduct(const ReplicatedMatrix& matrix) const
 
     double trace = 0.;
     for (int i = 0; i < dim_; i++)
-        trace += magma_ddot(dim_, device_data_.get() + ld_ * i, ld_,
+        trace += magma_ddot(dim_, device_data_.get() + i, ld_,
             matrix.device_data_.get() + matrix.ld_ * i, 1,
             magma_singleton.queue_);
 

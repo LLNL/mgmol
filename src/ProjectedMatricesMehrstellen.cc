@@ -10,6 +10,7 @@
 #include "ProjectedMatricesMehrstellen.h"
 #include "DistMatrix.h"
 #include "DistMatrixTools.h"
+#include "ReplicatedMatrix.h"
 
 template <class MatrixType>
 ProjectedMatricesMehrstellen<MatrixType>::ProjectedMatricesMehrstellen(
@@ -97,3 +98,6 @@ void ProjectedMatricesMehrstellen<MatrixType>::rotateAll(
 
 template class ProjectedMatricesMehrstellen<
     dist_matrix::DistMatrix<DISTMATDTYPE>>;
+#ifdef HAVE_MAGMA
+template class ProjectedMatricesMehrstellen<ReplicatedMatrix>;
+#endif

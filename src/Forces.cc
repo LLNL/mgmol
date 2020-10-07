@@ -412,6 +412,27 @@ void Forces<T>::lforce(Ions& ions, RHODTYPE* rho)
     lforce_tm_.stop();
 }
 
+template <class T>
+SquareLocalMatrices<double> Forces<T>::getReplicatedDM()
+{
+#ifdef HAVE_MAGMA
+    {
+        ProjectedMatrices<ReplicatedMatrix>* projmatrices
+            = dynamic_cast<ProjectedMatrices<ReplicatedMatrix>*>(
+                proj_matrices_);
+        if (projmatrices) return projmatrices->getReplicatedDM();
+    }
+#endif
+    {
+        ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
+            = dynamic_cast<
+                ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
+                proj_matrices_);
+        assert(projmatrices);
+        return projmatrices->getReplicatedDM();
+    }
+}
+
 // Get the nl energy as the trace of loc_kbpsi*mat_X for several loc_kbpsi
 // result added to erg
 
@@ -498,15 +519,9 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
     }
     else
     {
-        ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
-            = dynamic_cast<
-                ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
-                proj_matrices_);
-        assert(projmatrices);
+        SquareLocalMatrices<double> dm(getReplicatedDM());
 
-        const int ndim = projmatrices->dim();
-
-        SquareLocalMatrices<double> dm(projmatrices->getReplicatedDM());
+        const int ndim                     = dm.n();
         const double* const work_DM_matrix = dm.getSubMatrix();
 
         // loop over all the ions

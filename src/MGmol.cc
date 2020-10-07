@@ -54,6 +54,7 @@
 #include "Preconditioning.h"
 #include "ProjectedMatricesMehrstellen.h"
 #include "ProjectedMatricesSparse.h"
+#include "ReplicatedMatrix.h"
 #include "Rho.h"
 #include "SP2.h"
 #include "SparseDistMatrix.h"
@@ -262,14 +263,36 @@ int MGmol<OrbitalsType>::initial()
 
     // initialize data distribution objects
     bool with_spin = (mmpi.nspin() > 1);
+
+    // we support using ReplicatedMatrix on GPU only for
+    // a limited set of options
+#ifdef HAVE_MAGMA
+    bool use_replicated_matrix
+        = ((ct.OuterSolver() == OuterSolverType::ABPG)
+            && (ct.DM_solver() == DMNonLinearSolverType::Mixing)
+            && !ct.isLocMode());
+#endif
+
     if (ct.Mehrstellen())
-        proj_matrices_ = new ProjectedMatricesMehrstellen<
-            dist_matrix::DistMatrix<DISTMATDTYPE>>(
-            ct.numst, with_spin, ct.occ_width);
+#ifdef HAVE_MAGMA
+        if (use_replicated_matrix)
+            proj_matrices_ = new ProjectedMatricesMehrstellen<ReplicatedMatrix>(
+                ct.numst, with_spin, ct.occ_width);
+        else
+#endif
+            proj_matrices_ = new ProjectedMatricesMehrstellen<
+                dist_matrix::DistMatrix<DISTMATDTYPE>>(
+                ct.numst, with_spin, ct.occ_width);
     else if (ct.short_sighted)
         proj_matrices_ = new ProjectedMatricesSparse(
             ct.numst, ct.occ_width, lrs_, local_cluster_);
     else
+#ifdef HAVE_MAGMA
+        if (use_replicated_matrix)
+        proj_matrices_ = new ProjectedMatrices<ReplicatedMatrix>(
+            ct.numst, with_spin, ct.occ_width);
+    else
+#endif
         proj_matrices_
             = new ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>(
                 ct.numst, with_spin, ct.occ_width);
@@ -742,14 +765,33 @@ void MGmol<OrbitalsType>::printEigAndOcc()
             && ct.occupationWidthIsZero())
         && onpe0)
     {
-        ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
-            = dynamic_cast<
-                ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
-                proj_matrices_);
-        assert(projmatrices);
+        bool printflag = false;
+#ifdef HAVE_MAGMA
+        // try with ReplicatedMatrix first
+        {
+            ProjectedMatrices<ReplicatedMatrix>* projmatrices
+                = dynamic_cast<ProjectedMatrices<ReplicatedMatrix>*>(
+                    proj_matrices_);
+            if (projmatrices)
+            {
+                projmatrices->printEigenvalues(os_);
+                projmatrices->printOccupations(os_);
+                printflag = true;
+            }
+        }
+#endif
+        if (!printflag)
+        {
+            ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*
+                projmatrices
+                = dynamic_cast<
+                    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
+                    proj_matrices_);
+            assert(projmatrices);
 
-        projmatrices->printEigenvalues(os_);
-        projmatrices->printOccupations(os_);
+            projmatrices->printEigenvalues(os_);
+            projmatrices->printOccupations(os_);
+        }
     }
 }
 
