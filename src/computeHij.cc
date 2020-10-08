@@ -26,6 +26,7 @@
 #include "ProjectedMatricesInterface.h"
 #include "ProjectedMatricesSparse.h"
 #include "SquareSubMatrix2DistMatrix.h"
+#include "ReplicatedMatrix.h"
 
 template <>
 void MGmol<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals& orbitalsi,
@@ -42,6 +43,7 @@ void MGmol<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals& orbitalsi,
     computeHij_tm_.stop();
 }
 
+template <>
 template <>
 void MGmol<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals& orbitalsi,
     LocGridOrbitals& orbitalsj, dist_matrix::DistMatrix<double>& H)
@@ -378,8 +380,9 @@ void MGmol<OrbitalsType>::computeHnlPhiAndAdd2HPhi(Ions& ions,
 }
 
 template <class OrbitalsType>
+template <class MatrixType>
 void MGmol<OrbitalsType>::addHlocal2matrix(OrbitalsType& orbitalsi,
-    OrbitalsType& orbitalsj, dist_matrix::DistMatrix<DISTMATDTYPE>& mat)
+    OrbitalsType& orbitalsj, MatrixType& mat)
 {
     computeHij_tm_.start();
 
@@ -387,7 +390,7 @@ void MGmol<OrbitalsType>::addHlocal2matrix(OrbitalsType& orbitalsi,
     os_ << " addHlocal2matrix()" << endl;
 #endif
 
-    // add local H to DistMatrix
+    // add local H to mat
     hamiltonian_->addHlocal2matrix(orbitalsi, orbitalsj, mat);
 
     computeHij_tm_.stop();
@@ -478,3 +481,14 @@ void MGmol<OrbitalsType>::getHpsiAndTheta(Ions& ions, OrbitalsType& phi,
 
 template class MGmol<LocGridOrbitals>;
 template class MGmol<ExtendedGridOrbitals>;
+
+template
+void MGmol<ExtendedGridOrbitals>::addHlocal2matrix(
+    ExtendedGridOrbitals& orbitalsi,
+    ExtendedGridOrbitals& orbitalsj, dist_matrix::DistMatrix<double>&);
+#ifdef HAVE_MAGMA
+template
+void MGmol<ExtendedGridOrbitals>::addHlocal2matrix(
+    ExtendedGridOrbitals& orbitalsi,
+    ExtendedGridOrbitals& orbitalsj, ReplicatedMatrix& mat);
+#endif

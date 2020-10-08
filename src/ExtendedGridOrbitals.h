@@ -310,8 +310,9 @@ public:
     void getLocalOverlap(
         const ExtendedGridOrbitals& orbitals, SquareLocalMatrices<MATDTYPE>&);
 
+    template<class MatrixType>
     void addDotWithNcol2Matrix(
-        ExtendedGridOrbitals&, dist_matrix::DistMatrix<double>&) const;
+        ExtendedGridOrbitals&, MatrixType&) const;
 
     void scal(const double alpha)
     {

@@ -1688,6 +1688,7 @@ void ExtendedGridOrbitals::initRand()
     resetIterativeIndex();
 }
 
+template<>
 void ExtendedGridOrbitals::addDotWithNcol2Matrix(
     ExtendedGridOrbitals& Apsi, dist_matrix::DistMatrix<double>& matrix) const
 {
@@ -1737,6 +1738,26 @@ void ExtendedGridOrbitals::addDotWithNcol2Matrix(
 
     addDot_tm_.stop();
 }
+
+#ifdef HAVE_MAGMA
+template<>
+void ExtendedGridOrbitals::addDotWithNcol2Matrix(
+    ExtendedGridOrbitals& Apsi, ReplicatedMatrix& matrix) const
+{
+    addDot_tm_.start();
+
+    magma_trans_t magma_transa = magma_trans_const('t');
+    magma_trans_t magma_transb = magma_trans_const('n');
+
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    magmablas_dgemm(magma_transa, magma_transb, numst_, numst_, numpt_, 1.,
+        block_vector_.vect(0), lda_, Apsi.getPsi(0), lda_, 0.,
+        matrix.data(), matrix.ld(), magma_singleton.queue_);
+
+    addDot_tm_.stop();
+}
+#endif
 
 void ExtendedGridOrbitals::computeGlobalIndexes()
 {

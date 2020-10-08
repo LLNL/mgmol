@@ -22,6 +22,7 @@
 #include "ProjectedMatrices2N.h"
 #include "Rho.h"
 #include "tools.h"
+#include "ReplicatedMatrix.h"
 
 #include <iomanip>
 
@@ -839,3 +840,7 @@ void DavidsonSolver<OrbitalsType, MatrixType>::printTimers(std::ostream& os)
 
 template class DavidsonSolver<ExtendedGridOrbitals,
     dist_matrix::DistMatrix<DISTMATDTYPE>>;
+#ifdef HAVE_MAGMA
+template class DavidsonSolver<ExtendedGridOrbitals,
+    ReplicatedMatrix>;
+#endif

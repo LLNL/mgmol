@@ -20,6 +20,7 @@
 #include "memory_space.h"
 #include "mputils.h"
 #include "numerical_kernels.h"
+#include "ReplicatedMatrix.h"
 
 template <class OrbitalsType>
 Timer Rho<OrbitalsType>::update_tm_("Rho::update");
@@ -908,4 +909,8 @@ template void Rho<LocGridOrbitals>::computeRho<dist_matrix::DistMatrix<double>>(
 #ifdef USE_MP
 template double Rho<LocGridOrbitals>::dotWithRho<float>(
     const float* const func) const;
+#endif
+#ifdef HAVE_MAGMA
+template void Rho<ExtendedGridOrbitals>::computeRho<ReplicatedMatrix>(
+    ExtendedGridOrbitals&, const ReplicatedMatrix&);
 #endif

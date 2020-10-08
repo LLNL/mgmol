@@ -14,6 +14,7 @@
 #include "Mesh.h"
 #include "Potentials.h"
 #include "ProjectedMatrices.h"
+#include "ReplicatedMatrix.h"
 
 template <class T>
 Hamiltonian<T>::Hamiltonian()
@@ -191,6 +192,21 @@ void Hamiltonian<ExtendedGridOrbitals>::addHlocal2matrix(
     phi1.addDotWithNcol2Matrix(*hlphi_, hij);
 
     // hij.print(std::cout, 0, 0, 5, 5);
+}
+
+template <>
+template <>
+void Hamiltonian<ExtendedGridOrbitals>::addHlocal2matrix(
+    ExtendedGridOrbitals& phi1, ExtendedGridOrbitals& phi2,
+    ReplicatedMatrix&  hij, const bool force)
+{
+    applyLocal(phi2, force);
+
+#ifdef PRINT_OPERATIONS
+    if (onpe0) (*MPIdata::sout) << "Hamiltonian<T>::addHlocal2matrix()" << endl;
+#endif
+
+    phi1.addDotWithNcol2Matrix(*hlphi_, hij);
 }
 
 template <class T>

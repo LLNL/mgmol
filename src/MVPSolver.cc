@@ -403,5 +403,5 @@ template class MVPSolver<LocGridOrbitals,
 template class MVPSolver<ExtendedGridOrbitals,
     dist_matrix::DistMatrix<DISTMATDTYPE>>;
 #ifdef HAVE_MAGMA
-// template class MVPSolver<ExtendedGridOrbitals,ReplicatedMatrix>;
+template class MVPSolver<ExtendedGridOrbitals,ReplicatedMatrix>;
 #endif
