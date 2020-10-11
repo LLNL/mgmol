@@ -26,10 +26,16 @@ template <class T>
 class OrbitalsPreconditioning
 {
 private:
-    Preconditioning<MGPRECONDTYPE>* precond_;
-    pb::GridFuncVector<MGPRECONDTYPE>* gfv_work_;
+#ifdef HAVE_MAGMA
+    using memory_space_type = MemorySpace::Device;
+#else
+    using memory_space_type = MemorySpace::Host;
+#endif
 
-    pb::GridFuncVector<MGPRECONDTYPE>* data_wghosts_;
+    Preconditioning<MGPRECONDTYPE>* precond_;
+    pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>* gfv_work_;
+
+    pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>* data_wghosts_;
 
     // coefficient for preconditioning
     double gamma_;

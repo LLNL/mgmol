@@ -34,7 +34,7 @@ class BlockVector
     static short n_instances_;
     static short subdivx_;
 
-    static pb::GridFuncVector<ScalarType>* data_wghosts_;
+    static pb::GridFuncVector<ScalarType, MemorySpaceType>* data_wghosts_;
 
     // data allocator
     static std::vector<ScalarType*> class_storage_;
@@ -88,13 +88,16 @@ public:
 
     ~BlockVector();
 
-    const pb::GridFuncVector<ScalarType>& getDataWGhosts()
+    const pb::GridFuncVector<ScalarType, MemorySpaceType>& getDataWGhosts()
     {
         assert(data_wghosts_ != 0);
         return *data_wghosts_;
     }
 
-    pb::GridFuncVector<ScalarType>* getPtDataWGhosts() { return data_wghosts_; }
+    pb::GridFuncVector<ScalarType, MemorySpaceType>* getPtDataWGhosts()
+    {
+        return data_wghosts_;
+    }
 
     void initialize(
         const std::vector<std::vector<int>>& gid, const bool skinny_stencil);
@@ -132,7 +135,8 @@ public:
     ScalarType maxAbsValue() const;
 
     template <typename ScalarType2>
-    void setDataWithGhosts(pb::GridFuncVector<ScalarType2>* data_wghosts);
+    void setDataWithGhosts(
+        pb::GridFuncVector<ScalarType2, MemorySpaceType>* data_wghosts);
 
     void setDataWithGhosts();
 
@@ -154,12 +158,13 @@ public:
      * assign functions for source data with ghost values
      */
     template <typename ScalarType2>
-    void assign(const pb::GridFuncVector<ScalarType2>& src);
+    void assign(const pb::GridFuncVector<ScalarType2, MemorySpaceType>& src);
     template <typename ScalarType2>
     void assignComponent(const pb::GridFunc<ScalarType2>& src, const int i);
     template <typename ScalarType2>
     void assignComponent(
-        const pb::GridFuncVector<ScalarType2>& src, const int i);
+        const pb::GridFuncVector<ScalarType2, MemorySpaceType>& src,
+        const int i);
 
     void assignLocal(
         const int color, const short iloc, const ScalarType* const src)
@@ -270,7 +275,7 @@ std::vector<short> BlockVector<ScalarType, MemorySpaceType>::allocated_;
 template <typename ScalarType, typename MemorySpaceType>
 short BlockVector<ScalarType, MemorySpaceType>::max_alloc_instances_ = 4;
 template <typename ScalarType, typename MemorySpaceType>
-pb::GridFuncVector<ScalarType>*
+pb::GridFuncVector<ScalarType, MemorySpaceType>*
     BlockVector<ScalarType, MemorySpaceType>::data_wghosts_
     = nullptr;
 

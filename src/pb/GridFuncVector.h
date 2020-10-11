@@ -11,6 +11,7 @@
 #define GRIDFUNCVECTOR_H
 
 #include "GridFunc.h"
+#include "memory_space.h"
 
 #include <map>
 #include <memory>
@@ -18,7 +19,7 @@
 
 namespace pb
 {
-template <typename ScalarType>
+template <typename ScalarType, typename MemorySpaceType = MemorySpace::Host>
 class GridFuncVector
 {
     static Timer trade_bc_tm_;
@@ -33,6 +34,13 @@ class GridFuncVector
 
     // block of memory for all GridFunc
     std::unique_ptr<ScalarType> memory_;
+
+#ifdef HAVE_OPENMP_OFFLOAD
+    // block of memory for device memory
+    std::unique_ptr<ScalarType, void (*)(ScalarType*)> functions_dev_;
+#endif
+
+    using MemoryST = MemorySpace::Memory<ScalarType, MemorySpaceType>;
 
     // global id for functions in each subdivision
     const std::vector<std::vector<int>>& gid_;
@@ -115,6 +123,11 @@ public:
           comm_(my_grid.mype_env().comm()),
           skinny_stencil_(skinny_stencil),
           nfunc4buffers_(0)
+#ifdef HAVE_OPENMP_OFFLOAD
+          ,
+          functions_dev_(MemoryST::allocate(gid[0].size() * my_grid.sizeg()),
+              MemoryST::free)
+#endif
     {
         bc_[0] = px;
         bc_[1] = py;
@@ -148,6 +161,19 @@ public:
         functions_[i]->assign(v, dis);
         updated_boundaries_ = false;
     }
+
+#ifdef HAVE_OPENMP_OFFLOAD
+    void copyHtoD(int size)
+    {
+        MemorySpace::copy_to_dev(memory_.get(), size, functions_dev_.get());
+    }
+
+    void copyDtoH(int size)
+    {
+        MemorySpace::copy_to_host(functions_dev_.get(), size, memory_.get());
+    }
+#endif
+
     GridFunc<ScalarType>& getGridFunc(const int k)
     {
         assert(k < static_cast<int>(functions_.size()));
@@ -169,11 +195,13 @@ public:
     size_t size() const { return functions_.size(); }
 
     // pointwise products this=A*B for each vector in this
-    void prod(GridFuncVector<ScalarType>& A, const GridFunc<double>& B);
-    void prod(GridFuncVector<ScalarType>& A, const GridFunc<float>& B);
+    void prod(GridFuncVector<ScalarType, MemorySpaceType>& A,
+        const GridFunc<double>& B);
+    void prod(GridFuncVector<ScalarType, MemorySpaceType>& A,
+        const GridFunc<float>& B);
 
-    void extend3D(GridFuncVector<ScalarType>&);
-    void restrict3D(GridFuncVector<ScalarType>&);
+    void extend3D(GridFuncVector<ScalarType, MemorySpaceType>&);
+    void restrict3D(GridFuncVector<ScalarType, MemorySpaceType>&);
     void resetData()
     {
         assert(nfunc_ == static_cast<int>(functions_.size()));
@@ -183,15 +211,17 @@ public:
         updated_boundaries_ = true;
     }
     void set_updated_boundaries(const bool flag) { updated_boundaries_ = flag; }
-    GridFuncVector<ScalarType>& operator-=(
-        const GridFuncVector<ScalarType>& func);
-    void axpy(const double alpha, const GridFuncVector<ScalarType>& func);
+    GridFuncVector<ScalarType, MemorySpaceType>& operator-=(
+        const GridFuncVector<ScalarType, MemorySpaceType>& func);
+    void axpy(const double alpha,
+        const GridFuncVector<ScalarType, MemorySpaceType>& func);
 
     void init_vect(const int k, ScalarType* vv, const char dis) const;
-    template <typename MemorySpaceType>
-    void getValues(const int k, double* vv) const;
-    template <typename MemorySpaceType>
-    void getValues(const int k, float* vv) const;
+
+    template <typename InputScalarType>
+    void getValues(const int k, InputScalarType* vv) const;
+    // template <typename MemorySpaceType>
+    // void getValues(const int k, float* vv) const;
 
     static void printTimers(std::ostream& os)
     {
@@ -207,29 +237,33 @@ public:
     }
 };
 
-template <typename ScalarType>
-Timer GridFuncVector<ScalarType>::trade_bc_tm_("GridFuncVector::trade_bc");
-template <typename ScalarType>
-Timer GridFuncVector<ScalarType>::trade_bc_colors_tm_(
+template <typename ScalarType, typename MemorySpaceType>
+Timer GridFuncVector<ScalarType, MemorySpaceType>::trade_bc_tm_(
+    "GridFuncVector::trade_bc");
+template <typename ScalarType, typename MemorySpaceType>
+Timer GridFuncVector<ScalarType, MemorySpaceType>::trade_bc_colors_tm_(
     "GridFuncVector::trade_bc_colors");
-template <typename ScalarType>
-Timer GridFuncVector<ScalarType>::prod_tm_("GridFuncVector::prod");
-template <typename ScalarType>
-Timer GridFuncVector<ScalarType>::finishExchangeNorthSouth_tm_(
+template <typename ScalarType, typename MemorySpaceType>
+Timer GridFuncVector<ScalarType, MemorySpaceType>::prod_tm_(
+    "GridFuncVector::prod");
+template <typename ScalarType, typename MemorySpaceType>
+Timer GridFuncVector<ScalarType, MemorySpaceType>::finishExchangeNorthSouth_tm_(
     "GridFuncVector::finishExNorthSouth");
-template <typename ScalarType>
-Timer GridFuncVector<ScalarType>::finishExchangeUpDown_tm_(
+template <typename ScalarType, typename MemorySpaceType>
+Timer GridFuncVector<ScalarType, MemorySpaceType>::finishExchangeUpDown_tm_(
     "GridFuncVector::finishExUpDown");
-template <typename ScalarType>
-Timer GridFuncVector<ScalarType>::finishExchangeEastWest_tm_(
+template <typename ScalarType, typename MemorySpaceType>
+Timer GridFuncVector<ScalarType, MemorySpaceType>::finishExchangeEastWest_tm_(
     "GridFuncVector::finishExEastWest");
-template <typename ScalarType>
-Timer GridFuncVector<ScalarType>::wait_north_south_tm_(
+template <typename ScalarType, typename MemorySpaceType>
+Timer GridFuncVector<ScalarType, MemorySpaceType>::wait_north_south_tm_(
     "GridFuncVector::waitNS");
-template <typename ScalarType>
-Timer GridFuncVector<ScalarType>::wait_up_down_tm_("GridFuncVector::waitUD");
-template <typename ScalarType>
-Timer GridFuncVector<ScalarType>::wait_east_west_tm_("GridFuncVector::waitEW");
+template <typename ScalarType, typename MemorySpaceType>
+Timer GridFuncVector<ScalarType, MemorySpaceType>::wait_up_down_tm_(
+    "GridFuncVector::waitUD");
+template <typename ScalarType, typename MemorySpaceType>
+Timer GridFuncVector<ScalarType, MemorySpaceType>::wait_east_west_tm_(
+    "GridFuncVector::waitEW");
 
 } // namespace pb
 

@@ -120,6 +120,7 @@ public:
             delete lower_order_grid_;
             lower_order_grid_ = nullptr;
         }
+        del2_4th_tm_.print(std::cout);
     }
 };
 

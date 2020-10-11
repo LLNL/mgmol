@@ -14,6 +14,7 @@
 #define _FDOPERINTERFACE_H_
 
 #include "Timer.h"
+#include "memory_space.h"
 #include <iostream>
 
 namespace pb
@@ -30,6 +31,12 @@ protected:
     static Timer del2_4th_wpot_tm_;
 
 public:
+#ifdef HAVE_MAGMA
+    using memory_space_type = MemorySpace::Device;
+#else
+    using memory_space_type = MemorySpace::Host;
+#endif
+
     virtual ~FDoperInterface() {}
 
     static void printTimers(std::ostream& os)

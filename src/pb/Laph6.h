@@ -24,6 +24,8 @@ class Laph6 : public Lap<T>
     Laph4<T>* lower_order_op_;
 
 public:
+    using memory_space_type = FDoperInterface::memory_space_type;
+
     Laph6(const Grid& mygrid) : Lap<T>(mygrid)
     {
         // cout<<" Create Laph6 operator\n";
@@ -93,7 +95,8 @@ public:
         FDoper<T>::del2_6th(A, B);
         B.set_bc(A.bc(0), A.bc(1), A.bc(2));
     }
-    void apply(GridFuncVector<T>& A, GridFuncVector<T>& B) override
+    void apply(GridFuncVector<T, memory_space_type>& A,
+        GridFuncVector<T, memory_space_type>& B) override
     {
         assert(A.size() == B.size());
         A.trade_boundaries();
@@ -105,10 +108,11 @@ public:
     }
 
     void jacobi(GridFunc<T>&, const GridFunc<T>&, GridFunc<T>&) override;
-    void jacobi(
-        GridFuncVector<T>&, const GridFuncVector<T>&, GridFunc<T>&) override;
-    void jacobi(GridFuncVector<T>&, const GridFuncVector<T>&,
-        GridFuncVector<T>&) override;
+    void jacobi(GridFuncVector<T, memory_space_type>&,
+        const GridFuncVector<T, memory_space_type>&, GridFunc<T>&) override;
+    void jacobi(GridFuncVector<T, memory_space_type>&,
+        const GridFuncVector<T, memory_space_type>&,
+        GridFuncVector<T, memory_space_type>&) override;
 
     double diagEl(void) const override { return diagEl_; };
     double invDiagEl(void) const override { return invDiagEl_; };

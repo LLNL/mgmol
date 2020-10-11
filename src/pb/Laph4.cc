@@ -21,16 +21,17 @@ void Laph4<T>::jacobi(GridFunc<T>& A, const GridFunc<T>& B, GridFunc<T>& W)
     Lap<T>::jacobi(A, B, W, scale);
 }
 template <class T>
-void Laph4<T>::jacobi(
-    GridFuncVector<T>& A, const GridFuncVector<T>& B, GridFunc<T>& W)
+void Laph4<T>::jacobi(GridFuncVector<T, memory_space_type>& A,
+    const GridFuncVector<T, memory_space_type>& B, GridFunc<T>& W)
 {
     const double scale = -omega * invDiagEl_;
 
     Lap<T>::jacobi(A, B, W, scale);
 }
 template <class T>
-void Laph4<T>::jacobi(
-    GridFuncVector<T>& A, const GridFuncVector<T>& B, GridFuncVector<T>& W)
+void Laph4<T>::jacobi(GridFuncVector<T, memory_space_type>& A,
+    const GridFuncVector<T, memory_space_type>& B,
+    GridFuncVector<T, memory_space_type>& W)
 {
     const double scale = -omega * invDiagEl_;
 

@@ -100,6 +100,8 @@ void Hamiltonian<T>::applyLocal(const int ncolors, T& phi, T& hphi)
     phi.setDataWithGhosts();
     phi.trade_boundaries();
 
+    using memory_space_type = typename T::memory_space_type;
+
     if (ct.Mehrstellen())
     {
         pb::GridFunc<POTDTYPE> gfpot(
@@ -107,9 +109,10 @@ void Hamiltonian<T>::applyLocal(const int ncolors, T& phi, T& hphi)
         gfpot.assign(vtot);
         if (ct.Mehrstellen()) gfpot.trade_boundaries();
         const std::vector<std::vector<int>>& gid(phi.getOverlappingGids());
-        pb::GridFuncVector<ORBDTYPE> gfvw1(
+        pb::GridFuncVector<ORBDTYPE, memory_space_type> gfvw1(
             mygrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2], gid);
-        pb::GridFuncVector<ORBDTYPE>& gfvphi(*phi.getPtDataWGhosts());
+        pb::GridFuncVector<ORBDTYPE, memory_space_type>& gfvphi(
+            *phi.getPtDataWGhosts());
         gfvw1.prod(gfvphi, gfpot);
 
         pb::GridFunc<ORBDTYPE> gf_work1(
