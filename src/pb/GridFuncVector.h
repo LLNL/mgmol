@@ -19,7 +19,11 @@
 
 namespace pb
 {
+#ifdef HAVE_OPENMP_OFFLOAD
+template <typename ScalarType, typename MemorySpaceType = MemorySpace::Device>
+#else
 template <typename ScalarType, typename MemorySpaceType = MemorySpace::Host>
+#endif
 class GridFuncVector
 {
     static Timer trade_bc_tm_;

@@ -109,12 +109,7 @@ TEST_CASE("Trade ghost values", "[trade]")
             // gids[0].push_back((i + 3) % nfunc);
             gids[0].push_back(i);
 
-#ifndef HAVE_OPENMP_OFFLOAD
-        pb::GridFuncVector<double, MemorySpace::Host> gfv(grid, 1, 1, 1, gids);
-#else
-        pb::GridFuncVector<double, MemorySpace::Device> gfv(
-            grid, 1, 1, 1, gids);
-#endif
+        pb::GridFuncVector<double> gfv(grid, 1, 1, 1, gids);
         for (int i = 0; i < nfunc; i++)
         {
             std::vector<double> scaled_data(inner_data);
