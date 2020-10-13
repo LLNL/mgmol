@@ -39,11 +39,6 @@ class GridFuncVector
     // block of memory for all GridFunc
     std::unique_ptr<ScalarType> memory_;
 
-#ifdef HAVE_OPENMP_OFFLOAD
-    // block of memory for device memory
-    std::unique_ptr<ScalarType, void (*)(ScalarType*)> functions_dev_;
-#endif
-
     using MemoryST = MemorySpace::Memory<ScalarType, MemorySpaceType>;
 
     // global id for functions in each subdivision
@@ -91,6 +86,11 @@ class GridFuncVector
 
     // number of functions associated with buffers sizes
     int nfunc4buffers_;
+
+#ifdef HAVE_OPENMP_OFFLOAD
+    // block of memory for device memory
+    std::unique_ptr<ScalarType, void (*)(ScalarType*)> functions_dev_;
+#endif
 
     std::vector<std::vector<ScalarType>> comm_buf1_;
     std::vector<std::vector<ScalarType>> comm_buf2_;

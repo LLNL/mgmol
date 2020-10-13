@@ -672,7 +672,7 @@ void GridFuncVector<ScalarType, MemorySpaceType>::finishNorthSouthComm()
                     for (int i = nghosts * incx; i < (dimx + nghosts) * incx;
                          i += incx)
                     {
-                        for (int k = 0; k < sdimz; k++)
+                        for (int k = 0; k < dimz; k++)
                         {
                             ScalarType* pu
                                 = functions_alias + color * size_per_function;
