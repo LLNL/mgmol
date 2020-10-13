@@ -13,6 +13,17 @@
 
 #include "catch.hpp"
 
+// function of periodicity nx, ny, nz
+double cos3(const int i, const int j, const int k, const int nx, const int ny,
+    const int nz)
+{
+    double x = 2. * M_PI * (double)i / (double)nx;
+    double y = 2. * M_PI * (double)j / (double)ny;
+    double z = 2. * M_PI * (double)k / (double)nz;
+
+    return std::cos(x) * std::cos(y) * std::cos(z);
+}
+
 TEST_CASE("Trade ghost values", "[trade]")
 {
     const double origin[3]  = { 0., 0., 0. };
@@ -59,7 +70,8 @@ TEST_CASE("Trade ghost values", "[trade]")
 
                 for (int iz = 0; iz < nz; iz++)
                 {
-                    inner_data[iiy + iz] = uvalue;
+                    inner_data[iiy + iz]
+                        = cos3(ix, iy, iz, nx, ny, nz) + uvalue;
                 }
             }
         }
@@ -97,7 +109,11 @@ TEST_CASE("Trade ghost values", "[trade]")
 
                 for (int iz = initz; iz < endz; iz++)
                 {
-                    CHECK(uu[iiy + iz] == Approx(uvalue).epsilon(1.e-6));
+                    CHECK(uu[iiy + iz]
+                          == Approx(cos3(ix - nghosts, iy - nghosts,
+                                        iz - nghosts, nx, ny, nz)
+                                    + uvalue)
+                                 .epsilon(1.e-8));
                 }
             }
         }
@@ -122,8 +138,7 @@ TEST_CASE("Trade ghost values", "[trade]")
             for (int i = 0; i < nfunc; i++)
             {
                 const pb::GridFunc<double>& gfi(gfv.getGridFunc(i));
-                double* uu     = gfi.uu();
-                double ref_val = (i + 1) * uvalue;
+                double* uu = gfi.uu();
                 for (int ix = initx; ix < endx; ix++)
                 {
                     int iix = ix * grid.inc(0);
@@ -134,8 +149,14 @@ TEST_CASE("Trade ghost values", "[trade]")
 
                         for (int iz = initz; iz < endz; iz++)
                         {
+                            double ref_val
+                                = (i + 1)
+                                  * (uvalue
+                                        + cos3(ix - nghosts, iy - nghosts,
+                                              iz - nghosts, nx, ny, nz));
+
                             CHECK(
-                                uu[iiy + iz] == Approx(ref_val).epsilon(1.e-6));
+                                uu[iiy + iz] == Approx(ref_val).epsilon(1.e-8));
                         }
                     }
                 }
