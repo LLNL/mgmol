@@ -35,12 +35,25 @@ TEST_CASE("Trade ghost values", "[trade]")
 
     MGmol_MPI::setup(MPI_COMM_WORLD, std::cout);
 
-    // test for several different number of mesh points
-    // in z-direction to generate different communications
-    // patterns
-    for (unsigned nzg = 20; nzg <= 80; nzg *= 2)
+    // prepare 3 mesh sizes to test with
+    std::vector<std::array<unsigned, 3>> meshes;
     {
-        const unsigned ngpts[3] = { 32, 24, nzg };
+        std::array<unsigned, 3> ngpts1{ { 32, 24, 20 } };
+        meshes.push_back(ngpts1);
+
+        std::array<unsigned, 3> ngpts2{ { 20, 32, 24 } };
+        meshes.push_back(ngpts2);
+
+        std::array<unsigned, 3> ngpts3{ { 24, 20, 32 } };
+        meshes.push_back(ngpts3);
+    }
+
+    // test for several different number of mesh points
+    // to generate different communications
+    // patterns
+    for (auto& mesh : meshes)
+    {
+        const unsigned ngpts[3] = { mesh[0], mesh[1], mesh[2] };
         std::cout << "Mesh " << ngpts[0] << " x " << ngpts[1] << " x "
                   << ngpts[2] << std::endl;
         pb::PEenv mype_env(MPI_COMM_WORLD, ngpts[0], ngpts[1], ngpts[2]);
