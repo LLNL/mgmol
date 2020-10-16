@@ -13,6 +13,17 @@
 
 #include "catch.hpp"
 
+// function of periodicity nx, ny, nz
+double cos3(const int i, const int j, const int k, const int nx, const int ny,
+    const int nz)
+{
+    double x = 2. * M_PI * (double)i / (double)nx;
+    double y = 2. * M_PI * (double)j / (double)ny;
+    double z = 2. * M_PI * (double)k / (double)nz;
+
+    return std::cos(x) * std::cos(y) * std::cos(z);
+}
+
 TEST_CASE("Trade ghost values", "[trade]")
 {
     const double origin[3]  = { 0., 0., 0. };
@@ -24,12 +35,25 @@ TEST_CASE("Trade ghost values", "[trade]")
 
     MGmol_MPI::setup(MPI_COMM_WORLD, std::cout);
 
-    // test for several different number of mesh points
-    // in z-direction to generate different communications
-    // patterns
-    for (unsigned nzg = 20; nzg <= 80; nzg *= 2)
+    // prepare 3 mesh sizes to test with
+    std::vector<std::array<unsigned, 3>> meshes;
     {
-        const unsigned ngpts[3] = { 32, 24, nzg };
+        std::array<unsigned, 3> ngpts1{ { 32, 24, 20 } };
+        meshes.push_back(ngpts1);
+
+        std::array<unsigned, 3> ngpts2{ { 20, 32, 24 } };
+        meshes.push_back(ngpts2);
+
+        std::array<unsigned, 3> ngpts3{ { 24, 20, 32 } };
+        meshes.push_back(ngpts3);
+    }
+
+    // test for several different number of mesh points
+    // to generate different communications
+    // patterns
+    for (auto& mesh : meshes)
+    {
+        const unsigned ngpts[3] = { mesh[0], mesh[1], mesh[2] };
         std::cout << "Mesh " << ngpts[0] << " x " << ngpts[1] << " x "
                   << ngpts[2] << std::endl;
         pb::PEenv mype_env(MPI_COMM_WORLD, ngpts[0], ngpts[1], ngpts[2]);
@@ -59,7 +83,8 @@ TEST_CASE("Trade ghost values", "[trade]")
 
                 for (int iz = 0; iz < nz; iz++)
                 {
-                    inner_data[iiy + iz] = uvalue;
+                    inner_data[iiy + iz]
+                        = cos3(ix, iy, iz, nx, ny, nz) + uvalue;
                 }
             }
         }
@@ -97,7 +122,11 @@ TEST_CASE("Trade ghost values", "[trade]")
 
                 for (int iz = initz; iz < endz; iz++)
                 {
-                    CHECK(uu[iiy + iz] == Approx(uvalue).epsilon(1.e-6));
+                    CHECK(uu[iiy + iz]
+                          == Approx(cos3(ix - nghosts, iy - nghosts,
+                                        iz - nghosts, nx, ny, nz)
+                                    + uvalue)
+                                 .epsilon(1.e-8));
                 }
             }
         }
@@ -123,8 +152,7 @@ TEST_CASE("Trade ghost values", "[trade]")
             for (int i = 0; i < nfunc; i++)
             {
                 const pb::GridFunc<double>& gfi(gfv.getGridFunc(i));
-                double* uu     = gfi.uu();
-                double ref_val = (i + 1) * uvalue;
+                double* uu = gfi.uu();
                 for (int ix = initx; ix < endx; ix++)
                 {
                     int iix = ix * grid.inc(0);
@@ -135,8 +163,14 @@ TEST_CASE("Trade ghost values", "[trade]")
 
                         for (int iz = initz; iz < endz; iz++)
                         {
+                            double ref_val
+                                = (i + 1)
+                                  * (uvalue
+                                        + cos3(ix - nghosts, iy - nghosts,
+                                              iz - nghosts, nx, ny, nz));
+
                             CHECK(
-                                uu[iiy + iz] == Approx(ref_val).epsilon(1.e-6));
+                                uu[iiy + iz] == Approx(ref_val).epsilon(1.e-8));
                         }
                     }
                 }
