@@ -125,6 +125,10 @@ void GridFuncVector<ScalarType, MemorySpaceType>::prod(
             A.functions_[j]->updated_boundaries() && B.updated_boundaries());
     }
 
+#ifdef HAVE_OPENMP_OFFLOAD
+    void copyHtoD(ng * nf);
+#endif
+
     prod_tm_.stop();
 }
 
@@ -170,6 +174,10 @@ void GridFuncVector<ScalarType, MemorySpaceType>::prod(
         functions_[j]->set_updated_boundaries(
             A.functions_[j]->updated_boundaries() && B.updated_boundaries());
     }
+
+#ifdef HAVE_OPENMP_OFFLOAD
+    void copyHtoD(ng * nf);
+#endif
 
     prod_tm_.stop();
 }
