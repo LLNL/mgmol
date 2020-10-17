@@ -126,7 +126,7 @@ void GridFuncVector<ScalarType, MemorySpaceType>::prod(
     }
 
 #ifdef HAVE_OPENMP_OFFLOAD
-    void copyHtoD(ng * nf);
+    copyHtoD(ng * nf);
 #endif
 
     prod_tm_.stop();
@@ -176,7 +176,7 @@ void GridFuncVector<ScalarType, MemorySpaceType>::prod(
     }
 
 #ifdef HAVE_OPENMP_OFFLOAD
-    void copyHtoD(ng * nf);
+    copyHtoD(ng * nf);
 #endif
 
     prod_tm_.stop();
