@@ -109,7 +109,6 @@ void GridFuncVector<ScalarType, MemorySpaceType>::prod(
         if (npt > 0)
             for (int j = 0; j < nf; j++)
             {
-
                 ScalarType* __restrict__ pu = functions_[j]->uu(ibstart);
                 const ScalarType* __restrict__ v1
                     = A.functions_[j]->uu(ibstart);
@@ -124,10 +123,6 @@ void GridFuncVector<ScalarType, MemorySpaceType>::prod(
         functions_[j]->set_updated_boundaries(
             A.functions_[j]->updated_boundaries() && B.updated_boundaries());
     }
-
-#ifdef HAVE_OPENMP_OFFLOAD
-    copyHtoD(ng * nf);
-#endif
 
     prod_tm_.stop();
 }
@@ -174,10 +169,6 @@ void GridFuncVector<ScalarType, MemorySpaceType>::prod(
         functions_[j]->set_updated_boundaries(
             A.functions_[j]->updated_boundaries() && B.updated_boundaries());
     }
-
-#ifdef HAVE_OPENMP_OFFLOAD
-    copyHtoD(ng * nf);
-#endif
 
     prod_tm_.stop();
 }
@@ -1399,16 +1390,16 @@ void GridFuncVector<ScalarType, MemorySpaceType>::trade_boundaries()
     assert(dimy_ >= nghosts_);
     assert(dimz_ >= nghosts_);
 
-#ifdef HAVE_OPENMP_OFFLOAD
-    copyHtoD(nfunc_ * grid_.sizeg());
-#endif
-
     trade_bc_tm_.start();
 
     bool direction[3] = { !bc_[0], !bc_[1], !bc_[2] };
     if (bc_[0] != 1 || bc_[1] != 1 || bc_[2] != 1)
         for (int i = 0; i < nfunc_; i++)
             functions_[i]->setBoundaryValues(0., direction);
+
+#ifdef HAVE_OPENMP_OFFLOAD
+    copyHtoD(nfunc_ * grid_.sizeg());
+#endif
 
 #if 0
     for(int k=0;k<nfunc_;k+=5)
