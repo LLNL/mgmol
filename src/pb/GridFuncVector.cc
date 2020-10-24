@@ -297,6 +297,7 @@ void GridFuncVector<ScalarType, MemorySpaceType>::initiateNorthSouthComm(
     auto incy              = incy_;
     auto dimz              = dimz_;
     auto size_per_function = grid_.sizeg();
+    auto south_north_size  = south_north_size_;
 
     ScalarType* functions_alias = functions_dev_.get();
 #endif
@@ -328,12 +329,10 @@ void GridFuncVector<ScalarType, MemorySpaceType>::initiateNorthSouthComm(
                         const ScalarType* __restrict__ uus
                             = functions_alias + color * size_per_function
                               + nghosts * (incy + 1);
-                        //*(buf2_alias + color*(nghosts * dimx * dimz + 1)) =
-                        //(ScalarType)color;
-                        size_t index_buf2
-                            = color * (nghosts * dimx * dimz + 1) + 1
-                              + j / incy * (imin + iinc) / incx * dimz
-                              + (i - imin) / incx * dimz + k;
+                        size_t index_buf2 = color * south_north_size + 1
+                                            + j / incy * iinc / incx * dimz
+                                            + (i - imin) / incx * dimz + k;
+
                         buf2_alias[index_buf2] = uus[i + j + k];
                     }
                 }
@@ -392,12 +391,9 @@ void GridFuncVector<ScalarType, MemorySpaceType>::initiateNorthSouthComm(
                         const ScalarType* __restrict__ uus
                             = functions_alias + color * size_per_function
                               + nghosts + ymax;
-                        //*(buf1_alias + color*(nghosts * dimx * dimz + 1)) =
-                        //(ScalarType)color;
-                        size_t index_buf1
-                            = color * (nghosts * dimx * dimz + 1) + 1
-                              + j / incy * (imin + iinc) / incx * dimz
-                              + (i - imin) / incx * dimz + k;
+                        size_t index_buf1 = color * south_north_size + 1
+                                            + j / incy * iinc / incx * dimz
+                                            + (i - imin) / incx * dimz + k;
                         buf1_alias[index_buf1] = uus[i + j + k];
                     }
                 }
@@ -447,6 +443,7 @@ void GridFuncVector<ScalarType, MemorySpaceType>::finishNorthSouthComm()
     auto dimz              = dimz_;
     auto nghosts           = nghosts_;
     auto size_per_function = grid_.sizeg();
+    auto south_north_size  = south_north_size_;
 
     ScalarType* functions_alias = functions_dev_.get();
 #endif
@@ -488,12 +485,9 @@ void GridFuncVector<ScalarType, MemorySpaceType>::finishNorthSouthComm()
                             ScalarType* uus = functions_alias
                                               + color * size_per_function
                                               + nghosts * (incy + 1) + ymax;
-                            //*(buf1_alias + color*(nghosts * dimx * dimz + 1))
-                            //= (ScalarType)color;
-                            size_t index_buf4
-                                = color * (nghosts * dimx * dimz + 1) + 1
-                                  + j / incy * (imin + iinc) / incx * dimz
-                                  + (i - imin) / incx * dimz + k;
+                            size_t index_buf4 = color * south_north_size + 1
+                                                + j / incy * iinc / incx * dimz
+                                                + (i - imin) / incx * dimz + k;
                             uus[i + j + k] = buf4_alias[index_buf4];
                         }
                     }
@@ -588,12 +582,9 @@ void GridFuncVector<ScalarType, MemorySpaceType>::finishNorthSouthComm()
                             ScalarType* uus = functions_alias
                                               + color * size_per_function
                                               + nghosts;
-                            //*(buf1_alias + color*(nghosts * dimx * dimz + 1))
-                            //= (ScalarType)color;
-                            size_t index_buf3
-                                = color * (nghosts * dimx * dimz + 1) + 1
-                                  + j / incy * (imin + iinc) / incx * dimz
-                                  + (i - imin) / incx * dimz + k;
+                            size_t index_buf3 = color * south_north_size + 1
+                                                + j / incy * iinc / incx * dimz
+                                                + (i - imin) / incx * dimz + k;
                             uus[i + j + k] = buf3_alias[index_buf3];
                         }
                     }
@@ -701,6 +692,7 @@ void GridFuncVector<ScalarType, MemorySpaceType>::finishNorthSouthComm()
 #endif
         }
     }
+
     finishExchangeNorthSouth_tm_.stop();
 }
 
@@ -735,6 +727,7 @@ void GridFuncVector<ScalarType, MemorySpaceType>::initiateUpDownComm(
     auto incxy             = incxy_;
     auto incy              = incy_;
     auto size_per_function = grid_.sizeg();
+    auto up_down_size      = up_down_size_;
 
     ScalarType* functions_alias = functions_dev_.get();
 #endif
@@ -764,11 +757,8 @@ void GridFuncVector<ScalarType, MemorySpaceType>::initiateUpDownComm(
                     const ScalarType* __restrict__ uus
                         = functions_alias + color * size_per_function + nghosts
                           + incy * iinit;
-                    // the first element stores the number of functions
-                    //*(buf1_alias + color*(nghosts * incxy + 1)) =
-                    //(ScalarType)color;
                     size_t index_buf1
-                        = color * (incxy * nghosts + 1) + 1 + j * incxy + k;
+                        = color * up_down_size + 1 + j * incxy + k;
                     buf1_alias[index_buf1] = uus[zmax - 1 - j + k * incy];
                 }
             }
@@ -822,12 +812,8 @@ void GridFuncVector<ScalarType, MemorySpaceType>::initiateUpDownComm(
                     const ScalarType* __restrict__ uus
                         = functions_alias + color * size_per_function + nghosts
                           + incy * iinit;
-                    // the first element stores the number of functions
-                    //*buf1_alias = ncolors;
-                    //*(buf2_alias + color*(nghosts * incxy + 1)) =
-                    //(ScalarType)color;
                     size_t index_buf2
-                        = color * (incxy * nghosts + 1) + 1 + j * incxy + k;
+                        = color * up_down_size + 1 + j * incxy + k;
                     buf2_alias[index_buf2] = uus[j + k * incy];
                 }
             }
@@ -874,6 +860,7 @@ void GridFuncVector<ScalarType, MemorySpaceType>::finishUpDownComm()
     auto nghosts           = nghosts_;
     auto size_per_function = grid_.sizeg();
     auto dimxy             = dimxy_;
+    auto up_down_size      = up_down_size_;
 
     ScalarType* functions_alias = functions_dev_.get();
 #endif
@@ -910,10 +897,8 @@ void GridFuncVector<ScalarType, MemorySpaceType>::finishUpDownComm()
                         ScalarType* uus = functions_alias
                                           + color * size_per_function + nghosts
                                           - 1 - j;
-                        //*(buf3_alias + color*(nghosts * incxy + 1)) =
-                        //(ScalarType)color;
                         size_t index_buf3
-                            = color * (incxy * nghosts + 1) + 1 + j * incxy + k;
+                            = color * up_down_size + 1 + j * incxy + k;
                         uus[incy * iinit + k * incy] = buf3_alias[index_buf3];
                     }
                 }
@@ -990,10 +975,8 @@ void GridFuncVector<ScalarType, MemorySpaceType>::finishUpDownComm()
                         ScalarType* uus = functions_alias
                                           + color * size_per_function + nghosts
                                           + zmax + j;
-                        //*(buf3_alias + color*(nghosts * incxy + 1)) =
-                        //(ScalarType)color;
                         size_t index_buf4
-                            = color * (incxy * nghosts + 1) + 1 + j * incxy + k;
+                            = color * up_down_size + 1 + j * incxy + k;
                         uus[incy * iinit + k * incy] = buf4_alias[index_buf4];
                     }
                 }
@@ -1141,8 +1124,6 @@ void GridFuncVector<ScalarType, MemorySpaceType>::initiateEastWestComm(
                 const ScalarType* __restrict__ uus = functions_alias
                                                      + color * size_per_function
                                                      + east_west_size;
-                //*(buf1_alias + color*(east_west_size + 1)) =
-                //(ScalarType)color;
                 size_t index_buf1      = color * (east_west_size + 1) + 1 + k;
                 buf1_alias[index_buf1] = uus[k];
             }
@@ -1186,8 +1167,6 @@ void GridFuncVector<ScalarType, MemorySpaceType>::initiateEastWestComm(
             {
                 const ScalarType* __restrict__ uus
                     = functions_alias + color * size_per_function + xmax;
-                //*(buf2_alias + color*(east_west_size + 1)) =
-                //(ScalarType)color;
                 size_t index_buf2      = color * (east_west_size + 1) + 1 + k;
                 buf2_alias[index_buf2] = uus[k];
             }
@@ -1258,8 +1237,6 @@ void GridFuncVector<ScalarType, MemorySpaceType>::finishEastWestComm()
                 {
                     ScalarType* uus
                         = functions_alias + color * size_per_function + initu;
-                    //*(buf2_alias + color*(east_west_size + 1)) =
-                    //(ScalarType)color;
                     size_t index_buf3 = color * (east_west_size + 1) + 1 + k;
                     uus[k]            = buf3_alias[index_buf3];
                 }
@@ -1312,8 +1289,6 @@ void GridFuncVector<ScalarType, MemorySpaceType>::finishEastWestComm()
                 {
                     ScalarType* uus
                         = functions_alias + color * size_per_function + initu;
-                    //*(buf2_alias + color*(east_west_size + 1)) =
-                    //(ScalarType)color;
                     size_t index_buf4 = color * (east_west_size + 1) + 1 + k;
                     uus[k]            = buf4_alias[index_buf4];
                 }
