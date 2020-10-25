@@ -305,18 +305,18 @@ else()
            ${CMAKE_CURRENT_SOURCE_DIR}/ShortSighted/coords.in
            ${CMAKE_CURRENT_SOURCE_DIR}/ShortSighted/lrs.in
            ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+  add_test(NAME testProjectedMatrices
+           COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ProjectedMatrices/test.py
+           ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+           ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
+           ${CMAKE_CURRENT_SOURCE_DIR}/ProjectedMatrices/quenchExact.cfg
+           ${CMAKE_CURRENT_SOURCE_DIR}/ProjectedMatrices/quenchShortSighted.cfg
+           ${CMAKE_CURRENT_SOURCE_DIR}/ProjectedMatrices/coords.in
+           ${CMAKE_CURRENT_SOURCE_DIR}/ProjectedMatrices/lrs.in
+           ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 endif()
 
 #Regression tests
-add_test(NAME testProjectedMatrices
-         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ProjectedMatrices/test.py
-         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
-         ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
-         ${CMAKE_CURRENT_SOURCE_DIR}/ProjectedMatrices/quenchExact.cfg
-         ${CMAKE_CURRENT_SOURCE_DIR}/ProjectedMatrices/quenchShortSighted.cfg
-         ${CMAKE_CURRENT_SOURCE_DIR}/ProjectedMatrices/coords.in
-         ${CMAKE_CURRENT_SOURCE_DIR}/ProjectedMatrices/lrs.in
-         ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME Davidson
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Davidson/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
