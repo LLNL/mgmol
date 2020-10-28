@@ -698,10 +698,11 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
         work_orbitals.incrementIterativeIndex(2);
 
         std::vector<double> new_occ(numst_);
-        double tocc = 0.;
+        double tocc              = 0.;
+        const double spin_factor = mmpi.nspin() > 1 ? 1. : 0.5;
         for (int i = 0; i < numst_; i++)
         {
-            new_occ[i] = 0.5 * eval[numst_ + i];
+            new_occ[i] = spin_factor * eval[numst_ + i];
             tocc += new_occ[i];
         }
         double kbT = ct.occ_width;
