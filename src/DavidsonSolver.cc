@@ -706,8 +706,8 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
         }
         double kbT = ct.occ_width;
         if (onpe0 && ct.verbose > 2)
-            os_ << "Total occupations for kbT = " << kbT << ": "
-                << std::setprecision(15) << 2. * tocc << std::endl;
+            os_ << "Total occupations/spin for kbT = " << kbT << ": "
+                << std::setprecision(15) << tocc << std::endl;
 
 #if 0 // use lower T?
         const double tol_sum_occ=1.e-2;
@@ -750,8 +750,8 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
 #if 1
         // add occupation to lowest states until correct number of e- is reached
         if (onpe0 && ct.verbose > 2)
-            os_ << "Total occupations before correction = "
-                << std::setprecision(15) << 2. * tocc << std::endl;
+            os_ << "Total occupations/spin before correction = "
+                << std::setprecision(15) << tocc << std::endl;
         int j                   = numst_ - 1;
         const double target_nel = ct.getNelSpin();
         while ((target_nel - tocc) > 1.e-8 && j >= 0)
@@ -765,7 +765,7 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
             //    os_<<"Total occupations = "<<setprecision(15)<<2.*tocc<<endl;
         }
         if (onpe0 && ct.verbose > 2)
-            os_ << "Total occupations = " << std::setprecision(15) << 2. * tocc
+            os_ << "Total occupations/spin = " << std::setprecision(15) << tocc
                 << std::endl;
 
         if (onpe0 && ((outer_it % 10) == 0 || (retval == 0)) && ct.verbose > 2)
