@@ -748,14 +748,15 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
         }
 #endif
 #if 1
-        // add occupation to lowest states until ct.getNel() is reached
+        // add occupation to lowest states until correct number of e- is reached
         if (onpe0 && ct.verbose > 2)
             os_ << "Total occupations before correction = "
                 << std::setprecision(15) << 2. * tocc << std::endl;
-        int j = numst_ - 1;
-        while ((0.5 * ct.getNel() - tocc) > 1.e-8 && j >= 0)
+        int j                   = numst_ - 1;
+        const double target_nel = ct.getNelSpin();
+        while ((target_nel - tocc) > 1.e-8 && j >= 0)
         {
-            const double delta = 0.5 * ct.getNel() - tocc;
+            const double delta = target_nel - tocc;
             tocc -= new_occ[j];
             new_occ[j] = std::min(1., new_occ[j] + delta);
             tocc += new_occ[j];
