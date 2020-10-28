@@ -241,9 +241,6 @@ void DavidsonSolver<OrbitalsType, MatrixType>::buildTarget2N_MVP(
     // if( onpe0 )os_<<"Compute X2N..."<<endl;
     proj_mat2N_->setHB2H();
 
-    if (onpe0 && ct.verbose > 2)
-        os_ << "Compute X2N with Nel=" << ct.getNel() << std::endl;
-
     proj_mat2N_->updateDM(orbitals_index);
 
     target = proj_mat2N_->dm();
@@ -707,9 +704,6 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
             new_occ[i] = 0.5 * eval[numst_ + i];
             tocc += new_occ[i];
         }
-        if (onpe0 && ct.verbose > 2)
-            os_ << std::setprecision(15) << "N el. = " << ct.getNel()
-                << std::endl;
         double kbT = ct.occ_width;
         if (onpe0 && ct.verbose > 2)
             os_ << "Total occupations for kbT = " << kbT << ": "
