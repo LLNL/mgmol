@@ -184,7 +184,15 @@ double DavidsonSolver<OrbitalsType, MatrixType>::evaluateDerivative(
     work2N_->symm('l', 'l', 1., proj_mat2N_->getMatHB(), delta_dm, 0.);
 
     // factor 0.5 to get value in Hartree (HB is in Rydberg)
-    double de0  = 0.5 * work2N_->trace();
+    double de0      = 0.5 * work2N_->trace();
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    if (mmpi.nspin() > 1)
+    {
+        double tmp = 0.;
+        mmpi.allreduceSpin(&de0, &tmp, 1, MPI_SUM);
+        de0 = tmp;
+    }
+
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 2)
         os_ << "Derivative of U in 0 = " << de0 << std::endl;
