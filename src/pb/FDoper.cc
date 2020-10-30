@@ -380,6 +380,8 @@ void FDoper<T>::del2_4th(
     MemorySpace::assert_is_host_ptr(A);
     MemorySpace::assert_is_host_ptr(B);
 
+    del2_4th_tm_.start();
+
     const double cc0 = inv12 * inv_h2_[0];
     const double c1x = -16. * cc0;
     const double c2x = 1. * cc0;
@@ -505,7 +507,7 @@ void FDoper<T>::del2_4th(const Grid& Agrid, T* A, T* B, const size_t nfunc,
     int incx = incx_;
     int incy = incy_;
 
-    MGMOL_PARALLEL_FOR_COLLAPSE(2, A, B) // 0.037 s 3000x32^3 0.0156 1000x32^3
+    MGMOL_PARALLEL_FOR_COLLAPSE(4, A, B)
     for (size_t ifunc = 0; ifunc < nfunc; ifunc++)
     {
         for (int ix = 0; ix < dim0; ix++)
