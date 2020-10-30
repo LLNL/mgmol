@@ -143,8 +143,6 @@ void Rho<OrbitalsType>::update(OrbitalsType& current_orbitals)
 
     computeRho(current_orbitals);
 
-    gatherSpin();
-
     rescaleTotalCharge();
 
     assert(iterative_index_ >= 0);
@@ -624,6 +622,8 @@ void Rho<OrbitalsType>::computeRho(
         }
         computeRhoSubdomainUsingBlas3(0, subdivx, orbitals);
     }
+
+    gatherSpin();
 }
 
 template <class OrbitalsType>
@@ -664,6 +664,8 @@ void Rho<OrbitalsType>::computeRho(OrbitalsType& orbitals1,
     projmatrices1->updateSubMatX(dm);
     //    computeRhoSubdomainOffDiagBlock(0, subdivx, vorbitals, projmatrices1);
     computeRhoSubdomainUsingBlas3(0, subdivx, orbitals1, orbitals2);
+
+    gatherSpin();
 }
 
 template <class OrbitalsType>
@@ -783,6 +785,8 @@ void Rho<OrbitalsType>::computeRho(OrbitalsType& orbitals, const MatrixType& dm)
     projmatrices->updateSubMatX(dm);
 
     computeRhoSubdomainUsingBlas3(0, subdivx, orbitals);
+
+    gatherSpin();
 }
 
 template <class OrbitalsType>
