@@ -502,10 +502,19 @@ template <class MatrixType>
 double ProjectedMatrices<MatrixType>::getEigSum()
 {
     eigsum_tm_.start();
+
     work_->symm('l', 'l', 1., *matHB_, gm_->getInverse(), 0.);
 
     // return sum in Ry
     double val = work_->trace();
+    if (with_spin_)
+    {
+        double tmp      = 0.;
+        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+        mmpi.allreduceSpin(&val, &tmp, 1, MPI_SUM);
+        val = tmp;
+    }
+
     eigsum_tm_.stop();
 
     return val;
@@ -520,7 +529,15 @@ double ProjectedMatrices<MatrixType>::getExpectationH()
 template <class MatrixType>
 double ProjectedMatrices<MatrixType>::getExpectation(const MatrixType& A)
 {
-    return dm_->getExpectation(A);
+    double expectation = dm_->getExpectation(A);
+    if (with_spin_)
+    {
+        double tmp      = 0.;
+        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+        mmpi.allreduceSpin(&expectation, &tmp, 1, MPI_SUM);
+        expectation = tmp;
+    }
+    return expectation;
 }
 
 // strip dm from the overlap contribution
@@ -553,7 +570,15 @@ void ProjectedMatrices<MatrixType>::dressupDM()
 template <class MatrixType>
 double ProjectedMatrices<MatrixType>::computeEntropy(const double kbt)
 {
-    return kbt * dm_->computeEntropy();
+    double entropy = dm_->computeEntropy();
+    if (with_spin_)
+    {
+        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+        double tmp      = 0.;
+        mmpi.allreduceSpin(&entropy, &tmp, 1, MPI_SUM);
+        entropy = tmp;
+    }
+    return kbt * entropy;
 }
 
 template <class MatrixType>

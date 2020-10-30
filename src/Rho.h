@@ -74,6 +74,8 @@ class Rho
     void computeRho(
         OrbitalsType& orbitals, ProjectedMatricesInterface& proj_matrices);
 
+    void gatherSpin();
+
 public:
     // electronic density on grid
     std::vector<std::vector<RHODTYPE>> rho_;
@@ -108,8 +110,6 @@ public:
 
     template <typename T2>
     double dotWithRho(const T2* const func) const;
-
-    void gatherSpin();
 
     // void setupBlockSizes(const int block_functions, const int block_space)
     //{

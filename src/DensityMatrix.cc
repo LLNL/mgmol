@@ -424,18 +424,7 @@ template <class MatrixType>
 double DensityMatrix<MatrixType>::getExpectation(const MatrixType& A)
 {
     work_->gemm('n', 'n', 1., A, *dm_, 0.);
-    double val = work_->trace();
-
-    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-
-    if (mmpi.nspin() > 1)
-    {
-        double tmp = 0.;
-        mmpi.allreduceSpin(&val, &tmp, 1, MPI_SUM);
-        val = tmp;
-    }
-
-    return val;
+    return work_->trace();
 }
 
 template <class MatrixType>
