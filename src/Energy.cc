@@ -155,10 +155,12 @@ double Energy<T>::evaluateTotal(const double ts, // in [Ha]
 
     if (verbosity > 1)
     {
+        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+
         const std::vector<POTDTYPE>& vnuc(pot_.vnuc()); // vnuc is in [Ha]
         double evnuc = rho_.dotWithRho(&vnuc[0]);
         evnuc        = mygrid_.vel() * evnuc;
-        if (onpe0)
+        if (mmpi.PE0())
         {
             os << std::setprecision(8) << std::fixed << std::endl;
             if (pot_.diel())

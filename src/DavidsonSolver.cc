@@ -409,7 +409,7 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
         ProjectedMatrices<MatrixType>* proj_matN
             = dynamic_cast<ProjectedMatrices<MatrixType>*>(
                 orbitals.getProjMatrices());
-        if (onpe0 && ct.verbose > 1)
+        if (mmpi.PE0() && ct.verbose > 1)
         {
             os_ << "###########################" << std::endl;
             os_ << "DavidsonSolver -> Iteration " << outer_it << std::endl;
@@ -449,7 +449,7 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
 
         for (int inner_it = 0; inner_it < ct.dm_inner_steps; inner_it++)
         {
-            if (onpe0 && ct.verbose > 1)
+            if (mmpi.PE0() && ct.verbose > 1)
             {
                 os_ << "---------------------------" << std::endl;
                 os_ << "Inner iteration " << inner_it << std::endl;
@@ -487,7 +487,7 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
                 // if( onpe0 )os_<<"H11..."<<endl;
                 // h11.print(os_,0,0,5,5);
                 // if( onpe0 )os_<<"Matrices..."<<endl;
-                // projmatrices->printMatrices(cout);
+                // projmatrices->printMatrices(os_);
 
                 ts0 = evalEntropy(projmatrices, true, os_);
                 e0  = energy_->evaluateTotal(
@@ -564,8 +564,8 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
             if (mixing_ > 0.)
             {
                 beta = mixing_;
-                if (onpe0 && ct.verbose > 1)
-                    std::cout << "Davidson with beta = " << beta << std::endl;
+                if (mmpi.PE0() && ct.verbose > 1)
+                    os_ << "Davidson with beta = " << beta << std::endl;
             }
             else
             {
@@ -574,12 +574,12 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
                 //
                 // evaluate free energy at beta=1
                 //
-                if (onpe0 && ct.verbose > 2)
-                    std::cout << "Target energy..." << std::endl;
+                if (mmpi.PE0() && ct.verbose > 2)
+                    os_ << "Target energy..." << std::endl;
                 proj_mat2N_->setDM(target, orbitals.getIterativeIndex());
                 proj_mat2N_->computeOccupationsFromDM();
                 double nel = proj_mat2N_->getNel();
-                if (onpe0 && ct.verbose > 2)
+                if (mmpi.PE0() && ct.verbose > 2)
                     os_ << "Number of electrons at beta=1 : " << nel
                         << std::endl;
 
@@ -588,7 +588,6 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
                 dm21.getsub(target, numst_, numst_, numst_, 0);
                 dm22.getsub(target, numst_, numst_, numst_, numst_);
 
-                // if( onpe0 )os_<<"Rho..."<<endl;
                 rho_->computeRho(
                     orbitals, work_orbitals, dm11, dm12, dm21, dm22);
                 rho_->rescaleTotalCharge();
@@ -621,9 +620,10 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
                 // line minimization
                 beta = minQuadPolynomial(e0, e1, de0, (ct.verbose > 2), os_);
 
-                if (onpe0 && ct.verbose > 1)
+                if (mmpi.PE0() && ct.verbose > 1)
                 {
                     os_ << std::setprecision(12);
+                    os_ << "ts1=" << ts1 << std::endl;
                     os_ << std::fixed << "Inner iteration " << inner_it
                         << ", E0=" << e0 << ", E1=" << e1;
                     os_ << std::scientific << ", E0'=" << de0
@@ -648,12 +648,11 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
                 if (ct.verbose > 2)
                 {
                     double pnel = proj_mat2N_->getNel();
-                    if (onpe0)
+                    if (mmpi.PE0())
                         os_ << "Number of electrons for interpolated DM = "
                             << pnel << std::endl;
                 }
 
-                // if( onpe0 )os_<<"Rho..."<<endl;
                 rho_->computeRho(
                     orbitals, work_orbitals, dm11, dm12, dm21, dm22);
                 rho_->rescaleTotalCharge();
@@ -664,7 +663,7 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
         // update orbitals
         proj_mat2N_->diagonalizeDM(eval, evect);
 #if 1
-        if (onpe0 && ct.verbose > 2)
+        if (mmpi.PE0() && ct.verbose > 2)
         {
             os_ << "Eigenvalues of Interpolated DM: " << std::endl;
             os_ << std::fixed << std::setprecision(4);
@@ -714,7 +713,7 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
             tocc += new_occ[i];
         }
         double kbT = ct.occ_width;
-        if (onpe0 && ct.verbose > 2)
+        if (mmpi.PE0() && ct.verbose > 2)
             os_ << "Total occupations/spin for kbT = " << kbT << ": "
                 << std::setprecision(15) << tocc << std::endl;
 
@@ -758,7 +757,7 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
 #endif
 #if 1
         // add occupation to lowest states until correct number of e- is reached
-        if (onpe0 && ct.verbose > 2)
+        if (mmpi.PE0() && ct.verbose > 2)
             os_ << "Total occupations/spin before correction = "
                 << std::setprecision(15) << tocc << std::endl;
         int j                   = numst_ - 1;
@@ -773,11 +772,12 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
             // if( onpe0 && ct.verbose>2 )
             //    os_<<"Total occupations = "<<setprecision(15)<<2.*tocc<<endl;
         }
-        if (onpe0 && ct.verbose > 2)
+        if (mmpi.PE0() && ct.verbose > 2)
             os_ << "Total occupations/spin = " << std::setprecision(15) << tocc
                 << std::endl;
 
-        if (onpe0 && ((outer_it % 10) == 0 || (retval == 0)) && ct.verbose > 2)
+        if (mmpi.PE0() && ((outer_it % 10) == 0 || (retval == 0))
+            && ct.verbose > 2)
         {
             os_ << "Final Occupations: " << std::endl;
             os_ << std::fixed << std::setprecision(4);
@@ -807,7 +807,7 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
     // Generate new density
     rho_->update(orbitals);
 
-    if (onpe0 && ct.verbose > 0)
+    if (mmpi.PE0() && ct.verbose > 0)
     {
         ProjectedMatrices<MatrixType>* pmat
             = dynamic_cast<ProjectedMatrices<MatrixType>*>(
@@ -817,7 +817,7 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
         pmat->printOccupations(os_);
     }
 
-    if (onpe0 && ct.verbose > 1)
+    if (mmpi.PE0() && ct.verbose > 1)
     {
         os_ << "------------------------------------------------------------"
             << std::endl;
