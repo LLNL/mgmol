@@ -78,11 +78,12 @@ void OrbitalsPreconditioning<T>::setup(T& orbitals, const short mg_levels,
     assert(orbitals.chromatic_number()
            == static_cast<int>(orbitals.getOverlappingGids()[0].size()));
 
-    gfv_work_ = new pb::GridFuncVector<MGPRECONDTYPE>(mygrid, ct.bcWF[0],
-        ct.bcWF[1], ct.bcWF[2], orbitals.getOverlappingGids());
+    gfv_work_ = new pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>(mygrid,
+        ct.bcWF[0], ct.bcWF[1], ct.bcWF[2], orbitals.getOverlappingGids());
 
-    data_wghosts_ = new pb::GridFuncVector<MGPRECONDTYPE>(mygrid, ct.bcWF[0],
-        ct.bcWF[1], ct.bcWF[2], orbitals.getOverlappingGids());
+    data_wghosts_
+        = new pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>(mygrid,
+            ct.bcWF[0], ct.bcWF[1], ct.bcWF[2], orbitals.getOverlappingGids());
 
     is_set_ = true;
 

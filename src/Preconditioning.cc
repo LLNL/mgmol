@@ -115,8 +115,9 @@ void Preconditioning<T>::setup(map<int, GridMask*>& st_to_mask,
         = new pb::GridFunc<T>(*grid_[0], bc_[0], bc_[1], bc_[2]);
     gf_work_.push_back(gf_work);
 
-    pb::GridFuncVector<T>* gfv_work = new pb::GridFuncVector<T>(
-        *grid_[0], bc_[0], bc_[1], bc_[2], overlapping_gids_);
+    pb::GridFuncVector<T, memory_space_type>* gfv_work
+        = new pb::GridFuncVector<T, memory_space_type>(
+            *grid_[0], bc_[0], bc_[1], bc_[2], overlapping_gids_);
     gfv_work_.push_back(gfv_work);
 
     // coarse levels
@@ -142,16 +143,18 @@ void Preconditioning<T>::setup(map<int, GridMask*>& st_to_mask,
 
         mygrid = coarse_grid;
 
-        gfv_work = new pb::GridFuncVector<T>(
+        gfv_work = new pb::GridFuncVector<T, memory_space_type>(
             *coarse_grid, bc_[0], bc_[1], bc_[2], overlapping_gids_);
         gfv_work_.push_back(gfv_work);
 
-        pb::GridFuncVector<T>* gfv_rcoarse = new pb::GridFuncVector<T>(
-            *coarse_grid, bc_[0], bc_[1], bc_[2], overlapping_gids_);
+        pb::GridFuncVector<T, memory_space_type>* gfv_rcoarse
+            = new pb::GridFuncVector<T, memory_space_type>(
+                *coarse_grid, bc_[0], bc_[1], bc_[2], overlapping_gids_);
         gfv_rcoarse_.push_back(gfv_rcoarse);
 
-        pb::GridFuncVector<T>* gfv_newv = new pb::GridFuncVector<T>(
-            *coarse_grid, bc_[0], bc_[1], bc_[2], overlapping_gids_);
+        pb::GridFuncVector<T, memory_space_type>* gfv_newv
+            = new pb::GridFuncVector<T, memory_space_type>(
+                *coarse_grid, bc_[0], bc_[1], bc_[2], overlapping_gids_);
         gfv_newv_.push_back(gfv_newv);
     }
     gid2mask_ = st_to_mask;
@@ -160,8 +163,8 @@ void Preconditioning<T>::setup(map<int, GridMask*>& st_to_mask,
 // MG V-cycle with mask corresponding to state istate
 // (no mask if istate==-1)
 template <typename T>
-void Preconditioning<T>::mg(pb::GridFuncVector<T>& gfv_v,
-    const pb::GridFuncVector<T>& gfv_f, const short level)
+void Preconditioning<T>::mg(pb::GridFuncVector<T, memory_space_type>& gfv_v,
+    const pb::GridFuncVector<T, memory_space_type>& gfv_f, const short level)
 {
 #ifdef PRINT_OPERATIONS
     if (onpe0)
@@ -190,7 +193,7 @@ void Preconditioning<T>::mg(pb::GridFuncVector<T>& gfv_v,
     app_mask(*gfv_work_[level], level);
 
     // restrictions
-    pb::GridFuncVector<T>* rcoarse = gfv_rcoarse_[level];
+    pb::GridFuncVector<T, memory_space_type>* rcoarse = gfv_rcoarse_[level];
     assert(rcoarse != nullptr);
     gfv_work_[level]->restrict3D(*rcoarse);
 
@@ -198,7 +201,7 @@ void Preconditioning<T>::mg(pb::GridFuncVector<T>& gfv_v,
     app_mask(*rcoarse, level + 1);
 
     // storage functions for coarse grid
-    pb::GridFuncVector<T>* newv = gfv_newv_[level];
+    pb::GridFuncVector<T, memory_space_type>* newv = gfv_newv_[level];
 
     // call mgrid solver on a coarser level
     newv->resetData();
@@ -278,7 +281,7 @@ void Preconditioning<T>::mg(pb::GridFunc<T>& gf_v, const pb::GridFunc<T>& gf_f,
 
 template <typename T>
 void Preconditioning<T>::app_mask(
-    pb::GridFuncVector<T>& gvu, const short level) const
+    pb::GridFuncVector<T, memory_space_type>& gvu, const short level) const
 {
     const int nfunc = (int)gvu.size();
 #pragma omp parallel for

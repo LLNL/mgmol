@@ -36,8 +36,9 @@ void Lap<T>::jacobi(
     W.set_updated_boundaries(0);
 }
 template <class T>
-void Lap<T>::jacobi(GridFuncVector<T>& A, const GridFuncVector<T>& B,
-    GridFunc<T>& W, const double scale)
+void Lap<T>::jacobi(GridFuncVector<T, memory_space_type>& A,
+    const GridFuncVector<T, memory_space_type>& B, GridFunc<T>& W,
+    const double scale)
 {
     assert(A.size() == B.size());
 
@@ -56,8 +57,9 @@ void Lap<T>::jacobi(GridFuncVector<T>& A, const GridFuncVector<T>& B,
     A.set_updated_boundaries(false);
 }
 template <class T>
-void Lap<T>::jacobi(GridFuncVector<T>& A, const GridFuncVector<T>& B,
-    GridFuncVector<T>& W, const double scale)
+void Lap<T>::jacobi(GridFuncVector<T, memory_space_type>& A,
+    const GridFuncVector<T, memory_space_type>& B,
+    GridFuncVector<T, memory_space_type>& W, const double scale)
 {
     assert(A.size() == B.size());
 

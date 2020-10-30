@@ -301,12 +301,12 @@ BlockVector<ScalarType, MemorySpaceType>::operator-=(
 template <typename ScalarType, typename MemorySpaceType>
 template <typename ScalarType2>
 void BlockVector<ScalarType, MemorySpaceType>::assign(
-    const pb::GridFuncVector<ScalarType2>& src)
+    const pb::GridFuncVector<ScalarType2, MemorySpaceType>& src)
 {
     for (unsigned int i = 0; i < vect_.size(); i++)
     {
         ScalarType* dest = vect_[i];
-        src.template getValues<MemorySpaceType>(i, dest);
+        src.template getValues<ScalarType>(i, dest);
     }
 }
 
@@ -322,10 +322,10 @@ void BlockVector<ScalarType, MemorySpaceType>::assignComponent(
 template <typename ScalarType, typename MemorySpaceType>
 template <typename ScalarType2>
 void BlockVector<ScalarType, MemorySpaceType>::assignComponent(
-    const pb::GridFuncVector<ScalarType2>& src, const int i)
+    const pb::GridFuncVector<ScalarType2, MemorySpaceType>& src, const int i)
 {
     ScalarType* dest = vect_[i];
-    src.template getValues<MemorySpaceType>(i, dest);
+    src.template getValues<ScalarType>(i, dest);
 }
 
 template <typename ScalarType, typename MemorySpaceType>
@@ -358,7 +358,7 @@ void BlockVector<ScalarType, MemorySpaceType>::initialize(
         data_wghosts_ = nullptr;
     }
 
-    data_wghosts_ = new pb::GridFuncVector<ScalarType>(
+    data_wghosts_ = new pb::GridFuncVector<ScalarType, MemorySpaceType>(
         mygrid_, bc_[0], bc_[1], bc_[2], gid, skinny_stencil);
 
     data_wghosts_->resetData();
@@ -487,7 +487,7 @@ void BlockVector<ScalarType, MemorySpaceType>::setDataWithGhosts()
 template <typename ScalarType, typename MemorySpaceType>
 template <typename ScalarType2>
 void BlockVector<ScalarType, MemorySpaceType>::setDataWithGhosts(
-    pb::GridFuncVector<ScalarType2>* data_wghosts)
+    pb::GridFuncVector<ScalarType2, MemorySpaceType>* data_wghosts)
 {
     assert(data_wghosts != nullptr);
 
@@ -545,60 +545,60 @@ void BlockVector<ScalarType, MemorySpaceType>::set_ld_and_size_storage()
 
 template class BlockVector<double, MemorySpace::Host>;
 template void BlockVector<double, MemorySpace::Host>::assign(
-    const pb::GridFuncVector<float>& src);
+    const pb::GridFuncVector<float, MemorySpace::Host>& src);
 template void BlockVector<double, MemorySpace::Host>::assign(
-    const pb::GridFuncVector<double>& src);
+    const pb::GridFuncVector<double, MemorySpace::Host>& src);
 template void BlockVector<double, MemorySpace::Host>::assignComponent(
     const pb::GridFunc<float>& src, const int i);
 template void BlockVector<double, MemorySpace::Host>::assignComponent(
     const pb::GridFunc<double>& src, const int i);
 template void BlockVector<double, MemorySpace::Host>::setDataWithGhosts(
-    pb::GridFuncVector<float>* data_wghosts);
+    pb::GridFuncVector<float, MemorySpace::Host>* data_wghosts);
 template void BlockVector<double, MemorySpace::Host>::setDataWithGhosts(
-    pb::GridFuncVector<double>* data_wghosts);
+    pb::GridFuncVector<double, MemorySpace::Host>* data_wghosts);
 #ifdef USE_MP
 template class BlockVector<float, MemorySpace::Host>;
 template void BlockVector<float, MemorySpace::Host>::assign(
-    const pb::GridFuncVector<float>& src);
+    const pb::GridFuncVector<float, MemorySpace::Host>& src);
 template void BlockVector<float, MemorySpace::Host>::assign(
-    const pb::GridFuncVector<double>& src);
+    const pb::GridFuncVector<double, MemorySpace::Host>& src);
 template void BlockVector<float, MemorySpace::Host>::assignComponent(
     const pb::GridFunc<float>& src, const int i);
 template void BlockVector<float, MemorySpace::Host>::assignComponent(
     const pb::GridFunc<double>& src, const int i);
 template void BlockVector<float, MemorySpace::Host>::setDataWithGhosts(
-    pb::GridFuncVector<float>* data_wghosts);
+    pb::GridFuncVector<float, MemorySpace::Host>* data_wghosts);
 template void BlockVector<float, MemorySpace::Host>::setDataWithGhosts(
-    pb::GridFuncVector<double>* data_wghosts);
+    pb::GridFuncVector<double, MemorySpace::Host>* data_wghosts);
 #endif
 
 #ifdef HAVE_MAGMA
 template class BlockVector<double, MemorySpace::Device>;
 template void BlockVector<double, MemorySpace::Device>::assign(
-    const pb::GridFuncVector<float>& src);
+    const pb::GridFuncVector<float, MemorySpace::Device>& src);
 template void BlockVector<double, MemorySpace::Device>::assign(
-    const pb::GridFuncVector<double>& src);
+    const pb::GridFuncVector<double, MemorySpace::Device>& src);
 template void BlockVector<double, MemorySpace::Device>::assignComponent(
     const pb::GridFunc<float>& src, const int i);
 template void BlockVector<double, MemorySpace::Device>::assignComponent(
     const pb::GridFunc<double>& src, const int i);
 template void BlockVector<double, MemorySpace::Device>::setDataWithGhosts(
-    pb::GridFuncVector<float>* data_wghosts);
+    pb::GridFuncVector<float, MemorySpace::Device>* data_wghosts);
 template void BlockVector<double, MemorySpace::Device>::setDataWithGhosts(
-    pb::GridFuncVector<double>* data_wghosts);
+    pb::GridFuncVector<double, MemorySpace::Device>* data_wghosts);
 #ifdef USE_MP
 template class BlockVector<float, MemorySpace::Device>;
 template void BlockVector<float, MemorySpace::Device>::assign(
-    const pb::GridFuncVector<float>& src);
+    const pb::GridFuncVector<float, MemorySpace::Device>& src);
 template void BlockVector<float, MemorySpace::Device>::assign(
-    const pb::GridFuncVector<double>& src);
+    const pb::GridFuncVector<double, MemorySpace::Device>& src);
 template void BlockVector<float, MemorySpace::Device>::assignComponent(
     const pb::GridFunc<float>& src, const int i);
 template void BlockVector<float, MemorySpace::Device>::assignComponent(
     const pb::GridFunc<double>& src, const int i);
 template void BlockVector<float, MemorySpace::Device>::setDataWithGhosts(
-    pb::GridFuncVector<float>* data_wghosts);
+    pb::GridFuncVector<float, MemorySpace::Device>* data_wghosts);
 template void BlockVector<float, MemorySpace::Device>::setDataWithGhosts(
-    pb::GridFuncVector<double>* data_wghosts);
+    pb::GridFuncVector<double, MemorySpace::Device>* data_wghosts);
 #endif
 #endif

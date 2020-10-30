@@ -249,7 +249,8 @@ public:
     }
 
     template <typename T>
-    void setDataWithGhosts(pb::GridFuncVector<T>* data_wghosts)
+    void setDataWithGhosts(
+        pb::GridFuncVector<T, memory_space_type>* data_wghosts)
     {
         assert(data_wghosts != 0);
 
@@ -269,7 +270,7 @@ public:
         return block_vector_.getVectorWithGhosts(i);
     }
 
-    pb::GridFuncVector<ORBDTYPE>* getPtDataWGhosts()
+    pb::GridFuncVector<ORBDTYPE, memory_space_type>* getPtDataWGhosts()
     {
         return block_vector_.getPtDataWGhosts();
     }
@@ -306,7 +307,7 @@ public:
         block_vector_.assignComponent(gf_work, ist);
     }
     template <typename T>
-    void setPsi(const pb::GridFuncVector<T>& gf_work)
+    void setPsi(const pb::GridFuncVector<T, memory_space_type>& gf_work)
     {
         block_vector_.assign(gf_work);
     }

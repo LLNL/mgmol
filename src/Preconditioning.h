@@ -21,6 +21,14 @@
 template <typename T>
 class Preconditioning
 {
+public:
+#ifdef HAVE_MAGMA
+    using memory_space_type = MemorySpace::Device;
+#else
+    using memory_space_type = MemorySpace::Host;
+#endif
+
+private:
     short max_levels_;
     short lap_type_;
     short bc_[3];
@@ -31,16 +39,17 @@ class Preconditioning
     std::vector<pb::GridFunc<T>*> gf_rcoarse_;
     std::vector<pb::GridFunc<T>*> gf_newv_;
 
-    std::vector<pb::GridFuncVector<T>*> gfv_work_;
-    std::vector<pb::GridFuncVector<T>*> gfv_rcoarse_;
-    std::vector<pb::GridFuncVector<T>*> gfv_newv_;
+    std::vector<pb::GridFuncVector<T, memory_space_type>*> gfv_work_;
+    std::vector<pb::GridFuncVector<T, memory_space_type>*> gfv_rcoarse_;
+    std::vector<pb::GridFuncVector<T, memory_space_type>*> gfv_newv_;
 
     std::map<int, GridMask*> gid2mask_; // map state->mask;
     std::vector<std::vector<int>> overlapping_gids_;
 
     void app_mask(
         pb::GridFunc<T>&, const short level, const int istate = -1) const;
-    void app_mask(pb::GridFuncVector<T>&, const short level) const;
+    void app_mask(
+        pb::GridFuncVector<T, memory_space_type>&, const short level) const;
 
 public:
     Preconditioning(const short lap_type, const short maxlevels,
@@ -57,7 +66,8 @@ public:
         const std::vector<std::vector<int>>& gid);
     void mg(pb::GridFunc<T>& gf_v, const pb::GridFunc<T>& gf_f,
         const short level, const int istate = -1);
-    void mg(pb::GridFuncVector<T>& gf_v, const pb::GridFuncVector<T>& gf_f,
+    void mg(pb::GridFuncVector<T, memory_space_type>& gf_v,
+        const pb::GridFuncVector<T, memory_space_type>& gf_f,
         const short level);
     short max_levels() const { return max_levels_; }
 };

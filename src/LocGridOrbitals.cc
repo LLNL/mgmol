@@ -2637,15 +2637,16 @@ void LocGridOrbitals::initWF(const std::shared_ptr<LocalizationRegions> lrs)
 }
 
 template void LocGridOrbitals::setDataWithGhosts(
-    pb::GridFuncVector<float>* data_wghosts);
+    pb::GridFuncVector<float, memory_space_type>* data_wghosts);
 template void LocGridOrbitals::setDataWithGhosts(
-    pb::GridFuncVector<double>* data_wghosts);
+    pb::GridFuncVector<double, memory_space_type>* data_wghosts);
 
 template void LocGridOrbitals::setPsi(
     const pb::GridFunc<float>& gf_work, const int ist);
 template void LocGridOrbitals::setPsi(
     const pb::GridFunc<double>& gf_work, const int ist);
 
-template void LocGridOrbitals::setPsi(const pb::GridFuncVector<float>& gf_work);
 template void LocGridOrbitals::setPsi(
-    const pb::GridFuncVector<double>& gf_work);
+    const pb::GridFuncVector<float, memory_space_type>& gf_work);
+template void LocGridOrbitals::setPsi(
+    const pb::GridFuncVector<double, memory_space_type>& gf_work);
