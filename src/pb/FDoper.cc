@@ -507,7 +507,7 @@ void FDoper<T>::del2_4th(const Grid& Agrid, T* A, T* B, const size_t nfunc,
     int incx = incx_;
     int incy = incy_;
 
-    MGMOL_PARALLEL_FOR_COLLAPSE(4, A, B)
+    MGMOL_PARALLEL_FOR_COLLAPSE(2, A, B) // 0.037 s 3000x32^3 0.0156 1000x32^3
     for (size_t ifunc = 0; ifunc < nfunc; ifunc++)
     {
         for (int ix = 0; ix < dim0; ix++)
