@@ -346,8 +346,7 @@ void MGmol<OrbitalsType>::computeHnlPhiAndAdd2HPhi(Ions& ions,
                     numpt, 1., hpsi_view, hpsi);
             }
 #ifdef HAVE_MAGMA
-            MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
-                hpsi_view);
+            MemorySpace::Memory<ORBDTYPE, memory_space_type>::free(hpsi_view);
 #endif
         }
         else // no Mehrstellen
