@@ -353,26 +353,30 @@ void MGmol<OrbitalsType>::computeHnlPhiAndAdd2HPhi(Ions& ions,
         {
             {
                 ORBDTYPE* hnl = new ORBDTYPE[numpt];
+#ifdef HAVE_MAGMA
+                ORBDTYPE* hnl_view = MemorySpace::Memory<ORBDTYPE,
+                    memory_space_type>::allocate(numpt);
+#endif
                 for (short icolor = 0; icolor < ncolors; icolor++)
                 {
                     get_vnlpsi(ions, gid, icolor, kbpsi, hnl);
 
-                    ORBDTYPE* hpsi           = hphi.getPsi(icolor);
-                    ORBDTYPE* hpsi_host_view = MemorySpace::Memory<ORBDTYPE,
-                        memory_space_type>::allocate_host_view(numpt);
+#ifdef HAVE_MAGMA
                     MemorySpace::Memory<ORBDTYPE,
-                        memory_space_type>::copy_view_to_host(hpsi, numpt,
-                        hpsi_host_view);
+                        memory_space_type>::copy_view_to_dev(hnl, numpt,
+                        hnl_view);
+#else
+                    ORBDTYPE* hnl_view = hnl;
+#endif
+                    ORBDTYPE* hpsi = hphi.getPsi(icolor);
 
-                    LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
-                        numpt, 1., hnl, hpsi_host_view);
-
-                    MemorySpace::Memory<ORBDTYPE,
-                        memory_space_type>::copy_view_to_dev(hpsi_host_view,
-                        numpt, hpsi);
-                    MemorySpace::Memory<ORBDTYPE,
-                        memory_space_type>::free_host_view(hpsi_host_view);
+                    LinearAlgebraUtils<memory_space_type>::MPaxpy(
+                        numpt, 1., hnl_view, hpsi);
                 }
+#ifdef HAVE_MAGMA
+                MemorySpace::Memory<ORBDTYPE, memory_space_type>::free(
+                    hnl_view);
+#endif
                 delete[] hnl;
             }
         }
