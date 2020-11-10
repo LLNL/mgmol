@@ -311,7 +311,7 @@ void MGmol<OrbitalsType>::computeHnlPhiAndAdd2HPhi(Ions& ions,
         // compute Hnl*phi
         if (ct.Mehrstellen())
         {
-            pb::GridFuncVector<ORBDTYPE> gfv(
+            pb::GridFuncVector<ORBDTYPE, MemorySpace::Host> gfv(
                 mygrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2], gid);
             std::vector<ORBDTYPE> work(numpt);
             for (short icolor = 0; icolor < ncolors; icolor++)
@@ -322,28 +322,33 @@ void MGmol<OrbitalsType>::computeHnlPhiAndAdd2HPhi(Ions& ions,
             gfv.trade_boundaries();
 
             // compute B*Hnl*phi and add it to H*phi
+#ifdef HAVE_MAGMA
+            ORBDTYPE* hpsi_view
+                = MemorySpace::Memory<ORBDTYPE, memory_space_type>::allocate(
+                    numpt);
+#else
+            ORBDTYPE* hpsi_view = work.data();
+#endif
             for (int icolor = 0; icolor < ncolors; icolor++)
             {
                 hamiltonian_->lapOper()->rhs(
                     gfv.getGridFunc(icolor), work.data());
 
                 // Add the contribution of the non-local potential to H phi
-                ORBDTYPE* hpsi           = hphi.getPsi(icolor);
-                ORBDTYPE* hpsi_host_view = MemorySpace::Memory<ORBDTYPE,
-                    memory_space_type>::allocate_host_view(numpt);
+                ORBDTYPE* hpsi = hphi.getPsi(icolor);
+#ifdef HAVE_MAGMA
                 MemorySpace::Memory<ORBDTYPE,
-                    memory_space_type>::copy_view_to_host(hpsi, numpt,
-                    hpsi_host_view);
+                    memory_space_type>::copy_view_to_dev(work.data(), numpt,
+                    hpsi_view);
+#endif
 
-                LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
-                    numpt, 1., work.data(), hpsi_host_view);
-
-                MemorySpace::Memory<ORBDTYPE,
-                    memory_space_type>::copy_view_to_dev(hpsi_host_view, numpt,
-                    hpsi);
-                MemorySpace::Memory<ORBDTYPE,
-                    memory_space_type>::free_host_view(hpsi_host_view);
+                LinearAlgebraUtils<memory_space_type>::MPaxpy(
+                    numpt, 1., hpsi_view, hpsi);
             }
+#ifdef HAVE_MAGMA
+            MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+                hpsi_view);
+#endif
         }
         else // no Mehrstellen
         {
