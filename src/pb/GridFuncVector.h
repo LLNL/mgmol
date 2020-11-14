@@ -15,6 +15,7 @@
 
 #include <map>
 #include <memory>
+#include <type_traits>
 #include <vector>
 
 namespace pb
@@ -87,10 +88,8 @@ class GridFuncVector
     // number of functions associated with buffers sizes
     int nfunc4buffers_;
 
-#ifdef HAVE_OPENMP_OFFLOAD
     // block of memory for device memory
     std::unique_ptr<ScalarType, void (*)(ScalarType*)> functions_dev_;
-#endif
 
     std::vector<std::vector<ScalarType>> comm_buf1_;
     std::vector<std::vector<ScalarType>> comm_buf2_;
@@ -107,11 +106,64 @@ class GridFuncVector
 
     void allocate_buffers(const int nfunc);
 
+    template <typename MST = MemorySpaceType,
+        typename std::enable_if<
+            std::is_same<MemorySpace::Host, MST>::value>::type* = nullptr>
     void initiateNorthSouthComm(const int begin_color, const int end_color);
+
+    template <typename MST = MemorySpaceType,
+        typename std::enable_if<
+            std::is_same<MemorySpace::Device, MST>::value>::type* = nullptr>
+    void initiateNorthSouthComm(const int begin_color, const int end_color);
+
+    template <typename MST = MemorySpaceType,
+        typename std::enable_if<
+            std::is_same<MemorySpace::Host, MST>::value>::type* = nullptr>
     void finishNorthSouthComm();
+
+    template <typename MST = MemorySpaceType,
+        typename std::enable_if<
+            std::is_same<MemorySpace::Device, MST>::value>::type* = nullptr>
+    void finishNorthSouthComm();
+
+    template <typename MST = MemorySpaceType,
+        typename std::enable_if<
+            std::is_same<MemorySpace::Host, MST>::value>::type* = nullptr>
     void initiateUpDownComm(const int begin_color, const int end_color);
+
+    template <typename MST = MemorySpaceType,
+        typename std::enable_if<
+            std::is_same<MemorySpace::Device, MST>::value>::type* = nullptr>
+    void initiateUpDownComm(const int begin_color, const int end_color);
+
+    template <typename MST = MemorySpaceType,
+        typename std::enable_if<
+            std::is_same<MemorySpace::Host, MST>::value>::type* = nullptr>
     void finishUpDownComm();
+
+    template <typename MST = MemorySpaceType,
+        typename std::enable_if<
+            std::is_same<MemorySpace::Device, MST>::value>::type* = nullptr>
+    void finishUpDownComm();
+
+    template <typename MST = MemorySpaceType,
+        typename std::enable_if<
+            std::is_same<MemorySpace::Host, MST>::value>::type* = nullptr>
     void initiateEastWestComm(const int begin_color, const int end_color);
+
+    template <typename MST = MemorySpaceType,
+        typename std::enable_if<
+            std::is_same<MemorySpace::Device, MST>::value>::type* = nullptr>
+    void initiateEastWestComm(const int begin_color, const int end_color);
+
+    template <typename MST = MemorySpaceType,
+        typename std::enable_if<
+            std::is_same<MemorySpace::Host, MST>::value>::type* = nullptr>
+    void finishEastWestComm();
+
+    template <typename MST = MemorySpaceType,
+        typename std::enable_if<
+            std::is_same<MemorySpace::Device, MST>::value>::type* = nullptr>
     void finishEastWestComm();
 
     void communicateRemoteGids(const int begin_color, const int end_color);
@@ -126,11 +178,13 @@ public:
           grid_(my_grid),
           comm_(my_grid.mype_env().comm()),
           skinny_stencil_(skinny_stencil),
-          nfunc4buffers_(0)
+          nfunc4buffers_(0),
+// just for now
 #ifdef HAVE_OPENMP_OFFLOAD
-          ,
           functions_dev_(MemoryST::allocate(gid[0].size() * my_grid.sizeg()),
               MemoryST::free)
+#else
+          functions_dev_(nullptr, nullptr)
 #endif
     {
         bc_[0] = px;

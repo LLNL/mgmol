@@ -265,6 +265,8 @@ void GridFuncVector<ScalarType, MemorySpaceType>::allocate_buffers(
     }
 }
 template <typename ScalarType, typename MemorySpaceType>
+template <typename MST,
+    typename std::enable_if<std::is_same<MemorySpace::Host, MST>::value>::type*>
 void GridFuncVector<ScalarType, MemorySpaceType>::initiateNorthSouthComm(
     const int begin_color, const int end_color)
 {
@@ -290,17 +292,100 @@ void GridFuncVector<ScalarType, MemorySpaceType>::initiateNorthSouthComm(
     const int jmax = nghosts_ * incy_;
     const int ymax = dimy_ * grid_.inc(1);
 
-#ifdef HAVE_OPENMP_OFFLOAD
+    if (south_)
+    {
+        ScalarType* buf2_ptr = &comm_buf2[0];
+        // first element will tell how many functions (data) are in buffer
+        *buf2_ptr = (ScalarType)ncolors;
+        buf2_ptr++;
+
+        // pack data
+        for (int color = begin_color; color < end_color; color++)
+        {
+            for (short iloc = 0; iloc < nsubdivx_; iloc++)
+            {
+                const ScalarType* uus
+                    = functions_[color]->uu(nghosts_ * (incy_ + 1));
+                *buf2_ptr = (ScalarType)gid_[iloc][color];
+                buf2_ptr++;
+                for (int j = 0; j < jmax; j += incy_)
+                    for (int i = imin + iloc * iinc;
+                         i < imin + (iloc + 1) * iinc; i += incx_)
+                    {
+                        memcpy(buf2_ptr, &uus[i + j], sdimz);
+                        buf2_ptr += dimz_;
+                    }
+            }
+        }
+
+        grid_.mype_env().Isend(&comm_buf2[0], 1 + ncolors * south_north_size_,
+            SOUTH, &req_north_south_[2]);
+    }
+
+    if (north_)
+    {
+        ScalarType* buf1_ptr = &comm_buf1[0];
+        // first element will tell how many functions (data) are in buffer
+        *buf1_ptr = (ScalarType)ncolors;
+        buf1_ptr++;
+
+        // pack data
+        for (int color = begin_color; color < end_color; color++)
+        {
+            for (short iloc = 0; iloc < nsubdivx_; iloc++)
+            {
+                const ScalarType* uus = functions_[color]->uu(nghosts_ + ymax);
+                *buf1_ptr             = (ScalarType)gid_[iloc][color];
+                buf1_ptr++;
+                for (int j = 0; j < jmax; j += incy_)
+                    for (int i = imin + iloc * iinc;
+                         i < imin + (iloc + 1) * iinc; i += incx_)
+                    {
+                        memcpy(buf1_ptr, &uus[i + j], sdimz);
+                        buf1_ptr += dimz_;
+                    }
+            }
+        }
+
+        grid_.mype_env().Isend(&comm_buf1[0], 1 + ncolors * south_north_size_,
+            NORTH, &req_north_south_[0]);
+    }
+}
+template <typename ScalarType, typename MemorySpaceType>
+template <typename MST, typename std::enable_if<std::is_same<
+                            MemorySpace::Device, MST>::value>::type*>
+void GridFuncVector<ScalarType, MemorySpaceType>::initiateNorthSouthComm(
+    const int begin_color, const int end_color)
+{
+    std::vector<ScalarType>& comm_buf1(comm_buf1_[1]);
+    std::vector<ScalarType>& comm_buf2(comm_buf2_[1]);
+    std::vector<ScalarType>& comm_buf3(comm_buf3_[1]);
+    std::vector<ScalarType>& comm_buf4(comm_buf4_[1]);
+
+    const int ncolors = end_color - begin_color;
+
+    const size_t sizebuffer = 1 + nfunc_max_global_ * south_north_size_;
+    if (north_)
+        grid_.mype_env().Irecv(
+            &comm_buf4[0], sizebuffer, NORTH, &req_north_south_[3]);
+    if (south_)
+        grid_.mype_env().Irecv(
+            &comm_buf3[0], sizebuffer, SOUTH, &req_north_south_[1]);
+
+    const int imin = nghosts_ * incx_;
+    const int iinc = incx_ * dimx_ / nsubdivx_;
+
+    const int jmax = nghosts_ * incy_;
+    const int ymax = dimy_ * grid_.inc(1);
+
     auto nghosts           = nghosts_;
     auto incx              = incx_;
-    auto dimx              = dimx_;
     auto incy              = incy_;
     auto dimz              = dimz_;
     auto size_per_function = grid_.sizeg();
     auto south_north_size  = south_north_size_;
 
     ScalarType* functions_alias = functions_dev_.get();
-#endif
 
     if (south_)
     {
@@ -309,7 +394,6 @@ void GridFuncVector<ScalarType, MemorySpaceType>::initiateNorthSouthComm(
         *buf2_ptr = (ScalarType)ncolors;
         buf2_ptr++;
 
-#ifdef HAVE_OPENMP_OFFLOAD
         std::unique_ptr<ScalarType, void (*)(ScalarType*)> buf2_ptr_dev(
             MemoryST::allocate(sizebuffer - 1), MemoryST::free);
 
@@ -340,26 +424,7 @@ void GridFuncVector<ScalarType, MemorySpaceType>::initiateNorthSouthComm(
         }
 
         MemorySpace::copy_to_host(buf2_alias, sizebuffer - 1, buf2_ptr);
-#else
-        // pack data
-        for (int color = begin_color; color < end_color; color++)
-        {
-            for (short iloc = 0; iloc < nsubdivx_; iloc++)
-            {
-                const ScalarType* uus
-                    = functions_[color]->uu(nghosts_ * (incy_ + 1));
-                *buf2_ptr = (ScalarType)gid_[iloc][color];
-                buf2_ptr++;
-                for (int j = 0; j < jmax; j += incy_)
-                    for (int i = imin + iloc * iinc;
-                         i < imin + (iloc + 1) * iinc; i += incx_)
-                    {
-                        memcpy(buf2_ptr, &uus[i + j], sdimz);
-                        buf2_ptr += dimz_;
-                    }
-            }
-        }
-#endif
+
         grid_.mype_env().Isend(&comm_buf2[0], 1 + ncolors * south_north_size_,
             SOUTH, &req_north_south_[2]);
     }
@@ -371,7 +436,6 @@ void GridFuncVector<ScalarType, MemorySpaceType>::initiateNorthSouthComm(
         *buf1_ptr = (ScalarType)ncolors;
         buf1_ptr++;
 
-#ifdef HAVE_OPENMP_OFFLOAD
         std::unique_ptr<ScalarType, void (*)(ScalarType*)> buf1_ptr_dev(
             MemoryST::allocate(sizebuffer - 1), MemoryST::free);
 
@@ -401,52 +465,21 @@ void GridFuncVector<ScalarType, MemorySpaceType>::initiateNorthSouthComm(
         }
 
         MemorySpace::copy_to_host(buf1_alias, sizebuffer - 1, buf1_ptr);
-#else
-        // pack data
-        for (int color = begin_color; color < end_color; color++)
-        {
-            for (short iloc = 0; iloc < nsubdivx_; iloc++)
-            {
-                const ScalarType* uus = functions_[color]->uu(nghosts_ + ymax);
-                *buf1_ptr             = (ScalarType)gid_[iloc][color];
-                buf1_ptr++;
-                for (int j = 0; j < jmax; j += incy_)
-                    for (int i = imin + iloc * iinc;
-                         i < imin + (iloc + 1) * iinc; i += incx_)
-                    {
-                        memcpy(buf1_ptr, &uus[i + j], sdimz);
-                        buf1_ptr += dimz_;
-                    }
-            }
-        }
-#endif
 
         grid_.mype_env().Isend(&comm_buf1[0], 1 + ncolors * south_north_size_,
             NORTH, &req_north_south_[0]);
     }
 }
+
 template <typename ScalarType, typename MemorySpaceType>
+template <typename MST,
+    typename std::enable_if<std::is_same<MemorySpace::Host, MST>::value>::type*>
 void GridFuncVector<ScalarType, MemorySpaceType>::finishNorthSouthComm()
 {
     finishExchangeNorthSouth_tm_.start();
 
     std::vector<ScalarType>& comm_buf3(comm_buf3_[1]);
     std::vector<ScalarType>& comm_buf4(comm_buf4_[1]);
-
-#ifdef HAVE_OPENMP_OFFLOAD
-    auto sizebuffer = comm_buf3.size();
-
-    int nfunc              = nfunc_;
-    auto incy              = incy_;
-    auto incx              = incx_;
-    auto dimx              = dimx_;
-    auto dimz              = dimz_;
-    auto nghosts           = nghosts_;
-    auto size_per_function = grid_.sizeg();
-    auto south_north_size  = south_north_size_;
-
-    ScalarType* functions_alias = functions_dev_.get();
-#endif
 
     const int ymax     = dimy_ * grid_.inc(1);
     const size_t sdimz = dimz_ * sizeof(ScalarType);
@@ -463,37 +496,6 @@ void GridFuncVector<ScalarType, MemorySpaceType>::finishNorthSouthComm()
             const int nremote_func = (int)(*buf4_ptr);
             buf4_ptr++;
 
-#ifdef HAVE_OPENMP_OFFLOAD
-            std::unique_ptr<ScalarType, void (*)(ScalarType*)> buf4_ptr_dev(
-                MemoryST::allocate(sizebuffer - 1), MemoryST::free);
-
-            ScalarType* buf4_alias = buf4_ptr_dev.get();
-
-            MemorySpace::assert_is_dev_ptr(buf4_alias);
-
-            MemorySpace::copy_to_dev(buf4_ptr, sizebuffer - 1, buf4_alias);
-
-            MGMOL_PARALLEL_FOR_COLLAPSE(2, buf4_alias, functions_alias)
-            for (int color = 0; color < nfunc; color++)
-            {
-                for (int j = 0; j < jmax; j += incy)
-                {
-                    for (int i = imin; i < imin + iinc; i += incx)
-                    {
-                        for (int k = 0; k < dimz; k++)
-                        {
-                            ScalarType* uus = functions_alias
-                                              + color * size_per_function
-                                              + nghosts * (incy + 1) + ymax;
-                            size_t index_buf4 = color * south_north_size + 1
-                                                + j / incy * iinc / incx * dimz
-                                                + (i - imin) / incx * dimz + k;
-                            uus[i + j + k] = buf4_alias[index_buf4];
-                        }
-                    }
-                }
-            }
-#else
             for (int k = 0; k < nremote_func; k++)
             {
                 for (short iloc = 0; iloc < nsubdivx_; iloc++)
@@ -549,7 +551,7 @@ void GridFuncVector<ScalarType, MemorySpaceType>::finishNorthSouthComm()
                     }
                 }
             }
-#endif
+
             assert((buf4_ptr - &comm_buf4[0])
                    <= static_cast<int>(comm_buf4.size()));
         }
@@ -560,37 +562,6 @@ void GridFuncVector<ScalarType, MemorySpaceType>::finishNorthSouthComm()
             const int nremote_func = (int)(*buf3_ptr);
             buf3_ptr++;
 
-#ifdef HAVE_OPENMP_OFFLOAD
-            std::unique_ptr<ScalarType, void (*)(ScalarType*)> buf3_ptr_dev(
-                MemoryST::allocate(sizebuffer - 1), MemoryST::free);
-
-            ScalarType* buf3_alias = buf3_ptr_dev.get();
-
-            MemorySpace::assert_is_dev_ptr(buf3_alias);
-
-            MemorySpace::copy_to_dev(buf3_ptr, sizebuffer - 1, buf3_alias);
-
-            MGMOL_PARALLEL_FOR_COLLAPSE(2, buf3_alias, functions_alias)
-            for (int color = 0; color < nfunc; color++)
-            {
-                for (int j = 0; j < jmax; j += incy)
-                {
-                    for (int i = imin; i < imin + iinc; i += incx)
-                    {
-                        for (int k = 0; k < dimz; k++)
-                        {
-                            ScalarType* uus = functions_alias
-                                              + color * size_per_function
-                                              + nghosts;
-                            size_t index_buf3 = color * south_north_size + 1
-                                                + j / incy * iinc / incx * dimz
-                                                + (i - imin) / incx * dimz + k;
-                            uus[i + j + k] = buf3_alias[index_buf3];
-                        }
-                    }
-                }
-            }
-#else
             for (int k = 0; k < nremote_func; k++)
             {
                 for (short iloc = 0; iloc < nsubdivx_; iloc++)
@@ -644,7 +615,7 @@ void GridFuncVector<ScalarType, MemorySpaceType>::finishNorthSouthComm()
                     }
                 }
             }
-#endif
+
             assert((buf3_ptr - &comm_buf3[0])
                    <= static_cast<int>(comm_buf3.size()));
         }
@@ -653,7 +624,137 @@ void GridFuncVector<ScalarType, MemorySpaceType>::finishNorthSouthComm()
     { // grid_.mype_env().n_mpi_task(1)==1
         if (bc_[1] == 1)
         {
-#ifdef HAVE_OPENMP_OFFLOAD
+            // only for i already initialized
+            for (int k = 0; k < nfunc_; k++)
+            {
+                ScalarType* pu = functions_[k]->uu();
+                for (int j = 0; j < nghosts_ * incy_; j += incy_)
+                    for (int i = nghosts_ * incx_;
+                         i < (dimx_ + nghosts_) * incx_; i += incx_)
+                    {
+                        memcpy(&pu[i + nghosts_ + j],
+                            &pu[i + nghosts_ + j + ymax], sdimz);
+                        memcpy(&pu[i + nghosts_ * (incy_ + 1) + j + ymax],
+                            &pu[i + nghosts_ * (incy_ + 1) + j], sdimz);
+                    }
+            }
+        }
+    }
+
+    finishExchangeNorthSouth_tm_.stop();
+}
+
+template <typename ScalarType, typename MemorySpaceType>
+template <typename MST, typename std::enable_if<std::is_same<
+                            MemorySpace::Device, MST>::value>::type*>
+void GridFuncVector<ScalarType, MemorySpaceType>::finishNorthSouthComm()
+{
+    finishExchangeNorthSouth_tm_.start();
+
+    std::vector<ScalarType>& comm_buf3(comm_buf3_[1]);
+    std::vector<ScalarType>& comm_buf4(comm_buf4_[1]);
+
+    auto sizebuffer = comm_buf3.size();
+
+    int nfunc              = nfunc_;
+    auto incy              = incy_;
+    auto incx              = incx_;
+    auto dimx              = dimx_;
+    auto dimz              = dimz_;
+    auto nghosts           = nghosts_;
+    auto size_per_function = grid_.sizeg();
+    auto south_north_size  = south_north_size_;
+
+    ScalarType* functions_alias = functions_dev_.get();
+
+    const int ymax = dimy_ * grid_.inc(1);
+
+    if (grid_.mype_env().n_mpi_task(1) > 1)
+    {
+        const int imin = nghosts_ * incx_;
+        const int iinc = incx_ * dimx_ / nsubdivx_;
+        const int jmax = nghosts_ * incy_;
+
+        if (north_)
+        {
+            ScalarType* buf4_ptr = &comm_buf4[0];
+            buf4_ptr++;
+
+            std::unique_ptr<ScalarType, void (*)(ScalarType*)> buf4_ptr_dev(
+                MemoryST::allocate(sizebuffer - 1), MemoryST::free);
+
+            ScalarType* buf4_alias = buf4_ptr_dev.get();
+
+            MemorySpace::assert_is_dev_ptr(buf4_alias);
+
+            MemorySpace::copy_to_dev(buf4_ptr, sizebuffer - 1, buf4_alias);
+
+            MGMOL_PARALLEL_FOR_COLLAPSE(2, buf4_alias, functions_alias)
+            for (int color = 0; color < nfunc; color++)
+            {
+                for (int j = 0; j < jmax; j += incy)
+                {
+                    for (int i = imin; i < imin + iinc; i += incx)
+                    {
+                        for (int k = 0; k < dimz; k++)
+                        {
+                            ScalarType* uus = functions_alias
+                                              + color * size_per_function
+                                              + nghosts * (incy + 1) + ymax;
+                            size_t index_buf4 = color * south_north_size + 1
+                                                + j / incy * iinc / incx * dimz
+                                                + (i - imin) / incx * dimz + k;
+                            uus[i + j + k] = buf4_alias[index_buf4];
+                        }
+                    }
+                }
+            }
+            assert((buf4_ptr - &comm_buf4[0])
+                   <= static_cast<int>(comm_buf4.size()));
+        }
+
+        if (south_)
+        {
+            ScalarType* buf3_ptr = &comm_buf3[0];
+            buf3_ptr++;
+
+            std::unique_ptr<ScalarType, void (*)(ScalarType*)> buf3_ptr_dev(
+                MemoryST::allocate(sizebuffer - 1), MemoryST::free);
+
+            ScalarType* buf3_alias = buf3_ptr_dev.get();
+
+            MemorySpace::assert_is_dev_ptr(buf3_alias);
+
+            MemorySpace::copy_to_dev(buf3_ptr, sizebuffer - 1, buf3_alias);
+
+            MGMOL_PARALLEL_FOR_COLLAPSE(2, buf3_alias, functions_alias)
+            for (int color = 0; color < nfunc; color++)
+            {
+                for (int j = 0; j < jmax; j += incy)
+                {
+                    for (int i = imin; i < imin + iinc; i += incx)
+                    {
+                        for (int k = 0; k < dimz; k++)
+                        {
+                            ScalarType* uus = functions_alias
+                                              + color * size_per_function
+                                              + nghosts;
+                            size_t index_buf3 = color * south_north_size + 1
+                                                + j / incy * iinc / incx * dimz
+                                                + (i - imin) / incx * dimz + k;
+                            uus[i + j + k] = buf3_alias[index_buf3];
+                        }
+                    }
+                }
+            }
+            assert((buf3_ptr - &comm_buf3[0])
+                   <= static_cast<int>(comm_buf3.size()));
+        }
+    }
+    else
+    { // grid_.mype_env().n_mpi_task(1)==1
+        if (bc_[1] == 1)
+        {
             MGMOL_PARALLEL_FOR_COLLAPSE(2, functions_alias)
             for (int color = 0; color < nfunc; color++)
             {
@@ -674,29 +775,14 @@ void GridFuncVector<ScalarType, MemorySpaceType>::finishNorthSouthComm()
                     }
                 }
             }
-#else
-            // only for i already initialized
-            for (int k = 0; k < nfunc_; k++)
-            {
-                ScalarType* pu = functions_[k]->uu();
-                for (int j = 0; j < nghosts_ * incy_; j += incy_)
-                    for (int i = nghosts_ * incx_;
-                         i < (dimx_ + nghosts_) * incx_; i += incx_)
-                    {
-                        memcpy(&pu[i + nghosts_ + j],
-                            &pu[i + nghosts_ + j + ymax], sdimz);
-                        memcpy(&pu[i + nghosts_ * (incy_ + 1) + j + ymax],
-                            &pu[i + nghosts_ * (incy_ + 1) + j], sdimz);
-                    }
-            }
-#endif
         }
     }
 
     finishExchangeNorthSouth_tm_.stop();
 }
-
 template <typename ScalarType, typename MemorySpaceType>
+template <typename MST,
+    typename std::enable_if<std::is_same<MemorySpace::Host, MST>::value>::type*>
 void GridFuncVector<ScalarType, MemorySpaceType>::initiateUpDownComm(
     const int begin_color, const int end_color)
 {
@@ -722,7 +808,88 @@ void GridFuncVector<ScalarType, MemorySpaceType>::initiateUpDownComm(
         grid_.mype_env().Irecv(&comm_buf4[0], sizebuffer, UP, &req_up_down_[3]);
     }
 
-#ifdef HAVE_OPENMP_OFFLOAD
+    if (up_)
+    {
+        ScalarType* buf1_ptr = &comm_buf1[0];
+        // first element will tell how many functions (data) are in buffer
+        *buf1_ptr = (ScalarType)ncolors;
+        buf1_ptr++;
+
+        for (int color = begin_color; color < end_color; color++)
+        {
+            for (short iloc = 0; iloc < nsubdivx_; iloc++)
+            {
+                const ScalarType* const uus
+                    = functions_[color]->uu(nghosts_ + incy_ * iinit);
+                *buf1_ptr = (ScalarType)gid_[iloc][color];
+                buf1_ptr++;
+                for (int j = 0; j < nghosts_; j++)
+                {
+                    Tcopy(&incxy_, &uus[zmax - 1 - j + iloc * incxy_ * incy_],
+                        &incy_, buf1_ptr, &ione);
+                    buf1_ptr += incxy_;
+                }
+            }
+        }
+
+        grid_.mype_env().Isend(
+            &comm_buf1[0], 1 + ncolors * up_down_size_, UP, &req_up_down_[0]);
+    }
+    if (down_)
+    {
+        ScalarType* buf2_ptr = &comm_buf2[0];
+        // first element will tell how many functions (data) are in buffer
+        *buf2_ptr = (ScalarType)ncolors;
+        buf2_ptr++;
+
+        for (int color = begin_color; color < end_color; color++)
+        {
+            for (short iloc = 0; iloc < nsubdivx_; iloc++)
+            {
+                const ScalarType* const uus
+                    = functions_[color]->uu(nghosts_ + incy_ * iinit);
+                *buf2_ptr = (ScalarType)gid_[iloc][color];
+                buf2_ptr++;
+                for (int j = 0; j < nghosts_; j++)
+                {
+                    Tcopy(&incxy_, &uus[j + iloc * incxy_ * incy_], &incy_,
+                        buf2_ptr, &ione);
+                    buf2_ptr += incxy_;
+                }
+            }
+        }
+
+        grid_.mype_env().Isend(
+            &comm_buf2[0], 1 + ncolors * up_down_size_, DOWN, &req_up_down_[2]);
+    }
+}
+template <typename ScalarType, typename MemorySpaceType>
+template <typename MST, typename std::enable_if<std::is_same<
+                            MemorySpace::Device, MST>::value>::type*>
+void GridFuncVector<ScalarType, MemorySpaceType>::initiateUpDownComm(
+    const int begin_color, const int end_color)
+{
+    std::vector<ScalarType>& comm_buf1(comm_buf1_[2]);
+    std::vector<ScalarType>& comm_buf2(comm_buf2_[2]);
+    std::vector<ScalarType>& comm_buf3(comm_buf3_[2]);
+    std::vector<ScalarType>& comm_buf4(comm_buf4_[2]);
+
+    const int ncolors = end_color - begin_color;
+
+    const int sizebuffer = 1 + nfunc_max_global_ * up_down_size_;
+    int iinit            = (dimy_ + 2 * nghosts_) * nghosts_;
+    const int zmax       = dimz_;
+
+    if (down_)
+    {
+        grid_.mype_env().Irecv(
+            &comm_buf3[0], sizebuffer, DOWN, &req_up_down_[1]);
+    }
+    if (up_)
+    {
+        grid_.mype_env().Irecv(&comm_buf4[0], sizebuffer, UP, &req_up_down_[3]);
+    }
+
     auto nghosts           = nghosts_;
     auto incxy             = incxy_;
     auto incy              = incy_;
@@ -730,7 +897,6 @@ void GridFuncVector<ScalarType, MemorySpaceType>::initiateUpDownComm(
     auto up_down_size      = up_down_size_;
 
     ScalarType* functions_alias = functions_dev_.get();
-#endif
 
     if (up_)
     {
@@ -739,7 +905,6 @@ void GridFuncVector<ScalarType, MemorySpaceType>::initiateUpDownComm(
         *buf1_ptr = (ScalarType)ncolors;
         buf1_ptr++;
 
-#ifdef HAVE_OPENMP_OFFLOAD
         std::unique_ptr<ScalarType, void (*)(ScalarType*)> buf1_ptr_dev(
             MemoryST::allocate(sizebuffer - 1), MemoryST::free);
 
@@ -765,24 +930,6 @@ void GridFuncVector<ScalarType, MemorySpaceType>::initiateUpDownComm(
         }
 
         MemorySpace::copy_to_host(buf1_alias, sizebuffer - 1, buf1_ptr);
-#else
-        for (int color = begin_color; color < end_color; color++)
-        {
-            for (short iloc = 0; iloc < nsubdivx_; iloc++)
-            {
-                const ScalarType* const uus
-                    = functions_[color]->uu(nghosts_ + incy_ * iinit);
-                *buf1_ptr = (ScalarType)gid_[iloc][color];
-                buf1_ptr++;
-                for (int j = 0; j < nghosts_; j++)
-                {
-                    Tcopy(&incxy_, &uus[zmax - 1 - j + iloc * incxy_ * incy_],
-                        &incy_, buf1_ptr, &ione);
-                    buf1_ptr += incxy_;
-                }
-            }
-        }
-#endif
 
         grid_.mype_env().Isend(
             &comm_buf1[0], 1 + ncolors * up_down_size_, UP, &req_up_down_[0]);
@@ -794,7 +941,6 @@ void GridFuncVector<ScalarType, MemorySpaceType>::initiateUpDownComm(
         *buf2_ptr = (ScalarType)ncolors;
         buf2_ptr++;
 
-#ifdef HAVE_OPENMP_OFFLOAD
         std::unique_ptr<ScalarType, void (*)(ScalarType*)> buf2_ptr_dev(
             MemoryST::allocate(sizebuffer - 1), MemoryST::free);
 
@@ -820,50 +966,20 @@ void GridFuncVector<ScalarType, MemorySpaceType>::initiateUpDownComm(
         }
 
         MemorySpace::copy_to_host(buf2_alias, sizebuffer - 1, buf2_ptr);
-#else
-        for (int color = begin_color; color < end_color; color++)
-        {
-            for (short iloc = 0; iloc < nsubdivx_; iloc++)
-            {
-                const ScalarType* const uus
-                    = functions_[color]->uu(nghosts_ + incy_ * iinit);
-                *buf2_ptr = (ScalarType)gid_[iloc][color];
-                buf2_ptr++;
-                for (int j = 0; j < nghosts_; j++)
-                {
-                    Tcopy(&incxy_, &uus[j + iloc * incxy_ * incy_], &incy_,
-                        buf2_ptr, &ione);
-                    buf2_ptr += incxy_;
-                }
-            }
-        }
-#endif
 
         grid_.mype_env().Isend(
             &comm_buf2[0], 1 + ncolors * up_down_size_, DOWN, &req_up_down_[2]);
     }
 }
 template <typename ScalarType, typename MemorySpaceType>
+template <typename MST,
+    typename std::enable_if<std::is_same<MemorySpace::Host, MST>::value>::type*>
 void GridFuncVector<ScalarType, MemorySpaceType>::finishUpDownComm()
 {
     finishExchangeUpDown_tm_.start();
 
     std::vector<ScalarType>& comm_buf3(comm_buf3_[2]);
     std::vector<ScalarType>& comm_buf4(comm_buf4_[2]);
-
-#ifdef HAVE_OPENMP_OFFLOAD
-    auto sizebuffer = comm_buf3.size();
-
-    int nfunc              = nfunc_;
-    auto incy              = incy_;
-    auto incxy             = incxy_;
-    auto nghosts           = nghosts_;
-    auto size_per_function = grid_.sizeg();
-    auto dimxy             = dimxy_;
-    auto up_down_size      = up_down_size_;
-
-    ScalarType* functions_alias = functions_dev_.get();
-#endif
 
     const int zmax = dimz_;
 
@@ -877,34 +993,6 @@ void GridFuncVector<ScalarType, MemorySpaceType>::finishUpDownComm()
             const int nremote_func = (int)(*buf3_ptr);
             buf3_ptr++;
 
-#ifdef HAVE_OPENMP_OFFLOAD
-            std::unique_ptr<ScalarType, void (*)(ScalarType*)> buf3_ptr_dev(
-                MemoryST::allocate(sizebuffer - 1), MemoryST::free);
-
-            ScalarType* buf3_alias = buf3_ptr_dev.get();
-
-            MemorySpace::assert_is_dev_ptr(buf3_alias);
-
-            MemorySpace::copy_to_dev(buf3_ptr, sizebuffer - 1, buf3_alias);
-
-            MGMOL_PARALLEL_FOR_COLLAPSE(2, buf3_alias, functions_alias)
-            for (int color = 0; color < nfunc; color++)
-            {
-                for (int k = 0; k < incxy; k++)
-                {
-                    for (int j = 0; j < nghosts; j++)
-                    {
-                        ScalarType* uus = functions_alias
-                                          + color * size_per_function + nghosts
-                                          - 1 - j;
-                        size_t index_buf3
-                            = color * up_down_size + 1 + j * incxy + k;
-                        uus[incy * iinit + k * incy] = buf3_alias[index_buf3];
-                    }
-                }
-            }
-
-#else
             for (int k = 0; k < nremote_func; k++)
             {
                 for (short iloc = 0; iloc < nsubdivx_; iloc++)
@@ -947,7 +1035,6 @@ void GridFuncVector<ScalarType, MemorySpaceType>::finishUpDownComm()
                     }
                 }
             }
-#endif
         }
         if (up_)
         {
@@ -955,33 +1042,6 @@ void GridFuncVector<ScalarType, MemorySpaceType>::finishUpDownComm()
             const int nremote_func = (int)(*buf4_ptr);
             buf4_ptr++;
 
-#ifdef HAVE_OPENMP_OFFLOAD
-            std::unique_ptr<ScalarType, void (*)(ScalarType*)> buf4_ptr_dev(
-                MemoryST::allocate(sizebuffer - 1), MemoryST::free);
-
-            ScalarType* buf4_alias = buf4_ptr_dev.get();
-
-            MemorySpace::assert_is_dev_ptr(buf4_alias);
-
-            MemorySpace::copy_to_dev(buf4_ptr, sizebuffer - 1, buf4_alias);
-
-            MGMOL_PARALLEL_FOR_COLLAPSE(2, buf4_alias, functions_alias)
-            for (int color = 0; color < nfunc; color++)
-            {
-                for (int k = 0; k < incxy; k++)
-                {
-                    for (int j = 0; j < nghosts; j++)
-                    {
-                        ScalarType* uus = functions_alias
-                                          + color * size_per_function + nghosts
-                                          + zmax + j;
-                        size_t index_buf4
-                            = color * up_down_size + 1 + j * incxy + k;
-                        uus[incy * iinit + k * incy] = buf4_alias[index_buf4];
-                    }
-                }
-            }
-#else
             for (int k = 0; k < nremote_func; k++)
             {
                 for (short iloc = 0; iloc < nsubdivx_; iloc++)
@@ -1024,7 +1084,6 @@ void GridFuncVector<ScalarType, MemorySpaceType>::finishUpDownComm()
                     }
                 }
             }
-#endif
         }
     }
     else
@@ -1032,7 +1091,120 @@ void GridFuncVector<ScalarType, MemorySpaceType>::finishUpDownComm()
         if (bc_[2] == 1) /* grid_.mype_env().n_mpi_task(2)==1 */
         {
             int iinit = (dimy_ + 2 * nghosts_) * nghosts_;
-#ifdef HAVE_OPENMP_OFFLOAD
+            for (int k = 0; k < nfunc_; k++)
+            {
+                ScalarType* pu = functions_[k]->uu();
+                for (int j = 0; j < nghosts_; j++)
+                {
+                    Tcopy(&dimxy_, &pu[nghosts_ - j + iinit * incy_ + zmax - 1],
+                        &incy_, &pu[nghosts_ - j + iinit * incy_ - 1], &incy_);
+                }
+                for (int j = 0; j < nghosts_; j++)
+                {
+                    Tcopy(&dimxy_, &pu[nghosts_ + j + iinit * incy_], &incy_,
+                        &pu[nghosts_ + j + iinit * incy_ + zmax], &incy_);
+                }
+            }
+        }
+    }
+
+    finishExchangeUpDown_tm_.stop();
+}
+template <typename ScalarType, typename MemorySpaceType>
+template <typename MST, typename std::enable_if<std::is_same<
+                            MemorySpace::Device, MST>::value>::type*>
+void GridFuncVector<ScalarType, MemorySpaceType>::finishUpDownComm()
+{
+    finishExchangeUpDown_tm_.start();
+
+    std::vector<ScalarType>& comm_buf3(comm_buf3_[2]);
+    std::vector<ScalarType>& comm_buf4(comm_buf4_[2]);
+
+    auto sizebuffer = comm_buf3.size();
+
+    int nfunc              = nfunc_;
+    auto incy              = incy_;
+    auto incxy             = incxy_;
+    auto nghosts           = nghosts_;
+    auto size_per_function = grid_.sizeg();
+    auto dimxy             = dimxy_;
+    auto up_down_size      = up_down_size_;
+
+    ScalarType* functions_alias = functions_dev_.get();
+
+    const int zmax = dimz_;
+
+    if (grid_.mype_env().n_mpi_task(2) > 1)
+    {
+        int iinit = (dimy_ + 2 * nghosts_) * nghosts_;
+        if (down_)
+        {
+            ScalarType* buf3_ptr = &comm_buf3[0];
+            buf3_ptr++;
+
+            std::unique_ptr<ScalarType, void (*)(ScalarType*)> buf3_ptr_dev(
+                MemoryST::allocate(sizebuffer - 1), MemoryST::free);
+
+            ScalarType* buf3_alias = buf3_ptr_dev.get();
+
+            MemorySpace::assert_is_dev_ptr(buf3_alias);
+
+            MemorySpace::copy_to_dev(buf3_ptr, sizebuffer - 1, buf3_alias);
+
+            MGMOL_PARALLEL_FOR_COLLAPSE(2, buf3_alias, functions_alias)
+            for (int color = 0; color < nfunc; color++)
+            {
+                for (int k = 0; k < incxy; k++)
+                {
+                    for (int j = 0; j < nghosts; j++)
+                    {
+                        ScalarType* uus = functions_alias
+                                          + color * size_per_function + nghosts
+                                          - 1 - j;
+                        size_t index_buf3
+                            = color * up_down_size + 1 + j * incxy + k;
+                        uus[incy * iinit + k * incy] = buf3_alias[index_buf3];
+                    }
+                }
+            }
+        }
+        if (up_)
+        {
+            ScalarType* buf4_ptr = &comm_buf4[0];
+            buf4_ptr++;
+
+            std::unique_ptr<ScalarType, void (*)(ScalarType*)> buf4_ptr_dev(
+                MemoryST::allocate(sizebuffer - 1), MemoryST::free);
+
+            ScalarType* buf4_alias = buf4_ptr_dev.get();
+
+            MemorySpace::assert_is_dev_ptr(buf4_alias);
+
+            MemorySpace::copy_to_dev(buf4_ptr, sizebuffer - 1, buf4_alias);
+
+            MGMOL_PARALLEL_FOR_COLLAPSE(2, buf4_alias, functions_alias)
+            for (int color = 0; color < nfunc; color++)
+            {
+                for (int k = 0; k < incxy; k++)
+                {
+                    for (int j = 0; j < nghosts; j++)
+                    {
+                        ScalarType* uus = functions_alias
+                                          + color * size_per_function + nghosts
+                                          + zmax + j;
+                        size_t index_buf4
+                            = color * up_down_size + 1 + j * incxy + k;
+                        uus[incy * iinit + k * incy] = buf4_alias[index_buf4];
+                    }
+                }
+            }
+        }
+    }
+    else
+    {
+        if (bc_[2] == 1) /* grid_.mype_env().n_mpi_task(2)==1 */
+        {
+            int iinit = (dimy_ + 2 * nghosts_) * nghosts_;
             MGMOL_PARALLEL_FOR_COLLAPSE(2, functions_alias)
             for (int color = 0; color < nfunc; color++)
             {
@@ -1050,28 +1222,14 @@ void GridFuncVector<ScalarType, MemorySpaceType>::finishUpDownComm()
                     }
                 }
             }
-#else
-            for (int k = 0; k < nfunc_; k++)
-            {
-                ScalarType* pu = functions_[k]->uu();
-                for (int j = 0; j < nghosts_; j++)
-                {
-                    Tcopy(&dimxy_, &pu[nghosts_ - j + iinit * incy_ + zmax - 1],
-                        &incy_, &pu[nghosts_ - j + iinit * incy_ - 1], &incy_);
-                }
-                for (int j = 0; j < nghosts_; j++)
-                {
-                    Tcopy(&dimxy_, &pu[nghosts_ + j + iinit * incy_], &incy_,
-                        &pu[nghosts_ + j + iinit * incy_ + zmax], &incy_);
-                }
-            }
-#endif
         }
     }
 
     finishExchangeUpDown_tm_.stop();
 }
 template <typename ScalarType, typename MemorySpaceType>
+template <typename MST,
+    typename std::enable_if<std::is_same<MemorySpace::Host, MST>::value>::type*>
 void GridFuncVector<ScalarType, MemorySpaceType>::initiateEastWestComm(
     const int begin_color, const int end_color)
 {
@@ -1094,12 +1252,74 @@ void GridFuncVector<ScalarType, MemorySpaceType>::initiateEastWestComm(
         grid_.mype_env().Irecv(
             &comm_buf4[0], sizebuffer, WEST, &req_east_west_[2]);
 
-#ifdef HAVE_OPENMP_OFFLOAD
+    if (west_)
+    {
+        ScalarType* buf1_ptr = &comm_buf1[0];
+        // first element will tell how many functions (data) are in buffer
+        *buf1_ptr = (ScalarType)ncolors;
+        buf1_ptr++;
+
+        const int initu = east_west_size_;
+        for (int color = begin_color; color < end_color; color++)
+        {
+            *buf1_ptr = (ScalarType)gid_[0][color];
+            buf1_ptr++;
+            const ScalarType* const pu = functions_[color]->uu(initu);
+            memcpy(buf1_ptr, pu, east_west_size_data);
+            buf1_ptr += east_west_size_;
+        }
+
+        grid_.mype_env().Isend(
+            &comm_buf1[0], sizebuffer, WEST, &req_east_west_[1]);
+    }
+    if (east_)
+    {
+        ScalarType* buf2_ptr = &comm_buf2[0];
+        // first element will tell how many functions (data) are in buffer
+        *buf2_ptr = (ScalarType)ncolors;
+        buf2_ptr++;
+
+        const int initu = xmax;
+        for (int color = begin_color; color < end_color; color++)
+        {
+            *buf2_ptr = (ScalarType)gid_[nsubdivx_ - 1][color];
+            buf2_ptr++;
+            const ScalarType* const pu = functions_[color]->uu(initu);
+            memcpy(buf2_ptr, pu, east_west_size_data);
+            buf2_ptr += east_west_size_;
+        }
+        grid_.mype_env().Isend(
+            &comm_buf2[0], sizebuffer, EAST, &req_east_west_[0]);
+    }
+}
+template <typename ScalarType, typename MemorySpaceType>
+template <typename MST, typename std::enable_if<std::is_same<
+                            MemorySpace::Device, MST>::value>::type*>
+void GridFuncVector<ScalarType, MemorySpaceType>::initiateEastWestComm(
+    const int begin_color, const int end_color)
+{
+    std::vector<ScalarType>& comm_buf1(comm_buf1_[0]);
+    std::vector<ScalarType>& comm_buf2(comm_buf2_[0]);
+    std::vector<ScalarType>& comm_buf3(comm_buf3_[0]);
+    std::vector<ScalarType>& comm_buf4(comm_buf4_[0]);
+
+    const int ncolors = end_color - begin_color;
+
+    const int sizebuffer = 1 + nfunc_max_global_ * (east_west_size_ + 1);
+    const int xmax       = dimx_ * grid_.inc(0);
+
+    /* Non-blocking MPI */
+    if (east_)
+        grid_.mype_env().Irecv(
+            &comm_buf3[0], sizebuffer, EAST, &req_east_west_[3]);
+    if (west_)
+        grid_.mype_env().Irecv(
+            &comm_buf4[0], sizebuffer, WEST, &req_east_west_[2]);
+
     auto size_per_function = grid_.sizeg();
     auto east_west_size    = east_west_size_;
 
     ScalarType* functions_alias = functions_dev_.get();
-#endif
 
     if (west_)
     {
@@ -1108,7 +1328,6 @@ void GridFuncVector<ScalarType, MemorySpaceType>::initiateEastWestComm(
         *buf1_ptr = (ScalarType)ncolors;
         buf1_ptr++;
 
-#ifdef HAVE_OPENMP_OFFLOAD
         std::unique_ptr<ScalarType, void (*)(ScalarType*)> buf1_ptr_dev(
             MemoryST::allocate(sizebuffer - 1), MemoryST::free);
 
@@ -1130,17 +1349,6 @@ void GridFuncVector<ScalarType, MemorySpaceType>::initiateEastWestComm(
         }
 
         MemorySpace::copy_to_host(buf1_alias, sizebuffer - 1, buf1_ptr);
-#else
-        const int initu = east_west_size_;
-        for (int color = begin_color; color < end_color; color++)
-        {
-            *buf1_ptr = (ScalarType)gid_[0][color];
-            buf1_ptr++;
-            const ScalarType* const pu = functions_[color]->uu(initu);
-            memcpy(buf1_ptr, pu, east_west_size_data);
-            buf1_ptr += east_west_size_;
-        }
-#endif
 
         grid_.mype_env().Isend(
             &comm_buf1[0], sizebuffer, WEST, &req_east_west_[1]);
@@ -1152,7 +1360,6 @@ void GridFuncVector<ScalarType, MemorySpaceType>::initiateEastWestComm(
         *buf2_ptr = (ScalarType)ncolors;
         buf2_ptr++;
 
-#ifdef HAVE_OPENMP_OFFLOAD
         std::unique_ptr<ScalarType, void (*)(ScalarType*)> buf2_ptr_dev(
             MemoryST::allocate(sizebuffer - 1), MemoryST::free);
 
@@ -1173,38 +1380,20 @@ void GridFuncVector<ScalarType, MemorySpaceType>::initiateEastWestComm(
         }
 
         MemorySpace::copy_to_host(buf2_alias, sizebuffer - 1, buf2_ptr);
-#else
-        const int initu = xmax;
-        for (int color = begin_color; color < end_color; color++)
-        {
-            *buf2_ptr = (ScalarType)gid_[nsubdivx_ - 1][color];
-            buf2_ptr++;
-            const ScalarType* const pu = functions_[color]->uu(initu);
-            memcpy(buf2_ptr, pu, east_west_size_data);
-            buf2_ptr += east_west_size_;
-        }
-#endif
+
         grid_.mype_env().Isend(
             &comm_buf2[0], sizebuffer, EAST, &req_east_west_[0]);
     }
 }
 template <typename ScalarType, typename MemorySpaceType>
+template <typename MST,
+    typename std::enable_if<std::is_same<MemorySpace::Host, MST>::value>::type*>
 void GridFuncVector<ScalarType, MemorySpaceType>::finishEastWestComm()
 {
     finishExchangeEastWest_tm_.start();
 
     std::vector<ScalarType>& comm_buf3(comm_buf3_[0]);
     std::vector<ScalarType>& comm_buf4(comm_buf4_[0]);
-
-#ifdef HAVE_OPENMP_OFFLOAD
-    auto sizebuffer = comm_buf3.size();
-
-    auto nfunc             = nfunc_;
-    auto east_west_size    = east_west_size_;
-    auto size_per_function = grid_.sizeg();
-
-    ScalarType* functions_alias = functions_dev_.get();
-#endif
 
     const int xmax = dimx_ * grid_.inc(0);
 
@@ -1220,28 +1409,6 @@ void GridFuncVector<ScalarType, MemorySpaceType>::finishEastWestComm()
 
             const int initu = xmax + east_west_size_;
 
-#ifdef HAVE_OPENMP_OFFLOAD
-            std::unique_ptr<ScalarType, void (*)(ScalarType*)> buf3_ptr_dev(
-                MemoryST::allocate(sizebuffer - 1), MemoryST::free);
-
-            ScalarType* buf3_alias = buf3_ptr_dev.get();
-
-            MemorySpace::assert_is_dev_ptr(buf3_alias);
-
-            MemorySpace::copy_to_dev(buf3_ptr, sizebuffer - 1, buf3_alias);
-
-            MGMOL_PARALLEL_FOR_COLLAPSE(2, buf3_alias, functions_alias)
-            for (int color = 0; color < nfunc; color++)
-            {
-                for (int k = 0; k < east_west_size; k++)
-                {
-                    ScalarType* uus
-                        = functions_alias + color * size_per_function + initu;
-                    size_t index_buf3 = color * (east_west_size + 1) + 1 + k;
-                    uus[k]            = buf3_alias[index_buf3];
-                }
-            }
-#else
             for (int k = 0; k < nremote_func; k++)
             {
                 int gid = (int)(*buf3_ptr);
@@ -1262,7 +1429,6 @@ void GridFuncVector<ScalarType, MemorySpaceType>::finishEastWestComm()
                 }
                 buf3_ptr += east_west_size_;
             }
-#endif
         }
         if (west_)
         {
@@ -1272,28 +1438,6 @@ void GridFuncVector<ScalarType, MemorySpaceType>::finishEastWestComm()
 
             const int initu = 0;
 
-#ifdef HAVE_OPENMP_OFFLOAD
-            std::unique_ptr<ScalarType, void (*)(ScalarType*)> buf4_ptr_dev(
-                MemoryST::allocate(sizebuffer - 1), MemoryST::free);
-
-            ScalarType* buf4_alias = buf4_ptr_dev.get();
-
-            MemorySpace::assert_is_dev_ptr(buf4_alias);
-
-            MemorySpace::copy_to_dev(buf4_ptr, sizebuffer - 1, buf4_alias);
-
-            MGMOL_PARALLEL_FOR_COLLAPSE(2, buf4_alias, functions_alias)
-            for (int color = 0; color < nfunc; color++)
-            {
-                for (int k = 0; k < east_west_size; k++)
-                {
-                    ScalarType* uus
-                        = functions_alias + color * size_per_function + initu;
-                    size_t index_buf4 = color * (east_west_size + 1) + 1 + k;
-                    uus[k]            = buf4_alias[index_buf4];
-                }
-            }
-#else
             for (int k = 0; k < nremote_func; k++)
             {
                 int gid = (int)(*buf4_ptr);
@@ -1314,7 +1458,6 @@ void GridFuncVector<ScalarType, MemorySpaceType>::finishEastWestComm()
                 }
                 buf4_ptr += east_west_size_;
             }
-#endif
         }
     }
     else
@@ -1322,7 +1465,104 @@ void GridFuncVector<ScalarType, MemorySpaceType>::finishEastWestComm()
 
         if (bc_[0] == 1)
         {
-#ifdef HAVE_OPENMP_OFFLOAD
+            const size_t east_west_size_data
+                = east_west_size_ * sizeof(ScalarType);
+
+            for (int k = 0; k < nfunc_; k++)
+            {
+                ScalarType* pu = functions_[k]->uu();
+                memcpy(&pu[0], &pu[xmax], east_west_size_data);
+                memcpy(&pu[east_west_size_ + xmax], &pu[east_west_size_],
+                    east_west_size_data);
+            }
+        }
+    }
+    finishExchangeEastWest_tm_.stop();
+}
+template <typename ScalarType, typename MemorySpaceType>
+template <typename MST, typename std::enable_if<std::is_same<
+                            MemorySpace::Device, MST>::value>::type*>
+void GridFuncVector<ScalarType, MemorySpaceType>::finishEastWestComm()
+{
+    finishExchangeEastWest_tm_.start();
+
+    std::vector<ScalarType>& comm_buf3(comm_buf3_[0]);
+    std::vector<ScalarType>& comm_buf4(comm_buf4_[0]);
+
+    auto sizebuffer = comm_buf3.size();
+
+    auto nfunc             = nfunc_;
+    auto east_west_size    = east_west_size_;
+    auto size_per_function = grid_.sizeg();
+
+    ScalarType* functions_alias = functions_dev_.get();
+
+    const int xmax = dimx_ * grid_.inc(0);
+
+    if (grid_.mype_env().n_mpi_task(0) > 1)
+    {
+        if (east_)
+        {
+            ScalarType* buf3_ptr = &comm_buf3[0];
+            buf3_ptr++;
+
+            const int initu = xmax + east_west_size_;
+
+            std::unique_ptr<ScalarType, void (*)(ScalarType*)> buf3_ptr_dev(
+                MemoryST::allocate(sizebuffer - 1), MemoryST::free);
+
+            ScalarType* buf3_alias = buf3_ptr_dev.get();
+
+            MemorySpace::assert_is_dev_ptr(buf3_alias);
+
+            MemorySpace::copy_to_dev(buf3_ptr, sizebuffer - 1, buf3_alias);
+
+            MGMOL_PARALLEL_FOR_COLLAPSE(2, buf3_alias, functions_alias)
+            for (int color = 0; color < nfunc; color++)
+            {
+                for (int k = 0; k < east_west_size; k++)
+                {
+                    ScalarType* uus
+                        = functions_alias + color * size_per_function + initu;
+                    size_t index_buf3 = color * (east_west_size + 1) + 1 + k;
+                    uus[k]            = buf3_alias[index_buf3];
+                }
+            }
+        }
+        if (west_)
+        {
+            ScalarType* buf4_ptr = &comm_buf4[0];
+            buf4_ptr++;
+
+            const int initu = 0;
+
+            std::unique_ptr<ScalarType, void (*)(ScalarType*)> buf4_ptr_dev(
+                MemoryST::allocate(sizebuffer - 1), MemoryST::free);
+
+            ScalarType* buf4_alias = buf4_ptr_dev.get();
+
+            MemorySpace::assert_is_dev_ptr(buf4_alias);
+
+            MemorySpace::copy_to_dev(buf4_ptr, sizebuffer - 1, buf4_alias);
+
+            MGMOL_PARALLEL_FOR_COLLAPSE(2, buf4_alias, functions_alias)
+            for (int color = 0; color < nfunc; color++)
+            {
+                for (int k = 0; k < east_west_size; k++)
+                {
+                    ScalarType* uus
+                        = functions_alias + color * size_per_function + initu;
+                    size_t index_buf4 = color * (east_west_size + 1) + 1 + k;
+                    uus[k]            = buf4_alias[index_buf4];
+                }
+            }
+        }
+    }
+    else
+    { /* grid_.mype_env().n_mpi_task(0)==1 */
+
+        if (bc_[0] == 1)
+        {
             MGMOL_PARALLEL_FOR_COLLAPSE(2, functions_alias)
             for (int color = 0; color < nfunc; color++)
             {
@@ -1334,18 +1574,6 @@ void GridFuncVector<ScalarType, MemorySpaceType>::finishEastWestComm()
                     pu[east_west_size + xmax + k] = pu[east_west_size + k];
                 }
             }
-#else
-            const size_t east_west_size_data
-                = east_west_size_ * sizeof(ScalarType);
-
-            for (int k = 0; k < nfunc_; k++)
-            {
-                ScalarType* pu = functions_[k]->uu();
-                memcpy(&pu[0], &pu[xmax], east_west_size_data);
-                memcpy(&pu[east_west_size_ + xmax], &pu[east_west_size_],
-                    east_west_size_data);
-            }
-#endif
         }
     }
     finishExchangeEastWest_tm_.stop();
