@@ -656,7 +656,7 @@ void GridFuncVector<ScalarType, MemorySpaceType>::finishNorthSouthComm()
 
     auto sizebuffer = comm_buf3.size();
 
-    int nfunc              = nfunc_;
+    auto nfunc              = nfunc_;
     auto incy              = incy_;
     auto incx              = incx_;
     auto dimx              = dimx_;
@@ -1338,7 +1338,7 @@ void GridFuncVector<ScalarType, MemorySpaceType>::initiateEastWestComm(
         MGMOL_PARALLEL_FOR_COLLAPSE(2, buf1_alias, functions_alias)
         for (int color = begin_color; color < end_color; color++)
         {
-            for (int k = 0; k < east_west_size; k++)
+            for (size_t k = 0; k < east_west_size; k++)
             {
                 const ScalarType* __restrict__ uus = functions_alias
                                                      + color * size_per_function
@@ -1370,7 +1370,7 @@ void GridFuncVector<ScalarType, MemorySpaceType>::initiateEastWestComm(
         MGMOL_PARALLEL_FOR_COLLAPSE(2, buf2_alias, functions_alias)
         for (int color = begin_color; color < end_color; color++)
         {
-            for (int k = 0; k < east_west_size; k++)
+            for (size_t k = 0; k < east_west_size; k++)
             {
                 const ScalarType* __restrict__ uus
                     = functions_alias + color * size_per_function + xmax;
@@ -1520,7 +1520,7 @@ void GridFuncVector<ScalarType, MemorySpaceType>::finishEastWestComm()
             MGMOL_PARALLEL_FOR_COLLAPSE(2, buf3_alias, functions_alias)
             for (int color = 0; color < nfunc; color++)
             {
-                for (int k = 0; k < east_west_size; k++)
+                for (size_t k = 0; k < east_west_size; k++)
                 {
                     ScalarType* uus
                         = functions_alias + color * size_per_function + initu;
@@ -1548,7 +1548,7 @@ void GridFuncVector<ScalarType, MemorySpaceType>::finishEastWestComm()
             MGMOL_PARALLEL_FOR_COLLAPSE(2, buf4_alias, functions_alias)
             for (int color = 0; color < nfunc; color++)
             {
-                for (int k = 0; k < east_west_size; k++)
+                for (size_t k = 0; k < east_west_size; k++)
                 {
                     ScalarType* uus
                         = functions_alias + color * size_per_function + initu;
@@ -1566,7 +1566,7 @@ void GridFuncVector<ScalarType, MemorySpaceType>::finishEastWestComm()
             MGMOL_PARALLEL_FOR_COLLAPSE(2, functions_alias)
             for (int color = 0; color < nfunc; color++)
             {
-                for (int k = 0; k < east_west_size; k++)
+                for (size_t k = 0; k < east_west_size; k++)
                 {
                     ScalarType* pu
                         = functions_alias + color * size_per_function;
