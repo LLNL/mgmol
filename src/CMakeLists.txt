@@ -78,6 +78,7 @@ set(SOURCES
  getLAeigen.cc 
  LDAFunctional.cc 
  LDAonGrid.cc 
+ LDAonGridSpin.cc
  PBEFunctional.cc 
  PBEonGrid.cc 
  PBEonGridSpin.cc 

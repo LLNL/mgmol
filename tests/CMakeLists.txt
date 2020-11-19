@@ -422,6 +422,14 @@ add_test(NAME testSpinO2
          ${CMAKE_CURRENT_SOURCE_DIR}/SpinO2/mgmol_spin1.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/SpinO2/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+add_test(NAME testSpinO2LDA
+         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/SpinO2LDA/test.py
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+         ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
+         ${CMAKE_CURRENT_SOURCE_DIR}/SpinO2LDA/mgmol.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/SpinO2LDA/coords.in
+         ${CMAKE_CURRENT_SOURCE_DIR}/SpinO2LDA/lrs.in
+         ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 
 
 target_include_directories(testHDF5P PRIVATE ${HDF5_INCLUDE_DIRS})
