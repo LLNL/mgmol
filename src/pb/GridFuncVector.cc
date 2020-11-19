@@ -656,7 +656,7 @@ void GridFuncVector<ScalarType, MemorySpaceType>::finishNorthSouthComm()
 
     auto sizebuffer = comm_buf3.size();
 
-    auto nfunc              = nfunc_;
+    auto nfunc             = nfunc_;
     auto incy              = incy_;
     auto incx              = incx_;
     auto dimx              = dimx_;
