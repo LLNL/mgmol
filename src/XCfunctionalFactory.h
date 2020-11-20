@@ -7,6 +7,7 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 #include "LDAonGrid.h"
+#include "LDAonGridSpin.h"
 #include "PBEonGrid.h"
 #include "PBEonGridSpin.h"
 #include "Potentials.h"
@@ -22,7 +23,10 @@ public:
     {
         if (xctype == 0)
         {
-            return new LDAonGrid<T>(rho, pot);
+            if (nspin > 1)
+                return new LDAonGridSpin<T>(rho, pot);
+            else
+                return new LDAonGrid<T>(rho, pot);
         }
         else if (xctype == 2)
         {

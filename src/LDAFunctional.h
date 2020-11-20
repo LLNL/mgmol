@@ -7,13 +7,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-////////////////////////////////////////////////////////////////////////////////
-//
-// LDAFunctional.h
-//
-////////////////////////////////////////////////////////////////////////////////
-// $Id$
-
 #ifndef LDAFUNCTIONAL_H
 #define LDAFUNCTIONAL_H
 
@@ -36,7 +29,6 @@ class LDAFunctional : public XCFunctional
 public:
     LDAFunctional(std::vector<std::vector<RHODTYPE>>& rhoe) : XCFunctional(rhoe)
     {
-        assert(nspin_ == 1);
         assert(np_ > 0);
 
         exc_.resize(np_);

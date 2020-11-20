@@ -9,12 +9,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-// XCFunctional.h
-//
-////////////////////////////////////////////////////////////////////////////////
-// $Id$
-
-//
 // Abstract base class for density functionals
 // Input variables are: rho, rho_up, rho_dn, grad_rho, grad_rho_up, grad_rho_dn
 //
@@ -62,13 +56,16 @@
 class XCFunctional
 {
 protected:
-    int np_, nspin_;
+    int np_;
+    int nspin_;
 
     RHODTYPE* prho_;
     RHODTYPE* prho_up_;
     RHODTYPE* prho_dn_;
 
-    POTDTYPE *pexc_, *pexc_up_, *pexc_dn_;
+    POTDTYPE* pexc_;
+    POTDTYPE* pexc_up_;
+    POTDTYPE* pexc_dn_;
 
 public:
     POTDTYPE *pvxc1_, *pvxc1_up_, *pvxc1_dn_;
@@ -80,10 +77,9 @@ public:
     int nspin(void) const { return nspin_; };
 
     XCFunctional(std::vector<std::vector<RHODTYPE>>& rhoe)
+        : np_(rhoe[0].size()), nspin_(rhoe.size())
     {
-        nspin_ = rhoe.size();
         if (nspin_ > 1) assert(rhoe[0].size() == rhoe[1].size());
-        np_ = rhoe[0].size();
 
         pexc_ = pexc_up_ = pexc_dn_ = nullptr;
         pvxc1_ = pvxc1_up_ = pvxc1_dn_ = nullptr;
