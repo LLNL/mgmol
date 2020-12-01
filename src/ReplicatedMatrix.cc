@@ -253,7 +253,6 @@ void ReplicatedMatrix::transpose(
     magmablas_dtranspose(dim_, dim_, a.device_data_.get(), a.ld_, dwork, ld_,
         magma_singleton.queue_);
 
-    this->scal(beta);
     magmablas_dgeadd2(dim_, dim_, alpha, dwork, ld_, beta, device_data_.get(),
         ld_, magma_singleton.queue_);
 
