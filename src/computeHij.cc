@@ -25,8 +25,8 @@
 #include "Potentials.h"
 #include "ProjectedMatricesInterface.h"
 #include "ProjectedMatricesSparse.h"
-#include "SquareSubMatrix2DistMatrix.h"
 #include "ReplicatedMatrix.h"
+#include "SquareSubMatrix2DistMatrix.h"
 
 template <>
 void MGmol<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals& orbitalsi,
@@ -381,8 +381,8 @@ void MGmol<OrbitalsType>::computeHnlPhiAndAdd2HPhi(Ions& ions,
 
 template <class OrbitalsType>
 template <class MatrixType>
-void MGmol<OrbitalsType>::addHlocal2matrix(OrbitalsType& orbitalsi,
-    OrbitalsType& orbitalsj, MatrixType& mat)
+void MGmol<OrbitalsType>::addHlocal2matrix(
+    OrbitalsType& orbitalsi, OrbitalsType& orbitalsj, MatrixType& mat)
 {
     computeHij_tm_.start();
 
@@ -482,13 +482,11 @@ void MGmol<OrbitalsType>::getHpsiAndTheta(Ions& ions, OrbitalsType& phi,
 template class MGmol<LocGridOrbitals>;
 template class MGmol<ExtendedGridOrbitals>;
 
-template
-void MGmol<ExtendedGridOrbitals>::addHlocal2matrix(
-    ExtendedGridOrbitals& orbitalsi,
-    ExtendedGridOrbitals& orbitalsj, dist_matrix::DistMatrix<double>&);
+template void MGmol<ExtendedGridOrbitals>::addHlocal2matrix(
+    ExtendedGridOrbitals& orbitalsi, ExtendedGridOrbitals& orbitalsj,
+    dist_matrix::DistMatrix<double>&);
 #ifdef HAVE_MAGMA
-template
-void MGmol<ExtendedGridOrbitals>::addHlocal2matrix(
-    ExtendedGridOrbitals& orbitalsi,
-    ExtendedGridOrbitals& orbitalsj, ReplicatedMatrix& mat);
+template void MGmol<ExtendedGridOrbitals>::addHlocal2matrix(
+    ExtendedGridOrbitals& orbitalsi, ExtendedGridOrbitals& orbitalsj,
+    ReplicatedMatrix& mat);
 #endif

@@ -523,7 +523,7 @@ void ExtendedGridOrbitals::multiply_by_matrix(
     multiply_by_matrix(matrix, product.psi(0), product.lda_);
 }
 
-template<>
+template <>
 void ExtendedGridOrbitals::multiply_by_matrix(
     const dist_matrix::DistMatrix<DISTMATDTYPE>& matrix)
 {
@@ -571,9 +571,8 @@ void ExtendedGridOrbitals::multiply_by_matrix(
 }
 
 #ifdef HAVE_MAGMA
-template<>
-void ExtendedGridOrbitals::multiply_by_matrix(
-    const ReplicatedMatrix& matrix)
+template <>
+void ExtendedGridOrbitals::multiply_by_matrix(const ReplicatedMatrix& matrix)
 {
     prod_matrix_tm_.start();
 
@@ -582,17 +581,18 @@ void ExtendedGridOrbitals::multiply_by_matrix(
 
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
-    ORBDTYPE* tmp = MemorySpace::Memory<ORBDTYPE,
-            MemorySpace::Device>::allocate(numst_*lda_);
+    ORBDTYPE* tmp
+        = MemorySpace::Memory<ORBDTYPE, MemorySpace::Device>::allocate(
+            numst_ * lda_);
 
     magmablas_dgemm(magma_transa, magma_transb, numpt_, numst_, numst_, 1.,
-        block_vector_.vect(0), lda_, matrix.data(), matrix.ld(), 0.,
-        tmp, lda_, magma_singleton.queue_);
+        block_vector_.vect(0), lda_, matrix.data(), matrix.ld(), 0., tmp, lda_,
+        magma_singleton.queue_);
 
     MemorySpace::Memory<ORBDTYPE, MemorySpace::Device>::copy(
-        tmp, numst_*lda_, block_vector_.vect(0));
+        tmp, numst_ * lda_, block_vector_.vect(0));
 
-    MemorySpace::Memory<ORBDTYPE,MemorySpace::Device>::free(tmp);
+    MemorySpace::Memory<ORBDTYPE, MemorySpace::Device>::free(tmp);
 
     prod_matrix_tm_.stop();
 }
@@ -1717,7 +1717,7 @@ void ExtendedGridOrbitals::initRand()
     resetIterativeIndex();
 }
 
-template<>
+template <>
 void ExtendedGridOrbitals::addDotWithNcol2Matrix(
     ExtendedGridOrbitals& Apsi, dist_matrix::DistMatrix<double>& matrix) const
 {
@@ -1769,7 +1769,7 @@ void ExtendedGridOrbitals::addDotWithNcol2Matrix(
 }
 
 #ifdef HAVE_MAGMA
-template<>
+template <>
 void ExtendedGridOrbitals::addDotWithNcol2Matrix(
     ExtendedGridOrbitals& Apsi, ReplicatedMatrix& matrix) const
 {
@@ -1784,12 +1784,12 @@ void ExtendedGridOrbitals::addDotWithNcol2Matrix(
     const double vel = grid_.vel();
 
     magmablas_dgemm(magma_transa, magma_transb, numst_, numst_, numpt_, vel,
-        block_vector_.vect(0), lda_, Apsi.getPsi(0), lda_, 0.,
-        tmp.data(), tmp.ld(), magma_singleton.queue_);
+        block_vector_.vect(0), lda_, Apsi.getPsi(0), lda_, 0., tmp.data(),
+        tmp.ld(), magma_singleton.queue_);
 
     tmp.consolidate();
 
-    matrix.axpy(1.,tmp);
+    matrix.axpy(1., tmp);
 
     addDot_tm_.stop();
 }

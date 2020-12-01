@@ -38,12 +38,12 @@
 #include "Potentials.h"
 #include "ProjectedMatricesInterface.h"
 #include "ProjectedMatricesSparse.h"
+#include "ReplicatedMatrix.h"
 #include "Rho.h"
 #include "SpreadsAndCenters.h"
 #include "SubspaceProjector.h"
 #include "SymmetricPair.h"
 #include "tools.h"
-#include "ReplicatedMatrix.h"
 
 #define TEST_ENERGY 0
 

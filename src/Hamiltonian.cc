@@ -194,11 +194,12 @@ void Hamiltonian<ExtendedGridOrbitals>::addHlocal2matrix(
     // hij.print(std::cout, 0, 0, 5, 5);
 }
 
+#ifdef HAVE_MAGMA
 template <>
 template <>
 void Hamiltonian<ExtendedGridOrbitals>::addHlocal2matrix(
     ExtendedGridOrbitals& phi1, ExtendedGridOrbitals& phi2,
-    ReplicatedMatrix&  hij, const bool force)
+    ReplicatedMatrix& hij, const bool force)
 {
     applyLocal(phi2, force);
 
@@ -208,6 +209,7 @@ void Hamiltonian<ExtendedGridOrbitals>::addHlocal2matrix(
 
     phi1.addDotWithNcol2Matrix(*hlphi_, hij);
 }
+#endif
 
 template <class T>
 void Hamiltonian<T>::addHlocalij(

@@ -108,5 +108,5 @@ template class HamiltonianMVP_DMStrategy<dist_matrix::DistMatrix<DISTMATDTYPE>,
     ExtendedGridOrbitals>;
 #ifdef HAVE_MAGMA
 template class HamiltonianMVP_DMStrategy<ReplicatedMatrix,
-    ProjectedMatrices<ReplicatedMatrix>,ExtendedGridOrbitals>;
+    ProjectedMatrices<ReplicatedMatrix>, ExtendedGridOrbitals>;
 #endif

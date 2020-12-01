@@ -18,8 +18,8 @@
 #include "Potentials.h"
 #include "ProjectedMatrices.h"
 #include "ProjectedMatricesSparse.h"
-#include "tools.h"
 #include "ReplicatedMatrix.h"
+#include "tools.h"
 
 #include <iomanip>
 double evalEntropyMVP(ProjectedMatricesInterface* projmatrices,
@@ -370,6 +370,6 @@ template class HamiltonianMVPSolver<dist_matrix::DistMatrix<DISTMATDTYPE>,
     ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>,
     ExtendedGridOrbitals>;
 #ifdef HAVE_MAGMA
-template class HamiltonianMVPSolver<ReplicatedMatrix, ProjectedMatrices<ReplicatedMatrix>,
-    ExtendedGridOrbitals>;
+template class HamiltonianMVPSolver<ReplicatedMatrix,
+    ProjectedMatrices<ReplicatedMatrix>, ExtendedGridOrbitals>;
 #endif

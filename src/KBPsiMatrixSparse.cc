@@ -17,8 +17,8 @@
 #include "Mesh.h"
 #include "ProjectedMatrices.h"
 #include "ProjectedMatricesSparse.h"
-#include "SquareSubMatrix2DistMatrix.h"
 #include "ReplicatedMatrix.h"
+#include "SquareSubMatrix2DistMatrix.h"
 
 #include <limits.h>
 #define Ry2Ha 0.5;

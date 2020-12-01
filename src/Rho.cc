@@ -14,13 +14,13 @@
 #include "MPIdata.h"
 #include "Mesh.h"
 #include "ProjectedMatrices.h"
+#include "ReplicatedMatrix.h"
 #include "SquareLocalMatrices.h"
 #include "SubMatrices.h"
 #include "magma_singleton.h"
 #include "memory_space.h"
 #include "mputils.h"
 #include "numerical_kernels.h"
-#include "ReplicatedMatrix.h"
 
 template <class OrbitalsType>
 Timer Rho<OrbitalsType>::update_tm_("Rho::update");
@@ -913,9 +913,7 @@ template double Rho<LocGridOrbitals>::dotWithRho<float>(
 #ifdef HAVE_MAGMA
 template void Rho<ExtendedGridOrbitals>::computeRho<ReplicatedMatrix>(
     ExtendedGridOrbitals&, const ReplicatedMatrix&);
-template void
-Rho<ExtendedGridOrbitals>::computeRho<ReplicatedMatrix>(
-    ExtendedGridOrbitals&, ExtendedGridOrbitals&,
-    const ReplicatedMatrix&, const ReplicatedMatrix&,
-    const ReplicatedMatrix&, const ReplicatedMatrix&);
+template void Rho<ExtendedGridOrbitals>::computeRho<ReplicatedMatrix>(
+    ExtendedGridOrbitals&, ExtendedGridOrbitals&, const ReplicatedMatrix&,
+    const ReplicatedMatrix&, const ReplicatedMatrix&, const ReplicatedMatrix&);
 #endif

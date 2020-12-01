@@ -2,9 +2,10 @@
 #include "ReplicatedMatrix.h"
 
 template <>
-DMStrategy* DMStrategyFactory<LocGridOrbitals,dist_matrix::DistMatrix<double>>::
-    createHamiltonianMVP_DMStrategy(
-    MPI_Comm comm, std::ostream& os, Ions& ions, Rho<LocGridOrbitals>* rho,
+DMStrategy* DMStrategyFactory<LocGridOrbitals,
+    dist_matrix::DistMatrix<double>>::createHamiltonianMVP_DMStrategy(MPI_Comm
+                                                                          comm,
+    std::ostream& os, Ions& ions, Rho<LocGridOrbitals>* rho,
     Energy<LocGridOrbitals>* energy, Electrostatic* electrostat,
     MGmol<LocGridOrbitals>* mgmol_strategy,
     ProjectedMatricesInterface* /*proj_matrices*/, LocGridOrbitals* orbitals,
@@ -32,9 +33,10 @@ DMStrategy* DMStrategyFactory<LocGridOrbitals,dist_matrix::DistMatrix<double>>::
 }
 
 template <>
-DMStrategy*
-DMStrategyFactory<ExtendedGridOrbitals, dist_matrix::DistMatrix<double>>::createHamiltonianMVP_DMStrategy(
-    MPI_Comm comm, std::ostream& os, Ions& ions, Rho<ExtendedGridOrbitals>* rho,
+DMStrategy* DMStrategyFactory<ExtendedGridOrbitals,
+    dist_matrix::DistMatrix<double>>::createHamiltonianMVP_DMStrategy(MPI_Comm
+                                                                          comm,
+    std::ostream& os, Ions& ions, Rho<ExtendedGridOrbitals>* rho,
     Energy<ExtendedGridOrbitals>* energy, Electrostatic* electrostat,
     MGmol<ExtendedGridOrbitals>* mgmol_strategy,
     ProjectedMatricesInterface* /*proj_matrices*/,
@@ -53,9 +55,9 @@ DMStrategyFactory<ExtendedGridOrbitals, dist_matrix::DistMatrix<double>>::create
 
 #ifdef HAVE_MAGMA
 template <>
-DMStrategy*
-DMStrategyFactory<ExtendedGridOrbitals, ReplicatedMatrix>::createHamiltonianMVP_DMStrategy(
-    MPI_Comm comm, std::ostream& os, Ions& ions, Rho<ExtendedGridOrbitals>* rho,
+DMStrategy* DMStrategyFactory<ExtendedGridOrbitals,
+    ReplicatedMatrix>::createHamiltonianMVP_DMStrategy(MPI_Comm comm,
+    std::ostream& os, Ions& ions, Rho<ExtendedGridOrbitals>* rho,
     Energy<ExtendedGridOrbitals>* energy, Electrostatic* electrostat,
     MGmol<ExtendedGridOrbitals>* mgmol_strategy,
     ProjectedMatricesInterface* /*proj_matrices*/,
@@ -63,11 +65,9 @@ DMStrategyFactory<ExtendedGridOrbitals, ReplicatedMatrix>::createHamiltonianMVP_
 {
     (void)short_sighted;
 
-    DMStrategy* dm_strategy
-        = new HamiltonianMVP_DMStrategy<ReplicatedMatrix,
-            ProjectedMatrices<ReplicatedMatrix>,
-            ExtendedGridOrbitals>(
-            comm, os, ions, rho, energy, electrostat, mgmol_strategy, orbitals);
+    DMStrategy* dm_strategy = new HamiltonianMVP_DMStrategy<ReplicatedMatrix,
+        ProjectedMatrices<ReplicatedMatrix>, ExtendedGridOrbitals>(
+        comm, os, ions, rho, energy, electrostat, mgmol_strategy, orbitals);
 
     return dm_strategy;
 }
