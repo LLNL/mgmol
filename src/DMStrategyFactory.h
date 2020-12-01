@@ -20,7 +20,7 @@
 #include "ProjectedMatrices.h"
 #include "ProjectedMatricesSparse.h"
 
-template <class OrbitalsType>
+template <class OrbitalsType, class MatrixType>
 class DMStrategyFactory
 {
 public:
@@ -34,7 +34,7 @@ public:
         DMStrategy* dm_strategy = nullptr;
         if (ct.DM_solver() == DMNonLinearSolverType::MVP)
         {
-            dm_strategy = new MVP_DMStrategy<OrbitalsType>(comm, os, ions, rho,
+            dm_strategy = new MVP_DMStrategy<OrbitalsType,MatrixType>(comm, os, ions, rho,
                 energy, electrostat, mgmol_strategy, orbitals, proj_matrices,
                 ct.use_old_dm());
         }

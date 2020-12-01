@@ -16,6 +16,7 @@
 #include "MGmol.h"
 #include "ProjectedMatrices.h"
 #include "ProjectedMatricesSparse.h"
+#include "ReplicatedMatrix.h"
 
 template <class MatrixType, class ProjMatrixType, class OrbitalsType>
 HamiltonianMVP_DMStrategy<MatrixType, ProjMatrixType,
@@ -105,3 +106,7 @@ template class HamiltonianMVP_DMStrategy<VariableSizeMatrix<sparserow>,
 template class HamiltonianMVP_DMStrategy<dist_matrix::DistMatrix<DISTMATDTYPE>,
     ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>,
     ExtendedGridOrbitals>;
+#ifdef HAVE_MAGMA
+template class HamiltonianMVP_DMStrategy<ReplicatedMatrix,
+    ProjectedMatrices<ReplicatedMatrix>,ExtendedGridOrbitals>;
+#endif

@@ -913,4 +913,9 @@ template double Rho<LocGridOrbitals>::dotWithRho<float>(
 #ifdef HAVE_MAGMA
 template void Rho<ExtendedGridOrbitals>::computeRho<ReplicatedMatrix>(
     ExtendedGridOrbitals&, const ReplicatedMatrix&);
+template void
+Rho<ExtendedGridOrbitals>::computeRho<ReplicatedMatrix>(
+    ExtendedGridOrbitals&, ExtendedGridOrbitals&,
+    const ReplicatedMatrix&, const ReplicatedMatrix&,
+    const ReplicatedMatrix&, const ReplicatedMatrix&);
 #endif

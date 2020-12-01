@@ -9,6 +9,7 @@
 
 #include "ProjectedMatrices2N.h"
 #include "DistMatrix.h"
+#include "ReplicatedMatrix.h"
 
 template <class MatrixType>
 ProjectedMatrices2N<MatrixType>::ProjectedMatrices2N(
@@ -65,3 +66,6 @@ void ProjectedMatrices2N<MatrixType>::iterativeUpdateDMwithEigenstates(
 }
 
 template class ProjectedMatrices2N<dist_matrix::DistMatrix<double>>;
+#ifdef HAVE_MAGMA
+template class ProjectedMatrices2N<ReplicatedMatrix>;
+#endif

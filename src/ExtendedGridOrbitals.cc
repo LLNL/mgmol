@@ -523,6 +523,7 @@ void ExtendedGridOrbitals::multiply_by_matrix(
     multiply_by_matrix(matrix, product.psi(0), product.lda_);
 }
 
+template<>
 void ExtendedGridOrbitals::multiply_by_matrix(
     const dist_matrix::DistMatrix<DISTMATDTYPE>& matrix)
 {
@@ -568,6 +569,34 @@ void ExtendedGridOrbitals::multiply_by_matrix(
 
     prod_matrix_tm_.stop();
 }
+
+#ifdef HAVE_MAGMA
+template<>
+void ExtendedGridOrbitals::multiply_by_matrix(
+    const ReplicatedMatrix& matrix)
+{
+    prod_matrix_tm_.start();
+
+    magma_trans_t magma_transa = magma_trans_const('n');
+    magma_trans_t magma_transb = magma_trans_const('n');
+
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    ORBDTYPE* tmp = MemorySpace::Memory<ORBDTYPE,
+            MemorySpace::Device>::allocate(numst_*lda_);
+
+    magmablas_dgemm(magma_transa, magma_transb, numpt_, numst_, numst_, 1.,
+        block_vector_.vect(0), lda_, matrix.data(), matrix.ld(), 0.,
+        tmp, lda_, magma_singleton.queue_);
+
+    MemorySpace::Memory<ORBDTYPE, MemorySpace::Device>::copy(
+        tmp, numst_*lda_, block_vector_.vect(0));
+
+    MemorySpace::Memory<ORBDTYPE,MemorySpace::Device>::free(tmp);
+
+    prod_matrix_tm_.stop();
+}
+#endif
 
 int ExtendedGridOrbitals::read_hdf5(HDFrestart& h5f_file)
 {
@@ -1751,9 +1780,16 @@ void ExtendedGridOrbitals::addDotWithNcol2Matrix(
 
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
-    magmablas_dgemm(magma_transa, magma_transb, numst_, numst_, numpt_, 1.,
+    ReplicatedMatrix tmp("tmp", numst_, numst_);
+    const double vel = grid_.vel();
+
+    magmablas_dgemm(magma_transa, magma_transb, numst_, numst_, numpt_, vel,
         block_vector_.vect(0), lda_, Apsi.getPsi(0), lda_, 0.,
-        matrix.data(), matrix.ld(), magma_singleton.queue_);
+        tmp.data(), tmp.ld(), magma_singleton.queue_);
+
+    tmp.consolidate();
+
+    matrix.axpy(1.,tmp);
 
     addDot_tm_.stop();
 }
