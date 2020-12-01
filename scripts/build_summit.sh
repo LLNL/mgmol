@@ -1,7 +1,7 @@
 #! /bin/csh -f
 
 # load some modules
-source ./scripts/modules.summit
+./scripts/modules.summit
 
 # set some environment variables. Set them explicitly or use loaded module path (preferred)
 
@@ -26,7 +26,7 @@ cmake \
       -DCMAKE_BUILD_TYPE=RelWithDebInfo \
       -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} \
       -DCMAKE_CXX_COMPILER=mpicxx \
-      -DMPIEXEC_EXECUTABLE="/sw/summit/xalt/1.2.0/bin/jsrun" \
+      -DMPIEXEC_EXECUTABLE="/sw/summit/xalt/1.2.1/bin/jsrun" \
       -DMPIEXEC_NUMPROCS_FLAG="-n" \
       -DMPIEXEC_PREFLAGS="-a1;-c4;-bpacked:2;-g1" \
       -DBLA_VENDOR=${BLA_VENDOR} \
