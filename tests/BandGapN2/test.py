@@ -74,7 +74,7 @@ for i in range(len(lines)):
     gapHa = eval(eigenvalues[5])-eval(eigenvalues[4])
     gapEv = gapHa*27.211
     if abs(gapEv-ExpectedGapEV)>tole:
-      print("ERROR Band gap = {}".format(gapEV))
+      print("ERROR Band gap = {}".format(gapEv))
       print("Expected value: {}".format(ExpectedGapEV))
       sys.exit(1)
 
