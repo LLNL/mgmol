@@ -40,6 +40,8 @@ ReplicatedMatrix::ReplicatedMatrix(
       name_(name)
 {
     assert(m == n);
+
+    clear();
 }
 
 ReplicatedMatrix::ReplicatedMatrix(const std::string name, const int n)
@@ -48,6 +50,7 @@ ReplicatedMatrix::ReplicatedMatrix(const std::string name, const int n)
       device_data_(MemoryDev::allocate(dim_ * ld_), MemoryDev::free),
       name_(name)
 {
+    clear();
 }
 
 ReplicatedMatrix::ReplicatedMatrix(const std::string name,
@@ -92,6 +95,15 @@ ReplicatedMatrix& ReplicatedMatrix::operator=(const ReplicatedMatrix& rhs)
 }
 
 ReplicatedMatrix::~ReplicatedMatrix() {}
+
+void ReplicatedMatrix::getsub(
+    const ReplicatedMatrix& src, int m, int n, int ia, int ja)
+{
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    magma_dcopymatrix(m, n, src.device_data_.get() + ja * src.ld_ + ia, src.ld_,
+        device_data_.get(), ld_, magma_singleton.queue_);
+}
 
 void ReplicatedMatrix::consolidate()
 {
@@ -441,8 +453,6 @@ void ReplicatedMatrix::setVal(const int i, const int j, const double val)
 
 void ReplicatedMatrix::setDiagonal(const std::vector<double>& diag_values)
 {
-    clear();
-
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
     magma_dsetvector(dim_, diag_values.data(), 1, device_data_.get(), ld_ + 1,

@@ -49,4 +49,29 @@ TEST_CASE("Check ReplicatedMatrix", "[replicated_matrix]")
             CHECK(values[i]
                   == Approx(value * static_cast<double>(npes)).epsilon(1.e-8));
     }
+
+    // set diagonal, then retrieve it
+    {
+        ReplicatedMatrix mat("mat", n, n);
+        std::vector<double> values(n);
+        for (int i = 0; i < n; i++)values[i] = i;
+        mat.setDiagonal(values);
+
+        std::vector<double> newval(n);
+        mat.getDiagonalValues(newval.data());
+        for (int i = 0; i < n; i++)
+            CHECK(newval[i]
+                  == Approx(static_cast<double>(i)).epsilon(1.e-15));
+    }
+
+    // set matrix to identity, then retrieve diagonal
+    {
+        ReplicatedMatrix mat("mat", n, n);
+        mat.identity();
+        std::vector<double> newval(n);
+        mat.getDiagonalValues(newval.data());
+        for (int i = 0; i < n; i++)
+            CHECK(newval[i]
+                  == Approx(1.).epsilon(1.e-15));
+    }
 }
