@@ -310,8 +310,8 @@ public:
     void getLocalOverlap(
         const ExtendedGridOrbitals& orbitals, SquareLocalMatrices<MATDTYPE>&);
 
-    void addDotWithNcol2Matrix(
-        ExtendedGridOrbitals&, dist_matrix::DistMatrix<double>&) const;
+    template <class MatrixType>
+    void addDotWithNcol2Matrix(ExtendedGridOrbitals&, MatrixType&) const;
 
     void scal(const double alpha)
     {
@@ -345,7 +345,8 @@ public:
         ExtendedGridOrbitals& product) const;
     void multiply_by_matrix(
         const DISTMATDTYPE* const matrix, ExtendedGridOrbitals& product) const;
-    void multiply_by_matrix(const dist_matrix::DistMatrix<DISTMATDTYPE>&);
+    template <class MatrixType>
+    void multiply_by_matrix(const MatrixType&);
     void multiplyByMatrix2states(const int st1, const int st2,
         const double* mat, ExtendedGridOrbitals& product);
 

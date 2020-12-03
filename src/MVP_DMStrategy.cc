@@ -15,16 +15,17 @@
 #include "MGmol.h"
 #include "MVPSolver.h"
 #include "ProjectedMatricesInterface.h"
+#include "ReplicatedMatrix.h"
 
 #include <vector>
 using namespace std;
 
-template <class OrbitalsType>
-MVP_DMStrategy<OrbitalsType>::MVP_DMStrategy(MPI_Comm comm, ostream& os,
-    Ions& ions, Rho<OrbitalsType>* rho, Energy<OrbitalsType>* energy,
-    Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy,
-    OrbitalsType* orbitals, ProjectedMatricesInterface* proj_matrices,
-    const bool use_old_dm)
+template <class OrbitalsType, class MatrixType>
+MVP_DMStrategy<OrbitalsType, MatrixType>::MVP_DMStrategy(MPI_Comm comm,
+    ostream& os, Ions& ions, Rho<OrbitalsType>* rho,
+    Energy<OrbitalsType>* energy, Electrostatic* electrostat,
+    MGmol<OrbitalsType>* mgmol_strategy, OrbitalsType* orbitals,
+    ProjectedMatricesInterface* proj_matrices, const bool use_old_dm)
     : orbitals_(orbitals),
       proj_matrices_(proj_matrices),
       comm_(comm),
@@ -41,33 +42,38 @@ MVP_DMStrategy<OrbitalsType>::MVP_DMStrategy(MPI_Comm comm, ostream& os,
     assert(energy_ != nullptr);
 }
 
-template <class OrbitalsType>
-int MVP_DMStrategy<OrbitalsType>::update()
+template <class OrbitalsType, class MatrixType>
+int MVP_DMStrategy<OrbitalsType, MatrixType>::update()
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 2)
     {
-        (*MPIdata::sout) << "MVP_DMStrategy<OrbitalsType>::update()..." << endl;
+        (*MPIdata::sout)
+            << "MVP_DMStrategy<OrbitalsType,MatrixType>::update()..." << endl;
     }
 
-    MVPSolver<OrbitalsType, dist_matrix::DistMatrix<DISTMATDTYPE>> solver(comm_,
-        os_, ions_, rho_, energy_, electrostat_, mgmol_strategy_, ct.numst,
-        ct.occ_width, global_indexes_, ct.dm_inner_steps, use_old_dm_);
+    MVPSolver<OrbitalsType, MatrixType> solver(comm_, os_, ions_, rho_, energy_,
+        electrostat_, mgmol_strategy_, ct.numst, ct.occ_width, global_indexes_,
+        ct.dm_inner_steps, use_old_dm_);
 
     return solver.solve(*orbitals_);
 }
 
-template <class OrbitalsType>
-void MVP_DMStrategy<OrbitalsType>::stripDM()
+template <class OrbitalsType, class MatrixType>
+void MVP_DMStrategy<OrbitalsType, MatrixType>::stripDM()
 {
     if (use_old_dm_) proj_matrices_->stripDM();
 }
 
-template <class OrbitalsType>
-void MVP_DMStrategy<OrbitalsType>::dressDM()
+template <class OrbitalsType, class MatrixType>
+void MVP_DMStrategy<OrbitalsType, MatrixType>::dressDM()
 {
     if (use_old_dm_) proj_matrices_->dressupDM();
 }
 
-template class MVP_DMStrategy<LocGridOrbitals>;
-template class MVP_DMStrategy<ExtendedGridOrbitals>;
+template class MVP_DMStrategy<LocGridOrbitals, dist_matrix::DistMatrix<double>>;
+template class MVP_DMStrategy<ExtendedGridOrbitals,
+    dist_matrix::DistMatrix<double>>;
+#ifdef HAVE_MAGMA
+template class MVP_DMStrategy<ExtendedGridOrbitals, ReplicatedMatrix>;
+#endif

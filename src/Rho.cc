@@ -14,6 +14,7 @@
 #include "MPIdata.h"
 #include "Mesh.h"
 #include "ProjectedMatrices.h"
+#include "ReplicatedMatrix.h"
 #include "SquareLocalMatrices.h"
 #include "SubMatrices.h"
 #include "magma_singleton.h"
@@ -908,4 +909,11 @@ template void Rho<LocGridOrbitals>::computeRho<dist_matrix::DistMatrix<double>>(
 #ifdef USE_MP
 template double Rho<LocGridOrbitals>::dotWithRho<float>(
     const float* const func) const;
+#endif
+#ifdef HAVE_MAGMA
+template void Rho<ExtendedGridOrbitals>::computeRho<ReplicatedMatrix>(
+    ExtendedGridOrbitals&, const ReplicatedMatrix&);
+template void Rho<ExtendedGridOrbitals>::computeRho<ReplicatedMatrix>(
+    ExtendedGridOrbitals&, ExtendedGridOrbitals&, const ReplicatedMatrix&,
+    const ReplicatedMatrix&, const ReplicatedMatrix&, const ReplicatedMatrix&);
 #endif

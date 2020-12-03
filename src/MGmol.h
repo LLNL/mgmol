@@ -215,8 +215,9 @@ public:
         const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
         ProjectedMatricesInterface*);
 
-    void addHlocal2matrix(OrbitalsType& orbitalsi, OrbitalsType& orbitalsj,
-        dist_matrix::DistMatrix<double>& mat);
+    template <class MatrixType>
+    void addHlocal2matrix(
+        OrbitalsType& orbitalsi, OrbitalsType& orbitalsj, MatrixType& mat);
     void addHlocal2matrix(OrbitalsType& orbitalsi, OrbitalsType& orbitalsj,
         VariableSizeMatrix<SparseRow>& mat);
 

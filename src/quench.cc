@@ -38,6 +38,7 @@
 #include "Potentials.h"
 #include "ProjectedMatricesInterface.h"
 #include "ProjectedMatricesSparse.h"
+#include "ReplicatedMatrix.h"
 #include "Rho.h"
 #include "SpreadsAndCenters.h"
 #include "SubspaceProjector.h"
@@ -493,7 +494,11 @@ int MGmol<OrbitalsType>::outerSolve(OrbitalsType& orbitals,
             MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
             const bool with_spin = (mmpi.nspin() > 1);
+#ifdef HAVE_MAGMA
+            DavidsonSolver<OrbitalsType, ReplicatedMatrix>
+#else
             DavidsonSolver<OrbitalsType, dist_matrix::DistMatrix<DISTMATDTYPE>>
+#endif
                 solver(os_, *ions_, hamiltonian_, rho_, energy_, electrostat_,
                     this, gids, ct.dm_mix, with_spin);
 

@@ -23,7 +23,7 @@ class ProjectedMatricesInterface;
 class Ions;
 class Electrostatic;
 
-template <class OrbitalsType>
+template <class OrbitalsType, class MatrixType>
 class MVP_DMStrategy : public DMStrategy
 {
 private:

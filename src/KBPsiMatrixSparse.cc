@@ -17,6 +17,7 @@
 #include "Mesh.h"
 #include "ProjectedMatrices.h"
 #include "ProjectedMatricesSparse.h"
+#include "ReplicatedMatrix.h"
 #include "SquareSubMatrix2DistMatrix.h"
 
 #include <limits.h>
@@ -423,6 +424,22 @@ void KBPsiMatrixSparse::computeHvnlMatrix(
     SquareSubMatrix2DistMatrix* ss2dm = SquareSubMatrix2DistMatrix::instance();
     ss2dm->accumulate(submat, hij, 0.);
 }
+
+#ifdef HAVE_MAGMA
+
+template <>
+void KBPsiMatrixSparse::computeHvnlMatrix(
+    const KBPsiMatrixInterface* const kbpsi2, const Ions& ions,
+    ReplicatedMatrix& hij) const
+{
+    SquareSubMatrix<double> submat(computeHvnlMatrix(kbpsi2, ions));
+
+    hij.init(submat.data(), submat.ld());
+
+    hij.consolidate();
+}
+
+#endif
 
 // build <P|phi> elements, one atom at a time
 SquareSubMatrix<double> KBPsiMatrixSparse::computeHvnlMatrix(

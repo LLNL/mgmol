@@ -268,9 +268,11 @@ int MGmol<OrbitalsType>::initial()
     // a limited set of options
 #ifdef HAVE_MAGMA
     bool use_replicated_matrix
-        = ((ct.OuterSolver() == OuterSolverType::ABPG)
-            && (ct.DM_solver() == DMNonLinearSolverType::Mixing)
-            && !ct.isLocMode());
+        = !std::is_same<OrbitalsType, LocGridOrbitals>::value;
+//    bool use_replicated_matrix = !ct.isLocMode();
+//        = ((ct.OuterSolver() == OuterSolverType::ABPG)
+//            && (ct.DM_solver() == DMNonLinearSolverType::Mixing)
+//            && !ct.isLocMode());
 #endif
 
     if (ct.Mehrstellen())
@@ -488,8 +490,17 @@ int MGmol<OrbitalsType>::initial()
     updateHmatrix(*current_orbitals_, *ions_);
 
     // HMVP algorithm requires that H is initialized
-    dm_strategy_ = DMStrategyFactory<OrbitalsType>::create(comm_, os_, *ions_,
-        rho_, energy_, electrostat_, this, proj_matrices_, current_orbitals_);
+#ifdef HAVE_MAGMA
+    if (use_replicated_matrix)
+        dm_strategy_
+            = DMStrategyFactory<OrbitalsType, ReplicatedMatrix>::create(comm_,
+                os_, *ions_, rho_, energy_, electrostat_, this, proj_matrices_,
+                current_orbitals_);
+    else
+#endif
+        dm_strategy_ = DMStrategyFactory<OrbitalsType,
+            dist_matrix::DistMatrix<double>>::create(comm_, os_, *ions_, rho_,
+            energy_, electrostat_, this, proj_matrices_, current_orbitals_);
 
     // theta = invB * Hij
     proj_matrices_->updateThetaAndHB();

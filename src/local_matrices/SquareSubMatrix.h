@@ -31,6 +31,10 @@ private:
 public:
     SquareSubMatrix(const std::vector<int>& gid);
 
+    T* data() { return data_.data(); }
+
+    int ld() const { return n_; }
+
     const std::vector<int>& getGids() const { return gids_; }
 
     void setLocalValue(const int i, const int j, const double val)
