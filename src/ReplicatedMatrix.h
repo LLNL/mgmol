@@ -63,7 +63,13 @@ public:
 
     std::string name() { return name_; }
 
+    double* const data() const { return device_data_.get(); }
+
     int m() const { return dim_; }
+
+    int ld() const { return ld_; }
+
+    void getsub(const ReplicatedMatrix& a, int m, int n, int ia, int ja);
 
     ReplicatedMatrix& operator-=(const ReplicatedMatrix& rhs)
     {
