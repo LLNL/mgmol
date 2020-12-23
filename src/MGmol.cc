@@ -55,6 +55,7 @@
 #include "ProjectedMatricesMehrstellen.h"
 #include "ProjectedMatricesSparse.h"
 #include "ReplicatedMatrix.h"
+#include "ReplicatedVector.h"
 #include "Rho.h"
 #include "SP2.h"
 #include "SparseDistMatrix.h"
@@ -269,13 +270,10 @@ int MGmol<OrbitalsType>::initial()
 #ifdef HAVE_MAGMA
     bool use_replicated_matrix
         = !std::is_same<OrbitalsType, LocGridOrbitals>::value;
-//    bool use_replicated_matrix = !ct.isLocMode();
-//        = ((ct.OuterSolver() == OuterSolverType::ABPG)
-//            && (ct.DM_solver() == DMNonLinearSolverType::Mixing)
-//            && !ct.isLocMode());
 #endif
 
     if (ct.Mehrstellen())
+    {
 #ifdef HAVE_MAGMA
         if (use_replicated_matrix)
             proj_matrices_ = new ProjectedMatricesMehrstellen<ReplicatedMatrix>(
@@ -285,6 +283,7 @@ int MGmol<OrbitalsType>::initial()
             proj_matrices_ = new ProjectedMatricesMehrstellen<
                 dist_matrix::DistMatrix<DISTMATDTYPE>>(
                 ct.numst, with_spin, ct.occ_width);
+    }
     else if (ct.short_sighted)
         proj_matrices_ = new ProjectedMatricesSparse(
             ct.numst, ct.occ_width, lrs_, local_cluster_);
@@ -944,8 +943,6 @@ void MGmol<OrbitalsType>::printTimers()
     Table::printTimers(os_);
     LocalMatrices<MATDTYPE>::printTimers(os_);
     Power<LocalVector<double>, SquareLocalMatrices<double>>::printTimers(os_);
-    PowerGen<dist_matrix::DistMatrix<double>,
-        dist_matrix::DistVector<double>>::printTimers(os_);
     SP2::printTimers(os_);
     if (lrs_) lrs_->printTimers(os_);
     local_cluster_->printTimers(os_);
@@ -971,17 +968,21 @@ void MGmol<OrbitalsType>::printTimers()
     setup_tm_.print(os_);
     HDFrestart::printTimers(os_);
 #ifdef HAVE_MAGMA
+    PowerGen<ReplicatedMatrix, ReplicatedVector>::printTimers(os_);
     BlockVector<ORBDTYPE, MemorySpace::Device>::printTimers(os_);
-#else
-    BlockVector<ORBDTYPE, MemorySpace::Host>::printTimers(os_);
+    DavidsonSolver<ExtendedGridOrbitals, ReplicatedMatrix>::printTimers(os_);
+    ChebyshevApproximation<ReplicatedMatrix>::printTimers(os_);
 #endif
-    OrbitalsPreconditioning<OrbitalsType>::printTimers(os_);
+    PowerGen<dist_matrix::DistMatrix<double>,
+        dist_matrix::DistVector<double>>::printTimers(os_);
+    BlockVector<ORBDTYPE, MemorySpace::Host>::printTimers(os_);
     DavidsonSolver<ExtendedGridOrbitals,
         dist_matrix::DistMatrix<DISTMATDTYPE>>::printTimers(os_);
-    MDfiles::printTimers(os_);
-    ChebyshevApproximationInterface::printTimers(os_);
     ChebyshevApproximation<dist_matrix::DistMatrix<DISTMATDTYPE>>::printTimers(
         os_);
+    OrbitalsPreconditioning<OrbitalsType>::printTimers(os_);
+    MDfiles::printTimers(os_);
+    ChebyshevApproximationInterface::printTimers(os_);
 }
 
 template <class OrbitalsType>
