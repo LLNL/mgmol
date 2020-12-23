@@ -48,6 +48,7 @@ public:
         MatrixType& mat, const bool force = false);
     void addHlocalij(OrbitalsType& orbitals1, OrbitalsType& orbitals2,
         ProjectedMatricesInterface*);
+    void addHlocalij(OrbitalsType& orbitals1, ProjectedMatricesInterface*);
 };
 // Instantiate static variable here to avoid clang warnings
 template <class OrbitalsType>
