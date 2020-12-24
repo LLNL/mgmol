@@ -1288,17 +1288,17 @@ double ExtendedGridOrbitals::dotProduct(
     return dot;
 }
 
-dist_matrix::DistMatrix<DISTMATDTYPE> ExtendedGridOrbitals::product(
+dist_matrix::DistMatrix<DISTMATDTYPE> ExtendedGridOrbitals::computeProduct(
     const ExtendedGridOrbitals& orbitals, const bool transpose)
 {
     assert(numst_ > 0);
     assert(subdivx_ > 0);
     assert(subdivx_ < 1000);
 
-    return product(orbitals.psi(0), numst_, orbitals.lda_, transpose);
+    return computeProduct(orbitals.psi(0), numst_, orbitals.lda_, transpose);
 }
 
-dist_matrix::DistMatrix<DISTMATDTYPE> ExtendedGridOrbitals::product(
+dist_matrix::DistMatrix<DISTMATDTYPE> ExtendedGridOrbitals::computeProduct(
     const ORBDTYPE* const array, const int ncol, const int lda,
     const bool transpose)
 {

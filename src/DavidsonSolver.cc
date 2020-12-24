@@ -516,16 +516,15 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
             else
             {
                 h11 = h11nl;
-                mgmol_strategy_->addHlocal2matrix(orbitals, orbitals, h11);
+                hamiltonian_->addHlocal2matrix(orbitals, orbitals, h11);
             }
 
             // update h22, h12 and h21
             h22 = h22nl;
-            mgmol_strategy_->addHlocal2matrix(
-                work_orbitals, work_orbitals, h22);
+            hamiltonian_->addHlocal2matrix(work_orbitals, work_orbitals, h22);
 
             h12 = h12nl;
-            mgmol_strategy_->addHlocal2matrix(orbitals, work_orbitals, h12);
+            hamiltonian_->addHlocal2matrix(orbitals, work_orbitals, h12);
 
             h21.transpose(1., h12, 0.);
 
@@ -599,14 +598,14 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
 
                 // update h11, h22, h12, and h21
                 h11 = h11nl;
-                mgmol_strategy_->addHlocal2matrix(orbitals, orbitals, h11);
+                hamiltonian_->addHlocal2matrix(orbitals, orbitals, h11);
 
                 h22 = h22nl;
-                mgmol_strategy_->addHlocal2matrix(
+                hamiltonian_->addHlocal2matrix(
                     work_orbitals, work_orbitals, h22);
 
                 h12 = h12nl;
-                mgmol_strategy_->addHlocal2matrix(orbitals, work_orbitals, h12);
+                hamiltonian_->addHlocal2matrix(orbitals, work_orbitals, h12);
 
                 h21.transpose(1., h12, 0.);
 
