@@ -1519,6 +1519,9 @@ void LocalizationRegions::getMatrixDistances(
     for (short iloc = 0; iloc < subdivx; iloc++)
     {
         const vector<int>& gids_iloc(gids[iloc]);
+        const int n=gids_iloc.size();
+        std::vector<double> tmp(n*n);
+        memset(tmp.data(), 0, n*n*sizeof(double));
         short i = 0;
         for (vector<int>::const_iterator it1 = gids_iloc.begin();
              it1 != gids_iloc.end(); ++it1)
@@ -1530,12 +1533,13 @@ void LocalizationRegions::getMatrixDistances(
                      it2 != gids_iloc.end(); ++it2)
                 {
                     if ((*it2) >= 0)
-                        mat.setVal(i, j, sqrt(getDistance2(*it1, *it2)), iloc);
+                        tmp[i+j*n]=sqrt(getDistance2(*it1, *it2));
                     j++;
                 }
             }
             i++;
         }
+        mat.setValues(tmp.data(), n, iloc);
     }
 }
 

@@ -36,9 +36,12 @@ TEST_CASE("Check ReplicatedMatrix", "[replicated_matrix]")
     {
         double value = 0.1;
         SquareLocalMatrices<double> slm(1, n);
+        std::vector<double> tmp(n*n);
         for (int i = 0; i < n; i++)
             for (int j = 0; j < n; j++)
-                slm.setVal(i, j, value);
+                tmp[i+n*j]=value;
+
+        slm.setValues(tmp.data(), n);
 
         ReplicatedMatrix mat("mat", n, n);
         mat.assign(slm);

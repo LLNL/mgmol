@@ -84,13 +84,17 @@ public:
         return ptr_matrices_[iloc];
     }
 
+    void setValues(
+        double* values, const int ld, const int iloc=0);
+
+#if 0
     void setVal(const int i, const int j, const T val, const int iloc = 0)
     {
         assert(i < m_);
         assert(j < n_);
         ptr_matrices_[iloc][m_ * j + i] = val;
     }
-
+#endif
     T getVal(const int i, const int j, const int iloc = 0)
     {
         assert(i < m_);

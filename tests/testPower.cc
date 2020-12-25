@@ -21,8 +21,12 @@ TEST_CASE("Compute eigenvalues using the power method", "[power]")
     const double shift = -3.;
 
     SquareLocalMatrices<double> A(1, n);
+    std::vector<double> tmp(n*n);
+    memset(tmp.data(), 0, n*n*sizeof(double));
     for (int i = 0; i < n; i++)
-        A.setVal(i, i, 10. * i + shift);
+        tmp[i+n*i]= 10. * i + shift;
+
+    A.setValues(tmp.data(), n);
 
     double emin;
     double emax;

@@ -53,9 +53,13 @@ TEST_CASE(
 
     // setup an nxn local matrix
     SquareLocalMatrices<double> replicated(1, n);
-    for (int i = 0; i < m; i++)
-        for (int j = 0; j < n; j++)
-            replicated.setVal(i, j, 10. * (i + 1) + j + 1);
+
+    std::vector<double> tmp(n*m);
+    for (int j = 0; j < n; j++)
+        for (int i = 0; i < m; i++)
+            tmp[i+j*m]=10. * (i + 1) + j + 1;
+
+    replicated.setValues(tmp.data(), m);
 
     // distribute replicated matrix
     distm.initFromReplicated(replicated.getSubMatrix(), n);
