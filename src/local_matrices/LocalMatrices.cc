@@ -277,21 +277,20 @@ void LocalMatrices<T>::setMaskThreshold(
 }
 
 template <class T>
-void LocalMatrices<T>::setValues(
-    double* values, const int ld, const int iloc)
+void LocalMatrices<T>::setValues(double* values, const int ld, const int iloc)
 {
     T* local_mat = ptr_matrices_[iloc];
-    int index=0;
-    int vindex=0;
+    int index    = 0;
+    int vindex   = 0;
     for (int j = 0; j < n_; j++)
     {
         for (int i = 0; i < m_; i++)
         {
-                local_mat[index] = values[vindex];
-                index++;
-                vindex++;
+            local_mat[index] = values[vindex];
+            index++;
+            vindex++;
         }
-        vindex+=(ld-m_);
+        vindex += (ld - m_);
     }
 }
 

@@ -54,10 +54,10 @@ TEST_CASE(
     // setup an nxn local matrix
     SquareLocalMatrices<double> replicated(1, n);
 
-    std::vector<double> tmp(n*m);
+    std::vector<double> tmp(n * m);
     for (int j = 0; j < n; j++)
         for (int i = 0; i < m; i++)
-            tmp[i+j*m]=10. * (i + 1) + j + 1;
+            tmp[i + j * m] = 10. * (i + 1) + j + 1;
 
     replicated.setValues(tmp.data(), m);
 
