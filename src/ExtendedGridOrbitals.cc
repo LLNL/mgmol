@@ -963,7 +963,7 @@ void ExtendedGridOrbitals::computeMatB(
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
 
-            MATDTYPE* ssiloc = ss.getSubMatrix(iloc);
+            MATDTYPE* ssiloc = ss.getRawPtr(iloc);
 
             // calculate nf columns of ssiloc
             MPgemmTN(numst_, nf, loc_numpt_, 1.,
@@ -1614,7 +1614,7 @@ void ExtendedGridOrbitals::projectOut(
         MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
             getPsi(0, iloc), phi_size, phi_host_view);
 
-        MATDTYPE* localMat_iloc = lmatrix.getSubMatrix(iloc);
+        MATDTYPE* localMat_iloc = lmatrix.getRawPtr(iloc);
 
         // TODO this can be done on the GPU
         // Compute loc_numpt_ rows (for subdomain iloc)

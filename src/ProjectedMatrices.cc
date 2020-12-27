@@ -1265,7 +1265,7 @@ ProjectedMatrices<dist_matrix::DistMatrix<double>>::getReplicatedDM()
 {
     SquareLocalMatrices<double> sldm(1, dim_);
     const dist_matrix::DistMatrix<double>& dm(dm_->getMatrix());
-    dm.allgather(sldm.getSubMatrix(), dim_);
+    dm.allgather(sldm.getRawPtr(), dim_);
 
     return sldm;
 }

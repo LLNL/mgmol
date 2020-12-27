@@ -138,7 +138,10 @@ void DensityMatrixSparse::getLocalMatrix(
 
     for (short iloc = 0; iloc < subdiv; iloc++)
     {
-        MATDTYPE* const localX_iloc = localX.getSubMatrix(iloc);
+        std::vector<MATDTYPE> tmp(chromatic_number * chromatic_number);
+        memset(tmp.data(), 0,
+            chromatic_number * chromatic_number * sizeof(MATDTYPE));
+
         const vector<int>& gids(global_indexes[iloc]);
 #pragma omp parallel for
         for (int icolor = 0; icolor < chromatic_number; icolor++)
@@ -149,9 +152,10 @@ void DensityMatrixSparse::getLocalMatrix(
             {
                 const int st2 = gids[jcolor];
                 if (st2 == -1) continue;
-                localX_iloc[icolor + chromatic_number * jcolor]
+                tmp[icolor + chromatic_number * jcolor]
                     = (MATDTYPE)(*dm_).get_value(st1, st2);
             }
         }
+        localX.setValues(tmp.data(), chromatic_number, iloc);
     }
 }

@@ -11,23 +11,46 @@
 #include "blas3_c.h"
 #include "mputils.h"
 
-template <class T>
-LocalMatrices<T>::LocalMatrices(const short subdiv, const int m, const int n)
-    : m_(m), n_(n), subdiv_(subdiv)
+template <class DataType>
+LocalMatrices<DataType>::LocalMatrices(
+    const short nmat, const int m, const int n)
+    : m_(m), n_(n), nmat_(nmat)
 {
     assert(m >= 0);
     assert(n >= 0);
-    assert(subdiv >= 1);
+    assert(nmat >= 1);
 
-    ptr_matrices_.resize(subdiv_);
-    storage_size_ = subdiv_ * m_ * n_;
+    allocate();
 
     if (storage_size_ > 0)
     {
-        storage_ = new T[storage_size_];
-        memset(storage_, 0, storage_size_ * sizeof(T));
+        memset(storage_, 0, storage_size_ * sizeof(DataType));
+    }
+}
+
+template <class DataType>
+LocalMatrices<DataType>::LocalMatrices(const LocalMatrices& mat)
+    : m_(mat.m_), n_(mat.n_), nmat_(mat.nmat_)
+{
+    allocate();
+
+    if (storage_size_ > 0)
+    {
+        memcpy(storage_, mat.storage_, storage_size_ * sizeof(DataType));
+    }
+}
+
+template <class DataType>
+void LocalMatrices<DataType>::allocate()
+{
+    ptr_matrices_.resize(nmat_);
+    storage_size_ = nmat_ * m_ * n_;
+
+    if (storage_size_ > 0)
+    {
+        storage_       = new DataType[storage_size_];
         const int dim2 = m_ * n_;
-        for (int i = 0; i < subdiv; i++)
+        for (int i = 0; i < nmat_; i++)
             ptr_matrices_[i] = storage_ + dim2 * i;
     }
     else
@@ -36,37 +59,15 @@ LocalMatrices<T>::LocalMatrices(const short subdiv, const int m, const int n)
     }
 }
 
-template <class T>
-LocalMatrices<T>::LocalMatrices(const LocalMatrices& mat)
-    : m_(mat.m_), n_(mat.n_), subdiv_(mat.subdiv_)
+template <class DataType>
+template <class DataType2>
+void LocalMatrices<DataType>::copy(const LocalMatrices<DataType2>& mat)
 {
-    storage_size_ = mat.storage_size_;
-
-    ptr_matrices_.resize(subdiv_);
-
-    if (storage_size_ > 0)
+    for (short iloc = 0; iloc < nmat_; iloc++)
     {
-        storage_ = new T[storage_size_];
-        memcpy(storage_, mat.storage_, storage_size_ * sizeof(T));
-        const int dim2 = m_ * n_;
-        for (int i = 0; i < subdiv_; i++)
-            ptr_matrices_[i] = storage_ + dim2 * i;
-    }
-    else
-    {
-        storage_ = nullptr;
-    }
-}
-
-template <class T1>
-template <class T2>
-void LocalMatrices<T1>::copy(const LocalMatrices<T2>& mat)
-{
-    for (short iloc = 0; iloc < subdiv_; iloc++)
-    {
-        T1* dst_mat             = ptr_matrices_[iloc];
-        const T2* const src_mat = mat.getSubMatrix(iloc);
-        const int nelements     = n_ * m_;
+        DataType* dst_mat              = ptr_matrices_[iloc];
+        const DataType2* const src_mat = mat.getSubMatrix(iloc);
+        const int nelements            = n_ * m_;
         for (int j = 0; j < nelements; j++)
         {
             dst_mat[j] = src_mat[j];
@@ -75,12 +76,12 @@ void LocalMatrices<T1>::copy(const LocalMatrices<T2>& mat)
 }
 
 #ifdef HAVE_BML
-template <class T>
-void LocalMatrices<T>::copy(const bml_matrix_t* A)
+template <class DataType>
+void LocalMatrices<DataType>::copy(const bml_matrix_t* A)
 {
-    assert(subdiv_ == 1);
+    assert(nmat_ == 1);
 
-    T* dst_mat = ptr_matrices_[0];
+    DataType* dst_mat = ptr_matrices_[0];
 
     if (bml_get_precision(A) == double_real)
     {
@@ -106,19 +107,19 @@ void LocalMatrices<T>::copy(const bml_matrix_t* A)
 // perform the symmetric operation
 // C := A'*A
 // This one is for debug purposes, and can be removed if unused
-template <class T>
+template <class DataType>
 template <typename MemorySpaceType>
-void LocalMatrices<T>::syrk(
+void LocalMatrices<DataType>::syrk(
     const int iloc, const int k, const double* const a, const int lda)
 {
-    assert(iloc < subdiv_);
+    assert(iloc < nmat_);
     assert(iloc < static_cast<int>(ptr_matrices_.size()));
     assert(k <= lda);
     assert(ptr_matrices_[iloc] != nullptr);
     assert(m_ > 0);
     assert(m_ == n_);
 
-    T* const ssiloc = ptr_matrices_[iloc];
+    DataType* const ssiloc = ptr_matrices_[iloc];
     assert(ssiloc != nullptr);
 
     const double zero = 0.;
@@ -142,19 +143,19 @@ void LocalMatrices<T>::syrk(
 
 // perform the symmetric operation
 // C := A'*A
-template <class T>
+template <class DataType>
 template <typename MemorySpaceType>
-void LocalMatrices<T>::syrk(
+void LocalMatrices<DataType>::syrk(
     const int iloc, const int k, const float* const a, const int lda)
 {
-    assert(iloc < subdiv_);
+    assert(iloc < nmat_);
     assert(iloc < (int)ptr_matrices_.size());
     assert(k <= lda);
     assert(ptr_matrices_[iloc] != nullptr);
     assert(m_ > 0);
     assert(m_ == n_);
 
-    T* const ssiloc = ptr_matrices_[iloc];
+    DataType* const ssiloc = ptr_matrices_[iloc];
     assert(ssiloc != nullptr);
 
     const double zero = 0.;
@@ -166,16 +167,16 @@ void LocalMatrices<T>::syrk(
 }
 
 // This one is for debug purposes, and can be removed if unused
-template <class T>
-void LocalMatrices<T>::gemm(const int iloc, const int ma, const double* const a,
-    const int lda, const double* const b, const int ldb)
+template <class DataType>
+void LocalMatrices<DataType>::gemm(const int iloc, const int ma,
+    const double* const a, const int lda, const double* const b, const int ldb)
 {
-    assert(iloc < subdiv_);
+    assert(iloc < nmat_);
     assert(iloc < (int)ptr_matrices_.size());
     assert(ma <= lda);
     assert(ptr_matrices_[iloc] != nullptr);
 
-    T* const c = ptr_matrices_[iloc];
+    DataType* const c = ptr_matrices_[iloc];
     assert(c != nullptr);
 
     MemorySpace::assert_is_host_ptr(a);
@@ -185,16 +186,16 @@ void LocalMatrices<T>::gemm(const int iloc, const int ma, const double* const a,
         't', 'n', m_, n_, ma, 1., a, lda, b, ldb, 0., c, m_);
 }
 
-template <class T>
-void LocalMatrices<T>::gemm(const int iloc, const int ma, const float* const a,
-    const int lda, const float* const b, const int ldb)
+template <class DataType>
+void LocalMatrices<DataType>::gemm(const int iloc, const int ma,
+    const float* const a, const int lda, const float* const b, const int ldb)
 {
-    assert(iloc < subdiv_);
+    assert(iloc < nmat_);
     assert(iloc < (int)ptr_matrices_.size());
     assert(ma <= lda);
     assert(ptr_matrices_[iloc] != nullptr);
 
-    T* const c = ptr_matrices_[iloc];
+    DataType* const c = ptr_matrices_[iloc];
     assert(c != nullptr);
 
     MemorySpace::assert_is_host_ptr(a);
@@ -206,8 +207,8 @@ void LocalMatrices<T>::gemm(const int iloc, const int ma, const float* const a,
 
 // matrix multiplication
 // this = alpha*op(A)*op(B)+beta*this
-template <class T>
-void LocalMatrices<T>::gemm(const char transa, const char transb,
+template <class DataType>
+void LocalMatrices<DataType>::gemm(const char transa, const char transb,
     const double alpha, const LocalMatrices& matA, const LocalMatrices& matB,
     const double beta)
 {
@@ -218,13 +219,13 @@ void LocalMatrices<T>::gemm(const char transa, const char transb,
     const int nca = matA.n();
 
     // loop over subdomains
-    for (short iloc = 0; iloc < subdiv_; iloc++)
+    for (short iloc = 0; iloc < nmat_; iloc++)
     {
         // get matrix data from matA and MatB
-        const T* const amat = matA.getSubMatrix(iloc);
-        const T* const bmat = matB.getSubMatrix(iloc);
+        const DataType* const amat = matA.getSubMatrix(iloc);
+        const DataType* const bmat = matB.getSubMatrix(iloc);
         // get pointer to local storage
-        T* const c = ptr_matrices_[iloc];
+        DataType* const c = ptr_matrices_[iloc];
         assert(c != nullptr);
 
         // do matrix multiplication
@@ -236,13 +237,13 @@ void LocalMatrices<T>::gemm(const char transa, const char transb,
     }
 }
 
-template <class T>
-void LocalMatrices<T>::applyMask(const LocalMatrices& mask)
+template <class DataType>
+void LocalMatrices<DataType>::applyMask(const LocalMatrices& mask)
 {
-    for (short iloc = 0; iloc < subdiv_; iloc++)
+    for (short iloc = 0; iloc < nmat_; iloc++)
     {
-        T* local_mat  = ptr_matrices_[iloc];
-        T* local_mask = mask.ptr_matrices_[iloc];
+        DataType* local_mat  = ptr_matrices_[iloc];
+        DataType* local_mask = mask.ptr_matrices_[iloc];
         for (int j = 0; j < n_; j++)
         {
             for (int i = 0; i < m_; i++)
@@ -254,13 +255,13 @@ void LocalMatrices<T>::applyMask(const LocalMatrices& mask)
     }
 }
 
-template <class T>
-void LocalMatrices<T>::setMaskThreshold(
-    const T min_threshold, const T max_threshold)
+template <class DataType>
+void LocalMatrices<DataType>::setMaskThreshold(
+    const DataType min_threshold, const DataType max_threshold)
 {
-    for (short iloc = 0; iloc < subdiv_; iloc++)
+    for (short iloc = 0; iloc < nmat_; iloc++)
     {
-        T* local_mat = ptr_matrices_[iloc];
+        DataType* local_mat = ptr_matrices_[iloc];
         for (int j = 0; j < n_; j++)
         {
             for (int i = 0; i < m_; i++)
@@ -276,30 +277,33 @@ void LocalMatrices<T>::setMaskThreshold(
     }
 }
 
-template <class T>
-void LocalMatrices<T>::setValues(double* values, const int ld, const int iloc)
+template <class DataType>
+void LocalMatrices<DataType>::setValues(
+    DataType* values, const int ld, const int iloc)
 {
-    T* local_mat = ptr_matrices_[iloc];
-    int index    = 0;
-    int vindex   = 0;
+    DataType* local_mat = ptr_matrices_[iloc];
     for (int j = 0; j < n_; j++)
     {
-        for (int i = 0; i < m_; i++)
-        {
-            local_mat[index] = values[vindex];
-            index++;
-            vindex++;
-        }
-        vindex += (ld - m_);
+        memcpy(local_mat + j * m_, values + j * ld, n_ * sizeof(DataType));
     }
 }
 
-template <class T>
-void LocalMatrices<T>::printBlock(std::ostream& os, const int blocksize)
+template <class DataType>
+void LocalMatrices<DataType>::shift(const double shift, const int iloc)
 {
-    for (short iloc = 0; iloc < subdiv_; iloc++)
+    DataType* local_mat = ptr_matrices_[iloc];
+    for (int j = 0; j < n_; j++)
     {
-        T* local_mat = ptr_matrices_[iloc];
+        local_mat[j + j * m_] += shift;
+    }
+}
+
+template <class DataType>
+void LocalMatrices<DataType>::printBlock(std::ostream& os, const int blocksize)
+{
+    for (short iloc = 0; iloc < nmat_; iloc++)
+    {
+        DataType* local_mat = ptr_matrices_[iloc];
         os << "iloc=" << iloc << std::endl;
         for (int j = 0; j < blocksize; j++)
         {
@@ -313,11 +317,11 @@ void LocalMatrices<T>::printBlock(std::ostream& os, const int blocksize)
     }
 }
 
-template <class T>
-void LocalMatrices<T>::matvec(
-    const LocalVector<T>& u, LocalVector<T>& f, const int iloc)
+template <class DataType>
+void LocalMatrices<DataType>::matvec(
+    const LocalVector<DataType>& u, LocalVector<DataType>& f, const int iloc)
 {
-    T* mat = ptr_matrices_[iloc];
+    DataType* mat = ptr_matrices_[iloc];
     Tgemv('n', m_, n_, 1., mat, m_, u.data(), 1, 0., f.data(), 1);
 }
 

@@ -539,7 +539,7 @@ void ProjectedMatricesSparse::updateLocalMat(
 
     for (short iloc = 0; iloc < subdiv_; iloc++)
     {
-        MATDTYPE* localM_iloc = localM->getSubMatrix(iloc);
+        MATDTYPE* localM_iloc = localM->getRawPtr(iloc);
         for (int icolor = 0; icolor < chromatic_number_; icolor++)
         {
             const int st1 = global_indexes_[iloc][icolor];

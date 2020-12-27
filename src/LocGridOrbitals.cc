@@ -1460,7 +1460,7 @@ void LocGridOrbitals::computeMatB(
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
 
-            MATDTYPE* ssiloc = ss.getSubMatrix(iloc);
+            MATDTYPE* ssiloc = ss.getRawPtr(iloc);
 
             // calculate nf columns of ssiloc
             MPgemmTN(chromatic_number_, nf, loc_numpt_, 1.,
@@ -2346,7 +2346,7 @@ void LocGridOrbitals::projectOut(
         ORBDTYPE* phi    = getPsi(0, iloc);
         ORBDTYPE* parray = array + iloc * loc_numpt_;
 
-        MATDTYPE* localMat_iloc = pmatrix.getSubMatrix(iloc);
+        MATDTYPE* localMat_iloc = pmatrix.getRawPtr(iloc);
 
         // Compute loc_numpt_ rows (for subdomain iloc)
         LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(loc_numpt_,
@@ -2496,7 +2496,7 @@ void LocGridOrbitals::addDotWithNcol2Matrix(
 
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
-        MATDTYPE* ssiloc = ss.getSubMatrix(iloc);
+        MATDTYPE* ssiloc = ss.getRawPtr(iloc);
 
         // TODO
         MPgemmTN(chromatic_number_, chromatic_number_, loc_numpt_, vel,

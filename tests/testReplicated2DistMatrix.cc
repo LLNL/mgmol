@@ -62,11 +62,11 @@ TEST_CASE(
     replicated.setValues(tmp.data(), m);
 
     // distribute replicated matrix
-    distm.initFromReplicated(replicated.getSubMatrix(), n);
+    distm.initFromReplicated(replicated.getRawPtr(), n);
 
     // convert back to a replicated matrix
     SquareLocalMatrices<double> result(1, n);
-    distm.allgather(result.getSubMatrix(), n);
+    distm.allgather(result.getRawPtr(), n);
 
     if (mype == 0)
     {

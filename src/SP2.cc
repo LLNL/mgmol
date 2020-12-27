@@ -114,7 +114,7 @@ void SP2::iterate(int A)
 #else
     trace_[0] = Xi_->computePartialTrace(loc_ids_);
 
-    trace_[1]             = Xi_sq_->computePartialTrace(loc_ids_);
+    trace_[1] = Xi_sq_->computePartialTrace(loc_ids_);
 #endif
 
     reduceSumTrace();
@@ -163,9 +163,8 @@ void SP2::initializeLocalMat(const SquareLocalMatrices<MATDTYPE>& submatM,
     Xi_    = bml_zero_matrix(dense, double_real, n, n, sequential);
     Xi_sq_ = bml_zero_matrix(dense, double_real, n, n, sequential);
 #else
-    Xi_                   = new SquareLocalMatrices<MATDTYPE>(1, n);
-    Xi_sq_                = new SquareLocalMatrices<MATDTYPE>(1, n);
-    MATDTYPE* localM_iloc = Xi_->getSubMatrix();
+    Xi_       = new SquareLocalMatrices<MATDTYPE>(1, n);
+    Xi_sq_    = new SquareLocalMatrices<MATDTYPE>(1, n);
 #endif
 
     double factor = 1. / (emax - emin);
@@ -173,6 +172,7 @@ void SP2::initializeLocalMat(const SquareLocalMatrices<MATDTYPE>& submatM,
     // initialize Xi
     Xi_->copy(submatM);
 
+#ifdef HAVE_BML
     const int n1 = n + 1;
     // shift and scale Xi
     // We shift by -emin since we know it, instead of by the maximum
@@ -181,13 +181,12 @@ void SP2::initializeLocalMat(const SquareLocalMatrices<MATDTYPE>& submatM,
     for (int i = 0; i < n; i++)
     {
         const int pos = i * n1;
-#ifdef HAVE_BML
-        double* val = (double*)bml_get(Xi_, i, i);
+        double* val   = (double*)bml_get(Xi_, i, i);
         *val -= emax;
-#else
-        localM_iloc[pos] -= emin;
-#endif
     }
+#else
+    Xi_->shift(-emin);
+#endif
 
     // scale
 #ifdef HAVE_BML

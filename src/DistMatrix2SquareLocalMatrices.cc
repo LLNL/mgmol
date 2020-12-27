@@ -28,16 +28,17 @@ void DistMatrix2SquareLocalMatrices::convert(
 
     submatWork_->gather(dmat);
 
-    const short nd = lmat.subdiv();
+    const short nd = lmat.nmat();
     const int dim  = lmat.n();
 
+    std::vector<MATDTYPE> tmp(dim * dim);
     for (short i = 0; i < nd; i++)
     {
-        DISTMATDTYPE* local = lmat.getSubMatrix(i);
+        for (int jj = 0; jj < dim; jj++)
+            for (int ii = 0; ii < dim; ii++)
+                tmp[ii + dim * jj] = submatWork_->val(ii, jj, i);
 
-        for (int ii = 0; ii < dim; ii++)
-            for (int jj = 0; jj < dim; jj++)
-                local[ii + dim * jj] = submatWork_->val(ii, jj, i);
+        lmat.setValues(tmp.data(), dim, i);
     }
 
     convert_tm_.stop();

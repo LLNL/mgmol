@@ -33,24 +33,29 @@ const double tol_mat_elements = 1.e-14;
 
 /* LOCALMATRICES class - matrix entries are accessed in column-major order */
 
-template <class T>
+template <class DataType>
 class LocalMatrices
 {
-    T* storage_;
+    DataType* storage_;
     int storage_size_;
-    std::vector<T*> ptr_matrices_;
+    std::vector<DataType*> ptr_matrices_;
 
 protected:
+    // number of rows in matrices
     const int m_;
+    // number of columns in matrices
     const int n_;
-    const short subdiv_;
+    // number of matrices
+    const short nmat_;
 
 public:
-    LocalMatrices(const short subdiv, const int m, const int n);
+    LocalMatrices(const short nmat, const int m, const int n);
     LocalMatrices(const LocalMatrices&);
 
-    template <class T2>
-    void copy(const LocalMatrices<T2>& mat);
+    void allocate();
+
+    template <class DataType2>
+    void copy(const LocalMatrices<DataType2>& mat);
 #ifdef HAVE_BML
     void copy(const bml_matrix_t* A);
 #endif
@@ -64,29 +69,31 @@ public:
         }
     };
 
-    short subdiv() const { return subdiv_; }
+    short nmat() const { return nmat_; }
 
     int n() const { return n_; }
 
     int m() const { return m_; }
 
-    const T* getSubMatrix(const int iloc = 0) const
+    const DataType* getSubMatrix(const int iloc = 0) const
     {
         assert(iloc < (int)ptr_matrices_.size());
         assert(ptr_matrices_[iloc] != NULL);
         return ptr_matrices_[iloc];
     }
 
-    T* getSubMatrix(const int iloc = 0)
+    DataType* getRawPtr(const int iloc = 0)
     {
         assert(iloc < (int)ptr_matrices_.size());
         assert(ptr_matrices_[iloc] != NULL);
         return ptr_matrices_[iloc];
     }
 
-    void setValues(double* values, const int ld, const int iloc = 0);
+    void setValues(DataType* values, const int ld, const int iloc = 0);
 
-    T getVal(const int i, const int j, const int iloc = 0)
+    void shift(const double shift, const int iloc = 0);
+
+    DataType getVal(const int i, const int j, const int iloc = 0)
     {
         assert(i < m_);
         assert(j < n_);
@@ -111,13 +118,13 @@ public:
     void gemm(const char transa, const char transb, const double alpha,
         const LocalMatrices& matA, const LocalMatrices& matB,
         const double beta);
-    void reset() { memset(storage_, 0, storage_size_ * sizeof(T)); }
+    void reset() { memset(storage_, 0, storage_size_ * sizeof(DataType)); }
 
-    void setValues(const T val)
+    void setValues(const DataType val)
     {
-        for (int iloc = 0; iloc < subdiv_; iloc++)
+        for (int iloc = 0; iloc < nmat_; iloc++)
         {
-            T* ssiloc = ptr_matrices_[iloc];
+            DataType* ssiloc = ptr_matrices_[iloc];
             for (int i = 0; i < m_; i++)
             {
                 for (int j = 0; j < n_; j++)
@@ -132,7 +139,7 @@ public:
     {
         os << "LocalMatrices for iloc=" << iloc << std::endl;
         os << std::scientific;
-        const T* const ssiloc = ptr_matrices_[iloc];
+        const DataType* const ssiloc = ptr_matrices_[iloc];
         for (int i = 0; i < m_; i++)
         {
             for (int j = 0; j < n_; j++)
@@ -147,7 +154,7 @@ public:
     {
         os << "LocalMatrices for iloc=" << iloc << std::endl;
         os << std::scientific;
-        const T* const ssiloc = ptr_matrices_[iloc];
+        const DataType* const ssiloc = ptr_matrices_[iloc];
         for (int i = 0; i < bsize; i++)
         {
             for (int j = 0; j < bsize; j++)
@@ -160,7 +167,7 @@ public:
 
     void print(std::ostream& os) const
     {
-        for (int iloc = 0; iloc < subdiv_; iloc++)
+        for (int iloc = 0; iloc < nmat_; iloc++)
             print(os, iloc);
     }
 
@@ -168,10 +175,12 @@ public:
 
     void applyMask(const LocalMatrices& mask);
 
-    void setMaskThreshold(const T min_threshold, const T max_threshold);
+    void setMaskThreshold(
+        const DataType min_threshold, const DataType max_threshold);
     void printBlock(std::ostream& os, const int blocksize);
 
-    void matvec(const LocalVector<T>& u, LocalVector<T>& f, const int iloc = 0);
+    void matvec(const LocalVector<DataType>& u, LocalVector<DataType>& f,
+        const int iloc = 0);
 };
 
 #endif

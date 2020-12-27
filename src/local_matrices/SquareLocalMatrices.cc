@@ -10,8 +10,8 @@
 #include "SquareLocalMatrices.h"
 
 template <class T>
-SquareLocalMatrices<T>::SquareLocalMatrices(const int subdiv, const int m)
-    : LocalMatrices<T>(subdiv, m, m)
+SquareLocalMatrices<T>::SquareLocalMatrices(const int nmat, const int m)
+    : LocalMatrices<T>(nmat, m, m)
 {
 }
 
@@ -20,9 +20,9 @@ void SquareLocalMatrices<T>::fillUpperWithLower()
 {
     int m = LocalMatrices<T>::m_;
 
-    for (short iloc = 0; iloc < LocalMatrices<T>::subdiv_; iloc++)
+    for (short iloc = 0; iloc < LocalMatrices<T>::nmat_; iloc++)
     {
-        T* ssiloc = LocalMatrices<T>::getSubMatrix(iloc);
+        T* ssiloc = LocalMatrices<T>::getRawPtr(iloc);
 
         for (int i = 0; i < m; i++)
         {
@@ -40,9 +40,9 @@ void SquareLocalMatrices<T>::setDiagonal2Zero()
 {
     int m = LocalMatrices<T>::m_;
 
-    for (short iloc = 0; iloc < LocalMatrices<T>::subdiv_; iloc++)
+    for (short iloc = 0; iloc < LocalMatrices<T>::nmat_; iloc++)
     {
-        T* ssiloc = LocalMatrices<T>::getSubMatrix(iloc);
+        T* ssiloc = LocalMatrices<T>::getRawPtr(iloc);
         for (int i = 0; i < m; i++)
         {
             ssiloc[i + m * i] = 0.;
@@ -55,9 +55,9 @@ void SquareLocalMatrices<T>::transpose()
 {
     int m = LocalMatrices<T>::m_;
 
-    for (short iloc = 0; iloc < LocalMatrices<T>::subdiv_; iloc++)
+    for (short iloc = 0; iloc < LocalMatrices<T>::nmat_; iloc++)
     {
-        T* ssiloc = LocalMatrices<T>::getSubMatrix(iloc);
+        T* ssiloc = LocalMatrices<T>::getRawPtr(iloc);
         MemorySpace::assert_is_host_ptr(ssiloc);
 
         for (int i = 0; i < m; i++)
@@ -81,7 +81,7 @@ double SquareLocalMatrices<T>::computePartialTrace(
 
     int m = LocalMatrices<T>::m_;
 
-    T* ssiloc = LocalMatrices<T>::getSubMatrix(iloc);
+    T* ssiloc = LocalMatrices<T>::getRawPtr(iloc);
     MemorySpace::assert_is_host_ptr(ssiloc);
 
     double trace = 0.;
@@ -101,9 +101,9 @@ void SquareLocalMatrices<T>::shift(const T shift)
 {
     const int m = LocalMatrices<T>::m_;
 
-    for (short iloc = 0; iloc < LocalMatrices<T>::subdiv_; iloc++)
+    for (short iloc = 0; iloc < LocalMatrices<T>::nmat_; iloc++)
     {
-        T* mat = LocalMatrices<T>::getSubMatrix(iloc);
+        T* mat = LocalMatrices<T>::getRawPtr(iloc);
         MemorySpace::assert_is_host_ptr(mat);
 
         for (int i = 0; i < m; i++)
@@ -122,9 +122,9 @@ void SquareLocalMatrices<T>::applySymmetricMask(
     const int m = LocalMatrices<T>::m_;
     const int n = LocalMatrices<T>::n_;
 
-    for (short iloc = 0; iloc < LocalMatrices<T>::subdiv_; iloc++)
+    for (short iloc = 0; iloc < LocalMatrices<T>::nmat_; iloc++)
     {
-        T* mat = LocalMatrices<T>::getSubMatrix(iloc);
+        T* mat = LocalMatrices<T>::getRawPtr(iloc);
         MemorySpace::assert_is_host_ptr(mat);
         const std::vector<int>& loc_gids(gids[iloc]);
 

@@ -62,7 +62,7 @@ void SubspaceProjector<T>::projectOut(
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
         ORBDTYPE* xi            = subspace_.getPsi(0, iloc);
-        MATDTYPE* localMat_iloc = pmatrix.getSubMatrix(iloc);
+        MATDTYPE* localMat_iloc = pmatrix.getRawPtr(iloc);
 
         // Compute loc_numpt_ rows (for subdomain iloc)
         LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(loc_numpt_,
