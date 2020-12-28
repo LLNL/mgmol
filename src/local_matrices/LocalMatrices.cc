@@ -14,7 +14,12 @@
 template <class DataType>
 LocalMatrices<DataType>::LocalMatrices(
     const short nmat, const int m, const int n)
-    : m_(m), n_(n), nmat_(nmat)
+    : m_(m),
+      n_(n),
+      nmat_(nmat),
+      storage_(MemorySpace::Memory<DataType, MemorySpace::Host>::allocate(
+                   nmat_ * m_ * n_),
+          MemorySpace::Memory<DataType, MemorySpace::Host>::free)
 {
     assert(m >= 0);
     assert(n >= 0);
@@ -24,19 +29,25 @@ LocalMatrices<DataType>::LocalMatrices(
 
     if (storage_size_ > 0)
     {
-        memset(storage_, 0, storage_size_ * sizeof(DataType));
+        memset(storage_.get(), 0, storage_size_ * sizeof(DataType));
     }
 }
 
 template <class DataType>
 LocalMatrices<DataType>::LocalMatrices(const LocalMatrices& mat)
-    : m_(mat.m_), n_(mat.n_), nmat_(mat.nmat_)
+    : m_(mat.m_),
+      n_(mat.n_),
+      nmat_(mat.nmat_),
+      storage_(MemorySpace::Memory<DataType, MemorySpace::Host>::allocate(
+                   nmat_ * m_ * n_),
+          MemorySpace::Memory<DataType, MemorySpace::Host>::free)
 {
     allocate();
 
     if (storage_size_ > 0)
     {
-        memcpy(storage_, mat.storage_, storage_size_ * sizeof(DataType));
+        memcpy(storage_.get(), mat.storage_.get(),
+            storage_size_ * sizeof(DataType));
     }
 }
 
@@ -48,14 +59,9 @@ void LocalMatrices<DataType>::allocate()
 
     if (storage_size_ > 0)
     {
-        storage_       = new DataType[storage_size_];
         const int dim2 = m_ * n_;
         for (int i = 0; i < nmat_; i++)
-            ptr_matrices_[i] = storage_ + dim2 * i;
-    }
-    else
-    {
-        storage_ = nullptr;
+            ptr_matrices_[i] = storage_.get() + dim2 * i;
     }
 }
 

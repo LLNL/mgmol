@@ -36,7 +36,6 @@ const double tol_mat_elements = 1.e-14;
 template <class DataType>
 class LocalMatrices
 {
-    DataType* storage_;
     int storage_size_;
     std::vector<DataType*> ptr_matrices_;
 
@@ -47,6 +46,8 @@ protected:
     const int n_;
     // number of matrices
     const short nmat_;
+
+    std::unique_ptr<DataType, void (*)(DataType*)> storage_;
 
 public:
     LocalMatrices(const short nmat, const int m, const int n);
@@ -60,14 +61,7 @@ public:
     void copy(const bml_matrix_t* A);
 #endif
 
-    virtual ~LocalMatrices()
-    {
-        if (storage_ != nullptr)
-        {
-            delete[] storage_;
-            storage_ = nullptr;
-        }
-    };
+    virtual ~LocalMatrices(){};
 
     short nmat() const { return nmat_; }
 
@@ -100,10 +94,13 @@ public:
         return ptr_matrices_[iloc][m_ * j + i];
     }
 
-    void scal(const double alpha) { Tscal(storage_size_, alpha, storage_); }
+    void scal(const double alpha)
+    {
+        Tscal(storage_size_, alpha, storage_.get());
+    }
     void axpy(const double alpha, const LocalMatrices& matA)
     {
-        Taxpy(storage_size_, alpha, matA.storage_, storage_);
+        Taxpy(storage_size_, alpha, matA.storage_.get(), storage_.get());
     }
 
     template <typename MemorySpaceType>
@@ -118,7 +115,10 @@ public:
     void gemm(const char transa, const char transb, const double alpha,
         const LocalMatrices& matA, const LocalMatrices& matB,
         const double beta);
-    void reset() { memset(storage_, 0, storage_size_ * sizeof(DataType)); }
+    void reset()
+    {
+        memset(storage_.get(), 0, storage_size_ * sizeof(DataType));
+    }
 
     void setValues(const DataType val)
     {
