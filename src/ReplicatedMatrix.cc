@@ -137,11 +137,22 @@ void ReplicatedMatrix::assign(
         device_data_.get() + jb * ld_ + ib, ld_, magma_singleton.queue_);
 }
 
-void ReplicatedMatrix::assign(SquareLocalMatrices<double>& src)
+template<>
+void ReplicatedMatrix::assign(SquareLocalMatrices<double,MemorySpace::Host>& src)
 {
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
     magma_dsetmatrix(src.m(), src.n(), src.getSubMatrix(), src.n(),
+        device_data_.get(), ld_, magma_singleton.queue_);
+}
+
+template<>
+void ReplicatedMatrix::assign(SquareLocalMatrices<double,MemorySpace::Device>& src)
+{
+std::cout<<"ReplicatedMatrix::assign"<<std::endl;
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    magma_dcopymatrix(src.n(), src.n(), src.getRawPtr(), src.n(),
         device_data_.get(), ld_, magma_singleton.queue_);
 }
 

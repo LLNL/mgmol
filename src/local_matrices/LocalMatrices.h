@@ -40,6 +40,9 @@ class LocalMatrices
     int storage_size_;
     std::vector<DataType*> ptr_matrices_;
 
+    void set2zero();
+    void allocate();
+
 protected:
     // number of rows in matrices
     const int m_;
@@ -53,8 +56,6 @@ protected:
 public:
     LocalMatrices(const short nmat, const int m, const int n);
     LocalMatrices(const LocalMatrices&);
-
-    void allocate();
 
     template <class DataType2>
     void copy(const LocalMatrices<DataType2, MemorySpaceType>& mat);

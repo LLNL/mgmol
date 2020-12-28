@@ -130,7 +130,7 @@ template <>
 void ProjectedMatrices<ReplicatedMatrix>::convert(const ReplicatedMatrix& src,
     SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& dst)
 {
-    src.get(dst.getSubMatrix(), dst.m());
+    src.get(dst.getRawPtr(), dst.m());
 }
 #endif
 
@@ -1280,7 +1280,7 @@ ProjectedMatrices<ReplicatedMatrix>::getReplicatedDM()
 {
     SquareLocalMatrices<double, MemorySpace::Host> sldm(1, dim_);
     const ReplicatedMatrix& dm(dm_->getMatrix());
-    dm.get(sldm.getSubMatrix(), dim_);
+    dm.get(sldm.getRawPtr(), dim_);
 
     return sldm;
 }

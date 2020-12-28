@@ -80,7 +80,9 @@ public:
 
     void assign(const ReplicatedMatrix& src, const int ib, const int jb);
 
-    void assign(SquareLocalMatrices<double, MemorySpace::Host>& src);
+    template<typename MemorySpaceType>
+    void assign(SquareLocalMatrices<double, MemorySpaceType>& src);
+
     void add(const SquareSubMatrix<double>& src);
 
     // sum up values across MPI tasks

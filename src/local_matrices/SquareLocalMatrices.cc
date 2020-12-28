@@ -156,3 +156,6 @@ void SquareLocalMatrices<DataType, MemorySpaceType>::applySymmetricMask(
 
 template class SquareLocalMatrices<double, MemorySpace::Host>;
 template class SquareLocalMatrices<float, MemorySpace::Host>;
+#ifdef HAVE_MAGMA
+template class SquareLocalMatrices<double, MemorySpace::Device>;
+#endif
