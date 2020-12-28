@@ -42,26 +42,28 @@ void LocalMatrices<double, MemorySpace::Host>::set2zero()
 template <>
 void LocalMatrices<float, MemorySpace::Host>::set2zero()
 {
-    memset(storage_.get(), 0, storage_size_ * sizeof(double));
+    memset(storage_.get(), 0, storage_size_ * sizeof(float));
 }
 
+#ifdef HAVE_MAGMA
 template <>
 void LocalMatrices<double, MemorySpace::Device>::set2zero()
 {
-   auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
-    magmablas_dlaset(MagmaFull, m_, n_*nmat_, 0.0, 0.0, storage_.get(), m_,
+    magmablas_dlaset(MagmaFull, m_, n_ * nmat_, 0.0, 0.0, storage_.get(), m_,
         magma_singleton.queue_);
 }
 
 template <>
 void LocalMatrices<float, MemorySpace::Device>::set2zero()
 {
-   auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
-    magmablas_slaset(MagmaFull, m_, n_*nmat_, 0.0, 0.0, storage_.get(), m_,
+    magmablas_slaset(MagmaFull, m_, n_ * nmat_, 0.0, 0.0, storage_.get(), m_,
         magma_singleton.queue_);
 }
+#endif
 
 template <typename DataType, typename MemorySpaceType>
 LocalMatrices<DataType, MemorySpaceType>::LocalMatrices(
@@ -270,8 +272,8 @@ void LocalMatrices<DataType, MemorySpaceType>::gemm(const char transa,
         MemorySpace::assert_is_host_ptr(amat);
         MemorySpace::assert_is_host_ptr(bmat);
         MemorySpace::assert_is_host_ptr(c);
-        LinearAlgebraUtils<MemorySpaceType>::MPgemm(transa, transb, m_, n_,
-            nca, alpha, amat, lda, bmat, ldb, beta, c, m_);
+        LinearAlgebraUtils<MemorySpaceType>::MPgemm(transa, transb, m_, n_, nca,
+            alpha, amat, lda, bmat, ldb, beta, c, m_);
     }
 }
 
@@ -327,6 +329,7 @@ void LocalMatrices<double, MemorySpace::Host>::setValues(
     }
 }
 
+#ifdef HAVE_MAGMA
 template <>
 void LocalMatrices<double, MemorySpace::Device>::setValues(
     double* values, const int ld, const int iloc)
@@ -334,9 +337,10 @@ void LocalMatrices<double, MemorySpace::Device>::setValues(
     MemorySpace::assert_is_dev_ptr(values);
 
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
-    magma_dcopymatrix(m_, n_, values, ld,
-        ptr_matrices_[iloc], m_, magma_singleton.queue_);
+    magma_dcopymatrix(
+        m_, n_, values, ld, ptr_matrices_[iloc], m_, magma_singleton.queue_);
 }
+#endif
 
 template <typename DataType, typename MemorySpaceType>
 void LocalMatrices<DataType, MemorySpaceType>::printBlock(

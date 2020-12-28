@@ -35,7 +35,7 @@ TEST_CASE("Check ReplicatedMatrix", "[replicated_matrix]")
     // then consolidate matrix
     {
         double value = 0.1;
-        SquareLocalMatrices<double,MemorySpace::Host> slm(1, n);
+        SquareLocalMatrices<double, MemorySpace::Host> slm(1, n);
         std::vector<double> tmp(n * n);
         for (int i = 0; i < n; i++)
             for (int j = 0; j < n; j++)
@@ -54,22 +54,22 @@ TEST_CASE("Check ReplicatedMatrix", "[replicated_matrix]")
     }
 
     {
-assert(0==1);
+        assert(0 == 1);
         using MemoryDev = MemorySpace::Memory<double, MemorySpace::Device>;
 
         double value = 0.1;
-        SquareLocalMatrices<double,MemorySpace::Device> slm(1, n);
+        SquareLocalMatrices<double, MemorySpace::Device> slm(1, n);
         std::vector<double> tmp(n * n);
         for (int i = 0; i < n; i++)
             for (int j = 0; j < n; j++)
                 tmp[i + n * j] = value;
 
         std::unique_ptr<double, void (*)(double*)> tmp_dev(
-        MemoryDev::allocate(n*n), MemoryDev::free);
+            MemoryDev::allocate(n * n), MemoryDev::free);
 
         auto& magma_singleton = MagmaSingleton::get_magma_singleton();
         magma_dsetmatrix(
-        n, n, tmp.data(), n, tmp_dev.get(), n, magma_singleton.queue_);
+            n, n, tmp.data(), n, tmp_dev.get(), n, magma_singleton.queue_);
 
         slm.setValues(tmp_dev.get(), n);
 
@@ -82,7 +82,6 @@ assert(0==1);
             CHECK(values[i]
                   == Approx(value * static_cast<double>(npes)).epsilon(1.e-8));
     }
-
 
     // set diagonal, then retrieve it
     {

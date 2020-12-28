@@ -80,7 +80,7 @@ public:
 
     void assign(const ReplicatedMatrix& src, const int ib, const int jb);
 
-    template<typename MemorySpaceType>
+    template <typename MemorySpaceType>
     void assign(SquareLocalMatrices<double, MemorySpaceType>& src);
 
     void add(const SquareSubMatrix<double>& src);
