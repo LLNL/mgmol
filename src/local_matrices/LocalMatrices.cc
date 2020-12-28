@@ -84,6 +84,48 @@ LocalMatrices<DataType, MemorySpaceType>::LocalMatrices(
     }
 }
 
+#ifdef HAVE_MAGMA
+template <>
+void LocalMatrices<double, MemorySpace::Device>::LocalMatrices(
+    const LocalMatrices& mat)
+    : m_(mat.m_),
+      n_(mat.n_),
+      nmat_(mat.nmat_),
+      storage_(MemorySpace::Memory<double, MemorySpace::Device>::allocate(
+                   nmat_ * m_ * n_),
+          MemorySpace::Memory<double, MemorySpace::Device>::free)
+{
+    allocate();
+
+    if (storage_size_ > 0)
+    {
+        auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+        magma_dcopymatrix(m_, n_, mat.storage_.get(), m_, storage_.get(),
+            magma_singleton.queue_);
+    }
+}
+
+template <>
+void LocalMatrices<float, MemorySpace::Device>::LocalMatrices(
+    const LocalMatrices& mat)
+    : m_(mat.m_),
+      n_(mat.n_),
+      nmat_(mat.nmat_),
+      storage_(MemorySpace::Memory<float, MemorySpace::Device>::allocate(
+                   nmat_ * m_ * n_),
+          MemorySpace::Memory<float, MemorySpace::Device>::free)
+{
+    allocate();
+
+    if (storage_size_ > 0)
+    {
+        auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+        magma_scopymatrix(m_, n_, mat.storage_.get(), m_, storage_.get(),
+            magma_singleton.queue_);
+    }
+}
+#endif
+
 template <typename DataType, typename MemorySpaceType>
 void LocalMatrices<DataType, MemorySpaceType>::allocate()
 {
