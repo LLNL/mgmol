@@ -85,8 +85,6 @@ public:
 
     void setValues(DataType* values, const int ld, const int iloc = 0);
 
-    void shift(const double shift, const int iloc = 0);
-
     DataType getVal(const int i, const int j, const int iloc = 0)
     {
         assert(i < m_);

@@ -14,8 +14,8 @@
 
 #include <vector>
 
-template <class T>
-class SquareLocalMatrices : public LocalMatrices<T>
+template <class DataType>
+class SquareLocalMatrices : public LocalMatrices<DataType>
 {
 public:
     SquareLocalMatrices(const int subdiv, const int m);
@@ -32,7 +32,7 @@ public:
     /*!
      * add shift to diagonal, to shift eigenvalues
      */
-    void shift(const T);
+    void shift(const DataType);
 
     /*!
      * set elements to 0 for rows/cols with gids equal to -1

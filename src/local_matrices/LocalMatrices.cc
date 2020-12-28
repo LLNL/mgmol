@@ -295,16 +295,6 @@ void LocalMatrices<DataType>::setValues(
 }
 
 template <class DataType>
-void LocalMatrices<DataType>::shift(const double shift, const int iloc)
-{
-    DataType* local_mat = ptr_matrices_[iloc];
-    for (int j = 0; j < n_; j++)
-    {
-        local_mat[j + j * m_] += shift;
-    }
-}
-
-template <class DataType>
 void LocalMatrices<DataType>::printBlock(std::ostream& os, const int blocksize)
 {
     for (short iloc = 0; iloc < nmat_; iloc++)
