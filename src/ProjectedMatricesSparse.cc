@@ -180,8 +180,10 @@ void ProjectedMatricesSparse::setup(
 
         submatT_ = new VariableSizeMatrix<sparserow>("Theta", lsize_);
 
-        localX_ = new SquareLocalMatrices<MATDTYPE>(subdiv_, chromatic_number_);
-        localT_ = new SquareLocalMatrices<MATDTYPE>(subdiv_, chromatic_number_);
+        localX_ = new SquareLocalMatrices<MATDTYPE, MemorySpace::Host>(
+            subdiv_, chromatic_number_);
+        localT_ = new SquareLocalMatrices<MATDTYPE, MemorySpace::Host>(
+            subdiv_, chromatic_number_);
     }
     // get min and max of functions centered on local processors
     ///*
@@ -324,7 +326,7 @@ void ProjectedMatricesSparse::consolidateH()
 // computes the trace of the dotproduct with invS
 // assumes matrix ss contains partial contributions
 double ProjectedMatricesSparse::dotProductWithInvS(
-    const SquareLocalMatrices<MATDTYPE>& local_product)
+    const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& local_product)
 {
     return computeTraceInvSmultMat(local_product, true);
 }
@@ -332,7 +334,7 @@ double ProjectedMatricesSparse::dotProductWithInvS(
 // computes the trace of the dotproduct with DM
 // assumes matrix ss contains partial contributions
 double ProjectedMatricesSparse::dotProductWithDM(
-    const SquareLocalMatrices<MATDTYPE>& local_product)
+    const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& local_product)
 {
     double trace = computeTraceDMmultMat(local_product, true);
     // scale by occupation number
@@ -345,7 +347,7 @@ double ProjectedMatricesSparse::dotProductWithDM(
 }
 
 double ProjectedMatricesSparse::dotProductSimple(
-    const SquareLocalMatrices<MATDTYPE>& /*local_product*/)
+    const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& /*local_product*/)
 {
     std::cerr << "ERROR: ProjectedMatricesSparse::dotProductSimple() \
                not implemented!!!"
@@ -532,7 +534,7 @@ void ProjectedMatricesSparse::printTimers(std::ostream& os)
 
 void ProjectedMatricesSparse::updateLocalMat(
     const VariableSizeMatrix<sparserow>& submatM,
-    SquareLocalMatrices<MATDTYPE>* localM)
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host>* localM)
 {
     // return if matrix size is zero
     if (localM->n() == 0) return;
@@ -556,7 +558,8 @@ void ProjectedMatricesSparse::updateLocalMat(
 }
 
 double ProjectedMatricesSparse::computeTraceInvSmultMat(
-    const SquareLocalMatrices<MATDTYPE>& mat, const bool consolidate)
+    const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& mat,
+    const bool consolidate)
 {
     Control& ct = *(Control::instance());
     VariableSizeMatrix<sparserow> vsmat("VS", lsize_);
@@ -579,7 +582,8 @@ double ProjectedMatricesSparse::computeTraceInvSmultMat(
 }
 
 double ProjectedMatricesSparse::computeTraceDMmultMat(
-    const SquareLocalMatrices<MATDTYPE>& mat, const bool consolidate)
+    const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& mat,
+    const bool consolidate)
 {
     Control& ct = *(Control::instance());
     VariableSizeMatrix<sparserow> vsmat("VS", lsize_);
@@ -619,7 +623,8 @@ double ProjectedMatricesSparse::computeTraceInvSmultMat(
     return invS_->getTraceDotProductWithInvS(&vsmat);
 }
 
-void ProjectedMatricesSparse::applyInvS(SquareLocalMatrices<MATDTYPE>& mat)
+void ProjectedMatricesSparse::applyInvS(
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& mat)
 {
     Control& ct = *(Control::instance());
     mat.transpose();

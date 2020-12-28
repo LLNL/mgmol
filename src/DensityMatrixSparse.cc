@@ -126,7 +126,8 @@ void DensityMatrixSparse::printDM(ostream& os, int nrows) const
 }
 // get submatrix of Density matrix
 void DensityMatrixSparse::getLocalMatrix(
-    LocalMatrices<MATDTYPE>& localX, const vector<vector<int>>& global_indexes)
+    LocalMatrices<MATDTYPE, MemorySpace::Host>& localX,
+    const vector<vector<int>>& global_indexes)
 {
     assert(dm_ != nullptr);
 

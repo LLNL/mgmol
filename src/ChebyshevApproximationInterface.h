@@ -27,8 +27,9 @@ protected:
     double extents_[2]; // interval where function is defined
     std::vector<double> interp_points_; // Chebyshev interpolation points
 
-    LocalMatrices<double>* cmat_; // matrix to hold cosine information for
-                                  // generating coefficients coeffs
+    LocalMatrices<double, MemorySpace::Host>*
+        cmat_; // matrix to hold cosine information for
+               // generating coefficients coeffs
     ChebyshevApproximationFunction*
         chebfunc_; // Pointer to function to be approximated
     std::vector<double>

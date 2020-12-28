@@ -18,7 +18,8 @@ short LocalMatrices2DistMatrix::sparse_distmatrix_nb_tasks_per_partitions_
     = 256;
 
 template <class T>
-void LocalMatrices2DistMatrix::convert(const LocalMatrices<T>& src,
+void LocalMatrices2DistMatrix::convert(
+    const LocalMatrices<T, MemorySpace::Host>& src,
     dist_matrix::SparseDistMatrix<T>& dst, const int numst,
     const double tol) const
 {
@@ -89,7 +90,8 @@ void LocalMatrices2DistMatrix::convert(const LocalMatrices<T>& src,
 // Sum up all the local contributions (in LocalMatrices) into
 // one DistMatrix
 template <class T>
-void LocalMatrices2DistMatrix::accumulate(const LocalMatrices<T>& src,
+void LocalMatrices2DistMatrix::accumulate(
+    const LocalMatrices<T, MemorySpace::Host>& src,
     dist_matrix::DistMatrix<T>& dst, const double tol) const
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
@@ -105,9 +107,9 @@ void LocalMatrices2DistMatrix::accumulate(const LocalMatrices<T>& src,
 }
 
 template void LocalMatrices2DistMatrix::convert(
-    const LocalMatrices<DISTMATDTYPE>& src,
+    const LocalMatrices<DISTMATDTYPE, MemorySpace::Host>& src,
     dist_matrix::SparseDistMatrix<DISTMATDTYPE>& dst, const int numst,
     const double tol) const;
 template void LocalMatrices2DistMatrix::accumulate(
-    const LocalMatrices<DISTMATDTYPE>& src,
+    const LocalMatrices<DISTMATDTYPE, MemorySpace::Host>& src,
     dist_matrix::DistMatrix<DISTMATDTYPE>& dst, const double tol) const;

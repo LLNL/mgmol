@@ -64,7 +64,7 @@ public:
     ~DistMatrix2SquareLocalMatrices() {}
 
     void convert(const dist_matrix::DistMatrix<DISTMATDTYPE>& dmat,
-        SquareLocalMatrices<MATDTYPE>& lmat);
+        SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& lmat);
     const dist_matrix::SubMatrices<DISTMATDTYPE>& convert(
         const dist_matrix::DistMatrix<DISTMATDTYPE>& dmat);
 

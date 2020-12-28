@@ -1510,7 +1510,8 @@ void LocalizationRegions::printTimers(ostream& os)
 }
 
 void LocalizationRegions::getMatrixDistances(
-    SquareLocalMatrices<MATDTYPE>& mat, const vector<vector<int>>& gids)
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& mat,
+    const vector<vector<int>>& gids)
 {
     Mesh* mymesh        = Mesh::instance();
     const short subdivx = mymesh->subdivx();

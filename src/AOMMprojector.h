@@ -30,7 +30,7 @@ private:
 
     ProjectedMatricesInterface* kernel_proj_matrices_;
 
-    SquareLocalMatrices<MATDTYPE>* matrix_mask_;
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host>* matrix_mask_;
 
     short counter_;
 

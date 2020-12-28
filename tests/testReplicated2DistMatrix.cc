@@ -52,7 +52,7 @@ TEST_CASE(
     }
 
     // setup an nxn local matrix
-    SquareLocalMatrices<double> replicated(1, n);
+    SquareLocalMatrices<double, MemorySpace::Host> replicated(1, n);
 
     std::vector<double> tmp(n * m);
     for (int j = 0; j < n; j++)
@@ -65,7 +65,7 @@ TEST_CASE(
     distm.initFromReplicated(replicated.getRawPtr(), n);
 
     // convert back to a replicated matrix
-    SquareLocalMatrices<double> result(1, n);
+    SquareLocalMatrices<double, MemorySpace::Host> result(1, n);
     distm.allgather(result.getRawPtr(), n);
 
     if (mype == 0)

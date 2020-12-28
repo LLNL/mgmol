@@ -9,20 +9,23 @@
 
 #include "SquareLocalMatrices.h"
 
-template <class DataType>
-SquareLocalMatrices<DataType>::SquareLocalMatrices(const int nmat, const int m)
-    : LocalMatrices<DataType>(nmat, m, m)
+template <typename DataType, typename MemorySpaceType>
+SquareLocalMatrices<DataType, MemorySpaceType>::SquareLocalMatrices(
+    const int nmat, const int m)
+    : LocalMatrices<DataType, MemorySpaceType>(nmat, m, m)
 {
 }
 
-template <class DataType>
-void SquareLocalMatrices<DataType>::fillUpperWithLower()
+template <typename DataType, typename MemorySpaceType>
+void SquareLocalMatrices<DataType, MemorySpaceType>::fillUpperWithLower()
 {
-    int m = LocalMatrices<DataType>::m_;
+    int m = LocalMatrices<DataType, MemorySpaceType>::m_;
 
-    for (short iloc = 0; iloc < LocalMatrices<DataType>::nmat_; iloc++)
+    for (short iloc = 0; iloc < LocalMatrices<DataType, MemorySpaceType>::nmat_;
+         iloc++)
     {
-        DataType* ssiloc = LocalMatrices<DataType>::getRawPtr(iloc);
+        DataType* ssiloc
+            = LocalMatrices<DataType, MemorySpaceType>::getRawPtr(iloc);
 
         for (int i = 0; i < m; i++)
         {
@@ -35,14 +38,16 @@ void SquareLocalMatrices<DataType>::fillUpperWithLower()
     }
 }
 
-template <class DataType>
-void SquareLocalMatrices<DataType>::setDiagonal2Zero()
+template <typename DataType, typename MemorySpaceType>
+void SquareLocalMatrices<DataType, MemorySpaceType>::setDiagonal2Zero()
 {
-    int m = LocalMatrices<DataType>::m_;
+    int m = LocalMatrices<DataType, MemorySpaceType>::m_;
 
-    for (short iloc = 0; iloc < LocalMatrices<DataType>::nmat_; iloc++)
+    for (short iloc = 0; iloc < LocalMatrices<DataType, MemorySpaceType>::nmat_;
+         iloc++)
     {
-        DataType* ssiloc = LocalMatrices<DataType>::getRawPtr(iloc);
+        DataType* ssiloc
+            = LocalMatrices<DataType, MemorySpaceType>::getRawPtr(iloc);
         for (int i = 0; i < m; i++)
         {
             ssiloc[i + m * i] = 0.;
@@ -50,14 +55,16 @@ void SquareLocalMatrices<DataType>::setDiagonal2Zero()
     }
 }
 
-template <class DataType>
-void SquareLocalMatrices<DataType>::transpose()
+template <typename DataType, typename MemorySpaceType>
+void SquareLocalMatrices<DataType, MemorySpaceType>::transpose()
 {
-    int m = LocalMatrices<DataType>::m_;
+    int m = LocalMatrices<DataType, MemorySpaceType>::m_;
 
-    for (short iloc = 0; iloc < LocalMatrices<DataType>::nmat_; iloc++)
+    for (short iloc = 0; iloc < LocalMatrices<DataType, MemorySpaceType>::nmat_;
+         iloc++)
     {
-        DataType* ssiloc = LocalMatrices<DataType>::getRawPtr(iloc);
+        DataType* ssiloc
+            = LocalMatrices<DataType, MemorySpaceType>::getRawPtr(iloc);
         MemorySpace::assert_is_host_ptr(ssiloc);
 
         for (int i = 0; i < m; i++)
@@ -73,15 +80,16 @@ void SquareLocalMatrices<DataType>::transpose()
     }
 }
 
-template <class DataType>
-double SquareLocalMatrices<DataType>::computePartialTrace(
+template <typename DataType, typename MemorySpaceType>
+double SquareLocalMatrices<DataType, MemorySpaceType>::computePartialTrace(
     const std::vector<int>& ids, const int iloc)
 {
     assert(!ids.empty());
 
-    int m = LocalMatrices<DataType>::m_;
+    int m = LocalMatrices<DataType, MemorySpaceType>::m_;
 
-    DataType* ssiloc = LocalMatrices<DataType>::getRawPtr(iloc);
+    DataType* ssiloc
+        = LocalMatrices<DataType, MemorySpaceType>::getRawPtr(iloc);
     MemorySpace::assert_is_host_ptr(ssiloc);
 
     double trace = 0.;
@@ -96,14 +104,16 @@ double SquareLocalMatrices<DataType>::computePartialTrace(
     return trace;
 }
 
-template <class DataType>
-void SquareLocalMatrices<DataType>::shift(const DataType shift)
+template <typename DataType, typename MemorySpaceType>
+void SquareLocalMatrices<DataType, MemorySpaceType>::shift(const DataType shift)
 {
-    const int m = LocalMatrices<DataType>::m_;
+    const int m = LocalMatrices<DataType, MemorySpaceType>::m_;
 
-    for (short iloc = 0; iloc < LocalMatrices<DataType>::nmat_; iloc++)
+    for (short iloc = 0; iloc < LocalMatrices<DataType, MemorySpaceType>::nmat_;
+         iloc++)
     {
-        DataType* mat = LocalMatrices<DataType>::getRawPtr(iloc);
+        DataType* mat
+            = LocalMatrices<DataType, MemorySpaceType>::getRawPtr(iloc);
         MemorySpace::assert_is_host_ptr(mat);
 
         for (int i = 0; i < m; i++)
@@ -115,16 +125,18 @@ void SquareLocalMatrices<DataType>::shift(const DataType shift)
 
 // set matrix elements to zero in rows/columns
 // not associated with any orbital
-template <class DataType>
-void SquareLocalMatrices<DataType>::applySymmetricMask(
+template <typename DataType, typename MemorySpaceType>
+void SquareLocalMatrices<DataType, MemorySpaceType>::applySymmetricMask(
     const std::vector<std::vector<int>>& gids)
 {
-    const int m = LocalMatrices<DataType>::m_;
-    const int n = LocalMatrices<DataType>::n_;
+    const int m = LocalMatrices<DataType, MemorySpaceType>::m_;
+    const int n = LocalMatrices<DataType, MemorySpaceType>::n_;
 
-    for (short iloc = 0; iloc < LocalMatrices<DataType>::nmat_; iloc++)
+    for (short iloc = 0; iloc < LocalMatrices<DataType, MemorySpaceType>::nmat_;
+         iloc++)
     {
-        DataType* mat = LocalMatrices<DataType>::getRawPtr(iloc);
+        DataType* mat
+            = LocalMatrices<DataType, MemorySpaceType>::getRawPtr(iloc);
         MemorySpace::assert_is_host_ptr(mat);
         const std::vector<int>& loc_gids(gids[iloc]);
 
@@ -142,5 +154,5 @@ void SquareLocalMatrices<DataType>::applySymmetricMask(
     }
 }
 
-template class SquareLocalMatrices<double>;
-template class SquareLocalMatrices<float>;
+template class SquareLocalMatrices<double, MemorySpace::Host>;
+template class SquareLocalMatrices<float, MemorySpace::Host>;

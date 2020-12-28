@@ -34,7 +34,7 @@ void GrassmanCG<T>::conjugate()
     {
         // Numerator: compute matG = (MG^T*(G-G_old)) = MG^T*G - MG^T*G_old
         // first compute matG = MG^T*G
-        SquareLocalMatrices<MATDTYPE> matG(
+        SquareLocalMatrices<MATDTYPE, MemorySpace::Host> matG(
             new_grad->subdivx(), new_grad->chromatic_number());
         new_pcgrad->getLocalOverlap(*new_grad,
             matG); // equivalent to pcgrad.computeLocalProduct(grad, matG);
@@ -121,7 +121,8 @@ double GrassmanCG<T>::computeStepSize(T& orbitals)
     computeOrbitalsProdWithH(*sdir, zHzMat);
 
     // Compute S^{_1}*Zo^T*Phi and S^{_1}*Phi^T*Zo
-    SquareLocalMatrices<MATDTYPE> ss(sdir->subdivx(), sdir->chromatic_number());
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host> ss(
+        sdir->subdivx(), sdir->chromatic_number());
     sdir->getLocalOverlap(orbitals, ss);
     dist_matrix::DistMatrix<DISTMATDTYPE> invSzTphiMat(
         "invSzTphiMat", dim, dim);

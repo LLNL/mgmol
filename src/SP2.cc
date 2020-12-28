@@ -152,7 +152,8 @@ void SP2::solve(const int nel, const bool verbose)
 }
 
 template <>
-void SP2::initializeLocalMat(const SquareLocalMatrices<MATDTYPE>& submatM,
+void SP2::initializeLocalMat(
+    const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& submatM,
     const double emin, const double emax, const std::vector<int>& loc_ids)
 {
     loc_ids_ = loc_ids;
@@ -163,8 +164,8 @@ void SP2::initializeLocalMat(const SquareLocalMatrices<MATDTYPE>& submatM,
     Xi_    = bml_zero_matrix(dense, double_real, n, n, sequential);
     Xi_sq_ = bml_zero_matrix(dense, double_real, n, n, sequential);
 #else
-    Xi_       = new SquareLocalMatrices<MATDTYPE>(1, n);
-    Xi_sq_    = new SquareLocalMatrices<MATDTYPE>(1, n);
+    Xi_       = new SquareLocalMatrices<MATDTYPE, MemorySpace::Host>(1, n);
+    Xi_sq_    = new SquareLocalMatrices<MATDTYPE, MemorySpace::Host>(1, n);
 #endif
 
     double factor = 1. / (emax - emin);

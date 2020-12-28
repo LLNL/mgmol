@@ -22,7 +22,7 @@ Timer DistMatrix2SquareLocalMatrices::convert_tm_(
 
 void DistMatrix2SquareLocalMatrices::convert(
     const dist_matrix::DistMatrix<DISTMATDTYPE>& dmat,
-    SquareLocalMatrices<MATDTYPE>& lmat)
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& lmat)
 {
     convert_tm_.start();
 

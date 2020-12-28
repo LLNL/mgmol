@@ -62,12 +62,14 @@ class ProjectedMatrices : public ProjectedMatricesInterface
      * Matrices to be used to multiply orbitals on the right
      * (dimension equal to number of local colors)
      */
-    std::unique_ptr<SquareLocalMatrices<double>> localX_; // density matrix
-    std::unique_ptr<SquareLocalMatrices<double>> localT_; // theta=inv(S)*H_phi
+    std::unique_ptr<SquareLocalMatrices<double, MemorySpace::Host>>
+        localX_; // density matrix
+    std::unique_ptr<SquareLocalMatrices<double, MemorySpace::Host>>
+        localT_; // theta=inv(S)*H_phi
 
     // internal data structures to hold local contributions
     // to matrix H
-    std::unique_ptr<SquareLocalMatrices<double>> localHl_;
+    std::unique_ptr<SquareLocalMatrices<double, MemorySpace::Host>> localHl_;
     std::unique_ptr<SquareSubMatrix<double>> localHnl_;
 
     void printEigenvaluesHa(std::ostream& os) const;
@@ -120,10 +122,12 @@ protected:
     }
 
     // convert a SquareLocalMatrices object into a MatrixType
-    void convert(const SquareLocalMatrices<double>& src, MatrixType& dst);
+    void convert(const SquareLocalMatrices<double, MemorySpace::Host>& src,
+        MatrixType& dst);
 
     // convert a MatrixType object into a SquareLocalMatrices
-    void convert(const MatrixType& src, SquareLocalMatrices<double>& dst);
+    void convert(const MatrixType& src,
+        SquareLocalMatrices<double, MemorySpace::Host>& dst);
 
     void setupMPI(const std::vector<std::vector<int>>&);
 
@@ -140,7 +144,7 @@ public:
         localHnl_.reset(new SquareSubMatrix<double>(slH));
     }
     void setLocalMatrixElementsHl(
-        const SquareLocalMatrices<double>& slH) override
+        const SquareLocalMatrices<double, MemorySpace::Host>& slH) override
     {
         localHl_->copy(slH);
     }
@@ -150,9 +154,15 @@ public:
 
     double getTraceDiagProductWithInvS(std::vector<double>& ddiag) override;
 
-    SquareLocalMatrices<double>& getLocalX() const override { return *localX_; }
+    SquareLocalMatrices<double, MemorySpace::Host>& getLocalX() const override
+    {
+        return *localX_;
+    }
 
-    SquareLocalMatrices<double>& getLocalT() const override { return *localT_; }
+    SquareLocalMatrices<double, MemorySpace::Host>& getLocalT() const override
+    {
+        return *localT_;
+    }
 
     void updateSubMatX() override { updateSubMatX(dm_->getMatrix()); }
 
@@ -160,12 +170,14 @@ public:
 
     void updateSubMatT() override { convert(*theta_, *localT_); }
 
-    void computeLoewdinTransform(SquareLocalMatrices<double>& localPi,
+    void computeLoewdinTransform(
+        SquareLocalMatrices<double, MemorySpace::Host>& localPi,
         const int orb_index, const bool transform_matrices);
 
     void printTimers(std::ostream& os) override;
 
-    void initializeGramMatrix(const SquareLocalMatrices<double>& ss,
+    void initializeGramMatrix(
+        const SquareLocalMatrices<double, MemorySpace::Host>& ss,
         const int orbitals_index) override
     {
         assert(gm_);
@@ -252,7 +264,8 @@ public:
     void stripDM() override;
     void dressupDM() override;
 
-    void applyInvS(SquareLocalMatrices<double>& mat) override;
+    void applyInvS(
+        SquareLocalMatrices<double, MemorySpace::Host>& mat) override;
     void applyInvS(MatrixType& mat)
     {
         assert(gm_ != 0);
@@ -342,7 +355,7 @@ public:
         dm_->mix(mix, *mat_X_old_, itindex);
     }
 
-    SquareLocalMatrices<double> getReplicatedDM();
+    SquareLocalMatrices<double, MemorySpace::Host> getReplicatedDM();
 
     double getLinDependent2states(
         int& st1, int& st2, const bool /*flag*/) const override
@@ -350,7 +363,8 @@ public:
         return gm_->getLinDependent2states(st1, st2);
     }
 
-    virtual void initializeMatB(const SquareLocalMatrices<double>& ss) override
+    virtual void initializeMatB(
+        const SquareLocalMatrices<double, MemorySpace::Host>& ss) override
     {
         (void)ss;
         std::cerr
@@ -360,10 +374,14 @@ public:
     }
 
     void resetDotProductMatrices() override;
-    double dotProductWithInvS(const SquareLocalMatrices<double>& ss) override;
-    double dotProductWithDM(const SquareLocalMatrices<double>& ss) override;
-    double dotProductSimple(const SquareLocalMatrices<double>& ss) override;
-    double computeTraceInvSmultMat(const SquareLocalMatrices<double>& mat);
+    double dotProductWithInvS(
+        const SquareLocalMatrices<double, MemorySpace::Host>& ss) override;
+    double dotProductWithDM(
+        const SquareLocalMatrices<double, MemorySpace::Host>& ss) override;
+    double dotProductSimple(
+        const SquareLocalMatrices<double, MemorySpace::Host>& ss) override;
+    double computeTraceInvSmultMat(
+        const SquareLocalMatrices<double, MemorySpace::Host>& mat);
     double computeTraceInvSmultMat(const MatrixType& mat)
     {
         MatrixType pmatrix(mat);

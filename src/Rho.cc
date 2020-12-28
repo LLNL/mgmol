@@ -271,10 +271,10 @@ void Rho<OrbitalsType>::rescaleTotalCharge()
 //        j++;
 //    }
 //
-//    SquareLocalMatrices<MATDTYPE>& localX(projmatrices->getLocalX());
-//    const MATDTYPE* const localX_iloc = localX.getSubMatrix(iloc);
-//    melements.clear();
-//    melements.resize(nmycolors * nmycolors);
+//    SquareLocalMatrices<MATDTYPE,MemorySpace::Host>&
+//    localX(projmatrices->getLocalX()); const MATDTYPE* const localX_iloc =
+//    localX.getSubMatrix(iloc); melements.clear(); melements.resize(nmycolors *
+//    nmycolors);
 //
 //    for (int i = 0; i < nmycolors; i++)
 //    {
@@ -614,7 +614,7 @@ void Rho<OrbitalsType>::computeRho(
         // if (dynamic_cast<LocGridOrbitals*>(&orbitals)) but it
         if (std::is_same<OrbitalsType, LocGridOrbitals>::value)
         {
-            SquareLocalMatrices<MATDTYPE>& localX(
+            SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& localX(
                 (orbitals.projMatrices())->getLocalX());
 
             // if (verbosity_level_ > 1 && onpe0)
@@ -684,7 +684,7 @@ void Rho<OrbitalsType>::computeRhoSubdomainUsingBlas3(const int iloc_init,
 
     RHODTYPE* const prho = &rho_[myspin_][0];
 
-    SquareLocalMatrices<MATDTYPE>& localX(
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& localX(
         (orbitals1.projMatrices())->getLocalX());
 
     const int ld      = orbitals1.getLda();

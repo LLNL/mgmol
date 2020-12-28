@@ -80,7 +80,7 @@ public:
 
     void assign(const ReplicatedMatrix& src, const int ib, const int jb);
 
-    void assign(SquareLocalMatrices<double>& src);
+    void assign(SquareLocalMatrices<double, MemorySpace::Host>& src);
     void add(const SquareSubMatrix<double>& src);
 
     // sum up values across MPI tasks

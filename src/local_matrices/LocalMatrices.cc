@@ -11,8 +11,8 @@
 #include "blas3_c.h"
 #include "mputils.h"
 
-template <class DataType>
-LocalMatrices<DataType>::LocalMatrices(
+template <typename DataType, typename MemorySpaceType>
+LocalMatrices<DataType, MemorySpaceType>::LocalMatrices(
     const short nmat, const int m, const int n)
     : m_(m),
       n_(n),
@@ -33,8 +33,9 @@ LocalMatrices<DataType>::LocalMatrices(
     }
 }
 
-template <class DataType>
-LocalMatrices<DataType>::LocalMatrices(const LocalMatrices& mat)
+template <typename DataType, typename MemorySpaceType>
+LocalMatrices<DataType, MemorySpaceType>::LocalMatrices(
+    const LocalMatrices& mat)
     : m_(mat.m_),
       n_(mat.n_),
       nmat_(mat.nmat_),
@@ -51,8 +52,8 @@ LocalMatrices<DataType>::LocalMatrices(const LocalMatrices& mat)
     }
 }
 
-template <class DataType>
-void LocalMatrices<DataType>::allocate()
+template <typename DataType, typename MemorySpaceType>
+void LocalMatrices<DataType, MemorySpaceType>::allocate()
 {
     ptr_matrices_.resize(nmat_);
     storage_size_ = nmat_ * m_ * n_;
@@ -65,9 +66,10 @@ void LocalMatrices<DataType>::allocate()
     }
 }
 
-template <class DataType>
-template <class DataType2>
-void LocalMatrices<DataType>::copy(const LocalMatrices<DataType2>& mat)
+template <typename DataType, typename MemorySpaceType>
+template <typename DataType2>
+void LocalMatrices<DataType, MemorySpaceType>::copy(
+    const LocalMatrices<DataType2, MemorySpaceType>& mat)
 {
     for (short iloc = 0; iloc < nmat_; iloc++)
     {
@@ -82,8 +84,8 @@ void LocalMatrices<DataType>::copy(const LocalMatrices<DataType2>& mat)
 }
 
 #ifdef HAVE_BML
-template <class DataType>
-void LocalMatrices<DataType>::copy(const bml_matrix_t* A)
+template <typename DataType, typename MemorySpaceType>
+void LocalMatrices<DataType, MemorySpaceType>::copy(const bml_matrix_t* A)
 {
     assert(nmat_ == 1);
 
@@ -113,9 +115,8 @@ void LocalMatrices<DataType>::copy(const bml_matrix_t* A)
 // perform the symmetric operation
 // C := A'*A
 // This one is for debug purposes, and can be removed if unused
-template <class DataType>
-template <typename MemorySpaceType>
-void LocalMatrices<DataType>::syrk(
+template <typename DataType, typename MemorySpaceType>
+void LocalMatrices<DataType, MemorySpaceType>::syrk(
     const int iloc, const int k, const double* const a, const int lda)
 {
     assert(iloc < nmat_);
@@ -149,9 +150,8 @@ void LocalMatrices<DataType>::syrk(
 
 // perform the symmetric operation
 // C := A'*A
-template <class DataType>
-template <typename MemorySpaceType>
-void LocalMatrices<DataType>::syrk(
+template <typename DataType, typename MemorySpaceType>
+void LocalMatrices<DataType, MemorySpaceType>::syrk(
     const int iloc, const int k, const float* const a, const int lda)
 {
     assert(iloc < nmat_);
@@ -173,9 +173,10 @@ void LocalMatrices<DataType>::syrk(
 }
 
 // This one is for debug purposes, and can be removed if unused
-template <class DataType>
-void LocalMatrices<DataType>::gemm(const int iloc, const int ma,
-    const double* const a, const int lda, const double* const b, const int ldb)
+template <typename DataType, typename MemorySpaceType>
+void LocalMatrices<DataType, MemorySpaceType>::gemm(const int iloc,
+    const int ma, const double* const a, const int lda, const double* const b,
+    const int ldb)
 {
     assert(iloc < nmat_);
     assert(iloc < (int)ptr_matrices_.size());
@@ -192,9 +193,10 @@ void LocalMatrices<DataType>::gemm(const int iloc, const int ma,
         't', 'n', m_, n_, ma, 1., a, lda, b, ldb, 0., c, m_);
 }
 
-template <class DataType>
-void LocalMatrices<DataType>::gemm(const int iloc, const int ma,
-    const float* const a, const int lda, const float* const b, const int ldb)
+template <typename DataType, typename MemorySpaceType>
+void LocalMatrices<DataType, MemorySpaceType>::gemm(const int iloc,
+    const int ma, const float* const a, const int lda, const float* const b,
+    const int ldb)
 {
     assert(iloc < nmat_);
     assert(iloc < (int)ptr_matrices_.size());
@@ -213,10 +215,10 @@ void LocalMatrices<DataType>::gemm(const int iloc, const int ma,
 
 // matrix multiplication
 // this = alpha*op(A)*op(B)+beta*this
-template <class DataType>
-void LocalMatrices<DataType>::gemm(const char transa, const char transb,
-    const double alpha, const LocalMatrices& matA, const LocalMatrices& matB,
-    const double beta)
+template <typename DataType, typename MemorySpaceType>
+void LocalMatrices<DataType, MemorySpaceType>::gemm(const char transa,
+    const char transb, const double alpha, const LocalMatrices& matA,
+    const LocalMatrices& matB, const double beta)
 {
     assert(matA.n() == matB.m());
 
@@ -243,8 +245,9 @@ void LocalMatrices<DataType>::gemm(const char transa, const char transb,
     }
 }
 
-template <class DataType>
-void LocalMatrices<DataType>::applyMask(const LocalMatrices& mask)
+template <typename DataType, typename MemorySpaceType>
+void LocalMatrices<DataType, MemorySpaceType>::applyMask(
+    const LocalMatrices& mask)
 {
     for (short iloc = 0; iloc < nmat_; iloc++)
     {
@@ -261,8 +264,8 @@ void LocalMatrices<DataType>::applyMask(const LocalMatrices& mask)
     }
 }
 
-template <class DataType>
-void LocalMatrices<DataType>::setMaskThreshold(
+template <typename DataType, typename MemorySpaceType>
+void LocalMatrices<DataType, MemorySpaceType>::setMaskThreshold(
     const DataType min_threshold, const DataType max_threshold)
 {
     for (short iloc = 0; iloc < nmat_; iloc++)
@@ -283,8 +286,8 @@ void LocalMatrices<DataType>::setMaskThreshold(
     }
 }
 
-template <class DataType>
-void LocalMatrices<DataType>::setValues(
+template <typename DataType, typename MemorySpaceType>
+void LocalMatrices<DataType, MemorySpaceType>::setValues(
     DataType* values, const int ld, const int iloc)
 {
     DataType* local_mat = ptr_matrices_[iloc];
@@ -294,8 +297,9 @@ void LocalMatrices<DataType>::setValues(
     }
 }
 
-template <class DataType>
-void LocalMatrices<DataType>::printBlock(std::ostream& os, const int blocksize)
+template <typename DataType, typename MemorySpaceType>
+void LocalMatrices<DataType, MemorySpaceType>::printBlock(
+    std::ostream& os, const int blocksize)
 {
     for (short iloc = 0; iloc < nmat_; iloc++)
     {
@@ -313,35 +317,23 @@ void LocalMatrices<DataType>::printBlock(std::ostream& os, const int blocksize)
     }
 }
 
-template <class DataType>
-void LocalMatrices<DataType>::matvec(
-    const LocalVector<DataType>& u, LocalVector<DataType>& f, const int iloc)
+template <typename DataType, typename MemorySpaceType>
+void LocalMatrices<DataType, MemorySpaceType>::matvec(
+    const LocalVector<DataType, MemorySpaceType>& u,
+    LocalVector<DataType, MemorySpaceType>& f, const int iloc)
 {
     DataType* mat = ptr_matrices_[iloc];
     Tgemv('n', m_, n_, 1., mat, m_, u.data(), 1, 0., f.data(), 1);
 }
 
-template class LocalMatrices<double>;
-template class LocalMatrices<float>;
+template class LocalMatrices<double, MemorySpace::Host>;
+template class LocalMatrices<float, MemorySpace::Host>;
 
-template void LocalMatrices<double>::copy(const LocalMatrices<float>& mat);
-template void LocalMatrices<double>::copy(const LocalMatrices<double>& mat);
+template void LocalMatrices<double, MemorySpace::Host>::copy(
+    const LocalMatrices<float, MemorySpace::Host>& mat);
+template void LocalMatrices<double, MemorySpace::Host>::copy(
+    const LocalMatrices<double, MemorySpace::Host>& mat);
 
-template void LocalMatrices<double>::syrk<MemorySpace::Host>(
-    const int iloc, const int k, const double* const a, const int lda);
-template void LocalMatrices<double>::syrk<MemorySpace::Host>(
-    const int iloc, const int k, const float* const a, const int lda);
-template void LocalMatrices<float>::syrk<MemorySpace::Host>(
-    const int iloc, const int k, const double* const a, const int lda);
-template void LocalMatrices<float>::syrk<MemorySpace::Host>(
-    const int iloc, const int k, const float* const a, const int lda);
 #ifdef HAVE_MAGMA
-template void LocalMatrices<double>::syrk<MemorySpace::Device>(
-    const int iloc, const int k, const double* const a, const int lda);
-template void LocalMatrices<double>::syrk<MemorySpace::Device>(
-    const int iloc, const int k, const float* const a, const int lda);
-template void LocalMatrices<float>::syrk<MemorySpace::Device>(
-    const int iloc, const int k, const double* const a, const int lda);
-template void LocalMatrices<float>::syrk<MemorySpace::Device>(
-    const int iloc, const int k, const float* const a, const int lda);
+template class LocalMatrices<double, MemorySpace::Device>;
 #endif

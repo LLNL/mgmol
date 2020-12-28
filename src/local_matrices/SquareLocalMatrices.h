@@ -14,8 +14,8 @@
 
 #include <vector>
 
-template <class DataType>
-class SquareLocalMatrices : public LocalMatrices<DataType>
+template <typename DataType, typename MemorySpaceType>
+class SquareLocalMatrices : public LocalMatrices<DataType, MemorySpaceType>
 {
 public:
     SquareLocalMatrices(const int subdiv, const int m);

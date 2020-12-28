@@ -14,6 +14,7 @@
 #include "MGmol_blas1.h"
 
 #include "Timer.h"
+#include "memory_space.h"
 #include "mputils.h"
 
 #include "../global.h"
@@ -33,7 +34,7 @@ const double tol_mat_elements = 1.e-14;
 
 /* LOCALMATRICES class - matrix entries are accessed in column-major order */
 
-template <class DataType>
+template <typename DataType, typename MemorySpaceType>
 class LocalMatrices
 {
     int storage_size_;
@@ -56,7 +57,7 @@ public:
     void allocate();
 
     template <class DataType2>
-    void copy(const LocalMatrices<DataType2>& mat);
+    void copy(const LocalMatrices<DataType2, MemorySpaceType>& mat);
 #ifdef HAVE_BML
     void copy(const bml_matrix_t* A);
 #endif
@@ -101,9 +102,7 @@ public:
         Taxpy(storage_size_, alpha, matA.storage_.get(), storage_.get());
     }
 
-    template <typename MemorySpaceType>
     void syrk(const int iloc, const int m, const float* const a, const int lda);
-    template <typename MemorySpaceType>
     void syrk(
         const int iloc, const int m, const double* const a, const int lda);
     void gemm(const int iloc, const int ma, const float* const a, const int lda,
@@ -177,8 +176,8 @@ public:
         const DataType min_threshold, const DataType max_threshold);
     void printBlock(std::ostream& os, const int blocksize);
 
-    void matvec(const LocalVector<DataType>& u, LocalVector<DataType>& f,
-        const int iloc = 0);
+    void matvec(const LocalVector<DataType, MemorySpaceType>& u,
+        LocalVector<DataType, MemorySpaceType>& f, const int iloc = 0);
 };
 
 #endif

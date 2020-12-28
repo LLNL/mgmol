@@ -386,7 +386,7 @@ int PolakRibiereSolver<OrbitalsType>::solve(OrbitalsType& orbitals,
             }
 
             // save actual residual*inverse(S) (taking into account occupations)
-            // SquareLocalMatrices<MATDTYPE>& localX(
+            // SquareLocalMatrices<MATDTYPE,MemorySpace::Host>& localX(
             // proj_matrices_->getLocalX() ); r_k_->multiplyByMatrix(localX);
 
             // non-energy compatible spread penalties are added after

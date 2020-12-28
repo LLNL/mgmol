@@ -292,7 +292,7 @@ void VariableSizeMatrix<T>::insertMatrixElements(
 
 template <class T>
 void VariableSizeMatrix<T>::insertMatrixElements(
-    const LocalMatrices<MATDTYPE>& ss,
+    const LocalMatrices<MATDTYPE, MemorySpace::Host>& ss,
     const std::vector<std::vector<int>>& global_indexes, const int numst,
     const double tol)
 {

@@ -80,7 +80,8 @@ public:
         const double* vals,
         const bool append); /* Augment current matrix by inserting a new row */
     /* initialize matrix data from square local matrix object */
-    void insertMatrixElements(const LocalMatrices<MATDTYPE>& ss,
+    void insertMatrixElements(
+        const LocalMatrices<MATDTYPE, MemorySpace::Host>& ss,
         const std::vector<std::vector<int>>& global_indexes, const int numst,
         const double tol = MAT_TOL);
     void insertMatrixElements(
