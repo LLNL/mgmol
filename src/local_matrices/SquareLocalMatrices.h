@@ -11,6 +11,9 @@
 #define MGMOL_SQUARELOCALMATRICES_H
 
 #include "LocalMatrices.h"
+#ifdef HAVE_MAGMA
+class ReplicatedMatrix;
+#endif
 
 #include <vector>
 
@@ -38,6 +41,13 @@ public:
      * set elements to 0 for rows/cols with gids equal to -1
      */
     void applySymmetricMask(const std::vector<std::vector<int>>& gids);
+
+#ifdef HAVE_MAGMA
+    // assign values from a ReplicatedMatrix
+    void assign(const ReplicatedMatrix& src, const int iloc = 0);
+
+    void assign(SquareLocalMatrices<DataType, MemorySpace::Host>& src);
+#endif
 };
 
 #endif

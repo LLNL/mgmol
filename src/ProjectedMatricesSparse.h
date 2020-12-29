@@ -70,7 +70,7 @@ class ProjectedMatricesSparse : public ProjectedMatricesInterface
 
     DensityMatrixSparse* dm_;
 
-    SquareLocalMatrices<MATDTYPE, MemorySpace::Host>* localX_;
+    SquareLocalMatrices<MATDTYPE, memory_space_type>* localX_;
     SquareLocalMatrices<MATDTYPE, MemorySpace::Host>* localT_;
 
     /* Data distribution objects */
@@ -148,7 +148,7 @@ public:
         init_gram_matrix_tm_.stop();
     }
 
-    SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& getLocalX() const override
+    SquareLocalMatrices<MATDTYPE, memory_space_type>& getLocalX() const override
     {
         return *localX_;
     }

@@ -9,6 +9,7 @@
 
 #include "ProjectedMatrices.h"
 
+#include "Orbitals.h"
 #include "Control.h"
 #include "DensityMatrix.h"
 #include "DistMatrix2SquareLocalMatrices.h"
@@ -55,6 +56,46 @@ std::string ProjectedMatrices<dist_matrix::DistMatrix<double>>::getMatrixType()
 {
     return "DistMatrix<double>";
 }
+
+//
+// conversion functions from one matrix format into another
+//
+void convert_matrix(
+    const dist_matrix::DistMatrix<double>& src,
+    SquareLocalMatrices<double, MemorySpace::Host>& dst)
+{
+    DistMatrix2SquareLocalMatrices* dm2sl
+        = DistMatrix2SquareLocalMatrices::instance();
+    dm2sl->convert(src, dst);
+}
+#ifdef HAVE_MAGMA
+void convert_matrix(
+    const dist_matrix::DistMatrix<double>& src,
+    SquareLocalMatrices<double, MemorySpace::Device>& dst)
+{
+    DistMatrix2SquareLocalMatrices* dm2sl
+        = DistMatrix2SquareLocalMatrices::instance();
+    SquareLocalMatrices<double, MemorySpace::Host> tmp(dst.nmat(), dst.m());
+    dm2sl->convert(src, tmp);
+
+    dst.assign(tmp);
+}
+
+void convert_matrix(const ReplicatedMatrix& src,
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& dst)
+{
+    src.get(dst.getRawPtr(), dst.m());
+}
+
+void convert_matrix(const ReplicatedMatrix& src,
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Device>& dst)
+{
+    dst.assign(src);
+}
+
+#endif
+
+//=====================================================================//
 
 template <class MatrixType>
 ProjectedMatrices<MatrixType>::ProjectedMatrices(
@@ -105,16 +146,6 @@ void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::convert(
     sl2dm->accumulate(src, dst);
 }
 
-template <>
-void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::convert(
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& src,
-    SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& dst)
-{
-    DistMatrix2SquareLocalMatrices* dm2sl
-        = DistMatrix2SquareLocalMatrices::instance();
-    dm2sl->convert(src, dst);
-}
-
 #ifdef HAVE_MAGMA
 template <>
 void ProjectedMatrices<ReplicatedMatrix>::convert(
@@ -124,13 +155,6 @@ void ProjectedMatrices<ReplicatedMatrix>::convert(
     dst.init(src.getSubMatrix(), dim_);
 
     dst.consolidate();
-}
-
-template <>
-void ProjectedMatrices<ReplicatedMatrix>::convert(const ReplicatedMatrix& src,
-    SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& dst)
-{
-    src.get(dst.getRawPtr(), dst.m());
 }
 #endif
 
@@ -166,7 +190,7 @@ void ProjectedMatrices<MatrixType>::setup(
 
     setupMPI(global_indexes);
 
-    localX_.reset(new SquareLocalMatrices<MATDTYPE, MemorySpace::Host>(
+    localX_.reset(new SquareLocalMatrices<MATDTYPE, memory_space_type>(
         subdiv_, chromatic_number_));
     localT_.reset(new SquareLocalMatrices<MATDTYPE, MemorySpace::Host>(
         subdiv_, chromatic_number_));
@@ -174,6 +198,10 @@ void ProjectedMatrices<MatrixType>::setup(
     localHl_.reset(new SquareLocalMatrices<MATDTYPE, MemorySpace::Host>(
         global_indexes.size(), global_indexes[0].size()));
 }
+
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::updateSubMatT()
+{ convert_matrix(*theta_, *localT_); }
 
 template <class MatrixType>
 void ProjectedMatrices<MatrixType>::computeInvS()
@@ -228,7 +256,7 @@ void ProjectedMatrices<MatrixType>::applyInvS(
     gm_->applyInv(*work_);
 
     // convert result back into a SquareLocalMatrices
-    convert(*work_, mat);
+    convert_matrix(*work_, mat);
 }
 
 template <class MatrixType>
@@ -358,7 +386,7 @@ void ProjectedMatrices<MatrixType>::updateDMwithSP2(const int iterative_index)
 
     // generate replicated copy of theta_
     SquareLocalMatrices<double, MemorySpace::Host> theta(1, dim_);
-    convert(*theta_, theta);
+    convert_matrix(*theta_, theta);
 
     double emin;
     double emax;
@@ -908,7 +936,7 @@ void ProjectedMatrices<MatrixType>::computeLoewdinTransform(
         matHB_->gemm('n', 't', 1., mat, invSqrtMat, 0.);
     }
 
-    convert(invSqrtMat, localP);
+    convert_matrix(invSqrtMat, localP);
 }
 
 template <class MatrixType>
@@ -1259,7 +1287,7 @@ void ProjectedMatrices<ReplicatedMatrix>::consolidateH()
 template <class MatrixType>
 void ProjectedMatrices<MatrixType>::updateSubMatX(const MatrixType& dm)
 {
-    convert(dm, *localX_);
+    convert_matrix(dm, *localX_);
 }
 
 template <>

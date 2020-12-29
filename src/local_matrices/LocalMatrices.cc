@@ -416,6 +416,17 @@ void LocalMatrices<double, MemorySpace::Device>::setValues(
     magma_dcopymatrix(
         m_, n_, values, ld, ptr_matrices_[iloc], m_, magma_singleton.queue_);
 }
+
+template <>
+void LocalMatrices<double, MemorySpace::Device>::assign(
+    LocalMatrices<double, MemorySpace::Host>& src)
+{
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    for (short iloc = 0; iloc < nmat_; iloc++)
+    magma_dsetmatrix(src.m(), src.n(), src.getSubMatrix(), src.n(),
+        ptr_matrices_[iloc], m_, magma_singleton.queue_);
+}
 #endif
 
 template <typename DataType, typename MemorySpaceType>

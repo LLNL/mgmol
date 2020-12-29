@@ -180,7 +180,7 @@ void ProjectedMatricesSparse::setup(
 
         submatT_ = new VariableSizeMatrix<sparserow>("Theta", lsize_);
 
-        localX_ = new SquareLocalMatrices<MATDTYPE, MemorySpace::Host>(
+        localX_ = new SquareLocalMatrices<MATDTYPE, memory_space_type>(
             subdiv_, chromatic_number_);
         localT_ = new SquareLocalMatrices<MATDTYPE, MemorySpace::Host>(
             subdiv_, chromatic_number_);

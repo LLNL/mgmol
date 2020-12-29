@@ -23,7 +23,6 @@
 #include "tools.h"
 #include <iostream>
 
-class HDFrestart;
 
 template <class MatrixType>
 class ProjectedMatrices : public ProjectedMatricesInterface
@@ -62,7 +61,7 @@ class ProjectedMatrices : public ProjectedMatricesInterface
      * Matrices to be used to multiply orbitals on the right
      * (dimension equal to number of local colors)
      */
-    std::unique_ptr<SquareLocalMatrices<double, MemorySpace::Host>>
+    std::unique_ptr<SquareLocalMatrices<double, memory_space_type>>
         localX_; // density matrix
     std::unique_ptr<SquareLocalMatrices<double, MemorySpace::Host>>
         localT_; // theta=inv(S)*H_phi
@@ -125,10 +124,6 @@ protected:
     void convert(const SquareLocalMatrices<double, MemorySpace::Host>& src,
         MatrixType& dst);
 
-    // convert a MatrixType object into a SquareLocalMatrices
-    void convert(const MatrixType& src,
-        SquareLocalMatrices<double, MemorySpace::Host>& dst);
-
     void setupMPI(const std::vector<std::vector<int>>&);
 
     std::string getMatrixType();
@@ -154,7 +149,7 @@ public:
 
     double getTraceDiagProductWithInvS(std::vector<double>& ddiag) override;
 
-    SquareLocalMatrices<double, MemorySpace::Host>& getLocalX() const override
+    SquareLocalMatrices<double, memory_space_type>& getLocalX() const override
     {
         return *localX_;
     }
@@ -168,7 +163,7 @@ public:
 
     void updateSubMatX(const MatrixType& dm);
 
-    void updateSubMatT() override { convert(*theta_, *localT_); }
+    void updateSubMatT() override;
 
     void computeLoewdinTransform(
         SquareLocalMatrices<double, MemorySpace::Host>& localPi,

@@ -87,6 +87,10 @@ public:
 
     void setValues(DataType* values, const int ld, const int iloc = 0);
 
+#ifdef HAVE_MAGMA
+    void assign(LocalMatrices<DataType, MemorySpace::Host>& src);
+#endif
+
     DataType getVal(const int i, const int j, const int iloc = 0)
     {
         assert(i < m_);

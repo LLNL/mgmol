@@ -8,6 +8,9 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "SquareLocalMatrices.h"
+#ifdef HAVE_MAGMA
+#include "ReplicatedMatrix.h"
+#endif
 
 template <typename DataType, typename MemorySpaceType>
 SquareLocalMatrices<DataType, MemorySpaceType>::SquareLocalMatrices(
@@ -153,6 +156,34 @@ void SquareLocalMatrices<DataType, MemorySpaceType>::applySymmetricMask(
         }
     }
 }
+
+#ifdef HAVE_MAGMA
+template <>
+void SquareLocalMatrices<double, MemorySpace::Device>::assign(
+    const ReplicatedMatrix& src, const int iloc)
+{
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    double* dst = LocalMatrices<double, MemorySpace::Device>::getRawPtr(iloc);
+    magma_dcopymatrix(src.m(), src.m(), src.data(), src.ld(),
+        dst, m_, magma_singleton.queue_);
+
+}
+
+template <>
+void SquareLocalMatrices<double, MemorySpace::Device>::assign(
+    SquareLocalMatrices<double, MemorySpace::Host>& src)
+{
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    for (short iloc = 0; iloc < nmat_; iloc++)
+{
+    double* dst = LocalMatrices<double, MemorySpace::Device>::getRawPtr(iloc);
+    magma_dsetmatrix(src.m(), src.n(), src.getSubMatrix(), src.n(),
+        dst, m_, magma_singleton.queue_);
+}
+}
+#endif
 
 template class SquareLocalMatrices<double, MemorySpace::Host>;
 template class SquareLocalMatrices<float, MemorySpace::Host>;

@@ -11,14 +11,14 @@
 
 #ifdef HAVE_MAGMA
 
+class ReplicatedVector;
+#include "SquareLocalMatrices.h"
+#include "SquareSubMatrix.h"
+
 #include <memory>
 #include <mpi.h>
 #include <string>
 #include <vector>
-
-class ReplicatedVector;
-#include "SquareLocalMatrices.h"
-#include "SquareSubMatrix.h"
 
 class ReplicatedMatrix
 {

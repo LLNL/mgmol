@@ -25,8 +25,11 @@
 #include "fermi.h"
 #include "hdf5.h"
 #include "tools.h"
+#include "Orbitals.h"
 
 class HDFrestart;
+
+using memory_space_type = typename Orbitals::memory_space_type;
 
 /* tolerance for matrix elements */
 const double tol_matrix_elements = 1.e-14;
@@ -170,7 +173,7 @@ public:
     virtual void consolidateH() = 0;
 
     // return density matrix (inverse Gram if no unoccupied states)
-    virtual SquareLocalMatrices<MATDTYPE, MemorySpace::Host>&
+    virtual SquareLocalMatrices<MATDTYPE, memory_space_type>&
     getLocalX() const = 0;
 
     // return S**(-1)*H (or B**(-1)*H with Mehrstellen)
