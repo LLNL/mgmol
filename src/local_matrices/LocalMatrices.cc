@@ -9,8 +9,8 @@
 
 #include "LocalMatrices.h"
 #include "blas3_c.h"
-#include "mputils.h"
 #include "magma_singleton.h"
+#include "mputils.h"
 
 template <typename DataType, typename MemorySpaceType>
 LocalMatrices<DataType, MemorySpaceType>::LocalMatrices(
@@ -210,19 +210,27 @@ void LocalMatrices<double, MemorySpace::Host>::syrk(
     const char trans  = 't';
 
     // ssiloc is always on the host but a maybe on the device
+#ifdef HAVE_MAGMA
     const int size_a = lda * m_;
     double* a_host_view
         = MemorySpace::Memory<double, MemorySpace::Device>::allocate_host_view(
             size_a);
     MemorySpace::Memory<double, MemorySpace::Device>::copy_view_to_host(
         const_cast<double*>(a), size_a, a_host_view);
+#else
+    const double* const a_host_view = a;
+#endif
 
     LinearAlgebraUtils<MemorySpace::Host>::MPsyrk(
         uplo, trans, m_, k, one, a_host_view, lda, zero, ssiloc, m_);
 
-    MemorySpace::Memory<double, MemorySpace::Device>::free_host_view(a_host_view);
+#ifdef HAVE_MAGMA
+    MemorySpace::Memory<double, MemorySpace::Device>::free_host_view(
+        a_host_view);
+#endif
 }
 
+#ifdef HAVE_MAGMA
 template <>
 void LocalMatrices<double, MemorySpace::Device>::syrk(
     const int iloc, const int k, const double* const a, const int lda)
@@ -246,6 +254,7 @@ void LocalMatrices<double, MemorySpace::Device>::syrk(
     LinearAlgebraUtils<MemorySpace::Device>::MPsyrk(
         uplo, trans, m_, k, one, a, lda, zero, ssiloc, m_);
 }
+#endif
 
 // perform the symmetric operation
 // C := A'*A
