@@ -23,7 +23,6 @@
 #include "tools.h"
 #include <iostream>
 
-
 template <class MatrixType>
 class ProjectedMatrices : public ProjectedMatricesInterface
 {

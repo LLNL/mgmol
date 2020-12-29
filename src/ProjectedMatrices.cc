@@ -9,7 +9,6 @@
 
 #include "ProjectedMatrices.h"
 
-#include "Orbitals.h"
 #include "Control.h"
 #include "DensityMatrix.h"
 #include "DistMatrix2SquareLocalMatrices.h"
@@ -18,6 +17,7 @@
 #include "LocalMatrices2DistMatrix.h"
 #include "MGmol_MPI.h"
 #include "MPIdata.h"
+#include "Orbitals.h"
 #include "Power.h"
 #include "PowerGen.h"
 #include "ReplicatedMatrix.h"
@@ -60,8 +60,7 @@ std::string ProjectedMatrices<dist_matrix::DistMatrix<double>>::getMatrixType()
 //
 // conversion functions from one matrix format into another
 //
-void convert_matrix(
-    const dist_matrix::DistMatrix<double>& src,
+void convert_matrix(const dist_matrix::DistMatrix<double>& src,
     SquareLocalMatrices<double, MemorySpace::Host>& dst)
 {
     DistMatrix2SquareLocalMatrices* dm2sl
@@ -69,8 +68,7 @@ void convert_matrix(
     dm2sl->convert(src, dst);
 }
 #ifdef HAVE_MAGMA
-void convert_matrix(
-    const dist_matrix::DistMatrix<double>& src,
+void convert_matrix(const dist_matrix::DistMatrix<double>& src,
     SquareLocalMatrices<double, MemorySpace::Device>& dst)
 {
     DistMatrix2SquareLocalMatrices* dm2sl
@@ -201,7 +199,9 @@ void ProjectedMatrices<MatrixType>::setup(
 
 template <class MatrixType>
 void ProjectedMatrices<MatrixType>::updateSubMatT()
-{ convert_matrix(*theta_, *localT_); }
+{
+    convert_matrix(*theta_, *localT_);
+}
 
 template <class MatrixType>
 void ProjectedMatrices<MatrixType>::computeInvS()

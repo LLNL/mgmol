@@ -19,13 +19,13 @@
 #include "ChebyshevApproximationFunction.h"
 #include "Control.h"
 #include "MGmol_MPI.h"
+#include "Orbitals.h"
 #include "SquareLocalMatrices.h"
 #include "SquareSubMatrix.h"
 #include "entropy.h"
 #include "fermi.h"
 #include "hdf5.h"
 #include "tools.h"
-#include "Orbitals.h"
 
 class HDFrestart;
 

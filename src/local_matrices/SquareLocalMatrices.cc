@@ -165,9 +165,8 @@ void SquareLocalMatrices<double, MemorySpace::Device>::assign(
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
     double* dst = LocalMatrices<double, MemorySpace::Device>::getRawPtr(iloc);
-    magma_dcopymatrix(src.m(), src.m(), src.data(), src.ld(),
-        dst, m_, magma_singleton.queue_);
-
+    magma_dcopymatrix(src.m(), src.m(), src.data(), src.ld(), dst, m_,
+        magma_singleton.queue_);
 }
 
 template <>
@@ -177,11 +176,12 @@ void SquareLocalMatrices<double, MemorySpace::Device>::assign(
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
     for (short iloc = 0; iloc < nmat_; iloc++)
-{
-    double* dst = LocalMatrices<double, MemorySpace::Device>::getRawPtr(iloc);
-    magma_dsetmatrix(src.m(), src.n(), src.getSubMatrix(), src.n(),
-        dst, m_, magma_singleton.queue_);
-}
+    {
+        double* dst
+            = LocalMatrices<double, MemorySpace::Device>::getRawPtr(iloc);
+        magma_dsetmatrix(src.m(), src.n(), src.getSubMatrix(), src.n(), dst, m_,
+            magma_singleton.queue_);
+    }
 }
 #endif
 

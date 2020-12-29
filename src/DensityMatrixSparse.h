@@ -14,8 +14,8 @@
 #include "DataDistribution.h"
 #include "LocalizationRegions.h"
 #include "MPIdata.h"
-#include "VariableSizeMatrix.h"
 #include "Orbitals.h"
+#include "VariableSizeMatrix.h"
 
 #include <vector>
 

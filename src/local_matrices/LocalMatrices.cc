@@ -424,8 +424,8 @@ void LocalMatrices<double, MemorySpace::Device>::assign(
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
     for (short iloc = 0; iloc < nmat_; iloc++)
-    magma_dsetmatrix(src.m(), src.n(), src.getSubMatrix(), src.n(),
-        ptr_matrices_[iloc], m_, magma_singleton.queue_);
+        magma_dsetmatrix(src.m(), src.n(), src.getSubMatrix(), src.n(),
+            ptr_matrices_[iloc], m_, magma_singleton.queue_);
 }
 #endif
 
