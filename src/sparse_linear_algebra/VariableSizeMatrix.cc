@@ -296,7 +296,7 @@ void VariableSizeMatrix<T>::insertMatrixElements(
     const std::vector<std::vector<int>>& global_indexes, const int numst,
     const double tol)
 {
-    assert(static_cast<int>(global_indexes.size()) == ss.subdiv());
+    assert(static_cast<int>(global_indexes.size()) == ss.nmat());
 
     short subdiv           = (short)global_indexes.size();
     short chromatic_number = (short)global_indexes[0].size();
