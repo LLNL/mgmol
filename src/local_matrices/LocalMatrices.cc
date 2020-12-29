@@ -10,6 +10,7 @@
 #include "LocalMatrices.h"
 #include "blas3_c.h"
 #include "mputils.h"
+#include "magma_singleton.h"
 
 template <typename DataType, typename MemorySpaceType>
 LocalMatrices<DataType, MemorySpaceType>::LocalMatrices(
@@ -86,7 +87,7 @@ LocalMatrices<DataType, MemorySpaceType>::LocalMatrices(
 
 #ifdef HAVE_MAGMA
 template <>
-void LocalMatrices<double, MemorySpace::Device>::LocalMatrices(
+LocalMatrices<double, MemorySpace::Device>::LocalMatrices(
     const LocalMatrices& mat)
     : m_(mat.m_),
       n_(mat.n_),
@@ -100,13 +101,13 @@ void LocalMatrices<double, MemorySpace::Device>::LocalMatrices(
     if (storage_size_ > 0)
     {
         auto& magma_singleton = MagmaSingleton::get_magma_singleton();
-        magma_dcopymatrix(m_, n_, mat.storage_.get(), m_, storage_.get(),
+        magma_dcopymatrix(m_, n_, mat.storage_.get(), m_, storage_.get(), m_,
             magma_singleton.queue_);
     }
 }
 
 template <>
-void LocalMatrices<float, MemorySpace::Device>::LocalMatrices(
+LocalMatrices<float, MemorySpace::Device>::LocalMatrices(
     const LocalMatrices& mat)
     : m_(mat.m_),
       n_(mat.n_),
@@ -120,7 +121,7 @@ void LocalMatrices<float, MemorySpace::Device>::LocalMatrices(
     if (storage_size_ > 0)
     {
         auto& magma_singleton = MagmaSingleton::get_magma_singleton();
-        magma_scopymatrix(m_, n_, mat.storage_.get(), m_, storage_.get(),
+        magma_scopymatrix(m_, n_, mat.storage_.get(), m_, storage_.get(), m_,
             magma_singleton.queue_);
     }
 }
@@ -189,8 +190,8 @@ void LocalMatrices<DataType, MemorySpaceType>::copy(const bml_matrix_t* A)
 // perform the symmetric operation
 // C := A'*A
 // This one is for debug purposes, and can be removed if unused
-template <typename DataType, typename MemorySpaceType>
-void LocalMatrices<DataType, MemorySpaceType>::syrk(
+template <>
+void LocalMatrices<double, MemorySpace::Host>::syrk(
     const int iloc, const int k, const double* const a, const int lda)
 {
     assert(iloc < nmat_);
@@ -200,7 +201,7 @@ void LocalMatrices<DataType, MemorySpaceType>::syrk(
     assert(m_ > 0);
     assert(m_ == n_);
 
-    DataType* const ssiloc = ptr_matrices_[iloc];
+    double* const ssiloc = ptr_matrices_[iloc];
     assert(ssiloc != nullptr);
 
     const double zero = 0.;
@@ -211,15 +212,39 @@ void LocalMatrices<DataType, MemorySpaceType>::syrk(
     // ssiloc is always on the host but a maybe on the device
     const int size_a = lda * m_;
     double* a_host_view
-        = MemorySpace::Memory<double, MemorySpaceType>::allocate_host_view(
+        = MemorySpace::Memory<double, MemorySpace::Device>::allocate_host_view(
             size_a);
-    MemorySpace::Memory<double, MemorySpaceType>::copy_view_to_host(
+    MemorySpace::Memory<double, MemorySpace::Device>::copy_view_to_host(
         const_cast<double*>(a), size_a, a_host_view);
 
-    LinearAlgebraUtils<MemorySpaceType>::MPsyrk(
+    LinearAlgebraUtils<MemorySpace::Host>::MPsyrk(
         uplo, trans, m_, k, one, a_host_view, lda, zero, ssiloc, m_);
 
-    MemorySpace::Memory<double, MemorySpaceType>::free_host_view(a_host_view);
+    MemorySpace::Memory<double, MemorySpace::Device>::free_host_view(a_host_view);
+}
+
+template <>
+void LocalMatrices<double, MemorySpace::Device>::syrk(
+    const int iloc, const int k, const double* const a, const int lda)
+{
+    assert(iloc < nmat_);
+    assert(iloc < static_cast<int>(ptr_matrices_.size()));
+    assert(k <= lda);
+    assert(ptr_matrices_[iloc] != nullptr);
+    assert(m_ > 0);
+    assert(m_ == n_);
+    MemorySpace::assert_is_host_ptr(a);
+
+    double* const ssiloc = ptr_matrices_[iloc];
+    assert(ssiloc != nullptr);
+
+    const double zero = 0.;
+    const double one  = 1.;
+    const char uplo   = 'l'; // fill lower triangular part
+    const char trans  = 't';
+
+    LinearAlgebraUtils<MemorySpace::Device>::MPsyrk(
+        uplo, trans, m_, k, one, a, lda, zero, ssiloc, m_);
 }
 
 // perform the symmetric operation
