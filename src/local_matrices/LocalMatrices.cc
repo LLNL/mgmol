@@ -190,17 +190,18 @@ void LocalMatrices<DataType, MemorySpaceType>::copy(const bml_matrix_t* A)
 template <>
 void LocalMatrices<double, MemorySpace::Host>::scal(const double alpha)
 {
-    LinearAlgebraUtils<MemorySpace::Host>::MPscal(storage_size_, alpha, storage_.get());
+    LinearAlgebraUtils<MemorySpace::Host>::MPscal(
+        storage_size_, alpha, storage_.get());
 }
 
 #ifdef HAVE_MAGMA
 template <>
 void LocalMatrices<double, MemorySpace::Device>::scal(const double alpha)
 {
-    LinearAlgebraUtils<MemorySpace::Device>::MPscal(storage_size_, alpha, storage_.get());
+    LinearAlgebraUtils<MemorySpace::Device>::MPscal(
+        storage_size_, alpha, storage_.get());
 }
 #endif
-
 
 // perform the symmetric operation
 // C := A'*A

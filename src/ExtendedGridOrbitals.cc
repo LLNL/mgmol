@@ -435,7 +435,8 @@ void ExtendedGridOrbitals::multiplyByMatrix(
     const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& matrix,
     ORBDTYPE* product, const int ldp) const
 {
-    SquareLocalMatrices<ORBDTYPE, MemorySpace::Device> matdev(matrix.nmat(), matrix.m());
+    SquareLocalMatrices<ORBDTYPE, MemorySpace::Device> matdev(
+        matrix.nmat(), matrix.m());
     matdev.assign(matrix);
 
     multiplyByMatrix(matdev, product, ldp);
@@ -446,15 +447,14 @@ void ExtendedGridOrbitals::multiplyByMatrix(
     const SquareLocalMatrices<MATDTYPE, memory_space_type>& matrix,
     ORBDTYPE* product, const int ldp) const
 {
-    assert(matrix.nmat()==1);
+    assert(matrix.nmat() == 1);
 
     prod_matrix_tm_.start();
 
     const MATDTYPE* const mat = matrix.getSubMatrix();
 
-    LinearAlgebraUtils<memory_space_type>::MPgemmNN(numpt_, numst_,
-        numst_, 1., getPsi(0), lda_, mat, numst_, 0.,
-        product, ldp);
+    LinearAlgebraUtils<memory_space_type>::MPgemmNN(numpt_, numst_, numst_, 1.,
+        getPsi(0), lda_, mat, numst_, 0., product, ldp);
 
     prod_matrix_tm_.stop();
 }
@@ -465,7 +465,8 @@ void ExtendedGridOrbitals::multiplyByMatrix(
 void ExtendedGridOrbitals::multiplyByMatrix(
     const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& matrix)
 {
-    SquareLocalMatrices<ORBDTYPE, MemorySpace::Device> matdev(matrix.nmat(), matrix.m());
+    SquareLocalMatrices<ORBDTYPE, MemorySpace::Device> matdev(
+        matrix.nmat(), matrix.m());
     matdev.assign(matrix);
 
     multiplyByMatrix(matdev);
@@ -475,11 +476,16 @@ void ExtendedGridOrbitals::multiplyByMatrix(
 void ExtendedGridOrbitals::multiplyByMatrix(
     const SquareLocalMatrices<MATDTYPE, memory_space_type>& matrix)
 {
-    ORBDTYPE* product = MemorySpace::Memory<ORBDTYPE,memory_space_type>::allocate(numpt_ * numst_);
+    ORBDTYPE* product
+        = MemorySpace::Memory<ORBDTYPE, memory_space_type>::allocate(
+            numpt_ * numst_);
 
     multiplyByMatrix(matrix, product, numpt_);
 
-    MemorySpace::Memory<ORBDTYPE,memory_space_type>::free(product);
+    MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy(
+        product, numpt_ * numst_, getPsi(0));
+
+    MemorySpace::Memory<ORBDTYPE, memory_space_type>::free(product);
 }
 
 void ExtendedGridOrbitals::multiplyByMatrix(
@@ -1027,7 +1033,8 @@ void ExtendedGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
     const int ld, LocalMatrices<MATDTYPE, MemorySpace::Host>& ss,
     const bool transpose)
 {
-    LocalMatrices<ORBDTYPE, MemorySpace::Device> sdev(ss.nmat(), ss.m(), ss.n());
+    LocalMatrices<ORBDTYPE, MemorySpace::Device> sdev(
+        ss.nmat(), ss.m(), ss.n());
 
     computeLocalProduct(array, ld, sdev, transpose);
 
@@ -1061,8 +1068,8 @@ void ExtendedGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
         LinearAlgebraUtils<memory_space_type>::MPgemm('T', 'N', numst_, numst_,
-            loc_numpt_, 1., a + iloc * loc_numpt_, lda, b + + iloc * loc_numpt_, ldb,
-            0., ssf.getRawPtr(iloc), ssf.m());
+            loc_numpt_, 1., a + iloc * loc_numpt_, lda, b + +iloc * loc_numpt_,
+            ldb, 0., ssf.getRawPtr(iloc), ssf.m());
     }
 #ifdef USE_MP
     ss.copy(ssf);
