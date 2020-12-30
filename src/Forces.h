@@ -59,7 +59,7 @@ private:
     void evaluateRadialFunc(const std::vector<Vector3D>& positions,
         const double lrad, std::vector<std::array<double, 3 * NPTS>>& var,
         std::function<double(double)> const&);
-    SquareLocalMatrices<double> getReplicatedDM();
+    SquareLocalMatrices<double, MemorySpace::Host> getReplicatedDM();
 
 public:
     Forces(Hamiltonian<T>* hamiltonian, Rho<T>* rho,

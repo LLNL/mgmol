@@ -413,7 +413,7 @@ void Forces<T>::lforce(Ions& ions, RHODTYPE* rho)
 }
 
 template <class T>
-SquareLocalMatrices<double> Forces<T>::getReplicatedDM()
+SquareLocalMatrices<double, MemorySpace::Host> Forces<T>::getReplicatedDM()
 {
 #ifdef HAVE_MAGMA
     {
@@ -519,7 +519,7 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
     }
     else
     {
-        SquareLocalMatrices<double> dm(getReplicatedDM());
+        SquareLocalMatrices<double, MemorySpace::Host> dm(getReplicatedDM());
 
         const int ndim                     = dm.n();
         const double* const work_DM_matrix = dm.getSubMatrix();

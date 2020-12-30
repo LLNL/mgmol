@@ -42,7 +42,7 @@ void GrassmanCGSparse<T>::conjugate()
             m_one, *GrassmanLineMinimization<T>::grad_);
         // Numerator: compute matG = (MG^T*(G-G_old))^T = G^T*MG - G_old^T*MG
         // first compute matG = G^T*MG
-        SquareLocalMatrices<MATDTYPE> matG(
+        SquareLocalMatrices<MATDTYPE, MemorySpace::Host> matG(
             GrassmanLineMinimization<T>::new_grad_->subdivx(),
             GrassmanLineMinimization<T>::new_grad_->chromatic_number());
         GrassmanLineMinimization<T>::new_grad_->getLocalOverlap(
@@ -122,7 +122,7 @@ double GrassmanCGSparse<T>::computeStepSize(T& orbitals)
     computeOrbitalsProdWithH(
         *GrassmanLineMinimization<T>::sdir_, zHzMat, false);
     // Compute Zo^T*Phi
-    SquareLocalMatrices<MATDTYPE> ss(
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host> ss(
         GrassmanLineMinimization<T>::sdir_->subdivx(),
         GrassmanLineMinimization<T>::sdir_->chromatic_number());
     GrassmanLineMinimization<T>::sdir_->getLocalOverlap(orbitals, ss);
@@ -205,7 +205,7 @@ S^{-1}Z^T*Z*S^{-1}*Phi^T*H*Phi]
    computeOrbitalsProdWithH(*sdir_, zHzMat);
 
    // Compute S^{_1}*Zo^T*Phi and S^{_1}*Phi^T*Zo
-   SquareLocalMatrices<MATDTYPE> ss(sdir_->subdivx(),
+   SquareLocalMatrices<MATDTYPE,MemorySpace::Host> ss(sdir_->subdivx(),
 sdir_->chromatic_number()); sdir_->getLocalOverlap(orbitals, ss);
    dist_matrix::DistMatrix<DISTMATDTYPE> invSzTphiMat("invSzTphiMat", dim, dim);
    ss.fillDistMatrix(invSzTphiMat, sdir_->getOverlappingGids());
@@ -323,7 +323,7 @@ void GrassmanCGSparse<T>::parallelTransportUpdate(
     const double /*lambda*/, T& /*orbitals*/)
 {
     // update gradient information
-    //    SquareLocalMatrices<MATDTYPE> ss(grad->subdivx(),
+    //    SquareLocalMatrices<MATDTYPE,MemorySpace::Host> ss(grad->subdivx(),
     //    grad->chromatic_number()); grad->getLocalOverlap(ss);
     //    proj_matrices_->applyInvS(ss);
 }

@@ -1,21 +1,23 @@
 #ifndef MGMOL_LOCALVECTOR
 #define MGMOL_LOCALVECTOR
 
+#include "memory_space.h"
+
 #include <vector>
 
-template <class T>
+template <typename DataType, typename MemorySpaceType>
 class LocalVector
 {
 private:
-    std::vector<T> data_;
+    std::vector<DataType> data_;
 
 public:
     LocalVector(const int n) : data_(n) {}
 
-    LocalVector(const std::vector<T>& v) : data_(v) {}
+    LocalVector(const std::vector<DataType>& v) : data_(v) {}
 
-    T* data() { return data_.data(); }
-    const T* data() const { return data_.data(); }
+    DataType* data() { return data_.data(); }
+    const DataType* data() const { return data_.data(); }
 
     void normalize()
     {
@@ -23,15 +25,19 @@ public:
         Tscal(data_.size(), 1. / norm, data_.data());
     }
 
-    T dot(const LocalVector<T>& v) const
+    DataType dot(const LocalVector<DataType, MemorySpaceType>& v) const
     {
         return Tdot(data_.size(), data_.data(), v.data_.data());
     }
 
-    void swap(LocalVector<T>& v) { data_.swap(v.data_); }
-    void swap(std::vector<T>& v) { data_.swap(v); }
+    void swap(LocalVector<DataType, MemorySpaceType>& v)
+    {
+        data_.swap(v.data_);
+    }
+    void swap(std::vector<DataType>& v) { data_.swap(v); }
 
-    T scaledDiff2(const LocalVector<T>& v, const double theta)
+    DataType scaledDiff2(
+        const LocalVector<DataType, MemorySpaceType>& v, const double theta)
     {
         double diff2 = 0.;
         int n        = v.data_.size();

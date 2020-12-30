@@ -93,6 +93,7 @@ void Power<VECTOR, MATRIX>::computeEigenInterval(const MATRIX& A, double& emin,
     compute_tm_.stop();
 }
 
-template class Power<LocalVector<double>, SquareLocalMatrices<double>>;
+template class Power<LocalVector<double, MemorySpace::Host>,
+    SquareLocalMatrices<double, MemorySpace::Host>>;
 template class Power<dist_matrix::DistVector<double>,
     dist_matrix::DistMatrix<double>>;

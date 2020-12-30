@@ -11,14 +11,14 @@
 
 #ifdef HAVE_MAGMA
 
+class ReplicatedVector;
+#include "SquareLocalMatrices.h"
+#include "SquareSubMatrix.h"
+
 #include <memory>
 #include <mpi.h>
 #include <string>
 #include <vector>
-
-class ReplicatedVector;
-#include "SquareLocalMatrices.h"
-#include "SquareSubMatrix.h"
 
 class ReplicatedMatrix
 {
@@ -80,7 +80,9 @@ public:
 
     void assign(const ReplicatedMatrix& src, const int ib, const int jb);
 
-    void assign(SquareLocalMatrices<double>& src);
+    template <typename MemorySpaceType>
+    void assign(SquareLocalMatrices<double, MemorySpaceType>& src);
+
     void add(const SquareSubMatrix<double>& src);
 
     // sum up values across MPI tasks

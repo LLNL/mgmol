@@ -8,21 +8,27 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "SquareLocalMatrices.h"
+#ifdef HAVE_MAGMA
+#include "ReplicatedMatrix.h"
+#endif
 
-template <class T>
-SquareLocalMatrices<T>::SquareLocalMatrices(const int subdiv, const int m)
-    : LocalMatrices<T>(subdiv, m, m)
+template <typename DataType, typename MemorySpaceType>
+SquareLocalMatrices<DataType, MemorySpaceType>::SquareLocalMatrices(
+    const int nmat, const int m)
+    : LocalMatrices<DataType, MemorySpaceType>(nmat, m, m)
 {
 }
 
-template <class T>
-void SquareLocalMatrices<T>::fillUpperWithLower()
+template <typename DataType, typename MemorySpaceType>
+void SquareLocalMatrices<DataType, MemorySpaceType>::fillUpperWithLower()
 {
-    int m = LocalMatrices<T>::m_;
+    int m = LocalMatrices<DataType, MemorySpaceType>::m_;
 
-    for (short iloc = 0; iloc < LocalMatrices<T>::subdiv_; iloc++)
+    for (short iloc = 0; iloc < LocalMatrices<DataType, MemorySpaceType>::nmat_;
+         iloc++)
     {
-        T* ssiloc = LocalMatrices<T>::getSubMatrix(iloc);
+        DataType* ssiloc
+            = LocalMatrices<DataType, MemorySpaceType>::getRawPtr(iloc);
 
         for (int i = 0; i < m; i++)
         {
@@ -35,14 +41,16 @@ void SquareLocalMatrices<T>::fillUpperWithLower()
     }
 }
 
-template <class T>
-void SquareLocalMatrices<T>::setDiagonal2Zero()
+template <typename DataType, typename MemorySpaceType>
+void SquareLocalMatrices<DataType, MemorySpaceType>::setDiagonal2Zero()
 {
-    int m = LocalMatrices<T>::m_;
+    int m = LocalMatrices<DataType, MemorySpaceType>::m_;
 
-    for (short iloc = 0; iloc < LocalMatrices<T>::subdiv_; iloc++)
+    for (short iloc = 0; iloc < LocalMatrices<DataType, MemorySpaceType>::nmat_;
+         iloc++)
     {
-        T* ssiloc = LocalMatrices<T>::getSubMatrix(iloc);
+        DataType* ssiloc
+            = LocalMatrices<DataType, MemorySpaceType>::getRawPtr(iloc);
         for (int i = 0; i < m; i++)
         {
             ssiloc[i + m * i] = 0.;
@@ -50,14 +58,16 @@ void SquareLocalMatrices<T>::setDiagonal2Zero()
     }
 }
 
-template <class T>
-void SquareLocalMatrices<T>::transpose()
+template <typename DataType, typename MemorySpaceType>
+void SquareLocalMatrices<DataType, MemorySpaceType>::transpose()
 {
-    int m = LocalMatrices<T>::m_;
+    int m = LocalMatrices<DataType, MemorySpaceType>::m_;
 
-    for (short iloc = 0; iloc < LocalMatrices<T>::subdiv_; iloc++)
+    for (short iloc = 0; iloc < LocalMatrices<DataType, MemorySpaceType>::nmat_;
+         iloc++)
     {
-        T* ssiloc = LocalMatrices<T>::getSubMatrix(iloc);
+        DataType* ssiloc
+            = LocalMatrices<DataType, MemorySpaceType>::getRawPtr(iloc);
         MemorySpace::assert_is_host_ptr(ssiloc);
 
         for (int i = 0; i < m; i++)
@@ -65,7 +75,7 @@ void SquareLocalMatrices<T>::transpose()
             const int istart = m * i;
             for (int j = 0; j < i; j++)
             {
-                T tmp              = ssiloc[i + m * j];
+                DataType tmp       = ssiloc[i + m * j];
                 ssiloc[i + m * j]  = ssiloc[istart + j];
                 ssiloc[istart + j] = tmp;
             }
@@ -73,15 +83,16 @@ void SquareLocalMatrices<T>::transpose()
     }
 }
 
-template <class T>
-double SquareLocalMatrices<T>::computePartialTrace(
+template <typename DataType, typename MemorySpaceType>
+double SquareLocalMatrices<DataType, MemorySpaceType>::computePartialTrace(
     const std::vector<int>& ids, const int iloc)
 {
     assert(!ids.empty());
 
-    int m = LocalMatrices<T>::m_;
+    int m = LocalMatrices<DataType, MemorySpaceType>::m_;
 
-    T* ssiloc = LocalMatrices<T>::getSubMatrix(iloc);
+    DataType* ssiloc
+        = LocalMatrices<DataType, MemorySpaceType>::getRawPtr(iloc);
     MemorySpace::assert_is_host_ptr(ssiloc);
 
     double trace = 0.;
@@ -96,14 +107,16 @@ double SquareLocalMatrices<T>::computePartialTrace(
     return trace;
 }
 
-template <class T>
-void SquareLocalMatrices<T>::shift(const T shift)
+template <typename DataType, typename MemorySpaceType>
+void SquareLocalMatrices<DataType, MemorySpaceType>::shift(const DataType shift)
 {
-    const int m = LocalMatrices<T>::m_;
+    const int m = LocalMatrices<DataType, MemorySpaceType>::m_;
 
-    for (short iloc = 0; iloc < LocalMatrices<T>::subdiv_; iloc++)
+    for (short iloc = 0; iloc < LocalMatrices<DataType, MemorySpaceType>::nmat_;
+         iloc++)
     {
-        T* mat = LocalMatrices<T>::getSubMatrix(iloc);
+        DataType* mat
+            = LocalMatrices<DataType, MemorySpaceType>::getRawPtr(iloc);
         MemorySpace::assert_is_host_ptr(mat);
 
         for (int i = 0; i < m; i++)
@@ -115,16 +128,18 @@ void SquareLocalMatrices<T>::shift(const T shift)
 
 // set matrix elements to zero in rows/columns
 // not associated with any orbital
-template <class T>
-void SquareLocalMatrices<T>::applySymmetricMask(
+template <typename DataType, typename MemorySpaceType>
+void SquareLocalMatrices<DataType, MemorySpaceType>::applySymmetricMask(
     const std::vector<std::vector<int>>& gids)
 {
-    const int m = LocalMatrices<T>::m_;
-    const int n = LocalMatrices<T>::n_;
+    const int m = LocalMatrices<DataType, MemorySpaceType>::m_;
+    const int n = LocalMatrices<DataType, MemorySpaceType>::n_;
 
-    for (short iloc = 0; iloc < LocalMatrices<T>::subdiv_; iloc++)
+    for (short iloc = 0; iloc < LocalMatrices<DataType, MemorySpaceType>::nmat_;
+         iloc++)
     {
-        T* mat = LocalMatrices<T>::getSubMatrix(iloc);
+        DataType* mat
+            = LocalMatrices<DataType, MemorySpaceType>::getRawPtr(iloc);
         MemorySpace::assert_is_host_ptr(mat);
         const std::vector<int>& loc_gids(gids[iloc]);
 
@@ -142,5 +157,36 @@ void SquareLocalMatrices<T>::applySymmetricMask(
     }
 }
 
-template class SquareLocalMatrices<double>;
-template class SquareLocalMatrices<float>;
+#ifdef HAVE_MAGMA
+template <>
+void SquareLocalMatrices<double, MemorySpace::Device>::assign(
+    const ReplicatedMatrix& src, const int iloc)
+{
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    double* dst = LocalMatrices<double, MemorySpace::Device>::getRawPtr(iloc);
+    magma_dcopymatrix(src.m(), src.m(), src.data(), src.ld(), dst, m_,
+        magma_singleton.queue_);
+}
+
+template <>
+void SquareLocalMatrices<double, MemorySpace::Device>::assign(
+    SquareLocalMatrices<double, MemorySpace::Host>& src)
+{
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    for (short iloc = 0; iloc < nmat_; iloc++)
+    {
+        double* dst
+            = LocalMatrices<double, MemorySpace::Device>::getRawPtr(iloc);
+        magma_dsetmatrix(src.m(), src.n(), src.getSubMatrix(), src.n(), dst, m_,
+            magma_singleton.queue_);
+    }
+}
+#endif
+
+template class SquareLocalMatrices<double, MemorySpace::Host>;
+template class SquareLocalMatrices<float, MemorySpace::Host>;
+#ifdef HAVE_MAGMA
+template class SquareLocalMatrices<double, MemorySpace::Device>;
+#endif

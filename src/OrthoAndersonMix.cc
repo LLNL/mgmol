@@ -15,7 +15,7 @@
 template <class T>
 void OrthoAndersonMix<T>::postprocessUpdate()
 {
-    SquareLocalMatrices<double> ortho_transform(
+    SquareLocalMatrices<double, MemorySpace::Host> ortho_transform(
         x_.subdivx(), x_.chromatic_number());
     x_.orthonormalizeLoewdin(false, &ortho_transform);
     for (int j = 0; j < m_; j++)

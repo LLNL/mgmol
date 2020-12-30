@@ -17,6 +17,7 @@
 #include "LocalMatrices2DistMatrix.h"
 #include "MGmol_MPI.h"
 #include "MPIdata.h"
+#include "Orbitals.h"
 #include "Power.h"
 #include "PowerGen.h"
 #include "ReplicatedMatrix.h"
@@ -55,6 +56,44 @@ std::string ProjectedMatrices<dist_matrix::DistMatrix<double>>::getMatrixType()
 {
     return "DistMatrix<double>";
 }
+
+//
+// conversion functions from one matrix format into another
+//
+void convert_matrix(const dist_matrix::DistMatrix<double>& src,
+    SquareLocalMatrices<double, MemorySpace::Host>& dst)
+{
+    DistMatrix2SquareLocalMatrices* dm2sl
+        = DistMatrix2SquareLocalMatrices::instance();
+    dm2sl->convert(src, dst);
+}
+#ifdef HAVE_MAGMA
+void convert_matrix(const dist_matrix::DistMatrix<double>& src,
+    SquareLocalMatrices<double, MemorySpace::Device>& dst)
+{
+    DistMatrix2SquareLocalMatrices* dm2sl
+        = DistMatrix2SquareLocalMatrices::instance();
+    SquareLocalMatrices<double, MemorySpace::Host> tmp(dst.nmat(), dst.m());
+    dm2sl->convert(src, tmp);
+
+    dst.assign(tmp);
+}
+
+void convert_matrix(const ReplicatedMatrix& src,
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& dst)
+{
+    src.get(dst.getRawPtr(), dst.m());
+}
+
+void convert_matrix(const ReplicatedMatrix& src,
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Device>& dst)
+{
+    dst.assign(src);
+}
+
+#endif
+
+//=====================================================================//
 
 template <class MatrixType>
 ProjectedMatrices<MatrixType>::ProjectedMatrices(
@@ -98,38 +137,22 @@ ProjectedMatrices<MatrixType>::~ProjectedMatrices()
 
 template <>
 void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::convert(
-    const SquareLocalMatrices<MATDTYPE>& src,
+    const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& src,
     dist_matrix::DistMatrix<DISTMATDTYPE>& dst)
 {
     LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
     sl2dm->accumulate(src, dst);
 }
 
-template <>
-void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::convert(
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& src,
-    SquareLocalMatrices<MATDTYPE>& dst)
-{
-    DistMatrix2SquareLocalMatrices* dm2sl
-        = DistMatrix2SquareLocalMatrices::instance();
-    dm2sl->convert(src, dst);
-}
-
 #ifdef HAVE_MAGMA
 template <>
 void ProjectedMatrices<ReplicatedMatrix>::convert(
-    const SquareLocalMatrices<MATDTYPE>& src, ReplicatedMatrix& dst)
+    const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& src,
+    ReplicatedMatrix& dst)
 {
     dst.init(src.getSubMatrix(), dim_);
 
     dst.consolidate();
-}
-
-template <>
-void ProjectedMatrices<ReplicatedMatrix>::convert(
-    const ReplicatedMatrix& src, SquareLocalMatrices<MATDTYPE>& dst)
-{
-    src.get(dst.getSubMatrix(), dst.m());
 }
 #endif
 
@@ -165,13 +188,19 @@ void ProjectedMatrices<MatrixType>::setup(
 
     setupMPI(global_indexes);
 
-    localX_.reset(
-        new SquareLocalMatrices<MATDTYPE>(subdiv_, chromatic_number_));
-    localT_.reset(
-        new SquareLocalMatrices<MATDTYPE>(subdiv_, chromatic_number_));
+    localX_.reset(new SquareLocalMatrices<MATDTYPE, memory_space_type>(
+        subdiv_, chromatic_number_));
+    localT_.reset(new SquareLocalMatrices<MATDTYPE, MemorySpace::Host>(
+        subdiv_, chromatic_number_));
 
-    localHl_.reset(new SquareLocalMatrices<MATDTYPE>(
+    localHl_.reset(new SquareLocalMatrices<MATDTYPE, MemorySpace::Host>(
         global_indexes.size(), global_indexes[0].size()));
+}
+
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::updateSubMatT()
+{
+    convert_matrix(*theta_, *localT_);
 }
 
 template <class MatrixType>
@@ -219,7 +248,7 @@ void ProjectedMatrices<MatrixType>::rotateAll(
 
 template <class MatrixType>
 void ProjectedMatrices<MatrixType>::applyInvS(
-    SquareLocalMatrices<MATDTYPE>& mat)
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& mat)
 {
     // build DistMatrix from SquareLocalMatrices
     convert(mat, *work_);
@@ -227,7 +256,7 @@ void ProjectedMatrices<MatrixType>::applyInvS(
     gm_->applyInv(*work_);
 
     // convert result back into a SquareLocalMatrices
-    convert(*work_, mat);
+    convert_matrix(*work_, mat);
 }
 
 template <class MatrixType>
@@ -356,14 +385,16 @@ void ProjectedMatrices<MatrixType>::updateDMwithSP2(const int iterative_index)
     updateThetaAndHB();
 
     // generate replicated copy of theta_
-    SquareLocalMatrices<double> theta(1, dim_);
-    convert(*theta_, theta);
+    SquareLocalMatrices<double, MemorySpace::Host> theta(1, dim_);
+    convert_matrix(*theta_, theta);
 
     double emin;
     double emax;
     double epsilon = 1.e-2;
 
-    static Power<LocalVector<double>, SquareLocalMatrices<double>> power(dim_);
+    static Power<LocalVector<double, MemorySpace::Host>,
+        SquareLocalMatrices<double, MemorySpace::Host>>
+        power(dim_);
 
     power.computeEigenInterval(
         theta, emin, emax, epsilon, (onpe0 && ct.verbose > 1));
@@ -876,8 +907,8 @@ void ProjectedMatrices<MatrixType>::computeChemicalPotentialAndOccupations(
 
 template <class MatrixType>
 void ProjectedMatrices<MatrixType>::computeLoewdinTransform(
-    SquareLocalMatrices<MATDTYPE>& localP, const int orb_index,
-    const bool transform_matrices)
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& localP,
+    const int orb_index, const bool transform_matrices)
 {
     assert(gm_ != nullptr);
 
@@ -905,7 +936,7 @@ void ProjectedMatrices<MatrixType>::computeLoewdinTransform(
         matHB_->gemm('n', 't', 1., mat, invSqrtMat, 0.);
     }
 
-    convert(invSqrtMat, localP);
+    convert_matrix(invSqrtMat, localP);
 }
 
 template <class MatrixType>
@@ -924,7 +955,7 @@ void ProjectedMatrices<MatrixType>::resetDotProductMatrices()
 
 template <class MatrixType>
 double ProjectedMatrices<MatrixType>::dotProductWithInvS(
-    const SquareLocalMatrices<MATDTYPE>& local_product)
+    const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& local_product)
 {
     assert(gram_4dotProducts_ != nullptr);
 
@@ -939,7 +970,7 @@ double ProjectedMatrices<MatrixType>::dotProductWithInvS(
 
 template <class MatrixType>
 double ProjectedMatrices<MatrixType>::dotProductWithDM(
-    const SquareLocalMatrices<MATDTYPE>& local_product)
+    const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& local_product)
 {
     MatrixType ds("ds", dim_, dim_);
 
@@ -952,7 +983,7 @@ double ProjectedMatrices<MatrixType>::dotProductWithDM(
 
 template <class MatrixType>
 double ProjectedMatrices<MatrixType>::dotProductSimple(
-    const SquareLocalMatrices<MATDTYPE>& local_product)
+    const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& local_product)
 {
     convert(local_product, *work_);
 
@@ -977,7 +1008,7 @@ void ProjectedMatrices<MatrixType>::printTimers(std::ostream& os)
 // Assumes SquareLocalMatrix object contains partial contributions
 template <class MatrixType>
 double ProjectedMatrices<MatrixType>::computeTraceInvSmultMat(
-    const SquareLocalMatrices<MATDTYPE>& mat)
+    const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& mat)
 {
     convert(mat, *work_);
 
@@ -1256,28 +1287,28 @@ void ProjectedMatrices<ReplicatedMatrix>::consolidateH()
 template <class MatrixType>
 void ProjectedMatrices<MatrixType>::updateSubMatX(const MatrixType& dm)
 {
-    convert(dm, *localX_);
+    convert_matrix(dm, *localX_);
 }
 
 template <>
-SquareLocalMatrices<double>
+SquareLocalMatrices<double, MemorySpace::Host>
 ProjectedMatrices<dist_matrix::DistMatrix<double>>::getReplicatedDM()
 {
-    SquareLocalMatrices<double> sldm(1, dim_);
+    SquareLocalMatrices<double, MemorySpace::Host> sldm(1, dim_);
     const dist_matrix::DistMatrix<double>& dm(dm_->getMatrix());
-    dm.allgather(sldm.getSubMatrix(), dim_);
+    dm.allgather(sldm.getRawPtr(), dim_);
 
     return sldm;
 }
 
 #ifdef HAVE_MAGMA
 template <>
-SquareLocalMatrices<double>
+SquareLocalMatrices<double, MemorySpace::Host>
 ProjectedMatrices<ReplicatedMatrix>::getReplicatedDM()
 {
-    SquareLocalMatrices<double> sldm(1, dim_);
+    SquareLocalMatrices<double, MemorySpace::Host> sldm(1, dim_);
     const ReplicatedMatrix& dm(dm_->getMatrix());
-    dm.get(sldm.getSubMatrix(), dim_);
+    dm.get(sldm.getRawPtr(), dim_);
 
     return sldm;
 }

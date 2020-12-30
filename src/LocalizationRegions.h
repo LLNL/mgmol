@@ -15,6 +15,7 @@
 #include "MGmol_MPI.h"
 #include "MPIdata.h"
 #include "SpreadsAndCenters.h"
+#include "SquareLocalMatrices.h"
 #include "Timer.h"
 #include "Vector3D.h"
 #include "global.h"
@@ -27,8 +28,6 @@
 
 class OrbitalsTransform;
 class SymmetricPair;
-template <class T>
-class SquareLocalMatrices;
 
 typedef struct LRData
 {
@@ -450,7 +449,8 @@ public:
 
     void getGidsGlobal(std::vector<int>& gids);
     void updateOverlapRegions();
-    void getMatrixDistances(SquareLocalMatrices<MATDTYPE>& mat,
+    void getMatrixDistances(
+        SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& mat,
         const std::vector<std::vector<int>>& gids);
 
     void printMinMaxRadius(std::ostream& os)

@@ -46,7 +46,8 @@ public:
     void rotateAll(
         const MatrixType& rotation_matrix, const bool flag_eigen) override;
 
-    void initializeMatB(const SquareLocalMatrices<MATDTYPE>& ss)
+    void initializeMatB(
+        const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& ss)
     {
         ProjectedMatrices<MatrixType>::convert(ss, *matB_);
     }

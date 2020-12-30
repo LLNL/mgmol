@@ -228,7 +228,8 @@ template <class T>
 void Hamiltonian<T>::addHlocalij(
     T& phi1, ProjectedMatricesInterface* proj_matrices)
 {
-    SquareLocalMatrices<MATDTYPE> slm(phi1.subdivx(), phi1.chromatic_number());
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host> slm(
+        phi1.subdivx(), phi1.chromatic_number());
 
     phi1.computeLocalProduct(*hlphi_, slm);
 
@@ -250,7 +251,8 @@ void Hamiltonian<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals& phi1,
     if (onpe0) (*MPIdata::sout) << "Hamiltonian<T>::addHLocalij()" << endl;
 #endif
 
-    SquareLocalMatrices<MATDTYPE> ss(phi1.subdivx(), phi1.chromatic_number());
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host> ss(
+        phi1.subdivx(), phi1.chromatic_number());
 
     phi1.computeLocalProduct(*hlphi_, ss);
 

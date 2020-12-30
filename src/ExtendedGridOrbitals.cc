@@ -431,8 +431,8 @@ void ExtendedGridOrbitals::multiply_by_matrix(
 }
 
 void ExtendedGridOrbitals::multiplyByMatrix(
-    const SquareLocalMatrices<MATDTYPE>& matrix, ORBDTYPE* product,
-    const int ldp) const
+    const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& matrix,
+    ORBDTYPE* product, const int ldp) const
 {
     prod_matrix_tm_.start();
     unsigned int const product_size = numst_ * ldp;
@@ -471,7 +471,7 @@ void ExtendedGridOrbitals::multiplyByMatrix(
 // Here the result is stored in one of the matrices used in the multiplication,
 // so a temporary arry is necessary
 void ExtendedGridOrbitals::multiplyByMatrix(
-    const SquareLocalMatrices<MATDTYPE>& matrix)
+    const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& matrix)
 {
     prod_matrix_tm_.start();
 
@@ -511,7 +511,7 @@ void ExtendedGridOrbitals::multiplyByMatrix(
 }
 
 void ExtendedGridOrbitals::multiplyByMatrix(
-    const SquareLocalMatrices<MATDTYPE>& matrix,
+    const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& matrix,
     ExtendedGridOrbitals& product) const
 {
     multiplyByMatrix(matrix, product.psi(0), product.lda_);
@@ -931,7 +931,7 @@ void ExtendedGridOrbitals::computeMatB(
 
     const short bcolor = 32;
 
-    SquareLocalMatrices<MATDTYPE> ss(subdivx_, numst_);
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host> ss(subdivx_, numst_);
 
     ORBDTYPE* work = new ORBDTYPE[lda_ * bcolor];
     memset(work, 0, lda_ * bcolor * sizeof(ORBDTYPE));
@@ -963,7 +963,7 @@ void ExtendedGridOrbitals::computeMatB(
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
 
-            MATDTYPE* ssiloc = ss.getSubMatrix(iloc);
+            MATDTYPE* ssiloc = ss.getRawPtr(iloc);
 
             // calculate nf columns of ssiloc
             MPgemmTN(numst_, nf, loc_numpt_, 1.,
@@ -1000,7 +1000,8 @@ void ExtendedGridOrbitals::computeBAndInvB(const pb::Lap<ORBDTYPE>& LapOper)
     invBmat_tm_.stop();
 }
 
-void ExtendedGridOrbitals::getLocalOverlap(SquareLocalMatrices<MATDTYPE>& ss)
+void ExtendedGridOrbitals::getLocalOverlap(
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& ss)
 {
     assert(numst_ >= 0);
     assert(loc_numpt_ > 0);
@@ -1015,8 +1016,7 @@ void ExtendedGridOrbitals::getLocalOverlap(SquareLocalMatrices<MATDTYPE>& ss)
         ORBDTYPE* psi        = block_vector_.vect(0);
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
-            ss.syrk<memory_space_type>(
-                iloc, loc_numpt_, psi + iloc * loc_numpt_, lda_);
+            ss.syrk(iloc, loc_numpt_, psi + iloc * loc_numpt_, lda_);
         }
 
         // We may need the full matrix
@@ -1027,8 +1027,8 @@ void ExtendedGridOrbitals::getLocalOverlap(SquareLocalMatrices<MATDTYPE>& ss)
     }
 }
 
-void ExtendedGridOrbitals::getLocalOverlap(
-    const ExtendedGridOrbitals& orbitals, SquareLocalMatrices<MATDTYPE>& ss)
+void ExtendedGridOrbitals::getLocalOverlap(const ExtendedGridOrbitals& orbitals,
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& ss)
 {
     assert(numst_ >= 0);
 
@@ -1040,8 +1040,8 @@ void ExtendedGridOrbitals::getLocalOverlap(
 }
 
 void ExtendedGridOrbitals::computeLocalProduct(
-    const ExtendedGridOrbitals& orbitals, LocalMatrices<MATDTYPE>& ss,
-    const bool transpose)
+    const ExtendedGridOrbitals& orbitals,
+    LocalMatrices<MATDTYPE, MemorySpace::Host>& ss, const bool transpose)
 {
     // assert( orbitals.numst_>=0 );
     assert(orbitals.lda_ > 1);
@@ -1051,7 +1051,8 @@ void ExtendedGridOrbitals::computeLocalProduct(
 }
 
 void ExtendedGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
-    const int ld, LocalMatrices<MATDTYPE>& ss, const bool transpose)
+    const int ld, LocalMatrices<MATDTYPE, MemorySpace::Host>& ss,
+    const bool transpose)
 {
     assert(loc_numpt_ > 0);
     assert(loc_numpt_ <= ld);
@@ -1081,9 +1082,9 @@ void ExtendedGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
 
 #ifdef USE_MP
     // use temporary float data for matrix ss
-    LocalMatrices<ORBDTYPE> ssf(ss.subdiv(), ss.m(), ss.n());
+    LocalMatrices<ORBDTYPE, MemorySpace::Host> ssf(ss.subdiv(), ss.m(), ss.n());
 #else
-    LocalMatrices<ORBDTYPE>& ssf(ss);
+    LocalMatrices<ORBDTYPE, MemorySpace::Host>& ssf(ss);
 #endif
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
@@ -1127,7 +1128,7 @@ void ExtendedGridOrbitals::computeDiagonalElementsDotProduct(
 void ExtendedGridOrbitals::computeGram(
     dist_matrix::DistMatrix<DISTMATDTYPE>& gram_mat)
 {
-    SquareLocalMatrices<MATDTYPE> ss(subdivx_, numst_);
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host> ss(subdivx_, numst_);
 
     getLocalOverlap(ss);
 
@@ -1141,7 +1142,7 @@ void ExtendedGridOrbitals::computeGram(
 void ExtendedGridOrbitals::computeGram(const ExtendedGridOrbitals& orbitals,
     dist_matrix::DistMatrix<DISTMATDTYPE>& gram_mat)
 {
-    SquareLocalMatrices<MATDTYPE> ss(subdivx_, numst_);
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host> ss(subdivx_, numst_);
 
     getLocalOverlap(orbitals, ss);
 
@@ -1169,7 +1170,7 @@ void ExtendedGridOrbitals::computeGram(const int verbosity)
     assert(subdivx_ < 1000);
     assert(numst_ >= 0);
 
-    SquareLocalMatrices<MATDTYPE> ss(subdivx_, numst_);
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host> ss(subdivx_, numst_);
 
     getLocalOverlap(ss);
 
@@ -1202,7 +1203,7 @@ double ExtendedGridOrbitals::dotProductWithDM(
 {
     assert(proj_matrices_ != nullptr);
 
-    SquareLocalMatrices<MATDTYPE> ss(subdivx_, numst_);
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host> ss(subdivx_, numst_);
 
     computeLocalProduct(orbitals, ss);
 
@@ -1214,7 +1215,7 @@ double ExtendedGridOrbitals::dotProductWithInvS(
 {
     assert(proj_matrices_ != nullptr);
 
-    SquareLocalMatrices<MATDTYPE> ss(subdivx_, numst_);
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host> ss(subdivx_, numst_);
 
     computeLocalProduct(orbitals, ss);
 
@@ -1236,7 +1237,7 @@ double ExtendedGridOrbitals::dotProductSimple(
 {
     assert(proj_matrices_ != nullptr);
 
-    SquareLocalMatrices<MATDTYPE> ss(subdivx_, numst_);
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host> ss(subdivx_, numst_);
 
     computeLocalProduct(orbitals, ss);
 
@@ -1306,7 +1307,7 @@ dist_matrix::DistMatrix<DISTMATDTYPE> ExtendedGridOrbitals::computeProduct(
 
     dot_product_tm_.start();
 
-    LocalMatrices<MATDTYPE> ss(subdivx_, numst_, ncol);
+    LocalMatrices<MATDTYPE, MemorySpace::Host> ss(subdivx_, numst_, ncol);
 
     computeLocalProduct(array, lda, ss, transpose);
 
@@ -1321,7 +1322,8 @@ dist_matrix::DistMatrix<DISTMATDTYPE> ExtendedGridOrbitals::computeProduct(
 }
 
 void ExtendedGridOrbitals::orthonormalizeLoewdin(const bool overlap_uptodate,
-    SquareLocalMatrices<MATDTYPE>* matrixTransform, const bool update_matrices)
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host>* matrixTransform,
+    const bool update_matrices)
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 1)
@@ -1330,9 +1332,10 @@ void ExtendedGridOrbitals::orthonormalizeLoewdin(const bool overlap_uptodate,
 
     if (!overlap_uptodate) computeGram(0);
 
-    SquareLocalMatrices<MATDTYPE>* localP = matrixTransform;
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host>* localP = matrixTransform;
     if (matrixTransform == nullptr)
-        localP = new SquareLocalMatrices<MATDTYPE>(subdivx_, numst_);
+        localP = new SquareLocalMatrices<MATDTYPE, MemorySpace::Host>(
+            subdivx_, numst_);
 
     incrementIterativeIndex();
 
@@ -1591,7 +1594,7 @@ void ExtendedGridOrbitals::projectOut(
     assert(numst_ >= 0);
     assert(lda_ >= loc_numpt_);
 
-    SquareLocalMatrices<MATDTYPE> lmatrix(subdivx_, numst_);
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host> lmatrix(subdivx_, numst_);
 
     if (numst_ != 0) computeLocalProduct(array, lda, lmatrix, false);
 
@@ -1614,7 +1617,7 @@ void ExtendedGridOrbitals::projectOut(
         MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
             getPsi(0, iloc), phi_size, phi_host_view);
 
-        MATDTYPE* localMat_iloc = lmatrix.getSubMatrix(iloc);
+        MATDTYPE* localMat_iloc = lmatrix.getRawPtr(iloc);
 
         // TODO this can be done on the GPU
         // Compute loc_numpt_ rows (for subdomain iloc)

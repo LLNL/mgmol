@@ -70,8 +70,8 @@ class ProjectedMatricesSparse : public ProjectedMatricesInterface
 
     DensityMatrixSparse* dm_;
 
-    SquareLocalMatrices<MATDTYPE>* localX_;
-    SquareLocalMatrices<MATDTYPE>* localT_;
+    SquareLocalMatrices<MATDTYPE, memory_space_type>* localX_;
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host>* localT_;
 
     /* Data distribution objects */
     DataDistribution* distributor_invS_;
@@ -92,7 +92,7 @@ class ProjectedMatricesSparse : public ProjectedMatricesInterface
     std::vector<int> locvars_;
 
     void updateLocalMat(const VariableSizeMatrix<sparserow>& submatM,
-        SquareLocalMatrices<MATDTYPE>* localM);
+        SquareLocalMatrices<MATDTYPE, MemorySpace::Host>* localM);
     double getExpectationMat(VariableSizeMatrix<sparserow>* mat);
     VariableSizeMatrix<sparserowtab>* getGramMat() { return invS_->gramMat(); }
     void computeGenEigenInterval(std::vector<double>& interval,
@@ -113,10 +113,14 @@ public:
     double getExpectationH() override;
     void consolidateH() override;
     void consolidateOrbitalsOverlapMat(VariableSizeMatrix<sparserow>& mat);
-    double dotProductWithInvS(const SquareLocalMatrices<MATDTYPE>& ss) override;
-    double dotProductSimple(const SquareLocalMatrices<MATDTYPE>& ss) override;
-    double dotProductWithDM(const SquareLocalMatrices<MATDTYPE>& ss) override;
-    void applyInvS(SquareLocalMatrices<MATDTYPE>& mat) override;
+    double dotProductWithInvS(
+        const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& ss) override;
+    double dotProductSimple(
+        const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& ss) override;
+    double dotProductWithDM(
+        const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& ss) override;
+    void applyInvS(
+        SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& mat) override;
     double getEigSum() override;
     double getLinDependent2states(
         int& st1, int& st2, const bool print_flag = false) const override;
@@ -131,7 +135,8 @@ public:
     void printGramMatrix2states(
         const int st1, const int st2, std::ostream& os) const;
 
-    void initializeGramMatrix(const SquareLocalMatrices<MATDTYPE>& ss,
+    void initializeGramMatrix(
+        const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& ss,
         const int orbitals_index) override
     {
         assert(invS_ != NULL);
@@ -143,12 +148,12 @@ public:
         init_gram_matrix_tm_.stop();
     }
 
-    SquareLocalMatrices<MATDTYPE>& getLocalX() const override
+    SquareLocalMatrices<MATDTYPE, memory_space_type>& getLocalX() const override
     {
         return *localX_;
     }
 
-    SquareLocalMatrices<MATDTYPE>& getLocalT() const override
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& getLocalT() const override
     {
         return *localT_;
     }
@@ -191,7 +196,7 @@ public:
     // Add data from square local matrix (only contributions from functions
     // overlapping subdomain)
     void setLocalMatrixElementsHl(
-        const SquareLocalMatrices<MATDTYPE>& slH) override
+        const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& slH) override
     {
         // std::cout<<"Set Hl elements with matrix of size
         // "<<slH.m()<<std::endl;
@@ -343,9 +348,11 @@ public:
     bool isGramMatAugmented() { return invS_->isGramAugmented(); }
 
     double computeTraceInvSmultMat(
-        const SquareLocalMatrices<MATDTYPE>& mat, const bool consolidate);
+        const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& mat,
+        const bool consolidate);
     double computeTraceDMmultMat(
-        const SquareLocalMatrices<MATDTYPE>& mat, const bool consolidate);
+        const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& mat,
+        const bool consolidate);
     double computeTraceInvSmultMat(
         VariableSizeMatrix<sparserow>& vsmat, const bool consolidate);
     void stripDM() override { return; };

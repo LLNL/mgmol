@@ -11,11 +11,14 @@
 #define MGMOL_SQUARELOCALMATRICES_H
 
 #include "LocalMatrices.h"
+#ifdef HAVE_MAGMA
+class ReplicatedMatrix;
+#endif
 
 #include <vector>
 
-template <class T>
-class SquareLocalMatrices : public LocalMatrices<T>
+template <typename DataType, typename MemorySpaceType>
+class SquareLocalMatrices : public LocalMatrices<DataType, MemorySpaceType>
 {
 public:
     SquareLocalMatrices(const int subdiv, const int m);
@@ -32,12 +35,19 @@ public:
     /*!
      * add shift to diagonal, to shift eigenvalues
      */
-    void shift(const T);
+    void shift(const DataType);
 
     /*!
      * set elements to 0 for rows/cols with gids equal to -1
      */
     void applySymmetricMask(const std::vector<std::vector<int>>& gids);
+
+#ifdef HAVE_MAGMA
+    // assign values from a ReplicatedMatrix
+    void assign(const ReplicatedMatrix& src, const int iloc = 0);
+
+    void assign(SquareLocalMatrices<DataType, MemorySpace::Host>& src);
+#endif
 };
 
 #endif

@@ -47,9 +47,9 @@ void ChebyshevApproximationInterface::computeChebyshevCoeffs()
     // compute remaining coeffs_ values
     double_loop_tm_.start();
 
-    LocalVector<double> fvec(fvals);
+    LocalVector<double, MemorySpace::Host> fvec(fvals);
     coeffs_.resize(n, 0.);
-    LocalVector<double> cvec(coeffs_);
+    LocalVector<double, MemorySpace::Host> cvec(coeffs_);
 
     cmat_->matvec(fvec, cvec);
     (cvec.data())[0] = fsum;
@@ -128,16 +128,19 @@ void ChebyshevApproximationInterface::computeInterpolationPoints()
 
     double_loop_tm_.start();
     if (cmat_) delete cmat_;
-    cmat_ = new LocalMatrices<double>(1, order_, order_);
+    cmat_ = new LocalMatrices<double, MemorySpace::Host>(1, order_, order_);
+    std::vector<double> tmp(order_ * order_);
     for (int i = 1; i < order_; i++)
     {
         for (int k = 0; k < order_; k++)
         {
-            double iang = i * angles_[k];
-            double val  = std::cos(iang);
-            cmat_->setVal(i, k, val);
+            double iang         = i * angles_[k];
+            double val          = std::cos(iang);
+            tmp[i + k * order_] = val;
         }
     }
+    cmat_->setValues(tmp.data(), order_);
+
     double_loop_tm_.stop();
 }
 

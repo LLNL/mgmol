@@ -29,8 +29,8 @@ class SP2
     bml_matrix_t* Xi_;
     bml_matrix_t* Xi_sq_;
 #else
-    SquareLocalMatrices<MATDTYPE>* Xi_;
-    SquareLocalMatrices<MATDTYPE>* Xi_sq_;
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host>* Xi_;
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host>* Xi_sq_;
 #endif
 
     const double tol_;

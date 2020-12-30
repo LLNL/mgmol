@@ -271,10 +271,10 @@ void Rho<OrbitalsType>::rescaleTotalCharge()
 //        j++;
 //    }
 //
-//    SquareLocalMatrices<MATDTYPE>& localX(projmatrices->getLocalX());
-//    const MATDTYPE* const localX_iloc = localX.getSubMatrix(iloc);
-//    melements.clear();
-//    melements.resize(nmycolors * nmycolors);
+//    SquareLocalMatrices<MATDTYPE,MemorySpace::Host>&
+//    localX(projmatrices->getLocalX()); const MATDTYPE* const localX_iloc =
+//    localX.getSubMatrix(iloc); melements.clear(); melements.resize(nmycolors *
+//    nmycolors);
 //
 //    for (int i = 0; i < nmycolors; i++)
 //    {
@@ -614,7 +614,7 @@ void Rho<OrbitalsType>::computeRho(
         // if (dynamic_cast<LocGridOrbitals*>(&orbitals)) but it
         if (std::is_same<OrbitalsType, LocGridOrbitals>::value)
         {
-            SquareLocalMatrices<MATDTYPE>& localX(
+            SquareLocalMatrices<MATDTYPE, memory_space_type>& localX(
                 (orbitals.projMatrices())->getLocalX());
 
             // if (verbosity_level_ > 1 && onpe0)
@@ -684,7 +684,7 @@ void Rho<OrbitalsType>::computeRhoSubdomainUsingBlas3(const int iloc_init,
 
     RHODTYPE* const prho = &rho_[myspin_][0];
 
-    SquareLocalMatrices<MATDTYPE>& localX(
+    SquareLocalMatrices<MATDTYPE, memory_space_type>& localX(
         (orbitals1.projMatrices())->getLocalX());
 
     const int ld      = orbitals1.getLda();
@@ -703,17 +703,12 @@ void Rho<OrbitalsType>::computeRhoSubdomainUsingBlas3(const int iloc_init,
         // O(N^3) part
 #ifdef HAVE_MAGMA
         // If we have magma, we move all the data on the device
-        std::unique_ptr<MATDTYPE[], void (*)(MATDTYPE*)> mat_dev(
-            MemoryDev<MATDTYPE>::allocate(ncols * ncols),
-            MemoryDev<MATDTYPE>::free);
-        MemorySpace::copy_to_dev(mat, ncols * ncols, mat_dev);
-
         std::unique_ptr<ORBDTYPE[], void (*)(ORBDTYPE*)> product_dev(
             MemoryDev<ORBDTYPE>::allocate(nrows * ncols),
             MemoryDev<ORBDTYPE>::free);
 
         LinearAlgebraUtils<MemorySpace::Device>::MPgemmNN(nrows, ncols, ncols,
-            1., phi1, ld, mat_dev.get(), ncols, 0., product_dev.get(), nrows);
+            1., phi1, ld, mat, ncols, 0., product_dev.get(), nrows);
 
         // Move the data back on the host
         MemorySpace::copy_to_host(product_dev, nrows * ncols, product);

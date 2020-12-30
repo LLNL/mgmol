@@ -14,9 +14,12 @@
 #include "DataDistribution.h"
 #include "LocalizationRegions.h"
 #include "MPIdata.h"
+#include "Orbitals.h"
 #include "VariableSizeMatrix.h"
 
 #include <vector>
+
+using memory_space_type = typename Orbitals::memory_space_type;
 
 #define DM_NPRINT_ROWS_AND_COLS 5
 
@@ -69,7 +72,7 @@ public:
     double getTraceDotProductWithMat(VariableSizeMatrix<sparserow>* vsmat);
     VariableSizeMatrix<sparserow>* mat() { return dm_; }
     void printDM(std::ostream& os, int nrows = NUM_PRINT_ROWS) const;
-    void getLocalMatrix(LocalMatrices<MATDTYPE>& localX,
+    void getLocalMatrix(LocalMatrices<MATDTYPE, memory_space_type>& localX,
         const std::vector<std::vector<int>>& global_indexes);
     void printTimers(std::ostream& os) { gather_DM_tm_.print(os); }
 };

@@ -941,8 +941,9 @@ void MGmol<OrbitalsType>::printTimers()
     PreconILU<pcdatatype>::printTimers(os_);
     LinearSolver::printTimers(os_);
     Table::printTimers(os_);
-    LocalMatrices<MATDTYPE>::printTimers(os_);
-    Power<LocalVector<double>, SquareLocalMatrices<double>>::printTimers(os_);
+    LocalMatrices<MATDTYPE, MemorySpace::Host>::printTimers(os_);
+    Power<LocalVector<double, MemorySpace::Host>,
+        SquareLocalMatrices<double, MemorySpace::Host>>::printTimers(os_);
     SP2::printTimers(os_);
     if (lrs_) lrs_->printTimers(os_);
     local_cluster_->printTimers(os_);
@@ -1229,7 +1230,8 @@ void MGmol<OrbitalsType>::computeResidualUsingHPhi(OrbitalsType& psi,
 
     proj_matrices_->updateSubMatT();
 
-    SquareLocalMatrices<MATDTYPE>& localT(proj_matrices_->getLocalT());
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& localT(
+        proj_matrices_->getLocalT());
 
     pb::Lap<ORBDTYPE>* lapop = hamiltonian_->lapOper();
     const int ncolors        = psi.chromatic_number();

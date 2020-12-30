@@ -791,8 +791,8 @@ void LocGridOrbitals::multiply_by_matrix(const int first_color,
 }
 
 void LocGridOrbitals::multiplyByMatrix(
-    const SquareLocalMatrices<MATDTYPE>& matrix, ORBDTYPE* product,
-    const int ldp) const
+    const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& matrix,
+    ORBDTYPE* product, const int ldp) const
 {
     prod_matrix_tm_.start();
 
@@ -830,7 +830,7 @@ void LocGridOrbitals::multiplyByMatrix(
 // Here the result is stored in one of the matrices used in the multiplication,
 // so a temporary arry is necessary
 void LocGridOrbitals::multiplyByMatrix(
-    const SquareLocalMatrices<MATDTYPE>& matrix)
+    const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& matrix)
 {
     prod_matrix_tm_.start();
 
@@ -898,7 +898,8 @@ void LocGridOrbitals::multiplyByMatrix(
 }
 
 void LocGridOrbitals::multiplyByMatrix(
-    const SquareLocalMatrices<MATDTYPE>& matrix, LocGridOrbitals& product) const
+    const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& matrix,
+    LocGridOrbitals& product) const
 {
     multiplyByMatrix(matrix, product.psi(0), product.lda_);
 }
@@ -1435,7 +1436,8 @@ void LocGridOrbitals::computeMatB(
 
     const short bcolor = 32;
 
-    SquareLocalMatrices<MATDTYPE> ss(subdivx_, chromatic_number_);
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host> ss(
+        subdivx_, chromatic_number_);
 
     ORBDTYPE* work = new ORBDTYPE[lda_ * bcolor];
     memset(work, 0, lda_ * bcolor * sizeof(ORBDTYPE));
@@ -1460,7 +1462,7 @@ void LocGridOrbitals::computeMatB(
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
 
-            MATDTYPE* ssiloc = ss.getSubMatrix(iloc);
+            MATDTYPE* ssiloc = ss.getRawPtr(iloc);
 
             // calculate nf columns of ssiloc
             MPgemmTN(chromatic_number_, nf, loc_numpt_, 1.,
@@ -1495,7 +1497,8 @@ void LocGridOrbitals::computeBAndInvB(const pb::Lap<ORBDTYPE>& LapOper)
     invBmat_tm_.stop();
 }
 
-void LocGridOrbitals::getLocalOverlap(SquareLocalMatrices<MATDTYPE>& ss)
+void LocGridOrbitals::getLocalOverlap(
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& ss)
 {
     assert(chromatic_number_ >= 0);
     assert(loc_numpt_ > 0);
@@ -1511,8 +1514,7 @@ void LocGridOrbitals::getLocalOverlap(SquareLocalMatrices<MATDTYPE>& ss)
 
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
-            ss.syrk<memory_space_type>(
-                iloc, loc_numpt_, psi + iloc * loc_numpt_, lda_);
+            ss.syrk(iloc, loc_numpt_, psi + iloc * loc_numpt_, lda_);
         }
 
         // We may need the full matrix
@@ -1523,8 +1525,8 @@ void LocGridOrbitals::getLocalOverlap(SquareLocalMatrices<MATDTYPE>& ss)
     }
 }
 
-void LocGridOrbitals::getLocalOverlap(
-    const LocGridOrbitals& orbitals, SquareLocalMatrices<MATDTYPE>& ss)
+void LocGridOrbitals::getLocalOverlap(const LocGridOrbitals& orbitals,
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& ss)
 {
     assert(chromatic_number_ >= 0);
 
@@ -1536,7 +1538,7 @@ void LocGridOrbitals::getLocalOverlap(
 }
 
 void LocGridOrbitals::computeLocalProduct(const LocGridOrbitals& orbitals,
-    LocalMatrices<MATDTYPE>& ss, const bool transpose)
+    LocalMatrices<MATDTYPE, MemorySpace::Host>& ss, const bool transpose)
 {
     // assert( orbitals.chromatic_number_>=0 );
     assert(orbitals.lda_ > 1);
@@ -1546,7 +1548,8 @@ void LocGridOrbitals::computeLocalProduct(const LocGridOrbitals& orbitals,
 }
 
 void LocGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
-    const int ld, LocalMatrices<MATDTYPE>& ss, const bool transpose)
+    const int ld, LocalMatrices<MATDTYPE, MemorySpace::Host>& ss,
+    const bool transpose)
 {
     assert(loc_numpt_ > 0);
     assert(loc_numpt_ <= ld);
@@ -1576,9 +1579,9 @@ void LocGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
 
 #ifdef USE_MP
     // use temporary float data for matrix ss
-    LocalMatrices<ORBDTYPE> ssf(ss.subdiv(), ss.m(), ss.n());
+    LocalMatrices<ORBDTYPE, MemorySpace::Host> ssf(ss.subdiv(), ss.m(), ss.n());
 #else
-    LocalMatrices<ORBDTYPE>& ssf(ss);
+    LocalMatrices<ORBDTYPE, MemorySpace::Host>& ssf(ss);
 #endif
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
@@ -1673,7 +1676,8 @@ void LocGridOrbitals::computeDiagonalElementsDotProductLocal(
 void LocGridOrbitals::computeGram(
     dist_matrix::DistMatrix<DISTMATDTYPE>& gram_mat)
 {
-    SquareLocalMatrices<MATDTYPE> ss(subdivx_, chromatic_number_);
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host> ss(
+        subdivx_, chromatic_number_);
 
     getLocalOverlap(ss);
 
@@ -1687,7 +1691,8 @@ void LocGridOrbitals::computeGram(
 void LocGridOrbitals::computeGram(const LocGridOrbitals& orbitals,
     dist_matrix::DistMatrix<DISTMATDTYPE>& gram_mat)
 {
-    SquareLocalMatrices<MATDTYPE> ss(subdivx_, chromatic_number_);
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host> ss(
+        subdivx_, chromatic_number_);
 
     getLocalOverlap(orbitals, ss);
 
@@ -1716,7 +1721,8 @@ void LocGridOrbitals::computeGram(const int verbosity)
     assert(subdivx_ < 1000);
     assert(chromatic_number_ >= 0);
 
-    SquareLocalMatrices<MATDTYPE> ss(subdivx_, chromatic_number_);
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host> ss(
+        subdivx_, chromatic_number_);
 
     getLocalOverlap(ss);
 
@@ -1749,7 +1755,8 @@ double LocGridOrbitals::dotProductWithDM(const LocGridOrbitals& orbitals)
     assert(proj_matrices_ != nullptr);
     assert(chromatic_number_ == orbitals.chromatic_number_);
 
-    SquareLocalMatrices<MATDTYPE> ss(subdivx_, chromatic_number_);
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host> ss(
+        subdivx_, chromatic_number_);
 
     computeLocalProduct(orbitals, ss);
 
@@ -1761,7 +1768,8 @@ double LocGridOrbitals::dotProductWithInvS(const LocGridOrbitals& orbitals)
     assert(proj_matrices_ != nullptr);
     assert(chromatic_number_ == orbitals.chromatic_number_);
 
-    SquareLocalMatrices<MATDTYPE> ss(subdivx_, chromatic_number_);
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host> ss(
+        subdivx_, chromatic_number_);
 
     computeLocalProduct(orbitals, ss);
 
@@ -1791,7 +1799,8 @@ double LocGridOrbitals::dotProductSimple(const LocGridOrbitals& orbitals)
     assert(proj_matrices_ != nullptr);
     assert(chromatic_number_ == orbitals.chromatic_number_);
 
-    SquareLocalMatrices<MATDTYPE> ss(subdivx_, chromatic_number_);
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host> ss(
+        subdivx_, chromatic_number_);
 
     computeLocalProduct(orbitals, ss);
 
@@ -1862,7 +1871,8 @@ dist_matrix::DistMatrix<DISTMATDTYPE> LocGridOrbitals::product(
 
     dot_product_tm_.start();
 
-    LocalMatrices<MATDTYPE> ss(subdivx_, chromatic_number_, ncol);
+    LocalMatrices<MATDTYPE, MemorySpace::Host> ss(
+        subdivx_, chromatic_number_, ncol);
 
     if (chromatic_number_ != 0) computeLocalProduct(array, lda, ss, transpose);
 
@@ -1877,7 +1887,8 @@ dist_matrix::DistMatrix<DISTMATDTYPE> LocGridOrbitals::product(
 }
 
 void LocGridOrbitals::orthonormalizeLoewdin(const bool overlap_uptodate,
-    SquareLocalMatrices<MATDTYPE>* matrixTransform, const bool update_matrices)
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host>* matrixTransform,
+    const bool update_matrices)
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 1)
@@ -1886,9 +1897,10 @@ void LocGridOrbitals::orthonormalizeLoewdin(const bool overlap_uptodate,
 
     if (!overlap_uptodate) computeGram(0);
 
-    SquareLocalMatrices<MATDTYPE>* localP = matrixTransform;
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host>* localP = matrixTransform;
     if (matrixTransform == nullptr)
-        localP = new SquareLocalMatrices<MATDTYPE>(subdivx_, chromatic_number_);
+        localP = new SquareLocalMatrices<MATDTYPE, MemorySpace::Host>(
+            subdivx_, chromatic_number_);
 
     ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
         = dynamic_cast<
@@ -2324,7 +2336,8 @@ void LocGridOrbitals::projectOut(
     assert(chromatic_number_ >= 0);
     assert(lda_ > loc_numpt_);
 
-    SquareLocalMatrices<MATDTYPE> pmatrix(subdivx_, chromatic_number_);
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host> pmatrix(
+        subdivx_, chromatic_number_);
 
     if (chromatic_number_ != 0) computeLocalProduct(array, lda, pmatrix, false);
 
@@ -2346,7 +2359,7 @@ void LocGridOrbitals::projectOut(
         ORBDTYPE* phi    = getPsi(0, iloc);
         ORBDTYPE* parray = array + iloc * loc_numpt_;
 
-        MATDTYPE* localMat_iloc = pmatrix.getSubMatrix(iloc);
+        MATDTYPE* localMat_iloc = pmatrix.getRawPtr(iloc);
 
         // Compute loc_numpt_ rows (for subdomain iloc)
         LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(loc_numpt_,
@@ -2492,11 +2505,12 @@ void LocGridOrbitals::addDotWithNcol2Matrix(
 #endif
     const double vel = grid_.vel();
 
-    SquareLocalMatrices<MATDTYPE> ss(subdivx_, chromatic_number_);
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host> ss(
+        subdivx_, chromatic_number_);
 
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
-        MATDTYPE* ssiloc = ss.getSubMatrix(iloc);
+        MATDTYPE* ssiloc = ss.getRawPtr(iloc);
 
         // TODO
         MPgemmTN(chromatic_number_, chromatic_number_, loc_numpt_, vel,

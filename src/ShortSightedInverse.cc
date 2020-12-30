@@ -347,7 +347,8 @@ void ShortSightedInverse::computeInvS(DataDistribution& distributor_invS)
 }
 
 /* initialize the gram matrix */
-void ShortSightedInverse::initGramMatrix(const LocalMatrices<MATDTYPE>& ss,
+void ShortSightedInverse::initGramMatrix(
+    const LocalMatrices<MATDTYPE, MemorySpace::Host>& ss,
     const std::vector<std::vector<int>>& global_indexes,
     const int new_orbitals_index)
 {

@@ -11,6 +11,7 @@
 #define MGMOL_ORBITALS_H
 
 #include "hdf5.h"
+#include "memory_space.h"
 
 class Orbitals
 {

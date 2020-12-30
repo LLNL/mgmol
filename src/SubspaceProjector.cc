@@ -27,7 +27,7 @@ SubspaceProjector<T>::SubspaceProjector(T& subspace)
 // compute [I-P*(S^-1)*P^T]*orbitals
 template <class T>
 void SubspaceProjector<T>::projectOut(
-    T& orbitals, SquareLocalMatrices<MATDTYPE>* mask)
+    T& orbitals, SquareLocalMatrices<MATDTYPE, MemorySpace::Host>* mask)
 {
     assert(chromatic_number_ >= 0);
     assert(lda_ >= loc_numpt_);
@@ -44,7 +44,8 @@ void SubspaceProjector<T>::projectOut(
     }
 #endif
 
-    SquareLocalMatrices<MATDTYPE> pmatrix(subdivx_, chromatic_number_);
+    SquareLocalMatrices<MATDTYPE, MemorySpace::Host> pmatrix(
+        subdivx_, chromatic_number_);
 
     // compute <xi,orbitals>
     if (chromatic_number_ != 0)
@@ -62,7 +63,7 @@ void SubspaceProjector<T>::projectOut(
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
         ORBDTYPE* xi            = subspace_.getPsi(0, iloc);
-        MATDTYPE* localMat_iloc = pmatrix.getSubMatrix(iloc);
+        MATDTYPE* localMat_iloc = pmatrix.getRawPtr(iloc);
 
         // Compute loc_numpt_ rows (for subdomain iloc)
         LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(loc_numpt_,

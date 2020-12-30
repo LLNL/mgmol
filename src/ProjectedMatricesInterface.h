@@ -19,6 +19,7 @@
 #include "ChebyshevApproximationFunction.h"
 #include "Control.h"
 #include "MGmol_MPI.h"
+#include "Orbitals.h"
 #include "SquareLocalMatrices.h"
 #include "SquareSubMatrix.h"
 #include "entropy.h"
@@ -27,6 +28,8 @@
 #include "tools.h"
 
 class HDFrestart;
+
+using memory_space_type = typename Orbitals::memory_space_type;
 
 /* tolerance for matrix elements */
 const double tol_matrix_elements = 1.e-14;
@@ -156,11 +159,12 @@ public:
     virtual void printTimers(std::ostream& os) = 0;
     // initialize Gram matrix with SquareLocalMatrices (input)
     virtual void initializeGramMatrix(
-        const SquareLocalMatrices<MATDTYPE>& ss, const int orbitals_index)
+        const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& ss,
+        const int orbitals_index)
         = 0;
 
     virtual void setLocalMatrixElementsHl(
-        const SquareLocalMatrices<MATDTYPE>& slH)
+        const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& slH)
         = 0;
     virtual void setLocalMatrixElementsHnl(const SquareSubMatrix<MATDTYPE>& slH)
         = 0;
@@ -169,10 +173,12 @@ public:
     virtual void consolidateH() = 0;
 
     // return density matrix (inverse Gram if no unoccupied states)
-    virtual SquareLocalMatrices<MATDTYPE>& getLocalX() const = 0;
+    virtual SquareLocalMatrices<MATDTYPE, memory_space_type>&
+    getLocalX() const = 0;
 
     // return S**(-1)*H (or B**(-1)*H with Mehrstellen)
-    virtual SquareLocalMatrices<MATDTYPE>& getLocalT() const = 0;
+    virtual SquareLocalMatrices<MATDTYPE, MemorySpace::Host>&
+    getLocalT() const = 0;
 
     // returns local Gram Matrix
     //    virtual SquareLocalmatrices& getLocalS()const=0;
@@ -195,20 +201,25 @@ public:
     virtual void printGramMM(std::ofstream& tfile)                        = 0;
     virtual void setDMuniform(const double nel, const int orbitals_index) = 0;
 
-    virtual double dotProductWithInvS(const SquareLocalMatrices<MATDTYPE>& ss)
+    virtual double dotProductWithInvS(
+        const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& ss)
         = 0;
-    virtual double dotProductWithDM(const SquareLocalMatrices<MATDTYPE>& ss)
+    virtual double dotProductWithDM(
+        const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& ss)
         = 0;
-    virtual double dotProductSimple(const SquareLocalMatrices<MATDTYPE>& ss)
+    virtual double dotProductSimple(
+        const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& ss)
         = 0;
     virtual void resetDotProductMatrices() = 0;
 
-    virtual void stripDM()                                     = 0;
-    virtual void dressupDM()                                   = 0;
-    virtual void printS(std::ostream& os) const                = 0;
-    virtual void computeInvS()                                 = 0;
-    virtual void printMatrices(std::ostream& os) const         = 0;
-    virtual void applyInvS(SquareLocalMatrices<MATDTYPE>& mat) = 0;
+    virtual void stripDM()                             = 0;
+    virtual void dressupDM()                           = 0;
+    virtual void printS(std::ostream& os) const        = 0;
+    virtual void computeInvS()                         = 0;
+    virtual void printMatrices(std::ostream& os) const = 0;
+    virtual void applyInvS(
+        SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& mat)
+        = 0;
     virtual double getLinDependent2states(
         int& st1, int& st2, const bool) const                          = 0;
     virtual double checkCond(const double tol, const bool flag = true) = 0;
@@ -281,7 +292,8 @@ public:
     }
 
     virtual void setDMto2InvS() { exitWithErrorMessage("setDMto2InvS"); }
-    virtual void initializeMatB(const SquareLocalMatrices<MATDTYPE>& ss)
+    virtual void initializeMatB(
+        const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& ss)
     {
         (void)ss;
 
