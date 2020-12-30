@@ -46,7 +46,7 @@ public:
     // assign values from a ReplicatedMatrix
     void assign(const ReplicatedMatrix& src, const int iloc = 0);
 
-    void assign(SquareLocalMatrices<DataType, MemorySpace::Host>& src);
+    void assign(const SquareLocalMatrices<DataType, MemorySpace::Host>& src);
 #endif
 };
 

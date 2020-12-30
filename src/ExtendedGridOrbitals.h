@@ -110,6 +110,11 @@ private:
     void computeLocalProduct(const ORBDTYPE* const, const int,
         LocalMatrices<MATDTYPE, MemorySpace::Host>&,
         const bool transpose = false);
+#ifdef HAVE_MAGMA
+    void computeLocalProduct(const ORBDTYPE* const, const int,
+        LocalMatrices<MATDTYPE, MemorySpace::Device>&,
+        const bool transpose = false);
+#endif
 
     void computeGlobalIndexes();
     void computeInvNorms2(std::vector<std::vector<double>>& inv_norms2) const;
@@ -123,9 +128,15 @@ private:
     ORBDTYPE* psi(const int i) const { return block_vector_.vect(i); }
 
     void app_mask(const int, ORBDTYPE*, const short) const {};
+#ifdef HAVE_MAGMA
+    void multiplyByMatrix(
+        const SquareLocalMatrices<MATDTYPE, MemorySpace::Device>& matrix,
+        ORBDTYPE* product, const int ldp) const;
+#endif
     void multiplyByMatrix(
         const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& matrix,
         ORBDTYPE* product, const int ldp) const;
+
     void setup();
 
 protected:
@@ -341,8 +352,13 @@ public:
     void applyMask(const bool = false){};
     void applyCorrMask(const bool = false){};
 
+#ifdef HAVE_MAGMA
+    void multiplyByMatrix(
+        const SquareLocalMatrices<MATDTYPE, MemorySpace::Device>& matrix);
+#endif
     void multiplyByMatrix(
         const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& matrix);
+
     void multiplyByMatrix(
         const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& matrix,
         ExtendedGridOrbitals& product) const;
