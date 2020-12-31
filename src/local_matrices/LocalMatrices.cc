@@ -187,6 +187,22 @@ void LocalMatrices<DataType, MemorySpaceType>::copy(const bml_matrix_t* A)
 }
 #endif
 
+template <>
+void LocalMatrices<double, MemorySpace::Host>::scal(const double alpha)
+{
+    LinearAlgebraUtils<MemorySpace::Host>::MPscal(
+        storage_size_, alpha, storage_.get());
+}
+
+#ifdef HAVE_MAGMA
+template <>
+void LocalMatrices<double, MemorySpace::Device>::scal(const double alpha)
+{
+    LinearAlgebraUtils<MemorySpace::Device>::MPscal(
+        storage_size_, alpha, storage_.get());
+}
+#endif
+
 // perform the symmetric operation
 // C := A'*A
 // This one is for debug purposes, and can be removed if unused
@@ -419,12 +435,23 @@ void LocalMatrices<double, MemorySpace::Device>::setValues(
 
 template <>
 void LocalMatrices<double, MemorySpace::Device>::assign(
-    LocalMatrices<double, MemorySpace::Host>& src)
+    const LocalMatrices<double, MemorySpace::Host>& src)
 {
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
     for (short iloc = 0; iloc < nmat_; iloc++)
-        magma_dsetmatrix(src.m(), src.n(), src.getSubMatrix(), src.n(),
+        magma_dsetmatrix(src.m(), src.n(), src.getSubMatrix(iloc), src.n(),
+            ptr_matrices_[iloc], m_, magma_singleton.queue_);
+}
+
+template <>
+void LocalMatrices<double, MemorySpace::Host>::assign(
+    const LocalMatrices<double, MemorySpace::Device>& src)
+{
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    for (short iloc = 0; iloc < nmat_; iloc++)
+        magma_dgetmatrix(src.m(), src.n(), src.getSubMatrix(iloc), src.n(),
             ptr_matrices_[iloc], m_, magma_singleton.queue_);
 }
 #endif

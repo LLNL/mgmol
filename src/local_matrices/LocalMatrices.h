@@ -88,7 +88,8 @@ public:
     void setValues(DataType* values, const int ld, const int iloc = 0);
 
 #ifdef HAVE_MAGMA
-    void assign(LocalMatrices<DataType, MemorySpace::Host>& src);
+    void assign(const LocalMatrices<DataType, MemorySpace::Host>& src);
+    void assign(const LocalMatrices<DataType, MemorySpace::Device>& src);
 #endif
 
     DataType getVal(const int i, const int j, const int iloc = 0)
@@ -98,10 +99,7 @@ public:
         return ptr_matrices_[iloc][m_ * j + i];
     }
 
-    void scal(const double alpha)
-    {
-        Tscal(storage_size_, alpha, storage_.get());
-    }
+    void scal(const double alpha);
     void axpy(const double alpha, const LocalMatrices& matA)
     {
         Taxpy(storage_size_, alpha, matA.storage_.get(), storage_.get());

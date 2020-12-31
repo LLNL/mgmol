@@ -171,7 +171,7 @@ void SquareLocalMatrices<double, MemorySpace::Device>::assign(
 
 template <>
 void SquareLocalMatrices<double, MemorySpace::Device>::assign(
-    SquareLocalMatrices<double, MemorySpace::Host>& src)
+    const SquareLocalMatrices<double, MemorySpace::Host>& src)
 {
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 

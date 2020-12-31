@@ -430,84 +430,62 @@ void ExtendedGridOrbitals::multiply_by_matrix(
     prod_matrix_tm_.stop();
 }
 
+#ifdef HAVE_MAGMA
 void ExtendedGridOrbitals::multiplyByMatrix(
     const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& matrix,
     ORBDTYPE* product, const int ldp) const
 {
+    SquareLocalMatrices<ORBDTYPE, MemorySpace::Device> matdev(
+        matrix.nmat(), matrix.m());
+    matdev.assign(matrix);
+
+    multiplyByMatrix(matdev, product, ldp);
+}
+#endif
+
+void ExtendedGridOrbitals::multiplyByMatrix(
+    const SquareLocalMatrices<MATDTYPE, memory_space_type>& matrix,
+    ORBDTYPE* product, const int ldp) const
+{
+    assert(matrix.nmat() == 1);
+
     prod_matrix_tm_.start();
-    unsigned int const product_size = numst_ * ldp;
-    ORBDTYPE* product_host_view
-        = MemorySpace::Memory<ORBDTYPE, memory_space_type>::allocate_host_view(
-            product_size);
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
-        product, product_size, product_host_view);
 
-    // loop over subdomains
-    for (short iloc = 0; iloc < subdivx_; iloc++)
-    {
-        const MATDTYPE* const mat = matrix.getSubMatrix(iloc);
+    const MATDTYPE* const mat = matrix.getSubMatrix();
 
-        unsigned int const phi_size = loc_numpt_ * numst_;
-        ORBDTYPE* phi_host_view     = MemorySpace::Memory<ORBDTYPE,
-            memory_space_type>::allocate_host_view(phi_size);
-        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
-            getPsi(0, iloc), phi_size, phi_host_view);
-
-        // TODO this can be done on the GPU
-        // Compute product for subdomain iloc
-        LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(loc_numpt_, numst_,
-            numst_, 1., phi_host_view, lda_, mat, numst_, 0.,
-            product_host_view + iloc * loc_numpt_, ldp);
-    }
-
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_dev(
-        product_host_view, product_size, product);
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
-        product_host_view);
+    LinearAlgebraUtils<memory_space_type>::MPgemmNN(numpt_, numst_, numst_, 1.,
+        getPsi(0), lda_, mat, numst_, 0., product, ldp);
 
     prod_matrix_tm_.stop();
 }
 
 // Here the result is stored in one of the matrices used in the multiplication,
 // so a temporary arry is necessary
+#ifdef HAVE_MAGMA
 void ExtendedGridOrbitals::multiplyByMatrix(
     const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& matrix)
 {
-    prod_matrix_tm_.start();
+    SquareLocalMatrices<ORBDTYPE, MemorySpace::Device> matdev(
+        matrix.nmat(), matrix.m());
+    matdev.assign(matrix);
 
-    ORBDTYPE* product = new ORBDTYPE[loc_numpt_ * numst_];
-    memset(product, 0, loc_numpt_ * numst_ * sizeof(ORBDTYPE));
-    const size_t slnumpt = loc_numpt_ * sizeof(ORBDTYPE);
+    multiplyByMatrix(matdev);
+}
+#endif
 
-    // loop over subdomains
-    for (short iloc = 0; iloc < subdivx_; iloc++)
-    {
-        const MATDTYPE* const mat   = matrix.getSubMatrix(iloc);
-        unsigned int const phi_size = loc_numpt_ * numst_;
-        ORBDTYPE* phi_host_view     = MemorySpace::Memory<ORBDTYPE,
-            memory_space_type>::allocate_host_view(phi_size);
-        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
-            getPsi(0, iloc), phi_size, phi_host_view);
+void ExtendedGridOrbitals::multiplyByMatrix(
+    const SquareLocalMatrices<MATDTYPE, memory_space_type>& matrix)
+{
+    ORBDTYPE* product
+        = MemorySpace::Memory<ORBDTYPE, memory_space_type>::allocate(
+            numpt_ * numst_);
 
-        // TODO this can be done on the GPU
-        // Compute product for subdomain iloc
-        LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(loc_numpt_, numst_,
-            numst_, 1., phi_host_view, lda_, mat, numst_, 0., product,
-            loc_numpt_);
+    multiplyByMatrix(matrix, product, numpt_);
 
-        for (int color = 0; color < numst_; color++)
-            memcpy(phi_host_view + color * lda_, product + color * loc_numpt_,
-                slnumpt);
+    MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy(
+        product, numpt_ * numst_, getPsi(0));
 
-        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_dev(
-            phi_host_view, phi_size, getPsi(0, iloc));
-        MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
-            phi_host_view);
-    }
-
-    delete[] product;
-
-    prod_matrix_tm_.stop();
+    MemorySpace::Memory<ORBDTYPE, memory_space_type>::free(product);
 }
 
 void ExtendedGridOrbitals::multiplyByMatrix(
@@ -1050,8 +1028,22 @@ void ExtendedGridOrbitals::computeLocalProduct(
         computeLocalProduct(orbitals.psi(0), orbitals.lda_, ss, transpose);
 }
 
+#ifdef HAVE_MAGMA
 void ExtendedGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
     const int ld, LocalMatrices<MATDTYPE, MemorySpace::Host>& ss,
+    const bool transpose)
+{
+    LocalMatrices<ORBDTYPE, MemorySpace::Device> sdev(
+        ss.nmat(), ss.m(), ss.n());
+
+    computeLocalProduct(array, ld, sdev, transpose);
+
+    ss.assign(sdev);
+}
+#endif
+
+void ExtendedGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
+    const int ld, LocalMatrices<MATDTYPE, memory_space_type>& ss,
     const bool transpose)
 {
     assert(loc_numpt_ > 0);
@@ -1067,34 +1059,18 @@ void ExtendedGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
     const int lda = transpose ? ld : lda_;
     const int ldb = transpose ? lda_ : ld;
 
-    unsigned int const a_size = numpt_ * ss.m();
-    ORBDTYPE* a_host_view
-        = MemorySpace::Memory<ORBDTYPE, memory_space_type>::allocate_host_view(
-            a_size);
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
-        const_cast<ORBDTYPE*>(a), a_size, a_host_view);
-    unsigned int const b_size = numpt_ * ss.n();
-    ORBDTYPE* b_host_view
-        = MemorySpace::Memory<ORBDTYPE, memory_space_type>::allocate_host_view(
-            b_size);
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
-        const_cast<ORBDTYPE*>(b), b_size, b_host_view);
-
 #ifdef USE_MP
     // use temporary float data for matrix ss
-    LocalMatrices<ORBDTYPE, MemorySpace::Host> ssf(ss.subdiv(), ss.m(), ss.n());
+    LocalMatrices<ORBDTYPE, memory_space_type> ssf(ss.nmat(), ss.m(), ss.n());
 #else
-    LocalMatrices<ORBDTYPE, MemorySpace::Host>& ssf(ss);
+    LocalMatrices<ORBDTYPE, memory_space_type>& ssf(ss);
 #endif
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
-        ssf.gemm(iloc, loc_numpt_, a_host_view + iloc * loc_numpt_, lda,
-            b_host_view + iloc * loc_numpt_, ldb);
+        LinearAlgebraUtils<memory_space_type>::MPgemm('T', 'N', numst_, numst_,
+            loc_numpt_, 1., a + iloc * loc_numpt_, lda, b + +iloc * loc_numpt_,
+            ldb, 0., ssf.getRawPtr(iloc), ssf.m());
     }
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
-        a_host_view);
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
-        b_host_view);
 #ifdef USE_MP
     ss.copy(ssf);
 #endif
