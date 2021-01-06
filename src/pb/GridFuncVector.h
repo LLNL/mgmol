@@ -210,6 +210,10 @@ public:
 
     void setup();
 
+    const Grid& grid() { return grid_; }
+
+    ScalarType* data() { return memory_.get(); }
+
     template <typename ScalarType2>
     void assign(const int i, const ScalarType2* const v, const char dis = 'd')
     {

@@ -308,10 +308,30 @@ void FDoper<T>::del2_2nd(GridFunc<T>& A, GridFunc<T>& B) const
 {
     if (!A.updated_boundaries()) A.trade_boundaries();
 
-    del2_2nd_tm_.start();
+    del2_2nd(A.grid(), A.uu(), B.uu(), 1, MemorySpace::Host());
 
-    const T* __restrict__ v = A.uu();
-    T* __restrict__ u       = B.uu();
+    B.set_updated_boundaries(0);
+}
+
+template <class T>
+void FDoper<T>::del2_2nd(GridFuncVector<T>& A, GridFuncVector<T>& B) const
+{
+    A.trade_boundaries();
+
+    del2_2nd(A.grid(), A.data(), B.data(), A.size(), MemorySpace::Host());
+
+    B.set_updated_boundaries(0);
+}
+
+template <class T>
+void FDoper<T>::del2_2nd(
+    const Grid& grid, T* v, T* b, const size_t nfunc, MemorySpace::Host) const
+{
+    assert(grid.ghost_pt() > 0);
+    MemorySpace::assert_is_host_ptr(b);
+    MemorySpace::assert_is_host_ptr(v);
+
+    del2_2nd_tm_.start();
 
     double cc        = inv_h2(0);
     const double c1x = -cc;
@@ -323,39 +343,35 @@ void FDoper<T>::del2_2nd(GridFunc<T>& A, GridFunc<T>& B) const
     const double c1z = -cc;
     const double c0  = -2. * (c1x + c1y + c1z);
 
-    assert(grid_.ghost_pt() > 0);
+    const int dim0 = grid.dim(0);
+    const int dim1 = grid.dim(1);
+    const int dim2 = grid.dim(2);
 
-    const int dim0 = A.grid().dim(0);
-    const int dim1 = A.grid().dim(1);
-    const int dim2 = A.grid().dim(2);
+    const size_t ngpts = grid.sizeg();
 
-    const int gpt = grid_.ghost_pt();
-    int iix       = gpt * incx_;
+    int incx     = grid.inc(0);
+    int incy     = grid.inc(1);
+    const int ng = grid.ghost_pt();
 
-    for (int ix = 0; ix < dim0; ix++)
+#pragma omp parallel for collapse(4)
+    for (size_t ifunc = 0; ifunc < nfunc; ifunc++)
     {
-        int iiy = iix + gpt * incy_;
-
-        for (int iy = 0; iy < dim1; iy++)
+        for (int ix = 0; ix < dim0; ix++)
         {
-            int iiz = iiy + gpt;
-
-            for (int iz = 0; iz < dim2; iz++)
+            for (int iy = 0; iy < dim1; iy++)
             {
-                u[iiz] = c0 * v[iiz] + c1x * (v[iiz - incx_] + v[iiz + incx_])
-                         + c1y * (v[iiz - incy_] + v[iiz + incy_])
-                         + c1z * (v[iiz - 1] + v[iiz + 1]);
+                for (int iz = 0; iz < dim2; iz++)
+                {
+                    int iiz = ifunc * ngpts
+                              + ((ix + ng) * incx + (iy + ng) * incy) + iz + ng;
 
-                iiz++;
+                    b[iiz] = c0 * v[iiz] + c1x * (v[iiz - incx] + v[iiz + incx])
+                             + c1y * (v[iiz - incy] + v[iiz + incy])
+                             + c1z * (v[iiz - 1] + v[iiz + 1]);
+                }
             }
-
-            iiy += incy_;
         }
-
-        iix += incx_;
     }
-
-    B.set_updated_boundaries(0);
 
     del2_2nd_tm_.stop();
 }
@@ -368,6 +384,18 @@ void FDoper<T>::del2_4th(GridFunc<T>& A, GridFunc<T>& B) const
     if (!A.updated_boundaries()) A.trade_boundaries();
 
     del2_4th(A.grid(), A.uu(), B.uu(), 1, MemorySpace::Host());
+
+    B.set_updated_boundaries(0);
+}
+
+template <class T>
+void FDoper<T>::del2_4th(GridFuncVector<T>& A, GridFuncVector<T>& B) const
+{
+    assert(grid_.ghost_pt() > 1);
+
+    A.trade_boundaries();
+
+    del2_4th(A.grid(), A.data(), B.data(), A.size(), MemorySpace::Host());
 
     B.set_updated_boundaries(0);
 }

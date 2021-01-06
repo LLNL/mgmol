@@ -13,7 +13,7 @@
 #include "FDoperInterface.h"
 
 #include "Grid.h"
-#include "GridFunc.h"
+#include "GridFuncVector.h"
 #include "memory_space.h"
 
 namespace pb
@@ -51,8 +51,12 @@ protected:
     void del1_8th(GridFunc<T>&, GridFunc<T>&, const short) const;
     void del2_8th(GridFunc<T>&, GridFunc<T>&) const;
 
+    void del2_2nd(GridFuncVector<T>&, GridFuncVector<T>&) const;
+    void del2_4th(GridFuncVector<T>&, GridFuncVector<T>&) const;
+
     void del2_4th(const Grid&, T*, T*, const size_t, MemorySpace::Host) const;
     void del2_4th(const Grid&, T*, T*, const size_t, MemorySpace::Device) const;
+    void del2_2nd(const Grid&, T*, T*, const size_t, MemorySpace::Host) const;
 
     // Mehrstellenverfahren operators
     void del2_4th_Mehr(GridFunc<T>&, GridFunc<T>&) const;
