@@ -53,10 +53,12 @@ protected:
 
     void del2_2nd(GridFuncVector<T>&, GridFuncVector<T>&) const;
     void del2_4th(GridFuncVector<T>&, GridFuncVector<T>&) const;
+    void del2_4th_Mehr(GridFuncVector<T>&, GridFuncVector<T>&) const;
 
     void del2_4th(const Grid&, T*, T*, const size_t, MemorySpace::Host) const;
     void del2_4th(const Grid&, T*, T*, const size_t, MemorySpace::Device) const;
     void del2_2nd(const Grid&, T*, T*, const size_t, MemorySpace::Host) const;
+    void del2_4th_Mehr(const Grid&, const T* const, T*, const size_t) const;
 
     // Mehrstellenverfahren operators
     void del2_4th_Mehr(GridFunc<T>&, GridFunc<T>&) const;

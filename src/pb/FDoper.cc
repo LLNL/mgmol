@@ -820,11 +820,31 @@ void FDoper<T>::del2_8th(GridFunc<T>& A, GridFunc<T>& B) const
 
     B.set_updated_boundaries(0);
 }
+
 template <class T>
 void FDoper<T>::del2_4th_Mehr(GridFunc<T>& A, GridFunc<T>& B) const
 {
     if (!A.updated_boundaries()) A.trade_boundaries();
 
+    del2_4th_Mehr(A.grid(), A.uu(0), B.uu(0), 1);
+
+    B.set_updated_boundaries(0);
+}
+
+template <class T>
+void FDoper<T>::del2_4th_Mehr(GridFuncVector<T>& A, GridFuncVector<T>& B) const
+{
+    A.trade_boundaries();
+
+    del2_4th_Mehr(A.grid(), A.data(), B.data(), A.size());
+
+    B.set_updated_boundaries(0);
+}
+
+template <class T>
+void FDoper<T>::del2_4th_Mehr(
+    const Grid& grid, const T* const v, T* u, const size_t nfunc) const
+{
     del2_4th_Mehr_tm_.start();
 
     assert(inv_h2(0) > 1.e-12);
@@ -832,10 +852,11 @@ void FDoper<T>::del2_4th_Mehr(GridFunc<T>& A, GridFunc<T>& B) const
     assert(inv_h2(2) > 1.e-12);
     assert(ghosts() > 0);
 
-    const int shift = grid_.ghost_pt();
-    const int dim0  = grid_.dim(0);
-    const int dim1  = grid_.dim(1);
-    const int dim2  = grid_.dim(2);
+    const int shift = grid.ghost_pt();
+    const int dim0  = grid.dim(0);
+    const int dim1  = grid.dim(1);
+    const int dim2  = grid.dim(2);
+    const int ngpts = grid.sizeg();
 
 #if 0
     int ifirst0=1+shift;
@@ -857,57 +878,50 @@ void FDoper<T>::del2_4th_Mehr(GridFunc<T>& A, GridFunc<T>& B) const
 #else
     const int iix0 = shift * incx_;
 
-    const T* const v = A.uu(0);
-    T* u             = B.uu(0);
-
-    for (int ix = 0; ix < dim0; ix++)
+    for (size_t ifunc = 0; ifunc < nfunc; ifunc++)
     {
-
-        int iix = iix0 + ix * incx_;
-        int iiy = iix + shift * incy_;
-
-        for (int iy = 0; iy < dim1; iy++)
+        for (int ix = 0; ix < dim0; ix++)
         {
+            int iix = iix0 + ix * incx_ + ifunc * ngpts;
+            int iiy = iix + shift * incy_;
 
-            const int iiz = iiy + shift;
-
-            T* const u0          = u + iiz;
-            const T* const v0    = v + iiz;
-            const T* const vmx   = v0 - incx_;
-            const T* const vpx   = v0 + incx_;
-            const T* const vmxmy = vmx - incy_;
-            const T* const vpxmy = vpx - incy_;
-            const T* const vmy   = v0 - incy_;
-            const T* const vpy   = v0 + incy_;
-            const T* const vmxpy = vmx + incy_;
-            const T* const vpxpy = vpx + incy_;
-
-            for (int iz = 0; iz < dim2; iz++)
+            for (int iy = 0; iy < dim1; iy++)
             {
+                const int iiz = iiy + shift;
 
-                u0[iz] = (T)(c0mehr4_ * (double)v0[iz]
+                T* const u0          = u + iiz;
+                const T* const v0    = v + iiz;
+                const T* const vmx   = v0 - incx_;
+                const T* const vpx   = v0 + incx_;
+                const T* const vmxmy = vmx - incy_;
+                const T* const vpxmy = vpx - incy_;
+                const T* const vmy   = v0 - incy_;
+                const T* const vpy   = v0 + incy_;
+                const T* const vmxpy = vmx + incy_;
+                const T* const vpxpy = vpx + incy_;
 
-                             + czmehr4_ * (double)(v0[iz - 1] + v0[iz + 1])
-                             + cymehr4_ * (double)(vmy[iz] + vpy[iz])
-                             + cxmehr4_ * (double)(vmx[iz] + vpx[iz])
+                for (int iz = 0; iz < dim2; iz++)
+                {
+                    u0[iz] = (T)(c0mehr4_ * (double)v0[iz]
+                                 + czmehr4_ * (double)(v0[iz - 1] + v0[iz + 1])
+                                 + cymehr4_ * (double)(vmy[iz] + vpy[iz])
+                                 + cxmehr4_ * (double)(vmx[iz] + vpx[iz])
+                                 + cxzmehr4_
+                                       * (double)(vmx[iz - 1] + vmx[iz + 1]
+                                                  + vpx[iz - 1] + vpx[iz + 1])
+                                 + cyzmehr4_
+                                       * (double)(vmy[iz - 1] + vmy[iz + 1]
+                                                  + vpy[iz - 1] + vpy[iz + 1])
+                                 + cxymehr4_
+                                       * (double)(vmxmy[iz] + vpxmy[iz]
+                                                  + vmxpy[iz] + vpxpy[iz]));
+                }
 
-                             + cxzmehr4_
-                                   * (double)(vmx[iz - 1] + vmx[iz + 1]
-                                              + vpx[iz - 1] + vpx[iz + 1])
-                             + cyzmehr4_
-                                   * (double)(vmy[iz - 1] + vmy[iz + 1]
-                                              + vpy[iz - 1] + vpy[iz + 1])
-                             + cxymehr4_
-                                   * (double)(vmxmy[iz] + vpxmy[iz] + vmxpy[iz]
-                                              + vpxpy[iz]));
+                iiy += incy_;
             }
-
-            iiy += incy_;
         }
     }
 #endif
-    B.set_updated_boundaries(0);
-
     del2_4th_Mehr_tm_.stop();
 }
 

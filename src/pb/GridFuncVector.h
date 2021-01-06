@@ -210,7 +210,7 @@ public:
 
     void setup();
 
-    const Grid& grid() { return grid_; }
+    const Grid& grid() const { return grid_; }
 
     ScalarType* data() { return memory_.get(); }
 
