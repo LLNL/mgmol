@@ -98,12 +98,7 @@ public:
         GridFuncVector<T, memory_space_type>& B) override
     {
         assert(A.size() == B.size());
-        A.trade_boundaries();
-        const int nfunc = (int)A.size();
-        for (int k = 0; k < nfunc; k++)
-        {
-            FDoper<T>::del2_8th(A.getGridFunc(k), B.getGridFunc(k));
-        }
+        FDoper<T>::del2_8th(A, B);
     }
 
     void jacobi(GridFunc<T>&, const GridFunc<T>&, GridFunc<T>&) override;

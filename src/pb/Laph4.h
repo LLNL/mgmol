@@ -99,12 +99,8 @@ public:
         GridFuncVector<T, memory_space_type>& B) override
     {
         assert(A.size() == B.size());
-        A.trade_boundaries();
-        const int nfunc = (int)A.size();
-        for (int k = 0; k < nfunc; k++)
-        {
-            this->del2_4th(A.getGridFunc(k), B.getGridFunc(k));
-        }
+
+        this->del2_4th(A, B);
     }
     void apply(Grid& Agrid, T* A, T* B, const size_t nfunc)
     {

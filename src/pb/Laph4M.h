@@ -69,11 +69,7 @@ public:
     {
         assert(A.size() == B.size());
         A.trade_boundaries();
-        const int nfunc = (int)A.size();
-        for (int k = 0; k < nfunc; k++)
-        {
-            Lap<T>::del2_4th_Mehr(A.getGridFunc(k), B.getGridFunc(k));
-        }
+        Lap<T>::del2_4th_Mehr(A, B);
     }
 
     void rhs(GridFunc<T>& A, GridFunc<T>& B) const override
