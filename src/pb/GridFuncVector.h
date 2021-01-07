@@ -89,7 +89,7 @@ class GridFuncVector
     int nfunc4buffers_;
 
     // block of memory for device memory
-    std::unique_ptr<ScalarType, void (*)(ScalarType*)> functions_dev_;
+    std::unique_ptr<ScalarType, void (*)(ScalarType*)> memory_dev_;
 
     std::vector<std::vector<ScalarType>> comm_buf1_;
     std::vector<std::vector<ScalarType>> comm_buf2_;
@@ -181,10 +181,10 @@ public:
           nfunc4buffers_(0),
 // just for now
 #ifdef HAVE_OPENMP_OFFLOAD
-          functions_dev_(MemoryST::allocate(gid[0].size() * my_grid.sizeg()),
+          memory_dev_(MemoryST::allocate(gid[0].size() * my_grid.sizeg()),
               MemoryST::free)
 #else
-          functions_dev_(nullptr, nullptr)
+          memory_dev_(nullptr, nullptr)
 #endif
     {
         bc_[0] = px;
@@ -214,25 +214,39 @@ public:
 
     ScalarType* data() { return memory_.get(); }
 
+    ScalarType* getDataPtr(const int ifunc, const int index = 0)
+    {
+        return memory_.get() + ifunc * grid_.sizeg() + index;
+    }
+
+    // assign values to one GridFunc from values in array src
+    // (without ghosts)
     template <typename ScalarType2>
-    void assign(const int i, const ScalarType2* const v, const char dis = 'd')
+    void assign(const int i, const ScalarType2* const src, const char dis = 'd')
     {
         assert(i < static_cast<int>(functions_.size()));
         assert(functions_[i] != nullptr);
 
-        functions_[i]->assign(v, dis);
+        functions_[i]->assign(src, dis);
         updated_boundaries_ = false;
+    }
+
+    // extract values from one GridFunc into array dst
+    // (without ghosts)
+    void init_vect(const int k, ScalarType* dst, const char dis) const
+    {
+        functions_[k]->init_vect(dst, dis);
     }
 
 #ifdef HAVE_OPENMP_OFFLOAD
     void copyHtoD(int size)
     {
-        MemorySpace::copy_to_dev(memory_.get(), size, functions_dev_.get());
+        MemorySpace::copy_to_dev(memory_.get(), size, memory_dev_.get());
     }
 
     void copyDtoH(int size)
     {
-        MemorySpace::copy_to_host(functions_dev_.get(), size, memory_.get());
+        MemorySpace::copy_to_host(memory_dev_.get(), size, memory_.get());
     }
 #endif
 
@@ -254,7 +268,7 @@ public:
     void trade_boundaries();
     void trade_boundaries_colors(const short, const short);
 
-    size_t size() const { return functions_.size(); }
+    size_t size() const { return nfunc_; }
 
     // pointwise products this=A*B for each vector in this
     void prod(GridFuncVector<ScalarType, MemorySpaceType>& A,
@@ -266,10 +280,7 @@ public:
     void restrict3D(GridFuncVector<ScalarType, MemorySpaceType>&);
     void resetData()
     {
-        assert(nfunc_ == static_cast<int>(functions_.size()));
-
-        for (short k = 0; k < nfunc_; k++)
-            functions_[k]->resetData();
+        memset(memory_.get(), 0, nfunc_ * grid_.sizeg() * sizeof(ScalarType));
         updated_boundaries_ = true;
     }
     void set_updated_boundaries(const bool flag) { updated_boundaries_ = flag; }
@@ -278,12 +289,8 @@ public:
     void axpy(const double alpha,
         const GridFuncVector<ScalarType, MemorySpaceType>& func);
 
-    void init_vect(const int k, ScalarType* vv, const char dis) const;
-
     template <typename InputScalarType>
     void getValues(const int k, InputScalarType* vv) const;
-    // template <typename MemorySpaceType>
-    // void getValues(const int k, float* vv) const;
 
     static void printTimers(std::ostream& os)
     {
