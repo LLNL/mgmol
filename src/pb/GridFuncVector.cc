@@ -8,6 +8,7 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "GridFuncVector.h"
+#include "MGkernels.h"
 #include "MGmol_blas1.h"
 #include "MPIdata.h"
 #include "mputils.h"
@@ -1662,21 +1663,16 @@ void GridFuncVector<ScalarType, MemorySpaceType>::restrict3D(
 {
     if (!updated_boundaries_) trade_boundaries();
 
-    for (short k = 0; k < nfunc_; k++)
-    {
-        functions_[k]->restrict3D(*ucoarse.functions_[k]);
-    }
+    MGkernelRestrict3D(data(), grid_, ucoarse.data(), ucoarse.grid(), nfunc_);
 }
+
 template <typename ScalarType, typename MemorySpaceType>
 void GridFuncVector<ScalarType, MemorySpaceType>::extend3D(
     GridFuncVector& ucoarse)
 {
     if (!ucoarse.updated_boundaries_) ucoarse.trade_boundaries();
 
-    for (short k = 0; k < nfunc_; k++)
-    {
-        functions_[k]->extend3D(*ucoarse.functions_[k]);
-    }
+    MGkernelExtend3D(ucoarse.data(), ucoarse.grid(), data(), grid_, nfunc_);
 
     updated_boundaries_ = false;
 }

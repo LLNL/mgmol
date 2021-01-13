@@ -131,6 +131,7 @@ add_executable(testTradeGhostValues
                ${CMAKE_SOURCE_DIR}/src/pb/PEenv.cc
                ${CMAKE_SOURCE_DIR}/src/pb/GridFunc.cc
                ${CMAKE_SOURCE_DIR}/src/pb/GridFuncVector.cc
+               ${CMAKE_SOURCE_DIR}/src/pb/MGkernels.cc
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
@@ -147,6 +148,7 @@ add_executable(testLaph4
                ${CMAKE_SOURCE_DIR}/src/pb/PEenv.cc
                ${CMAKE_SOURCE_DIR}/src/pb/GridFunc.cc
                ${CMAKE_SOURCE_DIR}/src/pb/GridFuncVector.cc
+               ${CMAKE_SOURCE_DIR}/src/pb/MGkernels.cc
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
@@ -166,6 +168,7 @@ add_executable(testBatchLaph4
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
+               ${CMAKE_SOURCE_DIR}/src/pb/MGkernels.cc
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 add_executable(testGramMatrix

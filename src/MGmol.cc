@@ -40,6 +40,7 @@
 #include "LocGridOrbitals.h"
 #include "LocalizationRegions.h"
 #include "MDfiles.h"
+#include "MGkernels.h"
 #include "MGmol.h"
 #include "MLWFTransform.h"
 #include "MPIdata.h"
@@ -888,6 +889,7 @@ void MGmol<OrbitalsType>::printTimers()
     pb::GridFuncInterface::printTimers(os_);
     pb::GridFuncVector<double>::printTimers(os_);
     pb::GridFuncVector<float>::printTimers(os_);
+    pb::printMGkernelTimers(os_);
     pb::FDoperInterface::printTimers(os_);
     OrbitalsType::printTimers(os_);
     SinCosOps<OrbitalsType>::printTimers(os_);
