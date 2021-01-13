@@ -99,7 +99,7 @@ void MGkernelExtend3D(ScalarType* coarse_data, const Grid& coarse_grid,
                     int izf = ify + iz;
                     fine_data[izf]
                         = 0.5 * (fine_data[izf - 1] + fine_data[izf + 1]);
-                    assert(izf < static_cast<int>(fine_grid.sizeg()));
+                    assert(izf < static_cast<int>(nfunc * fine_grid.sizeg()));
                 }
             }
 
@@ -115,7 +115,7 @@ void MGkernelExtend3D(ScalarType* coarse_data, const Grid& coarse_grid,
                     fine_data[izf] = 0.5
                                      * (fine_data[izf + incy_fine]
                                            + fine_data[izf - incy_fine]);
-                    assert(izf < static_cast<int>(fine_grid.sizeg()));
+                    assert(izf < static_cast<int>(nfunc * fine_grid.sizeg()));
                 }
 
                 for (int iz = nghosts_fine + 1; iz < dimz + nghosts_fine;
@@ -127,7 +127,7 @@ void MGkernelExtend3D(ScalarType* coarse_data, const Grid& coarse_grid,
                                            + fine_data[izf + 1 - incy_fine]
                                            + fine_data[izf - 1 + incy_fine]
                                            + fine_data[izf - 1 - incy_fine]);
-                    assert(izf < static_cast<int>(fine_grid.sizeg()));
+                    assert(izf < static_cast<int>(nfunc * fine_grid.sizeg()));
                 }
             }
         }
