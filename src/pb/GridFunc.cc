@@ -3037,6 +3037,8 @@ void GridFunc<T>::extend3D(GridFunc<T>& ucoarse)
 {
     extend3D_tm_.start();
 
+    ucoarse.trade_boundaries();
+
     MGkernelExtend3D(ucoarse.uu(), ucoarse.grid(), this->uu(), grid_, 1);
 
     updated_boundaries_ = false;
@@ -3048,6 +3050,8 @@ template <typename T>
 void GridFunc<T>::restrict3D(GridFunc<T>& ucoarse)
 {
     restrict3D_tm_.start();
+
+    trade_boundaries();
 
     MGkernelRestrict3D<T>(this->uu(), grid_, ucoarse.uu(), ucoarse.grid(), 1);
 

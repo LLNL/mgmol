@@ -171,6 +171,19 @@ add_executable(testBatchLaph4
                ${CMAKE_SOURCE_DIR}/src/pb/MGkernels.cc
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
+add_executable(testMGkernels
+               ${CMAKE_SOURCE_DIR}/tests/testMGkernels.cc
+               ${CMAKE_SOURCE_DIR}/src/magma_singleton.cc
+               ${CMAKE_SOURCE_DIR}/src/pb/Grid.cc
+               ${CMAKE_SOURCE_DIR}/src/pb/PEenv.cc
+               ${CMAKE_SOURCE_DIR}/src/pb/GridFunc.cc
+               ${CMAKE_SOURCE_DIR}/src/pb/GridFuncVector.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
+               ${CMAKE_SOURCE_DIR}/src/pb/MGkernels.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
+               ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 add_executable(testGramMatrix
                ${CMAKE_SOURCE_DIR}/tests/testGramMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/GramMatrix.cc
@@ -281,6 +294,9 @@ add_test(NAME testLaph4
 add_test(NAME testBatchLaph4
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testBatchLaph4)
+add_test(NAME testtMGkernels
+         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+                 ${CMAKE_CURRENT_BINARY_DIR}/testMGkernels)
 add_test(NAME testGramMatrix
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testGramMatrix)
@@ -477,6 +493,8 @@ if(${MAGMA_FOUND})
     MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
   target_link_libraries(testBatchLaph4 PRIVATE ${BLAS_LIBRARIES}
     MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
+  target_link_libraries(testMGkernels PRIVATE ${BLAS_LIBRARIES}
+    MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
   target_link_libraries(testGramMatrix PRIVATE ${SCALAPACK_LIBRARIES}
     ${BLAS_LIBRARIES} MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
   target_link_libraries(testDensityMatrix PRIVATE ${SCALAPACK_LIBRARIES}
@@ -514,6 +532,8 @@ else()
   target_link_libraries(testLaph4 PRIVATE ${BLAS_LIBRARIES}
     MPI::MPI_CXX OpenMP::OpenMP_CXX)
   target_link_libraries(testBatchLaph4 PRIVATE ${BLAS_LIBRARIES}
+    MPI::MPI_CXX OpenMP::OpenMP_CXX)
+  target_link_libraries(testMGkernels PRIVATE ${BLAS_LIBRARIES}
     MPI::MPI_CXX OpenMP::OpenMP_CXX)
   target_link_libraries(testGramMatrix PRIVATE ${SCALAPACK_LIBRARIES}
     ${BLAS_LIBRARIES} MPI::MPI_CXX OpenMP::OpenMP_CXX)
