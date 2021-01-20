@@ -8,15 +8,16 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "GridFunc.h"
+#include "MGkernels.h"
 #include "MGmol_MPI.h"
 #include "MGmol_blas1.h"
 #include "mputils.h"
 #include "radial_functions.h"
+
+#include <cmath>
 #include <cstdarg>
 #include <cstdlib>
 #include <fstream>
-
-#include <cmath>
 #include <iomanip>
 #include <iostream>
 
@@ -3036,179 +3037,9 @@ void GridFunc<T>::extend3D(GridFunc<T>& ucoarse)
 {
     extend3D_tm_.start();
 
-    // assert(bc_==ucoarse.bc());
-    assert(mype_env().n_mpi_tasks() == ucoarse.grid().mype_env().n_mpi_tasks());
-    assert(dim(0) >= 2 * ucoarse.dim(0));
-    assert(dim(1) >= 2 * ucoarse.dim(1));
-    assert(dim(2) >= 2 * ucoarse.dim(2));
-    assert(ghost_pt() > 0);
+    ucoarse.trade_boundaries();
 
-    const int incx_fine   = grid_.inc(0);
-    const int incy_fine   = grid_.inc(1);
-    const int incy_coarse = ucoarse.grid_.inc(1);
-    const int incx_coarse = ucoarse.grid_.inc(0);
-
-    const short nghosts_fine   = ghost_pt();
-    const short nghosts_coarse = ucoarse.ghost_pt();
-
-    const int cdimx = ucoarse.dim(0);
-    const int cdimy = ucoarse.dim(1);
-    const int cdimz = ucoarse.dim(2);
-
-    int ione = 1;
-    int itwo = 2;
-
-    bc_[0] = ucoarse.bc_[0];
-    bc_[1] = ucoarse.bc_[1];
-    bc_[2] = ucoarse.bc_[2];
-
-    if (!ucoarse.updated_boundaries()) ucoarse.trade_boundaries();
-
-    // loop over coarse grid
-    // to inject coarse values on fine grid, including first ghost
-    for (int ix = 0; ix <= cdimx; ix++)
-    {
-
-        const int ifx = incx_fine * (2 * ix + nghosts_fine) + nghosts_fine;
-        const int icx = incx_coarse * (ix + nghosts_coarse) + nghosts_coarse;
-
-        for (int iy = 0; iy <= cdimy; iy++)
-        {
-
-            const int ify = ifx + incy_fine * (2 * iy + nghosts_fine);
-            const int icy = icx + incy_coarse * (iy + nghosts_coarse);
-
-            int size = cdimz + 1;
-            Tcopy(&size, ucoarse.uu(icy), &ione, &uu_[ify], &itwo);
-        }
-    }
-
-    // now work with fine level only
-    for (int ix = nghosts_fine; ix < dim_[0] + nghosts_fine; ix = ix + 2)
-    {
-
-        int ifx = incx_fine * ix;
-
-        for (int iy = nghosts_fine; iy < dim_[1] + nghosts_fine; iy = iy + 2)
-        {
-
-            int ify = ifx + incy_fine * iy;
-
-            for (int iz = nghosts_fine + 1; iz < dim_[2] + nghosts_fine;
-                 iz     = iz + 2)
-            {
-
-                int izf = ify + iz;
-
-                uu_[izf] = 0.5 * (uu_[izf - 1] + uu_[izf + 1]);
-                assert(izf < static_cast<int>(grid_.sizeg()));
-            }
-        }
-
-        for (int iy = nghosts_fine + 1; iy < dim_[1] + nghosts_fine;
-             iy     = iy + 2)
-        {
-
-            int ify = ifx + incy_fine * iy;
-
-            for (int iz = nghosts_fine; iz < dim_[2] + nghosts_fine;
-                 iz     = iz + 2)
-            {
-
-                int izf = ify + iz;
-
-                uu_[izf] = 0.5 * (uu_[izf + incy_fine] + uu_[izf - incy_fine]);
-
-                assert(izf < static_cast<int>(grid_.sizeg()));
-            }
-
-            for (int iz = nghosts_fine + 1; iz < dim_[2] + nghosts_fine;
-                 iz     = iz + 2)
-            {
-
-                int izf = ify + iz;
-
-                uu_[izf]
-                    = 0.25
-                      * (uu_[izf + 1 + incy_fine] + uu_[izf + 1 - incy_fine]
-                            + uu_[izf - 1 + incy_fine]
-                            + uu_[izf - 1 - incy_fine]);
-
-                assert(izf < static_cast<int>(grid_.sizeg()));
-            }
-        }
-    }
-
-    for (int ix = nghosts_fine + 1; ix < dim_[0] + nghosts_fine; ix = ix + 2)
-    {
-
-        int ifx = incx_fine * ix;
-
-        for (int iy = nghosts_fine; iy < dim_[1] + nghosts_fine; iy = iy + 2)
-        {
-
-            int ify = ifx + incy_fine * iy;
-
-            for (int iz = nghosts_fine + 1; iz < dim_[2] + nghosts_fine;
-                 iz     = iz + 2)
-            {
-
-                int izf = ify + iz;
-
-                uu_[izf]
-                    = 0.25
-                      * (uu_[izf + incx_fine + 1] + uu_[izf + incx_fine - 1]
-                            + uu_[izf - incx_fine + 1]
-                            + uu_[izf - incx_fine - 1]);
-            }
-
-            for (int iz = nghosts_fine; iz < dim_[2] + nghosts_fine;
-                 iz     = iz + 2)
-            {
-
-                int izf = ify + iz;
-
-                uu_[izf] = 0.5 * (uu_[izf + incx_fine] + uu_[izf - incx_fine]);
-            }
-        }
-
-        for (int iy = nghosts_fine + 1; iy < dim_[1] + nghosts_fine;
-             iy     = iy + 2)
-        {
-
-            int ify = ifx + incy_fine * iy;
-
-            for (int iz = nghosts_fine + 1; iz < dim_[2] + nghosts_fine;
-                 iz     = iz + 2)
-            {
-
-                int izf = ify + iz;
-
-                uu_[izf] = 0.125
-                           * (uu_[izf + incx_fine + incy_fine + 1]
-                                 + uu_[izf + incx_fine + incy_fine - 1]
-                                 + uu_[izf + incx_fine - incy_fine + 1]
-                                 + uu_[izf + incx_fine - incy_fine - 1]
-                                 + uu_[izf - incx_fine + incy_fine + 1]
-                                 + uu_[izf - incx_fine + incy_fine - 1]
-                                 + uu_[izf - incx_fine - incy_fine + 1]
-                                 + uu_[izf - incx_fine - incy_fine - 1]);
-            }
-
-            for (int iz = nghosts_fine; iz < dim_[2] + nghosts_fine;
-                 iz     = iz + 2)
-            {
-
-                int izf = ify + iz;
-
-                uu_[izf] = 0.25
-                           * (uu_[izf + incx_fine + incy_fine]
-                                 + uu_[izf + incx_fine - incy_fine]
-                                 + uu_[izf - incx_fine + incy_fine]
-                                 + uu_[izf - incx_fine - incy_fine]);
-            }
-        }
-    }
+    MGkernelExtend3D(ucoarse.uu(), ucoarse.grid(), this->uu(), grid_, 1);
 
     updated_boundaries_ = false;
 
@@ -3220,83 +3051,9 @@ void GridFunc<T>::restrict3D(GridFunc<T>& ucoarse)
 {
     restrict3D_tm_.start();
 
-    assert(dim(0) == 2 * ucoarse.dim(0));
-    assert(dim(1) == 2 * ucoarse.dim(1));
-    assert(dim(2) == 2 * ucoarse.dim(2));
+    trade_boundaries();
 
-    ucoarse.set_bc(bc_[0], bc_[1], bc_[2]);
-
-    const int incx_fine   = grid_.inc(0);
-    const int incy_fine   = grid_.inc(1);
-    const int incy_coarse = ucoarse.inc(1);
-    const int incx_coarse = ucoarse.inc(0);
-
-    const short nghosts_fine   = ghost_pt();
-    const short nghosts_coarse = ucoarse.ghost_pt();
-
-    if (!updated_boundaries_) trade_boundaries();
-
-    int ixf = nghosts_fine * incx_fine;
-    int ixc = nghosts_coarse * incx_coarse;
-
-    const int cdim0 = ucoarse.dim(0);
-    const int cdim1 = ucoarse.dim(1);
-    const int cdim2 = ucoarse.dim(2);
-
-    // loop over coarse grid
-    for (int ix = nghosts_fine; ix < cdim0 + nghosts_fine; ix++)
-    {
-
-        int iyf = ixf + incy_fine * nghosts_fine;
-        int iyc = ixc + incy_coarse * nghosts_coarse;
-
-        for (int iy = nghosts_fine; iy < cdim1 + nghosts_fine; iy++)
-        {
-
-            int izf = iyf + nghosts_fine;
-
-            const T* const u0    = uu_ + izf;
-            const T* const umx   = u0 - incx_fine;
-            const T* const upx   = u0 + incx_fine;
-            const T* const umy   = u0 - incy_fine;
-            const T* const upy   = u0 + incy_fine;
-            const T* const umxpy = u0 - incx_fine + incy_fine;
-            const T* const upxpy = u0 + incx_fine + incy_fine;
-            const T* const umxmy = u0 - incx_fine - incy_fine;
-            const T* const upxmy = u0 + incx_fine - incy_fine;
-            for (int iz = 0; iz < cdim2; iz++)
-            {
-
-                const int twoiz = 2 * iz;
-
-                double face = (double)upx[twoiz] + (double)umx[twoiz]
-                              + (double)upy[twoiz] + (double)umy[twoiz]
-                              + (double)u0[twoiz - 1] + (double)u0[twoiz + 1];
-
-                double corner
-                    = (double)upxpy[twoiz - 1] + (double)upxpy[twoiz + 1]
-                      + (double)upxmy[twoiz - 1] + (double)upxmy[twoiz + 1]
-                      + (double)umxpy[twoiz - 1] + (double)umxpy[twoiz + 1]
-                      + (double)umxmy[twoiz - 1] + (double)umxmy[twoiz + 1];
-
-                double edge = (double)upy[twoiz - 1] + (double)upy[twoiz + 1]
-                              + (double)umy[twoiz - 1] + (double)umy[twoiz + 1]
-                              + (double)upx[twoiz - 1] + (double)upx[twoiz + 1]
-                              + (double)umx[twoiz - 1] + (double)umx[twoiz + 1]
-                              + (double)umxmy[twoiz] + (double)upxmy[twoiz]
-                              + (double)umxpy[twoiz] + (double)upxpy[twoiz];
-
-                ucoarse.uu()[iyc + iz + nghosts_coarse] = (T)(
-                    inv64 * (8. * u0[twoiz] + 4. * face + 2. * edge + corner));
-            }
-
-            iyf += 2 * incy_fine;
-            iyc += incy_coarse;
-        }
-
-        ixf += 2 * incx_fine;
-        ixc += incx_coarse;
-    }
+    MGkernelRestrict3D<T>(this->uu(), grid_, ucoarse.uu(), ucoarse.grid(), 1);
 
     ucoarse.set_updated_boundaries(false);
 
