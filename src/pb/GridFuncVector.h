@@ -271,10 +271,9 @@ public:
     size_t size() const { return nfunc_; }
 
     // pointwise products this=A*B for each vector in this
-    void prod(GridFuncVector<ScalarType, MemorySpaceType>& A,
-        const GridFunc<double>& B);
-    void prod(GridFuncVector<ScalarType, MemorySpaceType>& A,
-        const GridFunc<float>& B);
+    template <typename ScalarType2>
+    void pointwiseProduct(GridFuncVector<ScalarType, MemorySpaceType>& A,
+        const GridFunc<ScalarType2>& B);
 
     void extend3D(GridFuncVector<ScalarType, MemorySpaceType>&);
     void restrict3D(GridFuncVector<ScalarType, MemorySpaceType>&);
