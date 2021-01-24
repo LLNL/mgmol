@@ -114,7 +114,7 @@ void Hamiltonian<T>::applyLocal(const int ncolors, T& phi, T& hphi)
             mygrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2], gid);
         pb::GridFuncVector<ORBDTYPE, memory_space_type>& gfvphi(
             *phi.getPtDataWGhosts());
-        gfvw1.prod(gfvphi, gfpot);
+        gfvw1.pointwiseProduct(gfvphi, gfpot);
 
         pb::GridFunc<ORBDTYPE> gf_work1(
             mygrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);

@@ -84,9 +84,12 @@ void GridFuncVector<ScalarType, MemorySpaceType>::setup()
     assert(dimy_ >= nghosts_);
     assert(dimz_ >= nghosts_);
 }
+
 template <typename ScalarType, typename MemorySpaceType>
-void GridFuncVector<ScalarType, MemorySpaceType>::prod(
-    GridFuncVector<ScalarType, MemorySpaceType>& A, const GridFunc<double>& B)
+template <typename ScalarType2>
+void GridFuncVector<ScalarType, MemorySpaceType>::pointwiseProduct(
+    GridFuncVector<ScalarType, MemorySpaceType>& A,
+    const GridFunc<ScalarType2>& B)
 {
     assert(A.grid_.sizeg() == grid_.sizeg());
     assert(B.grid().sizeg() == grid_.sizeg());
@@ -95,66 +98,22 @@ void GridFuncVector<ScalarType, MemorySpaceType>::prod(
     prod_tm_.start();
 
     const int bsize = 64;
-    const int ng    = grid_.sizeg();
-    const int nb    = ng / bsize;
-    const int nf    = (int)A.size();
+    const int ngpts = grid_.sizeg();
+    const int nb    = ngpts / bsize;
+    const int nf    = (int)size();
 
-    // loop over blocks
+    // loop over blocks (subdomains) to reuse B data
+    // for several columns of this and A
     for (int ib = 0; ib <= nb; ib++)
     {
-
-        const int ibstart             = ib * bsize;
-        const double* __restrict__ v2 = B.uu(ibstart);
-        const int npt                 = (ib < nb) ? bsize : ng - ibstart;
+        const int ibstart                  = ib * bsize;
+        const ScalarType2* __restrict__ v2 = B.uu(ibstart);
+        const int npt = (ib < nb) ? bsize : ngpts - ibstart;
         assert(npt >= 0);
 
         if (npt > 0)
             for (int j = 0; j < nf; j++)
             {
-                ScalarType* __restrict__ pu       = getDataPtr(j, ibstart);
-                const ScalarType* __restrict__ v1 = A.getDataPtr(j, ibstart);
-                for (int i = 0; i < npt; i++)
-                {
-                    pu[i] = (ScalarType)(v1[i] * v2[i]);
-                }
-            }
-    }
-    for (int j = 0; j < nf; j++)
-    {
-        functions_[j]->set_updated_boundaries(
-            A.functions_[j]->updated_boundaries() && B.updated_boundaries());
-    }
-
-    prod_tm_.stop();
-}
-
-template <typename ScalarType, typename MemorySpaceType>
-void GridFuncVector<ScalarType, MemorySpaceType>::prod(
-    GridFuncVector<ScalarType, MemorySpaceType>& A, const GridFunc<float>& B)
-{
-    assert(A.grid_.sizeg() == grid_.sizeg());
-    assert(B.grid().sizeg() == grid_.sizeg());
-    assert(A.size() == size());
-
-    prod_tm_.start();
-
-    const int bsize = 64;
-    const int ng    = grid_.sizeg();
-    const int nb    = ng / bsize;
-    const int nf    = (int)A.size();
-
-    // loop over blocks
-    for (int ib = 0; ib <= nb; ib++)
-    {
-        const int ibstart            = ib * bsize;
-        const float* __restrict__ v2 = B.uu(ibstart);
-        const int npt                = (ib < nb) ? bsize : ng - ibstart;
-        assert(npt >= 0);
-
-        if (npt > 0)
-            for (int j = 0; j < nf; j++)
-            {
-
                 ScalarType* __restrict__ pu       = getDataPtr(j, ibstart);
                 const ScalarType* __restrict__ v1 = A.getDataPtr(j, ibstart);
                 for (int i = 0; i < npt; i++)
@@ -1676,6 +1635,7 @@ void GridFuncVector<ScalarType, MemorySpaceType>::extend3D(
 
     updated_boundaries_ = false;
 }
+
 template <typename ScalarType, typename MemorySpaceType>
 GridFuncVector<ScalarType, MemorySpaceType>&
 GridFuncVector<ScalarType, MemorySpaceType>::operator-=(
@@ -1692,6 +1652,7 @@ GridFuncVector<ScalarType, MemorySpaceType>::operator-=(
 
     return *this;
 }
+
 template <typename ScalarType, typename MemorySpaceType>
 void GridFuncVector<ScalarType, MemorySpaceType>::axpy(
     const double alpha, const GridFuncVector<ScalarType, MemorySpaceType>& func)
@@ -2419,6 +2380,8 @@ template void GridFuncVector<double, MemorySpace::Host>::getValues<float>(
     const int, float*) const;
 template void GridFuncVector<double, MemorySpace::Host>::getValues<double>(
     const int, double*) const;
+template void GridFuncVector<double, MemorySpace::Host>::pointwiseProduct(
+    GridFuncVector<double, MemorySpace::Host>& A, const GridFunc<double>& B);
 #ifdef HAVE_MAGMA
 template class GridFuncVector<double, MemorySpace::Device>;
 template class GridFuncVector<float, MemorySpace::Device>;
@@ -2430,6 +2393,8 @@ template void GridFuncVector<double, MemorySpace::Device>::getValues<float>(
     const int, float*) const;
 template void GridFuncVector<double, MemorySpace::Device>::getValues<double>(
     const int, double*) const;
+template void GridFuncVector<double, MemorySpace::Device>::pointwiseProduct(
+    GridFuncVector<double, MemorySpace::Device>& A, const GridFunc<double>& B);
 #endif
 
 } // namespace pb
