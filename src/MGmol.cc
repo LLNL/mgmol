@@ -27,6 +27,7 @@
 #include "Electrostatic.h"
 #include "Energy.h"
 #include "EnergySpreadPenalty.h"
+#include "FDkernels.h"
 #include "FDoper.h"
 #include "FIRE.h"
 #include "Forces.h"
@@ -890,6 +891,7 @@ void MGmol<OrbitalsType>::printTimers()
     pb::GridFuncVector<double>::printTimers(os_);
     pb::GridFuncVector<float>::printTimers(os_);
     pb::printMGkernelTimers(os_);
+    pb::printFDkernelTimers(os_);
     pb::FDoperInterface::printTimers(os_);
     OrbitalsType::printTimers(os_);
     SinCosOps<OrbitalsType>::printTimers(os_);

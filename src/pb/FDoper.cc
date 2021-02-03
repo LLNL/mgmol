@@ -7,12 +7,12 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id: FDoper.cc,v 1.22 2010/01/28 22:56:31 jeanluc Exp $
 #include "FDoper.h"
-#include "tools.h"
-#include <iomanip>
-
+#include "FDkernels.h"
 #include "memory_space.h"
+#include "tools.h"
+
+#include <iomanip>
 
 #ifdef HAVE_MAGMA
 #include "magma_v2.h"
@@ -308,7 +308,7 @@ void FDoper<T>::del2_2nd(GridFunc<T>& A, GridFunc<T>& B) const
 {
     if (!A.updated_boundaries()) A.trade_boundaries();
 
-    del2_2nd(A.grid(), A.uu(), B.uu(), 1, MemorySpace::Host());
+    FDkernelDel2_2nd(A.grid(), A.uu(), B.uu(), 1, MemorySpace::Host());
 
     B.set_updated_boundaries(0);
 }
@@ -318,62 +318,10 @@ void FDoper<T>::del2_2nd(GridFuncVector<T>& A, GridFuncVector<T>& B) const
 {
     A.trade_boundaries();
 
-    del2_2nd(A.grid(), A.data(), B.data(), A.size(), MemorySpace::Host());
+    FDkernelDel2_2nd(
+        A.grid(), A.data(), B.data(), A.size(), MemorySpace::Host());
 
     B.set_updated_boundaries(0);
-}
-
-template <class T>
-void FDoper<T>::del2_2nd(
-    const Grid& grid, T* v, T* b, const size_t nfunc, MemorySpace::Host) const
-{
-    assert(grid.ghost_pt() > 0);
-    MemorySpace::assert_is_host_ptr(b);
-    MemorySpace::assert_is_host_ptr(v);
-
-    del2_2nd_tm_.start();
-
-    double cc        = inv_h2(0);
-    const double c1x = -cc;
-
-    cc               = inv_h2(1);
-    const double c1y = -cc;
-
-    cc               = inv_h2(2);
-    const double c1z = -cc;
-    const double c0  = -2. * (c1x + c1y + c1z);
-
-    const int dim0 = grid.dim(0);
-    const int dim1 = grid.dim(1);
-    const int dim2 = grid.dim(2);
-
-    const size_t ngpts = grid.sizeg();
-
-    int incx     = grid.inc(0);
-    int incy     = grid.inc(1);
-    const int ng = grid.ghost_pt();
-
-#pragma omp parallel for collapse(4)
-    for (size_t ifunc = 0; ifunc < nfunc; ifunc++)
-    {
-        for (int ix = 0; ix < dim0; ix++)
-        {
-            for (int iy = 0; iy < dim1; iy++)
-            {
-                for (int iz = 0; iz < dim2; iz++)
-                {
-                    int iiz = ifunc * ngpts
-                              + ((ix + ng) * incx + (iy + ng) * incy) + iz + ng;
-
-                    b[iiz] = c0 * v[iiz] + c1x * (v[iiz - incx] + v[iiz + incx])
-                             + c1y * (v[iiz - incy] + v[iiz + incy])
-                             + c1z * (v[iiz - 1] + v[iiz + 1]);
-                }
-            }
-        }
-    }
-
-    del2_2nd_tm_.stop();
 }
 
 template <class T>

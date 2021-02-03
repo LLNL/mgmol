@@ -24,6 +24,7 @@ set(SOURCES GridFuncVector.cc
        PBh6.cc 
        PBh8.cc
        MGkernels.cc
+       FDkernels.cc
 )
 
 add_library(mgmol_pb ${SOURCES})
