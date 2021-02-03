@@ -287,6 +287,26 @@ public:
         rhs.set_updated_boundaries(0);
     }
 
+    void del2_6th(GridFuncVector<ScalarType>& rhs)
+    {
+        trade_boundaries();
+
+        FDkernelDel2_6th(
+            grid(), data(), rhs.data(), size(), MemorySpace::Host());
+
+        rhs.set_updated_boundaries(0);
+    }
+
+    void del2_8th(GridFuncVector<ScalarType>& rhs)
+    {
+        trade_boundaries();
+
+        FDkernelDel2_8th(
+            grid(), data(), rhs.data(), size(), MemorySpace::Host());
+
+        rhs.set_updated_boundaries(0);
+    }
+
     void trade_boundaries();
     void trade_boundaries_colors(const short, const short);
 

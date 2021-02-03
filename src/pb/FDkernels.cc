@@ -250,6 +250,198 @@ void FDkernelDel2_4th(const Grid& grid, ScalarType* A, ScalarType* B,
 }
 #endif
 
+template <typename ScalarType>
+void FDkernelDel2_6th(const Grid& grid, ScalarType* v, ScalarType* u,
+    const size_t nfunc, MemorySpace::Host)
+{
+    assert(grid.ghost_pt() > 2);
+
+    double inv_h2[3] = { 1. / (grid.hgrid(0) * grid.hgrid(0)),
+        1. / (grid.hgrid(1) * grid.hgrid(1)),
+        1. / (grid.hgrid(2) * grid.hgrid(2)) };
+
+    double cc        = (1. / 180.) * inv_h2[0];
+    const double c1x = -270. * cc;
+    const double c2x = 27. * cc;
+    const double c3x = -2. * cc;
+
+    cc               = (1. / 180.) * inv_h2[1];
+    const double c1y = -270. * cc;
+    const double c2y = 27. * cc;
+    const double c3y = -2. * cc;
+
+    cc               = (1. / 180.) * inv_h2[2];
+    const double c1z = -270. * cc;
+    const double c2z = 27. * cc;
+    const double c3z = -2. * cc;
+
+    const double c0
+        = -2. * (c1x + c2x + c3x + c1y + c2y + c3y + c1z + c2z + c3z);
+
+    const int incx = grid.inc(0);
+    const int incy = grid.inc(1);
+
+    const int incx2 = 2 * grid.inc(0);
+    const int incy2 = 2 * grid.inc(1);
+    const int incx3 = 3 * grid.inc(0);
+    const int incy3 = 3 * grid.inc(1);
+
+    const int dim0     = grid.dim(0);
+    const int dim1     = grid.dim(1);
+    const int dim2     = grid.dim(2);
+    const size_t ngpts = grid.sizeg();
+
+    const int gpt = grid.ghost_pt();
+
+    int iix = gpt * incx;
+
+    for (size_t ifunc = 0; ifunc < nfunc; ifunc++)
+    {
+        for (int ix = 0; ix < dim0; ix++)
+        {
+            int iiy = iix + gpt * incy + ifunc * ngpts;
+
+            for (int iy = 0; iy < dim1; iy++)
+            {
+                int iiz = iiy + gpt;
+
+                for (int iz = 0; iz < dim2; iz++)
+                {
+                    u[iiz] = (ScalarType)(
+                        c0 * (double)v[iiz]
+
+                        + c1x * ((double)v[iiz - incx] + (double)v[iiz + incx])
+                        + c1y * ((double)v[iiz - incy] + (double)v[iiz + incy])
+                        + c1z * ((double)v[iiz - 1] + (double)v[iiz + 1])
+
+                        + c2x
+                              * ((double)v[iiz - incx2]
+                                    + (double)v[iiz + incx2])
+                        + c2y
+                              * ((double)v[iiz - incy2]
+                                    + (double)v[iiz + incy2])
+                        + c2z * ((double)v[iiz - 2] + (double)v[iiz + 2])
+
+                        + c3x
+                              * ((double)v[iiz - incx3]
+                                    + (double)v[iiz + incx3])
+                        + c3y
+                              * ((double)v[iiz - incy3]
+                                    + (double)v[iiz + incy3])
+                        + c3z * ((double)v[iiz - 3] + (double)v[iiz + 3]));
+
+                    iiz++;
+                }
+
+                iiy += incy;
+            }
+
+            iix += incx;
+        }
+    }
+}
+
+template <typename ScalarType>
+void FDkernelDel2_8th(const Grid& grid, ScalarType* v, ScalarType* u,
+    const size_t nfunc, MemorySpace::Host)
+{
+    double inv_h2[3] = { 1. / (grid.hgrid(0) * grid.hgrid(0)),
+        1. / (grid.hgrid(1) * grid.hgrid(1)),
+        1. / (grid.hgrid(2) * grid.hgrid(2)) };
+
+    double cc        = (1. / 5040.) * inv_h2[0];
+    const double c1x = -8064. * cc;
+    const double c2x = 1008. * cc;
+    const double c3x = -128. * cc;
+    const double c4x = 9. * cc;
+
+    cc               = (1. / 5040.) * inv_h2[1];
+    const double c1y = -8064. * cc;
+    const double c2y = 1008. * cc;
+    const double c3y = -128. * cc;
+    const double c4y = 9. * cc;
+
+    cc               = (1. / 5040.) * inv_h2[2];
+    const double c1z = -8064. * cc;
+    const double c2z = 1008. * cc;
+    const double c3z = -128. * cc;
+    const double c4z = 9. * cc;
+
+    const double c0 = -2.
+                      * (c1x + c2x + c3x + c4x + c1y + c2y + c3y + c4y + c1z
+                            + c2z + c3z + c4z);
+
+    const int incx  = grid.inc(0);
+    const int incy  = grid.inc(1);
+    const int incx2 = 2 * grid.inc(0);
+    const int incy2 = 2 * grid.inc(1);
+    const int incx3 = 3 * grid.inc(0);
+    const int incy3 = 3 * grid.inc(1);
+    const int incx4 = 4 * grid.inc(0);
+    const int incy4 = 4 * grid.inc(1);
+
+    const int dim0     = grid.dim(0);
+    const int dim1     = grid.dim(1);
+    const int dim2     = grid.dim(2);
+    const size_t ngpts = grid.sizeg();
+
+    const int gpt = grid.ghost_pt();
+    int iix       = gpt * incx;
+
+    for (size_t ifunc = 0; ifunc < nfunc; ifunc++)
+    {
+        for (int ix = 0; ix < dim0; ix++)
+        {
+            int iiy = iix + gpt * incy + ifunc * ngpts;
+
+            for (int iy = 0; iy < dim1; iy++)
+            {
+                int iiz = iiy + gpt;
+
+                for (int iz = 0; iz < dim2; iz++)
+                {
+                    u[iiz] = (ScalarType)(
+                        c0 * (double)v[iiz]
+
+                        + c1x * ((double)v[iiz - incx] + (double)v[iiz + incx])
+                        + c1y * ((double)v[iiz - incy] + (double)v[iiz + incy])
+                        + c1z * ((double)v[iiz - 1] + (double)v[iiz + 1])
+
+                        + c2x
+                              * ((double)v[iiz - incx2]
+                                    + (double)v[iiz + incx2])
+                        + c2y
+                              * ((double)v[iiz - incy2]
+                                    + (double)v[iiz + incy2])
+                        + c2z * ((double)v[iiz - 2] + (double)v[iiz + 2])
+
+                        + c3x
+                              * ((double)v[iiz - incx3]
+                                    + (double)v[iiz + incx3])
+                        + c3y
+                              * ((double)v[iiz - incy3]
+                                    + (double)v[iiz + incy3])
+                        + c3z * ((double)v[iiz - 3] + (double)v[iiz + 3])
+
+                        + c4x
+                              * ((double)v[iiz - incx4]
+                                    + (double)v[iiz + incx4])
+                        + c4y
+                              * ((double)v[iiz - incy4]
+                                    + (double)v[iiz + incy4])
+                        + c4z * ((double)v[iiz - 4] + (double)v[iiz + 4]));
+
+                    iiz++;
+                }
+
+                iiy += incy;
+            }
+
+            iix += incx;
+        }
+    }
+}
+
 template void FDkernelDel2_2nd<double>(const Grid& grid, double* v, double* b,
     const size_t nfunc, MemorySpace::Host);
 template void FDkernelDel2_2nd<float>(const Grid& grid, float* v, float* b,
@@ -258,6 +450,16 @@ template void FDkernelDel2_2nd<float>(const Grid& grid, float* v, float* b,
 template void FDkernelDel2_4th<double>(const Grid& grid, double* v, double* b,
     const size_t nfunc, MemorySpace::Host);
 template void FDkernelDel2_4th<float>(const Grid& grid, float* v, float* b,
+    const size_t nfunc, MemorySpace::Host);
+
+template void FDkernelDel2_6th<double>(const Grid& grid, double* v, double* b,
+    const size_t nfunc, MemorySpace::Host);
+template void FDkernelDel2_6th<float>(const Grid& grid, float* v, float* b,
+    const size_t nfunc, MemorySpace::Host);
+
+template void FDkernelDel2_8th<double>(const Grid& grid, double* v, double* b,
+    const size_t nfunc, MemorySpace::Host);
+template void FDkernelDel2_8th<float>(const Grid& grid, float* v, float* b,
     const size_t nfunc, MemorySpace::Host);
 
 #ifdef HAVE_MAGMA
