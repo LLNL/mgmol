@@ -18,6 +18,12 @@ void FDkernelDel2_2nd(const Grid& grid, ScalarType* v, ScalarType* b,
 template <typename ScalarType>
 void FDkernelDel2_4th(const Grid& grid, ScalarType* v, ScalarType* b,
     const size_t nfunc, MemorySpace::Host);
+
+#ifdef HAVE_MAGMA
+template <typename ScalarType>
+void FDkernelDel2_4th(const Grid& grid, ScalarType* v, ScalarType* b,
+    const size_t nfunc, MemorySpace::Device);
+#endif
 }
 
 #endif
