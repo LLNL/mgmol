@@ -316,12 +316,7 @@ void FDoper<T>::del2_2nd(GridFunc<T>& A, GridFunc<T>& B) const
 template <class T>
 void FDoper<T>::del2_2nd(GridFuncVector<T>& A, GridFuncVector<T>& B) const
 {
-    A.trade_boundaries();
-
-    FDkernelDel2_2nd(
-        A.grid(), A.data(), B.data(), A.size(), MemorySpace::Host());
-
-    B.set_updated_boundaries(0);
+    A.del2_2nd(B);
 }
 
 template <class T>
@@ -339,14 +334,7 @@ void FDoper<T>::del2_4th(GridFunc<T>& A, GridFunc<T>& B) const
 template <class T>
 void FDoper<T>::del2_4th(GridFuncVector<T>& A, GridFuncVector<T>& B) const
 {
-    assert(grid_.ghost_pt() > 1);
-
-    A.trade_boundaries();
-
-    FDkernelDel2_4th(
-        A.grid(), A.data(), B.data(), A.size(), MemorySpace::Host());
-
-    B.set_updated_boundaries(0);
+    A.del2_4th(B);
 }
 
 template <class T>

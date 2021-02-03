@@ -10,6 +10,7 @@
 #ifndef GRIDFUNCVECTOR_H
 #define GRIDFUNCVECTOR_H
 
+#include "FDkernels.h"
 #include "GridFunc.h"
 #include "memory_space.h"
 
@@ -265,6 +266,27 @@ public:
 
         return *functions_[k];
     }
+
+    void del2_4th(GridFuncVector<ScalarType>& rhs)
+    {
+        trade_boundaries();
+
+        FDkernelDel2_4th(
+            grid(), data(), rhs.data(), size(), MemorySpace::Host());
+
+        rhs.set_updated_boundaries(0);
+    }
+
+    void del2_2nd(GridFuncVector<ScalarType>& rhs)
+    {
+        trade_boundaries();
+
+        FDkernelDel2_2nd(
+            grid(), data(), rhs.data(), size(), MemorySpace::Host());
+
+        rhs.set_updated_boundaries(0);
+    }
+
     void trade_boundaries();
     void trade_boundaries_colors(const short, const short);
 
