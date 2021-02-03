@@ -10,6 +10,7 @@
 #ifndef PB_LAPH4_H
 #define PB_LAPH4_H
 
+#include "FDkernels.h"
 #include "Laph2.h"
 
 // Laplacian operator O(h^4)
@@ -86,8 +87,8 @@ public:
     // A->B
     void apply(GridFunc<T>& A, GridFunc<T>& B) override
     {
-        if (!A.updated_boundaries()) A.trade_boundaries();
-        this->del2_4th(A.grid(), A.uu(), B.uu(), 1, MemorySpace::Host());
+        A.trade_boundaries();
+        FDkernelDel2_4th(A.grid(), A.uu(), B.uu(), 1, MemorySpace::Host());
         B.set_updated_boundaries(0);
         B.set_bc(A.bc(0), A.bc(1), A.bc(2));
     }
@@ -104,7 +105,7 @@ public:
     }
     void apply(Grid& Agrid, T* A, T* B, const size_t nfunc)
     {
-        this->del2_4th(Agrid, A, B, nfunc, MemorySpace::Host());
+        FDkernelDel2_4th(Agrid, A, B, nfunc, MemorySpace::Host());
     }
 
     void jacobi(GridFunc<T>&, const GridFunc<T>&, GridFunc<T>&) override;
