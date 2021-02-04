@@ -92,7 +92,7 @@ public:
     {
         assert(A.size() == B.size());
 
-        this->del2_2nd(A, B);
+        A.del2_2nd(B);
     }
 
     void jacobi(GridFunc<T>&, const GridFunc<T>&, GridFunc<T>&) override;

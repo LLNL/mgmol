@@ -277,6 +277,16 @@ public:
         rhs.set_updated_boundaries(0);
     }
 
+    void del2_4th_Mehr(GridFuncVector<ScalarType>& rhs)
+    {
+        trade_boundaries();
+
+        FDkernelDel2_4th_Mehr(
+            grid(), data(), rhs.data(), size(), MemorySpace::Host());
+
+        rhs.set_updated_boundaries(0);
+    }
+
     void del2_2nd(GridFuncVector<ScalarType>& rhs)
     {
         trade_boundaries();

@@ -26,6 +26,10 @@ void FDkernelDel2_4th(const Grid& grid, ScalarType* v, ScalarType* b,
 #endif
 
 template <typename ScalarType>
+void FDkernelDel2_4th_Mehr(const Grid& grid, ScalarType* v, ScalarType* b,
+    const size_t nfunc, MemorySpace::Host);
+
+template <typename ScalarType>
 void FDkernelDel2_6th(const Grid& grid, ScalarType* v, ScalarType* b,
     const size_t nfunc, MemorySpace::Host);
 

@@ -67,9 +67,7 @@ public:
     void apply(GridFuncVector<T, memory_space_type>& A,
         GridFuncVector<T, memory_space_type>& B) override
     {
-        assert(A.size() == B.size());
-        A.trade_boundaries();
-        Lap<T>::del2_4th_Mehr(A, B);
+        A.del2_4th_Mehr(B);
     }
 
     void rhs(GridFunc<T>& A, GridFunc<T>& B) const override

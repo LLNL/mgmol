@@ -101,7 +101,7 @@ public:
     {
         assert(A.size() == B.size());
 
-        this->del2_4th(A, B);
+        A.del2_4th(B);
     }
     void apply(Grid& Agrid, T* A, T* B, const size_t nfunc)
     {

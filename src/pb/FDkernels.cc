@@ -3,6 +3,7 @@
 
 static Timer del2_2nd_tm("del2_2nd");
 static Timer del2_4th_tm("del2_4th");
+static Timer del2_4th_Mehr_tm("del2_4th_Mehr");
 
 const double inv12 = 1. / 12.;
 
@@ -442,6 +443,81 @@ void FDkernelDel2_8th(const Grid& grid, ScalarType* v, ScalarType* u,
     }
 }
 
+template <typename ScalarType>
+void FDkernelDel2_4th_Mehr(const Grid& grid, ScalarType* v, ScalarType* u,
+    const size_t nfunc, MemorySpace::Host)
+{
+    del2_4th_Mehr_tm.start();
+
+    double inv_h2[3] = { 1. / (grid.hgrid(0) * grid.hgrid(0)),
+        1. / (grid.hgrid(1) * grid.hgrid(1)),
+        1. / (grid.hgrid(2) * grid.hgrid(2)) };
+
+    const double c0mehr4  = 16. * inv12 * (inv_h2[0] + inv_h2[1] + inv_h2[2]);
+    const double cxmehr4  = -10. * inv12 * inv_h2[0] + 0.125 * c0mehr4;
+    const double cymehr4  = -10. * inv12 * inv_h2[1] + 0.125 * c0mehr4;
+    const double czmehr4  = -10. * inv12 * inv_h2[2] + 0.125 * c0mehr4;
+    const double cxymehr4 = -inv12 * (inv_h2[0] + inv_h2[1]);
+    const double cyzmehr4 = -inv12 * (inv_h2[2] + inv_h2[1]);
+    const double cxzmehr4 = -inv12 * (inv_h2[0] + inv_h2[2]);
+
+    const int shift = grid.ghost_pt();
+    const int dim0  = grid.dim(0);
+    const int dim1  = grid.dim(1);
+    const int dim2  = grid.dim(2);
+    const int ngpts = grid.sizeg();
+    const int incx  = grid.inc(0);
+    const int incy  = grid.inc(1);
+
+    const int iix0 = shift * incx;
+
+    for (size_t ifunc = 0; ifunc < nfunc; ifunc++)
+    {
+        for (int ix = 0; ix < dim0; ix++)
+        {
+            int iix = iix0 + ix * incx + ifunc * ngpts;
+            int iiy = iix + shift * incy;
+
+            for (int iy = 0; iy < dim1; iy++)
+            {
+                const int iiz = iiy + shift;
+
+                ScalarType* const u0          = u + iiz;
+                const ScalarType* const v0    = v + iiz;
+                const ScalarType* const vmx   = v0 - incx;
+                const ScalarType* const vpx   = v0 + incx;
+                const ScalarType* const vmxmy = vmx - incy;
+                const ScalarType* const vpxmy = vpx - incy;
+                const ScalarType* const vmy   = v0 - incy;
+                const ScalarType* const vpy   = v0 + incy;
+                const ScalarType* const vmxpy = vmx + incy;
+                const ScalarType* const vpxpy = vpx + incy;
+
+                for (int iz = 0; iz < dim2; iz++)
+                {
+                    u0[iz] = (ScalarType)(
+                        c0mehr4 * (double)v0[iz]
+                        + czmehr4 * (double)(v0[iz - 1] + v0[iz + 1])
+                        + cymehr4 * (double)(vmy[iz] + vpy[iz])
+                        + cxmehr4 * (double)(vmx[iz] + vpx[iz])
+                        + cxzmehr4
+                              * (double)(vmx[iz - 1] + vmx[iz + 1] + vpx[iz - 1]
+                                         + vpx[iz + 1])
+                        + cyzmehr4
+                              * (double)(vmy[iz - 1] + vmy[iz + 1] + vpy[iz - 1]
+                                         + vpy[iz + 1])
+                        + cxymehr4
+                              * (double)(vmxmy[iz] + vpxmy[iz] + vmxpy[iz]
+                                         + vpxpy[iz]));
+                }
+
+                iiy += incy;
+            }
+        }
+    }
+    del2_4th_Mehr_tm.stop();
+}
+
 template void FDkernelDel2_2nd<double>(const Grid& grid, double* v, double* b,
     const size_t nfunc, MemorySpace::Host);
 template void FDkernelDel2_2nd<float>(const Grid& grid, float* v, float* b,
@@ -450,6 +526,11 @@ template void FDkernelDel2_2nd<float>(const Grid& grid, float* v, float* b,
 template void FDkernelDel2_4th<double>(const Grid& grid, double* v, double* b,
     const size_t nfunc, MemorySpace::Host);
 template void FDkernelDel2_4th<float>(const Grid& grid, float* v, float* b,
+    const size_t nfunc, MemorySpace::Host);
+
+template void FDkernelDel2_4th_Mehr<double>(const Grid& grid, double* v,
+    double* b, const size_t nfunc, MemorySpace::Host);
+template void FDkernelDel2_4th_Mehr<float>(const Grid& grid, float* v, float* b,
     const size_t nfunc, MemorySpace::Host);
 
 template void FDkernelDel2_6th<double>(const Grid& grid, double* v, double* b,
