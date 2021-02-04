@@ -200,11 +200,11 @@ void FDkernelDel2_4th(const Grid& grid, ScalarType* A, ScalarType* B,
     const int incx2 = 2 * grid.inc(0);
     const int incy2 = 2 * grid.inc(1);
 
-    int iix = gpt * incx_;
+    int iix = gpt * incx;
 
-    const int dim0 = Agrid.dim(0);
-    const int dim1 = Agrid.dim(1);
-    const int dim2 = Agrid.dim(2);
+    const int dim0 = grid.dim(0);
+    const int dim1 = grid.dim(1);
+    const int dim2 = grid.dim(2);
 
     const size_t ng = grid.sizeg();
 
