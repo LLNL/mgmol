@@ -13,7 +13,7 @@
 #include "FDoperInterface.h"
 
 #include "Grid.h"
-#include "GridFuncVector.h"
+#include "GridFunc.h"
 #include "memory_space.h"
 
 namespace pb
@@ -33,14 +33,6 @@ protected:
     int incx_;
     int incy_;
 
-    double c0mehr4_;
-    double cxmehr4_;
-    double cymehr4_;
-    double czmehr4_;
-    double cxymehr4_;
-    double cyzmehr4_;
-    double cxzmehr4_;
-
     void del1_4th(GridFunc<T>&, GridFunc<T>&, const short) const;
     void del2_4th(GridFunc<T>&, GridFunc<T>&) const;
     void del2_4th_withPot(GridFunc<T>&, const double* const pot, T*) const;
@@ -50,21 +42,6 @@ protected:
     void del2_6th(GridFunc<T>&, GridFunc<T>&) const;
     void del1_8th(GridFunc<T>&, GridFunc<T>&, const short) const;
     void del2_8th(GridFunc<T>&, GridFunc<T>&) const;
-
-    void del2_2nd(GridFuncVector<T>&, GridFuncVector<T>&) const;
-    void del2_4th(GridFuncVector<T>&, GridFuncVector<T>&) const;
-    void del2_4th_Mehr(GridFuncVector<T>&, GridFuncVector<T>&) const;
-    void del2_6th(GridFuncVector<T>&, GridFuncVector<T>&) const;
-    void del2_8th(GridFuncVector<T>&, GridFuncVector<T>&) const;
-
-    void del2_4th(const Grid&, T*, T*, const size_t, MemorySpace::Host) const;
-    void del2_2nd(const Grid&, T*, T*, const size_t, MemorySpace::Host) const;
-    void del2_4th_Mehr(const Grid&, const T* const, T*, const size_t) const;
-    void del2_6th(const Grid&, const T* const, T*, const size_t) const;
-    void del2_8th(const Grid&, const T* const, T*, const size_t) const;
-#ifdef HAVE_MAGMA
-    void del2_4th(const Grid&, T*, T*, const size_t, MemorySpace::Device) const;
-#endif
 
     // Mehrstellenverfahren operators
     void del2_4th_Mehr(GridFunc<T>&, GridFunc<T>&) const;

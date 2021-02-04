@@ -7,7 +7,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id: Lap.h,v 1.11 2009/07/16 23:36:28 jeanluc Exp $
 #ifndef PB_LAP_H
 #define PB_LAP_H
 

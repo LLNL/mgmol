@@ -7,12 +7,12 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id: FDoper.cc,v 1.22 2010/01/28 22:56:31 jeanluc Exp $
 #include "FDoper.h"
-#include "tools.h"
-#include <iomanip>
-
+#include "FDkernels.h"
 #include "memory_space.h"
+#include "tools.h"
+
+#include <iomanip>
 
 #ifdef HAVE_MAGMA
 #include "magma_v2.h"
@@ -67,13 +67,6 @@ FDoper<T>::FDoper(const Grid& mygrid) : grid_(mygrid)
         assert(grid_.dim(i) > 0);
         assert(grid_.dim(i) < 10000);
     }
-    c0mehr4_  = 16. * inv12 * (inv_h2_[0] + inv_h2_[1] + inv_h2_[2]);
-    cxmehr4_  = -10. * inv12 * inv_h2_[0] + 0.125 * c0mehr4_;
-    cymehr4_  = -10. * inv12 * inv_h2_[1] + 0.125 * c0mehr4_;
-    czmehr4_  = -10. * inv12 * inv_h2_[2] + 0.125 * c0mehr4_;
-    cxymehr4_ = -inv12 * (inv_h2_[0] + inv_h2_[1]);
-    cyzmehr4_ = -inv12 * (inv_h2_[2] + inv_h2_[1]);
-    cxzmehr4_ = -inv12 * (inv_h2_[0] + inv_h2_[2]);
 }
 
 template <class T>
@@ -308,72 +301,9 @@ void FDoper<T>::del2_2nd(GridFunc<T>& A, GridFunc<T>& B) const
 {
     if (!A.updated_boundaries()) A.trade_boundaries();
 
-    del2_2nd(A.grid(), A.uu(), B.uu(), 1, MemorySpace::Host());
+    FDkernelDel2_2nd(A.grid(), A.uu(), B.uu(), 1, MemorySpace::Host());
 
     B.set_updated_boundaries(0);
-}
-
-template <class T>
-void FDoper<T>::del2_2nd(GridFuncVector<T>& A, GridFuncVector<T>& B) const
-{
-    A.trade_boundaries();
-
-    del2_2nd(A.grid(), A.data(), B.data(), A.size(), MemorySpace::Host());
-
-    B.set_updated_boundaries(0);
-}
-
-template <class T>
-void FDoper<T>::del2_2nd(
-    const Grid& grid, T* v, T* b, const size_t nfunc, MemorySpace::Host) const
-{
-    assert(grid.ghost_pt() > 0);
-    MemorySpace::assert_is_host_ptr(b);
-    MemorySpace::assert_is_host_ptr(v);
-
-    del2_2nd_tm_.start();
-
-    double cc        = inv_h2(0);
-    const double c1x = -cc;
-
-    cc               = inv_h2(1);
-    const double c1y = -cc;
-
-    cc               = inv_h2(2);
-    const double c1z = -cc;
-    const double c0  = -2. * (c1x + c1y + c1z);
-
-    const int dim0 = grid.dim(0);
-    const int dim1 = grid.dim(1);
-    const int dim2 = grid.dim(2);
-
-    const size_t ngpts = grid.sizeg();
-
-    int incx     = grid.inc(0);
-    int incy     = grid.inc(1);
-    const int ng = grid.ghost_pt();
-
-#pragma omp parallel for collapse(4)
-    for (size_t ifunc = 0; ifunc < nfunc; ifunc++)
-    {
-        for (int ix = 0; ix < dim0; ix++)
-        {
-            for (int iy = 0; iy < dim1; iy++)
-            {
-                for (int iz = 0; iz < dim2; iz++)
-                {
-                    int iiz = ifunc * ngpts
-                              + ((ix + ng) * incx + (iy + ng) * incy) + iz + ng;
-
-                    b[iiz] = c0 * v[iiz] + c1x * (v[iiz - incx] + v[iiz + incx])
-                             + c1y * (v[iiz - incy] + v[iiz + incy])
-                             + c1z * (v[iiz - 1] + v[iiz + 1]);
-                }
-            }
-        }
-    }
-
-    del2_2nd_tm_.stop();
 }
 
 template <class T>
@@ -381,203 +311,12 @@ void FDoper<T>::del2_4th(GridFunc<T>& A, GridFunc<T>& B) const
 {
     assert(grid_.ghost_pt() > 1);
 
-    if (!A.updated_boundaries()) A.trade_boundaries();
-
-    del2_4th(A.grid(), A.uu(), B.uu(), 1, MemorySpace::Host());
-
-    B.set_updated_boundaries(0);
-}
-
-template <class T>
-void FDoper<T>::del2_4th(GridFuncVector<T>& A, GridFuncVector<T>& B) const
-{
-    assert(grid_.ghost_pt() > 1);
-
     A.trade_boundaries();
 
-    del2_4th(A.grid(), A.data(), B.data(), A.size(), MemorySpace::Host());
+    FDkernelDel2_4th(A.grid(), A.uu(), B.uu(), 1, MemorySpace::Host());
 
     B.set_updated_boundaries(0);
 }
-
-template <class T>
-void FDoper<T>::del2_4th(
-    const Grid& Agrid, T* A, T* B, const size_t nfunc, MemorySpace::Host) const
-{
-    assert(grid_.ghost_pt() > 1);
-    MemorySpace::assert_is_host_ptr(A);
-    MemorySpace::assert_is_host_ptr(B);
-
-    del2_4th_tm_.start();
-
-    const double cc0 = inv12 * inv_h2_[0];
-    const double c1x = -16. * cc0;
-    const double c2x = 1. * cc0;
-
-    const double cc1 = inv12 * inv_h2_[1];
-    const double c1y = -16. * cc1;
-    const double c2y = 1. * cc1;
-
-    const double cc2 = inv12 * inv_h2_[2];
-    const double c1z = -16. * cc2;
-    const double c2z = 1. * cc2;
-
-    const double c0 = -2. * (c1x + c2x + c1y + c2y + c1z + c2z);
-
-    const int gpt = grid_.ghost_pt();
-
-    const int incx2 = 2 * Agrid.inc(0);
-    const int incy2 = 2 * Agrid.inc(1);
-
-    int iix = gpt * incx_;
-
-    const int dim0 = Agrid.dim(0);
-    const int dim1 = Agrid.dim(1);
-    const int dim2 = Agrid.dim(2);
-
-    const size_t ng = grid_.sizeg();
-
-    int incx = incx_;
-    int incy = incy_;
-
-#pragma omp parallel for collapse(4)
-    for (size_t ifunc = 0; ifunc < nfunc; ifunc++)
-    {
-        for (int ix = 0; ix < dim0; ix++)
-        {
-            for (int iy = 0; iy < dim1; iy++)
-            {
-                for (int iz = 0; iz < dim2; iz++)
-                {
-                    int iiz = ifunc * ng
-                              + (iix + ix * incx + gpt * incy + iy * incy)
-                              + gpt;
-
-                    const T* __restrict__ v0   = A + iiz;
-                    const T* __restrict__ vmx  = A + (iiz - incx);
-                    const T* __restrict__ vpx  = A + (iiz + incx);
-                    const T* __restrict__ vmx2 = A + (iiz - incx2);
-                    const T* __restrict__ vpx2 = A + (iiz + incx2);
-                    const T* __restrict__ vmy  = A + (iiz - incy);
-                    const T* __restrict__ vpy  = A + (iiz + incy);
-                    const T* __restrict__ vmy2 = A + (iiz - incy2);
-                    const T* __restrict__ vpy2 = A + (iiz + incy2);
-
-                    T* __restrict__ u = B + iiz;
-
-                    u[iz] = c0 * (double)v0[iz]
-
-                            + c1x * ((double)vmx[iz] + (double)vpx[iz])
-                            + c1y * ((double)vmy[iz] + (double)vpy[iz])
-                            + c1z * ((double)v0[iz - 1] + (double)v0[iz + 1])
-
-                            + c2x * ((double)vmx2[iz] + (double)vpx2[iz])
-                            + c2y * ((double)vmy2[iz] + (double)vpy2[iz])
-                            + c2z * ((double)v0[iz - 2] + (double)v0[iz + 2]);
-                }
-            }
-        }
-    }
-
-    del2_4th_tm_.stop();
-}
-
-#ifdef HAVE_MAGMA
-template <class T>
-void FDoper<T>::del2_4th(const Grid& Agrid, T* A, T* B, const size_t nfunc,
-    MemorySpace::Device) const
-{
-    MemorySpace::assert_is_dev_ptr(A);
-    MemorySpace::assert_is_dev_ptr(B);
-#ifndef HAVE_OPENMP_OFFLOAD
-    const size_t ng = grid_.sizeg();
-    std::unique_ptr<T, void (*)(T*)> A_host(
-        MemoryHost<T>::allocate(nfunc * ng), MemoryHost<T>::free);
-    MemorySpace::copy_to_host(A, nfunc * ng, A_host.get());
-    std::unique_ptr<T, void (*)(T*)> B_host(
-        MemoryHost<T>::allocate(nfunc * ng), MemoryHost<T>::free);
-
-    del2_4th(Agrid, A_host.get(), B_host.get(), nfunc, MemorySpace::Host());
-
-    MemorySpace::copy_to_dev(B_host.get(), ng * nfunc, B);
-#else
-    assert(grid_.ghost_pt() > 1);
-
-    del2_4th_tm_.start();
-
-    const double cc0 = inv12 * inv_h2_[0];
-    const double c1x = -16. * cc0;
-    const double c2x = 1. * cc0;
-
-    const double cc1 = inv12 * inv_h2_[1];
-    const double c1y = -16. * cc1;
-    const double c2y = 1. * cc1;
-
-    const double cc2 = inv12 * inv_h2_[2];
-    const double c1z = -16. * cc2;
-    const double c2z = 1. * cc2;
-
-    const double c0 = -2. * (c1x + c2x + c1y + c2y + c1z + c2z);
-
-    const int gpt = grid_.ghost_pt();
-
-    const int incx2 = 2 * Agrid.inc(0);
-    const int incy2 = 2 * Agrid.inc(1);
-
-    int iix = gpt * incx_;
-
-    const int dim0 = Agrid.dim(0);
-    const int dim1 = Agrid.dim(1);
-    const int dim2 = Agrid.dim(2);
-
-    const size_t ng = grid_.sizeg();
-
-    int incx = incx_;
-    int incy = incy_;
-
-    MGMOL_PARALLEL_FOR_COLLAPSE(2, A, B) // 0.037 s 3000x32^3 0.0156 1000x32^3
-    for (size_t ifunc = 0; ifunc < nfunc; ifunc++)
-    {
-        for (int ix = 0; ix < dim0; ix++)
-        {
-            for (int iy = 0; iy < dim1; iy++)
-            {
-                for (int iz = 0; iz < dim2; iz++)
-                {
-                    int iiz = ifunc * ng
-                              + (iix + ix * incx + gpt * incy + iy * incy)
-                              + gpt;
-
-                    const T* __restrict__ v0   = A + iiz;
-                    const T* __restrict__ vmx  = A + (iiz - incx);
-                    const T* __restrict__ vpx  = A + (iiz + incx);
-                    const T* __restrict__ vmx2 = A + (iiz - incx2);
-                    const T* __restrict__ vpx2 = A + (iiz + incx2);
-                    const T* __restrict__ vmy  = A + (iiz - incy);
-                    const T* __restrict__ vpy  = A + (iiz + incy);
-                    const T* __restrict__ vmy2 = A + (iiz - incy2);
-                    const T* __restrict__ vpy2 = A + (iiz + incy2);
-
-                    T* __restrict__ u = B + iiz;
-
-                    u[iz] = c0 * (double)v0[iz]
-
-                            + c1x * ((double)vmx[iz] + (double)vpx[iz])
-                            + c1y * ((double)vmy[iz] + (double)vpy[iz])
-                            + c1z * ((double)v0[iz - 1] + (double)v0[iz + 1])
-
-                            + c2x * ((double)vmx2[iz] + (double)vpx2[iz])
-                            + c2y * ((double)vmy2[iz] + (double)vpy2[iz])
-                            + c2z * ((double)v0[iz - 2] + (double)v0[iz + 2]);
-                }
-            }
-        }
-    }
-
-    del2_4th_tm_.stop();
-#endif
-}
-#endif
 
 template <class T>
 void FDoper<T>::del2_4th_withPot(
@@ -662,334 +401,31 @@ void FDoper<T>::del2_4th_withPot(
 template <class T>
 void FDoper<T>::del2_6th(GridFunc<T>& A, GridFunc<T>& B) const
 {
-    if (!A.updated_boundaries()) A.trade_boundaries();
-
-    del2_6th(A.grid(), A.uu(), B.uu(), 1);
-
-    B.set_updated_boundaries(0);
-}
-
-template <class T>
-void FDoper<T>::del2_6th(GridFuncVector<T>& A, GridFuncVector<T>& B) const
-{
     A.trade_boundaries();
 
-    del2_6th(A.grid(), A.data(), B.data(), A.size());
+    FDkernelDel2_6th(A.grid(), A.uu(), B.uu(), 1, MemorySpace::Host());
 
     B.set_updated_boundaries(0);
-}
-
-template <class T>
-void FDoper<T>::del2_6th(
-    const Grid& grid, const T* const v, T* u, const size_t nfunc) const
-{
-    assert(grid_.ghost_pt() > 2);
-
-    double cc        = (1. / 180.) * inv_h2(0);
-    const double c1x = -270. * cc;
-    const double c2x = 27. * cc;
-    const double c3x = -2. * cc;
-
-    cc               = (1. / 180.) * inv_h2(1);
-    const double c1y = -270. * cc;
-    const double c2y = 27. * cc;
-    const double c3y = -2. * cc;
-
-    cc               = (1. / 180.) * inv_h2(2);
-    const double c1z = -270. * cc;
-    const double c2z = 27. * cc;
-    const double c3z = -2. * cc;
-
-    const double c0
-        = -2. * (c1x + c2x + c3x + c1y + c2y + c3y + c1z + c2z + c3z);
-
-    const int incx2 = 2 * grid.inc(0);
-    const int incy2 = 2 * grid.inc(1);
-    const int incx3 = 3 * grid.inc(0);
-    const int incy3 = 3 * grid.inc(1);
-
-    const int dim0     = grid.dim(0);
-    const int dim1     = grid.dim(1);
-    const int dim2     = grid.dim(2);
-    const size_t ngpts = grid_.sizeg();
-
-    const int gpt = grid.ghost_pt();
-
-    int iix = gpt * incx_;
-
-    for (size_t ifunc = 0; ifunc < nfunc; ifunc++)
-    {
-        for (int ix = 0; ix < dim0; ix++)
-        {
-            int iiy = iix + gpt * incy_ + ifunc * ngpts;
-
-            for (int iy = 0; iy < dim1; iy++)
-            {
-                int iiz = iiy + gpt;
-
-                for (int iz = 0; iz < dim2; iz++)
-                {
-                    u[iiz] = (T)(
-                        c0 * (double)v[iiz]
-
-                        + c1x
-                              * ((double)v[iiz - incx_]
-                                    + (double)v[iiz + incx_])
-                        + c1y
-                              * ((double)v[iiz - incy_]
-                                    + (double)v[iiz + incy_])
-                        + c1z * ((double)v[iiz - 1] + (double)v[iiz + 1])
-
-                        + c2x
-                              * ((double)v[iiz - incx2]
-                                    + (double)v[iiz + incx2])
-                        + c2y
-                              * ((double)v[iiz - incy2]
-                                    + (double)v[iiz + incy2])
-                        + c2z * ((double)v[iiz - 2] + (double)v[iiz + 2])
-
-                        + c3x
-                              * ((double)v[iiz - incx3]
-                                    + (double)v[iiz + incx3])
-                        + c3y
-                              * ((double)v[iiz - incy3]
-                                    + (double)v[iiz + incy3])
-                        + c3z * ((double)v[iiz - 3] + (double)v[iiz + 3]));
-
-                    iiz++;
-                }
-
-                iiy += incy_;
-            }
-
-            iix += incx_;
-        }
-    }
 }
 
 template <class T>
 void FDoper<T>::del2_8th(GridFunc<T>& A, GridFunc<T>& B) const
 {
-    if (!A.updated_boundaries()) A.trade_boundaries();
-
-    del2_8th(A.grid(), A.uu(), B.uu(), 1);
-
-    B.set_updated_boundaries(0);
-}
-
-template <class T>
-void FDoper<T>::del2_8th(GridFuncVector<T>& A, GridFuncVector<T>& B) const
-{
-    assert(A.size() == B.size());
-
     A.trade_boundaries();
 
-    del2_8th(A.grid(), A.data(), B.data(), A.size());
+    FDkernelDel2_8th(A.grid(), A.uu(), B.uu(), 1, MemorySpace::Host());
 
     B.set_updated_boundaries(0);
-}
-
-template <class T>
-void FDoper<T>::del2_8th(
-    const Grid& grid, const T* const v, T* u, const size_t nfunc) const
-{
-    double cc        = (1. / 5040.) * inv_h2(0);
-    const double c1x = -8064. * cc;
-    const double c2x = 1008. * cc;
-    const double c3x = -128. * cc;
-    const double c4x = 9. * cc;
-
-    cc               = (1. / 5040.) * inv_h2(1);
-    const double c1y = -8064. * cc;
-    const double c2y = 1008. * cc;
-    const double c3y = -128. * cc;
-    const double c4y = 9. * cc;
-
-    cc               = (1. / 5040.) * inv_h2(2);
-    const double c1z = -8064. * cc;
-    const double c2z = 1008. * cc;
-    const double c3z = -128. * cc;
-    const double c4z = 9. * cc;
-
-    const double c0 = -2.
-                      * (c1x + c2x + c3x + c4x + c1y + c2y + c3y + c4y + c1z
-                            + c2z + c3z + c4z);
-
-    const int incx2 = 2 * grid.inc(0);
-    const int incy2 = 2 * grid.inc(1);
-    const int incx3 = 3 * grid.inc(0);
-    const int incy3 = 3 * grid.inc(1);
-    const int incx4 = 4 * grid.inc(0);
-    const int incy4 = 4 * grid.inc(1);
-
-    const int dim0     = grid.dim(0);
-    const int dim1     = grid.dim(1);
-    const int dim2     = grid.dim(2);
-    const size_t ngpts = grid.sizeg();
-
-    const int gpt = grid.ghost_pt();
-    int iix       = gpt * incx_;
-
-    for (size_t ifunc = 0; ifunc < nfunc; ifunc++)
-    {
-        for (int ix = 0; ix < dim0; ix++)
-        {
-            int iiy = iix + gpt * incy_ + ifunc * ngpts;
-
-            for (int iy = 0; iy < dim1; iy++)
-            {
-                int iiz = iiy + gpt;
-
-                for (int iz = 0; iz < dim2; iz++)
-                {
-                    u[iiz] = (T)(
-                        c0 * (double)v[iiz]
-
-                        + c1x
-                              * ((double)v[iiz - incx_]
-                                    + (double)v[iiz + incx_])
-                        + c1y
-                              * ((double)v[iiz - incy_]
-                                    + (double)v[iiz + incy_])
-                        + c1z * ((double)v[iiz - 1] + (double)v[iiz + 1])
-
-                        + c2x
-                              * ((double)v[iiz - incx2]
-                                    + (double)v[iiz + incx2])
-                        + c2y
-                              * ((double)v[iiz - incy2]
-                                    + (double)v[iiz + incy2])
-                        + c2z * ((double)v[iiz - 2] + (double)v[iiz + 2])
-
-                        + c3x
-                              * ((double)v[iiz - incx3]
-                                    + (double)v[iiz + incx3])
-                        + c3y
-                              * ((double)v[iiz - incy3]
-                                    + (double)v[iiz + incy3])
-                        + c3z * ((double)v[iiz - 3] + (double)v[iiz + 3])
-
-                        + c4x
-                              * ((double)v[iiz - incx4]
-                                    + (double)v[iiz + incx4])
-                        + c4y
-                              * ((double)v[iiz - incy4]
-                                    + (double)v[iiz + incy4])
-                        + c4z * ((double)v[iiz - 4] + (double)v[iiz + 4]));
-
-                    iiz++;
-                }
-
-                iiy += incy_;
-            }
-
-            iix += incx_;
-        }
-    }
 }
 
 template <class T>
 void FDoper<T>::del2_4th_Mehr(GridFunc<T>& A, GridFunc<T>& B) const
 {
-    if (!A.updated_boundaries()) A.trade_boundaries();
-
-    del2_4th_Mehr(A.grid(), A.uu(0), B.uu(0), 1);
-
-    B.set_updated_boundaries(0);
-}
-
-template <class T>
-void FDoper<T>::del2_4th_Mehr(GridFuncVector<T>& A, GridFuncVector<T>& B) const
-{
     A.trade_boundaries();
 
-    del2_4th_Mehr(A.grid(), A.data(), B.data(), A.size());
+    FDkernelDel2_4th_Mehr(A.grid(), A.uu(0), B.uu(0), 1, MemorySpace::Host());
 
     B.set_updated_boundaries(0);
-}
-
-template <class T>
-void FDoper<T>::del2_4th_Mehr(
-    const Grid& grid, const T* const v, T* u, const size_t nfunc) const
-{
-    del2_4th_Mehr_tm_.start();
-
-    assert(inv_h2(0) > 1.e-12);
-    assert(inv_h2(1) > 1.e-12);
-    assert(inv_h2(2) > 1.e-12);
-    assert(ghosts() > 0);
-
-    const int shift = grid.ghost_pt();
-    const int dim0  = grid.dim(0);
-    const int dim1  = grid.dim(1);
-    const int dim2  = grid.dim(2);
-    const int ngpts = grid.sizeg();
-
-#if 0
-    int ifirst0=1+shift;
-    int ilast0=dim0+shift;
-    int ifirst1=1+shift;
-    int ilast1=dim1+shift;
-    int ifirst2=1+shift;
-    int ilast2=dim2+shift;
-    int ilo0=1;
-    int ihi0=dim0+2*shift;
-    int ilo1=1;
-    int ihi1=dim1+2*shift;
-    int ilo2=1;
-    int ihi2=dim2+2*shift;
-    lap3d_4thmehr_(ifirst2,ilast2,ifirst1,ilast1,ifirst0,ilast0,
-                   ilo2,ihi2,ilo1,ihi1,ilo0,ihi0,
-                   c0mehr4_,czmehr4_,cymehr4_,cxmehr4_,cyzmehr4_,cxymehr4_,cxzmehr4_,
-                   A.uu(0),B.uu(0));
-#else
-    const int iix0 = shift * incx_;
-
-    for (size_t ifunc = 0; ifunc < nfunc; ifunc++)
-    {
-        for (int ix = 0; ix < dim0; ix++)
-        {
-            int iix = iix0 + ix * incx_ + ifunc * ngpts;
-            int iiy = iix + shift * incy_;
-
-            for (int iy = 0; iy < dim1; iy++)
-            {
-                const int iiz = iiy + shift;
-
-                T* const u0          = u + iiz;
-                const T* const v0    = v + iiz;
-                const T* const vmx   = v0 - incx_;
-                const T* const vpx   = v0 + incx_;
-                const T* const vmxmy = vmx - incy_;
-                const T* const vpxmy = vpx - incy_;
-                const T* const vmy   = v0 - incy_;
-                const T* const vpy   = v0 + incy_;
-                const T* const vmxpy = vmx + incy_;
-                const T* const vpxpy = vpx + incy_;
-
-                for (int iz = 0; iz < dim2; iz++)
-                {
-                    u0[iz] = (T)(c0mehr4_ * (double)v0[iz]
-                                 + czmehr4_ * (double)(v0[iz - 1] + v0[iz + 1])
-                                 + cymehr4_ * (double)(vmy[iz] + vpy[iz])
-                                 + cxmehr4_ * (double)(vmx[iz] + vpx[iz])
-                                 + cxzmehr4_
-                                       * (double)(vmx[iz - 1] + vmx[iz + 1]
-                                                  + vpx[iz - 1] + vpx[iz + 1])
-                                 + cyzmehr4_
-                                       * (double)(vmy[iz - 1] + vmy[iz + 1]
-                                                  + vpy[iz - 1] + vpy[iz + 1])
-                                 + cxymehr4_
-                                       * (double)(vmxmy[iz] + vpxmy[iz]
-                                                  + vmxpy[iz] + vpxpy[iz]));
-                }
-
-                iiy += incy_;
-            }
-        }
-    }
-#endif
-    del2_4th_Mehr_tm_.stop();
 }
 
 template <class T>
