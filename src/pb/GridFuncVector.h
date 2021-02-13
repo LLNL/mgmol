@@ -19,6 +19,9 @@
 #include <type_traits>
 #include <vector>
 
+template <class T>
+class Lap;
+
 namespace pb
 {
 #ifdef HAVE_OPENMP_OFFLOAD
@@ -342,6 +345,12 @@ public:
 
     template <typename InputScalarType>
     void getValues(const int k, InputScalarType* vv) const;
+
+    void applyLap(
+        const int type, GridFuncVector<ScalarType, MemorySpaceType>& rhs);
+    void jacobi(const int type,
+        const GridFuncVector<ScalarType, MemorySpaceType>& B,
+        GridFuncVector<ScalarType, MemorySpaceType>& w, const double scale);
 
     static void printTimers(std::ostream& os)
     {

@@ -11,6 +11,7 @@
 #define MGMOL_PRECONDITIONING_H
 
 #include "GridFunc.h"
+#include "GridFuncVector.h"
 #include "GridMask.h"
 #include "Lap.h"
 #include "tools.h"

@@ -2362,6 +2362,48 @@ void GridFuncVector<ScalarType, MemorySpaceType>::trade_boundaries_colors(
     trade_bc_colors_tm_.stop();
 }
 
+template <typename ScalarType, typename MemorySpaceType>
+void GridFuncVector<ScalarType, MemorySpaceType>::applyLap(
+    const int type, GridFuncVector<ScalarType, MemorySpaceType>& rhs)
+{
+    switch (type)
+    {
+        // Laph4M
+        case 0:
+            this->del2_4th_Mehr(rhs);
+            break;
+        // Laph2
+        case 1:
+            this->del2_2nd(rhs);
+            break;
+        case 2:
+            this->del2_4th(rhs);
+            break;
+        case 3:
+            this->del2_6th(rhs);
+            break;
+        case 4:
+            this->del2_8th(rhs);
+            break;
+        default:
+            std::cerr << "LapFactory::createLap() --- option invalid:" << type
+                      << std::endl;
+            abort();
+    }
+}
+
+template <typename ScalarType, typename MemorySpaceType>
+void GridFuncVector<ScalarType, MemorySpaceType>::jacobi(const int type,
+    const GridFuncVector<ScalarType, MemorySpaceType>& B,
+    GridFuncVector<ScalarType, MemorySpaceType>& w, const double jacobiFactor)
+{
+    applyLap(type, w);
+    w -= B;
+    axpy(-1. * jacobiFactor, w);
+
+    set_updated_boundaries(false);
+}
+
 template class GridFuncVector<double, MemorySpace::Host>;
 template class GridFuncVector<float, MemorySpace::Host>;
 template void GridFuncVector<float, MemorySpace::Host>::assign(

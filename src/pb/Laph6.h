@@ -95,18 +95,10 @@ public:
         FDoper<T>::del2_6th(A, B);
         B.set_bc(A.bc(0), A.bc(1), A.bc(2));
     }
-    void apply(GridFuncVector<T, memory_space_type>& A,
-        GridFuncVector<T, memory_space_type>& B) override
-    {
-        A.del2_6th(B);
-    }
 
     void jacobi(GridFunc<T>&, const GridFunc<T>&, GridFunc<T>&) override;
-    void jacobi(GridFuncVector<T, memory_space_type>&,
-        const GridFuncVector<T, memory_space_type>&, GridFunc<T>&) override;
-    void jacobi(GridFuncVector<T, memory_space_type>&,
-        const GridFuncVector<T, memory_space_type>&,
-        GridFuncVector<T, memory_space_type>&) override;
+
+    double jacobiFactor() const override { return invDiagEl_ / 1.5; }
 
     double diagEl(void) const override { return diagEl_; };
     double invDiagEl(void) const override { return invDiagEl_; };

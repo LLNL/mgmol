@@ -96,24 +96,14 @@ public:
     {
         this->del2_4th_withPot(A, pot, B);
     }
-    void apply(GridFuncVector<T, memory_space_type>& A,
-        GridFuncVector<T, memory_space_type>& B) override
-    {
-        assert(A.size() == B.size());
-
-        A.del2_4th(B);
-    }
     void apply(Grid& Agrid, T* A, T* B, const size_t nfunc)
     {
         FDkernelDel2_4th(Agrid, A, B, nfunc, MemorySpace::Host());
     }
 
     void jacobi(GridFunc<T>&, const GridFunc<T>&, GridFunc<T>&) override;
-    void jacobi(GridFuncVector<T, memory_space_type>&,
-        const GridFuncVector<T, memory_space_type>&, GridFunc<T>&) override;
-    void jacobi(GridFuncVector<T, memory_space_type>&,
-        const GridFuncVector<T, memory_space_type>&,
-        GridFuncVector<T, memory_space_type>&) override;
+
+    double jacobiFactor() const override { return invDiagEl_ / 1.5; }
 
     double diagEl(void) const override { return diagEl_; };
     double invDiagEl(void) const override { return invDiagEl_; };
