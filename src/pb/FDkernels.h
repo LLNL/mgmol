@@ -35,8 +35,10 @@ void FDkernelDel2_8th(const Grid& grid, ScalarType* v, ScalarType* b,
 template <typename ScalarType>
 void FDkernelDel2_2nd(const Grid& grid, ScalarType* v, ScalarType* b,
     const size_t nfunc, MemorySpace::Device)
-{/*to be implemented*/ 
-std::cerr<<"Function not implemented!!!"<<std::endl; abort();};
+{ /*to be implemented*/
+    std::cerr << "Function not implemented!!!" << std::endl;
+    abort();
+};
 
 template <typename ScalarType>
 void FDkernelDel2_4th(const Grid& grid, ScalarType* v, ScalarType* b,
@@ -45,22 +47,25 @@ void FDkernelDel2_4th(const Grid& grid, ScalarType* v, ScalarType* b,
 template <typename ScalarType>
 void FDkernelDel2_4th_Mehr(const Grid& grid, ScalarType* v, ScalarType* b,
     const size_t nfunc, MemorySpace::Device)
-{/*to be implemented*/
-std::cerr<<"Function not implemented!!!"<<std::endl; abort();
+{ /*to be implemented*/
+    std::cerr << "Function not implemented!!!" << std::endl;
+    abort();
 };
 
 template <typename ScalarType>
 void FDkernelDel2_6th(const Grid& grid, ScalarType* v, ScalarType* b,
     const size_t nfunc, MemorySpace::Device)
-{/*to be implemented*/
-std::cerr<<"Function not implemented!!!"<<std::endl; abort();
+{ /*to be implemented*/
+    std::cerr << "Function not implemented!!!" << std::endl;
+    abort();
 };
 
 template <typename ScalarType>
 void FDkernelDel2_8th(const Grid& grid, ScalarType* v, ScalarType* b,
     const size_t nfunc, MemorySpace::Device)
-{/*to be implemented*/
-std::cerr<<"Function not implemented!!!"<<std::endl; abort();
+{ /*to be implemented*/
+    std::cerr << "Function not implemented!!!" << std::endl;
+    abort();
 };
 #endif
 }
