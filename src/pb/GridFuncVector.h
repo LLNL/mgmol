@@ -19,9 +19,6 @@
 #include <type_traits>
 #include <vector>
 
-template <class T>
-class Lap;
-
 namespace pb
 {
 #ifdef HAVE_OPENMP_OFFLOAD
@@ -270,7 +267,10 @@ public:
         return *functions_[k];
     }
 
-    void del2_4th(GridFuncVector<ScalarType>& rhs)
+    template <typename MST = MemorySpaceType,
+        typename std::enable_if<
+            std::is_same<MemorySpace::Host, MST>::value>::type* = nullptr>
+    void del2_4th(GridFuncVector<ScalarType,MemorySpaceType>& rhs)
     {
         trade_boundaries();
 
@@ -280,7 +280,23 @@ public:
         rhs.set_updated_boundaries(0);
     }
 
-    void del2_4th_Mehr(GridFuncVector<ScalarType>& rhs)
+    template <typename MST = MemorySpaceType,
+        typename std::enable_if<
+            std::is_same<MemorySpace::Device, MST>::value>::type* = nullptr>
+    void del2_4th(GridFuncVector<ScalarType,MemorySpaceType>& rhs)
+    {
+        trade_boundaries();
+
+        FDkernelDel2_4th(
+            grid(), data(), rhs.data(), size(), MemorySpace::Device());
+
+        rhs.set_updated_boundaries(0);
+    }
+
+    template <typename MST = MemorySpaceType,
+        typename std::enable_if<
+            std::is_same<MemorySpace::Host, MST>::value>::type* = nullptr>
+    void del2_4th_Mehr(GridFuncVector<ScalarType,MemorySpaceType>& rhs)
     {
         trade_boundaries();
 
@@ -290,7 +306,23 @@ public:
         rhs.set_updated_boundaries(0);
     }
 
-    void del2_2nd(GridFuncVector<ScalarType>& rhs)
+    template <typename MST = MemorySpaceType,
+        typename std::enable_if<
+            std::is_same<MemorySpace::Device, MST>::value>::type* = nullptr>
+    void del2_4th_Mehr(GridFuncVector<ScalarType,MemorySpaceType>& rhs)
+    {
+        trade_boundaries();
+
+        FDkernelDel2_4th_Mehr(
+            grid(), data(), rhs.data(), size(), MemorySpace::Device());
+
+        rhs.set_updated_boundaries(0);
+    }
+
+    template <typename MST = MemorySpaceType,
+        typename std::enable_if<
+            std::is_same<MemorySpace::Host, MST>::value>::type* = nullptr>
+    void del2_2nd(GridFuncVector<ScalarType,MemorySpaceType>& rhs)
     {
         trade_boundaries();
 
@@ -300,7 +332,23 @@ public:
         rhs.set_updated_boundaries(0);
     }
 
-    void del2_6th(GridFuncVector<ScalarType>& rhs)
+    template <typename MST = MemorySpaceType,
+        typename std::enable_if<
+            std::is_same<MemorySpace::Device, MST>::value>::type* = nullptr>
+    void del2_2nd(GridFuncVector<ScalarType,MemorySpaceType>& rhs)
+    {
+        trade_boundaries();
+
+        FDkernelDel2_2nd(
+            grid(), data(), rhs.data(), size(), MemorySpace::Device());
+
+        rhs.set_updated_boundaries(0);
+    }
+
+    template <typename MST = MemorySpaceType,
+        typename std::enable_if<
+            std::is_same<MemorySpace::Host, MST>::value>::type* = nullptr>
+    void del2_6th(GridFuncVector<ScalarType,MemorySpaceType>& rhs)
     {
         trade_boundaries();
 
@@ -310,12 +358,41 @@ public:
         rhs.set_updated_boundaries(0);
     }
 
-    void del2_8th(GridFuncVector<ScalarType>& rhs)
+    template <typename MST = MemorySpaceType,
+        typename std::enable_if<
+            std::is_same<MemorySpace::Device, MST>::value>::type* = nullptr>
+    void del2_6th(GridFuncVector<ScalarType,MemorySpaceType>& rhs)
+    {
+        trade_boundaries();
+
+        FDkernelDel2_6th(
+            grid(), data(), rhs.data(), size(), MemorySpace::Device());
+
+        rhs.set_updated_boundaries(0);
+    }
+
+    template <typename MST = MemorySpaceType,
+        typename std::enable_if<
+            std::is_same<MemorySpace::Host, MST>::value>::type* = nullptr>
+    void del2_8th(GridFuncVector<ScalarType,MemorySpaceType>& rhs)
     {
         trade_boundaries();
 
         FDkernelDel2_8th(
             grid(), data(), rhs.data(), size(), MemorySpace::Host());
+
+        rhs.set_updated_boundaries(0);
+    }
+
+    template <typename MST = MemorySpaceType,
+        typename std::enable_if<
+            std::is_same<MemorySpace::Device, MST>::value>::type* = nullptr>
+    void del2_8th(GridFuncVector<ScalarType,MemorySpaceType>& rhs)
+    {
+        trade_boundaries();
+
+        FDkernelDel2_8th(
+            grid(), data(), rhs.data(), size(), MemorySpace::Device());
 
         rhs.set_updated_boundaries(0);
     }
