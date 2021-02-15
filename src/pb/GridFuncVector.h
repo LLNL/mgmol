@@ -290,6 +290,11 @@ public:
         FDkernelDel2_4th(
             grid(), data(), rhs.data(), size(), MemorySpace::Device());
 
+#ifdef HAVE_OPENMP_OFFLOAD
+        // copy result to host for now since host holds reference data
+        rhs.copyDtoH(nfunc_ * grid_.sizeg());
+#endif
+
         rhs.set_updated_boundaries(0);
     }
 
