@@ -345,8 +345,9 @@ public:
     {
         trade_boundaries();
 
+        // assume the CPU data is uptodate for now...
         FDkernelDel2_2nd(
-            grid(), data(), rhs.data(), size(), MemorySpace::Device());
+            grid(), data(), rhs.data(), size(), MemorySpace::Host());
 
         rhs.set_updated_boundaries(0);
     }
