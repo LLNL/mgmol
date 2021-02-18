@@ -48,7 +48,8 @@ template <typename ScalarType>
 void FDkernelDel2_4th_Mehr(const Grid& grid, ScalarType* v, ScalarType* b,
     const size_t nfunc, MemorySpace::Device)
 { /*to be implemented*/
-    std::cerr << "Function FDkernelDel2_4th_Mehr() not implemented!!!" << std::endl;
+    std::cerr << "Function FDkernelDel2_4th_Mehr() not implemented!!!"
+              << std::endl;
     abort();
 };
 
