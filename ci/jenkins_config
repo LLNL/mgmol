@@ -19,7 +19,7 @@ pipeline {
         stage('MAGMA-OpenMP') {
           agent {
             docker {
-              image "rombur/mgmol-stack:20.01.0"
+              image "rombur/mgmol-stack:20.12.0"
                 alwaysPull true
                 label 'nvidia-docker && volta'
             }
@@ -29,16 +29,16 @@ pipeline {
               dir('build') { 
                 sh '''#!/bin/bash 
                   . /root/.module
-                  module load cmake-3.16.1-gcc-9.2.0-jxsh43n && \
-                  module load gcc-9.2.0-gcc-7.4.0-r5q7xfn && \
-                  module load openmpi-4.0.2-gcc-9.2.0-ypxb7h6 && \
-                  module load netlib-scalapack-2.0.2-gcc-9.2.0-c4ksygc && \
-                  module load magma-2.5.1-gcc-7.4.0-nnix327 && \
-                  module load boost-1.70.0-gcc-9.2.0-xfs7chm && \
-                  module load cuda-10.1-gcc-7.4.0-762mb4s && \
-                  module load hdf5-1.10.5-gcc-9.2.0-wnd7pao
-                  module load openblas-0.3.7-gcc-7.4.0-7pjtf4y
-                  module load pkgconf-1.6.3-gcc-9.2.0-jun6j25
+                  module load cmake-3.18.2-gcc-10.2.0-zqvzwq6 && \
+                  module load gcc-10.2.0-gcc-7.5.0-ysahdxc && \
+                  module load openmpi-4.0.5-gcc-10.2.0-3uic733 && \
+                  module load netlib-scalapack-2.1.0-gcc-10.2.0-77iaf7w && \
+                  module load magma-2.5.3-gcc-7.5.0-ysh6w6u && \
+                  module load boost-1.70.0-gcc-10.2.0-r6pftjq && \
+                  module load cuda-10.2-gcc-7.5.0-bux346c && \
+                  module load hdf5-1.10.5-gcc-10.2.0-tkjkpox && \
+                  module load openblas-0.3.10-gcc-7.5.0-7cbayvd && \
+                  module load pkgconf-1.7.3-gcc-10.2.0-ksmdwsy
                   cmake \
                   -D BUILD_SHARED_LIBS=OFF \
                   -D CMAKE_BUILD_TYPE=Release \
@@ -63,7 +63,7 @@ pipeline {
         stage('CPU') {
           agent {
             docker {
-              image "rombur/mgmol-stack:latest"
+              image "rombur/mgmol-stack:20.12.0"
                 alwaysPull true
                 label 'docker'
             }
@@ -76,13 +76,13 @@ pipeline {
               dir('build') {
                 sh '''#!/bin/bash
                   . /root/.module
-                  module load cmake-3.16.1-gcc-9.2.0-jxsh43n
-                  module load gcc-9.2.0-gcc-7.4.0-r5q7xfn
-                  module load openmpi-4.0.2-gcc-9.2.0-ypxb7h6
-                  module load netlib-scalapack-2.0.2-gcc-9.2.0-c4ksygc
-                  module load boost-1.70.0-gcc-9.2.0-xfs7chm
-                  module load hdf5-1.10.5-gcc-9.2.0-wnd7pao
-                  module load openblas-0.3.7-gcc-7.4.0-7pjtf4y
+                  module load cmake-3.18.2-gcc-10.2.0-zqvzwq6 && \
+                  module load gcc-10.2.0-gcc-7.5.0-ysahdxc && \
+                  module load openmpi-4.0.5-gcc-10.2.0-3uic733 && \
+                  module load netlib-scalapack-2.1.0-gcc-10.2.0-77iaf7w && \
+                  module load boost-1.70.0-gcc-10.2.0-r6pftjq && \
+                  module load hdf5-1.10.5-gcc-10.2.0-tkjkpox && \
+                  module load openblas-0.3.10-gcc-7.5.0-7cbayvd
                   cmake \
                   -D BUILD_SHARED_LIBS=ON \
                   -D CMAKE_BUILD_TYPE=Release \
@@ -101,7 +101,7 @@ pipeline {
                 '''
                 sh '''#!/bin/bash
                 . /root/.module
-                module load gcc-9.2.0-gcc-7.4.0-r5q7xfn
+                module load gcc-10.2.0-gcc-7.5.0-ysahdxc
                 make coverage 
                 curl -s https://codecov.io/bash -o codecov_bash_uploader && chmod +x codecov_bash_uploader && ./codecov_bash_uploader -Z -X gcov -f lcov.info
                 '''
@@ -116,7 +116,7 @@ pipeline {
         stage('clang-sanitizer') {
           agent {
             docker {
-              image "rombur/mgmol-stack:latest"
+              image "rombur/mgmol-stack:20.12.0"
                 args '--cap-add SYS_PTRACE'
                 alwaysPull true
                 label 'docker'
@@ -134,13 +134,13 @@ pipeline {
               dir('build') {
                  sh '''#!/bin/bash
                   . /root/.module
-                  module load cmake-3.16.1-gcc-9.2.0-jxsh43n
-                  module load gcc-9.2.0-gcc-7.4.0-r5q7xfn
-                  module load openmpi-4.0.2-gcc-9.2.0-ypxb7h6
-                  module load netlib-scalapack-2.0.2-gcc-9.2.0-c4ksygc
-                  module load boost-1.70.0-gcc-9.2.0-xfs7chm
-                  module load hdf5-1.10.5-gcc-9.2.0-wnd7pao
-                  module load openblas-0.3.7-gcc-7.4.0-7pjtf4y
+                  module load cmake-3.18.2-gcc-10.2.0-zqvzwq6 && \
+                  module load gcc-10.2.0-gcc-7.5.0-ysahdxc && \
+                  module load openmpi-4.0.5-gcc-10.2.0-3uic733 && \
+                  module load netlib-scalapack-2.1.0-gcc-10.2.0-77iaf7w && \
+                  module load boost-1.70.0-gcc-10.2.0-r6pftjq && \
+                  module load hdf5-1.10.5-gcc-10.2.0-tkjkpox && \
+                  module load openblas-0.3.10-gcc-7.5.0-7cbayvd
                   cmake \
                   -D BUILD_SHARED_LIBS=ON \
                   -D CMAKE_BUILD_TYPE=Debug \

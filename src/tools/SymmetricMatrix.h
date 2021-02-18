@@ -11,6 +11,7 @@
 #define SYMMETRICMATRIX_H
 
 #include <cassert>
+#include <cstdio>
 #include <cstring>
 #include <map>
 #include <mpi.h>
