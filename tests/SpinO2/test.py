@@ -50,7 +50,7 @@ if abs(ref_energy-energy) > 1.e-3:
   sys.exit(1)
 
 #make sure forces are below tolerance
-tol = 4.e-4
+tol = 6.e-4
 Fz  = -1.06e-2
 for line in lines:
   #find output lines with forces
