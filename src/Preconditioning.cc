@@ -181,7 +181,8 @@ void Preconditioning<T>::mg(pb::GridFuncVector<T, memory_space_type>& gfv_v,
     // SMOOTHING
     for (short it = 0; it < ncycl; it++)
     {
-        myoper->jacobi(gfv_v, gfv_f, *gfv_work_[level]);
+        gfv_v.jacobi(
+            lap_type_, gfv_f, *gfv_work_[level], myoper->jacobiFactor());
         app_mask(gfv_v, level);
     }
 
@@ -217,7 +218,8 @@ void Preconditioning<T>::mg(pb::GridFuncVector<T, memory_space_type>& gfv_v,
     // post-smoothing
     for (short it = 0; it < 2; it++)
     {
-        myoper->jacobi(gfv_v, gfv_f, *gfv_work_[level]);
+        gfv_v.jacobi(
+            lap_type_, gfv_f, *gfv_work_[level], myoper->jacobiFactor());
         app_mask(gfv_v, level);
     }
 

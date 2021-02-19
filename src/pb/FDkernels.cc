@@ -544,9 +544,24 @@ template void FDkernelDel2_8th<float>(const Grid& grid, float* v, float* b,
     const size_t nfunc, MemorySpace::Host);
 
 #ifdef HAVE_MAGMA
+template void FDkernelDel2_2nd<double>(const Grid& grid, double* v, double* b,
+    const size_t nfunc, MemorySpace::Device);
+template void FDkernelDel2_2nd<float>(const Grid& grid, float* v, float* b,
+    const size_t nfunc, MemorySpace::Device);
+
 template void FDkernelDel2_4th<double>(const Grid& grid, double* v, double* b,
     const size_t nfunc, MemorySpace::Device);
 template void FDkernelDel2_4th<float>(const Grid& grid, float* v, float* b,
+    const size_t nfunc, MemorySpace::Device);
+
+template void FDkernelDel2_6th<double>(const Grid& grid, double* v, double* b,
+    const size_t nfunc, MemorySpace::Device);
+template void FDkernelDel2_6th<float>(const Grid& grid, float* v, float* b,
+    const size_t nfunc, MemorySpace::Device);
+
+template void FDkernelDel2_8th<double>(const Grid& grid, double* v, double* b,
+    const size_t nfunc, MemorySpace::Device);
+template void FDkernelDel2_8th<float>(const Grid& grid, float* v, float* b,
     const size_t nfunc, MemorySpace::Device);
 #endif
 } // namespace pb

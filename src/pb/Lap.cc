@@ -35,40 +35,7 @@ void Lap<T>::jacobi(
     A.set_updated_boundaries(0);
     W.set_updated_boundaries(0);
 }
-template <class T>
-void Lap<T>::jacobi(GridFuncVector<T, memory_space_type>& A,
-    const GridFuncVector<T, memory_space_type>& B, GridFunc<T>& W,
-    const double scale)
-{
-    assert(A.size() == B.size());
 
-    A.trade_boundaries();
-
-    const int nfunc = (int)A.size();
-#pragma omp parallel for
-    for (int k = 0; k < nfunc; k++)
-    {
-        apply(A.getGridFunc(k), W);
-        W -= (B.getGridFunc(k));
-        A.getGridFunc(k).axpy(scale, W);
-        A.getGridFunc(k).set_updated_boundaries(false);
-    }
-
-    A.set_updated_boundaries(false);
-}
-template <class T>
-void Lap<T>::jacobi(GridFuncVector<T, memory_space_type>& A,
-    const GridFuncVector<T, memory_space_type>& B,
-    GridFuncVector<T, memory_space_type>& W, const double scale)
-{
-    assert(A.size() == B.size());
-
-    apply(A, W);
-    W -= B;
-    A.axpy(scale, W);
-
-    A.set_updated_boundaries(false);
-}
 template class Lap<double>;
 template class Lap<float>;
 } // namespace pb
