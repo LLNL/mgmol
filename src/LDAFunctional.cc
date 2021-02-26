@@ -111,7 +111,6 @@ double LDAFunctional::computeRhoDotExc() const
         {
             const double rh = prho_up_[i] + prho_dn_[i];
             exc_temp += rh * (double)pexc_[i];
-            //            exc += rh*pexc_[i];
         }
         exc += (POTDTYPE)exc_temp;
     }

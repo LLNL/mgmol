@@ -52,12 +52,12 @@ public:
         int func_id = XC_GGA_X_PBE;
         if (xc_func_init(&xfunc_, func_id, XC_UNPOLARIZED) != 0)
         {
-            cerr << "Functional " << func_id << " not found" << endl;
+            std::cerr << "Functional " << func_id << " not found" << std::endl;
         }
         func_id = XC_GGA_C_PBE;
         if (xc_func_init(&cfunc_, func_id, XC_UNPOLARIZED) != 0)
         {
-            cerr << "Functional " << func_id << " not found" << endl;
+            std::cerr << "Functional " << func_id << " not found" << std::endl;
         }
         exc_.resize(np_);
         vxc_.resize(np_);

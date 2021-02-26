@@ -22,8 +22,8 @@ void LDAonGrid<T>::update()
 
 #ifdef USE_LIBXC
     xc_lda_exc_vxc(&xfunc_, exc_.size(), &rho_.rho_[0][0], &exc_[0], &vxc_[0]);
-    vector<double> vtmp(vxc_.size());
-    vector<double> etmp(vxc_.size());
+    std::vector<double> vtmp(vxc_.size());
+    std::vector<double> etmp(vxc_.size());
     xc_lda_exc_vxc(&cfunc_, exc_.size(), &rho_.rho_[0][0], &etmp[0], &vtmp[0]);
 
     int ione   = 1;
