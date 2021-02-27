@@ -11,16 +11,13 @@
 #define MGMOL_PBEONGRIDSPIN_H
 
 #include "Mesh.h"
-#include "PBEFunctional.h"
 #include "Rho.h"
 #include "XConGrid.h"
 
-//#define USE_LIBXC
-
 #ifdef USE_LIBXC
-#include "Control.h"
-#include "MGmol_MPI.h"
 #include <xc.h>
+#else
+#include "PBEFunctional.h"
 #endif
 
 #include <vector>

@@ -18,7 +18,6 @@
 #include <vector>
 
 const static double uk = 0.804;
-// const static double uk = 1.245;
 
 PBEFunctional::PBEFunctional(std::vector<std::vector<RHODTYPE>>& rhoe)
     : XCFunctional(rhoe)
@@ -94,14 +93,11 @@ void PBEFunctional::computeXC(void)
             double gp = (double)grad0[i] * (double)grad0[i]
                         + (double)grad1[i] * (double)grad1[i]
                         + (double)grad2[i] * (double)grad2[i];
-            pexc_[i] = (POTDTYPE)sqrt(gp);
-        }
+            RHODTYPE grad = (POTDTYPE)sqrt(gp);
 
-        for (int i = 0; i < np_; i++)
-        {
-            POTDTYPE* lpexc = pexc_ + i;
-            RHODTYPE grad   = *lpexc;
-            excpbe(prho_[i], grad, lpexc, pvxc1_ + i, pvxc2_ + i);
+            // compute energy density pexc_ and potentials components
+            // pvxc1_ and pvxc2_
+            excpbe(prho_[i], grad, pexc_ + i, pvxc1_ + i, pvxc2_ + i);
         }
     }
     else

@@ -14,6 +14,8 @@
 #include "Mesh.h"
 #include "Rho.h"
 #include "XConGrid.h"
+#include "memory_space.h"
+#include "mputils.h"
 
 //#define USE_LIBXC
 
@@ -50,12 +52,12 @@ public:
         int func_id = XC_LDA_X;
         if (xc_func_init(&xfunc_, func_id, XC_UNPOLARIZED) != 0)
         {
-            cerr << "Functional " << func_id << " not found" << endl;
+            std::cerr << "Functional " << func_id << " not found" << std::endl;
         }
         func_id = XC_LDA_C_PZ_MOD;
         if (xc_func_init(&cfunc_, func_id, XC_UNPOLARIZED) != 0)
         {
-            cerr << "Functional " << func_id << " not found" << endl;
+            std::cerr << "Functional " << func_id << " not found" << std::endl;
         }
         exc_.resize(rho.rho_[0].size());
         vxc_.resize(rho.rho_[0].size());
@@ -84,16 +86,17 @@ public:
 #ifdef USE_LIBXC
         int np = exc_.size();
         //        int ione=1;
-        double exc = mygrid.vel() * MPdot(np, &rho_.rho_[0][0], &exc_[0]);
-        //        double exc= mygrid.vel()*ddot(&np, &rho_.rho_[0][0], &ione,
-        //        &exc_[0], &ione);
+        double exc = mygrid.vel()
+                     * LinearAlgebraUtils<MemorySpace::Host>::MPdot(
+                           np, &rho_.rho_[0][0], &exc_[0]);
 
         double sum      = 0.;
         MGmol_MPI& mmpi = *(MGmol_MPI::instance());
         int rc          = mmpi.allreduce(&exc, &sum, 1, MPI_SUM);
         if (rc != MPI_SUCCESS)
         {
-            (*MPIdata::sout) << "MPI_Allreduce double sum failed!!!" << endl;
+            (*MPIdata::sout)
+                << "MPI_Allreduce double sum failed!!!" << std::endl;
             Control& ct = *(Control::instance());
             ct.global_exit(2);
         }

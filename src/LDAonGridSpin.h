@@ -16,10 +16,7 @@
 #include "Rho.h"
 #include "XConGrid.h"
 
-//#define USE_LIBXC
-
 #ifdef USE_LIBXC
-#include "Control.h"
 #include <xc.h>
 #endif
 
@@ -37,7 +34,6 @@ class LDAonGridSpin : public XConGrid
     xc_func_type xfunc_;
     xc_func_type cfunc_;
     std::vector<double> exc_;
-    std::vector<double> vxc_;
 #else
     LDAFunctional* lda_;
 #endif
@@ -55,15 +51,14 @@ public:
         int func_id = XC_LDA_X;
         if (xc_func_init(&xfunc_, func_id, XC_POLARIZED) != 0)
         {
-            cerr << "Functional " << func_id << " not found" << endl;
+            std::cerr << "Functional " << func_id << " not found" << std::endl;
         }
         func_id = XC_LDA_C_PZ_MOD;
         if (xc_func_init(&cfunc_, func_id, XC_POLARIZED) != 0)
         {
-            cerr << "Functional " << func_id << " not found" << endl;
+            std::cerr << "Functional " << func_id << " not found" << std::endl;
         }
-        exc_.resize(np_ * 2);
-        vxc_.resize(np_ * 2);
+        exc_.resize(np_);
 #else
         lda_ = new LDAFunctional(rho.rho_);
 #endif
@@ -81,31 +76,7 @@ public:
 
     void update() override;
 
-    double getExc() const override // in [Ha]
-    {
-        Mesh* mymesh           = Mesh::instance();
-        const pb::Grid& mygrid = mymesh->grid();
-
-#ifdef USE_LIBXC
-        double sum = 0.;
-        double exc = mygrid.vel() * MPdot(np_, &rho_.rho_[0][0], &exc_[0]);
-        exc += ddot(&np_, &rho_.rho_[1][0], &ione, &exc_[0], &ione);
-        //        double exc= mygrid.vel()*ddot(&np, &rho_.rho_[0][0], &ione,
-        //        &exc_[0], &ione);
-
-        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-        int rc          = mmpi.allreduce(&exc, &sum, 1, MPI_SUM);
-        if (rc != MPI_SUCCESS)
-        {
-            (*MPIdata::sout) << "MPI_Allreduce double sum failed!!!" << endl;
-            Control& ct = *(Control::instance());
-            ct.global_exit(2);
-        }
-        return sum;
-#else
-        return mygrid.vel() * lda_->computeRhoDotExc();
-#endif
-    }
+    double getExc() const override; // in [Ha]
 };
 
 #endif

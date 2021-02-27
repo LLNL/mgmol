@@ -159,6 +159,9 @@ target_link_libraries(mgmol_src ${link_libs})
 if(${MGMOL_WITH_MAGMA})
   target_link_libraries(mgmol_src PkgConfig::MAGMA)
 endif()
+if(${MGMOL_WITH_LIBXC})
+  target_include_directories(mgmol_src PRIVATE ${LIBXC_DIR}/include)
+endif (${MGMOL_WITH_LIBXC})
 
 install(TARGETS mgmol_src DESTINATION lib)
 
@@ -176,6 +179,9 @@ target_link_libraries(mgmol-opt ${Boost_LIBRARIES})
 if (${OPENMP_CXX_FOUND})
   target_link_libraries(mgmol-opt OpenMP::OpenMP_CXX)
 endif()
+if(${MGMOL_WITH_LIBXC})
+  target_link_libraries(mgmol-opt ${LIBXC_DIR}/lib/libxc.a)
+endif (${MGMOL_WITH_LIBXC})
 
 install(TARGETS mgmol-opt DESTINATION bin)
 

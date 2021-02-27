@@ -7,13 +7,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-////////////////////////////////////////////////////////////////////////////////
-//
-// PBEFunctional.h
-//
-////////////////////////////////////////////////////////////////////////////////
-// $Id$
-
 #ifndef PBEFUNCTIONAL_H
 #define PBEFUNCTIONAL_H
 
@@ -44,7 +37,9 @@ class PBEFunctional : public XCFunctional
         POTDTYPE* vxc1_up, POTDTYPE* vxc1_dn, POTDTYPE* vxc2_upup,
         POTDTYPE* vxc2_dndn, POTDTYPE* vxc2_updn, POTDTYPE* vxc2_dnup);
 
-    RHODTYPE *pgrad_rho_[3], *pgrad_rho_up_[3], *pgrad_rho_dn_[3];
+    RHODTYPE* pgrad_rho_[3];
+    RHODTYPE* pgrad_rho_up_[3];
+    RHODTYPE* pgrad_rho_dn_[3];
 
 public:
     PBEFunctional(std::vector<std::vector<RHODTYPE>>& rhoe);

@@ -60,6 +60,11 @@ else(${HDF5_FOUND})
   message(FATAL_ERROR "Required HDF5 package not found.")
 endif (${HDF5_FOUND})
 
+set(MGMOL_WITH_LIBXC FALSE CACHE BOOL "Compile with LIBXC")
+if(${MGMOL_WITH_LIBXC})
+  add_definitions(-DUSE_LIBXC)
+endif (${MGMOL_WITH_LIBXC})
+
 # Boost (required)
 find_package(Boost COMPONENTS program_options random REQUIRED)
 if(NOT ${Boost_FOUND})
