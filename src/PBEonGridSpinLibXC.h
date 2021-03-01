@@ -7,36 +7,50 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef MGMOL_PBEONGRID_H
-#define MGMOL_PBEONGRID_H
+#ifndef MGMOL_PBEONGRIDSPINLIBXC_H
+#define MGMOL_PBEONGRIDSPINLIBXC_H
 
-#include "PBEFunctional.h"
+#ifdef USE_LIBXC
+
 #include "Rho.h"
 #include "XConGrid.h"
+
+#include <xc.h>
+
+#include <vector>
 
 class Potentials;
 
 template <class T>
-class PBEonGrid : public XConGrid
+class PBEonGridSpinLibXC : public XConGrid
 {
     int np_;
-    PBEFunctional* pbe_;
+    int myspin_;
+
+    xc_func_type xfunc_;
+    xc_func_type cfunc_;
+
+    std::vector<double> vxc_;
+    std::vector<double> exc_;
+    std::vector<double> vsigma_;
+
     Rho<T>& rho_;
 
     Potentials& pot_;
 
 public:
-    PBEonGrid(Rho<T>& rho, Potentials& pot) : rho_(rho), pot_(pot)
-    {
-        np_  = rho.rho_[0].size();
-        pbe_ = new PBEFunctional(rho.rho_);
-    }
+    PBEonGridSpinLibXC(Rho<T>& rho, Potentials& pot);
 
-    ~PBEonGrid() override { delete pbe_; }
+    ~PBEonGridSpinLibXC() override
+    {
+        xc_func_end(&xfunc_);
+        xc_func_end(&cfunc_);
+    }
 
     void update() override;
 
     double getExc() const override;
 };
+#endif
 
 #endif

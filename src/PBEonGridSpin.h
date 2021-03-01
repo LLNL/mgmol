@@ -14,11 +14,7 @@
 #include "Rho.h"
 #include "XConGrid.h"
 
-#ifdef USE_LIBXC
-#include <xc.h>
-#else
 #include "PBEFunctional.h"
-#endif
 
 #include <vector>
 
@@ -30,14 +26,7 @@ class PBEonGridSpin : public XConGrid
     int np_;
     int myspin_;
     std::vector<double> vxc_;
-#ifdef USE_LIBXC
-    xc_func_type xfunc_;
-    xc_func_type cfunc_;
-    std::vector<double> exc_;
-    std::vector<double> vsigma_;
-#else
     PBEFunctional* pbe_;
-#endif
     Rho<T>& rho_;
 
     Potentials& pot_;
@@ -45,15 +34,7 @@ class PBEonGridSpin : public XConGrid
 public:
     PBEonGridSpin(Rho<T>& rho, Potentials& pot);
 
-    ~PBEonGridSpin() override
-    {
-#ifdef USE_LIBXC
-        xc_func_end(&xfunc_);
-        xc_func_end(&cfunc_);
-#else
-        delete pbe_;
-#endif
-    }
+    ~PBEonGridSpin() override { delete pbe_; }
 
     void update() override;
 

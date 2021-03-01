@@ -16,7 +16,6 @@
 #include "MGmol_MPI.h"
 #include "Mesh.h"
 #include "PBh4.h"
-
 #include "Potentials.h"
 #include "mputils.h"
 
@@ -26,22 +25,7 @@ PBEonGridSpin<T>::PBEonGridSpin(Rho<T>& rho, Potentials& pot)
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     myspin_         = mmpi.myspin();
-#ifdef USE_LIBXC
-    int func_id = XC_GGA_X_PBE;
-    if (xc_func_init(&xfunc_, func_id, XC_POLARIZED) != 0)
-    {
-        std::cerr << "Functional " << func_id << " not found" << std::endl;
-    }
-    func_id = XC_GGA_C_PBE;
-    if (xc_func_init(&cfunc_, func_id, XC_POLARIZED) != 0)
-    {
-        std::cerr << "Functional " << func_id << " not found" << std::endl;
-    }
-    exc_.resize(np_);
-    vsigma_.resize(np_ * 3);
-#else
-    pbe_ = new PBEFunctional(rho.rho_);
-#endif
+    pbe_            = new PBEFunctional(rho.rho_);
     vxc_.resize(np_ * 2);
 }
 
@@ -53,7 +37,6 @@ void PBEonGridSpin<T>::update()
     int iterative_index = rho_.getIterativeIndex();
 
     std::vector<std::vector<RHODTYPE>>& vrho = rho_.rho_;
-    double one                               = 1.;
 
     Control& ct            = *(Control::instance());
     Mesh* mymesh           = Mesh::instance();
@@ -80,19 +63,6 @@ void PBEonGridSpin<T>::update()
         memset(grad_rho[is], 0, np_ * sizeof(RHODTYPE));
     }
 
-#ifdef USE_LIBXC
-    double* sigma = new double[3 * np_];
-    memset(sigma, 0, 3 * np_ * sizeof(double));
-    double* rho = new double[2 * np_];
-    for (int j = 0; j < np_; j++)
-    {
-        for (short is = 0; is < 2; is++)
-        {
-            rho[2 * j + is] = rho_.rho_[is][j];
-        }
-    }
-#endif
-
     pb::GridFunc<RHODTYPE> gf_tmp(newGrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
     // compute grad rho, one direction at a time
     for (short dir = 0; dir < 3; dir++)
@@ -105,23 +75,8 @@ void PBEonGridSpin<T>::update()
             // convert gf_tmp back into RHODTYPE*
             gf_tmp.init_vect(grad_rho[is], 'd');
         }
-#ifdef USE_LIBXC
-        for (short is1 = 0; is1 < 2; is1++)
-        {
-            for (short is2 = is1; is2 < 2; is2++)
-            {
-                int jj = is1 + is2;
-                for (int j = 0; j < np_; j++)
-                {
-                    sigma[jj] += (grad_rho[is1][j] * grad_rho[is2][j]);
-                    jj += 3;
-                }
-            }
-        }
-#else
         pbe_->setGradRhoUp(dir, grad_rho[0]);
         pbe_->setGradRhoDn(dir, grad_rho[1]);
-#endif
     }
 
     for (short is = 0; is < 2; is++)
@@ -131,85 +86,11 @@ void PBEonGridSpin<T>::update()
         delete myoper_del[i];
 
     pb::GridFunc<POTDTYPE>* gf_vsigma[2];
-#ifdef USE_LIBXC
-    std::vector<double> vtmp(2 * np_);
-    std::vector<double> etmp(np_);
-    std::vector<double> stmp(3 * np_);
-    xc_gga_exc_vxc(&xfunc_, np_, rho, sigma, &exc_[0], &vtmp[0], &vsigma_[0]);
-    xc_gga_exc_vxc(&cfunc_, np_, rho, sigma, &etmp[0], &vxc_[0], &stmp[0]);
-    delete[] sigma;
-    delete[] rho;
-
-    int nn   = np_ * 2;
-    int ione = 1;
-    DAXPY(&nn, &one, &vxc_[0], &ione, &vtmp[0], &ione);
-    nn = np_;
-    DAXPY(&nn, &one, &etmp[0], &ione, &exc_[0], &ione);
-
-    nn = np_ * 3;
-    DAXPY(&nn, &one, &stmp[0], &ione, &vsigma_[0], &ione);
-
-    // factor 2.
-    double two = 2.;
-    int ithree = 3;
-    DSCAL(&np_, &two, &vsigma_[0], &ithree);
-    // DSCAL(&np_, &two, &vsigma_[np_], &ithree);
-    DSCAL(&np_, &two, &vsigma_[2], &ithree);
-
-    if (myspin_ == 0)
-    {
-        for (int j = 0; j < np_; j++)
-        {
-            vxc_[j] = vtmp[2 * j];
-        }
-    }
-    else
-    {
-        for (int j = 0; j < np_; j++)
-        {
-            vxc_[np_ + j] = vtmp[2 * j + 1];
-        }
-    }
-    std::vector<POTDTYPE> vstmp(np_);
-    gf_vsigma[0] = new pb::GridFunc<POTDTYPE>(
-        newGrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
-    gf_vsigma[1] = new pb::GridFunc<POTDTYPE>(
-        newGrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
-
-    if (myspin_ == 0)
-    {
-        for (int j = 0; j < np_; j++)
-        {
-            vstmp[j] = vsigma_[3 * j];
-        }
-        gf_vsigma[0]->assign(&vstmp[0], 'd');
-        for (int j = 0; j < np_; j++)
-        {
-            vstmp[j] = vsigma_[3 * j + 1];
-        }
-        gf_vsigma[1]->assign(&vstmp[0], 'd');
-    }
-    else
-    {
-        for (int j = 0; j < np_; j++)
-        {
-            vstmp[j] = vsigma_[3 * j + 1];
-        }
-        gf_vsigma[0]->assign(&vstmp[0], 'd');
-
-        for (int j = 0; j < np_; j++)
-        {
-            vstmp[j] = vsigma_[3 * j + 2];
-        }
-        gf_vsigma[1]->assign(&vstmp[0], 'd');
-    }
-#else
     pbe_->computeXC();
 
     if (myspin_ == 0)
     {
         assert(pbe_->pvxc1_up_ != nullptr);
-        //        Tcopy(&np_, pbe_->pvxc1_up_, &ione, &vxc_[0], &ione);
         MPcpy(&vxc_[0], pbe_->pvxc1_up_, np_);
         gf_vsigma[0] = new pb::GridFunc<POTDTYPE>(
             newGrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
@@ -222,7 +103,6 @@ void PBEonGridSpin<T>::update()
     else
     {
         assert(pbe_->pvxc1_dn_ != nullptr);
-        //        Tcopy(&np_, pbe_->pvxc1_dn_, &ione, &vxc_[np_], &ione);
         MPcpy(&vxc_[np_], pbe_->pvxc1_dn_, np_);
         gf_vsigma[0] = new pb::GridFunc<POTDTYPE>(
             newGrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
@@ -234,7 +114,6 @@ void PBEonGridSpin<T>::update()
     }
     (*gf_vsigma[0]) *= -1.;
     (*gf_vsigma[1]) *= -1.;
-#endif
 
     POTDTYPE* tmp = new POTDTYPE[np_];
     pb::GridFunc<POTDTYPE> gf_tmp_pot(gf_tmp);
@@ -248,7 +127,7 @@ void PBEonGridSpin<T>::update()
         // convert gf_vxc back into a POTDTYPE*
         gf_tmp_pot.init_vect(tmp, 'd');
         LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
-            np_, one, tmp, &vxc_[np_ * myspin_]);
+            np_, 1., tmp, &vxc_[np_ * myspin_]);
     }
 
     pot_.setVxc(&vxc_[np_ * myspin_], iterative_index);
@@ -269,19 +148,8 @@ double PBEonGridSpin<T>::getExc() const
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
 
-#ifdef USE_LIBXC
-    double sum = 0.;
-    double exc = LinearAlgebraUtils<MemorySpace::Host>::MPdot(
-        np_, &rho_.rho_[0][0], &exc_[0]);
-    exc += LinearAlgebraUtils<MemorySpace::Host>::MPdot(
-        np_, &rho_.rho_[1][0], &exc_[0]);
-    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    mmpi.allreduce(&exc, &sum, 1, MPI_SUM);
-    exc = sum;
-#else
     assert(pbe_ != nullptr);
     double exc = pbe_->computeRhoDotExc();
-#endif
     return exc * mygrid.vel();
 }
 

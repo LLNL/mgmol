@@ -6,8 +6,9 @@
 // All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
+#ifdef USE_LIBXC
 
-#include "PBEonGrid.h"
+#include "PBEonGridLibXC.h"
 
 #include "Control.h"
 #include "Delh4.h"
@@ -18,11 +19,12 @@
 #include "Potentials.h"
 
 template <class T>
-void PBEonGrid<T>::update()
+void PBEonGridLibXC<T>::update()
 {
     get_xc_tm_.start();
 
     std::vector<std::vector<RHODTYPE>>& vrho = rho_.rho_;
+    double one                               = 1.;
 
     Control& ct            = *(Control::instance());
     Mesh* mymesh           = Mesh::instance();
@@ -38,7 +40,10 @@ void PBEonGrid<T>::update()
     gf_rho.assign(&vrho[0][0]);
 
     pb::GridFunc<RHODTYPE> gf_tmp(newGrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
-    std::vector<RHODTYPE> tmp(np_);
+    std::vector<double> tmp(np_);
+    double* sigma = new double[np_];
+    memset(sigma, 0, np_ * sizeof(double));
+    int ione = 1;
 
     // compute grad rho
     for (int i = 0; i < 3; i++)
@@ -46,7 +51,11 @@ void PBEonGrid<T>::update()
         myoper_del[i]->apply(gf_rho, gf_tmp);
         // convert gf_tmp back into double*
         gf_tmp.init_vect(tmp.data(), 'd');
-        pbe_->setGradRho(i, tmp.data());
+        // compute sigma = grad(rho)*grad(rho) pointwise
+        for (int j = 0; j < np_; j++)
+        {
+            sigma[j] += (tmp[j] * tmp[j]);
+        }
     }
 
     const int iterative_index = rho_.getIterativeIndex();
@@ -55,11 +64,29 @@ void PBEonGrid<T>::update()
         delete myoper_del[i];
 
     // compute vxc1 and vxc2
-    pbe_->computeXC();
+    xc_gga_exc_vxc(
+        &xfunc_, np_, &rho_.rho_[0][0], sigma, &exc_[0], &vxc_[0], &vsigma_[0]);
 
+    // add correlation
+    {
+        std::vector<double> vtmp(np_);
+        std::vector<double> etmp(np_);
+        std::vector<double> stmp(np_);
+        xc_gga_exc_vxc(&cfunc_, np_, &rho_.rho_[0][0], sigma, &etmp[0],
+            &vtmp[0], &stmp[0]);
+
+        DAXPY(&np_, &one, &vtmp[0], &ione, &vxc_[0], &ione);
+        DAXPY(&np_, &one, &etmp[0], &ione, &exc_[0], &ione);
+        DAXPY(&np_, &one, &stmp[0], &ione, &vsigma_[0], &ione);
+    }
+
+    delete[] sigma;
+
+    std::vector<POTDTYPE> vstmp(np_);
+    MPcpy(&vstmp[0], &vsigma_[0], np_);
     pb::GridFunc<POTDTYPE> gf_vxc2(newGrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
-    gf_vxc2.assign(pbe_->pvxc2_);
-    gf_vxc2 *= -1.;
+    gf_vxc2.assign(&vstmp[0]);
+    gf_vxc2 *= 2.;
 
     //
     // compute vxc from vxc1 and vxc2
@@ -78,7 +105,7 @@ void PBEonGrid<T>::update()
     gf_vxc.init_vect(tmp_vxc.data(), 'd');
 
     LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
-        np_, 1., pbe_->pvxc1_, tmp_vxc.data());
+        np_, one, &vxc_[0], tmp_vxc.data());
 
     pot_.setVxc(tmp_vxc.data(), iterative_index);
 
@@ -86,15 +113,27 @@ void PBEonGrid<T>::update()
 }
 
 template <class T>
-double PBEonGrid<T>::getExc() const
+double PBEonGridLibXC<T>::getExc() const
 {
-    assert(pbe_ != nullptr);
-
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
 
-    return mygrid.vel() * pbe_->computeRhoDotExc();
+    double exc = mygrid.vel()
+                 * LinearAlgebraUtils<MemorySpace::Host>::MPdot(
+                       np_, &rho_.rho_[0][0], &exc_[0]);
+
+    double sum      = 0.;
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    int rc          = mmpi.allreduce(&exc, &sum, 1, MPI_SUM);
+    if (rc != MPI_SUCCESS)
+    {
+        (*MPIdata::sout) << "MPI_Allreduce double sum failed!!!" << std::endl;
+        mmpi.abort();
+    }
+    return sum;
 }
 
-template class PBEonGrid<LocGridOrbitals>;
-template class PBEonGrid<ExtendedGridOrbitals>;
+template class PBEonGridLibXC<LocGridOrbitals>;
+template class PBEonGridLibXC<ExtendedGridOrbitals>;
+
+#endif

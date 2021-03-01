@@ -20,23 +20,8 @@ void LDAonGrid<T>::update()
 
     int iterative_index = rho_.getIterativeIndex();
 
-#ifdef USE_LIBXC
-    xc_lda_exc_vxc(&xfunc_, exc_.size(), &rho_.rho_[0][0], &exc_[0], &vxc_[0]);
-    std::vector<double> vtmp(vxc_.size());
-    std::vector<double> etmp(vxc_.size());
-    xc_lda_exc_vxc(&cfunc_, exc_.size(), &rho_.rho_[0][0], &etmp[0], &vtmp[0]);
-
-    int ione   = 1;
-    double one = 1.;
-    int np     = vxc_.size();
-    DAXPY(&np, &one, &vtmp[0], &ione, &vxc_[0], &ione);
-    DAXPY(&np, &one, &etmp[0], &ione, &exc_[0], &ione);
-
-    pot_.setVxc(&vxc_[0], iterative_index);
-#else
     lda_->computeXC();
     pot_.setVxc(lda_->pvxc1_, iterative_index);
-#endif
 
     get_xc_tm_.stop();
 }

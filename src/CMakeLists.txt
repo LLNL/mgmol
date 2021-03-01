@@ -76,12 +76,17 @@ set(SOURCES
  DistanceConstraint.cc 
  MultiDistanceConstraint.cc 
  getLAeigen.cc 
+ XConGrid.cc
  LDAFunctional.cc 
  LDAonGrid.cc 
+ LDAonGridLibXC.cc
  LDAonGridSpin.cc
+ LDAonGridSpinLibXC.cc
  PBEFunctional.cc 
- PBEonGrid.cc 
- PBEonGridSpin.cc 
+ PBEonGrid.cc
+ PBEonGridLibXC.cc
+ PBEonGridSpin.cc
+ PBEonGridSpinLibXC.cc
  Electrostatic.cc 
  ProjectedMatrices.cc 
  ProjectedMatricesSparse.cc 
