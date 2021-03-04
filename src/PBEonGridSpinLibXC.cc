@@ -20,6 +20,8 @@
 #include "Potentials.h"
 #include "mputils.h"
 
+#define WHITEBIRD94 1
+
 template <class T>
 PBEonGridSpinLibXC<T>::PBEonGridSpinLibXC(Rho<T>& rho, Potentials& pot)
     : np_(rho.rho_[0].size()), rho_(rho), pot_(pot)
@@ -69,16 +71,18 @@ void PBEonGridSpinLibXC<T>::update()
         gf_rho[is]->assign(&vrho[is][0], 'd');
     }
 
-    RHODTYPE* grad_rho[2];
+    std::vector<std::vector<std::vector<RHODTYPE>>> grad_rho;
+    grad_rho.resize(2);
     for (short is = 0; is < 2; is++)
     {
-        grad_rho[is] = new RHODTYPE[np_];
-        memset(grad_rho[is], 0, np_ * sizeof(RHODTYPE));
+        grad_rho[is].resize(3);
+        for (short dir = 0; dir < 3; dir++)
+            grad_rho[is][dir].resize(np_);
     }
 
-    double* sigma = new double[3 * np_];
-    memset(sigma, 0, 3 * np_ * sizeof(double));
-    double* rho = new double[2 * np_];
+    std::vector<double> sigma(3 * np_);
+    memset(sigma.data(), 0, 3 * np_ * sizeof(double));
+    std::vector<double> rho(2 * np_);
     for (int j = 0; j < np_; j++)
     {
         for (short is = 0; is < 2; is++)
@@ -93,12 +97,14 @@ void PBEonGridSpinLibXC<T>::update()
     {
         for (short is = 0; is < 2; is++)
         {
-            memset(grad_rho[is], 0, np_ * sizeof(RHODTYPE));
             // gf_rho[is]->trade_boundaries();
             myoper_del[dir]->apply(*gf_rho[is], gf_tmp);
             // convert gf_tmp back into RHODTYPE*
-            gf_tmp.init_vect(grad_rho[is], 'd');
+            gf_tmp.init_vect(grad_rho[is][dir].data(), 'd');
         }
+    }
+    for (short dir = 0; dir < 3; dir++)
+    {
         for (short is1 = 0; is1 < 2; is1++)
         {
             for (short is2 = is1; is2 < 2; is2++)
@@ -106,27 +112,22 @@ void PBEonGridSpinLibXC<T>::update()
                 int jj = is1 + is2;
                 for (int j = 0; j < np_; j++)
                 {
-                    sigma[jj] += (grad_rho[is1][j] * grad_rho[is2][j]);
+                    sigma[jj]
+                        += (grad_rho[is1][dir][j] * grad_rho[is2][dir][j]);
                     jj += 3;
                 }
             }
         }
     }
 
-    for (short is = 0; is < 2; is++)
-        delete[] grad_rho[is];
-
-    for (short i = 0; i < 3; i++)
-        delete myoper_del[i];
-
     pb::GridFunc<POTDTYPE>* gf_vsigma[2];
     std::vector<double> vtmp(2 * np_);
     std::vector<double> etmp(np_);
     std::vector<double> stmp(3 * np_);
-    xc_gga_exc_vxc(&xfunc_, np_, rho, sigma, &exc_[0], &vtmp[0], &vsigma_[0]);
-    xc_gga_exc_vxc(&cfunc_, np_, rho, sigma, &etmp[0], &vxc_[0], &stmp[0]);
-    delete[] sigma;
-    delete[] rho;
+    xc_gga_exc_vxc(&xfunc_, np_, rho.data(), sigma.data(), &exc_[0], &vtmp[0],
+        &vsigma_[0]);
+    xc_gga_exc_vxc(
+        &cfunc_, np_, rho.data(), sigma.data(), &etmp[0], &vxc_[0], &stmp[0]);
 
     int nn   = np_ * 2;
     int ione = 1;
@@ -192,7 +193,31 @@ void PBEonGridSpinLibXC<T>::update()
         gf_vsigma[1]->assign(&vstmp[0], 'd');
     }
 
-    POTDTYPE* tmp = new POTDTYPE[np_];
+    std::vector<POTDTYPE> tmp(np_);
+#ifdef WHITEBIRD94
+    //
+    // White & Bird (1994)
+    //
+    std::vector<double> vsgrad(np_);
+    pb::GridFunc<POTDTYPE> gf_vsgrad(
+        newGrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
+    for (short is = 0; is < 2; is++)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < np_; j++)
+            {
+                vsgrad[j] = vsigma_[3 * j + is + myspin_] * grad_rho[is][i][j];
+            }
+            gf_vsgrad.assign(vsgrad.data());
+            myoper_del[i]->apply(gf_vsgrad, gf_tmp);
+
+            gf_tmp.init_vect(tmp.data(), 'd');
+            LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
+                np_, -1., tmp.data(), &vxc_[np_ * myspin_]);
+        }
+    }
+#else
     pb::GridFunc<POTDTYPE> gf_tmp_pot(gf_tmp);
     for (short is = 0; is < 2; is++)
     {
@@ -202,20 +227,23 @@ void PBEonGridSpinLibXC<T>::update()
         pb::GridFunc<POTDTYPE> gf_lhs(*gf_rho[is]);
         myoper.apply(gf_lhs, gf_tmp_pot);
         // convert gf_vxc back into a POTDTYPE*
-        gf_tmp_pot.init_vect(tmp, 'd');
+        gf_tmp_pot.init_vect(tmp.data(), 'd');
         LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
-            np_, one, tmp, &vxc_[np_ * myspin_]);
+            np_, one, tmp.data(), &vxc_[np_ * myspin_]);
     }
+#endif
 
     pot_.setVxc(&vxc_[np_ * myspin_], iterative_index);
 
-    delete[] tmp;
+    for (short i = 0; i < 3; i++)
+        delete myoper_del[i];
 
     for (short isp = 0; isp < 2; isp++)
     {
         delete gf_rho[isp];
         delete gf_vsigma[isp];
     }
+
     get_xc_tm_.stop();
 }
 
