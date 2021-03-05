@@ -17,6 +17,8 @@
 #include "PBh4.h"
 #include "Potentials.h"
 
+#define WHITEBIRD94
+
 template <class T>
 void PBEonGrid<T>::update()
 {
@@ -40,19 +42,21 @@ void PBEonGrid<T>::update()
     pb::GridFunc<RHODTYPE> gf_tmp(newGrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
     std::vector<RHODTYPE> tmp(np_);
 
+    std::vector<std::vector<double>> grad;
+    grad.resize(3);
+    for (int i = 0; i < 3; i++)
+        grad[i].resize(np_);
+
     // compute grad rho
     for (int i = 0; i < 3; i++)
     {
         myoper_del[i]->apply(gf_rho, gf_tmp);
         // convert gf_tmp back into double*
-        gf_tmp.init_vect(tmp.data(), 'd');
-        pbe_->setGradRho(i, tmp.data());
+        gf_tmp.init_vect(grad[i].data(), 'd');
+        pbe_->setGradRho(i, grad[i].data());
     }
 
     const int iterative_index = rho_.getIterativeIndex();
-
-    for (int i = 0; i < 3; i++)
-        delete myoper_del[i];
 
     // compute vxc1 and vxc2
     pbe_->computeXC();
@@ -64,6 +68,36 @@ void PBEonGrid<T>::update()
     //
     // compute vxc from vxc1 and vxc2
     //
+    std::vector<POTDTYPE> tmp_vxc(np_);
+
+#ifdef WHITEBIRD94
+    //
+    // White & Bird (1994)
+    //
+    std::vector<double> vsigma(np_);
+    memcpy(vsigma.data(), pbe_->pvxc2_, np_ * sizeof(double));
+    // rescale by -0.5 to get vsigma
+    LinearAlgebraUtils<MemorySpace::Host>::MPscal(np_, -0.5, vsigma.data());
+
+    memcpy(tmp_vxc.data(), pbe_->pvxc1_, np_ * sizeof(double));
+
+    std::vector<double> vsgrad(np_);
+    pb::GridFunc<POTDTYPE> gf_vsgrad(
+        newGrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
+    for (int i = 0; i < 3; i++)
+    {
+        for (int j = 0; j < np_; j++)
+        {
+            vsgrad[j] = 2. * vsigma[j] * grad[i][j];
+        }
+        gf_vsgrad.assign(vsgrad.data());
+        myoper_del[i]->apply(gf_vsgrad, gf_tmp);
+
+        gf_tmp.init_vect(tmp.data(), 'd');
+        LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
+            np_, -1., tmp.data(), tmp_vxc.data());
+    }
+#else
     pb::GridFunc<POTDTYPE> gf_vxc(newGrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
     pb::DielFunc<POTDTYPE> diel_vxc2(gf_vxc2);
     // convert gf_rho to POTDTYPE
@@ -74,13 +108,16 @@ void PBEonGrid<T>::update()
     myoper.apply(gf_lhs, gf_vxc);
 
     // convert gf_vxc back into data without ghosts
-    std::vector<POTDTYPE> tmp_vxc(np_);
     gf_vxc.init_vect(tmp_vxc.data(), 'd');
 
     LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
         np_, 1., pbe_->pvxc1_, tmp_vxc.data());
+#endif
 
     pot_.setVxc(tmp_vxc.data(), iterative_index);
+
+    for (int i = 0; i < 3; i++)
+        delete myoper_del[i];
 
     get_xc_tm_.stop();
 }
