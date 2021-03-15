@@ -12,6 +12,7 @@
 
 #include "FDkernels.h"
 #include "GridFunc.h"
+#include "Map2Masks.h"
 #include "memory_space.h"
 
 #include <map>
@@ -37,6 +38,8 @@ class GridFuncVector
     static Timer wait_north_south_tm_;
     static Timer wait_up_down_tm_;
     static Timer wait_east_west_tm_;
+
+    static Map2Masks* map2masks_;
 
     // block of memory for all GridFunc
     std::unique_ptr<ScalarType> memory_;
@@ -86,7 +89,6 @@ class GridFuncVector
 
     const bool skinny_stencil_;
 
-    // number of functions associated with buffers sizes
     int nfunc4buffers_;
 
     // block of memory for device memory
@@ -210,6 +212,8 @@ public:
     }
 
     void setup();
+
+    static void setMasks(Map2Masks* map2masks) { map2masks_ = map2masks; }
 
     const Grid& grid() const { return grid_; }
 
@@ -432,6 +436,8 @@ public:
         const GridFuncVector<ScalarType, MemorySpaceType>& B,
         GridFuncVector<ScalarType, MemorySpaceType>& w, const double scale);
 
+    void app_mask(const short level);
+
     static void printTimers(std::ostream& os)
     {
         trade_bc_tm_.print(os);
@@ -474,6 +480,8 @@ template <typename ScalarType, typename MemorySpaceType>
 Timer GridFuncVector<ScalarType, MemorySpaceType>::wait_east_west_tm_(
     "GridFuncVector::waitEW");
 
+template <typename ScalarType, typename MemorySpaceType>
+Map2Masks* GridFuncVector<ScalarType, MemorySpaceType>::map2masks_(nullptr);
 } // namespace pb
 
 #endif

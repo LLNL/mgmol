@@ -131,6 +131,7 @@ add_executable(testTradeGhostValues
                ${CMAKE_SOURCE_DIR}/src/pb/PEenv.cc
                ${CMAKE_SOURCE_DIR}/src/pb/GridFunc.cc
                ${CMAKE_SOURCE_DIR}/src/pb/GridFuncVector.cc
+               ${CMAKE_SOURCE_DIR}/src/Map2Masks.cc
                ${CMAKE_SOURCE_DIR}/src/pb/MGkernels.cc
                ${CMAKE_SOURCE_DIR}/src/pb/FDkernels.cc
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
@@ -149,6 +150,7 @@ add_executable(testLaph4
                ${CMAKE_SOURCE_DIR}/src/pb/PEenv.cc
                ${CMAKE_SOURCE_DIR}/src/pb/GridFunc.cc
                ${CMAKE_SOURCE_DIR}/src/pb/GridFuncVector.cc
+               ${CMAKE_SOURCE_DIR}/src/Map2Masks.cc
                ${CMAKE_SOURCE_DIR}/src/pb/MGkernels.cc
                ${CMAKE_SOURCE_DIR}/src/pb/FDkernels.cc
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
@@ -158,6 +160,7 @@ add_executable(testLaph4
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 add_executable(testBatchLaph4
                ${CMAKE_SOURCE_DIR}/tests/testBatchLaph4.cc
+               ${CMAKE_SOURCE_DIR}/src/Map2Masks.cc
                ${CMAKE_SOURCE_DIR}/src/pb/Laph4.cc
                ${CMAKE_SOURCE_DIR}/src/pb/Lap.cc
                ${CMAKE_SOURCE_DIR}/src/pb/Laph2.cc
@@ -176,6 +179,7 @@ add_executable(testBatchLaph4
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 add_executable(testMGkernels
                ${CMAKE_SOURCE_DIR}/tests/testMGkernels.cc
+               ${CMAKE_SOURCE_DIR}/src/Map2Masks.cc
                ${CMAKE_SOURCE_DIR}/src/magma_singleton.cc
                ${CMAKE_SOURCE_DIR}/src/pb/Grid.cc
                ${CMAKE_SOURCE_DIR}/src/pb/PEenv.cc

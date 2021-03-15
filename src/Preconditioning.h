@@ -44,14 +44,6 @@ private:
     std::vector<pb::GridFuncVector<T, memory_space_type>*> gfv_rcoarse_;
     std::vector<pb::GridFuncVector<T, memory_space_type>*> gfv_newv_;
 
-    std::map<int, GridMask*> gid2mask_; // map state->mask;
-    std::vector<std::vector<int>> overlapping_gids_;
-
-    void app_mask(
-        pb::GridFunc<T>&, const short level, const int istate = -1) const;
-    void app_mask(
-        pb::GridFuncVector<T, memory_space_type>&, const short level) const;
-
 public:
     Preconditioning(const short lap_type, const short maxlevels,
         const pb::Grid& grid, const short bc[3]);
@@ -61,12 +53,8 @@ public:
     ~Preconditioning();
     void clear();
 
-    void setup(std::map<int, GridMask*>& st_to_mask,
-        const std::vector<std::vector<int>>& gid);
-    void reset(std::map<int, GridMask*>& st_to_mask,
-        const std::vector<std::vector<int>>& gid);
-    void mg(pb::GridFunc<T>& gf_v, const pb::GridFunc<T>& gf_f,
-        const short level, const int istate = -1);
+    void setup(const std::vector<std::vector<int>>& overlapping_gids);
+    void reset(const std::vector<std::vector<int>>& overlapping_gids);
     void mg(pb::GridFuncVector<T, memory_space_type>& gf_v,
         const pb::GridFuncVector<T, memory_space_type>& gf_f,
         const short level);

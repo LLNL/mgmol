@@ -113,6 +113,7 @@ set(SOURCES
  Species.cc 
  HDFrestart.cc 
  MasksSet.cc 
+ Map2Masks.cc
  FunctionsPacking.cc 
  ColoredRegions.cc 
  LocGridOrbitals.cc 

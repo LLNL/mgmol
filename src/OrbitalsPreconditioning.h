@@ -12,6 +12,7 @@
 
 #include "GridFuncVector.h"
 #include "Lap.h"
+#include "Map2Masks.h"
 #include "Preconditioning.h"
 
 #include <memory>
@@ -48,8 +49,7 @@ private:
     // timers
     static Timer precond_tm_;
 
-    std::map<int, GridMask*> getGid2Masks(MasksSet* currentMasks,
-        const std::shared_ptr<LocalizationRegions>& lrs);
+    Map2Masks* map2masks_;
 
 public:
     OrbitalsPreconditioning()
