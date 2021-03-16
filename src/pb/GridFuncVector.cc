@@ -2404,6 +2404,19 @@ void GridFuncVector<ScalarType, MemorySpaceType>::jacobi(const int type,
     set_updated_boundaries(false);
 }
 
+template <typename ScalarType, typename MemorySpaceType>
+void GridFuncVector<ScalarType, MemorySpaceType>::app_mask(const short level)
+{
+    if (map2masks_ == nullptr) return;
+
+    const int nfunc = (int)gid_[0].size();
+#pragma omp parallel for
+    for (int color = 0; color < nfunc; color++)
+    {
+        map2masks_->apply(getGridFunc(color), gid_, level, color);
+    }
+}
+
 template class GridFuncVector<double, MemorySpace::Host>;
 template class GridFuncVector<float, MemorySpace::Host>;
 template void GridFuncVector<float, MemorySpace::Host>::assign(

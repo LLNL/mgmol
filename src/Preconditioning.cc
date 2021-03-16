@@ -94,21 +94,19 @@ void Preconditioning<T>::clear()
 }
 
 template <typename T>
-void Preconditioning<T>::reset(map<int, GridMask*>& st_to_mask,
-    const vector<vector<int>>& overlapping_gids)
+void Preconditioning<T>::reset(
+    const std::vector<std::vector<int>>& overlapping_gids)
 {
     clear();
 
-    setup(st_to_mask, overlapping_gids);
+    setup(overlapping_gids);
 }
 
 template <typename T>
-void Preconditioning<T>::setup(map<int, GridMask*>& st_to_mask,
-    const vector<vector<int>>& overlapping_gids)
+void Preconditioning<T>::setup(
+    const std::vector<std::vector<int>>& overlapping_gids)
 {
     assert(overlapping_gids.size() > 0);
-
-    overlapping_gids_ = overlapping_gids;
 
     // fine level
     pb::GridFunc<T>* gf_work
@@ -117,7 +115,7 @@ void Preconditioning<T>::setup(map<int, GridMask*>& st_to_mask,
 
     pb::GridFuncVector<T, memory_space_type>* gfv_work
         = new pb::GridFuncVector<T, memory_space_type>(
-            *grid_[0], bc_[0], bc_[1], bc_[2], overlapping_gids_);
+            *grid_[0], bc_[0], bc_[1], bc_[2], overlapping_gids);
     gfv_work_.push_back(gfv_work);
 
     // coarse levels
@@ -144,20 +142,19 @@ void Preconditioning<T>::setup(map<int, GridMask*>& st_to_mask,
         mygrid = coarse_grid;
 
         gfv_work = new pb::GridFuncVector<T, memory_space_type>(
-            *coarse_grid, bc_[0], bc_[1], bc_[2], overlapping_gids_);
+            *coarse_grid, bc_[0], bc_[1], bc_[2], overlapping_gids);
         gfv_work_.push_back(gfv_work);
 
         pb::GridFuncVector<T, memory_space_type>* gfv_rcoarse
             = new pb::GridFuncVector<T, memory_space_type>(
-                *coarse_grid, bc_[0], bc_[1], bc_[2], overlapping_gids_);
+                *coarse_grid, bc_[0], bc_[1], bc_[2], overlapping_gids);
         gfv_rcoarse_.push_back(gfv_rcoarse);
 
         pb::GridFuncVector<T, memory_space_type>* gfv_newv
             = new pb::GridFuncVector<T, memory_space_type>(
-                *coarse_grid, bc_[0], bc_[1], bc_[2], overlapping_gids_);
+                *coarse_grid, bc_[0], bc_[1], bc_[2], overlapping_gids);
         gfv_newv_.push_back(gfv_newv);
     }
-    gid2mask_ = st_to_mask;
 }
 
 // MG V-cycle with mask corresponding to state istate
@@ -183,7 +180,7 @@ void Preconditioning<T>::mg(pb::GridFuncVector<T, memory_space_type>& gfv_v,
     {
         gfv_v.jacobi(
             lap_type_, gfv_f, *gfv_work_[level], myoper->jacobiFactor());
-        app_mask(gfv_v, level);
+        gfv_v.app_mask(level);
     }
 
     if (level == max_levels_) return;
@@ -191,7 +188,7 @@ void Preconditioning<T>::mg(pb::GridFuncVector<T, memory_space_type>& gfv_v,
     // COARSE GRID CORRECTION
 
     // LOCALIZATION
-    app_mask(*gfv_work_[level], level);
+    gfv_work_[level]->app_mask(level);
 
     // restrictions
     pb::GridFuncVector<T, memory_space_type>* rcoarse = gfv_rcoarse_[level];
@@ -199,7 +196,7 @@ void Preconditioning<T>::mg(pb::GridFuncVector<T, memory_space_type>& gfv_v,
     gfv_work_[level]->restrict3D(*rcoarse);
 
     // LOCALIZATION
-    app_mask(*rcoarse, level + 1);
+    rcoarse->app_mask(level + 1);
 
     // storage functions for coarse grid
     pb::GridFuncVector<T, memory_space_type>* newv = gfv_newv_[level];
@@ -211,7 +208,7 @@ void Preconditioning<T>::mg(pb::GridFuncVector<T, memory_space_type>& gfv_v,
     gfv_work_[level]->extend3D(*newv);
 
     // LOCALIZATION
-    app_mask(*gfv_work_[level], level);
+    gfv_work_[level]->app_mask(level);
 
     gfv_v -= (*gfv_work_[level]);
 
@@ -220,115 +217,10 @@ void Preconditioning<T>::mg(pb::GridFuncVector<T, memory_space_type>& gfv_v,
     {
         gfv_v.jacobi(
             lap_type_, gfv_f, *gfv_work_[level], myoper->jacobiFactor());
-        app_mask(gfv_v, level);
+        gfv_v.app_mask(level);
     }
 
     if (bc_[0] != 1 || bc_[2] != 1 || bc_[2] != 1) gfv_v.trade_boundaries();
 }
 
-template <typename T>
-void Preconditioning<T>::mg(pb::GridFunc<T>& gf_v, const pb::GridFunc<T>& gf_f,
-    const short level, const int istate)
-{
-    //(*MPIdata::sout)<<"Preconditioning::mg() at level "<<level<<endl;
-    short ncycl = 2;
-    if (level == max_levels_) ncycl = 4;
-
-    pb::Lap<T>* myoper = precond_oper_[level];
-
-    // SMOOTHING
-    for (short it = 0; it < ncycl; it++)
-    {
-        myoper->jacobi(gf_v, gf_f, *gf_work_[level]);
-        app_mask(gf_v, level, istate);
-    }
-
-    if (level == max_levels_) return;
-
-    // COARSE GRID CORRECTION
-
-    // LOCALIZATION
-    app_mask(*gf_work_[level], level, istate);
-
-    // restrictions
-    pb::GridFunc<T>* rcoarse = gf_rcoarse_[level];
-    gf_work_[level]->restrict3D(*rcoarse);
-
-    // LOCALIZATION
-    app_mask(*rcoarse, level + 1, istate);
-
-    // storage functions for coarse grid
-    pb::GridFunc<T>* newv = gf_newv_[level];
-
-    // call mgrid solver on a coarser level
-    newv->resetData();
-    mg(*newv, *rcoarse, level + 1, istate);
-
-    gf_work_[level]->extend3D(*newv);
-
-    // LOCALIZATION
-    app_mask(*gf_work_[level], level, istate);
-
-    gf_v -= (*gf_work_[level]);
-
-    // post-smoothing
-    for (short it = 0; it < 2; it++)
-    {
-        myoper->jacobi(gf_v, gf_f, *gf_work_[level]);
-        app_mask(gf_v, level, istate);
-    }
-
-    if (bc_[0] != 1 || bc_[2] != 1 || bc_[2] != 1) gf_v.trade_boundaries();
-}
-
-template <typename T>
-void Preconditioning<T>::app_mask(
-    pb::GridFuncVector<T, memory_space_type>& gvu, const short level) const
-{
-    const int nfunc = (int)gvu.size();
-#pragma omp parallel for
-    for (int k = 0; k < nfunc; k++)
-    {
-        app_mask(gvu.getGridFunc(k), level, k);
-    }
-}
-
-template <typename T>
-void Preconditioning<T>::app_mask(
-    pb::GridFunc<T>& gu, const short level, const int color) const
-{
-    if (color == -1) return; // no mask applied
-    if (gid2mask_.empty()) return; // no mask applied
-
-    assert(overlapping_gids_.size() > 0);
-
-    const short subdivx = overlapping_gids_.size();
-
-    const pb::Grid& lgrid(gu.grid());
-    const short nghosts = lgrid.ghost_pt();
-    const int dim0      = lgrid.dim(0) / subdivx;
-    const int incx      = lgrid.inc(0);
-    const int lnumpt    = dim0 * incx;
-
-    for (short iloc = 0; iloc < subdivx; iloc++)
-    {
-        int st = overlapping_gids_[iloc][color];
-
-        if (st != -1)
-        {
-            map<int, GridMask*>::const_iterator it = gid2mask_.find(st);
-            assert(it != gid2mask_.end());
-            (it->second)->apply(gu, level, iloc);
-        }
-        else
-        {
-            int offset = (nghosts + dim0 * iloc) * incx;
-            assert(offset + lnumpt < static_cast<int>(lgrid.sizeg()));
-            T* pu = gu.uu() + offset;
-            memset(pu, 0, lnumpt * sizeof(T));
-        }
-    }
-}
-
 template class Preconditioning<float>;
-// template class Preconditioning<double>;

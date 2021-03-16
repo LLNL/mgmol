@@ -26,6 +26,8 @@ OrbitalsPreconditioning<T>::~OrbitalsPreconditioning()
     assert(precond_ != nullptr);
 
     delete precond_;
+    delete map2masks_;
+
     if (gfv_work_ != nullptr)
     {
         delete gfv_work_;
@@ -36,24 +38,6 @@ OrbitalsPreconditioning<T>::~OrbitalsPreconditioning()
         delete data_wghosts_;
         data_wghosts_ = nullptr;
     }
-}
-
-template <class T>
-std::map<int, GridMask*> OrbitalsPreconditioning<T>::getGid2Masks(
-    MasksSet* currentMasks, const std::shared_ptr<LocalizationRegions>& lrs)
-{
-    std::map<int, GridMask*> gid_to_mask;
-    const std::vector<int>& overlap_gids(lrs->getOverlapGids());
-    for (std::vector<int>::const_iterator it = overlap_gids.begin();
-         it != overlap_gids.end(); it++)
-    {
-        int gid         = (*it);
-        GridMask* maski = currentMasks->get_pmask(gid);
-        assert(maski != nullptr);
-        gid_to_mask.insert(std::pair<int, GridMask*>(gid, maski));
-    }
-
-    return gid_to_mask;
 }
 
 template <class T>
@@ -70,10 +54,17 @@ void OrbitalsPreconditioning<T>::setup(T& orbitals, const short mg_levels,
     precond_ = new Preconditioning<MGPRECONDTYPE>(
         lap_type, mg_levels, mygrid, ct.bcWF);
 
-    std::map<int, GridMask*> gid_to_mask;
-    if (currentMasks != nullptr) gid_to_mask = getGid2Masks(currentMasks, lrs);
+    if (currentMasks != nullptr)
+    {
+        // set masks in GridFuncVector class
+        map2masks_ = new Map2Masks(currentMasks, lrs->getOverlapGids());
+        pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>::setMasks(
+            map2masks_);
+    }
+    else
+        map2masks_ = nullptr;
 
-    precond_->setup(gid_to_mask, orbitals.getOverlappingGids());
+    precond_->setup(orbitals.getOverlappingGids());
 
     assert(orbitals.chromatic_number()
            == static_cast<int>(orbitals.getOverlappingGids()[0].size()));
