@@ -38,7 +38,7 @@ void DielectricControl::activate(const int it_scf, const double deig2)
     // turn ON continuum solvent
     if (isON && (ct.restart_info >= 3 || deig2 < 2.e-2 * ct.numst))
     {
-        electrostat_->setupPB(ct.rho0, ct.drho0, pot_);
+        electrostat_->setupPB(ct.e0_, ct.rho0_, ct.drho0_, pot_);
         electrostat_->setup(ct.vh_its);
         pbset_ = true;
     }

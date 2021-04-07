@@ -12,7 +12,6 @@
 #include "MGmol_MPI.h"
 #include "MGmol_blas1.h"
 #include "mputils.h"
-#include "radial_functions.h"
 
 #include <cmath>
 #include <cstdarg>

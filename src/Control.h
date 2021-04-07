@@ -519,8 +519,9 @@ public:
     short multipole_order;
 
     // dielectric parameters
-    float rho0;
-    float drho0;
+    float e0_;
+    float rho0_;
+    float drho0_;
 
     // flag to reset Vh at beginning of each MD step
     short hartree_reset_;

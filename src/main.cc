@@ -342,7 +342,9 @@ int main(int argc, char** argv)
                 po::value<char>()->default_value('f'),
                 "filter")("Poisson.solver",
                 po::value<string>()->default_value("CG"), "solver")(
-                "Poisson.rho0", po::value<float>()->default_value(0.0004),
+                "Poisson.e0", po::value<float>()->default_value(78.36),
+                "continuum solvent: epsilon0")("Poisson.rho0",
+                po::value<float>()->default_value(0.0004),
                 "continuum solvent: rho0")("Poisson.beta",
                 po::value<float>()->default_value(1.3),
                 "continuum solvent: beta")("Poisson.FDtype",
