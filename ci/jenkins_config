@@ -68,9 +68,6 @@ pipeline {
                 label 'docker'
             }
           }
-          environment {
-            CODECOV_TOKEN = '80bcfd05-a1ae-4b65-b049-0ec96abad409'
-          }
           steps {
             sh 'rm -rf build && mkdir -p build'
               dir('build') {
@@ -89,7 +86,7 @@ pipeline {
                   -D SCALAPACK_ROOT=$(spack location -i netlib-scalapack) \
                   -D SCALAPACK_ROOT=$(spack location -i netlib-scalapack) \
                   -D MGMOL_WITH_CLANG_FORMAT=ON \
-                  -D MGMOL_WITH_COVERAGE=ON \
+                  -D MGMOL_WITH_COVERAGE=OFF \
                   -D MGMOL_WITH_MAGMA=OFF \
                   -D CMAKE_CXX_FLAGS="-Wall -pedantic -Wextra" \
                   .. 
@@ -98,12 +95,6 @@ pipeline {
                 '''
                  sh '''make format 
                 git diff --exit-code
-                '''
-                sh '''#!/bin/bash
-                . /root/.module
-                module load gcc-9.2.0-gcc-7.4.0-r5q7xfn
-                make coverage 
-                curl -s https://codecov.io/bash -o codecov_bash_uploader && chmod +x codecov_bash_uploader && ./codecov_bash_uploader -Z -X gcov -f lcov.info
                 '''
               }
           }
