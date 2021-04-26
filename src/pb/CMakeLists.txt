@@ -8,7 +8,6 @@ set(SOURCES GridFuncVector.cc
        SolverLap.cc 
        tools.cc 
        PEenv.cc 
-       radial_functions.cc 
        DielFunc.cc 
        FDoper.cc 
        Lap.cc 

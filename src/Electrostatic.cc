@@ -218,13 +218,12 @@ void Electrostatic::computeVhRho(Rho<T>& rho)
 }
 
 void Electrostatic::setupPB(
-    const double rho0, const double drho0, Potentials& pot)
+    const double e0, const double rho0, const double drho0, Potentials& pot)
 {
     assert(rho0 > 0.);
     assert(grhod_ == nullptr);
 
-    Mesh* mymesh    = Mesh::instance();
-    const double e0 = 78.36;
+    Mesh* mymesh = Mesh::instance();
 
     const pb::PEenv& myPEenv = mymesh->peenv();
     const pb::Grid& myGrid   = mymesh->grid();

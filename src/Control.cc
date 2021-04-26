@@ -177,8 +177,8 @@ void Control::print(std::ostream& os)
     if (diel)
     {
         os << " With dielectric medium:";
-        os << std::setprecision(4) << std::scientific << " rho0=" << rho0
-           << ", drho0=" << drho0 << std::endl;
+        os << std::setprecision(4) << std::scientific << " e0=" << e0_
+           << ", rho0=" << rho0_ << ", drho0=" << drho0_ << std::endl;
     }
 
     os << " Boundary conditions for Poisson: " << bcPoisson[0] << ", "
@@ -454,7 +454,7 @@ void Control::sync(void)
         memset(&int_buffer[0], 0, size_int_buffer * sizeof(int));
     }
 
-    const short size_float_buffer = 42;
+    const short size_float_buffer = 43;
     float* float_buffer           = new float[size_float_buffer];
     if (mype_ == 0)
     {
@@ -473,8 +473,8 @@ void Control::sync(void)
         float_buffer[13] = tkel;
         float_buffer[14] = thtime;
         float_buffer[15] = spread_penalty_damping_;
-        float_buffer[16] = rho0;
-        float_buffer[17] = drho0;
+        float_buffer[16] = rho0_;
+        float_buffer[17] = drho0_;
         float_buffer[18] = min_distance_centers_;
         float_buffer[19] = conv_tol_stop;
         float_buffer[20] = threshold_eigenvalue_gram_;
@@ -499,6 +499,7 @@ void Control::sync(void)
         float_buffer[39] = overallocate_factor_;
         float_buffer[40] = threshold_eigenvalue_gram_quench_;
         float_buffer[41] = pair_mlwf_distance_threshold_;
+        float_buffer[42] = e0_;
     }
     else
     {
@@ -666,8 +667,8 @@ void Control::sync(void)
     tkel                              = float_buffer[13];
     thtime                            = float_buffer[14];
     spread_penalty_damping_           = float_buffer[15];
-    rho0                              = float_buffer[16];
-    drho0                             = float_buffer[17];
+    rho0_                             = float_buffer[16];
+    drho0_                            = float_buffer[17];
     min_distance_centers_             = float_buffer[18];
     conv_tol_stop                     = float_buffer[19];
     threshold_eigenvalue_gram_        = float_buffer[20];
@@ -692,6 +693,7 @@ void Control::sync(void)
     overallocate_factor_              = float_buffer[39];
     threshold_eigenvalue_gram_quench_ = float_buffer[40];
     pair_mlwf_distance_threshold_     = float_buffer[41];
+    e0_                               = float_buffer[42];
     max_electronic_steps_loose_       = max_electronic_steps;
 
     delete[] short_buffer;
@@ -769,9 +771,9 @@ int Control::checkState()
         (*MPIdata::sout) << "Invalid parameter vh_its" << std::endl;
         return -1;
     }
-    if (rho0 > .1)
+    if (rho0_ > .1)
     {
-        (*MPIdata::sout) << "rho0=" << rho0 << " is too large" << std::endl;
+        (*MPIdata::sout) << "rho0=" << rho0_ << " is too large" << std::endl;
         return -1;
     }
     if (short_sighted != 0 && short_sighted != 1)
@@ -839,8 +841,9 @@ int Control::checkState()
            || wannier_transform_type == 2);
     assert(tmatrices == 1 || tmatrices == 0);
     assert(mg_levels_ >= -1);
-    assert(rho0 > 0.);
-    assert(drho0 > 0.);
+    assert(rho0_ > 0.);
+    assert(drho0_ > 0.);
+    assert(e0_ > 0.);
     assert(getOrthoType() != OrthoType::UNDEFINED);
     assert(num_MD_steps >= 0);
     assert(dt >= 0.);
@@ -1526,8 +1529,9 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         vh_init         = vm["Poisson.max_steps_initial"].as<short>();
         vh_its          = vm["Poisson.max_steps"].as<short>();
         poisson_pc_nlev = vm["Poisson.max_levels"].as<short>();
-        rho0            = vm["Poisson.rho0"].as<float>();
-        drho0           = vm["Poisson.beta"].as<float>();
+        rho0_           = vm["Poisson.rho0"].as<float>();
+        drho0_          = vm["Poisson.beta"].as<float>();
+        e0_             = vm["Poisson.e0"].as<float>();
 
         str = vm["ProjectedMatrices.solver"].as<std::string>();
         if (str.compare("short_sighted") == 0) short_sighted = 1;

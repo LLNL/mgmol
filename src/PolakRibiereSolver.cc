@@ -120,7 +120,7 @@ void PolakRibiereSolver<OrbitalsType>::dielON()
     // turn ON continuum solvent
     if (isON && (ct.restart_info >= 3 || deig2_ < 2.e-2 * ct.numst))
     {
-        electrostat_->setupPB(ct.rho0, ct.drho0, pot);
+        electrostat_->setupPB(ct.e0_, ct.rho0_, ct.drho0_, pot);
         electrostat_->setup(ct.vh_its);
         pbset = true;
     }

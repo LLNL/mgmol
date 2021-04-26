@@ -47,7 +47,8 @@ public:
     static Timer solve_tm() { return solve_tm_; }
 
     void setup(const short max_sweeps);
-    void setupPB(const double rho0, const double drho0, Potentials& pot);
+    void setupPB(const double e0, const double rho0, const double drho0,
+        Potentials& pot);
 
     void setupRhoc(RHODTYPE* rhoc);
     void fillFuncAroundIons(const Ions& ions);
