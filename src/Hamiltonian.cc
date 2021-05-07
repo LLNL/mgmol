@@ -116,15 +116,17 @@ void Hamiltonian<T>::applyLocal(const int ncolors, T& phi, T& hphi)
             *phi.getPtDataWGhosts());
         gfvw1.pointwiseProduct(gfvphi, gfpot);
 
-        pb::GridFunc<ORBDTYPE> gf_work1(
-            mygrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
         pb::GridFunc<ORBDTYPE> gf_work2(
             mygrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
+
+        pb::GridFuncVector<ORBDTYPE, memory_space_type> gfv_work1(
+            mygrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2], gid);
+        // work = B*V*psi
+        gfvw1.applyRHS(0, gfv_work1);
         for (int i = 0; i < ncolors; i++)
         {
             // work1 = B*V*psi
-            lapOper_->rhs(gfvw1.getGridFunc(i), gf_work1);
-
+            pb::GridFunc<ORBDTYPE>& gf_work1(gfv_work1.getGridFunc(i));
             // work2 = -Lap*phi
             lapOper_->apply(phi.getFuncWithGhosts(i), gf_work2);
 

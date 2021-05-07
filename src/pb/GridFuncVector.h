@@ -328,6 +328,33 @@ public:
     template <typename MST = MemorySpaceType,
         typename std::enable_if<
             std::is_same<MemorySpace::Host, MST>::value>::type* = nullptr>
+    void rhs_4th_Mehr1(GridFuncVector<ScalarType, MemorySpaceType>& rhs)
+    {
+        trade_boundaries();
+
+        FDkernelRHS_4th_Mehr1(
+            grid(), data(), rhs.data(), size(), MemorySpace::Host());
+
+        rhs.set_updated_boundaries(0);
+    }
+
+    template <typename MST = MemorySpaceType,
+        typename std::enable_if<
+            std::is_same<MemorySpace::Device, MST>::value>::type* = nullptr>
+    void rhs_4th_Mehr1(GridFuncVector<ScalarType, MemorySpaceType>& rhs)
+    {
+        trade_boundaries();
+
+        // assume the CPU data is uptodate for now...
+        FDkernelRHS_4th_Mehr1(
+            grid(), data(), rhs.data(), size(), MemorySpace::Host());
+
+        rhs.set_updated_boundaries(0);
+    }
+
+    template <typename MST = MemorySpaceType,
+        typename std::enable_if<
+            std::is_same<MemorySpace::Host, MST>::value>::type* = nullptr>
     void del2_2nd(GridFuncVector<ScalarType, MemorySpaceType>& rhs)
     {
         trade_boundaries();
@@ -431,6 +458,8 @@ public:
     void getValues(const int k, InputScalarType* vv) const;
 
     void applyLap(
+        const int type, GridFuncVector<ScalarType, MemorySpaceType>& rhs);
+    void applyRHS(
         const int type, GridFuncVector<ScalarType, MemorySpaceType>& rhs);
     void jacobi(const int type,
         const GridFuncVector<ScalarType, MemorySpaceType>& B,
