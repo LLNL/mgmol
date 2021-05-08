@@ -332,8 +332,8 @@ public:
     {
         trade_boundaries();
 
-        FDkernelRHS_4th_Mehr1(
-            grid(), data(), rhs.data(), size(), MemorySpace::Host());
+        FDkernelRHS_4th_Mehr1(grid(), data(), rhs.data(), grid().ghost_pt(),
+            size(), MemorySpace::Host());
 
         rhs.set_updated_boundaries(0);
     }

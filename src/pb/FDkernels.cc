@@ -520,8 +520,8 @@ void FDkernelDel2_4th_Mehr(const Grid& grid, ScalarType* v, ScalarType* u,
 }
 
 template <typename ScalarType>
-void FDkernelRHS_4th_Mehr1(const Grid& grid, ScalarType* v, ScalarType* u,
-    const size_t nfunc, MemorySpace::Host)
+void FDkernelRHS_4th_Mehr1(const Grid& grid, ScalarType* v, ScalarType* rhs,
+    const short rhs_ghosts, const size_t nfunc, MemorySpace::Host)
 {
     rhs_4th_Mehr1_tm.start();
 
@@ -539,6 +539,14 @@ void FDkernelRHS_4th_Mehr1(const Grid& grid, ScalarType* v, ScalarType* u,
 
     const size_t ngpts = grid.sizeg();
 
+    const int incx_rhs  = (dim2 + 2 * rhs_ghosts) * (dim1 + 2 * rhs_ghosts);
+    const int incy_rhs  = (dim2 + 2 * rhs_ghosts);
+    const int ngpts_rhs = (dim2 + 2 * rhs_ghosts) * (dim1 + 2 * rhs_ghosts)
+                          * (dim0 + 2 * rhs_ghosts);
+
+    const int offset_rhs
+        = rhs_ghosts * incx_rhs + rhs_ghosts * incy_rhs + rhs_ghosts;
+
     for (size_t ifunc = 0; ifunc < nfunc; ifunc++)
     {
         for (int ix = 0; ix < dim0; ix++)
@@ -550,7 +558,8 @@ void FDkernelRHS_4th_Mehr1(const Grid& grid, ScalarType* v, ScalarType* u,
             {
                 int iiz = iiy + shift;
 
-                ScalarType* const u0        = u + iiz;
+                ScalarType* const u0 = rhs + ix * incx_rhs + iy * incy_rhs
+                                       + offset_rhs + ifunc * ngpts_rhs;
                 const ScalarType* const v0  = v + iiz;
                 const ScalarType* const vmx = v0 - incx;
                 const ScalarType* const vpx = v0 + incx;
@@ -600,9 +609,9 @@ template void FDkernelDel2_8th<float>(const Grid& grid, float* v, float* b,
     const size_t nfunc, MemorySpace::Host);
 
 template void FDkernelRHS_4th_Mehr1<double>(const Grid& grid, double* v,
-    double* b, const size_t nfunc, MemorySpace::Host);
+    double* b, const short nghosts, const size_t nfunc, MemorySpace::Host);
 template void FDkernelRHS_4th_Mehr1<float>(const Grid& grid, float* v, float* b,
-    const size_t nfunc, MemorySpace::Host);
+    const short nghosts, const size_t nfunc, MemorySpace::Host);
 
 #ifdef HAVE_MAGMA
 template void FDkernelDel2_2nd<double>(const Grid& grid, double* v, double* b,

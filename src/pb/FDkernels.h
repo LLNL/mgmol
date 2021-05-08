@@ -33,7 +33,7 @@ void FDkernelDel2_8th(const Grid& grid, ScalarType* v, ScalarType* b,
 
 template <typename ScalarType>
 void FDkernelRHS_4th_Mehr1(const Grid& grid, ScalarType* v, ScalarType* b,
-    const size_t nfunc, MemorySpace::Host);
+    const short rhs_ghosts, const size_t nfunc, MemorySpace::Host);
 
 #ifdef HAVE_MAGMA
 template <typename ScalarType>
