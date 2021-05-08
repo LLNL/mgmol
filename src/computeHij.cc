@@ -311,7 +311,7 @@ void MGmol<OrbitalsType>::computeHnlPhiAndAdd2HPhi(Ions& ions,
         // compute Hnl*phi
         if (ct.Mehrstellen())
         {
-            pb::GridFuncVector<ORBDTYPE> gfv(
+            pb::GridFuncVector<ORBDTYPE, MemorySpace::Host> gfv(
                 mygrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2], gid);
             std::vector<ORBDTYPE> work(numpt * ncolors);
             for (short icolor = 0; icolor < ncolors; icolor++)
