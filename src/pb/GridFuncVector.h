@@ -346,8 +346,8 @@ public:
         trade_boundaries();
 
         // assume the CPU data is uptodate for now...
-        FDkernelRHS_4th_Mehr1(
-            grid(), data(), rhs.data(), grid().ghost_pt(), size(), MemorySpace::Host());
+        FDkernelRHS_4th_Mehr1(grid(), data(), rhs.data(), grid().ghost_pt(),
+            size(), MemorySpace::Host());
 
         rhs.set_updated_boundaries(0);
     }
