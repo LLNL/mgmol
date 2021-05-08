@@ -487,50 +487,8 @@ void FDoper<T>::rhs_4th_Mehr1(GridFunc<T>& A, GridFunc<T>& B) const
 
     rhs_4th_Mehr1_tm_.start();
 
-    const double c0 = 0.5;
-    const double c1 = inv12;
-
-    const int shift = grid_.ghost_pt();
-    const int iix0  = shift * incx_;
-
-    const T* const v = A.uu(0);
-    T* u             = B.uu(0);
-
-    const int dim0 = dim(0);
-    const int dim1 = dim(1);
-    const int dim2 = dim(2);
-    for (int ix = 0; ix < dim0; ix++)
-    {
-
-        int iix = iix0 + ix * incx_;
-        int iiy = iix + shift * incy_;
-
-        for (int iy = 0; iy < dim1; iy++)
-        {
-
-            int iiz = iiy + shift;
-
-            T* const u0        = u + iiz;
-            const T* const v0  = v + iiz;
-            const T* const vmx = v0 - incx_;
-            const T* const vpx = v0 + incx_;
-            const T* const vmy = v0 - incy_;
-            const T* const vpy = v0 + incy_;
-
-            for (int iz = 0; iz < dim2; iz++)
-            {
-
-                u0[iz]
-                    = (T)(c0 * (double)v0[iz]
-
-                          + c1
-                                * (double)(vmx[iz] + vpx[iz] + vmy[iz] + vpy[iz]
-                                           + v0[iz - 1] + v0[iz + 1]));
-            }
-
-            iiy += incy_;
-        }
-    }
+    FDkernelRHS_4th_Mehr1(A.grid(), A.uu(0), B.uu(0), A.grid().ghost_pt(), 1,
+        MemorySpace::Host());
 
     B.set_updated_boundaries(0);
 
@@ -544,52 +502,7 @@ void FDoper<T>::rhs_4th_Mehr1(GridFunc<T>& A, T* const u) const
 
     rhs_4th_Mehr1_tm_.start();
 
-    const double c0 = 0.5;
-    const double c1 = inv12;
-
-    assert(grid_.ghost_pt() > 0);
-
-    const int shift = grid_.ghost_pt();
-    const int iix0  = shift * incx_;
-
-    const T* const v = A.uu(0);
-
-    const int dim0  = dim(0);
-    const int dim1  = dim(1);
-    const int dim2  = dim(2);
-    const int dim12 = dim1 * dim2;
-    for (int ix = 0; ix < dim0; ix++)
-    {
-
-        int iix = iix0 + ix * incx_;
-        int iiy = iix + shift * incy_;
-
-        for (int iy = 0; iy < dim1; iy++)
-        {
-
-            int iiz = iiy + shift;
-
-            T* const u0        = u + ix * dim12 + iy * dim2;
-            const T* const v0  = v + iiz;
-            const T* const vmx = v0 - incx_;
-            const T* const vpx = v0 + incx_;
-            const T* const vmy = v0 - incy_;
-            const T* const vpy = v0 + incy_;
-
-            for (int iz = 0; iz < dim2; iz++)
-            {
-
-                u0[iz]
-                    = (T)(c0 * (double)v0[iz]
-
-                          + c1
-                                * (double)(vmx[iz] + vpx[iz] + vmy[iz] + vpy[iz]
-                                           + v0[iz - 1] + v0[iz + 1]));
-            }
-
-            iiy += incy_;
-        }
-    }
+    FDkernelRHS_4th_Mehr1(A.grid(), A.uu(0), u, 0, 1, MemorySpace::Host());
 
     rhs_4th_Mehr1_tm_.stop();
 }

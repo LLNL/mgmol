@@ -122,6 +122,8 @@ void GridFuncVector<ScalarType, MemorySpaceType>::pointwiseProduct(
                 }
             }
     }
+
+    updated_boundaries_ = A.updated_boundaries_ && B.updated_boundaries();
     for (int j = 0; j < nf; j++)
     {
         functions_[j]->set_updated_boundaries(
@@ -2389,6 +2391,22 @@ void GridFuncVector<ScalarType, MemorySpaceType>::applyLap(
             std::cerr << "LapFactory::createLap() --- option invalid:" << type
                       << std::endl;
             abort();
+    }
+}
+
+template <typename ScalarType, typename MemorySpaceType>
+void GridFuncVector<ScalarType, MemorySpaceType>::applyRHS(
+    const int type, GridFuncVector<ScalarType, MemorySpaceType>& rhs)
+{
+    // Laph4M
+    if (type == 0)
+    {
+        this->rhs_4th_Mehr1(rhs);
+    }
+    else
+    {
+        memcpy(memory_.get(), rhs.memory_.get(),
+            functions_.size() * grid_.sizeg() * sizeof(ScalarType));
     }
 }
 

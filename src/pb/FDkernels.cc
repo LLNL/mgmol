@@ -4,6 +4,7 @@
 static Timer del2_2nd_tm("del2_2nd");
 static Timer del2_4th_tm("del2_4th");
 static Timer del2_4th_Mehr_tm("del2_4th_Mehr");
+static Timer rhs_4th_Mehr1_tm("rhs_4th_Mehr1");
 
 const double inv12 = 1. / 12.;
 
@@ -518,6 +519,70 @@ void FDkernelDel2_4th_Mehr(const Grid& grid, ScalarType* v, ScalarType* u,
     del2_4th_Mehr_tm.stop();
 }
 
+template <typename ScalarType>
+void FDkernelRHS_4th_Mehr1(const Grid& grid, ScalarType* v, ScalarType* rhs,
+    const short rhs_ghosts, const size_t nfunc, MemorySpace::Host)
+{
+    rhs_4th_Mehr1_tm.start();
+
+    const double c0 = 0.5;
+    const double c1 = inv12;
+
+    const int shift = grid.ghost_pt();
+    int incx        = grid.inc(0);
+    int incy        = grid.inc(1);
+    const int iix0  = shift * incx;
+
+    const int dim0 = grid.dim(0);
+    const int dim1 = grid.dim(1);
+    const int dim2 = grid.dim(2);
+
+    const size_t ngpts = grid.sizeg();
+
+    const int incx_rhs  = (dim2 + 2 * rhs_ghosts) * (dim1 + 2 * rhs_ghosts);
+    const int incy_rhs  = (dim2 + 2 * rhs_ghosts);
+    const int ngpts_rhs = (dim2 + 2 * rhs_ghosts) * (dim1 + 2 * rhs_ghosts)
+                          * (dim0 + 2 * rhs_ghosts);
+
+    const int offset_rhs
+        = rhs_ghosts * incx_rhs + rhs_ghosts * incy_rhs + rhs_ghosts;
+
+    for (size_t ifunc = 0; ifunc < nfunc; ifunc++)
+    {
+        for (int ix = 0; ix < dim0; ix++)
+        {
+            int iix = iix0 + ix * incx + ifunc * ngpts;
+            int iiy = iix + shift * incy;
+
+            for (int iy = 0; iy < dim1; iy++)
+            {
+                int iiz = iiy + shift;
+
+                ScalarType* const u0 = rhs + ix * incx_rhs + iy * incy_rhs
+                                       + offset_rhs + ifunc * ngpts_rhs;
+                const ScalarType* const v0  = v + iiz;
+                const ScalarType* const vmx = v0 - incx;
+                const ScalarType* const vpx = v0 + incx;
+                const ScalarType* const vmy = v0 - incy;
+                const ScalarType* const vpy = v0 + incy;
+
+                for (int iz = 0; iz < dim2; iz++)
+                {
+                    u0[iz] = (ScalarType)(
+                        c0 * (double)v0[iz]
+                        + c1
+                              * (double)(vmx[iz] + vpx[iz] + vmy[iz] + vpy[iz]
+                                         + v0[iz - 1] + v0[iz + 1]));
+                }
+
+                iiy += incy;
+            }
+        }
+    }
+
+    rhs_4th_Mehr1_tm.stop();
+}
+
 template void FDkernelDel2_2nd<double>(const Grid& grid, double* v, double* b,
     const size_t nfunc, MemorySpace::Host);
 template void FDkernelDel2_2nd<float>(const Grid& grid, float* v, float* b,
@@ -542,6 +607,11 @@ template void FDkernelDel2_8th<double>(const Grid& grid, double* v, double* b,
     const size_t nfunc, MemorySpace::Host);
 template void FDkernelDel2_8th<float>(const Grid& grid, float* v, float* b,
     const size_t nfunc, MemorySpace::Host);
+
+template void FDkernelRHS_4th_Mehr1<double>(const Grid& grid, double* v,
+    double* b, const short nghosts, const size_t nfunc, MemorySpace::Host);
+template void FDkernelRHS_4th_Mehr1<float>(const Grid& grid, float* v, float* b,
+    const short nghosts, const size_t nfunc, MemorySpace::Host);
 
 #ifdef HAVE_MAGMA
 template void FDkernelDel2_2nd<double>(const Grid& grid, double* v, double* b,
