@@ -355,6 +355,17 @@ public:
     template <typename MST = MemorySpaceType,
         typename std::enable_if<
             std::is_same<MemorySpace::Host, MST>::value>::type* = nullptr>
+    void rhs_4th_Mehr1(ScalarType* rhs)
+    {
+        trade_boundaries();
+
+        FDkernelRHS_4th_Mehr1(
+            grid(), data(), rhs, 0, size(), MemorySpace::Host());
+    }
+
+    template <typename MST = MemorySpaceType,
+        typename std::enable_if<
+            std::is_same<MemorySpace::Host, MST>::value>::type* = nullptr>
     void del2_2nd(GridFuncVector<ScalarType, MemorySpaceType>& rhs)
     {
         trade_boundaries();

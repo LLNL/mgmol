@@ -313,20 +313,18 @@ void MGmol<OrbitalsType>::computeHnlPhiAndAdd2HPhi(Ions& ions,
         {
             pb::GridFuncVector<ORBDTYPE> gfv(
                 mygrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2], gid);
-            std::vector<ORBDTYPE> work(numpt);
+            std::vector<ORBDTYPE> work(numpt * ncolors);
             for (short icolor = 0; icolor < ncolors; icolor++)
             {
                 get_vnlpsi(ions, gid, icolor, kbpsi, work.data());
                 gfv.assign(icolor, work.data());
             }
-            gfv.trade_boundaries();
+
+            gfv.rhs_4th_Mehr1(work.data());
 
             // compute B*Hnl*phi and add it to H*phi
             for (int icolor = 0; icolor < ncolors; icolor++)
             {
-                hamiltonian_->lapOper()->rhs(
-                    gfv.getGridFunc(icolor), work.data());
-
                 // Add the contribution of the non-local potential to H phi
                 ORBDTYPE* hpsi           = hphi.getPsi(icolor);
                 ORBDTYPE* hpsi_host_view = MemorySpace::Memory<ORBDTYPE,
@@ -336,7 +334,7 @@ void MGmol<OrbitalsType>::computeHnlPhiAndAdd2HPhi(Ions& ions,
                     hpsi_host_view);
 
                 LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
-                    numpt, 1., work.data(), hpsi_host_view);
+                    numpt, 1., work.data() + numpt * icolor, hpsi_host_view);
 
                 MemorySpace::Memory<ORBDTYPE,
                     memory_space_type>::copy_view_to_dev(hpsi_host_view, numpt,
