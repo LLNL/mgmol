@@ -108,7 +108,7 @@ void Hamiltonian<T>::applyLocal(const int ncolors, T& phi, T& hphi)
         pb::GridFunc<POTDTYPE> gfpot(
             mygrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
         gfpot.assign(vtot);
-        if (ct.Mehrstellen()) gfpot.trade_boundaries();
+        gfpot.trade_boundaries();
         const std::vector<std::vector<int>>& gid(phi.getOverlappingGids());
         pb::GridFuncVector<ORBDTYPE, memory_space_type> gfvw1(
             mygrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2], gid);
@@ -116,23 +116,19 @@ void Hamiltonian<T>::applyLocal(const int ncolors, T& phi, T& hphi)
             *phi.getPtDataWGhosts());
         gfvw1.pointwiseProduct(gfvphi, gfpot);
 
-        pb::GridFunc<ORBDTYPE> gf_work2(
-            mygrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
-
         pb::GridFuncVector<ORBDTYPE, memory_space_type> gfv_work1(
             mygrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2], gid);
-        // work = B*V*psi
+        // work1 = B*V*psi
         gfvw1.applyRHS(0, gfv_work1);
-        for (int i = 0; i < ncolors; i++)
-        {
-            // work1 = B*V*psi
-            pb::GridFunc<ORBDTYPE>& gf_work1(gfv_work1.getGridFunc(i));
-            // work2 = -Lap*phi
-            lapOper_->apply(phi.getFuncWithGhosts(i), gf_work2);
 
-            gf_work1 += gf_work2;
-            hphi.setPsi(gf_work1, i);
-        }
+        pb::GridFuncVector<ORBDTYPE, memory_space_type>* gfv_phi
+            = phi.getPtDataWGhosts();
+        // gfvw1 = -Lap*phi
+        gfv_phi->applyLap(0, gfvw1);
+        // gfv_work1 = -Lap*phi + B*V*psi
+        gfv_work1.axpy(1., gfvw1);
+        // set hpsi data without ghosts
+        hphi.setPsi(gfv_work1);
     }
     else
     {
