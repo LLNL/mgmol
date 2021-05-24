@@ -99,15 +99,7 @@ void GridFuncVector<ScalarType, MemorySpaceType>::pointwiseProduct(
 
     const int ngpts = grid_.sizeg();
 
-#ifdef HAVE_MAGMA
-    // GridFunc are always on host
-    ScalarType2* b_dev_view
-        = MemorySpace::Memory<ScalarType2, MemorySpaceType>::allocate(ngpts);
-    MemorySpace::Memory<ScalarType2, MemorySpaceType>::copy_view_to_dev(
-               B.uu(), ngpts, b_dev_view);
-#else
-    ScalarType2* b_dev_view = B.uu();
-#endif
+    ScalarType2* b_view = B.uu();
 
     const int bsize = 64;
     const int nb    = ngpts / bsize;
@@ -118,7 +110,7 @@ void GridFuncVector<ScalarType, MemorySpaceType>::pointwiseProduct(
     for (int ib = 0; ib <= nb; ib++)
     {
         const int ibstart                  = ib * bsize;
-        const ScalarType2* __restrict__ v2 = b_dev_view + ibstart;
+        const ScalarType2* __restrict__ v2 = b_view + ibstart;
         const int npt = (ib < nb) ? bsize : ngpts - ibstart;
         assert(npt >= 0);
 
@@ -140,9 +132,6 @@ void GridFuncVector<ScalarType, MemorySpaceType>::pointwiseProduct(
         functions_[j]->set_updated_boundaries(
             A.functions_[j]->updated_boundaries() && B.updated_boundaries());
     }
-#ifdef HAVE_MAGMA
-    MemorySpace::Memory<ScalarType2, MemorySpaceType>::free(b_dev_view);
-#endif
     prod_tm_.stop();
 }
 
