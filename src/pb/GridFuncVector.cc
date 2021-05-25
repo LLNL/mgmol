@@ -97,8 +97,11 @@ void GridFuncVector<ScalarType, MemorySpaceType>::pointwiseProduct(
 
     prod_tm_.start();
 
-    const int bsize = 64;
     const int ngpts = grid_.sizeg();
+
+    ScalarType2* b_view = B.uu();
+
+    const int bsize = 64;
     const int nb    = ngpts / bsize;
     const int nf    = (int)size();
 
@@ -107,7 +110,7 @@ void GridFuncVector<ScalarType, MemorySpaceType>::pointwiseProduct(
     for (int ib = 0; ib <= nb; ib++)
     {
         const int ibstart                  = ib * bsize;
-        const ScalarType2* __restrict__ v2 = B.uu(ibstart);
+        const ScalarType2* __restrict__ v2 = b_view + ibstart;
         const int npt = (ib < nb) ? bsize : ngpts - ibstart;
         assert(npt >= 0);
 
@@ -129,7 +132,6 @@ void GridFuncVector<ScalarType, MemorySpaceType>::pointwiseProduct(
         functions_[j]->set_updated_boundaries(
             A.functions_[j]->updated_boundaries() && B.updated_boundaries());
     }
-
     prod_tm_.stop();
 }
 
