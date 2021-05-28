@@ -29,7 +29,8 @@ public:
         Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy,
         ProjectedMatricesInterface* proj_matrices, OrbitalsType* orbitals)
     {
-        Control& ct = *(Control::instance());
+        Control& ct     = *(Control::instance());
+        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
         DMStrategy* dm_strategy = nullptr;
         if (ct.DM_solver() == DMNonLinearSolverType::MVP)
@@ -48,7 +49,8 @@ public:
         {
             if (ct.fullyOccupied())
             {
-                std::cout << "Fully occupied strategy" << std::endl;
+                if (mmpi.instancePE0())
+                    std::cout << "Fully occupied strategy" << std::endl;
                 dm_strategy
                     = new FullyOccupiedNonOrthoDMStrategy(proj_matrices);
             }
@@ -56,7 +58,8 @@ public:
             {
                 if (ct.getOrthoType() == OrthoType::Eigenfunctions)
                 {
-                    std::cout << "EigenDMStrategy..." << std::endl;
+                    if (mmpi.instancePE0())
+                        std::cout << "EigenDMStrategy..." << std::endl;
                     dm_strategy = new EigenDMStrategy<OrbitalsType>(
                         orbitals, proj_matrices);
                 }
@@ -64,7 +67,8 @@ public:
                 {
                     if (ct.getOrthoType() == OrthoType::Nonorthogonal)
                     {
-                        std::cout << "NonOrthoDMStrategy..." << std::endl;
+                        if (mmpi.instancePE0())
+                            std::cout << "NonOrthoDMStrategy..." << std::endl;
                         dm_strategy = new NonOrthoDMStrategy<OrbitalsType>(
                             orbitals, proj_matrices, ct.dm_mix);
                     }

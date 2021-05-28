@@ -38,7 +38,7 @@ void Species::read_1species(const string& filename)
         if (tfile->fail())
         {
             (*MPIdata::serr) << " Cannot open file " << filename.data() << endl;
-            ct.global_exit(2);
+            mmpi.abort();
         }
         else
         {
@@ -67,7 +67,7 @@ void Species::read_1species(const string& filename)
         if (nlccflag != 0)
         {
             (*MPIdata::serr) << " NLCC Option not implemented!!!" << endl;
-            ct.global_exit(2);
+            mmpi.abort();
         }
 
         // Read in the atomic number
@@ -91,13 +91,13 @@ void Species::read_1species(const string& filename)
         {
             (*MPIdata::serr) << " Species: num_potentials_=" << num_potentials_
                              << " Need potential functions" << endl;
-            ct.global_exit(2);
+            mmpi.abort();
         }
         if (num_potentials_ > 5)
         {
             (*MPIdata::serr) << " Species: num_potentials_=" << num_potentials_
                              << " Too many potential functions" << endl;
-            ct.global_exit(2);
+            mmpi.abort();
         }
 
         // L-value for the local potential
@@ -213,7 +213,7 @@ void Species::read_1species(const string& filename)
     if (mpirc != MPI_SUCCESS)
     {
         (*MPIdata::serr) << "Species, MPI Bcast of buf_name failed!!!" << endl;
-        ct.global_exit(2);
+        mmpi.abort();
     }
 
     MPI_Bcast(&h1s_, 1, MPI_DOUBLE, 0, comm_);

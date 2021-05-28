@@ -15,7 +15,6 @@
 #include "Control.h"
 #include "HDFrestart.h"
 #include "MGmol_MPI.h"
-#include "MPIdata.h"
 #include "VariableSizeMatrix.h"
 #include "random.h"
 #include "tools.h"
@@ -78,22 +77,16 @@ void ProjectedMatricesSparse::clearData()
 {
     //    if(isDataSetup_)
     //    {
-    // if(onpe0)cout<<"delete invS"<<endl;
     //       delete invS_; invS_=0;
     //       delete dm_; dm_ = 0;
-    // if(onpe0)cout<<"delete localX"<<endl;
     delete localX_;
     localX_ = nullptr;
-    // if(onpe0)cout<<"delete localT"<<endl;
     delete localT_;
     localT_ = nullptr;
-    // if(onpe0)cout<<"delete sH"<<endl;
     delete sH_;
     sH_ = nullptr;
-    // if(onpe0)cout<<"delete HB"<<endl;
     delete matHB_;
     matHB_ = nullptr;
-    // if(onpe0)cout<<"delete T"<<endl;
     delete submatT_;
     submatT_ = nullptr;
 
@@ -193,7 +186,7 @@ void ProjectedMatricesSparse::setup(
     mmpi.allreduce(&locmin, 1, MPI_MIN);
     mmpi.allreduce(&locmax, 1, MPI_MAX);
 
-    if (onpe0 && ct.verbose > 0)
+    if (mmpi.instancePE0() && ct.verbose > 0)
     {
         std::cout << "Max. number of locally centered functions: " << locmax
                   << std::endl;
@@ -702,9 +695,10 @@ void ProjectedMatricesSparse::computeGenEigenInterval(
     std::vector<double> work(new_sol);
 
     // get norm of initial sol
-    double alpha = Tnrm2(m, &sol[0]);
-    double gamma = 1. / alpha;
-    if (onpe0)
+    double alpha    = Tnrm2(m, &sol[0]);
+    double gamma    = 1. / alpha;
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    if (mmpi.instancePE0())
         std::cout << "e1:: ITER 0:: = " << alpha << " shft = " << shft
                   << std::endl;
 
@@ -771,7 +765,8 @@ void ProjectedMatricesSparse::computeGenEigenInterval(
         = LinearAlgebraUtils<MemorySpace::Host>::MPdot(m, &sol[0], &new_sol[0]);
 
     // loop
-    if (onpe0) std::cout << "e2:: ITER 0:: = " << beta << std::endl;
+    if (mmpi.instancePE0())
+        std::cout << "e2:: ITER 0:: = " << beta << std::endl;
     int iter2 = 0;
     for (int i = 0; i < maxits; i++)
     {
@@ -817,7 +812,6 @@ void ProjectedMatricesSparse::computeGenEigenInterval(
     e1         = std::min(tmp, e2);
     e2         = std::max(tmp, e2);
 
-    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     mmpi.allreduce(&e1, 1, MPI_MIN);
     mmpi.allreduce(&e2, 1, MPI_MAX);
     //   double tmp = e1;
@@ -825,7 +819,7 @@ void ProjectedMatricesSparse::computeGenEigenInterval(
     //   e2 = max(tmp, e2);
     double padding = pad * (e2 - e1);
 
-    if (onpe0)
+    if (mmpi.instancePE0())
         std::cout << "Power method Eigen intervals********************  = ( "
                   << e1 << ", " << e2 << ")"
                   << "iter1 = " << iter1 << ", iter2 = " << iter2 << std::endl;

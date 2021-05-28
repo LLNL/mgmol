@@ -13,7 +13,6 @@
 #include "ChebyshevApproximation.h"
 #include "DensityMatrix.h"
 #include "GramMatrix.h"
-#include "MPIdata.h"
 #include "ProjectedMatricesInterface.h"
 #include "SquareLocalMatrices.h"
 #include "SquareSubMatrix.h"
@@ -103,19 +102,22 @@ protected:
     std::vector<double> cheb_interval_;
     void printTheta(std::ostream& os) const
     {
-        if (onpe0) os << " Matrix Theta" << std::endl;
+        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+        if (mmpi.instancePE0()) os << " Matrix Theta" << std::endl;
         theta_->print(os, 0, 0, NPRINT_ROWS_AND_COLS, NPRINT_ROWS_AND_COLS);
     }
 
     void printHB(std::ostream& os) const
     {
-        if (onpe0) os << " Matrix HB" << std::endl;
+        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+        if (mmpi.instancePE0()) os << " Matrix HB" << std::endl;
         matHB_->print(os, 0, 0, NPRINT_ROWS_AND_COLS, NPRINT_ROWS_AND_COLS);
     }
 
     void printH(std::ostream& os) const
     {
-        if (onpe0) os << " Matrix H" << std::endl;
+        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+        if (mmpi.instancePE0()) os << " Matrix H" << std::endl;
         matH_->print(os, 0, 0, NPRINT_ROWS_AND_COLS, NPRINT_ROWS_AND_COLS);
     }
 
@@ -322,7 +324,9 @@ public:
 
     void saveDM() override
     {
-        if (onpe0) std::cout << "ProjectedMatrices::saveDM()" << std::endl;
+        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+        if (mmpi.instancePE0())
+            std::cout << "ProjectedMatrices::saveDM()" << std::endl;
         if (!mat_X_old_)
         {
             mat_X_old_.reset(new MatrixType(dm_->getMatrix()));

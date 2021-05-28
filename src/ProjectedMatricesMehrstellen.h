@@ -24,15 +24,16 @@ private:
     void printB(std::ostream& os) const
     {
         assert(matB_ != 0);
-        if (onpe0) os << " Matrix B" << std::endl;
+        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+        if (mmpi.instancePE0()) os << " Matrix B" << std::endl;
         matB_->print(os, 0, 0, NPRINT_ROWS_AND_COLS, NPRINT_ROWS_AND_COLS);
     }
 
     void printInvB(std::ostream& os) const
     {
         assert(invB_ != 0);
-
-        if (onpe0) os << " Matrix invB" << std::endl;
+        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+        if (mmpi.instancePE0()) os << " Matrix invB" << std::endl;
         invB_->print(os, 0, 0, NPRINT_ROWS_AND_COLS, NPRINT_ROWS_AND_COLS);
     }
     ProjectedMatricesMehrstellen(const ProjectedMatricesMehrstellen& pm);
@@ -61,8 +62,6 @@ public:
 
     void updateHB() override
     {
-        // if( onpe0 )
-        //    (*MPIdata::sout)<<"ProjectedMatrices::updateHB()..."<<endl;
         ProjectedMatrices<MatrixType>::matHB_->symm('l', 'l', 1.,
             ProjectedMatrices<MatrixType>::gm_->getMatrix(),
             *ProjectedMatrices<MatrixType>::theta_, 0.);

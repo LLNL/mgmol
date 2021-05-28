@@ -13,8 +13,6 @@
 #include "LocGridOrbitals.h"
 #include "ProjectedMatricesInterface.h"
 
-using namespace std;
-
 template <class T>
 NonOrthoDMStrategy<T>::NonOrthoDMStrategy(
     T* orbitals, ProjectedMatricesInterface* proj_matrices, const double mix)
@@ -25,11 +23,13 @@ NonOrthoDMStrategy<T>::NonOrthoDMStrategy(
 template <class T>
 void NonOrthoDMStrategy<T>::initialize()
 {
-    Control& ct = *(Control::instance());
+    Control& ct     = *(Control::instance());
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
-    if (onpe0 && ct.verbose > 2)
+    if (mmpi.PE0() && ct.verbose > 2)
     {
-        (*MPIdata::sout) << "NonOrthoDMStrategy<T>::initialize()..." << endl;
+        (*MPIdata::sout) << "NonOrthoDMStrategy<T>::initialize()..."
+                         << std::endl;
     }
     proj_matrices_->updateDM(orbitals_->getIterativeIndex());
 }
@@ -39,19 +39,20 @@ int NonOrthoDMStrategy<T>::update()
 {
     assert(proj_matrices_ != nullptr);
 
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    Control& ct     = *(Control::instance());
+
     if (mix_ <= 0.)
     {
-        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
         std::cerr << "NonOrthoDMStrategy, Invalid mixing value: " << mix_
                   << std::endl;
         MPI_Abort(mmpi.commSameSpin(), 0);
     }
 
-    Control& ct = *(Control::instance());
-    if (onpe0 && ct.verbose > 2)
+    if (mmpi.PE0() && ct.verbose > 2)
     {
         (*MPIdata::sout) << "NonOrthoDMStrategy<T>::update() with mixing = "
-                         << mix_ << endl;
+                         << mix_ << std::endl;
     }
 
     // save old density matrix
@@ -68,10 +69,11 @@ int NonOrthoDMStrategy<T>::update()
     if (ct.verbose > 2)
     {
         double dd = proj_matrices_->getNel();
-        if (onpe0)
+        if (mmpi.PE0())
             (*MPIdata::sout)
-                << setprecision(8)
-                << "test NonOrthoDMStrategy<T>::update(): Nel = " << dd << endl;
+                << std::setprecision(8)
+                << "test NonOrthoDMStrategy<T>::update(): Nel = " << dd
+                << std::endl;
     }
 
     return 0; // success
