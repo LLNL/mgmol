@@ -61,9 +61,8 @@ SP2::~SP2()
 // R. Zalesny et al. (eds), 2011
 int SP2::calcA(const int nel)
 {
-    double lhs = abs(trace_[1] - (double)nel * 0.5);
-    double rhs = abs(2. * trace_[0] - trace_[1] - (double)nel * 0.5);
-
+    double lhs = std::abs(trace_[1] - (double)nel * 0.5);
+    double rhs = std::abs(2. * trace_[0] - trace_[1] - (double)nel * 0.5);
     if (lhs < rhs)
         return 1;
     else
@@ -116,7 +115,6 @@ void SP2::iterate(int A)
 
     trace_[1] = Xi_sq_->computePartialTrace(loc_ids_);
 #endif
-
     reduceSumTrace();
 }
 
