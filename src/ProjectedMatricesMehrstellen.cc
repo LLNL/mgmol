@@ -40,22 +40,23 @@ void ProjectedMatricesMehrstellen<MatrixType>::computeInvB()
     assert(matB_ != nullptr);
     assert(invB_ != nullptr);
 
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 #ifdef DEBUG
-    if (onpe0)
+    if (mmpi.instancePE0())
         (*MPIdata::sout) << "ProjectedMatrices::computeInvB()" << std::endl;
 #endif
-    *invB_          = *matB_;
-    int info1       = invB_->potrf('l');
-    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    *invB_    = *matB_;
+    int info1 = invB_->potrf('l');
     mmpi.bcast(&info1, 1);
     if (info1 != 0)
     {
-        if (onpe0) (*MPIdata::serr) << "Matrix: " << matB_->name() << std::endl;
+        if (mmpi.instancePE0())
+            (*MPIdata::serr) << "Matrix: " << matB_->name() << std::endl;
         matB_->printMM((*MPIdata::serr));
     }
     int info2 = invB_->potri('l');
     mmpi.bcast(&info2, 1);
-    if (info2 != 0 && onpe0)
+    if (info2 != 0 && mmpi.instancePE0())
     {
         (*MPIdata::serr) << "Matrix: " << matB_->name() << std::endl;
         matB_->printMM((*MPIdata::serr));

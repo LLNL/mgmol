@@ -311,14 +311,14 @@ void Potentials::readExternalPot(const string filename, const char type)
             {
                 (*MPIdata::serr)
                     << "ERROR Potential: file length <=0!!!!" << endl;
-                ct.global_exit(2);
+                mmpi.abort();
             }
         }
     }
     if (!from)
     {
         (*MPIdata::serr) << " Cannot open file " << filename << endl;
-        ct.global_exit(2);
+        mmpi.abort();
     }
     if (onpe0)
     {
@@ -360,7 +360,7 @@ void Potentials::readExternalPot(const string filename, const char type)
                 (*MPIdata::serr)
                     << "Difference=" << fabs(origin[d] - mygrid.origin(d))
                     << endl;
-                ct.global_exit(2);
+                mmpi.abort();
             }
             if (fabs(ll[d] - mygrid.ll(d)) > 1.e-3)
             {
@@ -372,7 +372,7 @@ void Potentials::readExternalPot(const string filename, const char type)
                     << "Potential cell dimension=" << ll[d] << endl;
                 (*MPIdata::serr)
                     << "MGmol cell dimension=" << mygrid.ll(d) << endl;
-                ct.global_exit(2);
+                mmpi.abort();
             }
         }
 
@@ -396,7 +396,7 @@ void Potentials::readExternalPot(const string filename, const char type)
                              << i << " incompatible with Grid!!!" << endl;
             (*MPIdata::serr)
                 << "n=" << nxyz[i] << ", gdim_=" << gdim_[i] << endl;
-            ct.global_exit(2);
+            mmpi.abort();
         }
 
     const int incx = gdim_[2] * gdim_[1];
@@ -821,7 +821,9 @@ void Potentials::initialize(Ions& ions)
 
 void Potentials::rescaleRhoComp()
 {
-    Control& ct            = *(Control::instance());
+    Control& ct     = *(Control::instance());
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
 
@@ -844,7 +846,7 @@ void Potentials::rescaleRhoComp()
     if (onpe0 && ct.verbose > 1)
         cout << " Rescaled compensating charges: " << setprecision(8) << fixed
              << comp_rho << endl;
-    if (comp_rho < 0.) ct.global_exit(2);
+    if (comp_rho < 0.) mmpi.abort();
 }
 
 double Potentials::getCharge(RHODTYPE* rho)

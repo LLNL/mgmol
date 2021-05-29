@@ -16,7 +16,6 @@
 #include "HDFrestart.h"
 #include "LocalMatrices2DistMatrix.h"
 #include "MGmol_MPI.h"
-#include "MPIdata.h"
 #include "Orbitals.h"
 #include "Power.h"
 #include "PowerGen.h"
@@ -104,7 +103,8 @@ ProjectedMatrices<MatrixType>::ProjectedMatrices(
       dm_(new DensityMatrix<MatrixType>(ndim)),
       gm_(new GramMatrix<MatrixType>(ndim))
 {
-    if (onpe0)
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    if (mmpi.instancePE0())
     {
         std::cout << "New ProjectedMatrices with MatrixType: "
                   << getMatrixType() << std::endl;
@@ -208,7 +208,7 @@ void ProjectedMatrices<MatrixType>::computeInvS()
 {
     compute_inverse_tm_.start();
 #ifdef PRINT_OPERATIONS
-    if (onpe0)
+    if (mmpi.instancePE0())
         (*MPIdata::sout) << "ProjectedMatrices<MatrixType>::computeInvS()"
                          << std::endl;
 #endif
@@ -312,8 +312,10 @@ template <class MatrixType>
 void ProjectedMatrices<MatrixType>::updateDMwithChebApproximation(
     const int iterative_index)
 {
-    Control& ct = *(Control::instance());
-    if (onpe0)
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    Control& ct     = *(Control::instance());
+
+    if (mmpi.instancePE0())
         (*MPIdata::sout)
             << "ProjectedMatrices: Compute DM using Chebyshev approximation"
             << std::endl;
@@ -326,7 +328,8 @@ void ProjectedMatrices<MatrixType>::updateDMwithChebApproximation(
     computeGenEigenInterval(cheb_interval_, ct.dm_approx_power_maxits, 0.05);
     double emin = cheb_interval_[0];
     double emax = cheb_interval_[1];
-    //    if (onpe0 && ct.verbose > 1) cout<<"emin ="<<emin<<", emax
+    //    if (mmpi.instancePE0() && ct.verbose > 1) cout<<"emin ="<<emin<<",
+    //    emax
     //    ="<<emax<<endl;
 
     // compute approximation order
@@ -344,7 +347,7 @@ void ProjectedMatrices<MatrixType>::updateDMwithChebApproximation(
     // approximation.
     double final_mu = computeChemicalPotentialAndDMwithChebyshev(
         order, emin, emax, iterative_index);
-    if (onpe0 && ct.verbose > 1)
+    if (mmpi.instancePE0() && ct.verbose > 1)
         std::cout << "Final mu_ = " << final_mu << " [Ha]" << std::endl;
 }
 
@@ -352,9 +355,10 @@ template <class MatrixType>
 void ProjectedMatrices<MatrixType>::updateDMwithEigenstates(
     const int iterative_index)
 {
-    Control& ct = *(Control::instance());
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    Control& ct     = *(Control::instance());
 
-    if (onpe0 && ct.verbose > 1)
+    if (mmpi.PE0() && ct.verbose > 1)
         (*MPIdata::sout) << "ProjectedMatrices: Compute DM using eigenstates\n";
 
     MatrixType zz("Z", dim_, dim_);
@@ -363,7 +367,7 @@ void ProjectedMatrices<MatrixType>::updateDMwithEigenstates(
     // and return solution in zz and val
     solveGenEigenProblem(zz);
     computeChemicalPotentialAndOccupations();
-    if (onpe0 && ct.verbose > 1)
+    if (mmpi.instancePE0() && ct.verbose > 1)
         std::cout << "Final mu_ = " << 0.5 * mu_ << " [Ha]" << std::endl;
 
     // Build the density matrix X
@@ -377,9 +381,10 @@ void ProjectedMatrices<MatrixType>::updateDMwithEigenstates(
 template <class MatrixType>
 void ProjectedMatrices<MatrixType>::updateDMwithSP2(const int iterative_index)
 {
-    Control& ct = *(Control::instance());
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    Control& ct     = *(Control::instance());
 
-    if (onpe0 && ct.verbose > 1)
+    if (mmpi.instancePE0() && ct.verbose > 1)
         (*MPIdata::sout) << "ProjectedMatrices: Compute DM using SP2\n";
 
     updateThetaAndHB();
@@ -397,8 +402,8 @@ void ProjectedMatrices<MatrixType>::updateDMwithSP2(const int iterative_index)
         power(dim_);
 
     power.computeEigenInterval(
-        theta, emin, emax, epsilon, (onpe0 && ct.verbose > 1));
-    if (onpe0 && ct.verbose > 1)
+        theta, emin, emax, epsilon, (mmpi.instancePE0() && ct.verbose > 1));
+    if (mmpi.instancePE0() && ct.verbose > 1)
         std::cout << "emin=" << emin << ", emax=" << emax << std::endl;
 
     const bool distributed = false;
@@ -425,7 +430,9 @@ void ProjectedMatrices<MatrixType>::updateDMwithSP2(const int iterative_index)
 template <class MatrixType>
 void ProjectedMatrices<MatrixType>::updateDM(const int iterative_index)
 {
-    Control& ct = *(Control::instance());
+    Control& ct     = *(Control::instance());
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+
     if (ct.DMEigensolver() == DMEigensolverType::Eigensolver)
         updateDMwithEigenstates(iterative_index);
     else if (ct.DMEigensolver() == DMEigensolverType::Chebyshev)
@@ -436,7 +443,7 @@ void ProjectedMatrices<MatrixType>::updateDM(const int iterative_index)
     {
         std::cerr << "Eigensolver not available in "
                      "ProjectedMatrices<MatrixType>::updateDM()\n";
-        ct.global_exit(2);
+        mmpi.abort();
     }
 
 #ifndef NDEBUG
@@ -468,7 +475,7 @@ template <class MatrixType>
 void ProjectedMatrices<MatrixType>::computeOccupationsFromDM()
 {
 #ifdef PRINT_OPERATIONS
-    if (onpe0)
+    if (mmpi.instancePE0())
         (*MPIdata::sout)
             << "ProjectedMatrices<MatrixType>::computeOccupationsFromDM()"
             << std::endl;
@@ -493,7 +500,7 @@ void ProjectedMatrices<MatrixType>::setOccupations(
     const std::vector<DISTMATDTYPE>& occ)
 {
 #ifdef PRINT_OPERATIONS
-    if (onpe0)
+    if (mmpi.instancePE0())
         (*MPIdata::sout) << "ProjectedMatrices<MatrixType>::setOccupations()"
                          << std::endl;
 #endif
@@ -519,7 +526,6 @@ double ProjectedMatrices<MatrixType>::getNel() const
     double val = dm_->dot(gm_->getMatrix());
     if (with_spin_)
     {
-        std::cout << "nel for 1 spin = " << val << std::endl;
         double tmp      = 0.;
         MGmol_MPI& mmpi = *(MGmol_MPI::instance());
         mmpi.allreduceSpin(&val, &tmp, 1, MPI_SUM);
@@ -577,12 +583,13 @@ template <class MatrixType>
 void ProjectedMatrices<MatrixType>::stripDM()
 {
 #ifdef PRINT_OPERATIONS
-    if (onpe0)
+    if (mmpi.instancePE0())
         std::cout << "ProjectedMatrices<MatrixType>::stripDM()" << std::endl;
 #endif
 #ifdef DEBUG // TEST
     double dd = dm_->getMatrix().trace();
-    if (onpe0) std::cout << "test:  Trace DM = " << dd << std::endl;
+    if (mmpi.instancePE0())
+        std::cout << "test:  Trace DM = " << dd << std::endl;
     if (dm_->getMatrix().active()) assert(dd > 0.);
 #endif
     dm_->stripS(gm_->getCholeskyL());
@@ -592,7 +599,7 @@ template <class MatrixType>
 void ProjectedMatrices<MatrixType>::dressupDM()
 {
 #ifdef PRINT_OPERATIONS
-    if (onpe0)
+    if (mmpi.instancePE0())
         std::cout << "ProjectedMatrices<MatrixType>::dressupDM()" << std::endl;
 #endif
     dm_->dressUpS(gm_->getCholeskyL(), gm_->getAssociatedOrbitalsIndex());
@@ -615,11 +622,11 @@ double ProjectedMatrices<MatrixType>::computeEntropy(const double kbt)
 template <class MatrixType>
 double ProjectedMatrices<MatrixType>::computeEntropy()
 {
-    // if(onpe0)(*MPIdata::sout)<<"ProjectedMatrices<MatrixType>::computeEntropy()"<<std::endl;
-    // if(onpe0)(*MPIdata::sout)<<"width_="<<width_<<std::endl;
     compute_entropy_tm_.start();
 
-    Control& ct    = *(Control::instance());
+    Control& ct     = *(Control::instance());
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+
     double entropy = 0.;
 
     if (ct.DMEigensolver() == DMEigensolverType::Eigensolver
@@ -632,7 +639,7 @@ double ProjectedMatrices<MatrixType>::computeEntropy()
         }
         else
         {
-            if (onpe0 && ct.verbose > 1)
+            if (mmpi.PE0() && ct.verbose > 1)
                 (*MPIdata::sout)
                     << "occupations uptodate, skip computation..." << std::endl;
         }
@@ -665,7 +672,7 @@ double ProjectedMatrices<MatrixType>::computeEntropyWithCheb(const double kbt)
     const double emin = 0.;
     const double emax = 1.;
 
-    if (onpe0 && ct.verbose > 1)
+    if (mmpi.PE0() && ct.verbose > 1)
         (*MPIdata::sout) << "computeEntropyWithChebyshev "
                          << "emin = " << emin << " emax = " << emax
                          << std::endl;
@@ -684,7 +691,7 @@ double ProjectedMatrices<MatrixType>::computeEntropyWithCheb(const double kbt)
     recompute_entropy_coeffs = false;
     // compute trace
     const double ts = mat.trace();
-    //    if(onpe0 && ct.verbose > 1)(*MPIdata::sout)<<"entropy =
+    //    if(mmpi.PE0() && ct.verbose > 1)(*MPIdata::sout)<<"entropy =
     //    "<<orbital_occupation*kbt*entropy<<std::endl;
 
     return -orbital_occupation * kbt * ts;
@@ -707,14 +714,14 @@ double ProjectedMatrices<MatrixType>::checkCond(
         // ofstream tfile("s.mm", ios::out);
         // gm_->printMM(tfile);
         // tfile.close();
-        MGmol_MPI& mgmolmpi = *(MGmol_MPI::instance());
-        mgmolmpi.barrier();
-        if (onpe0)
+        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+        mmpi.barrier();
+        if (mmpi.PE0())
             (*MPIdata::sout)
                 << " CONDITION NUMBER OF THE OVERLAP MATRIX EXCEEDS TOL: "
                 << rcond << "!!!" << std::endl;
         Control& ct = *(Control::instance());
-        if (flag) ct.global_exit(2);
+        if (flag) mmpi.abort();
     }
     return rcond;
 }
@@ -832,8 +839,10 @@ void ProjectedMatrices<MatrixType>::printEigenvalues(std::ostream& os) const
 template <class MatrixType>
 void ProjectedMatrices<MatrixType>::printEigenvaluesEV(std::ostream& os) const
 {
-    Control& ct = *(Control::instance());
-    if (ct.DMEigensolver() == DMEigensolverType::Eigensolver && onpe0)
+    Control& ct     = *(Control::instance());
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    if (ct.DMEigensolver() == DMEigensolverType::Eigensolver
+        && mmpi.instancePE0())
     {
         os << std::endl << " Eigenvalues [eV]:";
 
@@ -856,8 +865,10 @@ void ProjectedMatrices<MatrixType>::printEigenvaluesEV(std::ostream& os) const
 template <class MatrixType>
 void ProjectedMatrices<MatrixType>::printEigenvaluesHa(std::ostream& os) const
 {
-    Control& ct = *(Control::instance());
-    if (ct.DMEigensolver() == DMEigensolverType::Eigensolver && onpe0)
+    Control& ct     = *(Control::instance());
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    if (ct.DMEigensolver() == DMEigensolverType::Eigensolver
+        && mmpi.instancePE0())
     {
         os << std::endl << " Eigenvalues [Ha]:";
 
@@ -897,8 +908,8 @@ void ProjectedMatrices<MatrixType>::computeChemicalPotentialAndOccupations(
     std::vector<DISTMATDTYPE> occ(dim_, 0.);
 
     mu_ = compute_chemical_potential_and_occupations(
-        energies, width, nel_, max_numst, onpe0, occ);
-    // if( onpe0 )
+        energies, width, nel_, max_numst, mmpi.instancePE0(), occ);
+    // if( mmpi.instancePE0() )
     //    (*MPIdata::sout)<<"computeChemicalPotentialAndOccupations() with mu="
     //        <<mu<<std::endl;
 
@@ -1040,12 +1051,13 @@ ProjectedMatrices<MatrixType>::computeChemicalPotentialAndDMwithChebyshev(
     assert(emax > emin);
     assert(nel_ >= 0.);
 
-    Control& ct = *(Control::instance());
+    Control& ct     = *(Control::instance());
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
     // create Chebyshev approximation object
     ChebyshevApproximation<MatrixType> chebapp(emin, emax, order, this);
 
-    if (onpe0 && ct.verbose > 0)
+    if (mmpi.instancePE0() && ct.verbose > 0)
         (*MPIdata::sout)
             << "computeChemicalPotentialAndDMWithChebyshev(), order = "
             << chebapp.order() << " with width=" << width_ << ", for " << nel_
@@ -1094,7 +1106,7 @@ ProjectedMatrices<MatrixType>::computeChemicalPotentialAndDMwithChebyshev(
     MatrixType tmp("TMP", dim_, dim_);
     MatrixType dm("DM", dim_, dim_);
 
-    if (onpe0 && ct.verbose > 0)
+    if (mmpi.instancePE0() && ct.verbose > 0)
         std::cout << "emin = " << emin << " emax = " << emax << std::endl;
 
     double f2 = 0.;
@@ -1146,8 +1158,7 @@ ProjectedMatrices<MatrixType>::computeChemicalPotentialAndDMwithChebyshev(
                 << "ERROR: f1=" << f1 << ", f2=" << f2 << std::endl;
             (*MPIdata::sout)
                 << "nel=" << nel_ << ", width=" << width_ << std::endl;
-            Control& ct = *(Control::instance());
-            ct.global_exit(2);
+            mmpi.abort();
         }
 
         double dmu;
@@ -1190,7 +1201,7 @@ ProjectedMatrices<MatrixType>::computeChemicalPotentialAndDMwithChebyshev(
 
         if (f > charge_tol)
         {
-            if (onpe0)
+            if (mmpi.instancePE0())
             {
                 (*MPIdata::sout)
                     << "WARNING: "
@@ -1208,7 +1219,6 @@ ProjectedMatrices<MatrixType>::computeChemicalPotentialAndDMwithChebyshev(
 
     // set density matrix
     dm.gemm('N', 'N', 1., tmp, gm_->getInverse(), 0.);
-    MGmol_MPI& mmpi           = *(MGmol_MPI::instance());
     double orbital_occupation = mmpi.nspin() > 1 ? 1. : 2.;
     dm.scal(orbital_occupation);
     dm_->setMatrix(dm, iterative_index);

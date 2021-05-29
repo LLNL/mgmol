@@ -526,13 +526,13 @@ HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
         if (file_id_ < 0)
         {
             MGMOL_HDFRESTART_FAIL("H5Fcreate failed for file " << filename_);
-            ct.global_exit(2);
+            mmpi.abort();
         }
         herr_t ret = H5Pclose(access_plist);
         if (ret < 0)
         {
             MGMOL_HDFRESTART_FAIL("H5Pclose failed!!!");
-            ct.global_exit(2);
+            mmpi.abort();
         }
         assert(ret != -1);
     }
@@ -587,14 +587,14 @@ HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
         {
             MGMOL_HDFRESTART_FAIL(
                 "File " << filename_ << " does not exists!!!");
-            ct.global_exit(2);
+            mmpi.abort();
         }
         htri_t ishdf = H5Fis_hdf5(filename_.c_str());
         if (ishdf < 0)
         {
             MGMOL_HDFRESTART_FAIL(
                 "H5Fis_hdf5() unsuccessful for file " << filename_);
-            ct.global_exit(2);
+            mmpi.abort();
         }
     }
 
@@ -618,7 +618,7 @@ HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
             if (err_id < 0)
             {
                 MGMOL_HDFRESTART_FAIL("H5Pset_fapl_mpio failed!!!");
-                ct.global_exit(2);
+                mmpi.abort();
             }
         }
         else
@@ -632,7 +632,7 @@ HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
         if (file_id_ < 0)
         {
             MGMOL_HDFRESTART_FAIL("open " << filename_ << " failed!!!");
-            ct.global_exit(2);
+            mmpi.abort();
         }
         else if (onpe0 && ct.verbose > 0)
         {
@@ -658,7 +658,7 @@ HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
             if (status < 0)
             {
                 MGMOL_HDFRESTART_FAIL("H5Sget_simple_extent_dims failed!!!");
-                ct.global_exit(2);
+                mmpi.abort();
             }
 
             // get global mesh size from file data

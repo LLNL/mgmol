@@ -18,7 +18,6 @@
 #include "DensityMatrixSparse.h"
 #include "LinearSolver.h"
 #include "LocalizationRegions.h"
-#include "MPIdata.h"
 #include "ShortSightedInverse.h"
 #include "SquareLocalMatrices.h"
 #include "Timer.h"
@@ -223,7 +222,8 @@ public:
     /* print the Theta matrix -- for diagnostics */
     void printTheta(std::ostream& os) const
     {
-        if (onpe0)
+        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+        if (mmpi.instancePE0())
             os << " Matrix Theta ... n = " << (*submatT_).n() << std::endl;
 
         std::vector<int> locfcns;
@@ -234,8 +234,9 @@ public:
     /* print the HB matrix -- for diagnostics */
     void printHB(std::ostream& os) const
     {
-
-        if (onpe0) os << " Matrix HB ... n = " << (*matHB_).n() << std::endl;
+        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+        if (mmpi.instancePE0())
+            os << " Matrix HB ... n = " << (*matHB_).n() << std::endl;
 
         std::vector<int> locfcns;
         (*lrs_).getLocalSubdomainIndices(locfcns);
@@ -292,7 +293,8 @@ public:
         /* matrix sH has local contributions, so we need to
          * gather neighboring data first.
          */
-        if (onpe0) os << " Matrix H " << std::endl;
+        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+        if (mmpi.instancePE0()) os << " Matrix H " << std::endl;
 
         std::vector<int> locfcns;
         (*lrs_).getLocalSubdomainIndices(locfcns);
@@ -327,12 +329,11 @@ public:
             // tfile.close();
             MGmol_MPI& mgmolmpi = *(MGmol_MPI::instance());
             mgmolmpi.barrier();
-            if (onpe0)
+            if (mgmolmpi.instancePE0())
                 (*MPIdata::sout)
                     << " CONDITION NUMBER OF THE OVERLAP MATRIX EXCEEDS TOL: "
                     << rcond << "!!!" << std::endl;
-            Control& ct = *(Control::instance());
-            if (flag) ct.global_exit(2);
+            if (flag) mgmolmpi.abort();
         }
         return rcond;
     }

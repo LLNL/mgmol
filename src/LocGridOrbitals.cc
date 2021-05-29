@@ -1840,11 +1840,11 @@ double LocGridOrbitals::dotProduct(
     }
     else
     {
+        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
         (*MPIdata::serr)
             << "LocGridOrbitals::dot_product() --- unknown dot product type"
             << std::endl;
-        Control& ct = *(Control::instance());
-        ct.global_exit(2);
+        mmpi.abort();
     }
 
     dot_product_tm_.stop();
@@ -2468,7 +2468,7 @@ void LocGridOrbitals::initRand()
                 (*MPIdata::serr)
                     << "    overlapping_gids_[" << iloc << "][" << 0
                     << "]=" << overlapping_gids_[iloc][0] << std::endl;
-            ct.global_exit(2);
+            mmpi.abort();
         }
 #endif
     }

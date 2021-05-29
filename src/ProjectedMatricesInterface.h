@@ -68,9 +68,12 @@ public:
           subdiv_(-1),
           chromatic_number_(-1)
     {
-        Control& ct = *(Control::instance());
-        nel_        = ct.getNelSpin();
-        std::cout << "ProjectedMatricesInterface: nel_=" << nel_ << std::endl;
+        Control& ct     = *(Control::instance());
+        nel_            = ct.getNelSpin();
+        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+        if (mmpi.PE0())
+            std::cout << "ProjectedMatricesInterface: nel_=" << nel_
+                      << std::endl;
     };
 
     // define Fermi distribution function to be approximated by Chebyshev

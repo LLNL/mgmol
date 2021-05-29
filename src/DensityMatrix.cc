@@ -120,10 +120,9 @@ void DensityMatrix<MatrixType>::build(const int new_orbitals_index)
 {
     //#ifdef PRINT_OPERATIONS
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    if (mmpi.instancePE0())
+    if (mmpi.PE0())
         std::cout
-            << "template <class MatrixType> "
-               "DensityMatrix<MatrixType>::build() for diagonal occupation..."
+            << "DensityMatrix<MatrixType>::build() for diagonal occupation..."
             << std::endl;
     //#endif
     if (!occ_uptodate_ && mmpi.instancePE0())

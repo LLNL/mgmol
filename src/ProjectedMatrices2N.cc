@@ -41,6 +41,8 @@ template <class MatrixType>
 void ProjectedMatrices2N<MatrixType>::iterativeUpdateDMwithEigenstates(
     const double occ_width, const int iterative_index, const bool flag_reduce_T)
 {
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+
     const int dim = this->dim();
 
     ProjectedMatrices<MatrixType>::solveGenEigenProblem(*work2N_);
@@ -50,7 +52,7 @@ void ProjectedMatrices2N<MatrixType>::iterativeUpdateDMwithEigenstates(
     const double tol = 1.e-6;
     do
     {
-        if (onpe0)
+        if (mmpi.instancePE0())
             (*MPIdata::sout) << "MVP target with kbT = " << kbT << std::endl;
         ProjectedMatrices<MatrixType>::computeChemicalPotentialAndOccupations(
             kbT, dim);
@@ -58,7 +60,7 @@ void ProjectedMatrices2N<MatrixType>::iterativeUpdateDMwithEigenstates(
         kbT *= 0.5;
     } while (occ[bdim_] > tol && flag_reduce_T);
 
-    if (onpe0)
+    if (mmpi.instancePE0())
         (*MPIdata::sout) << "MVP target with mu = "
                          << ProjectedMatricesInterface::mu_ << " [Ry]"
                          << std::endl;
