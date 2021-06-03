@@ -13,7 +13,6 @@
 #include <limits.h>
 
 //#define DEBUG
-using namespace std;
 
 namespace dist_matrix
 {
@@ -21,9 +20,9 @@ namespace dist_matrix
 // constructor based on vectors of indexes corresponding
 // to "local" matrix elements
 template <class T>
-SubMatrices<T>::SubMatrices(const string& name,
-    const vector<vector<int>>& indexes, MPI_Comm comm, const DistMatrix<T>& mat,
-    const SubMatricesIndexing<T>& submat_indexing)
+SubMatrices<T>::SubMatrices(const std::string& name,
+    const std::vector<std::vector<int>>& indexes, MPI_Comm comm,
+    const DistMatrix<T>& mat, const SubMatricesIndexing<T>& submat_indexing)
     : object_name_(name), comm_(comm), submat_indexing_(submat_indexing)
 {
     MPI_Comm_size(comm_, &npes_);
@@ -32,7 +31,8 @@ SubMatrices<T>::SubMatrices(const string& name,
 
 #ifdef DEBUG
     if (mype_ == 0)
-        cout << "SubMatrices with " << indexes[0].size() << " indexes" << endl;
+        std::cout << "SubMatrices with " << indexes[0].size() << " indexes"
+                  << std::endl;
 #endif
 
     const int nprow  = mat.nprow();
@@ -75,54 +75,41 @@ void SubMatrices<T>::scal(const double alpha)
 }
 
 template <>
-void SubMatrices<double>::sendrecv(double* sendbuf, double* recvbuf,
-    const vector<type_displ>& my_displ, const vector<type_displ>& remote_displ)
+int SubMatrices<float>::internal_MPI_Irecv(
+    float* buf, int count, int source, int tag, MPI_Request* request)
 {
-    MPI_Request req;
-    bool irecv = false;
-    int src    = mype_;
-
-    for (int p = 0; p < npes_ - 1; p++)
-    {
-        // next destination/source
-        int dst = (mype_ + p + 1) % npes_;
-        src--;
-        if (src < 0) src += npes_;
-
-        assert(dst < npes_);
-        assert(dst >= 0);
-
-        // post receive data
-        int mysize = submat_indexing_.getMySize(src);
-        if (mysize)
-        {
-            MPI_Irecv(recvbuf + my_displ[src], mysize, MPI_DOUBLE, src, p,
-                comm_, &req);
-            irecv = true;
-        }
-        else
-        {
-            irecv = false;
-        }
-
-        // send data
-        int rsize = submat_indexing_.getRemoteSize(dst);
-        if (rsize)
-        {
-            MPI_Send(
-                sendbuf + remote_displ[dst], rsize, MPI_DOUBLE, dst, p, comm_);
-        }
-        if (irecv) MPI_Wait(&req, MPI_STATUS_IGNORE);
-    }
+    return MPI_Irecv(buf, count, MPI_FLOAT, source, tag, comm_, request);
 }
 
 template <>
-void SubMatrices<float>::sendrecv(float* sendbuf, float* recvbuf,
-    const vector<type_displ>& my_displ, const vector<type_displ>& remote_displ)
+int SubMatrices<double>::internal_MPI_Irecv(
+    double* buf, int count, int source, int tag, MPI_Request* request)
 {
-    MPI_Request req;
-    bool irecv = false;
-    int src    = mype_;
+    return MPI_Irecv(buf, count, MPI_DOUBLE, source, tag, comm_, request);
+}
+
+template <>
+int SubMatrices<float>::internal_MPI_Send(
+    const float* buf, int count, int dest, int tag)
+{
+    return MPI_Send(buf, count, MPI_FLOAT, dest, tag, comm_);
+}
+
+template <>
+int SubMatrices<double>::internal_MPI_Send(
+    const double* buf, int count, int dest, int tag)
+{
+    return MPI_Send(buf, count, MPI_DOUBLE, dest, tag, comm_);
+}
+
+template <class T>
+void SubMatrices<T>::sendrecv(T* sendbuf, T* recvbuf,
+    const std::vector<type_displ>& my_displ,
+    const std::vector<type_displ>& remote_displ)
+{
+    std::vector<MPI_Request> req(npes_ - 1);
+    int ireq = 0;
+    int src  = mype_;
 
     for (int p = 0; p < npes_ - 1; p++)
     {
@@ -138,24 +125,20 @@ void SubMatrices<float>::sendrecv(float* sendbuf, float* recvbuf,
         int mysize = submat_indexing_.getMySize(src);
         if (mysize)
         {
-            MPI_Irecv(recvbuf + my_displ[src], mysize, MPI_FLOAT, src, p, comm_,
-                &req);
-            irecv = true;
-        }
-        else
-        {
-            irecv = false;
+            internal_MPI_Irecv(
+                recvbuf + my_displ[src], mysize, src, p, req.data() + ireq);
+            ireq++;
         }
 
         // send data
         int rsize = submat_indexing_.getRemoteSize(dst);
         if (rsize)
         {
-            MPI_Send(
-                sendbuf + remote_displ[dst], rsize, MPI_FLOAT, dst, p, comm_);
+            internal_MPI_Send(sendbuf + remote_displ[dst], rsize, dst, p);
         }
-        if (irecv) MPI_Wait(&req, MPI_STATUS_IGNORE);
     }
+    // std::cout<<"ireq="<<ireq<<std::endl;
+    if (ireq > 0) MPI_Waitall(ireq, req.data(), MPI_STATUS_IGNORE);
 }
 
 // from mat to local_data_
@@ -163,7 +146,7 @@ template <class T>
 void SubMatrices<T>::gather(const DistMatrix<T>& mat)
 {
 #ifdef DEBUG
-    if (mype_ == 0) cout << "SubMatrices<T>::gather()" << endl;
+    if (mype_ == 0) cout << "SubMatrices<T>::gather()" << std::endl;
 #endif
     gather_tm_.start();
 
@@ -176,17 +159,17 @@ void SubMatrices<T>::gather(const DistMatrix<T>& mat)
         my_size += submat_indexing_.getMySize(p);
 
     // compute displacements
-    vector<type_displ> remote_displ(npes_, 0);
+    std::vector<type_displ> remote_displ(npes_, 0);
     for (int pe = 1; pe < npes_; pe++)
         remote_displ[pe] = (type_displ)(
             submat_indexing_.getRemoteSize(pe - 1) + remote_displ[pe - 1]);
-    vector<type_displ> my_displ(npes_distmat_, 0);
+    std::vector<type_displ> my_displ(npes_distmat_, 0);
     for (int pe = 1; pe < npes_distmat_; pe++)
         my_displ[pe] = (type_displ)(
             submat_indexing_.getMySize(pe - 1) + my_displ[pe - 1]);
 
     // build buffer for data array to send
-    vector<T> buf_remote_val(tot_remote_size, 0.);
+    std::vector<T> buf_remote_val(tot_remote_size, 0.);
     if (send_)
         for (int pe = 0; pe < npes_; pe++)
         {
@@ -202,7 +185,7 @@ void SubMatrices<T>::gather(const DistMatrix<T>& mat)
                 const int j  = submat_indexing_.getRemoteDoubleIndex(ii + 1);
 #ifdef DEBUG
                 cout << "PE: " << mype_ << ", (i,j)=(" << i << "," << j << ")"
-                     << endl;
+                     << std::endl;
 #endif
                 assert(displ + k < (int)buf_remote_val.size());
                 assert(j < mat.n());
@@ -215,24 +198,7 @@ void SubMatrices<T>::gather(const DistMatrix<T>& mat)
 
     gather_comm_tm_.start();
 
-    vector<T> buf_my_val(my_size, 0.);
-
-#if 0
-  // send/recv data 
-  MPI_Alltoallv(&buf_remote_val[0],&remote_sizes_[0],&remote_displ[0],MPI_DOUBLE,
-                &buf_my_val[0],    &my_sizes_[0],    &my_displ[0],    MPI_DOUBLE,
-                comm_);
-#else
-    // The main interest of the MPI_Isend operation is the possible overlap
-    // of computation with communications,
-    // or the possible overlap between multiple communications.
-    // For large messages, in order to keep the memory usage on the receiver
-    // at a reasonable level, a rendezvous protocol is used. The sender
-    //[after sending a small packet] wait until the receiver confirm the
-    // message exchange (i.e. the corresponding receive operation has been
-    // posted) to send the large data. Using MPI_Isend can lead to longer
-    // execution times, as the real transfer will be delayed until the
-    // program enter in the next MPI call.
+    std::vector<T> buf_my_val(my_size, 0.);
 
     T* recvbuf = &buf_my_val[0];
     T* sendbuf = &buf_remote_val[0];
@@ -242,13 +208,10 @@ void SubMatrices<T>::gather(const DistMatrix<T>& mat)
         memcpy(recvbuf + my_displ[mype_], sendbuf + remote_displ[mype_],
             nelements * sizeof(T));
 
-    //    int src = mype_;
-
     sendrecv(sendbuf, recvbuf, my_displ, remote_displ);
 
-#endif
-
     gather_comm_tm_.stop();
+
     gather_comp_tm_.start();
 
     // loop over matrices to assign received data
@@ -282,47 +245,47 @@ void SubMatrices<T>::gather(const DistMatrix<T>& mat)
 
 ////////////////////////////////////////////////////////////////////////////////
 template <class T>
-void SubMatrices<T>::print(ostream& os) const
+void SubMatrices<T>::print(std::ostream& os) const
 {
     for (int im = 0; im < nb_local_matrices_; im++)
     {
         os << "SubMatrices " << n_ << " x " << n_ << ", name=" << object_name_
-           << ", matrix " << im << endl;
+           << ", matrix " << im << std::endl;
         os << "Indexes: ";
         for (int i = 0; i < n_; i++)
             os << submat_indexing_.getLocalIndex(im, i) << "\t";
-        os << endl;
+        os << std::endl;
 
         for (int i = 0; i < n_; i++)
         {
             for (int j = 0; j < n_; j++)
                 os << local_data_[im][i + n_ * j] << "\t";
-            os << endl;
+            os << std::endl;
         }
-        os << endl;
+        os << std::endl;
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 template <class T>
-void SubMatrices<T>::get_array(const int im, vector<T>& val)
+void SubMatrices<T>::get_array(const int im, std::vector<T>& val)
 {
     assert(im < nb_local_matrices_);
-    const map<int, short>& mapind = submat_indexing_.mapIndexes(im);
+    const std::map<int, short>& mapind = submat_indexing_.mapIndexes(im);
     val.resize(n_ * n_);
 
     const T* plocal_data = local_data_[im];
 
     for (int i = 0; i < n_; i++)
     {
-        map<int, short>::const_iterator p0
+        std::map<int, short>::const_iterator p0
             = mapind.find(submat_indexing_.getLocalIndex(im, i));
         assert(p0 != mapind.end());
         short il = p0->second;
         assert(il < n_);
         for (int j = 0; j < n_; j++)
         {
-            map<int, short>::const_iterator p1
+            std::map<int, short>::const_iterator p1
                 = mapind.find(submat_indexing_.getLocalIndex(im, j));
             assert(p1 != mapind.end());
             short jl = p1->second;
