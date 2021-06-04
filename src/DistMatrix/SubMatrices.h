@@ -57,6 +57,11 @@ private:
         const std::vector<type_displ>& my_displ,
         const std::vector<type_displ>& remote_displ);
 
+    // templated MPI wrappers
+    int internal_MPI_Irecv(
+        T* buf, int count, int source, int tag, MPI_Request* request);
+    int internal_MPI_Send(const T* buf, int count, int dest, int tag);
+
 public:
     static void printTimers(std::ostream& os)
     {
