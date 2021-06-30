@@ -5,8 +5,6 @@
 # This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 # Please also read this link https://github.com/llnl/mgmol/LICENSE
 #
-# read_hdf5.cc -> read_hdf5.py
-
 ''' Libraries '''
 import sys
 import copy
@@ -33,93 +31,6 @@ class mystruct:
 s = mystruct()
 s.FixedLengthString()
 # s.mystring
-
-########################################
-## Maps in C++, can be implemented as ## 
-## Dictionaries in Python             ##
-########################################
-
-''' Variables (Dictionaries) '''
-cov_radii = {}      # C++ - map <key = int, value = double> cov_radii
-ball_radii = {}     # C++ - map <key = int, value = double> ball_radii
-colors = {}         # C++ - map <key = int, value = string> colors
-
-''' Functions '''
-# Void Function (set_maps())
-# Set Covalent Radii, Ball Radii, and Colors for Chemical Element
-def set_maps():
-
-    # (H) Hydrogen
-    cov_radii.update( {1 : 0.6} )
-    ball_radii.update( {1 : 0.4} )
-    colors.update( {1 : 'White'} )
-
-    # Lithium
-    cov_radii.update( {3 : 2.7} )
-    ball_radii.update( {3 : 1.6} )
-    colors.update( {3 : 'Ochre'} )
-
-    # Beryllium
-    cov_radii.update( {4 : 2.0} )
-    ball_radii.update( {4 : 1.1} )
-    colors.update( {4 : 'Ochre'} )
-
-    # Carbon
-    cov_radii.update( {6 : 1.8} )
-    ball_radii.update( {6 : 0.7} )
-    colors.update( {6 : 'Cyan'} )
-
-    # Nitrogen
-    cov_radii.update( {7 : 1.8} )
-    ball_radii.update( {7 : 0.6} )
-    colors.update( {7 : 'Blue'} )
-
-    # Oxygen
-    cov_radii.update( {8 : 1.8} )
-    ball_radii.update( {8 : 0.5} )
-    colors.update( {8 : 'Red'} )
-
-    # F (Fluorine)
-    cov_radii.update( {9 : 1.8} )
-    ball_radii.update( {9 : 0.4} )
-    colors.update( {9 : 'Green'} )
-
-    # Na (Sodium)
-    cov_radii.update( {11 : 3.2} )
-    ball_radii.update( {11 : 1.9} )
-    colors.update( {11 : 'Ochre'} )
-
-    # Mg (Magnesium)
-    cov_radii.update( {12 : 2.9} )
-    ball_radii.update( {12 : 1.5} )
-    colors.update( {12 : 'Ochre'} )
-
-    # Al (Aluminium)
-    cov_radii.update( {13 : 2.5} )
-    ball_radii.update( {13 : 1.2} )
-    colors.update( {13 : 'Ochre'} )
-
-    # Si (Silicon)
-    cov_radii.update( {14 : 2.3} )
-    ball_radii.update( {14 : 1.1} )
-    colors.update( {14 : 'Ochre'} )
-
-    # P (Phosphorus)
-    cov_radii.update( {15 : 2.3} )
-    ball_radii.update( {15 : 1.1} )
-    colors.update( {15 : 'Tan'} )
-
-    # S (Sulfur)
-    cov_radii.update( {16 : 2.2} )
-    ball_radii.update( {16 : 1.1} )
-    colors.update( {16 : 'Yellow'} )
-
-    # Cl (Chlorine)
-    cov_radii.update( {17 : 2.2} )
-    ball_radii.update( {17 : 1.1} )
-    colors.update( {17 : 'Ochre'} )
-
-    return
 
 # Read dataset in hdf5 file.
 # Returns a pointer to an array containing the data.
@@ -588,7 +499,7 @@ def read_atomic_names_hdf5(hdfile, data):
         if len(tc[i])>0:
           count=count+1
 
-
+    print('count =',count)
     return count
 
 # Writes Text on .bov File
@@ -668,6 +579,7 @@ def writeAtomsXYZ(xyz_filename, filename, origin, lattice):
         # Make a Set with Chemical Elements
         atomicsp = []
         atomicsp.append('H')
+        atomicsp.append('D')
         atomicsp.append('Li')
         atomicsp.append('Be')
         atomicsp.append('B')
@@ -684,12 +596,14 @@ def writeAtomsXYZ(xyz_filename, filename, origin, lattice):
         atomicsp.append('Cl')
         atomicsp.append('K')
         atomicsp.append('Ca')
+        atomicsp.append('Fe')
         atomicsp.append('Ni')
         atomicsp.append('Cu')
+        atomicsp.append('Zn')
         atomicsp.append('Ga')
         atomicsp.append('Ge')
         atomicsp.append('Au')
-        atomicsp.append('Zn')
+        atomicsp.append('La')
 
         at_names = []
 
@@ -720,7 +634,6 @@ def writeAtomsXYZ(xyz_filename, filename, origin, lattice):
               continue
 
             sp = aname[0 : 2]
-
             if sp not in atomicsp:
 
                 sp = aname[0 : 1]
@@ -808,7 +721,7 @@ def main():
         return None
 
     # If data Empty, Stop.
-    if( data == None or dims == None ):
+    if( data is None or dims is None ):
         print('\nRead Failed.')
         return -1
 
