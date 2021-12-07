@@ -542,11 +542,13 @@ void RadialMeshFunction::printLocalPot(
 
     const std::vector<double>& potloc = y_[0];
 
-    (*tfile) << "# " << name << " local pseudopotential, l=" << ll << std::endl;
+    (*tfile) << "\"" << name << " local pseudopotential, l=" << ll << "\""
+             << std::endl;
 
     for (unsigned short idx = 0; idx < x_.size(); idx += 3)
     {
         (*tfile) << x_[idx] << "\t" << potloc[idx] << std::endl;
     }
+    (*tfile) << std::endl;
     (*tfile) << std::endl;
 }

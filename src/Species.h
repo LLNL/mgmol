@@ -143,6 +143,7 @@ private:
         assert(p < (short)kbp_[l].size());
         kbp_[l][p].print(tfile, 0);
         tfile << std::endl;
+        tfile << std::endl;
     }
 
     void checkLRadius() const;
