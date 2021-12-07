@@ -17,11 +17,10 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
-using namespace std;
 
 #define Ha2Ry 2.
 
-void Species::read_1species(const string& filename)
+void Species::read_1species(const std::string& filename)
 {
     Control& ct     = *(Control::instance());
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
@@ -31,19 +30,21 @@ void Species::read_1species(const string& filename)
     char buf_ignored[size_buf];
     memset(buf_name, 0, size_buf * sizeof(char));
 
-    ifstream* tfile = nullptr;
+    std::ifstream* tfile = nullptr;
     if (mmpi.instancePE0())
     {
-        tfile = new ifstream(filename.data(), ios::in);
+        tfile = new std::ifstream(filename.data(), std::ios::in);
         if (tfile->fail())
         {
-            (*MPIdata::serr) << " Cannot open file " << filename.data() << endl;
+            (*MPIdata::serr)
+                << " Cannot open file " << filename.data() << std::endl;
             mmpi.abort();
         }
         else
         {
             if (ct.verbose > 0)
-                (*MPIdata::sout) << " read_1species: Open " << filename << endl;
+                (*MPIdata::sout)
+                    << " read_1species: Open " << filename << std::endl;
         }
 
         // Description
@@ -52,7 +53,8 @@ void Species::read_1species(const string& filename)
         read_comments(*tfile);
 
 #ifdef DEBUG
-        (*MPIdata::sout) << " read_1species: Species = " << buf_name << endl;
+        (*MPIdata::sout) << " read_1species: Species = " << buf_name
+                         << std::endl;
 #endif
         tfile->get(buf_ignored, size_buf); // unused
         read_comments((*tfile));
@@ -66,7 +68,7 @@ void Species::read_1species(const string& filename)
         read_data(nlccflag, (*tfile));
         if (nlccflag != 0)
         {
-            (*MPIdata::serr) << " NLCC Option not implemented!!!" << endl;
+            (*MPIdata::serr) << " NLCC Option not implemented!!!" << std::endl;
             mmpi.abort();
         }
 
@@ -90,13 +92,13 @@ void Species::read_1species(const string& filename)
         if (num_potentials_ <= 0)
         {
             (*MPIdata::serr) << " Species: num_potentials_=" << num_potentials_
-                             << " Need potential functions" << endl;
+                             << " Need potential functions" << std::endl;
             mmpi.abort();
         }
         if (num_potentials_ > 5)
         {
             (*MPIdata::serr) << " Species: num_potentials_=" << num_potentials_
-                             << " Too many potential functions" << endl;
+                             << " Too many potential functions" << std::endl;
             mmpi.abort();
         }
 
@@ -104,11 +106,12 @@ void Species::read_1species(const string& filename)
         (*tfile) >> llocal_ >> type_flag_;
         read_comments((*tfile));
 #ifdef DEBUG
-        (*MPIdata::sout) << " Potential " << llocal_ << " is local" << endl;
+        (*MPIdata::sout) << " Potential " << llocal_ << " is local"
+                         << std::endl;
         if (type_flag_ == 1)
-            (*MPIdata::sout) << " Divide ref. state by radius" << endl;
+            (*MPIdata::sout) << " Divide ref. state by radius" << std::endl;
         if (type_flag_ == 2)
-            (*MPIdata::sout) << " Divide projector by radius" << endl;
+            (*MPIdata::sout) << " Divide projector by radius" << std::endl;
 #endif
         assert(llocal_ < num_potentials_);
         assert(llocal_ >= 0);
@@ -152,10 +155,10 @@ void Species::read_1species(const string& filename)
                 assert(l < static_cast<int>(multiplicity_.size()));
                 if (l != llocal_)
                 {
-                    string query;
+                    std::string query;
                     getline(*tfile, query);
 
-                    stringstream ss(query);
+                    std::stringstream ss(query);
                     short ll, nproj;
                     ss >> ll >> nproj;
                     assert(nproj > 0);
@@ -168,8 +171,8 @@ void Species::read_1species(const string& filename)
                     {
                         assert(p < static_cast<int>(ekb_[ll].size()));
                         ss >> ekb_[ll][p];
-                        cout << "Read ekb_[" << ll << "][" << p
-                             << "]=" << ekb_[ll][p] << endl;
+                        std::cout << "Read ekb_[" << ll << "][" << p
+                                  << "]=" << ekb_[ll][p] << std::endl;
                     }
                 }
                 else
@@ -198,21 +201,23 @@ void Species::read_1species(const string& filename)
         read_comments((*tfile));
 
 #ifdef DEBUG
-        (*MPIdata::sout) << " h1s=" << h1s_ << endl;
-        (*MPIdata::sout) << " atomic number " << atomic_number_ << endl;
-        (*MPIdata::sout) << " atomic mass " << mass_ << endl;
-        (*MPIdata::sout) << " rc=" << rc_ << endl;
+        (*MPIdata::sout) << " h1s=" << h1s_ << std::endl;
+        (*MPIdata::sout) << " atomic number " << atomic_number_ << std::endl;
+        (*MPIdata::sout) << " atomic mass " << mass_ << std::endl;
+        (*MPIdata::sout) << " rc=" << rc_ << std::endl;
         (*MPIdata::sout) << num_potentials_ << " potentials\n";
-        (*MPIdata::sout) << " type_flag=" << type_flag_ << endl;
-        (*MPIdata::sout) << " Local potential radius=" << lradius_ << endl;
-        (*MPIdata::sout) << " Non-local potential radius=" << nlradius_ << endl;
+        (*MPIdata::sout) << " type_flag=" << type_flag_ << std::endl;
+        (*MPIdata::sout) << " Local potential radius=" << lradius_ << std::endl;
+        (*MPIdata::sout) << " Non-local potential radius=" << nlradius_
+                         << std::endl;
 #endif
     }
 
     int mpirc = MPI_Bcast(buf_name, size_buf, MPI_CHAR, 0, comm_);
     if (mpirc != MPI_SUCCESS)
     {
-        (*MPIdata::serr) << "Species, MPI Bcast of buf_name failed!!!" << endl;
+        (*MPIdata::serr) << "Species, MPI Bcast of buf_name failed!!!"
+                         << std::endl;
         mmpi.abort();
     }
 
@@ -228,7 +233,7 @@ void Species::read_1species(const string& filename)
 
 #ifdef DEBUG
     if (printFlag)
-        (*MPIdata::sout) << " n_rad_points_=" << n_rad_points_ << endl;
+        (*MPIdata::sout) << " n_rad_points_=" << n_rad_points_ << std::endl;
 #endif
     name_ = buf_name;
     MPI_Bcast(&multiplicity_[0], num_potentials_, MPI_SHORT, 0, comm_);
@@ -268,11 +273,11 @@ void Species::read_1species(const string& filename)
         }
     }
 #ifdef DEBUG
-    (*MPIdata::sout) << "Potential read" << endl;
+    (*MPIdata::sout) << "Potential read" << std::endl;
 #endif
 
-    lradius_  = min(lradius_, input_kbp_[0].x(n_rad_points_ - 1));
-    nlradius_ = min(nlradius_, input_kbp_[0].x(n_rad_points_ - 1));
+    lradius_  = std::min(lradius_, input_kbp_[0].x(n_rad_points_ - 1));
+    nlradius_ = std::min(nlradius_, input_kbp_[0].x(n_rad_points_ - 1));
 
     kbp_.resize(num_potentials_);
     for (short l = 0; l < num_potentials_; l++)
@@ -288,7 +293,7 @@ void Species::read_1species(const string& filename)
     assert(rc_ > 0.);
 }
 
-void Species::readRadialKBpotentials(ifstream* tfile)
+void Species::readRadialKBpotentials(std::ifstream* tfile)
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
@@ -299,7 +304,7 @@ void Species::readRadialKBpotentials(ifstream* tfile)
         {
             if (l != llocal_) assert(multiplicity_[l] > 0);
 #ifdef DEBUG
-            (*MPIdata::sout) << "Read potential " << l << endl;
+            (*MPIdata::sout) << "Read potential " << l << std::endl;
 #endif
             short npot = multiplicity_[l] > 1 ? multiplicity_[l] : 2;
             short ncol = (l != llocal_) ? 1 + npot : 2;
@@ -310,9 +315,9 @@ void Species::readRadialKBpotentials(ifstream* tfile)
 
             if (type_flag_ == 1 && (num_potentials_ > 1))
             {
-                (*MPIdata::sout) << "Divide ref. states by radius" << endl;
-                const vector<double>& rps(input_kbp_[l].x());
-                vector<double>& rpsi(ref_psi(l));
+                (*MPIdata::sout) << "Divide ref. states by radius" << std::endl;
+                const std::vector<double>& rps(input_kbp_[l].x());
+                std::vector<double>& rpsi(ref_psi(l));
                 int kmin = 0;
                 if (rps[0] < 1.e-10)
                 {
@@ -332,7 +337,7 @@ void Species::readRadialKBpotentials(ifstream* tfile)
         input_kbp_[l].bcast(comm_, 0);
 }
 
-void Species::readRadialGTHpotentials(ifstream* tfile)
+void Species::readRadialGTHpotentials(std::ifstream* tfile)
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
@@ -342,7 +347,7 @@ void Species::readRadialGTHpotentials(ifstream* tfile)
         for (short j = 0; j < num_potentials_; j++)
         {
 #ifdef DEBUG
-            (*MPIdata::sout) << "Read potential " << j << endl;
+            (*MPIdata::sout) << "Read potential " << j << std::endl;
 #endif
             short ncol  = 2;
             short index = j;
@@ -356,10 +361,10 @@ void Species::readRadialGTHpotentials(ifstream* tfile)
 
             if (type_flag_ == 1 && (num_potentials_ > 1))
             {
-                (*MPIdata::sout) << "Divide ref. states by radius" << endl;
-                const vector<double>& rps = input_kbp_[j].x();
-                vector<double>& rpsi      = ref_psi(j);
-                int kmin                  = 0;
+                (*MPIdata::sout) << "Divide ref. states by radius" << std::endl;
+                const std::vector<double>& rps = input_kbp_[j].x();
+                std::vector<double>& rpsi      = ref_psi(j);
+                int kmin                       = 0;
                 if (rps[0] < 1.e-10)
                 {
                     rpsi[0] = 2. * rpsi[1] - rpsi[2];
@@ -378,14 +383,14 @@ void Species::readRadialGTHpotentials(ifstream* tfile)
         input_kbp_[j].bcast(comm_, 0);
 }
 
-void Species::print(ostream& os) const
+void Species::print(std::ostream& os) const
 {
-    os << " Atom: " << name_ << endl;
-    os << " Atomic mass     = " << mass_ << endl;
-    os << " Zion            = " << zion_ << endl;
-    os << " Core rc         = " << rc_ << endl;
-    os << " # of potentials = " << num_potentials_ << endl;
-    os << " Local pot.      = " << llocal_ << endl;
+    os << " Atom: " << name_ << std::endl;
+    os << " Atomic mass     = " << mass_ << std::endl;
+    os << " Zion            = " << zion_ << std::endl;
+    os << " Core rc         = " << rc_ << std::endl;
+    os << " # of potentials = " << num_potentials_ << std::endl;
+    os << " Local pot.      = " << llocal_ << std::endl;
 
     for (short ll = 0; ll < num_potentials_; ll++)
         for (short pp = 0; pp < multiplicity_[ll]; pp++)
@@ -394,11 +399,11 @@ void Species::print(ostream& os) const
 
             if (ll == llocal_)
             {
-                os << "N/A" << endl;
+                os << "N/A" << std::endl;
             }
             else
             {
-                os << ekb_[ll][pp] << endl;
+                os << ekb_[ll][pp] << std::endl;
             }
         }
 }
@@ -423,14 +428,15 @@ void Species::setKBcoeff(const short l, const short p, const double norm)
 
 void Species::gauss_filter_local_pot(const double rcut, const bool printFlag)
 {
-    if (printFlag) (*MPIdata::sout) << "Filter local potential" << endl;
+    if (printFlag) (*MPIdata::sout) << "Filter local potential" << std::endl;
     local_pot_.gauss_filter(rcut);
 }
 
 void Species::gauss_filter_kbp(
     const short l, const short p, const double rcut, const bool printFlag)
 {
-    if (printFlag) (*MPIdata::sout) << "Filter non-local potential" << endl;
+    if (printFlag)
+        (*MPIdata::sout) << "Filter non-local potential" << std::endl;
     assert(l < static_cast<int>(kbp_.size()));
     assert(p < static_cast<int>(kbp_[l].size()));
 
@@ -438,15 +444,15 @@ void Species::gauss_filter_kbp(
 }
 
 void Species::initLocalPotential(const char flag_filter, const double hmax,
-    ofstream* tfile, const bool printFlag)
+    std::ofstream* tfile, const bool printFlag)
 {
     Control& ct = *(Control::instance());
 
     const double lrcut    = lradius_ * 0.75;
     const bool print_flag = (printFlag && !ct.restart_run);
 
-    const vector<double>& potl(input_kbp_[llocal_].y(0));
-    const vector<double>& rps(input_kbp_[llocal_].x());
+    const std::vector<double>& potl(input_kbp_[llocal_].y(0));
+    const std::vector<double>& rps(input_kbp_[llocal_].x());
 
     // output local pseudopotential
     if (printFlag && (tfile != nullptr))
@@ -456,7 +462,7 @@ void Species::initLocalPotential(const char flag_filter, const double hmax,
 
     // Generate the local neutralized pseudopotential
     RadialInter rwork(rps);
-    vector<double>& work(rwork.y(0));
+    std::vector<double>& work(rwork.y(0));
     assert(work.size() > 0);
 
     for (int idx = 0; idx < n_rad_points_; idx++)
@@ -468,14 +474,15 @@ void Species::initLocalPotential(const char flag_filter, const double hmax,
     // output local projector
     if (printFlag && (tfile != nullptr))
     {
-        (*tfile) << "# " << name_ << ", neutralized potential, l=" << llocal_
-                 << endl;
+        (*tfile) << "\"" << name_ << ", neutralized potential, l=" << llocal_
+                 << "\"" << std::endl;
 
         for (int idx = 0; idx < n_rad_points_; idx += 3)
         {
-            (*tfile) << rps[idx] << "\t" << work[idx] << endl;
+            (*tfile) << rps[idx] << "\t" << work[idx] << std::endl;
         }
-        (*tfile) << endl;
+        (*tfile) << std::endl;
+        (*tfile) << std::endl;
     }
 
     if (flag_filter == 'f')
@@ -489,11 +496,13 @@ void Species::initLocalPotential(const char flag_filter, const double hmax,
         if (printFlag && (tfile != nullptr))
         {
             if (ct.verbose > 0)
-                cout << "Write local potential in file..." << endl;
+                std::cout << "Write local potential in file..." << std::endl;
             const RadialInter& plocal_pot = local_pot();
-            (*tfile) << "# " << name_ << " filtered: " << llocal_ << endl;
+            (*tfile) << "\"" << name_ << " filtered: " << llocal_ << "\""
+                     << std::endl;
             plocal_pot.print(*tfile);
-            (*tfile) << endl;
+            (*tfile) << std::endl;
+            (*tfile) << std::endl;
         }
     }
     else
@@ -509,23 +518,24 @@ void Species::initPotentials(
     assert(n_rad_points_ < 10000);
     assert(n_rad_points_ > 0);
 
-    Control& ct     = *(Control::instance());
-    ofstream* tfile = nullptr;
+    Control& ct          = *(Control::instance());
+    std::ofstream* tfile = nullptr;
     if (printFlag)
     {
         int mpi_rank;
         MPI_Comm_rank(comm_, &mpi_rank);
         if (ct.verbose > 0)
-            (*MPIdata::sout) << "Initialize radial potentials for species "
-                             << name_ << " on MPI rank " << mpi_rank << endl;
+            (*MPIdata::sout)
+                << "Initialize radial potentials for species " << name_
+                << " on MPI rank " << mpi_rank << std::endl;
         //(*MPIdata::sout)<<" initPotentials: potential local:"<<llocal_<<endl;
         //(*MPIdata::sout)<<"Max. l="<<max_l_<<endl;
     }
     if (printFlag && !ct.restart_run)
     {
-        string name     = "projectors" + name_ + ".xmgr";
-        string filename = ct.getFullFilename(name);
-        tfile           = new ofstream(filename.data(), ios::out);
+        std::string name     = "projectors" + name_ + ".dat";
+        std::string filename = ct.getFullFilename(name);
+        tfile = new std::ofstream(filename.data(), std::ios::out);
     }
 
     initLocalPotential(flag_filter, hmax, tfile, printFlag);
@@ -550,7 +560,7 @@ void Species::initPotentials(
 }
 
 void Species::initNonlocalKBPotentials(const char flag_filter,
-    const double hmax, ofstream* tfile, const bool printFlag)
+    const double hmax, std::ofstream* tfile, const bool printFlag)
 {
     assert(max_l_ >= 0);
 
@@ -559,24 +569,24 @@ void Species::initNonlocalKBPotentials(const char flag_filter,
     const bool print_flag = (printFlag && !ct.restart_run);
     const double nlrcut   = nlradius_ * 0.75;
 
-    const vector<double>& potloc(input_kbp_[llocal_].y(0));
+    const std::vector<double>& potloc(input_kbp_[llocal_].y(0));
 
     // Loop over over angular momentum states
     for (short ll = 0; ll <= max_l_; ll++)
     {
         if (ll != llocal_)
         {
-            const vector<double>& potl(input_kbp_[ll].y(0));
-            const vector<double>& rps(input_kbp_[ll].x());
+            const std::vector<double>& potl(input_kbp_[ll].y(0));
+            const std::vector<double>& rps(input_kbp_[ll].x());
             RadialInter rwork(rps);
-            vector<double>& work(rwork.y(0));
+            std::vector<double>& work(rwork.y(0));
             assert(work.size() > 0);
 
-            const vector<double>& refl(ref_psi(ll));
+            const std::vector<double>& refl(ref_psi(ll));
             assert(n_rad_points_ == (int)refl.size());
 
             if (printFlag && ct.verbose > 2)
-                (*MPIdata::sout) << "Generate radial KB projector" << endl;
+                (*MPIdata::sout) << "Generate radial KB projector" << std::endl;
             // Loop over radial grid points to build radial KB projector
             for (int idx = 0; idx < n_rad_points_; idx++)
             {
@@ -584,13 +594,15 @@ void Species::initNonlocalKBPotentials(const char flag_filter,
             }
             if (printFlag && (tfile != nullptr))
             {
-                (*tfile) << "# " << name_ << ", projector l=" << ll << endl;
+                (*tfile) << "\"" << name_ << ", projector l=" << ll << "\""
+                         << std::endl;
                 // output non-local projector
                 for (int idx = 0; idx < n_rad_points_; idx += 3)
                 {
-                    (*tfile) << rps[idx] << "\t" << work[idx] << endl;
+                    (*tfile) << rps[idx] << "\t" << work[idx] << std::endl;
                 }
-                (*tfile) << endl;
+                (*tfile) << std::endl;
+                (*tfile) << std::endl;
             }
 
             if (flag_filter == 'f')
@@ -609,8 +621,8 @@ void Species::initNonlocalKBPotentials(const char flag_filter,
             // output non-local projector
             if (printFlag && (tfile != nullptr))
             {
-                (*tfile) << "# " << name_ << " filtered projector, l=" << ll
-                         << endl;
+                (*tfile) << "\"" << name_ << " filtered projector, l=" << ll
+                         << "\"" << std::endl;
                 print_kbp(*tfile, ll);
             }
 
@@ -627,7 +639,7 @@ void Species::initNonlocalKBPotentials(const char flag_filter,
 }
 
 void Species::initNonlocalMultiProjectorsPotentials(const char flag_filter,
-    const double hmax, ofstream* tfile, const bool divide_by_r,
+    const double hmax, std::ofstream* tfile, const bool divide_by_r,
     const bool printFlag)
 {
     assert(max_l_ >= 0);
@@ -637,7 +649,7 @@ void Species::initNonlocalMultiProjectorsPotentials(const char flag_filter,
     if (printFlag && ct.verbose > 2)
     {
         (*MPIdata::sout) << "Species::initNonlocalMultiProjectorsPotentials()"
-                         << endl;
+                         << std::endl;
     }
 
     const bool print_flag = (printFlag && !ct.restart_run);
@@ -653,10 +665,10 @@ void Species::initNonlocalMultiProjectorsPotentials(const char flag_filter,
             {
                 assert(ll < static_cast<int>(input_kbp_.size()));
 
-                const vector<double>& pot(input_kbp_[ll].y(p));
-                const vector<double>& rps(input_kbp_[ll].x());
+                const std::vector<double>& pot(input_kbp_[ll].y(p));
+                const std::vector<double>& rps(input_kbp_[ll].x());
                 RadialInter rwork(rps);
-                vector<double>& work(rwork.y(0));
+                std::vector<double>& work(rwork.y(0));
                 assert(work.size() > 0);
 
                 // if( printFlag ) (*MPIdata::sout)<<"Copy radial
@@ -684,14 +696,15 @@ void Species::initNonlocalMultiProjectorsPotentials(const char flag_filter,
 
                 if (printFlag && (tfile != nullptr))
                 {
-                    (*tfile) << "# " << name_ << ", projector, l=" << ll
-                             << ", p=" << p << endl;
+                    (*tfile) << "\"" << name_ << ", projector, l=" << ll
+                             << ", p=" << p << "\"" << std::endl;
                     // output non-local projector
                     for (int idx = 0; idx < n_rad_points_; idx += 3)
                     {
-                        (*tfile) << rps[idx] << "\t" << pot[idx] << endl;
+                        (*tfile) << rps[idx] << "\t" << work[idx] << std::endl;
                     }
-                    (*tfile) << endl;
+                    (*tfile) << std::endl;
+                    (*tfile) << std::endl;
                 }
 
                 if (flag_filter == 'f')
@@ -712,9 +725,9 @@ void Species::initNonlocalMultiProjectorsPotentials(const char flag_filter,
                 // output non-local projector
                 if (printFlag && (tfile != nullptr) && flag_filter == 'f')
                 {
-                    (*tfile) << "# " << name_ << " filtered, l=" << ll
-                             << ", p=" << p << endl;
-                    print_kbp(*tfile, ll);
+                    (*tfile) << "\"" << name_ << " filtered projector, l=" << ll
+                             << ", p=" << p << "\"" << std::endl;
+                    print_kbp(*tfile, ll, p);
                 }
 
                 // Evaluate the normalization coefficient for the projector
@@ -723,8 +736,9 @@ void Species::initNonlocalMultiProjectorsPotentials(const char flag_filter,
                 // l="<<ll<<", p="<<p<<": "<<norm2<<endl;
                 // kbp_[ll][p].scale(sqrt(1./norm2));
                 if (printFlag)
-                    cout << "Norm2 radial KB projector=" << kbp_[ll][p].norm2()
-                         << endl;
+                    std::cout
+                        << "Norm2 radial KB projector=" << kbp_[ll][p].norm2()
+                        << std::endl;
                 setKBcoeff(ll, p, ekb_[ll][p]);
             }
         }
@@ -732,7 +746,7 @@ void Species::initNonlocalMultiProjectorsPotentials(const char flag_filter,
 }
 
 void Species::initNonlocalGTHPotentials(const char flag_filter,
-    const double hmax, ofstream* tfile, const bool printFlag)
+    const double hmax, std::ofstream* tfile, const bool printFlag)
 {
     assert(max_l_ >= 0);
 
@@ -746,14 +760,14 @@ void Species::initNonlocalGTHPotentials(const char flag_filter,
     {
         if (ll != llocal_)
         {
-            const vector<double>& potl(input_kbp_[ll].y(0));
-            const vector<double>& rps(input_kbp_[ll].x());
+            const std::vector<double>& potl(input_kbp_[ll].y(0));
+            const std::vector<double>& rps(input_kbp_[ll].x());
             RadialInter rwork(rps);
-            vector<double>& work(rwork.y(0));
+            std::vector<double>& work(rwork.y(0));
             assert(work.size() > 0);
 
             if (printFlag && ct.verbose > 2)
-                (*MPIdata::sout) << "Copy radial KB projector" << endl;
+                (*MPIdata::sout) << "Copy radial KB projector" << std::endl;
             for (int idx = 0; idx < n_rad_points_; idx++)
             {
                 work[idx] = potl[idx];
@@ -776,7 +790,8 @@ void Species::initNonlocalGTHPotentials(const char flag_filter,
             // output non-local projector
             if (printFlag && (tfile != nullptr))
             {
-                (*tfile) << "# " << name_ << " filtered, l=" << ll << endl;
+                (*tfile) << "\"" << name_ << " filtered, l=" << ll << "\""
+                         << std::endl;
                 print_kbp(*tfile, ll);
             }
 
