@@ -41,9 +41,9 @@ private:
     Electrostatic& electrostat_;
 
     std::shared_ptr<LocalizationRegions> ref_lrs_;
-    MasksSet* ref_masks_;
-    MasksSet* ref_corrmasks_;
-    OrbitalsType* ref_orbitals_;
+    std::shared_ptr<MasksSet> ref_masks_;
+    std::shared_ptr<MasksSet> ref_corrmasks_;
+    std::shared_ptr<OrbitalsType> ref_orbitals_;
     pb::GridFunc<POTDTYPE>* vh_init_;
 
     double etot_i_[3];

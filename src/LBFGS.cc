@@ -31,9 +31,11 @@ LBFGS<OrbitalsType>::LBFGS(OrbitalsType** orbitals, Ions& ions,
       masks_(masks),
       corrmasks_(corrmasks),
       electrostat_(electrostat),
-      ref_lrs_(std::make_shared<LocalizationRegions>(*lrs)),
       mgmol_strategy_(strategy)
 {
+    if (lrs)
+        ref_lrs_ = std::shared_ptr<LocalizationRegions>(
+            new LocalizationRegions(*lrs));
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
     Control& ct            = *(Control::instance());
@@ -49,14 +51,21 @@ LBFGS<OrbitalsType>::LBFGS(OrbitalsType** orbitals, Ions& ions,
         20, &etot_i_[0]);
     IonicAlgorithm<OrbitalsType>::registerStepper(stepper_);
 
-    ref_masks_     = new MasksSet(lrs, false, ct.getMGlevels());
-    ref_corrmasks_ = new MasksSet(lrs, true, 0);
+    if (lrs)
+    {
+        ref_masks_ = std::shared_ptr<MasksSet>(
+            new MasksSet(lrs, false, ct.getMGlevels()));
+        ref_corrmasks_ = std::shared_ptr<MasksSet>(new MasksSet(lrs, true, 0));
+    }
 
     vh_init_ = new pb::GridFunc<POTDTYPE>(electrostat_.getVh());
 
-    ref_orbitals_ = new OrbitalsType("LBFGS_ref", mygrid, mymesh->subdivx(),
-        ct.numst, ct.bcWF, (*orbitals_)->getProjMatrices(), ref_lrs_,
-        ref_masks_, ref_corrmasks_, local_cluster_);
+    MasksSet* ref_masks     = ref_masks_ ? ref_masks_.get() : nullptr;
+    MasksSet* ref_corrmasks = ref_corrmasks_ ? ref_corrmasks_.get() : nullptr;
+    ref_orbitals_           = std::shared_ptr<OrbitalsType>(
+        new OrbitalsType("LBFGS_ref", mygrid, mymesh->subdivx(), ct.numst,
+            ct.bcWF, (*orbitals_)->getProjMatrices(), ref_lrs_, ref_masks,
+            ref_corrmasks, local_cluster_));
 
     ref_orbitals_->assign(**orbitals_);
 }
@@ -65,10 +74,7 @@ template <class OrbitalsType>
 LBFGS<OrbitalsType>::~LBFGS()
 {
     delete vh_init_;
-    delete ref_masks_;
-    delete ref_corrmasks_;
     delete stepper_;
-    delete ref_orbitals_;
 }
 
 template <class OrbitalsType>
@@ -113,12 +119,16 @@ void LBFGS<LocGridOrbitals>::updateRefMasks()
 
     if (ct.lr_update)
     {
+        assert(ref_lrs_);
+
         *ref_lrs_       = *lrs_;
         *ref_masks_     = masks_;
         *ref_corrmasks_ = corrmasks_;
     }
 
-    ref_orbitals_->reset(ref_masks_, ref_corrmasks_, lrs_);
+    MasksSet* ref_masks     = ref_masks_ ? ref_masks_.get() : nullptr;
+    MasksSet* ref_corrmasks = ref_corrmasks_ ? ref_corrmasks_.get() : nullptr;
+    ref_orbitals_->reset(ref_masks, ref_corrmasks, lrs_);
 }
 
 template <>
