@@ -639,6 +639,8 @@ int ExtendedGridOrbitals::write_hdf5(
 int ExtendedGridOrbitals::write_func_hdf5(
     HDFrestart& h5f_file, const std::string& name)
 {
+    if (onpe0)
+        (*MPIdata::sout) << "ExtendedGridOrbitals::write_func_hdf5()...\n";
     Control& ct   = *(Control::instance());
     hid_t file_id = h5f_file.file_id();
     bool iwrite   = h5f_file.active();

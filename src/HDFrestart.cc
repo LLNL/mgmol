@@ -2363,37 +2363,37 @@ int HDFrestart::readAtomicVelocities(std::vector<double>& data)
         assert(file_id_ >= 0);
 
         htri_t exists = H5Lexists(file_id_, "/Ionic_velocities", H5P_DEFAULT);
-        if (!exists) return -1;
+        if (exists)
+        {
 
-        // Open an existing dataset
-        hid_t dataset_id = H5Dopen2(file_id_, "/Ionic_velocities", H5P_DEFAULT);
-        if (dataset_id < 0)
-        {
-            if (onpe0)
-                (*MPIdata::sout) << "HDFrestart::readAtomicVelocities(), "
-                                    "H5Dopen failed->no velocities read"
-                                 << std::endl;
-            data.clear();
-        }
-        else
-        {
+            // Open an existing dataset
+            hid_t dataset_id
+                = H5Dopen2(file_id_, "/Ionic_velocities", H5P_DEFAULT);
+            if (dataset_id < 0)
+            {
+                std::cerr << "HDFrestart::readAtomicVelocities(), "
+                             "H5Dopen failed->no velocities read"
+                          << std::endl;
+                data.clear();
+                return -1;
+            }
             int dim = (int)H5Dget_storage_size(dataset_id) / sizeof(double);
             data.resize(dim);
-        }
 
-        herr_t status = H5Dread(dataset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL,
-            H5P_DEFAULT, &data[0]);
-        if (status < 0)
-        {
-            MGMOL_HDFRESTART_FAIL("H5Dread failed!!!");
-            return -2;
-        }
+            herr_t status = H5Dread(dataset_id, H5T_NATIVE_DOUBLE, H5S_ALL,
+                H5S_ALL, H5P_DEFAULT, &data[0]);
+            if (status < 0)
+            {
+                MGMOL_HDFRESTART_FAIL("H5Dread failed!!!");
+                return -2;
+            }
 
-        status = H5Dclose(dataset_id);
-        if (status < 0)
-        {
-            MGMOL_HDFRESTART_FAIL("H5Dclose failed!!!");
-            return -2;
+            status = H5Dclose(dataset_id);
+            if (status < 0)
+            {
+                MGMOL_HDFRESTART_FAIL("H5Dclose failed!!!");
+                return -2;
+            }
         }
     }
 

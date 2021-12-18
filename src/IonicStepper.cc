@@ -211,28 +211,34 @@ int IonicStepper::readAtomicFields(
     // Open the dataset
     if (file_id >= 0)
     {
-        hid_t dataset_id = H5Dopen2(file_id, name.c_str(), H5P_DEFAULT);
-        if (dataset_id < 0)
+        htri_t exists = H5Lexists(file_id, name.c_str(), H5P_DEFAULT);
+        if (exists)
         {
-            (*MPIdata::serr) << "IonicStepper, H5Dopen2 failed for " << name
-                             << " !!!" << endl;
-            return -1;
-        }
 
-        assert(H5Dget_storage_size(dataset_id) == data.size() * sizeof(double));
-        herr_t status = H5Dread(dataset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL,
-            H5P_DEFAULT, &data[0]);
-        if (status < 0)
-        {
-            (*MPIdata::serr) << "IonicStepper, H5Dread failed!!!" << endl;
-            return -1;
-        }
-        // close dataset
-        status = H5Dclose(dataset_id);
-        if (status < 0)
-        {
-            (*MPIdata::serr) << "H5Dclose failed!!!" << endl;
-            return -1;
+            hid_t dataset_id = H5Dopen2(file_id, name.c_str(), H5P_DEFAULT);
+            if (dataset_id < 0)
+            {
+                (*MPIdata::serr) << "IonicStepper, H5Dopen2 failed for " << name
+                                 << " !!!" << endl;
+                return -1;
+            }
+
+            assert(H5Dget_storage_size(dataset_id)
+                   == data.size() * sizeof(double));
+            herr_t status = H5Dread(dataset_id, H5T_NATIVE_DOUBLE, H5S_ALL,
+                H5S_ALL, H5P_DEFAULT, &data[0]);
+            if (status < 0)
+            {
+                (*MPIdata::serr) << "IonicStepper, H5Dread failed!!!" << endl;
+                return -1;
+            }
+            // close dataset
+            status = H5Dclose(dataset_id);
+            if (status < 0)
+            {
+                (*MPIdata::serr) << "H5Dclose failed!!!" << endl;
+                return -1;
+            }
         }
     }
 

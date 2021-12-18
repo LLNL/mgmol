@@ -305,6 +305,8 @@ int LBFGS_IonicStepper::writeLBFGSinfo(HDFrestart& h5f_file)
 // return -1 if error occurs
 int LBFGS_IonicStepper::read_lbfgs(HDFrestart& h5f_file)
 {
+    if (onpe0) (*MPIdata::sout) << "LBFGS_IonicStepper::read_lbfgs()...\n";
+
     hid_t file_id = h5f_file.file_id();
 
     hsize_t dim_dset;
@@ -321,12 +323,10 @@ int LBFGS_IonicStepper::read_lbfgs(HDFrestart& h5f_file)
         // Open an existing dataset.
         string datasetname("/LBFGS");
         int err_id = h5f_file.dset_exists(datasetname);
-        if (err_id == 0)
+        if (err_id < 0)
         { // dataset does not exists
-            if (onpe0)
-                (*MPIdata::sout)
-                    << "Warning: no dataset /LBFGS-> no restart info for LBFGS"
-                    << endl;
+            (*MPIdata::sout) << "Warning: no dataset " << datasetname
+                             << " -> no restart info for LBFGS" << std::endl;
         }
         else
         {
@@ -512,18 +512,16 @@ int LBFGS_IonicStepper::read_lbfgs(HDFrestart& h5f_file)
             dataset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, u);
         if (status < 0)
         {
-            (*MPIdata::serr)
-                << "LBFGS_IonicStepper::read_lbfgs(): H5Dread failed!!!"
-                << endl;
+            std::cerr << "LBFGS_IonicStepper::read_lbfgs(): H5Dread failed!!!"
+                      << endl;
             return -1;
         }
 
         status = H5Sclose(dset_space);
         if (status < 0)
         {
-            (*MPIdata::serr)
-                << "LBFGS_IonicStepper::read_lbfgs(): H5Sclose failed!!!"
-                << endl;
+            std::cerr << "LBFGS_IonicStepper::read_lbfgs(): H5Sclose failed!!!"
+                      << endl;
             return -1;
         }
 
@@ -531,9 +529,8 @@ int LBFGS_IonicStepper::read_lbfgs(HDFrestart& h5f_file)
         status = H5Dclose(dataset_id);
         if (status < 0)
         {
-            (*MPIdata::serr)
-                << "LBFGS_IonicStepper::read_lbfgs(): H5Dclose failed!!!"
-                << endl;
+            std::cerr << "LBFGS_IonicStepper::read_lbfgs(): H5Dclose failed!!!"
+                      << endl;
             return -1;
         }
     }
@@ -563,6 +560,7 @@ int LBFGS_IonicStepper::read_lbfgs(HDFrestart& h5f_file)
 
 int LBFGS_IonicStepper::init(HDFrestart& h5f_file)
 {
+    if (onpe0) (*MPIdata::sout) << "LBFGS_IonicStepper::init()...\n";
     hid_t file_id = h5f_file.file_id();
 
     if (file_id >= 0)
@@ -570,9 +568,8 @@ int LBFGS_IonicStepper::init(HDFrestart& h5f_file)
         readPositions_hdf5(h5f_file, string("/Ionic_positions"));
 
         // Open dataset
-        hid_t dataset_id = H5Dopen2(file_id, "/Ionic_velocities", H5P_DEFAULT);
-        herr_t status    = 0;
-        if (dataset_id < 0)
+        htri_t exists = H5Lexists(file_id, "/Ionic_velocities", H5P_DEFAULT);
+        if (!exists)
         {
             if (onpe0)
             {
@@ -585,6 +582,10 @@ int LBFGS_IonicStepper::init(HDFrestart& h5f_file)
         }
         else
         {
+            hid_t dataset_id
+                = H5Dopen2(file_id, "/Ionic_velocities", H5P_DEFAULT);
+            herr_t status = 0;
+
             // Read velocities equal to (taup-tau0)/dt
             status = H5Dread(dataset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL,
                 H5P_DEFAULT, &taup_[0]);
@@ -609,9 +610,6 @@ int LBFGS_IonicStepper::init(HDFrestart& h5f_file)
     }
 
     int n = (int)tau0_.size(), ione = 1;
-    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    mmpi.bcast(&tau0_[0], n);
-    mmpi.bcast(&taup_[0], n);
     DAXPY(&n, &dt_, &taup_[0], &ione, &tau0_[0], &ione);
 
     int rlbfgs = read_lbfgs(h5f_file);
