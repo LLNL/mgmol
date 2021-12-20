@@ -423,7 +423,8 @@ add_test(NAME testLBFGS
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/LBFGS/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
          ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
-         ${CMAKE_CURRENT_SOURCE_DIR}/LBFGS/lbfgs.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/LBFGS/lbfgs1.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/LBFGS/lbfgs2.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/LBFGS/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/LBFGS/lrs.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
