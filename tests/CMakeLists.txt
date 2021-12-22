@@ -428,6 +428,15 @@ add_test(NAME testLBFGS
          ${CMAKE_CURRENT_SOURCE_DIR}/LBFGS/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/LBFGS/lrs.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+add_test(NAME testFIRE
+         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/FIRE/test.py
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+         ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
+         ${CMAKE_CURRENT_SOURCE_DIR}/FIRE/fire1.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/FIRE/fire2.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/FIRE/coords.in
+         ${CMAKE_CURRENT_SOURCE_DIR}/FIRE/lrs.in
+         ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME ChebyshevMVP
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Chebyshev/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
