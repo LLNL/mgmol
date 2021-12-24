@@ -7,13 +7,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-////////////////////////////////////////////////////////////////////////////////
-//
-// FIRE_IonicStepper.C
-//
-////////////////////////////////////////////////////////////////////////////////
-// $Id:$
-
 #include "FIRE_IonicStepper.h"
 #include "MGmol_MPI.h"
 #include "MGmol_blas1.h"
@@ -54,8 +47,6 @@ FIRE_IonicStepper::FIRE_IonicStepper(const double dt,
 
 int FIRE_IonicStepper::init(HDFrestart& h5f_file)
 {
-    assert(tau0_.size() > 0);
-    assert(taup_.size() > 0);
     assert(taup_.size() == tau0_.size());
 
     hid_t file_id                 = h5f_file.file_id();
@@ -63,7 +54,7 @@ int FIRE_IonicStepper::init(HDFrestart& h5f_file)
     const std::string warning_msg = "Warning: FIRE_IonicStepper::init(): ";
 
     // Open the dataset
-    if (file_id >= 0 && onpe0)
+    if (file_id >= 0 && taup_.size() > 0)
     {
         (*MPIdata::sout) << "Initialize FIRE_IonicStepper with data from "
                          << h5f_file.filename() << std::endl;
@@ -73,13 +64,16 @@ int FIRE_IonicStepper::init(HDFrestart& h5f_file)
         readPositions_hdf5(h5f_file, string_name);
 
         // Read velocities equal to (taup-tau0)/dt
-        hid_t dataset_id = H5Dopen2(file_id, "/Ionic_velocities", H5P_DEFAULT);
-        if (dataset_id < 0)
+        std::string name("/Ionic_velocities");
+        hid_t dataset_id;
+        htri_t exists = H5Lexists(file_id, name.c_str(), H5P_DEFAULT);
+
+        if (!exists)
         {
             if (onpe0)
             {
                 (*MPIdata::sout)
-                    << warning_msg << "H5Dopen failed for /Ionic_velocities"
+                    << warning_msg << "/Ionic_velocities not in HDF file"
                     << std::endl;
                 (*MPIdata::sout) << "Set velocities to zero" << std::endl;
             }
@@ -87,6 +81,11 @@ int FIRE_IonicStepper::init(HDFrestart& h5f_file)
         }
         else
         {
+            hid_t dataset_id = H5Dopen2(file_id, name.c_str(), H5P_DEFAULT);
+            if (dataset_id < 0)
+            {
+                std::cerr << "H5Dopen2 failed for " << name << std::endl;
+            }
             if (onpe0)
                 (*MPIdata::sout) << "Read Ionic velocities from "
                                  << h5f_file.filename() << std::endl;
@@ -115,9 +114,6 @@ int FIRE_IonicStepper::init(HDFrestart& h5f_file)
     }
 
     int n = (int)tau0_.size(), ione = 1;
-    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    mmpi.bcast(&tau0_[0], n);
-    mmpi.bcast(&taup_[0], n);
     DAXPY(&n, &dt_, &taup_[0], &ione, &tau0_[0], &ione);
 
     return 0;
@@ -128,14 +124,9 @@ int FIRE_IonicStepper::write_hdf5(HDFrestart& h5f_file)
     hid_t file_id = h5f_file.file_id();
     if (file_id < 0) return 0;
 
-    const bool write_flag = (onpe0 || h5f_file.useHdf5p());
+    writePositions(h5f_file);
 
-    if (write_flag)
-    {
-        writePositions(h5f_file);
-
-        writeVelocities(h5f_file);
-    }
+    writeVelocities(h5f_file);
 
     return 0;
 }

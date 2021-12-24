@@ -7,7 +7,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #include "IonicStepper.h"
 #include "Control.h"
 #include "MGmol_MPI.h"
@@ -56,12 +55,14 @@ int IonicStepper::writeAtomicFields(HDFrestart& h5f_file,
 {
     hid_t file_id = h5f_file.file_id();
     if (file_id < 0) return 0;
+    if (data.size() == 0) return 0;
 
     hid_t dataspace_id = -1;
     hid_t dataset_id   = -1;
 
     if (create)
     {
+
         // Create the data space for new datasets
         hsize_t dims[2] = { (hsize_t)data.size() / 3, 3 };
         dataspace_id    = H5Screate_simple(2, dims, nullptr);
@@ -146,6 +147,7 @@ int IonicStepper::writeVelocities(HDFrestart& h5f_file) const
 {
     hid_t file_id = h5f_file.file_id();
     if (file_id < 0) return 0;
+    if (tau0_.size() == 0) return 0;
 
     // Create the data space for new datasets
     hsize_t dims[2] = { (hsize_t)tau0_.size() / 3, 3 };
@@ -158,13 +160,31 @@ int IonicStepper::writeVelocities(HDFrestart& h5f_file) const
     }
 
     // Create dataset
-    hid_t dataset_id = H5Dcreate2(file_id, "/Ionic_velocities",
-        H5T_NATIVE_DOUBLE, dataspace_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    if (dataset_id < 0)
+    std::string name("/Ionic_velocities");
+    hid_t dataset_id;
+    htri_t exists = H5Lexists(file_id, name.c_str(), H5P_DEFAULT);
+    if (exists)
     {
-        (*MPIdata::serr)
-            << "IonicStepper:: H5Dcreate2 /Ionic_velocities failed!!!" << endl;
-        return -1;
+        dataset_id = H5Dopen2(file_id, name.c_str(), H5P_DEFAULT);
+        if (dataset_id < 0)
+        {
+            std::cerr << "IonicStepper::writeVelocities, H5Dopen2 "
+                         "failed for dataset "
+                      << name << "!!!" << endl;
+            return -1;
+        }
+    }
+    else
+    {
+        dataset_id = H5Dcreate2(file_id, name.c_str(), H5T_NATIVE_DOUBLE,
+            dataspace_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        if (dataset_id < 0)
+        {
+            (*MPIdata::serr)
+                << "IonicStepper:: H5Dcreate2 /Ionic_velocities failed!!!"
+                << endl;
+            return -1;
+        }
     }
 
     vector<double> data(taup_);
