@@ -20,15 +20,11 @@
 #include <stdlib.h>
 #include <string>
 
-// const double scmass=1822.89;
-
-// kb_au=8.617343e-5 [eV/K] / 27.211608 [eV/Ha]
-// const double kb_au=3.16678939e-06; // [Ha/K]
-
 FIRE_IonicStepper::FIRE_IonicStepper(const double dt,
     const std::vector<short>& atmove, std::vector<double>& tau0,
-    std::vector<double>& taup, std::vector<double>& fion)
-    : IonicStepper(dt, atmove, tau0, taup), fion_(fion)
+    std::vector<double>& taup, std::vector<double>& fion,
+    std::vector<double>& masses)
+    : IonicStepper(dt, atmove, tau0, taup), fion_(fion), dt_(dt)
 {
     assert(3 * atmove.size() == tau0.size());
     assert(taup.size() == tau0.size());
@@ -41,8 +37,21 @@ FIRE_IonicStepper::FIRE_IonicStepper(const double dt,
     falpha_     = 0.99;
     finc_       = 1.1;
     fdec_       = 0.5;
-    dt_         = dt;
-    dtmax_      = 100.;
+    dtmax_      = 5. * dt;
+
+    // use same mass for all atoms
+    double maxmass = 0.;
+    for (auto& mass : masses)
+    {
+        if (mass > maxmass)
+        {
+            maxmass = mass;
+        }
+    }
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    mmpi.allreduce(&maxmass, 1, MPI_MAX);
+
+    invmass_ = 1. / maxmass;
 }
 
 int FIRE_IonicStepper::init(HDFrestart& h5f_file)
@@ -170,7 +179,8 @@ int FIRE_IonicStepper::run()
     double inv_norm_f = 1. / sqrt(normf2);
     double normv      = sqrt(normv2);
 
-    if (pp <= 0.)
+    // store temporarily dt*velocity in taup_
+    if (pp <= 0. && normv > 0.)
     {
         dt_ *= fdec_;
         npp_   = 0;
@@ -178,7 +188,7 @@ int FIRE_IonicStepper::run()
         // freeze system
         if (onpe0)
             (*MPIdata::sout)
-                << "FIRE_IonicStepper: freeze system..." << std::endl;
+                << "FIRE_IonicStepper: set velocity to 0..." << std::endl;
         if (onpe0)
             (*MPIdata::sout)
                 << "FIRE_IonicStepper: new dt   =" << dt_ << std::endl;
@@ -213,25 +223,25 @@ int FIRE_IonicStepper::run()
             dt_ = std::min(dt_ * finc_, dtmax_);
             alpha_ *= falpha_;
             if (onpe0)
-                (*MPIdata::sout)
-                    << "FIRE_IonicStepper: new dt   =" << dt_ << std::endl;
-            if (onpe0)
-                (*MPIdata::sout)
-                    << "FIRE_IonicStepper: new alpha=" << alpha_ << std::endl;
+                (*MPIdata::sout) << "FIRE_IonicStepper: new dt   =" << dt_
+                                 << ", new alpha=" << alpha_ << std::endl;
         }
     }
 
+    // MD step using dt*velocity stored in taup_
+    // Store new position in taup_
+    if (onpe0)
+        (*MPIdata::sout) << "FIRE_IonicStepper: step with dt =" << dt_
+                         << std::endl;
     for (int ia = 0; ia < na; ia++)
     {
         if (atmove_[ia])
         {
-            // const double invmass=1./ pmass_[ia];
-            const double invmass = 1.;
             for (int j = 0; j < 3; j++)
             {
                 taup_[3 * ia + j]
-                    = tau0_[3 * ia + j] + dt_ * taup_[3 * ia + j]
-                      + 0.5 * dt_ * dt_ * invmass * fion_[3 * ia + j];
+                    = tau0_[3 * ia + j] + taup_[3 * ia + j]
+                      + 0.5 * dt_ * dt_ * invmass_ * fion_[3 * ia + j];
             }
         }
         else
