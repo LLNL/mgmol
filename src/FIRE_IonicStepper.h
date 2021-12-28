@@ -23,7 +23,7 @@
 class FIRE_IonicStepper : public IonicStepper
 {
 private:
-    std::vector<double> taum_;
+    std::vector<double>& taum_;
 
     std::vector<double>& fion_;
 
@@ -50,7 +50,8 @@ private:
 public:
     FIRE_IonicStepper(const double dt, const std::vector<short>& atmove,
         std::vector<double>& tau0, std::vector<double>& taup,
-        std::vector<double>& fion, std::vector<double>& masses);
+        std::vector<double>& taum, std::vector<double>& fion,
+        std::vector<double>& masses);
 
     int run() override;
     double etol(void) const override;

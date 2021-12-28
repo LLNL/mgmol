@@ -22,9 +22,9 @@
 
 FIRE_IonicStepper::FIRE_IonicStepper(const double dt,
     const std::vector<short>& atmove, std::vector<double>& tau0,
-    std::vector<double>& taup, std::vector<double>& fion,
-    std::vector<double>& masses)
-    : IonicStepper(dt, atmove, tau0, taup), fion_(fion), dt_(dt)
+    std::vector<double>& taup, std::vector<double>& taum,
+    std::vector<double>& fion, std::vector<double>& masses)
+    : IonicStepper(dt, atmove, tau0, taup), taum_(taum), fion_(fion), dt_(dt)
 {
     assert(3 * atmove.size() == tau0.size());
     assert(taup.size() == tau0.size());
@@ -148,8 +148,6 @@ int FIRE_IonicStepper::run()
     const int na = (int)atmove_.size();
     assert((int)fion_.size() == 3 * na);
 
-    if (taum_.empty()) taum_ = tau0_;
-
     double params[3] = { 0., 0., 0. };
     double& pp(params[0]);
     double& normf2(params[1]);
@@ -239,9 +237,8 @@ int FIRE_IonicStepper::run()
         {
             for (int j = 0; j < 3; j++)
             {
-                taup_[3 * ia + j]
-                    = tau0_[3 * ia + j] + taup_[3 * ia + j]
-                      + 0.5 * dt_ * dt_ * invmass_ * fion_[3 * ia + j];
+                taup_[3 * ia + j] = tau0_[3 * ia + j] + taup_[3 * ia + j]
+                                    + dt_ * dt_ * invmass_ * fion_[3 * ia + j];
             }
         }
         else
