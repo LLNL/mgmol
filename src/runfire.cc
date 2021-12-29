@@ -83,7 +83,7 @@ void MGmol<OrbitalsType>::runfire(OrbitalsType** orbitals, Ions& ions)
         else
         {
 
-            // tentative step for atomic positions
+            // 1 step for atomic positions
             conv = fire.run1step();
 
             if (onpe0)

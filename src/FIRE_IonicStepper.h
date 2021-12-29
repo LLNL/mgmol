@@ -13,7 +13,6 @@
 // according to Bitzek et al., Phys. rev. Lett. 97, 170201 (2006)
 //
 ////////////////////////////////////////////////////////////////////////////////
-// $Id:$
 
 #ifndef FIRE_IonicStepper_H
 #define FIRE_IonicStepper_H
@@ -24,18 +23,26 @@
 class FIRE_IonicStepper : public IonicStepper
 {
 private:
-    // taum_ stores velocities if dt_<=0
-    std::vector<double> taum_; // taum_[3*na_]
+    std::vector<double>& taum_;
 
     std::vector<double>& fion_;
 
+    double dt_;
+
+    ///
+    /// Inverse of largest mass in system
+    ///
+    double invmass_;
+
+    ///
+    /// FIRE algorithm parameters
+    ///
     int nmin_;
     int npp_;
 
     double alpha_init_;
     double alpha_;
     double falpha_;
-    double dt_;
     double dtmax_;
     double finc_;
     double fdec_;
@@ -43,7 +50,8 @@ private:
 public:
     FIRE_IonicStepper(const double dt, const std::vector<short>& atmove,
         std::vector<double>& tau0, std::vector<double>& taup,
-        std::vector<double>& fion);
+        std::vector<double>& taum, std::vector<double>& fion,
+        std::vector<double>& masses);
 
     int run() override;
     double etol(void) const override;

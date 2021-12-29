@@ -32,8 +32,9 @@ FIRE<OrbitalsType>::FIRE(OrbitalsType** orbitals, Ions& ions,
 {
     stepper_ = new FIRE_IonicStepper(dt, IonicAlgorithm<OrbitalsType>::atmove_,
         IonicAlgorithm<OrbitalsType>::tau0_,
-        IonicAlgorithm<OrbitalsType>::taup_,
-        IonicAlgorithm<OrbitalsType>::fion_);
+        IonicAlgorithm<OrbitalsType>::taup_, ions.getTaum(),
+        IonicAlgorithm<OrbitalsType>::fion_,
+        IonicAlgorithm<OrbitalsType>::pmass_);
 
     IonicAlgorithm<OrbitalsType>::registerStepper(stepper_);
 }
