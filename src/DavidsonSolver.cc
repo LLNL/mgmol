@@ -402,6 +402,14 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
     s11.identity();
     s22.identity();
 
+    // orthonormalize initial wave functions to avoid drifting away from
+    // orthonormalization over outer iterations (MD or geometry optimization)
+    // jlf, 01/02/2021
+    if (mmpi.PE0() && ct.verbose > 1)
+        os_ << "Orthonormalize wavefunctions ate start of DavidsonSolver"
+            << std::endl;
+    orbitals.orthonormalizeLoewdin(false, nullptr, false);
+
     for (int outer_it = 0; outer_it <= ct.max_electronic_steps; outer_it++)
     {
         // turn on PB solver if necessary
@@ -676,14 +684,19 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
                     os_ << "  ";
             }
             os_ << std::endl;
+            double tot = 0.;
+            for (int i = 0; i < numst_; i++)
+            {
+                tot += eval[numst_ + i];
+            }
+            os_ << "Total occupations for top half states="
+                << std::setprecision(15) << tot << std::endl;
         }
-        // double tot=0.;
-        // for(int i=0;i<numst_;i++){
-        //    tot+=eval[numst_+i];
-        //}
-        // if( onpe0 && ct.verbose>2 )
-        //    os_<<"Total occupations for top half states=
-        //    "<<setprecision(15)<<tot<<endl;
+        if (mmpi.PE0() && ct.verbose > 0)
+        {
+            os_ << std::setprecision(15)
+                << "Last level occupancy = " << eval[numst_] << std::endl;
+        }
 #endif
 
         // to differentiate very low occupation vectors, extract those with
