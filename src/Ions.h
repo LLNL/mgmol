@@ -88,7 +88,7 @@ class Ions
     std::vector<double> tau0_; // current ion positions
     std::vector<double> taup_; // next ion positions
     std::vector<double> fion_; // ionic forces
-    std::vector<double> velocity_; // ionic forces
+    std::vector<double> velocity_; // ionic velocities
     std::vector<double> pmass_;
     std::vector<short> atmove_;
     std::vector<unsigned short> rand_states_;
@@ -267,9 +267,9 @@ public:
         const std::vector<double>&, const std::vector<double>&, const double);
     void setTau0();
     void setPositionsToTau0();
+    void setVelocitiesToVel();
 
     void getPositions(std::vector<double>& tau) const;
-    void getVelocities(std::vector<double>& tau) const;
     void getForces(std::vector<double>& tau) const;
     void syncData(const std::vector<Species>& sp);
     // void syncNames(const int nions, std::vector<std::string>& local_names,

@@ -129,6 +129,7 @@ int IonicAlgorithm<OrbitalsType>::run1step()
 
     // set ions_
     ions_.setPositionsToTau0();
+    ions_.setVelocitiesToVel();
 
     ions_.setup();
 
