@@ -16,6 +16,7 @@
 #include "LocGridOrbitals.h"
 #include "MGmol.h"
 #include "MPIdata.h"
+#include "OrbitalsExtrapolationFactory.h"
 
 #include <iomanip>
 #include <iostream>
@@ -31,6 +32,9 @@ void MGmol<OrbitalsType>::runfire(OrbitalsType** orbitals, Ions& ions)
         *currentMasks_, *electrostat_, ct.dt, *this);
 
     DFTsolver<OrbitalsType>::resetItCount();
+
+    orbitals_extrapol_ = OrbitalsExtrapolationFactory<OrbitalsType>::create(
+        ct.WFExtrapolation());
 
     fire.init(h5f_file_);
 
@@ -66,7 +70,8 @@ void MGmol<OrbitalsType>::runfire(OrbitalsType** orbitals, Ions& ions)
 
         int flag_convF = fire.checkTolForces(ct.tol_forces);
 
-        int conv = 0;
+        int conv     = 0;
+        int vel_flag = 0;
         if (flag_convF)
         {
 
@@ -84,7 +89,9 @@ void MGmol<OrbitalsType>::runfire(OrbitalsType** orbitals, Ions& ions)
         {
 
             // 1 step for atomic positions
-            conv = fire.run1step();
+            vel_flag = fire.run1step();
+
+            ions.removeMassCenterMotion();
 
             if (onpe0)
             {
@@ -93,6 +100,15 @@ void MGmol<OrbitalsType>::runfire(OrbitalsType** orbitals, Ions& ions)
             }
             // update stuff that depends on atomic positions
             fire.updatePotAndMasks();
+
+            if (vel_flag == 1) orbitals_extrapol_->clearOldOrbitals();
+
+            // extrapolate orbitals
+            preWFextrapolation();
+
+            extrapolate_orbitals(orbitals);
+
+            postWFextrapolation(*orbitals);
 
             if (ct.checkpoint && ct.out_restart_file != "0")
                 if (ct.out_restart_info > 0)
@@ -112,6 +128,8 @@ void MGmol<OrbitalsType>::runfire(OrbitalsType** orbitals, Ions& ions)
         }
 
     } // end for steps
+
+    delete orbitals_extrapol_;
 
     // final dump
     if (ct.out_restart_info > 0)

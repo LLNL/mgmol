@@ -22,9 +22,9 @@
 
 FIRE_IonicStepper::FIRE_IonicStepper(const double dt,
     const std::vector<short>& atmove, std::vector<double>& tau0,
-    std::vector<double>& taup, std::vector<double>& taum,
+    std::vector<double>& taup, std::vector<double>& vel,
     std::vector<double>& fion, std::vector<double>& masses)
-    : IonicStepper(dt, atmove, tau0, taup), taum_(taum), fion_(fion), dt_(dt)
+    : IonicStepper(dt, atmove, tau0, taup), vel_(vel), fion_(fion), dt_(dt)
 {
     assert(3 * atmove.size() == tau0.size());
     assert(taup.size() == tau0.size());
@@ -37,7 +37,7 @@ FIRE_IonicStepper::FIRE_IonicStepper(const double dt,
     falpha_     = 0.99;
     finc_       = 1.1;
     fdec_       = 0.5;
-    dtmax_      = 5. * dt;
+    dtmax_      = 50.;
 
     // use same mass for all atoms
     double maxmass = 0.;
@@ -63,7 +63,7 @@ int FIRE_IonicStepper::init(HDFrestart& h5f_file)
     const std::string warning_msg = "Warning: FIRE_IonicStepper::init(): ";
 
     // Open the dataset
-    if (file_id >= 0 && taup_.size() > 0)
+    if (file_id >= 0 && tau0_.size() > 0)
     {
         (*MPIdata::sout) << "Initialize FIRE_IonicStepper with data from "
                          << h5f_file.filename() << std::endl;
@@ -72,9 +72,8 @@ int FIRE_IonicStepper::init(HDFrestart& h5f_file)
         std::string string_name("/Ionic_positions");
         readPositions_hdf5(h5f_file, string_name);
 
-        // Read velocities equal to (taup-tau0)/dt
+        // Read velocities
         std::string name("/Ionic_velocities");
-        hid_t dataset_id;
         htri_t exists = H5Lexists(file_id, name.c_str(), H5P_DEFAULT);
 
         if (!exists)
@@ -86,7 +85,7 @@ int FIRE_IonicStepper::init(HDFrestart& h5f_file)
                     << std::endl;
                 (*MPIdata::sout) << "Set velocities to zero" << std::endl;
             }
-            memset(&taup_[0], 0, taup_.size() * sizeof(double));
+            memset(&vel_[0], 0, vel_.size() * sizeof(double));
         }
         else
         {
@@ -99,7 +98,7 @@ int FIRE_IonicStepper::init(HDFrestart& h5f_file)
                 (*MPIdata::sout) << "Read Ionic velocities from "
                                  << h5f_file.filename() << std::endl;
             herr_t status = H5Dread(dataset_id, H5T_NATIVE_DOUBLE, H5S_ALL,
-                H5S_ALL, H5P_DEFAULT, &taup_[0]);
+                H5S_ALL, H5P_DEFAULT, &vel_[0]);
             if (status < 0)
             {
                 (*MPIdata::serr)
@@ -113,17 +112,14 @@ int FIRE_IonicStepper::init(HDFrestart& h5f_file)
                 (*MPIdata::serr) << "H5Dclose failed!!!" << std::endl;
                 return -1;
             }
-            if (taup_[0] != taup_[0])
+            if (vel_[0] != vel_[0])
             {
                 (*MPIdata::serr)
-                    << error_msg << "taup_[0]=" << taup_[0] << std::endl;
+                    << error_msg << "vel_[0]=" << vel_[0] << std::endl;
                 return -1;
             }
         }
     }
-
-    int n = (int)tau0_.size(), ione = 1;
-    DAXPY(&n, &dt_, &taup_[0], &ione, &tau0_[0], &ione);
 
     return 0;
 }
@@ -148,6 +144,35 @@ int FIRE_IonicStepper::run()
     const int na = (int)atmove_.size();
     assert((int)fion_.size() == 3 * na);
 
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+
+    // evaluate sum of forces
+    double sumf[3] = { 0., 0., 0. };
+    for (int ia = 0; ia < na; ia++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            sumf[j] += fion_[3 * ia + j];
+        }
+    }
+    mmpi.allreduce(&sumf[0], 3, MPI_SUM);
+
+    // divide sum of forces by total number of atoms
+    int natot = na;
+    mmpi.allreduce(&natot, 1, MPI_SUM);
+    for (int j = 0; j < 3; j++)
+        sumf[j] /= (double)natot;
+
+    // remove sum of forces divided by total number of atoms
+    // from all forces
+    for (int ia = 0; ia < na; ia++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            fion_[3 * ia + j] -= sumf[j];
+        }
+    }
+
     double params[3] = { 0., 0., 0. };
     double& pp(params[0]);
     double& normf2(params[1]);
@@ -159,11 +184,9 @@ int FIRE_IonicStepper::run()
         {
             for (int j = 0; j < 3; j++)
             {
-                pp += (tau0_[3 * ia + j] - taum_[3 * ia + j])
-                      * fion_[3 * ia + j];
+                pp += vel_[3 * ia + j] * fion_[3 * ia + j];
                 normf2 += fion_[3 * ia + j] * fion_[3 * ia + j];
-                normv2 += (tau0_[3 * ia + j] - taum_[3 * ia + j])
-                          * (tau0_[3 * ia + j] - taum_[3 * ia + j]);
+                normv2 += vel_[3 * ia + j] * vel_[3 * ia + j];
             }
         }
     }
@@ -171,13 +194,17 @@ int FIRE_IonicStepper::run()
     assert(normf2 == normf2);
     assert(normv2 == normv2);
 
-    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     mmpi.allreduce(&params[0], 3, MPI_SUM);
 
     double inv_norm_f = 1. / sqrt(normf2);
     double normv      = sqrt(normv2);
 
-    // store temporarily dt*velocity in taup_
+    // return value is 1 if velocity was set to 0, 0 otherwise
+    if (onpe0)
+        (*MPIdata::sout) << "FIRE_IonicStepper: pp = " << pp << std::endl;
+    if (onpe0)
+        (*MPIdata::sout) << "FIRE_IonicStepper: normv = " << normv << std::endl;
+
     if (pp <= 0. && normv > 0.)
     {
         dt_ *= fdec_;
@@ -192,11 +219,16 @@ int FIRE_IonicStepper::run()
                 << "FIRE_IonicStepper: new dt   =" << dt_ << std::endl;
         for (int ia = 0; ia < na; ia++)
         {
-            for (int j = 0; j < 3; j++)
-            {
-                taup_[3 * ia + j] = 0.;
-            }
+            if (atmove_[ia])
+                for (int j = 0; j < 3; j++)
+                {
+                    // half step back
+                    taup_[3 * ia + j]
+                        = tau0_[3 * ia + j] - 0.5 * dt_ * vel_[3 * ia + j];
+                    vel_[3 * ia + j] = 0.;
+                }
         }
+        return 1;
     }
     else
     {
@@ -207,9 +239,11 @@ int FIRE_IonicStepper::run()
             {
                 for (int j = 0; j < 3; j++)
                 {
-                    taup_[3 * ia + j]
-                        = (1. - alpha_)
-                              * (tau0_[3 * ia + j] - taum_[3 * ia + j])
+                    vel_[3 * ia + j] += dt_ * invmass_ * fion_[3 * ia + j];
+
+                    // mixing
+                    vel_[3 * ia + j]
+                        = (1. - alpha_) * vel_[3 * ia + j]
                           + alpha_ * fion_[3 * ia + j] * inv_norm_f * normv;
                 }
             }
@@ -237,8 +271,7 @@ int FIRE_IonicStepper::run()
         {
             for (int j = 0; j < 3; j++)
             {
-                taup_[3 * ia + j] = tau0_[3 * ia + j] + taup_[3 * ia + j]
-                                    + dt_ * dt_ * invmass_ * fion_[3 * ia + j];
+                taup_[3 * ia + j] = tau0_[3 * ia + j] + dt_ * vel_[3 * ia + j];
             }
         }
         else
@@ -249,8 +282,6 @@ int FIRE_IonicStepper::run()
             }
         }
     }
-
-    taum_ = tau0_;
 
     return 0;
 }

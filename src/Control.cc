@@ -69,6 +69,7 @@ Control::Control()
     dm_approx_order        = 500;
     dm_approx_ndigits      = 1;
     dm_approx_power_maxits = 100;
+    wf_extrapolation_      = 1;
 
     // undefined values
     dm_algo_                         = -1;
@@ -88,7 +89,6 @@ Control::Control()
     wf_dyn                           = -1;
     wf_m                             = -1;
     numst                            = -1;
-    wf_extrapolation_                = -1;
     betaAnderson                     = 0.;
     diel                             = -1;
     lap_type                         = -1;

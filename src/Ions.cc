@@ -2525,19 +2525,15 @@ void Ions::setPositionsToTau0()
     }
 }
 
-void Ions::getVelocities(std::vector<double>& tau) const
+void Ions::setVelocitiesToVel()
 {
-    assert(tau.size() == 3 * local_ions_.size());
+    assert(velocity_.size() == 3 * local_ions_.size());
 
-    int ia                                 = 0;
-    std::vector<Ion*>::const_iterator iion = local_ions_.begin();
-    while (iion != local_ions_.end())
+    int ia = 0;
+    for (auto& ion : local_ions_)
     {
-        for (short i = 0; i < 3; i++)
-        {
-            tau[3 * ia + i] = (*iion)->velocity(i);
-        }
-        iion++;
+        ion->setVelocity(velocity_[3 * ia + 0], velocity_[3 * ia + 1],
+            velocity_[3 * ia + 2]);
         ia++;
     }
 }
