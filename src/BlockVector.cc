@@ -509,7 +509,7 @@ void BlockVector<ScalarType, MemorySpaceType>::setDataWithGhosts(
 
         data_wghosts->assign(i, ivect_host_view);
 
-        MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+        MemorySpace::Memory<ScalarType, MemorySpaceType>::free_host_view(
             ivect_host_view);
     }
 
@@ -529,7 +529,7 @@ ScalarType BlockVector<ScalarType, MemorySpaceType>::maxAbsValue() const
     int ione = 1;
     // TODO
     MemorySpace::assert_is_host_ptr(storage_);
-    int imax        = IDAMAX(&size_storage_, storage_, &ione);
+    int imax        = Tiamax(&size_storage_, storage_, &ione);
     ScalarType maxv = fabs(storage_[imax - 1]);
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
     mmpi.allreduce(&maxv, 1, MPI_MAX);

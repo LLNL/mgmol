@@ -83,6 +83,9 @@ void Tgemv(const char trans, const int m, const int n, const float alpha,
     const float* const a, const int lda, const float* const x, const int incx,
     const float beta, float* const y, const int incy);
 
+int Tiamax(const int*, const double* const a, const int*);
+int Tiamax(const int*, const float* const a, const int*);
+
 template <typename MemorySpaceType>
 struct LinearAlgebraUtils
 {
