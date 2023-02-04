@@ -2457,6 +2457,8 @@ template void GridFuncVector<double, MemorySpace::Host>::getValues<double>(
     const int, double*) const;
 template void GridFuncVector<double, MemorySpace::Host>::pointwiseProduct(
     GridFuncVector<double, MemorySpace::Host>& A, const GridFunc<double>& B);
+template void GridFuncVector<float, MemorySpace::Host>::pointwiseProduct(
+    GridFuncVector<float, MemorySpace::Host>& A, const GridFunc<double>& B);
 #ifdef HAVE_MAGMA
 template class GridFuncVector<double, MemorySpace::Device>;
 template class GridFuncVector<float, MemorySpace::Device>;

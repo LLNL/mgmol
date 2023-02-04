@@ -687,6 +687,16 @@ void Tgemv(const char trans, const int m, const int n, const float alpha,
     SGEMV(&trans, &m, &n, &alpha, a, &lda, x, &incx, &beta, y, &incy);
 }
 
+int Tiamax(const int* n, const float* const a, const int* incx)
+{
+    return ISAMAX(n, a, incx);
+}
+
+int Tiamax(const int* n, const double* const a, const int* incx)
+{
+    return IDAMAX(n, a, incx);
+}
+
 /////////////////////////////
 //          MPgemm         //
 /////////////////////////////

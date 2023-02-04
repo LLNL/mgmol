@@ -1579,7 +1579,7 @@ void LocGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
 
 #ifdef USE_MP
     // use temporary float data for matrix ss
-    LocalMatrices<ORBDTYPE, MemorySpace::Host> ssf(ss.subdiv(), ss.m(), ss.n());
+    LocalMatrices<ORBDTYPE, MemorySpace::Host> ssf(ss.nmat(), ss.m(), ss.n());
 #else
     LocalMatrices<ORBDTYPE, MemorySpace::Host>& ssf(ss);
 #endif
