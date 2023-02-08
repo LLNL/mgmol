@@ -36,15 +36,12 @@ private:
     Preconditioning<MGPRECONDTYPE>* precond_;
     pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>* gfv_work_;
 
-    pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>* data_wghosts_;
+    pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>* gfv_work2_;
 
     // coefficient for preconditioning
     double gamma_;
 
     bool is_set_;
-
-    // preconditioner precision != orbitals precision
-    bool mixed_precision_;
 
     // timers
     static Timer precond_tm_;
@@ -54,12 +51,10 @@ private:
 public:
     OrbitalsPreconditioning()
     {
-        is_set_       = false;
-        precond_      = nullptr;
-        gfv_work_     = nullptr;
-        data_wghosts_ = nullptr;
-
-        mixed_precision_ = (sizeof(MGPRECONDTYPE) != sizeof(ORBDTYPE));
+        is_set_    = false;
+        precond_   = nullptr;
+        gfv_work_  = nullptr;
+        gfv_work2_ = nullptr;
     };
 
     ~OrbitalsPreconditioning();

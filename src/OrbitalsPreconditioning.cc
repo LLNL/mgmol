@@ -33,10 +33,10 @@ OrbitalsPreconditioning<T>::~OrbitalsPreconditioning()
         delete gfv_work_;
         gfv_work_ = nullptr;
     }
-    if (data_wghosts_ != nullptr && mixed_precision_)
+    if (gfv_work2_ != nullptr)
     {
-        delete data_wghosts_;
-        data_wghosts_ = nullptr;
+        delete gfv_work2_;
+        gfv_work2_ = nullptr;
     }
 }
 
@@ -72,13 +72,13 @@ void OrbitalsPreconditioning<T>::setup(T& orbitals, const short mg_levels,
     gfv_work_ = new pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>(mygrid,
         ct.bcWF[0], ct.bcWF[1], ct.bcWF[2], orbitals.getOverlappingGids());
 
-    data_wghosts_
+    gfv_work2_
         = new pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>(mygrid,
             ct.bcWF[0], ct.bcWF[1], ct.bcWF[2], orbitals.getOverlappingGids());
 
     is_set_ = true;
 
-    assert(data_wghosts_);
+    assert(gfv_work2_);
 }
 
 template <class T>
@@ -87,27 +87,22 @@ void OrbitalsPreconditioning<T>::precond_mg(T& orbitals)
     assert(is_set_);
     assert(precond_ != nullptr);
     assert(gamma_ > 0.);
+    assert(gfv_work_ != nullptr);
 
 #ifdef PRINT_OPERATIONS
     if (onpe0) (*MPIdata::sout) << "T::precond_mg()..." << endl;
 #endif
     precond_tm_.start();
 
-    // store residual in GridFuncVector<T> container
-    // used for ghost values (no ghost values needed)
-    if (mixed_precision_)
-        orbitals.setDataWithGhosts(data_wghosts_);
-    else
-        orbitals.setDataWithGhosts();
-    // trade_boundaries();
-
-    // block-implemented preconditioner
-    assert(gfv_work_ != nullptr);
-
     gfv_work_->resetData();
 
-    gfv_work_->axpy(gamma_, *data_wghosts_);
-    precond_->mg(*gfv_work_, *data_wghosts_, 0);
+    // store residual in GridFuncVector<T> container
+    // used for ghost values (no ghost values needed)
+    orbitals.setDataWithGhosts(gfv_work2_);
+    gfv_work_->axpy(gamma_, *gfv_work2_);
+
+    // block-implemented preconditioner
+    precond_->mg(*gfv_work_, *gfv_work2_, 0);
 
     orbitals.setPsi(*gfv_work_);
 
