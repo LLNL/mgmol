@@ -28,15 +28,13 @@ timers1={}
 timers2={}
 
 for line in lines1:
-  num_matches = string.count(line, 'Timer:')
-  if num_matches:
-    words=string.split(line)
+  if line.count('Timer:'):
+    words=line.split()
     timers1[words[1]]=words[6]
 
 for line in lines2:
-  num_matches = string.count(line, 'Timer:')
-  if num_matches:
-    words=string.split(line)
+  if line.count('Timer:'):
+    words=line.split()
     timers2[words[1]]=words[6]
 
 #analyse timers
@@ -51,7 +49,12 @@ for timer in timers1.keys():
 sorted_timers=sorted(results.items(), key=operator.itemgetter(1))
 
 #print results
-print 'key         time1            time2            relative diff.'
+print('-----------------------------------------------------------------------------')
+print('Timer                                     time1    time2    relative diff.(%)')
+print('-----------------------------------------------------------------------------')
 for timer in reversed(sorted_timers):
   key=timer[0]
-  print key.ljust(50),str(eval(timers1[key])).ljust(15),str(eval(timers2[key])).ljust(15),str(timer[1]).ljust(40)
+  print(key.ljust(50)),
+  print(str(eval(timers1[key])).ljust(10)),
+  print(str(eval(timers2[key])).ljust(10)),
+  print(str(100.*timer[1]).ljust(20))
