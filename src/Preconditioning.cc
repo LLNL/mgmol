@@ -17,7 +17,6 @@ Preconditioning<T>::Preconditioning(const short lap_type, const short maxlevels,
     const pb::Grid& grid, const short bcWF[3])
 {
     max_levels_ = maxlevels;
-    lap_type_   = lap_type;
     for (short i = 0; i < 3; i++)
         bc_[i] = bcWF[i];
 
@@ -25,14 +24,13 @@ Preconditioning<T>::Preconditioning(const short lap_type, const short maxlevels,
     grid_.push_back(mygrid);
 
     pb::Lap<T>* myoper = LapFactory<T>::createLap(*grid_[0], lap_type);
-    precond_oper_.push_back(myoper);
+    jacobi_factor_.push_back(myoper->jacobiFactor());
 }
 
 template <typename T>
 Preconditioning<T>::Preconditioning(const Preconditioning& precond)
 {
     max_levels_      = precond.max_levels_;
-    lap_type_        = precond.lap_type_;
     pb::Grid* mygrid = new pb::Grid(*(precond.grid_[0]));
     grid_.push_back(mygrid);
     for (short i = 0; i < 3; i++)
@@ -48,10 +46,6 @@ Preconditioning<T>::~Preconditioning()
 template <typename T>
 void Preconditioning<T>::clear()
 {
-    for (short i = 0; i < (short)precond_oper_.size(); i++)
-    {
-        delete precond_oper_[i];
-    }
     for (short i = 0; i < (short)gf_work_.size(); i++)
     {
         assert(gf_work_[i] != nullptr);
@@ -73,7 +67,6 @@ void Preconditioning<T>::clear()
     {
         delete grid_[i];
     }
-    precond_oper_.clear();
     grid_.clear();
     gf_work_.clear();
     gf_rcoarse_.clear();
@@ -127,7 +120,7 @@ void Preconditioning<T>::setup(
 
         // use 2nd order FD operator
         pb::Lap<T>* myoper = LapFactory<T>::createLap(*coarse_grid, 1);
-        precond_oper_.push_back(myoper);
+        jacobi_factor_.push_back(myoper->jacobiFactor());
 
         gf_work = new pb::GridFunc<T>(*coarse_grid, bc_[0], bc_[1], bc_[2]);
         gf_work_.push_back(gf_work);
@@ -161,7 +154,8 @@ void Preconditioning<T>::setup(
 // (no mask if istate==-1)
 template <typename T>
 void Preconditioning<T>::mg(pb::GridFuncVector<T, memory_space_type>& gfv_v,
-    const pb::GridFuncVector<T, memory_space_type>& gfv_f, const short level)
+    const pb::GridFuncVector<T, memory_space_type>& gfv_f, const short lap_type,
+    const short level)
 {
 #ifdef PRINT_OPERATIONS
     if (onpe0)
@@ -173,13 +167,12 @@ void Preconditioning<T>::mg(pb::GridFuncVector<T, memory_space_type>& gfv_v,
     short ncycl = 2;
     if (level == max_levels_) ncycl = 4;
 
-    pb::Lap<T>* myoper = precond_oper_[level];
+    const double jacobi_factor = jacobi_factor_[level];
 
     // SMOOTHING
     for (short it = 0; it < ncycl; it++)
     {
-        gfv_v.jacobi(
-            lap_type_, gfv_f, *gfv_work_[level], myoper->jacobiFactor());
+        gfv_v.jacobi(lap_type, gfv_f, *gfv_work_[level], jacobi_factor);
         gfv_v.app_mask(level);
     }
 
@@ -203,7 +196,7 @@ void Preconditioning<T>::mg(pb::GridFuncVector<T, memory_space_type>& gfv_v,
 
     // call mgrid solver on a coarser level
     newv->resetData();
-    mg(*newv, *rcoarse, level + 1);
+    mg(*newv, *rcoarse, 1, level + 1);
 
     gfv_work_[level]->extend3D(*newv);
 
@@ -215,8 +208,7 @@ void Preconditioning<T>::mg(pb::GridFuncVector<T, memory_space_type>& gfv_v,
     // post-smoothing
     for (short it = 0; it < 2; it++)
     {
-        gfv_v.jacobi(
-            lap_type_, gfv_f, *gfv_work_[level], myoper->jacobiFactor());
+        gfv_v.jacobi(lap_type, gfv_f, *gfv_work_[level], jacobi_factor);
         gfv_v.app_mask(level);
     }
 

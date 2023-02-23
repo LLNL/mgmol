@@ -47,6 +47,8 @@ void OrbitalsPreconditioning<T>::setup(T& orbitals, const short mg_levels,
 {
     assert(!is_set_);
 
+    lap_type_ = lap_type;
+
     Control& ct(*(Control::instance()));
     Mesh* mymesh = Mesh::instance();
     const pb::Grid& mygrid(mymesh->grid());
@@ -102,7 +104,7 @@ void OrbitalsPreconditioning<T>::precond_mg(T& orbitals)
     gfv_work_->axpy(gamma_, *gfv_work2_);
 
     // block-implemented preconditioner
-    precond_->mg(*gfv_work_, *gfv_work2_, 0);
+    precond_->mg(*gfv_work_, *gfv_work2_, lap_type_, 0);
 
     orbitals.setPsi(*gfv_work_);
 
