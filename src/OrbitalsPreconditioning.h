@@ -38,6 +38,8 @@ private:
 
     pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>* gfv_work2_;
 
+    short lap_type_;
+
     // coefficient for preconditioning
     double gamma_;
 

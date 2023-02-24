@@ -34,7 +34,9 @@ private:
     short lap_type_;
     short bc_[3];
 
-    std::vector<pb::Lap<T>*> precond_oper_;
+    // Jacobi factor at each level
+    std::vector<double> jacobi_factor_;
+
     std::vector<pb::Grid*> grid_;
     std::vector<pb::GridFunc<T>*> gf_work_;
     std::vector<pb::GridFunc<T>*> gf_rcoarse_;
@@ -57,7 +59,7 @@ public:
     void reset(const std::vector<std::vector<int>>& overlapping_gids);
     void mg(pb::GridFuncVector<T, memory_space_type>& gf_v,
         const pb::GridFuncVector<T, memory_space_type>& gf_f,
-        const short level);
+        const short lap_type, const short level);
     short max_levels() const { return max_levels_; }
 };
 #endif
