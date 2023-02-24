@@ -5,7 +5,7 @@
 # This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 # Please also read this link https://github.com/llnl/mgmol/LICENSE
 #
-# Python program to measure distance between 2 atoms in mgmol output
+# Python program to measure angle between 3 atoms in mgmol output
 #
 # use: python getTriatomicAngle.py mgmol_output atom1 atom2 atom3
 #-------------------------------------------------------------------------------
@@ -17,16 +17,16 @@ name1=sys.argv[2]
 name2=sys.argv[3]
 name3=sys.argv[4]
 
-L1=input.readlines()
+lines=input.readlines()
 
 found1=0
 found2=0
 found3=0
 
 #read file and get data for atoms
-for line in L1: ## loop over lines of file
-  words=string.split(line)
-  if len(words)>0:
+for line in lines: ## loop over lines of file
+  words=line.split()
+  if len(words)>1:
     if words[0][0:2]=='##':
       name=words[1]
       if name[0:1]=='*':
@@ -50,9 +50,9 @@ for line in L1: ## loop over lines of file
         d12=sqrt((x2-x1)**2+(y2-y1)**2+(z2-z1)**2)
         d13=sqrt((x3-x1)**2+(y3-y1)**2+(z3-z1)**2)
         d23=sqrt((x2-x3)**2+(y2-y3)**2+(z2-z3)**2)
-        print "d12 [Bohr]=",d12, ", d12 [Ang]=",d12*0.529177
-        print "d13 [Bohr]=",d13, ", d13 [Ang]=",d13*0.529177
-        print "d23 [Bohr]=",d23, ", d23 [Ang]=",d23*0.529177
+        print("d12 [Bohr]={}, d12 [Ang]={}".format(d12, d12*0.529177))
+        print("d13 [Bohr]={}, d13 [Ang]={}".format(d13, d13*0.529177))
+        print("d23 [Bohr]={}, d23 [Ang]={}".format(d23, d23*0.529177))
         
         v12_x=(x2-x1)/d12
         v12_y=(y2-y1)/d12
@@ -63,7 +63,7 @@ for line in L1: ## loop over lines of file
         v13_z=(z3-z1)/d13
         
         angle = acos( v12_x*v13_x+v12_y*v13_y+v12_z*v13_z )
-        print "angle=",angle*180./pi
+        print("angle={}".format(angle*180./pi))
         
         found1=0
         found2=0
