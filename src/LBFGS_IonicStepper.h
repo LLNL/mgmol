@@ -6,14 +6,6 @@
 // All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
-
-////////////////////////////////////////////////////////////////////////////////
-//
-// LBFGS_IonicStepper.h:
-//
-////////////////////////////////////////////////////////////////////////////////
-// $Id$
-
 #ifndef LBFGS_IONICSTEPPER_H
 #define LBFGS_IONICSTEPPER_H
 
@@ -91,6 +83,8 @@ private:
     int writeDoubleAtt(hid_t dataset_id) const;
     int writeIntAtt(hid_t dataset_id) const;
     int read_lbfgs(HDFrestart&);
+    void setDataFromLocalData(
+        std::vector<double>& x, const std::vector<double>& tau);
 
 public:
     LBFGS_IonicStepper(const double dt, const std::vector<short>& atmove,

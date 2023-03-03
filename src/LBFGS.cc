@@ -33,9 +33,15 @@ LBFGS<OrbitalsType>::LBFGS(OrbitalsType** orbitals, Ions& ions,
       electrostat_(electrostat),
       mgmol_strategy_(strategy)
 {
-    if (lrs)
+    setup(dt);
+}
+
+template <class OrbitalsType>
+void LBFGS<OrbitalsType>::setup(const double dt)
+{
+    if (lrs_)
         ref_lrs_ = std::shared_ptr<LocalizationRegions>(
-            new LocalizationRegions(*lrs));
+            new LocalizationRegions(*lrs_));
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
     Control& ct            = *(Control::instance());
@@ -48,14 +54,14 @@ LBFGS<OrbitalsType>::LBFGS(OrbitalsType** orbitals, Ions& ions,
         IonicAlgorithm<OrbitalsType>::tau0_,
         IonicAlgorithm<OrbitalsType>::taup_,
         IonicAlgorithm<OrbitalsType>::fion_, IonicAlgorithm<OrbitalsType>::gid_,
-        20, &etot_i_[0]);
+        5, &etot_i_[0]);
     IonicAlgorithm<OrbitalsType>::registerStepper(stepper_);
 
-    if (lrs)
+    if (lrs_)
     {
         ref_masks_ = std::shared_ptr<MasksSet>(
-            new MasksSet(lrs, false, ct.getMGlevels()));
-        ref_corrmasks_ = std::shared_ptr<MasksSet>(new MasksSet(lrs, true, 0));
+            new MasksSet(lrs_, false, ct.getMGlevels()));
+        ref_corrmasks_ = std::shared_ptr<MasksSet>(new MasksSet(lrs_, true, 0));
     }
 
     vh_init_ = new pb::GridFunc<POTDTYPE>(electrostat_.getVh());
@@ -78,6 +84,15 @@ LBFGS<OrbitalsType>::~LBFGS()
 }
 
 template <class OrbitalsType>
+void LBFGS<OrbitalsType>::reset(const double dt)
+{
+    delete vh_init_;
+    delete stepper_;
+
+    setup(dt);
+}
+
+template <class OrbitalsType>
 int LBFGS<OrbitalsType>::quenchElectrons(const int itmax, double& etot)
 {
     etot_i_[0] = etot_i_[1];
@@ -95,7 +110,7 @@ void LBFGS<OrbitalsType>::updateRefs()
     {
         if (onpe0)
             (*MPIdata::sout)
-                << "lbfgs: Reset orbitals to reference orbitals " << std::endl;
+                << "LBFGS: Reset orbitals to reference orbitals " << std::endl;
         (*orbitals_)->assign(*ref_orbitals_);
         electrostat_.setupInitialVh(*vh_init_);
     }
@@ -106,7 +121,7 @@ void LBFGS<OrbitalsType>::updateRefs()
 
         if (onpe0)
             (*MPIdata::sout)
-                << "lbfgs: Update reference orbitals " << std::endl;
+                << "LBFGS: Update reference orbitals " << std::endl;
         ref_orbitals_->assign(**orbitals_);
         vh_init_->assign(electrostat_.getVh(), 'd');
     }
@@ -143,7 +158,7 @@ void LBFGS<OrbitalsType>::setQuenchTol() const
     ct.conv_tol = 0.1 * stepper_->etol();
     if (onpe0)
         (*MPIdata::sout) << std::setprecision(12) << std::fixed
-                         << "lbfgs: Set SC convergence criterion to "
+                         << "LBFGS: Set SC convergence criterion to "
                          << ct.conv_tol << std::endl;
 }
 

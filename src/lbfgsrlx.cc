@@ -119,8 +119,10 @@ void MGmol<OrbitalsType>::lbfgsrlx(OrbitalsType** orbitals, Ions& ions)
 
         if (conv != 0)
         {
-            if (onpe0) os_ << "Geometry optimization stopped" << endl;
-            break;
+            if (onpe0) os_ << "LBFGS Geometry optimization stopped" << endl;
+            // break;
+            if (onpe0) os_ << "LBFGS Geometry optimization reset" << endl;
+            lbfgs.reset(ct.dt);
         }
 
     } // end for steps

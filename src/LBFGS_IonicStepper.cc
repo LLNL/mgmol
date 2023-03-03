@@ -17,13 +17,19 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
-using namespace std;
 
 static const int nb_attri = 11;
 
+#define MGMOL_LBFGS_FAIL(X)                                                    \
+    {                                                                          \
+        (*MPIdata::sout) << "LBFGS failure:" << std::endl;                     \
+        (*MPIdata::sout) << "Error Message: " << X << std::endl;               \
+    }
+
 LBFGS_IonicStepper::LBFGS_IonicStepper(const double dt,
-    const vector<short>& atmove, vector<double>& tau0, vector<double>& taup,
-    vector<double>& fion, const vector<int>& gid, const int m, double* etot)
+    const std::vector<short>& atmove, std::vector<double>& tau0,
+    std::vector<double>& taup, std::vector<double>& fion,
+    const std::vector<int>& gid, const int m, double* etot)
     : IonicStepper(dt, atmove, tau0, taup), fion_(fion), gids_(gid), etot_(etot)
 {
     assert(gid.size() == atmove.size());
@@ -62,13 +68,14 @@ LBFGS_IonicStepper::LBFGS_IonicStepper(const double dt,
     mmpi.allreduce(&gndofs_, &tmp, 1, MPI_SUM);
     gndofs_ = tmp;
 
-    m_ = min(m, gndofs_);
-    if (onpe0) (*MPIdata::sout) << " LBFGS with m=" << m_ << endl;
+    m_ = std::min(m, gndofs_);
+    if (onpe0) (*MPIdata::sout) << " LBFGS with m=" << m_ << std::endl;
 
     freeze_geom_center_ = (3 * na == gndofs_);
     if (onpe0)
         if (freeze_geom_center_)
-            (*MPIdata::sout) << " LBFGS with geometry center frozen" << endl;
+            (*MPIdata::sout)
+                << " LBFGS with geometry center frozen" << std::endl;
 
     // allocate duplicated arrays used in LBFGS computations
     xcurrent_.resize(gndofs_);
@@ -76,6 +83,8 @@ LBFGS_IonicStepper::LBFGS_IonicStepper(const double dt,
     work_.resize(gndofs_ * 2 * (m_ + 1) + 2 * m_);
     xref_.resize(gndofs_);
     diag_.resize(gndofs_);
+
+    setDataFromLocalData(xref_, tau0);
 
     //(*MPIdata::sout)<<"gndofs_="<<gndofs_<<", m_="<<m_<<endl;
     assert(gndofs_ > 0);
@@ -85,15 +94,14 @@ LBFGS_IonicStepper::LBFGS_IonicStepper(const double dt,
 int LBFGS_IonicStepper::writeDoubleAtt(hid_t dataset_id) const
 {
     // attribute: 16 double
-    string attname = "double parameters";
-    hsize_t dim    = 16;
+    std::string attname = "double parameters";
+    hsize_t dim         = 16;
 
     // Create dataset attribute.
     hid_t dataspace_id = H5Screate_simple(1, &dim, nullptr);
     if (dataspace_id < 0)
     {
-        (*MPIdata::serr) << "Attribute " << attname << ": H5Screate failed!!!"
-                         << endl;
+        MGMOL_LBFGS_FAIL("Attribute " << attname << ": H5Screate failed!!!");
         return -1;
     }
 
@@ -101,12 +109,11 @@ int LBFGS_IonicStepper::writeDoubleAtt(hid_t dataset_id) const
         H5T_NATIVE_DOUBLE, dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
     if (attribute_id < 0)
     {
-        (*MPIdata::serr) << "Attribute " << attname << ": H5Acreate failed!!!"
-                         << endl;
+        MGMOL_LBFGS_FAIL("Attribute " << attname << ": H5Acreate failed!!!");
         return -1;
     }
 
-    vector<double> attr_d(dim);
+    std::vector<double> attr_d(dim);
     attr_d[0]  = fx_;
     attr_d[1]  = fy_;
     attr_d[2]  = stx_;
@@ -128,44 +135,59 @@ int LBFGS_IonicStepper::writeDoubleAtt(hid_t dataset_id) const
     herr_t status = H5Awrite(attribute_id, H5T_NATIVE_DOUBLE, &attr_d[0]);
     if (status < 0)
     {
-        (*MPIdata::serr) << "Attribute " << attname << ": H5Awrite failed!!!"
-                         << endl;
+        MGMOL_LBFGS_FAIL("Attribute " << attname << ": H5Awrite failed!!!");
         return -1;
     }
 
     status = H5Aclose(attribute_id);
     if (status < 0)
     {
-        (*MPIdata::serr)
-            << "LBFGS_IonicStepper::writeDoubleAtt(): H5Aclose failed!!!"
-            << endl;
+        MGMOL_LBFGS_FAIL(
+            "LBFGS_IonicStepper::writeDoubleAtt(): H5Aclose failed!!!");
         return -1;
     }
 
     status = H5Sclose(dataspace_id);
     if (status < 0)
     {
-        (*MPIdata::serr)
-            << "LBFGS_IonicStepper::writeDoubleAtt(): H5Sclose failed!!!"
-            << endl;
+        MGMOL_LBFGS_FAIL(
+            "LBFGS_IonicStepper::writeDoubleAtt(): H5Sclose failed!!!");
         return -1;
     }
 
     return 0;
 }
 
+void LBFGS_IonicStepper::setDataFromLocalData(
+    std::vector<double>& x, const std::vector<double>& tau)
+{
+    // set to 0. before summing up across MPI tasks
+    memset(&x[0], 0, gndofs_ * sizeof(double));
+
+    const int na = (int)atmove_.size();
+    for (int ia = 0; ia < na; ia++)
+    {
+        const int gid = gids_[ia];
+        for (short j = 0; j < 3; j++)
+            x[3 * gid + j] = tau[3 * ia + j];
+    }
+
+    // consolidate data across all pes
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    mmpi.allreduce(&x[0], gndofs_, MPI_SUM);
+}
+
 int LBFGS_IonicStepper::writeIntAtt(hid_t dataset_id) const
 {
     // attribute: nb_attri int
-    string attname = "int parameters";
-    hsize_t dim    = nb_attri;
+    std::string attname = "int parameters";
+    hsize_t dim         = nb_attri;
 
     // Create dataspace and attribute
     hid_t dataspace_id = H5Screate_simple(1, &dim, nullptr);
     if (dataspace_id < 0)
     {
-        (*MPIdata::serr) << "Attribute " << attname << ": H5Screate failed!!!"
-                         << endl;
+        MGMOL_LBFGS_FAIL("Attribute " << attname << ": H5Screate failed!!!");
         return -1;
     }
 
@@ -173,12 +195,11 @@ int LBFGS_IonicStepper::writeIntAtt(hid_t dataset_id) const
         dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
     if (attribute_id < 0)
     {
-        (*MPIdata::serr) << "Attribute " << attname << ": H5Acreate failed!!!"
-                         << endl;
+        MGMOL_LBFGS_FAIL("Attribute " << attname << ": H5Acreate failed!!!");
         return -1;
     }
 
-    vector<int> attr_i(dim);
+    std::vector<int> attr_i(dim);
     attr_i[0]  = iflag_;
     attr_i[1]  = m_;
     attr_i[2]  = iter_;
@@ -194,24 +215,22 @@ int LBFGS_IonicStepper::writeIntAtt(hid_t dataset_id) const
     herr_t status = H5Awrite(attribute_id, H5T_NATIVE_INT, &attr_i[0]);
     if (status < 0)
     {
-        (*MPIdata::serr) << "Attribute " << attname << ": H5Awrite failed!!!"
-                         << endl;
+        MGMOL_LBFGS_FAIL("Attribute " << attname << ": H5Awrite failed!!!");
         return -1;
     }
 
     status = H5Aclose(attribute_id);
     if (status < 0)
     {
-        (*MPIdata::serr) << "Attribute " << attname << ": H5Aclose failed!!!"
-                         << endl;
+        MGMOL_LBFGS_FAIL("Attribute " << attname << ": H5Aclose failed!!!");
         return -1;
     }
 
     status = H5Sclose(dataspace_id);
     if (status < 0)
     {
-        (*MPIdata::serr)
-            << "LBFGS_IonicStepper::writeIntAtt(): H5Sclose failed!!!" << endl;
+        MGMOL_LBFGS_FAIL(
+            "LBFGS_IonicStepper::writeIntAtt(): H5Sclose failed!!!");
         return -1;
     }
 
@@ -232,20 +251,18 @@ int LBFGS_IonicStepper::writeLBFGSinfo(HDFrestart& h5f_file)
     hid_t dataspace_id = H5Screate_simple(1, &dim, nullptr);
     if (dataspace_id < 0)
     {
-        (*MPIdata::serr) << "LBFGS_IonicStepper::writeLBFGSinfo(), "
-                            "H5Screate_simple failed!!!"
-                         << endl;
+        MGMOL_LBFGS_FAIL("writeLBFGSinfo(), H5Screate_simple failed!!!");
         return -1;
     }
 
     // Create dataset.
-    string name("/LBFGS");
+    std::string name("/LBFGS");
     hid_t dataset_id = H5Dcreate2(file_id, name.c_str(), H5T_NATIVE_DOUBLE,
         dataspace_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     if (dataset_id < 0)
     {
-        (*MPIdata::serr) << "LBFGS_IonicStepper::writeLBFGSinfo(), H5Dcreate2 "
-                         << name << " failed!!!" << endl;
+        MGMOL_LBFGS_FAIL(
+            "writeLBFGSinfo(), H5Dcreate2 " << name << " failed!!!");
         return -1;
     }
 
@@ -261,10 +278,7 @@ int LBFGS_IonicStepper::writeLBFGSinfo(HDFrestart& h5f_file)
             dataset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, u);
         if (status < 0)
         {
-            (*MPIdata::serr)
-                << "Error in LBFGS_IonicStepper::writeLBFGSinfo(): H5Dwrite "
-                   "failed!!!"
-                << endl;
+            MGMOL_LBFGS_FAIL("writeLBFGSinfo(): H5Dwrite failed!!!");
             return status;
         }
 
@@ -280,22 +294,18 @@ int LBFGS_IonicStepper::writeLBFGSinfo(HDFrestart& h5f_file)
     herr_t status = H5Sclose(dataspace_id);
     if (status < 0)
     {
-        (*MPIdata::serr)
-            << "LBFGS_IonicStepper::writeLBFGSinfo(): H5Sclose failed!!!"
-            << endl;
+        MGMOL_LBFGS_FAIL("writeLBFGSinfo(): H5Sclose failed!!!");
         return -1;
     }
 
     status = H5Dclose(dataset_id);
     if (status < 0)
     {
-        (*MPIdata::serr)
-            << "LBFGS_IonicStepper::writeLBFGSinfo(): H5Dclose failed!!!"
-            << endl;
+        MGMOL_LBFGS_FAIL("writeLBFGSinfo(): H5Dclose failed!!!");
         return -1;
     }
 
-    if (onpe0) (*MPIdata::sout) << "LBFGS restart info written" << endl;
+    if (onpe0) (*MPIdata::sout) << "LBFGS restart info written" << std::endl;
 
     return return_status;
 }
@@ -313,15 +323,15 @@ int LBFGS_IonicStepper::read_lbfgs(HDFrestart& h5f_file)
     hsize_t maxdim;
     hid_t dataset_id = H5P_DEFAULT;
     herr_t status;
-    const string error_string
+    const std::string error_string
         = "!!!Error in LBFGS_IonicStepper::read_lbfgs(): ";
 
     short check_data = 0;
-    vector<double> attr_d(16);
+    std::vector<double> attr_d(16);
     if (onpe0)
     {
         // Open an existing dataset.
-        string datasetname("/LBFGS");
+        std::string datasetname("/LBFGS");
         int err_id = h5f_file.dset_exists(datasetname);
         if (err_id < 0)
         { // dataset does not exists
@@ -336,23 +346,24 @@ int LBFGS_IonicStepper::read_lbfgs(HDFrestart& h5f_file)
                 if (onpe0)
                     (*MPIdata::sout) << "Warning: H5Dopen failed for /LBFGS-> "
                                         "no restart info for LBFGS"
-                                     << endl;
+                                     << std::endl;
             }
             else
             {
-                (*MPIdata::sout) << "Read LBFGS information from PE 0" << endl;
+                (*MPIdata::sout)
+                    << "Read LBFGS information from PE 0" << std::endl;
                 check_data = 1;
 
                 // 1st attribute: 16 double
-                string attname = "double parameters";
+                std::string attname = "double parameters";
 
                 //  Open a dataset attribute.
                 hid_t attribute_id = H5Aopen_name(dataset_id, attname.c_str());
                 if (attribute_id < 0)
                 {
-                    (*MPIdata::serr)
-                        << "PE " << mype << ": " << error_string
-                        << "H5Aopen failed for " << attname << "!!!" << endl;
+                    (*MPIdata::serr) << "PE " << mype << ": " << error_string
+                                     << "H5Aopen failed for " << attname
+                                     << "!!!" << std::endl;
                     return -1;
                 }
 
@@ -361,16 +372,14 @@ int LBFGS_IonicStepper::read_lbfgs(HDFrestart& h5f_file)
                     attdataspace, &dim_dset, &maxdim);
                 if (rank != 1)
                 {
-                    (*MPIdata::serr)
-                        << error_string << "error in rank for attribute "
-                        << attname << endl;
+                    MGMOL_LBFGS_FAIL(error_string
+                                     << "error in rank for attribute "
+                                     << attname);
                     return -1;
                 }
                 if (dim_dset != 16)
                 {
-                    (*MPIdata::serr)
-                        << error_string << "error in dim for attribute "
-                        << attname << endl;
+                    MGMOL_LBFGS_FAIL("error in dim for attribute " << attname);
                     return -1;
                 }
 
@@ -378,8 +387,7 @@ int LBFGS_IonicStepper::read_lbfgs(HDFrestart& h5f_file)
                 status = H5Aread(attribute_id, H5T_NATIVE_DOUBLE, &attr_d[0]);
                 if (status < 0)
                 {
-                    (*MPIdata::serr)
-                        << error_string << "H5Aread failed!!!" << endl;
+                    MGMOL_LBFGS_FAIL(error_string << "H5Aread failed!!!");
                     return -1;
                 }
 
@@ -387,15 +395,13 @@ int LBFGS_IonicStepper::read_lbfgs(HDFrestart& h5f_file)
                 status = H5Aclose(attribute_id);
                 if (status < 0)
                 {
-                    (*MPIdata::serr)
-                        << error_string << "H5Aclose failed!!!" << endl;
+                    MGMOL_LBFGS_FAIL("H5Aclose failed!!!");
                     return -1;
                 }
                 status = H5Sclose(attdataspace);
                 if (status < 0)
                 {
-                    (*MPIdata::serr)
-                        << error_string << "H5Sclose failed!!!" << endl;
+                    MGMOL_LBFGS_FAIL("H5Sclose failed!!!");
                     return -1;
                 }
             }
@@ -409,7 +415,8 @@ int LBFGS_IonicStepper::read_lbfgs(HDFrestart& h5f_file)
 
     mmpi.bcast(&attr_d[0], 16);
 
-    if (onpe0) (*MPIdata::sout) << "Setup LBFGS using restart info" << endl;
+    if (onpe0)
+        (*MPIdata::sout) << "Setup LBFGS using restart info" << std::endl;
 
     fx_      = attr_d[0];
     fy_      = attr_d[1];
@@ -428,19 +435,18 @@ int LBFGS_IonicStepper::read_lbfgs(HDFrestart& h5f_file)
     etot_[2] = attr_d[14];
     stp_     = attr_d[15];
 
-    vector<int> attr_i;
+    std::vector<int> attr_i;
     attr_i.resize(nb_attri);
     if (onpe0)
     {
         // 2nd attribute: nb_attri int
-        string attname = "int parameters";
+        std::string attname = "int parameters";
 
         //  Open a dataset attribute.
         hid_t attribute_id = H5Aopen_name(dataset_id, attname.c_str());
         if (attribute_id < 0)
         {
-            (*MPIdata::serr)
-                << "H5Aopen failed for " << attname << "!!!" << endl;
+            MGMOL_LBFGS_FAIL("H5Aopen failed for " << attname << "!!!");
             return -1;
         }
 
@@ -448,8 +454,7 @@ int LBFGS_IonicStepper::read_lbfgs(HDFrestart& h5f_file)
         int rank = H5Sget_simple_extent_dims(attdataspace, &dim_dset, &maxdim);
         if (rank != 1)
         {
-            (*MPIdata::serr)
-                << "error in rank for attribute " << attname << endl;
+            MGMOL_LBFGS_FAIL("error in rank for attribute " << attname);
             return -1;
         }
         if (dim_dset == (nb_attri - 1))
@@ -460,8 +465,7 @@ int LBFGS_IonicStepper::read_lbfgs(HDFrestart& h5f_file)
         {
             if (dim_dset != nb_attri)
             {
-                (*MPIdata::serr)
-                    << "error in dim for attribute " << attname << endl;
+                MGMOL_LBFGS_FAIL("error in dim for attribute " << attname);
                 return -1;
             }
         }
@@ -470,7 +474,7 @@ int LBFGS_IonicStepper::read_lbfgs(HDFrestart& h5f_file)
         status = H5Aread(attribute_id, H5T_NATIVE_INT, &attr_i[0]);
         if (status < 0)
         {
-            (*MPIdata::serr) << "H5Aread failed!!!" << endl;
+            MGMOL_LBFGS_FAIL("H5Aread failed!!!");
             return -1;
         }
 
@@ -478,13 +482,13 @@ int LBFGS_IonicStepper::read_lbfgs(HDFrestart& h5f_file)
         status = H5Aclose(attribute_id);
         if (status < 0)
         {
-            (*MPIdata::serr) << "H5Aclose failed!!!" << endl;
+            MGMOL_LBFGS_FAIL("H5Aclose failed!!!");
             return -1;
         }
         status = H5Sclose(attdataspace);
         if (status < 0)
         {
-            (*MPIdata::serr) << "H5Sclose failed!!!" << endl;
+            MGMOL_LBFGS_FAIL("H5Sclose failed!!!");
             return -1;
         }
     }
@@ -512,16 +516,14 @@ int LBFGS_IonicStepper::read_lbfgs(HDFrestart& h5f_file)
             dataset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, u);
         if (status < 0)
         {
-            std::cerr << "LBFGS_IonicStepper::read_lbfgs(): H5Dread failed!!!"
-                      << endl;
+            MGMOL_LBFGS_FAIL("read_lbfgs(): H5Dread failed!!!");
             return -1;
         }
 
         status = H5Sclose(dset_space);
         if (status < 0)
         {
-            std::cerr << "LBFGS_IonicStepper::read_lbfgs(): H5Sclose failed!!!"
-                      << endl;
+            MGMOL_LBFGS_FAIL("read_lbfgs(): H5Sclose failed!!!");
             return -1;
         }
 
@@ -529,8 +531,7 @@ int LBFGS_IonicStepper::read_lbfgs(HDFrestart& h5f_file)
         status = H5Dclose(dataset_id);
         if (status < 0)
         {
-            std::cerr << "LBFGS_IonicStepper::read_lbfgs(): H5Dclose failed!!!"
-                      << endl;
+            MGMOL_LBFGS_FAIL("read_lbfgs(): H5Dclose failed!!!");
             return -1;
         }
     }
@@ -551,7 +552,7 @@ int LBFGS_IonicStepper::read_lbfgs(HDFrestart& h5f_file)
         if (onpe0)
             (*MPIdata::sout)
                 << "LBFGS Warning: No reference ionic positions in restart file"
-                << endl;
+                << std::endl;
     }
     delete[] u;
 
@@ -565,7 +566,7 @@ int LBFGS_IonicStepper::init(HDFrestart& h5f_file)
 
     if (file_id >= 0)
     {
-        readPositions_hdf5(h5f_file, string("/Ionic_positions"));
+        readPositions_hdf5(h5f_file, std::string("/Ionic_positions"));
 
         // Open dataset
         htri_t exists = H5Lexists(file_id, "/Ionic_velocities", H5P_DEFAULT);
@@ -575,8 +576,8 @@ int LBFGS_IonicStepper::init(HDFrestart& h5f_file)
             {
                 (*MPIdata::sout) << "Warning: LBFGS_IonicStepper::init(), "
                                     "H5Dopen2 failed for /Ionic_velocities!!!"
-                                 << endl;
-                (*MPIdata::sout) << "Set velocities to zero" << endl;
+                                 << std::endl;
+                (*MPIdata::sout) << "Set velocities to zero" << std::endl;
             }
             memset(&taup_[0], 0, taup_.size() * sizeof(double));
         }
@@ -593,7 +594,7 @@ int LBFGS_IonicStepper::init(HDFrestart& h5f_file)
             {
                 (*MPIdata::serr) << "Error: LBFGS_IonicStepper::init: H5Dread "
                                     "failed for taup!!!"
-                                 << endl;
+                                 << std::endl;
                 return -1;
             }
 
@@ -601,9 +602,7 @@ int LBFGS_IonicStepper::init(HDFrestart& h5f_file)
             status = H5Dclose(dataset_id);
             if (status < 0)
             {
-                (*MPIdata::serr)
-                    << "Error: LBFGS_IonicStepper::init(): H5Dclose failed!!!"
-                    << endl;
+                MGMOL_LBFGS_FAIL("init(): H5Dclose failed!!!");
                 return -1;
             }
         }
@@ -630,6 +629,17 @@ int LBFGS_IonicStepper::write_hdf5(HDFrestart& h5f_file)
 {
     int status = 0;
 
+    if (iflag_ < 0)
+    {
+        if (onpe0)
+        {
+            (*MPIdata::sout)
+                << "LBFGS algorithm ended with failure" << std::endl;
+            (*MPIdata::sout) << "Do NOT write LBFGS info!" << std::endl;
+        }
+        return 0;
+    }
+
     hid_t file_id = h5f_file.file_id();
     if (file_id < 0) return 0;
 
@@ -651,16 +661,15 @@ int LBFGS_IonicStepper::run()
 
     double step = 2.74; // safe step for H2 molecule
 
+    // set xcurrent_
+    setDataFromLocalData(xcurrent_, tau0_);
+
     // reset data to 0
-    memset(&xcurrent_[0], 0, gndofs_ * sizeof(double));
     memset(&g_[0], 0, gndofs_ * sizeof(double));
 
-    // set local data
     for (int ia = 0; ia < na; ia++)
     {
         const int gid = gids_[ia];
-        for (short j = 0; j < 3; j++)
-            xcurrent_[3 * gid + j] = tau0_[3 * ia + j];
         if (atmove_[ia])
         {
             for (short j = 0; j < 3; j++)
@@ -686,7 +695,6 @@ int LBFGS_IonicStepper::run()
 
     // consolidate data across all pes
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    mmpi.allreduce(&xcurrent_[0], gndofs_, MPI_SUM);
     mmpi.allreduce(&g_[0], gndofs_, MPI_SUM);
 
     if (onpe0) iflag_ = lbfgs(etot_[2], diagco, iflag_);
@@ -701,24 +709,20 @@ int LBFGS_IonicStepper::run()
     {
         if (onpe0)
         {
-            (*MPIdata::sout)
-                << "lbfgs: Line search failed-> Stop algorithm" << endl;
-            (*MPIdata::sout)
-                << "This could be due to inaccurate energies/forces" << endl;
+            MGMOL_LBFGS_FAIL("Line search failed, possibly due to inaccurate "
+                             "energies/forces");
         }
         return -1;
     }
     if (iflag_ == -2)
     {
         if (onpe0)
-            (*MPIdata::sout)
-                << "lbfgs: inverse Hessian approximation is not positive"
-                << endl;
+            MGMOL_LBFGS_FAIL("inverse Hessian approximation is not positive");
         return -2;
     }
     if (iflag_ == -3)
     {
-        if (onpe0) (*MPIdata::sout) << "lbfgs: yy is too small" << endl;
+        if (onpe0) MGMOL_LBFGS_FAIL("yy is too small");
         return -3;
     }
 
@@ -745,13 +749,13 @@ int LBFGS_IonicStepper::run()
 
 double LBFGS_IonicStepper::etol(void) const
 {
-    double emax    = max(etot_[2], etot_[1]);
-    emax           = max(emax, etot_[0]);
-    double emin    = min(etot_[2], etot_[1]);
-    emin           = min(emin, etot_[0]);
+    double emax    = std::max(etot_[2], etot_[1]);
+    emax           = std::max(emax, etot_[0]);
+    double emin    = std::min(etot_[2], etot_[1]);
+    emin           = std::min(emin, etot_[0]);
     double espread = emax - emin;
 
-    return min(espread * 1.e-4, 1.e-8);
+    return std::min(espread * 1.e-4, 1.e-8);
 }
 
 // lbfgs() returns an integer between -3 and +2:
@@ -807,7 +811,7 @@ int LBFGS_IonicStepper::lbfgs(
             for (int i = 0; i < gndofs_; i++)
                 diag_[i] = 1.;
         }
-        // the work vector work_ is divided as follows:
+        // the work std::vector work_ is divided as follows:
         // ---------------------------------------
         // the first n locations are used to store the gradient and
         //     other temporary information.
@@ -846,7 +850,7 @@ int LBFGS_IonicStepper::lbfgs(
                     if (yy < 1.e-14)
                     {
                         if (onpe0)
-                            (*MPIdata::sout) << "lbfgs: yy=" << yy << endl;
+                            (*MPIdata::sout) << "LBFGS: yy=" << yy << std::endl;
                         return -3;
                     }
                     double ratio = ys / yy;
@@ -884,7 +888,8 @@ int LBFGS_IonicStepper::lbfgs(
                         work_[i + 1] -= ay;
                         work_[i + 2] -= az;
                     }
-                    //(*MPIdata::sout)<<"lbfgs:shift search vector by "<<ax<<",
+                    //(*MPIdata::sout)<<"lbfgs:shift search std::vector by
+                    //"<<ax<<",
                     //"<<ay<<", "<<az<<endl;
                 }
 
@@ -895,8 +900,8 @@ int LBFGS_IonicStepper::lbfgs(
                 if (fabs(work_[maxw]) > dismax)
                 {
                     double alpha = dismax / fabs(work_[maxw]);
-                    (*MPIdata::sout)
-                        << "lbfgs: rescale search vector by " << alpha << endl;
+                    (*MPIdata::sout) << "LBFGS: rescale search std::vector by "
+                                     << alpha << std::endl;
                     DSCAL(&gndofs_, &alpha, &work_[0], &inc);
                 }
 
@@ -934,15 +939,16 @@ int LBFGS_IonicStepper::lbfgs(
 
         // Termination test
         double gnorm = sqrt(DDOT(&gndofs_, &g_[0], &inc, &g_[0], &inc));
-        (*MPIdata::sout) << setprecision(2) << scientific;
+        (*MPIdata::sout) << std::setprecision(2) << std::scientific;
         if (onpe0)
-            (*MPIdata::sout) << "lbfgs: Norm of gradient=" << gnorm << endl;
+            (*MPIdata::sout)
+                << "LBFGS: Norm of gradient=" << gnorm << std::endl;
         finish = (gnorm <= eps_);
 
     } while (!finish);
 
     (*MPIdata::sout) << "The minimization terminated without detecting errors."
-                     << endl;
+                     << std::endl;
 
     return 0;
 }
@@ -1057,8 +1063,8 @@ void LBFGS_IonicStepper::mcsrch(const double f, double* s, double& stp)
         if (dginit_ >= 0.)
         {
             (*MPIdata::sout)
-                << "lbfgs: the search direction is not a descent direction"
-                << endl;
+                << "LBFGS: the search direction is not a descent direction"
+                << std::endl;
             return;
         }
 
@@ -1069,7 +1075,7 @@ void LBFGS_IonicStepper::mcsrch(const double f, double* s, double& stp)
         finit_  = f;
         width_  = stpmax - stpmin;
         width1_ = 2. * width_;
-        (*MPIdata::sout) << "lbfgs: update reference positions" << endl;
+        (*MPIdata::sout) << "LBFGS: update reference positions" << std::endl;
         DCOPY(&gndofs_, &xcurrent_[0], &inc, &xref_[0], &inc);
         last_step_accepted_ = 1;
 
@@ -1100,8 +1106,8 @@ void LBFGS_IonicStepper::mcsrch(const double f, double* s, double& stp)
             // to the present interval of uncertainty.
             if (brackt_)
             {
-                stmin_ = min(stx_, sty_);
-                stmax_ = max(stx_, sty_);
+                stmin_ = std::min(stx_, sty_);
+                stmax_ = std::max(stx_, sty_);
             }
             else
             {
@@ -1110,8 +1116,8 @@ void LBFGS_IonicStepper::mcsrch(const double f, double* s, double& stp)
             }
 
             // force the step to be within the bounds stpmax and stpmin.
-            stp = max(stp, stpmin);
-            stp = min(stp, stpmax);
+            stp = std::max(stp, stpmin);
+            stp = std::min(stp, stpmax);
 
             // if an unusual termination is to occur then let
             // stp be the lowest point obtained so far.
@@ -1124,9 +1130,9 @@ void LBFGS_IonicStepper::mcsrch(const double f, double* s, double& stp)
             // evaluate the function and gradient at stp
             // and compute the directional derivative.
             // we return to main program to obtain f and g.
-            (*MPIdata::sout) << setprecision(2) << scientific;
+            (*MPIdata::sout) << std::setprecision(2) << std::scientific;
             (*MPIdata::sout)
-                << "lbfgs: try new position with stp=" << stp << endl;
+                << "LBFGS: try new position with stp=" << stp << std::endl;
             for (int j = 0; j < gndofs_; j++)
             {
                 assert(s[j] < 10.);
@@ -1170,8 +1176,8 @@ void LBFGS_IonicStepper::mcsrch(const double f, double* s, double& stp)
             info_ = 3;
             if (f <= ftest1)
             {
-                (*MPIdata::sout)
-                    << "Warning: 2nd Wolfe condition not satisfied" << endl;
+                (*MPIdata::sout) << "Warning: 2nd Wolfe condition not satisfied"
+                                 << std::endl;
                 info_ = 1;
             }
         }
@@ -1183,7 +1189,7 @@ void LBFGS_IonicStepper::mcsrch(const double f, double* s, double& stp)
 
         // in the first stage we seek a step for which the modified
         // function has a nonpositive value and nonnegative derivative.
-        if (stage1_ && f <= ftest1 && dg >= min(ftol, gtol) * dginit_)
+        if (stage1_ && f <= ftest1 && dg >= std::min(ftol, gtol) * dginit_)
             stage1_ = false;
 
         // a modified function is used to predict the step only if

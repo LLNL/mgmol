@@ -7,7 +7,7 @@
 #
 # Python program to enforce constraint in mgmol input
 #
-# use: python enforce_MultiDistance_constraint.py mgmol_input alpha1 atom1a atom1b alpha2 atom2a atom2b ... distance
+# use: python enforce_MultiDistance_constraint.py coords.in alpha1 atom1a atom1b alpha2 atom2a atom2b ... distance
 #-------------------------------------------------------------------------------
 import sys, string
 from math import sqrt
@@ -16,13 +16,18 @@ from numpy import *
 ##############################################
 # count atoms/species
 def getMassAtom(name):
-  one=name[0]
   mass=0.
-  if one[0:2] in spmass.keys():
-     mass=spmass[one[0:0+2]]
+  if name[0:2] in spmass.keys():
+     mass=spmass[name[0:2]]
   else:
-     mass=spmass[one[0]]
+     mass=spmass[name[0:1]]
   return mass
+
+def getName(strn):
+  if strn[0:2] in spmass.keys():
+     return strn[0:2]
+  else:
+     return strn[0:1]
 
 ##############################################
 # make one shake iteration
@@ -38,7 +43,7 @@ def enforce_constraint():
     d = sqrt( d2 )
     sigma = sigma+eval(alpha_[k])*d
 
-  print "#sigma=",sigma
+  print("#sigma=={}".format(sigma))
   if ( abs( sigma ) < tol_ ):
     return 1
 
@@ -100,14 +105,14 @@ while i<(len(sys.argv)-1):
   alpha_.append(sys.argv[i])
   name1_.append(sys.argv[i+1])
   name2_.append(sys.argv[i+2])
-  print '#alpha=',sys.argv[i],',name1_=',sys.argv[i+1],',name2_=',sys.argv[i+2]
+  print("#alpha={}, name1_={}, ,name2_={}".format(sys.argv[i],sys.argv[i+1],sys.argv[i+2]))
   i=i+3
 
 distance_=eval(sys.argv[i])
-print '#distance_=',distance_
+print("#distance_={}".format(distance_))
 
 nc_=len(alpha_)
-print '#nc=',nc_
+print("#nc={}".format(nc_))
 
 #list of unique names
 u_name_=[]
@@ -116,30 +121,28 @@ u_mass_=[]
 names_=[]
 
 #read file and get data for constraint atoms
-lines_of_file=input.readlines()
+lines=input.readlines()
 
 tau_=[]
 names_=[]
 masses=[]
-movable=[]
 found=0
 
-for line in lines_of_file: ## loop over lines of file
-  words=string.split(line)
-  if len(words)>1:
-    if words[0][0:1]!='#':
-      if( words[0] in name1_ or words[0] in name2_ ):
-        found=found+1
-        names_.append(words[0])
-        x=words[2]
-        y=words[3]
-        z=words[4]
-        #tau.append(x+'\t'+y+'\t'+z)
-        tau_.append([x,y,z])
-        movable.append(words[5])
+for line in lines: ## loop over lines of file
+  words=line.split()
+  if len(words)>4:
+    name = words[0]
+    #print(name)
+    if( words[0] in name1_ or words[0] in name2_ ):
+      found=found+1
+      names_.append(words[0])
+      x=words[2]
+      y=words[3]
+      z=words[4]
+      tau_.append([x,y,z])
 
 na_=len(names_)
-print '#na=',na_
+print("#na={}".format(na_))
 
 #copy
 taup_=tau_[:]
@@ -182,9 +185,9 @@ a_=zeros((na_,3))
 
 ##############################################
 
-print "#Old coordinates"
-for i in range(len(u_name_)):
-  print '#',u_name_[i],'\t',taup_[u_taup_[i]]
+#print("#Old coordinates")
+#for i in range(len(u_name_)):
+#  print("#{}\t{}".format(u_name_[i],taup_[u_taup_[i]]))
 
 conv=0
 maxit=10
@@ -195,38 +198,23 @@ while conv==0:
   if it>maxit:
     break
     
-print "#New coordinates"
-for i in range(len(u_name_)):
-  print '#',u_name_[i],'\t',taup_[u_taup_[i]]
+#print("#New coordinates")
+#for i in range(len(u_name_)):
+#  print("#{}\t{}".format(u_name_[i],taup_[u_taup_[i]]))
 
 if conv==1:
-  #write new file
-  for line in lines_of_file: ## loop over lines of file
+  #print("#write new file")
+  for line in lines: ## loop over lines of file
     found=0
-    words=string.split(line)
-    if len(words)>0:
-      if words[0][0:1]!='#':
-        for ia in range(len(names_)):
-          if( words[0]==names_[ia] ):
-            coord=taup_[ia]
-            found=1
-        if( words[0]=='constraint' and words[1]=='multidistance' ):
-            nwords=len(words)
-            i=3
-            while i<nwords-1:
-              if( words[i] in names_ and words[i+1] in names_ ):
-                found=2
-                i=i+3
-              else:
-                found=0
+    words=line.split()
+    if len(words)>3:
+      for ia in range(len(names_)):
+        if( words[0]==names_[ia] ):
+          coord=taup_[ia]
+          found=1
     if found==1:
-      print words[0].ljust(7),words[1].ljust(3),
-      print '%10.6f  %10.6f  %10.6f' % (eval(coord[0]),eval(coord[1]),eval(coord[2])),
-      print words[5].rjust(3)
-    elif found==2:
-      for i in range(nwords-1):
-        print words[i],
-      print distance_
+      print(words[0].ljust(7),words[1].ljust(3), end ="")
+      print("%10.6f  %10.6f  %10.6f"% (eval(coord[0]),eval(coord[1]),eval(coord[2])))
     else:
-      print line,
-    
+      print(line, end ="")
+
