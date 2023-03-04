@@ -51,6 +51,7 @@ private:
     MGmol<OrbitalsType>& mgmol_strategy_;
 
     void updateRefMasks();
+    void setup(const double dt);
 
 public:
     LBFGS(OrbitalsType** orbitals, Ions& ions, Rho<OrbitalsType>& rho,
@@ -59,6 +60,8 @@ public:
         Electrostatic& electrostat, const double dt, MGmol<OrbitalsType>&);
 
     ~LBFGS() override;
+
+    void reset(const double dt);
 
     int quenchElectrons(const int itmax, double& etot) override;
     void updateRefs();
