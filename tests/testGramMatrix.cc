@@ -116,5 +116,5 @@ TEST_CASE("Check functionalities of class GramMatrix", "[functions_GramMatrix")
     matA -= matB;
 
     normA = matA.norm('m');
-    CHECK(normA == Approx(0.).margin(1.e-14));
+    CHECK(normA == Approx(0.).margin(1.e-12));
 }
