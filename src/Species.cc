@@ -285,7 +285,7 @@ void Species::read_1species(const std::string& filename)
         if (l != llocal_) kbp_[l].resize(multiplicity_[l]);
     }
 
-    checkLRadius();
+    if (mmpi.instancePE0()) checkLRadius();
 
     assert(zion_ < 50);
     assert(llocal_ < num_potentials_);
