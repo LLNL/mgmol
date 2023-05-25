@@ -15,74 +15,69 @@ import numpy as np
 au2ps=2.418885e-05
 Ha2eV=27.211608
 
-searchterm1='Total'
-searchterm2='Energy'
-searchterm3='CONFIGURATION'
-
 fig = plt.figure()
 ax = fig.add_subplot(111)
 
 colors = ['r', 'b', 'k', 'g', 'c', 'm']
-file = 0
+ifile = 0
 
-print "Opening file."
+print("Opening file...")
 
 for arg in sys.argv[1:]:
   inputfile=open(arg,'r')
-  L=inputfile.readlines()
+  lines = inputfile.readlines()
 
-  energies=[]
+  totalE=[]
+  kineticE=[]
   times=[]
 
   #read number of atoms
-  natoms=0
-  for line in L:
-    num_matches1 = string.count(line, 'Number')
-    num_matches2 = string.count(line, 'ions')
-    if num_matches1 & num_matches2:
-      natoms=eval(string.split(line)[4])
+  natoms = 0
+  for line in lines:
+    if line.count('Number') & line.count('ions'):
+      natoms=eval(line.split()[4])
+      print("natoms = {}".format(natoms))
       break
 
   #read time step
   dt=0
-  for line in L:
-    num_matches1 = string.count(line, 'Timestep')
-    if num_matches1:
-      dt=eval(string.split(line)[5])
+  for line in lines:
+    if line.count('Timestep'):
+      dt=eval(line.split()[5])
       break
 
-  print 'dt=',dt
+  print("dt = {}".format(dt))
   #convert to ps
   dt=dt*au2ps
-  #read energies and times
+
+  #read totalE and times
   flag=0
-  for line in L:
-    num_matches3 = string.count(line, searchterm3)
-    if num_matches3:
-      words=string.split(line)
+  for line in lines:
+    if line.count('CONFIGURATION'):
+      words=line.split()
       time=eval(words[1])*dt
-    num_matches1 = string.count(line, searchterm1)
-    num_matches2 = string.count(line, searchterm2)
-    if num_matches1 & num_matches2:
+    if line.count('Total') & line.count('Energy'):
       if 'Hartree' in line:
           continue
-      words=string.split(line)
+      words=line.split()
       energy=eval(words[2])*Ha2eV/natoms
       times.append(time)
-      energies.append(energy)
-      print 'Energy=',energy
+      totalE.append(energy)
+      print("Energy = {}".format(energy))
 
   # plot results
-  if file < len(colors):
-      color = colors[file]
+  print("Plot results...")
+  print("Number of energy values: {}".format(len(totalE)))
+  if ifile < len(colors):
+      color = colors[ifile]
   else:
       color = 'r'
-  ax.plot(times,energies, color+'.--')
-  file += 1
+  ax.plot(times,totalE, color+'.--')
+  ifile += 1
 
-  np.savez('energies'+str(file)+'.npz', times, energies)
+  np.savez('totalE'+str(ifile)+'.npz', times, totalE)
 
-ax.set_ylabel('Total Energy (eV/atom)')
+ax.set_ylabel('Energy (eV/atom)')
 ax.set_xlabel('time (ps)')
 
 plt.show()
