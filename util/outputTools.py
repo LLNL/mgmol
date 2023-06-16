@@ -26,7 +26,7 @@ def countNumAtoms(ifile):
           if line[i+2]!='#':
             flag1=1
             flag2=1
-            ss = string.split(line)
+            ss = line.split()
             one = ss[-7]
             two   = ss[-6]
             three = ss[-5]

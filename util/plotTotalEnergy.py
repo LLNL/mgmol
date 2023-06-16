@@ -80,5 +80,6 @@ for arg in sys.argv[1:]:
 ax.set_ylabel('Energy (eV/atom)')
 ax.set_xlabel('time (ps)')
 
-plt.show()
-plt.savefig('totalE.png', dpi=100)
+#turn on either option to show or save into a file
+#plt.show()
+plt.savefig('totalE.png',bbox_inches='tight')

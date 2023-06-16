@@ -28,8 +28,8 @@ if len(sys.argv)>3:
 else:
   jobname=''
 
-L=input_.readlines()
-l=len(L)  ## no of lines in file
+lines=input_.readlines()
+l=len(lines)  ## no of lines in file
 
 # list possible species in a dictionary with their count
 species={'H':0,'D':0,'He':0,'Li':0,'Be':0,'B':0,'C':0,'N':0,'O':0,'F':0,'Na':0,
@@ -40,18 +40,16 @@ bohr2ang=1./ang2bohr
 
 na=outputTools.countNumAtoms(input_)
 nmlwc=outputTools.countNumMLWC(input_)
-#print 'N atoms=', na
-#na=na+nmlwc
-#print 'N atoms=', na
+#print("N atoms: {}".format(na))
+#print("Number of MLWC: {}".format(nmlwc))
 
 searchterm='Origin'
 ox=0.
 oy=0.
 oz=0.
-for line in L:
-  num_matches = string.count(line, searchterm)
-  if num_matches:
-    words=string.split(line)
+for line in lines:
+  if line.count(searchterm):
+    words=line.split()
     ox=eval(words[2])
     oy=eval(words[3])
     oz=eval(words[4])
@@ -61,10 +59,9 @@ searchterm='Dimension'
 lx=0.
 ly=0.
 lz=0.
-for line in L:
-  num_matches = string.count(line, searchterm)
-  if num_matches:
-    words=string.split(line)   
+for line in lines:
+  if line.count(searchterm):
+    words=line.split()
     lx=eval(words[2])
     ly=eval(words[3])
     lz=eval(words[4])
@@ -77,16 +74,16 @@ def readAtomicPositions(first_line,last_line,anames,acoords):
   j=0
   flag1=0
   flag2=0
-  #print 'loop starting at', first_line+1
+  #print("loop starting at {}".format(first_line+1))
   for line2 in range(first_line,last_line):
     i=0
-    for c in L[line2]:
+    for c in lines[line2]:
       flag1=0
       if c=='#': 
-        if L[line2][i+1]=='#':
+        if lines[line2][i+1]=='#':
           flag1=1
           flag2=1
-          word=string.split(L[line2][i+3:])
+          word=lines[line2][i+3:].split()
           name=word[0]
           occupancy = 1
           if name[0]=='*':
@@ -94,11 +91,10 @@ def readAtomicPositions(first_line,last_line,anames,acoords):
             occupancy = 0
           if name[0]=='D':
             name='H'+name[1:]
-          #print name
           x=word[1]
           y=word[2]
           z=word[3]
-          #print name+'\t'+x+'\t'+y+'\t'+z
+          #print(name+'\t'+x+'\t'+y+'\t'+z)
           anames[j]=name
           acoords[j]=x+' '+y+' '+z
           j=j+1
@@ -111,22 +107,21 @@ def readMLWC(first_line,last_line,anames,acoords):
   count=0
   flag1=0
   flag2=0
-  #print 'loop starting at', first_line+1
+  #print("loop starting at {}".format(first_line+1))
   for line2 in range(first_line,last_line):
     i=0
-    for c in L[line2]:
+    for c in lines[line2]:
       flag1=0
       if c=='&': 
-        if L[line2][i+1]=='&' and 'Ander' not in L[line2]:
+        if lines[line2][i+1]=='&' and 'Anderson' not in lines[line2]:
           flag1=1
           flag2=1
-          word=string.split(L[line2])
-          #print word
+          word=lines[line2].split()
           x=word[2]
           y=word[3]
           z=word[4]
-          #print name+'\t'+x+'\t'+y+'\t'+z
-          anames[count]='X'+`count`
+          #print(x+'\t'+y+'\t'+z)
+          anames[count]='X'+str(count)
           acoords[count]=x+' '+y+' '+z
           count=count+1
           break
@@ -147,7 +142,7 @@ def makeXYZobject(natoms,anames,acoords,xyzobject):
 
   #x,y,z
   for i in range(natoms): 
-    word=string.split(acoords[i])
+    word=acoords[i].split()
     xyzobject[i]=xyzobject[i]+'    '
     for j in range(3):
       x=eval(word[j])
@@ -177,10 +172,10 @@ def printXYZfile(natoms,anames,acoords,filename,jobname=''):
       output.write(lineout[i])
       output.write('\n')
   else:
-    print natoms
-    print 
+    print(natoms)
+    print("")
     for i in range(0,natoms):
-      print lineout[i]
+      print(lineout[i])
 
 ########################################################################
 
@@ -202,9 +197,9 @@ for i in range(0,nmlwc):
 
 count_sets=0
 for line in range(l): ## loop over lines of file 
-  num_matches1 = string.find(L[line], searchterm1)
-  num_matches2 = string.find(L[line], searchterm2)
-  num_matches3 = string.find(L[line], searchterm3)
+  num_matches1 = lines[line].find(searchterm1)
+  num_matches2 = lines[line].find(searchterm2)
+  num_matches3 = lines[line].find(searchterm3)
 
   if num_matches3>=0 and nmlwc>0:
     readMLWC(line+1,line+nmlwc+2,wnames,wcoords)
@@ -214,7 +209,7 @@ for line in range(l): ## loop over lines of file
     if( modulus==0 ):
       readAtomicPositions(line+1,line+na+2,anames,acoords)
       if( dump_freq_<default_dump_freq_ ):
-        filename=filename_+`count_sets`+".xyz"
+        filename=filename_+str(count_sets)+".xyz"
         printXYZfile(na+nmlwc,anames+wnames,acoords+wcoords,filename, jobname)
     count_sets=count_sets+1
   
