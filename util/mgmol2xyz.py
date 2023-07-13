@@ -195,6 +195,13 @@ for i in range(0,nmlwc):
   wcoords.append(' ')
   wnames.append(' ')
 
+#count number of frames
+nframes=0
+for line in lines:
+  if( line.find('IONIC CONFIGURATION ENERGY')>0 ):
+    nframes=nframes+1
+#print("Number of frames: {}".format(nframes))
+
 count_sets=0
 for line in range(l): ## loop over lines of file 
   num_matches1 = lines[line].find(searchterm1)
@@ -206,7 +213,9 @@ for line in range(l): ## loop over lines of file
 
   if num_matches1>=0 or num_matches2>=0 :
     modulus=count_sets%dump_freq_
-    if( modulus==0 ):
+    #print("Count = {}".format(count_sets))
+    if( modulus==0 or count_sets==(nframes-1) ):
+      #print("Read frame {}".format(count_sets))
       readAtomicPositions(line+1,line+na+2,anames,acoords)
       if( dump_freq_<default_dump_freq_ ):
         filename=filename_+str(count_sets)+".xyz"
