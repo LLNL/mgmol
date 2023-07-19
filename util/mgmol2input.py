@@ -12,7 +12,7 @@
 import sys, string
 import outputTools
 
-input =open(sys.argv[1],'r')
+ifile =open(sys.argv[1],'r')
 output=open(sys.argv[2],'r')
 Lo    =output.readlines()
 lo=len(Lo)  ## no of lines in file
@@ -23,19 +23,18 @@ species={'H':0,'He':0,'Li':0,'Be':0,'B':0,'C':0,'N':0,'O':0,'F':0,'Na':0,
 
 ##############################################
 # count number orbitals
-def getNumOrbitals(L):
-  searchterm='Number of states'
-  for line in L: ## loop over lines of file 
-    num_matches = string.count(line, searchterm)
+def getNumOrbitals(lines):
+  for line in lines: ## loop over lines of file
+    num_matches = line.count('Number of states')
     if num_matches:
-      word=string.split(line)
+      word=line.split()
       no=eval(word[4])
       break
   return no
 ##############################################
 
 na=outputTools.countNumAtoms(output)
-print '#',na,' atoms'
+print("#{} atoms".format(na))
 
 searchterm1='IONIC POSITIONS AND FORCES'
 searchterm2='Stepper Forces'
@@ -49,8 +48,8 @@ for i in range(0,na):
   names.append(0)
   
 for line in range(lo): ## loop over lines of file 
-  num_matches1 = string.count(Lo[line], searchterm1)
-  num_matches2 = string.count(Lo[line], searchterm2)
+  num_matches1 = Lo[line].count(searchterm1)
+  num_matches2 = Lo[line].count(searchterm2)
   if num_matches2 or num_matches1:
       j=0
       flag1=0
@@ -64,7 +63,7 @@ for line in range(lo): ## loop over lines of file
             if Lo[line2][i+1]=='#':
               flag1=1
               flag2=1
-              word=string.split(Lo[line2][i+3:])
+              word=Lo[line2][i+3:].split()
               name=word[-7]
               if word[-7][0]=='*':
                 name=word[-7][1:]
@@ -85,7 +84,7 @@ searchterm1='IONIC POSITIONS AND VELOCITIES'
 
 found_velocities=0
 for line in Lo: ## loop over lines of file 
-  num_matches1 = string.count(line, searchterm1)
+  num_matches1 = line.count(searchterm1)
   if num_matches1:
     found_velocities=1
     break
@@ -96,7 +95,7 @@ if found_velocities:
     vels.append("0")
 
   for line in range(lo): ## loop over lines of file 
-    num_matches1 = string.count(Lo[line], searchterm1)
+    num_matches1 = Lo[line].count(searchterm1)
     if num_matches1:
       j=0
       flag1=0
@@ -109,7 +108,7 @@ if found_velocities:
             if Lo[line2][1]=='#':
               flag1=1
               flag2=1
-              word=string.split(Lo[line2])
+              word=Lo[line2].split()
               if len(word)>5:
                 vx=word[5]
                 vy=word[6]
@@ -122,17 +121,17 @@ if found_velocities:
 else:
   searchterm1='Timestep'
   for line in Lo:
-    num_matches1 = string.count(line, searchterm1)
+    num_matches1 = line.count(searchterm1)
     if num_matches1:
-      words=string.split(line)
+      words=line.split()
       dt=eval(words[5])
-      print '#dt=',dt
+      print("#dt={}".format(dt))
       break  
   
   if previous_coords[0]!=0:
     for i in range(len(coords)):
-      words1=string.split(coords[i])
-      words2=string.split(previous_coords[i])
+      words1=coords[i].split()
+      words2=previous_coords[i].split()
       vx="%8.6f" % ((eval(words1[0])-eval(words2[0]))/dt)
       vy="%8.6f" % ((eval(words1[1])-eval(words2[1]))/dt)
       vz="%8.6f" % ((eval(words1[2])-eval(words2[2]))/dt)
@@ -142,25 +141,25 @@ else:
 #read MLWF centers
 searchterm1='centers'
 searchterm2='spreads'
-print '#',len(names),' names'
+print("#{} names".format(len(names)))
 
 no=getNumOrbitals(Lo)
-print '#',no,' orbitals'
+print("#{} orbitals".format(no))
 lrs=[]
 for i in range(0,no):
   lrs.append(0)
   
 for line in range(lo): ## loop over lines of file 
-  num_matches1 = string.count(Lo[line], searchterm1)
+  num_matches1 = Lo[line].count(searchterm1)
   if num_matches1:
-    num_matches2 = string.count(Lo[line], searchterm2)
+    num_matches2 = Lo[line].count(searchterm2)
     if num_matches2:
       j=0
       found_current_line=0
       already_found_one =0
       #print 'loop starting at', line+1
       for line2 in range(line+1,line+no+5):
-        words=string.split(Lo[line2])
+        words=Lo[line2].split()
         if len(words)>0:
           if words[0]=='&&':
             found_current_line=1
@@ -177,26 +176,26 @@ for line in range(lo): ## loop over lines of file
           break
 
 #print new input file
-Li=input.readlines()
+lines=ifile.readlines()
 natoms_printed=0
 count_orbital=0
-for line in Li: ## loop over lines of file
-  word=string.split(line)
+for line in lines: ## loop over lines of file
+  word=line.split()
   new_line=0
   if natoms_printed<na:
     if len(word)>0:
       name=word[0]
-      #print name
+      #print(name)
       for i in range(0,na):
         if name==names[i]:
           movable=1
           if len(word)>5:
             movable=word[5]
-          print name+'\t'+word[1]+'\t'+coords[i]+'\t'+str(movable),
+          print(name+'\t'+word[1]+'\t'+coords[i]+'\t'+str(movable))
           if len(vels)>0:
-            print '\t'+vels[i]
+            print('\t'+vels[i])
           else:
-            print ' '
+            print(" ")
           natoms_printed=natoms_printed+1
           new_line=1
           break
@@ -207,17 +206,17 @@ for line in Li: ## loop over lines of file
         if word[0][0]!='#' and word[0][0]!=' ':
           if len(word)>=3:
             if len(word)>3:
-              print lrs[count_orbital],word[3]
+              print(lrs[count_orbital],word[3])
             else:
-              print lrs[count_orbital]
+              print(lrs[count_orbital])
             count_orbital=count_orbital+1
             new_line=1
   
   if new_line==0:
-    print line,
+    print(line)
 
 if count_orbital<no:
-  print '#LRs',count_orbital
+  print("#LRs {}".format(count_orbital))
   for jj in range(count_orbital,no):
-    print lrs[jj]
+    print(lrs[jj])
 

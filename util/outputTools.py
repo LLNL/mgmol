@@ -25,7 +25,7 @@ def countNumAtoms(ifile):
         if line[i+1]=='#':
           if line[i+2]!='#':
             flag1=1
-            flag2=1
+            flag2=1 #flag2 turned on when first '##' found
             ss = line.split()
             one = ss[-7]
             two   = ss[-6]
@@ -42,6 +42,7 @@ def countNumAtoms(ifile):
           else:
             break
       i=i+1
+    #stop when first atom was found, but new line does not contain one
     if flag1!=flag2: break
 
   na=0
