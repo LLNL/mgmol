@@ -15,22 +15,23 @@ input=open(sys.argv[1],'r')
 frame=-1
 if len(sys.argv)>3:
   frame=eval(sys.argv[3])
-  print 'Input argument: Frame=',frame
+  print("Input argument: Frame = {}".format(frame))
 
-L1=input.readlines()
+lines=input.readlines()
 
 star='*'
 
 ##############################################
 # count number atoms
-def getNumAtoms(L):
-  searchterm='## '
+def getNumAtoms(lines):
   found_current_line=0
   already_found_one=0
   na=0
-  for line in L: ## loop over lines of file 
-    num_matches = string.count(line, searchterm)
-    if num_matches:
+  flag=0
+  for line in lines: ## loop over lines of file
+    if line.count("POSITIONS"):
+      flag=1
+    if flag==1 and line.count('## '):
       found_current_line=1
       already_found_one =1
       na=na+1
@@ -42,14 +43,14 @@ def getNumAtoms(L):
 ##############################################
 
 
-na=getNumAtoms(L1)
+na=getNumAtoms(lines)
 
-print 'N atoms in file=', na
+print("N atoms in file = {}".format(na))
 
 
 ##############################################
 
-searchterm1='CONFIGURATION'
+searchterm1='POSITIONS'
 
 def getPositions(names,coords,L,fframe):
   na=len(names)
@@ -58,25 +59,25 @@ def getPositions(names,coords,L,fframe):
   cur_frame=0
   for line in range(l): ## loop over lines of file1 
     if line>line_min:
-      num_matches1 = string.count(L[line], searchterm1)
+      num_matches1 = L[line].count(searchterm1)
       if num_matches1:
         j=0
-        print 'Frame: ',cur_frame,' Read positions starting at line ', line,' for ',na,' atoms'
+        print("Frame: {}, Read positions starting at line {} for {} atoms".format(cur_frame, line, na))
         for line2 in range(line+1,line+na+10):
-          if string.count(L[line2], '$$')>0:
+          if L[line2].count('$$')>0:
             break;
-          if string.count(L[line2], '##')>0:
-            words=string.split(L[line2])
+          if L[line2].count('##')>0:
+            words=L[line2].split()
             shift=0
             while words[shift]!='##':
               shift=shift+1
             shift=shift+1
             if words[shift]=='*':
-              print 'found *'
+              print("found *")
               shift=shift+1
             word=words[shift:]
             name=word[0]
-            #print name
+            #print(name)
             x=word[1]
             y=word[2]
             z=word[3]
@@ -85,7 +86,7 @@ def getPositions(names,coords,L,fframe):
             j=j+1
         line_min=line+na+2
         if fframe==cur_frame:
-          print 'break'
+          print("break")
           break
         cur_frame=cur_frame+1
 
@@ -94,10 +95,10 @@ def getPositions(names,coords,L,fframe):
 coords1=[]
 names1=[]
 for i in range(0,na):
-  coords1.append(0)
-  names1.append(0)
+  coords1.append("")
+  names1.append("")
 
-getPositions(names1,coords1,L1,frame)
+getPositions(names1,coords1,lines,frame)
 
 
 maxx=-1000.
@@ -108,7 +109,7 @@ miny=1000.
 minz=1000.
 
 for i in range(na): 
-  word1=string.split(coords1[i])
+  word1=coords1[i].split()
   x1=eval(word1[0])
   y1=eval(word1[1])
   z1=eval(word1[2])
@@ -120,6 +121,6 @@ for i in range(na):
   minz=min(minz,z1)
   na=na+1
 
-print 'N atoms =', na
-print 'Lower left =',minx,miny,minz
-print 'Upper right=',maxx,maxy,maxz
+print("N atoms = {}".format(na))
+print("Lower left = {}, {}, {}".format(minx,miny,minz))
+print("Upper right = {}, {}, {}".format(maxx,maxy,maxz))

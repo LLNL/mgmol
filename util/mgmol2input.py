@@ -191,7 +191,7 @@ for line in lines: ## loop over lines of file
           movable=1
           if len(word)>5:
             movable=word[5]
-          print(name+'\t'+word[1]+'\t'+coords[i]+'\t'+str(movable))
+          print(name+'\t'+word[1]+'\t'+coords[i]+'\t'+str(movable),end='')
           if len(vels)>0:
             print('\t'+vels[i])
           else:

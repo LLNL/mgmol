@@ -22,6 +22,18 @@ default_dump_freq_=100000
 dump_freq_=default_dump_freq_ # interval between frames for files generation
 if len(sys.argv)>2:
   dump_freq_=eval(sys.argv[2])
+  if dump_freq_ == -1:
+    dump_freq_ = default_dump_freq_
+shiftx=0.
+shifty=0.
+shiftz=0.
+if len(sys.argv)>3:
+  if len(sys.argv)<6:
+    print("Using shift require 6 arguments")
+    exit(1)
+  shiftx=eval(sys.argv[3])
+  shifty=eval(sys.argv[4])
+  shiftz=eval(sys.argv[5])
 
 if len(sys.argv)>3:
   jobname=sys.argv[3]
@@ -53,7 +65,7 @@ for line in lines:
     ox=eval(words[2])
     oy=eval(words[3])
     oz=eval(words[4])
-origin=array([ox,oy,oz])
+origin=array([ox+shiftx,oy+shifty,oz+shiftz])
 
 searchterm='Dimension'
 lx=0.
@@ -67,7 +79,7 @@ for line in lines:
     lz=eval(words[4])
 
 cell=array([lx,ly,lz])
-end=array([lx,ly,lz])
+end=array([lx+shiftx,ly+shifty,lz+shiftz])
 
 ########################################################################
 def readAtomicPositions(first_line,last_line,anames,acoords):
