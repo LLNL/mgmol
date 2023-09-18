@@ -34,9 +34,9 @@ for line in lines:
     maxz=max(z,maxz)
 
 #print lower left corner
-print 'll=(',ang2bohr*minx-bufsize,ang2bohr*miny-bufsize,ang2bohr*minz-bufsize,')'
+print ('ll=(',ang2bohr*minx-bufsize,ang2bohr*miny-bufsize,ang2bohr*minz-bufsize,')')
 
 #print domain dimensions
-print 'lenth=(',ang2bohr*(maxx-minx)+2.*bufsize, \
+print ('lenth=(',ang2bohr*(maxx-minx)+2.*bufsize, \
                 ang2bohr*(maxy-miny)+2.*bufsize, \
-                ang2bohr*(maxz-minz)+2.*bufsize,')'
+                ang2bohr*(maxz-minz)+2.*bufsize,')')
