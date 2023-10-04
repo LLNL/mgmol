@@ -39,8 +39,8 @@ for line in lines: ## loop over lines of file
     maxy=max(y,maxy)
     maxz=max(z,maxz)
 
-print na
-print '#generated from file ',sys.argv[1],' ll=(',minx,miny,minz,'),ur=(',maxx,maxy,',',maxz,')'
+print (na)
+print ('#generated from file ',sys.argv[1],' ll=(',minx,miny,minz,'),ur=(',maxx,maxy,',',maxz,')')
 
 for line in lines: ## loop over lines of file 
   if line[0:4] == 'ATOM' or line[0:4] == 'atom' or line[0:6] == 'HETATM':
@@ -50,7 +50,7 @@ for line in lines: ## loop over lines of file
     name = line[12:16]
     name = name.strip()
     
-    words=string.split(line)
+    words=str.split(line)
       
     firstletter=name[0:1]
     if firstletter in numbers_list:
@@ -74,7 +74,7 @@ for line in lines: ## loop over lines of file
         species="Zn"
 
     if species not in list_species.keys():
-      print "ERROR: unknown species", species
+      print ("ERROR: unknown species", species)
       break
 
-    print species,'\t',x,'\t',y,'\t',z
+    print (species,'\t',x,'\t',y,'\t',z)

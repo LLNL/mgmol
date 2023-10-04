@@ -858,7 +858,6 @@ bool LocalizationRegions::isLRcenterLocal(const LRData& lr) const
 
 void LocalizationRegions::setupLocalRegionsFromOverlapRegions()
 {
-    assert(overlap_regions_.size() > 0);
 
     setupLocalRegionsFromOverlapRegions_tm_.start();
 
