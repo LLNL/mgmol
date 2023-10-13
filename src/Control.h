@@ -493,6 +493,7 @@ public:
 
     // Number of steps
     short num_MD_steps;
+    short MD_last_step_;
 
     // number of scf steps between localization centers updates
     short lr_updates_type;

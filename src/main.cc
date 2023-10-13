@@ -233,9 +233,10 @@ int main(int argc, char** argv)
                 "Spread penalty damping factor")("SpreadPenalty.target",
                 po::value<float>()->default_value(-1.),
                 "Spread penalty target")("SpreadPenalty.alpha",
-                po::value<float>()->default_value(0.),
-                "Spread penalty factor")("MD.num_steps",
-                po::value<short>()->default_value(1), "number of MD steps")(
+                po::value<float>()->default_value(0.), "Spread penalty factor")(
+                "MD.num_steps", po::value<short>()->default_value(1),
+                "number of MD steps")("MD.last_step",
+                po::value<short>()->default_value(-1), "last MD step")(
                 "MD.dt", po::value<float>(), "time step for MD (a.u.)")(
                 "MD.print_interval", po::value<short>()->default_value(1),
                 "print intervale for MD data")("MD.print_directory",
