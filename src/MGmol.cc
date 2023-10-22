@@ -343,6 +343,11 @@ int MGmol<OrbitalsType>::initial()
         md_iteration_ = 1;
     }
 
+    if (ct.MD_last_step_ > 0)
+    {
+        ct.num_MD_steps = ct.MD_last_step_ - md_iteration_ + 1;
+    }
+
     mmpi.barrier();
     if (ct.verbose > 0) current_orbitals_->printChromaticNumber(os_);
 

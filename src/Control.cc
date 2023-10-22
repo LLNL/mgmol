@@ -434,6 +434,7 @@ void Control::sync(void)
         short_buffer[85] = dm_use_old_;
         short_buffer[86] = max_electronic_steps_tight_;
         short_buffer[88] = hartree_reset_;
+        short_buffer[89] = MD_last_step_;
         short_buffer[90] = (short)static_cast<int>(poisson_lap_type_);
     }
     else
@@ -645,6 +646,7 @@ void Control::sync(void)
     dm_use_old_                      = short_buffer[85];
     max_electronic_steps_tight_      = short_buffer[86];
     hartree_reset_                   = short_buffer[88];
+    MD_last_step_                    = short_buffer[89];
     poisson_lap_type_ = static_cast<PoissonFDtype>(short_buffer[90]);
 
     numst    = int_buffer[0];
@@ -1707,6 +1709,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
             atoms_dyn_        = 2;
             dt                = vm["MD.dt"].as<float>();
             num_MD_steps      = vm["MD.num_steps"].as<short>();
+            MD_last_step_     = vm["MD.last_step"].as<short>();
             md_print_freq     = vm["MD.print_interval"].as<short>();
             md_print_filename = vm["MD.print_directory"].as<std::string>();
             str               = vm["MD.thermostat"].as<std::string>();
