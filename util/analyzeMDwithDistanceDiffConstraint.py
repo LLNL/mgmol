@@ -5,8 +5,12 @@
 # This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 # Please also read this link https://github.com/llnl/mgmol/LICENSE
 #
-#how to run in local directory:
-#python analyzeMDwithDistanceDiffConstraint.py . O8203 H3041 N6678 > forces.dat
+# How to run in a python script:
+#   sys.path.append('/home/q8j/Documents/q8j/GIT/MGmol/util')
+#   import analyzeMDwithDistanceDiffConstraint as analyze
+#   ...
+#   analyze.runAnalyzeForces(idir,name0,name1,name2)
+
 import sys, string, os
 from math import sqrt, acos
 from numpy import *
@@ -34,12 +38,11 @@ nravg=0
 time=0.
 
 def getMassAtom(name):
-  one=name[0]
   mass=0.
-  if one[0:2] in spmass.keys():
-     mass=spmass[one[0:0+2]]
+  if name[0:2] in spmass.keys():
+     mass=spmass[name[0:0+2]]
   else:
-     mass=spmass[one[0]]
+     mass=spmass[name[0]]
   return mass
 
 def analyzeForces(filename,name0,name1,name2,dt):
@@ -48,14 +51,18 @@ def analyzeForces(filename,name0,name1,name2,dt):
   global corrected_avg_force
   global avg_invsqrtz
   global forces
+  global times
+  global running_forces
   global nsteps
   global nravg
   global time
-  
+
+  print("analyzeForces with arguments {}, {}, {}, {}".format(filename, name0,name1,name2,dt))
+
   m0=getMassAtom(name0)
   m1=getMassAtom(name1)
   m2=getMassAtom(name2)
-  #print '#Masses:',m0,m1,m2
+  print("#Masses: {}, {}, {}".format(m0,m1,m2))
 
   coords=[]
   found=0
@@ -66,10 +73,10 @@ def analyzeForces(filename,name0,name1,name2,dt):
   r1=zeros(3)
   r2=zeros(3)
 
-  file=open(filename,'r')
-  L1=file.readlines()
-  for line in L1: ## loop over lines of file
-    words=string.split(line)
+  f=open(filename,'r')
+  lines=f.readlines()
+  for line in lines: ## loop over lines of file
+    words=line.split()
     if len(words)>1:
       #find force on constraint
       if 'force' in words and 'constraint' in words and '=' in words:
@@ -86,7 +93,7 @@ def analyzeForces(filename,name0,name1,name2,dt):
           coords.append(name+'\t'+x+'\t'+y+'\t'+z)
     if found==3 and found_force:
       for i in range(3):
-        swords=string.split(coords[i])
+        swords=coords[i].split()
         name=swords[0]
         x=eval(swords[1])
         y=eval(swords[2])
@@ -121,8 +128,12 @@ def analyzeForces(filename,name0,name1,name2,dt):
 
       times.append(time)
       forces.append(eval(force))
-      
-      print filename,'time=',time,' Q=',q,' force=',force,' corrected force=',corrected_force,' Z=',z,' running avg.= ',running_avg_force
+
+      tol = 1.e-4
+      delta = corrected_force-eval(force)
+      if abs(delta)>tol:
+        print("{}, time={}, Q={}, force={}, corrected force={}, Z={}, running avg.= {}".format( \
+              filename,time,q,force,corrected_force,z,running_avg_force))
       #print r01, r12
       time=time+dt*au2ps
       
@@ -131,7 +142,6 @@ def analyzeForces(filename,name0,name1,name2,dt):
       
       if time>1.:
         avg_force=avg_force+eval(force)
-        
         running_forces.append(running_avg_force)
 
         invsqrtz=1./sqrt(z)
@@ -140,96 +150,137 @@ def analyzeForces(filename,name0,name1,name2,dt):
       
         nsteps=nsteps+1
 
-  file.close()
+  f.close()
 
-#main
-filesdir=sys.argv[1]
-filenames=os.listdir(filesdir)
+###############################################################################
+# main script
+###############################################################################
 
-name0=sys.argv[2]
-name1=sys.argv[3]
-name2=sys.argv[4]
-#print name0, name1, name2
 
-inputs=[]
-for filename in filenames:
-  if 'md_run' in filename:
-    inputs.append(filename)
+def runAnalyzeForces(filesdir,name0,name1,name2):
 
-inputs.sort()
+  global avg_force
+  global running_avg_force
+  global corrected_avg_force
+  global avg_invsqrtz
+  global forces
+  global times
+  global running_forces
+  global nsteps
+  global nravg
+  global time
 
-inputs[0]
-file=open(inputs[0],'r')
-L1=file.readlines()
-for line in L1: ## loop over lines of file
-  word=string.split(line)
-  if len(word)>1:
-    if word[0]=='Timestep':
-      dt=eval(word[5])
+  avg_force=0.
+  running_avg_force=0.
+  corrected_avg_force=0.
+  avg_invsqrtz=0.
 
-for filename in inputs:
-  analyzeForces(filename,name0,name1,name2,dt)
+  forces=[]
+  times=[]
+  running_forces=[]
 
-nf=int(ceil(1./(dt*au2ps)))
-ff=running_forces[-nf:]
-maxF=max(float(v) for v in ff)
-minF=min(float(v) for v in ff)
-print '#maxF=',maxF
-print '#minF=',minF
+  nsteps=0
+  nravg=0
+  time=0.
 
-if nsteps>0:
-  print '#Average force          =',avg_force/nsteps
-  print '#Average corrected force=',corrected_avg_force/avg_invsqrtz
-  print '#running_forces, spread last ',nf,' steps=',maxF-minF
+
+  filenames=os.listdir(filesdir)
+
+  #screen out files that are not mgmol outputs
+  inputs=[]
+  for filename in filenames:
+    if '.out' in filename:
+      inputs.append(filesdir+"/"+filename)
+
+  inputs.sort()
+
+  #extract dt from first output file in MD run
+  inputs[0]
+  f=open(inputs[0],'r')
+  lines=f.readlines()
+  for line in lines: ## loop over lines of file
+    word=line.split()
+    if len(word)>1:
+      if word[0]=='Timestep':
+        dt=eval(word[5])
+
+  #analyze all outputs
+  for filename in inputs:
+    analyzeForces(filename,name0,name1,name2,dt)
+
+  #number of steps/ps
+  nf=int(ceil(1./(dt*au2ps)))
+  print("nf = {}".format(nf))
+
+  ff=running_forces[-nf:]
+  maxF=max(float(v) for v in ff)
+  minF=min(float(v) for v in ff)
+  print("#maxF={}".format(maxF))
+  print("#minF={}".format(minF))
+
+  if nsteps>0:
+    print("#Average force          ={}".format(avg_force/nsteps))
+    print("#Average corrected force={}".format(corrected_avg_force/avg_invsqrtz))
+    print("#running_forces, spread last {}, steps={}".format(nf,maxF-minF))
   
-skip=5
-forcep = [ forces[i] for i in range(0, len(forces), skip)]
-timesp = [ times[i] for i in range(0, len(forces), skip)]
+  skip=5
+  forcep = [ forces[i] for i in range(0, len(forces), skip)]
+  timesp = [ times[i] for i in range(0, len(forces), skip)]
+  plt.figure(1)
+  xmax=len(forces)*dt*au2ps
+  ymin=min(forces)
+  ymax=max(forces)
+  plt.axis([0.,xmax,ymin,ymax])
 
-skip=25
-aves1 = [sum(forces[i-nf:i])/nf       for i in range(nf,   len(forces), skip)]
-aves2 = [sum(forces[i-2*nf:i])/(2*nf) for i in range(2*nf, len(forces), skip)]
-aves3 = [sum(forces[i-3*nf:i])/(3*nf) for i in range(3*nf, len(forces), skip)]
+  fig=plt.figure(1)
+  plt.subplot(211)
+  plt.plot(timesp, forcep, 'go')
+  plt.ylabel('force (Ha/Bohr)')
+  colors=['ro','bo','go','yo','mo']
+  icolor=0
+  #compute running averages
+  skip=25
+  for interval in range(1,6):
+    aves = [sum(forces[i-interval*nf:i])/(interval*nf) for i in range(interval*nf,len(forces), skip)]
 
-times1 = [ times[i] for i in range(nf, len(forces), skip)]
-times2 = [ times[i] for i in range(2*nf, len(forces), skip)]
-times3 = [ times[i] for i in range(3*nf, len(forces), skip)]
+    timesp = [ times[i] for i in range(interval*nf, len(forces), skip)]
+    forcep = [ forces[i] for i in range(interval*nf, len(forces), skip)]
 
-print '#time    force'
-for i in range(len(forces)):
-  print times[i],forces[i]
+    print("#Average over last {} ps: {}".format(interval,aves[-1]))
 
-print '#Running average over 2 ps, last value: ',aves2[-1]
-print '#Running average over 3 ps, last value: ',aves3[-1]
+    sigma = [sum((forces[i-interval*nf:i]-aves[-1])*(forces[i-interval*nf:i]-aves[-1]))/(interval*nf-1) for i in range(interval*nf, len(forces), skip)]
 
+    print("#Sigma over last {} ps: {}".format(interval,math.sqrt(sigma[-1])))
 
-xmax=len(forces)*dt*au2ps
-xmax=max(xmax,4.)
-ymin=min(forces)
-ymax=max(forces)
+    plt.subplot(212)
+    plt.plot(timesp, aves, colors[icolor])
+    icolor=icolor+1
+    plt.ylabel('running average (Ha/Bohr)')
+    plt.xlabel('time (ps)')
+    plt.axis([0.,xmax,ymin,ymax])
 
-plt.figure(1)
-plt.subplot(211)
-plt.axis([0.,xmax,ymin,ymax])
-plt.plot(timesp, forcep, 'go')
-plt.ylabel('force (Ha/Bohr)')
-#plt.show()
+  plt.savefig(filesdir+'_aves.png')
+  plt.close(fig)
 
-plt.subplot(212)
-ymin=min(aves2)
-ymax=max(aves2)
-plt.axis([0.,xmax,ymin,ymax])
-#plt.plot(times1, aves1, 'ro')
-plt.plot(times2, aves2, 'ro')
-plt.plot(times3, aves3, 'bo')
-plt.ylabel('force (Ha/Bohr)')
-plt.xlabel('time (ps)')
-#plt.show()
-plt.savefig('aves.png')
+  nn=int(nf/skip)
+  print(nn)
+  max3=max(aves[-1-nn:-1])
+  min3=min(aves[-1-nn:-1])
+  print("min aves over last ps = {}".format(min3))
+  print("max aves over last ps = {}".format(max3))
+  print("min-max spread aves3 over last ps = {}".format(max3-min3))
 
-nn=nf/skip
-max3=max(aves3[-1-nn:-1])
-min3=min(aves3[-1-nn:-1])
-print 'min aves3 over lat ps = ',min3
-print 'max aves3 over lat ps = ',max3
-print 'spread aves3 over lat ps = ',max3-min3
+###############################################################################
+# main script
+###############################################################################
+
+#target directory containing multiple segments of a single run
+#filesdir=sys.argv[1]
+#filenames=os.listdir(filesdir)
+
+#read names of 3 atoms involved in constraint
+#name0=sys.argv[2]
+#name1=sys.argv[3]
+#name2=sys.argv[4]
+
+#runAnalyzeForces(filesdir,name0,name1,name2)
