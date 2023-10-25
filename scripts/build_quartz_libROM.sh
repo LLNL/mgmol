@@ -2,8 +2,6 @@
 ## An example script to build on LLNL Peloton systems.
 ## For now, this script assumes intel/ mkl libraries are being used.
 
-set USE_LIBROM="On"
-
 # load some modules
 source scripts/modules.quartz
 
@@ -30,6 +28,7 @@ mkdir -p ${BUILD_DIR}
 cd ${BUILD_DIR}
 
 # clone the libROM GitHub repo in BUILD_DIR
+set USE_LIBROM="On"
 set LIBROM_PATH = ${BUILD_DIR}/libROM
 git clone https://github.com/LLNL/libROM
 
