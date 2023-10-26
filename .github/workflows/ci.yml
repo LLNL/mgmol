@@ -4,10 +4,10 @@ on:
   pull_request:
     types: [opened, labeled, synchronize]
     branches:
-      - main
+      - release
   # push:
   #   branches:
-  #     - main
+  #     - release
 
 jobs:
   docker-image:
