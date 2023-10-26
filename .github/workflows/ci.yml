@@ -38,8 +38,10 @@ jobs:
             git submodule status
       - name: cmake
         run: |
-            cmake . -DCMAKE_CXX_COMPILER=mpic++ -DCMAKE_Fortran_COMPILER=mpif90
+            mkdir build
+            cd build
+            cmake .. -DCMAKE_CXX_COMPILER=mpic++ -DCMAKE_Fortran_COMPILER=mpif90
       - name: make
         run: |
-            make -j 4
+            cd build && make -j 4
     
