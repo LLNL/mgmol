@@ -325,7 +325,7 @@ if(${MAGMA_FOUND})
 else()
   add_test(NAME testShortSighted
            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ShortSighted/test.py
-           ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 5 ${MPIEXEC_PREFLAGS}
+           ${MPIEXEC} --oversubscribe ${MPIEXEC_NUMPROC_FLAG} 5 ${MPIEXEC_PREFLAGS}
            ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
            ${CMAKE_CURRENT_SOURCE_DIR}/ShortSighted/quench.cfg
            ${CMAKE_CURRENT_SOURCE_DIR}/ShortSighted/md.cfg
@@ -412,7 +412,7 @@ add_test(NAME testSpreadPenalty
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME testMD_D72
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/MD_D72/test.py
-         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 5 ${MPIEXEC_PREFLAGS}
+         ${MPIEXEC} --oversubscribe ${MPIEXEC_NUMPROC_FLAG} 5 ${MPIEXEC_PREFLAGS}
          ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
          ${CMAKE_CURRENT_SOURCE_DIR}/MD_D72/mgmol_quench.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/MD_D72/mgmol_md.cfg
