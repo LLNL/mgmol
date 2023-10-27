@@ -21,7 +21,7 @@ jobs:
       - name: DockerPATH configuration
         run: echo "DOCKERPATH=$DOCKERPATH"
       - name: DockerPATH - check if files in docker path changed
-        if: contains(steps.files.outputs.all,env.DOCKERPATH) || contains(steps.files.outputs.all,'docker_librom.yml')
+        if: contains(steps.files.outputs.all,env.DOCKERPATH) || contains(steps.files.outputs.all,'docker_image.yml')
         run: |
           echo "CI container needs rebuilding..."
           echo "CI_NEEDS_REBUILD=true" >> $GITHUB_ENV
@@ -45,7 +45,7 @@ jobs:
         run: |
           echo "#!/bin/bash" > ${{env.DOCKERPATH}}/motd.sh
           echo "echo --------------------------" >> ${{env.DOCKERPATH}}/motd.sh
-          echo "echo pylibrom_env/CI Development Container"  >> ${{env.DOCKERPATH}}/motd.sh
+          echo "echo mgmol_env/CI Development Container"  >> ${{env.DOCKERPATH}}/motd.sh
           echo "echo \"Revision: `echo ${GITHUB_SHA} | cut -c1-8`\"" >> ${{env.DOCKERPATH}}/motd.sh
           echo "echo --------------------------" >> ${{env.DOCKERPATH}}/motd.sh
           chmod 755 ${{env.DOCKERPATH}}/motd.sh
