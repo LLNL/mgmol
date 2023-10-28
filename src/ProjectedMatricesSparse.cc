@@ -73,11 +73,11 @@ ProjectedMatricesSparse::ProjectedMatricesSparse(const int ndim,
     isDataSetup_ = false;
     /* Initialize eigenvalue0_ = 0. for use in OrbitalsPreconditioning.
      * This is not set in the sparse case and perhaps
-     * could be approximated with the diagonal of the 
-     * Gram matrix. It could also be removed if not 
+     * could be approximated with the diagonal of the
+     * Gram matrix. It could also be removed if not
      * needed for computing gamma in OrbitalsPreconditioning.
-    */
-    eigenvalue0_ = 0.; 
+     */
+    eigenvalue0_ = 0.;
 }
 
 void ProjectedMatricesSparse::clearData()
