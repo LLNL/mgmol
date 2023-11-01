@@ -19,6 +19,7 @@ set(link_libs mgmol_distmatrix
    )
 
 set(SOURCES
+ read_config.cc
  jade.cc
  DielectricControl.cc
  ReplicatedMatrix.cc
