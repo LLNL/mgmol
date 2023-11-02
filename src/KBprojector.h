@@ -11,12 +11,11 @@
 #define MGMOL_KBPROJECTOR_H
 
 #include "Mesh.h"
+#include "Species.h"
 #include "global.h"
 
 #include <cassert>
 #include <vector>
-
-class Species;
 
 // one KB projector
 class KBprojector

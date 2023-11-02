@@ -308,7 +308,6 @@ void exitWithErrorMessage(const std::string& name)
               << " not implemented and should not be called!!!" << std::endl;
     MPI_Finalize();
     exit(0);
-    // MPI_Abort(MPI_COMM_WORLD,0);
 }
 
 bool fileExists(const char* file)

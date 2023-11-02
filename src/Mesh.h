@@ -10,7 +10,6 @@
 #ifndef MGMOL_MESH_H
 #define MGMOL_MESH_H
 
-#include "Control.h"
 #include "GridFactory.h"
 #include "PEenv.h"
 #include <cassert>
