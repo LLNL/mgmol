@@ -6,10 +6,8 @@
 // All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
-
-// $Id$
-
 #include "ConstraintSet.h"
+#include "Control.h"
 #include "DistanceConstraint.h"
 #include "Ions.h"
 #include "MGmol_MPI.h"

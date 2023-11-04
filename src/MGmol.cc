@@ -531,9 +531,14 @@ void MGmol<OrbitalsType>::run()
 {
     total_tm_.start();
 
-    setup();
-
     Control& ct = *(Control::instance());
+
+#ifdef DEBUG
+    Mesh* mymesh             = Mesh::instance();
+    const pb::PEenv& myPEenv = mymesh->peenv();
+    *MPIdata::sout << " Run begins on processor " << myPEenv.mytask()
+                   << std::endl;
+#endif
 
     double eks = 0.;
 
