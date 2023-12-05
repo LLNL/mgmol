@@ -707,6 +707,11 @@ public:
     }
 
     bool AtomsMove() { return (atoms_dyn_ != 0); }
+
+    // ROM options
+    bool rom_offline;
+    bool rom_online;
+    bool rom_restore;
 };
 
 #endif
