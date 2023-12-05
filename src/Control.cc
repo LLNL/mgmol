@@ -146,7 +146,7 @@ Control::Control()
     screening_const = 0.;
 
     // ROM options
-    rom_offline                       = true;
+    rom_offline                       = true; // TODO
     rom_online                        = false;
     rom_restore                       = false;
 }
