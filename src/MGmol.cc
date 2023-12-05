@@ -69,6 +69,7 @@
 #include "XCfunctionalFactory.h"
 #include "XConGrid.h"
 #include "manage_memory.h"
+#include "romOffline.h"
 
 namespace mgmol
 {
@@ -1143,6 +1144,18 @@ void MGmol<OrbitalsType>::cleanup()
 
         if (ierr < 0)
             os_ << "WARNING: writing restart data failed!!!" << std::endl;
+    }
+
+    // Save orbital snapshots
+    if (ct.rom_offline > 0)
+    {
+        std::string filename(std::string(ct.out_restart_file));
+        filename += "0";
+        int ierr = save_orbital_snapshot(
+            filename, *current_orbitals_);
+
+        if (ierr < 0)
+            os_ << "WARNING: writing ROM snapshot data failed!!!" << std::endl;
     }
 
     MPI_Barrier(comm_);
