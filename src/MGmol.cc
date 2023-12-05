@@ -69,7 +69,6 @@
 #include "XCfunctionalFactory.h"
 #include "XConGrid.h"
 #include "manage_memory.h"
-#include "romOffline.h"
 
 namespace mgmol
 {
