@@ -1,0 +1,18 @@
+// Copyright (c) 2017, Lawrence Livermore National Security, LLC and
+// UT-Battelle, LLC.
+// Produced at the Lawrence Livermore National Laboratory and the Oak Ridge
+// National Laboratory.
+// LLNL-CODE-743438
+// All rights reserved.
+// This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
+// Please also read this link https://github.com/llnl/mgmol/LICENSE
+
+#ifndef MGMOL_ROMOFFLINE_H
+#define MGMOL_ROMOFFLINE_H
+
+#include <string>
+
+template <class OrbitalsType>
+int save_orbital_snapshot(std::string snapshot_dir, OrbitalsType& orbitals);
+
+#endif
