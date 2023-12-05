@@ -28,7 +28,7 @@ mkdir -p ${BUILD_DIR}
 cd ${BUILD_DIR}
 
 # build libROM in BUILD_DIR
-set USE_LIBROM="On"
+set MGMOL_WITH_LIBROM="On"
 set LIBROM_PATH = ${BUILD_DIR}/libROM
 git clone https://github.com/LLNL/libROM
 cd libROM
@@ -42,7 +42,7 @@ cmake -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} \
       -DMPIEXEC_NUMPROC_FLAG="-n" \
       -DBLA_VENDOR=${BLAS_VENDOR} \
       -DSCALAPACK_BLACS_LIBRARY=${BLACS_LIB}/libmkl_blacs_intelmpi_lp64.so \
-      -DUSE_LIBROM=${USE_LIBROM} \
+      -DMGMOL_WITH_LIBROM=${MGMOL_WITH_LIBROM} \
       -DLIBROM_PATH=${LIBROM_PATH} \
       -DCMAKE_BUILD_TYPE=DEBUG \
       ..
