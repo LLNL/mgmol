@@ -248,9 +248,9 @@ include_directories("${PROJECT_SOURCE_DIR}/src/local_matrices")
 include_directories("${PROJECT_SOURCE_DIR}/src/numerical_kernels")
 include_directories("${PROJECT_SOURCE_DIR}/src/pb")
 include_directories("${PROJECT_SOURCE_DIR}/src/radial")
+include_directories("${PROJECT_SOURCE_DIR}/src/rom")
 include_directories("${PROJECT_SOURCE_DIR}/src/sparse_linear_algebra")
 include_directories("${PROJECT_SOURCE_DIR}/src/tools")
-include_directories("${PROJECT_SOURCE_DIR}/src/rom")
 include_directories("${PROJECT_SOURCE_DIR}/src")
 
 # add subdirectories for source files, tests
