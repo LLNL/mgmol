@@ -5,7 +5,6 @@ add_subdirectory(local_matrices)
 add_subdirectory(numerical_kernels)
 add_subdirectory(pb)
 add_subdirectory(radial)
-add_subdirectory(rom)
 add_subdirectory(sparse_linear_algebra)
 add_subdirectory(tools)
 
@@ -16,7 +15,6 @@ set(link_libs
    mgmol_numerical_kernels 
    mgmol_pb 
    mgmol_radial 
-   mgmol_rom
    mgmol_sparse_linear_algebra 
    mgmol_tools
    )
@@ -158,6 +156,7 @@ set(SOURCES
  magma_singleton.cc
  ChebyshevApproximation.cc
  ChebyshevApproximationInterface.cc
+ rom.cc
 )
 
 add_library(mgmol_src ${SOURCES})
