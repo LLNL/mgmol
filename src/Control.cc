@@ -144,6 +144,11 @@ Control::Control()
 
     // data members set once for all (not accessible through interface)
     screening_const = 0.;
+
+    // ROM options
+    rom_offline                       = true;
+    rom_online                        = false;
+    rom_restore                       = false;
 }
 
 void Control::setup(const MPI_Comm comm_global, const bool with_spin,
