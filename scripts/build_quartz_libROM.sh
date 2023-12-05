@@ -27,10 +27,13 @@ set BUILD_DIR = ${MGMOL_ROOT}/build_quartz
 mkdir -p ${BUILD_DIR}
 cd ${BUILD_DIR}
 
-# clone the libROM GitHub repo in BUILD_DIR
+# build libROM in BUILD_DIR
 set USE_LIBROM="On"
 set LIBROM_PATH = ${BUILD_DIR}/libROM
 git clone https://github.com/LLNL/libROM
+cd libROM
+./scripts/compile.sh -t cmake/toolchains/simple.cmake
+cd ..
 
 # call cmake
 cmake -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} \
