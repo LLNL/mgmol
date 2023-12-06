@@ -1152,8 +1152,6 @@ void MGmol<OrbitalsType>::cleanup()
         // Save orbital snapshots
         if (ct.rom_offline > 0)
         {
-            //std::string filename(std::string(ct.out_restart_file));
-            //filename += "0";
             int ierr = save_orbital_snapshot(
                 h5restartfile.filename(), *current_orbitals_);
 
