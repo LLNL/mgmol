@@ -27,9 +27,13 @@ int MGmol<OrbitalsType>::save_orbital_snapshot(std::string file_path, OrbitalsTy
     if (stat(file_path.c_str(), &s) == 0)
     {
         if (s.st_mode & S_IFDIR)
-            snapshot_filename = file_path + "/orbital_snapshot";
+            snapshot_filename = file_path + "/orbital";
         else if (s.st_mode & S_IFREG)
-            snapshot_filename = "orbital_snapshot_" + file_path;
+        {
+            std::string::size_type pos = file_path.rfind("/");
+            file_path = (pos == std::string::npos) ? "" : file_path.substr(0, pos);
+            snapshot_filename = file_path + "/orbital";
+        }
         else
         {
             std::cout << file_path << " exists but is not a directory or a file." << std::endl;
@@ -37,11 +41,9 @@ int MGmol<OrbitalsType>::save_orbital_snapshot(std::string file_path, OrbitalsTy
         }
     }
 
-    std::cout << "Creating snapshot file " << snapshot_filename << std::endl;
 
     const int dim = orbitals.getLocNumpt();
     const int totalSamples = orbitals.chromatic_number();
-    std::cout << "Snapshot size: " << dim << "*" << totalSamples << std::endl;
 
     CAROM::Options svd_options(dim, totalSamples, 1);
     CAROM::BasisGenerator basis_generator(svd_options, false, snapshot_filename);
