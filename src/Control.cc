@@ -149,6 +149,7 @@ Control::Control()
     rom_offline                       = true; // TODO
     rom_online                        = false;
     rom_restore                       = false;
+    snapshot_basename                 = "coords.in_H2O_64_000000"; // TODO
 }
 
 void Control::setup(const MPI_Comm comm_global, const bool with_spin,
@@ -1909,6 +1910,12 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
             = vm["Quench.MLWF"].as<bool>() ? 2 : wannier_transform_type;
 
         maxDistanceAtomicInfo_ = vm["Parallel.atomic_info_radius"].as<float>();
+
+        // ROM flags
+        //rom_offline = vm["ROM.offline"].as<bool>() ? 1 : 0;
+        //rom_online = vm["ROM.online"].as<bool>() ? 1 : 0;
+        //rom_restore = vm["ROM.restore"].as<bool>() ? 1 : 0;
+        //snapshot_basename = vm["atomicCoordinates"].as<std::vector<std::string>>()[0];
 
         // options not available in configure file
         lr_updates_type         = 0;
