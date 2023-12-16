@@ -22,6 +22,7 @@
 template <class OrbitalsType>
 int MGmol<OrbitalsType>::save_orbital_snapshot(std::string file_path, OrbitalsType& orbitals)
 {
+    std::cout << "rom.cc: save_orbital_snapshot: " << file_path << std::endl;
     std::string snapshot_filename = file_path;
     struct stat s; 
     if (stat(file_path.c_str(), &s) == 0)
@@ -30,9 +31,7 @@ int MGmol<OrbitalsType>::save_orbital_snapshot(std::string file_path, OrbitalsTy
             snapshot_filename = file_path + "/orbital";
         else if (s.st_mode & S_IFREG)
         {
-            std::string::size_type pos = file_path.rfind("/");
-            file_path = (pos == std::string::npos) ? "" : file_path.substr(0, pos);
-            snapshot_filename = file_path + "/orbital";
+            snapshot_filename = file_path + "_orbital";
         }
         else
         {
@@ -40,7 +39,6 @@ int MGmol<OrbitalsType>::save_orbital_snapshot(std::string file_path, OrbitalsTy
             return 1;
         }
     }
-
 
     const int dim = orbitals.getLocNumpt();
     const int totalSamples = orbitals.chromatic_number();

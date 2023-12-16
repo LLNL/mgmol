@@ -712,6 +712,7 @@ public:
     bool rom_offline;
     bool rom_online;
     bool rom_restore;
+    std::string snapshot_basename;
 };
 
 #endif
