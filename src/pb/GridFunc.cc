@@ -2186,7 +2186,7 @@ void GridFunc<T>::defaultTrade_boundaries()
 }
 
 // set boundaries to value alpha.
-// Boundaries include ghosts points, and last layer
+// Boundaries include ghosts points, and first layer
 // (to have an odd number of grid points with nonzero values)
 template <typename T>
 void GridFunc<T>::setBoundaryValues(const T alpha, const bool direction[3])
@@ -2418,7 +2418,7 @@ void GridFunc<T>::setBoundaryValues(const T alpha, const bool direction[3])
 }
 
 // set boundaries to value alpha.
-// Boundaries include ghosts points, and last layer
+// Boundaries include ghosts points, and first layer
 // (to have an odd number of grid points with nonzero values)
 template <typename T>
 void GridFunc<T>::setBoundaryValuesNeumannZ(const T alpha)

@@ -176,6 +176,7 @@ public:
             src, locnumel_, vect_[color] + iloc * locnumel_);
     }
 
+    void setToDataWithGhosts() { assign(*data_wghosts_); }
     void copyDataFrom(const BlockVector& src)
     {
         assert(src.size_storage_ == size_storage_);

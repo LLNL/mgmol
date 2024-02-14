@@ -1852,10 +1852,10 @@ void ExtendedGridOrbitals::initWF(
                     gf_psi.assign(psi(icolor));
                     myoper.rhs(gf_psi, gf_work);
                     setPsi(gf_work, icolor);
-                    // gf_work.init_vect(psi(icolor),'d');
                 }
             }
     }
+
     resetIterativeIndex();
 
     if (onpe0 && ct.verbose > 2)
@@ -1874,7 +1874,11 @@ void ExtendedGridOrbitals::initWF(
     }
 
     setDataWithGhosts();
+
+    // needs to mask one layer of values when using 0 BC for wavefunctions
+    // the next two lines do that
     trade_boundaries();
+    setToDataWithGhosts();
 
 #ifdef DEBUG
     if (onpe0 && ct.verbose > 2)
