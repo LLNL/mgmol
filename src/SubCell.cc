@@ -72,11 +72,10 @@ SubCell::SubCell(
 }
 
 bool SubCell::spherePossibleOverlap(const Vector3D& center, const double radius,
-    const short iloc, const short bcPoisson[3]) const
+    const short iloc, const short bc[3]) const
 {
     // first find point in cell closest to center
-    Vector3D vdcenter
-        = centers_[iloc].vminimage(center, cell_dimensions_, bcPoisson);
+    Vector3D vdcenter = centers_[iloc].vminimage(center, cell_dimensions_, bc);
     Vector3D vcorner;
     for (short i = 0; i < 3; i++)
     {

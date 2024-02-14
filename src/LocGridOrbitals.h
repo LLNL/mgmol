@@ -310,6 +310,9 @@ public:
     {
         block_vector_.assign(gf_work);
     }
+
+    void setToDataWithGhosts() { block_vector_.setToDataWithGhosts(); }
+
     int chromatic_number(void) const
     {
         assert(chromatic_number_ < 10000);
