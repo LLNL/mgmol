@@ -27,10 +27,13 @@ set BUILD_DIR = ${MGMOL_ROOT}/build_quartz
 mkdir -p ${BUILD_DIR}
 cd ${BUILD_DIR}
 
-# clone the libROM GitHub repo in BUILD_DIR
-set USE_LIBROM="On"
+# build libROM in BUILD_DIR
+set MGMOL_WITH_LIBROM="On"
 set LIBROM_PATH = ${BUILD_DIR}/libROM
 git clone https://github.com/LLNL/libROM
+cd libROM
+./scripts/compile.sh -t cmake/toolchains/simple.cmake
+cd ..
 
 # call cmake
 cmake -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} \
@@ -39,7 +42,7 @@ cmake -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} \
       -DMPIEXEC_NUMPROC_FLAG="-n" \
       -DBLA_VENDOR=${BLAS_VENDOR} \
       -DSCALAPACK_BLACS_LIBRARY=${BLACS_LIB}/libmkl_blacs_intelmpi_lp64.so \
-      -DUSE_LIBROM=${USE_LIBROM} \
+      -DMGMOL_WITH_LIBROM=${MGMOL_WITH_LIBROM} \
       -DLIBROM_PATH=${LIBROM_PATH} \
       -DCMAKE_BUILD_TYPE=DEBUG \
       ..

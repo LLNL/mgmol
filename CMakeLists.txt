@@ -117,29 +117,17 @@ if (${MGMOL_WITH_SCALAPACK} OR DEFINED SCALAPACK_ROOT)
   endif(${SCALAPACK_FOUND})  
 endif(${MGMOL_WITH_SCALAPACK} OR DEFINED SCALAPACK_ROOT)
 
-# libROM (optional)
-set(USE_LIBROM False CACHE BOOL "Build with libROM")
+# libROM (required)
+set(MGMOL_WITH_LIBROM True CACHE BOOL "Build with libROM")
 set(LIBROM_PATH "" CACHE STRING "Path of libROM")
-if(USE_LIBROM)
+if(${MGMOL_WITH_LIBROM})
   if(NOT LIBROM_PATH)
     message(FATAL_ERROR "libROM PATH not specified.")
   else(NOT LIBROM_PATH)
-    set(LIBROM_SCRIPTS_PATH ${LIBROM_PATH}/scripts)
     message(STATUS "LIBROM_PATH: ${LIBROM_PATH}")
-    message(STATUS "LIBROM_SCRIPTS_PATH: ${LIBROM_SCRIPTS_PATH}")
-    include(ExternalProject)
-    ExternalProject_Add(
-      libROM
-      SOURCE_DIR ${LIBROM_SCRIPTS_PATH}
-      CONFIGURE_COMMAND ""
-      BINARY_DIR ${LIBROM_PATH}
-      BUILD_COMMAND ${LIBROM_SCRIPTS_PATH}/compile.sh -t ${LIBROM_PATH}/cmake/toolchains/simple.cmake
-      INSTALL_COMMAND ""
-    )
-    include_directories(${LIBROM_PATH}/lib)
-    link_directories(${LIBROM_PATH}/build/lib)
+    find_library(LIBROM_LIB libROM.so HINTS "${LIBROM_PATH}/build/lib")
   endif(NOT LIBROM_PATH)
-endif(USE_LIBROM)
+endif(${MGMOL_WITH_LIBROM})
 
 # ARPACK (optional)
 set(MGMOL_WITH_ARPACK FALSE CACHE BOOL "Compile with ARPACK package")
@@ -264,8 +252,10 @@ include_directories("${PROJECT_SOURCE_DIR}/src/sparse_linear_algebra")
 include_directories("${PROJECT_SOURCE_DIR}/src/tools")
 include_directories("${PROJECT_SOURCE_DIR}/src")
 
+include_directories("${LIBROM_PATH}/lib")
+link_libraries(${LIBROM_LIB})
+
 # add subdirectories for source files, tests
 add_subdirectory(src)
 
 add_subdirectory(tests)
-

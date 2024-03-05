@@ -8,7 +8,8 @@ add_subdirectory(radial)
 add_subdirectory(sparse_linear_algebra)
 add_subdirectory(tools)
 
-set(link_libs mgmol_distmatrix 
+set(link_libs 
+   mgmol_distmatrix 
    mgmol_linear_algebra 
    mgmol_local_matrices 
    mgmol_numerical_kernels 
@@ -153,13 +154,14 @@ set(SOURCES
  magma_singleton.cc
  ChebyshevApproximation.cc
  ChebyshevApproximationInterface.cc
+ rom.cc
 )
 
 add_library(mgmol_src ${SOURCES})
 
 target_include_directories(mgmol_src PRIVATE ${HDF5_INCLUDE_DIRS})
 target_include_directories(mgmol_src PRIVATE ${Boost_INCLUDE_DIRS})
-target_include_directories (mgmol_src PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(mgmol_src PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(mgmol_src ${link_libs})
 if(${MGMOL_WITH_MAGMA})
