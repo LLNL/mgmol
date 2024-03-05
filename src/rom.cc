@@ -22,7 +22,6 @@
 template <class OrbitalsType>
 int MGmol<OrbitalsType>::save_orbital_snapshot(std::string file_path, OrbitalsType& orbitals)
 {
-    std::cout << "rom.cc: save_orbital_snapshot: " << file_path << std::endl;
     std::string snapshot_filename = file_path;
     struct stat s; 
     if (stat(file_path.c_str(), &s) == 0)

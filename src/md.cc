@@ -491,7 +491,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
         if (ct.rom_offline > 0)
         {
             int ierr = save_orbital_snapshot(
-                ct.snapshot_basename + "_MD" + std::to_string(mdstep), **orbitals);
+                ct.md_print_filename + "_mdstep" + std::to_string(mdstep), **orbitals);
 
             if (ierr < 0)
                 os_ << "WARNING md(): writing ROM snapshot data failed!!!" << std::endl;
