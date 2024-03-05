@@ -1143,17 +1143,17 @@ void MGmol<OrbitalsType>::cleanup()
 
         if (ierr < 0)
             os_ << "WARNING: writing restart data failed!!!" << std::endl;
-    }
 
-    // Save orbital snapshots
-    if (ct.rom_offline > 0 && ct.AtomsDynamic() == AtomsDynamicType::Quench)
-    {
-        ct.snapshot_basename = "coords.in_H2O_64_000000";
-        int ierr = save_orbital_snapshot(
-            ct.snapshot_basename + "_quench", *current_orbitals_);
+        // Save orbital snapshots
+        if (ct.rom_offline > 0 && ct.AtomsDynamic() == AtomsDynamicType::Quench)
+        {
+            ierr = save_orbital_snapshot(
+                filename, *current_orbitals_);
 
-        if (ierr < 0)
-            os_ << "WARNING: writing ROM snapshot data failed!!!" << std::endl;
+            if (ierr < 0)
+                os_ << "WARNING: writing ROM snapshot data failed!!!" << std::endl;
+        }
+
     }
 
     MPI_Barrier(comm_);

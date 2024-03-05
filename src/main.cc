@@ -305,16 +305,7 @@ int main(int argc, char** argv)
                 "Modulos or parameter to control how often clusters are "
                 "recomputed during md")("LoadBalancing.output_file",
                 po::value<string>()->default_value(""),
-                "Output file for dumping cluster information in vtk format")(
-                "ROM.offline",
-                po::value<bool>()->default_value(false),
-                "online phase in ROM")(
-                "ROM.online",
-                po::value<bool>()->default_value(false),
-                "online phase in ROM")(
-                "ROM.restore",
-                po::value<bool>()->default_value(false),
-                "restore phase in ROM");
+                "Output file for dumping cluster information in vtk format");
 
             // Hidden options, will be allowed in config file, but will not be
             // shown to the user.
@@ -443,10 +434,7 @@ int main(int argc, char** argv)
                 "approximation of density matrix. ")("DensityMatrix.tol",
                 po::value<float>()->default_value(1.e-7),
                 "tolerance, used in iterative DM computation convergence "
-                "criteria")(
-                "ROM.snapshot_basename", 
-                po::value<string>()->default_value(""),
-                "ROM snapshot basename");
+                "criteria");
 
             po::options_description cmdline_options;
             cmdline_options.add(generic);
