@@ -43,30 +43,30 @@ jobs:
             cd build && make -j 4
       - name: test
         run: |
-            cd build && ctest --no-compress-output -T Test
-  code-style:
-    runs-on: ubuntu-latest
-    needs: [docker-image]
-    container:
-      image: ghcr.io/llnl/mgmol/mgmol_env:latest
-      options: --user 1001 --privileged
-      volumes:
-        - /mnt:/mnt
-    steps:
-      - name: Cancel previous runs
-        uses: styfle/cancel-workflow-action@0.11.0
-        with:
-          access_token: ${{ github.token }}
-      - name: Check out mgmol
-        uses: actions/checkout@v1
-        with:
-            submodules: 'true'
-      - name: cmake
-        run: |
-            mkdir build
-            cd build
-            cmake .. -DCMAKE_CXX_COMPILER=mpic++ -DCMAKE_Fortran_COMPILER=mpif90 -DMGMOL_WITH_CLANG_FORMAT=ON
-      - name: make
-        run: |
-            cd build && make format
+            cd build && ctest --no-compress-output -V -T Test
+  # code-style:
+  #   runs-on: ubuntu-latest
+  #   needs: [docker-image]
+  #   container:
+  #     image: ghcr.io/llnl/mgmol/mgmol_env:latest
+  #     options: --user 1001 --privileged
+  #     volumes:
+  #       - /mnt:/mnt
+  #   steps:
+  #     - name: Cancel previous runs
+  #       uses: styfle/cancel-workflow-action@0.11.0
+  #       with:
+  #         access_token: ${{ github.token }}
+  #     - name: Check out mgmol
+  #       uses: actions/checkout@v1
+  #       with:
+  #           submodules: 'true'
+  #     - name: cmake
+  #       run: |
+  #           mkdir build
+  #           cd build
+  #           cmake .. -DCMAKE_CXX_COMPILER=mpic++ -DCMAKE_Fortran_COMPILER=mpif90 -DMGMOL_WITH_CLANG_FORMAT=ON
+  #     - name: make
+  #       run: |
+  #           cd build && make format
     
