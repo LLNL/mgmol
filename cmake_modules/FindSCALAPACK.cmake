@@ -1,5 +1,3 @@
-message(STATUS "Entered FindSCALAPACK.cmake")
-
 set(_SCALAPACK_SEARCHES)
 
 # Search SCALAPACK_ROOT first if it is set.
