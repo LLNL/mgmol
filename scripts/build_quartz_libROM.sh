@@ -31,6 +31,9 @@ cd ${BUILD_DIR}
 set USE_LIBROM="On"
 set LIBROM_PATH = ${BUILD_DIR}/libROM
 git clone https://github.com/LLNL/libROM
+cd libROM
+./scripts/compile.sh -t ./cmake/toolchains/default-toss_4_x86_64_ib-librom-dev.cmake
+cd ${BUILD_DIR}
 
 # call cmake
 cmake -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} \
