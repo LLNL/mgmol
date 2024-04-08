@@ -1,3 +1,5 @@
+message(STATUS "Entered FindSCALAPACK.cmake")
+
 set(_SCALAPACK_SEARCHES)
 
 # Search SCALAPACK_ROOT first if it is set.
@@ -27,6 +29,19 @@ if(NOT SCALAPACK_LIBRARY)
   foreach(search ${_SCALAPACK_SEARCHES})
     find_library(SCALAPACK_LIBRARY NAMES ${SCALAPACK_NAMES} PATHS ${search} PATH_SUFFIXES lib NO_DEFAULT_PATH)
   endforeach()
+endif()
+
+# Search for some default library paths
+if (NOT SCALAPACK_FOUND)
+  find_library(SCALAPACK_LIBRARY
+    NAMES ${SCALAPACK_NAMES}
+    PATHS /usr/lib64 /usr/lib /usr/local/lib64 /usr/local/lib
+    /opt/local/lib /opt/sw/lib /sw/lib
+    ENV LD_LIBRARY_PATH
+    ENV DYLD_FALLBACK_LIBRARY_PATH
+    ENV DYLD_LIBRARY_PATH
+    ENV SCALAPACKDIR
+    ENV BLACSDIR)
 endif()
 
 unset(SCALAPACK_NAMES)
