@@ -4,7 +4,7 @@ on:
   pull_request:
     types: [opened, labeled, synchronize]
     branches:
-      - release
+      - ROMFPMD
   # push:
   #   branches:
   #     - release
@@ -25,17 +25,14 @@ jobs:
         uses: styfle/cancel-workflow-action@0.11.0
         with:
           access_token: ${{ github.token }}
-      - name: Set Swap Space
-        uses: pierotofy/set-swap-space@master
-        with:
-          swap-size-gb: 10
-      - name: Check out pylibROM
+      # - name: Set Swap Space
+      #   uses: pierotofy/set-swap-space@master
+      #   with:
+      #     swap-size-gb: 10
+      - name: Check out mgmol
         uses: actions/checkout@v1
         with:
             submodules: 'true'
-      - name: Git Submodules status
-        run: |
-            git submodule status
       - name: cmake
         run: |
             mkdir build
@@ -44,4 +41,32 @@ jobs:
       - name: make
         run: |
             cd build && make -j 4
+      - name: test
+        run: |
+            cd build && mctest --no-compress-output -T Test
+  code-style:
+    runs-on: ubuntu-latest
+    needs: [docker-image]
+    container:
+      image: ghcr.io/llnl/mgmol/mgmol_env:latest
+      options: --user 1001 --privileged
+      volumes:
+        - /mnt:/mnt
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.11.0
+        with:
+          access_token: ${{ github.token }}
+      - name: Check out mgmol
+        uses: actions/checkout@v1
+        with:
+            submodules: 'true'
+      - name: cmake
+        run: |
+            mkdir build
+            cd build
+            cmake .. -DCMAKE_CXX_COMPILER=mpic++ -DCMAKE_Fortran_COMPILER=mpif90 -DMGMOL_WITH_CLANG_FORMAT=ON
+      - name: make
+        run: |
+            cd build && make format
     
