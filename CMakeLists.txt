@@ -121,24 +121,12 @@ endif(${MGMOL_WITH_SCALAPACK} OR DEFINED SCALAPACK_ROOT)
 set(USE_LIBROM False CACHE BOOL "Build with libROM")
 set(LIBROM_PATH "" CACHE STRING "Path of libROM")
 if(USE_LIBROM)
+  message(STATUS "LIBROM_PATH: ${LIBROM_PATH}")
   if(NOT LIBROM_PATH)
-    message(FATAL_ERROR "libROM PATH not specified.")
-  else(NOT LIBROM_PATH)
-    set(LIBROM_SCRIPTS_PATH ${LIBROM_PATH}/scripts)
-    message(STATUS "LIBROM_PATH: ${LIBROM_PATH}")
-    message(STATUS "LIBROM_SCRIPTS_PATH: ${LIBROM_SCRIPTS_PATH}")
-    include(ExternalProject)
-    ExternalProject_Add(
-      libROM
-      SOURCE_DIR ${LIBROM_SCRIPTS_PATH}
-      CONFIGURE_COMMAND ""
-      BINARY_DIR ${LIBROM_PATH}
-      BUILD_COMMAND ${LIBROM_SCRIPTS_PATH}/compile.sh -t ${LIBROM_PATH}/cmake/toolchains/simple.cmake
-      INSTALL_COMMAND ""
-    )
-    include_directories(${LIBROM_PATH}/lib)
-    link_directories(${LIBROM_PATH}/build/lib)
+    message(FATAL_ERROR "Cmake is asked to use libROM, but LIBROM_PATH not specified.")
   endif(NOT LIBROM_PATH)
+
+  find_package(libROM REQUIRED)
 endif(USE_LIBROM)
 
 # ARPACK (optional)

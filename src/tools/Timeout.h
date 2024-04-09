@@ -17,7 +17,7 @@
 #include <stdlib.h>
 
 #include "MPIdata.h"
-#include "Signal.h"
+#include "Signal_mgmol.h"
 
 #if PCS
 #include <csignal>

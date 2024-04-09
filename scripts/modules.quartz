@@ -1,12 +1,19 @@
-module load intel/2022.1.0
+### choose either gcc or intel
+#module load intel/2022.1.0
+module load gcc/11.2.1
+
+module load cmake
 module load hdf5-parallel/1.14.0
-#module load hdf5-parallel
-#module load boost
-module load mkl
-module load cmake/3.14.5
+module load boost
+
+### choose either one
+module load mkl-interfaces
+#module load mkl
+
 module load python
-## manually add boost path
-setenv LD_LIBRARY_PATH /usr/tce/packages/boost/boost-1.80.0-mvapich2-2.3.6-gcc-10.3.1/lib:$LD_LIBRARY_PATH
+
+### manually add boost path
+#setenv LD_LIBRARY_PATH /usr/tce/packages/boost/boost-1.80.0-mvapich2-2.3.6-gcc-10.3.1/lib:$LD_LIBRARY_PATH
 
 #setenv MKLROOT $LIBRARY_PATH
 #setenv MKLROOT /usr/tce/packages/mkl/mkl-2022.1.0/mkl/2022.1.0
