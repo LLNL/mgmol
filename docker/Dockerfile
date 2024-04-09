@@ -10,23 +10,35 @@ WORKDIR /$ENVDIR
 # install packages
 RUN sudo apt-get install -yq git
 RUN sudo apt-get install --no-install-recommends -yq make gcc gfortran libssl-dev cmake
-RUN sudo apt-get install -yq libopenblas-dev libmpich-dev libblas-dev liblapack-dev libscalapack-mpi-dev libhdf5-mpich-dev
+RUN sudo apt-get install -yq libopenblas-dev libmpich-dev libblas-dev liblapack-dev libscalapack-mpi-dev libhdf5-mpi-dev
 RUN sudo apt-get install -yq libboost-all-dev
 RUN sudo apt-get install -yq vim
 RUN sudo apt-get install -yq git-lfs
 RUN sudo apt-get install -yq valgrind
 RUN sudo apt-get install -yq wget
-RUN sudo apt-get install -yq astyle
+### clang-format seems to be updated to 14.0. Not using it for now.
+# RUN sudo apt-get install -yq clang-format
 
 # install lldb and gdb for debugging
 RUN sudo apt-get install -yq lldb gdb
 
 RUN sudo apt-get clean -q
 
-# NOTE: currently docker does not have a way to set environment variable with a command output.
-# The following environment variable should use $(uname -m) for different architecture.
-# ENV SCALAPACK_ROOT=/usr/lib/aarch64-linux-gnu/
-ENV SCALAPACK_ROOT=/usr/lib/x86_64-linux-gnu/
+ENV LIB_DIR=/$ENVDIR/dependencies
+WORKDIR $LIB_DIR
+
+# cmake toolchain file for librom
+RUN echo 'set(CMAKE_C_COMPILER mpicc)\n\
+set(CMAKE_CXX_COMPILER mpicxx)\n\
+set(CMAKE_Fortran_COMPILER mpif90)' > ./librom_env.cmake
+ENV TOOLCHAIN_FILE=$LIB_DIR/librom_env.cmake
+
+# install libROM for scaleupROM
+RUN sudo git clone https://github.com/LLNL/libROM.git
+WORKDIR ./libROM/build
+# libROM without MFEM.
+RUN sudo cmake .. -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} -DCMAKE_BUILD_TYPE=Optimized -DUSE_MFEM=OFF
+RUN sudo make -j 16
 
 # create and switch to a user
 ENV USERNAME=test

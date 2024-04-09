@@ -7,7 +7,7 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// Adapted from Jeep: Signal.h,v 1.5 2002/06/28 20:50:33
+// Adapted from Jeep: Signal_mgmol.h,v 1.5 2002/06/28 20:50:33
 
 // The Signal class is a utility to catch UNIX signals.
 // A set of flags is maintained to remeber which signals were caught.
@@ -15,7 +15,7 @@
 // access the flag set, reset flags, or interrogate flags.
 // The Signal class can be used in an application by declaring
 //
-// #include "Signal.h"
+// #include "Signal_mgmol.h"
 // set<int> Signal::recv_;
 //
 // A signal can be registered using, e.g.
