@@ -29,8 +29,6 @@ if(NOT SCALAPACK_LIBRARY)
   endforeach()
 endif()
 
-unset(SCALAPACK_NAMES)
-
 mark_as_advanced(SCALAPACK_LIBRARY SCALAPACK_INCLUDE_DIR)
 
 include(FindPackageHandleStandardArgs)
@@ -47,7 +45,11 @@ if (NOT SCALAPACK_FOUND)
     ENV DYLD_LIBRARY_PATH
     ENV SCALAPACKDIR
     ENV BLACSDIR)
+
+  FIND_PACKAGE_HANDLE_STANDARD_ARGS(SCALAPACK REQUIRED_VARS SCALAPACK_LIBRARY)
 endif()
+
+unset(SCALAPACK_NAMES)
 
 if(SCALAPACK_FOUND)
   # Only Intel's scalapack requires an include directory
