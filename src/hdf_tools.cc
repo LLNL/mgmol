@@ -281,6 +281,7 @@ void write2d(hid_t file_id, const string& datasetname, vector<string>& data,
     }
 }
 
+#ifdef MGMOL_USE_HDF5P
 void parallelWrite2d(hid_t file_id, const string& datasetname,
     vector<int>& data, size_t* dims, MPI_Comm comm)
 {
@@ -584,6 +585,8 @@ void parallelWrite2d(hid_t file_id, const string& datasetname,
     H5Sclose(filespace);
     H5Sclose(memspace);
 }
+
+#endif
 
 void addAttribute2Dataset(
     hid_t dset_id, const char* attname, const vector<double>& attr_data)

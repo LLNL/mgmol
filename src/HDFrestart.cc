@@ -235,12 +235,14 @@ void HDFrestart::setupBlocks()
     }
 
     offset_[0] = 0;
+#ifdef MGMOL_USE_HDF5P
     if (use_hdf5p_)
     {
         offset_[1] = pes_.my_mpi(1) * block_[1];
         offset_[2] = pes_.my_mpi(2) * block_[2];
     }
     else
+#endif
     {
         offset_[1] = 0;
         offset_[2] = 0;
@@ -466,10 +468,14 @@ HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
     if (ct.out_restart_file_naming_strategy)
     {
         addDateToFilename();
+#ifdef MGMOL_USE_HDF5P
         if (use_hdf5p_) filename_.append(".h5");
+#endif
     }
 
+#ifdef MGMOL_USE_HDF5P
     if (!use_hdf5p_) // mkdir with filename and create files with task numbers
+#endif
     {
         // check if dir exists
         if (onpe0)
@@ -499,6 +505,7 @@ HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
                 << "HDFrestart(): create file " << filename_ << std::endl;
         hid_t access_plist
             = H5Pcreate(H5P_FILE_ACCESS); // property list identifier
+#ifdef MGMOL_USE_HDF5P
         if (use_hdf5p_)
         {
             // Set up file access property list with parallel I/O access
@@ -510,6 +517,7 @@ HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
             }
         }
         else
+#endif
         {
             // The H5FD_CORE driver enables an application to work with a file
             // in memory, speeding reads and writes as no disk access is made.
@@ -571,7 +579,9 @@ HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
 
     setOptions(option_number);
     filename_ = filename;
+#ifdef MGMOL_USE_HDF5P
     if (!use_hdf5p_)
+#endif
     {
         filename_.append("/Task");
         appendTaskNumberToFilename();
@@ -610,6 +620,7 @@ HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
 
         hid_t access_plist
             = H5Pcreate(H5P_FILE_ACCESS); // property list identifier
+#ifdef MGMOL_USE_HDF5P
         if (use_hdf5p_)
         {
             // Set up file access property list with parallel I/O access
@@ -622,6 +633,7 @@ HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
             }
         }
         else
+#endif
         {
             herr_t err_id = H5Pset_fapl_core(access_plist, 1024, 1);
             if (err_id < 0) MGMOL_HDFRESTART_FAIL("H5Pset_fapl_core failed!!!");
@@ -662,7 +674,9 @@ HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
             }
 
             // get global mesh size from file data
+#ifdef MGMOL_USE_HDF5P
             if (!use_hdf5p_)
+#endif
             {
                 dimsf_[1] *= pes.n_mpi_task(1);
                 dimsf_[2] *= pes.n_mpi_task(2);
@@ -1313,6 +1327,7 @@ int HDFrestart::read_1func_hdf5(T* vv, const std::string& datasetname)
             return -1;
         }
 
+#ifdef MGMOL_USE_HDF5P
         if (use_hdf5p_)
         {
             // Select hyperslab in the file.
@@ -1333,7 +1348,7 @@ int HDFrestart::read_1func_hdf5(T* vv, const std::string& datasetname)
                 plist_id = H5P_DEFAULT;
             }
         }
-
+#endif
         // read data in work_space
         getWorkspace(work_space);
         herr_t status
@@ -1344,9 +1359,11 @@ int HDFrestart::read_1func_hdf5(T* vv, const std::string& datasetname)
             return -1;
         }
 
+#ifdef MGMOL_USE_HDF5P
         // Close/release resources.
         if (use_hdf5p_)
             if (pes_.n_mpi_tasks() > 1) H5Pclose(plist_id);
+#endif
 
         status = H5Dclose(dset_id);
         if (status < 0)
@@ -1355,6 +1372,7 @@ int HDFrestart::read_1func_hdf5(T* vv, const std::string& datasetname)
             return -1;
         }
 
+#ifdef MGMOL_USE_HDF5P
         if (use_hdf5p_)
         {
             status = H5Sclose(filespace);
@@ -1371,6 +1389,7 @@ int HDFrestart::read_1func_hdf5(T* vv, const std::string& datasetname)
                 return -1;
             }
         }
+#endif
 
         memcpy(vv, work_space, bsize_ * sizeof(T));
 
@@ -1483,21 +1502,19 @@ int HDFrestart::write_1func_hdf5(
             MGMOL_HDFRESTART_FAIL("H5Dclose failed!!!");
             return -1;
         }
-        // if( use_hdf5p_ )
-        {
-            status = H5Sclose(filespace);
-            if (status < 0)
-            {
-                MGMOL_HDFRESTART_FAIL("H5Sclose failed for filespace!!!");
-                return -1;
-            }
 
-            status = H5Sclose(memspace);
-            if (status < 0)
-            {
-                MGMOL_HDFRESTART_FAIL("H5Sclose failed for memspace!!!");
-                return -1;
-            }
+        status = H5Sclose(filespace);
+        if (status < 0)
+        {
+            MGMOL_HDFRESTART_FAIL("H5Sclose failed for filespace!!!");
+            return -1;
+        }
+
+        status = H5Sclose(memspace);
+        if (status < 0)
+        {
+            MGMOL_HDFRESTART_FAIL("H5Sclose failed for memspace!!!");
+            return -1;
         }
     }
 
@@ -1518,6 +1535,7 @@ int HDFrestart::readData(
             MGMOL_HDFRESTART_FAIL("H5Dget_space failed !!!");
             return -1;
         }
+#ifdef MGMOL_USE_HDF5P
         if (use_hdf5p_)
         {
             // Select hyperslab in the file.
@@ -1535,6 +1553,7 @@ int HDFrestart::readData(
                 plist_id = H5Pcreate(H5P_DATASET_XFER);
             }
         }
+#endif
         if (precision == 1)
         {
             status = H5Dread(dset_id, H5T_NATIVE_FLOAT, memspace, filespace,
@@ -1552,8 +1571,10 @@ int HDFrestart::readData(
             return -1;
         }
 
+#ifdef MGMOL_USE_HDF5P
         // Close/release resources.
         if (use_hdf5p_ && pes_.n_mpi_tasks() > 1) H5Pclose(plist_id);
+#endif
 
         H5Sclose(filespace);
     }
@@ -1688,6 +1709,7 @@ int HDFrestart::writeData(T* data, hid_t space_id, hid_t memspace,
     {
         hid_t plist_id = H5P_DEFAULT;
         herr_t status;
+#ifdef MGMOL_USE_HDF5P
         if (use_hdf5p_)
         {
             // Select hyperslab in the file.
@@ -1706,7 +1728,7 @@ int HDFrestart::writeData(T* data, hid_t space_id, hid_t memspace,
                 plist_id = H5Pcreate(H5P_DATASET_XFER);
             }
         }
-
+#endif
         assert(dset_id >= 0);
         if (precision == 1)
             status = H5Dwrite(dset_id, H5T_NATIVE_FLOAT, memspace, space_id,
@@ -1721,7 +1743,9 @@ int HDFrestart::writeData(T* data, hid_t space_id, hid_t memspace,
         }
 
         // Close/release resources.
+#ifdef MGMOL_USE_HDF5P
         if (use_hdf5p_ && pes_.n_mpi_tasks() > 1) H5Pclose(plist_id);
+#endif
     }
 
     return 0;
@@ -1789,15 +1813,21 @@ void HDFrestart::setOptions(const short option_number)
     switch (option_number)
     {
         case 0: // 1 file/task
-            use_hdf5p_     = false;
+#ifdef MGMOL_USE_HDF5P
+            use_hdf5p_ = false;
+#endif
             gather_data_x_ = false;
             break;
+#ifdef MGMOL_USE_HDF5P
         case 1: // 1 file for all tasks
             use_hdf5p_     = true;
             gather_data_x_ = true;
             break;
+#endif
         case 2: // 1 file per column in x-direction
-            use_hdf5p_     = false;
+#ifdef MGMOL_USE_HDF5P
+            use_hdf5p_ = false;
+#endif
             gather_data_x_ = true;
             break;
         default:

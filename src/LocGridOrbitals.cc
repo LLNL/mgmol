@@ -1084,12 +1084,14 @@ int LocGridOrbitals::write_func_hdf5(
 
         std::vector<double> centers_and_radii;
         int nrec = 0;
+#ifdef MGMOL_USE_HDF5P
         if (h5f_file.useHdf5p())
         {
             nrec = colored_regions.getAllCentersAndRadii4color(
                 color, centers_and_radii);
         }
         else
+#endif
         {
             nrec = colored_regions.getLocCentersAndRadii4color(
                 color, centers_and_radii);
@@ -1097,11 +1099,13 @@ int LocGridOrbitals::write_func_hdf5(
         }
 
         std::vector<int> gids;
+#ifdef MGMOL_USE_HDF5P
         if (h5f_file.useHdf5p())
         {
             colored_regions.getAllGids4color(color, gids);
         }
         else
+#endif
         {
             colored_regions.getLocGids4color(color, gids);
         }

@@ -1648,7 +1648,10 @@ void LocalizationRegions::writeOldCenters(HDFrestart& h5f_file)
     hid_t file_id = h5f_file.file_id();
     if (file_id >= 0)
     {
+        string datasetname = "GidsList";
+
         // fill up data array to dimension common to all tasks
+#ifdef MGMOL_USE_HDF5P
         if (h5f_file.useHdf5p())
         {
             short s = gids.size();
@@ -1656,17 +1659,12 @@ void LocalizationRegions::writeOldCenters(HDFrestart& h5f_file)
             mgmol_tools::allreduce(&s, &ms, 1, MPI_MAX, h5f_file.comm_active());
             for (short i = s; i < ms; i++)
                 gids.push_back(-1);
-        }
 
-        string datasetname = "GidsList";
-
-        if (h5f_file.useHdf5p())
-        {
             cerr << "writeOldCenters(), parallelWrite1d not yet implemented."
                  << endl;
-            // mgmol_tools::parallelWrite2d(file_id,datasetname,gids,dims,h5f_file.comm_active());
         }
         else
+#endif
         {
             mgmol_tools::write1d(file_id, datasetname, gids, gids.size());
         }
@@ -1698,28 +1696,28 @@ void LocalizationRegions::writeOldCenter(HDFrestart& h5f_file, int i)
     hid_t file_id = h5f_file.file_id();
     if (file_id >= 0)
     {
+        stringstream datasetname;
+        datasetname << "OldCenter_" << i;
+
+#ifdef MGMOL_USE_HDF5P
         // fill up data array to dimension common to all tasks
         if (h5f_file.useHdf5p())
         {
             short s = data.size();
             short ms;
             mgmol_tools::allreduce(&s, &ms, 1, MPI_MAX, h5f_file.comm_active());
-            for (short i = s; i < ms; i++)
+            for (short j = s; j < ms; j++)
                 data.push_back(1.e32);
-        }
 
-        size_t dims[2] = { data.size() / 3, 3 };
+            size_t dims[2] = { data.size() / 3, 3 };
 
-        stringstream datasetname;
-        datasetname << "OldCenter_" << i;
-
-        if (h5f_file.useHdf5p())
-        {
             mgmol_tools::parallelWrite2d(
                 file_id, datasetname.str(), data, dims, h5f_file.comm_active());
         }
         else
+#endif
         {
+            size_t dims[2] = { data.size() / 3, 3 };
             mgmol_tools::write2d(file_id, datasetname.str(), data, dims);
         }
     }
