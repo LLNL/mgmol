@@ -491,6 +491,16 @@ target_include_directories(testHDF5P PRIVATE ${HDF5_INCLUDE_DIRS})
 target_include_directories(testAndersonMix PRIVATE
                            ${CMAKE_SOURCE_DIR}/tests/Anderson
                            ${HDF5_INCLUDE_DIRS})
+target_include_directories(testDistVector PRIVATE ${Boost_INCLUDE_DIRS})
+target_include_directories(testReplicated2DistMatrix PRIVATE ${Boost_INCLUDE_DIRS})
+target_include_directories(testDistMatrix PRIVATE ${Boost_INCLUDE_DIRS})
+target_include_directories(testConditionDistMatrix PRIVATE ${Boost_INCLUDE_DIRS})
+target_include_directories(testConditionDistMatrixPower PRIVATE ${Boost_INCLUDE_DIRS})
+target_include_directories(testPower PRIVATE ${Boost_INCLUDE_DIRS})
+target_include_directories(testPowerDistMatrix PRIVATE ${Boost_INCLUDE_DIRS})
+target_include_directories(testDensityMatrix PRIVATE ${Boost_INCLUDE_DIRS})
+target_include_directories(testGramMatrix PRIVATE ${Boost_INCLUDE_DIRS})
+target_include_directories(testAndersonMix PRIVATE ${Boost_INCLUDE_DIRS})
 
 target_link_libraries(testHDF5P PRIVATE ${HDF5_LIBRARIES}
   MPI::MPI_CXX)

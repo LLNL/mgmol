@@ -79,6 +79,7 @@ find_package(Boost COMPONENTS program_options random REQUIRED)
 if(NOT ${Boost_FOUND})
   message(FATAL_ERROR "Boost library required")
 endif(NOT ${Boost_FOUND})
+message(STATUS "Boost include dir: ${Boost_INCLUDE_DIRS}")
 
 # blas/ lapack (required)
 # Use cmake option -DBLA_VENDOR=<vendor>
