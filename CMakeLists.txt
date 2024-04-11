@@ -53,12 +53,17 @@ else()
 endif()
 
 # HDF5 (required)
+set(MGMOL_USE_HDF5P TRUE CACHE BOOL "Use HDF5 parallel capability")
 if(HDF5_LIBRARIES) #user sets libraries explicitly
   message(STATUS "HDF5_LIBRARIES: ${HDF5_LIBRARIES}")
   message(STATUS "HDF5_LIBRARIES include: ${HDF5_INCLUDE_DIRS}")
   message(STATUS "HDF5_HL_LIBRARIES: ${HDF5_HL_LIBRARIES}")
 else() #search for HDF5
-  set(HDF5_PREFER_PARALLEL True)
+  if(MGMOL_USE_HDF5P)
+    message(STATUS "Use HDF5 parallel capability")
+    set(HDF5_PREFER_PARALLEL True)
+    add_definitions(-DMGMOL_USE_HDF5P)
+  endif()
   message(STATUS "HDF5_ROOT: ${HDF5_ROOT}")
   find_package(HDF5 REQUIRED COMPONENTS C HL)
   if (${HDF5_FOUND})

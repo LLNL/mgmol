@@ -46,6 +46,32 @@ short Ions::max_num_proj_    = -1;
 double Ions::max_Vl_radius_  = -1.;
 double Ions::max_Vnl_radius_ = -1.;
 
+template <typename T>
+void writeData2d(hid_t file_id, std::string datasetname, std::vector<T>& data,
+    const int n, T element)
+{
+#ifdef MGMOL_USE_HDF5P
+    if (h5f_file.useHdf5p())
+    {
+        // fill up data array to dimension common to all tasks
+        short s = data.size();
+        short ms;
+        mgmol_tools::allreduce(&s, &ms, 1, MPI_MAX, h5f_file.comm_active());
+        for (short i = s; i < ms; i++)
+            data.push_back(element);
+        size_t dims[2] = { data.size() / n, n };
+
+        mgmol_tools::parallelWrite2d(
+            file_id, datasetname, data, dims, h5f_file.comm_active());
+    }
+    else
+#endif
+    {
+        size_t dims[2] = { data.size()/n, n };
+        mgmol_tools::write2d(file_id, datasetname, data, dims);
+    }
+}
+
 Ions::Ions(const double lat[3], const std::vector<Species>& sp) : species_(sp)
 {
     for (short i = 0; i < 3; i++)
@@ -726,43 +752,8 @@ void Ions::writeAtomicNumbers(HDFrestart& h5f_file)
     hid_t file_id = h5f_file.file_id();
     if (file_id >= 0)
     {
-        // fill up data array to dimension common to all tasks
-        if (h5f_file.useHdf5p())
-        {
-            short s = data.size();
-            short ms;
-            mgmol_tools::allreduce(&s, &ms, 1, MPI_MAX, h5f_file.comm_active());
-            for (short i = s; i < ms; i++)
-                data.push_back(-1);
-        }
-        // for(std::vector<int>::iterator it =data.begin();
-        //                          it!=data.end();
-        //                        ++it)
-        //    std::cout<<"Number="<<*it<<endl;
-
-        // std::cout<<"ms="<<ms<<endl;
-
-        // for(short i=0;i<ms;i++)data.push_back(-100*(mytask+1));
-        // std::vector<int> old(data);
-        // data.clear();
-        // for(short i=0;i<ms;i++)
-        //{
-        //    data.push_back(old[i]);
-        //    data.push_back(-1);
-        //}
-
-        size_t dims[2] = { data.size(), 1 };
-
         std::string datasetname("/Atomic_numbers");
-        if (h5f_file.useHdf5p())
-        {
-            mgmol_tools::parallelWrite2d(
-                file_id, datasetname, data, dims, h5f_file.comm_active());
-        }
-        else
-        {
-            mgmol_tools::write2d(file_id, datasetname, data, dims);
-        }
+        writeData2d(file_id, datasetname, data, 1, -1);
     }
 }
 
@@ -800,29 +791,9 @@ void Ions::writeAtomNames(HDFrestart& h5f_file)
 
     if (file_id >= 0)
     {
-        // fill up data array to dimension common to all tasks
-        if (h5f_file.useHdf5p())
-        {
-            short s = data.size();
-            short ms;
-            mgmol_tools::allreduce(&s, &ms, 1, MPI_MAX, h5f_file.comm_active());
-            std::string empty_string;
-            for (short i = s; i < ms; i++)
-                data.push_back(empty_string);
-        }
-
-        size_t dims[2] = { data.size(), 1 };
-
         std::string datasetname("/Atomic_names");
-        if (h5f_file.useHdf5p())
-        {
-            mgmol_tools::parallelWrite2d(
-                file_id, datasetname, data, dims, h5f_file.comm_active());
-        }
-        else
-        {
-            mgmol_tools::write2d(file_id, datasetname, data, dims);
-        }
+        std::string empty;
+        writeData2d(file_id, datasetname, data, 1, empty);
     }
 }
 
@@ -891,30 +862,9 @@ void Ions::writeLockedAtomNames(HDFrestart& h5f_file)
     hid_t file_id = h5f_file.file_id();
     if (file_id >= 0)
     {
-        // fill up data array to dimension common to all tasks
-        if (h5f_file.useHdf5p())
-        {
-            short s = data.size();
-            short ms;
-            mgmol_tools::allreduce(&s, &ms, 1, MPI_MAX, h5f_file.comm_active());
-            std::string empty_string;
-            for (short i = s; i < ms; i++)
-                data.push_back(empty_string);
-            if (ms == 0) return;
-        }
-
-        size_t dims[2] = { data.size(), 1 };
-
         std::string datasetname("/LockedAtomsNames");
-        if (h5f_file.useHdf5p())
-        {
-            mgmol_tools::parallelWrite2d(
-                file_id, datasetname, data, dims, h5f_file.comm_active());
-        }
-        else
-        {
-            mgmol_tools::write2d(file_id, datasetname, data, dims);
-        }
+        std::string empty;
+        writeData2d(file_id, datasetname, data, 1, empty);
     }
 }
 
@@ -949,28 +899,8 @@ void Ions::writeAtomicIDs(HDFrestart& h5f_file)
     hid_t file_id = h5f_file.file_id();
     if (file_id >= 0)
     {
-        // fill up data array to dimension common to all tasks
-        if (h5f_file.useHdf5p())
-        {
-            short s = data.size();
-            short ms;
-            mgmol_tools::allreduce(&s, &ms, 1, MPI_MAX, h5f_file.comm_active());
-            for (short i = s; i < ms; i++)
-                data.push_back(-1);
-        }
-
-        size_t dims[2] = { data.size(), 1 };
-
         std::string datasetname("/Atomic_IDs");
-        if (h5f_file.useHdf5p())
-        {
-            mgmol_tools::parallelWrite2d(
-                file_id, datasetname, data, dims, h5f_file.comm_active());
-        }
-        else
-        {
-            mgmol_tools::write2d(file_id, datasetname, data, dims);
-        }
+        writeData2d(file_id, datasetname, data, 1, -1);
     }
 }
 
@@ -1006,28 +936,8 @@ void Ions::writeAtomicNLprojIDs(HDFrestart& h5f_file)
     hid_t file_id = h5f_file.file_id();
     if (file_id >= 0)
     {
-        // fill up data array to dimension common to all tasks
-        if (h5f_file.useHdf5p())
-        {
-            short s = data.size();
-            short ms;
-            mgmol_tools::allreduce(&s, &ms, 1, MPI_MAX, h5f_file.comm_active());
-            for (short i = s; i < ms; i++)
-                data.push_back(-1);
-        }
-
-        size_t dims[2] = { data.size(), 1 };
-
         std::string datasetname("/AtomicNLproj_IDs");
-        if (h5f_file.useHdf5p())
-        {
-            mgmol_tools::parallelWrite2d(
-                file_id, datasetname, data, dims, h5f_file.comm_active());
-        }
-        else
-        {
-            mgmol_tools::write2d(file_id, datasetname, data, dims);
-        }
+        writeData2d(file_id, datasetname, data, 1, -1);
     }
 }
 
@@ -1064,28 +974,8 @@ void Ions::writePositions(HDFrestart& h5f_file)
     hid_t file_id = h5f_file.file_id();
     if (file_id >= 0)
     {
-        // fill up data array to dimension common to all tasks
-        if (h5f_file.useHdf5p())
-        {
-            short s = data.size();
-            short ms;
-            mgmol_tools::allreduce(&s, &ms, 1, MPI_MAX, h5f_file.comm_active());
-            for (short i = s; i < ms; i++)
-                data.push_back(1.e32);
-        }
-
-        size_t dims[2] = { data.size() / 3, 3 };
-
         std::string datasetname("/Ionic_positions");
-        if (h5f_file.useHdf5p())
-        {
-            mgmol_tools::parallelWrite2d(
-                file_id, datasetname, data, dims, h5f_file.comm_active());
-        }
-        else
-        {
-            mgmol_tools::write2d(file_id, datasetname, data, dims);
-        }
+        writeData2d(file_id, datasetname, data, 3, 1.e32);
     }
 }
 
@@ -1247,28 +1137,8 @@ void Ions::writeVelocities(HDFrestart& h5f_file)
     hid_t file_id = h5f_file.file_id();
     if (file_id >= 0)
     {
-        // fill up data array to dimension common to all tasks
-        if (h5f_file.useHdf5p())
-        {
-            short s = data.size();
-            short ms;
-            mgmol_tools::allreduce(&s, &ms, 1, MPI_MAX, h5f_file.comm_active());
-            for (short i = s; i < ms; i++)
-                data.push_back(1.e32);
-        }
-
-        size_t dims[2] = { data.size() / 3, 3 };
-
         std::string datasetname("/Ionic_velocities");
-        if (h5f_file.useHdf5p())
-        {
-            mgmol_tools::parallelWrite2d(
-                file_id, datasetname, data, dims, h5f_file.comm_active());
-        }
-        else
-        {
-            mgmol_tools::write2d(file_id, datasetname, data, dims);
-        }
+        writeData2d(file_id, datasetname, data, 3, 1.e32);
     }
 }
 
@@ -1313,28 +1183,8 @@ void Ions::writeRandomStates(HDFrestart& h5f_file)
     hid_t file_id = h5f_file.file_id();
     if (file_id >= 0)
     {
-        // fill up data array to dimension common to all tasks
-        if (h5f_file.useHdf5p())
-        {
-            short s = data.size();
-            short ms;
-            mgmol_tools::allreduce(&s, &ms, 1, MPI_MAX, h5f_file.comm_active());
-            for (short i = s; i < ms; i++)
-                data.push_back(0);
-        }
-
-        size_t dims[2] = { data.size() / 3, 3 };
-
         std::string datasetname("/Ionic_RandomStates");
-        if (h5f_file.useHdf5p())
-        {
-            mgmol_tools::parallelWrite2d(
-                file_id, datasetname, data, dims, h5f_file.comm_active());
-        }
-        else
-        {
-            mgmol_tools::write2d(file_id, datasetname, data, dims);
-        }
+        writeData2d(file_id, datasetname, data, 3, (unsigned short)0);
     }
 }
 
@@ -1492,28 +1342,8 @@ void Ions::writeForces(HDFrestart& h5f_file)
     hid_t file_id = h5f_file.file_id();
     if (file_id >= 0)
     {
-        // fill up data array to dimension common to all tasks
-        short ms = data.size();
-        if (h5f_file.useHdf5p())
-        {
-            short s = ms;
-            mgmol_tools::allreduce(&s, &ms, 1, MPI_MAX, h5f_file.comm_active());
-            for (short i = s; i < ms; i++)
-                data.push_back(1.e32);
-        }
-
-        size_t dims[2] = { data.size() / 3, 3 };
-
         std::string datasetname("/Ionic_forces");
-        if (h5f_file.useHdf5p())
-        {
-            mgmol_tools::parallelWrite2d(
-                file_id, datasetname, data, dims, h5f_file.comm_active());
-        }
-        else
-        {
-            mgmol_tools::write2d(file_id, datasetname, data, dims);
-        }
+        writeData2d(file_id, datasetname, data, 3, 1.e32);
     }
 }
 

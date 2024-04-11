@@ -643,7 +643,11 @@ int LBFGS_IonicStepper::write_hdf5(HDFrestart& h5f_file)
     hid_t file_id = h5f_file.file_id();
     if (file_id < 0) return 0;
 
+#ifdef MGMOL_USE_HDF5P
     const bool write_flag = (onpe0 || h5f_file.useHdf5p());
+#else
+    const bool write_flag = onpe0;
+#endif
 
     if (write_flag)
     {

@@ -63,7 +63,9 @@ class HDFrestart
     double* work_space_double_;
     float* work_space_float_;
 
+#ifdef MGMOL_USE_HDF5P
     bool use_hdf5p_;
+#endif
     bool gather_data_x_;
 
     short verbosity_;
@@ -113,7 +115,9 @@ public:
         const unsigned gdim[3], const short option_number);
 
     bool gatherDataX() const { return gather_data_x_; }
+#ifdef MGMOL_USE_HDF5P
     bool useHdf5p() const { return use_hdf5p_; }
+#endif
 
     hid_t open_dset(const std::string& datasetname) const
     {
@@ -194,9 +198,11 @@ public:
         assert(active_);
 
         hid_t filespace;
+#ifdef MGMOL_USE_HDF5P
         if (use_hdf5p_)
             filespace = H5Screate_simple(3, dimsf_, nullptr);
         else
+#endif
         {
             filespace = H5Screate_simple(3, block_, nullptr);
             // hsize_t dims[1]={block_[0]*block_[1]*block_[2]};
@@ -212,9 +218,11 @@ public:
         assert(active_);
 
         hid_t memspace;
+#ifdef MGMOL_USE_HDF5P
         if (use_hdf5p_)
             memspace = H5Screate_simple(3, block_, nullptr);
         else
+#endif
         {
             memspace = H5Screate_simple(3, block_, nullptr);
             // hsize_t dims[1]={block_[0]*block_[1]*block_[2]};
@@ -275,19 +283,23 @@ public:
     hid_t createPlist()
     {
         hid_t plist_id = H5P_DEFAULT;
+#ifdef MGMOL_USE_HDF5P
         if (use_hdf5p_ && active_)
         {
             // Create chunked dataset.
             plist_id = H5Pcreate(H5P_DATASET_CREATE);
             H5Pset_chunk(plist_id, 3, block_);
         }
+#endif
 
         return plist_id;
     }
 
     void releasePlist(hid_t plist_id)
     {
+#ifdef MGMOL_USE_HDF5P
         if (use_hdf5p_ && active_) H5Pclose(plist_id);
+#endif
     }
 
     static void printTimers(std::ostream& os);

@@ -1,8 +1,10 @@
 find_package(PythonInterp 3.2 REQUIRED)
 
-add_executable(testHDF5P
-               ${CMAKE_SOURCE_DIR}/tests/testHDF5P.cc
-               ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
+if(MGMOL_USE_HDF5P)
+  add_executable(testHDF5P
+                 ${CMAKE_SOURCE_DIR}/tests/testHDF5P.cc
+                 ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
+endif()
 add_executable(testMPI
                ${CMAKE_SOURCE_DIR}/tests/testMPI.cc
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
@@ -269,9 +271,11 @@ endif()
                
 target_compile_definitions(testAndersonMix PUBLIC TESTING)
 
-add_test(NAME testHDF5P
-         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
-                 ${CMAKE_CURRENT_BINARY_DIR}/testHDF5P)
+if(MGMOL_USE_HDF5P)
+  add_test(NAME testHDF5P
+           COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+                   ${CMAKE_CURRENT_BINARY_DIR}/testHDF5P)
+endif()
 add_test(NAME testMPI
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testMPI)
@@ -487,7 +491,11 @@ add_test(NAME testSpinO2LDA
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 
 
-target_include_directories(testHDF5P PRIVATE ${HDF5_INCLUDE_DIRS})
+if(MGMOL_USE_HDF5P)
+  target_include_directories(testHDF5P PRIVATE ${HDF5_INCLUDE_DIRS})
+  target_link_libraries(testHDF5P PRIVATE ${HDF5_LIBRARIES} MPI::MPI_CXX)
+endif()
+
 target_include_directories(testAndersonMix PRIVATE
                            ${CMAKE_SOURCE_DIR}/tests/Anderson
                            ${HDF5_INCLUDE_DIRS})
@@ -502,8 +510,6 @@ target_include_directories(testDensityMatrix PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories(testGramMatrix PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories(testAndersonMix PRIVATE ${Boost_INCLUDE_DIRS})
 
-target_link_libraries(testHDF5P PRIVATE ${HDF5_LIBRARIES}
-  MPI::MPI_CXX)
 target_link_libraries(testMPI PRIVATE MPI::MPI_CXX)
 target_link_libraries(testBlacsContext PRIVATE ${SCALAPACK_LIBRARIES}
   ${BLAS_LIBRARIES} MPI::MPI_CXX)
