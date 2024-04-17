@@ -123,8 +123,8 @@ if (${MGMOL_WITH_SCALAPACK} OR DEFINED SCALAPACK_ROOT)
   endif(${SCALAPACK_FOUND})  
 endif(${MGMOL_WITH_SCALAPACK} OR DEFINED SCALAPACK_ROOT)
 
-# libROM (optional)
-set(USE_LIBROM False CACHE BOOL "Build with libROM")
+# libROM (required)
+set(BUILD_WITH_LIBROM True CACHE BOOL "Build with libROM")
 set(LIBROM_PATH "" CACHE STRING "Path of libROM")
 if(USE_LIBROM)
   message(STATUS "LIBROM_PATH: ${LIBROM_PATH}")
@@ -256,10 +256,10 @@ include_directories("${PROJECT_SOURCE_DIR}/src/pb")
 include_directories("${PROJECT_SOURCE_DIR}/src/radial")
 include_directories("${PROJECT_SOURCE_DIR}/src/sparse_linear_algebra")
 include_directories("${PROJECT_SOURCE_DIR}/src/tools")
+include_directories("${PROJECT_SOURCE_DIR}/src/rom")
 include_directories("${PROJECT_SOURCE_DIR}/src")
 
 # add subdirectories for source files, tests
 add_subdirectory(src)
 
 add_subdirectory(tests)
-
