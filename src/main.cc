@@ -43,8 +43,9 @@
 
 #include <mpi.h>
 
-#include <boost/program_options.hpp>
-namespace po = boost::program_options;
+// #include <boost/program_options.hpp>
+// namespace po = boost::program_options;
+#include "OptionDescription.h"
 
 //#include "MemTrack.h"
 
