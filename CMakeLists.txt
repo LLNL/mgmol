@@ -127,6 +127,10 @@ if(USE_LIBROM)
   endif(NOT LIBROM_PATH)
 
   find_package(libROM REQUIRED)
+
+  if(libROM_FOUND)
+    set(MGMOL_HAS_LIBROM 1)
+  endif(libROM_FOUND)
 endif(USE_LIBROM)
 
 # ARPACK (optional)
