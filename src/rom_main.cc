@@ -44,6 +44,11 @@ int main(int argc, char** argv)
     assert(mype > -1);
     onpe0 = (mype == 0);
 
+#ifdef HAVE_MAGMA
+    std::cout << "ROM does not support MAGMA!\n" << std::endl;
+    return 1;
+#endif
+
     string input_file("");
     string lrs_filename;
     string constraints_filename("");
@@ -171,11 +176,145 @@ int main(int argc, char** argv)
     Control::setup(global_comm, with_spin, total_spin);
     Control& ct = *(Control::instance());
 
+    ct.setOptions(vm);
+    ct.sync();
+
+    int ret = ct.checkOptions();
+    if (ret < 0) return ret;
+
+    mmpi.bcastGlobal(input_file);
+    mmpi.bcastGlobal(lrs_filename);
+
+#ifdef _OPENMP
+    if (onpe0)
+    {
+        cout << " " << omp_get_max_threads() << " thread"
+             << (omp_get_max_threads() > 1 ? "s " : " ");
+        cout << "active" << endl << endl;
+    }
+    omp_set_nested(0);
+    if (omp_get_nested())
+    {
+        cerr << "Nested parallelism not allowed" << endl;
+        return 1;
+    }
+#endif
+
+    // Enter main scope
+    {
+        // setup standard output and error
+        sout = &std::cout;
+        serr = &std::cerr;
+
+        MGmolInterface* mgmol;
+        if (ct.isLocMode())
+            mgmol = new MGmol<LocGridOrbitals>(global_comm, *MPIdata::sout);
+        else
+            mgmol
+                = new MGmol<ExtendedGridOrbitals>(global_comm, *MPIdata::sout);
+
+        unsigned ngpts[3]    = { ct.ngpts_[0], ct.ngpts_[1], ct.ngpts_[2] };
+        double origin[3]     = { ct.ox_, ct.oy_, ct.oz_ };
+        const double cell[3] = { ct.lx_, ct.ly_, ct.lz_ };
+        Mesh::setup(mmpi.commSpin(), ngpts, origin, cell, ct.lap_type);
+
+        mgmol->setupFromInput(input_file);
+
+        if (ct.isLocMode() || ct.init_loc == 1) mgmol->setupLRs(lrs_filename);
+
+        mgmol->setupConstraintsFromInput(constraints_filename);
+
+        ct.checkNLrange();
+
+        LocGridOrbitals::setDotProduct(ct.dot_product_type);
+
+        Mesh* mymesh             = Mesh::instance();
+        const pb::PEenv& myPEenv = mymesh->peenv();
+
+        if (!ct.short_sighted)
+        {
+            MatricesBlacsContext::instance().setup(mmpi.commSpin(), ct.numst);
+
+            dist_matrix::DistMatrix<DISTMATDTYPE>::setBlockSize(64);
+
+            dist_matrix::DistMatrix<DISTMATDTYPE>::setDefaultBlacsContext(
+                MatricesBlacsContext::instance().bcxt());
+
+            ReplicatedWorkSpace<double>::instance().setup(ct.numst);
+
+            dist_matrix::SparseDistMatrix<
+                DISTMATDTYPE>::setNumTasksPerPartitioning(128);
+
+            MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+            int npes        = mmpi.size();
+            setSparseDistMatriConsolidationNumber(npes);
+        }
+#ifdef HAVE_MAGMA
+        ReplicatedMatrix::setMPIcomm(mmpi.commSpin());
+#endif
+
+        if (myPEenv.color() > 0)
+        {
+            cerr << "Code should be called with " << myPEenv.n_mpi_tasks()
+                 << " MPI tasks only" << endl;
+            ct.global_exit(2);
+        }
+
+        assert(myPEenv.color() == 0);
+
+        if (myPEenv.color() == 0)
+        {
+            assert(ct.getMGlevels() >= -1);
+            if (ct.withPreconditioner())
+            {
+                const pb::Grid& mygrid = mymesh->grid();
+
+                if ((mygrid.dim(0) % (1 << ct.getMGlevels())) != 0)
+                {
+                    cerr << "main: mygrid.dim(0)=" << mygrid.dim(0)
+                         << " not evenly divisible by "
+                         << "2^(ct.getMGlevels())=" << (1 << ct.getMGlevels())
+                         << endl;
+                    return -1;
+                }
+                if ((mygrid.dim(1) % (1 << ct.getMGlevels())) != 0)
+                {
+                    cerr << "main: mygrid.dim(1)=" << mygrid.dim(1)
+                         << " not evenly divisible by "
+                         << "2^(ct.getMGlevels())=" << (1 << ct.getMGlevels())
+                         << endl;
+                    return -1;
+                }
+                if ((mygrid.dim(2) % (1 << ct.getMGlevels())) != 0)
+                {
+                    cerr << "main: mygrid.dim(2)=" << mygrid.dim(2)
+                         << " not evenly divisible by "
+                         << "2^(ct.getMGlevels())=" << (1 << ct.getMGlevels())
+                         << endl;
+                    return -1;
+                }
+            }
+
+            myPEenv.barrier(); // wait to see if everybody is OK before
+                               // continuing...
+
+            // mgmol->run();
+            mgmol->setup();
+        }
+        delete mgmol;
+
+        if (!ct.short_sighted)
+        {
+            // need to destroy any MPI based object befor calling MPI_Finalize
+            MatricesBlacsContext::instance().clear();
+        }
+    } // close main scope
+
     // release memory for static arrays
-    // PackedCommunicationBuffer::deleteStorage();
-    // Mesh::deleteInstance();
+    PackedCommunicationBuffer::deleteStorage();
+    Mesh::deleteInstance();
     Control::deleteInstance();
-    // MGmol_MPI::deleteInstance();
+    MGmol_MPI::deleteInstance();
 
     mpirc = MPI_Finalize();
     if (mpirc != MPI_SUCCESS)
