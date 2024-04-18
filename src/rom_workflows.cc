@@ -8,3 +8,8 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "rom_workflows.h"
+
+void readRestartFiles(po::variables_map &vm)
+{
+    
+}

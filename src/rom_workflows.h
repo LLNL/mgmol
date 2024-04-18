@@ -45,10 +45,10 @@ using namespace std;
 #include <sys/cdefs.h>
 #include <time.h>
 
-// #include <boost/program_options.hpp>
-// namespace po = boost::program_options;
 #include "OptionDescription.h"
 
 #include "librom.h"
+
+void readRestartFiles(po::variables_map &vm);
 
 #endif  // ROM_WORKFLOWS_H
