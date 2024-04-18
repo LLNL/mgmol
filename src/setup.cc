@@ -39,8 +39,8 @@ int MGmol<OrbitalsType>::setupFromInput(const std::string filename)
 
     const pb::PEenv& myPEenv = mymesh->peenv();
     if (ct.restart_info > 0)
-        h5f_file_
-            = new HDFrestart(ct.restart_file, myPEenv, ct.restart_file_type);
+        h5f_file_ = new HDFrestart(ct.restart_file, myPEenv,
+                                   ct.restart_file_type);
 
     int status = readCoordinates(filename, false);
     if (status == -1) return -1;

@@ -23,44 +23,7 @@
 //   Potentials, eigenvalues and operators in Rydberg
 //   Energies in Hartree
 //
-#include <cassert>
-#include <iostream>
-#include <iterator>
-#include <vector>
-using namespace std;
-
-#ifdef _OPENMP
-#include <omp.h>
-#endif
-
-#ifdef USE_CNR
-#include <mkl.h>
-#endif
-
-#include <mpi.h>
-
-#include "Control.h"
-#include "DistMatrix.h"
-#include "ExtendedGridOrbitals.h"
-#include "LocGridOrbitals.h"
-#include "MGmol.h"
-#include "MGmol_MPI.h"
-#include "MPIdata.h"
-#include "MatricesBlacsContext.h"
-#include "Mesh.h"
-#include "PackedCommunicationBuffer.h"
-#include "ReplicatedWorkSpace.h"
-#include "SparseDistMatrix.h"
-#include "magma_singleton.h"
-#include "tools.h"
-
-#include <fenv.h>
-#include <sys/cdefs.h>
-#include <time.h>
-
-#include "OptionDescription.h"
-
-#include "librom.h"
+#include "rom_workflows.h"
 
 //#include "MemTrack.h"
 
@@ -207,6 +170,12 @@ int main(int argc, char** argv)
 
     Control::setup(global_comm, with_spin, total_spin);
     Control& ct = *(Control::instance());
+
+    // release memory for static arrays
+    // PackedCommunicationBuffer::deleteStorage();
+    // Mesh::deleteInstance();
+    Control::deleteInstance();
+    // MGmol_MPI::deleteInstance();
 
     mpirc = MPI_Finalize();
     if (mpirc != MPI_SUCCESS)
