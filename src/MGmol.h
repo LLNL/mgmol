@@ -10,6 +10,8 @@
 #ifndef MGMOL_H
 #define MGMOL_H
 
+#include "mgmol_config.h"
+
 #include "Energy.h"
 #include "GridFuncVector.h"
 #include "Hamiltonian.h"
@@ -130,7 +132,9 @@ private:
     int dumprestartFile(OrbitalsType** orbitals, Ions& ions,
         Rho<OrbitalsType>& rho, const bool write_extrapolated_wf,
         const short count);
+#ifdef MGMOL_HAS_LIBROM
     int save_orbital_snapshot(std::string snapshot_dir, OrbitalsType& orbitals);
+#endif
 
     void swapColumnsVect(dist_matrix::DistMatrix<DISTMATDTYPE>& evect,
         const dist_matrix::DistMatrix<DISTMATDTYPE>& hb2N,

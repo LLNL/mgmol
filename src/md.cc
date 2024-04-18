@@ -487,6 +487,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
             }
         }
 
+#ifdef MGMOL_HAS_LIBROM
         // Save orbital snapshots
         if (ct.rom_offline > 0)
         {
@@ -496,6 +497,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
             if (ierr < 0)
                 os_ << "WARNING md(): writing ROM snapshot data failed!!!" << std::endl;
         }
+#endif
 
         if (onpe0)
             os_ << std::setprecision(12) << std::fixed << "%%  "

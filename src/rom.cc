@@ -7,11 +7,13 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
+#include "mgmol_config.h"
+#ifdef MGMOL_HAS_LIBROM
+
 #include "LocGridOrbitals.h"
 #include "MGmol.h"
 
-#include "linalg/BasisGenerator.h"
-#include "linalg/BasisReader.h"
+#include "librom.h"
 
 #include <string>
 #include <iostream>
@@ -46,7 +48,7 @@ int MGmol<OrbitalsType>::save_orbital_snapshot(std::string file_path, OrbitalsTy
     CAROM::BasisGenerator basis_generator(svd_options, false, snapshot_filename);
 
     for (int i = 0; i < totalSamples; ++i)
-        basis_generator.takeSample(orbitals.getPsi(i), 0.0, 0.01);
+        basis_generator.takeSample(orbitals.getPsi(i));
 
     basis_generator.writeSnapshot();
 
@@ -55,3 +57,5 @@ int MGmol<OrbitalsType>::save_orbital_snapshot(std::string file_path, OrbitalsTy
 
 template class MGmol<LocGridOrbitals>;
 template class MGmol<ExtendedGridOrbitals>;
+
+#endif  // MGMOL_HAS_LIBROM
