@@ -316,3 +316,10 @@ void setupHiddenOption(po::options_description &hidden)
         "tolerance, used in iterative DM computation convergence "
         "criteria");
 }
+
+void setupROMConfigOption(po::options_description &rom_cfg)
+{
+    rom_cfg.add_options()
+        ("ROM.offline.restartFilename", po::value<string>()->required(),
+            "File name to read for snapshots."); 
+}

@@ -9,7 +9,11 @@
 
 #include "rom_workflows.h"
 
-void readRestartFiles(po::variables_map &vm)
+template <class OrbitalsType>
+void readRestartFiles(MGmolInterface *mgmol_)
 {
-    
+    MGmol<OrbitalsType> *mgmol = static_cast<MGmol<OrbitalsType> *>(mgmol_);
 }
+
+template void readRestartFiles<LocGridOrbitals>(MGmolInterface *mgmol_);
+template void readRestartFiles<ExtendedGridOrbitals>(MGmolInterface *mgmol_);

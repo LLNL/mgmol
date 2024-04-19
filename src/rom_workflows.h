@@ -49,6 +49,7 @@ using namespace std;
 
 #include "librom.h"
 
-void readRestartFiles(po::variables_map &vm);
+template <class OrbitalsType>
+void readRestartFiles(MGmolInterface *mgmol_);
 
 #endif  // ROM_WORKFLOWS_H
