@@ -18,6 +18,9 @@ void readRestartFiles(MGmolInterface *mgmol_)
     MGmol<OrbitalsType> *mgmol = static_cast<MGmol<OrbitalsType> *>(mgmol_);
 
     OrbitalsType *orbitals = mgmol->loadOrbitalFromRestartFile(rom_options.restart_filename);
+
+    mgmol->save_orbital_snapshot("test", *orbitals);
+
     delete orbitals;
 }
 
