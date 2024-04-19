@@ -719,6 +719,7 @@ public:
     bool rom_online;
     bool rom_restore;
     void setROMOptions(const boost::program_options::variables_map& vm);
+    void syncROMOptions();
     const ROMPrivateOptions getROMOptions() { return rom_pri_option; }
 };
 
