@@ -132,9 +132,6 @@ private:
     int dumprestartFile(OrbitalsType** orbitals, Ions& ions,
         Rho<OrbitalsType>& rho, const bool write_extrapolated_wf,
         const short count);
-#ifdef MGMOL_HAS_LIBROM
-    int save_orbital_snapshot(std::string snapshot_dir, OrbitalsType& orbitals);
-#endif
 
     void swapColumnsVect(dist_matrix::DistMatrix<DISTMATDTYPE>& evect,
         const dist_matrix::DistMatrix<DISTMATDTYPE>& hb2N,
@@ -308,6 +305,9 @@ public:
     }
 
     OrbitalsType* loadOrbitalFromRestartFile(const std::string filename);
+#ifdef MGMOL_HAS_LIBROM
+    int save_orbital_snapshot(std::string snapshot_dir, OrbitalsType& orbitals);
+#endif
 };
 // Instantiate static variables here to avoid clang warnings
 template <class OrbitalsType>
