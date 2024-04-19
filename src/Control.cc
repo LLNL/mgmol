@@ -2067,5 +2067,30 @@ void Control::setROMOptions(const boost::program_options::variables_map& vm)
     }  // onpe0
 
     // synchronize all processors
-    sync();
+    syncROMOptions();
+}
+
+void Control::syncROMOptions()
+{
+    if (onpe0 && verbose > 0)
+        (*MPIdata::sout) << "Control::syncROMOptions()" << std::endl;
+
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+
+    mmpi.bcast(rom_pri_option.restart_filename, comm_global_);
+
+    auto bcast_check = [](int mpirc) {
+        if (mpirc != MPI_SUCCESS)
+        {
+            (*MPIdata::sout) << "MPI Bcast of Control failed!!!" << std::endl;
+            MPI_Abort(comm_global_, 2);
+        }
+    };
+
+    short rom_stage = (short)static_cast<int>(rom_pri_option.rom_stage);
+    int mpirc;
+    mpirc = MPI_Bcast(&rom_stage, 1, MPI_SHORT, 0, comm_global_);
+    bcast_check(mpirc);
+
+    rom_pri_option.rom_stage = static_cast<ROMStage>(rom_stage);
 }
