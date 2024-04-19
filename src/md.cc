@@ -697,26 +697,114 @@ OrbitalsType* MGmol<OrbitalsType>::loadOrbitalFromRestartFile(const std::string 
     // const unsigned gdim[3] = { mygrid.gdim(0), mygrid.gdim(1), mygrid.gdim(2) };
 
     assert(ct.restart_info > 2);
+    assert((ct.AtomsDynamic() == AtomsDynamicType::MD) || (ct.AtomsDynamic() == AtomsDynamicType::Quench));
 
     HDFrestart h5file(filename, myPEenv, ct.out_restart_file_type);
+    int ierr;
 
-    OrbitalsType *restart_orbitals = new OrbitalsType("ForLoading", *current_orbitals_, false);
+    OrbitalsType *restart_orbitals = nullptr;
 
-    // TODO(kevin): do we need to copy the current orbitals?
-    if (!orbitals_extrapol_->getRestartData(*restart_orbitals))
-        restart_orbitals->assign(*current_orbitals_);
-
-    int ierr = restart_orbitals->read_func_hdf5(h5file);
-    mmpi.allreduce(&ierr, 1, MPI_MIN);
-
-    if (ierr < 0)
+    /* This corresponds to MGmol<OrbitalsType>::initial */
     {
+        // If not an initial run read data from files
+        if (ct.isLocMode())
+        {
+            std::string name = "ExtrapolatedFunction";
+            if (ct.verbose > 0)
+                printWithTimeStamp(
+                    "read LRs from ExtrapolatedFunction database...", os_);
+            int n = read_restart_lrs(h5file, name);
+            if (n == 0)
+            {
+                if (ct.verbose > 0)
+                    printWithTimeStamp("read LRs from Function database...", os_);
+                name = "Function";
+                n    = read_restart_lrs(h5file, name);
+            }
+            if (n < 0) return nullptr;
+
+            if (n > 0) lrs_->setup();
+        }
+
+        // Copy from current orbital, instead of constructing brand-new one
+        restart_orbitals = new OrbitalsType("ForLoading", *current_orbitals_, false);
+
+        // TODO(kevin): do we need this?
+        // increaseMemorySlotsForOrbitals<MemorySpaceType>();
+
+        // If not an initial run read data from files
+        md_time_      = h5file.getMDTimeFromFile();
+        md_iteration_ = h5file.getMDstepFromFile();
+
+        /* This corresponds to MGmol<OrbitalsType>::read_restart_data */
+        {
+            // TODO(kevin): do we need to load rho?
+            // read_rho_and_pot_hdf5(h5file, *rho_);
+
+            ierr = restart_orbitals->read_func_hdf5(h5file);
+        }   // read_restart_data
+
+        // TODO(kevin): Do we need this routine?
+        restart_orbitals->applyMask();
+
+    }   // initial()
+
+    /* This corresponds to MGmol<OrbitalsType>::md */
+    {
+        // TODO(kevin): do we need this?
+        // if (!ct.override_restart)
+        // {
+        //     if (onpe0) os_ << "Use restart file to initialize MD..." << std::endl;
+        //     stepper->init(h5file);
+        // }
+
+        int flag_extrapolated_data = 0;
         if (onpe0)
-            (*MPIdata::serr)
-                << "loadRestartFile: cannot read ...restart_orbitals..."
-                << std::endl;
-        return NULL;
-    }
+        {
+            flag_extrapolated_data
+                = h5file.dset_exists("ExtrapolatedFunction0000");
+            if (flag_extrapolated_data == 0)
+                flag_extrapolated_data
+                    = h5file.dset_exists("ExtrapolatedFunction0");
+        }
+        MPI_Bcast(&flag_extrapolated_data, 1, MPI_INT, 0, comm_);
+
+        /*
+            If extrapolated function exists,
+            then function is set as previous orbitals,
+            while the extrapolated function is set as the current orbitals.
+            This is how the restart file is saved via dumprestartFile.
+        */
+        if (flag_extrapolated_data)
+        {
+            orbitals_extrapol_ = OrbitalsExtrapolationFactory<OrbitalsType>::create(
+                                                                ct.WFExtrapolation());
+
+            if (onpe0) os_ << "Create new orbitals_minus1..." << std::endl;
+
+            orbitals_extrapol_->setupPreviousOrbitals(&restart_orbitals,
+                proj_matrices_, lrs_, local_cluster_, currentMasks_,
+                corrMasks_, h5file);
+
+            // need to reset a few things as we just read new orbitals
+            restart_orbitals->computeGramAndInvS();
+            dm_strategy_->update();
+        }
+
+        DFTsolver<OrbitalsType>::setItCountLarge();
+
+        // check if we are restarting from an MD dump
+        // no extrapolated functions -> atomic positions were extrapolated
+        // in stepper->init()
+        if (!flag_extrapolated_data)
+        {
+            moveVnuc(*ions_);
+        }
+
+        /* main workflow delete h5f_file_ here, meaning the loading is over. */
+        // delete h5f_file_;
+        // h5f_file_ = nullptr;
+    }   // md()
 
     ierr = h5file.close();
     mmpi.allreduce(&ierr, 1, MPI_MIN);
@@ -725,11 +813,8 @@ OrbitalsType* MGmol<OrbitalsType>::loadOrbitalFromRestartFile(const std::string 
         if (onpe0)
             (*MPIdata::serr)
                 << "loadRestartFile: cannot close file..." << std::endl;
-        return NULL;
+        return nullptr;
     }
-
-    // TODO(kevin): Do we need this routine?
-    restart_orbitals->applyMask();
 
     /*
         In returning restart_orbitals,

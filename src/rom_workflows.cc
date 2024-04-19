@@ -12,7 +12,13 @@
 template <class OrbitalsType>
 void readRestartFiles(MGmolInterface *mgmol_)
 {
+    Control& ct              = *(Control::instance());
+    ROMPrivateOptions rom_options = ct.getROMOptions();
+
     MGmol<OrbitalsType> *mgmol = static_cast<MGmol<OrbitalsType> *>(mgmol_);
+
+    OrbitalsType *orbitals = mgmol->loadOrbitalFromRestartFile(rom_options.restart_filename);
+    delete orbitals;
 }
 
 template void readRestartFiles<LocGridOrbitals>(MGmolInterface *mgmol_);
