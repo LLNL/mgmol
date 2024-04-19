@@ -21,4 +21,6 @@ void setupConfigOption(po::options_description &config, string &constraints_file
 
 void setupHiddenOption(po::options_description &hidden);
 
+void setupROMConfigOption(po::options_description &rom_cfg);
+
 #endif

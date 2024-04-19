@@ -82,6 +82,9 @@ int main(int argc, char** argv)
             po::options_description hidden("Hidden options");
             setupHiddenOption(hidden);
 
+            // ROM configuration options
+            setupROMConfigOption(config);
+
             po::options_description cmdline_options;
             cmdline_options.add(generic);
 
@@ -300,6 +303,11 @@ int main(int argc, char** argv)
 
             // mgmol->run();
             mgmol->setup();
+
+            if (ct.isLocMode())
+                readRestartFiles<LocGridOrbitals>(mgmol);
+            else
+                readRestartFiles<ExtendedGridOrbitals>(mgmol);
         }
         delete mgmol;
 
