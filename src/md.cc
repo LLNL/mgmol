@@ -693,10 +693,9 @@ OrbitalsType* MGmol<OrbitalsType>::loadOrbitalFromRestartFile(const std::string 
     Control& ct              = *(Control::instance());
     Mesh* mymesh             = Mesh::instance();
     const pb::PEenv& myPEenv = mymesh->peenv();
-    const pb::Grid& mygrid   = mymesh->grid();
-    // const unsigned gdim[3] = { mygrid.gdim(0), mygrid.gdim(1), mygrid.gdim(2) };
 
-    assert(ct.restart_info > 2);
+    /* For now, we only consider double-precision hdf5 I/O. */
+    assert(ct.restart_info > 3);
     assert((ct.AtomsDynamic() == AtomsDynamicType::MD) || (ct.AtomsDynamic() == AtomsDynamicType::Quench));
 
     HDFrestart h5file(filename, myPEenv, ct.out_restart_file_type);
