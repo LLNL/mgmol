@@ -180,6 +180,7 @@ int main(int argc, char** argv)
     Control& ct = *(Control::instance());
 
     ct.setOptions(vm);
+    ct.setROMOptions(vm);
     ct.sync();
 
     int ret = ct.checkOptions();

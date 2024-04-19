@@ -2056,3 +2056,16 @@ void Control::printPoissonOptions(std::ostream& os)
     }
     os << std::endl;
 }
+
+void Control::setROMOptions(const boost::program_options::variables_map& vm)
+{
+    printWithTimeStamp("Control::setROMOptions()...", std::cout);
+
+    if (onpe0)
+    {
+        rom_pri_option.restart_filename = vm["ROM.offline.restartFilename"].as<std::string>();
+    }  // onpe0
+
+    // synchronize all processors
+    sync();
+}
