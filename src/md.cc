@@ -686,5 +686,62 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
     delete orbitals_extrapol_;
 }
 
+template <class OrbitalsType>
+OrbitalsType* MGmol<OrbitalsType>::loadOrbitalFromRestartFile(const std::string filename)
+{
+    MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
+    Control& ct              = *(Control::instance());
+    Mesh* mymesh             = Mesh::instance();
+    const pb::PEenv& myPEenv = mymesh->peenv();
+    const pb::Grid& mygrid   = mymesh->grid();
+    // const unsigned gdim[3] = { mygrid.gdim(0), mygrid.gdim(1), mygrid.gdim(2) };
+
+    assert(ct.restart_info > 2);
+
+    HDFrestart h5file(filename, myPEenv, ct.out_restart_file_type);
+
+    OrbitalsType *restart_orbitals = new OrbitalsType("ForLoading", *current_orbitals_, false);
+
+    // TODO(kevin): do we need to copy the current orbitals?
+    if (!orbitals_extrapol_->getRestartData(*restart_orbitals))
+        restart_orbitals->assign(*current_orbitals_);
+
+    int ierr = restart_orbitals->read_func_hdf5(h5file);
+    mmpi.allreduce(&ierr, 1, MPI_MIN);
+
+    if (ierr < 0)
+    {
+        if (onpe0)
+            (*MPIdata::serr)
+                << "loadRestartFile: cannot read ...restart_orbitals..."
+                << std::endl;
+        return NULL;
+    }
+
+    ierr = h5file.close();
+    mmpi.allreduce(&ierr, 1, MPI_MIN);
+    if (ierr < 0)
+    {
+        if (onpe0)
+            (*MPIdata::serr)
+                << "loadRestartFile: cannot close file..." << std::endl;
+        return NULL;
+    }
+
+    // TODO(kevin): Do we need this routine?
+    restart_orbitals->applyMask();
+
+    /*
+        In returning restart_orbitals,
+        we hope that the wavefunctions in restart_orbitals are all set.
+        At least the following functions should return proper data loaded from the file:
+
+            restart_orbitals->getLocNumpt()
+            restart_orbitals->chromatic_number()
+            restart_orbitals->getPsi(idx)   (for int idx)
+    */
+    return restart_orbitals;
+}
+
 template class MGmol<LocGridOrbitals>;
 template class MGmol<ExtendedGridOrbitals>;

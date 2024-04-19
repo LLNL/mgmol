@@ -306,6 +306,8 @@ public:
     {
         forces_->force(orbitals, ions);
     }
+
+    OrbitalsType* loadOrbitalFromRestartFile(const std::string filename);
 };
 // Instantiate static variables here to avoid clang warnings
 template <class OrbitalsType>
