@@ -27,7 +27,10 @@ enum class ROMStage
 /* Stored as a private member variable of Control class */
 struct ROMPrivateOptions
 {
-    std::string restart_filename = "";
+    std::string restart_file_fmt = "";
+    int restart_file_minidx = -1;
+    int restart_file_maxidx = -1;
+    std::string basis_file = "";
     ROMStage rom_stage = ROMStage::UNSUPPORTED;
 };
 

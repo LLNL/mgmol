@@ -2063,7 +2063,11 @@ void Control::setROMOptions(const boost::program_options::variables_map& vm)
 
     if (onpe0)
     {
-        rom_pri_option.restart_filename = vm["ROM.offline.restartFilename"].as<std::string>();
+        rom_pri_option.restart_file_fmt = vm["ROM.offline.restart_filefmt"].as<std::string>();
+        rom_pri_option.restart_file_minidx = vm["ROM.offline.restart_min_idx"].as<int>();
+        rom_pri_option.restart_file_maxidx = vm["ROM.offline.restart_max_idx"].as<int>();
+
+        rom_pri_option.basis_file = vm["ROM.offline.basis_file"].as<std::string>();
     }  // onpe0
 
     // synchronize all processors
@@ -2077,7 +2081,8 @@ void Control::syncROMOptions()
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
-    mmpi.bcast(rom_pri_option.restart_filename, comm_global_);
+    mmpi.bcast(rom_pri_option.restart_file_fmt, comm_global_);
+    mmpi.bcast(rom_pri_option.basis_file, comm_global_);
 
     auto bcast_check = [](int mpirc) {
         if (mpirc != MPI_SUCCESS)
@@ -2090,6 +2095,12 @@ void Control::syncROMOptions()
     short rom_stage = (short)static_cast<int>(rom_pri_option.rom_stage);
     int mpirc;
     mpirc = MPI_Bcast(&rom_stage, 1, MPI_SHORT, 0, comm_global_);
+    bcast_check(mpirc);
+
+    mpirc = MPI_Bcast(&rom_pri_option.restart_file_minidx, 1, MPI_INT, 0, comm_global_);
+    bcast_check(mpirc);
+
+    mpirc = MPI_Bcast(&rom_pri_option.restart_file_maxidx, 1, MPI_INT, 0, comm_global_);
     bcast_check(mpirc);
 
     rom_pri_option.rom_stage = static_cast<ROMStage>(rom_stage);
