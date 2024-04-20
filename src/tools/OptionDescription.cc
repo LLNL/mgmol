@@ -320,6 +320,12 @@ void setupHiddenOption(po::options_description &hidden)
 void setupROMConfigOption(po::options_description &rom_cfg)
 {
     rom_cfg.add_options()
-        ("ROM.offline.restartFilename", po::value<string>()->required(),
-            "File name to read for snapshots."); 
+        ("ROM.offline.restart_filefmt", po::value<string>()->required(),
+            "File name format to read for snapshots.")
+        ("ROM.offline.restart_min_idx", po::value<int>()->required(),
+            "Minimum index for snapshot file format.")
+        ("ROM.offline.restart_max_idx", po::value<int>()->required(),
+            "Maximum index for snapshot file format.")
+        ("ROM.offline.basis_file", po::value<string>()->required(),
+            "File name for libROM snapshot/POD matrices.");
 }
