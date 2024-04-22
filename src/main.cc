@@ -140,6 +140,10 @@ int main(int argc, char** argv)
             // will be allowed in config file
             po::options_description config("Configuration");
             setupConfigOption(config, constraints_filename);
+#ifdef MGMOL_HAS_LIBROM
+            // ROM configuration options
+            setupROMConfigOption(config);
+#endif
 
             // Hidden options, will be allowed in config file, but will not be
             // shown to the user.

@@ -76,14 +76,13 @@ int main(int argc, char** argv)
             // will be allowed in config file
             po::options_description config("Configuration");
             setupConfigOption(config, constraints_filename);
+            // ROM configuration options
+            setupROMConfigOption(config);
 
             // Hidden options, will be allowed in config file, but will not be
             // shown to the user.
             po::options_description hidden("Hidden options");
             setupHiddenOption(hidden);
-
-            // ROM configuration options
-            setupROMConfigOption(config);
 
             po::options_description cmdline_options;
             cmdline_options.add(generic);
@@ -180,7 +179,6 @@ int main(int argc, char** argv)
     Control& ct = *(Control::instance());
 
     ct.setOptions(vm);
-    ct.setROMOptions(vm);
     ct.sync();
 
     int ret = ct.checkOptions();
