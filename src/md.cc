@@ -487,18 +487,6 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
             }
         }
 
-#ifdef MGMOL_HAS_LIBROM
-        // Save orbital snapshots
-        if (ct.rom_offline > 0)
-        {
-            int ierr = save_orbital_snapshot(
-                ct.md_print_filename + "_mdstep" + std::to_string(mdstep), **orbitals);
-
-            if (ierr < 0)
-                os_ << "WARNING md(): writing ROM snapshot data failed!!!" << std::endl;
-        }
-#endif
-
         if (onpe0)
             os_ << std::setprecision(12) << std::fixed << "%%  "
                 << md_iteration_ << "  IONIC CONFIGURATION ENERGY = " << eks
@@ -652,6 +640,18 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
                         if (ierr < 0) sleep(1.);
                         count++;
                     }
+
+#ifdef MGMOL_HAS_LIBROM
+                    // Save orbital snapshots
+                    if (ct.getROMOptions().save_librom_snapshot > 0)
+                    {
+                        int ierr = save_orbital_snapshot(
+                            ct.md_print_filename + "_mdstep" + std::to_string(mdstep), **orbitals);
+
+                        if (ierr < 0)
+                            os_ << "WARNING md(): writing ROM snapshot data failed!!!" << std::endl;
+                    }
+#endif
 
                     printWithTimeStamp("dumped restart file...", std::cout);
                 }

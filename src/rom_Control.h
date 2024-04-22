@@ -20,18 +20,23 @@ enum class ROMStage
 {
     OFFLINE,
     ONLINE,
-    RESTORE,
+    RESTORE,    // TODO(kevin): what stage is this?
+    BUILD,
     UNSUPPORTED
 };
 
 /* Stored as a private member variable of Control class */
 struct ROMPrivateOptions
 {
+    ROMStage rom_stage = ROMStage::UNSUPPORTED;
+
     std::string restart_file_fmt = "";
     int restart_file_minidx = -1;
     int restart_file_maxidx = -1;
     std::string basis_file = "";
-    ROMStage rom_stage = ROMStage::UNSUPPORTED;
+
+    /* save librom snapshot matrix at FOM simulation. */
+    bool save_librom_snapshot = false;
 };
 
 #endif  // ROM_CONTROL_H

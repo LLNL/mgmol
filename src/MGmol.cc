@@ -1151,7 +1151,7 @@ void MGmol<OrbitalsType>::cleanup()
 
 #ifdef MGMOL_HAS_LIBROM
         // Save orbital snapshots
-        if (ct.rom_offline > 0 && ct.AtomsDynamic() == AtomsDynamicType::Quench)
+        if (ct.getROMOptions().save_librom_snapshot > 0 && ct.AtomsDynamic() == AtomsDynamicType::Quench)
         {
             ierr = save_orbital_snapshot(
                 filename, *current_orbitals_);

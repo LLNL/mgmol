@@ -144,11 +144,6 @@ Control::Control()
 
     // data members set once for all (not accessible through interface)
     screening_const = 0.;
-
-    // ROM options
-    rom_offline                       = true; // TODO
-    rom_online                        = false;
-    rom_restore                       = false;
 }
 
 void Control::setup(const MPI_Comm comm_global, const bool with_spin,
@@ -1922,6 +1917,10 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
 
     // synchronize all processors
     sync();
+
+#ifdef MGMOL_HAS_LIBROM
+    setROMOptions(vm);
+#endif
 }
 
 int Control::checkOptions()
@@ -2063,11 +2062,22 @@ void Control::setROMOptions(const boost::program_options::variables_map& vm)
 
     if (onpe0)
     {
+        std::string str = vm["ROM.stage"].as<std::string>();
+        if (str.compare("offline") == 0)
+            rom_pri_option.rom_stage = ROMStage::OFFLINE;
+        else if (str.compare("online") == 0)
+            rom_pri_option.rom_stage = ROMStage::ONLINE;
+        else if (str.compare("build") == 0)
+            rom_pri_option.rom_stage = ROMStage::BUILD;
+        else if (str.compare("none") == 0)
+            rom_pri_option.rom_stage = ROMStage::UNSUPPORTED;
+
         rom_pri_option.restart_file_fmt = vm["ROM.offline.restart_filefmt"].as<std::string>();
         rom_pri_option.restart_file_minidx = vm["ROM.offline.restart_min_idx"].as<int>();
         rom_pri_option.restart_file_maxidx = vm["ROM.offline.restart_max_idx"].as<int>();
-
         rom_pri_option.basis_file = vm["ROM.offline.basis_file"].as<std::string>();
+
+        rom_pri_option.save_librom_snapshot = vm["ROM.offline.save_librom_snapshot"].as<bool>();
     }  // onpe0
 
     // synchronize all processors
@@ -2101,6 +2111,9 @@ void Control::syncROMOptions()
     bcast_check(mpirc);
 
     mpirc = MPI_Bcast(&rom_pri_option.restart_file_maxidx, 1, MPI_INT, 0, comm_global_);
+    bcast_check(mpirc);
+
+    mpirc = MPI_Bcast(&rom_pri_option.save_librom_snapshot, 1, MPI_C_BOOL, 0, comm_global_);
     bcast_check(mpirc);
 
     rom_pri_option.rom_stage = static_cast<ROMStage>(rom_stage);
