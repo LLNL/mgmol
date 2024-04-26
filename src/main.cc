@@ -30,7 +30,7 @@
 #include "MGmol_MPI.h"
 #include "MPIdata.h"
 #include "Mesh.h"
-#include "mgmol.h"
+#include "mgmol_run.h"
 #include "tools.h"
 
 #include <cassert>
