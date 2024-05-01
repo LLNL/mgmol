@@ -19,7 +19,6 @@ public:
 
     virtual ~MGmolInterface() {}
 
-    virtual void setup()                                                = 0;
     virtual int setupFromInput(const std::string input_file)            = 0;
     virtual int setupLRs(const std::string input_file)                  = 0;
     virtual int setupConstraintsFromInput(const std::string input_file) = 0;
