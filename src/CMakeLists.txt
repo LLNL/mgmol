@@ -162,6 +162,11 @@ set(SOURCES
  rom.cc
 )
 
+if(USE_LIBROM)
+  list(APPEND SOURCES
+    rom_workflows.cc)
+endif(USE_LIBROM)
+
 add_library(mgmol_src ${SOURCES})
 
 target_include_directories(mgmol_src PRIVATE ${HDF5_INCLUDE_DIRS})
