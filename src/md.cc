@@ -31,7 +31,7 @@
 #include "ProjectedMatricesMehrstellen.h"
 #include "ProjectedMatricesSparse.h"
 #include "Rho.h"
-#include "Signal.h"
+#include "mgmol_Signal.h"
 #include "SpreadsAndCenters.h"
 #include "tools.h"
 
