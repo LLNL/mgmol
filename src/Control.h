@@ -14,6 +14,7 @@
 #include "Timeout.h"
 
 /* enumeration and option variables for libROM */
+#include "mgmol_config.h"
 #include "rom_Control.h"
 
 #include <cassert>
