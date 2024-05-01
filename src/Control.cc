@@ -1917,6 +1917,10 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
 
     // synchronize all processors
     sync();
+
+#ifdef MGMOL_HAS_LIBROM
+    setROMOptions(vm);
+#endif
 }
 
 int Control::checkOptions()
@@ -2050,4 +2054,67 @@ void Control::printPoissonOptions(std::ostream& os)
             os << "Undefined!!!";
     }
     os << std::endl;
+}
+
+void Control::setROMOptions(const boost::program_options::variables_map& vm)
+{
+    printWithTimeStamp("Control::setROMOptions()...", std::cout);
+
+    if (onpe0)
+    {
+        std::string str = vm["ROM.stage"].as<std::string>();
+        if (str.compare("offline") == 0)
+            rom_pri_option.rom_stage = ROMStage::OFFLINE;
+        else if (str.compare("online") == 0)
+            rom_pri_option.rom_stage = ROMStage::ONLINE;
+        else if (str.compare("build") == 0)
+            rom_pri_option.rom_stage = ROMStage::BUILD;
+        else if (str.compare("none") == 0)
+            rom_pri_option.rom_stage = ROMStage::UNSUPPORTED;
+
+        rom_pri_option.restart_file_fmt = vm["ROM.offline.restart_filefmt"].as<std::string>();
+        rom_pri_option.restart_file_minidx = vm["ROM.offline.restart_min_idx"].as<int>();
+        rom_pri_option.restart_file_maxidx = vm["ROM.offline.restart_max_idx"].as<int>();
+        rom_pri_option.basis_file = vm["ROM.offline.basis_file"].as<std::string>();
+
+        rom_pri_option.save_librom_snapshot = vm["ROM.offline.save_librom_snapshot"].as<bool>();
+    }  // onpe0
+
+    // synchronize all processors
+    syncROMOptions();
+}
+
+void Control::syncROMOptions()
+{
+    if (onpe0 && verbose > 0)
+        (*MPIdata::sout) << "Control::syncROMOptions()" << std::endl;
+
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+
+    mmpi.bcast(rom_pri_option.restart_file_fmt, comm_global_);
+    mmpi.bcast(rom_pri_option.basis_file, comm_global_);
+
+    auto bcast_check = [](int mpirc) {
+        if (mpirc != MPI_SUCCESS)
+        {
+            (*MPIdata::sout) << "MPI Bcast of Control failed!!!" << std::endl;
+            MPI_Abort(comm_global_, 2);
+        }
+    };
+
+    short rom_stage = (short)static_cast<int>(rom_pri_option.rom_stage);
+    int mpirc;
+    mpirc = MPI_Bcast(&rom_stage, 1, MPI_SHORT, 0, comm_global_);
+    bcast_check(mpirc);
+
+    mpirc = MPI_Bcast(&rom_pri_option.restart_file_minidx, 1, MPI_INT, 0, comm_global_);
+    bcast_check(mpirc);
+
+    mpirc = MPI_Bcast(&rom_pri_option.restart_file_maxidx, 1, MPI_INT, 0, comm_global_);
+    bcast_check(mpirc);
+
+    mpirc = MPI_Bcast(&rom_pri_option.save_librom_snapshot, 1, MPI_C_BOOL, 0, comm_global_);
+    bcast_check(mpirc);
+
+    rom_pri_option.rom_stage = static_cast<ROMStage>(rom_stage);
 }
