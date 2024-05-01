@@ -102,7 +102,7 @@ private:
     double total_energy_;
     ConstraintSet* constraints_;
 
-    OrbitalsExtrapolation<OrbitalsType>* orbitals_extrapol_;
+    OrbitalsExtrapolation<OrbitalsType>* orbitals_extrapol_ = nullptr;
 
     float md_time_;
     int md_iteration_;
