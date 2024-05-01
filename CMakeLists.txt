@@ -136,6 +136,10 @@ if(USE_LIBROM)
   endif(NOT LIBROM_PATH)
 
   find_package(libROM REQUIRED)
+
+  if(libROM_FOUND)
+    set(MGMOL_HAS_LIBROM 1)
+  endif(libROM_FOUND)
 endif(USE_LIBROM)
 
 # ARPACK (optional)
@@ -260,6 +264,9 @@ include_directories("${PROJECT_SOURCE_DIR}/src/radial")
 include_directories("${PROJECT_SOURCE_DIR}/src/sparse_linear_algebra")
 include_directories("${PROJECT_SOURCE_DIR}/src/tools")
 include_directories("${PROJECT_SOURCE_DIR}/src")
+
+include_directories("${LIBROM_PATH}/lib")
+link_libraries(${LIBROM_LIB})
 
 # add subdirectories for source files, tests
 add_subdirectory(src)
