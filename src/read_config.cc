@@ -14,6 +14,7 @@
 #include <iterator>
 #include <sys/cdefs.h>
 #include <vector>
+#include "MGmol_prototypes.h"
 
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
@@ -200,6 +201,10 @@ int read_config(int argc, char** argv, po::variables_map& vm,
             "recomputed during md")("LoadBalancing.output_file",
             po::value<std::string>()->default_value(""),
             "Output file for dumping cluster information in vtk format");
+
+#ifdef MGMOL_HAS_LIBROM
+        setupROMConfigOption(config);
+#endif
 
         // Hidden options, will be allowed in config file, but will not be
         // shown to the user.
@@ -409,3 +414,22 @@ int read_config(int argc, char** argv, po::variables_map& vm,
 
     return 0;
 }
+
+#ifdef MGMOL_HAS_LIBROM
+void setupROMConfigOption(po::options_description &rom_cfg)
+{
+    rom_cfg.add_options()
+        ("ROM.stage", po::value<std::string>()->default_value("none"),
+            "ROM workflow stage: offline; build; online; none.")
+        ("ROM.offline.restart_filefmt", po::value<std::string>(),
+            "File name format to read for snapshots.")
+        ("ROM.offline.restart_min_idx", po::value<int>(),
+            "Minimum index for snapshot file format.")
+        ("ROM.offline.restart_max_idx", po::value<int>(),
+            "Maximum index for snapshot file format.")
+        ("ROM.offline.basis_file", po::value<std::string>(),
+            "File name for libROM snapshot/POD matrices.")
+        ("ROM.offline.save_librom_snapshot", po::value<bool>()->default_value(false),
+            "Save libROM snapshot file at FOM simulation.");
+}
+#endif
