@@ -29,7 +29,9 @@ int MGmol<OrbitalsType>::save_orbital_snapshot(std::string file_path, OrbitalsTy
     if (stat(file_path.c_str(), &s) == 0)
     {
         if (s.st_mode & S_IFDIR)
+        {
             snapshot_filename = file_path + "/orbital";
+        }
         else if (s.st_mode & S_IFREG)
         {
             snapshot_filename = file_path + "_orbital";
