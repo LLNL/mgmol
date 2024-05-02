@@ -106,7 +106,7 @@ extern Timer ions_setupInteractingIons_tm;
 extern Timer ions_setup_tm;
 extern Timer updateCenters_tm;
 
-#include "Signal.h"
+#include "mgmol_Signal.h"
 std::set<int> Signal::recv_;
 
 template <class OrbitalsType>

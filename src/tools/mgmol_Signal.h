@@ -15,7 +15,7 @@
 // access the flag set, reset flags, or interrogate flags.
 // The Signal class can be used in an application by declaring
 //
-// #include "Signal.h"
+// #include "mgmol_Signal.h"
 // set<int> Signal::recv_;
 //
 // A signal can be registered using, e.g.
