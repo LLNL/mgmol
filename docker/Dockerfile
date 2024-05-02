@@ -14,7 +14,7 @@ RUN sudo apt-get install -yq libopenblas-dev libmpich-dev libblas-dev liblapack-
 RUN sudo apt-get install -yq libboost-all-dev
 RUN sudo apt-get install -yq vim
 RUN sudo apt-get install -yq git-lfs
-RUN sudo apt-get install -yq valgrind
+RUN sudo apt-get install -yq valgrind hdf5-tools
 RUN sudo apt-get install -yq wget
 ### clang-format seems to be updated to 14.0. Not using it for now.
 # RUN sudo apt-get install -yq clang-format
