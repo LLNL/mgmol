@@ -731,10 +731,6 @@ OrbitalsType* MGmol<OrbitalsType>::loadOrbitalFromRestartFile(const std::string 
             orbitals_extrapol_->setupPreviousOrbitals(&restart_orbitals,
                 proj_matrices_, lrs_, local_cluster_, currentMasks_,
                 corrMasks_, h5file);
-
-            // need to reset a few things as we just read new orbitals
-            restart_orbitals->computeGramAndInvS();
-            dm_strategy_->update();
         }
 
         /* main workflow delete h5f_file_ here, meaning the loading is over. */
