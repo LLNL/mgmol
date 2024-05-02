@@ -47,9 +47,10 @@ double Ions::max_Vl_radius_  = -1.;
 double Ions::max_Vnl_radius_ = -1.;
 
 template <typename T>
-void writeData2d(hid_t file_id, std::string datasetname, std::vector<T>& data,
-    const int n, T element)
+void writeData2d(HDFrestart& h5f_file, std::string datasetname,
+    std::vector<T>& data, const size_t n, T element)
 {
+    hid_t file_id = h5f_file.file_id();
 #ifdef MGMOL_USE_HDF5P
     if (h5f_file.useHdf5p())
     {
@@ -67,7 +68,7 @@ void writeData2d(hid_t file_id, std::string datasetname, std::vector<T>& data,
     else
 #endif
     {
-        size_t dims[2] = { data.size()/n, n };
+        size_t dims[2] = { data.size() / n, n };
         mgmol_tools::write2d(file_id, datasetname, data, dims);
     }
 }
@@ -753,7 +754,7 @@ void Ions::writeAtomicNumbers(HDFrestart& h5f_file)
     if (file_id >= 0)
     {
         std::string datasetname("/Atomic_numbers");
-        writeData2d(file_id, datasetname, data, 1, -1);
+        writeData2d(h5f_file, datasetname, data, 1, -1);
     }
 }
 
@@ -788,12 +789,11 @@ void Ions::writeAtomNames(HDFrestart& h5f_file)
 
     // write data
     hid_t file_id = h5f_file.file_id();
-
     if (file_id >= 0)
     {
         std::string datasetname("/Atomic_names");
         std::string empty;
-        writeData2d(file_id, datasetname, data, 1, empty);
+        writeData2d(h5f_file, datasetname, data, 1, empty);
     }
 }
 
@@ -864,7 +864,7 @@ void Ions::writeLockedAtomNames(HDFrestart& h5f_file)
     {
         std::string datasetname("/LockedAtomsNames");
         std::string empty;
-        writeData2d(file_id, datasetname, data, 1, empty);
+        writeData2d(h5f_file, datasetname, data, 1, empty);
     }
 }
 
@@ -900,7 +900,7 @@ void Ions::writeAtomicIDs(HDFrestart& h5f_file)
     if (file_id >= 0)
     {
         std::string datasetname("/Atomic_IDs");
-        writeData2d(file_id, datasetname, data, 1, -1);
+        writeData2d(h5f_file, datasetname, data, 1, -1);
     }
 }
 
@@ -937,7 +937,7 @@ void Ions::writeAtomicNLprojIDs(HDFrestart& h5f_file)
     if (file_id >= 0)
     {
         std::string datasetname("/AtomicNLproj_IDs");
-        writeData2d(file_id, datasetname, data, 1, -1);
+        writeData2d(h5f_file, datasetname, data, 1, -1);
     }
 }
 
@@ -975,7 +975,7 @@ void Ions::writePositions(HDFrestart& h5f_file)
     if (file_id >= 0)
     {
         std::string datasetname("/Ionic_positions");
-        writeData2d(file_id, datasetname, data, 3, 1.e32);
+        writeData2d(h5f_file, datasetname, data, 3, 1.e32);
     }
 }
 
@@ -1138,7 +1138,7 @@ void Ions::writeVelocities(HDFrestart& h5f_file)
     if (file_id >= 0)
     {
         std::string datasetname("/Ionic_velocities");
-        writeData2d(file_id, datasetname, data, 3, 1.e32);
+        writeData2d(h5f_file, datasetname, data, 3, 1.e32);
     }
 }
 
@@ -1184,7 +1184,7 @@ void Ions::writeRandomStates(HDFrestart& h5f_file)
     if (file_id >= 0)
     {
         std::string datasetname("/Ionic_RandomStates");
-        writeData2d(file_id, datasetname, data, 3, (unsigned short)0);
+        writeData2d(h5f_file, datasetname, data, 3, (unsigned short)0);
     }
 }
 
@@ -1343,7 +1343,7 @@ void Ions::writeForces(HDFrestart& h5f_file)
     if (file_id >= 0)
     {
         std::string datasetname("/Ionic_forces");
-        writeData2d(file_id, datasetname, data, 3, 1.e32);
+        writeData2d(h5f_file, datasetname, data, 3, 1.e32);
     }
 }
 
