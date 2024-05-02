@@ -44,7 +44,7 @@ public:
     virtual short getNumOrbitalExtrapolations() { return 0; }
 
 protected:
-    OrbitalsType* orbitals_minus1_;
+    OrbitalsType* orbitals_minus1_ = nullptr;
 };
 
 #endif
