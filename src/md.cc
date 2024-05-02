@@ -31,7 +31,7 @@
 #include "ProjectedMatricesMehrstellen.h"
 #include "ProjectedMatricesSparse.h"
 #include "Rho.h"
-#include "Signal_mgmol.h"
+#include "mgmol_Signal.h"
 #include "SpreadsAndCenters.h"
 #include "tools.h"
 
@@ -672,6 +672,90 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
 
     delete stepper;
     delete orbitals_extrapol_;
+}
+
+template <class OrbitalsType>
+OrbitalsType* MGmol<OrbitalsType>::loadOrbitalFromRestartFile(const std::string filename)
+{
+    MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
+    Control& ct              = *(Control::instance());
+    Mesh* mymesh             = Mesh::instance();
+    const pb::PEenv& myPEenv = mymesh->peenv();
+
+    /* For now, we only consider double-precision hdf5 I/O. */
+    assert(ct.restart_info > 3);
+    assert((ct.AtomsDynamic() == AtomsDynamicType::MD) || (ct.AtomsDynamic() == AtomsDynamicType::Quench));
+
+    HDFrestart h5file(filename, myPEenv, ct.out_restart_file_type);
+    int ierr;
+
+    OrbitalsType *restart_orbitals = nullptr;
+
+    /* This corresponds to MGmol<OrbitalsType>::initial */
+    {
+        // Copy from current orbital, instead of constructing brand-new one
+        restart_orbitals = new OrbitalsType("ForLoading", *current_orbitals_, false);
+
+        /* This corresponds to MGmol<OrbitalsType>::read_restart_data */
+        {
+            ierr = restart_orbitals->read_func_hdf5(h5file);
+        }   // read_restart_data
+    }   // initial()
+
+    /* This corresponds to MGmol<OrbitalsType>::md */
+    {
+        int flag_extrapolated_data = 0;
+        if (onpe0)
+        {
+            flag_extrapolated_data
+                = h5file.dset_exists("ExtrapolatedFunction0000");
+            if (flag_extrapolated_data == 0)
+                flag_extrapolated_data
+                    = h5file.dset_exists("ExtrapolatedFunction0");
+        }
+        MPI_Bcast(&flag_extrapolated_data, 1, MPI_INT, 0, comm_);
+
+        /*
+            If extrapolated function exists,
+            then function is set as previous orbitals,
+            while the extrapolated function is set as the current orbitals.
+            This is how the restart file is saved via dumprestartFile.
+        */
+        if (flag_extrapolated_data)
+        {
+            orbitals_extrapol_ = OrbitalsExtrapolationFactory<OrbitalsType>::create(
+                                                                ct.WFExtrapolation());
+
+            if (onpe0) os_ << "Create new orbitals_minus1..." << std::endl;
+
+            orbitals_extrapol_->setupPreviousOrbitals(&restart_orbitals,
+                proj_matrices_, lrs_, local_cluster_, currentMasks_,
+                corrMasks_, h5file);
+        }
+
+        /* main workflow delete h5f_file_ here, meaning the loading is over. */
+    }   // md()
+
+    ierr = h5file.close();
+    mmpi.allreduce(&ierr, 1, MPI_MIN);
+    if (ierr < 0)
+    {
+        if (onpe0)
+            (*MPIdata::serr)
+                << "loadRestartFile: cannot close file..." << std::endl;
+        return nullptr;
+    }
+
+    /*
+        In returning restart_orbitals,
+        we hope that the wavefunctions in restart_orbitals are all set.
+        At least the following functions should return proper data loaded from the file:
+
+            restart_orbitals->getLocNumpt()
+            restart_orbitals->chromatic_number()
+            restart_orbitals->getPsi(idx)   (for int idx)
+    */
+    return restart_orbitals;
 }
 
 template class MGmol<LocGridOrbitals>;

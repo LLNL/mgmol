@@ -102,7 +102,7 @@ private:
     double total_energy_;
     ConstraintSet* constraints_;
 
-    OrbitalsExtrapolation<OrbitalsType>* orbitals_extrapol_;
+    OrbitalsExtrapolation<OrbitalsType>* orbitals_extrapol_ = nullptr;
 
     float md_time_;
     int md_iteration_;
@@ -301,6 +301,8 @@ public:
     {
         forces_->force(orbitals, ions);
     }
+
+    OrbitalsType* loadOrbitalFromRestartFile(const std::string filename);
 };
 // Instantiate static variables here to avoid clang warnings
 template <class OrbitalsType>
