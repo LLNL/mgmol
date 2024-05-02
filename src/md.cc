@@ -693,71 +693,17 @@ OrbitalsType* MGmol<OrbitalsType>::loadOrbitalFromRestartFile(const std::string 
 
     /* This corresponds to MGmol<OrbitalsType>::initial */
     {
-        /*
-            Just for the orbital loading, this part is currently not needed.
-            but left commented here for future reference.
-        */
-        // // If not an initial run read data from files
-        // if (ct.isLocMode())
-        // {
-        //     std::string name = "ExtrapolatedFunction";
-        //     if (ct.verbose > 0)
-        //         printWithTimeStamp(
-        //             "read LRs from ExtrapolatedFunction database...", os_);
-        //     int n = read_restart_lrs(h5file, name);
-        //     if (n == 0)
-        //     {
-        //         if (ct.verbose > 0)
-        //             printWithTimeStamp("read LRs from Function database...", os_);
-        //         name = "Function";
-        //         n    = read_restart_lrs(h5file, name);
-        //     }
-        //     if (n < 0) return nullptr;
-
-        //     if (n > 0) lrs_->setup();
-        // }
-
         // Copy from current orbital, instead of constructing brand-new one
         restart_orbitals = new OrbitalsType("ForLoading", *current_orbitals_, false);
 
-        /*
-            Just for the orbital loading, this part is currently not needed.
-            but left commented here for future reference.
-        */
-        // increaseMemorySlotsForOrbitals<MemorySpaceType>();
-
-        // // If not an initial run read data from files
-        // md_time_      = h5file.getMDTimeFromFile();
-        // md_iteration_ = h5file.getMDstepFromFile();
-
         /* This corresponds to MGmol<OrbitalsType>::read_restart_data */
         {
-            // TODO(kevin): do we need to load rho?
-            // read_rho_and_pot_hdf5(h5file, *rho_);
-
             ierr = restart_orbitals->read_func_hdf5(h5file);
         }   // read_restart_data
-
-        /*
-            Just for the orbital loading, this part is currently not needed.
-            but left commented here for future reference.
-        */
-        // restart_orbitals->applyMask();
-
     }   // initial()
 
     /* This corresponds to MGmol<OrbitalsType>::md */
     {
-        /*
-            Just for the orbital loading, this part is currently not needed.
-            but left commented here for future reference.
-        */
-        // if (!ct.override_restart)
-        // {
-        //     if (onpe0) os_ << "Use restart file to initialize MD..." << std::endl;
-        //     stepper->init(h5file);
-        // }
-
         int flag_extrapolated_data = 0;
         if (onpe0)
         {
@@ -791,23 +737,7 @@ OrbitalsType* MGmol<OrbitalsType>::loadOrbitalFromRestartFile(const std::string 
             dm_strategy_->update();
         }
 
-        /*
-            Just for the orbital loading, this part is currently not needed.
-            but left commented here for future reference.
-        */
-        // DFTsolver<OrbitalsType>::setItCountLarge();
-
-        // // check if we are restarting from an MD dump
-        // // no extrapolated functions -> atomic positions were extrapolated
-        // // in stepper->init()
-        // if (!flag_extrapolated_data)
-        // {
-        //     moveVnuc(*ions_);
-        // }
-
         /* main workflow delete h5f_file_ here, meaning the loading is over. */
-        // delete h5f_file_;
-        // h5f_file_ = nullptr;
     }   // md()
 
     ierr = h5file.close();
