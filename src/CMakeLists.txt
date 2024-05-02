@@ -159,6 +159,7 @@ set(SOURCES
  magma_singleton.cc
  ChebyshevApproximation.cc
  ChebyshevApproximationInterface.cc
+ rom.cc
 )
 
 add_library(mgmol_src ${SOURCES})

@@ -641,6 +641,18 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
                         count++;
                     }
 
+#ifdef MGMOL_HAS_LIBROM
+                    // Save orbital snapshots
+                    if (ct.getROMOptions().save_librom_snapshot > 0)
+                    {
+                        int ierr = save_orbital_snapshot(
+                            ct.md_print_filename + "_mdstep" + std::to_string(mdstep), **orbitals);
+
+                        if (ierr < 0)
+                            os_ << "WARNING md(): writing ROM snapshot data failed!!!" << std::endl;
+                    }
+#endif
+
                     printWithTimeStamp("dumped restart file...", std::cout);
                 }
 

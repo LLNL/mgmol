@@ -1148,7 +1148,19 @@ void MGmol<OrbitalsType>::cleanup()
 
         if (ierr < 0)
             os_ << "WARNING: writing restart data failed!!!" << std::endl;
-    }
+
+#ifdef MGMOL_HAS_LIBROM
+        // Save orbital snapshots
+        if (ct.getROMOptions().save_librom_snapshot > 0 && ct.AtomsDynamic() == AtomsDynamicType::Quench)
+        {
+            ierr = save_orbital_snapshot(
+                filename, *current_orbitals_);
+
+            if (ierr < 0)
+                os_ << "WARNING: writing ROM snapshot data failed!!!" << std::endl;
+        }
+#endif
+    }   // if (ct.out_restart_info > 0 && !ct.AtomsMove())
 
     MPI_Barrier(comm_);
     closing_tm_.stop();
