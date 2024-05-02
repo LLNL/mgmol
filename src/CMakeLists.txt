@@ -1,4 +1,7 @@
 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/mgmol_config.h.in
+  ${CMAKE_CURRENT_SOURCE_DIR}/mgmol_config.h @ONLY)
+
 add_subdirectory(DistMatrix)
 add_subdirectory(linear_algebra)
 add_subdirectory(local_matrices)
@@ -8,7 +11,8 @@ add_subdirectory(radial)
 add_subdirectory(sparse_linear_algebra)
 add_subdirectory(tools)
 
-set(link_libs mgmol_distmatrix 
+set(link_libs
+   mgmol_distmatrix 
    mgmol_linear_algebra 
    mgmol_local_matrices 
    mgmol_numerical_kernels 
@@ -161,7 +165,11 @@ add_library(mgmol_src ${SOURCES})
 
 target_include_directories(mgmol_src PRIVATE ${HDF5_INCLUDE_DIRS})
 target_include_directories(mgmol_src PRIVATE ${Boost_INCLUDE_DIRS})
-target_include_directories (mgmol_src PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(mgmol_src PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+if(USE_LIBROM)
+  target_include_directories (mgmol_src PRIVATE ${LIBROM_INCLUDES})
+  target_link_libraries(mgmol_src ${LIBROM_LIB})
+endif(USE_LIBROM)
 
 target_link_libraries(mgmol_src ${link_libs})
 if(${MGMOL_WITH_MAGMA})
@@ -196,7 +204,7 @@ install(TARGETS mgmol-opt DESTINATION bin)
 # build ROM executable
 if(USE_LIBROM)
   add_executable(mgmol-rom rom_main.cc)
-  target_include_directories (mgmol-rom PRIVATE ${Boost_INCLUDE_DIRS} ${LIBROM_INCLUDES})
+  target_include_directories (mgmol-rom PRIVATE ${Boost_INCLUDE_DIRS})
 
   target_link_libraries(mgmol-rom mgmol_src ${link_libs})
   target_link_libraries(mgmol-rom ${SCALAPACK_LIBRARIES})
