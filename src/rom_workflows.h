@@ -33,14 +33,6 @@
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
 
-/* headers from old src/main.cc */
-// #include "DistMatrix.h"
-// #include "MatricesBlacsContext.h"
-// #include "PackedCommunicationBuffer.h"
-// #include "ReplicatedWorkSpace.h"
-// #include "SparseDistMatrix.h"
-// #include "magma_singleton.h"
-
 #include "librom.h"
 
 template <class OrbitalsType>

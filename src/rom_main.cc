@@ -25,14 +25,6 @@
 //
 #include "rom_workflows.h"
 
-//#include "MemTrack.h"
-
-/*
-void trapfpe () {
-  feenableexcept(FE_INVALID|FE_DIVBYZERO|FE_OVERFLOW);
-}
-*/
-
 // A helper function
 template <class T>
 std::ostream& operator<<(std::ostream& os, const std::vector<T>& v)
