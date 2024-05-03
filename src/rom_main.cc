@@ -23,76 +23,115 @@
 //   Potentials, eigenvalues and operators in Rydberg
 //   Energies in Hartree
 //
-#include <cassert>
-#include <iostream>
-#include <iterator>
-#include <vector>
-using namespace std;
+#include "rom_workflows.h"
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
-
-#ifdef USE_CNR
-#include <mkl.h>
-#endif
-
-#include <mpi.h>
-
-#include "Control.h"
-#include "DistMatrix.h"
-#include "ExtendedGridOrbitals.h"
-#include "LocGridOrbitals.h"
-#include "MGmol.h"
-#include "MGmol_MPI.h"
-#include "MPIdata.h"
-#include "MatricesBlacsContext.h"
-#include "Mesh.h"
-#include "PackedCommunicationBuffer.h"
-#include "ReplicatedWorkSpace.h"
-#include "SparseDistMatrix.h"
-#include "magma_singleton.h"
-#include "tools.h"
-
-#include <fenv.h>
-#include <sys/cdefs.h>
-#include <time.h>
-
-#include <boost/program_options.hpp>
-namespace po = boost::program_options;
-
-#include "librom.h"
-
-//#include "MemTrack.h"
+// A helper function
+template <class T>
+std::ostream& operator<<(std::ostream& os, const std::vector<T>& v)
+{
+    copy(v.begin(), v.end(), std::ostream_iterator<T>(std::cout, " "));
+    return os;
+}
 
 int main(int argc, char** argv)
 {
-    // change handling of memory allocation errors
-    set_new_handler(noMoreMemory);
-
-    cout.sync_with_stdio();
-
     int mpirc = MPI_Init(&argc, &argv);
     if (mpirc != MPI_SUCCESS)
     {
-        cerr << "MPI Initialization failed!!!" << endl;
+        std::cerr << "MPI Initialization failed!!!" << std::endl;
         MPI_Abort(MPI_COMM_WORLD, 0);
     }
-    MPI_Comm_rank(MPI_COMM_WORLD, &mype);
-    assert(mype > -1);
-    onpe0 = (mype == 0);
 
-    CAROM::Vector librom_vector(10, false);
+    MPI_Comm comm = MPI_COMM_WORLD;
+
+    mgmol_init(comm);
+
+    // read runtime parameters
+    std::string input_filename("");
+    std::string lrs_filename;
+    std::string constraints_filename("");
+    bool tcheck = false;
+
+    float total_spin = 0.;
+    bool with_spin   = false;
+
+    po::variables_map vm;
+
+    // use configure file if it can be found
+    // std::string config_filename("mgmol.cfg");
+
+    // read options from PE0 only
+    if (MPIdata::onpe0)
+    {
+        read_config(argc, argv, vm, input_filename, lrs_filename,
+            constraints_filename, total_spin, with_spin, tcheck);
+    }
+
+    MGmol_MPI::setup(comm, std::cout, with_spin);
+    MGmol_MPI& mmpi      = *(MGmol_MPI::instance());
+    MPI_Comm global_comm = mmpi.commGlobal();
+
+    Control::setup(global_comm, with_spin, total_spin);
+    Control& ct = *(Control::instance());
+
+    ct.setOptions(vm);
+
+    int ret = ct.checkOptions();
+    if (ret < 0) return ret;
+
+    mmpi.bcastGlobal(input_filename);
+    mmpi.bcastGlobal(lrs_filename);
+
+    // Enter main scope
+    {
+        MGmolInterface* mgmol;
+        if (ct.isLocMode())
+            mgmol = new MGmol<LocGridOrbitals>(global_comm, *MPIdata::sout);
+        else
+            mgmol
+                = new MGmol<ExtendedGridOrbitals>(global_comm, *MPIdata::sout);
+
+        unsigned ngpts[3]    = { ct.ngpts_[0], ct.ngpts_[1], ct.ngpts_[2] };
+        double origin[3]     = { ct.ox_, ct.oy_, ct.oz_ };
+        const double cell[3] = { ct.lx_, ct.ly_, ct.lz_ };
+        Mesh::setup(mmpi.commSpin(), ngpts, origin, cell, ct.lap_type);
+
+        mgmol->setupFromInput(input_filename);
+
+        if (ct.isLocMode() || ct.init_loc == 1) mgmol->setupLRs(lrs_filename);
+
+        mgmol->setupConstraintsFromInput(constraints_filename);
+
+        mgmol_setup();
+
+        if (!tcheck)
+        {
+            mgmol->setup();
+
+            if (ct.isLocMode())
+                readRestartFiles<LocGridOrbitals>(mgmol);
+            else
+                readRestartFiles<ExtendedGridOrbitals>(mgmol);
+        }
+        else
+        {
+            *MPIdata::sout << " Input parameters OK\n";
+        }
+        delete mgmol;
+
+    } // close main scope
+
+    mgmol_finalize();
 
     mpirc = MPI_Finalize();
     if (mpirc != MPI_SUCCESS)
     {
-        cerr << "MPI Finalize failed!!!" << endl;
+        std::cerr << "MPI Finalize failed!!!" << std::endl;
     }
 
     time_t tt;
     time(&tt);
-    if (onpe0) cout << " Run ended at " << ctime(&tt) << endl;
+    if (onpe0) std::cout << " Run ended at " << ctime(&tt) << std::endl;
 
     // MemTrack::TrackDumpBlocks();
 
