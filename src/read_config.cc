@@ -421,13 +421,13 @@ void setupROMConfigOption(po::options_description &rom_cfg)
     rom_cfg.add_options()
         ("ROM.stage", po::value<std::string>()->default_value("none"),
             "ROM workflow stage: offline; build; online; none.")
-        ("ROM.offline.restart_filefmt", po::value<std::string>(),
+        ("ROM.offline.restart_filefmt", po::value<std::string>()->default_value(""),
             "File name format to read for snapshots.")
-        ("ROM.offline.restart_min_idx", po::value<int>(),
+        ("ROM.offline.restart_min_idx", po::value<int>()->default_value(-1),
             "Minimum index for snapshot file format.")
-        ("ROM.offline.restart_max_idx", po::value<int>(),
+        ("ROM.offline.restart_max_idx", po::value<int>()->default_value(-1),
             "Maximum index for snapshot file format.")
-        ("ROM.offline.basis_file", po::value<std::string>(),
+        ("ROM.offline.basis_file", po::value<std::string>()->default_value(""),
             "File name for libROM snapshot/POD matrices.")
         ("ROM.offline.save_librom_snapshot", po::value<bool>()->default_value(false),
             "Save libROM snapshot file at FOM simulation.");
