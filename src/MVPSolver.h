@@ -24,27 +24,22 @@ template <class OrbitalsType, class MatrixType>
 class MVPSolver
 {
 private:
-    MPI_Comm comm_;
+    const MPI_Comm comm_;
     std::ostream& os_;
 
-    short n_inner_steps_;
+    const short n_inner_steps_;
 
-    bool use_old_dm_;
+    const bool use_old_dm_;
     Ions& ions_;
+
+    int numst_;
 
     Rho<OrbitalsType>* rho_;
     Energy<OrbitalsType>* energy_;
     Electrostatic* electrostat_;
 
-    int history_length_;
-    std::vector<double> eks_history_;
-
     MGmol<OrbitalsType>* mgmol_strategy_;
 
-    double de_old_;
-    double de_;
-
-    int numst_;
     MatrixType* work_;
     ProjectedMatrices<MatrixType>* proj_mat_work_;
 

@@ -52,18 +52,22 @@ MVPSolver<OrbitalsType, MatrixType>::MVPSolver(MPI_Comm comm, std::ostream& os,
       os_(os),
       n_inner_steps_(n_inner_steps),
       use_old_dm_(use_old_dm),
-      ions_(ions)
+      ions_(ions),
+      numst_(numst)
 {
-    history_length_ = 2;
-    eks_history_.resize(history_length_, 100000.);
+    Control& ct = *(Control::instance());
+    if (onpe0 && ct.verbose > 0)
+    {
+        os_ << "MVPSolver..." << std::endl;
+        if (use_old_dm_) os_ << "MVPSolver uses old DM..." << std::endl;
+    }
 
     rho_            = rho;
     energy_         = energy;
     electrostat_    = electrostat;
     mgmol_strategy_ = mgmol_strategy;
 
-    numst_ = numst;
-    work_  = new MatrixType("workMVP", numst_, numst_);
+    work_ = new MatrixType("workMVP", numst_, numst_);
 
     proj_mat_work_ = new ProjectedMatrices<MatrixType>(numst_, false, kbT);
     proj_mat_work_->setup(global_indexes);
@@ -123,9 +127,9 @@ void MVPSolver<OrbitalsType, MatrixType>::buildTarget_MVP(
 {
     target_tm_.start();
 
-    if (onpe0) std::cout << "buildTarget_MVP()..." << std::endl;
-
     Control& ct = *(Control::instance());
+    if (onpe0 && ct.verbose > 1)
+        std::cout << "buildTarget_MVP()..." << std::endl;
 
     proj_mat_work_->assignH(h11);
 
@@ -135,10 +139,8 @@ void MVPSolver<OrbitalsType, MatrixType>::buildTarget_MVP(
     //
     // compute target density matrix, with occupations>0 in numst only
     //
-    // if( onpe0 )os_<<"Compute XN..."<<endl;
     proj_mat_work_->setHB2H();
 
-    // if( onpe0 )os_<<"Compute DM..."<<endl;
     proj_mat_work_->updateDM(orbitals_index);
 
     target = proj_mat_work_->dm();
@@ -168,17 +170,11 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
         os_ << "---------------------------------------------------------------"
                "-"
             << std::endl;
-        os_ << "Update DM functions using MVP Solver..." << std::endl;
+        os_ << "Update DM using MVP Solver..." << std::endl;
         os_ << "---------------------------------------------------------------"
                "-"
             << std::endl;
     }
-
-    // step for numerical derivative
-
-    // double nel=orbitals.projMatrices()->getNel();
-    // if( onpe0 )
-    //    os_<<"NEW algorithm: Number of electrons at start = "<<nel<<endl;
 
     KBPsiMatrixSparse kbpsi(nullptr);
     kbpsi.setup(ions_);
@@ -227,11 +223,12 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
                 energy_->saveVofRho();
             }
 
-            ProjectedMatricesInterface* current_proj_mat
-                = (inner_it == 0) ? orbitals.getProjMatrices() : proj_mat_work_;
+            ProjectedMatrices<MatrixType>* current_proj_mat
+                = (inner_it == 0)
+                      ? dynamic_cast<ProjectedMatrices<MatrixType>*>(
+                            orbitals.getProjMatrices())
+                      : proj_mat_work_;
 
-            double ts0;
-            double e0        = 0.;
             const int printE = (ct.verbose > 1) ? 1 : 0;
 
             // compute h11 for the current potential by adding local part to
@@ -239,49 +236,32 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
             MatrixType h11(h11_nl);
             mgmol_strategy_->addHlocal2matrix(orbitals, orbitals, h11);
 
+            current_proj_mat->assignH(h11);
+            current_proj_mat->setHB2H();
+
             if (inner_it == 0)
             {
-                // orbitals are new, so a few things need to recomputed
-                ProjectedMatrices<MatrixType>* projmatrices
-                    = dynamic_cast<ProjectedMatrices<MatrixType>*>(
-                        orbitals.getProjMatrices());
-
-                projmatrices->assignH(h11);
-                projmatrices->setHB2H();
-
                 if (use_old_dm_)
                 {
-                    dmInit = projmatrices->dm();
+                    dmInit = current_proj_mat->dm();
                 }
-
-                ts0 = evalEntropyMVP(projmatrices, true, os_);
-                e0  = energy_->evaluateTotal(
-                    ts0, projmatrices, orbitals, printE, os_);
             }
             else
             {
-
                 dmInit = proj_mat_work_->dm();
-
-                proj_mat_work_->assignH(h11);
-                proj_mat_work_->setHB2H();
-
-                ts0 = evalEntropyMVP(proj_mat_work_, true, os_);
-                e0  = energy_->evaluateTotal(
-                    ts0, proj_mat_work_, orbitals, printE, os_);
             }
 
-            // N x N target...
-            // proj_mat_work_->setHiterativeIndex(orbitals.getIterativeIndex(),
-            // pot.getIterativeIndex());
+            const double ts0 = evalEntropyMVP(current_proj_mat, true, os_);
+            const double e0  = energy_->evaluateTotal(
+                ts0, current_proj_mat, orbitals, printE, os_);
 
             MatrixType target("target", numst_, numst_);
-            MatrixType delta_dm("delta_dm", numst_, numst_);
 
             buildTarget_MVP(h11, s11, target);
 
             if (use_old_dm_ || inner_it > 0)
             {
+                MatrixType delta_dm("delta_dm", numst_, numst_);
                 delta_dm = target;
                 delta_dm -= dmInit;
 
@@ -291,16 +271,15 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
                 // evaluate free energy at beta=1
                 //
                 if (onpe0 && ct.verbose > 2)
-                    std::cout << "Target energy..." << std::endl;
+                    std::cout << "MVP --- Target energy..." << std::endl;
                 proj_mat_work_->setDM(target, orbitals.getIterativeIndex());
                 proj_mat_work_->computeOccupationsFromDM();
                 if (ct.verbose > 2) current_proj_mat->printOccupations(os_);
-                double nel = proj_mat_work_->getNel();
+                const double nel = proj_mat_work_->getNel();
                 if (onpe0 && ct.verbose > 1)
-                    os_ << "Number of electrons at beta=1 : " << nel
+                    os_ << "MVP --- Number of electrons at beta=1 : " << nel
                         << std::endl;
 
-                // if( onpe0 )os_<<"Rho..."<<endl;
                 rho_->computeRho(orbitals, target);
                 rho_->rescaleTotalCharge();
 
@@ -323,13 +302,13 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
                     ts1, proj_mat_work_, orbitals, ct.verbose - 1, os_);
 
                 // line minimization
-                double beta
+                const double beta
                     = minQuadPolynomial(e0, e1, de0, (ct.verbose > 2), os_);
 
                 if (onpe0 && ct.verbose > 0)
                 {
                     os_ << std::setprecision(12);
-                    os_ << std::fixed << "Inner iteration " << inner_it
+                    os_ << std::fixed << "MVP inner iteration " << inner_it
                         << ", E0=" << e0 << ", E1=" << e1;
                     os_ << std::scientific << ", E0'=" << de0
                         << " -> beta=" << beta;
@@ -355,7 +334,6 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
                         os_ << "Number of electrons for interpolated DM = "
                             << pnel << std::endl;
                 }
-
                 // if( onpe0 )os_<<"Rho..."<<endl;
                 rho_->computeRho(orbitals, *work_);
                 rho_->rescaleTotalCharge();
@@ -363,6 +341,7 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
 
         } // inner iterations
 
+        // set DM to latest iteration value
         ProjectedMatrices<MatrixType>* projmatrices
             = dynamic_cast<ProjectedMatrices<MatrixType>*>(
                 orbitals.getProjMatrices());
@@ -375,11 +354,9 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
     if (onpe0 && ct.verbose > 1)
     {
         os_ << "---------------------------------------------------------------"
-               "-"
             << std::endl;
         os_ << "End MVP Solver..." << std::endl;
         os_ << "---------------------------------------------------------------"
-               "-"
             << std::endl;
     }
     solve_tm_.stop();
