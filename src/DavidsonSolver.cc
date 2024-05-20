@@ -598,7 +598,6 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
 
                 rho_->computeRho(
                     orbitals, work_orbitals, dm11, dm12, dm21, dm22);
-                rho_->rescaleTotalCharge();
 
                 mgmol_strategy_->update_pot(vh_init, ions_);
 
@@ -663,7 +662,6 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
 
                 rho_->computeRho(
                     orbitals, work_orbitals, dm11, dm12, dm21, dm22);
-                rho_->rescaleTotalCharge();
             }
 
         } // inner iterations
