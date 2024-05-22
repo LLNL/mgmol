@@ -25,7 +25,7 @@ cmake -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} \
       -DMPIEXEC_PREFLAGS="--oversubscribe" \
       -DMGMOL_WITH_CLANG_FORMAT=ON \
       -DCMAKE_PREFIX_PATH=${HOME}/bin \
-      -D CMAKE_CXX_FLAGS="-Wall -pedantic -Wextra" \
+      -DCMAKE_CXX_FLAGS="-Wall -pedantic -Wextra" \
       ..
 
 # call make install

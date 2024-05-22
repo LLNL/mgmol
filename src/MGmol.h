@@ -10,6 +10,8 @@
 #ifndef MGMOL_H
 #define MGMOL_H
 
+#include "mgmol_config.h"
+
 #include "Energy.h"
 #include "GridFuncVector.h"
 #include "Hamiltonian.h"
@@ -303,6 +305,10 @@ public:
     }
 
     OrbitalsType* loadOrbitalFromRestartFile(const std::string filename);
+
+#ifdef MGMOL_HAS_LIBROM
+    int save_orbital_snapshot(std::string snapshot_dir, OrbitalsType& orbitals);
+#endif
 };
 // Instantiate static variables here to avoid clang warnings
 template <class OrbitalsType>
