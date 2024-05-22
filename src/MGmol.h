@@ -305,6 +305,7 @@ public:
     }
 
     OrbitalsType* loadOrbitalFromRestartFile(const std::string filename);
+
 #ifdef MGMOL_HAS_LIBROM
     int save_orbital_snapshot(std::string snapshot_dir, OrbitalsType& orbitals);
 #endif
