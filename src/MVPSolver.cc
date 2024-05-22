@@ -302,7 +302,6 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
 
                 // if( onpe0 )os_<<"Rho..."<<endl;
                 rho_->computeRho(orbitals, target);
-                rho_->rescaleTotalCharge();
 
                 mgmol_strategy_->update_pot(vh_init, ions_);
 
@@ -358,7 +357,6 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
 
                 // if( onpe0 )os_<<"Rho..."<<endl;
                 rho_->computeRho(orbitals, *work_);
-                rho_->rescaleTotalCharge();
             }
 
         } // inner iterations

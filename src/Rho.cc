@@ -28,8 +28,6 @@ template <class OrbitalsType>
 Timer Rho<OrbitalsType>::compute_tm_("Rho::compute");
 template <class OrbitalsType>
 Timer Rho<OrbitalsType>::compute_blas_tm_("Rho::compute_usingBlas");
-// template <class OrbitalsType>
-// Timer Rho<OrbitalsType>::compute_offdiag_tm_("Rho::compute_offdiag");
 
 #ifdef HAVE_MAGMA
 template <typename ScalarType>
@@ -45,10 +43,6 @@ Rho<OrbitalsType>::Rho()
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     myspin_         = mmpi.myspin();
     nspin_          = mmpi.nspin();
-
-    // default values for block sizes
-    //    block_functions_ = 8;
-    //    block_space_     = 256;
 
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
@@ -75,31 +69,6 @@ void Rho<OrbitalsType>::setup(const OrthoType orbitals_type,
     orbitals_type_ = orbitals_type;
 
     orbitals_indexes_ = orbitals_indexes;
-}
-
-template <class OrbitalsType>
-void Rho<OrbitalsType>::extrapolate()
-{
-    double minus = -1;
-    double two   = 2.;
-    if (rho_minus1_.empty())
-    {
-        rho_minus1_.resize(nspin_);
-        rho_minus1_[myspin_].resize(np_);
-        memcpy(&rho_minus1_[myspin_][0], &rho_[myspin_][0],
-            np_ * sizeof(RHODTYPE));
-        return;
-    }
-    RHODTYPE* tmp = new RHODTYPE[np_];
-    memcpy(tmp, &rho_[myspin_][0], np_ * sizeof(RHODTYPE));
-
-    LinearAlgebraUtils<MemorySpace::Host>::MPscal(np_, two, &rho_[myspin_][0]);
-    LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
-        np_, minus, &rho_minus1_[myspin_][0], &rho_[myspin_][0]);
-
-    memcpy(&rho_minus1_[myspin_][0], tmp, np_ * sizeof(RHODTYPE));
-
-    delete[] tmp;
 }
 
 template <class OrbitalsType>
@@ -143,8 +112,6 @@ void Rho<OrbitalsType>::update(OrbitalsType& current_orbitals)
 #endif
 
     computeRho(current_orbitals);
-
-    rescaleTotalCharge();
 
     assert(iterative_index_ >= 0);
 
@@ -234,68 +201,6 @@ void Rho<OrbitalsType>::rescaleTotalCharge()
 #endif
 }
 
-// template <class OrbitalsType>
-// int Rho<OrbitalsType>::setupSubdomainData(const int iloc,
-//    const vector<const T*>& vorbitals,
-//    const ProjectedMatricesInterface* const projmatrices,
-//    vector<MATDTYPE>& melements, vector<vector<const ORBDTYPE*>>& vmpsi)
-//{
-//    // printWithTimeStamp("Rho<OrbitalsType>::setupSubdomainData()...",cout);
-//
-//    const short norb = (short)vorbitals.size();
-//    vmpsi.resize(norb);
-//
-//    const vector<int>& loc_indexes(orbitals_indexes_[iloc]);
-//    const int n_colors = (int)loc_indexes.size();
-//
-//    if (n_colors == 0) return 0;
-//
-//    vector<int> mycolors;
-//    mycolors.reserve(n_colors);
-//    for (int icolor = 0; icolor < n_colors; icolor++)
-//        if (loc_indexes[icolor] != -1) mycolors.push_back(icolor);
-//    const int nmycolors = (int)mycolors.size();
-//
-//    for (short j = 0; j < norb; j++)
-//        vmpsi[j].resize(nmycolors);
-//
-//    short j = 0;
-//    for (typename vector<const T*>::const_iterator it = vorbitals.begin();
-//         it != vorbitals.end(); ++it)
-//    {
-//        for (int color = 0; color < nmycolors; color++)
-//        {
-//            vmpsi[j][color] = (*it)->getPsi(mycolors[color], iloc);
-//            assert(vmpsi[j][color] != NULL);
-//        }
-//        j++;
-//    }
-//
-//    SquareLocalMatrices<MATDTYPE,MemorySpace::Host>&
-//    localX(projmatrices->getLocalX()); const MATDTYPE* const localX_iloc =
-//    localX.getSubMatrix(iloc); melements.clear(); melements.resize(nmycolors *
-//    nmycolors);
-//
-//    for (int i = 0; i < nmycolors; i++)
-//    {
-//        const int icolor = mycolors[i];
-//        if (norb == 1)
-//        {
-//            melements[i * nmycolors + i]
-//                = localX_iloc[icolor + n_colors * icolor];
-//        }
-//        const int jmax = (norb == 1) ? i : nmycolors;
-//        for (int j = 0; j < jmax; j++)
-//        {
-//            int jcolor = mycolors[j];
-//            melements[j * nmycolors + i]
-//                = localX_iloc[icolor + n_colors * jcolor];
-//        }
-//    }
-//
-//    return nmycolors;
-//}
-
 template <class OrbitalsType>
 void Rho<OrbitalsType>::accumulateCharge(const double alpha, const short ix_max,
     const ORBDTYPE* const psii, const ORBDTYPE* const psij,
@@ -304,235 +209,6 @@ void Rho<OrbitalsType>::accumulateCharge(const double alpha, const short ix_max,
     for (int ix = 0; ix < ix_max; ix++)
         plrho[ix] += (RHODTYPE)(alpha * (double)psii[ix] * (double)psij[ix]);
 }
-
-// template <class OrbitalsType>
-// void Rho<OrbitalsType>::computeRhoSubdomain(
-//    const int iloc_init, const int iloc_end, const OrbitalsType& orbitals)
-//{
-//    assert(orbitals_type_ == OrthoType::Eigenfunctions
-//        || orbitals_type_ == OrthoType::Nonorthogonal);
-//
-//    compute_tm_.start();
-//
-//    Mesh* mymesh = Mesh::instance();
-//
-//    const int loc_numpt = mymesh->locNumpt();
-//
-//    RHODTYPE* const prho = &rho_[myspin_][0];
-//
-//    vector<const T*> vorbitals;
-//    vorbitals.push_back(&orbitals);
-//
-//    const double nondiagfactor = 2.;
-//
-//    for (int iloc = iloc_init; iloc < iloc_end; iloc++)
-//    {
-//        const int istart = iloc * loc_numpt;
-//
-//        RHODTYPE* const lrho = &prho[istart];
-//
-//        vector<MATDTYPE> melements;
-//        vector<vector<const ORBDTYPE*>> vmpsi;
-//
-//        const int nmycolors = setupSubdomainData(
-//            iloc, vorbitals, orbitals.projMatrices(), melements, vmpsi);
-//        assert(vmpsi.size() == 1);
-//        vector<const ORBDTYPE*> mpsi = vmpsi[0];
-//
-//        const int nblocks_color = nmycolors / block_functions_;
-//        const int max_icolor    = (nmycolors % block_functions_ == 0)
-//                                   ? nmycolors
-//                                   : nblocks_color * block_functions_;
-//        const int missed_rows = nmycolors - max_icolor;
-//        //(*MPIdata::sout)<<"max_icolor="<<max_icolor<<endl;
-//        //(*MPIdata::sout)<<"Rho<OrbitalsType>::computeRhoSubdomain:
-//        //missed_rows="<<missed_rows<<endl;
-//        //(*MPIdata::sout)<<"nblocks_color="<<nblocks_color<<endl;
-//
-//#ifdef _OPENMP
-//#pragma omp parallel for
-//#endif
-//        for (int idx = 0; idx < loc_numpt; idx += block_space_)
-//        {
-//            const short ix_max = min(block_space_, loc_numpt - idx);
-//            // RHODTYPE* const plrho=lrho+idx;
-//
-//            // non-diagonal blocks
-//            for (int icolor = 0; icolor < max_icolor;
-//                 icolor += block_functions_)
-//                for (int jcolor = 0; jcolor < icolor;
-//                     jcolor += block_functions_)
-//                {
-//
-//                    nonOrthoRhoKernel(icolor, block_functions_, jcolor,
-//                        block_functions_, idx, ix_max, &melements[0],
-//                        nmycolors, mpsi, nondiagfactor, lrho);
-//                }
-//            // finish missing rows ()
-//            if (missed_rows)
-//                for (int jcolor = 0; jcolor < max_icolor;
-//                     jcolor += block_functions_)
-//                {
-//                    nonOrthoRhoKernel(max_icolor, missed_rows, jcolor,
-//                        block_functions_, idx, ix_max, &melements[0],
-//                        nmycolors, mpsi, nondiagfactor, lrho);
-//                }
-//
-//            // diagonal blocks (jcolor=icolor)
-//            for (int icolor = 0; icolor < max_icolor;
-//                 icolor += block_functions_)
-//            {
-//                nonOrthoRhoKernelDiagonalBlock(icolor, block_functions_, idx,
-//                    ix_max, &melements[0], nmycolors, mpsi, lrho);
-//            }
-//            // finish missing rows () for diagonal blocks
-//            if (missed_rows)
-//            {
-//                nonOrthoRhoKernelDiagonalBlock(max_icolor, missed_rows, idx,
-//                    ix_max, &melements[0], nmycolors, mpsi, lrho);
-//            }
-//        }
-//    }
-//
-//    compute_tm_.stop();
-//}
-
-// template <class OrbitalsType>
-// void Rho<OrbitalsType>::computeRhoSubdomainOffDiagBlock(const int iloc_init,
-//    const int iloc_end, const vector<const T*>& vorbitals,
-//    const ProjectedMatricesInterface* const projmatrices)
-//{
-//    assert(orbitals_type_ == OrthoType::Eigenfunctions
-//        || orbitals_type_ == OrthoType::Nonorthogonal);
-//    assert(vorbitals.size() == 2);
-//
-//    compute_offdiag_tm_.start();
-//
-//    //
-//    printWithTimeStamp("Rho<OrbitalsType>::computeRhoSubdomainOffDiagBlock()...",cout);
-//
-//    Mesh* mymesh = Mesh::instance();
-//
-//    const int loc_numpt = mymesh->locNumpt();
-//
-//    RHODTYPE* const prho = &rho_[myspin_][0];
-//
-//    for (int iloc = iloc_init; iloc < iloc_end; iloc++)
-//    {
-//        const int istart = iloc * loc_numpt;
-//
-//        RHODTYPE* const lrho = &prho[istart];
-//
-//        vector<MATDTYPE> melements;
-//        vector<vector<const ORBDTYPE*>> vmpsi;
-//
-//        const int nmycolors = setupSubdomainData(
-//            iloc, vorbitals, projmatrices, melements, vmpsi);
-//        const int nblocks_color = nmycolors / block_functions_;
-//        const int max_icolor    = (nmycolors % block_functions_ == 0)
-//                                   ? nmycolors
-//                                   : nblocks_color * block_functions_;
-//        const int missed_rows = nmycolors - max_icolor;
-//        //(*MPIdata::sout)<<"max_icolor="<<max_icolor<<endl;
-//        //(*MPIdata::sout)<<"Rho<OrbitalsType>::computeRhoSubdomainOffDiagBlock:
-//        //missed_rows="<<missed_rows<<endl;
-//        //(*MPIdata::sout)<<"nblocks_color="<<nblocks_color<<endl;
-//
-//        for (int idx = 0; idx < loc_numpt; idx += block_space_)
-//        {
-//            const short ix_max    = min(block_space_, loc_numpt - idx);
-//            RHODTYPE* const plrho = lrho + idx;
-//
-//            for (int istart = 0; istart < max_icolor;
-//                 istart += block_functions_)
-//                for (int jstart = 0; jstart < max_icolor;
-//                     jstart += block_functions_)
-//                {
-//                    for (short jcolor = jstart;
-//                         jcolor < jstart + block_functions_; jcolor++)
-//                    {
-//                        const int jld              = jcolor * nmycolors;
-//                        const ORBDTYPE* const psij = &vmpsi[1][jcolor][idx];
-//                        for (short icolor = istart;
-//                             icolor < istart + block_functions_; icolor++)
-//                        {
-//                            const ORBDTYPE* const psii =
-//                            &vmpsi[0][icolor][idx]; const double alpha
-//                                = (double)melements[jld + icolor];
-//                            accumulateCharge(alpha, ix_max, psii, psij,
-//                            plrho);
-//                        }
-//                    }
-//                }
-//            // finish missing rows and cols
-//            if (missed_rows)
-//            {
-//                int icolor = max_icolor;
-//                int imax   = nmycolors % block_functions_;
-//                for (int jcolor = 0; jcolor < max_icolor;
-//                     jcolor += block_functions_)
-//                {
-//                    for (short j = 0; j < block_functions_; j++)
-//                    {
-//                        const int jstart = (jcolor + j) * nmycolors + icolor;
-//                        const ORBDTYPE* const psij = &vmpsi[1][jcolor +
-//                        j][idx]; for (short i = 0; i < imax; i++)
-//                        {
-//                            const ORBDTYPE* const psii
-//                                = &vmpsi[0][icolor + i][idx];
-//                            const double alpha = (double)melements[jstart +
-//                            i]; accumulateCharge(alpha, ix_max, psii, psij,
-//                            plrho);
-//                        }
-//                    }
-//                }
-//            }
-//            if (missed_rows)
-//            {
-//                int jcolor = max_icolor;
-//                int jmax   = nmycolors % block_functions_;
-//                for (int icolor = 0; icolor < max_icolor;
-//                     icolor += block_functions_)
-//                {
-//                    for (short j = 0; j < jmax; j++)
-//                    {
-//                        const int jstart = (jcolor + j) * nmycolors + icolor;
-//                        const ORBDTYPE* const psij = &vmpsi[1][jcolor +
-//                        j][idx]; for (short i = 0; i < block_functions_; i++)
-//                        {
-//                            const ORBDTYPE* const psii
-//                                = &vmpsi[0][icolor + i][idx];
-//                            const double alpha = (double)melements[jstart +
-//                            i]; accumulateCharge(alpha, ix_max, psii, psij,
-//                            plrho);
-//                        }
-//                    }
-//                }
-//            }
-//            if (missed_rows)
-//            {
-//                int icolor = max_icolor;
-//                int imax   = nmycolors % block_functions_;
-//                int jcolor = max_icolor;
-//                int jmax   = nmycolors % block_functions_;
-//                for (short j = 0; j < jmax; j++)
-//                {
-//                    const int jstart = (jcolor + j) * nmycolors + icolor;
-//                    const ORBDTYPE* const psij = &vmpsi[1][jcolor + j][idx];
-//                    for (short i = 0; i < imax; i++)
-//                    {
-//                        const ORBDTYPE* const psii = &vmpsi[0][icolor +
-//                        i][idx]; const double alpha = (double)melements[jstart
-//                        + i]; accumulateCharge(alpha, ix_max, psii, psij,
-//                        plrho);
-//                    }
-//                }
-//            }
-//        }
-//    }
-//
-//    compute_offdiag_tm_.stop();
-//}
 
 template <class OrbitalsType>
 void Rho<OrbitalsType>::computeRhoSubdomain(const int iloc_init,
@@ -587,18 +263,27 @@ void Rho<OrbitalsType>::computeRho(OrbitalsType& orbitals)
 }
 
 template <class OrbitalsType>
+void Rho<OrbitalsType>::resetValues()
+{
+    Mesh* mymesh        = Mesh::instance();
+    const int subdivx   = mymesh->subdivx();
+    const int loc_numpt = mymesh->locNumpt();
+
+    memset(&rho_[myspin_][0], 0, subdivx * loc_numpt * sizeof(RHODTYPE));
+}
+
+template <class OrbitalsType>
 void Rho<OrbitalsType>::computeRho(
     OrbitalsType& orbitals, ProjectedMatricesInterface& proj_matrices)
 {
     assert(rho_.size() > 0);
     assert(rho_[myspin_].size() > 0);
 
-    Mesh* mymesh        = Mesh::instance();
-    const int subdivx   = mymesh->subdivx();
-    const int loc_numpt = mymesh->locNumpt();
-    Control& ct         = *(Control::instance());
+    Mesh* mymesh      = Mesh::instance();
+    const int subdivx = mymesh->subdivx();
+    Control& ct       = *(Control::instance());
 
-    memset(&rho_[myspin_][0], 0, subdivx * loc_numpt * sizeof(RHODTYPE));
+    resetValues();
 
     if (orbitals_type_ == OrthoType::Eigenfunctions
         || (orbitals_type_ == OrthoType::Orthonormal && ct.fullyOccupied()))
@@ -611,7 +296,6 @@ void Rho<OrbitalsType>::computeRho(
     {
         proj_matrices.updateSubMatX();
 
-        // if (dynamic_cast<LocGridOrbitals*>(&orbitals)) but it
         if (std::is_same<OrbitalsType, LocGridOrbitals>::value)
         {
             SquareLocalMatrices<MATDTYPE, memory_space_type>& localX(
@@ -625,6 +309,8 @@ void Rho<OrbitalsType>::computeRho(
     }
 
     gatherSpin();
+
+    rescaleTotalCharge();
 }
 
 template <class OrbitalsType>
@@ -635,11 +321,10 @@ void Rho<OrbitalsType>::computeRho(OrbitalsType& orbitals1,
 {
     assert(orbitals_type_ == OrthoType::Nonorthogonal);
 
-    Mesh* mymesh        = Mesh::instance();
-    const int subdivx   = mymesh->subdivx();
-    const int loc_numpt = mymesh->locNumpt();
+    Mesh* mymesh      = Mesh::instance();
+    const int subdivx = mymesh->subdivx();
 
-    memset(&rho_[myspin_][0], 0, subdivx * loc_numpt * sizeof(RHODTYPE));
+    resetValues();
 
     // 11 diagonal block
     ProjectedMatrices<MatrixType>* projmatrices1
@@ -655,18 +340,14 @@ void Rho<OrbitalsType>::computeRho(OrbitalsType& orbitals1,
     projmatrices2->updateSubMatX(dm22);
     computeRhoSubdomainUsingBlas3(0, subdivx, orbitals2);
 
-    // non diagonal blocks
-    // vector<const T*> vorbitals;
-    // vorbitals.push_back(&orbitals1);
-    // vorbitals.push_back(&orbitals2);
-
     MatrixType dm(dm12);
     dm.scal(2.); // use symmetry to reduce work
     projmatrices1->updateSubMatX(dm);
-    //    computeRhoSubdomainOffDiagBlock(0, subdivx, vorbitals, projmatrices1);
     computeRhoSubdomainUsingBlas3(0, subdivx, orbitals1, orbitals2);
 
     gatherSpin();
+
+    rescaleTotalCharge();
 }
 
 template <class OrbitalsType>
@@ -769,11 +450,10 @@ void Rho<OrbitalsType>::computeRho(OrbitalsType& orbitals, const MatrixType& dm)
 
     iterative_index_++;
 
-    Mesh* mymesh        = Mesh::instance();
-    const int subdivx   = mymesh->subdivx();
-    const int loc_numpt = mymesh->locNumpt();
+    Mesh* mymesh      = Mesh::instance();
+    const int subdivx = mymesh->subdivx();
 
-    memset(&rho_[myspin_][0], 0, subdivx * loc_numpt * sizeof(RHODTYPE));
+    resetValues();
 
     ProjectedMatrices<MatrixType>* projmatrices
         = dynamic_cast<ProjectedMatrices<MatrixType>*>(
@@ -783,6 +463,8 @@ void Rho<OrbitalsType>::computeRho(OrbitalsType& orbitals, const MatrixType& dm)
     computeRhoSubdomainUsingBlas3(0, subdivx, orbitals);
 
     gatherSpin();
+
+    rescaleTotalCharge();
 }
 
 template <class OrbitalsType>
@@ -879,7 +561,6 @@ void Rho<OrbitalsType>::printTimers(std::ostream& os)
     update_tm_.print(os);
     compute_tm_.print(os);
     compute_blas_tm_.print(os);
-    // compute_offdiag_tm_.print(os);
 }
 
 template class Rho<LocGridOrbitals>;

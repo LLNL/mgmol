@@ -35,24 +35,13 @@ class Rho
 
     int verbosity_level_;
 
-    // parameters for "blocking" in loops over functions and space
-    // int block_functions_;
-    // int block_space_;
-
     static Timer update_tm_;
     static Timer compute_tm_;
     static Timer compute_blas_tm_;
-    // static Timer compute_offdiag_tm_;
 
     double computeTotalCharge();
-    // void computeRhoSubdomain(const int iloc_init, const int iloc_end,
-    //    const T& orbitals);
     void computeRhoSubdomain(const int iloc_init, const int iloc_end,
         const OrbitalsType& orbitals, const std::vector<double>& occ);
-    // void computeRhoSubdomainOffDiagBlock(const int iloc_init,
-    //    const int iloc_end,
-    //    const std::vector<const T*>& vorbitals,
-    //    const ProjectedMatricesInterface* const);
     void computeRhoSubdomainUsingBlas3(const int iloc_init, const int iloc_end,
         const OrbitalsType& orbitals1, const OrbitalsType& orbitals2);
     void computeRhoSubdomainUsingBlas3(
@@ -64,11 +53,6 @@ class Rho
     void accumulateCharge(const double alpha, const short ix_max,
         const ORBDTYPE* const psii, const ORBDTYPE* const psij,
         RHODTYPE* const plrho);
-    // int setupSubdomainData(const int iloc,
-    //    const std::vector<const T*>& vorbitals,
-    //    const ProjectedMatricesInterface* const projmatrices,
-    //    std::vector<MATDTYPE>& melements,
-    //    std::vector<std::vector<const ORBDTYPE*>>& mpsi);
 
     void computeRho(OrbitalsType& orbitals);
     void computeRho(
@@ -76,15 +60,17 @@ class Rho
 
     void gatherSpin();
 
+    void resetValues();
+
+    void rescaleTotalCharge();
+
 public:
     // electronic density on grid
     std::vector<std::vector<RHODTYPE>> rho_;
-    std::vector<std::vector<RHODTYPE>> rho_minus1_;
 
     Rho();
     ~Rho(){};
 
-    void rescaleTotalCharge();
     void setup(
         const OrthoType orbitals_type, const std::vector<std::vector<int>>&);
     void setVerbosityLevel(const int vlevel) { verbosity_level_ = vlevel; }
@@ -105,17 +91,10 @@ public:
     void initUniform();
     int getIterativeIndex() const { return iterative_index_; }
     int readRestart(HDFrestart& file);
-    void extrapolate();
     void axpyRhoc(const double alpha, RHODTYPE* rhoc);
 
     template <typename T2>
     double dotWithRho(const T2* const func) const;
-
-    // void setupBlockSizes(const int block_functions, const int block_space)
-    //{
-    //    block_functions_ = block_functions;
-    //    block_space_     = block_space;
-    //}
 
     static void printTimers(std::ostream& os);
 };
