@@ -448,12 +448,14 @@ void ProjectedMatrices<MatrixType>::updateDM(const int iterative_index)
 
 #ifndef NDEBUG
     double nel = getNel();
-    std::cout << "ProjectedMatrices<MatrixType>::updateDM(), nel = " << nel
-              << std::endl;
+    if (mmpi.instancePE0())
+        std::cout << "ProjectedMatrices<MatrixType>::updateDM(), nel = " << nel
+                  << std::endl;
     assert(std::isfinite(nel));
     double energy = getExpectationH();
-    std::cout << "ProjectedMatrices<MatrixType>::updateDM(), energy = "
-              << energy << std::endl;
+    if (mmpi.instancePE0())
+        std::cout << "ProjectedMatrices<MatrixType>::updateDM(), energy = "
+                  << energy << std::endl;
 #endif
 }
 
@@ -935,6 +937,11 @@ void ProjectedMatrices<MatrixType>::computeLoewdinTransform(
 
     if (transform_matrices)
     {
+        Control& ct     = *(Control::instance());
+        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+        if (mmpi.instancePE0() && ct.verbose > 1)
+            std::cout << "Transform DM to reflect Loewdin orthonormalization"
+                      << std::endl;
         assert(sqrtMat);
 
         // transform DM to reflect Loewdin orthonormalization
