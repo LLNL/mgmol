@@ -262,6 +262,12 @@ void ProjectedMatrices<MatrixType>::applyInvS(
 template <class MatrixType>
 void ProjectedMatrices<MatrixType>::setDMto2InvS()
 {
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    Control& ct     = *(Control::instance());
+
+    if (mmpi.instancePE0() && ct.verbose > 1)
+        std::cout << "ProjectedMatrices::setDMto2InvS()..." << std::endl;
+
     dm_->setto2InvS(gm_->getInverse(), gm_->getAssociatedOrbitalsIndex());
 }
 
