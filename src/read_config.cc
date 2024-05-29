@@ -20,8 +20,7 @@ namespace po = boost::program_options;
 
 int read_config(int argc, char** argv, po::variables_map& vm,
     std::string& input_file, std::string& lrs_filename,
-    std::string& constraints_filename, float& total_spin, bool& with_spin,
-    bool& tcheck)
+    std::string& constraints_filename, float& total_spin, bool& with_spin)
 {
     // use configure file if it can be found
     // std::string config_filename("mgmol.cfg");
@@ -373,10 +372,6 @@ int read_config(int argc, char** argv, po::variables_map& vm,
             return 0;
         }
 
-        if (vm.count("check"))
-        {
-            tcheck = true;
-        }
         if (vm.count("spin"))
         {
             total_spin = vm["spin"].as<float>();

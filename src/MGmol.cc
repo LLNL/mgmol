@@ -113,73 +113,29 @@ template <class OrbitalsType>
 MGmol<OrbitalsType>::MGmol(MPI_Comm comm, std::ostream& os,
     std::string input_filename, std::string lrs_filename,
     std::string constraints_filename)
-    : os_(os)
+    : os_(os), comm_(comm)
 {
-    comm_ = comm;
-
-    constraints_ = new ConstraintSet();
+    constraints_.reset(new ConstraintSet());
 
     mgmol::out = &os;
 
-    geom_optimizer_ = nullptr;
-    local_cluster_  = nullptr;
-    proj_matrices_  = nullptr;
-    dm_strategy_    = nullptr;
-
-    h5f_file_ = nullptr;
-
-    aomm_ = nullptr;
-
-    spreadf_ = nullptr;
-
-    spread_penalty_ = nullptr;
-
-    orbitals_precond_ = nullptr;
-
-    forces_ = nullptr;
-
-    energy_ = nullptr;
+    current_orbitals_ = nullptr;
 
     setupFromInput(input_filename);
 
+    /*
+     * Extra setup if using localization regions
+     */
     setupLRs(lrs_filename);
 
-    setupConstraintsFromInput(constraints_filename);
-
-    setup();
+    if (!constraints_filename.empty())
+        setupConstraintsFromInput(constraints_filename);
 }
 
 template <class OrbitalsType>
 MGmol<OrbitalsType>::~MGmol()
 {
-    delete electrostat_;
-    delete rho_;
-    delete constraints_;
-    delete xcongrid_;
-    delete energy_;
-    if (hamiltonian_ != nullptr) delete hamiltonian_;
-    if (geom_optimizer_ != nullptr) delete geom_optimizer_;
-
-    if (currentMasks_ != nullptr) delete currentMasks_;
-    if (corrMasks_ != nullptr) delete corrMasks_;
-
-    if (aomm_ != nullptr) delete aomm_;
-
-    delete current_orbitals_;
-    delete ions_;
-    delete g_kbpsi_;
-
-    delete proj_matrices_;
-    if (local_cluster_ != nullptr) delete local_cluster_;
-
-    if (h5f_file_ != nullptr) delete h5f_file_;
-
-    if (spreadf_ != nullptr) delete spreadf_;
-
-    if (spread_penalty_ != nullptr) delete spread_penalty_;
-
-    delete forces_;
-    if (dm_strategy_ != nullptr) delete dm_strategy_;
+    if (current_orbitals_) delete current_orbitals_;
 }
 
 template <>
@@ -192,18 +148,17 @@ void MGmol<LocGridOrbitals>::initialMasks()
     if (ct.verbose > 0)
         printWithTimeStamp("MGmol<OrbitalsType>::initialMasks()...", os_);
 
-    currentMasks_ = new MasksSet(false, ct.getMGlevels());
+    currentMasks_
+        = std::shared_ptr<MasksSet>(new MasksSet(false, ct.getMGlevels()));
     currentMasks_->setup(lrs_);
 
-    corrMasks_ = new MasksSet(true, 0);
+    corrMasks_ = std::shared_ptr<MasksSet>(new MasksSet(true, 0));
     corrMasks_->setup(lrs_);
 }
 
 template <>
 void MGmol<ExtendedGridOrbitals>::initialMasks()
 {
-    currentMasks_ = nullptr;
-    corrMasks_    = nullptr;
 }
 
 template <class OrbitalsType>
@@ -227,7 +182,7 @@ int MGmol<OrbitalsType>::initial()
 
     pb::Lap<ORBDTYPE>* lapop
         = ct.Mehrstellen() ? hamiltonian_->lapOper() : nullptr;
-    g_kbpsi_ = new KBPsiMatrixSparse(lapop);
+    g_kbpsi_.reset(new KBPsiMatrixSparse(lapop));
 
     check_anisotropy();
 
@@ -269,7 +224,7 @@ int MGmol<OrbitalsType>::initial()
         // set number of iterations to 10.
         if (ct.load_balancing_alpha > 0.0)
         {
-            local_cluster_ = new ClusterOrbitals(lrs_);
+            local_cluster_.reset(new ClusterOrbitals(lrs_));
             local_cluster_->setup();
             local_cluster_->computeClusters(ct.load_balancing_max_iterations);
         }
@@ -289,29 +244,31 @@ int MGmol<OrbitalsType>::initial()
     {
 #ifdef HAVE_MAGMA
         if (use_replicated_matrix)
-            proj_matrices_ = new ProjectedMatricesMehrstellen<ReplicatedMatrix>(
-                ct.numst, with_spin, ct.occ_width);
+            proj_matrices_.reset(
+                new ProjectedMatricesMehrstellen<ReplicatedMatrix>(
+                    ct.numst, with_spin, ct.occ_width));
         else
 #endif
-            proj_matrices_ = new ProjectedMatricesMehrstellen<
+            proj_matrices_.reset(new ProjectedMatricesMehrstellen<
                 dist_matrix::DistMatrix<DISTMATDTYPE>>(
-                ct.numst, with_spin, ct.occ_width);
+                ct.numst, with_spin, ct.occ_width));
     }
     else if (ct.short_sighted)
-        proj_matrices_ = new ProjectedMatricesSparse(
-            ct.numst, ct.occ_width, lrs_, local_cluster_);
+        proj_matrices_.reset(new ProjectedMatricesSparse(
+            ct.numst, ct.occ_width, lrs_, local_cluster_.get()));
     else
 #ifdef HAVE_MAGMA
         if (use_replicated_matrix)
-        proj_matrices_ = new ProjectedMatrices<ReplicatedMatrix>(
-            ct.numst, with_spin, ct.occ_width);
+        proj_matrices_.reset(new ProjectedMatrices<ReplicatedMatrix>(
+            ct.numst, with_spin, ct.occ_width));
     else
 #endif
-        proj_matrices_
-            = new ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>(
-                ct.numst, with_spin, ct.occ_width);
+        proj_matrices_.reset(
+            new ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>(
+                ct.numst, with_spin, ct.occ_width));
 
-    forces_ = new Forces<OrbitalsType>(hamiltonian_, rho_, proj_matrices_);
+    forces_.reset(new Forces<OrbitalsType>(
+        hamiltonian_.get(), rho_.get(), proj_matrices_.get()));
 
     if (ct.verbose > 0)
         printWithTimeStamp(
@@ -326,8 +283,8 @@ int MGmol<OrbitalsType>::initial()
         printWithTimeStamp("MGmol<OrbitalsType>::initial(), create T...", os_);
 
     current_orbitals_ = new OrbitalsType("Primary", mygrid, mymesh->subdivx(),
-        ct.numst, ct.bcWF, proj_matrices_, lrs_, currentMasks_, corrMasks_,
-        local_cluster_, true);
+        ct.numst, ct.bcWF, proj_matrices_.get(), lrs_, currentMasks_.get(),
+        corrMasks_.get(), local_cluster_.get(), true);
 
     increaseMemorySlotsForOrbitals<MemorySpaceType>();
 
@@ -372,7 +329,7 @@ int MGmol<OrbitalsType>::initial()
                 "MGmol<OrbitalsType>::initial(), init wf and masks...", os_);
 
         // Make temp mask for initial random wave functions
-        if (ct.init_loc == 1 && currentMasks_ != nullptr)
+        if (ct.init_loc == 1 && currentMasks_)
         {
             float cut_init = ct.initRadius();
             assert(cut_init > 0.);
@@ -383,7 +340,7 @@ int MGmol<OrbitalsType>::initial()
         current_orbitals_->initWF(lrs_);
 
         // initialize masks again
-        if (ct.init_loc == 1 && currentMasks_ != nullptr)
+        if (ct.init_loc == 1 && currentMasks_)
         {
             currentMasks_->initialize(lrs_, 0);
         }
@@ -427,9 +384,10 @@ int MGmol<OrbitalsType>::initial()
     }
 
     if (ct.verbose > 0) printWithTimeStamp("Initialize XC functional...", os_);
-    xcongrid_ = XCfunctionalFactory<OrbitalsType>::create(
-        ct.xctype, mmpi.nspin(), *rho_, pot);
-    assert(xcongrid_ != nullptr);
+    xcongrid_
+        = std::shared_ptr<XConGrid>(XCfunctionalFactory<OrbitalsType>::create(
+            ct.xctype, mmpi.nspin(), *rho_, pot));
+    assert(xcongrid_);
 
     // initialize nl potentials with restart values if possible
     //    if( ct.restart_info>1 )
@@ -473,7 +431,7 @@ int MGmol<OrbitalsType>::initial()
     {
         Vector3D origin(mygrid.origin(0), mygrid.origin(1), mygrid.origin(2));
         Vector3D ll(mygrid.ll(0), mygrid.ll(1), mygrid.ll(2));
-        spreadf_ = new SpreadsAndCenters<OrbitalsType>(origin, ll);
+        spreadf_.reset(new SpreadsAndCenters<OrbitalsType>(origin, ll));
     }
 
     bool energy_with_spread_penalty = false;
@@ -481,26 +439,30 @@ int MGmol<OrbitalsType>::initial()
     {
         if (ct.isSpreadFunctionalVolume())
         {
-            spread_penalty_ = new SpreadPenaltyVolume<OrbitalsType>(spreadf_,
-                ct.spreadPenaltyTarget(), ct.spreadPenaltyAlphaFactor(),
-                ct.spreadPenaltyDampingFactor());
+            spread_penalty_.reset(
+                new SpreadPenaltyVolume<OrbitalsType>(spreadf_.get(),
+                    ct.spreadPenaltyTarget(), ct.spreadPenaltyAlphaFactor(),
+                    ct.spreadPenaltyDampingFactor()));
         }
         else if (ct.isSpreadFunctionalEnergy())
         {
             energy_with_spread_penalty = true;
-            spread_penalty_ = new EnergySpreadPenalty<OrbitalsType>(spreadf_,
-                ct.spreadPenaltyTarget(), ct.spreadPenaltyAlphaFactor());
+            spread_penalty_.reset(
+                new EnergySpreadPenalty<OrbitalsType>(spreadf_.get(),
+                    ct.spreadPenaltyTarget(), ct.spreadPenaltyAlphaFactor()));
         }
         else
-            spread_penalty_ = new SpreadPenalty<OrbitalsType>(spreadf_,
-                ct.spreadPenaltyTarget(), ct.spreadPenaltyAlphaFactor(),
-                ct.spreadPenaltyDampingFactor());
+            spread_penalty_.reset(
+                new SpreadPenalty<OrbitalsType>(spreadf_.get(),
+                    ct.spreadPenaltyTarget(), ct.spreadPenaltyAlphaFactor(),
+                    ct.spreadPenaltyDampingFactor()));
     }
 
-    SpreadPenaltyInterface<OrbitalsType>* spread_penalty
+    std::shared_ptr<SpreadPenaltyInterface<OrbitalsType>> spread_penalty
         = energy_with_spread_penalty ? spread_penalty_ : nullptr;
-    energy_ = new Energy<OrbitalsType>(
-        mygrid, *ions_, pot, *electrostat_, *rho_, *xcongrid_, spread_penalty);
+    energy_ = std::shared_ptr<Energy<OrbitalsType>>(
+        new Energy<OrbitalsType>(mygrid, *ions_, pot, *electrostat_, *rho_,
+            *xcongrid_, spread_penalty.get()));
 
     if (ct.verbose > 0) printWithTimeStamp("Setup matrices...", os_);
 
@@ -509,15 +471,16 @@ int MGmol<OrbitalsType>::initial()
     // HMVP algorithm requires that H is initialized
 #ifdef HAVE_MAGMA
     if (use_replicated_matrix)
-        dm_strategy_
-            = DMStrategyFactory<OrbitalsType, ReplicatedMatrix>::create(comm_,
-                os_, *ions_, rho_, energy_, electrostat_, this, proj_matrices_,
-                current_orbitals_);
+        dm_strategy_.reset(
+            DMStrategyFactory<OrbitalsType, ReplicatedMatrix>::create(comm_,
+                os_, *ions_, rho_.get(), energy_.get(), electrostat_.get(),
+                this, proj_matrices_.get(), current_orbitals_));
     else
 #endif
-        dm_strategy_ = DMStrategyFactory<OrbitalsType,
-            dist_matrix::DistMatrix<double>>::create(comm_, os_, *ions_, rho_,
-            energy_, electrostat_, this, proj_matrices_, current_orbitals_);
+        dm_strategy_.reset(DMStrategyFactory<OrbitalsType,
+            dist_matrix::DistMatrix<double>>::create(comm_, os_, *ions_,
+            rho_.get(), energy_.get(), electrostat_.get(), this,
+            proj_matrices_.get(), current_orbitals_));
 
     // theta = invB * Hij
     proj_matrices_->updateThetaAndHB();
@@ -609,7 +572,7 @@ void MGmol<OrbitalsType>::finalEnergy()
     // Get the total energy
     const double ts = 0.5 * proj_matrices_->computeEntropy(); // in [Ha]
     total_energy_   = energy_->evaluateTotal(
-        ts, proj_matrices_, *current_orbitals_, 2, os_);
+        ts, proj_matrices_.get(), *current_orbitals_, 2, os_);
 }
 
 template <class OrbitalsType>
@@ -624,7 +587,7 @@ void MGmol<OrbitalsType>::printMM()
         ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
             = dynamic_cast<
                 ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
-                proj_matrices_);
+                proj_matrices_.get());
         assert(projmatrices != nullptr);
         projmatrices->printHamiltonianMM(tfileh);
     }
@@ -697,7 +660,7 @@ void MGmol<OrbitalsType>::write_header()
         ct.printPoissonOptions(os_);
     } // onpe0
 
-    if (current_orbitals_ != nullptr && ct.verbose > 0)
+    if (current_orbitals_ && ct.verbose > 0)
     {
         current_orbitals_->printNumst(os_);
         current_orbitals_->printChromaticNumber(os_);
@@ -802,9 +765,9 @@ void MGmol<OrbitalsType>::printEigAndOcc()
 #ifdef HAVE_MAGMA
         // try with ReplicatedMatrix first
         {
-            ProjectedMatrices<ReplicatedMatrix>* projmatrices
-                = dynamic_cast<ProjectedMatrices<ReplicatedMatrix>*>(
-                    proj_matrices_);
+            std::shared_ptr<ProjectedMatrices<ReplicatedMatrix>> projmatrices
+                = std::dynamic_pointer_cast<
+                    ProjectedMatrices<ReplicatedMatrix>>(proj_matrices_);
             if (projmatrices)
             {
                 projmatrices->printEigenvalues(os_);
@@ -815,10 +778,10 @@ void MGmol<OrbitalsType>::printEigAndOcc()
 #endif
         if (!printflag)
         {
-            ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*
-                projmatrices
-                = dynamic_cast<
-                    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
+            std::shared_ptr<
+                ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>>
+                projmatrices = std::dynamic_pointer_cast<
+                    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>>(
                     proj_matrices_);
             assert(projmatrices);
 
@@ -1062,21 +1025,23 @@ double MGmol<OrbitalsType>::get_evnl(const Ions& ions)
     double val;
     if (ct.short_sighted)
     {
-        ProjectedMatricesSparse* projmatrices
-            = dynamic_cast<ProjectedMatricesSparse*>(proj_matrices_);
-        assert(projmatrices);
-
-        val = g_kbpsi_->getEvnl(ions, projmatrices);
-    }
-    else
-    {
-        ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
-            = dynamic_cast<
-                ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
+        std::shared_ptr<ProjectedMatricesSparse> projmatrices
+            = std::dynamic_pointer_cast<ProjectedMatricesSparse>(
                 proj_matrices_);
         assert(projmatrices);
 
-        val = g_kbpsi_->getEvnl(ions, projmatrices);
+        val = g_kbpsi_->getEvnl(ions, projmatrices.get());
+    }
+    else
+    {
+        std::shared_ptr<
+            ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>>
+            projmatrices = std::dynamic_pointer_cast<
+                ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>>(
+                proj_matrices_);
+        assert(projmatrices);
+
+        val = g_kbpsi_->getEvnl(ions, projmatrices.get());
     }
 
     evnl_tm_.stop();
@@ -1102,11 +1067,11 @@ void MGmol<OrbitalsType>::setup()
         printWithTimeStamp("MGmol<OrbitalsType>::setup()...", os_);
 
     if (ct.verbose > 0) printWithTimeStamp("Setup VH...", os_);
-    electrostat_ = new Electrostatic(
-        ct.getPoissonFDtype(), ct.bcPoisson, ct.screening_const);
+    electrostat_ = std::shared_ptr<Electrostatic>(new Electrostatic(
+        ct.getPoissonFDtype(), ct.bcPoisson, ct.screening_const));
     electrostat_->setup(ct.vh_init);
 
-    rho_ = new Rho<OrbitalsType>();
+    rho_ = std::shared_ptr<Rho<OrbitalsType>>(new Rho<OrbitalsType>());
     rho_->setVerbosityLevel(ct.verbose);
 
 #ifdef HAVE_MAGMA
@@ -1193,17 +1158,18 @@ template <class OrbitalsType>
 void MGmol<OrbitalsType>::setGamma(
     const pb::Lap<ORBDTYPE>& lapOper, const Potentials& pot)
 {
-    assert(orbitals_precond_ != nullptr);
+    assert(orbitals_precond_);
 
     Control& ct = *(Control::instance());
 
-    orbitals_precond_->setGamma(lapOper, pot, ct.getMGlevels(), proj_matrices_);
+    orbitals_precond_->setGamma(
+        lapOper, pot, ct.getMGlevels(), proj_matrices_.get());
 }
 
 template <class OrbitalsType>
 void MGmol<OrbitalsType>::precond_mg(OrbitalsType& phi)
 {
-    assert(orbitals_precond_ != nullptr);
+    assert(orbitals_precond_);
 
     orbitals_precond_->precond_mg(phi);
 }
@@ -1434,7 +1400,7 @@ template <class OrbitalsType>
 void MGmol<OrbitalsType>::addResidualSpreadPenalty(
     OrbitalsType& phi, OrbitalsType& res)
 {
-    assert(spread_penalty_ != nullptr);
+    assert(spread_penalty_);
 
     spread_penalty_->addResidual(phi, res);
 }

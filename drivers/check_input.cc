@@ -7,22 +7,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-//
-//                  main.cc
-//
-//    Description:
-//        Real grid, finite difference, molecular dynamics program
-//        for with nonorthogonal localized orbitals.
-//
-//        Uses Mehrstellen operators, multigrid accelerations, and
-//        non-local pseudopotentials.
-//
-//     Includes LDA and PBE exchange and correlation functionals.
-//
-// Units:
-//   Potentials, eigenvalues and operators in Rydberg
-//   Energies in Hartree
-//
 #include "Control.h"
 #include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
@@ -33,8 +17,6 @@
 
 #include <cassert>
 #include <iostream>
-#include <time.h>
-#include <vector>
 
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
@@ -50,14 +32,9 @@ int main(int argc, char** argv)
 
     MPI_Comm comm = MPI_COMM_WORLD;
 
-    /*
-     * Initialize general things, like magma, openmp, IO, ...
-     */
     mgmol_init(comm);
 
-    /*
-     * read runtime parameters
-     */
+    // read runtime parameters
     std::string input_filename("");
     std::string lrs_filename;
     std::string constraints_filename("");
@@ -67,7 +44,7 @@ int main(int argc, char** argv)
 
     po::variables_map vm;
 
-    // read from PE0 only
+    // read options from PE0 only
     if (MPIdata::onpe0)
     {
         read_config(argc, argv, vm, input_filename, lrs_filename,
@@ -78,9 +55,6 @@ int main(int argc, char** argv)
     MGmol_MPI& mmpi      = *(MGmol_MPI::instance());
     MPI_Comm global_comm = mmpi.commGlobal();
 
-    /*
-     * Setup control struct with run time parameters
-     */
     Control::setup(global_comm, with_spin, total_spin);
     Control& ct = *(Control::instance());
 
@@ -102,12 +76,9 @@ int main(int argc, char** argv)
             mgmol = new MGmol<ExtendedGridOrbitals>(global_comm, *MPIdata::sout,
                 input_filename, lrs_filename, constraints_filename);
 
-        mgmol->setup();
-
-        mgmol->run();
+        *MPIdata::sout << " Input parameters OK\n";
 
         delete mgmol;
-
     } // close main scope
 
     mgmol_finalize();
@@ -117,10 +88,6 @@ int main(int argc, char** argv)
     {
         std::cerr << "MPI Finalize failed!!!" << std::endl;
     }
-
-    time_t tt;
-    time(&tt);
-    if (onpe0) std::cout << " Run ended at " << ctime(&tt) << std::endl;
 
     return 0;
 }
