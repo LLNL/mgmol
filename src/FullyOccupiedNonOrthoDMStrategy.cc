@@ -8,19 +8,30 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "FullyOccupiedNonOrthoDMStrategy.h"
+#include "ExtendedGridOrbitals.h"
+#include "LocGridOrbitals.h"
 #include "ProjectedMatricesInterface.h"
 
-FullyOccupiedNonOrthoDMStrategy::FullyOccupiedNonOrthoDMStrategy(
+template <class OrbitalsType>
+FullyOccupiedNonOrthoDMStrategy<OrbitalsType>::FullyOccupiedNonOrthoDMStrategy(
     ProjectedMatricesInterface* proj_matrices)
     : proj_matrices_(proj_matrices)
 {
 }
 
-void FullyOccupiedNonOrthoDMStrategy::initialize() { update(); }
+template <class OrbitalsType>
+void FullyOccupiedNonOrthoDMStrategy<OrbitalsType>::initialize(
+    OrbitalsType& orbitals)
+{
+    update(orbitals);
+}
 
-int FullyOccupiedNonOrthoDMStrategy::update()
+template <class OrbitalsType>
+int FullyOccupiedNonOrthoDMStrategy<OrbitalsType>::update(
+    OrbitalsType& orbitals)
 {
     assert(proj_matrices_ != nullptr);
+    (void)orbitals;
 
     proj_matrices_->setDMto2InvS();
 
@@ -34,3 +45,6 @@ int FullyOccupiedNonOrthoDMStrategy::update()
 
     return 0; // success
 }
+
+template class FullyOccupiedNonOrthoDMStrategy<LocGridOrbitals>;
+template class FullyOccupiedNonOrthoDMStrategy<ExtendedGridOrbitals>;

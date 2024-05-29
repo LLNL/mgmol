@@ -104,7 +104,9 @@ ProjectedMatrices<MatrixType>::ProjectedMatrices(
       gm_(new GramMatrix<MatrixType>(ndim))
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    if (mmpi.instancePE0())
+    Control& ct     = *(Control::instance());
+
+    if (mmpi.instancePE0() && ct.verbose > 1)
     {
         std::cout << "New ProjectedMatrices with MatrixType: "
                   << getMatrixType() << std::endl;
@@ -164,7 +166,7 @@ void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::setupMPI(
     MPI_Comm comm   = mmpi.commSpin();
 
     DistMatrix2SquareLocalMatrices::setup(
-        comm, global_indexes, dm_->getMatrix());
+        comm, global_indexes, gm_->getMatrix());
     LocalMatrices2DistMatrix::setup(comm, global_indexes);
 }
 

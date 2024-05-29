@@ -13,15 +13,15 @@
 #include "LocGridOrbitals.h"
 #include "ProjectedMatricesInterface.h"
 
-template <class T>
-NonOrthoDMStrategy<T>::NonOrthoDMStrategy(
-    T* orbitals, ProjectedMatricesInterface* proj_matrices, const double mix)
-    : orbitals_(orbitals), proj_matrices_(proj_matrices), mix_(mix)
+template <class OrbitalsType>
+NonOrthoDMStrategy<OrbitalsType>::NonOrthoDMStrategy(
+    ProjectedMatricesInterface* proj_matrices, const double mix)
+    : proj_matrices_(proj_matrices), mix_(mix)
 {
 }
 
-template <class T>
-void NonOrthoDMStrategy<T>::initialize()
+template <class OrbitalsType>
+void NonOrthoDMStrategy<OrbitalsType>::initialize(OrbitalsType& orbitals)
 {
     Control& ct     = *(Control::instance());
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
@@ -31,11 +31,11 @@ void NonOrthoDMStrategy<T>::initialize()
         (*MPIdata::sout) << "NonOrthoDMStrategy<T>::initialize()..."
                          << std::endl;
     }
-    proj_matrices_->updateDM(orbitals_->getIterativeIndex());
+    proj_matrices_->updateDM(orbitals.getIterativeIndex());
 }
 
-template <class T>
-int NonOrthoDMStrategy<T>::update()
+template <class OrbitalsType>
+int NonOrthoDMStrategy<OrbitalsType>::update(OrbitalsType& orbitals)
 {
     assert(proj_matrices_ != nullptr);
 
@@ -59,11 +59,11 @@ int NonOrthoDMStrategy<T>::update()
     if (mix_ < 1.) proj_matrices_->saveDM();
 
     // compute new density matrix
-    proj_matrices_->updateDM(orbitals_->getIterativeIndex());
+    proj_matrices_->updateDM(orbitals.getIterativeIndex());
 
     if (mix_ < 1.)
     {
-        proj_matrices_->updateDMwithRelax(mix_, orbitals_->getIterativeIndex());
+        proj_matrices_->updateDMwithRelax(mix_, orbitals.getIterativeIndex());
     }
 
     if (ct.verbose > 2)

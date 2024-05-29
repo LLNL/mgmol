@@ -80,10 +80,8 @@ template <class OrbitalsType>
 void MGmol<OrbitalsType>::postWFextrapolation(OrbitalsType* orbitals)
 {
     Control& ct = *(Control::instance());
-    if (ct.isLocMode())
-    {
-        orbitals->computeGramAndInvS();
-    }
+
+    orbitals->computeGramAndInvS();
 
     if (ct.OuterSolver() == OuterSolverType::ABPG
         || ct.OuterSolver() == OuterSolverType::NLCG)
@@ -95,7 +93,8 @@ void MGmol<OrbitalsType>::postWFextrapolation(OrbitalsType* orbitals)
     }
     else
     {
-        if (orbitals_extrapol_->extrapolatedH()) dm_strategy_->update();
+        if (orbitals_extrapol_->extrapolatedH())
+            dm_strategy_->update(*orbitals);
     }
 }
 
@@ -382,7 +381,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
 
                 // need to reset a few things as we just read new orbitals
                 (*orbitals)->computeGramAndInvS();
-                dm_strategy_->update();
+                dm_strategy_->update(*current_orbitals_);
             }
 
             DFTsolver<OrbitalsType>::setItCountLarge();
@@ -462,7 +461,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
                     move_orbitals(orbitals);
 
                     (*orbitals)->computeGramAndInvS();
-                    dm_strategy_->update();
+                    dm_strategy_->update(**orbitals);
 
                     // reduce number of steps to keep total run time about the
                     // same

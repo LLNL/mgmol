@@ -13,21 +13,21 @@
 #include "LocGridOrbitals.h"
 #include "ProjectedMatrices.h"
 
-template <class T>
-EigenDMStrategy<T>::EigenDMStrategy(
-    T* current_orbitals, ProjectedMatricesInterface* proj_matrices)
-    : current_orbitals_(current_orbitals), proj_matrices_(proj_matrices)
+template <class OrbitalsType>
+EigenDMStrategy<OrbitalsType>::EigenDMStrategy(
+    ProjectedMatricesInterface* proj_matrices)
+    : proj_matrices_(proj_matrices)
 {
 }
 
-template <class T>
-void EigenDMStrategy<T>::initialize()
+template <class OrbitalsType>
+void EigenDMStrategy<OrbitalsType>::initialize(OrbitalsType& orbitals)
 {
-    update();
+    update(orbitals);
 }
 
-template <class T>
-int EigenDMStrategy<T>::update()
+template <class OrbitalsType>
+int EigenDMStrategy<OrbitalsType>::update(OrbitalsType& orbitals)
 {
     Control& ct = *(Control::instance());
 
@@ -37,14 +37,13 @@ int EigenDMStrategy<T>::update()
         = dynamic_cast<
             ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
             proj_matrices_);
-    pmat->updateDMwithEigenstatesAndRotate(
-        current_orbitals_->getIterativeIndex(), zz);
+    pmat->updateDMwithEigenstatesAndRotate(orbitals.getIterativeIndex(), zz);
 
     // if( onpe0 && ct.verbose>2 )
     //    (*MPIdata::sout)<<"get_dm_diag: rotate orbitals "<<endl;
-    current_orbitals_->multiply_by_matrix(zz);
-    current_orbitals_->setDataWithGhosts();
-    current_orbitals_->trade_boundaries();
+    orbitals.multiply_by_matrix(zz);
+    orbitals.setDataWithGhosts();
+    orbitals.trade_boundaries();
 
     return 0;
 }

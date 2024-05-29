@@ -24,10 +24,9 @@ class Ions;
 class Electrostatic;
 
 template <class OrbitalsType, class MatrixType>
-class MVP_DMStrategy : public DMStrategy
+class MVP_DMStrategy : public DMStrategy<OrbitalsType>
 {
 private:
-    OrbitalsType* orbitals_;
     ProjectedMatricesInterface* proj_matrices_;
 
     MPI_Comm comm_;
@@ -46,11 +45,11 @@ public:
     MVP_DMStrategy(MPI_Comm comm, std::ostream& os, Ions& ions,
         Rho<OrbitalsType>* rho, Energy<OrbitalsType>* energy,
         Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy,
-        OrbitalsType* orbitals, ProjectedMatricesInterface* proj_matrices,
-        const bool use_old_dm);
+        const std::vector<std::vector<int>>& overlappingGids,
+        ProjectedMatricesInterface* proj_matrices, const bool use_old_dm);
 
-    void initialize() override{};
-    int update() override;
+    void initialize(OrbitalsType& orbitals) override{};
+    int update(OrbitalsType& orbitals) override;
 
     // H is updated with MVP loop, so no need to compute it outside
     bool needH() const override { return false; }

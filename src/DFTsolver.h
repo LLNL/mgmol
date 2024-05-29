@@ -10,6 +10,7 @@
 #ifndef MGMOL_DFTSOLVER_H
 #define MGMOL_DFTSOLVER_H
 
+#include "DMStrategy.h"
 #include "DielectricControl.h"
 #include "Energy.h"
 #include "Hamiltonian.h"
@@ -23,7 +24,6 @@
 class Ions;
 class Electrostatic;
 class ProjectedMatricesInterface;
-class DMStrategy;
 
 template <class OrbitalsType>
 class DFTsolver
@@ -40,7 +40,7 @@ private:
     Electrostatic* electrostat_;
     Ions& ions_;
     Rho<OrbitalsType>* rho_;
-    DMStrategy* dm_strategy_;
+    DMStrategy<OrbitalsType>* dm_strategy_;
 
     OrbitalsStepper<OrbitalsType>* orbitals_stepper_;
 
@@ -72,8 +72,8 @@ public:
     DFTsolver(Hamiltonian<OrbitalsType>* hamiltonian,
         ProjectedMatricesInterface* proj_matrices, Energy<OrbitalsType>* energy,
         Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy,
-        Ions& ions, Rho<OrbitalsType>* rho, DMStrategy* dm_strategy,
-        std::ostream& os);
+        Ions& ions, Rho<OrbitalsType>* rho,
+        DMStrategy<OrbitalsType>* dm_strategy, std::ostream& os);
 
     ~DFTsolver();
 

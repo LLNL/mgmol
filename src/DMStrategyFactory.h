@@ -24,20 +24,20 @@ template <class OrbitalsType, class MatrixType>
 class DMStrategyFactory
 {
 public:
-    static DMStrategy* create(MPI_Comm comm, std::ostream& os, Ions& ions,
-        Rho<OrbitalsType>* rho, Energy<OrbitalsType>* energy,
+    static DMStrategy<OrbitalsType>* create(MPI_Comm comm, std::ostream& os,
+        Ions& ions, Rho<OrbitalsType>* rho, Energy<OrbitalsType>* energy,
         Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy,
         ProjectedMatricesInterface* proj_matrices, OrbitalsType* orbitals)
     {
         Control& ct     = *(Control::instance());
         MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
-        DMStrategy* dm_strategy = nullptr;
+        DMStrategy<OrbitalsType>* dm_strategy = nullptr;
         if (ct.DM_solver() == DMNonLinearSolverType::MVP)
         {
             dm_strategy = new MVP_DMStrategy<OrbitalsType, MatrixType>(comm, os,
-                ions, rho, energy, electrostat, mgmol_strategy, orbitals,
-                proj_matrices, ct.use_old_dm());
+                ions, rho, energy, electrostat, mgmol_strategy,
+                orbitals->getOverlappingGids(), proj_matrices, ct.use_old_dm());
         }
         else if (ct.DM_solver() == DMNonLinearSolverType::HMVP)
         {
@@ -51,8 +51,8 @@ public:
             {
                 if (mmpi.instancePE0())
                     std::cout << "Fully occupied strategy" << std::endl;
-                dm_strategy
-                    = new FullyOccupiedNonOrthoDMStrategy(proj_matrices);
+                dm_strategy = new FullyOccupiedNonOrthoDMStrategy<OrbitalsType>(
+                    proj_matrices);
             }
             else
             {
@@ -60,8 +60,8 @@ public:
                 {
                     if (mmpi.instancePE0())
                         std::cout << "EigenDMStrategy..." << std::endl;
-                    dm_strategy = new EigenDMStrategy<OrbitalsType>(
-                        orbitals, proj_matrices);
+                    dm_strategy
+                        = new EigenDMStrategy<OrbitalsType>(proj_matrices);
                 }
                 else
                 {
@@ -70,7 +70,7 @@ public:
                         if (mmpi.instancePE0())
                             std::cout << "NonOrthoDMStrategy..." << std::endl;
                         dm_strategy = new NonOrthoDMStrategy<OrbitalsType>(
-                            orbitals, proj_matrices, ct.dm_mix);
+                            proj_matrices, ct.dm_mix);
                     }
                 }
             }
@@ -81,11 +81,12 @@ public:
     }
 
 private:
-    static DMStrategy* createHamiltonianMVP_DMStrategy(MPI_Comm comm,
-        std::ostream& os, Ions& ions, Rho<OrbitalsType>* rho,
+    static DMStrategy<OrbitalsType>* createHamiltonianMVP_DMStrategy(
+        MPI_Comm comm, std::ostream& os, Ions& ions, Rho<OrbitalsType>* rho,
         Energy<OrbitalsType>* energy, Electrostatic* electrostat,
         MGmol<OrbitalsType>* mgmol_strategy,
-        ProjectedMatricesInterface* proj_matrices, OrbitalsType*, const bool);
+        ProjectedMatricesInterface* proj_matrices, OrbitalsType* orbitals,
+        const bool);
 };
 
 #endif

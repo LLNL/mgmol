@@ -252,7 +252,11 @@ public:
         gm_->computeInverse();
     }
 
-    const MatrixType& getGramMatrix() { return gm_->getMatrix(); }
+    const MatrixType& getGramMatrix()
+    {
+        assert(gm_ != nullptr);
+        return gm_->getMatrix();
+    }
 
     void getOccupations(std::vector<double>& occ) const override;
     void setOccupations(const std::vector<double>& occ);
@@ -264,7 +268,7 @@ public:
         SquareLocalMatrices<double, MemorySpace::Host>& mat) override;
     void applyInvS(MatrixType& mat)
     {
-        assert(gm_ != 0);
+        assert(gm_ != nullptr);
         gm_->applyInv(mat);
     }
 

@@ -13,20 +13,19 @@
 #include "DMStrategy.h"
 #include "ProjectedMatricesInterface.h"
 
-template <class T>
-class NonOrthoDMStrategy : public DMStrategy
+template <class OrbitalsType>
+class NonOrthoDMStrategy : public DMStrategy<OrbitalsType>
 {
 private:
-    T* orbitals_;
     ProjectedMatricesInterface* proj_matrices_;
     const double mix_;
 
 public:
-    NonOrthoDMStrategy(T* orbitals, ProjectedMatricesInterface* proj_matrices,
-        const double mix);
+    NonOrthoDMStrategy(
+        ProjectedMatricesInterface* proj_matrices, const double mix);
 
-    void initialize() override;
-    int update() override;
+    void initialize(OrbitalsType& orbitals) override;
+    int update(OrbitalsType& orbitals) override;
 
     bool needH() const override { return true; }
 

@@ -85,7 +85,7 @@ void OrbitalsExtrapolationOrder2<OrbitalsType>::extrapolate_orbitals(
     {
         // DM (if not recomputed from scratch)
         // is consistant with orthonormal set of orbitals...
-        (*orbitals)->orthonormalizeLoewdin();
+        if (ct.fullyOccupied()) (*orbitals)->orthonormalizeLoewdin();
     }
 }
 
