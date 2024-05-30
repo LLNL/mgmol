@@ -110,7 +110,10 @@ extern Timer updateCenters_tm;
 std::set<int> Signal::recv_;
 
 template <class OrbitalsType>
-MGmol<OrbitalsType>::MGmol(MPI_Comm comm, std::ostream& os) : os_(os)
+MGmol<OrbitalsType>::MGmol(MPI_Comm comm, std::ostream& os,
+    std::string input_filename, std::string lrs_filename,
+    std::string constraints_filename)
+    : os_(os)
 {
     comm_ = comm;
 
@@ -136,6 +139,14 @@ MGmol<OrbitalsType>::MGmol(MPI_Comm comm, std::ostream& os) : os_(os)
     forces_ = nullptr;
 
     energy_ = nullptr;
+
+    setupFromInput(input_filename);
+
+    setupLRs(lrs_filename);
+
+    setupConstraintsFromInput(constraints_filename);
+
+    setup();
 }
 
 template <class OrbitalsType>

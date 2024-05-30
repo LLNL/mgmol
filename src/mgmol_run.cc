@@ -86,37 +86,12 @@ int mgmol_init(MPI_Comm comm)
     return 0;
 }
 
-int mgmol_setup()
+int mgmol_check()
 {
     Control& ct              = *(Control::instance());
     Mesh* mymesh             = Mesh::instance();
     const pb::PEenv& myPEenv = mymesh->peenv();
     MGmol_MPI& mmpi          = *(MGmol_MPI::instance());
-
-    ct.checkNLrange();
-
-    LocGridOrbitals::setDotProduct(ct.dot_product_type);
-
-    if (!ct.short_sighted)
-    {
-        MatricesBlacsContext::instance().setup(mmpi.commSpin(), ct.numst);
-
-        dist_matrix::DistMatrix<DISTMATDTYPE>::setBlockSize(64);
-
-        dist_matrix::DistMatrix<DISTMATDTYPE>::setDefaultBlacsContext(
-            MatricesBlacsContext::instance().bcxt());
-
-        ReplicatedWorkSpace<double>::instance().setup(ct.numst);
-
-        dist_matrix::SparseDistMatrix<DISTMATDTYPE>::setNumTasksPerPartitioning(
-            128);
-
-        int npes = mmpi.size();
-        setSparseDistMatriConsolidationNumber(npes);
-    }
-#ifdef HAVE_MAGMA
-    ReplicatedMatrix::setMPIcomm(mmpi.commSpin());
-#endif
 
     if (myPEenv.color() > 0)
     {

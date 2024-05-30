@@ -145,7 +145,12 @@ private:
     template <typename MemorySpaceType>
     int initial();
     void initialMasks();
-    int setupLRsFromInput(const std::string input_file);
+    int setupLRsFromInput(const std::string filename);
+
+    void setup();
+    int setupLRs(const std::string input_file) override;
+    int setupFromInput(const std::string input_file) override;
+    int setupConstraintsFromInput(const std::string input_file) override;
 
     // timers
     static Timer total_tm_;
@@ -166,7 +171,8 @@ private:
 public:
     Electrostatic* electrostat_;
 
-    MGmol(MPI_Comm comm, std::ostream& os);
+    MGmol(MPI_Comm comm, std::ostream& os, std::string input_filename,
+        std::string lrs_filename, std::string constraints_filename);
 
     ~MGmol() override;
 
@@ -274,10 +280,6 @@ public:
     void set_forces(std::vector<std::vector<double>>& f);
     int nions() { return ions_->getNumIons(); }
     double getTotalEnergy();
-    void setup();
-    int setupLRs(const std::string input_file) override;
-    int setupFromInput(const std::string input_file) override;
-    int setupConstraintsFromInput(const std::string input_file) override;
     void cleanup();
     void geomOptimSetup();
     void geomOptimQuench();
