@@ -7,5 +7,5 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 int mgmol_init(MPI_Comm comm);
-int mgmol_setup();
+int mgmol_check();
 void mgmol_finalize();
