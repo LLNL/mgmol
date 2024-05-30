@@ -521,114 +521,6 @@ double Ions::energyDiff(const short bc[3]) const
     return energy; // Hartree
 }
 
-// Associate each ion with the PE where they are centered
-// by setting a flag "here"
-// void Ions::associate2PE()
-//{
-//    Control& ct(*(Control::instance()));
-//    Mesh* mymesh             = Mesh::instance();
-//    const pb::PEenv& myPEenv = mymesh->peenv();
-//    const pb::Grid& mygrid   = mymesh->grid();
-//
-//    double div_lattice[3];
-//    for (short i = 0; i < 3; i++)
-//        div_lattice[i] = lattice_[i] / (double)(myPEenv.n_mpi_task(i));
-//
-//    double offset[3];
-//    for (short i = 0; i < 3; i++)
-//        offset[i] = (double)myPEenv.my_mpi(i) * div_lattice[i];
-//
-//#ifdef DEBUG
-//    int isum2 = 0;
-//    (*MPIdata::sout) << " offset=(" << offset[0] << "," << offset[1] << ","
-//                     << offset[2] << ")" << std::endl;
-//#endif
-//
-//    for (short i = 0; i < 3; i++)
-//        if (myPEenv.n_mpi_task(i) == (myPEenv.my_mpi(i) + 1))
-//            div_lattice[i] = lattice_[i] - offset[i];
-//
-//    const double origin[3]
-//        = { mygrid.origin(0), mygrid.origin(1), mygrid.origin(2) };
-//    const double end[3] = { origin[0] + lattice_[0], origin[1] + lattice_[1],
-//        origin[2] + lattice_[2] };
-//
-//    int isum = 0;
-//
-//    // Loop over ions
-//    local_ions_.clear();
-//    std::vector<Ion*>::iterator ion = list_ions_.begin();
-//    while (ion != list_ions_.end())
-//    {
-//        double t[3];
-//        for (short i = 0; i < 3; i++)
-//        {
-//            t[i] = (*ion)->position(i);
-//            while (t[i] >= end[i])
-//                t[i] -= lattice_[i];
-//            while (t[i] < origin[i])
-//                t[i] += lattice_[i];
-//            t[i] -= origin[i];
-//            t[i] -= offset[i];
-//        }
-//
-//#if DEBUG
-//        (*MPIdata::sout) << " t=(" << t[0] << "," << t[1] << "," << t[2] <<
-//        ")"
-//                         << std::endl;
-//#endif
-//
-//        if ((t[0] >= 0. && t[0] < (div_lattice[0]))
-//            && (t[1] >= 0. && t[1] < (div_lattice[1]))
-//            && (t[2] >= 0. && t[2] < (div_lattice[2])))
-//        {
-//
-//            (*ion)->set_here(true);
-//
-//            local_ions_.push_back(*ion);
-//
-//            isum++;
-//        }
-//        else
-//        {
-//            (*ion)->set_here(false);
-//        }
-//#ifndef NDEBUG
-//        if ((*ion)->here())
-//        {
-//            (*MPIdata::sout) << " Ion " << (*ion)->name() << " centered on PE
-//            "
-//                             << myPEenv.mytask() << std::endl;
-//        }
-//#endif
-//        ion++;
-//    }
-//    // Test all atoms associated to each processors sum up to
-//    // total number of atoms
-//
-//    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-//    mmpi.allreduce(&isum, 1, MPI_SUM);
-//    if (onpe0)
-//    {
-//        (*MPIdata::sout) << " num_ions=" << num_ions_ << std::endl;
-//        (*MPIdata::sout) << " isum=" << isum << std::endl;
-//    }
-//    if (isum != num_ions_)
-//    {
-//        (*MPIdata::sout) << " num_ions != isum !!!!" << std::endl;
-//        ct.global_exit(2);
-//    }
-//
-//#ifdef DEBUG
-//    mmpi.allreduce(&isum2, 1, MPI_SUM);
-//    (*MPIdata::sout) << " Isum2=" << isum2 << std::endl;
-//    assert(isum2 == num_ions_);
-//#endif
-//
-//    // if( onpe0 )
-//    //    (*MPIdata::sout)<<"Ions::associate2PE() done..."<<endl;
-//}
-
 // Writes out the positions of all the ions
 // PE root does the writing
 void Ions::printPositionsGlobal(std::ostream& os, const int root) const
@@ -779,11 +671,9 @@ void Ions::writeAtomNames(HDFrestart& h5f_file)
     }
     else
     {
-        std::vector<Ion*>::const_iterator ion = local_ions_.begin();
-        while (ion != local_ions_.end())
+        for (auto& ion : local_ions_)
         {
-            data.push_back((*ion)->name());
-            ion++;
+            data.push_back(ion->name());
         }
     }
 
@@ -851,20 +741,21 @@ void Ions::writeLockedAtomNames(HDFrestart& h5f_file)
     }
     else
     {
-        std::vector<Ion*>::const_iterator ion = local_ions_.begin();
-        while (ion != local_ions_.end())
+        for (auto& ion : local_ions_)
         {
-            if ((*ion)->locked()) data.push_back((*ion)->name());
-            ion++;
+            if (ion->locked()) data.push_back(ion->name());
         }
     }
 
-    hid_t file_id = h5f_file.file_id();
-    if (file_id >= 0)
+    if (!data.empty())
     {
-        std::string datasetname("/LockedAtomsNames");
-        std::string empty;
-        writeData2d(h5f_file, datasetname, data, 1, empty);
+        hid_t file_id = h5f_file.file_id();
+        if (file_id >= 0)
+        {
+            std::string datasetname("/LockedAtomsNames");
+            std::string empty;
+            writeData2d(h5f_file, datasetname, data, 1, empty);
+        }
     }
 }
 
@@ -888,11 +779,9 @@ void Ions::writeAtomicIDs(HDFrestart& h5f_file)
     }
     else
     {
-        std::vector<Ion*>::const_iterator ion = local_ions_.begin();
-        while (ion != local_ions_.end())
+        for (auto& ion : local_ions_)
         {
-            data.push_back((*ion)->index());
-            ion++;
+            data.push_back(ion->index());
         }
     }
 
@@ -925,11 +814,9 @@ void Ions::writeAtomicNLprojIDs(HDFrestart& h5f_file)
     }
     else
     {
-        std::vector<Ion*>::const_iterator ion = local_ions_.begin();
-        while (ion != local_ions_.end())
+        for (auto& ion : local_ions_)
         {
-            data.push_back((*ion)->nlprojid());
-            ion++;
+            data.push_back(ion->nlprojid());
         }
     }
 
@@ -961,13 +848,11 @@ void Ions::writePositions(HDFrestart& h5f_file)
     }
     else
     {
-        std::vector<Ion*>::const_iterator ion = local_ions_.begin();
-        while (ion != local_ions_.end())
+        for (auto& ion : local_ions_)
         {
-            data.push_back((*ion)->position(0));
-            data.push_back((*ion)->position(1));
-            data.push_back((*ion)->position(2));
-            ion++;
+            data.push_back(ion->position(0));
+            data.push_back(ion->position(1));
+            data.push_back(ion->position(2));
         }
     }
 
@@ -1124,13 +1009,11 @@ void Ions::writeVelocities(HDFrestart& h5f_file)
     }
     else
     {
-        std::vector<Ion*>::const_iterator ion = local_ions_.begin();
-        while (ion != local_ions_.end())
+        for (auto& ion : local_ions_)
         {
-            data.push_back((*ion)->velocity(0));
-            data.push_back((*ion)->velocity(1));
-            data.push_back((*ion)->velocity(2));
-            ion++;
+            data.push_back(ion->velocity(0));
+            data.push_back(ion->velocity(1));
+            data.push_back(ion->velocity(2));
         }
     }
 
@@ -1162,13 +1045,11 @@ void Ions::writeRandomStates(HDFrestart& h5f_file)
     }
     else
     {
-        std::vector<Ion*>::const_iterator ion = local_ions_.begin();
-        while (ion != local_ions_.end())
+        for (auto& ion : local_ions_)
         {
-            data.push_back((*ion)->randomState(0));
-            data.push_back((*ion)->randomState(1));
-            data.push_back((*ion)->randomState(2));
-            ion++;
+            data.push_back(ion->randomState(0));
+            data.push_back(ion->randomState(1));
+            data.push_back(ion->randomState(2));
         }
     }
 
@@ -2556,11 +2437,9 @@ void Ions::gatherNames(
 {
     std::vector<std::string> local_names;
 
-    std::vector<Ion*>::const_iterator ion = local_ions_.begin();
-    while (ion != local_ions().end())
+    for (auto& ion : local_ions_)
     {
-        local_names.push_back((*ion)->name());
-        ++ion;
+        local_names.push_back(ion->name());
     }
 
     // gather data to PE root
@@ -2578,11 +2457,9 @@ void Ions::gatherLockedNames(
 {
     std::vector<std::string> local_names;
 
-    std::vector<Ion*>::const_iterator ion = local_ions_.begin();
-    while (ion != local_ions().end())
+    for (auto& ion : local_ions_)
     {
-        if ((*ion)->locked()) local_names.push_back((*ion)->name());
-        ++ion;
+        if (ion->locked()) local_names.push_back(ion->name());
     }
 
     // gather data to PE root
@@ -2600,11 +2477,9 @@ void Ions::gatherIndexes(
 {
     std::vector<int> local_indexes;
 
-    std::vector<Ion*>::const_iterator ion = local_ions_.begin();
-    while (ion != local_ions_.end())
+    for (auto& ion : local_ions_)
     {
-        local_indexes.push_back((*ion)->index());
-        ++ion;
+        local_indexes.push_back(ion->index());
     }
 
     // gather data to PE root
@@ -2622,11 +2497,9 @@ void Ions::gatherNLprojIds(
 {
     std::vector<int> local_nlprojids;
 
-    std::vector<Ion*>::const_iterator ion = local_ions_.begin();
-    while (ion != local_ions_.end())
+    for (auto& ion : local_ions_)
     {
-        local_nlprojids.push_back((*ion)->nlprojid());
-        ++ion;
+        local_nlprojids.push_back(ion->nlprojid());
     }
 
     // gather data to PE root
@@ -2644,11 +2517,9 @@ void Ions::gatherAtomicNumbers(
 {
     std::vector<int> local_atnumbers;
 
-    std::vector<Ion*>::const_iterator ion = local_ions_.begin();
-    while (ion != local_ions_.end())
+    for (auto& ion : local_ions_)
     {
-        local_atnumbers.push_back((*ion)->atomic_number());
-        ++ion;
+        local_atnumbers.push_back(ion->atomic_number());
     }
 
     // gather data to PE root
@@ -2666,13 +2537,11 @@ void Ions::gatherRandStates(std::vector<unsigned short>& rstates,
 {
     std::vector<unsigned short> local_rstates;
 
-    std::vector<Ion*>::const_iterator ion = local_ions_.begin();
-    while (ion != local_ions().end())
+    for (auto& ion : local_ions_)
     {
-        local_rstates.push_back((*ion)->randomState(0));
-        local_rstates.push_back((*ion)->randomState(1));
-        local_rstates.push_back((*ion)->randomState(2));
-        ++ion;
+        local_rstates.push_back(ion->randomState(0));
+        local_rstates.push_back(ion->randomState(1));
+        local_rstates.push_back(ion->randomState(2));
     }
 
     // gather data to PE root
@@ -2690,17 +2559,14 @@ void Ions::gatherPositions(
 {
     std::vector<double> local_positions;
 
-    std::vector<Ion*>::const_iterator ion = local_ions_.begin();
-    while (ion != local_ions().end())
+    for (auto& ion : local_ions_)
     {
         // get position of local ion
         double position[3];
-        (*ion)->getPosition(&position[0]);
+        ion->getPosition(&position[0]);
         local_positions.push_back(position[0]);
         local_positions.push_back(position[1]);
         local_positions.push_back(position[2]);
-
-        ++ion;
     }
 
     // gather data to PE root
@@ -2718,17 +2584,14 @@ void Ions::gatherForces(
 {
     std::vector<double> local_forces;
 
-    std::vector<Ion*>::const_iterator ion = local_ions_.begin();
-    while (ion != local_ions().end())
+    for (auto& ion : local_ions_)
     {
         // get position of local ion
         double force[3];
-        (*ion)->getForce(&force[0]);
+        ion->getForce(&force[0]);
         local_forces.push_back(force[0]);
         local_forces.push_back(force[1]);
         local_forces.push_back(force[2]);
-
-        ++ion;
     }
 
     // gather data to PE root
@@ -2746,14 +2609,11 @@ void Ions::gatherVelocities(
 {
     std::vector<double> local_velocities;
 
-    std::vector<Ion*>::const_iterator ion = local_ions_.begin();
-    while (ion != local_ions().end())
+    for (auto& ion : local_ions_)
     {
-        local_velocities.push_back((*ion)->velocity(0));
-        local_velocities.push_back((*ion)->velocity(1));
-        local_velocities.push_back((*ion)->velocity(2));
-
-        ++ion;
+        local_velocities.push_back(ion->velocity(0));
+        local_velocities.push_back(ion->velocity(1));
+        local_velocities.push_back(ion->velocity(2));
     }
 
     // gather data to PE root
@@ -2845,81 +2705,6 @@ bool Ions::hasLockedAtoms() const
 
     return (flag == 1);
 }
-
-#if 0
-void Ions::syncNames(const int nions, std::vector<std::string>& local_names, vector<string>& names)
-{
-    MGmol_MPI& mmpi ( *(MGmol_MPI::instance()) );
-    MPI_Comm& comm=mmpi.comm();  
-    // prepare to gather data
-    int npes = mmpi.size();
-    int num_ions = nions;
-    std::vector<int>recvcnts(npes);
-    std::vector<int>::iterator rcv;
-    std::vector<int>disp(npes);   
-    std::vector<int>::iterator disp_it; 
-    int tot = 0;
-    int totchars;
-    // Gather data for atom names
-    // first get length of each name
-    std::vector<int>loc_name_len;
-    std::vector<int>nameLen(num_ions,0);
-    tot=0;
-    for(std::vector<std::string>::iterator str=local_names.begin(); str!=local_names.end(); ++str){
-       //tot+= *str.size();
-       std::string s = *str;
-       tot+= s.length();
-       loc_name_len.push_back(s.length());
-    }
-    mmpi.allGatherV(loc_name_len, nameLen);
-
-    std::vector<char>char_loc_names(tot);
-    int idx = 0;
-    for(std::vector<std::string>::iterator str=local_names.begin(); str!=local_names.end(); ++str){
-       //tot+= *str.size();
-       std::string s = *str;
-       memcpy(&char_loc_names[idx], s.c_str(), s.size());
-       idx+=s.size();
-    }    
-    assert(idx == tot);
-    
-    // gather data for atom names
-    //get recv counts
-    rcv = recvcnts.begin();
-    MPI_Allgather(&tot, 1, MPI_INT, &(*rcv), 1, MPI_INT, comm);
-    
-    //get displacements
-    totchars = recvcnts[npes-1];
-    disp[0] = 0;
-    for(int pos = 1; pos < npes; pos++){
-       disp[pos] = disp[pos-1] + recvcnts[pos-1];
-       totchars+=recvcnts[pos-1];
-    }
-    // gather atomic names
-    std::vector<char> names_data(totchars);      
-    std::vector<char>::iterator locnames_it=char_loc_names.begin();
-    std::vector<char>::iterator names_it=names_data.begin();  
-    disp_it=disp.begin();
-    rcv = recvcnts.begin();  
-    MPI_Allgatherv(&(*locnames_it), tot, MPI_CHAR, &(*names_it), &(*rcv), &(*disp_it), MPI_CHAR, comm);
-      
-//    std::vector<std::string> names;
-    int pos = 0;
-    for(int i=0; i<num_ions; i++)
-    {
-       char str[nameLen[i]+1];
-       str[nameLen[i]] = '\0';
-       memcpy(str, &names_data[pos], nameLen[i]*sizeof(char));
-       std::string cstr;
-       cstr.assign(str);
-//       if(onpe0)puts(str);
-       names.push_back(cstr);
-       pos+=nameLen[i]*sizeof(char);       
-    
-    }
-    return;
-}
-#endif
 
 double Ions::getMaxNLradius() const
 {
