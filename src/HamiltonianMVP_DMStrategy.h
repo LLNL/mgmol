@@ -22,11 +22,9 @@ template <class T>
 class MGmol;
 
 template <class MatrixType, class ProjMatrixType, class OrbitalsType>
-class HamiltonianMVP_DMStrategy : public DMStrategy
+class HamiltonianMVP_DMStrategy : public DMStrategy<OrbitalsType>
 {
 private:
-    OrbitalsType* orbitals_;
-
     MPI_Comm comm_;
     std::ostream& os_;
 
@@ -47,8 +45,8 @@ public:
 
     ~HamiltonianMVP_DMStrategy() override;
 
-    void initialize() override;
-    int update() override;
+    void initialize(OrbitalsType& orbitals) override;
+    int update(OrbitalsType& orbitals) override;
 
     // H is updated with HamiltonianMVP loop, so no need to compute it outside
     bool needH() const override { return false; }

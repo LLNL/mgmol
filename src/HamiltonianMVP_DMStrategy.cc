@@ -24,8 +24,7 @@ HamiltonianMVP_DMStrategy<MatrixType, ProjMatrixType,
     Ions& ions, Rho<OrbitalsType>* rho, Energy<OrbitalsType>* energy,
     Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy,
     OrbitalsType* orbitals)
-    : orbitals_(orbitals),
-      comm_(comm),
+    : comm_(comm),
       os_(os),
       ions_(ions),
       rho_(rho),
@@ -58,13 +57,13 @@ HamiltonianMVP_DMStrategy<MatrixType, ProjMatrixType,
 
 template <class MatrixType, class ProjMatrixType, class OrbitalsType>
 void HamiltonianMVP_DMStrategy<MatrixType, ProjMatrixType,
-    OrbitalsType>::initialize()
+    OrbitalsType>::initialize(OrbitalsType& orbitals)
 {
 }
 
 template <class MatrixType, class ProjMatrixType, class OrbitalsType>
-int HamiltonianMVP_DMStrategy<MatrixType, ProjMatrixType,
-    OrbitalsType>::update()
+int HamiltonianMVP_DMStrategy<MatrixType, ProjMatrixType, OrbitalsType>::update(
+    OrbitalsType& orbitals)
 {
     assert(solver_ != nullptr);
 
@@ -75,7 +74,7 @@ int HamiltonianMVP_DMStrategy<MatrixType, ProjMatrixType,
                          << std::endl;
     }
 
-    return solver_->solve(*orbitals_);
+    return solver_->solve(orbitals);
 }
 
 template <class MatrixType, class ProjMatrixType, class OrbitalsType>

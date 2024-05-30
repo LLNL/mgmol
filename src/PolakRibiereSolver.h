@@ -10,6 +10,7 @@
 #ifndef MGMOL_PolakRibiereSolver_H
 #define MGMOL_PolakRibiereSolver_H
 
+#include "DMStrategy.h"
 #include "Energy.h"
 #include "Hamiltonian.h"
 #include "MGmol.h"
@@ -20,7 +21,6 @@
 class Ions;
 class Electrostatic;
 class ProjectedMatricesInterface;
-class DMStrategy;
 
 template <class OrbitalsType>
 class PolakRibiereSolver
@@ -37,7 +37,7 @@ private:
     Electrostatic* electrostat_;
     Ions& ions_;
     Rho<OrbitalsType>* rho_;
-    DMStrategy* dm_strategy_;
+    DMStrategy<OrbitalsType>* dm_strategy_;
 
     std::ostream& os_;
 
@@ -87,8 +87,8 @@ public:
     PolakRibiereSolver(Hamiltonian<OrbitalsType>* hamiltonian,
         ProjectedMatricesInterface* proj_matrices, Energy<OrbitalsType>* energy,
         Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy,
-        Ions& ions, Rho<OrbitalsType>* rho, DMStrategy* dm_strategy,
-        std::ostream& os);
+        Ions& ions, Rho<OrbitalsType>* rho,
+        DMStrategy<OrbitalsType>* dm_strategy, std::ostream& os);
 
     ~PolakRibiereSolver();
 

@@ -31,8 +31,8 @@
 #include "ProjectedMatricesMehrstellen.h"
 #include "ProjectedMatricesSparse.h"
 #include "Rho.h"
-#include "mgmol_Signal.h"
 #include "SpreadsAndCenters.h"
+#include "mgmol_Signal.h"
 #include "tools.h"
 
 #include <sstream>
@@ -72,7 +72,7 @@ void MGmol<OrbitalsType>::preWFextrapolation()
     if (ct.OuterSolver() == OuterSolverType::ABPG
         || ct.OuterSolver() == OuterSolverType::NLCG)
     {
-        if (ct.dm_mix < 1.) proj_matrices_->stripDM();
+        if (ct.dm_mix < 1. || !ct.fullyOccupied()) proj_matrices_->stripDM();
     }
 }
 
@@ -80,22 +80,21 @@ template <class OrbitalsType>
 void MGmol<OrbitalsType>::postWFextrapolation(OrbitalsType* orbitals)
 {
     Control& ct = *(Control::instance());
-    if (ct.isLocMode())
-    {
-        orbitals->computeGramAndInvS();
-    }
+
+    orbitals->computeGramAndInvS();
 
     if (ct.OuterSolver() == OuterSolverType::ABPG
         || ct.OuterSolver() == OuterSolverType::NLCG)
     {
-        if (ct.dm_mix < 1.)
+        if (ct.dm_mix < 1. || !ct.fullyOccupied())
             proj_matrices_->dressupDM();
         else
             proj_matrices_->setDMto2InvS();
     }
     else
     {
-        if (orbitals_extrapol_->extrapolatedH()) dm_strategy_->update();
+        if (orbitals_extrapol_->extrapolatedH())
+            dm_strategy_->update(*orbitals);
     }
 }
 
@@ -382,7 +381,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
 
                 // need to reset a few things as we just read new orbitals
                 (*orbitals)->computeGramAndInvS();
-                dm_strategy_->update();
+                dm_strategy_->update(*current_orbitals_);
             }
 
             DFTsolver<OrbitalsType>::setItCountLarge();
@@ -462,7 +461,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
                     move_orbitals(orbitals);
 
                     (*orbitals)->computeGramAndInvS();
-                    dm_strategy_->update();
+                    dm_strategy_->update(**orbitals);
 
                     // reduce number of steps to keep total run time about the
                     // same
@@ -675,7 +674,8 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
 }
 
 template <class OrbitalsType>
-OrbitalsType* MGmol<OrbitalsType>::loadOrbitalFromRestartFile(const std::string filename)
+OrbitalsType* MGmol<OrbitalsType>::loadOrbitalFromRestartFile(
+    const std::string filename)
 {
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
     Control& ct              = *(Control::instance());
@@ -684,23 +684,25 @@ OrbitalsType* MGmol<OrbitalsType>::loadOrbitalFromRestartFile(const std::string 
 
     /* For now, we only consider double-precision hdf5 I/O. */
     assert(ct.restart_info > 3);
-    assert((ct.AtomsDynamic() == AtomsDynamicType::MD) || (ct.AtomsDynamic() == AtomsDynamicType::Quench));
+    assert((ct.AtomsDynamic() == AtomsDynamicType::MD)
+           || (ct.AtomsDynamic() == AtomsDynamicType::Quench));
 
     HDFrestart h5file(filename, myPEenv, ct.out_restart_file_type);
     int ierr;
 
-    OrbitalsType *restart_orbitals = nullptr;
+    OrbitalsType* restart_orbitals = nullptr;
 
     /* This corresponds to MGmol<OrbitalsType>::initial */
     {
         // Copy from current orbital, instead of constructing brand-new one
-        restart_orbitals = new OrbitalsType("ForLoading", *current_orbitals_, false);
+        restart_orbitals
+            = new OrbitalsType("ForLoading", *current_orbitals_, false);
 
         /* This corresponds to MGmol<OrbitalsType>::read_restart_data */
         {
             ierr = restart_orbitals->read_func_hdf5(h5file);
-        }   // read_restart_data
-    }   // initial()
+        } // read_restart_data
+    } // initial()
 
     /* This corresponds to MGmol<OrbitalsType>::md */
     {
@@ -723,18 +725,19 @@ OrbitalsType* MGmol<OrbitalsType>::loadOrbitalFromRestartFile(const std::string 
         */
         if (flag_extrapolated_data)
         {
-            orbitals_extrapol_ = OrbitalsExtrapolationFactory<OrbitalsType>::create(
-                                                                ct.WFExtrapolation());
+            orbitals_extrapol_
+                = OrbitalsExtrapolationFactory<OrbitalsType>::create(
+                    ct.WFExtrapolation());
 
             if (onpe0) os_ << "Create new orbitals_minus1..." << std::endl;
 
             orbitals_extrapol_->setupPreviousOrbitals(&restart_orbitals,
-                proj_matrices_, lrs_, local_cluster_, currentMasks_,
-                corrMasks_, h5file);
+                proj_matrices_, lrs_, local_cluster_, currentMasks_, corrMasks_,
+                h5file);
         }
 
         /* main workflow delete h5f_file_ here, meaning the loading is over. */
-    }   // md()
+    } // md()
 
     ierr = h5file.close();
     mmpi.allreduce(&ierr, 1, MPI_MIN);
@@ -749,7 +752,8 @@ OrbitalsType* MGmol<OrbitalsType>::loadOrbitalFromRestartFile(const std::string 
     /*
         In returning restart_orbitals,
         we hope that the wavefunctions in restart_orbitals are all set.
-        At least the following functions should return proper data loaded from the file:
+        At least the following functions should return proper data loaded from
+       the file:
 
             restart_orbitals->getLocNumpt()
             restart_orbitals->chromatic_number()

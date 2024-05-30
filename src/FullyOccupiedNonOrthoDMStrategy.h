@@ -13,15 +13,16 @@
 #include "DMStrategy.h"
 class ProjectedMatricesInterface;
 
-class FullyOccupiedNonOrthoDMStrategy : public DMStrategy
+template <class OrbitalsType>
+class FullyOccupiedNonOrthoDMStrategy : public DMStrategy<OrbitalsType>
 {
     ProjectedMatricesInterface* proj_matrices_;
 
 public:
     FullyOccupiedNonOrthoDMStrategy(ProjectedMatricesInterface* proj_matrices);
 
-    void initialize() override;
-    int update() override;
+    void initialize(OrbitalsType& orbitals) override;
+    int update(OrbitalsType& orbitals) override;
 
     bool needH() const override { return false; }
 

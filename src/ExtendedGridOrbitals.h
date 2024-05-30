@@ -184,7 +184,11 @@ public:
     virtual void assign(const ExtendedGridOrbitals& orbitals);
     void copyDataFrom(const ExtendedGridOrbitals& src);
 
-    ProjectedMatricesInterface* getProjMatrices() { return proj_matrices_; }
+    ProjectedMatricesInterface* getProjMatrices()
+    {
+        assert(proj_matrices_ != nullptr);
+        return proj_matrices_;
+    }
 
     const ProjectedMatricesInterface* projMatrices() const
     {

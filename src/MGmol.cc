@@ -511,7 +511,7 @@ int MGmol<OrbitalsType>::initial()
     // theta = invB * Hij
     proj_matrices_->updateThetaAndHB();
 
-    dm_strategy_->initialize();
+    dm_strategy_->initialize(*current_orbitals_);
 
     if (ct.verbose > 1)
     {

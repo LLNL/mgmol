@@ -184,6 +184,7 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
         ProjectedMatrices<MatrixType>* projmatrices
             = dynamic_cast<ProjectedMatrices<MatrixType>*>(
                 orbitals.getProjMatrices());
+        assert(projmatrices);
         s11 = projmatrices->getGramMatrix();
     }
 

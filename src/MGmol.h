@@ -35,13 +35,13 @@ class ProjectedMatricesInterface;
 class KBPsiMatrix;
 class KBPsiMatrixSparse;
 class MasksSet;
-class DMStrategy;
 
 template <class OrbitalsType>
 class IonicAlgorithm;
 
 #include "AOMMprojector.h"
 #include "ClusterOrbitals.h"
+#include "DMStrategy.h"
 #include "ExtendedGridOrbitals.h"
 #include "Forces.h"
 #include "Ions.h"
@@ -95,7 +95,7 @@ private:
 
     SpreadPenaltyInterface<OrbitalsType>* spread_penalty_;
 
-    DMStrategy* dm_strategy_;
+    DMStrategy<OrbitalsType>* dm_strategy_;
 
     HDFrestart* h5f_file_;
 

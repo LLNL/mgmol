@@ -104,7 +104,9 @@ ProjectedMatrices<MatrixType>::ProjectedMatrices(
       gm_(new GramMatrix<MatrixType>(ndim))
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    if (mmpi.instancePE0())
+    Control& ct     = *(Control::instance());
+
+    if (mmpi.instancePE0() && ct.verbose > 1)
     {
         std::cout << "New ProjectedMatrices with MatrixType: "
                   << getMatrixType() << std::endl;
@@ -164,7 +166,7 @@ void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::setupMPI(
     MPI_Comm comm   = mmpi.commSpin();
 
     DistMatrix2SquareLocalMatrices::setup(
-        comm, global_indexes, dm_->getMatrix());
+        comm, global_indexes, gm_->getMatrix());
     LocalMatrices2DistMatrix::setup(comm, global_indexes);
 }
 
@@ -262,6 +264,12 @@ void ProjectedMatrices<MatrixType>::applyInvS(
 template <class MatrixType>
 void ProjectedMatrices<MatrixType>::setDMto2InvS()
 {
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    Control& ct     = *(Control::instance());
+
+    if (mmpi.instancePE0() && ct.verbose > 1)
+        std::cout << "ProjectedMatrices::setDMto2InvS()..." << std::endl;
+
     dm_->setto2InvS(gm_->getInverse(), gm_->getAssociatedOrbitalsIndex());
 }
 

@@ -30,7 +30,8 @@ PolakRibiereSolver<OrbitalsType>::PolakRibiereSolver(
     Hamiltonian<OrbitalsType>* hamiltonian,
     ProjectedMatricesInterface* proj_matrices, Energy<OrbitalsType>* energy,
     Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy, Ions& ions,
-    Rho<OrbitalsType>* rho, DMStrategy* dm_strategy, std::ostream& os)
+    Rho<OrbitalsType>* rho, DMStrategy<OrbitalsType>* dm_strategy,
+    std::ostream& os)
     : mgmol_strategy_(mgmol_strategy),
       hamiltonian_(hamiltonian),
       proj_matrices_(proj_matrices),
@@ -543,7 +544,7 @@ int PolakRibiereSolver<OrbitalsType>::solve(OrbitalsType& orbitals,
                 mgmol_strategy_->updateHmatrix(orbitals, ions);
 
             // compute new density matrix
-            dm_success = dm_strategy_->update();
+            dm_success = dm_strategy_->update(orbitals);
 
             skip_wolfe_cond = false;
         }

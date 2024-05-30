@@ -10,11 +10,12 @@
 #ifndef DMSTRATEGY_H
 #define DMSTRATEGY_H
 
+template <class OrbitalsType>
 class DMStrategy
 {
 public:
-    virtual void initialize() = 0;
-    virtual int update()      = 0;
+    virtual void initialize(OrbitalsType& orbitals) = 0;
+    virtual int update(OrbitalsType& orbitals)      = 0;
 
     virtual ~DMStrategy(){};
 
