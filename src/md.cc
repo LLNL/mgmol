@@ -734,6 +734,8 @@ OrbitalsType* MGmol<OrbitalsType>::loadOrbitalFromRestartFile(
             orbitals_extrapol_->setupPreviousOrbitals(&restart_orbitals,
                 proj_matrices_, lrs_, local_cluster_, currentMasks_, corrMasks_,
                 h5file);
+
+            delete orbitals_extrapol_;
         }
 
         /* main workflow delete h5f_file_ here, meaning the loading is over. */
