@@ -161,6 +161,15 @@ void HDFrestart::addDateToFilename()
         filename_.append("0");
     }
     filename_.append(extension);
+
+    // seconds
+    filename_.append("_");
+    extension = std::to_string(tt1->tm_sec);
+    if (tt1->tm_sec < 10)
+    {
+        filename_.append("0");
+    }
+    filename_.append(extension);
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     // make sure all the PEs use the same filename
     std::vector<char> name_buffer(filename_.begin(), filename_.end());
