@@ -722,20 +722,15 @@ OrbitalsType* MGmol<OrbitalsType>::loadOrbitalFromRestartFile(
             then function is set as previous orbitals,
             while the extrapolated function is set as the current orbitals.
             This is how the restart file is saved via dumprestartFile.
+
+            For now, we just enforce to not use the restart files with extrapolation.
         */
         if (flag_extrapolated_data)
         {
-            orbitals_extrapol_
-                = OrbitalsExtrapolationFactory<OrbitalsType>::create(
-                    ct.WFExtrapolation());
+            if (onpe0)
+                (*MPIdata::serr) << "loadRestartFile: does not support restart files with extrapolation." << std::endl;
 
-            if (onpe0) os_ << "Create new orbitals_minus1..." << std::endl;
-
-            orbitals_extrapol_->setupPreviousOrbitals(&restart_orbitals,
-                proj_matrices_, lrs_, local_cluster_, currentMasks_, corrMasks_,
-                h5file);
-
-            delete orbitals_extrapol_;
+            global_exit(0);
         }
 
         /* main workflow delete h5f_file_ here, meaning the loading is over. */
