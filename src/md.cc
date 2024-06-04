@@ -137,8 +137,8 @@ OrbitalsType* MGmol<OrbitalsType>::new_orbitals_with_current_LRs(bool setup)
 
     // need to build new orbitals as masks have changed
     OrbitalsType* new_orbitals = new OrbitalsType("NewMasks", mygrid,
-        mymesh->subdivx(), ct.numst, ct.bcWF, proj_matrices_, lrs_,
-        currentMasks_, corrMasks_, local_cluster_, setup);
+        mymesh->subdivx(), ct.numst, ct.bcWF, proj_matrices_.get(), lrs_,
+        currentMasks_.get(), corrMasks_.get(), local_cluster_.get(), setup);
 
     return new_orbitals;
 }
@@ -317,8 +317,8 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
     int size_tau = (int)tau0.size();
     DFTsolver<OrbitalsType>::resetItCount();
 
-    orbitals_extrapol_ = OrbitalsExtrapolationFactory<OrbitalsType>::create(
-        ct.WFExtrapolation());
+    orbitals_extrapol_.reset(OrbitalsExtrapolationFactory<OrbitalsType>::create(
+        ct.WFExtrapolation()));
 
     MD_IonicStepper* stepper = new MD_IonicStepper(
         ct.dt, atmove, tau0, taup, taum, fion, pmass, rand_states);
@@ -376,8 +376,8 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
                 if (onpe0) os_ << "Create new orbitals_minus1..." << std::endl;
 
                 orbitals_extrapol_->setupPreviousOrbitals(&current_orbitals_,
-                    proj_matrices_, lrs_, local_cluster_, currentMasks_,
-                    corrMasks_, *h5f_file_);
+                    proj_matrices_.get(), lrs_, local_cluster_.get(),
+                    currentMasks_.get(), corrMasks_.get(), *h5f_file_);
 
                 // need to reset a few things as we just read new orbitals
                 (*orbitals)->computeGramAndInvS();
@@ -395,8 +395,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
             moveVnuc(ions);
         }
 
-        delete h5f_file_;
-        h5f_file_ = nullptr;
+        h5f_file_.reset();
     }
 
     // additional SC steps to compensate random start
@@ -437,7 +436,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
             if (ct.adaptiveLRs())
             {
                 assert(lrs_);
-                adaptLR(spreadf_, nullptr);
+                adaptLR(spreadf_.get(), nullptr);
 
                 last_move_is_small = lrs_->moveIsSmall();
 
@@ -670,7 +669,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
     }
 
     delete stepper;
-    delete orbitals_extrapol_;
+    orbitals_extrapol_.reset();
 }
 
 template <class OrbitalsType>

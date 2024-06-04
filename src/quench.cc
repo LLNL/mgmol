@@ -326,8 +326,9 @@ bool MGmol<OrbitalsType>::rotateStatesPairsOverlap(
         spreadf2st.print(os_);
         orbitals.computeGramAndInvS();
 
-        ProjectedMatricesSparse* projmatrices
-            = dynamic_cast<ProjectedMatricesSparse*>(proj_matrices_);
+        std::shared_ptr<ProjectedMatricesSparse> projmatrices
+            = std::dynamic_pointer_cast<ProjectedMatricesSparse>(
+                proj_matrices_);
         if (onpe0)
             std::cout << "Gram Matrix for pair of states after transformation:"
                       << std::endl;
@@ -398,7 +399,7 @@ void MGmol<OrbitalsType>::disentangleOrbitals(OrbitalsType& orbitals,
 template <>
 void MGmol<LocGridOrbitals>::applyAOMMprojection(LocGridOrbitals& orbitals)
 {
-    aomm_ = new AOMMprojector(orbitals, lrs_);
+    aomm_.reset(new AOMMprojector(orbitals, lrs_));
     aomm_->projectOut(orbitals);
 }
 
@@ -422,8 +423,9 @@ int MGmol<LocGridOrbitals>::outerSolve(LocGridOrbitals& orbitals,
         case OuterSolverType::ABPG:
         case OuterSolverType::NLCG:
         {
-            DFTsolver<LocGridOrbitals> solver(hamiltonian_, proj_matrices_,
-                energy_, electrostat_, this, ions, rho_, dm_strategy_, os_);
+            DFTsolver<LocGridOrbitals> solver(hamiltonian_.get(),
+                proj_matrices_.get(), energy_.get(), electrostat_.get(), this,
+                ions, rho_.get(), dm_strategy_.get(), os_);
 
             retval = solver.solve(
                 orbitals, work_orbitals, ions, max_steps, iprint, last_eks);
@@ -433,9 +435,9 @@ int MGmol<LocGridOrbitals>::outerSolve(LocGridOrbitals& orbitals,
 
         case OuterSolverType::PolakRibiere:
         {
-            PolakRibiereSolver<LocGridOrbitals> solver(hamiltonian_,
-                proj_matrices_, energy_, electrostat_, this, ions, rho_,
-                dm_strategy_, os_);
+            PolakRibiereSolver<LocGridOrbitals> solver(hamiltonian_.get(),
+                proj_matrices_.get(), energy_.get(), electrostat_.get(), this,
+                ions, rho_.get(), dm_strategy_.get(), os_);
 
             retval = solver.solve(
                 orbitals, work_orbitals, ions, max_steps, iprint, last_eks);
@@ -466,8 +468,9 @@ int MGmol<OrbitalsType>::outerSolve(OrbitalsType& orbitals,
         case OuterSolverType::ABPG:
         case OuterSolverType::NLCG:
         {
-            DFTsolver<OrbitalsType> solver(hamiltonian_, proj_matrices_,
-                energy_, electrostat_, this, ions, rho_, dm_strategy_, os_);
+            DFTsolver<OrbitalsType> solver(hamiltonian_.get(),
+                proj_matrices_.get(), energy_.get(), electrostat_.get(), this,
+                ions, rho_.get(), dm_strategy_.get(), os_);
 
             retval = solver.solve(
                 orbitals, work_orbitals, ions, max_steps, iprint, last_eks);
@@ -477,9 +480,9 @@ int MGmol<OrbitalsType>::outerSolve(OrbitalsType& orbitals,
 
         case OuterSolverType::PolakRibiere:
         {
-            PolakRibiereSolver<OrbitalsType> solver(hamiltonian_,
-                proj_matrices_, energy_, electrostat_, this, ions, rho_,
-                dm_strategy_, os_);
+            PolakRibiereSolver<OrbitalsType> solver(hamiltonian_.get(),
+                proj_matrices_.get(), energy_.get(), electrostat_.get(), this,
+                ions, rho_.get(), dm_strategy_.get(), os_);
 
             retval = solver.solve(
                 orbitals, work_orbitals, ions, max_steps, iprint, last_eks);
@@ -499,8 +502,9 @@ int MGmol<OrbitalsType>::outerSolve(OrbitalsType& orbitals,
 #else
             DavidsonSolver<OrbitalsType, dist_matrix::DistMatrix<DISTMATDTYPE>>
 #endif
-                solver(os_, *ions_, hamiltonian_, rho_, energy_, electrostat_,
-                    this, gids, ct.dm_mix, with_spin);
+                solver(os_, *ions_, hamiltonian_.get(), rho_.get(),
+                    energy_.get(), electrostat_.get(), this, gids, ct.dm_mix,
+                    with_spin);
 
             retval = solver.solve(orbitals, work_orbitals);
             break;
@@ -558,9 +562,9 @@ int MGmol<OrbitalsType>::quench(OrbitalsType* orbitals, Ions& ions,
         applyAOMMprojection(*orbitals);
     }
 
-    orbitals_precond_ = new OrbitalsPreconditioning<OrbitalsType>();
+    orbitals_precond_.reset(new OrbitalsPreconditioning<OrbitalsType>());
     orbitals_precond_->setup(
-        *orbitals, ct.getMGlevels(), ct.lap_type, currentMasks_, lrs_);
+        *orbitals, ct.getMGlevels(), ct.lap_type, currentMasks_.get(), lrs_);
 
     // solve electronic structure problem
     // (inner iterations)
@@ -570,11 +574,9 @@ int MGmol<OrbitalsType>::quench(OrbitalsType* orbitals, Ions& ions,
 
     if (ct.use_kernel_functions)
     {
-        delete aomm_;
-        aomm_ = nullptr;
+        aomm_.reset();
     }
-    delete orbitals_precond_;
-    orbitals_precond_ = nullptr;
+    orbitals_precond_.reset();
 
     // Get the n.l. energy
     // TODO: Fix bug where energy vs. time output is incorrect if get_evnl is
@@ -599,7 +601,8 @@ int MGmol<OrbitalsType>::quench(OrbitalsType* orbitals, Ions& ions,
                 << " TS             [Ha] = " << ts << std::endl;
         }
     }
-    last_eks = energy_->evaluateTotal(ts, proj_matrices_, *orbitals, 2, os_);
+    last_eks
+        = energy_->evaluateTotal(ts, proj_matrices_.get(), *orbitals, 2, os_);
 
     if (ct.computeCondGramMD())
     {

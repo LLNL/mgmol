@@ -36,7 +36,7 @@ Timer Electrostatic::solve_tm_("Electrostatic::solve");
 
 Electrostatic::Electrostatic(PoissonFDtype lap_type, const short bcPoisson[3],
     const double screening_const)
-    : laptype_(lap_type)
+    : laptype_(lap_type), poisson_solver_(nullptr)
 {
     assert(bcPoisson[0] >= 0);
     assert(bcPoisson[1] >= 0);
@@ -166,6 +166,8 @@ Electrostatic::Electrostatic(PoissonFDtype lap_type, const short bcPoisson[3],
 
 Electrostatic::~Electrostatic()
 {
+    assert(poisson_solver_ != nullptr);
+
     delete poisson_solver_;
     if (grhod_ != nullptr) delete grhod_;
     if (grhoc_ != nullptr) delete grhoc_;

@@ -279,9 +279,9 @@ int MGmol<OrbitalsType>::get_NOLMO(NOLMOTransform& noot, OrbitalsType& orbitals,
     }
     sincos.clear();
 
-    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
-        = dynamic_cast<
-            ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
+    std::shared_ptr<ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>>
+        projmatrices = std::dynamic_pointer_cast<
+            ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>>(
             proj_matrices_);
     assert(projmatrices);
 

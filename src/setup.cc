@@ -28,7 +28,15 @@ int MGmol<OrbitalsType>::setupFromInput(const std::string filename)
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
-    hamiltonian_    = new Hamiltonian<OrbitalsType>();
+    /*
+     * Setup global mesh for calculations
+     */
+    unsigned ngpts[3]    = { ct.ngpts_[0], ct.ngpts_[1], ct.ngpts_[2] };
+    double origin[3]     = { ct.ox_, ct.oy_, ct.oz_ };
+    const double cell[3] = { ct.lx_, ct.ly_, ct.lz_ };
+    Mesh::setup(mmpi.commSpin(), ngpts, origin, cell, ct.lap_type);
+
+    hamiltonian_.reset(new Hamiltonian<OrbitalsType>());
     Potentials& pot = hamiltonian_->potential();
 
     ct.registerPotentials(pot);
@@ -43,8 +51,8 @@ int MGmol<OrbitalsType>::setupFromInput(const std::string filename)
 
     const pb::PEenv& myPEenv = mymesh->peenv();
     if (ct.restart_info > 0)
-        h5f_file_
-            = new HDFrestart(ct.restart_file, myPEenv, ct.restart_file_type);
+        h5f_file_.reset(
+            new HDFrestart(ct.restart_file, myPEenv, ct.restart_file_type));
 
     int status = readCoordinates(filename, false);
     if (status == -1) return -1;
