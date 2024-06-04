@@ -482,7 +482,7 @@ add_test(NAME ChebyshevMVP
          ${CMAKE_CURRENT_SOURCE_DIR}/Chebyshev/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 
-if(NOT ${MAGMA_FOUND})
+if(NOT ${MGMOL_WITH_MAGMA})
   add_test(NAME testShortSighted
            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ShortSighted/test.py
            ${MPIEXEC} --oversubscribe ${MPIEXEC_NUMPROC_FLAG} 5 ${MPIEXEC_PREFLAGS}
