@@ -26,8 +26,6 @@ public:
 
     virtual ~OrbitalsExtrapolation();
 
-    virtual bool extrapolatedH() const { return false; }
-
     virtual void clearOldOrbitals();
     bool getRestartData(OrbitalsType& orbitals);
     virtual void setupPreviousOrbitals(OrbitalsType** orbitals,

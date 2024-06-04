@@ -91,11 +91,6 @@ void MGmol<OrbitalsType>::postWFextrapolation(OrbitalsType* orbitals)
         else
             proj_matrices_->setDMto2InvS();
     }
-    else
-    {
-        if (orbitals_extrapol_->extrapolatedH())
-            dm_strategy_->update(*orbitals);
-    }
 }
 
 template <class OrbitalsType>
