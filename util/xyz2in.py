@@ -5,9 +5,11 @@
 # This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 # Please also read this link https://github.com/llnl/mgmol/LICENSE
 #
-# Python program to convert .xyz file into mgmol input
+# Python program to convert .xyz file into mgmol input coordinates file
+# Optional arguments: [lx ly lz] to define box size and map all atoms into
+#                     box (0,0,0)-(lx,ly,lz) using periodic boundary conditions
 #
-# use: python coords.xyz > coords.in
+# use: python coords.xyz [lx ly lz] > coords.in
 #-------------------------------------------------------------------------------
 import sys, string
 
