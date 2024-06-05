@@ -175,6 +175,10 @@ void Rho<OrbitalsType>::rescaleTotalCharge()
             (*MPIdata::sout) << " Rescaling factor: " << t1 << std::endl;
             (*MPIdata::sout) << " Num. electrons: " << nel << std::endl;
         }
+        if (fabs(t1 - 1.) > 0.02)
+        {
+            mmpi.abort();
+        }
 
         for (int ispin = 0; ispin < nspin; ispin++)
             LinearAlgebraUtils<MemorySpace::Host>::MPscal(
