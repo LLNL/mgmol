@@ -1781,6 +1781,7 @@ int Ions::readAtomsFromXYZ(
             }
             ++count;
         }
+     delete tfile;
     }
 
     mmpi.bcastGlobal(&count, 1);
@@ -1788,6 +1789,16 @@ int Ions::readAtomsFromXYZ(
 
     mmpi.bcastGlobal(&crds[0], 3 * natoms);
     mmpi.bcastGlobal(&spec[0], natoms);
+
+    return setAtoms(crds, spec);
+}
+
+int Ions::setAtoms(std::vector<double>& crds, std::vector<short>& spec)
+{
+    MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
+    Control& ct(*(Control::instance()));
+
+    const int natoms = crds.size()/3;
 
     double velocity[3] = { 0., 0., 0. };
     bool locked        = false;
@@ -1873,8 +1884,6 @@ int Ions::readAtomsFromXYZ(
     }
     //    std::cout<<mmpi.mype()<<"...list size = "<<list_ions_.size()<<" local
     //    ions size = "<<local_ions_.size()<<endl;
-
-    if (mmpi.PE0()) delete tfile;
 
     return natoms;
 }

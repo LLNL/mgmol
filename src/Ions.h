@@ -259,6 +259,7 @@ public:
     int readAtoms(const std::string& filename, const bool cell_relative);
     int readAtoms(std::ifstream* tfile, const bool cell_relative);
     void initFromRestartFile(HDFrestart& h5_file);
+    int setAtoms(std::vector<double>& crds, std::vector<short>& spec);
 
     int getNValenceElectrons() const;
     void syncForces();
