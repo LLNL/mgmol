@@ -10,6 +10,7 @@
 #include "Ions.h"
 #include "Control.h"
 #include "HDFrestart.h"
+#include "MGmol_MPI.h"
 #include "MGmol_blas1.h"
 #include "MPIdata.h"
 #include "Mesh.h"
@@ -169,12 +170,9 @@ void Ions::computeMaxNumProjs()
                          << " initialized" << std::endl;
 #endif
 
-    std::vector<Ion*>::iterator ion = list_ions_.begin();
-    while (ion != list_ions_.end())
+    for (auto& ion : list_ions_)
     {
-        max_num_proj_ = std::max(max_num_proj_, (*ion)->nProjectors());
-
-        ion++;
+        max_num_proj_ = std::max(max_num_proj_, ion->nProjectors());
     }
 
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
@@ -210,11 +208,9 @@ void Ions::setup()
     if (ct.verbose > 0)
         printWithTimeStamp("Ions::setup()... individual ions...", std::cout);
 
-    std::vector<Ion*>::iterator ion = list_ions_.begin();
-    while (ion != list_ions_.end())
+    for (auto& ion : list_ions_)
     {
-        (*ion)->setup();
-        ion++;
+        ion->setup();
     }
 
     setMapVL();
@@ -1569,7 +1565,7 @@ Ion* Ions::findLocalIon(const int index) const
     return nullptr;
 }
 
-void Ions::setPositions(const std::vector<double>& tau)
+void Ions::setLocalPositions(const std::vector<double>& tau)
 {
     assert(tau.size() == 3 * local_ions_.size());
 
@@ -2118,8 +2114,6 @@ int Ions::read1atom(std::ifstream* tfile, const bool cell_relative)
     // Ion needs to be created by each MPI task to set global ids
     Ion* new_ion = new Ion(species_[isp], name_read, crds, velocity, locked);
 
-    // assert( (new_ion->locked() == false) || (new_ion->locked() == true) );
-
 #ifdef DEBUG
     if (onpe0) (*MPIdata::sout) << "Ion read..." << std::endl;
 #endif
@@ -2131,11 +2125,11 @@ int Ions::read1atom(std::ifstream* tfile, const bool cell_relative)
         // populate local_ions_ list
         if (inLocalIons(crds[0], crds[1], crds[2]))
         {
-            (new_ion)->set_here(true);
+            new_ion->set_here(true);
             local_ions_.push_back(new_ion);
         }
         else
-            (new_ion)->set_here(false);
+            new_ion->set_here(false);
     }
     else
     {
@@ -2193,7 +2187,7 @@ void Ions::setVelocities(const std::vector<double>& tau0,
     }
 }
 
-void Ions::getPositions(std::vector<double>& tau) const
+void Ions::getLocalPositions(std::vector<double>& tau) const
 {
     assert(tau.size() == 3 * local_ions_.size());
 
@@ -2205,6 +2199,32 @@ void Ions::getPositions(std::vector<double>& tau) const
         iion++;
         ia++;
     }
+}
+
+void Ions::getPositions(std::vector<double>& tau)
+{
+    std::vector<double> tau_local(3 * local_ions_.size());
+
+    getLocalPositions(tau_local);
+
+    int n = getNumIons();
+    tau.resize(3 * n);
+
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    mmpi.allGatherV(tau_local, tau);
+}
+
+void Ions::getForces(std::vector<double>& forces)
+{
+    std::vector<double> forces_local(3 * local_ions_.size());
+
+    getLocalForces(forces_local);
+
+    int n = getNumIons();
+    forces.resize(3 * n);
+
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    mmpi.allGatherV(forces_local, forces);
 }
 
 void Ions::setTau0()
@@ -2236,6 +2256,14 @@ void Ions::setPositionsToTau0()
     }
 }
 
+void Ions::setPositions(const std::vector<double>& tau)
+{
+    setLocalPositions(tau);
+
+    // setup required after updating local ions positions
+    setup();
+}
+
 void Ions::setVelocitiesToVel()
 {
     assert(velocity_.size() == 3 * local_ions_.size());
@@ -2249,7 +2277,7 @@ void Ions::setVelocitiesToVel()
     }
 }
 
-void Ions::getForces(std::vector<double>& tau) const
+void Ions::getLocalForces(std::vector<double>& tau) const
 {
     assert(tau.size() == 3 * local_ions_.size());
 
@@ -2380,12 +2408,10 @@ double Ions::computeMaxNLprojRadius() const
 {
     double radius = 0.;
 
-    std::vector<Ion*>::const_iterator iion = local_ions_.begin();
-    while (iion != local_ions_.end())
+    for (auto& iion : local_ions_)
     {
-        double r = (*iion)->radiusNLproj();
+        double r = iion->radiusNLproj();
         radius   = r > radius ? r : radius;
-        iion++;
     }
 
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
@@ -3061,7 +3087,7 @@ void Ions::updateForcesInteractingIons()
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
 
     // get computed forces into fion_
-    getForces(fion_);
+    getLocalForces(fion_);
 
     // initialize with local names and forces
     DistributedIonicData forces_data(local_names_, fion_);

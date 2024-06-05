@@ -16,7 +16,6 @@
 #include <map>
 #include <vector>
 
-#include "DataDistribution.h"
 #include "DistributedIonicData.h"
 #include "Ion.h"
 #include "hdf5.h"
@@ -247,7 +246,7 @@ public:
     // check if ion is in list of local ions
     bool isLocal(const std::string& ion_name) const;
 
-    void setPositions(const std::vector<double>& tau);
+    void setLocalPositions(const std::vector<double>& tau);
     void get_positions(std::vector<std::vector<double>>& r) const;
     void set_positions(const std::vector<std::vector<double>>& r);
     void get_forces(std::vector<std::vector<double>>& f) const;
@@ -268,9 +267,12 @@ public:
     void setTau0();
     void setPositionsToTau0();
     void setVelocitiesToVel();
+    void setPositions(const std::vector<double>& tau);
 
-    void getPositions(std::vector<double>& tau) const;
-    void getForces(std::vector<double>& tau) const;
+    void getLocalPositions(std::vector<double>& tau) const;
+    void getPositions(std::vector<double>& tau);
+    void getForces(std::vector<double>& forces);
+    void getLocalForces(std::vector<double>& tau) const;
     void syncData(const std::vector<Species>& sp);
     // void syncNames(const int nions, std::vector<std::string>& local_names,
     // std::vector<std::string>& names);
