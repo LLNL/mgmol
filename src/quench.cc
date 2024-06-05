@@ -176,7 +176,7 @@ void MGmol<OrbitalsType>::resetProjectedMatricesAndDM(
     proj_matrices_->updateThetaAndHB();
 
     // reset DM using chosen strategy
-    dm_strategy_->initialize();
+    dm_strategy_->initialize(orbitals);
 }
 
 // try to use some rotations to avoid degeneracies

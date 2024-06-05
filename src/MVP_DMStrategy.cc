@@ -24,17 +24,17 @@ template <class OrbitalsType, class MatrixType>
 MVP_DMStrategy<OrbitalsType, MatrixType>::MVP_DMStrategy(MPI_Comm comm,
     ostream& os, Ions& ions, Rho<OrbitalsType>* rho,
     Energy<OrbitalsType>* energy, Electrostatic* electrostat,
-    MGmol<OrbitalsType>* mgmol_strategy, OrbitalsType* orbitals,
+    MGmol<OrbitalsType>* mgmol_strategy,
+    const std::vector<std::vector<int>>& overlappingGids,
     ProjectedMatricesInterface* proj_matrices, const bool use_old_dm)
-    : orbitals_(orbitals),
-      proj_matrices_(proj_matrices),
+    : proj_matrices_(proj_matrices),
       comm_(comm),
       os_(os),
       ions_(ions),
       rho_(rho),
       energy_(energy),
       electrostat_(electrostat),
-      global_indexes_(orbitals->getOverlappingGids()),
+      global_indexes_(overlappingGids),
       mgmol_strategy_(mgmol_strategy),
       use_old_dm_(use_old_dm)
 {
@@ -43,7 +43,7 @@ MVP_DMStrategy<OrbitalsType, MatrixType>::MVP_DMStrategy(MPI_Comm comm,
 }
 
 template <class OrbitalsType, class MatrixType>
-int MVP_DMStrategy<OrbitalsType, MatrixType>::update()
+int MVP_DMStrategy<OrbitalsType, MatrixType>::update(OrbitalsType& orbitals)
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 2)
@@ -56,7 +56,7 @@ int MVP_DMStrategy<OrbitalsType, MatrixType>::update()
         electrostat_, mgmol_strategy_, ct.numst, ct.occ_width, global_indexes_,
         ct.dm_inner_steps, use_old_dm_);
 
-    return solver.solve(*orbitals_);
+    return solver.solve(orbitals);
 }
 
 template <class OrbitalsType, class MatrixType>

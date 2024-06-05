@@ -31,7 +31,7 @@ if not os.path.exists(cwd+'/'+dst):
 command = "{} {} -c {} -i {}".format(mpicmd,exe,inp,coords)
 print("Run command: {}".format(command))
 
-output = subprocess.check_output(command,shell=True)
+output = subprocess.check_output(command,stderr=subprocess.STDOUT,shell=True)
 
 #analyse mgmol standard output
 #make sure force is below tolerance
@@ -63,6 +63,12 @@ for line in lines:
       for i in range(5,8):
         if abs(eval(words[i]))>tol:
           sys.exit(1)
+
+for line in lines:
+  if line.count(b'HDF5-DIAG') and line.count(b'Error'):
+    print(line)
+    print("Found HDF5 error")
+    sys.exit(1)
 
 niterations = len(energies)
 print("MVP solver ran for {} iterations".format(niterations))

@@ -24,7 +24,8 @@ template <class OrbitalsType>
 DFTsolver<OrbitalsType>::DFTsolver(Hamiltonian<OrbitalsType>* hamiltonian,
     ProjectedMatricesInterface* proj_matrices, Energy<OrbitalsType>* energy,
     Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy, Ions& ions,
-    Rho<OrbitalsType>* rho, DMStrategy* dm_strategy, std::ostream& os)
+    Rho<OrbitalsType>* rho, DMStrategy<OrbitalsType>* dm_strategy,
+    std::ostream& os)
     : mgmol_strategy_(mgmol_strategy),
       hamiltonian_(hamiltonian),
       proj_matrices_(proj_matrices),
@@ -316,7 +317,7 @@ int DFTsolver<OrbitalsType>::solve(OrbitalsType& orbitals,
         const bool ortho
             = (ct.getOrthoType() == OrthoType::Eigenfunctions || orthof);
 
-        if (!ortho)
+        if (!ortho || !ct.fullyOccupied())
         {
             // strip dm from the overlap contribution
             // dm <- Ls**T * dm * Ls
@@ -337,7 +338,14 @@ int DFTsolver<OrbitalsType>::solve(OrbitalsType& orbitals,
             }
             else
             {
-                orbitals.orthonormalizeLoewdin();
+                bool updateDM = false;
+                if (!ct.fullyOccupied())
+                {
+                    orbitals.computeGramAndInvS();
+                    dm_strategy_->dressDM();
+                    updateDM = true;
+                }
+                orbitals.orthonormalizeLoewdin(true, nullptr, updateDM);
 
                 orbitals_stepper_->restartMixing();
             }
@@ -384,7 +392,7 @@ int DFTsolver<OrbitalsType>::solve(OrbitalsType& orbitals,
             mgmol_strategy_->updateHmatrix(orbitals, ions);
 
         // compute new density matrix
-        dm_strategy_->update();
+        dm_strategy_->update(orbitals);
 
         incInnerIt();
 

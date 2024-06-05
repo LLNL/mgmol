@@ -13,6 +13,10 @@
 #include "LocGridOrbitals.h"
 #include "MGmol.h"
 #include "Potentials.h"
+#include "ReplicatedWorkSpace.h"
+#include "SparseDistMatrix.h"
+
+#include "mgmol_run.h"
 
 template <class OrbitalsType>
 int MGmol<OrbitalsType>::setupFromInput(const std::string filename)
@@ -51,6 +55,36 @@ int MGmol<OrbitalsType>::setupFromInput(const std::string filename)
     ct.setTolEnergy();
     ct.setSpreadRadius();
 
+    ct.checkNLrange();
+
+    // now that we know the number of states, we can set a few other static
+    // data
+    if (!ct.short_sighted)
+    {
+        MatricesBlacsContext::instance().setup(mmpi.commSpin(), ct.numst);
+
+        dist_matrix::DistMatrix<DISTMATDTYPE>::setBlockSize(64);
+
+        dist_matrix::DistMatrix<DISTMATDTYPE>::setDefaultBlacsContext(
+            MatricesBlacsContext::instance().bcxt());
+
+        ReplicatedWorkSpace<double>::instance().setup(ct.numst);
+
+        dist_matrix::SparseDistMatrix<DISTMATDTYPE>::setNumTasksPerPartitioning(
+            128);
+
+        int npes = mmpi.size();
+        setSparseDistMatriConsolidationNumber(npes);
+    }
+
+#ifdef HAVE_MAGMA
+    ReplicatedMatrix::setMPIcomm(mmpi.commSpin());
+#endif
+
+    LocGridOrbitals::setDotProduct(ct.dot_product_type);
+
+    mgmol_check();
+
     return 0;
 }
 
@@ -58,6 +92,8 @@ template <class OrbitalsType>
 int MGmol<OrbitalsType>::setupLRs(const std::string filename)
 {
     Control& ct = *(Control::instance());
+
+    if (!(ct.isLocMode() || ct.init_loc == 1)) return 0;
 
     // create localization regions
     Mesh* mymesh           = Mesh::instance();

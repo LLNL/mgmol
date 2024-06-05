@@ -188,6 +188,8 @@ void ExtendedGridOrbitals::reset(MasksSet* masks, MasksSet* corrmasks,
 
 void ExtendedGridOrbitals::assign(const ExtendedGridOrbitals& orbitals)
 {
+    assert(proj_matrices_ != nullptr);
+
     assign_tm_.start();
 
     setIterativeIndex(orbitals);
