@@ -1582,69 +1582,6 @@ void Ions::setLocalPositions(const std::vector<double>& tau)
     setup_ = false;
 }
 
-void Ions::get_positions(std::vector<std::vector<double>>& rr) const
-{
-    assert(rr.size() == local_ions_.size());
-    if (local_ions_.empty()) return;
-    std::vector<double> tau(3);
-    int i                                 = 0;
-    std::vector<Ion*>::const_iterator ion = local_ions_.begin();
-    while (ion != local_ions_.end())
-    {
-        tau[0] = (*ion)->position(0);
-        tau[1] = (*ion)->position(1);
-        tau[2] = (*ion)->position(2);
-        rr[i]  = tau;
-        ion++;
-        i++;
-    }
-}
-void Ions::set_positions(const std::vector<std::vector<double>>& rr)
-{
-    assert(rr.size() == local_ions_.size());
-
-    if (local_ions_.empty()) return;
-    std::vector<Ion*>::iterator ion = local_ions_.begin();
-    int i                           = 0;
-    while (ion != local_ions_.end())
-    {
-        assert(rr[i].size() == 3);
-        (*ion)->setPosition(rr[i][0], rr[i][1], rr[i][2]);
-        ion++;
-        i++;
-    }
-}
-void Ions::get_forces(std::vector<std::vector<double>>& ff) const
-{
-    assert(ff.size() == local_ions_.size());
-
-    if (local_ions_.empty()) return;
-    int i                                 = 0;
-    std::vector<Ion*>::const_iterator ion = local_ions_.begin();
-    while (ion != local_ions_.end())
-    {
-        ff[i][0] = (*ion)->force(0);
-        ff[i][1] = (*ion)->force(1);
-        ff[i][2] = (*ion)->force(2);
-        ion++;
-        i++;
-    }
-}
-void Ions::set_forces(const std::vector<std::vector<double>>& ff)
-{
-    assert(ff.size() == local_ions_.size());
-
-    if (local_ions_.empty()) return;
-    std::vector<Ion*>::iterator ion = local_ions_.begin();
-    int i                           = 0;
-    while (ion != local_ions_.end())
-    {
-        (*ion)->setForce(ff[i][0], ff[i][1], ff[i][2]);
-        ion++;
-        i++;
-    }
-}
-
 int Ions::readAtoms(const std::string& filename, const bool cell_relative)
 {
 

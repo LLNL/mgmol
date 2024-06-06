@@ -287,10 +287,6 @@ public:
     double get_evnl(const Ions& ions);
     void sebprintPositions();
     void sebprintForces();
-    void get_positions(std::vector<std::vector<double>>& r);
-    void set_positions(std::vector<std::vector<double>>& r);
-    void get_forces(std::vector<std::vector<double>>& f);
-    void set_forces(std::vector<std::vector<double>>& f);
     int nions() { return ions_->getNumIons(); }
     double getTotalEnergy();
     void cleanup();

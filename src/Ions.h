@@ -36,7 +36,12 @@ class Ions
     const std::vector<Species>& species_;
 
     std::vector<Ion*> list_ions_;
-    std::vector<Ion*> local_ions_; // centered in local sub-domain
+
+    /*
+     * ions located in local sub-domain
+     */
+    std::vector<Ion*> local_ions_;
+
     std::vector<Ion*> interacting_ions_; // for ion-ion interactions
     std::vector<Ion*>
         overlappingNL_ions_; // with projectors overlapping local sub-domain
@@ -61,7 +66,6 @@ class Ions
     void readRestartPositions(HDFrestart& h5_file);
     int read1atom(std::ifstream* tfile, const bool cell_relative);
 
-    // void associate2PE();
     void setupInteractingIons();
     void setupListOverlappingIons();
     void setMapVL();
@@ -248,10 +252,6 @@ public:
     bool isLocal(const std::string& ion_name) const;
 
     void setLocalPositions(const std::vector<double>& tau);
-    void get_positions(std::vector<std::vector<double>>& r) const;
-    void set_positions(const std::vector<std::vector<double>>& r);
-    void get_forces(std::vector<std::vector<double>>& f) const;
-    void set_forces(const std::vector<std::vector<double>>& f);
 
     void lockAtom(const std::string& name);
 
