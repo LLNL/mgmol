@@ -112,22 +112,27 @@ int main(int argc, char** argv)
         // to initialize MGmol
         std::vector<double> positions;
         mgmol->getAtomicPositions(positions);
+        std::vector<short> anumbers;
+        mgmol->getAtomicNumbers(anumbers);
         if (MPIdata::onpe0)
         {
             std::cout << "Positions:" << std::endl;
+            std::vector<short>::iterator ita = anumbers.begin();
             for (std::vector<double>::iterator it = positions.begin();
                  it != positions.end(); it += 3)
             {
+                std::cout << *ita;
                 for (int i = 0; i < 3; i++)
                     std::cout << "    " << *(it + i);
                 std::cout << std::endl;
+                ita++;
             }
         }
 
         // compute energy and forces using all MPI tasks
         // expect positions to be replicated on all MPI tasks
         std::vector<double> forces;
-        mgmol->evaluateEnergyAndForces(positions, forces);
+        mgmol->evaluateEnergyAndForces(positions, anumbers, forces);
 
         // print out results
         if (MPIdata::onpe0)

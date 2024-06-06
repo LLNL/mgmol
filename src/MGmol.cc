@@ -1412,12 +1412,21 @@ void MGmol<OrbitalsType>::getAtomicPositions(std::vector<double>& tau)
 }
 
 template <class OrbitalsType>
-double MGmol<OrbitalsType>::evaluateEnergyAndForces(
-    const std::vector<double>& tau, std::vector<double>& forces)
+void MGmol<OrbitalsType>::getAtomicNumbers(std::vector<short>& an)
 {
+    ions_->getAtomicNumbers(an);
+}
+
+template <class OrbitalsType>
+double MGmol<OrbitalsType>::evaluateEnergyAndForces(
+    const std::vector<double>& tau, std::vector<short>& atnumbers,
+    std::vector<double>& forces)
+{
+    assert(tau.size() == 3 * atnumbers.size());
+
     Control& ct = *(Control::instance());
 
-    ions_->setPositions(tau);
+    ions_->setPositions(tau, atnumbers);
 
     double eks = 0.;
     quench(current_orbitals_, *ions_, ct.max_electronic_steps, 20, eks);

@@ -239,7 +239,7 @@ Ions::~Ions()
 void Ions::setupListOverlappingIons()
 {
     Control& ct = *(Control::instance());
-    if (ct.verbose > 0)
+    if (ct.verbose > 1)
         printWithTimeStamp("Ions::setupListOverlappingIons()...", std::cout);
 
     overlappingNL_ions_.clear();
@@ -265,7 +265,7 @@ void Ions::setupListOverlappingIons()
 void Ions::setupInteractingIons()
 {
     Control& ct = *(Control::instance());
-    if (ct.verbose > 0)
+    if (ct.verbose > 1)
         printWithTimeStamp("Ions::setupInteractingIons()...", std::cout);
 
     ions_setupInteractingIons_tm.start();
@@ -1781,7 +1781,7 @@ int Ions::readAtomsFromXYZ(
             }
             ++count;
         }
-     delete tfile;
+        delete tfile;
     }
 
     mmpi.bcastGlobal(&count, 1);
@@ -1793,12 +1793,13 @@ int Ions::readAtomsFromXYZ(
     return setAtoms(crds, spec);
 }
 
-int Ions::setAtoms(std::vector<double>& crds, std::vector<short>& spec)
+int Ions::setAtoms(
+    const std::vector<double>& crds, const std::vector<short>& spec)
 {
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
     Control& ct(*(Control::instance()));
 
-    const int natoms = crds.size()/3;
+    const int natoms = crds.size() / 3;
 
     double velocity[3] = { 0., 0., 0. };
     bool locked        = false;
@@ -1827,7 +1828,7 @@ int Ions::setAtoms(std::vector<double>& crds, std::vector<short>& spec)
         }
         if (spname.compare("") == 0)
         {
-            (*MPIdata::serr) << "Ions::readAtomsFromXYZ() --- ERROR: unknown "
+            (*MPIdata::serr) << "Ions::setAtoms() --- ERROR: unknown "
                                 "species for atomic number "
                              << spec[ia] << std::endl;
             return -1;
@@ -1848,7 +1849,7 @@ int Ions::setAtoms(std::vector<double>& crds, std::vector<short>& spec)
 
         // Populate list_ions_ list
         // std::cout<<"crds: "<<crds[3*ia+0]<<", "<<crds[3*ia+1]<<",
-        // "<<crds[3*ia+2]<<endl;
+        // "<<crds[3*ia+2]<<std::endl;
         if (inListIons(crds[3 * ia + 0], crds[3 * ia + 1], crds[3 * ia + 2]))
         {
             list_ions_.push_back(new_ion);
@@ -2216,11 +2217,21 @@ void Ions::getPositions(std::vector<double>& tau)
 
     getLocalPositions(tau_local);
 
-    int n = getNumIons();
-    tau.resize(3 * n);
-
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     mmpi.allGatherV(tau_local, tau);
+}
+
+void Ions::getAtomicNumbers(std::vector<short>& atnumbers)
+{
+    std::vector<short> local_atnumbers;
+
+    for (auto& ion : local_ions_)
+    {
+        local_atnumbers.push_back(ion->atomic_number());
+    }
+
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    mmpi.allGatherV(local_atnumbers, atnumbers);
 }
 
 void Ions::getForces(std::vector<double>& forces)
@@ -2265,9 +2276,15 @@ void Ions::setPositionsToTau0()
     }
 }
 
-void Ions::setPositions(const std::vector<double>& tau)
+void Ions::setPositions(
+    const std::vector<double>& tau, const std::vector<short>& anumbers)
 {
-    setLocalPositions(tau);
+    assert(tau.size() == anumbers.size() * 3);
+
+    // clear previous data
+    clearLists();
+
+    num_ions_ = setAtoms(tau, anumbers);
 
     // setup required after updating local ions positions
     setup();
@@ -3171,6 +3188,18 @@ void Ions::updateTaupInteractingIons()
     }
 }
 
+void Ions::clearLists()
+{
+    local_ions_.clear();
+    std::vector<Ion*>::iterator ion = list_ions_.begin();
+    while (ion != list_ions_.end())
+    {
+        delete *ion;
+        ion++;
+    }
+    list_ions_.clear();
+}
+
 // update list of local ions
 void Ions::updateListIons()
 {
@@ -3195,15 +3224,7 @@ void Ions::updateListIons()
     // Note: this is based on data from MD std::vectors
 
     // First cleanup list_ions_
-    local_ions_.clear();
-    // delete current ions from list
-    std::vector<Ion*>::iterator ion = list_ions_.begin();
-    while (ion != list_ions_.end())
-    {
-        delete *ion;
-        ion++;
-    }
-    list_ions_.clear();
+    clearLists();
 
     // Update list starting with local ion data.
     // This enables overlapping data accumulation with communication.

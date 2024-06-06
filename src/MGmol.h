@@ -180,13 +180,15 @@ public:
 
     void run() override;
 
-    double evaluateEnergyAndForces(
-        const std::vector<double>& tau, std::vector<double>& forces);
+    double evaluateEnergyAndForces(const std::vector<double>& tau,
+        std::vector<short>& atnumbers, std::vector<double>& forces);
 
     /*
      * get internal atomic positions
      */
     void getAtomicPositions(std::vector<double>& tau);
+
+    void getAtomicNumbers(std::vector<short>& an);
 
     void initNuc(Ions& ions);
     void initKBR();

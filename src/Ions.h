@@ -157,6 +157,7 @@ class Ions
     void gatherForces(
         std::vector<double>& forces, const int root, const MPI_Comm comm) const;
     bool hasLockedAtoms() const;
+    void clearLists();
 
 public:
     Ions(const double lat[3], const std::vector<Species>& sp);
@@ -259,7 +260,8 @@ public:
     int readAtoms(const std::string& filename, const bool cell_relative);
     int readAtoms(std::ifstream* tfile, const bool cell_relative);
     void initFromRestartFile(HDFrestart& h5_file);
-    int setAtoms(std::vector<double>& crds, std::vector<short>& spec);
+    int setAtoms(
+        const std::vector<double>& crds, const std::vector<short>& spec);
 
     int getNValenceElectrons() const;
     void syncForces();
@@ -268,10 +270,13 @@ public:
     void setTau0();
     void setPositionsToTau0();
     void setVelocitiesToVel();
-    void setPositions(const std::vector<double>& tau);
+    void setPositions(
+        const std::vector<double>& tau, const std::vector<short>& anumbers);
 
     void getLocalPositions(std::vector<double>& tau) const;
     void getPositions(std::vector<double>& tau);
+    void getAtomicNumbers(std::vector<short>& atnumbers);
+
     void getForces(std::vector<double>& forces);
     void getLocalForces(std::vector<double>& tau) const;
     void syncData(const std::vector<Species>& sp);
