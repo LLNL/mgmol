@@ -177,6 +177,8 @@ void Rho<OrbitalsType>::rescaleTotalCharge()
         }
         if (fabs(t1 - 1.) > 0.02)
         {
+            std::cerr << "Error on density too large to continue. Abort."
+                      << std::endl;
             mmpi.abort();
         }
 
