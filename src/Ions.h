@@ -16,7 +16,6 @@
 #include <map>
 #include <vector>
 
-#include "DataDistribution.h"
 #include "DistributedIonicData.h"
 #include "Ion.h"
 #include "hdf5.h"
@@ -37,7 +36,12 @@ class Ions
     const std::vector<Species>& species_;
 
     std::vector<Ion*> list_ions_;
-    std::vector<Ion*> local_ions_; // centered in local sub-domain
+
+    /*
+     * ions located in local sub-domain
+     */
+    std::vector<Ion*> local_ions_;
+
     std::vector<Ion*> interacting_ions_; // for ion-ion interactions
     std::vector<Ion*>
         overlappingNL_ions_; // with projectors overlapping local sub-domain
@@ -62,7 +66,6 @@ class Ions
     void readRestartPositions(HDFrestart& h5_file);
     int read1atom(std::ifstream* tfile, const bool cell_relative);
 
-    // void associate2PE();
     void setupInteractingIons();
     void setupListOverlappingIons();
     void setMapVL();
@@ -158,6 +161,7 @@ class Ions
     void gatherForces(
         std::vector<double>& forces, const int root, const MPI_Comm comm) const;
     bool hasLockedAtoms() const;
+    void clearLists();
 
 public:
     Ions(const double lat[3], const std::vector<Species>& sp);
@@ -247,11 +251,7 @@ public:
     // check if ion is in list of local ions
     bool isLocal(const std::string& ion_name) const;
 
-    void setPositions(const std::vector<double>& tau);
-    void get_positions(std::vector<std::vector<double>>& r) const;
-    void set_positions(const std::vector<std::vector<double>>& r);
-    void get_forces(std::vector<std::vector<double>>& f) const;
-    void set_forces(const std::vector<std::vector<double>>& f);
+    void setLocalPositions(const std::vector<double>& tau);
 
     void lockAtom(const std::string& name);
 
@@ -260,6 +260,8 @@ public:
     int readAtoms(const std::string& filename, const bool cell_relative);
     int readAtoms(std::ifstream* tfile, const bool cell_relative);
     void initFromRestartFile(HDFrestart& h5_file);
+    int setAtoms(
+        const std::vector<double>& crds, const std::vector<short>& spec);
 
     int getNValenceElectrons() const;
     void syncForces();
@@ -268,9 +270,15 @@ public:
     void setTau0();
     void setPositionsToTau0();
     void setVelocitiesToVel();
+    void setPositions(
+        const std::vector<double>& tau, const std::vector<short>& anumbers);
 
-    void getPositions(std::vector<double>& tau) const;
-    void getForces(std::vector<double>& tau) const;
+    void getLocalPositions(std::vector<double>& tau) const;
+    void getPositions(std::vector<double>& tau);
+    void getAtomicNumbers(std::vector<short>& atnumbers);
+
+    void getForces(std::vector<double>& forces);
+    void getLocalForces(std::vector<double>& tau) const;
     void syncData(const std::vector<Species>& sp);
     // void syncNames(const int nions, std::vector<std::string>& local_names,
     // std::vector<std::string>& names);

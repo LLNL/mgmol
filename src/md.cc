@@ -344,8 +344,9 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
         constraints_->enforceConstraints(20);
 
         stepper->updateTau();
-        ions.setPositions(tau0);
+        ions.setLocalPositions(tau0);
 
+        // setup required after updating local ions positions
         ions.setup();
     }
 
@@ -489,7 +490,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
         force(**orbitals, ions);
 
         // set fion
-        ions.getForces(fion);
+        ions.getLocalForces(fion);
 
         // constraints need to be added again and setup as atoms
         // may have moved and local atoms are not the same anymore
@@ -717,12 +718,15 @@ OrbitalsType* MGmol<OrbitalsType>::loadOrbitalFromRestartFile(
             while the extrapolated function is set as the current orbitals.
             This is how the restart file is saved via dumprestartFile.
 
-            For now, we just enforce to not use the restart files with extrapolation.
+            For now, we just enforce to not use the restart files with
+           extrapolation.
         */
         if (flag_extrapolated_data)
         {
             if (onpe0)
-                (*MPIdata::serr) << "loadRestartFile: does not support restart files with extrapolation." << std::endl;
+                (*MPIdata::serr) << "loadRestartFile: does not support restart "
+                                    "files with extrapolation."
+                                 << std::endl;
 
             global_exit(0);
         }

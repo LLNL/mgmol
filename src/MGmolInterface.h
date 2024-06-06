@@ -11,6 +11,7 @@
 #define MGMOLINTERFACE_H
 
 #include <cstring>
+#include <vector>
 
 class MGmolInterface
 {
@@ -24,6 +25,11 @@ public:
     virtual int setupConstraintsFromInput(const std::string input_file) = 0;
     virtual void setup()                                                = 0;
     virtual void run()                                                  = 0;
+    virtual double evaluateEnergyAndForces(const std::vector<double>& tau,
+        std::vector<short>& atnumbers, std::vector<double>& forces)
+        = 0;
+    virtual void getAtomicPositions(std::vector<double>& tau) = 0;
+    virtual void getAtomicNumbers(std::vector<short>& an)     = 0;
 };
 
 #endif

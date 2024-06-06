@@ -1405,6 +1405,39 @@ void MGmol<OrbitalsType>::addResidualSpreadPenalty(
     spread_penalty_->addResidual(phi, res);
 }
 
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::getAtomicPositions(std::vector<double>& tau)
+{
+    ions_->getPositions(tau);
+}
+
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::getAtomicNumbers(std::vector<short>& an)
+{
+    ions_->getAtomicNumbers(an);
+}
+
+template <class OrbitalsType>
+double MGmol<OrbitalsType>::evaluateEnergyAndForces(
+    const std::vector<double>& tau, std::vector<short>& atnumbers,
+    std::vector<double>& forces)
+{
+    assert(tau.size() == 3 * atnumbers.size());
+
+    Control& ct = *(Control::instance());
+
+    ions_->setPositions(tau, atnumbers);
+
+    double eks = 0.;
+    quench(current_orbitals_, *ions_, ct.max_electronic_steps, 20, eks);
+
+    force(*current_orbitals_, *ions_);
+
+    ions_->getForces(forces);
+
+    return eks;
+}
+
 template class MGmol<LocGridOrbitals>;
 template class MGmol<ExtendedGridOrbitals>;
 template int MGmol<LocGridOrbitals>::initial<MemorySpace::Host>();
