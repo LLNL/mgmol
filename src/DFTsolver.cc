@@ -339,13 +339,15 @@ int DFTsolver<OrbitalsType>::solve(OrbitalsType& orbitals,
             else
             {
                 bool updateDM = false;
+                bool updatedS = false;
                 if (!ct.fullyOccupied())
                 {
                     orbitals.computeGramAndInvS();
                     dm_strategy_->dressDM();
                     updateDM = true;
+                    updatedS = true;
                 }
-                orbitals.orthonormalizeLoewdin(true, nullptr, updateDM);
+                orbitals.orthonormalizeLoewdin(updatedS, nullptr, updateDM);
 
                 orbitals_stepper_->restartMixing();
             }
