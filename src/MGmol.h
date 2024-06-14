@@ -178,6 +178,10 @@ public:
 
     ~MGmol() override;
 
+    /* access functions */
+    OrbitalsType* getOrbitals() { return current_orbitals_; }
+    std::shared_ptr<Hamiltonian<OrbitalsType>> getHamiltonian() { return hamiltonian_; }
+
     void run() override;
 
     double evaluateEnergyAndForces(const std::vector<double>& tau,
@@ -313,7 +317,7 @@ public:
         forces_->force(orbitals, ions);
     }
 
-    OrbitalsType* loadOrbitalFromRestartFile(const std::string filename);
+    void loadRestartFile(const std::string filename);
 };
 // Instantiate static variables here to avoid clang warnings
 template <class OrbitalsType>
