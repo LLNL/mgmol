@@ -25,6 +25,13 @@ enum class ROMStage
     UNSUPPORTED
 };
 
+enum class ROMVariable
+{
+    ORBITALS,
+    POTENTIAL,
+    NONE
+};
+
 /* Stored as a private member variable of Control class */
 struct ROMPrivateOptions
 {
@@ -34,6 +41,7 @@ struct ROMPrivateOptions
     int restart_file_minidx = -1;
     int restart_file_maxidx = -1;
     std::string basis_file = "";
+    ROMVariable variable=ROMVariable::NONE;
 
     /* save librom snapshot matrix at FOM simulation. */
     bool save_librom_snapshot = false;

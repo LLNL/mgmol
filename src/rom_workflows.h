@@ -13,6 +13,7 @@
 #include "Control.h"
 #include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
+#include "Potentials.h"
 #include "MGmol.h"
 #include "MGmol_MPI.h"
 #include "MPIdata.h"
