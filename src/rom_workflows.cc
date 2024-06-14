@@ -43,8 +43,7 @@ void readRestartFiles(MGmolInterface *mgmol_)
 
     MGmol<OrbitalsType> *mgmol = static_cast<MGmol<OrbitalsType> *>(mgmol_);
     OrbitalsType *orbitals = mgmol->getOrbitals();
-    Hamiltonian<OrbitalsType> *hamiltonian = mgmol->getHamiltonian();
-    Potentials& pot = hamiltonian->potential();
+    Potentials& pot = mgmol->getHamiltonian()->potential();
     std::string filename;
 
     /* Determine basis prefix, dimension, and sample size */
