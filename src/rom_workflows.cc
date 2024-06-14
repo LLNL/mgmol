@@ -40,7 +40,7 @@ void readRestartFiles(MGmolInterface *mgmol_)
 
     /* Read the first snapshot to determin dimension and number of snapshots */
     filename = string_format(rom_options.restart_file_fmt, minidx);
-    orbitals = mgmol->loadOrbitalFromRestartFile(filename);
+    mgmol->loadRestartFile(filename);
     const int dim = orbitals->getLocNumpt();
     const int chrom_num = orbitals->chromatic_number();
     const int totalSamples = orbitals->chromatic_number() * num_restart;
@@ -54,7 +54,7 @@ void readRestartFiles(MGmolInterface *mgmol_)
     for (int k = minidx; k <= maxidx; k++)
     {
         filename = string_format(rom_options.restart_file_fmt, k);
-        orbitals = mgmol->loadOrbitalFromRestartFile(filename);
+        mgmol->loadRestartFile(filename);
         assert(dim == orbitals->getLocNumpt());
         assert(chrom_num == orbitals->chromatic_number());
 

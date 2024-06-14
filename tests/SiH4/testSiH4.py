@@ -44,16 +44,21 @@ os.remove(dst2)
 lines=output.split(b'\n')
 
 tol = 5.e-3
+found_forces = False
 for line in lines:
-  num_matches = line.count(b'%%')
-  if num_matches:
+  if line.count(b'%%'):
     print(line)
-  num_matches = line.count(b'##')
-  if num_matches:
+  if line.count(b'##'):
     words=line.split()
     if len(words)==8:
       print(line)
+      found_forces = True
       for i in range(5,8):
         if abs(eval(words[i]))>tol:
           sys.exit(1)
 
+if (not found_forces):
+  print("no forces found")
+  sys.exit(1)
+
+sys.exit(0)

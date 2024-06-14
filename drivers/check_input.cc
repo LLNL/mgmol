@@ -7,31 +7,19 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-//
-//                  main.cc
-//
-//    Description:
-//        Real grid, finite difference, molecular dynamics program
-//        for with nonorthogonal localized orbitals.
-//
-//        Uses Mehrstellen operators, multigrid accelerations, and
-//        non-local pseudopotentials.
-//
-//     Includes LDA and PBE exchange and correlation functionals.
-//
-// Units:
-//   Potentials, eigenvalues and operators in Rydberg
-//   Energies in Hartree
-//
-#include "rom_workflows.h"
+#include "Control.h"
+#include "ExtendedGridOrbitals.h"
+#include "LocGridOrbitals.h"
+#include "MGmol.h"
+#include "MGmol_MPI.h"
+#include "MPIdata.h"
+#include "mgmol_run.h"
 
-// A helper function
-template <class T>
-std::ostream& operator<<(std::ostream& os, const std::vector<T>& v)
-{
-    copy(v.begin(), v.end(), std::ostream_iterator<T>(std::cout, " "));
-    return os;
-}
+#include <cassert>
+#include <iostream>
+
+#include <boost/program_options.hpp>
+namespace po = boost::program_options;
 
 int main(int argc, char** argv)
 {
@@ -56,9 +44,6 @@ int main(int argc, char** argv)
 
     po::variables_map vm;
 
-    // use configure file if it can be found
-    // std::string config_filename("mgmol.cfg");
-
     // read options from PE0 only
     if (MPIdata::onpe0)
     {
@@ -78,11 +63,6 @@ int main(int argc, char** argv)
     int ret = ct.checkOptions();
     if (ret < 0) return ret;
 
-    unsigned ngpts[3]    = { ct.ngpts_[0], ct.ngpts_[1], ct.ngpts_[2] };
-    double origin[3]     = { ct.ox_, ct.oy_, ct.oz_ };
-    const double cell[3] = { ct.lx_, ct.ly_, ct.lz_ };
-    Mesh::setup(mmpi.commSpin(), ngpts, origin, cell, ct.lap_type);
-
     mmpi.bcastGlobal(input_filename);
     mmpi.bcastGlobal(lrs_filename);
 
@@ -96,15 +76,9 @@ int main(int argc, char** argv)
             mgmol = new MGmol<ExtendedGridOrbitals>(global_comm, *MPIdata::sout,
                 input_filename, lrs_filename, constraints_filename);
 
-        mgmol->setup();
-
-        if (ct.isLocMode())
-            readRestartFiles<LocGridOrbitals>(mgmol);
-        else
-            readRestartFiles<ExtendedGridOrbitals>(mgmol);
+        *MPIdata::sout << " Input parameters OK\n";
 
         delete mgmol;
-
     } // close main scope
 
     mgmol_finalize();
@@ -114,14 +88,6 @@ int main(int argc, char** argv)
     {
         std::cerr << "MPI Finalize failed!!!" << std::endl;
     }
-
-    time_t tt;
-    time(&tt);
-    if (onpe0) std::cout << " Run ended at " << ctime(&tt) << std::endl;
-
-    // MemTrack::TrackDumpBlocks();
-
-    //    MemTrack::TrackListMemoryUsage();
 
     return 0;
 }

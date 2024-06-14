@@ -44,6 +44,7 @@ class IonicAlgorithm;
 #include "AOMMprojector.h"
 #include "ClusterOrbitals.h"
 #include "DMStrategy.h"
+#include "Energy.h"
 #include "ExtendedGridOrbitals.h"
 #include "Forces.h"
 #include "Ions.h"
@@ -55,6 +56,8 @@ class IonicAlgorithm;
 #include "SpreadPenaltyInterface.h"
 #include "SpreadsAndCenters.h"
 
+#include <memory>
+
 template <class OrbitalsType>
 class MGmol : public MGmolInterface
 {
@@ -63,48 +66,49 @@ private:
 
     MPI_Comm comm_;
 
-    XConGrid* xcongrid_;
+    std::shared_ptr<XConGrid> xcongrid_;
 
     OrbitalsType* current_orbitals_;
 
-    AOMMprojector* aomm_;
+    std::shared_ptr<AOMMprojector> aomm_;
 
-    Ions* ions_;
+    std::shared_ptr<Ions> ions_;
 
-    Rho<OrbitalsType>* rho_;
+    std::shared_ptr<Rho<OrbitalsType>> rho_;
 
-    Energy<OrbitalsType>* energy_;
+    std::shared_ptr<Energy<OrbitalsType>> energy_;
 
-    Hamiltonian<OrbitalsType>* hamiltonian_;
+    std::shared_ptr<Hamiltonian<OrbitalsType>> hamiltonian_;
 
-    Forces<OrbitalsType>* forces_;
+    std::shared_ptr<Forces<OrbitalsType>> forces_;
 
-    MasksSet* currentMasks_;
-    MasksSet* corrMasks_;
+    std::shared_ptr<MasksSet> currentMasks_;
+    std::shared_ptr<MasksSet> corrMasks_;
 
-    // ProjectedMatrices* proj_matrices_;
-    ProjectedMatricesInterface* proj_matrices_;
+    std::shared_ptr<ProjectedMatricesInterface> proj_matrices_;
 
-    IonicAlgorithm<OrbitalsType>* geom_optimizer_;
+    std::shared_ptr<IonicAlgorithm<OrbitalsType>> geom_optimizer_;
 
     std::shared_ptr<LocalizationRegions> lrs_;
 
-    ClusterOrbitals* local_cluster_;
+    std::shared_ptr<ClusterOrbitals> local_cluster_;
 
-    KBPsiMatrixSparse* g_kbpsi_;
+    std::shared_ptr<KBPsiMatrixSparse> g_kbpsi_;
 
-    SpreadsAndCenters<OrbitalsType>* spreadf_;
+    std::shared_ptr<SpreadsAndCenters<OrbitalsType>> spreadf_;
 
-    SpreadPenaltyInterface<OrbitalsType>* spread_penalty_;
+    std::shared_ptr<SpreadPenaltyInterface<OrbitalsType>> spread_penalty_;
 
-    DMStrategy<OrbitalsType>* dm_strategy_;
+    std::shared_ptr<DMStrategy<OrbitalsType>> dm_strategy_;
 
-    HDFrestart* h5f_file_;
+    std::shared_ptr<HDFrestart> h5f_file_;
+
+    std::shared_ptr<OrbitalsPreconditioning<OrbitalsType>> orbitals_precond_;
 
     double total_energy_;
-    ConstraintSet* constraints_;
+    std::shared_ptr<ConstraintSet> constraints_;
 
-    OrbitalsExtrapolation<OrbitalsType>* orbitals_extrapol_ = nullptr;
+    std::shared_ptr<OrbitalsExtrapolation<OrbitalsType>> orbitals_extrapol_;
 
     float md_time_;
     int md_iteration_;
@@ -168,17 +172,30 @@ private:
     static Timer comp_res_tm_;
     static Timer init_nuc_tm_;
 
-    OrbitalsPreconditioning<OrbitalsType>* orbitals_precond_;
-
 public:
-    Electrostatic* electrostat_;
+    std::shared_ptr<Electrostatic> electrostat_;
 
     MGmol(MPI_Comm comm, std::ostream& os, std::string input_filename,
         std::string lrs_filename, std::string constraints_filename);
 
     ~MGmol() override;
 
+    /* access functions */
+    OrbitalsType* getOrbitals() { return current_orbitals_; }
+    std::shared_ptr<Hamiltonian<OrbitalsType>> getHamiltonian() { return hamiltonian_; }
+
     void run() override;
+
+    double evaluateEnergyAndForces(const std::vector<double>& tau,
+        std::vector<short>& atnumbers, std::vector<double>& forces);
+
+    /*
+     * get internal atomic positions
+     */
+    void getAtomicPositions(std::vector<double>& tau);
+
+    void getAtomicNumbers(std::vector<short>& an);
+
     void initNuc(Ions& ions);
     void initKBR();
 
@@ -276,10 +293,6 @@ public:
     double get_evnl(const Ions& ions);
     void sebprintPositions();
     void sebprintForces();
-    void get_positions(std::vector<std::vector<double>>& r);
-    void set_positions(std::vector<std::vector<double>>& r);
-    void get_forces(std::vector<std::vector<double>>& f);
-    void set_forces(std::vector<std::vector<double>>& f);
     int nions() { return ions_->getNumIons(); }
     double getTotalEnergy();
     void cleanup();
@@ -306,7 +319,7 @@ public:
         forces_->force(orbitals, ions);
     }
 
-    OrbitalsType* loadOrbitalFromRestartFile(const std::string filename);
+    void loadRestartFile(const std::string filename);
 
 #ifdef MGMOL_HAS_LIBROM
     int save_orbital_snapshot(std::string snapshot_dir, OrbitalsType& orbitals);

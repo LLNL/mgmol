@@ -36,15 +36,14 @@ void MGmol<OrbitalsType>::lbfgsrlx(OrbitalsType** orbitals, Ions& ions)
     Control& ct = *(Control::instance());
 
     LBFGS<OrbitalsType> lbfgs(orbitals, ions, *rho_, *constraints_, lrs_,
-        local_cluster_, *currentMasks_, *corrMasks_, *electrostat_, ct.dt,
+        local_cluster_.get(), *currentMasks_, *corrMasks_, *electrostat_, ct.dt,
         *this);
 
     DFTsolver<OrbitalsType>::resetItCount();
 
-    lbfgs.init(h5f_file_);
+    lbfgs.init(h5f_file_.get());
 
-    delete h5f_file_;
-    h5f_file_ = nullptr;
+    h5f_file_.reset();
 
     // additional quench to compensate random start
     if (ct.restart_info < 3)

@@ -33,13 +33,12 @@ void MGmol<OrbitalsType>::runfire(OrbitalsType** orbitals, Ions& ions)
 
     DFTsolver<OrbitalsType>::resetItCount();
 
-    orbitals_extrapol_ = OrbitalsExtrapolationFactory<OrbitalsType>::create(
-        ct.WFExtrapolation());
+    orbitals_extrapol_.reset(OrbitalsExtrapolationFactory<OrbitalsType>::create(
+        ct.WFExtrapolation()));
 
-    fire.init(h5f_file_);
+    fire.init(h5f_file_.get());
 
-    delete h5f_file_;
-    h5f_file_ = nullptr;
+    h5f_file_.reset();
 
     // additional quench to compensate random start
     if (ct.restart_info < 3)
@@ -129,7 +128,7 @@ void MGmol<OrbitalsType>::runfire(OrbitalsType** orbitals, Ions& ions)
 
     } // end for steps
 
-    delete orbitals_extrapol_;
+    orbitals_extrapol_.reset();
 
     // final dump
     if (ct.out_restart_info > 0)
