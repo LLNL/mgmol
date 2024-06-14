@@ -669,7 +669,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
 }
 
 template <class OrbitalsType>
-OrbitalsType* MGmol<OrbitalsType>::loadOrbitalFromRestartFile(
+void MGmol<OrbitalsType>::loadRestartFile(
     const std::string filename)
 {
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
@@ -683,56 +683,15 @@ OrbitalsType* MGmol<OrbitalsType>::loadOrbitalFromRestartFile(
            || (ct.AtomsDynamic() == AtomsDynamicType::Quench));
 
     HDFrestart h5file(filename, myPEenv, ct.out_restart_file_type);
-    int ierr;
 
-    OrbitalsType* restart_orbitals = nullptr;
-
-    /* This corresponds to MGmol<OrbitalsType>::initial */
+    int ierr = read_restart_data(h5file, *rho_, *current_orbitals_);
+    if (ierr < 0)
     {
-        // Copy from current orbital, instead of constructing brand-new one
-        restart_orbitals
-            = new OrbitalsType("ForLoading", *current_orbitals_, false);
-
-        /* This corresponds to MGmol<OrbitalsType>::read_restart_data */
-        {
-            ierr = restart_orbitals->read_func_hdf5(h5file);
-        } // read_restart_data
-    } // initial()
-
-    /* This corresponds to MGmol<OrbitalsType>::md */
-    {
-        int flag_extrapolated_data = 0;
         if (onpe0)
-        {
-            flag_extrapolated_data
-                = h5file.dset_exists("ExtrapolatedFunction0000");
-            if (flag_extrapolated_data == 0)
-                flag_extrapolated_data
-                    = h5file.dset_exists("ExtrapolatedFunction0");
-        }
-        MPI_Bcast(&flag_extrapolated_data, 1, MPI_INT, 0, comm_);
+            (*MPIdata::serr) << "loadRestartFile: failed to read the restart file." << std::endl;
 
-        /*
-            If extrapolated function exists,
-            then function is set as previous orbitals,
-            while the extrapolated function is set as the current orbitals.
-            This is how the restart file is saved via dumprestartFile.
-
-            For now, we just enforce to not use the restart files with
-           extrapolation.
-        */
-        if (flag_extrapolated_data)
-        {
-            if (onpe0)
-                (*MPIdata::serr) << "loadRestartFile: does not support restart "
-                                    "files with extrapolation."
-                                 << std::endl;
-
-            global_exit(0);
-        }
-
-        /* main workflow delete h5f_file_ here, meaning the loading is over. */
-    } // md()
+        global_exit(0);
+    }
 
     ierr = h5file.close();
     mmpi.allreduce(&ierr, 1, MPI_MIN);
@@ -741,20 +700,10 @@ OrbitalsType* MGmol<OrbitalsType>::loadOrbitalFromRestartFile(
         if (onpe0)
             (*MPIdata::serr)
                 << "loadRestartFile: cannot close file..." << std::endl;
-        return nullptr;
+        return;
     }
 
-    /*
-        In returning restart_orbitals,
-        we hope that the wavefunctions in restart_orbitals are all set.
-        At least the following functions should return proper data loaded from
-       the file:
-
-            restart_orbitals->getLocNumpt()
-            restart_orbitals->chromatic_number()
-            restart_orbitals->getPsi(idx)   (for int idx)
-    */
-    return restart_orbitals;
+    return;
 }
 
 template class MGmol<LocGridOrbitals>;
