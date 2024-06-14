@@ -25,7 +25,7 @@ double getLAeigen(const double tol, const int maxit, Ions& ions);
 int read_config(int argc, char** argv,
     boost::program_options::variables_map& vm, std::string& input_file,
     std::string& lrs_filename, std::string& constraints_filename,
-    float& total_spin, bool& with_spin, bool& tcheck);
+    float& total_spin, bool& with_spin);
 #ifdef MGMOL_HAS_LIBROM
 void setupROMConfigOption(po::options_description &rom_cfg);
 #endif

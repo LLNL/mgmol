@@ -91,11 +91,6 @@ void MGmol<OrbitalsType>::postWFextrapolation(OrbitalsType* orbitals)
         else
             proj_matrices_->setDMto2InvS();
     }
-    else
-    {
-        if (orbitals_extrapol_->extrapolatedH())
-            dm_strategy_->update(*orbitals);
-    }
 }
 
 template <class OrbitalsType>
@@ -137,8 +132,8 @@ OrbitalsType* MGmol<OrbitalsType>::new_orbitals_with_current_LRs(bool setup)
 
     // need to build new orbitals as masks have changed
     OrbitalsType* new_orbitals = new OrbitalsType("NewMasks", mygrid,
-        mymesh->subdivx(), ct.numst, ct.bcWF, proj_matrices_, lrs_,
-        currentMasks_, corrMasks_, local_cluster_, setup);
+        mymesh->subdivx(), ct.numst, ct.bcWF, proj_matrices_.get(), lrs_,
+        currentMasks_.get(), corrMasks_.get(), local_cluster_.get(), setup);
 
     return new_orbitals;
 }
@@ -317,8 +312,8 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
     int size_tau = (int)tau0.size();
     DFTsolver<OrbitalsType>::resetItCount();
 
-    orbitals_extrapol_ = OrbitalsExtrapolationFactory<OrbitalsType>::create(
-        ct.WFExtrapolation());
+    orbitals_extrapol_.reset(OrbitalsExtrapolationFactory<OrbitalsType>::create(
+        ct.WFExtrapolation()));
 
     MD_IonicStepper* stepper = new MD_IonicStepper(
         ct.dt, atmove, tau0, taup, taum, fion, pmass, rand_states);
@@ -349,8 +344,9 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
         constraints_->enforceConstraints(20);
 
         stepper->updateTau();
-        ions.setPositions(tau0);
+        ions.setLocalPositions(tau0);
 
+        // setup required after updating local ions positions
         ions.setup();
     }
 
@@ -376,8 +372,8 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
                 if (onpe0) os_ << "Create new orbitals_minus1..." << std::endl;
 
                 orbitals_extrapol_->setupPreviousOrbitals(&current_orbitals_,
-                    proj_matrices_, lrs_, local_cluster_, currentMasks_,
-                    corrMasks_, *h5f_file_);
+                    proj_matrices_.get(), lrs_, local_cluster_.get(),
+                    currentMasks_.get(), corrMasks_.get(), *h5f_file_);
 
                 // need to reset a few things as we just read new orbitals
                 (*orbitals)->computeGramAndInvS();
@@ -395,8 +391,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
             moveVnuc(ions);
         }
 
-        delete h5f_file_;
-        h5f_file_ = nullptr;
+        h5f_file_.reset();
     }
 
     // additional SC steps to compensate random start
@@ -437,7 +432,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
             if (ct.adaptiveLRs())
             {
                 assert(lrs_);
-                adaptLR(spreadf_, nullptr);
+                adaptLR(spreadf_.get(), nullptr);
 
                 last_move_is_small = lrs_->moveIsSmall();
 
@@ -495,7 +490,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
         force(**orbitals, ions);
 
         // set fion
-        ions.getForces(fion);
+        ions.getLocalForces(fion);
 
         // constraints need to be added again and setup as atoms
         // may have moved and local atoms are not the same anymore
@@ -682,11 +677,11 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
     }
 
     delete stepper;
-    delete orbitals_extrapol_;
+    orbitals_extrapol_.reset();
 }
 
 template <class OrbitalsType>
-OrbitalsType* MGmol<OrbitalsType>::loadOrbitalFromRestartFile(
+void MGmol<OrbitalsType>::loadRestartFile(
     const std::string filename)
 {
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
@@ -700,53 +695,15 @@ OrbitalsType* MGmol<OrbitalsType>::loadOrbitalFromRestartFile(
            || (ct.AtomsDynamic() == AtomsDynamicType::Quench));
 
     HDFrestart h5file(filename, myPEenv, ct.out_restart_file_type);
-    int ierr;
 
-    OrbitalsType* restart_orbitals = nullptr;
-
-    /* This corresponds to MGmol<OrbitalsType>::initial */
+    int ierr = read_restart_data(h5file, *rho_, *current_orbitals_);
+    if (ierr < 0)
     {
-        // Copy from current orbital, instead of constructing brand-new one
-        restart_orbitals
-            = new OrbitalsType("ForLoading", *current_orbitals_, false);
-
-        /* This corresponds to MGmol<OrbitalsType>::read_restart_data */
-        {
-            ierr = restart_orbitals->read_func_hdf5(h5file);
-        } // read_restart_data
-    } // initial()
-
-    /* This corresponds to MGmol<OrbitalsType>::md */
-    {
-        int flag_extrapolated_data = 0;
         if (onpe0)
-        {
-            flag_extrapolated_data
-                = h5file.dset_exists("ExtrapolatedFunction0000");
-            if (flag_extrapolated_data == 0)
-                flag_extrapolated_data
-                    = h5file.dset_exists("ExtrapolatedFunction0");
-        }
-        MPI_Bcast(&flag_extrapolated_data, 1, MPI_INT, 0, comm_);
+            (*MPIdata::serr) << "loadRestartFile: failed to read the restart file." << std::endl;
 
-        /*
-            If extrapolated function exists,
-            then function is set as previous orbitals,
-            while the extrapolated function is set as the current orbitals.
-            This is how the restart file is saved via dumprestartFile.
-
-            For now, we just enforce to not use the restart files with extrapolation.
-        */
-        if (flag_extrapolated_data)
-        {
-            if (onpe0)
-                (*MPIdata::serr) << "loadRestartFile: does not support restart files with extrapolation." << std::endl;
-
-            global_exit(0);
-        }
-
-        /* main workflow delete h5f_file_ here, meaning the loading is over. */
-    } // md()
+        global_exit(0);
+    }
 
     ierr = h5file.close();
     mmpi.allreduce(&ierr, 1, MPI_MIN);
@@ -755,20 +712,10 @@ OrbitalsType* MGmol<OrbitalsType>::loadOrbitalFromRestartFile(
         if (onpe0)
             (*MPIdata::serr)
                 << "loadRestartFile: cannot close file..." << std::endl;
-        return nullptr;
+        return;
     }
 
-    /*
-        In returning restart_orbitals,
-        we hope that the wavefunctions in restart_orbitals are all set.
-        At least the following functions should return proper data loaded from
-       the file:
-
-            restart_orbitals->getLocNumpt()
-            restart_orbitals->chromatic_number()
-            restart_orbitals->getPsi(idx)   (for int idx)
-    */
-    return restart_orbitals;
+    return;
 }
 
 template class MGmol<LocGridOrbitals>;

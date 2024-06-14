@@ -7,22 +7,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-//
-//                  main.cc
-//
-//    Description:
-//        Real grid, finite difference, molecular dynamics program
-//        for with nonorthogonal localized orbitals.
-//
-//        Uses Mehrstellen operators, multigrid accelerations, and
-//        non-local pseudopotentials.
-//
-//     Includes LDA and PBE exchange and correlation functionals.
-//
-// Units:
-//   Potentials, eigenvalues and operators in Rydberg
-//   Energies in Hartree
-//
 #include "Control.h"
 #include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
@@ -94,6 +78,13 @@ int main(int argc, char** argv)
 
     // Enter main scope
     {
+        if (MPIdata::onpe0)
+        {
+            std::cout << "-------------------------" << std::endl;
+            std::cout << "Construct MGmol object..." << std::endl;
+            std::cout << "-------------------------" << std::endl;
+        }
+
         MGmolInterface* mgmol;
         if (ct.isLocMode())
             mgmol = new MGmol<LocGridOrbitals>(global_comm, *MPIdata::sout,
@@ -102,9 +93,59 @@ int main(int argc, char** argv)
             mgmol = new MGmol<ExtendedGridOrbitals>(global_comm, *MPIdata::sout,
                 input_filename, lrs_filename, constraints_filename);
 
+        if (MPIdata::onpe0)
+        {
+            std::cout << "-------------------------" << std::endl;
+            std::cout << "MGmol setup..." << std::endl;
+            std::cout << "-------------------------" << std::endl;
+        }
         mgmol->setup();
 
-        mgmol->run();
+        if (MPIdata::onpe0)
+        {
+            std::cout << "-------------------------" << std::endl;
+            std::cout << "Setup done..." << std::endl;
+            std::cout << "-------------------------" << std::endl;
+        }
+
+        // here we just use the atomic positions read in and used
+        // to initialize MGmol
+        std::vector<double> positions;
+        mgmol->getAtomicPositions(positions);
+        std::vector<short> anumbers;
+        mgmol->getAtomicNumbers(anumbers);
+        if (MPIdata::onpe0)
+        {
+            std::cout << "Positions:" << std::endl;
+            std::vector<short>::iterator ita = anumbers.begin();
+            for (std::vector<double>::iterator it = positions.begin();
+                 it != positions.end(); it += 3)
+            {
+                std::cout << *ita;
+                for (int i = 0; i < 3; i++)
+                    std::cout << "    " << *(it + i);
+                std::cout << std::endl;
+                ita++;
+            }
+        }
+
+        // compute energy and forces using all MPI tasks
+        // expect positions to be replicated on all MPI tasks
+        std::vector<double> forces;
+        mgmol->evaluateEnergyAndForces(positions, anumbers, forces);
+
+        // print out results
+        if (MPIdata::onpe0)
+        {
+            std::cout << "Forces:" << std::endl;
+            for (std::vector<double>::iterator it = forces.begin();
+                 it != forces.end(); it += 3)
+            {
+                for (int i = 0; i < 3; i++)
+                    std::cout << "    " << *(it + i);
+                std::cout << std::endl;
+            }
+        }
 
         delete mgmol;
 

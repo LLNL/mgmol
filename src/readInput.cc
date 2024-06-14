@@ -175,7 +175,7 @@ int MGmol<OrbitalsType>::readCoordinates(
 
     // setup ions
     const std::vector<Species>& sp(ct.getSpecies());
-    ions_ = new Ions(lattice, sp);
+    ions_.reset(new Ions(lattice, sp));
 
     if (ct.restart_info > 0
         && ct.override_restart == 0) // read restart ionic positions
@@ -217,7 +217,7 @@ int MGmol<OrbitalsType>::readCoordinates(
 
     // setup ions
     const std::vector<Species>& sp(ct.getSpecies());
-    ions_ = new Ions(lattice, sp);
+    ions_.reset(new Ions(lattice, sp));
 
     if (ct.restart_info > 0
         && ct.override_restart == 0) // read restart ionic positions

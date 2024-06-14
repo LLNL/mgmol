@@ -280,13 +280,14 @@ template <class OrbitalsType>
 void MGmol<OrbitalsType>::getKBPsiAndHij(OrbitalsType& orbitals, Ions& ions,
     KBPsiMatrixSparse* kbpsi, dist_matrix::DistMatrix<DISTMATDTYPE>& hij)
 {
-    getKBPsiAndHij(orbitals, orbitals, ions, kbpsi, proj_matrices_, hij);
+    getKBPsiAndHij(orbitals, orbitals, ions, kbpsi, proj_matrices_.get(), hij);
 }
 
 template <class OrbitalsType>
 void MGmol<OrbitalsType>::getKBPsiAndHij(OrbitalsType& orbitals, Ions& ions)
 {
-    getKBPsiAndHij(orbitals, orbitals, ions, g_kbpsi_, proj_matrices_);
+    getKBPsiAndHij(
+        orbitals, orbitals, ions, g_kbpsi_.get(), proj_matrices_.get());
 }
 
 template <class OrbitalsType>
@@ -396,7 +397,7 @@ template <class OrbitalsType>
 void MGmol<OrbitalsType>::getHpsiAndTheta(
     Ions& ions, OrbitalsType& phi, OrbitalsType& hphi)
 {
-    getHpsiAndTheta(ions, phi, hphi, g_kbpsi_);
+    getHpsiAndTheta(ions, phi, hphi, g_kbpsi_.get());
 }
 
 template <class OrbitalsType>
@@ -434,10 +435,10 @@ void MGmol<OrbitalsType>::getHpsiAndTheta(Ions& ions, OrbitalsType& phi,
         proj_matrices_->clearSparseH();
 
         // Compute the contribution of the non-local potential into sh
-        kbpsi->computeHvnlMatrix(ions, proj_matrices_);
+        kbpsi->computeHvnlMatrix(ions, proj_matrices_.get());
 
         // add local part of H to sh
-        hamiltonian_->addHlocalij(phi, proj_matrices_);
+        hamiltonian_->addHlocalij(phi, proj_matrices_.get());
 
         energy_->saveVofRho();
 
