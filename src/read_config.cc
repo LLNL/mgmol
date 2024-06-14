@@ -425,6 +425,8 @@ void setupROMConfigOption(po::options_description &rom_cfg)
         ("ROM.offline.basis_file", po::value<std::string>()->default_value(""),
             "File name for libROM snapshot/POD matrices.")
         ("ROM.offline.save_librom_snapshot", po::value<bool>()->default_value(false),
-            "Save libROM snapshot file at FOM simulation.");
+            "Save libROM snapshot file at FOM simulation.")
+        ("ROM.offline.variable", po::value<std::string>()->default_value(""),
+            "FOM variable to perform POD: either orbitals or potential.");
 }
 #endif
