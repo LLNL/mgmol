@@ -50,7 +50,6 @@ int main(int argc, char** argv)
     std::string input_filename("");
     std::string lrs_filename;
     std::string constraints_filename("");
-    bool tcheck = false;
 
     float total_spin = 0.;
     bool with_spin   = false;
@@ -64,7 +63,7 @@ int main(int argc, char** argv)
     if (MPIdata::onpe0)
     {
         read_config(argc, argv, vm, input_filename, lrs_filename,
-            constraints_filename, total_spin, with_spin, tcheck);
+            constraints_filename, total_spin, with_spin);
     }
 
     MGmol_MPI::setup(comm, std::cout, with_spin);
@@ -97,17 +96,13 @@ int main(int argc, char** argv)
             mgmol = new MGmol<ExtendedGridOrbitals>(global_comm, *MPIdata::sout,
                 input_filename, lrs_filename, constraints_filename);
 
-        if (!tcheck)
-        {
-            if (ct.isLocMode())
-                readRestartFiles<LocGridOrbitals>(mgmol);
-            else
-                readRestartFiles<ExtendedGridOrbitals>(mgmol);
-        }
+        mgmol->setup();
+
+        if (ct.isLocMode())
+            readRestartFiles<LocGridOrbitals>(mgmol);
         else
-        {
-            *MPIdata::sout << " Input parameters OK\n";
-        }
+            readRestartFiles<ExtendedGridOrbitals>(mgmol);
+
         delete mgmol;
 
     } // close main scope
