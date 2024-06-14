@@ -79,6 +79,11 @@ int main(int argc, char** argv)
     int ret = ct.checkOptions();
     if (ret < 0) return ret;
 
+    unsigned ngpts[3]    = { ct.ngpts_[0], ct.ngpts_[1], ct.ngpts_[2] };
+    double origin[3]     = { ct.ox_, ct.oy_, ct.oz_ };
+    const double cell[3] = { ct.lx_, ct.ly_, ct.lz_ };
+    Mesh::setup(mmpi.commSpin(), ngpts, origin, cell, ct.lap_type);
+
     mmpi.bcastGlobal(input_filename);
     mmpi.bcastGlobal(lrs_filename);
 
@@ -86,28 +91,14 @@ int main(int argc, char** argv)
     {
         MGmolInterface* mgmol;
         if (ct.isLocMode())
-            mgmol = new MGmol<LocGridOrbitals>(global_comm, *MPIdata::sout);
+            mgmol = new MGmol<LocGridOrbitals>(global_comm, *MPIdata::sout,
+                input_filename, lrs_filename, constraints_filename);
         else
-            mgmol
-                = new MGmol<ExtendedGridOrbitals>(global_comm, *MPIdata::sout);
-
-        unsigned ngpts[3]    = { ct.ngpts_[0], ct.ngpts_[1], ct.ngpts_[2] };
-        double origin[3]     = { ct.ox_, ct.oy_, ct.oz_ };
-        const double cell[3] = { ct.lx_, ct.ly_, ct.lz_ };
-        Mesh::setup(mmpi.commSpin(), ngpts, origin, cell, ct.lap_type);
-
-        mgmol->setupFromInput(input_filename);
-
-        if (ct.isLocMode() || ct.init_loc == 1) mgmol->setupLRs(lrs_filename);
-
-        mgmol->setupConstraintsFromInput(constraints_filename);
-
-        mgmol_setup();
+            mgmol = new MGmol<ExtendedGridOrbitals>(global_comm, *MPIdata::sout,
+                input_filename, lrs_filename, constraints_filename);
 
         if (!tcheck)
         {
-            mgmol->setup();
-
             if (ct.isLocMode())
                 readRestartFiles<LocGridOrbitals>(mgmol);
             else
