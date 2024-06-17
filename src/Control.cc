@@ -2077,6 +2077,14 @@ void Control::setROMOptions(const boost::program_options::variables_map& vm)
         rom_pri_option.restart_file_maxidx = vm["ROM.offline.restart_max_idx"].as<int>();
         rom_pri_option.basis_file = vm["ROM.offline.basis_file"].as<std::string>();
 
+        str = vm["ROM.offline.variable"].as<std::string>();
+        if (str.compare("orbitals") == 0)
+            rom_pri_option.variable = ROMVariable::ORBITALS;
+        else if (str.compare("potential") == 0)
+            rom_pri_option.variable = ROMVariable::POTENTIAL;
+        else
+            rom_pri_option.variable = ROMVariable::NONE;
+
         rom_pri_option.save_librom_snapshot = vm["ROM.offline.save_librom_snapshot"].as<bool>();
     }  // onpe0
 
@@ -2116,5 +2124,10 @@ void Control::syncROMOptions()
     mpirc = MPI_Bcast(&rom_pri_option.save_librom_snapshot, 1, MPI_C_BOOL, 0, comm_global_);
     bcast_check(mpirc);
 
+    short rom_var = (short)static_cast<int>(rom_pri_option.variable);
+    mpirc = MPI_Bcast(&rom_var, 1, MPI_SHORT, 0, comm_global_);
+    bcast_check(mpirc);
+
     rom_pri_option.rom_stage = static_cast<ROMStage>(rom_stage);
+    rom_pri_option.variable = static_cast<ROMVariable>(rom_var);
 }

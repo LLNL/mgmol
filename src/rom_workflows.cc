@@ -27,7 +27,14 @@ template <class OrbitalsType>
 void readRestartFiles(MGmolInterface *mgmol_)
 {
     Control& ct              = *(Control::instance());
+    Mesh* mymesh             = Mesh::instance();
+    const pb::PEenv& myPEenv = mymesh->peenv();
+
     ROMPrivateOptions rom_options = ct.getROMOptions();
+    /* type of variable we intend to run POD */
+    ROMVariable rom_var = rom_options.variable;
+
+    /* number of restart files, start/end indices */
     assert(rom_options.restart_file_minidx >= 0);
     assert(rom_options.restart_file_maxidx >= 0);
     const int minidx = rom_options.restart_file_minidx;
@@ -35,20 +42,37 @@ void readRestartFiles(MGmolInterface *mgmol_)
     const int num_restart = maxidx - minidx + 1;
 
     MGmol<OrbitalsType> *mgmol = static_cast<MGmol<OrbitalsType> *>(mgmol_);
-    OrbitalsType *orbitals = nullptr;
+    OrbitalsType *orbitals = mgmol->getOrbitals();
+    Potentials& pot = mgmol->getHamiltonian()->potential();
     std::string filename;
 
-    /* Read the first snapshot to determin dimension and number of snapshots */
-    filename = string_format(rom_options.restart_file_fmt, minidx);
-    mgmol->loadRestartFile(filename);
-    const int dim = orbitals->getLocNumpt();
+    /* Determine basis prefix, dimension, and sample size */
+    std::string basis_prefix = rom_options.basis_file;
+    int dim;
+    int totalSamples = num_restart;
     const int chrom_num = orbitals->chromatic_number();
-    const int totalSamples = orbitals->chromatic_number() * num_restart;
-    delete orbitals;
+    switch (rom_var)
+    {
+    case ROMVariable::ORBITALS:
+        basis_prefix += "_orbitals";
+        dim = orbitals->getLocNumpt();
+        /* if orbitals, each sample have chromatic number of wave functions */
+        totalSamples *= orbitals->chromatic_number();
+        break;
+
+    case ROMVariable::POTENTIAL:
+        basis_prefix += "_potential";
+        dim = pot.size();
+        break;
+    
+    default:
+        ct.global_exit(-1);
+        break;
+    }
 
     /* Initialize libROM classes */
     CAROM::Options svd_options(dim, totalSamples, 1);
-    CAROM::BasisGenerator basis_generator(svd_options, false, rom_options.basis_file);
+    CAROM::BasisGenerator basis_generator(svd_options, false, basis_prefix);
     
     /* Collect the restart files */
     for (int k = minidx; k <= maxidx; k++)
@@ -58,10 +82,19 @@ void readRestartFiles(MGmolInterface *mgmol_)
         assert(dim == orbitals->getLocNumpt());
         assert(chrom_num == orbitals->chromatic_number());
 
-        for (int i = 0; i < chrom_num; ++i)
-            basis_generator.takeSample(orbitals->getPsi(i));
+        switch (rom_var)
+        {
+        case ROMVariable::ORBITALS:
+            for (int i = 0; i < chrom_num; ++i)
+                basis_generator.takeSample(orbitals->getPsi(i));
+            break;
 
-        delete orbitals;
+        case ROMVariable::POTENTIAL:
+            basis_prefix += "_potential";
+            /* we save total potential for now */
+            basis_generator.takeSample(pot.vtot());
+            break;
+        }
     }
     basis_generator.writeSnapshot();
     basis_generator.endSamples();

@@ -37,7 +37,7 @@ jobs:
         run: |
             mkdir build
             cd build
-            cmake .. -DCMAKE_CXX_COMPILER=mpic++ -DCMAKE_Fortran_COMPILER=mpif90 -DMPIEXEC_PREFLAGS="--oversubscribe"
+            cmake .. -DCMAKE_CXX_COMPILER=mpic++ -DCMAKE_Fortran_COMPILER=mpif90 -DMPIEXEC_PREFLAGS="--oversubscribe" -DUSE_LIBROM=On -DLIBROM_PATH=/env/dependencies/libROM
       - name: make
         run: |
             cd build && make -j 4
