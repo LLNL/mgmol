@@ -841,6 +841,63 @@ int ProjectedMatrices<MatrixType>::read_dm_hdf5(hid_t file_id)
 }
 
 template <class MatrixType>
+int ProjectedMatrices<MatrixType>::writeOcc_hdf5(HDFrestart& h5f_file)
+{
+    hid_t file_id = h5f_file.file_id();
+
+    if (file_id < 0) return 0;
+
+    std::vector<DISTMATDTYPE> occ;
+    getOccupations(occ);
+
+    hsize_t dims[1] = { occ.size() };
+
+    // filespace identifier
+    hid_t dataspace = H5Screate_simple(1, dims, nullptr);
+
+    hid_t dset_id = H5Dcreate2(file_id, "/Occupation", H5T_NATIVE_DOUBLE,
+        dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    if (dset_id < 0)
+    {
+        (*MPIdata::serr) << "ProjectedMatrices<MatrixType>::writeOcc_hdf5: "
+                            "H5Dcreate2 failed!!!"
+                         << std::endl;
+        return -1;
+    }
+
+    hid_t memspace  = dataspace;
+    hid_t filespace = dataspace;
+
+    DISTMATDTYPE* d_occ = occ.data();
+    herr_t status = H5Dwrite(dset_id, H5T_NATIVE_DOUBLE, memspace, filespace,
+        H5P_DEFAULT, d_occ);
+    if (status < 0)
+    {
+        (*MPIdata::serr) << "Orbitals: H5Dwrite failed!!!" << std::endl;
+        return -1;
+    }
+
+    status = H5Dclose(dset_id);
+    if (status < 0)
+    {
+        (*MPIdata::serr) << "ProjectedMatrices<MatrixType>::writeOcc_hdf5(), "
+                            "H5Dclose failed!!!"
+                         << std::endl;
+        return -1;
+    }
+    status = H5Sclose(dataspace);
+    if (status < 0)
+    {
+        (*MPIdata::serr) << "ProjectedMatrices<MatrixType>::writeOcc_hdf5(), "
+                            "H5Sclose failed!!!"
+                         << std::endl;
+        return -1;
+    }
+
+    return 0;
+}
+
+template <class MatrixType>
 void ProjectedMatrices<MatrixType>::printEigenvalues(std::ostream& os) const
 {
     printEigenvaluesHa(os);

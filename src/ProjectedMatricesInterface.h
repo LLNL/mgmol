@@ -281,6 +281,14 @@ public:
 
         return 0;
     }
+    virtual int writeOcc_hdf5(HDFrestart& h5f_file)
+    {
+        (void)h5f_file;
+
+        exitWithErrorMessage("writeOcc_hdf5");
+
+        return 0;
+    }
     virtual void updateDMwithChebApproximation(const int iterative_index)
     {
         (void)iterative_index;

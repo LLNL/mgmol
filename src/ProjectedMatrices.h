@@ -313,6 +313,7 @@ public:
     double checkCond(const double tol, const bool flag = true) override;
     int writeDM_hdf5(HDFrestart& h5f_file) override;
     int read_dm_hdf5(hid_t file_id) override;
+    int writeOcc_hdf5(HDFrestart& h5f_file) override;
     void printEigenvalues(std::ostream& os) const;
     void updateDM(const int iterative_index) override;
     void updateDMwithEigenstates(const int iterative_index);
