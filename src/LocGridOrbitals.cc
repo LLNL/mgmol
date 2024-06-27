@@ -1009,6 +1009,8 @@ int LocGridOrbitals::write_hdf5(HDFrestart& h5f_file, const std::string& name)
 
         int ierr = proj_matrices_->writeDM_hdf5(h5f_file);
         if (ierr < 0) return ierr;
+        ierr = proj_matrices_->writeOcc_hdf5(h5f_file);
+        if (ierr < 0) return ierr;
     }
 
     int ierr = write_func_hdf5(h5f_file, name);
