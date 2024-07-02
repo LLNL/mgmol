@@ -8,6 +8,7 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "rom_workflows.h"
+#include "Electrostatic.h"
 #include <memory>
 #include <string>
 #include <stdexcept>
@@ -100,5 +101,85 @@ void readRestartFiles(MGmolInterface *mgmol_)
     basis_generator.endSamples();
 }
 
+template <class OrbitalsType>
+void buildROMPoissonOperator(MGmolInterface *mgmol_)
+{
+    Control& ct              = *(Control::instance());
+    Mesh* mymesh             = Mesh::instance();
+    const pb::PEenv& myPEenv = mymesh->peenv();
+
+    ROMPrivateOptions rom_options = ct.getROMOptions();
+    /* type of variable we intend to run POD */
+    ROMVariable rom_var = rom_options.variable;
+    if (rom_var != ROMVariable::POTENTIAL)
+    {
+        std::cerr << "buildROMPoissonOperator error: ROM variable must be POTENTIAL to run this stage!\n" << std::endl;
+        MPI_Abort(MPI_COMM_WORLD, 0);
+    }
+
+    /* Load Hartree potential basis matrix */
+    std::string basis_file = rom_options.basis_file;
+    const int num_pot_basis = rom_options.num_potbasis;
+    CAROM::BasisReader basis_reader(basis_file);
+    CAROM::Matrix *pot_basis = basis_reader.getSpatialBasis(num_pot_basis);
+
+    /* Load PoissonSolver pointer */
+    MGmol<OrbitalsType> *mgmol = static_cast<MGmol<OrbitalsType> *>(mgmol_);
+    Poisson *poisson = mgmol->electrostat_->getPoissonSolver();
+
+    /* Initialize ROM matrix (undistributed) */
+    CAROM::Matrix pot_rom(num_pot_basis, num_pot_basis, false);
+
+    pb::GridFunc<POTDTYPE> gf_col(poisson->vh());
+    pb::GridFunc<POTDTYPE> gf_opcol(gf_col);
+    CAROM::Vector *col = nullptr, *op_col = nullptr, *rom_col = nullptr;
+    for (int c = 0; c < num_pot_basis; c++)
+    {
+        /* copy c-th column librom vector to GridFunc gf_col */
+        col = pot_basis->getColumn(c);
+        gf_col.assign(col->getData());
+
+        /* apply Laplace operator */
+        poisson->applyOperator(gf_col, gf_opcol);
+
+        /* get librom view-vector of gf_opcol */
+        op_col = new CAROM::Vector(gf_opcol.uu(), col->dim(), true, false);
+
+        /* Compute basis projection of the column */
+        /* Resulting vector is undistributed */
+        rom_col = pot_basis->transposeMult(*op_col);
+
+        /* libROM matrix is row-major, so data copy is necessary */
+        for (int r = 0; r < num_pot_basis; r++)
+            pot_rom(r, c) = (*rom_col)(r);
+
+        delete col;
+        delete op_col;
+        delete rom_col;
+    }   // for (int c = 0; c < num_pot_basis; c++)
+    
+    /* Save ROM operator */
+    // write the file from PE0 only
+    if (MPIdata::onpe0)
+    {
+        std::string rom_oper = "pot_rom_oper.h5";
+        CAROM::HDFDatabase h5_helper;
+        h5_helper.create(rom_oper);
+        h5_helper.putInteger("number_of_potential_basis", num_pot_basis);
+        h5_helper.putDoubleArray("potential_rom_operator", pot_rom.getData(),
+                                num_pot_basis * num_pot_basis, false);
+
+        /* save the inverse as well */
+        pot_rom.inverse();
+        h5_helper.putDoubleArray("potential_rom_inverse", pot_rom.getData(),
+                                num_pot_basis * num_pot_basis, false);
+
+        h5_helper.close();
+    }
+}
+
 template void readRestartFiles<LocGridOrbitals>(MGmolInterface *mgmol_);
 template void readRestartFiles<ExtendedGridOrbitals>(MGmolInterface *mgmol_);
+
+template void buildROMPoissonOperator<LocGridOrbitals>(MGmolInterface *mgmol_);
+template void buildROMPoissonOperator<ExtendedGridOrbitals>(MGmolInterface *mgmol_);

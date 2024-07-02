@@ -86,6 +86,10 @@ int main(int argc, char** argv)
     mmpi.bcastGlobal(input_filename);
     mmpi.bcastGlobal(lrs_filename);
 
+    /* Get ROM driver mode */
+    ROMPrivateOptions rom_options = ct.getROMOptions();
+    ROMStage rom_stage = rom_options.rom_stage;
+
     // Enter main scope
     {
         MGmolInterface* mgmol;
@@ -98,10 +102,29 @@ int main(int argc, char** argv)
 
         mgmol->setup();
 
-        if (ct.isLocMode())
-            readRestartFiles<LocGridOrbitals>(mgmol);
-        else
-            readRestartFiles<ExtendedGridOrbitals>(mgmol);
+        switch (rom_stage)
+        {
+        case (ROMStage::OFFLINE):
+            if (ct.isLocMode())
+                readRestartFiles<LocGridOrbitals>(mgmol);
+            else
+                readRestartFiles<ExtendedGridOrbitals>(mgmol);
+        break;
+
+        case (ROMStage::BUILD):
+            if (ct.isLocMode())
+                buildROMPoissonOperator<LocGridOrbitals>(mgmol);
+            else
+                buildROMPoissonOperator<ExtendedGridOrbitals>(mgmol);
+        break;
+
+        default:
+            std::cerr << "rom_main error: Unknown ROM stage" << std::endl;
+            MPI_Abort(MPI_COMM_WORLD, 0);
+        break;
+        }
+
+        
 
         delete mgmol;
 

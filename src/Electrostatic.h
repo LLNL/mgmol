@@ -46,6 +46,8 @@ public:
     ~Electrostatic();
     static Timer solve_tm() { return solve_tm_; }
 
+    Poisson* getPoissonSolver() { return poisson_solver_; }
+
     void setup(const short max_sweeps);
     void setupPB(const double e0, const double rho0, const double drho0,
         Potentials& pot);
