@@ -22,6 +22,7 @@ enum class ROMStage
     ONLINE,
     RESTORE,    // TODO(kevin): what stage is this?
     BUILD,
+    TEST_POISSON,
     UNSUPPORTED
 };
 

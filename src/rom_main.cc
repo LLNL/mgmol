@@ -118,6 +118,13 @@ int main(int argc, char** argv)
                 buildROMPoissonOperator<ExtendedGridOrbitals>(mgmol);
         break;
 
+        case (ROMStage::TEST_POISSON):
+            if (ct.isLocMode())
+                testROMPoissonOperator<LocGridOrbitals>(mgmol);
+            else
+                testROMPoissonOperator<ExtendedGridOrbitals>(mgmol);
+        break;
+
         default:
             std::cerr << "rom_main error: Unknown ROM stage" << std::endl;
             MPI_Abort(MPI_COMM_WORLD, 0);

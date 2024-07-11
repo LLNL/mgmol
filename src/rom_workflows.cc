@@ -178,8 +178,139 @@ void buildROMPoissonOperator(MGmolInterface *mgmol_)
     }
 }
 
+template <class OrbitalsType>
+void testROMPoissonOperator(MGmolInterface *mgmol_)
+{
+    Control& ct              = *(Control::instance());
+    Mesh* mymesh             = Mesh::instance();
+    const pb::PEenv& myPEenv = mymesh->peenv();
+
+    ROMPrivateOptions rom_options = ct.getROMOptions();
+
+    /* Load MGmol pointer and Potentials */
+    MGmol<OrbitalsType> *mgmol = static_cast<MGmol<OrbitalsType> *>(mgmol_);
+    Poisson *poisson = mgmol->electrostat_->getPoissonSolver();
+    Potentials& pot = mgmol->getHamiltonian()->potential();
+    const int dim = pot.size();
+
+    /* fictitious snapshot numbers */
+    const int nsnapshot = 3;
+
+    /* Set compensating charges to zero now */
+    pb::GridFunc<POTDTYPE> rhoc(poisson->vh());
+    rhoc = 0.0;
+
+    /* Generate fictitious right-hand sides and snapshots */
+    std::vector<pb::GridFunc<POTDTYPE> *> rhs(0), fom_sol(0);
+    for (int s = 0; s < nsnapshot; s++)
+    {
+        rhs.push_back(new pb::GridFunc<POTDTYPE>(poisson->vh()));
+        rhs.back()->init_rand();
+
+        poisson->solve(*rhs.back(), rhoc);
+
+        fom_sol.push_back(new pb::GridFunc<POTDTYPE>(poisson->vh()));
+    }
+
+    /* Initialize libROM classes */
+    std::string basis_prefix = "test_poisson";
+    CAROM::Options svd_options(dim, nsnapshot, 1);
+    CAROM::BasisGenerator basis_generator(svd_options, false, basis_prefix);
+
+    /* Collect snapshots and train POD basis */
+    for (int s = 0; s < nsnapshot; s++)
+        basis_generator.takeSample(fom_sol[s]->uu());
+    basis_generator.endSamples();
+
+    /* Load POD basis. We use the maximum number of basis vectors. */
+    const CAROM::Matrix *pot_basis = basis_generator.getSpatialBasis();
+
+    /* Initialize Projection ROM matrix (undistributed) */
+    CAROM::Matrix pot_rom(nsnapshot, nsnapshot, false);
+
+    /* Build Projection of Poisson operator */
+    pb::GridFunc<POTDTYPE> gf_col(poisson->vh());
+    pb::GridFunc<POTDTYPE> gf_opcol(gf_col);
+    CAROM::Vector *col = nullptr, *op_col = nullptr, *rom_col = nullptr;
+    for (int c = 0; c < nsnapshot; c++)
+    {
+        /* copy c-th column librom vector to GridFunc gf_col */
+        col = pot_basis->getColumn(c);
+        gf_col.assign(col->getData());
+
+        /* apply Laplace operator */
+        poisson->applyOperator(gf_col, gf_opcol);
+
+        /* get librom view-vector of gf_opcol */
+        op_col = new CAROM::Vector(gf_opcol.uu(), col->dim(), true, false);
+
+        /* Compute basis projection of the column */
+        /* Resulting vector is undistributed */
+        rom_col = pot_basis->transposeMult(*op_col);
+
+        /* libROM matrix is row-major, so data copy is necessary */
+        for (int r = 0; r < nsnapshot; r++)
+            pot_rom(r, c) = (*rom_col)(r);
+
+        delete col;
+        delete op_col;
+        delete rom_col;
+    }   // for (int c = 0; c < num_pot_basis; c++)
+
+    /* Inverse of the projection ROM matrix */
+    pot_rom.inverse();
+
+    /* Test with sample RHS. ROM must be able to 100% reproduce the FOM solution. */
+    std::vector<CAROM::Vector *> rom_sol(0), rom_rhs(0);
+    std::vector<pb::GridFunc<POTDTYPE> *> test_sol(0);
+    for (int s = 0; s < nsnapshot; s++)
+    {
+        /* get librom view-vector of rhs[s] */
+        op_col = new CAROM::Vector(rhs[s]->uu(), dim, true, false);
+
+        /* project onto POD basis */
+        rom_rhs.push_back(pot_basis->transposeMult(*op_col));
+        delete op_col;
+
+        /* solve ROM */
+        rom_sol.push_back(pot_rom.mult(*rom_rhs.back()));
+
+        /* initialize lift-up FOM solution */
+        test_sol.push_back(new pb::GridFunc<POTDTYPE>(poisson->vh()));
+        test_sol.back()->init_rand();
+
+        /* lift back to FOM to check the accuracy */
+        /* get librom view-vector of test_sol[s] */
+        op_col = new CAROM::Vector(test_sol.back()->uu(), dim, true, false);
+        pot_basis->mult(*rom_sol.back(), *op_col);
+
+        delete op_col;
+    }
+
+    /* Compute relative errors */
+    for (int s = 0; s < nsnapshot; s++)
+    {
+        *test_sol[s] -= *fom_sol[s];
+        double rel_error = test_sol[s]->norm2() / fom_sol[s]->norm2();
+        printf("%d-th sample relative error: %.3e\n", s, rel_error);
+    }
+
+    /* clean up pointers */
+    for (int s = 0; s < nsnapshot; s++)
+    {
+        delete rhs[s];
+        delete fom_sol[s];
+        delete rom_sol[s];
+        delete rom_rhs[s];
+        delete test_sol[s];
+    }
+}
+
 template void readRestartFiles<LocGridOrbitals>(MGmolInterface *mgmol_);
 template void readRestartFiles<ExtendedGridOrbitals>(MGmolInterface *mgmol_);
 
 template void buildROMPoissonOperator<LocGridOrbitals>(MGmolInterface *mgmol_);
 template void buildROMPoissonOperator<ExtendedGridOrbitals>(MGmolInterface *mgmol_);
+
+template void testROMPoissonOperator<LocGridOrbitals>(MGmolInterface *mgmol_);
+template void testROMPoissonOperator<ExtendedGridOrbitals>(MGmolInterface *mgmol_);
