@@ -92,8 +92,8 @@ void readRestartFiles(MGmolInterface *mgmol_)
 
         case ROMVariable::POTENTIAL:
             basis_prefix += "_potential";
-            /* we save total potential for now */
-            basis_generator.takeSample(pot.vtot());
+            /* we save hartree potential */
+            basis_generator.takeSample(pot.vh_rho());
             break;
         }
     }
