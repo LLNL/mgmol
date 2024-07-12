@@ -214,6 +214,14 @@ void testROMPoissonOperator(MGmolInterface *mgmol_)
         poisson->solve(*rhs.back(), rhoc);
 
         fom_sol.push_back(new pb::GridFunc<POTDTYPE>(poisson->vh()));
+
+        /* check if the solution is correct */
+        pb::GridFunc<POTDTYPE> res(*fom_sol.back());
+        /* apply Laplace operator */
+        poisson->applyOperator(*fom_sol.back(), res);
+        /* FD operator scales rhs by 4pi */
+        res.axpy(- 4. * M_PI, *rhs.back());
+        printf("res norm: %.3e\n", res.norm2());
     }
 
     /* Initialize libROM classes */
@@ -262,7 +270,8 @@ void testROMPoissonOperator(MGmolInterface *mgmol_)
     }   // for (int c = 0; c < num_pot_basis; c++)
 
     /* Inverse of the projection ROM matrix */
-    pot_rom.inverse();
+    CAROM::Matrix pot_rom_inv(pot_rom);
+    pot_rom_inv.inverse();
 
     /* Test with sample RHS. ROM must be able to 100% reproduce the FOM solution. */
     std::vector<CAROM::Vector *> rom_sol(0), rom_rhs(0);
@@ -276,8 +285,16 @@ void testROMPoissonOperator(MGmolInterface *mgmol_)
         rom_rhs.push_back(pot_basis->transposeMult(*op_col));
         delete op_col;
 
+        /* FOM FD operator scales rhs by 4pi */
+        *rom_rhs.back() *= 4. * M_PI;
+
         /* solve ROM */
-        rom_sol.push_back(pot_rom.mult(*rom_rhs.back()));
+        rom_sol.push_back(pot_rom_inv.mult(*rom_rhs.back()));
+
+        /* check ROM solution */
+        CAROM::Vector &res(*pot_rom.mult(*rom_sol.back()));
+        res -= *rom_rhs.back();
+        printf("rom res norm: %.3e\n", res.norm2());
 
         /* initialize lift-up FOM solution */
         test_sol.push_back(new pb::GridFunc<POTDTYPE>(poisson->vh()));
