@@ -193,18 +193,24 @@ void testROMPoissonOperator(MGmolInterface *mgmol_)
     Potentials& pot = mgmol->getHamiltonian()->potential();
     const int dim = pot.size();
 
+    /* GridFunc initialization inputs */
+    const pb::Grid &grid(poisson->vh().grid());
+    short bc[3];
+    for (int d = 0; d < 3; d++)
+        bc[d] = poisson->vh().bc(d);
+
     /* fictitious snapshot numbers */
     const int nsnapshot = 3;
 
     /* Set compensating charges to zero now */
-    pb::GridFunc<POTDTYPE> rhoc(poisson->vh());
+    pb::GridFunc<POTDTYPE> rhoc(grid, bc[0], bc[1], bc[2]);
     rhoc = 0.0;
 
     /* Generate fictitious right-hand sides and snapshots */
     std::vector<pb::GridFunc<POTDTYPE> *> rhs(0), fom_sol(0);
     for (int s = 0; s < nsnapshot; s++)
     {
-        rhs.push_back(new pb::GridFunc<POTDTYPE>(poisson->vh()));
+        rhs.push_back(new pb::GridFunc<POTDTYPE>(grid, bc[0], bc[1], bc[2]));
         rhs.back()->init_rand();
 
         /* average out for periodic bc */
@@ -216,7 +222,7 @@ void testROMPoissonOperator(MGmolInterface *mgmol_)
         fom_sol.push_back(new pb::GridFunc<POTDTYPE>(poisson->vh()));
 
         /* check if the solution is correct */
-        pb::GridFunc<POTDTYPE> res(*fom_sol.back());
+        pb::GridFunc<POTDTYPE> res(grid, bc[0], bc[1], bc[2]);
         /* apply Laplace operator */
         poisson->applyOperator(*fom_sol.back(), res);
         /* FD operator scales rhs by 4pi */
@@ -236,6 +242,32 @@ void testROMPoissonOperator(MGmolInterface *mgmol_)
 
     /* Load POD basis. We use the maximum number of basis vectors. */
     const CAROM::Matrix *pot_basis = basis_generator.getSpatialBasis();
+
+    /* Check if full projection preserves FOM solution */
+    for (int c = 0; c < nsnapshot; c++)
+    {
+        CAROM::Vector *fom_sol_vec = nullptr;
+        /* get librom view-vector of fom_sol */
+        fom_sol_vec = new CAROM::Vector(fom_sol[c]->uu(), pot_basis->numRows(), true, false);
+
+        CAROM::Vector *rom_proj = pot_basis->transposeMult(*fom_sol_vec);
+        CAROM::Vector *reconstruct = pot_basis->mult(*rom_proj);
+
+        /* error on libROM side */
+        CAROM::Vector *librom_error = reconstruct->minus(fom_sol_vec);
+        printf("librom reconstruction error: %.3e\n", librom_error->norm());
+
+        /* error on mgmol side */
+        pb::GridFunc<POTDTYPE> gf_col(grid, bc[0], bc[1], bc[2]);
+        gf_col.setValues(reconstruct->dim(), reconstruct->getData());
+        gf_col -= *fom_sol[c];
+        printf("mgmol reconstruction error: %.3e\n", gf_col.norm2());
+
+        delete fom_sol_vec;
+        delete rom_proj;
+        delete reconstruct;
+        delete librom_error;
+    }
 
     /* Initialize Projection ROM matrix (undistributed) */
     CAROM::Matrix pot_rom(nsnapshot, nsnapshot, false);
@@ -294,7 +326,7 @@ void testROMPoissonOperator(MGmolInterface *mgmol_)
         /* check ROM solution */
         CAROM::Vector &res(*pot_rom.mult(*rom_sol.back()));
         res -= *rom_rhs.back();
-        printf("rom res norm: %.3e\n", res.norm2());
+        printf("rom res norm: %.3e\n", res.norm());
 
         /* initialize lift-up FOM solution */
         test_sol.push_back(new pb::GridFunc<POTDTYPE>(poisson->vh()));

@@ -63,12 +63,8 @@ public:
 
     void smooth(GridFunc<T>&, GridFunc<T>&, const double);
 
-    virtual void transform(GridFunc<T>&) const {
-        printf("FDoper::transform\n");
-    };
-    virtual void inv_transform(GridFunc<T>&) const {
-        printf("FDoper::inv_transform\n");
-    };
+    virtual void transform(GridFunc<T>&) const {};
+    virtual void inv_transform(GridFunc<T>&) const {};
     virtual void rhs(GridFunc<T>& A, GridFunc<T>& B) const
     {
         rhs_tm_.start();
