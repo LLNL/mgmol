@@ -207,6 +207,10 @@ void testROMPoissonOperator(MGmolInterface *mgmol_)
         rhs.push_back(new pb::GridFunc<POTDTYPE>(poisson->vh()));
         rhs.back()->init_rand();
 
+        /* average out for periodic bc */
+        double avg = rhs.back()->get_average();
+        *(rhs.back()) -= avg;
+
         poisson->solve(*rhs.back(), rhoc);
 
         fom_sol.push_back(new pb::GridFunc<POTDTYPE>(poisson->vh()));
