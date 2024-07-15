@@ -416,6 +416,9 @@ void testROMPoissonOperator(MGmolInterface *mgmol_)
         testsol_gf -= fomsol_gf;
         double rel_error = testsol_gf.norm2() / fomsol_gf.norm2();
         printf("%d-th sample relative error: %.3e\n", s, rel_error);
+
+        if (rel_error > 1.0e-9)
+            abort();
     }
 
     /* clean up pointers */
