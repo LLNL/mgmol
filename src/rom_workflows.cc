@@ -191,7 +191,8 @@ void testROMPoissonOperator(MGmolInterface *mgmol_)
     MGmol<OrbitalsType> *mgmol = static_cast<MGmol<OrbitalsType> *>(mgmol_);
     Poisson *poisson = mgmol->electrostat_->getPoissonSolver();
     Potentials& pot = mgmol->getHamiltonian()->potential();
-    const int dim = pot.size();
+    // const int dim = pot.size();
+    const int dim = poisson->vh().sizeg();
 
     /* GridFunc initialization inputs */
     const pb::Grid &grid(poisson->vh().grid());
@@ -227,7 +228,7 @@ void testROMPoissonOperator(MGmolInterface *mgmol_)
         poisson->applyOperator(*fom_sol.back(), res);
         /* FD operator scales rhs by 4pi */
         res.axpy(- 4. * M_PI, *rhs.back());
-        printf("res norm: %.3e\n", res.norm2());
+        printf("FOM res norm: %.3e\n", res.norm2());
     }
 
     /* Initialize libROM classes */
@@ -259,6 +260,9 @@ void testROMPoissonOperator(MGmolInterface *mgmol_)
 
         /* error on mgmol side */
         pb::GridFunc<POTDTYPE> gf_col(grid, bc[0], bc[1], bc[2]);
+        printf("reconstruct size: %d\n", reconstruct->dim());
+        printf("gf_col sizeg: %d\n", gf_col.sizeg());
+        printf("gf_col size: %d\n", gf_col.size());
         gf_col.setValues(reconstruct->dim(), reconstruct->getData());
         gf_col -= *fom_sol[c];
         printf("mgmol reconstruction error: %.3e\n", gf_col.norm2());
@@ -267,6 +271,33 @@ void testROMPoissonOperator(MGmolInterface *mgmol_)
         delete rom_proj;
         delete reconstruct;
         delete librom_error;
+    }
+
+    /* Check FOM axpy is equivalent to ROM axpy */
+    for (int s = 0; s < nsnapshot; s++)
+    {
+        pb::GridFunc<POTDTYPE> res(grid, bc[0], bc[1], bc[2]);
+        /* apply Laplace operator */
+        poisson->applyOperator(*fom_sol[s], res);
+
+        /* get librom view-vector of fom_res */
+        CAROM::Vector *fom_res = new CAROM::Vector(res.uu(), pot_basis->numRows(), true, false);
+        CAROM::Vector *rom_res = pot_basis->transposeMult(*fom_res);
+
+        /* get librom view-vector of fom_rhs */
+        CAROM::Vector *fom_rhs = new CAROM::Vector(rhs[s]->uu(), pot_basis->numRows(), true, false);
+        CAROM::Vector *rom_rhs = pot_basis->transposeMult(*fom_rhs);
+
+        /* FD operator scales rhs by 4pi */
+        *rom_rhs *= 4. * M_PI;
+        *rom_res -= *rom_rhs;
+
+        printf("ROM res norm: %.3e\n", rom_res->norm());
+
+        delete fom_res;
+        delete rom_res;
+        delete fom_rhs;
+        delete rom_rhs;
     }
 
     /* Initialize Projection ROM matrix (undistributed) */
@@ -280,7 +311,8 @@ void testROMPoissonOperator(MGmolInterface *mgmol_)
     {
         /* copy c-th column librom vector to GridFunc gf_col */
         col = pot_basis->getColumn(c);
-        gf_col.assign(col->getData());
+        // gf_col.assign(col->getData());
+        gf_col.setValues(col->dim(), col->getData());
 
         /* apply Laplace operator */
         poisson->applyOperator(gf_col, gf_opcol);
@@ -304,6 +336,17 @@ void testROMPoissonOperator(MGmolInterface *mgmol_)
     /* Inverse of the projection ROM matrix */
     CAROM::Matrix pot_rom_inv(pot_rom);
     pot_rom_inv.inverse();
+
+    /* Check the inverse */
+    CAROM::Matrix *identity = pot_rom_inv.mult(pot_rom);
+    printf("pot_rom_inv * pot_rom = identity\n");
+    for (int i = 0; i < nsnapshot; i++)
+    {
+        for (int j = 0; j < nsnapshot; j++)
+            printf("%.3e\t", identity->item(i, j));
+        printf("\n");
+    }
+    delete identity;
 
     /* Test with sample RHS. ROM must be able to 100% reproduce the FOM solution. */
     std::vector<CAROM::Vector *> rom_sol(0), rom_rhs(0);
