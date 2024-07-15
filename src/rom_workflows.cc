@@ -240,47 +240,46 @@ void testROMPoissonOperator(MGmolInterface *mgmol_)
         printf("FOM res norm: %.3e\n", res.norm2());
     }
 
-    // /* Initialize libROM classes */
-    // std::string basis_prefix = "test_poisson";
-    // CAROM::Options svd_options(dim, nsnapshot, 1);
-    // CAROM::BasisGenerator basis_generator(svd_options, false, basis_prefix);
+    /* Initialize libROM classes */
+    std::string basis_prefix = "test_poisson";
+    CAROM::Options svd_options(dim, nsnapshot, 1);
+    CAROM::BasisGenerator basis_generator(svd_options, false, basis_prefix);
 
-    // /* Collect snapshots and train POD basis */
-    // for (int s = 0; s < nsnapshot; s++)
-    //     basis_generator.takeSample(fom_sol[s]->uu());
-    // basis_generator.endSamples();
+    /* Collect snapshots and train POD basis */
+    for (int s = 0; s < nsnapshot; s++)
+        basis_generator.takeSample(fom_sol[s].data());
+    basis_generator.endSamples();
 
-    // /* Load POD basis. We use the maximum number of basis vectors. */
-    // const CAROM::Matrix *pot_basis = basis_generator.getSpatialBasis();
+    /* Load POD basis. We use the maximum number of basis vectors. */
+    const CAROM::Matrix *pot_basis = basis_generator.getSpatialBasis();
 
-    // /* Check if full projection preserves FOM solution */
-    // for (int c = 0; c < nsnapshot; c++)
-    // {
-    //     CAROM::Vector *fom_sol_vec = nullptr;
-    //     /* get librom view-vector of fom_sol */
-    //     fom_sol_vec = new CAROM::Vector(fom_sol[c]->uu(), pot_basis->numRows(), true, false);
+    /* Check if full projection preserves FOM solution */
+    for (int c = 0; c < nsnapshot; c++)
+    {
+        CAROM::Vector *fom_sol_vec = nullptr;
+        /* get librom view-vector of fom_sol */
+        fom_sol_vec = new CAROM::Vector(fom_sol[c].data(), pot_basis->numRows(), true, false);
 
-    //     CAROM::Vector *rom_proj = pot_basis->transposeMult(*fom_sol_vec);
-    //     CAROM::Vector *reconstruct = pot_basis->mult(*rom_proj);
+        CAROM::Vector *rom_proj = pot_basis->transposeMult(*fom_sol_vec);
+        CAROM::Vector *reconstruct = pot_basis->mult(*rom_proj);
 
-    //     /* error on libROM side */
-    //     CAROM::Vector *librom_error = reconstruct->minus(fom_sol_vec);
-    //     printf("librom reconstruction error: %.3e\n", librom_error->norm());
+        /* error on libROM side */
+        CAROM::Vector *librom_error = reconstruct->minus(fom_sol_vec);
+        printf("librom reconstruction error: %.3e\n", librom_error->norm());
 
-    //     /* error on mgmol side */
-    //     pb::GridFunc<POTDTYPE> gf_col(grid, bc[0], bc[1], bc[2]);
-    //     printf("reconstruct size: %d\n", reconstruct->dim());
-    //     printf("gf_col sizeg: %d\n", gf_col.sizeg());
-    //     printf("gf_col size: %d\n", gf_col.size());
-    //     gf_col.setValues(reconstruct->dim(), reconstruct->getData());
-    //     gf_col -= *fom_sol[c];
-    //     printf("mgmol reconstruction error: %.3e\n", gf_col.norm2());
+        /* error on mgmol side */
+        pb::GridFunc<POTDTYPE> recon_gf(grid, bc[0], bc[1], bc[2]);
+        pb::GridFunc<POTDTYPE> fom_gf(grid, bc[0], bc[1], bc[2]);
+        recon_gf.assign(reconstruct->getData(), 'd');
+        fom_gf.assign(fom_sol[c].data(), 'd');
+        recon_gf -= fom_gf;
+        printf("mgmol reconstruction error: %.3e\n", recon_gf.norm2());
 
-    //     delete fom_sol_vec;
-    //     delete rom_proj;
-    //     delete reconstruct;
-    //     delete librom_error;
-    // }
+        delete fom_sol_vec;
+        delete rom_proj;
+        delete reconstruct;
+        delete librom_error;
+    }
 
     // /* Check FOM axpy is equivalent to ROM axpy */
     // for (int s = 0; s < nsnapshot; s++)
