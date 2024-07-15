@@ -281,40 +281,47 @@ void testROMPoissonOperator(MGmolInterface *mgmol_)
         delete librom_error;
     }
 
-    // /* Check FOM axpy is equivalent to ROM axpy */
-    // for (int s = 0; s < nsnapshot; s++)
-    // {
-    //     pb::GridFunc<POTDTYPE> res(grid, bc[0], bc[1], bc[2]);
-    //     /* apply Laplace operator */
-    //     poisson->applyOperator(*fom_sol[s], res);
+    /* Check FOM axpy is equivalent to ROM axpy */
+    for (int s = 0; s < nsnapshot; s++)
+    {
+        CAROM::Vector fom_res(pot_basis->numRows(), true);
+        CAROM::Vector rom_res(nsnapshot, false);
+        CAROM::Vector fom_rhs(pot_basis->numRows(), true);
+        CAROM::Vector rom_rhs(nsnapshot, false);
 
-    //     /* get librom view-vector of fom_res */
-    //     CAROM::Vector *fom_res = new CAROM::Vector(res.uu(), pot_basis->numRows(), true, false);
-    //     CAROM::Vector *rom_res = pot_basis->transposeMult(*fom_res);
+        pb::GridFunc<POTDTYPE> res(grid, bc[0], bc[1], bc[2]);
+        pb::GridFunc<POTDTYPE> fomsol_gf(grid, bc[0], bc[1], bc[2]);
+        pb::GridFunc<POTDTYPE> mgmol_rhs(grid, bc[0], bc[1], bc[2]);
+        fomsol_gf.assign(fom_sol[s].data(), 'd');
+        mgmol_rhs.assign(rhs[s].data(), 'd');
 
-    //     /* get librom view-vector of fom_rhs */
-    //     pb::GridFunc<POTDTYPE> mgmol_rhs(*rhs[s]);
-    //     CAROM::Vector *fom_rhs = new CAROM::Vector(mgmol_rhs.uu(), pot_basis->numRows(), true, false);
-    //     CAROM::Vector *rom_rhs = pot_basis->transposeMult(*fom_rhs);
+        /* apply Laplace operator */
+        poisson->applyOperator(fomsol_gf, res);
 
-    //     /* FD operator scales rhs by 4pi */
-    //     res.axpy(- 4. * M_PI, mgmol_rhs);
-    //     printf("FOM res norm: %.3e\n", res.norm2());
-    //     delete fom_res;
-    //     fom_res = new CAROM::Vector(res.uu(), pot_basis->numRows(), true, false);
-    //     CAROM::Vector *res_proj = pot_basis->transposeMult(*fom_res);
-    //     printf("FOM res projection norm: %.3e\n", res_proj->norm());
+        /* get librom view-vector of fom_res */
+        res.init_vect(fom_res.getData(), 'd');
+        pot_basis->transposeMult(fom_res, rom_res);
 
-    //     *rom_rhs *= 4. * M_PI;
-    //     *rom_res -= *rom_rhs;
+        /* get librom view-vector of fom_rhs */
+        mgmol_rhs.init_vect(fom_rhs.getData(), 'd');
+        pot_basis->transposeMult(fom_rhs, rom_rhs);
 
-    //     printf("ROM res norm: %.3e\n", rom_res->norm());
+        /* ROM residual: FD operator scales rhs by 4pi */
+        rom_rhs *= 4. * M_PI;
+        rom_res -= rom_rhs;
+        printf("ROM res norm: %.3e\n", rom_res.norm());
 
-    //     delete fom_res;
-    //     delete rom_res;
-    //     delete fom_rhs;
-    //     delete rom_rhs;
-    // }
+        /* FOM residual: FD operator scales rhs by 4pi */
+        res.axpy(- 4. * M_PI, mgmol_rhs);
+        printf("FOM res norm: %.3e\n", res.norm2());
+
+        /* projection of the residual */
+        res.init_vect(fom_res.getData(), 'd');
+        CAROM::Vector *res_proj = pot_basis->transposeMult(fom_res);
+        printf("FOM res projection norm: %.3e\n", res_proj->norm());
+
+        delete res_proj;
+    }
 
     // /* Initialize Projection ROM matrix (undistributed) */
     // CAROM::Matrix pot_rom(nsnapshot, nsnapshot, false);
