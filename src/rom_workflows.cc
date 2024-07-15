@@ -217,7 +217,7 @@ void testROMPoissonOperator(MGmolInterface *mgmol_)
         
         /* average out for periodic bc */
         pb::GridFunc<POTDTYPE> rhs_gf(grid, bc[0], bc[1], bc[2]);
-        rhs_gf.assign(rhs[s].data());
+        rhs_gf.assign(rhs[s].data(), 'd');
         double avg = rhs_gf.get_average();
         rhs_gf -= avg;
 
@@ -323,103 +323,104 @@ void testROMPoissonOperator(MGmolInterface *mgmol_)
         delete res_proj;
     }
 
-    // /* Initialize Projection ROM matrix (undistributed) */
-    // CAROM::Matrix pot_rom(nsnapshot, nsnapshot, false);
+    /* Initialize Projection ROM matrix (undistributed) */
+    CAROM::Matrix pot_rom(nsnapshot, nsnapshot, false);
 
-    // /* Build Projection of Poisson operator */
-    // pb::GridFunc<POTDTYPE> gf_col(poisson->vh());
-    // pb::GridFunc<POTDTYPE> gf_opcol(gf_col);
-    // CAROM::Vector *col = nullptr, *op_col = nullptr, *rom_col = nullptr;
-    // for (int c = 0; c < nsnapshot; c++)
-    // {
-    //     /* copy c-th column librom vector to GridFunc gf_col */
-    //     col = pot_basis->getColumn(c);
-    //     // gf_col.assign(col->getData());
-    //     gf_col.setValues(col->dim(), col->getData());
+    /* Build Projection of Poisson operator */
+    pb::GridFunc<POTDTYPE> gf_col(poisson->vh());
+    pb::GridFunc<POTDTYPE> gf_opcol(gf_col);
+    CAROM::Vector *col = nullptr, *op_col = nullptr, *rom_col = nullptr;
+    for (int c = 0; c < nsnapshot; c++)
+    {
+        pb::GridFunc<POTDTYPE> col_gf(grid, bc[0], bc[1], bc[2]);
+        pb::GridFunc<POTDTYPE> opcol_gf(grid, bc[0], bc[1], bc[2]);
+        CAROM::Vector op_col(pot_basis->numRows(), true);
 
-    //     /* apply Laplace operator */
-    //     poisson->applyOperator(gf_col, gf_opcol);
+        /* copy c-th column librom vector to GridFunc gf_col */
+        CAROM::Vector *col = pot_basis->getColumn(c);
+        col_gf.assign(col->getData(), 'd');
 
-    //     /* get librom view-vector of gf_opcol */
-    //     op_col = new CAROM::Vector(gf_opcol.uu(), col->dim(), true, false);
+        /* apply Laplace operator */
+        poisson->applyOperator(col_gf, opcol_gf);
 
-    //     /* Compute basis projection of the column */
-    //     /* Resulting vector is undistributed */
-    //     rom_col = pot_basis->transposeMult(*op_col);
+        /* get librom view-vector of gf_opcol */
+        opcol_gf.init_vect(op_col.getData(), 'd');
 
-    //     /* libROM matrix is row-major, so data copy is necessary */
-    //     for (int r = 0; r < nsnapshot; r++)
-    //         pot_rom(r, c) = (*rom_col)(r);
+        /* Compute basis projection of the column */
+        /* Resulting vector is undistributed */
+        CAROM::Vector *rom_col = pot_basis->transposeMult(op_col);
 
-    //     delete col;
-    //     delete op_col;
-    //     delete rom_col;
-    // }   // for (int c = 0; c < num_pot_basis; c++)
+        /* libROM matrix is row-major, so data copy is necessary */
+        for (int r = 0; r < nsnapshot; r++)
+            pot_rom(r, c) = (*rom_col)(r);
 
-    // /* Inverse of the projection ROM matrix */
-    // CAROM::Matrix pot_rom_inv(pot_rom);
-    // pot_rom_inv.inverse();
+        delete col;
+        delete rom_col;
+    }   // for (int c = 0; c < num_pot_basis; c++)
 
-    // /* Check the inverse */
-    // CAROM::Matrix *identity = pot_rom_inv.mult(pot_rom);
-    // printf("pot_rom_inv * pot_rom = identity\n");
-    // for (int i = 0; i < nsnapshot; i++)
-    // {
-    //     for (int j = 0; j < nsnapshot; j++)
-    //         printf("%.3e\t", identity->item(i, j));
-    //     printf("\n");
-    // }
-    // delete identity;
+    /* Inverse of the projection ROM matrix */
+    CAROM::Matrix pot_rom_inv(pot_rom);
+    pot_rom_inv.inverse();
 
-    // /* Test with sample RHS. ROM must be able to 100% reproduce the FOM solution. */
-    // std::vector<CAROM::Vector *> rom_sol(0), rom_rhs(0);
-    // std::vector<pb::GridFunc<POTDTYPE> *> test_sol(0);
-    // for (int s = 0; s < nsnapshot; s++)
-    // {
-    //     /* get librom view-vector of rhs[s] */
-    //     op_col = new CAROM::Vector(rhs[s]->uu(), dim, true, false);
+    /* Check the inverse */
+    CAROM::Matrix *identity = pot_rom_inv.mult(pot_rom);
+    printf("pot_rom_inv * pot_rom = identity\n");
+    for (int i = 0; i < nsnapshot; i++)
+    {
+        for (int j = 0; j < nsnapshot; j++)
+            printf("%.3e\t", identity->item(i, j));
+        printf("\n");
+    }
+    delete identity;
 
-    //     /* project onto POD basis */
-    //     rom_rhs.push_back(pot_basis->transposeMult(*op_col));
-    //     delete op_col;
+    /* Test with sample RHS. ROM must be able to 100% reproduce the FOM solution. */
+    std::vector<CAROM::Vector *> rom_sol(0), rom_rhs(0);
+    std::vector<std::vector<POTDTYPE>> test_sol(nsnapshot);
+    for (int s = 0; s < nsnapshot; s++)
+    {
+        /* get librom view-vector of rhs[s] */
+        CAROM::Vector fom_rhs(rhs[s].data(), dim, true, false);
 
-    //     /* FOM FD operator scales rhs by 4pi */
-    //     *rom_rhs.back() *= 4. * M_PI;
+        /* project onto POD basis */
+        rom_rhs.push_back(pot_basis->transposeMult(fom_rhs));
 
-    //     /* solve ROM */
-    //     rom_sol.push_back(pot_rom_inv.mult(*rom_rhs.back()));
+        /* FOM FD operator scales rhs by 4pi */
+        *rom_rhs.back() *= 4. * M_PI;
 
-    //     /* check ROM solution */
-    //     CAROM::Vector &res(*pot_rom.mult(*rom_sol.back()));
-    //     res -= *rom_rhs.back();
-    //     printf("rom res norm: %.3e\n", res.norm());
+        /* solve ROM */
+        rom_sol.push_back(pot_rom_inv.mult(*rom_rhs.back()));
 
-    //     /* initialize lift-up FOM solution */
-    //     test_sol.push_back(new pb::GridFunc<POTDTYPE>(poisson->vh()));
-    //     test_sol.back()->init_rand();
+        /* check ROM solution */
+        CAROM::Vector &res(*pot_rom.mult(*rom_sol.back()));
+        res -= *rom_rhs.back();
+        printf("rom res norm: %.3e\n", res.norm());
 
-    //     /* lift back to FOM to check the accuracy */
-    //     /* get librom view-vector of test_sol[s] */
-    //     op_col = new CAROM::Vector(test_sol.back()->uu(), dim, true, false);
-    //     pot_basis->mult(*rom_sol.back(), *op_col);
+        /* initialize lift-up FOM solution */
+        test_sol[s].resize(dim);
+        /* get librom view-vector of test_sol[s] */
+        CAROM::Vector test_sol_vec(test_sol[s].data(), dim, true, false);
+        pot_basis->mult(*rom_sol.back(), test_sol_vec);
+    }
 
-    //     delete op_col;
-    // }
+    /* Compute relative errors */
+    for (int s = 0; s < nsnapshot; s++)
+    {
+        pb::GridFunc<POTDTYPE> testsol_gf(grid, bc[0], bc[1], bc[2]);
+        pb::GridFunc<POTDTYPE> fomsol_gf(grid, bc[0], bc[1], bc[2]);
 
-    // /* Compute relative errors */
-    // for (int s = 0; s < nsnapshot; s++)
-    // {
-    //     *test_sol[s] -= *fom_sol[s];
-    //     double rel_error = test_sol[s]->norm2() / fom_sol[s]->norm2();
-    //     printf("%d-th sample relative error: %.3e\n", s, rel_error);
-    // }
+        testsol_gf.assign(test_sol[s].data(), 'd');
+        fomsol_gf.assign(fom_sol[s].data(), 'd');
+
+        testsol_gf -= fomsol_gf;
+        double rel_error = testsol_gf.norm2() / fomsol_gf.norm2();
+        printf("%d-th sample relative error: %.3e\n", s, rel_error);
+    }
 
     /* clean up pointers */
     for (int s = 0; s < nsnapshot; s++)
     {
-        // delete rom_sol[s];
-        // delete rom_rhs[s];
-        // delete test_sol[s];
+        delete rom_sol[s];
+        delete rom_rhs[s];
     }
 }
 
