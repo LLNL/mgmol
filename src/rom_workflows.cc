@@ -127,35 +127,40 @@ void buildROMPoissonOperator(MGmolInterface *mgmol_)
     MGmol<OrbitalsType> *mgmol = static_cast<MGmol<OrbitalsType> *>(mgmol_);
     Poisson *poisson = mgmol->electrostat_->getPoissonSolver();
 
+    /* GridFunc initialization inputs */
+    const pb::Grid &grid(poisson->vh().grid());
+    short bc[3];
+    for (int d = 0; d < 3; d++)
+        bc[d] = poisson->vh().bc(d);
+
     /* Initialize ROM matrix (undistributed) */
     CAROM::Matrix pot_rom(num_pot_basis, num_pot_basis, false);
 
-    pb::GridFunc<POTDTYPE> gf_col(poisson->vh());
-    pb::GridFunc<POTDTYPE> gf_opcol(gf_col);
-    CAROM::Vector *col = nullptr, *op_col = nullptr, *rom_col = nullptr;
+    pb::GridFunc<POTDTYPE> col_gf(grid, bc[0], bc[1], bc[2]);
+    pb::GridFunc<POTDTYPE> opcol_gf(grid, bc[0], bc[1], bc[2]);
+    CAROM::Vector op_col(pot_basis->numRows(), true);
+    CAROM::Vector rom_col(num_pot_basis, false);
     for (int c = 0; c < num_pot_basis; c++)
     {
         /* copy c-th column librom vector to GridFunc gf_col */
-        col = pot_basis->getColumn(c);
-        gf_col.assign(col->getData());
+        CAROM::Vector *col = pot_basis->getColumn(c);
+        col_gf.assign(col->getData(), 'd');
 
         /* apply Laplace operator */
-        poisson->applyOperator(gf_col, gf_opcol);
+        poisson->applyOperator(col_gf, opcol_gf);
 
         /* get librom view-vector of gf_opcol */
-        op_col = new CAROM::Vector(gf_opcol.uu(), col->dim(), true, false);
+        opcol_gf.init_vect(op_col.getData(), 'd');
 
         /* Compute basis projection of the column */
         /* Resulting vector is undistributed */
-        rom_col = pot_basis->transposeMult(*op_col);
+        pot_basis->transposeMult(op_col, rom_col);
 
         /* libROM matrix is row-major, so data copy is necessary */
         for (int r = 0; r < num_pot_basis; r++)
-            pot_rom(r, c) = (*rom_col)(r);
+            pot_rom(r, c) = rom_col(r);
 
         delete col;
-        delete op_col;
-        delete rom_col;
     }   // for (int c = 0; c < num_pot_basis; c++)
     
     /* Save ROM operator */
@@ -327,9 +332,6 @@ void testROMPoissonOperator(MGmolInterface *mgmol_)
     CAROM::Matrix pot_rom(nsnapshot, nsnapshot, false);
 
     /* Build Projection of Poisson operator */
-    pb::GridFunc<POTDTYPE> gf_col(poisson->vh());
-    pb::GridFunc<POTDTYPE> gf_opcol(gf_col);
-    CAROM::Vector *col = nullptr, *op_col = nullptr, *rom_col = nullptr;
     for (int c = 0; c < nsnapshot; c++)
     {
         pb::GridFunc<POTDTYPE> col_gf(grid, bc[0], bc[1], bc[2]);
