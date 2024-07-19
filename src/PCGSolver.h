@@ -97,6 +97,8 @@ public:
     double getFinalResidual() const { return final_residual_; }
     double getResidualReduction() const { return residual_reduction_; }
 
+    T* getOperator() { return &oper_; }
+
     // Destructor
     ~PCGSolver() { clear(); }
 };

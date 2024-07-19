@@ -2069,6 +2069,8 @@ void Control::setROMOptions(const boost::program_options::variables_map& vm)
             rom_pri_option.rom_stage = ROMStage::ONLINE;
         else if (str.compare("build") == 0)
             rom_pri_option.rom_stage = ROMStage::BUILD;
+        else if (str.compare("test_poisson") == 0)
+            rom_pri_option.rom_stage = ROMStage::TEST_POISSON;
         else if (str.compare("none") == 0)
             rom_pri_option.rom_stage = ROMStage::UNSUPPORTED;
 
@@ -2086,6 +2088,8 @@ void Control::setROMOptions(const boost::program_options::variables_map& vm)
             rom_pri_option.variable = ROMVariable::NONE;
 
         rom_pri_option.save_librom_snapshot = vm["ROM.offline.save_librom_snapshot"].as<bool>();
+
+        rom_pri_option.num_potbasis = vm["ROM.basis.number_of_potential_basis"].as<int>();
     }  // onpe0
 
     // synchronize all processors
@@ -2130,4 +2134,7 @@ void Control::syncROMOptions()
 
     rom_pri_option.rom_stage = static_cast<ROMStage>(rom_stage);
     rom_pri_option.variable = static_cast<ROMVariable>(rom_var);
+
+    mpirc = MPI_Bcast(&rom_pri_option.num_potbasis, 1, MPI_INT, 0, comm_global_);
+    bcast_check(mpirc);
 }

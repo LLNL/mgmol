@@ -35,8 +35,15 @@
 namespace po = boost::program_options;
 
 #include "librom.h"
+#include "utils/HDFDatabase.h"
 
 template <class OrbitalsType>
 void readRestartFiles(MGmolInterface *mgmol_);
+
+template <class OrbitalsType>
+void buildROMPoissonOperator(MGmolInterface *mgmol_);
+
+template <class OrbitalsType>
+void testROMPoissonOperator(MGmolInterface *mgmol_);
 
 #endif  // ROM_WORKFLOWS_H

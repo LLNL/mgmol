@@ -427,6 +427,8 @@ void setupROMConfigOption(po::options_description &rom_cfg)
         ("ROM.offline.save_librom_snapshot", po::value<bool>()->default_value(false),
             "Save libROM snapshot file at FOM simulation.")
         ("ROM.offline.variable", po::value<std::string>()->default_value(""),
-            "FOM variable to perform POD: either orbitals or potential.");
+            "FOM variable to perform POD: either orbitals or potential.")
+        ("ROM.basis.number_of_potential_basis", po::value<int>()->default_value(-1),
+            "Number of potential POD basis to build Hartree potential ROM operator.");
 }
 #endif

@@ -22,6 +22,7 @@ enum class ROMStage
     ONLINE,
     RESTORE,    // TODO(kevin): what stage is this?
     BUILD,
+    TEST_POISSON,
     UNSUPPORTED
 };
 
@@ -45,6 +46,9 @@ struct ROMPrivateOptions
 
     /* save librom snapshot matrix at FOM simulation. */
     bool save_librom_snapshot = false;
+
+    /* options for ROM building */
+    int num_potbasis = -1;
 };
 
 #endif  // ROM_CONTROL_H
