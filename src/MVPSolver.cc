@@ -59,7 +59,8 @@ MVPSolver<OrbitalsType, MatrixType>::MVPSolver(MPI_Comm comm, std::ostream& os,
     if (onpe0 && ct.verbose > 0)
     {
         os_ << "MVPSolver..." << std::endl;
-        if (use_old_dm_) os_ << "MVPSolver uses old DM..." << std::endl;
+        if (use_old_dm_ && ct.verbose > 1)
+            os_ << "MVPSolver uses old DM..." << std::endl;
     }
 
     rho_            = rho;
@@ -252,8 +253,9 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
                 dmInit = proj_mat_work_->dm();
             }
 
-            const double ts0 = evalEntropyMVP(current_proj_mat, true, os_);
-            const double e0  = energy_->evaluateTotal(
+            const double ts0
+                = evalEntropyMVP(current_proj_mat, (ct.verbose > 1), os_);
+            const double e0 = energy_->evaluateTotal(
                 ts0, current_proj_mat, orbitals, printE, os_);
 
             MatrixType target("target", numst_, numst_);
