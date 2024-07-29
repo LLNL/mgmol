@@ -406,7 +406,7 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
     // orthonormalization over outer iterations (MD or geometry optimization)
     // jlf, 01/02/2021
     if (mmpi.PE0() && ct.verbose > 1)
-        os_ << "Orthonormalize wavefunctions ate start of DavidsonSolver"
+        os_ << "Orthonormalize wavefunctions at start of DavidsonSolver"
             << std::endl;
     orbitals.orthonormalizeLoewdin(false, nullptr, false);
 
@@ -418,7 +418,7 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
         ProjectedMatrices<MatrixType>* proj_matN
             = dynamic_cast<ProjectedMatrices<MatrixType>*>(
                 orbitals.getProjMatrices());
-        if (mmpi.PE0() && ct.verbose > 1)
+        if (mmpi.PE0() && ct.verbose > 0)
         {
             os_ << "###########################" << std::endl;
             os_ << "DavidsonSolver -> Iteration " << outer_it << std::endl;
@@ -498,7 +498,7 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
                 // if( onpe0 )os_<<"Matrices..."<<endl;
                 // projmatrices->printMatrices(os_);
 
-                ts0 = evalEntropy(projmatrices, true, os_);
+                ts0 = evalEntropy(projmatrices, (ct.verbose > 1), os_);
                 e0  = energy_->evaluateTotal(
                     ts0, projmatrices, orbitals, printE, os_);
 
@@ -547,7 +547,7 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
                 proj_mat2N_->assignBlocksH(h11, h12, h21, h22);
                 proj_mat2N_->setHB2H();
 
-                ts0 = evalEntropy(proj_mat2N_.get(), true, os_);
+                ts0 = evalEntropy(proj_mat2N_.get(), (ct.verbose > 1), os_);
                 e0  = energy_->evaluateTotal(
                     ts0, proj_mat2N_.get(), orbitals, printE, os_);
             }
@@ -627,7 +627,7 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
                 // line minimization
                 beta = minQuadPolynomial(e0, e1, de0, (ct.verbose > 2), os_);
 
-                if (mmpi.PE0() && ct.verbose > 1)
+                if (mmpi.PE0() && ct.verbose > 0)
                 {
                     os_ << std::setprecision(12);
                     os_ << "ts1=" << ts1 << std::endl;
@@ -690,7 +690,7 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
             os_ << "Total occupations for top half states="
                 << std::setprecision(15) << tot << std::endl;
         }
-        if (mmpi.PE0() && ct.verbose > 0)
+        if (mmpi.PE0() && ct.verbose > 1)
         {
             os_ << std::setprecision(15)
                 << "Last level occupancy = " << eval[numst_] << std::endl;

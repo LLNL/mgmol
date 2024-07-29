@@ -71,7 +71,7 @@ public:
         Control& ct     = *(Control::instance());
         nel_            = ct.getNelSpin();
         MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-        if (mmpi.PE0())
+        if (mmpi.PE0() && ct.verbose > 1)
             std::cout << "ProjectedMatricesInterface: nel_=" << nel_
                       << std::endl;
     };

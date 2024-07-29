@@ -118,13 +118,13 @@ void DensityMatrix<MatrixType>::build(
 template <class MatrixType>
 void DensityMatrix<MatrixType>::build(const int new_orbitals_index)
 {
-    //#ifdef PRINT_OPERATIONS
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+#ifdef PRINT_OPERATIONS
     if (mmpi.PE0())
         std::cout
             << "DensityMatrix<MatrixType>::build() for diagonal occupation..."
             << std::endl;
-    //#endif
+#endif
     if (!occ_uptodate_ && mmpi.instancePE0())
         std::cout << "Warning: occupations not up to date to build DM!!!"
                   << std::endl;
