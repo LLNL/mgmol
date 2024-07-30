@@ -347,6 +347,7 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
             = dynamic_cast<ProjectedMatrices<MatrixType>*>(
                 orbitals.getProjMatrices());
         projmatrices->setDM(*work_, orbitals.getIterativeIndex());
+        projmatrices->setEigenvalues(proj_mat_work_->getEigenvalues());
     }
 
     // Generate new density

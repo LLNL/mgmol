@@ -409,6 +409,12 @@ public:
     {
         dm_->setMatrix(mat, orbitals_index);
     }
+    void setEigenvalues(const std::vector<double>& eigenvalues)
+    {
+        memcpy(eigenvalues_.data(), eigenvalues.data(),
+            eigenvalues.size() * sizeof(double));
+    }
+    const std::vector<double>& getEigenvalues() const { return eigenvalues_; }
     void computeGenEigenInterval(std::vector<double>& interval,
         const int maxits, const double padding = 0.01);
     DensityMatrix<MatrixType>& getDM() { return *dm_; }

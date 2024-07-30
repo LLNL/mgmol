@@ -70,6 +70,30 @@ for line in lines:
     print("Found HDF5 error")
     sys.exit(1)
 
+flag = 0
+eigenvalues=[]
+for line in lines:
+  if line.count(b'FERMI'):
+    flag = 0
+  if flag==1:
+    words=line.split()
+    for w in words:
+      eigenvalues.append(eval(w))
+  if line.count(b'Eigenvalues'):
+    flag = 1
+    eigenvalues=[]
+
+print(eigenvalues)
+tol = 1.e-4
+eigenvalue0 = -0.208
+if abs(eigenvalues[0]-eigenvalue0)>tol:
+  print("Expected eigenvalue 0 to be {}".format(eigenvalue0))
+  sys.exit(1)
+eigenvalue50 = 0.208
+if abs(eigenvalues[50]-eigenvalue50)>tol:
+  print("Expected eigenvalue 50 to be {}".format(eigenvalue50))
+  sys.exit(1)
+
 niterations = len(energies)
 print("MVP solver ran for {} iterations".format(niterations))
 if niterations>180:
