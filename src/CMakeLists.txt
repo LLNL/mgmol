@@ -68,7 +68,7 @@ set(SOURCES
  GrassmanLineMinimization.cc 
  GrassmanCG.cc 
  GrassmanCGSparse.cc 
- LBFGS.cc 
+ MGmolLBFGS.cc
  IonicStepper.cc 
  Energy.cc 
  GramMatrix.cc 

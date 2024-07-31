@@ -7,7 +7,7 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#include "LBFGS.h"
+#include "MGmolLBFGS.h"
 #include "Control.h"
 #include "Electrostatic.h"
 #include "MGmol.h"
@@ -16,7 +16,7 @@
 #include "ProjectedMatrices.h"
 
 template <class OrbitalsType>
-LBFGS<OrbitalsType>::LBFGS(OrbitalsType** orbitals, Ions& ions,
+MGmolLBFGS<OrbitalsType>::MGmolLBFGS(OrbitalsType** orbitals, Ions& ions,
     Rho<OrbitalsType>& rho, ConstraintSet& constraints,
     std::shared_ptr<LocalizationRegions> lrs, ClusterOrbitals* local_cluster,
     MasksSet& masks, MasksSet& corrmasks, Electrostatic& electrostat,
@@ -37,7 +37,7 @@ LBFGS<OrbitalsType>::LBFGS(OrbitalsType** orbitals, Ions& ions,
 }
 
 template <class OrbitalsType>
-void LBFGS<OrbitalsType>::setup(const double dt)
+void MGmolLBFGS<OrbitalsType>::setup(const double dt)
 {
     if (lrs_)
         ref_lrs_ = std::shared_ptr<LocalizationRegions>(
@@ -77,14 +77,14 @@ void LBFGS<OrbitalsType>::setup(const double dt)
 }
 
 template <class OrbitalsType>
-LBFGS<OrbitalsType>::~LBFGS()
+MGmolLBFGS<OrbitalsType>::~MGmolLBFGS()
 {
     delete vh_init_;
     delete stepper_;
 }
 
 template <class OrbitalsType>
-void LBFGS<OrbitalsType>::reset(const double dt)
+void MGmolLBFGS<OrbitalsType>::reset(const double dt)
 {
     delete vh_init_;
     delete stepper_;
@@ -93,7 +93,7 @@ void LBFGS<OrbitalsType>::reset(const double dt)
 }
 
 template <class OrbitalsType>
-int LBFGS<OrbitalsType>::quenchElectrons(const int itmax, double& etot)
+int MGmolLBFGS<OrbitalsType>::quenchElectrons(const int itmax, double& etot)
 {
     etot_i_[0] = etot_i_[1];
     etot_i_[1] = etot_i_[2];
@@ -104,7 +104,7 @@ int LBFGS<OrbitalsType>::quenchElectrons(const int itmax, double& etot)
 }
 
 template <class OrbitalsType>
-void LBFGS<OrbitalsType>::updateRefs()
+void MGmolLBFGS<OrbitalsType>::updateRefs()
 {
     if (!stepper_->check_last_step_accepted())
     {
@@ -128,7 +128,7 @@ void LBFGS<OrbitalsType>::updateRefs()
 }
 
 template <>
-void LBFGS<LocGridOrbitals>::updateRefMasks()
+void MGmolLBFGS<LocGridOrbitals>::updateRefMasks()
 {
     Control& ct = *(Control::instance());
 
@@ -147,12 +147,12 @@ void LBFGS<LocGridOrbitals>::updateRefMasks()
 }
 
 template <>
-void LBFGS<ExtendedGridOrbitals>::updateRefMasks()
+void MGmolLBFGS<ExtendedGridOrbitals>::updateRefMasks()
 {
 }
 
 template <class OrbitalsType>
-void LBFGS<OrbitalsType>::setQuenchTol() const
+void MGmolLBFGS<OrbitalsType>::setQuenchTol() const
 {
     Control& ct = *(Control::instance());
     ct.conv_tol = 0.1 * stepper_->etol();
@@ -163,7 +163,7 @@ void LBFGS<OrbitalsType>::setQuenchTol() const
 }
 
 template <class OrbitalsType>
-void LBFGS<OrbitalsType>::updatePotAndMasks()
+void MGmolLBFGS<OrbitalsType>::updatePotAndMasks()
 {
     if (!stepper_->check_last_step_accepted())
         electrostat_.setupInitialVh(*vh_init_);
@@ -172,10 +172,10 @@ void LBFGS<OrbitalsType>::updatePotAndMasks()
 }
 
 template <class OrbitalsType>
-bool LBFGS<OrbitalsType>::lbfgsLastStepNotAccepted() const
+bool MGmolLBFGS<OrbitalsType>::lbfgsLastStepNotAccepted() const
 {
     return !stepper_->check_last_step_accepted();
 }
 
-template class LBFGS<LocGridOrbitals>;
-template class LBFGS<ExtendedGridOrbitals>;
+template class MGmolLBFGS<LocGridOrbitals>;
+template class MGmolLBFGS<ExtendedGridOrbitals>;
