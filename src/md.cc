@@ -576,17 +576,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
 
         ct.steps = md_iteration_;
 
-#if EXTRAPOLATE_RHO
-        if (onpe0) os_ << "Extrapolate rho..." << std::endl;
-        rho_->axpyRhoc(-1., rhoc_);
-        rho_->extrapolate();
-#endif
-
         moveVnuc(ions);
-
-#if EXTRAPOLATE_RHO
-        rho_->axpyRhoc(1., rhoc_);
-#endif
 
         if (!small_move)
         {
@@ -669,8 +659,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
 }
 
 template <class OrbitalsType>
-void MGmol<OrbitalsType>::loadRestartFile(
-    const std::string filename)
+void MGmol<OrbitalsType>::loadRestartFile(const std::string filename)
 {
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
     Control& ct              = *(Control::instance());
@@ -688,7 +677,9 @@ void MGmol<OrbitalsType>::loadRestartFile(
     if (ierr < 0)
     {
         if (onpe0)
-            (*MPIdata::serr) << "loadRestartFile: failed to read the restart file." << std::endl;
+            (*MPIdata::serr)
+                << "loadRestartFile: failed to read the restart file."
+                << std::endl;
 
         global_exit(0);
     }
