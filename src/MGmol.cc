@@ -1428,6 +1428,8 @@ double MGmol<OrbitalsType>::evaluateEnergyAndForces(
 
     ions_->setPositions(tau, atnumbers);
 
+    moveVnuc(*ions_);
+
     double eks = 0.;
     quench(current_orbitals_, *ions_, ct.max_electronic_steps, 20, eks);
 

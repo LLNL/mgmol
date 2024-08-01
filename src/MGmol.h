@@ -180,7 +180,10 @@ public:
 
     /* access functions */
     OrbitalsType* getOrbitals() { return current_orbitals_; }
-    std::shared_ptr<Hamiltonian<OrbitalsType>> getHamiltonian() { return hamiltonian_; }
+    std::shared_ptr<Hamiltonian<OrbitalsType>> getHamiltonian()
+    {
+        return hamiltonian_;
+    }
 
     void run() override;
 
