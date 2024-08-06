@@ -226,7 +226,7 @@ void checkMaxForces(const std::vector<double>& fion,
 }
 
 template <class OrbitalsType>
-int MGmol<OrbitalsType>::dumprestartFile(OrbitalsType** orbitals, Ions& ions,
+int MGmol<OrbitalsType>::dumpMDrestartFile(OrbitalsType** orbitals, Ions& ions,
     Rho<OrbitalsType>& rho, const bool write_extrapolated_wf, const short count)
 {
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
@@ -255,7 +255,7 @@ int MGmol<OrbitalsType>::dumprestartFile(OrbitalsType** orbitals, Ions& ions,
     {
         if (onpe0)
             (*MPIdata::serr)
-                << "dumprestartFile: cannot write ...previous_orbitals..."
+                << "dumpMDrestartFile: cannot write ...previous_orbitals..."
                 << std::endl;
         return ierr;
     }
@@ -269,7 +269,7 @@ int MGmol<OrbitalsType>::dumprestartFile(OrbitalsType** orbitals, Ions& ions,
         if (ierr < 0)
         {
             if (onpe0)
-                (*MPIdata::serr) << "dumprestartFile: cannot write "
+                (*MPIdata::serr) << "dumpMDrestartFile: cannot write "
                                     "...ExtrapolatedFunction..."
                                  << std::endl;
             return ierr;
@@ -282,7 +282,7 @@ int MGmol<OrbitalsType>::dumprestartFile(OrbitalsType** orbitals, Ions& ions,
     {
         if (onpe0)
             (*MPIdata::serr)
-                << "dumprestartFile: cannot close file..." << std::endl;
+                << "dumpMDrestartFile: cannot close file..." << std::endl;
         return ierr;
     }
 
@@ -398,7 +398,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
     if (ct.restart_info < 3)
     {
         double eks = 0.;
-        quench(*orbitals, ions, ct.max_electronic_steps, 20, eks);
+        quench(**orbitals, ions, ct.max_electronic_steps, 20, eks);
     }
 
     ct.max_changes_pot = 0;
@@ -426,7 +426,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
         bool last_move_is_small = true;
         do
         {
-            retval = quench(*orbitals, ions, ct.max_electronic_steps, 0, eks);
+            retval = quench(**orbitals, ions, ct.max_electronic_steps, 0, eks);
 
             // update localization regions
             if (ct.adaptiveLRs())
@@ -614,12 +614,12 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
                     while (ierr < 0 && count < DUMP_MAX_NUM_TRY)
                     {
                         dump_tm_.start();
-                        ierr = dumprestartFile(
+                        ierr = dumpMDrestartFile(
                             orbitals, ions, *rho_, extrapolated_flag, count);
                         dump_tm_.stop();
                         if (onpe0 && ierr < 0 && count < (DUMP_MAX_NUM_TRY - 1))
                             std::cout
-                                << "dumprestartFile() failed... try again..."
+                                << "dumpMDrestartFile() failed... try again..."
                                 << std::endl;
                         if (ierr < 0) sleep(1.);
                         count++;
@@ -640,12 +640,12 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
         while (ierr < 0 && count < DUMP_MAX_NUM_TRY)
         {
             dump_tm_.start();
-            ierr = dumprestartFile(
+            ierr = dumpMDrestartFile(
                 orbitals, ions, *rho_, extrapolated_flag, count);
             dump_tm_.stop();
 
             if (onpe0 && ierr < 0 && count < (DUMP_MAX_NUM_TRY - 1))
-                std::cout << "dumprestartFile() failed... try again..."
+                std::cout << "dumpMDrestartFile() failed... try again..."
                           << std::endl;
             if (ierr < 0) sleep(1.);
             count++;

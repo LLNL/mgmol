@@ -519,7 +519,7 @@ int MGmol<OrbitalsType>::outerSolve(OrbitalsType& orbitals,
 }
 
 template <class OrbitalsType>
-int MGmol<OrbitalsType>::quench(OrbitalsType* orbitals, Ions& ions,
+int MGmol<OrbitalsType>::quench(OrbitalsType& orbitals, Ions& ions,
     const int max_inner_steps, const int iprint, double& last_eks)
 {
     assert(max_inner_steps > -1);
@@ -543,33 +543,33 @@ int MGmol<OrbitalsType>::quench(OrbitalsType* orbitals, Ions& ions,
     }
 
     // get actual indexes of stored functions
-    const std::vector<std::vector<int>>& gids(orbitals->getOverlappingGids());
+    const std::vector<std::vector<int>>& gids(orbitals.getOverlappingGids());
 
     g_kbpsi_->setup(*ions_);
     electrostat_->setup(ct.vh_its);
     rho_->setup(ct.getOrthoType(), gids);
 
-    OrbitalsType work_orbitals("Work", *orbitals);
+    OrbitalsType work_orbitals("Work", orbitals);
 
-    orbitals->setDataWithGhosts();
-    orbitals->trade_boundaries();
+    orbitals.setDataWithGhosts();
+    orbitals.trade_boundaries();
 
-    disentangleOrbitals(*orbitals, work_orbitals, ions, max_steps);
+    disentangleOrbitals(orbitals, work_orbitals, ions, max_steps);
 
     // setup "kernel" functions for AOMM algorithm
     if (ct.use_kernel_functions)
     {
-        applyAOMMprojection(*orbitals);
+        applyAOMMprojection(orbitals);
     }
 
     orbitals_precond_.reset(new OrbitalsPreconditioning<OrbitalsType>());
     orbitals_precond_->setup(
-        *orbitals, ct.getMGlevels(), ct.lap_type, currentMasks_.get(), lrs_);
+        orbitals, ct.getMGlevels(), ct.lap_type, currentMasks_.get(), lrs_);
 
     // solve electronic structure problem
     // (inner iterations)
     retval = outerSolve(
-        *orbitals, work_orbitals, ions, max_steps, iprint, last_eks);
+        orbitals, work_orbitals, ions, max_steps, iprint, last_eks);
     if (retval == -1) return -1;
 
     if (ct.use_kernel_functions)
@@ -602,7 +602,7 @@ int MGmol<OrbitalsType>::quench(OrbitalsType* orbitals, Ions& ions,
         }
     }
     last_eks
-        = energy_->evaluateTotal(ts, proj_matrices_.get(), *orbitals, 2, os_);
+        = energy_->evaluateTotal(ts, proj_matrices_.get(), orbitals, 2, os_);
 
     if (ct.computeCondGramMD())
     {
@@ -615,7 +615,7 @@ int MGmol<OrbitalsType>::quench(OrbitalsType* orbitals, Ions& ions,
     if (ct.isLocMode() || ct.isSpreadFunctionalActive())
     {
         // build matrices necessary to compute spreads and centers
-        spreadf_->computePositionMatrix(*orbitals, work_orbitals);
+        spreadf_->computePositionMatrix(orbitals, work_orbitals);
 
         if (ct.verbose > 0 || !ct.AtomsMove())
         {
@@ -628,7 +628,7 @@ int MGmol<OrbitalsType>::quench(OrbitalsType* orbitals, Ions& ions,
     {
         if (ct.wannier_transform_type >= 1)
         {
-            wftransform(orbitals, &work_orbitals, ions);
+            wftransform(&orbitals, &work_orbitals, ions);
         }
     }
 
