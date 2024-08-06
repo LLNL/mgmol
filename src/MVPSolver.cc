@@ -208,6 +208,7 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
 
         kbpsi.computeHvnlMatrix(&kbpsi, ions_, h11_nl);
 
+        const double tol_de0 = 1.e-12;
         for (int inner_it = 0; inner_it < n_inner_steps_; inner_it++)
         {
             if (onpe0 && ct.verbose > 1)
@@ -270,6 +271,14 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
 
                 double de0 = evaluateDerivative(dmInit, delta_dm, ts0);
 
+                if (std::abs(de0) < tol_de0 && inner_it > 0)
+                {
+                    if (onpe0 && ct.verbose > 0)
+                        std::cout << "MVP: de0 = " << de0
+                                  << ", convergence achieved" << std::endl;
+                    break;
+                }
+
                 //
                 // evaluate free energy at beta=1
                 //
@@ -306,6 +315,7 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
                 // line minimization
                 const double beta
                     = minQuadPolynomial(e0, e1, de0, (ct.verbose > 2), os_);
+                assert(!std::isnan(beta));
 
                 if (onpe0 && ct.verbose > 0)
                 {
@@ -348,6 +358,8 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
                 orbitals.getProjMatrices());
         projmatrices->setDM(*work_, orbitals.getIterativeIndex());
         projmatrices->setEigenvalues(proj_mat_work_->getEigenvalues());
+        projmatrices->assignH(proj_mat_work_->getH());
+        projmatrices->setHB2H();
     }
 
     // Generate new density
