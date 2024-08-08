@@ -46,4 +46,7 @@ void buildROMPoissonOperator(MGmolInterface *mgmol_);
 template <class OrbitalsType>
 void testROMPoissonOperator(MGmolInterface *mgmol_);
 
+template <class OrbitalsType>
+void testROMRhoOperator(MGmolInterface *mgmol_);
+
 #endif  // ROM_WORKFLOWS_H
