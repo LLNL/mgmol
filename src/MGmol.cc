@@ -521,7 +521,8 @@ void MGmol<OrbitalsType>::run()
     switch (ct.AtomsDynamic())
     {
         case AtomsDynamicType::Quench:
-            quench(current_orbitals_, *ions_, ct.max_electronic_steps, 20, eks);
+            quench(
+                *current_orbitals_, *ions_, ct.max_electronic_steps, 20, eks);
 
             // Forces for the last states
             force(*current_orbitals_, *ions_);
@@ -1097,25 +1098,21 @@ void MGmol<OrbitalsType>::setup()
 }
 
 template <class OrbitalsType>
-void MGmol<OrbitalsType>::cleanup()
+void MGmol<OrbitalsType>::dumpRestart()
 {
-    closing_tm_.start();
-
-    Mesh* mymesh             = Mesh::instance();
-    const pb::PEenv& myPEenv = mymesh->peenv();
-    Control& ct              = *(Control::instance());
-
-    printTimers();
+    Control& ct = *(Control::instance());
 
     // Save data to restart file
-    if (ct.out_restart_info > 0 && !ct.AtomsMove())
+    if (ct.out_restart_info > 0)
     {
+        Mesh* mymesh           = Mesh::instance();
         const pb::Grid& mygrid = mymesh->grid();
         unsigned gdim[3] = { mygrid.gdim(0), mygrid.gdim(1), mygrid.gdim(2) };
+        const pb::PEenv& myPEenv = mymesh->peenv();
 
         // create restart file
         std::string filename(std::string(ct.out_restart_file));
-        filename += "0";
+        if (ct.out_restart_file_naming_strategy) filename += "0";
         HDFrestart h5restartfile(
             filename, myPEenv, gdim, ct.out_restart_file_type);
 
@@ -1124,6 +1121,22 @@ void MGmol<OrbitalsType>::cleanup()
 
         if (ierr < 0)
             os_ << "WARNING: writing restart data failed!!!" << std::endl;
+    }
+}
+
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::cleanup()
+{
+    closing_tm_.start();
+
+    Control& ct = *(Control::instance());
+
+    printTimers();
+
+    // Save data to restart file
+    if (!ct.AtomsMove())
+    {
+        dumpRestart();
     }
 
     MPI_Barrier(comm_);
@@ -1422,6 +1435,14 @@ double MGmol<OrbitalsType>::evaluateEnergyAndForces(
     const std::vector<double>& tau, std::vector<short>& atnumbers,
     std::vector<double>& forces)
 {
+    return evaluateEnergyAndForces(current_orbitals_, tau, atnumbers, forces);
+}
+
+template <class OrbitalsType>
+double MGmol<OrbitalsType>::evaluateEnergyAndForces(Orbitals* orbitals,
+    const std::vector<double>& tau, std::vector<short>& atnumbers,
+    std::vector<double>& forces)
+{
     assert(tau.size() == 3 * atnumbers.size());
 
     Control& ct = *(Control::instance());
@@ -1430,10 +1451,11 @@ double MGmol<OrbitalsType>::evaluateEnergyAndForces(
 
     moveVnuc(*ions_);
 
-    double eks = 0.;
-    quench(current_orbitals_, *ions_, ct.max_electronic_steps, 20, eks);
+    double eks              = 0.;
+    OrbitalsType* dorbitals = dynamic_cast<OrbitalsType*>(orbitals);
+    quench(*dorbitals, *ions_, ct.max_electronic_steps, 20, eks);
 
-    force(*current_orbitals_, *ions_);
+    force(*dorbitals, *ions_);
 
     ions_->getForces(forces);
 

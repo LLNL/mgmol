@@ -98,7 +98,7 @@ void IonicAlgorithm<OrbitalsType>::init(HDFrestart* h5f_file)
 template <class OrbitalsType>
 int IonicAlgorithm<OrbitalsType>::quenchElectrons(const int itmax, double& etot)
 {
-    int ret = mgmol_strategy_.quench(*orbitals_, ions_, itmax, 0, etot);
+    int ret = mgmol_strategy_.quench(**orbitals_, ions_, itmax, 0, etot);
 
     return ret;
 }
