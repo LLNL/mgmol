@@ -535,6 +535,7 @@ void computeRhoOnSamplePts(const CAROM::Matrix &dm,
     for (int d = 0; d < sampled_rho.dim(); d++)
     {
         double val = 0.0;
+        /* CAROM Matrices are row-major */
         for (int c = 0; c < sampled_phi.numColumns(); c++, d_product++, d_phi++)
             val += (*d_product) * (*d_phi);
 
