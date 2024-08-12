@@ -470,7 +470,10 @@ void testROMRhoOperator(MGmolInterface *mgmol_)
 {
     Control& ct              = *(Control::instance());
     Mesh* mymesh             = Mesh::instance();
+    const int subdivx = mymesh->subdivx();
     const pb::PEenv& myPEenv = mymesh->peenv();
+    MGmol_MPI& mmpi      = *(MGmol_MPI::instance());
+    const int rank = mmpi.mypeGlobal();
 
     if (ct.isLocMode())
         printf("LocMode is On!\n");
@@ -488,12 +491,14 @@ void testROMRhoOperator(MGmolInterface *mgmol_)
     assert(ortho_type == OrthoType::Nonorthogonal);
 
     const int dim = pot.size();
-    printf("pot size: %d\n", dim);
+    printf("rank %d, pot size: %d\n", rank, dim);
 
     const int nrows = mymesh->locNumpt();
     printf("mesh::locNumpt: %d\n", nrows);
-
+    
     OrbitalsType *orbitals = mgmol->getOrbitals();
+    printf("orbitals::locNumpt: %d\n", orbitals->getLocNumpt());
+
     ProjectedMatricesInterface *proj_matrices = orbitals->getProjMatrices();
     SquareLocalMatrices<MATDTYPE, memory_space_type>& localX(proj_matrices->getLocalX());
 
@@ -503,8 +508,42 @@ void testROMRhoOperator(MGmolInterface *mgmol_)
 
     bool dm_distributed = (localX.nmat() > 1);
     assert(!dm_distributed);
-    /* copy density matrix */
+    // /* copy density matrix */
     CAROM::Matrix dm(localX.getRawPtr(), localX.m(), localX.n(), dm_distributed, true);
+    // /* random density matrix */
+    // CAROM::Matrix dm(localX.m(), localX.n(), dm_distributed, true);
+    // CAROM::Matrix dm_transpose(dm);
+    // dm_transpose.transpose();
+
+    // /* set mgmol density matrix */
+    // MATDTYPE *d_localX = localX.getRawPtr();
+    // memcpy(d_localX, dm_transpose.getData(), localX.m() * localX.n());
+    // /* update rho first */
+    // rho->computeRho(*orbitals);
+
+    const int chrom_num = orbitals->chromatic_number();
+    CAROM::Matrix psi(dim, chrom_num, true);
+    for (int c = 0; c < chrom_num; c++)
+    {
+        ORBDTYPE *d_psi = orbitals->getPsi(c);
+        for (int d = 0; d < dim ; d++)
+            psi.item(d, c) = *(d_psi + d);
+    }
+
+    CAROM::Matrix rom_psi(chrom_num, chrom_num, false);
+    for (int i = 0; i < chrom_num; i++)
+        for (int j = 0; j < chrom_num; j++)
+            rom_psi(i, j) = (i == j) ? 1 : 0;
+
+    /* local sample index */
+    std::vector<int> grid_idx(1);
+    grid_idx[0] = 1105; // first grid point
+
+    CAROM::Vector sample_rho(grid_idx.size(), true);
+
+    computeRhoOnSamplePts(dm, psi, rom_psi, grid_idx, sample_rho);
+
+    printf("rank %d, rho[%d]: %.3e, sample_rho: %.3e\n", rank, rho->rho_[0][grid_idx[0]], sample_rho(0));
 }
 
 /*
