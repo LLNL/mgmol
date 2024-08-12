@@ -650,8 +650,9 @@ double ProjectedMatrices<MatrixType>::computeEntropy()
         else
         {
             if (mmpi.PE0() && ct.verbose > 1)
-                (*MPIdata::sout)
-                    << "occupations uptodate, skip computation..." << std::endl;
+                (*MPIdata::sout) << "computeEntropy: occupations uptodate, "
+                                    "skip computation..."
+                                 << std::endl;
         }
         entropy = computeEntropy(width_);
     }
