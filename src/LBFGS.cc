@@ -97,7 +97,7 @@ int LBFGS<OrbitalsType>::quenchElectrons(const int itmax, double& etot)
 {
     etot_i_[0] = etot_i_[1];
     etot_i_[1] = etot_i_[2];
-    int ret = mgmol_strategy_.quench(*orbitals_, ions_, itmax, 0, etot_i_[2]);
+    int ret = mgmol_strategy_.quench(**orbitals_, ions_, itmax, 0, etot_i_[2]);
 
     etot = etot_i_[2];
     return ret;

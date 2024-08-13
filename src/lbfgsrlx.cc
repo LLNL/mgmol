@@ -77,6 +77,7 @@ void MGmol<OrbitalsType>::lbfgsrlx(OrbitalsType** orbitals, Ions& ions)
 
         lbfgs.computeForces();
 
+        // check for convergence
         int flag_convF = lbfgs.checkTolForces(ct.tol_forces);
 
         int conv = 0;
@@ -87,10 +88,8 @@ void MGmol<OrbitalsType>::lbfgsrlx(OrbitalsType** orbitals, Ions& ions)
                 os_ << endl
                     << endl
                     << "LBFGS: convergence in forces has been achieved. "
-                       "stopping ..."
                     << endl;
             }
-            conv = 1;
         }
         else
         {
@@ -116,10 +115,17 @@ void MGmol<OrbitalsType>::lbfgsrlx(OrbitalsType** orbitals, Ions& ions)
         // Write down positions and displacements
         ions.printPositions(os_);
 
+        // early termination if convergence achieved
+        if (flag_convF)
+        {
+            if (onpe0) os_ << "LBFGS: stopping ..." << endl;
+            break;
+        }
+
+        // reset iterations if last step failed
         if (conv != 0)
         {
             if (onpe0) os_ << "LBFGS Geometry optimization stopped" << endl;
-            // break;
             if (onpe0) os_ << "LBFGS Geometry optimization reset" << endl;
             lbfgs.reset(ct.dt);
         }
