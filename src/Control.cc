@@ -997,42 +997,6 @@ void Control::readRestartInfo(std::ifstream* tfile)
     }
 }
 
-void Control::readRestartOutputInfo(std::ifstream* tfile)
-{
-    const std::string zero = "0";
-    const std::string one  = "1";
-    if (tfile != nullptr)
-    {
-        // Read in the output restart filename
-        std::string filename;
-        (*tfile) >> filename;
-        // int dpcs_chkpoint=0;
-        if (zero.compare(filename) == 0) // no restart dump
-            out_restart_info = 0;
-        else
-        {
-            if (one.compare(filename) == 0)
-            { // automatic naming of dump
-                filename                         = "snapshot";
-                out_restart_file_naming_strategy = 1;
-            }
-            (*tfile) >> out_restart_info;
-            (*tfile) >> out_restart_file_type;
-            //(*tfile)>>dpcs_chkpoint;
-            // timeout_.set(dpcs_chkpoint);
-        }
-
-        out_restart_file.assign(run_directory_);
-        out_restart_file.append("/");
-        out_restart_file.append(filename);
-        (*MPIdata::sout) << "Output restart file: " << out_restart_file
-                         << " with info level " << out_restart_info
-                         << std::endl;
-        //(*MPIdata::sout)<<"Time for DPCS checkpoint:
-        //"<<dpcs_chkpoint<<"[s]"<<endl;
-    }
-}
-
 int Control::setPreconditionerParameters(const short type, const float factor,
     const bool project_out, const short nlevels, const float fgrid_hmax)
 {

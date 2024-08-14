@@ -1,0 +1,3 @@
+Single water molecule MD, with Oxigen atom pinned to (0,0,0) coordinate:
+
+mpirun -np 4 mgmol-opt -c mgmol.cfg -i coords.in

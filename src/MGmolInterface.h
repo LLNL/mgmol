@@ -28,8 +28,15 @@ public:
     virtual double evaluateEnergyAndForces(const std::vector<double>& tau,
         std::vector<short>& atnumbers, std::vector<double>& forces)
         = 0;
+    virtual double evaluateEnergyAndForces(Orbitals*,
+        const std::vector<double>& tau, std::vector<short>& atnumbers,
+        std::vector<double>& forces)
+        = 0;
     virtual void getAtomicPositions(std::vector<double>& tau) = 0;
     virtual void getAtomicNumbers(std::vector<short>& an)     = 0;
+    virtual std::shared_ptr<ProjectedMatricesInterface> getProjectedMatrices()
+        = 0;
+    virtual void dumpRestart() = 0;
 };
 
 #endif
