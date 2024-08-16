@@ -55,7 +55,7 @@ make -j 16
 ### Currently libROM does not have the installation procedure,
 ### so copying binary file to installation directory will disrupt the relative path to libROM.so,
 ### causing a run-time error.
-#make install
+make install
 
 #      -DBLAS_LIBRARIES=/usr/tce/packages/mkl/mkl-2022.1.0/mkl/2022.1.0/lib/intel64/lib \
 #      -DLAPACK_LIBRARIES=/usr/tce/packages/mkl/mkl-2022.1.0/mkl/2022.1.0/lib/intel64/lib \  
