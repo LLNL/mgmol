@@ -46,6 +46,7 @@ struct ROMPrivateOptions
 
     /* save librom snapshot matrix at FOM simulation. */
     bool save_librom_snapshot = false;
+    int librom_snapshot_freq = -1;
 
     /* options for ROM building */
     int num_potbasis = -1;
