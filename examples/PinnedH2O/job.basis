@@ -27,6 +27,6 @@ echo "Snapshot files: $snapshot_files"
 
 set basis_file = "PinnedH2O_orbitals_basis"
 
-srun -n $ncpus $exe -f $basis_file $snapshot_files > basis_${increment_md_steps}_${num_md_steps}_Pineed_H2O.out
+srun -n $ncpus $exe -f $basis_file $snapshot_files > basis_${increment_md_steps}_${num_md_steps}_Pinned_H2O.out
 
 date
