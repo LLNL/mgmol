@@ -499,7 +499,9 @@ void testROMRhoOperator(MGmolInterface *mgmol_)
     OrbitalsType *orbitals = mgmol->getOrbitals();
     printf("orbitals::locNumpt: %d\n", orbitals->getLocNumpt());
 
-    ProjectedMatricesInterface *proj_matrices = orbitals->getProjMatrices();
+    /* NOTE(kevin): we assume we only use ProjectedMatrices class */
+    ProjectedMatrices<dist_matrix::DistMatrix<double>> *proj_matrices =
+        static_cast<ProjectedMatrices<dist_matrix::DistMatrix<double>> *>(orbitals->getProjMatrices());
     SquareLocalMatrices<MATDTYPE, memory_space_type>& localX(proj_matrices->getLocalX());
 
     printf("localX nmat: %d\n", localX.nmat());
@@ -508,18 +510,28 @@ void testROMRhoOperator(MGmolInterface *mgmol_)
 
     bool dm_distributed = (localX.nmat() > 1);
     assert(!dm_distributed);
+
     // /* copy density matrix */
     CAROM::Matrix dm(localX.getRawPtr(), localX.m(), localX.n(), dm_distributed, true);
-    // /* random density matrix */
-    // CAROM::Matrix dm(localX.m(), localX.n(), dm_distributed, true);
-    // CAROM::Matrix dm_transpose(dm);
-    // dm_transpose.transpose();
 
-    // /* set mgmol density matrix */
-    // MATDTYPE *d_localX = localX.getRawPtr();
-    // memcpy(d_localX, dm_transpose.getData(), localX.m() * localX.n());
+    // /* random density matrix */
+    // /* NOTE(kevin): Due to rescaleTotalCharge, the result is slightly inconsistent. */
+    // CAROM::Matrix dm(localX.m(), localX.n(), dm_distributed, true);
+    // dm = 0.0;
+    // dist_matrix::DistMatrix<double> dm_mgmol(proj_matrices->dm());
+    // for (int i = 0; i < dm_mgmol.m(); i++)
+    // {
+    //     for (int j = 0; j < dm_mgmol.m(); j++)
+    //     {
+    //         if (dm_mgmol.getVal(i, j) == 0.0)
+    //             continue;
+
+    //         dm(i, j) = dm_mgmol.getVal(i, j) * (0.975 + 0.05 * ran0());
+    //         dm_mgmol.setVal(i, j, dm(i, j));
+    //     }
+    // }
     // /* update rho first */
-    // rho->computeRho(*orbitals);
+    // rho->computeRho(*orbitals, dm_mgmol);
 
     const int chrom_num = orbitals->chromatic_number();
     CAROM::Matrix psi(dim, chrom_num, true);

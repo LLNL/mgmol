@@ -12,6 +12,7 @@
 
 #include "Control.h"
 #include "ExtendedGridOrbitals.h"
+#include "ProjectedMatrices.h"
 #include "LocGridOrbitals.h"
 #include "Potentials.h"
 #include "MGmol.h"
