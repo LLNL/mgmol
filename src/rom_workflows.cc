@@ -492,6 +492,28 @@ void testROMRhoOperator(MGmolInterface *mgmol_)
 
     const int dim = pot.size();
     printf("rank %d, pot size: %d\n", rank, dim);
+    printf("rank %d, rho size: %d\n", rank, rho->rho_[0].size());
+
+    /* number of restart files, start/end indices */
+    assert(rom_options.restart_file_minidx >= 0);
+    assert(rom_options.restart_file_maxidx >= 0);
+    const int minidx = rom_options.restart_file_minidx;
+    const int maxidx = rom_options.restart_file_maxidx;
+    const int num_restart = maxidx - minidx + 1;
+    
+    // /* Collect the restart files */
+    std::string filename;
+
+    /* load only the first restart file for now */
+    int k = minidx;
+    filename = string_format(rom_options.restart_file_fmt, k);
+    /*
+        currently, this does not update rho.
+        computeRhoOnSamplePts computes with the new density matrix,
+        while mgmol rho remains the same as the initial condition.
+        Commenting line 516 gives a consistent result, both for the initial condition.
+    */
+    mgmol->loadRestartFile(filename);
 
     const int nrows = mymesh->locNumpt();
     printf("mesh::locNumpt: %d\n", nrows);
@@ -500,8 +522,10 @@ void testROMRhoOperator(MGmolInterface *mgmol_)
     printf("orbitals::locNumpt: %d\n", orbitals->getLocNumpt());
 
     /* NOTE(kevin): we assume we only use ProjectedMatrices class */
-    ProjectedMatrices<dist_matrix::DistMatrix<double>> *proj_matrices =
-        static_cast<ProjectedMatrices<dist_matrix::DistMatrix<double>> *>(orbitals->getProjMatrices());
+    // ProjectedMatrices<dist_matrix::DistMatrix<double>> *proj_matrices =
+    //     static_cast<ProjectedMatrices<dist_matrix::DistMatrix<double>> *>(orbitals->getProjMatrices());
+    ProjectedMatricesInterface *proj_matrices = orbitals->getProjMatrices();
+    proj_matrices->updateSubMatX();
     SquareLocalMatrices<MATDTYPE, memory_space_type>& localX(proj_matrices->getLocalX());
 
     printf("localX nmat: %d\n", localX.nmat());
@@ -511,7 +535,7 @@ void testROMRhoOperator(MGmolInterface *mgmol_)
     bool dm_distributed = (localX.nmat() > 1);
     assert(!dm_distributed);
 
-    // /* copy density matrix */
+    /* copy density matrix */
     CAROM::Matrix dm(localX.getRawPtr(), localX.m(), localX.n(), dm_distributed, true);
 
     // /* random density matrix */
@@ -530,8 +554,10 @@ void testROMRhoOperator(MGmolInterface *mgmol_)
     //         dm_mgmol.setVal(i, j, dm(i, j));
     //     }
     // }
-    // /* update rho first */
+
+    /* update rho first */
     // rho->computeRho(*orbitals, dm_mgmol);
+    // rho->update(*orbitals);
 
     const int chrom_num = orbitals->chromatic_number();
     CAROM::Matrix psi(dim, chrom_num, true);
