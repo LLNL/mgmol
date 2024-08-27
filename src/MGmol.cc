@@ -1129,8 +1129,8 @@ void MGmol<OrbitalsType>::dumpRestart()
             ierr = save_orbital_snapshot(
                 filename, *current_orbitals_);
 
-            if (ierr < 0)
-                os_ << "WARNING: writing ROM snapshot data failed!!!" << std::endl;
+            ierr = save_potential_snapshot(
+                filename, hamiltonion_->potential());
         }
 #endif
     }

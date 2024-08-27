@@ -1,0 +1,34 @@
+#!/bin/tcsh
+#SBATCH -N 2
+#SBATCH -t 1:00:00
+#SBATCH -p pbatch
+
+date
+
+setenv OMP_NUM_THREADS 1
+#setenv KMP_DETERMINISTIC_REDUCTION 1
+
+set ncpus = 64
+
+set maindir = /p/lustre2/cheung26/mgmol-20240815
+
+setenv LD_LIBRARY_PATH ${maindir}/build_quartz/libROM/build/lib:$LD_LIBRARY_PATH
+
+set exe     = mgmol-opt
+
+cp $maindir/install_quartz/bin/$exe .
+
+set datadir = $maindir/examples/Li2GTH
+
+set cfg_rom = mgmol_rom.cfg
+#cp $datadir/$cfg_rom .
+
+cp $datadir/li2.xyz .
+
+ln -s -f $maindir/potentials/pseudo.Li_GTH_PBE
+
+source $maindir/scripts/modules.quartz
+
+srun -n $ncpus $exe -c $cfg_rom -i li2.xyz > rom_Li2GTH.out
+
+date
