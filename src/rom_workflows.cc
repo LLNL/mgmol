@@ -475,10 +475,10 @@ void testROMRhoOperator(MGmolInterface *mgmol_)
     MGmol_MPI& mmpi      = *(MGmol_MPI::instance());
     const int rank = mmpi.mypeGlobal();
 
-    if (ct.isLocMode())
-        printf("LocMode is On!\n");
-    else
-        printf("LocMode is Off!\n");
+    // if (ct.isLocMode())
+    //     printf("LocMode is On!\n");
+    // else
+    //     printf("LocMode is Off!\n");
 
     ROMPrivateOptions rom_options = ct.getROMOptions();
 
@@ -491,8 +491,8 @@ void testROMRhoOperator(MGmolInterface *mgmol_)
     assert(ortho_type == OrthoType::Nonorthogonal);
 
     const int dim = pot.size();
-    printf("rank %d, pot size: %d\n", rank, dim);
-    printf("rank %d, rho size: %d\n", rank, rho->rho_[0].size());
+    // printf("rank %d, pot size: %d\n", rank, dim);
+    // printf("rank %d, rho size: %d\n", rank, rho->rho_[0].size());
 
     /* number of restart files, start/end indices */
     assert(rom_options.restart_file_minidx >= 0);
@@ -516,10 +516,10 @@ void testROMRhoOperator(MGmolInterface *mgmol_)
     mgmol->loadRestartFile(filename);
 
     const int nrows = mymesh->locNumpt();
-    printf("mesh::locNumpt: %d\n", nrows);
+    // printf("mesh::locNumpt: %d\n", nrows);
     
     OrbitalsType *orbitals = mgmol->getOrbitals();
-    printf("orbitals::locNumpt: %d\n", orbitals->getLocNumpt());
+    // printf("orbitals::locNumpt: %d\n", orbitals->getLocNumpt());
 
     /* NOTE(kevin): we assume we only use ProjectedMatrices class */
     // ProjectedMatrices<dist_matrix::DistMatrix<double>> *proj_matrices =
@@ -528,9 +528,9 @@ void testROMRhoOperator(MGmolInterface *mgmol_)
     proj_matrices->updateSubMatX();
     SquareLocalMatrices<MATDTYPE, memory_space_type>& localX(proj_matrices->getLocalX());
 
-    printf("localX nmat: %d\n", localX.nmat());
-    printf("localX n: %d\n", localX.n());
-    printf("localX m: %d\n", localX.m());
+    // printf("localX nmat: %d\n", localX.nmat());
+    // printf("localX n: %d\n", localX.n());
+    // printf("localX m: %d\n", localX.m());
 
     bool dm_distributed = (localX.nmat() > 1);
     assert(!dm_distributed);
@@ -582,6 +582,8 @@ void testROMRhoOperator(MGmolInterface *mgmol_)
     computeRhoOnSamplePts(dm, psi, rom_psi, grid_idx, sample_rho);
 
     printf("rank %d, rho[%d]: %.3e, sample_rho: %.3e\n", rank, rho->rho_[0][grid_idx[0]], sample_rho(0));
+    const double error = abs(rho->rho_[0][grid_idx[0]] - sample_rho(0));
+    CAROM_VERIFY(error < 1.0e-15);
 }
 
 /*
