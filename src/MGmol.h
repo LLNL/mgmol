@@ -339,7 +339,7 @@ public:
 
 #ifdef MGMOL_HAS_LIBROM
     int save_orbital_snapshot(std::string file_path, OrbitalsType& orbitals);
-    int save_potential_snapshot(std::string file_path, Potentials& potential)
+    int save_potential_snapshot(std::string file_path, Potentials& potential);
 #endif
 };
 // Instantiate static variables here to avoid clang warnings

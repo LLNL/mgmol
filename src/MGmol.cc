@@ -1130,7 +1130,7 @@ void MGmol<OrbitalsType>::dumpRestart()
                 filename, *current_orbitals_);
 
             ierr = save_potential_snapshot(
-                filename, hamiltonion_->potential());
+                filename, hamiltonian_->potential());
         }
 #endif
     }

@@ -11,6 +11,7 @@
 #ifdef MGMOL_HAS_LIBROM
 
 #include "LocGridOrbitals.h"
+#include "Potentials.h"
 #include "MGmol.h"
 
 #include "librom.h"
@@ -57,7 +58,8 @@ int MGmol<OrbitalsType>::save_orbital_snapshot(std::string file_path, OrbitalsTy
     return 0;
 }
 
-int save_potential_snapshot(std::string file_path, Potentials& potential)
+template <class OrbitalsType>
+int MGmol<OrbitalsType>::save_potential_snapshot(std::string file_path, Potentials& potential)
 {
     std::string snapshot_filename = file_path;
     struct stat s; 
@@ -78,7 +80,7 @@ int save_potential_snapshot(std::string file_path, Potentials& potential)
         }
     }
 
-    const int dim = dim = potential.size();
+    const int dim = potential.size();
 
     CAROM::Options svd_options(dim, 1, 1);
     CAROM::BasisGenerator basis_generator(svd_options, false, snapshot_filename);
@@ -87,7 +89,6 @@ int save_potential_snapshot(std::string file_path, Potentials& potential)
     basis_generator.writeSnapshot();
 
     return 0;
-}
 }
 
 template class MGmol<LocGridOrbitals>;
