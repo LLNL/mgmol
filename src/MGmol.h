@@ -133,7 +133,7 @@ private:
         KBPsiMatrixSparse* kbpsi, dist_matrix::DistMatrix<DISTMATDTYPE>& hij);
     void computeHnlPhiAndAdd2HPhi(Ions& ions, OrbitalsType& phi,
         OrbitalsType& hphi, const KBPsiMatrixSparse* const kbpsi);
-    int dumprestartFile(OrbitalsType** orbitals, Ions& ions,
+    int dumpMDrestartFile(OrbitalsType** orbitals, Ions& ions,
         Rho<OrbitalsType>& rho, const bool write_extrapolated_wf,
         const short count);
 
@@ -188,6 +188,9 @@ public:
     void run() override;
 
     double evaluateEnergyAndForces(const std::vector<double>& tau,
+        std::vector<short>& atnumbers, std::vector<double>& forces);
+
+    double evaluateEnergyAndForces(Orbitals*, const std::vector<double>& tau,
         std::vector<short>& atnumbers, std::vector<double>& forces);
 
     /*
@@ -247,7 +250,7 @@ public:
 
     void update_pot(const pb::GridFunc<POTDTYPE>& vh_init, const Ions& ions);
     void update_pot(const Ions& ions);
-    int quench(OrbitalsType* orbitals, Ions& ions, const int max_steps,
+    int quench(OrbitalsType& orbitals, Ions& ions, const int max_steps,
         const int iprint, double& last_eks);
     int outerSolve(OrbitalsType& orbitals, OrbitalsType& work_orbitals,
         Ions& ions, const int max_steps, const int iprint, double& last_eks);
@@ -320,7 +323,17 @@ public:
         forces_->force(orbitals, ions);
     }
 
+    /*
+     * simply dump current state
+     */
+    void dumpRestart();
+
     void loadRestartFile(const std::string filename);
+
+    std::shared_ptr<ProjectedMatricesInterface> getProjectedMatrices()
+    {
+        return proj_matrices_;
+    }
 
 #ifdef MGMOL_HAS_LIBROM
     int save_orbital_snapshot(std::string snapshot_dir, OrbitalsType& orbitals);

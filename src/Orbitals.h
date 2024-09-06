@@ -26,6 +26,8 @@ public:
 
     Orbitals() { iterative_index_ = -10; }
 
+    virtual ~Orbitals(){};
+
     Orbitals(const Orbitals& A, const bool copy_data)
     {
         if (copy_data)

@@ -246,6 +246,10 @@ add_executable(testDensityMatrix
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
                ${CMAKE_SOURCE_DIR}/src/tools/random.cc
                ${CMAKE_SOURCE_DIR}/tests/ut_magma_main.cc)
+add_executable(testEnergyAndForces
+               ${CMAKE_SOURCE_DIR}/tests/EnergyAndForces/testEnergyAndForces.cc)
+add_executable(testWFEnergyAndForces
+               ${CMAKE_SOURCE_DIR}/tests/WFEnergyAndForces/testWFEnergyAndForces.cc)
 
 if(${MAGMA_FOUND})
   add_executable(testOpenmpOffload
@@ -334,6 +338,21 @@ add_test(NAME testGramMatrix
 add_test(NAME testDensityMatrix
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testDensityMatrix)
+add_test(NAME testEnergyAndForces
+         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/EnergyAndForces/test.py
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+         ${CMAKE_CURRENT_BINARY_DIR}/testEnergyAndForces
+         ${CMAKE_CURRENT_SOURCE_DIR}/EnergyAndForces/mgmol.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/EnergyAndForces/coords.in
+         ${CMAKE_CURRENT_SOURCE_DIR}/EnergyAndForces/lrs.in
+         ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+add_test(NAME testWFEnergyAndForces
+         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/WFEnergyAndForces/test.py
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+         ${CMAKE_CURRENT_BINARY_DIR}/testWFEnergyAndForces
+         ${CMAKE_CURRENT_SOURCE_DIR}/WFEnergyAndForces/mgmol.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/WFEnergyAndForces/sih4.xyz
+         ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 
 if(${MAGMA_FOUND}) 
   add_test(NAME testOpenmpOffload
@@ -518,6 +537,8 @@ target_link_libraries(testBlacsContext PRIVATE ${SCALAPACK_LIBRARIES}
   ${BLAS_LIBRARIES} MPI::MPI_CXX)
 target_link_libraries(testSuperSampling PRIVATE MPI::MPI_CXX)
 target_link_libraries(testDirectionalReduce PRIVATE MPI::MPI_CXX)
+target_link_libraries(testEnergyAndForces PRIVATE mgmol_src)
+target_link_libraries(testWFEnergyAndForces PRIVATE mgmol_src)
 
 if(${MAGMA_FOUND})
   target_link_libraries(testDistVector PRIVATE ${SCALAPACK_LIBRARIES}

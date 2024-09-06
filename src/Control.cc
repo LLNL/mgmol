@@ -997,42 +997,6 @@ void Control::readRestartInfo(std::ifstream* tfile)
     }
 }
 
-void Control::readRestartOutputInfo(std::ifstream* tfile)
-{
-    const std::string zero = "0";
-    const std::string one  = "1";
-    if (tfile != nullptr)
-    {
-        // Read in the output restart filename
-        std::string filename;
-        (*tfile) >> filename;
-        // int dpcs_chkpoint=0;
-        if (zero.compare(filename) == 0) // no restart dump
-            out_restart_info = 0;
-        else
-        {
-            if (one.compare(filename) == 0)
-            { // automatic naming of dump
-                filename                         = "snapshot";
-                out_restart_file_naming_strategy = 1;
-            }
-            (*tfile) >> out_restart_info;
-            (*tfile) >> out_restart_file_type;
-            //(*tfile)>>dpcs_chkpoint;
-            // timeout_.set(dpcs_chkpoint);
-        }
-
-        out_restart_file.assign(run_directory_);
-        out_restart_file.append("/");
-        out_restart_file.append(filename);
-        (*MPIdata::sout) << "Output restart file: " << out_restart_file
-                         << " with info level " << out_restart_info
-                         << std::endl;
-        //(*MPIdata::sout)<<"Time for DPCS checkpoint:
-        //"<<dpcs_chkpoint<<"[s]"<<endl;
-    }
-}
-
 int Control::setPreconditionerParameters(const short type, const float factor,
     const bool project_out, const short nlevels, const float fgrid_hmax)
 {
@@ -2090,6 +2054,7 @@ void Control::setROMOptions(const boost::program_options::variables_map& vm)
             rom_pri_option.variable = ROMVariable::NONE;
 
         rom_pri_option.save_librom_snapshot = vm["ROM.offline.save_librom_snapshot"].as<bool>();
+        rom_pri_option.librom_snapshot_freq = vm["ROM.offline.librom_snapshot_freq"].as<int>();
 
         rom_pri_option.num_potbasis = vm["ROM.basis.number_of_potential_basis"].as<int>();
     }  // onpe0
@@ -2128,6 +2093,9 @@ void Control::syncROMOptions()
     bcast_check(mpirc);
 
     mpirc = MPI_Bcast(&rom_pri_option.save_librom_snapshot, 1, MPI_C_BOOL, 0, comm_global_);
+    bcast_check(mpirc);
+
+    mpirc = MPI_Bcast(&rom_pri_option.librom_snapshot_freq, 1, MPI_INT, 0, comm_global_);
     bcast_check(mpirc);
 
     short rom_var = (short)static_cast<int>(rom_pri_option.variable);

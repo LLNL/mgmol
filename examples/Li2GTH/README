@@ -1,0 +1,11 @@
+#Run MGmol
+mpirun -np 4 mgmol-opt -c davidson.cfg -i li2.xyz > davidson.out
+
+#extract visit files from HDF5 file
+python read_hdf5.py -bov li2.h5 Vtotal
+
+python read_hdf5.py -bov li2.h50 Function0002
+
+Note: the eigenfunctions corresponding to the 3 occupied states are stored
+in functions 2, 3 and 4 because they are the result of diagonalizing the DM
+in Davidson algorithm, not H.

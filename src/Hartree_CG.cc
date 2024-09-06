@@ -90,8 +90,10 @@ void Hartree_CG<T>::solve(
 
     double residual_reduction = poisson_solver_->getResidualReduction();
     double final_residual     = poisson_solver_->getFinalResidual();
+    const bool large_residual
+        = (residual_reduction > 1.e-3 || final_residual > 1.e-3);
 
-    if (onpe0)
+    if (onpe0 && (large_residual || ct.verbose > 1))
         (*MPIdata::sout) << setprecision(2) << scientific
                          << "Hartree_CG: residual reduction = "
                          << residual_reduction
