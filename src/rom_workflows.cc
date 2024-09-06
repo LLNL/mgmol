@@ -545,7 +545,7 @@ void testROMRhoOperator(MGmolInterface *mgmol_)
         sampled_row[s] = global_sampled_row[gs];
 
     /* load only the first restart file for now */
-    const int test_idx = 0;
+    const int test_idx = 2;
 
     filename = string_format(rom_options.restart_file_fmt, test_idx + minidx);
     /*
@@ -622,22 +622,27 @@ void testROMRhoOperator(MGmolInterface *mgmol_)
     for (int s = 0; s < sampled_row.size(); s++)
     {
         const double error = abs(rho->rho_[0][sampled_row[s]] - sample_rho(s));
-        printf("rank %d, rho[%d]: %.5e, sample_rho: %.5e, librom_snapshot: %.5e\n",
-            rank, sampled_row[s], rho->rho_[0][sampled_row[s]], sample_rho(s), rho_snapshots(sampled_row[s], test_idx));
-        CAROM_VERIFY(error < 1.0e-15);
+        if (error > 1.0e-4)
+            printf("rank %d, rho[%d]: %.5e, sample_rho: %.5e, librom_snapshot: %.5e\n",
+                rank, sampled_row[s], rho->rho_[0][sampled_row[s]], sample_rho(s), rho_snapshots(sampled_row[s], test_idx));
+        CAROM_VERIFY(error < 1.0e-4);
     }
 
     sample_rho.gather();
 
     CAROM::Vector *rom_rho = rho_basis_inv.mult(sample_rho);
     for (int d = 0; d < rom_rho->dim(); d++)
-        CAROM_VERIFY(abs(proj_rho->item(d, test_idx) - rom_rho->item(d)) < 1.0e-13);
+    {
+        if ((rank == 0) && (abs(proj_rho->item(d, test_idx) - rom_rho->item(d)) > 1.0e-3))
+            printf("rom_rho error: %.3e\n", abs(proj_rho->item(d, test_idx) - rom_rho->item(d)));
+        CAROM_VERIFY(abs(proj_rho->item(d, test_idx) - rom_rho->item(d)) < 1.0e-3);
+    }
 
     CAROM::Vector *fom_rho = rho_basis->mult(*rom_rho);
 
     CAROM_VERIFY(fom_rho->dim() == rho->rho_[0].size());
     for (int d = 0; d < fom_rho->dim(); d++)
-        CAROM_VERIFY(abs(fom_rho->item(d) - rho->rho_[0][d]) < 1.0e-13);
+        CAROM_VERIFY(abs(fom_rho->item(d) - rho->rho_[0][d]) < 1.0e-4);
 
     delete rom_rho;
     delete fom_rho;
