@@ -37,6 +37,7 @@ namespace po = boost::program_options;
 
 #include "librom.h"
 #include "utils/HDFDatabase.h"
+#include "utils/mpi_utils.h"
 
 template <class OrbitalsType>
 void readRestartFiles(MGmolInterface *mgmol_);

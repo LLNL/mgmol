@@ -474,6 +474,7 @@ void testROMRhoOperator(MGmolInterface *mgmol_)
     const pb::PEenv& myPEenv = mymesh->peenv();
     MGmol_MPI& mmpi      = *(MGmol_MPI::instance());
     const int rank = mmpi.mypeGlobal();
+    const int nprocs = mmpi.size();
 
     // if (ct.isLocMode())
     //     printf("LocMode is On!\n");
@@ -490,9 +491,8 @@ void testROMRhoOperator(MGmolInterface *mgmol_)
     const OrthoType ortho_type = rho->getOrthoType();
     assert(ortho_type == OrthoType::Nonorthogonal);
 
+    /* potential should have the same size as rho */
     const int dim = pot.size();
-    // printf("rank %d, pot size: %d\n", rank, dim);
-    // printf("rank %d, rho size: %d\n", rank, rho->rho_[0].size());
 
     /* number of restart files, start/end indices */
     assert(rom_options.restart_file_minidx >= 0);
@@ -501,12 +501,53 @@ void testROMRhoOperator(MGmolInterface *mgmol_)
     const int maxidx = rom_options.restart_file_maxidx;
     const int num_restart = maxidx - minidx + 1;
     
-    // /* Collect the restart files */
+    /* Initialize libROM classes */
+    /*
+        In practice, we do not produce rho POD basis. 
+        This rho POD basis is for the sake of verification.
+    */
+    CAROM::Options svd_options(dim, num_restart, 1);
+    svd_options.static_svd_preserve_snapshot = true;
+    CAROM::BasisGenerator basis_generator(svd_options, false, "test_rho");
+
+    /* Collect the restart files */
     std::string filename;
+    for (int k = minidx; k <= maxidx; k++)
+    {
+        filename = string_format(rom_options.restart_file_fmt, k);
+        mgmol->loadRestartFile(filename);
+        basis_generator.takeSample(&rho->rho_[0][0]);
+    }    
+    // basis_generator.writeSnapshot();
+    const CAROM::Matrix rho_snapshots(*basis_generator.getSnapshotMatrix());
+    basis_generator.endSamples();
+
+    const CAROM::Matrix *rho_basis = basis_generator.getSpatialBasis();
+    CAROM::Matrix *proj_rho = rho_basis->transposeMult(rho_snapshots);
+
+    /* DEIM hyperreduction */
+    CAROM::Matrix rho_basis_inv(num_restart, num_restart, false);
+    std::vector<int> global_sampled_row(num_restart), sampled_rows_per_proc(nprocs);
+    DEIM(rho_basis, num_restart, global_sampled_row, sampled_rows_per_proc,
+         rho_basis_inv, rank, nprocs);
+    if (rank == 0)
+    {
+        int num_sample_rows = 0;
+        for (int k = 0; k < sampled_rows_per_proc.size(); k++)
+            num_sample_rows += sampled_rows_per_proc[k];
+        printf("number of sampled row: %d\n", num_sample_rows);
+    }
+    
+    /* get local sampled row */
+    std::vector<int> offsets, sampled_row(sampled_rows_per_proc[rank]);
+    int num_global_sample = CAROM::get_global_offsets(sampled_rows_per_proc[rank], offsets);
+    for (int s = 0, gs = offsets[rank]; gs < offsets[rank+1]; gs++, s++)
+        sampled_row[s] = global_sampled_row[gs];
 
     /* load only the first restart file for now */
-    int k = minidx;
-    filename = string_format(rom_options.restart_file_fmt, k);
+    const int test_idx = 0;
+
+    filename = string_format(rom_options.restart_file_fmt, test_idx + minidx);
     /*
         currently, this does not update rho.
         computeRhoOnSamplePts computes with the new density matrix,
@@ -573,17 +614,33 @@ void testROMRhoOperator(MGmolInterface *mgmol_)
         for (int j = 0; j < chrom_num; j++)
             rom_psi(i, j) = (i == j) ? 1 : 0;
 
-    /* local sample index */
-    std::vector<int> grid_idx(1);
-    grid_idx[0] = 1105; // first grid point
+    /* this will be resized in computeRhoOnSamplePts */
+    CAROM::Vector sample_rho(1, true);
 
-    CAROM::Vector sample_rho(grid_idx.size(), true);
+    computeRhoOnSamplePts(dm, psi, rom_psi, sampled_row, sample_rho);
 
-    computeRhoOnSamplePts(dm, psi, rom_psi, grid_idx, sample_rho);
+    for (int s = 0; s < sampled_row.size(); s++)
+    {
+        const double error = abs(rho->rho_[0][sampled_row[s]] - sample_rho(s));
+        printf("rank %d, rho[%d]: %.5e, sample_rho: %.5e, librom_snapshot: %.5e\n",
+            rank, sampled_row[s], rho->rho_[0][sampled_row[s]], sample_rho(s), rho_snapshots(sampled_row[s], test_idx));
+        CAROM_VERIFY(error < 1.0e-15);
+    }
 
-    printf("rank %d, rho[%d]: %.3e, sample_rho: %.3e\n", rank, rho->rho_[0][grid_idx[0]], sample_rho(0));
-    const double error = abs(rho->rho_[0][grid_idx[0]] - sample_rho(0));
-    CAROM_VERIFY(error < 1.0e-15);
+    sample_rho.gather();
+
+    CAROM::Vector *rom_rho = rho_basis_inv.mult(sample_rho);
+    for (int d = 0; d < rom_rho->dim(); d++)
+        CAROM_VERIFY(abs(proj_rho->item(d, test_idx) - rom_rho->item(d)) < 1.0e-13);
+
+    CAROM::Vector *fom_rho = rho_basis->mult(*rom_rho);
+
+    CAROM_VERIFY(fom_rho->dim() == rho->rho_[0].size());
+    for (int d = 0; d < fom_rho->dim(); d++)
+        CAROM_VERIFY(abs(fom_rho->item(d) - rho->rho_[0][d]) < 1.0e-13);
+
+    delete rom_rho;
+    delete fom_rho;
 }
 
 /*
@@ -606,10 +663,11 @@ void computeRhoOnSamplePts(const CAROM::Matrix &dm,
     CAROM::mult(phi_basis, local_idx, rom_phi, sampled_phi);
 
     /* same product as in computeRhoSubdomainUsingBlas3 */
-    CAROM::Matrix *product = sampled_phi.mult(dm);
+    CAROM::Matrix product(1, 1, sampled_phi.distributed());
+    sampled_phi.mult(dm, product);
 
     sampled_rho.setSize(sampled_phi.numRows());
-    double *d_product = product->getData();
+    double *d_product = product.getData();
     double *d_phi = sampled_phi.getData();
     for (int d = 0; d < sampled_rho.dim(); d++)
     {
