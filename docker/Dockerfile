@@ -35,9 +35,7 @@ ENV TOOLCHAIN_FILE=$LIB_DIR/librom_env.cmake
 
 # install libROM for scaleupROM
 RUN sudo git clone https://github.com/LLNL/libROM.git
-WORKDIR ./libROM
-RUN sudo git checkout vec-mpi
-WORKDIR ./build
+WORKDIR ./libROM/build
 # libROM without MFEM.
 RUN sudo cmake .. -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} -DCMAKE_BUILD_TYPE=Optimized -DUSE_MFEM=OFF
 RUN sudo make -j 16
