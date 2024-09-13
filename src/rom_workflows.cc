@@ -218,7 +218,7 @@ void buildROMPoissonOperator(MGmolInterface *mgmol_)
     // write the file from PE0 only
     if (MPIdata::onpe0)
     {
-        std::string rom_oper = "pot_rom_oper.h5";
+        std::string rom_oper = rom_options.pot_rom_file;
         CAROM::HDFDatabase h5_helper;
         h5_helper.create(rom_oper);
         h5_helper.putInteger("number_of_potential_basis", num_pot_basis);
@@ -236,6 +236,67 @@ void buildROMPoissonOperator(MGmolInterface *mgmol_)
 
         /* save right-hand side rescaling operator */
         h5_helper.putDoubleArray("potential_rhs_rescaler", rom_ones.getData(),
+                                num_pot_basis, false);
+
+        h5_helper.close();
+    }
+}
+
+template <class OrbitalsType>
+void runPoissonROM(MGmolInterface *mgmol_)
+{
+    Control& ct              = *(Control::instance());
+    Mesh* mymesh             = Mesh::instance();
+    const pb::PEenv& myPEenv = mymesh->peenv();
+    MGmol_MPI& mmpi          = *(MGmol_MPI::instance());
+    const int rank           = mmpi.mypeGlobal();
+    const int nprocs         = mmpi.size();
+
+    ROMPrivateOptions rom_options = ct.getROMOptions();
+    /* type of variable we intend to run POD */
+    ROMVariable rom_var = rom_options.variable;
+    if (rom_var != ROMVariable::POTENTIAL)
+    {
+        std::cerr << "runPoissonROM error: ROM variable must be POTENTIAL to run this stage!\n" << std::endl;
+        MPI_Abort(MPI_COMM_WORLD, 0);
+    }
+
+    /* Load Hartree potential basis matrix */
+    std::string basis_file = rom_options.basis_file;
+    const int num_pot_basis = rom_options.num_potbasis;
+    CAROM::BasisReader basis_reader(basis_file);
+    CAROM::Matrix *pot_basis = basis_reader.getSpatialBasis(num_pot_basis);
+
+    /* initialize rom operator variables */
+    CAROM::Matrix pot_rom(num_pot_basis, num_pot_basis, false);
+    CAROM::Matrix pot_rom_inv(num_pot_basis, num_pot_basis, false);
+    CAROM::Matrix pot_rhs_rom(num_pot_basis, num_pot_basis, false);
+    CAROM::Vector pot_rhs_rescaler(num_pot_basis, false);
+    
+    /* Load ROM operator */
+    // read the file from PE0 only
+    if (MPIdata::onpe0)
+    {
+        std::string rom_oper = rom_options.pot_rom_file;
+        CAROM::HDFDatabase h5_helper;
+        h5_helper.open(rom_oper, "r");
+        int num_pot_basis_file = -1;
+        h5_helper.getInteger("number_of_potential_basis", num_pot_basis_file);
+        CAROM_VERIFY(num_pot_basis_file == num_pot_basis);
+
+        h5_helper.getDoubleArray("potential_rom_operator", pot_rom.getData(),
+                                num_pot_basis * num_pot_basis, false);
+
+        /* load the inverse as well */
+        h5_helper.getDoubleArray("potential_rom_inverse", pot_rom_inv.getData(),
+                                num_pot_basis * num_pot_basis, false);
+
+        /* load right-hand side hyper-reduction operator */
+        h5_helper.getDoubleArray("potential_rhs_rom_inverse", pot_rhs_rom.getData(),
+                                num_pot_basis * num_pot_basis, false);
+
+        /* load right-hand side rescaling operator */
+        h5_helper.getDoubleArray("potential_rhs_rescaler", pot_rhs_rescaler.getData(),
                                 num_pot_basis, false);
 
         h5_helper.close();
@@ -726,6 +787,9 @@ template void readRestartFiles<ExtendedGridOrbitals>(MGmolInterface *mgmol_);
 
 template void buildROMPoissonOperator<LocGridOrbitals>(MGmolInterface *mgmol_);
 template void buildROMPoissonOperator<ExtendedGridOrbitals>(MGmolInterface *mgmol_);
+
+template void runPoissonROM<LocGridOrbitals>(MGmolInterface *mgmol_);
+template void runPoissonROM<ExtendedGridOrbitals>(MGmolInterface *mgmol_);
 
 template void testROMPoissonOperator<LocGridOrbitals>(MGmolInterface *mgmol_);
 template void testROMPoissonOperator<ExtendedGridOrbitals>(MGmolInterface *mgmol_);

@@ -46,6 +46,9 @@ template <class OrbitalsType>
 void buildROMPoissonOperator(MGmolInterface *mgmol_);
 
 template <class OrbitalsType>
+void runPoissonROM(MGmolInterface *mgmol_);
+
+template <class OrbitalsType>
 void testROMPoissonOperator(MGmolInterface *mgmol_);
 
 template <class OrbitalsType>
