@@ -143,6 +143,9 @@ void buildROMPoissonOperator(MGmolInterface *mgmol_)
     Control& ct              = *(Control::instance());
     Mesh* mymesh             = Mesh::instance();
     const pb::PEenv& myPEenv = mymesh->peenv();
+    MGmol_MPI& mmpi          = *(MGmol_MPI::instance());
+    const int rank           = mmpi.mypeGlobal();
+    const int nprocs         = mmpi.size();
 
     ROMPrivateOptions rom_options = ct.getROMOptions();
     /* type of variable we intend to run POD */
@@ -198,6 +201,18 @@ void buildROMPoissonOperator(MGmolInterface *mgmol_)
 
         delete col;
     }   // for (int c = 0; c < num_pot_basis; c++)
+
+    /* DEIM hyperreduction */
+    CAROM::Matrix pot_rhs_rom(num_pot_basis, num_pot_basis, false);
+    std::vector<int> global_sampled_row(num_pot_basis), sampled_rows_per_proc(nprocs);
+    DEIM(pot_basis, num_pot_basis, global_sampled_row, sampled_rows_per_proc,
+         pot_rhs_rom, rank, nprocs);
+
+    /* ROM rescaleTotalCharge operator */
+    CAROM::Vector fom_ones(pot_basis->numRows(), true);
+    CAROM::Vector rom_ones(num_pot_basis, false);
+    fom_ones = mymesh->grid().vel(); // volume element
+    pot_basis->transposeMult(fom_ones, rom_ones);
     
     /* Save ROM operator */
     // write the file from PE0 only
@@ -215,9 +230,19 @@ void buildROMPoissonOperator(MGmolInterface *mgmol_)
         h5_helper.putDoubleArray("potential_rom_inverse", pot_rom.getData(),
                                 num_pot_basis * num_pot_basis, false);
 
+        /* save right-hand side hyper-reduction operator */
+        h5_helper.putDoubleArray("potential_rhs_rom_inverse", pot_rhs_rom.getData(),
+                                num_pot_basis * num_pot_basis, false);
+
+        /* save right-hand side rescaling operator */
+        h5_helper.putDoubleArray("potential_rhs_rescaler", rom_ones.getData(),
+                                num_pot_basis, false);
+
         h5_helper.close();
     }
 }
+
+/* test routines */
 
 template <class OrbitalsType>
 void testROMPoissonOperator(MGmolInterface *mgmol_)
@@ -689,6 +714,10 @@ void computeRhoOnSamplePts(const CAROM::Matrix &dm,
         and probably need to make ROM-equivalent functions with another hyper-reduction?
     */
     // gatherSpin();
+
+    /*
+        rescaleTotalCharge is handled after hyperreduction.
+    */
     // rescaleTotalCharge();
 }
 
