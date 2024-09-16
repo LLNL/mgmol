@@ -12,6 +12,7 @@
 
 #include "Control.h"
 #include "ExtendedGridOrbitals.h"
+#include "ProjectedMatrices.h"
 #include "LocGridOrbitals.h"
 #include "Potentials.h"
 #include "MGmol.h"
@@ -36,6 +37,7 @@ namespace po = boost::program_options;
 
 #include "librom.h"
 #include "utils/HDFDatabase.h"
+#include "utils/mpi_utils.h"
 
 template <class OrbitalsType>
 void readRestartFiles(MGmolInterface *mgmol_);
@@ -45,5 +47,12 @@ void buildROMPoissonOperator(MGmolInterface *mgmol_);
 
 template <class OrbitalsType>
 void testROMPoissonOperator(MGmolInterface *mgmol_);
+
+template <class OrbitalsType>
+void testROMRhoOperator(MGmolInterface *mgmol_);
+
+void computeRhoOnSamplePts(const CAROM::Matrix &dm,
+    const CAROM::Matrix &phi_basis, const CAROM::Matrix &rom_phi,
+    const std::vector<int> &local_idx, CAROM::Vector &sampled_rho);
 
 #endif  // ROM_WORKFLOWS_H

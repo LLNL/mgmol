@@ -23,6 +23,7 @@ enum class ROMStage
     RESTORE,    // TODO(kevin): what stage is this?
     BUILD,
     TEST_POISSON,
+    TEST_RHO,
     UNSUPPORTED
 };
 

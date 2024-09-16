@@ -2035,6 +2035,8 @@ void Control::setROMOptions(const boost::program_options::variables_map& vm)
             rom_pri_option.rom_stage = ROMStage::BUILD;
         else if (str.compare("test_poisson") == 0)
             rom_pri_option.rom_stage = ROMStage::TEST_POISSON;
+        else if (str.compare("test_rho") == 0)
+            rom_pri_option.rom_stage = ROMStage::TEST_RHO;
         else if (str.compare("none") == 0)
             rom_pri_option.rom_stage = ROMStage::UNSUPPORTED;
 
