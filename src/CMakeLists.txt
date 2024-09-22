@@ -208,7 +208,6 @@ if(${MGMOL_WITH_LIBXC})
 endif (${MGMOL_WITH_LIBXC})
 
 install(TARGETS mgmol-opt DESTINATION bin)
-<<<<<<< HEAD
 
 # build ROM executable
 if(USE_LIBROM)
@@ -231,5 +230,3 @@ if(USE_LIBROM)
   endif (${MGMOL_WITH_LIBXC})
   install(TARGETS mgmol-rom DESTINATION bin)
 endif(USE_LIBROM)
-=======
->>>>>>> release
