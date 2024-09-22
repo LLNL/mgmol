@@ -1149,6 +1149,22 @@ void MGmol<OrbitalsType>::cleanup()
     {
         dumpRestart();
     }
+}
+
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::cleanup()
+{
+    closing_tm_.start();
+
+    Control& ct = *(Control::instance());
+
+    printTimers();
+
+    // Save data to restart file
+    if (!ct.AtomsMove())
+    {
+        dumpRestart();
+    }
 
     MPI_Barrier(comm_);
     closing_tm_.stop();
@@ -1443,7 +1459,7 @@ void MGmol<OrbitalsType>::getAtomicNumbers(std::vector<short>& an)
 
 template <class OrbitalsType>
 double MGmol<OrbitalsType>::evaluateEnergyAndForces(
-    const std::vector<double>& tau, std::vector<short>& atnumbers,
+    const std::vector<double>& tau, const std::vector<short>& atnumbers,
     std::vector<double>& forces)
 {
     return evaluateEnergyAndForces(current_orbitals_, tau, atnumbers, forces);
@@ -1451,7 +1467,7 @@ double MGmol<OrbitalsType>::evaluateEnergyAndForces(
 
 template <class OrbitalsType>
 double MGmol<OrbitalsType>::evaluateEnergyAndForces(Orbitals* orbitals,
-    const std::vector<double>& tau, std::vector<short>& atnumbers,
+    const std::vector<double>& tau, const std::vector<short>& atnumbers,
     std::vector<double>& forces)
 {
     assert(tau.size() == 3 * atnumbers.size());
@@ -1469,6 +1485,46 @@ double MGmol<OrbitalsType>::evaluateEnergyAndForces(Orbitals* orbitals,
     force(*dorbitals, *ions_);
 
     ions_->getForces(forces);
+
+    return eks;
+}
+
+template <class OrbitalsType>
+double MGmol<OrbitalsType>::evaluateDMandEnergyAndForces(Orbitals* orbitals,
+    const std::vector<double>& tau, const std::vector<short>& atnumbers,
+    std::vector<double>& forces)
+{
+    OrbitalsType* dorbitals = dynamic_cast<OrbitalsType*>(orbitals);
+
+    ions_->setPositions(tau, atnumbers);
+
+    moveVnuc(*ions_);
+
+    // initialize electronic density
+    rho_->update(*dorbitals);
+
+    // initialize potential
+    update_pot(*ions_);
+
+    // initialize projected matrices
+    updateHmatrix(*dorbitals, *ions_);
+    proj_matrices_->updateThetaAndHB();
+
+    // compute DM
+    std::shared_ptr<DMStrategy<OrbitalsType>> dm_strategy(
+        DMStrategyFactory<OrbitalsType,
+            dist_matrix::DistMatrix<double>>::create(comm_, os_, *ions_,
+            rho_.get(), energy_.get(), electrostat_.get(), this,
+            proj_matrices_.get(), dorbitals));
+
+    dm_strategy->update(*dorbitals);
+
+    // evaluate energy and forces
+    double ts = 0.;
+    double eks
+        = energy_->evaluateTotal(ts, proj_matrices_.get(), *dorbitals, 2, os_);
+
+    force(*dorbitals, *ions_);
 
     return eks;
 }
