@@ -1135,21 +1135,6 @@ void MGmol<OrbitalsType>::dumpRestart()
 #endif
     }
 }
-template <class OrbitalsType>
-void MGmol<OrbitalsType>::cleanup()
-{
-    closing_tm_.start();
-
-    Control& ct = *(Control::instance());
-
-    printTimers();
-
-    // Save data to restart file
-    if (!ct.AtomsMove())
-    {
-        dumpRestart();
-    }
-}
 
 template <class OrbitalsType>
 void MGmol<OrbitalsType>::cleanup()
