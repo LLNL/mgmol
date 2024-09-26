@@ -7,8 +7,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef _PCG_SOLVER_DIEL_H_
-#define _PCG_SOLVER_DIEL_H_
+#ifndef MGMOL_PCG_SOLVER_DIEL_H_
+#define MGMOL_PCG_SOLVER_DIEL_H_
 
 #include "Control.h"
 #include "PB.h"
@@ -21,7 +21,7 @@
 
 #include <vector>
 
-template <class T, typename T2>
+template <class T, typename ScalarType>
 class PCGSolver_Diel
 {
 
@@ -32,9 +32,9 @@ private:
     // operators
     T oper_;
     std::vector<T*> pc_oper_;
-    std::vector<pb::GridFunc<T2>*> gf_work_;
-    std::vector<pb::GridFunc<T2>*> gf_rcoarse_;
-    std::vector<pb::GridFunc<T2>*> gf_newv_;
+    std::vector<pb::GridFunc<ScalarType>*> gf_work_;
+    std::vector<pb::GridFunc<ScalarType>*> gf_rcoarse_;
+    std::vector<pb::GridFunc<ScalarType>*> gf_newv_;
     // solver params
     int maxiters_;
     double tol_;
@@ -46,6 +46,11 @@ private:
     short max_nlevels_;
     short nlevels_;
     void setupPrecon();
+
+    void clear();
+
+    void preconSolve(pb::GridFunc<ScalarType>& gf_v,
+        const pb::GridFunc<ScalarType>& gf_f, const short level = 0);
 
 public:
     PCGSolver_Diel(T& oper, const short px, const short py, const short pz)
@@ -78,15 +83,12 @@ public:
         max_nlevels_ = max_nlevels;
     }
 
-    void clear();
+    bool solve(
+        pb::GridFunc<ScalarType>& gf_phi, pb::GridFunc<ScalarType>& gf_rhs);
 
-    void preconSolve(pb::GridFunc<T2>& gf_v, const pb::GridFunc<T2>& gf_f,
-        const short level = 0);
-
-    bool solve(pb::GridFunc<T2>& gf_phi, pb::GridFunc<T2>& gf_rhs);
-
-    bool solve(pb::GridFunc<T2>& gf_phi, pb::GridFunc<T2>& gf_rhs,
-        pb::GridFunc<T2>& gf_rhod, pb::GridFunc<T2>& gf_vks);
+    bool solve(pb::GridFunc<ScalarType>& gf_phi,
+        pb::GridFunc<ScalarType>& gf_rhs, pb::GridFunc<ScalarType>& gf_rhod,
+        pb::GridFunc<ScalarType>& gf_vks);
 
     double getFinalResidual() const { return final_residual_; }
     double getResidualReduction() const { return residual_reduction_; }

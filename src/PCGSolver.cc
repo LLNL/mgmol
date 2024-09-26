@@ -11,14 +11,13 @@
 
 #include <iomanip>
 #include <iostream>
-using namespace std;
 
-template <class T, typename T2>
-void PCGSolver<T, T2>::clear()
+template <class T, typename ScalarType>
+void PCGSolver<T, ScalarType>::clear()
 {
-    for (short i = 0; i < (short)pc_oper_.size(); i++)
+    for (short i = 0; i < (short)precond_oper_.size(); i++)
     {
-        delete pc_oper_[i];
+        delete precond_oper_[i];
     }
     for (short i = 0; i < (short)gf_work_.size(); i++)
     {
@@ -35,26 +34,26 @@ void PCGSolver<T, T2>::clear()
         assert(gf_newv_[i] != nullptr);
         delete gf_newv_[i];
     }
-    // delete grids after pb::GridFunc<T2> objects since those
+    // delete grids after pb::GridFunc<ScalarType> objects since those
     // have data members references to grids
     for (short i = 0; i < (short)grid_.size(); i++)
     {
         delete grid_[i];
     }
-    pc_oper_.clear();
+    precond_oper_.clear();
     grid_.clear();
     gf_work_.clear();
     gf_rcoarse_.clear();
     gf_newv_.clear();
 }
 
-template <class T, typename T2>
-void PCGSolver<T, T2>::setupPrecon()
+template <class T, typename ScalarType>
+void PCGSolver<T, ScalarType>::setupPrecon()
 {
     // check if precon is already setup
     // Assumes operator does not change, hence
     // a single setup is sufficient
-    if (is_pc_setup_) return;
+    if (is_precond_setup_) return;
 
     // fine level
     pb::Grid* mygrid = new pb::Grid(oper_.grid());
@@ -63,7 +62,7 @@ void PCGSolver<T, T2>::setupPrecon()
 
     pb::Lap<POISSONPRECONDTYPE>* myoper
         = LapFactory<POISSONPRECONDTYPE>::createLap(*grid_[0], lap_type_);
-    pc_oper_.push_back(myoper);
+    precond_oper_.push_back(myoper);
 
     pb::GridFunc<POISSONPRECONDTYPE>* gf_work
         = new pb::GridFunc<POISSONPRECONDTYPE>(
@@ -92,7 +91,7 @@ void PCGSolver<T, T2>::setupPrecon()
 
         pb::Lap<POISSONPRECONDTYPE>* myoper
             = LapFactory<POISSONPRECONDTYPE>::createLap(*coarse_grid, 1);
-        pc_oper_.push_back(myoper);
+        precond_oper_.push_back(myoper);
 
         gf_work = new pb::GridFunc<POISSONPRECONDTYPE>(
             *coarse_grid, bc_[0], bc_[1], bc_[2]);
@@ -109,12 +108,13 @@ void PCGSolver<T, T2>::setupPrecon()
 
         mygrid = coarse_grid;
     }
-    is_pc_setup_ = true;
+    is_precond_setup_ = true;
 }
 
 // MG V-cycle with no mask
-template <class T, typename T2>
-void PCGSolver<T, T2>::preconSolve(pb::GridFunc<POISSONPRECONDTYPE>& gf_v,
+template <class T, typename ScalarType>
+void PCGSolver<T, ScalarType>::preconSolve(
+    pb::GridFunc<POISSONPRECONDTYPE>& gf_v,
     const pb::GridFunc<POISSONPRECONDTYPE>& gf_f, const short level)
 {
     //(*MPIdata::sout)<<"Preconditioning::mg() at level "<<level<<endl;
@@ -124,7 +124,7 @@ void PCGSolver<T, T2>::preconSolve(pb::GridFunc<POISSONPRECONDTYPE>& gf_v,
         ncycl = 4 > (nu1_ + nu2_) ? 4 : (nu1_ + nu2_);
     }
 
-    pb::Lap<POISSONPRECONDTYPE>* myoper = pc_oper_[level];
+    pb::Lap<POISSONPRECONDTYPE>* myoper = precond_oper_[level];
 
     // SMOOTHING
     for (short it = 0; it < ncycl; it++)
@@ -161,25 +161,23 @@ void PCGSolver<T, T2>::preconSolve(pb::GridFunc<POISSONPRECONDTYPE>& gf_v,
 }
 
 // Left Preconditioned CG
-template <class T, typename T2>
-bool PCGSolver<T, T2>::solve(pb::GridFunc<T2>& gf_phi, pb::GridFunc<T2>& gf_rhs)
+template <class T, typename ScalarType>
+bool PCGSolver<T, ScalarType>::solve(
+    pb::GridFunc<ScalarType>& gf_phi, const pb::GridFunc<ScalarType>& gf_rhs)
 {
     bool converged           = false;
     const pb::Grid& finegrid = gf_phi.grid();
 
     // initial data and residual - We assume a nonzero initial guess
-    pb::GridFunc<T2> lhs(finegrid, bc_[0], bc_[1], bc_[2]);
+    pb::GridFunc<ScalarType> lhs(finegrid, bc_[0], bc_[1], bc_[2]);
     // scale initial guess with epsilon
     oper_.inv_transform(gf_phi);
     // compute initial residual: r := b - Ax
     /* compute Ax */
     oper_.apply(gf_phi, lhs);
     /* set r = b */
-    pb::GridFunc<T2> res(gf_rhs);
+    pb::GridFunc<ScalarType> res(gf_rhs);
     oper_.transform(res);
-    // Hartree units
-    const double hu = 4. * M_PI;
-    res *= hu;
     /* compute r = r - Ax */
     res -= lhs;
 
@@ -199,11 +197,11 @@ bool PCGSolver<T, T2>::solve(pb::GridFunc<T2>& gf_phi, pb::GridFunc<T2>& gf_rhs)
     /* preconditioning step */
     prec_z.setValues(0.);
     preconSolve(prec_z, prec_res, 0);
-    pb::GridFunc<T2> z(prec_z);
+    pb::GridFunc<ScalarType> z(prec_z);
 
     // conjugate vectors
-    pb::GridFunc<T2> p(prec_z);
-    pb::GridFunc<T2> ap(p.grid(), bc_[0], bc_[1], bc_[2]);
+    pb::GridFunc<ScalarType> p(prec_z);
+    pb::GridFunc<ScalarType> ap(p.grid(), bc_[0], bc_[1], bc_[2]);
 
     double rtz = res.gdot(z);
 
@@ -251,13 +249,14 @@ bool PCGSolver<T, T2>::solve(pb::GridFunc<T2>& gf_phi, pb::GridFunc<T2>& gf_rhs)
 }
 
 // Left Preconditioned CG
-template <class T, typename T2>
-bool PCGSolver<T, T2>::solve(T2* phi, T2* rhs, const char dis)
+template <class T, typename ScalarType>
+bool PCGSolver<T, ScalarType>::solve(
+    ScalarType* phi, ScalarType* rhs, const char dis)
 {
-    pb::GridFunc<T2> gf_phi(oper_.grid(), bc_[0], bc_[1], bc_[2]);
+    pb::GridFunc<ScalarType> gf_phi(oper_.grid(), bc_[0], bc_[1], bc_[2]);
     gf_phi.assign(phi, dis);
 
-    pb::GridFunc<T2> gf_work(oper_.grid(), bc_[0], bc_[1], bc_[2]);
+    pb::GridFunc<ScalarType> gf_work(oper_.grid(), bc_[0], bc_[1], bc_[2]);
     gf_work.assign(rhs, dis);
 
     bool converged = solve(gf_phi, gf_work);
