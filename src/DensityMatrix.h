@@ -84,17 +84,24 @@ public:
         *dm_            = mat;
         orbitals_index_ = orbitals_index;
 
-        occupation_.clear();
+        setDummyOcc();
 
         occ_uptodate_ = false;
         uniform_occ_  = false;
         stripped_     = false;
     }
 
+    // set occupations to meaningless values to catch uninitialized use
+    void setDummyOcc()
+    {
+        for (auto& occ : occupation_)
+            occ = -1.;
+    }
+
     void initMatrix(const double* const val)
     {
         dm_->init(val, dim_);
-        occupation_.clear();
+        setDummyOcc();
 
         occ_uptodate_ = false;
         uniform_occ_  = false;
@@ -105,8 +112,10 @@ public:
 
     void getOccupations(std::vector<double>& occ) const
     {
+        assert(!occupation_.empty());
         assert(occ_uptodate_);
         assert((int)occ.size() == dim_);
+
         memcpy(&occ[0], &occupation_[0], dim_ * sizeof(double));
     }
 
