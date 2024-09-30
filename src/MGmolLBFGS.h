@@ -27,7 +27,7 @@ class MGmol;
 class KBPsiMatrixInterface;
 
 template <class OrbitalsType>
-class LBFGS : public IonicAlgorithm<OrbitalsType>
+class MGmolLBFGS : public IonicAlgorithm<OrbitalsType>
 {
 private:
     OrbitalsType** orbitals_;
@@ -54,12 +54,12 @@ private:
     void setup(const double dt);
 
 public:
-    LBFGS(OrbitalsType** orbitals, Ions& ions, Rho<OrbitalsType>& rho,
+    MGmolLBFGS(OrbitalsType** orbitals, Ions& ions, Rho<OrbitalsType>& rho,
         ConstraintSet& constraints, std::shared_ptr<LocalizationRegions> lrs,
         ClusterOrbitals* local_cluster, MasksSet& masks, MasksSet& corrmasks,
         Electrostatic& electrostat, const double dt, MGmol<OrbitalsType>&);
 
-    ~LBFGS() override;
+    ~MGmolLBFGS() override;
 
     void reset(const double dt);
 

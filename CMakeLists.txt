@@ -4,7 +4,7 @@ cmake_policy(SET CMP0074 NEW)
 
 project (MGmol C CXX Fortran)
 
-set (CMAKE_CXX_STANDARD 11)
+set (CMAKE_CXX_STANDARD 14)
 
 # Specify the location of additional CMAKE modules
 SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
@@ -155,6 +155,14 @@ if(${MGMOL_WITH_TRICUBIC} OR DEFINED TRICUBIC_ROOT)
     add_definitions(-DHAVE_TRICUBIC)
   endif(${TRICUBIC_FOUND})
 endif(${MGMOL_WITH_TRICUBIC} OR DEFINED TRICUBIC_ROOT)
+
+# LBFGS++ (optional)
+if(DEFINED LBFGSPP_INCLUDE)
+  message(STATUS "LBFGSpp at ${LBFGSPP_INCLUDE}")
+  if(DEFINED EIGEN_INCLUDE)
+    message(STATUS "EIGEN at ${EIGEN_INCLUDE}")
+  endif(DEFINED EIGEN_INCLUDE)
+endif(DEFINED LBFGSPP_INCLUDE)
 
 # clang-format (optional)
 set(MGMOL_WITH_CLANG_FORMAT FALSE CACHE BOOL "Indent code with clang-format")
