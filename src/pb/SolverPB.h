@@ -64,9 +64,9 @@ public:
     }
 
     bool solve(T2* phi, T2* rhs, T2* rhod, T2* vks, const char dis);
-    bool solve(GridFunc<T2>& gf_phi, GridFunc<T2>& gf_rhs,
+    bool solve(GridFunc<T2>& gf_phi, const GridFunc<T2>& gf_rhs,
         GridFunc<T2>& gf_rhod, GridFunc<T2>& gf_vks);
-    bool solve(GridFunc<T2>& gf_phi, GridFunc<T2>& gf_rhs) override;
+    bool solve(GridFunc<T2>& gf_phi, const GridFunc<T2>& gf_rhs) override;
 
     ~SolverPB() override{};
 

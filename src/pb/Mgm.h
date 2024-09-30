@@ -7,7 +7,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id: Mgm.h,v 1.13 2010/01/28 22:56:47 jeanluc Exp $
 #ifndef PB_MGM_H
 #define PB_MGM_H
 
@@ -41,8 +40,6 @@ bool Mgm(T1& A, T2& vh, const GridFunc<T3>& rho, const short cogr,
     A.rhs(res, rhs);
 
     // Hartree units
-    rhs *= (4. * M_PI);
-
     // work GridFunc<T3>
     GridFunc<T3> lhs(finegrid, bcx, bcy, bcz);
 

@@ -7,8 +7,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef _PCG_SOLVER_H_
-#define _PCG_SOLVER_H_
+#ifndef MGMOL_PCG_SOLVER_H
+#define MGMOL_PCG_SOLVER_H
 
 #include "Control.h"
 #include "Lap.h"
@@ -17,32 +17,41 @@
 
 #include <vector>
 
-template <class T, typename T2>
+template <class T, typename ScalarType>
 class PCGSolver
 {
-
 private:
     std::vector<pb::Grid*> grid_;
     short lap_type_;
     short bc_[3];
     bool fully_periodic_;
-    // operators
+
+    // operator to solve for
     T oper_;
-    std::vector<pb::Lap<POISSONPRECONDTYPE>*> pc_oper_;
+
+    // preconditioner operator for each MG level
+    std::vector<pb::Lap<POISSONPRECONDTYPE>*> precond_oper_;
     std::vector<pb::GridFunc<POISSONPRECONDTYPE>*> gf_work_;
     std::vector<pb::GridFunc<POISSONPRECONDTYPE>*> gf_rcoarse_;
     std::vector<pb::GridFunc<POISSONPRECONDTYPE>*> gf_newv_;
-    // solver params
+
+    // solver parameters
     int maxiters_;
     double tol_;
     double final_residual_;
     double residual_reduction_;
-    // precon params
+
+    // preconditioner parameters
     short nu1_;
     short nu2_;
     short max_nlevels_;
     short nlevels_;
-    bool is_pc_setup_;
+    bool is_precond_setup_;
+
+    void preconSolve(pb::GridFunc<POISSONPRECONDTYPE>& gf_v,
+        const pb::GridFunc<POISSONPRECONDTYPE>& gf_f, const short level = 0);
+    void setupPrecon();
+    void clear();
 
 public:
     PCGSolver(T& oper, const short px, const short py, const short pz)
@@ -61,15 +70,10 @@ public:
         bc_[1]          = py;
         bc_[2]          = pz;
         fully_periodic_ = ((bc_[0] == 1) && (bc_[1] == 1) && (bc_[2] == 1));
-        // fine grid info
-        //        pb::Grid* mygrid=new pb::Grid(oper.grid());
-        //        grid_.push_back(mygrid);
-        // fine grid operator
-        Control& ct  = *(Control::instance());
-        lap_type_    = ct.lap_type;
-        is_pc_setup_ = false;
-        //        pb::Lap* myoper = LapFactory::createLap(*grid_[0],lap_type_);
-        //        pc_oper_.push_back(myoper);
+
+        Control& ct       = *(Control::instance());
+        lap_type_         = ct.lap_type;
+        is_precond_setup_ = false;
     };
 
     void setup(const short nu1, const short nu2, const short max_sweeps,
@@ -83,16 +87,10 @@ public:
         setupPrecon();
     }
 
-    void clear();
+    bool solve(pb::GridFunc<ScalarType>& gf_phi,
+        const pb::GridFunc<ScalarType>& gf_rhs);
 
-    void setupPrecon();
-
-    void preconSolve(pb::GridFunc<POISSONPRECONDTYPE>& gf_v,
-        const pb::GridFunc<POISSONPRECONDTYPE>& gf_f, const short level = 0);
-
-    bool solve(pb::GridFunc<T2>& gf_phi, pb::GridFunc<T2>& gf_rhs);
-
-    bool solve(T2* phi, T2* rhs, const char dis);
+    bool solve(ScalarType* phi, ScalarType* rhs, const char dis);
 
     double getFinalResidual() const { return final_residual_; }
     double getResidualReduction() const { return residual_reduction_; }
