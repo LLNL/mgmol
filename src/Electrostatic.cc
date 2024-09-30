@@ -11,6 +11,7 @@
 #include "Control.h"
 #include "ExtendedGridOrbitals.h"
 #include "GridFactory.h"
+#include "GridFunc.h"
 #include "Hartree.h"
 #include "Hartree_CG.h"
 #include "Ions.h"
@@ -22,15 +23,6 @@
 #include "Rho.h"
 #include "ShiftedHartree.h"
 #include "mputils.h"
-
-#include "GridFunc.h"
-#include "Laph2.h"
-#include "Laph4.h"
-#include "Laph4M.h"
-#include "Laph4MP.h"
-#include "Laph6.h"
-#include "Laph8.h"
-#include "ShiftedLaph4M.h"
 
 Timer Electrostatic::solve_tm_("Electrostatic::solve");
 
@@ -49,109 +41,9 @@ Electrostatic::Electrostatic(PoissonFDtype lap_type, const short bcPoisson[3],
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& myGrid = mymesh->grid();
 
-    Control& ct = *(Control::instance());
-    if (ct.MGPoissonSolver()) // use MG for Poisson Solver
-    {
-        if (screening_const > 0.)
-        {
-            switch (lap_type)
-            {
-                case PoissonFDtype::h4M:
-                    poisson_solver_
-                        = new ShiftedHartree<pb::ShiftedLaph4M<POTDTYPE>>(
-                            myGrid, bc_, screening_const);
-                    break;
-                default:
-                    (*MPIdata::sout)
-                        << "Electrostatic, shifted, Undefined option: "
-                        << static_cast<int>(lap_type) << std::endl;
-            }
-        }
-        else
-        {
-            switch (lap_type)
-            {
-                case PoissonFDtype::h4M:
-                    poisson_solver_
-                        = new Hartree<pb::Laph4M<POTDTYPE>>(myGrid, bc_);
-                    break;
-                case PoissonFDtype::h2:
-                    poisson_solver_
-                        = new Hartree<pb::Laph2<POTDTYPE>>(myGrid, bc_);
-                    break;
-                case PoissonFDtype::h4:
-                    poisson_solver_
-                        = new Hartree<pb::Laph4<POTDTYPE>>(myGrid, bc_);
-                    break;
-                case PoissonFDtype::h6:
-                    poisson_solver_
-                        = new Hartree<pb::Laph6<POTDTYPE>>(myGrid, bc_);
-                    break;
-                case PoissonFDtype::h8:
-                    poisson_solver_
-                        = new Hartree<pb::Laph8<POTDTYPE>>(myGrid, bc_);
-                    break;
-                case PoissonFDtype::h4MP:
-                    poisson_solver_
-                        = new Hartree<pb::Laph4MP<POTDTYPE>>(myGrid, bc_);
-                    break;
-                default:
-                    (*MPIdata::sout) << "Electrostatic, Undefined option: "
-                                     << static_cast<int>(lap_type) << std::endl;
-            }
-        }
-    }
-    else // use PCG for Poisson Solver
-    {
-        if (screening_const > 0.)
-        {
-            switch (lap_type)
-            {
-                case PoissonFDtype::h4M:
-                    poisson_solver_
-                        = new ShiftedHartree<pb::ShiftedLaph4M<POTDTYPE>>(
-                            myGrid, bc_, screening_const);
-                    break;
-                default:
-                    (*MPIdata::sout)
-                        << "PCG Electrostatic, shifted, Undefined option: "
-                        << static_cast<int>(lap_type) << std::endl;
-            }
-        }
-        else
-        {
-            switch (lap_type)
-            {
-                case PoissonFDtype::h4M:
-                    poisson_solver_
-                        = new Hartree_CG<pb::Laph4M<POTDTYPE>>(myGrid, bc_);
-                    break;
-                case PoissonFDtype::h2:
-                    poisson_solver_
-                        = new Hartree_CG<pb::Laph2<POTDTYPE>>(myGrid, bc_);
-                    break;
-                case PoissonFDtype::h4:
-                    poisson_solver_
-                        = new Hartree_CG<pb::Laph4<POTDTYPE>>(myGrid, bc_);
-                    break;
-                case PoissonFDtype::h6:
-                    poisson_solver_
-                        = new Hartree_CG<pb::Laph6<POTDTYPE>>(myGrid, bc_);
-                    break;
-                case PoissonFDtype::h8:
-                    poisson_solver_
-                        = new Hartree_CG<pb::Laph8<POTDTYPE>>(myGrid, bc_);
-                    break;
-                case PoissonFDtype::h4MP:
-                    poisson_solver_
-                        = new Hartree_CG<pb::Laph4MP<POTDTYPE>>(myGrid, bc_);
-                    break;
-                default:
-                    (*MPIdata::sout) << "PCG Electrostatic, Undefined option: "
-                                     << static_cast<int>(lap_type) << std::endl;
-            }
-        }
-    }
+    // create Poisson solver
+    poisson_solver_ = PoissonSolverFactory::create(
+        myGrid, lap_type, bcPoisson, screening_const);
 
     grhoc_     = nullptr;
     diel_flag_ = false;
@@ -244,73 +136,8 @@ void Electrostatic::setupPB(
         ngpts, origin, cell, static_cast<int>(laptype_), true, myPEenv);
     if (poisson_solver_ != nullptr) delete poisson_solver_;
 
-    Control& ct = *(Control::instance());
-    if (ct.MGPoissonSolver()) // use MG for Poisson Solver
-    {
-        switch (laptype_)
-        {
-            case PoissonFDtype::h4M:
-                poisson_solver_ = new PBdiel<pb::PBh4M<POTDTYPE>>(
-                    *pbGrid_, bc_, e0, rho0, drho0);
-                break;
-            case PoissonFDtype::h2:
-                poisson_solver_ = new PBdiel<pb::PBh2<POTDTYPE>>(
-                    *pbGrid_, bc_, e0, rho0, drho0);
-                break;
-            case PoissonFDtype::h4:
-                poisson_solver_ = new PBdiel<pb::PBh4<POTDTYPE>>(
-                    *pbGrid_, bc_, e0, rho0, drho0);
-                break;
-            case PoissonFDtype::h6:
-                poisson_solver_ = new PBdiel<pb::PBh6<POTDTYPE>>(
-                    *pbGrid_, bc_, e0, rho0, drho0);
-                break;
-            case PoissonFDtype::h8:
-                poisson_solver_ = new PBdiel<pb::PBh8<POTDTYPE>>(
-                    *pbGrid_, bc_, e0, rho0, drho0);
-                break;
-            case PoissonFDtype::h4MP:
-                poisson_solver_ = new PBdiel<pb::PBh4MP<POTDTYPE>>(
-                    *pbGrid_, bc_, e0, rho0, drho0);
-                break;
-            default:
-                (*MPIdata::sout)
-                    << "Electrostatic, Undefined option" << std::endl;
-        }
-    }
-    else // use PCG for Poisson Solver
-    {
-        switch (laptype_)
-        {
-            case PoissonFDtype::h4M:
-                poisson_solver_ = new PBdiel_CG<pb::PBh4M<POTDTYPE>>(
-                    *pbGrid_, bc_, e0, rho0, drho0);
-                break;
-            case PoissonFDtype::h2:
-                poisson_solver_ = new PBdiel_CG<pb::PBh2<POTDTYPE>>(
-                    *pbGrid_, bc_, e0, rho0, drho0);
-                break;
-            case PoissonFDtype::h4:
-                poisson_solver_ = new PBdiel_CG<pb::PBh4<POTDTYPE>>(
-                    *pbGrid_, bc_, e0, rho0, drho0);
-                break;
-            case PoissonFDtype::h6:
-                poisson_solver_ = new PBdiel_CG<pb::PBh6<POTDTYPE>>(
-                    *pbGrid_, bc_, e0, rho0, drho0);
-                break;
-            case PoissonFDtype::h8:
-                poisson_solver_ = new PBdiel_CG<pb::PBh8<POTDTYPE>>(
-                    *pbGrid_, bc_, e0, rho0, drho0);
-                break;
-            case PoissonFDtype::h4MP:
-                poisson_solver_ = new PBdiel_CG<pb::PBh4MP<POTDTYPE>>(
-                    *pbGrid_, bc_, e0, rho0, drho0);
-                break;
-            default:
-                (*MPIdata::sout)
-                    << "Electrostatic, Undefined option" << std::endl;
-        }
-    }
+    poisson_solver_ = PoissonSolverFactory::createDiel(
+        *pbGrid_, laptype_, bc_, e0, rho0, drho0);
 
     if (grhoc_ != nullptr)
     {
@@ -330,6 +157,7 @@ void Electrostatic::setupPB(
     poisson_solver_->set_vh(gf_vh);
 }
 
+// This function is only useful for Hartree problem with dielectric continuum
 void Electrostatic::fillFuncAroundIons(const Ions& ions)
 {
     assert(grhod_ != nullptr);
@@ -352,7 +180,6 @@ void Electrostatic::fillFuncAroundIons(const Ions& ions)
     std::vector<Ion*>::const_iterator ion = rc_ions.begin();
     while (ion != rc_ions.end())
     {
-
         double rc = (*ion)->getRC();
         // Special case: silicon
         if ((*ion)->isMass28()) rc = 2.0;
@@ -373,43 +200,32 @@ void Electrostatic::fillFuncAroundIons(const Ions& ions)
 #endif
             for (unsigned int ix = 0; ix < pbGrid_->dim(0); ix++)
             {
-
                 xc[1]         = pbGrid_->start(1);
                 const int ix1 = (ix + shift) * incx;
 
                 for (unsigned int iy = 0; iy < pbGrid_->dim(1); iy++)
                 {
-
                     xc[2]         = pbGrid_->start(2);
                     const int iy1 = ix1 + (iy + shift) * incy;
 
                     for (unsigned int iz = 0; iz < pbGrid_->dim(2); iz++)
                     {
-
                         const double r = (*ion)->minimage(xc, lattice, bc_);
 
                         if (r < rc)
                         {
                             const double alpha = 0.2 * (1. + cos(r * pi_rc));
-
-                            const int iz1 = iy1 + iz + shift;
+                            const int iz1      = iy1 + iz + shift;
                             vv[iz1] += alpha;
                         }
-
                         xc[2] += pbGrid_->hgrid(2);
                     }
-
                     xc[1] += pbGrid_->hgrid(1);
-
                 } // end for iy
-
                 xc[0] += pbGrid_->hgrid(0);
-
             } // end for ix
         }
-
         ion++;
-
     } // end loop on list of ions
 
     return;
