@@ -837,7 +837,7 @@ void MGmol<OrbitalsType>::initNuc(Ions& ions)
     pot.initialize(ions);
 
     // Check compensating charges
-    double comp_rho = pot.getCharge(pot.rho_comp());
+    double comp_rho = getCharge(pot.rho_comp());
 
     if (onpe0 && ct.verbose > 1)
     {
