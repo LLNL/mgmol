@@ -228,7 +228,7 @@ void printWithTimeStamp(const std::string& string2print, std::ostream& os)
     int mpierr=MPI_Reduce(&s, &r, 1, MPI_INT, MPI_SUM, 0, mmpi.commGlobal());
     if( mpierr!=MPI_SUCCESS )
     {
-        cerr << " Error in MPI!!!" << endl;
+        cerr << " Error in MPI!!!" << std::endl;
         MPI_Abort(mmpi.commGlobal(),1);
     }
     if( r!=mmpi.size()*s && onpe0 )
@@ -387,4 +387,19 @@ void getkvector(const int index, const int kmax, int kvector[3])
     // if (onpe0)
     //    std::cout << " k=(" << kvector[0] << "," << kvector[1] << ","
     //              << kvector[2] << ")" << std::endl;
+}
+
+double getCharge(double* rho)
+{
+    Control& ct            = *(Control::instance());
+    Mesh* mymesh           = Mesh::instance();
+    const pb::Grid& mygrid = mymesh->grid();
+
+    double charge = mygrid.integralOverMesh(rho);
+
+    if (onpe0 && ct.verbose > 0)
+        std::cout << std::setprecision(8) << std::fixed << "Charge: " << charge
+                  << std::endl;
+
+    return charge;
 }
