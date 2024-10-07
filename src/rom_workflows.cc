@@ -785,6 +785,11 @@ void computeRhoOnSamplePts(const CAROM::Matrix &dm,
 template <class OrbitalsType>
 void testROMIonDensity(MGmolInterface *mgmol_)
 {
+    /* random number generator */
+    static std::random_device rd;  // Will be used to obtain a seed for the random number engine
+    static std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd(){}
+    static std::uniform_real_distribution<> dis(0.0, 1.0);
+
     Control& ct              = *(Control::instance());
     Mesh* mymesh             = Mesh::instance();
     const int subdivx = mymesh->subdivx();
@@ -805,11 +810,13 @@ void testROMIonDensity(MGmolInterface *mgmol_)
     assert(!(mgmol->electrostat_->isDielectric()));
     assert(pot.getBackgroundCharge() <= 0.0);
 
+    const int num_snap = 3;
+
     /* 3 fictitious ion configurations */
     const std::vector<Ion*> &overlappingVL_ions(ions->overlappingNL_ions());
     const int nlocal_ions = overlappingVL_ions.size();
-    std::vector<std::vector<std::vector<double>>> cfgs(3);
-    for (int idx = 0; idx < 3; idx++)
+    std::vector<std::vector<std::vector<double>>> cfgs(num_snap);
+    for (int idx = 0; idx < num_snap; idx++)
     {
         cfgs[idx].resize(nlocal_ions);
 
@@ -821,14 +828,14 @@ void testROMIonDensity(MGmolInterface *mgmol_)
             {
                 double orig_position = overlappingVL_ions[k]->position(d);
                 /* hope this does not go beyond the domain.. */
-                cfgs[idx][k][d] = orig_position * (0.9 + 0.2 * ran0());
+                cfgs[idx][k][d] = orig_position * (0.9 + 0.2 * dis(gen));
             }
         }
     }
 
     /* Collect fictitious ion density based on each configuration */
-    std::vector<std::vector<POTDTYPE>> fom_rhoc(3);
-    for (int idx = 0; idx < 3; idx++)
+    std::vector<std::vector<POTDTYPE>> fom_rhoc(num_snap);
+    for (int idx = 0; idx < num_snap; idx++)
     {
         /* set ion positions */
         for (int i = 0; i < nlocal_ions; i++)
@@ -841,6 +848,59 @@ void testROMIonDensity(MGmolInterface *mgmol_)
         mgmol->electrostat_->setupRhoc(pot.rho_comp());
         fom_rhoc[idx].resize(dim);
         mgmol->electrostat_->getRhoc()->init_vect(fom_rhoc[idx].data(), 'd');
+    }
+
+    /* Initialize libROM classes */
+    /*
+        In practice, we do not produce rhoc POD basis. 
+        This rhoc POD basis is for the sake of verification.
+    */
+    CAROM::Options svd_options(dim, num_snap, 1);
+    svd_options.static_svd_preserve_snapshot = true;
+    CAROM::BasisGenerator basis_generator(svd_options, false, "test_rhoc");
+    for (int idx = 0; idx < num_snap; idx++)
+        basis_generator.takeSample(&fom_rhoc[idx][0]);
+
+    const CAROM::Matrix rhoc_snapshots(*basis_generator.getSnapshotMatrix());
+    basis_generator.endSamples();
+
+    const CAROM::Matrix *rhoc_basis = basis_generator.getSpatialBasis();
+    CAROM::Matrix *proj_rhoc = rhoc_basis->transposeMult(rhoc_snapshots);
+
+    /* DEIM hyperreduction */
+    CAROM::Matrix rhoc_basis_inv(num_snap, num_snap, false);
+    std::vector<int> global_sampled_row(num_snap), sampled_rows_per_proc(nprocs);
+    DEIM(rhoc_basis, num_snap, global_sampled_row, sampled_rows_per_proc,
+         rhoc_basis_inv, rank, nprocs);
+    if (rank == 0)
+    {
+        int num_sample_rows = 0;
+        for (int k = 0; k < sampled_rows_per_proc.size(); k++)
+            num_sample_rows += sampled_rows_per_proc[k];
+        printf("number of sampled row: %d\n", num_sample_rows);
+    }
+    
+    /* get local sampled row */
+    std::vector<int> offsets, sampled_row(sampled_rows_per_proc[rank]);
+    int num_global_sample = CAROM::get_global_offsets(sampled_rows_per_proc[rank], offsets);
+    for (int s = 0, gs = offsets[rank]; gs < offsets[rank+1]; gs++, s++)
+        sampled_row[s] = global_sampled_row[gs];
+
+    /* test one solution */
+    const int test_idx = 2;
+
+    /* set ion positions */
+    for (int i = 0; i < nlocal_ions; i++)
+        overlappingVL_ions[i]->setPosition(cfgs[test_idx][i][0], cfgs[test_idx][i][1], cfgs[test_idx][i][2]);
+
+    /* eval ion density on sample grid points */
+    std::vector<RHODTYPE> sampled_rhoc(sampled_row.size());
+    pot.evalIonDensityOnSamplePts(*ions, sampled_row, sampled_rhoc);
+
+    for (int d = 0; d < sampled_row.size(); d++)
+    {
+        printf("rank %d, fom rhoc[%d]: %.3e, rom rhoc: %.3e\n", rank, sampled_row[d], fom_rhoc[test_idx][sampled_row[d]], sampled_rhoc[d]);
+        CAROM_VERIFY(abs(fom_rhoc[test_idx][sampled_row[d]] - sampled_rhoc[d]) < 1.0e-12);
     }
 }
 
