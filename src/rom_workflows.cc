@@ -782,6 +782,68 @@ void computeRhoOnSamplePts(const CAROM::Matrix &dm,
     // rescaleTotalCharge();
 }
 
+template <class OrbitalsType>
+void testROMIonDensity(MGmolInterface *mgmol_)
+{
+    Control& ct              = *(Control::instance());
+    Mesh* mymesh             = Mesh::instance();
+    const int subdivx = mymesh->subdivx();
+    const pb::PEenv& myPEenv = mymesh->peenv();
+    MGmol_MPI& mmpi      = *(MGmol_MPI::instance());
+    const int rank = mmpi.mypeGlobal();
+    const int nprocs = mmpi.size();
+
+    ROMPrivateOptions rom_options = ct.getROMOptions();
+
+    /* Load MGmol pointer and Potentials */
+    MGmol<OrbitalsType> *mgmol = static_cast<MGmol<OrbitalsType> *>(mgmol_);
+    Poisson *poisson = mgmol->electrostat_->getPoissonSolver(); 
+    Potentials& pot = mgmol->getHamiltonian()->potential();
+    const int dim = pot.size();
+    std::shared_ptr<Ions> ions = mgmol->getIons();
+
+    assert(!(mgmol->electrostat_->isDielectric()));
+    assert(pot.getBackgroundCharge() <= 0.0);
+
+    /* 3 fictitious ion configurations */
+    const std::vector<Ion*> &overlappingVL_ions(ions->overlappingNL_ions());
+    const int nlocal_ions = overlappingVL_ions.size();
+    std::vector<std::vector<std::vector<double>>> cfgs(3);
+    for (int idx = 0; idx < 3; idx++)
+    {
+        cfgs[idx].resize(nlocal_ions);
+
+        for (int k = 0; k < nlocal_ions; k++)
+        {
+            cfgs[idx][k].resize(3);
+
+            for (int d = 0; d < 3; d++)
+            {
+                double orig_position = overlappingVL_ions[k]->position(d);
+                /* hope this does not go beyond the domain.. */
+                cfgs[idx][k][d] = orig_position * (0.9 + 0.2 * ran0());
+            }
+        }
+    }
+
+    /* Collect fictitious ion density based on each configuration */
+    std::vector<std::vector<POTDTYPE>> fom_rhoc(3);
+    for (int idx = 0; idx < 3; idx++)
+    {
+        /* set ion positions */
+        for (int i = 0; i < nlocal_ions; i++)
+            overlappingVL_ions[i]->setPosition(cfgs[idx][i][0], cfgs[idx][i][1], cfgs[idx][i][2]);
+
+        /* compute resulting ion density */
+        /* NOTE: we exclude rescaling for the sake of verification */
+        pot.initialize(*ions);
+
+        mgmol->electrostat_->setupRhoc(pot.rho_comp());
+        fom_rhoc[idx].resize(dim);
+        mgmol->electrostat_->getRhoc()->init_vect(fom_rhoc[idx].data(), 'd');
+    }
+}
+
 template void readRestartFiles<LocGridOrbitals>(MGmolInterface *mgmol_);
 template void readRestartFiles<ExtendedGridOrbitals>(MGmolInterface *mgmol_);
 
@@ -796,3 +858,6 @@ template void testROMPoissonOperator<ExtendedGridOrbitals>(MGmolInterface *mgmol
 
 template void testROMRhoOperator<LocGridOrbitals>(MGmolInterface *mgmol_);
 template void testROMRhoOperator<ExtendedGridOrbitals>(MGmolInterface *mgmol_);
+
+template void testROMIonDensity<LocGridOrbitals>(MGmolInterface *mgmol_);
+template void testROMIonDensity<ExtendedGridOrbitals>(MGmolInterface *mgmol_);

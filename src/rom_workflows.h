@@ -54,6 +54,9 @@ void testROMPoissonOperator(MGmolInterface *mgmol_);
 template <class OrbitalsType>
 void testROMRhoOperator(MGmolInterface *mgmol_);
 
+template <class OrbitalsType>
+void testROMIonDensity(MGmolInterface *mgmol_);
+
 void computeRhoOnSamplePts(const CAROM::Matrix &dm,
     const CAROM::Matrix &phi_basis, const CAROM::Matrix &rom_phi,
     const std::vector<int> &local_idx, CAROM::Vector &sampled_rho);

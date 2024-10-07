@@ -25,6 +25,7 @@ enum class ROMStage
     ONLINE_POISSON,
     TEST_POISSON,
     TEST_RHO,
+    TEST_ION,
     UNSUPPORTED
 };
 

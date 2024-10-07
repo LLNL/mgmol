@@ -159,6 +159,8 @@ public:
 
     double getChargeInCell() const { return charge_in_cell_; }
 
+    const double getBackgroundCharge() const { return background_charge_; }
+
     /*!
      * initialize total potential as local pseudopotential
      */
