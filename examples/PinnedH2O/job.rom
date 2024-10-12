@@ -21,7 +21,7 @@ cp $maindir/install_quartz/bin/$exe .
 set datadir = $maindir/examples/PinnedH2O
 
 set cfg_rom = mgmol_rom.cfg
-#cp $datadir/$cfg_rom .
+cp $datadir/$cfg_rom .
 
 cp $datadir/coords.in .
 

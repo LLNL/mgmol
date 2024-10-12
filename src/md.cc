@@ -492,6 +492,44 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
         // Compute forces
         force(**orbitals, ions);
 
+#ifdef MGMOL_HAS_LIBROM
+        // TODO: cleanup
+        int rdim = 39;
+        std::string basis_filename = "PinnedH2O_orbitals_basis_1_50";
+        bool ROM_md = false;
+
+        if (rdim > 0)
+        {
+            if (onpe0)
+            {
+                os_ << "Projecting orbitals onto ROM subspaces" << std::endl;
+                os_ << "Loading ROM basis " << basis_filename << std::endl;
+                os_ << "ROM basis dimension = " << rdim << std::endl;
+            }
+            project_orbital(basis_filename, rdim, **orbitals);
+            if (ROM_md)
+            {
+                force(**orbitals, ions);
+            }
+            else
+            {
+                double shift[3];
+                for (short i = 0; i < 3; i++) shift[i] = 0.;
+                Ions ROM_ions(ions, shift);
+                force(**orbitals, ROM_ions);
+                std::string zero = "0";
+                if (ions_->getNumIons() < 256 || ct.verbose > 2)
+                {
+                    if (ct.verbose > 0) ROM_ions.printForcesGlobal(os_);
+                }
+                else if (zero.compare(ct.md_print_filename) == 0)
+                {
+                    ROM_ions.printForcesLocal(os_);
+                }
+            }
+        }
+#endif
+
         // set fion
         ions.getLocalForces(fion);
 
@@ -633,8 +671,8 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
 
 #ifdef MGMOL_HAS_LIBROM
         // Save orbital snapshots
-        if (md_iteration_ % librom_snapshot_freq == 0
-            && ct.getROMOptions().save_librom_snapshot > 0)
+        if (ct.getROMOptions().save_librom_snapshot > 0 && 
+            md_iteration_ % librom_snapshot_freq == 0)
         {
             int ierr = save_orbital_snapshot(
                 ct.md_print_filename + "_mdstep" + std::to_string(mdstep), **orbitals);
