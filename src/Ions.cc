@@ -584,11 +584,9 @@ void Ions::printPositionsLocal(std::ostream& os, const int root) const
         os.setf(std::ios::right, std::ios::adjustfield);
         os.setf(std::ios::fixed, std::ios::floatfield);
 
-        std::vector<Ion*>::const_iterator ion = local_ions_.begin();
-        while (ion != local_ions_.end())
+        for (auto& ion : local_ions_)
         {
-            (*ion)->printPosition(os);
-            ion++;
+            ion->printPosition(os);
         }
 
         os << std::endl;
@@ -627,14 +625,12 @@ void Ions::writeAtomicNumbers(HDFrestart& h5f_file)
     }
     else
     {
-        std::vector<Ion*>::const_iterator ion = local_ions_.begin();
-        while (ion != local_ions_.end())
+        for (auto& ion : local_ions_)
         {
-            assert((*ion)->atomic_number() > 0);
-            assert((*ion)->atomic_number() < 200);
+            assert(ion->atomic_number() > 0);
+            assert(ion->atomic_number() < 200);
 
-            data.push_back((*ion)->atomic_number());
-            ion++;
+            data.push_back(ion->atomic_number());
         }
     }
 
@@ -685,17 +681,15 @@ void Ions::writeAtomNames(HDFrestart& h5f_file)
 
 void Ions::lockAtom(const std::string& name)
 {
-    std::vector<Ion*>::iterator ion = local_ions_.begin();
-    while (ion != local_ions_.end())
+    for (auto& ion : local_ions_)
     {
-        std::string name_ion((*ion)->name());
+        std::string name_ion(ion->name());
         if (name.compare(name_ion) == 0)
         {
-            (*ion)->lock();
+            ion->lock();
             if (onpe0) (*MPIdata::sout) << "Lock atom " << name << std::endl;
             break;
         }
-        ion++;
     }
 }
 
@@ -975,12 +969,10 @@ void Ions::readRestartPositions(HDFrestart& h5_file)
     std::vector<double> data;
     h5_file.readAtomicPositions(data);
 
-    int i                           = 0;
-    std::vector<Ion*>::iterator ion = local_ions_.begin();
-    while (ion != local_ions_.end())
+    int i = 0;
+    for (auto& ion : local_ions_)
     {
-        (*ion)->setPosition(data[3 * i], data[3 * i + 1], data[3 * i + 2]);
-        ion++;
+        ion->setPosition(data[3 * i], data[3 * i + 1], data[3 * i + 2]);
         i++;
     }
 }
@@ -1109,14 +1101,12 @@ void Ions::removeMassCenterMotion()
 #endif
     }
 
-    ion = local_ions_.begin();
-    i   = 0;
-    while (ion != local_ions_.end())
+    i = 0;
+    for (auto& ion : local_ions_)
     {
         const int threei = 3 * i;
-        (*ion)->setVelocity(velocities[threei] - tmp[0],
+        ion->setVelocity(velocities[threei] - tmp[0],
             velocities[threei + 1] - tmp[1], velocities[threei + 2] - tmp[2]);
-        ion++;
         i++;
     }
 
@@ -1124,16 +1114,15 @@ void Ions::removeMassCenterMotion()
     mv[0] = 0.;
     mv[1] = 0.;
     mv[2] = 0.;
-    while (ion != local_ions_.end())
+    for (auto& ion : local_ions_)
     {
-        velocities[3 * i]     = (*ion)->velocity(0);
-        velocities[3 * i + 1] = (*ion)->velocity(1);
-        velocities[3 * i + 2] = (*ion)->velocity(2);
+        velocities[3 * i]     = ion->velocity(0);
+        velocities[3 * i + 1] = ion->velocity(1);
+        velocities[3 * i + 2] = ion->velocity(2);
         mv[0] += mass[i] * velocities[3 * i];
         mv[1] += mass[i] * velocities[3 * i + 1];
         mv[2] += mass[i] * velocities[3 * i + 2];
 
-        ion++;
         i++;
     }
 
@@ -1155,12 +1144,10 @@ void Ions::readRestartVelocities(HDFrestart& h5_file)
     std::vector<double> data;
     h5_file.readAtomicVelocities(data);
 
-    std::vector<Ion*>::iterator ion = local_ions_.begin();
-    int i                           = 0;
-    while (ion != local_ions_.end())
+    int i = 0;
+    for (auto& ion : local_ions_)
     {
-        (*ion)->setVelocity(data[3 * i], data[3 * i + 1], data[3 * i + 2]);
-        ion++;
+        ion->setVelocity(data[3 * i], data[3 * i + 1], data[3 * i + 2]);
         i++;
     }
 }
@@ -1174,12 +1161,10 @@ void Ions::readRestartRandomStates(HDFrestart& h5f_file)
     std::vector<unsigned short> data;
     h5f_file.readRestartRandomStates(data);
 
-    std::vector<Ion*>::iterator ion = local_ions_.begin();
-    int i                           = 0;
-    while (ion != local_ions_.end())
+    int i = 0;
+    for (auto& ion : local_ions_)
     {
-        (*ion)->setRandomState(data[3 * i], data[3 * i + 1], data[3 * i + 2]);
-        ion++;
+        ion->setRandomState(data[3 * i], data[3 * i + 1], data[3 * i + 2]);
         i++;
     }
 }
@@ -1202,17 +1187,14 @@ void Ions::writeForces(HDFrestart& h5f_file)
     }
     else
     {
-        std::vector<Ion*>::const_iterator ion = local_ions_.begin();
-        while (ion != local_ions().end())
+        for (auto& ion : local_ions_)
         {
             // get position of local ion
             double force[3];
-            (*ion)->getForce(&force[0]);
+            ion->getForce(&force[0]);
             data.push_back(force[0]);
             data.push_back(force[1]);
             data.push_back(force[2]);
-
-            ++ion;
         }
     }
 
@@ -1364,64 +1346,54 @@ void Ions::printForcesLocal(std::ostream& os, const int root) const
            << "FX" << std::setw(10) << "FY" << std::setw(10) << "FZ"
            << std::endl;
 
-        std::vector<Ion*>::const_iterator ion = local_ions_.begin();
-        while (ion != local_ions_.end())
+        for (auto& ion : local_ions_)
         {
+            ion->printPositionAndForce(os);
 
-            (*ion)->printPositionAndForce(os);
-
-            if (!(*ion)->locked())
+            if (!ion->locked())
             {
+                avg_forces[0] += fabs(ion->force(0));
+                avg_forces[1] += fabs(ion->force(1));
+                avg_forces[2] += fabs(ion->force(2));
 
-                avg_forces[0] += fabs((*ion)->force(0));
-                avg_forces[1] += fabs((*ion)->force(1));
-                avg_forces[2] += fabs((*ion)->force(2));
-
-                double ff = (*ion)->norm2F();
+                double ff = ion->norm2F();
                 maxf[0]   = std::max(maxf[0], ff);
 
-                max_forces[0] = std::max(max_forces[0], fabs((*ion)->force(0)));
-                max_forces[1] = std::max(max_forces[1], fabs((*ion)->force(1)));
-                max_forces[2] = std::max(max_forces[2], fabs((*ion)->force(2)));
+                max_forces[0] = std::max(max_forces[0], fabs(ion->force(0)));
+                max_forces[1] = std::max(max_forces[1], fabs(ion->force(1)));
+                max_forces[2] = std::max(max_forces[2], fabs(ion->force(2)));
 
                 num_movable++;
             }
 
             for (short ii = 0; ii < 3; ii++)
-                sum_forces[ii] += (*ion)->force(ii);
+                sum_forces[ii] += ion->force(ii);
             num_atoms++;
-
-            ion++;
         }
     }
     else
     {
-        std::vector<Ion*>::const_iterator ion = local_ions_.begin();
-        while (ion != local_ions_.end())
+        for (auto& ion : local_ions_)
         {
-
-            if (!(*ion)->locked())
+            if (!ion->locked())
             {
+                avg_forces[0] += fabs(ion->force(0));
+                avg_forces[1] += fabs(ion->force(1));
+                avg_forces[2] += fabs(ion->force(2));
 
-                avg_forces[0] += fabs((*ion)->force(0));
-                avg_forces[1] += fabs((*ion)->force(1));
-                avg_forces[2] += fabs((*ion)->force(2));
-
-                double ff = (*ion)->norm2F();
+                double ff = ion->norm2F();
                 maxf[0]   = std::max(maxf[0], ff);
 
-                max_forces[0] = std::max(max_forces[0], fabs((*ion)->force(0)));
-                max_forces[1] = std::max(max_forces[1], fabs((*ion)->force(1)));
-                max_forces[2] = std::max(max_forces[2], fabs((*ion)->force(2)));
+                max_forces[0] = std::max(max_forces[0], fabs(ion->force(0)));
+                max_forces[1] = std::max(max_forces[1], fabs(ion->force(1)));
+                max_forces[2] = std::max(max_forces[2], fabs(ion->force(2)));
 
                 num_movable++;
             }
 
             for (short ii = 0; ii < 3; ii++)
-                sum_forces[ii] += (*ion)->force(ii);
+                sum_forces[ii] += ion->force(ii);
             num_atoms++;
-
-            ion++;
         }
     }
     // global statistics
@@ -1479,12 +1451,10 @@ int Ions::countIonsHere() const { return (int)local_ions_.size(); }
 
 int Ions::countProjectorsHere() const
 {
-    int count                             = 0;
-    std::vector<Ion*>::const_iterator ion = local_ions_.begin();
-    while (ion != local_ions_.end())
+    int count = 0;
+    for (auto& ion : local_ions_)
     {
-        count += (*ion)->nProjectors();
-        ion++;
+        count += ion->nProjectors();
     }
     return count;
 }
@@ -1497,12 +1467,10 @@ int Ions::countProjectors() const
     Mesh* mymesh             = Mesh::instance();
     const pb::PEenv& myPEenv = mymesh->peenv();
 
-    int nproj                             = 0;
-    std::vector<Ion*>::const_iterator ion = local_ions_.begin();
-    while (ion != local_ions_.end())
+    int nproj = 0;
+    for (auto& ion : local_ions_)
     {
-        nproj += (*ion)->nProjectors();
-        ion++;
+        nproj += ion->nProjectors();
     }
     int tmp = nproj;
     MPI_Allreduce(&tmp, &nproj, 1, MPI_INT, MPI_SUM, myPEenv.comm());
@@ -1569,13 +1537,10 @@ void Ions::setLocalPositions(const std::vector<double>& tau)
 {
     assert(tau.size() == 3 * local_ions_.size());
 
-    std::vector<Ion*>::iterator ion = local_ions_.begin();
-    int ia                          = 0;
-    while (ion != local_ions_.end())
+    int ia = 0;
+    for (auto& ion : local_ions_)
     {
-        (*ion)->setPosition(tau[3 * ia + 0], tau[3 * ia + 1], tau[3 * ia + 2]);
-
-        ion++;
+        ion->setPosition(tau[3 * ia + 0], tau[3 * ia + 1], tau[3 * ia + 2]);
         ia++;
     }
 
@@ -1780,50 +1745,53 @@ int Ions::setAtoms(
         if (ia < 1000) aname.append("0");
         if (ia < 10000) aname.append("0");
         aname.append(ss.str());
-        Ion* new_ion
-            = new Ion(species_[isp], aname, &crds[3 * ia], velocity, locked);
-        new_ion->bcast(mmpi.commGlobal());
 
-        // Populate list_ions_ list
-        // std::cout<<"crds: "<<crds[3*ia+0]<<", "<<crds[3*ia+1]<<",
-        // "<<crds[3*ia+2]<<std::endl;
-        if (inListIons(crds[3 * ia + 0], crds[3 * ia + 1], crds[3 * ia + 2]))
-        {
-            list_ions_.push_back(new_ion);
-            if (ct.verbose > 2)
-                (*MPIdata::sout)
-                    << "Ion " << aname << " at position " << crds[3 * ia + 0]
-                    << "," << crds[3 * ia + 1] << "," << crds[3 * ia + 2]
-                    << " added to the list... on PE" << mmpi.mypeGlobal()
-                    << std::endl;
-            // populate local_ions_ list
-            if (inLocalIons(
-                    crds[3 * ia + 0], crds[3 * ia + 1], crds[3 * ia + 2]))
-            {
-                (new_ion)->set_here(true);
-                local_ions_.push_back(new_ion);
-                if (onpe0 && ct.verbose > 2)
-                    (*MPIdata::sout)
-                        << "Ion " << aname << " at position "
-                        << crds[3 * ia + 0] << "," << crds[3 * ia + 1] << ","
-                        << crds[3 * ia + 2]
-                        << " added to the list of local ions... on PE"
-                        << mmpi.mypeGlobal() << std::endl;
-            }
-            else
-                (new_ion)->set_here(false);
-        }
-        else
-        {
-            //(*MPIdata::sout)<<"Ion "<<aname<<" NOT added to the list... on
-            // PE"<<mmpi.mype() <<endl;
-            delete new_ion;
-        }
+        addIonToList(species_[isp], aname, &crds[3 * ia], velocity, locked);
     }
     //    std::cout<<mmpi.mype()<<"...list size = "<<list_ions_.size()<<" local
     //    ions size = "<<local_ions_.size()<<endl;
 
     return natoms;
+}
+
+void Ions::addIonToList(const Species& sp, const std::string& name,
+    const double crds[3], const double velocity[3], const bool locked)
+{
+    MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
+    Control& ct(*(Control::instance()));
+
+    // create a new Ion
+    Ion* new_ion = new Ion(sp, name, &crds[0], velocity, locked);
+    new_ion->bcast(mmpi.commGlobal());
+
+    if (inListIons(crds[0], crds[1], crds[2]))
+    {
+        list_ions_.push_back(new_ion);
+        if (ct.verbose > 2)
+            (*MPIdata::sout)
+                << "Ion " << name << " at position " << crds[0] << ","
+                << crds[1] << "," << crds[2] << " added to the list... on PE"
+                << mmpi.mypeGlobal() << std::endl;
+
+        // populate local_ions_ list
+        if (inLocalIons(crds[0], crds[1], crds[2]))
+        {
+            (new_ion)->set_here(true);
+            local_ions_.push_back(new_ion);
+            if (onpe0 && ct.verbose > 2)
+                (*MPIdata::sout) << "Ion " << name << " at position " << crds[0]
+                                 << "," << crds[1] << "," << crds[2]
+                                 << " added to the list of local ions... on PE"
+                                 << mmpi.mypeGlobal() << std::endl;
+        }
+        else
+            (new_ion)->set_here(false);
+    }
+    else
+    {
+        // delete Ion if not put in list
+        delete new_ion;
+    }
 }
 
 int Ions::readNatoms(const std::string& filename, const bool cell_relative)
@@ -2117,9 +2085,8 @@ void Ions::setVelocities(const std::vector<double>& tau0,
     assert(tau0.size() == 3 * local_ions_.size());
     assert(taup.size() == 3 * local_ions_.size());
 
-    int ia                           = 0;
-    std::vector<Ion*>::iterator iion = local_ions_.begin();
-    while (iion != local_ions_.end())
+    int ia = 0;
+    for (auto& ion : local_ions_)
     {
         double v[3];
         for (short i = 0; i < 3; i++)
@@ -2128,8 +2095,7 @@ void Ions::setVelocities(const std::vector<double>& tau0,
             v[i] -= tau0[3 * ia + i];
             v[i] /= dt;
         }
-        (*iion)->setVelocity(v[0], v[1], v[2]);
-        iion++;
+        ion->setVelocity(v[0], v[1], v[2]);
         ia++;
     }
 }
@@ -2138,12 +2104,10 @@ void Ions::getLocalPositions(std::vector<double>& tau) const
 {
     assert(tau.size() == 3 * local_ions_.size());
 
-    int ia                                 = 0;
-    std::vector<Ion*>::const_iterator iion = local_ions_.begin();
-    while (iion != local_ions_.end())
+    int ia = 0;
+    for (auto& ion : local_ions_)
     {
-        (*iion)->getPosition(&tau[3 * ia]);
-        iion++;
+        ion->getPosition(&tau[3 * ia]);
         ia++;
     }
 }
@@ -2188,12 +2152,10 @@ void Ions::setTau0()
 {
     assert(tau0_.size() == 3 * local_ions_.size());
 
-    int ia                                 = 0;
-    std::vector<Ion*>::const_iterator iion = local_ions_.begin();
-    while (iion != local_ions_.end())
+    int ia = 0;
+    for (auto& ion : local_ions_)
     {
-        (*iion)->getPosition(&tau0_[3 * ia]);
-        iion++;
+        ion->getPosition(&tau0_[3 * ia]);
         ia++;
     }
 }
@@ -2202,13 +2164,11 @@ void Ions::setPositionsToTau0()
 {
     assert(tau0_.size() == 3 * local_ions_.size());
 
-    int ia                                 = 0;
-    std::vector<Ion*>::const_iterator iion = local_ions_.begin();
-    while (iion != local_ions_.end())
+    int ia = 0;
+    for (auto& ion : local_ions_)
     {
-        (*iion)->setPosition(
+        ion->setPosition(
             tau0_[3 * ia + 0], tau0_[3 * ia + 1], tau0_[3 * ia + 2]);
-        iion++;
         ia++;
     }
 }
@@ -2244,13 +2204,11 @@ void Ions::getLocalForces(std::vector<double>& tau) const
 {
     assert(tau.size() == 3 * local_ions_.size());
 
-    int ia                                 = 0;
-    std::vector<Ion*>::const_iterator iion = local_ions_.begin();
-    while (iion != local_ions_.end())
+    int ia = 0;
+    for (auto& ion : local_ions_)
     {
         assert(3 * ia + 2 < (int)tau.size());
-        (*iion)->getForce(&tau[3 * ia]);
-        iion++;
+        ion->getForce(&tau[3 * ia]);
         ia++;
     }
 }
@@ -2351,12 +2309,10 @@ double Ions::computeMaxVlRadius() const
 {
     double radius = 0.;
 
-    std::vector<Ion*>::const_iterator iion = local_ions_.begin();
-    while (iion != local_ions_.end())
+    for (auto& ion : local_ions_)
     {
-        double r = (*iion)->computeRadiusVl();
+        double r = ion->computeRadiusVl();
         radius   = r > radius ? r : radius;
-        iion++;
     }
 
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
@@ -2393,13 +2349,11 @@ void Ions::gatherNames(std::map<int, std::string>& names, const int root,
     std::vector<std::string> data;
     std::vector<std::string> local_names;
 
-    std::vector<Ion*>::const_iterator ion = local_ions_.begin();
-    while (ion != local_ions().end())
+    for (auto& ion : local_ions_)
     {
         // get local name and index
-        local_names.push_back((*ion)->name());
-        local_indexes.push_back((*ion)->index());
-        ++ion;
+        local_names.push_back(ion->name());
+        local_indexes.push_back(ion->index());
     }
 
     // gather data to PE root
@@ -2695,15 +2649,13 @@ bool Ions::hasLockedAtoms() const
     return (flag == 1);
 }
 
-double Ions::getMaxNLradius() const
+double Ions::getSpeciesMaxNLradius() const
 {
-    double radius                            = 0;
-    std::vector<Species>::const_iterator spi = species_.begin();
-    while (spi != species_.end())
+    double radius = 0.;
+    for (const auto& spi : species_)
     {
-        const double nlradius = spi->nlradius();
+        const double nlradius = spi.nlradius();
         radius                = radius > nlradius ? radius : nlradius;
-        spi++;
     }
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
     mmpi.allreduce(&radius, 1, MPI_MAX);
@@ -2711,15 +2663,13 @@ double Ions::getMaxNLradius() const
     return radius;
 }
 
-double Ions::getMaxLradius() const
+double Ions::getSpeciesMaxLradius() const
 {
-    double radius                            = 0;
-    std::vector<Species>::const_iterator spi = species_.begin();
-    while (spi != species_.end())
+    double radius = 0.;
+    for (const auto& spi : species_)
     {
-        const double lradius = spi->lradius();
+        const double lradius = spi.lradius();
         radius               = radius > lradius ? radius : lradius;
-        spi++;
     }
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
     mmpi.allreduce(&radius, 1, MPI_MAX);
@@ -2918,8 +2868,8 @@ void Ions::computeNumIons(void)
 double Ions::getMaxListRadius() const
 {
     // get radius of projectors
-    const double nlradius = getMaxNLradius();
-    const double lradius  = getMaxLradius();
+    const double nlradius = getSpeciesMaxNLradius();
+    const double lradius  = getSpeciesMaxLradius();
 
     double rmax = nlradius > lradius ? nlradius : lradius;
 
@@ -3289,21 +3239,15 @@ void Ions::updateIons()
     Control& ct(*(Control::instance()));
 
     // update local_ions data
-    std::vector<Ion*>::iterator ion = local_ions_.begin();
-    int ia                          = 0;
-    while (ion != local_ions_.end())
+    int ia = 0;
+    for (auto& ion : local_ions_)
     {
-        (*ion)->setPosition(
+        ion->setPosition(
             tau0_[3 * ia + 0], tau0_[3 * ia + 1], tau0_[3 * ia + 2]);
 
-        //        (*ion)->setForce(fion_[3*ia+0],
-        //                          fion_[3*ia+1],
-        //                          fion_[3*ia+2]);
+        ion->setRandomState(rand_states_[3 * ia + 0], rand_states_[3 * ia + 1],
+            rand_states_[3 * ia + 2]);
 
-        (*ion)->setRandomState(rand_states_[3 * ia + 0],
-            rand_states_[3 * ia + 1], rand_states_[3 * ia + 2]);
-
-        ion++;
         ia++;
     }
 
