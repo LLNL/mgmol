@@ -28,7 +28,7 @@ const double factor_kernel4dot = 10.;
 template <class MatrixType>
 DensityMatrix<MatrixType>::DensityMatrix(const int ndim)
 {
-    assert(ndim >= 0);
+    assert(ndim > 0);
 
     dim_ = ndim;
 
@@ -45,6 +45,7 @@ DensityMatrix<MatrixType>::DensityMatrix(const int ndim)
     kernel4dot_ = new MatrixType("K4dot", ndim, ndim);
     work_       = new MatrixType("work", ndim, ndim);
     occupation_.resize(dim_);
+    setDummyOcc();
 }
 
 template <class MatrixType>
@@ -109,6 +110,7 @@ void DensityMatrix<MatrixType>::build(
     const std::vector<double>& occ, const int new_orbitals_index)
 {
     assert(dm_ != nullptr);
+    assert(!occ.empty());
 
     setOccupations(occ);
 
@@ -149,6 +151,8 @@ template <class MatrixType>
 void DensityMatrix<MatrixType>::setUniform(
     const double nel, const int new_orbitals_index)
 {
+    assert(!occupation_.empty());
+
     MGmol_MPI& mmpi  = *(MGmol_MPI::instance());
     const double occ = (double)((double)nel / (double)dim_);
     if (mmpi.instancePE0())
@@ -314,6 +318,7 @@ void DensityMatrix<MatrixType>::computeOccupations(const MatrixType& ls)
 template <class MatrixType>
 void DensityMatrix<MatrixType>::setOccupations(const std::vector<double>& occ)
 {
+    assert(!occ.empty());
 #ifdef PRINT_OPERATIONS
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     if (mmpi.instancePE0())

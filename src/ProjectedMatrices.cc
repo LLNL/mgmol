@@ -509,6 +509,7 @@ template <class MatrixType>
 void ProjectedMatrices<MatrixType>::setOccupations(
     const std::vector<DISTMATDTYPE>& occ)
 {
+    assert(!occ.empty());
 #ifdef PRINT_OPERATIONS
     if (mmpi.instancePE0())
         (*MPIdata::sout) << "ProjectedMatrices<MatrixType>::setOccupations()"

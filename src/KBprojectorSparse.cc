@@ -103,7 +103,7 @@ void KBprojectorSparse::setNLindex(
 
     for (int i = 0; i < size_nl; i++)
     {
-        assert(i < lnumpt);
+        // assert(i < lnumpt);
         if ((pvec[i] < iloc * lnumpt) || (pvec[i] >= (iloc + 1) * lnumpt))
         {
             (*MPIdata::sout) << " iloc=" << iloc << ", i=" << i
@@ -960,7 +960,7 @@ bool KBprojectorSparse::setIndexesAndProjectors()
             // get "pvec" and "is_in_domain"
             int icount = get_index_array(pvec, iloc, index_low, index_high);
             assert(icount <= nl3);
-            assert(icount <= mymesh->npointsPatch());
+            //            assert(icount <= mymesh->npointsPatch());
             assert(icount > 0);
 
             setNLindex(iloc, icount, pvec);

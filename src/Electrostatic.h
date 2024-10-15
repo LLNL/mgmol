@@ -13,6 +13,7 @@
 #include "Control.h"
 #include "GridFunc.h"
 #include "Poisson.h"
+#include "PoissonSolverFactory.h"
 #include "Rho.h"
 #include "Timer.h"
 

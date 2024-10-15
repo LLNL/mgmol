@@ -64,7 +64,7 @@ public:
 
     bool solve(T2* phi, T2* rhs, const char dis);
 
-    bool solve(GridFunc<T2>& gf_phi, GridFunc<T2>& gf_rhs) override;
+    bool solve(GridFunc<T2>& gf_phi, const GridFunc<T2>& gf_rhs) override;
 
     short getNbSweeps() const override { return nb_sweeps_; }
     double getFinalResidual() const override { return final_residual_; }
