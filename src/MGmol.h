@@ -187,11 +187,30 @@ public:
 
     void run() override;
 
+    /*
+     * Evaluate the energy and forces for an atomic configuration
+     * specified by tau (input)
+     */
     double evaluateEnergyAndForces(const std::vector<double>& tau,
-        std::vector<short>& atnumbers, std::vector<double>& forces);
+        const std::vector<short>& atnumbers, std::vector<double>& forces);
 
-    double evaluateEnergyAndForces(Orbitals*, const std::vector<double>& tau,
-        std::vector<short>& atnumbers, std::vector<double>& forces);
+    /*
+     * Evaluate the energy and forces for an atomic configuration
+     * specified by tau (input), using the input "orbitals" as initial
+     * guess for the wavefunctions
+     */
+    double evaluateEnergyAndForces(Orbitals* orbitals,
+        const std::vector<double>& tau, const std::vector<short>& atnumbers,
+        std::vector<double>& forces);
+
+    /*
+     * Evaluate the energy and forces for an atomic configuration
+     * specified by tau (input), using the input "orbitals" as wavefunctions
+     * (fixed)
+     */
+    double evaluateDMandEnergyAndForces(Orbitals* orbitals,
+        const std::vector<double>& tau, const std::vector<short>& atnumbers,
+        std::vector<double>& forces);
 
     /*
      * get internal atomic positions

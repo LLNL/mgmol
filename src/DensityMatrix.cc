@@ -149,14 +149,11 @@ template <class MatrixType>
 void DensityMatrix<MatrixType>::setUniform(
     const double nel, const int new_orbitals_index)
 {
-#ifdef PRINT_OPERATIONS
-    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    if (mmpi.instancePE0())
-        std::cout << "template <class MatrixType> "
-                     "DensityMatrix<MatrixType>::setUniform()"
-                  << std::endl;
-#endif
+    MGmol_MPI& mmpi  = *(MGmol_MPI::instance());
     const double occ = (double)((double)nel / (double)dim_);
+    if (mmpi.instancePE0())
+        std::cout << "DensityMatrix::setUniform(), occupation = " << occ
+                  << std::endl;
     assert(occ < 1.01);
     for (int i = 0; i < dim_; i++)
         occupation_[i] = occ;

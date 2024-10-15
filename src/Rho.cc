@@ -90,8 +90,8 @@ void Rho<OrbitalsType>::update(OrbitalsType& current_orbitals)
 
     update_tm_.start();
 
-    if (verbosity_level_ > 2 && onpe0)
-        (*MPIdata::sout) << "Rho<OrbitalsType>::update()" << std::endl;
+    if (verbosity_level_ > 1 && onpe0)
+        (*MPIdata::sout) << "Rho::update()..." << std::endl;
 
     const int new_iterative_index
         = ((1 + current_orbitals.getIterativeIndex()) % 100)
@@ -99,7 +99,7 @@ void Rho<OrbitalsType>::update(OrbitalsType& current_orbitals)
 
     if (iterative_index_ == new_iterative_index)
     {
-        if (onpe0 && verbosity_level_ > 2)
+        if (onpe0 && verbosity_level_ > 1)
             (*MPIdata::sout) << "Rho already up to date, iterative_index_="
                              << iterative_index_ << std::endl;
         return;

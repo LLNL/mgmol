@@ -512,7 +512,7 @@ void testROMRhoOperator(MGmolInterface *mgmol_)
     MGmol<OrbitalsType> *mgmol = static_cast<MGmol<OrbitalsType> *>(mgmol_);
     Poisson *poisson = mgmol->electrostat_->getPoissonSolver(); 
     Potentials& pot = mgmol->getHamiltonian()->potential();
-    std::shared_ptr<Rho<OrbitalsType>> rho = mgmol->getRho();
+    std::shared_ptr<Rho<OrbitalsType>> rho = NULL; // mgmol->getRho();
     const OrthoType ortho_type = rho->getOrthoType();
     assert(ortho_type == OrthoType::Nonorthogonal);
 
