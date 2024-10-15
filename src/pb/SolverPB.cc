@@ -7,7 +7,6 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id: SolverPB.cc,v 1.13 2010/01/28 22:56:32 jeanluc Exp $
 #include "SolverPB.h"
 #include "Mgm.h"
 #include "PBh2.h"
@@ -85,7 +84,7 @@ bool SolverPB<T, T2>::solve(T2* phi, T2* rhs, T2* rhod, T2* vks, const char dis)
 }
 
 template <class T, typename T2>
-bool SolverPB<T, T2>::solve(GridFunc<T2>& gf_phi, GridFunc<T2>& gf_rhs,
+bool SolverPB<T, T2>::solve(GridFunc<T2>& gf_phi, const GridFunc<T2>& gf_rhs,
     GridFunc<T2>& gf_rhod, GridFunc<T2>& gf_vks)
 {
     oper_.init(gf_rhod);
@@ -101,7 +100,7 @@ bool SolverPB<T, T2>::solve(GridFunc<T2>& gf_phi, GridFunc<T2>& gf_rhs,
 }
 
 template <class T, typename T2>
-bool SolverPB<T, T2>::solve(GridFunc<T2>& gf_phi, GridFunc<T2>& gf_rhs)
+bool SolverPB<T, T2>::solve(GridFunc<T2>& gf_phi, const GridFunc<T2>& gf_rhs)
 {
     if (!oper_.initialized())
     {

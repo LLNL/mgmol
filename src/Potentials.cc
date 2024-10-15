@@ -27,6 +27,7 @@
 #include <fstream>
 using namespace std;
 
+// unit conversion factor Ha -> Ry
 const double ha2ry = 2.;
 
 Potentials::~Potentials()
@@ -57,12 +58,8 @@ Potentials::Potentials(const bool vh_frozen)
 
     size_ = dim_[0] * dim_[1] * dim_[2];
 
-    mix_ = 1.;
-
     scf_dvrho_ = 1000.;
     scf_dv_    = 1000.;
-
-    vh_frozen_ = vh_frozen;
 
     vtot_.resize(size_);
     vtot_old_.resize(size_);
@@ -101,7 +98,7 @@ void Potentials::initWithVnuc()
     double one = 1.;
     LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
         size_, one, &v_ext_[0], &vtot_[0]);
-    // factor 2 to get total potential in [Ry] for calculations
+    // factor ha2ry to get total potential in [Ry] for calculations
     LinearAlgebraUtils<MemorySpace::Host>::MPscal(size_, ha2ry, &vtot_[0]);
 }
 
@@ -568,9 +565,8 @@ template <typename T>
 void Potentials::setVxc(const T* const vxc, const int iterativeIndex)
 {
     assert(iterativeIndex >= 0);
-    //    int ione=1;
+
     itindex_vxc_ = iterativeIndex;
-    //    Tcopy(&size_, vxc,  &ione, &vxc_rho_[0], &ione);
     MPcpy(&vxc_rho_[0], vxc, size_);
 }
 void Potentials::setVh(const POTDTYPE* const vh, const int iterativeIndex)
@@ -847,20 +843,6 @@ void Potentials::rescaleRhoComp()
         cout << " Rescaled compensating charges: " << setprecision(8) << fixed
              << comp_rho << endl;
     if (comp_rho < 0.) mmpi.abort();
-}
-
-double Potentials::getCharge(RHODTYPE* rho)
-{
-    Control& ct            = *(Control::instance());
-    Mesh* mymesh           = Mesh::instance();
-    const pb::Grid& mygrid = mymesh->grid();
-
-    double charge = mygrid.integralOverMesh(rho);
-
-    if (onpe0 && ct.verbose > 0)
-        cout << setprecision(8) << fixed << "Charge: " << charge << endl;
-
-    return charge;
 }
 
 void Potentials::addBackgroundToRhoComp()

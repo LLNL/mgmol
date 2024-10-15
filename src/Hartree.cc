@@ -7,10 +7,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
 #include <iomanip>
 #include <iostream>
-using namespace std;
 
 #include "Control.h"
 #include "Hartree.h"
@@ -82,6 +80,8 @@ void Hartree<T>::solve(
     //    {
     /* solve with POTDTYPE precision */
     pb::GridFunc<POTDTYPE> rhs(work_rho);
+    // Hartree units
+    rhs *= (4. * M_PI);
     poisson_solver_->solve(*Poisson::vh_, rhs);
     //    }
     //    else
@@ -92,10 +92,11 @@ void Hartree<T>::solve(
     double final_residual     = poisson_solver_->getFinalResidual();
 
     if (onpe0)
-        (*MPIdata::sout) << setprecision(2) << scientific
+        (*MPIdata::sout) << std::setprecision(2) << std::scientific
                          << "Hartree: residual reduction = "
                          << residual_reduction
-                         << ", final residual = " << final_residual << endl;
+                         << ", final residual = " << final_residual
+                         << std::endl;
 
     Poisson::Int_vhrho_  = vel * Poisson::vh_->gdot(rho);
     Poisson::Int_vhrhoc_ = vel * Poisson::vh_->gdot(rhoc);

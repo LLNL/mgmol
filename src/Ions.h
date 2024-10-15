@@ -71,13 +71,14 @@ class Ions
     void setMapVL();
     double computeMaxVlRadius() const;
     double computeMaxNLprojRadius() const;
-    double getMaxNLradius() const;
-    double getMaxLradius() const;
-    void updateListIons();
 
-    // compute boundary for box containing all atoms to be known on local
-    // processor that is values for list_boundary_left_, list_boundary_right_
-    void setupListIonsBoundaries(const double rmax);
+    /*
+     * Evaluate maximum pseudopotential radius among all species in class
+     */
+    double getSpeciesMaxNLradius() const;
+    double getSpeciesMaxLradius() const;
+
+    void updateListIons();
 
     void augmentIonsData(const int nsteps, const int dir, const int disp,
         const int locSize, const int maxLocSize, std::vector<IonData>& data,
@@ -163,6 +164,8 @@ class Ions
     bool hasLockedAtoms() const;
     void clearLists();
 
+    void rescaleVelocities(const double factor);
+
 public:
     Ions(const double lat[3], const std::vector<Species>& sp);
 
@@ -171,6 +174,10 @@ public:
     ~Ions();
 
     void setup();
+
+    // compute boundary for box containing all atoms to be known on local
+    // processor that is values for list_boundary_left_, list_boundary_right_
+    void setupListIonsBoundaries(const double rmax);
 
     std::vector<std::string>& getLocalNames() { return local_names_; }
     std::vector<double>& getTau0() { return tau0_; }
@@ -334,12 +341,14 @@ public:
 
     void updateForcesInteractingIons();
     void updateTaupInteractingIons();
-    void rescaleVelocities(const double factor);
 
     /*!
      * Calculate minimum distance between local pairs
      */
     double computeMinLocalSpacing() const;
+
+    void addIonToList(const Species& sp, const std::string& name,
+        const double crds[3], const double velocity[3], const bool lock);
 
     // void checkUnicityLocalIons();
 };

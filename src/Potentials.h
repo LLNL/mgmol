@@ -30,7 +30,6 @@ class Potentials
     int gdim_[3];
     int dim_[3];
     bool diel_;
-    double mix_;
 
     double scf_dvrho_;
     double scf_dv_;
@@ -39,8 +38,9 @@ class Potentials
     double charge_in_cell_;
     double ionic_charge_;
 
-    bool vh_frozen_;
-
+    /*!
+     * Total KS potential seen by electrons
+     */
     std::vector<POTDTYPE> vtot_;
     std::vector<POTDTYPE> vtot_old_;
 
@@ -48,16 +48,30 @@ class Potentials
     std::vector<POTDTYPE> vh_rho_;
     std::vector<POTDTYPE> vxc_rho_;
 
-    // nuclei local potential
+    /*
+     * Potential contribution from atomic cores (local pseudopotential)
+     */
     std::vector<POTDTYPE> v_nuc_;
 
-    // external potential (read from input)
+    /*!
+     * Optional external potential (read from input)
+     * Used only in special cases.
+     */
     std::vector<POTDTYPE> v_ext_;
 #ifdef HAVE_TRICUBIC
     pb::TriCubic<POTDTYPE>* vext_tricubic_;
 #endif
 
+    /*!
+     * Potential associated with the sum of Gaussian charge distributions
+     * compensating  the Coulomb potential of each atom
+     */
     std::vector<POTDTYPE> v_comp_;
+
+    /*!
+     * Sum of Gaussian charge distributions compensating the Coulomb potential
+     * of each atom
+     */
     std::vector<RHODTYPE> rho_comp_;
 
     std::vector<POTDTYPE> dv_;
@@ -121,14 +135,11 @@ public:
     void turnOnDiel() { diel_ = true; }
 
     int size() const { return size_; }
-    bool vh_frozen() const { return vh_frozen_; }
-    void freeze_vh() { vh_frozen_ = true; }
 
     double scf_dvrho(void) const { return scf_dvrho_; }
     double scf_dv(void) const { return scf_dv_; }
     POTDTYPE* vtot() { return &vtot_[0]; }
     POTDTYPE* vh_rho() { return &vh_rho_[0]; }
-    POTDTYPE* vxc_rho() { return &vxc_rho_[0]; }
     RHODTYPE* rho_comp() { return &rho_comp_[0]; }
 
     const std::vector<POTDTYPE>& vnuc() const { return v_nuc_; }
@@ -136,12 +147,6 @@ public:
     POTDTYPE* vext() { return &v_ext_[0]; }
     POTDTYPE* vepsilon() { return &vepsilon_[0]; }
 
-    void set_vcomp(const POTDTYPE val)
-    {
-        const int n = (int)v_comp_.size();
-        for (int i = 0; i < n; i++)
-            v_comp_[i] = val;
-    }
     void axpVcompToVh(const double alpha);
     void axpVcomp(POTDTYPE* v, const double alpha);
 
@@ -154,13 +159,29 @@ public:
 
     double getChargeInCell() const { return charge_in_cell_; }
 
+    /*!
+     * initialize total potential as local pseudopotential
+     */
     void initWithVnuc();
 
     void getVofRho(std::vector<POTDTYPE>& vrho) const;
 
-    double delta_v(const std::vector<std::vector<RHODTYPE>>&);
-    double update(const std::vector<std::vector<RHODTYPE>>&);
-    void update(const double);
+    /*!
+     * evaluate potential correction associated with a new rho
+     */
+    double delta_v(const std::vector<std::vector<RHODTYPE>>& rho);
+
+    /*!
+     * update potentials based on argument rho
+     */
+    double update(const std::vector<std::vector<RHODTYPE>>& rho);
+
+    /*!
+     * update potentials based on potential correction delta v and mixing
+     * parameter
+     */
+    void update(const double mix);
+
     double max() const;
     double min() const;
     void readAll(std::vector<Species>& sp);
@@ -172,7 +193,6 @@ public:
 
     void initialize(Ions& ions);
     void rescaleRhoComp();
-    double getCharge(RHODTYPE* rho);
     void initBackground(Ions& ions);
     void addBackgroundToRhoComp();
 
