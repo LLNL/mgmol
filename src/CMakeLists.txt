@@ -194,3 +194,15 @@ if(${MGMOL_WITH_LIBXC})
 endif (${MGMOL_WITH_LIBXC})
 
 install(TARGETS mgmol-opt DESTINATION bin)
+
+# test executable just for this debugging
+add_executable(test_overlapping_ion test_overlapping_ion.cc)
+target_include_directories (test_overlapping_ion PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries(test_overlapping_ion mgmol_src)
+if (${OPENMP_CXX_FOUND})
+  target_link_libraries(test_overlapping_ion OpenMP::OpenMP_CXX)
+endif()
+if(${MGMOL_WITH_LIBXC})
+  target_link_libraries(test_overlapping_ion ${LIBXC_DIR}/lib/libxc.a)
+endif (${MGMOL_WITH_LIBXC})
+install(TARGETS test_overlapping_ion DESTINATION bin)

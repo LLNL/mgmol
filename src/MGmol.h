@@ -178,6 +178,7 @@ public:
     ~MGmol() override;
 
     /* access functions */
+    std::shared_ptr<Ions> getIons() { return ions_; }
     OrbitalsType* getOrbitals() { return current_orbitals_; }
     std::shared_ptr<Hamiltonian<OrbitalsType>> getHamiltonian()
     {
