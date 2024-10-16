@@ -10,7 +10,7 @@ setenv OMP_NUM_THREADS 1
 
 set ncpus = 64
 
-set maindir = /p/lustre2/cheung26/mgmol-20240919
+set maindir = /p/lustre2/cheung26/mgmol-20241012
 
 setenv LD_LIBRARY_PATH ${maindir}/build_quartz/libROM/build/lib:$LD_LIBRARY_PATH
 
@@ -27,6 +27,6 @@ echo "Snapshot files: $snapshot_files"
 
 set basis_file = "PinnedH2O_orbitals_basis_${increment_md_steps}_${num_md_steps}"
 
-srun -n $ncpus $exe -f $basis_file $snapshot_files > basis_${increment_md_steps}_${num_md_steps}_Pinned_H2O.out
+srun -n $ncpus $exe -f $basis_file $snapshot_files > basis_${increment_md_steps}_${num_md_steps}_PinnedH2O.out
 
 date
