@@ -48,6 +48,10 @@ void testOverlappingIons(MGmolInterface *mgmol_)
     static std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd(){}
     static std::uniform_real_distribution<> dis(0.0, 1.0);
 
+    MGmol_MPI& mmpi      = *(MGmol_MPI::instance());
+    const int rank = mmpi.mypeGlobal();
+    const int nprocs = mmpi.size();
+
     MGmol<OrbitalsType> *mgmol = static_cast<MGmol<OrbitalsType> *>(mgmol_);
     std::shared_ptr<Ions> ions = mgmol->getIons();
 
@@ -109,6 +113,9 @@ void testOverlappingIons(MGmolInterface *mgmol_)
         {
             if (abs(fom_overlapping_ions[test_idx][k][d] - ions->overlappingNL_ions()[k]->position(d)) >= 1.0e-12)
             {
+                printf("rank %d, local overlap ion %d: (%.3e, %.3e, %.3e) =?= (%.3e, %.3e, %.3e)\n",
+                        rank, k, fom_overlapping_ions[test_idx][k][0], fom_overlapping_ions[test_idx][k][1], fom_overlapping_ions[test_idx][k][2],
+                        ions->overlappingNL_ions()[k]->position(0), ions->overlappingNL_ions()[k]->position(1), ions->overlappingNL_ions()[k]->position(2));
                 std::cerr << "overlapping ion coordinates are different!!!" << std::endl;
                 MPI_Abort(MPI_COMM_WORLD, 0);
             }
