@@ -55,26 +55,37 @@ void testOverlappingIons(MGmolInterface *mgmol_)
     MGmol<OrbitalsType> *mgmol = static_cast<MGmol<OrbitalsType> *>(mgmol_);
     std::shared_ptr<Ions> ions = mgmol->getIons();
 
+    Mesh* mymesh           = Mesh::instance();
+    const pb::Grid& mygrid = mymesh->grid();
+
+    /* get the extent of global domain */
+    const double origin[3] = { mygrid.origin(0), mygrid.origin(1), mygrid.origin(2) };
+    const double lattice[3] = { mygrid.ll(0), mygrid.ll(1), mygrid.ll(2) };
+    if (rank == 0)
+    {
+        printf("origin: (%.3e, %.3e, %.3e)\n", origin[0], origin[1], origin[2]);
+        printf("lattice: (%.3e, %.3e, %.3e)\n", lattice[0], lattice[1], lattice[2]);
+    }
+
+    /* get global atomic numbers */
+    const int num_ions = ions->getNumIons();
+    std::vector<short> atnumbers(num_ions);
+    ions->getAtomicNumbers(atnumbers);
+
     /* 3 fictitious ion configurations */
     const int num_snap = 3;
     const std::vector<Ion*> &local_ions(ions->local_ions());
     const int nlocal_ions = local_ions.size();
-    std::vector<std::vector<std::vector<double>>> cfgs(num_snap);
+    std::vector<std::vector<double>> cfgs(num_snap);
     for (int idx = 0; idx < num_snap; idx++)
     {
-        cfgs[idx].resize(nlocal_ions);
-
-        for (int k = 0; k < nlocal_ions; k++)
-        {
-            cfgs[idx][k].resize(3);
-
-            for (int d = 0; d < 3; d++)
-            {
-                double orig_position = local_ions[k]->position(d);
-                /* hope this does not go beyond the domain.. */
-                cfgs[idx][k][d] = orig_position * (0.9 + 0.2 * dis(gen));
-            }
-        }
+        cfgs[idx].resize(3 * num_ions);
+        if (rank == 0)
+            for (int k = 0; k < num_ions; k++)
+                for (int d = 0; d < 3; d++)
+                    cfgs[idx][3 * k + d] = origin[d] + lattice[d] * dis(gen);
+        
+        mmpi.bcastGlobal(cfgs[idx].data(), 3 * num_ions, 0);
     }
 
     /* Save overlappingVL ions from each fictitious ion configuration */
@@ -82,9 +93,7 @@ void testOverlappingIons(MGmolInterface *mgmol_)
     for (int idx = 0; idx < num_snap; idx++)
     {
         /* set ion positions */
-        for (int i = 0; i < nlocal_ions; i++)
-            local_ions[i]->setPosition(cfgs[idx][i][0], cfgs[idx][i][1], cfgs[idx][i][2]);
-        ions->setup();
+        ions->setPositions(cfgs[idx], atnumbers);
 
         fom_overlapping_ions[idx].resize(ions->overlappingNL_ions().size());
         for (int k = 0; k < ions->overlappingNL_ions().size(); k++)
@@ -96,11 +105,13 @@ void testOverlappingIons(MGmolInterface *mgmol_)
         }
     }
 
-    const int test_idx = 1;
+    std::uniform_int_distribution<> distrib(0, num_snap-1);
+    int test_idx = distrib(gen);
+    mmpi.bcastGlobal(&test_idx);
+    if (rank == 0) printf("test index: %d\n", test_idx);
+
     /* set ion positions */
-    for (int i = 0; i < nlocal_ions; i++)
-        local_ions[i]->setPosition(cfgs[test_idx][i][0], cfgs[test_idx][i][1], cfgs[test_idx][i][2]);
-    ions->setup();
+    ions->setPositions(cfgs[test_idx], atnumbers);
 
     if (fom_overlapping_ions[test_idx].size() != ions->overlappingNL_ions().size())
     {
@@ -120,7 +131,6 @@ void testOverlappingIons(MGmolInterface *mgmol_)
                 MPI_Abort(MPI_COMM_WORLD, 0);
             }
         }
-            
     }
 }
 
