@@ -494,20 +494,17 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
 
 #ifdef MGMOL_HAS_LIBROM
         // TODO: cleanup
-        int rdim = 39;
-        std::string basis_filename = "PinnedH2O_orbitals_basis_1_50";
-        bool ROM_md = false;
-
-        if (rdim > 0)
+        if (ct.getROMOptions().num_orbbasis > 0)
         {
             if (onpe0)
             {
-                os_ << "Projecting orbitals onto ROM subspaces" << std::endl;
-                os_ << "Loading ROM basis " << basis_filename << std::endl;
-                os_ << "ROM basis dimension = " << rdim << std::endl;
+                os_ << "Projecting orbitals onto ROM subspaces to compare " 
+                    << ((ct.getROMOptions().compare_md) ? "MD dynamics" : "force") << std::endl;
+                os_ << "Loading ROM basis " << ct.getROMOptions().basis_file << std::endl;
+                os_ << "ROM basis dimension = " << ct.getROMOptions().num_orbbasis << std::endl;
             }
-            project_orbital(basis_filename, rdim, **orbitals);
-            if (ROM_md)
+            project_orbital(ct.getROMOptions().basis_file, ct.getROMOptions().num_orbbasis, **orbitals);
+            if (ct.getROMOptions().compare_md)
             {
                 force(**orbitals, ions);
             }
