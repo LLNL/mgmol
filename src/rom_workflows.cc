@@ -792,6 +792,7 @@ void testROMIonDensity(MGmolInterface *mgmol_)
 
     Control& ct              = *(Control::instance());
     Mesh* mymesh             = Mesh::instance();
+    const pb::Grid& mygrid = mymesh->grid();
     const int subdivx = mymesh->subdivx();
     const pb::PEenv& myPEenv = mymesh->peenv();
     MGmol_MPI& mmpi      = *(MGmol_MPI::instance());
@@ -805,7 +806,21 @@ void testROMIonDensity(MGmolInterface *mgmol_)
     Poisson *poisson = mgmol->electrostat_->getPoissonSolver(); 
     Potentials& pot = mgmol->getHamiltonian()->potential();
     const int dim = pot.size();
-    std::shared_ptr<Ions> ions = mgmol->getIons();
+    std::shared_ptr<Ions> ions = mgmol->getIons();    
+
+    /* get the extent of global domain */
+    const double origin[3] = { mygrid.origin(0), mygrid.origin(1), mygrid.origin(2) };
+    const double lattice[3] = { mygrid.ll(0), mygrid.ll(1), mygrid.ll(2) };
+    if (rank == 0)
+    {
+        printf("origin: (%.3e, %.3e, %.3e)\n", origin[0], origin[1], origin[2]);
+        printf("lattice: (%.3e, %.3e, %.3e)\n", lattice[0], lattice[1], lattice[2]);
+    }
+
+    /* get global atomic numbers */
+    const int num_ions = ions->getNumIons();
+    std::vector<short> atnumbers(num_ions);
+    ions->getAtomicNumbers(atnumbers);
 
     assert(!(mgmol->electrostat_->isDielectric()));
     assert(pot.getBackgroundCharge() <= 0.0);
@@ -813,33 +828,35 @@ void testROMIonDensity(MGmolInterface *mgmol_)
     const int num_snap = 3;
 
     /* 3 fictitious ion configurations */
-    const std::vector<Ion*> &overlappingVL_ions(ions->overlappingNL_ions());
-    const int nlocal_ions = overlappingVL_ions.size();
-    std::vector<std::vector<std::vector<double>>> cfgs(num_snap);
+    std::vector<std::vector<double>> cfgs(num_snap);
     for (int idx = 0; idx < num_snap; idx++)
     {
-        cfgs[idx].resize(nlocal_ions);
-
-        for (int k = 0; k < nlocal_ions; k++)
-        {
-            cfgs[idx][k].resize(3);
-
-            for (int d = 0; d < 3; d++)
-            {
-                double orig_position = overlappingVL_ions[k]->position(d);
-                /* hope this does not go beyond the domain.. */
-                cfgs[idx][k][d] = orig_position * (0.9 + 0.2 * dis(gen));
-            }
-        }
+        cfgs[idx].resize(3 * num_ions);
+        if (rank == 0)
+            for (int k = 0; k < num_ions; k++)
+                for (int d = 0; d < 3; d++)
+                    cfgs[idx][3 * k + d] = origin[d] + lattice[d] * dis(gen);
+        
+        mmpi.bcastGlobal(cfgs[idx].data(), 3 * num_ions, 0);
     }
 
     /* Collect fictitious ion density based on each configuration */
     std::vector<std::vector<POTDTYPE>> fom_rhoc(num_snap);
+    /* Sanity check for overlappingVL_ions */
+    std::vector<std::vector<std::vector<double>>> fom_overlap_ions(num_snap);
     for (int idx = 0; idx < num_snap; idx++)
     {
         /* set ion positions */
-        for (int i = 0; i < nlocal_ions; i++)
-            overlappingVL_ions[i]->setPosition(cfgs[idx][i][0], cfgs[idx][i][1], cfgs[idx][i][2]);
+        ions->setPositions(cfgs[idx], atnumbers);
+
+        /* save overlapping ions for sanity check */
+        fom_overlap_ions[idx].resize(ions->overlappingVL_ions().size());
+        for (int k = 0; k < ions->overlappingVL_ions().size(); k++)
+        {
+            fom_overlap_ions[idx][k].resize(3);
+            for (int d = 0; d < 3; d++)
+                fom_overlap_ions[idx][k][d] = ions->overlappingVL_ions()[k]->position(d);
+        }
 
         /* compute resulting ion density */
         /* NOTE: we exclude rescaling for the sake of verification */
@@ -887,11 +904,19 @@ void testROMIonDensity(MGmolInterface *mgmol_)
         sampled_row[s] = global_sampled_row[gs];
 
     /* test one solution */
-    const int test_idx = 2;
+    std::uniform_int_distribution<> distrib(0, num_snap-1);
+    int test_idx = distrib(gen);
+    mmpi.bcastGlobal(&test_idx);
+    if (rank == 0) printf("test index: %d\n", test_idx);
 
     /* set ion positions */
-    for (int i = 0; i < nlocal_ions; i++)
-        overlappingVL_ions[i]->setPosition(cfgs[test_idx][i][0], cfgs[test_idx][i][1], cfgs[test_idx][i][2]);
+    ions->setPositions(cfgs[test_idx], atnumbers);
+
+    /* Sanity check for overlapping ions */
+    CAROM_VERIFY(fom_overlap_ions[test_idx].size() == ions->overlappingVL_ions().size());
+    for (int k = 0; k < ions->overlappingVL_ions().size(); k++)
+        for (int d = 0; d < 3; d++)
+            CAROM_VERIFY(abs(fom_overlap_ions[test_idx][k][d] - ions->overlappingVL_ions()[k]->position(d)) < 1.0e-12);
 
     /* eval ion density on sample grid points */
     std::vector<RHODTYPE> sampled_rhoc(sampled_row.size());
