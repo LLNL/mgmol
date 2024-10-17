@@ -95,6 +95,9 @@ class Potentials
     void initializeSupersampledRadialDataOnMesh(
         const Vector3D& position, const Species& sp);
 
+    void initializeRadialDataOnSampledPts(
+        const Vector3D& position, const Species& sp, const std::vector<int> &local_idx, std::vector<RHODTYPE> &sampled_rhoc);
+
 public:
     Potentials(const bool vh_frozen = false);
 
@@ -159,6 +162,8 @@ public:
 
     double getChargeInCell() const { return charge_in_cell_; }
 
+    const double getBackgroundCharge() const { return background_charge_; }
+
     /*!
      * initialize total potential as local pseudopotential
      */
@@ -195,6 +200,8 @@ public:
     void rescaleRhoComp();
     void initBackground(Ions& ions);
     void addBackgroundToRhoComp();
+
+    void evalIonDensityOnSamplePts(Ions& ions, const std::vector<int> &local_idx, std::vector<RHODTYPE> &sampled_rhoc);
 
 #ifdef HAVE_TRICUBIC
     void readExternalPot(const string filename, const char type);

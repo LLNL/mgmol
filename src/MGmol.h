@@ -187,6 +187,7 @@ public:
         return hamiltonian_;
     }
     std::shared_ptr<Rho<OrbitalsType>> getRho() { return rho_; }
+    std::shared_ptr<Ions> getIons() { return ions_; }
 
     void run() override;
 

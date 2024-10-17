@@ -431,6 +431,8 @@ void setupROMConfigOption(po::options_description &rom_cfg)
         ("ROM.offline.variable", po::value<std::string>()->default_value(""),
             "FOM variable to perform POD: either orbitals or potential.")
         ("ROM.basis.number_of_potential_basis", po::value<int>()->default_value(-1),
-            "Number of potential POD basis to build Hartree potential ROM operator.");
+            "Number of potential POD basis to build Hartree potential ROM operator.")
+        ("ROM.potential_rom_file", po::value<std::string>()->default_value(""),
+            "File name to save/load potential ROM operators.");
 }
 #endif
