@@ -492,6 +492,41 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
         // Compute forces
         force(**orbitals, ions);
 
+#ifdef MGMOL_HAS_LIBROM
+        // TODO: cleanup
+        if (ct.getROMOptions().num_orbbasis > 0)
+        {
+            if (onpe0)
+            {
+                os_ << "Projecting orbitals onto ROM subspaces to compare " 
+                    << ((ct.getROMOptions().compare_md) ? "MD dynamics" : "force") << std::endl;
+                os_ << "Loading ROM basis " << ct.getROMOptions().basis_file << std::endl;
+                os_ << "ROM basis dimension = " << ct.getROMOptions().num_orbbasis << std::endl;
+            }
+            project_orbital(ct.getROMOptions().basis_file, ct.getROMOptions().num_orbbasis, **orbitals);
+            if (ct.getROMOptions().compare_md)
+            {
+                force(**orbitals, ions);
+            }
+            else
+            {
+                double shift[3];
+                for (short i = 0; i < 3; i++) shift[i] = 0.;
+                Ions ROM_ions(ions, shift);
+                force(**orbitals, ROM_ions);
+                std::string zero = "0";
+                if (ions_->getNumIons() < 256 || ct.verbose > 2)
+                {
+                    if (ct.verbose > 0) ROM_ions.printForcesGlobal(os_);
+                }
+                else if (zero.compare(ct.md_print_filename) == 0)
+                {
+                    ROM_ions.printForcesLocal(os_);
+                }
+            }
+        }
+#endif
+
         // set fion
         ions.getLocalForces(fion);
 
@@ -633,8 +668,8 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
 
 #ifdef MGMOL_HAS_LIBROM
         // Save orbital snapshots
-        if (md_iteration_ % librom_snapshot_freq == 0
-            && ct.getROMOptions().save_librom_snapshot > 0)
+        if (ct.getROMOptions().save_librom_snapshot > 0 && 
+            md_iteration_ % librom_snapshot_freq == 0)
         {
             int ierr = save_orbital_snapshot(
                 ct.md_print_filename + "_mdstep" + std::to_string(mdstep), **orbitals);

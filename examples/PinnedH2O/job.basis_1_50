@@ -1,7 +1,7 @@
 #!/bin/tcsh
 #SBATCH -N 2
 #SBATCH -t 0:10:00
-#SBATCH -p pdebug
+#SBATCH -p pbatch
 
 date
 
@@ -10,7 +10,7 @@ setenv OMP_NUM_THREADS 1
 
 set ncpus = 64
 
-set maindir = /p/lustre2/cheung26/mgmol-20240815
+set maindir = /p/lustre2/cheung26/mgmol-20241012
 
 setenv LD_LIBRARY_PATH ${maindir}/build_quartz/libROM/build/lib:$LD_LIBRARY_PATH
 
@@ -18,15 +18,15 @@ set exe     = ${maindir}/build_quartz/libROM/build/examples/misc/combine_samples
 
 set snapshot_files = ""
 set increment_md_steps = 1
-set num_md_steps = 500
+set num_md_steps = 50
 
 foreach k (`seq $increment_md_steps $increment_md_steps $num_md_steps`)
     set snapshot_files = "$snapshot_files MD_mdstep${k}_snapshot"
 end
 echo "Snapshot files: $snapshot_files"
 
-set basis_file = "PinnedH2O_orbitals_basis"
+set basis_file = "PinnedH2O_orbitals_basis_${increment_md_steps}_${num_md_steps}"
 
-srun -n $ncpus $exe -f $basis_file $snapshot_files > basis_${increment_md_steps}_${num_md_steps}_Pinned_H2O.out
+srun -n $ncpus $exe -f $basis_file $snapshot_files > basis_${increment_md_steps}_${num_md_steps}_PinnedH2O.out
 
 date
