@@ -81,6 +81,7 @@ void Hartree_CG<T>::solve(
     //    {
     /* solve with POTDTYPE precision */
     pb::GridFunc<POTDTYPE> rhs(work_rho);
+    rhs *= (4. * M_PI);
     poisson_solver_->solve(*Poisson::vh_, rhs);
     //    }
     //    else

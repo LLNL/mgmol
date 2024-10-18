@@ -70,6 +70,7 @@ Control::Control()
     dm_approx_ndigits      = 1;
     dm_approx_power_maxits = 100;
     wf_extrapolation_      = 1;
+    verbose                = 0;
 
     // undefined values
     dm_algo_                         = -1;

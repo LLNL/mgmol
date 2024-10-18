@@ -9,10 +9,8 @@
 
 #include "PCGSolver_Diel.h"
 
-using namespace std;
-
-template <class T, typename T2>
-void PCGSolver_Diel<T, T2>::clear()
+template <class T, typename ScalarType>
+void PCGSolver_Diel<T, ScalarType>::clear()
 {
     for (short i = 0; i < (short)pc_oper_.size(); i++)
     {
@@ -33,7 +31,7 @@ void PCGSolver_Diel<T, T2>::clear()
         assert(gf_newv_[i] != nullptr);
         delete gf_newv_[i];
     }
-    // delete grids after pb::GridFunc<T2> objects since those
+    // delete grids after pb::GridFunc<ScalarType> objects since those
     // have data members references to grids
     for (short i = 0; i < (short)grid_.size(); i++)
     {
@@ -46,8 +44,8 @@ void PCGSolver_Diel<T, T2>::clear()
     gf_newv_.clear();
 }
 
-template <class T, typename T2>
-void PCGSolver_Diel<T, T2>::setupPrecon()
+template <class T, typename ScalarType>
+void PCGSolver_Diel<T, ScalarType>::setupPrecon()
 {
     // fine level
     pb::Grid* mygrid = new pb::Grid(oper_.grid());
@@ -57,8 +55,8 @@ void PCGSolver_Diel<T, T2>::setupPrecon()
     T* myoper = new T(oper_);
     pc_oper_.push_back(myoper);
 
-    pb::GridFunc<T2>* gf_work
-        = new pb::GridFunc<T2>(*grid_[0], bc_[0], bc_[1], bc_[2]);
+    pb::GridFunc<ScalarType>* gf_work
+        = new pb::GridFunc<ScalarType>(*grid_[0], bc_[0], bc_[1], bc_[2]);
     gf_work_.push_back(gf_work);
 
     // coarse levels
@@ -86,24 +84,25 @@ void PCGSolver_Diel<T, T2>::setupPrecon()
         T* myoper = new T(pc_oper_[ln - 1]->coarseOp(*mygrid));
         pc_oper_.push_back(myoper);
 
-        gf_work = new pb::GridFunc<T2>(*coarse_grid, bc_[0], bc_[1], bc_[2]);
+        gf_work = new pb::GridFunc<ScalarType>(
+            *coarse_grid, bc_[0], bc_[1], bc_[2]);
         gf_work_.push_back(gf_work);
 
-        pb::GridFunc<T2>* gf_rcoarse
-            = new pb::GridFunc<T2>(*coarse_grid, bc_[0], bc_[1], bc_[2]);
+        pb::GridFunc<ScalarType>* gf_rcoarse = new pb::GridFunc<ScalarType>(
+            *coarse_grid, bc_[0], bc_[1], bc_[2]);
         gf_rcoarse_.push_back(gf_rcoarse);
-        pb::GridFunc<T2>* gf_newv
-            = new pb::GridFunc<T2>(*coarse_grid, bc_[0], bc_[1], bc_[2]);
+        pb::GridFunc<ScalarType>* gf_newv = new pb::GridFunc<ScalarType>(
+            *coarse_grid, bc_[0], bc_[1], bc_[2]);
         gf_newv_.push_back(gf_newv);
 
         mygrid = coarse_grid;
     }
 }
 
-template <class T, typename T2>
+template <class T, typename ScalarType>
 // MG V-cycle with no mask
-void PCGSolver_Diel<T, T2>::preconSolve(
-    pb::GridFunc<T2>& gf_v, const pb::GridFunc<T2>& gf_f, const short level)
+void PCGSolver_Diel<T, ScalarType>::preconSolve(pb::GridFunc<ScalarType>& gf_v,
+    const pb::GridFunc<ScalarType>& gf_f, const short level)
 {
     //(*MPIdata::sout)<<"Preconditioning::mg() at level "<<level<<endl;
     short ncycl = nu1_;
@@ -126,11 +125,11 @@ void PCGSolver_Diel<T, T2>::preconSolve(
     // COARSE GRID CORRECTION
 
     // restrictions
-    pb::GridFunc<T2>* rcoarse = gf_rcoarse_[level];
+    pb::GridFunc<ScalarType>* rcoarse = gf_rcoarse_[level];
     gf_work_[level]->restrict3D(*rcoarse);
 
     // storage functions for coarse grid
-    pb::GridFunc<T2>* newv = gf_newv_[level];
+    pb::GridFunc<ScalarType>* newv = gf_newv_[level];
 
     // call mgrid solver on a coarser level
     newv->resetData();
@@ -149,15 +148,16 @@ void PCGSolver_Diel<T, T2>::preconSolve(
     if (bc_[0] != 1 || bc_[2] != 1 || bc_[2] != 1) gf_v.trade_boundaries();
 }
 
-template <class T, typename T2>
+template <class T, typename ScalarType>
 // Left Preconditioned CG
-bool PCGSolver_Diel<T, T2>::solve(
-    pb::GridFunc<T2>& gf_phi, pb::GridFunc<T2>& gf_rhs)
+bool PCGSolver_Diel<T, ScalarType>::solve(
+    pb::GridFunc<ScalarType>& gf_phi, pb::GridFunc<ScalarType>& gf_rhs)
 {
     if (!oper_.initialized())
     {
-        cout << "Error in PCGSolver_Diel<T>::solve: operator not initialized"
-             << endl;
+        std::cout
+            << "Error in PCGSolver_Diel<T>::solve: operator not initialized"
+            << std::endl;
         return 0.;
     }
 
@@ -165,13 +165,13 @@ bool PCGSolver_Diel<T, T2>::solve(
     const pb::Grid& finegrid = gf_phi.grid();
 
     // initial data and residual - We assume a nonzero initial guess
-    pb::GridFunc<T2> lhs(finegrid, bc_[0], bc_[1], bc_[2]);
-    pb::GridFunc<T2> res(finegrid, bc_[0], bc_[1], bc_[2]);
+    pb::GridFunc<ScalarType> lhs(finegrid, bc_[0], bc_[1], bc_[2]);
+    pb::GridFunc<ScalarType> res(finegrid, bc_[0], bc_[1], bc_[2]);
     // scale initial guess with epsilon
     oper_.inv_transform(gf_phi);
     // compute initial residual
     oper_.apply(gf_phi, lhs);
-    pb::GridFunc<T2> rhs(gf_rhs);
+    pb::GridFunc<ScalarType> rhs(gf_rhs);
     oper_.transform(rhs);
     // Hartree units
     rhs *= (4. * M_PI);
@@ -180,13 +180,13 @@ bool PCGSolver_Diel<T, T2>::solve(
     double rnorm      = init_rnorm;
 
     // preconditioned residual
-    pb::GridFunc<T2> z(finegrid, bc_[0], bc_[1], bc_[2]);
+    pb::GridFunc<ScalarType> z(finegrid, bc_[0], bc_[1], bc_[2]);
     // preconditioning step
     z = 0.;
     preconSolve(z, res, 0);
     // conjugate vectors
-    pb::GridFunc<T2> p(z);
-    pb::GridFunc<T2> ap(p.grid(), bc_[0], bc_[1], bc_[2]);
+    pb::GridFunc<ScalarType> p(z);
+    pb::GridFunc<ScalarType> ap(p.grid(), bc_[0], bc_[1], bc_[2]);
 
     double rtz = res.gdot(z);
 
@@ -225,11 +225,11 @@ bool PCGSolver_Diel<T, T2>::solve(
     return converged;
 }
 
-template <class T, typename T2>
+template <class T, typename ScalarType>
 // Left Preconditioned CG
-bool PCGSolver_Diel<T, T2>::solve(pb::GridFunc<T2>& gf_phi,
-    pb::GridFunc<T2>& gf_rhs, pb::GridFunc<T2>& gf_rhod,
-    pb::GridFunc<T2>& gf_vks)
+bool PCGSolver_Diel<T, ScalarType>::solve(pb::GridFunc<ScalarType>& gf_phi,
+    pb::GridFunc<ScalarType>& gf_rhs, pb::GridFunc<ScalarType>& gf_rhod,
+    pb::GridFunc<ScalarType>& gf_vks)
 {
     // initialize the linear system operator and the preconditioner
     oper_.init(gf_rhod);

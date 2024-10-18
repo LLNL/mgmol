@@ -7,9 +7,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id: Solver.h,v 1.14 2010/01/28 22:56:47 jeanluc Exp $
-#ifndef SOLVE_H
-#define SOLVE_H
+#ifndef PB_SOLVER_H
+#define PB_SOLVER_H
 
 #include "GridFunc.h"
 
@@ -33,7 +32,7 @@ public:
         fully_periodic_ = ((bc_[0] == 1) && (bc_[1] == 1) && (bc_[2] == 1));
     }
 
-    virtual bool solve(GridFunc<T>&, GridFunc<T>&) = 0;
+    virtual bool solve(GridFunc<T>&, const GridFunc<T>&) = 0;
 
     virtual void setup(const short nu1, const short nu2, const short max_sweeps,
         const double tol, const short max_nlevels,

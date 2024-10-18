@@ -209,6 +209,8 @@ add_executable(testMGkernels
                ${CMAKE_SOURCE_DIR}/src/pb/FDkernels.cc
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
+add_executable(testIons
+               ${CMAKE_SOURCE_DIR}/tests/testIons.cc)
 add_executable(testGramMatrix
                ${CMAKE_SOURCE_DIR}/tests/testGramMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/GramMatrix.cc
@@ -334,6 +336,10 @@ add_test(NAME testBatchLaph4
 add_test(NAME testtMGkernels
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testMGkernels)
+add_test(NAME testIons
+         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+                 ${CMAKE_CURRENT_BINARY_DIR}/testIons
+                 ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME testGramMatrix
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testGramMatrix)
@@ -541,6 +547,7 @@ target_include_directories(testPowerDistMatrix PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories(testDensityMatrix PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories(testGramMatrix PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories(testAndersonMix PRIVATE ${Boost_INCLUDE_DIRS})
+target_include_directories(testIons PRIVATE ${Boost_INCLUDE_DIRS} ${HDF5_INCLUDE_DIRS})
 
 target_link_libraries(testMPI PRIVATE MPI::MPI_CXX)
 target_link_libraries(testBlacsContext PRIVATE ${SCALAPACK_LIBRARIES}
@@ -550,6 +557,7 @@ target_link_libraries(testDirectionalReduce PRIVATE MPI::MPI_CXX)
 target_link_libraries(testEnergyAndForces PRIVATE mgmol_src)
 target_link_libraries(testWFEnergyAndForces PRIVATE mgmol_src)
 target_link_libraries(testDMandEnergyAndForces PRIVATE mgmol_src)
+target_link_libraries(testIons PRIVATE mgmol_src)
 
 if(${MAGMA_FOUND})
   target_link_libraries(testDistVector PRIVATE ${SCALAPACK_LIBRARIES}
