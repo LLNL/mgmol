@@ -218,7 +218,7 @@ void buildROMPoissonOperator(MGmolInterface *mgmol_)
     // write the file from PE0 only
     if (MPIdata::onpe0)
     {
-        std::string rom_oper = "pot_rom_oper.h5";
+        std::string rom_oper = rom_options.pot_rom_file;
         CAROM::HDFDatabase h5_helper;
         h5_helper.create(rom_oper);
         h5_helper.putInteger("number_of_potential_basis", num_pot_basis);
@@ -236,6 +236,67 @@ void buildROMPoissonOperator(MGmolInterface *mgmol_)
 
         /* save right-hand side rescaling operator */
         h5_helper.putDoubleArray("potential_rhs_rescaler", rom_ones.getData(),
+                                num_pot_basis, false);
+
+        h5_helper.close();
+    }
+}
+
+template <class OrbitalsType>
+void runPoissonROM(MGmolInterface *mgmol_)
+{
+    Control& ct              = *(Control::instance());
+    Mesh* mymesh             = Mesh::instance();
+    const pb::PEenv& myPEenv = mymesh->peenv();
+    MGmol_MPI& mmpi          = *(MGmol_MPI::instance());
+    const int rank           = mmpi.mypeGlobal();
+    const int nprocs         = mmpi.size();
+
+    ROMPrivateOptions rom_options = ct.getROMOptions();
+    /* type of variable we intend to run POD */
+    ROMVariable rom_var = rom_options.variable;
+    if (rom_var != ROMVariable::POTENTIAL)
+    {
+        std::cerr << "runPoissonROM error: ROM variable must be POTENTIAL to run this stage!\n" << std::endl;
+        MPI_Abort(MPI_COMM_WORLD, 0);
+    }
+
+    /* Load Hartree potential basis matrix */
+    std::string basis_file = rom_options.basis_file;
+    const int num_pot_basis = rom_options.num_potbasis;
+    CAROM::BasisReader basis_reader(basis_file);
+    CAROM::Matrix *pot_basis = basis_reader.getSpatialBasis(num_pot_basis);
+
+    /* initialize rom operator variables */
+    CAROM::Matrix pot_rom(num_pot_basis, num_pot_basis, false);
+    CAROM::Matrix pot_rom_inv(num_pot_basis, num_pot_basis, false);
+    CAROM::Matrix pot_rhs_rom(num_pot_basis, num_pot_basis, false);
+    CAROM::Vector pot_rhs_rescaler(num_pot_basis, false);
+    
+    /* Load ROM operator */
+    // read the file from PE0 only
+    if (MPIdata::onpe0)
+    {
+        std::string rom_oper = rom_options.pot_rom_file;
+        CAROM::HDFDatabase h5_helper;
+        h5_helper.open(rom_oper, "r");
+        int num_pot_basis_file = -1;
+        h5_helper.getInteger("number_of_potential_basis", num_pot_basis_file);
+        CAROM_VERIFY(num_pot_basis_file == num_pot_basis);
+
+        h5_helper.getDoubleArray("potential_rom_operator", pot_rom.getData(),
+                                num_pot_basis * num_pot_basis, false);
+
+        /* load the inverse as well */
+        h5_helper.getDoubleArray("potential_rom_inverse", pot_rom_inv.getData(),
+                                num_pot_basis * num_pot_basis, false);
+
+        /* load right-hand side hyper-reduction operator */
+        h5_helper.getDoubleArray("potential_rhs_rom_inverse", pot_rhs_rom.getData(),
+                                num_pot_basis * num_pot_basis, false);
+
+        /* load right-hand side rescaling operator */
+        h5_helper.getDoubleArray("potential_rhs_rescaler", pot_rhs_rescaler.getData(),
                                 num_pot_basis, false);
 
         h5_helper.close();
@@ -721,14 +782,167 @@ void computeRhoOnSamplePts(const CAROM::Matrix &dm,
     // rescaleTotalCharge();
 }
 
+template <class OrbitalsType>
+void testROMIonDensity(MGmolInterface *mgmol_)
+{
+    /* random number generator */
+    static std::random_device rd;  // Will be used to obtain a seed for the random number engine
+    static std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd(){}
+    static std::uniform_real_distribution<> dis(0.0, 1.0);
+
+    Control& ct              = *(Control::instance());
+    Mesh* mymesh             = Mesh::instance();
+    const pb::Grid& mygrid = mymesh->grid();
+    const int subdivx = mymesh->subdivx();
+    const pb::PEenv& myPEenv = mymesh->peenv();
+    MGmol_MPI& mmpi      = *(MGmol_MPI::instance());
+    const int rank = mmpi.mypeGlobal();
+    const int nprocs = mmpi.size();
+
+    ROMPrivateOptions rom_options = ct.getROMOptions();
+
+    /* Load MGmol pointer and Potentials */
+    MGmol<OrbitalsType> *mgmol = static_cast<MGmol<OrbitalsType> *>(mgmol_);
+    Poisson *poisson = mgmol->electrostat_->getPoissonSolver(); 
+    Potentials& pot = mgmol->getHamiltonian()->potential();
+    const int dim = pot.size();
+    std::shared_ptr<Ions> ions = mgmol->getIons();    
+
+    /* get the extent of global domain */
+    const double origin[3] = { mygrid.origin(0), mygrid.origin(1), mygrid.origin(2) };
+    const double lattice[3] = { mygrid.ll(0), mygrid.ll(1), mygrid.ll(2) };
+    if (rank == 0)
+    {
+        printf("origin: (%.3e, %.3e, %.3e)\n", origin[0], origin[1], origin[2]);
+        printf("lattice: (%.3e, %.3e, %.3e)\n", lattice[0], lattice[1], lattice[2]);
+    }
+
+    /* get global atomic numbers */
+    const int num_ions = ions->getNumIons();
+    std::vector<short> atnumbers(num_ions);
+    ions->getAtomicNumbers(atnumbers);
+
+    assert(!(mgmol->electrostat_->isDielectric()));
+    assert(pot.getBackgroundCharge() <= 0.0);
+
+    const int num_snap = 3;
+
+    /* 3 fictitious ion configurations */
+    std::vector<std::vector<double>> cfgs(num_snap);
+    for (int idx = 0; idx < num_snap; idx++)
+    {
+        cfgs[idx].resize(3 * num_ions);
+        if (rank == 0)
+            for (int k = 0; k < num_ions; k++)
+                for (int d = 0; d < 3; d++)
+                    cfgs[idx][3 * k + d] = origin[d] + lattice[d] * dis(gen);
+        
+        mmpi.bcastGlobal(cfgs[idx].data(), 3 * num_ions, 0);
+    }
+
+    /* Collect fictitious ion density based on each configuration */
+    std::vector<std::vector<POTDTYPE>> fom_rhoc(num_snap);
+    /* Sanity check for overlappingVL_ions */
+    std::vector<std::vector<std::vector<double>>> fom_overlap_ions(num_snap);
+    for (int idx = 0; idx < num_snap; idx++)
+    {
+        /* set ion positions */
+        ions->setPositions(cfgs[idx], atnumbers);
+
+        /* save overlapping ions for sanity check */
+        fom_overlap_ions[idx].resize(ions->overlappingVL_ions().size());
+        for (int k = 0; k < ions->overlappingVL_ions().size(); k++)
+        {
+            fom_overlap_ions[idx][k].resize(3);
+            for (int d = 0; d < 3; d++)
+                fom_overlap_ions[idx][k][d] = ions->overlappingVL_ions()[k]->position(d);
+        }
+
+        /* compute resulting ion density */
+        /* NOTE: we exclude rescaling for the sake of verification */
+        pot.initialize(*ions);
+
+        mgmol->electrostat_->setupRhoc(pot.rho_comp());
+        fom_rhoc[idx].resize(dim);
+        mgmol->electrostat_->getRhoc()->init_vect(fom_rhoc[idx].data(), 'd');
+    }
+
+    /* Initialize libROM classes */
+    /*
+        In practice, we do not produce rhoc POD basis. 
+        This rhoc POD basis is for the sake of verification.
+    */
+    CAROM::Options svd_options(dim, num_snap, 1);
+    svd_options.static_svd_preserve_snapshot = true;
+    CAROM::BasisGenerator basis_generator(svd_options, false, "test_rhoc");
+    for (int idx = 0; idx < num_snap; idx++)
+        basis_generator.takeSample(&fom_rhoc[idx][0]);
+
+    const CAROM::Matrix rhoc_snapshots(*basis_generator.getSnapshotMatrix());
+    basis_generator.endSamples();
+
+    const CAROM::Matrix *rhoc_basis = basis_generator.getSpatialBasis();
+    CAROM::Matrix *proj_rhoc = rhoc_basis->transposeMult(rhoc_snapshots);
+
+    /* DEIM hyperreduction */
+    CAROM::Matrix rhoc_basis_inv(num_snap, num_snap, false);
+    std::vector<int> global_sampled_row(num_snap), sampled_rows_per_proc(nprocs);
+    DEIM(rhoc_basis, num_snap, global_sampled_row, sampled_rows_per_proc,
+         rhoc_basis_inv, rank, nprocs);
+    if (rank == 0)
+    {
+        int num_sample_rows = 0;
+        for (int k = 0; k < sampled_rows_per_proc.size(); k++)
+            num_sample_rows += sampled_rows_per_proc[k];
+        printf("number of sampled row: %d\n", num_sample_rows);
+    }
+    
+    /* get local sampled row */
+    std::vector<int> offsets, sampled_row(sampled_rows_per_proc[rank]);
+    int num_global_sample = CAROM::get_global_offsets(sampled_rows_per_proc[rank], offsets);
+    for (int s = 0, gs = offsets[rank]; gs < offsets[rank+1]; gs++, s++)
+        sampled_row[s] = global_sampled_row[gs];
+
+    /* test one solution */
+    std::uniform_int_distribution<> distrib(0, num_snap-1);
+    int test_idx = distrib(gen);
+    mmpi.bcastGlobal(&test_idx);
+    if (rank == 0) printf("test index: %d\n", test_idx);
+
+    /* set ion positions */
+    ions->setPositions(cfgs[test_idx], atnumbers);
+
+    /* Sanity check for overlapping ions */
+    CAROM_VERIFY(fom_overlap_ions[test_idx].size() == ions->overlappingVL_ions().size());
+    for (int k = 0; k < ions->overlappingVL_ions().size(); k++)
+        for (int d = 0; d < 3; d++)
+            CAROM_VERIFY(abs(fom_overlap_ions[test_idx][k][d] - ions->overlappingVL_ions()[k]->position(d)) < 1.0e-12);
+
+    /* eval ion density on sample grid points */
+    std::vector<RHODTYPE> sampled_rhoc(sampled_row.size());
+    pot.evalIonDensityOnSamplePts(*ions, sampled_row, sampled_rhoc);
+
+    for (int d = 0; d < sampled_row.size(); d++)
+    {
+        printf("rank %d, fom rhoc[%d]: %.3e, rom rhoc: %.3e\n", rank, sampled_row[d], fom_rhoc[test_idx][sampled_row[d]], sampled_rhoc[d]);
+        CAROM_VERIFY(abs(fom_rhoc[test_idx][sampled_row[d]] - sampled_rhoc[d]) < 1.0e-12);
+    }
+}
+
 template void readRestartFiles<LocGridOrbitals>(MGmolInterface *mgmol_);
 template void readRestartFiles<ExtendedGridOrbitals>(MGmolInterface *mgmol_);
 
 template void buildROMPoissonOperator<LocGridOrbitals>(MGmolInterface *mgmol_);
 template void buildROMPoissonOperator<ExtendedGridOrbitals>(MGmolInterface *mgmol_);
 
+template void runPoissonROM<LocGridOrbitals>(MGmolInterface *mgmol_);
+template void runPoissonROM<ExtendedGridOrbitals>(MGmolInterface *mgmol_);
+
 template void testROMPoissonOperator<LocGridOrbitals>(MGmolInterface *mgmol_);
 template void testROMPoissonOperator<ExtendedGridOrbitals>(MGmolInterface *mgmol_);
 
 template void testROMRhoOperator<LocGridOrbitals>(MGmolInterface *mgmol_);
 template void testROMRhoOperator<ExtendedGridOrbitals>(MGmolInterface *mgmol_);
+
+template void testROMIonDensity<LocGridOrbitals>(MGmolInterface *mgmol_);
+template void testROMIonDensity<ExtendedGridOrbitals>(MGmolInterface *mgmol_);

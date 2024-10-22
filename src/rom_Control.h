@@ -22,8 +22,10 @@ enum class ROMStage
     ONLINE,
     RESTORE,    // TODO(kevin): what stage is this?
     BUILD,
+    ONLINE_POISSON,
     TEST_POISSON,
     TEST_RHO,
+    TEST_ION,
     UNSUPPORTED
 };
 
@@ -51,6 +53,7 @@ struct ROMPrivateOptions
 
     /* options for ROM building */
     int num_potbasis = -1;
+    std::string pot_rom_file = "";
 };
 
 #endif  // ROM_CONTROL_H

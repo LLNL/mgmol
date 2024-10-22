@@ -118,6 +118,13 @@ int main(int argc, char** argv)
                 buildROMPoissonOperator<ExtendedGridOrbitals>(mgmol);
         break;
 
+        case (ROMStage::ONLINE_POISSON):
+            if (ct.isLocMode())
+                runPoissonROM<LocGridOrbitals>(mgmol);
+            else
+                runPoissonROM<ExtendedGridOrbitals>(mgmol);
+        break;
+
         case (ROMStage::TEST_POISSON):
             if (ct.isLocMode())
                 testROMPoissonOperator<LocGridOrbitals>(mgmol);
@@ -130,6 +137,13 @@ int main(int argc, char** argv)
                 testROMRhoOperator<LocGridOrbitals>(mgmol);
             else
                 testROMRhoOperator<ExtendedGridOrbitals>(mgmol);
+
+        case (ROMStage::TEST_ION):
+            if (ct.isLocMode())
+                testROMIonDensity<LocGridOrbitals>(mgmol);
+            else
+                testROMIonDensity<ExtendedGridOrbitals>(mgmol);
+
         break;
 
         default:
