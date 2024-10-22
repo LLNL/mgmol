@@ -430,6 +430,10 @@ void setupROMConfigOption(po::options_description &rom_cfg)
             "Frequency of saving libROM snapshot file at FOM simulation.")
         ("ROM.offline.variable", po::value<std::string>()->default_value(""),
             "FOM variable to perform POD: either orbitals or potential.")
+        ("ROM.basis.compare_md", po::value<bool>()->default_value(false),
+            "Compare MD or single-step force.")
+        ("ROM.basis.number_of_orbital_basis", po::value<int>()->default_value(-1),
+            "Number of orbital POD basis.")
         ("ROM.basis.number_of_potential_basis", po::value<int>()->default_value(-1),
             "Number of potential POD basis to build Hartree potential ROM operator.")
         ("ROM.potential_rom_file", po::value<std::string>()->default_value(""),

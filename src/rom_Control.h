@@ -45,13 +45,15 @@ struct ROMPrivateOptions
     int restart_file_minidx = -1;
     int restart_file_maxidx = -1;
     std::string basis_file = "";
-    ROMVariable variable=ROMVariable::NONE;
+    ROMVariable variable = ROMVariable::NONE;
 
-    /* save librom snapshot matrix at FOM simulation. */
+    /* save librom orbital snapshot matrix at FOM simulation. */
     bool save_librom_snapshot = false;
     int librom_snapshot_freq = -1;
 
     /* options for ROM building */
+    bool compare_md = false;
+    int num_orbbasis = -1;
     int num_potbasis = -1;
     std::string pot_rom_file = "";
 };
