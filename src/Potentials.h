@@ -18,6 +18,10 @@
 #include <string>
 #include <vector>
 
+#ifdef MGMOL_HAS_LIBROM
+#include "librom.h"
+#endif
+
 class Ions;
 class Species;
 template <class T>
@@ -95,8 +99,10 @@ class Potentials
     void initializeSupersampledRadialDataOnMesh(
         const Vector3D& position, const Species& sp);
 
+#ifdef MGMOL_HAS_LIBROM
     void initializeRadialDataOnSampledPts(
-        const Vector3D& position, const Species& sp, const std::vector<int> &local_idx, std::vector<RHODTYPE> &sampled_rhoc);
+        const Vector3D& position, const Species& sp, const std::vector<int> &local_idx, CAROM::Vector &sampled_rhoc);
+#endif
 
 public:
     Potentials(const bool vh_frozen = false);
@@ -164,6 +170,8 @@ public:
 
     const double getBackgroundCharge() const { return background_charge_; }
 
+    const double getIonicCharge() const { return ionic_charge_; }
+
     /*!
      * initialize total potential as local pseudopotential
      */
@@ -201,7 +209,9 @@ public:
     void initBackground(Ions& ions);
     void addBackgroundToRhoComp();
 
-    void evalIonDensityOnSamplePts(Ions& ions, const std::vector<int> &local_idx, std::vector<RHODTYPE> &sampled_rhoc);
+#ifdef MGMOL_HAS_LIBROM
+    void evalIonDensityOnSamplePts(Ions& ions, const std::vector<int> &local_idx, CAROM::Vector &sampled_rhoc);
+#endif
 
 #ifdef HAVE_TRICUBIC
     void readExternalPot(const string filename, const char type);
