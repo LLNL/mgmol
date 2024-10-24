@@ -899,8 +899,9 @@ void Potentials::initBackground(Ions& ions)
     if (fabs(background_charge_) < 1.e-10) background_charge_ = 0.;
 }
 
+#ifdef MGMOL_HAS_LIBROM
 void Potentials::evalIonDensityOnSamplePts(
-    Ions& ions, const std::vector<int> &local_idx, std::vector<RHODTYPE> &sampled_rhoc)
+    Ions& ions, const std::vector<int> &local_idx, CAROM::Vector &sampled_rhoc)
 {
     Mesh* mymesh           = Mesh::instance();
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
@@ -918,9 +919,8 @@ void Potentials::evalIonDensityOnSamplePts(
     }
 
     // initialize output vector
-    sampled_rhoc.resize(local_idx.size());
-    for (int d = 0; d < sampled_rhoc.size(); d++)
-        sampled_rhoc[d] = 0.0;
+    sampled_rhoc.setSize(local_idx.size());
+    sampled_rhoc = 0.0;
 
     // Loop over ions
     for (auto& ion : ions.overlappingVL_ions())
@@ -936,9 +936,9 @@ void Potentials::evalIonDensityOnSamplePts(
 }
 
 void Potentials::initializeRadialDataOnSampledPts(
-    const Vector3D& position, const Species& sp, const std::vector<int> &local_idx, std::vector<RHODTYPE> &sampled_rhoc)
+    const Vector3D& position, const Species& sp, const std::vector<int> &local_idx, CAROM::Vector &sampled_rhoc)
 {
-    assert(local_idx.size() == sampled_rhoc.size());
+    assert(local_idx.size() == sampled_rhoc.dim());
 
     Control& ct = *(Control::instance());
 
@@ -984,11 +984,12 @@ void Potentials::initializeRadialDataOnSampledPts(
         /* accumulate ion species density */
         const double r = position.minimage(point, lattice, ct.bcPoisson);
         if (r < lrad)
-            sampled_rhoc[k] += sp.getRhoComp(r);
+            sampled_rhoc(k) += sp.getRhoComp(r);
     }
 
     return;
 }
+#endif
 
 template void Potentials::setVxc<double>(
     const double* const vxc, const int iterativeIndex);
