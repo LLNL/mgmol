@@ -434,5 +434,7 @@ void setupROMConfigOption(po::options_description &rom_cfg)
             "Number of potential POD basis to build Hartree potential ROM operator.")
         ("ROM.potential_rom_file", po::value<std::string>()->default_value(""),
             "File name to save/load potential ROM operators.");
+        ("ROM.online.test_restart_file", po::value<std::string>()->default_value(""),
+            "File name to test online ROM.");
 }
 #endif

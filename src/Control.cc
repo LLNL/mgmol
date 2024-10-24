@@ -2063,6 +2063,8 @@ void Control::setROMOptions(const boost::program_options::variables_map& vm)
 
         rom_pri_option.num_potbasis = vm["ROM.basis.number_of_potential_basis"].as<int>();
         rom_pri_option.pot_rom_file = vm["ROM.potential_rom_file"].as<std::string>();
+
+        rom_pri_option.test_restart_file = vm["ROM.online.test_restart_file"].as<std::string>();
     }  // onpe0
 
     // synchronize all processors
@@ -2079,6 +2081,7 @@ void Control::syncROMOptions()
     mmpi.bcast(rom_pri_option.restart_file_fmt, comm_global_);
     mmpi.bcast(rom_pri_option.basis_file, comm_global_);
     mmpi.bcast(rom_pri_option.pot_rom_file, comm_global_);
+    mmpi.bcast(rom_pri_option.test_restart_file, comm_global_);
 
     auto bcast_check = [](int mpirc) {
         if (mpirc != MPI_SUCCESS)
