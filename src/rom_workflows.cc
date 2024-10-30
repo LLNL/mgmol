@@ -327,9 +327,9 @@ void runPoissonROM(MGmolInterface *mgmol_)
                                 num_pot_basis * num_pot_basis, false);
 
         /* load right-hand side hyper-reduction sample index */
-        h5_helper.getIntegerArray("potential_rhs_sample_idx", global_sampled_row.data(),
+        h5_helper.getIntegerArray("potential_rhs_hr_idx", global_sampled_row.data(),
                                   global_sampled_row.size(), false);
-        h5_helper.getIntegerArray("potential_rhs_sampled_rows_per_proc", sampled_rows_per_proc.data(),
+        h5_helper.getIntegerArray("potential_rhs_hr_idcs_per_proc", sampled_rows_per_proc.data(),
                                   sampled_rows_per_proc.size(), false);
 
         /* load right-hand side hyper-reduction operator */
