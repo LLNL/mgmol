@@ -49,7 +49,11 @@ jobs:
             cd ${GITHUB_WORKSPACE}/tests/ROM/test_rom_poisson
             ln -s ${GITHUB_WORKSPACE}/build/src/mgmol-rom .
             ln -s ${GITHUB_WORKSPACE}/potentials/* .
-            mpirun -n 3 --oversubscribe ./mgmol-rom -c carbyne.cfg -i carbyne.in
+            mpirun -n 3 --oversubscribe ./mgmol-rom -c carbyne.poisson.cfg -i carbyne.in
+      - name: test ROM ion density evaluation
+        run: |
+            cd ${GITHUB_WORKSPACE}/tests/ROM/test_rom_poisson
+            mpirun -n 3 --oversubscribe ./mgmol-rom -c carbyne.ion.cfg -i carbyne.in
   # code-style:
   #   runs-on: ubuntu-latest
   #   needs: [docker-image]

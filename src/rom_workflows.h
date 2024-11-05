@@ -46,10 +46,16 @@ template <class OrbitalsType>
 void buildROMPoissonOperator(MGmolInterface *mgmol_);
 
 template <class OrbitalsType>
+void runPoissonROM(MGmolInterface *mgmol_);
+
+template <class OrbitalsType>
 void testROMPoissonOperator(MGmolInterface *mgmol_);
 
 template <class OrbitalsType>
 void testROMRhoOperator(MGmolInterface *mgmol_);
+
+template <class OrbitalsType>
+void testROMIonDensity(MGmolInterface *mgmol_);
 
 void computeRhoOnSamplePts(const CAROM::Matrix &dm,
     const CAROM::Matrix &phi_basis, const CAROM::Matrix &rom_phi,
