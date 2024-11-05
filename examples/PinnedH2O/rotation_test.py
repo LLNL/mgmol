@@ -27,7 +27,7 @@ def rotation_matrix(axis, angle):
         [uz * ux * (1 - cos_theta) - uy * sin_theta, uz * uy * (1 - cos_theta) + ux * sin_theta, cos_theta + uz**2 * (1 - cos_theta)]
     ])
 
-plane_normal = np.cross(H1, H2)
+plane_normal = np.cross(H2, H1)
 plane_normal = plane_normal / np.linalg.norm(plane_normal)
 
 target_plane_normal = np.array([0, 0, 1])
