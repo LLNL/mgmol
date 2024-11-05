@@ -20,7 +20,7 @@ os.makedirs(output_dir, exist_ok=True)
 for d_bondangle in bondangle_increment:
     bondangle = ref_bondangle + d_bondangle
     x = ref_bondlength * np.cos(np.radians(bondangle / 2))
-    y = ref_bondlength * np.cos(np.radians(bondangle / 2))
+    y = ref_bondlength * np.sin(np.radians(bondangle / 2))
     for f_bondlength1 in bondlength1_factor:
         for f_bondlength2 in bondlength2_factor:
             H1 = np.array([f_bondlength1*x, f_bondlength1*y, 0.0])
