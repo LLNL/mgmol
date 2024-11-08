@@ -33,6 +33,7 @@ enum class ROMVariable
 {
     ORBITALS,
     POTENTIAL,
+    DENSITY,
     NONE
 };
 
