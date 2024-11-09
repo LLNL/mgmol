@@ -183,6 +183,7 @@ public:
     {
         return hamiltonian_;
     }
+    std::shared_ptr<Rho<OrbitalsType>> getRho() { return rho_; }
 
     void run() override;
 
