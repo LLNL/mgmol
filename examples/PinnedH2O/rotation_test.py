@@ -53,8 +53,10 @@ print(f'Angle between O1-H1 and O1-H2 = {bondangle}')
 bondlength1 = calculate_bondlength(H1_rotated, O1)
 bondlength2 = calculate_bondlength(H2_rotated, O1)
 bondangle = calculate_bondangle(H1_rotated, O1, H2_rotated, False)
+if bondlength1 < bondlength2:
+    H1_rotated, H2_rotated, bondlength1, bondlength2 = H2_rotated, H1_rotated, bondlength2, bondlength1
 
-print('Aligned system')
+print('Rotated system in z=0 plane about x=0 axis, with longer bondlength in H1')
 print(f'H1 = {H1_rotated}')
 print(f'H2 = {H2_rotated}')
 print(f'Bondlength of O1-H1 = {bondlength1}')
