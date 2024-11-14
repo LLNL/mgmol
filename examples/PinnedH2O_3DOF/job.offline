@@ -10,7 +10,7 @@ setenv OMP_NUM_THREADS 1
 
 set ncpus = 64
 
-set maindir = /p/lustre2/cheung26/mgmol-20241031
+set maindir = /p/lustre2/cheung26/mgmol-20241012
 
 setenv LD_LIBRARY_PATH ${maindir}/build_quartz/libROM/build/lib:$LD_LIBRARY_PATH
 
@@ -49,7 +49,13 @@ foreach i (`seq 0 $bondlength_num_increments`)
       set bondangle = `echo "scale=1; $bondangle_min + $k * ($bondangle_max - $bondangle_min) / ($bondangle_num_increments)" | bc`
       set bondangle = `printf "%.1f" $bondangle`
       echo "bondlength1: $bondlength_one, bondlength2: $bondlength_two, bondangle: $bondangle"
-      srun -n $ncpus $exe -c $cfg_offline -i coords_${bondlength_one}_${bondlength_two}_${bondangle}.in > offline_PinnedH2O_${bondlength_one}_${bondlength_two}_${bondangle}.out
+      set tag = ${bondlength_one}_${bondlength_two}_${bondangle}
+      cp $cfg_offline ${tag}_${cfg_offline}
+      sed -i "s/CUSTOM_TAG/results_${tag}/g" ${tag}_${cfg_offline}
+      srun -n $ncpus $exe -c ${tag}_${cfg_offline} -i coords_${tag}.in > offline_PinnedH2O_${tag}.out
+      mv ${tag}_${cfg_offline} results_${tag}/${cfg_offline}
+      mv coords_${tag}.in results_${tag}/coords.in
+      mv offline_PinnedH2O_${tag}.out results_${tag}/offline_PinnedH2O.out
     end
   end
 end
