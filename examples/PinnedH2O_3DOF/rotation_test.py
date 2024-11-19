@@ -49,13 +49,13 @@ print(f'Angle between O1-H1 and O1-H2 = {bondangle}')
 
 H1_rotated = np.dot(rot_matrix_align_plane, H1)
 H2_rotated = np.dot(rot_matrix_align_plane, H2)
-bondlength1 = calculate_bondlength(H1_rotated, O1)
-bondlength2 = calculate_bondlength(H2_rotated, O1)
-bondangle = calculate_bondangle(H1_rotated, O1, H2_rotated, False)
 fliped_bond = False
 if bondlength1 < bondlength2:
     fliped_bond = True
-    H1_rotated, H2_rotated, bondlength1, bondlength2 = H2_rotated, H1_rotated, bondlength2, bondlength1
+    H1_rotated, H2_rotated = H2_rotated, H1_rotated
+bondlength1 = calculate_bondlength(H1_rotated, O1)
+bondlength2 = calculate_bondlength(H2_rotated, O1)
+bondangle = calculate_bondangle(H1_rotated, O1, H2_rotated, False)
 
 print('Reference system (z=0 plane about x=0 axis, with longer bondlength in H1)')
 print(f'H1 = {H1_rotated}')
