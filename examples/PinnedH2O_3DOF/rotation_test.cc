@@ -63,6 +63,12 @@ void apply_rotation(const double matrix[3][3], const double vec[3], double resul
     result[2] = matrix[2][0] * vec[0] + matrix[2][1] * vec[1] + matrix[2][2] * vec[2];
 }
 
+void apply_transpose_rotation(const double matrix[3][3], const double vec[3], double result[3]) {
+    result[0] = matrix[0][0] * vec[0] + matrix[1][0] * vec[1] + matrix[2][0] * vec[2];
+    result[1] = matrix[0][1] * vec[0] + matrix[1][1] * vec[1] + matrix[2][1] * vec[2];
+    result[2] = matrix[0][2] * vec[0] + matrix[1][2] * vec[1] + matrix[2][2] * vec[2];
+}
+
 int main() {
     double O1[3] = {0.00, 0.00, 0.00};
     double H1[3] = {-0.45, -1.48, -0.97};
@@ -99,19 +105,34 @@ int main() {
     apply_rotation(rot_matrix_align_plane, H1, H1_rotated);
     apply_rotation(rot_matrix_align_plane, H2, H2_rotated);
     bool flipped_bond = false;
-
     if (bondlength1 < bondlength2) {
         flipped_bond = true;
         swap(H1_rotated, H2_rotated);
     }
-
     bondlength1 = calculate_bondlength(H1_rotated, O1);
     bondlength2 = calculate_bondlength(H2_rotated, O1);
     bondangle = calculate_bondangle(H1_rotated, O1, H2_rotated, false);
 
-    cout << "Reference system (z=0 plane about x=0 axis, with longer bondlength in H1):" << endl;
+    cout << "Reference system (z=0 plane about x=0 axis, with longer bondlength in H1)" << endl;
     cout << "H1 = (" << H1_rotated[0] << ", " << H1_rotated[1] << ", " << H1_rotated[2] << ")" << endl;
     cout << "H2 = (" << H2_rotated[0] << ", " << H2_rotated[1] << ", " << H2_rotated[2] << ")" << endl;
+    cout << "Bondlength of O1-H1 = " << bondlength1 << endl;
+    cout << "Bondlength of O1-H2 = " << bondlength2 << endl;
+    cout << "Angle between O1-H1 and O1-H2 = " << bondangle << endl;
+
+    if (flipped_bond) {
+        swap(H1_rotated, H2_rotated);
+    }
+    double H1_restored[3], H2_restored[3];
+    apply_transpose_rotation(rot_matrix_align_plane, H1_rotated, H1_restored);
+    apply_transpose_rotation(rot_matrix_align_plane, H2_rotated, H2_restored);
+    bondlength1 = calculate_bondlength(H1_restored, O1);
+    bondlength2 = calculate_bondlength(H2_restored, O1);
+    bondangle = calculate_bondangle(H1_restored, O1, H2_restored, false);
+
+    cout << "Restored system" << endl;
+    cout << "H1 = (" << H1_restored[0] << ", " << H1_restored[1] << ", " << H1_restored[2] << ")" << endl;
+    cout << "H2 = (" << H2_restored[0] << ", " << H2_restored[1] << ", " << H2_restored[2] << ")" << endl;
     cout << "Bondlength of O1-H1 = " << bondlength1 << endl;
     cout << "Bondlength of O1-H2 = " << bondlength2 << endl;
     cout << "Angle between O1-H1 and O1-H2 = " << bondangle << endl;

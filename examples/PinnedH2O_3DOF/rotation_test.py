@@ -66,15 +66,15 @@ print(f'Angle between O1-H1 and O1-H2 = {bondangle}')
 
 if fliped_bond:
     H1_rotated, H2_rotated = H2_rotated, H1_rotated
-H1_rotated = np.dot(rot_matrix_align_plane.T, H1_rotated)
-H2_rotated = np.dot(rot_matrix_align_plane.T, H2_rotated)
-bondlength1 = calculate_bondlength(H1_rotated, O1)
-bondlength2 = calculate_bondlength(H2_rotated, O1)
-bondangle = calculate_bondangle(H1_rotated, O1, H2_rotated, False)
+H1_restored = np.dot(rot_matrix_align_plane.T, H1_rotated)
+H2_restored = np.dot(rot_matrix_align_plane.T, H2_rotated)
+bondlength1 = calculate_bondlength(H1_restored, O1)
+bondlength2 = calculate_bondlength(H2_restored, O1)
+bondangle = calculate_bondangle(H1_restored, O1, H2_restored, False)
 
 print('Restored system')
-print(f'H1 = {H1_rotated}')
-print(f'H2 = {H2_rotated}')
+print(f'H1 = {H1_restored}')
+print(f'H2 = {H2_restored}')
 print(f'Bondlength of O1-H1 = {bondlength1}')
 print(f'Bondlength of O1-H2 = {bondlength2}')
 print(f'Angle between O1-H1 and O1-H2 = {bondangle}')
