@@ -13,7 +13,10 @@
 #include "MGmol_MPI.h"
 #include "ReplicatedMatrix.h"
 #include "ReplicatedWorkSpace.h"
+<<<<<<< HEAD
 #include "hdf_tools.h"
+=======
+>>>>>>> 1273415 (Update use of DM in restart)
 
 #include <cmath>
 #include <iomanip>
@@ -446,6 +449,9 @@ void DensityMatrix<MatrixType>::mix(
 template <class MatrixType>
 int DensityMatrix<MatrixType>::write(HDFrestart& h5f_file, std::string& name)
 {
+    hid_t file_id = h5f_file.file_id();
+    if (file_id < 0) return 0;
+
     ReplicatedWorkSpace<double>& wspace(
         ReplicatedWorkSpace<double>::instance());
 

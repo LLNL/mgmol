@@ -168,7 +168,7 @@ int MGmol<OrbitalsType>::write_hdf5(HDFrestart& h5f_file,
 
         if (!ct.fullyOccupied())
         {
-            int ierr = proj_matrices_->writeDM(h5f_file);
+            ierr = proj_matrices_->writeDM(h5f_file);
             if (ierr < 0) return ierr;
         }
         if (ct.isLocMode()

@@ -269,6 +269,14 @@ public:
     {
         (void)h5f_file;
 
+        exitWithErrorMessage("read_dm_hdf5");
+
+        return 0;
+    }
+    virtual int writeDM(HDFrestart& h5f_file)
+    {
+        (void)h5f_file;
+
         exitWithErrorMessage("readDM");
 
         return 0;
