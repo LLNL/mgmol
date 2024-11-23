@@ -275,6 +275,10 @@ int MGmol<OrbitalsType>::dumpMDrestartFile(OrbitalsType& orbitals, Ions& ions,
                                  << std::endl;
             return ierr;
         }
+
+        // write DM associated with non-extrapolated wavefunctions
+        // (last computed solution of KS equations)
+        proj_matrices_->writeSavedDM(h5file);
     }
 
     ierr = h5file.close();
@@ -579,6 +583,13 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
             lrs_->clearOldCenters();
         }
 
+        // save DM for possible restart write
+        // note: extrapolation is going to modify it!
+        if ((ct.out_restart_info > 2)
+            && (((md_iteration_ % ct.checkpoint) == 0)
+                   || (mdstep == ct.num_MD_steps)))
+            proj_matrices_->saveDM();
+
         preWFextrapolation();
 
         if (ct.dt > 0.
@@ -656,6 +667,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
 template <class OrbitalsType>
 void MGmol<OrbitalsType>::loadRestartFile(const std::string filename)
 {
+    if (onpe0) std::cout << "loadRestartFile..." << std::endl;
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
     Control& ct              = *(Control::instance());
     Mesh* mymesh             = Mesh::instance();
@@ -677,6 +689,12 @@ void MGmol<OrbitalsType>::loadRestartFile(const std::string filename)
                 << std::endl;
 
         global_exit(0);
+    }
+    if (!ct.fullyOccupied())
+    {
+        // overwrite DM with restart data in dataset Density_Matrix_WF
+        if (h5file.checkDataExists("Density_Matrix_WF"))
+            ierr = proj_matrices_->readWFDM(h5file);
     }
 
     ierr = h5file.close();

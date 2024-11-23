@@ -319,7 +319,9 @@ public:
     double computeEntropyWithCheb(const double kbt);
     double checkCond(const double tol, const bool flag = true) override;
     int writeDM(HDFrestart& h5f_file) override;
+    int writeSavedDM(HDFrestart& h5f_file);
     int readDM(HDFrestart& h5f_file) override;
+    int readWFDM(HDFrestart& h5f_file);
     void printEigenvalues(std::ostream& os) const;
     void updateDM(const int iterative_index) override;
     void updateDMwithEigenstates(const int iterative_index);
