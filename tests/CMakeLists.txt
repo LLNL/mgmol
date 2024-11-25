@@ -491,6 +491,14 @@ add_test(NAME testMD_D72
          ${CMAKE_CURRENT_SOURCE_DIR}/MD_D72/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/MD_D72/lrs.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+add_test(NAME testMD_MVP
+         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/MD_MVP/test.py
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+         ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
+         ${CMAKE_CURRENT_SOURCE_DIR}/MD_MVP/quench.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/MD_MVP/md.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/MD_MVP/li2.xyz
+         ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME testLBFGS
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/LBFGS/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
