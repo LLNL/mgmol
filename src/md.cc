@@ -226,7 +226,7 @@ void checkMaxForces(const std::vector<double>& fion,
 }
 
 template <class OrbitalsType>
-int MGmol<OrbitalsType>::dumpMDrestartFile(OrbitalsType** orbitals, Ions& ions,
+int MGmol<OrbitalsType>::dumpMDrestartFile(OrbitalsType& orbitals, Ions& ions,
     Rho<OrbitalsType>& rho, const bool write_extrapolated_wf, const short count)
 {
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
@@ -245,9 +245,11 @@ int MGmol<OrbitalsType>::dumpMDrestartFile(OrbitalsType** orbitals, Ions& ions,
 
     HDFrestart h5file(filename, myPEenv, gdim, ct.out_restart_file_type);
 
-    OrbitalsType previous_orbitals("ForDumping", **orbitals, false);
+    OrbitalsType previous_orbitals("ForDumping", orbitals, false);
     if (!orbitals_extrapol_->getRestartData(previous_orbitals))
-        previous_orbitals.assign(**orbitals);
+        previous_orbitals.assign(orbitals);
+
+    // write all restart info in HDF5 file
     int ierr = write_hdf5(h5file, rho.rho_, ions, previous_orbitals, lrs_);
     mmpi.allreduce(&ierr, 1, MPI_MIN);
 
@@ -259,12 +261,11 @@ int MGmol<OrbitalsType>::dumpMDrestartFile(OrbitalsType** orbitals, Ions& ions,
                 << std::endl;
         return ierr;
     }
-    // write_hdf5(h5file, rho.rho_, ions, *orbitals_minus1);
-    // stepper->write_hdf5(h5file);
 
     if (write_extrapolated_wf && ct.out_restart_info > 2)
     {
-        ierr = (*orbitals)->write_func_hdf5(h5file, "ExtrapolatedFunction");
+        // write extra  info needed for seamless MD restart
+        ierr = orbitals.write(h5file, "ExtrapolatedFunction");
         mmpi.allreduce(&ierr, 1, MPI_MIN);
         if (ierr < 0)
         {
@@ -354,16 +355,11 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
 
     if (ct.restart_info > 1)
     {
-        int flag_extrapolated_data = 0;
-        if (onpe0)
-        {
+        int flag_extrapolated_data
+            = h5f_file_->checkDataExists("ExtrapolatedFunction0000");
+        if (flag_extrapolated_data == 0)
             flag_extrapolated_data
-                = h5f_file_->dset_exists("ExtrapolatedFunction0000");
-            if (flag_extrapolated_data == 0)
-                flag_extrapolated_data
-                    = h5f_file_->dset_exists("ExtrapolatedFunction0");
-        }
-        MPI_Bcast(&flag_extrapolated_data, 1, MPI_INT, 0, comm_);
+                = h5f_file_->checkDataExists("ExtrapolatedFunction0");
 
         if (ct.restart_info > 2)
         {
@@ -377,7 +373,6 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
 
                 // need to reset a few things as we just read new orbitals
                 (*orbitals)->computeGramAndInvS();
-                dm_strategy_->update(*current_orbitals_);
             }
 
             DFTsolver<OrbitalsType>::setItCountLarge();
@@ -615,7 +610,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
                     {
                         dump_tm_.start();
                         ierr = dumpMDrestartFile(
-                            orbitals, ions, *rho_, extrapolated_flag, count);
+                            **orbitals, ions, *rho_, extrapolated_flag, count);
                         dump_tm_.stop();
                         if (onpe0 && ierr < 0 && count < (DUMP_MAX_NUM_TRY - 1))
                             std::cout
@@ -641,7 +636,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
         {
             dump_tm_.start();
             ierr = dumpMDrestartFile(
-                orbitals, ions, *rho_, extrapolated_flag, count);
+                **orbitals, ions, *rho_, extrapolated_flag, count);
             dump_tm_.stop();
 
             if (onpe0 && ierr < 0 && count < (DUMP_MAX_NUM_TRY - 1))

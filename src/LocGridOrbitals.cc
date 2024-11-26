@@ -966,7 +966,6 @@ int LocGridOrbitals::read_hdf5(HDFrestart& h5f_file)
 
     Control& ct = *(Control::instance());
 
-    hid_t file_id    = h5f_file.file_id();
     std::string name = "Function";
     int ierr         = read_func_hdf5(h5f_file, name);
     if (ierr < 0)
@@ -984,7 +983,7 @@ int LocGridOrbitals::read_hdf5(HDFrestart& h5f_file)
     // Read DM
     if (!ct.fullyOccupied())
     {
-        ierr = proj_matrices_->read_dm_hdf5(file_id);
+        ierr = proj_matrices_->readDM(h5f_file);
         if (ierr < 0)
         {
             (*MPIdata::serr)
@@ -997,27 +996,7 @@ int LocGridOrbitals::read_hdf5(HDFrestart& h5f_file)
     return ierr;
 }
 
-int LocGridOrbitals::write_hdf5(HDFrestart& h5f_file, const std::string& name)
-{
-    assert(proj_matrices_ != nullptr);
-    Control& ct = *(Control::instance());
-
-    if (!ct.fullyOccupied())
-    {
-        MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
-        mmpi.barrier();
-
-        int ierr = proj_matrices_->writeDM_hdf5(h5f_file);
-        if (ierr < 0) return ierr;
-    }
-
-    int ierr = write_func_hdf5(h5f_file, name);
-
-    return ierr;
-}
-
-int LocGridOrbitals::write_func_hdf5(
-    HDFrestart& h5f_file, const std::string& name)
+int LocGridOrbitals::write(HDFrestart& h5f_file, const std::string& name)
 {
     Control& ct   = *(Control::instance());
     hid_t file_id = h5f_file.file_id();
@@ -1249,7 +1228,7 @@ int LocGridOrbitals::read_func_hdf5(
         const std::string key(itcenter->first);
 
         // checkif dataset exists...
-        int err_id = h5f_file.dset_exists(key);
+        int err_id = h5f_file.checkDataExistsLocal(key);
         if (h5f_file.gatherDataX()) mmpi.bcast(&err_id, 1);
         if (err_id == 0) break; // dataset does not exists
 

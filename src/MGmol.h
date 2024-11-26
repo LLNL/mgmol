@@ -130,7 +130,7 @@ private:
         KBPsiMatrixSparse* kbpsi, dist_matrix::DistMatrix<DISTMATDTYPE>& hij);
     void computeHnlPhiAndAdd2HPhi(Ions& ions, OrbitalsType& phi,
         OrbitalsType& hphi, const KBPsiMatrixSparse* const kbpsi);
-    int dumpMDrestartFile(OrbitalsType** orbitals, Ions& ions,
+    int dumpMDrestartFile(OrbitalsType& orbitals, Ions& ions,
         Rho<OrbitalsType>& rho, const bool write_extrapolated_wf,
         const short count);
 

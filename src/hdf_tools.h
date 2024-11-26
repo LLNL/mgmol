@@ -6,8 +6,8 @@
 // All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
-
 #include "hdf5.h"
+
 #include <mpi.h>
 #include <string>
 #include <vector>
@@ -39,4 +39,8 @@ void addAttribute2Dataset(
 void addAttribute2Dataset(
     hid_t dset_id, const char* attname, const std::vector<int>& attr_data);
 int whatisopen(hid_t fid);
+
+int write_matrix(
+    hid_t file_id, std::string& name, const double* matrix, const int dim);
+int read_matrix(hid_t file_id, std::string& name, double* matrix);
 }

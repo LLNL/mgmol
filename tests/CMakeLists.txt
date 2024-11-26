@@ -247,6 +247,8 @@ add_executable(testDensityMatrix
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
                ${CMAKE_SOURCE_DIR}/src/tools/random.cc
+               ${CMAKE_SOURCE_DIR}/src/ReplicatedWorkSpace.cc
+               ${CMAKE_SOURCE_DIR}/src/hdf_tools.cc
                ${CMAKE_SOURCE_DIR}/tests/ut_magma_main.cc)
 add_executable(testEnergyAndForces
                ${CMAKE_SOURCE_DIR}/tests/EnergyAndForces/testEnergyAndForces.cc)
@@ -552,7 +554,7 @@ target_include_directories(testConditionDistMatrix PRIVATE ${Boost_INCLUDE_DIRS}
 target_include_directories(testConditionDistMatrixPower PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories(testPower PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories(testPowerDistMatrix PRIVATE ${Boost_INCLUDE_DIRS})
-target_include_directories(testDensityMatrix PRIVATE ${Boost_INCLUDE_DIRS})
+target_include_directories(testDensityMatrix PRIVATE ${Boost_INCLUDE_DIRS} ${HDF5_INCLUDE_DIRS})
 target_include_directories(testGramMatrix PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories(testAndersonMix PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories(testIons PRIVATE ${Boost_INCLUDE_DIRS} ${HDF5_INCLUDE_DIRS})
@@ -566,6 +568,7 @@ target_link_libraries(testEnergyAndForces PRIVATE mgmol_src)
 target_link_libraries(testWFEnergyAndForces PRIVATE mgmol_src)
 target_link_libraries(testDMandEnergyAndForces PRIVATE mgmol_src)
 target_link_libraries(testIons PRIVATE mgmol_src)
+target_link_libraries(testDensityMatrix PRIVATE ${HDF5_LIBRARIES})
 
 if(${MAGMA_FOUND})
   target_link_libraries(testDistVector PRIVATE ${SCALAPACK_LIBRARIES}
