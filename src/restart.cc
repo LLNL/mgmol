@@ -163,9 +163,14 @@ int MGmol<OrbitalsType>::write_hdf5(HDFrestart& h5f_file,
     // Write wavefunctions and old centers.
     if (ct.out_restart_info > 2)
     {
-        int ierr = orbitals.write_hdf5(h5f_file);
+        int ierr = orbitals.write(h5f_file);
         if (ierr < 0) return ierr;
 
+        if (!ct.fullyOccupied())
+        {
+            int ierr = proj_matrices_->writeDM(h5f_file);
+            if (ierr < 0) return ierr;
+        }
         if (ct.isLocMode()
             && ct.WFExtrapolation() == WFExtrapolationType::Reversible)
         {

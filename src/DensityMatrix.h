@@ -10,6 +10,7 @@
 #ifndef MGMOL_DENSITYMATRIX_H
 #define MGMOL_DENSITYMATRIX_H
 
+#include "HDFrestart.h"
 #include "MGmol_MPI.h"
 #include "global.h"
 
@@ -23,7 +24,7 @@
 template <class MatrixType>
 class DensityMatrix
 {
-    int dim_;
+    const int dim_;
     std::vector<double> occupation_;
 
     MatrixType* dm_;
@@ -35,6 +36,10 @@ class DensityMatrix
     bool occ_uptodate_;
     bool uniform_occ_;
     bool stripped_;
+
+    /*!
+     * Max. occupation of an orbital: 1 with spin, 2 otherwise
+     */
     double orbital_occupation_;
 
     DensityMatrix();
@@ -146,6 +151,9 @@ public:
     double getExpectation(const MatrixType& A);
     void mix(
         const double mix, const MatrixType& matA, const int new_orbitals_index);
+
+    int write(HDFrestart& h5f_file, std::string& name);
+    int read(HDFrestart& h5f_file, std::string& name);
 };
 
 #endif
