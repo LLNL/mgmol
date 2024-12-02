@@ -746,9 +746,36 @@ int ProjectedMatrices<MatrixType>::writeDM(HDFrestart& h5f_file)
 }
 
 template <class MatrixType>
+int ProjectedMatrices<MatrixType>::writeSavedDM(HDFrestart& h5f_file)
+{
+    std::string name("/Density_Matrix_WF");
+
+    ReplicatedWorkSpace<double>& wspace(
+        ReplicatedWorkSpace<double>::instance());
+
+    const MatrixType* matrix = mat_X_old_.get();
+    wspace.initSquareMatrix(*matrix);
+
+    DISTMATDTYPE* work_matrix = wspace.square_matrix();
+
+    hid_t file_id = h5f_file.file_id();
+    return mgmol_tools::write_matrix(file_id, name, work_matrix, dim_);
+}
+
+template <class MatrixType>
 int ProjectedMatrices<MatrixType>::readDM(HDFrestart& h5f_file)
 {
     std::string name("/Density_Matrix");
+    return dm_->read(h5f_file, name);
+}
+
+template <class MatrixType>
+int ProjectedMatrices<MatrixType>::readWFDM(HDFrestart& h5f_file)
+{
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    mmpi.barrier();
+    if (mmpi.PE0()) std::cout << "ProjectedMatrices::readWFDM..." << std::endl;
+    std::string name("/Density_Matrix_WF");
     return dm_->read(h5f_file, name);
 }
 
