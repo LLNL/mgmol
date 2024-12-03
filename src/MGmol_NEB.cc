@@ -9,8 +9,8 @@
 
 #include "DFTsolver.h"
 #include "FIRE.h"
-#include "LBFGS.h"
 #include "MGmol.h"
+#include "MGmolLBFGS.h"
 #include "ProjectedMatricesInterface.h"
 
 using namespace std;
@@ -34,8 +34,8 @@ void MGmol<T>::geomOptimSetup()
     switch (ct.AtomsDynamic())
     {
         case AtomsDynamicType::LBFGS:
-            geom_optimizer_ = new LBFGS<T>(&current_orbitals_, *ions_, *rho_,
-                *constraints_, *lrs_, local_cluster_, *currentMasks_,
+            geom_optimizer_ = new MGmolLBFGS<T>(&current_orbitals_, *ions_,
+                *rho_, *constraints_, *lrs_, local_cluster_, *currentMasks_,
                 *corrMasks_, *electrostat_, ct.dt, *this);
             break;
 

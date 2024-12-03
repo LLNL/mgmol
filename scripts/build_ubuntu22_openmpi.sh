@@ -26,6 +26,8 @@ cmake -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} \
       -DMGMOL_WITH_CLANG_FORMAT=ON \
       -DCMAKE_PREFIX_PATH=${HOME}/bin \
       -D CMAKE_CXX_FLAGS="-Wall -pedantic -Wextra" \
+      -DLBFGSPP_INCLUDE=/home/q8j/GIT/LBFGSpp/include \
+      -DEIGEN_INCLUDE=/home/q8j/GIT/eigen \
       ..
 
 # call make install

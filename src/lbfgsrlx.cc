@@ -13,10 +13,10 @@
 #include "Electrostatic.h"
 #include "Energy.h"
 #include "Ions.h"
-#include "LBFGS.h"
 #include "LBFGS_IonicStepper.h"
 #include "LocalizationRegions.h"
 #include "MGmol.h"
+#include "MGmolLBFGS.h"
 #include "MGmol_blas1.h"
 #include "MPIdata.h"
 #include "MasksSet.h"
@@ -35,7 +35,7 @@ void MGmol<OrbitalsType>::lbfgsrlx(OrbitalsType** orbitals, Ions& ions)
 {
     Control& ct = *(Control::instance());
 
-    LBFGS<OrbitalsType> lbfgs(orbitals, ions, *rho_, *constraints_, lrs_,
+    MGmolLBFGS<OrbitalsType> lbfgs(orbitals, ions, *rho_, *constraints_, lrs_,
         local_cluster_.get(), *currentMasks_, *corrMasks_, *electrostat_, ct.dt,
         *this);
 
