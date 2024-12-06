@@ -166,18 +166,24 @@ int main(int argc, char** argv)
             ct.numst, ct.bcWF, projmatrices.get(), nullptr, nullptr, nullptr,
             nullptr);
 
-        int rdim = 36;
-        CAROM::BasisReader reader(file_path);
-        CAROM::Matrix* orbital_basis = reader.getSpatialBasis(rdim);
-        carom_matrix_to_orbitals(Psi_projected, orbitals);
+#ifdef MGMOL_HAS_LIBROM
+        CAROM::BasisReader reader(ct.getROMOptions().basis_file);
+        CAROM::Matrix* Psi = reader.getSpatialBasis(ct.getROMOptions().num_orbbasis);
+        //mgmol->carom_matrix_to_orbitals(Psi, orbitals);
+        pb::GridFunc<ORBDTYPE> gf_psi(mymesh->grid(), ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
+        CAROM::Vector psi;
+        for (int i = 0; i < Psi->numColumns(); ++i)
+        {
+            Psi->getColumn(i, psi);
+            gf_psi.assign(psi.getData());
+            orbitals.setPsi(gf_psi, i);
+        }
+#endif  // MGMOL_HAS_LIBROM
 
         //
         // evaluate energy and forces again
         //
 
-        // convergence should be really quick since we start with an initial
-        // guess which is the solution
-        ct.max_electronic_steps = 300;
         eks                     = mgmol->evaluateEnergyAndForces(
             &orbitals, positions, anumbers, forces);
 

@@ -254,6 +254,8 @@ add_executable(testWFEnergyAndForces
                ${CMAKE_SOURCE_DIR}/tests/WFEnergyAndForces/testWFEnergyAndForces.cc)
 add_executable(testDMandEnergyAndForces
                ${CMAKE_SOURCE_DIR}/tests/DMandEnergyAndForces/testDMandEnergyAndForces.cc)
+add_executable(testPinnedH2O_3DOF
+               ${CMAKE_SOURCE_DIR}/tests/PinnedH2O_3DOF/testPinnedH2O_3DOF.cc)
 
 if(${MAGMA_FOUND})
   add_executable(testOpenmpOffload
@@ -368,6 +370,14 @@ add_test(NAME testDMandEnergyAndForces
          ${CMAKE_CURRENT_SOURCE_DIR}/DMandEnergyAndForces/mgmol.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/DMandEnergyAndForces/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/DMandEnergyAndForces/lrs.in
+         ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+add_test(NAME testPinnedH2O_3DOF
+         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/PinnedH2O_3DOF/test.py
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+         ${CMAKE_CURRENT_BINARY_DIR}/testPinnedH2O_3DOF
+         ${CMAKE_CURRENT_SOURCE_DIR}/PinnedH2O_3DOF/mgmol.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/PinnedH2O_3DOF/coords.in
+         ${CMAKE_CURRENT_SOURCE_DIR}/PinnedH2O_3DOF/lrs.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 
 if(${MAGMA_FOUND}) 
@@ -557,6 +567,7 @@ target_link_libraries(testDirectionalReduce PRIVATE MPI::MPI_CXX)
 target_link_libraries(testEnergyAndForces PRIVATE mgmol_src)
 target_link_libraries(testWFEnergyAndForces PRIVATE mgmol_src)
 target_link_libraries(testDMandEnergyAndForces PRIVATE mgmol_src)
+target_link_libraries(testPinnedH2O_3DOF PRIVATE mgmol_src)
 target_link_libraries(testIons PRIVATE mgmol_src)
 
 if(${MAGMA_FOUND})
