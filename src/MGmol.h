@@ -21,6 +21,10 @@
 #include "MGmol_prototypes.h"
 #include <iostream>
 
+#ifdef MGMOL_HAS_LIBROM
+#include "librom.h"
+#endif  // MGMOL_HAS_LIBROM
+
 // inline double one(const double r){ return 1.; }
 
 inline double linear(const double r) { return 1. - r; }
@@ -359,6 +363,8 @@ public:
     }
 
 #ifdef MGMOL_HAS_LIBROM
+    const CAROM::Matrix* orbitals_to_carom_matrix(const OrbitalsType& orbitals);
+    void carom_matrix_to_orbitals(const CAROM::Matrix* Psi, OrbitalsType& orbitals);
     int save_orbital_snapshot(std::string snapshot_dir, OrbitalsType& orbitals);
     void project_orbital(std::string snapshot_dir, int rdim, OrbitalsType& orbitals);
 #endif

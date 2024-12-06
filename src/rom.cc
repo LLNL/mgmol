@@ -20,7 +20,36 @@
 #include <fstream>
 #include <sys/stat.h>
 
-// Save the wavefunction snapshots
+template <class OrbitalsType>
+const CAROM::Matrix* MGmol<OrbitalsType>::orbitals_to_carom_matrix(const OrbitalsType& orbitals)
+{
+    const int dim = orbitals.getLocNumpt();
+    const int num_orbitals = orbitals.chromatic_number();
+
+    CAROM::Options svd_options(dim, num_orbitals, 1);
+    CAROM::BasisGenerator basis_generator(svd_options, false, "foo");
+
+    for (int i = 0; i < num_orbitals; ++i)
+        basis_generator.takeSample(orbitals.getPsi(i));
+
+    return basis_generator.getSnapshotMatrix();
+}
+
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::carom_matrix_to_orbitals(const CAROM::Matrix* Psi, OrbitalsType& orbitals)
+{
+    Control& ct = *(Control::instance());
+    Mesh* mesh = Mesh::instance();
+    pb::GridFunc<ORBDTYPE> gf_psi(mesh->grid(), ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
+    CAROM::Vector psi;
+    for (int i = 0; i < Psi->numColumns(); ++i)
+    {
+        Psi->getColumn(i, psi);
+        gf_psi.assign(psi.getData());
+        orbitals.setPsi(gf_psi, i);
+    }
+}
+
 template <class OrbitalsType>
 int MGmol<OrbitalsType>::save_orbital_snapshot(std::string file_path, OrbitalsType& orbitals)
 {
@@ -60,35 +89,15 @@ int MGmol<OrbitalsType>::save_orbital_snapshot(std::string file_path, OrbitalsTy
 template <class OrbitalsType>
 void MGmol<OrbitalsType>::project_orbital(std::string file_path, int rdim, OrbitalsType& orbitals)
 {
-    const int dim = orbitals.getLocNumpt();
-    const int totalSamples = orbitals.chromatic_number();
-
-    CAROM::Options svd_options(dim, totalSamples, 1);
-    CAROM::BasisGenerator basis_generator(svd_options, false, "foo");
-
-    for (int i = 0; i < totalSamples; ++i)
-        basis_generator.takeSample(orbitals.getPsi(i));
-    const CAROM::Matrix* orbital_snapshots = basis_generator.getSnapshotMatrix();
+    const CAROM::Matrix* Psi = orbitals_to_carom_matrix(orbitals);
 
     CAROM::BasisReader reader(file_path);
     CAROM::Matrix* orbital_basis = reader.getSpatialBasis(rdim);
 
-    CAROM::Matrix* proj_orbital_coeff = orbital_basis->transposeMult(orbital_snapshots);
-    CAROM::Matrix* proj_orbital_snapshots = orbital_basis->mult(proj_orbital_coeff);
+    CAROM::Matrix* Psi_reduced = orbital_basis->transposeMult(Psi);
+    CAROM::Matrix* Psi_projected = orbital_basis->mult(Psi_reduced);
     
-    Control& ct = *(Control::instance());
-    Mesh* mesh = Mesh::instance();
-    pb::GridFunc<ORBDTYPE> gf_psi(mesh->grid(), ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
-    CAROM::Vector snapshot, proj_snapshot;
-    for (int i = 0; i < totalSamples; ++i)
-    {
-        orbital_snapshots->getColumn(i, snapshot);
-        proj_orbital_snapshots->getColumn(i, proj_snapshot);
-        gf_psi.assign(proj_snapshot.getData());
-        orbitals.setPsi(gf_psi, i);
-        snapshot -= proj_snapshot;
-        std::cout << "Error for orbital " << i << " = " << snapshot.norm() << std::endl;
-    }
+    carom_matrix_to_orbitals(Psi_projected, orbitals);
 }
 
 template class MGmol<LocGridOrbitals>;
