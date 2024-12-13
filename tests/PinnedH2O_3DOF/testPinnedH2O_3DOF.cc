@@ -17,7 +17,6 @@
 
 #ifdef MGMOL_HAS_LIBROM
 #include "librom.h"
-#endif  // MGMOL_HAS_LIBROM
 
 #include <cassert>
 #include <iostream>
@@ -154,8 +153,12 @@ int main(int argc, char** argv)
             }
         }
 
-        // compute energy and forces again using wavefunctions
-        // from previous call
+        // compute energy and forces again with projected problem onto ROM subspace
+        if (MPIdata::onpe0)
+        {
+            std::cout << "Loading ROM basis " << ct.getROMOptions().basis_file << std::endl;
+            std::cout << "ROM basis dimension = " << ct.getROMOptions().num_orbbasis << std::endl;
+        }
         Mesh* mymesh           = Mesh::instance();
         const pb::Grid& mygrid = mymesh->grid();
 
@@ -166,19 +169,8 @@ int main(int argc, char** argv)
             ct.numst, ct.bcWF, projmatrices.get(), nullptr, nullptr, nullptr,
             nullptr);
 
-#ifdef MGMOL_HAS_LIBROM
-        CAROM::BasisReader reader(ct.getROMOptions().basis_file);
-        CAROM::Matrix* Psi = reader.getSpatialBasis(ct.getROMOptions().num_orbbasis);
-        //mgmol->carom_matrix_to_orbitals(Psi, orbitals);
-        pb::GridFunc<ORBDTYPE> gf_psi(mymesh->grid(), ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
-        CAROM::Vector psi;
-        for (int i = 0; i < Psi->numColumns(); ++i)
-        {
-            Psi->getColumn(i, psi);
-            gf_psi.assign(psi.getData());
-            orbitals.setPsi(gf_psi, i);
-        }
-#endif  // MGMOL_HAS_LIBROM
+        MGmol<ExtendedGridOrbitals>* mgmol_ = dynamic_cast<MGmol<ExtendedGridOrbitals>*>(mgmol);
+        mgmol_->set_orbital(ct.getROMOptions().basis_file, ct.getROMOptions().num_orbbasis, orbitals);
 
         //
         // evaluate energy and forces again
@@ -219,3 +211,4 @@ int main(int argc, char** argv)
 
     return 0;
 }
+#endif  // MGMOL_HAS_LIBROM

@@ -493,7 +493,6 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
         force(**orbitals, ions);
 
 #ifdef MGMOL_HAS_LIBROM
-        // TODO: cleanup
         if (ct.getROMOptions().num_orbbasis > 0)
         {
             if (onpe0)
