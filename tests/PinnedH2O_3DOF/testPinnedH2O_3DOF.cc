@@ -166,11 +166,10 @@ int main(int argc, char** argv)
             = mgmol->getProjectedMatrices();
 
         ExtendedGridOrbitals orbitals("new_orbitals", mygrid, mymesh->subdivx(),
-            ct.numst, ct.bcWF, projmatrices.get(), nullptr, nullptr, nullptr,
+            ct.getROMOptions().num_orbbasis, ct.bcWF, projmatrices.get(), nullptr, nullptr, nullptr,
             nullptr);
 
-        mgmol->set_orbital(ct.getROMOptions().basis_file, ct.getROMOptions().num_orbbasis, 
-                           static_cast<void*>(&orbitals));
+        orbitals.set(ct.getROMOptions().basis_file, ct.getROMOptions().num_orbbasis); 
 
         //
         // evaluate energy and forces again

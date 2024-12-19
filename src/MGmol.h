@@ -361,12 +361,6 @@ public:
 #ifdef MGMOL_HAS_LIBROM
     int save_orbital_snapshot(std::string file_path, OrbitalsType& orbitals);
     void project_orbital(std::string file_path, int rdim, OrbitalsType& orbitals);
-    void set_orbital(std::string file_path, int rdim, OrbitalsType& orbitals);
-    void set_orbital(const std::string& file_path, int rdim, void* orbitals) override
-    {
-        OrbitalsType* orbitals_t = static_cast<OrbitalsType*>(orbitals);
-        set_orbital(file_path, rdim, *orbitals_t);
-    }
 #endif
 };
 // Instantiate static variables here to avoid clang warnings

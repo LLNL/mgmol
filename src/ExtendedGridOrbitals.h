@@ -401,6 +401,9 @@ public:
         const pb::Grid& mygrid = mymesh->grid();
         return mygrid.maxDomainSize();
     }
+#ifdef MGMOL_HAS_LIBROM
+    void set(std::string file_path, int rdim);
+#endif
 };
 
 #endif

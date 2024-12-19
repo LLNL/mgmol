@@ -11,6 +11,7 @@
 #ifdef MGMOL_HAS_LIBROM
 
 #include "LocGridOrbitals.h"
+#include "ExtendedGridOrbitals.h"
 #include "MGmol.h"
 
 #include "librom.h"
@@ -91,11 +92,9 @@ void MGmol<OrbitalsType>::project_orbital(std::string file_path, int rdim, Orbit
     }
 }
 
-template <class OrbitalsType>
-void MGmol<OrbitalsType>::set_orbital(std::string file_path, int rdim, OrbitalsType& orbitals)
+void ExtendedGridOrbitals::set(std::string file_path, int rdim)
 {
-    const int dim = orbitals.getLocNumpt();
-    const int totalSamples = orbitals.chromatic_number();
+    const int dim = getLocNumpt();
 
     CAROM::BasisReader reader(file_path);
     CAROM::Matrix* orbital_basis = reader.getSpatialBasis(rdim);
@@ -108,7 +107,7 @@ void MGmol<OrbitalsType>::set_orbital(std::string file_path, int rdim, OrbitalsT
     {
         orbital_basis->getColumn(i, psi);
         gf_psi.assign(psi.getData());
-        orbitals.setPsi(gf_psi, i);
+        setPsi(gf_psi, i);
     }
 }
 

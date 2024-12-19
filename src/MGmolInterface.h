@@ -43,7 +43,6 @@ public:
     virtual std::shared_ptr<ProjectedMatricesInterface> getProjectedMatrices()
         = 0;
     virtual void dumpRestart() = 0;
-    virtual void set_orbital(const std::string& file_path, int rdim, void* orbitals) = 0;
 };
 
 #endif
