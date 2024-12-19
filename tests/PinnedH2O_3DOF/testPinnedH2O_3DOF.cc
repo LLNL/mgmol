@@ -169,8 +169,8 @@ int main(int argc, char** argv)
             ct.numst, ct.bcWF, projmatrices.get(), nullptr, nullptr, nullptr,
             nullptr);
 
-        MGmol<ExtendedGridOrbitals>* mgmol_ = dynamic_cast<MGmol<ExtendedGridOrbitals>*>(mgmol);
-        mgmol_->set_orbital(ct.getROMOptions().basis_file, ct.getROMOptions().num_orbbasis, orbitals);
+        mgmol->set_orbital(ct.getROMOptions().basis_file, ct.getROMOptions().num_orbbasis, 
+                           static_cast<void*>(&orbitals));
 
         //
         // evaluate energy and forces again
