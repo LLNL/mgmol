@@ -933,12 +933,12 @@ int HDFrestart::getLRCenters(std::multimap<std::string, Vector3D>& centers,
 
         std::string datasetname(getDatasetName(name, color));
 
-        int err_id = dset_exists(datasetname);
+        int err_id = checkDataExistsLocal(datasetname);
         if (err_id == 0)
         { // dataset does not exists
             // try older version
             datasetname = getDatasetName_old(name, color);
-            err_id      = dset_exists(datasetname);
+            err_id      = checkDataExistsLocal(datasetname);
         }
 
         if (err_id == 0)
@@ -1052,12 +1052,12 @@ int HDFrestart::getLRs(std::shared_ptr<LocalizationRegions> lrs,
 
         std::string datasetname(getDatasetName(name, color));
 
-        int err_id = dset_exists(datasetname);
+        int err_id = checkDataExistsLocal(datasetname);
         if (err_id == 0)
         { // dataset does not exists
             // try older version
             datasetname = getDatasetName_old(name, color);
-            err_id      = dset_exists(datasetname);
+            err_id      = checkDataExistsLocal(datasetname);
         }
         if (err_id == 0)
         { // dataset does not exists

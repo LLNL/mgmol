@@ -155,28 +155,30 @@ public:
         return 0;
     }
 
-    hid_t dset_exists(const std::string& datasetname) const
+    hid_t checkDataExists(const std::string& datasetname) const
     {
-        if (active_)
-        {
-            return dset_exists(datasetname.c_str());
-        }
-        return 0;
+        return checkDataExists(datasetname.c_str());
     }
-    herr_t dset_exists(const char* const datasetname) const
+    herr_t checkDataExists(const char* const datasetname) const
+    {
+        herr_t err_id = checkDataExistsLocal(datasetname);
+
+        short id = (short)err_id;
+        MPI_Bcast(&id, 1, MPI_SHORT, 0, comm_data_);
+        return (herr_t)id;
+    }
+
+    hid_t checkDataExistsLocal(const std::string& datasetname) const
+    {
+        return checkDataExistsLocal(datasetname.c_str());
+    }
+
+    herr_t checkDataExistsLocal(const char* const datasetname) const
     {
         herr_t err_id = 0;
         if (active_)
         {
             err_id = H5LTfind_dataset(file_id_, datasetname);
-
-            if (err_id < 0)
-            {
-                if (onpe0)
-                    (*MPIdata::sout)
-                        << "HDFrestart::dset_exists() failed for dataset "
-                        << datasetname << std::endl;
-            }
         }
         return err_id;
     }

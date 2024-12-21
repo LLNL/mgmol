@@ -12,6 +12,8 @@
 #include "DistMatrix.h"
 #include "MGmol_MPI.h"
 #include "ReplicatedMatrix.h"
+#include "ReplicatedWorkSpace.h"
+#include "hdf_tools.h"
 
 #include <cmath>
 #include <iomanip>
@@ -22,15 +24,24 @@ const double factor_kernel4dot = 10.;
 
 #define PROCRUSTES 0
 
+#define MGMOL_DENSITYMATRIX_FAIL(X)                                            \
+    {                                                                          \
+        std::cerr << "DensityMatrix failure:" << std::endl;                    \
+        std::cerr << "Error Message: " << X << std::endl;                      \
+    }
+
 // occupations in [0,1]
 // DM eigenvalues in [0,orbital_occupation]
 
 template <class MatrixType>
 DensityMatrix<MatrixType>::DensityMatrix(const int ndim)
+    : dim_(ndim),
+      orbitals_index_(-1),
+      occ_uptodate_(false),
+      uniform_occ_(false),
+      stripped_(false)
 {
     assert(ndim > 0);
-
-    dim_ = ndim;
 
     occ_uptodate_ = false;
     stripped_     = false;
@@ -38,8 +49,6 @@ DensityMatrix<MatrixType>::DensityMatrix(const int ndim)
 
     MGmol_MPI& mmpi     = *(MGmol_MPI::instance());
     orbital_occupation_ = mmpi.nspin() > 1 ? 1. : 2.;
-
-    orbitals_index_ = -1;
 
     dm_         = new MatrixType("DM", ndim, ndim);
     kernel4dot_ = new MatrixType("K4dot", ndim, ndim);
@@ -436,6 +445,43 @@ void DensityMatrix<MatrixType>::mix(
 
     dm_->axpy(mix, matA);
     orbitals_index_ = new_orbitals_index;
+}
+
+template <class MatrixType>
+int DensityMatrix<MatrixType>::write(HDFrestart& h5f_file, std::string& name)
+{
+    ReplicatedWorkSpace<double>& wspace(
+        ReplicatedWorkSpace<double>::instance());
+
+    wspace.initSquareMatrix(*dm_);
+
+    DISTMATDTYPE* work_matrix = wspace.square_matrix();
+
+    hid_t file_id = h5f_file.file_id();
+    return mgmol_tools::write_matrix(file_id, name, work_matrix, dim_);
+}
+
+template <class MatrixType>
+int DensityMatrix<MatrixType>::read(HDFrestart& h5f_file, std::string& name)
+{
+    ReplicatedWorkSpace<double>& wspace(
+        ReplicatedWorkSpace<double>::instance());
+    DISTMATDTYPE* work_matrix = wspace.square_matrix();
+
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+
+    int ierr = 0;
+    if (mmpi.instancePE0())
+    {
+        hid_t file_id = h5f_file.file_id();
+        ierr          = mgmol_tools::read_matrix(file_id, name, work_matrix);
+    }
+    mmpi.bcast(&ierr, 1);
+
+    if (ierr >= 0) wspace.mpiBcastSquareMatrix();
+    if (ierr >= 0) initMatrix(work_matrix);
+
+    return ierr;
 }
 
 template class DensityMatrix<dist_matrix::DistMatrix<double>>;
