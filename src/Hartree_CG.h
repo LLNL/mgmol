@@ -40,6 +40,13 @@ public:
 
     void solve(const pb::GridFunc<RHODTYPE>& rho,
         const pb::GridFunc<RHODTYPE>& rhoc) override;
+
+    void applyOperator(pb::GridFunc<POTDTYPE> &vh,
+        pb::GridFunc<POTDTYPE> &lhs) override
+    {
+        T *oper = poisson_solver_->getOperator();
+        oper->apply(vh, lhs);
+    }
 };
 
 #endif

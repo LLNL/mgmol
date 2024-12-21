@@ -43,6 +43,12 @@ DensityMatrix<MatrixType>::DensityMatrix(const int ndim)
 {
     assert(ndim > 0);
 
+    dim_ = ndim;
+
+    occ_uptodate_ = false;
+    stripped_     = false;
+    uniform_occ_  = false;
+
     MGmol_MPI& mmpi     = *(MGmol_MPI::instance());
     orbital_occupation_ = mmpi.nspin() > 1 ? 1. : 2.;
 
