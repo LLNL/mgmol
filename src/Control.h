@@ -294,7 +294,6 @@ public:
         const float dtol, const short kim, const short itmax, const short lfil,
         const short maxfill, const short ilutype);
     void setSpreadRadius();
-    int readOccupations(std::ifstream* tfile);
     bool checkTimeout() { return timeout_.check(); }
 
     bool occupationWidthIsZero() { return occ_width < 1.e-12; }
