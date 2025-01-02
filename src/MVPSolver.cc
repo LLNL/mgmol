@@ -143,7 +143,6 @@ void MVPSolver<OrbitalsType, MatrixType>::buildTarget_MVP(
     proj_mat_work_->setHB2H();
 
     proj_mat_work_->updateDM(orbitals_index);
-
     target = proj_mat_work_->dm();
 
     if (ct.verbose > 2)
@@ -286,7 +285,7 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
                     std::cout << "MVP --- Target energy..." << std::endl;
                 proj_mat_work_->setDM(target, orbitals.getIterativeIndex());
                 proj_mat_work_->computeOccupationsFromDM();
-                if (ct.verbose > 2) current_proj_mat->printOccupations(os_);
+                if (ct.verbose > 2) proj_mat_work_->printOccupations(os_);
                 const double nel = proj_mat_work_->getNel();
                 if (onpe0 && ct.verbose > 1)
                     os_ << "MVP --- Number of electrons at beta=1 : " << nel
@@ -346,7 +345,6 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
                         os_ << "Number of electrons for interpolated DM = "
                             << pnel << std::endl;
                 }
-                // if( onpe0 )os_<<"Rho..."<<endl;
                 rho_->computeRho(orbitals, *work_);
             }
 
