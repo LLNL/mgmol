@@ -60,7 +60,9 @@ int MGmol<OrbitalsType>::setupFromInput(const std::string filename)
 
     const short myspin = mmpi.myspin();
     const int nel      = ions_->getNValenceElectrons();
-    if (ct.restart_info > 2)
+    // for the case of extended wavefunctions, we can determine the number
+    // of empty states from the number of wavefunctions in restart file
+    if (ct.restart_info > 2 && !ct.short_sighted)
     {
         std::string name = "Function";
         int count        = h5f_file_->countFunctionObjects(name);
