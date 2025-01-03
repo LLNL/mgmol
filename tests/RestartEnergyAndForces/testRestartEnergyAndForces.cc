@@ -85,13 +85,8 @@ int main(int argc, char** argv)
             std::cout << "-------------------------" << std::endl;
         }
 
-        MGmolInterface* mgmol;
-        if (ct.isLocMode())
-            mgmol = new MGmol<LocGridOrbitals>(global_comm, *MPIdata::sout,
-                input_filename, lrs_filename, constraints_filename);
-        else
-            mgmol = new MGmol<ExtendedGridOrbitals>(global_comm, *MPIdata::sout,
-                input_filename, lrs_filename, constraints_filename);
+        MGmolInterface* mgmol = new MGmol<ExtendedGridOrbitals>(global_comm,
+            *MPIdata::sout, input_filename, lrs_filename, constraints_filename);
 
         if (MPIdata::onpe0)
         {
@@ -161,6 +156,9 @@ int main(int argc, char** argv)
             MPI_Abort(mmpi.commSameSpin(), 0);
         }
 
+        // set the iterative index to 1 to differentiate it from first instance
+        // in MGmol initial() function. This is not very clean and could be
+        // better designed, but works for now
         orbitals.setIterativeIndex(1);
 
         // set initial DM with uniform occupations
