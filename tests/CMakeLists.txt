@@ -256,6 +256,8 @@ add_executable(testWFEnergyAndForces
                ${CMAKE_SOURCE_DIR}/tests/WFEnergyAndForces/testWFEnergyAndForces.cc)
 add_executable(testDMandEnergyAndForces
                ${CMAKE_SOURCE_DIR}/tests/DMandEnergyAndForces/testDMandEnergyAndForces.cc)
+add_executable(testRestartEnergyAndForces
+               ${CMAKE_SOURCE_DIR}/tests/RestartEnergyAndForces/testRestartEnergyAndForces.cc)
 
 if(${MAGMA_FOUND})
   add_executable(testOpenmpOffload
@@ -370,6 +372,15 @@ add_test(NAME testDMandEnergyAndForces
          ${CMAKE_CURRENT_SOURCE_DIR}/DMandEnergyAndForces/mgmol.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/DMandEnergyAndForces/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/DMandEnergyAndForces/lrs.in
+         ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+add_test(NAME testRestartEnergyAndForces
+         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/RestartEnergyAndForces/test.py
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+         ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
+         ${CMAKE_CURRENT_BINARY_DIR}/testRestartEnergyAndForces
+         ${CMAKE_CURRENT_SOURCE_DIR}/RestartEnergyAndForces/mgmol.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/RestartEnergyAndForces/restart.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/RestartEnergyAndForces/h2o.xyz
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 
 if(${MAGMA_FOUND}) 
@@ -567,6 +578,7 @@ target_link_libraries(testDirectionalReduce PRIVATE MPI::MPI_CXX)
 target_link_libraries(testEnergyAndForces PRIVATE mgmol_src)
 target_link_libraries(testWFEnergyAndForces PRIVATE mgmol_src)
 target_link_libraries(testDMandEnergyAndForces PRIVATE mgmol_src)
+target_link_libraries(testRestartEnergyAndForces PRIVATE mgmol_src)
 target_link_libraries(testIons PRIVATE mgmol_src)
 target_link_libraries(testDensityMatrix PRIVATE ${HDF5_LIBRARIES})
 

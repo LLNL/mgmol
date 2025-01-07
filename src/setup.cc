@@ -50,6 +50,7 @@ int MGmol<OrbitalsType>::setupFromInput(const std::string filename)
     if (ct.isLocMode()) mymesh->subdivGridx(ct.getMGlevels());
 
     const pb::PEenv& myPEenv = mymesh->peenv();
+
     if (ct.restart_info > 0)
         h5f_file_.reset(
             new HDFrestart(ct.restart_file, myPEenv, ct.restart_file_type));
@@ -58,8 +59,20 @@ int MGmol<OrbitalsType>::setupFromInput(const std::string filename)
     if (status == -1) return -1;
 
     const short myspin = mmpi.myspin();
-    const int nval     = ions_->getNValenceElectrons();
-    ct.setNumst(myspin, nval);
+    const int nel      = ions_->getNValenceElectrons();
+    // for the case of extended wavefunctions, we can determine the number
+    // of empty states from the number of wavefunctions in restart file
+    if (ct.restart_info > 2 && !ct.short_sighted)
+    {
+        std::string name = "Function";
+        int count        = h5f_file_->countFunctionObjects(name);
+        std::cout << "found " << count << " functions in restart file..."
+                  << std::endl;
+        int nempty = ct.withSpin() ? count - nel : count - int(0.5 * nel);
+        ct.setNempty(nempty);
+    }
+    ct.setNumst(myspin, nel);
+
     ct.setTolEnergy();
     ct.setSpreadRadius();
 
