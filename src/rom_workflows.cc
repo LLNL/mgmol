@@ -802,6 +802,9 @@ void testROMRhoOperator(MGmolInterface *mgmol_)
     const int rank = mmpi.mypeGlobal();
     const int nprocs = mmpi.size();
 
+    static std::random_device rd;  // Will be used to obtain a seed for the random number engine
+    static std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd(){}
+
     // if (ct.isLocMode())
     //     printf("LocMode is On!\n");
     // else
@@ -890,7 +893,10 @@ void testROMRhoOperator(MGmolInterface *mgmol_)
         sampled_row[s] = global_sampled_row[gs];
 
     /* load only the first restart file for now */
-    const int test_idx = 2;
+    std::uniform_int_distribution<> distrib(0, num_restart-1);
+    int test_idx = distrib(gen);
+    mmpi.bcastGlobal(&test_idx);
+    if (rank == 0) printf("test index: %d\n", test_idx);
 
     filename = string_format(rom_options.restart_file_fmt, test_idx + minidx);
     /*
@@ -967,10 +973,10 @@ void testROMRhoOperator(MGmolInterface *mgmol_)
     for (int s = 0; s < sampled_row.size(); s++)
     {
         const double error = abs(rho->rho_[0][sampled_row[s]] - sample_rho(s));
-        if (error > 1.0e-4)
+        if (error > 1.0e-10)
             printf("rank %d, rho[%d]: %.5e, sample_rho: %.5e, librom_snapshot: %.5e\n",
                 rank, sampled_row[s], rho->rho_[0][sampled_row[s]], sample_rho(s), rho_snapshots(sampled_row[s], test_idx));
-        CAROM_VERIFY(error < 1.0e-4);
+        CAROM_VERIFY(error < 1.0e-10);
     }
 
     sample_rho.gather();
@@ -978,16 +984,16 @@ void testROMRhoOperator(MGmolInterface *mgmol_)
     CAROM::Vector *rom_rho = rho_basis_inv.mult(sample_rho);
     for (int d = 0; d < rom_rho->dim(); d++)
     {
-        if ((rank == 0) && (abs(proj_rho->item(d, test_idx) - rom_rho->item(d)) > 1.0e-3))
+        if ((rank == 0))
             printf("rom_rho error: %.3e\n", abs(proj_rho->item(d, test_idx) - rom_rho->item(d)));
-        CAROM_VERIFY(abs(proj_rho->item(d, test_idx) - rom_rho->item(d)) < 1.0e-3);
+        CAROM_VERIFY(abs(proj_rho->item(d, test_idx) - rom_rho->item(d)) < 1.0e-10);
     }
 
     CAROM::Vector *fom_rho = rho_basis->mult(*rom_rho);
 
     CAROM_VERIFY(fom_rho->dim() == rho->rho_[0].size());
     for (int d = 0; d < fom_rho->dim(); d++)
-        CAROM_VERIFY(abs(fom_rho->item(d) - rho->rho_[0][d]) < 1.0e-4);
+        CAROM_VERIFY(abs(fom_rho->item(d) - rho->rho_[0][d]) < 1.0e-10);
 
     delete rom_rho;
     delete fom_rho;
