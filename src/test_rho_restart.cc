@@ -30,6 +30,7 @@
 #include "MGmol_MPI.h"
 #include "MPIdata.h"
 #include "mgmol_run.h"
+#include "Potentials.h"
 
 #include <cassert>
 #include <iostream>
@@ -74,6 +75,49 @@ void testRhoRestart(MGmolInterface *mgmol_)
         {
             printf("rank %d, rho[%d]=%.15e, rho0[%d]=%.15e\n", rank, d, rho->rho_[0][d], d, rho0[d]);
             std::cerr << "Density is inconsistent!!!" << std::endl;
+            MPI_Abort(MPI_COMM_WORLD, 0);
+        }
+    }
+}
+
+template <class OrbitalsType>
+void testPotRestart(MGmolInterface *mgmol_)
+{
+    /* random number generator */
+    static std::random_device rd;  // Will be used to obtain a seed for the random number engine
+    static std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd(){}
+    static std::uniform_real_distribution<> dis(0.0, 1.0);
+
+    MGmol_MPI& mmpi      = *(MGmol_MPI::instance());
+    const int rank = mmpi.mypeGlobal();
+    const int nprocs = mmpi.size();
+
+    Control& ct = *(Control::instance());
+    MGmol<OrbitalsType> *mgmol = static_cast<MGmol<OrbitalsType> *>(mgmol_);
+    Potentials& pot = mgmol->getHamiltonian()->potential();
+
+    /* load a restart file */
+    mgmol->loadRestartFile(ct.restart_file);
+
+    /* save potential from the restart file to elsewhere */
+    std::vector<POTDTYPE> vh0(pot.size());
+    POTDTYPE *d_vhrho = pot.vh_rho();
+    for (int d = 0; d < vh0.size(); d++)
+        vh0[d] = d_vhrho[d];
+
+    /* recompute potential */
+    std::shared_ptr<Ions> ions = mgmol->getIons();
+    mgmol->update_pot(*ions);
+
+    /* check if the recomputed potential is the same */
+    d_vhrho = pot.vh_rho();
+    for (int d = 0; d < vh0.size(); d++)
+    {
+        double error = abs(vh0[d] - d_vhrho[d]) / abs(vh0[d]);
+        if (error > 1e-10)
+        {
+            printf("rank %d, vh_rho[%d]=%.15e, vh_rho0[%d]=%.15e\n", rank, d, d_vhrho[d], d, vh0[d]);
+            std::cerr << "Potential is inconsistent!!!" << std::endl;
             MPI_Abort(MPI_COMM_WORLD, 0);
         }
     }
@@ -145,9 +189,15 @@ int main(int argc, char** argv)
         mgmol->setup();
 
         if (ct.isLocMode())
+        {
             testRhoRestart<LocGridOrbitals>(mgmol);
+            testPotRestart<LocGridOrbitals>(mgmol);
+        }
         else
+        {
             testRhoRestart<ExtendedGridOrbitals>(mgmol);
+            testPotRestart<ExtendedGridOrbitals>(mgmol);
+        }
 
         delete mgmol;
 
