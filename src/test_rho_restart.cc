@@ -31,6 +31,8 @@
 #include "MPIdata.h"
 #include "mgmol_run.h"
 #include "Potentials.h"
+#include "Poisson.h"
+#include "Electrostatic.h"
 
 #include <cassert>
 #include <iostream>
@@ -95,31 +97,48 @@ void testPotRestart(MGmolInterface *mgmol_)
     Control& ct = *(Control::instance());
     MGmol<OrbitalsType> *mgmol = static_cast<MGmol<OrbitalsType> *>(mgmol_);
     Potentials& pot = mgmol->getHamiltonian()->potential();
+    Poisson *poisson = mgmol->electrostat_->getPoissonSolver();
+    std::shared_ptr<Rho<OrbitalsType>> rho = mgmol->getRho();
+
+    /* GridFunc initialization inputs */
+    const pb::Grid &grid(poisson->vh().grid());
+    short bc[3];
+    for (int d = 0; d < 3; d++)
+        bc[d] = poisson->vh().bc(d);
 
     /* load a restart file */
     mgmol->loadRestartFile(ct.restart_file);
 
     /* save potential from the restart file to elsewhere */
+    pb::GridFunc<POTDTYPE> vh0_gf(grid, bc[0], bc[1], bc[2]);
+    vh0_gf.assign(pot.vh_rho(), 'd');
+
     std::vector<POTDTYPE> vh0(pot.size());
     POTDTYPE *d_vhrho = pot.vh_rho();
     for (int d = 0; d < vh0.size(); d++)
         vh0[d] = d_vhrho[d];
 
     /* recompute potential */
-    std::shared_ptr<Ions> ions = mgmol->getIons();
-    mgmol->update_pot(*ions);
+    pb::GridFunc<RHODTYPE> grho(grid, bc[0], bc[1], bc[2]);
+    grho.assign(&rho->rho_[0][0]);
+    pb::GridFunc<RHODTYPE> *grhoc = mgmol->electrostat_->getRhoc();
 
-    /* check if the recomputed potential is the same */
-    d_vhrho = pot.vh_rho();
-    for (int d = 0; d < vh0.size(); d++)
+    poisson->solve(grho, *grhoc);
+    const pb::GridFunc<POTDTYPE> vh = poisson->vh();
+
+    pb::GridFunc<POTDTYPE> error_gf(grid, bc[0], bc[1], bc[2]);
+    error_gf = vh0_gf;
+    error_gf -= vh;
+
+    double rel_error = error_gf.norm2() / vh0_gf.norm2();
+    if (rel_error > 1e-10)
     {
-        double error = abs(vh0[d] - d_vhrho[d]) / abs(vh0[d]);
-        if (error > 1e-10)
+        if (rank == 0)
         {
-            printf("rank %d, vh_rho[%d]=%.15e, vh_rho0[%d]=%.15e\n", rank, d, d_vhrho[d], d, vh0[d]);
+            printf("FOM potential relative error: %.3e\n", rel_error);
             std::cerr << "Potential is inconsistent!!!" << std::endl;
-            MPI_Abort(MPI_COMM_WORLD, 0);
         }
+        MPI_Abort(MPI_COMM_WORLD, 0);
     }
 }
 
