@@ -2055,6 +2055,8 @@ void Control::setROMOptions(const boost::program_options::variables_map& vm)
             rom_pri_option.variable = ROMVariable::ORBITALS;
         else if (str.compare("potential") == 0)
             rom_pri_option.variable = ROMVariable::POTENTIAL;
+        else if (str.compare("density") == 0)
+            rom_pri_option.variable = ROMVariable::DENSITY;
         else
             rom_pri_option.variable = ROMVariable::NONE;
 
@@ -2064,6 +2066,7 @@ void Control::setROMOptions(const boost::program_options::variables_map& vm)
         rom_pri_option.compare_md = vm["ROM.basis.compare_md"].as<bool>();
         rom_pri_option.num_orbbasis = vm["ROM.basis.number_of_orbital_basis"].as<int>();
         rom_pri_option.num_potbasis = vm["ROM.basis.number_of_potential_basis"].as<int>();
+        rom_pri_option.num_rhobasis = vm["ROM.basis.number_of_density_basis"].as<int>();
         rom_pri_option.pot_rom_file = vm["ROM.potential_rom_file"].as<std::string>();
 
         rom_pri_option.test_restart_file = vm["ROM.online.test_restart_file"].as<std::string>();
@@ -2124,5 +2127,8 @@ void Control::syncROMOptions()
     bcast_check(mpirc);
 
     mpirc = MPI_Bcast(&rom_pri_option.num_potbasis, 1, MPI_INT, 0, comm_global_);
+    bcast_check(mpirc);
+
+    mpirc = MPI_Bcast(&rom_pri_option.num_rhobasis, 1, MPI_INT, 0, comm_global_);
     bcast_check(mpirc);
 }
