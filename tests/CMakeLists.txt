@@ -247,6 +247,8 @@ add_executable(testDensityMatrix
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
                ${CMAKE_SOURCE_DIR}/src/tools/random.cc
+               ${CMAKE_SOURCE_DIR}/src/ReplicatedWorkSpace.cc
+               ${CMAKE_SOURCE_DIR}/src/hdf_tools.cc
                ${CMAKE_SOURCE_DIR}/tests/ut_magma_main.cc)
 add_executable(testEnergyAndForces
                ${CMAKE_SOURCE_DIR}/tests/EnergyAndForces/testEnergyAndForces.cc)
@@ -254,6 +256,8 @@ add_executable(testWFEnergyAndForces
                ${CMAKE_SOURCE_DIR}/tests/WFEnergyAndForces/testWFEnergyAndForces.cc)
 add_executable(testDMandEnergyAndForces
                ${CMAKE_SOURCE_DIR}/tests/DMandEnergyAndForces/testDMandEnergyAndForces.cc)
+add_executable(testRestartEnergyAndForces
+               ${CMAKE_SOURCE_DIR}/tests/RestartEnergyAndForces/testRestartEnergyAndForces.cc)
 add_executable(testPinnedH2O_3DOF
                ${CMAKE_SOURCE_DIR}/tests/PinnedH2O_3DOF/testPinnedH2O_3DOF.cc)
 
@@ -370,6 +374,15 @@ add_test(NAME testDMandEnergyAndForces
          ${CMAKE_CURRENT_SOURCE_DIR}/DMandEnergyAndForces/mgmol.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/DMandEnergyAndForces/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/DMandEnergyAndForces/lrs.in
+         ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+add_test(NAME testRestartEnergyAndForces
+         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/RestartEnergyAndForces/test.py
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+         ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
+         ${CMAKE_CURRENT_BINARY_DIR}/testRestartEnergyAndForces
+         ${CMAKE_CURRENT_SOURCE_DIR}/RestartEnergyAndForces/mgmol.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/RestartEnergyAndForces/restart.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/RestartEnergyAndForces/h2o.xyz
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME testPinnedH2O_3DOF
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/PinnedH2O_3DOF/test.py
@@ -501,6 +514,14 @@ add_test(NAME testMD_D72
          ${CMAKE_CURRENT_SOURCE_DIR}/MD_D72/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/MD_D72/lrs.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+add_test(NAME testMD_MVP
+         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/MD_MVP/test.py
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+         ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
+         ${CMAKE_CURRENT_SOURCE_DIR}/MD_MVP/quench.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/MD_MVP/md.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/MD_MVP/li2.xyz
+         ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME testLBFGS
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/LBFGS/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
@@ -554,7 +575,7 @@ target_include_directories(testConditionDistMatrix PRIVATE ${Boost_INCLUDE_DIRS}
 target_include_directories(testConditionDistMatrixPower PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories(testPower PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories(testPowerDistMatrix PRIVATE ${Boost_INCLUDE_DIRS})
-target_include_directories(testDensityMatrix PRIVATE ${Boost_INCLUDE_DIRS})
+target_include_directories(testDensityMatrix PRIVATE ${Boost_INCLUDE_DIRS} ${HDF5_INCLUDE_DIRS})
 target_include_directories(testGramMatrix PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories(testAndersonMix PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories(testIons PRIVATE ${Boost_INCLUDE_DIRS} ${HDF5_INCLUDE_DIRS})
@@ -567,8 +588,10 @@ target_link_libraries(testDirectionalReduce PRIVATE MPI::MPI_CXX)
 target_link_libraries(testEnergyAndForces PRIVATE mgmol_src)
 target_link_libraries(testWFEnergyAndForces PRIVATE mgmol_src)
 target_link_libraries(testDMandEnergyAndForces PRIVATE mgmol_src)
+target_link_libraries(testRestartEnergyAndForces PRIVATE mgmol_src)
 target_link_libraries(testPinnedH2O_3DOF PRIVATE mgmol_src)
 target_link_libraries(testIons PRIVATE mgmol_src)
+target_link_libraries(testDensityMatrix PRIVATE ${HDF5_LIBRARIES})
 
 if(${MAGMA_FOUND})
   target_link_libraries(testDistVector PRIVATE ${SCALAPACK_LIBRARIES}

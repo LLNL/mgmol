@@ -93,7 +93,14 @@ protected:
     std::unique_ptr<MatrixType> matHB_;
     std::unique_ptr<MatrixType> matH_;
 
+    /*!
+     * Density Matrix
+     */
     std::unique_ptr<DensityMatrix<MatrixType>> dm_;
+
+    /*!
+     * Gram matrix of orbitals overlaps
+     */
     std::unique_ptr<GramMatrix<MatrixType>> gm_;
 
     // work matrix for tmp usage
@@ -311,8 +318,10 @@ public:
     double computeEntropy() override;
     double computeEntropyWithCheb(const double kbt);
     double checkCond(const double tol, const bool flag = true) override;
-    int writeDM_hdf5(HDFrestart& h5f_file) override;
-    int read_dm_hdf5(hid_t file_id) override;
+    int writeDM(HDFrestart& h5f_file) override;
+    int writeSavedDM(HDFrestart& h5f_file);
+    int readDM(HDFrestart& h5f_file) override;
+    int readWFDM(HDFrestart& h5f_file);
     void printEigenvalues(std::ostream& os) const;
     void updateDM(const int iterative_index) override;
     void updateDMwithEigenstates(const int iterative_index);

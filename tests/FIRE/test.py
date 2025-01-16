@@ -49,7 +49,11 @@ print(command)
 restart_file = subprocess.check_output(command,shell=True)
 restart_file=str(restart_file[:-1],'utf-8')
 print(restart_file)
-os.symlink(restart_file, 'wave.out')
+try:
+  os.symlink(restart_file, 'wave.out')
+except FileExistsError:
+  os.remove('wave.out')
+  os.symlink(restart_file, 'wave.out')
 
 command = "{} {} -c {}".format(mpicmd,exe,inp2)
 print(command)

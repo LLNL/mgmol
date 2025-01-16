@@ -265,19 +265,35 @@ public:
 
         exitWithErrorMessage("updateDMwithRelax");
     }
-    virtual int read_dm_hdf5(hid_t file_id)
-    {
-        (void)file_id;
-
-        exitWithErrorMessage("read_dm_hdf5");
-
-        return 0;
-    }
-    virtual int writeDM_hdf5(HDFrestart& h5f_file)
+    virtual int readDM(HDFrestart& h5f_file)
     {
         (void)h5f_file;
 
-        exitWithErrorMessage("writeDM_hdf5");
+        exitWithErrorMessage("readDM");
+
+        return 0;
+    }
+    virtual int readWFDM(HDFrestart& h5f_file)
+    {
+        (void)h5f_file;
+
+        exitWithErrorMessage("readWFDM");
+
+        return 0;
+    }
+    virtual int writeDM(HDFrestart& h5f_file)
+    {
+        (void)h5f_file;
+
+        exitWithErrorMessage("writeDM");
+
+        return 0;
+    }
+    virtual int writeSavedDM(HDFrestart& h5f_file)
+    {
+        (void)h5f_file;
+
+        exitWithErrorMessage("writeSavedDM");
 
         return 0;
     }

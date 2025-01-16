@@ -26,6 +26,7 @@
 #include "SparseDistMatrix.h"
 #include "SquareSubMatrix2DistMatrix.h"
 #include "fermi.h"
+#include "hdf_tools.h"
 
 #include <fstream>
 #include <iomanip>
@@ -732,114 +733,50 @@ double ProjectedMatrices<MatrixType>::checkCond(
             (*MPIdata::sout)
                 << " CONDITION NUMBER OF THE OVERLAP MATRIX EXCEEDS TOL: "
                 << rcond << "!!!" << std::endl;
-        Control& ct = *(Control::instance());
         if (flag) mmpi.abort();
     }
     return rcond;
 }
 
-////// TEMPLATE THIS FOR FLOAT OPTION ??
 template <class MatrixType>
-int ProjectedMatrices<MatrixType>::writeDM_hdf5(HDFrestart& h5f_file)
+int ProjectedMatrices<MatrixType>::writeDM(HDFrestart& h5f_file)
 {
-    hid_t file_id = h5f_file.file_id();
-
-    ReplicatedWorkSpace<double>& wspace(
-        ReplicatedWorkSpace<double>::instance());
-
-    wspace.initSquareMatrix(dm_->getMatrix());
-
-    if (file_id < 0) return 0;
-
-    hsize_t dims[2] = { dim_, dim_ };
-
-    // filespace identifier
-    hid_t dataspace = H5Screate_simple(2, dims, nullptr);
-
-    hid_t dset_id = H5Dcreate2(file_id, "/Density_Matrix", H5T_NATIVE_DOUBLE,
-        dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    if (dset_id < 0)
-    {
-        (*MPIdata::serr) << "ProjectedMatrices<MatrixType>::write_dm_hdf5: "
-                            "H5Dcreate2 failed!!!"
-                         << std::endl;
-        return -1;
-    }
-
-    hid_t memspace  = dataspace;
-    hid_t filespace = dataspace;
-
-    DISTMATDTYPE* work_matrix = wspace.square_matrix();
-    herr_t status = H5Dwrite(dset_id, H5T_NATIVE_DOUBLE, memspace, filespace,
-        H5P_DEFAULT, work_matrix);
-    if (status < 0)
-    {
-        (*MPIdata::serr) << "Orbitals: H5Dwrite failed!!!" << std::endl;
-        return -1;
-    }
-
-    status = H5Dclose(dset_id);
-    if (status < 0)
-    {
-        (*MPIdata::serr) << "ProjectedMatrices<MatrixType>::write_dm_hdf5(), "
-                            "H5Dclose failed!!!"
-                         << std::endl;
-        return -1;
-    }
-    status = H5Sclose(dataspace);
-    if (status < 0)
-    {
-        (*MPIdata::serr) << "ProjectedMatrices<MatrixType>::write_dm_hdf5(), "
-                            "H5Sclose failed!!!"
-                         << std::endl;
-        return -1;
-    }
-
-    return 0;
+    std::string name("/Density_Matrix");
+    return dm_->write(h5f_file, name);
 }
-////// TEMPLATE THIS FOR FLOAT OPTION ??
+
 template <class MatrixType>
-int ProjectedMatrices<MatrixType>::read_dm_hdf5(hid_t file_id)
+int ProjectedMatrices<MatrixType>::writeSavedDM(HDFrestart& h5f_file)
 {
+    std::string name("/Density_Matrix_WF");
+
     ReplicatedWorkSpace<double>& wspace(
         ReplicatedWorkSpace<double>::instance());
+
+    const MatrixType* matrix = mat_X_old_.get();
+    wspace.initSquareMatrix(*matrix);
+
     DISTMATDTYPE* work_matrix = wspace.square_matrix();
 
-    int ierr        = 0;
+    hid_t file_id = h5f_file.file_id();
+    return mgmol_tools::write_matrix(file_id, name, work_matrix, dim_);
+}
+
+template <class MatrixType>
+int ProjectedMatrices<MatrixType>::readDM(HDFrestart& h5f_file)
+{
+    std::string name("/Density_Matrix");
+    return dm_->read(h5f_file, name);
+}
+
+template <class MatrixType>
+int ProjectedMatrices<MatrixType>::readWFDM(HDFrestart& h5f_file)
+{
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    if (mmpi.instancePE0())
-    {
-        hid_t dset_id = H5Dopen2(file_id, "/Density_Matrix", H5P_DEFAULT);
-        if (dset_id < 0)
-        {
-            (*MPIdata::serr)
-                << "H5Dopen failed for /Density_Matrix!!!" << std::endl;
-        }
-        else
-        {
-            ierr          = 1;
-            herr_t status = H5Dread(dset_id, H5T_NATIVE_DOUBLE, H5S_ALL,
-                H5S_ALL, H5P_DEFAULT, work_matrix);
-            if (status < 0)
-            {
-                (*MPIdata::serr)
-                    << "H5Dread failed for /Density_Matrix!!!" << std::endl;
-                return -1;
-            }
-
-            status = H5Dclose(dset_id);
-            if (status < 0)
-            {
-                (*MPIdata::serr) << "H5Dclose failed!!!" << std::endl;
-                return -1;
-            }
-        }
-    }
-    mmpi.bcast(&ierr, 1);
-    if (ierr >= 0) wspace.mpiBcastSquareMatrix();
-    if (ierr >= 0) dm_->initMatrix(work_matrix);
-
-    return ierr;
+    mmpi.barrier();
+    if (mmpi.PE0()) std::cout << "ProjectedMatrices::readWFDM..." << std::endl;
+    std::string name("/Density_Matrix_WF");
+    return dm_->read(h5f_file, name);
 }
 
 template <class MatrixType>

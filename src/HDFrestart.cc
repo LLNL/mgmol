@@ -933,12 +933,12 @@ int HDFrestart::getLRCenters(std::multimap<std::string, Vector3D>& centers,
 
         std::string datasetname(getDatasetName(name, color));
 
-        int err_id = dset_exists(datasetname);
+        int err_id = checkDataExistsLocal(datasetname);
         if (err_id == 0)
         { // dataset does not exists
             // try older version
             datasetname = getDatasetName_old(name, color);
-            err_id      = dset_exists(datasetname);
+            err_id      = checkDataExistsLocal(datasetname);
         }
 
         if (err_id == 0)
@@ -1052,12 +1052,12 @@ int HDFrestart::getLRs(std::shared_ptr<LocalizationRegions> lrs,
 
         std::string datasetname(getDatasetName(name, color));
 
-        int err_id = dset_exists(datasetname);
+        int err_id = checkDataExistsLocal(datasetname);
         if (err_id == 0)
         { // dataset does not exists
             // try older version
             datasetname = getDatasetName_old(name, color);
-            err_id      = dset_exists(datasetname);
+            err_id      = checkDataExistsLocal(datasetname);
         }
         if (err_id == 0)
         { // dataset does not exists
@@ -2723,6 +2723,21 @@ void HDFrestart::gatherDataXdir(std::vector<T>& data)
             }
         }
     }
+}
+
+int HDFrestart::countFunctionObjects(std::string& name) const
+{
+    int count = 0;
+    int found = 0;
+    do
+    {
+        std::string datasetname(getDatasetName(name, count));
+        // check if dataset exists...
+        found = checkDataExists(datasetname);
+        if (found) count++;
+    } while (found); // dataset exists
+
+    return count;
 }
 
 template int HDFrestart::read_1func_hdf5(float*, const std::string&);

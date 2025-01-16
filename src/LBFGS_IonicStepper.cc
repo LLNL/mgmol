@@ -328,11 +328,11 @@ int LBFGS_IonicStepper::read_lbfgs(HDFrestart& h5f_file)
 
     short check_data = 0;
     std::vector<double> attr_d(16);
+    // Open an existing dataset.
+    std::string datasetname("/LBFGS");
+    int err_id = h5f_file.checkDataExists(datasetname);
     if (onpe0)
     {
-        // Open an existing dataset.
-        std::string datasetname("/LBFGS");
-        int err_id = h5f_file.dset_exists(datasetname);
         if (err_id < 0)
         { // dataset does not exists
             (*MPIdata::sout) << "Warning: no dataset " << datasetname
@@ -343,10 +343,9 @@ int LBFGS_IonicStepper::read_lbfgs(HDFrestart& h5f_file)
             dataset_id = H5Dopen2(file_id, "/LBFGS", H5P_DEFAULT);
             if (dataset_id < 0)
             {
-                if (onpe0)
-                    (*MPIdata::sout) << "Warning: H5Dopen failed for /LBFGS-> "
-                                        "no restart info for LBFGS"
-                                     << std::endl;
+                (*MPIdata::sout) << "Warning: H5Dopen failed for /LBFGS-> "
+                                    "no restart info for LBFGS"
+                                 << std::endl;
             }
             else
             {
