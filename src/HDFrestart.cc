@@ -2725,6 +2725,21 @@ void HDFrestart::gatherDataXdir(std::vector<T>& data)
     }
 }
 
+int HDFrestart::countFunctionObjects(std::string& name) const
+{
+    int count = 0;
+    int found = 0;
+    do
+    {
+        std::string datasetname(getDatasetName(name, count));
+        // check if dataset exists...
+        found = checkDataExists(datasetname);
+        if (found) count++;
+    } while (found); // dataset exists
+
+    return count;
+}
+
 template int HDFrestart::read_1func_hdf5(float*, const std::string&);
 template int HDFrestart::read_1func_hdf5(double*, const std::string&);
 

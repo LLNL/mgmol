@@ -59,9 +59,9 @@ const T& Hamiltonian<T>::applyLocal(T& phi, const bool force)
     if (onpe0)
     {
         (*MPIdata::sout) << "Hamiltonian<T>::applyLocal(), new_index ="
-                         << new_index << endl;
+                         << new_index << std::endl;
         (*MPIdata::sout) << "Hamiltonian<T>::applyLocal(), itindex_  ="
-                         << itindex_ << endl;
+                         << itindex_ << std::endl;
     }
 #endif
     if (force || new_index != itindex_)
@@ -76,7 +76,8 @@ const T& Hamiltonian<T>::applyLocal(T& phi, const bool force)
         if (onpe0)
             (*MPIdata::sout)
                 << "Hamiltonian<T>::hlphi up to date, itindex_=" << itindex_
-                << endl;
+                << ", Potential index=" << pot_->getIterativeIndex()
+                << std::endl;
 #endif
     }
     return *hlphi_;

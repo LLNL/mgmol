@@ -249,6 +249,7 @@ public:
         const float total_spin, std::string run_directory = ".");
 
     void setDefaultValues();
+    bool withSpin() { return with_spin_; }
 
     bool globalColoring() const { return (coloring_algo_ / 10 == 0); }
 
@@ -269,6 +270,8 @@ public:
     }
 
     float getSpin() const { return total_spin_; }
+
+    void setNempty(const int nempty) { nempty_ = nempty; }
 
     short getMGlevels() { return mg_levels_; }
 
@@ -301,7 +304,6 @@ public:
         const float dtol, const short kim, const short itmax, const short lfil,
         const short maxfill, const short ilutype);
     void setSpreadRadius();
-    int readOccupations(std::ifstream* tfile);
     bool checkTimeout() { return timeout_.check(); }
 
     bool occupationWidthIsZero() { return occ_width < 1.e-12; }
