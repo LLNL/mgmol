@@ -114,7 +114,8 @@ int MD_IonicStepper::init(HDFrestart& /*h5f_file*/)
             (*MPIdata::sout) << "MD_IonicStepper::init() --- use positions "
                                 "from restart file with dt="
                              << dt_ << endl;
-        // taum_: velocities -> displacements = -dt*vel
+        // taum_ was initialized with velocities
+        // set taum_ to displacements = -dt*vel
         double alpha = -1. * dt_;
         DSCAL(&size_tau, &alpha, &taum_[0], &ione);
 
@@ -123,113 +124,9 @@ int MD_IonicStepper::init(HDFrestart& /*h5f_file*/)
         taup_            = tau0_;
         DAXPY(&size_tau, &minus_one, &taum_[0], &ione, &taup_[0], &ione);
 
-        // taum_ -> previous positions: tau0_ - dt*vel
+        // Now set taum_ to previous positions: tau0_ - dt*vel
         DAXPY(&size_tau, &one, &tau0_[0], &ione, &taum_[0], &ione);
     }
-
-    return 0;
-}
-
-int MD_IonicStepper::writeForces(HDFrestart& h5f_file)
-{
-    hid_t file_id = h5f_file.file_id();
-
-    // Create the data space for new datasets
-    hsize_t dims[2] = { (hsize_t)tau0_.size() / 3, 3 };
-
-    hid_t dataspace_id = H5Screate_simple(2, dims, nullptr);
-    if (dataspace_id < 0)
-    {
-        (*MPIdata::serr) << "MD_IonicStepper: H5Screate_simple failed!!!"
-                         << endl;
-        return -1;
-    }
-
-    // Open dataset
-    hid_t dataset_id = H5Dcreate2(file_id, "/Ionic_forces", H5T_NATIVE_DOUBLE,
-        dataspace_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    if (dataset_id < 0)
-    {
-        (*MPIdata::serr)
-            << "MD_IonicStepper::H5Dcreate2 /Ionic_forces failed!!!" << endl;
-        return -1;
-    }
-
-    // Write forces
-    herr_t status = H5Dwrite(dataset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL,
-        H5P_DEFAULT, &fion_[0]);
-    if (status < 0)
-    {
-        (*MPIdata::serr) << "MD_IonicStepper::H5Dwrite forces failed!!!"
-                         << endl;
-        return -1;
-    }
-    else
-    {
-        if (onpe0)
-            (*MPIdata::sout)
-                << "Ionic forces written into " << h5f_file.filename() << endl;
-    }
-
-    status = H5Dclose(dataset_id);
-    if (status < 0)
-    {
-        (*MPIdata::serr) << "H5Dclose failed!!!" << endl;
-        return -1;
-    }
-    H5Sclose(dataspace_id);
-
-    return 0;
-}
-
-int MD_IonicStepper::writeTaum(HDFrestart& h5f_file)
-{
-    hid_t file_id = h5f_file.file_id();
-
-    // Create the data space for new datasets
-    hsize_t dims[2] = { (hsize_t)taum_.size() / 3, 3 };
-
-    hid_t dataspace_id = H5Screate_simple(2, dims, nullptr);
-    if (dataspace_id < 0)
-    {
-        (*MPIdata::serr) << "MD_IonicStepper: H5Screate_simple failed!!!"
-                         << endl;
-        return -1;
-    }
-
-    // Open dataset
-    hid_t dataset_id = H5Dcreate2(file_id, "/Ionic_velocities",
-        H5T_NATIVE_DOUBLE, dataspace_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    if (dataset_id < 0)
-    {
-        (*MPIdata::serr)
-            << "MD_IonicStepper::H5Dcreate2 /Ionic_velocities failed!!!"
-            << endl;
-        return -1;
-    }
-
-    // Write forces
-    herr_t status = H5Dwrite(dataset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL,
-        H5P_DEFAULT, &taum_[0]);
-    if (status < 0)
-    {
-        (*MPIdata::serr) << "MD_IonicStepper::H5Dwrite taum failed!!!" << endl;
-        return -1;
-    }
-    else
-    {
-        if (onpe0)
-            (*MPIdata::sout) << "Ionic velocities written into "
-                             << h5f_file.filename() << endl;
-    }
-
-    status = H5Dclose(dataset_id);
-    if (status < 0)
-    {
-        (*MPIdata::serr) << "H5Dclose failed!!!" << endl;
-        return -1;
-    }
-    H5Sclose(dataspace_id);
 
     return 0;
 }
@@ -251,11 +148,18 @@ int MD_IonicStepper::write_hdf5(HDFrestart& h5f_file)
         if (status < 0) return status;
 
         if (dt_ > 0.)
+        {
             writeVelocities(h5f_file);
+            std::string datasetname("/Ionic_previous_positions");
+            writeAtomicFields(h5f_file, taum_, datasetname, true);
+        }
         else
-            writeTaum(h5f_file);
-
-        writeForces(h5f_file);
+        {
+            std::string datasetname("/Ionic_velocities");
+            writeAtomicFields(h5f_file, taum_, datasetname, true);
+        }
+        std::string datasetname("/Ionic_forces");
+        writeAtomicFields(h5f_file, fion_, datasetname, true);
     }
 
     //
@@ -469,7 +373,8 @@ void MD_IonicStepper::updateTau()
     tau0_ = taup_;
     if (dt_ > 0.)
     {
-        // update taup to be able to compute velocity...
+        // update taup_ to be able to compute velocity:
+        // taup_ <- tau0_-taum_
         int size_tau = (int)tau0_.size();
         int ione     = 1;
         double alpha = 1.;
