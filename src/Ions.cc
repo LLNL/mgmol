@@ -3209,7 +3209,7 @@ void Ions::initStepperData()
 
         for (short i = 0; i < 3; i++)
         {
-            taum_.push_back((*lion)->old_position(i));
+            taum_.push_back((*lion)->getPreviousPosition(i));
             tau0_.push_back((*lion)->position(i));
             fion_.push_back((*lion)->force(i));
             velocity_.push_back((*lion)->velocity(i));

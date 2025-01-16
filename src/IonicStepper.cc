@@ -13,8 +13,6 @@
 #include "MGmol_blas1.h"
 #include <stdlib.h>
 
-using namespace std;
-
 IonicStepper::IonicStepper(const double dt, const std::vector<short>& atmove,
     std::vector<double>& tau0, std::vector<double>& taup)
     : atmove_(atmove), tau0_(tau0), taup_(taup)
@@ -51,7 +49,8 @@ IonicStepper::IonicStepper(const double dt, const std::vector<short>& atmove,
 }
 
 int IonicStepper::writeAtomicFields(HDFrestart& h5f_file,
-    const vector<double>& data, const string& name, const bool create) const
+    const std::vector<double>& data, const std::string& name,
+    const bool create) const
 {
     hid_t file_id = h5f_file.file_id();
     if (file_id < 0) return 0;
@@ -62,7 +61,6 @@ int IonicStepper::writeAtomicFields(HDFrestart& h5f_file,
 
     if (create)
     {
-
         // Create the data space for new datasets
         hsize_t dims[2] = { (hsize_t)data.size() / 3, 3 };
         dataspace_id    = H5Screate_simple(2, dims, nullptr);
@@ -70,7 +68,7 @@ int IonicStepper::writeAtomicFields(HDFrestart& h5f_file,
         {
             (*MPIdata::serr)
                 << "IonicStepper::writeAtomicFields, H5Screate_simple failed!!!"
-                << endl;
+                << std::endl;
             return -1;
         }
 
@@ -81,7 +79,7 @@ int IonicStepper::writeAtomicFields(HDFrestart& h5f_file,
         {
             (*MPIdata::serr) << "IonicStepper::writeAtomicFields, H5Dcreate2 "
                                 "failed for dataset "
-                             << name << "!!!" << endl;
+                             << name << "!!!" << std::endl;
             return -1;
         }
     }
@@ -93,7 +91,7 @@ int IonicStepper::writeAtomicFields(HDFrestart& h5f_file,
         {
             (*MPIdata::serr) << "IonicStepper::writeAtomicFields, H5Dopen2 "
                                 "failed for dataset "
-                             << name << "!!!" << endl;
+                             << name << "!!!" << std::endl;
             return -1;
         }
     }
@@ -103,7 +101,7 @@ int IonicStepper::writeAtomicFields(HDFrestart& h5f_file,
     if (status < 0)
     {
         (*MPIdata::serr) << "IonicStepper::writeAtomicFields: H5Dwrite " << name
-                         << " failed!!!" << endl;
+                         << " failed!!!" << std::endl;
         return -1;
     }
     else
@@ -111,14 +109,15 @@ int IonicStepper::writeAtomicFields(HDFrestart& h5f_file,
         if (onpe0)
             (*MPIdata::sout)
                 << "IonicStepper::writeAtomicFields, Data written into file "
-                << h5f_file.filename() << endl;
+                << h5f_file.filename() << std::endl;
     }
 
     status = H5Dclose(dataset_id);
     if (status < 0)
     {
         (*MPIdata::serr)
-            << "IonicStepper::writeAtomicFields, H5Dclose failed!!!" << endl;
+            << "IonicStepper::writeAtomicFields, H5Dclose failed!!!"
+            << std::endl;
         return -1;
     }
 
@@ -129,7 +128,7 @@ int IonicStepper::writeAtomicFields(HDFrestart& h5f_file,
         {
             (*MPIdata::serr)
                 << "IonicStepper::writeAtomicFields, H5Sclose failed!!!"
-                << endl;
+                << std::endl;
             return -1;
         }
     }
@@ -137,7 +136,8 @@ int IonicStepper::writeAtomicFields(HDFrestart& h5f_file,
     return 0;
 }
 
-int IonicStepper::writePositions(HDFrestart& h5f_file, const string& name) const
+int IonicStepper::writePositions(
+    HDFrestart& h5f_file, const std::string& name) const
 {
     return writeAtomicFields(h5f_file, tau0_, name, false);
 }
@@ -155,7 +155,8 @@ int IonicStepper::writeVelocities(HDFrestart& h5f_file) const
     hid_t dataspace_id = H5Screate_simple(2, dims, nullptr);
     if (dataspace_id < 0)
     {
-        (*MPIdata::serr) << "IonicStepper: H5Screate_simple failed!!!" << endl;
+        (*MPIdata::serr) << "IonicStepper: H5Screate_simple failed!!!"
+                         << std::endl;
         return -1;
     }
 
@@ -170,7 +171,7 @@ int IonicStepper::writeVelocities(HDFrestart& h5f_file) const
         {
             std::cerr << "IonicStepper::writeVelocities, H5Dopen2 "
                          "failed for dataset "
-                      << name << "!!!" << endl;
+                      << name << "!!!" << std::endl;
             return -1;
         }
     }
@@ -182,12 +183,12 @@ int IonicStepper::writeVelocities(HDFrestart& h5f_file) const
         {
             (*MPIdata::serr)
                 << "IonicStepper:: H5Dcreate2 /Ionic_velocities failed!!!"
-                << endl;
+                << std::endl;
             return -1;
         }
     }
 
-    vector<double> data(taup_);
+    std::vector<double> data(taup_);
     double minus = -1.;
     int n = (int)tau0_.size(), ione = 1;
     DAXPY(&n, &minus, &tau0_[0], &ione, &data[0], &ione);
@@ -202,20 +203,20 @@ int IonicStepper::writeVelocities(HDFrestart& h5f_file) const
     if (status < 0)
     {
         (*MPIdata::serr) << "IonicStepper::H5Dwrite velocities failed!!!"
-                         << endl;
+                         << std::endl;
         return -1;
     }
     else
     {
         if (onpe0)
             (*MPIdata::sout) << "Ionic velocities written into "
-                             << h5f_file.filename() << endl;
+                             << h5f_file.filename() << std::endl;
     }
 
     status = H5Dclose(dataset_id);
     if (status < 0)
     {
-        (*MPIdata::serr) << "H5Dclose failed!!!" << endl;
+        (*MPIdata::serr) << "H5Dclose failed!!!" << std::endl;
         return -1;
     }
     H5Sclose(dataspace_id);
@@ -224,7 +225,7 @@ int IonicStepper::writeVelocities(HDFrestart& h5f_file) const
 }
 
 int IonicStepper::readAtomicFields(
-    HDFrestart& h5f_file, vector<double>& data, const string& name)
+    HDFrestart& h5f_file, std::vector<double>& data, const std::string& name)
 {
     hid_t file_id = h5f_file.file_id();
 
@@ -239,7 +240,7 @@ int IonicStepper::readAtomicFields(
             if (dataset_id < 0)
             {
                 (*MPIdata::serr) << "IonicStepper, H5Dopen2 failed for " << name
-                                 << " !!!" << endl;
+                                 << " !!!" << std::endl;
                 return -1;
             }
 
@@ -249,14 +250,15 @@ int IonicStepper::readAtomicFields(
                 H5S_ALL, H5P_DEFAULT, &data[0]);
             if (status < 0)
             {
-                (*MPIdata::serr) << "IonicStepper, H5Dread failed!!!" << endl;
+                (*MPIdata::serr)
+                    << "IonicStepper, H5Dread failed!!!" << std::endl;
                 return -1;
             }
             // close dataset
             status = H5Dclose(dataset_id);
             if (status < 0)
             {
-                (*MPIdata::serr) << "H5Dclose failed!!!" << endl;
+                (*MPIdata::serr) << "H5Dclose failed!!!" << std::endl;
                 return -1;
             }
         }
@@ -265,13 +267,14 @@ int IonicStepper::readAtomicFields(
     return 0;
 }
 
-int IonicStepper::readPositions_hdf5(HDFrestart& h5f_file, const string& name)
+int IonicStepper::readPositions_hdf5(
+    HDFrestart& h5f_file, const std::string& name)
 {
     return readAtomicFields(h5f_file, tau0_, name);
 }
 
 int IonicStepper::writeRandomStates(HDFrestart& h5f_file,
-    vector<unsigned short>& data, const string& name) const
+    std::vector<unsigned short>& data, const std::string& name) const
 {
     hid_t file_id = h5f_file.file_id();
     bool create   = false;
@@ -282,7 +285,7 @@ int IonicStepper::writeRandomStates(HDFrestart& h5f_file,
     if (dataset_id < 0)
     {
         (*MPIdata::serr) << "IonicStepper:: H5Dopen2 " << name
-                         << " failed!!! Creating new data file " << endl;
+                         << " failed!!! Creating new data file " << std::endl;
 
         // Create the data space for the dataset
         hsize_t dims[2] = { (hsize_t)data.size() / 3, 3 };
@@ -291,7 +294,7 @@ int IonicStepper::writeRandomStates(HDFrestart& h5f_file,
         {
             (*MPIdata::serr)
                 << "Ions::writeRandomStates: H5Screate_simple failed!!!"
-                << endl;
+                << std::endl;
             return -1;
         }
         // Create the dataset
@@ -300,7 +303,7 @@ int IonicStepper::writeRandomStates(HDFrestart& h5f_file,
         if (dataset_id < 0)
         {
             (*MPIdata::serr)
-                << "Ions::writeRandomStates: H5Dcreate2 failed!!!" << endl;
+                << "Ions::writeRandomStates: H5Dcreate2 failed!!!" << std::endl;
             return -1;
         }
         create = true;
@@ -312,7 +315,7 @@ int IonicStepper::writeRandomStates(HDFrestart& h5f_file,
     if (status < 0)
     {
         (*MPIdata::serr) << "IonicStepper::writeRandomStates: H5Dwrite " << name
-                         << " failed!!!" << endl;
+                         << " failed!!!" << std::endl;
         return -1;
     }
     else
@@ -320,14 +323,15 @@ int IonicStepper::writeRandomStates(HDFrestart& h5f_file,
         if (onpe0)
             (*MPIdata::sout)
                 << "IonicStepper::writeRandomStates, Data written into file "
-                << h5f_file.filename() << endl;
+                << h5f_file.filename() << std::endl;
     }
 
     status = H5Dclose(dataset_id);
     if (status < 0)
     {
         (*MPIdata::serr)
-            << "IonicStepper::writeRandomStates, H5Dclose failed!!!" << endl;
+            << "IonicStepper::writeRandomStates, H5Dclose failed!!!"
+            << std::endl;
         return -1;
     }
 
@@ -338,7 +342,7 @@ int IonicStepper::writeRandomStates(HDFrestart& h5f_file,
         {
             (*MPIdata::serr)
                 << "IonicStepper::writeAtomicFields, H5Sclose failed!!!"
-                << endl;
+                << std::endl;
             return -1;
         }
     }
@@ -346,8 +350,8 @@ int IonicStepper::writeRandomStates(HDFrestart& h5f_file,
     return 0;
 }
 
-int IonicStepper::readRandomStates(
-    HDFrestart& h5f_file, vector<unsigned short>& data, const string& name)
+int IonicStepper::readRandomStates(HDFrestart& h5f_file,
+    std::vector<unsigned short>& data, const std::string& name)
 {
     hid_t file_id = h5f_file.file_id();
 
@@ -360,10 +364,10 @@ int IonicStepper::readRandomStates(
             if (onpe0)
             {
                 (*MPIdata::sout)
-                    << "H5Dopen failed for /Ionic_RandomStates" << endl;
+                    << "H5Dopen failed for /Ionic_RandomStates" << std::endl;
                 (*MPIdata::sout)
                     << "Set random states to default computed in Ion.cc"
-                    << endl;
+                    << std::endl;
             }
         }
         else
@@ -373,19 +377,20 @@ int IonicStepper::readRandomStates(
 
             if (onpe0)
                 (*MPIdata::sout) << "Read Ionic random states from "
-                                 << h5f_file.filename() << endl;
+                                 << h5f_file.filename() << std::endl;
             herr_t status = H5Dread(dataset_id, H5T_NATIVE_USHORT, H5S_ALL,
                 H5S_ALL, H5P_DEFAULT, &data[0]);
             if (status < 0)
             {
-                (*MPIdata::serr) << "IonicStepper: H5Dread failed!!!" << endl;
+                (*MPIdata::serr)
+                    << "IonicStepper: H5Dread failed!!!" << std::endl;
                 return -1;
             }
             // close dataset
             status = H5Dclose(dataset_id);
             if (status < 0)
             {
-                (*MPIdata::serr) << "H5Dclose failed!!!" << endl;
+                (*MPIdata::serr) << "H5Dclose failed!!!" << std::endl;
                 return -1;
             }
         }

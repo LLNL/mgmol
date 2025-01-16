@@ -176,7 +176,7 @@ public:
     }
 
     double position(const short i) const { return position_[i]; }
-    double old_position(const short i) const { return old_position_[i]; }
+    double getPreviousPosition(const short i) const { return old_position_[i]; }
     void setPosition(const double x, const double y, const double z)
     {
         old_position_[0] = position_[0];
