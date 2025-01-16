@@ -10,7 +10,7 @@ setenv OMP_NUM_THREADS 1
 
 set ncpus = 64
 
-set maindir = /p/lustre2/cheung26/mgmol-20241012
+set maindir = /p/lustre2/cheung26/mgmol-20241220
 
 setenv LD_LIBRARY_PATH ${maindir}/build_quartz/libROM/build/lib:$LD_LIBRARY_PATH
 
@@ -35,13 +35,13 @@ foreach i (`seq 0 $bondlength_num_increments`)
       set bondangle = `printf "%.1f" $bondangle`
       echo "bondlength1: $bondlength_one, bondlength2: $bondlength_two, bondangle: $bondangle"
       set tag = ${bondlength_one}_${bondlength_two}_${bondangle}
-      set snapshot_files = "$snapshot_files results_${tag}/orbital_snapshot"
+      set snapshot_files = "$snapshot_files data/${tag}/orbital_snapshot"
     end
   end
 end
 echo "Snapshot files: $snapshot_files"
 
-set basis_file = "PinnedH2O_3DOF_orbitals_basis_${bondlength_num_increments}_${bondangle_num_increments}"
-srun -n $ncpus $exe -f $basis_file $snapshot_files > basis_${bondlength_num_increments}_${bondangle_num_increments}_PinnedH2O_3DOF.out
+set basis_file = "data/PinnedH2O_3DOF_orbitals_basis_${bondlength_num_increments}_${bondangle_num_increments}"
+srun -n $ncpus $exe -f $basis_file $snapshot_files > data/basis_${bondlength_num_increments}_${bondangle_num_increments}_PinnedH2O_3DOF.out
 
 date

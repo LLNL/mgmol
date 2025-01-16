@@ -159,6 +159,11 @@ int main(int argc, char** argv)
             std::cout << "Loading ROM basis " << ct.getROMOptions().basis_file << std::endl;
             std::cout << "ROM basis dimension = " << ct.getROMOptions().num_orbbasis << std::endl;
         }
+
+        const int nel = 4;
+        int nempty = ct.withSpin() ? ct.getROMOptions().num_orbbasis - nel : ct.getROMOptions().num_orbbasis - int(0.5 * nel);
+        ct.setNempty(nempty);
+
         Mesh* mymesh           = Mesh::instance();
         const pb::Grid& mygrid = mymesh->grid();
 

@@ -1,6 +1,6 @@
 #!/bin/tcsh
 #SBATCH -N 2
-#SBATCH -t 1:00:00
+#SBATCH -t 2:00:00
 #SBATCH -p pbatch
 
 date
@@ -10,7 +10,7 @@ setenv OMP_NUM_THREADS 1
 
 set ncpus = 64
 
-set maindir = /p/lustre2/cheung26/mgmol-20241012
+set maindir = /p/lustre2/cheung26/mgmol-20241220
 
 setenv LD_LIBRARY_PATH ${maindir}/build_quartz/libROM/build/lib:$LD_LIBRARY_PATH
 
@@ -43,12 +43,16 @@ foreach i (`seq 0 $bondlength_num_increments`)
       set bondangle = `printf "%.1f" $bondangle`
       echo "bondlength1: $bondlength_one, bondlength2: $bondlength_two, bondangle: $bondangle"
       set tag = ${bondlength_one}_${bondlength_two}_${bondangle}
+      if (-e data/${tag}) then
+        continue
+      endif
       cp $cfg_offline ${tag}_${cfg_offline}
-      sed -i "s/CUSTOM_TAG/results_${tag}/g" ${tag}_${cfg_offline}
-      srun -n $ncpus $exe -c ${tag}_${cfg_offline} -i aux/coords_${tag}.in > offline_PinnedH2O_${tag}.out
-      mv ${tag}_${cfg_offline} results_${tag}/${cfg_offline}
-      mv aux/coords_${tag}.in results_${tag}/coords.in
-      mv offline_PinnedH2O_${tag}.out results_${tag}/offline_PinnedH2O.out
+      sed -i "s/CUSTOM_TAG/${tag}/g" ${tag}_${cfg_offline}
+      srun -n $ncpus $exe -c ${tag}_${cfg_offline} -i data/coords_${tag}.in > ${tag}_offline_PinnedH2O.out
+      mv data/coords_${tag}.in ${tag}/coords.in
+      mv ${tag}_${cfg_offline} ${tag}/${cfg_offline}
+      mv ${tag}_offline_PinnedH2O.out ${tag}/offline_PinnedH2O.out
+      mv -f ${tag} data
     end
   end
 end
