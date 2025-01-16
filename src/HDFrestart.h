@@ -173,6 +173,7 @@ public:
         return checkDataExistsLocal(datasetname.c_str());
     }
 
+    // Returns zero (false), a positive (true) or a negative (failure) value.
     herr_t checkDataExistsLocal(const char* const datasetname) const
     {
         herr_t err_id = 0;
@@ -281,6 +282,8 @@ public:
     float getMDTimeFromFile() const;
     int getMDstepFromFile() const;
     int getFromFile(const std::string& attname) const;
+
+    int countFunctionObjects(std::string& name) const;
 
     hid_t createPlist()
     {
