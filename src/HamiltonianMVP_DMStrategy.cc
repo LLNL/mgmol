@@ -57,7 +57,7 @@ HamiltonianMVP_DMStrategy<MatrixType, ProjMatrixType,
 
 template <class MatrixType, class ProjMatrixType, class OrbitalsType>
 void HamiltonianMVP_DMStrategy<MatrixType, ProjMatrixType,
-    OrbitalsType>::initialize(OrbitalsType& orbitals)
+    OrbitalsType>::initialize(OrbitalsType&)
 {
 }
 

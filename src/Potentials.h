@@ -96,7 +96,7 @@ class Potentials
         const Vector3D& position, const Species& sp);
 
 public:
-    Potentials(const bool vh_frozen = false);
+    Potentials();
 
     ~Potentials();
 

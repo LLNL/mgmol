@@ -428,7 +428,7 @@ void HDFrestart::addReleaseNumber2File(const char* release)
         // if( onpe0 )
         {
             HDF_FixedLengthString t;
-            strncpy(t.mystring, release, MyHDFStrLength);
+            strncpy(t.mystring, release, MyHDFStrLength - 1);
             herr_t status = H5Awrite(attribute_id, strtype, &t);
             if (status < 0)
             {

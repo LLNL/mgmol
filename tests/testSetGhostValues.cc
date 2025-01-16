@@ -18,8 +18,6 @@ TEST_CASE("Set ghost values", "[set ghosts")
     const double ll         = 1.;
     const double lattice[3] = { ll, ll, ll };
 
-    const int nfunc = 10;
-
     MGmol_MPI::setup(MPI_COMM_WORLD, std::cout);
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
@@ -100,8 +98,6 @@ TEST_CASE("Set ghost values", "[set ghosts")
             // initialize gf with inner_data
             gf.assign(inner_data.data(), 'd');
             gf.set_updated_boundaries(false);
-
-            double norm_before = gf.norm2();
 
             // fill ghost values
             const bool direction[3] = { true, true, true };

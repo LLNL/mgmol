@@ -37,9 +37,8 @@ Potentials::~Potentials()
 #endif
 }
 
-Potentials::Potentials(const bool vh_frozen)
+Potentials::Potentials()
 {
-    //(*MPIdata::sout)<<"Potentials::setup()"<<endl;
     diel_            = false; // default: no dielectric
     itindex_vxc_     = -1;
     itindex_vh_      = -1;
