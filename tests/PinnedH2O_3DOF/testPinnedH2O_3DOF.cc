@@ -137,7 +137,6 @@ int main(int argc, char** argv)
         std::vector<double> forces;
         double eks
             = mgmol->evaluateEnergyAndForces(positions, anumbers, forces);
-        mgmol->dumpRestart();
 
         // print out results
         if (MPIdata::onpe0)
@@ -160,13 +159,6 @@ int main(int argc, char** argv)
             std::cout << "Loading ROM basis " << ct.getROMOptions().basis_file << std::endl;
             std::cout << "ROM basis dimension = " << rdim << std::endl;
         }
-
-        const int nel = ct.getNel();
-        int nempty = ct.withSpin() ? rdim - nel : rdim - int(0.5 * nel);
-        ct.setNempty(nempty);
-
-        const short myspin = mmpi.myspin();
-        ct.setNumst(myspin, nel);
 
         Mesh* mymesh           = Mesh::instance();
         const pb::Grid& mygrid = mymesh->grid();
