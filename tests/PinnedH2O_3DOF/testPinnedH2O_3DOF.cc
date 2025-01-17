@@ -154,15 +154,19 @@ int main(int argc, char** argv)
         }
 
         // compute energy and forces again with projected problem onto ROM subspace
+        const int rdim = ct.getROMOptions().num_orbbasis;
         if (MPIdata::onpe0)
         {
             std::cout << "Loading ROM basis " << ct.getROMOptions().basis_file << std::endl;
-            std::cout << "ROM basis dimension = " << ct.getROMOptions().num_orbbasis << std::endl;
+            std::cout << "ROM basis dimension = " << rdim << std::endl;
         }
 
-        const int nel = 4;
-        int nempty = ct.withSpin() ? ct.getROMOptions().num_orbbasis - nel : ct.getROMOptions().num_orbbasis - int(0.5 * nel);
+        const int nel = ct.getNel();
+        int nempty = ct.withSpin() ? rdim - nel : rdim - int(0.5 * nel);
         ct.setNempty(nempty);
+
+        const short myspin = mmpi.myspin();
+        ct.setNumst(myspin, nel);
 
         Mesh* mymesh           = Mesh::instance();
         const pb::Grid& mygrid = mymesh->grid();
@@ -171,7 +175,7 @@ int main(int argc, char** argv)
             = mgmol->getProjectedMatrices();
 
         ExtendedGridOrbitals orbitals("new_orbitals", mygrid, mymesh->subdivx(),
-            ct.getROMOptions().num_orbbasis, ct.bcWF, projmatrices.get(), nullptr, nullptr, nullptr,
+            rdim, ct.bcWF, projmatrices.get(), nullptr, nullptr, nullptr,
             nullptr);
 
         orbitals.set(ct.getROMOptions().basis_file, ct.getROMOptions().num_orbbasis); 
