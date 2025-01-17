@@ -171,6 +171,7 @@ int main(int argc, char** argv)
             nullptr);
 
         orbitals.set(ct.getROMOptions().basis_file, ct.getROMOptions().num_orbbasis); 
+        orbitals.computeGramAndInvS();
 
         //
         // evaluate energy and forces again
