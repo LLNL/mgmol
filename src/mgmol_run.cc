@@ -91,7 +91,6 @@ int mgmol_check()
     Control& ct              = *(Control::instance());
     Mesh* mymesh             = Mesh::instance();
     const pb::PEenv& myPEenv = mymesh->peenv();
-    MGmol_MPI& mmpi          = *(MGmol_MPI::instance());
 
     if (myPEenv.color() > 0)
     {

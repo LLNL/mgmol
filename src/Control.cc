@@ -31,23 +31,6 @@ float Control::total_spin_     = 0.;
 std::string Control::run_directory_(".");
 bool Control::with_spin_ = false;
 
-static void finishRead(std::ifstream& tfile)
-{
-    // while( tfile.get()!='\n');
-    // string str;
-    // getline(tfile,str);
-    char str[256];
-    tfile.getline(str, 256);
-
-    char cc = (char)tfile.peek();
-    while (cc == ('#') || (cc == '\n') || cc == ' ')
-    {
-        while (tfile.get() != '\n')
-            ;
-        cc = (char)tfile.peek(); // look at next character
-    }
-}
-
 Control::Control()
 {
     assert(comm_global_ != MPI_COMM_NULL);

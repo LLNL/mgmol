@@ -1608,7 +1608,6 @@ int Ions::readAtomsFromXYZ(
     const std::string& filename, const bool cell_relative)
 {
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
-    Control& ct(*(Control::instance()));
 
     // set up list boundaries
     // get radius of projectors
@@ -1698,9 +1697,6 @@ int Ions::readAtomsFromXYZ(
 int Ions::setAtoms(
     const std::vector<double>& crds, const std::vector<short>& spec)
 {
-    MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
-    Control& ct(*(Control::instance()));
-
     const int natoms = crds.size() / 3;
 
     double velocity[3] = { 0., 0., 0. };
@@ -1748,8 +1744,6 @@ int Ions::setAtoms(
 
         addIonToList(species_[isp], aname, &crds[3 * ia], velocity, locked);
     }
-    //    std::cout<<mmpi.mype()<<"...list size = "<<list_ions_.size()<<" local
-    //    ions size = "<<local_ions_.size()<<endl;
 
     return natoms;
 }
