@@ -135,11 +135,13 @@ int main(int argc, char** argv)
         // compute energy and forces using all MPI tasks
         // expect positions to be replicated on all MPI tasks
         std::vector<double> forces;
-        double eks
-            = mgmol->evaluateEnergyAndForces(positions, anumbers, forces);
+        double eks;
+        //double eks
+        //    = mgmol->evaluateEnergyAndForces(positions, anumbers, forces);
 
         // print out results
-        if (MPIdata::onpe0)
+        if (false)
+        //if (MPIdata::onpe0)
         {
             std::cout << "Eks: " << eks << std::endl;
             std::cout << "Forces:" << std::endl;
@@ -176,7 +178,7 @@ int main(int argc, char** argv)
         // set the iterative index to 1 to differentiate it from first instance
         // in MGmol initial() function. This is not very clean and could be
         // better designed, but works for now
-        orbitals.setIterativeIndex(1);
+        orbitals.setIterativeIndex(1000);
 
         // set initial DM with uniform occupations
         projmatrices->setDMuniform(ct.getNelSpin(), 0);
@@ -185,7 +187,7 @@ int main(int argc, char** argv)
         // evaluate energy and forces again
         //
 
-        eks                     = mgmol->evaluateEnergyAndForces(
+        eks                     = mgmol->evaluateDMandEnergyAndForces(
             &orbitals, positions, anumbers, forces);
 
         // print out results
