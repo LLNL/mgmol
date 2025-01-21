@@ -88,13 +88,8 @@ int main(int argc, char** argv)
             std::cout << "-------------------------" << std::endl;
         }
 
-        MGmolInterface* mgmol;
-        if (ct.isLocMode())
-            mgmol = new MGmol<LocGridOrbitals>(global_comm, *MPIdata::sout,
-                input_filename, lrs_filename, constraints_filename);
-        else
-            mgmol = new MGmol<ExtendedGridOrbitals>(global_comm, *MPIdata::sout,
-                input_filename, lrs_filename, constraints_filename);
+        MGmolInterface* mgmol = new MGmol<ExtendedGridOrbitals>(global_comm,
+            *MPIdata::sout, input_filename, lrs_filename, constraints_filename);
 
         if (MPIdata::onpe0)
         {
@@ -132,62 +127,44 @@ int main(int argc, char** argv)
             }
         }
 
-        // compute energy and forces using all MPI tasks
-        // expect positions to be replicated on all MPI tasks
-        std::vector<double> forces;
-        double eks;
-        //double eks
-        //    = mgmol->evaluateEnergyAndForces(positions, anumbers, forces);
-
-        // print out results
-        if (false)
-        //if (MPIdata::onpe0)
-        {
-            std::cout << "Eks: " << eks << std::endl;
-            std::cout << "Forces:" << std::endl;
-            for (std::vector<double>::iterator it = forces.begin();
-                 it != forces.end(); it += 3)
-            {
-                for (int i = 0; i < 3; i++)
-                    std::cout << "    " << *(it + i);
-                std::cout << std::endl;
-            }
-        }
+        Mesh* mymesh             = Mesh::instance();
+        const pb::Grid& mygrid   = mymesh->grid();
+        const pb::PEenv& myPEenv = mymesh->peenv();
 
         // compute energy and forces again with projected problem onto ROM subspace
         const int rdim = ct.getROMOptions().num_orbbasis;
-        if (MPIdata::onpe0)
+        if (rdim != ct.numst)
         {
-            std::cout << "Loading ROM basis " << ct.getROMOptions().basis_file << std::endl;
-            std::cout << "ROM basis dimension = " << rdim << std::endl;
+            std::cerr << "The number of functions in the ROM basis file, "
+                      << rdim << " is not equal to ct.numst, " << ct.numst
+                      << std::endl;
+            MPI_Abort(mmpi.commSameSpin(), 0);
         }
-
-        Mesh* mymesh           = Mesh::instance();
-        const pb::Grid& mygrid = mymesh->grid();
 
         std::shared_ptr<ProjectedMatricesInterface> projmatrices
             = mgmol->getProjectedMatrices();
 
         ExtendedGridOrbitals orbitals("new_orbitals", mygrid, mymesh->subdivx(),
-            rdim, ct.bcWF, projmatrices.get(), nullptr, nullptr, nullptr,
+            ct.numst, ct.bcWF, projmatrices.get(), nullptr, nullptr, nullptr,
             nullptr);
 
-        orbitals.set(ct.getROMOptions().basis_file, ct.getROMOptions().num_orbbasis); 
+        orbitals.set(ct.getROMOptions().basis_file, ct.numst); 
         orbitals.computeGramAndInvS();
 
         // set the iterative index to 1 to differentiate it from first instance
         // in MGmol initial() function. This is not very clean and could be
         // better designed, but works for now
-        orbitals.setIterativeIndex(1000);
+        orbitals.setIterativeIndex(1);
 
         // set initial DM with uniform occupations
         projmatrices->setDMuniform(ct.getNelSpin(), 0);
+        projmatrices->printDM(std::cout);
 
         //
-        // evaluate energy and forces again
+        // evaluate energy and forces with ROM bases just read
         //
-
-        eks                     = mgmol->evaluateDMandEnergyAndForces(
+        std::vector<double> forces;
+        double eks = mgmol->evaluateDMandEnergyAndForces(
             &orbitals, positions, anumbers, forces);
 
         // print out results
