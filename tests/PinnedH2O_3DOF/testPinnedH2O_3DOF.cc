@@ -149,12 +149,12 @@ int main(int argc, char** argv)
             nullptr);
 
         orbitals.set(ct.getROMOptions().basis_file, ct.numst); 
-        orbitals.computeGramAndInvS();
+        orbitals.orthonormalizeLoewdin();
 
         // set the iterative index to 1 to differentiate it from first instance
         // in MGmol initial() function. This is not very clean and could be
         // better designed, but works for now
-        orbitals.setIterativeIndex(1);
+        orbitals.setIterativeIndex(10);
 
         // set initial DM with uniform occupations
         projmatrices->setDMuniform(ct.getNelSpin(), 0);
