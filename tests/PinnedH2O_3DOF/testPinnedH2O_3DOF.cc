@@ -150,6 +150,7 @@ int main(int argc, char** argv)
 
         orbitals.set(ct.getROMOptions().basis_file, ct.numst); 
         orbitals.orthonormalizeLoewdin();
+        orbitals.setDataWithGhosts(true);
 
         // set the iterative index to 1 to differentiate it from first instance
         // in MGmol initial() function. This is not very clean and could be

@@ -16,7 +16,7 @@ setenv LD_LIBRARY_PATH ${maindir}/build_quartz/libROM/build/lib:$LD_LIBRARY_PATH
 
 set exe     = testPinnedH2O_3DOF
 
-#cp $maindir/build_quartz/tests/$exe .
+cp $maindir/build_quartz/tests/$exe .
 
 set cfg_online = mgmol_online_test1.cfg
 
