@@ -1818,6 +1818,14 @@ int Control::checkOptions()
         return -1;
     }
 
+    if (DM_solver_ > 0 && lap_type == 0)
+    {
+        std::cerr << "DM_solver_ = " << DM_solver_ << std::endl;
+        std::cerr << "ERROR: Mehrstellen not compatible with MVP inner solvers!"
+                  << std::endl;
+        return -1;
+    }
+
     if (it_algo_type_ == 3 && lap_type == 0)
     {
         std::cerr
