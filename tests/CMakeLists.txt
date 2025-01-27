@@ -250,6 +250,8 @@ add_executable(testDensityMatrix
                ${CMAKE_SOURCE_DIR}/src/ReplicatedWorkSpace.cc
                ${CMAKE_SOURCE_DIR}/src/hdf_tools.cc
                ${CMAKE_SOURCE_DIR}/tests/ut_magma_main.cc)
+add_executable(test_rho_restart
+               ${CMAKE_SOURCE_DIR}/tests/RhoRestart/test_rho_restart.cc)
 add_executable(testEnergyAndForces
                ${CMAKE_SOURCE_DIR}/tests/EnergyAndForces/testEnergyAndForces.cc)
 add_executable(testWFEnergyAndForces
@@ -382,6 +384,17 @@ add_test(NAME testRestartEnergyAndForces
          ${CMAKE_CURRENT_SOURCE_DIR}/RestartEnergyAndForces/restart.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/RestartEnergyAndForces/h2o.xyz
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+add_test(NAME testRhoRestart
+         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/RhoRestart/test.py
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+         ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
+         ${CMAKE_CURRENT_BINARY_DIR}/test_rho_restart
+         ${CMAKE_CURRENT_SOURCE_DIR}/RhoRestart/mgmol.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/RhoRestart/md.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/RhoRestart/restart.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/RhoRestart/h2o.xyz
+         ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+
 
 if(${MAGMA_FOUND}) 
   add_test(NAME testOpenmpOffload
@@ -577,6 +590,7 @@ target_include_directories(testDensityMatrix PRIVATE ${Boost_INCLUDE_DIRS} ${HDF
 target_include_directories(testGramMatrix PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories(testAndersonMix PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories(testIons PRIVATE ${Boost_INCLUDE_DIRS} ${HDF5_INCLUDE_DIRS})
+target_include_directories(test_rho_restart PRIVATE ${Boost_INCLUDE_DIRS})
 
 target_link_libraries(testMPI PRIVATE MPI::MPI_CXX)
 target_link_libraries(testBlacsContext PRIVATE ${SCALAPACK_LIBRARIES}
@@ -589,6 +603,7 @@ target_link_libraries(testDMandEnergyAndForces PRIVATE mgmol_src)
 target_link_libraries(testRestartEnergyAndForces PRIVATE mgmol_src)
 target_link_libraries(testIons PRIVATE mgmol_src)
 target_link_libraries(testDensityMatrix PRIVATE ${HDF5_LIBRARIES})
+target_link_libraries(test_rho_restart mgmol_src)
 
 if(${MAGMA_FOUND})
   target_link_libraries(testDistVector PRIVATE ${SCALAPACK_LIBRARIES}

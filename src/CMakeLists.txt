@@ -194,15 +194,3 @@ if(${MGMOL_WITH_LIBXC})
 endif (${MGMOL_WITH_LIBXC})
 
 install(TARGETS mgmol-opt DESTINATION bin)
-
-# test executable just for this debugging
-add_executable(test_rho_restart test_rho_restart.cc)
-target_include_directories (test_rho_restart PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries(test_rho_restart mgmol_src)
-if (${OPENMP_CXX_FOUND})
-  target_link_libraries(test_rho_restart OpenMP::OpenMP_CXX)
-endif()
-if(${MGMOL_WITH_LIBXC})
-  target_link_libraries(test_rho_restart ${LIBXC_DIR}/lib/libxc.a)
-endif (${MGMOL_WITH_LIBXC})
-install(TARGETS test_rho_restart DESTINATION bin)

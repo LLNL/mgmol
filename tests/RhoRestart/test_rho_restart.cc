@@ -7,56 +7,34 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-//
-//                  main.cc
-//
-//    Description:
-//        Real grid, finite difference, molecular dynamics program
-//        for with nonorthogonal localized orbitals.
-//
-//        Uses Mehrstellen operators, multigrid accelerations, and
-//        non-local pseudopotentials.
-//
-//     Includes LDA and PBE exchange and correlation functionals.
-//
-// Units:
-//   Potentials, eigenvalues and operators in Rydberg
-//   Energies in Hartree
-//
 #include "Control.h"
+#include "Electrostatic.h"
 #include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "MGmol.h"
 #include "MGmol_MPI.h"
 #include "MPIdata.h"
-#include "mgmol_run.h"
-#include "Potentials.h"
 #include "Poisson.h"
-#include "Electrostatic.h"
+#include "Potentials.h"
+#include "mgmol_run.h"
 
 #include <cassert>
 #include <iostream>
+#include <random>
 #include <time.h>
 #include <vector>
-#include <random>
 
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
 
 template <class OrbitalsType>
-void testRhoRestart(MGmolInterface *mgmol_)
+int testRhoRestart(MGmolInterface* mgmol_)
 {
-    /* random number generator */
-    static std::random_device rd;  // Will be used to obtain a seed for the random number engine
-    static std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd(){}
-    static std::uniform_real_distribution<> dis(0.0, 1.0);
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    const int rank  = mmpi.mypeGlobal();
 
-    MGmol_MPI& mmpi      = *(MGmol_MPI::instance());
-    const int rank = mmpi.mypeGlobal();
-    const int nprocs = mmpi.size();
-
-    Control& ct = *(Control::instance());
-    MGmol<OrbitalsType> *mgmol = static_cast<MGmol<OrbitalsType> *>(mgmol_);
+    Control& ct                = *(Control::instance());
+    MGmol<OrbitalsType>* mgmol = static_cast<MGmol<OrbitalsType>*>(mgmol_);
     std::shared_ptr<Rho<OrbitalsType>> rho = mgmol->getRho();
 
     /* load a restart file */
@@ -70,38 +48,36 @@ void testRhoRestart(MGmolInterface *mgmol_)
     rho->update(*mgmol->getOrbitals());
 
     /* check if the recomputed density is the same */
-    for (int d = 0; d < rho0.size(); d++)
+    for (int d = 0; d < (int)rho0.size(); d++)
     {
         double error = abs(rho0[d] - rho->rho_[0][d]) / abs(rho0[d]);
         if (error > 1e-10)
         {
-            printf("rank %d, rho[%d]=%.15e, rho0[%d]=%.15e\n", rank, d, rho->rho_[0][d], d, rho0[d]);
+            printf("rank %d, rho[%d]=%.15e, rho0[%d]=%.15e\n", rank, d,
+                rho->rho_[0][d], d, rho0[d]);
             std::cerr << "Density is inconsistent!!!" << std::endl;
-            MPI_Abort(MPI_COMM_WORLD, 0);
+            return -1;
         }
     }
+    if (rank == 0) std::cout << "Density is consistent..." << std::endl;
+
+    return 0;
 }
 
 template <class OrbitalsType>
-void testPotRestart(MGmolInterface *mgmol_)
+int testPotRestart(MGmolInterface* mgmol_)
 {
-    /* random number generator */
-    static std::random_device rd;  // Will be used to obtain a seed for the random number engine
-    static std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd(){}
-    static std::uniform_real_distribution<> dis(0.0, 1.0);
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    const int rank  = mmpi.mypeGlobal();
 
-    MGmol_MPI& mmpi      = *(MGmol_MPI::instance());
-    const int rank = mmpi.mypeGlobal();
-    const int nprocs = mmpi.size();
-
-    Control& ct = *(Control::instance());
-    MGmol<OrbitalsType> *mgmol = static_cast<MGmol<OrbitalsType> *>(mgmol_);
-    Potentials& pot = mgmol->getHamiltonian()->potential();
-    Poisson *poisson = mgmol->electrostat_->getPoissonSolver();
+    Control& ct                = *(Control::instance());
+    MGmol<OrbitalsType>* mgmol = static_cast<MGmol<OrbitalsType>*>(mgmol_);
+    Potentials& pot            = mgmol->getHamiltonian()->potential();
+    Poisson* poisson           = mgmol->electrostat_->getPoissonSolver();
     std::shared_ptr<Rho<OrbitalsType>> rho = mgmol->getRho();
 
     /* GridFunc initialization inputs */
-    const pb::Grid &grid(poisson->vh().grid());
+    const pb::Grid& grid(poisson->vh().grid());
     short bc[3];
     for (int d = 0; d < 3; d++)
         bc[d] = poisson->vh().bc(d);
@@ -114,14 +90,14 @@ void testPotRestart(MGmolInterface *mgmol_)
     vh0_gf.assign(pot.vh_rho(), 'd');
 
     std::vector<POTDTYPE> vh0(pot.size());
-    POTDTYPE *d_vhrho = pot.vh_rho();
-    for (int d = 0; d < vh0.size(); d++)
+    POTDTYPE* d_vhrho = pot.vh_rho();
+    for (int d = 0; d < (int)vh0.size(); d++)
         vh0[d] = d_vhrho[d];
 
     /* recompute potential */
     pb::GridFunc<RHODTYPE> grho(grid, bc[0], bc[1], bc[2]);
     grho.assign(&rho->rho_[0][0]);
-    pb::GridFunc<RHODTYPE> *grhoc = mgmol->electrostat_->getRhoc();
+    pb::GridFunc<RHODTYPE>* grhoc = mgmol->electrostat_->getRhoc();
 
     poisson->solve(grho, *grhoc);
     const pb::GridFunc<POTDTYPE> vh = poisson->vh();
@@ -138,8 +114,10 @@ void testPotRestart(MGmolInterface *mgmol_)
             printf("FOM potential relative error: %.3e\n", rel_error);
             std::cerr << "Potential is inconsistent!!!" << std::endl;
         }
-        MPI_Abort(MPI_COMM_WORLD, 0);
+        return -1;
     }
+
+    return 0;
 }
 
 int main(int argc, char** argv)
@@ -195,28 +173,26 @@ int main(int argc, char** argv)
     mmpi.bcastGlobal(input_filename);
     mmpi.bcastGlobal(lrs_filename);
 
+    int status = 0;
+
     // Enter main scope
     {
-        MGmolInterface* mgmol;
-        if (ct.isLocMode())
-            mgmol = new MGmol<LocGridOrbitals>(global_comm, *MPIdata::sout,
-                input_filename, lrs_filename, constraints_filename);
-        else
-            mgmol = new MGmol<ExtendedGridOrbitals>(global_comm, *MPIdata::sout,
-                input_filename, lrs_filename, constraints_filename);
+        MGmolInterface* mgmol = new MGmol<ExtendedGridOrbitals>(global_comm,
+            *MPIdata::sout, input_filename, lrs_filename, constraints_filename);
 
         mgmol->setup();
 
-        if (ct.isLocMode())
-        {
-            testRhoRestart<LocGridOrbitals>(mgmol);
-            testPotRestart<LocGridOrbitals>(mgmol);
-        }
-        else
-        {
-            testRhoRestart<ExtendedGridOrbitals>(mgmol);
-            testPotRestart<ExtendedGridOrbitals>(mgmol);
-        }
+        if (MPIdata::onpe0)
+            std::cout << "=============================" << std::endl;
+        if (MPIdata::onpe0) std::cout << "testRhoRestart..." << std::endl;
+        status = testRhoRestart<ExtendedGridOrbitals>(mgmol);
+        if (status < 0) return status;
+
+        if (MPIdata::onpe0)
+            std::cout << "=============================" << std::endl;
+        if (MPIdata::onpe0) std::cout << "testPotRestart..." << std::endl;
+        status = testPotRestart<ExtendedGridOrbitals>(mgmol);
+        if (status < 0) return status;
 
         delete mgmol;
 
