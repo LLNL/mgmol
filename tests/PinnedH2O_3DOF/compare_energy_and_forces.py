@@ -1,11 +1,25 @@
 import numpy as np
 import os
 
+N_l = 5
+N_theta = 5
+rdim = 36
+
+bondlength_min = 0.95
+bondlength_max = 1.05
+bondlength_num_increments = 10
+
+bondangle_min = -5.0
+bondangle_max = 5.0
+bondangle_num_increments = 10
+
+output_dir = f'results_{N_l}_{N_theta}_{rdim}'
+
 def process_data(s_l1, s_l2, s_theta, N_l, N_theta, rdim):
     try:
         data_dir = f'data/{s_l1}_{s_l2}_{s_theta}'
         offline_file = os.path.join(data_dir, 'offline_PinnedH2O.out')
-        log_file = f'{s_l1}_{s_l2}_{s_theta}_{N_l}_{N_theta}_{rdim}.log'
+        log_file = f'{output_dir}/{s_l1}_{s_l2}_{s_theta}.log'
 
         f_O1_fom = None
         f_H1_fom = None
@@ -86,54 +100,54 @@ def process_data(s_l1, s_l2, s_theta, N_l, N_theta, rdim):
         print(f"An error occurred: {e}")
         return None
 
-s_l1 = "1.02"
-s_l2 = "0.98"
-s_theta = "2.0"
-N_l = 5
-N_theta = 2
-rdim = 8
+for i in range(bondlength_num_increments + 1):
+    bondlength_one = round(bondlength_min + i * (bondlength_max - bondlength_min) / bondlength_num_increments, 2)
+    for j in range(i + 1):
+        bondlength_two = round(bondlength_min + j * (bondlength_max - bondlength_min) / bondlength_num_increments, 2)
+        for k in range(bondangle_num_increments + 1):
+            bondangle = round(bondangle_min + k * (bondangle_max - bondangle_min) / bondangle_num_increments, 1)
 
-output_filename = f'energy_and_forces_{s_l1}_{s_l2}_{s_theta}_{N_l}_{N_theta}_{rdim}.out'
+            s_l1 = f"{bondlength_one:.2f}"
+            s_l2 = f"{bondlength_two:.2f}"
+            s_theta = f"{bondangle:.1f}"
+            tag = f'{s_l1}_{s_l2}_{s_theta}'
 
-with open(output_filename, 'w') as outfile:
-    # Print parameters to file
-    print("s_l1:", s_l1, file=outfile)
-    print("s_l2:", s_l2, file=outfile)
-    print("s_theta:", s_theta, file=outfile)
-    print("N_l:", N_l, file=outfile)
-    print("N_theta:", N_theta, file=outfile)
-    print("rdim:", rdim, file=outfile)
+            output_filename = f'{output_dir}/energy_and_forces_{tag}.out'
 
-    results = process_data(s_l1, s_l2, s_theta, N_l, N_theta, rdim)
+            with open(output_filename, 'w') as outfile:
+                print("s_l1:", s_l1, file=outfile)
+                print("s_l2:", s_l2, file=outfile)
+                print("s_theta:", s_theta, file=outfile)
+                print("N_l:", N_l, file=outfile)
+                print("N_theta:", N_theta, file=outfile)
+                print("rdim:", rdim, file=outfile)
 
-    if results:
-        Eks_fom, f_O1_fom, f_H1_fom, f_H2_fom, Eks_rom, f_O1_rom, f_H1_rom, f_H2_rom = results
+                results = process_data(s_l1, s_l2, s_theta, N_l, N_theta, rdim)
 
-        print("Eks_fom:", Eks_fom, file=outfile)
-        print("Eks_rom:", Eks_rom, file=outfile)
+                if results:
+                    Eks_fom, f_O1_fom, f_H1_fom, f_H2_fom, Eks_rom, f_O1_rom, f_H1_rom, f_H2_rom = results
 
-        print("f_O1_fom:", f_O1_fom, file=outfile)
-        print("f_O1_rom:", f_O1_rom, file=outfile)
+                    print("Eks_fom:", Eks_fom, file=outfile)
+                    print("Eks_rom:", Eks_rom, file=outfile)
 
-        print("f_H1_fom:", f_H1_fom, file=outfile)
-        print("f_H1_rom:", f_H1_rom, file=outfile)
+                    print("f_O1_fom:", f_O1_fom, file=outfile)
+                    print("f_O1_rom:", f_O1_rom, file=outfile)
 
-        print("f_H2_fom:", f_H2_fom, file=outfile)
-        print("f_H2_rom:", f_H2_rom, file=outfile)
+                    print("f_H1_fom:", f_H1_fom, file=outfile)
+                    print("f_H1_rom:", f_H1_rom, file=outfile)
 
-        def calculate_differences(fom, rom, name):
-            diff = fom - rom
-            abs_diff = np.linalg.norm(diff)
-            rel_diff = abs_diff / np.linalg.norm(fom) if np.linalg.norm(fom)!= 0 else float('inf')
+                    print("f_H2_fom:", f_H2_fom, file=outfile)
+                    print("f_H2_rom:", f_H2_rom, file=outfile)
 
-            print(f"Absolute difference in {name}:", abs_diff, file=outfile)
-            print(f"Relative difference in {name}:", rel_diff, file=outfile)
+                    def calculate_differences(fom, rom, name):
+                        abs_diff = np.linalg.norm(fom - rom)
+                        rel_diff = abs_diff / np.linalg.norm(fom) if np.linalg.norm(fom)!= 0 else float('inf')
+                        print(f"Absolute difference in {name}:", abs_diff, file=outfile)
+                        print(f"Relative difference in {name}:", rel_diff, file=outfile)
 
-        calculate_differences(Eks_fom, Eks_rom, "Eks")
-        calculate_differences(f_O1_fom, f_O1_rom, "f_O1")
-        calculate_differences(f_H1_fom, f_H1_rom, "f_H1")
-        calculate_differences(f_H2_fom, f_H2_rom, "f_H2")
-
-    else:
-        print("Error occurred during data processing. Differences cannot be calculated.", file=outfile)
-
+                    calculate_differences(Eks_fom, Eks_rom, "Eks")
+                    calculate_differences(f_O1_fom, f_O1_rom, "f_O1")
+                    calculate_differences(f_H1_fom, f_H1_rom, "f_H1")
+                    calculate_differences(f_H2_fom, f_H2_rom, "f_H2")
+                else:
+                    print("Error occurred during data processing. Differences cannot be calculated.", file=outfile)

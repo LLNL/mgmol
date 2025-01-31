@@ -16,6 +16,7 @@ setenv LD_LIBRARY_PATH ${maindir}/build_quartz/libROM/build/lib:$LD_LIBRARY_PATH
 
 set exe     = mgmol-opt
 
+rm $exe
 cp $maindir/install_quartz/bin/$exe .
 
 set cfg_offline = mgmol_offline.cfg
