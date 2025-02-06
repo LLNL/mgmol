@@ -359,8 +359,8 @@ public:
     }
 
 #ifdef MGMOL_HAS_LIBROM
-    int save_orbital_snapshot(std::string snapshot_dir, OrbitalsType& orbitals);
-    void project_orbital(std::string snapshot_dir, int rdim, OrbitalsType& orbitals);
+    int save_orbital_snapshot(std::string file_path, OrbitalsType& orbitals);
+    void project_orbital(std::string file_path, int rdim, OrbitalsType& orbitals);
 #endif
 };
 // Instantiate static variables here to avoid clang warnings

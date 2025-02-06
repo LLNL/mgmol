@@ -11,6 +11,7 @@
 #ifdef MGMOL_HAS_LIBROM
 
 #include "LocGridOrbitals.h"
+#include "ExtendedGridOrbitals.h"
 #include "MGmol.h"
 
 #include "librom.h"
@@ -88,6 +89,25 @@ void MGmol<OrbitalsType>::project_orbital(std::string file_path, int rdim, Orbit
         orbitals.setPsi(gf_psi, i);
         snapshot -= proj_snapshot;
         std::cout << "Error for orbital " << i << " = " << snapshot.norm() << std::endl;
+    }
+}
+
+void ExtendedGridOrbitals::set(std::string file_path, int rdim)
+{
+    const int dim = getLocNumpt();
+
+    CAROM::BasisReader reader(file_path);
+    CAROM::Matrix* orbital_basis = reader.getSpatialBasis(rdim);
+
+    Control& ct = *(Control::instance());
+    Mesh* mymesh           = Mesh::instance();
+    pb::GridFunc<ORBDTYPE> gf_psi(mymesh->grid(), ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
+    CAROM::Vector psi;
+    for (int i = 0; i < rdim; ++i)
+    {
+        orbital_basis->getColumn(i, psi);
+        gf_psi.assign(psi.getData());
+        setPsi(gf_psi, i);
     }
 }
 

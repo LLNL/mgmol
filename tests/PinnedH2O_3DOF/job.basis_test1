@@ -1,0 +1,34 @@
+#!/bin/tcsh
+#SBATCH -N 2
+#SBATCH -t 0:10:00
+#SBATCH -p pdebug
+
+date
+
+setenv OMP_NUM_THREADS 1
+#setenv KMP_DETERMINISTIC_REDUCTION 1
+
+set ncpus = 64
+
+set maindir = /p/lustre2/cheung26/mgmol-20241220
+
+setenv LD_LIBRARY_PATH ${maindir}/build_quartz/libROM/build/lib:$LD_LIBRARY_PATH
+
+set exe     = ${maindir}/build_quartz/libROM/build/examples/misc/combine_samples
+
+set basis_tag = "test1"
+set snapshot_files = ""
+
+set bondlength_one = 1.00
+set bondlength_two = 1.00
+set bondangle = 0.0
+echo "bondlength1: $bondlength_one, bondlength2: $bondlength_two, bondangle: $bondangle"
+set tag = ${bondlength_one}_${bondlength_two}_${bondangle}
+set snapshot_files = "$snapshot_files data/${tag}/orbital_snapshot"
+
+echo "Snapshot files: $snapshot_files"
+
+set basis_file = "data/PinnedH2O_3DOF_orbitals_basis_${basis_tag}"
+srun -n $ncpus $exe -f $basis_file $snapshot_files > data/basis_${basis_tag}_PinnedH2O_3DOF.out
+
+date

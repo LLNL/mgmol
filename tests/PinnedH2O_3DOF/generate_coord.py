@@ -11,7 +11,7 @@ bondlength_factor = np.linspace(0.95, 1.05, 11)
 bondangle_increment = np.linspace(-5, 5, 11)
 
 # output directory
-output_dir = "PinnedH2O_3dof_coords"
+output_dir = "data"
 
 # generation
 os.makedirs(output_dir, exist_ok=True)
