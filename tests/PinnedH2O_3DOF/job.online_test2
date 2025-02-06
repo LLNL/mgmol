@@ -25,6 +25,6 @@ ln -s -f $maindir/potentials/pseudo.H_ONCV_PBE_SG15 .
 
 source $maindir/scripts/modules.quartz
 
-srun -p pdebug -n $ncpus $exe -c $cfg_online -i coords_1.00_1.00_0.0.in
+srun -p pdebug -n $ncpus $exe -c $cfg_online -i data/1.00_1.00_0.0/coords.in
 
 date
