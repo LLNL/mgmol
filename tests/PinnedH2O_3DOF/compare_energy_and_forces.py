@@ -1,9 +1,20 @@
 import numpy as np
 import os
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+import argparse
 
-N_l = 5
-N_theta = 5
-rdim = 36
+parser = argparse.ArgumentParser(description="Calculate and plot differences in energies and forces.")
+
+parser.add_argument("--N_l", type=int, default=2, help="Sampling frequency of bond length points")
+parser.add_argument("--N_theta", type=int, default=2, help="Sampling frequency of bond angle points")
+parser.add_argument("--rdim", type=int, default=18, help="Dimension of the ROM basis")
+
+args = parser.parse_args()
+
+N_l = args.N_l
+N_theta = args.N_theta
+rdim = args.rdim
 
 bondlength_min = 0.95
 bondlength_max = 1.05
@@ -100,6 +111,16 @@ def process_data(s_l1, s_l2, s_theta, N_l, N_theta, rdim):
         print(f"An error occurred: {e}")
         return None
 
+Eks_diff_reproductive = []
+f_O1_diff_reproductive = []
+f_H1_diff_reproductive = []
+f_H2_diff_reproductive = []
+
+Eks_diff_predictive = []
+f_O1_diff_predictive = []
+f_H1_diff_predictive = []
+f_H2_diff_predictive = []
+
 for i in range(bondlength_num_increments + 1):
     bondlength_one = round(bondlength_min + i * (bondlength_max - bondlength_min) / bondlength_num_increments, 2)
     for j in range(i + 1):
@@ -144,10 +165,69 @@ for i in range(bondlength_num_increments + 1):
                         rel_diff = abs_diff / np.linalg.norm(fom) if np.linalg.norm(fom)!= 0 else float('inf')
                         print(f"Absolute difference in {name}:", abs_diff, file=outfile)
                         print(f"Relative difference in {name}:", rel_diff, file=outfile)
+                        return abs_diff
 
-                    calculate_differences(Eks_fom, Eks_rom, "Eks")
-                    calculate_differences(f_O1_fom, f_O1_rom, "f_O1")
-                    calculate_differences(f_H1_fom, f_H1_rom, "f_H1")
-                    calculate_differences(f_H2_fom, f_H2_rom, "f_H2")
+                    Eks_diff = calculate_differences(Eks_fom, Eks_rom, "Eks")
+                    f_O1_diff = calculate_differences(f_O1_fom, f_O1_rom, "f_O1")
+                    f_H1_diff = calculate_differences(f_H1_fom, f_H1_rom, "f_H1")
+                    f_H2_diff = calculate_differences(f_H2_fom, f_H2_rom, "f_H2")
+
+                    if i * N_l % bondlength_num_increments == 0 and j * N_l % bondlength_num_increments == 0 and k * N_theta % bondangle_num_increments == 0:
+                        Eks_diff_reproductive.append(Eks_diff)
+                        f_O1_diff_reproductive.append(f_O1_diff)
+                        f_H1_diff_reproductive.append(f_H1_diff)
+                        f_H2_diff_reproductive.append(f_H2_diff)
+                    else:
+                        Eks_diff_predictive.append(Eks_diff)
+                        f_O1_diff_predictive.append(f_O1_diff)
+                        f_H1_diff_predictive.append(f_H1_diff)
+                        f_H2_diff_predictive.append(f_H2_diff)
                 else:
                     print("Error occurred during data processing. Differences cannot be calculated.", file=outfile)
+
+def plot_histogram(data, quantity, test_case):
+    plt.figure(figsize=(8, 6)) 
+    plt.hist(data, bins=20, color='skyblue', edgecolor='black')
+
+    if quantity == "Eks":
+        quantity_name = "absolute difference in total energy"
+    elif quantity.startswith("f_"):
+        quantity_name = f"magnitude of difference in force on {quantity[2:]}"
+    else:
+        raise ValueError("Invalid input quantity")
+
+    plt.title(f'Histogram of {quantity_name}')
+    plt.xlabel('Difference')
+    plt.ylabel('Frequency')
+
+    min_val, max_val = np.min(data), np.max(data)
+    plt.xlim(min_val, max_val)
+    num_ticks = 8 
+    xticks = np.linspace(min_val, max_val, num_ticks)
+    plt.xticks(xticks)
+    formatter = ticker.ScalarFormatter(useMathText=True)
+    formatter.set_scientific(True)
+    formatter.set_powerlimits((0, 0)) 
+    plt.gca().xaxis.set_major_formatter(formatter)
+
+    total_count = len(data)
+    mean_val = np.mean(data)
+    max_val = np.max(data)
+    stats_text = (f"Total {test_case} cases: {total_count}\n"
+                  f"Mean: {mean_val:.3e}")
+    plt.text(0.95, 0.95, stats_text, transform=plt.gca().transAxes, 
+             fontsize=12, verticalalignment='top', horizontalalignment='right',
+             bbox=dict(facecolor='white', alpha=0.7, edgecolor='black'))
+
+    plt.tight_layout() 
+    plt.savefig(f"{output_dir}/{quantity}_difference_histogram_{test_case}.png")
+
+plot_histogram(Eks_diff_reproductive, "Eks", "reproductive")
+plot_histogram(f_O1_diff_reproductive, "f_O1", "reproductive")
+plot_histogram(f_H1_diff_reproductive, "f_H1", "reproductive")
+plot_histogram(f_H2_diff_reproductive, "f_H2", "reproductive")
+
+plot_histogram(Eks_diff_predictive, "Eks", "predictive")
+plot_histogram(f_O1_diff_predictive, "f_O1", "predictive")
+plot_histogram(f_H1_diff_predictive, "f_H1", "predictive")
+plot_histogram(f_H2_diff_predictive, "f_H2", "predictive")
