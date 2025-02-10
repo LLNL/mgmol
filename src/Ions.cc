@@ -700,13 +700,12 @@ void Ions::readLockedAtomNames(HDFrestart& h5f_file)
     if (dim == 0) return;
 
     std::vector<std::string> data;
-    h5f_file.readLockedAtomNames(data);
+    std::string datasetname("/LockedAtomsNames");
+    h5f_file.readAtomicData(datasetname, data);
 
-    for (std::vector<std::string>::const_iterator i   = data.begin(),
-                                                  end = data.end();
-         i != end; ++i)
+    for (auto& i : data)
     {
-        lockAtom(*i);
+        lockAtom(i);
     }
 }
 
@@ -874,13 +873,17 @@ void Ions::initFromRestartFile(HDFrestart& h5_file)
     setupListIonsBoundaries(rmax);
 
     std::vector<int> at_numbers;
-    h5_file.readAtomicNumbers(at_numbers);
+    std::string datasetname("/Atomic_numbers");
+    h5_file.readAtomicData(datasetname, at_numbers);
     std::vector<int> at_indexes;
-    int nidxs = h5_file.readAtomicIDs(at_indexes);
+    std::string datasetname_indexes("/Atomic_IDs");
+    int nidxs = h5_file.readAtomicData(datasetname_indexes, at_indexes);
     std::vector<int> at_nlprojIds;
-    int npids = h5_file.readAtomicNLprojIDs(at_nlprojIds);
+    std::string datasetname_nlprojIds("/AtomicNLproj_IDs");
+    int npids = h5_file.readAtomicData(datasetname_nlprojIds, at_nlprojIds);
     std::vector<std::string> at_names;
-    h5_file.readAtomicNames(at_names);
+    std::string datasetname_names("/Atomic_names");
+    h5_file.readAtomicData(datasetname_names, at_names);
     if (onpe0 && ct.verbose > 2)
     {
         std::cout << "HDF file: at nb=" << at_numbers.size() << std::endl;
@@ -967,7 +970,8 @@ void Ions::readRestartPositions(HDFrestart& h5_file)
         (*MPIdata::sout) << "Read ionic positions from hdf5 file" << std::endl;
 
     std::vector<double> data;
-    h5_file.readAtomicPositions(data);
+    std::string datasetname("/Ionic_positions");
+    h5_file.readAtomicData(datasetname, data);
 
     int i = 0;
     for (auto& ion : local_ions_)
@@ -1142,7 +1146,8 @@ void Ions::readRestartVelocities(HDFrestart& h5_file)
                          << std::endl;
 
     std::vector<double> data;
-    h5_file.readAtomicVelocities(data);
+    std::string datasetname("/Ionic_velocities");
+    h5_file.readAtomicData(datasetname, data);
 
     int i = 0;
     for (auto& ion : local_ions_)
