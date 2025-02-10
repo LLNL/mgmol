@@ -106,10 +106,10 @@ int main()
                          plane_normal[1] * target_plane_normal[1] +
                          plane_normal[2] * target_plane_normal[2];
     double angle_to_align = acos(min(max(dot_product, -1.0), 1.0));
-    double rot_matrix_align_plane[3][3];
-    rotation_matrix(axis_to_align, angle_to_align, rot_matrix_align_plane);
-    apply_rotation(rot_matrix_align_plane, H1, H1_temp);
-    apply_rotation(rot_matrix_align_plane, H2, H2_temp);
+    double out_of_plane_rotation_matrix[3][3];
+    rotation_matrix(axis_to_align, angle_to_align, out_of_plane_rotation_matrix);
+    apply_rotation(out_of_plane_rotation_matrix, H1, H1_temp);
+    apply_rotation(out_of_plane_rotation_matrix, H2, H2_temp);
 
     double theta1 = atan2(H1_temp[1], H1_temp[0]);
     double planar_rotation_angle = -theta1 + bondangle / 360.0 * M_PI;
@@ -148,8 +148,8 @@ int main()
     apply_transpose_rotation(planar_rotation_matrix, H1_rotated, H1_temp);
     apply_transpose_rotation(planar_rotation_matrix, H2_rotated, H2_temp);
 
-    apply_transpose_rotation(rot_matrix_align_plane, H1_temp, H1_restored);
-    apply_transpose_rotation(rot_matrix_align_plane, H2_temp, H2_restored);
+    apply_transpose_rotation(out_of_plane_rotation_matrix, H1_temp, H1_restored);
+    apply_transpose_rotation(out_of_plane_rotation_matrix, H2_temp, H2_restored);
 
     double bondlength1_restored = calculate_bondlength(H1_restored, O1);
     double bondlength2_restored = calculate_bondlength(H2_restored, O1);

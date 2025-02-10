@@ -47,9 +47,9 @@ target_plane_normal = np.array([0, 0, 1])
 axis_to_align = np.cross(plane_normal, target_plane_normal)
 axis_to_align /= np.linalg.norm(axis_to_align)
 angle_to_align = np.arccos(np.clip(np.dot(plane_normal, target_plane_normal), -1.0, 1.0))
-rot_matrix_align_plane = rotation_matrix(axis_to_align, angle_to_align)
-H1_rotated = np.dot(rot_matrix_align_plane, H1)
-H2_rotated = np.dot(rot_matrix_align_plane, H2)
+out_of_plane_rotation_matrix = rotation_matrix(axis_to_align, angle_to_align)
+H1_rotated = np.dot(out_of_plane_rotation_matrix, H1)
+H2_rotated = np.dot(out_of_plane_rotation_matrix, H2)
 
 theta1 = np.arctan2(H1_rotated[1], H1_rotated[0]) 
 theta2 = np.arctan2(H2_rotated[1], H2_rotated[0])
@@ -84,8 +84,8 @@ if bondlength1 < bondlength2:
 H1_restored = np.dot(planar_rotation_matrix.T, H1_restored)
 H2_restored = np.dot(planar_rotation_matrix.T, H2_restored)
 
-H1_restored = np.dot(rot_matrix_align_plane.T, H1_restored)
-H2_restored = np.dot(rot_matrix_align_plane.T, H2_restored)
+H1_restored = np.dot(out_of_plane_rotation_matrix.T, H1_restored)
+H2_restored = np.dot(out_of_plane_rotation_matrix.T, H2_restored)
 
 bondlength1_restored = calculate_bondlength(H1_restored, O1)
 bondlength2_restored = calculate_bondlength(H2_restored, O1)
