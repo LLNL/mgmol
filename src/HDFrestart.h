@@ -260,19 +260,12 @@ public:
     template <class T>
     int readData(T* vv, hid_t memspace, hid_t dset_id, const short precision);
 
-    //    int writeRandomState(unsigned short int rand_state[3]);
-    //    int readRandomState(unsigned short* rand_state);
-    int readAtomicIDs(std::vector<int>& data);
-    int readAtomicNLprojIDs(std::vector<int>& data);
-    int readAtomicNumbers(std::vector<int>& data);
-    int readAtomicNames(std::vector<std::string>& data);
-    int readAtomicPositions(std::vector<double>& data);
-    int readAtomicVelocities(std::vector<double>& data);
-    int readLockedAtomNames(std::vector<std::string>& data);
+    int readAtomicData(std::string datasetname, std::vector<std::string>& data);
+    int readAtomicData(std::string datasetname, std::vector<double>& data);
+    int readAtomicData(std::string datasetname, std::vector<int>& data);
     int readRestartRandomStates(std::vector<unsigned short>& data);
     int readOldCenter(std::vector<double>& data, int i);
     int readOldCenterOnMesh(std::vector<double>& data, int i);
-    int readGidsList(std::vector<int>& data);
 
     void addDateToFilename();
     void addMDTime2File(const float run_time);
