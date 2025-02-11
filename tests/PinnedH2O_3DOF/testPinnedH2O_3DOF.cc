@@ -95,7 +95,7 @@ void apply_transpose_rotation(const double matrix[3][3], const double vec[3], do
     result[2] = matrix[0][2] * vec[0] + matrix[1][2] * vec[1] + matrix[2][2] * vec[2];
 }
 
-void rotate_PinnedH2O(std::vector<double>& positions, std::vector<short>& anumbers, int atom_order[3], 
+void rotate_PinnedH2O(std::vector<double>& positions, std::vector<short>& anumbers,
                       double out_of_plane_rotation_matrix[3][3], double& planar_rotation_angle, bool& flipped_bond)
 {
     int O1_idx = -1;
@@ -159,7 +159,6 @@ void rotate_PinnedH2O(std::vector<double>& positions, std::vector<short>& anumbe
     {
         H1_rotated[1] *= -1.0;
         H2_rotated[1] *= -1.0;
-        std::swap(H1_idx, H2_idx);
         std::swap(H1_rotated, H2_rotated);
     }
 
@@ -176,28 +175,12 @@ void rotate_PinnedH2O(std::vector<double>& positions, std::vector<short>& anumbe
     anumbers[0] = 1;
     anumbers[1] = 8;
     anumbers[2] = 1;
-
-    atom_order[0] = H2_idx;
-    atom_order[1] = O1_idx;
-    atom_order[2] = H1_idx;
 }
 
-void transpose_rotate_PinnedH2O(std::vector<double>& positions, std::vector<double>& forces, std::vector<short>& anumbers, 
-                                const int atom_order[3], const double out_of_plane_rotation_matrix[3][3], 
+void transpose_rotate_PinnedH2O(std::vector<double>& positions, std::vector<double>& forces,
+                                const double out_of_plane_rotation_matrix[3][3], 
                                 const double planar_rotation_angle, const bool flipped_bond)
 {
-    double planar_rotation_matrix[3][3];
-    double target_plane_normal[3] = {0, 0, 1};
-    rotation_matrix(target_plane_normal, planar_rotation_angle, planar_rotation_matrix);
-
-    int H2_idx = 0;
-    int O1_idx = 1;
-    int H1_idx = 2;
-
-    //int H2_idx = atom_order[0];
-    //int O1_idx = atom_order[1];
-    //int H1_idx = atom_order[2];
-
     double H2_rotated[3] = {positions[0], positions[1], positions[2]};
     double O1_rotated[3] = {positions[3], positions[4], positions[5]};
     double H1_rotated[3] = {positions[6], positions[7], positions[8]};
@@ -210,12 +193,14 @@ void transpose_rotate_PinnedH2O(std::vector<double>& positions, std::vector<doub
     {
         H1_rotated[1] *= -1.0;
         H2_rotated[1] *= -1.0;
-        std::swap(H1_rotated, H2_rotated);
         f_O1_rotated[1] *= -1.0;
         f_H1_rotated[1] *= -1.0;
         f_H2_rotated[1] *= -1.0;
-        std::swap(f_H1_rotated, f_H2_rotated);
     }
+
+    double planar_rotation_matrix[3][3];
+    double target_plane_normal[3] = {0, 0, 1};
+    rotation_matrix(target_plane_normal, planar_rotation_angle, planar_rotation_matrix);
 
     double H1_temp[3], H2_temp[3];
     apply_transpose_rotation(planar_rotation_matrix, H1_rotated, H1_temp);
@@ -235,29 +220,22 @@ void transpose_rotate_PinnedH2O(std::vector<double>& positions, std::vector<doub
     apply_transpose_rotation(out_of_plane_rotation_matrix, f_H1_temp, f_H1_restored);
     apply_transpose_rotation(out_of_plane_rotation_matrix, f_H2_temp, f_H2_restored);
 
-    positions[3*H2_idx]   = H2_restored[0];
-    positions[3*H2_idx+1] = H2_restored[1];
-    positions[3*H2_idx+2] = H2_restored[2];
-    positions[3*O1_idx]   = 0.0;
-    positions[3*O1_idx+1] = 0.0;
-    positions[3*O1_idx+2] = 0.0;
-    positions[3*H1_idx]   = H1_restored[0];
-    positions[3*H1_idx+1] = H1_restored[1];
-    positions[3*H1_idx+2] = H1_restored[2];
+    positions[0] = H2_restored[0];
+    positions[1] = H2_restored[1];
+    positions[2] = H2_restored[2];
+    positions[6] = H1_restored[0];
+    positions[7] = H1_restored[1];
+    positions[8] = H1_restored[2];
 
-    forces[3*H2_idx]     = f_H2_restored[0];
-    forces[3*H2_idx+1]   = f_H2_restored[1];
-    forces[3*H2_idx+2]   = f_H2_restored[2];
-    forces[3*O1_idx]     = f_O1_restored[0];
-    forces[3*O1_idx+1]   = f_O1_restored[1];
-    forces[3*O1_idx+2]   = f_O1_restored[2];
-    forces[3*H1_idx]     = f_H1_restored[0];
-    forces[3*H1_idx+1]   = f_H1_restored[1];
-    forces[3*H1_idx+2]   = f_H1_restored[2];
-
-    anumbers[H2_idx] = 1;
-    anumbers[O1_idx] = 8;
-    anumbers[H1_idx] = 1;
+    forces[0] = f_H2_restored[0];
+    forces[1] = f_H2_restored[1];
+    forces[2] = f_H2_restored[2];
+    forces[3] = f_O1_restored[0];
+    forces[4] = f_O1_restored[1];
+    forces[5] = f_O1_restored[2];
+    forces[6] = f_H1_restored[0];
+    forces[7] = f_H1_restored[1];
+    forces[8] = f_H1_restored[2];
 }
 
 int main(int argc, char** argv)
@@ -366,7 +344,7 @@ int main(int argc, char** argv)
         double out_of_plane_rotation_matrix[3][3];
         double planar_rotation_angle;
         bool flipped_bond;
-        rotate_PinnedH2O(positions, anumbers, atom_order, out_of_plane_rotation_matrix, planar_rotation_angle, flipped_bond);
+        rotate_PinnedH2O(positions, anumbers, out_of_plane_rotation_matrix, planar_rotation_angle, flipped_bond);
 
         Mesh* mymesh             = Mesh::instance();
         const pb::Grid& mygrid   = mymesh->grid();
@@ -439,7 +417,7 @@ int main(int argc, char** argv)
         }
 
         // rotate the forces to the original coordinate system
-        transpose_rotate_PinnedH2O(positions, forces, anumbers, atom_order, out_of_plane_rotation_matrix, planar_rotation_angle, flipped_bond);
+        transpose_rotate_PinnedH2O(positions, forces, out_of_plane_rotation_matrix, planar_rotation_angle, flipped_bond);
 
         // print out results
         if (MPIdata::onpe0)
