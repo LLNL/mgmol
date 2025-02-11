@@ -91,7 +91,6 @@ int main()
     cout << "Bondlength of O1-H2 = " << bondlength2 << endl;
     cout << "Angle between O1-H1 and O1-H2 = " << bondangle << endl;
 
-
     double H1_temp[3], H2_temp[3];
     double H1_rotated[3], H2_rotated[3];
 
@@ -121,15 +120,15 @@ int main()
     if (bondlength1 < bondlength2)
     {
         swap(H1_rotated, H2_rotated);
-        H1_rotated[1] *= -1;
-        H2_rotated[1] *= -1;
+        H1_rotated[1] *= -1.0;
+        H2_rotated[1] *= -1.0;
     }
 
     double bondlength1_rotated = calculate_bondlength(H1_rotated, O1);
     double bondlength2_rotated = calculate_bondlength(H2_rotated, O1);
     double bondangle_rotated = calculate_bondangle(H1_rotated, O1, H2_rotated, false);
 
-    cout << "Reference system (z=0 plane about x=0 axis, with longer bondlength in Q1)" << endl;
+    cout << "Reference system (in z=0 plane, symmetric about x=0 axis, with longer bondlength in Q1)" << endl;
     cout << "H1 = (" << H1_rotated[0] << ", " << H1_rotated[1] << ", " << H1_rotated[2] << ")" << endl;
     cout << "H2 = (" << H2_rotated[0] << ", " << H2_rotated[1] << ", " << H2_rotated[2] << ")" << endl;
     cout << "Bondlength of O1-H1 = " << bondlength1_rotated << endl;
@@ -141,8 +140,8 @@ int main()
     if (bondlength1 < bondlength2)
     {
         swap(H1_rotated, H2_rotated);
-        H1_rotated[1] *= -1;
-        H2_rotated[1] *= -1;
+        H1_rotated[1] *= -1.0;
+        H2_rotated[1] *= -1.0;
     }
 
     apply_transpose_rotation(planar_rotation_matrix, H1_rotated, H1_temp);
