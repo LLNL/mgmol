@@ -137,13 +137,13 @@ void readRestartFiles(MGmolInterface *mgmol_)
 
         case ROMVariable::POTENTIAL:
         {
-            /*
-                potential in restart file is not consistent with
-                density/density matrix in the same file.
-                here we recompute potential.
-            */
-            std::shared_ptr<Ions> ions = mgmol->getIons();
-            mgmol->update_pot(*ions);
+            // /*
+            //     potential in restart file is not consistent with
+            //     density/density matrix in the same file.
+            //     here we recompute potential.
+            // */
+            // std::shared_ptr<Ions> ions = mgmol->getIons();
+            // mgmol->update_pot(*ions);
 
             /* we save hartree potential */
             basis_generator.takeSample(pot.vh_rho());
@@ -480,9 +480,9 @@ void runPoissonROM(MGmolInterface *mgmol_)
     CAROM::Vector fom_rho_vec(&rho->rho_[0][0], dim, true, false);
     CAROM::Vector rho_proj(num_pot_basis, false);
     pot_basis->transposeMult(fom_rho_vec, rho_proj);
-    // CAROM::Vector *rho_proj2 = pot_basis->mult(*rho_proj);
-    // (*rho_proj2) -= fom_rho_vec;
-    // double rho_proj_error = rho_proj2->norm() / fom_rho_vec.norm();
+    CAROM::Vector rho_proj_diff(rho_proj);
+    rho_proj_diff -= rom_rho;
+    double rho_proj_error = rho_proj_diff.norm() / rho_proj.norm();
     if (rank == 0)
     {
         printf("rom rho\n");
@@ -494,7 +494,7 @@ void runPoissonROM(MGmolInterface *mgmol_)
             printf("%.5e\t", rho_proj.item(d));
         printf("\n");
 
-        // printf("rho proj error: %.5e\n", rho_proj_error);
+        printf("rho proj error: %.5e\n", rho_proj_error);
     }
 
     /* project FOM ion density onto potential pod basis */
@@ -568,7 +568,7 @@ void runPoissonROM(MGmolInterface *mgmol_)
     testsol_gf -= fomsol_gf;
     double rel_error = testsol_gf.norm2() / fomsol_gf.norm2();
     if (rank == 0)
-        printf("relative error: %.3e\n", rel_error);
+        printf("potential relative error: %.3e\n", rel_error);
 
     /* librom view vector for fom solution */
     CAROM::Vector fom_sol_vec(pot.vh_rho(), dim, true, false);
@@ -584,17 +584,27 @@ void runPoissonROM(MGmolInterface *mgmol_)
         for (int d = 0; d < num_pot_basis; d++)
             printf("%.5e\t", fom_proj.item(d));
         printf("\n");
-        printf("ratio\n");
-        for (int d = 0; d < num_pot_basis; d++)
-            printf("%.5e\t", rom_pot.item(d) / fom_proj.item(d));
-        printf("\n");
+    }
+
+    /* compute FOM potential from FOM rho/rhoc */
+    {
+        pb::GridFunc<RHODTYPE> grho(grid, bc[0], bc[1], bc[2]);
+        grho.assign(&rho->rho_[0][0]);
+        pb::GridFunc<RHODTYPE> *grhoc = mgmol->electrostat_->getRhoc();
+
+        poisson->solve(grho, *grhoc);
+        const pb::GridFunc<POTDTYPE> vh = poisson->vh();
+
+        pb::GridFunc<POTDTYPE> error_gf(grid, bc[0], bc[1], bc[2]);
+        error_gf.assign(pot.vh_rho(), 'd');
+        error_gf -= vh;
+
+        double rel_error = error_gf.norm2() / fomsol_gf.norm2();
+        if (rank == 0)
+            printf("FOM potential relative error: %.3e\n", rel_error);
     }
 
     /* clean up */
-    // delete rom_rhs;
-    // delete rom_rho;
-    // delete rom_rhoc;
-    // delete rho_proj2;
 }
 
 /* test routines */
