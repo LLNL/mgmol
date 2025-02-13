@@ -36,6 +36,7 @@
 namespace po = boost::program_options;
 
 #include "librom.h"
+#include "hyperreduction/Hyperreduction.h"
 #include "utils/HDFDatabase.h"
 #include "utils/mpi_utils.h"
 

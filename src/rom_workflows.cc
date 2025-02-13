@@ -66,6 +66,9 @@ void readRestartFiles(MGmolInterface *mgmol_)
     Control& ct              = *(Control::instance());
     Mesh* mymesh             = Mesh::instance();
     const pb::PEenv& myPEenv = mymesh->peenv();
+    MGmol_MPI& mmpi          = *(MGmol_MPI::instance());
+    const int rank           = mmpi.mypeGlobal();
+    const int nprocs         = mmpi.size();
 
     ROMPrivateOptions rom_options = ct.getROMOptions();
     /* type of variable we intend to run POD */
@@ -81,6 +84,7 @@ void readRestartFiles(MGmolInterface *mgmol_)
     MGmol<OrbitalsType> *mgmol = static_cast<MGmol<OrbitalsType> *>(mgmol_);
     OrbitalsType *orbitals = mgmol->getOrbitals();
     Potentials& pot = mgmol->getHamiltonian()->potential();
+    std::shared_ptr<Rho<OrbitalsType>> rho = mgmol->getRho();
     std::string filename;
 
     /* Determine basis prefix, dimension, and sample size */
@@ -100,6 +104,11 @@ void readRestartFiles(MGmolInterface *mgmol_)
     case ROMVariable::POTENTIAL:
         basis_prefix += "_potential";
         dim = pot.size();
+        break;
+
+    case ROMVariable::DENSITY: // electronic density
+        basis_prefix += "_density";
+        dim = pot.size(); // same as potential
         break;
     
     default:
@@ -127,9 +136,21 @@ void readRestartFiles(MGmolInterface *mgmol_)
             break;
 
         case ROMVariable::POTENTIAL:
-            basis_prefix += "_potential";
+        {
+            // /*
+            //     potential in restart file is not consistent with
+            //     density/density matrix in the same file.
+            //     here we recompute potential.
+            // */
+            // std::shared_ptr<Ions> ions = mgmol->getIons();
+            // mgmol->update_pot(*ions);
+
             /* we save hartree potential */
             basis_generator.takeSample(pot.vh_rho());
+            break;
+        }
+        case ROMVariable::DENSITY:
+            basis_generator.takeSample(&rho->rho_[0][0]);
             break;
         }
     }
@@ -159,8 +180,11 @@ void buildROMPoissonOperator(MGmolInterface *mgmol_)
     /* Load Hartree potential basis matrix */
     std::string basis_file = rom_options.basis_file;
     const int num_pot_basis = rom_options.num_potbasis;
-    CAROM::BasisReader basis_reader(basis_file);
-    CAROM::Matrix *pot_basis = basis_reader.getSpatialBasis(num_pot_basis);
+    CAROM::BasisReader pot_basis_reader(basis_file + "_potential");
+    CAROM::Matrix *pot_basis = pot_basis_reader.getSpatialBasis(num_pot_basis);
+    const int num_rho_basis = rom_options.num_rhobasis;
+    CAROM::BasisReader rho_basis_reader(basis_file + "_density");
+    CAROM::Matrix *rho_basis = rho_basis_reader.getSpatialBasis(num_rho_basis);
 
     /* Load PoissonSolver pointer */
     MGmol<OrbitalsType> *mgmol = static_cast<MGmol<OrbitalsType> *>(mgmol_);
@@ -202,17 +226,32 @@ void buildROMPoissonOperator(MGmolInterface *mgmol_)
         delete col;
     }   // for (int c = 0; c < num_pot_basis; c++)
 
-    /* DEIM hyperreduction */
-    CAROM::Matrix pot_rhs_rom(num_pot_basis, num_pot_basis, false);
-    std::vector<int> global_sampled_row(num_pot_basis), sampled_rows_per_proc(nprocs);
-    DEIM(pot_basis, num_pot_basis, global_sampled_row, sampled_rows_per_proc,
-         pot_rhs_rom, rank, nprocs);
+    /* hyperreduction */
+    CAROM::Matrix rho_basis_inv(num_rho_basis, num_rho_basis, false);
+    
+    std::vector<int> global_sampled_row(num_rho_basis), sampled_rows_per_proc(nprocs);
+    CAROM::Hyperreduction HR("deim");
+    HR.ComputeSamples(rho_basis, num_rho_basis, global_sampled_row, sampled_rows_per_proc,
+                      rho_basis_inv, rank, nprocs, num_rho_basis);
+    if (rank == 0)
+    {
+        int num_sample_rows = 0;
+        for (int k = 0; k < sampled_rows_per_proc.size(); k++)
+            num_sample_rows += sampled_rows_per_proc[k];
+        printf("number of sampled row: %d\n", num_sample_rows);
+    }
+
+    /* projection of rho onto potential pod basis */
+    CAROM::Matrix pot_rho_rom(num_pot_basis, num_rho_basis, false);
+    CAROM::Matrix tmp(pot_rho_rom);
+    pot_basis->transposeMult(*rho_basis, tmp);
+    tmp.mult(rho_basis_inv, pot_rho_rom);
 
     /* ROM rescaleTotalCharge operator */
-    CAROM::Vector fom_ones(pot_basis->numRows(), true);
-    CAROM::Vector rom_ones(num_pot_basis, false);
+    CAROM::Vector fom_ones(rho_basis->numRows(), true);
+    CAROM::Vector rom_ones(num_rho_basis, false);
     fom_ones = mymesh->grid().vel(); // volume element
-    pot_basis->transposeMult(fom_ones, rom_ones);
+    rho_basis->transposeMult(fom_ones, rom_ones);
     
     /* Save ROM operator */
     // write the file from PE0 only
@@ -230,13 +269,21 @@ void buildROMPoissonOperator(MGmolInterface *mgmol_)
         h5_helper.putDoubleArray("potential_rom_inverse", pot_rom.getData(),
                                 num_pot_basis * num_pot_basis, false);
 
+        /* save right-hand side hyper-reduction sample index */
+        h5_helper.putIntegerArray("potential_rhs_hr_idx", global_sampled_row.data(),
+                                  global_sampled_row.size(), false);
+        h5_helper.putIntegerArray("potential_rhs_hr_idcs_per_proc", sampled_rows_per_proc.data(),
+                                  sampled_rows_per_proc.size(), false);
+        h5_helper.putInteger("potential_rhs_nprocs", nprocs);
+        h5_helper.putInteger("potential_rhs_hr_idx_size", global_sampled_row.size());
+
         /* save right-hand side hyper-reduction operator */
-        h5_helper.putDoubleArray("potential_rhs_rom_inverse", pot_rhs_rom.getData(),
-                                num_pot_basis * num_pot_basis, false);
+        h5_helper.putDoubleArray("potential_rho_rom_inverse", pot_rho_rom.getData(),
+                                num_pot_basis * num_rho_basis, false);
 
         /* save right-hand side rescaling operator */
-        h5_helper.putDoubleArray("potential_rhs_rescaler", rom_ones.getData(),
-                                num_pot_basis, false);
+        h5_helper.putDoubleArray("potential_rho_rescaler", rom_ones.getData(),
+                                num_rho_basis, false);
 
         h5_helper.close();
     }
@@ -261,17 +308,52 @@ void runPoissonROM(MGmolInterface *mgmol_)
         MPI_Abort(MPI_COMM_WORLD, 0);
     }
 
+    /* Load MGmol pointer and Potentials */
+    MGmol<OrbitalsType> *mgmol = static_cast<MGmol<OrbitalsType> *>(mgmol_);
+    Poisson *poisson = mgmol->electrostat_->getPoissonSolver();
+    Potentials& pot = mgmol->getHamiltonian()->potential();
+    std::shared_ptr<Rho<OrbitalsType>> rho = mgmol->getRho();
+    const int dim = pot.size();
+
+    /* GridFunc initialization inputs */
+    const pb::Grid &grid(poisson->vh().grid());
+    short bc[3];
+    for (int d = 0; d < 3; d++)
+        bc[d] = poisson->vh().bc(d);
+
     /* Load Hartree potential basis matrix */
     std::string basis_file = rom_options.basis_file;
+    basis_file += "_potential";
     const int num_pot_basis = rom_options.num_potbasis;
+    const int num_rho_basis = rom_options.num_rhobasis;
     CAROM::BasisReader basis_reader(basis_file);
     CAROM::Matrix *pot_basis = basis_reader.getSpatialBasis(num_pot_basis);
 
     /* initialize rom operator variables */
     CAROM::Matrix pot_rom(num_pot_basis, num_pot_basis, false);
     CAROM::Matrix pot_rom_inv(num_pot_basis, num_pot_basis, false);
-    CAROM::Matrix pot_rhs_rom(num_pot_basis, num_pot_basis, false);
-    CAROM::Vector pot_rhs_rescaler(num_pot_basis, false);
+    CAROM::Matrix pot_rho_rom(num_pot_basis, num_rho_basis, false);
+    CAROM::Vector pot_rho_rescaler(num_rho_basis, false);
+
+    int nprocs0 = -1, hr_idx_size = -1;
+    if (MPIdata::onpe0)
+    {
+        std::string rom_oper = rom_options.pot_rom_file;
+        CAROM::HDFDatabase h5_helper;
+        h5_helper.open(rom_oper, "r");
+
+        h5_helper.getInteger("potential_rhs_nprocs", nprocs0);
+        h5_helper.getInteger("potential_rhs_hr_idx_size", hr_idx_size);
+        if (nprocs0 != nprocs)
+        {
+            std::cerr << "runPoissonROM error: same number of processors must be used as for buildPoissonROM!\n" << std::endl;
+            MPI_Abort(MPI_COMM_WORLD, 0);
+        }
+
+        h5_helper.close();
+    }
+    mmpi.bcastGlobal(&hr_idx_size);
+    std::vector<int> global_sampled_row(hr_idx_size), sampled_rows_per_proc(nprocs);
     
     /* Load ROM operator */
     // read the file from PE0 only
@@ -291,16 +373,238 @@ void runPoissonROM(MGmolInterface *mgmol_)
         h5_helper.getDoubleArray("potential_rom_inverse", pot_rom_inv.getData(),
                                 num_pot_basis * num_pot_basis, false);
 
+        /* load right-hand side hyper-reduction sample index */
+        h5_helper.getIntegerArray("potential_rhs_hr_idx", global_sampled_row.data(),
+                                  global_sampled_row.size(), false);
+        h5_helper.getIntegerArray("potential_rhs_hr_idcs_per_proc", sampled_rows_per_proc.data(),
+                                  sampled_rows_per_proc.size(), false);
+
         /* load right-hand side hyper-reduction operator */
-        h5_helper.getDoubleArray("potential_rhs_rom_inverse", pot_rhs_rom.getData(),
-                                num_pot_basis * num_pot_basis, false);
+        h5_helper.getDoubleArray("potential_rho_rom_inverse", pot_rho_rom.getData(),
+                                num_pot_basis * num_rho_basis, false);
 
         /* load right-hand side rescaling operator */
-        h5_helper.getDoubleArray("potential_rhs_rescaler", pot_rhs_rescaler.getData(),
+        h5_helper.getDoubleArray("potential_rho_rescaler", pot_rho_rescaler.getData(),
                                 num_pot_basis, false);
 
         h5_helper.close();
     }
+    // broadcast over all processes
+    mmpi.bcastGlobal(pot_rom.getData(), num_pot_basis * num_pot_basis, 0);
+    mmpi.bcastGlobal(pot_rom_inv.getData(), num_pot_basis * num_pot_basis, 0);
+    mmpi.bcastGlobal(pot_rho_rom.getData(), num_pot_basis * num_rho_basis, 0);
+    mmpi.bcastGlobal(pot_rho_rescaler.getData(), num_rho_basis, 0);
+    mmpi.bcastGlobal(global_sampled_row.data(), hr_idx_size, 0);
+    mmpi.bcastGlobal(sampled_rows_per_proc.data(), nprocs, 0);
+
+    /* get local sampled row */
+    std::vector<int> offsets, sampled_row(sampled_rows_per_proc[rank]);
+    int num_global_sample = CAROM::get_global_offsets(sampled_rows_per_proc[rank], offsets);
+    for (int s = 0, gs = offsets[rank]; gs < offsets[rank+1]; gs++, s++)
+        sampled_row[s] = global_sampled_row[gs];
+    
+    /* ROM currently support only nspin=1 */
+    CAROM_VERIFY(rho->rho_.size() == 1);
+
+    /* load the test restart file */
+    mgmol->loadRestartFile(rom_options.test_restart_file);
+
+    /* get mgmol orbitals and copy to librom */
+    OrbitalsType *orbitals = mgmol->getOrbitals();
+    const int chrom_num = orbitals->chromatic_number();
+    CAROM::Matrix psi(dim, chrom_num, true);
+    for (int c = 0; c < chrom_num; c++)
+    {
+        ORBDTYPE *d_psi = orbitals->getPsi(c);
+        for (int d = 0; d < dim ; d++)
+            psi.item(d, c) = *(d_psi + d);
+    }
+
+    /*
+        get rom coefficients of orbitals based on orbital POD basis.
+        At this point, we take the FOM orbital as it is,
+        thus rom coefficients become the identity matrix.
+    */
+    CAROM::Matrix rom_psi(chrom_num, chrom_num, false);
+    for (int i = 0; i < chrom_num; i++)
+        for (int j = 0; j < chrom_num; j++)
+            rom_psi(i, j) = (i == j) ? 1 : 0;
+
+    /* get mgmol density matrix */
+    ProjectedMatricesInterface *proj_matrices = orbitals->getProjMatrices();
+    proj_matrices->updateSubMatX();
+    SquareLocalMatrices<MATDTYPE, memory_space_type>& localX(proj_matrices->getLocalX());
+
+    bool dm_distributed = (localX.nmat() > 1);
+    CAROM_VERIFY(!dm_distributed);
+
+    /* copy density matrix into librom */
+    CAROM::Matrix dm(localX.getRawPtr(), localX.m(), localX.n(), dm_distributed, true);
+
+    /* compute ROM rho using hyper reduction */
+    CAROM::Vector sample_rho(1, true); // this will be resized in computeRhoOnSamplePts
+    computeRhoOnSamplePts(dm, psi, rom_psi, sampled_row, sample_rho);
+
+    /* check sampled rho */
+    for (int s = 0; s < sampled_row.size(); s++)
+    {
+        printf("rank %d, rho[%d]: %.5e, sample_rho: %.5e, diff: %.5e\n",
+            rank, sampled_row[s], rho->rho_[0][sampled_row[s]], sample_rho(s), abs(rho->rho_[0][sampled_row[s]] - sample_rho(s)));
+    }
+
+    sample_rho.gather();
+    CAROM::Vector rom_rho(num_pot_basis, false);
+    pot_rho_rom.mult(sample_rho, rom_rho);
+    // if (rank == 0)
+    // {
+    //     printf("rom rho before projection\n");
+    //     for (int d = 0; d < num_pot_basis; d++)
+    //         printf("%.5e\t", rom_rho->item(d));
+    //     printf("\n");
+
+    //     printf("pot_rhs_rescaler\n");
+    //     for (int d = 0; d < num_pot_basis; d++)
+    //         printf("%.5e\t", pot_rhs_rescaler.item(d));
+    //     printf("\n");
+    // }
+
+    // /* rescale the electron density */
+    // const double nel  = ct.getNel();
+    // // volume element is already multiplied in pot_rhs_rescaler.
+    // const double tcharge = rom_rho->inner_product(pot_rhs_rescaler);
+    // *rom_rho *= nel / tcharge;
+    // if (rank == 0)
+    //     printf("rank %d, rho scaler: %.3e\n", rank, nel / tcharge);
+
+    /* check rho projection */
+    CAROM::Vector fom_rho_vec(&rho->rho_[0][0], dim, true, false);
+    CAROM::Vector rho_proj(num_pot_basis, false);
+    pot_basis->transposeMult(fom_rho_vec, rho_proj);
+    CAROM::Vector rho_proj_diff(rho_proj);
+    rho_proj_diff -= rom_rho;
+    double rho_proj_error = rho_proj_diff.norm() / rho_proj.norm();
+    if (rank == 0)
+    {
+        printf("rom rho\n");
+        for (int d = 0; d < num_pot_basis; d++)
+            printf("%.5e\t", rom_rho.item(d));
+        printf("\n");
+        printf("fom rho projection\n");
+        for (int d = 0; d < num_pot_basis; d++)
+            printf("%.5e\t", rho_proj.item(d));
+        printf("\n");
+
+        printf("rho proj error: %.5e\n", rho_proj_error);
+    }
+
+    /* project FOM ion density onto potential pod basis */
+    CAROM::Vector fom_rhoc_vec(pot.rho_comp(), dim, true, false);
+    CAROM::Vector rom_rhoc(num_pot_basis, false);
+    pot_basis->transposeMult(fom_rhoc_vec, rom_rhoc);
+
+    // /* compute ROM ion density using hyper reduction */
+    // std::shared_ptr<Ions> ions = mgmol->getIons();    
+    // CAROM::Vector sampled_rhoc(1, true); // this will be resized in evalIonDensityOnSamplePts
+    // pot.evalIonDensityOnSamplePts(*ions, sampled_row, sampled_rhoc);
+
+    // /* check sampled rhoc */
+    // RHODTYPE *rho_comp = pot.rho_comp();
+    // for (int s = 0; s < sampled_row.size(); s++)
+    // {
+    //     printf("rank %d, rhoc[%d]: %.5e, sampled_rhoc: %.5e, diff: %.5e\n",
+    //         rank, sampled_row[s], rho_comp[sampled_row[s]], sampled_rhoc(s), abs(rho_comp[sampled_row[s]] - sampled_rhoc(s)));
+    // }
+
+    // sampled_rhoc.gather();
+    // CAROM::Vector *rom_rhoc = pot_rhs_rom.mult(sampled_rhoc);
+
+    // /* rescale the ion density */
+    // const double ionic_charge = pot.getIonicCharge();
+    // // volume element is already multiplied in pot_rhs_rescaler.
+    // const double comp_rho = rom_rhoc->inner_product(pot_rhs_rescaler);
+    // *rom_rhoc *= ionic_charge / comp_rho;
+    // if (rank == 0)
+    //     printf("rank %d, rhoc scaler: %.3e\n", rank, ionic_charge / comp_rho);
+
+    // /* right-hand side */
+    // CAROM::Vector sampled_rhs(sample_rho);
+    // sampled_rhs -= sampled_rhoc;
+    // sampled_rhs *= (4.0 * M_PI);
+
+    /* get poisson right-hand side by applying Laplace operator to potential */
+    pb::GridFunc<POTDTYPE> fomsol_gf(grid, bc[0], bc[1], bc[2]);
+    fomsol_gf.assign(pot.vh_rho(), 'd');
+    /* apply Laplace operator */
+    pb::GridFunc<POTDTYPE> fomrhs_gf(grid, bc[0], bc[1], bc[2]);
+    poisson->applyOperator(fomsol_gf, fomrhs_gf);
+    CAROM::Vector fomrhs(pot_basis->numRows(), true);
+    fomrhs_gf.init_vect(fomrhs.getData(), 'd');
+    // /* check sampled rhs */
+    // for (int s = 0; s < sampled_row.size(); s++)
+    // {
+    //     printf("rank %d, rhs[%d]: %.5e, sampled_rhs: %.5e, diff: %.5e\n",
+    //         rank, sampled_row[s], fomrhs(sampled_row[s]), sampled_rhs(s), abs(fomrhs(sampled_row[s]) - sampled_rhs(s)));
+    // }
+
+    /* ROM right-hand side */
+    CAROM::Vector rom_rhs(rom_rho);
+    rom_rhs -= rom_rhoc;
+    rom_rhs *= 4.0 * M_PI;
+
+    /* solve Poisson ROM */
+    CAROM::Vector rom_pot(num_pot_basis, false);
+    pot_rom_inv.mult(rom_rhs, rom_pot);
+
+    /* data array to lift up rom solution */
+    std::vector<POTDTYPE> test_sol(dim);
+    /* get librom view-vector of test_sol[s] */
+    CAROM::Vector test_sol_vec(test_sol.data(), dim, true, false);
+    pot_basis->mult(rom_pot, test_sol_vec);
+
+    /* mgmol grid function for lifted-up fom solution */
+    pb::GridFunc<POTDTYPE> testsol_gf(grid, bc[0], bc[1], bc[2]);
+    testsol_gf.assign(test_sol.data(), 'd');
+
+    testsol_gf -= fomsol_gf;
+    double rel_error = testsol_gf.norm2() / fomsol_gf.norm2();
+    if (rank == 0)
+        printf("potential relative error: %.3e\n", rel_error);
+
+    /* librom view vector for fom solution */
+    CAROM::Vector fom_sol_vec(pot.vh_rho(), dim, true, false);
+    CAROM::Vector fom_proj(num_pot_basis, false);
+    pot_basis->transposeMult(fom_sol_vec, fom_proj);
+    if (rank == 0)
+    {
+        printf("rom vector\n");
+        for (int d = 0; d < num_pot_basis; d++)
+            printf("%.5e\t", rom_pot.item(d));
+        printf("\n");
+        printf("fom projection\n");
+        for (int d = 0; d < num_pot_basis; d++)
+            printf("%.5e\t", fom_proj.item(d));
+        printf("\n");
+    }
+
+    /* compute FOM potential from FOM rho/rhoc */
+    {
+        pb::GridFunc<RHODTYPE> grho(grid, bc[0], bc[1], bc[2]);
+        grho.assign(&rho->rho_[0][0]);
+        pb::GridFunc<RHODTYPE> *grhoc = mgmol->electrostat_->getRhoc();
+
+        poisson->solve(grho, *grhoc);
+        const pb::GridFunc<POTDTYPE> vh = poisson->vh();
+
+        pb::GridFunc<POTDTYPE> error_gf(grid, bc[0], bc[1], bc[2]);
+        error_gf.assign(pot.vh_rho(), 'd');
+        error_gf -= vh;
+
+        double rel_error = error_gf.norm2() / fomsol_gf.norm2();
+        if (rank == 0)
+            printf("FOM potential relative error: %.3e\n", rel_error);
+    }
+
+    /* clean up */
 }
 
 /* test routines */
@@ -311,6 +615,9 @@ void testROMPoissonOperator(MGmolInterface *mgmol_)
     Control& ct              = *(Control::instance());
     Mesh* mymesh             = Mesh::instance();
     const pb::PEenv& myPEenv = mymesh->peenv();
+    MGmol_MPI& mmpi          = *(MGmol_MPI::instance());
+    const int rank           = mmpi.mypeGlobal();
+    const int nprocs         = mmpi.size();
 
     ROMPrivateOptions rom_options = ct.getROMOptions();
 
@@ -371,14 +678,21 @@ void testROMPoissonOperator(MGmolInterface *mgmol_)
     std::string basis_prefix = "test_poisson";
     CAROM::Options svd_options(dim, nsnapshot, 1);
     CAROM::BasisGenerator basis_generator(svd_options, false, basis_prefix);
+    CAROM::BasisGenerator rhs_basis_generator(svd_options, false, "test_rhs");
 
     /* Collect snapshots and train POD basis */
     for (int s = 0; s < nsnapshot; s++)
+    {
         basis_generator.takeSample(fom_sol[s].data());
+        rhs_basis_generator.takeSample(rhs[s].data());
+    }
     basis_generator.endSamples();
+    rhs_basis_generator.endSamples();
 
     /* Load POD basis. We use the maximum number of basis vectors. */
     const CAROM::Matrix *pot_basis = basis_generator.getSpatialBasis();
+    const CAROM::Matrix *rhs_basis = rhs_basis_generator.getSpatialBasis();
+    CAROM::Matrix *rhs2pot = pot_basis->transposeMult(rhs_basis);
 
     /* Check if full projection preserves FOM solution */
     for (int c = 0; c < nsnapshot; c++)
@@ -497,6 +811,27 @@ void testROMPoissonOperator(MGmolInterface *mgmol_)
     }
     delete identity;
 
+    /* set up hyper-reduction for right-hand side. */
+    CAROM::Matrix rhs_basis_inv(nsnapshot, nsnapshot, false);
+    std::vector<int> global_sampled_row(nsnapshot), sampled_rows_per_proc(nprocs);
+    CAROM::Hyperreduction HR("deim");
+    HR.ComputeSamples(rhs_basis, nsnapshot, global_sampled_row, sampled_rows_per_proc,
+                      rhs_basis_inv, rank, nprocs, nsnapshot);
+    CAROM::Matrix *pot_rhs_rom = rhs2pot->mult(rhs_basis_inv);
+    if (rank == 0)
+    {
+        int num_sample_rows = 0;
+        for (int k = 0; k < sampled_rows_per_proc.size(); k++)
+            num_sample_rows += sampled_rows_per_proc[k];
+        printf("number of sampled row: %d\n", num_sample_rows);
+    }
+
+    /* get local sampled row */
+    std::vector<int> offsets, sampled_row(sampled_rows_per_proc[rank]);
+    int num_global_sample = CAROM::get_global_offsets(sampled_rows_per_proc[rank], offsets);
+    for (int s = 0, gs = offsets[rank]; gs < offsets[rank+1]; gs++, s++)
+        sampled_row[s] = global_sampled_row[gs];
+
     /* Test with sample RHS. ROM must be able to 100% reproduce the FOM solution. */
     std::vector<CAROM::Vector *> rom_sol(0), rom_rhs(0);
     std::vector<std::vector<POTDTYPE>> test_sol(nsnapshot);
@@ -505,8 +840,16 @@ void testROMPoissonOperator(MGmolInterface *mgmol_)
         /* get librom view-vector of rhs[s] */
         CAROM::Vector fom_rhs(rhs[s].data(), dim, true, false);
 
-        /* project onto POD basis */
-        rom_rhs.push_back(pot_basis->transposeMult(fom_rhs));
+        // /* project onto POD basis */
+        // rom_rhs.push_back(pot_basis->transposeMult(fom_rhs));
+        /* get sampled rhs */
+        CAROM::Vector sample_rhs(1, true);
+        sample_rhs.setSize(sampled_row.size());
+        for (int s = 0; s < sampled_row.size(); s++)
+            sample_rhs(s) = fom_rhs(sampled_row[s]);
+        /* get ROM rhs projection */
+        sample_rhs.gather();
+        rom_rhs.push_back(pot_rhs_rom->mult(sample_rhs));
 
         /* FOM FD operator scales rhs by 4pi */
         *rom_rhs.back() *= 4. * M_PI;
@@ -562,6 +905,9 @@ void testROMRhoOperator(MGmolInterface *mgmol_)
     const int rank = mmpi.mypeGlobal();
     const int nprocs = mmpi.size();
 
+    static std::random_device rd;  // Will be used to obtain a seed for the random number engine
+    static std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd(){}
+
     // if (ct.isLocMode())
     //     printf("LocMode is On!\n");
     // else
@@ -573,9 +919,15 @@ void testROMRhoOperator(MGmolInterface *mgmol_)
     MGmol<OrbitalsType> *mgmol = static_cast<MGmol<OrbitalsType> *>(mgmol_);
     Poisson *poisson = mgmol->electrostat_->getPoissonSolver(); 
     Potentials& pot = mgmol->getHamiltonian()->potential();
-    std::shared_ptr<Rho<OrbitalsType>> rho = NULL; // mgmol->getRho();
+    std::shared_ptr<Rho<OrbitalsType>> rho = mgmol->getRho();
     const OrthoType ortho_type = rho->getOrthoType();
     assert(ortho_type == OrthoType::Nonorthogonal);
+
+    /* GridFunc initialization inputs */
+    const pb::Grid &grid(poisson->vh().grid());
+    short bc[3];
+    for (int d = 0; d < 3; d++)
+        bc[d] = poisson->vh().bc(d);
 
     /* potential should have the same size as rho */
     const int dim = pot.size();
@@ -598,11 +950,24 @@ void testROMRhoOperator(MGmolInterface *mgmol_)
 
     /* Collect the restart files */
     std::string filename;
+    pb::GridFunc<POTDTYPE> rhogf(grid, bc[0], bc[1], bc[2]);
+    std::vector<RHODTYPE> rho_outvec(rho->rho_[0].size());
     for (int k = minidx; k <= maxidx; k++)
     {
         filename = string_format(rom_options.restart_file_fmt, k);
         mgmol->loadRestartFile(filename);
         basis_generator.takeSample(&rho->rho_[0][0]);
+
+        rhogf.assign(&rho->rho_[0][0]);
+        rhogf.init_vect(rho_outvec.data(), 'd');
+        for (int d = 0; d < rho_outvec.size(); d++)
+        {
+            const double error = abs(rho->rho_[0][d] - rho_outvec[d]);
+            if (error > 0.0)
+                printf("rank %d, rho[%d]: %.15e, sample_rho: %.15e\n",
+                    rank, d, rho->rho_[0][d], rho_outvec[d]);
+            CAROM_VERIFY(error == 0.0);
+        }
     }    
     // basis_generator.writeSnapshot();
     const CAROM::Matrix rho_snapshots(*basis_generator.getSnapshotMatrix());
@@ -631,7 +996,10 @@ void testROMRhoOperator(MGmolInterface *mgmol_)
         sampled_row[s] = global_sampled_row[gs];
 
     /* load only the first restart file for now */
-    const int test_idx = 2;
+    std::uniform_int_distribution<> distrib(0, num_restart-1);
+    int test_idx = distrib(gen);
+    mmpi.bcastGlobal(&test_idx);
+    if (rank == 0) printf("test index: %d\n", test_idx);
 
     filename = string_format(rom_options.restart_file_fmt, test_idx + minidx);
     /*
@@ -708,10 +1076,10 @@ void testROMRhoOperator(MGmolInterface *mgmol_)
     for (int s = 0; s < sampled_row.size(); s++)
     {
         const double error = abs(rho->rho_[0][sampled_row[s]] - sample_rho(s));
-        if (error > 1.0e-4)
+        if (error > 1.0e-10)
             printf("rank %d, rho[%d]: %.5e, sample_rho: %.5e, librom_snapshot: %.5e\n",
                 rank, sampled_row[s], rho->rho_[0][sampled_row[s]], sample_rho(s), rho_snapshots(sampled_row[s], test_idx));
-        CAROM_VERIFY(error < 1.0e-4);
+        CAROM_VERIFY(error < 1.0e-10);
     }
 
     sample_rho.gather();
@@ -719,16 +1087,16 @@ void testROMRhoOperator(MGmolInterface *mgmol_)
     CAROM::Vector *rom_rho = rho_basis_inv.mult(sample_rho);
     for (int d = 0; d < rom_rho->dim(); d++)
     {
-        if ((rank == 0) && (abs(proj_rho->item(d, test_idx) - rom_rho->item(d)) > 1.0e-3))
+        if ((rank == 0))
             printf("rom_rho error: %.3e\n", abs(proj_rho->item(d, test_idx) - rom_rho->item(d)));
-        CAROM_VERIFY(abs(proj_rho->item(d, test_idx) - rom_rho->item(d)) < 1.0e-3);
+        CAROM_VERIFY(abs(proj_rho->item(d, test_idx) - rom_rho->item(d)) < 1.0e-10);
     }
 
     CAROM::Vector *fom_rho = rho_basis->mult(*rom_rho);
 
     CAROM_VERIFY(fom_rho->dim() == rho->rho_[0].size());
     for (int d = 0; d < fom_rho->dim(); d++)
-        CAROM_VERIFY(abs(fom_rho->item(d) - rho->rho_[0][d]) < 1.0e-4);
+        CAROM_VERIFY(abs(fom_rho->item(d) - rho->rho_[0][d]) < 1.0e-10);
 
     delete rom_rho;
     delete fom_rho;
@@ -919,13 +1287,13 @@ void testROMIonDensity(MGmolInterface *mgmol_)
             CAROM_VERIFY(abs(fom_overlap_ions[test_idx][k][d] - ions->overlappingVL_ions()[k]->position(d)) < 1.0e-12);
 
     /* eval ion density on sample grid points */
-    std::vector<RHODTYPE> sampled_rhoc(sampled_row.size());
+    CAROM::Vector sampled_rhoc(1, true); // this will be resized in evalIonDensityOnSamplePts
     pot.evalIonDensityOnSamplePts(*ions, sampled_row, sampled_rhoc);
 
     for (int d = 0; d < sampled_row.size(); d++)
     {
-        printf("rank %d, fom rhoc[%d]: %.3e, rom rhoc: %.3e\n", rank, sampled_row[d], fom_rhoc[test_idx][sampled_row[d]], sampled_rhoc[d]);
-        CAROM_VERIFY(abs(fom_rhoc[test_idx][sampled_row[d]] - sampled_rhoc[d]) < 1.0e-12);
+        printf("rank %d, fom rhoc[%d]: %.3e, rom rhoc: %.3e\n", rank, sampled_row[d], fom_rhoc[test_idx][sampled_row[d]], sampled_rhoc(d));
+        CAROM_VERIFY(abs(fom_rhoc[test_idx][sampled_row[d]] - sampled_rhoc(d)) < 1.0e-12);
     }
 }
 

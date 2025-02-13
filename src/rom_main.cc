@@ -137,13 +137,13 @@ int main(int argc, char** argv)
                 testROMRhoOperator<LocGridOrbitals>(mgmol);
             else
                 testROMRhoOperator<ExtendedGridOrbitals>(mgmol);
+        break;
 
         case (ROMStage::TEST_ION):
             if (ct.isLocMode())
                 testROMIonDensity<LocGridOrbitals>(mgmol);
             else
                 testROMIonDensity<ExtendedGridOrbitals>(mgmol);
-
         break;
 
         default:

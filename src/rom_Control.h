@@ -33,6 +33,7 @@ enum class ROMVariable
 {
     ORBITALS,
     POTENTIAL,
+    DENSITY,
     NONE
 };
 
@@ -55,7 +56,11 @@ struct ROMPrivateOptions
     bool compare_md = false;
     int num_orbbasis = -1;
     int num_potbasis = -1;
+    int num_rhobasis = -1;
     std::string pot_rom_file = "";
+
+    /* options for online Poisson ROM */
+    std::string test_restart_file = "";
 };
 
 #endif  // ROM_CONTROL_H
