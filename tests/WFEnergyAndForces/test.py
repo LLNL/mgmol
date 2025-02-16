@@ -3,6 +3,7 @@ import sys
 import os
 import subprocess
 import string
+import shutil
 
 print("Test WFEnergyAndForces...")
 
@@ -36,6 +37,8 @@ command = "{} {} -c {} -i {}".format(mpicmd,exe,inp,coords)
 print("Run command: {}".format(command))
 output = subprocess.check_output(command,shell=True)
 lines=output.split(b'\n')
+
+shutil.rmtree('WF')
 
 #analyse output
 energies=[]

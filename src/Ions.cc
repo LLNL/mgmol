@@ -911,8 +911,10 @@ void Ions::initFromRestartFile(HDFrestart& h5_file)
     assert(at_numbers.size() == at_nlprojIds.size());
 
     num_ions_ = at_names.size();
-    mmpi.allreduce(&num_ions_, 1, MPI_SUM);
-
+    if (!h5_file.useHdf5p())
+    {
+        mmpi.allreduce(&num_ions_, 1, MPI_SUM);
+    }
     if (onpe0 && ct.verbose > 0)
     {
         (*MPIdata::sout) << "Ions::setFromRestartFile(), read " << num_ions_
@@ -947,8 +949,20 @@ void Ions::initFromRestartFile(HDFrestart& h5_file)
     }
     readRestartPositions(h5_file);
     readRestartVelocities(h5_file);
-    readRestartRandomStates(h5_file);
+    if (ct.LangevinThermostat()) readRestartRandomStates(h5_file);
     readLockedAtomNames(h5_file);
+
+    // remove atoms from local list if not local
+    for (std::vector<Ion*>::iterator it = local_ions_.begin();
+         it != local_ions_.end();)
+    {
+        double p[3];
+        (*it)->getPosition(p);
+        if (!inLocalIons(p[0], p[1], p[2]))
+            it = local_ions_.erase(it);
+        else
+            ++it;
+    }
 
     // rescale all velocities by factor specified in input
     rescaleVelocities(ct.VelocityScalingFactor());
