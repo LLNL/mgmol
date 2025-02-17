@@ -3,9 +3,8 @@ import sys
 import os
 import subprocess
 import string
-import shutil
 
-print("Test RestartEnergyAndForces...")
+print("Test test_rho_restart...")
 
 nargs=len(sys.argv)
 
@@ -14,8 +13,7 @@ for i in range(4,nargs-7):
   mpicmd = mpicmd + " "+sys.argv[i]
 print("MPI run command: {}".format(mpicmd))
 
-mgmol_exe = sys.argv[nargs-6]
-test_exe = sys.argv[nargs-5]
+mgmol_exe = sys.argv[nargs-5]
 input1 = sys.argv[nargs-4]
 input2 = sys.argv[nargs-3]
 coords = sys.argv[nargs-2]
@@ -36,53 +34,41 @@ if not os.path.exists(dst2):
   print("Create link to %s"%dst2)
   os.symlink(src2, dst2)
 
-#run mgmol
+#run mgmol to generate initial ground state
 command = "{} {} -c {} -i {}".format(mpicmd,mgmol_exe,input1,coords)
 print("Run command: {}".format(command))
 
 output = subprocess.check_output(command,shell=True)
 lines=output.split(b'\n')
 
-#analyse output
-ref_energy=1.e18
-for line in lines:
-  if line.count(b'%%'):
-    print(line)
-    words=line.split()
-    words=words[5].split(b',')[0]
-    energy = words.decode()
-  if line.count(b'achieved'):
-    ref_energy=energy
-    break
-
-#run test
-command = "{} {} -c {} -i {}".format(mpicmd,test_exe,input2,coords)
+#run MD
+command = "{} {} -c {} -i {}".format(mpicmd,mgmol_exe,input2,coords)
 print("Run command: {}".format(command))
 output = subprocess.check_output(command,shell=True)
 lines=output.split(b'\n')
 
-shutil.rmtree('WF')
+os.remove('WF')
 
-test_energy=1.e18
+print("Check energy conservation...")
+tol = 1.e-4
+energy = 0.
+count = 0
 for line in lines:
-  if line.count(b'%%'):
+  if line.count(b'Total') and line.count(b'Energy'):
     print(line)
+    count=count+1
     words=line.split()
-    words=words[5].split(b',')[0]
-    energy = words.decode()
-  if line.count(b'Eks'):
-    print(line)
-    words=line.split()
-    print(words)
-    test_energy = words[2]
-    break
 
+    energy=eval(words[2])
+    if count==1:
+      first_energy=energy
 
-tol = 1.e-6
-diff=eval(test_energy)-eval(ref_energy)
-print(diff)
-if abs(diff)>tol:
-  print("Energies differ: {} vs {} !!!".format(ref_energy,test_energy))
+    if count>1 and abs(energy-first_energy)>tol:
+      print("ERROR Energy = {} != {}".format(energy,first_energy))
+      sys.exit(1)
+
+if count<4:
+  print("ERROR needs 4 energy values for checking conservation!")
   sys.exit(1)
 
 print("Test SUCCESSFUL!")

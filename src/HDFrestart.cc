@@ -457,7 +457,8 @@ HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
     verbosity_ = 0;
     closed_    = false;
 
-    //(*MPIdata::sout)<<"HDFrestart::HDFrestart(), filename="<<filename<<endl;
+    //(*MPIdata::sout)<<"HDFrestart::HDFrestart(),
+    // filename="<<filename<<std::endl;
     setActivity();
 
     count_[0] = count_[1] = count_[2] = 1;
@@ -749,7 +750,7 @@ int writeListCentersAndRadii(
     }
 
     // if( onpe0 && ct.verbose>2 )
-    //    (*MPIdata::sout)<<"Write attribute "<<attname<<endl;
+    //    (*MPIdata::sout)<<"Write attribute "<<attname<<std::endl;
     herr_t status = H5Awrite(attribute_id, H5T_NATIVE_DOUBLE, &attr_data[0]);
     if (status < 0)
     {
@@ -1921,6 +1922,11 @@ int HDFrestart::readAtomicData(std::string datasetname, std::vector<int>& data)
     // send data to inactive PEs
     if (gather_data_x_) gatherDataXdir(data);
 
+    if (useHdf5p())
+    {
+        data.erase(std::remove(data.begin(), data.end(), -1), data.end());
+    }
+
     return 0;
 }
 
@@ -1928,7 +1934,7 @@ int HDFrestart::readAtomicData(
     std::string datasetname, std::vector<double>& data)
 {
     if (onpe0)
-        (*MPIdata::sout) << "Read ionic positions from hdf5 file" << std::endl;
+        (*MPIdata::sout) << "Read atomic data from hdf5 file" << std::endl;
 
     if (active_)
     {
@@ -1968,6 +1974,10 @@ int HDFrestart::readAtomicData(
         }
     }
 
+    if (useHdf5p())
+    {
+        data.erase(std::remove(data.begin(), data.end(), 1e+32), data.end());
+    }
     if (gather_data_x_) gatherDataXdir(data);
 
     return 0;
@@ -2094,6 +2104,11 @@ int HDFrestart::readAtomicData(
         data.push_back(t);
     }
 
+    if (useHdf5p())
+    {
+        data.erase(std::remove(data.begin(), data.end(), ""), data.end());
+    }
+
     return 0;
 }
 
@@ -2128,7 +2143,6 @@ int HDFrestart::readRestartRandomStates(std::vector<unsigned short>& data)
                 dim = (int)H5Dget_storage_size(dataset_id)
                       / sizeof(unsigned short);
             }
-
             if (dim > 0)
             {
                 data.resize(dim);
@@ -2148,12 +2162,10 @@ int HDFrestart::readRestartRandomStates(std::vector<unsigned short>& data)
                 }
 
                 if (!data.empty())
-                    if (data[0] != data[0])
+                    if (std::isnan(data[0]))
                     {
                         MGMOL_HDFRESTART_FAIL(
-                            "ERROR: HDFrestart::readRestartRandomStates() "
-                            "--- data[0]="
-                            << data[0]);
+                            "readRestartRandomStates() is NaN");
                         return -2;
                     }
             }
