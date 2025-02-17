@@ -75,10 +75,13 @@ Potentials::Potentials()
 
     dv_.resize(size_);
 
-    memset(&vepsilon_[0], 0, size_ * sizeof(POTDTYPE));
-    memset(&vh_rho_[0], 0, size_ * sizeof(POTDTYPE));
-    memset(&vxc_rho_[0], 0, size_ * sizeof(POTDTYPE));
-    memset(&v_ext_[0], 0, size_ * sizeof(POTDTYPE));
+    vh_rho_backup_.resize(size_);
+
+    memset(vepsilon_.data(), 0, size_ * sizeof(POTDTYPE));
+    memset(vh_rho_.data(), 0, size_ * sizeof(POTDTYPE));
+    memset(vxc_rho_.data(), 0, size_ * sizeof(POTDTYPE));
+    memset(v_ext_.data(), 0, size_ * sizeof(POTDTYPE));
+    memset(vh_rho_backup_.data(), 0, size_ * sizeof(POTDTYPE));
 
 #ifdef HAVE_TRICUBIC
     vext_tricubic_ = NULL;
@@ -594,6 +597,11 @@ void Potentials::axpVcompToVh(const double alpha)
 void Potentials::axpVcomp(POTDTYPE* v, const double alpha)
 {
     LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(size_, alpha, &v_comp_[0], v);
+}
+
+void Potentials::backupVh()
+{
+    memcpy(vh_rho_backup_.data(), vh_rho_.data(), size_ * sizeof(POTDTYPE));
 }
 
 void Potentials::initializeSupersampledRadialDataOnMesh(
