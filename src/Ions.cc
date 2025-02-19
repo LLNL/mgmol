@@ -1807,46 +1807,6 @@ void Ions::addIonToList(const Species& sp, const std::string& name,
     }
 }
 
-void Ions::addIonToList(const Species& sp, const std::string& name,
-    const double crds[3], const double velocity[3], const bool locked)
-{
-    MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
-    Control& ct(*(Control::instance()));
-
-    // create a new Ion
-    Ion* new_ion = new Ion(sp, name, &crds[0], velocity, locked);
-    new_ion->bcast(mmpi.commGlobal());
-
-    if (inListIons(crds[0], crds[1], crds[2]))
-    {
-        list_ions_.push_back(new_ion);
-        if (ct.verbose > 2)
-            (*MPIdata::sout)
-                << "Ion " << name << " at position " << crds[0] << ","
-                << crds[1] << "," << crds[2] << " added to the list... on PE"
-                << mmpi.mypeGlobal() << std::endl;
-
-        // populate local_ions_ list
-        if (inLocalIons(crds[0], crds[1], crds[2]))
-        {
-            (new_ion)->set_here(true);
-            local_ions_.push_back(new_ion);
-            if (onpe0 && ct.verbose > 2)
-                (*MPIdata::sout) << "Ion " << name << " at position " << crds[0]
-                                 << "," << crds[1] << "," << crds[2]
-                                 << " added to the list of local ions... on PE"
-                                 << mmpi.mypeGlobal() << std::endl;
-        }
-        else
-            (new_ion)->set_here(false);
-    }
-    else
-    {
-        // delete Ion if not put in list
-        delete new_ion;
-    }
-}
-
 int Ions::readNatoms(const std::string& filename, const bool cell_relative)
 {
     Control& ct(*(Control::instance()));

@@ -210,6 +210,8 @@ public:
      */
     void backupVh();
 
+    void evalIonDensityOnSamplePts(Ions& ions, const std::vector<int> &local_idx, std::vector<RHODTYPE> &sampled_rhoc);
+
 #ifdef HAVE_TRICUBIC
     void readExternalPot(const string filename, const char type);
     void setupVextTricubic();
