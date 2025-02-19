@@ -58,7 +58,7 @@ public:
     template <class T>
     void computeVh(const pb::GridFunc<POTDTYPE>& vhinit, const Ions& ions,
         Rho<T>& rho, Potentials& pot);
-    void setupInitialVh(const POTDTYPE* const);
+    void setupInitialVh(const std::vector<POTDTYPE>&);
     void setupInitialVh(const pb::GridFunc<POTDTYPE>&);
     template <class T>
     void computeVhRho(Rho<T>& rho);

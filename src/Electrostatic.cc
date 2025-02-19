@@ -65,7 +65,7 @@ Electrostatic::~Electrostatic()
     if (grhoc_ != nullptr) delete grhoc_;
 }
 
-void Electrostatic::setupInitialVh(const POTDTYPE* const vh_init)
+void Electrostatic::setupInitialVh(const std::vector<POTDTYPE>& vh_init)
 {
     poisson_solver_->set_vh(vh_init);
 
@@ -153,7 +153,7 @@ void Electrostatic::setupPB(
 
     // initialize vh with last trial solution
     pb::GridFunc<POTDTYPE> gf_vh(*pbGrid_, bc_[0], bc_[1], bc_[2]);
-    gf_vh.assign(pot.vh_rho());
+    gf_vh.assign((pot.vh_rho()).data());
     poisson_solver_->set_vh(gf_vh);
 }
 

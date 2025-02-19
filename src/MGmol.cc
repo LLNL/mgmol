@@ -319,8 +319,6 @@ int MGmol<OrbitalsType>::initial()
     mmpi.barrier();
     if (ct.verbose > 0) current_orbitals_->printChromaticNumber(os_);
 
-    pot.initBackground(*ions_);
-
     // Random initialization of the wavefunctions
     if (ct.restart_info <= 2)
     {
@@ -834,22 +832,8 @@ void MGmol<OrbitalsType>::initNuc(Ions& ions)
 
     Potentials& pot = hamiltonian_->potential();
 
+    // initialize poentials based on ionic positions and their species
     pot.initialize(ions);
-
-    // Check compensating charges
-    double comp_rho = getCharge(pot.rho_comp());
-
-    if (onpe0 && ct.verbose > 1)
-    {
-        os_ << std::setprecision(8) << std::fixed
-            << " Charge of rhoc: " << comp_rho << std::endl;
-    }
-
-#if 1
-    pot.rescaleRhoComp();
-#endif
-
-    pot.addBackgroundToRhoComp();
 
     electrostat_->setupRhoc(pot.rho_comp());
 

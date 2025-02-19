@@ -71,7 +71,10 @@ public:
 
     virtual void set_rhod(pb::GridFunc<RHODTYPE>* /*rhod*/){};
     void set_vh(const pb::GridFunc<POTDTYPE>& vh) { (*vh_) = vh; };
-    void set_vh(const POTDTYPE* const vh) { vh_->assign(vh, 'd'); };
+    void set_vh(const std::vector<POTDTYPE>& vh)
+    {
+        vh_->assign(vh.data(), 'd');
+    };
     void resetVh() { vh_->resetData(); }
     void set_vepsilon(const POTDTYPE* const vepsilon)
     {
