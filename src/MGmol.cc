@@ -1112,7 +1112,6 @@ void MGmol<OrbitalsType>::dumpRestart()
 
         // create restart file
         std::string filename(std::string(ct.out_restart_file));
-        if (ct.out_restart_file_naming_strategy) filename += "0";
         HDFrestart h5restartfile(
             filename, myPEenv, gdim, ct.out_restart_file_type);
 

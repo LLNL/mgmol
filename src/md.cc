@@ -242,9 +242,12 @@ int MGmol<OrbitalsType>::dumpMDrestartFile(OrbitalsType& orbitals, Ions& ions,
     std::string filename(std::string(ct.out_restart_file));
     // add an integer corresponding to attempt number/count
     // to allow several attempts at creating and writing file
-    std::stringstream s;
-    s << count;
-    filename += s.str();
+    if (count > 0)
+    {
+        std::stringstream s;
+        s << count;
+        filename += s.str();
+    }
 
     HDFrestart h5file(filename, myPEenv, gdim, ct.out_restart_file_type);
 
