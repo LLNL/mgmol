@@ -7,15 +7,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-////////////////////////////////////////////////////////////////////////////////
-//
-// MD_IonicStepper.h:
-//
-////////////////////////////////////////////////////////////////////////////////
-// $Id$
-
-#ifndef MD_IONICSTEPPER_H
-#define MD_IONICSTEPPER_H
+#ifndef MGMOL_MD_IONICSTEPPER_H
+#define MGMOL_MD_IONICSTEPPER_H
 
 #include "IonicStepper.h"
 #include <cassert>
@@ -72,8 +65,6 @@ public:
     void updateTau();
     double etol(void) const override;
     int write_hdf5(HDFrestart&) override;
-    int writeForces(HDFrestart& h5f_file);
-    int writeTaum(HDFrestart& h5f_file);
     int init(HDFrestart&) override;
     void printVelocities(std::ostream& os) const;
 

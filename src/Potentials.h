@@ -76,6 +76,11 @@ class Potentials
 
     std::vector<POTDTYPE> dv_;
 
+    /*!
+     * Backpup copy of Hartree potential to save previous state
+     */
+    std::vector<POTDTYPE> vh_rho_backup_;
+
     int itindex_vxc_;
     int itindex_vh_;
 
@@ -99,7 +104,7 @@ class Potentials
         const Vector3D& position, const Species& sp, const std::vector<int> &local_idx, std::vector<RHODTYPE> &sampled_rhoc);
 
 public:
-    Potentials(const bool vh_frozen = false);
+    Potentials();
 
     ~Potentials();
 
@@ -141,14 +146,15 @@ public:
 
     double scf_dvrho(void) const { return scf_dvrho_; }
     double scf_dv(void) const { return scf_dv_; }
-    POTDTYPE* vtot() { return &vtot_[0]; }
-    POTDTYPE* vh_rho() { return &vh_rho_[0]; }
-    RHODTYPE* rho_comp() { return &rho_comp_[0]; }
+    POTDTYPE* vtot() { return vtot_.data(); }
+    POTDTYPE* vh_rho() { return vh_rho_.data(); }
+    RHODTYPE* rho_comp() { return rho_comp_.data(); }
 
     const std::vector<POTDTYPE>& vnuc() const { return v_nuc_; }
-    POTDTYPE* vnuc() { return &v_nuc_[0]; }
-    POTDTYPE* vext() { return &v_ext_[0]; }
-    POTDTYPE* vepsilon() { return &vepsilon_[0]; }
+    POTDTYPE* vnuc() { return v_nuc_.data(); }
+    POTDTYPE* vext() { return v_ext_.data(); }
+    POTDTYPE* vepsilon() { return vepsilon_.data(); }
+    POTDTYPE* vh_rho_backup() { return vh_rho_backup_.data(); }
 
     void axpVcompToVh(const double alpha);
     void axpVcomp(POTDTYPE* v, const double alpha);
@@ -161,8 +167,6 @@ public:
     bool diel() const { return diel_; }
 
     double getChargeInCell() const { return charge_in_cell_; }
-
-    const double getBackgroundCharge() const { return background_charge_; }
 
     /*!
      * initialize total potential as local pseudopotential
@@ -201,7 +205,10 @@ public:
     void initBackground(Ions& ions);
     void addBackgroundToRhoComp();
 
-    void evalIonDensityOnSamplePts(Ions& ions, const std::vector<int> &local_idx, std::vector<RHODTYPE> &sampled_rhoc);
+    /*!
+     * Save current Hartree potential into backup array
+     */
+    void backupVh();
 
 #ifdef HAVE_TRICUBIC
     void readExternalPot(const string filename, const char type);

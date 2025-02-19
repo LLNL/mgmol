@@ -34,13 +34,13 @@ Timer ions_setup_tm("ions::setup");
 const double ang2bohr = 1.8897269;
 // const double rmax = 8.0;
 
-std::map<std::string, short> Ions::map_species_
-    = { { "H", 1 }, { "D", 1 }, { "Li", 3 }, { "Be", 4 }, { "B", 5 },
-          { "C", 6 }, { "N", 7 }, { "O", 8 }, { "F", 9 }, { "Na", 11 },
-          { "Mg", 12 }, { "Al", 13 }, { "Si", 14 }, { "P", 15 }, { "S", 16 },
-          { "Cl", 17 }, { "K", 19 }, { "Ca", 20 }, { "Cr", 24 }, { "Mn", 25 },
-          { "Fe", 26 }, { "Co", 27 }, { "Ni", 28 }, { "Cu", 29 }, { "Zn", 30 },
-          { "Ga", 31 }, { "Ge", 32 }, { "La", 57 }, { "Au", 79 } };
+std::map<std::string, short> Ions::map_species_ = { { "H", 1 }, { "D", 1 },
+    { "Li", 3 }, { "Be", 4 }, { "B", 5 }, { "C", 6 }, { "N", 7 }, { "O", 8 },
+    { "F", 9 }, { "Na", 11 }, { "Mg", 12 }, { "Al", 13 }, { "Si", 14 },
+    { "P", 15 }, { "S", 16 }, { "Cl", 17 }, { "K", 19 }, { "Ca", 20 },
+    { "Cr", 24 }, { "Mn", 25 }, { "Fe", 26 }, { "Co", 27 }, { "Ni", 28 },
+    { "Cu", 29 }, { "Zn", 30 }, { "Ga", 31 }, { "Ge", 32 }, { "Br", 35 },
+    { "La", 57 }, { "Au", 79 } };
 
 int Ions::num_ions_          = -1;
 short Ions::max_num_proj_    = -1;
@@ -700,13 +700,12 @@ void Ions::readLockedAtomNames(HDFrestart& h5f_file)
     if (dim == 0) return;
 
     std::vector<std::string> data;
-    h5f_file.readLockedAtomNames(data);
+    std::string datasetname("/LockedAtomsNames");
+    h5f_file.readAtomicData(datasetname, data);
 
-    for (std::vector<std::string>::const_iterator i   = data.begin(),
-                                                  end = data.end();
-         i != end; ++i)
+    for (auto& i : data)
     {
-        lockAtom(*i);
+        lockAtom(i);
     }
 }
 
@@ -874,13 +873,17 @@ void Ions::initFromRestartFile(HDFrestart& h5_file)
     setupListIonsBoundaries(rmax);
 
     std::vector<int> at_numbers;
-    h5_file.readAtomicNumbers(at_numbers);
+    std::string datasetname("/Atomic_numbers");
+    h5_file.readAtomicData(datasetname, at_numbers);
     std::vector<int> at_indexes;
-    int nidxs = h5_file.readAtomicIDs(at_indexes);
+    std::string datasetname_indexes("/Atomic_IDs");
+    int nidxs = h5_file.readAtomicData(datasetname_indexes, at_indexes);
     std::vector<int> at_nlprojIds;
-    int npids = h5_file.readAtomicNLprojIDs(at_nlprojIds);
+    std::string datasetname_nlprojIds("/AtomicNLproj_IDs");
+    int npids = h5_file.readAtomicData(datasetname_nlprojIds, at_nlprojIds);
     std::vector<std::string> at_names;
-    h5_file.readAtomicNames(at_names);
+    std::string datasetname_names("/Atomic_names");
+    h5_file.readAtomicData(datasetname_names, at_names);
     if (onpe0 && ct.verbose > 2)
     {
         std::cout << "HDF file: at nb=" << at_numbers.size() << std::endl;
@@ -908,8 +911,10 @@ void Ions::initFromRestartFile(HDFrestart& h5_file)
     assert(at_numbers.size() == at_nlprojIds.size());
 
     num_ions_ = at_names.size();
-    mmpi.allreduce(&num_ions_, 1, MPI_SUM);
-
+    if (!h5_file.useHdf5p())
+    {
+        mmpi.allreduce(&num_ions_, 1, MPI_SUM);
+    }
     if (onpe0 && ct.verbose > 0)
     {
         (*MPIdata::sout) << "Ions::setFromRestartFile(), read " << num_ions_
@@ -944,8 +949,20 @@ void Ions::initFromRestartFile(HDFrestart& h5_file)
     }
     readRestartPositions(h5_file);
     readRestartVelocities(h5_file);
-    readRestartRandomStates(h5_file);
+    if (ct.LangevinThermostat()) readRestartRandomStates(h5_file);
     readLockedAtomNames(h5_file);
+
+    // remove atoms from local list if not local
+    for (std::vector<Ion*>::iterator it = local_ions_.begin();
+         it != local_ions_.end();)
+    {
+        double p[3];
+        (*it)->getPosition(p);
+        if (!inLocalIons(p[0], p[1], p[2]))
+            it = local_ions_.erase(it);
+        else
+            ++it;
+    }
 
     // rescale all velocities by factor specified in input
     rescaleVelocities(ct.VelocityScalingFactor());
@@ -967,7 +984,8 @@ void Ions::readRestartPositions(HDFrestart& h5_file)
         (*MPIdata::sout) << "Read ionic positions from hdf5 file" << std::endl;
 
     std::vector<double> data;
-    h5_file.readAtomicPositions(data);
+    std::string datasetname("/Ionic_positions");
+    h5_file.readAtomicData(datasetname, data);
 
     int i = 0;
     for (auto& ion : local_ions_)
@@ -1142,7 +1160,8 @@ void Ions::readRestartVelocities(HDFrestart& h5_file)
                          << std::endl;
 
     std::vector<double> data;
-    h5_file.readAtomicVelocities(data);
+    std::string datasetname("/Ionic_velocities");
+    h5_file.readAtomicData(datasetname, data);
 
     int i = 0;
     for (auto& ion : local_ions_)
@@ -1608,7 +1627,6 @@ int Ions::readAtomsFromXYZ(
     const std::string& filename, const bool cell_relative)
 {
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
-    Control& ct(*(Control::instance()));
 
     // set up list boundaries
     // get radius of projectors
@@ -1698,9 +1716,6 @@ int Ions::readAtomsFromXYZ(
 int Ions::setAtoms(
     const std::vector<double>& crds, const std::vector<short>& spec)
 {
-    MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
-    Control& ct(*(Control::instance()));
-
     const int natoms = crds.size() / 3;
 
     double velocity[3] = { 0., 0., 0. };
@@ -1748,10 +1763,48 @@ int Ions::setAtoms(
 
         addIonToList(species_[isp], aname, &crds[3 * ia], velocity, locked);
     }
-    //    std::cout<<mmpi.mype()<<"...list size = "<<list_ions_.size()<<" local
-    //    ions size = "<<local_ions_.size()<<endl;
 
     return natoms;
+}
+
+void Ions::addIonToList(const Species& sp, const std::string& name,
+    const double crds[3], const double velocity[3], const bool locked)
+{
+    MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
+    Control& ct(*(Control::instance()));
+
+    // create a new Ion
+    Ion* new_ion = new Ion(sp, name, &crds[0], velocity, locked);
+    new_ion->bcast(mmpi.commGlobal());
+
+    if (inListIons(crds[0], crds[1], crds[2]))
+    {
+        list_ions_.push_back(new_ion);
+        if (ct.verbose > 2)
+            (*MPIdata::sout)
+                << "Ion " << name << " at position " << crds[0] << ","
+                << crds[1] << "," << crds[2] << " added to the list... on PE"
+                << mmpi.mypeGlobal() << std::endl;
+
+        // populate local_ions_ list
+        if (inLocalIons(crds[0], crds[1], crds[2]))
+        {
+            (new_ion)->set_here(true);
+            local_ions_.push_back(new_ion);
+            if (onpe0 && ct.verbose > 2)
+                (*MPIdata::sout) << "Ion " << name << " at position " << crds[0]
+                                 << "," << crds[1] << "," << crds[2]
+                                 << " added to the list of local ions... on PE"
+                                 << mmpi.mypeGlobal() << std::endl;
+        }
+        else
+            (new_ion)->set_here(false);
+    }
+    else
+    {
+        // delete Ion if not put in list
+        delete new_ion;
+    }
 }
 
 void Ions::addIonToList(const Species& sp, const std::string& name,
@@ -3209,7 +3262,7 @@ void Ions::initStepperData()
 
         for (short i = 0; i < 3; i++)
         {
-            taum_.push_back((*lion)->old_position(i));
+            taum_.push_back((*lion)->getPreviousPosition(i));
             tau0_.push_back((*lion)->position(i));
             fion_.push_back((*lion)->force(i));
             velocity_.push_back((*lion)->velocity(i));

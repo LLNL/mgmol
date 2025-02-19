@@ -428,7 +428,7 @@ void HDFrestart::addReleaseNumber2File(const char* release)
         // if( onpe0 )
         {
             HDF_FixedLengthString t;
-            strncpy(t.mystring, release, MyHDFStrLength);
+            strncpy(t.mystring, release, MyHDFStrLength - 1);
             herr_t status = H5Awrite(attribute_id, strtype, &t);
             if (status < 0)
             {
@@ -457,7 +457,8 @@ HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
     verbosity_ = 0;
     closed_    = false;
 
-    //(*MPIdata::sout)<<"HDFrestart::HDFrestart(), filename="<<filename<<endl;
+    //(*MPIdata::sout)<<"HDFrestart::HDFrestart(),
+    // filename="<<filename<<std::endl;
     setActivity();
 
     count_[0] = count_[1] = count_[2] = 1;
@@ -749,7 +750,7 @@ int writeListCentersAndRadii(
     }
 
     // if( onpe0 && ct.verbose>2 )
-    //    (*MPIdata::sout)<<"Write attribute "<<attname<<endl;
+    //    (*MPIdata::sout)<<"Write attribute "<<attname<<std::endl;
     herr_t status = H5Awrite(attribute_id, H5T_NATIVE_DOUBLE, &attr_data[0]);
     if (status < 0)
     {
@@ -1874,141 +1875,32 @@ void HDFrestart::printTimers(std::ostream& os)
     create_file_tm_.print(os);
     close_file_tm_.print(os);
 }
-/*
-int HDFrestart::writeRandomState(unsigned short int rand_state[3])
-{
-    if( active_ ){
-        // Create the data space for new datasets
-        hsize_t dims[1]={3};
-        hid_t    dataspace_id = H5Screate_simple(1, dims, NULL);
-        if( dataspace_id<0 ){
-            (*MPIdata::serr)<<"HDFrestart::writeRandomState(): H5Screate_simple
-failed!!!"<<endl; return -1;
-        }
-        // Open dataset
-        hid_t    dataset_id = H5Dcreate2(file_id_, "/Random_state",
-                               H5T_NATIVE_INT,
-                               dataspace_id, H5P_DEFAULT, H5P_DEFAULT,
-H5P_DEFAULT); if( dataset_id<0 ){
-            (*MPIdata::serr)<<"HDFrestart::writeRandomState()::H5Dcreate
-/Random_state failed!!!"<<endl; return -1;
-        }
-        if ( onpe0 ){
-            (*MPIdata::sout)<<"HDFrestart::writeRandomState(): State for random
-numbers generator: "
-                <<rand_state[0]<<","
-                <<rand_state[1]<<","
-                <<rand_state[2]<<endl;
-        }
-        int randst[3]={(int)rand_state[0],
-                       (int)rand_state[1],
-                       (int)rand_state[2]};
-        if( onpe0 )
-        {
-            herr_t status = H5Dwrite(dataset_id, H5T_NATIVE_INT, H5S_ALL,
-H5S_ALL, H5P_DEFAULT, &randst[0]); if( status<0 ){
-                (*MPIdata::serr)<<"HDFrestart::writeRandomState(): H5Dwrite
-randst failed!!!"<<endl; return -1; }else{
-                (*MPIdata::sout)<<"Random randst written into "
-                    <<filename_<<endl;
-            }
-        }
 
-        herr_t status = H5Dclose(dataset_id);
-        if( status<0 ){
-            (*MPIdata::serr)<<"HDFrestart::writeRandomState(): H5Dclose
-failed!!!"<<endl; return -1;
-        }
-        status = H5Sclose(dataspace_id);
-        if( status<0 ){
-            (*MPIdata::serr)<<"HDFrestart::writeRandomState(): H5Sclose
-failed!!!"<<endl; return -1;
-        }
-    }
-    return 0;
-}
-*/
-
-/*
-int HDFrestart::readRandomState(unsigned short* rand_state)
-{
-    std::string function_name("HDFrestart::readRandomState()");
-
-    int randst[3]={0,0,0}; //{(int)_init_rand_state[0],
-(int)_init_rand_state[1], (int)_init_rand_state[2]}; // default values
-
-    if( onpe0 )
-    {
-        // Open the dataset
-        hid_t dataset_id = H5Dopen2(file_id_, "/Random_state",H5P_DEFAULT);
-        if( dataset_id<0 ){
-            if( onpe0 ){
-                (*MPIdata::sout)<<function_name<<" --- H5Dopen() failed for
-/Random_state "<<endl;
-            }
-        }else{
-            herr_t status = H5Dread(dataset_id, H5T_NATIVE_INT, H5S_ALL,
-H5S_ALL, H5P_DEFAULT, &randst[0]); if( status<0 ){
-                (*MPIdata::serr)<<function_name<<" --- H5Dread() failed for
-/Random_state!!!"<<endl; return -1;
-            }
-            else{
-                (*MPIdata::sout)<<"HDFrestart::readRandomState(): State for
-random numbers generator: "
-                    <<randst[0]<<","
-                    <<randst[1]<<","
-                    <<randst[2]<<endl;
-            }
-
-            // close dataset
-            status = H5Dclose(dataset_id);
-            if( status<0 ){
-                (*MPIdata::serr)<<function_name<<" --- H5Dclose
-failed!!!"<<endl; return -1;
-            }
-        }
-    }
-    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    mmpi.bcast(&randst[0], 3);
-
-    for(short i=0;i<3;i++)rand_state[i]=(unsigned short)randst[i];
-
-    return 0;
-}
-*/
-int HDFrestart::readAtomicNumbers(std::vector<int>& data)
+int HDFrestart::readAtomicData(std::string datasetname, std::vector<int>& data)
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 0)
-    {
-        (*MPIdata::sout) << "HDFrestart::readAtomicNumbers()..." << std::endl;
-    }
+        (*MPIdata::sout) << "HDFrestart::readAtomicData()..." << std::endl;
 
     if (active_)
     {
         assert(file_id_ >= 0);
 
-        htri_t exists = H5Lexists(file_id_, "/Atomic_numbers", H5P_DEFAULT);
+        htri_t exists = H5Lexists(file_id_, datasetname.c_str(), H5P_DEFAULT);
         if (!exists) return 0;
 
         // Open the dataset
-        hid_t dataset_id = H5Dopen2(file_id_, "/Atomic_numbers", H5P_DEFAULT);
+        hid_t dataset_id = H5Dopen2(file_id_, datasetname.c_str(), H5P_DEFAULT);
         if (dataset_id < 0)
         {
-            if (onpe0)
-                (*MPIdata::sout)
-                    << "HDFrestart::readAtomicNumbers() --- H5Dopen2 failed!!!"
-                    << std::endl;
+            MGMOL_HDFRESTART_FAIL("H5Dopen2 failed for " + datasetname);
             return -1;
         }
 
         int dim = (int)(H5Dget_storage_size(dataset_id) / sizeof(int));
         if (dim == 0)
         {
-            if (onpe0)
-                (*MPIdata::sout)
-                    << "HDFrestart::readAtomicNumbers() --- No numbers!!!"
-                    << std::endl;
+            MGMOL_HDFRESTART_FAIL("No " + datasetname);
             return -1;
         }
         data.resize(dim);
@@ -2017,174 +1909,52 @@ int HDFrestart::readAtomicNumbers(std::vector<int>& data)
             H5P_DEFAULT, &data[0]);
         if (status < 0)
         {
-            (*MPIdata::sout)
-                << "HDFrestart::readAtomicNumbers() --- H5Dread failed!!!"
-                << std::endl;
+            MGMOL_HDFRESTART_FAIL("H5Dread failed for " + datasetname);
             return -1;
         }
         status = H5Dclose(dataset_id);
         if (status < 0)
         {
-            (*MPIdata::sout)
-                << "HDFrestart::readAtomicNumbers() --- H5Dclose failed!!!"
-                << std::endl;
+            MGMOL_HDFRESTART_FAIL("H5Dclose failed for " + datasetname);
             return -1;
         }
     } // if active_
     // send data to inactive PEs
     if (gather_data_x_) gatherDataXdir(data);
 
-    return 0;
-}
-
-// return -2 means failure
-// return -1 means dataset does not exists, and could be from older MGmol
-// version
-int HDFrestart::readAtomicIDs(std::vector<int>& data)
-{
-    Control& ct = *(Control::instance());
-    if (onpe0 && ct.verbose > 0)
-        (*MPIdata::sout) << "HDFrestart::readAtomicIDs()..." << std::endl;
-
-    if (active_)
+    if (useHdf5p())
     {
-        assert(file_id_ >= 0);
-        htri_t exists = H5Lexists(file_id_, "/Atomic_IDs", H5P_DEFAULT);
-        if (!exists) return -1;
-
-        // Open the dataset
-        hid_t dataset_id = H5Dopen2(file_id_, "/Atomic_IDs", H5P_DEFAULT);
-        if (dataset_id < 0)
-        {
-            if (onpe0)
-                (*MPIdata::sout)
-                    << "HDFrestart::readAtomicIDs() --- H5Dopen2 failed!!!"
-                    << std::endl;
-            return -2;
-        }
-
-        int dim = (int)(H5Dget_storage_size(dataset_id) / sizeof(int));
-        if (dim == 0)
-        {
-            if (onpe0)
-                (*MPIdata::sout)
-                    << "HDFrestart::readAtomicIDs() --- No IDs!!!" << std::endl;
-            return -2;
-        }
-        data.resize(dim);
-
-        herr_t status = H5Dread(dataset_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL,
-            H5P_DEFAULT, &data[0]);
-        if (status < 0)
-        {
-            (*MPIdata::sout)
-                << "HDFrestart::readAtomicIDs() --- H5Dread failed!!!"
-                << std::endl;
-            return -2;
-        }
-        status = H5Dclose(dataset_id);
-        if (status < 0)
-        {
-            (*MPIdata::sout)
-                << "HDFrestart::readAtomicIDs() --- H5Dclose failed!!!"
-                << std::endl;
-            return -2;
-        }
-    }
-    if (gather_data_x_) gatherDataXdir(data);
-
-    return 0;
-}
-
-// return -2 means failure
-// return -1 means dataset does not exists, and could be from older MGmol
-// version
-int HDFrestart::readAtomicNLprojIDs(std::vector<int>& data)
-{
-    Control& ct = *(Control::instance());
-    if (onpe0 && ct.verbose > 0)
-        (*MPIdata::sout) << "HDFrestart::readAtomicNLprojIDs()..." << std::endl;
-
-    if (active_)
-    {
-        assert(file_id_ >= 0);
-
-        htri_t exists = H5Lexists(file_id_, "/AtomicNLproj_IDs", H5P_DEFAULT);
-        if (!exists) return -1;
-
-        hid_t dataset_id = H5Dopen2(file_id_, "/AtomicNLproj_IDs", H5P_DEFAULT);
-        if (dataset_id < 0)
-        {
-            if (onpe0)
-                (*MPIdata::sout) << "HDFrestart::readAtomicNLprojIDs() --- "
-                                    "H5Dopen2 failed!!!"
-                                 << std::endl;
-            return -2;
-        }
-
-        int dim = (int)(H5Dget_storage_size(dataset_id) / sizeof(int));
-        if (dim == 0)
-        {
-            if (onpe0)
-                (*MPIdata::sout)
-                    << "HDFrestart::readAtomicNLprojIDs() --- No IDs!!!"
-                    << std::endl;
-            return -2;
-        }
-        data.resize(dim);
-
-        herr_t status = H5Dread(dataset_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL,
-            H5P_DEFAULT, &data[0]);
-        if (status < 0)
-        {
-            (*MPIdata::sout)
-                << "HDFrestart::readAtomicNLprojIDs() --- H5Dread failed!!!"
-                << std::endl;
-            return -2;
-        }
-        status = H5Dclose(dataset_id);
-        if (status < 0)
-        {
-            (*MPIdata::sout)
-                << "HDFrestart::readAtomicNLprojIDs() --- H5Dclose failed!!!"
-                << std::endl;
-            return -2;
-        }
+        data.erase(std::remove(data.begin(), data.end(), -1), data.end());
     }
 
-    if (gather_data_x_) gatherDataXdir(data);
     return 0;
 }
 
-int HDFrestart::readAtomicPositions(std::vector<double>& data)
+int HDFrestart::readAtomicData(
+    std::string datasetname, std::vector<double>& data)
 {
     if (onpe0)
-        (*MPIdata::sout) << "Read ionic positions from hdf5 file" << std::endl;
+        (*MPIdata::sout) << "Read atomic data from hdf5 file" << std::endl;
 
     if (active_)
     {
         assert(file_id_ >= 0);
 
-        htri_t exists = H5Lexists(file_id_, "/Ionic_positions", H5P_DEFAULT);
+        htri_t exists = H5Lexists(file_id_, datasetname.c_str(), H5P_DEFAULT);
         if (!exists) return -1;
 
         // Open the dataset
-        hid_t dataset_id = H5Dopen2(file_id_, "/Ionic_positions", H5P_DEFAULT);
+        hid_t dataset_id = H5Dopen2(file_id_, datasetname.c_str(), H5P_DEFAULT);
         if (dataset_id < 0)
         {
-            (*MPIdata::sout)
-                << "HDFrestart:readAtomicPositions() --- H5Dopen2 failed!!!"
-                << std::endl;
+            MGMOL_HDFRESTART_FAIL("H5Dopen2 failed for " + datasetname);
             return -2;
         }
 
         int dim = (int)H5Dget_storage_size(dataset_id) / sizeof(double);
         if (dim == 0)
         {
-            if (onpe0)
-                (*MPIdata::sout)
-                    << "HDFrestart:readAtomicPositions() --- No positions!!!"
-                    << std::endl;
+            MGMOL_HDFRESTART_FAIL("readAtomicData() --- No " + datasetname);
             return -2;
         }
         data.resize(dim);
@@ -2193,19 +1963,21 @@ int HDFrestart::readAtomicPositions(std::vector<double>& data)
             H5P_DEFAULT, &data[0]);
         if (status < 0)
         {
-            (*MPIdata::sout)
-                << "HDFrestart:readAtomicPositions() --- H5Dread failed!!!"
-                << std::endl;
+            MGMOL_HDFRESTART_FAIL("H5Dread failed for " + datasetname);
             return -2;
         }
         status = H5Dclose(dataset_id);
         if (status < 0)
         {
-            (*MPIdata::sout) << "H5Dclose failed!!!" << std::endl;
+            MGMOL_HDFRESTART_FAIL("H5Dclose failed for " + datasetname);
             return -2;
         }
     }
 
+    if (useHdf5p())
+    {
+        data.erase(std::remove(data.begin(), data.end(), 1e+32), data.end());
+    }
     if (gather_data_x_) gatherDataXdir(data);
 
     return 0;
@@ -2218,59 +1990,12 @@ int HDFrestart::readOldCenterOnMesh(std::vector<double>& data, int i)
                             "points from hdf5 file"
                          << std::endl;
 
-    if (active_)
-    {
-        assert(file_id_ >= 0);
+    std::stringstream datasetstream;
+    datasetstream << "OldCenterOnMesh_" << i;
 
-        std::stringstream datasetstream;
-        datasetstream << "OldCenterOnMesh_" << i;
+    std::string datasetname = datasetstream.str();
 
-        std::string datasetname = datasetstream.str();
-
-        htri_t exists = H5Lexists(file_id_, datasetname.c_str(), H5P_DEFAULT);
-        if (!exists) return -1;
-
-        // Open the dataset
-        hid_t dataset_id = H5Dopen2(file_id_, datasetname.c_str(), H5P_DEFAULT);
-        if (dataset_id < 0)
-        {
-            (*MPIdata::sout)
-                << "HDFrestart:readOldCenterOnMesh() --- H5Dopen2 failed!!!"
-                << std::endl;
-            return -2;
-        }
-
-        int dim = (int)H5Dget_storage_size(dataset_id) / sizeof(double);
-        if (dim == 0)
-        {
-            if (onpe0)
-                (*MPIdata::sout)
-                    << "HDFrestart:readOldCenterOnMesh() --- No old centers!!!"
-                    << std::endl;
-            return -2;
-        }
-        data.resize(dim);
-
-        herr_t status = H5Dread(dataset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL,
-            H5P_DEFAULT, &data[0]);
-        if (status < 0)
-        {
-            (*MPIdata::sout)
-                << "HDFrestart:readOldCenterOnMesh() --- H5Dread failed!!!"
-                << std::endl;
-            return -2;
-        }
-        status = H5Dclose(dataset_id);
-        if (status < 0)
-        {
-            (*MPIdata::sout) << "H5Dclose failed!!!" << std::endl;
-            return -2;
-        }
-    }
-
-    if (gather_data_x_) gatherDataXdir(data);
-
-    return 0;
+    return readAtomicData(datasetname, data);
 }
 
 int HDFrestart::readOldCenter(std::vector<double>& data, int i)
@@ -2279,256 +2004,16 @@ int HDFrestart::readOldCenter(std::vector<double>& data, int i)
         (*MPIdata::sout) << "Read old localization centers from hdf5 file"
                          << std::endl;
 
-    if (active_)
-    {
-        assert(file_id_ >= 0);
+    std::stringstream datasetstream;
+    datasetstream << "OldCenter_" << i;
 
-        std::stringstream datasetstream;
-        datasetstream << "OldCenter_" << i;
+    std::string datasetname = datasetstream.str();
 
-        std::string datasetname = datasetstream.str();
-
-        htri_t exists = H5Lexists(file_id_, datasetname.c_str(), H5P_DEFAULT);
-        if (!exists) return -1;
-
-        // Open the dataset
-        hid_t dataset_id = H5Dopen2(file_id_, datasetname.c_str(), H5P_DEFAULT);
-        if (dataset_id < 0)
-        {
-            (*MPIdata::sout)
-                << "HDFrestart:readOldCenter() --- H5Dopen2 failed!!!"
-                << std::endl;
-            return -2;
-        }
-
-        int dim = (int)H5Dget_storage_size(dataset_id) / sizeof(double);
-        if (dim == 0)
-        {
-            if (onpe0)
-                (*MPIdata::sout)
-                    << "HDFrestart:readOldCenter() --- No old centers!!!"
-                    << std::endl;
-            return -2;
-        }
-        data.resize(dim);
-
-        herr_t status = H5Dread(dataset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL,
-            H5P_DEFAULT, &data[0]);
-        if (status < 0)
-        {
-            (*MPIdata::sout)
-                << "HDFrestart:readOldCenter() --- H5Dread failed!!!"
-                << std::endl;
-            return -2;
-        }
-        status = H5Dclose(dataset_id);
-        if (status < 0)
-        {
-            (*MPIdata::sout) << "H5Dclose failed!!!" << std::endl;
-            return -2;
-        }
-    }
-
-    if (gather_data_x_) gatherDataXdir(data);
-
-    return 0;
+    return readAtomicData(datasetname, data);
 }
 
-int HDFrestart::readGidsList(std::vector<int>& data)
-{
-    if (onpe0)
-        (*MPIdata::sout) << "Read list of gids from hdf5 file" << std::endl;
-
-    if (active_)
-    {
-        assert(file_id_ >= 0);
-
-        std::string datasetname = "GidsList";
-
-        htri_t exists = H5Lexists(file_id_, datasetname.c_str(), H5P_DEFAULT);
-        if (!exists) return -1;
-
-        // Open the dataset
-        hid_t dataset_id = H5Dopen2(file_id_, datasetname.c_str(), H5P_DEFAULT);
-        if (dataset_id < 0)
-        {
-            (*MPIdata::sout)
-                << "HDFrestart:readGidsList() --- H5Dopen2 failed!!!"
-                << std::endl;
-            return -2;
-        }
-
-        int dim = (int)H5Dget_storage_size(dataset_id) / sizeof(int);
-        if (dim == 0)
-        {
-            if (onpe0)
-                (*MPIdata::sout)
-                    << "HDFrestart:readGidsList() --- No GidsList!!!"
-                    << std::endl;
-            return -2;
-        }
-        data.resize(dim);
-
-        herr_t status = H5Dread(dataset_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL,
-            H5P_DEFAULT, &data[0]);
-        if (status < 0)
-        {
-            (*MPIdata::sout)
-                << "HDFrestart:readGidsList() --- H5Dread failed!!!"
-                << std::endl;
-            return -2;
-        }
-        status = H5Dclose(dataset_id);
-        if (status < 0)
-        {
-            (*MPIdata::sout) << "H5Dclose failed!!!" << std::endl;
-            return -2;
-        }
-    }
-
-    if (gather_data_x_) gatherDataXdir(data);
-
-    return 0;
-}
-
-int HDFrestart::readAtomicVelocities(std::vector<double>& data)
-{
-    if (onpe0)
-        (*MPIdata::sout) << "Read atomic velocities from hdf5 file"
-                         << std::endl;
-
-    if (active_)
-    {
-        assert(file_id_ >= 0);
-
-        htri_t exists = H5Lexists(file_id_, "/Ionic_velocities", H5P_DEFAULT);
-        if (exists)
-        {
-
-            // Open an existing dataset
-            hid_t dataset_id
-                = H5Dopen2(file_id_, "/Ionic_velocities", H5P_DEFAULT);
-            if (dataset_id < 0)
-            {
-                std::cerr << "HDFrestart::readAtomicVelocities(), "
-                             "H5Dopen failed->no velocities read"
-                          << std::endl;
-                data.clear();
-                return -1;
-            }
-            int dim = (int)H5Dget_storage_size(dataset_id) / sizeof(double);
-            data.resize(dim);
-
-            herr_t status = H5Dread(dataset_id, H5T_NATIVE_DOUBLE, H5S_ALL,
-                H5S_ALL, H5P_DEFAULT, &data[0]);
-            if (status < 0)
-            {
-                MGMOL_HDFRESTART_FAIL("H5Dread failed!!!");
-                return -2;
-            }
-
-            status = H5Dclose(dataset_id);
-            if (status < 0)
-            {
-                MGMOL_HDFRESTART_FAIL("H5Dclose failed!!!");
-                return -2;
-            }
-        }
-    }
-
-    if (gather_data_x_) gatherDataXdir(data);
-
-    return 0;
-}
-
-int HDFrestart::readLockedAtomNames(std::vector<std::string>& data)
-{
-    if (onpe0)
-        (*MPIdata::sout) << "HDFrestart::readLockedAtomNames()..." << std::endl;
-
-    std::vector<char> buffer;
-    short name_length = 7; // default, value used before February 2016
-
-    if (active_)
-    {
-        assert(file_id_ >= 0);
-
-        htri_t exists = H5Lexists(file_id_, "/LockedAtomsNames", H5P_DEFAULT);
-        if (!exists) return 0;
-
-        hid_t dataset_id = H5Dopen2(file_id_, "/LockedAtomsNames", H5P_DEFAULT);
-        if (dataset_id < 0)
-        {
-            if (onpe0)
-                (*MPIdata::sout) << "HDFrestart::readLockedAtomNames(), "
-                                    "H5Dopen failed->no locked atoms read"
-                                 << std::endl;
-            return -1;
-        }
-
-        std::string attname("String_Length");
-        htri_t existsA = H5Aexists(dataset_id, attname.c_str());
-        if (existsA)
-        {
-            hid_t attribute_id = H5Aopen_name(dataset_id, attname.c_str());
-            herr_t status = H5Aread(attribute_id, H5T_NATIVE_INT, &name_length);
-            // check validity of data just read
-            if (status < 0)
-            {
-                MGMOL_HDFRESTART_FAIL("H5Aread failed!!!");
-                return -1;
-            }
-        }
-
-        int dim = (int)H5Dget_storage_size(dataset_id) / name_length;
-
-        if (onpe0)
-            (*MPIdata::sout)
-                << "HDFrestart::readLockedAtomNames(), dataset size=" << dim
-                << std::endl;
-
-        if (dim == 0) return 0;
-
-        buffer.resize(dim * name_length);
-
-        // create type for std::strings of length IonData_MaxStrLength
-        hid_t strtype = H5Tcopy(H5T_C_S1);
-        H5Tset_size(strtype, name_length);
-        herr_t status = H5Dread(
-            dataset_id, strtype, H5S_ALL, H5S_ALL, H5P_DEFAULT, &buffer[0]);
-        if (status < 0)
-        {
-            (*MPIdata::sout)
-                << "HDFrestart::readLockedAtomNames(), H5Dread failed!!!"
-                << std::endl;
-            return -1;
-        }
-        status = H5Dclose(dataset_id);
-        if (status < 0)
-        {
-            (*MPIdata::sout) << "H5Dclose failed!!!" << std::endl;
-            return -1;
-        }
-    }
-
-    if (gather_data_x_) gatherDataXdir(buffer);
-
-    data.clear();
-    for (unsigned short i = 0; i < buffer.size(); i += name_length)
-    {
-        std::string t(&buffer[i], name_length);
-        assert(t.size() > 0);
-
-        stripLeadingAndTrailingBlanks(t);
-
-        assert(t.size() > 0);
-        data.push_back(t);
-    }
-
-    return 0;
-}
-
-int HDFrestart::readAtomicNames(std::vector<std::string>& data)
+int HDFrestart::readAtomicData(
+    std::string datasetname, std::vector<std::string>& data)
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 0)
@@ -2541,11 +2026,12 @@ int HDFrestart::readAtomicNames(std::vector<std::string>& data)
     {
         assert(file_id_ >= 0);
 
-        htri_t exists = H5Lexists(file_id_, "/Atomic_names", H5P_DEFAULT);
+        htri_t exists = H5Lexists(file_id_, datasetname.c_str(), H5P_DEFAULT);
         if (exists)
         {
             // Open the dataset
-            hid_t dataset_id = H5Dopen2(file_id_, "/Atomic_names", H5P_DEFAULT);
+            hid_t dataset_id
+                = H5Dopen2(file_id_, datasetname.c_str(), H5P_DEFAULT);
             if (dataset_id < 0)
             {
                 MGMOL_HDFRESTART_FAIL("H5Dopen2 failed!!!");
@@ -2577,7 +2063,7 @@ int HDFrestart::readAtomicNames(std::vector<std::string>& data)
             int dim = (int)H5Dget_storage_size(dataset_id) / name_length;
             if (dim == 0)
             {
-                if (onpe0) MGMOL_HDFRESTART_FAIL("No names!!!");
+                MGMOL_HDFRESTART_FAIL("No names!!!");
                 return -1;
             }
 
@@ -2618,6 +2104,11 @@ int HDFrestart::readAtomicNames(std::vector<std::string>& data)
         data.push_back(t);
     }
 
+    if (useHdf5p())
+    {
+        data.erase(std::remove(data.begin(), data.end(), ""), data.end());
+    }
+
     return 0;
 }
 
@@ -2652,7 +2143,6 @@ int HDFrestart::readRestartRandomStates(std::vector<unsigned short>& data)
                 dim = (int)H5Dget_storage_size(dataset_id)
                       / sizeof(unsigned short);
             }
-
             if (dim > 0)
             {
                 data.resize(dim);
@@ -2672,12 +2162,10 @@ int HDFrestart::readRestartRandomStates(std::vector<unsigned short>& data)
                 }
 
                 if (!data.empty())
-                    if (data[0] != data[0])
+                    if (std::isnan(data[0]))
                     {
                         MGMOL_HDFRESTART_FAIL(
-                            "ERROR: HDFrestart::readRestartRandomStates() "
-                            "--- data[0]="
-                            << data[0]);
+                            "readRestartRandomStates() is NaN");
                         return -2;
                     }
             }

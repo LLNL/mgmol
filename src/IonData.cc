@@ -10,12 +10,11 @@
 #include "IonData.h"
 #include "tools.h"
 #include <string.h>
-using namespace std;
 
 void IonData::unpack(char*& cptr, int*& iptr, double*& dptr)
 {
     // get name
-    string name(cptr, IonData_MaxStrLength);
+    std::string name(cptr, IonData_MaxStrLength);
     stripLeadingAndTrailingBlanks(name);
     ion_name = name;
     cptr += IonData_MaxStrLength;
@@ -52,16 +51,16 @@ void IonData::unpack(char*& cptr, int*& iptr, double*& dptr)
 
 // pack Ions data for communication
 void IonData::packIonData(
-    char* cbuff, int* ibuff, double* dbuff, vector<IonData>& data)
+    char* cbuff, int* ibuff, double* dbuff, std::vector<IonData>& data)
 {
     // pack ion_names buffer
     int idx = 0;
-    for (vector<IonData>::iterator idata = data.begin(); idata != data.end();
-         ++idata)
+    for (std::vector<IonData>::iterator idata = data.begin();
+         idata != data.end(); ++idata)
     {
-        string s = (*idata).ion_name;
+        std::string s = (*idata).ion_name;
         FixedLengthString t;
-        strncpy(t.mystring, s.c_str(), IonData_MaxStrLength);
+        strncpy(t.mystring, s.c_str(), IonData_MaxStrLength - 1);
         memcpy(&cbuff[idx], t.mystring, IonData_MaxStrLength);
         idx += IonData_MaxStrLength;
     }
@@ -69,8 +68,8 @@ void IonData::packIonData(
     // pack integer datatypes
     int* iptr = &ibuff[0];
     // first pack local data size
-    *(iptr++)                       = data.size();
-    vector<IonData>::iterator idata = data.begin();
+    *(iptr++)                            = data.size();
+    std::vector<IonData>::iterator idata = data.begin();
     while (idata != data.end())
     {
         // pack atomic_num

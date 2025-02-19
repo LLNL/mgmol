@@ -378,6 +378,8 @@ public:
     // 10 or larger means CG, otherwise MG V-cycles
     bool MGPoissonSolver() { return (diel_flag_ / 10 == 0); }
 
+    bool LangevinThermostat() { return (thermostat_type == 1); }
+
     //
     // data
     //
