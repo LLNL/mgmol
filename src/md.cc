@@ -54,6 +54,9 @@ void MGmol<OrbitalsType>::moveVnuc(Ions& ions)
 
     Potentials& pot = hamiltonian_->potential();
 
+    // save Hartree potential internally
+    pot.backupVh();
+
     // Update items that change when the ionic coordinates change
     pot.axpVcompToVh(1.);
     initNuc(ions);

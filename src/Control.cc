@@ -31,23 +31,6 @@ float Control::total_spin_     = 0.;
 std::string Control::run_directory_(".");
 bool Control::with_spin_ = false;
 
-static void finishRead(std::ifstream& tfile)
-{
-    // while( tfile.get()!='\n');
-    // string str;
-    // getline(tfile,str);
-    char str[256];
-    tfile.getline(str, 256);
-
-    char cc = (char)tfile.peek();
-    while (cc == ('#') || (cc == '\n') || cc == ' ')
-    {
-        while (tfile.get() != '\n')
-            ;
-        cc = (char)tfile.peek(); // look at next character
-    }
-}
-
 Control::Control()
 {
     assert(comm_global_ != MPI_COMM_NULL);
@@ -1836,6 +1819,14 @@ int Control::checkOptions()
         std::cerr
             << "ERROR: Mehrstellen not compatible with Short-sighted algorithm!"
             << std::endl;
+        return -1;
+    }
+
+    if (DM_solver_ > 0 && lap_type == 0)
+    {
+        std::cerr << "DM_solver_ = " << DM_solver_ << std::endl;
+        std::cerr << "ERROR: Mehrstellen not compatible with MVP inner solvers!"
+                  << std::endl;
         return -1;
     }
 

@@ -32,6 +32,7 @@ USE_LIBROM="On"
 LIBROM_PATH=${BUILD_DIR}/libROM
 git clone https://github.com/LLNL/libROM
 cd libROM
+git checkout 321d18f4d5adfa29f0a3de9be2699fee9732f2bf
 #./scripts/compile.sh -t ./cmake/toolchains/default-toss_4_x86_64_ib-librom-dev.cmake
 ./scripts/compile.sh
 cd ${BUILD_DIR}

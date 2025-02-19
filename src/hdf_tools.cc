@@ -22,6 +22,18 @@
 
 namespace mgmol_tools
 {
+void string2fixedlength(
+    std::vector<std::string>& data, std::vector<FixedLengthString>& tc)
+{
+    tc.clear();
+    for (auto& d : data)
+    {
+        FixedLengthString t;
+        strncpy(t.mystring, d.c_str(), IonData_MaxStrLength - 1);
+        tc.push_back(t);
+    }
+}
+
 void write1d(hid_t file_id, const std::string& datasetname,
     std::vector<int>& data, size_t length)
 {
@@ -235,14 +247,7 @@ void write2d(hid_t file_id, const std::string& datasetname,
 
     // First copy the contents of the vector into a temporary container
     std::vector<FixedLengthString> tc;
-    for (std::vector<std::string>::const_iterator i   = data.begin(),
-                                                  end = data.end();
-         i != end; ++i)
-    {
-        FixedLengthString t;
-        strncpy(t.mystring, i->c_str(), IonData_MaxStrLength);
-        tc.push_back(t);
-    }
+    string2fixedlength(data, tc);
 
     std::string attname("String_Length");
     hsize_t dimsA[1]    = { 1 };
@@ -583,14 +588,7 @@ void parallelWrite2d(hid_t file_id, const std::string& datasetname,
 
     // First copy the contents of the vector into a temporary container
     std::vector<FixedLengthString> tc;
-    for (std::vector<std::string>::const_iterator i   = data.begin(),
-                                                  end = data.end();
-         i != end; ++i)
-    {
-        FixedLengthString t;
-        strncpy(t.mystring, i->c_str(), IonData_MaxStrLength);
-        tc.push_back(t);
-    }
+    string2fixedlength(data, tc);
     status = H5Dwrite(dset_id, strtype, memspace, filespace, plist_id, &tc[0]);
     if (status < 0)
     {

@@ -12,7 +12,6 @@
 #include "tools.h"
 
 #include <string.h>
-using namespace std;
 
 DistributedIonicData::DistributedIonicData(
     const std::vector<std::string>& local_names,
@@ -31,16 +30,16 @@ DistributedIonicData::DistributedIonicData(
 
 int DistributedIonicData::pack(char* cbuff, double* dbuff)
 {
-    vector<double>::iterator itf = data_.begin();
-    double* dptr                 = dbuff;
+    std::vector<double>::iterator itf = data_.begin();
+    double* dptr                      = dbuff;
 
     int idx = 0;
-    for (vector<std::string>::iterator it = ion_names_.begin();
+    for (std::vector<std::string>::iterator it = ion_names_.begin();
          it != ion_names_.end(); ++it)
     {
-        string s(*it);
+        std::string s(*it);
         FixedLengthString t;
-        strncpy(t.mystring, s.c_str(), IonData_MaxStrLength);
+        strncpy(t.mystring, s.c_str(), IonData_MaxStrLength - 1);
         memcpy(&cbuff[idx], t.mystring, IonData_MaxStrLength);
         idx += IonData_MaxStrLength;
 
@@ -58,7 +57,7 @@ void DistributedIonicData::unpack(char*& cptr, double*& dptr, const short ndata)
     for (short i = 0; i < ndata; i++)
     {
         // get name
-        string name(cptr, IonData_MaxStrLength);
+        std::string name(cptr, IonData_MaxStrLength);
         stripLeadingAndTrailingBlanks(name);
         ion_names_.push_back(name);
         cptr += IonData_MaxStrLength;

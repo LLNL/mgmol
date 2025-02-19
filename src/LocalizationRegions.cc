@@ -1726,7 +1726,8 @@ void LocalizationRegions::writeOldCenter(HDFrestart& h5f_file, int i)
 void LocalizationRegions::setupOldCenters(HDFrestart& h5_file)
 {
     vector<int> gids;
-    h5_file.readGidsList(gids);
+    std::string datasetname("GidsList");
+    h5_file.readAtomicData(datasetname, gids);
 
     map<int, int> gids_map;
     for (unsigned int i = 0; i < gids.size(); i++)

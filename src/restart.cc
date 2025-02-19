@@ -117,7 +117,7 @@ int MGmol<OrbitalsType>::write_hdf5(HDFrestart& h5f_file,
         ions.writeAtomicIDs(h5f_file);
         ions.writeAtomicNLprojIDs(h5f_file);
         ions.writePositions(h5f_file);
-        ions.writeRandomStates(h5f_file);
+        if (ct.LangevinThermostat()) ions.writeRandomStates(h5f_file);
         ions.writeVelocities(h5f_file);
         ions.writeForces(h5f_file);
 
@@ -140,6 +140,14 @@ int MGmol<OrbitalsType>::write_hdf5(HDFrestart& h5f_file,
         ierr = h5f_file.write_1func_hdf5(
             pot.vh_rho(), "Hartree", &ll[0], &origin[0]);
         if (ierr < 0) return ierr;
+
+        if (ct.AtomsDynamic() == AtomsDynamicType::MD)
+        {
+            // Write hartree potential before extrapolation
+            ierr = h5f_file.write_1func_hdf5(
+                pot.vh_rho_backup(), "Preceding_Hartree", &ll[0], &origin[0]);
+            if (ierr < 0) return ierr;
+        }
 
         // Write
         if (ct.diel)
