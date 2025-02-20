@@ -42,7 +42,7 @@ for line in lines:
     print(line)
 
 #run MD
-command = "ls -ld snapshot0* | awk '{ print $9 }' | tail -n1"
+command = "ls -ld snapshot* | awk '{ print $9 }' | tail -n1"
 print(command)
 restart_file = subprocess.check_output(command,shell=True)
 restart_file=str(restart_file[:-1],'utf-8')
