@@ -853,6 +853,42 @@ void Ions::writePositions(HDFrestart& h5f_file)
     }
 }
 
+void Ions::writePreviousPositions(HDFrestart& h5f_file)
+{
+    Control& ct(*(Control::instance()));
+
+    if (onpe0 && ct.verbose > 1)
+    {
+        (*MPIdata::sout) << "Ions::writePositions" << std::endl;
+    }
+
+    std::vector<double> data;
+    if (h5f_file.gatherDataX())
+    {
+        Mesh* mymesh             = Mesh::instance();
+        const pb::PEenv& myPEenv = mymesh->peenv();
+        MPI_Comm comm            = myPEenv.comm_x();
+
+        gatherPreviousPositions(data, 0, comm);
+    }
+    else
+    {
+        for (auto& ion : local_ions_)
+        {
+            data.push_back(ion->getPreviousPosition(0));
+            data.push_back(ion->getPreviousPosition(1));
+            data.push_back(ion->getPreviousPosition(2));
+        }
+    }
+
+    hid_t file_id = h5f_file.file_id();
+    if (file_id >= 0)
+    {
+        std::string datasetname("/Ionic_previous_positions");
+        writeData2d(h5f_file, datasetname, data, 3, 1.e32);
+    }
+}
+
 void Ions::initFromRestartFile(HDFrestart& h5_file)
 {
     assert(list_ions_.empty());
@@ -995,14 +1031,39 @@ void Ions::readRestartPositions(HDFrestart& h5_file)
     }
 }
 
+void Ions::readRestartPreviousPositions(HDFrestart& h5_file)
+{
+    Control& ct = *(Control::instance());
+    if (onpe0 && ct.verbose > 0)
+        (*MPIdata::sout) << "Read ionic positions from hdf5 file" << std::endl;
+
+    std::vector<double> data;
+    std::string datasetname("/Ionic_previous_positions");
+    h5_file.readAtomicData(datasetname, data);
+    assert(data.size() == 3 * local_ions_.size());
+
+    int i = 0;
+    for (auto& ion : local_ions_)
+    {
+        ion->setPreviousPosition(data[3 * i], data[3 * i + 1], data[3 * i + 2]);
+        i++;
+    }
+}
+
+void Ions::resetPositionsToPrevious()
+{
+    for (auto& ion : local_ions_)
+    {
+        ion->resetPositionsToPrevious();
+    }
+}
+
 void Ions::writeVelocities(HDFrestart& h5f_file)
 {
     Control& ct(*(Control::instance()));
 
     if (onpe0 && ct.verbose > 1)
-    {
         (*MPIdata::sout) << "Ions::writeVelocities" << std::endl;
-    }
 
     std::vector<double> data;
     if (h5f_file.gatherDataX())
@@ -2523,6 +2584,28 @@ void Ions::gatherPositions(
         local_positions.push_back(position[0]);
         local_positions.push_back(position[1]);
         local_positions.push_back(position[2]);
+    }
+
+    // gather data to PE root
+    std::vector<double> data;
+    mgmol_tools::gatherV(local_positions, data, root, comm);
+
+    int mype = 0;
+    MPI_Comm_rank(comm, &mype);
+    positions.clear();
+    if (mype == root) positions = data;
+}
+
+void Ions::gatherPreviousPositions(
+    std::vector<double>& positions, const int root, const MPI_Comm comm) const
+{
+    std::vector<double> local_positions;
+
+    for (auto& ion : local_ions_)
+    {
+        local_positions.push_back(ion->getPreviousPosition(0));
+        local_positions.push_back(ion->getPreviousPosition(1));
+        local_positions.push_back(ion->getPreviousPosition(2));
     }
 
     // gather data to PE root

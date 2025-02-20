@@ -147,6 +147,8 @@ class Ions
         const MPI_Comm comm) const;
     void gatherPositions(std::vector<double>& positions, const int root,
         const MPI_Comm comm) const;
+    void gatherPreviousPositions(std::vector<double>& positions, const int root,
+        const MPI_Comm comm) const;
     void gatherLockedNames(std::vector<std::string>& names, const int root,
         const MPI_Comm comm) const;
     void gatherIndexes(
@@ -198,6 +200,7 @@ public:
             ion++;
         }
     }
+    void resetPositionsToPrevious();
     void removeMassCenterMotion();
 
     bool hasNLprojectors()
@@ -237,6 +240,7 @@ public:
     double kinetic_E(void) const;
 
     void writePositions(HDFrestart& h5f_file);
+    void writePreviousPositions(HDFrestart& h5f_file);
     void writeVelocities(HDFrestart& h5f_file);
     void writeRandomStates(HDFrestart& h5f_file);
     void writeForces(HDFrestart& h5f_file);
@@ -350,6 +354,7 @@ public:
     void addIonToList(const Species& sp, const std::string& name,
         const double crds[3], const double velocity[3], const bool lock);
 
+    void readRestartPreviousPositions(HDFrestart& h5_file);
     // void checkUnicityLocalIons();
 };
 

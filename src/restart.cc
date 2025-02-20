@@ -102,6 +102,8 @@ int MGmol<OrbitalsType>::write_hdf5(HDFrestart& h5f_file,
         ions.writeAtomicNLprojIDs(h5f_file);
         ions.writePositions(h5f_file);
         if (ct.LangevinThermostat()) ions.writeRandomStates(h5f_file);
+        if (ct.AtomsDynamic() == AtomsDynamicType::MD)
+            ions.writePreviousPositions(h5f_file);
         ions.writeVelocities(h5f_file);
         ions.writeForces(h5f_file);
 

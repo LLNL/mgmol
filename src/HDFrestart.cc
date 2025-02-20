@@ -1440,8 +1440,8 @@ int HDFrestart::read_1func_hdf5(T* vv, const std::string& datasetname)
 }
 
 template <class T>
-int HDFrestart::write_1func_hdf5(
-    T* vv, const std::string& datasetname, double* ll, double* cell_origin)
+int HDFrestart::write_1func_hdf5(const T* const vv,
+    const std::string& datasetname, double* ll, double* cell_origin)
 {
     assert(ll != nullptr);
     assert(cell_origin != nullptr);
@@ -1652,7 +1652,7 @@ int HDFrestart::readData(
 }
 
 template <class T>
-int HDFrestart::writeData(T* data, hid_t space_id, hid_t memspace,
+int HDFrestart::writeData(const T* const data, hid_t space_id, hid_t memspace,
     hid_t dset_id, const short precision)
 {
     if (precision == 1)
@@ -2017,7 +2017,8 @@ int HDFrestart::readAtomicData(
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 0)
-        (*MPIdata::sout) << "HDFrestart::readAtomicNames()..." << std::endl;
+        (*MPIdata::sout) << "HDFrestart::readAtomicData(), dataset = "
+                         << datasetname << std::endl;
 
     std::vector<char> buffer;
     short name_length = 7; // default, value used before February 2016
@@ -2095,10 +2096,9 @@ int HDFrestart::readAtomicData(
     {
         std::string t(&buffer[i], name_length);
         assert(t.size() > 0);
-        // cout<<"name="<<t<<endl;
 
         stripLeadingAndTrailingBlanks(t);
-        // cout<<"stripped name="<<t<<endl;
+        // std::cout<<"stripped name="<<t<<std::endl;
 
         assert(t.size() > 0);
         data.push_back(t);
@@ -2232,13 +2232,13 @@ template int HDFrestart::read_1func_hdf5(float*, const std::string&);
 template int HDFrestart::read_1func_hdf5(double*, const std::string&);
 
 template int HDFrestart::write_1func_hdf5(
-    double*, const std::string&, double* ll, double* origin);
+    const double* const, const std::string&, double* ll, double* origin);
 
 template int HDFrestart::readData(
     double*, hid_t memspace, hid_t dset_id, const short precision);
 template int HDFrestart::readData(
     float*, hid_t memspace, hid_t dset_id, const short precision);
-template int HDFrestart::writeData(double* vv, hid_t filespace, hid_t memspace,
-    hid_t dset_id, const short precision);
-template int HDFrestart::writeData(float* vv, hid_t filespace, hid_t memspace,
-    hid_t dset_id, const short precision);
+template int HDFrestart::writeData(const double* const vv, hid_t filespace,
+    hid_t memspace, hid_t dset_id, const short precision);
+template int HDFrestart::writeData(const float* const vv, hid_t filespace,
+    hid_t memspace, hid_t dset_id, const short precision);
