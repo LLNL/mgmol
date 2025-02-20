@@ -206,6 +206,8 @@ public:
      */
     void backupVh();
 
+    void resetVhRho2Backup() { vh_rho_ = vh_rho_backup_; }
+
 #ifdef HAVE_TRICUBIC
     void readExternalPot(const string filename, const char type);
     void setupVextTricubic();

@@ -703,6 +703,19 @@ void MGmol<OrbitalsType>::loadRestartFile(const std::string filename)
             ierr = proj_matrices_->readWFDM(h5file);
     }
 
+    if (h5file.checkDataExists("Preceding_Hartree"))
+    {
+        ions_->readRestartPreviousPositions(h5file);
+        ions_->resetPositionsToPrevious();
+        ions_->setup();
+
+        Potentials& pot = hamiltonian_->potential();
+        pot.initialize(*ions_);
+        if (onpe0) std::cout << "Reset VhRho to backup..." << std::endl;
+        pot.resetVhRho2Backup();
+        electrostat_->setupRhoc(pot.rho_comp());
+    }
+
     ierr = h5file.close();
     mmpi.allreduce(&ierr, 1, MPI_MIN);
     if (ierr < 0)

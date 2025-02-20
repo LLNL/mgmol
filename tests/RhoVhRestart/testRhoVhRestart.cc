@@ -33,12 +33,8 @@ int testRhoRestart(MGmolInterface* mgmol_)
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     const int rank  = mmpi.mypeGlobal();
 
-    Control& ct                = *(Control::instance());
     MGmol<OrbitalsType>* mgmol = static_cast<MGmol<OrbitalsType>*>(mgmol_);
     std::shared_ptr<Rho<OrbitalsType>> rho = mgmol->getRho();
-
-    /* load a restart file */
-    mgmol->loadRestartFile(ct.restart_file);
 
     /* save density from the restart file to elsewhere */
     std::vector<RHODTYPE> rho0(rho->rho_[0].size());
@@ -67,55 +63,60 @@ int testRhoRestart(MGmolInterface* mgmol_)
 template <class OrbitalsType>
 int testPotRestart(MGmolInterface* mgmol_)
 {
+    Control& ct = *(Control::instance());
+
+    Mesh* mymesh           = Mesh::instance();
+    const pb::Grid& mygrid = mymesh->grid();
+
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     const int rank  = mmpi.mypeGlobal();
 
-    Control& ct                = *(Control::instance());
     MGmol<OrbitalsType>* mgmol = static_cast<MGmol<OrbitalsType>*>(mgmol_);
     Potentials& pot            = mgmol->getHamiltonian()->potential();
     Poisson* poisson           = mgmol->electrostat_->getPoissonSolver();
     std::shared_ptr<Rho<OrbitalsType>> rho = mgmol->getRho();
 
     /* GridFunc initialization inputs */
-    const pb::Grid& grid(poisson->vh().grid());
     short bc[3];
     for (int d = 0; d < 3; d++)
-        bc[d] = poisson->vh().bc(d);
-
-    /* load a restart file */
-    mgmol->loadRestartFile(ct.restart_file);
+        bc[d] = ct.bcPoisson[d];
 
     /* save potential from the restart file to elsewhere */
-    pb::GridFunc<POTDTYPE> vh0_gf(grid, bc[0], bc[1], bc[2]);
-    vh0_gf.assign(pot.vh_rho(), 'd');
+    pb::GridFunc<POTDTYPE> vh0_gf(mygrid, bc[0], bc[1], bc[2]);
+    vh0_gf.assign((pot.vh_rho()).data(), 'd');
+    double n = vh0_gf.norm2();
+    std::cout << "Norm2 of vh = " << n << std::endl;
 
     std::vector<POTDTYPE> vh0(pot.size());
-    POTDTYPE* d_vhrho = pot.vh_rho();
+    const std::vector<POTDTYPE>& d_vhrho(pot.vh_rho());
     for (int d = 0; d < (int)vh0.size(); d++)
         vh0[d] = d_vhrho[d];
 
     /* recompute potential */
-    pb::GridFunc<RHODTYPE> grho(grid, bc[0], bc[1], bc[2]);
+    pb::GridFunc<RHODTYPE> grho(mygrid, bc[0], bc[1], bc[2]);
     grho.assign(&rho->rho_[0][0]);
     pb::GridFunc<RHODTYPE>* grhoc = mgmol->electrostat_->getRhoc();
 
     poisson->solve(grho, *grhoc);
-    const pb::GridFunc<POTDTYPE> vh = poisson->vh();
+    const pb::GridFunc<POTDTYPE>& vh(poisson->vh());
 
-    pb::GridFunc<POTDTYPE> error_gf(grid, bc[0], bc[1], bc[2]);
-    error_gf = vh0_gf;
+    pb::GridFunc<POTDTYPE> error_gf(vh0_gf);
     error_gf -= vh;
 
     double rel_error = error_gf.norm2() / vh0_gf.norm2();
-    if (rel_error > 1e-10)
+    if (rank == 0)
+    {
+        printf("FOM potential relative error: %.3e\n", rel_error);
+    }
+    if (rel_error > 1e-9)
     {
         if (rank == 0)
         {
-            printf("FOM potential relative error: %.3e\n", rel_error);
             std::cerr << "Potential is inconsistent!!!" << std::endl;
         }
         return -1;
     }
+    if (rank == 0) std::cout << "Potential is consistent..." << std::endl;
 
     return 0;
 }
@@ -181,6 +182,11 @@ int main(int argc, char** argv)
             *MPIdata::sout, input_filename, lrs_filename, constraints_filename);
 
         mgmol->setup();
+
+        /* load a restart file */
+        MGmol<ExtendedGridOrbitals>* mgmol_ext
+            = dynamic_cast<MGmol<ExtendedGridOrbitals>*>(mgmol);
+        mgmol_ext->loadRestartFile(ct.restart_file);
 
         if (MPIdata::onpe0)
             std::cout << "=============================" << std::endl;

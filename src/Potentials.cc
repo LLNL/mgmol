@@ -939,6 +939,12 @@ int Potentials::read(HDFrestart& h5f_file)
         h5f_file.read_1func_hdf5(vepsilon_.data(), "VDielectric");
     }
 
+    std::string datasetname("Preceding_Hartree");
+    if (h5f_file.checkDataExists(datasetname))
+    {
+        h5f_file.read_1func_hdf5(vh_rho_backup_.data(), datasetname);
+    }
+
     return 0;
 }
 
