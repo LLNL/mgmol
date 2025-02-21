@@ -20,16 +20,17 @@ cp $maindir/install_quartz/bin/$exe .
 
 set datadir = $maindir/examples/PinnedH2O
 
-set cfg_offline = mgmol_offline.cfg
-cp $datadir/$cfg_offline .
+set bondlength_num_increments = 2
+set bondangle_num_increments = 2
+set num_basis = 34
 
-cp $datadir/coords.in .
+set cfg_rom = mgmol_rom_3DOF_${bondlength_num_increments}_${bondangle_num_increments}_${num_basis}.cfg
 
 ln -s -f $maindir/potentials/pseudo.O_ONCV_PBE_SG15 .
 ln -s -f $maindir/potentials/pseudo.H_ONCV_PBE_SG15 .
 
 source $maindir/scripts/modules.quartz
 
-srun -n $ncpus $exe -c $cfg_offline -i coords.in > offline_PinnedH2O.out
+srun -n $ncpus $exe -c $cfg_rom -i coords.in > PinnedH2O_rom_3DOF_${bondlength_num_increments}_${bondangle_num_increments}_${num_basis}.out
 
 date
