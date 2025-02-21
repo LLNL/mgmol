@@ -362,6 +362,7 @@ public:
     int save_orbital_snapshot(std::string file_path, OrbitalsType& orbitals);
     void project_orbital(std::string file_path, int rdim, OrbitalsType& orbitals);
 #endif
+    void updateDMandEnergy(OrbitalsType& orbitals, Ions ions, double& eks);
 };
 // Instantiate static variables here to avoid clang warnings
 template <class OrbitalsType>

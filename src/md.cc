@@ -35,6 +35,11 @@
 #include "mgmol_Signal.h"
 #include "tools.h"
 
+#ifdef MGMOL_HAS_LIBROM
+#include "rom_workflows.h"
+#include "PinnedH2O.h"
+#endif
+
 #include <sstream>
 #include <string>
 #include <vector>
@@ -400,7 +405,14 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
     if (ct.restart_info < 3)
     {
         double eks = 0.;
-        quench(**orbitals, ions, ct.max_electronic_steps, 20, eks);
+        if (ct.getROMOptions().rom_stage == ROMStage::TEST_ORBITAL)
+        {
+            updateDMandEnergy(**orbitals, ions, eks);
+        }
+        else
+        {
+            quench(**orbitals, ions, ct.max_electronic_steps, 20, eks);
+        }
     }
 
     ct.max_changes_pot = 0;
@@ -431,7 +443,14 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
         bool last_move_is_small = true;
         do
         {
-            retval = quench(**orbitals, ions, ct.max_electronic_steps, 0, eks);
+            if (ct.getROMOptions().rom_stage == ROMStage::TEST_ORBITAL)
+            {
+                updateDMandEnergy(**orbitals, ions, eks);
+            }
+            else
+            {
+                retval = quench(**orbitals, ions, ct.max_electronic_steps, 0, eks);
+            }
 
             // update localization regions
             if (ct.adaptiveLRs())
@@ -495,7 +514,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
         force(**orbitals, ions);
 
 #ifdef MGMOL_HAS_LIBROM
-        if (ct.getROMOptions().num_orbbasis > 0)
+        if (ct.getROMOptions().rom_stage == ROMStage::TEST_ORBITAL)
         {
             if (onpe0)
             {

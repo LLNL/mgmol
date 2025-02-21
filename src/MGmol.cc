@@ -1443,6 +1443,33 @@ void MGmol<OrbitalsType>::getAtomicNumbers(std::vector<short>& an)
 }
 
 template <class OrbitalsType>
+void MGmol<OrbitalsType>::updateDMandEnergy(OrbitalsType& orbitals, Ions ions, double& eks)
+{
+    // initialize electronic density
+    rho_->update(orbitals);
+
+    // initialize potential
+    update_pot(ions);
+
+    // initialize projected matrices
+    updateHmatrix(orbitals, ions);
+    proj_matrices_->updateThetaAndHB();
+
+    // compute DM
+    std::shared_ptr<DMStrategy<OrbitalsType>> dm_strategy(
+        DMStrategyFactory<OrbitalsType,
+            dist_matrix::DistMatrix<double>>::create(comm_, os_, ions,
+            rho_.get(), energy_.get(), electrostat_.get(), this,
+            proj_matrices_.get(), &orbitals));
+
+    dm_strategy->update(orbitals);
+
+    // evaluate energy and forces
+    double ts = 0.;
+    eks = energy_->evaluateTotal(ts, proj_matrices_.get(), orbitals, 2, os_);
+}
+
+template <class OrbitalsType>
 double MGmol<OrbitalsType>::evaluateEnergyAndForces(
     const std::vector<double>& tau, const std::vector<short>& atnumbers,
     std::vector<double>& forces)

@@ -22,6 +22,8 @@ enum class ROMStage
     ONLINE,
     RESTORE,    // TODO(kevin): what stage is this?
     BUILD,
+    ONLINE_MVP,
+    TEST_ORBITAL,
     ONLINE_POISSON,
     TEST_POISSON,
     TEST_RHO,
