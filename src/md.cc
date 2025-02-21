@@ -35,9 +35,9 @@
 #include "mgmol_Signal.h"
 #include "tools.h"
 
+#include "PinnedH2O.h"
 #ifdef MGMOL_HAS_LIBROM
 #include "rom_workflows.h"
-#include "PinnedH2O.h"
 #endif
 
 #include <sstream>
@@ -405,8 +405,28 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
     if (ct.restart_info < 3)
     {
         double eks = 0.;
-        if (ct.getROMOptions().rom_stage == ROMStage::TEST_ORBITAL)
+        if (ct.getROMOptions().rom_stage == ROMStage::ONLINE_MVP)
         {
+            orbitals.set(ct.getROMOptions().basis_file, ct.numst); 
+            orbitals.orthonormalizeLoewdin();
+            orbitals.setDataWithGhosts(true);
+            orbitals.setIterativeIndex(10);
+
+            std::shared_ptr<ProjectedMatricesInterface> projmatrices
+                = getProjectedMatrices();
+            projmatrices->setDMuniform(ct.getNelSpin(), 0);
+            projmatrices->printDM(os_);
+
+            std::vector<double> positions;
+            getAtomicPositions(positions);
+            std::vector<short> anumbers;
+            getAtomicNumbers(anumbers);
+            PinnedH2O H2O_molecule;
+            H2O_molecule.rotate(positions, anumbers);
+
+            ions.setPositions(positions, atnumbers);
+            moveVnuc(ions);
+
             updateDMandEnergy(**orbitals, ions, eks);
         }
         else
@@ -441,54 +461,66 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
         int retval              = 0;
         bool small_move         = true;
         bool last_move_is_small = true;
-        do
+
+        // variables in ROM MVP solver for Pinned H2O
+        std::vector<double> positions;
+        std::vector<short> anumbers;
+        std::vector<double> forces;
+        PinnedH2O H2O_molecule;
+
+        if (ct.getROMOptions().rom_stage == ROMStage::ONLINE_MVP)
         {
-            if (ct.getROMOptions().rom_stage == ROMStage::TEST_ORBITAL)
-            {
-                updateDMandEnergy(**orbitals, ions, eks);
-            }
-            else
+            getAtomicPositions(positions);
+            getAtomicNumbers(anumbers);
+            H2O_molecule.rotate(positions, anumbers);
+            ions.setPositions(positions, atnumbers);
+            moveVnuc(ions);
+            updateDMandEnergy(**orbitals, ions, eks);
+        }
+        else
+        {
+            do
             {
                 retval = quench(**orbitals, ions, ct.max_electronic_steps, 0, eks);
-            }
 
-            // update localization regions
-            if (ct.adaptiveLRs())
-            {
-                assert(lrs_);
-                adaptLR(spreadf_.get(), nullptr);
-
-                last_move_is_small = lrs_->moveIsSmall();
-
-                // update cluster for load balancing
-                if (ct.load_balancing_alpha > 0.0
-                    && mdstep % ct.load_balancing_modulo == 0)
+                // update localization regions
+                if (ct.adaptiveLRs())
                 {
-                    local_cluster_->computeClusters(
-                        ct.load_balancing_max_iterations);
+                    assert(lrs_);
+                    adaptLR(spreadf_.get(), nullptr);
+
+                    last_move_is_small = lrs_->moveIsSmall();
+
+                    // update cluster for load balancing
+                    if (ct.load_balancing_alpha > 0.0
+                        && mdstep % ct.load_balancing_modulo == 0)
+                    {
+                        local_cluster_->computeClusters(
+                            ct.load_balancing_max_iterations);
+                    }
+
+                    // printWithTimeStamp("quench done...",cout);
+
+                    // do extra cycles if centers resulting from quench
+                    // are "significantly" different from initial centers
+                    if (!last_move_is_small)
+                    {
+                        printWithTimeStamp(
+                            "WARNING: large move->extra inner cycle...", std::cout);
+                        small_move = false;
+                        move_orbitals(orbitals);
+
+                        (*orbitals)->computeGramAndInvS();
+                        dm_strategy_->update(**orbitals);
+
+                        // reduce number of steps to keep total run time about the
+                        // same
+                        ct.num_MD_steps--;
+                        // printWithTimeStamp("extra work done...",cout);
+                    }
                 }
-
-                // printWithTimeStamp("quench done...",cout);
-
-                // do extra cycles if centers resulting from quench
-                // are "significantly" different from initial centers
-                if (!last_move_is_small)
-                {
-                    printWithTimeStamp(
-                        "WARNING: large move->extra inner cycle...", std::cout);
-                    small_move = false;
-                    move_orbitals(orbitals);
-
-                    (*orbitals)->computeGramAndInvS();
-                    dm_strategy_->update(**orbitals);
-
-                    // reduce number of steps to keep total run time about the
-                    // same
-                    ct.num_MD_steps--;
-                    // printWithTimeStamp("extra work done...",cout);
-                }
-            }
-        } while (!last_move_is_small);
+            } while (!last_move_is_small);
+        }
 
         if (retval < 0)
         {
@@ -512,6 +544,13 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
 
         // Compute forces
         force(**orbitals, ions);
+
+        if (ct.getROMOptions().rom_stage == ROMStage::ONLINE_MVP)
+        {
+            ions.getForces(forces);
+            H2O_molecule.transpose_rotate(positions, forces);
+            // TODO: set forces
+        }
 
 #ifdef MGMOL_HAS_LIBROM
         if (ct.getROMOptions().rom_stage == ROMStage::TEST_ORBITAL)
