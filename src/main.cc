@@ -45,7 +45,7 @@ int main(int argc, char** argv)
     if (mpirc != MPI_SUCCESS)
     {
         std::cerr << "MPI Initialization failed!!!" << std::endl;
-        MPI_Abort(MPI_COMM_WORLD, 0);
+        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
 
     MPI_Comm comm = MPI_COMM_WORLD;

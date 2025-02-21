@@ -495,7 +495,7 @@ void Control::sync(void)
         if (mpirc != MPI_SUCCESS)
         {
             (*MPIdata::sout) << "MPI Bcast of Control failed!!!" << std::endl;
-            MPI_Abort(comm_global_, 2);
+            MPI_Abort(comm_global_, EXIT_FAILURE);
         }
     };
 
@@ -1152,7 +1152,7 @@ void Control::setTolEigenvalueGram(const float tol)
                          << threshold_eigenvalue_gram_ << std::endl;
 }
 
-void Control::global_exit(int i) { MPI_Abort(comm_global_, i); }
+void Control::global_exit() { MPI_Abort(comm_global_, EXIT_FAILURE); }
 
 void Control::setSpecies(Potentials& pot)
 {
@@ -1342,7 +1342,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
             (*MPIdata::serr)
                 << "ERROR in Control::setOptions: Invalid restart dump type"
                 << std::endl;
-            MPI_Abort(comm_global_, 2);
+            MPI_Abort(comm_global_, EXIT_FAILURE);
         }
 
         (*MPIdata::sout) << "Output restart file: " << out_restart_file
@@ -1549,14 +1549,14 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
             else
             {
                 std::cerr << "ERROR: Spread Penalty needs a type" << std::endl;
-                MPI_Abort(comm_global_, 0);
+                MPI_Abort(comm_global_, EXIT_FAILURE);
             }
 
             if (spread_penalty_target_ <= 0.)
             {
                 (*MPIdata::sout) << "Invalid value for Spread Penalty target: "
                                  << spread_penalty_target_ << std::endl;
-                MPI_Abort(comm_global_, 0);
+                MPI_Abort(comm_global_, EXIT_FAILURE);
             }
         }
 
@@ -1599,7 +1599,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
                 {
                     (*MPIdata::sout) << "Invalid value for Thermostat.type: "
                                      << thermostat_type << std::endl;
-                    MPI_Abort(comm_global_, 0);
+                    MPI_Abort(comm_global_, EXIT_FAILURE);
                 }
 
                 tkel = vm["Thermostat.temperature"].as<float>();
@@ -1608,7 +1608,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
                     (*MPIdata::sout)
                         << "Invalid value for Thermostat.temperature: " << tkel
                         << std::endl;
-                    MPI_Abort(comm_global_, 0);
+                    MPI_Abort(comm_global_, EXIT_FAILURE);
                 }
                 thtime = vm["Thermostat.relax_time"].as<float>();
                 if (thtime < 0.)
@@ -1616,7 +1616,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
                     (*MPIdata::sout)
                         << "Invalid value for Thermostat.relax_time: " << thtime
                         << std::endl;
-                    MPI_Abort(comm_global_, 0);
+                    MPI_Abort(comm_global_, EXIT_FAILURE);
                 }
 
                 if (str.compare("SCALING") == 0)
@@ -1627,7 +1627,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
                         (*MPIdata::sout)
                             << "Invalid value for Thermostat.width: " << thwidth
                             << std::endl;
-                        MPI_Abort(comm_global_, 0);
+                        MPI_Abort(comm_global_, EXIT_FAILURE);
                     }
                 }
             }

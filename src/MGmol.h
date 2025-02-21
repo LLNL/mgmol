@@ -221,7 +221,6 @@ public:
     void initNuc(Ions& ions);
     void initKBR();
 
-    void global_exit(int i);
     void printEigAndOcc();
 
     int readCoordinates(std::ifstream* tfile, const bool cell_relative);

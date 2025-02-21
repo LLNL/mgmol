@@ -236,9 +236,9 @@ void MDfiles::printDataInFiles(vector<string>& ions_names, vector<double>& tau,
             ofstream tfile(coord_dir_name.data(), ios::out);
             if (!tfile.is_open())
             {
-                cerr << " Unable to open file " << coord_dir_name.data()
-                     << endl;
-                ct.global_exit(0);
+                std::cerr << " Unable to open file " << coord_dir_name.data()
+                          << endl;
+                ct.global_exit();
             }
             // cout<<"recvbuf.size()="<<recvbuf.size()<<endl;
             // tfile<<"recvbuf.size()="<<recvbuf.size()<<endl;
@@ -279,8 +279,9 @@ void MDfiles::printDataInFiles(vector<string>& ions_names, vector<double>& tau,
             ofstream tfile2(wf_dir_name.data(), ios::out);
             if (!tfile2.is_open())
             {
-                cerr << " Unable to open file " << wf_dir_name.data() << endl;
-                ct.global_exit(0);
+                std::cerr << " Unable to open file " << wf_dir_name.data()
+                          << std::endl;
+                ct.global_exit();
             }
             const int na = recvbufspreads.size();
             for (int i = 0; i < na; i++)

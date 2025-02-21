@@ -191,7 +191,7 @@ BlacsContext::BlacsContext(
     {
         std::cerr << " BlacsContext::BlacsContext: type = " << type
                   << " is an incorrect parameter" << std::endl;
-        MPI_Abort(comm_global, 0);
+        MPI_Abort(comm_global, EXIT_FAILURE);
     }
 
     size_ = nprow_ * npcol_;
@@ -222,7 +222,7 @@ BlacsContext::BlacsContext(
     {
         std::cerr << " nprocs_=" << nprocs_ << std::endl;
         std::cerr << " BlacsContext nprow*npcol > nprocs_" << std::endl;
-        MPI_Abort(comm_global, 0);
+        MPI_Abort(comm_global, EXIT_FAILURE);
     }
 
     ictxt_ = Csys2blacs_handle(comm_global_);
@@ -252,7 +252,7 @@ BlacsContext::BlacsContext(
     {
         std::cerr << " BlacsContext::BlacsContext: invalid parameters"
                   << " in " << __FILE__ << ":" << __LINE__ << std::endl;
-        MPI_Abort(comm_global, 0);
+        MPI_Abort(comm_global, EXIT_FAILURE);
     }
     int* pmap = new int[nprow * npcol];
     // build pmap
@@ -296,7 +296,7 @@ BlacsContext::BlacsContext(BlacsContext& bc, const int irow, const int icol,
     {
         std::cerr << " BlacsContext::BlacsContext: invalid parameters"
                   << std::endl;
-        MPI_Abort(comm_global_, 0);
+        MPI_Abort(comm_global_, EXIT_FAILURE);
     }
     int* pmap = new int[nprow * npcol];
     // build pmap
@@ -350,7 +350,7 @@ BlacsContext::BlacsContext(const BlacsContext& bc, const char type)
         std::cerr
             << " BlacsContext::BlacsContext: row/col incorrect parameter: "
             << type << std::endl;
-        MPI_Abort(comm_global_, 0);
+        MPI_Abort(comm_global_, EXIT_FAILURE);
     }
 
     ictxt_ = Csys2blacs_handle(comm_global_);

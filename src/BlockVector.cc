@@ -209,7 +209,7 @@ void BlockVector<ScalarType, MemorySpaceType>::allocate_storage()
         std::cerr << "ERROR BlockVector: trying to use allocation "
                   << size_storage_ << " bigger than initialy preallocated "
                   << allocated_size_storage_ << "!!!" << std::endl;
-        ct.global_exit(0);
+        ct.global_exit();
     }
     storage_ = class_storage_[my_allocation_];
     assert(class_storage_.size() > 0);

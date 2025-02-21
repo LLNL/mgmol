@@ -46,7 +46,7 @@ int NonOrthoDMStrategy<OrbitalsType>::update(OrbitalsType& orbitals)
     {
         std::cerr << "NonOrthoDMStrategy, Invalid mixing value: " << mix_
                   << std::endl;
-        MPI_Abort(mmpi.commSameSpin(), 0);
+        MPI_Abort(mmpi.commSameSpin(), EXIT_FAILURE);
     }
 
     if (mmpi.PE0() && ct.verbose > 2)
