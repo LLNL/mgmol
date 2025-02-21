@@ -354,7 +354,7 @@ double ProjectedMatricesSparse::dotProductSimple(
               << std::endl;
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    MPI_Abort(mmpi.commSameSpin(), 0);
+    MPI_Abort(mmpi.commSameSpin(), EXIT_FAILURE);
 
     return -1.;
 }

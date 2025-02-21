@@ -690,11 +690,10 @@ void MGmol<OrbitalsType>::loadRestartFile(const std::string filename)
     if (ierr < 0)
     {
         if (onpe0)
-            (*MPIdata::serr)
-                << "loadRestartFile: failed to read the restart file."
-                << std::endl;
+            std::cerr << "loadRestartFile: failed to read the restart file."
+                      << std::endl;
 
-        global_exit(0);
+        mmpi.abort();
     }
     if (!ct.fullyOccupied())
     {

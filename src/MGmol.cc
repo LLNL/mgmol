@@ -729,12 +729,6 @@ void MGmol<OrbitalsType>::write_header()
 }
 
 template <class OrbitalsType>
-void MGmol<OrbitalsType>::global_exit(int i)
-{
-    MPI_Abort(comm_, i);
-}
-
-template <class OrbitalsType>
 void MGmol<OrbitalsType>::check_anisotropy()
 {
     Mesh* mymesh           = Mesh::instance();
@@ -748,7 +742,8 @@ void MGmol<OrbitalsType>::check_anisotropy()
                              << ", hmin=" << mygrid.hmin() << std::endl;
         (*MPIdata::serr) << "init: Anisotropy too large: "
                          << mygrid.anisotropy() << std::endl;
-        global_exit(2);
+        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+        mmpi.abort();
     }
 }
 
@@ -1046,7 +1041,8 @@ void MGmol<OrbitalsType>::setup()
     total_tm_.start();
     setup_tm_.start();
 
-    Control& ct = *(Control::instance());
+    Control& ct     = *(Control::instance());
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
     if (ct.verbose > 0)
         printWithTimeStamp("MGmol<OrbitalsType>::setup()...", os_);
@@ -1064,7 +1060,8 @@ void MGmol<OrbitalsType>::setup()
 #else
     int ierr = initial<MemorySpace::Host>();
 #endif
-    if (ierr < 0) global_exit(0);
+
+    if (ierr < 0) mmpi.abort();
 
     // Write header to stdout
     write_header();

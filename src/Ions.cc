@@ -1961,7 +1961,6 @@ int Ions::read1atom(std::ifstream* tfile, const bool cell_relative)
     double velocity[3] = { 0., 0., 0. };
 
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
-    Control& ct(*(Control::instance()));
 
     short movable = 0;
     std::string query;
@@ -2005,7 +2004,7 @@ int Ions::read1atom(std::ifstream* tfile, const bool cell_relative)
         {
             std::cerr << "ERROR: Invalid name read in input file: " << name_read
                       << std::endl;
-            ct.global_exit(2);
+            mmpi.abort();
         }
         short dummy;
         ss >> dummy; // not used anymore (was species index)

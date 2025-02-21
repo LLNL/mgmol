@@ -35,7 +35,7 @@ public:
     virtual void applyWithPot(GridFunc<T>&, const double* const, T*)
     {
         std::cerr << "ERROR: Lap::applyWithPot() not implemented" << std::endl;
-        MPI_Abort(MPI_COMM_WORLD, 0);
+        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
 
     std::string name() const { return name_; }

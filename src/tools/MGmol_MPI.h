@@ -237,7 +237,7 @@ public:
     void split_allreduce_sums_int(int*, const int);
     void split_allreduce_sums_short(short int*, const int);
 
-    void abort() const { MPI_Abort(comm_global_, 0); }
+    void abort() const { MPI_Abort(comm_global_, EXIT_FAILURE); }
 };
 
 #endif

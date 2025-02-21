@@ -185,8 +185,8 @@ double Potentials::update(const std::vector<std::vector<RHODTYPE>>& rho)
         = MPI_Allreduce(&dvdot, &sum, 1, MPI_DOUBLE, MPI_SUM, myPEenv.comm());
     if (rc != MPI_SUCCESS)
     {
-        std::cout << "MPI_Allreduce double sum failed!!!" << std::endl;
-        MPI_Abort(myPEenv.comm(), 2);
+        std::cerr << "MPI_Allreduce double sum failed!!!" << std::endl;
+        MPI_Abort(myPEenv.comm(), EXIT_FAILURE);
     }
     dvdot = sum;
 
@@ -253,8 +253,8 @@ double Potentials::delta_v(const std::vector<std::vector<RHODTYPE>>& rho)
         = MPI_Allreduce(&dvdot, &sum, 1, MPI_DOUBLE, MPI_SUM, myPEenv.comm());
     if (rc != MPI_SUCCESS)
     {
-        std::cout << "MPI_Allreduce double sum failed!!!" << std::endl;
-        MPI_Abort(myPEenv.comm(), 2);
+        std::cerr << "MPI_Allreduce double sum failed!!!" << std::endl;
+        MPI_Abort(myPEenv.comm(), EXIT_FAILURE);
     }
     dvdot = sum;
 

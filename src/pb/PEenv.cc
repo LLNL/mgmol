@@ -197,7 +197,7 @@ PEenv::~PEenv()
         if (mpirc != MPI_SUCCESS)
         {
             std::cerr << "MPI_Comm_free failed!" << std::endl;
-            MPI_Abort(comm_, 2);
+            MPI_Abort(comm_, EXIT_FAILURE);
         }
     }
     if (cart_comm_ != MPI_COMM_NULL) MPI_Comm_free(&cart_comm_);
@@ -277,7 +277,7 @@ void PEenv::task2xyz()
         if (rc != MPI_SUCCESS)
         {
             std::cerr << " error in MPI_Cart_coords()!!!" << std::endl;
-            MPI_Abort(comm_, 1);
+            MPI_Abort(comm_, EXIT_FAILURE);
         }
 #else
         mytask_dir_[2] = mytask_ % n_mpi_tasks_dir_[2];
@@ -650,7 +650,7 @@ void PEenv::split_comm(const int nx, const int ny, const int nz, const int bias)
         {
             std::cerr << "MPI_Comm_split failed!, my color_=" << color_
                       << std::endl;
-            MPI_Abort(comm_, 0);
+            MPI_Abort(comm_, EXIT_FAILURE);
         }
         MPI_Comm_size(comm_active_, &n_mpi_tasks_);
 #ifndef NDEBUG
@@ -696,7 +696,7 @@ void PEenv::printPEnames(std::ostream& os) const
                 {
                     std::cerr << "PEenv::printPEnames, MPI_Recv() failed!!!"
                               << std::endl;
-                    MPI_Abort(comm_, 0);
+                    MPI_Abort(comm_, EXIT_FAILURE);
                 }
             }
             else if (ip == mytask_)
@@ -708,7 +708,7 @@ void PEenv::printPEnames(std::ostream& os) const
                 {
                     std::cerr << "PEenv::printPEnames, MPI_Send() failed!!!"
                               << std::endl;
-                    MPI_Abort(comm_, 0);
+                    MPI_Abort(comm_, EXIT_FAILURE);
                 }
             }
             if (mytask_ == 0)
@@ -717,7 +717,7 @@ void PEenv::printPEnames(std::ostream& os) const
     if (mytask_ == 0) os << std::endl;
 }
 
-void PEenv::globalExit() const { MPI_Abort(comm_, 2); }
+void PEenv::globalExit() const { MPI_Abort(comm_, EXIT_FAILURE); }
 
 void PEenv::bcast(int* val, const int n) const
 {

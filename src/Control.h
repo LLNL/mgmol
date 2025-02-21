@@ -346,7 +346,7 @@ public:
         return pair_mlwf_distance_threshold_;
     }
 
-    void global_exit(int i);
+    void global_exit();
 
     bool Mehrstellen() const { return (lap_type == 0 || lap_type == 10); }
 
