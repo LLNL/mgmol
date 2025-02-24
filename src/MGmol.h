@@ -150,7 +150,6 @@ private:
     void initialMasks();
     int setupLRsFromInput(const std::string filename);
 
-    void setup();
     int setupLRs(const std::string input_file) override;
     int setupFromInput(const std::string input_file) override;
     int setupConstraintsFromInput(const std::string input_file) override;
@@ -177,12 +176,15 @@ public:
 
     ~MGmol() override;
 
+    void setup();
+
     /* access functions */
     OrbitalsType* getOrbitals() { return current_orbitals_; }
     std::shared_ptr<Hamiltonian<OrbitalsType>> getHamiltonian()
     {
         return hamiltonian_;
     }
+    std::shared_ptr<Rho<OrbitalsType>> getRho() { return rho_; }
 
     void run() override;
 
