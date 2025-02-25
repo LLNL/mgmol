@@ -2213,6 +2213,18 @@ void Ions::setVelocitiesToVel()
     }
 }
 
+void Ions::setForces(const std::vector<double> forces)
+{
+    assert(forces.size() == 3 * local_ions_.size());
+
+    int ia = 0; 
+    for (auto& ion : local_ions_)
+    {    
+        ion->setForce(forces[3 * ia + 0], forces[3 * ia + 1], forces[3 * ia + 2]);
+        ia++;
+    }    
+}
+
 void Ions::getLocalForces(std::vector<double>& tau) const
 {
     assert(tau.size() == 3 * local_ions_.size());
