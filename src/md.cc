@@ -432,6 +432,8 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
 
             updateDMandEnergy(**orbitals, ions, eks);
             do_quench = false;
+            if (onpe0)
+                os_  << "Initialization completed. eks = " << eks :: std::endl;
         }
 #endif
         if (do_quench)
@@ -483,6 +485,11 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
             moveVnuc(ions);
             updateDMandEnergy(**orbitals, ions, eks);
             do_quench = false;
+
+            ions.getForces(forces);
+            H2O_molecule.transpose_rotate(positions, forces);
+            ions.setPositions(positions, anumbers);
+            ions.setForces(forces);
         }
 #endif
 
@@ -558,6 +565,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
         {
             ions.getForces(forces);
             H2O_molecule.transpose_rotate(positions, forces);
+            ions.setPositions(positions, anumbers);
             ions.setForces(forces);
         }
 
