@@ -401,51 +401,29 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
         h5f_file_.reset();
     }
 
+    bool ROM_MVP = (ct.getROMOptions().rom_stage == ROMStage::ONLINE_PINNED_H2O_3DOF);
+#ifdef MGMOL_HAS_LIBROM
+    // ROM - initialize orbitals and density matrix
+    if (ROM_MVP)
+    {
+        ExtendedGridOrbitals** extended_orbitals = reinterpret_cast<ExtendedGridOrbitals**>(orbitals);
+        (*extended_orbitals)->set(ct.getROMOptions().basis_file, ct.numst); 
+        (*extended_orbitals)->orthonormalizeLoewdin();
+        (*extended_orbitals)->setDataWithGhosts(true);
+        (*extended_orbitals)->setIterativeIndex(10);
+
+        std::shared_ptr<ProjectedMatricesInterface> projmatrices
+            = getProjectedMatrices();
+        projmatrices->setDMuniform(ct.getNelSpin(), 0);
+        projmatrices->printDM(os_);
+    }
+#endif
+
     // additional SC steps to compensate random start
-    if (ct.restart_info < 3)
+    if (ct.restart_info < 3 && !ROM_MVP)
     {
         double eks = 0.;
-        bool do_quench = true;
-#ifdef MGMOL_HAS_LIBROM
-        if (ct.getROMOptions().rom_stage == ROMStage::ONLINE_MVP)
-        {
-            ExtendedGridOrbitals** extended_orbitals = reinterpret_cast<ExtendedGridOrbitals**>(orbitals);
-            (*extended_orbitals)->set(ct.getROMOptions().basis_file, ct.numst); 
-            (*extended_orbitals)->orthonormalizeLoewdin();
-            (*extended_orbitals)->setDataWithGhosts(true);
-            (*extended_orbitals)->setIterativeIndex(10);
-
-            std::shared_ptr<ProjectedMatricesInterface> projmatrices
-                = getProjectedMatrices();
-            projmatrices->setDMuniform(ct.getNelSpin(), 0);
-            projmatrices->printDM(os_);
-
-            std::vector<double> positions;
-            getAtomicPositions(positions);
-            std::vector<short> anumbers;
-            getAtomicNumbers(anumbers);
-            PinnedH2O H2O_molecule;
-            H2O_molecule.rotate(positions, anumbers);
-
-            ions.setPositions(positions, anumbers);
-            moveVnuc(ions);
-
-            updateDMandEnergy(**orbitals, ions, eks);
-            do_quench = false;
-            if (onpe0)
-                os_  << "Initialization completed. eks = " << eks << std::endl;
-
-            std::vector<double> forces;
-            ions.getForces(forces);
-            H2O_molecule.transpose_rotate(positions, forces);
-            ions.setPositions(positions, anumbers);
-            ions.setForces(forces);
-        }
-#endif
-        if (do_quench)
-        {
-            quench(**orbitals, ions, ct.max_electronic_steps, 20, eks);
-        }
+        quench(**orbitals, ions, ct.max_electronic_steps, 20, eks);
     }
 
     ct.max_changes_pot = 0;
@@ -474,26 +452,29 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
         int retval              = 0;
         bool small_move         = true;
         bool last_move_is_small = true;
-        bool do_quench = true;
 
 #ifdef MGMOL_HAS_LIBROM
         // variables in ROM MVP solver for Pinned H2O
         std::vector<double> positions;
         std::vector<short> anumbers;
         PinnedH2O H2O_molecule;
-        if (ct.getROMOptions().rom_stage == ROMStage::ONLINE_MVP)
+        if (ct.getROMOptions().rom_stage == ROMStage::ONLINE_PINNED_H2O_3DOF)
         {
             getAtomicPositions(positions);
             getAtomicNumbers(anumbers);
             H2O_molecule.rotate(positions, anumbers);
             ions.setPositions(positions, anumbers);
-            moveVnuc(ions);
-            updateDMandEnergy(**orbitals, ions, eks);
-            do_quench = false;
+            Potentials& pot = hamiltonian_->potential();
+            pot.initialize(ions);
+            //moveVnuc(ions);
         }
 #endif
 
-        if (do_quench)
+        if (ROM_MVP)
+        {
+            updateDMandEnergy(**orbitals, ions, eks);
+        }
+        else
         {
             retval = quench(**orbitals, ions, ct.max_electronic_steps, 0, eks);
         }
@@ -561,7 +542,8 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
         // Compute forces
         force(**orbitals, ions);
 
-        if (ct.getROMOptions().rom_stage == ROMStage::ONLINE_MVP)
+#ifdef MGMOL_HAS_LIBROM
+        if (ct.getROMOptions().rom_stage == ROMStage::ONLINE_PINNED_H2O_3DOF)
         {
             std::vector<double> forces;
             ions.getForces(forces);
@@ -570,7 +552,6 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
             ions.setForces(forces);
         }
 
-#ifdef MGMOL_HAS_LIBROM
         if (ct.getROMOptions().rom_stage == ROMStage::TEST_ORBITAL)
         {
             if (onpe0)

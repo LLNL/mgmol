@@ -22,7 +22,7 @@ enum class ROMStage
     ONLINE,
     RESTORE,    // TODO(kevin): what stage is this?
     BUILD,
-    ONLINE_MVP,
+    ONLINE_PINNED_H2O_3DOF,
     TEST_ORBITAL,
     ONLINE_POISSON,
     TEST_POISSON,
