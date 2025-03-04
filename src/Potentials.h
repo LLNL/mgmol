@@ -26,7 +26,6 @@ class GridFunc;
 
 class Potentials
 {
-
     int size_;
     int gdim_[3];
     int dim_[3];
@@ -167,28 +166,23 @@ public:
 
     double getChargeInCell() const { return charge_in_cell_; }
 
-    /*!
-     * initialize total potential as local pseudopotential
-     */
-    void initWithVnuc();
-
     void getVofRho(std::vector<POTDTYPE>& vrho) const;
 
     /*!
      * evaluate potential correction associated with a new rho
      */
-    double delta_v(const std::vector<std::vector<RHODTYPE>>& rho);
+    double computeDeltaV(const std::vector<std::vector<RHODTYPE>>& rho);
 
     /*!
-     * update potentials based on argument rho
+     * update total potential with updated components
      */
-    double update(const std::vector<std::vector<RHODTYPE>>& rho);
+    double updateVtot(const std::vector<std::vector<RHODTYPE>>& rho);
 
     /*!
      * update potentials based on potential correction delta v and mixing
      * parameter
      */
-    void update(const double mix);
+    void updateVtot(const double mix);
 
     double max() const;
     double min() const;
@@ -196,7 +190,6 @@ public:
 
     template <typename T>
     void setVxc(const T* const vxc, const int iterativeIndex);
-    void setVh(const POTDTYPE* const vh, const int iterativeIndex);
     void setVh(const pb::GridFunc<POTDTYPE>& vh, const int iterativeIndex);
 
     void initialize(Ions& ions);

@@ -87,37 +87,19 @@ Potentials::Potentials()
 #endif
 }
 
-void Potentials::initWithVnuc()
-{
-    assert(size_ > 0);
-    if (verbosity_level_ > 2 && onpe0)
-        (*MPIdata::sout) << "Potentials::initWithVnuc()" << std::endl;
-    itindex_vxc_ = 0;
-    itindex_vh_  = 0;
-    int ione     = 1;
-    Tcopy(&size_, &v_nuc_[0], &ione, &vtot_[0], &ione);
-    double one = 1.;
-    LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
-        size_, one, &v_ext_[0], &vtot_[0]);
-    // factor ha2ry to get total potential in [Ry] for calculations
-    LinearAlgebraUtils<MemorySpace::Host>::MPscal(size_, ha2ry, &vtot_[0]);
-}
-
 double Potentials::max() const
 {
-    Mesh* mymesh             = Mesh::instance();
-    const pb::PEenv& myPEenv = mymesh->peenv();
-    double vmax              = (*max_element(vtot_.begin(), vtot_.end()));
-    vmax                     = myPEenv.double_max_all(vmax);
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    double vmax     = (*max_element(vtot_.begin(), vtot_.end()));
+    vmax            = mmpi.allreduce(&vmax, 1, MPI_MAX);
     return vmax;
 }
 
 double Potentials::min() const
 {
-    Mesh* mymesh             = Mesh::instance();
-    const pb::PEenv& myPEenv = mymesh->peenv();
-    double vmin              = -(*min_element(vtot_.begin(), vtot_.end()));
-    vmin                     = -myPEenv.double_max_all(vmin);
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    double vmin     = -(*min_element(vtot_.begin(), vtot_.end()));
+    vmin            = -mmpi.allreduce(&vmin, 1, MPI_MAX);
     return vmin;
 }
 
@@ -141,7 +123,7 @@ void Potentials::evalNormDeltaVtotRho(
     mmpi.allreduce(&scf_dvrho_, 1, MPI_SUM);
 }
 
-double Potentials::update(const std::vector<std::vector<RHODTYPE>>& rho)
+double Potentials::updateVtot(const std::vector<std::vector<RHODTYPE>>& rho)
 {
     assert(itindex_vxc_ >= 0);
     assert(itindex_vh_ >= 0);
@@ -149,9 +131,8 @@ double Potentials::update(const std::vector<std::vector<RHODTYPE>>& rho)
 
     if (verbosity_level_ > 2 && onpe0)
         (*MPIdata::sout) << "Potentials::update(rho)" << std::endl;
-    int ione                 = 1;
-    Mesh* mymesh             = Mesh::instance();
-    const pb::PEenv& myPEenv = mymesh->peenv();
+    int ione        = 1;
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
     // save old potentials
     Tcopy(&size_, &vtot_[0], &ione, &vtot_old_[0], &ione);
@@ -181,23 +162,22 @@ double Potentials::update(const std::vector<std::vector<RHODTYPE>>& rho)
         = LinearAlgebraUtils<MemorySpace::Host>::MPdot(size_, &dv_[0], &dv_[0]);
 
     double sum = 0.;
-    int rc
-        = MPI_Allreduce(&dvdot, &sum, 1, MPI_DOUBLE, MPI_SUM, myPEenv.comm());
+    int rc     = mmpi.allreduce(&dvdot, &sum, 1, MPI_SUM);
     if (rc != MPI_SUCCESS)
     {
         std::cerr << "MPI_Allreduce double sum failed!!!" << std::endl;
-        MPI_Abort(myPEenv.comm(), EXIT_FAILURE);
+        mmpi.abort();
     }
     dvdot = sum;
 
     scf_dv_            = 0.5 * sqrt(dvdot);
-    const double gsize = (double)size_ * (double)myPEenv.n_mpi_tasks();
+    const double gsize = (double)size_ * (double)mmpi.size();
     scf_dv_ /= gsize;
 
     return scf_dv_;
 }
 
-void Potentials::update(const double mix)
+void Potentials::updateVtot(const double mix)
 {
     assert(itindex_vxc_ == itindex_vh_);
 
@@ -210,7 +190,7 @@ void Potentials::update(const double mix)
         size_, potmix, &dv_[0], &vtot_[0]);
 }
 
-double Potentials::delta_v(const std::vector<std::vector<RHODTYPE>>& rho)
+double Potentials::computeDeltaV(const std::vector<std::vector<RHODTYPE>>& rho)
 {
     assert(itindex_vxc_ == itindex_vh_);
     assert(size_ > 0);
@@ -218,9 +198,8 @@ double Potentials::delta_v(const std::vector<std::vector<RHODTYPE>>& rho)
     if (verbosity_level_ > 2 && onpe0)
         (*MPIdata::sout) << "Potentials::delta_v()" << std::endl;
 
-    int ione                 = 1;
-    Mesh* mymesh             = Mesh::instance();
-    const pb::PEenv& myPEenv = mymesh->peenv();
+    int ione        = 1;
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
     // save old potentials
     Tcopy(&size_, &vtot_[0], &ione, &vtot_old_[0], &ione);
@@ -249,17 +228,16 @@ double Potentials::delta_v(const std::vector<std::vector<RHODTYPE>>& rho)
         = LinearAlgebraUtils<MemorySpace::Host>::MPdot(size_, &dv_[0], &dv_[0]);
 
     double sum = 0.;
-    int rc
-        = MPI_Allreduce(&dvdot, &sum, 1, MPI_DOUBLE, MPI_SUM, myPEenv.comm());
+    int rc     = mmpi.allreduce(&dvdot, &sum, 1, MPI_SUM);
     if (rc != MPI_SUCCESS)
     {
         std::cerr << "MPI_Allreduce double sum failed!!!" << std::endl;
-        MPI_Abort(myPEenv.comm(), EXIT_FAILURE);
+        mmpi.abort();
     }
     dvdot = sum;
 
     scf_dv_            = 0.5 * sqrt(dvdot);
-    const double gsize = (double)size_ * (double)myPEenv.n_mpi_tasks();
+    const double gsize = (double)size_ * (double)mmpi.size();
     scf_dv_ /= gsize;
 
     return scf_dv_;
@@ -437,7 +415,6 @@ void Potentials::readExternalPot(const std::string filename, const char type)
                 {
                     assert(index < size_);
                     (*from) >> v_ext_[index];
-                    //(*MPIdata::sout)<<myPEenv.mytask();
                     //(*MPIdata::sout)<<",
                     // v_ext_["<<index<<"]="<<v_ext_[index]<<endl;
                     index++;
@@ -568,6 +545,7 @@ void Potentials::readAll(std::vector<Species>& sp)
         isp++;
     }
 }
+
 template <typename T>
 void Potentials::setVxc(const T* const vxc, const int iterativeIndex)
 {
@@ -575,13 +553,6 @@ void Potentials::setVxc(const T* const vxc, const int iterativeIndex)
 
     itindex_vxc_ = iterativeIndex;
     MPcpy(&vxc_rho_[0], vxc, size_);
-}
-void Potentials::setVh(const POTDTYPE* const vh, const int iterativeIndex)
-{
-    assert(iterativeIndex >= 0);
-    int ione    = 1;
-    itindex_vh_ = iterativeIndex;
-    Tcopy(&size_, vh, &ione, &vh_rho_[0], &ione);
 }
 
 void Potentials::setVh(
@@ -932,6 +903,7 @@ int Potentials::read(HDFrestart& h5f_file)
 
     // Read the hartree potential
     h5f_file.read_1func_hdf5(vh_rho_.data(), "Hartree");
+    itindex_vh_ = 0;
 
     // Read dielectric potential
     if (ct.diel)

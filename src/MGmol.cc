@@ -400,7 +400,6 @@ int MGmol<OrbitalsType>::initial()
     current_orbitals_->setDataWithGhosts();
     current_orbitals_->trade_boundaries();
 
-    //    if(ct.restart_info <= 1)pot.initWithVnuc();
     // initialize matrices S and invB
 
     if (ct.numst > 0)
@@ -1379,14 +1378,14 @@ void MGmol<OrbitalsType>::update_pot(const Ions& ions)
 
     const bool flag_mixing = (fabs(ct.mix_pot - 1.) > 1.e-3);
 
-    // evaluate potential correction
+    // update total potential
     if (flag_mixing)
     {
-        pot.delta_v(rho_->rho_);
-        pot.update(ct.mix_pot);
+        pot.computeDeltaV(rho_->rho_);
+        pot.updateVtot(ct.mix_pot);
     }
     else
-        pot.update(rho_->rho_);
+        pot.updateVtot(rho_->rho_);
 }
 
 template <class OrbitalsType>
