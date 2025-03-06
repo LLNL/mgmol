@@ -11,16 +11,15 @@
 
 #include "Control.h"
 #include "ExtendedGridOrbitals.h"
-#include "Ions.h"
 #include "LocGridOrbitals.h"
 #include "MGmol_MPI.h"
 #include "Mesh.h"
 #include "ProjectedMatrices.h"
-#include "ProjectedMatricesSparse.h"
 #include "ReplicatedMatrix.h"
 #include "SquareSubMatrix2DistMatrix.h"
 
 #include <limits.h>
+
 #define Ry2Ha 0.5;
 
 Timer KBPsiMatrixSparse::global_sum_tm_("KBPsiMatrixSparse::global_sum");
@@ -133,7 +132,7 @@ void KBPsiMatrixSparse::globalSumKBpsi()
 // Loop over the ions with projectors overlapping with local subdomain
 // and evaluate <KB|psi> for some state.
 template <class T>
-void KBPsiMatrixSparse::computeKBpsi(Ions& ions, T& orbitals,
+void KBPsiMatrixSparse::computeKBpsi(const Ions& ions, T& orbitals,
     const int first_color, const int nb_colors, const bool flag)
 {
     assert(first_color >= 0);
@@ -189,7 +188,7 @@ void KBPsiMatrixSparse::computeKBpsi(Ions& ions, T& orbitals,
             // Loop over the ions
             if (gid != -1)
             {
-                for (auto ion : ions.overlappingNL_ions())
+                for (const auto& ion : ions.overlappingNL_ions())
                 {
                     computeLocalElement(
                         *ion, gid, iloc, ppsi + color * ldsize, flag);
@@ -211,8 +210,8 @@ void KBPsiMatrixSparse::computeKBpsi(Ions& ions, T& orbitals,
     compute_kbpsi_tm_.stop();
 }
 
-void KBPsiMatrixSparse::computeKBpsi(
-    Ions& ions, pb::GridFunc<ORBDTYPE>* phi, const int istate, const bool flag)
+void KBPsiMatrixSparse::computeKBpsi(const Ions& ions,
+    pb::GridFunc<ORBDTYPE>* phi, const int istate, const bool flag)
 {
     assert(lapop_ != nullptr);
     compute_kbpsi_tm_.start();
@@ -238,7 +237,7 @@ void KBPsiMatrixSparse::computeKBpsi(
     for (int iloc = 0; iloc < subdivx; iloc++)
     {
         // Loop over the ions
-        for (auto ion : ions.overlappingNL_ions())
+        for (const auto& ion : ions.overlappingNL_ions())
         {
             computeLocalElement(*ion, istate, iloc, ppsi, flag);
         }
@@ -251,7 +250,7 @@ void KBPsiMatrixSparse::computeKBpsi(
 
 void KBPsiMatrixSparse::scaleWithKBcoeff(const Ions& ions)
 {
-    for (auto ion : ions.overlappingNL_ions())
+    for (const auto& ion : ions.overlappingNL_ions())
     {
         std::vector<int> gids;
         ion->getGidsNLprojs(gids);
@@ -266,8 +265,8 @@ void KBPsiMatrixSparse::scaleWithKBcoeff(const Ions& ions)
 
             // loop over states to multiply kbpsi_[st][gid] and kbBpsi_[st][gid]
             // by coeff
-            (*kbpsimat_).scaleRow(gid, coeff);
-            if (lapop_) (*kbBpsimat_).scaleRow(gid, coeff);
+            kbpsimat_->scaleRow(gid, coeff);
+            if (lapop_) kbBpsimat_->scaleRow(gid, coeff);
         }
     }
 }
@@ -454,7 +453,7 @@ SquareSubMatrix<double> KBPsiMatrixSparse::computeHvnlMatrix(
 
     // Loop over ions centered on current PE only
     // (distribution of work AND Hvnlij contributions)
-    for (auto ion : ions.local_ions())
+    for (const auto& ion : ions.local_ions())
     {
         computeHvnlMatrix((KBPsiMatrixSparse*)kbpsi2, *ion, Aij);
     }
@@ -473,7 +472,7 @@ void KBPsiMatrixSparse::computeHvnlMatrix(
 
     // Loop over ions centered on current PE only
     // (distribution of work AND Hvnlij contributions)
-    for (auto ion : ions.local_ions())
+    for (const auto& ion : ions.local_ions())
     {
         computeHvnlMatrix((KBPsiMatrixSparse*)kbpsi2, *ion, mat);
     }
@@ -538,14 +537,14 @@ void KBPsiMatrixSparse::getPsiKBPsiSym(
 {
     // loop over all the ions
     // parallelization over ions by including only those centered in subdomain
-    for (auto& ion : ions.local_ions())
+    for (const auto& ion : ions.local_ions())
     {
         getPsiKBPsiSym(*ion, sm);
     }
 }
 
 template <class T>
-void KBPsiMatrixSparse::computeAll(Ions& ions, T& orbitals)
+void KBPsiMatrixSparse::computeAll(const Ions& ions, T& orbitals)
 {
     assert(count_proj_subdomain_ == ions.countProjectorsSubdomain());
 
@@ -603,7 +602,7 @@ double KBPsiMatrixSparse::getEvnl(
     double trace = 0.0;
     // loop over all the ions
     // parallelization over ions by including only those centered in subdomain
-    for (auto& ion : ions.local_ions())
+    for (const auto& ion : ions.local_ions())
     {
         std::vector<int> gids;
         ion->getGidsNLprojs(gids);
@@ -618,10 +617,9 @@ double KBPsiMatrixSparse::getEvnl(
 
     /* gather trace result */
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    MPI_Comm comm   = mmpi.commSpin();
 
     double evnl = 0.0;
-    MPI_Allreduce(&trace, &evnl, 1, MPI_DOUBLE, MPI_SUM, comm);
+    mmpi.allreduce(&trace, &evnl, 1, MPI_SUM);
 
     return evnl * Ry2Ha;
 }
@@ -637,7 +635,7 @@ double KBPsiMatrixSparse::getEvnl(const Ions& ions,
     double trace = 0.0;
     // loop over all the ions
     // parallelization over ions by including only those centered in subdomain
-    for (auto& ion : ions.local_ions())
+    for (const auto& ion : ions.local_ions())
     {
         std::vector<int> gids;
         ion->getGidsNLprojs(gids);
@@ -652,10 +650,9 @@ double KBPsiMatrixSparse::getEvnl(const Ions& ions,
 
     /* gather trace result */
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    MPI_Comm comm   = mmpi.commSpin();
 
     double evnl = 0.0;
-    MPI_Allreduce(&trace, &evnl, 1, MPI_DOUBLE, MPI_SUM, comm);
+    mmpi.allreduce(&trace, &evnl, 1, MPI_SUM);
 
     return evnl * Ry2Ha;
 }
@@ -736,12 +733,12 @@ double KBPsiMatrixSparse::getTraceDM(
     return trace;
 }
 
-template void KBPsiMatrixSparse::computeKBpsi(Ions& ions,
+template void KBPsiMatrixSparse::computeKBpsi(const Ions& ions,
     LocGridOrbitals& orbitals, const int first_color, const int nb_colors,
     const bool flag);
-template void KBPsiMatrixSparse::computeAll(Ions&, LocGridOrbitals&);
+template void KBPsiMatrixSparse::computeAll(const Ions&, LocGridOrbitals&);
 
-template void KBPsiMatrixSparse::computeKBpsi(Ions& ions,
+template void KBPsiMatrixSparse::computeKBpsi(const Ions& ions,
     ExtendedGridOrbitals& orbitals, const int first_color, const int nb_colors,
     const bool flag);
-template void KBPsiMatrixSparse::computeAll(Ions&, ExtendedGridOrbitals&);
+template void KBPsiMatrixSparse::computeAll(const Ions&, ExtendedGridOrbitals&);

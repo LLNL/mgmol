@@ -220,7 +220,7 @@ public:
 
     void getAtomicNumbers(std::vector<short>& an);
 
-    void initNuc(Ions& ions);
+    void setupPotentials(Ions& ions);
     void initKBR();
 
     void printEigAndOcc();

@@ -12,7 +12,9 @@
 
 #include "DataDistribution.h"
 #include "DensityMatrixSparse.h"
+#include "Ions.h"
 #include "KBPsiMatrixInterface.h"
+#include "ProjectedMatricesSparse.h"
 #include "SquareSubMatrix.h"
 #include "VariableSizeMatrix.h"
 
@@ -22,11 +24,6 @@
 
 #include <cassert>
 #include <limits.h>
-
-class Ions;
-class Ion;
-class ProjectedMatricesInterface;
-class ProjectedMatricesSparse;
 
 class KBPsiMatrixSparse : public KBPsiMatrixInterface
 {
@@ -79,8 +76,8 @@ class KBPsiMatrixSparse : public KBPsiMatrixInterface
     void getPsiKBPsiSym(const Ions& ions, VariableSizeMatrix<sparserow>& sm);
     void getPsiKBPsiSym(const Ion& ion, VariableSizeMatrix<sparserow>& sm);
     template <class OrbitalsType>
-    void computeKBpsi(Ions& ions, OrbitalsType& orbitals, const int first_color,
-        const int nb_colors, const bool flag);
+    void computeKBpsi(const Ions& ions, OrbitalsType& orbitals,
+        const int first_color, const int nb_colors, const bool flag);
     void clearData();
 
 public:
@@ -105,7 +102,7 @@ public:
     double getEvnl(
         const Ions& ions, ProjectedMatrices<MatrixType>* proj_matrices);
     void computeKBpsi(
-        Ions& ions, pb::GridFunc<ORBDTYPE>*, const int, const bool flag);
+        const Ions& ions, pb::GridFunc<ORBDTYPE>*, const int, const bool flag);
     double getValIonState(const int gid, const int st) const
     {
         return (*kbpsimat_).get_value(gid, st);
@@ -127,7 +124,7 @@ public:
         const Ions& ions, ProjectedMatricesInterface* proj_matrices) const;
 
     template <class T>
-    void computeAll(Ions& ions, T& orbitals);
+    void computeAll(const Ions& ions, T& orbitals);
     void setup(const Ions& ions);
 
     double getTraceDM(

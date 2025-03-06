@@ -358,8 +358,8 @@ int MGmol<OrbitalsType>::initial()
     }
 
     // Initialize the nuclear local potential and the compensating charges
-    if (ct.verbose > 0) printWithTimeStamp("initNuc()...", os_);
-    initNuc(*ions_);
+    if (ct.verbose > 0) printWithTimeStamp("setupPotentials()...", os_);
+    setupPotentials(*ions_);
 
     // initialize Rho
     if (ct.verbose > 0) printWithTimeStamp("Initialize Rho...", os_);
@@ -414,9 +414,6 @@ int MGmol<OrbitalsType>::initial()
             printWithTimeStamp("Compute initial condition number...", os_);
         current_orbitals_->checkCond(100000., ct.AtomsMove());
     }
-
-    if (ct.verbose > 0) printWithTimeStamp("Setup kbpsi...", os_);
-    g_kbpsi_->setup(*ions_);
 
     if (ct.restart_info == 0)
     {
@@ -817,7 +814,7 @@ double get_trilinval(const double xc, const double yc, const double zc,
 #endif
 
 template <class OrbitalsType>
-void MGmol<OrbitalsType>::initNuc(Ions& ions)
+void MGmol<OrbitalsType>::setupPotentials(Ions& ions)
 {
     init_nuc_tm_.start();
 
@@ -829,9 +826,12 @@ void MGmol<OrbitalsType>::initNuc(Ions& ions)
     // initialize poentials based on ionic positions and their species
     pot.initialize(ions);
 
+    if (ct.verbose > 0) printWithTimeStamp("Setup kbpsi...", os_);
+    g_kbpsi_->setup(*ions_);
+
     electrostat_->setupRhoc(pot.rho_comp());
 
-    if (onpe0 && ct.verbose > 3) os_ << " initNuc done" << std::endl;
+    if (onpe0 && ct.verbose > 3) os_ << " setupPotentials done" << std::endl;
 
     init_nuc_tm_.stop();
 }
@@ -1428,7 +1428,7 @@ double MGmol<OrbitalsType>::evaluateEnergyAndForces(Orbitals* orbitals,
 
     ions_->setPositions(tau, atnumbers);
 
-    moveVnuc(*ions_);
+    setupPotentials(*ions_);
 
     double eks              = 0.;
     OrbitalsType* dorbitals = dynamic_cast<OrbitalsType*>(orbitals);
@@ -1450,7 +1450,7 @@ double MGmol<OrbitalsType>::evaluateDMandEnergyAndForces(Orbitals* orbitals,
 
     ions_->setPositions(tau, atnumbers);
 
-    moveVnuc(*ions_);
+    setupPotentials(*ions_);
 
     // initialize electronic density
     rho_->update(*dorbitals);
