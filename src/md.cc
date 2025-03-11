@@ -35,8 +35,9 @@
 #include "mgmol_Signal.h"
 #include "tools.h"
 
-#include "PinnedH2O.h"
 #ifdef MGMOL_HAS_LIBROM
+#include "KBPsiMatrixSparse.h"
+#include "PinnedH2O.h"
 #include "rom_workflows.h"
 #endif
 
@@ -406,6 +407,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
     // ROM - initialize orbitals and density matrix
     if (ROM_MVP)
     {
+        if (onpe0) os_ << "Setup ROM MVP solver..." << std::endl;
         ExtendedGridOrbitals** extended_orbitals = reinterpret_cast<ExtendedGridOrbitals**>(orbitals);
         (*extended_orbitals)->set(ct.getROMOptions().basis_file, ct.numst); 
         (*extended_orbitals)->orthonormalizeLoewdin();
@@ -460,12 +462,14 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
         PinnedH2O H2O_molecule;
         if (ct.getROMOptions().rom_stage == ROMStage::ONLINE_PINNED_H2O_3DOF)
         {
+            if (onpe0) os_ << "Rotate Pinned H2O molecule in timestep " << mdstep << std::endl;
             getAtomicPositions(positions);
             getAtomicNumbers(anumbers);
             H2O_molecule.rotate(positions, anumbers);
             ions.setPositions(positions, anumbers);
             Potentials& pot = hamiltonian_->potential();
             pot.initialize(ions);
+            g_kbpsi_->setup(ions);
             //moveVnuc(ions);
         }
 #endif
@@ -545,6 +549,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
 #ifdef MGMOL_HAS_LIBROM
         if (ct.getROMOptions().rom_stage == ROMStage::ONLINE_PINNED_H2O_3DOF)
         {
+            if (onpe0) os_ << "Transpose rotate the PinnedH2O molecule" << std::endl;
             std::vector<double> forces;
             ions.getForces(forces);
             H2O_molecule.transpose_rotate(positions, forces);
