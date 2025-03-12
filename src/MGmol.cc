@@ -1510,6 +1510,13 @@ double MGmol<OrbitalsType>::evaluateDMandEnergyAndForces(Orbitals* orbitals,
 
     ions_->setPositions(tau, atnumbers);
 
+#ifdef MGMOL_HAS_LIBROM
+    Control& ct = *(Control::instance());
+    Potentials& pot = hamiltonian_->potential();
+    pot.initialize(*ions_);
+    g_kbpsi_->setup(*ions_);
+#endif
+
     moveVnuc(*ions_);
 
     // initialize electronic density
