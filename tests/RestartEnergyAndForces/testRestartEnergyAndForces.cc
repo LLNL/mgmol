@@ -124,6 +124,8 @@ int main(int argc, char** argv)
             }
         }
 
+        mgmol->setPositions(positions, anumbers);
+
         Mesh* mymesh             = Mesh::instance();
         const pb::Grid& mygrid   = mymesh->grid();
         const pb::PEenv& myPEenv = mymesh->peenv();
@@ -164,6 +166,36 @@ int main(int argc, char** argv)
         // set initial DM with uniform occupations
         projmatrices->setDMuniform(ct.getNelSpin(), 0);
         projmatrices->printDM(std::cout);
+
+        // swap H and O to make sure order of atoms in list does not matter
+        double x     = positions[0];
+        double y     = positions[1];
+        double z     = positions[2];
+        positions[0] = positions[3];
+        positions[1] = positions[4];
+        positions[2] = positions[5];
+        positions[3] = x;
+        positions[4] = y;
+        positions[5] = z;
+        short tmp    = anumbers[0];
+        anumbers[0]  = anumbers[1];
+        anumbers[1]  = tmp;
+        if (MPIdata::onpe0)
+        {
+            std::cout << "Positions:" << std::endl;
+            std::vector<short>::iterator ita = anumbers.begin();
+            for (std::vector<double>::iterator it = positions.begin();
+                 it != positions.end(); it += 3)
+            {
+                std::cout << *ita;
+                for (int i = 0; i < 3; i++)
+                    std::cout << "    " << *(it + i);
+                std::cout << std::endl;
+                ita++;
+            }
+        }
+
+        mgmol->setPositions(positions, anumbers);
 
         //
         // evaluate energy and forces with wavefunctions just read

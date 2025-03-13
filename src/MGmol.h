@@ -341,6 +341,11 @@ public:
     {
         forces_->force(orbitals, ions);
     }
+    void setPositions(const std::vector<double>& positions,
+        const std::vector<short>& atnumbers)
+    {
+        ions_->setPositions(positions, atnumbers);
+    }
 
     /*
      * simply dump current state
