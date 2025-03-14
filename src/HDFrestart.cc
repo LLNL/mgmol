@@ -1922,10 +1922,12 @@ int HDFrestart::readAtomicData(std::string datasetname, std::vector<int>& data)
     // send data to inactive PEs
     if (gather_data_x_) gatherDataXdir(data);
 
+#ifdef MGMOL_USE_HDF5P
     if (useHdf5p())
     {
         data.erase(std::remove(data.begin(), data.end(), -1), data.end());
     }
+#endif
 
     return 0;
 }
@@ -1974,10 +1976,12 @@ int HDFrestart::readAtomicData(
         }
     }
 
+#ifdef MGMOL_USE_HDF5P
     if (useHdf5p())
     {
         data.erase(std::remove(data.begin(), data.end(), 1e+32), data.end());
     }
+#endif
     if (gather_data_x_) gatherDataXdir(data);
 
     return 0;
@@ -2104,10 +2108,12 @@ int HDFrestart::readAtomicData(
         data.push_back(t);
     }
 
+#ifdef MGMOL_USE_HDF5P
     if (useHdf5p())
     {
         data.erase(std::remove(data.begin(), data.end(), ""), data.end());
     }
+#endif
 
     return 0;
 }

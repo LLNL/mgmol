@@ -14,6 +14,7 @@
 #include <cstring>
 #include <map>
 #include <mpi.h>
+#include <stdio.h>
 #include <vector>
 
 // full lower triangular part of symmetric matrix with compact storage
