@@ -64,7 +64,13 @@ lines=output.split(b'\n')
 shutil.rmtree('WF')
 
 test_energy=1.e18
+l=-1
 for line in lines:
+  if line.count(b'Positions'):
+    l=0
+  if l>=0 and l<4:
+    print(line)
+    l=l+1
   if line.count(b'%%'):
     print(line)
     words=line.split()
