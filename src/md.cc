@@ -59,7 +59,7 @@ void MGmol<OrbitalsType>::moveVnuc(Ions& ions)
 
     // Update items that change when the ionic coordinates change
     pot.axpVcompToVh(1.);
-    initNuc(ions);
+    setupPotentials(ions);
     pot.axpVcompToVh(-1.);
 
     proj_matrices_->setHiterativeIndex(-1, -1);

@@ -2104,7 +2104,6 @@ int HDFrestart::readAtomicData(
         stripLeadingAndTrailingBlanks(t);
         // std::cout<<"stripped name="<<t<<std::endl;
 
-        assert(t.size() > 0);
         data.push_back(t);
     }
 
