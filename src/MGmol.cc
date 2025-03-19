@@ -1443,7 +1443,7 @@ void MGmol<OrbitalsType>::getAtomicNumbers(std::vector<short>& an)
 }
 
 template <class OrbitalsType>
-void MGmol<OrbitalsType>::updateDMandEnergy(OrbitalsType& orbitals, Ions ions, double& eks)
+void MGmol<OrbitalsType>::updateDMandEnergy(OrbitalsType& orbitals, Ions& ions, double& eks)
 {
     // initialize electronic density
     rho_->update(orbitals);
