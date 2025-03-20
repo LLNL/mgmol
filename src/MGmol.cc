@@ -87,6 +87,7 @@ extern Timer sgemm_tm;
 extern Timer dgemm_tm;
 extern Timer mpgemm_tm;
 extern Timer tttgemm_tm;
+extern Timer bligemm_tm;
 extern Timer dsyrk_tm;
 extern Timer ssyrk_tm;
 extern Timer mpsyrk_tm;
@@ -864,6 +865,7 @@ void MGmol<OrbitalsType>::printTimers()
     dgemm_tm.print(os_);
     mpgemm_tm.print(os_);
     tttgemm_tm.print(os_);
+    bligemm_tm.print(os_);
 
     ssyrk_tm.print(os_);
     dsyrk_tm.print(os_);
