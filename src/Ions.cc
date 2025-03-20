@@ -2213,16 +2213,31 @@ void Ions::setVelocitiesToVel()
     }
 }
 
-void Ions::setForces(const std::vector<double> forces)
+void Ions::setForces(const std::vector<double>& forces)
 {
-    assert(forces.size() == 3 * local_ions_.size());
+    int n = getNumIons();
+    assert(forces.size() == 3 * n);
 
-    int ia = 0; 
-    for (auto& ion : local_ions_)
-    {    
-        ion->setForce(forces[3 * ia + 0], forces[3 * ia + 1], forces[3 * ia + 2]);
-        ia++;
-    }    
+    int local_size = 3 * local_ions_.size();
+    std::vector<double> forces_local(local_size);
+
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    int num_ranks = mmpi.size();
+    int rank = mmpi.mypeGlobal();
+
+    std::vector<int> send_counts(num_ranks);
+    mmpi.allGather(&local_size, 1, send_counts.data(), num_ranks);
+
+    int displacement = 0;
+    for (int i = 0; i < rank; ++i) {
+        displacement += send_counts[i];
+    }
+
+    std::copy(forces.begin() + displacement, 
+              forces.begin() + displacement + local_size, 
+              forces_local.begin());
+
+    setLocalForces(forces_local);
 }
 
 void Ions::getLocalForces(std::vector<double>& tau) const
@@ -2234,6 +2249,19 @@ void Ions::getLocalForces(std::vector<double>& tau) const
     {
         assert(3 * ia + 2 < (int)tau.size());
         ion->getForce(&tau[3 * ia]);
+        ia++;
+    }
+}
+
+void Ions::setLocalForces(const std::vector<double>& tau)
+{
+    assert(tau.size() == 3 * local_ions_.size());
+
+    int ia = 0;
+    for (auto& ion : local_ions_)
+    {
+        assert(3 * ia + 2 < (int)tau.size());
+        ion->setForce(tau[3 * ia + 0], tau[3 * ia + 1], tau[3 * ia + 2]);
         ia++;
     }
 }

@@ -279,7 +279,8 @@ public:
     void setVelocitiesToVel();
     void setPositions(
         const std::vector<double>& tau, const std::vector<short>& anumbers);
-    void setForces(const std::vector<double> forces);
+    void setForces(const std::vector<double>& forces);
+    void setLocalForces(const std::vector<double>& tau);
 
     void getLocalPositions(std::vector<double>& tau) const;
     void getPositions(std::vector<double>& tau);
