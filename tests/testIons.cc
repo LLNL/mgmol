@@ -8,6 +8,8 @@
 
 int main(int argc, char** argv)
 {
+    int status = 0;
+
     int mpirc = MPI_Init(&argc, &argv);
 
     MPI_Comm comm = MPI_COMM_WORLD;
@@ -92,7 +94,7 @@ int main(int argc, char** argv)
         if (ntotal != na)
         {
             std::cout << "ntotal = " << ntotal << std::endl;
-            return 1;
+            status = 1;
         }
     }
     MPI_Barrier(MPI_COMM_WORLD);
@@ -141,16 +143,49 @@ int main(int argc, char** argv)
         MPI_Allreduce(&nlocal, &ntotal, 1, MPI_INT, MPI_SUM, comm);
         if (ntotal != na)
         {
-            std::cout << "ntotal = " << ntotal << std::endl;
-            return 1;
+            std::cerr << "ntotal = " << ntotal << std::endl;
+            MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
         }
     }
+
+    // get the names of all the ions
+    std::vector<std::string> names;
+    ions.getNames(names);
+    if (myrank == 0)
+        for (auto& name : names)
+            std::cout << "name = " << name << std::endl;
+    if (names.size() != na)
+    {
+        std::cerr << "Incorrect count of names..." << std::endl;
+        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    std::vector<double> forces(3 * na);
+    // arbitrary value
+    const double fval = 1.12;
+    for (auto& f : forces)
+        f = fval;
+    ions.setLocalForces(forces, names);
+
+    int nlocal = ions.getNumLocIons();
+    std::vector<double> lforces(3 * nlocal);
+    ions.getLocalForces(lforces);
+    for (auto& f : lforces)
+    {
+        if (std::abs(f - fval) > 1.e-14)
+        {
+            std::cerr << "f = " << f << std::endl;
+            MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+        }
+    }
+
     mpirc = MPI_Finalize();
     if (mpirc != MPI_SUCCESS)
     {
         std::cerr << "MPI Finalize failed!!!" << std::endl;
-        return 1;
+        status = 1;
     }
 
-    return 0;
+    return status;
 }

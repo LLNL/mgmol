@@ -1288,6 +1288,29 @@ void Ions::writeForces(HDFrestart& h5f_file)
     }
 }
 
+void Ions::setLocalForces(
+    const std::vector<double>& forces, const std::vector<std::string>& names)
+{
+    assert(forces.size() == 3 * names.size());
+
+    // loop over global list of forces and atom names
+    std::vector<std::string>::const_iterator s = names.begin();
+    for (auto it = forces.begin(); it != forces.end(); it += 3)
+    {
+        // find possible matching ion
+        for (auto& ion : local_ions_)
+        {
+            if (ion->compareName(*s))
+            {
+                ion->set_force(0, *it);
+                ion->set_force(1, *(it + 1));
+                ion->set_force(2, *(it + 2));
+            }
+        }
+        s++;
+    }
+}
+
 // Writes out the postions of the ions and the current forces on them by root
 void Ions::printForcesGlobal(std::ostream& os, const int root) const
 {
@@ -2184,6 +2207,22 @@ void Ions::getLocalPositions(std::vector<double>& tau) const
     {
         ion->getPosition(&tau[3 * ia]);
         ia++;
+    }
+}
+
+void Ions::getLocalNames(std::vector<std::string>& names) const
+{
+    for (auto& ion : local_ions_)
+    {
+        names.push_back(ion->name());
+    }
+}
+
+void Ions::getNames(std::vector<std::string>& names) const
+{
+    for (auto& ion : list_ions_)
+    {
+        names.push_back(ion->name());
     }
 }
 
