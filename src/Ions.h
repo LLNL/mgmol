@@ -285,11 +285,20 @@ public:
         const std::vector<double>& tau, const std::vector<short>& anumbers);
 
     void getLocalPositions(std::vector<double>& tau) const;
+    void getLocalNames(std::vector<std::string>& names) const;
+    void getNames(std::vector<std::string>& names) const;
     void getPositions(std::vector<double>& tau);
     void getAtomicNumbers(std::vector<short>& atnumbers);
 
     void getForces(std::vector<double>& forces);
     void getLocalForces(std::vector<double>& tau) const;
+
+    /*!
+     * set forces for ions in local_ions_ based on names matching
+     */
+    void setLocalForces(const std::vector<double>& forces,
+        const std::vector<std::string>& names);
+
     void syncData(const std::vector<Species>& sp);
     // void syncNames(const int nions, std::vector<std::string>& local_names,
     // std::vector<std::string>& names);
