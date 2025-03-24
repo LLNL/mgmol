@@ -556,7 +556,7 @@ template void BlockVector<double, MemorySpace::Host>::setDataWithGhosts(
     pb::GridFuncVector<float, MemorySpace::Host>* data_wghosts);
 template void BlockVector<double, MemorySpace::Host>::setDataWithGhosts(
     pb::GridFuncVector<double, MemorySpace::Host>* data_wghosts);
-#ifdef USE_MP
+#ifdef MGMOL_USE_MIXEDP
 template class BlockVector<float, MemorySpace::Host>;
 template void BlockVector<float, MemorySpace::Host>::assign(
     const pb::GridFuncVector<float, MemorySpace::Host>& src);
@@ -586,7 +586,7 @@ template void BlockVector<double, MemorySpace::Device>::setDataWithGhosts(
     pb::GridFuncVector<float, MemorySpace::Device>* data_wghosts);
 template void BlockVector<double, MemorySpace::Device>::setDataWithGhosts(
     pb::GridFuncVector<double, MemorySpace::Device>* data_wghosts);
-#ifdef USE_MP
+#ifdef MGMOL_USE_MIXEDP
 template class BlockVector<float, MemorySpace::Device>;
 template void BlockVector<float, MemorySpace::Device>::assign(
     const pb::GridFuncVector<float, MemorySpace::Device>& src);
