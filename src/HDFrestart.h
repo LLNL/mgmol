@@ -246,16 +246,16 @@ public:
     int read_1func_hdf5(T*, const std::string&);
 
     template <class T>
-    int write_1func_hdf5(
-        T*, const std::string&, double* ll = nullptr, double* origin = nullptr);
+    int write_1func_hdf5(const T* const, const std::string&,
+        double* ll = nullptr, double* origin = nullptr);
 
     int read_att(const hid_t dset_id, const std::string& attname,
         std::vector<double>& attr_data);
 
     // write data in file with precision "precision"
     template <class T>
-    int writeData(T* vv, hid_t filespace, hid_t memspace, hid_t dset_id,
-        const short precision);
+    int writeData(const T* const vv, hid_t filespace, hid_t memspace,
+        hid_t dset_id, const short precision);
 
     template <class T>
     int readData(T* vv, hid_t memspace, hid_t dset_id, const short precision);

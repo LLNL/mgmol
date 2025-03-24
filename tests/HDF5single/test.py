@@ -47,7 +47,7 @@ print("Run command: {}".format(command))
 output = subprocess.check_output(command,shell=True)
 lines=output.split(b'\n')
 
-os.remove('WF')
+os.remove('wf.h5')
 
 print("Check energy conservation...")
 tol = 1.e-4
@@ -70,6 +70,8 @@ for line in lines:
 if count<4:
   print("ERROR needs 4 energy values for checking conservation!")
   sys.exit(1)
+
+os.remove('wf_md.h5')
 
 print("Test SUCCESSFUL!")
 sys.exit(0)

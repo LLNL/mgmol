@@ -43,27 +43,11 @@ int MGmol<OrbitalsType>::read_rho_and_pot_hdf5(
         os_ << "Try to read density and potentials" << std::endl;
 
     Potentials& pot = hamiltonian_->potential();
+    pot.read(file);
 
-    Mesh* mymesh           = Mesh::instance();
-    const pb::Grid& mygrid = mymesh->grid();
-    POTDTYPE* tmp          = new POTDTYPE[mygrid.size()];
-
-    // Read total potential
-    file.read_1func_hdf5(pot.vtot(), "Vtotal");
-
-    // Read the hartree potential
-    file.read_1func_hdf5(tmp, "Hartree");
-    pot.setVh(tmp, 0);
-
-    // Read dielectric potential
-    if (ct.diel)
-    {
-        file.read_1func_hdf5(pot.vepsilon(), "VDielectric");
-    }
     // Read the Density
     rho.readRestart(file);
 
-    delete[] tmp;
     return 0;
 }
 
@@ -118,6 +102,8 @@ int MGmol<OrbitalsType>::write_hdf5(HDFrestart& h5f_file,
         ions.writeAtomicNLprojIDs(h5f_file);
         ions.writePositions(h5f_file);
         if (ct.LangevinThermostat()) ions.writeRandomStates(h5f_file);
+        if (ct.AtomsDynamic() == AtomsDynamicType::MD)
+            ions.writePreviousPositions(h5f_file);
         ions.writeVelocities(h5f_file);
         ions.writeForces(h5f_file);
 
@@ -131,40 +117,11 @@ int MGmol<OrbitalsType>::write_hdf5(HDFrestart& h5f_file,
 
     if (ct.out_restart_info > 1)
     {
-        // Write total potential
-        int ierr = h5f_file.write_1func_hdf5(
-            pot.vtot(), "Vtotal", &ll[0], &origin[0]);
-        if (ierr < 0) return ierr;
-
-        // Write the hartree potential
-        ierr = h5f_file.write_1func_hdf5(
-            pot.vh_rho(), "Hartree", &ll[0], &origin[0]);
-        if (ierr < 0) return ierr;
-
-        if (ct.AtomsDynamic() == AtomsDynamicType::MD)
-        {
-            // Write hartree potential before extrapolation
-            ierr = h5f_file.write_1func_hdf5(
-                pot.vh_rho_backup(), "Preceding_Hartree", &ll[0], &origin[0]);
-            if (ierr < 0) return ierr;
-        }
-
-        // Write
-        if (ct.diel)
-        {
-            ierr = h5f_file.write_1func_hdf5(
-                pot.vepsilon(), "VDielectric", &ll[0], &origin[0]);
-        }
-        if (ierr < 0) return ierr;
+        int ierr = pot.write(h5f_file);
 
         // Write the Density
         ierr = h5f_file.write_1func_hdf5(
             &rho[0][0], "Density", &ll[0], &origin[0]);
-        if (ierr < 0) return ierr;
-
-        // Write external potential
-        ierr
-            = h5f_file.write_1func_hdf5(pot.vext(), "Vext", &ll[0], &origin[0]);
         if (ierr < 0) return ierr;
     }
 

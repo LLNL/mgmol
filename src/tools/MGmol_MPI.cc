@@ -110,7 +110,7 @@ void MGmol_MPI::setupComm(
                     << " Calculation with spin requires even number of MPI "
                        "tasks!!!"
                     << std::endl;
-                MPI_Abort(comm, 1);
+                MPI_Abort(comm, EXIT_FAILURE);
             }
 
             // create communicator to communicate data within one spin
@@ -125,7 +125,7 @@ void MGmol_MPI::setupComm(
             {
                 std::cerr << " Error in creating spin subcommunicator!!!"
                           << std::endl;
-                MPI_Abort(comm, 1);
+                MPI_Abort(comm, EXIT_FAILURE);
             }
 
             MPI_Barrier(comm_global_);
@@ -141,7 +141,7 @@ void MGmol_MPI::setupComm(
             {
                 std::cerr << " Error in creating across spin subcommunicator!!!"
                           << std::endl;
-                MPI_Abort(comm, 1);
+                MPI_Abort(comm, EXIT_FAILURE);
             }
             nspin_  = 2;
             myspin_ = key;

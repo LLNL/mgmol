@@ -28,7 +28,7 @@
     std::cerr << "ERROR in file " << __FILE__ << " at line " << __LINE__       \
               << std::endl;                                                    \
     std::cerr << "Error Message: " << X << std::endl;                          \
-    MPI_Abort(comm_global_, 2);
+    MPI_Abort(comm_global_, EXIT_FAILURE);
 
 #endif
 

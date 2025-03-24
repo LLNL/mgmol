@@ -10,6 +10,7 @@
 #ifndef MGMOL_POTENTIALS_H
 #define MGMOL_POTENTIALS_H
 
+#include "HDFrestart.h"
 #include "Rho.h"
 #include "TriCubic.h"
 
@@ -25,7 +26,6 @@ class GridFunc;
 
 class Potentials
 {
-
     int size_;
     int gdim_[3];
     int dim_[3];
@@ -103,6 +103,12 @@ class Potentials
     void initializeRadialDataOnSampledPts(
         const Vector3D& position, const Species& sp, const std::vector<int> &local_idx, std::vector<RHODTYPE> &sampled_rhoc);
 
+    void rescaleRhoComp();
+
+    void addBackgroundToRhoComp();
+
+    void initBackground();
+
 public:
     Potentials();
 
@@ -142,54 +148,46 @@ public:
 
     void turnOnDiel() { diel_ = true; }
 
+    int write(HDFrestart& h5f_file);
+    int read(HDFrestart& h5f_file);
+
     int size() const { return size_; }
 
     double scf_dvrho(void) const { return scf_dvrho_; }
     double scf_dv(void) const { return scf_dv_; }
     POTDTYPE* vtot() { return vtot_.data(); }
-    POTDTYPE* vh_rho() { return vh_rho_.data(); }
     RHODTYPE* rho_comp() { return rho_comp_.data(); }
 
     const std::vector<POTDTYPE>& vnuc() const { return v_nuc_; }
-    POTDTYPE* vnuc() { return v_nuc_.data(); }
-    POTDTYPE* vext() { return v_ext_.data(); }
+    const std::vector<POTDTYPE>& vh_rho() const { return vh_rho_; }
+
     POTDTYPE* vepsilon() { return vepsilon_.data(); }
-    POTDTYPE* vh_rho_backup() { return vh_rho_backup_.data(); }
 
     void axpVcompToVh(const double alpha);
-    void axpVcomp(POTDTYPE* v, const double alpha);
-
-    POTDTYPE vtot(const int i) { return vtot_[i]; }
-    POTDTYPE vh_rho(const int i) { return vh_rho_[i]; }
-    POTDTYPE vxc_rho(const int i) { return vxc_rho_[i]; }
-    POTDTYPE vepsilon(const int i) { return vepsilon_[i]; }
 
     bool diel() const { return diel_; }
 
     double getChargeInCell() const { return charge_in_cell_; }
 
-    /*!
-     * initialize total potential as local pseudopotential
-     */
-    void initWithVnuc();
+    const double getBackgroundCharge() const { return background_charge_; }
 
     void getVofRho(std::vector<POTDTYPE>& vrho) const;
 
     /*!
      * evaluate potential correction associated with a new rho
      */
-    double delta_v(const std::vector<std::vector<RHODTYPE>>& rho);
+    double computeDeltaV(const std::vector<std::vector<RHODTYPE>>& rho);
 
     /*!
-     * update potentials based on argument rho
+     * update total potential with updated components
      */
-    double update(const std::vector<std::vector<RHODTYPE>>& rho);
+    double updateVtot(const std::vector<std::vector<RHODTYPE>>& rho);
 
     /*!
      * update potentials based on potential correction delta v and mixing
      * parameter
      */
-    void update(const double mix);
+    void updateVtot(const double mix);
 
     double max() const;
     double min() const;
@@ -197,18 +195,16 @@ public:
 
     template <typename T>
     void setVxc(const T* const vxc, const int iterativeIndex);
-    void setVh(const POTDTYPE* const vh, const int iterativeIndex);
     void setVh(const pb::GridFunc<POTDTYPE>& vh, const int iterativeIndex);
 
     void initialize(Ions& ions);
-    void rescaleRhoComp();
-    void initBackground(Ions& ions);
-    void addBackgroundToRhoComp();
 
     /*!
      * Save current Hartree potential into backup array
      */
     void backupVh();
+
+    void resetVhRho2Backup() { vh_rho_ = vh_rho_backup_; }
 
     void evalIonDensityOnSamplePts(Ions& ions, const std::vector<int> &local_idx, std::vector<RHODTYPE> &sampled_rhoc);
 

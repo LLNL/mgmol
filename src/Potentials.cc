@@ -25,7 +25,6 @@
 #include "mputils.h"
 
 #include <fstream>
-using namespace std;
 
 // unit conversion factor Ha -> Ry
 const double ha2ry = 2.;
@@ -88,41 +87,24 @@ Potentials::Potentials()
 #endif
 }
 
-void Potentials::initWithVnuc()
-{
-    assert(size_ > 0);
-    if (verbosity_level_ > 2 && onpe0)
-        (*MPIdata::sout) << "Potentials::initWithVnuc()" << endl;
-    itindex_vxc_ = 0;
-    itindex_vh_  = 0;
-    int ione     = 1;
-    Tcopy(&size_, &v_nuc_[0], &ione, &vtot_[0], &ione);
-    double one = 1.;
-    LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
-        size_, one, &v_ext_[0], &vtot_[0]);
-    // factor ha2ry to get total potential in [Ry] for calculations
-    LinearAlgebraUtils<MemorySpace::Host>::MPscal(size_, ha2ry, &vtot_[0]);
-}
-
 double Potentials::max() const
 {
-    Mesh* mymesh             = Mesh::instance();
-    const pb::PEenv& myPEenv = mymesh->peenv();
-    double vmax              = (*max_element(vtot_.begin(), vtot_.end()));
-    vmax                     = myPEenv.double_max_all(vmax);
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    double vmax     = (*max_element(vtot_.begin(), vtot_.end()));
+    vmax            = mmpi.allreduce(&vmax, 1, MPI_MAX);
     return vmax;
 }
 
 double Potentials::min() const
 {
-    Mesh* mymesh             = Mesh::instance();
-    const pb::PEenv& myPEenv = mymesh->peenv();
-    double vmin              = -(*min_element(vtot_.begin(), vtot_.end()));
-    vmin                     = -myPEenv.double_max_all(vmin);
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    double vmin     = -(*min_element(vtot_.begin(), vtot_.end()));
+    vmin            = -mmpi.allreduce(&vmin, 1, MPI_MAX);
     return vmin;
 }
 
-void Potentials::evalNormDeltaVtotRho(const vector<vector<RHODTYPE>>& rho)
+void Potentials::evalNormDeltaVtotRho(
+    const std::vector<std::vector<RHODTYPE>>& rho)
 {
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
@@ -141,17 +123,16 @@ void Potentials::evalNormDeltaVtotRho(const vector<vector<RHODTYPE>>& rho)
     mmpi.allreduce(&scf_dvrho_, 1, MPI_SUM);
 }
 
-double Potentials::update(const vector<vector<RHODTYPE>>& rho)
+double Potentials::updateVtot(const std::vector<std::vector<RHODTYPE>>& rho)
 {
     assert(itindex_vxc_ >= 0);
     assert(itindex_vh_ >= 0);
     assert(itindex_vxc_ == itindex_vh_);
 
     if (verbosity_level_ > 2 && onpe0)
-        (*MPIdata::sout) << "Potentials::update(rho)" << endl;
-    int ione                 = 1;
-    Mesh* mymesh             = Mesh::instance();
-    const pb::PEenv& myPEenv = mymesh->peenv();
+        (*MPIdata::sout) << "Potentials::update(rho)" << std::endl;
+    int ione        = 1;
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
     // save old potentials
     Tcopy(&size_, &vtot_[0], &ione, &vtot_old_[0], &ione);
@@ -181,28 +162,27 @@ double Potentials::update(const vector<vector<RHODTYPE>>& rho)
         = LinearAlgebraUtils<MemorySpace::Host>::MPdot(size_, &dv_[0], &dv_[0]);
 
     double sum = 0.;
-    int rc
-        = MPI_Allreduce(&dvdot, &sum, 1, MPI_DOUBLE, MPI_SUM, myPEenv.comm());
+    int rc     = mmpi.allreduce(&dvdot, &sum, 1, MPI_SUM);
     if (rc != MPI_SUCCESS)
     {
-        cout << "MPI_Allreduce double sum failed!!!" << endl;
-        MPI_Abort(myPEenv.comm(), 2);
+        std::cerr << "MPI_Allreduce double sum failed!!!" << std::endl;
+        mmpi.abort();
     }
     dvdot = sum;
 
     scf_dv_            = 0.5 * sqrt(dvdot);
-    const double gsize = (double)size_ * (double)myPEenv.n_mpi_tasks();
+    const double gsize = (double)size_ * (double)mmpi.size();
     scf_dv_ /= gsize;
 
     return scf_dv_;
 }
 
-void Potentials::update(const double mix)
+void Potentials::updateVtot(const double mix)
 {
     assert(itindex_vxc_ == itindex_vh_);
 
 #ifdef DEBUG
-    if (onpe0) (*MPIdata::sout) << "Potentials::update(mix)" << endl;
+    if (onpe0) (*MPIdata::sout) << "Potentials::update(mix)" << std::endl;
 #endif
     //    int ione=1;
     double potmix = mix;
@@ -210,17 +190,16 @@ void Potentials::update(const double mix)
         size_, potmix, &dv_[0], &vtot_[0]);
 }
 
-double Potentials::delta_v(const vector<vector<RHODTYPE>>& rho)
+double Potentials::computeDeltaV(const std::vector<std::vector<RHODTYPE>>& rho)
 {
     assert(itindex_vxc_ == itindex_vh_);
     assert(size_ > 0);
 
     if (verbosity_level_ > 2 && onpe0)
-        (*MPIdata::sout) << "Potentials::delta_v()" << endl;
+        (*MPIdata::sout) << "Potentials::delta_v()" << std::endl;
 
-    int ione                 = 1;
-    Mesh* mymesh             = Mesh::instance();
-    const pb::PEenv& myPEenv = mymesh->peenv();
+    int ione        = 1;
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
     // save old potentials
     Tcopy(&size_, &vtot_[0], &ione, &vtot_old_[0], &ione);
@@ -249,24 +228,23 @@ double Potentials::delta_v(const vector<vector<RHODTYPE>>& rho)
         = LinearAlgebraUtils<MemorySpace::Host>::MPdot(size_, &dv_[0], &dv_[0]);
 
     double sum = 0.;
-    int rc
-        = MPI_Allreduce(&dvdot, &sum, 1, MPI_DOUBLE, MPI_SUM, myPEenv.comm());
+    int rc     = mmpi.allreduce(&dvdot, &sum, 1, MPI_SUM);
     if (rc != MPI_SUCCESS)
     {
-        cout << "MPI_Allreduce double sum failed!!!" << endl;
-        MPI_Abort(myPEenv.comm(), 2);
+        std::cerr << "MPI_Allreduce double sum failed!!!" << std::endl;
+        mmpi.abort();
     }
     dvdot = sum;
 
     scf_dv_            = 0.5 * sqrt(dvdot);
-    const double gsize = (double)size_ * (double)myPEenv.n_mpi_tasks();
+    const double gsize = (double)size_ * (double)mmpi.size();
     scf_dv_ /= gsize;
 
     return scf_dv_;
 }
 
 // in Ry
-void Potentials::getVofRho(vector<POTDTYPE>& vrho) const
+void Potentials::getVofRho(std::vector<POTDTYPE>& vrho) const
 {
     vrho.resize(size_);
     int ione        = 1;
@@ -283,7 +261,7 @@ void Potentials::getVofRho(vector<POTDTYPE>& vrho) const
 // type:
 // 2->text
 // 3->binary
-void Potentials::readExternalPot(const string filename, const char type)
+void Potentials::readExternalPot(const std::string filename, const char type)
 {
     assert(type == 2 || type == 3);
 
@@ -304,27 +282,27 @@ void Potentials::readExternalPot(const string filename, const char type)
         {
             from->seekg(0, ios::end);
             const int length = from->tellg();
-            (*MPIdata::sout) << "Length file = " << length << endl;
+            (*MPIdata::sout) << "Length file = " << length << std::endl;
             from->seekg(0, ios::beg);
             if (length <= 0)
             {
                 (*MPIdata::serr)
-                    << "ERROR Potential: file length <=0!!!!" << endl;
+                    << "ERROR Potential: file length <=0!!!!" << std::endl;
                 mmpi.abort();
             }
         }
     }
     if (!from)
     {
-        (*MPIdata::serr) << " Cannot open file " << filename << endl;
+        (*MPIdata::serr) << " Cannot open file " << filename << std::endl;
         mmpi.abort();
     }
     if (onpe0)
     {
         (*MPIdata::sout) << "Potentials::read_ExternalPot(), filename="
-                         << filename << endl;
-        if (type == 2) (*MPIdata::sout) << "text file..." << endl;
-        if (type == 3) (*MPIdata::sout) << "binary file..." << endl;
+                         << filename << std::endl;
+        if (type == 2) (*MPIdata::sout) << "text file..." << std::endl;
+        if (type == 3) (*MPIdata::sout) << "binary file..." << std::endl;
     }
 
     // read origin and end of cell (to check compatibility)
@@ -348,29 +326,32 @@ void Potentials::readExternalPot(const string filename, const char type)
     if (onpe0)
         for (short d = 0; d < 3; d++)
         {
-            (*MPIdata::sout) << setprecision(8);
+            (*MPIdata::sout) << std::setprecision(8);
             if (fabs(origin[d] - mygrid.origin(d)) > 1.e-3)
             {
                 (*MPIdata::serr)
                     << "ERROR Potential: Incompatible cell origin in direction "
-                    << d << endl;
-                (*MPIdata::serr) << "Potential origin=" << origin[d] << endl;
-                (*MPIdata::serr) << "MGmol origin=" << mygrid.origin(d) << endl;
+                    << d << std::endl;
+                (*MPIdata::serr)
+                    << "Potential origin=" << origin[d] << std::endl;
+                (*MPIdata::serr)
+                    << "MGmol origin=" << mygrid.origin(d) << std::endl;
                 (*MPIdata::serr)
                     << "Difference=" << fabs(origin[d] - mygrid.origin(d))
-                    << endl;
+                    << std::endl;
                 mmpi.abort();
             }
             if (fabs(ll[d] - mygrid.ll(d)) > 1.e-3)
             {
                 (*MPIdata::serr) << "ERROR Potential: Incompatible cell "
                                     "dimension in direction "
-                                 << d << endl;
-                (*MPIdata::serr) << "Potential cell end=" << end[d] << endl;
+                                 << d << std::endl;
                 (*MPIdata::serr)
-                    << "Potential cell dimension=" << ll[d] << endl;
+                    << "Potential cell end=" << end[d] << std::endl;
                 (*MPIdata::serr)
-                    << "MGmol cell dimension=" << mygrid.ll(d) << endl;
+                    << "Potential cell dimension=" << ll[d] << std::endl;
+                (*MPIdata::serr)
+                    << "MGmol cell dimension=" << mygrid.ll(d) << std::endl;
                 mmpi.abort();
             }
         }
@@ -392,9 +373,9 @@ void Potentials::readExternalPot(const string filename, const char type)
         if (nxyz[i] != gdim_[i])
         {
             (*MPIdata::serr) << "Potentials::read_ExternalPot(): dimension "
-                             << i << " incompatible with Grid!!!" << endl;
+                             << i << " incompatible with Grid!!!" << std::endl;
             (*MPIdata::serr)
-                << "n=" << nxyz[i] << ", gdim_=" << gdim_[i] << endl;
+                << "n=" << nxyz[i] << ", gdim_=" << gdim_[i] << std::endl;
             mmpi.abort();
         }
 
@@ -434,7 +415,6 @@ void Potentials::readExternalPot(const string filename, const char type)
                 {
                     assert(index < size_);
                     (*from) >> v_ext_[index];
-                    //(*MPIdata::sout)<<myPEenv.mytask();
                     //(*MPIdata::sout)<<",
                     // v_ext_["<<index<<"]="<<v_ext_[index]<<endl;
                     index++;
@@ -454,7 +434,7 @@ void Potentials::readExternalPot(const string filename, const char type)
 
     if (type == 3)
     {
-        vector<float> tmp(dim_[2]);
+        std::vector<float> tmp(dim_[2]);
         for (int i = 0; i < dim_[0]; i++)
         {
             // advance (start-file_index) positions
@@ -512,7 +492,8 @@ void Potentials::getGradVext(const double r[3], double dfdr[3]) const
     vext_tricubic_->getGradient(r, dfdr, comm);
 }
 
-void Potentials::getValVext(const vector<double>& r, vector<double>& val) const
+void Potentials::getValVext(
+    const std::vector<double>& r, std::vector<double>& val) const
 {
     assert(vext_tricubic_ != NULL);
 
@@ -522,21 +503,22 @@ void Potentials::getValVext(const vector<double>& r, vector<double>& val) const
 }
 #endif
 
-void Potentials::readAll(vector<Species>& sp)
+void Potentials::readAll(std::vector<Species>& sp)
 {
     assert(sp.size() <= pot_filenames_.size());
 
     if (verbosity_level_ > 2 && onpe0)
         (*MPIdata::sout) << "Potentials::readAll() for " << pot_types_.size()
-                         << " potentials" << endl;
+                         << " potentials" << std::endl;
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
     double hmin            = mygrid.hmin();
     if (verbosity_level_ > 2 && onpe0)
-        (*MPIdata::sout) << "hmin= " << hmin << endl;
+        (*MPIdata::sout) << "hmin= " << hmin << std::endl;
 
-    vector<string>::const_iterator it_filename = pot_filenames_.begin();
-    int isp                                    = 0;
+    std::vector<std::string>::const_iterator it_filename
+        = pot_filenames_.begin();
+    int isp = 0;
     while (it_filename != pot_filenames_.end())
     {
         if (pot_types_[isp] == 'n' || pot_types_[isp] == 's'
@@ -556,13 +538,14 @@ void Potentials::readAll(vector<Species>& sp)
 #else
             (*MPIdata::sout)
                 << "ERROR: cannot read external potential "
-                << " -> need to compile with Tricubic library" << endl;
+                << " -> need to compile with Tricubic library" << std::endl;
 #endif
         }
         it_filename++;
         isp++;
     }
 }
+
 template <typename T>
 void Potentials::setVxc(const T* const vxc, const int iterativeIndex)
 {
@@ -570,13 +553,6 @@ void Potentials::setVxc(const T* const vxc, const int iterativeIndex)
 
     itindex_vxc_ = iterativeIndex;
     MPcpy(&vxc_rho_[0], vxc, size_);
-}
-void Potentials::setVh(const POTDTYPE* const vh, const int iterativeIndex)
-{
-    assert(iterativeIndex >= 0);
-    int ione    = 1;
-    itindex_vh_ = iterativeIndex;
-    Tcopy(&size_, vh, &ione, &vh_rho_[0], &ione);
 }
 
 void Potentials::setVh(
@@ -592,11 +568,6 @@ void Potentials::axpVcompToVh(const double alpha)
 {
     LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
         size_, alpha, &v_comp_[0], &vh_rho_[0]);
-}
-
-void Potentials::axpVcomp(POTDTYPE* v, const double alpha)
-{
-    LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(size_, alpha, &v_comp_[0], v);
 }
 
 void Potentials::backupVh()
@@ -792,9 +763,12 @@ void Potentials::initialize(Ions& ions)
     const pb::Grid& mygrid = mymesh->grid();
     const int numpt        = mygrid.size();
 
-    memset(&v_comp_[0], 0, numpt * sizeof(POTDTYPE));
-    memset(&rho_comp_[0], 0, numpt * sizeof(RHODTYPE));
-    memset(&v_nuc_[0], 0, numpt * sizeof(RHODTYPE));
+    memset(v_comp_.data(), 0, numpt * sizeof(POTDTYPE));
+    memset(rho_comp_.data(), 0, numpt * sizeof(RHODTYPE));
+    memset(v_nuc_.data(), 0, numpt * sizeof(RHODTYPE));
+
+    // Count up the total ionic charge
+    ionic_charge_ = ions.computeIonicCharge();
 
     char flag_filter = pot_type(0);
 
@@ -805,6 +779,7 @@ void Potentials::initialize(Ions& ions)
 
         Vector3D position(ion->position(0), ion->position(1), ion->position(2));
 
+        // initialize rho_comp_, v_comp_, v_nuc_
         if (flag_filter == 's')
         {
             const int sampleRate  = 3;
@@ -820,6 +795,13 @@ void Potentials::initialize(Ions& ions)
             initializeRadialDataOnMesh(position, sp);
         }
     }
+
+    // rescale rho_comp_ due to finite mesh effects
+    rescaleRhoComp();
+
+    initBackground();
+
+    addBackgroundToRhoComp();
 }
 
 void Potentials::rescaleRhoComp()
@@ -831,24 +813,33 @@ void Potentials::rescaleRhoComp()
     const pb::Grid& mygrid = mymesh->grid();
 
     // Check compensating charges
-    double comp_rho = getCharge(&rho_comp_[0]);
+    double comp_rho = getCharge(rho_comp_.data());
+    if (onpe0 && ct.verbose > 1)
+    {
+        std::cout << std::setprecision(8) << std::fixed
+                  << " Charge of rhoc: " << comp_rho << std::endl;
+    }
 
     if (onpe0 && ct.verbose > 1)
     {
-        cout << " Rescaling rhoc" << endl;
+        std::cout << " Rescaling rhoc" << std::endl;
     }
+
+    // rescale rho_comp_ (initialized by sampling on mesh)
+    // so that its integral exactly matches ionic_charge_
     if (ionic_charge_ > 0.)
     {
         const int numpt = mygrid.size();
         double t        = ionic_charge_ / comp_rho;
-        LinearAlgebraUtils<MemorySpace::Host>::MPscal(numpt, t, &rho_comp_[0]);
+        LinearAlgebraUtils<MemorySpace::Host>::MPscal(
+            numpt, t, rho_comp_.data());
 
         // Check new compensating charges
-        comp_rho = getCharge(&rho_comp_[0]);
+        comp_rho = getCharge(rho_comp_.data());
     }
     if (onpe0 && ct.verbose > 1)
-        cout << " Rescaled compensating charges: " << setprecision(8) << fixed
-             << comp_rho << endl;
+        std::cout << " Rescaled compensating charges: " << std::setprecision(8)
+                  << std::fixed << comp_rho << std::endl;
     if (comp_rho < 0.) mmpi.abort();
 }
 
@@ -868,25 +859,22 @@ void Potentials::addBackgroundToRhoComp()
         {
             if (onpe0)
             {
-                cout << setprecision(12) << scientific
-                     << "Add background charge " << background << " to rhoc "
-                     << endl;
+                std::cout << std::setprecision(12) << std::scientific
+                          << "Add background charge " << background
+                          << " to rhoc " << std::endl;
             }
             for (int i = 0; i < numpt; i++)
                 rho_comp_[i] += background;
 
             // Check new compensating charges
-            getCharge(&rho_comp_[0]);
+            getCharge(rho_comp_.data());
         }
     }
 }
 
-void Potentials::initBackground(Ions& ions)
+void Potentials::initBackground()
 {
     Control& ct = *(Control::instance());
-
-    // Count up the total ionic charge
-    ionic_charge_ = ions.computeIonicCharge();
 
     // calculation the compensating background charge
     //   for charged supercell calculations
@@ -898,9 +886,9 @@ void Potentials::initBackground(Ions& ions)
     }
     if (onpe0 && ct.verbose > 0)
     {
-        cout << "N electrons=      " << ct.getNel() << endl;
-        cout << "ionic charge=     " << ionic_charge_ << endl;
-        cout << "background charge=" << background_charge_ << endl;
+        std::cout << "N electrons=      " << ct.getNel() << std::endl;
+        std::cout << "ionic charge=     " << ionic_charge_ << std::endl;
+        std::cout << "background charge=" << background_charge_ << std::endl;
     }
 
     if (fabs(background_charge_) < 1.e-10) background_charge_ = 0.;
@@ -918,8 +906,8 @@ void Potentials::evalIonDensityOnSamplePts(
     {
         if (onpe0)
         {
-            cout << "Potentials::evalIonDensityOnSamplePts - flag_filter s is not supported"
-                << endl;
+            std::cout << "Potentials::evalIonDensityOnSamplePts - flag_filter s is not supported"
+                << std::endl;
         }
         mmpi.abort();
     }
@@ -995,6 +983,75 @@ void Potentials::initializeRadialDataOnSampledPts(
     }
 
     return;
+}
+
+int Potentials::read(HDFrestart& h5f_file)
+{
+    Control& ct = *(Control::instance());
+
+    // Read total potential
+    h5f_file.read_1func_hdf5(vtot_.data(), "Vtotal");
+
+    // Read the hartree potential
+    h5f_file.read_1func_hdf5(vh_rho_.data(), "Hartree");
+    itindex_vh_ = 0;
+
+    // Read dielectric potential
+    if (ct.diel)
+    {
+        h5f_file.read_1func_hdf5(vepsilon_.data(), "VDielectric");
+    }
+
+    std::string datasetname("Preceding_Hartree");
+    if (h5f_file.checkDataExists(datasetname))
+    {
+        h5f_file.read_1func_hdf5(vh_rho_backup_.data(), datasetname);
+    }
+
+    return 0;
+}
+
+int Potentials::write(HDFrestart& h5f_file)
+{
+    Control& ct = *(Control::instance());
+
+    Mesh* mymesh           = Mesh::instance();
+    const pb::Grid& mygrid = mymesh->grid();
+
+    double ll[3]     = { mygrid.ll(0), mygrid.ll(1), mygrid.ll(2) };
+    double origin[3] = { mygrid.origin(0), mygrid.origin(1), mygrid.origin(2) };
+
+    // Write total potential
+    int ierr
+        = h5f_file.write_1func_hdf5(vtot_.data(), "Vtotal", &ll[0], &origin[0]);
+    if (ierr < 0) return ierr;
+
+    // Write the hartree potential
+    ierr = h5f_file.write_1func_hdf5(
+        vh_rho_.data(), "Hartree", &ll[0], &origin[0]);
+    if (ierr < 0) return ierr;
+
+    if (ct.AtomsDynamic() == AtomsDynamicType::MD)
+    {
+        // Write hartree potential before extrapolation
+        ierr = h5f_file.write_1func_hdf5(
+            vh_rho_backup_.data(), "Preceding_Hartree", &ll[0], &origin[0]);
+        if (ierr < 0) return ierr;
+    }
+
+    // Write
+    if (ct.diel)
+    {
+        ierr = h5f_file.write_1func_hdf5(
+            vepsilon_.data(), "VDielectric", &ll[0], &origin[0]);
+    }
+    if (ierr < 0) return ierr;
+
+    // Write external potential
+    ierr = h5f_file.write_1func_hdf5(v_ext_.data(), "Vext", &ll[0], &origin[0]);
+    if (ierr < 0) return ierr;
+
+    return ierr;
 }
 
 template void Potentials::setVxc<double>(

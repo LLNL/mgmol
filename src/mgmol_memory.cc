@@ -62,7 +62,7 @@ void addTrack(long addr, long asize)
     if (nPos > MAXNUMALLOCATIONS)
     {
         printf("ERROR: Not enough memory slots!!!");
-        MPI_Abort(MPI_COMM_WORLD, 1);
+        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
     // if(onpe0)printf("nPos=%d, addr=%ld, size=%ld\n",nPos,addr,asize);
 }

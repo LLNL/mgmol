@@ -98,7 +98,7 @@ void RadialMeshFunction::bcast(MPI_Comm comm, const int root)
     {
         (*MPIdata::sout) << "RadialMeshFunction::bcast() failed!!!"
                          << std::endl;
-        MPI_Abort(comm, 0);
+        MPI_Abort(comm, EXIT_FAILURE);
     }
 
     for (int i = 0; i < nn[1]; i++)
@@ -110,7 +110,7 @@ void RadialMeshFunction::bcast(MPI_Comm comm, const int root)
         {
             (*MPIdata::sout)
                 << "RadialMeshFunction::bcast() failed!!!" << std::endl;
-            MPI_Abort(comm, 0);
+            MPI_Abort(comm, EXIT_FAILURE);
         }
     }
 }

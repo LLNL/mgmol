@@ -120,8 +120,7 @@ double LDAFunctional::computeRhoDotExc() const
     if (rc != MPI_SUCCESS)
     {
         (*MPIdata::sout) << "MPI_Allreduce double sum failed!!!" << endl;
-        Control& ct = *(Control::instance());
-        ct.global_exit(2);
+        mmpi.abort();
     }
     exc = (POTDTYPE)sum;
     return exc;

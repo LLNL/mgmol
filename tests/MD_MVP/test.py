@@ -42,20 +42,20 @@ for line in lines:
 
 #run MD
 for i in range(2):
-  command = "ls -ld snapshot0* | awk '{ print $9 }' | tail -n1"
+  command = "ls -ld snapshot* | awk '{ print $9 }' | tail -n1"
   print(command)
   restart_file = subprocess.check_output(command,shell=True)
   restart_file=str(restart_file[:-1],'utf-8')
   print(restart_file)
 
-  os.rename(restart_file, 'wave.out')
+  os.rename(restart_file, 'snapshotMVP')
 
   #run MGmol
   command = "{} {} -c {} -i {}".format(mpicmd,exe,inp2,coords)
   output2 = subprocess.check_output(command,shell=True)
 
   #remove used restart files
-  shutil.rmtree('wave.out')
+  shutil.rmtree('snapshotMVP')
 
   #analyse mgmol standard output
   lines=output2.split(b'\n')
@@ -81,7 +81,7 @@ for i in range(2):
         sys.exit(1)
 
 #remove last restart files
-command = "ls -ld snapshot0* | awk '{ print $9 }' | tail -n1"
+command = "ls -ld snapshot* | awk '{ print $9 }' | tail -n1"
 restart_file = subprocess.check_output(command,shell=True)
 restart_file=str(restart_file[:-1],'utf-8')
 shutil.rmtree(restart_file)

@@ -29,7 +29,7 @@ void noMoreMemory()
     std::cerr << "Unable to satisfy request for memory for MPI task " << mype
               << std::endl;
     Control& ct = *(Control::instance());
-    ct.global_exit(3);
+    ct.global_exit();
 }
 
 // an atom name should start with a capital letter and end with a number
@@ -229,12 +229,12 @@ void printWithTimeStamp(const std::string& string2print, std::ostream& os)
     if( mpierr!=MPI_SUCCESS )
     {
         cerr << " Error in MPI!!!" << std::endl;
-        MPI_Abort(mmpi.commGlobal(),1);
+        MPI_Abort(mmpi.commGlobal(),EXIT_FAILURE);
     }
     if( r!=mmpi.size()*s && onpe0 )
     {
         cerr << " Error in barrier: "<<r<<"!="<<(mmpi.size()*s)<<endl;
-        MPI_Abort(mmpi.commGlobal(),1);
+        MPI_Abort(mmpi.commGlobal(),EXIT_FAILURE);
     }
     s++;
     s=(s%128);

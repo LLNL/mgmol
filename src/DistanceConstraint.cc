@@ -99,7 +99,7 @@ bool DistanceConstraint::enforce(void)
     {
         cerr << "mype=" << mype << ", tau1p_[0]=" << tau1p_[0] << endl;
         cerr << "mype=" << mype << ", tau2p_[0]=" << tau2p_[0] << endl;
-        MPI_Abort(MPI_COMM_WORLD, 0);
+        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
     if (locally_owned_)
         (*MPIdata::sout) << setprecision(8) << "DistanceConstraint, d=" << d

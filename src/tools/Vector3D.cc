@@ -80,7 +80,7 @@ void bcastvv3d(std::vector<Vector3D>& vv, MPI_Comm comm)
         std::cerr
             << "ERROR!!!! bcastvv3d(), Failure in MPI_Bcast of 'radii_'!!!"
             << std::endl;
-        MPI_Abort(comm, 0);
+        MPI_Abort(comm, EXIT_FAILURE);
     }
     for (int j = 0; j < n; j++)
         for (short i = 0; i < 3; i++)

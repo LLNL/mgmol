@@ -545,7 +545,6 @@ int MGmol<OrbitalsType>::quench(OrbitalsType& orbitals, Ions& ions,
     // get actual indexes of stored functions
     const std::vector<std::vector<int>>& gids(orbitals.getOverlappingGids());
 
-    g_kbpsi_->setup(*ions_);
     electrostat_->setup(ct.vh_its);
     rho_->setup(ct.getOrthoType(), gids);
 
