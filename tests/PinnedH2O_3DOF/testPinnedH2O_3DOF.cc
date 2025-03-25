@@ -206,7 +206,7 @@ int main(int argc, char** argv)
         }
 
         // rotate the forces to the original coordinate system
-        H2O_molecule.transpose_rotate(positions, forces);
+        H2O_molecule.transpose_rotate(positions, anumbers, forces);
 
         // print out results
         if (MPIdata::onpe0)

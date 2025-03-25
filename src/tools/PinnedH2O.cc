@@ -8,10 +8,14 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "PinnedH2O.h"
+#include <iostream>
 
 PinnedH2O::PinnedH2O()
-    : planar_rotation_angle(0.0), 
-      flipped_bond(false)
+    : flipped_bond(false),
+      O1_idx(-1),
+      H1_idx(-1),
+      H2_idx(-1),
+      planar_rotation_angle(0.0)
 {
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
@@ -88,7 +92,6 @@ void PinnedH2O::apply_transpose_rotation(const double matrix[3][3], const double
 
 void PinnedH2O::rotate(std::vector<double>& positions, std::vector<short>& anumbers)
 {
-    int O1_idx = -1;
     for (int i = 0; i < 3; i++) {
         if (positions[3 * i] == 0.0 && positions[3 * i + 1] == 0.0 && positions[3 * i + 2] == 0.0) {
             O1_idx = i;
@@ -97,8 +100,8 @@ void PinnedH2O::rotate(std::vector<double>& positions, std::vector<short>& anumb
     }
     if (O1_idx == -1) return;
 
-    int H1_idx = (O1_idx + 1) % 3;
-    int H2_idx = (O1_idx + 2) % 3;
+    H1_idx = (O1_idx + 1) % 3;
+    H2_idx = (O1_idx + 2) % 3;
 
     double O1[3] = {positions[3 * O1_idx], positions[3 * O1_idx + 1], positions[3 * O1_idx + 2]};
     double H1[3] = {positions[3 * H1_idx], positions[3 * H1_idx + 1], positions[3 * H1_idx + 2]};
@@ -166,7 +169,7 @@ void PinnedH2O::rotate(std::vector<double>& positions, std::vector<short>& anumb
     anumbers[2] = 1;
 }
 
-void PinnedH2O::transpose_rotate(std::vector<double>& positions, std::vector<double>& forces)
+void PinnedH2O::transpose_rotate(std::vector<double>& positions, std::vector<short>& anumbers, std::vector<double>& forces)
 {
     double H2_rotated[3] = {positions[0], positions[1], positions[2]};
     double O1_rotated[3] = {positions[3], positions[4], positions[5]};
@@ -207,20 +210,27 @@ void PinnedH2O::transpose_rotate(std::vector<double>& positions, std::vector<dou
     apply_transpose_rotation(out_of_plane_rotation_matrix, f_H1_temp, f_H1_restored);
     apply_transpose_rotation(out_of_plane_rotation_matrix, f_H2_temp, f_H2_restored);
 
-    positions[0] = H2_restored[0];
-    positions[1] = H2_restored[1];
-    positions[2] = H2_restored[2];
-    positions[6] = H1_restored[0];
-    positions[7] = H1_restored[1];
-    positions[8] = H1_restored[2];
+    positions[3*H2_idx] = H2_restored[0];
+    positions[3*H2_idx+1] = H2_restored[1];
+    positions[3*H2_idx+2] = H2_restored[2];
+    positions[3*O1_idx] = 0.0;
+    positions[3*O1_idx+1] = 0.0; 
+    positions[3*O1_idx+2] = 0.0; 
+    positions[3*H1_idx] = H1_restored[0];
+    positions[3*H1_idx+1] = H1_restored[1];
+    positions[3*H1_idx+2] = H1_restored[2];
 
-    forces[0] = f_H2_restored[0];
-    forces[1] = f_H2_restored[1];
-    forces[2] = f_H2_restored[2];
-    forces[3] = f_O1_restored[0];
-    forces[4] = f_O1_restored[1];
-    forces[5] = f_O1_restored[2];
-    forces[6] = f_H1_restored[0];
-    forces[7] = f_H1_restored[1];
-    forces[8] = f_H1_restored[2];
+    anumbers[H2_idx] = 1;
+    anumbers[O1_idx] = 8;
+    anumbers[H1_idx] = 1;
+
+    forces[3*H2_idx] = f_H2_restored[0];
+    forces[3*H2_idx+1] = f_H2_restored[1];
+    forces[3*H2_idx+2] = f_H2_restored[2];
+    forces[3*O1_idx] = f_O1_restored[0];
+    forces[3*O1_idx+1] = f_O1_restored[1];
+    forces[3*O1_idx+2] = f_O1_restored[2];
+    forces[3*H1_idx] = f_H1_restored[0];
+    forces[3*H1_idx+1] = f_H1_restored[1];
+    forces[3*H1_idx+2] = f_H1_restored[2];
 }

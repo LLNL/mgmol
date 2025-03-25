@@ -471,10 +471,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
             getAtomicNumbers(anumbers);
             H2O_molecule.rotate(positions, anumbers);
             ions.setPositions(positions, anumbers);
-            Potentials& pot = hamiltonian_->potential();
-            pot.initialize(ions);
-            g_kbpsi_->setup(ions);
-            //moveVnuc(ions);
+            setupPotentials(ions);
             ions.getNames(names);
         }
 #endif
@@ -557,7 +554,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
             if (onpe0) os_ << "Transpose rotate the PinnedH2O molecule" << std::endl;
             std::vector<double> forces;
             ions.getForces(forces);
-            H2O_molecule.transpose_rotate(positions, forces);
+            H2O_molecule.transpose_rotate(positions, anumbers, forces);
             ions.setPositions(positions, anumbers);
             ions.setLocalForces(forces, names);
         }
