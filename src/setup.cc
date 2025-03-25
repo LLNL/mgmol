@@ -140,7 +140,7 @@ int MGmol<OrbitalsType>::setupLRsFromInput(const std::string filename)
         if (!tfile->is_open())
         {
             std::cerr << " Unable to open file " << filename << std::endl;
-            global_exit(0);
+            mmpi.abort();
         }
         else
         {
@@ -173,7 +173,7 @@ int MGmol<OrbitalsType>::setupConstraintsFromInput(const std::string filename)
         if (!tfile->is_open())
         {
             std::cerr << " Unable to open file " << filename << std::endl;
-            global_exit(0);
+            mmpi.abort();
         }
         else
         {

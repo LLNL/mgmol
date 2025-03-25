@@ -166,7 +166,7 @@ public:
         {
             std::cerr << "ERROR in PEenv::maxXdir()" << std::endl;
             sleep(5);
-            MPI_Abort(comm_, 0);
+            MPI_Abort(comm_, EXIT_FAILURE);
         }
         delete[] sendbuf;
     }
@@ -181,7 +181,7 @@ public:
         {
             std::cerr << "ERROR in PEenv::maxYdir()" << std::endl;
             sleep(5);
-            MPI_Abort(comm_, 0);
+            MPI_Abort(comm_, EXIT_FAILURE);
         }
         delete[] sendbuf;
     }
@@ -196,7 +196,7 @@ public:
         {
             std::cerr << "ERROR in PEenv::maxZdir()" << std::endl;
             sleep(5);
-            MPI_Abort(comm_, 0);
+            MPI_Abort(comm_, EXIT_FAILURE);
         }
         delete[] sendbuf;
     }

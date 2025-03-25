@@ -319,8 +319,6 @@ int MGmol<OrbitalsType>::initial()
     mmpi.barrier();
     if (ct.verbose > 0) current_orbitals_->printChromaticNumber(os_);
 
-    pot.initBackground(*ions_);
-
     // Random initialization of the wavefunctions
     if (ct.restart_info <= 2)
     {
@@ -360,8 +358,8 @@ int MGmol<OrbitalsType>::initial()
     }
 
     // Initialize the nuclear local potential and the compensating charges
-    if (ct.verbose > 0) printWithTimeStamp("initNuc()...", os_);
-    initNuc(*ions_);
+    if (ct.verbose > 0) printWithTimeStamp("setupPotentials()...", os_);
+    setupPotentials(*ions_);
 
     // initialize Rho
     if (ct.verbose > 0) printWithTimeStamp("Initialize Rho...", os_);
@@ -402,7 +400,6 @@ int MGmol<OrbitalsType>::initial()
     current_orbitals_->setDataWithGhosts();
     current_orbitals_->trade_boundaries();
 
-    //    if(ct.restart_info <= 1)pot.initWithVnuc();
     // initialize matrices S and invB
 
     if (ct.numst > 0)
@@ -417,9 +414,6 @@ int MGmol<OrbitalsType>::initial()
             printWithTimeStamp("Compute initial condition number...", os_);
         current_orbitals_->checkCond(100000., ct.AtomsMove());
     }
-
-    if (ct.verbose > 0) printWithTimeStamp("Setup kbpsi...", os_);
-    g_kbpsi_->setup(*ions_);
 
     if (ct.restart_info == 0)
     {
@@ -731,12 +725,6 @@ void MGmol<OrbitalsType>::write_header()
 }
 
 template <class OrbitalsType>
-void MGmol<OrbitalsType>::global_exit(int i)
-{
-    MPI_Abort(comm_, i);
-}
-
-template <class OrbitalsType>
 void MGmol<OrbitalsType>::check_anisotropy()
 {
     Mesh* mymesh           = Mesh::instance();
@@ -750,7 +738,8 @@ void MGmol<OrbitalsType>::check_anisotropy()
                              << ", hmin=" << mygrid.hmin() << std::endl;
         (*MPIdata::serr) << "init: Anisotropy too large: "
                          << mygrid.anisotropy() << std::endl;
-        global_exit(2);
+        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+        mmpi.abort();
     }
 }
 
@@ -825,7 +814,7 @@ double get_trilinval(const double xc, const double yc, const double zc,
 #endif
 
 template <class OrbitalsType>
-void MGmol<OrbitalsType>::initNuc(Ions& ions)
+void MGmol<OrbitalsType>::setupPotentials(Ions& ions)
 {
     init_nuc_tm_.start();
 
@@ -834,26 +823,15 @@ void MGmol<OrbitalsType>::initNuc(Ions& ions)
 
     Potentials& pot = hamiltonian_->potential();
 
+    // initialize poentials based on ionic positions and their species
     pot.initialize(ions);
 
-    // Check compensating charges
-    double comp_rho = getCharge(pot.rho_comp());
-
-    if (onpe0 && ct.verbose > 1)
-    {
-        os_ << std::setprecision(8) << std::fixed
-            << " Charge of rhoc: " << comp_rho << std::endl;
-    }
-
-#if 1
-    pot.rescaleRhoComp();
-#endif
-
-    pot.addBackgroundToRhoComp();
+    if (ct.verbose > 0) printWithTimeStamp("Setup kbpsi...", os_);
+    g_kbpsi_->setup(*ions_);
 
     electrostat_->setupRhoc(pot.rho_comp());
 
-    if (onpe0 && ct.verbose > 3) os_ << " initNuc done" << std::endl;
+    if (onpe0 && ct.verbose > 3) os_ << " setupPotentials done" << std::endl;
 
     init_nuc_tm_.stop();
 }
@@ -1062,7 +1040,8 @@ void MGmol<OrbitalsType>::setup()
     total_tm_.start();
     setup_tm_.start();
 
-    Control& ct = *(Control::instance());
+    Control& ct     = *(Control::instance());
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
     if (ct.verbose > 0)
         printWithTimeStamp("MGmol<OrbitalsType>::setup()...", os_);
@@ -1080,7 +1059,8 @@ void MGmol<OrbitalsType>::setup()
 #else
     int ierr = initial<MemorySpace::Host>();
 #endif
-    if (ierr < 0) global_exit(0);
+
+    if (ierr < 0) mmpi.abort();
 
     // Write header to stdout
     write_header();
@@ -1112,7 +1092,6 @@ void MGmol<OrbitalsType>::dumpRestart()
 
         // create restart file
         std::string filename(std::string(ct.out_restart_file));
-        if (ct.out_restart_file_naming_strategy) filename += "0";
         HDFrestart h5restartfile(
             filename, myPEenv, gdim, ct.out_restart_file_type);
 
@@ -1411,14 +1390,14 @@ void MGmol<OrbitalsType>::update_pot(const Ions& ions)
 
     const bool flag_mixing = (fabs(ct.mix_pot - 1.) > 1.e-3);
 
-    // evaluate potential correction
+    // update total potential
     if (flag_mixing)
     {
-        pot.delta_v(rho_->rho_);
-        pot.update(ct.mix_pot);
+        pot.computeDeltaV(rho_->rho_);
+        pot.updateVtot(ct.mix_pot);
     }
     else
-        pot.update(rho_->rho_);
+        pot.updateVtot(rho_->rho_);
 }
 
 template <class OrbitalsType>
@@ -1461,7 +1440,7 @@ double MGmol<OrbitalsType>::evaluateEnergyAndForces(Orbitals* orbitals,
 
     ions_->setPositions(tau, atnumbers);
 
-    moveVnuc(*ions_);
+    setupPotentials(*ions_);
 
     double eks              = 0.;
     OrbitalsType* dorbitals = dynamic_cast<OrbitalsType*>(orbitals);
@@ -1483,7 +1462,7 @@ double MGmol<OrbitalsType>::evaluateDMandEnergyAndForces(Orbitals* orbitals,
 
     ions_->setPositions(tau, atnumbers);
 
-    moveVnuc(*ions_);
+    setupPotentials(*ions_);
 
     // initialize electronic density
     rho_->update(*dorbitals);

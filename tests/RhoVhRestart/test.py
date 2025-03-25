@@ -3,9 +3,8 @@ import sys
 import os
 import subprocess
 import string
-import shutil
 
-print("Test RestartEnergyAndForces...")
+print("Test test_rho_restart...")
 
 nargs=len(sys.argv)
 
@@ -14,10 +13,11 @@ for i in range(4,nargs-7):
   mpicmd = mpicmd + " "+sys.argv[i]
 print("MPI run command: {}".format(mpicmd))
 
-mgmol_exe = sys.argv[nargs-6]
-test_exe = sys.argv[nargs-5]
-input1 = sys.argv[nargs-4]
-input2 = sys.argv[nargs-3]
+mgmol_exe = sys.argv[nargs-7]
+test_exe = sys.argv[nargs-6]
+input1 = sys.argv[nargs-5]
+input2 = sys.argv[nargs-4]
+input3 = sys.argv[nargs-3]
 coords = sys.argv[nargs-2]
 print("coordinates file: %s"%coords)
 
@@ -36,60 +36,44 @@ if not os.path.exists(dst2):
   print("Create link to %s"%dst2)
   os.symlink(src2, dst2)
 
-#run mgmol
+#run mgmol to generate initial ground state
 command = "{} {} -c {} -i {}".format(mpicmd,mgmol_exe,input1,coords)
 print("Run command: {}".format(command))
 
 output = subprocess.check_output(command,shell=True)
 lines=output.split(b'\n')
 
-#analyse output
-ref_energy=1.e18
+flag=0
 for line in lines:
-  if line.count(b'%%'):
-    print(line)
-    words=line.split()
-    words=words[5].split(b',')[0]
-    energy = words.decode()
-  if line.count(b'achieved'):
-    ref_energy=energy
-    break
+  if line.count(b'Run ended'):
+    flag=1
 
-#run test
-command = "{} {} -c {} -i {}".format(mpicmd,test_exe,input2,coords)
+if flag==0:
+  print("Initial quench failed to complete!")
+  sys.exit(1)
+
+#run MD
+command = "{} {} -c {} -i {}".format(mpicmd,mgmol_exe,input2,coords)
 print("Run command: {}".format(command))
 output = subprocess.check_output(command,shell=True)
 lines=output.split(b'\n')
 
-shutil.rmtree('WF')
-
-test_energy=1.e18
-l=-1
+flag=0
 for line in lines:
-  if line.count(b'Positions'):
-    l=0
-  if l>=0 and l<4:
-    print(line)
-    l=l+1
-  if line.count(b'%%'):
-    print(line)
-    words=line.split()
-    words=words[5].split(b',')[0]
-    energy = words.decode()
-  if line.count(b'Eks'):
-    print(line)
-    words=line.split()
-    print(words)
-    test_energy = words[2]
-    break
+  if line.count(b'Run ended'):
+    flag=1
 
-
-tol = 1.e-6
-diff=eval(test_energy)-eval(ref_energy)
-print(diff)
-if abs(diff)>tol:
-  print("Energies differ: {} vs {} !!!".format(ref_energy,test_energy))
+if flag==0:
+  print("MD failed to complete!")
   sys.exit(1)
+
+#run test
+command = "{} {} -c {} -i {}".format(mpicmd,test_exe,input3,coords)
+print("Run command: {}".format(command))
+output = subprocess.check_output(command,shell=True)
+lines=output.split(b'\n')
+for line in lines:
+  print(line)
 
 print("Test SUCCESSFUL!")
 sys.exit(0)

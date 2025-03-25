@@ -272,9 +272,10 @@ void Forces<T>::get_loc_proj(RHODTYPE* rho,
     const int numpt = mymesh->numpt();
 
     Potentials& pot = hamiltonian_->potential();
+    const std::vector<POTDTYPE>& vh_rho(pot.vh_rho());
     for (int idx = 0; idx < numpt; idx++)
     {
-        const double vhrho = pot.vh_rho(idx);
+        const double vhrho = vh_rho[idx];
         for (short dir = 0; dir < 3; dir++)
         {
             double* lproj = &(loc_proj[dir * NPTS]);

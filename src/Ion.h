@@ -74,12 +74,6 @@ class Ion
 
         position_[i] += shift;
     }
-    void setOldPosition(const double x, const double y, const double z)
-    {
-        old_position_[0] = x;
-        old_position_[1] = y;
-        old_position_[2] = z;
-    }
 
 public:
     Ion(const Species& species, const std::string& name, const double crds[3],
@@ -95,6 +89,13 @@ public:
 
     void init(const double crds[3], const double velocity[3], const bool lock);
     void setup();
+
+    void setPreviousPosition(const double x, const double y, const double z)
+    {
+        old_position_[0] = x;
+        old_position_[1] = y;
+        old_position_[2] = z;
+    }
 
     std::shared_ptr<KBprojector> kbproj() { return kbproj_; }
     const std::shared_ptr<KBprojector> kbproj() const { return kbproj_; }
@@ -189,6 +190,9 @@ public:
 
         kbproj_->clear();
     }
+
+    void resetPositionsToPrevious();
+
     void shiftPositionXLBOMDTest(Vector3D shift)
     {
         for (short dir = 0; dir < 3; dir++)
