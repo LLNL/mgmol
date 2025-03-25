@@ -8,6 +8,8 @@
 
 int main(int argc, char** argv)
 {
+    int status = 0;
+
     int mpirc = MPI_Init(&argc, &argv);
 
     MPI_Comm comm = MPI_COMM_WORLD;
@@ -41,7 +43,7 @@ int main(int argc, char** argv)
     // read species info from pseudopotential file
     std::string file_path = argv[1];
     std::string filename(file_path + "/pseudo.C_ONCV_PBE_SG15");
-    std::cout << "Potential = " << filename << std::endl;
+    if (myrank == 0) std::cout << "Potential = " << filename << std::endl;
 
     sp.read_1species(filename);
     sp.set_dim_nl(h[0]);
@@ -80,25 +82,110 @@ int main(int argc, char** argv)
 
     ions.setup();
 
-    std::vector<Ion*>& new_local_ions(ions.local_ions());
+    // verify sum of local ions adds up to total number of ions
+    {
+        std::vector<Ion*>& new_local_ions(ions.local_ions());
 
-    int nlocal = new_local_ions.size();
-    std::cout << "PE " << myrank << ", nlocal = " << nlocal << std::endl;
+        int nlocal = new_local_ions.size();
+        std::cout << "PE " << myrank << ", nlocal = " << nlocal << std::endl;
 
-    int ntotal = 0;
-    MPI_Allreduce(&nlocal, &ntotal, 1, MPI_INT, MPI_SUM, comm);
+        int ntotal = 0;
+        MPI_Allreduce(&nlocal, &ntotal, 1, MPI_INT, MPI_SUM, comm);
+        if (ntotal != na)
+        {
+            std::cout << "ntotal = " << ntotal << std::endl;
+            status = 1;
+        }
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    // verify some functionalities of class Ions
+    {
+        std::vector<double> positions;
+        std::vector<short> anumbers;
+        ions.getPositions(positions);
+        ions.getAtomicNumbers(anumbers);
+        if (myrank == 0)
+        {
+            int i = 0;
+            for (auto& position : positions)
+            {
+                std::cout << position;
+                if (i % 3 == 2)
+                    std::cout << std::endl;
+                else
+                    std::cout << "   ";
+                i++;
+            }
+        }
+        MPI_Barrier(MPI_COMM_WORLD);
+
+        // swap x and z
+        for (size_t i = 0; i < positions.size() - 2; i++)
+        {
+            double x         = positions[i];
+            double z         = positions[i + 2];
+            positions[i]     = z;
+            positions[i + 2] = x;
+        }
+
+        ions.setPositions(positions, anumbers);
+    }
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    {
+        std::vector<Ion*>& new_local_ions(ions.local_ions());
+
+        int nlocal = new_local_ions.size();
+        std::cout << "PE " << myrank << ", nlocal = " << nlocal << std::endl;
+
+        int ntotal = 0;
+        MPI_Allreduce(&nlocal, &ntotal, 1, MPI_INT, MPI_SUM, comm);
+        if (ntotal != na)
+        {
+            std::cerr << "ntotal = " << ntotal << std::endl;
+            MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+        }
+    }
+
+    // get the names of all the ions
+    std::vector<std::string> names;
+    ions.getNames(names);
+    if (myrank == 0)
+        for (auto& name : names)
+            std::cout << "name = " << name << std::endl;
+    if (names.size() != na)
+    {
+        std::cerr << "Incorrect count of names..." << std::endl;
+        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    std::vector<double> forces(3 * na);
+    // arbitrary value
+    const double fval = 1.12;
+    for (auto& f : forces)
+        f = fval;
+    ions.setLocalForces(forces, names);
+
+    int nlocal = ions.getNumLocIons();
+    std::vector<double> lforces(3 * nlocal);
+    ions.getLocalForces(lforces);
+    for (auto& f : lforces)
+    {
+        if (std::abs(f - fval) > 1.e-14)
+        {
+            std::cerr << "f = " << f << std::endl;
+            MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+        }
+    }
+
     mpirc = MPI_Finalize();
     if (mpirc != MPI_SUCCESS)
     {
         std::cerr << "MPI Finalize failed!!!" << std::endl;
-        return 1;
+        status = 1;
     }
 
-    if (ntotal != na)
-    {
-        std::cout << "ntotal = " << ntotal << std::endl;
-        return 1;
-    }
-
-    return 0;
+    return status;
 }

@@ -153,7 +153,6 @@ private:
     void initialMasks();
     int setupLRsFromInput(const std::string filename);
 
-    void setup();
     int setupLRs(const std::string input_file) override;
     int setupFromInput(const std::string input_file) override;
     int setupConstraintsFromInput(const std::string input_file) override;
@@ -179,6 +178,8 @@ public:
         std::string lrs_filename, std::string constraints_filename);
 
     ~MGmol() override;
+
+    void setup();
 
     /* access functions */
     OrbitalsType* getOrbitals() { return current_orbitals_; }
@@ -223,10 +224,9 @@ public:
 
     void getAtomicNumbers(std::vector<short>& an);
 
-    void initNuc(Ions& ions);
+    void setupPotentials(Ions& ions);
     void initKBR();
 
-    void global_exit(int i);
     void printEigAndOcc();
 
     int readCoordinates(std::ifstream* tfile, const bool cell_relative);
@@ -344,6 +344,11 @@ public:
     void force(OrbitalsType& orbitals, Ions& ions)
     {
         forces_->force(orbitals, ions);
+    }
+    void setPositions(const std::vector<double>& positions,
+        const std::vector<short>& atnumbers)
+    {
+        ions_->setPositions(positions, atnumbers);
     }
 
     /*

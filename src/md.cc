@@ -65,7 +65,7 @@ void MGmol<OrbitalsType>::moveVnuc(Ions& ions)
 
     // Update items that change when the ionic coordinates change
     pot.axpVcompToVh(1.);
-    initNuc(ions);
+    setupPotentials(ions);
     pot.axpVcompToVh(-1.);
 
     proj_matrices_->setHiterativeIndex(-1, -1);
@@ -248,9 +248,12 @@ int MGmol<OrbitalsType>::dumpMDrestartFile(OrbitalsType& orbitals, Ions& ions,
     std::string filename(std::string(ct.out_restart_file));
     // add an integer corresponding to attempt number/count
     // to allow several attempts at creating and writing file
-    std::stringstream s;
-    s << count;
-    filename += s.str();
+    if (count > 0)
+    {
+        std::stringstream s;
+        s << count;
+        filename += s.str();
+    }
 
     HDFrestart h5file(filename, myPEenv, gdim, ct.out_restart_file_type);
 
@@ -799,11 +802,29 @@ void MGmol<OrbitalsType>::loadRestartFile(const std::string filename)
     if (ierr < 0)
     {
         if (onpe0)
-            (*MPIdata::serr)
-                << "loadRestartFile: failed to read the restart file."
-                << std::endl;
+            std::cerr << "loadRestartFile: failed to read the restart file."
+                      << std::endl;
 
-        global_exit(0);
+        mmpi.abort();
+    }
+    if (!ct.fullyOccupied())
+    {
+        // overwrite DM with restart data in dataset Density_Matrix_WF
+        if (h5file.checkDataExists("Density_Matrix_WF"))
+            ierr = proj_matrices_->readWFDM(h5file);
+    }
+
+    if (h5file.checkDataExists("Preceding_Hartree"))
+    {
+        ions_->readRestartPreviousPositions(h5file);
+        ions_->resetPositionsToPrevious();
+        ions_->setup();
+
+        Potentials& pot = hamiltonian_->potential();
+        pot.initialize(*ions_);
+        if (onpe0) std::cout << "Reset VhRho to backup..." << std::endl;
+        pot.resetVhRho2Backup();
+        electrostat_->setupRhoc(pot.rho_comp());
     }
     if (!ct.fullyOccupied())
     {

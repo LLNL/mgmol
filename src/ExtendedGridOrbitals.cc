@@ -1239,7 +1239,7 @@ double ExtendedGridOrbitals::dotProduct(
                             "dot product type"
                          << std::endl;
         Control& ct = *(Control::instance());
-        ct.global_exit(2);
+        ct.global_exit();
     }
 
     dot_product_tm_.stop();

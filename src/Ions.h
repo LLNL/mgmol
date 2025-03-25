@@ -147,6 +147,8 @@ class Ions
         const MPI_Comm comm) const;
     void gatherPositions(std::vector<double>& positions, const int root,
         const MPI_Comm comm) const;
+    void gatherPreviousPositions(std::vector<double>& positions, const int root,
+        const MPI_Comm comm) const;
     void gatherLockedNames(std::vector<std::string>& names, const int root,
         const MPI_Comm comm) const;
     void gatherIndexes(
@@ -198,6 +200,7 @@ public:
             ion++;
         }
     }
+    void resetPositionsToPrevious();
     void removeMassCenterMotion();
 
     bool hasNLprojectors()
@@ -237,6 +240,7 @@ public:
     double kinetic_E(void) const;
 
     void writePositions(HDFrestart& h5f_file);
+    void writePreviousPositions(HDFrestart& h5f_file);
     void writeVelocities(HDFrestart& h5f_file);
     void writeRandomStates(HDFrestart& h5f_file);
     void writeForces(HDFrestart& h5f_file);
@@ -283,11 +287,20 @@ public:
     void setLocalForces(const std::vector<double>& tau);
 
     void getLocalPositions(std::vector<double>& tau) const;
+    void getLocalNames(std::vector<std::string>& names) const;
+    void getNames(std::vector<std::string>& names) const;
     void getPositions(std::vector<double>& tau);
     void getAtomicNumbers(std::vector<short>& atnumbers);
 
     void getForces(std::vector<double>& forces);
     void getLocalForces(std::vector<double>& tau) const;
+
+    /*!
+     * set forces for ions in local_ions_ based on names matching
+     */
+    void setLocalForces(const std::vector<double>& forces,
+        const std::vector<std::string>& names);
+
     void syncData(const std::vector<Species>& sp);
     // void syncNames(const int nions, std::vector<std::string>& local_names,
     // std::vector<std::string>& names);
@@ -352,6 +365,7 @@ public:
     void addIonToList(const Species& sp, const std::string& name,
         const double crds[3], const double velocity[3], const bool lock);
 
+    void readRestartPreviousPositions(HDFrestart& h5_file);
     // void checkUnicityLocalIons();
 };
 

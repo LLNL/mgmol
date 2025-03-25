@@ -103,7 +103,7 @@ void readRestartFiles(MGmolInterface *mgmol_)
         break;
     
     default:
-        ct.global_exit(-1);
+        ct.global_exit();
         break;
     }
 
@@ -129,7 +129,8 @@ void readRestartFiles(MGmolInterface *mgmol_)
         case ROMVariable::POTENTIAL:
             basis_prefix += "_potential";
             /* we save hartree potential */
-            basis_generator.takeSample(pot.vh_rho());
+            // TODO: consider create overloaded takeSample with const
+            basis_generator.takeSample(const_cast<double*>(pot.vh_rho().data()));
             break;
         }
     }

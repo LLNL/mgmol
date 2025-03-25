@@ -288,7 +288,7 @@ void DataDistribution::distributeLocalDataWithCommOvlp(const int nsteps,
             std::cout << "ERROR: " << name_ << ", dir=" << dir
                       << ", remote_size=" << remote_size << ", bsiz=" << bsiz
                       << std::endl;
-            MPI_Abort(cart_comm_, 0);
+            MPI_Abort(cart_comm_, EXIT_FAILURE);
         }
         // string stamp="DataDistribution ("+name_+"), buffer size checked...";
         // printWithTimeStamp(stamp,cout);
@@ -302,14 +302,14 @@ void DataDistribution::distributeLocalDataWithCommOvlp(const int nsteps,
         if (mpircv != MPI_SUCCESS)
         {
             std::cout << "ERROR in MPI_Irecv, code=" << mpircv << std::endl;
-            MPI_Abort(cart_comm_, 0);
+            MPI_Abort(cart_comm_, EXIT_FAILURE);
         }
         int mpisnd = MPI_Isend(packed_buffer.sendBuffer(), siz, MPI_CHAR, dest,
             0, cart_comm_, &request[1]);
         if (mpisnd != MPI_SUCCESS)
         {
             std::cout << "ERROR in MPI_Isend, code=" << mpisnd << std::endl;
-            MPI_Abort(cart_comm_, 0);
+            MPI_Abort(cart_comm_, EXIT_FAILURE);
         }
         /* wait to complete communication */
         MPI_Waitall(2, request, MPI_STATUSES_IGNORE);

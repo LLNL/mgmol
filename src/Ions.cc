@@ -853,6 +853,42 @@ void Ions::writePositions(HDFrestart& h5f_file)
     }
 }
 
+void Ions::writePreviousPositions(HDFrestart& h5f_file)
+{
+    Control& ct(*(Control::instance()));
+
+    if (onpe0 && ct.verbose > 1)
+    {
+        (*MPIdata::sout) << "Ions::writePositions" << std::endl;
+    }
+
+    std::vector<double> data;
+    if (h5f_file.gatherDataX())
+    {
+        Mesh* mymesh             = Mesh::instance();
+        const pb::PEenv& myPEenv = mymesh->peenv();
+        MPI_Comm comm            = myPEenv.comm_x();
+
+        gatherPreviousPositions(data, 0, comm);
+    }
+    else
+    {
+        for (auto& ion : local_ions_)
+        {
+            data.push_back(ion->getPreviousPosition(0));
+            data.push_back(ion->getPreviousPosition(1));
+            data.push_back(ion->getPreviousPosition(2));
+        }
+    }
+
+    hid_t file_id = h5f_file.file_id();
+    if (file_id >= 0)
+    {
+        std::string datasetname("/Ionic_previous_positions");
+        writeData2d(h5f_file, datasetname, data, 3, 1.e32);
+    }
+}
+
 void Ions::initFromRestartFile(HDFrestart& h5_file)
 {
     assert(list_ions_.empty());
@@ -911,10 +947,12 @@ void Ions::initFromRestartFile(HDFrestart& h5_file)
     assert(at_numbers.size() == at_nlprojIds.size());
 
     num_ions_ = at_names.size();
+#ifdef MGMOL_USE_HDF5P
     if (!h5_file.useHdf5p())
     {
         mmpi.allreduce(&num_ions_, 1, MPI_SUM);
     }
+#endif
     if (onpe0 && ct.verbose > 0)
     {
         (*MPIdata::sout) << "Ions::setFromRestartFile(), read " << num_ions_
@@ -995,14 +1033,39 @@ void Ions::readRestartPositions(HDFrestart& h5_file)
     }
 }
 
+void Ions::readRestartPreviousPositions(HDFrestart& h5_file)
+{
+    Control& ct = *(Control::instance());
+    if (onpe0 && ct.verbose > 0)
+        (*MPIdata::sout) << "Read ionic positions from hdf5 file" << std::endl;
+
+    std::vector<double> data;
+    std::string datasetname("/Ionic_previous_positions");
+    h5_file.readAtomicData(datasetname, data);
+    assert(data.size() == 3 * local_ions_.size());
+
+    int i = 0;
+    for (auto& ion : local_ions_)
+    {
+        ion->setPreviousPosition(data[3 * i], data[3 * i + 1], data[3 * i + 2]);
+        i++;
+    }
+}
+
+void Ions::resetPositionsToPrevious()
+{
+    for (auto& ion : local_ions_)
+    {
+        ion->resetPositionsToPrevious();
+    }
+}
+
 void Ions::writeVelocities(HDFrestart& h5f_file)
 {
     Control& ct(*(Control::instance()));
 
     if (onpe0 && ct.verbose > 1)
-    {
         (*MPIdata::sout) << "Ions::writeVelocities" << std::endl;
-    }
 
     std::vector<double> data;
     if (h5f_file.gatherDataX())
@@ -1222,6 +1285,29 @@ void Ions::writeForces(HDFrestart& h5f_file)
     {
         std::string datasetname("/Ionic_forces");
         writeData2d(h5f_file, datasetname, data, 3, 1.e32);
+    }
+}
+
+void Ions::setLocalForces(
+    const std::vector<double>& forces, const std::vector<std::string>& names)
+{
+    assert(forces.size() == 3 * names.size());
+
+    // loop over global list of forces and atom names
+    std::vector<std::string>::const_iterator s = names.begin();
+    for (auto it = forces.begin(); it != forces.end(); it += 3)
+    {
+        // find possible matching ion
+        for (auto& ion : local_ions_)
+        {
+            if (ion->compareName(*s))
+            {
+                ion->set_force(0, *it);
+                ion->set_force(1, *(it + 1));
+                ion->set_force(2, *(it + 2));
+            }
+        }
+        s++;
     }
 }
 
@@ -1900,7 +1986,6 @@ int Ions::read1atom(std::ifstream* tfile, const bool cell_relative)
     double velocity[3] = { 0., 0., 0. };
 
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
-    Control& ct(*(Control::instance()));
 
     short movable = 0;
     std::string query;
@@ -1944,7 +2029,7 @@ int Ions::read1atom(std::ifstream* tfile, const bool cell_relative)
         {
             std::cerr << "ERROR: Invalid name read in input file: " << name_read
                       << std::endl;
-            ct.global_exit(2);
+            mmpi.abort();
         }
         short dummy;
         ss >> dummy; // not used anymore (was species index)
@@ -2122,6 +2207,22 @@ void Ions::getLocalPositions(std::vector<double>& tau) const
     {
         ion->getPosition(&tau[3 * ia]);
         ia++;
+    }
+}
+
+void Ions::getLocalNames(std::vector<std::string>& names) const
+{
+    for (auto& ion : local_ions_)
+    {
+        names.push_back(ion->name());
+    }
+}
+
+void Ions::getNames(std::vector<std::string>& names) const
+{
+    for (auto& ion : list_ions_)
+    {
+        names.push_back(ion->name());
     }
 }
 
@@ -2563,6 +2664,28 @@ void Ions::gatherPositions(
         local_positions.push_back(position[0]);
         local_positions.push_back(position[1]);
         local_positions.push_back(position[2]);
+    }
+
+    // gather data to PE root
+    std::vector<double> data;
+    mgmol_tools::gatherV(local_positions, data, root, comm);
+
+    int mype = 0;
+    MPI_Comm_rank(comm, &mype);
+    positions.clear();
+    if (mype == root) positions = data;
+}
+
+void Ions::gatherPreviousPositions(
+    std::vector<double>& positions, const int root, const MPI_Comm comm) const
+{
+    std::vector<double> local_positions;
+
+    for (auto& ion : local_ions_)
+    {
+        local_positions.push_back(ion->getPreviousPosition(0));
+        local_positions.push_back(ion->getPreviousPosition(1));
+        local_positions.push_back(ion->getPreviousPosition(2));
     }
 
     // gather data to PE root

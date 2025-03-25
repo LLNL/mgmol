@@ -492,7 +492,7 @@ void LocalizationRegions::bcastLRs()
         cerr << "ERROR!!!! LocalizationRegions::bcast(), Failure in MPI_Bcast "
                 "of 'nglobal_'!!!"
              << endl;
-        MPI_Abort(comm, 0);
+        MPI_Abort(comm, EXIT_FAILURE);
     }
 
     if (nglobal_ == 0) return;
@@ -522,7 +522,7 @@ void LocalizationRegions::bcastLRs()
             cerr << "ERROR!!!! LocalizationRegions::bcast(), Failure in "
                     "MPI_Bcast of 'centers'!!!"
                  << endl;
-            MPI_Abort(comm, 0);
+            MPI_Abort(comm, EXIT_FAILURE);
         }
         vector<LRData>::iterator it = all_regions_.begin();
         int i                       = 0;
@@ -554,7 +554,7 @@ void LocalizationRegions::bcastLRs()
             cerr << "ERROR!!!! LocalizationRegions::bcast(), Failure in "
                     "MPI_Bcast of 'radius'!!!"
                  << endl;
-            MPI_Abort(comm, 0);
+            MPI_Abort(comm, EXIT_FAILURE);
         }
         it = all_regions_.begin();
         i  = 0;
@@ -642,7 +642,7 @@ void LocalizationRegions::bcastLRs()
         cerr << "ERROR!!!! LocalizationRegions::bcast(), Failure in MPI_Bcast "
                 "of 'volume'!!!"
              << endl;
-        MPI_Abort(comm, 0);
+        MPI_Abort(comm, EXIT_FAILURE);
     }
     if (ct.verbose > 0)
         printWithTimeStamp("LocalizationRegions::bcast() done...", cout);
@@ -915,19 +915,9 @@ void LocalizationRegions::setupLocalRegionsFromOverlapRegions()
         cerr << "ERROR in distribution of localization centers: count=" << count
              << endl;
         cerr << "global number of regions=" << nglobal_ << endl;
-        MPI_Abort(MPI_COMM_WORLD, 1);
+        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
 
-#if 0    
-    //if(onpe0)
-    if( count!=nglobal_ )
-    {
-        cerr<<"ERROR in distribution of localization centers: count="<<count
-            <<", regions_.size()="<<regions_.size()
-            <<endl;
-        MPI_Abort(MPI_COMM_WORLD,1);
-    }
-#endif
     gid_local_regions_set_ = true;
     setupLocalRegionsFromOverlapRegions_tm_.stop();
 }

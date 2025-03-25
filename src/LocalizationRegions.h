@@ -242,7 +242,7 @@ public:
         std::cout << "mype:" << mype
                   << ", WARNING: didn't find a center for gid=" << gid
                   << std::endl;
-        MPI_Abort(MPI_COMM_WORLD, 0);
+        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
         return (overlap_regions_.end())->center;
     }
 
@@ -261,7 +261,7 @@ public:
         std::cout << "mype:" << mype
                   << ", WARNING: didn't find a color for gid=" << gid
                   << std::endl;
-        MPI_Abort(MPI_COMM_WORLD, 0);
+        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
         return -1;
     }
 
@@ -284,7 +284,7 @@ public:
         std::cout << "mype:" << mype
                   << ", WARNING: didn't find a center and radius for gid="
                   << gid << std::endl;
-        MPI_Abort(MPI_COMM_WORLD, 0);
+        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
 
         center = (overlap_regions_.end())->center;
         return (overlap_regions_.end())->radius;

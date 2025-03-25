@@ -167,8 +167,7 @@ double PBEFunctional::computeRhoDotExc() const
     if (rc != MPI_SUCCESS)
     {
         (*MPIdata::sout) << "MPI_Allreduce double sum failed!!!" << std::endl;
-        Control& ct = *(Control::instance());
-        ct.global_exit(2);
+        mmpi.abort();
     }
     exc = sum;
     return exc;

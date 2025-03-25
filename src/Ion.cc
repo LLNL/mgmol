@@ -294,12 +294,18 @@ void Ion::getIonData(IonData& idata) const
     }
 }
 
+void Ion::resetPositionsToPrevious()
+{
+    for (int pos = 0; pos < 3; pos++)
+        position_[pos] = old_position_[pos];
+}
+
 void Ion::setFromIonData(const IonData& data)
 {
     // random state
     setRandomState(data.rand_state[0], data.rand_state[1], data.rand_state[2]);
     // previous position
-    setOldPosition(
+    setPreviousPosition(
         data.old_position[0], data.old_position[1], data.old_position[2]);
     // velocity
     setVelocity(data.velocity[0], data.velocity[1], data.velocity[2]);
