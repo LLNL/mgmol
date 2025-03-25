@@ -469,10 +469,10 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
             if (onpe0) os_ << "Rotate Pinned H2O molecule in timestep " << mdstep << std::endl;
             getAtomicPositions(positions);
             getAtomicNumbers(anumbers);
-            ions.getNames(names);
             H2O_molecule.rotate(positions, anumbers);
             ions.setPositions(positions, anumbers);
             setupPotentials(ions);
+            ions.getNames(names);
         }
 #endif
 
@@ -556,6 +556,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
             ions.getForces(forces);
             H2O_molecule.transpose_rotate(positions, anumbers, forces);
             ions.setPositions(positions, anumbers);
+            ions.getNames(names);
             ions.setLocalForces(forces, names);
         }
 
