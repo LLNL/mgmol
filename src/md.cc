@@ -462,6 +462,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
         // variables in ROM MVP solver for Pinned H2O
         std::vector<double> positions;
         std::vector<short> anumbers;
+        std::vector<std::string> names;
         PinnedH2O H2O_molecule;
         if (ct.getROMOptions().rom_stage == ROMStage::ONLINE_PINNED_H2O_3DOF)
         {
@@ -474,6 +475,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
             pot.initialize(ions);
             g_kbpsi_->setup(ions);
             //moveVnuc(ions);
+            ions.getNames(names);
         }
 #endif
 
@@ -557,7 +559,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
             ions.getForces(forces);
             H2O_molecule.transpose_rotate(positions, forces);
             ions.setPositions(positions, anumbers);
-            ions.setForces(forces);
+            ions.setLocalForces(forces, names);
         }
 
         if (ct.getROMOptions().rom_stage == ROMStage::TEST_ORBITAL)
