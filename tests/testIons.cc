@@ -107,6 +107,7 @@ int main(int argc, char** argv)
         ions.getAtomicNumbers(anumbers);
         if (myrank == 0)
         {
+            std::cout << "Positions:" << std::endl;
             int i = 0;
             for (auto& position : positions)
             {
@@ -121,7 +122,7 @@ int main(int argc, char** argv)
         MPI_Barrier(MPI_COMM_WORLD);
 
         // swap x and z
-        for (size_t i = 0; i < positions.size() - 2; i++)
+        for (size_t i = 0; i < positions.size() - 2; i += 3)
         {
             double x         = positions[i];
             double z         = positions[i + 2];
@@ -162,24 +163,46 @@ int main(int argc, char** argv)
     MPI_Barrier(MPI_COMM_WORLD);
 
     std::vector<double> forces(3 * na);
-    // arbitrary value
-    const double fval = 1.12;
+    // set forces to a different arbitrary value for each component
+    int i = 0;
     for (auto& f : forces)
-        f = fval;
+    {
+        f = (double)i;
+        i++;
+    }
+    ions.getNames(names);
     ions.setLocalForces(forces, names);
+
+    ions.printForcesGlobal(std::cout);
 
     int nlocal = ions.getNumLocIons();
     std::vector<double> lforces(3 * nlocal);
     ions.getLocalForces(lforces);
     for (auto& f : lforces)
     {
-        if (std::abs(f - fval) > 1.e-14)
+        if (std::fmod(f, 1.) > 1.e-14)
         {
             std::cerr << "f = " << f << std::endl;
             MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
         }
     }
 
+    ions.getForces(forces);
+    if (myrank == 0)
+        for (auto f0 = forces.begin(); f0 != forces.end(); f0++)
+        {
+            std::cout << "f0 = " << *f0 << std::endl;
+            for (auto f1 = f0 + 1; f1 != forces.end(); f1++)
+            {
+                // make sure each force component is different
+                if (std::abs(*f0 - *f1) < 1.e-14)
+                {
+                    std::cerr << "f0 = " << *f0 << ", f1 = " << *f1
+                              << std::endl;
+                    MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+                }
+            }
+        }
     mpirc = MPI_Finalize();
     if (mpirc != MPI_SUCCESS)
     {

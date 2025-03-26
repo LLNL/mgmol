@@ -19,6 +19,8 @@ add_executable(testDistVector
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/BlacsContext.cc
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/gemm_impl.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/syrk_impl.cc
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
                ${CMAKE_SOURCE_DIR}/src/tools/random.cc
@@ -32,6 +34,8 @@ add_executable(testReplicated2DistMatrix
                ${CMAKE_SOURCE_DIR}/src/local_matrices/SquareLocalMatrices.cc
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/gemm_impl.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/syrk_impl.cc
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
                ${CMAKE_SOURCE_DIR}/src/tools/random.cc
@@ -43,6 +47,8 @@ add_executable(testDistMatrix
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/BlacsContext.cc
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/gemm_impl.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/syrk_impl.cc
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
                ${CMAKE_SOURCE_DIR}/src/tools/random.cc
@@ -54,6 +60,8 @@ add_executable(testConditionDistMatrix
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/BlacsContext.cc
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/gemm_impl.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/syrk_impl.cc
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
                ${CMAKE_SOURCE_DIR}/src/tools/random.cc
@@ -68,6 +76,8 @@ add_executable(testConditionDistMatrixPower
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/BlacsContext.cc
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/gemm_impl.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/syrk_impl.cc
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
                ${CMAKE_SOURCE_DIR}/src/tools/random.cc
@@ -79,6 +89,8 @@ add_executable(testPower
                ${CMAKE_SOURCE_DIR}/src/local_matrices/LocalMatrices.cc
                ${CMAKE_SOURCE_DIR}/src/local_matrices/SquareLocalMatrices.cc
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/gemm_impl.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/syrk_impl.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/DistMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/BlacsContext.cc
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
@@ -93,6 +105,8 @@ add_executable(testPowerDistMatrix
                ${CMAKE_SOURCE_DIR}/src/local_matrices/LocalMatrices.cc
                ${CMAKE_SOURCE_DIR}/src/local_matrices/SquareLocalMatrices.cc
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/gemm_impl.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/syrk_impl.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/DistMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/BlacsContext.cc
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
@@ -123,6 +137,8 @@ add_executable(testVariableSizeMatrix
                ${CMAKE_SOURCE_DIR}/src/sparse_linear_algebra/Table.cc
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/gemm_impl.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/syrk_impl.cc
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
@@ -138,6 +154,8 @@ add_executable(testTradeGhostValues
                ${CMAKE_SOURCE_DIR}/src/pb/FDkernels.cc
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/gemm_impl.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/syrk_impl.cc
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
@@ -153,6 +171,8 @@ add_executable(testSetGhostValues
                ${CMAKE_SOURCE_DIR}/src/pb/FDkernels.cc
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/gemm_impl.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/syrk_impl.cc
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
@@ -172,6 +192,8 @@ add_executable(testLaph4
                ${CMAKE_SOURCE_DIR}/src/pb/FDkernels.cc
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/gemm_impl.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/syrk_impl.cc
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
@@ -189,6 +211,8 @@ add_executable(testBatchLaph4
                ${CMAKE_SOURCE_DIR}/src/pb/GridFuncVector.cc
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/gemm_impl.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/syrk_impl.cc
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
                ${CMAKE_SOURCE_DIR}/src/pb/MGkernels.cc
                ${CMAKE_SOURCE_DIR}/src/pb/FDkernels.cc
@@ -204,6 +228,8 @@ add_executable(testMGkernels
                ${CMAKE_SOURCE_DIR}/src/pb/GridFuncVector.cc
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/gemm_impl.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/syrk_impl.cc
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
                ${CMAKE_SOURCE_DIR}/src/pb/MGkernels.cc
                ${CMAKE_SOURCE_DIR}/src/pb/FDkernels.cc
@@ -225,6 +251,8 @@ add_executable(testGramMatrix
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/DistMatrixTools.cc
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/syrk_impl.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/gemm_impl.cc
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
                ${CMAKE_SOURCE_DIR}/src/tools/random.cc
@@ -244,6 +272,8 @@ add_executable(testDensityMatrix
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/DistMatrixTools.cc
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
                ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/syrk_impl.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/gemm_impl.cc
                ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
                ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
                ${CMAKE_SOURCE_DIR}/src/tools/random.cc
@@ -527,14 +557,16 @@ add_test(NAME testMD_D72
          ${CMAKE_CURRENT_SOURCE_DIR}/MD_D72/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/MD_D72/lrs.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
-add_test(NAME testHDF5single
-         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/HDF5single/test.py
-         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
-         ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
-         ${CMAKE_CURRENT_SOURCE_DIR}/HDF5single/mgmol.cfg
-         ${CMAKE_CURRENT_SOURCE_DIR}/HDF5single/md.cfg
-         ${CMAKE_CURRENT_SOURCE_DIR}/HDF5single/h2o.xyz
-         ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+if(MGMOL_USE_HDF5P)
+  add_test(NAME testHDF5single
+           COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/HDF5single/test.py
+           ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+           ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
+           ${CMAKE_CURRENT_SOURCE_DIR}/HDF5single/mgmol.cfg
+           ${CMAKE_CURRENT_SOURCE_DIR}/HDF5single/md.cfg
+           ${CMAKE_CURRENT_SOURCE_DIR}/HDF5single/h2o.xyz
+           ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+endif()
 add_test(NAME testMD_MVP
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/MD_MVP/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}

@@ -49,7 +49,6 @@ public:
 
     const bool isDielectric() { return diel_flag_; }
     pb::GridFunc<RHODTYPE>* getRhoc() { return grhoc_; }
-
     Poisson* getPoissonSolver() { return poisson_solver_; }
 
     void setup(const short max_sweeps);

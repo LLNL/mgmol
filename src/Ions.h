@@ -10,20 +10,20 @@
 #ifndef MGMOL_IONS_H
 #define MGMOL_IONS_H
 
+#include "DistributedIonicData.h"
+#include "HDFrestart.h"
+#include "Ion.h"
+
 #include <fstream>
-#include <iomanip>
-#include <list>
 #include <map>
 #include <vector>
 
-#include "DistributedIonicData.h"
-#include "Ion.h"
-#include "hdf5.h"
-
-class HDFrestart;
-
 class Ions
 {
+private:
+    /*!
+     * map species to atomic numbers
+     */
     static std::map<std::string, short> map_species_;
     static int num_ions_;
 
@@ -37,7 +37,7 @@ class Ions
 
     std::vector<Ion*> list_ions_;
 
-    /*
+    /*!
      * ions located in local sub-domain
      */
     std::vector<Ion*> local_ions_;
@@ -60,6 +60,13 @@ class Ions
     MPI_Comm cart_comm_; // MPI cartesian communicator for data distribution
 
     bool has_locked_atoms_;
+
+    /*!
+     * Prevent usage of copy constructor by making it private and
+     * non-implemented
+     */
+    Ions(const Ions&);
+    void operator=(const Ions&);
 
     void readRestartVelocities(HDFrestart& h5_file);
     void readRestartRandomStates(HDFrestart& h5_file);
@@ -193,11 +200,9 @@ public:
     std::vector<int>& getGids() { return gids_; }
     void resetForces()
     {
-        std::vector<Ion*>::iterator ion = local_ions_.begin();
-        while (ion != local_ions_.end())
+        for (auto& ion : local_ions_)
         {
-            (*ion)->resetForce();
-            ion++;
+            ion->resetForce();
         }
     }
     void resetPositionsToPrevious();
@@ -287,10 +292,10 @@ public:
     void getLocalPositions(std::vector<double>& tau) const;
     void getLocalNames(std::vector<std::string>& names) const;
     void getNames(std::vector<std::string>& names) const;
-    void getPositions(std::vector<double>& tau);
-    void getAtomicNumbers(std::vector<short>& atnumbers);
+    void getPositions(std::vector<double>& tau) const;
+    void getAtomicNumbers(std::vector<short>& atnumbers) const;
 
-    void getForces(std::vector<double>& forces);
+    void getForces(std::vector<double>& forces) const;
     void getLocalForces(std::vector<double>& tau) const;
 
     /*!
