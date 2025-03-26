@@ -24,6 +24,8 @@ unsigned short isqrt(unsigned value)
 static unsigned int _nlproj_gid = 0;
 static unsigned int _index      = 0;
 
+void Ion::resetIndexCount() { _index = 0; }
+
 Ion::Ion(const Species& species, const std::string& name, const double crds[3],
     const double velocity[3], const bool lock)
     : name_(name), species_(species), index_(_index), nlproj_gid_(_nlproj_gid)

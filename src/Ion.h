@@ -314,6 +314,8 @@ public:
     void getKBcoeffs(std::vector<double>& coeffs);
     double energyDiff(
         Ion& ion, const double lattice[3], const short bc[3]) const;
+
+    static void resetIndexCount();
 };
 
 #endif

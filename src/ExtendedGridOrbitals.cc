@@ -926,10 +926,10 @@ void ExtendedGridOrbitals::computeMatB(
             MATDTYPE* ssiloc = ss.getRawPtr(iloc);
 
             // calculate nf columns of ssiloc
-            MPgemmTN(numst_, nf, loc_numpt_, 1.,
-                orbitals_psi_host_view + iloc * loc_numpt_, lda_,
-                work + iloc * loc_numpt_, lda_, 0., ssiloc + icolor * numst_,
-                numst_);
+            LinearAlgebraUtils<memory_space_type>::MPgemmTN(numst_, nf,
+                loc_numpt_, 1., orbitals_psi_host_view + iloc * loc_numpt_,
+                lda_, work + iloc * loc_numpt_, lda_, 0.,
+                ssiloc + icolor * numst_, numst_);
         }
     }
 
@@ -970,7 +970,7 @@ void ExtendedGridOrbitals::getLocalOverlap(
 
     if (numst_ != 0)
     {
-#ifdef USE_MP
+#ifdef MGMOL_USE_MIXEDP
         getLocalOverlap(*this, ss);
 #else
         ORBDTYPE* psi        = block_vector_.vect(0);
@@ -1041,21 +1041,12 @@ void ExtendedGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
     const int lda = transpose ? ld : lda_;
     const int ldb = transpose ? lda_ : ld;
 
-#ifdef USE_MP
-    // use temporary float data for matrix ss
-    LocalMatrices<ORBDTYPE, memory_space_type> ssf(ss.nmat(), ss.m(), ss.n());
-#else
-    LocalMatrices<ORBDTYPE, memory_space_type>& ssf(ss);
-#endif
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
-        LinearAlgebraUtils<memory_space_type>::MPgemm('T', 'N', numst_, numst_,
+        LinearAlgebraUtils<memory_space_type>::MPgemmTN(numst_, numst_,
             loc_numpt_, 1., a + iloc * loc_numpt_, lda, b + +iloc * loc_numpt_,
-            ldb, 0., ssf.getRawPtr(iloc), ssf.m());
+            ldb, 0., ss.getRawPtr(iloc), ss.m());
     }
-#ifdef USE_MP
-    ss.copy(ssf);
-#endif
 
     ss.scal(grid_.vel());
 }
@@ -1709,9 +1700,9 @@ void ExtendedGridOrbitals::addDotWithNcol2Matrix(
             Apsi.getPsi(0, iloc), phi_size, phi_host_view);
 
         // TODO this can be done on the GPU
-        MPgemmTN(numst_, numst_, loc_numpt_, vel,
-            block_vector_host_view + iloc * loc_numpt_, lda_, phi_host_view,
-            lda_, 1., work.data(), numst_);
+        LinearAlgebraUtils<memory_space_type>::MPgemmTN(numst_, numst_,
+            loc_numpt_, vel, block_vector_host_view + iloc * loc_numpt_, lda_,
+            phi_host_view, lda_, 1., work.data(), numst_);
 
         MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
             phi_host_view);
