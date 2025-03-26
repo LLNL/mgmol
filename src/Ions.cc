@@ -109,14 +109,12 @@ Ions::Ions(const double lat[3], const std::vector<Species>& sp) : species_(sp)
 
 Ions::Ions(const Ions& ions, const double shift[3]) : species_(ions.species_)
 {
-    std::vector<Ion*>::const_iterator ion = ions.list_ions_.begin();
-    while (ion != ions.list_ions_.end())
+    for (const auto& ion : ions.list_ions_)
     {
-        Ion* newion = new Ion(**ion);
+        Ion* newion = new Ion(*ion);
         newion->shiftPosition(shift);
         newion->setup();
         list_ions_.push_back(newion);
-        ion++;
     }
     for (short i = 0; i < 3; ++i)
         lattice_[i] = ions.lattice_[i];
@@ -2211,7 +2209,7 @@ void Ions::getLocalPositions(std::vector<double>& tau) const
 void Ions::getLocalNames(std::vector<std::string>& names) const
 {
     names.clear();
-    for (auto& ion : local_ions_)
+    for (const auto& ion : local_ions_)
     {
         names.push_back(ion->name());
     }
@@ -2219,14 +2217,14 @@ void Ions::getLocalNames(std::vector<std::string>& names) const
 
 void Ions::getNames(std::vector<std::string>& names) const
 {
-    names.clear();
-    for (auto& ion : list_ions_)
-    {
-        names.push_back(ion->name());
-    }
+    std::vector<std::string> local_names;
+    getLocalNames(local_names);
+
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    mmpi.allGatherV(local_names, names);
 }
 
-void Ions::getPositions(std::vector<double>& tau)
+void Ions::getPositions(std::vector<double>& tau) const
 {
     std::vector<double> tau_local(3 * local_ions_.size());
 
@@ -2236,10 +2234,9 @@ void Ions::getPositions(std::vector<double>& tau)
     mmpi.allGatherV(tau_local, tau);
 }
 
-void Ions::getAtomicNumbers(std::vector<short>& atnumbers)
+void Ions::getAtomicNumbers(std::vector<short>& atnumbers) const
 {
     std::vector<short> local_atnumbers;
-
     for (auto& ion : local_ions_)
     {
         local_atnumbers.push_back(ion->atomic_number());
@@ -2249,14 +2246,10 @@ void Ions::getAtomicNumbers(std::vector<short>& atnumbers)
     mmpi.allGatherV(local_atnumbers, atnumbers);
 }
 
-void Ions::getForces(std::vector<double>& forces)
+void Ions::getForces(std::vector<double>& forces) const
 {
     std::vector<double> forces_local(3 * local_ions_.size());
-
     getLocalForces(forces_local);
-
-    int n = getNumIons();
-    forces.resize(3 * n);
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     mmpi.allGatherV(forces_local, forces);

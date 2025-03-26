@@ -292,10 +292,10 @@ public:
     void getLocalPositions(std::vector<double>& tau) const;
     void getLocalNames(std::vector<std::string>& names) const;
     void getNames(std::vector<std::string>& names) const;
-    void getPositions(std::vector<double>& tau);
-    void getAtomicNumbers(std::vector<short>& atnumbers);
+    void getPositions(std::vector<double>& tau) const;
+    void getAtomicNumbers(std::vector<short>& atnumbers) const;
 
-    void getForces(std::vector<double>& forces);
+    void getForces(std::vector<double>& forces) const;
     void getLocalForces(std::vector<double>& tau) const;
 
     /*!
