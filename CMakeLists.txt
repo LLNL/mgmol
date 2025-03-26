@@ -52,6 +52,12 @@ else()
   find_package(OpenMP)
 endif()
 
+# Use mixed precision
+set(MGMOL_WITH_MP FALSE CACHE BOOL "Compile with mixed precision")
+if(MGMOL_WITH_MP)
+  add_definitions(-DMGMOL_USE_MIXEDP)
+endif()
+
 # HDF5 (required)
 set(MGMOL_USE_HDF5P TRUE CACHE BOOL "Use HDF5 parallel capability")
 if(HDF5_LIBRARIES) #user sets libraries explicitly
@@ -100,8 +106,15 @@ if(NOT BLAS_LIBRARIES)
     message(FATAL_ERROR "Required blas library not found.")
   endif(NOT ${BLAS_FOUND})  
 else(NOT BLAS_LIBRARIES)
-  message(STATUS "BLAS_LIBARIES: ${BLAS_LIBRARIES}")
+  message(STATUS "BLAS_LIBARIES set to ${BLAS_LIBRARIES}")
 endif(NOT BLAS_LIBRARIES)  
+
+set(MGMOL_WITH_BLIS FALSE CACHE BOOL "Use BLIS library")
+if(MGMOL_WITH_BLIS)
+  add_definitions(-DMGMOL_USE_BLIS)
+  message(STATUS "BLIS_LIBRARIES include: ${BLIS_INCLUDE_DIRS}")
+  include_directories("${BLIS_INCLUDE_DIRS}")
+endif()
 
 if(NOT LAPACK_LIBRARIES)  
   find_package(LAPACK REQUIRED)

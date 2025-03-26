@@ -1,0 +1,13 @@
+// Copyright (c) 2017, Lawrence Livermore National Security, LLC and
+// UT-Battelle, LLC.
+// Produced at the Lawrence Livermore National Laboratory and the Oak Ridge
+// National Laboratory.
+// LLNL-CODE-743438
+// All rights reserved.
+// This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
+// Please also read this link https://github.com/llnl/mgmol/LICENSE
+
+template <typename T1, typename T2>
+void syrk_impl(const char uplo, const char trans, const int n, const int k,
+    const double alpha, const T1* const a, const int lda, const double beta,
+    T2* c, const int ldc);

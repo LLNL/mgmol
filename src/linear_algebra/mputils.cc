@@ -16,19 +16,27 @@
 #include <magma_v2.h>
 #endif
 
+#include "MGmol_blas1.h"
+#include "gemm_impl.h"
+#include "syrk_impl.h"
+
+#ifdef MGMOL_USE_BLIS
+#include <blis.h>
+#else
+#include "blas2_c.h"
+#include "blas3_c.h"
+#endif
+
 #include <cassert>
 #include <iostream>
 #include <vector>
 
 Timer dgemm_tm("dgemm");
 Timer sgemm_tm("sgemm");
-Timer mpgemm_tm("mpgemm");
-Timer tttgemm_tm("tttgemm");
+Timer bligemm_tm("bligemm");
 
 Timer dsyrk_tm("dsyrk");
 Timer ssyrk_tm("ssyrk");
-Timer mpsyrk_tm("mpsyrk");
-Timer tttsyrk_tm("tttsyrk");
 
 Timer mpdot_tm("mpdot");
 Timer ttdot_tm("ttdot");
@@ -305,106 +313,6 @@ void LAU_H::MPsyrk(const char uplo, const char trans, const int n, const int k,
 }
 
 template <>
-void LAU_H::MPsyrk(const char uplo, const char trans, const int n, const int k,
-    const double alpha, const float* const a, const int lda, const double beta,
-    float* c, const int ldc)
-{
-    MemorySpace::assert_is_host_ptr(a);
-    MemorySpace::assert_is_host_ptr(c);
-
-    mpsyrk_tm.start();
-
-    if (beta == 1. && (alpha == 0. || n == 0 || k == 0)) return;
-
-    /* case Trans == 'N' */
-    if (trans == 'N' || trans == 'n')
-    {
-        /* buffer to hold accumulation in double */
-        std::vector<double> buff(n);
-        if (uplo == 'U' || uplo == 'u')
-        {
-            for (int j = 0; j < n; j++)
-            {
-                const int len = j + 1;
-                std::fill(buff.begin(), buff.begin() + len, 0.);
-                for (int l = 0; l < k; l++)
-                {
-                    /* pointer to beginning of column l in matrix a */
-                    const float* colL = a + lda * l;
-                    /* get multiplier */
-                    double mult = static_cast<double>(
-                        alpha * colL[j]); // same as alpha * a[lda*l + j];
-                    LAU_H::MPaxpy(len, mult, colL, buff.data());
-                }
-                /* Update col j of upper part of matrix C. */
-                /* Get pointer to beginning of column j in C. */
-                float* cj = c + ldc * j;
-                LAU_H::MPscal(len, beta, cj);
-                for (int i = 0; i < len; i++)
-                    cj[i] += static_cast<float>(buff[i]);
-            }
-        }
-        else /* uplo = 'L' or 'l' */
-        {
-            for (int j = 0; j < n; j++)
-            {
-                const int len = n - (j + 1);
-                std::fill(buff.begin(), buff.begin() + len, 0.);
-                for (int l = 0; l < k; l++)
-                {
-                    /* pointer to beginning of column l in matrix a */
-                    const float* colL = a + lda * l + j;
-                    /* get multiplier */
-                    double mult = static_cast<double>(
-                        alpha * colL[0]); // same as alpha * a[lda*l + j];
-                    LAU_H::MPaxpy(len, mult, colL, buff.data());
-                }
-                /* Update col j of upper part of matrix C. */
-                /* Get pointer to beginning of column j in C. */
-                float* cj = c + ldc * j + j;
-                LAU_H::MPscal(len, beta, cj);
-                for (int i = 0; i < len; i++)
-                    cj[i] += static_cast<float>(buff[i]);
-            }
-        }
-    }
-    else /* Trans == 'T' or 'C' */
-    {
-        if (uplo == 'U' || uplo == 'u')
-        {
-            for (int j = 0; j < n; j++)
-            {
-                const float* __restrict__ aj = a + lda * j;
-                for (int i = 0; i < j; i++)
-                {
-                    const int pos                = ldc * j + i;
-                    const float* __restrict__ ai = a + lda * i;
-                    double bc = static_cast<double>(c[pos]) * beta;
-                    c[pos]    = static_cast<float>(
-                        alpha * LAU_H::MPdot(k, ai, aj) + bc);
-                }
-            }
-        }
-        else /* uplo = 'L' or 'l' */
-        {
-            for (int j = 0; j < n; j++)
-            {
-                const float* __restrict__ aj = a + lda * j;
-                for (int i = j; i < n; i++)
-                {
-                    const int pos                = ldc * j + i;
-                    const float* __restrict__ ai = a + lda * i;
-                    double bc = static_cast<double>(c[pos]) * beta;
-                    c[pos]    = static_cast<float>(
-                        alpha * LAU_H::MPdot(k, ai, aj) + bc);
-                }
-            }
-        }
-    }
-    mpsyrk_tm.stop();
-}
-
-template <>
 template <typename T1, typename T2>
 void LAU_H::MPsyrk(const char uplo, const char trans, const int n, const int k,
     const double alpha, const T1* const a, const int lda, const double beta,
@@ -413,97 +321,7 @@ void LAU_H::MPsyrk(const char uplo, const char trans, const int n, const int k,
     MemorySpace::assert_is_host_ptr(a);
     MemorySpace::assert_is_host_ptr(c);
 
-    tttsyrk_tm.start();
-
-    if (beta == 1. && (alpha == 0. || n == 0 || k == 0)) return;
-
-    /* case Trans == 'N' */
-    if (trans == 'N' || trans == 'n')
-    {
-        /* buffer to hold accumulation in double */
-        std::vector<double> buff(n);
-        if (uplo == 'U' || uplo == 'u')
-        {
-            for (int j = 0; j < n; j++)
-            {
-                const int len = j + 1;
-                std::fill(buff.begin(), buff.begin() + len, 0.);
-                for (int l = 0; l < k; l++)
-                {
-                    /* pointer to beginning of column l in matrix a */
-                    const T1* colL = a + lda * l;
-                    /* get multiplier */
-                    double mult = static_cast<double>(
-                        alpha * colL[j]); // same as alpha * a[lda*l + j];
-                    LAU_H::MPaxpy(len, mult, colL, buff.data());
-                }
-                /* Update col j of upper part of matrix C. */
-                /* Get pointer to beginning of column j in C. */
-                T2* cj = c + ldc * j;
-                LAU_H::MPscal(len, beta, cj);
-                for (int i = 0; i < len; i++)
-                    cj[i] += (T2)buff[i];
-            }
-        }
-        else /* uplo = 'L' or 'l' */
-        {
-            for (int j = 0; j < n; j++)
-            {
-                const int len = n - (j + 1);
-                std::fill(buff.begin(), buff.begin() + len, 0.);
-                for (int l = 0; l < k; l++)
-                {
-                    /* pointer to beginning of column l in matrix a */
-                    const T1* colL = a + lda * l + j;
-                    /* get multiplier */
-                    double mult = static_cast<double>(
-                        alpha * colL[0]); // same as alpha * a[lda*l + j];
-                    LAU_H::MPaxpy(len, mult, colL, buff.data());
-                }
-                /* Update col j of upper part of matrix C. */
-                /* Get pointer to beginning of column j in C. */
-                T2* cj = c + ldc * j + j;
-                LAU_H::MPscal(len, beta, cj);
-                for (int i = 0; i < len; i++)
-                    cj[i] += (T2)buff[i];
-            }
-        }
-    }
-    else /* Trans == 'T' or 'C' */
-    {
-        if (uplo == 'U' || uplo == 'u')
-        {
-            for (int j = 0; j < n; j++)
-            {
-                const T1* __restrict__ aj = a + lda * j;
-                for (int i = 0; i < j; i++)
-                {
-                    const int pos             = ldc * j + i;
-                    const T1* __restrict__ ai = a + lda * i;
-                    double bc = static_cast<double>(c[pos]) * beta;
-                    c[pos]
-                        = static_cast<T2>(alpha * LAU_H::MPdot(k, ai, aj) + bc);
-                }
-            }
-        }
-        else /* uplo = 'L' or 'l' */
-        {
-            for (int j = 0; j < n; j++)
-            {
-                const T1* __restrict__ aj = a + lda * j;
-                for (int i = j; i < n; i++)
-                {
-                    const int pos             = ldc * j + i;
-                    const T1* __restrict__ ai = a + lda * i;
-                    double bc = static_cast<double>(c[pos]) * beta;
-                    c[pos]
-                        = static_cast<T2>(alpha * LAU_H::MPdot(k, ai, aj) + bc);
-                }
-            }
-        }
-    }
-
-    tttsyrk_tm.stop();
+    syrk_impl(uplo, trans, n, k, alpha, a, lda, beta, c, ldc);
 }
 
 // MemorySpace::Device
@@ -725,103 +543,7 @@ void LAU_H::MPgemm(const char transa, const char transb, const int m,
     MemorySpace::assert_is_host_ptr(b);
     MemorySpace::assert_is_host_ptr(c);
 
-    tttgemm_tm.start();
-    // if(onpe0)cout<<"template MPgemm..."<<endl;
-
-    if (beta == 1. && (alpha == 0. || m == 0 || n == 0 || k == 0)) return;
-
-    /* case transb == 'N' and transa == 'N' */
-    if (transb == 'N' || transb == 'n')
-    {
-        if (transa == 'N' || transa == 'n')
-        {
-            /* buffer to hold accumulation in double */
-            std::vector<double> buff(m);
-            for (int j = 0; j < n; j++)
-            {
-                std::fill(buff.begin(), buff.end(), 0.);
-                for (int l = 0; l < k; l++)
-                {
-                    /* pointer to beginning of column l in matrix a */
-                    const T1* colL = a + lda * l;
-                    /* get multiplier */
-                    double mult = (double)(alpha * b[ldb * j + l]);
-                    LAU_H::MPaxpy(m, mult, colL, buff.data());
-                }
-                /* Update col j of of result matrix C. */
-                /* Get pointer to beginning of column j in C. */
-                T3* cj = c + ldc * j;
-                LAU_H::MPscal(m, beta, cj);
-                for (int i = 0; i < m; i++)
-                {
-                    cj[i] += (T3)buff[i];
-                }
-            }
-        }
-        else /* transa == 'T'/'C' */
-        {
-            for (int j = 0; j < n; j++)
-            {
-                const T2* __restrict__ bj = b + ldb * j;
-                for (int i = 0; i < m; i++)
-                {
-                    const int pos = ldc * j + i;
-                    double bc     = static_cast<double>(c[pos]) * beta;
-                    const T1* __restrict__ ai = a + lda * i;
-                    c[pos]
-                        = static_cast<T3>(alpha * LAU_H::MPdot(k, ai, bj) + bc);
-                }
-            }
-        }
-    }
-    else /* transb == 'T'/'C' */
-    {
-        if (transa == 'N' || transa == 'n')
-        {
-            /* buffer to hold accumulation in double */
-            std::vector<double> buff(m);
-            for (int j = 0; j < n; j++)
-            {
-                std::fill(buff.begin(), buff.end(), 0.);
-                for (int l = 0; l < k; l++)
-                {
-                    /* pointer to beginning of column l in matrix a */
-                    const T1* colL = a + lda * l;
-                    /* get multiplier */
-                    double mult = (double)(alpha * b[ldb * l + j]);
-                    LAU_H::MPaxpy(m, mult, colL, buff.data());
-                }
-                /* Update col j of of result matrix C. */
-                /* Get pointer to beginning of column j in C. */
-                T3* cj = c + ldc * j;
-                LAU_H::MPscal(m, beta, cj);
-                for (int i = 0; i < m; i++)
-                {
-                    cj[i] += (T3)buff[i];
-                }
-            }
-        }
-        else /* transa == 'T'/'C' */
-        {
-            for (int j = 0; j < n; j++)
-            {
-                for (int i = 0; i < m; i++)
-                {
-                    const int pos = ldc * j + i;
-                    const T1* ai  = a + lda * i;
-                    double sum    = 0.;
-                    for (int l = 0; l < k; l++)
-                    {
-                        sum += alpha * ai[l] * b[ldb * l + j];
-                    }
-                    sum += (double)(beta * c[pos]);
-                    c[pos] = (T3)sum;
-                }
-            }
-        }
-    }
-
-    tttgemm_tm.stop();
+    gemm_impl(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
 }
 
 // input/output in double, computation in double
@@ -840,111 +562,6 @@ void LAU_H::MPgemm<double, double, double>(const char transa, const char transb,
     DGEMM(
         &transa, &transb, &m, &n, &k, &alpha, a, &lda, b, &ldb, &beta, c, &ldc);
     dgemm_tm.stop();
-}
-
-// input/output in float, computation in double
-template <>
-template <>
-void LAU_H::MPgemm<float, float, float>(const char transa, const char transb,
-    const int m, const int n, const int k, const double alpha,
-    const float* const a, const int lda, const float* const b, const int ldb,
-    const double beta, float* const c, const int ldc)
-{
-    MemorySpace::assert_is_host_ptr(a);
-    MemorySpace::assert_is_host_ptr(b);
-    MemorySpace::assert_is_host_ptr(c);
-
-    mpgemm_tm.start();
-
-    if (beta == 1. && (alpha == 0. || m == 0 || n == 0 || k == 0)) return;
-
-    /* case transb == 'N' and transa == 'N' */
-    if (transb == 'N' || transb == 'n')
-    {
-        if (transa == 'N' || transa == 'n')
-        {
-            /* buffer to hold accumulation in double */
-            std::vector<double> buff(m);
-            for (int j = 0; j < n; j++)
-            {
-                std::fill(buff.begin(), buff.end(), 0);
-                for (int l = 0; l < k; l++)
-                {
-                    /* pointer to beginning of column l in matrix a */
-                    const float* colL = a + lda * l;
-                    /* get multiplier */
-                    double mult = (double)(alpha * b[ldb * j + l]);
-                    LAU_H::MPaxpy(m, mult, colL, buff.data());
-                }
-                /* Update col j of of result matrix C. */
-                /* Get pointer to beginning of column j in C. */
-                float* cj = c + ldc * j;
-                LAU_H::MPscal(m, beta, cj);
-                for (int i = 0; i < m; i++)
-                    cj[i] += (float)buff[i];
-            }
-        }
-        else /* transa == 'T'/'C' */
-        {
-            for (int j = 0; j < n; j++)
-            {
-                const float* __restrict__ bj = b + ldb * j;
-                for (int i = 0; i < m; i++)
-                {
-                    const int pos                = ldc * j + i;
-                    double bc                    = (double)c[pos] * beta;
-                    const float* __restrict__ ai = a + lda * i;
-                    c[pos] = (float)(alpha * MPdot(k, ai, bj) + bc);
-                }
-            }
-        }
-    }
-    else /* transb == 'T'/'C' */
-    {
-        if (transa == 'N' || transa == 'n')
-        {
-            /* buffer to hold accumulation in double */
-            std::vector<double> buff(m);
-            for (int j = 0; j < n; j++)
-            {
-                std::fill(buff.begin(), buff.end(), 0);
-                for (int l = 0; l < k; l++)
-                {
-                    /* pointer to beginning of column l in matrix a */
-                    const float* colL = a + lda * l;
-                    /* get multiplier */
-                    double mult = (double)(alpha * b[ldb * l + j]);
-                    LAU_H::MPaxpy(m, mult, colL, buff.data());
-                }
-                /* Update col j of of result matrix C. */
-                /* Get pointer to beginning of column j in C. */
-                float* cj = c + ldc * j;
-                LAU_H::MPscal(m, beta, cj);
-                for (int i = 0; i < m; i++)
-                    cj[i] += (float)buff[i];
-            }
-        }
-        else /* transa == 'T'/'C' */
-        {
-            for (int j = 0; j < n; j++)
-            {
-                for (int i = 0; i < m; i++)
-                {
-                    const int pos   = ldc * j + i;
-                    const float* ai = a + lda * i;
-                    double sum      = 0.;
-                    for (int l = 0; l < k; l++)
-                    {
-                        sum += alpha * ai[l] * b[ldb * l + j];
-                    }
-                    sum += (double)(beta * c[pos]);
-                    c[pos] = (float)sum;
-                }
-            }
-        }
-    }
-
-    mpgemm_tm.stop();
 }
 
 // MemorySpace::Device
@@ -1014,10 +631,6 @@ void LAU_D::MPgemm(const char transa, const char transb, const int m,
 }
 #endif
 
-///////////////////////////////
-//          MPgemmNN         //
-///////////////////////////////
-
 template <typename MemorySpaceType>
 template <typename T1, typename T2, typename T3>
 void LinearAlgebraUtils<MemorySpaceType>::MPgemmNN(const int m, const int n,
@@ -1031,19 +644,122 @@ void LinearAlgebraUtils<MemorySpaceType>::MPgemmNN(const int m, const int n,
         transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
 }
 
+template <>
+template <>
+void LAU_H::MPgemmNN(const int m, const int n, const int k, const double alpha,
+    const float* const a, const int lda, const double* const b, const int ldb,
+    const double beta, float* const c, const int ldc)
+{
+    MemorySpace::assert_is_host_ptr(a);
+    MemorySpace::assert_is_host_ptr(b);
+    MemorySpace::assert_is_host_ptr(c);
+
+#ifdef MGMOL_USE_BLIS
+    bligemm_tm.start();
+
+    // Create matrix objects
+    // When storing by columns, the row stride is 1
+    // When storing by columns, the column stride is also sometimes called the
+    // leading dimension
+    obj_t A;
+    bli_obj_create_with_attached_buffer(
+        BLIS_FLOAT, m, k, const_cast<float*>(a), 1, lda, &A);
+
+    obj_t B;
+    bli_obj_create_with_attached_buffer(
+        BLIS_DOUBLE, k, n, const_cast<double*>(b), 1, ldb, &B);
+
+    obj_t C;
+    bli_obj_create_with_attached_buffer(
+        BLIS_FLOAT, m, n, const_cast<float*>(c), 1, ldc, &C);
+
+    obj_t bli_alpha;
+    bli_obj_create_1x1(BLIS_DOUBLE, &bli_alpha);
+    bli_setsc(alpha, 0., &bli_alpha);
+
+    obj_t bli_beta;
+    bli_obj_create_1x1(BLIS_DOUBLE, &bli_beta);
+    bli_setsc(beta, 0., &bli_beta);
+
+    // accumulate results in double precision
+    bli_obj_set_comp_prec(BLIS_DOUBLE_PREC, &C);
+
+    bli_gemm(&bli_alpha, &A, &B, &bli_beta, &C);
+
+    // Clean up BLIS objects
+    bli_obj_free(&bli_alpha);
+    bli_obj_free(&bli_beta);
+
+    bligemm_tm.stop();
+#else
+    char transa = 'n';
+    char transb = 'n';
+
+    LAU_H::MPgemm(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
+#endif
+}
+
 // input in float, computation in double
-void MPgemmTN(const int m, const int n, const int k, const double alpha,
+template <>
+template <>
+void LAU_H::MPgemmTN(const int m, const int n, const int k, const double alpha,
     const float* const a, const int lda, const float* const b, const int ldb,
     const double beta, double* const c, const int ldc)
 {
+    // std::cout << "LAU_H::MPgemmTN" << std::endl;
+    MemorySpace::assert_is_host_ptr(a);
+    MemorySpace::assert_is_host_ptr(b);
+    MemorySpace::assert_is_host_ptr(c);
+
+#ifdef MGMOL_USE_BLIS
+    bligemm_tm.start();
+
+    // Create matrix objects
+    // When storing by columns, the row stride is 1
+    // When storing by columns, the column stride is also sometimes called the
+    // leading dimension
+    obj_t A;
+    bli_obj_create_with_attached_buffer(
+        BLIS_FLOAT, k, m, const_cast<float*>(a), 1, lda, &A);
+    bli_obj_toggle_trans(&A);
+
+    obj_t B;
+    bli_obj_create_with_attached_buffer(
+        BLIS_FLOAT, k, n, const_cast<float*>(b), 1, ldb, &B);
+    obj_t C;
+    bli_obj_create_with_attached_buffer(
+        BLIS_DOUBLE, m, n, const_cast<double*>(c), 1, ldc, &C);
+
+    obj_t bli_alpha;
+    bli_obj_create_1x1(BLIS_DOUBLE, &bli_alpha);
+    bli_setsc(alpha, 0., &bli_alpha);
+
+    obj_t bli_beta;
+    bli_obj_create_1x1(BLIS_DOUBLE, &bli_beta);
+    bli_setsc(beta, 0., &bli_beta);
+
+    // accumulate results in double precision
+    // dafault: precision of C
+    bli_obj_set_comp_prec(BLIS_DOUBLE_PREC, &C);
+    bli_gemm(&bli_alpha, &A, &B, &bli_beta, &C);
+
+    // Clean up BLIS objects
+    bli_obj_free(&bli_alpha);
+    bli_obj_free(&bli_beta);
+
+    bligemm_tm.stop();
+#else
     char transa = 't';
     char transb = 'n';
 
     LAU_H::MPgemm(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
+#endif
 }
 
 // input in float, computation in double
-void MPgemmTN(const int m, const int n, const int k, const double alpha,
+template <>
+template <>
+void LAU_H::MPgemmTN(const int m, const int n, const int k, const double alpha,
     const float* const a, const int lda, const float* const b, const int ldb,
     const double beta, float* const c, const int ldc)
 {
@@ -1053,12 +769,12 @@ void MPgemmTN(const int m, const int n, const int k, const double alpha,
     LAU_H::MPgemm(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
 }
 
-/////// additional calls ... may be removed later if unused
-
+template <typename MemorySpaceType>
 template <typename T1, typename T2, typename T3>
-void MPgemmTN(const int m, const int n, const int k, const double alpha,
-    const T1* const a, const int lda, const T2* const b, const int ldb,
-    const double beta, T3* const c, const int ldc)
+void LinearAlgebraUtils<MemorySpaceType>::MPgemmTN(const int m, const int n,
+    const int k, const double alpha, const T1* const a, const int lda,
+    const T2* const b, const int ldb, const double beta, T3* const c,
+    const int ldc)
 {
     // if(onpe0)cout<<"template MPgemmNN..."<<endl;
     char transa = 't';
@@ -1107,10 +823,16 @@ template void LAU_H::MPgemm<float, float, double>(const char transa,
     const double alpha, const float* const a, const int lda,
     const float* const b, const int ldb, const double beta, double* const c,
     const int ldc);
-template void LAU_H::MPgemmNN<float, double, float>(const int m, const int n,
-    const int k, const double alpha, const float* const a, const int lda,
-    const double* const b, const int ldb, const double beta, float* const c,
+template void LAU_H::MPgemm<float, float, float>(const char transa,
+    const char transb, const int m, const int n, const int k,
+    const double alpha, const float* const a, const int lda,
+    const float* const b, const int ldb, const double beta, float* const c,
     const int ldc);
+
+// template void LAU_H::MPgemmNN<float, double, float>(const int m, const int n,
+//    const int k, const double alpha, const float* const a, const int lda,
+//    const double* const b, const int ldb, const double beta, float* const c,
+//    const int ldc);
 template void LAU_H::MPgemmNN<double, double, double>(const int m, const int n,
     const int k, const double alpha, const double* const a, const int lda,
     const double* const b, const int ldb, const double beta, double* const c,
@@ -1127,14 +849,18 @@ template void LAU_H::MPaxpy<float, double>(const int len, const double scal,
     const float* __restrict__ xptr, double* __restrict__ yptr);
 template void LAU_H::MPaxpy<float, float>(const int len, const double scal,
     const float* __restrict__ xptr, float* __restrict__ yptr);
+
 template void LAU_H::MPsyrk<double, float>(const char uplo, const char trans,
     const int n, const int k, const double alpha, const double* const a,
     const int lda, const double beta, float* c, const int ldc);
 template void LAU_H::MPsyrk<float, double>(const char uplo, const char trans,
     const int n, const int k, const double alpha, const float* const a,
     const int lda, const double beta, double* c, const int ldc);
+template void LAU_H::MPsyrk<float, float>(const char uplo, const char trans,
+    const int n, const int k, const double alpha, const float* const a,
+    const int lda, const double beta, float* c, const int ldc);
 
-template void MPgemmTN<double, double, double>(const int m, const int n,
+template void LAU_H::MPgemmTN<double, double, double>(const int m, const int n,
     const int k, const double alpha, const double* const a, const int lda,
     const double* const b, const int ldb, const double beta, double* const c,
     const int ldc);

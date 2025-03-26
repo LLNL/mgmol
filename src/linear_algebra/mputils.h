@@ -11,8 +11,6 @@
 #define MGMOL_MPUTILS_H
 
 #include "MGmol_blas1.h"
-#include "blas2_c.h"
-#include "blas3_c.h"
 #include "memory_space.h"
 
 /* scal */
@@ -100,6 +98,11 @@ struct LinearAlgebraUtils
         const double alpha, const T1* const a, const int lda, const T2* const b,
         const int ldb, const double beta, T3* const c, const int ldc);
 
+    template <typename T1, typename T2, typename T3>
+    static void MPgemmTN(const int m, const int n, const int k,
+        const double alpha, const T1* const a, const int lda, const T2* const b,
+        const int ldb, const double beta, T3* const c, const int ldc);
+
     /* mixed-precision scalar times vector. Accumulates results
      * in double precision and stores as single precision.
      */
@@ -125,27 +128,11 @@ struct LinearAlgebraUtils
     static void MPsyrk(const char uplo, const char trans, const int n,
         const int k, const double alpha, const double* const a, const int lda,
         const double beta, double* c, const int ldc);
-    static void MPsyrk(const char uplo, const char trans, const int n,
-        const int k, const double alpha, const float* const a, const int lda,
-        const double beta, float* c, const int ldc);
     template <typename T1, typename T2>
     static void MPsyrk(const char uplo, const char trans, const int n,
         const int k, const double alpha, const T1* const a, const int lda,
         const double beta, T2* c, const int ldc);
 };
-
-void MPgemmTN(const int m, const int n, const int k, const double alpha,
-    const float* const a, const int lda, const float* const b, const int ldb,
-    const double beta, double* const c, const int ldc);
-
-void MPgemmTN(const int m, const int n, const int k, const double alpha,
-    const float* const a, const int lda, const float* const b, const int ldb,
-    const double beta, float* const c, const int ldc);
-
-template <typename T1, typename T2, typename T3>
-void MPgemmTN(const int m, const int n, const int k, const double alpha,
-    const T1* const a, const int lda, const T2* const b, const int ldb,
-    const double beta, T3* const c, const int ldc);
 
 /* trsm */
 void Ttrsm(const char, const char, const char, const char, const int, const int,
