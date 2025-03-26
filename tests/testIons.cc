@@ -166,7 +166,11 @@ int main(int argc, char** argv)
     const double fval = 1.12;
     for (auto& f : forces)
         f = fval;
+
+    ions.getNames(names);
     ions.setLocalForces(forces, names);
+
+    ions.printForcesGlobal(std::cout);
 
     int nlocal = ions.getNumLocIons();
     std::vector<double> lforces(3 * nlocal);
