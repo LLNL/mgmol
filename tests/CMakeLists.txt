@@ -558,14 +558,16 @@ add_test(NAME testMD_D72
          ${CMAKE_CURRENT_SOURCE_DIR}/MD_D72/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/MD_D72/lrs.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
-add_test(NAME testHDF5single
-         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/HDF5single/test.py
-         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
-         ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
-         ${CMAKE_CURRENT_SOURCE_DIR}/HDF5single/mgmol.cfg
-         ${CMAKE_CURRENT_SOURCE_DIR}/HDF5single/md.cfg
-         ${CMAKE_CURRENT_SOURCE_DIR}/HDF5single/h2o.xyz
-         ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+if(MGMOL_USE_HDF5P)
+  add_test(NAME testHDF5single
+           COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/HDF5single/test.py
+           ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+           ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
+           ${CMAKE_CURRENT_SOURCE_DIR}/HDF5single/mgmol.cfg
+           ${CMAKE_CURRENT_SOURCE_DIR}/HDF5single/md.cfg
+           ${CMAKE_CURRENT_SOURCE_DIR}/HDF5single/h2o.xyz
+           ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+endif()
 add_test(NAME testMD_MVP
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/MD_MVP/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
