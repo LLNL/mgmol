@@ -947,10 +947,11 @@ void Ions::initFromRestartFile(HDFrestart& h5_file)
     num_ions_ = at_names.size();
 #ifdef MGMOL_USE_HDF5P
     if (!h5_file.useHdf5p())
+#endif
     {
         mmpi.allreduce(&num_ions_, 1, MPI_SUM);
     }
-#endif
+
     if (onpe0 && ct.verbose > 0)
     {
         (*MPIdata::sout) << "Ions::setFromRestartFile(), read " << num_ions_
