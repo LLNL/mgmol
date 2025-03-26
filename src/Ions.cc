@@ -1299,6 +1299,22 @@ void Ions::setLocalForces(
         {
             if (ion->compareName(*s))
             {
+                //std::cout << "Ion found: " << ion->name() << std::endl;
+                //std::cout << "Ion force: (" << *it << ", " << *(it + 1) << ", " << *(it + 2) << ")" << std::endl;
+                //std::cout << "names: ";
+                //for (int i = 0; i < names.size(); i++)
+                //{
+                //    std::cout << names[i];
+                //    if (i == forces.size() - 1) std::cout << std::endl;
+                //    else std::cout << ", ";
+                //}
+                //std::cout << "forces: ";
+                //for (int i = 0; i < forces.size(); i++)
+                //{
+                //    std::cout << forces[i];
+                //    if (i == forces.size() - 1) std::cout << ")" << std::endl;
+                //    else std::cout << ", ";
+                //}
                 ion->set_force(0, *it);
                 ion->set_force(1, *(it + 1));
                 ion->set_force(2, *(it + 2));
