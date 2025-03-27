@@ -335,16 +335,12 @@ public:
     void precond_mg(OrbitalsType& orbitals);
     void setGamma(const pb::Lap<ORBDTYPE>& lapOper, const Potentials& pot);
     double computeResidual(OrbitalsType& orbitals, OrbitalsType& work_orbitals,
-        OrbitalsType& res, const bool print_residual, const bool norm_res);
+        Ions& ions, OrbitalsType& res, const bool print_residual,
+        const bool norm_res);
     void applyAOMMprojection(OrbitalsType&);
     void force(OrbitalsType& orbitals, Ions& ions)
     {
         forces_->force(orbitals, ions);
-    }
-    void setPositions(const std::vector<double>& positions,
-        const std::vector<short>& atnumbers)
-    {
-        ions_->setPositions(positions, atnumbers);
     }
 
     /*

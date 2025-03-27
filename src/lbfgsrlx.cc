@@ -14,7 +14,6 @@
 #include "Energy.h"
 #include "Ions.h"
 #include "LBFGS.h"
-#include "LBFGS_IonicStepper.h"
 #include "LocalizationRegions.h"
 #include "MGmol.h"
 #include "MGmol_blas1.h"
