@@ -25,6 +25,7 @@ public:
     virtual int setupConstraintsFromInput(const std::string input_file) = 0;
     virtual void setup()                                                = 0;
     virtual void run()                                                  = 0;
+    virtual void cleanup()                                              = 0;
 
     virtual double evaluateEnergyAndForces(const std::vector<double>& tau,
         const std::vector<short>& atnumbers, std::vector<double>& forces)
