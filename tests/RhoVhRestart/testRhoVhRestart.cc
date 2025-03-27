@@ -46,8 +46,8 @@ int testRhoRestart(MGmolInterface* mgmol_)
     /* check if the recomputed density is the same */
     for (int d = 0; d < (int)rho0.size(); d++)
     {
-        double error = abs(rho0[d] - rho->rho_[0][d]) / abs(rho0[d]);
-        if (error > 1e-10)
+        double error = abs(rho0[d] - rho->rho_[0][d]);
+        if (error > 1e-10 * abs(rho0[d]))
         {
             printf("rank %d, rho[%d]=%.15e, rho0[%d]=%.15e\n", rank, d,
                 rho->rho_[0][d], d, rho0[d]);
