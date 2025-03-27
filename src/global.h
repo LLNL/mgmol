@@ -15,7 +15,7 @@
 
 //#include "mgmol_memory.h"
 
-#ifdef USE_MP
+#ifdef MGMOL_USE_MIXEDP
 typedef float ORBDTYPE;
 #else
 typedef double ORBDTYPE;

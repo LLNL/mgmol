@@ -1448,8 +1448,8 @@ void LocGridOrbitals::computeMatB(
             MATDTYPE* ssiloc = ss.getRawPtr(iloc);
 
             // calculate nf columns of ssiloc
-            MPgemmTN(chromatic_number_, nf, loc_numpt_, 1.,
-                orbitals_psi + iloc * loc_numpt_, lda_,
+            LinearAlgebraUtils<memory_space_type>::MPgemmTN(chromatic_number_,
+                nf, loc_numpt_, 1., orbitals_psi + iloc * loc_numpt_, lda_,
                 work + iloc * loc_numpt_, lda_, 0.,
                 ssiloc + icolor * chromatic_number_, chromatic_number_);
         }
@@ -1490,7 +1490,7 @@ void LocGridOrbitals::getLocalOverlap(
 
     if (chromatic_number_ != 0)
     {
-#ifdef USE_MP
+#ifdef MGMOL_USE_MIXEDP
         getLocalOverlap(*this, ss);
 #else
         const ORBDTYPE* const psi = block_vector_.vect(0);
@@ -1560,7 +1560,7 @@ void LocGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
     MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
         const_cast<ORBDTYPE*>(b), b_size, b_host_view);
 
-#ifdef USE_MP
+#ifdef MGMOL_USE_MIXEDP
     // use temporary float data for matrix ss
     LocalMatrices<ORBDTYPE, MemorySpace::Host> ssf(ss.nmat(), ss.m(), ss.n());
 #else
@@ -1575,7 +1575,7 @@ void LocGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
         a_host_view);
     MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
         b_host_view);
-#ifdef USE_MP
+#ifdef MGMOL_USE_MIXEDP
     ss.copy(ssf);
 #endif
 
@@ -2495,8 +2495,8 @@ void LocGridOrbitals::addDotWithNcol2Matrix(
     {
         MATDTYPE* ssiloc = ss.getRawPtr(iloc);
 
-        // TODO
-        MPgemmTN(chromatic_number_, chromatic_number_, loc_numpt_, vel,
+        LinearAlgebraUtils<memory_space_type>::MPgemmTN(chromatic_number_,
+            chromatic_number_, loc_numpt_, vel,
             block_vector_.vect(0) + iloc * loc_numpt_, lda_,
             Apsi.getPsi(0, iloc), lda_, 0., ssiloc, chromatic_number_);
     }

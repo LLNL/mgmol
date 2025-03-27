@@ -764,12 +764,6 @@ void MGmol<OrbitalsType>::loadRestartFile(const std::string filename)
         pot.resetVhRho2Backup();
         electrostat_->setupRhoc(pot.rho_comp());
     }
-    if (!ct.fullyOccupied())
-    {
-        // overwrite DM with restart data in dataset Density_Matrix_WF
-        if (h5file.checkDataExists("Density_Matrix_WF"))
-            ierr = proj_matrices_->readWFDM(h5file);
-    }
 
     ierr = h5file.close();
     mmpi.allreduce(&ierr, 1, MPI_MIN);

@@ -588,7 +588,7 @@ Rho<ExtendedGridOrbitals>::computeRho<dist_matrix::DistMatrix<double>>(
     ExtendedGridOrbitals&, const dist_matrix::DistMatrix<double>&);
 template void Rho<LocGridOrbitals>::computeRho<dist_matrix::DistMatrix<double>>(
     LocGridOrbitals&, const dist_matrix::DistMatrix<double>&);
-#ifdef USE_MP
+#ifdef MGMOL_USE_MIXEDP
 template double Rho<LocGridOrbitals>::dotWithRho<float>(
     const float* const func) const;
 #endif

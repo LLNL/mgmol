@@ -20,6 +20,10 @@
 #include <cassert>
 #include <mpi.h>
 
+#ifdef MGMOL_USE_BLIS
+#include <blis/blis.h>
+#endif
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -38,6 +42,10 @@ int mgmol_init(MPI_Comm comm)
     MPI_Comm_rank(comm, &MPIdata::mype);
     assert(mype > -1);
     MPIdata::onpe0 = (MPIdata::mype == 0);
+
+#ifdef MGMOL_USE_BLIS
+    bli_init();
+#endif
 
 #ifdef HAVE_MAGMA
     magma_int_t magmalog = magma_init();

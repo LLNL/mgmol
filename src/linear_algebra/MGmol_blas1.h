@@ -11,12 +11,17 @@
 #define MGMOL_MYBLAS1_H
 
 #include "fc_mangle.h"
+#ifdef MGMOL_USE_BLIS
+#include <blis.h>
+#endif
 
 #include <cmath>
 #include <string.h>
 
 #define MY_VERSION 0
 #define EPSILON 1.e-12
+
+#ifndef MGMOL_USE_BLIS
 
 #ifdef __cplusplus
 extern "C"
@@ -42,11 +47,16 @@ extern "C"
     float SNRM2(const int* const, const float* const, const int* const);
     int IDAMAX(const int* const, const double* const, const int* const);
     int ISAMAX(const int* const, const float* const, const int* const);
-    void DROT(int*, double*, int*, double*, int*, double*, double*);
-    void SROT(int*, float*, int*, float*, int*, float*, float*);
+    void DROT(const int*, double*, const int*, double*, const int*,
+        const double*, const double*);
+    void SROT(const int*, float*, const int*, float*, const int*, const float*,
+        const float*);
+
 #ifdef __cplusplus
 }
 #endif
+
+#endif // MGMOL_USE_BLIS
 
 inline void my_daxpy(
     const int n, const double alpha, const double* const a, double* b)
