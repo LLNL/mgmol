@@ -29,7 +29,7 @@ Timer GrassmanLineMinimization<T>::update_states_tm_("Grassman_update_states");
 //
 // orthof=true: wants orthonormalized updated wave functions
 template <class T>
-int GrassmanLineMinimization<T>::updateWF(T& orbitals, Ions& /*ions*/,
+int GrassmanLineMinimization<T>::updateWF(T& orbitals, Ions& ions,
     const double precond_factor, const bool orthof, T& work_orbitals,
     const bool accelerate, const bool print_res, const double atol)
 {
@@ -61,7 +61,7 @@ int GrassmanLineMinimization<T>::updateWF(T& orbitals, Ions& /*ions*/,
     // Update wavefunctions
     const bool check_res = (atol > 0.);
     double normRes = mgmol_strategy_->computeResidual(orbitals, work_orbitals,
-        *new_grad_, (print_res || check_res), check_res);
+        ions, *new_grad_, (print_res || check_res), check_res);
     if (normRes < atol && check_res)
     {
         nl_update_tm_.stop();

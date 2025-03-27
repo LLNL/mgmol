@@ -243,9 +243,9 @@ double PolakRibiereSolver<OrbitalsType>::evaluateEnergy(
     const OrbitalsType& orbitals, const bool print_flag)
 {
     // Get the new total energy
-    const double ts = 0.5 * proj_matrices_->computeEntropy(); // in [Ha]
-    const double energy
-        = energy_->evaluateTotal(ts, proj_matrices_, orbitals, print_flag, os_);
+    const double ts     = 0.5 * proj_matrices_->computeEntropy(); // in [Ha]
+    const double energy = energy_->evaluateTotal(
+        ts, proj_matrices_, ions_, orbitals, print_flag, os_);
 
     // Control& ct(*(Control::instance()));
     // if( ct.verbose>2 && onpe0 )os_<<"energy="<<energy<<endl;
@@ -369,7 +369,7 @@ int PolakRibiereSolver<OrbitalsType>::solve(OrbitalsType& orbitals,
 
             // evaluate residuals, preconditioned residuals for current orbitals
             double normRes = mgmol_strategy_->computeResidual(orbitals,
-                work_orbitals, *r_k_, (print_res || ct.checkResidual()),
+                work_orbitals, ions_, *r_k_, (print_res || ct.checkResidual()),
                 ct.checkResidual());
             if (normRes < ct.conv_tol && ct.checkResidual())
             {

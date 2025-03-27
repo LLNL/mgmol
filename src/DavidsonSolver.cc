@@ -500,7 +500,7 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
 
                 ts0 = evalEntropy(projmatrices, (ct.verbose > 1), os_);
                 e0  = energy_->evaluateTotal(
-                    ts0, projmatrices, orbitals, printE, os_);
+                    ts0, projmatrices, ions_, orbitals, printE, os_);
 
                 retval = checkConvergence(e0, outer_it, ct.conv_tol);
                 if (retval == 0 || (outer_it == ct.max_electronic_steps))
@@ -549,7 +549,7 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
 
                 ts0 = evalEntropy(proj_mat2N_.get(), (ct.verbose > 1), os_);
                 e0  = energy_->evaluateTotal(
-                    ts0, proj_mat2N_.get(), orbitals, printE, os_);
+                    ts0, proj_mat2N_.get(), ions_, orbitals, printE, os_);
             }
 
             // 2N x 2N target...
@@ -621,8 +621,8 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
 
                 const double ts1
                     = evalEntropy(proj_mat2N_.get(), (ct.verbose > 2), os_);
-                const double e1 = energy_->evaluateTotal(
-                    ts1, proj_mat2N_.get(), orbitals, ct.verbose - 1, os_);
+                const double e1 = energy_->evaluateTotal(ts1, proj_mat2N_.get(),
+                    ions_, orbitals, ct.verbose - 1, os_);
 
                 // line minimization
                 beta = minQuadPolynomial(e0, e1, de0, (ct.verbose > 2), os_);

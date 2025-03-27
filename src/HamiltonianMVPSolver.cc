@@ -160,8 +160,8 @@ int HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>::solve(
 
         // compute energy at origin
         const int printE = (ct.verbose > 1) ? 1 : 0;
-        double e0
-            = energy_->evaluateTotal(ts0, projmatrices, orbitals, printE, os_);
+        double e0        = energy_->evaluateTotal(
+            ts0, projmatrices, ions_, orbitals, printE, os_);
 
         //
         // compute energy at end for new H
@@ -189,8 +189,8 @@ int HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>::solve(
         projmatrices->setHB2H();
 
         // compute energy at end (beta=1.)
-        double e1
-            = energy_->evaluateTotal(ts1, projmatrices, orbitals, printE, os_);
+        double e1 = energy_->evaluateTotal(
+            ts1, projmatrices, ions_, orbitals, printE, os_);
 
         //
         // evaluate energy at mid-point
@@ -226,8 +226,8 @@ int HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>::solve(
         projmatrices->setHB2H();
 
         // compute energy at midpoint
-        double ei
-            = energy_->evaluateTotal(tsi, projmatrices, orbitals, printE, os_);
+        double ei = energy_->evaluateTotal(
+            tsi, projmatrices, ions_, orbitals, printE, os_);
 
         // line minimization
         double beta
@@ -285,7 +285,7 @@ int HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>::solve(
 
                 // compute energy at end (beta=1.)
                 ei = energy_->evaluateTotal(
-                    tsi, projmatrices, orbitals, printE, os_);
+                    tsi, projmatrices, ions_, orbitals, printE, os_);
 
                 // line minimization
                 beta = minQuadPolynomialFrom3values(
