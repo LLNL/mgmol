@@ -190,6 +190,7 @@ int main(int argc, char** argv)
             }
         }
 
+        mgmol->cleanup();
         delete mgmol;
 
     } // close main scope
