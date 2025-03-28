@@ -1347,7 +1347,8 @@ void Ions::setLocalForces(
 
     // tolerance can be pretty loose, as long as it does not allow mix up
     // with coordinates of other atoms
-    const double tol = 1.e-2;
+    //const double tol = 1.e-2;
+    const double tol = 1.e-1;
 
     // loop over global list of forces and coordinates
     std::vector<double>::const_iterator cit = coords.begin();
