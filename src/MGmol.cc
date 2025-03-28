@@ -1530,8 +1530,6 @@ double MGmol<OrbitalsType>::evaluateDMandEnergyAndForces(Orbitals* orbitals,
 
     ions.getForces(forces);
 
-    ions_->getForces(forces);
-
     return eks;
 }
 

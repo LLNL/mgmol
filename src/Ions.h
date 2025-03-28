@@ -308,6 +308,12 @@ public:
     void setLocalForces(const std::vector<double>& forces,
         const std::vector<std::string>& names);
 
+    /*!
+     * set forces for ions in local_ions_ based on coordinates matching
+     */
+    void setLocalForces(
+        const std::vector<double>& forces, const std::vector<double>& coords);
+
     void syncData(const std::vector<Species>& sp);
     // void syncNames(const int nions, std::vector<std::string>& local_names,
     // std::vector<std::string>& names);
