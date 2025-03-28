@@ -26,8 +26,8 @@ public:
     void transpose_rotate(std::vector<double>& positions, std::vector<short>& anumbers, std::vector<double>& forces);
     void print(std::ostream& os)
     {
-        os << "Bondlengths = " << bondlength1 << ", " << bondlength2 << "; "
-           << "Bondangle = " << bondangle << std::endl;
+        os << "Bondlengths = " << bondlength1 << ", " << bondlength2 << " Bohrs; "
+           << "Bondangle = " << bondangle * 180.0 / M_PI << " degrees." << std::endl;
     }
 
 private:

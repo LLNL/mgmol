@@ -18,12 +18,7 @@ set exe     = mgmol-opt
 
 cp $maindir/install_quartz/bin/$exe .
 
-set datadir = $maindir/examples/PinnedH2O
-
 set cfg_offline = mgmol_offline.cfg
-cp $datadir/$cfg_offline .
-
-cp $datadir/coords.in .
 
 ln -s -f $maindir/potentials/pseudo.O_ONCV_PBE_SG15 .
 ln -s -f $maindir/potentials/pseudo.H_ONCV_PBE_SG15 .

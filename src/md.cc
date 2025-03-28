@@ -471,7 +471,6 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
         Ions ROM_ions(positions, anumbers, lattice, ions_->getSpecies());
 
         // Pinned H2O 3 DOF
-        std::vector<std::string> names;
         PinnedH2O H2O_molecule;
         if (ct.getROMOptions().rom_stage == ROMStage::ONLINE_PINNED_H2O_3DOF)
         {

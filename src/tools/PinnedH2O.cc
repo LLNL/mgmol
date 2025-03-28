@@ -152,6 +152,7 @@ void PinnedH2O::rotate(std::vector<double>& positions, std::vector<short>& anumb
         H1_rotated[1] *= -1.0;
         H2_rotated[1] *= -1.0;
         std::swap(H1_rotated, H2_rotated);
+        std::swap(bondlength1, bondlength2);
     }
 
     positions[0] = H2_rotated[0];
