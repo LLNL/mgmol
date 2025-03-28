@@ -256,7 +256,7 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
             const double ts0
                 = evalEntropyMVP(current_proj_mat, (ct.verbose > 1), os_);
             const double e0 = energy_->evaluateTotal(
-                ts0, current_proj_mat, orbitals, printE, os_);
+                ts0, current_proj_mat, ions_, orbitals, printE, os_);
 
             MatrixType target("target", numst_, numst_);
 
@@ -309,7 +309,7 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
                 const double ts1
                     = evalEntropyMVP(proj_mat_work_, (ct.verbose > 2), os_);
                 const double e1 = energy_->evaluateTotal(
-                    ts1, proj_mat_work_, orbitals, ct.verbose - 1, os_);
+                    ts1, proj_mat_work_, ions_, orbitals, ct.verbose - 1, os_);
 
                 // line minimization
                 const double beta

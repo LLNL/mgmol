@@ -455,9 +455,8 @@ int MGmol<OrbitalsType>::initial()
 
     std::shared_ptr<SpreadPenaltyInterface<OrbitalsType>> spread_penalty
         = energy_with_spread_penalty ? spread_penalty_ : nullptr;
-    energy_ = std::shared_ptr<Energy<OrbitalsType>>(
-        new Energy<OrbitalsType>(mygrid, *ions_, pot, *electrostat_, *rho_,
-            *xcongrid_, spread_penalty.get()));
+    energy_ = std::shared_ptr<Energy<OrbitalsType>>(new Energy<OrbitalsType>(
+        mygrid, pot, *electrostat_, *rho_, *xcongrid_, spread_penalty.get()));
 
     if (ct.verbose > 0) printWithTimeStamp("Setup matrices...", os_);
 
@@ -568,7 +567,7 @@ void MGmol<OrbitalsType>::finalEnergy()
     // Get the total energy
     const double ts = 0.5 * proj_matrices_->computeEntropy(); // in [Ha]
     total_energy_   = energy_->evaluateTotal(
-        ts, proj_matrices_.get(), *current_orbitals_, 2, os_);
+        ts, proj_matrices_.get(), *ions_, *current_orbitals_, 2, os_);
 }
 
 template <class OrbitalsType>
@@ -828,7 +827,7 @@ void MGmol<OrbitalsType>::setupPotentials(Ions& ions)
     pot.initialize(ions);
 
     if (ct.verbose > 0) printWithTimeStamp("Setup kbpsi...", os_);
-    g_kbpsi_->setup(*ions_);
+    g_kbpsi_->setup(ions);
 
     electrostat_->setupRhoc(pot.rho_comp());
 
@@ -1182,8 +1181,8 @@ void MGmol<OrbitalsType>::precond_mg(OrbitalsType& phi)
 
 template <class OrbitalsType>
 double MGmol<OrbitalsType>::computeResidual(OrbitalsType& orbitals,
-    OrbitalsType& work_orbitals, OrbitalsType& res, const bool print_residual,
-    const bool norm_res)
+    OrbitalsType& work_orbitals, Ions& ions, OrbitalsType& res,
+    const bool print_residual, const bool norm_res)
 
 {
     assert(orbitals.getIterativeIndex() >= 0);
@@ -1202,7 +1201,7 @@ double MGmol<OrbitalsType>::computeResidual(OrbitalsType& orbitals,
 
     // get H*psi stored in work_orbitals.psi
     // and psi^T H psi in Hij
-    getHpsiAndTheta(*ions_, orbitals, work_orbitals);
+    getHpsiAndTheta(ions, orbitals, work_orbitals);
 
     double norm2Res = computeConstraintResidual(
         orbitals, work_orbitals, res, print_residual, norm_res);
@@ -1467,17 +1466,22 @@ double MGmol<OrbitalsType>::evaluateEnergyAndForces(Orbitals* orbitals,
 
     Control& ct = *(Control::instance());
 
-    ions_->setPositions(tau, atnumbers);
+    // create a new temporary Ions object to be used for
+    // energy end forces calculation
+    Mesh* mymesh            = Mesh::instance();
+    const pb::Grid& mygrid  = mymesh->grid();
+    const double lattice[3] = { mygrid.ll(0), mygrid.ll(1), mygrid.ll(2) };
+    Ions ions(tau, atnumbers, lattice, ions_->getSpecies());
 
-    setupPotentials(*ions_);
+    setupPotentials(ions);
 
     double eks              = 0.;
     OrbitalsType* dorbitals = dynamic_cast<OrbitalsType*>(orbitals);
-    quench(*dorbitals, *ions_, ct.max_electronic_steps, 20, eks);
+    quench(*dorbitals, ions, ct.max_electronic_steps, 20, eks);
 
-    force(*dorbitals, *ions_);
+    force(*dorbitals, ions);
 
-    ions_->getForces(forces);
+    ions.getForces(forces);
 
     return eks;
 }
@@ -1489,35 +1493,42 @@ double MGmol<OrbitalsType>::evaluateDMandEnergyAndForces(Orbitals* orbitals,
 {
     OrbitalsType* dorbitals = dynamic_cast<OrbitalsType*>(orbitals);
 
-    ions_->setPositions(tau, atnumbers);
+    // create a new temporary Ions object to be used for
+    // energy end forces calculation
+    Mesh* mymesh            = Mesh::instance();
+    const pb::Grid& mygrid  = mymesh->grid();
+    const double lattice[3] = { mygrid.ll(0), mygrid.ll(1), mygrid.ll(2) };
+    Ions ions(tau, atnumbers, lattice, ions_->getSpecies());
 
-    setupPotentials(*ions_);
+    setupPotentials(ions);
 
     // initialize electronic density
     rho_->update(*dorbitals);
 
     // initialize potential
-    update_pot(*ions_);
+    update_pot(ions);
 
     // initialize projected matrices
-    updateHmatrix(*dorbitals, *ions_);
+    updateHmatrix(*dorbitals, ions);
     proj_matrices_->updateThetaAndHB();
 
     // compute DM
     std::shared_ptr<DMStrategy<OrbitalsType>> dm_strategy(
         DMStrategyFactory<OrbitalsType,
-            dist_matrix::DistMatrix<double>>::create(comm_, os_, *ions_,
+            dist_matrix::DistMatrix<double>>::create(comm_, os_, ions,
             rho_.get(), energy_.get(), electrostat_.get(), this,
             proj_matrices_.get(), dorbitals));
 
     dm_strategy->update(*dorbitals);
 
     // evaluate energy and forces
-    double ts = 0.;
-    double eks
-        = energy_->evaluateTotal(ts, proj_matrices_.get(), *dorbitals, 2, os_);
+    double ts  = 0.;
+    double eks = energy_->evaluateTotal(
+        ts, proj_matrices_.get(), ions, *dorbitals, 2, os_);
 
-    force(*dorbitals, *ions_);
+    force(*dorbitals, ions);
+
+    ions.getForces(forces);
 
     ions_->getForces(forces);
 

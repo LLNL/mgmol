@@ -25,11 +25,10 @@
 #define RY2HA 0.5
 
 template <class T>
-Energy<T>::Energy(const pb::Grid& mygrid, const Ions& ions,
-    const Potentials& pot, const Electrostatic& es, const Rho<T>& rho,
-    const XConGrid& xc, SpreadPenaltyInterface<T>* spread_penalty)
+Energy<T>::Energy(const pb::Grid& mygrid, const Potentials& pot,
+    const Electrostatic& es, const Rho<T>& rho, const XConGrid& xc,
+    SpreadPenaltyInterface<T>* spread_penalty)
     : mygrid_(mygrid),
-      ions_(ions),
       pot_(pot),
       es_(es),
       rho_(rho),
@@ -59,7 +58,7 @@ double Energy<T>::getEVrhoRho() const
 }
 
 template <class T>
-double Energy<T>::evaluateEnergyIonsInVext()
+double Energy<T>::evaluateEnergyIonsInVext(Ions& ions)
 {
     double energy = 0.;
 
@@ -69,12 +68,12 @@ double Energy<T>::evaluateEnergyIonsInVext()
     //(*MPIdata::sout)<<"Energy<T>::evaluateEnergyIonsInVext()"<<std::endl;
     double position[3];
     std::vector<double> positions;
-    positions.reserve(3 * ions_.local_ions().size());
+    positions.reserve(3 * ions.local_ions().size());
 
     // loop over ions
     int nions                             = 0;
-    std::vector<Ion*>::const_iterator ion = ions_.local_ions().begin();
-    while (ion != ions_.local_ions().end())
+    std::vector<Ion*>::const_iterator ion = ions.local_ions().begin();
+    while (ion != ions.local_ions().end())
     {
         (*ion)->getPosition(position);
         positions.push_back(position[0]);
@@ -88,9 +87,9 @@ double Energy<T>::evaluateEnergyIonsInVext()
     pot_.getValVext(positions, val);
 
     // loop over ions again
-    ion           = ions_.local_ions().begin();
+    ion           = ions.local_ions().begin();
     int ion_index = 0;
-    while (ion != ions_.local_ions().end())
+    while (ion != ions.local_ions().end())
     {
         const double z = (*ion)->getZion();
         // int ion_index=(*ion)->index();
@@ -112,16 +111,16 @@ double Energy<T>::evaluateEnergyIonsInVext()
 
 template <class T>
 double Energy<T>::evaluateTotal(const double ts, // in [Ha]
-    ProjectedMatricesInterface* projmatrices, const T& phi, const int verbosity,
-    std::ostream& os)
+    ProjectedMatricesInterface* projmatrices, Ions& ions, const T& phi,
+    const int verbosity, std::ostream& os)
 {
     eval_te_tm_.start();
 
     Control& ct = *(Control::instance());
 
-    const double eself = ions_.energySelf();
-    const double ediff = ions_.energyDiff(ct.bcPoisson);
-    const double eipot = evaluateEnergyIonsInVext();
+    const double eself = ions.energySelf();
+    const double ediff = ions.energyDiff(ct.bcPoisson);
+    const double eipot = evaluateEnergyIonsInVext(ions);
 
     const double eigsum = 0.5 * projmatrices->getExpectationH();
 
