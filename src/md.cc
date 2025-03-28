@@ -458,28 +458,35 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
         bool small_move         = true;
         bool last_move_is_small = true;
 
+        bool force_on_ions = true;
 #ifdef MGMOL_HAS_LIBROM
-        // variables in ROM MVP solver for Pinned H2O
+        // Ions for ROM
+        Mesh* mymesh            = Mesh::instance();
+        const pb::Grid& mygrid  = mymesh->grid();
+        const double lattice[3] = { mygrid.ll(0), mygrid.ll(1), mygrid.ll(2) };
         std::vector<double> positions;
         std::vector<short> anumbers;
+        getAtomicPositions(positions);
+        getAtomicNumbers(anumbers);
+        Ions ROM_ions(positions, anumbers, lattice, ions_->getSpecies());
+
+        // Pinned H2O 3 DOF
         std::vector<std::string> names;
         PinnedH2O H2O_molecule;
         if (ct.getROMOptions().rom_stage == ROMStage::ONLINE_PINNED_H2O_3DOF)
         {
             if (onpe0) os_ << "Rotate Pinned H2O molecule in timestep " << mdstep << std::endl;
-            getAtomicPositions(positions);
-            getAtomicNumbers(anumbers);
-            ions.setPositions(positions, anumbers); // artificial call to get new naming pattern
             ions.getNames(names);
             H2O_molecule.rotate(positions, anumbers);
-            ions.setPositions(positions, anumbers);
-            setupPotentials(ions);
+            ROM_ions.setPositions(positions, anumbers);
+            setupPotentials(ROM_ions);
+            force_on_ions = false;
         }
 #endif
 
         if (ROM_MVP)
         {
-            updateDMandEnergy(**orbitals, ions, eks);
+            updateDMandEnergy(**orbitals, ROM_ions, eks);
         }
         else
         {
@@ -547,16 +554,18 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
                 << std::endl;
 
         // Compute forces
-        force(**orbitals, ions);
+        if (force_on_ions)
+            force(**orbitals, ions);
 
 #ifdef MGMOL_HAS_LIBROM
         if (ct.getROMOptions().rom_stage == ROMStage::ONLINE_PINNED_H2O_3DOF)
         {
+            force(**orbitals, ROM_ions);
+            // Pinned H2O 3 DOF
             if (onpe0) os_ << "Transpose rotate the PinnedH2O molecule" << std::endl;
             std::vector<double> forces;
-            ions.getForces(forces);
+            ROM_ions.getForces(forces);
             H2O_molecule.transpose_rotate(positions, anumbers, forces);
-            ions.setPositions(positions, anumbers);
             ions.setLocalForces(forces, names);
         }
 
@@ -569,16 +578,17 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
                 os_ << "Loading ROM basis " << ct.getROMOptions().basis_file << std::endl;
                 os_ << "ROM basis dimension = " << ct.getROMOptions().num_orbbasis << std::endl;
             }
+
+            // Project orbitals to ROM subspace
             project_orbital(ct.getROMOptions().basis_file, ct.getROMOptions().num_orbbasis, **orbitals);
             if (ct.getROMOptions().compare_md)
             {
+                // overwrite ions force for MD time stepping
                 force(**orbitals, ions);
             }
             else
             {
-                double shift[3];
-                for (short i = 0; i < 3; i++) shift[i] = 0.;
-                Ions ROM_ions(ions, shift);
+                // write ROM_ions force for one-step comparison
                 force(**orbitals, ROM_ions);
                 std::string zero = "0";
                 if (ions_->getNumIons() < 256 || ct.verbose > 2)

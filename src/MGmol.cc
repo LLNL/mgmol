@@ -1446,7 +1446,7 @@ void MGmol<OrbitalsType>::updateDMandEnergy(OrbitalsType& orbitals, Ions& ions, 
 
     // evaluate energy and forces
     double ts = 0.;
-    eks = energy_->evaluateTotal(ts, proj_matrices_.get(), orbitals, 2, os_);
+    eks = energy_->evaluateTotal(ts, proj_matrices_.get(), ions, orbitals, 2, os_);
 }
 
 template <class OrbitalsType>
