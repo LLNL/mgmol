@@ -196,8 +196,8 @@ double DFTsolver<OrbitalsType>::evaluateEnergy(
 
     // Get the new total energy
     const double ts = 0.5 * proj_matrices_->computeEntropy(); // in [Ha]
-    eks_history_[0]
-        = energy_->evaluateTotal(ts, proj_matrices_, orbitals, print_flag, os_);
+    eks_history_[0] = energy_->evaluateTotal(
+        ts, proj_matrices_, ions_, orbitals, print_flag, os_);
 
     sum_eig_[1] = sum_eig_[0];
     sum_eig_[0] = 2. * proj_matrices_->getEigSum(); // 2.*sum in [Ry]

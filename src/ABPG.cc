@@ -38,7 +38,7 @@ void ABPG<T>::setup(T& orbitals)
 //
 // orthof=true: wants orthonormalized updated wave functions
 template <class T>
-int ABPG<T>::updateWF(T& orbitals, Ions& /*ions*/, const double precond_factor,
+int ABPG<T>::updateWF(T& orbitals, Ions& ions, const double precond_factor,
     const bool /*orthof*/, T& work_orbitals, const bool accelerate,
     const bool print_res, const double atol)
 {
@@ -51,8 +51,8 @@ int ABPG<T>::updateWF(T& orbitals, Ions& /*ions*/, const double precond_factor,
     T res("Residual", orbitals, false);
 
     const bool check_res = (atol > 0.);
-    double normRes       = mgmol_strategy_->computeResidual(
-        orbitals, work_orbitals, res, (print_res || check_res), check_res);
+    double normRes = mgmol_strategy_->computeResidual(orbitals, work_orbitals,
+        ions, res, (print_res || check_res), check_res);
     if (normRes < atol && check_res)
     {
         abpg_nl_update_tm_.stop();

@@ -35,6 +35,10 @@ private:
 
     const std::vector<Species>& species_;
 
+    bool setup_;
+
+    bool has_locked_atoms_;
+
     std::vector<Ion*> list_ions_;
 
     /*!
@@ -59,8 +63,6 @@ private:
     int dest_[3];
     MPI_Comm cart_comm_; // MPI cartesian communicator for data distribution
 
-    bool has_locked_atoms_;
-
     /*!
      * Prevent usage of copy constructor by making it private and
      * non-implemented
@@ -73,6 +75,7 @@ private:
     void readRestartPositions(HDFrestart& h5_file);
     int read1atom(std::ifstream* tfile, const bool cell_relative);
 
+    void setupSubdomains(const double lat[3]);
     void setupInteractingIons();
     void setupListOverlappingIons();
     void setMapVL();
@@ -129,14 +132,12 @@ private:
     int rstep_[3]; // number of steps to the right for each dimension to gather
                    // data
 
-    bool setup_;
-
     void gatherLockedData(std::vector<int>& locked_data, const int root) const;
     void computeNumIons(void);
     int readNatoms(const std::string& input_file, const bool cell_relative);
     int readNatoms(std::ifstream* tfile, const bool cell_relative);
     int readAtomsFromXYZ(const std::string& filename, const bool cell_relative);
-    void setupContraintsData(std::vector<Ion*>&);
+    void setupContraintsData();
     void clearStepperData();
     void initStepperData();
     void computeMaxNumProjs();
@@ -179,6 +180,9 @@ public:
     Ions(const double lat[3], const std::vector<Species>& sp);
 
     Ions(const Ions&, const double shift[3]);
+
+    Ions(const std::vector<double>& p, const std::vector<short>& anum,
+        const double lat[3], const std::vector<Species>& sp);
 
     ~Ions();
 
@@ -357,8 +361,13 @@ public:
         return *spi;
     }
 
+    const std::vector<Species>& getSpecies() const { return species_; }
+
     void updateForcesInteractingIons();
     void updateTaupInteractingIons();
+
+    void updateDataInteractingIons(
+        std::vector<double>& data, std::vector<double*>& interacting_data);
 
     /*!
      * Calculate minimum distance between local pairs

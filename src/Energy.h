@@ -11,6 +11,7 @@
 #define MGMOL_ENERGY_H
 
 #include "Grid.h"
+#include "Ions.h"
 #include "Rho.h"
 #include "SpreadPenaltyInterface.h"
 #include "Timer.h"
@@ -20,7 +21,6 @@
 #include <vector>
 
 class Potentials;
-class Ions;
 class Electrostatic;
 class ProjectedMatricesInterface;
 class XConGrid;
@@ -29,7 +29,6 @@ template <class T>
 class Energy
 {
     const pb::Grid& mygrid_;
-    const Ions& ions_;
     const Potentials& pot_;
     const Electrostatic& es_;
     const Rho<T>& rho_;
@@ -45,16 +44,15 @@ class Energy
     double getEVrhoRho() const;
 
 public:
-    Energy(const pb::Grid&, const Ions&, const Potentials&,
-        const Electrostatic&, const Rho<T>&, const XConGrid&,
-        SpreadPenaltyInterface<T>*);
+    Energy(const pb::Grid&, const Potentials&, const Electrostatic&,
+        const Rho<T>&, const XConGrid&, SpreadPenaltyInterface<T>*);
 
     static Timer eval_te_tm() { return eval_te_tm_; }
 
-    double evaluateTotal(const double ts, ProjectedMatricesInterface*,
+    double evaluateTotal(const double ts, ProjectedMatricesInterface*, Ions&,
         const T& phi, const int, std::ostream&);
 
-    double evaluateEnergyIonsInVext();
+    double evaluateEnergyIonsInVext(Ions&);
 
     void saveVofRho();
 };
