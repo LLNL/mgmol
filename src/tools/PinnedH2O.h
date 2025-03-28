@@ -13,6 +13,7 @@
 #include <vector>
 #include <cmath>
 #include <algorithm>
+#include <iostream>
 
 class PinnedH2O
 {
@@ -23,6 +24,11 @@ public:
 
     void rotate(std::vector<double>& positions, std::vector<short>& anumbers);
     void transpose_rotate(std::vector<double>& positions, std::vector<short>& anumbers, std::vector<double>& forces);
+    void print(std::ostream& os)
+    {
+        os << "Bondlengths = " << bondlength1 << ", " << bondlength2 << "; "
+           << "Bondangle = " << bondangle << std::endl;
+    }
 
 private:
     double calculate_bondlength(const double atom1[3], const double atom2[3]) const;
@@ -32,6 +38,10 @@ private:
     void cross(const double a[3], const double b[3], double result[3]) const;
     void apply_rotation(const double matrix[3][3], const double vec[3], double result[3]) const;
     void apply_transpose_rotation(const double matrix[3][3], const double vec[3], double result[3]) const;
+
+    double bondlength1;
+    double bondlength2;
+    double bondangle;
 
     bool flipped_bond;
     int O1_idx;

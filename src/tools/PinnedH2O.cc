@@ -107,9 +107,9 @@ void PinnedH2O::rotate(std::vector<double>& positions, std::vector<short>& anumb
     double H1[3] = {positions[3 * H1_idx], positions[3 * H1_idx + 1], positions[3 * H1_idx + 2]};
     double H2[3] = {positions[3 * H2_idx], positions[3 * H2_idx + 1], positions[3 * H2_idx + 2]};
 
-    double bondlength1 = calculate_bondlength(H1, O1);
-    double bondlength2 = calculate_bondlength(H2, O1);
-    double bondangle = calculate_bondangle(H1, O1, H2);
+    bondlength1 = calculate_bondlength(H1, O1);
+    bondlength2 = calculate_bondlength(H2, O1);
+    bondangle = calculate_bondangle(H1, O1, H2);
 
     double H1_temp[3], H2_temp[3];
     double H1_rotated[3], H2_rotated[3];

@@ -476,8 +476,8 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
         if (ct.getROMOptions().rom_stage == ROMStage::ONLINE_PINNED_H2O_3DOF)
         {
             if (onpe0) os_ << "Rotate Pinned H2O molecule in timestep " << mdstep << std::endl;
-            ions.getNames(names);
             H2O_molecule.rotate(positions, anumbers);
+            H2O_molecule.print(os_);
             ROM_ions.setPositions(positions, anumbers);
             setupPotentials(ROM_ions);
             force_on_ions = false;
@@ -566,7 +566,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
             std::vector<double> forces;
             ROM_ions.getForces(forces);
             H2O_molecule.transpose_rotate(positions, anumbers, forces);
-            ions.setLocalForces(forces, names);
+            ions.setLocalForces(forces, positions);
         }
 
         if (ct.getROMOptions().rom_stage == ROMStage::TEST_ORBITAL)
