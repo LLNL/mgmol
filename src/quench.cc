@@ -600,8 +600,8 @@ int MGmol<OrbitalsType>::quench(OrbitalsType& orbitals, Ions& ions,
                 << " TS             [Ha] = " << ts << std::endl;
         }
     }
-    last_eks
-        = energy_->evaluateTotal(ts, proj_matrices_.get(), orbitals, 2, os_);
+    last_eks = energy_->evaluateTotal(
+        ts, proj_matrices_.get(), ions, orbitals, 2, os_);
 
     if (ct.computeCondGramMD())
     {

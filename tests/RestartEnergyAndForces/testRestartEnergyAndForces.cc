@@ -124,8 +124,6 @@ int main(int argc, char** argv)
             }
         }
 
-        mgmol->setPositions(positions, anumbers);
-
         Mesh* mymesh             = Mesh::instance();
         const pb::Grid& mygrid   = mymesh->grid();
         const pb::PEenv& myPEenv = mymesh->peenv();
@@ -194,8 +192,6 @@ int main(int argc, char** argv)
                 ita++;
             }
         }
-
-        mgmol->setPositions(positions, anumbers);
 
         //
         // evaluate energy and forces with wavefunctions just read

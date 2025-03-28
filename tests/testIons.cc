@@ -170,7 +170,6 @@ int main(int argc, char** argv)
         f = (double)i;
         i++;
     }
-
     ions.getNames(names);
     ions.setLocalForces(forces, names);
 
