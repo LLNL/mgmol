@@ -468,7 +468,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
         std::vector<short> anumbers;
         getAtomicPositions(positions);
         getAtomicNumbers(anumbers);
-        Ions ROM_ions(positions, anumbers, lattice, ions_->getSpecies());
+        Ions* ROM_ions;
 
         // Pinned H2O 3 DOF
         PinnedH2O H2O_molecule;
@@ -477,15 +477,15 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
             if (onpe0) os_ << "Rotate Pinned H2O molecule in timestep " << mdstep << std::endl;
             H2O_molecule.rotate(positions, anumbers);
             if (onpe0) H2O_molecule.print(os_);
-            ROM_ions.setPositions(positions, anumbers);
-            setupPotentials(ROM_ions);
+            ROM_ions = new Ions(positions, anumbers, lattice, ions_->getSpecies());
+            setupPotentials(*ROM_ions);
             force_on_ions = false;
         }
 #endif
 
         if (ROM_MVP)
         {
-            updateDMandEnergy(**orbitals, ROM_ions, eks);
+            updateDMandEnergy(**orbitals, *ROM_ions, eks);
         }
         else
         {
@@ -559,13 +559,14 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
 #ifdef MGMOL_HAS_LIBROM
         if (ct.getROMOptions().rom_stage == ROMStage::ONLINE_PINNED_H2O_3DOF)
         {
-            force(**orbitals, ROM_ions);
+            force(**orbitals, *ROM_ions);
             // Pinned H2O 3 DOF
             if (onpe0) os_ << "Transpose rotate the PinnedH2O molecule" << std::endl;
             std::vector<double> forces;
-            ROM_ions.getForces(forces);
+            ROM_ions->getForces(forces);
             H2O_molecule.transpose_rotate(positions, anumbers, forces);
             ions.setLocalForces(forces, positions);
+            delete ROM_ions;
         }
 
         if (ct.getROMOptions().rom_stage == ROMStage::TEST_ORBITAL)
@@ -588,16 +589,19 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
             else
             {
                 // write ROM_ions force for one-step comparison
-                force(**orbitals, ROM_ions);
+                ROM_ions = new Ions(positions, anumbers, lattice, ions_->getSpecies());
+                force(**orbitals, *ROM_ions);
                 std::string zero = "0";
                 if (ions_->getNumIons() < 256 || ct.verbose > 2)
                 {
-                    if (ct.verbose > 0) ROM_ions.printForcesGlobal(os_);
+                    if (ct.verbose > 0) ROM_ions->printForcesGlobal(os_);
+
                 }
                 else if (zero.compare(ct.md_print_filename) == 0)
                 {
-                    ROM_ions.printForcesLocal(os_);
+                    ROM_ions->printForcesLocal(os_);
                 }
+                delete ROM_ions;
             }
         }
 #endif

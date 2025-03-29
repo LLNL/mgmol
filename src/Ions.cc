@@ -1347,8 +1347,7 @@ void Ions::setLocalForces(
 
     // tolerance can be pretty loose, as long as it does not allow mix up
     // with coordinates of other atoms
-    //const double tol = 1.e-2;
-    const double tol = 1.e-1;
+    const double tol = 1.e-2;
 
     // loop over global list of forces and coordinates
     std::vector<double>::const_iterator cit = coords.begin();
@@ -1360,11 +1359,14 @@ void Ions::setLocalForces(
             double p[3];
             ion->getPosition(&p[0]);
             double d2 = (p[0] - (*cit)) * (p[0] - (*cit))
-                        + (p[1] - (*(cit + 1))) * (p[0] - (*(cit + 1)))
-                        + (p[2] - (*(cit + 2))) * (p[0] - (*(cit + 2)));
+                        + (p[1] - (*(cit + 1))) * (p[1] - (*(cit + 1)))
+                        + (p[2] - (*(cit + 2))) * (p[2] - (*(cit + 2)));
             double d = std::sqrt(d2);
             if (d < tol)
             {
+                //std::cout << "Ion found: " << ion->name() << std::endl;
+                //std::cout << "Ion position:( " << *cit << ", " << *(cit + 1) << ", " << *(cit + 2) << ")" << std::endl;
+                //std::cout << "Ion force: (" << *fit << ", " << *(fit + 1) << ", " << *(fit + 2) << ")" << std::endl;
                 ion->set_force(0, *fit);
                 ion->set_force(1, *(fit + 1));
                 ion->set_force(2, *(fit + 2));

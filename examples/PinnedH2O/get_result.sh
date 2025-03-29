@@ -2,8 +2,8 @@
 #filename="rom39_PinnedH2O.out" # ROM compare MD
 #filename="39_force_PinnedH2O.out" # ROM compare force
 
-filename="PinnedH2O_ref.out" # FOM
-#filename="PinnedH2O_rom_3DOF_2_2_34.out" # ROM PinnedH2O 3DOF MD
+#filename="PinnedH2O_ref.out" # FOM
+filename="PinnedH2O_rom_3DOF_2_2_34.out" # ROM PinnedH2O 3DOF MD
 
 # Extracting H1, H2, F1, F2 from MGmgol output log
 # if FOM, these files contain the FOM results
