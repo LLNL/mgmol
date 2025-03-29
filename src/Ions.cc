@@ -1341,8 +1341,8 @@ void Ions::setLocalForces(
             double p[3];
             ion->getPosition(&p[0]);
             double d2 = (p[0] - (*cit)) * (p[0] - (*cit))
-                        + (p[1] - (*(cit + 1))) * (p[0] - (*(cit + 1)))
-                        + (p[2] - (*(cit + 2))) * (p[0] - (*(cit + 2)));
+                        + (p[1] - (*(cit + 1))) * (p[1] - (*(cit + 1)))
+                        + (p[2] - (*(cit + 2))) * (p[2] - (*(cit + 2)));
             double d = std::sqrt(d2);
             if (d < tol)
             {
