@@ -6,6 +6,29 @@
 
 #include <random>
 
+// check that all forces components have integer values larger than 0
+// and differ from each other
+int checkForces(std::vector<double>& forces)
+{
+    const double tol = 1.e-14;
+
+    for (auto f0 = forces.begin(); f0 != forces.end(); f0++)
+    {
+        std::cout << "f0 = " << *f0 << std::endl;
+        for (auto f1 = f0 + 1; f1 != forces.end(); f1++)
+        {
+            // make sure each force component is different
+            if (std::abs(*f0 - *f1) < tol || *f1 < tol || *f0 < tol)
+            {
+                std::cerr << "f0 = " << *f0 << ", f1 = " << *f1 << std::endl;
+                return 1;
+            }
+        }
+    }
+
+    return 0;
+}
+
 int main(int argc, char** argv)
 {
     int status = 0;
@@ -164,7 +187,7 @@ int main(int argc, char** argv)
 
     std::vector<double> forces(3 * na);
     // set forces to a different arbitrary value for each component
-    int i = 0;
+    int i = 1;
     for (auto& f : forces)
     {
         f = (double)i;
@@ -189,20 +212,29 @@ int main(int argc, char** argv)
 
     ions.getForces(forces);
     if (myrank == 0)
-        for (auto f0 = forces.begin(); f0 != forces.end(); f0++)
+    {
+        int status = checkForces(forces);
+        if (status > 0) MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+    }
+
+    // test Ions::setLocalForces based on coordinates matching
+    {
+        std::vector<double> positions;
+        std::vector<short> anumbers;
+        ions.getPositions(positions);
+
+        ions.setLocalForces(forces, positions);
+
+        ions.printForcesGlobal(std::cout);
+
+        ions.getForces(forces);
+        if (myrank == 0)
         {
-            std::cout << "f0 = " << *f0 << std::endl;
-            for (auto f1 = f0 + 1; f1 != forces.end(); f1++)
-            {
-                // make sure each force component is different
-                if (std::abs(*f0 - *f1) < 1.e-14)
-                {
-                    std::cerr << "f0 = " << *f0 << ", f1 = " << *f1
-                              << std::endl;
-                    MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
-                }
-            }
+            int status = checkForces(forces);
+            if (status > 0) MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
         }
+    }
+
     mpirc = MPI_Finalize();
     if (mpirc != MPI_SUCCESS)
     {
