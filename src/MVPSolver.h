@@ -33,6 +33,7 @@ private:
     Ions& ions_;
 
     int numst_;
+    double mixing_;
 
     Rho<OrbitalsType>* rho_;
     Energy<OrbitalsType>* energy_;
@@ -56,7 +57,7 @@ public:
         Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy,
         const int numst, const double kbT,
         const std::vector<std::vector<int>>& global_indexes,
-        const short n_inner_steps, const bool use_old_dm);
+        const short n_inner_steps, const double mixing, const bool use_old_dm);
     ~MVPSolver();
 
     int solve(OrbitalsType& orbitals);

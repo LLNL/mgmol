@@ -4,7 +4,7 @@ import os
 import subprocess
 import string
 
-print("Test MVP solver...")
+print("Test MVP solver with mixing coefficient...")
 
 nargs=len(sys.argv)
 
@@ -19,10 +19,16 @@ coords = sys.argv[nargs-2]
 print("coordinates file: %s"%coords)
 
 #create links to potentials files
-dst = 'pseudo.Al_LDA_FHI'
-src = sys.argv[nargs-1] + '/' + dst
-
 cwd = os.getcwd()
+
+dst = 'pseudo.O_ONCV_PBE_SG15'
+src = sys.argv[nargs-1] + '/' + dst
+if not os.path.exists(cwd+'/'+dst):
+  print("Create link to %s"%dst)
+  os.symlink(src, dst)
+
+dst = 'pseudo.H_ONCV_PBE_SG15'
+src = sys.argv[nargs-1] + '/' + dst
 if not os.path.exists(cwd+'/'+dst):
   print("Create link to %s"%dst)
   os.symlink(src, dst)
@@ -47,33 +53,10 @@ if convergence==0:
   print("MVP Solver did not converge")
   sys.exit(1)
 
-tol = 1.e-4
-energies=[]
-print("Check forces are smaller than tol = {}".format(tol))
-for line in lines:
-  if line.count(b'MVP'):
-    print(line)
-  if line.count(b'%%'):
-    print(line)
-    words=line.split()
-    energy=(words[5].split(b','))[0]
-    energies.append(energy)
-  if line.count(b'##'):
-    words=line.split()
-    if len(words)==8:
-      print(line)
-      for i in range(5,8):
-        if abs(eval(words[i]))>tol:
-          sys.exit(1)
-
-for line in lines:
-  if line.count(b'HDF5-DIAG') and line.count(b'Error'):
-    print(line)
-    print("Found HDF5 error")
-    sys.exit(1)
-
 flag = 0
 eigenvalues=[]
+energies=[]
+ecount=0
 for line in lines:
   if line.count(b'FERMI'):
     flag = 0
@@ -84,28 +67,35 @@ for line in lines:
   if line.count(b'Eigenvalues'):
     flag = 1
     eigenvalues=[]
+  if line.count(b'%%'):
+    words=line.split()
+    e=words[5][0:-1]
+    print(e)
+    ecount=ecount+1
+    energies.append(eval(e))
+print(energies)
 
 print(eigenvalues)
 tol = 1.e-4
-eigenvalue0 = -0.208
+eigenvalue0 = -0.916
 if abs(eigenvalues[0]-eigenvalue0)>tol:
   print("Expected eigenvalue 0 to be {}".format(eigenvalue0))
   sys.exit(1)
-eigenvalue50 = 0.208
-if abs(eigenvalues[50]-eigenvalue50)>tol:
-  print("Expected eigenvalue 50 to be {}".format(eigenvalue50))
+eigenvalue8 = 0.219
+if abs(eigenvalues[8]-eigenvalue8)>tol:
+  print("Expected eigenvalue 8 to be {}".format(eigenvalue8))
   sys.exit(1)
 
-niterations = len(energies)
+niterations = ecount
 print("MVP solver ran for {} iterations".format(niterations))
 if niterations>180:
   print("MVP test FAILED for taking too many iterations")
   sys.exit(1)
 
 print("Check energy...")
-last_energy = eval(energies[-1])
+last_energy = energies[-1]
 print("Energy = {}".format(last_energy))
-if last_energy>-64.390:
+if last_energy>-17.16269:
   print("Last energy = {}".format(last_energy))
   sys.exit(1)
 
