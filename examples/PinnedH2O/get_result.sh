@@ -5,6 +5,11 @@
 #filename="PinnedH2O_ref" # FOM
 filename="PinnedH2O_rom_3DOF_2_2_34" # ROM PinnedH2O 3DOF MD
 
+# Extracting kinetic energy, total energy, temperature from MGmgol output log
+awk '/Kinetic/ {print $3}' $filename.out > ke_$filename.txt
+awk '/Kinetic/ {print $5}' $filename.out >temp_$filename.txt
+awk '/Total/ {print $3}' $filename.out > te_$filename.txt
+
 # Extracting H1, H2, F1, F2 from MGmgol output log
 # if FOM, these files contain the FOM results
 # if compare MD, these files contain the results with projected orbitals
