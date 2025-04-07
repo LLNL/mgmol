@@ -8,7 +8,7 @@ date
 setenv OMP_NUM_THREADS 1
 #setenv KMP_DETERMINISTIC_REDUCTION 1
 
-set ncpus = 64
+set ncpus = 8
 
 set maindir = /p/lustre2/cheung26/mgmol-20250219
 
@@ -19,10 +19,10 @@ set exe     = ${maindir}/build_quartz/libROM/build/examples/misc/combine_samples
 set snapshot_files = ""
 set bondlength_min = 0.95
 set bondlength_max = 1.05
-set bondlength_num_increments = 5
+set bondlength_num_increments = 2
 set bondangle_min = -5.0 
 set bondangle_max = 5.0
-set bondangle_num_increments = 5
+set bondangle_num_increments = 2
 
 foreach i (`seq 0 $bondlength_num_increments`)
   set bondlength_one = `echo "scale=2; $bondlength_min + $i * ($bondlength_max - $bondlength_min) / ($bondlength_num_increments)" | bc`
