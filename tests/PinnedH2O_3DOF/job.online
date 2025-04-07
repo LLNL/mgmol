@@ -57,8 +57,6 @@ foreach i (`seq 0 $bondlength_num_increments`)
       set bondangle = `printf "%.1f" $bondangle`
       echo "bondlength1: $bondlength_one, bondlength2: $bondlength_two, bondangle: $bondangle"
       set tag = ${bondlength_one}_${bondlength_two}_${bondangle}
- 
-      echo $ncpus $exe $case $cfg_online $tag
       srun -p pdebug -n $ncpus $exe -c ${case}_${cfg_online} -i /usr/workspace/nlrom/MGmol/PinnedH2O_3DOF/data_${ncpus}/${tag}/coords.in >& results_${case}/${tag}.log
     end
   end
