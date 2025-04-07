@@ -1,5 +1,5 @@
 #!/bin/tcsh
-#SBATCH -N 2
+#SBATCH -N 1
 #SBATCH -t 1:00:00
 #SBATCH -p pdebug
 
