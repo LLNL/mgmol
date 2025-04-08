@@ -21,7 +21,7 @@ source $maindir/scripts/modules.quartz
 
 rm -rf snapshot0_*
 
-set coord_file = coords.in_rotate2
+set coord_file = coords_rotate2.in
 
 set exe     = mgmol-opt
 set cfg_online = mgmol_ref_rotate.cfg
