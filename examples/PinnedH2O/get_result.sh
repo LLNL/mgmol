@@ -2,8 +2,8 @@
 #filename="rom39_PinnedH2O" # ROM compare MD
 #filename="39_force_PinnedH2O" # ROM compare force
 
-#filename="PinnedH2O_ref" # FOM
-filename="PinnedH2O_rom_3DOF_2_2_34" # ROM PinnedH2O 3DOF MD
+#filename="PinnedH2O_test2_ref" # FOM
+filename="PinnedH2O_rom_3DOF_test2_2_2_34" # ROM PinnedH2O 3DOF MD
 
 # Extracting kinetic energy, total energy, temperature from MGmgol output log
 awk '/Kinetic/ {print $3}' $filename.out > ke_$filename.txt
