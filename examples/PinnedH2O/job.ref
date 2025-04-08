@@ -21,7 +21,7 @@ cp $maindir/install_quartz/bin/$exe .
 
 set datadir = $maindir/examples/PinnedH2O
 
-set cfg = mgmol_test${case}.cfg
+set cfg = mgmol_ref_test${case}.cfg
 cp $datadir/$cfg .
 
 cp $datadir/coords.in .
