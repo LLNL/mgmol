@@ -321,10 +321,7 @@ int read_config(int argc, char** argv, po::variables_map& vm,
             po::value<short>()->default_value(100),
             "Maximum number of iterations for power method "
             "to compute interval for Chebyshev "
-            "approximation of density matrix. ")("DensityMatrix.tol",
-            po::value<float>()->default_value(1.e-7),
-            "tolerance, used in iterative DM computation convergence "
-            "criteria");
+            "approximation of density matrix. ");
 
         po::options_description cmdline_options;
         cmdline_options.add(generic);

@@ -224,7 +224,7 @@ void Control::print(std::ostream& os)
        << conv_tol << std::endl;
     os << std::fixed;
     os << " Density matrix mixing = " << dm_mix << std::endl;
-    os << " Density matrix tol = " << dm_tol << std::endl;
+    os << std::setprecision(4) << std::scientific << << " Density matrix tol = " << dm_tol << std::endl;
     if (DMEigensolver() == DMEigensolverType::Eigensolver)
     {
         os << " Density matrix computation algorithm = "
@@ -1742,8 +1742,6 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         }
         else
             dm_algo_ = 2;
-
-        dm_tol = vm["DensityMatrix.tol"].as<float>();
 
         str = vm["DensityMatrix.solver"].as<std::string>();
         if (str.compare("Mixing") == 0) DM_solver_ = 0;
