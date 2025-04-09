@@ -302,7 +302,9 @@ int read_config(int argc, char** argv, po::variables_map& vm,
             po::value<short>()->default_value(0),
             "Flag for computing new centers from extrapolated orbitals.")(
             "DensityMatrix.mixing", po::value<float>()->default_value(-1.),
-            "Mixing coefficient for Density Matrix")("DensityMatrix.solver",
+            "Mixing coefficient for Density Matrix")("DensityMatrix.tol",
+            po::value<float>()->default_value(1.e-12),
+            "Tolerance for Density Matrix convergence")("DensityMatrix.solver",
             po::value<std::string>()->default_value("Mixing"),
             "Algorithm for updating Density Matrix: Mixing, MVP, HMVP")(
             "DensityMatrix.nb_inner_it", po::value<short>()->default_value(3),
