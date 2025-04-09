@@ -47,13 +47,14 @@ MVPSolver<OrbitalsType, MatrixType>::MVPSolver(MPI_Comm comm, std::ostream& os,
     Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy,
     const int numst, const double kbT,
     const std::vector<std::vector<int>>& global_indexes,
-    const short n_inner_steps, const bool use_old_dm)
+    const short n_inner_steps, const double mixing, const bool use_old_dm)
     : comm_(comm),
       os_(os),
       n_inner_steps_(n_inner_steps),
       use_old_dm_(use_old_dm),
       ions_(ions),
-      numst_(numst)
+      numst_(numst),
+      mixing_(mixing)
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 0)
@@ -267,65 +268,79 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
                 MatrixType delta_dm("delta_dm", numst_, numst_);
                 delta_dm = target;
                 delta_dm -= dmInit;
-
-                double de0 = evaluateDerivative(dmInit, delta_dm, ts0);
-
-                if (std::abs(de0) < tol_de0 && inner_it > 0)
+                double beta = 0.;
+                if (mixing_ > 0.)
                 {
+                    beta = mixing_;
+                    if (onpe0 && ct.verbose > 1)
+                    {
+                        os_ << "MVP with beta = " << beta << std::endl;
+                        os_ << std::setprecision(12);
+                        os_ << std::fixed << "MVP inner iteration " << inner_it
+                            << ", E0=" << e0 << std::endl;
+                    }
+                }
+                else
+                {
+                    double de0 = evaluateDerivative(dmInit, delta_dm, ts0);
+
+                    if (std::abs(de0) < tol_de0 && inner_it > 0)
+                    {
+                        if (onpe0 && ct.verbose > 0)
+                            std::cout << "MVP: de0 = " << de0
+                                      << ", convergence achieved" << std::endl;
+                        break;
+                    }
+
+                    //
+                    // evaluate free energy at beta=1
+                    //
+                    if (onpe0 && ct.verbose > 2)
+                        std::cout << "MVP --- Target energy..." << std::endl;
+                    proj_mat_work_->setDM(target, orbitals.getIterativeIndex());
+                    proj_mat_work_->computeOccupationsFromDM();
+                    if (ct.verbose > 2) proj_mat_work_->printOccupations(os_);
+                    const double nel = proj_mat_work_->getNel();
+                    if (onpe0 && ct.verbose > 1)
+                        os_ << "MVP --- Number of electrons at beta=1 : " << nel
+                            << std::endl;
+
+                    rho_->computeRho(orbitals, target);
+
+                    mgmol_strategy_->update_pot(vh_init, ions_);
+
+                    energy_->saveVofRho();
+
+                    // update h11
+                    {
+                        h11 = h11_nl;
+                        mgmol_strategy_->addHlocal2matrix(
+                            orbitals, orbitals, h11);
+                    }
+
+                    proj_mat_work_->assignH(h11);
+                    proj_mat_work_->setHB2H();
+
+                    const double ts1
+                        = evalEntropyMVP(proj_mat_work_, (ct.verbose > 2), os_);
+                    const double e1 = energy_->evaluateTotal(ts1,
+                        proj_mat_work_, ions_, orbitals, ct.verbose - 1, os_);
+
+                    // line minimization
+                    beta
+                        = minQuadPolynomial(e0, e1, de0, (ct.verbose > 2), os_);
+                    assert(!std::isnan(beta));
+
                     if (onpe0 && ct.verbose > 0)
-                        std::cout << "MVP: de0 = " << de0
-                                  << ", convergence achieved" << std::endl;
-                    break;
+                    {
+                        os_ << std::setprecision(12);
+                        os_ << std::fixed << "MVP inner iteration " << inner_it
+                            << ", E0=" << e0 << ", E1=" << e1;
+                        os_ << std::scientific << ", E0'=" << de0
+                            << " -> beta=" << beta;
+                        os_ << std::endl;
+                    }
                 }
-
-                //
-                // evaluate free energy at beta=1
-                //
-                if (onpe0 && ct.verbose > 2)
-                    std::cout << "MVP --- Target energy..." << std::endl;
-                proj_mat_work_->setDM(target, orbitals.getIterativeIndex());
-                proj_mat_work_->computeOccupationsFromDM();
-                if (ct.verbose > 2) proj_mat_work_->printOccupations(os_);
-                const double nel = proj_mat_work_->getNel();
-                if (onpe0 && ct.verbose > 1)
-                    os_ << "MVP --- Number of electrons at beta=1 : " << nel
-                        << std::endl;
-
-                rho_->computeRho(orbitals, target);
-
-                mgmol_strategy_->update_pot(vh_init, ions_);
-
-                energy_->saveVofRho();
-
-                // update h11
-                {
-                    h11 = h11_nl;
-                    mgmol_strategy_->addHlocal2matrix(orbitals, orbitals, h11);
-                }
-
-                proj_mat_work_->assignH(h11);
-                proj_mat_work_->setHB2H();
-
-                const double ts1
-                    = evalEntropyMVP(proj_mat_work_, (ct.verbose > 2), os_);
-                const double e1 = energy_->evaluateTotal(
-                    ts1, proj_mat_work_, ions_, orbitals, ct.verbose - 1, os_);
-
-                // line minimization
-                const double beta
-                    = minQuadPolynomial(e0, e1, de0, (ct.verbose > 2), os_);
-                assert(!std::isnan(beta));
-
-                if (onpe0 && ct.verbose > 0)
-                {
-                    os_ << std::setprecision(12);
-                    os_ << std::fixed << "MVP inner iteration " << inner_it
-                        << ", E0=" << e0 << ", E1=" << e1;
-                    os_ << std::scientific << ", E0'=" << de0
-                        << " -> beta=" << beta;
-                    os_ << std::endl;
-                }
-
                 // update DM
                 *work_ = dmInit;
                 work_->axpy(beta, delta_dm);
