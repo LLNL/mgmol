@@ -50,6 +50,7 @@ Timer md_tau_tm("md_tau");
 Timer md_moveVnuc_tm("md_moveVnuc");
 Timer md_updateMasks_tm("md_updateMasks");
 Timer md_extrapolateOrbitals_tm("md_extrapolateOrbitals");
+Timer md_updateDMandEnergy_tm("md_updateDMandEnergy");
 
 #define DUMP_MAX_NUM_TRY 5
 
@@ -485,7 +486,9 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
 
         if (ROM_MVP)
         {
+            md_updateDMandEnergy_tm.start();
             updateDMandEnergy(**orbitals, *ROM_ions, eks);
+            md_updateDMandEnergy_tm.stop();
         }
         else
         {

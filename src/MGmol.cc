@@ -102,6 +102,7 @@ extern Timer md_moveVnuc_tm;
 extern Timer md_updateMasks_tm;
 extern Timer md_extrapolateOrbitals_tm;
 extern Timer md_updateRhoAndPot_tm;
+extern Timer md_updateDMandEnergy_tm;
 extern Timer quench_tm;
 extern Timer ions_setupInteractingIons_tm;
 extern Timer ions_setup_tm;
@@ -928,6 +929,7 @@ void MGmol<OrbitalsType>::printTimers()
     init_nuc_tm_.print(os_);
     md_updateMasks_tm.print(os_);
     md_extrapolateOrbitals_tm.print(os_);
+    md_updateDMandEnergy_tm.print(os_);
     quench_tm.print(os_);
     evnl_tm_.print(os_);
     ions_setupInteractingIons_tm.print(os_);
