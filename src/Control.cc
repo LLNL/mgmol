@@ -224,7 +224,7 @@ void Control::print(std::ostream& os)
        << conv_tol << std::endl;
     os << std::fixed;
     os << " Density matrix mixing = " << dm_mix << std::endl;
-    os << std::setprecision(4) << std::scientific << << " Density matrix tol = " << dm_tol << std::endl;
+    os << std::setprecision(4) << std::scientific << " Density matrix tol = " << dm_tol << std::endl;
     if (DMEigensolver() == DMEigensolverType::Eigensolver)
     {
         os << " Density matrix computation algorithm = "
