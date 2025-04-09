@@ -47,14 +47,16 @@ MVPSolver<OrbitalsType, MatrixType>::MVPSolver(MPI_Comm comm, std::ostream& os,
     Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy,
     const int numst, const double kbT,
     const std::vector<std::vector<int>>& global_indexes,
-    const short n_inner_steps, const double mixing, const bool use_old_dm)
+    const short n_inner_steps, const double mixing, const double tol_de0,
+    const bool use_old_dm)
     : comm_(comm),
       os_(os),
       n_inner_steps_(n_inner_steps),
       use_old_dm_(use_old_dm),
       ions_(ions),
       numst_(numst),
-      mixing_(mixing)
+      mixing_(mixing),
+      tol_de0_(tol_de0)
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 0)
@@ -208,7 +210,6 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
 
         kbpsi.computeHvnlMatrix(&kbpsi, ions_, h11_nl);
 
-        const double tol_de0 = 1.e-12;
         for (int inner_it = 0; inner_it < n_inner_steps_; inner_it++)
         {
             if (onpe0 && ct.verbose > 1)
@@ -268,13 +269,26 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
                 MatrixType delta_dm("delta_dm", numst_, numst_);
                 delta_dm = target;
                 delta_dm -= dmInit;
+
+                double de0 = evaluateDerivative(dmInit, delta_dm, ts0);
+
+                // check for convergence
+                if (std::abs(de0) < tol_de0_ && inner_it > 0)
+                {
+                    if (onpe0 && ct.verbose > 0)
+                        std::cout << "MVP: de0 = " << de0
+                                  << ", convergence achieved" << std::endl;
+                    break;
+                }
+
                 double beta = 0.;
                 if (mixing_ > 0.)
                 {
                     beta = mixing_;
-                    if (onpe0 && ct.verbose > 1)
+                    if (onpe0 && ct.verbose > 0)
                     {
-                        os_ << "MVP with beta = " << beta << std::endl;
+                        if (ct.verbose > 1)
+                            os_ << "MVP with beta = " << beta << std::endl;
                         os_ << std::setprecision(12);
                         os_ << std::fixed << "MVP inner iteration " << inner_it
                             << ", E0=" << e0 << std::endl;
@@ -282,16 +296,6 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
                 }
                 else
                 {
-                    double de0 = evaluateDerivative(dmInit, delta_dm, ts0);
-
-                    if (std::abs(de0) < tol_de0 && inner_it > 0)
-                    {
-                        if (onpe0 && ct.verbose > 0)
-                            std::cout << "MVP: de0 = " << de0
-                                      << ", convergence achieved" << std::endl;
-                        break;
-                    }
-
                     //
                     // evaluate free energy at beta=1
                     //
