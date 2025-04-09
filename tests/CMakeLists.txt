@@ -291,7 +291,8 @@ add_executable(testDMandEnergyAndForces
 add_executable(testRestartEnergyAndForces
                ${CMAKE_SOURCE_DIR}/tests/RestartEnergyAndForces/testRestartEnergyAndForces.cc)
 add_executable(testPinnedH2O_3DOF
-               ${CMAKE_SOURCE_DIR}/tests/PinnedH2O_3DOF/testPinnedH2O_3DOF.cc)
+               ${CMAKE_SOURCE_DIR}/tests/PinnedH2O_3DOF/testPinnedH2O_3DOF.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/PinnedH2O.cc)
 
 if(${MAGMA_FOUND})
   add_executable(testOpenmpOffload

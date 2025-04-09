@@ -1953,6 +1953,10 @@ void Control::setROMOptions(const boost::program_options::variables_map& vm)
             rom_pri_option.rom_stage = ROMStage::ONLINE;
         else if (str.compare("build") == 0)
             rom_pri_option.rom_stage = ROMStage::BUILD;
+        else if (str.compare("online_pinned_H2O_3dof") == 0)
+            rom_pri_option.rom_stage = ROMStage::ONLINE_PINNED_H2O_3DOF;
+        else if (str.compare("test_orbital") == 0)
+            rom_pri_option.rom_stage = ROMStage::TEST_ORBITAL;
         else if (str.compare("online_poisson") == 0)
             rom_pri_option.rom_stage = ROMStage::ONLINE_POISSON;
         else if (str.compare("test_poisson") == 0)
