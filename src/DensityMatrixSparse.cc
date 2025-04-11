@@ -26,7 +26,7 @@ DensityMatrixSparse::DensityMatrixSparse(
     MGmol_MPI& mmpi     = *(MGmol_MPI::instance());
     orbital_occupation_ = mmpi.nspin() > 1 ? 1. : 2.;
 
-    orbitals_index_ = -1;
+    update_index_ = -1;
 
     if (dim_ > 0)
     {
@@ -44,27 +44,24 @@ DensityMatrixSparse::~DensityMatrixSparse()
     }
 }
 
-void DensityMatrixSparse::setUniform(const double nel, const int orbitals_index)
+void DensityMatrixSparse::setUniform(const double nel)
 {
     const double occ = (double)((double)nel / (double)dim_);
     assert(occ < 1.01);
-    orbitals_index_ = orbitals_index;
+    update_index_++;
     (*dm_).reset();
     const double uval = (double)occ * orbital_occupation_;
     for (std::vector<int>::const_iterator st = locvars_.begin();
          st != locvars_.end(); ++st)
         (*dm_).insertMatrixElement(*st, *st, uval, INSERT, true);
-
-    return;
 }
 
-void DensityMatrixSparse::setto2InvS(
-    const VariableSizeMatrix<sparserow>& invS, const int orbitals_index)
+void DensityMatrixSparse::setto2InvS(const VariableSizeMatrix<sparserow>& invS)
 {
     *dm_ = invS;
     dm_->scale(orbital_occupation_);
 
-    orbitals_index_ = orbitals_index;
+    update_index_++;
 }
 // build density matrix, given computed locally centered data
 void DensityMatrixSparse::assembleMatrixFromCenteredData(
@@ -92,7 +89,7 @@ void DensityMatrixSparse::assembleMatrixFromCenteredData(
     dtor_DM.updateLocalRows((*dm_));
     gather_DM_tm_.stop();
 
-    orbitals_index_ = orbitals_index;
+    update_index_ = orbitals_index;
 }
 // compute trace of dot product dm_ . vsmat
 double DensityMatrixSparse::getTraceDotProductWithMat(

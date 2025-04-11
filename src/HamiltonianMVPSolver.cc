@@ -105,8 +105,6 @@ int HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>::solve(
     ProjMatrixType* projmatrices
         = dynamic_cast<ProjMatrixType*>(orbitals.getProjMatrices());
 
-    int iterative_index = 0;
-
     // save computed vh for a fair energy "comparison" with vh computed
     // in close neigborhood
     const pb::GridFunc<POTDTYPE> vh_init(electrostat_->getVh());
@@ -134,13 +132,11 @@ int HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>::solve(
         //
         // evaluate energy at origin
         //
-        iterative_index++;
-
         projmatrices->assignH(*hmatrix_);
         projmatrices->setHB2H();
 
         // update DM and compute entropy
-        projmatrices->updateDM(iterative_index);
+        projmatrices->updateDM();
         double ts0 = evalEntropyMVP(projmatrices, true, os_);
         // Update density
         rho_->update(orbitals);
@@ -168,10 +164,8 @@ int HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>::solve(
         //
         MatrixType htarget(projmatrices->getH());
 
-        iterative_index++;
-
         // update DM and compute entropy
-        projmatrices->updateDM(iterative_index);
+        projmatrices->updateDM();
         double ts1 = evalEntropyMVP(projmatrices, true, os_);
         // Update density
         rho_->update(orbitals);
@@ -204,10 +198,8 @@ int HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>::solve(
         projmatrices->assignH(h11);
         projmatrices->setHB2H();
 
-        iterative_index++;
-
         // update DM and entropy
-        projmatrices->updateDM(iterative_index);
+        projmatrices->updateDM();
         double tsi = evalEntropyMVP(projmatrices, true, os_);
 
         // Update density
@@ -262,10 +254,8 @@ int HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>::solve(
                 projmatrices->assignH(h11);
                 projmatrices->setHB2H();
 
-                iterative_index++;
-
                 // update DM and entropy
-                projmatrices->updateDM(iterative_index);
+                projmatrices->updateDM();
                 tsi = evalEntropyMVP(projmatrices, true, os_);
 
                 // Update density
@@ -325,9 +315,7 @@ int HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>::solve(
     projmatrices->assignH(*hmatrix_);
     projmatrices->setHB2H();
 
-    iterative_index++;
-
-    projmatrices->updateDM(iterative_index);
+    projmatrices->updateDM();
 
     // Generate new density
     rho_->update(orbitals);

@@ -206,8 +206,8 @@ double DavidsonSolver<OrbitalsType, MatrixType>::evaluateDerivative(
     const double dbeta = 0.0001;
     *work2N_           = dm2Ninit;
     work2N_->axpy(dbeta, delta_dm);
-    // proj_mat2N_->setDM(*work2N_,orbitals.getIterativeIndex());
-    proj_mat2N_->setDM(*work2N_, -1);
+
+    proj_mat2N_->setDM(*work2N_);
     proj_mat2N_->computeOccupationsFromDM();
 
     const double tsd0e = evalEntropy(proj_mat2N_.get(), false, os_);
@@ -250,7 +250,7 @@ void DavidsonSolver<OrbitalsType, MatrixType>::buildTarget2N_MVP(
     // if( onpe0 )os_<<"Compute X2N..."<<endl;
     proj_mat2N_->setHB2H();
 
-    proj_mat2N_->updateDM(orbitals_index);
+    proj_mat2N_->updateDM();
 
     target = proj_mat2N_->dm();
 
@@ -584,7 +584,7 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
                 //
                 if (mmpi.PE0() && ct.verbose > 2)
                     os_ << "Target energy..." << std::endl;
-                proj_mat2N_->setDM(target, orbitals.getIterativeIndex());
+                proj_mat2N_->setDM(target);
                 proj_mat2N_->computeOccupationsFromDM();
                 double nel = proj_mat2N_->getNel();
                 if (mmpi.PE0() && ct.verbose > 2)
@@ -643,7 +643,7 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
             // update DM
             *work2N_ = dm2Ninit;
             work2N_->axpy(beta, delta_dm);
-            proj_mat2N_->setDM(*work2N_, orbitals.getIterativeIndex());
+            proj_mat2N_->setDM(*work2N_);
 
             if (inner_it < ct.dm_inner_steps - 1)
             {
@@ -809,7 +809,7 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
             = dynamic_cast<ProjectedMatrices<MatrixType>*>(
                 orbitals.getProjMatrices());
         assert(pmat);
-        pmat->buildDM(new_occ, orbitals.getIterativeIndex());
+        pmat->buildDM(new_occ);
 
         if (retval == 0) break;
 

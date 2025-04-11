@@ -199,10 +199,10 @@ public:
     virtual double computeEntropy() = 0;
     virtual double getEigSum()      = 0;
 
-    virtual void updateTheta()                                            = 0;
-    virtual void computeInvB()                                            = 0;
-    virtual void printGramMM(std::ofstream& tfile)                        = 0;
-    virtual void setDMuniform(const double nel, const int orbitals_index) = 0;
+    virtual void updateTheta()                     = 0;
+    virtual void computeInvB()                     = 0;
+    virtual void printGramMM(std::ofstream& tfile) = 0;
+    virtual void setDMuniform(const double nel)    = 0;
 
     virtual double dotProductWithInvS(
         const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& ss)
@@ -258,10 +258,9 @@ public:
     }
     virtual void saveDM() { exitWithErrorMessage("saveDM"); }
     virtual void resetDM() { exitWithErrorMessage("resetDM"); }
-    virtual void updateDMwithRelax(const double mix, const int itindex)
+    virtual void updateDMwithRelax(const double mix)
     {
         (void)mix;
-        (void)itindex;
 
         exitWithErrorMessage("updateDMwithRelax");
     }
@@ -297,18 +296,11 @@ public:
 
         return 0;
     }
-    virtual void updateDMwithChebApproximation(const int iterative_index)
+    virtual void updateDMwithChebApproximation()
     {
-        (void)iterative_index;
-
         exitWithErrorMessage("updateDMwithChebApproximation");
     }
-    virtual void updateDM(const int iterative_index)
-    {
-        (void)iterative_index;
-
-        exitWithErrorMessage("updateDM");
-    }
+    virtual void updateDM() { exitWithErrorMessage("updateDM"); }
 
     virtual void setDMto2InvS() { exitWithErrorMessage("setDMto2InvS"); }
     virtual void initializeMatB(
