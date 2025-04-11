@@ -31,7 +31,10 @@ class DensityMatrix
     MatrixType* kernel4dot_;
     MatrixType* work_;
 
-    int orbitals_index_;
+    /*!
+     * Keep track of changes, incremented every time dm_ is updated
+     */
+    int update_index_;
 
     bool occ_uptodate_;
     bool uniform_occ_;
@@ -46,16 +49,16 @@ class DensityMatrix
     DensityMatrix& operator=(const DensityMatrix&);
     DensityMatrix(const DensityMatrix&);
 
-    void build(const int new_orbitals_index);
+    void build();
 
 public:
     DensityMatrix(const int ndim);
 
     ~DensityMatrix();
 
-    void setUniform(const double nel, const int new_orbitals_index);
+    void setUniform(const double nel);
 
-    int getOrbitalsIndex() const { return orbitals_index_; }
+    int getIndex() const { return update_index_; }
 
     bool occupationsUptodate() const { return occ_uptodate_; }
     bool fromUniformOccupations() const { return uniform_occ_; }
@@ -84,10 +87,10 @@ public:
 
     const MatrixType& kernel4dot() const { return *kernel4dot_; }
 
-    void setMatrix(const MatrixType& mat, const int orbitals_index)
+    void setMatrix(const MatrixType& mat)
     {
-        *dm_            = mat;
-        orbitals_index_ = orbitals_index;
+        *dm_ = mat;
+        update_index_++;
 
         setDummyOcc();
 
@@ -112,7 +115,7 @@ public:
         uniform_occ_  = false;
         stripped_     = false;
 
-        orbitals_index_ = 0;
+        update_index_ = 0;
     }
 
     void getOccupations(std::vector<double>& occ) const
@@ -126,22 +129,19 @@ public:
 
     void setOccupations(const std::vector<double>& occ);
 
-    void setto2InvS(const MatrixType& invS, const int orbitals_index);
+    void setto2InvS(const MatrixType& invS);
 
     void stripS(const MatrixType& ls);
-    void dressUpS(const MatrixType& ls, const int new_orbitals_index);
+    void dressUpS(const MatrixType& ls);
 
     // dm_ -> u*dm_*u^T
     void transform(const MatrixType& u);
 
-    void buildFromBlock(const MatrixType& block00);
-
     double computeEntropy() const;
     void computeOccupations(const MatrixType& ls);
-    void build(const std::vector<double>& occ, const int new_orbitals_index);
-    void build(const MatrixType& z, const int new_orbitals_index);
-    void build(const MatrixType& z, const std::vector<double>& occ,
-        const int new_orbitals_index);
+    void build(const std::vector<double>& occ);
+    void build(const MatrixType& z);
+    void build(const MatrixType& z, const std::vector<double>& occ);
 
     void rotate(const MatrixType& rotation_matrix, const bool flag_eigen);
     void printOccupations(std::ostream& os) const;
@@ -149,8 +149,12 @@ public:
     void diagonalize(
         const char eigv, std::vector<double>& occ, MatrixType& vect);
     double getExpectation(const MatrixType& A);
-    void mix(
-        const double mix, const MatrixType& matA, const int new_orbitals_index);
+    void mix(const double mix, const MatrixType& matA);
+
+    /*!
+     * dm <- dm + (dm-previous_dm) = 2.*dm - previous_dm
+     */
+    void linearExtrapolate(const MatrixType& previous_dm);
 
     int write(HDFrestart& h5f_file, std::string& name);
     int read(HDFrestart& h5f_file, std::string& name);

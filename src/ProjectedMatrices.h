@@ -80,8 +80,8 @@ class ProjectedMatrices : public ProjectedMatricesInterface
     {
         computeChemicalPotentialAndOccupations(width_, dim_);
     }
-    double computeChemicalPotentialAndDMwithChebyshev(const int order,
-        const double emin, const double emax, const int iterative_index);
+    double computeChemicalPotentialAndDMwithChebyshev(
+        const int order, const double emin, const double emax);
 
 protected:
     // indexes corresponding to valid function in each subdomain
@@ -197,12 +197,9 @@ public:
     int getDMMatrixIndex() const override
     {
         assert(dm_);
-        return dm_->getOrbitalsIndex();
+        return dm_->getIndex();
     }
-    void setDMuniform(const double nel, const int orbitals_index) override
-    {
-        dm_->setUniform(nel, orbitals_index);
-    }
+    void setDMuniform(const double nel) override { dm_->setUniform(nel); }
     int dim() const { return dim_; }
 
     void computeInvS() override;
@@ -280,10 +277,9 @@ public:
     }
 
     void setDMto2InvS() override;
-    void buildDM(const MatrixType& z, const int orbitals_index);
-    void buildDM(const MatrixType& z, const std::vector<double>&,
-        const int orbitals_index);
-    void buildDM(const std::vector<double>&, const int orbitals_index);
+    void buildDM(const MatrixType& z);
+    void buildDM(const MatrixType& z, const std::vector<double>&);
+    void buildDM(const std::vector<double>&);
 
     double getEigSum() override;
     double getExpectation(const MatrixType& A);
@@ -323,12 +319,11 @@ public:
     int readDM(HDFrestart& h5f_file) override;
     int readWFDM(HDFrestart& h5f_file);
     void printEigenvalues(std::ostream& os) const;
-    void updateDM(const int iterative_index) override;
-    void updateDMwithEigenstates(const int iterative_index);
-    void updateDMwithSP2(const int iterative_index);
-    void updateDMwithEigenstatesAndRotate(
-        const int iterative_index, MatrixType& zz);
-    void updateDMwithChebApproximation(const int iterative_index) override;
+    void updateDM() override;
+    void updateDMwithEigenstates();
+    void updateDMwithSP2();
+    void updateDMwithEigenstatesAndRotate(MatrixType& zz);
+    void updateDMwithChebApproximation() override;
     void computeChemicalPotentialAndOccupations(
         const double width, const int max_numst)
     {
@@ -354,16 +349,16 @@ public:
 
     void resetDM() override
     {
-        dm_->setMatrix(*mat_X_old_, 0);
+        dm_->setMatrix(*mat_X_old_);
         dm_->stripS(*mat_L_old_);
     }
 
-    void updateDMwithRelax(const double mix, const int itindex) override
+    void updateDMwithRelax(const double mix) override
     {
         // cout<<"ProjectedMatrices::updateDMwithRelax()..."<<endl;
         assert(mat_X_old_);
 
-        dm_->mix(mix, *mat_X_old_, itindex);
+        dm_->mix(mix, *mat_X_old_);
     }
 
     SquareLocalMatrices<double, MemorySpace::Host> getReplicatedDM();
@@ -414,10 +409,7 @@ public:
         pmat.gemm('n', 'n', 1.0, mat, *theta_, 0.);
     }
     MatrixType& getMatHB() { return *matHB_; }
-    void setDM(const MatrixType& mat, const int orbitals_index)
-    {
-        dm_->setMatrix(mat, orbitals_index);
-    }
+    void setDM(const MatrixType& mat) { dm_->setMatrix(mat); }
     void setEigenvalues(const std::vector<double>& eigenvalues)
     {
         memcpy(eigenvalues_.data(), eigenvalues.data(),

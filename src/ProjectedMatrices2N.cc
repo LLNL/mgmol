@@ -39,7 +39,7 @@ void ProjectedMatrices2N<MatrixType>::assignBlocksH(
 
 template <class MatrixType>
 void ProjectedMatrices2N<MatrixType>::iterativeUpdateDMwithEigenstates(
-    const double occ_width, const int iterative_index, const bool flag_reduce_T)
+    const double occ_width, const bool flag_reduce_T)
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
@@ -64,7 +64,7 @@ void ProjectedMatrices2N<MatrixType>::iterativeUpdateDMwithEigenstates(
         (*MPIdata::sout) << "MVP target with mu = "
                          << ProjectedMatricesInterface::mu_ << " [Ry]"
                          << std::endl;
-    ProjectedMatrices<MatrixType>::buildDM(*work2N_, iterative_index);
+    ProjectedMatrices<MatrixType>::buildDM(*work2N_);
 }
 
 template class ProjectedMatrices2N<dist_matrix::DistMatrix<double>>;

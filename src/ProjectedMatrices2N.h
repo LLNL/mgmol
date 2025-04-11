@@ -26,8 +26,8 @@ public:
 
     void assignBlocksH(MatrixType&, MatrixType&, MatrixType&, MatrixType&);
 
-    void iterativeUpdateDMwithEigenstates(const double occ_width,
-        const int iterative_index, const bool flag_reduce_T = true);
+    void iterativeUpdateDMwithEigenstates(
+        const double occ_width, const bool flag_reduce_T = true);
     void diagonalizeDM(std::vector<double>& occ, MatrixType& vect)
     {
         // we are assuming Gram matrix=identity

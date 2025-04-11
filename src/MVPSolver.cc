@@ -104,8 +104,8 @@ double MVPSolver<OrbitalsType, MatrixType>::evaluateDerivative(
     const double dbeta = 0.001;
     *work_             = dmInit;
     work_->axpy(dbeta, delta_dm);
-    // proj_mat_work_->setDM(*work_,orbitals.getIterativeIndex());
-    proj_mat_work_->setDM(*work_, -1);
+
+    proj_mat_work_->setDM(*work_);
     proj_mat_work_->computeOccupationsFromDM();
 
     const double tsd0e = evalEntropyMVP(proj_mat_work_, false, os_);
@@ -145,7 +145,7 @@ void MVPSolver<OrbitalsType, MatrixType>::buildTarget_MVP(
     //
     proj_mat_work_->setHB2H();
 
-    proj_mat_work_->updateDM(orbitals_index);
+    proj_mat_work_->updateDM();
     target = proj_mat_work_->dm();
 
     if (ct.verbose > 2)
@@ -301,7 +301,7 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
                     //
                     if (onpe0 && ct.verbose > 2)
                         std::cout << "MVP --- Target energy..." << std::endl;
-                    proj_mat_work_->setDM(target, orbitals.getIterativeIndex());
+                    proj_mat_work_->setDM(target);
                     proj_mat_work_->computeOccupationsFromDM();
                     if (ct.verbose > 2) proj_mat_work_->printOccupations(os_);
                     const double nel = proj_mat_work_->getNel();
@@ -353,7 +353,7 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
             {
                 *work_ = target;
             }
-            proj_mat_work_->setDM(*work_, orbitals.getIterativeIndex());
+            proj_mat_work_->setDM(*work_);
 
             if (inner_it < n_inner_steps_ - 1)
             {
@@ -373,7 +373,7 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
         ProjectedMatrices<MatrixType>* projmatrices
             = dynamic_cast<ProjectedMatrices<MatrixType>*>(
                 orbitals.getProjMatrices());
-        projmatrices->setDM(*work_, orbitals.getIterativeIndex());
+        projmatrices->setDM(*work_);
         projmatrices->setEigenvalues(proj_mat_work_->getEigenvalues());
         projmatrices->assignH(proj_mat_work_->getH());
         projmatrices->setHB2H();

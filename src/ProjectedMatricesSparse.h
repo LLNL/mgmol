@@ -170,15 +170,12 @@ public:
         /* scale H */
         //    (*matHB_).scale(vel_);
     }
-    void setDMuniform(const double nel, const int orbitals_index) override
-    {
-        dm_->setUniform(nel, orbitals_index);
-    }
+    void setDMuniform(const double nel) override { dm_->setUniform(nel); }
 
     int getDMMatrixIndex() const override
     {
         assert(dm_ != nullptr);
-        return dm_->getOrbitalsIndex();
+        return dm_->getIndex();
     }
     int getGramMatrixIndex() const
     {
@@ -253,7 +250,7 @@ public:
     void setDMto2InvS() override
     {
         assert(invS_ != nullptr);
-        dm_->setto2InvS(invS_->getInvS(), invS_->getGramMatrixOrbitalsIndex());
+        dm_->setto2InvS(invS_->getInvS());
     }
 
     void computeInvS() override

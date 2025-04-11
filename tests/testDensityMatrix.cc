@@ -95,10 +95,10 @@ TEST_CASE(
     // setup density matrix
     DensityMatrix<MatrixType> dm(n);
 
-    dm.setMatrix(matK, 0);
+    dm.setMatrix(matK);
 
     dm.stripS(ls);
-    dm.dressUpS(ls, 1);
+    dm.dressUpS(ls);
 
     const MatrixType& newM = dm.getMatrix();
     if (myrank == 0) std::cout << "new M" << std::endl;

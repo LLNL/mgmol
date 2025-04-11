@@ -37,7 +37,7 @@ int EigenDMStrategy<OrbitalsType>::update(OrbitalsType& orbitals)
         = dynamic_cast<
             ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
             proj_matrices_);
-    pmat->updateDMwithEigenstatesAndRotate(orbitals.getIterativeIndex(), zz);
+    pmat->updateDMwithEigenstatesAndRotate(zz);
 
     // if( onpe0 && ct.verbose>2 )
     //    (*MPIdata::sout)<<"get_dm_diag: rotate orbitals "<<endl;

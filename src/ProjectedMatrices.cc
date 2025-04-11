@@ -271,7 +271,7 @@ void ProjectedMatrices<MatrixType>::setDMto2InvS()
     if (mmpi.instancePE0() && ct.verbose > 1)
         std::cout << "ProjectedMatrices::setDMto2InvS()..." << std::endl;
 
-    dm_->setto2InvS(gm_->getInverse(), gm_->getAssociatedOrbitalsIndex());
+    dm_->setto2InvS(gm_->getInverse());
 }
 
 template <class MatrixType>
@@ -296,30 +296,28 @@ void ProjectedMatrices<MatrixType>::solveGenEigenProblem(
 }
 
 template <class MatrixType>
-void ProjectedMatrices<MatrixType>::buildDM(
-    const MatrixType& z, const int orbitals_index)
+void ProjectedMatrices<MatrixType>::buildDM(const MatrixType& z)
 {
-    dm_->build(z, orbitals_index);
-}
-
-template <class MatrixType>
-void ProjectedMatrices<MatrixType>::buildDM(const MatrixType& z,
-    const std::vector<DISTMATDTYPE>& occ, const int orbitals_index)
-{
-    dm_->build(z, occ, orbitals_index);
+    dm_->build(z);
 }
 
 template <class MatrixType>
 void ProjectedMatrices<MatrixType>::buildDM(
-    const std::vector<DISTMATDTYPE>& occ, const int orbitals_index)
+    const MatrixType& z, const std::vector<DISTMATDTYPE>& occ)
 {
-    dm_->build(occ, orbitals_index);
+    dm_->build(z, occ);
+}
+
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::buildDM(
+    const std::vector<DISTMATDTYPE>& occ)
+{
+    dm_->build(occ);
 }
 
 // Use Chebyshev approximation to compute chemical potential and density matrix
 template <class MatrixType>
-void ProjectedMatrices<MatrixType>::updateDMwithChebApproximation(
-    const int iterative_index)
+void ProjectedMatrices<MatrixType>::updateDMwithChebApproximation()
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     Control& ct     = *(Control::instance());
@@ -354,15 +352,14 @@ void ProjectedMatrices<MatrixType>::updateDMwithChebApproximation(
     }
     // compute chemical potential and density matrix with Chebyshev
     // approximation.
-    double final_mu = computeChemicalPotentialAndDMwithChebyshev(
-        order, emin, emax, iterative_index);
+    double final_mu
+        = computeChemicalPotentialAndDMwithChebyshev(order, emin, emax);
     if (mmpi.instancePE0() && ct.verbose > 1)
         std::cout << "Final mu_ = " << final_mu << " [Ha]" << std::endl;
 }
 
 template <class MatrixType>
-void ProjectedMatrices<MatrixType>::updateDMwithEigenstates(
-    const int iterative_index)
+void ProjectedMatrices<MatrixType>::updateDMwithEigenstates()
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     Control& ct     = *(Control::instance());
@@ -381,14 +378,14 @@ void ProjectedMatrices<MatrixType>::updateDMwithEigenstates(
 
     // Build the density matrix X
     // X = Z * gamma * Z^T
-    buildDM(zz, iterative_index);
+    buildDM(zz);
 }
 
 //"replicated" implementation of SP2.
 // Theta is replicated on each MPI task, and SP2 solve run independently
 // by each MPI task
 template <class MatrixType>
-void ProjectedMatrices<MatrixType>::updateDMwithSP2(const int iterative_index)
+void ProjectedMatrices<MatrixType>::updateDMwithSP2()
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     Control& ct     = *(Control::instance());
@@ -433,21 +430,21 @@ void ProjectedMatrices<MatrixType>::updateDMwithSP2(const int iterative_index)
     MatrixType dm("dm", dim_, dim_);
 
     sp2.getDM(dm, gm_->getInverse());
-    dm_->setMatrix(dm, iterative_index);
+    dm_->setMatrix(dm);
 }
 
 template <class MatrixType>
-void ProjectedMatrices<MatrixType>::updateDM(const int iterative_index)
+void ProjectedMatrices<MatrixType>::updateDM()
 {
     Control& ct     = *(Control::instance());
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
     if (ct.DMEigensolver() == DMEigensolverType::Eigensolver)
-        updateDMwithEigenstates(iterative_index);
+        updateDMwithEigenstates();
     else if (ct.DMEigensolver() == DMEigensolverType::Chebyshev)
-        updateDMwithChebApproximation(iterative_index);
+        updateDMwithChebApproximation();
     else if (ct.DMEigensolver() == DMEigensolverType::SP2)
-        updateDMwithSP2(iterative_index);
+        updateDMwithSP2();
     else
     {
         std::cerr << "Eigensolver not available in "
@@ -470,7 +467,7 @@ void ProjectedMatrices<MatrixType>::updateDM(const int iterative_index)
 
 template <class MatrixType>
 void ProjectedMatrices<MatrixType>::updateDMwithEigenstatesAndRotate(
-    const int iterative_index, MatrixType& zz)
+    MatrixType& zz)
 {
     // solves generalized eigenvalue problem
     // and return solution in zz
@@ -479,7 +476,7 @@ void ProjectedMatrices<MatrixType>::updateDMwithEigenstatesAndRotate(
 
     rotateAll(zz, true);
 
-    dm_->build(zz, iterative_index);
+    dm_->build(zz);
 }
 
 template <class MatrixType>
@@ -614,7 +611,7 @@ void ProjectedMatrices<MatrixType>::dressupDM()
     if (mmpi.instancePE0())
         std::cout << "ProjectedMatrices<MatrixType>::dressupDM()" << std::endl;
 #endif
-    dm_->dressUpS(gm_->getCholeskyL(), gm_->getAssociatedOrbitalsIndex());
+    dm_->dressUpS(gm_->getCholeskyL());
 }
 
 template <class MatrixType>
@@ -999,8 +996,7 @@ double ProjectedMatrices<MatrixType>::computeTraceInvSmultMatMultTheta(
 template <class MatrixType>
 double
 ProjectedMatrices<MatrixType>::computeChemicalPotentialAndDMwithChebyshev(
-    const int order, const double emin, const double emax,
-    const int iterative_index)
+    const int order, const double emin, const double emax)
 {
     assert(emax > emin);
     assert(nel_ >= 0.);
@@ -1175,7 +1171,7 @@ ProjectedMatrices<MatrixType>::computeChemicalPotentialAndDMwithChebyshev(
     dm.gemm('N', 'N', 1., tmp, gm_->getInverse(), 0.);
     double orbital_occupation = mmpi.nspin() > 1 ? 1. : 2.;
     dm.scal(orbital_occupation);
-    dm_->setMatrix(dm, iterative_index);
+    dm_->setMatrix(dm);
 
     return mu_;
 }

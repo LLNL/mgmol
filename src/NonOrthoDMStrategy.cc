@@ -31,7 +31,7 @@ void NonOrthoDMStrategy<OrbitalsType>::initialize(OrbitalsType& orbitals)
         (*MPIdata::sout) << "NonOrthoDMStrategy<T>::initialize()..."
                          << std::endl;
     }
-    proj_matrices_->updateDM(orbitals.getIterativeIndex());
+    proj_matrices_->updateDM();
 }
 
 template <class OrbitalsType>
@@ -59,11 +59,11 @@ int NonOrthoDMStrategy<OrbitalsType>::update(OrbitalsType& orbitals)
     if (mix_ < 1.) proj_matrices_->saveDM();
 
     // compute new density matrix
-    proj_matrices_->updateDM(orbitals.getIterativeIndex());
+    proj_matrices_->updateDM();
 
     if (mix_ < 1.)
     {
-        proj_matrices_->updateDMwithRelax(mix_, orbitals.getIterativeIndex());
+        proj_matrices_->updateDMwithRelax(mix_);
     }
 
     if (ct.verbose > 2)
