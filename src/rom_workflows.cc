@@ -863,7 +863,7 @@ void testROMIonDensity(MGmolInterface *mgmol_)
         /* NOTE: we exclude rescaling for the sake of verification */
         mgmol->setupPotentials(*ions);
 
-        mgmol->electrostat_->setupRhoc(pot.rho_comp());
+        //mgmol->electrostat_->setupRhoc(pot.rho_comp());
         fom_rhoc[idx].resize(dim);
         mgmol->electrostat_->getRhoc()->init_vect(fom_rhoc[idx].data(), 'd');
     }
