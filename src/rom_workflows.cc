@@ -841,6 +841,7 @@ void testROMIonDensity(MGmolInterface *mgmol_)
         mmpi.bcastGlobal(cfgs[idx].data(), 3 * num_ions, 0);
     }
 
+    /* Artificial ions object to avoid repeated setPositions */
     Ions* new_ions;
     /* Collect fictitious ion density based on each configuration */
     std::vector<std::vector<POTDTYPE>> fom_rhoc(num_snap);
