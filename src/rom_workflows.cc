@@ -841,6 +841,7 @@ void testROMIonDensity(MGmolInterface *mgmol_)
         mmpi.bcastGlobal(cfgs[idx].data(), 3 * num_ions, 0);
     }
 
+    Ions* new_ions;
     /* Collect fictitious ion density based on each configuration */
     std::vector<std::vector<POTDTYPE>> fom_rhoc(num_snap);
     /* Sanity check for overlappingVL_ions */
@@ -848,24 +849,27 @@ void testROMIonDensity(MGmolInterface *mgmol_)
     for (int idx = 0; idx < num_snap; idx++)
     {
         /* set ion positions */
-        ions->setPositions(cfgs[idx], atnumbers);
+        //ions->setPositions(cfgs[idx], atnumbers);
+        new_ions = new Ions(cfgs[idx], atnumbers, lattice, ions->getSpecies());
 
         /* save overlapping ions for sanity check */
-        fom_overlap_ions[idx].resize(ions->overlappingVL_ions().size());
-        for (int k = 0; k < ions->overlappingVL_ions().size(); k++)
+        fom_overlap_ions[idx].resize(new_ions->overlappingVL_ions().size());
+        for (int k = 0; k < new_ions->overlappingVL_ions().size(); k++)
         {
             fom_overlap_ions[idx][k].resize(3);
             for (int d = 0; d < 3; d++)
-                fom_overlap_ions[idx][k][d] = ions->overlappingVL_ions()[k]->position(d);
+                fom_overlap_ions[idx][k][d] = new_ions->overlappingVL_ions()[k]->position(d);
         }
 
         /* compute resulting ion density */
         /* NOTE: we exclude rescaling for the sake of verification */
-        mgmol->setupPotentials(*ions);
+        mgmol->setupPotentials(*new_ions);
 
         //mgmol->electrostat_->setupRhoc(pot.rho_comp());
         fom_rhoc[idx].resize(dim);
         mgmol->electrostat_->getRhoc()->init_vect(fom_rhoc[idx].data(), 'd');
+
+        delete new_ions;
     }
 
     /* Initialize libROM classes */
@@ -911,26 +915,29 @@ void testROMIonDensity(MGmolInterface *mgmol_)
     if (rank == 0) printf("test index: %d\n", test_idx);
 
     /* set ion positions */
-    ions->setPositions(cfgs[test_idx], atnumbers);
+    //ions->setPositions(cfgs[test_idx], atnumbers);
+    new_ions = new Ions(cfgs[test_idx], atnumbers, lattice, ions->getSpecies());
 
     /* Sanity check for overlapping ions */
-    CAROM_VERIFY(fom_overlap_ions[test_idx].size() == ions->overlappingVL_ions().size());
-    for (int k = 0; k < ions->overlappingVL_ions().size(); k++)
+    CAROM_VERIFY(fom_overlap_ions[test_idx].size() == new_ions->overlappingVL_ions().size());
+    for (int k = 0; k < new_ions->overlappingVL_ions().size(); k++)
         for (int d = 0; d < 3; d++)
-            CAROM_VERIFY(abs(fom_overlap_ions[test_idx][k][d] - ions->overlappingVL_ions()[k]->position(d)) < 1.0e-12);
+            CAROM_VERIFY(abs(fom_overlap_ions[test_idx][k][d] - new_ions->overlappingVL_ions()[k]->position(d)) < 1.0e-12);
 
     /* set up potentials */
-    mgmol->setupPotentials(*ions);
+    mgmol->setupPotentials(*new_ions);
 
     /* eval ion density on sample grid points */
     std::vector<RHODTYPE> sampled_rhoc(sampled_row.size());
-    pot.evalIonDensityOnSamplePts(*ions, sampled_row, sampled_rhoc);
+    pot.evalIonDensityOnSamplePts(*new_ions, sampled_row, sampled_rhoc);
 
     for (int d = 0; d < sampled_row.size(); d++)
     {
         printf("rank %d, fom rhoc[%d]: %.3e, rom rhoc: %.3e\n", rank, sampled_row[d], fom_rhoc[test_idx][sampled_row[d]], sampled_rhoc[d]);
         CAROM_VERIFY(abs(fom_rhoc[test_idx][sampled_row[d]] - sampled_rhoc[d]) < 1.0e-12);
     }
+
+    delete new_ions;
 }
 
 template void readRestartFiles<LocGridOrbitals>(MGmolInterface *mgmol_);
