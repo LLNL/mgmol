@@ -919,6 +919,9 @@ void testROMIonDensity(MGmolInterface *mgmol_)
         for (int d = 0; d < 3; d++)
             CAROM_VERIFY(abs(fom_overlap_ions[test_idx][k][d] - ions->overlappingVL_ions()[k]->position(d)) < 1.0e-12);
 
+    /* set up potentials */
+    mgmol->setupPotentials(*ions);
+
     /* eval ion density on sample grid points */
     std::vector<RHODTYPE> sampled_rhoc(sampled_row.size());
     pot.evalIonDensityOnSamplePts(*ions, sampled_row, sampled_rhoc);
