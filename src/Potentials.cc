@@ -927,13 +927,6 @@ void Potentials::evalIonDensityOnSamplePts(
         initializeRadialDataOnSampledPts(position, sp, local_idx, sampled_rhoc);
     }
 
-    // rescale rho_comp_ due to finite mesh effects
-    rescaleRhoComp();
-
-    initBackground();
-
-    addBackgroundToRhoComp();
-
     return;
 }
 
