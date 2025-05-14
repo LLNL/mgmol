@@ -936,7 +936,7 @@ void testROMIonDensity(MGmolInterface *mgmol_)
     for (int d = 0; d < sampled_row.size(); d++)
     {
         printf("rank %d, fom rhoc[%d]: %.3e, rom rhoc: %.3e\n", rank, sampled_row[d], fom_rhoc[test_idx][sampled_row[d]], sampled_rhoc[d]);
-        CAROM_VERIFY(abs(fom_rhoc[test_idx][sampled_row[d]] - sampled_rhoc[d]) < 1.0e-2 * fom_rhoc[test_idx][sampled_row[d]]);
+        CAROM_VERIFY(abs(fom_rhoc[test_idx][sampled_row[d]] - sampled_rhoc[d]) < 1.0e-2);
     }
 
     delete new_ions;
