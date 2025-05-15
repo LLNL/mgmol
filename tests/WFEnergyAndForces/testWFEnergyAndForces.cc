@@ -190,6 +190,9 @@ int main(int argc, char** argv)
             }
         }
 
+        // rename output restart file
+        ct.out_restart_file = ct.out_restart_file + "1";
+
         mgmol->cleanup();
         delete mgmol;
 

@@ -224,6 +224,7 @@ void Control::print(std::ostream& os)
        << conv_tol << std::endl;
     os << std::fixed;
     os << " Density matrix mixing = " << dm_mix << std::endl;
+    os << std::setprecision(4) << std::scientific << " Density matrix tol = " << dm_tol << std::endl;
     if (DMEigensolver() == DMEigensolverType::Eigensolver)
     {
         os << " Density matrix computation algorithm = "
@@ -439,7 +440,7 @@ void Control::sync(void)
         memset(&int_buffer[0], 0, size_int_buffer * sizeof(int));
     }
 
-    const short size_float_buffer = 43;
+    const short size_float_buffer = 44;
     float* float_buffer           = new float[size_float_buffer];
     if (mype_ == 0)
     {
@@ -485,6 +486,7 @@ void Control::sync(void)
         float_buffer[40] = threshold_eigenvalue_gram_quench_;
         float_buffer[41] = pair_mlwf_distance_threshold_;
         float_buffer[42] = e0_;
+        float_buffer[43] = dm_tol;
     }
     else
     {
@@ -680,6 +682,7 @@ void Control::sync(void)
     threshold_eigenvalue_gram_quench_ = float_buffer[40];
     pair_mlwf_distance_threshold_     = float_buffer[41];
     e0_                               = float_buffer[42];
+    dm_tol                            = float_buffer[43];
     max_electronic_steps_loose_       = max_electronic_steps;
 
     delete[] short_buffer;
@@ -699,8 +702,8 @@ void Control::setDefaultValues()
 
 void Control::adjust()
 {
-    // change dm_mix default to 1. if not using Davidson
-    if (it_algo_type_ != 2 && dm_mix < 0.) dm_mix = 1.;
+    // change dm_mix default to 1. if not using Davidson or MVP
+    if ((it_algo_type_ != 2 && DM_solver_ != 1) && dm_mix < 0.) dm_mix = 1.;
 
     if (nel_ - 2 * numst == 0)
     {
@@ -1720,6 +1723,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
             lrs_extrapolation = 10;
 
         dm_mix         = vm["DensityMatrix.mixing"].as<float>();
+        dm_tol         = vm["DensityMatrix.tol"].as<float>();
         dm_inner_steps = vm["DensityMatrix.nb_inner_it"].as<short>();
         dm_use_old_    = vm["DensityMatrix.use_old"].as<bool>() ? 1 : 0;
         str            = vm["DensityMatrix.algo"].as<std::string>();
@@ -1738,8 +1742,6 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         }
         else
             dm_algo_ = 2;
-
-        dm_tol = vm["DensityMatrix.tol"].as<float>();
 
         str = vm["DensityMatrix.solver"].as<std::string>();
         if (str.compare("Mixing") == 0) DM_solver_ = 0;
