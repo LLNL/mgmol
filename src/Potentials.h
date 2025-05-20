@@ -103,12 +103,6 @@ class Potentials
     void initializeRadialDataOnSampledPts(
         const Vector3D& position, const Species& sp, const std::vector<int> &local_idx, std::vector<RHODTYPE> &sampled_rhoc);
 
-    void rescaleRhoComp();
-
-    void addBackgroundToRhoComp();
-
-    void initBackground();
-
 public:
     Potentials();
 
@@ -207,6 +201,10 @@ public:
     void resetVhRho2Backup() { vh_rho_ = vh_rho_backup_; }
 
     void evalIonDensityOnSamplePts(Ions& ions, const std::vector<int> &local_idx, std::vector<RHODTYPE> &sampled_rhoc);
+
+    void rescaleRhoComp();
+    void addBackgroundToRhoComp();
+    void initBackground();
 
 #ifdef HAVE_TRICUBIC
     void readExternalPot(const string filename, const char type);
