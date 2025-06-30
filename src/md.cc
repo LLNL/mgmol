@@ -407,8 +407,12 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
     }
 
     bool ROM_MVP = (ct.getROMOptions().rom_stage == ROMStage::ONLINE_PINNED_H2O_3DOF);
+    DensityMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>* dm = nullptr;
+    dist_matrix::DistMatrix<DISTMATDTYPE>* previous_dm = nullptr;
 #ifdef MGMOL_HAS_LIBROM
     // ROM - initialize orbitals and density matrix
+    // assume ct.Mehrstellen() nor ct.short_sighted nor use_replicated_matrix
+    // so that Line 267 of MGmol.cc is activated 
     if (ROM_MVP)
     {
         if (onpe0) os_ << "Setup ROM MVP solver..." << std::endl;
@@ -422,6 +426,12 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
             = getProjectedMatrices();
         projmatrices->setDMuniform(ct.getNelSpin(), 0);
         projmatrices->printDM(os_);
+
+
+        std::shared_ptr<ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>> projmatrices_downcast =
+            std::dynamic_pointer_cast<ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>>(projmatrices);
+        dm = &(projmatrices_downcast->getDM());
+        previous_dm = new dist_matrix::DistMatrix<DISTMATDTYPE>(dm->getMatrix());
     }
 #endif
 
@@ -489,6 +499,13 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
             md_updateDMandEnergy_tm.start();
             updateDMandEnergy(**orbitals, *ROM_ions, eks);
             md_updateDMandEnergy_tm.stop();
+
+           // save last DM in tmp
+           dist_matrix::DistMatrix<DISTMATDTYPE> tmp(dm->getMatrix());
+           // extrapolate DM using previous_dm
+           dm->linearExtrapolate(*previous_dm);
+           // reset previous_dm
+           *previous_dm = tmp;
         }
         else
         {
