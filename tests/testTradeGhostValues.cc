@@ -13,6 +13,8 @@
 
 #include "catch.hpp"
 
+#include <array>
+
 // function of periodicity nx, ny, nz
 double cos3(const int i, const int j, const int k, const int nx, const int ny,
     const int nz)
