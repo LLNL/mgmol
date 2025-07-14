@@ -37,9 +37,9 @@ foreach k (`seq 0 $temperature_num_increments`)
   ln -s -f $maindir/potentials/pseudo.O_ONCV_PBE_SG15 .
   ln -s -f $maindir/potentials/pseudo.D_ONCV_PBE_SG15 .
   sed -i -e "s/CUSTOM_TAG/${tag}/g" ${cfg_quench}
-  sed -i -e "s/CUSTOM_TEMPERATURE/${tag}/g" ${cfg_quench}
+  sed -i -e "s/CUSTOM_TEMPERATURE/${temperature}/g" ${cfg_quench}
   sed -i -e "s/CUSTOM_TAG/${tag}/g" ${cfg_md}
-  sed -i -e "s/CUSTOM_TEMPERATURE/${tag}/g" ${cfg_md}
+  sed -i -e "s/CUSTOM_TEMPERATURE/${temperature}/g" ${cfg_md}
   sbatch job.snap
   cd ../..
 end

@@ -6,9 +6,10 @@
 setenv OMP_NUM_THREADS 1
 #setenv KMP_DETERMINISTIC_REDUCTION 1
 
+set maindir = /p/lustre2/cheung26/mgmol
+
 setenv LD_LIBRARY_PATH ${maindir}/build_quartz/libROM/build/lib:$LD_LIBRARY_PATH
 
-set maindir = /p/lustre2/cheung26/mgmol
 set exe     = ${maindir}/install_quartz/bin/mgmol-opt
 set datadir = $maindir/examples/H2O_64
 set cfg_quench = mgmol_quench.cfg
