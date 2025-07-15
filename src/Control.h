@@ -555,7 +555,6 @@ public:
     short out_restart_file_naming_strategy;
     short restart_file_type;
     short out_restart_file_type;
-    short override_restart;
 
     short verbose;
 

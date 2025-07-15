@@ -164,7 +164,7 @@ int MGmol<OrbitalsType>::readLRsFromInput(std::ifstream* tfile)
 
 template <class OrbitalsType>
 int MGmol<OrbitalsType>::readCoordinates(
-    const std::string& filename, const bool cell_relative)
+    const std::string& coords_filename, const bool cell_relative)
 {
     Control& ct = *(Control::instance());
     if (ct.verbose > 0) printWithTimeStamp("Read atomic coordinates...", os_);
@@ -177,29 +177,26 @@ int MGmol<OrbitalsType>::readCoordinates(
     const std::vector<Species>& sp(ct.getSpecies());
     ions_.reset(new Ions(lattice, sp));
 
-    if (ct.restart_info > 0
-        && ct.override_restart == 0) // read restart ionic positions
+    if (ct.restart_info > 0 && coords_filename.empty())
     {
-        if (ct.restart_info > 0)
+        // read restart atomic positions
+        if (onpe0 && ct.verbose > 0)
         {
-            if (onpe0 && ct.verbose > 0)
-            {
-                os_ << "Initialize ionic positions from restart file "
-                    << ct.restart_file << std::endl;
-            }
-            ions_->initFromRestartFile(*h5f_file_);
+            os_ << "Initialize atomic positions from restart file "
+                << ct.restart_file << std::endl;
         }
+        ions_->initFromRestartFile(*h5f_file_);
     }
     else
     {
         // Coordinates and species type for each ion.
-        int info = ions_->readAtoms(filename, cell_relative);
+        int info = ions_->readAtoms(coords_filename, cell_relative);
 
         return info;
     }
 
     const int num_ions = ions_->getNumIons();
-    if (onpe0) os_ << num_ions << " ions in simulation" << std::endl;
+    if (onpe0) os_ << num_ions << " atoms in simulation" << std::endl;
 
     return 0;
 }

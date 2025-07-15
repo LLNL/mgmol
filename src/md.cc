@@ -333,7 +333,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
 
     constraints_->printConstraints(os_);
 
-    if (ct.restart_info > 0 && !ct.override_restart)
+    if (ct.restart_info > 0)
     {
         if (onpe0) os_ << "Use restart file to initialize MD..." << std::endl;
         stepper->init(*h5f_file_);
