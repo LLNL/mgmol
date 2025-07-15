@@ -172,7 +172,7 @@ int main(int argc, char** argv)
         //
 
         // reset initial DM to test iterative solve for it
-        projmatrices->setDMuniform(ct.getNelSpin(), 0);
+        projmatrices->setDMuniform(ct.getNelSpin());
         ct.dm_inner_steps = 50;
         eks               = mgmol->evaluateDMandEnergyAndForces(
             &orbitals, positions, anumbers, forces);

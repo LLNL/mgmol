@@ -162,7 +162,7 @@ int main(int argc, char** argv)
         orbitals.setIterativeIndex(1);
 
         // set initial DM with uniform occupations
-        projmatrices->setDMuniform(ct.getNelSpin(), 0);
+        projmatrices->setDMuniform(ct.getNelSpin());
         projmatrices->printDM(std::cout);
 
         // swap H and O to make sure order of atoms in list does not matter
