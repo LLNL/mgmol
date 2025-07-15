@@ -424,7 +424,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
 
         std::shared_ptr<ProjectedMatricesInterface> projmatrices
             = getProjectedMatrices();
-        projmatrices->setDMuniform(ct.getNelSpin(), 0);
+        projmatrices->setDMuniform(ct.getNelSpin());
         projmatrices->printDM(os_);
 
         std::shared_ptr<ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>> projmatrices_downcast =

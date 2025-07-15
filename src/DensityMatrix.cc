@@ -22,7 +22,11 @@
 
 const double factor_kernel4dot = 10.;
 
-#define PROCRUSTES 0
+#define MGMOL_DENSITYMATRIX_FAIL(X)                                            \
+    {                                                                          \
+        std::cerr << "DensityMatrix failure:" << std::endl;                    \
+        std::cerr << "Error Message: " << X << std::endl;                      \
+    }
 
 #define MGMOL_DENSITYMATRIX_FAIL(X)                                            \
     {                                                                          \
@@ -36,7 +40,7 @@ const double factor_kernel4dot = 10.;
 template <class MatrixType>
 DensityMatrix<MatrixType>::DensityMatrix(const int ndim)
     : dim_(ndim),
-      orbitals_index_(-1),
+      update_index_(-1),
       occ_uptodate_(false),
       uniform_occ_(false),
       stripped_(false)
@@ -66,8 +70,8 @@ DensityMatrix<MatrixType>::~DensityMatrix()
 }
 
 template <class MatrixType>
-void DensityMatrix<MatrixType>::build(const MatrixType& zmat,
-    const std::vector<double>& occ, const int new_orbitals_index)
+void DensityMatrix<MatrixType>::build(
+    const MatrixType& zmat, const std::vector<double>& occ)
 {
 #ifdef PRINT_OPERATIONS
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
@@ -98,32 +102,30 @@ void DensityMatrix<MatrixType>::build(const MatrixType& zmat,
     work_->symm('r', 'l', 1., gamma, zmat, 0.);
     kernel4dot_->gemm('n', 't', 1., *work_, zmat, 0.);
 
-    stripped_       = false;
-    orbitals_index_ = new_orbitals_index;
+    stripped_ = false;
+    update_index_++;
 }
 
 template <class MatrixType>
-void DensityMatrix<MatrixType>::build(
-    const MatrixType& zmat, const int new_orbitals_index)
+void DensityMatrix<MatrixType>::build(const MatrixType& zmat)
 {
-    build(zmat, occupation_, new_orbitals_index);
+    build(zmat, occupation_);
 }
 
 // build diagonal matrix
 template <class MatrixType>
-void DensityMatrix<MatrixType>::build(
-    const std::vector<double>& occ, const int new_orbitals_index)
+void DensityMatrix<MatrixType>::build(const std::vector<double>& occ)
 {
     assert(dm_ != nullptr);
     assert(!occ.empty());
 
     setOccupations(occ);
 
-    build(new_orbitals_index);
+    build();
 }
 
 template <class MatrixType>
-void DensityMatrix<MatrixType>::build(const int new_orbitals_index)
+void DensityMatrix<MatrixType>::build()
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 #ifdef PRINT_OPERATIONS
@@ -148,13 +150,12 @@ void DensityMatrix<MatrixType>::build(const int new_orbitals_index)
                         * std::min(1., factor_kernel4dot * occupation_[i]));
     kernel4dot_->setDiagonal(w);
 
-    stripped_       = false;
-    orbitals_index_ = new_orbitals_index;
+    stripped_ = false;
+    update_index_++;
 }
 
 template <class MatrixType>
-void DensityMatrix<MatrixType>::setUniform(
-    const double nel, const int new_orbitals_index)
+void DensityMatrix<MatrixType>::setUniform(const double nel)
 {
     assert(!occupation_.empty());
 
@@ -171,22 +172,13 @@ void DensityMatrix<MatrixType>::setUniform(
 
     uniform_occ_ = true;
 
-    build(occupation_, new_orbitals_index);
-}
-
-template <class MatrixType>
-void DensityMatrix<MatrixType>::buildFromBlock(const MatrixType& block00)
-{
-    dm_->clear();
-    dm_->assign(block00, 0, 0);
-    dm_->print(std::cout, 0, 0, 25, 25);
+    build(occupation_);
 }
 
 template <class MatrixType>
 void DensityMatrix<MatrixType>::rotate(
     const MatrixType& rotation_matrix, const bool flag_eigen)
 {
-
     if (!flag_eigen)
     {
         MatrixType invU(rotation_matrix);
@@ -204,6 +196,8 @@ void DensityMatrix<MatrixType>::rotate(
         invU.getrs('n', tmp, ipiv);
 
         *dm_ = tmp;
+
+        update_index_++;
     }
 }
 
@@ -370,8 +364,7 @@ double DensityMatrix<MatrixType>::computeEntropy() const
 }
 
 template <class MatrixType>
-void DensityMatrix<MatrixType>::setto2InvS(
-    const MatrixType& invS, const int orbitals_index)
+void DensityMatrix<MatrixType>::setto2InvS(const MatrixType& invS)
 {
     *dm_ = invS;
     dm_->scal(orbital_occupation_);
@@ -382,8 +375,8 @@ void DensityMatrix<MatrixType>::setto2InvS(
             occupation_[st] = 1.;
         occ_uptodate_ = true;
     }
-    uniform_occ_    = false;
-    orbitals_index_ = orbitals_index;
+    uniform_occ_ = false;
+    update_index_++;
 }
 
 template <class MatrixType>
@@ -400,8 +393,7 @@ void DensityMatrix<MatrixType>::stripS(const MatrixType& ls)
 }
 
 template <class MatrixType>
-void DensityMatrix<MatrixType>::dressUpS(
-    const MatrixType& ls, const int new_orbitals_index)
+void DensityMatrix<MatrixType>::dressUpS(const MatrixType& ls)
 {
     assert(stripped_);
 
@@ -410,10 +402,11 @@ void DensityMatrix<MatrixType>::dressUpS(
     *dm_ = *work_;
     ls.trtrs('l', 't', 'n', *dm_);
 
-    orbitals_index_ = new_orbitals_index;
-    occ_uptodate_   = false;
-    uniform_occ_    = false;
-    stripped_       = false;
+    update_index_++;
+
+    occ_uptodate_ = false;
+    uniform_occ_  = false;
+    stripped_     = false;
 }
 
 // dm_ -> u*dm_*u^T
@@ -424,6 +417,8 @@ void DensityMatrix<MatrixType>::transform(const MatrixType& u)
 {
     work_->gemm('n', 't', 1., *dm_, u, 0.);
     dm_->gemm('n', 'n', 1., u, *work_, 0.);
+
+    update_index_++;
 }
 
 template <class MatrixType>
@@ -434,13 +429,21 @@ double DensityMatrix<MatrixType>::getExpectation(const MatrixType& A)
 }
 
 template <class MatrixType>
-void DensityMatrix<MatrixType>::mix(
-    const double mix, const MatrixType& matA, const int new_orbitals_index)
+void DensityMatrix<MatrixType>::mix(const double mix, const MatrixType& matA)
 {
     dm_->scal(1. - mix);
-
     dm_->axpy(mix, matA);
-    orbitals_index_ = new_orbitals_index;
+
+    update_index_++;
+}
+
+template <class MatrixType>
+void DensityMatrix<MatrixType>::linearExtrapolate(const MatrixType& previous_dm)
+{
+    dm_->scal(2.);
+    dm_->axpy(-1., previous_dm);
+
+    update_index_++;
 }
 
 template <class MatrixType>

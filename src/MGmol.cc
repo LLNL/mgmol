@@ -365,9 +365,7 @@ int MGmol<OrbitalsType>::initial()
 
     // initialize Rho
     if (ct.verbose > 0) printWithTimeStamp("Initialize Rho...", os_);
-    if (ct.restart_info <= 1)
-        proj_matrices_->setDMuniform(
-            ct.getNelSpin(), current_orbitals_->getIterativeIndex());
+    if (ct.restart_info <= 1) proj_matrices_->setDMuniform(ct.getNelSpin());
 
     rho_->setup(ct.getOrthoType(), current_orbitals_->getOverlappingGids());
 
