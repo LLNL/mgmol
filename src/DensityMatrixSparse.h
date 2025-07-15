@@ -32,7 +32,7 @@ class DensityMatrixSparse
 
     VariableSizeMatrix<sparserow>* dm_;
 
-    int orbitals_index_;
+    int update_index_;
 
     double orbital_occupation_;
 
@@ -43,16 +43,14 @@ public:
 
     ~DensityMatrixSparse();
 
-    void setUniform(const double nel, const int new_orbitals_index);
+    void setUniform(const double nel);
 
-    void setto2InvS(
-        const VariableSizeMatrix<sparserow>& invS, const int orbitals_index);
-    int getOrbitalsIndex() const { return orbitals_index_; }
-    void setMatrix(
-        const VariableSizeMatrix<sparserow>& mat, const int orbitals_index)
+    void setto2InvS(const VariableSizeMatrix<sparserow>& invS);
+    int getIndex() const { return update_index_; }
+    void setMatrix(const VariableSizeMatrix<sparserow>& mat)
     {
-        *dm_            = mat;
-        orbitals_index_ = orbitals_index;
+        *dm_ = mat;
+        update_index_++;
     }
     void assembleMatrixFromCenteredData(const std::vector<double>& data,
         const std::vector<int>& locRowIds, const int* globalColIds,

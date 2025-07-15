@@ -166,7 +166,7 @@ int main(int argc, char** argv)
         orbitals.setIterativeIndex(10);
 
         // set initial DM with uniform occupations
-        projmatrices->setDMuniform(ct.getNelSpin(), 0);
+        projmatrices->setDMuniform(ct.getNelSpin());
         projmatrices->printDM(std::cout);
 
         //
