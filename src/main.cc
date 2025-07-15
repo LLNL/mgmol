@@ -58,7 +58,7 @@ int main(int argc, char** argv)
     /*
      * read runtime parameters
      */
-    std::string input_filename("");
+    std::string coords_filename("");
     std::string lrs_filename;
     std::string constraints_filename("");
 
@@ -70,7 +70,7 @@ int main(int argc, char** argv)
     // read from PE0 only
     if (MPIdata::onpe0)
     {
-        read_config(argc, argv, vm, input_filename, lrs_filename,
+        read_config(argc, argv, vm, coords_filename, lrs_filename,
             constraints_filename, total_spin, with_spin);
     }
 
@@ -89,7 +89,7 @@ int main(int argc, char** argv)
     int ret = ct.checkOptions();
     if (ret < 0) return ret;
 
-    mmpi.bcastGlobal(input_filename);
+    mmpi.bcastGlobal(coords_filename);
     mmpi.bcastGlobal(lrs_filename);
 
     // Enter main scope
@@ -97,10 +97,10 @@ int main(int argc, char** argv)
         MGmolInterface* mgmol;
         if (ct.isLocMode())
             mgmol = new MGmol<LocGridOrbitals>(global_comm, *MPIdata::sout,
-                input_filename, lrs_filename, constraints_filename);
+                coords_filename, lrs_filename, constraints_filename);
         else
             mgmol = new MGmol<ExtendedGridOrbitals>(global_comm, *MPIdata::sout,
-                input_filename, lrs_filename, constraints_filename);
+                coords_filename, lrs_filename, constraints_filename);
 
         mgmol->setup();
 
