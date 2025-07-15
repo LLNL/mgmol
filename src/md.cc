@@ -406,10 +406,10 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
         h5f_file_.reset();
     }
 
+#ifdef MGMOL_HAS_LIBROM
     bool ROM_MVP = (ct.getROMOptions().rom_stage == ROMStage::ONLINE_PINNED_H2O_3DOF);
     DensityMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>* dm = nullptr;
     dist_matrix::DistMatrix<DISTMATDTYPE>* previous_dm = nullptr;
-#ifdef MGMOL_HAS_LIBROM
     // ROM - initialize orbitals and density matrix
     // assume ct.Mehrstellen() nor ct.short_sighted nor use_replicated_matrix
     // so that Line 267 of MGmol.cc is activated 
@@ -496,15 +496,11 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
         if (ROM_MVP)
         {
             md_updateDMandEnergy_tm.start();
+            dist_matrix::DistMatrix<DISTMATDTYPE> tmp(dm->getMatrix());
+            dm->linearExtrapolate(*previous_dm);
+            *previous_dm = tmp;
             updateDMandEnergy(**orbitals, *ROM_ions, eks);
             md_updateDMandEnergy_tm.stop();
-
-           // save last DM in tmp
-           dist_matrix::DistMatrix<DISTMATDTYPE> tmp(dm->getMatrix());
-           // extrapolate DM using previous_dm
-           dm->linearExtrapolate(*previous_dm);
-           // reset previous_dm
-           *previous_dm = tmp;
         }
         else
         {
