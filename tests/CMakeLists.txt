@@ -456,6 +456,15 @@ add_test(NAME testSiH4
          ${CMAKE_CURRENT_SOURCE_DIR}/SiH4/mgmol.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/SiH4/sih4.xyz
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+add_test(NAME testOverrideCoords
+         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/OverrideCoords/test.py
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+         ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
+         ${CMAKE_CURRENT_SOURCE_DIR}/OverrideCoords/mgmol.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/OverrideCoords/restart.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/OverrideCoords/sih4.xyz
+         ${CMAKE_CURRENT_SOURCE_DIR}/OverrideCoords/shifted.xyz
+         ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME testCl2
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Cl2_ONCVPSP_LDA/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
