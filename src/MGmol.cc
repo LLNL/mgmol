@@ -45,6 +45,7 @@
 #include "MGmol.h"
 #include "MLWFTransform.h"
 #include "MPIdata.h"
+#include "MVPSolver.h"
 #include "MasksSet.h"
 #include "Mesh.h"
 #include "OrbitalsPreconditioning.h"
@@ -900,6 +901,9 @@ void MGmol<OrbitalsType>::printTimers()
     AndersonMix<OrbitalsType>::update_tm().print(os_);
     proj_matrices_->printTimers(os_);
     ShortSightedInverse::printTimers(os_);
+    if (std::is_same<OrbitalsType, ExtendedGridOrbitals>::value)
+        MVPSolver<ExtendedGridOrbitals,
+            dist_matrix::DistMatrix<DISTMATDTYPE>>::printTimers(os_);
     VariableSizeMatrixInterface::printTimers(os_);
     DataDistribution::printTimers(os_);
     PackedCommunicationBuffer::printTimers(os_);
