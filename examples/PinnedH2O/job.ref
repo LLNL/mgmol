@@ -1,7 +1,7 @@
 #!/bin/tcsh
 #SBATCH -N 1
-#SBATCH -t 1:00:00
-#SBATCH -p pdebug
+#SBATCH -t 3:00:00
+#SBATCH -p pbatch
 
 date
 
