@@ -56,7 +56,7 @@ except FileExistsError:
   os.remove('wave.out')
   os.symlink(restart_file, 'wave.out')
 
-command = "{} {} -c {} -i {} -l {}".format(mpicmd,exe,inp2,coords,lrs)
+command = "{} {} -c {} -l {}".format(mpicmd,exe,inp2,lrs)
 print(command)
 output = subprocess.check_output(command,shell=True)
 

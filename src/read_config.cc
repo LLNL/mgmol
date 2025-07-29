@@ -20,7 +20,7 @@
 namespace po = boost::program_options;
 
 int read_config(int argc, char** argv, po::variables_map& vm,
-    std::string& input_file, std::string& lrs_filename,
+    std::string& coords_filename, std::string& lrs_filename,
     std::string& constraints_filename, float& total_spin, bool& with_spin)
 {
     // use configure file if it can be found
@@ -36,9 +36,9 @@ int read_config(int argc, char** argv, po::variables_map& vm,
             "help,h", "produce help message")("check", "check input")(
             "config,c",
             po::value<std::string>(&config_file)->default_value("mgmol.cfg"),
-            "name of a file of a configuration.")("atomicCoordinates,i",
-            po::value<std::vector<std::string>>(),
-            "coordinates filename")("LRsFilename,l",
+            "name of configuration file")("atomicCoordinates,i",
+            po::value<std::string>(&coords_filename),
+            "atomic coordinates filename")("LRsFilename,l",
             po::value<std::string>(&lrs_filename), "LRs filename");
 
         // Declare a group of options (with default when appropriate) that
@@ -150,9 +150,8 @@ int read_config(int argc, char** argv, po::variables_map& vm,
             "Tolerance on forces for Geometry optimization")(
             "GeomOpt.max_steps", po::value<short>()->default_value(1),
             "max. number of Geometry optimization steps")("GeomOpt.dt",
-            po::value<float>(), "Delta t for trial pseudo-time steps")(
-            "atomicCoordinates", po::value<std::vector<std::string>>(),
-            "coordinates filename")("Thermostat.type",
+            po::value<float>(),
+            "Delta t for trial pseudo-time steps")("Thermostat.type",
             po::value<std::string>()->default_value("Langevin"),
             "Thermostat type")("Thermostat.temperature",
             po::value<float>()->default_value(-1.), "Thermostat temperature")(
@@ -384,9 +383,9 @@ int read_config(int argc, char** argv, po::variables_map& vm,
         }
         if (vm.count("atomicCoordinates"))
         {
-            input_file
+            coords_filename
                 = vm["atomicCoordinates"].as<std::vector<std::string>>()[0];
-            std::cout << "Input files is: " << input_file << "\n";
+            std::cout << "Coordinates files is: " << coords_filename << "\n";
         }
         else
         {

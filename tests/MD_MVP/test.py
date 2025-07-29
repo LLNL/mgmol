@@ -51,7 +51,7 @@ for i in range(2):
   os.rename(restart_file, 'snapshotMVP')
 
   #run MGmol
-  command = "{} {} -c {} -i {}".format(mpicmd,exe,inp2,coords)
+  command = "{} {} -c {}".format(mpicmd,exe,inp2)
   output2 = subprocess.check_output(command,shell=True)
 
   #remove used restart files
