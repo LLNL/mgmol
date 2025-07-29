@@ -28,12 +28,6 @@ const double factor_kernel4dot = 10.;
         std::cerr << "Error Message: " << X << std::endl;                      \
     }
 
-#define MGMOL_DENSITYMATRIX_FAIL(X)                                            \
-    {                                                                          \
-        std::cerr << "DensityMatrix failure:" << std::endl;                    \
-        std::cerr << "Error Message: " << X << std::endl;                      \
-    }
-
 // occupations in [0,1]
 // DM eigenvalues in [0,orbital_occupation]
 

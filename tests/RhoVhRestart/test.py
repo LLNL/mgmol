@@ -53,7 +53,7 @@ if flag==0:
   sys.exit(1)
 
 #run MD
-command = "{} {} -c {} -i {}".format(mpicmd,mgmol_exe,input2,coords)
+command = "{} {} -c {}".format(mpicmd,mgmol_exe,input2)
 print("Run command: {}".format(command))
 output = subprocess.check_output(command,shell=True)
 lines=output.split(b'\n')
@@ -68,7 +68,7 @@ if flag==0:
   sys.exit(1)
 
 #run test
-command = "{} {} -c {} -i {}".format(mpicmd,test_exe,input3,coords)
+command = "{} {} -c {}".format(mpicmd,test_exe,input3)
 print("Run command: {}".format(command))
 output = subprocess.check_output(command,shell=True)
 lines=output.split(b'\n')

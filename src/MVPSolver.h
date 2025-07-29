@@ -16,7 +16,6 @@
 
 class Ions;
 class Electrostatic;
-class ProjectedMatrices2N;
 template <class OrbitalsType>
 class ProjectedMatrices;
 
@@ -67,7 +66,7 @@ public:
     ~MVPSolver();
 
     int solve(OrbitalsType& orbitals);
-    void printTimers(std::ostream& os);
+    static void printTimers(std::ostream& os);
 };
 
 #endif
