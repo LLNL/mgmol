@@ -12,6 +12,8 @@
 
 #include "catch.hpp"
 
+#include <array>
+
 TEST_CASE("Set ghost values", "[set ghosts")
 {
     const double origin[3]  = { 0., 0., 0. };

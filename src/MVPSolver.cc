@@ -398,12 +398,8 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
 template <class OrbitalsType, class MatrixType>
 void MVPSolver<OrbitalsType, MatrixType>::printTimers(std::ostream& os)
 {
-    if (onpe0)
-    {
-        os << std::setprecision(2) << std::fixed << std::endl;
-        solve_tm_.print(os);
-        target_tm_.print(os);
-    }
+    solve_tm_.print(os);
+    target_tm_.print(os);
 }
 
 template class MVPSolver<LocGridOrbitals,

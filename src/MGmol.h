@@ -229,7 +229,6 @@ public:
 
     void printEigAndOcc();
 
-    int readCoordinates(std::ifstream* tfile, const bool cell_relative);
     int readCoordinates(const std::string& filename, const bool cell_relative);
     double computeConstraintResidual(OrbitalsType& orbitals,
         const OrbitalsType& hphi, OrbitalsType& res, const bool print_residual,
