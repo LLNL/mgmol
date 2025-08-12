@@ -1827,6 +1827,12 @@ void ExtendedGridOrbitals::initWF(
             }
     }
 
+    // needs to mask one layer of values when using 0 BC for
+    // wavefunctions the next two lines do that
+    setDataWithGhosts();
+    trade_boundaries();
+    setToDataWithGhosts();
+
     resetIterativeIndex();
 
     if (onpe0 && ct.verbose > 2)

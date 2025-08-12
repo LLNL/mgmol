@@ -13,10 +13,9 @@ for i in range(4,nargs-5):
   mpicmd = mpicmd + " "+sys.argv[i]
 print("MPI run command: {}".format(mpicmd))
 
-exe = sys.argv[nargs-5]
-inp = sys.argv[nargs-4]
-coords = sys.argv[nargs-3]
-lrs = sys.argv[nargs-2]
+exe = sys.argv[nargs-4]
+inp = sys.argv[nargs-3]
+coords = sys.argv[nargs-2]
 print("coordinates file: %s"%coords)
 
 #create links to potentials files
@@ -28,7 +27,7 @@ if not os.path.exists(dst1):
   os.symlink(src1, dst1)
 
 #run mgmol
-command = "{} {} -c {} -i {} -l {}".format(mpicmd,exe,inp,coords,lrs)
+command = "{} {} -c {} -i {}".format(mpicmd,exe,inp,coords)
 print("Run command: {}".format(command))
 output = subprocess.check_output(command,shell=True)
 
