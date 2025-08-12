@@ -500,7 +500,6 @@ add_test(NAME testSpinO2LDA
          ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
          ${CMAKE_CURRENT_SOURCE_DIR}/SpinO2LDA/mgmol.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/SpinO2LDA/coords.in
-         ${CMAKE_CURRENT_SOURCE_DIR}/SpinO2LDA/lrs.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME testMVP
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/MVP/test.py
