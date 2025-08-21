@@ -192,7 +192,7 @@ public:
 
     GridFunc<T>& operator/=(const GridFunc<T>& B);
 
-    void axpy(const double alpha, const GridFunc<T>& vv);
+    void axpy(const T alpha, const GridFunc<T>& vv);
     void scal(const double alpha);
     void prod(const GridFunc<T>& A, const GridFunc<T>& B);
     void diff(const GridFunc<T>& A, const GridFunc<T>& B);

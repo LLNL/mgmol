@@ -521,7 +521,7 @@ void GridFunc<T>::scal(const double alpha)
 }
 
 template <typename T>
-void GridFunc<T>::axpy(const double alpha, const GridFunc<T>& vv)
+void GridFunc<T>::axpy(const T alpha, const GridFunc<T>& vv)
 {
     assert(vv.grid_.sizeg() == grid_.sizeg());
 

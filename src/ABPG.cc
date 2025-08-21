@@ -127,7 +127,7 @@ void ABPG<T>::update_states(T& orbitals, T& res, T& work_orbitals,
     else
     {
         // Preconditioned Power Method
-        orbitals.axpy(alpha, res);
+        orbitals.axpy((ORBDTYPE)alpha, res);
 
         if (ct.getOrthoType() == OrthoType::Orthonormal)
             orbitals.orthonormalizeLoewdin(false);

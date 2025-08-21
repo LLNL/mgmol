@@ -40,6 +40,7 @@ Timer ssyrk_tm("ssyrk");
 
 Timer mpdot_tm("mpdot");
 Timer ttdot_tm("ttdot");
+Timer loopaxpy_tm("loopaxpy");
 
 /* Function definitions. See mputils.h for comments */
 
@@ -227,6 +228,7 @@ double LAU_D::MPdot(
 ///////////////////////////////
 // MemorySpace::Host
 template <>
+template <>
 void LAU_H::MPaxpy(const int len, double scal, const double* __restrict__ xptr,
     double* __restrict__ yptr)
 {
@@ -238,10 +240,24 @@ void LAU_H::MPaxpy(const int len, double scal, const double* __restrict__ xptr,
 }
 
 template <>
-template <typename T1, typename T2>
-void LAU_H::MPaxpy(const int len, double scal, const T1* __restrict__ xptr,
-    T2* __restrict__ yptr)
+template <>
+void LAU_H::MPaxpy(const int len, float scal, const float* __restrict__ xptr,
+    float* __restrict__ yptr)
 {
+    MemorySpace::assert_is_host_ptr(xptr);
+    MemorySpace::assert_is_host_ptr(yptr);
+
+    const int one = 1;
+    SAXPY(&len, &scal, xptr, &one, yptr, &one);
+}
+
+template <>
+template <typename T0, typename T1, typename T2>
+void LAU_H::MPaxpy(
+    const int len, T0 scal, const T1* __restrict__ xptr, T2* __restrict__ yptr)
+{
+    loopaxpy_tm.start();
+
     MemorySpace::assert_is_host_ptr(xptr);
     MemorySpace::assert_is_host_ptr(yptr);
 #pragma omp parallel for simd
@@ -249,6 +265,8 @@ void LAU_H::MPaxpy(const int len, double scal, const T1* __restrict__ xptr,
     {
         yptr[k] += static_cast<T2>(scal * static_cast<double>(xptr[k]));
     }
+
+    loopaxpy_tm.stop();
 }
 
 // MemorySpace::Device
@@ -845,10 +863,15 @@ template double LAU_H::MPdot<double, float>(
     const int len, const double* const xptr, const float* const yptr);
 template double LAU_H::MPdot<float, double>(
     const int len, const float* const xptr, const double* const yptr);
-template void LAU_H::MPaxpy<float, double>(const int len, const double scal,
-    const float* __restrict__ xptr, double* __restrict__ yptr);
-template void LAU_H::MPaxpy<float, float>(const int len, const double scal,
-    const float* __restrict__ xptr, float* __restrict__ yptr);
+template void LAU_H::MPaxpy<double, float, double>(const int len,
+    const double scal, const float* __restrict__ xptr,
+    double* __restrict__ yptr);
+template void LAU_H::MPaxpy<float, float, double>(const int len,
+    const float scal, const float* __restrict__ xptr,
+    double* __restrict__ yptr);
+template void LAU_H::MPaxpy<double, float, float>(const int len,
+    const double scal, const float* __restrict__ xptr,
+    float* __restrict__ yptr);
 
 template void LAU_H::MPsyrk<double, float>(const char uplo, const char trans,
     const int n, const int k, const double alpha, const double* const a,

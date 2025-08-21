@@ -127,7 +127,7 @@ void Hamiltonian<T>::applyLocal(const int ncolors, T& phi, T& hphi)
         // gfvw1 = -Lap*phi
         gfv_phi->applyLap(0, gfvw1);
         // gfv_work1 = -Lap*phi + B*V*psi
-        gfv_work1.axpy(1., gfvw1);
+        gfv_work1.axpy((ORBDTYPE)1., gfvw1);
         // set hpsi data without ghosts
         hphi.setPsi(gfv_work1);
     }

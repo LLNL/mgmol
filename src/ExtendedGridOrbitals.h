@@ -86,7 +86,7 @@ private:
     //
     // private functions
     //
-    void projectOut(ORBDTYPE* const, const int, const double scale = 1.);
+    void projectOut(ORBDTYPE* const, const int);
 
     void multiply_by_matrix(
         const DISTMATDTYPE* const, ORBDTYPE*, const int) const;
@@ -334,7 +334,7 @@ public:
         block_vector_.scal(alpha);
         incrementIterativeIndex();
     }
-    void projectOut(ExtendedGridOrbitals&, const double scale = 1.);
+    void projectOut(ExtendedGridOrbitals&);
 
     void normalize();
     void orthonormalize2states(const int st1, const int st2);
@@ -350,7 +350,9 @@ public:
     }
 
     void initGauss(const double, const std::shared_ptr<LocalizationRegions>);
-    virtual void axpy(const double alpha, const ExtendedGridOrbitals&);
+
+    template <typename CoeffType>
+    void axpy(const CoeffType alpha, const ExtendedGridOrbitals&);
 
     void app_mask(const int, pb::GridFunc<ORBDTYPE>&, const short) const {};
 

@@ -199,8 +199,9 @@ void ExtendedGridOrbitals::assign(const ExtendedGridOrbitals& orbitals)
     assign_tm_.stop();
 }
 
+template <typename CoeffType>
 void ExtendedGridOrbitals::axpy(
-    const double alpha, const ExtendedGridOrbitals& orbitals)
+    const CoeffType alpha, const ExtendedGridOrbitals& orbitals)
 {
     axpy_tm_.start();
 
@@ -1519,10 +1520,9 @@ void ExtendedGridOrbitals::normalize()
 
 // modify argument orbitals, by projecting out its component
 // along ExtendedGridOrbitals
-void ExtendedGridOrbitals::projectOut(
-    ExtendedGridOrbitals& orbitals, const double scale)
+void ExtendedGridOrbitals::projectOut(ExtendedGridOrbitals& orbitals)
 {
-    projectOut(orbitals.psi(0), lda_, scale);
+    projectOut(orbitals.psi(0), lda_);
 
 #if 0
     // test if projection is now 0
@@ -1535,8 +1535,7 @@ void ExtendedGridOrbitals::projectOut(
     orbitals.incrementIterativeIndex();
 }
 
-void ExtendedGridOrbitals::projectOut(
-    ORBDTYPE* const array, const int lda, const double scale)
+void ExtendedGridOrbitals::projectOut(ORBDTYPE* const array, const int lda)
 {
     assert(lda > 1);
     assert(loc_numpt_ > 0);
@@ -1584,7 +1583,7 @@ void ExtendedGridOrbitals::projectOut(
         MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
             parray, parray_size, parray_host_view);
 
-        double minus = -1. * scale;
+        ORBDTYPE minus = -1.;
         for (int j = 0; j < numst_; j++)
             LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(loc_numpt_, minus,
                 tproduct + j * loc_numpt_, parray_host_view + j * lda);
@@ -1862,6 +1861,13 @@ void ExtendedGridOrbitals::initWF(
         (*MPIdata::sout) << "ExtendedGridOrbitals::init_wf() done" << std::endl;
 #endif
 }
+
+template void ExtendedGridOrbitals::axpy(
+    const double alpha, const ExtendedGridOrbitals&);
+#ifdef MGMOL_USE_MIXEDP
+template void ExtendedGridOrbitals::axpy(
+    const float alpha, const ExtendedGridOrbitals&);
+#endif
 
 template void ExtendedGridOrbitals::setDataWithGhosts(
     pb::GridFuncVector<float, memory_space_type>* data_wghosts);
