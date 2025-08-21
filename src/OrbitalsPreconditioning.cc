@@ -101,7 +101,7 @@ void OrbitalsPreconditioning<T>::precond_mg(T& orbitals)
     // store residual in GridFuncVector<T> container
     // used for ghost values (no ghost values needed)
     orbitals.setDataWithGhosts(gfv_work2_);
-    gfv_work_->axpy(gamma_, *gfv_work2_);
+    gfv_work_->axpy((MGPRECONDTYPE)gamma_, *gfv_work2_);
 
     // block-implemented preconditioner
     precond_->mg(*gfv_work_, *gfv_work2_, lap_type_, 0);

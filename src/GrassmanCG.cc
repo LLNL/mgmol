@@ -237,9 +237,6 @@ void GrassmanCG<T>::parallelTransportUpdate(const double /*lambda*/, T& phi)
 {
     Control& ct = *(Control::instance());
 
-    //    const double fact = lambda;
-    const double fact = 1.;
-
     // update history data
     T* gradptr;
     // update gradient information
@@ -255,13 +252,13 @@ void GrassmanCG<T>::parallelTransportUpdate(const double /*lambda*/, T& phi)
     if (ct.parallel_transport)
     {
         // compute G_old = G - lambda*(Phi*S^{-1}*Phi^T*G).*corrmasks
-        phi.projectOut(*GrassmanLineMinimization<T>::grad_, fact);
+        phi.projectOut(*GrassmanLineMinimization<T>::grad_);
         GrassmanLineMinimization<T>::grad_->applyCorrMask(true);
         // compute MG_old = MG - lambda*(Phi*S^{-1}*Phi^T*MG).*masks
-        phi.projectOut(*GrassmanLineMinimization<T>::pcgrad_, fact);
+        phi.projectOut(*GrassmanLineMinimization<T>::pcgrad_);
         GrassmanLineMinimization<T>::pcgrad_->applyMask(true);
         // update preconditioned search direction information
-        phi.projectOut(*GrassmanLineMinimization<T>::sdir_, fact);
+        phi.projectOut(*GrassmanLineMinimization<T>::sdir_);
         GrassmanLineMinimization<T>::sdir_->applyMask(true);
     }
 

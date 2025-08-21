@@ -710,7 +710,7 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
         // eigenvalues of DM
         orbitals.multiply_by_matrix(dm12);
         work_orbitals.multiply_by_matrix(dm22);
-        orbitals.axpy(1., work_orbitals);
+        orbitals.axpy((ORBDTYPE)1., work_orbitals);
         orbitals.incrementIterativeIndex();
         orbitals.incrementIterativeIndex();
         work_orbitals.incrementIterativeIndex(2);

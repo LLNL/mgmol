@@ -95,6 +95,7 @@ extern Timer mpsyrk_tm;
 extern Timer tttsyrk_tm;
 extern Timer mpdot_tm;
 extern Timer ttdot_tm;
+extern Timer loopaxpy_tm;
 extern Timer get_NOLMO_tm;
 extern Timer get_MLWF_tm;
 extern Timer md_iterations_tm;
@@ -871,6 +872,7 @@ void MGmol<OrbitalsType>::printTimers()
     tttsyrk_tm.print(os_);
     mpdot_tm.print(os_);
     ttdot_tm.print(os_);
+    loopaxpy_tm.print(os_);
 
     dist_matrix::SubMatrices<double>::printTimers(os_);
 
@@ -1266,7 +1268,7 @@ void MGmol<OrbitalsType>::computeResidualUsingHPhi(OrbitalsType& psi,
         }
 
         // res = (B*phi*theta - H*phi) in [Ry]
-        res.axpy(-1., hphi);
+        res.axpy((ORBDTYPE)(-1.), hphi);
     }
 
     get_res_tm_.stop();

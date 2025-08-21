@@ -109,7 +109,8 @@ public:
         deallocate_storage();
     }
 
-    void axpy(const double alpha, const BlockVector& bv)
+    template <typename ScalarType2>
+    void axpy(const ScalarType2 alpha, const BlockVector& bv)
     {
         assert(storage_ != nullptr);
         assert(bv.storage_ != nullptr);

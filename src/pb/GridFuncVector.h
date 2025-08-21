@@ -462,7 +462,9 @@ public:
     void set_updated_boundaries(const bool flag) { updated_boundaries_ = flag; }
     GridFuncVector<ScalarType, MemorySpaceType>& operator-=(
         const GridFuncVector<ScalarType, MemorySpaceType>& func);
-    void axpy(const double alpha,
+
+    template <typename ScalarType2>
+    void axpy(const ScalarType2 alpha,
         const GridFuncVector<ScalarType, MemorySpaceType>& func);
 
     template <typename InputScalarType>

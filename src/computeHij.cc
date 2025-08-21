@@ -334,8 +334,8 @@ void MGmol<OrbitalsType>::computeHnlPhiAndAdd2HPhi(Ions& ions,
                     memory_space_type>::copy_view_to_host(hpsi, numpt,
                     hpsi_host_view);
 
-                LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
-                    numpt, 1., work.data() + numpt * icolor, hpsi_host_view);
+                LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(numpt,
+                    (ORBDTYPE)1., work.data() + numpt * icolor, hpsi_host_view);
 
                 MemorySpace::Memory<ORBDTYPE,
                     memory_space_type>::copy_view_to_dev(hpsi_host_view, numpt,
@@ -360,7 +360,7 @@ void MGmol<OrbitalsType>::computeHnlPhiAndAdd2HPhi(Ions& ions,
                         hpsi_host_view);
 
                     LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
-                        numpt, 1., hnl, hpsi_host_view);
+                        numpt, (ORBDTYPE)1., hnl, hpsi_host_view);
 
                     MemorySpace::Memory<ORBDTYPE,
                         memory_space_type>::copy_view_to_dev(hpsi_host_view,
