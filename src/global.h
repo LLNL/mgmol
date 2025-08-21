@@ -23,19 +23,16 @@ typedef double ORBDTYPE;
 
 /* lmasktype sets the data type for the mask coeffs */
 typedef ORBDTYPE lmasktype;
-// typedef float lmasktype;
 
 typedef double RHODTYPE;
-// typedef float RHODTYPE;
 
 typedef double MATDTYPE;
 
 typedef float MGPRECONDTYPE;
 
 typedef double POTDTYPE;
-// typedef float POTDTYPE;
 
-typedef ORBDTYPE KBPROJDTYPE;
+typedef double KBPROJDTYPE;
 
 typedef float POISSONPRECONDTYPE;
 
