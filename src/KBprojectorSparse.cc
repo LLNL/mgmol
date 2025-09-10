@@ -15,7 +15,7 @@
 
 const double rthreshold = 1.e-5;
 
-std::vector<std::vector<ORBDTYPE>> KBprojectorSparse::work_nlindex_;
+std::vector<std::vector<KBPROJDTYPE>> KBprojectorSparse::work_nlindex_;
 std::vector<std::vector<KBPROJDTYPE>> KBprojectorSparse::work_proj_;
 
 KBprojectorSparse::KBprojectorSparse(const Species& sp) : KBprojector(sp)
@@ -133,11 +133,12 @@ void KBprojectorSparse::registerPsi(const short iloc, const ORBDTYPE* const psi)
     assert(work_nlindex_.size()
            == static_cast<unsigned int>(omp_get_max_threads()));
     assert(static_cast<unsigned int>(thread) < work_nlindex_.size());
-    std::vector<ORBDTYPE>& work(work_nlindex_[thread]);
+    std::vector<KBPROJDTYPE>& work(work_nlindex_[thread]);
     for (int i = 0; i < sizenl; i++)
     {
         const int j = rnlindex[i];
-        work[i]     = psi[j];
+        // convert to KBPROJDTYPE if necessary to enable optimized dot products
+        work[i] = (KBPROJDTYPE)psi[j];
     }
 }
 

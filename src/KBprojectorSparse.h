@@ -30,7 +30,7 @@
 class KBprojectorSparse : public KBprojector
 {
     // work arrays (1 for each thread)
-    static std::vector<std::vector<ORBDTYPE>> work_nlindex_;
+    static std::vector<std::vector<KBPROJDTYPE>> work_nlindex_;
 
     static std::vector<std::vector<KBPROJDTYPE>> work_proj_;
 
