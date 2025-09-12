@@ -38,9 +38,13 @@ Timer bligemm_tm("bligemm");
 Timer dsyrk_tm("dsyrk");
 Timer ssyrk_tm("ssyrk");
 
-Timer mpdot_tm("mpdot");
 Timer ttdot_tm("ttdot");
+
+// Timers for hand written loops
+Timer loopdot_tm("loopdot");
 Timer loopaxpy_tm("loopaxpy");
+Timer loopscal_tm("loopscal");
+Timer loopcp_tm("loopcp");
 
 /* Function definitions. See mputils.h for comments */
 
@@ -70,6 +74,8 @@ void LAU_H::MPscal(const int len, const double scal, double* dptr)
 template <>
 void LAU_H::MPscal(const int len, const double scal, float* dptr)
 {
+    loopscal_tm.start();
+
     MemorySpace::assert_is_host_ptr(dptr);
 
     if (scal == 1.)
@@ -86,6 +92,8 @@ void LAU_H::MPscal(const int len, const double scal, float* dptr)
             dptr[k]    = static_cast<float>(scal * val);
         }
     }
+
+    loopscal_tm.stop();
 }
 
 // MemorySpace::Device
@@ -159,7 +167,7 @@ double LAU_H::MPdot(
     MemorySpace::assert_is_host_ptr(xptr);
     MemorySpace::assert_is_host_ptr(yptr);
 
-    mpdot_tm.start();
+    loopdot_tm.start();
 
     double dot = 0.;
     for (int k = 0; k < len; k++)
@@ -169,7 +177,7 @@ double LAU_H::MPdot(
         dot += val1 * val2;
     }
 
-    mpdot_tm.stop();
+    loopdot_tm.stop();
 
     return dot;
 }
@@ -811,14 +819,22 @@ void MPcpy(float* const dest, const float* const src, const int n)
 void MPcpy(
     double* __restrict__ dest, const float* __restrict__ src, const int n)
 {
+    loopcp_tm.start();
+
     for (int i = 0; i < n; i++)
         dest[i] = src[i];
+
+    loopcp_tm.stop();
 }
 void MPcpy(
     float* __restrict__ dest, const double* __restrict__ src, const int n)
 {
+    loopcp_tm.start();
+
     for (int i = 0; i < n; i++)
         dest[i] = src[i];
+
+    loopcp_tm.stop();
 }
 
 template void LAU_H::MPgemm<double, float, double>(const char transa,
