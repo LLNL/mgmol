@@ -95,9 +95,11 @@ extern Timer dsyrk_tm;
 extern Timer ssyrk_tm;
 extern Timer mpsyrk_tm;
 extern Timer tttsyrk_tm;
-extern Timer mpdot_tm;
 extern Timer ttdot_tm;
+extern Timer loopdot_tm;
 extern Timer loopaxpy_tm;
+extern Timer loopscal_tm;
+extern Timer loopcp_tm;
 extern Timer get_NOLMO_tm;
 extern Timer get_MLWF_tm;
 extern Timer md_iterations_tm;
@@ -860,9 +862,12 @@ void MGmol<OrbitalsType>::printTimers()
     dsyrk_tm.print(os_);
     mpsyrk_tm.print(os_);
     tttsyrk_tm.print(os_);
-    mpdot_tm.print(os_);
     ttdot_tm.print(os_);
+
+    loopcp_tm.print(os_);
     loopaxpy_tm.print(os_);
+    loopscal_tm.print(os_);
+    loopdot_tm.print(os_);
 
     dist_matrix::SubMatrices<double>::printTimers(os_);
 
