@@ -158,6 +158,7 @@ if(${MGMOL_WITH_MAGMA})
     add_definitions(-DHAVE_MAGMA)
   endif(${MAGMA_FOUND})
 endif(${MGMOL_WITH_MAGMA})
+add_definitions(-DMGMOL_USE_REPLICATED_MATRICES)
 
 # tricubic (optional)
 set(MGMOL_WITH_TRICUBIC FALSE CACHE BOOL "Compile with tricubic package")
@@ -217,6 +218,7 @@ FortranCInterface_HEADER(
         DGEMM SGEMM DSYMM DSYRK SSYRK DTRMM DTRSM STRSM
         #lapack
         DSYEV DPOTRF DPOTRS DPOTRI DSYGST DTRTRS DPOCON DSYGV DLANGE
+        DGETRF DGETRS DLACPY
 )
 
 FortranCInterface_HEADER(

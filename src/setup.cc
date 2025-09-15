@@ -82,6 +82,7 @@ int MGmol<OrbitalsType>::setupFromInput(const std::string filename)
     // data
     if (!ct.short_sighted)
     {
+#ifndef MGMOL_USE_REPLICATED_MATRICES
         MatricesBlacsContext::instance().setup(mmpi.commSpin(), ct.numst);
 
         dist_matrix::DistMatrix<DISTMATDTYPE>::setBlockSize(64);
@@ -96,9 +97,10 @@ int MGmol<OrbitalsType>::setupFromInput(const std::string filename)
 
         int npes = mmpi.size();
         setSparseDistMatriConsolidationNumber(npes);
+#endif
     }
 
-#ifdef HAVE_MAGMA
+#ifdef MGMOL_USE_REPLICATED_MATRICES
     ReplicatedMatrix::setMPIcomm(mmpi.commSpin());
 #endif
 

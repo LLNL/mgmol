@@ -238,14 +238,14 @@ int MGmol<OrbitalsType>::initial()
 
     // we support using ReplicatedMatrix on GPU only for
     // a limited set of options
-#ifdef HAVE_MAGMA
+#ifdef MGMOL_USE_REPLICATED_MATRICES
     bool use_replicated_matrix
         = !std::is_same<OrbitalsType, LocGridOrbitals>::value;
 #endif
 
     if (ct.Mehrstellen())
     {
-#ifdef HAVE_MAGMA
+#ifdef MGMOL_USE_REPLICATED_MATRICES
         if (use_replicated_matrix)
             proj_matrices_.reset(
                 new ProjectedMatricesMehrstellen<ReplicatedMatrix>(
@@ -260,7 +260,7 @@ int MGmol<OrbitalsType>::initial()
         proj_matrices_.reset(new ProjectedMatricesSparse(
             ct.numst, ct.occ_width, lrs_, local_cluster_.get()));
     else
-#ifdef HAVE_MAGMA
+#ifdef MGMOL_USE_REPLICATED_MATRICES
         if (use_replicated_matrix)
         proj_matrices_.reset(new ProjectedMatrices<ReplicatedMatrix>(
             ct.numst, with_spin, ct.occ_width));
@@ -463,7 +463,7 @@ int MGmol<OrbitalsType>::initial()
     updateHmatrix(*current_orbitals_, *ions_);
 
     // HMVP algorithm requires that H is initialized
-#ifdef HAVE_MAGMA
+#ifdef MGMOL_USE_REPLICATED_MATRICES
     if (use_replicated_matrix)
         dm_strategy_.reset(
             DMStrategyFactory<OrbitalsType, ReplicatedMatrix>::create(comm_,
@@ -752,7 +752,7 @@ void MGmol<OrbitalsType>::printEigAndOcc()
         && onpe0)
     {
         bool printflag = false;
-#ifdef HAVE_MAGMA
+#ifdef MGMOL_USE_REPLICATED_MATRICES
         // try with ReplicatedMatrix first
         {
             std::shared_ptr<ProjectedMatrices<ReplicatedMatrix>> projmatrices
@@ -940,9 +940,11 @@ void MGmol<OrbitalsType>::printTimers()
     dump_tm_.print(os_);
     setup_tm_.print(os_);
     HDFrestart::printTimers(os_);
-#ifdef HAVE_MAGMA
-    PowerGen<ReplicatedMatrix, ReplicatedVector>::printTimers(os_);
+#ifdef USE_MAGMA
     BlockVector<ORBDTYPE, MemorySpace::Device>::printTimers(os_);
+#endif
+#ifdef MGMOL_USE_REPLICATED_MATRICES
+    PowerGen<ReplicatedMatrix, ReplicatedVector>::printTimers(os_);
     DavidsonSolver<ExtendedGridOrbitals, ReplicatedMatrix>::printTimers(os_);
     ChebyshevApproximation<ReplicatedMatrix>::printTimers(os_);
 #endif

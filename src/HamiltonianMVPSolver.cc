@@ -357,7 +357,5 @@ template class HamiltonianMVPSolver<VariableSizeMatrix<sparserow>,
 template class HamiltonianMVPSolver<dist_matrix::DistMatrix<DISTMATDTYPE>,
     ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>,
     ExtendedGridOrbitals>;
-#ifdef HAVE_MAGMA
 template class HamiltonianMVPSolver<ReplicatedMatrix,
     ProjectedMatrices<ReplicatedMatrix>, ExtendedGridOrbitals>;
-#endif

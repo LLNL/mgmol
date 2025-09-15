@@ -98,14 +98,11 @@ void HamiltonianMVP_DMStrategy<MatrixType, ProjMatrixType,
 
 template class HamiltonianMVP_DMStrategy<dist_matrix::DistMatrix<DISTMATDTYPE>,
     ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>, LocGridOrbitals>;
-
 template class HamiltonianMVP_DMStrategy<VariableSizeMatrix<sparserow>,
     ProjectedMatricesSparse, LocGridOrbitals>;
 
 template class HamiltonianMVP_DMStrategy<dist_matrix::DistMatrix<DISTMATDTYPE>,
     ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>,
     ExtendedGridOrbitals>;
-#ifdef HAVE_MAGMA
 template class HamiltonianMVP_DMStrategy<ReplicatedMatrix,
     ProjectedMatrices<ReplicatedMatrix>, ExtendedGridOrbitals>;
-#endif

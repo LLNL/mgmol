@@ -497,7 +497,7 @@ int MGmol<OrbitalsType>::outerSolve(OrbitalsType& orbitals,
             MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
             const bool with_spin = (mmpi.nspin() > 1);
-#ifdef HAVE_MAGMA
+#ifdef MGMOL_USE_REPLICATED_MATRICES
             DavidsonSolver<OrbitalsType, ReplicatedMatrix>
 #else
             DavidsonSolver<OrbitalsType, dist_matrix::DistMatrix<DISTMATDTYPE>>

@@ -187,6 +187,4 @@ void PowerGen<MatrixType, VectorType>::computeGenEigenInterval(MatrixType& mat,
 
 template class PowerGen<dist_matrix::DistMatrix<DISTMATDTYPE>,
     dist_matrix::DistVector<DISTMATDTYPE>>;
-#ifdef HAVE_MAGMA
 template class PowerGen<ReplicatedMatrix, ReplicatedVector>;
-#endif

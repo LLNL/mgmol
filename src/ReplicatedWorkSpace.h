@@ -70,7 +70,7 @@ public:
     void setUpperTriangularSquareMatrixToZero();
 
     void initSquareMatrix(const dist_matrix::DistMatrix<ScalarType>& tmat);
-#ifdef HAVE_MAGMA
+#ifdef MGMOL_USE_REPLICATED_MATRICES
     void initSquareMatrix(const ReplicatedMatrix& mat);
 #endif
 

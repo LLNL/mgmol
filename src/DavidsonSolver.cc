@@ -483,6 +483,7 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
                 ProjectedMatrices<MatrixType>* projmatrices
                     = dynamic_cast<ProjectedMatrices<MatrixType>*>(
                         orbitals.getProjMatrices());
+                assert(projmatrices != nullptr);
 
                 // get H*psi stored in work_orbitals
                 // h11 computed at the same time
@@ -850,6 +851,4 @@ void DavidsonSolver<OrbitalsType, MatrixType>::printTimers(std::ostream& os)
 
 template class DavidsonSolver<ExtendedGridOrbitals,
     dist_matrix::DistMatrix<DISTMATDTYPE>>;
-#ifdef HAVE_MAGMA
 template class DavidsonSolver<ExtendedGridOrbitals, ReplicatedMatrix>;
-#endif

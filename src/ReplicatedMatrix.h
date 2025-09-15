@@ -9,8 +9,6 @@
 #ifndef MGMOL_REPLICATEDMATRIX_H
 #define MGMOL_REPLICATEDMATRIX_H
 
-#ifdef HAVE_MAGMA
-
 class ReplicatedVector;
 #include "SquareLocalMatrices.h"
 #include "SquareSubMatrix.h"
@@ -32,7 +30,7 @@ class ReplicatedMatrix
     size_t ld_;
 
     // matrix data
-    std::unique_ptr<double, void (*)(double*)> device_data_;
+    std::unique_ptr<double, void (*)(double*)> data_;
 
     std::string name_;
 
@@ -63,7 +61,7 @@ public:
 
     std::string name() { return name_; }
 
-    double* const data() const { return device_data_.get(); }
+    double* data() const { return data_.get(); }
 
     int m() const { return dim_; }
 
@@ -126,6 +124,7 @@ public:
     int iamax(const int j, double& val);
     double norm(char ty);
     double traceProduct(const ReplicatedMatrix&) const;
+    void shift(const double);
 
     void print(
         std::ostream& os, const int, const int, const int, const int) const;
@@ -136,7 +135,5 @@ public:
 };
 
 void rotateSym(ReplicatedMatrix&, const ReplicatedMatrix&, ReplicatedMatrix&);
-
-#endif
 
 #endif

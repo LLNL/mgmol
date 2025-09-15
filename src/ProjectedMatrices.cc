@@ -60,6 +60,7 @@ std::string ProjectedMatrices<dist_matrix::DistMatrix<double>>::getMatrixType()
 //
 // conversion functions from one matrix format into another
 //
+#ifndef HAVE_MAGMA
 void convert_matrix(const dist_matrix::DistMatrix<double>& src,
     SquareLocalMatrices<double, MemorySpace::Host>& dst)
 {
@@ -67,7 +68,7 @@ void convert_matrix(const dist_matrix::DistMatrix<double>& src,
         = DistMatrix2SquareLocalMatrices::instance();
     dm2sl->convert(src, dst);
 }
-#ifdef HAVE_MAGMA
+#else
 void convert_matrix(const dist_matrix::DistMatrix<double>& src,
     SquareLocalMatrices<double, MemorySpace::Device>& dst)
 {
@@ -78,19 +79,20 @@ void convert_matrix(const dist_matrix::DistMatrix<double>& src,
 
     dst.assign(tmp);
 }
+#endif
 
+#ifndef HAVE_MAGMA
 void convert_matrix(const ReplicatedMatrix& src,
     SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& dst)
 {
     src.get(dst.getRawPtr(), dst.m());
 }
-
+#else
 void convert_matrix(const ReplicatedMatrix& src,
     SquareLocalMatrices<MATDTYPE, MemorySpace::Device>& dst)
 {
     dst.assign(src);
 }
-
 #endif
 
 //=====================================================================//
@@ -147,7 +149,7 @@ void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::convert(
     sl2dm->accumulate(src, dst);
 }
 
-#ifdef HAVE_MAGMA
+#ifdef MGMOL_USE_REPLICATED_MATRICES
 template <>
 void ProjectedMatrices<ReplicatedMatrix>::convert(
     const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& src,
@@ -171,7 +173,7 @@ void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::setupMPI(
     LocalMatrices2DistMatrix::setup(comm, global_indexes);
 }
 
-#ifdef HAVE_MAGMA
+#ifdef MGMOL_USE_REPLICATED_MATRICES
 template <>
 void ProjectedMatrices<ReplicatedMatrix>::setupMPI(
     const std::vector<std::vector<int>>& global_indexes)
@@ -1193,7 +1195,6 @@ void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::
     power.computeGenEigenInterval(mat, *gm_, interval, maxits, pad);
 }
 
-#ifdef HAVE_MAGMA
 template <>
 void ProjectedMatrices<ReplicatedMatrix>::computeGenEigenInterval(
     std::vector<double>& interval, const int maxits, const double pad)
@@ -1204,7 +1205,6 @@ void ProjectedMatrices<ReplicatedMatrix>::computeGenEigenInterval(
 
     power.computeGenEigenInterval(mat, *gm_, interval, maxits, pad);
 }
-#endif
 
 template <>
 void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::consolidateH()
@@ -1228,12 +1228,13 @@ void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::consolidateH()
     consolidate_H_tm_.stop();
 }
 
-#ifdef HAVE_MAGMA
+#ifdef MGMOL_USE_REPLICATED_MATRICES
 template <>
 void ProjectedMatrices<ReplicatedMatrix>::consolidateH()
 {
     consolidate_H_tm_.start();
 
+    // assign SquareLocalMatrices to matH_
     matH_->assign(*localHl_);
     matH_->add(*localHnl_);
 
@@ -1261,7 +1262,7 @@ ProjectedMatrices<dist_matrix::DistMatrix<double>>::getReplicatedDM()
     return sldm;
 }
 
-#ifdef HAVE_MAGMA
+#ifdef MGMOL_USE_REPLICATED_MATRICES
 template <>
 SquareLocalMatrices<double, MemorySpace::Host>
 ProjectedMatrices<ReplicatedMatrix>::getReplicatedDM()
@@ -1275,6 +1276,6 @@ ProjectedMatrices<ReplicatedMatrix>::getReplicatedDM()
 #endif
 
 template class ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>;
-#ifdef HAVE_MAGMA
+#ifdef MGMOL_USE_REPLICATED_MATRICES
 template class ProjectedMatrices<ReplicatedMatrix>;
 #endif

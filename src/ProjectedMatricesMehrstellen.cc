@@ -99,6 +99,4 @@ void ProjectedMatricesMehrstellen<MatrixType>::rotateAll(
 
 template class ProjectedMatricesMehrstellen<
     dist_matrix::DistMatrix<DISTMATDTYPE>>;
-#ifdef HAVE_MAGMA
 template class ProjectedMatricesMehrstellen<ReplicatedMatrix>;
-#endif

@@ -592,10 +592,10 @@ template void Rho<LocGridOrbitals>::computeRho<dist_matrix::DistMatrix<double>>(
 template double Rho<LocGridOrbitals>::dotWithRho<float>(
     const float* const func) const;
 #endif
-#ifdef HAVE_MAGMA
 template void Rho<ExtendedGridOrbitals>::computeRho<ReplicatedMatrix>(
     ExtendedGridOrbitals&, const ReplicatedMatrix&);
 template void Rho<ExtendedGridOrbitals>::computeRho<ReplicatedMatrix>(
     ExtendedGridOrbitals&, ExtendedGridOrbitals&, const ReplicatedMatrix&,
     const ReplicatedMatrix&, const ReplicatedMatrix&, const ReplicatedMatrix&);
-#endif
+template void Rho<LocGridOrbitals>::computeRho<ReplicatedMatrix>(
+    LocGridOrbitals&, const ReplicatedMatrix&);

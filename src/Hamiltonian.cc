@@ -90,7 +90,7 @@ void Hamiltonian<T>::applyLocal(const int ncolors, T& phi, T& hphi)
 #ifdef PRINT_OPERATIONS
     if (onpe0)
         (*MPIdata::sout) << "Hamiltonian<T>::applyLocal() for " << ncolors
-                         << " states" << endl;
+                         << " states" << std::endl;
 #endif
 
     const Control& ct      = *(Control::instance());
@@ -170,7 +170,8 @@ void Hamiltonian<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals& phi1,
     applyLocal(phi2, force);
 
 #ifdef PRINT_OPERATIONS
-    if (onpe0) (*MPIdata::sout) << "Hamiltonian<T>::addHlocal2matrix()" << endl;
+    if (onpe0)
+        (*MPIdata::sout) << "Hamiltonian<T>::addHlocal2matrix()" << std::endl;
 #endif
 
     phi1.addDotWithNcol2Matrix(*hlphi_, hij);
@@ -185,7 +186,8 @@ void Hamiltonian<ExtendedGridOrbitals>::addHlocal2matrix(
     applyLocal(phi2, force);
 
 #ifdef PRINT_OPERATIONS
-    if (onpe0) (*MPIdata::sout) << "Hamiltonian<T>::addHlocal2matrix()" << endl;
+    if (onpe0)
+        (*MPIdata::sout) << "Hamiltonian<T>::addHlocal2matrix()" << std::endl;
 #endif
 
     // hij.print(std::cout, 0, 0, 5, 5);
@@ -195,7 +197,6 @@ void Hamiltonian<ExtendedGridOrbitals>::addHlocal2matrix(
     // hij.print(std::cout, 0, 0, 5, 5);
 }
 
-#ifdef HAVE_MAGMA
 template <>
 template <>
 void Hamiltonian<ExtendedGridOrbitals>::addHlocal2matrix(
@@ -205,12 +206,13 @@ void Hamiltonian<ExtendedGridOrbitals>::addHlocal2matrix(
     applyLocal(phi2, force);
 
 #ifdef PRINT_OPERATIONS
-    if (onpe0) (*MPIdata::sout) << "Hamiltonian<T>::addHlocal2matrix()" << endl;
+    if (onpe0)
+        (*MPIdata::sout) << "Hamiltonian<T>::addHlocal2matrix() at line "
+                         << __LINE__ << std::endl;
 #endif
 
     phi1.addDotWithNcol2Matrix(*hlphi_, hij);
 }
-#endif
 
 template <class T>
 void Hamiltonian<T>::addHlocalij(
@@ -219,7 +221,9 @@ void Hamiltonian<T>::addHlocalij(
     applyLocal(phi2);
 
 #ifdef PRINT_OPERATIONS
-    if (onpe0) (*MPIdata::sout) << "Hamiltonian<T>::addHLocalij()" << endl;
+    if (onpe0)
+        (*MPIdata::sout) << "Hamiltonian<T>::addHLocalij() at line " << __LINE__
+                         << std::endl;
 #endif
 
     addHlocalij(phi1, proj_matrices);
@@ -249,7 +253,9 @@ void Hamiltonian<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals& phi1,
     applyLocal(phi2, force);
 
 #ifdef PRINT_OPERATIONS
-    if (onpe0) (*MPIdata::sout) << "Hamiltonian<T>::addHLocalij()" << endl;
+    if (onpe0)
+        (*MPIdata::sout) << "Hamiltonian<T>::addHLocalij() at line " << __LINE__
+                         << std::endl;
 #endif
 
     SquareLocalMatrices<MATDTYPE, MemorySpace::Host> ss(

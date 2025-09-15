@@ -424,8 +424,6 @@ void KBPsiMatrixSparse::computeHvnlMatrix(
     ss2dm->accumulate(submat, hij, 0.);
 }
 
-#ifdef HAVE_MAGMA
-
 template <>
 void KBPsiMatrixSparse::computeHvnlMatrix(
     const KBPsiMatrixInterface* const kbpsi2, const Ions& ions,
@@ -437,8 +435,6 @@ void KBPsiMatrixSparse::computeHvnlMatrix(
 
     hij.consolidate();
 }
-
-#endif
 
 // build <P|phi> elements, one atom at a time
 SquareSubMatrix<double> KBPsiMatrixSparse::computeHvnlMatrix(

@@ -231,7 +231,7 @@ void SP2::getDM(dist_matrix::DistMatrix<DISTMATDTYPE>& submatM, // output
     getdm_tm_.stop();
 }
 
-#ifdef HAVE_MAGMA
+#ifdef MGMOL_USE_REPLICATED_MATRICES
 template <>
 void SP2::getDM(ReplicatedMatrix& submatM, // output
     const ReplicatedMatrix& invS)
