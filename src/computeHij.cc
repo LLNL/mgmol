@@ -250,20 +250,6 @@ void MGmol<OrbitalsType>::computeHij(OrbitalsType& orbitals_i,
 template <class OrbitalsType>
 void MGmol<OrbitalsType>::getKBPsiAndHij(OrbitalsType& orbitals_i,
     OrbitalsType& orbitals_j, Ions& ions, KBPsiMatrixSparse* kbpsi,
-    ProjectedMatricesInterface* projmatrices,
-    dist_matrix::DistMatrix<DISTMATDTYPE>& hij)
-{
-    kbpsi->computeAll(ions, orbitals_i);
-
-    computeHij(orbitals_i, orbitals_j, ions, kbpsi, hij, true);
-
-    projmatrices->setHiterativeIndex(orbitals_j.getIterativeIndex(),
-        hamiltonian_->potential().getIterativeIndex());
-}
-
-template <class OrbitalsType>
-void MGmol<OrbitalsType>::getKBPsiAndHij(OrbitalsType& orbitals_i,
-    OrbitalsType& orbitals_j, Ions& ions, KBPsiMatrixSparse* kbpsi,
     ProjectedMatricesInterface* projmatrices)
 {
     kbpsi->computeAll(ions, orbitals_i);
@@ -274,13 +260,6 @@ void MGmol<OrbitalsType>::getKBPsiAndHij(OrbitalsType& orbitals_i,
 
     projmatrices->setHiterativeIndex(orbitals_j.getIterativeIndex(),
         hamiltonian_->potential().getIterativeIndex());
-}
-
-template <class OrbitalsType>
-void MGmol<OrbitalsType>::getKBPsiAndHij(OrbitalsType& orbitals, Ions& ions,
-    KBPsiMatrixSparse* kbpsi, dist_matrix::DistMatrix<DISTMATDTYPE>& hij)
-{
-    getKBPsiAndHij(orbitals, orbitals, ions, kbpsi, proj_matrices_.get(), hij);
 }
 
 template <class OrbitalsType>
