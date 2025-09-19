@@ -218,6 +218,4 @@ MatrixType ChebyshevApproximation<MatrixType>::computeChebyshevApproximation(
 }
 
 template class ChebyshevApproximation<dist_matrix::DistMatrix<DISTMATDTYPE>>;
-#ifdef MGMOL_USE_REPLICATED_MATRICES
 template class ChebyshevApproximation<ReplicatedMatrix>;
-#endif

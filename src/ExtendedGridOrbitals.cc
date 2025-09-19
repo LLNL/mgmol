@@ -1267,7 +1267,6 @@ void ExtendedGridOrbitals::orthonormalizeLoewdin(const bool overlap_uptodate,
     incrementIterativeIndex();
 
     bool multbymat = false;
-#ifdef MGMOL_USE_REPLICATED_MATRICES
     // try with ReplicatedMatrix first
     {
         ProjectedMatrices<ReplicatedMatrix>* projmatrices
@@ -1284,7 +1283,6 @@ void ExtendedGridOrbitals::orthonormalizeLoewdin(const bool overlap_uptodate,
             multbymat = true;
         }
     }
-#endif
     if (!multbymat)
     {
         ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices

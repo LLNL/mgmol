@@ -328,7 +328,5 @@ void GramMatrix<MatrixType>::applyInv(VectorType& mat)
 template class GramMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>;
 template void GramMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>::applyInv(
     dist_matrix::DistVector<DISTMATDTYPE>&);
-#ifdef MGMOL_USE_REPLICATED_MATRICES
 template class GramMatrix<ReplicatedMatrix>;
 template void GramMatrix<ReplicatedMatrix>::applyInv(ReplicatedVector&);
-#endif

@@ -385,7 +385,7 @@ void Control::sync(void)
         short_buffer[47] = out_restart_file_naming_strategy;
         short_buffer[48] = enforceVmass0;
         short_buffer[49] = dm_inner_steps;
-        short_buffer[50] = -1;
+        short_buffer[50] = rmatrices;
         short_buffer[51] = fgmres_kim;
         short_buffer[52] = fgmres_maxits;
         short_buffer[53] = ilu_type;
@@ -598,41 +598,41 @@ void Control::sync(void)
     out_restart_file_naming_strategy = short_buffer[47];
     enforceVmass0                    = short_buffer[48];
     dm_inner_steps                   = short_buffer[49];
-    //...                 = short_buffer[50];
-    fgmres_kim                    = short_buffer[51];
-    fgmres_maxits                 = short_buffer[52];
-    ilu_type                      = short_buffer[53];
-    ilu_lof                       = short_buffer[54];
-    ilu_maxfil                    = short_buffer[55];
-    coloring_algo_                = short_buffer[56];
-    diel_flag_                    = short_buffer[57];
-    poisson_pc_nu1                = short_buffer[58];
-    poisson_pc_nu2                = short_buffer[59];
-    poisson_pc_nlev               = short_buffer[60];
-    system_charge_                = short_buffer[61];
-    md_print_freq                 = short_buffer[62];
-    use_kernel_functions          = short_buffer[63];
-    ngpts_[0]                     = short_buffer[64];
-    ngpts_[1]                     = short_buffer[65];
-    ngpts_[2]                     = short_buffer[66];
-    computeCondGram_              = short_buffer[67];
-    lrs_extrapolation             = short_buffer[68];
-    parallel_transport            = (bool)short_buffer[69];
-    with_spin_                    = (bool)short_buffer[70];
-    conv_criterion_               = short_buffer[71];
-    load_balancing_max_iterations = short_buffer[72];
-    load_balancing_modulo         = short_buffer[73];
-    write_clusters                = short_buffer[74];
-    DM_solver_                    = short_buffer[75];
-    dm_algo_                      = short_buffer[80];
-    dm_approx_order               = short_buffer[81];
-    dm_approx_ndigits             = short_buffer[82];
-    dm_approx_power_maxits        = short_buffer[83];
-    spread_penalty_type_          = short_buffer[84];
-    dm_use_old_                   = short_buffer[85];
-    max_electronic_steps_tight_   = short_buffer[86];
-    hartree_reset_                = short_buffer[88];
-    MD_last_step_                 = short_buffer[89];
+    rmatrices                        = short_buffer[50];
+    fgmres_kim                       = short_buffer[51];
+    fgmres_maxits                    = short_buffer[52];
+    ilu_type                         = short_buffer[53];
+    ilu_lof                          = short_buffer[54];
+    ilu_maxfil                       = short_buffer[55];
+    coloring_algo_                   = short_buffer[56];
+    diel_flag_                       = short_buffer[57];
+    poisson_pc_nu1                   = short_buffer[58];
+    poisson_pc_nu2                   = short_buffer[59];
+    poisson_pc_nlev                  = short_buffer[60];
+    system_charge_                   = short_buffer[61];
+    md_print_freq                    = short_buffer[62];
+    use_kernel_functions             = short_buffer[63];
+    ngpts_[0]                        = short_buffer[64];
+    ngpts_[1]                        = short_buffer[65];
+    ngpts_[2]                        = short_buffer[66];
+    computeCondGram_                 = short_buffer[67];
+    lrs_extrapolation                = short_buffer[68];
+    parallel_transport               = (bool)short_buffer[69];
+    with_spin_                       = (bool)short_buffer[70];
+    conv_criterion_                  = short_buffer[71];
+    load_balancing_max_iterations    = short_buffer[72];
+    load_balancing_modulo            = short_buffer[73];
+    write_clusters                   = short_buffer[74];
+    DM_solver_                       = short_buffer[75];
+    dm_algo_                         = short_buffer[80];
+    dm_approx_order                  = short_buffer[81];
+    dm_approx_ndigits                = short_buffer[82];
+    dm_approx_power_maxits           = short_buffer[83];
+    spread_penalty_type_             = short_buffer[84];
+    dm_use_old_                      = short_buffer[85];
+    max_electronic_steps_tight_      = short_buffer[86];
+    hartree_reset_                   = short_buffer[88];
+    MD_last_step_                    = short_buffer[89];
     poisson_lap_type_ = static_cast<PoissonFDtype>(short_buffer[90]);
 
     numst    = int_buffer[0];
@@ -829,6 +829,7 @@ int Control::checkState()
     assert(wannier_transform_type == 0 || wannier_transform_type == 1
            || wannier_transform_type == 2);
     assert(tmatrices == 1 || tmatrices == 0);
+    assert(rmatrices == 1 || rmatrices == 0);
     assert(mg_levels_ >= -1);
     assert(rho0_ > 0.);
     assert(drho0_ > 0.);
@@ -1419,6 +1420,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         if (str.compare("exact") == 0) short_sighted = 0;
 
         tmatrices = vm["ProjectedMatrices.printMM"].as<bool>() ? 1 : 0;
+        rmatrices = vm["ProjectedMatrices.replicated"].as<bool>() ? 1 : 0;
 
         if (short_sighted)
         {

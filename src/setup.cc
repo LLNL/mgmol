@@ -82,27 +82,26 @@ int MGmol<OrbitalsType>::setupFromInput(const std::string filename)
     // data
     if (!ct.short_sighted)
     {
-#ifndef MGMOL_USE_REPLICATED_MATRICES
-        MatricesBlacsContext::instance().setup(mmpi.commSpin(), ct.numst);
-
-        dist_matrix::DistMatrix<DISTMATDTYPE>::setBlockSize(64);
-
-        dist_matrix::DistMatrix<DISTMATDTYPE>::setDefaultBlacsContext(
-            MatricesBlacsContext::instance().bcxt());
-
         ReplicatedWorkSpace<double>::instance().setup(ct.numst);
 
-        dist_matrix::SparseDistMatrix<DISTMATDTYPE>::setNumTasksPerPartitioning(
-            128);
+        if (!ct.rmatrices)
+        {
+            MatricesBlacsContext::instance().setup(mmpi.commSpin(), ct.numst);
 
-        int npes = mmpi.size();
-        setSparseDistMatriConsolidationNumber(npes);
-#endif
+            dist_matrix::DistMatrix<DISTMATDTYPE>::setBlockSize(64);
+
+            dist_matrix::DistMatrix<DISTMATDTYPE>::setDefaultBlacsContext(
+                MatricesBlacsContext::instance().bcxt());
+
+            dist_matrix::SparseDistMatrix<
+                DISTMATDTYPE>::setNumTasksPerPartitioning(128);
+
+            int npes = mmpi.size();
+            setSparseDistMatriConsolidationNumber(npes);
+        }
     }
 
-#ifdef MGMOL_USE_REPLICATED_MATRICES
-    ReplicatedMatrix::setMPIcomm(mmpi.commSpin());
-#endif
+    if (ct.rmatrices) ReplicatedMatrix::setMPIcomm(mmpi.commSpin());
 
     LocGridOrbitals::setDotProduct(ct.dot_product_type);
 

@@ -271,7 +271,6 @@ void ReplicatedMatrix::init(const double* const ha, const int lda)
     magma_dsetmatrix(
         dim_, dim_, ha, lda, data_.get(), ld_, magma_singleton.queue_);
 #else
-    assert(lda == ld_);
     for (int i = 0; i < dim_; i++)
         memcpy(data_.get() + ld_ * i, ha + lda * i, dim_ * sizeof(double));
 #endif
@@ -279,13 +278,13 @@ void ReplicatedMatrix::init(const double* const ha, const int lda)
 
 void ReplicatedMatrix::get(double* ha, const int lda) const
 {
+assert(ha!=nullptr);
 #ifdef USE_MAGMA
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
     magma_dgetmatrix(
         dim_, dim_, data_.get(), ld_, ha, lda, magma_singleton.queue_);
 #else
-    assert(lda == ld_);
     for (int i = 0; i < dim_; i++)
         memcpy(ha + lda * i, data_.get() + ld_ * i, dim_ * sizeof(double));
 #endif

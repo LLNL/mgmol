@@ -416,14 +416,12 @@ void Forces<T>::lforce(Ions& ions, RHODTYPE* rho)
 template <class T>
 SquareLocalMatrices<double, MemorySpace::Host> Forces<T>::getReplicatedDM()
 {
-#ifdef MGMOL_USE_REPLICATED_MATRICES
     {
         ProjectedMatrices<ReplicatedMatrix>* projmatrices
             = dynamic_cast<ProjectedMatrices<ReplicatedMatrix>*>(
                 proj_matrices_);
         if (projmatrices) return projmatrices->getReplicatedDM();
     }
-#endif
     {
         ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
             = dynamic_cast<

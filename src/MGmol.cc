@@ -236,22 +236,18 @@ int MGmol<OrbitalsType>::initial()
     // initialize data distribution objects
     bool with_spin = (mmpi.nspin() > 1);
 
-    // we support using ReplicatedMatrix on GPU only for
+    // we support using ReplicatedMatrix only for
     // a limited set of options
-#ifdef MGMOL_USE_REPLICATED_MATRICES
     bool use_replicated_matrix
-        = !std::is_same<OrbitalsType, LocGridOrbitals>::value;
-#endif
+        = (ct.rmatrices && !std::is_same<OrbitalsType, LocGridOrbitals>::value);
 
     if (ct.Mehrstellen())
     {
-#ifdef MGMOL_USE_REPLICATED_MATRICES
         if (use_replicated_matrix)
             proj_matrices_.reset(
                 new ProjectedMatricesMehrstellen<ReplicatedMatrix>(
                     ct.numst, with_spin, ct.occ_width));
         else
-#endif
             proj_matrices_.reset(new ProjectedMatricesMehrstellen<
                 dist_matrix::DistMatrix<DISTMATDTYPE>>(
                 ct.numst, with_spin, ct.occ_width));
@@ -259,13 +255,10 @@ int MGmol<OrbitalsType>::initial()
     else if (ct.short_sighted)
         proj_matrices_.reset(new ProjectedMatricesSparse(
             ct.numst, ct.occ_width, lrs_, local_cluster_.get()));
-    else
-#ifdef MGMOL_USE_REPLICATED_MATRICES
-        if (use_replicated_matrix)
+    else if (use_replicated_matrix)
         proj_matrices_.reset(new ProjectedMatrices<ReplicatedMatrix>(
             ct.numst, with_spin, ct.occ_width));
     else
-#endif
         proj_matrices_.reset(
             new ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>(
                 ct.numst, with_spin, ct.occ_width));
@@ -463,14 +456,12 @@ int MGmol<OrbitalsType>::initial()
     updateHmatrix(*current_orbitals_, *ions_);
 
     // HMVP algorithm requires that H is initialized
-#ifdef MGMOL_USE_REPLICATED_MATRICES
     if (use_replicated_matrix)
         dm_strategy_.reset(
             DMStrategyFactory<OrbitalsType, ReplicatedMatrix>::create(comm_,
                 os_, *ions_, rho_.get(), energy_.get(), electrostat_.get(),
                 this, proj_matrices_.get(), current_orbitals_));
     else
-#endif
         dm_strategy_.reset(DMStrategyFactory<OrbitalsType,
             dist_matrix::DistMatrix<double>>::create(comm_, os_, *ions_,
             rho_.get(), energy_.get(), electrostat_.get(), this,
@@ -752,7 +743,6 @@ void MGmol<OrbitalsType>::printEigAndOcc()
         && onpe0)
     {
         bool printflag = false;
-#ifdef MGMOL_USE_REPLICATED_MATRICES
         // try with ReplicatedMatrix first
         {
             std::shared_ptr<ProjectedMatrices<ReplicatedMatrix>> projmatrices
@@ -765,7 +755,6 @@ void MGmol<OrbitalsType>::printEigAndOcc()
                 printflag = true;
             }
         }
-#endif
         if (!printflag)
         {
             std::shared_ptr<
@@ -943,11 +932,9 @@ void MGmol<OrbitalsType>::printTimers()
 #ifdef USE_MAGMA
     BlockVector<ORBDTYPE, MemorySpace::Device>::printTimers(os_);
 #endif
-#ifdef MGMOL_USE_REPLICATED_MATRICES
     PowerGen<ReplicatedMatrix, ReplicatedVector>::printTimers(os_);
     DavidsonSolver<ExtendedGridOrbitals, ReplicatedMatrix>::printTimers(os_);
     ChebyshevApproximation<ReplicatedMatrix>::printTimers(os_);
-#endif
     PowerGen<dist_matrix::DistMatrix<double>,
         dist_matrix::DistVector<double>>::printTimers(os_);
     BlockVector<ORBDTYPE, MemorySpace::Host>::printTimers(os_);

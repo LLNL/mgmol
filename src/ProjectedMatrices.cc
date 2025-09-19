@@ -149,7 +149,6 @@ void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::convert(
     sl2dm->accumulate(src, dst);
 }
 
-#ifdef MGMOL_USE_REPLICATED_MATRICES
 template <>
 void ProjectedMatrices<ReplicatedMatrix>::convert(
     const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& src,
@@ -159,7 +158,6 @@ void ProjectedMatrices<ReplicatedMatrix>::convert(
 
     dst.consolidate();
 }
-#endif
 
 template <>
 void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::setupMPI(
@@ -173,13 +171,11 @@ void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::setupMPI(
     LocalMatrices2DistMatrix::setup(comm, global_indexes);
 }
 
-#ifdef MGMOL_USE_REPLICATED_MATRICES
 template <>
 void ProjectedMatrices<ReplicatedMatrix>::setupMPI(
     const std::vector<std::vector<int>>& global_indexes)
 {
 }
-#endif
 
 template <class MatrixType>
 void ProjectedMatrices<MatrixType>::setup(
@@ -1228,7 +1224,6 @@ void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::consolidateH()
     consolidate_H_tm_.stop();
 }
 
-#ifdef MGMOL_USE_REPLICATED_MATRICES
 template <>
 void ProjectedMatrices<ReplicatedMatrix>::consolidateH()
 {
@@ -1243,7 +1238,6 @@ void ProjectedMatrices<ReplicatedMatrix>::consolidateH()
 
     consolidate_H_tm_.stop();
 }
-#endif
 
 template <class MatrixType>
 void ProjectedMatrices<MatrixType>::updateSubMatX(const MatrixType& dm)
@@ -1262,7 +1256,6 @@ ProjectedMatrices<dist_matrix::DistMatrix<double>>::getReplicatedDM()
     return sldm;
 }
 
-#ifdef MGMOL_USE_REPLICATED_MATRICES
 template <>
 SquareLocalMatrices<double, MemorySpace::Host>
 ProjectedMatrices<ReplicatedMatrix>::getReplicatedDM()
@@ -1273,9 +1266,6 @@ ProjectedMatrices<ReplicatedMatrix>::getReplicatedDM()
 
     return sldm;
 }
-#endif
 
 template class ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>;
-#ifdef MGMOL_USE_REPLICATED_MATRICES
 template class ProjectedMatrices<ReplicatedMatrix>;
-#endif

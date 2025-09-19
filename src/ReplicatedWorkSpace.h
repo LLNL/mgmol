@@ -70,9 +70,7 @@ public:
     void setUpperTriangularSquareMatrixToZero();
 
     void initSquareMatrix(const dist_matrix::DistMatrix<ScalarType>& tmat);
-#ifdef MGMOL_USE_REPLICATED_MATRICES
     void initSquareMatrix(const ReplicatedMatrix& mat);
-#endif
 
     int getDim() { return ndim_; }
 };

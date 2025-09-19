@@ -13,6 +13,7 @@
 #include "MGmol_blas1.h"
 
 #include <mpi.h>
+#include <cassert>
 
 template <class ScalarType>
 Timer ReplicatedWorkSpace<ScalarType>::mpisum_tm_(
@@ -54,13 +55,13 @@ void ReplicatedWorkSpace<ScalarType>::initSquareMatrix(
     distmat.allgather(square_matrix_, ndim_);
 }
 
-#ifdef MGMOL_USE_REPLICATED_MATRICES
 template <class ScalarType>
 void ReplicatedWorkSpace<ScalarType>::initSquareMatrix(
     const ReplicatedMatrix& mat)
 {
+assert(square_matrix_!=nullptr);
+
     mat.get(square_matrix_, ndim_ * ndim_);
 }
-#endif
 
 template class ReplicatedWorkSpace<double>;
