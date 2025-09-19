@@ -45,22 +45,6 @@ void MGmol<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals& orbitalsi,
 
 template <>
 template <>
-void MGmol<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals& orbitalsi,
-    LocGridOrbitals& orbitalsj, dist_matrix::DistMatrix<double>& H)
-{
-    computeHij_tm_.start();
-
-#if DEBUG
-    os_ << " addHlocal2matrix()" << endl;
-#endif
-
-    hamiltonian_->addHlocal2matrix(orbitalsi, orbitalsj, H);
-
-    computeHij_tm_.stop();
-}
-
-template <>
-template <>
 void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i,
     LocGridOrbitals& orbitals_j, const Ions& ions,
     const KBPsiMatrixSparse* const kbpsi_i,
@@ -250,20 +234,6 @@ void MGmol<OrbitalsType>::computeHij(OrbitalsType& orbitals_i,
 template <class OrbitalsType>
 void MGmol<OrbitalsType>::getKBPsiAndHij(OrbitalsType& orbitals_i,
     OrbitalsType& orbitals_j, Ions& ions, KBPsiMatrixSparse* kbpsi,
-    ProjectedMatricesInterface* projmatrices,
-    dist_matrix::DistMatrix<DISTMATDTYPE>& hij)
-{
-    kbpsi->computeAll(ions, orbitals_i);
-
-    computeHij(orbitals_i, orbitals_j, ions, kbpsi, hij, true);
-
-    projmatrices->setHiterativeIndex(orbitals_j.getIterativeIndex(),
-        hamiltonian_->potential().getIterativeIndex());
-}
-
-template <class OrbitalsType>
-void MGmol<OrbitalsType>::getKBPsiAndHij(OrbitalsType& orbitals_i,
-    OrbitalsType& orbitals_j, Ions& ions, KBPsiMatrixSparse* kbpsi,
     ProjectedMatricesInterface* projmatrices)
 {
     kbpsi->computeAll(ions, orbitals_i);
@@ -274,13 +244,6 @@ void MGmol<OrbitalsType>::getKBPsiAndHij(OrbitalsType& orbitals_i,
 
     projmatrices->setHiterativeIndex(orbitals_j.getIterativeIndex(),
         hamiltonian_->potential().getIterativeIndex());
-}
-
-template <class OrbitalsType>
-void MGmol<OrbitalsType>::getKBPsiAndHij(OrbitalsType& orbitals, Ions& ions,
-    KBPsiMatrixSparse* kbpsi, dist_matrix::DistMatrix<DISTMATDTYPE>& hij)
-{
-    getKBPsiAndHij(orbitals, orbitals, ions, kbpsi, proj_matrices_.get(), hij);
 }
 
 template <class OrbitalsType>
@@ -459,6 +422,9 @@ template class MGmol<ExtendedGridOrbitals>;
 
 template void MGmol<ExtendedGridOrbitals>::addHlocal2matrix(
     ExtendedGridOrbitals& orbitalsi, ExtendedGridOrbitals& orbitalsj,
+    dist_matrix::DistMatrix<double>&);
+template void MGmol<LocGridOrbitals>::addHlocal2matrix(
+    LocGridOrbitals& orbitalsi, LocGridOrbitals& orbitalsj,
     dist_matrix::DistMatrix<double>&);
 #ifdef HAVE_MAGMA
 template void MGmol<ExtendedGridOrbitals>::addHlocal2matrix(

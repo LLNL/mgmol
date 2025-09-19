@@ -122,12 +122,6 @@ private:
     void getKBPsiAndHij(OrbitalsType& orbitals_i, OrbitalsType& orbitals_j,
         Ions& ions, KBPsiMatrixSparse* kbpsi,
         ProjectedMatricesInterface* projmatrices);
-    void getKBPsiAndHij(OrbitalsType& orbitals_i, OrbitalsType& orbitals_j,
-        Ions& ions, KBPsiMatrixSparse* kbpsi,
-        ProjectedMatricesInterface* projmatrices,
-        dist_matrix::DistMatrix<DISTMATDTYPE>& hij);
-    void getKBPsiAndHij(OrbitalsType& orbitals, Ions& ions,
-        KBPsiMatrixSparse* kbpsi, dist_matrix::DistMatrix<DISTMATDTYPE>& hij);
     void computeHnlPhiAndAdd2HPhi(Ions& ions, OrbitalsType& phi,
         OrbitalsType& hphi, const KBPsiMatrixSparse* const kbpsi);
     int dumpMDrestartFile(OrbitalsType& orbitals, Ions& ions,

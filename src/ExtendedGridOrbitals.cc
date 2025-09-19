@@ -1239,38 +1239,6 @@ double ExtendedGridOrbitals::dotProduct(
     return dot;
 }
 
-dist_matrix::DistMatrix<DISTMATDTYPE> ExtendedGridOrbitals::computeProduct(
-    const ExtendedGridOrbitals& orbitals, const bool transpose)
-{
-    assert(numst_ > 0);
-    assert(subdivx_ > 0);
-    assert(subdivx_ < 1000);
-
-    return computeProduct(orbitals.psi(0), numst_, orbitals.lda_, transpose);
-}
-
-dist_matrix::DistMatrix<DISTMATDTYPE> ExtendedGridOrbitals::computeProduct(
-    const ORBDTYPE* const array, const int ncol, const int lda,
-    const bool transpose)
-{
-    assert(lda > 1);
-
-    dot_product_tm_.start();
-
-    LocalMatrices<MATDTYPE, MemorySpace::Host> ss(subdivx_, numst_, ncol);
-
-    computeLocalProduct(array, lda, ss, transpose);
-
-    LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
-
-    dist_matrix::DistMatrix<DISTMATDTYPE> tmp("tmp", numst_, numst_);
-    sl2dm->accumulate(ss, tmp);
-
-    dot_product_tm_.stop();
-
-    return tmp;
-}
-
 void ExtendedGridOrbitals::orthonormalizeLoewdin(const bool overlap_uptodate,
     SquareLocalMatrices<MATDTYPE, MemorySpace::Host>* matrixTransform,
     const bool update_matrices)

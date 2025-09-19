@@ -122,8 +122,6 @@ private:
 
     void initFourier();
     void initRand();
-    dist_matrix::DistMatrix<DISTMATDTYPE> computeProduct(const ORBDTYPE* const,
-        const int, const int, const bool transpose = false);
 
     ORBDTYPE* psi(const int i) const { return block_vector_.vect(i); }
 
@@ -317,8 +315,6 @@ public:
     void computeDiagonalElementsDotProduct(const ExtendedGridOrbitals& orbitals,
         std::vector<DISTMATDTYPE>& ss) const;
 
-    dist_matrix::DistMatrix<DISTMATDTYPE> computeProduct(
-        const ExtendedGridOrbitals&, const bool transpose = false);
     void computeLocalProduct(const ExtendedGridOrbitals&,
         LocalMatrices<MATDTYPE, MemorySpace::Host>&,
         const bool transpose = false);
