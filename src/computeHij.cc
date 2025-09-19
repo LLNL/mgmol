@@ -45,22 +45,6 @@ void MGmol<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals& orbitalsi,
 
 template <>
 template <>
-void MGmol<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals& orbitalsi,
-    LocGridOrbitals& orbitalsj, dist_matrix::DistMatrix<double>& H)
-{
-    computeHij_tm_.start();
-
-#if DEBUG
-    os_ << " addHlocal2matrix()" << endl;
-#endif
-
-    hamiltonian_->addHlocal2matrix(orbitalsi, orbitalsj, H);
-
-    computeHij_tm_.stop();
-}
-
-template <>
-template <>
 void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i,
     LocGridOrbitals& orbitals_j, const Ions& ions,
     const KBPsiMatrixSparse* const kbpsi_i,
@@ -438,6 +422,9 @@ template class MGmol<ExtendedGridOrbitals>;
 
 template void MGmol<ExtendedGridOrbitals>::addHlocal2matrix(
     ExtendedGridOrbitals& orbitalsi, ExtendedGridOrbitals& orbitalsj,
+    dist_matrix::DistMatrix<double>&);
+template void MGmol<LocGridOrbitals>::addHlocal2matrix(
+    LocGridOrbitals& orbitalsi, LocGridOrbitals& orbitalsj,
     dist_matrix::DistMatrix<double>&);
 #ifdef HAVE_MAGMA
 template void MGmol<ExtendedGridOrbitals>::addHlocal2matrix(
