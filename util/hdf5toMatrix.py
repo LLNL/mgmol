@@ -95,7 +95,7 @@ def get_function(filename, datasetname, dims):
 def main():
 
     h5filename = sys.argv[1]
-    basename = 'Function'
+    field = 'Function'
 
     # Remove File Extension ( .hdf5 )
     base_filename = h5filename.split('.')[0].strip()
@@ -105,7 +105,7 @@ def main():
     output_data_filename = base_filename + '.dat'
     print('\noutput_data_filename = ' + output_data_filename)
 
-    arrays = []
+    columns = []
 
     i = 0
     while i<1000:
@@ -114,52 +114,41 @@ def main():
       while len(number)<4:
         number = '0'+number
 
-      datasetname = basename + number
+      datasetname = field + number
       print('\nDataset: ' + datasetname)
 
       dims = np.arange(0, dtype = h5py.h5t.NATIVE_INT32)  # Turns Into a TUPLE
 
       try:
-        data, dims = get_function(h5filename, datasetname, dims)
+        column, dims = get_function(h5filename, datasetname, dims)
       except Exception:
         print('\nRead Failed. \nEither the HDF5 File ' +
               'or the Dataset are not Present. Stop.\n')
         break
 
       # If data Empty, Stop.
-      if( data is None or dims is None ):
+      if( column is None or dims is None ):
         print('\nRead Failed.')
         return -1
 
-      arrays.append(data)
+      #add data just read as a column in list of columns
+      columns.append(column)
 
       dim = [ int(dims[0]), int(dims[1]), int(dims[2]) ]
 
-      # More Variables
-      incx = dim[1] * dim[2]
-      incy = dim[2]
-
       i = i+1
 
+    #build numpy 2d array from all the columns
+    matrix = columns[0]
+    for i in range(len(columns)-1):
+      matrix = np.column_stack((matrix,columns[i+1]))
 
     print('\nWrite data...\n')
 
-    with open(output_data_filename, 'w') as tfile:
-      nrows = dim[0]*dim[1]*dim[2]
-      ncols = len(arrays)
-      tfile.write(str(nrows) + '\t' + str(ncols) )
+    nrows = dim[0]*dim[1]*dim[2]
+    ncols = len(columns)
 
-      for i in range( dim[0] ):
-        for j in range( dim[1] ):
-          for k in range( dim[2] ):
-            row = (i * incx) + (j * incy) + k
-            tfile.write('\n')
-            for l in range(len(arrays)):
-              data = arrays[l]
-              if l>0:
-                tfile.write('\t')
-              tfile.write(str(data[row] ))
-      tfile.write('\n')
+    np.savetxt('matrix.dat', matrix, delimiter='\t', fmt='%le', header=str(nrows) + '\t' + str(ncols))
 
     return 0
 
