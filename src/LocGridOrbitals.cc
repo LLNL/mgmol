@@ -1659,16 +1659,7 @@ void LocGridOrbitals::computeDiagonalElementsDotProductLocal(
 void LocGridOrbitals::computeGram(
     dist_matrix::DistMatrix<DISTMATDTYPE>& gram_mat)
 {
-    SquareLocalMatrices<MATDTYPE, MemorySpace::Host> ss(
-        subdivx_, chromatic_number_);
-
-    getLocalOverlap(ss);
-
-    LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
-
-    gram_mat.clear();
-
-    sl2dm->accumulate(ss, gram_mat);
+    computeGram(*this, gram_mat);
 }
 
 void LocGridOrbitals::computeGram(const LocGridOrbitals& orbitals,
@@ -1833,40 +1824,6 @@ double LocGridOrbitals::dotProduct(
     dot_product_tm_.stop();
 
     return dot;
-}
-
-dist_matrix::DistMatrix<DISTMATDTYPE> LocGridOrbitals::product(
-    const LocGridOrbitals& orbitals, const bool transpose)
-{
-    assert(numst_ > 0);
-    assert(subdivx_ > 0);
-    assert(subdivx_ < 1000);
-
-    return product(
-        orbitals.psi(0), orbitals.chromatic_number_, orbitals.lda_, transpose);
-}
-
-dist_matrix::DistMatrix<DISTMATDTYPE> LocGridOrbitals::product(
-    const ORBDTYPE* const array, const int ncol, const int lda,
-    const bool transpose)
-{
-    assert(lda > 1);
-
-    dot_product_tm_.start();
-
-    LocalMatrices<MATDTYPE, MemorySpace::Host> ss(
-        subdivx_, chromatic_number_, ncol);
-
-    if (chromatic_number_ != 0) computeLocalProduct(array, lda, ss, transpose);
-
-    LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
-
-    dist_matrix::DistMatrix<DISTMATDTYPE> tmp("tmp", numst_, numst_);
-    sl2dm->accumulate(ss, tmp);
-
-    dot_product_tm_.stop();
-
-    return tmp;
 }
 
 void LocGridOrbitals::orthonormalizeLoewdin(const bool overlap_uptodate,
