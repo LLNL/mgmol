@@ -278,7 +278,7 @@ void ReplicatedMatrix::init(const double* const ha, const int lda)
 
 void ReplicatedMatrix::get(double* ha, const int lda) const
 {
-assert(ha!=nullptr);
+    assert(ha != nullptr);
 #ifdef USE_MAGMA
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 

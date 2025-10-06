@@ -43,6 +43,7 @@ DMStrategy<LocGridOrbitals>* DMStrategyFactory<LocGridOrbitals,
     const bool short_sighted)
 {
     std::cerr << "Not implemented" << std::endl;
+    assert(0==1);
 }
 
 template <>

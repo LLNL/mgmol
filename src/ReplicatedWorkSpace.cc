@@ -12,8 +12,8 @@
 #include "MGmol_MPI.h"
 #include "MGmol_blas1.h"
 
-#include <mpi.h>
 #include <cassert>
+#include <mpi.h>
 
 template <class ScalarType>
 Timer ReplicatedWorkSpace<ScalarType>::mpisum_tm_(
@@ -59,7 +59,7 @@ template <class ScalarType>
 void ReplicatedWorkSpace<ScalarType>::initSquareMatrix(
     const ReplicatedMatrix& mat)
 {
-assert(square_matrix_!=nullptr);
+    assert(square_matrix_ != nullptr);
 
     mat.get(square_matrix_, ndim_ * ndim_);
 }

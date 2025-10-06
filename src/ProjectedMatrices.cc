@@ -251,7 +251,7 @@ template <class MatrixType>
 void ProjectedMatrices<MatrixType>::applyInvS(
     SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& mat)
 {
-    // build DistMatrix from SquareLocalMatrices
+    // build Matrix from SquareLocalMatrices
     convert(mat, *work_);
 
     gm_->applyInv(*work_);

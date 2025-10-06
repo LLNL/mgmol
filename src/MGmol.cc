@@ -236,10 +236,7 @@ int MGmol<OrbitalsType>::initial()
     // initialize data distribution objects
     bool with_spin = (mmpi.nspin() > 1);
 
-    // we support using ReplicatedMatrix only for
-    // a limited set of options
-    bool use_replicated_matrix
-        = (ct.rmatrices && !std::is_same<OrbitalsType, LocGridOrbitals>::value);
+    bool use_replicated_matrix = ct.rmatrices;
 
     if (ct.Mehrstellen())
     {
@@ -632,10 +629,12 @@ void MGmol<OrbitalsType>::write_header()
             << (omp_get_max_threads() > 1 ? "s " : " ");
         os_ << "active" << std::endl << std::endl;
 #endif
-
-        os_ << " ScaLapack block size: "
-            << dist_matrix::DistMatrix<DISTMATDTYPE>::getBlockSize()
-            << std::endl;
+        if (!ct.rmatrices)
+        {
+            os_ << " ScaLapack block size: "
+                << dist_matrix::DistMatrix<DISTMATDTYPE>::getBlockSize()
+                << std::endl;
+        }
 
         if (!ct.short_sighted)
         {
@@ -938,10 +937,19 @@ void MGmol<OrbitalsType>::printTimers()
     PowerGen<dist_matrix::DistMatrix<double>,
         dist_matrix::DistVector<double>>::printTimers(os_);
     BlockVector<ORBDTYPE, MemorySpace::Host>::printTimers(os_);
-    DavidsonSolver<ExtendedGridOrbitals,
-        dist_matrix::DistMatrix<DISTMATDTYPE>>::printTimers(os_);
-    ChebyshevApproximation<dist_matrix::DistMatrix<DISTMATDTYPE>>::printTimers(
-        os_);
+    if (ct.rmatrices)
+    {
+        DavidsonSolver<ExtendedGridOrbitals, ReplicatedMatrix>::printTimers(
+            os_);
+        ChebyshevApproximation<ReplicatedMatrix>::printTimers(os_);
+    }
+    else
+    {
+        DavidsonSolver<ExtendedGridOrbitals,
+            dist_matrix::DistMatrix<DISTMATDTYPE>>::printTimers(os_);
+        ChebyshevApproximation<
+            dist_matrix::DistMatrix<DISTMATDTYPE>>::printTimers(os_);
+    }
     OrbitalsPreconditioning<OrbitalsType>::printTimers(os_);
     MDfiles::printTimers(os_);
     ChebyshevApproximationInterface::printTimers(os_);
@@ -1007,14 +1015,26 @@ double MGmol<OrbitalsType>::get_evnl(const Ions& ions)
     }
     else
     {
-        std::shared_ptr<
-            ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>>
-            projmatrices = std::dynamic_pointer_cast<
-                ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>>(
-                proj_matrices_);
-        assert(projmatrices);
+        if (ct.rmatrices)
+        {
+            std::shared_ptr<ProjectedMatrices<ReplicatedMatrix>> projmatrices
+                = std::dynamic_pointer_cast<
+                    ProjectedMatrices<ReplicatedMatrix>>(proj_matrices_);
+            assert(projmatrices);
 
-        val = g_kbpsi_->getEvnl(ions, projmatrices.get());
+            val = g_kbpsi_->getEvnl(ions, projmatrices.get());
+        }
+        else
+        {
+            std::shared_ptr<
+                ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>>
+                projmatrices = std::dynamic_pointer_cast<
+                    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>>(
+                    proj_matrices_);
+            assert(projmatrices);
+
+            val = g_kbpsi_->getEvnl(ions, projmatrices.get());
+        }
     }
 
     evnl_tm_.stop();
@@ -1445,6 +1465,8 @@ double MGmol<OrbitalsType>::evaluateDMandEnergyAndForces(Orbitals* orbitals,
     const std::vector<double>& tau, const std::vector<short>& atnumbers,
     std::vector<double>& forces)
 {
+    Control& ct = *(Control::instance());
+
     OrbitalsType* dorbitals = dynamic_cast<OrbitalsType*>(orbitals);
 
     // create a new temporary Ions object to be used for
@@ -1467,13 +1489,25 @@ double MGmol<OrbitalsType>::evaluateDMandEnergyAndForces(Orbitals* orbitals,
     proj_matrices_->updateThetaAndHB();
 
     // compute DM
-    std::shared_ptr<DMStrategy<OrbitalsType>> dm_strategy(
-        DMStrategyFactory<OrbitalsType,
-            dist_matrix::DistMatrix<double>>::create(comm_, os_, ions,
-            rho_.get(), energy_.get(), electrostat_.get(), this,
-            proj_matrices_.get(), dorbitals));
+    if (ct.rmatrices)
+    {
+        std::shared_ptr<DMStrategy<OrbitalsType>> dm_strategy(
+            DMStrategyFactory<OrbitalsType, ReplicatedMatrix>::create(comm_,
+                os_, ions, rho_.get(), energy_.get(), electrostat_.get(), this,
+                proj_matrices_.get(), dorbitals));
 
-    dm_strategy->update(*dorbitals);
+        dm_strategy->update(*dorbitals);
+    }
+    else
+    {
+        std::shared_ptr<DMStrategy<OrbitalsType>> dm_strategy(
+            DMStrategyFactory<OrbitalsType,
+                dist_matrix::DistMatrix<double>>::create(comm_, os_, ions,
+                rho_.get(), energy_.get(), electrostat_.get(), this,
+                proj_matrices_.get(), dorbitals));
+
+        dm_strategy->update(*dorbitals);
+    }
 
     // evaluate energy and forces
     double ts  = 0.;

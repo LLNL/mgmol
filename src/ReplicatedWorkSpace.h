@@ -40,7 +40,11 @@ class ReplicatedWorkSpace
     }
     ReplicatedWorkSpace(const ReplicatedWorkSpace&);
 
-    ~ReplicatedWorkSpace() { delete[] square_matrix_; }
+    ~ReplicatedWorkSpace()
+    {
+        delete[] square_matrix_;
+        square_matrix_ = nullptr;
+    }
 
 public:
     Timer mpisum_tm() { return mpisum_tm_; }
