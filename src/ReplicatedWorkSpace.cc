@@ -60,8 +60,9 @@ void ReplicatedWorkSpace<ScalarType>::initSquareMatrix(
     const ReplicatedMatrix& mat)
 {
     assert(square_matrix_ != nullptr);
+    assert(ndim_ > 0);
 
-    mat.get(square_matrix_, ndim_ * ndim_);
+    mat.get(square_matrix_, ndim_);
 }
 
 template class ReplicatedWorkSpace<double>;
