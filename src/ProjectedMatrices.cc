@@ -15,11 +15,13 @@
 #include "DistMatrixTools.h"
 #include "HDFrestart.h"
 #include "LocalMatrices2DistMatrix.h"
+#include "LocalMatrices2ReplicatedMatrix.h"
 #include "MGmol_MPI.h"
 #include "Orbitals.h"
 #include "Power.h"
 #include "PowerGen.h"
 #include "ReplicatedMatrix.h"
+#include "ReplicatedMatrix2SquareLocalMatrices.h"
 #include "ReplicatedVector.h"
 #include "ReplicatedWorkSpace.h"
 #include "SP2.h"
@@ -85,7 +87,11 @@ void convert_matrix(const dist_matrix::DistMatrix<double>& src,
 void convert_matrix(const ReplicatedMatrix& src,
     SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& dst)
 {
-    src.get(dst.getRawPtr(), dst.m());
+    assert(dst.m() > 0);
+
+    ReplicatedMatrix2SquareLocalMatrices* r2l
+        = ReplicatedMatrix2SquareLocalMatrices::instance();
+    r2l->convert(src, dst);
 }
 #else
 void convert_matrix(const ReplicatedMatrix& src,
@@ -154,9 +160,10 @@ void ProjectedMatrices<ReplicatedMatrix>::convert(
     const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& src,
     ReplicatedMatrix& dst)
 {
-    dst.init(src.getSubMatrix(), dim_);
+    LocalMatrices2ReplicatedMatrix* sl2rm
+        = LocalMatrices2ReplicatedMatrix::instance();
 
-    dst.consolidate();
+    sl2rm->accumulate(src, dst);
 }
 
 template <>
@@ -175,6 +182,12 @@ template <>
 void ProjectedMatrices<ReplicatedMatrix>::setupMPI(
     const std::vector<std::vector<int>>& global_indexes)
 {
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    MPI_Comm comm   = mmpi.commSpin();
+
+    LocalMatrices2ReplicatedMatrix::setup(comm, global_indexes);
+
+    ReplicatedMatrix2SquareLocalMatrices::setup(global_indexes);
 }
 
 template <class MatrixType>
@@ -736,6 +749,7 @@ double ProjectedMatrices<MatrixType>::checkCond(
 template <class MatrixType>
 int ProjectedMatrices<MatrixType>::writeDM(HDFrestart& h5f_file)
 {
+    // std::cout << "ProjectedMatrices<MatrixType>::writeDM()..." << std::endl;
     std::string name("/Density_Matrix");
     return dm_->write(h5f_file, name);
 }

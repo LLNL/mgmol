@@ -7,7 +7,7 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 #include "ReplicatedMatrix.h"
-
+#include "LocalMatrices2ReplicatedMatrix.h"
 #include "ReplicatedVector.h"
 #include "memory_space.h"
 #include "random.h"
@@ -199,10 +199,9 @@ void ReplicatedMatrix::assign(
     magma_dsetmatrix(src.m(), src.n(), src.getSubMatrix(), src.n(), data_.get(),
         ld_, magma_singleton.queue_);
 #else
-    // copy columns of matrix
-    for (int j = 0; j < dim_; j++)
-        memcpy(data_.get() + j * ld_, src.getSubMatrix() + j * src.n(),
-            dim_ * sizeof(double));
+    LocalMatrices2ReplicatedMatrix* l2r
+        = LocalMatrices2ReplicatedMatrix::instance();
+    l2r->convert(src, *this, dim_, 0.);
 #endif
 }
 
@@ -211,6 +210,10 @@ void ReplicatedMatrix::assign(
     SquareLocalMatrices<double, MemorySpace::Device>& src)
 {
     assert(src.n() == dim_);
+
+    // current implementation restriction
+    assert(src.nmat() == 1);
+
 #ifdef USE_MAGMA
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
@@ -221,6 +224,20 @@ void ReplicatedMatrix::assign(
     for (int j = 0; j < dim_; j++)
         memcpy(data_.get() + j * ld_, src.getRawPtr() + j * src.n(),
             dim_ * sizeof(double));
+#endif
+}
+
+void ReplicatedMatrix::assign(const double* const src, const int ld)
+{
+#ifdef USE_MAGMA
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    magma_dcopymatrix(
+        dim_, dim_, src, ld, data_.get(), ld_, magma_singleton.queue_);
+#else
+    // copy columns of matrix
+    for (int j = 0; j < dim_; j++)
+        memcpy(data_.get() + j * ld_, src + j * ld, dim_ * sizeof(double));
 #endif
 }
 
@@ -271,8 +288,8 @@ void ReplicatedMatrix::init(const double* const ha, const int lda)
     magma_dsetmatrix(
         dim_, dim_, ha, lda, data_.get(), ld_, magma_singleton.queue_);
 #else
-    for (int i = 0; i < dim_; i++)
-        memcpy(data_.get() + ld_ * i, ha + lda * i, dim_ * sizeof(double));
+    for (int j = 0; j < dim_; j++)
+        memcpy(data_.get() + ld_ * j, ha + lda * j, dim_ * sizeof(double));
 #endif
 }
 
@@ -285,8 +302,8 @@ void ReplicatedMatrix::get(double* ha, const int lda) const
     magma_dgetmatrix(
         dim_, dim_, data_.get(), ld_, ha, lda, magma_singleton.queue_);
 #else
-    for (int i = 0; i < dim_; i++)
-        memcpy(ha + lda * i, data_.get() + ld_ * i, dim_ * sizeof(double));
+    for (int j = 0; j < dim_; j++)
+        memcpy(ha + lda * j, data_.get() + ld_ * j, dim_ * sizeof(double));
 #endif
 }
 

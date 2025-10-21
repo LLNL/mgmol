@@ -736,7 +736,6 @@ void LocGridOrbitals::multiply_by_matrix(
     const dist_matrix::DistMatrix<DISTMATDTYPE>& dmatrix,
     ORBDTYPE* const product, const int ldp)
 {
-
     ReplicatedWorkSpace<DISTMATDTYPE>& wspace(
         ReplicatedWorkSpace<DISTMATDTYPE>::instance());
     DISTMATDTYPE* work_matrix = wspace.square_matrix();

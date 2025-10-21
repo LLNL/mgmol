@@ -76,6 +76,8 @@ public:
     }
     ReplicatedMatrix& operator=(const ReplicatedMatrix& rhs);
 
+    void assign(const double* const src, const int ld);
+
     void assign(const ReplicatedMatrix& src, const int ib, const int jb);
 
     template <typename MemorySpaceType>

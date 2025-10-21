@@ -242,6 +242,7 @@ add_executable(testGramMatrix
                ${CMAKE_SOURCE_DIR}/src/GramMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/Power.cc
                ${CMAKE_SOURCE_DIR}/src/magma_singleton.cc
+               ${CMAKE_SOURCE_DIR}/src/LocalMatrices2ReplicatedMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/local_matrices/LocalMatrices.cc
                ${CMAKE_SOURCE_DIR}/src/local_matrices/SquareLocalMatrices.cc
                ${CMAKE_SOURCE_DIR}/src/ReplicatedMatrix.cc
@@ -265,6 +266,7 @@ add_executable(testDensityMatrix
                ${CMAKE_SOURCE_DIR}/src/magma_singleton.cc
                ${CMAKE_SOURCE_DIR}/src/local_matrices/LocalMatrices.cc
                ${CMAKE_SOURCE_DIR}/src/local_matrices/SquareLocalMatrices.cc
+               ${CMAKE_SOURCE_DIR}/src/LocalMatrices2ReplicatedMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/ReplicatedMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/DistMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/BlacsContext.cc
