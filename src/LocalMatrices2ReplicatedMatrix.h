@@ -12,6 +12,7 @@
 
 #include "LocalMatrices.h"
 #include "ReplicatedMatrix.h"
+#include "Timer.h"
 
 #include <vector>
 
@@ -25,7 +26,7 @@ class LocalMatrices2ReplicatedMatrix
 private:
     static LocalMatrices2ReplicatedMatrix* pinstance_;
 
-    static MPI_Comm comm_;
+    static Timer convert_tm_;
 
     static std::vector<std::vector<int>> global_indexes_;
 
@@ -41,11 +42,10 @@ public:
         return pinstance_;
     }
 
-    LocalMatrices2ReplicatedMatrix() { assert(comm_ != MPI_COMM_NULL); }
+    LocalMatrices2ReplicatedMatrix() {}
 
-    static void setup(MPI_Comm comm, const std::vector<std::vector<int>>& gids)
+    static void setup(const std::vector<std::vector<int>>& gids)
     {
-        comm_           = comm;
         global_indexes_ = gids;
     }
 
@@ -55,6 +55,8 @@ public:
 
     void accumulate(const LocalMatrices<double, MemorySpace::Host>& src,
         ReplicatedMatrix& dst, const double tol = tol_mat_elements) const;
+
+    static void printTimers(std::ostream& os) { convert_tm_.print(os); }
 };
 
 #endif

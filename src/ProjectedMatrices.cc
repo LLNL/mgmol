@@ -185,7 +185,7 @@ void ProjectedMatrices<ReplicatedMatrix>::setupMPI(
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     MPI_Comm comm   = mmpi.commSpin();
 
-    LocalMatrices2ReplicatedMatrix::setup(comm, global_indexes);
+    LocalMatrices2ReplicatedMatrix::setup(global_indexes);
 
     ReplicatedMatrix2SquareLocalMatrices::setup(global_indexes);
 }

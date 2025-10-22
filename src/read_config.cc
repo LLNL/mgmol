@@ -177,7 +177,7 @@ int read_config(int argc, char** argv, po::variables_map& vm,
             po::value<bool>()->default_value(false),
             "print projected matrices in MM format")(
             "ProjectedMatrices.replicated",
-            po::value<bool>()->default_value(true),
+            po::value<bool>()->default_value(false),
             "use replicated projected matrices")("LocalizationRegions.radius",
             po::value<float>()->default_value(1000.),
             "Localization regions radius")("LocalizationRegions.adaptive",

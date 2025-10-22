@@ -24,7 +24,6 @@ set(SOURCES
  jade.cc
  LocalMatrices2ReplicatedMatrix.cc
  ReplicatedMatrix2SquareLocalMatrices.cc
- LocalMatrices2ReplicatedMatrix.cc
  DielectricControl.cc
  ReplicatedMatrix.cc
  ReplicatedVector.cc

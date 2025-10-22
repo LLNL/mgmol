@@ -556,7 +556,7 @@ void ExtendedGridOrbitals::multiply_by_matrix(const ReplicatedMatrix& matrix)
 {
     prod_matrix_tm_.start();
 
-#ifdef USE_MAGMA
+#ifdef HAVE_MAGMA
     magma_trans_t magma_transa = magma_trans_const('n');
     magma_trans_t magma_transb = magma_trans_const('n');
 

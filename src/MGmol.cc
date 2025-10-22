@@ -39,6 +39,7 @@
 #include "KBPsiMatrixSparse.h"
 #include "LBFGS.h"
 #include "LocGridOrbitals.h"
+#include "LocalMatrices2ReplicatedMatrix.h"
 #include "LocalizationRegions.h"
 #include "MDfiles.h"
 #include "MGkernels.h"
@@ -58,6 +59,7 @@
 #include "ProjectedMatricesMehrstellen.h"
 #include "ProjectedMatricesSparse.h"
 #include "ReplicatedMatrix.h"
+#include "ReplicatedMatrix2SquareLocalMatrices.h"
 #include "ReplicatedVector.h"
 #include "Rho.h"
 #include "SP2.h"
@@ -870,6 +872,9 @@ void MGmol<OrbitalsType>::printTimers()
 
     dist_matrix::DistMatrix<DISTMATDTYPE>::printTimers(os_);
 
+    ReplicatedMatrix2SquareLocalMatrices::printTimers(os_);
+    LocalMatrices2ReplicatedMatrix::printTimers(os_);
+
     MGmol_MPI::printTimers(os_);
 
     g_kbpsi_->printTimers(os_);
@@ -928,7 +933,7 @@ void MGmol<OrbitalsType>::printTimers()
     dump_tm_.print(os_);
     setup_tm_.print(os_);
     HDFrestart::printTimers(os_);
-#ifdef USE_MAGMA
+#ifdef HAVE_MAGMA
     BlockVector<ORBDTYPE, MemorySpace::Device>::printTimers(os_);
 #endif
     PowerGen<ReplicatedMatrix, ReplicatedVector>::printTimers(os_);

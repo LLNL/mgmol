@@ -12,9 +12,11 @@
 
 LocalMatrices2ReplicatedMatrix* LocalMatrices2ReplicatedMatrix::pinstance_
     = nullptr;
-MPI_Comm LocalMatrices2ReplicatedMatrix::comm_ = MPI_COMM_NULL;
 std::vector<std::vector<int>> LocalMatrices2ReplicatedMatrix::global_indexes_;
 double LocalMatrices2ReplicatedMatrix::tol_mat_elements = 1.e-14;
+
+Timer LocalMatrices2ReplicatedMatrix::convert_tm_(
+    "LocalMatrices2ReplicatedMatrix::convert");
 
 void LocalMatrices2ReplicatedMatrix::convert(
     const LocalMatrices<double, MemorySpace::Host>& src, ReplicatedMatrix& dst,
@@ -24,6 +26,8 @@ void LocalMatrices2ReplicatedMatrix::convert(
 
     assert(!global_indexes_.empty());
 
+    convert_tm_.start();
+
     const int subdiv = static_cast<int>(global_indexes_.size());
 
     std::vector<double> val(subdiv);
@@ -32,7 +36,6 @@ void LocalMatrices2ReplicatedMatrix::convert(
         = static_cast<short>(global_indexes_[0].size());
 
     std::vector<double> data(numst * numst);
-    ;
 
     // double loop over colors
     for (short icolor = 0; icolor < chromatic_number; icolor++)
@@ -67,6 +70,8 @@ void LocalMatrices2ReplicatedMatrix::convert(
     } // icolor
 
     dst.assign(data.data(), numst);
+
+    convert_tm_.stop();
 }
 
 // Sum up all the local contributions (in LocalMatrices) into

@@ -126,7 +126,7 @@ ReplicatedMatrix::~ReplicatedMatrix() {}
 void ReplicatedMatrix::getsub(
     const ReplicatedMatrix& src, int m, int n, int ia, int ja)
 {
-#ifdef USE_MAGMA
+#ifdef HAVE_MAGMA
 
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
@@ -146,7 +146,7 @@ void ReplicatedMatrix::consolidate()
     assert(comm_ != MPI_COMM_NULL);
 
     std::vector<double> mat(dim_ * ld_);
-#ifdef USE_MAGMA
+#ifdef HAVE_MAGMA
     std::vector<double> mat_sum(dim_ * ld_);
     double* mat_sum_data = mat_sum.data();
 
@@ -162,7 +162,7 @@ void ReplicatedMatrix::consolidate()
     MPI_Allreduce(
         mat.data(), mat_sum_data, dim_ * ld_, MPI_DOUBLE, MPI_SUM, comm_);
 
-#ifdef USE_MAGMA
+#ifdef HAVE_MAGMA
     // copy from CPU to GPU
     magma_dsetmatrix(dim_, dim_, mat_sum.data(), ld_, data_.get(), ld_,
         magma_singleton.queue_);
@@ -173,7 +173,7 @@ void ReplicatedMatrix::assign(
     const ReplicatedMatrix& src, const int ib, const int jb)
 {
     assert(this != &src);
-#ifdef USE_MAGMA
+#ifdef HAVE_MAGMA
 
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
@@ -193,7 +193,7 @@ template <>
 void ReplicatedMatrix::assign(
     SquareLocalMatrices<double, MemorySpace::Host>& src)
 {
-#ifdef USE_MAGMA
+#ifdef HAVE_MAGMA
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
     magma_dsetmatrix(src.m(), src.n(), src.getSubMatrix(), src.n(), data_.get(),
@@ -214,7 +214,7 @@ void ReplicatedMatrix::assign(
     // current implementation restriction
     assert(src.nmat() == 1);
 
-#ifdef USE_MAGMA
+#ifdef HAVE_MAGMA
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
     magma_dcopymatrix(src.n(), src.n(), src.getRawPtr(), src.n(), data_.get(),
@@ -229,7 +229,7 @@ void ReplicatedMatrix::assign(
 
 void ReplicatedMatrix::assign(const double* const src, const int ld)
 {
-#ifdef USE_MAGMA
+#ifdef HAVE_MAGMA
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
     magma_dcopymatrix(
@@ -259,7 +259,7 @@ void ReplicatedMatrix::add(const SquareSubMatrix<double>& mat)
         }
     }
 
-#ifdef USE_MAGMA
+#ifdef HAVE_MAGMA
     std::unique_ptr<double, void (*)(double*)> src_dev(
         Memory::allocate(dim_ * ld_), Memory::free);
 
@@ -282,7 +282,7 @@ void ReplicatedMatrix::add(const SquareSubMatrix<double>& mat)
 
 void ReplicatedMatrix::init(const double* const ha, const int lda)
 {
-#ifdef USE_MAGMA
+#ifdef HAVE_MAGMA
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
     magma_dsetmatrix(
@@ -296,7 +296,7 @@ void ReplicatedMatrix::init(const double* const ha, const int lda)
 void ReplicatedMatrix::get(double* ha, const int lda) const
 {
     assert(ha != nullptr);
-#ifdef USE_MAGMA
+#ifdef HAVE_MAGMA
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
     magma_dgetmatrix(
@@ -309,7 +309,7 @@ void ReplicatedMatrix::get(double* ha, const int lda) const
 
 void ReplicatedMatrix::getDiagonalValues(double* ha)
 {
-#ifdef USE_MAGMA
+#ifdef HAVE_MAGMA
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
     magma_dgetvector(dim_, data_.get(), ld_ + 1, ha, 1, magma_singleton.queue_);
@@ -323,7 +323,7 @@ void ReplicatedMatrix::getDiagonalValues(double* ha)
 
 void ReplicatedMatrix::axpy(const double alpha, const ReplicatedMatrix& a)
 {
-#ifdef USE_MAGMA
+#ifdef HAVE_MAGMA
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
     magmablas_dgeadd(dim_, dim_, alpha, a.data_.get(), a.ld_, data_.get(), ld_,
@@ -341,7 +341,7 @@ void ReplicatedMatrix::setRandom(const double minv, const double maxv)
 
     generateRandomData(mat, minv, maxv);
 
-#ifdef USE_MAGMA
+#ifdef HAVE_MAGMA
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
     magma_dsetmatrix(
@@ -356,7 +356,7 @@ void ReplicatedMatrix::setRandom(const double minv, const double maxv)
 
 void ReplicatedMatrix::identity()
 {
-#ifdef USE_MAGMA
+#ifdef HAVE_MAGMA
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
     magmablas_dlaset(MagmaFull, dim_, dim_, 0.0, 1.0, data_.get(), ld_,
@@ -372,7 +372,7 @@ void ReplicatedMatrix::identity()
 void ReplicatedMatrix::scal(const double alpha)
 {
     int size = dim_ * ld_;
-#ifdef USE_MAGMA
+#ifdef HAVE_MAGMA
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
     magma_dscal(size, alpha, data_.get(), 1, magma_singleton.queue_);
@@ -386,7 +386,7 @@ void ReplicatedMatrix::scal(const double alpha)
 void ReplicatedMatrix::transpose(
     const double alpha, const ReplicatedMatrix& a, const double beta)
 {
-#ifdef USE_MAGMA
+#ifdef HAVE_MAGMA
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
     double* dwork;
@@ -422,7 +422,7 @@ void ReplicatedMatrix::gemm(const char transa, const char transb,
     const double alpha, const ReplicatedMatrix& a, const ReplicatedMatrix& b,
     const double beta)
 {
-#ifdef USE_MAGMA
+#ifdef HAVE_MAGMA
     magma_trans_t magma_transa = magma_trans_const(transa);
     magma_trans_t magma_transb = magma_trans_const(transb);
 
@@ -444,7 +444,7 @@ void ReplicatedMatrix::symm(const char side, const char uplo,
     const double alpha, const ReplicatedMatrix& a, const ReplicatedMatrix& b,
     const double beta)
 {
-#ifdef USE_MAGMA
+#ifdef HAVE_MAGMA
     magma_side_t magma_side = magma_side_const(side);
     magma_uplo_t magma_uplo = magma_uplo_const(uplo);
 
@@ -466,7 +466,7 @@ int ReplicatedMatrix::potrf(char uplo)
     assert(data_.get());
 
     int info;
-#ifdef USE_MAGMA
+#ifdef HAVE_MAGMA
     magma_uplo_t magma_uplo = magma_uplo_const(uplo);
 
     magma_dpotrf_gpu(magma_uplo, dim_, data_.get(), ld_, &info);
