@@ -22,6 +22,8 @@ set(SOURCES
  mgmol_run.cc
  read_config.cc
  jade.cc
+ LocalMatrices2ReplicatedMatrix.cc
+ ReplicatedMatrix2SquareLocalMatrices.cc
  DielectricControl.cc
  ReplicatedMatrix.cc
  ReplicatedVector.cc

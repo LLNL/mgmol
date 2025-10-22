@@ -477,6 +477,9 @@ public:
     // transfer matrix flag
     short tmatrices;
 
+    // replicated matrices
+    short rmatrices;
+
     // Initialization with localized orbitals (1) or not (0)
     short init_loc;
 

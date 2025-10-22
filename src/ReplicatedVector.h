@@ -9,8 +9,6 @@
 #ifndef MGMOL_REPLICATEDVECTOR_H
 #define MGMOL_REPLICATEDVECTOR_H
 
-#ifdef HAVE_MAGMA
-
 #include "ReplicatedMatrix.h"
 
 #include <vector>
@@ -19,14 +17,14 @@ class ReplicatedVector
 {
     int dim_;
 
-    std::unique_ptr<double, void (*)(double*)> device_data_;
+    std::unique_ptr<double, void (*)(double*)> data_;
 
 public:
     ReplicatedVector(const std::string name, const int n);
     ReplicatedVector(const ReplicatedVector&);
     ReplicatedVector(const std::vector<double>&);
     ReplicatedVector& operator=(const ReplicatedVector&);
-    double* data() { return device_data_.get(); }
+    double* data() { return data_.get(); }
     void clear();
     double dot(const ReplicatedVector& v);
     double nrm2();
@@ -38,6 +36,5 @@ public:
     void gemm(const char transa, const char transb, const double alpha,
         const ReplicatedMatrix&, const ReplicatedVector&, const double beta);
 };
-#endif
 
 #endif

@@ -72,8 +72,8 @@ void MVP_DMStrategy<OrbitalsType, MatrixType>::dressDM()
 }
 
 template class MVP_DMStrategy<LocGridOrbitals, dist_matrix::DistMatrix<double>>;
+template class MVP_DMStrategy<LocGridOrbitals, ReplicatedMatrix>;
+
 template class MVP_DMStrategy<ExtendedGridOrbitals,
     dist_matrix::DistMatrix<double>>;
-#ifdef HAVE_MAGMA
 template class MVP_DMStrategy<ExtendedGridOrbitals, ReplicatedMatrix>;
-#endif

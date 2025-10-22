@@ -497,16 +497,27 @@ int MGmol<OrbitalsType>::outerSolve(OrbitalsType& orbitals,
             MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
             const bool with_spin = (mmpi.nspin() > 1);
-#ifdef HAVE_MAGMA
-            DavidsonSolver<OrbitalsType, ReplicatedMatrix>
-#else
-            DavidsonSolver<OrbitalsType, dist_matrix::DistMatrix<DISTMATDTYPE>>
-#endif
-                solver(os_, *ions_, hamiltonian_.get(), rho_.get(),
-                    energy_.get(), electrostat_.get(), this, gids, ct.dm_mix,
-                    with_spin);
+            if (ct.rmatrices)
+            {
+                DavidsonSolver<OrbitalsType, ReplicatedMatrix>
 
-            retval = solver.solve(orbitals, work_orbitals);
+                    solver(os_, *ions_, hamiltonian_.get(), rho_.get(),
+                        energy_.get(), electrostat_.get(), this, gids,
+                        ct.dm_mix, with_spin);
+
+                retval = solver.solve(orbitals, work_orbitals);
+            }
+            else
+            {
+                DavidsonSolver<OrbitalsType,
+                    dist_matrix::DistMatrix<DISTMATDTYPE>>
+
+                    solver(os_, *ions_, hamiltonian_.get(), rho_.get(),
+                        energy_.get(), electrostat_.get(), this, gids,
+                        ct.dm_mix, with_spin);
+
+                retval = solver.solve(orbitals, work_orbitals);
+            }
             break;
         }
 

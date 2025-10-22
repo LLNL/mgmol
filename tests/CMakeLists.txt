@@ -242,6 +242,7 @@ add_executable(testGramMatrix
                ${CMAKE_SOURCE_DIR}/src/GramMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/Power.cc
                ${CMAKE_SOURCE_DIR}/src/magma_singleton.cc
+               ${CMAKE_SOURCE_DIR}/src/LocalMatrices2ReplicatedMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/local_matrices/LocalMatrices.cc
                ${CMAKE_SOURCE_DIR}/src/local_matrices/SquareLocalMatrices.cc
                ${CMAKE_SOURCE_DIR}/src/ReplicatedMatrix.cc
@@ -265,6 +266,7 @@ add_executable(testDensityMatrix
                ${CMAKE_SOURCE_DIR}/src/magma_singleton.cc
                ${CMAKE_SOURCE_DIR}/src/local_matrices/LocalMatrices.cc
                ${CMAKE_SOURCE_DIR}/src/local_matrices/SquareLocalMatrices.cc
+               ${CMAKE_SOURCE_DIR}/src/LocalMatrices2ReplicatedMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/ReplicatedMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/DistMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/BlacsContext.cc
@@ -485,6 +487,13 @@ add_test(NAME Davidson
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
          ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
          ${CMAKE_CURRENT_SOURCE_DIR}/Davidson/davidson.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/Davidson/coords.in
+         ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+add_test(NAME DavidsonReplicated
+         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Davidson/test.py
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+         ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
+         ${CMAKE_CURRENT_SOURCE_DIR}/DavidsonReplicated/davidson.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/Davidson/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME testSpinO2

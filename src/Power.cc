@@ -9,6 +9,8 @@
 
 #include "GramMatrix.h"
 #include "LocalVector.h"
+#include "ReplicatedMatrix.h"
+#include "ReplicatedVector.h"
 #include "SquareLocalMatrices.h"
 #include "mputils.h"
 #include "random.h"
@@ -97,3 +99,4 @@ template class Power<LocalVector<double, MemorySpace::Host>,
     SquareLocalMatrices<double, MemorySpace::Host>>;
 template class Power<dist_matrix::DistVector<double>,
     dist_matrix::DistMatrix<double>>;
+// template class Power<ReplicatedVector, ReplicatedMatrix>;

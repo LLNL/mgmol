@@ -424,8 +424,6 @@ void KBPsiMatrixSparse::computeHvnlMatrix(
     ss2dm->accumulate(submat, hij, 0.);
 }
 
-#ifdef HAVE_MAGMA
-
 template <>
 void KBPsiMatrixSparse::computeHvnlMatrix(
     const KBPsiMatrixInterface* const kbpsi2, const Ions& ions,
@@ -437,8 +435,6 @@ void KBPsiMatrixSparse::computeHvnlMatrix(
 
     hij.consolidate();
 }
-
-#endif
 
 // build <P|phi> elements, one atom at a time
 SquareSubMatrix<double> KBPsiMatrixSparse::computeHvnlMatrix(
@@ -624,9 +620,9 @@ double KBPsiMatrixSparse::getEvnl(
     return evnl * Ry2Ha;
 }
 
-template <>
-double KBPsiMatrixSparse::getEvnl(const Ions& ions,
-    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* proj_matrices)
+template <class MatrixType>
+double KBPsiMatrixSparse::getEvnl(
+    const Ions& ions, ProjectedMatrices<MatrixType>* proj_matrices)
 {
     SquareLocalMatrices<double, MemorySpace::Host> dm(
         proj_matrices->getReplicatedDM());
@@ -742,3 +738,8 @@ template void KBPsiMatrixSparse::computeKBpsi(const Ions& ions,
     ExtendedGridOrbitals& orbitals, const int first_color, const int nb_colors,
     const bool flag);
 template void KBPsiMatrixSparse::computeAll(const Ions&, ExtendedGridOrbitals&);
+
+template double KBPsiMatrixSparse::getEvnl(const Ions& ions,
+    ProjectedMatrices<dist_matrix::DistMatrix<double>>* proj_matrices);
+template double KBPsiMatrixSparse::getEvnl(
+    const Ions& ions, ProjectedMatrices<ReplicatedMatrix>* proj_matrices);

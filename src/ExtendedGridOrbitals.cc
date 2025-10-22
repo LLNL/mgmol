@@ -551,12 +551,12 @@ void ExtendedGridOrbitals::multiply_by_matrix(
     prod_matrix_tm_.stop();
 }
 
-#ifdef HAVE_MAGMA
 template <>
 void ExtendedGridOrbitals::multiply_by_matrix(const ReplicatedMatrix& matrix)
 {
     prod_matrix_tm_.start();
 
+#ifdef HAVE_MAGMA
     magma_trans_t magma_transa = magma_trans_const('n');
     magma_trans_t magma_transb = magma_trans_const('n');
 
@@ -574,10 +574,19 @@ void ExtendedGridOrbitals::multiply_by_matrix(const ReplicatedMatrix& matrix)
         tmp, numst_ * lda_, block_vector_.vect(0));
 
     MemorySpace::Memory<ORBDTYPE, MemorySpace::Device>::free(tmp);
+#else
+    ORBDTYPE* tmp = MemorySpace::Memory<ORBDTYPE, MemorySpace::Host>::allocate(
+        numst_ * lda_);
+    LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(numpt_, numst_, numst_, 1.,
+        block_vector_.vect(0), lda_, matrix.data(), matrix.ld(), 0., tmp, lda_);
+
+    memcpy(block_vector_.vect(0), tmp, numst_ * lda_ * sizeof(ORBDTYPE));
+
+    MemorySpace::Memory<ORBDTYPE, MemorySpace::Host>::free(tmp);
+#endif
 
     prod_matrix_tm_.stop();
 }
-#endif
 
 int ExtendedGridOrbitals::read_hdf5(HDFrestart& h5f_file)
 {
@@ -1258,7 +1267,6 @@ void ExtendedGridOrbitals::orthonormalizeLoewdin(const bool overlap_uptodate,
     incrementIterativeIndex();
 
     bool multbymat = false;
-#ifdef HAVE_MAGMA
     // try with ReplicatedMatrix first
     {
         ProjectedMatrices<ReplicatedMatrix>* projmatrices
@@ -1275,7 +1283,6 @@ void ExtendedGridOrbitals::orthonormalizeLoewdin(const bool overlap_uptodate,
             multbymat = true;
         }
     }
-#endif
     if (!multbymat)
     {
         ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
@@ -1687,24 +1694,29 @@ void ExtendedGridOrbitals::addDotWithNcol2Matrix(
     addDot_tm_.stop();
 }
 
-#ifdef HAVE_MAGMA
 template <>
 void ExtendedGridOrbitals::addDotWithNcol2Matrix(
     ExtendedGridOrbitals& Apsi, ReplicatedMatrix& matrix) const
 {
     addDot_tm_.start();
 
+    ReplicatedMatrix tmp("tmp", numst_, numst_);
+    const double vel = grid_.vel();
+
+#ifdef HAVE_MAGMA
     magma_trans_t magma_transa = magma_trans_const('t');
     magma_trans_t magma_transb = magma_trans_const('n');
 
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
-    ReplicatedMatrix tmp("tmp", numst_, numst_);
-    const double vel = grid_.vel();
-
     magmablas_dgemm(magma_transa, magma_transb, numst_, numst_, numpt_, vel,
         block_vector_.vect(0), lda_, Apsi.getPsi(0), lda_, 0., tmp.data(),
         tmp.ld(), magma_singleton.queue_);
+#else
+    LinearAlgebraUtils<memory_space_type>::MPgemmTN(numst_, numst_, numpt_, vel,
+        block_vector_.vect(0), lda_, Apsi.getPsi(0), lda_, 0., tmp.data(),
+        tmp.ld());
+#endif
 
     tmp.consolidate();
 
@@ -1712,7 +1724,6 @@ void ExtendedGridOrbitals::addDotWithNcol2Matrix(
 
     addDot_tm_.stop();
 }
-#endif
 
 void ExtendedGridOrbitals::computeGlobalIndexes()
 {

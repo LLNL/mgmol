@@ -404,8 +404,8 @@ void MVPSolver<OrbitalsType, MatrixType>::printTimers(std::ostream& os)
 
 template class MVPSolver<LocGridOrbitals,
     dist_matrix::DistMatrix<DISTMATDTYPE>>;
+template class MVPSolver<LocGridOrbitals, ReplicatedMatrix>;
+
 template class MVPSolver<ExtendedGridOrbitals,
     dist_matrix::DistMatrix<DISTMATDTYPE>>;
-#ifdef HAVE_MAGMA
 template class MVPSolver<ExtendedGridOrbitals, ReplicatedMatrix>;
-#endif

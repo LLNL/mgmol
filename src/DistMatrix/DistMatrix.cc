@@ -78,6 +78,8 @@ DistMatrix<T>::DistMatrix(const std::string& name, const int m, const int n)
       bc_(*default_bc_),
       comm_global_(default_bc_->comm_global())
 {
+    assert(default_bc_ != nullptr);
+
     resize(m, n, distmatrix_def_block_size_, distmatrix_def_block_size_);
 }
 
@@ -87,6 +89,8 @@ DistMatrix<T>::DistMatrix(const std::string& name, const int m)
       bc_(*default_bc_),
       comm_global_(default_bc_->comm_global())
 {
+    assert(default_bc_ != nullptr);
+
     resize(m, m, distmatrix_def_block_size_, distmatrix_def_block_size_);
 }
 

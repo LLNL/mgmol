@@ -478,6 +478,4 @@ int DensityMatrix<MatrixType>::read(HDFrestart& h5f_file, std::string& name)
 }
 
 template class DensityMatrix<dist_matrix::DistMatrix<double>>;
-#ifdef HAVE_MAGMA
 template class DensityMatrix<ReplicatedMatrix>;
-#endif

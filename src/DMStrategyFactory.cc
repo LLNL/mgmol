@@ -34,6 +34,19 @@ DMStrategy<LocGridOrbitals>* DMStrategyFactory<LocGridOrbitals,
 }
 
 template <>
+DMStrategy<LocGridOrbitals>* DMStrategyFactory<LocGridOrbitals,
+    ReplicatedMatrix>::createHamiltonianMVP_DMStrategy(MPI_Comm comm,
+    std::ostream& os, Ions& ions, Rho<LocGridOrbitals>* rho,
+    Energy<LocGridOrbitals>* energy, Electrostatic* electrostat,
+    MGmol<LocGridOrbitals>* mgmol_strategy,
+    ProjectedMatricesInterface* /*proj_matrices*/, LocGridOrbitals* orbitals,
+    const bool short_sighted)
+{
+    std::cerr << "Not implemented" << std::endl;
+    assert(0 == 1);
+}
+
+template <>
 DMStrategy<ExtendedGridOrbitals>* DMStrategyFactory<ExtendedGridOrbitals,
     dist_matrix::DistMatrix<double>>::createHamiltonianMVP_DMStrategy(MPI_Comm
                                                                           comm,
@@ -54,24 +67,21 @@ DMStrategy<ExtendedGridOrbitals>* DMStrategyFactory<ExtendedGridOrbitals,
     return dm_strategy;
 }
 
-#ifdef HAVE_MAGMA
 template <>
 DMStrategy<ExtendedGridOrbitals>* DMStrategyFactory<ExtendedGridOrbitals,
     ReplicatedMatrix>::createHamiltonianMVP_DMStrategy(MPI_Comm comm,
     std::ostream& os, Ions& ions, Rho<ExtendedGridOrbitals>* rho,
     Energy<ExtendedGridOrbitals>* energy, Electrostatic* electrostat,
     MGmol<ExtendedGridOrbitals>* mgmol_strategy,
-    ProjectedMatricesInterface* /*proj_matrices*/, LocGridOrbitals* orbitals,
-    const bool short_sighted)
+    ProjectedMatricesInterface* /*proj_matrices*/,
+    ExtendedGridOrbitals* orbitals, const bool short_sighted)
 {
     (void)short_sighted;
 
     DMStrategy<ExtendedGridOrbitals>* dm_strategy
         = new HamiltonianMVP_DMStrategy<ReplicatedMatrix,
-            ProjectedMatrices<ReplicatedMatrix>, ExtendedGridOrbitals>(comm, os,
-            ions, rho, energy, electrostat, mgmol_strategy,
-            orbitals->getOverlappingGids());
+            ProjectedMatrices<ReplicatedMatrix>, ExtendedGridOrbitals>(
+            comm, os, ions, rho, energy, electrostat, mgmol_strategy, orbitals);
 
     return dm_strategy;
 }
-#endif

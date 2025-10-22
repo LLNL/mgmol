@@ -12,6 +12,7 @@
 #include "MGmol_MPI.h"
 #include "MGmol_blas1.h"
 
+#include <cassert>
 #include <mpi.h>
 
 template <class ScalarType>
@@ -54,13 +55,14 @@ void ReplicatedWorkSpace<ScalarType>::initSquareMatrix(
     distmat.allgather(square_matrix_, ndim_);
 }
 
-#ifdef HAVE_MAGMA
 template <class ScalarType>
 void ReplicatedWorkSpace<ScalarType>::initSquareMatrix(
     const ReplicatedMatrix& mat)
 {
-    mat.get(square_matrix_, ndim_ * ndim_);
+    assert(square_matrix_ != nullptr);
+    assert(ndim_ > 0);
+
+    mat.get(square_matrix_, ndim_);
 }
-#endif
 
 template class ReplicatedWorkSpace<double>;

@@ -71,7 +71,7 @@ public:
 
     int m() const { return m_; }
 
-    const DataType* getSubMatrix(const int iloc = 0) const
+    DataType* getSubMatrix(const int iloc = 0) const
     {
         assert(iloc < (int)ptr_matrices_.size());
         assert(ptr_matrices_[iloc] != NULL);
