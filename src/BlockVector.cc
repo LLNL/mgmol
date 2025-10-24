@@ -493,8 +493,6 @@ void BlockVector<ScalarType, MemorySpaceType>::setDataWithGhosts(
 
     set_data_tm_.start();
 
-    data_wghosts->resetData();
-
     data_wghosts->set_updated_boundaries(false);
 
     // get number of mesh points
