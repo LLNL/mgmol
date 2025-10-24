@@ -262,9 +262,7 @@ BlockVector<ScalarType, MemorySpaceType>::BlockVector(
 
     setup(bv);
 
-    if (copy_data)
-        MemorySpace::Memory<ScalarType, MemorySpaceType>::copy(
-            bv.storage_, size_storage_, storage_);
+    if (copy_data) copyFrom(bv);
 }
 
 template <typename ScalarType, typename MemorySpaceType>
@@ -278,10 +276,21 @@ BlockVector<ScalarType, MemorySpaceType>::operator=(
 
     setup(bv);
 
+    copyFrom(bv);
+
+    return *this;
+}
+
+template <typename ScalarType, typename MemorySpaceType>
+void BlockVector<ScalarType, MemorySpaceType>::copyFrom(
+    const BlockVector<ScalarType, MemorySpaceType>& bv)
+{
+    copy_tm_.start();
+
     MemorySpace::Memory<ScalarType, MemorySpaceType>::copy(
         bv.storage_, size_storage_, storage_);
 
-    return *this;
+    copy_tm_.stop();
 }
 
 template <typename ScalarType, typename MemorySpaceType>
@@ -289,12 +298,17 @@ BlockVector<ScalarType, MemorySpaceType>&
 BlockVector<ScalarType, MemorySpaceType>::operator-=(
     const BlockVector<ScalarType, MemorySpaceType>& src)
 {
+    opminus_tm_.start();
+
     for (unsigned int i = 0; i < vect_.size(); i++)
     {
         ScalarType* vi             = vect_[i];
         ScalarType const* const si = src.vect_[i];
         BV<ScalarType, MemorySpaceType>::subtract(numel_, si, vi);
     }
+
+    opminus_tm_.stop();
+
     return *this;
 }
 
@@ -303,11 +317,15 @@ template <typename ScalarType2>
 void BlockVector<ScalarType, MemorySpaceType>::assign(
     const pb::GridFuncVector<ScalarType2, MemorySpaceType>& src)
 {
+    assign_tm_.start();
+
     for (unsigned int i = 0; i < vect_.size(); i++)
     {
         ScalarType* dest = vect_[i];
         src.template getValues<ScalarType>(i, dest);
     }
+
+    assign_tm_.stop();
 }
 
 template <typename ScalarType, typename MemorySpaceType>
@@ -396,7 +414,11 @@ void BlockVector<ScalarType, MemorySpaceType>::scal(const double alpha)
 {
     assert(storage_ != nullptr);
 
+    scal_tm_.start();
+
     LinearAlgebraUtils<MemorySpaceType>::MPscal(size_storage_, alpha, storage_);
+
+    scal_tm_.stop();
 }
 
 template <typename ScalarType, typename MemorySpaceType>
@@ -453,6 +475,7 @@ void BlockVector<ScalarType, MemorySpaceType>::axpy(
     LinearAlgebraUtils<MemorySpaceType>::MPaxpy(
         locnumel_, alpha, vect_[ix] + shift, vect_[iy] + shift);
 }
+
 template <typename ScalarType, typename MemorySpaceType>
 void BlockVector<ScalarType, MemorySpaceType>::axpy(const double alpha,
     BlockVector<ScalarType, MemorySpaceType>& bv, const int ix, const int iy,
@@ -519,6 +542,10 @@ void BlockVector<ScalarType, MemorySpaceType>::printTimers(std::ostream& os)
 {
     set_data_tm_.print(os);
     trade_data_tm_.print(os);
+    assign_tm_.print(os);
+    scal_tm_.print(os);
+    opminus_tm_.print(os);
+    copy_tm_.print(os);
 }
 
 template <typename ScalarType, typename MemorySpaceType>

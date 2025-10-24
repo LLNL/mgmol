@@ -30,6 +30,10 @@ class BlockVector
 {
     static Timer set_data_tm_;
     static Timer trade_data_tm_;
+    static Timer assign_tm_;
+    static Timer scal_tm_;
+    static Timer opminus_tm_;
+    static Timer copy_tm_;
 
     static short n_instances_;
     static short subdivx_;
@@ -87,6 +91,8 @@ public:
     BlockVector& operator=(const BlockVector& bv);
 
     ~BlockVector();
+
+    void copyFrom(const BlockVector& bv);
 
     const pb::GridFuncVector<ScalarType, MemorySpaceType>& getDataWGhosts()
     {
@@ -307,4 +313,18 @@ Timer BlockVector<ScalarType, MemorySpaceType>::set_data_tm_(
 template <typename ScalarType, typename MemorySpaceType>
 Timer BlockVector<ScalarType, MemorySpaceType>::trade_data_tm_(
     "BlockVector::trade_data");
+
+template <typename ScalarType, typename MemorySpaceType>
+Timer BlockVector<ScalarType, MemorySpaceType>::assign_tm_(
+    "BlockVector::assign");
+
+template <typename ScalarType, typename MemorySpaceType>
+Timer BlockVector<ScalarType, MemorySpaceType>::scal_tm_("BlockVector::scal");
+
+template <typename ScalarType, typename MemorySpaceType>
+Timer BlockVector<ScalarType, MemorySpaceType>::opminus_tm_(
+    "BlockVector::opminus");
+
+template <typename ScalarType, typename MemorySpaceType>
+Timer BlockVector<ScalarType, MemorySpaceType>::copy_tm_("BlockVector::copy");
 #endif
