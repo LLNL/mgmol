@@ -1643,7 +1643,7 @@ void GridFuncVector<ScalarType, MemorySpaceType>::extend3D(
 template <typename ScalarType, typename MemorySpaceType>
 GridFuncVector<ScalarType, MemorySpaceType>&
 GridFuncVector<ScalarType, MemorySpaceType>::operator-=(
-    const GridFuncVector& func)
+    const GridFuncVector<ScalarType, MemorySpaceType>& func)
 {
     assert(func.grid_.sizeg() == grid_.sizeg());
     assert(func.grid_.ghost_pt() == grid_.ghost_pt());
@@ -1655,6 +1655,20 @@ GridFuncVector<ScalarType, MemorySpaceType>::operator-=(
     updated_boundaries_ = (func.updated_boundaries_ && updated_boundaries_);
 
     return *this;
+}
+
+template <typename ScalarType, typename MemorySpaceType>
+template <typename ScalarType2>
+void GridFuncVector<ScalarType, MemorySpaceType>::copyFrom(
+    const GridFuncVector<ScalarType2, MemorySpaceType>& src)
+{
+    copy_tm_.start();
+
+    MPcpy(memory_.get(), src.getDataPtr(0), nfunc_ * grid_.sizeg());
+
+    updated_boundaries_ = src.getUpdatedBoundariesFlag();
+
+    copy_tm_.stop();
 }
 
 template <typename ScalarType, typename MemorySpaceType>
@@ -2465,6 +2479,11 @@ template void GridFuncVector<float, MemorySpace::Host>::axpy(
     const float alpha, const GridFuncVector<float, MemorySpace::Host>& func);
 template void GridFuncVector<double, MemorySpace::Host>::axpy(
     const double alpha, const GridFuncVector<double, MemorySpace::Host>& func);
+template void GridFuncVector<float, MemorySpace::Host>::copyFrom(
+    const GridFuncVector<double, MemorySpace::Host>& src);
+template void GridFuncVector<double, MemorySpace::Host>::copyFrom(
+    const GridFuncVector<float, MemorySpace::Host>& src);
+
 #ifdef HAVE_MAGMA
 template class GridFuncVector<double, MemorySpace::Device>;
 template class GridFuncVector<float, MemorySpace::Device>;

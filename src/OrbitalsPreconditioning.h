@@ -34,9 +34,15 @@ private:
 #endif
 
     Preconditioning<MGPRECONDTYPE>* precond_;
-    pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>* gfv_work_;
 
-    pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>* gfv_work2_;
+    // work arrays with preconditioner precision
+    std::shared_ptr<pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>>
+        gfv_work1_;
+    std::shared_ptr<pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>>
+        gfv_work2_;
+
+    // tmp work array for case ORBDTYPE!=MGPRECONDTYPE
+    std::shared_ptr<pb::GridFuncVector<ORBDTYPE, memory_space_type>> gfv_work3_;
 
     short lap_type_;
 
@@ -53,10 +59,8 @@ private:
 public:
     OrbitalsPreconditioning()
     {
-        is_set_    = false;
-        precond_   = nullptr;
-        gfv_work_  = nullptr;
-        gfv_work2_ = nullptr;
+        is_set_  = false;
+        precond_ = nullptr;
     };
 
     ~OrbitalsPreconditioning();
