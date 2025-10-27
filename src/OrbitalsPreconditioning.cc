@@ -27,17 +27,6 @@ OrbitalsPreconditioning<T>::~OrbitalsPreconditioning()
 
     delete precond_;
     delete map2masks_;
-
-    if (gfv_work_ != nullptr)
-    {
-        delete gfv_work_;
-        gfv_work_ = nullptr;
-    }
-    if (gfv_work2_ != nullptr)
-    {
-        delete gfv_work2_;
-        gfv_work2_ = nullptr;
-    }
 }
 
 template <class T>
@@ -71,12 +60,24 @@ void OrbitalsPreconditioning<T>::setup(T& orbitals, const short mg_levels,
     assert(orbitals.chromatic_number()
            == static_cast<int>(orbitals.getOverlappingGids()[0].size()));
 
-    gfv_work_ = new pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>(mygrid,
-        ct.bcWF[0], ct.bcWF[1], ct.bcWF[2], orbitals.getOverlappingGids());
+    gfv_work1_
+        = std::shared_ptr<pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>>(
+            new pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>(mygrid,
+                ct.bcWF[0], ct.bcWF[1], ct.bcWF[2],
+                orbitals.getOverlappingGids()));
 
     gfv_work2_
-        = new pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>(mygrid,
-            ct.bcWF[0], ct.bcWF[1], ct.bcWF[2], orbitals.getOverlappingGids());
+        = std::shared_ptr<pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>>(
+            new pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>(mygrid,
+                ct.bcWF[0], ct.bcWF[1], ct.bcWF[2],
+                orbitals.getOverlappingGids()));
+
+    if (!std::is_same<ORBDTYPE, MGPRECONDTYPE>::value)
+        gfv_work3_
+            = std::shared_ptr<pb::GridFuncVector<ORBDTYPE, memory_space_type>>(
+                new pb::GridFuncVector<ORBDTYPE, memory_space_type>(mygrid,
+                    ct.bcWF[0], ct.bcWF[1], ct.bcWF[2],
+                    orbitals.getOverlappingGids()));
 
     is_set_ = true;
 
@@ -89,24 +90,46 @@ void OrbitalsPreconditioning<T>::precond_mg(T& orbitals)
     assert(is_set_);
     assert(precond_ != nullptr);
     assert(gamma_ > 0.);
-    assert(gfv_work_ != nullptr);
+    assert(gfv_work1_);
 
 #ifdef PRINT_OPERATIONS
     if (onpe0) (*MPIdata::sout) << "T::precond_mg()..." << endl;
 #endif
     precond_tm_.start();
 
-    gfv_work_->resetData();
+    // initialize gfv_work2_ with data from orbitals
+    if (std::is_same<ORBDTYPE, MGPRECONDTYPE>::value)
+    {
+        orbitals.setDataWithGhosts(gfv_work2_.get());
+    }
+    else
+    {
+        // Convert to data with ghosts first, then convert to different
+        // precision. This is more efficient in practice than doing precision
+        // conversion in setDataWithGhosts
+        orbitals.setDataWithGhosts(gfv_work3_.get());
 
-    // store residual in GridFuncVector<T> container
-    // used for ghost values (no ghost values needed)
-    orbitals.setDataWithGhosts(gfv_work2_);
-    gfv_work_->axpy((MGPRECONDTYPE)gamma_, *gfv_work2_);
+        gfv_work2_->copyFrom(*gfv_work3_);
+    }
+
+    gfv_work1_->resetData();
+    gfv_work1_->axpy((MGPRECONDTYPE)gamma_, *gfv_work2_);
 
     // block-implemented preconditioner
-    precond_->mg(*gfv_work_, *gfv_work2_, lap_type_, 0);
+    precond_->mg(*gfv_work1_, *gfv_work2_, lap_type_, 0);
 
-    orbitals.setPsi(*gfv_work_);
+    if (std::is_same<ORBDTYPE, MGPRECONDTYPE>::value)
+    {
+        orbitals.setPsi(*gfv_work1_);
+    }
+    else
+    {
+        // Convert to orbitals precision first
+        gfv_work3_->copyFrom(*gfv_work1_);
+
+        // set orbitals to GridFuncVector second
+        orbitals.setPsi(*gfv_work3_);
+    }
 
 #ifdef PRINT_OPERATIONS
     if (onpe0)
