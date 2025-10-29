@@ -92,8 +92,6 @@ public:
 
     ~BlockVector();
 
-    void copyFrom(const BlockVector& bv);
-
     const pb::GridFuncVector<ScalarType, MemorySpaceType>& getDataWGhosts()
     {
         assert(data_wghosts_ != 0);
@@ -184,13 +182,19 @@ public:
     }
 
     void setToDataWithGhosts() { assign(*data_wghosts_); }
+
     void copyDataFrom(const BlockVector& src)
     {
+        copy_tm_.start();
+
         assert(src.size_storage_ == size_storage_);
         assert(storage_ != nullptr);
         assert(src.storage_ != nullptr);
+
         MemorySpace::Memory<ScalarType, MemorySpaceType>::copy(
             src.storage_, size_storage_, storage_);
+
+        copy_tm_.stop();
     }
 
     pb::GridFunc<ScalarType>& getVectorWithGhosts(const int i)
