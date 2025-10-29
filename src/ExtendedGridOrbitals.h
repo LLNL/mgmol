@@ -60,7 +60,6 @@ private:
 
     static int lda_; // leading dimension for storage
     static int numpt_;
-    static int loc_numpt_;
 
     // static double (ExtendedGridOrbitals::*dotProduct_)(const
     // ExtendedGridOrbitals&);
@@ -140,8 +139,6 @@ private:
 protected:
     const pb::Grid& grid_;
 
-    static short subdivx_;
-
     // indexes corresponding to valid function in each subdomain
     static std::vector<std::vector<int>> overlapping_gids_;
 
@@ -195,7 +192,7 @@ public:
 
     int numst(void) const { return numst_; }
     int getLda() const { return lda_; }
-    int getLocNumpt() const { return loc_numpt_; }
+    int getLocNumpt() const { return numpt_; }
     int getNumpt() const { return numpt_; }
 
     bool isCompatibleWith(const ExtendedGridOrbitals&) const { return true; }
@@ -262,10 +259,10 @@ public:
         assert(new_storage != 0);
         block_vector_.setStorage(new_storage);
     }
-    ORBDTYPE* getPsi(const int i, const short iloc = 0) const
+    ORBDTYPE* getPsi(const int i, const int iloc = 0) const
     {
-        assert(iloc < subdivx_);
-        return block_vector_.vect(i) + iloc * loc_numpt_;
+        assert(iloc == 0);
+        return block_vector_.vect(i);
     }
     template <typename T>
     void setPsi(const pb::GridFunc<T>& gf_work, const int ist)
@@ -283,7 +280,7 @@ public:
         assert(numst_ < 10000);
         return numst_;
     }
-    short subdivx(void) const { return subdivx_; }
+    short subdivx(void) const { return 1; }
     void printChromaticNumber(std::ostream& os) const
     {
         if (onpe0) os << " Max. chromatic_number: " << numst_ << std::endl;
