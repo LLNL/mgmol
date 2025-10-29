@@ -980,20 +980,7 @@ void ExtendedGridOrbitals::getLocalOverlap(
 
     if (numst_ != 0)
     {
-#ifdef MGMOL_USE_MIXEDP
         getLocalOverlap(*this, ss);
-#else
-        ORBDTYPE* psi        = block_vector_.vect(0);
-        for (short iloc = 0; iloc < subdivx_; iloc++)
-        {
-            ss.syrk(iloc, loc_numpt_, psi + iloc * loc_numpt_, lda_);
-        }
-
-        // We may need the full matrix
-        ss.fillUpperWithLower();
-
-        ss.scal(grid_.vel());
-#endif
     }
 }
 
@@ -1054,11 +1041,9 @@ void ExtendedGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
         LinearAlgebraUtils<memory_space_type>::MPgemmTN(numst_, numst_,
-            loc_numpt_, 1., a + iloc * loc_numpt_, lda, b + +iloc * loc_numpt_,
-            ldb, 0., ss.getRawPtr(iloc), ss.m());
+            loc_numpt_, grid_.vel(), a + iloc * loc_numpt_, lda,
+            b + +iloc * loc_numpt_, ldb, 0., ss.getRawPtr(iloc), ss.m());
     }
-
-    ss.scal(grid_.vel());
 }
 
 void ExtendedGridOrbitals::computeDiagonalElementsDotProduct(
