@@ -212,7 +212,6 @@ void ExtendedGridOrbitals::initGauss(
     const double rc, const std::shared_ptr<LocalizationRegions> lrs)
 {
     assert(numst_ >= 0);
-    assert(1 > 0);
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     Control& ct     = *(Control::instance());

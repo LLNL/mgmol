@@ -262,7 +262,7 @@ BlockVector<ScalarType, MemorySpaceType>::BlockVector(
 
     setup(bv);
 
-    if (copy_data) copyFrom(bv);
+    if (copy_data) copyDataFrom(bv);
 }
 
 template <typename ScalarType, typename MemorySpaceType>
@@ -276,21 +276,9 @@ BlockVector<ScalarType, MemorySpaceType>::operator=(
 
     setup(bv);
 
-    copyFrom(bv);
+    copyDataFrom(bv);
 
     return *this;
-}
-
-template <typename ScalarType, typename MemorySpaceType>
-void BlockVector<ScalarType, MemorySpaceType>::copyFrom(
-    const BlockVector<ScalarType, MemorySpaceType>& bv)
-{
-    copy_tm_.start();
-
-    MemorySpace::Memory<ScalarType, MemorySpaceType>::copy(
-        bv.storage_, size_storage_, storage_);
-
-    copy_tm_.stop();
 }
 
 template <typename ScalarType, typename MemorySpaceType>
