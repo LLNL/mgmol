@@ -78,7 +78,7 @@ void DensityMatrix<MatrixType>::build(
 #endif
 
     // diagonal matrix with occ values in diagonal
-    MatrixType gamma("Gamma", &occ[0], dim_, dim_);
+    MatrixType gamma("Gamma", &occ[0], dim_);
     gamma.scal(orbital_occupation_); // rescale for spin
 
     // work_ = zmat*gamma with gamma symmetric
@@ -132,7 +132,7 @@ void DensityMatrix<MatrixType>::build()
         std::cout << "Warning: occupations not up to date to build DM!!!"
                   << std::endl;
 
-    MatrixType gamma("Gamma", &occupation_[0], dim_, dim_);
+    MatrixType gamma("Gamma", &occupation_[0], dim_);
     gamma.scal(orbital_occupation_); // rescale for spin
 
     *dm_ = gamma;

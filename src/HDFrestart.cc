@@ -1655,13 +1655,13 @@ int HDFrestart::writeData(const T* const data, hid_t space_id, hid_t memspace,
 {
     if (precision == 1)
     {
-        assert(work_space_float_.size() == bsize_);
+        assert((int)work_space_float_.size() == bsize_);
         for (int i = 0; i < bsize_; i++)
             work_space_float_[i] = (float)data[i];
     }
     else
     {
-        assert(work_space_double_.size() == bsize_);
+        assert((int)work_space_double_.size() == bsize_);
         for (int i = 0; i < bsize_; i++)
             work_space_double_[i] = (double)data[i];
     }

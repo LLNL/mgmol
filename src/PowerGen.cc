@@ -46,10 +46,10 @@ void PowerGen<MatrixType, VectorType>::computeGenEigenInterval(MatrixType& mat,
 
     // initialize solution data
     // initial guess
-    VectorType sol("sol", m);
+    VectorType sol(m);
     sol = vec1_; // initialize local solution data
     // new solution
-    VectorType new_sol("new_sol", m);
+    VectorType new_sol(m);
 
     // get norm of initial sol
     double alpha = sol.nrm2();

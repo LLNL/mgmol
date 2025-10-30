@@ -2766,7 +2766,7 @@ void Ions::gatherForces(std::vector<double>& forces, const int root) const
         const int index = ion->index();
         // std::cout << "index = " << index << std::endl;
         assert(index < num_ions_);
-        assert(forces.size() >= 3 * index);
+        assert((int)forces.size() >= 3 * index);
         assert(index < num_ions_);
         ion->getForce(&forces[3 * index]);
     }
