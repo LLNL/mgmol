@@ -48,6 +48,10 @@ template <>
 void MGmol<LocGridOrbitals>::addHlocal2matrix(
     LocGridOrbitals& orbitalsi, LocGridOrbitals& orbitalsj, ReplicatedMatrix& H)
 {
+    (void)orbitalsi;
+    (void)orbitalsj;
+    (void)H;
+
     std::cerr << "Not implemented!" << std::endl;
     MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
 }

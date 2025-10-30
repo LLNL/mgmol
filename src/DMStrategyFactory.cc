@@ -36,14 +36,17 @@ DMStrategy<LocGridOrbitals>* DMStrategyFactory<LocGridOrbitals,
 template <>
 DMStrategy<LocGridOrbitals>* DMStrategyFactory<LocGridOrbitals,
     ReplicatedMatrix>::createHamiltonianMVP_DMStrategy(MPI_Comm comm,
-    std::ostream& os, Ions& ions, Rho<LocGridOrbitals>* rho,
-    Energy<LocGridOrbitals>* energy, Electrostatic* electrostat,
-    MGmol<LocGridOrbitals>* mgmol_strategy,
-    ProjectedMatricesInterface* /*proj_matrices*/, LocGridOrbitals* orbitals,
-    const bool short_sighted)
+    std::ostream& /*os*/, Ions& /*ions*/, Rho<LocGridOrbitals>* /*rho*/,
+    Energy<LocGridOrbitals>* /*energy*/, Electrostatic* /*electrostat*/,
+    MGmol<LocGridOrbitals>* /*mgmol_strategy*/,
+    ProjectedMatricesInterface* /*proj_matrices*/,
+    LocGridOrbitals* /*orbitals*/, const bool /*short_sighted*/)
 {
-    std::cerr << "Not implemented" << std::endl;
-    assert(0 == 1);
+
+    std::cerr << "DMStrategy not implemented" << std::endl;
+    MPI_Abort(comm, EXIT_FAILURE);
+
+    return nullptr;
 }
 
 template <>

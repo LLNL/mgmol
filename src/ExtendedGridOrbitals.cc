@@ -72,7 +72,11 @@ ExtendedGridOrbitals::ExtendedGridOrbitals(std::string name,
     (void)local_cluster;
 
     // preconditions
+#ifndef NDEBUG
     assert(subdivx == 1);
+#else
+    (void)subdivx;
+#endif
     assert(proj_matrices != nullptr);
 
     for (short i = 0; i < 3; i++)

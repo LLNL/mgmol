@@ -261,7 +261,7 @@ public:
     }
     ORBDTYPE* getPsi(const int i, const int iloc = 0) const
     {
-        assert(iloc == 0);
+        (void)iloc;
         return block_vector_.vect(i);
     }
     template <typename T>
