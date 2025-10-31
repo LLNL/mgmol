@@ -52,8 +52,8 @@ public:
     ReplicatedMatrix(const std::string name, const int n);
 
     // construct diagonal matrix from diagonal values
-    ReplicatedMatrix(const std::string name, const double* const diagonal,
-        const int m, const int n);
+    ReplicatedMatrix(
+        const std::string name, const double* const diagonal, const int m);
 
     ReplicatedMatrix(const ReplicatedMatrix&);
 

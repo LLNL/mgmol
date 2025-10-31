@@ -22,7 +22,7 @@ using MemoryDev = MemorySpace::Memory<double, MemorySpace::Device>;
 using MemoryDev = MemorySpace::Memory<double, MemorySpace::Host>;
 #endif
 
-ReplicatedVector::ReplicatedVector(const std::string name, const int n)
+ReplicatedVector::ReplicatedVector(const int n)
     : dim_(n), data_(MemoryDev::allocate(dim_), MemoryDev::free)
 {
 }

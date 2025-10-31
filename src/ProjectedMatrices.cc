@@ -167,8 +167,8 @@ void ProjectedMatrices<ReplicatedMatrix>::convert(
 }
 
 template <>
-void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::setupMPI(
-    const std::vector<std::vector<int>>& global_indexes)
+void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::
+    setupGlobalIndexes(const std::vector<std::vector<int>>& global_indexes)
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     MPI_Comm comm   = mmpi.commSpin();
@@ -179,12 +179,9 @@ void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::setupMPI(
 }
 
 template <>
-void ProjectedMatrices<ReplicatedMatrix>::setupMPI(
+void ProjectedMatrices<ReplicatedMatrix>::setupGlobalIndexes(
     const std::vector<std::vector<int>>& global_indexes)
 {
-    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    MPI_Comm comm   = mmpi.commSpin();
-
     LocalMatrices2ReplicatedMatrix::setup(global_indexes);
 
     ReplicatedMatrix2SquareLocalMatrices::setup(global_indexes);
@@ -200,7 +197,7 @@ void ProjectedMatrices<MatrixType>::setup(
 
     global_indexes_ = global_indexes;
 
-    setupMPI(global_indexes);
+    setupGlobalIndexes(global_indexes);
 
     localX_.reset(new SquareLocalMatrices<MATDTYPE, memory_space_type>(
         subdiv_, chromatic_number_));

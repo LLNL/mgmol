@@ -20,7 +20,7 @@ class ReplicatedVector
     std::unique_ptr<double, void (*)(double*)> data_;
 
 public:
-    ReplicatedVector(const std::string name, const int n);
+    ReplicatedVector(const int n);
     ReplicatedVector(const ReplicatedVector&);
     ReplicatedVector(const std::vector<double>&);
     ReplicatedVector& operator=(const ReplicatedVector&);

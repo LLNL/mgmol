@@ -65,8 +65,8 @@ ReplicatedMatrix::ReplicatedMatrix(const std::string name, const int n)
     clear();
 }
 
-ReplicatedMatrix::ReplicatedMatrix(const std::string name,
-    const double* const diagonal, const int m, const int n)
+ReplicatedMatrix::ReplicatedMatrix(
+    const std::string name, const double* const diagonal, const int m)
     : dim_(m),
       ld_(roundup(dim_)),
       data_(Memory::allocate(dim_ * ld_), Memory::free),
@@ -349,7 +349,7 @@ void ReplicatedMatrix::setRandom(const double minv, const double maxv)
 #else
     double* data = data_.get();
     for (int j = 0; j < dim_; j++)
-        for (int i = 0; i < dim_ * ld_; i++)
+        for (int i = 0; i < dim_ * (int)ld_; i++)
             data[j * ld_ + i] = mat[j * dim_ + i];
 #endif
 }
@@ -855,4 +855,9 @@ void ReplicatedMatrix::shift(const double shift)
         mat[i + i * dim_] += shift;
 }
 
-void ReplicatedMatrix::printMM(std::ostream& os) const {}
+void ReplicatedMatrix::printMM(std::ostream& os) const
+{
+    (void)os;
+    std::cerr << "ReplicatedMatrix::printMM() not implemented" << std::endl;
+    MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+}
