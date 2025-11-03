@@ -827,6 +827,7 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
         assert(pmat);
 
         pmat->printOccupations(os_);
+        proj_mat2N_->printEigenvalues(os_);
     }
 
     if (mmpi.PE0() && ct.verbose > 1)
