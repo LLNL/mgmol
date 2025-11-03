@@ -521,8 +521,7 @@ void MGmol<OrbitalsType>::run()
 
             constraints_->projectOutForces(20);
 
-            if ((ions_->getNumIons() <= 1024 || ct.verbose > 2)
-                && ct.verbose > 0)
+            if ((ions_->getNumIons() <= 1024 || ct.verbose > 1))
                 ions_->printForcesGlobal(os_);
 
             finalEnergy();
