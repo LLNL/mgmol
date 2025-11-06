@@ -11,17 +11,17 @@
 #define MGMOL_MVP_DMStrategy_H
 
 #include "DMStrategy.h"
+#include "Electrostatic.h"
 #include "Energy.h"
+#include "Hamiltonian.h"
+#include "Ions.h"
 #include "MGmol.h"
+#include "ProjectedMatricesInterface.h"
 #include "Rho.h"
 
 #include <iostream>
 #include <mpi.h>
 #include <vector>
-
-class ProjectedMatricesInterface;
-class Ions;
-class Electrostatic;
 
 template <class OrbitalsType, class MatrixType>
 class MVP_DMStrategy : public DMStrategy<OrbitalsType>
@@ -36,6 +36,7 @@ private:
     Rho<OrbitalsType>* rho_;
     Energy<OrbitalsType>* energy_;
     Electrostatic* electrostat_;
+    Hamiltonian<OrbitalsType>* hamiltonian_;
     const std::vector<std::vector<int>>& global_indexes_;
     MGmol<OrbitalsType>* mgmol_strategy_;
 
@@ -44,7 +45,8 @@ private:
 public:
     MVP_DMStrategy(MPI_Comm comm, std::ostream& os, Ions& ions,
         Rho<OrbitalsType>* rho, Energy<OrbitalsType>* energy,
-        Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy,
+        Electrostatic* electrostat, Hamiltonian<OrbitalsType>*,
+        MGmol<OrbitalsType>* mgmol_strategy,
         const std::vector<std::vector<int>>& overlappingGids,
         ProjectedMatricesInterface* proj_matrices, const bool use_old_dm);
 

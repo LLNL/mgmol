@@ -7,6 +7,7 @@ DMStrategy<LocGridOrbitals>* DMStrategyFactory<LocGridOrbitals,
                                                                           comm,
     std::ostream& os, Ions& ions, Rho<LocGridOrbitals>* rho,
     Energy<LocGridOrbitals>* energy, Electrostatic* electrostat,
+    Hamiltonian<LocGridOrbitals>* hamiltonian,
     MGmol<LocGridOrbitals>* mgmol_strategy,
     ProjectedMatricesInterface* /*proj_matrices*/, LocGridOrbitals* orbitals,
     const bool short_sighted)
@@ -16,7 +17,7 @@ DMStrategy<LocGridOrbitals>* DMStrategyFactory<LocGridOrbitals,
         DMStrategy<LocGridOrbitals>* dm_strategy
             = new HamiltonianMVP_DMStrategy<VariableSizeMatrix<sparserow>,
                 ProjectedMatricesSparse, LocGridOrbitals>(comm, os, ions, rho,
-                energy, electrostat, mgmol_strategy, orbitals);
+                energy, electrostat, hamiltonian, mgmol_strategy, orbitals);
 
         return dm_strategy;
     }
@@ -27,7 +28,7 @@ DMStrategy<LocGridOrbitals>* DMStrategyFactory<LocGridOrbitals,
                 dist_matrix::DistMatrix<DISTMATDTYPE>,
                 ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>,
                 LocGridOrbitals>(comm, os, ions, rho, energy, electrostat,
-                mgmol_strategy, orbitals);
+                hamiltonian, mgmol_strategy, orbitals);
 
         return dm_strategy;
     }
@@ -38,6 +39,7 @@ DMStrategy<LocGridOrbitals>* DMStrategyFactory<LocGridOrbitals,
     ReplicatedMatrix>::createHamiltonianMVP_DMStrategy(MPI_Comm comm,
     std::ostream& /*os*/, Ions& /*ions*/, Rho<LocGridOrbitals>* /*rho*/,
     Energy<LocGridOrbitals>* /*energy*/, Electrostatic* /*electrostat*/,
+    Hamiltonian<LocGridOrbitals>* /*hamiltonian*/,
     MGmol<LocGridOrbitals>* /*mgmol_strategy*/,
     ProjectedMatricesInterface* /*proj_matrices*/,
     LocGridOrbitals* /*orbitals*/, const bool /*short_sighted*/)
@@ -55,6 +57,7 @@ DMStrategy<ExtendedGridOrbitals>* DMStrategyFactory<ExtendedGridOrbitals,
                                                                           comm,
     std::ostream& os, Ions& ions, Rho<ExtendedGridOrbitals>* rho,
     Energy<ExtendedGridOrbitals>* energy, Electrostatic* electrostat,
+    Hamiltonian<ExtendedGridOrbitals>* hamiltonian,
     MGmol<ExtendedGridOrbitals>* mgmol_strategy,
     ProjectedMatricesInterface* /*proj_matrices*/,
     ExtendedGridOrbitals* orbitals, const bool short_sighted)
@@ -64,8 +67,8 @@ DMStrategy<ExtendedGridOrbitals>* DMStrategyFactory<ExtendedGridOrbitals,
     DMStrategy<ExtendedGridOrbitals>* dm_strategy
         = new HamiltonianMVP_DMStrategy<dist_matrix::DistMatrix<DISTMATDTYPE>,
             ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>,
-            ExtendedGridOrbitals>(
-            comm, os, ions, rho, energy, electrostat, mgmol_strategy, orbitals);
+            ExtendedGridOrbitals>(comm, os, ions, rho, energy, electrostat,
+            hamiltonian, mgmol_strategy, orbitals);
 
     return dm_strategy;
 }
@@ -75,6 +78,7 @@ DMStrategy<ExtendedGridOrbitals>* DMStrategyFactory<ExtendedGridOrbitals,
     ReplicatedMatrix>::createHamiltonianMVP_DMStrategy(MPI_Comm comm,
     std::ostream& os, Ions& ions, Rho<ExtendedGridOrbitals>* rho,
     Energy<ExtendedGridOrbitals>* energy, Electrostatic* electrostat,
+    Hamiltonian<ExtendedGridOrbitals>* hamiltonian,
     MGmol<ExtendedGridOrbitals>* mgmol_strategy,
     ProjectedMatricesInterface* /*proj_matrices*/,
     ExtendedGridOrbitals* orbitals, const bool short_sighted)
@@ -83,8 +87,9 @@ DMStrategy<ExtendedGridOrbitals>* DMStrategyFactory<ExtendedGridOrbitals,
 
     DMStrategy<ExtendedGridOrbitals>* dm_strategy
         = new HamiltonianMVP_DMStrategy<ReplicatedMatrix,
-            ProjectedMatrices<ReplicatedMatrix>, ExtendedGridOrbitals>(
-            comm, os, ions, rho, energy, electrostat, mgmol_strategy, orbitals);
+            ProjectedMatrices<ReplicatedMatrix>, ExtendedGridOrbitals>(comm, os,
+            ions, rho, energy, electrostat, hamiltonian, mgmol_strategy,
+            orbitals);
 
     return dm_strategy;
 }

@@ -461,12 +461,13 @@ int MGmol<OrbitalsType>::initial()
         dm_strategy_.reset(
             DMStrategyFactory<OrbitalsType, ReplicatedMatrix>::create(comm_,
                 os_, *ions_, rho_.get(), energy_.get(), electrostat_.get(),
-                this, proj_matrices_.get(), current_orbitals_));
+                hamiltonian_.get(), this, proj_matrices_.get(),
+                current_orbitals_));
     else
         dm_strategy_.reset(DMStrategyFactory<OrbitalsType,
             dist_matrix::DistMatrix<double>>::create(comm_, os_, *ions_,
-            rho_.get(), energy_.get(), electrostat_.get(), this,
-            proj_matrices_.get(), current_orbitals_));
+            rho_.get(), energy_.get(), electrostat_.get(), hamiltonian_.get(),
+            this, proj_matrices_.get(), current_orbitals_));
 
     // theta = invB * Hij
     proj_matrices_->updateThetaAndHB();
@@ -1502,8 +1503,8 @@ double MGmol<OrbitalsType>::evaluateDMandEnergyAndForces(Orbitals* orbitals,
     {
         std::shared_ptr<DMStrategy<OrbitalsType>> dm_strategy(
             DMStrategyFactory<OrbitalsType, ReplicatedMatrix>::create(comm_,
-                os_, ions, rho_.get(), energy_.get(), electrostat_.get(), this,
-                proj_matrices_.get(), dorbitals));
+                os_, ions, rho_.get(), energy_.get(), electrostat_.get(),
+                hamiltonian_.get(), this, proj_matrices_.get(), dorbitals));
 
         dm_strategy->update(*dorbitals);
     }
@@ -1512,8 +1513,8 @@ double MGmol<OrbitalsType>::evaluateDMandEnergyAndForces(Orbitals* orbitals,
         std::shared_ptr<DMStrategy<OrbitalsType>> dm_strategy(
             DMStrategyFactory<OrbitalsType,
                 dist_matrix::DistMatrix<double>>::create(comm_, os_, ions,
-                rho_.get(), energy_.get(), electrostat_.get(), this,
-                proj_matrices_.get(), dorbitals));
+                rho_.get(), energy_.get(), electrostat_.get(),
+                hamiltonian_.get(), this, proj_matrices_.get(), dorbitals));
 
         dm_strategy->update(*dorbitals);
     }

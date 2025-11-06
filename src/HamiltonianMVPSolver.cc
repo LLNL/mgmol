@@ -37,8 +37,9 @@ template <class MatrixType, class ProjMatrixType, class OrbitalsType>
 HamiltonianMVPSolver<MatrixType, ProjMatrixType,
     OrbitalsType>::HamiltonianMVPSolver(std::ostream& os, Ions& ions,
     Rho<OrbitalsType>* rho, Energy<OrbitalsType>* energy,
-    Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy,
-    const int numst, const short n_inner_steps, const MatrixType& hinit,
+    Electrostatic* electrostat, Hamiltonian<OrbitalsType>* hamiltonian,
+    MGmol<OrbitalsType>* mgmol_strategy, const int numst,
+    const short n_inner_steps, const MatrixType& hinit,
     const bool try_shorter_intervals)
     : os_(os),
       n_inner_steps_(n_inner_steps),
@@ -50,6 +51,7 @@ HamiltonianMVPSolver<MatrixType, ProjMatrixType,
     rho_            = rho;
     energy_         = energy;
     electrostat_    = electrostat;
+    hamiltonian_    = hamiltonian;
     mgmol_strategy_ = mgmol_strategy;
 
     numst_ = numst;
@@ -149,7 +151,7 @@ int HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>::solve(
         // compute new h11 for the current potential by adding local part to
         // nonlocal components
         h11 = h11nl;
-        mgmol_strategy_->addHlocal2matrix(orbitals, orbitals, h11);
+        hamiltonian_->addHlocal2matrix(orbitals, orbitals, h11);
 
         projmatrices->assignH(h11);
         projmatrices->setHB2H();
@@ -177,7 +179,7 @@ int HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>::solve(
 
         // update H and compute energy at midpoint
         h11 = h11nl;
-        mgmol_strategy_->addHlocal2matrix(orbitals, orbitals, h11);
+        hamiltonian_->addHlocal2matrix(orbitals, orbitals, h11);
 
         projmatrices->assignH(h11);
         projmatrices->setHB2H();
@@ -212,7 +214,7 @@ int HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>::solve(
 
         // update H with new potential
         h11 = h11nl;
-        mgmol_strategy_->addHlocal2matrix(orbitals, orbitals, h11);
+        hamiltonian_->addHlocal2matrix(orbitals, orbitals, h11);
 
         projmatrices->assignH(h11);
         projmatrices->setHB2H();
@@ -268,7 +270,7 @@ int HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>::solve(
 
                 // update H
                 h11 = h11nl;
-                mgmol_strategy_->addHlocal2matrix(orbitals, orbitals, h11);
+                hamiltonian_->addHlocal2matrix(orbitals, orbitals, h11);
 
                 projmatrices->assignH(h11);
                 projmatrices->setHB2H();

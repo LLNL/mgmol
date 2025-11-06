@@ -216,6 +216,18 @@ void Hamiltonian<ExtendedGridOrbitals>::addHlocal2matrix(
     phi1.addDotWithNcol2Matrix(*hlphi_, hij);
 }
 
+template <>
+template <>
+void Hamiltonian<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals& phi1,
+    LocGridOrbitals& phi2, ReplicatedMatrix& hij, const bool force)
+{
+    applyLocal(phi2, force);
+
+    // phi1.addDotWithNcol2Matrix(*hlphi_, hij);
+    std::cerr << "Not implemented!" << std::endl;
+    MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+}
+
 template <class T>
 void Hamiltonian<T>::addHlocalij(
     T& phi1, T& phi2, ProjectedMatricesInterface* proj_matrices)
@@ -293,3 +305,8 @@ template void Hamiltonian<ExtendedGridOrbitals>::addHlocalij(
     ExtendedGridOrbitals&, ProjectedMatricesInterface* proj_matrices);
 template void Hamiltonian<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals&,
     LocGridOrbitals&, VariableSizeMatrix<sparserow>& mat, const bool force);
+template void Hamiltonian<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals&,
+    LocGridOrbitals&, dist_matrix::DistMatrix<DISTMATDTYPE>& hij,
+    const bool force);
+template void Hamiltonian<LocGridOrbitals>::addHlocal2matrix(
+    LocGridOrbitals&, LocGridOrbitals&, ReplicatedMatrix&, const bool force);

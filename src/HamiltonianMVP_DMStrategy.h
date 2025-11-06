@@ -11,13 +11,13 @@
 #define MGMOL_HamiltonianMVP_DMStrategy_H
 
 #include "DMStrategy.h"
+#include "Electrostatic.h"
 #include "Energy.h"
 #include "HamiltonianMVPSolver.h"
+#include "Ions.h"
 #include "MGmol.h"
 #include "Rho.h"
 
-class Ions;
-class Electrostatic;
 template <class T>
 class MGmol;
 
@@ -32,6 +32,7 @@ private:
     Rho<OrbitalsType>* rho_;
     Energy<OrbitalsType>* energy_;
     Electrostatic* electrostat_;
+    Hamiltonian<OrbitalsType>* hamiltonian_;
     const std::vector<std::vector<int>>& global_indexes_;
     MGmol<OrbitalsType>* mgmol_strategy_;
 
@@ -40,8 +41,8 @@ private:
 public:
     HamiltonianMVP_DMStrategy(MPI_Comm comm, std::ostream& os, Ions& ions,
         Rho<OrbitalsType>* rho, Energy<OrbitalsType>* energy,
-        Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy,
-        OrbitalsType* orbitals);
+        Electrostatic* electrostat, Hamiltonian<OrbitalsType>* hamiltonian,
+        MGmol<OrbitalsType>* mgmol_strategy, OrbitalsType* orbitals);
 
     ~HamiltonianMVP_DMStrategy() override;
 
