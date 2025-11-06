@@ -86,7 +86,6 @@ const T& Hamiltonian<T>::applyLocal(T& phi, const bool force)
 template <class T>
 void Hamiltonian<T>::applyLocal(const int ncolors, T& phi, T& hphi)
 {
-    apply_Hloc_tm_.start();
 #ifdef PRINT_OPERATIONS
     if (onpe0)
         (*MPIdata::sout) << "Hamiltonian<T>::applyLocal() for " << ncolors
@@ -101,6 +100,9 @@ void Hamiltonian<T>::applyLocal(const int ncolors, T& phi, T& hphi)
 
     phi.setDataWithGhosts();
     phi.trade_boundaries();
+
+    // start timer after filling ghost values
+    apply_Hloc_tm_.start();
 
     using memory_space_type = typename T::memory_space_type;
 
