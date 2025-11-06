@@ -66,15 +66,12 @@ class KBPsiMatrixSparse : public KBPsiMatrixInterface
         return (*kbBpsimat_).get_value(gid, st);
     }
 
-    void computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi, const Ion&,
-        SquareSubMatrix<double>& mat) const;
-    void computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi2,
+    // private functions working with single Ion
+    void computeHvnlElementsIon(const KBPsiMatrixSparse* const kbpsi,
+        const Ion&, SquareSubMatrix<double>& mat) const;
+    void computeHvnlElementsIon(const KBPsiMatrixSparse* const kbpsi2,
         const Ion& ion, VariableSizeMatrix<sparserow>& mat) const;
-    void computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi2, const Ion&,
-        ProjectedMatricesInterface*) const;
 
-    void getPsiKBPsiSym(const Ions& ions, VariableSizeMatrix<sparserow>& sm);
-    void getPsiKBPsiSym(const Ion& ion, VariableSizeMatrix<sparserow>& sm);
     template <class OrbitalsType>
     void computeKBpsi(const Ions& ions, OrbitalsType& orbitals,
         const int first_color, const int nb_colors, const bool flag);

@@ -276,8 +276,9 @@ void KBPsiMatrixSparse::scaleWithKBcoeff(const Ions& ions)
 //    potential, and add them into Aij.
 // Note: neglecting the small matrix elements reduces the size of hnlij and thus
 //       reduces the size of communications later on.
-void KBPsiMatrixSparse::computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi2,
-    const Ion& ion, SquareSubMatrix<double>& hnlij) const
+void KBPsiMatrixSparse::computeHvnlElementsIon(
+    const KBPsiMatrixSparse* const kbpsi2, const Ion& ion,
+    SquareSubMatrix<double>& hnlij) const
 {
     assert(ion.here());
 
@@ -346,8 +347,9 @@ void KBPsiMatrixSparse::computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi2,
     }
 }
 
-void KBPsiMatrixSparse::computeHvnlMatrix(const KBPsiMatrixSparse* const kbpsi2,
-    const Ion& ion, VariableSizeMatrix<sparserow>& mat) const
+void KBPsiMatrixSparse::computeHvnlElementsIon(
+    const KBPsiMatrixSparse* const kbpsi2, const Ion& ion,
+    VariableSizeMatrix<sparserow>& mat) const
 {
     assert(ion.here());
 
@@ -451,7 +453,7 @@ SquareSubMatrix<double> KBPsiMatrixSparse::computeHvnlMatrix(
     // (distribution of work AND Hvnlij contributions)
     for (const auto& ion : ions.local_ions())
     {
-        computeHvnlMatrix((KBPsiMatrixSparse*)kbpsi2, *ion, Aij);
+        computeHvnlElementsIon((KBPsiMatrixSparse*)kbpsi2, *ion, Aij);
     }
 
     computeHvnlMatrix_tm_.stop();
@@ -470,7 +472,7 @@ void KBPsiMatrixSparse::computeHvnlMatrix(
     // (distribution of work AND Hvnlij contributions)
     for (const auto& ion : ions.local_ions())
     {
-        computeHvnlMatrix((KBPsiMatrixSparse*)kbpsi2, *ion, mat);
+        computeHvnlElementsIon((KBPsiMatrixSparse*)kbpsi2, *ion, mat);
     }
 
     computeHvnlMatrix_tm_.stop();
@@ -480,63 +482,8 @@ void KBPsiMatrixSparse::computeHvnlMatrix(
     const KBPsiMatrixInterface* const kbpsi2, const Ions& ions,
     ProjectedMatricesInterface* proj_matrices) const
 {
-    computeHvnlMatrix_tm_.start();
-
     SquareSubMatrix<double> hnlij(computeHvnlMatrix(kbpsi2, ions));
     proj_matrices->setLocalMatrixElementsHnl(hnlij);
-
-    computeHvnlMatrix_tm_.stop();
-}
-
-// build elements of matrix <phi_i|Vnl|phi_j> (assumed to be symmetric)
-// assemble resulting matrix in variable sparse matrix format
-void KBPsiMatrixSparse::getPsiKBPsiSym(
-    const Ion& ion, VariableSizeMatrix<sparserow>& sm)
-{
-    std::vector<int> gids;
-    ion.getGidsNLprojs(gids);
-    std::vector<short> kbsigns;
-    ion.getKBsigns(kbsigns);
-
-    const short nprojs = (short)gids.size();
-    for (short i = 0; i < nprojs; i++)
-    {
-        const int gid      = gids[i];
-        const double coeff = (double)kbsigns[i];
-        int* rindex        = (int*)(kbpsimat_->getTableValue(gid));
-        if (rindex == nullptr) continue;
-        const int lrindex = *rindex;
-        const int nnzrow1 = kbpsimat_->nnzrow(lrindex);
-        for (int p1 = 0; p1 < nnzrow1; p1++)
-        {
-            double kbpsielement1 = kbpsimat_->getRowEntry(lrindex, p1);
-            if (fabs(kbpsielement1) <= tolKBpsi) continue;
-            const int st1 = kbpsimat_->getColumnIndex(lrindex, p1);
-            for (int p2 = 0; p2 < nnzrow1; p2++)
-            {
-                double kbpsielement2 = kbpsimat_->getRowEntry(lrindex, p2);
-                if (fabs(kbpsielement2) <= tolKBpsi) continue;
-                const double alpha = coeff * kbpsielement1 * kbpsielement2;
-                /* set hnlij */
-                if (fabs(alpha) > tolKBpsi)
-                {
-                    const int st2 = kbpsimat_->getColumnIndex(lrindex, p2);
-                    sm.insertMatrixElement(st1, st2, alpha, ADD, true);
-                }
-            }
-        }
-    }
-}
-
-void KBPsiMatrixSparse::getPsiKBPsiSym(
-    const Ions& ions, VariableSizeMatrix<sparserow>& sm)
-{
-    // loop over all the ions
-    // parallelization over ions by including only those centered in subdomain
-    for (const auto& ion : ions.local_ions())
-    {
-        getPsiKBPsiSym(*ion, sm);
-    }
 }
 
 template <class T>
@@ -654,20 +601,26 @@ double KBPsiMatrixSparse::getEvnl(
 }
 
 double KBPsiMatrixSparse::getTraceDM(
-    const int gid, const DISTMATDTYPE* const mat_X, const int numst) const
+    const int gid, const double* const mat_X, const int numst) const
 {
+    trace_tm_.start();
+
     double trace = 0.;
 
     int* rindex = (int*)(*kbpsimat_).getTableValue(gid);
-    if (rindex == nullptr) return trace;
+    if (rindex == nullptr)
+    {
+        trace_tm_.stop();
+        return trace;
+    }
 
     const int lrindex = *rindex;
     const int nnzrow1 = kbpsimat_->nnzrow(lrindex);
     for (int p1 = 0; p1 < nnzrow1; p1++)
     {
-        const int st1                  = kbpsimat_->getColumnIndex(lrindex, p1);
-        const double t1                = (*kbpsimat_).getRowEntry(lrindex, p1);
-        const DISTMATDTYPE* const pmat = &mat_X[st1 * numst];
+        const int st1            = kbpsimat_->getColumnIndex(lrindex, p1);
+        const double t1          = (*kbpsimat_).getRowEntry(lrindex, p1);
+        const double* const pmat = &mat_X[st1 * numst];
 
         for (int p2 = 0; p2 < nnzrow1; p2++)
         {
@@ -676,6 +629,8 @@ double KBPsiMatrixSparse::getTraceDM(
             trace += t1 * (*kbpsimat_).getRowEntry(lrindex, p2) * pmat[st2];
         }
     }
+
+    trace_tm_.stop();
 
     return trace;
 }
