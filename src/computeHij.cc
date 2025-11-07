@@ -29,34 +29,6 @@
 #include "SquareSubMatrix2DistMatrix.h"
 
 template <>
-void MGmol<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals& orbitalsi,
-    LocGridOrbitals& orbitalsj, VariableSizeMatrix<sparserow>& mat)
-{
-    computeHij_tm_.start();
-
-#ifdef PRINT_OPERATIONS
-    os_ << " addHlocal2matrix() at line " << __LINE__ << std::endl;
-#endif
-
-    hamiltonian_->addHlocal2matrix(orbitalsi, orbitalsj, mat, true);
-
-    computeHij_tm_.stop();
-}
-
-template <>
-template <>
-void MGmol<LocGridOrbitals>::addHlocal2matrix(
-    LocGridOrbitals& orbitalsi, LocGridOrbitals& orbitalsj, ReplicatedMatrix& H)
-{
-    (void)orbitalsi;
-    (void)orbitalsj;
-    (void)H;
-
-    std::cerr << "Not implemented!" << std::endl;
-    MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
-}
-
-template <>
 template <>
 void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i,
     LocGridOrbitals& orbitals_j, const Ions& ions,
@@ -72,7 +44,7 @@ void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i,
     kbpsi_i->computeHvnlMatrix(kbpsi_j, ions, mat);
 
     // add local Hamiltonian part to phi_i^T*H*phi_j
-    addHlocal2matrix(orbitals_i, orbitals_j, mat);
+    hamiltonian_->addHlocal2matrix(orbitals_i, orbitals_j, mat, true);
 
     // sum matrix elements among processors
     if (consolidate)
@@ -112,7 +84,7 @@ void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i,
     kbpsi->computeHvnlMatrix(ions, mat);
 
     // add local Hamiltonian part to phi^T*H*phi
-    addHlocal2matrix(orbitals_i, orbitals_j, mat);
+    hamiltonian_->addHlocal2matrix(orbitals_i, orbitals_j, mat, true);
 
     // sum matrix elements among processors
     if (consolidate)
@@ -170,7 +142,7 @@ void MGmol<OrbitalsType>::computeHij_private(OrbitalsType& orbitals_i,
     ss2dm->accumulate(submat, hij, 0.);
 
     // add local Hamiltonian part to phi^T*H*phi
-    addHlocal2matrix(orbitals_i, orbitals_j, hij);
+    hamiltonian_->addHlocal2matrix(orbitals_i, orbitals_j, hij, true);
 }
 
 template <>
@@ -225,7 +197,7 @@ void MGmol<OrbitalsType>::computeHij_private(OrbitalsType& orbitals_i,
     ss2dm->accumulate(submat, hij, 0.);
 
     // add local Hamiltonian part to phi^T*H*phi
-    addHlocal2matrix(orbitals_i, orbitals_j, hij);
+    hamiltonian_->addHlocal2matrix(orbitals_i, orbitals_j, hij);
 }
 
 template <class OrbitalsType>
@@ -353,23 +325,6 @@ void MGmol<OrbitalsType>::computeHnlPhiAndAdd2HPhi(Ions& ions,
 }
 
 template <class OrbitalsType>
-template <class MatrixType>
-void MGmol<OrbitalsType>::addHlocal2matrix(
-    OrbitalsType& orbitalsi, OrbitalsType& orbitalsj, MatrixType& mat)
-{
-    computeHij_tm_.start();
-
-#ifdef PRINT_OPERATIONS
-    os_ << " addHlocal2matrix()" << std::endl;
-#endif
-
-    // add local H to mat
-    hamiltonian_->addHlocal2matrix(orbitalsi, orbitalsj, mat);
-
-    computeHij_tm_.stop();
-}
-
-template <class OrbitalsType>
 void MGmol<OrbitalsType>::getHpsiAndTheta(
     Ions& ions, OrbitalsType& phi, OrbitalsType& hphi)
 {
@@ -433,13 +388,3 @@ void MGmol<OrbitalsType>::getHpsiAndTheta(Ions& ions, OrbitalsType& phi,
 
 template class MGmol<LocGridOrbitals>;
 template class MGmol<ExtendedGridOrbitals>;
-
-template void MGmol<ExtendedGridOrbitals>::addHlocal2matrix(
-    ExtendedGridOrbitals& orbitalsi, ExtendedGridOrbitals& orbitalsj,
-    dist_matrix::DistMatrix<double>&);
-template void MGmol<LocGridOrbitals>::addHlocal2matrix(
-    LocGridOrbitals& orbitalsi, LocGridOrbitals& orbitalsj,
-    dist_matrix::DistMatrix<double>&);
-template void MGmol<ExtendedGridOrbitals>::addHlocal2matrix(
-    ExtendedGridOrbitals& orbitalsi, ExtendedGridOrbitals& orbitalsj,
-    ReplicatedMatrix& mat);

@@ -254,12 +254,6 @@ public:
         const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
         ProjectedMatricesInterface*);
 
-    template <class MatrixType>
-    void addHlocal2matrix(
-        OrbitalsType& orbitalsi, OrbitalsType& orbitalsj, MatrixType& mat);
-    void addHlocal2matrix(OrbitalsType& orbitalsi, OrbitalsType& orbitalsj,
-        VariableSizeMatrix<SparseRow>& mat);
-
     void update_pot(const pb::GridFunc<POTDTYPE>& vh_init, const Ions& ions);
     void update_pot(const Ions& ions);
     int quench(OrbitalsType& orbitals, Ions& ions, const int max_steps,

@@ -10,6 +10,7 @@
 #define MGMOL_MVPSOLVER_H
 
 #include "Energy.h"
+#include "Hamiltonian.h"
 #include "MGmol.h"
 #include "Rho.h"
 #include "Timer.h"
@@ -42,6 +43,7 @@ private:
     Rho<OrbitalsType>* rho_;
     Energy<OrbitalsType>* energy_;
     Electrostatic* electrostat_;
+    Hamiltonian<OrbitalsType>* hamiltonian_;
 
     MGmol<OrbitalsType>* mgmol_strategy_;
 
@@ -56,10 +58,9 @@ private:
     void buildTarget_MVP(MatrixType& h11, MatrixType& s11, MatrixType& target);
 
 public:
-    MVPSolver(MPI_Comm comm, std::ostream& os, Ions& ions,
-        Rho<OrbitalsType>* rho, Energy<OrbitalsType>* energy,
-        Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy,
-        const int numst, const double kbT,
+    MVPSolver(MPI_Comm comm, std::ostream& os, Ions& ions, Rho<OrbitalsType>*,
+        Energy<OrbitalsType>*, Electrostatic*, Hamiltonian<OrbitalsType>*,
+        MGmol<OrbitalsType>* mgmol_strategy, const int numst, const double kbT,
         const std::vector<std::vector<int>>& global_indexes,
         const short n_inner_steps, const double mixing, const double tol_de0,
         const bool use_old_dm);
