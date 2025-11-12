@@ -23,7 +23,7 @@ class ProjectedMatricesInterface;
 class Potentials;
 class LocalizationRegions;
 
-template <class T>
+template <class OrbitalsType, typename PDataType>
 class OrbitalsPreconditioning
 {
 private:
@@ -33,15 +33,15 @@ private:
     using memory_space_type = MemorySpace::Host;
 #endif
 
-    std::shared_ptr<Preconditioning<MGPRECONDTYPE>> precond_;
+    std::shared_ptr<Preconditioning<PDataType>> precond_;
 
     // work arrays with preconditioner precision
-    std::shared_ptr<pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>>
+    std::shared_ptr<pb::GridFuncVector<PDataType, memory_space_type>>
         gfv_work1_;
-    std::shared_ptr<pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>>
+    std::shared_ptr<pb::GridFuncVector<PDataType, memory_space_type>>
         gfv_work2_;
 
-    // tmp work array for case ORBDTYPE!=MGPRECONDTYPE
+    // tmp work array for case ORBDTYPE!=PDataType
     std::shared_ptr<pb::GridFuncVector<ORBDTYPE, memory_space_type>> gfv_work3_;
 
     short lap_type_;
@@ -61,16 +61,17 @@ public:
 
     ~OrbitalsPreconditioning();
 
-    void setup(T& orbitals, const short mg_levels, const short lap_type,
-        MasksSet*, const std::shared_ptr<LocalizationRegions>&);
-    void precond_mg(T& orbitals);
+    void setup(OrbitalsType& orbitals, const short mg_levels,
+        const short lap_type, MasksSet*,
+        const std::shared_ptr<LocalizationRegions>&);
+    void precond_mg(OrbitalsType& orbitals);
     void setGamma(const pb::Lap<ORBDTYPE>& lapOper, const Potentials& pot,
         const short mg_levels, ProjectedMatricesInterface* proj_matrices);
     static void printTimers(std::ostream& os);
 };
 
-template <class T>
-Timer OrbitalsPreconditioning<T>::precond_tm_(
+template <class OrbitalsType, typename PDataType>
+Timer OrbitalsPreconditioning<OrbitalsType, PDataType>::precond_tm_(
     "OrbitalsPreconditioning::precond");
 
 #endif

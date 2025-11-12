@@ -100,7 +100,8 @@ private:
 
     std::shared_ptr<HDFrestart> h5f_file_;
 
-    std::shared_ptr<OrbitalsPreconditioning<OrbitalsType>> orbitals_precond_;
+    std::shared_ptr<OrbitalsPreconditioning<OrbitalsType, MGPRECONDTYPE>>
+        orbitals_precond_;
 
     double total_energy_;
     std::shared_ptr<ConstraintSet> constraints_;
