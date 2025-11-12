@@ -23,10 +23,7 @@ template <class T>
 OrbitalsPreconditioning<T>::~OrbitalsPreconditioning()
 {
     assert(is_set_);
-    assert(precond_ != nullptr);
-
-    delete precond_;
-    delete map2masks_;
+    assert(precond_);
 }
 
 template <class T>
@@ -42,42 +39,36 @@ void OrbitalsPreconditioning<T>::setup(T& orbitals, const short mg_levels,
     Mesh* mymesh = Mesh::instance();
     const pb::Grid& mygrid(mymesh->grid());
 
-    precond_ = new Preconditioning<MGPRECONDTYPE>(
+    precond_ = std::make_shared<Preconditioning<MGPRECONDTYPE>>(
         lap_type, mg_levels, mygrid, ct.bcWF);
 
     if (currentMasks != nullptr)
     {
         // set masks in GridFuncVector class
-        map2masks_ = new Map2Masks(currentMasks, lrs->getOverlapGids());
+        map2masks_
+            = std::make_shared<Map2Masks>(currentMasks, lrs->getOverlapGids());
         pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>::setMasks(
-            map2masks_);
+            map2masks_.get());
     }
-    else
-        map2masks_ = nullptr;
 
     precond_->setup(orbitals.getOverlappingGids());
 
     assert(orbitals.chromatic_number()
            == static_cast<int>(orbitals.getOverlappingGids()[0].size()));
 
-    gfv_work1_
-        = std::shared_ptr<pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>>(
-            new pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>(mygrid,
-                ct.bcWF[0], ct.bcWF[1], ct.bcWF[2],
-                orbitals.getOverlappingGids()));
+    gfv_work1_ = std::make_shared<
+        pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>>(mygrid,
+        ct.bcWF[0], ct.bcWF[1], ct.bcWF[2], orbitals.getOverlappingGids());
 
-    gfv_work2_
-        = std::shared_ptr<pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>>(
-            new pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>(mygrid,
-                ct.bcWF[0], ct.bcWF[1], ct.bcWF[2],
-                orbitals.getOverlappingGids()));
+    gfv_work2_ = std::make_shared<
+        pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>>(mygrid,
+        ct.bcWF[0], ct.bcWF[1], ct.bcWF[2], orbitals.getOverlappingGids());
 
     if (!std::is_same<ORBDTYPE, MGPRECONDTYPE>::value)
         gfv_work3_
-            = std::shared_ptr<pb::GridFuncVector<ORBDTYPE, memory_space_type>>(
-                new pb::GridFuncVector<ORBDTYPE, memory_space_type>(mygrid,
-                    ct.bcWF[0], ct.bcWF[1], ct.bcWF[2],
-                    orbitals.getOverlappingGids()));
+            = std::make_shared<pb::GridFuncVector<ORBDTYPE, memory_space_type>>(
+                mygrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2],
+                orbitals.getOverlappingGids());
 
     is_set_ = true;
 
@@ -88,7 +79,7 @@ template <class T>
 void OrbitalsPreconditioning<T>::precond_mg(T& orbitals)
 {
     assert(is_set_);
-    assert(precond_ != nullptr);
+    assert(precond_);
     assert(gamma_ > 0.);
     assert(gfv_work1_);
 
@@ -144,7 +135,7 @@ void OrbitalsPreconditioning<T>::setGamma(const pb::Lap<ORBDTYPE>& lapOper,
     const Potentials& pot, const short mg_levels,
     ProjectedMatricesInterface* proj_matrices)
 {
-    assert(precond_ != nullptr);
+    assert(precond_);
     assert(is_set_);
 
     const double small_eig = proj_matrices->getLowestEigenvalue();

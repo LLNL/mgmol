@@ -33,7 +33,7 @@ private:
     using memory_space_type = MemorySpace::Host;
 #endif
 
-    Preconditioning<MGPRECONDTYPE>* precond_;
+    std::shared_ptr<Preconditioning<MGPRECONDTYPE>> precond_;
 
     // work arrays with preconditioner precision
     std::shared_ptr<pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>>
@@ -54,14 +54,10 @@ private:
     // timers
     static Timer precond_tm_;
 
-    Map2Masks* map2masks_;
+    std::shared_ptr<Map2Masks> map2masks_;
 
 public:
-    OrbitalsPreconditioning()
-    {
-        is_set_  = false;
-        precond_ = nullptr;
-    };
+    OrbitalsPreconditioning() { is_set_ = false; };
 
     ~OrbitalsPreconditioning();
 
