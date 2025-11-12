@@ -19,20 +19,17 @@
 #include "Preconditioning.h"
 #include "ProjectedMatricesInterface.h"
 
-template <class T>
-OrbitalsPreconditioning<T>::~OrbitalsPreconditioning()
+template <class OrbitalsType, typename PDataType>
+OrbitalsPreconditioning<OrbitalsType, PDataType>::~OrbitalsPreconditioning()
 {
     assert(is_set_);
-    assert(precond_ != nullptr);
-
-    delete precond_;
-    delete map2masks_;
+    assert(precond_);
 }
 
-template <class T>
-void OrbitalsPreconditioning<T>::setup(T& orbitals, const short mg_levels,
-    const short lap_type, MasksSet* currentMasks,
-    const std::shared_ptr<LocalizationRegions>& lrs)
+template <class OrbitalsType, typename PDataType>
+void OrbitalsPreconditioning<OrbitalsType, PDataType>::setup(
+    OrbitalsType& orbitals, const short mg_levels, const short lap_type,
+    MasksSet* currentMasks, const std::shared_ptr<LocalizationRegions>& lrs)
 {
     assert(!is_set_);
 
@@ -42,18 +39,17 @@ void OrbitalsPreconditioning<T>::setup(T& orbitals, const short mg_levels,
     Mesh* mymesh = Mesh::instance();
     const pb::Grid& mygrid(mymesh->grid());
 
-    precond_ = new Preconditioning<MGPRECONDTYPE>(
+    precond_ = std::make_shared<Preconditioning<PDataType>>(
         lap_type, mg_levels, mygrid, ct.bcWF);
 
     if (currentMasks != nullptr)
     {
         // set masks in GridFuncVector class
-        map2masks_ = new Map2Masks(currentMasks, lrs->getOverlapGids());
-        pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>::setMasks(
-            map2masks_);
+        map2masks_
+            = std::make_shared<Map2Masks>(currentMasks, lrs->getOverlapGids());
+        pb::GridFuncVector<PDataType, memory_space_type>::setMasks(
+            map2masks_.get());
     }
-    else
-        map2masks_ = nullptr;
 
     precond_->setup(orbitals.getOverlappingGids());
 
@@ -61,34 +57,32 @@ void OrbitalsPreconditioning<T>::setup(T& orbitals, const short mg_levels,
            == static_cast<int>(orbitals.getOverlappingGids()[0].size()));
 
     gfv_work1_
-        = std::shared_ptr<pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>>(
-            new pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>(mygrid,
-                ct.bcWF[0], ct.bcWF[1], ct.bcWF[2],
-                orbitals.getOverlappingGids()));
+        = std::make_shared<pb::GridFuncVector<PDataType, memory_space_type>>(
+            mygrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2],
+            orbitals.getOverlappingGids());
 
     gfv_work2_
-        = std::shared_ptr<pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>>(
-            new pb::GridFuncVector<MGPRECONDTYPE, memory_space_type>(mygrid,
-                ct.bcWF[0], ct.bcWF[1], ct.bcWF[2],
-                orbitals.getOverlappingGids()));
+        = std::make_shared<pb::GridFuncVector<PDataType, memory_space_type>>(
+            mygrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2],
+            orbitals.getOverlappingGids());
 
-    if (!std::is_same<ORBDTYPE, MGPRECONDTYPE>::value)
+    if (sizeof(ORBDTYPE) != sizeof(PDataType))
         gfv_work3_
-            = std::shared_ptr<pb::GridFuncVector<ORBDTYPE, memory_space_type>>(
-                new pb::GridFuncVector<ORBDTYPE, memory_space_type>(mygrid,
-                    ct.bcWF[0], ct.bcWF[1], ct.bcWF[2],
-                    orbitals.getOverlappingGids()));
+            = std::make_shared<pb::GridFuncVector<ORBDTYPE, memory_space_type>>(
+                mygrid, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2],
+                orbitals.getOverlappingGids());
 
     is_set_ = true;
 
     assert(gfv_work2_);
 }
 
-template <class T>
-void OrbitalsPreconditioning<T>::precond_mg(T& orbitals)
+template <class OrbitalsType, typename PDataType>
+void OrbitalsPreconditioning<OrbitalsType, PDataType>::precond_mg(
+    OrbitalsType& orbitals)
 {
     assert(is_set_);
-    assert(precond_ != nullptr);
+    assert(precond_);
     assert(gamma_ > 0.);
     assert(gfv_work1_);
 
@@ -98,7 +92,7 @@ void OrbitalsPreconditioning<T>::precond_mg(T& orbitals)
     precond_tm_.start();
 
     // initialize gfv_work2_ with data from orbitals
-    if (std::is_same<ORBDTYPE, MGPRECONDTYPE>::value)
+    if (sizeof(ORBDTYPE) == sizeof(PDataType))
     {
         orbitals.setDataWithGhosts(gfv_work2_.get());
     }
@@ -113,12 +107,12 @@ void OrbitalsPreconditioning<T>::precond_mg(T& orbitals)
     }
 
     gfv_work1_->resetData();
-    gfv_work1_->axpy((MGPRECONDTYPE)gamma_, *gfv_work2_);
+    gfv_work1_->axpy((PDataType)gamma_, *gfv_work2_);
 
     // block-implemented preconditioner
     precond_->mg(*gfv_work1_, *gfv_work2_, lap_type_, 0);
 
-    if (std::is_same<ORBDTYPE, MGPRECONDTYPE>::value)
+    if (sizeof(ORBDTYPE) == sizeof(PDataType))
     {
         orbitals.setPsi(*gfv_work1_);
     }
@@ -133,18 +127,19 @@ void OrbitalsPreconditioning<T>::precond_mg(T& orbitals)
 
 #ifdef PRINT_OPERATIONS
     if (onpe0)
-        (*MPIdata::sout) << "OrbitalsPreconditioning<T>::precond_mg() done"
+        (*MPIdata::sout) << "OrbitalsPreconditioning<OrbitalsType,PDataType>::"
+                            "precond_mg() done"
                          << endl;
 #endif
     precond_tm_.stop();
 }
 
-template <class T>
-void OrbitalsPreconditioning<T>::setGamma(const pb::Lap<ORBDTYPE>& lapOper,
-    const Potentials& pot, const short mg_levels,
-    ProjectedMatricesInterface* proj_matrices)
+template <class OrbitalsType, typename PDataType>
+void OrbitalsPreconditioning<OrbitalsType, PDataType>::setGamma(
+    const pb::Lap<ORBDTYPE>& lapOper, const Potentials& pot,
+    const short mg_levels, ProjectedMatricesInterface* proj_matrices)
 {
-    assert(precond_ != nullptr);
+    assert(precond_);
     assert(is_set_);
 
     const double small_eig = proj_matrices->getLowestEigenvalue();
@@ -167,11 +162,12 @@ void OrbitalsPreconditioning<T>::setGamma(const pb::Lap<ORBDTYPE>& lapOper,
 #endif
 }
 
-template <class T>
-void OrbitalsPreconditioning<T>::printTimers(std::ostream& os)
+template <class OrbitalsType, typename PDataType>
+void OrbitalsPreconditioning<OrbitalsType, PDataType>::printTimers(
+    std::ostream& os)
 {
     precond_tm_.print(os);
 }
 
-template class OrbitalsPreconditioning<LocGridOrbitals>;
-template class OrbitalsPreconditioning<ExtendedGridOrbitals>;
+template class OrbitalsPreconditioning<LocGridOrbitals, MGPRECONDTYPE>;
+template class OrbitalsPreconditioning<ExtendedGridOrbitals, MGPRECONDTYPE>;

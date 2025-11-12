@@ -572,7 +572,8 @@ int MGmol<OrbitalsType>::quench(OrbitalsType& orbitals, Ions& ions,
         applyAOMMprojection(orbitals);
     }
 
-    orbitals_precond_.reset(new OrbitalsPreconditioning<OrbitalsType>());
+    orbitals_precond_.reset(
+        new OrbitalsPreconditioning<OrbitalsType, MGPRECONDTYPE>());
     orbitals_precond_->setup(
         orbitals, ct.getMGlevels(), ct.lap_type, currentMasks_.get(), lrs_);
 
