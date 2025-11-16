@@ -141,7 +141,7 @@ void Hamiltonian<T>::applyLocal(const int ncolors, T& phi, T& hphi)
         for (int i = 0; i < ncolors; i++)
         {
             using memory_space_type   = typename T::memory_space_type;
-            ORBDTYPE* ihphi           = hphi.getPsi(i);
+            auto ihphi                = hphi.getPsi(i);
             unsigned int const size   = hphi.getNumpt();
             ORBDTYPE* ihphi_host_view = MemorySpace::Memory<ORBDTYPE,
                 memory_space_type>::allocate_host_view(size);
@@ -221,6 +221,8 @@ template <>
 void Hamiltonian<LocGridOrbitals>::addHlocal2matrix(LocGridOrbitals& phi1,
     LocGridOrbitals& phi2, ReplicatedMatrix& hij, const bool force)
 {
+    (void)hij;
+
     applyLocal(phi2, force);
 
     // phi1.addDotWithNcol2Matrix(*hlphi_, hij);

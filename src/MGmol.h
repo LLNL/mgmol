@@ -321,10 +321,17 @@ public:
     void projectOutKernel(OrbitalsType& phi);
 
     void precond_mg(OrbitalsType& orbitals);
-    void setGamma(const pb::Lap<ORBDTYPE>& lapOper, const Potentials& pot);
+    double computeResidual(OrbitalsType& orbitals, OrbitalsType& work_orbitals,
+        Ions& ions, OrbitalsType& res, const KBPsiMatrixSparse* const kbpsi,
+        const bool print_residual, const bool norm_res);
     double computeResidual(OrbitalsType& orbitals, OrbitalsType& work_orbitals,
         Ions& ions, OrbitalsType& res, const bool print_residual,
-        const bool norm_res);
+        const bool norm_res)
+    {
+        return computeResidual(orbitals, work_orbitals, ions, res,
+            g_kbpsi_.get(), print_residual, norm_res);
+    }
+
     void applyAOMMprojection(OrbitalsType&);
     void force(OrbitalsType& orbitals, Ions& ions)
     {

@@ -239,7 +239,7 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
             // compute h11 for the current potential by adding local part to
             // nonlocal components
             MatrixType h11(h11_nl);
-            hamiltonian_->addHlocal2matrix(orbitals, orbitals, h11);
+            hamiltonian_->addHlocal2matrix(orbitals, orbitals, h11, false);
 
             current_proj_mat->assignH(h11);
             current_proj_mat->setHB2H();
@@ -317,10 +317,9 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
                     energy_->saveVofRho();
 
                     // update h11
-                    {
-                        h11 = h11_nl;
-                        hamiltonian_->addHlocal2matrix(orbitals, orbitals, h11);
-                    }
+                    h11 = h11_nl;
+                    hamiltonian_->addHlocal2matrix(
+                        orbitals, orbitals, h11, false);
 
                     proj_mat_work_->assignH(h11);
                     proj_mat_work_->setHB2H();
