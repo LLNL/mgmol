@@ -197,7 +197,7 @@ void MGmol<OrbitalsType>::computeHij_private(OrbitalsType& orbitals_i,
     ss2dm->accumulate(submat, hij, 0.);
 
     // add local Hamiltonian part to phi^T*H*phi
-    hamiltonian_->addHlocal2matrix(orbitals_i, orbitals_j, hij);
+    hamiltonian_->addHlocal2matrix(orbitals_i, orbitals_j, hij, false);
 }
 
 template <class OrbitalsType>
@@ -325,13 +325,6 @@ void MGmol<OrbitalsType>::computeHnlPhiAndAdd2HPhi(Ions& ions,
 }
 
 template <class OrbitalsType>
-void MGmol<OrbitalsType>::getHpsiAndTheta(
-    Ions& ions, OrbitalsType& phi, OrbitalsType& hphi)
-{
-    getHpsiAndTheta(ions, phi, hphi, g_kbpsi_.get());
-}
-
-template <class OrbitalsType>
 void MGmol<OrbitalsType>::getHpsiAndTheta(Ions& ions, OrbitalsType& phi,
     OrbitalsType& hphi, const KBPsiMatrixSparse* const kbpsi)
 {
@@ -345,7 +338,7 @@ void MGmol<OrbitalsType>::getHpsiAndTheta(Ions& ions, OrbitalsType& phi,
     os_ << " getHpsiAndTheta" << std::endl;
 #endif
 
-    hphi.assign(hamiltonian_->applyLocal(phi));
+    hamiltonian_->applyLocal(phi.chromatic_number(), phi, hphi);
 
     // Compute "nstates" columns of matrix
     //  Hij = phi**T * H_loc * phi  and save in sh
@@ -370,7 +363,13 @@ void MGmol<OrbitalsType>::getHpsiAndTheta(Ions& ions, OrbitalsType& phi,
         kbpsi->computeHvnlMatrix(ions, proj_matrices_.get());
 
         // add local part of H to sh
-        hamiltonian_->addHlocalij(phi, proj_matrices_.get());
+        SquareLocalMatrices<MATDTYPE, MemorySpace::Host> slm(
+            phi.subdivx(), phi.chromatic_number());
+
+        phi.computeLocalProduct(hphi, slm);
+        proj_matrices_->setLocalMatrixElementsHl(slm);
+
+        proj_matrices_->consolidateH();
 
         energy_->saveVofRho();
 

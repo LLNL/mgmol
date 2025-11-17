@@ -1193,8 +1193,6 @@ double MGmol<OrbitalsType>::computeResidual(OrbitalsType& phi,
     const bool norm_res)
 
 {
-    assert(orbitals.getIterativeIndex() >= 0);
-
     comp_res_tm_.start();
     // os_<<"computeResidual()"<<endl;
 
