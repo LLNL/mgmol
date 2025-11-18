@@ -424,7 +424,7 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
             os_ << "DavidsonSolver -> Iteration " << outer_it << std::endl;
             os_ << "###########################" << std::endl;
         }
-        OrbitalsType tmp_orbitals("Davidson_tmp", orbitals);
+        OrbitalsType hphi("Davidson_hphi", orbitals);
         MatrixType dm2Ninit("dm2N", 2 * numst_, 2 * numst_);
         std::vector<DISTMATDTYPE> eval(2 * numst_);
         MatrixType evect("EigVect", 2 * numst_, 2 * numst_);
@@ -485,9 +485,9 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
                         orbitals.getProjMatrices());
                 assert(projmatrices != nullptr);
 
-                // get H*psi stored in work_orbitals
+                // get H*phi stored in hphi
                 // h11 computed at the same time
-                mgmol_strategy_->computePrecondResidual(orbitals, tmp_orbitals,
+                mgmol_strategy_->computePrecondResidual(orbitals, hphi,
                     work_orbitals, ions_, &kbpsi_1, false, false);
 
                 projmatrices->setHB2H();
@@ -525,15 +525,19 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
             else
             {
                 h11 = h11nl;
-                hamiltonian_->addHlocal2matrix(orbitals, orbitals, h11);
+                hamiltonian_->applyLocal(numst_, orbitals, hphi);
+                orbitals.addDotWithNcol2Matrix(hphi, h11);
             }
 
-            // update h22, h12 and h21
-            h22 = h22nl;
-            hamiltonian_->addHlocal2matrix(work_orbitals, work_orbitals, h22);
+            // compute H*P and store in hphi
+            hamiltonian_->applyLocal(numst_, work_orbitals, hphi);
 
+            // update h22, h12 and h21
             h12 = h12nl;
-            hamiltonian_->addHlocal2matrix(orbitals, work_orbitals, h12);
+            orbitals.addDotWithNcol2Matrix(hphi, h12);
+
+            h22 = h22nl;
+            work_orbitals.addDotWithNcol2Matrix(hphi, h22);
 
             h21.transpose(1., h12, 0.);
 
@@ -606,17 +610,20 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
 
                 // update h11, h22, h12, and h21
                 h11 = h11nl;
-                hamiltonian_->addHlocal2matrix(orbitals, orbitals, h11);
+                hamiltonian_->applyLocal(numst_, orbitals, hphi);
+                orbitals.addDotWithNcol2Matrix(hphi, h11);
+
+                hamiltonian_->applyLocal(numst_, work_orbitals, hphi);
 
                 h22 = h22nl;
-                hamiltonian_->addHlocal2matrix(
-                    work_orbitals, work_orbitals, h22);
+                work_orbitals.addDotWithNcol2Matrix(hphi, h22);
 
                 h12 = h12nl;
-                hamiltonian_->addHlocal2matrix(orbitals, work_orbitals, h12);
+                orbitals.addDotWithNcol2Matrix(hphi, h12);
 
                 h21.transpose(1., h12, 0.);
 
+                // assemble 2N x 2N Hamiltonian
                 proj_mat2N_->assignBlocksH(h11, h12, h21, h22);
                 proj_mat2N_->setHB2H();
 
