@@ -151,7 +151,7 @@ int HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>::solve(
         // compute new h11 for the current potential by adding local part to
         // nonlocal components
         h11 = h11nl;
-        hamiltonian_->addHlocal2matrix(orbitals, orbitals, h11);
+        hamiltonian_->addHlocal2matrix(orbitals, orbitals, h11, false);
 
         projmatrices->assignH(h11);
         projmatrices->setHB2H();
@@ -179,7 +179,7 @@ int HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>::solve(
 
         // update H and compute energy at midpoint
         h11 = h11nl;
-        hamiltonian_->addHlocal2matrix(orbitals, orbitals, h11);
+        hamiltonian_->addHlocal2matrix(orbitals, orbitals, h11, false);
 
         projmatrices->assignH(h11);
         projmatrices->setHB2H();
@@ -214,7 +214,7 @@ int HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>::solve(
 
         // update H with new potential
         h11 = h11nl;
-        hamiltonian_->addHlocal2matrix(orbitals, orbitals, h11);
+        hamiltonian_->addHlocal2matrix(orbitals, orbitals, h11, false);
 
         projmatrices->assignH(h11);
         projmatrices->setHB2H();
@@ -270,7 +270,7 @@ int HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>::solve(
 
                 // update H
                 h11 = h11nl;
-                hamiltonian_->addHlocal2matrix(orbitals, orbitals, h11);
+                hamiltonian_->addHlocal2matrix(orbitals, orbitals, h11, false);
 
                 projmatrices->assignH(h11);
                 projmatrices->setHB2H();

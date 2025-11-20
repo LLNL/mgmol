@@ -1171,33 +1171,28 @@ void MGmol<OrbitalsType>::projectOutKernel(OrbitalsType& phi)
 }
 
 template <class OrbitalsType>
-void MGmol<OrbitalsType>::setGamma(
-    const pb::Lap<ORBDTYPE>& lapOper, const Potentials& pot)
+void MGmol<OrbitalsType>::precond_mg(OrbitalsType& phi)
 {
     assert(orbitals_precond_);
 
     Control& ct = *(Control::instance());
 
-    orbitals_precond_->setGamma(
-        lapOper, pot, ct.getMGlevels(), proj_matrices_.get());
-}
+    Potentials& pot            = hamiltonian_->potential();
+    pb::Lap<ORBDTYPE>* lapOper = hamiltonian_->lapOper();
 
-template <class OrbitalsType>
-void MGmol<OrbitalsType>::precond_mg(OrbitalsType& phi)
-{
-    assert(orbitals_precond_);
+    orbitals_precond_->setGamma(
+        *lapOper, pot, ct.getMGlevels(), proj_matrices_.get());
 
     orbitals_precond_->precond_mg(phi);
 }
 
 template <class OrbitalsType>
-double MGmol<OrbitalsType>::computeResidual(OrbitalsType& orbitals,
-    OrbitalsType& work_orbitals, Ions& ions, OrbitalsType& res,
-    const bool print_residual, const bool norm_res)
+double MGmol<OrbitalsType>::computeResidual(OrbitalsType& phi,
+    OrbitalsType& hphi, Ions& ions, OrbitalsType& res,
+    const KBPsiMatrixSparse* const kbpsi, const bool print_residual,
+    const bool norm_res)
 
 {
-    assert(orbitals.getIterativeIndex() >= 0);
-
     comp_res_tm_.start();
     // os_<<"computeResidual()"<<endl;
 
@@ -1205,19 +1200,14 @@ double MGmol<OrbitalsType>::computeResidual(OrbitalsType& orbitals,
 
     proj_matrices_->computeInvB();
 
-    Potentials& pot          = hamiltonian_->potential();
-    pb::Lap<ORBDTYPE>* lapop = hamiltonian_->lapOper();
-
-    setGamma(*lapop, pot);
-
-    // get H*psi stored in work_orbitals.psi
+    // get H*phi stored in hphi
     // and psi^T H psi in Hij
-    getHpsiAndTheta(ions, orbitals, work_orbitals);
+    getHpsiAndTheta(ions, phi, hphi, kbpsi);
 
-    double norm2Res = computeConstraintResidual(
-        orbitals, work_orbitals, res, print_residual, norm_res);
+    double norm2Res
+        = computeConstraintResidual(phi, hphi, res, print_residual, norm_res);
 
-    if (ct.isSpreadFunctionalEnergy()) addResidualSpreadPenalty(orbitals, res);
+    if (ct.isSpreadFunctionalEnergy()) addResidualSpreadPenalty(phi, res);
 
     comp_res_tm_.stop();
 
@@ -1344,19 +1334,8 @@ double MGmol<OrbitalsType>::computePrecondResidual(OrbitalsType& phi,
 {
     Control& ct = *(Control::instance());
 
-    proj_matrices_->computeInvB();
-
-    Potentials& pot          = hamiltonian_->potential();
-    pb::Lap<ORBDTYPE>* lapop = hamiltonian_->lapOper();
-
-    setGamma(*lapop, pot);
-
-    // get H*psi stored in hphi
-    // and psi^T H psi in Hij
-    getHpsiAndTheta(ions, phi, hphi, kbpsi);
-
-    double norm2Res
-        = computeConstraintResidual(phi, hphi, res, print_residual, norm_res);
+    double norm2Res = computeResidual(
+        phi, hphi, ions, res, kbpsi, print_residual, norm_res);
 
     if (ct.withPreconditioner())
     {
@@ -1365,8 +1344,6 @@ double MGmol<OrbitalsType>::computePrecondResidual(OrbitalsType& phi,
         // -> res
         orbitals_precond_->precond_mg(res);
     }
-
-    // if( ct.isSpreadFunctionalActive() )addResidualSpreadPenalty(phi,res);
 
     return norm2Res;
 }

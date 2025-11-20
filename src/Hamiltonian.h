@@ -44,7 +44,7 @@ public:
 
     template <class MatrixType>
     void addHlocal2matrix(OrbitalsType& orbitals1, OrbitalsType& orbitals2,
-        MatrixType& mat, const bool force = false);
+        MatrixType& mat, const bool force);
     void addHlocalij(OrbitalsType& orbitals1, OrbitalsType& orbitals2,
         ProjectedMatricesInterface*);
     void addHlocalij(OrbitalsType& orbitals1, ProjectedMatricesInterface*);
