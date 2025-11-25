@@ -89,8 +89,8 @@ void Hartree_CG<T>::solve(
     //       poisson_solver_->solve(*Poisson::vh_, work_rho);
     //    }
 
-    double residual_reduction = poisson_solver_->getResidualReduction();
-    double final_residual     = poisson_solver_->getFinalResidual();
+    const double residual_reduction = poisson_solver_->getResidualReduction();
+    const double final_residual     = poisson_solver_->getFinalResidual();
     const bool large_residual
         = (residual_reduction > 1.e-3 || final_residual > 1.e-3);
 
@@ -105,7 +105,7 @@ void Hartree_CG<T>::solve(
 
     PoissonInterface::poisson_tm_.stop();
 
-    assert(residual_reduction == residual_reduction);
+    assert(!std::isnan(residual_reduction));
 }
 
 template class Hartree_CG<pb::Laph2<POTDTYPE>>;

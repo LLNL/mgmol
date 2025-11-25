@@ -7,28 +7,31 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#ifndef _HARTREE_CG_H_
-#define _HARTREE_CG_H_
+#ifndef MGMOL_HARTREE_CG_H
+#define MGMOL_HARTREE_CG_H
 
 #include "PCGSolver.h"
 #include "Poisson.h"
 
-template <class T>
+template <class OperatorType>
 class Hartree_CG : public Poisson
 {
 private:
-    PCGSolver<T, POTDTYPE>* poisson_solver_;
+    std::shared_ptr<PCGSolver<OperatorType, POTDTYPE, POISSONPRECONDTYPE>>
+        poisson_solver_;
 
 public:
     // Constructor
     Hartree_CG(const pb::Grid& grid, const short bc[3]) : Poisson(grid, bc)
     {
-        T oper(Poisson::grid_);
-        poisson_solver_ = new PCGSolver<T, POTDTYPE>(oper, bc[0], bc[1], bc[2]);
+        OperatorType oper(Poisson::grid_);
+        poisson_solver_ = std::make_shared<
+            PCGSolver<OperatorType, POTDTYPE, POISSONPRECONDTYPE>>(
+            oper, bc[0], bc[1], bc[2]);
     };
 
     // Destructor
-    ~Hartree_CG() override { delete poisson_solver_; }
+    ~Hartree_CG() override {}
 
     void setup(const short nu1, const short nu2, const short max_sweeps,
         const double tol, const short max_nlevels,

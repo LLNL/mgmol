@@ -50,7 +50,7 @@ public:
     };
 
     // Destructor
-    ~Poisson() override { delete vh_; };
+    virtual ~Poisson() override { delete vh_; };
 
     virtual void setup(const short nu1, const short nu2, const short max_sweeps,
         const double tol, const short max_nlevels,
