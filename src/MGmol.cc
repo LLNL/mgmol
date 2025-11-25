@@ -1342,7 +1342,7 @@ double MGmol<OrbitalsType>::computePrecondResidual(OrbitalsType& phi,
         // PRECONDITIONING
         // compute the preconditioned steepest descent direction
         // -> res
-        orbitals_precond_->precond_mg(res);
+        precond_mg(res);
     }
 
     return norm2Res;
