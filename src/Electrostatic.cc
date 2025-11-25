@@ -319,8 +319,7 @@ void Electrostatic::computeVh(const Ions& ions, Rho<T>& rho, Potentials& pot)
         eepsilon_ = 0.;
     }
 
-    iterative_index_ = pot.getIterativeIndex();
-    iterative_index_++;
+    iterative_index_ = rho.getIterativeIndex();
     pot.setVh(poisson_solver_->vh(), iterative_index_);
 
     if (diel_flag_)
