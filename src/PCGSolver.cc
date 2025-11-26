@@ -265,15 +265,21 @@ bool PCGSolver<OperatorType, ScalarDataType, PrecondDataType>::solve(
     return converged;
 }
 
+template class PCGSolver<pb::Laph4MP<double>, double, double>;
 template class PCGSolver<pb::Laph4MP<double>, double, float>;
 template class PCGSolver<pb::Laph4MP<float>, float, float>;
+template class PCGSolver<pb::Laph4M<double>, double, double>;
 template class PCGSolver<pb::Laph4M<double>, double, float>;
 template class PCGSolver<pb::Laph4M<float>, float, float>;
+template class PCGSolver<pb::Laph4<double>, double, double>;
 template class PCGSolver<pb::Laph4<double>, double, float>;
 template class PCGSolver<pb::Laph4<float>, float, float>;
+template class PCGSolver<pb::Laph2<double>, double, double>;
 template class PCGSolver<pb::Laph2<double>, double, float>;
 template class PCGSolver<pb::Laph2<float>, float, float>;
+template class PCGSolver<pb::Laph6<double>, double, double>;
 template class PCGSolver<pb::Laph6<double>, double, float>;
 template class PCGSolver<pb::Laph6<float>, float, float>;
+template class PCGSolver<pb::Laph8<double>, double, double>;
 template class PCGSolver<pb::Laph8<double>, double, float>;
 template class PCGSolver<pb::Laph8<float>, float, float>;

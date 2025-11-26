@@ -34,6 +34,4 @@ typedef double POTDTYPE;
 
 typedef double KBPROJDTYPE;
 
-typedef float POISSONPRECONDTYPE;
-
 #endif

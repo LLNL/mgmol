@@ -13,11 +13,13 @@
 #include "PCGSolver.h"
 #include "Poisson.h"
 
-template <class OperatorType>
+#include <memory>
+
+template <class OperatorType, typename ScalarType, typename PDataType>
 class Hartree_CG : public Poisson
 {
 private:
-    std::shared_ptr<PCGSolver<OperatorType, POTDTYPE, POISSONPRECONDTYPE>>
+    std::shared_ptr<PCGSolver<OperatorType, ScalarType, PDataType>>
         poisson_solver_;
 
 public:
@@ -25,9 +27,9 @@ public:
     Hartree_CG(const pb::Grid& grid, const short bc[3]) : Poisson(grid, bc)
     {
         OperatorType oper(Poisson::grid_);
-        poisson_solver_ = std::make_shared<
-            PCGSolver<OperatorType, POTDTYPE, POISSONPRECONDTYPE>>(
-            oper, bc[0], bc[1], bc[2]);
+        poisson_solver_
+            = std::make_shared<PCGSolver<OperatorType, ScalarType, PDataType>>(
+                oper, bc[0], bc[1], bc[2]);
     };
 
     // Destructor
@@ -41,8 +43,8 @@ public:
         poisson_solver_->setup(nu1, nu2, max_sweeps, tol, max_nlevels);
     }
 
-    void solve(const pb::GridFunc<RHODTYPE>& rho,
-        const pb::GridFunc<RHODTYPE>& rhoc) override;
+    void solve(const pb::GridFunc<ScalarType>& rho,
+        const pb::GridFunc<ScalarType>& rhoc) override;
 };
 
 #endif
