@@ -44,6 +44,7 @@ Control::Control()
     poisson_pc_nu1         = 2;
     poisson_pc_nu2         = 2;
     poisson_pc_nlev        = 10;
+    poisson_pc_data_       = 32;
     coloring_algo_         = 0;
     maxDistanceAtomicInfo_ = 8.;
     spread_factor          = 2.;
@@ -331,7 +332,7 @@ void Control::sync(void)
     if (onpe0 && verbose > 0)
         (*MPIdata::sout) << "Control::sync()" << std::endl;
     // pack
-    const short size_short_buffer = 91;
+    const short size_short_buffer = 92;
     short* short_buffer           = new short[size_short_buffer];
     if (mype_ == 0)
     {
@@ -421,6 +422,7 @@ void Control::sync(void)
         short_buffer[88] = hartree_reset_;
         short_buffer[89] = MD_last_step_;
         short_buffer[90] = (short)static_cast<int>(poisson_lap_type_);
+        short_buffer[91] = poisson_pc_data_;
     }
     else
     {
@@ -634,6 +636,7 @@ void Control::sync(void)
     hartree_reset_                   = short_buffer[88];
     MD_last_step_                    = short_buffer[89];
     poisson_lap_type_ = static_cast<PoissonFDtype>(short_buffer[90]);
+    poisson_pc_data_  = short_buffer[91];
 
     numst    = int_buffer[0];
     nel_     = int_buffer[1];
@@ -1406,14 +1409,15 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         bool poisson_reset = vm["Poisson.reset"].as<bool>();
         hartree_reset_     = poisson_reset ? 1 : 0;
 
-        poisson_pc_nu1  = vm["Poisson.nu1"].as<short>();
-        poisson_pc_nu2  = vm["Poisson.nu2"].as<short>();
-        vh_init         = vm["Poisson.max_steps_initial"].as<short>();
-        vh_its          = vm["Poisson.max_steps"].as<short>();
-        poisson_pc_nlev = vm["Poisson.max_levels"].as<short>();
-        rho0_           = vm["Poisson.rho0"].as<float>();
-        drho0_          = vm["Poisson.beta"].as<float>();
-        e0_             = vm["Poisson.e0"].as<float>();
+        poisson_pc_nu1   = vm["Poisson.nu1"].as<short>();
+        poisson_pc_nu2   = vm["Poisson.nu2"].as<short>();
+        vh_init          = vm["Poisson.max_steps_initial"].as<short>();
+        vh_its           = vm["Poisson.max_steps"].as<short>();
+        poisson_pc_nlev  = vm["Poisson.max_levels"].as<short>();
+        rho0_            = vm["Poisson.rho0"].as<float>();
+        drho0_           = vm["Poisson.beta"].as<float>();
+        e0_              = vm["Poisson.e0"].as<float>();
+        poisson_pc_data_ = vm["Poisson.precond_precision"].as<short>();
 
         str = vm["ProjectedMatrices.solver"].as<std::string>();
         if (str.compare("short_sighted") == 0) short_sighted = 1;

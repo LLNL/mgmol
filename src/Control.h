@@ -403,6 +403,11 @@ public:
     short poisson_pc_nu2;
     short poisson_pc_nlev;
 
+    /*!
+     * Poisson preconditioner precision (32 or 64)
+     */
+    short poisson_pc_data_;
+
     PoissonFDtype poisson_lap_type_;
 
     short lap_type;

@@ -12,8 +12,8 @@
 #include <iomanip>
 #include <iostream>
 
-template <class T, typename ScalarType>
-void PCGSolver<T, ScalarType>::clear()
+template <class OperatorType, typename ScalarDataType, typename PrecondDataType>
+void PCGSolver<OperatorType, ScalarDataType, PrecondDataType>::clear()
 {
     for (short i = 0; i < (short)precond_oper_.size(); i++)
     {
@@ -34,7 +34,7 @@ void PCGSolver<T, ScalarType>::clear()
         assert(gf_newv_[i] != nullptr);
         delete gf_newv_[i];
     }
-    // delete grids after pb::GridFunc<ScalarType> objects since those
+    // delete grids after pb::GridFunc<ScalarDataType> objects since those
     // have data members references to grids
     for (short i = 0; i < (short)grid_.size(); i++)
     {
@@ -47,10 +47,10 @@ void PCGSolver<T, ScalarType>::clear()
     gf_newv_.clear();
 }
 
-template <class T, typename ScalarType>
-void PCGSolver<T, ScalarType>::setupPrecon()
+template <class OperatorType, typename ScalarDataType, typename PrecondDataType>
+void PCGSolver<OperatorType, ScalarDataType, PrecondDataType>::setupPrecon()
 {
-    // check if precon is already setup
+    // check if preconditioner is already setup
     // Assumes operator does not change, hence
     // a single setup is sufficient
     if (is_precond_setup_) return;
@@ -60,13 +60,12 @@ void PCGSolver<T, ScalarType>::setupPrecon()
     grid_.push_back(mygrid);
     const short nghosts = mygrid->ghost_pt();
 
-    pb::Lap<POISSONPRECONDTYPE>* myoper
-        = LapFactory<POISSONPRECONDTYPE>::createLap(*grid_[0], lap_type_);
+    pb::Lap<PrecondDataType>* myoper
+        = LapFactory<PrecondDataType>::createLap(*grid_[0], precond_lap_type_);
     precond_oper_.push_back(myoper);
 
-    pb::GridFunc<POISSONPRECONDTYPE>* gf_work
-        = new pb::GridFunc<POISSONPRECONDTYPE>(
-            *grid_[0], bc_[0], bc_[1], bc_[2]);
+    pb::GridFunc<PrecondDataType>* gf_work
+        = new pb::GridFunc<PrecondDataType>(*grid_[0], bc_[0], bc_[1], bc_[2]);
     gf_work_.push_back(gf_work);
 
     // coarse levels
@@ -89,20 +88,20 @@ void PCGSolver<T, ScalarType>::setupPrecon()
         pb::Grid* coarse_grid = new pb::Grid(mygrid->coarse_grid());
         grid_.push_back(coarse_grid);
 
-        pb::Lap<POISSONPRECONDTYPE>* myoper
-            = LapFactory<POISSONPRECONDTYPE>::createLap(*coarse_grid, 1);
+        pb::Lap<PrecondDataType>* myoper
+            = LapFactory<PrecondDataType>::createLap(*coarse_grid, 1);
         precond_oper_.push_back(myoper);
 
-        gf_work = new pb::GridFunc<POISSONPRECONDTYPE>(
+        gf_work = new pb::GridFunc<PrecondDataType>(
             *coarse_grid, bc_[0], bc_[1], bc_[2]);
         gf_work_.push_back(gf_work);
 
-        pb::GridFunc<POISSONPRECONDTYPE>* gf_rcoarse
-            = new pb::GridFunc<POISSONPRECONDTYPE>(
+        pb::GridFunc<PrecondDataType>* gf_rcoarse
+            = new pb::GridFunc<PrecondDataType>(
                 *coarse_grid, bc_[0], bc_[1], bc_[2]);
         gf_rcoarse_.push_back(gf_rcoarse);
-        pb::GridFunc<POISSONPRECONDTYPE>* gf_newv
-            = new pb::GridFunc<POISSONPRECONDTYPE>(
+        pb::GridFunc<PrecondDataType>* gf_newv
+            = new pb::GridFunc<PrecondDataType>(
                 *coarse_grid, bc_[0], bc_[1], bc_[2]);
         gf_newv_.push_back(gf_newv);
 
@@ -112,10 +111,10 @@ void PCGSolver<T, ScalarType>::setupPrecon()
 }
 
 // MG V-cycle with no mask
-template <class T, typename ScalarType>
-void PCGSolver<T, ScalarType>::preconSolve(
-    pb::GridFunc<POISSONPRECONDTYPE>& gf_v,
-    const pb::GridFunc<POISSONPRECONDTYPE>& gf_f, const short level)
+template <class OperatorType, typename ScalarDataType, typename PrecondDataType>
+void PCGSolver<OperatorType, ScalarDataType, PrecondDataType>::preconSolve(
+    pb::GridFunc<PrecondDataType>& gf_v,
+    const pb::GridFunc<PrecondDataType>& gf_f, const short level)
 {
     //(*MPIdata::sout)<<"Preconditioning::mg() at level "<<level<<endl;
     short ncycl = nu1_;
@@ -124,9 +123,9 @@ void PCGSolver<T, ScalarType>::preconSolve(
         ncycl = 4 > (nu1_ + nu2_) ? 4 : (nu1_ + nu2_);
     }
 
-    pb::Lap<POISSONPRECONDTYPE>* myoper = precond_oper_[level];
+    pb::Lap<PrecondDataType>* myoper = precond_oper_[level];
 
-    // SMOOTHING
+    // pre-smoothing
     for (short it = 0; it < ncycl; it++)
     {
         myoper->jacobi(gf_v, gf_f, *gf_work_[level]);
@@ -137,11 +136,11 @@ void PCGSolver<T, ScalarType>::preconSolve(
     // COARSE GRID CORRECTION
 
     // restrictions
-    pb::GridFunc<POISSONPRECONDTYPE>* rcoarse = gf_rcoarse_[level];
+    pb::GridFunc<PrecondDataType>* rcoarse = gf_rcoarse_[level];
     gf_work_[level]->restrict3D(*rcoarse);
 
     // storage functions for coarse grid
-    pb::GridFunc<POISSONPRECONDTYPE>* newv = gf_newv_[level];
+    pb::GridFunc<PrecondDataType>* newv = gf_newv_[level];
 
     // call mgrid solver on a coarser level
     newv->resetData();
@@ -161,28 +160,29 @@ void PCGSolver<T, ScalarType>::preconSolve(
 }
 
 // Left Preconditioned CG
-template <class T, typename ScalarType>
-bool PCGSolver<T, ScalarType>::solve(
-    pb::GridFunc<ScalarType>& gf_phi, const pb::GridFunc<ScalarType>& gf_rhs)
+template <class OperatorType, typename ScalarDataType, typename PrecondDataType>
+bool PCGSolver<OperatorType, ScalarDataType, PrecondDataType>::solve(
+    pb::GridFunc<ScalarDataType>& gf_phi,
+    const pb::GridFunc<ScalarDataType>& gf_rhs)
 {
     bool converged           = false;
     const pb::Grid& finegrid = gf_phi.grid();
 
     // initial data and residual - We assume a nonzero initial guess
-    pb::GridFunc<ScalarType> lhs(finegrid, bc_[0], bc_[1], bc_[2]);
+    pb::GridFunc<ScalarDataType> lhs(finegrid, bc_[0], bc_[1], bc_[2]);
     // scale initial guess with epsilon
     oper_.inv_transform(gf_phi);
     // compute initial residual: r := b - Ax
     /* compute Ax */
     oper_.apply(gf_phi, lhs);
-    /* set r = b */
-    pb::GridFunc<ScalarType> res(gf_rhs);
+    // set r = b
+    pb::GridFunc<ScalarDataType> res(gf_rhs);
     oper_.transform(res);
-    /* compute r = r - Ax */
+    // compute r = r - Ax
     res -= lhs;
 
-    double init_rnorm = res.norm2();
-    assert(init_rnorm == init_rnorm);
+    const double init_rnorm = res.norm2();
+    assert(!std::isnan(init_rnorm));
     // cout<<"init_rnorm="<<init_rnorm<<endl;
 
     // Early return if rhs is 0.
@@ -191,17 +191,17 @@ bool PCGSolver<T, ScalarType>::solve(
 
     double rnorm = init_rnorm;
 
-    /* preconditioned residual as type POISSONPRECONDTYPE */
-    pb::GridFunc<POISSONPRECONDTYPE> prec_z(finegrid, bc_[0], bc_[1], bc_[2]);
-    pb::GridFunc<POISSONPRECONDTYPE> prec_res(res);
+    /* preconditioned residual as type PrecondDataType */
+    pb::GridFunc<PrecondDataType> prec_z(finegrid, bc_[0], bc_[1], bc_[2]);
+    pb::GridFunc<PrecondDataType> prec_res(res);
     /* preconditioning step */
     prec_z.setValues(0.);
     preconSolve(prec_z, prec_res, 0);
-    pb::GridFunc<ScalarType> z(prec_z);
+    pb::GridFunc<ScalarDataType> z(prec_z);
 
     // conjugate vectors
-    pb::GridFunc<ScalarType> p(prec_z);
-    pb::GridFunc<ScalarType> ap(p.grid(), bc_[0], bc_[1], bc_[2]);
+    pb::GridFunc<ScalarDataType> p(prec_z);
+    pb::GridFunc<ScalarDataType> ap(p.grid(), bc_[0], bc_[1], bc_[2]);
 
     double rtz = res.gdot(z);
 
@@ -213,7 +213,7 @@ bool PCGSolver<T, ScalarType>::solve(
         double ptap = p.gdot(ap);
         double alp  = rtz / ptap;
 
-        assert(alp == alp);
+        assert(!std::isnan(alp));
 
         // update solution
         gf_phi.axpy(alp, p);
@@ -248,15 +248,14 @@ bool PCGSolver<T, ScalarType>::solve(
     return converged;
 }
 
-// Left Preconditioned CG
-template <class T, typename ScalarType>
-bool PCGSolver<T, ScalarType>::solve(
-    ScalarType* phi, ScalarType* rhs, const char dis)
+template <class OperatorType, typename ScalarDataType, typename PrecondDataType>
+bool PCGSolver<OperatorType, ScalarDataType, PrecondDataType>::solve(
+    ScalarDataType* phi, ScalarDataType* rhs, const char dis)
 {
-    pb::GridFunc<ScalarType> gf_phi(oper_.grid(), bc_[0], bc_[1], bc_[2]);
+    pb::GridFunc<ScalarDataType> gf_phi(oper_.grid(), bc_[0], bc_[1], bc_[2]);
     gf_phi.assign(phi, dis);
 
-    pb::GridFunc<ScalarType> gf_work(oper_.grid(), bc_[0], bc_[1], bc_[2]);
+    pb::GridFunc<ScalarDataType> gf_work(oper_.grid(), bc_[0], bc_[1], bc_[2]);
     gf_work.assign(rhs, dis);
 
     bool converged = solve(gf_phi, gf_work);
@@ -266,15 +265,21 @@ bool PCGSolver<T, ScalarType>::solve(
     return converged;
 }
 
-template class PCGSolver<pb::Laph4MP<double>, double>;
-template class PCGSolver<pb::Laph4MP<float>, float>;
-template class PCGSolver<pb::Laph4M<double>, double>;
-template class PCGSolver<pb::Laph4M<float>, float>;
-template class PCGSolver<pb::Laph4<double>, double>;
-template class PCGSolver<pb::Laph4<float>, float>;
-template class PCGSolver<pb::Laph2<double>, double>;
-template class PCGSolver<pb::Laph2<float>, float>;
-template class PCGSolver<pb::Laph6<double>, double>;
-template class PCGSolver<pb::Laph6<float>, float>;
-template class PCGSolver<pb::Laph8<double>, double>;
-template class PCGSolver<pb::Laph8<float>, float>;
+template class PCGSolver<pb::Laph4MP<double>, double, double>;
+template class PCGSolver<pb::Laph4MP<double>, double, float>;
+template class PCGSolver<pb::Laph4MP<float>, float, float>;
+template class PCGSolver<pb::Laph4M<double>, double, double>;
+template class PCGSolver<pb::Laph4M<double>, double, float>;
+template class PCGSolver<pb::Laph4M<float>, float, float>;
+template class PCGSolver<pb::Laph4<double>, double, double>;
+template class PCGSolver<pb::Laph4<double>, double, float>;
+template class PCGSolver<pb::Laph4<float>, float, float>;
+template class PCGSolver<pb::Laph2<double>, double, double>;
+template class PCGSolver<pb::Laph2<double>, double, float>;
+template class PCGSolver<pb::Laph2<float>, float, float>;
+template class PCGSolver<pb::Laph6<double>, double, double>;
+template class PCGSolver<pb::Laph6<double>, double, float>;
+template class PCGSolver<pb::Laph6<float>, float, float>;
+template class PCGSolver<pb::Laph8<double>, double, double>;
+template class PCGSolver<pb::Laph8<double>, double, float>;
+template class PCGSolver<pb::Laph8<float>, float, float>;

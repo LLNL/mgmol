@@ -7,9 +7,8 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-// $Id$
-#ifndef included_Poisson
-#define included_Poisson
+#ifndef MGMOL_included_Poisson
+#define MGMOL_included_Poisson
 
 #include "PoissonInterface.h"
 
@@ -24,8 +23,6 @@
 class Poisson : public PoissonInterface
 {
 protected:
-    //    static Timer   poisson_tm_;
-
     const pb::Grid& grid_;
 
     pb::GridFunc<POTDTYPE>* vh_;
@@ -50,7 +47,7 @@ public:
     };
 
     // Destructor
-    ~Poisson() override { delete vh_; };
+    virtual ~Poisson() override { delete vh_; };
 
     virtual void setup(const short nu1, const short nu2, const short max_sweeps,
         const double tol, const short max_nlevels,
