@@ -28,11 +28,11 @@
 #include "Ions.h"
 #include "KBPsiMatrixSparse.h"
 #include "LocalizationRegions.h"
+#include "MGOrbitalsPreconditioning.h"
 #include "MGmol.h"
 #include "MPIdata.h"
 #include "MasksSet.h"
 #include "Mesh.h"
-#include "OrbitalsPreconditioning.h"
 #include "OrbitalsTransform.h"
 #include "PolakRibiereSolver.h"
 #include "Potentials.h"
@@ -573,9 +573,9 @@ int MGmol<OrbitalsType>::quench(OrbitalsType& orbitals, Ions& ions,
     }
 
     orbitals_precond_.reset(
-        new OrbitalsPreconditioning<OrbitalsType, MGPRECONDTYPE>());
-    orbitals_precond_->setup(
-        orbitals, ct.getMGlevels(), ct.lap_type, currentMasks_.get(), lrs_);
+        new MGOrbitalsPreconditioning<OrbitalsType, MGPRECONDTYPE>(
+            ct.getMGlevels(), ct.lap_type));
+    orbitals_precond_->setup(orbitals, currentMasks_.get(), lrs_);
 
     // solve electronic structure problem
     // (inner iterations)

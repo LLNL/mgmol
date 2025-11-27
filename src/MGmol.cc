@@ -42,6 +42,7 @@
 #include "LocalMatrices2ReplicatedMatrix.h"
 #include "LocalizationRegions.h"
 #include "MDfiles.h"
+#include "MGOrbitalsPreconditioning.h"
 #include "MGkernels.h"
 #include "MGmol.h"
 #include "MLWFTransform.h"
@@ -49,7 +50,6 @@
 #include "MVPSolver.h"
 #include "MasksSet.h"
 #include "Mesh.h"
-#include "OrbitalsPreconditioning.h"
 #include "PackedCommunicationBuffer.h"
 #include "PoissonInterface.h"
 #include "Potentials.h"
@@ -960,7 +960,8 @@ void MGmol<OrbitalsType>::printTimers()
         ChebyshevApproximation<
             dist_matrix::DistMatrix<DISTMATDTYPE>>::printTimers(os_);
     }
-    OrbitalsPreconditioning<OrbitalsType, MGPRECONDTYPE>::printTimers(os_);
+    MGOrbitalsPreconditioning<OrbitalsType, float>::printTimers(os_);
+    MGOrbitalsPreconditioning<OrbitalsType, double>::printTimers(os_);
     MDfiles::printTimers(os_);
     ChebyshevApproximationInterface::printTimers(os_);
 }
@@ -1180,10 +1181,16 @@ void MGmol<OrbitalsType>::precond_mg(OrbitalsType& phi)
     Potentials& pot            = hamiltonian_->potential();
     pb::Lap<ORBDTYPE>* lapOper = hamiltonian_->lapOper();
 
-    orbitals_precond_->setGamma(
+    using OrbitalsPrecond
+        = MGOrbitalsPreconditioning<OrbitalsType, MGPRECONDTYPE>;
+
+    std::shared_ptr<OrbitalsPrecond> orbitals_precond
+        = std::dynamic_pointer_cast<OrbitalsPrecond>(orbitals_precond_);
+
+    orbitals_precond->setGamma(
         *lapOper, pot, ct.getMGlevels(), proj_matrices_.get());
 
-    orbitals_precond_->precond_mg(phi);
+    orbitals_precond_->precond(phi);
 }
 
 template <class OrbitalsType>

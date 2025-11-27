@@ -216,3 +216,4 @@ void Preconditioning<T>::mg(pb::GridFuncVector<T, memory_space_type>& gfv_v,
 }
 
 template class Preconditioning<float>;
+template class Preconditioning<double>;
