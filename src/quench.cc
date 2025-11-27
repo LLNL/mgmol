@@ -572,9 +572,27 @@ int MGmol<OrbitalsType>::quench(OrbitalsType& orbitals, Ions& ions,
         applyAOMMprojection(orbitals);
     }
 
-    orbitals_precond_.reset(
-        new MGOrbitalsPreconditioning<OrbitalsType, MGPRECONDTYPE>(
-            ct.getMGlevels(), ct.lap_type));
+    const short precision = ct.precond_precision_;
+    if (precision == 32)
+    {
+        orbitals_precond_.reset(
+            new MGOrbitalsPreconditioning<OrbitalsType, float>(
+                ct.getMGlevels(), ct.lap_type));
+    }
+    else if (precision == 64)
+    {
+        orbitals_precond_.reset(
+            new MGOrbitalsPreconditioning<OrbitalsType, double>(
+                ct.getMGlevels(), ct.lap_type));
+    }
+    else
+    {
+        std::cerr << "Unknown precision option for orbitals preconditioner!!!"
+                  << std::endl;
+        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+        mmpi.abort();
+    }
+
     orbitals_precond_->setup(orbitals, currentMasks_.get(), lrs_);
 
     // solve electronic structure problem

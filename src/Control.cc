@@ -263,7 +263,8 @@ void Control::print(std::ostream& os)
         os << " Localization radius       = " << cut_radius << std::endl;
     os << std::endl;
 
-    os << " preconditioner factor:" << precond_factor << std::endl;
+    os << " preconditioner factor: " << precond_factor << std::endl;
+    os << " preconditioner precision: " << precond_precision_ << std::endl;
     if (precond_type_ == 10)
     {
         os << " Multigrid preconditioning for wave functions:" << std::endl;
@@ -332,7 +333,7 @@ void Control::sync(void)
     if (onpe0 && verbose > 0)
         (*MPIdata::sout) << "Control::sync()" << std::endl;
     // pack
-    const short size_short_buffer = 92;
+    const short size_short_buffer = 93;
     short* short_buffer           = new short[size_short_buffer];
     if (mype_ == 0)
     {
@@ -423,6 +424,7 @@ void Control::sync(void)
         short_buffer[89] = MD_last_step_;
         short_buffer[90] = (short)static_cast<int>(poisson_lap_type_);
         short_buffer[91] = poisson_pc_data_;
+        short_buffer[92] = precond_precision_;
     }
     else
     {
@@ -635,8 +637,9 @@ void Control::sync(void)
     max_electronic_steps_tight_      = short_buffer[86];
     hartree_reset_                   = short_buffer[88];
     MD_last_step_                    = short_buffer[89];
-    poisson_lap_type_ = static_cast<PoissonFDtype>(short_buffer[90]);
-    poisson_pc_data_  = short_buffer[91];
+    poisson_lap_type_  = static_cast<PoissonFDtype>(short_buffer[90]);
+    poisson_pc_data_   = short_buffer[91];
+    precond_precision_ = short_buffer[92];
 
     numst    = int_buffer[0];
     nel_     = int_buffer[1];
@@ -1479,8 +1482,9 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         std::cout << "Outer solver type: " << str << std::endl;
         assert(it_algo_type_ >= 0);
 
-        mg_levels_     = vm["Quench.preconditioner_num_levels"].as<short>() - 1;
-        precond_factor = vm["Quench.step_length"].as<float>();
+        mg_levels_ = vm["Quench.preconditioner_num_levels"].as<short>() - 1;
+        precond_precision_ = vm["Quench.preconditioner_precision"].as<short>();
+        precond_factor     = vm["Quench.step_length"].as<float>();
         if (precond_factor < 0.)
         {
             switch (lap_type)

@@ -1181,14 +1181,33 @@ void MGmol<OrbitalsType>::precond_mg(OrbitalsType& phi)
     Potentials& pot            = hamiltonian_->potential();
     pb::Lap<ORBDTYPE>* lapOper = hamiltonian_->lapOper();
 
-    using OrbitalsPrecond
-        = MGOrbitalsPreconditioning<OrbitalsType, MGPRECONDTYPE>;
+    const short precision = ct.precond_precision_;
+    if (precision == 32)
+    {
+        using OrbitalsPrecond = MGOrbitalsPreconditioning<OrbitalsType, float>;
 
-    std::shared_ptr<OrbitalsPrecond> orbitals_precond
-        = std::dynamic_pointer_cast<OrbitalsPrecond>(orbitals_precond_);
+        std::shared_ptr<OrbitalsPrecond> orbitals_precond
+            = std::dynamic_pointer_cast<OrbitalsPrecond>(orbitals_precond_);
 
-    orbitals_precond->setGamma(
-        *lapOper, pot, ct.getMGlevels(), proj_matrices_.get());
+        orbitals_precond->setGamma(
+            *lapOper, pot, ct.getMGlevels(), proj_matrices_.get());
+    }
+    else if (precision == 64)
+    {
+        using OrbitalsPrecond = MGOrbitalsPreconditioning<OrbitalsType, double>;
+
+        std::shared_ptr<OrbitalsPrecond> orbitals_precond
+            = std::dynamic_pointer_cast<OrbitalsPrecond>(orbitals_precond_);
+
+        orbitals_precond->setGamma(
+            *lapOper, pot, ct.getMGlevels(), proj_matrices_.get());
+    }
+    else
+    {
+        std::cerr << "Precision " << precision
+                  << " not supported for orbitals preconditioner!!!"
+                  << std::endl;
+    }
 
     orbitals_precond_->precond(phi);
 }
