@@ -283,7 +283,7 @@ int MGmol<OrbitalsType>::initial()
         ct.numst, ct.bcWF, proj_matrices_.get(), lrs_, currentMasks_.get(),
         corrMasks_.get(), local_cluster_.get(), true);
 
-    increaseMemorySlotsForOrbitals<MemorySpaceType>();
+    increaseMemorySlotsForOrbitals<ORBDTYPE, MemorySpaceType>();
 
     Potentials& pot            = hamiltonian_->potential();
     pb::Lap<ORBDTYPE>* lapOper = hamiltonian_->lapOper();
