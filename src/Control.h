@@ -414,6 +414,8 @@ public:
 
     short orthof; // orthogonalization frequency
 
+    short precond_precision_;
+
     // screening constant for potential mixing
     float screening_const;
 

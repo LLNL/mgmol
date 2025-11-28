@@ -46,9 +46,9 @@ class IonicAlgorithm;
 #include "Forces.h"
 #include "Ions.h"
 #include "LocGridOrbitals.h"
+#include "MGOrbitalsPreconditioning.h"
 #include "MGmolInterface.h"
 #include "OrbitalsExtrapolation.h"
-#include "OrbitalsPreconditioning.h"
 #include "Rho.h"
 #include "SpreadPenaltyInterface.h"
 #include "SpreadsAndCenters.h"
@@ -100,8 +100,7 @@ private:
 
     std::shared_ptr<HDFrestart> h5f_file_;
 
-    std::shared_ptr<OrbitalsPreconditioning<OrbitalsType, MGPRECONDTYPE>>
-        orbitals_precond_;
+    std::shared_ptr<OrbitalsPreconditioning<OrbitalsType>> orbitals_precond_;
 
     double total_energy_;
     std::shared_ptr<ConstraintSet> constraints_;

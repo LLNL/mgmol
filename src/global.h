@@ -28,8 +28,6 @@ typedef double RHODTYPE;
 
 typedef double MATDTYPE;
 
-typedef float MGPRECONDTYPE;
-
 typedef double POTDTYPE;
 
 typedef double KBPROJDTYPE;

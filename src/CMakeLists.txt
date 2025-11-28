@@ -44,7 +44,7 @@ set(SOURCES
  HamiltonianMVP_DMStrategy.cc 
  MVPSolver.cc 
  HamiltonianMVPSolver.cc 
- OrbitalsPreconditioning.cc 
+ MGOrbitalsPreconditioning.cc
  DFTsolver.cc 
  NonOrthoDMStrategy.cc 
  FullyOccupiedNonOrthoDMStrategy.cc 

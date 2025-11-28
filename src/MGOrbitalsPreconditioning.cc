@@ -7,7 +7,7 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-#include "OrbitalsPreconditioning.h"
+#include "MGOrbitalsPreconditioning.h"
 
 #include "Control.h"
 #include "ExtendedGridOrbitals.h"
@@ -20,27 +20,30 @@
 #include "ProjectedMatricesInterface.h"
 
 template <class OrbitalsType, typename PDataType>
-OrbitalsPreconditioning<OrbitalsType, PDataType>::~OrbitalsPreconditioning()
+MGOrbitalsPreconditioning<OrbitalsType, PDataType>::MGOrbitalsPreconditioning(
+    const short mg_levels, const short lap_type)
+    : mg_levels_(mg_levels), lap_type_(lap_type), is_set_(false){};
+
+template <class OrbitalsType, typename PDataType>
+MGOrbitalsPreconditioning<OrbitalsType, PDataType>::~MGOrbitalsPreconditioning()
 {
     assert(is_set_);
     assert(precond_);
 }
 
 template <class OrbitalsType, typename PDataType>
-void OrbitalsPreconditioning<OrbitalsType, PDataType>::setup(
-    OrbitalsType& orbitals, const short mg_levels, const short lap_type,
-    MasksSet* currentMasks, const std::shared_ptr<LocalizationRegions>& lrs)
+void MGOrbitalsPreconditioning<OrbitalsType, PDataType>::setup(
+    OrbitalsType& orbitals, MasksSet* currentMasks,
+    const std::shared_ptr<LocalizationRegions>& lrs)
 {
     assert(!is_set_);
-
-    lap_type_ = lap_type;
 
     Control& ct(*(Control::instance()));
     Mesh* mymesh = Mesh::instance();
     const pb::Grid& mygrid(mymesh->grid());
 
     precond_ = std::make_shared<Preconditioning<PDataType>>(
-        lap_type, mg_levels, mygrid, ct.bcWF);
+        lap_type_, mg_levels_, mygrid, ct.bcWF);
 
     if (currentMasks != nullptr)
     {
@@ -78,7 +81,7 @@ void OrbitalsPreconditioning<OrbitalsType, PDataType>::setup(
 }
 
 template <class OrbitalsType, typename PDataType>
-void OrbitalsPreconditioning<OrbitalsType, PDataType>::precond_mg(
+void MGOrbitalsPreconditioning<OrbitalsType, PDataType>::precond(
     OrbitalsType& orbitals)
 {
     assert(is_set_);
@@ -127,15 +130,16 @@ void OrbitalsPreconditioning<OrbitalsType, PDataType>::precond_mg(
 
 #ifdef PRINT_OPERATIONS
     if (onpe0)
-        (*MPIdata::sout) << "OrbitalsPreconditioning<OrbitalsType,PDataType>::"
-                            "precond_mg() done"
-                         << endl;
+        (*MPIdata::sout)
+            << "MGOrbitalsPreconditioning<OrbitalsType,PDataType>::"
+               "precond_mg() done"
+            << endl;
 #endif
     precond_tm_.stop();
 }
 
 template <class OrbitalsType, typename PDataType>
-void OrbitalsPreconditioning<OrbitalsType, PDataType>::setGamma(
+void MGOrbitalsPreconditioning<OrbitalsType, PDataType>::setGamma(
     const pb::Lap<ORBDTYPE>& lapOper, const Potentials& pot,
     const short mg_levels, ProjectedMatricesInterface* proj_matrices)
 {
@@ -163,11 +167,13 @@ void OrbitalsPreconditioning<OrbitalsType, PDataType>::setGamma(
 }
 
 template <class OrbitalsType, typename PDataType>
-void OrbitalsPreconditioning<OrbitalsType, PDataType>::printTimers(
+void MGOrbitalsPreconditioning<OrbitalsType, PDataType>::printTimers(
     std::ostream& os)
 {
     precond_tm_.print(os);
 }
 
-template class OrbitalsPreconditioning<LocGridOrbitals, MGPRECONDTYPE>;
-template class OrbitalsPreconditioning<ExtendedGridOrbitals, MGPRECONDTYPE>;
+template class MGOrbitalsPreconditioning<LocGridOrbitals, float>;
+template class MGOrbitalsPreconditioning<LocGridOrbitals, double>;
+template class MGOrbitalsPreconditioning<ExtendedGridOrbitals, float>;
+template class MGOrbitalsPreconditioning<ExtendedGridOrbitals, double>;
