@@ -6,17 +6,13 @@
 // All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
+#include "ExtendedGridOrbitals.h"
 
 #include "global.h"
 
-#include <mpi.h>
-
 #include "Control.h"
-#include "DistMatrix.h"
-#include "ExtendedGridOrbitals.h"
+#include "DotProductManagerFactory.h"
 #include "GridFunc.h"
-#include "HDFrestart.h"
-#include "Laph2.h"
 #include "Laph4M.h"
 #include "LocalMatrices2DistMatrix.h"
 #include "LocalizationRegions.h"
@@ -31,18 +27,21 @@
 
 #include <cmath>
 #include <fstream>
+#include <mpi.h>
 #include <utility>
 
 #define ORBITAL_OCCUPATION 2.
 std::string getDatasetName(const std::string& name, const int color);
 
-int ExtendedGridOrbitals::lda_   = 0;
-int ExtendedGridOrbitals::numpt_ = 0;
-ExtendedGridOrbitalsPtrFunc ExtendedGridOrbitals::dotProduct_
-    = &ExtendedGridOrbitals::dotProductDiagonal;
+int ExtendedGridOrbitals::lda_                = 0;
+int ExtendedGridOrbitals::numpt_              = 0;
 int ExtendedGridOrbitals::data_wghosts_index_ = -1;
 int ExtendedGridOrbitals::numst_              = -1;
 std::vector<std::vector<int>> ExtendedGridOrbitals::overlapping_gids_;
+
+DotProductManager<ExtendedGridOrbitals>*
+    ExtendedGridOrbitals::dotProductManager_
+    = nullptr;
 
 Timer ExtendedGridOrbitals::matB_tm_("ExtendedGridOrbitals::matB");
 Timer ExtendedGridOrbitals::invBmat_tm_("ExtendedGridOrbitals::invBmat");
@@ -137,14 +136,11 @@ void ExtendedGridOrbitals::copyDataFrom(const ExtendedGridOrbitals& src)
 
 void ExtendedGridOrbitals::setDotProduct(const short dot_type)
 {
-    if (dot_type == 0)
-        dotProduct_ = &ExtendedGridOrbitals::dotProductDiagonal;
-    else if (dot_type == 1)
-        dotProduct_ = &ExtendedGridOrbitals::dotProductWithInvS;
-    else if (dot_type == 2)
-        dotProduct_ = &ExtendedGridOrbitals::dotProductWithDM;
-    else if (dot_type == 3)
-        dotProduct_ = &ExtendedGridOrbitals::dotProductSimple;
+    DotProductManagerFactory<ExtendedGridOrbitals> factory;
+
+    dotProductManager_ = factory.create(dot_type);
+
+    assert(dotProductManager_ != nullptr);
 }
 
 void ExtendedGridOrbitals::setup()
@@ -1102,55 +1098,10 @@ void ExtendedGridOrbitals::checkCond(const double tol, const bool flag_stop)
     proj_matrices_->checkCond(tol, flag_stop);
 }
 
-double ExtendedGridOrbitals::dotProductWithDM(
-    const ExtendedGridOrbitals& orbitals)
-{
-    assert(proj_matrices_ != nullptr);
-
-    SquareLocalMatrices<MATDTYPE, MemorySpace::Host> ss(1, numst_);
-
-    computeLocalProduct(orbitals, ss);
-
-    return proj_matrices_->dotProductWithDM(ss);
-}
-
-double ExtendedGridOrbitals::dotProductWithInvS(
-    const ExtendedGridOrbitals& orbitals)
-{
-    assert(proj_matrices_ != nullptr);
-
-    SquareLocalMatrices<MATDTYPE, MemorySpace::Host> ss(1, numst_);
-
-    computeLocalProduct(orbitals, ss);
-
-    return proj_matrices_->dotProductWithInvS(ss);
-}
-
-double ExtendedGridOrbitals::dotProductDiagonal(
-    const ExtendedGridOrbitals& orbitals)
-{
-    assert(proj_matrices_ != nullptr);
-
-    std::vector<DISTMATDTYPE> ss(numst_);
-    computeDiagonalElementsDotProduct(orbitals, ss);
-    return proj_matrices_->getTraceDiagProductWithInvS(ss);
-}
-
-double ExtendedGridOrbitals::dotProductSimple(
-    const ExtendedGridOrbitals& orbitals)
-{
-    assert(proj_matrices_ != nullptr);
-
-    SquareLocalMatrices<MATDTYPE, MemorySpace::Host> ss(1, numst_);
-
-    computeLocalProduct(orbitals, ss);
-
-    return proj_matrices_->dotProductSimple(ss);
-}
-
 double ExtendedGridOrbitals::dotProduct(const ExtendedGridOrbitals& orbitals)
 {
-    return (this->*dotProduct_)(orbitals); // call through pointer member
+    assert(dotProductManager_ != nullptr);
+    return dotProductManager_->dotProduct(*this, orbitals);
 }
 
 double ExtendedGridOrbitals::dotProduct(
@@ -1162,31 +1113,13 @@ double ExtendedGridOrbitals::dotProduct(
     assert(1 > 0);
     assert(1 < 1000);
 
-    double dot = 0.;
-    if (dot_type == 0)
-    {
-        dot = dotProductDiagonal(orbitals);
-    }
-    else if (dot_type == 1)
-    {
-        dot = dotProductWithInvS(orbitals);
-    }
-    else if (dot_type == 2)
-    {
-        dot = dotProductWithDM(orbitals);
-    }
-    else if (dot_type == 3)
-    {
-        dot = dotProductSimple(orbitals);
-    }
-    else
-    {
-        (*MPIdata::serr) << "ExtendedGridOrbitals::dot_product() --- unknown "
-                            "dot product type"
-                         << std::endl;
-        Control& ct = *(Control::instance());
-        ct.global_exit();
-    }
+    DotProductManagerFactory<ExtendedGridOrbitals> factory;
+    DotProductManager<ExtendedGridOrbitals>* manager = factory.create(dot_type);
+    assert(manager != nullptr);
+
+    double dot = manager->dotProduct(*this, orbitals);
+
+    delete manager;
 
     dot_product_tm_.stop();
 

@@ -103,7 +103,7 @@ int MGmol<OrbitalsType>::setupFromInput(const std::string filename)
 
     if (ct.rmatrices) ReplicatedMatrix::setMPIcomm(mmpi.commSpin());
 
-    LocGridOrbitals::setDotProduct(ct.dot_product_type);
+    OrbitalsType::setDotProduct(ct.dot_product_type);
 
     mgmol_check();
 
