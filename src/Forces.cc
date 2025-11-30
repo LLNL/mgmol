@@ -672,5 +672,5 @@ void Forces<T>::force(T& orbitals, Ions& ions)
     total_tm_.stop();
 }
 
-template class Forces<LocGridOrbitals>;
-template class Forces<ExtendedGridOrbitals>;
+template class Forces<LocGridOrbitals<ORBDTYPE>>;
+template class Forces<ExtendedGridOrbitals<ORBDTYPE>>;

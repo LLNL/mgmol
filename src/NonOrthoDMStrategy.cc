@@ -91,5 +91,5 @@ void NonOrthoDMStrategy<T>::dressDM()
     if (mix_ < 1.) proj_matrices_->dressupDM();
 }
 
-template class NonOrthoDMStrategy<LocGridOrbitals>;
-template class NonOrthoDMStrategy<ExtendedGridOrbitals>;
+template class NonOrthoDMStrategy<LocGridOrbitals<ORBDTYPE>>;
+template class NonOrthoDMStrategy<ExtendedGridOrbitals<ORBDTYPE>>;

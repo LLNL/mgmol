@@ -133,5 +133,5 @@ double PBEonGrid<T>::getExc() const
     return mygrid.vel() * pbe_->computeRhoDotExc();
 }
 
-template class PBEonGrid<LocGridOrbitals>;
-template class PBEonGrid<ExtendedGridOrbitals>;
+template class PBEonGrid<LocGridOrbitals<ORBDTYPE>>;
+template class PBEonGrid<ExtendedGridOrbitals<ORBDTYPE>>;

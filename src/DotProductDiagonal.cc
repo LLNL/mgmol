@@ -16,8 +16,9 @@
 #include "SquareLocalMatrices.h"
 
 template <>
-double DotProductDiagonal<ExtendedGridOrbitals>::dotProduct(
-    ExtendedGridOrbitals& phi0, const ExtendedGridOrbitals& phi1)
+double DotProductDiagonal<ExtendedGridOrbitals<ORBDTYPE>>::dotProduct(
+    ExtendedGridOrbitals<ORBDTYPE>& phi0,
+    const ExtendedGridOrbitals<ORBDTYPE>& phi1)
 {
     const int chromatic_number = phi0.chromatic_number();
     std::vector<DISTMATDTYPE> ss(chromatic_number);
@@ -29,8 +30,8 @@ double DotProductDiagonal<ExtendedGridOrbitals>::dotProduct(
 }
 
 template <>
-double DotProductDiagonal<LocGridOrbitals>::dotProduct(
-    LocGridOrbitals& phi0, const LocGridOrbitals& phi1)
+double DotProductDiagonal<LocGridOrbitals<ORBDTYPE>>::dotProduct(
+    LocGridOrbitals<ORBDTYPE>& phi0, const LocGridOrbitals<ORBDTYPE>& phi1)
 {
     const int numst                           = phi0.numst();
     ProjectedMatricesInterface* proj_matrices = phi0.getProjMatrices();

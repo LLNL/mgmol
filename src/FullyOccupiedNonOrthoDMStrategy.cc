@@ -46,5 +46,5 @@ int FullyOccupiedNonOrthoDMStrategy<OrbitalsType>::update(
     return 0; // success
 }
 
-template class FullyOccupiedNonOrthoDMStrategy<LocGridOrbitals>;
-template class FullyOccupiedNonOrthoDMStrategy<ExtendedGridOrbitals>;
+template class FullyOccupiedNonOrthoDMStrategy<LocGridOrbitals<ORBDTYPE>>;
+template class FullyOccupiedNonOrthoDMStrategy<ExtendedGridOrbitals<ORBDTYPE>>;

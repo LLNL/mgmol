@@ -336,14 +336,16 @@ void Electrostatic::computeVh(const Ions& ions, Rho<T>& rho, Potentials& pot)
     solve_tm_.stop();
 }
 
-template void Electrostatic::computeVhRho(Rho<LocGridOrbitals>& rho);
+template void Electrostatic::computeVhRho(Rho<LocGridOrbitals<ORBDTYPE>>& rho);
 template void Electrostatic::computeVh(
-    const Ions& ions, Rho<LocGridOrbitals>& rho, Potentials& pot);
+    const Ions& ions, Rho<LocGridOrbitals<ORBDTYPE>>& rho, Potentials& pot);
 template void Electrostatic::computeVh(const pb::GridFunc<POTDTYPE>& vhinit,
-    const Ions& ions, Rho<LocGridOrbitals>& rho, Potentials& pot);
+    const Ions& ions, Rho<LocGridOrbitals<ORBDTYPE>>& rho, Potentials& pot);
 
-template void Electrostatic::computeVhRho(Rho<ExtendedGridOrbitals>& rho);
-template void Electrostatic::computeVh(
-    const Ions& ions, Rho<ExtendedGridOrbitals>& rho, Potentials& pot);
+template void Electrostatic::computeVhRho(
+    Rho<ExtendedGridOrbitals<ORBDTYPE>>& rho);
+template void Electrostatic::computeVh(const Ions& ions,
+    Rho<ExtendedGridOrbitals<ORBDTYPE>>& rho, Potentials& pot);
 template void Electrostatic::computeVh(const pb::GridFunc<POTDTYPE>& vhinit,
-    const Ions& ions, Rho<ExtendedGridOrbitals>& rho, Potentials& pot);
+    const Ions& ions, Rho<ExtendedGridOrbitals<ORBDTYPE>>& rho,
+    Potentials& pot);

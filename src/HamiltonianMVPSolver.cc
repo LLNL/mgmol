@@ -351,13 +351,14 @@ void HamiltonianMVPSolver<MatrixType, ProjMatrixType,
 
 // explicit instantiation of class
 template class HamiltonianMVPSolver<dist_matrix::DistMatrix<DISTMATDTYPE>,
-    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>, LocGridOrbitals>;
+    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>,
+    LocGridOrbitals<ORBDTYPE>>;
 
 template class HamiltonianMVPSolver<VariableSizeMatrix<sparserow>,
-    ProjectedMatricesSparse, LocGridOrbitals>;
+    ProjectedMatricesSparse, LocGridOrbitals<ORBDTYPE>>;
 
 template class HamiltonianMVPSolver<dist_matrix::DistMatrix<DISTMATDTYPE>,
     ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>,
-    ExtendedGridOrbitals>;
+    ExtendedGridOrbitals<ORBDTYPE>>;
 template class HamiltonianMVPSolver<ReplicatedMatrix,
-    ProjectedMatrices<ReplicatedMatrix>, ExtendedGridOrbitals>;
+    ProjectedMatrices<ReplicatedMatrix>, ExtendedGridOrbitals<ORBDTYPE>>;

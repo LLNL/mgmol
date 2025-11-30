@@ -31,5 +31,5 @@ double DotProductWithInvS<T>::dotProduct(T& phi0, const T& phi1)
     return proj_matrices->dotProductWithInvS(ss);
 }
 
-template class DotProductWithInvS<LocGridOrbitals>;
-template class DotProductWithInvS<ExtendedGridOrbitals>;
+template class DotProductWithInvS<LocGridOrbitals<ORBDTYPE>>;
+template class DotProductWithInvS<ExtendedGridOrbitals<ORBDTYPE>>;

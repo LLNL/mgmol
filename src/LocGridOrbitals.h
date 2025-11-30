@@ -24,7 +24,6 @@
 #include "SaveData.h"
 #include "SinCosOps.h"
 #include "SquareLocalMatrices.h"
-#include "global.h"
 
 #include "hdf5.h"
 #include <iostream>
@@ -32,15 +31,12 @@
 #include <memory>
 #include <vector>
 
-class Potentials;
-template <class T>
-class ProjectedMatrices;
 class ProjectedMatricesInterface;
 class LocalizationRegions;
 class MasksSet;
-class LocGridOrbitals;
 class Masks4Orbitals;
 
+template <typename ScalarType>
 class LocGridOrbitals : public Orbitals
 {
 private:
@@ -65,7 +61,7 @@ private:
     static int numpt_;
     static int loc_numpt_;
 
-    static DotProductManager<LocGridOrbitals>* dotProductManager_;
+    static DotProductManager<LocGridOrbitals<ScalarType>>* dotProductManager_;
 
     static int data_wghosts_index_;
 
@@ -80,7 +76,7 @@ private:
     int chromatic_number_;
 
     // map gid -> function storage (for each subdomain)
-    std::vector<std::map<int, ORBDTYPE*>>* gidToStorage_;
+    std::vector<std::map<int, ScalarType*>>* gidToStorage_;
 
     // pointers to objects owned outside class
     ProjectedMatricesInterface* proj_matrices_;
@@ -89,7 +85,7 @@ private:
     ////////////////////////////////////////////////////////
     // instance specific data
     ////////////////////////////////////////////////////////
-    BlockVector<ORBDTYPE, memory_space_type> block_vector_;
+    BlockVector<ScalarType, memory_space_type> block_vector_;
 
     ////////////////////////////////////////////////////////
     //
@@ -97,19 +93,19 @@ private:
     //
     void copySharedData(const LocGridOrbitals& A);
 
-    const ORBDTYPE* getGidStorage(const int st, const short iloc) const;
+    const ScalarType* getGidStorage(const int st, const short iloc) const;
     int packStates(std::shared_ptr<LocalizationRegions> lrs);
     void setAssignedIndexes();
-    void projectOut(ORBDTYPE* const, const int, const double scale = 1.);
+    void projectOut(ScalarType* const, const int, const double scale = 1.);
 
     void multiply_by_matrix(const int first_color, const int ncolors,
         const DISTMATDTYPE* const matrix, LocGridOrbitals& product) const;
     void multiply_by_matrix(const int, const int, const DISTMATDTYPE* const,
-        ORBDTYPE*, const int) const;
+        ScalarType*, const int) const;
     void multiply_by_matrix(const dist_matrix::DistMatrix<DISTMATDTYPE>& matrix,
-        ORBDTYPE* const product, const int ldp);
+        ScalarType* const product, const int ldp);
     void scal(const int i, const double alpha) { block_vector_.scal(i, alpha); }
-    virtual void assign(const int i, const ORBDTYPE* const v, const int n = 1)
+    virtual void assign(const int i, const ScalarType* const v, const int n = 1)
     {
         block_vector_.assign(i, v, n);
     }
@@ -118,13 +114,13 @@ private:
     LocGridOrbitals& operator=(const LocGridOrbitals& orbitals);
     LocGridOrbitals();
 
-    void computeMatB(const LocGridOrbitals&, const pb::Lap<ORBDTYPE>&);
+    void computeMatB(const LocGridOrbitals&, const pb::Lap<ScalarType>&);
     void matrixToLocalMatrix(const short, const DISTMATDTYPE* const,
         DISTMATDTYPE* const, const int, const int) const;
     void matrixToLocalMatrix(
         const short, const DISTMATDTYPE* const, DISTMATDTYPE* const) const;
 
-    void computeLocalProduct(const ORBDTYPE* const, const int,
+    void computeLocalProduct(const ScalarType* const, const int,
         LocalMatrices<MATDTYPE, MemorySpace::Host>&,
         const bool transpose = false);
 
@@ -135,12 +131,12 @@ private:
     void initFourier();
     void initRand();
 
-    ORBDTYPE* psi(const int i) const { return block_vector_.vect(i); }
+    ScalarType* psi(const int i) const { return block_vector_.vect(i); }
 
-    void app_mask(const int, ORBDTYPE*, const short level) const;
+    void app_mask(const int, ScalarType*, const short level) const;
     void multiplyByMatrix(
         const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& matrix,
-        ORBDTYPE* product, const int ldp) const;
+        ScalarType* product, const int ldp) const;
     void setup(MasksSet* masks, MasksSet* corrmasks,
         std::shared_ptr<LocalizationRegions> lrs);
 
@@ -246,7 +242,7 @@ public:
 
         block_vector_.setDataWithGhosts(data_wghosts);
     }
-    pb::GridFunc<ORBDTYPE>& getFuncWithGhosts(const int i)
+    pb::GridFunc<ScalarType>& getFuncWithGhosts(const int i)
     {
         //(*MPIdata::sout)<<" data_wghosts_index_="<<data_wghosts_index_
         //    <<" getIterativeIndex()   ="<<getIterativeIndex()<<endl;
@@ -260,7 +256,7 @@ public:
         return block_vector_.getVectorWithGhosts(i);
     }
 
-    pb::GridFuncVector<ORBDTYPE, memory_space_type>* getPtDataWGhosts()
+    pb::GridFuncVector<ScalarType, memory_space_type>* getPtDataWGhosts()
     {
         return block_vector_.getPtDataWGhosts();
     }
@@ -281,12 +277,12 @@ public:
         }
     }
 
-    void set_storage(ORBDTYPE* new_storage)
+    void set_storage(ScalarType* new_storage)
     {
         assert(new_storage != 0);
         block_vector_.setStorage(new_storage);
     }
-    ORBDTYPE* getPsi(const int i, const short iloc = 0) const
+    ScalarType* getPsi(const int i, const short iloc = 0) const
     {
         assert(iloc < subdivx_);
         return block_vector_.vect(i) + iloc * loc_numpt_;
@@ -325,7 +321,7 @@ public:
     {
         if (onpe0) os << " Number of states   = " << numst_ << std::endl;
     }
-    void computeBAndInvB(const pb::Lap<ORBDTYPE>& LapOper);
+    void computeBAndInvB(const pb::Lap<ScalarType>& LapOper);
 
     void computeGram(const int verbosity = 0);
     void computeGramAndInvS(const int verbosity = 0);
@@ -333,7 +329,7 @@ public:
     void computeGram(const LocGridOrbitals& orbitals,
         dist_matrix::DistMatrix<DISTMATDTYPE>& gram_mat);
 
-    ORBDTYPE maxAbsValue() const { return block_vector_.maxAbsValue(); }
+    ScalarType maxAbsValue() const { return block_vector_.maxAbsValue(); }
 
     /*!
      * use predefined (default) dot product type
@@ -383,7 +379,8 @@ public:
     void initGauss(const double, const std::shared_ptr<LocalizationRegions>);
     virtual void axpy(const double alpha, const LocGridOrbitals&);
 
-    void app_mask(const int, pb::GridFunc<ORBDTYPE>&, const short level) const;
+    void app_mask(
+        const int, pb::GridFunc<ScalarType>&, const short level) const;
 
     void applyMask(const bool first_time = false);
     void applyCorrMask(const bool first_time = false);

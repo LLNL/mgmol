@@ -33,29 +33,60 @@
 #define ORBITAL_OCCUPATION 2.
 std::string getDatasetName(const std::string& name, const int color);
 
-int ExtendedGridOrbitals::lda_                = 0;
-int ExtendedGridOrbitals::numpt_              = 0;
-int ExtendedGridOrbitals::data_wghosts_index_ = -1;
-int ExtendedGridOrbitals::numst_              = -1;
-std::vector<std::vector<int>> ExtendedGridOrbitals::overlapping_gids_;
-
-DotProductManager<ExtendedGridOrbitals>*
-    ExtendedGridOrbitals::dotProductManager_
+template <typename ScalarType>
+DotProductManager<ExtendedGridOrbitals<ScalarType>>*
+    ExtendedGridOrbitals<ScalarType>::dotProductManager_
     = nullptr;
 
-Timer ExtendedGridOrbitals::matB_tm_("ExtendedGridOrbitals::matB");
-Timer ExtendedGridOrbitals::invBmat_tm_("ExtendedGridOrbitals::invBmat");
-Timer ExtendedGridOrbitals::overlap_tm_("ExtendedGridOrbitals::overlap");
-Timer ExtendedGridOrbitals::dot_product_tm_(
-    "ExtendedGridOrbitals::dot_product");
-Timer ExtendedGridOrbitals::addDot_tm_("ExtendedGridOrbitals::addDot");
-Timer ExtendedGridOrbitals::prod_matrix_tm_(
-    "ExtendedGridOrbitals::prod_matrix");
-Timer ExtendedGridOrbitals::assign_tm_("ExtendedGridOrbitals::assign");
-Timer ExtendedGridOrbitals::normalize_tm_("ExtendedGridOrbitals::normalize");
-Timer ExtendedGridOrbitals::axpy_tm_("ExtendedGridOrbitals::axpy");
+template <typename ScalarType>
+int ExtendedGridOrbitals<ScalarType>::lda_ = 0;
+template <typename ScalarType>
+int ExtendedGridOrbitals<ScalarType>::numpt_ = 0;
+template <typename ScalarType>
+int ExtendedGridOrbitals<ScalarType>::data_wghosts_index_ = -1;
+template <typename ScalarType>
+int ExtendedGridOrbitals<ScalarType>::numst_ = -1;
+template <typename ScalarType>
+std::vector<std::vector<int>>
+    ExtendedGridOrbitals<ScalarType>::overlapping_gids_;
 
-ExtendedGridOrbitals::ExtendedGridOrbitals(std::string name,
+template <typename ScalarType>
+Timer ExtendedGridOrbitals<ScalarType>::matB_tm_(
+    "ExtendedGridOrbitals" + std::to_string(8 * sizeof(ScalarType)) + "::matB");
+template <typename ScalarType>
+Timer ExtendedGridOrbitals<ScalarType>::invBmat_tm_(
+    "ExtendedGridOrbitals" + std::to_string(8 * sizeof(ScalarType))
+    + "::invBmat");
+template <typename ScalarType>
+Timer ExtendedGridOrbitals<ScalarType>::overlap_tm_(
+    "ExtendedGridOrbitals" + std::to_string(8 * sizeof(ScalarType))
+    + "::overlap");
+template <typename ScalarType>
+Timer ExtendedGridOrbitals<ScalarType>::dot_product_tm_(
+    "ExtendedGridOrbitals" + std::to_string(8 * sizeof(ScalarType))
+    + "::dot_product");
+template <typename ScalarType>
+Timer ExtendedGridOrbitals<ScalarType>::addDot_tm_(
+    "ExtendedGridOrbitals" + std::to_string(8 * sizeof(ScalarType))
+    + "::addDot");
+template <typename ScalarType>
+Timer ExtendedGridOrbitals<ScalarType>::prod_matrix_tm_(
+    "ExtendedGridOrbitals" + std::to_string(8 * sizeof(ScalarType))
+    + "::prod_matrix");
+template <typename ScalarType>
+Timer ExtendedGridOrbitals<ScalarType>::assign_tm_(
+    "ExtendedGridOrbitals" + std::to_string(8 * sizeof(ScalarType))
+    + "::assign");
+template <typename ScalarType>
+Timer ExtendedGridOrbitals<ScalarType>::normalize_tm_(
+    "ExtendedGridOrbitals" + std::to_string(8 * sizeof(ScalarType))
+    + "::normalize");
+template <typename ScalarType>
+Timer ExtendedGridOrbitals<ScalarType>::axpy_tm_(
+    "ExtendedGridOrbitals" + std::to_string(8 * sizeof(ScalarType)) + "::axpy");
+
+template <typename ScalarType>
+ExtendedGridOrbitals<ScalarType>::ExtendedGridOrbitals(std::string name,
     const pb::Grid& my_grid, const short subdivx, const int numst,
     const short bc[3], ProjectedMatricesInterface* proj_matrices,
     std::shared_ptr<LocalizationRegions> lrs, MasksSet* masks,
@@ -91,28 +122,31 @@ ExtendedGridOrbitals::ExtendedGridOrbitals(std::string name,
     if (setup_flag) setup();
 }
 
-ExtendedGridOrbitals::~ExtendedGridOrbitals()
+template <typename ScalarType>
+ExtendedGridOrbitals<ScalarType>::~ExtendedGridOrbitals()
 {
     assert(proj_matrices_ != nullptr);
 }
 
-ExtendedGridOrbitals::ExtendedGridOrbitals(const std::string& name,
-    const ExtendedGridOrbitals& A, const bool copy_data)
+template <typename ScalarType>
+ExtendedGridOrbitals<ScalarType>::ExtendedGridOrbitals(const std::string& name,
+    const ExtendedGridOrbitals<ScalarType>& A, const bool copy_data)
     : Orbitals(A, copy_data),
       name_(name),
       proj_matrices_(A.proj_matrices_),
       block_vector_(A.block_vector_, copy_data),
       grid_(A.grid_)
 {
-    // if(onpe0)cout<<"call ExtendedGridOrbitals(const ExtendedGridOrbitals &A,
-    // const bool copy_data)"<<endl;
+    // if(onpe0)cout<<"call ExtendedGridOrbitals(const
+    // ExtendedGridOrbitals &A, const bool copy_data)"<<endl;
 
     assert(A.proj_matrices_ != nullptr);
 }
 
-ExtendedGridOrbitals::ExtendedGridOrbitals(const std::string& name,
-    const ExtendedGridOrbitals& A, ProjectedMatricesInterface* proj_matrices,
-    const bool copy_data)
+template <typename ScalarType>
+ExtendedGridOrbitals<ScalarType>::ExtendedGridOrbitals(const std::string& name,
+    const ExtendedGridOrbitals<ScalarType>& A,
+    ProjectedMatricesInterface* proj_matrices, const bool copy_data)
     : Orbitals(A, copy_data),
       name_(name),
       proj_matrices_(proj_matrices),
@@ -125,7 +159,9 @@ ExtendedGridOrbitals::ExtendedGridOrbitals(const std::string& name,
     proj_matrices_->setup(overlapping_gids_);
 }
 
-void ExtendedGridOrbitals::copyDataFrom(const ExtendedGridOrbitals& src)
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::copyDataFrom(
+    const ExtendedGridOrbitals& src)
 {
     assert(proj_matrices_ != nullptr);
 
@@ -134,7 +170,8 @@ void ExtendedGridOrbitals::copyDataFrom(const ExtendedGridOrbitals& src)
     setIterativeIndex(src);
 }
 
-void ExtendedGridOrbitals::setDotProduct(const short dot_type)
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::setDotProduct(const short dot_type)
 {
     DotProductManagerFactory<ExtendedGridOrbitals> factory;
 
@@ -143,7 +180,8 @@ void ExtendedGridOrbitals::setDotProduct(const short dot_type)
     assert(dotProductManager_ != nullptr);
 }
 
-void ExtendedGridOrbitals::setup()
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::setup()
 {
     Control& ct = *(Control::instance());
 
@@ -167,8 +205,9 @@ void ExtendedGridOrbitals::setup()
             "ExtendedGridOrbitals::setup() done...", (*MPIdata::sout));
 }
 
-void ExtendedGridOrbitals::reset(MasksSet* masks, MasksSet* corrmasks,
-    std::shared_ptr<LocalizationRegions> lrs)
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::reset(MasksSet* masks,
+    MasksSet* corrmasks, std::shared_ptr<LocalizationRegions> lrs)
 {
     (void)masks;
     (void)corrmasks;
@@ -182,7 +221,9 @@ void ExtendedGridOrbitals::reset(MasksSet* masks, MasksSet* corrmasks,
     setup();
 }
 
-void ExtendedGridOrbitals::assign(const ExtendedGridOrbitals& orbitals)
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::assign(
+    const ExtendedGridOrbitals& orbitals)
 {
     assert(proj_matrices_ != nullptr);
 
@@ -195,9 +236,10 @@ void ExtendedGridOrbitals::assign(const ExtendedGridOrbitals& orbitals)
     assign_tm_.stop();
 }
 
+template <typename ScalarType>
 template <typename CoeffType>
-void ExtendedGridOrbitals::axpy(
-    const CoeffType alpha, const ExtendedGridOrbitals& orbitals)
+void ExtendedGridOrbitals<ScalarType>::axpy(
+    const CoeffType alpha, const ExtendedGridOrbitals<ScalarType>& orbitals)
 {
     axpy_tm_.start();
 
@@ -208,7 +250,8 @@ void ExtendedGridOrbitals::axpy(
     axpy_tm_.stop();
 }
 
-void ExtendedGridOrbitals::initGauss(
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::initGauss(
     const double rc, const std::shared_ptr<LocalizationRegions> lrs)
 {
     assert(numst_ >= 0);
@@ -241,13 +284,13 @@ void ExtendedGridOrbitals::initGauss(
     const double rmax = 6. * rc;
     for (int icolor = 0; icolor < numst_; icolor++)
     {
-        ORBDTYPE* ipsi               = psi(icolor);
+        ScalarType* ipsi             = psi(icolor);
         unsigned int const ipsi_size = numpt_;
-        ORBDTYPE* ipsi_host_view     = MemorySpace::Memory<ORBDTYPE,
+        ScalarType* ipsi_host_view   = MemorySpace::Memory<ScalarType,
             memory_space_type>::allocate_host_view(ipsi_size);
-        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+        MemorySpace::Memory<ScalarType, memory_space_type>::copy_view_to_host(
             ipsi, ipsi_size, ipsi_host_view);
-        MemorySpace::Memory<ORBDTYPE, MemorySpace::Host>::set(
+        MemorySpace::Memory<ScalarType, MemorySpace::Host>::set(
             ipsi_host_view, ipsi_size, 0);
 
         const Vector3D& center(lrs->getCenter(icolor));
@@ -266,7 +309,7 @@ void ExtendedGridOrbitals::initGauss(
                     const double r = xc.minimage(center, ll, ct.bcWF);
                     if (r < rmax)
                         ipsi_host_view[ix * incx + iy * incy + iz]
-                            = static_cast<ORBDTYPE>(exp(-r * r * invrc2));
+                            = static_cast<ScalarType>(exp(-r * r * invrc2));
                     else
                         ipsi_host_view[ix * incx + iy * incy + iz] = 0.;
 
@@ -277,15 +320,16 @@ void ExtendedGridOrbitals::initGauss(
             xc[0] += hgrid[0];
         }
 
-        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_dev(
+        MemorySpace::Memory<ScalarType, memory_space_type>::copy_view_to_dev(
             ipsi_host_view, ipsi_size, ipsi);
-        MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+        MemorySpace::Memory<ScalarType, memory_space_type>::free_host_view(
             ipsi_host_view);
     }
     resetIterativeIndex();
 }
 
-void ExtendedGridOrbitals::initFourier()
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::initFourier()
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 2)
@@ -322,13 +366,13 @@ void ExtendedGridOrbitals::initFourier()
         const double kk[3] = { dk[0] * (double)kvector[0],
             dk[1] * (double)kvector[1], dk[2] * (double)kvector[2] };
 
-        ORBDTYPE* ipsi               = psi(icolor);
+        ScalarType* ipsi             = psi(icolor);
         unsigned int const ipsi_size = numpt_;
-        ORBDTYPE* ipsi_host_view     = MemorySpace::Memory<ORBDTYPE,
+        ScalarType* ipsi_host_view   = MemorySpace::Memory<ScalarType,
             memory_space_type>::allocate_host_view(ipsi_size);
-        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+        MemorySpace::Memory<ScalarType, memory_space_type>::copy_view_to_host(
             ipsi, ipsi_size, ipsi_host_view);
-        MemorySpace::Memory<ORBDTYPE, MemorySpace::Host>::set(
+        MemorySpace::Memory<ScalarType, MemorySpace::Host>::set(
             ipsi_host_view, numpt_, 0);
 
         // TODO this can be done on the GPU with OpenMP
@@ -344,9 +388,9 @@ void ExtendedGridOrbitals::initFourier()
                 {
                     ipsi_host_view[ix * incx + iy * incy + iz]
                         = 1.
-                          - static_cast<ORBDTYPE>(std::cos(kk[0] * x)
-                                                  * std::cos(kk[1] * y)
-                                                  * std::cos(kk[2] * z));
+                          - static_cast<ScalarType>(std::cos(kk[0] * x)
+                                                    * std::cos(kk[1] * y)
+                                                    * std::cos(kk[2] * z));
 
                     z += hgrid[2];
                 }
@@ -355,17 +399,18 @@ void ExtendedGridOrbitals::initFourier()
             x += hgrid[0];
         }
 
-        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_dev(
+        MemorySpace::Memory<ScalarType, memory_space_type>::copy_view_to_dev(
             ipsi_host_view, ipsi_size, ipsi);
-        MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+        MemorySpace::Memory<ScalarType, memory_space_type>::free_host_view(
             ipsi_host_view);
     }
     resetIterativeIndex();
 }
 
-void ExtendedGridOrbitals::multiply_by_matrix(
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::multiply_by_matrix(
     const dist_matrix::DistMatrix<DISTMATDTYPE>& dmatrix,
-    ORBDTYPE* const product, const int ldp)
+    ScalarType* const product, const int ldp)
 {
 #if 0
     (*MPIdata::sout)<<"self multiply_by_matrix"<<endl;
@@ -381,47 +426,47 @@ void ExtendedGridOrbitals::multiply_by_matrix(
     multiply_by_matrix(work_matrix, product, ldp);
 }
 
-void ExtendedGridOrbitals::multiply_by_matrix(
-    const DISTMATDTYPE* const matrix, ORBDTYPE* product, const int ldp) const
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::multiply_by_matrix(
+    const DISTMATDTYPE* const matrix, ScalarType* product, const int ldp) const
 {
     prod_matrix_tm_.start();
 
     unsigned int const product_size = numst_ * ldp;
-    ORBDTYPE* product_host_view
-        = MemorySpace::Memory<ORBDTYPE, memory_space_type>::allocate_host_view(
-            product_size);
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+    ScalarType* product_host_view   = MemorySpace::Memory<ScalarType,
+        memory_space_type>::allocate_host_view(product_size);
+    MemorySpace::Memory<ScalarType, memory_space_type>::copy_view_to_host(
         product, product_size, product_host_view);
-    memset(product_host_view, 0, ldp * numst_ * sizeof(ORBDTYPE));
+    memset(product_host_view, 0, ldp * numst_ * sizeof(ScalarType));
 
     unsigned int const phi_size = numpt_ * numst_;
-    ORBDTYPE* phi_host_view
-        = MemorySpace::Memory<ORBDTYPE, memory_space_type>::allocate_host_view(
-            phi_size);
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+    ScalarType* phi_host_view   = MemorySpace::Memory<ScalarType,
+        memory_space_type>::allocate_host_view(phi_size);
+    MemorySpace::Memory<ScalarType, memory_space_type>::copy_view_to_host(
         getPsi(0), phi_size, phi_host_view);
 
     // TODO this can be done on the GPU
     LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(numpt_, numst_, numst_, 1.,
         phi_host_view, lda_, matrix, numst_, 0., product_host_view, ldp);
 
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+    MemorySpace::Memory<ScalarType, memory_space_type>::free_host_view(
         phi_host_view);
 
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_dev(
+    MemorySpace::Memory<ScalarType, memory_space_type>::copy_view_to_dev(
         product_host_view, product_size, product);
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+    MemorySpace::Memory<ScalarType, memory_space_type>::free_host_view(
         product_host_view);
 
     prod_matrix_tm_.stop();
 }
 
 #ifdef HAVE_MAGMA
-void ExtendedGridOrbitals::multiplyByMatrix(
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::multiplyByMatrix(
     const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& matrix,
-    ORBDTYPE* product, const int ldp) const
+    ScalarType* product, const int ldp) const
 {
-    SquareLocalMatrices<ORBDTYPE, MemorySpace::Device> matdev(
+    SquareLocalMatrices<ScalarType, MemorySpace::Device> matdev(
         matrix.nmat(), matrix.m());
     matdev.assign(matrix);
 
@@ -429,9 +474,10 @@ void ExtendedGridOrbitals::multiplyByMatrix(
 }
 #endif
 
-void ExtendedGridOrbitals::multiplyByMatrix(
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::multiplyByMatrix(
     const SquareLocalMatrices<MATDTYPE, memory_space_type>& matrix,
-    ORBDTYPE* product, const int ldp) const
+    ScalarType* product, const int ldp) const
 {
     assert(matrix.nmat() == 1);
 
@@ -448,10 +494,11 @@ void ExtendedGridOrbitals::multiplyByMatrix(
 // Here the result is stored in one of the matrices used in the multiplication,
 // so a temporary arry is necessary
 #ifdef HAVE_MAGMA
-void ExtendedGridOrbitals::multiplyByMatrix(
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::multiplyByMatrix(
     const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& matrix)
 {
-    SquareLocalMatrices<ORBDTYPE, MemorySpace::Device> matdev(
+    SquareLocalMatrices<ScalarType, MemorySpace::Device> matdev(
         matrix.nmat(), matrix.m());
     matdev.assign(matrix);
 
@@ -459,42 +506,62 @@ void ExtendedGridOrbitals::multiplyByMatrix(
 }
 #endif
 
-void ExtendedGridOrbitals::multiplyByMatrix(
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::multiplyByMatrix(
     const SquareLocalMatrices<MATDTYPE, memory_space_type>& matrix)
 {
-    ORBDTYPE* product
-        = MemorySpace::Memory<ORBDTYPE, memory_space_type>::allocate(
+    ScalarType* product
+        = MemorySpace::Memory<ScalarType, memory_space_type>::allocate(
             numpt_ * numst_);
 
     multiplyByMatrix(matrix, product, numpt_);
 
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy(
+    MemorySpace::Memory<ScalarType, memory_space_type>::copy(
         product, numpt_ * numst_, getPsi(0));
 
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::free(product);
+    MemorySpace::Memory<ScalarType, memory_space_type>::free(product);
 }
 
-void ExtendedGridOrbitals::multiplyByMatrix(
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::multiplyByMatrix(
     const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& matrix,
-    ExtendedGridOrbitals& product) const
+    ExtendedGridOrbitals<ScalarType>& product) const
 {
     multiplyByMatrix(matrix, product.psi(0), product.lda_);
 }
 
-void ExtendedGridOrbitals::multiply_by_matrix(
-    const DISTMATDTYPE* const matrix, ExtendedGridOrbitals& product) const
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::multiply_by_matrix(
+    const DISTMATDTYPE* const matrix,
+    ExtendedGridOrbitals<ScalarType>& product) const
 {
     multiply_by_matrix(matrix, product.psi(0), product.lda_);
 }
 
 template <>
-void ExtendedGridOrbitals::multiply_by_matrix(
+template <>
+void ExtendedGridOrbitals<ORBDTYPE>::multiply_by_matrix(
+    const dist_matrix::DistMatrix<DISTMATDTYPE>& matrix)
+{
+    multiply_by_DistMatrix(matrix);
+}
+
+template <>
+template <>
+void ExtendedGridOrbitals<ORBDTYPE>::multiply_by_matrix(
+    const ReplicatedMatrix& matrix)
+{
+    multiply_by_ReplicatedMatrix(matrix);
+}
+
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::multiply_by_DistMatrix(
     const dist_matrix::DistMatrix<DISTMATDTYPE>& matrix)
 {
     prod_matrix_tm_.start();
 
-    ORBDTYPE* product = new ORBDTYPE[numpt_ * numst_];
-    memset(product, 0, numpt_ * numst_ * sizeof(ORBDTYPE));
+    ScalarType* product = new ScalarType[numpt_ * numst_];
+    memset(product, 0, numpt_ * numst_ * sizeof(ScalarType));
 
     ReplicatedWorkSpace<DISTMATDTYPE>& wspace(
         ReplicatedWorkSpace<DISTMATDTYPE>::instance());
@@ -502,13 +569,12 @@ void ExtendedGridOrbitals::multiply_by_matrix(
 
     matrix.allgather(work_matrix, numst_);
 
-    const size_t slnumpt = numpt_ * sizeof(ORBDTYPE);
+    const size_t slnumpt = numpt_ * sizeof(ScalarType);
 
     unsigned int const phi_size = numpt_ * numst_;
-    ORBDTYPE* phi_host_view
-        = MemorySpace::Memory<ORBDTYPE, memory_space_type>::allocate_host_view(
-            phi_size);
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+    ScalarType* phi_host_view   = MemorySpace::Memory<ScalarType,
+        memory_space_type>::allocate_host_view(phi_size);
+    MemorySpace::Memory<ScalarType, memory_space_type>::copy_view_to_host(
         getPsi(0), phi_size, phi_host_view);
 
     // TODO this can be done on the GPU
@@ -518,9 +584,9 @@ void ExtendedGridOrbitals::multiply_by_matrix(
     for (int color = 0; color < numst_; color++)
         memcpy(phi_host_view + color * lda_, product + color * numpt_, slnumpt);
 
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_dev(
+    MemorySpace::Memory<ScalarType, memory_space_type>::copy_view_to_dev(
         phi_host_view, phi_size, getPsi(0));
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+    MemorySpace::Memory<ScalarType, memory_space_type>::free_host_view(
         phi_host_view);
 
     delete[] product;
@@ -528,8 +594,9 @@ void ExtendedGridOrbitals::multiply_by_matrix(
     prod_matrix_tm_.stop();
 }
 
-template <>
-void ExtendedGridOrbitals::multiply_by_matrix(const ReplicatedMatrix& matrix)
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::multiply_by_ReplicatedMatrix(
+    const ReplicatedMatrix& matrix)
 {
     prod_matrix_tm_.start();
 
@@ -539,33 +606,35 @@ void ExtendedGridOrbitals::multiply_by_matrix(const ReplicatedMatrix& matrix)
 
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
-    ORBDTYPE* tmp
-        = MemorySpace::Memory<ORBDTYPE, MemorySpace::Device>::allocate(
+    ScalarType* tmp
+        = MemorySpace::Memory<ScalarType, MemorySpace::Device>::allocate(
             numst_ * lda_);
 
     magmablas_dgemm(magma_transa, magma_transb, numpt_, numst_, numst_, 1.,
         block_vector_.vect(0), lda_, matrix.data(), matrix.ld(), 0., tmp, lda_,
         magma_singleton.queue_);
 
-    MemorySpace::Memory<ORBDTYPE, MemorySpace::Device>::copy(
+    MemorySpace::Memory<ScalarType, MemorySpace::Device>::copy(
         tmp, numst_ * lda_, block_vector_.vect(0));
 
-    MemorySpace::Memory<ORBDTYPE, MemorySpace::Device>::free(tmp);
+    MemorySpace::Memory<ScalarType, MemorySpace::Device>::free(tmp);
 #else
-    ORBDTYPE* tmp = MemorySpace::Memory<ORBDTYPE, MemorySpace::Host>::allocate(
-        numst_ * lda_);
+    ScalarType* tmp
+        = MemorySpace::Memory<ScalarType, MemorySpace::Host>::allocate(
+            numst_ * lda_);
     LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(numpt_, numst_, numst_, 1.,
         block_vector_.vect(0), lda_, matrix.data(), matrix.ld(), 0., tmp, lda_);
 
-    memcpy(block_vector_.vect(0), tmp, numst_ * lda_ * sizeof(ORBDTYPE));
+    memcpy(block_vector_.vect(0), tmp, numst_ * lda_ * sizeof(ScalarType));
 
-    MemorySpace::Memory<ORBDTYPE, MemorySpace::Host>::free(tmp);
+    MemorySpace::Memory<ScalarType, MemorySpace::Host>::free(tmp);
 #endif
 
     prod_matrix_tm_.stop();
 }
 
-int ExtendedGridOrbitals::read_hdf5(HDFrestart& h5f_file)
+template <typename ScalarType>
+int ExtendedGridOrbitals<ScalarType>::read_hdf5(HDFrestart& h5f_file)
 {
     assert(proj_matrices_ != nullptr);
 
@@ -575,9 +644,9 @@ int ExtendedGridOrbitals::read_hdf5(HDFrestart& h5f_file)
     int ierr         = read_func_hdf5(h5f_file, name);
     if (ierr < 0)
     {
-        (*MPIdata::serr)
-            << "ExtendedGridOrbitals::read_hdf5(): error in reading " << name
-            << ", size=" << name.size() << std::endl;
+        (*MPIdata::serr) << "ExtendedGridOrbitals<ScalarType>::read_hdf5(): "
+                            "error in reading "
+                         << name << ", size=" << name.size() << std::endl;
         return ierr;
     }
     else if (onpe0 && ct.verbose > 2)
@@ -592,9 +661,9 @@ int ExtendedGridOrbitals::read_hdf5(HDFrestart& h5f_file)
         ierr = proj_matrices_->readDM(h5f_file);
         if (ierr < 0)
         {
-            (*MPIdata::serr)
-                << "ExtendedGridOrbitals::read_hdf5(): error in reading DM"
-                << std::endl;
+            (*MPIdata::serr) << "ExtendedGridOrbitals<ScalarType>::read_hdf5():"
+                                " error in reading DM"
+                             << std::endl;
             return ierr;
         }
     }
@@ -604,7 +673,9 @@ int ExtendedGridOrbitals::read_hdf5(HDFrestart& h5f_file)
     return ierr;
 }
 
-int ExtendedGridOrbitals::write(HDFrestart& h5f_file, const std::string& name)
+template <typename ScalarType>
+int ExtendedGridOrbitals<ScalarType>::write(
+    HDFrestart& h5f_file, const std::string& name)
 {
     if (onpe0)
         (*MPIdata::sout) << "ExtendedGridOrbitals::write_func_hdf5()...\n";
@@ -697,9 +768,9 @@ int ExtendedGridOrbitals::write(HDFrestart& h5f_file, const std::string& name)
         } // iwrite
 
         unsigned int const psi_size = numpt_;
-        ORBDTYPE* psi_host_view     = MemorySpace::Memory<ORBDTYPE,
+        ScalarType* psi_host_view   = MemorySpace::Memory<ScalarType,
             memory_space_type>::allocate_host_view(psi_size);
-        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+        MemorySpace::Memory<ScalarType, memory_space_type>::copy_view_to_host(
             psi(color), psi_size, psi_host_view);
 
         int ierr = h5f_file.writeData(
@@ -712,9 +783,10 @@ int ExtendedGridOrbitals::write(HDFrestart& h5f_file, const std::string& name)
             herr_t status = H5Dclose(dset_id);
             if (status < 0)
             {
-                (*MPIdata::serr) << "ExtendedGridOrbitals::write_func_hdf5:"
-                                    "H5Dclose failed!!!"
-                                 << std::endl;
+                (*MPIdata::serr)
+                    << "ExtendedGridOrbitals<ScalarType>::write_func_hdf5:"
+                       "H5Dclose failed!!!"
+                    << std::endl;
                 return -1;
             }
         }
@@ -745,7 +817,8 @@ int ExtendedGridOrbitals::write(HDFrestart& h5f_file, const std::string& name)
 }
 
 // read all the data sets with names starting with "name"
-int ExtendedGridOrbitals::read_func_hdf5(
+template <typename ScalarType>
+int ExtendedGridOrbitals<ScalarType>::read_func_hdf5(
     HDFrestart& h5f_file, const std::string& name)
 {
     assert(numst_ >= 0);
@@ -766,18 +839,18 @@ int ExtendedGridOrbitals::read_func_hdf5(
     // memory dataspace identifier
     hid_t memspace = (h5f_file.active()) ? h5f_file.createMemspace() : 0;
 
-    ORBDTYPE* buffer = new ORBDTYPE[block[0] * block[1] * block[2]];
+    ScalarType* buffer = new ScalarType[block[0] * block[1] * block[2]];
 
     if (onpe0 && ct.verbose > 2)
     {
         if (h5f_file.gatherDataX())
         {
-            (*MPIdata::sout)
-                << "ExtendedGridOrbitals::read_func_hdf5(): Read wave "
-                   "functions from "
-                << grid_.mype_env().n_mpi_task(1)
-                       * grid_.mype_env().n_mpi_task(2)
-                << " PEs" << std::endl;
+            (*MPIdata::sout) << "ExtendedGridOrbitals::read_func_"
+                                "hdf5(): Read wave "
+                                "functions from "
+                             << grid_.mype_env().n_mpi_task(1)
+                                    * grid_.mype_env().n_mpi_task(2)
+                             << " PEs" << std::endl;
         }
         else
         {
@@ -806,18 +879,19 @@ int ExtendedGridOrbitals::read_func_hdf5(
         hid_t dset_id = h5f_file.open_dset(datasetname);
         if (dset_id < 0)
         {
-            (*MPIdata::serr)
-                << "ExtendedGridOrbitals::read_func_hdf5() --- cannot open "
-                << datasetname << std::endl;
+            (*MPIdata::serr) << "ExtendedGridOrbitals<ScalarType>::read_func_"
+                                "hdf5() --- cannot open "
+                             << datasetname << std::endl;
             return dset_id;
         }
 
         herr_t status = h5f_file.readData(buffer, memspace, dset_id, precision);
         if (status < 0)
         {
-            (*MPIdata::serr) << "ExtendedGridOrbitals::read_func_hdf5() --- "
-                                "H5Dread failed!!!"
-                             << std::endl;
+            (*MPIdata::serr)
+                << "ExtendedGridOrbitals<ScalarType>::read_func_hdf5() --- "
+                   "H5Dread failed!!!"
+                << std::endl;
             return -1;
         }
 
@@ -828,16 +902,16 @@ int ExtendedGridOrbitals::read_func_hdf5(
         }
 
 #ifdef HAVE_MAGMA
-        ORBDTYPE* buffer_dev
-            = MemorySpace::Memory<ORBDTYPE, MemorySpace::Device>::allocate(
+        ScalarType* buffer_dev
+            = MemorySpace::Memory<ScalarType, MemorySpace::Device>::allocate(
                 numpt_);
         MemorySpace::copy_to_dev(buffer, numpt_, buffer_dev);
 #else
-        ORBDTYPE* buffer_dev = buffer;
+        ScalarType* buffer_dev = buffer;
 #endif
         block_vector_.assignLocal(icolor, 0, buffer_dev);
 #ifdef HAVE_MAGMA
-        MemorySpace::Memory<ORBDTYPE, MemorySpace::Device>::free(buffer_dev);
+        MemorySpace::Memory<ScalarType, MemorySpace::Device>::free(buffer_dev);
 #endif
     }
 
@@ -859,8 +933,10 @@ int ExtendedGridOrbitals::read_func_hdf5(
 
 // compute the matrix <psi1|B|psi2>
 // output: matB
-void ExtendedGridOrbitals::computeMatB(
-    const ExtendedGridOrbitals& orbitals, const pb::Lap<ORBDTYPE>& LapOper)
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::computeMatB(
+    const ExtendedGridOrbitals<ScalarType>& orbitals,
+    const pb::Lap<ScalarType>& LapOper)
 {
     if (numst_ == 0) return;
 
@@ -876,17 +952,16 @@ void ExtendedGridOrbitals::computeMatB(
 
     SquareLocalMatrices<MATDTYPE, MemorySpace::Host> ss(1, numst_);
 
-    ORBDTYPE* work = new ORBDTYPE[lda_ * bcolor];
-    memset(work, 0, lda_ * bcolor * sizeof(ORBDTYPE));
+    ScalarType* work = new ScalarType[lda_ * bcolor];
+    memset(work, 0, lda_ * bcolor * sizeof(ScalarType));
 
-    ORBDTYPE* const orbitals_psi
+    ScalarType* const orbitals_psi
         = (numst_ > 0) ? orbitals.block_vector_.vect(0) : nullptr;
     const unsigned int orbitals_psi_size
         = orbitals.block_vector_.get_allocated_size_storage();
-    ORBDTYPE* orbitals_psi_host_view
-        = MemorySpace::Memory<ORBDTYPE, memory_space_type>::allocate_host_view(
-            orbitals_psi_size);
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+    ScalarType* orbitals_psi_host_view = MemorySpace::Memory<ScalarType,
+        memory_space_type>::allocate_host_view(orbitals_psi_size);
+    MemorySpace::Memory<ScalarType, memory_space_type>::copy_view_to_host(
         orbitals_psi, orbitals_psi_size, orbitals_psi_host_view);
 
     setDataWithGhosts();
@@ -911,7 +986,7 @@ void ExtendedGridOrbitals::computeMatB(
             ss0 + icolor * numst_, numst_);
     }
 
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+    MemorySpace::Memory<ScalarType, memory_space_type>::free_host_view(
         orbitals_psi_host_view);
     delete[] work;
 
@@ -921,7 +996,9 @@ void ExtendedGridOrbitals::computeMatB(
 }
 
 // compute <Phi|B|Phi> and its inverse
-void ExtendedGridOrbitals::computeBAndInvB(const pb::Lap<ORBDTYPE>& LapOper)
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::computeBAndInvB(
+    const pb::Lap<ScalarType>& LapOper)
 {
     assert(proj_matrices_ != nullptr);
 
@@ -936,7 +1013,8 @@ void ExtendedGridOrbitals::computeBAndInvB(const pb::Lap<ORBDTYPE>& LapOper)
     invBmat_tm_.stop();
 }
 
-void ExtendedGridOrbitals::getLocalOverlap(
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::getLocalOverlap(
     SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& ss)
 {
     assert(numst_ >= 0);
@@ -949,7 +1027,9 @@ void ExtendedGridOrbitals::getLocalOverlap(
     }
 }
 
-void ExtendedGridOrbitals::getLocalOverlap(const ExtendedGridOrbitals& orbitals,
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::getLocalOverlap(
+    const ExtendedGridOrbitals& orbitals,
     SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& ss)
 {
     assert(numst_ >= 0);
@@ -961,8 +1041,9 @@ void ExtendedGridOrbitals::getLocalOverlap(const ExtendedGridOrbitals& orbitals,
     }
 }
 
-void ExtendedGridOrbitals::computeLocalProduct(
-    const ExtendedGridOrbitals& orbitals,
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::computeLocalProduct(
+    const ExtendedGridOrbitals<ScalarType>& orbitals,
     LocalMatrices<MATDTYPE, MemorySpace::Host>& ss, const bool transpose)
 {
     // assert( orbitals.numst_>=0 );
@@ -973,11 +1054,12 @@ void ExtendedGridOrbitals::computeLocalProduct(
 }
 
 #ifdef HAVE_MAGMA
-void ExtendedGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
-    const int ld, LocalMatrices<MATDTYPE, MemorySpace::Host>& ss,
-    const bool transpose)
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::computeLocalProduct(
+    const ScalarType* const array, const int ld,
+    LocalMatrices<MATDTYPE, MemorySpace::Host>& ss, const bool transpose)
 {
-    LocalMatrices<ORBDTYPE, MemorySpace::Device> sdev(
+    LocalMatrices<ScalarType, MemorySpace::Device> sdev(
         ss.nmat(), ss.m(), ss.n());
 
     computeLocalProduct(array, ld, sdev, transpose);
@@ -986,9 +1068,10 @@ void ExtendedGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
 }
 #endif
 
-void ExtendedGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
-    const int ld, LocalMatrices<MATDTYPE, memory_space_type>& ss,
-    const bool transpose)
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::computeLocalProduct(
+    const ScalarType* const array, const int ld,
+    LocalMatrices<MATDTYPE, memory_space_type>& ss, const bool transpose)
 {
     assert(numpt_ > 0);
     assert(numpt_ <= ld);
@@ -996,8 +1079,8 @@ void ExtendedGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
     assert(numst_ != 0);
     assert(grid_.vel() > 0.);
 
-    const ORBDTYPE* const a = transpose ? array : block_vector_.vect(0);
-    const ORBDTYPE* const b = transpose ? block_vector_.vect(0) : array;
+    const ScalarType* const a = transpose ? array : block_vector_.vect(0);
+    const ScalarType* const b = transpose ? block_vector_.vect(0) : array;
 
     const int lda = transpose ? ld : lda_;
     const int ldb = transpose ? lda_ : ld;
@@ -1006,8 +1089,10 @@ void ExtendedGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
         grid_.vel(), a, lda, b, ldb, 0., ss.getRawPtr(0), ss.m());
 }
 
-void ExtendedGridOrbitals::computeDiagonalElementsDotProduct(
-    const ExtendedGridOrbitals& orbitals, std::vector<DISTMATDTYPE>& ss) const
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::computeDiagonalElementsDotProduct(
+    const ExtendedGridOrbitals<ScalarType>& orbitals,
+    std::vector<DISTMATDTYPE>& ss) const
 {
     assert(numst_ > 0);
     assert(grid_.vel() > 0.);
@@ -1025,7 +1110,8 @@ void ExtendedGridOrbitals::computeDiagonalElementsDotProduct(
     mmpi.allreduce(&tmp[0], &ss[0], numst_, MPI_SUM);
 }
 
-void ExtendedGridOrbitals::computeGram(
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::computeGram(
     dist_matrix::DistMatrix<DISTMATDTYPE>& gram_mat)
 {
     SquareLocalMatrices<MATDTYPE, MemorySpace::Host> ss(1, numst_);
@@ -1039,7 +1125,9 @@ void ExtendedGridOrbitals::computeGram(
     sl2dm->accumulate(ss, gram_mat);
 }
 
-void ExtendedGridOrbitals::computeGram(const ExtendedGridOrbitals& orbitals,
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::computeGram(
+    const ExtendedGridOrbitals& orbitals,
     dist_matrix::DistMatrix<DISTMATDTYPE>& gram_mat)
 {
     SquareLocalMatrices<MATDTYPE, MemorySpace::Host> ss(1, numst_);
@@ -1055,7 +1143,8 @@ void ExtendedGridOrbitals::computeGram(const ExtendedGridOrbitals& orbitals,
 }
 
 // compute the lower-triangular part of the overlap matrix
-void ExtendedGridOrbitals::computeGram(const int verbosity)
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::computeGram(const int verbosity)
 {
     assert(proj_matrices_ != nullptr);
 
@@ -1081,7 +1170,8 @@ void ExtendedGridOrbitals::computeGram(const int verbosity)
     overlap_tm_.stop();
 }
 
-void ExtendedGridOrbitals::computeGramAndInvS(const int verbosity)
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::computeGramAndInvS(const int verbosity)
 {
     assert(proj_matrices_ != nullptr);
 
@@ -1091,27 +1181,28 @@ void ExtendedGridOrbitals::computeGramAndInvS(const int verbosity)
     proj_matrices_->computeInvS();
 }
 
-void ExtendedGridOrbitals::checkCond(const double tol, const bool flag_stop)
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::checkCond(
+    const double tol, const bool flag_stop)
 {
     assert(proj_matrices_ != nullptr);
 
     proj_matrices_->checkCond(tol, flag_stop);
 }
 
-double ExtendedGridOrbitals::dotProduct(const ExtendedGridOrbitals& orbitals)
+template <typename ScalarType>
+double ExtendedGridOrbitals<ScalarType>::dotProduct(
+    const ExtendedGridOrbitals<ScalarType>& orbitals)
 {
     assert(dotProductManager_ != nullptr);
     return dotProductManager_->dotProduct(*this, orbitals);
 }
 
-double ExtendedGridOrbitals::dotProduct(
-    const ExtendedGridOrbitals& orbitals, const short dot_type)
+template <typename ScalarType>
+double ExtendedGridOrbitals<ScalarType>::dotProduct(
+    const ExtendedGridOrbitals<ScalarType>& orbitals, const short dot_type)
 {
     dot_product_tm_.start();
-
-    assert(numst_ >= 0);
-    assert(1 > 0);
-    assert(1 < 1000);
 
     DotProductManagerFactory<ExtendedGridOrbitals> factory;
     DotProductManager<ExtendedGridOrbitals>* manager = factory.create(dot_type);
@@ -1126,7 +1217,9 @@ double ExtendedGridOrbitals::dotProduct(
     return dot;
 }
 
-void ExtendedGridOrbitals::orthonormalizeLoewdin(const bool overlap_uptodate,
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::orthonormalizeLoewdin(
+    const bool overlap_uptodate,
     SquareLocalMatrices<MATDTYPE, MemorySpace::Host>* matrixTransform,
     const bool update_matrices)
 {
@@ -1180,7 +1273,8 @@ void ExtendedGridOrbitals::orthonormalizeLoewdin(const bool overlap_uptodate,
     if (matrixTransform == nullptr) delete localP;
 }
 
-double ExtendedGridOrbitals::norm() const
+template <typename ScalarType>
+double ExtendedGridOrbitals<ScalarType>::norm() const
 {
     double norm = 0;
 
@@ -1191,7 +1285,8 @@ double ExtendedGridOrbitals::norm() const
     return norm;
 }
 
-double ExtendedGridOrbitals::normState(const int gid) const
+template <typename ScalarType>
+double ExtendedGridOrbitals<ScalarType>::normState(const int gid) const
 {
     assert(gid >= 0);
 
@@ -1208,7 +1303,9 @@ double ExtendedGridOrbitals::normState(const int gid) const
     return grid_.vel() * norm;
 }
 
-void ExtendedGridOrbitals::orthonormalize2states(const int st1, const int st2)
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::orthonormalize2states(
+    const int st1, const int st2)
 {
     assert(st1 >= 0);
     assert(st2 >= 0);
@@ -1278,15 +1375,16 @@ void ExtendedGridOrbitals::orthonormalize2states(const int st1, const int st2)
 #endif
 }
 
-void ExtendedGridOrbitals::multiplyByMatrix2states(const int st1, const int st2,
-    const double* mat, ExtendedGridOrbitals& product)
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::multiplyByMatrix2states(const int st1,
+    const int st2, const double* mat, ExtendedGridOrbitals<ScalarType>& product)
 {
     assert(st1 >= 0);
     assert(st2 >= 0);
     assert(1 == 1);
 
     // if( onpe0 && ct.verbose>2 )
-    //  (*MPIdata::sout)<<"ExtendedGridOrbitals::multiplyByMatrix2states()"<<endl;
+    //  (*MPIdata::sout)<<"ExtendedGridOrbitals<ScalarType>::multiplyByMatrix2states()"<<endl;
 
     product.block_vector_.set_zero(st1, 0);
     product.block_vector_.set_zero(st2, 0);
@@ -1297,7 +1395,8 @@ void ExtendedGridOrbitals::multiplyByMatrix2states(const int st1, const int st2,
     product.block_vector_.axpy(mat[1], block_vector_, st2, st1, 0);
 }
 
-void ExtendedGridOrbitals::computeInvNorms2(
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::computeInvNorms2(
     std::vector<std::vector<double>>& inv_norms2) const
 {
     std::vector<double> diagS(numst_);
@@ -1315,7 +1414,8 @@ void ExtendedGridOrbitals::computeInvNorms2(
     }
 }
 
-void ExtendedGridOrbitals::normalize()
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::normalize()
 {
     normalize_tm_.start();
 
@@ -1323,7 +1423,8 @@ void ExtendedGridOrbitals::normalize()
     assert(numst_ >= 0);
 
     // if( onpe0 && ct.verbose>2 )
-    //        (*MPIdata::sout)<<"Normalize ExtendedGridOrbitals"<<endl;
+    //        (*MPIdata::sout)<<"Normalize
+    //        ExtendedGridOrbitals<ScalarType>"<<endl;
 
     //    const double vel = grid_.vel();
     std::vector<double> diagS(numst_);
@@ -1350,8 +1451,10 @@ void ExtendedGridOrbitals::normalize()
 }
 
 // modify argument orbitals, by projecting out its component
-// along ExtendedGridOrbitals
-void ExtendedGridOrbitals::projectOut(ExtendedGridOrbitals& orbitals)
+// along ExtendedGridOrbitals<ScalarType>
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::projectOut(
+    ExtendedGridOrbitals<ScalarType>& orbitals)
 {
     projectOut(orbitals.psi(0), lda_);
 
@@ -1366,7 +1469,9 @@ void ExtendedGridOrbitals::projectOut(ExtendedGridOrbitals& orbitals)
     orbitals.incrementIterativeIndex();
 }
 
-void ExtendedGridOrbitals::projectOut(ORBDTYPE* const array, const int lda)
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::projectOut(
+    ScalarType* const array, const int lda)
 {
     assert(lda > 1);
     assert(numpt_ > 0);
@@ -1384,14 +1489,13 @@ void ExtendedGridOrbitals::projectOut(ORBDTYPE* const array, const int lda)
 #endif
     proj_matrices_->applyInvS(lmatrix);
 
-    ORBDTYPE* tproduct = new ORBDTYPE[numpt_ * numst_];
-    memset(tproduct, 0, numpt_ * numst_ * sizeof(ORBDTYPE));
+    ScalarType* tproduct = new ScalarType[numpt_ * numst_];
+    memset(tproduct, 0, numpt_ * numst_ * sizeof(ScalarType));
 
     unsigned int const phi_size = numpt_ * numst_;
-    ORBDTYPE* phi_host_view
-        = MemorySpace::Memory<ORBDTYPE, memory_space_type>::allocate_host_view(
-            phi_size);
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+    ScalarType* phi_host_view   = MemorySpace::Memory<ScalarType,
+        memory_space_type>::allocate_host_view(phi_size);
+    MemorySpace::Memory<ScalarType, memory_space_type>::copy_view_to_host(
         getPsi(0), phi_size, phi_host_view);
 
     MATDTYPE* localMat = lmatrix.getRawPtr();
@@ -1401,32 +1505,32 @@ void ExtendedGridOrbitals::projectOut(ORBDTYPE* const array, const int lda)
     LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(numpt_, numst_, numst_, 1.,
         phi_host_view, lda_, localMat, numst_, 0., tproduct, numpt_);
 
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+    MemorySpace::Memory<ScalarType, memory_space_type>::free_host_view(
         phi_host_view);
 
-    ORBDTYPE* parray               = array + 0 * numpt_;
+    ScalarType* parray             = array + 0 * numpt_;
     unsigned int const parray_size = numst_ * lda;
-    ORBDTYPE* parray_host_view
-        = MemorySpace::Memory<ORBDTYPE, memory_space_type>::allocate_host_view(
-            parray_size);
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+    ScalarType* parray_host_view   = MemorySpace::Memory<ScalarType,
+        memory_space_type>::allocate_host_view(parray_size);
+    MemorySpace::Memory<ScalarType, memory_space_type>::copy_view_to_host(
         parray, parray_size, parray_host_view);
 
-    ORBDTYPE minus = -1.;
+    ScalarType minus = -1.;
     for (int j = 0; j < numst_; j++)
         LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
             numpt_, minus, tproduct + j * numpt_, parray_host_view + j * lda);
 
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_dev(
+    MemorySpace::Memory<ScalarType, memory_space_type>::copy_view_to_dev(
         parray_host_view, parray_size, parray);
 
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+    MemorySpace::Memory<ScalarType, memory_space_type>::free_host_view(
         parray_host_view);
 
     delete[] tproduct;
 }
 
-void ExtendedGridOrbitals::initRand()
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::initRand()
 {
     Control& ct = *(Control::instance());
 
@@ -1465,10 +1569,10 @@ void ExtendedGridOrbitals::initRand()
         for (unsigned int idx = 0; idx < grid_.gdim(2); idx++)
             zrand[idx] = ran0() - 0.5;
 
-        unsigned int const size  = numpt_;
-        ORBDTYPE* psi_state_view = MemorySpace::Memory<ORBDTYPE,
+        unsigned int const size    = numpt_;
+        ScalarType* psi_state_view = MemorySpace::Memory<ScalarType,
             memory_space_type>::allocate_host_view(size);
-        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+        MemorySpace::Memory<ScalarType, memory_space_type>::copy_view_to_host(
             psi(istate), size, psi_state_view);
 
         for (int ix = loc_length * 0; ix < loc_length; ix++)
@@ -1484,9 +1588,9 @@ void ExtendedGridOrbitals::initRand()
                            < static_cast<unsigned int>(lda_));
                 }
 
-        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_dev(
+        MemorySpace::Memory<ScalarType, memory_space_type>::copy_view_to_dev(
             psi_state_view, size, psi(istate));
-        MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+        MemorySpace::Memory<ScalarType, memory_space_type>::free_host_view(
             psi_state_view);
     }
 
@@ -1494,8 +1598,18 @@ void ExtendedGridOrbitals::initRand()
 }
 
 template <>
-void ExtendedGridOrbitals::addDotWithNcol2Matrix(
-    ExtendedGridOrbitals& Apsi, dist_matrix::DistMatrix<double>& matrix) const
+template <>
+void ExtendedGridOrbitals<ORBDTYPE>::addDotWithNcol2Matrix(
+    ExtendedGridOrbitals<ORBDTYPE>& Apsi,
+    dist_matrix::DistMatrix<double>& matrix) const
+{
+    addDotWithNcol2DistMatrix(Apsi, matrix);
+}
+
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::addDotWithNcol2DistMatrix(
+    ExtendedGridOrbitals<ScalarType>& Apsi,
+    dist_matrix::DistMatrix<double>& matrix) const
 {
     addDot_tm_.start();
 
@@ -1509,17 +1623,15 @@ void ExtendedGridOrbitals::addDotWithNcol2Matrix(
     memset(work.data(), 0, size_work * sizeof(double));
 
     unsigned int const block_vector_size = numpt_ * numst_;
-    ORBDTYPE* block_vector_host_view
-        = MemorySpace::Memory<ORBDTYPE, memory_space_type>::allocate_host_view(
-            block_vector_size);
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+    ScalarType* block_vector_host_view   = MemorySpace::Memory<ScalarType,
+        memory_space_type>::allocate_host_view(block_vector_size);
+    MemorySpace::Memory<ScalarType, memory_space_type>::copy_view_to_host(
         block_vector_.vect(0), block_vector_size, block_vector_host_view);
 
     unsigned int const phi_size = numpt_ * numst_;
-    ORBDTYPE* phi_host_view
-        = MemorySpace::Memory<ORBDTYPE, memory_space_type>::allocate_host_view(
-            phi_size);
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+    ScalarType* phi_host_view   = MemorySpace::Memory<ScalarType,
+        memory_space_type>::allocate_host_view(phi_size);
+    MemorySpace::Memory<ScalarType, memory_space_type>::copy_view_to_host(
         Apsi.getPsi(0), phi_size, phi_host_view);
 
     // TODO this can be done on the GPU
@@ -1527,10 +1639,10 @@ void ExtendedGridOrbitals::addDotWithNcol2Matrix(
         block_vector_host_view + 0 * numpt_, lda_, phi_host_view, lda_, 1.,
         work.data(), numst_);
 
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+    MemorySpace::Memory<ScalarType, memory_space_type>::free_host_view(
         phi_host_view);
 
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+    MemorySpace::Memory<ScalarType, memory_space_type>::free_host_view(
         block_vector_host_view);
 
     std::vector<double> work2(size_work);
@@ -1544,8 +1656,16 @@ void ExtendedGridOrbitals::addDotWithNcol2Matrix(
 }
 
 template <>
-void ExtendedGridOrbitals::addDotWithNcol2Matrix(
-    ExtendedGridOrbitals& Apsi, ReplicatedMatrix& matrix) const
+template <>
+void ExtendedGridOrbitals<ORBDTYPE>::addDotWithNcol2Matrix(
+    ExtendedGridOrbitals<ORBDTYPE>& Apsi, ReplicatedMatrix& matrix) const
+{
+    addDotWithNcol2ReplicatedMatrix(Apsi, matrix);
+}
+
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::addDotWithNcol2ReplicatedMatrix(
+    ExtendedGridOrbitals<ScalarType>& Apsi, ReplicatedMatrix& matrix) const
 {
     addDot_tm_.start();
 
@@ -1574,7 +1694,8 @@ void ExtendedGridOrbitals::addDotWithNcol2Matrix(
     addDot_tm_.stop();
 }
 
-void ExtendedGridOrbitals::computeGlobalIndexes()
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::computeGlobalIndexes()
 {
     overlapping_gids_.clear();
     overlapping_gids_.resize(1);
@@ -1585,7 +1706,8 @@ void ExtendedGridOrbitals::computeGlobalIndexes()
     }
 }
 
-void ExtendedGridOrbitals::printTimers(std::ostream& os)
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::printTimers(std::ostream& os)
 {
     matB_tm_.print(os);
     invBmat_tm_.print(os);
@@ -1598,7 +1720,8 @@ void ExtendedGridOrbitals::printTimers(std::ostream& os)
     axpy_tm_.print(os);
 }
 
-void ExtendedGridOrbitals::initWF(
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::initWF(
     const std::shared_ptr<LocalizationRegions> lrs)
 {
     Control& ct = *(Control::instance());
@@ -1633,10 +1756,10 @@ void ExtendedGridOrbitals::initWF(
             if (ct.globalColoring())
             {
                 // smooth out random functions
-                pb::Laph4M<ORBDTYPE> myoper(grid_);
-                pb::GridFunc<ORBDTYPE> gf_work(
+                pb::Laph4M<ScalarType> myoper(grid_);
+                pb::GridFunc<ScalarType> gf_work(
                     grid_, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
-                pb::GridFunc<ORBDTYPE> gf_psi(
+                pb::GridFunc<ScalarType> gf_psi(
                     grid_, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
 
                 if (onpe0 && ct.verbose > 2)
@@ -1687,24 +1810,7 @@ void ExtendedGridOrbitals::initWF(
 #endif
 }
 
-template void ExtendedGridOrbitals::axpy(
-    const double alpha, const ExtendedGridOrbitals&);
-#ifdef MGMOL_USE_MIXEDP
-template void ExtendedGridOrbitals::axpy(
-    const float alpha, const ExtendedGridOrbitals&);
-#endif
+template void ExtendedGridOrbitals<ORBDTYPE>::axpy(
+    const ORBDTYPE alpha, const ExtendedGridOrbitals<ORBDTYPE>&);
 
-template void ExtendedGridOrbitals::setDataWithGhosts(
-    pb::GridFuncVector<float, memory_space_type>* data_wghosts);
-template void ExtendedGridOrbitals::setDataWithGhosts(
-    pb::GridFuncVector<double, memory_space_type>* data_wghosts);
-
-template void ExtendedGridOrbitals::setPsi(
-    const pb::GridFunc<float>& gf_work, const int ist);
-template void ExtendedGridOrbitals::setPsi(
-    const pb::GridFunc<double>& gf_work, const int ist);
-
-template void ExtendedGridOrbitals::setPsi(
-    const pb::GridFuncVector<float, memory_space_type>& gf_work);
-template void ExtendedGridOrbitals::setPsi(
-    const pb::GridFuncVector<double, memory_space_type>& gf_work);
+template class ExtendedGridOrbitals<ORBDTYPE>;

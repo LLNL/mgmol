@@ -48,5 +48,5 @@ int EigenDMStrategy<OrbitalsType>::update(OrbitalsType& orbitals)
     return 0;
 }
 
-template class EigenDMStrategy<LocGridOrbitals>;
-template class EigenDMStrategy<ExtendedGridOrbitals>;
+template class EigenDMStrategy<LocGridOrbitals<ORBDTYPE>>;
+template class EigenDMStrategy<ExtendedGridOrbitals<ORBDTYPE>>;

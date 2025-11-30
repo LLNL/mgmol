@@ -262,7 +262,7 @@ double PolakRibiereSolver<OrbitalsType>::computeBeta(
     OrbitalsType& work_orbitals) const
 {
     work_orbitals.assign(*r_k_);
-    work_orbitals.axpy(-1., *r_km1_);
+    work_orbitals.axpy((ORBDTYPE)(-1.), *r_km1_);
 
     double beta = z_k_->dotProduct(work_orbitals, 2);
 
@@ -453,7 +453,7 @@ int PolakRibiereSolver<OrbitalsType>::solve(OrbitalsType& orbitals,
                 if (onpe0 && ct.verbose > 1)
                     os_ << " PolakRibiereSolver: beta=" << beta << std::endl;
                 p_k_->scal(beta);
-                p_k_->axpy(1., *z_k_);
+                p_k_->axpy((ORBDTYPE)1., *z_k_);
 
                 if (beta > 0.1) p_k_->scal(1. / (1. + beta));
             }
@@ -462,7 +462,7 @@ int PolakRibiereSolver<OrbitalsType>::solve(OrbitalsType& orbitals,
             alpha_k = alpha_;
 
             // make new trial step
-            orbitals.axpy(alpha_k, *p_k_);
+            orbitals.axpy((ORBDTYPE)alpha_k, *p_k_);
 
             // save current "k" vectors into "km1" vectors
             if (with_preconditioner_)
@@ -480,7 +480,7 @@ int PolakRibiereSolver<OrbitalsType>::solve(OrbitalsType& orbitals,
                     << alpha_k << "..." << std::endl;
 
             // half step back
-            orbitals.axpy(-1. * alpha_k, *p_k_);
+            orbitals.axpy((ORBDTYPE)(-1. * alpha_k), *p_k_);
 
             // return DM to value before trial step
             dm_strategy_->reset();
@@ -577,5 +577,5 @@ int PolakRibiereSolver<OrbitalsType>::solve(OrbitalsType& orbitals,
     return retval;
 }
 
-template class PolakRibiereSolver<LocGridOrbitals>;
-template class PolakRibiereSolver<ExtendedGridOrbitals>;
+template class PolakRibiereSolver<LocGridOrbitals<ORBDTYPE>>;
+template class PolakRibiereSolver<ExtendedGridOrbitals<ORBDTYPE>>;

@@ -31,5 +31,5 @@ double DotProductSimple<T>::dotProduct(T& phi0, const T& phi1)
     return proj_matrices->dotProductSimple(ss);
 }
 
-template class DotProductSimple<LocGridOrbitals>;
-template class DotProductSimple<ExtendedGridOrbitals>;
+template class DotProductSimple<LocGridOrbitals<ORBDTYPE>>;
+template class DotProductSimple<ExtendedGridOrbitals<ORBDTYPE>>;

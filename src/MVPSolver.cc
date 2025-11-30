@@ -401,10 +401,10 @@ void MVPSolver<OrbitalsType, MatrixType>::printTimers(std::ostream& os)
     target_tm_.print(os);
 }
 
-template class MVPSolver<LocGridOrbitals,
+template class MVPSolver<LocGridOrbitals<ORBDTYPE>,
     dist_matrix::DistMatrix<DISTMATDTYPE>>;
-template class MVPSolver<LocGridOrbitals, ReplicatedMatrix>;
+template class MVPSolver<LocGridOrbitals<ORBDTYPE>, ReplicatedMatrix>;
 
-template class MVPSolver<ExtendedGridOrbitals,
+template class MVPSolver<ExtendedGridOrbitals<ORBDTYPE>,
     dist_matrix::DistMatrix<DISTMATDTYPE>>;
-template class MVPSolver<ExtendedGridOrbitals, ReplicatedMatrix>;
+template class MVPSolver<ExtendedGridOrbitals<ORBDTYPE>, ReplicatedMatrix>;

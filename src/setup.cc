@@ -194,5 +194,5 @@ int MGmol<OrbitalsType>::setupConstraintsFromInput(const std::string filename)
     return 0;
 }
 
-template class MGmol<LocGridOrbitals>;
-template class MGmol<ExtendedGridOrbitals>;
+template class MGmol<LocGridOrbitals<ORBDTYPE>>;
+template class MGmol<ExtendedGridOrbitals<ORBDTYPE>>;

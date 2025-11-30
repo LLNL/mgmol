@@ -52,8 +52,8 @@ Timer quench_evnl_tm("quench_evnl");
 Timer updateCenters_tm("MGmol<OrbitalsType>::updateCenters");
 
 template <>
-void MGmol<ExtendedGridOrbitals>::adaptLR(
-    const SpreadsAndCenters<ExtendedGridOrbitals>* /*spreadf*/,
+void MGmol<ExtendedGridOrbitals<ORBDTYPE>>::adaptLR(
+    const SpreadsAndCenters<ExtendedGridOrbitals<ORBDTYPE>>* /*spreadf*/,
     const OrbitalsTransform* /*ot*/)
 {
 }
@@ -397,7 +397,8 @@ void MGmol<OrbitalsType>::disentangleOrbitals(OrbitalsType& orbitals,
 }
 
 template <>
-void MGmol<LocGridOrbitals>::applyAOMMprojection(LocGridOrbitals& orbitals)
+void MGmol<LocGridOrbitals<ORBDTYPE>>::applyAOMMprojection(
+    LocGridOrbitals<ORBDTYPE>& orbitals)
 {
     aomm_.reset(new AOMMprojector(orbitals, lrs_));
     aomm_->projectOut(orbitals);
@@ -409,8 +410,9 @@ void MGmol<OrbitalsType>::applyAOMMprojection(OrbitalsType&)
 }
 
 template <>
-int MGmol<LocGridOrbitals>::outerSolve(LocGridOrbitals& orbitals,
-    LocGridOrbitals& work_orbitals, Ions& ions, const int max_steps,
+int MGmol<LocGridOrbitals<ORBDTYPE>>::outerSolve(
+    LocGridOrbitals<ORBDTYPE>& orbitals,
+    LocGridOrbitals<ORBDTYPE>& work_orbitals, Ions& ions, const int max_steps,
     const int iprint, double& last_eks)
 {
     int retval
@@ -423,7 +425,7 @@ int MGmol<LocGridOrbitals>::outerSolve(LocGridOrbitals& orbitals,
         case OuterSolverType::ABPG:
         case OuterSolverType::NLCG:
         {
-            DFTsolver<LocGridOrbitals> solver(hamiltonian_.get(),
+            DFTsolver<LocGridOrbitals<ORBDTYPE>> solver(hamiltonian_.get(),
                 proj_matrices_.get(), energy_.get(), electrostat_.get(), this,
                 ions, rho_.get(), dm_strategy_.get(), os_);
 
@@ -435,9 +437,10 @@ int MGmol<LocGridOrbitals>::outerSolve(LocGridOrbitals& orbitals,
 
         case OuterSolverType::PolakRibiere:
         {
-            PolakRibiereSolver<LocGridOrbitals> solver(hamiltonian_.get(),
-                proj_matrices_.get(), energy_.get(), electrostat_.get(), this,
-                ions, rho_.get(), dm_strategy_.get(), os_);
+            PolakRibiereSolver<LocGridOrbitals<ORBDTYPE>> solver(
+                hamiltonian_.get(), proj_matrices_.get(), energy_.get(),
+                electrostat_.get(), this, ions, rho_.get(), dm_strategy_.get(),
+                os_);
 
             retval = solver.solve(
                 orbitals, work_orbitals, ions, max_steps, iprint, last_eks);
@@ -667,5 +670,5 @@ int MGmol<OrbitalsType>::quench(OrbitalsType& orbitals, Ions& ions,
     return retval;
 }
 
-template class MGmol<LocGridOrbitals>;
-template class MGmol<ExtendedGridOrbitals>;
+template class MGmol<LocGridOrbitals<ORBDTYPE>>;
+template class MGmol<ExtendedGridOrbitals<ORBDTYPE>>;

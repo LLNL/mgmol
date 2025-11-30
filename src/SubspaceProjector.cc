@@ -82,5 +82,5 @@ void SubspaceProjector<T>::projectOut(
     orbitals.incrementIterativeIndex();
 }
 
-template class SubspaceProjector<LocGridOrbitals>;
-template class SubspaceProjector<ExtendedGridOrbitals>;
+template class SubspaceProjector<LocGridOrbitals<ORBDTYPE>>;
+template class SubspaceProjector<ExtendedGridOrbitals<ORBDTYPE>>;

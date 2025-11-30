@@ -87,11 +87,13 @@ int main(int argc, char** argv)
 
         MGmolInterface* mgmol;
         if (ct.isLocMode())
-            mgmol = new MGmol<LocGridOrbitals>(global_comm, *MPIdata::sout,
-                input_filename, lrs_filename, constraints_filename);
+            mgmol = new MGmol<LocGridOrbitals<ORBDTYPE>>(global_comm,
+                *MPIdata::sout, input_filename, lrs_filename,
+                constraints_filename);
         else
-            mgmol = new MGmol<ExtendedGridOrbitals>(global_comm, *MPIdata::sout,
-                input_filename, lrs_filename, constraints_filename);
+            mgmol = new MGmol<ExtendedGridOrbitals<ORBDTYPE>>(global_comm,
+                *MPIdata::sout, input_filename, lrs_filename,
+                constraints_filename);
 
         if (MPIdata::onpe0)
         {
@@ -158,9 +160,9 @@ int main(int argc, char** argv)
         std::shared_ptr<ProjectedMatricesInterface> projmatrices
             = mgmol->getProjectedMatrices();
 
-        ExtendedGridOrbitals orbitals("new_orbitals", mygrid, mymesh->subdivx(),
-            ct.numst, ct.bcWF, projmatrices.get(), nullptr, nullptr, nullptr,
-            nullptr);
+        ExtendedGridOrbitals<ORBDTYPE> orbitals("new_orbitals", mygrid,
+            mymesh->subdivx(), ct.numst, ct.bcWF, projmatrices.get(), nullptr,
+            nullptr, nullptr, nullptr);
 
         const pb::PEenv& myPEenv = mymesh->peenv();
         HDFrestart h5file("WF", myPEenv, ct.out_restart_file_type);

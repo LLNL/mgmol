@@ -30,8 +30,9 @@
 
 template <>
 template <>
-void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i,
-    LocGridOrbitals& orbitals_j, const Ions& ions,
+void MGmol<LocGridOrbitals<ORBDTYPE>>::computeHij(
+    LocGridOrbitals<ORBDTYPE>& orbitals_i,
+    LocGridOrbitals<ORBDTYPE>& orbitals_j, const Ions& ions,
     const KBPsiMatrixSparse* const kbpsi_i,
     const KBPsiMatrixSparse* const kbpsi_j, VariableSizeMatrix<sparserow>& mat,
     const bool consolidate)
@@ -72,8 +73,9 @@ void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i,
 }
 
 template <>
-void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i,
-    LocGridOrbitals& orbitals_j, const Ions& ions,
+void MGmol<LocGridOrbitals<ORBDTYPE>>::computeHij(
+    LocGridOrbitals<ORBDTYPE>& orbitals_i,
+    LocGridOrbitals<ORBDTYPE>& orbitals_j, const Ions& ions,
     const KBPsiMatrixSparse* const kbpsi, VariableSizeMatrix<sparserow>& mat,
     const bool consolidate)
 {
@@ -147,8 +149,9 @@ void MGmol<OrbitalsType>::computeHij_private(OrbitalsType& orbitals_i,
 
 template <>
 template <>
-void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i,
-    LocGridOrbitals& orbitals_j, const Ions& ions,
+void MGmol<LocGridOrbitals<ORBDTYPE>>::computeHij(
+    LocGridOrbitals<ORBDTYPE>& orbitals_i,
+    LocGridOrbitals<ORBDTYPE>& orbitals_j, const Ions& ions,
     const KBPsiMatrixSparse* const kbpsi,
     const KBPsiMatrixSparse* const kbpsi_j,
     dist_matrix::DistMatrix<DISTMATDTYPE>& hij, const bool consolidate)
@@ -160,8 +163,9 @@ void MGmol<LocGridOrbitals>::computeHij(LocGridOrbitals& orbitals_i,
 
 template <>
 template <>
-void MGmol<ExtendedGridOrbitals>::computeHij(ExtendedGridOrbitals& orbitals_i,
-    ExtendedGridOrbitals& orbitals_j, const Ions& ions,
+void MGmol<ExtendedGridOrbitals<ORBDTYPE>>::computeHij(
+    ExtendedGridOrbitals<ORBDTYPE>& orbitals_i,
+    ExtendedGridOrbitals<ORBDTYPE>& orbitals_j, const Ions& ions,
     const KBPsiMatrixSparse* const kbpsi,
     const KBPsiMatrixSparse* const kbpsi_j,
     dist_matrix::DistMatrix<DISTMATDTYPE>& hij, const bool consolidate)
@@ -385,5 +389,5 @@ void MGmol<OrbitalsType>::getHpsiAndTheta(Ions& ions, OrbitalsType& phi,
     get_Hpsi_and_Hij_tm_.stop();
 }
 
-template class MGmol<LocGridOrbitals>;
-template class MGmol<ExtendedGridOrbitals>;
+template class MGmol<LocGridOrbitals<ORBDTYPE>>;
+template class MGmol<ExtendedGridOrbitals<ORBDTYPE>>;

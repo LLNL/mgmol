@@ -857,6 +857,6 @@ void DavidsonSolver<OrbitalsType, MatrixType>::printTimers(std::ostream& os)
     target_tm_.print(os);
 }
 
-template class DavidsonSolver<ExtendedGridOrbitals,
+template class DavidsonSolver<ExtendedGridOrbitals<ORBDTYPE>,
     dist_matrix::DistMatrix<DISTMATDTYPE>>;
-template class DavidsonSolver<ExtendedGridOrbitals, ReplicatedMatrix>;
+template class DavidsonSolver<ExtendedGridOrbitals<ORBDTYPE>, ReplicatedMatrix>;

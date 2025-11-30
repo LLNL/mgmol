@@ -178,26 +178,27 @@ int main(int argc, char** argv)
 
     // Enter main scope
     {
-        MGmolInterface* mgmol = new MGmol<ExtendedGridOrbitals>(global_comm,
-            *MPIdata::sout, input_filename, lrs_filename, constraints_filename);
+        MGmolInterface* mgmol = new MGmol<ExtendedGridOrbitals<ORBDTYPE>>(
+            global_comm, *MPIdata::sout, input_filename, lrs_filename,
+            constraints_filename);
 
         mgmol->setup();
 
         /* load a restart file */
-        MGmol<ExtendedGridOrbitals>* mgmol_ext
-            = dynamic_cast<MGmol<ExtendedGridOrbitals>*>(mgmol);
+        MGmol<ExtendedGridOrbitals<ORBDTYPE>>* mgmol_ext
+            = dynamic_cast<MGmol<ExtendedGridOrbitals<ORBDTYPE>>*>(mgmol);
         mgmol_ext->loadRestartFile(ct.restart_file);
 
         if (MPIdata::onpe0)
             std::cout << "=============================" << std::endl;
         if (MPIdata::onpe0) std::cout << "testRhoRestart..." << std::endl;
-        status = testRhoRestart<ExtendedGridOrbitals>(mgmol);
+        status = testRhoRestart<ExtendedGridOrbitals<ORBDTYPE>>(mgmol);
         if (status < 0) return status;
 
         if (MPIdata::onpe0)
             std::cout << "=============================" << std::endl;
         if (MPIdata::onpe0) std::cout << "testPotRestart..." << std::endl;
-        status = testPotRestart<ExtendedGridOrbitals>(mgmol);
+        status = testPotRestart<ExtendedGridOrbitals<ORBDTYPE>>(mgmol);
         if (status < 0) return status;
 
         delete mgmol;
