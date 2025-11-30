@@ -13,6 +13,7 @@
 #include "BlockVector.h"
 #include "ClusterOrbitals.h"
 #include "DataDistribution.h"
+#include "DotProductManager.h"
 #include "FunctionsPacking.h"
 #include "GridFunc.h"
 #include "HDFrestart.h"
@@ -40,8 +41,6 @@ class MasksSet;
 class LocGridOrbitals;
 class Masks4Orbitals;
 
-typedef double (LocGridOrbitals::*PtrFunc)(const LocGridOrbitals&);
-
 class LocGridOrbitals : public Orbitals
 {
 private:
@@ -66,8 +65,7 @@ private:
     static int numpt_;
     static int loc_numpt_;
 
-    // static double (LocGridOrbitals::*dotProduct_)(const LocGridOrbitals&);
-    static PtrFunc dotProduct_;
+    static DotProductManager<LocGridOrbitals>* dotProductManager_;
 
     static int data_wghosts_index_;
 
@@ -125,11 +123,6 @@ private:
         DISTMATDTYPE* const, const int, const int) const;
     void matrixToLocalMatrix(
         const short, const DISTMATDTYPE* const, DISTMATDTYPE* const) const;
-
-    double dotProductDiagonal(const LocGridOrbitals& orbitals);
-    double dotProductWithDM(const LocGridOrbitals& orbitals);
-    double dotProductWithInvS(const LocGridOrbitals& orbitals);
-    double dotProductSimple(const LocGridOrbitals& orbitals);
 
     void computeLocalProduct(const ORBDTYPE* const, const int,
         LocalMatrices<MATDTYPE, MemorySpace::Host>&,

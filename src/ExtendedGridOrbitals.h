@@ -12,6 +12,7 @@
 
 #include "BlockVector.h"
 #include "DistMatrix.h"
+#include "DotProductManager.h"
 #include "GridFunc.h"
 #include "HDFrestart.h"
 #include "Lap.h"
@@ -37,9 +38,6 @@ class ExtendedGridOrbitals;
 class MasksSet;
 class ClusterOrbitals;
 
-typedef double (ExtendedGridOrbitals::*ExtendedGridOrbitalsPtrFunc)(
-    const ExtendedGridOrbitals&);
-
 class ExtendedGridOrbitals : public Orbitals
 {
 private:
@@ -61,9 +59,7 @@ private:
     static int lda_; // leading dimension for storage
     static int numpt_;
 
-    // static double (ExtendedGridOrbitals::*dotProduct_)(const
-    // ExtendedGridOrbitals&);
-    static ExtendedGridOrbitalsPtrFunc dotProduct_;
+    static DotProductManager<ExtendedGridOrbitals>* dotProductManager_;
 
     static int data_wghosts_index_;
 
@@ -100,11 +96,6 @@ private:
     ExtendedGridOrbitals();
 
     void computeMatB(const ExtendedGridOrbitals&, const pb::Lap<ORBDTYPE>&);
-
-    double dotProductDiagonal(const ExtendedGridOrbitals& orbitals);
-    double dotProductWithDM(const ExtendedGridOrbitals& orbitals);
-    double dotProductWithInvS(const ExtendedGridOrbitals& orbitals);
-    double dotProductSimple(const ExtendedGridOrbitals& orbitals);
 
     void computeLocalProduct(const ORBDTYPE* const, const int,
         LocalMatrices<MATDTYPE, MemorySpace::Host>&,

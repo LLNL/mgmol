@@ -14,11 +14,11 @@
 #include "ColoredRegions.h"
 #include "Control.h"
 #include "DistMatrix.h"
+#include "DotProductManagerFactory.h"
 #include "FunctionsPacking.h"
 #include "GridFunc.h"
 #include "GridMask.h"
 #include "HDFrestart.h"
-#include "Laph2.h"
 #include "Laph4M.h"
 #include "LocGridOrbitals.h"
 #include "LocalMatrices2DistMatrix.h"
@@ -27,8 +27,6 @@
 #include "Masks4Orbitals.h"
 #include "MasksSet.h"
 #include "Mesh.h"
-#include "Potentials.h"
-#include "Preconditioning.h"
 #include "ProjectedMatrices.h"
 #include "ReplicatedWorkSpace.h"
 #include "SquareLocalMatrices.h"
@@ -46,11 +44,14 @@
 #define ORBITAL_OCCUPATION 2.
 std::string getDatasetName(const std::string& name, const int color);
 
-short LocGridOrbitals::subdivx_          = 0;
-int LocGridOrbitals::lda_                = 0;
-int LocGridOrbitals::numpt_              = 0;
-int LocGridOrbitals::loc_numpt_          = 0;
-PtrFunc LocGridOrbitals::dotProduct_     = &LocGridOrbitals::dotProductDiagonal;
+short LocGridOrbitals::subdivx_ = 0;
+int LocGridOrbitals::lda_       = 0;
+int LocGridOrbitals::numpt_     = 0;
+int LocGridOrbitals::loc_numpt_ = 0;
+
+DotProductManager<LocGridOrbitals>* LocGridOrbitals::dotProductManager_
+    = nullptr;
+
 int LocGridOrbitals::data_wghosts_index_ = -1;
 
 Timer LocGridOrbitals::get_dm_tm_("LocGridOrbitals::get_dm");
@@ -202,14 +203,11 @@ void LocGridOrbitals::copyDataFrom(const LocGridOrbitals& src)
 
 void LocGridOrbitals::setDotProduct(const short dot_type)
 {
-    if (dot_type == 0)
-        dotProduct_ = &LocGridOrbitals::dotProductDiagonal;
-    else if (dot_type == 1)
-        dotProduct_ = &LocGridOrbitals::dotProductWithInvS;
-    else if (dot_type == 2)
-        dotProduct_ = &LocGridOrbitals::dotProductWithDM;
-    else if (dot_type == 3)
-        dotProduct_ = &LocGridOrbitals::dotProductSimple;
+    DotProductManagerFactory<LocGridOrbitals> factory;
+
+    dotProductManager_ = factory.create(dot_type);
+
+    assert(dotProductManager_ != nullptr);
 }
 
 void LocGridOrbitals::setGids2Storage()
@@ -1723,66 +1721,10 @@ void LocGridOrbitals::checkCond(const double tol, const bool flag_stop)
     proj_matrices_->checkCond(tol, flag_stop);
 }
 
-double LocGridOrbitals::dotProductWithDM(const LocGridOrbitals& orbitals)
-{
-    assert(proj_matrices_ != nullptr);
-    assert(chromatic_number_ == orbitals.chromatic_number_);
-
-    SquareLocalMatrices<MATDTYPE, MemorySpace::Host> ss(
-        subdivx_, chromatic_number_);
-
-    computeLocalProduct(orbitals, ss);
-
-    return proj_matrices_->dotProductWithDM(ss);
-}
-
-double LocGridOrbitals::dotProductWithInvS(const LocGridOrbitals& orbitals)
-{
-    assert(proj_matrices_ != nullptr);
-    assert(chromatic_number_ == orbitals.chromatic_number_);
-
-    SquareLocalMatrices<MATDTYPE, MemorySpace::Host> ss(
-        subdivx_, chromatic_number_);
-
-    computeLocalProduct(orbitals, ss);
-
-    return proj_matrices_->dotProductWithInvS(ss);
-}
-
-double LocGridOrbitals::dotProductDiagonal(const LocGridOrbitals& orbitals)
-{
-    assert(proj_matrices_ != nullptr);
-
-    std::vector<DISTMATDTYPE> ss;
-    Control& ct = *(Control::instance());
-    if (ct.short_sighted)
-    {
-        computeDiagonalElementsDotProductLocal(orbitals, ss);
-    }
-    else
-    {
-        ss.resize(numst_);
-        computeDiagonalElementsDotProduct(orbitals, ss);
-    }
-    return proj_matrices_->getTraceDiagProductWithInvS(ss);
-}
-
-double LocGridOrbitals::dotProductSimple(const LocGridOrbitals& orbitals)
-{
-    assert(proj_matrices_ != nullptr);
-    assert(chromatic_number_ == orbitals.chromatic_number_);
-
-    SquareLocalMatrices<MATDTYPE, MemorySpace::Host> ss(
-        subdivx_, chromatic_number_);
-
-    computeLocalProduct(orbitals, ss);
-
-    return proj_matrices_->dotProductSimple(ss);
-}
-
 double LocGridOrbitals::dotProduct(const LocGridOrbitals& orbitals)
 {
-    return (this->*dotProduct_)(orbitals); // call through pointer member
+    assert(dotProductManager_ != nullptr);
+    return dotProductManager_->dotProduct(*this, orbitals);
 }
 
 double LocGridOrbitals::dotProduct(
@@ -1794,31 +1736,13 @@ double LocGridOrbitals::dotProduct(
     assert(subdivx_ > 0);
     assert(subdivx_ < 1000);
 
-    double dot = 0.;
-    if (dot_type == 0)
-    {
-        dot = dotProductDiagonal(orbitals);
-    }
-    else if (dot_type == 1)
-    {
-        dot = dotProductWithInvS(orbitals);
-    }
-    else if (dot_type == 2)
-    {
-        dot = dotProductWithDM(orbitals);
-    }
-    else if (dot_type == 3)
-    {
-        dot = dotProductSimple(orbitals);
-    }
-    else
-    {
-        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-        (*MPIdata::serr)
-            << "LocGridOrbitals::dot_product() --- unknown dot product type"
-            << std::endl;
-        mmpi.abort();
-    }
+    DotProductManagerFactory<LocGridOrbitals> factory;
+    DotProductManager<LocGridOrbitals>* manager = factory.create(dot_type);
+    assert(manager != nullptr);
+
+    double dot = manager->dotProduct(*this, orbitals);
+
+    delete manager;
 
     dot_product_tm_.stop();
 

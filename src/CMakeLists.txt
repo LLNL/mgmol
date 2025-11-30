@@ -22,6 +22,10 @@ set(SOURCES
  mgmol_run.cc
  read_config.cc
  jade.cc
+ DotProductSimple.cc
+ DotProductDiagonal.cc
+ DotProductWithInvS.cc
+ DotProductWithDM.cc
  LocalMatrices2ReplicatedMatrix.cc
  ReplicatedMatrix2SquareLocalMatrices.cc
  DielectricControl.cc
