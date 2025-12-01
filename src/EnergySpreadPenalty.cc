@@ -231,5 +231,5 @@ double EnergySpreadPenalty<T>::evaluateEnergy(const T& phi)
     return alpha_ * total_energy;
 }
 
-template class EnergySpreadPenalty<LocGridOrbitals>;
-template class EnergySpreadPenalty<ExtendedGridOrbitals>;
+template class EnergySpreadPenalty<LocGridOrbitals<ORBDTYPE>>;
+template class EnergySpreadPenalty<ExtendedGridOrbitals<ORBDTYPE>>;

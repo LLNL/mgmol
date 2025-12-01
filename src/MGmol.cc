@@ -146,7 +146,7 @@ MGmol<OrbitalsType>::~MGmol()
 }
 
 template <>
-void MGmol<LocGridOrbitals>::initialMasks()
+void MGmol<LocGridOrbitals<ORBDTYPE>>::initialMasks()
 {
     assert(lrs_);
 
@@ -164,7 +164,7 @@ void MGmol<LocGridOrbitals>::initialMasks()
 }
 
 template <>
-void MGmol<ExtendedGridOrbitals>::initialMasks()
+void MGmol<ExtendedGridOrbitals<ORBDTYPE>>::initialMasks()
 {
 }
 
@@ -901,8 +901,8 @@ void MGmol<OrbitalsType>::printTimers()
     AndersonMix<OrbitalsType>::update_tm().print(os_);
     proj_matrices_->printTimers(os_);
     ShortSightedInverse::printTimers(os_);
-    if (std::is_same<OrbitalsType, ExtendedGridOrbitals>::value)
-        MVPSolver<ExtendedGridOrbitals,
+    if (std::is_same<OrbitalsType, ExtendedGridOrbitals<ORBDTYPE>>::value)
+        MVPSolver<ExtendedGridOrbitals<ORBDTYPE>,
             dist_matrix::DistMatrix<DISTMATDTYPE>>::printTimers(os_);
     VariableSizeMatrixInterface::printTimers(os_);
     DataDistribution::printTimers(os_);
@@ -942,20 +942,21 @@ void MGmol<OrbitalsType>::printTimers()
     BlockVector<ORBDTYPE, MemorySpace::Device>::printTimers(os_);
 #endif
     PowerGen<ReplicatedMatrix, ReplicatedVector>::printTimers(os_);
-    DavidsonSolver<ExtendedGridOrbitals, ReplicatedMatrix>::printTimers(os_);
+    DavidsonSolver<ExtendedGridOrbitals<ORBDTYPE>,
+        ReplicatedMatrix>::printTimers(os_);
     ChebyshevApproximation<ReplicatedMatrix>::printTimers(os_);
     PowerGen<dist_matrix::DistMatrix<double>,
         dist_matrix::DistVector<double>>::printTimers(os_);
     BlockVector<ORBDTYPE, MemorySpace::Host>::printTimers(os_);
     if (ct.rmatrices)
     {
-        DavidsonSolver<ExtendedGridOrbitals, ReplicatedMatrix>::printTimers(
-            os_);
+        DavidsonSolver<ExtendedGridOrbitals<ORBDTYPE>,
+            ReplicatedMatrix>::printTimers(os_);
         ChebyshevApproximation<ReplicatedMatrix>::printTimers(os_);
     }
     else
     {
-        DavidsonSolver<ExtendedGridOrbitals,
+        DavidsonSolver<ExtendedGridOrbitals<ORBDTYPE>,
             dist_matrix::DistMatrix<DISTMATDTYPE>>::printTimers(os_);
         ChebyshevApproximation<
             dist_matrix::DistMatrix<DISTMATDTYPE>>::printTimers(os_);
@@ -1157,7 +1158,8 @@ void MGmol<OrbitalsType>::cleanup()
 }
 
 template <>
-void MGmol<LocGridOrbitals>::projectOutKernel(LocGridOrbitals& phi)
+void MGmol<LocGridOrbitals<ORBDTYPE>>::projectOutKernel(
+    LocGridOrbitals<ORBDTYPE>& phi)
 {
     assert(aomm_ != nullptr);
     aomm_->projectOut(phi);
@@ -1534,11 +1536,13 @@ double MGmol<OrbitalsType>::evaluateDMandEnergyAndForces(Orbitals* orbitals,
     return eks;
 }
 
-template class MGmol<LocGridOrbitals>;
-template class MGmol<ExtendedGridOrbitals>;
-template int MGmol<LocGridOrbitals>::initial<MemorySpace::Host>();
-template int MGmol<ExtendedGridOrbitals>::initial<MemorySpace::Host>();
+template class MGmol<LocGridOrbitals<ORBDTYPE>>;
+template class MGmol<ExtendedGridOrbitals<ORBDTYPE>>;
+template int MGmol<LocGridOrbitals<ORBDTYPE>>::initial<MemorySpace::Host>();
+template int
+MGmol<ExtendedGridOrbitals<ORBDTYPE>>::initial<MemorySpace::Host>();
 #ifdef HAVE_MAGMA
-template int MGmol<LocGridOrbitals>::initial<MemorySpace::Device>();
-template int MGmol<ExtendedGridOrbitals>::initial<MemorySpace::Device>();
+template int MGmol<LocGridOrbitals<ORBDTYPE>>::initial<MemorySpace::Device>();
+template int
+MGmol<ExtendedGridOrbitals<ORBDTYPE>>::initial<MemorySpace::Device>();
 #endif

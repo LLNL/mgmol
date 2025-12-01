@@ -99,12 +99,13 @@ void HamiltonianMVP_DMStrategy<MatrixType, ProjMatrixType,
 }
 
 template class HamiltonianMVP_DMStrategy<dist_matrix::DistMatrix<DISTMATDTYPE>,
-    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>, LocGridOrbitals>;
+    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>,
+    LocGridOrbitals<ORBDTYPE>>;
 template class HamiltonianMVP_DMStrategy<VariableSizeMatrix<sparserow>,
-    ProjectedMatricesSparse, LocGridOrbitals>;
+    ProjectedMatricesSparse, LocGridOrbitals<ORBDTYPE>>;
 
 template class HamiltonianMVP_DMStrategy<dist_matrix::DistMatrix<DISTMATDTYPE>,
     ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>,
-    ExtendedGridOrbitals>;
+    ExtendedGridOrbitals<ORBDTYPE>>;
 template class HamiltonianMVP_DMStrategy<ReplicatedMatrix,
-    ProjectedMatrices<ReplicatedMatrix>, ExtendedGridOrbitals>;
+    ProjectedMatrices<ReplicatedMatrix>, ExtendedGridOrbitals<ORBDTYPE>>;

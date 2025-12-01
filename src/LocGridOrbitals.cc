@@ -44,31 +44,63 @@
 #define ORBITAL_OCCUPATION 2.
 std::string getDatasetName(const std::string& name, const int color);
 
-short LocGridOrbitals::subdivx_ = 0;
-int LocGridOrbitals::lda_       = 0;
-int LocGridOrbitals::numpt_     = 0;
-int LocGridOrbitals::loc_numpt_ = 0;
-
-DotProductManager<LocGridOrbitals>* LocGridOrbitals::dotProductManager_
+template <typename ScalarType>
+DotProductManager<LocGridOrbitals<ScalarType>>*
+    LocGridOrbitals<ScalarType>::dotProductManager_
     = nullptr;
 
-int LocGridOrbitals::data_wghosts_index_ = -1;
+template <typename ScalarType>
+short LocGridOrbitals<ScalarType>::subdivx_ = 0;
+template <typename ScalarType>
+int LocGridOrbitals<ScalarType>::lda_ = 0;
+template <typename ScalarType>
+int LocGridOrbitals<ScalarType>::numpt_ = 0;
+template <typename ScalarType>
+int LocGridOrbitals<ScalarType>::loc_numpt_ = 0;
 
-Timer LocGridOrbitals::get_dm_tm_("LocGridOrbitals::get_dm");
-Timer LocGridOrbitals::matB_tm_("LocGridOrbitals::matB");
-Timer LocGridOrbitals::invBmat_tm_("LocGridOrbitals::invBmat");
-Timer LocGridOrbitals::overlap_tm_("LocGridOrbitals::overlap");
-Timer LocGridOrbitals::dot_product_tm_("LocGridOrbitals::dot_product");
-Timer LocGridOrbitals::addDot_tm_("LocGridOrbitals::addDot");
-Timer LocGridOrbitals::mask_tm_("LocGridOrbitals::mask");
-Timer LocGridOrbitals::prod_matrix_tm_("LocGridOrbitals::prod_matrix");
-Timer LocGridOrbitals::assign_tm_("LocGridOrbitals::assign");
-Timer LocGridOrbitals::normalize_tm_("LocGridOrbitals::normalize");
-Timer LocGridOrbitals::axpy_tm_("LocGridOrbitals::axpy");
+template <typename ScalarType>
+int LocGridOrbitals<ScalarType>::data_wghosts_index_ = -1;
 
-LocGridOrbitals::LocGridOrbitals(std::string name, const pb::Grid& my_grid,
-    const short subdivx, const int numst, const short bc[3],
-    ProjectedMatricesInterface* proj_matrices,
+template <typename ScalarType>
+Timer LocGridOrbitals<ScalarType>::get_dm_tm_(
+    "LocGridOrbitals" + std::to_string(8 * sizeof(ScalarType)) + "::get_dm");
+template <typename ScalarType>
+Timer LocGridOrbitals<ScalarType>::matB_tm_(
+    "LocGridOrbitals" + std::to_string(8 * sizeof(ScalarType)) + "::matB");
+template <typename ScalarType>
+Timer LocGridOrbitals<ScalarType>::invBmat_tm_(
+    "LocGridOrbitals" + std::to_string(8 * sizeof(ScalarType)) + "::invBmat");
+template <typename ScalarType>
+Timer LocGridOrbitals<ScalarType>::overlap_tm_(
+    "LocGridOrbitals" + std::to_string(8 * sizeof(ScalarType)) + "::overlap");
+template <typename ScalarType>
+Timer LocGridOrbitals<ScalarType>::dot_product_tm_(
+    "LocGridOrbitals" + std::to_string(8 * sizeof(ScalarType))
+    + "::dot_product");
+template <typename ScalarType>
+Timer LocGridOrbitals<ScalarType>::addDot_tm_(
+    "LocGridOrbitals" + std::to_string(8 * sizeof(ScalarType)) + "::addDot");
+template <typename ScalarType>
+Timer LocGridOrbitals<ScalarType>::mask_tm_(
+    "LocGridOrbitals" + std::to_string(8 * sizeof(ScalarType)) + "::mask");
+template <typename ScalarType>
+Timer LocGridOrbitals<ScalarType>::prod_matrix_tm_(
+    "LocGridOrbitals" + std::to_string(8 * sizeof(ScalarType))
+    + "::prod_matrix");
+template <typename ScalarType>
+Timer LocGridOrbitals<ScalarType>::assign_tm_(
+    "LocGridOrbitals" + std::to_string(8 * sizeof(ScalarType)) + "::assign");
+template <typename ScalarType>
+Timer LocGridOrbitals<ScalarType>::normalize_tm_(
+    "LocGridOrbitals" + std::to_string(8 * sizeof(ScalarType)) + "::normalize");
+template <typename ScalarType>
+Timer LocGridOrbitals<ScalarType>::axpy_tm_(
+    "LocGridOrbitals" + std::to_string(8 * sizeof(ScalarType)) + "::axpy");
+
+template <typename ScalarType>
+LocGridOrbitals<ScalarType>::LocGridOrbitals(std::string name,
+    const pb::Grid& my_grid, const short subdivx, const int numst,
+    const short bc[3], ProjectedMatricesInterface* proj_matrices,
     std::shared_ptr<LocalizationRegions> lrs, MasksSet* masks,
     MasksSet* corrmasks, ClusterOrbitals* local_cluster, const bool setup_flag)
     : name_(std::move(name)),
@@ -108,7 +140,8 @@ LocGridOrbitals::LocGridOrbitals(std::string name, const pb::Grid& my_grid,
     if (setup_flag) setup(lrs);
 }
 
-LocGridOrbitals::~LocGridOrbitals()
+template <typename ScalarType>
+LocGridOrbitals<ScalarType>::~LocGridOrbitals()
 {
     assert(proj_matrices_ != nullptr);
     assert(pack_);
@@ -120,8 +153,9 @@ LocGridOrbitals::~LocGridOrbitals()
     gidToStorage_ = nullptr;
 }
 
-LocGridOrbitals::LocGridOrbitals(
-    const std::string& name, const LocGridOrbitals& A, const bool copy_data)
+template <typename ScalarType>
+LocGridOrbitals<ScalarType>::LocGridOrbitals(const std::string& name,
+    const LocGridOrbitals<ScalarType>& A, const bool copy_data)
     : Orbitals(A, copy_data),
       name_(name),
       proj_matrices_(A.proj_matrices_),
@@ -142,9 +176,11 @@ LocGridOrbitals::LocGridOrbitals(
     setGids2Storage();
 }
 
-LocGridOrbitals::LocGridOrbitals(const std::string& name,
-    const LocGridOrbitals& A, ProjectedMatricesInterface* proj_matrices,
-    MasksSet* masks, MasksSet* corrmasks, const bool copy_data)
+template <typename ScalarType>
+LocGridOrbitals<ScalarType>::LocGridOrbitals(const std::string& name,
+    const LocGridOrbitals<ScalarType>& A,
+    ProjectedMatricesInterface* proj_matrices, MasksSet* masks,
+    MasksSet* corrmasks, const bool copy_data)
     : Orbitals(A, copy_data),
       name_(name),
       proj_matrices_(proj_matrices),
@@ -171,7 +207,9 @@ LocGridOrbitals::LocGridOrbitals(const std::string& name,
     proj_matrices_->setup(overlapping_gids_);
 }
 
-void LocGridOrbitals::copySharedData(const LocGridOrbitals& A)
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::copySharedData(
+    const LocGridOrbitals<ScalarType>& A)
 {
     assert(A.gidToStorage_ != nullptr);
     assert(A.pack_);
@@ -192,7 +230,9 @@ void LocGridOrbitals::copySharedData(const LocGridOrbitals& A)
     distributor_normalize_   = A.distributor_normalize_;
 }
 
-void LocGridOrbitals::copyDataFrom(const LocGridOrbitals& src)
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::copyDataFrom(
+    const LocGridOrbitals<ScalarType>& src)
 {
     assert(proj_matrices_ != nullptr);
 
@@ -201,7 +241,8 @@ void LocGridOrbitals::copyDataFrom(const LocGridOrbitals& src)
     setIterativeIndex(src);
 }
 
-void LocGridOrbitals::setDotProduct(const short dot_type)
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::setDotProduct(const short dot_type)
 {
     DotProductManagerFactory<LocGridOrbitals> factory;
 
@@ -210,7 +251,8 @@ void LocGridOrbitals::setDotProduct(const short dot_type)
     assert(dotProductManager_ != nullptr);
 }
 
-void LocGridOrbitals::setGids2Storage()
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::setGids2Storage()
 {
     assert(chromatic_number_ >= 0);
     assert(subdivx_ > 0);
@@ -218,25 +260,26 @@ void LocGridOrbitals::setGids2Storage()
     if (gidToStorage_ != nullptr)
         gidToStorage_->clear();
     else
-        gidToStorage_ = new std::vector<std::map<int, ORBDTYPE*>>();
+        gidToStorage_ = new std::vector<std::map<int, ScalarType*>>();
     gidToStorage_->resize(subdivx_);
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
-        std::map<int, ORBDTYPE*>& gid2st((*gidToStorage_)[iloc]);
+        std::map<int, ScalarType*>& gid2st((*gidToStorage_)[iloc]);
         for (int color = 0; color < chromatic_number_; color++)
         {
             const int gid = overlapping_gids_[iloc][color];
             if (gid != -1)
             {
                 gid2st.insert(
-                    std::pair<int, ORBDTYPE*>(gid, getPsi(color, iloc)));
+                    std::pair<int, ScalarType*>(gid, getPsi(color, iloc)));
             }
         }
     }
 }
 
 // return pointer to const data
-const ORBDTYPE* LocGridOrbitals::getGidStorage(
+template <typename ScalarType>
+const ScalarType* LocGridOrbitals<ScalarType>::getGidStorage(
     const int gid, const short iloc) const
 {
     assert(numst_ >= 0);
@@ -245,15 +288,15 @@ const ORBDTYPE* LocGridOrbitals::getGidStorage(
     assert(gid < numst_);
     assert(iloc < (short)gidToStorage_->size());
 
-    std::map<int, ORBDTYPE*>::const_iterator p
-        = (*gidToStorage_)[iloc].find(gid);
+    auto p = (*gidToStorage_)[iloc].find(gid);
     if (p != (*gidToStorage_)[iloc].end())
         return p->second;
     else
         return nullptr;
 }
 
-void LocGridOrbitals::setup(MasksSet* masks, MasksSet* corrmasks,
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::setup(MasksSet* masks, MasksSet* corrmasks,
     std::shared_ptr<LocalizationRegions> lrs)
 {
     assert(masks != nullptr);
@@ -268,7 +311,9 @@ void LocGridOrbitals::setup(MasksSet* masks, MasksSet* corrmasks,
     setup(lrs);
 }
 
-void LocGridOrbitals::setup(std::shared_ptr<LocalizationRegions> lrs)
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::setup(
+    std::shared_ptr<LocalizationRegions> lrs)
 {
     Control& ct = *(Control::instance());
 
@@ -311,7 +356,8 @@ void LocGridOrbitals::setup(std::shared_ptr<LocalizationRegions> lrs)
             "LocGridOrbitals::setup() done...", (*MPIdata::sout));
 }
 
-void LocGridOrbitals::reset(MasksSet* masks, MasksSet* corrmasks,
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::reset(MasksSet* masks, MasksSet* corrmasks,
     std::shared_ptr<LocalizationRegions> lrs)
 {
     // free some old data
@@ -322,7 +368,9 @@ void LocGridOrbitals::reset(MasksSet* masks, MasksSet* corrmasks,
     setup(masks, corrmasks, lrs);
 }
 
-void LocGridOrbitals::assign(const LocGridOrbitals& orbitals)
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::assign(
+    const LocGridOrbitals<ScalarType>& orbitals)
 {
     assign_tm_.start();
 
@@ -344,9 +392,9 @@ void LocGridOrbitals::assign(const LocGridOrbitals& orbitals)
     {
         Control& ct = *(Control::instance());
         if (onpe0 && ct.verbose > 2)
-            (*MPIdata::sout)
-                << "LocGridOrbitals::Assign orbitals to different LR"
-                << std::endl;
+            (*MPIdata::sout) << "LocGridOrbitals::Assign orbitals "
+                                "to different LR"
+                             << std::endl;
         for (int color = 0; color < chromatic_number_; color++)
         {
             // assign state
@@ -356,7 +404,7 @@ void LocGridOrbitals::assign(const LocGridOrbitals& orbitals)
                 if (gid != -1)
                 {
                     // find storage location in orbitals
-                    const ORBDTYPE* const val
+                    const ScalarType* const val
                         = orbitals.getGidStorage(gid, iloc);
                     // copy into new psi_
                     if (val != nullptr)
@@ -371,7 +419,9 @@ void LocGridOrbitals::assign(const LocGridOrbitals& orbitals)
     assign_tm_.stop();
 }
 
-void LocGridOrbitals::axpy(const double alpha, const LocGridOrbitals& orbitals)
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::axpy(
+    const double alpha, const LocGridOrbitals<ScalarType>& orbitals)
 {
     axpy_tm_.start();
 
@@ -397,7 +447,7 @@ void LocGridOrbitals::axpy(const double alpha, const LocGridOrbitals& orbitals)
                 if (gid != -1)
                 {
                     // find orbital storage in orbitals
-                    const ORBDTYPE* const val
+                    const ScalarType* const val
                         = orbitals.getGidStorage(gid, iloc);
                     // copy into new psi_
                     if (val != nullptr)
@@ -414,7 +464,8 @@ void LocGridOrbitals::axpy(const double alpha, const LocGridOrbitals& orbitals)
     axpy_tm_.stop();
 }
 
-short LocGridOrbitals::checkOverlap(
+template <typename ScalarType>
+short LocGridOrbitals<ScalarType>::checkOverlap(
     const int st1, const int st2, const short level)
 {
     assert(masks4orbitals_);
@@ -422,7 +473,8 @@ short LocGridOrbitals::checkOverlap(
     return masks4orbitals_->checkOverlap(st1, st2, level);
 }
 
-void LocGridOrbitals::applyMask(const bool first_time)
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::applyMask(const bool first_time)
 {
     assert(chromatic_number_ >= 0);
     assert(subdivx_ > 0);
@@ -449,16 +501,17 @@ void LocGridOrbitals::applyMask(const bool first_time)
     mask_tm_.stop();
 }
 
-void LocGridOrbitals::applyCorrMask(const bool first_time)
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::applyCorrMask(const bool first_time)
 {
     mask_tm_.start();
 
     for (int color = 0; color < chromatic_number_; color++)
     {
-        const unsigned int size  = block_vector_.get_allocated_size_storage();
-        ORBDTYPE* ipsi_host_view = MemorySpace::Memory<ORBDTYPE,
+        const unsigned int size    = block_vector_.get_allocated_size_storage();
+        ScalarType* ipsi_host_view = MemorySpace::Memory<ScalarType,
             memory_space_type>::allocate_host_view(size);
-        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+        MemorySpace::Memory<ScalarType, memory_space_type>::copy_view_to_host(
             psi(color), size, ipsi_host_view);
 
         for (short iloc = 0; iloc < subdivx_; iloc++)
@@ -472,9 +525,9 @@ void LocGridOrbitals::applyCorrMask(const bool first_time)
             else
                 block_vector_.set_zero(color, iloc);
         }
-        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_dev(
+        MemorySpace::Memory<ScalarType, memory_space_type>::copy_view_to_dev(
             ipsi_host_view, size, psi(color));
-        MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+        MemorySpace::Memory<ScalarType, memory_space_type>::free_host_view(
             ipsi_host_view);
     }
     incrementIterativeIndex();
@@ -482,8 +535,9 @@ void LocGridOrbitals::applyCorrMask(const bool first_time)
     mask_tm_.stop();
 }
 
-void LocGridOrbitals::app_mask(
-    const int color, ORBDTYPE* u, const short level) const
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::app_mask(
+    const int color, ScalarType* u, const short level) const
 {
     mask_tm_.start();
     assert(masks4orbitals_);
@@ -501,13 +555,14 @@ void LocGridOrbitals::app_mask(
             (masks4orbitals_->getMask(gid)).apply(u, level, iloc);
         }
         else
-            memset(u + iloc * lnumpt, 0, lnumpt * sizeof(ORBDTYPE));
+            memset(u + iloc * lnumpt, 0, lnumpt * sizeof(ScalarType));
     }
     mask_tm_.stop();
 }
 
-void LocGridOrbitals::app_mask(
-    const int color, pb::GridFunc<ORBDTYPE>& gu, const short level) const
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::app_mask(
+    const int color, pb::GridFunc<ScalarType>& gu, const short level) const
 {
     mask_tm_.start();
 
@@ -532,23 +587,25 @@ void LocGridOrbitals::app_mask(
         {
             int offset = (shift + dim0 * iloc) * incx;
             assert(offset + lnumpt < static_cast<int>(gu.grid().sizeg()));
-            ORBDTYPE* pu = gu.uu() + offset;
-            memset(pu, 0, lnumpt * sizeof(ORBDTYPE));
+            ScalarType* pu = gu.uu() + offset;
+            memset(pu, 0, lnumpt * sizeof(ScalarType));
         }
     }
     mask_tm_.stop();
 }
 
-void LocGridOrbitals::init2zero()
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::init2zero()
 {
     for (int icolor = 0; icolor < chromatic_number_; icolor++)
     {
-        ORBDTYPE* ipsi = psi(icolor);
-        memset(ipsi, 0, numpt_ * sizeof(ORBDTYPE));
+        ScalarType* ipsi = psi(icolor);
+        memset(ipsi, 0, numpt_ * sizeof(ScalarType));
     }
 }
 
-void LocGridOrbitals::initGauss(
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::initGauss(
     const double rc, const std::shared_ptr<LocalizationRegions> lrs)
 {
     assert(chromatic_number_ >= 0);
@@ -582,13 +639,13 @@ void LocGridOrbitals::initGauss(
     const double rmax = 6. * rc;
     for (int icolor = 0; icolor < chromatic_number_; icolor++)
     {
-        const unsigned int size  = numpt_;
-        ORBDTYPE* ipsi_host_view = MemorySpace::Memory<ORBDTYPE,
+        const unsigned int size    = numpt_;
+        ScalarType* ipsi_host_view = MemorySpace::Memory<ScalarType,
             memory_space_type>::allocate_host_view(size);
-        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+        MemorySpace::Memory<ScalarType, memory_space_type>::copy_view_to_host(
             psi(icolor), size, ipsi_host_view);
 
-        memset(ipsi_host_view, 0, numpt_ * sizeof(ORBDTYPE));
+        memset(ipsi_host_view, 0, numpt_ * sizeof(ScalarType));
 
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
@@ -611,7 +668,7 @@ void LocGridOrbitals::initGauss(
                             const double r = xc.minimage(center, ll, ct.bcWF);
                             if (r < rmax)
                                 ipsi_host_view[ix * incx + iy * incy + iz]
-                                    = (ORBDTYPE)exp(-r * r * invrc2);
+                                    = (ScalarType)exp(-r * r * invrc2);
                             else
                                 ipsi_host_view[ix * incx + iy * incy + iz] = 0.;
 
@@ -623,15 +680,16 @@ void LocGridOrbitals::initGauss(
                 }
             }
         }
-        MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_dev(
+        MemorySpace::Memory<ScalarType, memory_space_type>::copy_view_to_dev(
             ipsi_host_view, size, psi(icolor));
-        MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+        MemorySpace::Memory<ScalarType, memory_space_type>::free_host_view(
             ipsi_host_view);
     }
     resetIterativeIndex();
 }
 
-void LocGridOrbitals::initFourier()
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::initFourier()
 {
     Control& ct = *(Control::instance());
     if (onpe0 && ct.verbose > 2)
@@ -667,8 +725,8 @@ void LocGridOrbitals::initFourier()
         const double kk[3] = { dk[0] * (double)kvector[0],
             dk[1] * (double)kvector[1], dk[2] * (double)kvector[2] };
 
-        ORBDTYPE* ipsi = psi(icolor);
-        memset(ipsi, 0, numpt_ * sizeof(ORBDTYPE));
+        ScalarType* ipsi = psi(icolor);
+        memset(ipsi, 0, numpt_ * sizeof(ScalarType));
 
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
@@ -688,8 +746,8 @@ void LocGridOrbitals::initFourier()
                         {
                             ipsi[ix * incx + iy * incy + iz]
                                 = 1.
-                                  - (ORBDTYPE)(cos(kk[0] * x) * cos(kk[1] * y)
-                                               * cos(kk[2] * z));
+                                  - (ScalarType)(cos(kk[0] * x) * cos(kk[1] * y)
+                                                 * cos(kk[2] * z));
 
                             z += hgrid[2];
                         }
@@ -703,7 +761,9 @@ void LocGridOrbitals::initFourier()
     resetIterativeIndex();
 }
 
-int LocGridOrbitals::packStates(std::shared_ptr<LocalizationRegions> lrs)
+template <typename ScalarType>
+int LocGridOrbitals<ScalarType>::packStates(
+    std::shared_ptr<LocalizationRegions> lrs)
 {
     assert(lrs);
 
@@ -730,9 +790,10 @@ int LocGridOrbitals::packStates(std::shared_ptr<LocalizationRegions> lrs)
     return pack_->chromatic_number();
 }
 
-void LocGridOrbitals::multiply_by_matrix(
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::multiply_by_matrix(
     const dist_matrix::DistMatrix<DISTMATDTYPE>& dmatrix,
-    ORBDTYPE* const product, const int ldp)
+    ScalarType* const product, const int ldp)
 {
     ReplicatedWorkSpace<DISTMATDTYPE>& wspace(
         ReplicatedWorkSpace<DISTMATDTYPE>::instance());
@@ -744,8 +805,9 @@ void LocGridOrbitals::multiply_by_matrix(
     multiply_by_matrix(0, chromatic_number_, work_matrix, product, ldp);
 }
 
-void LocGridOrbitals::multiply_by_matrix(const int first_color,
-    const int ncolors, const DISTMATDTYPE* const matrix, ORBDTYPE* product,
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::multiply_by_matrix(const int first_color,
+    const int ncolors, const DISTMATDTYPE* const matrix, ScalarType* product,
     const int ldp) const
 {
     prod_matrix_tm_.start();
@@ -754,7 +816,7 @@ void LocGridOrbitals::multiply_by_matrix(const int first_color,
     assert((first_color + ncolors) <= chromatic_number_);
     assert(subdivx_ > 0);
 
-    memset(product, 0, ldp * ncolors * sizeof(ORBDTYPE));
+    memset(product, 0, ldp * ncolors * sizeof(ScalarType));
 
     DISTMATDTYPE* matrix_local = new DISTMATDTYPE[chromatic_number_ * ncolors];
 
@@ -787,9 +849,10 @@ void LocGridOrbitals::multiply_by_matrix(const int first_color,
     prod_matrix_tm_.stop();
 }
 
-void LocGridOrbitals::multiplyByMatrix(
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::multiplyByMatrix(
     const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& matrix,
-    ORBDTYPE* product, const int ldp) const
+    ScalarType* product, const int ldp) const
 {
     prod_matrix_tm_.start();
 
@@ -826,7 +889,8 @@ void LocGridOrbitals::multiplyByMatrix(
 
 // Here the result is stored in one of the matrices used in the multiplication,
 // so a temporary arry is necessary
-void LocGridOrbitals::multiplyByMatrix(
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::multiplyByMatrix(
     const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& matrix)
 {
     prod_matrix_tm_.start();
@@ -834,38 +898,38 @@ void LocGridOrbitals::multiplyByMatrix(
     if (chromatic_number_ > 0)
     {
         unsigned int const product_size = loc_numpt_ * chromatic_number_;
-        std::unique_ptr<ORBDTYPE[], void (*)(ORBDTYPE*)> product(
-            MemorySpace::Memory<ORBDTYPE, memory_space_type>::allocate(
+        std::unique_ptr<ScalarType[], void (*)(ScalarType*)> product(
+            MemorySpace::Memory<ScalarType, memory_space_type>::allocate(
                 product_size),
-            MemorySpace::Memory<ORBDTYPE, memory_space_type>::free);
+            MemorySpace::Memory<ScalarType, memory_space_type>::free);
         // We want to to use:
-        // MemorySpace::Memory<ORBDTYPE, memory_space_type>::set(
+        // MemorySpace::Memory<ScalarType, memory_space_type>::set(
         //     product.get(), product_size, 0.);
         // but we get an error at linking time from nvptx-none-gcc
 #ifdef HAVE_MAGMA
 #ifdef HAVE_OPENMP_OFFLOAD
-        ORBDTYPE* tmp = product.get();
+        ScalarType* tmp = product.get();
 #pragma omp target teams distribute parallel for is_device_ptr(tmp)
         for (unsigned int i = 0; i < product_size; ++i)
             tmp[i] = 0;
 #else
-        ORBDTYPE* product_host
-            = MemorySpace::Memory<ORBDTYPE, MemorySpace::Host>::allocate(
+        ScalarType* product_host
+            = MemorySpace::Memory<ScalarType, MemorySpace::Host>::allocate(
                 product_size);
-        std::memset(product_host, 0, product_size * sizeof(ORBDTYPE));
+        std::memset(product_host, 0, product_size * sizeof(ScalarType));
         MemorySpace::copy_to_dev(product_host, product_size, product.get());
-        MemorySpace::Memory<ORBDTYPE, MemorySpace::Host>::free(product_host);
+        MemorySpace::Memory<ScalarType, MemorySpace::Host>::free(product_host);
 #endif
 #else
-        std::memset(product.get(), 0, product_size * sizeof(ORBDTYPE));
+        std::memset(product.get(), 0, product_size * sizeof(ScalarType));
 #endif
 
-        const size_t slnumpt = loc_numpt_ * sizeof(ORBDTYPE);
+        const size_t slnumpt = loc_numpt_ * sizeof(ScalarType);
 
         // loop over subdomains
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
-            ORBDTYPE* phi             = getPsi(0, iloc);
+            ScalarType* phi           = getPsi(0, iloc);
             const MATDTYPE* const mat = matrix.getSubMatrix(iloc);
 #ifdef HAVE_MAGMA
             int const mat_size = matrix.m() * matrix.n();
@@ -886,7 +950,7 @@ void LocGridOrbitals::multiplyByMatrix(
                 chromatic_number_, 0., product.get(), loc_numpt_);
 
             for (int color = 0; color < chromatic_number_; color++)
-                MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy(
+                MemorySpace::Memory<ScalarType, memory_space_type>::copy(
                     product.get() + color * loc_numpt_, slnumpt, phi + color);
         }
     }
@@ -894,35 +958,40 @@ void LocGridOrbitals::multiplyByMatrix(
     prod_matrix_tm_.stop();
 }
 
-void LocGridOrbitals::multiplyByMatrix(
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::multiplyByMatrix(
     const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& matrix,
-    LocGridOrbitals& product) const
+    LocGridOrbitals<ScalarType>& product) const
 {
     multiplyByMatrix(matrix, product.psi(0), product.lda_);
 }
 
-void LocGridOrbitals::multiply_by_matrix(const int first_color,
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::multiply_by_matrix(const int first_color,
     const int ncolors, const DISTMATDTYPE* const matrix,
-    LocGridOrbitals& product) const
+    LocGridOrbitals<ScalarType>& product) const
 {
     multiply_by_matrix(
         first_color, ncolors, matrix, product.psi(0), product.lda_);
 }
 
-void LocGridOrbitals::multiply_by_matrix(
-    const DISTMATDTYPE* const matrix, LocGridOrbitals& product) const
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::multiply_by_matrix(
+    const DISTMATDTYPE* const matrix,
+    LocGridOrbitals<ScalarType>& product) const
 {
     multiply_by_matrix(
         0, chromatic_number_, matrix, product.psi(0), product.lda_);
 }
 
-void LocGridOrbitals::multiply_by_matrix(
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::multiply_by_matrix(
     const dist_matrix::DistMatrix<DISTMATDTYPE>& matrix)
 {
     prod_matrix_tm_.start();
 
-    ORBDTYPE* product = new ORBDTYPE[loc_numpt_ * chromatic_number_];
-    memset(product, 0, loc_numpt_ * chromatic_number_ * sizeof(ORBDTYPE));
+    ScalarType* product = new ScalarType[loc_numpt_ * chromatic_number_];
+    memset(product, 0, loc_numpt_ * chromatic_number_ * sizeof(ScalarType));
 
     ReplicatedWorkSpace<DISTMATDTYPE>& wspace(
         ReplicatedWorkSpace<DISTMATDTYPE>::instance());
@@ -933,12 +1002,12 @@ void LocGridOrbitals::multiply_by_matrix(
     DISTMATDTYPE* matrix_local
         = new DISTMATDTYPE[chromatic_number_ * chromatic_number_];
 
-    const size_t slnumpt = loc_numpt_ * sizeof(ORBDTYPE);
+    const size_t slnumpt = loc_numpt_ * sizeof(ScalarType);
 
     // loop over subdomains
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
-        ORBDTYPE* phi = getPsi(0, iloc);
+        ScalarType* phi = getPsi(0, iloc);
 
         matrixToLocalMatrix(iloc, work_matrix, matrix_local);
 
@@ -957,7 +1026,8 @@ void LocGridOrbitals::multiply_by_matrix(
     prod_matrix_tm_.stop();
 }
 
-int LocGridOrbitals::read_hdf5(HDFrestart& h5f_file)
+template <typename ScalarType>
+int LocGridOrbitals<ScalarType>::read_hdf5(HDFrestart& h5f_file)
 {
     assert(proj_matrices_ != nullptr);
 
@@ -983,9 +1053,9 @@ int LocGridOrbitals::read_hdf5(HDFrestart& h5f_file)
         ierr = proj_matrices_->readDM(h5f_file);
         if (ierr < 0)
         {
-            (*MPIdata::serr)
-                << "LocGridOrbitals::read_hdf5(): error in reading DM"
-                << std::endl;
+            (*MPIdata::serr) << "LocGridOrbitals::read_hdf5(): "
+                                "error in reading DM"
+                             << std::endl;
             return ierr;
         }
     }
@@ -993,7 +1063,9 @@ int LocGridOrbitals::read_hdf5(HDFrestart& h5f_file)
     return ierr;
 }
 
-int LocGridOrbitals::write(HDFrestart& h5f_file, const std::string& name)
+template <typename ScalarType>
+int LocGridOrbitals<ScalarType>::write(
+    HDFrestart& h5f_file, const std::string& name)
 {
     Control& ct   = *(Control::instance());
     hid_t file_id = h5f_file.file_id();
@@ -1020,7 +1092,7 @@ int LocGridOrbitals::write(HDFrestart& h5f_file, const std::string& name)
     const short precision = ct.out_restart_info > 3 ? 2 : 1;
 
     if (onpe0 && ct.verbose > 2)
-        (*MPIdata::sout) << "Write LocGridOrbitals " << name
+        (*MPIdata::sout) << "Write LocGridOrbitals<ScalarType> " << name
                          << " with precision " << precision << std::endl;
     // loop over global (storage) functions
     for (int color = 0; color < chromatic_number_; color++)
@@ -1123,9 +1195,9 @@ int LocGridOrbitals::write(HDFrestart& h5f_file, const std::string& name)
             herr_t status = H5Dclose(dset_id);
             if (status < 0)
             {
-                (*MPIdata::serr)
-                    << "LocGridOrbitals::write_func_hdf5:H5Dclose failed!!!"
-                    << std::endl;
+                (*MPIdata::serr) << "LocGridOrbitals::write_func_"
+                                    "hdf5:H5Dclose failed!!!"
+                                 << std::endl;
                 return -1;
             }
         }
@@ -1155,7 +1227,8 @@ int LocGridOrbitals::write(HDFrestart& h5f_file, const std::string& name)
     return 0;
 }
 
-int LocGridOrbitals::read_func_hdf5(
+template <typename ScalarType>
+int LocGridOrbitals<ScalarType>::read_func_hdf5(
     HDFrestart& h5f_file, const std::string& name)
 {
     assert(chromatic_number_ >= 0);
@@ -1181,7 +1254,7 @@ int LocGridOrbitals::read_func_hdf5(
     hid_t memspace = H5P_DEFAULT;
     if (h5f_file.active()) memspace = h5f_file.createMemspace();
 
-    ORBDTYPE* buffer = new ORBDTYPE[block[0] * block[1] * block[2]];
+    ScalarType* buffer = new ScalarType[block[0] * block[1] * block[2]];
 
     if (onpe0 && ct.verbose > 2)
     {
@@ -1195,9 +1268,9 @@ int LocGridOrbitals::read_func_hdf5(
         }
         else
         {
-            (*MPIdata::sout)
-                << "LocGridOrbitals::read_func_hdf5(): Read wave functions "
-                << name << " from all tasks..." << std::endl;
+            (*MPIdata::sout) << "LocGridOrbitals::read_func_hdf5():"
+                                " Read wave functions "
+                             << name << " from all tasks..." << std::endl;
         }
     }
 
@@ -1237,18 +1310,18 @@ int LocGridOrbitals::read_func_hdf5(
         hid_t dset_id = h5f_file.open_dset(key);
         if (dset_id < 0)
         {
-            (*MPIdata::serr)
-                << "LocGridOrbitals::read_func_hdf5() --- cannot open " << key
-                << std::endl;
+            (*MPIdata::serr) << "LocGridOrbitals::read_func_hdf5() "
+                                "--- cannot open "
+                             << key << std::endl;
             return dset_id;
         }
 
         herr_t status = h5f_file.readData(buffer, memspace, dset_id, precision);
         if (status < 0)
         {
-            (*MPIdata::serr)
-                << "LocGridOrbitals::read_func_hdf5() --- H5Dread failed!!!"
-                << std::endl;
+            (*MPIdata::serr) << "LocGridOrbitals::read_func_hdf5() "
+                                "--- H5Dread failed!!!"
+                             << std::endl;
             return -1;
         }
 
@@ -1367,13 +1440,15 @@ int LocGridOrbitals::read_func_hdf5(
 
 // initialize matrix chromatic_number_ by ncolor (for columns first_color to
 // first_color+ncolor)
-void LocGridOrbitals::matrixToLocalMatrix(const short iloc,
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::matrixToLocalMatrix(const short iloc,
     const DISTMATDTYPE* const matrix, DISTMATDTYPE* const lmatrix) const
 {
     matrixToLocalMatrix(iloc, matrix, lmatrix, 0, chromatic_number_);
 }
 
-void LocGridOrbitals::matrixToLocalMatrix(const short iloc,
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::matrixToLocalMatrix(const short iloc,
     const DISTMATDTYPE* const matrix, DISTMATDTYPE* const lmatrix,
     const int first_color, const int ncolor) const
 {
@@ -1401,8 +1476,10 @@ void LocGridOrbitals::matrixToLocalMatrix(const short iloc,
 
 // compute the matrix <psi1|B|psi2>
 // output: matB
-void LocGridOrbitals::computeMatB(
-    const LocGridOrbitals& orbitals, const pb::Lap<ORBDTYPE>& LapOper)
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::computeMatB(
+    const LocGridOrbitals<ScalarType>& orbitals,
+    const pb::Lap<ScalarType>& LapOper)
 {
     if (numst_ == 0) return;
 
@@ -1419,10 +1496,10 @@ void LocGridOrbitals::computeMatB(
     SquareLocalMatrices<MATDTYPE, MemorySpace::Host> ss(
         subdivx_, chromatic_number_);
 
-    ORBDTYPE* work = new ORBDTYPE[lda_ * bcolor];
-    memset(work, 0, lda_ * bcolor * sizeof(ORBDTYPE));
+    ScalarType* work = new ScalarType[lda_ * bcolor];
+    memset(work, 0, lda_ * bcolor * sizeof(ScalarType));
 
-    const ORBDTYPE* const orbitals_psi
+    const ScalarType* const orbitals_psi
         = (chromatic_number_ > 0) ? orbitals.block_vector_.vect(0) : nullptr;
 
     setDataWithGhosts();
@@ -1462,7 +1539,9 @@ void LocGridOrbitals::computeMatB(
 }
 
 // compute <Phi|B|Phi> and its inverse
-void LocGridOrbitals::computeBAndInvB(const pb::Lap<ORBDTYPE>& LapOper)
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::computeBAndInvB(
+    const pb::Lap<ScalarType>& LapOper)
 {
     assert(proj_matrices_ != nullptr);
 
@@ -1477,7 +1556,8 @@ void LocGridOrbitals::computeBAndInvB(const pb::Lap<ORBDTYPE>& LapOper)
     invBmat_tm_.stop();
 }
 
-void LocGridOrbitals::getLocalOverlap(
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::getLocalOverlap(
     SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& ss)
 {
     assert(chromatic_number_ >= 0);
@@ -1490,7 +1570,7 @@ void LocGridOrbitals::getLocalOverlap(
 #ifdef MGMOL_USE_MIXEDP
         getLocalOverlap(*this, ss);
 #else
-        const ORBDTYPE* const psi = block_vector_.vect(0);
+        const ScalarType* const psi = block_vector_.vect(0);
 
         for (short iloc = 0; iloc < subdivx_; iloc++)
         {
@@ -1505,7 +1585,9 @@ void LocGridOrbitals::getLocalOverlap(
     }
 }
 
-void LocGridOrbitals::getLocalOverlap(const LocGridOrbitals& orbitals,
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::getLocalOverlap(
+    const LocGridOrbitals<ScalarType>& orbitals,
     SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& ss)
 {
     assert(chromatic_number_ >= 0);
@@ -1517,7 +1599,9 @@ void LocGridOrbitals::getLocalOverlap(const LocGridOrbitals& orbitals,
     }
 }
 
-void LocGridOrbitals::computeLocalProduct(const LocGridOrbitals& orbitals,
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::computeLocalProduct(
+    const LocGridOrbitals<ScalarType>& orbitals,
     LocalMatrices<MATDTYPE, MemorySpace::Host>& ss, const bool transpose)
 {
     // assert( orbitals.chromatic_number_>=0 );
@@ -1527,9 +1611,10 @@ void LocGridOrbitals::computeLocalProduct(const LocGridOrbitals& orbitals,
         computeLocalProduct(orbitals.psi(0), orbitals.lda_, ss, transpose);
 }
 
-void LocGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
-    const int ld, LocalMatrices<MATDTYPE, MemorySpace::Host>& ss,
-    const bool transpose)
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::computeLocalProduct(
+    const ScalarType* const array, const int ld,
+    LocalMatrices<MATDTYPE, MemorySpace::Host>& ss, const bool transpose)
 {
     assert(loc_numpt_ > 0);
     assert(loc_numpt_ <= ld);
@@ -1538,39 +1623,37 @@ void LocGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
     assert(grid_.vel() > 0.);
     assert(subdivx_ > 0);
 
-    const ORBDTYPE* const a = transpose ? array : block_vector_.vect(0);
-    const ORBDTYPE* const b = transpose ? block_vector_.vect(0) : array;
+    const ScalarType* const a = transpose ? array : block_vector_.vect(0);
+    const ScalarType* const b = transpose ? block_vector_.vect(0) : array;
 
     const int lda = transpose ? ld : lda_;
     const int ldb = transpose ? lda_ : ld;
 
     unsigned int const a_size = numpt_ * ss.m();
-    ORBDTYPE* a_host_view
-        = MemorySpace::Memory<ORBDTYPE, memory_space_type>::allocate_host_view(
-            a_size);
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
-        const_cast<ORBDTYPE*>(a), a_size, a_host_view);
+    ScalarType* a_host_view   = MemorySpace::Memory<ScalarType,
+        memory_space_type>::allocate_host_view(a_size);
+    MemorySpace::Memory<ScalarType, memory_space_type>::copy_view_to_host(
+        const_cast<ScalarType*>(a), a_size, a_host_view);
     unsigned int const b_size = numpt_ * ss.n();
-    ORBDTYPE* b_host_view
-        = MemorySpace::Memory<ORBDTYPE, memory_space_type>::allocate_host_view(
-            b_size);
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
-        const_cast<ORBDTYPE*>(b), b_size, b_host_view);
+    ScalarType* b_host_view   = MemorySpace::Memory<ScalarType,
+        memory_space_type>::allocate_host_view(b_size);
+    MemorySpace::Memory<ScalarType, memory_space_type>::copy_view_to_host(
+        const_cast<ScalarType*>(b), b_size, b_host_view);
 
 #ifdef MGMOL_USE_MIXEDP
     // use temporary float data for matrix ss
-    LocalMatrices<ORBDTYPE, MemorySpace::Host> ssf(ss.nmat(), ss.m(), ss.n());
+    LocalMatrices<ScalarType, MemorySpace::Host> ssf(ss.nmat(), ss.m(), ss.n());
 #else
-    LocalMatrices<ORBDTYPE, MemorySpace::Host>& ssf(ss);
+    LocalMatrices<ScalarType, MemorySpace::Host>& ssf(ss);
 #endif
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
         ssf.gemm(iloc, loc_numpt_, a_host_view + iloc * loc_numpt_, lda,
             b_host_view + iloc * loc_numpt_, ldb);
     }
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+    MemorySpace::Memory<ScalarType, memory_space_type>::free_host_view(
         a_host_view);
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(
+    MemorySpace::Memory<ScalarType, memory_space_type>::free_host_view(
         b_host_view);
 #ifdef MGMOL_USE_MIXEDP
     ss.copy(ssf);
@@ -1579,8 +1662,9 @@ void LocGridOrbitals::computeLocalProduct(const ORBDTYPE* const array,
     ss.scal(grid_.vel());
 }
 
-void LocGridOrbitals::computeDiagonalElementsDotProduct(
-    const LocGridOrbitals& orbitals, std::vector<DISTMATDTYPE>& ss)
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::computeDiagonalElementsDotProduct(
+    const LocGridOrbitals<ScalarType>& orbitals, std::vector<DISTMATDTYPE>& ss)
 {
     assert(numst_ > 0);
     assert(grid_.vel() > 0.);
@@ -1605,8 +1689,9 @@ void LocGridOrbitals::computeDiagonalElementsDotProduct(
     mmpi.allreduce(&tmp[0], &ss[0], numst_, MPI_SUM);
 }
 
-void LocGridOrbitals::computeDiagonalElementsDotProductLocal(
-    const LocGridOrbitals& orbitals, std::vector<DISTMATDTYPE>& ss)
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::computeDiagonalElementsDotProductLocal(
+    const LocGridOrbitals<ScalarType>& orbitals, std::vector<DISTMATDTYPE>& ss)
 {
     assert(grid_.vel() > 0.);
 
@@ -1653,13 +1738,16 @@ void LocGridOrbitals::computeDiagonalElementsDotProductLocal(
     }
 }
 
-void LocGridOrbitals::computeGram(
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::computeGram(
     dist_matrix::DistMatrix<DISTMATDTYPE>& gram_mat)
 {
     computeGram(*this, gram_mat);
 }
 
-void LocGridOrbitals::computeGram(const LocGridOrbitals& orbitals,
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::computeGram(
+    const LocGridOrbitals<ScalarType>& orbitals,
     dist_matrix::DistMatrix<DISTMATDTYPE>& gram_mat)
 {
     SquareLocalMatrices<MATDTYPE, MemorySpace::Host> ss(
@@ -1675,7 +1763,8 @@ void LocGridOrbitals::computeGram(const LocGridOrbitals& orbitals,
 }
 
 // compute the lower-triangular part of the overlap matrix
-void LocGridOrbitals::computeGram(const int verbosity)
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::computeGram(const int verbosity)
 {
     assert(proj_matrices_ != nullptr);
 
@@ -1704,7 +1793,8 @@ void LocGridOrbitals::computeGram(const int verbosity)
     overlap_tm_.stop();
 }
 
-void LocGridOrbitals::computeGramAndInvS(const int verbosity)
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::computeGramAndInvS(const int verbosity)
 {
     assert(proj_matrices_ != nullptr);
 
@@ -1714,21 +1804,26 @@ void LocGridOrbitals::computeGramAndInvS(const int verbosity)
     proj_matrices_->computeInvS();
 }
 
-void LocGridOrbitals::checkCond(const double tol, const bool flag_stop)
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::checkCond(
+    const double tol, const bool flag_stop)
 {
     assert(proj_matrices_ != nullptr);
 
     proj_matrices_->checkCond(tol, flag_stop);
 }
 
-double LocGridOrbitals::dotProduct(const LocGridOrbitals& orbitals)
+template <typename ScalarType>
+double LocGridOrbitals<ScalarType>::dotProduct(
+    const LocGridOrbitals<ScalarType>& orbitals)
 {
     assert(dotProductManager_ != nullptr);
     return dotProductManager_->dotProduct(*this, orbitals);
 }
 
-double LocGridOrbitals::dotProduct(
-    const LocGridOrbitals& orbitals, const short dot_type)
+template <typename ScalarType>
+double LocGridOrbitals<ScalarType>::dotProduct(
+    const LocGridOrbitals<ScalarType>& orbitals, const short dot_type)
 {
     dot_product_tm_.start();
 
@@ -1749,7 +1844,9 @@ double LocGridOrbitals::dotProduct(
     return dot;
 }
 
-void LocGridOrbitals::orthonormalizeLoewdin(const bool overlap_uptodate,
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::orthonormalizeLoewdin(
+    const bool overlap_uptodate,
     SquareLocalMatrices<MATDTYPE, MemorySpace::Host>* matrixTransform,
     const bool update_matrices)
 {
@@ -1788,7 +1885,8 @@ void LocGridOrbitals::orthonormalizeLoewdin(const bool overlap_uptodate,
     if (matrixTransform == nullptr) delete localP;
 }
 
-double LocGridOrbitals::norm() const
+template <typename ScalarType>
+double LocGridOrbitals<ScalarType>::norm() const
 {
     Control& ct = *(Control::instance());
 
@@ -1801,7 +1899,8 @@ double LocGridOrbitals::norm() const
     return norm;
 }
 
-double LocGridOrbitals::normState(const int gid) const
+template <typename ScalarType>
+double LocGridOrbitals<ScalarType>::normState(const int gid) const
 {
     assert(gid >= 0);
 
@@ -1833,7 +1932,9 @@ double LocGridOrbitals::normState(const int gid) const
     return grid_.vel() * norm;
 }
 
-void LocGridOrbitals::orthonormalize2states(const int st1, const int st2)
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::orthonormalize2states(
+    const int st1, const int st2)
 {
     assert(st1 >= 0);
     assert(st2 >= 0);
@@ -1974,8 +2075,9 @@ void LocGridOrbitals::orthonormalize2states(const int st1, const int st2)
 #endif
 }
 
-void LocGridOrbitals::multiplyByMatrix2states(
-    const int st1, const int st2, const double* mat, LocGridOrbitals& product)
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::multiplyByMatrix2states(const int st1,
+    const int st2, const double* mat, LocGridOrbitals<ScalarType>& product)
 {
     assert(st1 >= 0);
     assert(st2 >= 0);
@@ -2022,7 +2124,8 @@ void LocGridOrbitals::multiplyByMatrix2states(
     }
 }
 
-void LocGridOrbitals::computeDiagonalGram(
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::computeDiagonalGram(
     VariableSizeMatrix<sparserow>& diagS) const
 {
     const double vel = grid_.vel();
@@ -2054,7 +2157,8 @@ void LocGridOrbitals::computeDiagonalGram(
 #endif
 }
 
-void LocGridOrbitals::computeInvNorms2(
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::computeInvNorms2(
     std::vector<std::vector<double>>& inv_norms2) const
 {
     const int initTabSize = 4096;
@@ -2086,7 +2190,8 @@ void LocGridOrbitals::computeInvNorms2(
     }
 }
 
-void LocGridOrbitals::normalize()
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::normalize()
 {
     normalize_tm_.start();
 
@@ -2175,8 +2280,10 @@ void LocGridOrbitals::normalize()
 }
 
 // modify argument orbitals, by projecting out its component
-// along LocGridOrbitals
-void LocGridOrbitals::projectOut(LocGridOrbitals& orbitals, const double scale)
+// along LocGridOrbitals<ScalarType>
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::projectOut(
+    LocGridOrbitals<ScalarType>& orbitals, const double scale)
 {
     projectOut(orbitals.psi(0), lda_, scale);
 
@@ -2191,8 +2298,9 @@ void LocGridOrbitals::projectOut(LocGridOrbitals& orbitals, const double scale)
     orbitals.incrementIterativeIndex();
 }
 
-void LocGridOrbitals::projectOut(
-    ORBDTYPE* const array, const int lda, const double scale)
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::projectOut(
+    ScalarType* const array, const int lda, const double scale)
 {
     assert(lda > 1);
     assert(loc_numpt_ > 0);
@@ -2213,14 +2321,14 @@ void LocGridOrbitals::projectOut(
 #endif
     proj_matrices_->applyInvS(pmatrix);
 
-    ORBDTYPE* tproduct = new ORBDTYPE[loc_numpt_ * chromatic_number_];
-    memset(tproduct, 0, loc_numpt_ * chromatic_number_ * sizeof(ORBDTYPE));
+    ScalarType* tproduct = new ScalarType[loc_numpt_ * chromatic_number_];
+    memset(tproduct, 0, loc_numpt_ * chromatic_number_ * sizeof(ScalarType));
 
     // loop over subdomains
     for (short iloc = 0; iloc < subdivx_; iloc++)
     {
-        ORBDTYPE* phi    = getPsi(0, iloc);
-        ORBDTYPE* parray = array + iloc * loc_numpt_;
+        ScalarType* phi    = getPsi(0, iloc);
+        ScalarType* parray = array + iloc * loc_numpt_;
 
         MATDTYPE* localMat_iloc = pmatrix.getRawPtr(iloc);
 
@@ -2238,7 +2346,8 @@ void LocGridOrbitals::projectOut(
     delete[] tproduct;
 }
 
-void LocGridOrbitals::initRand()
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::initRand()
 {
     Control& ct = *(Control::instance());
 
@@ -2344,8 +2453,10 @@ void LocGridOrbitals::initRand()
 }
 
 // Compute nstates column of Psi^T*A*Psi starting at column 0
-void LocGridOrbitals::addDotWithNcol2Matrix(
-    LocGridOrbitals& Apsi, dist_matrix::DistMatrix<DISTMATDTYPE>& matrix) const
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::addDotWithNcol2Matrix(
+    LocGridOrbitals<ScalarType>& Apsi,
+    dist_matrix::DistMatrix<DISTMATDTYPE>& matrix) const
 {
     addDot_tm_.start();
 
@@ -2388,7 +2499,8 @@ void LocGridOrbitals::addDotWithNcol2Matrix(
     addDot_tm_.stop();
 }
 
-void LocGridOrbitals::computeGlobalIndexes(
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::computeGlobalIndexes(
     std::shared_ptr<LocalizationRegions> lrs)
 {
     all_overlapping_gids_ = lrs->getOverlapGids();
@@ -2417,7 +2529,8 @@ void LocGridOrbitals::computeGlobalIndexes(
     }
 }
 
-void LocGridOrbitals::printTimers(std::ostream& os)
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::printTimers(std::ostream& os)
 {
     matB_tm_.print(os);
     invBmat_tm_.print(os);
@@ -2432,7 +2545,9 @@ void LocGridOrbitals::printTimers(std::ostream& os)
     axpy_tm_.print(os);
 }
 
-void LocGridOrbitals::initWF(const std::shared_ptr<LocalizationRegions> lrs)
+template <typename ScalarType>
+void LocGridOrbitals<ScalarType>::initWF(
+    const std::shared_ptr<LocalizationRegions> lrs)
 {
     Control& ct = *(Control::instance());
 
@@ -2466,10 +2581,10 @@ void LocGridOrbitals::initWF(const std::shared_ptr<LocalizationRegions> lrs)
             if (ct.globalColoring())
             {
                 // smooth out random functions
-                pb::Laph4M<ORBDTYPE> myoper(grid_);
-                pb::GridFunc<ORBDTYPE> gf_work(
+                pb::Laph4M<ScalarType> myoper(grid_);
+                pb::GridFunc<ScalarType> gf_work(
                     grid_, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
-                pb::GridFunc<ORBDTYPE> gf_psi(
+                pb::GridFunc<ScalarType> gf_psi(
                     grid_, ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
 
                 if (onpe0 && ct.verbose > 2)
@@ -2513,17 +2628,4 @@ void LocGridOrbitals::initWF(const std::shared_ptr<LocalizationRegions> lrs)
 #endif
 }
 
-template void LocGridOrbitals::setDataWithGhosts(
-    pb::GridFuncVector<float, memory_space_type>* data_wghosts);
-template void LocGridOrbitals::setDataWithGhosts(
-    pb::GridFuncVector<double, memory_space_type>* data_wghosts);
-
-template void LocGridOrbitals::setPsi(
-    const pb::GridFunc<float>& gf_work, const int ist);
-template void LocGridOrbitals::setPsi(
-    const pb::GridFunc<double>& gf_work, const int ist);
-
-template void LocGridOrbitals::setPsi(
-    const pb::GridFuncVector<float, memory_space_type>& gf_work);
-template void LocGridOrbitals::setPsi(
-    const pb::GridFuncVector<double, memory_space_type>& gf_work);
+template class LocGridOrbitals<ORBDTYPE>;

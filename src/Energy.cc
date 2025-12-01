@@ -199,5 +199,5 @@ double Energy<T>::evaluateTotal(const double ts, // in [Ha]
     return energy_sc;
 }
 
-template class Energy<LocGridOrbitals>;
-template class Energy<ExtendedGridOrbitals>;
+template class Energy<LocGridOrbitals<ORBDTYPE>>;
+template class Energy<ExtendedGridOrbitals<ORBDTYPE>>;

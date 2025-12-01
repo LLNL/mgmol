@@ -829,5 +829,5 @@ void SinCosOps<T>::computeDiag(const T& orbitals,
     compute_tm_.stop();
 }
 
-template class SinCosOps<LocGridOrbitals>;
-template class SinCosOps<ExtendedGridOrbitals>;
+template class SinCosOps<LocGridOrbitals<ORBDTYPE>>;
+template class SinCosOps<ExtendedGridOrbitals<ORBDTYPE>>;

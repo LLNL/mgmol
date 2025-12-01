@@ -545,5 +545,5 @@ void SpreadsAndCenters<T>::computeSinCosDiag(
         mat, orbitals.getAllOverlappingGids(), orbitals.getLocalGids());
 }
 
-template class SpreadsAndCenters<LocGridOrbitals>;
-template class SpreadsAndCenters<ExtendedGridOrbitals>;
+template class SpreadsAndCenters<LocGridOrbitals<ORBDTYPE>>;
+template class SpreadsAndCenters<ExtendedGridOrbitals<ORBDTYPE>>;

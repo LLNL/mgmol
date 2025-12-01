@@ -1824,8 +1824,8 @@ double LocalizationRegions::computeMinDistBetweenLocalPairs(
 //}
 
 template float LocalizationRegions::move(
-    const SpreadsAndCenters<LocGridOrbitals>& sc, const bool flag);
+    const SpreadsAndCenters<LocGridOrbitals<ORBDTYPE>>& sc, const bool flag);
 template float LocalizationRegions::updateRadiiConstVol(
-    const SpreadsAndCenters<LocGridOrbitals>& sc);
+    const SpreadsAndCenters<LocGridOrbitals<ORBDTYPE>>& sc);
 template float LocalizationRegions::updateRadii(
-    const SpreadsAndCenters<LocGridOrbitals>& sc, const float ratio);
+    const SpreadsAndCenters<LocGridOrbitals<ORBDTYPE>>& sc, const float ratio);

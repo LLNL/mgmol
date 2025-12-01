@@ -727,5 +727,5 @@ void MGmol<OrbitalsType>::loadRestartFile(const std::string filename)
     return;
 }
 
-template class MGmol<LocGridOrbitals>;
-template class MGmol<ExtendedGridOrbitals>;
+template class MGmol<LocGridOrbitals<ORBDTYPE>>;
+template class MGmol<ExtendedGridOrbitals<ORBDTYPE>>;

@@ -321,6 +321,6 @@ void AndersonMix<T>::update(T& f, T& work, ostream& os, const bool verbose)
 #ifdef TESTING
 template class AndersonMix<Solution>;
 #else
-template class AndersonMix<LocGridOrbitals>;
-template class AndersonMix<ExtendedGridOrbitals>;
+template class AndersonMix<LocGridOrbitals<ORBDTYPE>>;
+template class AndersonMix<ExtendedGridOrbitals<ORBDTYPE>>;
 #endif

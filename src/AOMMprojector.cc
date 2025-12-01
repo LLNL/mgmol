@@ -14,8 +14,8 @@
 #include "ProjectedMatricesSparse.h"
 #include "SubspaceProjector.h"
 
-AOMMprojector::AOMMprojector(
-    LocGridOrbitals& phi, const std::shared_ptr<LocalizationRegions>& lrs)
+AOMMprojector::AOMMprojector(LocGridOrbitals<ORBDTYPE>& phi,
+    const std::shared_ptr<LocalizationRegions>& lrs)
 {
     Control& ct     = *(Control::instance());
     Mesh* mymesh    = Mesh::instance();
@@ -48,7 +48,7 @@ AOMMprojector::AOMMprojector(
                 ct.numst, with_spin, ct.occ_width);
 
     // kernel functions use their own projected matrices and masks
-    kernel_phi_ = new LocGridOrbitals(
+    kernel_phi_ = new LocGridOrbitals<ORBDTYPE>(
         "AOMM", phi, kernel_proj_matrices_, kernelMasks_, nullptr);
     kernel_phi_->initGauss(0.5 * radius, lrs);
 
@@ -59,7 +59,8 @@ AOMMprojector::AOMMprojector(
 
     kernel_phi_->computeGramAndInvS(ct.verbose);
 
-    kernelprojector_ = new SubspaceProjector<LocGridOrbitals>(*kernel_phi_);
+    kernelprojector_
+        = new SubspaceProjector<LocGridOrbitals<ORBDTYPE>>(*kernel_phi_);
 
     matrix_mask_ = new SquareLocalMatrices<MATDTYPE, MemorySpace::Host>(
         subdivx, kernel_phi_->chromatic_number());
@@ -77,7 +78,7 @@ AOMMprojector::AOMMprojector(
     //    matrix_mask_->setMaskThreshold(threshold, 10000.);
 }
 
-void AOMMprojector::resetProjectors(LocGridOrbitals& phi)
+void AOMMprojector::resetProjectors(LocGridOrbitals<ORBDTYPE>& phi)
 {
     if (onpe0) std::cout << "AOMM: reset projectors..." << std::endl;
 
@@ -89,10 +90,11 @@ void AOMMprojector::resetProjectors(LocGridOrbitals& phi)
     kernel_phi_->computeGramAndInvS(0);
 
     delete kernelprojector_;
-    kernelprojector_ = new SubspaceProjector<LocGridOrbitals>(*kernel_phi_);
+    kernelprojector_
+        = new SubspaceProjector<LocGridOrbitals<ORBDTYPE>>(*kernel_phi_);
 }
 
-void AOMMprojector::projectOut(LocGridOrbitals& phi)
+void AOMMprojector::projectOut(LocGridOrbitals<ORBDTYPE>& phi)
 {
     assert(kernelprojector_ != nullptr);
     assert(matrix_mask_ != nullptr);

@@ -62,7 +62,7 @@ void GrassmanCG<T>::conjugate()
         double tau       = std::max(0., alpha);
         const double one = 1.;
         sdir->scal(tau);
-        sdir->axpy(one, *new_pcgrad);
+        sdir->axpy((ORBDTYPE)one, *new_pcgrad);
     }
     else
     {
@@ -281,5 +281,5 @@ void GrassmanCG<T>::parallelTransportUpdate(const double /*lambda*/, T& phi)
     return;
 }
 
-template class GrassmanCG<LocGridOrbitals>;
-template class GrassmanCG<ExtendedGridOrbitals>;
+template class GrassmanCG<LocGridOrbitals<ORBDTYPE>>;
+template class GrassmanCG<ExtendedGridOrbitals<ORBDTYPE>>;

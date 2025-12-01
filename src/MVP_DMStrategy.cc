@@ -72,9 +72,10 @@ void MVP_DMStrategy<OrbitalsType, MatrixType>::dressDM()
     if (use_old_dm_) proj_matrices_->dressupDM();
 }
 
-template class MVP_DMStrategy<LocGridOrbitals, dist_matrix::DistMatrix<double>>;
-template class MVP_DMStrategy<LocGridOrbitals, ReplicatedMatrix>;
-
-template class MVP_DMStrategy<ExtendedGridOrbitals,
+template class MVP_DMStrategy<LocGridOrbitals<ORBDTYPE>,
     dist_matrix::DistMatrix<double>>;
-template class MVP_DMStrategy<ExtendedGridOrbitals, ReplicatedMatrix>;
+template class MVP_DMStrategy<LocGridOrbitals<ORBDTYPE>, ReplicatedMatrix>;
+
+template class MVP_DMStrategy<ExtendedGridOrbitals<ORBDTYPE>,
+    dist_matrix::DistMatrix<double>>;
+template class MVP_DMStrategy<ExtendedGridOrbitals<ORBDTYPE>, ReplicatedMatrix>;

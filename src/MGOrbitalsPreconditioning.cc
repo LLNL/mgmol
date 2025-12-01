@@ -173,7 +173,8 @@ void MGOrbitalsPreconditioning<OrbitalsType, PDataType>::printTimers(
     precond_tm_.print(os);
 }
 
-template class MGOrbitalsPreconditioning<LocGridOrbitals, float>;
-template class MGOrbitalsPreconditioning<LocGridOrbitals, double>;
-template class MGOrbitalsPreconditioning<ExtendedGridOrbitals, float>;
-template class MGOrbitalsPreconditioning<ExtendedGridOrbitals, double>;
+template class MGOrbitalsPreconditioning<LocGridOrbitals<ORBDTYPE>, float>;
+template class MGOrbitalsPreconditioning<LocGridOrbitals<ORBDTYPE>, double>;
+template class MGOrbitalsPreconditioning<ExtendedGridOrbitals<ORBDTYPE>, float>;
+template class MGOrbitalsPreconditioning<ExtendedGridOrbitals<ORBDTYPE>,
+    double>;

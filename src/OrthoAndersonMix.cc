@@ -25,5 +25,5 @@ void OrthoAndersonMix<T>::postprocessUpdate()
     }
 }
 
-template class OrthoAndersonMix<ExtendedGridOrbitals>;
-template class OrthoAndersonMix<LocGridOrbitals>;
+template class OrthoAndersonMix<ExtendedGridOrbitals<ORBDTYPE>>;
+template class OrthoAndersonMix<LocGridOrbitals<ORBDTYPE>>;

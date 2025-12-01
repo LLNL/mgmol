@@ -685,14 +685,16 @@ double KBPsiMatrixSparse::getTraceDM(
 }
 
 template void KBPsiMatrixSparse::computeKBpsi(const Ions& ions,
-    LocGridOrbitals& orbitals, const int first_color, const int nb_colors,
-    const bool flag);
-template void KBPsiMatrixSparse::computeAll(const Ions&, LocGridOrbitals&);
+    LocGridOrbitals<ORBDTYPE>& orbitals, const int first_color,
+    const int nb_colors, const bool flag);
+template void KBPsiMatrixSparse::computeAll(
+    const Ions&, LocGridOrbitals<ORBDTYPE>&);
 
 template void KBPsiMatrixSparse::computeKBpsi(const Ions& ions,
-    ExtendedGridOrbitals& orbitals, const int first_color, const int nb_colors,
-    const bool flag);
-template void KBPsiMatrixSparse::computeAll(const Ions&, ExtendedGridOrbitals&);
+    ExtendedGridOrbitals<ORBDTYPE>& orbitals, const int first_color,
+    const int nb_colors, const bool flag);
+template void KBPsiMatrixSparse::computeAll(
+    const Ions&, ExtendedGridOrbitals<ORBDTYPE>&);
 
 template double KBPsiMatrixSparse::getEvnl(const Ions& ions,
     ProjectedMatrices<dist_matrix::DistMatrix<double>>* proj_matrices);
