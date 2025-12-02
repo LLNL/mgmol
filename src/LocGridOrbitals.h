@@ -35,6 +35,7 @@ class ProjectedMatricesInterface;
 class LocalizationRegions;
 class MasksSet;
 class Masks4Orbitals;
+class ReplicatedMatrix;
 
 template <typename ScalarType>
 class LocGridOrbitals : public Orbitals
@@ -355,6 +356,12 @@ public:
 
     void addDotWithNcol2Matrix(
         LocGridOrbitals&, dist_matrix::DistMatrix<DISTMATDTYPE>&) const;
+    void addDotWithNcol2Matrix(LocGridOrbitals&, ReplicatedMatrix&) const
+    {
+        std::cerr << "LocGridOrbitals::addDotWithNcol2Matrix not implemented "
+                     "for ReplicatedMatrix"
+                  << std::endl;
+    }
 
     void scal(const double alpha)
     {
