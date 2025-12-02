@@ -222,6 +222,8 @@ void Hamiltonian<LocGridOrbitals<ORBDTYPE>>::addHlocal2matrix(
     LocGridOrbitals<ORBDTYPE>& phi1, LocGridOrbitals<ORBDTYPE>& phi2,
     ReplicatedMatrix& hij, const bool force)
 {
+    (void)phi1;
+    (void)phi2;
     (void)hij;
 
     applyLocal(phi2, force);
@@ -284,39 +286,5 @@ void Hamiltonian<LocGridOrbitals<ORBDTYPE>>::addHlocal2matrix(
     mat.insertMatrixElements(ss, phi1.getOverlappingGids(), ct.numst);
 }
 
-template Hamiltonian<LocGridOrbitals<ORBDTYPE>>::Hamiltonian();
-template Hamiltonian<ExtendedGridOrbitals<ORBDTYPE>>::Hamiltonian();
-
-template Hamiltonian<LocGridOrbitals<ORBDTYPE>>::~Hamiltonian();
-template Hamiltonian<ExtendedGridOrbitals<ORBDTYPE>>::~Hamiltonian();
-
-template void Hamiltonian<LocGridOrbitals<ORBDTYPE>>::setup(
-    pb::Grid const&, int);
-template void Hamiltonian<ExtendedGridOrbitals<ORBDTYPE>>::setup(
-    pb::Grid const&, int);
-
-template const LocGridOrbitals<ORBDTYPE>&
-Hamiltonian<LocGridOrbitals<ORBDTYPE>>::applyLocal(
-    LocGridOrbitals<ORBDTYPE>&, const bool);
-template const ExtendedGridOrbitals<ORBDTYPE>&
-Hamiltonian<ExtendedGridOrbitals<ORBDTYPE>>::applyLocal(
-    ExtendedGridOrbitals<ORBDTYPE>&, const bool);
-template void Hamiltonian<LocGridOrbitals<ORBDTYPE>>::addHlocalij(
-    LocGridOrbitals<ORBDTYPE>&, LocGridOrbitals<ORBDTYPE>&,
-    ProjectedMatricesInterface* proj_matrices);
-template void Hamiltonian<ExtendedGridOrbitals<ORBDTYPE>>::addHlocalij(
-    ExtendedGridOrbitals<ORBDTYPE>&, ExtendedGridOrbitals<ORBDTYPE>&,
-    ProjectedMatricesInterface* proj_matrices);
-template void Hamiltonian<LocGridOrbitals<ORBDTYPE>>::addHlocalij(
-    LocGridOrbitals<ORBDTYPE>&, ProjectedMatricesInterface* proj_matrices);
-template void Hamiltonian<ExtendedGridOrbitals<ORBDTYPE>>::addHlocalij(
-    ExtendedGridOrbitals<ORBDTYPE>&, ProjectedMatricesInterface* proj_matrices);
-template void Hamiltonian<LocGridOrbitals<ORBDTYPE>>::addHlocal2matrix(
-    LocGridOrbitals<ORBDTYPE>&, LocGridOrbitals<ORBDTYPE>&,
-    VariableSizeMatrix<sparserow>& mat, const bool force);
-template void Hamiltonian<LocGridOrbitals<ORBDTYPE>>::addHlocal2matrix(
-    LocGridOrbitals<ORBDTYPE>&, LocGridOrbitals<ORBDTYPE>&,
-    dist_matrix::DistMatrix<DISTMATDTYPE>& hij, const bool force);
-template void Hamiltonian<LocGridOrbitals<ORBDTYPE>>::addHlocal2matrix(
-    LocGridOrbitals<ORBDTYPE>&, LocGridOrbitals<ORBDTYPE>&, ReplicatedMatrix&,
-    const bool force);
+template class Hamiltonian<LocGridOrbitals<ORBDTYPE>>;
+template class Hamiltonian<ExtendedGridOrbitals<ORBDTYPE>>;
