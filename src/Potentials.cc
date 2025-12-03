@@ -155,6 +155,7 @@ double Potentials::updateVtot(const std::vector<std::vector<RHODTYPE>>& rho)
     double minus = -1.;
     LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
         size_, minus, &vtot_[0], &dv_[0]);
+    LinearAlgebraUtils<MemorySpace::Host>::MPscal(size_, minus, &dv_[0]);
 
     evalNormDeltaVtotRho(rho);
 

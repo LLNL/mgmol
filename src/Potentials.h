@@ -155,6 +155,8 @@ public:
     POTDTYPE* vtot() { return vtot_.data(); }
     RHODTYPE* rho_comp() { return rho_comp_.data(); }
 
+    const std::vector<POTDTYPE>& dv() { return dv_; }
+
     const std::vector<POTDTYPE>& vnuc() const { return v_nuc_; }
     const std::vector<POTDTYPE>& vh_rho() const { return vh_rho_; }
 
