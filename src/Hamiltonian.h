@@ -42,6 +42,11 @@ public:
     const OrbitalsType& applyLocal(OrbitalsType& phi, const bool force = false);
     void applyLocal(const int nstates, OrbitalsType& phi, OrbitalsType& hphi);
 
+    /*!
+     * Apply potential difference dv to phi
+     */
+    void applyDeltaPot(const OrbitalsType& phi, OrbitalsType& hphi);
+
     template <class MatrixType>
     void addHlocal2matrix(OrbitalsType& orbitals1, OrbitalsType& orbitals2,
         MatrixType& mat, const bool force);

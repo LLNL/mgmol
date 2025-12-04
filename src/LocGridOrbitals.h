@@ -363,6 +363,12 @@ public:
                   << std::endl;
     }
 
+    void applyDiagonalOp(
+        const std::vector<POTDTYPE>& v, LocGridOrbitals& hphi) const
+    {
+        block_vector_.applyDiagonalOp(v, hphi.block_vector_);
+    }
+
     void scal(const double alpha)
     {
         block_vector_.scal(alpha);

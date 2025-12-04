@@ -902,8 +902,12 @@ void MGmol<OrbitalsType>::printTimers()
     proj_matrices_->printTimers(os_);
     ShortSightedInverse::printTimers(os_);
     if (std::is_same<OrbitalsType, ExtendedGridOrbitals<ORBDTYPE>>::value)
+    {
         MVPSolver<ExtendedGridOrbitals<ORBDTYPE>,
             dist_matrix::DistMatrix<DISTMATDTYPE>>::printTimers(os_);
+        MVPSolver<ExtendedGridOrbitals<ORBDTYPE>,
+            ReplicatedMatrix>::printTimers(os_);
+    }
     VariableSizeMatrixInterface::printTimers(os_);
     DataDistribution::printTimers(os_);
     PackedCommunicationBuffer::printTimers(os_);

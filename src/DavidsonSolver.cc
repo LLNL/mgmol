@@ -521,22 +521,29 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
 
                 kbpsi_2.computeHvnlMatrix(&kbpsi_2, ions_, h22nl);
                 kbpsi_1.computeHvnlMatrix(&kbpsi_2, ions_, h12nl);
+
+                h12 = h12nl;
+                h22 = h22nl;
             }
             else
             {
-                h11 = h11nl;
-                hamiltonian_->applyLocal(numst_, orbitals, hphi);
+                hamiltonian_->applyDeltaPot(orbitals, hphi);
                 orbitals.addDotWithNcol2Matrix(hphi, h11);
             }
 
-            // compute H*P and store in hphi
-            hamiltonian_->applyLocal(numst_, work_orbitals, hphi);
+            if (inner_it == 0)
+            {
+                // compute H*P and store in hphi
+                hamiltonian_->applyLocal(numst_, work_orbitals, hphi);
+            }
+            else
+            {
+                hamiltonian_->applyDeltaPot(work_orbitals, hphi);
+            }
 
             // update h22, h12 and h21
-            h12 = h12nl;
             orbitals.addDotWithNcol2Matrix(hphi, h12);
 
-            h22 = h22nl;
             work_orbitals.addDotWithNcol2Matrix(hphi, h22);
 
             h21.transpose(1., h12, 0.);
@@ -609,16 +616,11 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
                 energy_->saveVofRho();
 
                 // update h11, h22, h12, and h21
-                h11 = h11nl;
-                hamiltonian_->applyLocal(numst_, orbitals, hphi);
+                hamiltonian_->applyDeltaPot(orbitals, hphi);
                 orbitals.addDotWithNcol2Matrix(hphi, h11);
 
-                hamiltonian_->applyLocal(numst_, work_orbitals, hphi);
-
-                h22 = h22nl;
+                hamiltonian_->applyDeltaPot(work_orbitals, hphi);
                 work_orbitals.addDotWithNcol2Matrix(hphi, h22);
-
-                h12 = h12nl;
                 orbitals.addDotWithNcol2Matrix(hphi, h12);
 
                 h21.transpose(1., h12, 0.);
