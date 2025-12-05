@@ -33,7 +33,7 @@ cmake -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} \
       -DMPIEXEC_NUMPROC_FLAG="-n" \
       -DBLA_VENDOR=${BLAS_VENDOR} \
       -DSCALAPACK_BLACS_LIBRARY=${BLACS_LIB}/libmkl_blacs_intelmpi_lp64.so \
-      -DCMAKE_BUILD_TYPE=Debug \
+      -DCMAKE_BUILD_TYPE=Release \
       -DMPIEXEC_EXECUTABLE=/usr/bin/srun \
       ..
  
