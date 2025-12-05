@@ -1405,7 +1405,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         if (str.compare("periodic") == 0) bcWF[2] = 1;
 
         str = vm["Poisson.solver"].as<std::string>();
-        if (str.compare("PCG") == 0) diel_flag_ = 10;
+        if (str.compare("CG") == 0 || str.compare("PCG") == 0) diel_flag_ = 10;
         if (str.compare("MG") == 0) diel_flag_ = 0;
 
         str = vm["Poisson.diel"].as<std::string>();
