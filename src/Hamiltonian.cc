@@ -161,6 +161,14 @@ void Hamiltonian<T>::applyLocal(const int ncolors, T& phi, T& hphi)
     apply_Hloc_tm_.stop();
 }
 
+template <class T>
+void Hamiltonian<T>::applyDeltaPot(const T& phi, T& hphi)
+{
+    const std::vector<POTDTYPE>& dv(pot_->dv());
+
+    phi.applyDiagonalOp(dv, hphi);
+}
+
 // add to hij the elements <phi1|Hloc|phi2>
 // corresponding to the local part of the Hamiltonian
 template <>

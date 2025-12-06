@@ -478,6 +478,27 @@ void BlockVector<ScalarType, MemorySpaceType>::axpy(const double alpha,
     LinearAlgebraUtils<MemorySpaceType>::MPaxpy(
         locnumel_, alpha, bv.vect_[ix] + shift, vect_[iy] + shift);
 }
+
+template <typename ScalarType, typename MemorySpaceType>
+void BlockVector<ScalarType, MemorySpaceType>::applyDiagonalOp(
+    const std::vector<double>& diag,
+    BlockVector<ScalarType, MemorySpaceType>& dst) const
+{
+    diagop_tm_.start();
+
+    const double* const dd = diag.data();
+
+    for (unsigned int j = 0; j < vect_.size(); j++)
+    {
+        const ScalarType* __restrict__ srcj = vect_[j];
+        ScalarType* __restrict__ dstj       = dst.vect_[j];
+        for (int i = 0; i < numel_; i++)
+            dstj[i] = (ScalarType)(dd[i] * (double)srcj[i]);
+    }
+
+    diagop_tm_.stop();
+}
+
 template <typename ScalarType, typename MemorySpaceType>
 void BlockVector<ScalarType, MemorySpaceType>::hasnan(const int j) const
 {
@@ -534,6 +555,7 @@ void BlockVector<ScalarType, MemorySpaceType>::printTimers(std::ostream& os)
     scal_tm_.print(os);
     opminus_tm_.print(os);
     copy_tm_.print(os);
+    diagop_tm_.print(os);
 }
 
 template <typename ScalarType, typename MemorySpaceType>

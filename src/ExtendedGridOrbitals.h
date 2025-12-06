@@ -281,6 +281,12 @@ public:
         assert(numst_ < 10000);
         return numst_;
     }
+    void applyDiagonalOp(
+        const std::vector<POTDTYPE>& v, ExtendedGridOrbitals& hphi) const
+    {
+        block_vector_.applyDiagonalOp(v, hphi.block_vector_);
+    }
+
     short subdivx(void) const { return 1; }
     void printChromaticNumber(std::ostream& os) const
     {

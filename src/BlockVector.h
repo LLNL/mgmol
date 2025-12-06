@@ -34,6 +34,7 @@ class BlockVector
     static Timer scal_tm_;
     static Timer opminus_tm_;
     static Timer copy_tm_;
+    static Timer diagop_tm_;
 
     static short n_instances_;
     static short subdivx_;
@@ -136,6 +137,9 @@ public:
         assert(vect_[i] != 0);
         return vect_[i];
     }
+
+    void applyDiagonalOp(const std::vector<double>& diag,
+        BlockVector<ScalarType, MemorySpaceType>& dst) const;
 
     ScalarType maxAbsValue() const;
 
@@ -331,4 +335,8 @@ Timer BlockVector<ScalarType, MemorySpaceType>::opminus_tm_(
 
 template <typename ScalarType, typename MemorySpaceType>
 Timer BlockVector<ScalarType, MemorySpaceType>::copy_tm_("BlockVector::copy");
+
+template <typename ScalarType, typename MemorySpaceType>
+Timer BlockVector<ScalarType, MemorySpaceType>::diagop_tm_(
+    "BlockVector::diagop");
 #endif
