@@ -176,8 +176,15 @@ bool PCGSolver<OperatorType, ScalarDataType, PrecondDataType>::solve(
     /* compute Ax */
     oper_.apply(gf_phi, lhs);
     // set r = b
-    pb::GridFunc<ScalarDataType> res(gf_rhs);
-    oper_.transform(res);
+    pb::GridFunc<ScalarDataType> rhs(gf_rhs);
+
+    // transform r.h.s. to account for dielectric model
+    oper_.transform(rhs);
+
+    // apply Mehrstelllen r.h.s. if appropriate
+    pb::GridFunc<ScalarDataType> res(finegrid, bc_[0], bc_[1], bc_[2]);
+    oper_.rhs(rhs, res);
+
     // compute r = r - Ax
     res -= lhs;
 

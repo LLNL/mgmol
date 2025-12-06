@@ -36,7 +36,7 @@ output = subprocess.check_output(command,shell=True)
 lines=output.split(b'\n')
 
 tol = 4.e-6
-Fz  = 1.2e-3
+Fz  = -7.33e-04
 for line in lines:
   num_matches = line.count(b'%%')
   if num_matches:
@@ -51,7 +51,7 @@ for line in lines:
       for i in range(5,7):
         force = eval(words[i])
         if abs(force)>tol:
-          print("force = {}".format(force))
+          print("Force larger than tol, force = {}".format(force))
           sys.exit(1)
       #check value of force in z direction
       if abs(eval(words[7])-Fz)>2.e-5:
