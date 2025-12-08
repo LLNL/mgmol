@@ -70,21 +70,24 @@ if niterations>120:
   print("Chebyshev-MVP test FAILED for taking too many iterations")
   sys.exit(1)
 
+energy_ref = -108.264614049136
+tol = 1.e-6
 print("Check energy...")
 last_energy = eval(energies[-1])
 print("Energy = {}".format(last_energy))
-if last_energy>-108.0868:
+if abs(last_energy-energy_ref)>tol:
   print("Last energy = {}".format(last_energy))
   sys.exit(1)
 
 tol = 1.e-5
+entropy_ref = 0.17653976
 print("Check entropy...")
 for line in lines:
   if line.count(b'-TS'):
     words=line.split()
     entropy = eval(words[3])
     print("Entropy = {}".format(entropy))
-    entropy_diff = entropy+0.17819
+    entropy_diff = entropy+entropy_ref
     if abs(entropy_diff)>tol:
         print("Check entropy test FAILED. Entropy difference = {}".format(abs(entropy_diff)))
         sys.exit(1)

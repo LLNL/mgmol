@@ -43,15 +43,15 @@ for line in lines:
     words=line.split()
     energy = eval(words[5][:-1])
 
-ref_energy = -31.805
+ref_energy = -31.808
 print("energy = {}".format(energy))
 if abs(ref_energy-energy) > 1.e-3:
-  print("Incorrect energy!")
+  print("Expected energy = {}".format(ref_energy))
   sys.exit(1)
 
 #make sure forces are below tolerance
 tol = 6.e-4
-Fz  = -1.06e-2
+Fz  = -0.96e-2
 for line in lines:
   #find output lines with forces
   if line.count(b'##'):

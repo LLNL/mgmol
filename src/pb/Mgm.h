@@ -35,12 +35,10 @@ bool Mgm(T1& A, T2& vh, const GridFunc<T3>& rho, const short cogr,
 
     // Compute r.h.s. from rho
     GridFunc<T3> res(rho);
-    A.transform(res);
+    A.transform(res); // to account for dielectric model
     GridFunc<T3> rhs(finegrid, bcx, bcy, bcz);
-    A.rhs(res, rhs);
+    A.rhs(res, rhs); // to account for possible Mehrstellen operator
 
-    // Hartree units
-    // work GridFunc<T3>
     GridFunc<T3> lhs(finegrid, bcx, bcy, bcz);
 
     short bcwork[3] = { bcx, bcy, bcz };
@@ -54,7 +52,6 @@ bool Mgm(T1& A, T2& vh, const GridFunc<T3>& rho, const short cogr,
     nb_sweeps                 = 0;
     for (short i = 0; i < max_sweeps; i++)
     {
-
         A.apply(vh, lhs);
         // res=rhs-lhs;
         res.diff(rhs, lhs);
