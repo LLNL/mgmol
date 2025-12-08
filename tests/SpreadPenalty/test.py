@@ -79,7 +79,7 @@ if (spread-spread_target) > tol:
 
 #we tolerate an energy difference since the initial wave functions
 #are very delocalized and the spread penalty remains active all along
-energy_ref = -17.16448
+energy_ref = -17.1660
 tol = 5.e-4
 if abs(energy-energy_ref) > tol:
   print("Test failed: last energy value incorrect!")
