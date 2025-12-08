@@ -368,7 +368,7 @@ public:
         poisson_pc_nlev = nlev;
     }
 
-    // 10 or larger means CG, otherwise MG V-cycles
+    // 10 or larger means PCG, otherwise MG V-cycles
     bool MGPoissonSolver() { return (diel_flag_ / 10 == 0); }
 
     bool LangevinThermostat() { return (thermostat_type == 1); }
@@ -399,6 +399,7 @@ public:
 
     // dielectric model for solvation
     short diel;
+    // Parameters for MG solver/ preconditioner for Poisson problem
     short poisson_pc_nu1;
     short poisson_pc_nu2;
     short poisson_pc_nlev;
@@ -472,6 +473,9 @@ public:
 
     // Number of v-cycles for hartree solution
     short vh_its;
+    
+    // convergence tolerance for solving Poisson problem using PCG.
+    float poisson_conv_tol;
 
     // Max number of changes of potential
     short max_changes_pot;

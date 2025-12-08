@@ -41,9 +41,10 @@ Control::Control()
     lrs_extrapolation      = 1; // default
     lrs_compute            = 0;
     system_charge_         = 0.;
-    poisson_pc_nu1         = 2;
-    poisson_pc_nu2         = 2;
+    poisson_pc_nu1         = 1;
+    poisson_pc_nu2         = 1;
     poisson_pc_nlev        = 10;
+    poisson_conv_tol       = 1.e-8;
     poisson_pc_data_       = 32;
     coloring_algo_         = 0;
     maxDistanceAtomicInfo_ = 8.;
@@ -444,7 +445,7 @@ void Control::sync(void)
         memset(&int_buffer[0], 0, size_int_buffer * sizeof(int));
     }
 
-    const short size_float_buffer = 44;
+    const short size_float_buffer = 45;
     float* float_buffer           = new float[size_float_buffer];
     if (mype_ == 0)
     {
@@ -491,6 +492,7 @@ void Control::sync(void)
         float_buffer[41] = pair_mlwf_distance_threshold_;
         float_buffer[42] = e0_;
         float_buffer[43] = dm_tol;
+        float_buffer[44] = poisson_conv_tol;
     }
     else
     {
@@ -689,6 +691,7 @@ void Control::sync(void)
     pair_mlwf_distance_threshold_     = float_buffer[41];
     e0_                               = float_buffer[42];
     dm_tol                            = float_buffer[43];
+    poisson_conv_tol                  = float_buffer[44];
     max_electronic_steps_loose_       = max_electronic_steps;
 
     delete[] short_buffer;
@@ -1402,7 +1405,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         if (str.compare("periodic") == 0) bcWF[2] = 1;
 
         str = vm["Poisson.solver"].as<std::string>();
-        if (str.compare("CG") == 0) diel_flag_ = 10;
+        if (str.compare("CG") == 0 || str.compare("PCG") == 0) diel_flag_ = 10;
         if (str.compare("MG") == 0) diel_flag_ = 0;
 
         str = vm["Poisson.diel"].as<std::string>();
@@ -1421,6 +1424,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         drho0_           = vm["Poisson.beta"].as<float>();
         e0_              = vm["Poisson.e0"].as<float>();
         poisson_pc_data_ = vm["Poisson.precond_precision"].as<short>();
+        poisson_conv_tol = vm["Poisson.conv_tol"].as<float>();
 
         str = vm["ProjectedMatrices.solver"].as<std::string>();
         if (str.compare("short_sighted") == 0) short_sighted = 1;

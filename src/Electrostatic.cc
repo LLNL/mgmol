@@ -254,9 +254,10 @@ void Electrostatic::setup(const short max_sweeps)
 {
     Control& ct           = *(Control::instance());
     const short nu1       = ct.poisson_pc_nu1;
-    const short nu2       = ct.poisson_pc_nu1;
+    const short nu2       = ct.poisson_pc_nu2;
     const short max_nlevs = ct.poisson_pc_nlev;
-    poisson_solver_->setup(nu1, nu2, max_sweeps, 1.e-16, max_nlevs);
+    const float conv_tol  = ct.poisson_conv_tol;
+    poisson_solver_->setup(nu1, nu2, max_sweeps, conv_tol, max_nlevs);
 }
 
 template <class T>
