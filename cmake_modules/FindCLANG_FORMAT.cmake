@@ -5,7 +5,7 @@
 # CLANG_FORMAT_VERSION      - The version of clang-format found
 
 find_program(CLANG_FORMAT_EXECUTABLE
-  NAMES clang-format clang-format-6.0
+  NAMES clang-format clang-format-15.0
   DOC "clang-format executable")
 mark_as_advanced(CLANG_FORMAT_EXECUTABLE)
 
@@ -14,14 +14,14 @@ if (CLANG_FORMAT_EXECUTABLE)
   execute_process(COMMAND ${CLANG_FORMAT_EXECUTABLE} -version
     OUTPUT_VARIABLE clang_format_version
     ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
-  if (clang_format_version MATCHES "^clang-format version .*")
-    # clang_format_version sample: "clang-format version 6.0.0-1ubuntu2 (tags/RELEASE_600/final)"
-    string(REGEX REPLACE "clang-format version ([.0-9]+).*" "\\1" 
-      CLANG_FORMAT_VERSION "${clang_format_version}")
+  message(STATUS ${clang_format_version})
+
+  if (clang_format_version MATCHES "clang-format version ([0-9]+)")
+    set(CLANG_FORMAT_FOUND_VERSION_MAJOR ${CMAKE_MATCH_1})
+    message(STATUS "Found clang-format version major: ${CLANG_FORMAT_FOUND_VERSION_MAJOR}")
   endif()
-  if (NOT CLANG_FORMAT_VERSION STREQUAL "6.0.0" AND
-      NOT CLANG_FORMAT_VERSION STREQUAL "6.0.1")
-    message(SEND_ERROR "Wrong clang-format version. Please use clang-format 6.0.")
+  if (NOT CLANG_FORMAT_FOUND_VERSION_MAJOR STREQUAL "15")
+    message(SEND_ERROR "Wrong clang-format version. Please use clang-format 15")
   endif()
 endif()
 
