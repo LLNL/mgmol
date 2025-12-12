@@ -147,7 +147,7 @@ int gatherV(std::vector<std::string>& sendbuf,
     }
     char* recvdata = new char[totchars];
     mpi_err        = MPI_Gatherv(&charStr[0], sendcount, MPI_CHAR, &recvdata[0],
-        recvcounts, displs, MPI_CHAR, root, comm);
+               recvcounts, displs, MPI_CHAR, root, comm);
     if (mpi_err != MPI_SUCCESS)
     {
         std::cerr << "ERROR in MPI_Gatherv in MGmol_MPI::GatherV() !!!"

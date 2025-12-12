@@ -29,7 +29,7 @@ public:
 
     MLWFTransform(const int nst, const Vector3D& origin, const Vector3D& ll);
 
-    ~MLWFTransform() override {}
+    ~MLWFTransform() override { }
 
     void printTransform();
 };

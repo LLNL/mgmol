@@ -23,7 +23,7 @@ protected:
         names_; // names of atoms involved in the constraint
 
 public:
-    virtual ~Constraint(){};
+    virtual ~Constraint() {};
 
     virtual bool enforce(void)            = 0;
     virtual bool project_out_forces(void) = 0;

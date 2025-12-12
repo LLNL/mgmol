@@ -30,7 +30,6 @@ public:
 #endif
 
 private:
-
     // V-cycle parameters
     const short max_levels_;
     const short npresmooth_;
@@ -52,8 +51,8 @@ private:
 
 public:
     Preconditioning(const short lap_type, const short maxlevels,
-        const short npresmooth, const short npostsmooth,
-        const pb::Grid& grid, const short bc[3]);
+        const short npresmooth, const short npostsmooth, const pb::Grid& grid,
+        const short bc[3]);
 
     Preconditioning(const Preconditioning&) = delete;
 

@@ -39,7 +39,7 @@ private:
 public:
     DistributedIonicData(
         const std::vector<std::string>&, const std::vector<double>&);
-    DistributedIonicData(){};
+    DistributedIonicData() {};
 
     int size() const { return (int)ion_names_.size(); };
 

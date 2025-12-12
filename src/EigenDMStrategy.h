@@ -27,9 +27,9 @@ public:
 
     bool needH() const override { return true; }
 
-    void stripDM() override {}
-    void dressDM() override {}
-    void reset() override {}
+    void stripDM() override { }
+    void dressDM() override { }
+    void reset() override { }
 };
 
 #endif

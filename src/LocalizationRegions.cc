@@ -1052,7 +1052,7 @@ void LocalizationRegions::computeSubdivOverlapGids()
             // subdiv center
             double cc[3] = { 0.5
                                  * (2. * subdom_lower_left_[0]
-                                       + (2 * iloc + 1) * loc_length),
+                                     + (2 * iloc + 1) * loc_length),
                 0.5 * (2. * subdom_lower_left_[1] + subdom_div_lattice_[1]),
                 0.5 * (2. * subdom_lower_left_[2] + subdom_div_lattice_[2]) };
             double t[3]  = { center[0], center[1], center[2] };

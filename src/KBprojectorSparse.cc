@@ -504,8 +504,9 @@ void KBprojectorSparse::setDProjector(const short iloc, const int icount)
                             r3[jcount] = (KBPROJDTYPE)(t1 * z * x);
                             r4[jcount]
                                 = (KBPROJDTYPE)(0.5 * t1 * (x * x - y * y));
-                            r5[jcount] = (KBPROJDTYPE)(
-                                0.5 * t1 * (sqrt3 * z * z - rr * inv_sqrt3));
+                            r5[jcount] = (KBPROJDTYPE)(0.5 * t1
+                                                       * (sqrt3 * z * z
+                                                           - rr * inv_sqrt3));
                         }
                         else
                         {
@@ -612,20 +613,22 @@ void KBprojectorSparse::setFProjector(const short iloc, const int icount)
                             const double y2 = y * y;
                             const double z2 = z * z;
 
-                            r1[jcount] = (KBPROJDTYPE)(
-                                sqrt5 * t1 * (3. * x2 - y2) * y);
-                            r2[jcount] = (KBPROJDTYPE)(
-                                2. * sqrt2 * sqrt3 * sqrt5 * t1 * x * y * z);
-                            r3[jcount] = (KBPROJDTYPE)(
-                                sqrt3 * t1 * y * (4. * z2 - x2 - y2));
-                            r4[jcount] = (KBPROJDTYPE)(
-                                sqrt2 * t1 * z * (2. * z2 - 3. * x2 - 3 * y2));
-                            r5[jcount] = (KBPROJDTYPE)(
-                                sqrt3 * t1 * x * (4. * z2 - x2 - y2));
-                            r6[jcount] = (KBPROJDTYPE)(
-                                sqrt2 * sqrt3 * sqrt5 * t1 * (x2 - y2) * z);
-                            r7[jcount] = (KBPROJDTYPE)(
-                                sqrt5 * t1 * (x2 - 3. * y2) * x);
+                            r1[jcount] = (KBPROJDTYPE)(sqrt5 * t1
+                                                       * (3. * x2 - y2) * y);
+                            r2[jcount]
+                                = (KBPROJDTYPE)(2. * sqrt2 * sqrt3 * sqrt5 * t1
+                                                * x * y * z);
+                            r3[jcount] = (KBPROJDTYPE)(sqrt3 * t1 * y
+                                                       * (4. * z2 - x2 - y2));
+                            r4[jcount]
+                                = (KBPROJDTYPE)(sqrt2 * t1 * z
+                                                * (2. * z2 - 3. * x2 - 3 * y2));
+                            r5[jcount] = (KBPROJDTYPE)(sqrt3 * t1 * x
+                                                       * (4. * z2 - x2 - y2));
+                            r6[jcount] = (KBPROJDTYPE)(sqrt2 * sqrt3 * sqrt5
+                                                       * t1 * (x2 - y2) * z);
+                            r7[jcount] = (KBPROJDTYPE)(sqrt5 * t1
+                                                       * (x2 - 3. * y2) * x);
                         }
                         else
                         {

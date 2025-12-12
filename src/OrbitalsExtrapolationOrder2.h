@@ -16,7 +16,7 @@ template <class OrbitalsType>
 class OrbitalsExtrapolationOrder2 : public OrbitalsExtrapolation<OrbitalsType>
 {
 public:
-    OrbitalsExtrapolationOrder2() {}
+    OrbitalsExtrapolationOrder2() { }
 
     void extrapolate_orbitals(
         OrbitalsType** orbitals, OrbitalsType* new_orbitals) override;

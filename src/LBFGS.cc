@@ -22,7 +22,7 @@ LBFGS<OrbitalsType>::LBFGS(OrbitalsType** orbitals, Ions& ions,
     MasksSet& masks, MasksSet& corrmasks, Electrostatic& electrostat,
     const double dt, MGmol<OrbitalsType>& strategy)
     : IonicAlgorithm<OrbitalsType>(
-          orbitals, ions, rho, constraints, lrs, masks, strategy),
+        orbitals, ions, rho, constraints, lrs, masks, strategy),
       orbitals_(orbitals),
       ions_(ions),
       rho_(rho),
@@ -70,8 +70,8 @@ void LBFGS<OrbitalsType>::setup(const double dt)
     MasksSet* ref_corrmasks = ref_corrmasks_ ? ref_corrmasks_.get() : nullptr;
     ref_orbitals_           = std::shared_ptr<OrbitalsType>(
         new OrbitalsType("LBFGS_ref", mygrid, mymesh->subdivx(), ct.numst,
-            ct.bcWF, (*orbitals_)->getProjMatrices(), ref_lrs_, ref_masks,
-            ref_corrmasks, local_cluster_));
+                      ct.bcWF, (*orbitals_)->getProjMatrices(), ref_lrs_, ref_masks,
+                      ref_corrmasks, local_cluster_));
 
     ref_orbitals_->assign(**orbitals_);
 }

@@ -26,7 +26,7 @@ protected:
     std::string name_;
 
 public:
-    Lap(const Grid& mygrid) : FDoper<T>(mygrid) {}
+    Lap(const Grid& mygrid) : FDoper<T>(mygrid) { }
 
     Lap& operator=(const Lap& v) = default;
 
@@ -50,7 +50,7 @@ public:
     virtual void setLowerOrderGrid(void)    = 0;
     virtual double jacobiFactor(void) const = 0;
 
-    ~Lap() override {}
+    ~Lap() override { }
 };
 
 } // namespace pb

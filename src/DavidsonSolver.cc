@@ -131,9 +131,9 @@ int DavidsonSolver<OrbitalsType, MatrixType>::checkConvergence(
 //    {
 //        n++;
 //    }
-//#ifdef USE_MPI
+// #ifdef USE_MPI
 //    MPI_Bcast(&n, 1, MPI_INT, 0, comm_);
-//#endif
+// #endif
 //    if (n <= numst) return;
 //
 //    // build H matrix in basis of evect
@@ -159,9 +159,9 @@ int DavidsonSolver<OrbitalsType, MatrixType>::checkConvergence(
 //                index  = i;
 //            }
 //        }
-//#ifdef USE_MPI
+// #ifdef USE_MPI
 //        MPI_Bcast(&index, 1, MPI_INT, 0, comm_);
-//#endif
+// #endif
 //        if (index != n - 1)
 //        {
 //            if (onpe0 && ct.verbose > 2)

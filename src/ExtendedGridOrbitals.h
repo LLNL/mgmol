@@ -356,8 +356,8 @@ public:
 
     void app_mask(const int, pb::GridFunc<ScalarType>&, const short) const {};
 
-    void applyMask(const bool = false){};
-    void applyCorrMask(const bool = false){};
+    void applyMask(const bool = false) {};
+    void applyCorrMask(const bool = false) {};
 
 #ifdef HAVE_MAGMA
     void multiplyByMatrix(

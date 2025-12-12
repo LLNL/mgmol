@@ -28,8 +28,9 @@ MGOrbitalsPreconditioning<OrbitalsType, PDataType>::MGOrbitalsPreconditioning(
     Mesh* mymesh = Mesh::instance();
     const pb::Grid& mygrid(mymesh->grid());
 
-    precond_ = std::make_shared<Preconditioning<PDataType>>(
-        lap_type_, mg_levels_, ct.mg_npresmoothing_, ct.mg_npostsmoothing_, mygrid, ct.bcWF);
+    precond_
+        = std::make_shared<Preconditioning<PDataType>>(lap_type_, mg_levels_,
+            ct.mg_npresmoothing_, ct.mg_npostsmoothing_, mygrid, ct.bcWF);
 }
 
 template <class OrbitalsType, typename PDataType>

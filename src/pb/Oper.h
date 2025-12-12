@@ -19,7 +19,7 @@ class Oper
 {
 
 public:
-    virtual ~Oper() {}
+    virtual ~Oper() { }
 };
 
 } // namespace pb

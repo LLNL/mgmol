@@ -144,7 +144,7 @@ double Potentials::updateVtot(const std::vector<std::vector<RHODTYPE>>& rho)
         vtot_[idx]
             = (POTDTYPE)(ha2ry
                          * ((double)v_nuc_[idx] + (double)v_ext_[idx]
-                               + (double)vh_rho_[idx] + (double)vxc_rho_[idx]));
+                             + (double)vh_rho_[idx] + (double)vxc_rho_[idx]));
     }
     double two = ha2ry;
     if (diel_)
@@ -211,7 +211,7 @@ double Potentials::computeDeltaV(const std::vector<std::vector<RHODTYPE>>& rho)
         dv_[idx]
             = (POTDTYPE)(ha2ry
                          * ((double)v_nuc_[idx] + (double)v_ext_[idx]
-                               + (double)vh_rho_[idx] + (double)vxc_rho_[idx]));
+                             + (double)vh_rho_[idx] + (double)vxc_rho_[idx]));
     }
     double two = ha2ry;
     if (diel_)

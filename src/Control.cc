@@ -271,7 +271,8 @@ void Control::print(std::ostream& os)
         os << " Multigrid preconditioning for wave functions:" << std::endl;
         os << " # of Multigrid levels     : " << mg_levels_ << std::endl;
         os << " # of pre-smoothing steps  : " << mg_npresmoothing_ << std::endl;
-        os << " # of post-smoothing steps : " << mg_npostsmoothing_ << std::endl;
+        os << " # of post-smoothing steps : " << mg_npostsmoothing_
+           << std::endl;
     }
     else
     {
@@ -503,7 +504,8 @@ void Control::sync(void)
         memset(&float_buffer[0], 0, size_float_buffer * sizeof(float));
     }
 
-    auto bcast_check = [](int mpirc) {
+    auto bcast_check = [](int mpirc)
+    {
         if (mpirc != MPI_SUCCESS)
         {
             (*MPIdata::sout) << "MPI Bcast of Control failed!!!" << std::endl;
@@ -1497,9 +1499,9 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         mg_npresmoothing_  = vm["Preconditioner.npresmoothing"].as<short>();
         mg_npostsmoothing_ = vm["Preconditioner.npostsmoothing"].as<short>();
         precond_precision_ = vm["Preconditioner.precision"].as<short>();
-	assert(precond_precision_==32 ||precond_precision_==64);
+        assert(precond_precision_ == 32 || precond_precision_ == 64);
 
-        precond_factor     = vm["Quench.step_length"].as<float>();
+        precond_factor = vm["Quench.step_length"].as<float>();
         if (precond_factor < 0.)
         {
             switch (lap_type)

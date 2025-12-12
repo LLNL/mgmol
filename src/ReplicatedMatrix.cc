@@ -121,7 +121,7 @@ ReplicatedMatrix& ReplicatedMatrix::operator=(const ReplicatedMatrix& rhs)
     return *this;
 }
 
-ReplicatedMatrix::~ReplicatedMatrix() {}
+ReplicatedMatrix::~ReplicatedMatrix() { }
 
 void ReplicatedMatrix::getsub(
     const ReplicatedMatrix& src, int m, int n, int ia, int ja)

@@ -227,7 +227,7 @@ struct Memory<T, MemorySpace::Host>
         ptr = nullptr;
     }
 
-    static void free_host_view(T* /*ptr*/) {}
+    static void free_host_view(T* /*ptr*/) { }
 
     static void copy(T const* in, unsigned int size, T* out)
     {

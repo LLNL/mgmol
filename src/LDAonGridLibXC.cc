@@ -47,7 +47,7 @@ double LDAonGridLibXC<T>::getExc() const
     //        int ione=1;
     double exc = mygrid.vel()
                  * LinearAlgebraUtils<MemorySpace::Host>::MPdot(
-                       np, &rho_.rho_[0][0], &exc_[0]);
+                     np, &rho_.rho_[0][0], &exc_[0]);
 
     double sum      = 0.;
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());

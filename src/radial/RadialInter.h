@@ -16,16 +16,16 @@ class RadialInter : public RadialMeshFunction
 {
 private:
 public:
-    RadialInter(const std::vector<double>& x) : RadialMeshFunction(x) {}
+    RadialInter(const std::vector<double>& x) : RadialMeshFunction(x) { }
 
-    RadialInter() : RadialMeshFunction() {}
+    RadialInter() : RadialMeshFunction() { }
 
     RadialInter(std::vector<double>& x, std::vector<std::vector<double>>& y)
         : RadialMeshFunction(x, y)
     {
     }
 
-    ~RadialInter() override {}
+    ~RadialInter() override { }
 
     double linint(const double x, const int j = 0) const;
     double cubint(const double x, const int j = 0) const;

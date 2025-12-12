@@ -61,7 +61,7 @@ public:
             "Work", gids, comm, empty_mat, *submat_indexing_));
     }
 
-    ~DistMatrix2SquareLocalMatrices() {}
+    ~DistMatrix2SquareLocalMatrices() { }
 
     void convert(const dist_matrix::DistMatrix<DISTMATDTYPE>& dmat,
         SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& lmat);

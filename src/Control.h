@@ -212,7 +212,7 @@ private:
 
     Control();
 
-    ~Control(){};
+    ~Control() {};
     Control(const Control& ct) { (void)ct; };
 
     void printRestartLink();
@@ -399,7 +399,6 @@ public:
     short mg_npresmoothing_;
     short mg_npostsmoothing_;
 
-
     // dielectric model for solvation
     short diel;
     // Parameters for MG solver/ preconditioner for Poisson problem
@@ -476,7 +475,7 @@ public:
 
     // Number of v-cycles for hartree solution
     short vh_its;
-    
+
     // convergence tolerance for solving Poisson problem using PCG.
     float poisson_conv_tol;
 

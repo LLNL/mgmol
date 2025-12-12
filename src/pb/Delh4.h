@@ -19,7 +19,7 @@ template <class T>
 class Delxh4 : public FDoper<T>
 {
 public:
-    Delxh4(const Grid& mygrid) : FDoper<T>(mygrid) {}
+    Delxh4(const Grid& mygrid) : FDoper<T>(mygrid) { }
 
     // A->B
     void apply(GridFunc<T>& A, GridFunc<T>& B) override
@@ -27,7 +27,7 @@ public:
         this->del1_4th(A, B, 0);
     }
 
-    ~Delxh4() override{};
+    ~Delxh4() override {};
 
     static short minNumberGhosts() { return 2; }
 };
@@ -35,7 +35,7 @@ template <class T>
 class Delyh4 : public FDoper<T>
 {
 public:
-    Delyh4(const Grid& mygrid) : FDoper<T>(mygrid) {}
+    Delyh4(const Grid& mygrid) : FDoper<T>(mygrid) { }
 
     // A->B
     void apply(GridFunc<T>& A, GridFunc<T>& B) override
@@ -43,7 +43,7 @@ public:
         this->del1_4th(A, B, 1);
     }
 
-    ~Delyh4() override{};
+    ~Delyh4() override {};
 
     static short minNumberGhosts() { return 2; }
 };
@@ -51,7 +51,7 @@ template <class T>
 class Delzh4 : public FDoper<T>
 {
 public:
-    Delzh4(const Grid& mygrid) : FDoper<T>(mygrid) {}
+    Delzh4(const Grid& mygrid) : FDoper<T>(mygrid) { }
 
     // A->B
     void apply(GridFunc<T>& A, GridFunc<T>& B) override
@@ -59,7 +59,7 @@ public:
         this->del1_4th(A, B, 2);
     }
 
-    ~Delzh4() override{};
+    ~Delzh4() override {};
 
     static short minNumberGhosts() { return 2; }
 };

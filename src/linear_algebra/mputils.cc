@@ -632,7 +632,8 @@ void LAU_D::MPgemm(const char transa, const char transb, const int m,
 
     dgemm_tm.start();
     // Transform char to magma_trans_t
-    auto convert_to_magma_trans = [](const char trans) {
+    auto convert_to_magma_trans = [](const char trans)
+    {
         if ((trans == 'N') || trans == 'n')
             return MagmaNoTrans;
         else if ((trans == 'T') || trans == 't')

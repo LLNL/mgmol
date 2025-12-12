@@ -16,9 +16,9 @@ template <class T>
 class Mixing
 {
 public:
-    Mixing(){};
+    Mixing() {};
 
-    virtual ~Mixing(){};
+    virtual ~Mixing() {};
 
     virtual void update(T& res, T& work, std::ostream& os, const bool verbose)
         = 0;

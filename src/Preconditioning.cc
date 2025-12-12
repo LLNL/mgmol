@@ -12,16 +12,14 @@
 
 template <typename T>
 Preconditioning<T>::Preconditioning(const short lap_type, const short maxlevels,
-    const short npresmooth, const short npostsmooth,
-    const pb::Grid& grid, const short bcWF[3]):
-	max_levels_(maxlevels),
-	npresmooth_(npresmooth),
-	npostsmooth_(npostsmooth)
+    const short npresmooth, const short npostsmooth, const pb::Grid& grid,
+    const short bcWF[3])
+    : max_levels_(maxlevels), npresmooth_(npresmooth), npostsmooth_(npostsmooth)
 {
-    assert(npresmooth_>=0);
-    assert(npostsmooth_>=0);
-    assert(npresmooth_<100);
-    assert(npostsmooth_<100);
+    assert(npresmooth_ >= 0);
+    assert(npostsmooth_ >= 0);
+    assert(npresmooth_ < 100);
+    assert(npostsmooth_ < 100);
 
     for (short i = 0; i < 3; i++)
         bc_[i] = bcWF[i];
@@ -160,7 +158,7 @@ void Preconditioning<T>::mg(pb::GridFuncVector<T, memory_space_type>& gfv_v,
     assert(gfv_work_[level] != nullptr);
 
     short ncycl = npresmooth_;
-    if (level == max_levels_) ncycl = npresmooth_+npostsmooth_;
+    if (level == max_levels_) ncycl = npresmooth_ + npostsmooth_;
 
     const double jacobi_factor = jacobi_factor_[level];
 

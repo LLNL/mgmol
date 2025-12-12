@@ -171,7 +171,7 @@ public:
 #endif
     }
 
-    ~Species() {}
+    ~Species() { }
 
     unsigned short getAtomicNumber() const { return atomic_number_; }
     double getMass() const { return mass_ * SCMASS; } // SCMASS = 1822.89

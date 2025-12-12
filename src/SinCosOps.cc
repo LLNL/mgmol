@@ -696,7 +696,7 @@ void SinCosOps<T>::compute(
                                     const double alpha
                                         = (double)orbitals1.psi(color)[index]
                                           * (double)orbitals2.psi(
-                                                jstate)[index];
+                                              jstate)[index];
                                     atmp[0] += alpha * cosx[ix];
                                     atmp[1] += alpha * sinx[ix];
                                     atmp[2] += alpha * cosy[iy];

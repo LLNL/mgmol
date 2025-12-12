@@ -63,7 +63,7 @@ public:
     void copy(const bml_matrix_t* A);
 #endif
 
-    virtual ~LocalMatrices(){};
+    virtual ~LocalMatrices() {};
 
     short nmat() const { return nmat_; }
 
@@ -171,7 +171,7 @@ public:
             print(os, iloc);
     }
 
-    static void printTimers(std::ostream& /*os*/) {}
+    static void printTimers(std::ostream& /*os*/) { }
 
     void applyMask(const LocalMatrices& mask);
 

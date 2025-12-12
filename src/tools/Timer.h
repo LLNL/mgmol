@@ -67,7 +67,7 @@ public:
           total_real_(0.0),
           running_(false),
           ncalls_(0),
-          comm_(comm){};
+          comm_(comm) {};
 
     void reset()
     {

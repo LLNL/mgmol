@@ -68,7 +68,7 @@ public:
         GridFunc<T2>& gf_rhod, GridFunc<T2>& gf_vks);
     bool solve(GridFunc<T2>& gf_phi, const GridFunc<T2>& gf_rhs) override;
 
-    ~SolverPB() override{};
+    ~SolverPB() override {};
 
     short getNbSweeps() const override { return nb_sweeps_; }
     double getFinalResidual() const override { return final_residual_; }

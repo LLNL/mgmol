@@ -117,8 +117,7 @@ int read_config(int argc, char** argv, po::variables_map& vm,
             "Compute MLWF (apply rotation) in quench")(
             "Quench.num_lin_iterations", po::value<short>()->default_value(0),
             "Number of iterations without potential update in quench")(
-            "Preconditioner.num_levels",
-            po::value<short>()->default_value(2),
+            "Preconditioner.num_levels", po::value<short>()->default_value(2),
             "Number of levels for MG preconditioner")(
             "Preconditioner.npresmoothing",
             po::value<short>()->default_value(2),
@@ -126,8 +125,7 @@ int read_config(int argc, char** argv, po::variables_map& vm,
             "Preconditioner.npostsmoothing",
             po::value<short>()->default_value(2),
             "Number of postsmoothing steps i preconditioner")(
-            "Preconditioner.precision",
-            po::value<short>()->default_value(32),
+            "Preconditioner.precision", po::value<short>()->default_value(32),
             "Precision for MG preconditioner")("Quench.spread_penalty_damping",
             po::value<float>()->default_value(0.),
             "Spread penalty damping factor")("Quench.spread_penalty_target",
@@ -252,8 +250,9 @@ int read_config(int argc, char** argv, po::variables_map& vm,
             "continuum solvent: beta")("Poisson.FDtype",
             po::value<std::string>()->default_value("Mehrstellen"),
             "FDtype")("Poisson.nu1", po::value<short>()->default_value(1),
-            "MG pre-smoothing sweeps")("Poisson.nu2", po::value<short>()->default_value(1),
-            "MG post-smoothing sweeps")("Poisson.max_steps", po::value<short>()->default_value(20),
+            "MG pre-smoothing sweeps")("Poisson.nu2",
+            po::value<short>()->default_value(1), "MG post-smoothing sweeps")(
+            "Poisson.max_steps", po::value<short>()->default_value(20),
             "max. nb. steps Poisson solver")("Poisson.max_steps_initial",
             po::value<short>()->default_value(20),
             "max. nb. steps Poisson solver in first solve")(

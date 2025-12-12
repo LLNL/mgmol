@@ -30,7 +30,7 @@ public:
         ProjectedMatricesInterface* proj_matrices, MGmol<T>* mgmol_strategy,
         Ions& ions, std::ostream& os)
         : GrassmanLineMinimization<T>(
-              hamiltonian, proj_matrices, mgmol_strategy, ions, os)
+            hamiltonian, proj_matrices, mgmol_strategy, ions, os)
     {
     }
 

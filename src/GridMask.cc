@@ -15,7 +15,7 @@
 #include "GridMask.h"
 #include "SubCell.h"
 
-//#define DEBUG 1
+// #define DEBUG 1
 
 Timer GridMask::init_tm_("GridMask::init");
 
@@ -373,7 +373,7 @@ bool GridMask::overlap_on_pe(
         assert(gm.mask_not_zero_[level][iloc] >= -1);
         overlap_12 = (overlap_12
                       || ((mask_not_zero_[level][iloc] + 1)
-                             && (gm.mask_not_zero_[level][iloc] + 1)));
+                          && (gm.mask_not_zero_[level][iloc] + 1)));
     }
 
     return overlap_12;

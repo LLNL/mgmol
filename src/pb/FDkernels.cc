@@ -309,28 +309,37 @@ void FDkernelDel2_6th(const Grid& grid, ScalarType* v, ScalarType* u,
 
                 for (int iz = 0; iz < dim2; iz++)
                 {
-                    u[iiz] = (ScalarType)(
-                        c0 * (double)v[iiz]
+                    u[iiz] = (ScalarType)(c0 * (double)v[iiz]
 
-                        + c1x * ((double)v[iiz - incx] + (double)v[iiz + incx])
-                        + c1y * ((double)v[iiz - incy] + (double)v[iiz + incy])
-                        + c1z * ((double)v[iiz - 1] + (double)v[iiz + 1])
+                                          + c1x
+                                                * ((double)v[iiz - incx]
+                                                    + (double)v[iiz + incx])
+                                          + c1y
+                                                * ((double)v[iiz - incy]
+                                                    + (double)v[iiz + incy])
+                                          + c1z
+                                                * ((double)v[iiz - 1]
+                                                    + (double)v[iiz + 1])
 
-                        + c2x
-                              * ((double)v[iiz - incx2]
-                                    + (double)v[iiz + incx2])
-                        + c2y
-                              * ((double)v[iiz - incy2]
-                                    + (double)v[iiz + incy2])
-                        + c2z * ((double)v[iiz - 2] + (double)v[iiz + 2])
+                                          + c2x
+                                                * ((double)v[iiz - incx2]
+                                                    + (double)v[iiz + incx2])
+                                          + c2y
+                                                * ((double)v[iiz - incy2]
+                                                    + (double)v[iiz + incy2])
+                                          + c2z
+                                                * ((double)v[iiz - 2]
+                                                    + (double)v[iiz + 2])
 
-                        + c3x
-                              * ((double)v[iiz - incx3]
-                                    + (double)v[iiz + incx3])
-                        + c3y
-                              * ((double)v[iiz - incy3]
-                                    + (double)v[iiz + incy3])
-                        + c3z * ((double)v[iiz - 3] + (double)v[iiz + 3]));
+                                          + c3x
+                                                * ((double)v[iiz - incx3]
+                                                    + (double)v[iiz + incx3])
+                                          + c3y
+                                                * ((double)v[iiz - incy3]
+                                                    + (double)v[iiz + incy3])
+                                          + c3z
+                                                * ((double)v[iiz - 3]
+                                                    + (double)v[iiz + 3]));
 
                     iiz++;
                 }
@@ -371,7 +380,7 @@ void FDkernelDel2_8th(const Grid& grid, ScalarType* v, ScalarType* u,
 
     const double c0 = -2.
                       * (c1x + c2x + c3x + c4x + c1y + c2y + c3y + c4y + c1z
-                            + c2z + c3z + c4z);
+                          + c2z + c3z + c4z);
 
     const int incx  = grid.inc(0);
     const int incy  = grid.inc(1);
@@ -402,36 +411,47 @@ void FDkernelDel2_8th(const Grid& grid, ScalarType* v, ScalarType* u,
 
                 for (int iz = 0; iz < dim2; iz++)
                 {
-                    u[iiz] = (ScalarType)(
-                        c0 * (double)v[iiz]
+                    u[iiz] = (ScalarType)(c0 * (double)v[iiz]
 
-                        + c1x * ((double)v[iiz - incx] + (double)v[iiz + incx])
-                        + c1y * ((double)v[iiz - incy] + (double)v[iiz + incy])
-                        + c1z * ((double)v[iiz - 1] + (double)v[iiz + 1])
+                                          + c1x
+                                                * ((double)v[iiz - incx]
+                                                    + (double)v[iiz + incx])
+                                          + c1y
+                                                * ((double)v[iiz - incy]
+                                                    + (double)v[iiz + incy])
+                                          + c1z
+                                                * ((double)v[iiz - 1]
+                                                    + (double)v[iiz + 1])
 
-                        + c2x
-                              * ((double)v[iiz - incx2]
-                                    + (double)v[iiz + incx2])
-                        + c2y
-                              * ((double)v[iiz - incy2]
-                                    + (double)v[iiz + incy2])
-                        + c2z * ((double)v[iiz - 2] + (double)v[iiz + 2])
+                                          + c2x
+                                                * ((double)v[iiz - incx2]
+                                                    + (double)v[iiz + incx2])
+                                          + c2y
+                                                * ((double)v[iiz - incy2]
+                                                    + (double)v[iiz + incy2])
+                                          + c2z
+                                                * ((double)v[iiz - 2]
+                                                    + (double)v[iiz + 2])
 
-                        + c3x
-                              * ((double)v[iiz - incx3]
-                                    + (double)v[iiz + incx3])
-                        + c3y
-                              * ((double)v[iiz - incy3]
-                                    + (double)v[iiz + incy3])
-                        + c3z * ((double)v[iiz - 3] + (double)v[iiz + 3])
+                                          + c3x
+                                                * ((double)v[iiz - incx3]
+                                                    + (double)v[iiz + incx3])
+                                          + c3y
+                                                * ((double)v[iiz - incy3]
+                                                    + (double)v[iiz + incy3])
+                                          + c3z
+                                                * ((double)v[iiz - 3]
+                                                    + (double)v[iiz + 3])
 
-                        + c4x
-                              * ((double)v[iiz - incx4]
-                                    + (double)v[iiz + incx4])
-                        + c4y
-                              * ((double)v[iiz - incy4]
-                                    + (double)v[iiz + incy4])
-                        + c4z * ((double)v[iiz - 4] + (double)v[iiz + 4]));
+                                          + c4x
+                                                * ((double)v[iiz - incx4]
+                                                    + (double)v[iiz + incx4])
+                                          + c4y
+                                                * ((double)v[iiz - incy4]
+                                                    + (double)v[iiz + incy4])
+                                          + c4z
+                                                * ((double)v[iiz - 4]
+                                                    + (double)v[iiz + 4]));
 
                     iiz++;
                 }
@@ -496,20 +516,26 @@ void FDkernelDel2_4th_Mehr(const Grid& grid, ScalarType* v, ScalarType* u,
 
                 for (int iz = 0; iz < dim2; iz++)
                 {
-                    u0[iz] = (ScalarType)(
-                        c0mehr4 * (double)v0[iz]
-                        + czmehr4 * (double)(v0[iz - 1] + v0[iz + 1])
-                        + cymehr4 * (double)(vmy[iz] + vpy[iz])
-                        + cxmehr4 * (double)(vmx[iz] + vpx[iz])
-                        + cxzmehr4
-                              * (double)(vmx[iz - 1] + vmx[iz + 1] + vpx[iz - 1]
-                                         + vpx[iz + 1])
-                        + cyzmehr4
-                              * (double)(vmy[iz - 1] + vmy[iz + 1] + vpy[iz - 1]
-                                         + vpy[iz + 1])
-                        + cxymehr4
-                              * (double)(vmxmy[iz] + vpxmy[iz] + vmxpy[iz]
-                                         + vpxpy[iz]));
+                    u0[iz]
+                        = (ScalarType)(c0mehr4 * (double)v0[iz]
+                                       + czmehr4
+                                             * (double)(v0[iz - 1] + v0[iz + 1])
+                                       + cymehr4 * (double)(vmy[iz] + vpy[iz])
+                                       + cxmehr4 * (double)(vmx[iz] + vpx[iz])
+                                       + cxzmehr4
+                                             * (double)(vmx[iz - 1]
+                                                        + vmx[iz + 1]
+                                                        + vpx[iz - 1]
+                                                        + vpx[iz + 1])
+                                       + cyzmehr4
+                                             * (double)(vmy[iz - 1]
+                                                        + vmy[iz + 1]
+                                                        + vpy[iz - 1]
+                                                        + vpy[iz + 1])
+                                       + cxymehr4
+                                             * (double)(vmxmy[iz] + vpxmy[iz]
+                                                        + vmxpy[iz]
+                                                        + vpxpy[iz]));
                 }
 
                 iiy += incy;
@@ -568,11 +594,12 @@ void FDkernelRHS_4th_Mehr1(const Grid& grid, ScalarType* v, ScalarType* rhs,
 
                 for (int iz = 0; iz < dim2; iz++)
                 {
-                    u0[iz] = (ScalarType)(
-                        c0 * (double)v0[iz]
-                        + c1
-                              * (double)(vmx[iz] + vpx[iz] + vmy[iz] + vpy[iz]
-                                         + v0[iz - 1] + v0[iz + 1]));
+                    u0[iz] = (ScalarType)(c0 * (double)v0[iz]
+                                          + c1
+                                                * (double)(vmx[iz] + vpx[iz]
+                                                           + vmy[iz] + vpy[iz]
+                                                           + v0[iz - 1]
+                                                           + v0[iz + 1]));
                 }
 
                 iiy += incy;

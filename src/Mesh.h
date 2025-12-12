@@ -52,7 +52,7 @@ class Mesh
         delete myGrid_;
         delete myPEenv_;
     };
-    Mesh(const Mesh&){};
+    Mesh(const Mesh&) {};
 
 public:
     static Mesh* instance()
