@@ -40,7 +40,11 @@ class ReplicatedWorkSpace
     }
     ReplicatedWorkSpace(const ReplicatedWorkSpace&);
 
-    ~ReplicatedWorkSpace() { delete[] square_matrix_; }
+    ~ReplicatedWorkSpace()
+    {
+        delete[] square_matrix_;
+        square_matrix_ = nullptr;
+    }
 
 public:
     Timer mpisum_tm() { return mpisum_tm_; }
@@ -70,9 +74,7 @@ public:
     void setUpperTriangularSquareMatrixToZero();
 
     void initSquareMatrix(const dist_matrix::DistMatrix<ScalarType>& tmat);
-#ifdef HAVE_MAGMA
     void initSquareMatrix(const ReplicatedMatrix& mat);
-#endif
 
     int getDim() { return ndim_; }
 };

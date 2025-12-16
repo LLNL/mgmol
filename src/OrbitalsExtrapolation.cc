@@ -79,5 +79,5 @@ void OrbitalsExtrapolation<OrbitalsType>::setupPreviousOrbitals(
     *orbitals        = new_orbitals;
 }
 
-template class OrbitalsExtrapolation<LocGridOrbitals>;
-template class OrbitalsExtrapolation<ExtendedGridOrbitals>;
+template class OrbitalsExtrapolation<LocGridOrbitals<ORBDTYPE>>;
+template class OrbitalsExtrapolation<ExtendedGridOrbitals<ORBDTYPE>>;

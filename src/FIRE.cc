@@ -39,5 +39,5 @@ FIRE<OrbitalsType>::FIRE(OrbitalsType** orbitals, Ions& ions,
     IonicAlgorithm<OrbitalsType>::registerStepper(stepper_);
 }
 
-template class FIRE<LocGridOrbitals>;
-template class FIRE<ExtendedGridOrbitals>;
+template class FIRE<LocGridOrbitals<ORBDTYPE>>;
+template class FIRE<ExtendedGridOrbitals<ORBDTYPE>>;

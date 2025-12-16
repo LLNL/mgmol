@@ -26,7 +26,8 @@ class DMStrategyFactory
 public:
     static DMStrategy<OrbitalsType>* create(MPI_Comm comm, std::ostream& os,
         Ions& ions, Rho<OrbitalsType>* rho, Energy<OrbitalsType>* energy,
-        Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy,
+        Electrostatic* electrostat, Hamiltonian<OrbitalsType>* hamiltonian,
+        MGmol<OrbitalsType>* mgmol_strategy,
         ProjectedMatricesInterface* proj_matrices, OrbitalsType* orbitals)
     {
         Control& ct     = *(Control::instance());
@@ -36,14 +37,14 @@ public:
         if (ct.DM_solver() == DMNonLinearSolverType::MVP)
         {
             dm_strategy = new MVP_DMStrategy<OrbitalsType, MatrixType>(comm, os,
-                ions, rho, energy, electrostat, mgmol_strategy,
+                ions, rho, energy, electrostat, hamiltonian, mgmol_strategy,
                 orbitals->getOverlappingGids(), proj_matrices, ct.use_old_dm());
         }
         else if (ct.DM_solver() == DMNonLinearSolverType::HMVP)
         {
             dm_strategy = createHamiltonianMVP_DMStrategy(comm, os, ions, rho,
-                energy, electrostat, mgmol_strategy, proj_matrices, orbitals,
-                ct.short_sighted);
+                energy, electrostat, hamiltonian, mgmol_strategy, proj_matrices,
+                orbitals, ct.short_sighted);
         }
         else
         {
@@ -84,6 +85,7 @@ private:
     static DMStrategy<OrbitalsType>* createHamiltonianMVP_DMStrategy(
         MPI_Comm comm, std::ostream& os, Ions& ions, Rho<OrbitalsType>* rho,
         Energy<OrbitalsType>* energy, Electrostatic* electrostat,
+        Hamiltonian<OrbitalsType>* hamiltonian,
         MGmol<OrbitalsType>* mgmol_strategy,
         ProjectedMatricesInterface* proj_matrices, OrbitalsType* orbitals,
         const bool);

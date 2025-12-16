@@ -328,4 +328,4 @@ void GrassmanCGSparse<T>::parallelTransportUpdate(
     //    proj_matrices_->applyInvS(ss);
 }
 
-template class GrassmanCGSparse<LocGridOrbitals>;
+template class GrassmanCGSparse<LocGridOrbitals<ORBDTYPE>>;

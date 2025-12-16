@@ -302,7 +302,7 @@ void Rho<OrbitalsType>::computeRho(
     {
         proj_matrices.updateSubMatX();
 
-        if (std::is_same<OrbitalsType, LocGridOrbitals>::value)
+        if (std::is_same<OrbitalsType, LocGridOrbitals<ORBDTYPE>>::value)
         {
             SquareLocalMatrices<MATDTYPE, memory_space_type>& localX(
                 (orbitals.projMatrices())->getLocalX());
@@ -569,33 +569,34 @@ void Rho<OrbitalsType>::printTimers(std::ostream& os)
     compute_blas_tm_.print(os);
 }
 
-template class Rho<LocGridOrbitals>;
-template class Rho<ExtendedGridOrbitals>;
+template class Rho<LocGridOrbitals<ORBDTYPE>>;
+template class Rho<ExtendedGridOrbitals<ORBDTYPE>>;
 
-template double Rho<LocGridOrbitals>::dotWithRho<double>(
+template double Rho<LocGridOrbitals<ORBDTYPE>>::dotWithRho<double>(
     const double* const func) const;
-template double Rho<ExtendedGridOrbitals>::dotWithRho<double>(
+template double Rho<ExtendedGridOrbitals<ORBDTYPE>>::dotWithRho<double>(
     const double* const func) const;
-template void
-Rho<ExtendedGridOrbitals>::computeRho<dist_matrix::DistMatrix<double>>(
-    ExtendedGridOrbitals&, ExtendedGridOrbitals&,
-    const dist_matrix::DistMatrix<double>&,
+template void Rho<ExtendedGridOrbitals<ORBDTYPE>>::computeRho<
+    dist_matrix::DistMatrix<double>>(ExtendedGridOrbitals<ORBDTYPE>&,
+    ExtendedGridOrbitals<ORBDTYPE>&, const dist_matrix::DistMatrix<double>&,
     const dist_matrix::DistMatrix<double>&,
     const dist_matrix::DistMatrix<double>&,
     const dist_matrix::DistMatrix<double>&);
+template void Rho<ExtendedGridOrbitals<ORBDTYPE>>::computeRho<
+    dist_matrix::DistMatrix<double>>(
+    ExtendedGridOrbitals<ORBDTYPE>&, const dist_matrix::DistMatrix<double>&);
 template void
-Rho<ExtendedGridOrbitals>::computeRho<dist_matrix::DistMatrix<double>>(
-    ExtendedGridOrbitals&, const dist_matrix::DistMatrix<double>&);
-template void Rho<LocGridOrbitals>::computeRho<dist_matrix::DistMatrix<double>>(
-    LocGridOrbitals&, const dist_matrix::DistMatrix<double>&);
+Rho<LocGridOrbitals<ORBDTYPE>>::computeRho<dist_matrix::DistMatrix<double>>(
+    LocGridOrbitals<ORBDTYPE>&, const dist_matrix::DistMatrix<double>&);
 #ifdef MGMOL_USE_MIXEDP
-template double Rho<LocGridOrbitals>::dotWithRho<float>(
+template double Rho<LocGridOrbitals<ORBDTYPE>>::dotWithRho<float>(
     const float* const func) const;
 #endif
-#ifdef HAVE_MAGMA
-template void Rho<ExtendedGridOrbitals>::computeRho<ReplicatedMatrix>(
-    ExtendedGridOrbitals&, const ReplicatedMatrix&);
-template void Rho<ExtendedGridOrbitals>::computeRho<ReplicatedMatrix>(
-    ExtendedGridOrbitals&, ExtendedGridOrbitals&, const ReplicatedMatrix&,
-    const ReplicatedMatrix&, const ReplicatedMatrix&, const ReplicatedMatrix&);
-#endif
+template void Rho<ExtendedGridOrbitals<ORBDTYPE>>::computeRho<ReplicatedMatrix>(
+    ExtendedGridOrbitals<ORBDTYPE>&, const ReplicatedMatrix&);
+template void Rho<ExtendedGridOrbitals<ORBDTYPE>>::computeRho<ReplicatedMatrix>(
+    ExtendedGridOrbitals<ORBDTYPE>&, ExtendedGridOrbitals<ORBDTYPE>&,
+    const ReplicatedMatrix&, const ReplicatedMatrix&, const ReplicatedMatrix&,
+    const ReplicatedMatrix&);
+template void Rho<LocGridOrbitals<ORBDTYPE>>::computeRho<ReplicatedMatrix>(
+    LocGridOrbitals<ORBDTYPE>&, const ReplicatedMatrix&);

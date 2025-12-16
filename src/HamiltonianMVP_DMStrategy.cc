@@ -22,14 +22,15 @@ template <class MatrixType, class ProjMatrixType, class OrbitalsType>
 HamiltonianMVP_DMStrategy<MatrixType, ProjMatrixType,
     OrbitalsType>::HamiltonianMVP_DMStrategy(MPI_Comm comm, std::ostream& os,
     Ions& ions, Rho<OrbitalsType>* rho, Energy<OrbitalsType>* energy,
-    Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy,
-    OrbitalsType* orbitals)
+    Electrostatic* electrostat, Hamiltonian<OrbitalsType>* hamiltonian,
+    MGmol<OrbitalsType>* mgmol_strategy, OrbitalsType* orbitals)
     : comm_(comm),
       os_(os),
       ions_(ions),
       rho_(rho),
       energy_(energy),
       electrostat_(electrostat),
+      hamiltonian_(hamiltonian),
       global_indexes_(orbitals->getOverlappingGids()),
       mgmol_strategy_(mgmol_strategy)
 {
@@ -44,8 +45,9 @@ HamiltonianMVP_DMStrategy<MatrixType, ProjMatrixType,
 
     solver_
         = new HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>(
-            os_, ions_, rho_, energy_, electrostat_, mgmol_strategy_, ct.numst,
-            ct.dm_inner_steps, projmatrices->getH(), true);
+            os_, ions_, rho_, energy_, electrostat_, hamiltonian_,
+            mgmol_strategy_, ct.numst, ct.dm_inner_steps, projmatrices->getH(),
+            true);
 }
 
 template <class MatrixType, class ProjMatrixType, class OrbitalsType>
@@ -97,15 +99,13 @@ void HamiltonianMVP_DMStrategy<MatrixType, ProjMatrixType,
 }
 
 template class HamiltonianMVP_DMStrategy<dist_matrix::DistMatrix<DISTMATDTYPE>,
-    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>, LocGridOrbitals>;
-
+    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>,
+    LocGridOrbitals<ORBDTYPE>>;
 template class HamiltonianMVP_DMStrategy<VariableSizeMatrix<sparserow>,
-    ProjectedMatricesSparse, LocGridOrbitals>;
+    ProjectedMatricesSparse, LocGridOrbitals<ORBDTYPE>>;
 
 template class HamiltonianMVP_DMStrategy<dist_matrix::DistMatrix<DISTMATDTYPE>,
     ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>,
-    ExtendedGridOrbitals>;
-#ifdef HAVE_MAGMA
+    ExtendedGridOrbitals<ORBDTYPE>>;
 template class HamiltonianMVP_DMStrategy<ReplicatedMatrix,
-    ProjectedMatrices<ReplicatedMatrix>, ExtendedGridOrbitals>;
-#endif
+    ProjectedMatrices<ReplicatedMatrix>, ExtendedGridOrbitals<ORBDTYPE>>;

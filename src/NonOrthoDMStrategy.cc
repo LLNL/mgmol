@@ -21,7 +21,7 @@ NonOrthoDMStrategy<OrbitalsType>::NonOrthoDMStrategy(
 }
 
 template <class OrbitalsType>
-void NonOrthoDMStrategy<OrbitalsType>::initialize(OrbitalsType& orbitals)
+void NonOrthoDMStrategy<OrbitalsType>::initialize(OrbitalsType& /*orbitals*/)
 {
     Control& ct     = *(Control::instance());
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
@@ -35,7 +35,7 @@ void NonOrthoDMStrategy<OrbitalsType>::initialize(OrbitalsType& orbitals)
 }
 
 template <class OrbitalsType>
-int NonOrthoDMStrategy<OrbitalsType>::update(OrbitalsType& orbitals)
+int NonOrthoDMStrategy<OrbitalsType>::update(OrbitalsType& /*orbitals*/)
 {
     assert(proj_matrices_ != nullptr);
 
@@ -91,5 +91,5 @@ void NonOrthoDMStrategy<T>::dressDM()
     if (mix_ < 1.) proj_matrices_->dressupDM();
 }
 
-template class NonOrthoDMStrategy<LocGridOrbitals>;
-template class NonOrthoDMStrategy<ExtendedGridOrbitals>;
+template class NonOrthoDMStrategy<LocGridOrbitals<ORBDTYPE>>;
+template class NonOrthoDMStrategy<ExtendedGridOrbitals<ORBDTYPE>>;

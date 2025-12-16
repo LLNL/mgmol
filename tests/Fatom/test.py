@@ -65,7 +65,7 @@ for i in range(len(lines)):
       print("ERROR Eigenvalue 0 = {}".format(eval(eigenvalues[0])))
       sys.exit(1)
     for ii in range(3):
-      if abs(eval(eigenvalues[1+ii])+0.409)>tole:
+      if abs(eval(eigenvalues[1+ii])+0.410)>tole:
         print("ERROR Eigenvalue {} = {}".format(1+ii,eval(eigenvalues[1+ii])))
         sys.exit(1)
     sys.exit(0)

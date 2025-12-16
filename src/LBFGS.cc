@@ -128,7 +128,7 @@ void LBFGS<OrbitalsType>::updateRefs()
 }
 
 template <>
-void LBFGS<LocGridOrbitals>::updateRefMasks()
+void LBFGS<LocGridOrbitals<ORBDTYPE>>::updateRefMasks()
 {
     Control& ct = *(Control::instance());
 
@@ -147,7 +147,7 @@ void LBFGS<LocGridOrbitals>::updateRefMasks()
 }
 
 template <>
-void LBFGS<ExtendedGridOrbitals>::updateRefMasks()
+void LBFGS<ExtendedGridOrbitals<ORBDTYPE>>::updateRefMasks()
 {
 }
 
@@ -177,5 +177,5 @@ bool LBFGS<OrbitalsType>::lbfgsLastStepNotAccepted() const
     return !stepper_->check_last_step_accepted();
 }
 
-template class LBFGS<LocGridOrbitals>;
-template class LBFGS<ExtendedGridOrbitals>;
+template class LBFGS<LocGridOrbitals<ORBDTYPE>>;
+template class LBFGS<ExtendedGridOrbitals<ORBDTYPE>>;

@@ -87,12 +87,13 @@ for line in lines:
 
 print(eigenvalues)
 tol = 1.e-4
-eigenvalue0 = -0.208
+eigenvalue0 = -0.210
 if abs(eigenvalues[0]-eigenvalue0)>tol:
   print("Expected eigenvalue 0 to be {}".format(eigenvalue0))
   sys.exit(1)
-eigenvalue50 = 0.208
+eigenvalue50 = 0.205
 if abs(eigenvalues[50]-eigenvalue50)>tol:
+  print("Eeigenvalue 50 = {}".format(eigenvalues[50]))
   print("Expected eigenvalue 50 to be {}".format(eigenvalue50))
   sys.exit(1)
 

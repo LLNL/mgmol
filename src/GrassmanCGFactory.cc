@@ -4,22 +4,23 @@
 #include "LocGridOrbitals.h"
 
 template <>
-OrbitalsStepper<LocGridOrbitals>* GrassmanCGFactory<LocGridOrbitals>::create(
-    Hamiltonian<LocGridOrbitals>* hamiltonian,
+OrbitalsStepper<LocGridOrbitals<ORBDTYPE>>*
+GrassmanCGFactory<LocGridOrbitals<ORBDTYPE>>::create(
+    Hamiltonian<LocGridOrbitals<ORBDTYPE>>* hamiltonian,
     ProjectedMatricesInterface* proj_matrices,
-    MGmol<LocGridOrbitals>* mgmol_strategy, Ions& ions, std::ostream& os,
-    const bool short_sighted)
+    MGmol<LocGridOrbitals<ORBDTYPE>>* mgmol_strategy, Ions& ions,
+    std::ostream& os, const bool short_sighted)
 {
-    OrbitalsStepper<LocGridOrbitals>* stepper;
+    OrbitalsStepper<LocGridOrbitals<ORBDTYPE>>* stepper;
 
     if (short_sighted)
     {
-        stepper = new GrassmanCGSparse<LocGridOrbitals>(
+        stepper = new GrassmanCGSparse<LocGridOrbitals<ORBDTYPE>>(
             hamiltonian, proj_matrices, mgmol_strategy, ions, os);
     }
     else
     {
-        stepper = new GrassmanCG<LocGridOrbitals>(
+        stepper = new GrassmanCG<LocGridOrbitals<ORBDTYPE>>(
             hamiltonian, proj_matrices, mgmol_strategy, ions, os);
     }
 
@@ -27,15 +28,15 @@ OrbitalsStepper<LocGridOrbitals>* GrassmanCGFactory<LocGridOrbitals>::create(
 }
 
 template <>
-OrbitalsStepper<ExtendedGridOrbitals>*
-GrassmanCGFactory<ExtendedGridOrbitals>::create(
-    Hamiltonian<ExtendedGridOrbitals>* hamiltonian,
+OrbitalsStepper<ExtendedGridOrbitals<ORBDTYPE>>*
+GrassmanCGFactory<ExtendedGridOrbitals<ORBDTYPE>>::create(
+    Hamiltonian<ExtendedGridOrbitals<ORBDTYPE>>* hamiltonian,
     ProjectedMatricesInterface* proj_matrices,
-    MGmol<ExtendedGridOrbitals>* mgmol_strategy, Ions& ions, std::ostream& os,
-    const bool /*short_sighted*/)
+    MGmol<ExtendedGridOrbitals<ORBDTYPE>>* mgmol_strategy, Ions& ions,
+    std::ostream& os, const bool /*short_sighted*/)
 {
-    OrbitalsStepper<ExtendedGridOrbitals>* stepper
-        = new GrassmanCG<ExtendedGridOrbitals>(
+    OrbitalsStepper<ExtendedGridOrbitals<ORBDTYPE>>* stepper
+        = new GrassmanCG<ExtendedGridOrbitals<ORBDTYPE>>(
             hamiltonian, proj_matrices, mgmol_strategy, ions, os);
 
     return stepper;

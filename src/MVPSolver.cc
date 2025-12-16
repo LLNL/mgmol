@@ -44,8 +44,8 @@ double evalEntropyMVP(ProjectedMatricesInterface* projmatrices,
 template <class OrbitalsType, class MatrixType>
 MVPSolver<OrbitalsType, MatrixType>::MVPSolver(MPI_Comm comm, std::ostream& os,
     Ions& ions, Rho<OrbitalsType>* rho, Energy<OrbitalsType>* energy,
-    Electrostatic* electrostat, MGmol<OrbitalsType>* mgmol_strategy,
-    const int numst, const double kbT,
+    Electrostatic* electrostat, Hamiltonian<OrbitalsType>* hamiltonian,
+    MGmol<OrbitalsType>* mgmol_strategy, const int numst, const double kbT,
     const std::vector<std::vector<int>>& global_indexes,
     const short n_inner_steps, const double mixing, const double tol_de0,
     const bool use_old_dm)
@@ -69,6 +69,7 @@ MVPSolver<OrbitalsType, MatrixType>::MVPSolver(MPI_Comm comm, std::ostream& os,
     rho_            = rho;
     energy_         = energy;
     electrostat_    = electrostat;
+    hamiltonian_    = hamiltonian;
     mgmol_strategy_ = mgmol_strategy;
 
     work_ = new MatrixType("workMVP", numst_, numst_);
@@ -210,6 +211,10 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
 
         kbpsi.computeHvnlMatrix(&kbpsi, ions_, h11_nl);
 
+        OrbitalsType hphi("MVP_hphi", orbitals);
+
+        MatrixType h11(h11_nl);
+
         for (int inner_it = 0; inner_it < n_inner_steps_; inner_it++)
         {
             if (onpe0 && ct.verbose > 1)
@@ -237,8 +242,15 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
 
             // compute h11 for the current potential by adding local part to
             // nonlocal components
-            MatrixType h11(h11_nl);
-            mgmol_strategy_->addHlocal2matrix(orbitals, orbitals, h11);
+            if (inner_it == 0)
+            {
+                hamiltonian_->applyLocal(numst_, orbitals, hphi);
+            }
+            else
+            {
+                hamiltonian_->applyDeltaPot(orbitals, hphi);
+            }
+            orbitals.addDotWithNcol2Matrix(hphi, h11);
 
             current_proj_mat->assignH(h11);
             current_proj_mat->setHB2H();
@@ -316,11 +328,8 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
                     energy_->saveVofRho();
 
                     // update h11
-                    {
-                        h11 = h11_nl;
-                        mgmol_strategy_->addHlocal2matrix(
-                            orbitals, orbitals, h11);
-                    }
+                    hamiltonian_->applyDeltaPot(orbitals, hphi);
+                    orbitals.addDotWithNcol2Matrix(hphi, h11);
 
                     proj_mat_work_->assignH(h11);
                     proj_mat_work_->setHB2H();
@@ -402,10 +411,10 @@ void MVPSolver<OrbitalsType, MatrixType>::printTimers(std::ostream& os)
     target_tm_.print(os);
 }
 
-template class MVPSolver<LocGridOrbitals,
+template class MVPSolver<LocGridOrbitals<ORBDTYPE>,
     dist_matrix::DistMatrix<DISTMATDTYPE>>;
-template class MVPSolver<ExtendedGridOrbitals,
+template class MVPSolver<LocGridOrbitals<ORBDTYPE>, ReplicatedMatrix>;
+
+template class MVPSolver<ExtendedGridOrbitals<ORBDTYPE>,
     dist_matrix::DistMatrix<DISTMATDTYPE>>;
-#ifdef HAVE_MAGMA
-template class MVPSolver<ExtendedGridOrbitals, ReplicatedMatrix>;
-#endif
+template class MVPSolver<ExtendedGridOrbitals<ORBDTYPE>, ReplicatedMatrix>;

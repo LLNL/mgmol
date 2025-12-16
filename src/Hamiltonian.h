@@ -27,8 +27,6 @@ class Hamiltonian
 
     static Timer apply_Hloc_tm_;
 
-    void applyLocal(const int nstates, OrbitalsType& phi, OrbitalsType& hphi);
-
 public:
     static Timer apply_Hloc_tm() { return apply_Hloc_tm_; }
 
@@ -42,10 +40,16 @@ public:
     pb::Lap<ORBDTYPE>* lapOper() { return lapOper_; }
 
     const OrbitalsType& applyLocal(OrbitalsType& phi, const bool force = false);
+    void applyLocal(const int nstates, OrbitalsType& phi, OrbitalsType& hphi);
+
+    /*!
+     * Apply potential difference dv to phi
+     */
+    void applyDeltaPot(const OrbitalsType& phi, OrbitalsType& hphi);
 
     template <class MatrixType>
     void addHlocal2matrix(OrbitalsType& orbitals1, OrbitalsType& orbitals2,
-        MatrixType& mat, const bool force = false);
+        MatrixType& mat, const bool force);
     void addHlocalij(OrbitalsType& orbitals1, OrbitalsType& orbitals2,
         ProjectedMatricesInterface*);
     void addHlocalij(OrbitalsType& orbitals1, ProjectedMatricesInterface*);

@@ -112,7 +112,7 @@ void GrassmanLineMinimization<T>::update_states(
         // Grassman line minimization method
         double lambda = computeStepSize(orbitals);
         //        orbitals.projectOut(*sdir_);
-        orbitals.axpy(lambda, *sdir_);
+        orbitals.axpy((ORBDTYPE)lambda, *sdir_);
         // recompute overlap and inverse for new wavefunctions
         orbitals.computeGramAndInvS();
         if (onpe0 && ct.verbose > 1)
@@ -124,7 +124,7 @@ void GrassmanLineMinimization<T>::update_states(
     {
         // Preconditioned Power Method
         //        orbitals.projectOut(*sdir_);
-        orbitals.axpy(alpha, *sdir_);
+        orbitals.axpy((ORBDTYPE)alpha, *sdir_);
         //        if(onpe0)cout<<"alpha = "<<alpha<<endl;
         // recompute overlap and inverse for new wavefunctions
         orbitals.computeGramAndInvS();
@@ -147,5 +147,5 @@ void GrassmanLineMinimization<T>::printTimers(std::ostream& os)
     update_states_tm_.print(os);
 }
 
-template class GrassmanLineMinimization<LocGridOrbitals>;
-template class GrassmanLineMinimization<ExtendedGridOrbitals>;
+template class GrassmanLineMinimization<LocGridOrbitals<ORBDTYPE>>;
+template class GrassmanLineMinimization<ExtendedGridOrbitals<ORBDTYPE>>;

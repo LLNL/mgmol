@@ -53,7 +53,7 @@ void OrbitalsExtrapolationOrder2<OrbitalsType>::extrapolate_orbitals(
             getProcrustesTransform(matQ, yyt);
 
             orbitals_minus1->multiply_by_matrix(matQ);
-            orbitals_minus1->axpy(-1., *new_orbitals);
+            orbitals_minus1->axpy((ORBDTYPE)-1., *new_orbitals);
             orbitals_minus1->multiply_by_matrix(yyt);
         }
         else
@@ -61,7 +61,7 @@ void OrbitalsExtrapolationOrder2<OrbitalsType>::extrapolate_orbitals(
 
             new_orbitals->scal(2.);
         }
-        new_orbitals->axpy(-1., *orbitals_minus1);
+        new_orbitals->axpy((ORBDTYPE)-1., *orbitals_minus1);
 
         delete orbitals_minus1;
     }
@@ -89,5 +89,5 @@ void OrbitalsExtrapolationOrder2<OrbitalsType>::extrapolate_orbitals(
     }
 }
 
-template class OrbitalsExtrapolationOrder2<LocGridOrbitals>;
-template class OrbitalsExtrapolationOrder2<ExtendedGridOrbitals>;
+template class OrbitalsExtrapolationOrder2<LocGridOrbitals<ORBDTYPE>>;
+template class OrbitalsExtrapolationOrder2<ExtendedGridOrbitals<ORBDTYPE>>;

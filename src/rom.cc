@@ -92,7 +92,8 @@ void MGmol<OrbitalsType>::project_orbital(std::string file_path, int rdim, Orbit
     }
 }
 
-void ExtendedGridOrbitals::set(std::string file_path, int rdim)
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::set(std::string file_path, int rdim)
 {
     const int dim = getLocNumpt();
 
@@ -111,7 +112,7 @@ void ExtendedGridOrbitals::set(std::string file_path, int rdim)
     }
 }
 
-template class MGmol<LocGridOrbitals>;
-template class MGmol<ExtendedGridOrbitals>;
+template class MGmol<LocGridOrbitals<ORBDTYPE>>;
+template class MGmol<ExtendedGridOrbitals<ORBDTYPE>>;
 
 #endif  // MGMOL_HAS_LIBROM

@@ -66,8 +66,6 @@ HDFrestart::~HDFrestart()
 {
     if (!closed_) close();
 
-    closeWorkSpace();
-
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     mmpi.barrier();
 
@@ -1147,13 +1145,13 @@ int HDFrestart::getLRs(std::shared_ptr<LocalizationRegions> lrs,
 template <>
 void HDFrestart::getWorkspace<float>(float*& work_space)
 {
-    work_space = work_space_float_;
+    work_space = work_space_float_.data();
 }
 
 template <>
 void HDFrestart::getWorkspace<double>(double*& work_space)
 {
-    work_space = work_space_double_;
+    work_space = work_space_double_.data();
 }
 
 template <>
@@ -1567,12 +1565,12 @@ int HDFrestart::readData(
         if (precision == 1)
         {
             status = H5Dread(dset_id, H5T_NATIVE_FLOAT, memspace, filespace,
-                plist_id, work_space_float_);
+                plist_id, work_space_float_.data());
         }
         else
         {
             status = H5Dread(dset_id, H5T_NATIVE_DOUBLE, memspace, filespace,
-                plist_id, work_space_double_);
+                plist_id, work_space_double_.data());
         }
 
         if (status < 0)
@@ -1604,15 +1602,15 @@ int HDFrestart::readData(
                 {
                     //(*MPIdata::sout)<<"PE: "<<pes_.mytask()<<", Send data to
                     //"<<dest<<endl;
-                    MPI_Send(work_space_double_ + i * bsize_, bsize_,
+                    MPI_Send(work_space_double_.data() + i * bsize_, bsize_,
                         MPI_DOUBLE, dest, tag, comm_data_);
                 }
                 else if (pes_.my_mpi(0) == i)
                 {
                     //(*MPIdata::sout)<<"PE: "<<pes_.mytask()<<", Receive data
                     // from "<<ipe<<endl;
-                    MPI_Recv(work_space_double_, bsize_, MPI_DOUBLE, source,
-                        tag, comm_data_, &mpistatus);
+                    MPI_Recv(work_space_double_.data(), bsize_, MPI_DOUBLE,
+                        source, tag, comm_data_, &mpistatus);
                 }
             }
         else
@@ -1624,15 +1622,15 @@ int HDFrestart::readData(
                 {
                     //(*MPIdata::sout)<<"PE: "<<pes_.mytask()<<", Send data to
                     //"<<dest<<endl;
-                    MPI_Send(work_space_float_ + i * bsize_, bsize_, MPI_FLOAT,
-                        dest, tag, comm_data_);
+                    MPI_Send(work_space_float_.data() + i * bsize_, bsize_,
+                        MPI_FLOAT, dest, tag, comm_data_);
                 }
                 else if (pes_.my_mpi(0) == i)
                 {
                     //(*MPIdata::sout)<<"PE: "<<pes_.mytask()<<", Receive data
                     // from "<<ipe<<endl;
-                    MPI_Recv(work_space_float_, bsize_, MPI_FLOAT, source, tag,
-                        comm_data_, &mpistatus);
+                    MPI_Recv(work_space_float_.data(), bsize_, MPI_FLOAT,
+                        source, tag, comm_data_, &mpistatus);
                 }
             }
     }
@@ -1657,11 +1655,13 @@ int HDFrestart::writeData(const T* const data, hid_t space_id, hid_t memspace,
 {
     if (precision == 1)
     {
+        assert((int)work_space_float_.size() == bsize_);
         for (int i = 0; i < bsize_; i++)
             work_space_float_[i] = (float)data[i];
     }
     else
     {
+        assert((int)work_space_double_.size() == bsize_);
         for (int i = 0; i < bsize_; i++)
             work_space_double_[i] = (double)data[i];
     }
@@ -1683,14 +1683,14 @@ int HDFrestart::writeData(const T* const data, hid_t space_id, hid_t memspace,
                 {
                     //(*MPIdata::sout)<<"PE: "<<pes_.mytask()<<", Send data to
                     //"<<dest<<endl;
-                    MPI_Send(work_space_double_, bsize_, MPI_DOUBLE, dest, i,
-                        comm_data_);
+                    MPI_Send(work_space_double_.data(), bsize_, MPI_DOUBLE,
+                        dest, i, comm_data_);
                 }
                 else if (pes_.my_mpi(0) == 0)
                 {
                     //(*MPIdata::sout)<<"PE: "<<pes_.mytask()<<", Receive data
                     // from "<<ipe<<endl;
-                    MPI_Recv(work_space_double_ + i * bsize_, bsize_,
+                    MPI_Recv(work_space_double_.data() + i * bsize_, bsize_,
                         MPI_DOUBLE, ipe, i, comm_data_, &mpistatus);
                 }
             }
@@ -1702,15 +1702,15 @@ int HDFrestart::writeData(const T* const data, hid_t space_id, hid_t memspace,
                 {
                     //(*MPIdata::sout)<<"PE: "<<pes_.mytask()<<", Send data to
                     //"<<dest<<endl;
-                    MPI_Send(work_space_float_, bsize_, MPI_FLOAT, dest, i,
-                        comm_data_);
+                    MPI_Send(work_space_float_.data(), bsize_, MPI_FLOAT, dest,
+                        i, comm_data_);
                 }
                 else if (pes_.my_mpi(0) == 0)
                 {
                     //(*MPIdata::sout)<<"PE: "<<pes_.mytask()<<", Receive data
                     // from "<<ipe<<endl;
-                    MPI_Recv(work_space_float_ + i * bsize_, bsize_, MPI_FLOAT,
-                        ipe, i, comm_data_, &mpistatus);
+                    MPI_Recv(work_space_float_.data() + i * bsize_, bsize_,
+                        MPI_FLOAT, ipe, i, comm_data_, &mpistatus);
                 }
             }
     }
@@ -1742,10 +1742,10 @@ int HDFrestart::writeData(const T* const data, hid_t space_id, hid_t memspace,
         assert(dset_id >= 0);
         if (precision == 1)
             status = H5Dwrite(dset_id, H5T_NATIVE_FLOAT, memspace, space_id,
-                plist_id, work_space_float_);
+                plist_id, work_space_float_.data());
         else
             status = H5Dwrite(dset_id, H5T_NATIVE_DOUBLE, memspace, space_id,
-                plist_id, work_space_double_);
+                plist_id, work_space_double_.data());
         if (status < 0)
         {
             MGMOL_HDFRESTART_FAIL("H5Dwrite failed!!!");
@@ -1851,21 +1851,12 @@ void HDFrestart::setupWorkSpace()
 {
     // if( active_ )
     {
-        const int n        = block_[0] * block_[1] * block_[2];
-        work_space_double_ = new double[n];
-        memset(work_space_double_, 0, n * sizeof(double));
+        const int n = block_[0] * block_[1] * block_[2];
+        work_space_double_.resize(n);
+        memset(work_space_double_.data(), 0, n * sizeof(double));
 
-        work_space_float_ = new float[n];
-        memset(work_space_float_, 0, n * sizeof(float));
-    }
-}
-
-void HDFrestart::closeWorkSpace()
-{
-    // if( active_ )
-    {
-        delete[] work_space_double_;
-        delete[] work_space_float_;
+        work_space_float_.resize(n);
+        memset(work_space_float_.data(), 0, n * sizeof(float));
     }
 }
 

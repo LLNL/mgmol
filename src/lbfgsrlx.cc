@@ -138,7 +138,7 @@ void MGmol<OrbitalsType>::lbfgsrlx(OrbitalsType** orbitals, Ions& ions)
     }
 }
 
-template void MGmol<LocGridOrbitals>::lbfgsrlx(
-    LocGridOrbitals** orbitals, Ions& ions);
-template void MGmol<ExtendedGridOrbitals>::lbfgsrlx(
-    ExtendedGridOrbitals** orbitals, Ions& ions);
+template void MGmol<LocGridOrbitals<ORBDTYPE>>::lbfgsrlx(
+    LocGridOrbitals<ORBDTYPE>** orbitals, Ions& ions);
+template void MGmol<ExtendedGridOrbitals<ORBDTYPE>>::lbfgsrlx(
+    ExtendedGridOrbitals<ORBDTYPE>** orbitals, Ions& ions);

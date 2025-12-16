@@ -243,8 +243,7 @@ public:
     // Construct a diagonal DistMatrix from a vector dmat of diagonal elements
     DistMatrix<T>(const std::string& name, const BlacsContext&,
         const T* const dmat, const int m, const int n);
-    DistMatrix<T>(
-        const std::string& name, const T* const dmat, const int m, const int n);
+    DistMatrix<T>(const std::string& name, const T* const dmat, const int m);
 
     DistMatrix<T>& operator=(const DistMatrix<T>& a);
     DistMatrix<T>& assign(const DistMatrix<T>&, const int, const int);

@@ -425,5 +425,5 @@ void DFTsolver<OrbitalsType>::printTimers(std::ostream& os)
     solve_tm_.print(os);
 }
 
-template class DFTsolver<LocGridOrbitals>;
-template class DFTsolver<ExtendedGridOrbitals>;
+template class DFTsolver<LocGridOrbitals<ORBDTYPE>>;
+template class DFTsolver<ExtendedGridOrbitals<ORBDTYPE>>;

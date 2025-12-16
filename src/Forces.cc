@@ -416,14 +416,12 @@ void Forces<T>::lforce(Ions& ions, RHODTYPE* rho)
 template <class T>
 SquareLocalMatrices<double, MemorySpace::Host> Forces<T>::getReplicatedDM()
 {
-#ifdef HAVE_MAGMA
     {
         ProjectedMatrices<ReplicatedMatrix>* projmatrices
             = dynamic_cast<ProjectedMatrices<ReplicatedMatrix>*>(
                 proj_matrices_);
         if (projmatrices) return projmatrices->getReplicatedDM();
     }
-#endif
     {
         ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
             = dynamic_cast<
@@ -674,5 +672,5 @@ void Forces<T>::force(T& orbitals, Ions& ions)
     total_tm_.stop();
 }
 
-template class Forces<LocGridOrbitals>;
-template class Forces<ExtendedGridOrbitals>;
+template class Forces<LocGridOrbitals<ORBDTYPE>>;
+template class Forces<ExtendedGridOrbitals<ORBDTYPE>>;

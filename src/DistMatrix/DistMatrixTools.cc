@@ -120,7 +120,7 @@ void sqrtDistMatrix(dist_matrix::DistMatrix<DISTMATDTYPE>& u)
     {
         eigenvalues[i] = 1. / sqrt(eigenvalues[i]);
     }
-    dist_matrix::DistMatrix<DISTMATDTYPE> g("g", &eigenvalues[0], nst, nst);
+    dist_matrix::DistMatrix<DISTMATDTYPE> g("g", &eigenvalues[0], nst);
 
     // u = z * g * z**T
     w.symm('r', 'l', 1., g, z, 0.);

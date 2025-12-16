@@ -1643,14 +1643,14 @@ void GridFuncVector<ScalarType, MemorySpaceType>::extend3D(
 template <typename ScalarType, typename MemorySpaceType>
 GridFuncVector<ScalarType, MemorySpaceType>&
 GridFuncVector<ScalarType, MemorySpaceType>::operator-=(
-    const GridFuncVector& func)
+    const GridFuncVector<ScalarType, MemorySpaceType>& func)
 {
     assert(func.grid_.sizeg() == grid_.sizeg());
     assert(func.grid_.ghost_pt() == grid_.ghost_pt());
     assert(this != &func);
 
-    LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
-        nfunc_ * grid_.sizeg(), -1., func.memory_.get(), memory_.get());
+    LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(nfunc_ * grid_.sizeg(),
+        (ScalarType)(-1.), func.memory_.get(), memory_.get());
 
     updated_boundaries_ = (func.updated_boundaries_ && updated_boundaries_);
 
@@ -1658,8 +1658,23 @@ GridFuncVector<ScalarType, MemorySpaceType>::operator-=(
 }
 
 template <typename ScalarType, typename MemorySpaceType>
-void GridFuncVector<ScalarType, MemorySpaceType>::axpy(
-    const double alpha, const GridFuncVector<ScalarType, MemorySpaceType>& func)
+template <typename ScalarType2>
+void GridFuncVector<ScalarType, MemorySpaceType>::copyFrom(
+    const GridFuncVector<ScalarType2, MemorySpaceType>& src)
+{
+    copy_tm_.start();
+
+    MPcpy(memory_.get(), src.getDataPtr(0), nfunc_ * grid_.sizeg());
+
+    updated_boundaries_ = src.getUpdatedBoundariesFlag();
+
+    copy_tm_.stop();
+}
+
+template <typename ScalarType, typename MemorySpaceType>
+template <typename ScalarType2>
+void GridFuncVector<ScalarType, MemorySpaceType>::axpy(const ScalarType2 alpha,
+    const GridFuncVector<ScalarType, MemorySpaceType>& func)
 {
     LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
         nfunc_ * grid_.sizeg(), alpha, func.memory_.get(), memory_.get());
@@ -2419,7 +2434,7 @@ void GridFuncVector<ScalarType, MemorySpaceType>::jacobi(const int type,
 {
     applyLap(type, w);
     w -= B;
-    axpy(-1. * jacobiFactor, w);
+    axpy((ScalarType)(-1. * jacobiFactor), w);
 
     set_updated_boundaries(false);
 }
@@ -2459,6 +2474,16 @@ template void GridFuncVector<double, MemorySpace::Host>::pointwiseProduct(
     GridFuncVector<double, MemorySpace::Host>& A, const GridFunc<double>& B);
 template void GridFuncVector<float, MemorySpace::Host>::pointwiseProduct(
     GridFuncVector<float, MemorySpace::Host>& A, const GridFunc<double>& B);
+
+template void GridFuncVector<float, MemorySpace::Host>::axpy(
+    const float alpha, const GridFuncVector<float, MemorySpace::Host>& func);
+template void GridFuncVector<double, MemorySpace::Host>::axpy(
+    const double alpha, const GridFuncVector<double, MemorySpace::Host>& func);
+template void GridFuncVector<float, MemorySpace::Host>::copyFrom(
+    const GridFuncVector<double, MemorySpace::Host>& src);
+template void GridFuncVector<double, MemorySpace::Host>::copyFrom(
+    const GridFuncVector<float, MemorySpace::Host>& src);
+
 #ifdef HAVE_MAGMA
 template class GridFuncVector<double, MemorySpace::Device>;
 template class GridFuncVector<float, MemorySpace::Device>;

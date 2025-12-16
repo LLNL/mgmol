@@ -13,6 +13,8 @@
 #include "fc_mangle.h"
 
 typedef const char* const Pchar;
+typedef const int* const Pint;
+typedef const double* const Pdouble;
 
 #define dsygst DSYGST
 #define dtrtrs DTRTRS
@@ -24,15 +26,15 @@ extern "C"
 {
     void DSYEV(Pchar, Pchar, const int* const, double*, const int* const,
         double*, double*, const int* const, int*);
-    void dsygv(const int* const, Pchar, Pchar, const int* const, double*,
+    void DSYGV(const int* const, Pchar, Pchar, const int* const, double*,
         const int* const, double*, const int* const, double*, double*,
         const int* const, int*);
     void DPOTRI(Pchar, const int* const, double*, const int* const, int*);
     void DPOTRF(Pchar, const int* const, double*, const int* const, int*);
     void DPOTRS(Pchar, const int* const, const int* const, double*,
         const int* const, double*, const int* const, int*);
-    void dgetrf(int*, int*, double*, int*, int*, int*);
-    void dgetrs(Pchar, int*, int*, double*, int*, int*, double*, int*, int*);
+    void DGETRF(int*, int*, double*, int*, int*, int*);
+    void DGETRS(Pchar, int*, int*, double*, int*, int*, double*, int*, int*);
     void dpocon(Pchar, const int* const, double*, const int* const, double*,
         double*, double*, const int* const, int*);
     void dtrtrs(Pchar, Pchar, Pchar, const int* const, const int* const,
@@ -43,6 +45,7 @@ extern "C"
     void dgesvd(Pchar, Pchar, int*, int*, double*, int*, double*, double*, int*,
         double*, int*, double*, int*, int*);
     double dlange(Pchar, int*, int*, double*, int*, double*);
+    void DLACPY(Pchar, Pint, Pint, Pdouble, Pint, Pdouble, Pint);
 }
 
 #endif

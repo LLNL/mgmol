@@ -218,6 +218,4 @@ MatrixType ChebyshevApproximation<MatrixType>::computeChebyshevApproximation(
 }
 
 template class ChebyshevApproximation<dist_matrix::DistMatrix<DISTMATDTYPE>>;
-#ifdef HAVE_MAGMA
 template class ChebyshevApproximation<ReplicatedMatrix>;
-#endif
