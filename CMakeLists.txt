@@ -151,7 +151,7 @@ if(USE_LIBROM)
   find_package(libROM REQUIRED)
 
   if(libROM_FOUND)
-    set(MGMOL_HAS_LIBROM 1)
+    add_definitions(-DMGMOL_HAS_LIBROM)
   endif(libROM_FOUND)
 endif(USE_LIBROM)
 
