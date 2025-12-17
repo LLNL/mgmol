@@ -202,7 +202,7 @@ bool PCGSolver<OperatorType, ScalarDataType, PrecondDataType>::solve(
     pb::GridFunc<PrecondDataType> prec_z(finegrid, bc_[0], bc_[1], bc_[2]);
     pb::GridFunc<PrecondDataType> prec_res(res);
     /* preconditioning step */
-    prec_z.setValues(0.);
+    prec_z.setZero();
     preconSolve(prec_z, prec_res, 0);
     pb::GridFunc<ScalarDataType> z(prec_z);
 
@@ -236,7 +236,7 @@ bool PCGSolver<OperatorType, ScalarDataType, PrecondDataType>::solve(
             converged = true;
             break;
         }
-        prec_z.setValues(0.);
+        prec_z.setZero();
         prec_res.setValues(res);
         preconSolve(prec_z, prec_res, 0);
         z.setValues(prec_z);
