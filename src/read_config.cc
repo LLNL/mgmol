@@ -117,10 +117,16 @@ int read_config(int argc, char** argv, po::variables_map& vm,
             "Compute MLWF (apply rotation) in quench")(
             "Quench.num_lin_iterations", po::value<short>()->default_value(0),
             "Number of iterations without potential update in quench")(
-            "Quench.preconditioner_num_levels",
+            "Preconditioner.num_levels",
             po::value<short>()->default_value(2),
             "Number of levels for MG preconditioner")(
-            "Quench.preconditioner_precision",
+            "Preconditioner.npresmoothing",
+            po::value<short>()->default_value(2),
+            "Number of presmoothing steps i preconditioner")(
+            "Preconditioner.npostsmoothing",
+            po::value<short>()->default_value(2),
+            "Number of postsmoothing steps i preconditioner")(
+            "Preconditioner.precision",
             po::value<short>()->default_value(32),
             "Precision for MG preconditioner")("Quench.spread_penalty_damping",
             po::value<float>()->default_value(0.),

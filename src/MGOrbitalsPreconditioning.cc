@@ -22,7 +22,15 @@
 template <class OrbitalsType, typename PDataType>
 MGOrbitalsPreconditioning<OrbitalsType, PDataType>::MGOrbitalsPreconditioning(
     const short mg_levels, const short lap_type)
-    : mg_levels_(mg_levels), lap_type_(lap_type), is_set_(false){};
+    : mg_levels_(mg_levels), lap_type_(lap_type), is_set_(false)
+{
+    Control& ct(*(Control::instance()));
+    Mesh* mymesh = Mesh::instance();
+    const pb::Grid& mygrid(mymesh->grid());
+
+    precond_ = std::make_shared<Preconditioning<PDataType>>(
+        lap_type_, mg_levels_, ct.mg_npresmoothing_, ct.mg_npostsmoothing_, mygrid, ct.bcWF);
+}
 
 template <class OrbitalsType, typename PDataType>
 MGOrbitalsPreconditioning<OrbitalsType, PDataType>::~MGOrbitalsPreconditioning()
@@ -41,9 +49,6 @@ void MGOrbitalsPreconditioning<OrbitalsType, PDataType>::setup(
     Control& ct(*(Control::instance()));
     Mesh* mymesh = Mesh::instance();
     const pb::Grid& mygrid(mymesh->grid());
-
-    precond_ = std::make_shared<Preconditioning<PDataType>>(
-        lap_type_, mg_levels_, mygrid, ct.bcWF);
 
     if (currentMasks != nullptr)
     {
