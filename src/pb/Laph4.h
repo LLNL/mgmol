@@ -34,7 +34,7 @@ public:
         //-1/12 16/12 -30/12 16/12 -1/12
         diagEl_ = 2.5
                   * (Lap<T>::inv_h2(0) + Lap<T>::inv_h2(1)
-                        + Lap<T>::inv_h2(2)); // 2.5 = 30./12.
+                      + Lap<T>::inv_h2(2)); // 2.5 = 30./12.
         invDiagEl_    = 1. / diagEl_;
         Lap<T>::name_ = "Classical 4th order";
 

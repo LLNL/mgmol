@@ -46,8 +46,8 @@ SubCell::SubCell(
     outer_radius_
         = sqrt(0.25
                * (subcell_dimensions_[0] * subcell_dimensions_[0]
-                     + subcell_dimensions_[1] * subcell_dimensions_[1]
-                     + subcell_dimensions_[2] * subcell_dimensions_[2]));
+                   + subcell_dimensions_[1] * subcell_dimensions_[1]
+                   + subcell_dimensions_[2] * subcell_dimensions_[2]));
     inner_radius_ = std::min(subcell_dimensions_[0], subcell_dimensions_[1]);
     inner_radius_ = std::min(inner_radius_, subcell_dimensions_[2]);
     inner_radius_ *= 0.5;

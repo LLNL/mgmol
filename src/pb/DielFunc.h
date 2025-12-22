@@ -90,7 +90,7 @@ public:
         drho0_              = A.drho0_;
     }
 
-    ~DielFunc() override{};
+    ~DielFunc() override {};
 
     DielFunc& operator=(const T);
 

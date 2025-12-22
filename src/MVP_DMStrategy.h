@@ -50,7 +50,7 @@ public:
         const std::vector<std::vector<int>>& overlappingGids,
         ProjectedMatricesInterface* proj_matrices, const bool use_old_dm);
 
-    void initialize(OrbitalsType&) override{};
+    void initialize(OrbitalsType&) override {};
     int update(OrbitalsType& orbitals) override;
 
     // H is updated with MVP loop, so no need to compute it outside
@@ -60,7 +60,7 @@ public:
 
     void dressDM() override;
 
-    void reset() override {}
+    void reset() override { }
 };
 
 #endif

@@ -114,7 +114,7 @@ void MGkernelExtend3D(ScalarType* coarse_data, const Grid& coarse_grid,
                     int izf        = ify + iz;
                     fine_data[izf] = 0.5
                                      * (fine_data[izf + incy_fine]
-                                           + fine_data[izf - incy_fine]);
+                                         + fine_data[izf - incy_fine]);
                     assert(izf < static_cast<int>(nfunc * fine_grid.sizeg()));
                 }
 
@@ -124,9 +124,9 @@ void MGkernelExtend3D(ScalarType* coarse_data, const Grid& coarse_grid,
                     int izf        = ify + iz;
                     fine_data[izf] = 0.25
                                      * (fine_data[izf + 1 + incy_fine]
-                                           + fine_data[izf + 1 - incy_fine]
-                                           + fine_data[izf - 1 + incy_fine]
-                                           + fine_data[izf - 1 - incy_fine]);
+                                         + fine_data[izf + 1 - incy_fine]
+                                         + fine_data[izf - 1 + incy_fine]
+                                         + fine_data[izf - 1 - incy_fine]);
                     assert(izf < static_cast<int>(nfunc * fine_grid.sizeg()));
                 }
             }
@@ -146,9 +146,9 @@ void MGkernelExtend3D(ScalarType* coarse_data, const Grid& coarse_grid,
                     int izf        = ify + iz;
                     fine_data[izf] = 0.25
                                      * (fine_data[izf + incx_fine + 1]
-                                           + fine_data[izf + incx_fine - 1]
-                                           + fine_data[izf - incx_fine + 1]
-                                           + fine_data[izf - incx_fine - 1]);
+                                         + fine_data[izf + incx_fine - 1]
+                                         + fine_data[izf - incx_fine + 1]
+                                         + fine_data[izf - incx_fine - 1]);
                 }
 
                 for (int iz = nghosts_fine; iz < dimz + nghosts_fine;
@@ -157,7 +157,7 @@ void MGkernelExtend3D(ScalarType* coarse_data, const Grid& coarse_grid,
                     int izf        = ify + iz;
                     fine_data[izf] = 0.5
                                      * (fine_data[izf + incx_fine]
-                                           + fine_data[izf - incx_fine]);
+                                         + fine_data[izf - incx_fine]);
                 }
             }
 
@@ -173,13 +173,13 @@ void MGkernelExtend3D(ScalarType* coarse_data, const Grid& coarse_grid,
                     fine_data[izf]
                         = 0.125
                           * (fine_data[izf + incx_fine + incy_fine + 1]
-                                + fine_data[izf + incx_fine + incy_fine - 1]
-                                + fine_data[izf + incx_fine - incy_fine + 1]
-                                + fine_data[izf + incx_fine - incy_fine - 1]
-                                + fine_data[izf - incx_fine + incy_fine + 1]
-                                + fine_data[izf - incx_fine + incy_fine - 1]
-                                + fine_data[izf - incx_fine - incy_fine + 1]
-                                + fine_data[izf - incx_fine - incy_fine - 1]);
+                              + fine_data[izf + incx_fine + incy_fine - 1]
+                              + fine_data[izf + incx_fine - incy_fine + 1]
+                              + fine_data[izf + incx_fine - incy_fine - 1]
+                              + fine_data[izf - incx_fine + incy_fine + 1]
+                              + fine_data[izf - incx_fine + incy_fine - 1]
+                              + fine_data[izf - incx_fine - incy_fine + 1]
+                              + fine_data[izf - incx_fine - incy_fine - 1]);
                 }
 
                 for (int iz = nghosts_fine; iz < dimz + nghosts_fine;
@@ -189,9 +189,9 @@ void MGkernelExtend3D(ScalarType* coarse_data, const Grid& coarse_grid,
                     fine_data[izf]
                         = 0.25
                           * (fine_data[izf + incx_fine + incy_fine]
-                                + fine_data[izf + incx_fine - incy_fine]
-                                + fine_data[izf - incx_fine + incy_fine]
-                                + fine_data[izf - incx_fine - incy_fine]);
+                              + fine_data[izf + incx_fine - incy_fine]
+                              + fine_data[izf - incx_fine + incy_fine]
+                              + fine_data[izf - incx_fine - incy_fine]);
                 }
             }
         }
@@ -265,9 +265,10 @@ void MGkernelRestrict3D(ScalarType* fine_data, const Grid& fine_grid,
                           + (double)umxmy[twoiz] + (double)upxmy[twoiz]
                           + (double)umxpy[twoiz] + (double)upxpy[twoiz];
 
-                    coarse_data[iyc + iz + nghosts_coarse] = (ScalarType)(
-                        inv64
-                        * (8. * u0[twoiz] + 4. * face + 2. * edge + corner));
+                    coarse_data[iyc + iz + nghosts_coarse]
+                        = (ScalarType)(inv64
+                                       * (8. * u0[twoiz] + 4. * face + 2. * edge
+                                           + corner));
                 }
 
                 iyf += 2 * incy_fine;

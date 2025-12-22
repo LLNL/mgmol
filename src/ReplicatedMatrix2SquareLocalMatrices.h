@@ -35,14 +35,14 @@ public:
         return pinstance_;
     }
 
-    ReplicatedMatrix2SquareLocalMatrices() {}
+    ReplicatedMatrix2SquareLocalMatrices() { }
 
     static void setup(const std::vector<std::vector<int>>& gids)
     {
         global_indexes_ = gids;
     }
 
-    ~ReplicatedMatrix2SquareLocalMatrices() {}
+    ~ReplicatedMatrix2SquareLocalMatrices() { }
 
     void convert(const ReplicatedMatrix& dmat,
         SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& lmat);

@@ -176,7 +176,7 @@ public:
 
     int globalNumLRs() const { return nglobal_; }
 
-    virtual ~LocalizationRegions() {}
+    virtual ~LocalizationRegions() { }
 
     virtual void setup()
     {

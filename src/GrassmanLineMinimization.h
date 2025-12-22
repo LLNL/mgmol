@@ -72,7 +72,7 @@ public:
         delete sdir_;
     }
 
-    void setup(T&) override{};
+    void setup(T&) override {};
 
     int updateWF(T& orbitals, Ions& ions, const double precond_factor,
         const bool orthof, T& work_orbitals, const bool accelerate,

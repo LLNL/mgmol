@@ -28,9 +28,9 @@ protected:
     static Timer computeLocalElement_tm_;
 
 public:
-    KBPsiMatrixInterface() : iterative_index_(-1){};
+    KBPsiMatrixInterface() : iterative_index_(-1) {};
 
-    virtual ~KBPsiMatrixInterface(){};
+    virtual ~KBPsiMatrixInterface() {};
 
     int getIterativeIndex() const { return iterative_index_; }
     void setOutdated() { iterative_index_ = -1; }

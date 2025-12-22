@@ -14,9 +14,9 @@ template <class T>
 class SpreadPenaltyInterface
 {
 public:
-    SpreadPenaltyInterface() {}
+    SpreadPenaltyInterface() { }
 
-    virtual ~SpreadPenaltyInterface() {}
+    virtual ~SpreadPenaltyInterface() { }
 
     // add penalty functional contribution to residual
     virtual void addResidual(T& phi, T& res)    = 0;

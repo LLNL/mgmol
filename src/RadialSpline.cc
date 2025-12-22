@@ -40,7 +40,7 @@ void RadialSpline::spline(const double yp1, const double ypn)
         y2_[i]      = (sig - 1.0) * invp;
         u[i]        = (6.0
                        * ((y_[i + 1] - y_[i]) / (x_[i + 1] - x_[i])
-                             - (y_[i] - y_[i - 1]) / (x_[i] - x_[i - 1]))
+                           - (y_[i] - y_[i - 1]) / (x_[i] - x_[i - 1]))
                        / (x_[i + 1] - x_[i - 1])
                    - sig * u[i - 1])
                * invp;

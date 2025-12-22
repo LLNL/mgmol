@@ -359,7 +359,7 @@ GridFunc<T>& GridFunc<T>::operator=(const GridFunc<T>& func)
 template <typename T>
 void GridFunc<T>::setZero()
 {
-    memset(uu_, 0, grid_.sizeg()*sizeof(T));
+    memset(uu_, 0, grid_.sizeg() * sizeof(T));
 
     updated_boundaries_ = true;
 }
@@ -1513,7 +1513,7 @@ void GridFunc<T>::initTrigo3d(const short bc[3], const int n[3])
     double (*f2)(double);
     int init[3] = { 0, 0, 0 };
     int end[3]  = { dim_[0] + 2 * nghosts, dim_[1] + 2 * nghosts,
-        dim_[2] + 2 * nghosts };
+         dim_[2] + 2 * nghosts };
     if (bc[0] == 1)
     {
         f0 = &cos;
@@ -3089,8 +3089,8 @@ void GridFunc<T>::test_setBoundaryValues()
 
     assert(std::abs(my_dot
                     - (grid_.gsize() - grid_.gdim(0) * grid_.gdim(1)
-                          - grid_.gdim(0) * (grid_.gdim(2) - 1)
-                          - (grid_.gdim(1) - 1) * (grid_.gdim(2) - 1)))
+                        - grid_.gdim(0) * (grid_.gdim(2) - 1)
+                        - (grid_.gdim(1) - 1) * (grid_.gdim(2) - 1)))
            < 1.e-8);
 
     if ((2 * (dim(0) >> 1) == dim(0)) && (2 * (dim(1) >> 1) == dim(1))

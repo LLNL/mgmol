@@ -358,9 +358,9 @@ public:
 
     const VariableSizeMatrix<sparserow>& getH() { return *matHB_; }
     void assignH(const VariableSizeMatrix<sparserow>& matH) { *matHB_ = matH; }
-    void printEigenvalues(std::ostream& /*os*/) const {}
-    void printOccupations(std::ostream& /*os*/) const override {}
-    void setHB2H() override {}
+    void printEigenvalues(std::ostream& /*os*/) const { }
+    void printOccupations(std::ostream& /*os*/) const override { }
+    void setHB2H() override { }
 
     DensityMatrixSparse& getDM() { return *dm_; }
 };

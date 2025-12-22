@@ -592,7 +592,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
         // note: extrapolation is going to modify it!
         if ((ct.out_restart_info > 2)
             && (((md_iteration_ % ct.checkpoint) == 0)
-                   || (mdstep == ct.num_MD_steps)))
+                || (mdstep == ct.num_MD_steps)))
             proj_matrices_->saveDM();
 
         preWFextrapolation();

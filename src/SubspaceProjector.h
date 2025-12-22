@@ -29,7 +29,7 @@ private:
 public:
     SubspaceProjector(T& subspace);
 
-    ~SubspaceProjector() {}
+    ~SubspaceProjector() { }
 
     void projectOut(
         T&, SquareLocalMatrices<MATDTYPE, MemorySpace::Host>* mask = nullptr);

@@ -16,9 +16,9 @@ template <class T>
 class OrbitalsStepper
 {
 public:
-    OrbitalsStepper() {}
+    OrbitalsStepper() { }
 
-    virtual ~OrbitalsStepper() {}
+    virtual ~OrbitalsStepper() { }
 
     virtual void setup(T&) = 0;
 
@@ -27,7 +27,7 @@ public:
         const bool print_res, const double atol)
         = 0;
 
-    virtual void restartMixing(){};
+    virtual void restartMixing() {};
 };
 
 #endif

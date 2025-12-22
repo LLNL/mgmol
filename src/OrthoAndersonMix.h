@@ -28,7 +28,7 @@ public:
     {
     }
 
-    ~OrthoAndersonMix() override{};
+    ~OrthoAndersonMix() override {};
 };
 
 #endif

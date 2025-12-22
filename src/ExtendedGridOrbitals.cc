@@ -719,7 +719,7 @@ int ExtendedGridOrbitals<ScalarType>::write(
 
             hid_t dtype_id = outHdfDataType(ct.out_restart_info);
             dset_id        = H5Dcreate2(file_id, datasetname.c_str(), dtype_id,
-                filespace, H5P_DEFAULT, plist_id, H5P_DEFAULT);
+                       filespace, H5P_DEFAULT, plist_id, H5P_DEFAULT);
             if (dset_id < 0)
             {
                 (*MPIdata::serr) << "ExtendedGridOrbitals::write_func_hdf5(), "

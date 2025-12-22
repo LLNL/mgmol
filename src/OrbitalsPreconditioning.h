@@ -17,9 +17,9 @@ template <class OrbitalsType>
 class OrbitalsPreconditioning
 {
 public:
-    OrbitalsPreconditioning(){};
+    OrbitalsPreconditioning() {};
 
-    virtual ~OrbitalsPreconditioning(){};
+    virtual ~OrbitalsPreconditioning() {};
 
     virtual void setup(OrbitalsType& orbitals, MasksSet*,
         const std::shared_ptr<LocalizationRegions>&)

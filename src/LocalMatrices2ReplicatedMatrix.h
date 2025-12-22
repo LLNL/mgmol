@@ -42,7 +42,7 @@ public:
         return pinstance_;
     }
 
-    LocalMatrices2ReplicatedMatrix() {}
+    LocalMatrices2ReplicatedMatrix() { }
 
     static void setup(const std::vector<std::vector<int>>& gids)
     {

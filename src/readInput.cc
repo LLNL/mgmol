@@ -21,7 +21,7 @@
 
 #include <mpi.h>
 
-//#define DEBUG 1
+// #define DEBUG 1
 
 template <class OrbitalsType>
 int MGmol<OrbitalsType>::readLRsFromInput(std::ifstream* tfile)

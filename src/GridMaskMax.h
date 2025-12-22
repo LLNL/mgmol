@@ -25,7 +25,7 @@ class GridMaskMax : public GridMask
 public:
     GridMaskMax(const unsigned short nclevels, const unsigned short subdivx,
         const pb::Grid& mygrid)
-        : GridMask(nclevels, subdivx, mygrid){};
+        : GridMask(nclevels, subdivx, mygrid) {};
 
     void apply(float* u, const unsigned short level, const unsigned short iloc,
         const bool /*first_application*/ = false) override

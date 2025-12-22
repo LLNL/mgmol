@@ -112,7 +112,7 @@ public:
 
     Vector3D closestGridPt(Vector3D coords) const;
 
-    ~Grid() {}
+    ~Grid() { }
 
     template <typename T>
     void getSinCosFunctions(std::vector<T>& sinx, std::vector<T>& siny,

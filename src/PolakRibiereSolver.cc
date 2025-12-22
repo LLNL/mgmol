@@ -160,7 +160,7 @@ bool PolakRibiereSolver<OrbitalsType>::checkWolfeConditions(
     // const double dk  =-1.*r_k_->dotProduct(*p_k_);
     const double dkm1 = -1.
                         * r_km1_->dotProduct(*p_k_,
-                              2); // inverse(S) already included in r_km1_
+                            2); // inverse(S) already included in r_km1_
 
     const bool wolfe0
         = (trial_step_energy <= eks_history_[0] + sigma_a_ * alpha_k * dkm1);

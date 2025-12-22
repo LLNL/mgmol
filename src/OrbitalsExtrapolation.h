@@ -22,7 +22,7 @@ template <class OrbitalsType>
 class OrbitalsExtrapolation
 {
 public:
-    OrbitalsExtrapolation() : orbitals_minus1_(nullptr) {}
+    OrbitalsExtrapolation() : orbitals_minus1_(nullptr) { }
 
     virtual ~OrbitalsExtrapolation();
 

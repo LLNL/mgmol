@@ -36,7 +36,7 @@ public:
         invdr_ = -1.;
     };
 
-    virtual ~RadialMeshFunction(){};
+    virtual ~RadialMeshFunction() {};
 
     RadialMeshFunction(const std::vector<double>& x)
     {

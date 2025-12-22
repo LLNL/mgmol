@@ -85,7 +85,7 @@ public:
     Ion(const Species& species, IonData data);
     Ion(const Ion& ion);
 
-    ~Ion(){};
+    ~Ion() {};
 
     void init(const double crds[3], const double velocity[3], const bool lock);
     void setup();

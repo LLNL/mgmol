@@ -137,7 +137,7 @@ void Hamiltonian<T>::applyLocal(const int ncolors, T& phi, T& hphi)
     {
         // This loop is not thread safe as GridFunc ghost values filling
         // MPI calls may conflicts (all use the same tag)
-        //#pragma omp parallel for
+        // #pragma omp parallel for
         for (int i = 0; i < ncolors; i++)
         {
             using memory_space_type   = typename T::memory_space_type;
