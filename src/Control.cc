@@ -269,7 +269,9 @@ void Control::print(std::ostream& os)
     if (precond_type_ == 10)
     {
         os << " Multigrid preconditioning for wave functions:" << std::endl;
-        os << " # of Multigrid levels   : " << mg_levels_ << std::endl;
+        os << " # of Multigrid levels     : " << mg_levels_ << std::endl;
+        os << " # of pre-smoothing steps  : " << mg_npresmoothing_ << std::endl;
+        os << " # of post-smoothing steps : " << mg_npostsmoothing_ << std::endl;
     }
     else
     {
@@ -334,7 +336,7 @@ void Control::sync(void)
     if (onpe0 && verbose > 0)
         (*MPIdata::sout) << "Control::sync()" << std::endl;
     // pack
-    const short size_short_buffer = 93;
+    const short size_short_buffer = 95;
     short* short_buffer           = new short[size_short_buffer];
     if (mype_ == 0)
     {
@@ -426,6 +428,8 @@ void Control::sync(void)
         short_buffer[90] = (short)static_cast<int>(poisson_lap_type_);
         short_buffer[91] = poisson_pc_data_;
         short_buffer[92] = precond_precision_;
+        short_buffer[93] = mg_npresmoothing_;
+        short_buffer[94] = mg_npostsmoothing_;
     }
     else
     {
@@ -642,6 +646,8 @@ void Control::sync(void)
     poisson_lap_type_  = static_cast<PoissonFDtype>(short_buffer[90]);
     poisson_pc_data_   = short_buffer[91];
     precond_precision_ = short_buffer[92];
+    mg_npresmoothing_  = short_buffer[93];
+    mg_npostsmoothing_ = short_buffer[94];
 
     numst    = int_buffer[0];
     nel_     = int_buffer[1];
@@ -1486,8 +1492,13 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         std::cout << "Outer solver type: " << str << std::endl;
         assert(it_algo_type_ >= 0);
 
-        mg_levels_ = vm["Quench.preconditioner_num_levels"].as<short>() - 1;
-        precond_precision_ = vm["Quench.preconditioner_precision"].as<short>();
+        // Preconditioner parameters
+        mg_levels_         = vm["Preconditioner.num_levels"].as<short>() - 1;
+        mg_npresmoothing_  = vm["Preconditioner.npresmoothing"].as<short>();
+        mg_npostsmoothing_ = vm["Preconditioner.npostsmoothing"].as<short>();
+        precond_precision_ = vm["Preconditioner.precision"].as<short>();
+	assert(precond_precision_==32 ||precond_precision_==64);
+
         precond_factor     = vm["Quench.step_length"].as<float>();
         if (precond_factor < 0.)
         {
