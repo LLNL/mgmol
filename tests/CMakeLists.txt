@@ -496,6 +496,13 @@ add_test(NAME DavidsonReplicated
          ${CMAKE_CURRENT_SOURCE_DIR}/DavidsonReplicated/davidson.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/Davidson/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+ add_test(NAME DavidsonMixing
+         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/DavidsonMixing/test.py
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+         ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
+         ${CMAKE_CURRENT_SOURCE_DIR}/DavidsonMixing/davidson.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/DavidsonMixing/sih4.xyz
+         ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME testSpinO2
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/SpinO2/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
