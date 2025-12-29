@@ -27,19 +27,6 @@ const double inv64 = 1. / 64.;
 namespace pb
 {
 
-Timer GridFuncInterface::trade_bc_tm_("GridFunc::trade_bc");
-Timer GridFuncInterface::restrict3D_tm_("GridFunc::restrict3D");
-Timer GridFuncInterface::extend3D_tm_("GridFunc::extend3D");
-Timer GridFuncInterface::prod_tm_("GridFunc::prod");
-Timer GridFuncInterface::gather_tm_("GridFunc::gather");
-Timer GridFuncInterface::scatter_tm_("GridFunc::scatter");
-Timer GridFuncInterface::all_gather_tm_("GridFunc::all_gather");
-Timer GridFuncInterface::finishExchangeNorthSouth_tm_(
-    "GridFunc::finishExNorthSouth");
-Timer GridFuncInterface::finishExchangeUpDown_tm_("GridFunc::finishExUpDown");
-Timer GridFuncInterface::finishExchangeEastWest_tm_(
-    "GridFunc::finishExEastWest");
-
 template <typename T>
 std::vector<T> GridFunc<T>::buf1_;
 template <typename T>
@@ -664,7 +651,7 @@ int GridFunc<T>::count_threshold(const T threshold)
         if (rc != MPI_SUCCESS)
         {
             std::cout << "MPI_Allreduce double sum failed!!!" << std::endl;
-            mype_env().globalExit();
+            mmpi.abort();
         }
         icount = sum;
     }
@@ -2732,16 +2719,9 @@ void GridFunc<T>::setBoundaryValues(
 }
 
 // dot product on the global grid (distributed)
-/* This is split into the double-type argument and float-type argument
- * below. This is necessary to ensure that the underlying MPdot routine
- * that is called returns the same result whether T=float and vv is double
- * or T=double and vv is float. Otherwise the GridFunc copy constructor
- * would use a copy of vv of the same type as "this" GridFunc object (i.e.
- * type T). This could lead to different results for float-double and
- * double-float combinations of this function.
- */
-template <typename T>
-double GridFunc<T>::gdot(const GridFunc<double>& vv) const
+template <typename ScalarType1>
+template <typename ScalarType2>
+double GridFunc<ScalarType1>::gdot(const GridFunc<ScalarType2>& vv) const
 {
     const int nghosts = ghost_pt();
 
@@ -2765,9 +2745,9 @@ double GridFunc<T>::gdot(const GridFunc<double>& vv) const
         initz++;
     }
 
-    const double* const vv1 = vv.uu();
-    const T* const vv2      = uu_;
-    double my_dot           = 0.;
+    const ScalarType2* const vv1 = vv.uu();
+    const ScalarType1* const vv2 = uu_;
+    double my_dot                = 0.;
     for (int ix = initx; ix < endx; ix += incx_)
     {
         for (int iy = inity; iy < endy; iy += incy_)
@@ -2787,63 +2767,7 @@ double GridFunc<T>::gdot(const GridFunc<double>& vv) const
         {
             std::cout << "MPI_Allreduce double sum failed in gdot!!!"
                       << std::endl;
-            mype_env().globalExit();
-        }
-        my_dot = sum;
-    }
-
-    return my_dot;
-}
-
-// dot product on the global grid (distributed)
-template <typename T>
-double GridFunc<T>::gdot(const GridFunc<float>& vv) const
-{
-    const int nghosts = ghost_pt();
-
-    int dimz = grid_.dim(2);
-
-    const int endx = (nghosts + dim_[0]) * incx_;
-    const int endy = (nghosts + dim_[1]) * incy_;
-
-    int initx = nghosts * incx_;
-    int inity = nghosts * incy_;
-    int initz = nghosts;
-
-    // remove "layers" belonging to BC
-    if (((bc_[0] != 1) || (vv.bc(0) != 1)) && mype_env().my_mpi(0) == 0)
-        initx += incx_;
-    if (((bc_[1] != 1) || (vv.bc(1) != 1)) && mype_env().my_mpi(1) == 0)
-        inity += incy_;
-    if (((bc_[2] != 1) || (vv.bc(2) != 1)) && mype_env().my_mpi(2) == 0)
-    {
-        dimz--;
-        initz++;
-    }
-
-    const float* const vv1 = vv.uu();
-    const T* const vv2     = uu_;
-    double my_dot          = 0.;
-    for (int ix = initx; ix < endx; ix += incx_)
-    {
-        for (int iy = inity; iy < endy; iy += incy_)
-        {
-            int iz = ix + iy + initz;
-            my_dot += LinearAlgebraUtils<MemorySpace::Host>::MPdot(
-                dimz, &vv1[iz], &vv2[iz]);
-        }
-    }
-
-    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    if (mype_env().n_mpi_tasks() > 1)
-    {
-        double sum = 0.;
-        int rc     = mmpi.allreduce(&my_dot, &sum, 1, MPI_SUM);
-        if (rc != MPI_SUCCESS)
-        {
-            std::cout << "MPI_Allreduce double sum failed in gdot!!!"
-                      << std::endl;
-            mype_env().globalExit();
+            mmpi.abort();
         }
         my_dot = sum;
     }
@@ -2867,13 +2791,13 @@ bool GridFunc<T>::def_const() const
     if ((!bc_[0] || !bc_[1] || !bc_[2])) tmp = 1;
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    if (mype_env().n_mpi_tasks() > 1)
+    if (mmpi.size() > 1)
     {
         int rc = mmpi.allreduce(&tmp, &sum, 1, MPI_SUM);
         if (rc != MPI_SUCCESS)
         {
             std::cout << "MPI_Allreduce double sum failed!!!" << std::endl;
-            mype_env().globalExit();
+            mmpi.abort();
         }
     }
 
@@ -2916,7 +2840,7 @@ double GridFunc<T>::get_average()
         if (rc != MPI_SUCCESS)
         {
             std::cout << "MPI_Allreduce double sum failed!!!" << std::endl;
-            mype_env().globalExit();
+            mmpi.abort();
         }
         sum = tmp / ((double)mype_env().n_mpi_tasks());
     }
@@ -3022,7 +2946,7 @@ double GridFunc<T>::integral() const
         if (rc != MPI_SUCCESS)
         {
             std::cout << "MPI_Allreduce double sum failed!!!" << std::endl;
-            mype_env().globalExit();
+            mmpi.abort();
         }
         integral = tmp;
     }
@@ -3219,7 +3143,7 @@ void GridFunc<T>::test_newgrid()
     if (rc != MPI_SUCCESS)
     {
         std::cout << "MPI_Allreduce double sum failed!!!" << std::endl;
-        mype_env().globalExit();
+        mmpi.abort();
     }
     my_dot = sum;
     s2     = sqrt(grid_.vel() * my_dot);
@@ -3378,7 +3302,7 @@ double GridFunc<T>::get_bias()
         if (rc != MPI_SUCCESS)
         {
             std::cout << "MPI_Bcast failed in get_bias()!!!" << std::endl;
-            mype_env().globalExit();
+            mmpi.abort();
         }
 
         for (unsigned int j = 0; j < grid_.dim(1); j++)
