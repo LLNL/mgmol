@@ -423,12 +423,12 @@ public:
 
 template <class MatrixType>
 Timer ProjectedMatrices<MatrixType>::init_gram_matrix_tm_(
-    "ProjectedMatrices<MatrixType>::initialize_Gram_Matrix");
+    "ProjectedMatrices::initialize_Gram_Matrix");
 template <class MatrixType>
 Timer ProjectedMatrices<MatrixType>::sygv_tm_("ProjectedMatrices::sygv");
 template <class MatrixType>
 Timer ProjectedMatrices<MatrixType>::compute_inverse_tm_(
-    "ProjectedMatrices<MatrixType>::computeInverse");
+    "ProjectedMatrices::computeInverse");
 template <class MatrixType>
 Timer ProjectedMatrices<MatrixType>::compute_invB_tm_(
     "ProjectedMatrices::computeInvB");
@@ -448,5 +448,5 @@ Timer ProjectedMatrices<MatrixType>::consolidate_H_tm_(
     "ProjectedMatrices::consolidate_sH");
 template <class MatrixType>
 Timer ProjectedMatrices<MatrixType>::compute_entropy_tm_(
-    "ProjectedMatrices<MatrixType>::compute_entropy");
+    "ProjectedMatrices::compute_entropy");
 #endif
