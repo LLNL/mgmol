@@ -503,34 +503,36 @@ public:
 
 template <typename ScalarType, typename MemorySpaceType>
 Timer GridFuncVector<ScalarType, MemorySpaceType>::trade_bc_tm_(
-    "GridFuncVector::trade_bc_" + std::to_string(sizeof(ScalarType)));
+    "GridFuncVector::trade_bc_" + std::to_string(sizeof(ScalarType) * 8));
 template <typename ScalarType, typename MemorySpaceType>
 Timer GridFuncVector<ScalarType, MemorySpaceType>::trade_bc_colors_tm_(
-    "GridFuncVector::trade_bc_colors");
+    "GridFuncVector::trade_bc_colors" + std::to_string(sizeof(ScalarType) * 8));
 template <typename ScalarType, typename MemorySpaceType>
 Timer GridFuncVector<ScalarType, MemorySpaceType>::prod_tm_(
-    "GridFuncVector::prod");
+    "GridFuncVector::prod" + std::to_string(sizeof(ScalarType) * 8));
 template <typename ScalarType, typename MemorySpaceType>
 Timer GridFuncVector<ScalarType, MemorySpaceType>::finishExchangeNorthSouth_tm_(
-    "GridFuncVector::finishExNorthSouth_" + std::to_string(sizeof(ScalarType)));
+    "GridFuncVector::finishExNorthSouth_"
+    + std::to_string(sizeof(ScalarType) * 8));
 template <typename ScalarType, typename MemorySpaceType>
 Timer GridFuncVector<ScalarType, MemorySpaceType>::finishExchangeUpDown_tm_(
-    "GridFuncVector::finishExUpDown_" + std::to_string(sizeof(ScalarType)));
+    "GridFuncVector::finishExUpDown_" + std::to_string(sizeof(ScalarType) * 8));
 template <typename ScalarType, typename MemorySpaceType>
 Timer GridFuncVector<ScalarType, MemorySpaceType>::finishExchangeEastWest_tm_(
-    "GridFuncVector::finishExEastWest_" + std::to_string(sizeof(ScalarType)));
+    "GridFuncVector::finishExEastWest_"
+    + std::to_string(sizeof(ScalarType) * 8));
 template <typename ScalarType, typename MemorySpaceType>
 Timer GridFuncVector<ScalarType, MemorySpaceType>::wait_north_south_tm_(
-    "GridFuncVector::waitNS_" + std::to_string(sizeof(ScalarType)));
+    "GridFuncVector::waitNS_" + std::to_string(sizeof(ScalarType) * 8));
 template <typename ScalarType, typename MemorySpaceType>
 Timer GridFuncVector<ScalarType, MemorySpaceType>::wait_up_down_tm_(
-    "GridFuncVector::waitUD_" + std::to_string(sizeof(ScalarType)));
+    "GridFuncVector::waitUD_" + std::to_string(sizeof(ScalarType) * 8));
 template <typename ScalarType, typename MemorySpaceType>
 Timer GridFuncVector<ScalarType, MemorySpaceType>::wait_east_west_tm_(
-    "GridFuncVector::waitEW_" + std::to_string(sizeof(ScalarType)));
+    "GridFuncVector::waitEW_" + std::to_string(sizeof(ScalarType) * 8));
 template <typename ScalarType, typename MemorySpaceType>
 Timer GridFuncVector<ScalarType, MemorySpaceType>::copy_tm_(
-    "GridFuncVector::copy_" + std::to_string(sizeof(ScalarType)));
+    "GridFuncVector::copy_" + std::to_string(sizeof(ScalarType) * 8));
 
 template <typename ScalarType, typename MemorySpaceType>
 Map2Masks* GridFuncVector<ScalarType, MemorySpaceType>::map2masks_(nullptr);

@@ -842,7 +842,8 @@ void MGmol<OrbitalsType>::printTimers()
                "====== "
             << std::endl;
     }
-    pb::GridFuncInterface::printTimers(os_);
+    pb::GridFunc<double>::printTimers(os_);
+    pb::GridFunc<float>::printTimers(os_);
     pb::GridFuncVector<double>::printTimers(os_);
     pb::GridFuncVector<float>::printTimers(os_);
     pb::printMGkernelTimers(os_);
