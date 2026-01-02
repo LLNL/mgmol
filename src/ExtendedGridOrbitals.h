@@ -408,4 +408,16 @@ public:
 #endif
 };
 
+template <typename ScalarType>
+int ExtendedGridOrbitals<ScalarType>::lda_ = 0;
+template <typename ScalarType>
+int ExtendedGridOrbitals<ScalarType>::numpt_ = 0;
+template <typename ScalarType>
+int ExtendedGridOrbitals<ScalarType>::data_wghosts_index_ = -1;
+template <typename ScalarType>
+int ExtendedGridOrbitals<ScalarType>::numst_ = -1;
+template <typename ScalarType>
+std::vector<std::vector<int>>
+    ExtendedGridOrbitals<ScalarType>::overlapping_gids_;
+
 #endif

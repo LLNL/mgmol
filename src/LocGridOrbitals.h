@@ -434,4 +434,14 @@ public:
     double getMaxR() const { return 2. * lrs_->max_radii(); }
 };
 
+template <typename ScalarType>
+short LocGridOrbitals<ScalarType>::subdivx_ = 0;
+template <typename ScalarType>
+int LocGridOrbitals<ScalarType>::lda_ = 0;
+template <typename ScalarType>
+int LocGridOrbitals<ScalarType>::numpt_ = 0;
+template <typename ScalarType>
+int LocGridOrbitals<ScalarType>::loc_numpt_ = 0;
+template <typename ScalarType>
+int LocGridOrbitals<ScalarType>::data_wghosts_index_ = -1;
 #endif

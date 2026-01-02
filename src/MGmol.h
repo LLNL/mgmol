@@ -173,7 +173,7 @@ public:
 
     ~MGmol() override;
 
-    void setup();
+    void setup() override;
 
     /* access functions */
     OrbitalsType* getOrbitals() { return current_orbitals_; }
@@ -191,7 +191,8 @@ public:
      * specified by tau (input)
      */
     double evaluateEnergyAndForces(const std::vector<double>& tau,
-        const std::vector<short>& atnumbers, std::vector<double>& forces);
+        const std::vector<short>& atnumbers,
+        std::vector<double>& forces) override;
 
     /*
      * Evaluate the energy and forces for an atomic configuration
@@ -200,7 +201,7 @@ public:
      */
     double evaluateEnergyAndForces(Orbitals* orbitals,
         const std::vector<double>& tau, const std::vector<short>& atnumbers,
-        std::vector<double>& forces);
+        std::vector<double>& forces) override;
 
     /*
      * Evaluate the energy and forces for an atomic configuration
@@ -209,14 +210,14 @@ public:
      */
     double evaluateDMandEnergyAndForces(Orbitals* orbitals,
         const std::vector<double>& tau, const std::vector<short>& atnumbers,
-        std::vector<double>& forces);
+        std::vector<double>& forces) override;
 
     /*
      * get internal atomic positions
      */
-    void getAtomicPositions(std::vector<double>& tau);
+    void getAtomicPositions(std::vector<double>& tau) override;
 
-    void getAtomicNumbers(std::vector<short>& an);
+    void getAtomicNumbers(std::vector<short>& an) override;
 
     void setupPotentials(Ions& ions);
     void initKBR();
@@ -309,7 +310,7 @@ public:
     void sebprintForces();
     int nions() { return ions_->getNumIons(); }
     double getTotalEnergy();
-    void cleanup();
+    void cleanup() override;
     void geomOptimSetup();
     void geomOptimQuench();
     void geomOptimComputeForces();
@@ -349,11 +350,11 @@ public:
     /*
      * simply dump current state
      */
-    void dumpRestart();
+    void dumpRestart() override;
 
     void loadRestartFile(const std::string filename);
 
-    std::shared_ptr<ProjectedMatricesInterface> getProjectedMatrices()
+    std::shared_ptr<ProjectedMatricesInterface> getProjectedMatrices() override
     {
         return proj_matrices_;
     }
