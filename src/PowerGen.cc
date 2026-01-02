@@ -8,13 +8,16 @@
 #include "PowerGen.h"
 
 #include "Control.h"
-#include "DistMatrix.h"
-#include "DistVector.h"
 #include "GramMatrix.h"
 #include "ReplicatedMatrix.h"
 #include "ReplicatedVector.h"
 #include "mputils.h"
 #include "random.h"
+
+#ifdef MGMOL_USE_SCALAPACK
+#include "DistMatrix.h"
+#include "DistVector.h"
+#endif
 
 /* Use the power method to compute the extents of the spectrum of the
  * generalized eigenproblem. In order to use a residual-based convergence
@@ -185,6 +188,8 @@ void PowerGen<MatrixType, VectorType>::computeGenEigenInterval(MatrixType& mat,
     compute_tm_.stop();
 }
 
+#ifdef MGMOL_USE_SCALAPACK
 template class PowerGen<dist_matrix::DistMatrix<DISTMATDTYPE>,
     dist_matrix::DistVector<DISTMATDTYPE>>;
+#endif
 template class PowerGen<ReplicatedMatrix, ReplicatedVector>;

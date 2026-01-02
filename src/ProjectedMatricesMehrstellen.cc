@@ -8,9 +8,12 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "ProjectedMatricesMehrstellen.h"
+#include "ReplicatedMatrix.h"
+
+#ifdef MGMOL_USE_SCALAPACK
 #include "DistMatrix.h"
 #include "DistMatrixTools.h"
-#include "ReplicatedMatrix.h"
+#endif
 
 template <class MatrixType>
 ProjectedMatricesMehrstellen<MatrixType>::ProjectedMatricesMehrstellen(
@@ -97,6 +100,8 @@ void ProjectedMatricesMehrstellen<MatrixType>::rotateAll(
     ProjectedMatrices<MatrixType>::dm_->rotate(rotation_matrix, flag_eigen);
 }
 
+#ifdef MGMOL_USE_SCALAPACK
 template class ProjectedMatricesMehrstellen<
     dist_matrix::DistMatrix<DISTMATDTYPE>>;
+#endif
 template class ProjectedMatricesMehrstellen<ReplicatedMatrix>;

@@ -6,11 +6,14 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "SP2.h"
-#include "DistMatrix.h"
 #include "MGmol_MPI.h"
 #include "MPIdata.h"
 #include "ReplicatedMatrix.h"
 #include "linear_algebra/blas3_c.h"
+
+#ifdef MGMOL_USE_SCALAPACK
+#include "DistMatrix.h"
+#endif
 
 Timer SP2::getdm_tm_("SP2::getDM");
 
@@ -214,6 +217,7 @@ void SP2::initializeLocalMat(
     reduceSumTrace();
 }
 
+#ifdef MGMOL_USE_SCALAPACK
 template <>
 void SP2::getDM(dist_matrix::DistMatrix<DISTMATDTYPE>& submatM, // output
     const dist_matrix::DistMatrix<DISTMATDTYPE>& invS)
@@ -230,6 +234,7 @@ void SP2::getDM(dist_matrix::DistMatrix<DISTMATDTYPE>& submatM, // output
 
     getdm_tm_.stop();
 }
+#endif
 
 template <>
 void SP2::getDM(ReplicatedMatrix& submatM, // output

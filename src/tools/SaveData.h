@@ -10,9 +10,11 @@
 #ifndef SAVEDATA_H_
 #define SAVEDATA_H_
 
+#ifdef SCALAPACK
 #include "BlacsContext.h"
 #include "DistMatrix.h"
 #include "MatricesBlacsContext.h"
+#endif
 
 #include <csignal>
 #include <fstream>
@@ -69,10 +71,10 @@ void saveData(std::vector<T> data, const char* filename)
     }
 }
 
+#ifdef SCALAPACK
 template <class T>
 void saveData(dist_matrix::DistMatrix<T> data, const char* filename)
 {
-
     dist_matrix::BlacsContext bc(MPI_COMM_WORLD, 1, 1);
 
     std::ofstream outputFile(filename);
@@ -81,9 +83,9 @@ void saveData(dist_matrix::DistMatrix<T> data, const char* filename)
 
     if (outputFile.is_open())
     {
-
         data.print(outputFile);
     }
 }
+#endif
 
 #endif /* SAVEDATA_H_ */

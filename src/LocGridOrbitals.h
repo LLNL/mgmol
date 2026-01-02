@@ -37,6 +37,10 @@ class MasksSet;
 class Masks4Orbitals;
 class ReplicatedMatrix;
 
+#ifndef MGMOL_USE_SCALAPACK
+typedef double DISTMATDTYPE;
+#endif
+
 template <typename ScalarType>
 class LocGridOrbitals : public Orbitals
 {
@@ -103,8 +107,10 @@ private:
         const DISTMATDTYPE* const matrix, LocGridOrbitals& product) const;
     void multiply_by_matrix(const int, const int, const DISTMATDTYPE* const,
         ScalarType*, const int) const;
+#ifdef MGMOL_USE_SCALAPACK
     void multiply_by_matrix(const dist_matrix::DistMatrix<DISTMATDTYPE>& matrix,
         ScalarType* const product, const int ldp);
+#endif
     void scal(const int i, const double alpha) { block_vector_.scal(i, alpha); }
     virtual void assign(const int i, const ScalarType* const v, const int n = 1)
     {
@@ -326,9 +332,11 @@ public:
 
     void computeGram(const int verbosity = 0);
     void computeGramAndInvS(const int verbosity = 0);
+#ifdef MGMOL_USE_SCALAPACK
     void computeGram(dist_matrix::DistMatrix<DISTMATDTYPE>& gram_mat);
     void computeGram(const LocGridOrbitals& orbitals,
         dist_matrix::DistMatrix<DISTMATDTYPE>& gram_mat);
+#endif
 
     ScalarType maxAbsValue() const { return block_vector_.maxAbsValue(); }
 
@@ -354,8 +362,10 @@ public:
     void getLocalOverlap(const LocGridOrbitals& orbitals,
         SquareLocalMatrices<MATDTYPE, MemorySpace::Host>&);
 
+#ifdef MGMOL_USE_SCALAPACK
     void addDotWithNcol2Matrix(
         LocGridOrbitals&, dist_matrix::DistMatrix<DISTMATDTYPE>&) const;
+#endif
     void addDotWithNcol2Matrix(LocGridOrbitals&, ReplicatedMatrix&) const
     {
         std::cerr << "LocGridOrbitals::addDotWithNcol2Matrix not implemented "
@@ -405,7 +415,9 @@ public:
         LocGridOrbitals& product) const;
     void multiply_by_matrix(
         const DISTMATDTYPE* const matrix, LocGridOrbitals& product) const;
+#ifdef MGMOL_USE_SCALAPACK
     void multiply_by_matrix(const dist_matrix::DistMatrix<DISTMATDTYPE>&);
+#endif
     void multiplyByMatrix2states(const int st1, const int st2,
         const double* mat, LocGridOrbitals& product);
 

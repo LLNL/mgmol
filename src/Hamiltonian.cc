@@ -171,6 +171,7 @@ void Hamiltonian<T>::applyDeltaPot(const T& phi, T& hphi)
 
 // add to hij the elements <phi1|Hloc|phi2>
 // corresponding to the local part of the Hamiltonian
+#ifdef MGMOL_USE_SCALAPACK
 template <>
 template <>
 void Hamiltonian<LocGridOrbitals<ORBDTYPE>>::addHlocal2matrix(
@@ -206,6 +207,7 @@ void Hamiltonian<ExtendedGridOrbitals<ORBDTYPE>>::addHlocal2matrix(
 
     // hij.print(std::cout, 0, 0, 5, 5);
 }
+#endif
 
 template <>
 template <>

@@ -17,11 +17,9 @@
 AOMMprojector::AOMMprojector(LocGridOrbitals<ORBDTYPE>& phi,
     const std::shared_ptr<LocalizationRegions>& lrs)
 {
-    Control& ct     = *(Control::instance());
-    Mesh* mymesh    = Mesh::instance();
-    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    Control& ct  = *(Control::instance());
+    Mesh* mymesh = Mesh::instance();
 
-    bool with_spin      = (mmpi.nspin() > 1);
     const short subdivx = mymesh->subdivx();
 
     // radius of kernel functions
@@ -43,10 +41,18 @@ AOMMprojector::AOMMprojector(LocGridOrbitals<ORBDTYPE>& phi,
         kernel_proj_matrices_
             = new ProjectedMatricesSparse(ct.numst, ct.occ_width, lrs);
     else
+    {
+#ifdef MGMOL_USE_SCALAPACK
+        MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+        bool with_spin  = (mmpi.nspin() > 1);
         kernel_proj_matrices_
             = new ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>(
                 ct.numst, with_spin, ct.occ_width);
-
+#else
+        std::cerr << "AOMMprojector requires ScaLapack" << std::endl;
+        abort();
+#endif
+    }
     // kernel functions use their own projected matrices and masks
     kernel_phi_ = new LocGridOrbitals<ORBDTYPE>(
         "AOMM", phi, kernel_proj_matrices_, kernelMasks_, nullptr);

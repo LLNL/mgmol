@@ -128,11 +128,13 @@ private:
         Rho<OrbitalsType>& rho, const bool write_extrapolated_wf,
         const short count);
 
+#ifdef MGMOL_USE_SCALAPACK
     void swapColumnsVect(dist_matrix::DistMatrix<DISTMATDTYPE>& evect,
         const dist_matrix::DistMatrix<DISTMATDTYPE>& hb2N,
         const std::vector<double>& eval,
         dist_matrix::DistMatrix<DISTMATDTYPE>& work);
     void wftransform(OrbitalsType*, OrbitalsType*, Ions&);
+#endif
     int readLRsFromInput(std::ifstream* tfile);
     void preWFextrapolation();
     void postWFextrapolation(OrbitalsType* orbitals);
@@ -233,6 +235,7 @@ public:
         const KBPsiMatrixSparse* const kbpsi_j, MatrixType& mat,
         const bool consolidate);
 
+#ifdef MGMOL_USE_SCALAPACK
     void computeHij_private(OrbitalsType& orbitals_i, OrbitalsType& orbitals_j,
         const Ions& ions, const KBPsiMatrixSparse* const kbpsi_i,
         const KBPsiMatrixSparse* const kbpsi_j,
@@ -245,6 +248,7 @@ public:
     void computeHij_private(OrbitalsType& orbitals_i, OrbitalsType& orbitals_j,
         const Ions& ions, const KBPsiMatrixSparse* const kbpsi_i,
         dist_matrix::DistMatrix<DISTMATDTYPE>& mat);
+#endif
 
     void computeHij(OrbitalsType& orbitals_i, OrbitalsType& orbitals_j,
         const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
@@ -281,8 +285,12 @@ public:
     void addResidualSpreadPenalty(OrbitalsType& phi, OrbitalsType& res);
     int get_NOLMO(NOLMOTransform& noot, OrbitalsType& orbitals,
         OrbitalsType& work_orbitals, const double dd, const bool apply_flag);
-    void adaptLR(const SpreadsAndCenters<OrbitalsType>* spreadf,
-        const OrbitalsTransform* ot);
+    void adaptLR(const SpreadsAndCenters<OrbitalsType>* spreadf
+#ifdef MGMOL_USE_SCALAPACK
+        ,
+        const OrbitalsTransform* ot
+#endif
+    );
     int update_masks();
     void move_orbitals(OrbitalsType** orbitals);
     int getMLWF2states(const int st1, const int st2, OrbitalsType& orbitals,

@@ -10,7 +10,10 @@
 #ifndef MGMOL_GRASSMANCG_H
 #define MGMOL_GRASSMANCG_H
 
+#ifdef MGMOL_USE_SCALAPACK
 #include "DistMatrix.h"
+#endif
+
 #include "GrassmanLineMinimization.h"
 #include "Hamiltonian.h"
 #include "Potentials.h"
@@ -36,10 +39,12 @@ public:
 
     void conjugate() override;
     double computeStepSize(T& orbitals) override;
+#ifdef MGMOL_USE_SCALAPACK
     void computeOrbitalsProdWithH(
         T& orbitals1, T& orbitals2, dist_matrix::DistMatrix<DISTMATDTYPE>& mat);
     void computeOrbitalsProdWithH(
         T& orbitals, dist_matrix::DistMatrix<DISTMATDTYPE>& mat);
+#endif
     void parallelTransportUpdate(const double lambda, T& orbitals) override;
 };
 #endif

@@ -11,7 +11,6 @@
 #include <cassert>
 
 #include "Control.h"
-#include "DistMatrix.h"
 #include "Energy.h"
 #include "GridFuncVector.h"
 #include "Hamiltonian.h"
@@ -26,7 +25,11 @@
 #include "ProjectedMatricesInterface.h"
 #include "ProjectedMatricesSparse.h"
 #include "ReplicatedMatrix.h"
+
+#ifdef MGMOL_USE_SCALAPACK
+#include "DistMatrix.h"
 #include "SquareSubMatrix2DistMatrix.h"
+#endif
 
 template <>
 template <>
@@ -125,6 +128,7 @@ void MGmol<LocGridOrbitals<ORBDTYPE>>::computeHij(
     }
 }
 
+#ifdef MGMOL_USE_SCALAPACK
 template <class OrbitalsType>
 void MGmol<OrbitalsType>::computeHij_private(OrbitalsType& orbitals_i,
     OrbitalsType& orbitals_j, const Ions& ions,
@@ -203,6 +207,7 @@ void MGmol<OrbitalsType>::computeHij_private(OrbitalsType& orbitals_i,
     // add local Hamiltonian part to phi^T*H*phi
     hamiltonian_->addHlocal2matrix(orbitals_i, orbitals_j, hij, false);
 }
+#endif
 
 template <class OrbitalsType>
 void MGmol<OrbitalsType>::computeHij(OrbitalsType& orbitals_i,
