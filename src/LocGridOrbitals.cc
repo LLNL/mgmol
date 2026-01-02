@@ -50,18 +50,6 @@ DotProductManager<LocGridOrbitals<ScalarType>>*
     = nullptr;
 
 template <typename ScalarType>
-short LocGridOrbitals<ScalarType>::subdivx_ = 0;
-template <typename ScalarType>
-int LocGridOrbitals<ScalarType>::lda_ = 0;
-template <typename ScalarType>
-int LocGridOrbitals<ScalarType>::numpt_ = 0;
-template <typename ScalarType>
-int LocGridOrbitals<ScalarType>::loc_numpt_ = 0;
-
-template <typename ScalarType>
-int LocGridOrbitals<ScalarType>::data_wghosts_index_ = -1;
-
-template <typename ScalarType>
 Timer LocGridOrbitals<ScalarType>::get_dm_tm_(
     "LocGridOrbitals" + std::to_string(8 * sizeof(ScalarType)) + "::get_dm");
 template <typename ScalarType>

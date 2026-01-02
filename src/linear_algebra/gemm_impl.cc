@@ -244,8 +244,3 @@ template void gemm_impl<float, float, double>(const char transa,
     const double alpha, const float* const a, const int lda,
     const float* const b, const int ldb, const double beta, double* const c,
     const int ldc);
-template void gemm_impl<float, float, float>(const char transa,
-    const char transb, const int m, const int n, const int k,
-    const double alpha, const float* const a, const int lda,
-    const float* const b, const int ldb, const double beta, float* const c,
-    const int ldc);

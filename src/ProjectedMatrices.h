@@ -315,9 +315,9 @@ public:
     double computeEntropyWithCheb(const double kbt);
     double checkCond(const double tol, const bool flag = true) override;
     int writeDM(HDFrestart& h5f_file) override;
-    int writeSavedDM(HDFrestart& h5f_file);
+    int writeSavedDM(HDFrestart& h5f_file) override;
     int readDM(HDFrestart& h5f_file) override;
-    int readWFDM(HDFrestart& h5f_file);
+    int readWFDM(HDFrestart& h5f_file) override;
     void printEigenvalues(std::ostream& os) const;
     void updateDM() override;
     void updateDMwithEigenstates();
