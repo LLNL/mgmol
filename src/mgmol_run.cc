@@ -14,7 +14,7 @@
 #include "Mesh.h"
 #include "PackedCommunicationBuffer.h"
 #include "ReplicatedWorkSpace.h"
-#include "SparseDistMatrix.h"
+// #include "SparseDistMatrix.h"
 #include "tools.h"
 
 #include <cassert>
@@ -165,8 +165,10 @@ void mgmol_finalize()
 
     if (!ct.short_sighted)
     {
+#ifdef MGMOL_USE_SCALAPACK
         // need to destroy any MPI based object befor calling MPI_Finalize
         MatricesBlacsContext::instance().clear();
+#endif
     }
 
     // release memory for static arrays

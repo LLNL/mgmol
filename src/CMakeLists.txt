@@ -1,5 +1,4 @@
 
-add_subdirectory(DistMatrix)
 add_subdirectory(linear_algebra)
 add_subdirectory(local_matrices)
 add_subdirectory(numerical_kernels)
@@ -7,7 +6,11 @@ add_subdirectory(pb)
 add_subdirectory(radial)
 add_subdirectory(sparse_linear_algebra)
 add_subdirectory(tools)
+if(${MGMOL_WITH_SCALAPACK})
+  add_subdirectory(DistMatrix)
+endif(${MGMOL_WITH_SCALAPACK})
 
+if(${MGMOL_WITH_SCALAPACK})
 set(link_libs mgmol_distmatrix 
    mgmol_linear_algebra 
    mgmol_local_matrices 
@@ -17,6 +20,17 @@ set(link_libs mgmol_distmatrix
    mgmol_sparse_linear_algebra 
    mgmol_tools
    )
+else(${MGMOL_WITH_SCALAPACK})
+set(link_libs
+   mgmol_linear_algebra
+   mgmol_local_matrices
+   mgmol_numerical_kernels
+   mgmol_pb
+   mgmol_radial
+   mgmol_sparse_linear_algebra
+   mgmol_tools
+   )
+endif(${MGMOL_WITH_SCALAPACK})
 
 set(SOURCES
  mgmol_run.cc
@@ -31,10 +45,6 @@ set(SOURCES
  DielectricControl.cc
  ReplicatedMatrix.cc
  ReplicatedVector.cc
- SquareSubMatrix2DistMatrix.cc
- LocalMatrices2DistMatrix.cc
- DistMatrix2SquareLocalMatrices.cc
- GrassmanCGFactory.cc
  DMStrategyFactory.cc
  manage_memory.cc
  SubCell.cc
@@ -71,9 +81,6 @@ set(SOURCES
  MGmol.cc 
  MGmol_NEB.cc 
  ABPG.cc 
- GrassmanLineMinimization.cc 
- GrassmanCG.cc 
- GrassmanCGSparse.cc 
  LBFGS.cc 
  IonicStepper.cc 
  Energy.cc 
@@ -112,8 +119,6 @@ set(SOURCES
  MultipoleExpansion.cc 
  SpreadsAndCenters.cc 
  Preconditioning.cc 
- OrbitalsTransform.cc 
- NOLMOTransform.cc 
  LocalizationRegions.cc 
  Hartree.cc 
  ShiftedHartree.cc 
@@ -132,7 +137,6 @@ set(SOURCES
  lbfgsrlx.cc 
  OrthoAndersonMix.cc
  AndersonMix.cc 
- MLWFTransform.cc 
  Ion.cc 
  GridMask.cc 
  GridMaskMult.cc 
@@ -142,7 +146,6 @@ set(SOURCES
  md.cc 
  get_vnlpsi.cc 
  quench.cc 
- mlwf.cc 
  readInput.cc 
  Forces.cc 
  computeHij.cc 
@@ -161,9 +164,26 @@ set(SOURCES
  magma_singleton.cc
  ChebyshevApproximation.cc
  ChebyshevApproximationInterface.cc
+ mlwf.cc
 )
 
-add_library(mgmol_src ${SOURCES})
+if(${MGMOL_WITH_SCALAPACK})
+  set(SCALAPACK_SOURCES
+    SquareSubMatrix2DistMatrix.cc
+    LocalMatrices2DistMatrix.cc
+    DistMatrix2SquareLocalMatrices.cc
+    GrassmanCGFactory.cc
+    GrassmanLineMinimization.cc
+    GrassmanCG.cc
+    GrassmanCGSparse.cc
+    MLWFTransform.cc
+    NOLMOTransform.cc
+    OrbitalsTransform.cc
+  )
+  add_library(mgmol_src ${SOURCES} ${SCALAPACK_SOURCES})
+else()
+  add_library(mgmol_src ${SOURCES})
+endif(${MGMOL_WITH_SCALAPACK})
 
 target_include_directories(mgmol_src PRIVATE ${HDF5_INCLUDE_DIRS})
 target_include_directories(mgmol_src PRIVATE ${Boost_INCLUDE_DIRS})

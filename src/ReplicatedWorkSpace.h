@@ -10,9 +10,12 @@
 #ifndef MGMOL_REPLICATED_WORKSPACE_H
 #define MGMOL_REPLICATED_WORKSPACE_H
 
-#include "DistMatrix.h"
 #include "ReplicatedMatrix.h"
 #include "Timer.h"
+
+#ifdef MGMOL_USE_SCALAPACK
+#include "DistMatrix.h"
+#endif
 
 #include <cassert>
 
@@ -73,7 +76,9 @@ public:
 
     void setUpperTriangularSquareMatrixToZero();
 
+#ifdef MGMOL_USE_SCALAPACK
     void initSquareMatrix(const dist_matrix::DistMatrix<ScalarType>& tmat);
+#endif
     void initSquareMatrix(const ReplicatedMatrix& mat);
 
     int getDim() { return ndim_; }

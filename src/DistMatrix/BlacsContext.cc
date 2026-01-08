@@ -13,11 +13,11 @@
 #include <cmath>
 #include <iostream>
 
-#ifdef SCALAPACK
+#ifdef MGMOL_USE_SCALAPACK
 #include "blacs.h"
 #endif
 
-#ifndef SCALAPACK
+#ifndef MGMOL_USE_SCALAPACK
 
 void Cblacs_pinfo(int* mypnum, int* nprocs)
 {

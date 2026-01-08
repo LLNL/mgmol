@@ -9,7 +9,7 @@
 #include "DensityMatrix.h"
 #include "GramMatrix.h"
 
-#ifndef HAVE_MAGMA
+#ifdef MGMOL_USE_SCALAPACK
 #include "BlacsContext.h"
 #include "DistMatrix.h"
 #else
@@ -23,10 +23,10 @@
 TEST_CASE(
     "Check functionalities of class DensityMatrix", "[functions_DensityMatrix")
 {
-#ifdef HAVE_MAGMA
-    typedef ReplicatedMatrix MatrixType;
-#else
+#ifdef MGMOL_USE_SCALAPACK
     typedef dist_matrix::DistMatrix<double> MatrixType;
+#else
+    typedef ReplicatedMatrix MatrixType;
 #endif
     int myrank;
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
@@ -36,7 +36,7 @@ TEST_CASE(
 
     MGmol_MPI::setup(MPI_COMM_WORLD, std::cout);
 
-#ifndef HAVE_MAGMA
+#ifdef MGMOL_USE_SCALAPACK
     INFO("This example to set up to use only 4 processes");
     REQUIRE(npes == 4);
 

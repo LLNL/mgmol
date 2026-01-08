@@ -10,7 +10,6 @@
 #include "MVPSolver.h"
 
 #include "Control.h"
-#include "DistMatrix.h"
 #include "Electrostatic.h"
 #include "Energy.h"
 #include "Ions.h"
@@ -22,6 +21,10 @@
 #include "ReplicatedMatrix.h"
 #include "Rho.h"
 #include "tools.h"
+
+#ifdef MGMOL_USE_SCALAPACK
+#include "DistMatrix.h"
+#endif
 
 #include <iomanip>
 
@@ -411,10 +414,11 @@ void MVPSolver<OrbitalsType, MatrixType>::printTimers(std::ostream& os)
     target_tm_.print(os);
 }
 
+#ifdef MGMOL_USE_SCALAPACK
 template class MVPSolver<LocGridOrbitals<ORBDTYPE>,
     dist_matrix::DistMatrix<DISTMATDTYPE>>;
-template class MVPSolver<LocGridOrbitals<ORBDTYPE>, ReplicatedMatrix>;
-
 template class MVPSolver<ExtendedGridOrbitals<ORBDTYPE>,
     dist_matrix::DistMatrix<DISTMATDTYPE>>;
+#endif
+template class MVPSolver<LocGridOrbitals<ORBDTYPE>, ReplicatedMatrix>;
 template class MVPSolver<ExtendedGridOrbitals<ORBDTYPE>, ReplicatedMatrix>;

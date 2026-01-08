@@ -11,10 +11,7 @@
 
 #include "Control.h"
 #include "DensityMatrix.h"
-#include "DistMatrix2SquareLocalMatrices.h"
-#include "DistMatrixTools.h"
 #include "HDFrestart.h"
-#include "LocalMatrices2DistMatrix.h"
 #include "LocalMatrices2ReplicatedMatrix.h"
 #include "MGmol_MPI.h"
 #include "Orbitals.h"
@@ -25,10 +22,19 @@
 #include "ReplicatedVector.h"
 #include "ReplicatedWorkSpace.h"
 #include "SP2.h"
-#include "SparseDistMatrix.h"
-#include "SquareSubMatrix2DistMatrix.h"
 #include "fermi.h"
 #include "hdf_tools.h"
+
+#ifdef MGMOL_USE_SCALAPACK
+#include "DistMatrix2SquareLocalMatrices.h"
+#include "DistMatrixTools.h"
+#include "DistVector.h"
+#include "LocalMatrices2DistMatrix.h"
+#include "SparseDistMatrix.h"
+#include "SquareSubMatrix2DistMatrix.h"
+#else
+typedef double DISTMATDTYPE;
+#endif
 
 #include <fstream>
 #include <iomanip>
@@ -45,7 +51,9 @@ template <class MatrixType>
 DensityMatrix<MatrixType>* ProjectedMatrices<MatrixType>::dm_4dot_product_
     = nullptr;
 
+#ifdef MGMOL_USE_SCALAPACK
 static int sparse_distmatrix_nb_partitions = 128;
+#endif
 
 template <>
 std::string ProjectedMatrices<ReplicatedMatrix>::getMatrixType()
@@ -53,12 +61,15 @@ std::string ProjectedMatrices<ReplicatedMatrix>::getMatrixType()
     return "ReplicatedMatrix";
 }
 
+#ifdef MGMOL_USE_SCALAPACK
 template <>
 std::string ProjectedMatrices<dist_matrix::DistMatrix<double>>::getMatrixType()
 {
     return "DistMatrix<double>";
 }
+#endif
 
+#ifdef MGMOL_USE_SCALAPACK
 //
 // conversion functions from one matrix format into another
 //
@@ -81,6 +92,7 @@ void convert_matrix(const dist_matrix::DistMatrix<double>& src,
 
     dst.assign(tmp);
 }
+#endif
 #endif
 
 #ifndef HAVE_MAGMA
@@ -146,6 +158,7 @@ ProjectedMatrices<MatrixType>::~ProjectedMatrices()
     n_instances_--;
 }
 
+#ifdef MGMOL_USE_SCALAPACK
 template <>
 void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::convert(
     const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& src,
@@ -154,6 +167,7 @@ void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::convert(
     LocalMatrices2DistMatrix* sl2dm = LocalMatrices2DistMatrix::instance();
     sl2dm->accumulate(src, dst);
 }
+#endif
 
 template <>
 void ProjectedMatrices<ReplicatedMatrix>::convert(
@@ -166,6 +180,7 @@ void ProjectedMatrices<ReplicatedMatrix>::convert(
     sl2rm->accumulate(src, dst);
 }
 
+#ifdef MGMOL_USE_SCALAPACK
 template <>
 void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::
     setupGlobalIndexes(const std::vector<std::vector<int>>& global_indexes)
@@ -177,6 +192,7 @@ void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::
         comm, global_indexes, gm_->getMatrix());
     LocalMatrices2DistMatrix::setup(comm, global_indexes);
 }
+#endif
 
 template <>
 void ProjectedMatrices<ReplicatedMatrix>::setupGlobalIndexes(
@@ -1188,6 +1204,7 @@ ProjectedMatrices<MatrixType>::computeChemicalPotentialAndDMwithChebyshev(
 /* Use the power method to compute the extents of the spectrum of the
  * generalized eigenproblem.
  */
+#ifdef MGMOL_USE_SCALAPACK
 template <>
 void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::
     computeGenEigenInterval(
@@ -1201,6 +1218,7 @@ void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::
 
     power.computeGenEigenInterval(mat, *gm_, interval, maxits, pad);
 }
+#endif
 
 template <>
 void ProjectedMatrices<ReplicatedMatrix>::computeGenEigenInterval(
@@ -1213,6 +1231,7 @@ void ProjectedMatrices<ReplicatedMatrix>::computeGenEigenInterval(
     power.computeGenEigenInterval(mat, *gm_, interval, maxits, pad);
 }
 
+#ifdef MGMOL_USE_SCALAPACK
 template <>
 void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::consolidateH()
 {
@@ -1234,6 +1253,7 @@ void ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>::consolidateH()
 
     consolidate_H_tm_.stop();
 }
+#endif
 
 template <>
 void ProjectedMatrices<ReplicatedMatrix>::consolidateH()
@@ -1256,6 +1276,7 @@ void ProjectedMatrices<MatrixType>::updateSubMatX(const MatrixType& dm)
     convert_matrix(dm, *localX_);
 }
 
+#ifdef MGMOL_USE_SCALAPACK
 template <>
 SquareLocalMatrices<double, MemorySpace::Host>
 ProjectedMatrices<dist_matrix::DistMatrix<double>>::getReplicatedDM()
@@ -1266,6 +1287,7 @@ ProjectedMatrices<dist_matrix::DistMatrix<double>>::getReplicatedDM()
 
     return sldm;
 }
+#endif
 
 template <>
 SquareLocalMatrices<double, MemorySpace::Host>
@@ -1278,5 +1300,7 @@ ProjectedMatrices<ReplicatedMatrix>::getReplicatedDM()
     return sldm;
 }
 
+#ifdef MGMOL_USE_SCALAPACK
 template class ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>;
+#endif
 template class ProjectedMatrices<ReplicatedMatrix>;

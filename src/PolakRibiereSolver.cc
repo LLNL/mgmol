@@ -499,6 +499,7 @@ int PolakRibiereSolver<OrbitalsType>::solve(OrbitalsType& orbitals,
             orbitals.computeGramAndInvS();
         }
 
+#ifdef MGMOL_USE_SCALAPACK
         // rotate pairs if smallest eigenvalue of overlap matrix below threshold
         if (ct.getThresholdEigenvalueGramQuench() > 0. && wolfe)
         {
@@ -517,6 +518,7 @@ int PolakRibiereSolver<OrbitalsType>::solve(OrbitalsType& orbitals,
                         << std::endl;
             }
         }
+#endif
 
         // rebuild dm with new overlap matrix
         dm_strategy_->dressDM();

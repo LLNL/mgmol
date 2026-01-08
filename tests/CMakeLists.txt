@@ -8,6 +8,7 @@ endif()
 add_executable(testMPI
                ${CMAKE_SOURCE_DIR}/tests/testMPI.cc
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
+if(${MGMOL_WITH_SCALAPACK})
 add_executable(testBlacsContext
                ${CMAKE_SOURCE_DIR}/tests/testBlacsContext.cc
                ${CMAKE_SOURCE_DIR}/src/DistMatrix/BlacsContext.cc
@@ -114,6 +115,7 @@ add_executable(testPowerDistMatrix
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
                ${CMAKE_SOURCE_DIR}/src/tools/random.cc
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
+endif(${MGMOL_WITH_SCALAPACK})
 add_executable(testDirectionalReduce
                ${CMAKE_SOURCE_DIR}/tests/testDirectionalReduce.cc
                ${CMAKE_SOURCE_DIR}/src/sparse_linear_algebra/DirectionalReduce.cc
@@ -237,6 +239,7 @@ add_executable(testMGkernels
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 add_executable(testIons
                ${CMAKE_SOURCE_DIR}/tests/testIons.cc)
+if(${MGMOL_WITH_SCALAPACK})
 add_executable(testGramMatrix
                ${CMAKE_SOURCE_DIR}/tests/testGramMatrix.cc
                ${CMAKE_SOURCE_DIR}/src/GramMatrix.cc
@@ -282,6 +285,7 @@ add_executable(testDensityMatrix
                ${CMAKE_SOURCE_DIR}/src/ReplicatedWorkSpace.cc
                ${CMAKE_SOURCE_DIR}/src/hdf_tools.cc
                ${CMAKE_SOURCE_DIR}/tests/ut_magma_main.cc)
+endif(${MGMOL_WITH_SCALAPACK})
 add_executable(testRhoVhRestart
                ${CMAKE_SOURCE_DIR}/tests/RhoVhRestart/testRhoVhRestart.cc)
 add_executable(testEnergyAndForces
@@ -326,6 +330,7 @@ endif()
 add_test(NAME testMPI
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testMPI)
+if(${MGMOL_WITH_SCALAPACK})
 add_test(NAME testBlacsContext
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testBlacsContext)
@@ -344,11 +349,12 @@ add_test(NAME testConditionDistMatrix
 add_test(NAME testConditionDistMatrixPower
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testConditionDistMatrixPower)
-add_test(NAME testPower
-         COMMAND ${CMAKE_CURRENT_BINARY_DIR}/testPower)
 add_test(NAME testPowerDistMatrix
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testPowerDistMatrix)
+add_test(NAME testPower
+         COMMAND ${CMAKE_CURRENT_BINARY_DIR}/testPower)
+endif(${MGMOL_WITH_SCALAPACK})
 add_test(NAME testDirectionalReduce
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testDirectionalReduce)
@@ -378,12 +384,14 @@ add_test(NAME testIons
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testIons
                  ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+if(${MGMOL_WITH_SCALAPACK})
 add_test(NAME testGramMatrix
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testGramMatrix)
 add_test(NAME testDensityMatrix
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testDensityMatrix)
+endif(${MGMOL_WITH_SCALAPACK})
 add_test(NAME testEnergyAndForces
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/EnergyAndForces/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
@@ -517,6 +525,7 @@ add_test(NAME testSpinO2LDA
          ${CMAKE_CURRENT_SOURCE_DIR}/SpinO2LDA/mgmol.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/SpinO2LDA/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+if(${MGMOL_WITH_SCALAPACK})
 add_test(NAME testMVP
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/MVP/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
@@ -524,6 +533,7 @@ add_test(NAME testMVP
          ${CMAKE_CURRENT_SOURCE_DIR}/MVP/mvp.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/MVP/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+endif(${MGMOL_WITH_SCALAPACK})
 add_test(NAME testMVPReplicated
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/MVP/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
@@ -621,6 +631,7 @@ add_test(NAME testFIRE
          ${CMAKE_CURRENT_SOURCE_DIR}/FIRE/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/FIRE/lrs.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+if(${MGMOL_WITH_SCALAPACK})
 add_test(NAME ChebyshevMVP
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Chebyshev/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
@@ -629,6 +640,7 @@ add_test(NAME ChebyshevMVP
          ${CMAKE_CURRENT_SOURCE_DIR}/Chebyshev/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 
+endif(${MGMOL_WITH_SCALAPACK})
 if(NOT ${MGMOL_WITH_MAGMA})
   add_test(NAME testShortSighted
            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ShortSighted/test.py
@@ -649,6 +661,7 @@ endif()
 target_include_directories(testAndersonMix PRIVATE
                            ${CMAKE_SOURCE_DIR}/tests/Anderson
                            ${HDF5_INCLUDE_DIRS})
+if(${MGMOL_WITH_SCALAPACK})
 target_include_directories(testDistVector PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories(testReplicated2DistMatrix PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories(testDistMatrix PRIVATE ${Boost_INCLUDE_DIRS})
@@ -658,13 +671,17 @@ target_include_directories(testPower PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories(testPowerDistMatrix PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories(testDensityMatrix PRIVATE ${Boost_INCLUDE_DIRS} ${HDF5_INCLUDE_DIRS})
 target_include_directories(testGramMatrix PRIVATE ${Boost_INCLUDE_DIRS})
+
+target_link_libraries(testBlacsContext PRIVATE ${SCALAPACK_LIBRARIES}
+  ${BLAS_LIBRARIES} MPI::MPI_CXX)
+target_link_libraries(testDensityMatrix PRIVATE ${HDF5_LIBRARIES})
+endif(${MGMOL_WITH_SCALAPACK})
+
 target_include_directories(testAndersonMix PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories(testIons PRIVATE ${Boost_INCLUDE_DIRS} ${HDF5_INCLUDE_DIRS})
 target_include_directories(testRhoVhRestart PRIVATE ${Boost_INCLUDE_DIRS})
 
 target_link_libraries(testMPI PRIVATE MPI::MPI_CXX)
-target_link_libraries(testBlacsContext PRIVATE ${SCALAPACK_LIBRARIES}
-  ${BLAS_LIBRARIES} MPI::MPI_CXX)
 target_link_libraries(testSuperSampling PRIVATE MPI::MPI_CXX)
 target_link_libraries(testDirectionalReduce PRIVATE MPI::MPI_CXX)
 target_link_libraries(testEnergyAndForces PRIVATE mgmol_src)
@@ -672,7 +689,6 @@ target_link_libraries(testWFEnergyAndForces PRIVATE mgmol_src)
 target_link_libraries(testDMandEnergyAndForces PRIVATE mgmol_src)
 target_link_libraries(testRestartEnergyAndForces PRIVATE mgmol_src)
 target_link_libraries(testIons PRIVATE mgmol_src)
-target_link_libraries(testDensityMatrix PRIVATE ${HDF5_LIBRARIES})
 target_link_libraries(testRhoVhRestart mgmol_src)
 
 if(${MAGMA_FOUND})
@@ -720,23 +736,29 @@ if(${MAGMA_FOUND})
       MPI::MPI_CXX OpenMP::OpenMP_CXX PkgConfig::MAGMA)
   endif()
 else()
-  target_link_libraries(testDistVector PRIVATE ${SCALAPACK_LIBRARIES}
-    ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} MPI::MPI_CXX OpenMP::OpenMP_CXX)
-  target_link_libraries(testReplicated2DistMatrix PRIVATE ${SCALAPACK_LIBRARIES}
-    ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} MPI::MPI_CXX OpenMP::OpenMP_CXX)
-  target_link_libraries(testDistMatrix PRIVATE ${SCALAPACK_LIBRARIES}
-    ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} MPI::MPI_CXX OpenMP::OpenMP_CXX)
-  target_link_libraries(testConditionDistMatrix PRIVATE ${SCALAPACK_LIBRARIES}
-    ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} MPI::MPI_CXX OpenMP::OpenMP_CXX)
-  target_link_libraries(testConditionDistMatrixPower PRIVATE
-    ${SCALAPACK_LIBRARIES} ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES}
-    MPI::MPI_CXX OpenMP::OpenMP_CXX)
-  target_link_libraries(testPower PRIVATE ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES}
-    ${SCALAPACK_LIBRARIES}
-    MPI::MPI_CXX OpenMP::OpenMP_CXX)
-  target_link_libraries(testPowerDistMatrix PRIVATE ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES}
-    ${SCALAPACK_LIBRARIES} MPI::MPI_CXX
-    OpenMP::OpenMP_CXX)
+  if(${MGMOL_WITH_SCALAPACK})
+    target_link_libraries(testDistVector PRIVATE ${SCALAPACK_LIBRARIES}
+      ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} MPI::MPI_CXX OpenMP::OpenMP_CXX)
+    target_link_libraries(testReplicated2DistMatrix PRIVATE ${SCALAPACK_LIBRARIES}
+      ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} MPI::MPI_CXX OpenMP::OpenMP_CXX)
+    target_link_libraries(testDistMatrix PRIVATE ${SCALAPACK_LIBRARIES}
+      ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} MPI::MPI_CXX OpenMP::OpenMP_CXX)
+    target_link_libraries(testConditionDistMatrix PRIVATE ${SCALAPACK_LIBRARIES}
+      ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} MPI::MPI_CXX OpenMP::OpenMP_CXX)
+    target_link_libraries(testConditionDistMatrixPower PRIVATE
+      ${SCALAPACK_LIBRARIES} ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES}
+      MPI::MPI_CXX OpenMP::OpenMP_CXX)
+    target_link_libraries(testPowerDistMatrix PRIVATE ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES}
+      ${SCALAPACK_LIBRARIES} MPI::MPI_CXX
+      OpenMP::OpenMP_CXX)
+    target_link_libraries(testPower PRIVATE ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES}
+      ${SCALAPACK_LIBRARIES}
+      MPI::MPI_CXX OpenMP::OpenMP_CXX)
+    target_link_libraries(testGramMatrix PRIVATE ${SCALAPACK_LIBRARIES}
+      ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} MPI::MPI_CXX OpenMP::OpenMP_CXX)
+    target_link_libraries(testDensityMatrix PRIVATE ${SCALAPACK_LIBRARIES}
+      ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} MPI::MPI_CXX OpenMP::OpenMP_CXX)
+  endif(${MGMOL_WITH_SCALAPACK})
   target_link_libraries(testAndersonMix PRIVATE ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} 
     MPI::MPI_CXX OpenMP::OpenMP_CXX)
   target_link_libraries(testVariableSizeMatrix PRIVATE ${BLAS_LIBRARIES} 
@@ -751,10 +773,6 @@ else()
     MPI::MPI_CXX OpenMP::OpenMP_CXX)
   target_link_libraries(testMGkernels PRIVATE ${BLAS_LIBRARIES}
     MPI::MPI_CXX OpenMP::OpenMP_CXX)
-  target_link_libraries(testGramMatrix PRIVATE ${SCALAPACK_LIBRARIES}
-    ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} MPI::MPI_CXX OpenMP::OpenMP_CXX)
-  target_link_libraries(testDensityMatrix PRIVATE ${SCALAPACK_LIBRARIES}
-    ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} MPI::MPI_CXX OpenMP::OpenMP_CXX)
 endif()
 
 set_tests_properties(testSiH4 PROPERTIES REQUIRED_FILES

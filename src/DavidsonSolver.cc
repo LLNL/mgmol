@@ -859,6 +859,8 @@ void DavidsonSolver<OrbitalsType, MatrixType>::printTimers(std::ostream& os)
     target_tm_.print(os);
 }
 
+#ifdef MGMOL_USE_SCALAPACK
 template class DavidsonSolver<ExtendedGridOrbitals<ORBDTYPE>,
     dist_matrix::DistMatrix<DISTMATDTYPE>>;
+#endif
 template class DavidsonSolver<ExtendedGridOrbitals<ORBDTYPE>, ReplicatedMatrix>;

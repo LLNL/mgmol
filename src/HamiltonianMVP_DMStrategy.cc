@@ -9,7 +9,6 @@
 
 #include "HamiltonianMVP_DMStrategy.h"
 #include "Control.h"
-#include "DistMatrix.h"
 #include "HamiltonianMVPSolver.h"
 #include "Ions.h"
 #include "LocGridOrbitals.h"
@@ -17,6 +16,10 @@
 #include "ProjectedMatrices.h"
 #include "ProjectedMatricesSparse.h"
 #include "ReplicatedMatrix.h"
+
+#ifdef MGMOL_USE_SCALAPACK
+#include "DistMatrix.h"
+#endif
 
 template <class MatrixType, class ProjMatrixType, class OrbitalsType>
 HamiltonianMVP_DMStrategy<MatrixType, ProjMatrixType,
@@ -98,14 +101,15 @@ void HamiltonianMVP_DMStrategy<MatrixType, ProjMatrixType,
     solver_->reset();
 }
 
+#ifdef MGMOL_USE_SCALAPACK
 template class HamiltonianMVP_DMStrategy<dist_matrix::DistMatrix<DISTMATDTYPE>,
     ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>,
     LocGridOrbitals<ORBDTYPE>>;
-template class HamiltonianMVP_DMStrategy<VariableSizeMatrix<sparserow>,
-    ProjectedMatricesSparse, LocGridOrbitals<ORBDTYPE>>;
-
 template class HamiltonianMVP_DMStrategy<dist_matrix::DistMatrix<DISTMATDTYPE>,
     ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>,
     ExtendedGridOrbitals<ORBDTYPE>>;
+#endif
+template class HamiltonianMVP_DMStrategy<VariableSizeMatrix<sparserow>,
+    ProjectedMatricesSparse, LocGridOrbitals<ORBDTYPE>>;
 template class HamiltonianMVP_DMStrategy<ReplicatedMatrix,
     ProjectedMatrices<ReplicatedMatrix>, ExtendedGridOrbitals<ORBDTYPE>>;

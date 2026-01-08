@@ -29,6 +29,7 @@ void EigenDMStrategy<OrbitalsType>::initialize(OrbitalsType& orbitals)
 template <class OrbitalsType>
 int EigenDMStrategy<OrbitalsType>::update(OrbitalsType& orbitals)
 {
+#ifdef MGMOL_USE_SCALAPACK
     Control& ct = *(Control::instance());
 
     dist_matrix::DistMatrix<DISTMATDTYPE> zz("Z", ct.numst, ct.numst);
@@ -44,6 +45,13 @@ int EigenDMStrategy<OrbitalsType>::update(OrbitalsType& orbitals)
     orbitals.multiply_by_matrix(zz);
     orbitals.setDataWithGhosts();
     orbitals.trade_boundaries();
+#else
+    (void)orbitals;
+    std::cerr << "EigenDMStrategy<OrbitalsType>::update(OrbitalsType& "
+                 "orbitals) not implemented"
+              << std::endl;
+    abort();
+#endif
 
     return 0;
 }

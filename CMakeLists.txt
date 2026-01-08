@@ -131,7 +131,7 @@ set (MGMOL_WITH_SCALAPACK True CACHE BOOL "Build with SCALAPACK")
 if (${MGMOL_WITH_SCALAPACK} OR DEFINED SCALAPACK_ROOT)
   find_package(SCALAPACK)
   if(${SCALAPACK_FOUND})
-    add_definitions(-DSCALAPACK)
+    add_definitions(-DMGMOL_USE_SCALAPACK)
     message(STATUS "SCALAPACK_INCLUDE_DIRS: ${SCALAPACK_INCLUDE_DIRS}")
     message(STATUS "SCALAPACK_LIBARIES: ${SCALAPACK_LIBRARIES}")
   else(${SCALAPACK_FOUND})
@@ -220,7 +220,8 @@ FortranCInterface_HEADER(
         DGETRF DGETRS DLACPY
 )
 
-FortranCInterface_HEADER(
+if(${SCALAPACK_FOUND})
+  FortranCInterface_HEADER(
     scalapack_mangle.h
     MACRO_NAMESPACE "FC_SCALAPACK_"
     SYMBOLS
@@ -233,7 +234,8 @@ FortranCInterface_HEADER(
         pdtrtri pstrtri pdpocon pspocon pdsygst pssygst pdsyev pssyev
         pdelset pselset pdelget pselget pdlatra pslatra pdlaset pslaset pdgesvd psgesvd
         pdamax psamax
-)
+  )
+endif(${SCALAPACK_FOUND})
 
 FortranCInterface_HEADER(
     arpack_mangle.h
