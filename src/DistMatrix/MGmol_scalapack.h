@@ -6,8 +6,8 @@
 // All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
-#ifndef MGMOL_SCALAPACK_H
-#define MGMOL_SCALAPACK_H
+#ifndef MGMOL_MGMOL_USE_SCALAPACK_H
+#define MGMOL_MGMOL_USE_SCALAPACK_H
 
 #include "scalapack_mangle.h"
 
@@ -18,7 +18,7 @@ typedef const float* const Pfloat;
 
 extern "C"
 {
-#ifdef SCALAPACK
+#ifdef MGMOL_USE_SCALAPACK
     // PBLAS
     void pdswap(
         Pint, double*, Pint, Pint, Pint, Pint, double*, Pint, Pint, Pint, Pint);
@@ -60,7 +60,7 @@ extern "C"
     void pdamax(Pint, double*, int*, double*, Pint, Pint, Pint, Pint);
     void psamax(Pint, float*, int*, float*, Pint, Pint, Pint, Pint);
 
-    // SCALAPACK
+    // MGMOL_USE_SCALAPACK
     void pdelset(double*, Pint, Pint, int*, Pdouble);
     void pselset(float*, Pint, Pint, int*, Pfloat);
     float pselget(Pchar, Pchar, float*, Pfloat, Pint, Pint, Pint);
@@ -120,7 +120,7 @@ extern "C"
         int*);
     void psgesvd(Pchar, Pchar, int*, int*, float*, int*, int*, int*, float*,
         float*, int*, int*, int*, float*, int*, int*, int*, float*, int*, int*);
-    // SCALAPACK TOOLS
+    // MGMOL_USE_SCALAPACK TOOLS
     int NUMROC(Pint, Pint, Pint, Pint, Pint);
     int INDXL2G(Pint, Pint, Pint, Pint, Pint);
     int INDXG2L(Pint, Pint, Pint, Pint, Pint);

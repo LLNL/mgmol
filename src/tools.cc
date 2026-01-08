@@ -12,8 +12,11 @@
 #include "MGmol_MPI.h"
 #include "MPIdata.h"
 #include "Mesh.h"
-#include "SparseDistMatrix.h"
 #include "Vector3D.h"
+
+#ifdef MGMOL_USE_SCALAPACK
+#include "SparseDistMatrix.h"
+#endif
 
 #include <sys/stat.h>
 #include <time.h>
@@ -103,6 +106,7 @@ void read_comments(std::ifstream& tfile)
     }
 }
 
+#ifdef MGMOL_USE_SCALAPACK
 void setSparseDistMatriConsolidationNumber(const int npes)
 {
     int consolidation_number = 9;
@@ -131,6 +135,7 @@ void setSparseDistMatriConsolidationNumber(const int npes)
         dist_matrix::SparseDistMatrix<DISTMATDTYPE>::printConsolidationNumber(
             *MPIdata::sout);
 }
+#endif
 
 void reduceBytes(std::vector<char>& val, const MPI_Comm comm)
 {

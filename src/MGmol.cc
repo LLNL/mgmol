@@ -22,8 +22,6 @@
 #include "DFTsolver.h"
 #include "DMStrategyFactory.h"
 #include "DavidsonSolver.h"
-#include "DistMatrix.h"
-#include "DistMatrix2SquareLocalMatrices.h"
 #include "Electrostatic.h"
 #include "Energy.h"
 #include "EnergySpreadPenalty.h"
@@ -31,7 +29,6 @@
 #include "FDoper.h"
 #include "FIRE.h"
 #include "Forces.h"
-#include "GrassmanLineMinimization.h"
 #include "GridFunc.h"
 #include "HDFrestart.h"
 #include "Hamiltonian.h"
@@ -45,7 +42,6 @@
 #include "MGOrbitalsPreconditioning.h"
 #include "MGkernels.h"
 #include "MGmol.h"
-#include "MLWFTransform.h"
 #include "MPIdata.h"
 #include "MVPSolver.h"
 #include "MasksSet.h"
@@ -63,15 +59,23 @@
 #include "ReplicatedVector.h"
 #include "Rho.h"
 #include "SP2.h"
-#include "SparseDistMatrix.h"
 #include "SpreadPenalty.h"
 #include "SpreadPenaltyVolume.h"
 #include "SpreadsAndCenters.h"
-#include "SubMatrices.h"
 #include "SubspaceProjector.h"
 #include "XCfunctionalFactory.h"
 #include "XConGrid.h"
 #include "manage_memory.h"
+
+#ifdef MGMOL_USE_SCALAPACK
+#include "DistMatrix.h"
+#include "DistMatrix2SquareLocalMatrices.h"
+#include "DistVector.h"
+#include "GrassmanLineMinimization.h"
+#include "MLWFTransform.h"
+#include "SparseDistMatrix.h"
+#include "SubMatrices.h"
+#endif
 
 namespace mgmol
 {
@@ -100,8 +104,6 @@ extern Timer loopdot_tm;
 extern Timer loopaxpy_tm;
 extern Timer loopscal_tm;
 extern Timer loopcp_tm;
-extern Timer get_NOLMO_tm;
-extern Timer get_MLWF_tm;
 extern Timer md_iterations_tm;
 extern Timer md_tau_tm;
 extern Timer md_moveVnuc_tm;
@@ -113,6 +115,10 @@ extern Timer quench_tm;
 extern Timer ions_setupInteractingIons_tm;
 extern Timer ions_setup_tm;
 extern Timer updateCenters_tm;
+#ifdef MGMOL_USE_SCALAPACK
+extern Timer get_NOLMO_tm;
+extern Timer get_MLWF_tm;
+#endif
 
 #include "mgmol_Signal.h"
 std::set<int> Signal::recv_;
@@ -250,9 +256,15 @@ int MGmol<OrbitalsType>::initial()
                 new ProjectedMatricesMehrstellen<ReplicatedMatrix>(
                     ct.numst, with_spin, ct.occ_width));
         else
+        {
+#ifdef MGMOL_USE_SCALAPACK
             proj_matrices_.reset(new ProjectedMatricesMehrstellen<
                 dist_matrix::DistMatrix<DISTMATDTYPE>>(
                 ct.numst, with_spin, ct.occ_width));
+#else
+            std::cerr << "Not implemented" << std::endl;
+#endif
+        }
     }
     else if (ct.short_sighted)
         proj_matrices_.reset(new ProjectedMatricesSparse(
@@ -261,9 +273,15 @@ int MGmol<OrbitalsType>::initial()
         proj_matrices_.reset(new ProjectedMatrices<ReplicatedMatrix>(
             ct.numst, with_spin, ct.occ_width));
     else
+    {
+#ifdef MGMOL_USE_SCALAPACK
         proj_matrices_.reset(
             new ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>(
                 ct.numst, with_spin, ct.occ_width));
+#else
+        std::cerr << "Not implemented" << std::endl;
+#endif
+    }
 
     forces_.reset(new Forces<OrbitalsType>(
         hamiltonian_.get(), rho_.get(), proj_matrices_.get()));
@@ -465,10 +483,14 @@ int MGmol<OrbitalsType>::initial()
                 hamiltonian_.get(), this, proj_matrices_.get(),
                 current_orbitals_));
     else
+    {
+#ifdef MGMOL_USE_SCALAPACK
         dm_strategy_.reset(DMStrategyFactory<OrbitalsType,
             dist_matrix::DistMatrix<double>>::create(comm_, os_, *ions_,
             rho_.get(), energy_.get(), electrostat_.get(), hamiltonian_.get(),
             this, proj_matrices_.get(), current_orbitals_));
+#endif
+    }
 
     // theta = invB * Hij
     proj_matrices_->updateThetaAndHB();
@@ -572,12 +594,17 @@ void MGmol<OrbitalsType>::printMM()
         std::ofstream tfile("s.mm", std::ios::out);
         proj_matrices_->printGramMM(tfile);
         std::ofstream tfileh("h.mm", std::ios::out);
+#ifdef MGMOL_USE_SCALAPACK
         ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
             = dynamic_cast<
                 ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
                 proj_matrices_.get());
         assert(projmatrices != nullptr);
         projmatrices->printHamiltonianMM(tfileh);
+#else
+        std::cerr << "MGmol<OrbitalsType>::printMM() not implemented"
+                  << std::endl;
+#endif
     }
 }
 
@@ -634,6 +661,7 @@ void MGmol<OrbitalsType>::write_header()
             << (omp_get_max_threads() > 1 ? "s " : " ");
         os_ << "active" << std::endl << std::endl;
 #endif
+#ifdef MGMOL_USE_SCALAPACK
         if (!ct.rmatrices)
         {
             os_ << " ScaLapack block size: "
@@ -646,6 +674,7 @@ void MGmol<OrbitalsType>::write_header()
             MatricesBlacsContext& mbc(MatricesBlacsContext::instance());
             mbc.print(os_);
         }
+#endif
 
         ct.printPoissonOptions(os_);
     } // onpe0
@@ -746,20 +775,17 @@ void MGmol<OrbitalsType>::printEigAndOcc()
             && ct.occupationWidthIsZero())
         && onpe0)
     {
-        bool printflag = false;
         // try with ReplicatedMatrix first
+        std::shared_ptr<ProjectedMatrices<ReplicatedMatrix>> projmatrices
+            = std::dynamic_pointer_cast<ProjectedMatrices<ReplicatedMatrix>>(
+                proj_matrices_);
+        if (projmatrices)
         {
-            std::shared_ptr<ProjectedMatrices<ReplicatedMatrix>> projmatrices
-                = std::dynamic_pointer_cast<
-                    ProjectedMatrices<ReplicatedMatrix>>(proj_matrices_);
-            if (projmatrices)
-            {
-                projmatrices->printEigenvalues(os_);
-                projmatrices->printOccupations(os_);
-                printflag = true;
-            }
+            projmatrices->printEigenvalues(os_);
+            projmatrices->printOccupations(os_);
         }
-        if (!printflag)
+#ifdef MGMOL_USE_SCALAPACK
+        else
         {
             std::shared_ptr<
                 ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>>
@@ -771,6 +797,7 @@ void MGmol<OrbitalsType>::printEigAndOcc()
             projmatrices->printEigenvalues(os_);
             projmatrices->printOccupations(os_);
         }
+#endif
     }
 }
 
@@ -871,14 +898,6 @@ void MGmol<OrbitalsType>::printTimers()
     loopscal_tm.print(os_);
     loopdot_tm.print(os_);
 
-    dist_matrix::SubMatrices<double>::printTimers(os_);
-
-    DistMatrix2SquareLocalMatrices::printTimers(os_);
-
-    dist_matrix::SparseDistMatrix<DISTMATDTYPE>::printTimers(os_);
-
-    dist_matrix::DistMatrix<DISTMATDTYPE>::printTimers(os_);
-
     ReplicatedMatrix2SquareLocalMatrices::printTimers(os_);
     LocalMatrices2ReplicatedMatrix::printTimers(os_);
 
@@ -895,8 +914,15 @@ void MGmol<OrbitalsType>::printTimers()
     get_res_tm_.print(os_);
     comp_res_tm_.print(os_);
     vnlpsi_tm.print(os_);
+#ifdef MGMOL_USE_SCALAPACK
+    dist_matrix::SubMatrices<double>::printTimers(os_);
+    DistMatrix2SquareLocalMatrices::printTimers(os_);
+    dist_matrix::SparseDistMatrix<DISTMATDTYPE>::printTimers(os_);
+    dist_matrix::DistMatrix<DISTMATDTYPE>::printTimers(os_);
+
     get_MLWF_tm.print(os_);
     get_NOLMO_tm.print(os_);
+#endif
     Energy<OrbitalsType>::eval_te_tm().print(os_);
     Electrostatic::solve_tm().print(os_);
     PoissonInterface::printTimers(os_);
@@ -905,8 +931,10 @@ void MGmol<OrbitalsType>::printTimers()
     ShortSightedInverse::printTimers(os_);
     if (std::is_same<OrbitalsType, ExtendedGridOrbitals<ORBDTYPE>>::value)
     {
+#ifdef MGMOL_USE_SCALAPACK
         MVPSolver<ExtendedGridOrbitals<ORBDTYPE>,
             dist_matrix::DistMatrix<DISTMATDTYPE>>::printTimers(os_);
+#endif
         MVPSolver<ExtendedGridOrbitals<ORBDTYPE>,
             ReplicatedMatrix>::printTimers(os_);
     }
@@ -926,8 +954,10 @@ void MGmol<OrbitalsType>::printTimers()
     forces_->printTimers(os_);
     if (ct.OuterSolver() == OuterSolverType::ABPG)
         ABPG<OrbitalsType>::printTimers(os_);
+#ifdef MGMOL_USE_SCALAPACK
     else if (ct.OuterSolver() == OuterSolverType::NLCG)
         GrassmanLineMinimization<OrbitalsType>::printTimers(os_);
+#endif
     adaptLR_tm_.print(os_);
     updateCenters_tm.print(os_);
     md_iterations_tm.print(os_);
@@ -952,8 +982,10 @@ void MGmol<OrbitalsType>::printTimers()
     DavidsonSolver<ExtendedGridOrbitals<ORBDTYPE>,
         ReplicatedMatrix>::printTimers(os_);
     ChebyshevApproximation<ReplicatedMatrix>::printTimers(os_);
+#ifdef MGMOL_USE_SCALAPACK
     PowerGen<dist_matrix::DistMatrix<double>,
         dist_matrix::DistVector<double>>::printTimers(os_);
+#endif
     BlockVector<ORBDTYPE, MemorySpace::Host>::printTimers(os_);
     if (ct.rmatrices)
     {
@@ -961,6 +993,7 @@ void MGmol<OrbitalsType>::printTimers()
             ReplicatedMatrix>::printTimers(os_);
         ChebyshevApproximation<ReplicatedMatrix>::printTimers(os_);
     }
+#ifdef MGMOL_USE_SCALAPACK
     else
     {
         DavidsonSolver<ExtendedGridOrbitals<ORBDTYPE>,
@@ -968,6 +1001,7 @@ void MGmol<OrbitalsType>::printTimers()
         ChebyshevApproximation<
             dist_matrix::DistMatrix<DISTMATDTYPE>>::printTimers(os_);
     }
+#endif
     MGOrbitalsPreconditioning<OrbitalsType, float>::printTimers(os_);
     MGOrbitalsPreconditioning<OrbitalsType, double>::printTimers(os_);
     MDfiles::printTimers(os_);
@@ -1022,7 +1056,7 @@ double MGmol<OrbitalsType>::get_evnl(const Ions& ions)
     evnl_tm_.start();
     Control& ct = *(Control::instance());
 
-    double val;
+    double val = std::numeric_limits<double>::signaling_NaN();
     if (ct.short_sighted)
     {
         std::shared_ptr<ProjectedMatricesSparse> projmatrices
@@ -1043,6 +1077,7 @@ double MGmol<OrbitalsType>::get_evnl(const Ions& ions)
 
             val = g_kbpsi_->getEvnl(ions, projmatrices.get());
         }
+#ifdef MGMOL_USE_SCALAPACK
         else
         {
             std::shared_ptr<
@@ -1054,6 +1089,7 @@ double MGmol<OrbitalsType>::get_evnl(const Ions& ions)
 
             val = g_kbpsi_->getEvnl(ions, projmatrices.get());
         }
+#endif
     }
 
     evnl_tm_.stop();
@@ -1562,6 +1598,7 @@ double MGmol<OrbitalsType>::evaluateDMandEnergyAndForces(Orbitals* orbitals,
 
         dm_strategy->update(*dorbitals);
     }
+#ifdef MGMOL_USE_SCALAPACK
     else
     {
         std::shared_ptr<DMStrategy<OrbitalsType>> dm_strategy(
@@ -1572,6 +1609,7 @@ double MGmol<OrbitalsType>::evaluateDMandEnergyAndForces(Orbitals* orbitals,
 
         dm_strategy->update(*dorbitals);
     }
+#endif
 
     // evaluate energy and forces
     double ts  = 0.;

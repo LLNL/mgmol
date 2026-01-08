@@ -11,7 +11,9 @@
 #define MGMOL_EXTENDEDGRIDORBITALS_H
 
 #include "BlockVector.h"
+#ifdef MGMOL_USE_SCALAPACK
 #include "DistMatrix.h"
+#endif
 #include "DotProductManager.h"
 #include "GridFunc.h"
 #include "HDFrestart.h"
@@ -33,6 +35,9 @@
 class ProjectedMatricesInterface;
 class LocalizationRegions;
 class ClusterOrbitals;
+#ifndef MGMOL_USE_SCALAPACK
+typedef double DISTMATDTYPE;
+#endif
 
 template <typename ScalarType>
 class ExtendedGridOrbitals : public Orbitals
@@ -82,13 +87,16 @@ private:
     void projectOut(ScalarType* const, const int);
 
     void multiply_by_ReplicatedMatrix(const ReplicatedMatrix& matrix);
+#ifdef MGMOL_USE_SCALAPACK
     void multiply_by_DistMatrix(
         const dist_matrix::DistMatrix<DISTMATDTYPE>& matrix);
-
+#endif
     void multiply_by_matrix(
         const DISTMATDTYPE* const, ScalarType*, const int) const;
+#ifdef MGMOL_USE_SCALAPACK
     void multiply_by_matrix(const dist_matrix::DistMatrix<DISTMATDTYPE>& matrix,
         ScalarType* const product, const int ldp);
+#endif
     void scal(const int i, const double alpha) { block_vector_.scal(i, alpha); }
     virtual void assign(const int i, const ScalarType* const v, const int n = 1)
     {
@@ -115,8 +123,10 @@ private:
     /*!
      * Specialized functions
      */
+#ifdef MGMOL_USE_SCALAPACK
     void addDotWithNcol2DistMatrix(
         ExtendedGridOrbitals&, dist_matrix::DistMatrix<DISTMATDTYPE>&) const;
+#endif
     void addDotWithNcol2ReplicatedMatrix(
         ExtendedGridOrbitals&, ReplicatedMatrix&) const;
 
@@ -300,9 +310,11 @@ public:
 
     void computeGram(const int verbosity = 0);
     void computeGramAndInvS(const int verbosity = 0);
+#ifdef MGMOL_USE_SCALAPACK
     void computeGram(dist_matrix::DistMatrix<DISTMATDTYPE>& gram_mat);
     void computeGram(const ExtendedGridOrbitals& orbitals,
         dist_matrix::DistMatrix<DISTMATDTYPE>& gram_mat);
+#endif
 
     ScalarType maxAbsValue() const { return block_vector_.maxAbsValue(); }
 

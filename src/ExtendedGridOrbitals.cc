@@ -14,7 +14,9 @@
 #include "DotProductManagerFactory.h"
 #include "GridFunc.h"
 #include "Laph4M.h"
+#ifdef MGMOL_USE_SCALAPACK
 #include "LocalMatrices2DistMatrix.h"
+#endif
 #include "LocalizationRegions.h"
 #include "MPIdata.h"
 #include "Mesh.h"
@@ -399,6 +401,7 @@ void ExtendedGridOrbitals<ScalarType>::initFourier()
     resetIterativeIndex();
 }
 
+#ifdef MGMOL_USE_SCALAPACK
 template <typename ScalarType>
 void ExtendedGridOrbitals<ScalarType>::multiply_by_matrix(
     const dist_matrix::DistMatrix<DISTMATDTYPE>& dmatrix,
@@ -417,6 +420,7 @@ void ExtendedGridOrbitals<ScalarType>::multiply_by_matrix(
 
     multiply_by_matrix(work_matrix, product, ldp);
 }
+#endif
 
 template <typename ScalarType>
 void ExtendedGridOrbitals<ScalarType>::multiply_by_matrix(
@@ -530,6 +534,7 @@ void ExtendedGridOrbitals<ScalarType>::multiply_by_matrix(
     multiply_by_matrix(matrix, product.psi(0), product.lda_);
 }
 
+#ifdef MGMOL_USE_SCALAPACK
 template <>
 template <>
 void ExtendedGridOrbitals<ORBDTYPE>::multiply_by_matrix(
@@ -537,6 +542,7 @@ void ExtendedGridOrbitals<ORBDTYPE>::multiply_by_matrix(
 {
     multiply_by_DistMatrix(matrix);
 }
+#endif
 
 template <>
 template <>
@@ -546,6 +552,7 @@ void ExtendedGridOrbitals<ORBDTYPE>::multiply_by_matrix(
     multiply_by_ReplicatedMatrix(matrix);
 }
 
+#ifdef MGMOL_USE_SCALAPACK
 template <typename ScalarType>
 void ExtendedGridOrbitals<ScalarType>::multiply_by_DistMatrix(
     const dist_matrix::DistMatrix<DISTMATDTYPE>& matrix)
@@ -585,6 +592,7 @@ void ExtendedGridOrbitals<ScalarType>::multiply_by_DistMatrix(
 
     prod_matrix_tm_.stop();
 }
+#endif
 
 template <typename ScalarType>
 void ExtendedGridOrbitals<ScalarType>::multiply_by_ReplicatedMatrix(
@@ -1102,6 +1110,7 @@ void ExtendedGridOrbitals<ScalarType>::computeDiagonalElementsDotProduct(
     mmpi.allreduce(&tmp[0], &ss[0], numst_, MPI_SUM);
 }
 
+#ifdef MGMOL_USE_SCALAPACK
 template <typename ScalarType>
 void ExtendedGridOrbitals<ScalarType>::computeGram(
     dist_matrix::DistMatrix<DISTMATDTYPE>& gram_mat)
@@ -1133,6 +1142,7 @@ void ExtendedGridOrbitals<ScalarType>::computeGram(
 
     sl2dm->accumulate(ss, gram_mat);
 }
+#endif
 
 // compute the lower-triangular part of the overlap matrix
 template <typename ScalarType>
@@ -1248,6 +1258,7 @@ void ExtendedGridOrbitals<ScalarType>::orthonormalizeLoewdin(
     }
     if (!multbymat)
     {
+#ifdef MGMOL_USE_SCALAPACK
         ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
             = dynamic_cast<
                 ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
@@ -1260,6 +1271,7 @@ void ExtendedGridOrbitals<ScalarType>::orthonormalizeLoewdin(
 
             projmatrices->setGram2Id(getIterativeIndex());
         }
+#endif
     }
 
     if (matrixTransform == nullptr) delete localP;
@@ -1589,6 +1601,7 @@ void ExtendedGridOrbitals<ScalarType>::initRand()
     resetIterativeIndex();
 }
 
+#ifdef MGMOL_USE_SCALAPACK
 template <>
 template <>
 void ExtendedGridOrbitals<ORBDTYPE>::addDotWithNcol2Matrix(
@@ -1646,6 +1659,7 @@ void ExtendedGridOrbitals<ScalarType>::addDotWithNcol2DistMatrix(
 
     addDot_tm_.stop();
 }
+#endif
 
 template <>
 template <>

@@ -8,10 +8,13 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "OrbitalsExtrapolationOrder3.h"
-#include "DistMatrixTools.h"
 #include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "ProjectedMatrices.h"
+
+#ifdef MGMOL_USE_SCALAPACK
+#include "DistMatrixTools.h"
+#endif
 
 template <class OrbitalsType>
 void OrbitalsExtrapolationOrder3<OrbitalsType>::extrapolate_orbitals(
@@ -21,6 +24,7 @@ void OrbitalsExtrapolationOrder3<OrbitalsType>::extrapolate_orbitals(
 
     new_orbitals->assign(**orbitals);
 
+#ifdef MGMOL_USE_SCALAPACK
     bool use_dense_proj_mat = false;
     if (ct.OuterSolver() != OuterSolverType::ABPG
         && ct.OuterSolver() != OuterSolverType::NLCG)
@@ -32,6 +36,7 @@ void OrbitalsExtrapolationOrder3<OrbitalsType>::extrapolate_orbitals(
                 proj_matrices))
             use_dense_proj_mat = true;
     }
+#endif
 
     // do the extrapolation if previous orbitals exist (not at first step)
 
@@ -42,7 +47,8 @@ void OrbitalsExtrapolationOrder3<OrbitalsType>::extrapolate_orbitals(
         if (ct.verbose > 1 && onpe0)
             (*MPIdata::sout) << "Extrapolate orbitals using 3rd order scheme..."
                              << std::endl;
-        // align orbitals_minus1 with new_orbitals
+            // align orbitals_minus1 with new_orbitals
+#ifdef MGMOL_USE_SCALAPACK
         if (use_dense_proj_mat)
         {
             dist_matrix::DistMatrix<DISTMATDTYPE> matQ("Q", ct.numst, ct.numst);
@@ -72,6 +78,7 @@ void OrbitalsExtrapolationOrder3<OrbitalsType>::extrapolate_orbitals(
             }
         }
         else
+#endif
         {
             tmp_orbitals_minus1.assign(*orbitals_minus1_);
             if (orbitals_minus2_ != nullptr)
@@ -102,10 +109,6 @@ void OrbitalsExtrapolationOrder3<OrbitalsType>::extrapolate_orbitals(
     }
 
     orbitals_minus1_ = *orbitals;
-
-    if (use_dense_proj_mat)
-    {
-    }
 
     *orbitals = new_orbitals;
 

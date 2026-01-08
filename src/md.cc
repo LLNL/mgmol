@@ -505,7 +505,12 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
             if (ct.adaptiveLRs())
             {
                 assert(lrs_);
-                adaptLR(spreadf_.get(), nullptr);
+                adaptLR(spreadf_.get()
+#ifdef MGMOL_USE_SCALAPACK
+                            ,
+                    nullptr
+#endif
+                );
 
                 last_move_is_small = lrs_->moveIsSmall();
 

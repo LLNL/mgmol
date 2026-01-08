@@ -8,13 +8,18 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "GramMatrix.h"
+#include "Power.h"
+#include "ReplicatedMatrix.h"
+#include "ReplicatedVector.h"
+
+#ifdef MGMOL_USE_SCALAPACK
 #include "DistMatrix.h"
 #include "DistMatrix2SquareLocalMatrices.h"
 #include "DistMatrixTools.h"
 #include "DistVector.h"
-#include "Power.h"
-#include "ReplicatedMatrix.h"
-#include "ReplicatedVector.h"
+#else
+typedef double DISTMATDTYPE;
+#endif
 
 #include <iomanip>
 #include <iostream>
@@ -109,6 +114,7 @@ void GramMatrix<MatrixType>::solveLST(MatrixType& z) const
     ls_->trtrs('l', 't', 'n', z);
 }
 
+#ifdef MGMOL_USE_SCALAPACK
 template <>
 double GramMatrix<dist_matrix::DistMatrix<double>>::computeCond()
 {
@@ -135,6 +141,7 @@ double GramMatrix<dist_matrix::DistMatrix<double>>::computeCond()
 
     return cond;
 }
+#endif
 
 template <>
 double GramMatrix<ReplicatedMatrix>::computeCond()
@@ -325,8 +332,10 @@ void GramMatrix<MatrixType>::applyInv(VectorType& mat)
     ls_->potrs('l', mat);
 }
 
+#ifdef MGMOL_USE_SCALAPACK
 template class GramMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>;
 template void GramMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>::applyInv(
     dist_matrix::DistVector<DISTMATDTYPE>&);
+#endif
 template class GramMatrix<ReplicatedMatrix>;
 template void GramMatrix<ReplicatedMatrix>::applyInv(ReplicatedVector&);

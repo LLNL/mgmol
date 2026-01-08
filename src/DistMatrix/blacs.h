@@ -33,7 +33,7 @@ extern "C"
     int blacs_pnum(int*, int*, int*);
 }
 
-#ifdef SCALAPACK
+#ifdef MGMOL_USE_SCALAPACK
 extern "C"
 {
 #endif
@@ -53,7 +53,7 @@ extern "C"
     void Cblacs_exit(int);
     int Cblacs_pnum(int, int, int);
     int Csys2blacs_handle(MPI_Comm);
-#ifdef SCALAPACK
+#ifdef MGMOL_USE_SCALAPACK
 }
 #endif
 

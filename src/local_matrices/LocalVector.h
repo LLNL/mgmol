@@ -2,6 +2,7 @@
 #define MGMOL_LOCALVECTOR
 
 #include "memory_space.h"
+#include "mputils.h"
 
 #include <vector>
 

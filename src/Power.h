@@ -7,7 +7,6 @@
 #ifndef MGMOL_POWER_H
 #define MGMOL_POWER_H
 
-#include "DistVector.h"
 #include "Timer.h"
 #include "random.h"
 #include <iostream>
