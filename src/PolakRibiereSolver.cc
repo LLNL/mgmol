@@ -336,7 +336,6 @@ int PolakRibiereSolver<OrbitalsType>::solve(OrbitalsType& orbitals,
 
         if (dm_success == 0) // if DM determined at previous step is good
         {
-
             // turn on PB solver if necessary
             dielON();
 
@@ -354,8 +353,11 @@ int PolakRibiereSolver<OrbitalsType>::solve(OrbitalsType& orbitals,
             // (to be used for energy and gradient computation)
             proj_matrices_->updateThetaAndHB();
 
-            if (step == max_steps) break;
-
+            if (step == max_steps)
+            {
+                solve_tm_.stop();
+                break;
+            }
             // Output the eigenvalues and occupations
             bool flag = false;
             if (iprint) flag = (!(step % iprint) && step < max_steps - 1);
@@ -439,6 +441,7 @@ int PolakRibiereSolver<OrbitalsType>::solve(OrbitalsType& orbitals,
                         << " PolakRibiereSolver: convergence achieved for "
                            "delta E..."
                         << std::endl;
+                solve_tm_.stop();
                 break;
             }
 
@@ -449,8 +452,7 @@ int PolakRibiereSolver<OrbitalsType>::solve(OrbitalsType& orbitals,
             {
                 double beta = computeBeta(work_orbitals);
                 if (beta < 0.) beta = 0.;
-                // const double beta=0.;
-                if (onpe0 && ct.verbose > 1)
+                if (onpe0 && ct.verbose > 0)
                     os_ << " PolakRibiereSolver: beta=" << beta << std::endl;
                 p_k_->scal(beta);
                 p_k_->axpy((ORBDTYPE)1., *z_k_);
