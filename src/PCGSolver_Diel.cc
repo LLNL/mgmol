@@ -167,20 +167,33 @@ bool PCGSolver_Diel<T, ScalarType>::solve(
     pb::GridFunc<ScalarType> res(finegrid, bc_[0], bc_[1], bc_[2]);
     // scale initial guess with epsilon
     oper_.inv_transform(gf_phi);
+
     // compute initial residual
     oper_.apply(gf_phi, lhs);
     pb::GridFunc<ScalarType> rhs(gf_rhs);
+
+    // transform r.h.s. to account for dielectric model
     oper_.transform(rhs);
-    // Hartree units
+
+    // convert to Hartree units
     rhs *= (4. * M_PI);
+
+    // save rhs norm to compute relative norms
+    const double rhs_norm = res.norm2();
+    assert(!std::isnan(rhs_norm));
+
     res.diff(rhs, lhs);
     double init_rnorm = res.norm2();
     double rnorm      = init_rnorm;
 
+    // Early return if already converged
+    if (init_rnorm < tol_ * rhs_norm) return true;
+
     // preconditioned residual
     pb::GridFunc<ScalarType> z(finegrid, bc_[0], bc_[1], bc_[2]);
     // preconditioning step
-    z = 0.;
+    z.setZero();
+
     preconSolve(z, res, 0);
     // conjugate vectors
     pb::GridFunc<ScalarType> p(z);
@@ -203,7 +216,7 @@ bool PCGSolver_Diel<T, ScalarType>::solve(
 
         // check for convergence
         rnorm = res.norm2();
-        if (rnorm <= tol_ * init_rnorm)
+        if (rnorm <= tol_ * rhs_norm)
         {
             converged = true;
             break;

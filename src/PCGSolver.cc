@@ -6,11 +6,11 @@
 // All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
-
 #include "PCGSolver.h"
 
 #include "LapFactory.h"
 
+#include <cassert>
 #include <iomanip>
 #include <iostream>
 
@@ -189,6 +189,10 @@ bool PCGSolver<OperatorType, ScalarDataType, PrecondDataType>::solve(
     pb::GridFunc<ScalarDataType> res(finegrid, bc_[0], bc_[1], bc_[2]);
     oper_.rhs(rhs, res);
 
+    // save rhs norm to compute relative norms
+    const double rhs_norm = res.norm2();
+    assert(!std::isnan(rhs_norm));
+
     // compute r = r - Ax
     res -= lhs;
 
@@ -196,9 +200,8 @@ bool PCGSolver<OperatorType, ScalarDataType, PrecondDataType>::solve(
     assert(!std::isnan(init_rnorm));
     // cout<<"init_rnorm="<<init_rnorm<<endl;
 
-    // Early return if rhs is 0.
-    // Not doing that can cause numerical issues
-    if (init_rnorm < 1.e-24) return true;
+    // Early return if already converged
+    if (init_rnorm < tol_ * rhs_norm) return true;
 
     double rnorm = init_rnorm;
 
@@ -235,7 +238,7 @@ bool PCGSolver<OperatorType, ScalarDataType, PrecondDataType>::solve(
 
         // check for convergence
         rnorm = res.norm2();
-        if (rnorm <= tol_ * init_rnorm)
+        if (rnorm < tol_ * rhs_norm)
         {
             converged = true;
             break;
