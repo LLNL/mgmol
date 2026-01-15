@@ -238,7 +238,9 @@ add_executable(testMGkernels
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 add_executable(testIons
-               ${CMAKE_SOURCE_DIR}/tests/testIons.cc)
+               ${CMAKE_SOURCE_DIR}/tests/testIons.cc
+               ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
+
 if(${MGMOL_WITH_SCALAPACK})
 add_executable(testGramMatrix
                ${CMAKE_SOURCE_DIR}/tests/testGramMatrix.cc
@@ -385,8 +387,10 @@ add_test(NAME testtMGkernels
                  ${CMAKE_CURRENT_BINARY_DIR}/testMGkernels)
 add_test(NAME testIons
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
-                 ${CMAKE_CURRENT_BINARY_DIR}/testIons
-                 ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+                 ${CMAKE_CURRENT_BINARY_DIR}/testIons)
+set_tests_properties(testIons PROPERTIES
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/potentials)
+
 if(${MGMOL_WITH_SCALAPACK})
 add_test(NAME testGramMatrix
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
