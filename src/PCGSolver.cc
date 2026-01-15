@@ -9,6 +9,8 @@
 
 #include "PCGSolver.h"
 
+#include "LapFactory.h"
+
 #include <iomanip>
 #include <iostream>
 
@@ -116,6 +118,8 @@ void PCGSolver<OperatorType, ScalarDataType, PrecondDataType>::preconSolve(
     pb::GridFunc<PrecondDataType>& gf_v,
     const pb::GridFunc<PrecondDataType>& gf_f, const short level)
 {
+    assert(is_precond_setup_);
+
     //(*MPIdata::sout)<<"Preconditioning::mg() at level "<<level<<endl;
     short ncycl = nu1_;
     if (level == nlevels_)

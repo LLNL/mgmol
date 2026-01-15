@@ -6,9 +6,8 @@
 // All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
-
-#ifndef _PBdiel_CG_H_
-#define _PBdiel_CG_H_
+#ifndef MGMOL_PBdiel_CG_H_
+#define MGMOL_PBdiel_CG_H_
 
 #include "MPIdata.h"
 #include "Poisson.h"
@@ -38,9 +37,10 @@ public:
         T oper(Poisson::grid_, e0, rho0, drho0);
         Poisson::vepsilon_
             = new pb::GridFunc<POTDTYPE>(Poisson::grid_, bc[0], bc[1], bc[2]);
-        rhod_ = nullptr;
-        poisson_solver_
-            = new PCGSolver_Diel<T, POTDTYPE>(oper, bc[0], bc[1], bc[2]);
+        rhod_           = nullptr;
+        Control& ct     = *(Control::instance());
+        poisson_solver_ = new PCGSolver_Diel<T, POTDTYPE>(
+            oper, ct.lap_type, bc[0], bc[1], bc[2]);
     };
 
     // Destructor
