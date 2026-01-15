@@ -99,19 +99,17 @@ void PCGSolver_Diel<T, ScalarType>::setupPrecon()
     }
 }
 
-template <class T, typename ScalarType>
 // MG V-cycle with no mask
+template <class T, typename ScalarType>
 void PCGSolver_Diel<T, ScalarType>::preconSolve(pb::GridFunc<ScalarType>& gf_v,
     const pb::GridFunc<ScalarType>& gf_f, const short level)
 {
-    //(*MPIdata::sout)<<"Preconditioning::mg() at level "<<level<<endl;
     short ncycl = nu1_;
     if (level == nlevels_)
     {
         ncycl = 4 > (nu1_ + nu2_) ? 4 : (nu1_ + nu2_);
     }
 
-    //    pb::Lap* myoper=pc_oper_[level];
     T* myoper = pc_oper_[level];
 
     // SMOOTHING
@@ -148,8 +146,8 @@ void PCGSolver_Diel<T, ScalarType>::preconSolve(pb::GridFunc<ScalarType>& gf_v,
     if (bc_[0] != 1 || bc_[2] != 1 || bc_[2] != 1) gf_v.trade_boundaries();
 }
 
-template <class T, typename ScalarType>
 // Left Preconditioned CG
+template <class T, typename ScalarType>
 bool PCGSolver_Diel<T, ScalarType>::solve(
     pb::GridFunc<ScalarType>& gf_phi, pb::GridFunc<ScalarType>& gf_rhs)
 {
@@ -225,8 +223,8 @@ bool PCGSolver_Diel<T, ScalarType>::solve(
     return converged;
 }
 
-template <class T, typename ScalarType>
 // Left Preconditioned CG
+template <class T, typename ScalarType>
 bool PCGSolver_Diel<T, ScalarType>::solve(pb::GridFunc<ScalarType>& gf_phi,
     pb::GridFunc<ScalarType>& gf_rhs, pb::GridFunc<ScalarType>& gf_rhod,
     pb::GridFunc<ScalarType>& gf_vks)
