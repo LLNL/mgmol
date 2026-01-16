@@ -220,6 +220,30 @@ add_executable(testBatchLaph4
                ${CMAKE_SOURCE_DIR}/src/pb/FDkernels.cc
                ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
+add_executable(testPoisson
+               ${CMAKE_SOURCE_DIR}/tests/testPoisson.cc
+               ${CMAKE_SOURCE_DIR}/src/PCGSolver.cc
+               ${CMAKE_SOURCE_DIR}/src/pb/Laph4.cc
+               ${CMAKE_SOURCE_DIR}/src/pb/Lap.cc
+               ${CMAKE_SOURCE_DIR}/src/pb/Laph2.cc
+               ${CMAKE_SOURCE_DIR}/src/pb/Laph6.cc
+               ${CMAKE_SOURCE_DIR}/src/pb/Laph8.cc
+               ${CMAKE_SOURCE_DIR}/src/pb/Laph4M.cc
+               ${CMAKE_SOURCE_DIR}/src/pb/FDoper.cc
+               ${CMAKE_SOURCE_DIR}/src/magma_singleton.cc
+               ${CMAKE_SOURCE_DIR}/src/pb/Grid.cc
+               ${CMAKE_SOURCE_DIR}/src/pb/PEenv.cc
+               ${CMAKE_SOURCE_DIR}/src/pb/GridFunc.cc
+               ${CMAKE_SOURCE_DIR}/src/Map2Masks.cc
+               ${CMAKE_SOURCE_DIR}/src/pb/MGkernels.cc
+               ${CMAKE_SOURCE_DIR}/src/pb/FDkernels.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/MGmol_MPI.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/mputils.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/gemm_impl.cc
+               ${CMAKE_SOURCE_DIR}/src/linear_algebra/syrk_impl.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/mgmol_mpi_tools.cc
+               ${CMAKE_SOURCE_DIR}/src/tools/Timer.cc
+               ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
 add_executable(testMGkernels
                ${CMAKE_SOURCE_DIR}/tests/testMGkernels.cc
                ${CMAKE_SOURCE_DIR}/src/Map2Masks.cc
@@ -240,7 +264,6 @@ add_executable(testMGkernels
 add_executable(testIons
                ${CMAKE_SOURCE_DIR}/tests/testIons.cc
                ${CMAKE_SOURCE_DIR}/tests/ut_main.cc)
-
 if(${MGMOL_WITH_SCALAPACK})
 add_executable(testGramMatrix
                ${CMAKE_SOURCE_DIR}/tests/testGramMatrix.cc
@@ -382,6 +405,9 @@ add_test(NAME testLaph4
 add_test(NAME testBatchLaph4
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testBatchLaph4)
+add_test(NAME testPoisson
+         COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+                 ${CMAKE_CURRENT_BINARY_DIR}/testPoisson)
 add_test(NAME testtMGkernels
          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
                  ${CMAKE_CURRENT_BINARY_DIR}/testMGkernels)
@@ -793,6 +819,8 @@ else()
   target_link_libraries(testLaph4 PRIVATE ${BLAS_LIBRARIES}
     MPI::MPI_CXX OpenMP::OpenMP_CXX)
   target_link_libraries(testBatchLaph4 PRIVATE ${BLAS_LIBRARIES}
+    MPI::MPI_CXX OpenMP::OpenMP_CXX)
+  target_link_libraries(testPoisson PRIVATE ${BLAS_LIBRARIES}
     MPI::MPI_CXX OpenMP::OpenMP_CXX)
   target_link_libraries(testMGkernels PRIVATE ${BLAS_LIBRARIES}
     MPI::MPI_CXX OpenMP::OpenMP_CXX)
