@@ -980,12 +980,14 @@ void LocGridOrbitals<ScalarType>::multiply_by_matrix(
 #ifdef MGMOL_USE_SCALAPACK
 template <typename ScalarType>
 void LocGridOrbitals<ScalarType>::multiply_by_matrix(
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& matrix)
+    const dist_matrix::DistMatrix<DISTMATDTYPE>& matrix, const double alpha,
+    LocGridOrbitals<ScalarType>& product)
 {
     prod_matrix_tm_.start();
 
-    ScalarType* product = new ScalarType[loc_numpt_ * chromatic_number_];
-    memset(product, 0, loc_numpt_ * chromatic_number_ * sizeof(ScalarType));
+    ScalarType* product_ptr
+        = (this == &product) ? new ScalarType[loc_numpt_ * chromatic_number_]
+                             : product.getPsi(0);
 
     ReplicatedWorkSpace<DISTMATDTYPE>& wspace(
         ReplicatedWorkSpace<DISTMATDTYPE>::instance());
@@ -1008,14 +1010,15 @@ void LocGridOrbitals<ScalarType>::multiply_by_matrix(
         // Compute loc_numpt_ rows (for subdomain iloc)
         LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(loc_numpt_,
             chromatic_number_, chromatic_number_, 1., phi, lda_, matrix_local,
-            chromatic_number_, 0., product, loc_numpt_);
+            chromatic_number_, alpha, product_ptr, loc_numpt_);
 
         for (int color = 0; color < chromatic_number_; color++)
-            memcpy(phi + color * lda_, product + color * loc_numpt_, slnumpt);
+            memcpy(
+                phi + color * lda_, product_ptr + color * loc_numpt_, slnumpt);
     }
 
     delete[] matrix_local;
-    delete[] product;
+    if (this == &product) delete[] product_ptr;
 
     prod_matrix_tm_.stop();
 }
