@@ -527,6 +527,8 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
             }
             else
             {
+                if (mmpi.PE0() && ct.verbose > 2)
+                    os_ << "Update h11..." << std::endl;
                 hamiltonian_->applyDeltaPot(orbitals, hphi);
                 orbitals.addDotWithNcol2Matrix(hphi, h11);
             }
@@ -542,6 +544,8 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
             }
 
             // update h22, h12 and h21
+            if (mmpi.PE0() && ct.verbose > 2)
+                os_ << "Update h22, h12 and h21..." << std::endl;
             orbitals.addDotWithNcol2Matrix(hphi, h12);
 
             work_orbitals.addDotWithNcol2Matrix(hphi, h22);
@@ -718,9 +722,10 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
 
         // replace orbitals with eigenvectors corresponding to largest
         // eigenvalues of DM
-        orbitals.multiply_by_matrix(dm12);
-        work_orbitals.multiply_by_matrix(dm22);
-        orbitals.axpy((ORBDTYPE)1., work_orbitals);
+        if (mmpi.PE0() && ct.verbose > 2)
+            os_ << "Update trial eigenvectors..." << std::endl;
+        orbitals.multiply_by_matrix(dm12, 0., orbitals);
+        work_orbitals.multiply_by_matrix(dm22, 1., orbitals);
         orbitals.incrementIterativeIndex();
         orbitals.incrementIterativeIndex();
         work_orbitals.incrementIterativeIndex(2);

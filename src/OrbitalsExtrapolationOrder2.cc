@@ -58,9 +58,9 @@ void OrbitalsExtrapolationOrder2<OrbitalsType>::extrapolate_orbitals(
                 "yyt", ct.numst, ct.numst);
             getProcrustesTransform(matQ, yyt);
 
-            orbitals_minus1->multiply_by_matrix(matQ);
+            orbitals_minus1->multiply_by_matrix(matQ, 0., *orbitals_minus1);
             orbitals_minus1->axpy((ORBDTYPE)-1., *new_orbitals);
-            orbitals_minus1->multiply_by_matrix(yyt);
+            orbitals_minus1->multiply_by_matrix(yyt, 0., *orbitals_minus1);
         }
         else // !use_dense_proj_mat
 #endif
