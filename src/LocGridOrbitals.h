@@ -416,7 +416,8 @@ public:
     void multiply_by_matrix(
         const DISTMATDTYPE* const matrix, LocGridOrbitals& product) const;
 #ifdef MGMOL_USE_SCALAPACK
-    void multiply_by_matrix(const dist_matrix::DistMatrix<DISTMATDTYPE>&);
+    void multiply_by_matrix(const dist_matrix::DistMatrix<DISTMATDTYPE>&,
+        const double alpha, LocGridOrbitals& product);
 #endif
     void multiplyByMatrix2states(const int st1, const int st2,
         const double* mat, LocGridOrbitals& product);

@@ -58,23 +58,26 @@ void OrbitalsExtrapolationOrder3<OrbitalsType>::extrapolate_orbitals(
             // alignement
             orbitals_minus1_->computeGram(*new_orbitals, matQ);
             getProcrustesTransform(matQ, yyt);
-            orbitals_minus1_->multiply_by_matrix(matQ);
+            orbitals_minus1_->multiply_by_matrix(matQ, 0., *orbitals_minus1_);
 
             // compute delta Phi
             tmp_orbitals_minus1.assign(*orbitals_minus1_);
             tmp_orbitals_minus1.axpy((ORBDTYPE)-1., *new_orbitals);
-            tmp_orbitals_minus1.multiply_by_matrix(yyt);
+            tmp_orbitals_minus1.multiply_by_matrix(
+                yyt, 0., tmp_orbitals_minus1);
 
             if (orbitals_minus2_ != nullptr)
             {
                 // alignement
                 orbitals_minus2_->computeGram(*new_orbitals, matQ);
                 getProcrustesTransform(matQ, yyt);
-                orbitals_minus2_->multiply_by_matrix(matQ);
+                orbitals_minus2_->multiply_by_matrix(
+                    matQ, 0., *orbitals_minus2_);
 
                 // compute delta Phi
                 orbitals_minus2_->axpy((ORBDTYPE)-1., *orbitals_minus1_);
-                orbitals_minus2_->multiply_by_matrix(yyt);
+                orbitals_minus2_->multiply_by_matrix(
+                    yyt, 0., *orbitals_minus2_);
             }
         }
         else

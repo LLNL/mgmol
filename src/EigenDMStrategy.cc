@@ -42,7 +42,7 @@ int EigenDMStrategy<OrbitalsType>::update(OrbitalsType& orbitals)
 
     // if( onpe0 && ct.verbose>2 )
     //    (*MPIdata::sout)<<"get_dm_diag: rotate orbitals "<<endl;
-    orbitals.multiply_by_matrix(zz);
+    orbitals.multiply_by_matrix(zz, 0., orbitals);
     orbitals.setDataWithGhosts();
     orbitals.trade_boundaries();
 #else

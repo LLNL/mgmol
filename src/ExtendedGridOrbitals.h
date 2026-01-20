@@ -57,6 +57,8 @@ private:
     static Timer assign_tm_;
     static Timer normalize_tm_;
     static Timer axpy_tm_;
+    static Timer gemm_nn_tm_;
+    static Timer gemm_tn_tm_;
 
     static int lda_; // leading dimension for storage
     static int numpt_;
@@ -86,17 +88,15 @@ private:
     //
     void projectOut(ScalarType* const, const int);
 
-    void multiply_by_ReplicatedMatrix(const ReplicatedMatrix& matrix);
+    void multiply_by_ReplicatedMatrix(const ReplicatedMatrix& matrix,
+        const double alpha, ExtendedGridOrbitals<ORBDTYPE>& product);
 #ifdef MGMOL_USE_SCALAPACK
     void multiply_by_DistMatrix(
-        const dist_matrix::DistMatrix<DISTMATDTYPE>& matrix);
+        const dist_matrix::DistMatrix<DISTMATDTYPE>& matrix, const double alpha,
+        ExtendedGridOrbitals<ORBDTYPE>& product);
 #endif
     void multiply_by_matrix(
         const DISTMATDTYPE* const, ScalarType*, const int) const;
-#ifdef MGMOL_USE_SCALAPACK
-    void multiply_by_matrix(const dist_matrix::DistMatrix<DISTMATDTYPE>& matrix,
-        ScalarType* const product, const int ldp);
-#endif
     void scal(const int i, const double alpha) { block_vector_.scal(i, alpha); }
     virtual void assign(const int i, const ScalarType* const v, const int n = 1)
     {
@@ -384,7 +384,8 @@ public:
     void multiply_by_matrix(
         const DISTMATDTYPE* const matrix, ExtendedGridOrbitals& product) const;
     template <class MatrixType>
-    void multiply_by_matrix(const MatrixType&);
+    void multiply_by_matrix(const MatrixType&, const double alpha,
+        ExtendedGridOrbitals<ORBDTYPE>& product);
     void multiplyByMatrix2states(const int st1, const int st2,
         const double* mat, ExtendedGridOrbitals& product);
 
