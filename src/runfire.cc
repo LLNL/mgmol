@@ -137,7 +137,7 @@ void MGmol<OrbitalsType>::runfire(OrbitalsType** orbitals, Ions& ions)
     }
 }
 
-template void MGmol<LocGridOrbitals>::runfire(
-    LocGridOrbitals** orbitals, Ions& ions);
-template void MGmol<ExtendedGridOrbitals>::runfire(
-    ExtendedGridOrbitals** orbitals, Ions& ions);
+template void MGmol<LocGridOrbitals<ORBDTYPE>>::runfire(
+    LocGridOrbitals<ORBDTYPE>** orbitals, Ions& ions);
+template void MGmol<ExtendedGridOrbitals<ORBDTYPE>>::runfire(
+    ExtendedGridOrbitals<ORBDTYPE>** orbitals, Ions& ions);

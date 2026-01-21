@@ -185,5 +185,5 @@ double PBEonGridSpin<T>::getExc() const
     return exc * mygrid.vel();
 }
 
-template class PBEonGridSpin<LocGridOrbitals>;
-template class PBEonGridSpin<ExtendedGridOrbitals>;
+template class PBEonGridSpin<LocGridOrbitals<ORBDTYPE>>;
+template class PBEonGridSpin<ExtendedGridOrbitals<ORBDTYPE>>;

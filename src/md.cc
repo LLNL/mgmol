@@ -26,7 +26,6 @@
 #include "Mesh.h"
 #include "OrbitalsExtrapolation.h"
 #include "OrbitalsExtrapolationFactory.h"
-#include "OrbitalsPreconditioning.h"
 #include "Potentials.h"
 #include "ProjectedMatricesMehrstellen.h"
 #include "ProjectedMatricesSparse.h"
@@ -412,7 +411,7 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
     if (ROM_MVP)
     {
         if (onpe0) os_ << "Setup ROM MVP solver..." << std::endl;
-        ExtendedGridOrbitals** extended_orbitals = reinterpret_cast<ExtendedGridOrbitals**>(orbitals);
+        ExtendedGridOrbitals<ORBDTYPE>** extended_orbitals = reinterpret_cast<ExtendedGridOrbitals<ORBDTYPE>**>(orbitals);
         (*extended_orbitals)->set(ct.getROMOptions().basis_file, ct.numst); 
         (*extended_orbitals)->orthonormalizeLoewdin();
         (*extended_orbitals)->setDataWithGhosts(true);
@@ -856,5 +855,5 @@ void MGmol<OrbitalsType>::loadRestartFile(const std::string filename)
     return;
 }
 
-template class MGmol<LocGridOrbitals>;
-template class MGmol<ExtendedGridOrbitals>;
+template class MGmol<LocGridOrbitals<ORBDTYPE>>;
+template class MGmol<ExtendedGridOrbitals<ORBDTYPE>>;

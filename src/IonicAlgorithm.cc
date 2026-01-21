@@ -235,5 +235,5 @@ void IonicAlgorithm<OrbitalsType>::updatePotAndMasks()
     mgmol_strategy_.move_orbitals(orbitals_);
 }
 
-template class IonicAlgorithm<LocGridOrbitals>;
-template class IonicAlgorithm<ExtendedGridOrbitals>;
+template class IonicAlgorithm<LocGridOrbitals<ORBDTYPE>>;
+template class IonicAlgorithm<ExtendedGridOrbitals<ORBDTYPE>>;

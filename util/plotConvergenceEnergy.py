@@ -9,35 +9,45 @@
 import sys, string
 import matplotlib.pyplot as plt
 
-energies=[]
-
-inputfile=open(sys.argv[1],'r')
-lines=inputfile.readlines()
-
-flag=0
-nst=0
 conv_energy=10000.
-for line in lines:
-  if line.count( 'Number of states'):
-    words=line.split()
-    nst=eval(words[4])
-  num_matches1 = line.count('ENERGY')
-  num_matches2 = line.count('%%')
-  if num_matches1 & num_matches2:
-    words=line.split()
-    energy=eval(words[5][:-1])
-    energies.append(energy)
-    conv_energy=energy
 
-deltaes=[]
-for energy in energies:
-  deltaes.append((energy-conv_energy)/nst)
+markers=['r.--','b.--','g.--']
 
-plt.plot(deltaes,'r.--')
-plt.ylabel('error Eks/orbital [Ry]')
-plt.xlabel('outer iterations')
-plt.axis([0.,len(deltaes),10.*deltaes[-2],deltaes[0]])
+i=0
+for filename in sys.argv[1:]:
+  energies=[]
+
+  inputfile=open(filename,'r')
+  lines=inputfile.readlines()
+
+  flag=0
+  na=0
+  for line in lines:
+    if line.count('Number of ions'):
+      words=line.split()
+      na=eval(words[4])
+      print('na = {}'.format(na))
+    if line.count('ENERGY') & line.count('%%'):
+      words=line.split()
+      energy=eval(words[5][:-1])
+      energies.append(energy)
+      if conv_energy>energy:
+        conv_energy=energy
+
+  print('Reference energy [Ha/atom] = {}'.format(conv_energy/na))
+  deltaes=[]
+  for energy in energies:
+    deltaes.append((energy-conv_energy)/na)
+
+  plt.plot(deltaes,markers[i])
+  plt.axis([0.,len(deltaes),10.*deltaes[-2],deltaes[0]])
+  i=i+1
+
+plt.ylabel('error Eks/atom [Ha]', fontsize=12)
+plt.xlabel('outer iterations', fontsize=12)
 plt.yscale('log')
+plt.xticks(fontsize=12)
+plt.yticks(fontsize=12)
 
 #plt.show()
 plt.savefig('errorEnergy.png', dpi=100)

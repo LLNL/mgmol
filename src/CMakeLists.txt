@@ -26,6 +26,12 @@ set(SOURCES
  mgmol_run.cc
  read_config.cc
  jade.cc
+ DotProductSimple.cc
+ DotProductDiagonal.cc
+ DotProductWithInvS.cc
+ DotProductWithDM.cc
+ LocalMatrices2ReplicatedMatrix.cc
+ ReplicatedMatrix2SquareLocalMatrices.cc
  DielectricControl.cc
  ReplicatedMatrix.cc
  ReplicatedVector.cc
@@ -46,7 +52,7 @@ set(SOURCES
  HamiltonianMVP_DMStrategy.cc 
  MVPSolver.cc 
  HamiltonianMVPSolver.cc 
- OrbitalsPreconditioning.cc 
+ MGOrbitalsPreconditioning.cc
  DFTsolver.cc 
  NonOrthoDMStrategy.cc 
  FullyOccupiedNonOrthoDMStrategy.cc 

@@ -127,7 +127,7 @@ void ABPG<T>::update_states(T& orbitals, T& res, T& work_orbitals,
     else
     {
         // Preconditioned Power Method
-        orbitals.axpy(alpha, res);
+        orbitals.axpy((ORBDTYPE)alpha, res);
 
         if (ct.getOrthoType() == OrthoType::Orthonormal)
             orbitals.orthonormalizeLoewdin(false);
@@ -148,5 +148,5 @@ void ABPG<T>::printTimers(std::ostream& os)
     update_states_tm_.print(os);
 }
 
-template class ABPG<LocGridOrbitals>;
-template class ABPG<ExtendedGridOrbitals>;
+template class ABPG<LocGridOrbitals<ORBDTYPE>>;
+template class ABPG<ExtendedGridOrbitals<ORBDTYPE>>;

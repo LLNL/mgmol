@@ -39,8 +39,10 @@
 #include "KBPsiMatrixSparse.h"
 #include "LBFGS.h"
 #include "LocGridOrbitals.h"
+#include "LocalMatrices2ReplicatedMatrix.h"
 #include "LocalizationRegions.h"
 #include "MDfiles.h"
+#include "MGOrbitalsPreconditioning.h"
 #include "MGkernels.h"
 #include "MGmol.h"
 #include "MLWFTransform.h"
@@ -48,7 +50,6 @@
 #include "MVPSolver.h"
 #include "MasksSet.h"
 #include "Mesh.h"
-#include "OrbitalsPreconditioning.h"
 #include "PackedCommunicationBuffer.h"
 #include "PoissonInterface.h"
 #include "Potentials.h"
@@ -58,6 +59,7 @@
 #include "ProjectedMatricesMehrstellen.h"
 #include "ProjectedMatricesSparse.h"
 #include "ReplicatedMatrix.h"
+#include "ReplicatedMatrix2SquareLocalMatrices.h"
 #include "ReplicatedVector.h"
 #include "Rho.h"
 #include "SP2.h"
@@ -93,8 +95,11 @@ extern Timer dsyrk_tm;
 extern Timer ssyrk_tm;
 extern Timer mpsyrk_tm;
 extern Timer tttsyrk_tm;
-extern Timer mpdot_tm;
 extern Timer ttdot_tm;
+extern Timer loopdot_tm;
+extern Timer loopaxpy_tm;
+extern Timer loopscal_tm;
+extern Timer loopcp_tm;
 extern Timer get_NOLMO_tm;
 extern Timer get_MLWF_tm;
 extern Timer md_iterations_tm;
@@ -142,7 +147,7 @@ MGmol<OrbitalsType>::~MGmol()
 }
 
 template <>
-void MGmol<LocGridOrbitals>::initialMasks()
+void MGmol<LocGridOrbitals<ORBDTYPE>>::initialMasks()
 {
     assert(lrs_);
 
@@ -160,7 +165,7 @@ void MGmol<LocGridOrbitals>::initialMasks()
 }
 
 template <>
-void MGmol<ExtendedGridOrbitals>::initialMasks()
+void MGmol<ExtendedGridOrbitals<ORBDTYPE>>::initialMasks()
 {
 }
 
@@ -236,22 +241,15 @@ int MGmol<OrbitalsType>::initial()
     // initialize data distribution objects
     bool with_spin = (mmpi.nspin() > 1);
 
-    // we support using ReplicatedMatrix on GPU only for
-    // a limited set of options
-#ifdef HAVE_MAGMA
-    bool use_replicated_matrix
-        = !std::is_same<OrbitalsType, LocGridOrbitals>::value;
-#endif
+    bool use_replicated_matrix = ct.rmatrices;
 
     if (ct.Mehrstellen())
     {
-#ifdef HAVE_MAGMA
         if (use_replicated_matrix)
             proj_matrices_.reset(
                 new ProjectedMatricesMehrstellen<ReplicatedMatrix>(
                     ct.numst, with_spin, ct.occ_width));
         else
-#endif
             proj_matrices_.reset(new ProjectedMatricesMehrstellen<
                 dist_matrix::DistMatrix<DISTMATDTYPE>>(
                 ct.numst, with_spin, ct.occ_width));
@@ -259,13 +257,10 @@ int MGmol<OrbitalsType>::initial()
     else if (ct.short_sighted)
         proj_matrices_.reset(new ProjectedMatricesSparse(
             ct.numst, ct.occ_width, lrs_, local_cluster_.get()));
-    else
-#ifdef HAVE_MAGMA
-        if (use_replicated_matrix)
+    else if (use_replicated_matrix)
         proj_matrices_.reset(new ProjectedMatrices<ReplicatedMatrix>(
             ct.numst, with_spin, ct.occ_width));
     else
-#endif
         proj_matrices_.reset(
             new ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>(
                 ct.numst, with_spin, ct.occ_width));
@@ -289,7 +284,7 @@ int MGmol<OrbitalsType>::initial()
         ct.numst, ct.bcWF, proj_matrices_.get(), lrs_, currentMasks_.get(),
         corrMasks_.get(), local_cluster_.get(), true);
 
-    increaseMemorySlotsForOrbitals<MemorySpaceType>();
+    increaseMemorySlotsForOrbitals<ORBDTYPE, MemorySpaceType>();
 
     Potentials& pot            = hamiltonian_->potential();
     pb::Lap<ORBDTYPE>* lapOper = hamiltonian_->lapOper();
@@ -463,18 +458,17 @@ int MGmol<OrbitalsType>::initial()
     updateHmatrix(*current_orbitals_, *ions_);
 
     // HMVP algorithm requires that H is initialized
-#ifdef HAVE_MAGMA
     if (use_replicated_matrix)
         dm_strategy_.reset(
             DMStrategyFactory<OrbitalsType, ReplicatedMatrix>::create(comm_,
                 os_, *ions_, rho_.get(), energy_.get(), electrostat_.get(),
-                this, proj_matrices_.get(), current_orbitals_));
+                hamiltonian_.get(), this, proj_matrices_.get(),
+                current_orbitals_));
     else
-#endif
         dm_strategy_.reset(DMStrategyFactory<OrbitalsType,
             dist_matrix::DistMatrix<double>>::create(comm_, os_, *ions_,
-            rho_.get(), energy_.get(), electrostat_.get(), this,
-            proj_matrices_.get(), current_orbitals_));
+            rho_.get(), energy_.get(), electrostat_.get(), hamiltonian_.get(),
+            this, proj_matrices_.get(), current_orbitals_));
 
     // theta = invB * Hij
     proj_matrices_->updateThetaAndHB();
@@ -529,8 +523,7 @@ void MGmol<OrbitalsType>::run()
 
             constraints_->projectOutForces(20);
 
-            if ((ions_->getNumIons() <= 1024 || ct.verbose > 2)
-                && ct.verbose > 0)
+            if ((ions_->getNumIons() <= 1024 || ct.verbose > 1))
                 ions_->printForcesGlobal(os_);
 
             finalEnergy();
@@ -641,10 +634,12 @@ void MGmol<OrbitalsType>::write_header()
             << (omp_get_max_threads() > 1 ? "s " : " ");
         os_ << "active" << std::endl << std::endl;
 #endif
-
-        os_ << " ScaLapack block size: "
-            << dist_matrix::DistMatrix<DISTMATDTYPE>::getBlockSize()
-            << std::endl;
+        if (!ct.rmatrices)
+        {
+            os_ << " ScaLapack block size: "
+                << dist_matrix::DistMatrix<DISTMATDTYPE>::getBlockSize()
+                << std::endl;
+        }
 
         if (!ct.short_sighted)
         {
@@ -752,7 +747,6 @@ void MGmol<OrbitalsType>::printEigAndOcc()
         && onpe0)
     {
         bool printflag = false;
-#ifdef HAVE_MAGMA
         // try with ReplicatedMatrix first
         {
             std::shared_ptr<ProjectedMatrices<ReplicatedMatrix>> projmatrices
@@ -765,7 +759,6 @@ void MGmol<OrbitalsType>::printEigAndOcc()
                 printflag = true;
             }
         }
-#endif
         if (!printflag)
         {
             std::shared_ptr<
@@ -870,8 +863,12 @@ void MGmol<OrbitalsType>::printTimers()
     dsyrk_tm.print(os_);
     mpsyrk_tm.print(os_);
     tttsyrk_tm.print(os_);
-    mpdot_tm.print(os_);
     ttdot_tm.print(os_);
+
+    loopcp_tm.print(os_);
+    loopaxpy_tm.print(os_);
+    loopscal_tm.print(os_);
+    loopdot_tm.print(os_);
 
     dist_matrix::SubMatrices<double>::printTimers(os_);
 
@@ -880,6 +877,9 @@ void MGmol<OrbitalsType>::printTimers()
     dist_matrix::SparseDistMatrix<DISTMATDTYPE>::printTimers(os_);
 
     dist_matrix::DistMatrix<DISTMATDTYPE>::printTimers(os_);
+
+    ReplicatedMatrix2SquareLocalMatrices::printTimers(os_);
+    LocalMatrices2ReplicatedMatrix::printTimers(os_);
 
     MGmol_MPI::printTimers(os_);
 
@@ -902,9 +902,13 @@ void MGmol<OrbitalsType>::printTimers()
     AndersonMix<OrbitalsType>::update_tm().print(os_);
     proj_matrices_->printTimers(os_);
     ShortSightedInverse::printTimers(os_);
-    if (std::is_same<OrbitalsType, ExtendedGridOrbitals>::value)
-        MVPSolver<ExtendedGridOrbitals,
+    if (std::is_same<OrbitalsType, ExtendedGridOrbitals<ORBDTYPE>>::value)
+    {
+        MVPSolver<ExtendedGridOrbitals<ORBDTYPE>,
             dist_matrix::DistMatrix<DISTMATDTYPE>>::printTimers(os_);
+        MVPSolver<ExtendedGridOrbitals<ORBDTYPE>,
+            ReplicatedMatrix>::printTimers(os_);
+    }
     VariableSizeMatrixInterface::printTimers(os_);
     DataDistribution::printTimers(os_);
     PackedCommunicationBuffer::printTimers(os_);
@@ -941,19 +945,30 @@ void MGmol<OrbitalsType>::printTimers()
     setup_tm_.print(os_);
     HDFrestart::printTimers(os_);
 #ifdef HAVE_MAGMA
-    PowerGen<ReplicatedMatrix, ReplicatedVector>::printTimers(os_);
     BlockVector<ORBDTYPE, MemorySpace::Device>::printTimers(os_);
-    DavidsonSolver<ExtendedGridOrbitals, ReplicatedMatrix>::printTimers(os_);
-    ChebyshevApproximation<ReplicatedMatrix>::printTimers(os_);
 #endif
+    PowerGen<ReplicatedMatrix, ReplicatedVector>::printTimers(os_);
+    DavidsonSolver<ExtendedGridOrbitals<ORBDTYPE>,
+        ReplicatedMatrix>::printTimers(os_);
+    ChebyshevApproximation<ReplicatedMatrix>::printTimers(os_);
     PowerGen<dist_matrix::DistMatrix<double>,
         dist_matrix::DistVector<double>>::printTimers(os_);
     BlockVector<ORBDTYPE, MemorySpace::Host>::printTimers(os_);
-    DavidsonSolver<ExtendedGridOrbitals,
-        dist_matrix::DistMatrix<DISTMATDTYPE>>::printTimers(os_);
-    ChebyshevApproximation<dist_matrix::DistMatrix<DISTMATDTYPE>>::printTimers(
-        os_);
-    OrbitalsPreconditioning<OrbitalsType>::printTimers(os_);
+    if (ct.rmatrices)
+    {
+        DavidsonSolver<ExtendedGridOrbitals<ORBDTYPE>,
+            ReplicatedMatrix>::printTimers(os_);
+        ChebyshevApproximation<ReplicatedMatrix>::printTimers(os_);
+    }
+    else
+    {
+        DavidsonSolver<ExtendedGridOrbitals<ORBDTYPE>,
+            dist_matrix::DistMatrix<DISTMATDTYPE>>::printTimers(os_);
+        ChebyshevApproximation<
+            dist_matrix::DistMatrix<DISTMATDTYPE>>::printTimers(os_);
+    }
+    MGOrbitalsPreconditioning<OrbitalsType, float>::printTimers(os_);
+    MGOrbitalsPreconditioning<OrbitalsType, double>::printTimers(os_);
     MDfiles::printTimers(os_);
     ChebyshevApproximationInterface::printTimers(os_);
 }
@@ -1018,14 +1033,26 @@ double MGmol<OrbitalsType>::get_evnl(const Ions& ions)
     }
     else
     {
-        std::shared_ptr<
-            ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>>
-            projmatrices = std::dynamic_pointer_cast<
-                ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>>(
-                proj_matrices_);
-        assert(projmatrices);
+        if (ct.rmatrices)
+        {
+            std::shared_ptr<ProjectedMatrices<ReplicatedMatrix>> projmatrices
+                = std::dynamic_pointer_cast<
+                    ProjectedMatrices<ReplicatedMatrix>>(proj_matrices_);
+            assert(projmatrices);
 
-        val = g_kbpsi_->getEvnl(ions, projmatrices.get());
+            val = g_kbpsi_->getEvnl(ions, projmatrices.get());
+        }
+        else
+        {
+            std::shared_ptr<
+                ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>>
+                projmatrices = std::dynamic_pointer_cast<
+                    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>>(
+                    proj_matrices_);
+            assert(projmatrices);
+
+            val = g_kbpsi_->getEvnl(ions, projmatrices.get());
+        }
     }
 
     evnl_tm_.stop();
@@ -1149,7 +1176,8 @@ void MGmol<OrbitalsType>::cleanup()
 }
 
 template <>
-void MGmol<LocGridOrbitals>::projectOutKernel(LocGridOrbitals& phi)
+void MGmol<LocGridOrbitals<ORBDTYPE>>::projectOutKernel(
+    LocGridOrbitals<ORBDTYPE>& phi)
 {
     assert(aomm_ != nullptr);
     aomm_->projectOut(phi);
@@ -1164,33 +1192,53 @@ void MGmol<OrbitalsType>::projectOutKernel(OrbitalsType& phi)
 }
 
 template <class OrbitalsType>
-void MGmol<OrbitalsType>::setGamma(
-    const pb::Lap<ORBDTYPE>& lapOper, const Potentials& pot)
+void MGmol<OrbitalsType>::precond_mg(OrbitalsType& phi)
 {
     assert(orbitals_precond_);
 
     Control& ct = *(Control::instance());
 
-    orbitals_precond_->setGamma(
-        lapOper, pot, ct.getMGlevels(), proj_matrices_.get());
+    Potentials& pot            = hamiltonian_->potential();
+    pb::Lap<ORBDTYPE>* lapOper = hamiltonian_->lapOper();
+
+    const short precision = ct.precond_precision_;
+    if (precision == 32)
+    {
+        using OrbitalsPrecond = MGOrbitalsPreconditioning<OrbitalsType, float>;
+
+        std::shared_ptr<OrbitalsPrecond> orbitals_precond
+            = std::dynamic_pointer_cast<OrbitalsPrecond>(orbitals_precond_);
+
+        orbitals_precond->setGamma(
+            *lapOper, pot, ct.getMGlevels(), proj_matrices_.get());
+    }
+    else if (precision == 64)
+    {
+        using OrbitalsPrecond = MGOrbitalsPreconditioning<OrbitalsType, double>;
+
+        std::shared_ptr<OrbitalsPrecond> orbitals_precond
+            = std::dynamic_pointer_cast<OrbitalsPrecond>(orbitals_precond_);
+
+        orbitals_precond->setGamma(
+            *lapOper, pot, ct.getMGlevels(), proj_matrices_.get());
+    }
+    else
+    {
+        std::cerr << "Precision " << precision
+                  << " not supported for orbitals preconditioner!!!"
+                  << std::endl;
+    }
+
+    orbitals_precond_->precond(phi);
 }
 
 template <class OrbitalsType>
-void MGmol<OrbitalsType>::precond_mg(OrbitalsType& phi)
-{
-    assert(orbitals_precond_);
-
-    orbitals_precond_->precond_mg(phi);
-}
-
-template <class OrbitalsType>
-double MGmol<OrbitalsType>::computeResidual(OrbitalsType& orbitals,
-    OrbitalsType& work_orbitals, Ions& ions, OrbitalsType& res,
-    const bool print_residual, const bool norm_res)
+double MGmol<OrbitalsType>::computeResidual(OrbitalsType& phi,
+    OrbitalsType& hphi, Ions& ions, OrbitalsType& res,
+    const KBPsiMatrixSparse* const kbpsi, const bool print_residual,
+    const bool norm_res)
 
 {
-    assert(orbitals.getIterativeIndex() >= 0);
-
     comp_res_tm_.start();
     // os_<<"computeResidual()"<<endl;
 
@@ -1198,19 +1246,14 @@ double MGmol<OrbitalsType>::computeResidual(OrbitalsType& orbitals,
 
     proj_matrices_->computeInvB();
 
-    Potentials& pot          = hamiltonian_->potential();
-    pb::Lap<ORBDTYPE>* lapop = hamiltonian_->lapOper();
-
-    setGamma(*lapop, pot);
-
-    // get H*psi stored in work_orbitals.psi
+    // get H*phi stored in hphi
     // and psi^T H psi in Hij
-    getHpsiAndTheta(ions, orbitals, work_orbitals);
+    getHpsiAndTheta(ions, phi, hphi, kbpsi);
 
-    double norm2Res = computeConstraintResidual(
-        orbitals, work_orbitals, res, print_residual, norm_res);
+    double norm2Res
+        = computeConstraintResidual(phi, hphi, res, print_residual, norm_res);
 
-    if (ct.isSpreadFunctionalEnergy()) addResidualSpreadPenalty(orbitals, res);
+    if (ct.isSpreadFunctionalEnergy()) addResidualSpreadPenalty(phi, res);
 
     comp_res_tm_.stop();
 
@@ -1280,7 +1323,7 @@ void MGmol<OrbitalsType>::computeResidualUsingHPhi(OrbitalsType& psi,
         }
 
         // res = (B*phi*theta - H*phi) in [Ry]
-        res.axpy(-1., hphi);
+        res.axpy((ORBDTYPE)(-1.), hphi);
     }
 
     get_res_tm_.stop();
@@ -1337,29 +1380,16 @@ double MGmol<OrbitalsType>::computePrecondResidual(OrbitalsType& phi,
 {
     Control& ct = *(Control::instance());
 
-    proj_matrices_->computeInvB();
-
-    Potentials& pot          = hamiltonian_->potential();
-    pb::Lap<ORBDTYPE>* lapop = hamiltonian_->lapOper();
-
-    setGamma(*lapop, pot);
-
-    // get H*psi stored in hphi
-    // and psi^T H psi in Hij
-    getHpsiAndTheta(ions, phi, hphi, kbpsi);
-
-    double norm2Res
-        = computeConstraintResidual(phi, hphi, res, print_residual, norm_res);
+    double norm2Res = computeResidual(
+        phi, hphi, ions, res, kbpsi, print_residual, norm_res);
 
     if (ct.withPreconditioner())
     {
         // PRECONDITIONING
         // compute the preconditioned steepest descent direction
         // -> res
-        orbitals_precond_->precond_mg(res);
+        precond_mg(res);
     }
-
-    // if( ct.isSpreadFunctionalActive() )addResidualSpreadPenalty(phi,res);
 
     return norm2Res;
 }
@@ -1443,8 +1473,8 @@ void MGmol<OrbitalsType>::updateDMandEnergy(OrbitalsType& orbitals, Ions& ions, 
     std::shared_ptr<DMStrategy<OrbitalsType>> dm_strategy(
         DMStrategyFactory<OrbitalsType,
             dist_matrix::DistMatrix<double>>::create(comm_, os_, ions,
-            rho_.get(), energy_.get(), electrostat_.get(), this,
-            proj_matrices_.get(), &orbitals));
+            rho_.get(), energy_.get(), electrostat_.get(),
+            hamiltonian_.get(), this, proj_matrices_.get(), &orbitals));
 
     dm_strategy->update(orbitals);
 
@@ -1495,6 +1525,8 @@ double MGmol<OrbitalsType>::evaluateDMandEnergyAndForces(Orbitals* orbitals,
     const std::vector<double>& tau, const std::vector<short>& atnumbers,
     std::vector<double>& forces)
 {
+    Control& ct = *(Control::instance());
+
     OrbitalsType* dorbitals = dynamic_cast<OrbitalsType*>(orbitals);
 
     // create a new temporary Ions object to be used for
@@ -1517,13 +1549,25 @@ double MGmol<OrbitalsType>::evaluateDMandEnergyAndForces(Orbitals* orbitals,
     proj_matrices_->updateThetaAndHB();
 
     // compute DM
-    std::shared_ptr<DMStrategy<OrbitalsType>> dm_strategy(
-        DMStrategyFactory<OrbitalsType,
-            dist_matrix::DistMatrix<double>>::create(comm_, os_, ions,
-            rho_.get(), energy_.get(), electrostat_.get(), this,
-            proj_matrices_.get(), dorbitals));
+    if (ct.rmatrices)
+    {
+        std::shared_ptr<DMStrategy<OrbitalsType>> dm_strategy(
+            DMStrategyFactory<OrbitalsType, ReplicatedMatrix>::create(comm_,
+                os_, ions, rho_.get(), energy_.get(), electrostat_.get(),
+                hamiltonian_.get(), this, proj_matrices_.get(), dorbitals));
 
-    dm_strategy->update(*dorbitals);
+        dm_strategy->update(*dorbitals);
+    }
+    else
+    {
+        std::shared_ptr<DMStrategy<OrbitalsType>> dm_strategy(
+            DMStrategyFactory<OrbitalsType,
+                dist_matrix::DistMatrix<double>>::create(comm_, os_, ions,
+                rho_.get(), energy_.get(), electrostat_.get(),
+                hamiltonian_.get(), this, proj_matrices_.get(), dorbitals));
+
+        dm_strategy->update(*dorbitals);
+    }
 
     // evaluate energy and forces
     double ts  = 0.;
@@ -1537,11 +1581,13 @@ double MGmol<OrbitalsType>::evaluateDMandEnergyAndForces(Orbitals* orbitals,
     return eks;
 }
 
-template class MGmol<LocGridOrbitals>;
-template class MGmol<ExtendedGridOrbitals>;
-template int MGmol<LocGridOrbitals>::initial<MemorySpace::Host>();
-template int MGmol<ExtendedGridOrbitals>::initial<MemorySpace::Host>();
+template class MGmol<LocGridOrbitals<ORBDTYPE>>;
+template class MGmol<ExtendedGridOrbitals<ORBDTYPE>>;
+template int MGmol<LocGridOrbitals<ORBDTYPE>>::initial<MemorySpace::Host>();
+template int
+MGmol<ExtendedGridOrbitals<ORBDTYPE>>::initial<MemorySpace::Host>();
 #ifdef HAVE_MAGMA
-template int MGmol<LocGridOrbitals>::initial<MemorySpace::Device>();
-template int MGmol<ExtendedGridOrbitals>::initial<MemorySpace::Device>();
+template int MGmol<LocGridOrbitals<ORBDTYPE>>::initial<MemorySpace::Device>();
+template int
+MGmol<ExtendedGridOrbitals<ORBDTYPE>>::initial<MemorySpace::Device>();
 #endif

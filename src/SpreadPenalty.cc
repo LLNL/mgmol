@@ -317,5 +317,5 @@ double SpreadPenalty<T>::evaluateEnergy(const T& phi)
     return alpha_ * total_energy;
 }
 
-template class SpreadPenalty<LocGridOrbitals>;
-template class SpreadPenalty<ExtendedGridOrbitals>;
+template class SpreadPenalty<LocGridOrbitals<ORBDTYPE>>;
+template class SpreadPenalty<ExtendedGridOrbitals<ORBDTYPE>>;

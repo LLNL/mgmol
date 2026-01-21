@@ -26,5 +26,5 @@ void LDAonGrid<T>::update()
     get_xc_tm_.stop();
 }
 
-template class LDAonGrid<LocGridOrbitals>;
-template class LDAonGrid<ExtendedGridOrbitals>;
+template class LDAonGrid<LocGridOrbitals<ORBDTYPE>>;
+template class LDAonGrid<ExtendedGridOrbitals<ORBDTYPE>>;

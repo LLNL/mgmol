@@ -60,8 +60,8 @@ class HDFrestart
 
     int bsize_;
 
-    double* work_space_double_;
-    float* work_space_float_;
+    std::vector<double> work_space_double_;
+    std::vector<float> work_space_float_;
 
 #ifdef MGMOL_USE_HDF5P
     bool use_hdf5p_;
@@ -87,7 +87,6 @@ class HDFrestart
     template <class T>
     void gatherDataXdir(std::vector<T>& data);
 
-    void closeWorkSpace();
     void setupWorkSpace();
 
     template <class T>

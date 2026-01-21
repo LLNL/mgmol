@@ -30,6 +30,11 @@ class BlockVector
 {
     static Timer set_data_tm_;
     static Timer trade_data_tm_;
+    static Timer assign_tm_;
+    static Timer scal_tm_;
+    static Timer opminus_tm_;
+    static Timer copy_tm_;
+    static Timer diagop_tm_;
 
     static short n_instances_;
     static short subdivx_;
@@ -109,7 +114,8 @@ public:
         deallocate_storage();
     }
 
-    void axpy(const double alpha, const BlockVector& bv)
+    template <typename ScalarType2>
+    void axpy(const ScalarType2 alpha, const BlockVector& bv)
     {
         assert(storage_ != nullptr);
         assert(bv.storage_ != nullptr);
@@ -131,6 +137,9 @@ public:
         assert(vect_[i] != 0);
         return vect_[i];
     }
+
+    void applyDiagonalOp(const std::vector<double>& diag,
+        BlockVector<ScalarType, MemorySpaceType>& dst) const;
 
     ScalarType maxAbsValue() const;
 
@@ -177,13 +186,19 @@ public:
     }
 
     void setToDataWithGhosts() { assign(*data_wghosts_); }
+
     void copyDataFrom(const BlockVector& src)
     {
+        copy_tm_.start();
+
         assert(src.size_storage_ == size_storage_);
         assert(storage_ != nullptr);
         assert(src.storage_ != nullptr);
+
         MemorySpace::Memory<ScalarType, MemorySpaceType>::copy(
             src.storage_, size_storage_, storage_);
+
+        copy_tm_.stop();
     }
 
     pb::GridFunc<ScalarType>& getVectorWithGhosts(const int i)
@@ -306,4 +321,22 @@ Timer BlockVector<ScalarType, MemorySpaceType>::set_data_tm_(
 template <typename ScalarType, typename MemorySpaceType>
 Timer BlockVector<ScalarType, MemorySpaceType>::trade_data_tm_(
     "BlockVector::trade_data");
+
+template <typename ScalarType, typename MemorySpaceType>
+Timer BlockVector<ScalarType, MemorySpaceType>::assign_tm_(
+    "BlockVector::assign");
+
+template <typename ScalarType, typename MemorySpaceType>
+Timer BlockVector<ScalarType, MemorySpaceType>::scal_tm_("BlockVector::scal");
+
+template <typename ScalarType, typename MemorySpaceType>
+Timer BlockVector<ScalarType, MemorySpaceType>::opminus_tm_(
+    "BlockVector::opminus");
+
+template <typename ScalarType, typename MemorySpaceType>
+Timer BlockVector<ScalarType, MemorySpaceType>::copy_tm_("BlockVector::copy");
+
+template <typename ScalarType, typename MemorySpaceType>
+Timer BlockVector<ScalarType, MemorySpaceType>::diagop_tm_(
+    "BlockVector::diagop");
 #endif

@@ -10,18 +10,16 @@
 #ifndef MGMOL_FIRE_H
 #define MGMOL_FIRE_H
 
+#include "ConstraintSet.h"
+#include "Electrostatic.h"
 #include "Energy.h"
 #include "FIRE_IonicStepper.h"
 #include "IonicAlgorithm.h"
 #include "Ions.h"
 #include "LocalizationRegions.h"
 #include "MGmol.h"
+#include "MasksSet.h"
 #include "Rho.h"
-
-class MasksSet;
-class Electrostatic;
-class KBPsiMatrixInterface;
-class ConstraintSet;
 
 template <class OrbitalsType>
 class FIRE : public IonicAlgorithm<OrbitalsType>

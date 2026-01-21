@@ -41,9 +41,11 @@ Control::Control()
     lrs_extrapolation      = 1; // default
     lrs_compute            = 0;
     system_charge_         = 0.;
-    poisson_pc_nu1         = 2;
-    poisson_pc_nu2         = 2;
+    poisson_pc_nu1         = 1;
+    poisson_pc_nu2         = 1;
     poisson_pc_nlev        = 10;
+    poisson_conv_tol       = 1.e-8;
+    poisson_pc_data_       = 32;
     coloring_algo_         = 0;
     maxDistanceAtomicInfo_ = 8.;
     spread_factor          = 2.;
@@ -262,7 +264,8 @@ void Control::print(std::ostream& os)
         os << " Localization radius       = " << cut_radius << std::endl;
     os << std::endl;
 
-    os << " preconditioner factor:" << precond_factor << std::endl;
+    os << " preconditioner factor: " << precond_factor << std::endl;
+    os << " preconditioner precision: " << precond_precision_ << std::endl;
     if (precond_type_ == 10)
     {
         os << " Multigrid preconditioning for wave functions:" << std::endl;
@@ -331,7 +334,7 @@ void Control::sync(void)
     if (onpe0 && verbose > 0)
         (*MPIdata::sout) << "Control::sync()" << std::endl;
     // pack
-    const short size_short_buffer = 91;
+    const short size_short_buffer = 93;
     short* short_buffer           = new short[size_short_buffer];
     if (mype_ == 0)
     {
@@ -385,7 +388,7 @@ void Control::sync(void)
         short_buffer[47] = out_restart_file_naming_strategy;
         short_buffer[48] = enforceVmass0;
         short_buffer[49] = dm_inner_steps;
-        short_buffer[50] = -1;
+        short_buffer[50] = rmatrices;
         short_buffer[51] = fgmres_kim;
         short_buffer[52] = fgmres_maxits;
         short_buffer[53] = ilu_type;
@@ -421,6 +424,8 @@ void Control::sync(void)
         short_buffer[88] = hartree_reset_;
         short_buffer[89] = MD_last_step_;
         short_buffer[90] = (short)static_cast<int>(poisson_lap_type_);
+        short_buffer[91] = poisson_pc_data_;
+        short_buffer[92] = precond_precision_;
     }
     else
     {
@@ -440,7 +445,7 @@ void Control::sync(void)
         memset(&int_buffer[0], 0, size_int_buffer * sizeof(int));
     }
 
-    const short size_float_buffer = 44;
+    const short size_float_buffer = 45;
     float* float_buffer           = new float[size_float_buffer];
     if (mype_ == 0)
     {
@@ -487,6 +492,7 @@ void Control::sync(void)
         float_buffer[41] = pair_mlwf_distance_threshold_;
         float_buffer[42] = e0_;
         float_buffer[43] = dm_tol;
+        float_buffer[44] = poisson_conv_tol;
     }
     else
     {
@@ -598,42 +604,44 @@ void Control::sync(void)
     out_restart_file_naming_strategy = short_buffer[47];
     enforceVmass0                    = short_buffer[48];
     dm_inner_steps                   = short_buffer[49];
-    //...                 = short_buffer[50];
-    fgmres_kim                    = short_buffer[51];
-    fgmres_maxits                 = short_buffer[52];
-    ilu_type                      = short_buffer[53];
-    ilu_lof                       = short_buffer[54];
-    ilu_maxfil                    = short_buffer[55];
-    coloring_algo_                = short_buffer[56];
-    diel_flag_                    = short_buffer[57];
-    poisson_pc_nu1                = short_buffer[58];
-    poisson_pc_nu2                = short_buffer[59];
-    poisson_pc_nlev               = short_buffer[60];
-    system_charge_                = short_buffer[61];
-    md_print_freq                 = short_buffer[62];
-    use_kernel_functions          = short_buffer[63];
-    ngpts_[0]                     = short_buffer[64];
-    ngpts_[1]                     = short_buffer[65];
-    ngpts_[2]                     = short_buffer[66];
-    computeCondGram_              = short_buffer[67];
-    lrs_extrapolation             = short_buffer[68];
-    parallel_transport            = (bool)short_buffer[69];
-    with_spin_                    = (bool)short_buffer[70];
-    conv_criterion_               = short_buffer[71];
-    load_balancing_max_iterations = short_buffer[72];
-    load_balancing_modulo         = short_buffer[73];
-    write_clusters                = short_buffer[74];
-    DM_solver_                    = short_buffer[75];
-    dm_algo_                      = short_buffer[80];
-    dm_approx_order               = short_buffer[81];
-    dm_approx_ndigits             = short_buffer[82];
-    dm_approx_power_maxits        = short_buffer[83];
-    spread_penalty_type_          = short_buffer[84];
-    dm_use_old_                   = short_buffer[85];
-    max_electronic_steps_tight_   = short_buffer[86];
-    hartree_reset_                = short_buffer[88];
-    MD_last_step_                 = short_buffer[89];
-    poisson_lap_type_ = static_cast<PoissonFDtype>(short_buffer[90]);
+    rmatrices                        = short_buffer[50];
+    fgmres_kim                       = short_buffer[51];
+    fgmres_maxits                    = short_buffer[52];
+    ilu_type                         = short_buffer[53];
+    ilu_lof                          = short_buffer[54];
+    ilu_maxfil                       = short_buffer[55];
+    coloring_algo_                   = short_buffer[56];
+    diel_flag_                       = short_buffer[57];
+    poisson_pc_nu1                   = short_buffer[58];
+    poisson_pc_nu2                   = short_buffer[59];
+    poisson_pc_nlev                  = short_buffer[60];
+    system_charge_                   = short_buffer[61];
+    md_print_freq                    = short_buffer[62];
+    use_kernel_functions             = short_buffer[63];
+    ngpts_[0]                        = short_buffer[64];
+    ngpts_[1]                        = short_buffer[65];
+    ngpts_[2]                        = short_buffer[66];
+    computeCondGram_                 = short_buffer[67];
+    lrs_extrapolation                = short_buffer[68];
+    parallel_transport               = (bool)short_buffer[69];
+    with_spin_                       = (bool)short_buffer[70];
+    conv_criterion_                  = short_buffer[71];
+    load_balancing_max_iterations    = short_buffer[72];
+    load_balancing_modulo            = short_buffer[73];
+    write_clusters                   = short_buffer[74];
+    DM_solver_                       = short_buffer[75];
+    dm_algo_                         = short_buffer[80];
+    dm_approx_order                  = short_buffer[81];
+    dm_approx_ndigits                = short_buffer[82];
+    dm_approx_power_maxits           = short_buffer[83];
+    spread_penalty_type_             = short_buffer[84];
+    dm_use_old_                      = short_buffer[85];
+    max_electronic_steps_tight_      = short_buffer[86];
+    hartree_reset_                   = short_buffer[88];
+    MD_last_step_                    = short_buffer[89];
+    poisson_lap_type_  = static_cast<PoissonFDtype>(short_buffer[90]);
+    poisson_pc_data_   = short_buffer[91];
+    precond_precision_ = short_buffer[92];
 
     numst    = int_buffer[0];
     nel_     = int_buffer[1];
@@ -683,6 +691,7 @@ void Control::sync(void)
     pair_mlwf_distance_threshold_     = float_buffer[41];
     e0_                               = float_buffer[42];
     dm_tol                            = float_buffer[43];
+    poisson_conv_tol                  = float_buffer[44];
     max_electronic_steps_loose_       = max_electronic_steps;
 
     delete[] short_buffer;
@@ -829,6 +838,7 @@ int Control::checkState()
     assert(wannier_transform_type == 0 || wannier_transform_type == 1
            || wannier_transform_type == 2);
     assert(tmatrices == 1 || tmatrices == 0);
+    assert(rmatrices == 1 || rmatrices == 0);
     assert(mg_levels_ >= -1);
     assert(rho0_ > 0.);
     assert(drho0_ > 0.);
@@ -1395,7 +1405,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         if (str.compare("periodic") == 0) bcWF[2] = 1;
 
         str = vm["Poisson.solver"].as<std::string>();
-        if (str.compare("CG") == 0) diel_flag_ = 10;
+        if (str.compare("CG") == 0 || str.compare("PCG") == 0) diel_flag_ = 10;
         if (str.compare("MG") == 0) diel_flag_ = 0;
 
         str = vm["Poisson.diel"].as<std::string>();
@@ -1405,20 +1415,23 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         bool poisson_reset = vm["Poisson.reset"].as<bool>();
         hartree_reset_     = poisson_reset ? 1 : 0;
 
-        poisson_pc_nu1  = vm["Poisson.nu1"].as<short>();
-        poisson_pc_nu2  = vm["Poisson.nu2"].as<short>();
-        vh_init         = vm["Poisson.max_steps_initial"].as<short>();
-        vh_its          = vm["Poisson.max_steps"].as<short>();
-        poisson_pc_nlev = vm["Poisson.max_levels"].as<short>();
-        rho0_           = vm["Poisson.rho0"].as<float>();
-        drho0_          = vm["Poisson.beta"].as<float>();
-        e0_             = vm["Poisson.e0"].as<float>();
+        poisson_pc_nu1   = vm["Poisson.nu1"].as<short>();
+        poisson_pc_nu2   = vm["Poisson.nu2"].as<short>();
+        vh_init          = vm["Poisson.max_steps_initial"].as<short>();
+        vh_its           = vm["Poisson.max_steps"].as<short>();
+        poisson_pc_nlev  = vm["Poisson.max_levels"].as<short>();
+        rho0_            = vm["Poisson.rho0"].as<float>();
+        drho0_           = vm["Poisson.beta"].as<float>();
+        e0_              = vm["Poisson.e0"].as<float>();
+        poisson_pc_data_ = vm["Poisson.precond_precision"].as<short>();
+        poisson_conv_tol = vm["Poisson.conv_tol"].as<float>();
 
         str = vm["ProjectedMatrices.solver"].as<std::string>();
         if (str.compare("short_sighted") == 0) short_sighted = 1;
         if (str.compare("exact") == 0) short_sighted = 0;
 
         tmatrices = vm["ProjectedMatrices.printMM"].as<bool>() ? 1 : 0;
+        rmatrices = vm["ProjectedMatrices.replicated"].as<bool>() ? 1 : 0;
 
         if (short_sighted)
         {
@@ -1473,8 +1486,9 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         std::cout << "Outer solver type: " << str << std::endl;
         assert(it_algo_type_ >= 0);
 
-        mg_levels_     = vm["Quench.preconditioner_num_levels"].as<short>() - 1;
-        precond_factor = vm["Quench.step_length"].as<float>();
+        mg_levels_ = vm["Quench.preconditioner_num_levels"].as<short>() - 1;
+        precond_precision_ = vm["Quench.preconditioner_precision"].as<short>();
+        precond_factor     = vm["Quench.step_length"].as<float>();
         if (precond_factor < 0.)
         {
             switch (lap_type)

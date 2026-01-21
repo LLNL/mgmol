@@ -54,7 +54,7 @@ print('Timer                                     time1    time2    relative diff
 print('-----------------------------------------------------------------------------')
 for timer in reversed(sorted_timers):
   key=timer[0]
-  print(key.ljust(50)),
-  print(str(eval(timers1[key])).ljust(10)),
-  print(str(eval(timers2[key])).ljust(10)),
+  print(key.ljust(50), end="")
+  print(str(eval(timers1[key])).ljust(10), end="")
+  print(str(eval(timers2[key])).ljust(10), end="")
   print(str(100.*timer[1]).ljust(20))

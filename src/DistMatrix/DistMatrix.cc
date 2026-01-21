@@ -78,6 +78,8 @@ DistMatrix<T>::DistMatrix(const std::string& name, const int m, const int n)
       bc_(*default_bc_),
       comm_global_(default_bc_->comm_global())
 {
+    assert(default_bc_ != nullptr);
+
     resize(m, n, distmatrix_def_block_size_, distmatrix_def_block_size_);
 }
 
@@ -87,6 +89,8 @@ DistMatrix<T>::DistMatrix(const std::string& name, const int m)
       bc_(*default_bc_),
       comm_global_(default_bc_->comm_global())
 {
+    assert(default_bc_ != nullptr);
+
     resize(m, m, distmatrix_def_block_size_, distmatrix_def_block_size_);
 }
 
@@ -2032,12 +2036,12 @@ DistMatrix<T>::DistMatrix(const std::string& name, const BlacsContext& bc,
 
 template <class T>
 DistMatrix<T>::DistMatrix(
-    const std::string& name, const T* const dmat, const int m, const int n)
+    const std::string& name, const T* const dmat, const int m)
     : object_name_(name),
       bc_(*default_bc_),
       comm_global_(default_bc_->comm_global())
 {
-    resize(m, n, distmatrix_def_block_size_, distmatrix_def_block_size_);
+    resize(m, m, distmatrix_def_block_size_, distmatrix_def_block_size_);
     setDiagonalValues(dmat);
 }
 

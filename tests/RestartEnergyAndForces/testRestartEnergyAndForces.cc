@@ -85,8 +85,9 @@ int main(int argc, char** argv)
             std::cout << "-------------------------" << std::endl;
         }
 
-        MGmolInterface* mgmol = new MGmol<ExtendedGridOrbitals>(global_comm,
-            *MPIdata::sout, input_filename, lrs_filename, constraints_filename);
+        MGmolInterface* mgmol = new MGmol<ExtendedGridOrbitals<ORBDTYPE>>(
+            global_comm, *MPIdata::sout, input_filename, lrs_filename,
+            constraints_filename);
 
         if (MPIdata::onpe0)
         {
@@ -142,9 +143,9 @@ int main(int argc, char** argv)
         std::shared_ptr<ProjectedMatricesInterface> projmatrices
             = mgmol->getProjectedMatrices();
 
-        ExtendedGridOrbitals orbitals("new_orbitals", mygrid, mymesh->subdivx(),
-            ct.numst, ct.bcWF, projmatrices.get(), nullptr, nullptr, nullptr,
-            nullptr);
+        ExtendedGridOrbitals<ORBDTYPE> orbitals("new_orbitals", mygrid,
+            mymesh->subdivx(), ct.numst, ct.bcWF, projmatrices.get(), nullptr,
+            nullptr, nullptr, nullptr);
 
         // read numst_ wavefunction
         int nread = orbitals.read_func_hdf5(h5file, name);

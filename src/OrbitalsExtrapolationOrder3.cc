@@ -56,7 +56,7 @@ void OrbitalsExtrapolationOrder3<OrbitalsType>::extrapolate_orbitals(
 
             // compute delta Phi
             tmp_orbitals_minus1.assign(*orbitals_minus1_);
-            tmp_orbitals_minus1.axpy(-1., *new_orbitals);
+            tmp_orbitals_minus1.axpy((ORBDTYPE)-1., *new_orbitals);
             tmp_orbitals_minus1.multiply_by_matrix(yyt);
 
             if (orbitals_minus2_ != nullptr)
@@ -67,7 +67,7 @@ void OrbitalsExtrapolationOrder3<OrbitalsType>::extrapolate_orbitals(
                 orbitals_minus2_->multiply_by_matrix(matQ);
 
                 // compute delta Phi
-                orbitals_minus2_->axpy(-1., *orbitals_minus1_);
+                orbitals_minus2_->axpy((ORBDTYPE)-1., *orbitals_minus1_);
                 orbitals_minus2_->multiply_by_matrix(yyt);
             }
         }
@@ -75,17 +75,17 @@ void OrbitalsExtrapolationOrder3<OrbitalsType>::extrapolate_orbitals(
         {
             tmp_orbitals_minus1.assign(*orbitals_minus1_);
             if (orbitals_minus2_ != nullptr)
-                orbitals_minus2_->axpy(-1., *orbitals_minus1_);
+                orbitals_minus2_->axpy((ORBDTYPE)-1., *orbitals_minus1_);
             if (ct.verbose > 1 && onpe0)
                 (*MPIdata::sout)
                     << "Compute tmp_orbitals_minus1..." << std::endl;
-            tmp_orbitals_minus1.axpy(-1., *new_orbitals);
+            tmp_orbitals_minus1.axpy((ORBDTYPE)-1., *new_orbitals);
         }
 
         if (orbitals_minus2_ != nullptr)
         {
-            new_orbitals->axpy(-2., tmp_orbitals_minus1);
-            new_orbitals->axpy(1., *orbitals_minus2_);
+            new_orbitals->axpy((ORBDTYPE)-2., tmp_orbitals_minus1);
+            new_orbitals->axpy((ORBDTYPE)1., *orbitals_minus2_);
 
             delete orbitals_minus2_;
         }
@@ -95,7 +95,7 @@ void OrbitalsExtrapolationOrder3<OrbitalsType>::extrapolate_orbitals(
                 (*MPIdata::sout) << "Extrapolate orbitals using 2nd order "
                                     "scheme only for this step..."
                                  << std::endl;
-            new_orbitals->axpy(-1., tmp_orbitals_minus1);
+            new_orbitals->axpy((ORBDTYPE)-1., tmp_orbitals_minus1);
         }
 
         orbitals_minus2_ = orbitals_minus1_;
@@ -122,5 +122,5 @@ void OrbitalsExtrapolationOrder3<OrbitalsType>::extrapolate_orbitals(
     }
 }
 
-template class OrbitalsExtrapolationOrder3<LocGridOrbitals>;
-template class OrbitalsExtrapolationOrder3<ExtendedGridOrbitals>;
+template class OrbitalsExtrapolationOrder3<LocGridOrbitals<ORBDTYPE>>;
+template class OrbitalsExtrapolationOrder3<ExtendedGridOrbitals<ORBDTYPE>>;

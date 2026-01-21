@@ -261,7 +261,7 @@ void AndersonMix<T>::update(T& f, T& work, ostream& os, const bool verbose)
 
         for (int j = 0; j < mm_; j++)
         {
-            x_.axpy(theta_[j], *xi_[j]);
+            x_.axpy((ORBDTYPE)theta_[j], *xi_[j]);
         }
         // update xi_ for next step
         // restart
@@ -288,7 +288,7 @@ void AndersonMix<T>::update(T& f, T& work, ostream& os, const bool verbose)
 
         for (int j = 0; j < mm_; j++)
         {
-            f.axpy(theta_[j], *fi_[j]);
+            f.axpy((ORBDTYPE)theta_[j], *fi_[j]);
         }
 
         // update fi_ for next step
@@ -309,9 +309,9 @@ void AndersonMix<T>::update(T& f, T& work, ostream& os, const bool verbose)
 #endif
     // update x_
     if (mm_ > 0)
-        x_.axpy(beta_, f);
+        x_.axpy((ORBDTYPE)beta_, f);
     else
-        x_.axpy(1., f);
+        x_.axpy((ORBDTYPE)1., f);
 
     postprocessUpdate();
 
@@ -321,6 +321,6 @@ void AndersonMix<T>::update(T& f, T& work, ostream& os, const bool verbose)
 #ifdef TESTING
 template class AndersonMix<Solution>;
 #else
-template class AndersonMix<LocGridOrbitals>;
-template class AndersonMix<ExtendedGridOrbitals>;
+template class AndersonMix<LocGridOrbitals<ORBDTYPE>>;
+template class AndersonMix<ExtendedGridOrbitals<ORBDTYPE>>;
 #endif

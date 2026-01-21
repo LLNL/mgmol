@@ -119,10 +119,8 @@ struct LinearAlgebraUtils
     /* mixed-precision vector times scalar plus vector. Accumulates results
      * in double precision and stores in single precision.
      */
-    static void MPaxpy(const int len, double scal,
-        const double* __restrict__ xptr, double* __restrict__ yptr);
-    template <typename T1, typename T2>
-    static void MPaxpy(const int len, double scal, const T1* __restrict__ xptr,
+    template <typename T0, typename T1, typename T2>
+    static void MPaxpy(const int len, T0 scal, const T1* __restrict__ xptr,
         T2* __restrict__ yptr);
 
     static void MPsyrk(const char uplo, const char trans, const int n,

@@ -12,15 +12,17 @@
 
 #include "BlockVector.h"
 #include "DistMatrix.h"
+#include "DotProductManager.h"
 #include "GridFunc.h"
 #include "HDFrestart.h"
 #include "Lap.h"
 #include "MPIdata.h"
+#include "MasksSet.h"
 #include "Mesh.h"
 #include "Orbitals.h"
+#include "ReplicatedMatrix.h"
 #include "SinCosOps.h"
 #include "SquareLocalMatrices.h"
-#include "global.h"
 
 #include "hdf5.h"
 #include <iostream>
@@ -28,18 +30,11 @@
 #include <string>
 #include <vector>
 
-class Potentials;
-template <class T>
-class ProjectedMatrices;
 class ProjectedMatricesInterface;
 class LocalizationRegions;
-class ExtendedGridOrbitals;
-class MasksSet;
 class ClusterOrbitals;
 
-typedef double (ExtendedGridOrbitals::*ExtendedGridOrbitalsPtrFunc)(
-    const ExtendedGridOrbitals&);
-
+template <typename ScalarType>
 class ExtendedGridOrbitals : public Orbitals
 {
 private:
@@ -60,11 +55,9 @@ private:
 
     static int lda_; // leading dimension for storage
     static int numpt_;
-    static int loc_numpt_;
 
-    // static double (ExtendedGridOrbitals::*dotProduct_)(const
-    // ExtendedGridOrbitals&);
-    static ExtendedGridOrbitalsPtrFunc dotProduct_;
+    static DotProductManager<ExtendedGridOrbitals<ScalarType>>*
+        dotProductManager_;
 
     static int data_wghosts_index_;
 
@@ -80,38 +73,37 @@ private:
     ////////////////////////////////////////////////////////
     // instance specific data
     ////////////////////////////////////////////////////////
-    BlockVector<ORBDTYPE, memory_space_type> block_vector_;
+    BlockVector<ScalarType, memory_space_type> block_vector_;
 
     ////////////////////////////////////////////////////////
     //
     // private functions
     //
-    void projectOut(ORBDTYPE* const, const int, const double scale = 1.);
+    void projectOut(ScalarType* const, const int);
+
+    void multiply_by_ReplicatedMatrix(const ReplicatedMatrix& matrix);
+    void multiply_by_DistMatrix(
+        const dist_matrix::DistMatrix<DISTMATDTYPE>& matrix);
 
     void multiply_by_matrix(
-        const DISTMATDTYPE* const, ORBDTYPE*, const int) const;
+        const DISTMATDTYPE* const, ScalarType*, const int) const;
     void multiply_by_matrix(const dist_matrix::DistMatrix<DISTMATDTYPE>& matrix,
-        ORBDTYPE* const product, const int ldp);
+        ScalarType* const product, const int ldp);
     void scal(const int i, const double alpha) { block_vector_.scal(i, alpha); }
-    virtual void assign(const int i, const ORBDTYPE* const v, const int n = 1)
+    virtual void assign(const int i, const ScalarType* const v, const int n = 1)
     {
         block_vector_.assign(i, v, n);
     }
     ExtendedGridOrbitals& operator=(const ExtendedGridOrbitals& orbitals);
     ExtendedGridOrbitals();
 
-    void computeMatB(const ExtendedGridOrbitals&, const pb::Lap<ORBDTYPE>&);
+    void computeMatB(const ExtendedGridOrbitals&, const pb::Lap<ScalarType>&);
 
-    double dotProductDiagonal(const ExtendedGridOrbitals& orbitals);
-    double dotProductWithDM(const ExtendedGridOrbitals& orbitals);
-    double dotProductWithInvS(const ExtendedGridOrbitals& orbitals);
-    double dotProductSimple(const ExtendedGridOrbitals& orbitals);
-
-    void computeLocalProduct(const ORBDTYPE* const, const int,
+    void computeLocalProduct(const ScalarType* const, const int,
         LocalMatrices<MATDTYPE, MemorySpace::Host>&,
         const bool transpose = false);
 #ifdef HAVE_MAGMA
-    void computeLocalProduct(const ORBDTYPE* const, const int,
+    void computeLocalProduct(const ScalarType* const, const int,
         LocalMatrices<MATDTYPE, MemorySpace::Device>&,
         const bool transpose = false);
 #endif
@@ -120,29 +112,33 @@ private:
     void computeInvNorms2(std::vector<std::vector<double>>& inv_norms2) const;
     void computeDiagonalGram(VariableSizeMatrix<sparserow>& diagS) const;
 
+    /*!
+     * Specialized functions
+     */
+    void addDotWithNcol2DistMatrix(
+        ExtendedGridOrbitals&, dist_matrix::DistMatrix<DISTMATDTYPE>&) const;
+    void addDotWithNcol2ReplicatedMatrix(
+        ExtendedGridOrbitals&, ReplicatedMatrix&) const;
+
     void initFourier();
     void initRand();
-    dist_matrix::DistMatrix<DISTMATDTYPE> computeProduct(const ORBDTYPE* const,
-        const int, const int, const bool transpose = false);
 
-    ORBDTYPE* psi(const int i) const { return block_vector_.vect(i); }
+    ScalarType* psi(const int i) const { return block_vector_.vect(i); }
 
-    void app_mask(const int, ORBDTYPE*, const short) const {};
+    void app_mask(const int, ScalarType*, const short) const {};
 #ifdef HAVE_MAGMA
     void multiplyByMatrix(
         const SquareLocalMatrices<MATDTYPE, MemorySpace::Device>& matrix,
-        ORBDTYPE* product, const int ldp) const;
+        ScalarType* product, const int ldp) const;
 #endif
     void multiplyByMatrix(
         const SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& matrix,
-        ORBDTYPE* product, const int ldp) const;
+        ScalarType* product, const int ldp) const;
 
     void setup();
 
 protected:
     const pb::Grid& grid_;
-
-    static short subdivx_;
 
     // indexes corresponding to valid function in each subdomain
     static std::vector<std::vector<int>> overlapping_gids_;
@@ -197,7 +193,7 @@ public:
 
     int numst(void) const { return numst_; }
     int getLda() const { return lda_; }
-    int getLocNumpt() const { return loc_numpt_; }
+    int getLocNumpt() const { return numpt_; }
     int getNumpt() const { return numpt_; }
 
     bool isCompatibleWith(const ExtendedGridOrbitals&) const { return true; }
@@ -224,7 +220,7 @@ public:
 
         block_vector_.setDataWithGhosts(data_wghosts);
     }
-    pb::GridFunc<ORBDTYPE>& getFuncWithGhosts(const int i)
+    pb::GridFunc<ScalarType>& getFuncWithGhosts(const int i)
     {
         //(*MPIdata::sout)<<" data_wghosts_index_="<<data_wghosts_index_
         //    <<" getIterativeIndex()   ="<<getIterativeIndex()<<endl;
@@ -238,7 +234,7 @@ public:
         return block_vector_.getVectorWithGhosts(i);
     }
 
-    pb::GridFuncVector<ORBDTYPE, memory_space_type>* getPtDataWGhosts()
+    pb::GridFuncVector<ScalarType, memory_space_type>* getPtDataWGhosts()
     {
         return block_vector_.getPtDataWGhosts();
     }
@@ -259,15 +255,15 @@ public:
         }
     }
 
-    void set_storage(ORBDTYPE* new_storage)
+    void set_storage(ScalarType* new_storage)
     {
         assert(new_storage != 0);
         block_vector_.setStorage(new_storage);
     }
-    ORBDTYPE* getPsi(const int i, const short iloc = 0) const
+    ScalarType* getPsi(const int i, const int iloc = 0) const
     {
-        assert(iloc < subdivx_);
-        return block_vector_.vect(i) + iloc * loc_numpt_;
+        (void)iloc;
+        return block_vector_.vect(i);
     }
     template <typename T>
     void setPsi(const pb::GridFunc<T>& gf_work, const int ist)
@@ -285,7 +281,13 @@ public:
         assert(numst_ < 10000);
         return numst_;
     }
-    short subdivx(void) const { return subdivx_; }
+    void applyDiagonalOp(
+        const std::vector<POTDTYPE>& v, ExtendedGridOrbitals& hphi) const
+    {
+        block_vector_.applyDiagonalOp(v, hphi.block_vector_);
+    }
+
+    short subdivx(void) const { return 1; }
     void printChromaticNumber(std::ostream& os) const
     {
         if (onpe0) os << " Max. chromatic_number: " << numst_ << std::endl;
@@ -294,7 +296,7 @@ public:
     {
         if (onpe0) os << " Number of states   = " << numst_ << std::endl;
     }
-    void computeBAndInvB(const pb::Lap<ORBDTYPE>& LapOper);
+    void computeBAndInvB(const pb::Lap<ScalarType>& LapOper);
 
     void computeGram(const int verbosity = 0);
     void computeGramAndInvS(const int verbosity = 0);
@@ -302,7 +304,7 @@ public:
     void computeGram(const ExtendedGridOrbitals& orbitals,
         dist_matrix::DistMatrix<DISTMATDTYPE>& gram_mat);
 
-    ORBDTYPE maxAbsValue() const { return block_vector_.maxAbsValue(); }
+    ScalarType maxAbsValue() const { return block_vector_.maxAbsValue(); }
 
     /*!
      * use predefined (default) dot product type
@@ -317,8 +319,6 @@ public:
     void computeDiagonalElementsDotProduct(const ExtendedGridOrbitals& orbitals,
         std::vector<DISTMATDTYPE>& ss) const;
 
-    dist_matrix::DistMatrix<DISTMATDTYPE> computeProduct(
-        const ExtendedGridOrbitals&, const bool transpose = false);
     void computeLocalProduct(const ExtendedGridOrbitals&,
         LocalMatrices<MATDTYPE, MemorySpace::Host>&,
         const bool transpose = false);
@@ -334,7 +334,7 @@ public:
         block_vector_.scal(alpha);
         incrementIterativeIndex();
     }
-    void projectOut(ExtendedGridOrbitals&, const double scale = 1.);
+    void projectOut(ExtendedGridOrbitals&);
 
     void normalize();
     void orthonormalize2states(const int st1, const int st2);
@@ -350,9 +350,11 @@ public:
     }
 
     void initGauss(const double, const std::shared_ptr<LocalizationRegions>);
-    virtual void axpy(const double alpha, const ExtendedGridOrbitals&);
 
-    void app_mask(const int, pb::GridFunc<ORBDTYPE>&, const short) const {};
+    template <typename CoeffType>
+    void axpy(const CoeffType alpha, const ExtendedGridOrbitals&);
+
+    void app_mask(const int, pb::GridFunc<ScalarType>&, const short) const {};
 
     void applyMask(const bool = false){};
     void applyCorrMask(const bool = false){};
@@ -400,9 +402,11 @@ public:
         const pb::Grid& mygrid = mymesh->grid();
         return mygrid.maxDomainSize();
     }
+
 #ifdef MGMOL_HAS_LIBROM
     void set(std::string file_path, int rdim);
 #endif
+
 };
 
 #endif

@@ -942,20 +942,20 @@ void testROMIonDensity(MGmolInterface *mgmol_)
     delete new_ions;
 }
 
-template void readRestartFiles<LocGridOrbitals>(MGmolInterface *mgmol_);
-template void readRestartFiles<ExtendedGridOrbitals>(MGmolInterface *mgmol_);
+template void readRestartFiles<LocGridOrbitals<ORBDTYPE>>(MGmolInterface *mgmol_);
+template void readRestartFiles<ExtendedGridOrbitals<ORBDTYPE>>(MGmolInterface *mgmol_);
 
-template void buildROMPoissonOperator<LocGridOrbitals>(MGmolInterface *mgmol_);
-template void buildROMPoissonOperator<ExtendedGridOrbitals>(MGmolInterface *mgmol_);
+template void buildROMPoissonOperator<LocGridOrbitals<ORBDTYPE>>(MGmolInterface *mgmol_);
+template void buildROMPoissonOperator<ExtendedGridOrbitals<ORBDTYPE>>(MGmolInterface *mgmol_);
 
-template void runPoissonROM<LocGridOrbitals>(MGmolInterface *mgmol_);
-template void runPoissonROM<ExtendedGridOrbitals>(MGmolInterface *mgmol_);
+template void runPoissonROM<LocGridOrbitals<ORBDTYPE>>(MGmolInterface *mgmol_);
+template void runPoissonROM<ExtendedGridOrbitals<ORBDTYPE>>(MGmolInterface *mgmol_);
 
-template void testROMPoissonOperator<LocGridOrbitals>(MGmolInterface *mgmol_);
-template void testROMPoissonOperator<ExtendedGridOrbitals>(MGmolInterface *mgmol_);
+template void testROMPoissonOperator<LocGridOrbitals<ORBDTYPE>>(MGmolInterface *mgmol_);
+template void testROMPoissonOperator<ExtendedGridOrbitals<ORBDTYPE>>(MGmolInterface *mgmol_);
 
-template void testROMRhoOperator<LocGridOrbitals>(MGmolInterface *mgmol_);
-template void testROMRhoOperator<ExtendedGridOrbitals>(MGmolInterface *mgmol_);
+template void testROMRhoOperator<LocGridOrbitals<ORBDTYPE>>(MGmolInterface *mgmol_);
+template void testROMRhoOperator<ExtendedGridOrbitals<ORBDTYPE>>(MGmolInterface *mgmol_);
 
-template void testROMIonDensity<LocGridOrbitals>(MGmolInterface *mgmol_);
-template void testROMIonDensity<ExtendedGridOrbitals>(MGmolInterface *mgmol_);
+template void testROMIonDensity<LocGridOrbitals<ORBDTYPE>>(MGmolInterface *mgmol_);
+template void testROMIonDensity<ExtendedGridOrbitals<ORBDTYPE>>(MGmolInterface *mgmol_);

@@ -151,7 +151,7 @@ if(USE_LIBROM)
   find_package(libROM REQUIRED)
 
   if(libROM_FOUND)
-    set(MGMOL_HAS_LIBROM 1)
+    add_definitions(-DMGMOL_HAS_LIBROM)
   endif(libROM_FOUND)
 endif(USE_LIBROM)
 
@@ -233,6 +233,7 @@ FortranCInterface_HEADER(
         DGEMM SGEMM DSYMM DSYRK SSYRK DTRMM DTRSM STRSM
         #lapack
         DSYEV DPOTRF DPOTRS DPOTRI DSYGST DTRTRS DPOCON DSYGV DLANGE
+        DGETRF DGETRS DLACPY
 )
 
 FortranCInterface_HEADER(

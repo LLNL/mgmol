@@ -42,5 +42,5 @@ double LDAonGridSpin<T>::getExc() const // in [Ha]
     return mygrid.vel() * lda_->computeRhoDotExc();
 }
 
-template class LDAonGridSpin<LocGridOrbitals>;
-template class LDAonGridSpin<ExtendedGridOrbitals>;
+template class LDAonGridSpin<LocGridOrbitals<ORBDTYPE>>;
+template class LDAonGridSpin<ExtendedGridOrbitals<ORBDTYPE>>;

@@ -11,6 +11,7 @@
 #-------------------------------------------------------------------------------
 import sys, string
 from math import sqrt
+import matplotlib.pyplot as plt
 
 input1=open(sys.argv[1],'r')
 input2=open(sys.argv[2],'r')
@@ -20,28 +21,20 @@ if len(sys.argv)>3:
   frame=eval(sys.argv[3])
   print( 'Input argument: Frame=',frame )
 
-L1=input1.readlines()
-L2=input2.readlines()
-
-star='*'
+lines1=input1.readlines()
+lines2=input2.readlines()
 
 ##############################################
 # count number atoms
 def getNumAtoms(lines):
-  searchterm1='## '
-  searchterm2='FORCES'
-  searchterm3='Forces'
   found_current_line=0
   already_found_one=0
   na=0
   flag=0
   for line in lines: ## loop over lines of file
-    num_matches1 = line.count(searchterm1)
-    num_matches2 = line.count(searchterm2)
-    num_matches3 = line.count(searchterm3)
-    if num_matches2 or num_matches3:
+    if line.count('FORCES') or line.count('Forces'):
       flag=1
-    if num_matches1 & flag==1:
+    if line.count('## ') & flag==1:
       #print 'line=',line
       found_current_line=1
       already_found_one =1
@@ -54,12 +47,11 @@ def getNumAtoms(lines):
 ##############################################
 
 
-na1=getNumAtoms(L1)
-na2=getNumAtoms(L2)
+na1=getNumAtoms(lines1)
+na2=getNumAtoms(lines2)
 
 print( 'N atoms in file1=', na1)
 print( 'N atoms in file2=', na2)
-
 
 ##############################################
 
@@ -113,25 +105,16 @@ def getForces(names,coords,forces,lines,fframe):
 
 ##############################################
 
-forces1=[]
-coords1=[]
-names1=[]
-for i in range(0,na1):
-  forces1.append(0)
-  coords1.append(0)
-  names1.append(0)
+forces1=[0]*na1
+coords1=[0]*na1
+names1=[0]*na1
 
-forces2=[]
-coords2=[]
-names2=[]
-for i in range(0,na2):
-  forces2.append(0)
-  coords2.append(0)
-  names2.append(0)
+forces2=[0]*na2
+coords2=[0]*na2
+names2=[0]*na2
   
-  
-getForces(names1,coords1,forces1,L1,frame)
-getForces(names2,coords2,forces2,L2,frame)
+getForces(names1,coords1,forces1,lines1,frame)
+getForces(names2,coords2,forces2,lines2,frame)
 
 mindf=100.
 maxdf=0.
@@ -142,40 +125,7 @@ avgz=0.
 imax=0
 jmax=0
 dff=[]
-bin=[]
-for i in range(0,10):
-  bin.append(0)
-
-##############################################
-def subtractAverageForce(forces):
-  avgx=0.
-  avgy=0.
-  avgz=0.
-  na=len(forces)
-  for i in range(na): 
-    word=string.split(forces[i])
-    fx=eval(word[0])
-    fy=eval(word[1])
-    fz=eval(word[2])
-    avgx=avgx+fx
-    avgy=avgy+fy
-    avgz=avgz+fz
-
-  avgx=avgx/na
-  avgy=avgy/na
-  avgz=avgz/na
-  
-  for i in range(na):
-    word=string.split(forces[i])
-    fx=eval(word[0])-avgx
-    fy=eval(word[1])-avgy
-    fz=eval(word[2])-avgz
-    forces[i]=str(fx)+'\t'+str(fy)+'\t'+str(fz)
-
-##############################################
-
-#subtractAverageForce(forces1)
-#subtractAverageForce(forces2)
+bins=[0] * 10
 
 na=0
 for i in range(na1):
@@ -209,16 +159,19 @@ for i in range(na1):
         mindf=df
       na=na+1
       print (names1[i],': delta f=',df)
+
 print ('na=',na)
 avg=avg/na
+avgx=avgx/na
+avgy=avgz/na
+avgz=avgz/na
 
-print ('N atoms =', na)
-print ('Avg. df=',avgx,avgy,avgz)
-print ('Avg. |df|=',avg)
-print ('Min. df=',mindf)
-print ('Max. df=',maxdf)
-print ('df max for atom ',names1[imax],' and ',names2[jmax])
-print ('Forces atoms with largest force difference:')
+print ('N atoms = ', na)
+print ('Avg. df = ',avgx,avgy,avgz)
+print ('Avg. |df| = ',avg)
+print ('Min. |df| = ',mindf)
+print ('Max. |df| = ',maxdf)
+print ('Atoms with largest force difference:')
 filename1=sys.argv[1]
 filename1=filename1.ljust(15)
 filename2=sys.argv[2]
@@ -230,10 +183,15 @@ delf=(maxdf+1.e-5-mindf)/10.
 for j in range(na):
   a=(dff[j]-mindf)/delf
   b=int(a)
-  bin[b]=bin[b]+1
+  bins[b]=bins[b]+1
 
 for i in range(0,10):
-  print (mindf+(i+0.5)*delf, bin[i])
+  print (mindf+(i+0.5)*delf, bins[i])
 
-#for j in range(na): 
-#  print (dff[j])
+plt.hist(dff, bins=10, edgecolor="black")
+plt.ticklabel_format(axis='x', style='sci', scilimits=(0,0))
+plt.xlabel('force error magnitude [Ha/Bohr]',fontsize=12)
+plt.ylabel('frequency',fontsize=12)
+plt.xticks(fontsize=12)
+plt.yticks(fontsize=12)
+plt.savefig('errorForces.png', dpi=100)

@@ -12,7 +12,7 @@
 
 // Increase memory slots in BlockVector as needed based on runtime
 // options
-template <typename MemorySpaceType>
+template <typename DataType, typename MemorySpaceType>
 void increaseMemorySlotsForOrbitals()
 {
     Control& ct = *(Control::instance());
@@ -22,18 +22,18 @@ void increaseMemorySlotsForOrbitals()
         case OuterSolverType::ABPG:
         {
             // r_k-1, phi_k-1
-            BlockVector<ORBDTYPE, MemorySpaceType>::incMaxAllocInstances(2);
+            BlockVector<DataType, MemorySpaceType>::incMaxAllocInstances(2);
             break;
         }
         case OuterSolverType::PolakRibiere:
         {
             // r_k-1, z_k, z_k-1, p_k
-            BlockVector<ORBDTYPE, MemorySpaceType>::incMaxAllocInstances(4);
+            BlockVector<DataType, MemorySpaceType>::incMaxAllocInstances(4);
             break;
         }
         case OuterSolverType::Davidson:
         {
-            BlockVector<ORBDTYPE, MemorySpaceType>::incMaxAllocInstances(2);
+            BlockVector<DataType, MemorySpaceType>::incMaxAllocInstances(2);
             break;
         }
         default:
@@ -44,17 +44,17 @@ void increaseMemorySlotsForOrbitals()
     {
         case WFExtrapolationType::Reversible:
         {
-            BlockVector<ORBDTYPE, MemorySpaceType>::incMaxAllocInstances(2);
+            BlockVector<DataType, MemorySpaceType>::incMaxAllocInstances(2);
             break;
         }
         case WFExtrapolationType::Order2:
         {
-            BlockVector<ORBDTYPE, MemorySpaceType>::incMaxAllocInstances(1);
+            BlockVector<DataType, MemorySpaceType>::incMaxAllocInstances(1);
             break;
         }
         case WFExtrapolationType::Order3:
         {
-            BlockVector<ORBDTYPE, MemorySpaceType>::incMaxAllocInstances(2);
+            BlockVector<DataType, MemorySpaceType>::incMaxAllocInstances(2);
             break;
         }
         default:
@@ -62,21 +62,21 @@ void increaseMemorySlotsForOrbitals()
     }
 
     for (short i = 1; i < ct.wf_m; i++)
-        BlockVector<ORBDTYPE, MemorySpaceType>::incMaxAllocInstances(2);
+        BlockVector<DataType, MemorySpaceType>::incMaxAllocInstances(2);
     if (ct.use_kernel_functions)
-        BlockVector<ORBDTYPE, MemorySpaceType>::incMaxAllocInstances(1);
+        BlockVector<DataType, MemorySpaceType>::incMaxAllocInstances(1);
 
     switch (ct.AtomsDynamic())
     {
         case AtomsDynamicType::LBFGS:
-            BlockVector<ORBDTYPE, MemorySpaceType>::incMaxAllocInstances(1);
+            BlockVector<DataType, MemorySpaceType>::incMaxAllocInstances(1);
             break;
         default:
             break;
     }
 }
 
-template void increaseMemorySlotsForOrbitals<MemorySpace::Host>();
+template void increaseMemorySlotsForOrbitals<ORBDTYPE, MemorySpace::Host>();
 #ifdef HAVE_MAGMA
-template void increaseMemorySlotsForOrbitals<MemorySpace::Device>();
+template void increaseMemorySlotsForOrbitals<ORBDTYPE, MemorySpace::Device>();
 #endif

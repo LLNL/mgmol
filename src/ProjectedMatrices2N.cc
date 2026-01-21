@@ -68,6 +68,4 @@ void ProjectedMatrices2N<MatrixType>::iterativeUpdateDMwithEigenstates(
 }
 
 template class ProjectedMatrices2N<dist_matrix::DistMatrix<double>>;
-#ifdef HAVE_MAGMA
 template class ProjectedMatrices2N<ReplicatedMatrix>;
-#endif

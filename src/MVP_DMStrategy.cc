@@ -24,7 +24,7 @@ template <class OrbitalsType, class MatrixType>
 MVP_DMStrategy<OrbitalsType, MatrixType>::MVP_DMStrategy(MPI_Comm comm,
     ostream& os, Ions& ions, Rho<OrbitalsType>* rho,
     Energy<OrbitalsType>* energy, Electrostatic* electrostat,
-    MGmol<OrbitalsType>* mgmol_strategy,
+    Hamiltonian<OrbitalsType>* hamiltonian, MGmol<OrbitalsType>* mgmol_strategy,
     const std::vector<std::vector<int>>& overlappingGids,
     ProjectedMatricesInterface* proj_matrices, const bool use_old_dm)
     : proj_matrices_(proj_matrices),
@@ -34,6 +34,7 @@ MVP_DMStrategy<OrbitalsType, MatrixType>::MVP_DMStrategy(MPI_Comm comm,
       rho_(rho),
       energy_(energy),
       electrostat_(electrostat),
+      hamiltonian_(hamiltonian),
       global_indexes_(overlappingGids),
       mgmol_strategy_(mgmol_strategy),
       use_old_dm_(use_old_dm)
@@ -53,8 +54,8 @@ int MVP_DMStrategy<OrbitalsType, MatrixType>::update(OrbitalsType& orbitals)
     }
 
     MVPSolver<OrbitalsType, MatrixType> solver(comm_, os_, ions_, rho_, energy_,
-        electrostat_, mgmol_strategy_, ct.numst, ct.occ_width, global_indexes_,
-        ct.dm_inner_steps, ct.dm_mix, ct.dm_tol, use_old_dm_);
+        electrostat_, hamiltonian_, mgmol_strategy_, ct.numst, ct.occ_width,
+        global_indexes_, ct.dm_inner_steps, ct.dm_mix, ct.dm_tol, use_old_dm_);
 
     return solver.solve(orbitals);
 }
@@ -71,9 +72,10 @@ void MVP_DMStrategy<OrbitalsType, MatrixType>::dressDM()
     if (use_old_dm_) proj_matrices_->dressupDM();
 }
 
-template class MVP_DMStrategy<LocGridOrbitals, dist_matrix::DistMatrix<double>>;
-template class MVP_DMStrategy<ExtendedGridOrbitals,
+template class MVP_DMStrategy<LocGridOrbitals<ORBDTYPE>,
     dist_matrix::DistMatrix<double>>;
-#ifdef HAVE_MAGMA
-template class MVP_DMStrategy<ExtendedGridOrbitals, ReplicatedMatrix>;
-#endif
+template class MVP_DMStrategy<LocGridOrbitals<ORBDTYPE>, ReplicatedMatrix>;
+
+template class MVP_DMStrategy<ExtendedGridOrbitals<ORBDTYPE>,
+    dist_matrix::DistMatrix<double>>;
+template class MVP_DMStrategy<ExtendedGridOrbitals<ORBDTYPE>, ReplicatedMatrix>;

@@ -2,76 +2,101 @@
 #include "ReplicatedMatrix.h"
 
 template <>
-DMStrategy<LocGridOrbitals>* DMStrategyFactory<LocGridOrbitals,
+DMStrategy<LocGridOrbitals<ORBDTYPE>>*
+DMStrategyFactory<LocGridOrbitals<ORBDTYPE>,
     dist_matrix::DistMatrix<double>>::createHamiltonianMVP_DMStrategy(MPI_Comm
                                                                           comm,
-    std::ostream& os, Ions& ions, Rho<LocGridOrbitals>* rho,
-    Energy<LocGridOrbitals>* energy, Electrostatic* electrostat,
-    MGmol<LocGridOrbitals>* mgmol_strategy,
-    ProjectedMatricesInterface* /*proj_matrices*/, LocGridOrbitals* orbitals,
-    const bool short_sighted)
+    std::ostream& os, Ions& ions, Rho<LocGridOrbitals<ORBDTYPE>>* rho,
+    Energy<LocGridOrbitals<ORBDTYPE>>* energy, Electrostatic* electrostat,
+    Hamiltonian<LocGridOrbitals<ORBDTYPE>>* hamiltonian,
+    MGmol<LocGridOrbitals<ORBDTYPE>>* mgmol_strategy,
+    ProjectedMatricesInterface* /*proj_matrices*/,
+    LocGridOrbitals<ORBDTYPE>* orbitals, const bool short_sighted)
 {
     if (short_sighted)
     {
-        DMStrategy<LocGridOrbitals>* dm_strategy
+        DMStrategy<LocGridOrbitals<ORBDTYPE>>* dm_strategy
             = new HamiltonianMVP_DMStrategy<VariableSizeMatrix<sparserow>,
-                ProjectedMatricesSparse, LocGridOrbitals>(comm, os, ions, rho,
-                energy, electrostat, mgmol_strategy, orbitals);
+                ProjectedMatricesSparse, LocGridOrbitals<ORBDTYPE>>(comm, os,
+                ions, rho, energy, electrostat, hamiltonian, mgmol_strategy,
+                orbitals);
 
         return dm_strategy;
     }
     else
     {
-        DMStrategy<LocGridOrbitals>* dm_strategy
+        DMStrategy<LocGridOrbitals<ORBDTYPE>>* dm_strategy
             = new HamiltonianMVP_DMStrategy<
                 dist_matrix::DistMatrix<DISTMATDTYPE>,
                 ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>,
-                LocGridOrbitals>(comm, os, ions, rho, energy, electrostat,
-                mgmol_strategy, orbitals);
+                LocGridOrbitals<ORBDTYPE>>(comm, os, ions, rho, energy,
+                electrostat, hamiltonian, mgmol_strategy, orbitals);
 
         return dm_strategy;
     }
 }
 
 template <>
-DMStrategy<ExtendedGridOrbitals>* DMStrategyFactory<ExtendedGridOrbitals,
+DMStrategy<LocGridOrbitals<ORBDTYPE>>*
+DMStrategyFactory<LocGridOrbitals<ORBDTYPE>,
+    ReplicatedMatrix>::createHamiltonianMVP_DMStrategy(MPI_Comm comm,
+    std::ostream& /*os*/, Ions& /*ions*/,
+    Rho<LocGridOrbitals<ORBDTYPE>>* /*rho*/,
+    Energy<LocGridOrbitals<ORBDTYPE>>* /*energy*/,
+    Electrostatic* /*electrostat*/,
+    Hamiltonian<LocGridOrbitals<ORBDTYPE>>* /*hamiltonian*/,
+    MGmol<LocGridOrbitals<ORBDTYPE>>* /*mgmol_strategy*/,
+    ProjectedMatricesInterface* /*proj_matrices*/,
+    LocGridOrbitals<ORBDTYPE>* /*orbitals*/, const bool /*short_sighted*/)
+{
+
+    std::cerr << "DMStrategy not implemented" << std::endl;
+    MPI_Abort(comm, EXIT_FAILURE);
+
+    return nullptr;
+}
+
+template <>
+DMStrategy<ExtendedGridOrbitals<ORBDTYPE>>*
+DMStrategyFactory<ExtendedGridOrbitals<ORBDTYPE>,
     dist_matrix::DistMatrix<double>>::createHamiltonianMVP_DMStrategy(MPI_Comm
                                                                           comm,
-    std::ostream& os, Ions& ions, Rho<ExtendedGridOrbitals>* rho,
-    Energy<ExtendedGridOrbitals>* energy, Electrostatic* electrostat,
-    MGmol<ExtendedGridOrbitals>* mgmol_strategy,
+    std::ostream& os, Ions& ions, Rho<ExtendedGridOrbitals<ORBDTYPE>>* rho,
+    Energy<ExtendedGridOrbitals<ORBDTYPE>>* energy, Electrostatic* electrostat,
+    Hamiltonian<ExtendedGridOrbitals<ORBDTYPE>>* hamiltonian,
+    MGmol<ExtendedGridOrbitals<ORBDTYPE>>* mgmol_strategy,
     ProjectedMatricesInterface* /*proj_matrices*/,
-    ExtendedGridOrbitals* orbitals, const bool short_sighted)
+    ExtendedGridOrbitals<ORBDTYPE>* orbitals, const bool short_sighted)
 {
     (void)short_sighted;
 
-    DMStrategy<ExtendedGridOrbitals>* dm_strategy
+    DMStrategy<ExtendedGridOrbitals<ORBDTYPE>>* dm_strategy
         = new HamiltonianMVP_DMStrategy<dist_matrix::DistMatrix<DISTMATDTYPE>,
             ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>,
-            ExtendedGridOrbitals>(
-            comm, os, ions, rho, energy, electrostat, mgmol_strategy, orbitals);
+            ExtendedGridOrbitals<ORBDTYPE>>(comm, os, ions, rho, energy,
+            electrostat, hamiltonian, mgmol_strategy, orbitals);
 
     return dm_strategy;
 }
 
-#ifdef HAVE_MAGMA
 template <>
-DMStrategy<ExtendedGridOrbitals>* DMStrategyFactory<ExtendedGridOrbitals,
+DMStrategy<ExtendedGridOrbitals<ORBDTYPE>>*
+DMStrategyFactory<ExtendedGridOrbitals<ORBDTYPE>,
     ReplicatedMatrix>::createHamiltonianMVP_DMStrategy(MPI_Comm comm,
-    std::ostream& os, Ions& ions, Rho<ExtendedGridOrbitals>* rho,
-    Energy<ExtendedGridOrbitals>* energy, Electrostatic* electrostat,
-    MGmol<ExtendedGridOrbitals>* mgmol_strategy,
-    ProjectedMatricesInterface* /*proj_matrices*/, LocGridOrbitals* orbitals,
-    const bool short_sighted)
+    std::ostream& os, Ions& ions, Rho<ExtendedGridOrbitals<ORBDTYPE>>* rho,
+    Energy<ExtendedGridOrbitals<ORBDTYPE>>* energy, Electrostatic* electrostat,
+    Hamiltonian<ExtendedGridOrbitals<ORBDTYPE>>* hamiltonian,
+    MGmol<ExtendedGridOrbitals<ORBDTYPE>>* mgmol_strategy,
+    ProjectedMatricesInterface* /*proj_matrices*/,
+    ExtendedGridOrbitals<ORBDTYPE>* orbitals, const bool short_sighted)
 {
     (void)short_sighted;
 
-    DMStrategy<ExtendedGridOrbitals>* dm_strategy
+    DMStrategy<ExtendedGridOrbitals<ORBDTYPE>>* dm_strategy
         = new HamiltonianMVP_DMStrategy<ReplicatedMatrix,
-            ProjectedMatrices<ReplicatedMatrix>, ExtendedGridOrbitals>(comm, os,
-            ions, rho, energy, electrostat, mgmol_strategy,
-            orbitals->getOverlappingGids());
+            ProjectedMatrices<ReplicatedMatrix>,
+            ExtendedGridOrbitals<ORBDTYPE>>(comm, os, ions, rho, energy,
+            electrostat, hamiltonian, mgmol_strategy, orbitals);
 
     return dm_strategy;
 }
-#endif

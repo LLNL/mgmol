@@ -60,9 +60,9 @@ double Energy<T>::getEVrhoRho() const
 template <class T>
 double Energy<T>::evaluateEnergyIonsInVext(Ions& ions)
 {
+#ifdef HAVE_TRICUBIC
     double energy = 0.;
 
-#ifdef HAVE_TRICUBIC
     if (!pot_.withVext()) return energy;
 
     //(*MPIdata::sout)<<"Energy<T>::evaluateEnergyIonsInVext()"<<std::endl;
@@ -86,6 +86,8 @@ double Energy<T>::evaluateEnergyIonsInVext(Ions& ions)
     std::vector<double> val(nions);
     pot_.getValVext(positions, val);
 
+    double energy = 0.;
+
     // loop over ions again
     ion           = ions.local_ions().begin();
     int ion_index = 0;
@@ -105,8 +107,13 @@ double Energy<T>::evaluateEnergyIonsInVext(Ions& ions)
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     mmpi.allreduce(&energy, &tmp, 1, MPI_SUM);
     energy = tmp;
-#endif
+
     return energy;
+#else
+    (void)ions;
+
+    return 0.;
+#endif
 }
 
 template <class T>
@@ -192,5 +199,5 @@ double Energy<T>::evaluateTotal(const double ts, // in [Ha]
     return energy_sc;
 }
 
-template class Energy<LocGridOrbitals>;
-template class Energy<ExtendedGridOrbitals>;
+template class Energy<LocGridOrbitals<ORBDTYPE>>;
+template class Energy<ExtendedGridOrbitals<ORBDTYPE>>;

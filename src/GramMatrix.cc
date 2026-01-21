@@ -136,14 +136,13 @@ double GramMatrix<dist_matrix::DistMatrix<double>>::computeCond()
     return cond;
 }
 
-#ifdef HAVE_MAGMA
 template <>
 double GramMatrix<ReplicatedMatrix>::computeCond()
 {
     const double cond = 1;
+
     return cond;
 }
-#endif
 
 // mat is overwritten by inv(ls)*mat*inv(ls**T)
 template <class MatrixType>
@@ -329,7 +328,5 @@ void GramMatrix<MatrixType>::applyInv(VectorType& mat)
 template class GramMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>;
 template void GramMatrix<dist_matrix::DistMatrix<DISTMATDTYPE>>::applyInv(
     dist_matrix::DistVector<DISTMATDTYPE>&);
-#ifdef HAVE_MAGMA
 template class GramMatrix<ReplicatedMatrix>;
 template void GramMatrix<ReplicatedMatrix>::applyInv(ReplicatedVector&);
-#endif

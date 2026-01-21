@@ -92,26 +92,27 @@ void MGmol<OrbitalsType>::project_orbital(std::string file_path, int rdim, Orbit
     }
 }
 
-void ExtendedGridOrbitals::set(std::string file_path, int rdim)
-{
-    const int dim = getLocNumpt();
+//template <typename ScalarType>
+//void ExtendedGridOrbitals<ScalarType>::set(std::string file_path, int rdim)
+//{
+//    const int dim = getLocNumpt();
 
-    CAROM::BasisReader reader(file_path);
-    CAROM::Matrix* orbital_basis = reader.getSpatialBasis(rdim);
+//    CAROM::BasisReader reader(file_path);
+//    CAROM::Matrix* orbital_basis = reader.getSpatialBasis(rdim);
 
-    Control& ct = *(Control::instance());
-    Mesh* mymesh           = Mesh::instance();
-    pb::GridFunc<ORBDTYPE> gf_psi(mymesh->grid(), ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
-    CAROM::Vector psi;
-    for (int i = 0; i < rdim; ++i)
-    {
-        orbital_basis->getColumn(i, psi);
-        gf_psi.assign(psi.getData());
-        setPsi(gf_psi, i);
-    }
-}
+//    Control& ct = *(Control::instance());
+//    Mesh* mymesh           = Mesh::instance();
+//    pb::GridFunc<ORBDTYPE> gf_psi(mymesh->grid(), ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
+//    CAROM::Vector psi;
+//    for (int i = 0; i < rdim; ++i)
+//    {
+//        orbital_basis->getColumn(i, psi);
+//        gf_psi.assign(psi.getData());
+//        setPsi(gf_psi, i);
+//    }
+//}
 
-template class MGmol<LocGridOrbitals>;
-template class MGmol<ExtendedGridOrbitals>;
+template class MGmol<LocGridOrbitals<ORBDTYPE>>;
+template class MGmol<ExtendedGridOrbitals<ORBDTYPE>>;
 
 #endif  // MGMOL_HAS_LIBROM

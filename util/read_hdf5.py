@@ -665,13 +665,10 @@ def writeAtomsXYZ(xyz_filename, filename, origin, lattice):
 
 
 ''' MAIN '''
-# *argv (sys.argv in Python) - Takes an Arbitrary Number of Paramters
-# and Stores Them in a List
-
 # USAGE:
-# ssh -l user cab.llnl.gov (If Using Cab System)
 # python read_hdf5.py [ -bov ] file.hdf5 datasetName
-
+# The '-bov' option should be used to visulaize data with VisIt
+# For a plain asci file with data in one column, no '-bov' option should be used
 def main():
 
     ''' Variables '''
@@ -800,25 +797,30 @@ def main():
     else:
 
         print('\nWrite data...\n')
-
+        ndec = 4
         with open(output_data_filename, 'w') as tfile:
 
-            tfile.write('\n' + str( origin[0] ) + '\t'
-                             + str( origin[1] ) + '\t'
-                             + str( origin[2] ) + '\t'
-                             + str( origin[0] + lattice[0] ) + '\t'
-                             + str( origin[1] + lattice[1] ) + '\t'
-                             + str( origin[2] + lattice[2] )
-                             + '  // cell corners')
+            tfile.write(  str(round(lattice[0],ndec)) + '\t'
+                        + str(round(lattice[1],ndec)) + '\t'
+                        + str(round(lattice[2],ndec))
+                        + '  // domain dimensions [Bohr]\n')
+            tfile.write(  str(round(origin[0],ndec)) + '\t'
+                        + str(round(origin[1],ndec)) + '\t'
+                        + str(round(origin[2],ndec))
+                        + '  // lower left corner [Bohr]\n')
+            tfile.write(  str(dim[0]) + '\t'
+                        + str(dim[1]) + '\t'
+                        + str(dim[2]) + '  // mesh')
 
-            tfile.write(str(dim[0]) + '\t' + str(dim[1]) + '\t'
-                        + str(dim[2]) + ' // mesh')
-
+            count=0
             for i in range( dim[0] ):
                 for j in range( dim[1] ):
                     for k in range( dim[2] ):
                         row = (i * incx) + (j * incy) + k
                         tfile.write('\n' + str( data[row] ))
+                        count = count + 1
+
+            print("Written {} values.".format(count))
 
     # Release Data and Attributes
     del data

@@ -49,9 +49,9 @@ class IonicAlgorithm;
 #include "Forces.h"
 #include "Ions.h"
 #include "LocGridOrbitals.h"
+#include "MGOrbitalsPreconditioning.h"
 #include "MGmolInterface.h"
 #include "OrbitalsExtrapolation.h"
-#include "OrbitalsPreconditioning.h"
 #include "Rho.h"
 #include "SpreadPenaltyInterface.h"
 #include "SpreadsAndCenters.h"
@@ -125,12 +125,6 @@ private:
     void getKBPsiAndHij(OrbitalsType& orbitals_i, OrbitalsType& orbitals_j,
         Ions& ions, KBPsiMatrixSparse* kbpsi,
         ProjectedMatricesInterface* projmatrices);
-    void getKBPsiAndHij(OrbitalsType& orbitals_i, OrbitalsType& orbitals_j,
-        Ions& ions, KBPsiMatrixSparse* kbpsi,
-        ProjectedMatricesInterface* projmatrices,
-        dist_matrix::DistMatrix<DISTMATDTYPE>& hij);
-    void getKBPsiAndHij(OrbitalsType& orbitals, Ions& ions,
-        KBPsiMatrixSparse* kbpsi, dist_matrix::DistMatrix<DISTMATDTYPE>& hij);
     void computeHnlPhiAndAdd2HPhi(Ions& ions, OrbitalsType& phi,
         OrbitalsType& hphi, const KBPsiMatrixSparse* const kbpsi);
     int dumpMDrestartFile(OrbitalsType& orbitals, Ions& ions,
@@ -264,12 +258,6 @@ public:
         const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
         ProjectedMatricesInterface*);
 
-    template <class MatrixType>
-    void addHlocal2matrix(
-        OrbitalsType& orbitalsi, OrbitalsType& orbitalsj, MatrixType& mat);
-    void addHlocal2matrix(OrbitalsType& orbitalsi, OrbitalsType& orbitalsj,
-        VariableSizeMatrix<SparseRow>& mat);
-
     void update_pot(const pb::GridFunc<POTDTYPE>& vh_init, const Ions& ions);
     void update_pot(const Ions& ions);
     int quench(OrbitalsType& orbitals, Ions& ions, const int max_steps,
@@ -336,10 +324,17 @@ public:
     void projectOutKernel(OrbitalsType& phi);
 
     void precond_mg(OrbitalsType& orbitals);
-    void setGamma(const pb::Lap<ORBDTYPE>& lapOper, const Potentials& pot);
+    double computeResidual(OrbitalsType& orbitals, OrbitalsType& work_orbitals,
+        Ions& ions, OrbitalsType& res, const KBPsiMatrixSparse* const kbpsi,
+        const bool print_residual, const bool norm_res);
     double computeResidual(OrbitalsType& orbitals, OrbitalsType& work_orbitals,
         Ions& ions, OrbitalsType& res, const bool print_residual,
-        const bool norm_res);
+        const bool norm_res)
+    {
+        return computeResidual(orbitals, work_orbitals, ions, res,
+            g_kbpsi_.get(), print_residual, norm_res);
+    }
+
     void applyAOMMprojection(OrbitalsType&);
     void force(OrbitalsType& orbitals, Ions& ions)
     {

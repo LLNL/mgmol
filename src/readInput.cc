@@ -201,5 +201,5 @@ int MGmol<OrbitalsType>::readCoordinates(
     return 0;
 }
 
-template class MGmol<LocGridOrbitals>;
-template class MGmol<ExtendedGridOrbitals>;
+template class MGmol<LocGridOrbitals<ORBDTYPE>>;
+template class MGmol<ExtendedGridOrbitals<ORBDTYPE>>;

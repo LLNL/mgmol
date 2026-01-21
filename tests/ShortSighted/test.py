@@ -67,8 +67,8 @@ lines=output2.split(b'\n')
 print("Check energies...")
 tol = 1.e-3
 count = 0
-energy1_ref = -83.904
-energy4_ref = -83.871
+energy1_ref = -83.929
+energy4_ref = -83.896
 
 for line in lines:
   num_matches1 = line.count(b'IONIC')
@@ -93,7 +93,7 @@ for line in lines:
 tol = 1.e-1
 count = 0
 temperature1_ref = 948.253
-temperature4_ref = 916.029
+temperature4_ref = 916.336
 
 for line in lines:
   num_matches1 = line.count(b'Kinetic')

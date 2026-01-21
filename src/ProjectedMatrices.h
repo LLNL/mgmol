@@ -132,7 +132,7 @@ protected:
     void convert(const SquareLocalMatrices<double, MemorySpace::Host>& src,
         MatrixType& dst);
 
-    void setupMPI(const std::vector<std::vector<int>>&);
+    void setupGlobalIndexes(const std::vector<std::vector<int>>&);
 
     std::string getMatrixType();
 

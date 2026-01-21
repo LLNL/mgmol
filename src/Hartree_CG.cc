@@ -6,13 +6,8 @@
 // All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
-
-#include <iomanip>
-#include <iostream>
-using namespace std;
-
-#include "Control.h"
 #include "Hartree_CG.h"
+#include "Control.h"
 #include "MultipoleExpansion.h"
 
 #include "Laph2.h"
@@ -22,15 +17,16 @@ using namespace std;
 #include "Laph6.h"
 #include "Laph8.h"
 
-// Timer Poisson::poisson_tm_("Poisson::poisson");
+#include <iomanip>
+#include <iostream>
 
-template <class T>
-void Hartree_CG<T>::solve(
-    const pb::GridFunc<RHODTYPE>& rho, const pb::GridFunc<RHODTYPE>& rhoc)
+template <class OperType, typename ScalarType, typename PDataType>
+void Hartree_CG<OperType, ScalarType, PDataType>::solve(
+    const pb::GridFunc<ScalarType>& rho, const pb::GridFunc<ScalarType>& rhoc)
 {
     PoissonInterface::poisson_tm_.start();
 
-    pb::GridFunc<RHODTYPE> work_rho(rho);
+    pb::GridFunc<ScalarType> work_rho(rho);
     Control& ct = *(Control::instance());
 
     // Keep in memory vh*rho before updating vh
@@ -48,7 +44,7 @@ void Hartree_CG<T>::solve(
         if (Poisson::bc_[i] == 2) dim_mpol++;
     //(*MPIdata::sout)<<"dim_mpol="<<dim_mpol<<endl;
 
-    pb::GridFunc<POTDTYPE> bc_func(
+    pb::GridFunc<ScalarType> bc_func(
         Poisson::grid_, Poisson::bc_[0], Poisson::bc_[1], Poisson::bc_[2]);
     if (dim_mpol > 0)
     {
@@ -70,53 +66,40 @@ void Hartree_CG<T>::solve(
         }
     }
 
-    /* Check for uniform precision before calling poisson_solver.
-     * Downgrade or upgrade rhs (work_rho) to have precision of solution (vh_).
-     * Note that this could be done at the beginning of this function, but
-     * several operations involving rho might be done in lower precision
-     * (depending on POTDTYPE), which could affect accuracy. For now, we delay
-     * the switch until just before the solve call.
-     */
-    //    if(sizeof(POTDTYPE) != sizeof(RHODTYPE))
-    //    {
-    /* solve with POTDTYPE precision */
-    pb::GridFunc<POTDTYPE> rhs(work_rho);
+    pb::GridFunc<ScalarType> rhs(work_rho);
     rhs *= (4. * M_PI);
     poisson_solver_->solve(*Poisson::vh_, rhs);
-    //    }
-    //    else
-    //    {
-    //       poisson_solver_->solve(*Poisson::vh_, work_rho);
-    //    }
 
-    double residual_reduction = poisson_solver_->getResidualReduction();
-    double final_residual     = poisson_solver_->getFinalResidual();
+    const double residual_reduction = poisson_solver_->getResidualReduction();
+    const double final_residual     = poisson_solver_->getFinalResidual();
     const bool large_residual
         = (residual_reduction > 1.e-3 || final_residual > 1.e-3);
 
     if (onpe0 && (large_residual || ct.verbose > 1))
-        (*MPIdata::sout) << setprecision(2) << scientific
+        (*MPIdata::sout) << std::setprecision(2) << std::scientific
                          << "Hartree_CG: residual reduction = "
                          << residual_reduction
-                         << ", final residual = " << final_residual << endl;
+                         << ", final residual = " << final_residual
+                         << std::endl;
 
     Poisson::Int_vhrho_  = vel * Poisson::vh_->gdot(rho);
     Poisson::Int_vhrhoc_ = vel * Poisson::vh_->gdot(rhoc);
 
     PoissonInterface::poisson_tm_.stop();
 
-    assert(residual_reduction == residual_reduction);
+    assert(!std::isnan(residual_reduction));
 }
 
-template class Hartree_CG<pb::Laph2<POTDTYPE>>;
-// template class Hartree_CG<pb::Laph2<float> >;
-template class Hartree_CG<pb::Laph4<POTDTYPE>>;
-// template class Hartree_CG<pb::Laph4<float> >;
-template class Hartree_CG<pb::Laph6<POTDTYPE>>;
-// template class Hartree_CG<pb::Laph6<float> >;
-template class Hartree_CG<pb::Laph8<POTDTYPE>>;
-// template class Hartree_CG<pb::Laph8<float> >;
-template class Hartree_CG<pb::Laph4M<POTDTYPE>>;
-// template class Hartree_CG<pb::Laph4M<float> >;
-template class Hartree_CG<pb::Laph4MP<POTDTYPE>>;
-// template class Hartree_CG<pb::Laph4MP<float> >;
+template class Hartree_CG<pb::Laph2<double>, double, float>;
+template class Hartree_CG<pb::Laph4<double>, double, float>;
+template class Hartree_CG<pb::Laph6<double>, double, float>;
+template class Hartree_CG<pb::Laph8<double>, double, float>;
+template class Hartree_CG<pb::Laph4M<double>, double, float>;
+template class Hartree_CG<pb::Laph4MP<double>, double, float>;
+
+template class Hartree_CG<pb::Laph2<double>, double, double>;
+template class Hartree_CG<pb::Laph4<double>, double, double>;
+template class Hartree_CG<pb::Laph6<double>, double, double>;
+template class Hartree_CG<pb::Laph8<double>, double, double>;
+template class Hartree_CG<pb::Laph4M<double>, double, double>;
+template class Hartree_CG<pb::Laph4MP<double>, double, double>;

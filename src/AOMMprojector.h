@@ -22,9 +22,9 @@ class MasksSet;
 class AOMMprojector
 {
 private:
-    LocGridOrbitals* kernel_phi_;
+    LocGridOrbitals<ORBDTYPE>* kernel_phi_;
 
-    SubspaceProjector<LocGridOrbitals>* kernelprojector_;
+    SubspaceProjector<LocGridOrbitals<ORBDTYPE>>* kernelprojector_;
 
     MasksSet* kernelMasks_;
 
@@ -35,13 +35,13 @@ private:
     short counter_;
 
 public:
-    AOMMprojector(
-        LocGridOrbitals& phi, const std::shared_ptr<LocalizationRegions>& lrs);
+    AOMMprojector(LocGridOrbitals<ORBDTYPE>& phi,
+        const std::shared_ptr<LocalizationRegions>& lrs);
     ~AOMMprojector();
 
-    void projectOut(LocGridOrbitals& phi);
+    void projectOut(LocGridOrbitals<ORBDTYPE>& phi);
 
-    void resetProjectors(LocGridOrbitals& phi);
+    void resetProjectors(LocGridOrbitals<ORBDTYPE>& phi);
 };
 
 #endif

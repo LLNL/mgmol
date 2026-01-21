@@ -53,11 +53,11 @@ for line in coords: ## loop over lines of file
           vy=eval(word[7])
           vz=eval(word[8])
         for i in range(nx):
-          x=eval(word[2])+i*lx
+          x=round(eval(word[2])+i*lx,12)
           for j in range(ny):
-            y=eval(word[3])+j*ly
+            y=round(eval(word[3])+j*ly,12)
             for k in range(nz):
-              z=eval(word[4])+k*lz
+              z=round(eval(word[4])+k*lz,12)
               count_atom = count_atom + 1
               name = myspecies + str(count_atom)
               sp=word[1]
