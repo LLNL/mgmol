@@ -78,9 +78,7 @@ double GridFunc<double>::fmax()
     int n    = grid_.sizeg();
     int imax = IDAMAX(&n, &uu_[0], &ione) - 1;
 
-    double vmax = mype_env().double_max_all(uu_[imax]);
-
-    return vmax;
+    return mype_env().double_max_all(uu_[imax]);
 }
 
 template <>
@@ -90,9 +88,7 @@ double GridFunc<float>::fmax()
     int n    = grid_.sizeg();
     int imax = ISAMAX(&n, &uu_[0], &ione) - 1;
 
-    double vmax = mype_env().double_max_all((double)uu_[imax]);
-
-    return vmax;
+    return mype_env().double_max_all((double)uu_[imax]);
 }
 
 template <typename T>
@@ -219,8 +215,7 @@ GridFunc<T>::GridFunc(const GridFunc<double>& A) : grid_(A.grid())
 
     alloc();
 
-    int n = grid_.sizeg();
-    MPcpy(uu_, A.uu(), n);
+    MPcpy(uu_, A.uu(), grid_.sizeg());
 
     updated_boundaries_ = A.updated_boundaries();
 }
@@ -276,13 +271,11 @@ GridFunc<T>::GridFunc(const GridFunc<T>& A, const Grid& new_grid)
 
     for (int ix = 0; ix < dim_[0]; ix++)
     {
-
         int ix1 = (ix + shift1) * incx_ + shift1;
         int ix2 = (ix + shift2) * incx2 + shift2;
 
         for (int iy = 0; iy < dim_[1]; iy++)
         {
-
             int iy1 = ix1 + (iy + shift1) * incy_;
             int iy2 = ix2 + (iy + shift2) * incy2;
 
@@ -331,13 +324,11 @@ void GridFunc<T>::set_max(const T val)
 }
 
 template <typename T>
-void GridFunc<T>::setValues(const int n, const T* src, const int pos)
+void GridFunc<T>::setValues(const int n, const T* src)
 {
-    assert((pos + n) <= static_cast<int>(grid_.sizeg()));
+    assert(n <= static_cast<int>(grid_.sizeg()));
 
-    size_t ssize = n * sizeof(T);
-    // int ione=1;
-    memcpy(&uu_[pos], src, ssize);
+    memcpy(uu_, src, n * sizeof(T));
 }
 
 template <typename T>
@@ -366,6 +357,14 @@ GridFunc<T>& GridFunc<T>::operator=(const GridFunc<T>& func)
 }
 
 template <typename T>
+void GridFunc<T>::setZero()
+{
+    memset(uu_, 0, grid_.sizeg()*sizeof(T));
+
+    updated_boundaries_ = true;
+}
+
+template <typename T>
 void GridFunc<T>::setValues(const T val)
 {
     const int n        = grid_.sizeg();
@@ -373,6 +372,8 @@ void GridFunc<T>::setValues(const T val)
 
     for (int i = 0; i < n; i++)
         pu[i] = val;
+
+    updated_boundaries_ = true;
 }
 
 template <typename T>
@@ -380,7 +381,6 @@ GridFunc<T>& GridFunc<T>::operator=(const T val)
 {
     setValues(val);
 
-    updated_boundaries_ = true;
     return *this;
 }
 
@@ -516,7 +516,6 @@ GridFunc<T>& GridFunc<T>::operator*=(const double alpha)
 template <typename T>
 void GridFunc<T>::scal(const double alpha)
 {
-
     LinearAlgebraUtils<MemorySpace::Host>::MPscal(grid_.sizeg(), alpha, uu_);
 }
 

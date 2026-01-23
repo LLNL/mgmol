@@ -95,7 +95,7 @@ protected:
     static std::vector<T> buf3_;
     static std::vector<T> buf4_;
 
-    void setValues(const int n, const T* src, const int pos = 0);
+    void setValues(const int n, const T* src);
 
 public:
     // Constructors
@@ -114,6 +114,7 @@ public:
 
     void setValues(const GridFunc<T>& src);
     void setValues(const T val);
+    void setZero();
 
     int inc(const short dir) const { return grid_.inc(dir); }
 

@@ -10,13 +10,19 @@
 #include "Preconditioning.h"
 #include "LapFactory.h"
 
-using namespace std;
-
 template <typename T>
 Preconditioning<T>::Preconditioning(const short lap_type, const short maxlevels,
-    const pb::Grid& grid, const short bcWF[3])
+    const short npresmooth, const short npostsmooth,
+    const pb::Grid& grid, const short bcWF[3]):
+	max_levels_(maxlevels),
+	npresmooth_(npresmooth),
+	npostsmooth_(npostsmooth)
 {
-    max_levels_ = maxlevels;
+    assert(npresmooth_>=0);
+    assert(npostsmooth_>=0);
+    assert(npresmooth_<100);
+    assert(npostsmooth_<100);
+
     for (short i = 0; i < 3; i++)
         bc_[i] = bcWF[i];
 
@@ -25,16 +31,6 @@ Preconditioning<T>::Preconditioning(const short lap_type, const short maxlevels,
 
     pb::Lap<T>* myoper = LapFactory<T>::createLap(*grid_[0], lap_type);
     jacobi_factor_.push_back(myoper->jacobiFactor());
-}
-
-template <typename T>
-Preconditioning<T>::Preconditioning(const Preconditioning& precond)
-{
-    max_levels_      = precond.max_levels_;
-    pb::Grid* mygrid = new pb::Grid(*(precond.grid_[0]));
-    grid_.push_back(mygrid);
-    for (short i = 0; i < 3; i++)
-        bc_[i] = precond.bc_[i];
 }
 
 template <typename T>
@@ -150,8 +146,7 @@ void Preconditioning<T>::setup(
     }
 }
 
-// MG V-cycle with mask corresponding to state istate
-// (no mask if istate==-1)
+// MG V-cycle
 template <typename T>
 void Preconditioning<T>::mg(pb::GridFuncVector<T, memory_space_type>& gfv_v,
     const pb::GridFuncVector<T, memory_space_type>& gfv_f, const short lap_type,
@@ -164,8 +159,8 @@ void Preconditioning<T>::mg(pb::GridFuncVector<T, memory_space_type>& gfv_v,
     assert(static_cast<int>(gfv_work_.size()) > level);
     assert(gfv_work_[level] != nullptr);
 
-    short ncycl = 2;
-    if (level == max_levels_) ncycl = 4;
+    short ncycl = npresmooth_;
+    if (level == max_levels_) ncycl = npresmooth_+npostsmooth_;
 
     const double jacobi_factor = jacobi_factor_[level];
 
@@ -206,7 +201,7 @@ void Preconditioning<T>::mg(pb::GridFuncVector<T, memory_space_type>& gfv_v,
     gfv_v -= (*gfv_work_[level]);
 
     // post-smoothing
-    for (short it = 0; it < 2; it++)
+    for (short it = 0; it < npostsmooth_; it++)
     {
         gfv_v.jacobi(lap_type, gfv_f, *gfv_work_[level], jacobi_factor);
         gfv_v.app_mask(level);
