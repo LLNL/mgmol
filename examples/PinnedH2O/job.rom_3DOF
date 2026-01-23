@@ -11,7 +11,7 @@ setenv OMP_NUM_THREADS 1
 set ncpus = 1
 set case = 2
 
-set maindir = /p/lustre2/cheung26/mgmol_poisson_test/mgmol_new
+set maindir = /p/lustre2/cheung26/mgmol
 
 setenv LD_LIBRARY_PATH ${maindir}/build_quartz/libROM/build/lib:$LD_LIBRARY_PATH
 
