@@ -29,7 +29,7 @@ typedef enum INSERTMODE
 } INSERTMODE;
 
 /* define maximum local matrix size */
-//#define MAX_MAT_SIZE   15000
+// #define MAX_MAT_SIZE   15000
 /* define default tolerance for pruning matrix entries */
 #define MAT_TOL 1.0e-14
 /* define maximum number of print rows */

@@ -360,7 +360,8 @@ public:
 
 #ifdef MGMOL_HAS_LIBROM
     int save_orbital_snapshot(std::string file_path, OrbitalsType& orbitals);
-    void project_orbital(std::string file_path, int rdim, OrbitalsType& orbitals);
+    void project_orbital(
+        std::string file_path, int rdim, OrbitalsType& orbitals);
 #endif
     void updateDMandEnergy(OrbitalsType& orbitals, Ions& ions, double& eks);
 };

@@ -49,6 +49,6 @@ public:
     virtual int write_hdf5(HDFrestart&) = 0;
     virtual int init(HDFrestart&)       = 0;
 
-    virtual ~IonicStepper(){};
+    virtual ~IonicStepper() {};
 };
 #endif

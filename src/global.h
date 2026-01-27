@@ -13,7 +13,7 @@
 // this file should be included in every MGmol file
 // to enable global definitions, macros, ...
 
-//#include "mgmol_memory.h"
+// #include "mgmol_memory.h"
 
 #ifdef MGMOL_USE_MIXEDP
 typedef float ORBDTYPE;

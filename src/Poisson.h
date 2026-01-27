@@ -66,7 +66,7 @@ public:
     double IntVhRhoc(void) const { return Int_vhrhoc_; }
     double IntVhRho_old(void) const { return Int_vhrho_old_; }
 
-    virtual void set_rhod(pb::GridFunc<RHODTYPE>* /*rhod*/){};
+    virtual void set_rhod(pb::GridFunc<RHODTYPE>* /*rhod*/) {};
     void set_vh(const pb::GridFunc<POTDTYPE>& vh) { (*vh_) = vh; };
     void set_vh(const std::vector<POTDTYPE>& vh)
     {
@@ -89,9 +89,11 @@ public:
         Int_vhrhoc_      = vel * vh_->gdot(rhoc);
     }
 
-    virtual void applyOperator(pb::GridFunc<POTDTYPE> &vh, pb::GridFunc<POTDTYPE> &lhs)
+    virtual void applyOperator(
+        pb::GridFunc<POTDTYPE>& vh, pb::GridFunc<POTDTYPE>& lhs)
     {
-        std::cerr << "ERROR: Abstract method Poisson::applyOperator()" << std::endl;
+        std::cerr << "ERROR: Abstract method Poisson::applyOperator()"
+                  << std::endl;
         MPI_Abort(MPI_COMM_WORLD, 0);
     }
 };

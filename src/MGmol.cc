@@ -1135,13 +1135,14 @@ void MGmol<OrbitalsType>::dumpRestart()
 
 #ifdef MGMOL_HAS_LIBROM
         // Save orbital snapshots
-        if (ct.getROMOptions().save_librom_snapshot > 0 && ct.AtomsDynamic() == AtomsDynamicType::Quench)
+        if (ct.getROMOptions().save_librom_snapshot > 0
+            && ct.AtomsDynamic() == AtomsDynamicType::Quench)
         {
-            ierr = save_orbital_snapshot(
-                filename, *current_orbitals_);
+            ierr = save_orbital_snapshot(filename, *current_orbitals_);
 
             if (ierr < 0)
-                os_ << "WARNING: writing ROM snapshot data failed!!!" << std::endl;
+                os_ << "WARNING: writing ROM snapshot data failed!!!"
+                    << std::endl;
         }
 #endif
     }
@@ -1457,7 +1458,8 @@ void MGmol<OrbitalsType>::getAtomicNumbers(std::vector<short>& an)
 }
 
 template <class OrbitalsType>
-void MGmol<OrbitalsType>::updateDMandEnergy(OrbitalsType& orbitals, Ions& ions, double& eks)
+void MGmol<OrbitalsType>::updateDMandEnergy(
+    OrbitalsType& orbitals, Ions& ions, double& eks)
 {
     // initialize electronic density
     rho_->update(orbitals);
@@ -1473,14 +1475,15 @@ void MGmol<OrbitalsType>::updateDMandEnergy(OrbitalsType& orbitals, Ions& ions, 
     std::shared_ptr<DMStrategy<OrbitalsType>> dm_strategy(
         DMStrategyFactory<OrbitalsType,
             dist_matrix::DistMatrix<double>>::create(comm_, os_, ions,
-            rho_.get(), energy_.get(), electrostat_.get(),
-            hamiltonian_.get(), this, proj_matrices_.get(), &orbitals));
+            rho_.get(), energy_.get(), electrostat_.get(), hamiltonian_.get(),
+            this, proj_matrices_.get(), &orbitals));
 
     dm_strategy->update(orbitals);
 
     // evaluate energy and forces
     double ts = 0.;
-    eks = energy_->evaluateTotal(ts, proj_matrices_.get(), ions, orbitals, 2, os_);
+    eks       = energy_->evaluateTotal(
+        ts, proj_matrices_.get(), ions, orbitals, 2, os_);
 }
 
 template <class OrbitalsType>

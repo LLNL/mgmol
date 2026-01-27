@@ -41,7 +41,7 @@ public:
         MasksSet& masks, Electrostatic& electrostat, const double dt,
         MGmol<OrbitalsType>&);
 
-    ~FIRE() override{};
+    ~FIRE() override {};
 };
 
 #endif

@@ -69,7 +69,7 @@ public:
     std::vector<std::vector<RHODTYPE>> rho_;
 
     Rho();
-    ~Rho(){};
+    ~Rho() {};
 
     const OrthoType getOrthoType() { return orbitals_type_; }
 

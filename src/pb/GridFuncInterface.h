@@ -30,7 +30,7 @@ protected:
     static Timer finishExchangeEastWest_tm_;
 
 public:
-    virtual ~GridFuncInterface() {}
+    virtual ~GridFuncInterface() { }
 
     static void printTimers(std::ostream& os)
     {

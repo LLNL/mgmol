@@ -31,7 +31,7 @@ public:
     {
     }
 
-    DistVector(const int m) : DistMatrix<T>("noname", m, 1) {}
+    DistVector(const int m) : DistMatrix<T>("noname", m, 1) { }
 
     DistVector(const std::vector<T>& v) : DistMatrix<T>("noname", v.size(), 1)
     {

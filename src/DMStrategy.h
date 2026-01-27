@@ -17,7 +17,7 @@ public:
     virtual void initialize(OrbitalsType& orbitals) = 0;
     virtual int update(OrbitalsType& orbitals)      = 0;
 
-    virtual ~DMStrategy(){};
+    virtual ~DMStrategy() {};
 
     // tells if strategy needs an updated H matrix
     // to update DM

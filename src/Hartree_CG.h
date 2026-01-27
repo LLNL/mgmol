@@ -33,7 +33,7 @@ public:
     };
 
     // Destructor
-    ~Hartree_CG() override {}
+    ~Hartree_CG() override { }
 
     void setup(const short nu1, const short nu2, const short max_sweeps,
         const double tol, const short max_nlevels,

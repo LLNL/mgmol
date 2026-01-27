@@ -271,7 +271,8 @@ void Control::print(std::ostream& os)
         os << " Multigrid preconditioning for wave functions:" << std::endl;
         os << " # of Multigrid levels     : " << mg_levels_ << std::endl;
         os << " # of pre-smoothing steps  : " << mg_npresmoothing_ << std::endl;
-        os << " # of post-smoothing steps : " << mg_npostsmoothing_ << std::endl;
+        os << " # of post-smoothing steps : " << mg_npostsmoothing_
+           << std::endl;
     }
     else
     {
@@ -503,7 +504,8 @@ void Control::sync(void)
         memset(&float_buffer[0], 0, size_float_buffer * sizeof(float));
     }
 
-    auto bcast_check = [](int mpirc) {
+    auto bcast_check = [](int mpirc)
+    {
         if (mpirc != MPI_SUCCESS)
         {
             (*MPIdata::sout) << "MPI Bcast of Control failed!!!" << std::endl;
@@ -1497,9 +1499,9 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         mg_npresmoothing_  = vm["Preconditioner.npresmoothing"].as<short>();
         mg_npostsmoothing_ = vm["Preconditioner.npostsmoothing"].as<short>();
         precond_precision_ = vm["Preconditioner.precision"].as<short>();
-	assert(precond_precision_==32 ||precond_precision_==64);
+        assert(precond_precision_ == 32 || precond_precision_ == 64);
 
-        precond_factor     = vm["Quench.step_length"].as<float>();
+        precond_factor = vm["Quench.step_length"].as<float>();
         if (precond_factor < 0.)
         {
             switch (lap_type)
@@ -1994,10 +1996,14 @@ void Control::setROMOptions(const boost::program_options::variables_map& vm)
         else if (str.compare("none") == 0)
             rom_pri_option.rom_stage = ROMStage::UNSUPPORTED;
 
-        rom_pri_option.restart_file_fmt = vm["ROM.offline.restart_filefmt"].as<std::string>();
-        rom_pri_option.restart_file_minidx = vm["ROM.offline.restart_min_idx"].as<int>();
-        rom_pri_option.restart_file_maxidx = vm["ROM.offline.restart_max_idx"].as<int>();
-        rom_pri_option.basis_file = vm["ROM.offline.basis_file"].as<std::string>();
+        rom_pri_option.restart_file_fmt
+            = vm["ROM.offline.restart_filefmt"].as<std::string>();
+        rom_pri_option.restart_file_minidx
+            = vm["ROM.offline.restart_min_idx"].as<int>();
+        rom_pri_option.restart_file_maxidx
+            = vm["ROM.offline.restart_max_idx"].as<int>();
+        rom_pri_option.basis_file
+            = vm["ROM.offline.basis_file"].as<std::string>();
 
         str = vm["ROM.offline.variable"].as<std::string>();
         if (str.compare("orbitals") == 0)
@@ -2007,14 +2013,19 @@ void Control::setROMOptions(const boost::program_options::variables_map& vm)
         else
             rom_pri_option.variable = ROMVariable::NONE;
 
-        rom_pri_option.save_librom_snapshot = vm["ROM.offline.save_librom_snapshot"].as<bool>();
-        rom_pri_option.librom_snapshot_freq = vm["ROM.offline.librom_snapshot_freq"].as<int>();
+        rom_pri_option.save_librom_snapshot
+            = vm["ROM.offline.save_librom_snapshot"].as<bool>();
+        rom_pri_option.librom_snapshot_freq
+            = vm["ROM.offline.librom_snapshot_freq"].as<int>();
 
         rom_pri_option.compare_md = vm["ROM.basis.compare_md"].as<bool>();
-        rom_pri_option.num_orbbasis = vm["ROM.basis.number_of_orbital_basis"].as<int>();
-        rom_pri_option.num_potbasis = vm["ROM.basis.number_of_potential_basis"].as<int>();
-        rom_pri_option.pot_rom_file = vm["ROM.potential_rom_file"].as<std::string>();
-    }  // onpe0
+        rom_pri_option.num_orbbasis
+            = vm["ROM.basis.number_of_orbital_basis"].as<int>();
+        rom_pri_option.num_potbasis
+            = vm["ROM.basis.number_of_potential_basis"].as<int>();
+        rom_pri_option.pot_rom_file
+            = vm["ROM.potential_rom_file"].as<std::string>();
+    } // onpe0
 
     // synchronize all processors
     syncROMOptions();
@@ -2031,7 +2042,8 @@ void Control::syncROMOptions()
     mmpi.bcast(rom_pri_option.basis_file, comm_global_);
     mmpi.bcast(rom_pri_option.pot_rom_file, comm_global_);
 
-    auto bcast_check = [](int mpirc) {
+    auto bcast_check = [](int mpirc)
+    {
         if (mpirc != MPI_SUCCESS)
         {
             (*MPIdata::sout) << "MPI Bcast of Control failed!!!" << std::endl;
@@ -2044,31 +2056,38 @@ void Control::syncROMOptions()
     mpirc = MPI_Bcast(&rom_stage, 1, MPI_SHORT, 0, comm_global_);
     bcast_check(mpirc);
 
-    mpirc = MPI_Bcast(&rom_pri_option.restart_file_minidx, 1, MPI_INT, 0, comm_global_);
+    mpirc = MPI_Bcast(
+        &rom_pri_option.restart_file_minidx, 1, MPI_INT, 0, comm_global_);
     bcast_check(mpirc);
 
-    mpirc = MPI_Bcast(&rom_pri_option.restart_file_maxidx, 1, MPI_INT, 0, comm_global_);
+    mpirc = MPI_Bcast(
+        &rom_pri_option.restart_file_maxidx, 1, MPI_INT, 0, comm_global_);
     bcast_check(mpirc);
 
-    mpirc = MPI_Bcast(&rom_pri_option.save_librom_snapshot, 1, MPI_C_BOOL, 0, comm_global_);
+    mpirc = MPI_Bcast(
+        &rom_pri_option.save_librom_snapshot, 1, MPI_C_BOOL, 0, comm_global_);
     bcast_check(mpirc);
 
-    mpirc = MPI_Bcast(&rom_pri_option.librom_snapshot_freq, 1, MPI_INT, 0, comm_global_);
+    mpirc = MPI_Bcast(
+        &rom_pri_option.librom_snapshot_freq, 1, MPI_INT, 0, comm_global_);
     bcast_check(mpirc);
 
     short rom_var = (short)static_cast<int>(rom_pri_option.variable);
-    mpirc = MPI_Bcast(&rom_var, 1, MPI_SHORT, 0, comm_global_);
+    mpirc         = MPI_Bcast(&rom_var, 1, MPI_SHORT, 0, comm_global_);
     bcast_check(mpirc);
 
     rom_pri_option.rom_stage = static_cast<ROMStage>(rom_stage);
-    rom_pri_option.variable = static_cast<ROMVariable>(rom_var);
+    rom_pri_option.variable  = static_cast<ROMVariable>(rom_var);
 
-    mpirc = MPI_Bcast(&rom_pri_option.compare_md, 1, MPI_C_BOOL, 0, comm_global_);
+    mpirc
+        = MPI_Bcast(&rom_pri_option.compare_md, 1, MPI_C_BOOL, 0, comm_global_);
     bcast_check(mpirc);
 
-    mpirc = MPI_Bcast(&rom_pri_option.num_orbbasis, 1, MPI_INT, 0, comm_global_);
+    mpirc
+        = MPI_Bcast(&rom_pri_option.num_orbbasis, 1, MPI_INT, 0, comm_global_);
     bcast_check(mpirc);
 
-    mpirc = MPI_Bcast(&rom_pri_option.num_potbasis, 1, MPI_INT, 0, comm_global_);
+    mpirc
+        = MPI_Bcast(&rom_pri_option.num_potbasis, 1, MPI_INT, 0, comm_global_);
     bcast_check(mpirc);
 }

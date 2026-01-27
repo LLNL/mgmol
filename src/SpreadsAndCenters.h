@@ -53,7 +53,7 @@ private:
         std::vector<std::vector<double>>& matr);
 
 public:
-    virtual ~SpreadsAndCenters() {}
+    virtual ~SpreadsAndCenters() { }
 
     void computeCenters(std::vector<Vector3D>& centers) const
     {

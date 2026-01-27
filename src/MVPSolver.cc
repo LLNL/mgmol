@@ -235,7 +235,7 @@ int MVPSolver<OrbitalsType, MatrixType>::solve(OrbitalsType& orbitals)
             ProjectedMatrices<MatrixType>* current_proj_mat
                 = (inner_it == 0)
                       ? dynamic_cast<ProjectedMatrices<MatrixType>*>(
-                            orbitals.getProjMatrices())
+                          orbitals.getProjMatrices())
                       : proj_mat_work_;
 
             const int printE = (ct.verbose > 1) ? 1 : 0;

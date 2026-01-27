@@ -21,7 +21,7 @@ Adapted from pARMS code. (original version by Z. Li)
 #include <vector>
 
 #define USE_POWERS2 1
-//#define COUNT_LINKS 1
+// #define COUNT_LINKS 1
 
 typedef struct Slot
 {

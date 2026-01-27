@@ -32,7 +32,7 @@ class AndersonMix : public Mixing<T>
 
     static Timer update_tm_;
 
-    virtual void postprocessUpdate(){};
+    virtual void postprocessUpdate() {};
 
     T& x_; // current trial solution
 

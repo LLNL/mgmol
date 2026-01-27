@@ -37,7 +37,7 @@ public:
     using memory_space_type = MemorySpace::Host;
 #endif
 
-    virtual ~FDoperInterface() {}
+    virtual ~FDoperInterface() { }
 
     static void printTimers(std::ostream& os)
     {

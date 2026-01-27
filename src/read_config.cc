@@ -7,6 +7,7 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
+#include "MGmol_prototypes.h"
 #include <cassert>
 #include <fenv.h>
 #include <fstream>
@@ -14,7 +15,6 @@
 #include <iterator>
 #include <sys/cdefs.h>
 #include <vector>
-#include "MGmol_prototypes.h"
 
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
@@ -118,8 +118,7 @@ int read_config(int argc, char** argv, po::variables_map& vm,
             "Compute MLWF (apply rotation) in quench")(
             "Quench.num_lin_iterations", po::value<short>()->default_value(0),
             "Number of iterations without potential update in quench")(
-            "Preconditioner.num_levels",
-            po::value<short>()->default_value(2),
+            "Preconditioner.num_levels", po::value<short>()->default_value(2),
             "Number of levels for MG preconditioner")(
             "Preconditioner.npresmoothing",
             po::value<short>()->default_value(2),
@@ -127,8 +126,7 @@ int read_config(int argc, char** argv, po::variables_map& vm,
             "Preconditioner.npostsmoothing",
             po::value<short>()->default_value(2),
             "Number of postsmoothing steps i preconditioner")(
-            "Preconditioner.precision",
-            po::value<short>()->default_value(32),
+            "Preconditioner.precision", po::value<short>()->default_value(32),
             "Precision for MG preconditioner")("Quench.spread_penalty_damping",
             po::value<float>()->default_value(0.),
             "Spread penalty damping factor")("Quench.spread_penalty_target",
@@ -257,8 +255,9 @@ int read_config(int argc, char** argv, po::variables_map& vm,
             "continuum solvent: beta")("Poisson.FDtype",
             po::value<std::string>()->default_value("Mehrstellen"),
             "FDtype")("Poisson.nu1", po::value<short>()->default_value(1),
-            "MG pre-smoothing sweeps")("Poisson.nu2", po::value<short>()->default_value(1),
-            "MG post-smoothing sweeps")("Poisson.max_steps", po::value<short>()->default_value(20),
+            "MG pre-smoothing sweeps")("Poisson.nu2",
+            po::value<short>()->default_value(1), "MG post-smoothing sweeps")(
+            "Poisson.max_steps", po::value<short>()->default_value(20),
             "max. nb. steps Poisson solver")("Poisson.max_steps_initial",
             po::value<short>()->default_value(20),
             "max. nb. steps Poisson solver in first solve")(
@@ -423,32 +422,35 @@ int read_config(int argc, char** argv, po::variables_map& vm,
 }
 
 #ifdef MGMOL_HAS_LIBROM
-void setupROMConfigOption(po::options_description &rom_cfg)
+void setupROMConfigOption(po::options_description& rom_cfg)
 {
-    rom_cfg.add_options()
-        ("ROM.stage", po::value<std::string>()->default_value("none"),
-            "ROM workflow stage: offline; build; online; none.")
-        ("ROM.offline.restart_filefmt", po::value<std::string>()->default_value(""),
-            "File name format to read for snapshots.")
-        ("ROM.offline.restart_min_idx", po::value<int>()->default_value(-1),
-            "Minimum index for snapshot file format.")
-        ("ROM.offline.restart_max_idx", po::value<int>()->default_value(-1),
-            "Maximum index for snapshot file format.")
-        ("ROM.offline.basis_file", po::value<std::string>()->default_value(""),
-            "File name for libROM snapshot/POD matrices.")
-        ("ROM.offline.save_librom_snapshot", po::value<bool>()->default_value(false),
-            "Save libROM snapshot file at FOM simulation.")
-        ("ROM.offline.librom_snapshot_freq", po::value<int>()->default_value(-1),
-            "Frequency of saving libROM snapshot file at FOM simulation.")
-        ("ROM.offline.variable", po::value<std::string>()->default_value(""),
-            "FOM variable to perform POD: either orbitals or potential.")
-        ("ROM.basis.compare_md", po::value<bool>()->default_value(false),
-            "Compare MD or single-step force.")
-        ("ROM.basis.number_of_orbital_basis", po::value<int>()->default_value(-1),
-            "Number of orbital POD basis.")
-        ("ROM.basis.number_of_potential_basis", po::value<int>()->default_value(-1),
-            "Number of potential POD basis to build Hartree potential ROM operator.")
-        ("ROM.potential_rom_file", po::value<std::string>()->default_value(""),
-            "File name to save/load potential ROM operators.");
+    rom_cfg.add_options()("ROM.stage",
+        po::value<std::string>()->default_value("none"),
+        "ROM workflow stage: offline; build; online; none.")(
+        "ROM.offline.restart_filefmt",
+        po::value<std::string>()->default_value(""),
+        "File name format to read for snapshots.")(
+        "ROM.offline.restart_min_idx", po::value<int>()->default_value(-1),
+        "Minimum index for snapshot file format.")(
+        "ROM.offline.restart_max_idx", po::value<int>()->default_value(-1),
+        "Maximum index for snapshot file format.")("ROM.offline.basis_file",
+        po::value<std::string>()->default_value(""),
+        "File name for libROM snapshot/POD matrices.")(
+        "ROM.offline.save_librom_snapshot",
+        po::value<bool>()->default_value(false),
+        "Save libROM snapshot file at FOM simulation.")(
+        "ROM.offline.librom_snapshot_freq", po::value<int>()->default_value(-1),
+        "Frequency of saving libROM snapshot file at FOM simulation.")(
+        "ROM.offline.variable", po::value<std::string>()->default_value(""),
+        "FOM variable to perform POD: either orbitals or potential.")(
+        "ROM.basis.compare_md", po::value<bool>()->default_value(false),
+        "Compare MD or single-step force.")("ROM.basis.number_of_orbital_basis",
+        po::value<int>()->default_value(-1),
+        "Number of orbital POD basis.")("ROM.basis.number_of_potential_basis",
+        po::value<int>()->default_value(-1),
+        "Number of potential POD basis to build Hartree potential ROM "
+        "operator.")("ROM.potential_rom_file",
+        po::value<std::string>()->default_value(""),
+        "File name to save/load potential ROM operators.");
 }
 #endif

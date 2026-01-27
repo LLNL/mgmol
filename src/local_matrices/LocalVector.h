@@ -12,9 +12,9 @@ private:
     std::vector<DataType> data_;
 
 public:
-    LocalVector(const int n) : data_(n) {}
+    LocalVector(const int n) : data_(n) { }
 
-    LocalVector(const std::vector<DataType>& v) : data_(v) {}
+    LocalVector(const std::vector<DataType>& v) : data_(v) { }
 
     DataType* data() { return data_.data(); }
     const DataType* data() const { return data_.data(); }

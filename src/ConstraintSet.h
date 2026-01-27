@@ -35,7 +35,7 @@ private:
     bool addConstraint(Ions&, const std::vector<std::string>& argv);
 
 public:
-    ConstraintSet(){};
+    ConstraintSet() {};
 
     void clear();
 

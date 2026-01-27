@@ -15,7 +15,7 @@ template <class T>
 class DotProductDiagonal : public DotProductManager<T>
 {
 public:
-    DotProductDiagonal(){};
+    DotProductDiagonal() {};
 
     double dotProduct(T& phi0, const T& phi1) override;
 };

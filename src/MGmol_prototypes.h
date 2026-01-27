@@ -10,8 +10,8 @@
 #ifndef MGMOL_PROTOTYPES_H
 #define MGMOL_PROTOTYPES_H
 
-#include "mgmol_config.h"
 #include "global.h"
+#include "mgmol_config.h"
 
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
@@ -27,7 +27,7 @@ int read_config(int argc, char** argv,
     std::string& lrs_filename, std::string& constraints_filename,
     float& total_spin, bool& with_spin);
 #ifdef MGMOL_HAS_LIBROM
-void setupROMConfigOption(po::options_description &rom_cfg);
+void setupROMConfigOption(po::options_description& rom_cfg);
 #endif
 
 #endif

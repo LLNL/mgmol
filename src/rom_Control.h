@@ -20,7 +20,7 @@ enum class ROMStage
 {
     OFFLINE,
     ONLINE,
-    RESTORE,    // TODO(kevin): what stage is this?
+    RESTORE, // TODO(kevin): what stage is this?
     BUILD,
     ONLINE_PINNED_H2O_3DOF,
     TEST_ORBITAL,
@@ -44,20 +44,20 @@ struct ROMPrivateOptions
     ROMStage rom_stage = ROMStage::UNSUPPORTED;
 
     std::string restart_file_fmt = "";
-    int restart_file_minidx = -1;
-    int restart_file_maxidx = -1;
-    std::string basis_file = "";
-    ROMVariable variable = ROMVariable::NONE;
+    int restart_file_minidx      = -1;
+    int restart_file_maxidx      = -1;
+    std::string basis_file       = "";
+    ROMVariable variable         = ROMVariable::NONE;
 
     /* save librom orbital snapshot matrix at FOM simulation. */
     bool save_librom_snapshot = false;
-    int librom_snapshot_freq = -1;
+    int librom_snapshot_freq  = -1;
 
     /* options for ROM building */
-    bool compare_md = false;
-    int num_orbbasis = -1;
-    int num_potbasis = -1;
+    bool compare_md          = false;
+    int num_orbbasis         = -1;
+    int num_potbasis         = -1;
     std::string pot_rom_file = "";
 };
 
-#endif  // ROM_CONTROL_H
+#endif // ROM_CONTROL_H

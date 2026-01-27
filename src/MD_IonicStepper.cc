@@ -265,8 +265,8 @@ int MD_IonicStepper::run()
                         taup_[3 * ia + j]
                             = factor
                               * (2. * tau0_[3 * ia + j] - taum_[3 * ia + j]
-                                    + dt_ * dt_ * invmass * fion_[3 * ia + j]
-                                    + 0.5 * dt_ * gamma_ * taum_[3 * ia + j]);
+                                  + dt_ * dt_ * invmass * fion_[3 * ia + j]
+                                  + 0.5 * dt_ * gamma_ * taum_[3 * ia + j]);
                     }
                 }
                 else
@@ -402,7 +402,7 @@ void MD_IonicStepper::updateWithVelocityScaling(const double lambda)
                 taup_[3 * ia + j]
                     += lambda
                        * (tau0_[3 * ia + j] - taum_[3 * ia + j]
-                             + dt_ * dt_ * invmass * fion_[3 * ia + j]);
+                           + dt_ * dt_ * invmass * fion_[3 * ia + j]);
             }
         }
     }

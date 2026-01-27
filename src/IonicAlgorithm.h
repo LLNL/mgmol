@@ -51,7 +51,7 @@ public:
         ConstraintSet& constraints, std::shared_ptr<LocalizationRegions> lrs,
         MasksSet& masks, MGmol<OrbitalsType>&);
 
-    virtual ~IonicAlgorithm(){};
+    virtual ~IonicAlgorithm() {};
 
     virtual void init(HDFrestart* h5f_file);
     virtual int run1step();

@@ -19,7 +19,7 @@ Masks4Orbitals::Masks4Orbitals(
     associateGids2Masks(overlap_gids);
 }
 
-Masks4Orbitals::~Masks4Orbitals() {}
+Masks4Orbitals::~Masks4Orbitals() { }
 
 void Masks4Orbitals::associateGids2Masks(const vector<int>& overlap_gids)
 {

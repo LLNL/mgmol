@@ -147,7 +147,7 @@ bool ConstraintSet::addConstraint(Ions& ions, const vector<string>& argv)
             // check if a constraint (name1,name2) or (name2,name1) is defined
             if (pc->type() == "distance"
                 && ((pc->names(0) == name1 && pc->names(1) == name2)
-                       || (pc->names(1) == name1 && pc->names(0) == name2)))
+                    || (pc->names(1) == name1 && pc->names(0) == name2)))
                 found = true;
         }
 

@@ -277,7 +277,7 @@ bool MultiDistanceConstraint::project_out_forces(void)
                 // projection
                 proj += dd
                         * (dx * u_fion_[p][0] + dy * u_fion_[p][1]
-                              + dz * u_fion_[p][2]);
+                            + dz * u_fion_[p][2]);
                 // gradient
                 a_[p][0] += dd * dx;
                 a_[p][1] += dd * dy;
@@ -354,7 +354,7 @@ double MultiDistanceConstraint::projected_force(void) const
                 // projection
                 de -= dd
                       * (dx * u_fion_[p][0] + dy * u_fion_[p][1]
-                            + dz * u_fion_[p][2]);
+                          + dz * u_fion_[p][2]);
                 // gradient
                 a_[p][0] += dd * dx;
                 a_[p][1] += dd * dy;

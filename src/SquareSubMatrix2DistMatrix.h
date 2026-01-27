@@ -39,7 +39,7 @@ public:
         return pinstance_;
     }
 
-    SquareSubMatrix2DistMatrix() {}
+    SquareSubMatrix2DistMatrix() { }
 
     template <class T>
     void convert(const SquareSubMatrix<T>& lmat,

@@ -23,13 +23,13 @@ class PBh4MP : public PBh4M<T>
 public:
     // constructor
     PBh4MP(const Grid& mygrid, DielFunc<T>& myepsilon)
-        : PBh4M<T>(mygrid, myepsilon){};
+        : PBh4M<T>(mygrid, myepsilon) {};
     PBh4MP(const Grid& mygrid, const double e0, const double rho0,
         const double drho0)
-        : PBh4M<T>(mygrid, e0, rho0, drho0){};
+        : PBh4M<T>(mygrid, e0, rho0, drho0) {};
 
     PBh4MP(const Grid& mygrid, DielFunc<T>& myepsilon, GridFunc<T>& pp)
-        : PBh4M<T>(mygrid, myepsilon, pp){};
+        : PBh4M<T>(mygrid, myepsilon, pp) {};
 
     // construct a coarse grid operator
     PBh4MP coarseOp(const Grid& mygrid)

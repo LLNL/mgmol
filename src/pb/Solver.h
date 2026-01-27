@@ -39,7 +39,7 @@ public:
         const bool gather_coarse_level = true)
         = 0;
 
-    virtual ~Solver() {}
+    virtual ~Solver() { }
 
     virtual short getNbSweeps() const               = 0;
     virtual double getFinalResidual() const         = 0;
