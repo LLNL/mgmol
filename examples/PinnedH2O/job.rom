@@ -8,7 +8,7 @@ date
 setenv OMP_NUM_THREADS 1
 #setenv KMP_DETERMINISTIC_REDUCTION 1
 
-set ncpus = 8
+set ncpus = 1
 
 set maindir = /p/lustre2/cheung26/mgmol
 

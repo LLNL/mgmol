@@ -176,9 +176,6 @@ private:
     // 11=local greedy
     short coloring_algo_;
 
-    // Number of MG levels for preconditioning
-    short mg_levels_;
-
     // preconditioning type
     // 10 = MG, block implementation
     short precond_type_;
@@ -403,6 +400,12 @@ public:
     short lrs_extrapolation;
 
     float betaAnderson;
+
+    // Number of MG levels for preconditioning
+    short mg_levels_;
+    short mg_npresmoothing_;
+    short mg_npostsmoothing_;
+
 
     // dielectric model for solvation
     short diel;
