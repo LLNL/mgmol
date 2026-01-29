@@ -11,20 +11,15 @@
 #include <cassert>
 
 #include "Control.h"
-#include "Energy.h"
 #include "GridFuncVector.h"
 #include "Hamiltonian.h"
 #include "Ions.h"
 #include "KBPsiMatrixSparse.h"
-#include "Lap.h"
 #include "MGmol.h"
 #include "MGmol_MPI.h"
-#include "MGmol_blas1.h"
 #include "Mesh.h"
 #include "Potentials.h"
 #include "ProjectedMatricesInterface.h"
-#include "ProjectedMatricesSparse.h"
-#include "ReplicatedMatrix.h"
 
 #ifdef MGMOL_USE_SCALAPACK
 #include "DistMatrix.h"
@@ -76,6 +71,7 @@ void MGmol<LocGridOrbitals<ORBDTYPE>>::computeHij(
 }
 
 template <>
+template <>
 void MGmol<LocGridOrbitals<ORBDTYPE>>::computeHij(
     LocGridOrbitals<ORBDTYPE>& orbitals_i,
     LocGridOrbitals<ORBDTYPE>& orbitals_j, const Ions& ions,
@@ -113,14 +109,7 @@ void MGmol<LocGridOrbitals<ORBDTYPE>>::computeHij(
 
         // sparsify matrix rows according to pattern/ clear rows corresponding
         // to non-centered data
-        std::vector<bool> pattern(mat.n(), 0);
-        for (std::vector<int>::iterator it = locfcns.begin();
-             it != locfcns.end(); ++it)
-        {
-            const int* rindex = (int*)mat.getTableValue(*it);
-            pattern[*rindex]  = 1;
-        }
-        mat.sparsify(pattern);
+        mat.sparsify(locfcns);
 
         DataDistribution distributor(
             "Hij", 2 * (*lrs_).max_radii(), myPEenv, domain);
@@ -128,86 +117,44 @@ void MGmol<LocGridOrbitals<ORBDTYPE>>::computeHij(
     }
 }
 
-#ifdef MGMOL_USE_SCALAPACK
 template <class OrbitalsType>
-void MGmol<OrbitalsType>::computeHij_private(OrbitalsType& orbitals_i,
+template <class MatrixType>
+void MGmol<OrbitalsType>::computeHij(OrbitalsType& orbitals_i,
     OrbitalsType& orbitals_j, const Ions& ions,
     const KBPsiMatrixSparse* const kbpsi_i,
-    const KBPsiMatrixSparse* const kbpsi_j,
-    dist_matrix::DistMatrix<DISTMATDTYPE>& hij)
+    const KBPsiMatrixSparse* const kbpsi_j, MatrixType& hij,
+    const bool consolidate)
 {
+    (void)consolidate;
+
 #ifdef PRINT_OPERATIONS
     if (onpe0) os_ << "computeHij() at line " << __LINE__ << std::endl;
 #endif
 
-    hij.clear();
-
-    SquareSubMatrix<double> submat(kbpsi_i->computeHvnlMatrix(kbpsi_j, ions));
-
-    SquareSubMatrix2DistMatrix* ss2dm = SquareSubMatrix2DistMatrix::instance();
-    ss2dm->accumulate(submat, hij, 0.);
+    kbpsi_i->computeHvnlMatrix(kbpsi_j, ions, hij);
 
     // add local Hamiltonian part to phi^T*H*phi
     hamiltonian_->addHlocal2matrix(orbitals_i, orbitals_j, hij, true);
 }
 
-template <>
-template <>
-void MGmol<LocGridOrbitals<ORBDTYPE>>::computeHij(
-    LocGridOrbitals<ORBDTYPE>& orbitals_i,
-    LocGridOrbitals<ORBDTYPE>& orbitals_j, const Ions& ions,
-    const KBPsiMatrixSparse* const kbpsi,
-    const KBPsiMatrixSparse* const kbpsi_j,
-    dist_matrix::DistMatrix<DISTMATDTYPE>& hij, const bool consolidate)
-{
-    (void)consolidate;
-
-    computeHij_private(orbitals_i, orbitals_j, ions, kbpsi, kbpsi_j, hij);
-}
-
-template <>
-template <>
-void MGmol<ExtendedGridOrbitals<ORBDTYPE>>::computeHij(
-    ExtendedGridOrbitals<ORBDTYPE>& orbitals_i,
-    ExtendedGridOrbitals<ORBDTYPE>& orbitals_j, const Ions& ions,
-    const KBPsiMatrixSparse* const kbpsi,
-    const KBPsiMatrixSparse* const kbpsi_j,
-    dist_matrix::DistMatrix<DISTMATDTYPE>& hij, const bool consolidate)
-{
-    (void)consolidate;
-
-    computeHij_private(orbitals_i, orbitals_j, ions, kbpsi, kbpsi_j, hij);
-}
-
 template <class OrbitalsType>
+template <class MatrixType>
 void MGmol<OrbitalsType>::computeHij(OrbitalsType& orbitals_i,
     OrbitalsType& orbitals_j, const Ions& ions,
-    const KBPsiMatrixSparse* const kbpsi, dist_matrix::DistMatrix<double>& hij,
+    const KBPsiMatrixSparse* const kbpsi, MatrixType& hij,
     const bool consolidate)
 {
     (void)consolidate;
 
-    computeHij_private(orbitals_i, orbitals_j, ions, kbpsi, hij);
-}
-
-template <class OrbitalsType>
-void MGmol<OrbitalsType>::computeHij_private(OrbitalsType& orbitals_i,
-    OrbitalsType& orbitals_j, const Ions& ions,
-    const KBPsiMatrixSparse* const kbpsi, dist_matrix::DistMatrix<double>& hij)
-{
 #ifdef PRINT_OPERATIONS
     if (onpe0) os_ << "computeHij() at line" << __LINE__ << std::endl;
 #endif
 
-    SquareSubMatrix<double> submat(kbpsi->computeHvnlMatrix(ions));
-
-    SquareSubMatrix2DistMatrix* ss2dm = SquareSubMatrix2DistMatrix::instance();
-    ss2dm->accumulate(submat, hij, 0.);
+    kbpsi->computeHvnlMatrix(kbpsi, ions, hij);
 
     // add local Hamiltonian part to phi^T*H*phi
     hamiltonian_->addHlocal2matrix(orbitals_i, orbitals_j, hij, false);
 }
-#endif
 
 template <class OrbitalsType>
 void MGmol<OrbitalsType>::computeHij(OrbitalsType& orbitals_i,
@@ -396,3 +343,31 @@ void MGmol<OrbitalsType>::getHpsiAndTheta(Ions& ions, OrbitalsType& phi,
 
 template class MGmol<LocGridOrbitals<ORBDTYPE>>;
 template class MGmol<ExtendedGridOrbitals<ORBDTYPE>>;
+
+#ifdef MGMOL_USE_SCALAPACK
+template void
+MGmol<LocGridOrbitals<ORBDTYPE>>::computeHij<dist_matrix::DistMatrix<double>>(
+    LocGridOrbitals<ORBDTYPE>& orbitals_i,
+    LocGridOrbitals<ORBDTYPE>& orbitals_j, const Ions& ions,
+    const KBPsiMatrixSparse* const kbpsi_i,
+    const KBPsiMatrixSparse* const kbpsi_j,
+    dist_matrix::DistMatrix<double>& mat, const bool consolidate);
+template void
+MGmol<LocGridOrbitals<ORBDTYPE>>::computeHij<dist_matrix::DistMatrix<double>>(
+    LocGridOrbitals<ORBDTYPE>& orbitals_i,
+    LocGridOrbitals<ORBDTYPE>& orbitals_j, const Ions& ions,
+    const KBPsiMatrixSparse* const kbpsi, dist_matrix::DistMatrix<double>& mat,
+    const bool consolidate);
+
+template void MGmol<ExtendedGridOrbitals<ORBDTYPE>>::computeHij<
+    dist_matrix::DistMatrix<double>>(ExtendedGridOrbitals<ORBDTYPE>& orbitals_i,
+    ExtendedGridOrbitals<ORBDTYPE>& orbitals_j, const Ions& ions,
+    const KBPsiMatrixSparse* const kbpsi_i,
+    const KBPsiMatrixSparse* const kbpsi_j,
+    dist_matrix::DistMatrix<double>& mat, const bool consolidate);
+template void MGmol<ExtendedGridOrbitals<ORBDTYPE>>::computeHij<
+    dist_matrix::DistMatrix<double>>(ExtendedGridOrbitals<ORBDTYPE>& orbitals_i,
+    ExtendedGridOrbitals<ORBDTYPE>& orbitals_j, const Ions& ions,
+    const KBPsiMatrixSparse* const kbpsi, dist_matrix::DistMatrix<double>& mat,
+    const bool consolidate);
+#endif
