@@ -11,7 +11,7 @@
 #include "Timer.h"
 #include "numerical_kernels.h"
 
-//#define WTIMERS
+// #define WTIMERS
 
 #ifdef WTIMERS
 Timer nonOrthoRhoKernel_tm("nonOrthoRhoKernel");

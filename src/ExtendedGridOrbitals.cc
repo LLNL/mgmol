@@ -723,7 +723,7 @@ int ExtendedGridOrbitals<ScalarType>::write(
 
             hid_t dtype_id = outHdfDataType(ct.out_restart_info);
             dset_id        = H5Dcreate2(file_id, datasetname.c_str(), dtype_id,
-                filespace, H5P_DEFAULT, plist_id, H5P_DEFAULT);
+                       filespace, H5P_DEFAULT, plist_id, H5P_DEFAULT);
             if (dset_id < 0)
             {
                 (*MPIdata::serr) << "ExtendedGridOrbitals::write_func_hdf5(), "
@@ -1823,9 +1823,10 @@ void ExtendedGridOrbitals<ScalarType>::set(std::string file_path, int rdim)
     CAROM::BasisReader reader(file_path);
     CAROM::Matrix* orbital_basis = reader.getSpatialBasis(rdim);
 
-    Control& ct = *(Control::instance());
-    Mesh* mymesh           = Mesh::instance();
-    pb::GridFunc<ORBDTYPE> gf_psi(mymesh->grid(), ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
+    Control& ct  = *(Control::instance());
+    Mesh* mymesh = Mesh::instance();
+    pb::GridFunc<ORBDTYPE> gf_psi(
+        mymesh->grid(), ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
     CAROM::Vector psi;
     for (int i = 0; i < rdim; ++i)
     {

@@ -84,7 +84,7 @@ public:
         assert(species_.dim_nl() < 1000);
     }
 
-    ~KBprojector() {}
+    ~KBprojector() { }
 
     virtual void clear() = 0;
 
@@ -101,14 +101,18 @@ public:
 
     // axpySket for templated destination type
     virtual void axpySKet(
-        const short iloc, const double alpha, double* const) const = 0;
+        const short iloc, const double alpha, double* const) const
+        = 0;
     virtual void axpySKet(
-        const short iloc, const double alpha, float* const) const = 0;
+        const short iloc, const double alpha, float* const) const
+        = 0;
 
     virtual void axpyKet(const short iloc, const std::vector<double>& alpha,
-        double* const dst) const = 0;
+        double* const dst) const
+        = 0;
     virtual void axpyKet(const short iloc, const std::vector<double>& alpha,
-        float* const dst) const  = 0;
+        float* const dst) const
+        = 0;
 
     bool onlyOneProjector() const
     {

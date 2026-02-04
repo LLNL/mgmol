@@ -258,7 +258,7 @@ public:
         return *this;
     }
 
-    ~DistMatrix() {}
+    ~DistMatrix() { }
 
     void identity(void);
 

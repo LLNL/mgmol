@@ -18,9 +18,9 @@ class XConGrid
 public:
     static Timer get_xc_tm_;
 
-    XConGrid(){};
+    XConGrid() {};
 
-    virtual ~XConGrid(){};
+    virtual ~XConGrid() {};
 
     virtual void update() = 0;
 

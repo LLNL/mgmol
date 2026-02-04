@@ -88,71 +88,73 @@ int main(int argc, char** argv)
 
     /* Get ROM driver mode */
     ROMPrivateOptions rom_options = ct.getROMOptions();
-    ROMStage rom_stage = rom_options.rom_stage;
+    ROMStage rom_stage            = rom_options.rom_stage;
 
     // Enter main scope
     {
         MGmolInterface* mgmol;
         if (ct.isLocMode())
-            mgmol = new MGmol<LocGridOrbitals<ORBDTYPE>>(global_comm, *MPIdata::sout,
-                input_filename, lrs_filename, constraints_filename);
+            mgmol = new MGmol<LocGridOrbitals<ORBDTYPE>>(global_comm,
+                *MPIdata::sout, input_filename, lrs_filename,
+                constraints_filename);
         else
-            mgmol = new MGmol<ExtendedGridOrbitals<ORBDTYPE>>(global_comm, *MPIdata::sout,
-                input_filename, lrs_filename, constraints_filename);
+            mgmol = new MGmol<ExtendedGridOrbitals<ORBDTYPE>>(global_comm,
+                *MPIdata::sout, input_filename, lrs_filename,
+                constraints_filename);
 
         mgmol->setup();
 
         switch (rom_stage)
         {
-        case (ROMStage::OFFLINE):
-            if (ct.isLocMode())
-                readRestartFiles<LocGridOrbitals<ORBDTYPE>>(mgmol);
-            else
-                readRestartFiles<ExtendedGridOrbitals<ORBDTYPE>>(mgmol);
-        break;
+            case (ROMStage::OFFLINE):
+                if (ct.isLocMode())
+                    readRestartFiles<LocGridOrbitals<ORBDTYPE>>(mgmol);
+                else
+                    readRestartFiles<ExtendedGridOrbitals<ORBDTYPE>>(mgmol);
+                break;
 
-        case (ROMStage::BUILD):
-            if (ct.isLocMode())
-                buildROMPoissonOperator<LocGridOrbitals<ORBDTYPE>>(mgmol);
-            else
-                buildROMPoissonOperator<ExtendedGridOrbitals<ORBDTYPE>>(mgmol);
-        break;
+            case (ROMStage::BUILD):
+                if (ct.isLocMode())
+                    buildROMPoissonOperator<LocGridOrbitals<ORBDTYPE>>(mgmol);
+                else
+                    buildROMPoissonOperator<ExtendedGridOrbitals<ORBDTYPE>>(
+                        mgmol);
+                break;
 
-        case (ROMStage::ONLINE_POISSON):
-            if (ct.isLocMode())
-                runPoissonROM<LocGridOrbitals<ORBDTYPE>>(mgmol);
-            else
-                runPoissonROM<ExtendedGridOrbitals<ORBDTYPE>>(mgmol);
-        break;
+            case (ROMStage::ONLINE_POISSON):
+                if (ct.isLocMode())
+                    runPoissonROM<LocGridOrbitals<ORBDTYPE>>(mgmol);
+                else
+                    runPoissonROM<ExtendedGridOrbitals<ORBDTYPE>>(mgmol);
+                break;
 
-        case (ROMStage::TEST_POISSON):
-            if (ct.isLocMode())
-                testROMPoissonOperator<LocGridOrbitals<ORBDTYPE>>(mgmol);
-            else
-                testROMPoissonOperator<ExtendedGridOrbitals<ORBDTYPE>>(mgmol);
-        break;
+            case (ROMStage::TEST_POISSON):
+                if (ct.isLocMode())
+                    testROMPoissonOperator<LocGridOrbitals<ORBDTYPE>>(mgmol);
+                else
+                    testROMPoissonOperator<ExtendedGridOrbitals<ORBDTYPE>>(
+                        mgmol);
+                break;
 
-        case (ROMStage::TEST_RHO):
-            if (ct.isLocMode())
-                testROMRhoOperator<LocGridOrbitals<ORBDTYPE>>(mgmol);
-            else
-                testROMRhoOperator<ExtendedGridOrbitals<ORBDTYPE>>(mgmol);
+            case (ROMStage::TEST_RHO):
+                if (ct.isLocMode())
+                    testROMRhoOperator<LocGridOrbitals<ORBDTYPE>>(mgmol);
+                else
+                    testROMRhoOperator<ExtendedGridOrbitals<ORBDTYPE>>(mgmol);
 
-        case (ROMStage::TEST_ION):
-            if (ct.isLocMode())
-                testROMIonDensity<LocGridOrbitals<ORBDTYPE>>(mgmol);
-            else
-                testROMIonDensity<ExtendedGridOrbitals<ORBDTYPE>>(mgmol);
+            case (ROMStage::TEST_ION):
+                if (ct.isLocMode())
+                    testROMIonDensity<LocGridOrbitals<ORBDTYPE>>(mgmol);
+                else
+                    testROMIonDensity<ExtendedGridOrbitals<ORBDTYPE>>(mgmol);
 
-        break;
+                break;
 
-        default:
-            std::cerr << "rom_main error: Unknown ROM stage" << std::endl;
-            MPI_Abort(MPI_COMM_WORLD, 0);
-        break;
+            default:
+                std::cerr << "rom_main error: Unknown ROM stage" << std::endl;
+                MPI_Abort(MPI_COMM_WORLD, 0);
+                break;
         }
-
-        
 
         delete mgmol;
 

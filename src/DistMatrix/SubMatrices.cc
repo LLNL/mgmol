@@ -12,7 +12,7 @@
 
 #include <limits.h>
 
-//#define DEBUG
+// #define DEBUG
 
 namespace dist_matrix
 {
@@ -161,12 +161,12 @@ void SubMatrices<T>::gather(const DistMatrix<T>& mat)
     // compute displacements
     std::vector<type_displ> remote_displ(npes_, 0);
     for (int pe = 1; pe < npes_; pe++)
-        remote_displ[pe] = (type_displ)(
-            submat_indexing_.getRemoteSize(pe - 1) + remote_displ[pe - 1]);
+        remote_displ[pe] = (type_displ)(submat_indexing_.getRemoteSize(pe - 1)
+                                        + remote_displ[pe - 1]);
     std::vector<type_displ> my_displ(npes_distmat_, 0);
     for (int pe = 1; pe < npes_distmat_; pe++)
-        my_displ[pe] = (type_displ)(
-            submat_indexing_.getMySize(pe - 1) + my_displ[pe - 1]);
+        my_displ[pe] = (type_displ)(submat_indexing_.getMySize(pe - 1)
+                                    + my_displ[pe - 1]);
 
     // build buffer for data array to send
     std::vector<T> buf_remote_val(tot_remote_size, 0.);

@@ -41,13 +41,13 @@ TEST_CASE("Trade ghost values", "[trade]")
     // prepare 3 mesh sizes to test with
     std::vector<std::array<unsigned, 3>> meshes;
     {
-        std::array<unsigned, 3> ngpts1{ { 32, 24, 20 } };
+        std::array<unsigned, 3> ngpts1 { { 32, 24, 20 } };
         meshes.push_back(ngpts1);
 
-        std::array<unsigned, 3> ngpts2{ { 20, 32, 24 } };
+        std::array<unsigned, 3> ngpts2 { { 20, 32, 24 } };
         meshes.push_back(ngpts2);
 
-        std::array<unsigned, 3> ngpts3{ { 24, 20, 32 } };
+        std::array<unsigned, 3> ngpts3 { { 24, 20, 32 } };
         meshes.push_back(ngpts3);
     }
 
@@ -187,8 +187,8 @@ TEST_CASE("Trade ghost values", "[trade]")
                                 double ref_val
                                     = (i + 1)
                                       * (uvalue
-                                            + cos3(ix - nghosts, iy - nghosts,
-                                                  iz - nghosts, nx, ny, nz));
+                                          + cos3(ix - nghosts, iy - nghosts,
+                                              iz - nghosts, nx, ny, nz));
 
                                 CHECK(uu[iiy + iz]
                                       == Approx(ref_val).epsilon(1.e-8));

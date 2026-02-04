@@ -21,7 +21,7 @@ FIRE<OrbitalsType>::FIRE(OrbitalsType** orbitals, Ions& ions,
     std::shared_ptr<LocalizationRegions> lrs, MasksSet& masks,
     Electrostatic& electrostat, const double dt, MGmol<OrbitalsType>& strategy)
     : IonicAlgorithm<OrbitalsType>(
-          orbitals, ions, rho, constraints, lrs, masks, strategy),
+        orbitals, ions, rho, constraints, lrs, masks, strategy),
       orbitals_(orbitals),
       ions_(ions),
       rho_(rho),

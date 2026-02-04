@@ -12,13 +12,13 @@
 
 #include "Control.h"
 #include "ExtendedGridOrbitals.h"
-#include "ProjectedMatrices.h"
 #include "LocGridOrbitals.h"
-#include "Potentials.h"
 #include "MGmol.h"
 #include "MGmol_MPI.h"
 #include "MPIdata.h"
 #include "Mesh.h"
+#include "Potentials.h"
+#include "ProjectedMatrices.h"
 #include "mgmol_run.h"
 #include "tools.h"
 
@@ -40,25 +40,25 @@ namespace po = boost::program_options;
 #include "utils/mpi_utils.h"
 
 template <class OrbitalsType>
-void readRestartFiles(MGmolInterface *mgmol_);
+void readRestartFiles(MGmolInterface* mgmol_);
 
 template <class OrbitalsType>
-void buildROMPoissonOperator(MGmolInterface *mgmol_);
+void buildROMPoissonOperator(MGmolInterface* mgmol_);
 
 template <class OrbitalsType>
-void runPoissonROM(MGmolInterface *mgmol_);
+void runPoissonROM(MGmolInterface* mgmol_);
 
 template <class OrbitalsType>
-void testROMPoissonOperator(MGmolInterface *mgmol_);
+void testROMPoissonOperator(MGmolInterface* mgmol_);
 
 template <class OrbitalsType>
-void testROMRhoOperator(MGmolInterface *mgmol_);
+void testROMRhoOperator(MGmolInterface* mgmol_);
 
 template <class OrbitalsType>
-void testROMIonDensity(MGmolInterface *mgmol_);
+void testROMIonDensity(MGmolInterface* mgmol_);
 
-void computeRhoOnSamplePts(const CAROM::Matrix &dm,
-    const CAROM::Matrix &phi_basis, const CAROM::Matrix &rom_phi,
-    const std::vector<int> &local_idx, CAROM::Vector &sampled_rho);
+void computeRhoOnSamplePts(const CAROM::Matrix& dm,
+    const CAROM::Matrix& phi_basis, const CAROM::Matrix& rom_phi,
+    const std::vector<int>& local_idx, CAROM::Vector& sampled_rho);
 
-#endif  // ROM_WORKFLOWS_H
+#endif // ROM_WORKFLOWS_H

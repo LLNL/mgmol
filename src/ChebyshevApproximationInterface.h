@@ -49,7 +49,7 @@ protected:
 
 public:
     // constructor
-    ChebyshevApproximationInterface(){};
+    ChebyshevApproximationInterface() {};
 
     // build the Chebyshev coefficients for the interval [a, b]
     void computeChebyshevCoeffs();
@@ -66,7 +66,7 @@ public:
         max_order_ = order;
         order_     = order;
     }
-    virtual ~ChebyshevApproximationInterface(){};
+    virtual ~ChebyshevApproximationInterface() {};
 
     static void printTimers(std::ostream& os)
     {

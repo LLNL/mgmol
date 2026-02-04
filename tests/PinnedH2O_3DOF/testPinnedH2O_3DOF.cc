@@ -13,19 +13,19 @@
 #include "MGmol.h"
 #include "MGmol_MPI.h"
 #include "MPIdata.h"
-#include "mgmol_run.h"
 #include "PinnedH2O.h"
+#include "mgmol_run.h"
 
 #ifdef MGMOL_HAS_LIBROM
 #include "librom.h"
 
+#include <algorithm>
 #include <cassert>
+#include <cmath>
+#include <cstring>
 #include <iostream>
 #include <time.h>
 #include <vector>
-#include <cmath>
-#include <algorithm>
-#include <cstring>
 
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
@@ -92,8 +92,9 @@ int main(int argc, char** argv)
             std::cout << "-------------------------" << std::endl;
         }
 
-        MGmolInterface* mgmol = new MGmol<ExtendedGridOrbitals<ORBDTYPE>>(global_comm,
-            *MPIdata::sout, input_filename, lrs_filename, constraints_filename);
+        MGmolInterface* mgmol = new MGmol<ExtendedGridOrbitals<ORBDTYPE>>(
+            global_comm, *MPIdata::sout, input_filename, lrs_filename,
+            constraints_filename);
 
         if (MPIdata::onpe0)
         {
@@ -139,7 +140,8 @@ int main(int argc, char** argv)
         const pb::Grid& mygrid   = mymesh->grid();
         const pb::PEenv& myPEenv = mymesh->peenv();
 
-        // compute energy and forces again with projected problem onto ROM subspace
+        // compute energy and forces again with projected problem onto ROM
+        // subspace
         const int rdim = ct.getROMOptions().num_orbbasis;
         if (rdim != ct.numst)
         {
@@ -152,11 +154,11 @@ int main(int argc, char** argv)
         std::shared_ptr<ProjectedMatricesInterface> projmatrices
             = mgmol->getProjectedMatrices();
 
-        ExtendedGridOrbitals<ORBDTYPE> orbitals("new_orbitals", mygrid, mymesh->subdivx(),
-            ct.numst, ct.bcWF, projmatrices.get(), nullptr, nullptr, nullptr,
-            nullptr);
+        ExtendedGridOrbitals<ORBDTYPE> orbitals("new_orbitals", mygrid,
+            mymesh->subdivx(), ct.numst, ct.bcWF, projmatrices.get(), nullptr,
+            nullptr, nullptr, nullptr);
 
-        orbitals.set(ct.getROMOptions().basis_file, ct.numst); 
+        orbitals.set(ct.getROMOptions().basis_file, ct.numst);
         orbitals.orthonormalizeLoewdin();
         orbitals.setDataWithGhosts(true);
 
@@ -253,4 +255,4 @@ int main(int argc, char** argv)
 
     return 0;
 }
-#endif  // MGMOL_HAS_LIBROM
+#endif // MGMOL_HAS_LIBROM

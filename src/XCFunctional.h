@@ -103,7 +103,7 @@ public:
     }
 
     // virtual destructor needed to ensure proper deallocation
-    virtual ~XCFunctional() {}
+    virtual ~XCFunctional() { }
 
     virtual void computeXC(void) = 0;
 };

@@ -26,7 +26,7 @@ static const double min_det_mat = 0.01;
 static const double max_theta   = 0.5;
 static const double min_theta   = -3.;
 
-//#define DEBUG 0
+// #define DEBUG 0
 
 template <class T>
 AndersonMix<T>::AndersonMix(const int m, const double beta, T& x) : m_(m), x_(x)
@@ -236,7 +236,7 @@ void AndersonMix<T>::update(T& f, T& work, ostream& os, const bool verbose)
             }
         }
 
-        //#ifdef DEBUG
+        // #ifdef DEBUG
         if (os.good() && mm_ > 0 && verbose)
         {
             os << "Anderson extrapolation:";
@@ -244,7 +244,7 @@ void AndersonMix<T>::update(T& f, T& work, ostream& os, const bool verbose)
                 os << "  theta[" << j << "]=" << theta_[j];
             os << endl;
         }
-        //#endif
+        // #endif
     }
 
     // update x_

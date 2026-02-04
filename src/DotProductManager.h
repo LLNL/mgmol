@@ -13,9 +13,9 @@ template <class T>
 class DotProductManager
 {
 public:
-    DotProductManager(){};
+    DotProductManager() {};
 
-    virtual ~DotProductManager(){};
+    virtual ~DotProductManager() {};
 
     virtual double dotProduct(T& a, const T& b) = 0;
 };

@@ -204,9 +204,9 @@ void Ions::setup()
 
     updateListIons();
 
-    //#ifndef NDEBUG
-    //    checkUnicityLocalIons();
-    //#endif
+    // #ifndef NDEBUG
+    //     checkUnicityLocalIons();
+    // #endif
 
     setupInteractingIons();
 
@@ -1023,9 +1023,9 @@ void Ions::initFromRestartFile(HDFrestart& h5_file)
     // update list ions
     updateListIons();
 
-    //#ifndef NDEBUG
-    //    checkUnicityLocalIons();
-    //#endif
+    // #ifndef NDEBUG
+    //     checkUnicityLocalIons();
+    // #endif
 }
 
 void Ions::readRestartPositions(HDFrestart& h5_file)
@@ -2942,19 +2942,19 @@ bool Ions::inListIons(const double x, const double y, const double z)
     // check to see if ion is in list
     if (((t[0] >= list_boundary_left_[0] && t[0] <= list_boundary_right_[0])
             || ((t[0] - lattice_[0]) >= list_boundary_left_[0]
-                   && (t[0] - lattice_[0]) <= list_boundary_right_[0])
+                && (t[0] - lattice_[0]) <= list_boundary_right_[0])
             || ((t[0] + lattice_[0]) >= list_boundary_left_[0]
-                   && (t[0] + lattice_[0]) <= list_boundary_right_[0]))
+                && (t[0] + lattice_[0]) <= list_boundary_right_[0]))
         && ((t[1] >= list_boundary_left_[1] && t[1] <= list_boundary_right_[1])
-               || ((t[1] - lattice_[1]) >= list_boundary_left_[1]
-                      && (t[1] - lattice_[1]) <= list_boundary_right_[1])
-               || ((t[1] + lattice_[1]) >= list_boundary_left_[1]
-                      && (t[1] + lattice_[1]) <= list_boundary_right_[1]))
+            || ((t[1] - lattice_[1]) >= list_boundary_left_[1]
+                && (t[1] - lattice_[1]) <= list_boundary_right_[1])
+            || ((t[1] + lattice_[1]) >= list_boundary_left_[1]
+                && (t[1] + lattice_[1]) <= list_boundary_right_[1]))
         && ((t[2] >= list_boundary_left_[2] && t[2] <= list_boundary_right_[2])
-               || ((t[2] - lattice_[2]) >= list_boundary_left_[2]
-                      && (t[2] - lattice_[2]) <= list_boundary_right_[2])
-               || ((t[2] + lattice_[2]) >= list_boundary_left_[2]
-                      && (t[2] + lattice_[2]) <= list_boundary_right_[2])))
+            || ((t[2] - lattice_[2]) >= list_boundary_left_[2]
+                && (t[2] - lattice_[2]) <= list_boundary_right_[2])
+            || ((t[2] + lattice_[2]) >= list_boundary_left_[2]
+                && (t[2] + lattice_[2]) <= list_boundary_right_[2])))
         inList = true;
 
     return inList;

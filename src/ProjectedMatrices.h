@@ -151,7 +151,7 @@ public:
     {
         localHl_->copy(slH);
     }
-    void clearSparseH() override {}
+    void clearSparseH() override { }
 
     void consolidateH() override;
 

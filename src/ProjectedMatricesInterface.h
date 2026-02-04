@@ -138,7 +138,7 @@ public:
         return (this->*(funcptr_))(nodes);
     }
 
-    virtual ~ProjectedMatricesInterface(){};
+    virtual ~ProjectedMatricesInterface() {};
 
     virtual void setup(const std::vector<std::vector<int>>& global_indexes) = 0;
 
@@ -176,12 +176,12 @@ public:
     virtual void consolidateH() = 0;
 
     // return density matrix (inverse Gram if no unoccupied states)
-    virtual SquareLocalMatrices<MATDTYPE, memory_space_type>&
-    getLocalX() const = 0;
+    virtual SquareLocalMatrices<MATDTYPE, memory_space_type>& getLocalX() const
+        = 0;
 
     // return S**(-1)*H (or B**(-1)*H with Mehrstellen)
-    virtual SquareLocalMatrices<MATDTYPE, MemorySpace::Host>&
-    getLocalT() const = 0;
+    virtual SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& getLocalT() const
+        = 0;
 
     // returns local Gram Matrix
     //    virtual SquareLocalmatrices& getLocalS()const=0;
@@ -223,8 +223,8 @@ public:
     virtual void applyInvS(
         SquareLocalMatrices<MATDTYPE, MemorySpace::Host>& mat)
         = 0;
-    virtual double getLinDependent2states(
-        int& st1, int& st2, const bool) const                          = 0;
+    virtual double getLinDependent2states(int& st1, int& st2, const bool) const
+        = 0;
     virtual double checkCond(const double tol, const bool flag = true) = 0;
     virtual double getNel() const                                      = 0;
     virtual void updateThetaAndHB()                                    = 0;

@@ -38,7 +38,7 @@ protected:
     static Timer AmultSymB_tm_;
 
 public:
-    virtual ~VariableSizeMatrixInterface() {}
+    virtual ~VariableSizeMatrixInterface() { }
 
     static void printTimers(std::ostream& os)
     {

@@ -144,7 +144,7 @@ double Potentials::updateVtot(const std::vector<std::vector<RHODTYPE>>& rho)
         vtot_[idx]
             = (POTDTYPE)(ha2ry
                          * ((double)v_nuc_[idx] + (double)v_ext_[idx]
-                               + (double)vh_rho_[idx] + (double)vxc_rho_[idx]));
+                             + (double)vh_rho_[idx] + (double)vxc_rho_[idx]));
     }
     double two = ha2ry;
     if (diel_)
@@ -211,7 +211,7 @@ double Potentials::computeDeltaV(const std::vector<std::vector<RHODTYPE>>& rho)
         dv_[idx]
             = (POTDTYPE)(ha2ry
                          * ((double)v_nuc_[idx] + (double)v_ext_[idx]
-                               + (double)vh_rho_[idx] + (double)vxc_rho_[idx]));
+                             + (double)vh_rho_[idx] + (double)vxc_rho_[idx]));
     }
     double two = ha2ry;
     if (diel_)
@@ -895,11 +895,11 @@ void Potentials::initBackground()
     if (fabs(background_charge_) < 1.e-10) background_charge_ = 0.;
 }
 
-void Potentials::evalIonDensityOnSamplePts(
-    Ions& ions, const std::vector<int> &local_idx, std::vector<RHODTYPE> &sampled_rhoc)
+void Potentials::evalIonDensityOnSamplePts(Ions& ions,
+    const std::vector<int>& local_idx, std::vector<RHODTYPE>& sampled_rhoc)
 {
     Mesh* mymesh           = Mesh::instance();
-    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+    MGmol_MPI& mmpi        = *(MGmol_MPI::instance());
     const pb::Grid& mygrid = mymesh->grid();
 
     const char flag_filter = pot_type(0);
@@ -907,8 +907,9 @@ void Potentials::evalIonDensityOnSamplePts(
     {
         if (onpe0)
         {
-            std::cout << "Potentials::evalIonDensityOnSamplePts - flag_filter s is not supported"
-                << std::endl;
+            std::cout << "Potentials::evalIonDensityOnSamplePts - flag_filter "
+                         "s is not supported"
+                      << std::endl;
         }
         mmpi.abort();
     }
@@ -931,8 +932,9 @@ void Potentials::evalIonDensityOnSamplePts(
     return;
 }
 
-void Potentials::initializeRadialDataOnSampledPts(
-    const Vector3D& position, const Species& sp, const std::vector<int> &local_idx, std::vector<RHODTYPE> &sampled_rhoc)
+void Potentials::initializeRadialDataOnSampledPts(const Vector3D& position,
+    const Species& sp, const std::vector<int>& local_idx,
+    std::vector<RHODTYPE>& sampled_rhoc)
 {
     assert(local_idx.size() == sampled_rhoc.size());
 
@@ -960,7 +962,7 @@ void Potentials::initializeRadialDataOnSampledPts(
     const RadialInter& lpot(sp.local_pot());
     const Vector3D lattice(mygrid.ll(0), mygrid.ll(1), mygrid.ll(2));
 
-    for(int k  = 0; k < local_idx.size(); k++)
+    for (int k = 0; k < local_idx.size(); k++)
     {
         /*
             local_idx provides offset.
@@ -979,8 +981,7 @@ void Potentials::initializeRadialDataOnSampledPts(
 
         /* accumulate ion species density */
         const double r = position.minimage(point, lattice, ct.bcPoisson);
-        if (r < lrad)
-            sampled_rhoc[k] += sp.getRhoComp(r);
+        if (r < lrad) sampled_rhoc[k] += sp.getRhoComp(r);
     }
 
     return;

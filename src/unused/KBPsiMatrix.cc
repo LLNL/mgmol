@@ -15,7 +15,7 @@
 
 #include <limits.h>
 
-//#define USE_OLD_ALGO  1
+// #define USE_OLD_ALGO  1
 
 Timer KBPsiMatrix::allreduce_tm_("KBPsiMatrix::allreduce");
 Timer KBPsiMatrix::global_sum_tm_("KBPsiMatrix::global_sum");

@@ -7,7 +7,7 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
-//#define DEBUG 1
+// #define DEBUG 1
 #include "MGmol_blas1.h"
 
 #include <cassert>
@@ -138,4 +138,4 @@ void MLWFTransform::printTransform()
         fb.close();
     }
 }
-//#endif
+// #endif

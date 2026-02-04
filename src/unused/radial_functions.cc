@@ -167,20 +167,20 @@ double rho2(const double r, const double a)
     {
         const double ar2 = (a - r) * (a - r);
 
-        alpha = (4 * (-8 + exp(3 * r2))
-                    * (1
-                          + (-1 + e0)
-                                * (1
-                                      - (1 + pow(a, 2) - 2 * a * r + r2)
-                                            / exp(ar2))))
-                    / exp(4 * r2)
-                - ((-1 + e0)
-                      * ((2 * (a - r)) / exp(ar2)
-                            + (2 * (1 + ar2 + 0. * pow(a - r, 4)) * (-a + r))
-                                  / exp(ar2))
-                      * ((2 * (-2 + exp(3 * r2)) * r) / exp(4 * r2)
-                            + sqrt(M_PI) * (erf(2. * r) - erf(r))))
-                      / r2;
+        alpha
+            = (4 * (-8 + exp(3 * r2))
+                  * (1
+                      + (-1 + e0)
+                            * (1
+                                - (1 + pow(a, 2) - 2 * a * r + r2) / exp(ar2))))
+                  / exp(4 * r2)
+              - ((-1 + e0)
+                    * ((2 * (a - r)) / exp(ar2)
+                        + (2 * (1 + ar2 + 0. * pow(a - r, 4)) * (-a + r))
+                              / exp(ar2))
+                    * ((2 * (-2 + exp(3 * r2)) * r) / exp(4 * r2)
+                        + sqrt(M_PI) * (erf(2. * r) - erf(r))))
+                    / r2;
     }
     else
     {
@@ -211,8 +211,8 @@ double rho4(const double r, const double a)
                         / exp(4 * r2)
                     + exp(-a * a + 2 * a * r - 5 * r2) * (-1 + e0) * ar5
                           * (2 * (-2 + exp(3 * r2)) * r
-                                + exp(4 * r2) * sqrt(M_PI)
-                                      * (erf(2. * r) - erf(r))))
+                              + exp(4 * r2) * sqrt(M_PI)
+                                    * (erf(2. * r) - erf(r))))
                 / (4. * pow(M_PI, 1.5) * r2);
     }
     else

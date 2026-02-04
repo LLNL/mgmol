@@ -1110,7 +1110,7 @@ int LocGridOrbitals<ScalarType>::write(
 
             hid_t dtype_id = outHdfDataType(ct.out_restart_info);
             dset_id        = H5Dcreate2(file_id, datasetname.c_str(), dtype_id,
-                filespace, H5P_DEFAULT, plist_id, H5P_DEFAULT);
+                       filespace, H5P_DEFAULT, plist_id, H5P_DEFAULT);
             if (dset_id < 0)
             {
                 (*MPIdata::serr) << "LocGridOrbitals::write_func_hdf5(), "
@@ -2002,7 +2002,7 @@ void LocGridOrbitals<ScalarType>::orthonormalize2states(
                             {
                                 tmp[1] += vel
                                           * block_vector_.dot(
-                                                color_ic, color_jc, iloc);
+                                              color_ic, color_jc, iloc);
                             }
                     }
                 }
@@ -2062,7 +2062,7 @@ void LocGridOrbitals<ScalarType>::orthonormalize2states(
                             {
                                 tmp[1] += vel
                                           * block_vector_.dot(
-                                                color_ic, color_jc, iloc);
+                                              color_ic, color_jc, iloc);
                             }
                     }
                 }
@@ -2237,7 +2237,7 @@ void LocGridOrbitals<ScalarType>::normalize()
                 {
                     diagS[gid] += vel
                                   * static_cast<double>(
-                                        block_vector_.dot(color, color, iloc));
+                                      block_vector_.dot(color, color, iloc));
                 }
             }
         }

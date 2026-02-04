@@ -24,7 +24,7 @@ public:
     OrbitalsExtrapolationOrder3()
         : initial_orbitals_minus2_(nullptr),
           orbitals_minus1_(nullptr),
-          orbitals_minus2_(nullptr){};
+          orbitals_minus2_(nullptr) {};
 
     ~OrbitalsExtrapolationOrder3() override
     {

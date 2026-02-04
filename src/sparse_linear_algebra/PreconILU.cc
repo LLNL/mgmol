@@ -353,7 +353,7 @@ int PreconILU<T>::lofC(LinearSolverMatrix<lsdatatype>& csmat_)
             {
                 int pos = row
                           - (*L_).getColumnIterator(
-                                0); /* get the position of row */
+                              0); /* get the position of row */
                 int it = llvl[pos] + *uptr + 1;
                 if (it > lof_) continue;
                 int ip = iw[*row];
@@ -887,7 +887,7 @@ int PreconILU<T>::milut(LinearSolverMatrix<lsdatatype>& csmat_)
                 {
                     alpha = sr
                             * (std::sqrt(tval)
-                                  + droptol_ * (gamma - std::sqrt(tval)));
+                                + droptol_ * (gamma - std::sqrt(tval)));
                 }
             }
             else

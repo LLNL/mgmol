@@ -21,7 +21,7 @@ protected:
     static Timer poisson_tm_;
 
 public:
-    virtual ~PoissonInterface() {}
+    virtual ~PoissonInterface() { }
     static void printTimers(std::ostream& os) { poisson_tm_.print(os); }
 };
 

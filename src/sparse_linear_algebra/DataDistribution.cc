@@ -277,7 +277,7 @@ void DataDistribution::distributeLocalDataWithCommOvlp(const int nsteps,
     if (nsteps > 0)
     {
 #ifndef NDEBUG // check if receive buffers are large enough
-        //#if 1
+        // #if 1
         int remote_size;
         MPI_Irecv(&remote_size, 1, MPI_INT, source, 0, cart_comm_, &request[0]);
         MPI_Isend(&siz, 1, MPI_INT, dest, 0, cart_comm_, &request[1]);
@@ -401,7 +401,7 @@ void DataDistribution::distributeLocalData(const int nsteps, const int dir,
 
         if ((step == nsteps - 1)
             && (bcflag
-                   == true)) // this is the last step - apply boundary condition
+                == true)) // this is the last step - apply boundary condition
         {
             packed_buffer.updateMatrixEntriesWithRecvBuf(
                 amat, packed_buffer.recvBuffer());

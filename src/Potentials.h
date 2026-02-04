@@ -100,8 +100,9 @@ class Potentials
     void initializeSupersampledRadialDataOnMesh(
         const Vector3D& position, const Species& sp);
 
-    void initializeRadialDataOnSampledPts(
-        const Vector3D& position, const Species& sp, const std::vector<int> &local_idx, std::vector<RHODTYPE> &sampled_rhoc);
+    void initializeRadialDataOnSampledPts(const Vector3D& position,
+        const Species& sp, const std::vector<int>& local_idx,
+        std::vector<RHODTYPE>& sampled_rhoc);
 
     void rescaleRhoComp();
 
@@ -208,7 +209,8 @@ public:
 
     void resetVhRho2Backup() { vh_rho_ = vh_rho_backup_; }
 
-    void evalIonDensityOnSamplePts(Ions& ions, const std::vector<int> &local_idx, std::vector<RHODTYPE> &sampled_rhoc);
+    void evalIonDensityOnSamplePts(Ions& ions,
+        const std::vector<int>& local_idx, std::vector<RHODTYPE>& sampled_rhoc);
 
 #ifdef HAVE_TRICUBIC
     void readExternalPot(const string filename, const char type);

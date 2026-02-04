@@ -216,10 +216,14 @@ void FDoper<T>::del1_6th(
 
             for (int iz = 0; iz < dim2; iz++)
             {
-                u[iiz] = (T)(
-                    e1 * ((double)v[iiz + incc] - (double)v[iiz - incc])
-                    + e2 * ((double)v[iiz - incc2] - (double)v[iiz + incc2])
-                    + e3 * ((double)v[iiz + incc3] - (double)v[iiz - incc3]));
+                u[iiz]
+                    = (T)(e1 * ((double)v[iiz + incc] - (double)v[iiz - incc])
+                          + e2
+                                * ((double)v[iiz - incc2]
+                                    - (double)v[iiz + incc2])
+                          + e3
+                                * ((double)v[iiz + incc3]
+                                    - (double)v[iiz - incc3]));
 
                 iiz++;
             }
@@ -278,11 +282,17 @@ void FDoper<T>::del1_8th(
             for (int iz = 0; iz < dim2; iz++)
             {
 
-                u[iiz] = (T)(
-                    e1 * ((double)v[iiz + incc] - (double)v[iiz - incc])
-                    + e2 * ((double)v[iiz - incc2] - (double)v[iiz + incc2])
-                    + e3 * ((double)v[iiz + incc3] - (double)v[iiz - incc3])
-                    + e4 * ((double)v[iiz - incc4] - (double)v[iiz + incc4]));
+                u[iiz]
+                    = (T)(e1 * ((double)v[iiz + incc] - (double)v[iiz - incc])
+                          + e2
+                                * ((double)v[iiz - incc2]
+                                    - (double)v[iiz + incc2])
+                          + e3
+                                * ((double)v[iiz + incc3]
+                                    - (double)v[iiz - incc3])
+                          + e4
+                                * ((double)v[iiz - incc4]
+                                    - (double)v[iiz + incc4]));
 
                 iiz++;
             }
@@ -609,24 +619,26 @@ void FDoper<T>::rhs_4th_Mehr2(GridFunc<T>& A, T* const u) const
             for (int iz = 0; iz < dim2; iz++)
             {
 
-                u0[iz] = (T)(
-                    c0 * (double)v[iiz]
+                u0[iz] = (T)(c0 * (double)v[iiz]
 
-                    + c1
-                          * (double)(v[iiz - incx_] + v[iiz + incx_]
-                                     + v[iiz - incy_] + v[iiz + incy_]
-                                     + v[iiz - 1] + v[iiz + 1])
+                             + c1
+                                   * (double)(v[iiz - incx_] + v[iiz + incx_]
+                                              + v[iiz - incy_] + v[iiz + incy_]
+                                              + v[iiz - 1] + v[iiz + 1])
 
-                    + c2
-                          * (double)(v[iiz - incx_ - incy_]
-                                     + v[iiz + incx_ - incy_]
-                                     + v[iiz - incx_ + incy_]
-                                     + v[iiz + incx_ + incy_]
-                                     + v[iiz - incy_ - 1] + v[iiz - incy_ + 1]
-                                     + v[iiz + incy_ - 1] + v[iiz + incy_ + 1]
-                                     + v[iiz - incx_ - 1] + v[iiz - incx_ + 1]
-                                     + v[iiz + incx_ - 1]
-                                     + v[iiz + incx_ + 1]));
+                             + c2
+                                   * (double)(v[iiz - incx_ - incy_]
+                                              + v[iiz + incx_ - incy_]
+                                              + v[iiz - incx_ + incy_]
+                                              + v[iiz + incx_ + incy_]
+                                              + v[iiz - incy_ - 1]
+                                              + v[iiz - incy_ + 1]
+                                              + v[iiz + incy_ - 1]
+                                              + v[iiz + incy_ + 1]
+                                              + v[iiz - incx_ - 1]
+                                              + v[iiz - incx_ + 1]
+                                              + v[iiz + incx_ - 1]
+                                              + v[iiz + incx_ + 1]));
                 iiz++;
             }
 

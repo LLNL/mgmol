@@ -27,13 +27,13 @@ TEST_CASE("Set ghost values", "[set ghosts")
     // prepare 3 mesh sizes to test with
     std::vector<std::array<unsigned, 3>> meshes;
     {
-        std::array<unsigned, 3> ngpts1{ { 16, 24, 20 } };
+        std::array<unsigned, 3> ngpts1 { { 16, 24, 20 } };
         meshes.push_back(ngpts1);
 
-        std::array<unsigned, 3> ngpts2{ { 20, 32, 24 } };
+        std::array<unsigned, 3> ngpts2 { { 20, 32, 24 } };
         meshes.push_back(ngpts2);
 
-        std::array<unsigned, 3> ngpts3{ { 24, 20, 32 } };
+        std::array<unsigned, 3> ngpts3 { { 24, 20, 32 } };
         meshes.push_back(ngpts3);
     }
 
