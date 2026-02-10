@@ -24,7 +24,6 @@
 #ifdef MGMOL_USE_SCALAPACK
 #include "DistMatrix.h"
 #include "SquareSubMatrix2DistMatrix.h"
-#endif
 
 template <>
 template <>

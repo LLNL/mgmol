@@ -10,6 +10,7 @@
 #ifndef MGMOL_PCG_SOLVER_DIEL_H_
 #define MGMOL_PCG_SOLVER_DIEL_H_
 
+#include "Control.h"
 #include "PB.h"
 #include "PBh2.h"
 #include "PBh4.h"
@@ -26,11 +27,11 @@ class PCGSolver_Diel
 
 private:
     std::vector<pb::Grid*> grid_;
+    short lap_type_;
     short bc_[3];
     // operators
     T oper_;
     std::vector<T*> pc_oper_;
-    const short lap_type_;
     std::vector<pb::GridFunc<ScalarType>*> gf_work_;
     std::vector<pb::GridFunc<ScalarType>*> gf_rcoarse_;
     std::vector<pb::GridFunc<ScalarType>*> gf_newv_;
@@ -52,9 +53,8 @@ private:
         const pb::GridFunc<ScalarType>& gf_f, const short level = 0);
 
 public:
-    PCGSolver_Diel(T& oper, const short lap_type, const short px,
-        const short py, const short pz)
-        : oper_(oper), lap_type_(lap_type)
+    PCGSolver_Diel(T& oper, const short px, const short py, const short pz)
+        : oper_(oper)
     {
         maxiters_           = 10; // default
         nu1_                = 2; // default
@@ -68,6 +68,9 @@ public:
         bc_[0] = px;
         bc_[1] = py;
         bc_[2] = pz;
+        //        fully_periodic_=( (bc_[0]==1) && (bc_[1]==1) && (bc_[2]==1) );
+        Control& ct = *(Control::instance());
+        lap_type_   = ct.lap_type;
     };
 
     void setup(const short nu1, const short nu2, const short max_sweeps,

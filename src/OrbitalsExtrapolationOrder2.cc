@@ -9,13 +9,10 @@
 
 #include "OrbitalsExtrapolationOrder2.h"
 #include "Control.h"
+#include "DistMatrixTools.h"
 #include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "ProjectedMatrices.h"
-
-#ifdef MGMOL_USE_SCALAPACK
-#include "DistMatrixTools.h"
-#endif
 
 template <class OrbitalsType>
 void OrbitalsExtrapolationOrder2<OrbitalsType>::extrapolate_orbitals(
@@ -23,7 +20,6 @@ void OrbitalsExtrapolationOrder2<OrbitalsType>::extrapolate_orbitals(
 {
     Control& ct = *(Control::instance());
 
-#ifdef MGMOL_USE_SCALAPACK
     bool use_dense_proj_mat = false;
     if (ct.OuterSolver() != OuterSolverType::ABPG
         && ct.OuterSolver() != OuterSolverType::NLCG)
@@ -35,7 +31,6 @@ void OrbitalsExtrapolationOrder2<OrbitalsType>::extrapolate_orbitals(
                 proj_matrices))
             use_dense_proj_mat = true;
     }
-#endif
 
     new_orbitals->assign(**orbitals);
 
@@ -47,8 +42,7 @@ void OrbitalsExtrapolationOrder2<OrbitalsType>::extrapolate_orbitals(
         if (ct.verbose > 1 && onpe0)
             (*MPIdata::sout) << "Extrapolate orbitals order 2..." << std::endl;
 
-            // align orbitals_minus1_ with new_orbitals
-#ifdef MGMOL_USE_SCALAPACK
+        // align orbitals_minus1_ with new_orbitals
         if (use_dense_proj_mat)
         {
             dist_matrix::DistMatrix<DISTMATDTYPE> matQ("Q", ct.numst, ct.numst);
@@ -58,13 +52,13 @@ void OrbitalsExtrapolationOrder2<OrbitalsType>::extrapolate_orbitals(
                 "yyt", ct.numst, ct.numst);
             getProcrustesTransform(matQ, yyt);
 
-            orbitals_minus1->multiply_by_matrix(matQ, 0., *orbitals_minus1);
+            orbitals_minus1->multiply_by_matrix(matQ);
             orbitals_minus1->axpy((ORBDTYPE)-1., *new_orbitals);
-            orbitals_minus1->multiply_by_matrix(yyt, 0., *orbitals_minus1);
+            orbitals_minus1->multiply_by_matrix(yyt);
         }
-        else // !use_dense_proj_mat
-#endif
-        {
+        else
+        { // !use_dense_proj_mat
+
             new_orbitals->scal(2.);
         }
         new_orbitals->axpy((ORBDTYPE)-1., *orbitals_minus1);

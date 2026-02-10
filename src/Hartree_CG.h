@@ -27,10 +27,9 @@ public:
     Hartree_CG(const pb::Grid& grid, const short bc[3]) : Poisson(grid, bc)
     {
         OperatorType oper(Poisson::grid_);
-        Control& ct = *(Control::instance());
         poisson_solver_
             = std::make_shared<PCGSolver<OperatorType, ScalarType, PDataType>>(
-                oper, ct.lap_type, bc[0], bc[1], bc[2]);
+                oper, bc[0], bc[1], bc[2]);
     };
 
     // Destructor

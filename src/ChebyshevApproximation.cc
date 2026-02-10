@@ -8,14 +8,21 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "ChebyshevApproximation.h"
+#include "DistMatrix.h"
 #include "MPIdata.h"
 #include "ReplicatedMatrix.h"
 
-#ifdef MGMOL_USE_SCALAPACK
-#include "DistMatrix.h"
-#endif
-
 #include <iostream>
+
+template <class MatrixType>
+Timer ChebyshevApproximation<MatrixType>::compute_tm_(
+    "ChebyshevApproximation::compute");
+template <class MatrixType>
+Timer ChebyshevApproximation<MatrixType>::compute2_tm_(
+    "ChebyshevApproximation::compute2");
+template <class MatrixType>
+Timer ChebyshevApproximation<MatrixType>::build_nodes_tm_(
+    "ChebyshevApproximation::build_nodes");
 
 template <class MatrixType>
 ChebyshevApproximation<MatrixType>::ChebyshevApproximation(const double a,
@@ -210,7 +217,5 @@ MatrixType ChebyshevApproximation<MatrixType>::computeChebyshevApproximation(
     return mat;
 }
 
-#ifdef MGMOL_USE_SCALAPACK
 template class ChebyshevApproximation<dist_matrix::DistMatrix<DISTMATDTYPE>>;
-#endif
 template class ChebyshevApproximation<ReplicatedMatrix>;

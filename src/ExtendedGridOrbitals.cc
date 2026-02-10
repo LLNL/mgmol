@@ -14,9 +14,7 @@
 #include "DotProductManagerFactory.h"
 #include "GridFunc.h"
 #include "Laph4M.h"
-#ifdef MGMOL_USE_SCALAPACK
 #include "LocalMatrices2DistMatrix.h"
-#endif
 #include "LocalizationRegions.h"
 #include "MPIdata.h"
 #include "Mesh.h"
@@ -32,6 +30,10 @@
 #include <mpi.h>
 #include <utility>
 
+#ifdef MGMOL_HAS_LIBROM
+#include "librom.h"
+#endif
+
 #define ORBITAL_OCCUPATION 2.
 std::string getDatasetName(const std::string& name, const int color);
 
@@ -39,6 +41,18 @@ template <typename ScalarType>
 DotProductManager<ExtendedGridOrbitals<ScalarType>>*
     ExtendedGridOrbitals<ScalarType>::dotProductManager_
     = nullptr;
+
+template <typename ScalarType>
+int ExtendedGridOrbitals<ScalarType>::lda_ = 0;
+template <typename ScalarType>
+int ExtendedGridOrbitals<ScalarType>::numpt_ = 0;
+template <typename ScalarType>
+int ExtendedGridOrbitals<ScalarType>::data_wghosts_index_ = -1;
+template <typename ScalarType>
+int ExtendedGridOrbitals<ScalarType>::numst_ = -1;
+template <typename ScalarType>
+std::vector<std::vector<int>>
+    ExtendedGridOrbitals<ScalarType>::overlapping_gids_;
 
 template <typename ScalarType>
 Timer ExtendedGridOrbitals<ScalarType>::matB_tm_(
@@ -74,14 +88,6 @@ Timer ExtendedGridOrbitals<ScalarType>::normalize_tm_(
 template <typename ScalarType>
 Timer ExtendedGridOrbitals<ScalarType>::axpy_tm_(
     "ExtendedGridOrbitals" + std::to_string(8 * sizeof(ScalarType)) + "::axpy");
-template <typename ScalarType>
-Timer ExtendedGridOrbitals<ScalarType>::gemm_nn_tm_(
-    "ExtendedGridOrbitals" + std::to_string(8 * sizeof(ScalarType))
-    + "::gemm_nn");
-template <typename ScalarType>
-Timer ExtendedGridOrbitals<ScalarType>::gemm_tn_tm_(
-    "ExtendedGridOrbitals" + std::to_string(8 * sizeof(ScalarType))
-    + "::gemm_tn");
 
 template <typename ScalarType>
 ExtendedGridOrbitals<ScalarType>::ExtendedGridOrbitals(std::string name,
@@ -135,6 +141,9 @@ ExtendedGridOrbitals<ScalarType>::ExtendedGridOrbitals(const std::string& name,
       block_vector_(A.block_vector_, copy_data),
       grid_(A.grid_)
 {
+    // if(onpe0)cout<<"call ExtendedGridOrbitals(const
+    // ExtendedGridOrbitals &A, const bool copy_data)"<<endl;
+
     assert(A.proj_matrices_ != nullptr);
 }
 
@@ -404,6 +413,25 @@ void ExtendedGridOrbitals<ScalarType>::initFourier()
 
 template <typename ScalarType>
 void ExtendedGridOrbitals<ScalarType>::multiply_by_matrix(
+    const dist_matrix::DistMatrix<DISTMATDTYPE>& dmatrix,
+    ScalarType* const product, const int ldp)
+{
+#if 0
+    (*MPIdata::sout)<<"self multiply_by_matrix"<<endl;
+#endif
+
+    ReplicatedWorkSpace<DISTMATDTYPE>& wspace(
+        ReplicatedWorkSpace<DISTMATDTYPE>::instance());
+    DISTMATDTYPE* work_matrix = wspace.square_matrix();
+
+    // build a local complete matrix from a distributed matrix
+    dmatrix.allgather(work_matrix, numst_);
+
+    multiply_by_matrix(work_matrix, product, ldp);
+}
+
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::multiply_by_matrix(
     const DISTMATDTYPE* const matrix, ScalarType* product, const int ldp) const
 {
     prod_matrix_tm_.start();
@@ -413,6 +441,7 @@ void ExtendedGridOrbitals<ScalarType>::multiply_by_matrix(
         memory_space_type>::allocate_host_view(product_size);
     MemorySpace::Memory<ScalarType, memory_space_type>::copy_view_to_host(
         product, product_size, product_host_view);
+    memset(product_host_view, 0, ldp * numst_ * sizeof(ScalarType));
 
     unsigned int const phi_size = numpt_ * numst_;
     ScalarType* phi_host_view   = MemorySpace::Memory<ScalarType,
@@ -421,10 +450,8 @@ void ExtendedGridOrbitals<ScalarType>::multiply_by_matrix(
         getPsi(0), phi_size, phi_host_view);
 
     // TODO this can be done on the GPU
-    gemm_nn_tm_.start();
     LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(numpt_, numst_, numst_, 1.,
         phi_host_view, lda_, matrix, numst_, 0., product_host_view, ldp);
-    gemm_nn_tm_.stop();
 
     MemorySpace::Memory<ScalarType, memory_space_type>::free_host_view(
         phi_host_view);
@@ -458,14 +485,14 @@ void ExtendedGridOrbitals<ScalarType>::multiplyByMatrix(
 {
     assert(matrix.nmat() == 1);
 
-    gemm_nn_tm_.start();
+    prod_matrix_tm_.start();
 
     const MATDTYPE* const mat = matrix.getSubMatrix();
 
     LinearAlgebraUtils<memory_space_type>::MPgemmNN(numpt_, numst_, numst_, 1.,
         getPsi(0), lda_, mat, numst_, 0., product, ldp);
 
-    gemm_nn_tm_.stop();
+    prod_matrix_tm_.stop();
 }
 
 // Here the result is stored in one of the matrices used in the multiplication,
@@ -515,39 +542,30 @@ void ExtendedGridOrbitals<ScalarType>::multiply_by_matrix(
     multiply_by_matrix(matrix, product.psi(0), product.lda_);
 }
 
-#ifdef MGMOL_USE_SCALAPACK
 template <>
 template <>
 void ExtendedGridOrbitals<ORBDTYPE>::multiply_by_matrix(
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& matrix, const double alpha,
-    ExtendedGridOrbitals<ORBDTYPE>& product)
+    const dist_matrix::DistMatrix<DISTMATDTYPE>& matrix)
 {
-    multiply_by_DistMatrix(matrix, alpha, product);
+    multiply_by_DistMatrix(matrix);
 }
-#endif
 
 template <>
 template <>
 void ExtendedGridOrbitals<ORBDTYPE>::multiply_by_matrix(
-    const ReplicatedMatrix& matrix, const double alpha,
-    ExtendedGridOrbitals<ORBDTYPE>& product)
+    const ReplicatedMatrix& matrix)
 {
-    multiply_by_ReplicatedMatrix(matrix, alpha, product);
+    multiply_by_ReplicatedMatrix(matrix);
 }
 
-#ifdef MGMOL_USE_SCALAPACK
 template <typename ScalarType>
 void ExtendedGridOrbitals<ScalarType>::multiply_by_DistMatrix(
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& matrix, const double alpha,
-    ExtendedGridOrbitals<ORBDTYPE>& product)
+    const dist_matrix::DistMatrix<DISTMATDTYPE>& matrix)
 {
     prod_matrix_tm_.start();
 
-    ScalarType* product_ptr
-        = (this == &product)
-              ? MemorySpace::Memory<ScalarType, MemorySpace::Host>::allocate(
-                  numpt_ * numst_)
-              : product.getPsi(0);
+    ScalarType* product = new ScalarType[numpt_ * numst_];
+    memset(product, 0, numpt_ * numst_ * sizeof(ScalarType));
 
     ReplicatedWorkSpace<DISTMATDTYPE>& wspace(
         ReplicatedWorkSpace<DISTMATDTYPE>::instance());
@@ -564,33 +582,27 @@ void ExtendedGridOrbitals<ScalarType>::multiply_by_DistMatrix(
         getPsi(0), phi_size, phi_host_view);
 
     // TODO this can be done on the GPU
-    gemm_nn_tm_.start();
     LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(numpt_, numst_, numst_, 1.,
-        phi_host_view, lda_, work_matrix, numst_, alpha, product_ptr, numpt_);
-    gemm_nn_tm_.stop();
+        phi_host_view, lda_, work_matrix, numst_, 0., product, numpt_);
 
     for (int color = 0; color < numst_; color++)
-        memcpy(phi_host_view + color * lda_, product_ptr + color * numpt_,
-            slnumpt);
+        memcpy(phi_host_view + color * lda_, product + color * numpt_, slnumpt);
 
     MemorySpace::Memory<ScalarType, memory_space_type>::copy_view_to_dev(
         phi_host_view, phi_size, getPsi(0));
     MemorySpace::Memory<ScalarType, memory_space_type>::free_host_view(
         phi_host_view);
 
-    if (this == &product)
-        MemorySpace::Memory<ScalarType, MemorySpace::Host>::free(product_ptr);
+    delete[] product;
 
     prod_matrix_tm_.stop();
 }
-#endif
 
 template <typename ScalarType>
 void ExtendedGridOrbitals<ScalarType>::multiply_by_ReplicatedMatrix(
-    const ReplicatedMatrix& matrix, const double alpha,
-    ExtendedGridOrbitals<ORBDTYPE>& product)
+    const ReplicatedMatrix& matrix)
 {
-    gemm_nn_tm_.start();
+    prod_matrix_tm_.start();
 
 #ifdef HAVE_MAGMA
     magma_trans_t magma_transa = magma_trans_const('n');
@@ -598,43 +610,31 @@ void ExtendedGridOrbitals<ScalarType>::multiply_by_ReplicatedMatrix(
 
     auto& magma_singleton = MagmaSingleton::get_magma_singleton();
 
-    ScalarType* product_ptr
-        = (this == &product)
-              ? MemorySpace::Memory<ScalarType, MemorySpace::Device>::allocate(
-                  numst_ * lda_)
-              : product.getPsi(0);
+    ScalarType* tmp
+        = MemorySpace::Memory<ScalarType, MemorySpace::Device>::allocate(
+            numst_ * lda_);
 
     magmablas_dgemm(magma_transa, magma_transb, numpt_, numst_, numst_, 1.,
-        block_vector_.vect(0), lda_, matrix.data(), matrix.ld(), alpha,
-        product_ptr, lda_, magma_singleton.queue_);
+        block_vector_.vect(0), lda_, matrix.data(), matrix.ld(), 0., tmp, lda_,
+        magma_singleton.queue_);
 
-    if (this == &product)
-    {
-        MemorySpace::Memory<ScalarType, MemorySpace::Device>::copy(
-            product_ptr, numst_ * lda_, block_vector_.vect(0));
+    MemorySpace::Memory<ScalarType, MemorySpace::Device>::copy(
+        tmp, numst_ * lda_, block_vector_.vect(0));
 
-        MemorySpace::Memory<ScalarType, MemorySpace::Device>::free(product);
-    }
+    MemorySpace::Memory<ScalarType, MemorySpace::Device>::free(tmp);
 #else
-    ScalarType* product_ptr
-        = (this == &product)
-              ? MemorySpace::Memory<ScalarType, MemorySpace::Host>::allocate(
-                  numst_ * lda_)
-              : product.getPsi(0);
+    ScalarType* tmp
+        = MemorySpace::Memory<ScalarType, MemorySpace::Host>::allocate(
+            numst_ * lda_);
     LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(numpt_, numst_, numst_, 1.,
-        block_vector_.vect(0), lda_, matrix.data(), matrix.ld(), alpha,
-        product_ptr, lda_);
+        block_vector_.vect(0), lda_, matrix.data(), matrix.ld(), 0., tmp, lda_);
 
-    if (this == &product)
-    {
-        memcpy(block_vector_.vect(0), product_ptr,
-            numst_ * lda_ * sizeof(ScalarType));
+    memcpy(block_vector_.vect(0), tmp, numst_ * lda_ * sizeof(ScalarType));
 
-        MemorySpace::Memory<ScalarType, MemorySpace::Host>::free(product_ptr);
-    }
+    MemorySpace::Memory<ScalarType, MemorySpace::Host>::free(tmp);
 #endif
 
-    gemm_nn_tm_.stop();
+    prod_matrix_tm_.stop();
 }
 
 template <typename ScalarType>
@@ -1077,18 +1077,11 @@ void ExtendedGridOrbitals<ScalarType>::computeLocalProduct(
     const ScalarType* const array, const int ld,
     LocalMatrices<MATDTYPE, memory_space_type>& ss, const bool transpose)
 {
-    gemm_tn_tm_.start();
-
     assert(numpt_ > 0);
     assert(numpt_ <= ld);
     assert(array != nullptr);
     assert(numst_ != 0);
     assert(grid_.vel() > 0.);
-
-    Control& ct = *(Control::instance());
-    if (onpe0 && ct.verbose > 2)
-        std::cout << "ExtendedGridOrbitals::computeLocalProduct()..."
-                  << std::endl;
 
     const ScalarType* const a = transpose ? array : block_vector_.vect(0);
     const ScalarType* const b = transpose ? block_vector_.vect(0) : array;
@@ -1098,8 +1091,6 @@ void ExtendedGridOrbitals<ScalarType>::computeLocalProduct(
 
     LinearAlgebraUtils<memory_space_type>::MPgemmTN(numst_, numst_, numpt_,
         grid_.vel(), a, lda, b, ldb, 0., ss.getRawPtr(0), ss.m());
-
-    gemm_tn_tm_.stop();
 }
 
 template <typename ScalarType>
@@ -1123,7 +1114,6 @@ void ExtendedGridOrbitals<ScalarType>::computeDiagonalElementsDotProduct(
     mmpi.allreduce(&tmp[0], &ss[0], numst_, MPI_SUM);
 }
 
-#ifdef MGMOL_USE_SCALAPACK
 template <typename ScalarType>
 void ExtendedGridOrbitals<ScalarType>::computeGram(
     dist_matrix::DistMatrix<DISTMATDTYPE>& gram_mat)
@@ -1155,7 +1145,6 @@ void ExtendedGridOrbitals<ScalarType>::computeGram(
 
     sl2dm->accumulate(ss, gram_mat);
 }
-#endif
 
 // compute the lower-triangular part of the overlap matrix
 template <typename ScalarType>
@@ -1271,7 +1260,6 @@ void ExtendedGridOrbitals<ScalarType>::orthonormalizeLoewdin(
     }
     if (!multbymat)
     {
-#ifdef MGMOL_USE_SCALAPACK
         ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
             = dynamic_cast<
                 ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
@@ -1284,7 +1272,6 @@ void ExtendedGridOrbitals<ScalarType>::orthonormalizeLoewdin(
 
             projmatrices->setGram2Id(getIterativeIndex());
         }
-#endif
     }
 
     if (matrixTransform == nullptr) delete localP;
@@ -1519,10 +1506,8 @@ void ExtendedGridOrbitals<ScalarType>::projectOut(
 
     // TODO this can be done on the GPU
     // Compute numpt_ rows (for subdomain 0)
-    gemm_nn_tm_.start();
     LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(numpt_, numst_, numst_, 1.,
         phi_host_view, lda_, localMat, numst_, 0., tproduct, numpt_);
-    gemm_nn_tm_.stop();
 
     MemorySpace::Memory<ScalarType, memory_space_type>::free_host_view(
         phi_host_view);
@@ -1616,7 +1601,6 @@ void ExtendedGridOrbitals<ScalarType>::initRand()
     resetIterativeIndex();
 }
 
-#ifdef MGMOL_USE_SCALAPACK
 template <>
 template <>
 void ExtendedGridOrbitals<ORBDTYPE>::addDotWithNcol2Matrix(
@@ -1635,16 +1619,12 @@ void ExtendedGridOrbitals<ScalarType>::addDotWithNcol2DistMatrix(
 
     assert(numst_ > 0);
 
-    Control& ct = *(Control::instance());
-    if (onpe0 && ct.verbose > 2)
-        std::cout << "ExtendedGridOrbitals::addDotWithNcol2DistMatrix()..."
-                  << std::endl;
-
     const double vel = grid_.vel();
 
     // replicated matrix
     const int size_work = numst_ * numst_;
     std::vector<double> work(size_work);
+    memset(work.data(), 0, size_work * sizeof(double));
 
     unsigned int const block_vector_size = numpt_ * numst_;
     ScalarType* block_vector_host_view   = MemorySpace::Memory<ScalarType,
@@ -1659,11 +1639,9 @@ void ExtendedGridOrbitals<ScalarType>::addDotWithNcol2DistMatrix(
         Apsi.getPsi(0), phi_size, phi_host_view);
 
     // TODO this can be done on the GPU
-    gemm_tn_tm_.start();
     LinearAlgebraUtils<memory_space_type>::MPgemmTN(numst_, numst_, numpt_, vel,
-        block_vector_host_view + 0 * numpt_, lda_, phi_host_view, lda_, 0.,
+        block_vector_host_view + 0 * numpt_, lda_, phi_host_view, lda_, 1.,
         work.data(), numst_);
-    gemm_tn_tm_.stop();
 
     MemorySpace::Memory<ScalarType, memory_space_type>::free_host_view(
         phi_host_view);
@@ -1680,7 +1658,6 @@ void ExtendedGridOrbitals<ScalarType>::addDotWithNcol2DistMatrix(
 
     addDot_tm_.stop();
 }
-#endif
 
 template <>
 template <>
@@ -1696,16 +1673,9 @@ void ExtendedGridOrbitals<ScalarType>::addDotWithNcol2ReplicatedMatrix(
 {
     addDot_tm_.start();
 
-    Control& ct = *(Control::instance());
-    if (onpe0 && ct.verbose > 2)
-        std::cout
-            << "ExtendedGridOrbitals::addDotWithNcol2ReplicatedMatrix()..."
-            << std::endl;
-
     ReplicatedMatrix tmp("tmp", numst_, numst_);
     const double vel = grid_.vel();
 
-    gemm_tn_tm_.start();
 #ifdef HAVE_MAGMA
     magma_trans_t magma_transa = magma_trans_const('t');
     magma_trans_t magma_transb = magma_trans_const('n');
@@ -1720,7 +1690,6 @@ void ExtendedGridOrbitals<ScalarType>::addDotWithNcol2ReplicatedMatrix(
         block_vector_.vect(0), lda_, Apsi.getPsi(0), lda_, 0., tmp.data(),
         tmp.ld());
 #endif
-    gemm_tn_tm_.stop();
 
     tmp.consolidate();
 
@@ -1750,8 +1719,6 @@ void ExtendedGridOrbitals<ScalarType>::printTimers(std::ostream& os)
     dot_product_tm_.print(os);
     addDot_tm_.print(os);
     prod_matrix_tm_.print(os);
-    gemm_nn_tm_.print(os);
-    gemm_tn_tm_.print(os);
     assign_tm_.print(os);
     normalize_tm_.print(os);
     axpy_tm_.print(os);
@@ -1846,6 +1813,29 @@ void ExtendedGridOrbitals<ScalarType>::initWF(
         (*MPIdata::sout) << "ExtendedGridOrbitals::init_wf() done" << std::endl;
 #endif
 }
+
+#ifdef MGMOL_HAS_LIBROM
+template <typename ScalarType>
+void ExtendedGridOrbitals<ScalarType>::set(std::string file_path, int rdim)
+{
+    const int dim = getLocNumpt();
+
+    CAROM::BasisReader reader(file_path);
+    CAROM::Matrix* orbital_basis = reader.getSpatialBasis(rdim);
+
+    Control& ct  = *(Control::instance());
+    Mesh* mymesh = Mesh::instance();
+    pb::GridFunc<ORBDTYPE> gf_psi(
+        mymesh->grid(), ct.bcWF[0], ct.bcWF[1], ct.bcWF[2]);
+    CAROM::Vector psi;
+    for (int i = 0; i < rdim; ++i)
+    {
+        orbital_basis->getColumn(i, psi);
+        gf_psi.assign(psi.getData());
+        setPsi(gf_psi, i);
+    }
+}
+#endif
 
 template void ExtendedGridOrbitals<ORBDTYPE>::axpy(
     const ORBDTYPE alpha, const ExtendedGridOrbitals<ORBDTYPE>&);

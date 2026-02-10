@@ -13,6 +13,7 @@
 
 #include "ColoredRegions.h"
 #include "Control.h"
+#include "DistMatrix.h"
 #include "DotProductManagerFactory.h"
 #include "FunctionsPacking.h"
 #include "GridFunc.h"
@@ -20,6 +21,7 @@
 #include "HDFrestart.h"
 #include "Laph4M.h"
 #include "LocGridOrbitals.h"
+#include "LocalMatrices2DistMatrix.h"
 #include "LocalizationRegions.h"
 #include "MPIdata.h"
 #include "Masks4Orbitals.h"
@@ -34,11 +36,6 @@
 #include "lapack_c.h"
 #include "memory_space.h"
 
-#ifdef MGMOL_USE_SCALAPACK
-#include "DistMatrix.h"
-#include "LocalMatrices2DistMatrix.h"
-#endif
-
 #include <cmath>
 #include <fstream>
 #include <utility>
@@ -51,6 +48,18 @@ template <typename ScalarType>
 DotProductManager<LocGridOrbitals<ScalarType>>*
     LocGridOrbitals<ScalarType>::dotProductManager_
     = nullptr;
+
+template <typename ScalarType>
+short LocGridOrbitals<ScalarType>::subdivx_ = 0;
+template <typename ScalarType>
+int LocGridOrbitals<ScalarType>::lda_ = 0;
+template <typename ScalarType>
+int LocGridOrbitals<ScalarType>::numpt_ = 0;
+template <typename ScalarType>
+int LocGridOrbitals<ScalarType>::loc_numpt_ = 0;
+
+template <typename ScalarType>
+int LocGridOrbitals<ScalarType>::data_wghosts_index_ = -1;
 
 template <typename ScalarType>
 Timer LocGridOrbitals<ScalarType>::get_dm_tm_(
@@ -781,7 +790,6 @@ int LocGridOrbitals<ScalarType>::packStates(
     return pack_->chromatic_number();
 }
 
-#ifdef MGMOL_USE_SCALAPACK
 template <typename ScalarType>
 void LocGridOrbitals<ScalarType>::multiply_by_matrix(
     const dist_matrix::DistMatrix<DISTMATDTYPE>& dmatrix,
@@ -796,7 +804,6 @@ void LocGridOrbitals<ScalarType>::multiply_by_matrix(
 
     multiply_by_matrix(0, chromatic_number_, work_matrix, product, ldp);
 }
-#endif
 
 template <typename ScalarType>
 void LocGridOrbitals<ScalarType>::multiply_by_matrix(const int first_color,
@@ -977,17 +984,14 @@ void LocGridOrbitals<ScalarType>::multiply_by_matrix(
         0, chromatic_number_, matrix, product.psi(0), product.lda_);
 }
 
-#ifdef MGMOL_USE_SCALAPACK
 template <typename ScalarType>
 void LocGridOrbitals<ScalarType>::multiply_by_matrix(
-    const dist_matrix::DistMatrix<DISTMATDTYPE>& matrix, const double alpha,
-    LocGridOrbitals<ScalarType>& product)
+    const dist_matrix::DistMatrix<DISTMATDTYPE>& matrix)
 {
     prod_matrix_tm_.start();
 
-    ScalarType* product_ptr
-        = (this == &product) ? new ScalarType[loc_numpt_ * chromatic_number_]
-                             : product.getPsi(0);
+    ScalarType* product = new ScalarType[loc_numpt_ * chromatic_number_];
+    memset(product, 0, loc_numpt_ * chromatic_number_ * sizeof(ScalarType));
 
     ReplicatedWorkSpace<DISTMATDTYPE>& wspace(
         ReplicatedWorkSpace<DISTMATDTYPE>::instance());
@@ -1010,19 +1014,17 @@ void LocGridOrbitals<ScalarType>::multiply_by_matrix(
         // Compute loc_numpt_ rows (for subdomain iloc)
         LinearAlgebraUtils<MemorySpace::Host>::MPgemmNN(loc_numpt_,
             chromatic_number_, chromatic_number_, 1., phi, lda_, matrix_local,
-            chromatic_number_, alpha, product_ptr, loc_numpt_);
+            chromatic_number_, 0., product, loc_numpt_);
 
         for (int color = 0; color < chromatic_number_; color++)
-            memcpy(
-                phi + color * lda_, product_ptr + color * loc_numpt_, slnumpt);
+            memcpy(phi + color * lda_, product + color * loc_numpt_, slnumpt);
     }
 
     delete[] matrix_local;
-    if (this == &product) delete[] product_ptr;
+    delete[] product;
 
     prod_matrix_tm_.stop();
 }
-#endif
 
 template <typename ScalarType>
 int LocGridOrbitals<ScalarType>::read_hdf5(HDFrestart& h5f_file)
@@ -1736,7 +1738,6 @@ void LocGridOrbitals<ScalarType>::computeDiagonalElementsDotProductLocal(
     }
 }
 
-#ifdef MGMOL_USE_SCALAPACK
 template <typename ScalarType>
 void LocGridOrbitals<ScalarType>::computeGram(
     dist_matrix::DistMatrix<DISTMATDTYPE>& gram_mat)
@@ -1760,7 +1761,6 @@ void LocGridOrbitals<ScalarType>::computeGram(
 
     sl2dm->accumulate(ss, gram_mat);
 }
-#endif
 
 // compute the lower-triangular part of the overlap matrix
 template <typename ScalarType>
@@ -1862,27 +1862,14 @@ void LocGridOrbitals<ScalarType>::orthonormalizeLoewdin(
         localP = new SquareLocalMatrices<MATDTYPE, MemorySpace::Host>(
             subdivx_, chromatic_number_);
 
-    // try with ReplicatedMatrix first
-    ProjectedMatrices<ReplicatedMatrix>* projmatrices
-        = dynamic_cast<ProjectedMatrices<ReplicatedMatrix>*>(proj_matrices_);
-    if (projmatrices)
-    {
-        projmatrices->computeLoewdinTransform(
-            *localP, getIterativeIndex(), update_matrices);
-    }
-#ifdef MGMOL_USE_SCALAPACK
-    else
-    {
-        ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
-            = dynamic_cast<
-                ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
-                proj_matrices_);
-        assert(projmatrices != nullptr);
-        assert(localP);
-        projmatrices->computeLoewdinTransform(
-            *localP, getIterativeIndex(), update_matrices);
-    }
-#endif
+    ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
+        = dynamic_cast<
+            ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>*>(
+            proj_matrices_);
+    assert(projmatrices != nullptr);
+    assert(localP);
+    projmatrices->computeLoewdinTransform(
+        *localP, getIterativeIndex(), update_matrices);
 
     multiplyByMatrix(*localP);
 
@@ -2466,7 +2453,6 @@ void LocGridOrbitals<ScalarType>::initRand()
 }
 
 // Compute nstates column of Psi^T*A*Psi starting at column 0
-#ifdef MGMOL_USE_SCALAPACK
 template <typename ScalarType>
 void LocGridOrbitals<ScalarType>::addDotWithNcol2Matrix(
     LocGridOrbitals<ScalarType>& Apsi,
@@ -2512,7 +2498,6 @@ void LocGridOrbitals<ScalarType>::addDotWithNcol2Matrix(
 
     addDot_tm_.stop();
 }
-#endif
 
 template <typename ScalarType>
 void LocGridOrbitals<ScalarType>::computeGlobalIndexes(

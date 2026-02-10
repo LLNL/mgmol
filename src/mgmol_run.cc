@@ -14,7 +14,7 @@
 #include "Mesh.h"
 #include "PackedCommunicationBuffer.h"
 #include "ReplicatedWorkSpace.h"
-// #include "SparseDistMatrix.h"
+#include "SparseDistMatrix.h"
 #include "tools.h"
 
 #include <cassert>
@@ -42,24 +42,6 @@ int mgmol_init(MPI_Comm comm)
     MPI_Comm_rank(comm, &MPIdata::mype);
     assert(mype > -1);
     MPIdata::onpe0 = (MPIdata::mype == 0);
-
-    if (mype == 0)
-    {
-#if defined(__GNUC__) && !defined(__clang__)
-        std::cout << "GCC " << __GNUC__ << "." << __GNUC_MINOR__ << "."
-                  << __GNUC_PATCHLEVEL__ << std::endl;
-#elif defined(__clang__)
-        std::cout << "Clang " << __clang_major__ << "." << __clang_minor__
-                  << "." << __clang_patchlevel__ << std::endl;
-#else
-        std::cout << "Unknown Compiler" << std::endl;
-#endif
-
-        int version, subversion;
-        MPI_Get_version(&version, &subversion);
-        std::cout << "MPI Version: " << version << "." << subversion
-                  << std::endl;
-    }
 
 #ifdef MGMOL_USE_BLIS
     bli_init();
@@ -165,10 +147,8 @@ void mgmol_finalize()
 
     if (!ct.short_sighted)
     {
-#ifdef MGMOL_USE_SCALAPACK
         // need to destroy any MPI based object befor calling MPI_Finalize
         MatricesBlacsContext::instance().clear();
-#endif
     }
 
     // release memory for static arrays

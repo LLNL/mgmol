@@ -33,6 +33,7 @@
 #include "MPIdata.h"
 #include "MasksSet.h"
 #include "Mesh.h"
+#include "OrbitalsTransform.h"
 #include "PolakRibiereSolver.h"
 #include "Potentials.h"
 #include "ProjectedMatricesInterface.h"
@@ -60,12 +61,8 @@ Timer updateCenters_tm("MGmol<OrbitalsType>::updateCenters");
 
 template <>
 void MGmol<ExtendedGridOrbitals<ORBDTYPE>>::adaptLR(
-    const SpreadsAndCenters<ExtendedGridOrbitals<ORBDTYPE>>* /*spreadf*/
-#ifdef MGMOL_USE_SCALAPACK
-    ,
-    const OrbitalsTransform* /*ot*/
-#endif
-)
+    const SpreadsAndCenters<ExtendedGridOrbitals<ORBDTYPE>>* /*spreadf*/,
+    const OrbitalsTransform* /*ot*/)
 {
 }
 
@@ -75,12 +72,8 @@ void MGmol<ExtendedGridOrbitals<ORBDTYPE>>::adaptLR(
 // 1 -> radius only
 // 2 -> center and radius
 template <class OrbitalsType>
-void MGmol<OrbitalsType>::adaptLR(const SpreadsAndCenters<OrbitalsType>* spreadf
-#ifdef MGMOL_USE_SCALAPACK
-    ,
-    const OrbitalsTransform* ot
-#endif
-)
+void MGmol<OrbitalsType>::adaptLR(
+    const SpreadsAndCenters<OrbitalsType>* spreadf, const OrbitalsTransform* ot)
 {
     assert(lrs_);
 
@@ -120,7 +113,6 @@ void MGmol<OrbitalsType>::adaptLR(const SpreadsAndCenters<OrbitalsType>* spreadf
         }
 
         double avg;
-#ifdef MGMOL_USE_SCALAPACK
         // if ct.lr_volume_calc true, calculate volume base on spreads
         if (ct.lr_volume_calc == 1)
         {
@@ -146,7 +138,6 @@ void MGmol<OrbitalsType>::adaptLR(const SpreadsAndCenters<OrbitalsType>* spreadf
             avg                = lrs_->updateRadii(ot, ratio);
         }
         else
-#endif
         {
             if (onpe0) os_ << " Adapt with constant LR volume" << std::endl;
             avg = lrs_->updateRadiiConstVol(*spreadf);
@@ -196,7 +187,6 @@ void MGmol<OrbitalsType>::resetProjectedMatricesAndDM(
     dm_strategy_->initialize(orbitals);
 }
 
-#ifdef MGMOL_USE_SCALAPACK
 // try to use some rotations to avoid degeneracies
 template <class OrbitalsType>
 bool MGmol<OrbitalsType>::rotateStatesPairsCommonCenter(
@@ -413,7 +403,6 @@ void MGmol<OrbitalsType>::disentangleOrbitals(OrbitalsType& orbitals,
         ct.num_MD_steps--;
     }
 }
-#endif
 
 template <>
 void MGmol<LocGridOrbitals<ORBDTYPE>>::applyAOMMprojection(
@@ -529,7 +518,6 @@ int MGmol<OrbitalsType>::outerSolve(OrbitalsType& orbitals,
 
                 retval = solver.solve(orbitals, work_orbitals);
             }
-#ifdef MGMOL_USE_SCALAPACK
             else
             {
                 DavidsonSolver<OrbitalsType,
@@ -541,7 +529,6 @@ int MGmol<OrbitalsType>::outerSolve(OrbitalsType& orbitals,
 
                 retval = solver.solve(orbitals, work_orbitals);
             }
-#endif
             break;
         }
 
@@ -588,9 +575,7 @@ int MGmol<OrbitalsType>::quench(OrbitalsType& orbitals, Ions& ions,
     orbitals.setDataWithGhosts();
     orbitals.trade_boundaries();
 
-#ifdef MGMOL_USE_SCALAPACK
     disentangleOrbitals(orbitals, work_orbitals, ions, max_steps);
-#endif
 
     // setup "kernel" functions for AOMM algorithm
     if (ct.use_kernel_functions)
@@ -697,7 +682,7 @@ int MGmol<OrbitalsType>::quench(OrbitalsType& orbitals, Ions& ions,
             wftransform(&orbitals, &work_orbitals, ions);
         }
     }
-#endif
+
     // delete hnl_orbitals_;hnl_orbitals_=0;
 
     quench_tm.stop();

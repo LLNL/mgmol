@@ -10,6 +10,8 @@
 #ifndef MGMOL_H
 #define MGMOL_H
 
+#include "mgmol_config.h"
+
 #include "Energy.h"
 #include "GridFuncVector.h"
 #include "Hamiltonian.h"
@@ -42,6 +44,7 @@ class IonicAlgorithm;
 #include "AOMMprojector.h"
 #include "ClusterOrbitals.h"
 #include "DMStrategy.h"
+#include "Energy.h"
 #include "ExtendedGridOrbitals.h"
 #include "Forces.h"
 #include "Ions.h"
@@ -128,13 +131,11 @@ private:
         Rho<OrbitalsType>& rho, const bool write_extrapolated_wf,
         const short count);
 
-#ifdef MGMOL_USE_SCALAPACK
     void swapColumnsVect(dist_matrix::DistMatrix<DISTMATDTYPE>& evect,
         const dist_matrix::DistMatrix<DISTMATDTYPE>& hb2N,
         const std::vector<double>& eval,
         dist_matrix::DistMatrix<DISTMATDTYPE>& work);
     void wftransform(OrbitalsType*, OrbitalsType*, Ions&);
-#endif
     int readLRsFromInput(std::ifstream* tfile);
     void preWFextrapolation();
     void postWFextrapolation(OrbitalsType* orbitals);
@@ -172,7 +173,7 @@ public:
 
     ~MGmol() override;
 
-    void setup() override;
+    void setup();
 
     /* access functions */
     OrbitalsType* getOrbitals() { return current_orbitals_; }
@@ -181,6 +182,7 @@ public:
         return hamiltonian_;
     }
     std::shared_ptr<Rho<OrbitalsType>> getRho() { return rho_; }
+    std::shared_ptr<Ions> getIons() { return ions_; }
 
     void run() override;
 
@@ -189,8 +191,7 @@ public:
      * specified by tau (input)
      */
     double evaluateEnergyAndForces(const std::vector<double>& tau,
-        const std::vector<short>& atnumbers,
-        std::vector<double>& forces) override;
+        const std::vector<short>& atnumbers, std::vector<double>& forces);
 
     /*
      * Evaluate the energy and forces for an atomic configuration
@@ -199,7 +200,7 @@ public:
      */
     double evaluateEnergyAndForces(Orbitals* orbitals,
         const std::vector<double>& tau, const std::vector<short>& atnumbers,
-        std::vector<double>& forces) override;
+        std::vector<double>& forces);
 
     /*
      * Evaluate the energy and forces for an atomic configuration
@@ -208,14 +209,14 @@ public:
      */
     double evaluateDMandEnergyAndForces(Orbitals* orbitals,
         const std::vector<double>& tau, const std::vector<short>& atnumbers,
-        std::vector<double>& forces) override;
+        std::vector<double>& forces);
 
     /*
      * get internal atomic positions
      */
-    void getAtomicPositions(std::vector<double>& tau) override;
+    void getAtomicPositions(std::vector<double>& tau);
 
-    void getAtomicNumbers(std::vector<short>& an) override;
+    void getAtomicNumbers(std::vector<short>& an);
 
     void setupPotentials(Ions& ions);
     void initKBR();
@@ -272,12 +273,8 @@ public:
     void addResidualSpreadPenalty(OrbitalsType& phi, OrbitalsType& res);
     int get_NOLMO(NOLMOTransform& noot, OrbitalsType& orbitals,
         OrbitalsType& work_orbitals, const double dd, const bool apply_flag);
-    void adaptLR(const SpreadsAndCenters<OrbitalsType>* spreadf
-#ifdef MGMOL_USE_SCALAPACK
-        ,
-        const OrbitalsTransform* ot
-#endif
-    );
+    void adaptLR(const SpreadsAndCenters<OrbitalsType>* spreadf,
+        const OrbitalsTransform* ot);
     int update_masks();
     void move_orbitals(OrbitalsType** orbitals);
     int getMLWF2states(const int st1, const int st2, OrbitalsType& orbitals,
@@ -300,7 +297,7 @@ public:
     void sebprintForces();
     int nions() { return ions_->getNumIons(); }
     double getTotalEnergy();
-    void cleanup() override;
+    void cleanup();
     void geomOptimSetup();
     void geomOptimQuench();
     void geomOptimComputeForces();
@@ -331,18 +328,30 @@ public:
     {
         forces_->force(orbitals, ions);
     }
+    void setPositions(const std::vector<double>& positions,
+        const std::vector<short>& atnumbers)
+    {
+        ions_->setPositions(positions, atnumbers);
+    }
 
     /*
      * simply dump current state
      */
-    void dumpRestart() override;
+    void dumpRestart();
 
     void loadRestartFile(const std::string filename);
 
-    std::shared_ptr<ProjectedMatricesInterface> getProjectedMatrices() override
+    std::shared_ptr<ProjectedMatricesInterface> getProjectedMatrices()
     {
         return proj_matrices_;
     }
+
+#ifdef MGMOL_HAS_LIBROM
+    int save_orbital_snapshot(std::string file_path, OrbitalsType& orbitals);
+    void project_orbital(
+        std::string file_path, int rdim, OrbitalsType& orbitals);
+#endif
+    void updateDMandEnergy(OrbitalsType& orbitals, Ions& ions, double& eks);
 };
 // Instantiate static variables here to avoid clang warnings
 template <class OrbitalsType>

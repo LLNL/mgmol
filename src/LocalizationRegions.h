@@ -22,14 +22,11 @@
 #include "mgmol_mpi_tools.h"
 #include "tools.h"
 
-#ifdef MGMOL_USE_SCALAPACK
-#include "OrbitalsTransform.h"
-#endif
-
 #include <iostream>
 #include <set>
 #include <vector>
 
+class OrbitalsTransform;
 class SymmetricPair;
 
 typedef struct LRData
@@ -401,9 +398,7 @@ public:
 
     template <class T>
     float move(const SpreadsAndCenters<T>& sc, const bool flag = false);
-#ifdef MGMOL_USE_SCALAPACK
     float updateRadii(const OrbitalsTransform* ot, const float ratio);
-#endif
     template <class T>
     float updateRadii(const SpreadsAndCenters<T>& sc, const float ratio);
     template <class T>

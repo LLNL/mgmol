@@ -6,8 +6,10 @@
 // All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
-#ifndef MGMOL_LAPFACTORY_H
-#define MGMOL_LAPFACTORY_H
+
+// $Id$
+#ifndef LAPFACTORY_H
+#define LAPFACTORY_H
 
 #include "Laph2.h"
 #include "Laph4.h"
@@ -15,7 +17,7 @@
 #include "Laph4MP.h"
 #include "Laph6.h"
 #include "Laph8.h"
-#include "MGmol_MPI.h"
+#include "MPIdata.h"
 
 template <class T>
 class LapFactory
@@ -23,7 +25,7 @@ class LapFactory
 public:
     static pb::Lap<T>* createLap(const pb::Grid& grid, const int type)
     {
-        pb::Lap<T>* lap = nullptr;
+        pb::Lap<T>* lap;
         switch (type)
         {
             case 0:
@@ -45,12 +47,10 @@ public:
                 lap = new pb::Laph4MP<T>(grid);
                 break;
             default:
-                MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-                if (mmpi.instancePE0())
-                    std::cerr
-                        << "LapFactory::createLap() --- option invalid:" << type
-                        << std::endl;
-                mmpi.abort();
+                (*MPIdata::serr)
+                    << "LapFactory::createLap() --- option invalid:" << type
+                    << std::endl;
+                exit(2);
         }
         return lap;
     }
