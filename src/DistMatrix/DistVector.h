@@ -96,7 +96,7 @@ public:
                 DistMatrix<T>::val_.size(), DistMatrix<T>::val_.data(),
                 v.val_.data());
         }
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         MGmol_MPI& mmpi = *(MGmol_MPI::instance());
         mmpi.allreduce(&tsum, &sum, 1, MPI_SUM);
 #else

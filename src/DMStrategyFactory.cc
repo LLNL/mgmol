@@ -1,7 +1,6 @@
 #include "DMStrategyFactory.h"
 #include "ReplicatedMatrix.h"
 
-#ifdef MGMOL_USE_SCALAPACK
 template <>
 DMStrategy<LocGridOrbitals<ORBDTYPE>>*
 DMStrategyFactory<LocGridOrbitals<ORBDTYPE>,
@@ -36,7 +35,6 @@ DMStrategyFactory<LocGridOrbitals<ORBDTYPE>,
         return dm_strategy;
     }
 }
-#endif
 
 template <>
 DMStrategy<LocGridOrbitals<ORBDTYPE>>*
@@ -58,7 +56,6 @@ DMStrategyFactory<LocGridOrbitals<ORBDTYPE>,
     return nullptr;
 }
 
-#ifdef MGMOL_USE_SCALAPACK
 template <>
 DMStrategy<ExtendedGridOrbitals<ORBDTYPE>>*
 DMStrategyFactory<ExtendedGridOrbitals<ORBDTYPE>,
@@ -81,7 +78,6 @@ DMStrategyFactory<ExtendedGridOrbitals<ORBDTYPE>,
 
     return dm_strategy;
 }
-#endif
 
 template <>
 DMStrategy<ExtendedGridOrbitals<ORBDTYPE>>*

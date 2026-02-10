@@ -11,17 +11,14 @@
 #include "LocGridOrbitals.h"
 #include "LocalizationRegions.h"
 #include "MGmol.h"
+#include "MLWFTransform.h"
 #include "Mesh.h"
+#include "NOLMOTransform.h"
 #include "ProjectedMatrices.h"
 #include "ReplicatedWorkSpace.h"
 #include "SinCosOps.h"
 #include "blas3_c.h"
 #include "mputils.h"
-
-#ifdef MGMOL_USE_SCALAPACK
-#include "MLWFTransform.h"
-#include "NOLMOTransform.h"
-#endif
 
 #include <vector>
 
@@ -35,7 +32,6 @@ void dtrsm_c(const char side, const char uplo, const char transa,
     DTRSM(&side, &uplo, &transa, &diag, &m, &n, &alpha, a, &lda, b, &ldb);
 }
 
-#ifdef MGMOL_USE_SCALAPACK
 void distributeColumns(
     std::vector<DISTMATDTYPE>& vmm, dist_matrix::DistMatrix<DISTMATDTYPE>& mat)
 {
@@ -342,7 +338,6 @@ int MGmol<OrbitalsType>::get_NOLMO(NOLMOTransform& noot, OrbitalsType& orbitals,
 
     return 0;
 }
-#endif
 
 template class MGmol<LocGridOrbitals<ORBDTYPE>>;
 template class MGmol<ExtendedGridOrbitals<ORBDTYPE>>;

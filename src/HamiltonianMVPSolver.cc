@@ -350,15 +350,15 @@ void HamiltonianMVPSolver<MatrixType, ProjMatrixType,
 }
 
 // explicit instantiation of class
-#ifdef MGMOL_USE_SCALAPACK
 template class HamiltonianMVPSolver<dist_matrix::DistMatrix<DISTMATDTYPE>,
     ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>,
     LocGridOrbitals<ORBDTYPE>>;
+
+template class HamiltonianMVPSolver<VariableSizeMatrix<sparserow>,
+    ProjectedMatricesSparse, LocGridOrbitals<ORBDTYPE>>;
+
 template class HamiltonianMVPSolver<dist_matrix::DistMatrix<DISTMATDTYPE>,
     ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>,
     ExtendedGridOrbitals<ORBDTYPE>>;
-#endif
-template class HamiltonianMVPSolver<VariableSizeMatrix<sparserow>,
-    ProjectedMatricesSparse, LocGridOrbitals<ORBDTYPE>>;
 template class HamiltonianMVPSolver<ReplicatedMatrix,
     ProjectedMatrices<ReplicatedMatrix>, ExtendedGridOrbitals<ORBDTYPE>>;

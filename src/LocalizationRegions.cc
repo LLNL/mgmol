@@ -12,15 +12,12 @@
 #include "LocGridOrbitals.h"
 #include "LocalizationRegions.h"
 #include "Mesh.h"
+#include "OrbitalsTransform.h"
 #include "SpreadsAndCenters.h"
 #include "SquareLocalMatrices.h"
 #include "SymmetricPair.h"
 #include "hdf_tools.h"
 #include "tools.h"
-
-#ifdef MGMOL_USE_SCALAPACK
-#include "OrbitalsTransform.h"
-#endif
 
 #include <algorithm>
 #include <iomanip>
@@ -392,7 +389,6 @@ float LocalizationRegions::updateRadiiConstVol(const SpreadsAndCenters<T>& sc)
     return updateRadii(sc, ratio);
 }
 
-#ifdef MGMOL_USE_SCALAPACK
 float LocalizationRegions::updateRadii(
     const OrbitalsTransform* ot, const float ratio)
 {
@@ -405,7 +401,6 @@ float LocalizationRegions::updateRadii(
 
     return getMeanRadius();
 }
-#endif
 
 float LocalizationRegions::moveTo(const vector<Vector3D>& target_centers)
 {

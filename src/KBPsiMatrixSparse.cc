@@ -16,10 +16,7 @@
 #include "Mesh.h"
 #include "ProjectedMatrices.h"
 #include "ReplicatedMatrix.h"
-
-#ifdef MGMOL_USE_SCALAPACK
 #include "SquareSubMatrix2DistMatrix.h"
-#endif
 
 #include <limits.h>
 
@@ -418,7 +415,6 @@ void KBPsiMatrixSparse::computeHvnlMatrix(
     computeHvnlMatrix(this, ions, proj_matrices);
 }
 
-#ifdef MGMOL_USE_SCALAPACK
 template <>
 void KBPsiMatrixSparse::computeHvnlMatrix(
     const KBPsiMatrixInterface* const kbpsi2, const Ions& ions,
@@ -429,7 +425,6 @@ void KBPsiMatrixSparse::computeHvnlMatrix(
     SquareSubMatrix2DistMatrix* ss2dm = SquareSubMatrix2DistMatrix::instance();
     ss2dm->accumulate(submat, hij, 0.);
 }
-#endif
 
 template <>
 void KBPsiMatrixSparse::computeHvnlMatrix(
@@ -701,9 +696,7 @@ template void KBPsiMatrixSparse::computeKBpsi(const Ions& ions,
 template void KBPsiMatrixSparse::computeAll(
     const Ions&, ExtendedGridOrbitals<ORBDTYPE>&);
 
-#ifdef MGMOL_USE_SCALAPACK
 template double KBPsiMatrixSparse::getEvnl(const Ions& ions,
     ProjectedMatrices<dist_matrix::DistMatrix<double>>* proj_matrices);
-#endif
 template double KBPsiMatrixSparse::getEvnl(
     const Ions& ions, ProjectedMatrices<ReplicatedMatrix>* proj_matrices);

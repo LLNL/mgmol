@@ -14,9 +14,7 @@
 #include "MGmol.h"
 #include "Potentials.h"
 #include "ReplicatedWorkSpace.h"
-#ifdef MGMOL_USE_SCALAPACK
 #include "SparseDistMatrix.h"
-#endif
 
 #include "mgmol_run.h"
 
@@ -86,7 +84,6 @@ int MGmol<OrbitalsType>::setupFromInput(const std::string filename)
     {
         ReplicatedWorkSpace<double>::instance().setup(ct.numst);
 
-#ifdef MGMOL_USE_SCALAPACK
         if (!ct.rmatrices)
         {
             MatricesBlacsContext::instance().setup(mmpi.commSpin(), ct.numst);
@@ -102,7 +99,6 @@ int MGmol<OrbitalsType>::setupFromInput(const std::string filename)
             int npes = mmpi.size();
             setSparseDistMatriConsolidationNumber(npes);
         }
-#endif
     }
 
     if (ct.rmatrices) ReplicatedMatrix::setMPIcomm(mmpi.commSpin());

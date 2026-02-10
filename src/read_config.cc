@@ -7,6 +7,7 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
+#include "MGmol_prototypes.h"
 #include <cassert>
 #include <fenv.h>
 #include <fstream>
@@ -185,11 +186,7 @@ int read_config(int argc, char** argv, po::variables_map& vm,
             po::value<bool>()->default_value(false),
             "print projected matrices in MM format")(
             "ProjectedMatrices.replicated",
-#ifdef MGMOL_USE_SCALAPACK
             po::value<bool>()->default_value(false),
-#else
-            po::value<bool>()->default_value(true),
-#endif
             "use replicated projected matrices")("LocalizationRegions.radius",
             po::value<float>()->default_value(1000.),
             "Localization regions radius")("LocalizationRegions.adaptive",
@@ -212,6 +209,10 @@ int read_config(int argc, char** argv, po::variables_map& vm,
             "recomputed during md")("LoadBalancing.output_file",
             po::value<std::string>()->default_value(""),
             "Output file for dumping cluster information in vtk format");
+
+#ifdef MGMOL_HAS_LIBROM
+        setupROMConfigOption(config);
+#endif
 
         // Hidden options, will be allowed in config file, but will not be
         // shown to the user.
@@ -419,3 +420,37 @@ int read_config(int argc, char** argv, po::variables_map& vm,
 
     return 0;
 }
+
+#ifdef MGMOL_HAS_LIBROM
+void setupROMConfigOption(po::options_description& rom_cfg)
+{
+    rom_cfg.add_options()("ROM.stage",
+        po::value<std::string>()->default_value("none"),
+        "ROM workflow stage: offline; build; online; none.")(
+        "ROM.offline.restart_filefmt",
+        po::value<std::string>()->default_value(""),
+        "File name format to read for snapshots.")(
+        "ROM.offline.restart_min_idx", po::value<int>()->default_value(-1),
+        "Minimum index for snapshot file format.")(
+        "ROM.offline.restart_max_idx", po::value<int>()->default_value(-1),
+        "Maximum index for snapshot file format.")("ROM.offline.basis_file",
+        po::value<std::string>()->default_value(""),
+        "File name for libROM snapshot/POD matrices.")(
+        "ROM.offline.save_librom_snapshot",
+        po::value<bool>()->default_value(false),
+        "Save libROM snapshot file at FOM simulation.")(
+        "ROM.offline.librom_snapshot_freq", po::value<int>()->default_value(-1),
+        "Frequency of saving libROM snapshot file at FOM simulation.")(
+        "ROM.offline.variable", po::value<std::string>()->default_value(""),
+        "FOM variable to perform POD: either orbitals or potential.")(
+        "ROM.basis.compare_md", po::value<bool>()->default_value(false),
+        "Compare MD or single-step force.")("ROM.basis.number_of_orbital_basis",
+        po::value<int>()->default_value(-1),
+        "Number of orbital POD basis.")("ROM.basis.number_of_potential_basis",
+        po::value<int>()->default_value(-1),
+        "Number of potential POD basis to build Hartree potential ROM "
+        "operator.")("ROM.potential_rom_file",
+        po::value<std::string>()->default_value(""),
+        "File name to save/load potential ROM operators.");
+}
+#endif

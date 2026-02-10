@@ -422,7 +422,6 @@ SquareLocalMatrices<double, MemorySpace::Host> Forces<T>::getReplicatedDM()
                 proj_matrices_);
         if (projmatrices) return projmatrices->getReplicatedDM();
     }
-#ifdef MGMOL_USE_SCALAPACK
     {
         ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>* projmatrices
             = dynamic_cast<
@@ -431,7 +430,6 @@ SquareLocalMatrices<double, MemorySpace::Host> Forces<T>::getReplicatedDM()
         assert(projmatrices);
         return projmatrices->getReplicatedDM();
     }
-#endif
 }
 
 // Get the nl energy as the trace of loc_kbpsi*mat_X for several loc_kbpsi

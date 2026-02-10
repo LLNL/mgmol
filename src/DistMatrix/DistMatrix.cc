@@ -23,14 +23,14 @@
 
 #include <mpi.h>
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
 #include "blacs.h"
 #endif
 
 namespace dist_matrix
 {
 
-#ifndef MGMOL_USE_SCALAPACK
+#ifndef SCALAPACK
 int NUMROC(int* a, int* b, int* c, int* d, int* e) { return *a; }
 int INDXL2G(Pint indxloc, Pint nb, Pint iproc, Pint isrcproc, Pint nprocs)
 {
@@ -135,7 +135,7 @@ void DistMatrix<T>::resize(const int m, const int n, const int mb, const int nb)
 
     m_ = m;
     n_ = n;
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
     mb_ = std::min(mb, m);
     nb_ = std::min(nb, n);
 #else
@@ -280,7 +280,7 @@ double DistMatrix<T>::traceProduct(const DistMatrix<T>& x) const
         tsum = LinearAlgebraUtils<MemorySpace::Host>::MPdot(
             size_, &val_[0], &x.val_[0]);
     }
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     mmpi.allreduce(&tsum, &sum, 1, MPI_SUM);
 #else
@@ -325,7 +325,7 @@ void DistMatrix<T>::axpy(const double alpha, const DistMatrix<T>& x)
 template <>
 void DistMatrix<double>::identity(void)
 {
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
     char uplo    = 'n';
     double alpha = 0.0;
     double beta  = 1.0;
@@ -342,7 +342,7 @@ void DistMatrix<double>::identity(void)
 template <>
 void DistMatrix<float>::identity(void)
 {
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
     char uplo   = 'n';
     float alpha = 0.0;
     float beta  = 1.0;
@@ -371,7 +371,7 @@ DistMatrix<double>& DistMatrix<double>::operator=(const DistMatrix<double>& src)
         exit(1);
     }
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
     if (src.mb_ == mb_ && src.nb_ == nb_ && src.bc_ == bc_)
 #endif
     {
@@ -390,7 +390,7 @@ DistMatrix<double>& DistMatrix<double>::operator=(const DistMatrix<double>& src)
             memcpy(&val_[0], &src.val_[0], size_ * sizeof(double));
         }
     }
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
     else
     {
         // redistribute using function pdgemr2d
@@ -423,7 +423,7 @@ DistMatrix<float>& DistMatrix<float>::operator=(const DistMatrix<float>& src)
         exit(1);
     }
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
     if (src.mb_ == mb_ && src.nb_ == nb_ && src.bc_ == bc_)
 #endif
     {
@@ -442,7 +442,7 @@ DistMatrix<float>& DistMatrix<float>::operator=(const DistMatrix<float>& src)
             memcpy(&val_[0], &src.val_[0], size_ * sizeof(float));
         }
     }
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
     else
     {
         // redistribute using function pdgemr2d
@@ -478,7 +478,7 @@ DistMatrix<double>& DistMatrix<double>::assign(
         exit(1);
     }
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
     if (src.bc_ == bc_ && src.m_ == m_ && src.n_ == n_ && src.mb_ == mb_
         && src.nb_ == nb_)
 #endif
@@ -493,7 +493,7 @@ DistMatrix<double>& DistMatrix<double>::assign(
             }
         }
     }
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
     else
     {
         // redistribute
@@ -528,7 +528,7 @@ DistMatrix<float>& DistMatrix<float>::assign(
         exit(1);
     }
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
     if (src.bc_ == bc_ && src.m_ == m_ && src.n_ == n_ && src.mb_ == mb_
         && src.nb_ == nb_)
 #endif
@@ -543,7 +543,7 @@ DistMatrix<float>& DistMatrix<float>::assign(
             }
         }
     }
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
     else
     {
         // redistribute
@@ -589,7 +589,7 @@ void DistMatrix<double>::gemv(const char transa, const double alpha,
             assert(a.n() == m_);
         }
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         pdgemv(&transa, &m, &n, &alpha, &a.val_[0], &ione, &ione, a.desc(),
             &b.val_[0], &ione, &ione, b.desc(), &ione, &beta, &val_[0], &ione,
@@ -612,7 +612,7 @@ void DistMatrix<double>::matvec(
         char transa  = 'N';
         double alpha = 1.;
         double beta  = 0.;
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         pdgemv(&transa, &m_, &n_, &alpha, &val_[0], &ione, &ione, desc(),
             &v.val_[0], &ione, &ione, v.desc(), &ione, &beta, &y.val_[0], &ione,
@@ -648,7 +648,7 @@ void DistMatrix<float>::gemv(const char transa, const float alpha,
             assert(a.n() == m_);
         }
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         psgemv(&transa, &m, &n, &alpha, &a.val_[0], &ione, &ione, a.desc(),
             &b.val_[0], &ione, &ione, b.desc(), &ione, &beta, &val_[0], &ione,
@@ -672,7 +672,7 @@ void DistMatrix<double>::symv(const char uplo, const double alpha,
     {
         assert(a.n() == m_);
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         pdsymv(&uplo, &m_, &alpha, &a.val_[0], &ione, &ione, a.desc(),
             &b.val_[0], &ione, &ione, b.desc(), &ione, &beta, &val_[0], &ione,
@@ -696,7 +696,7 @@ void DistMatrix<float>::symv(const char uplo, const float alpha,
     {
         assert(a.n() == m_);
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         pssymv(&uplo, &m_, &alpha, &a.val_[0], &ione, &ione, a.desc(),
             &b.val_[0], &ione, &ione, b.desc(), &ione, &beta, &val_[0], &ione,
@@ -747,7 +747,7 @@ void DistMatrix<double>::gemm(const char transa, const char transb,
             assert(k == b.n());
         }
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         pdgemm(&transa, &transb, &m, &n, &k, &alpha, &a.val_[0], &ione, &ione,
             a.desc(), &b.val_[0], &ione, &ione, b.desc(), &beta, &val_[0],
@@ -793,7 +793,7 @@ void DistMatrix<float>::gemm(const char transa, const char transb,
             assert(k == b.n());
         }
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         psgemm(&transa, &transb, &m, &n, &k, &alpha, &a.val_[0], &ione, &ione,
             a.desc(), &b.val_[0], &ione, &ione, b.desc(), &beta, &val_[0],
@@ -834,7 +834,7 @@ void DistMatrix<double>::symm(const char side, const char uplo,
             assert(a.m() == b.n());
         }
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         pdsymm(&side, &uplo, &m_, &n_, &alpha, &a.val_[0], &ione, &ione,
             a.desc(), &b.val_[0], &ione, &ione, b.desc(), &beta, &val_[0],
@@ -870,7 +870,7 @@ void DistMatrix<float>::symm(const char side, const char uplo,
             assert(a.m() == b.n());
         }
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         pssymm(&side, &uplo, &m_, &n_, &alpha, &a.val_[0], &ione, &ione,
             a.desc(), &b.val_[0], &ione, &ione, b.desc(), &beta, &val_[0],
@@ -907,7 +907,7 @@ void DistMatrix<double>::trmm(const char side, const char uplo,
         {
             assert(a.n_ == n_);
         }
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         pdtrmm(&side, &uplo, &trans, &diag, &m_, &n_, &alpha, &a.val_[0], &ione,
             &ione, a.desc_, &val_[0], &ione, &ione, desc_);
@@ -933,7 +933,7 @@ void DistMatrix<float>::trmm(const char side, const char uplo, const char trans,
         {
             assert(a.n_ == n_);
         }
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         pstrmm(&side, &uplo, &trans, &diag, &m_, &n_, &alpha, &a.val_[0], &ione,
             &ione, a.desc_, &val_[0], &ione, &ione, desc_);
@@ -972,7 +972,7 @@ void DistMatrix<double>::trsm(const char side, const char uplo,
         {
             assert(a.n_ == n_);
         }
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         pdtrsm(&side, &uplo, &trans, &diag, &m_, &n_, &alpha, &a.val_[0], &ione,
             &ione, a.desc_, &val_[0], &ione, &ione, desc_);
@@ -998,7 +998,7 @@ void DistMatrix<float>::trsm(const char side, const char uplo, const char trans,
         {
             assert(a.n_ == n_);
         }
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         pstrsm(&side, &uplo, &trans, &diag, &m_, &n_, &alpha, &a.val_[0], &ione,
             &ione, a.desc_, &val_[0], &ione, &ione, desc_);
@@ -1023,7 +1023,7 @@ void DistMatrix<double>::trtrs(const char uplo, const char trans,
     {
         assert(m_ == n_);
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         pdtrtrs(&uplo, &trans, &diag, &m_, &b.n_, &val_[0], &ione, &ione, desc_,
             &b.val_[0], &ione, &ione, b.desc_, &info);
@@ -1048,7 +1048,7 @@ void DistMatrix<float>::trtrs(const char uplo, const char trans,
     {
         assert(m_ == n_);
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         pstrtrs(&uplo, &trans, &diag, &m_, &b.n_, &val_[0], &ione, &ione, desc_,
             &b.val_[0], &ione, &ione, b.desc_, &info);
@@ -1077,7 +1077,7 @@ int DistMatrix<double>::potrf(char uplo)
     {
         assert(m_ == n_);
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         pdpotrf(&uplo, &m_, val_.data(), &ione, &ione, desc_, &info);
 #else
@@ -1105,7 +1105,7 @@ int DistMatrix<float>::potrf(char uplo)
     {
         assert(m_ == n_);
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         pspotrf(&uplo, &m_, &val_[0], &ione, &ione, desc_, &info);
 #else
@@ -1132,7 +1132,7 @@ void DistMatrix<double>::getrf(std::vector<int>& ipiv)
     int info;
     if (active_)
     {
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         ipiv.resize(mb_ + mloc_);
         pdgetrf(&m_, &n_, &val_[0], &ione, &ione, desc_, &ipiv[0], &info);
@@ -1154,7 +1154,7 @@ void DistMatrix<float>::getrf(std::vector<int>& ipiv)
     int info;
     if (active_)
     {
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         ipiv.resize(mb_ + mloc_);
         psgetrf(&m_, &n_, &val_[0], &ione, &ione, desc_, &ipiv[0], &info);
@@ -1183,7 +1183,7 @@ void DistMatrix<double>::potrs(char uplo, DistMatrix<double>& b)
         assert(m_ == n_);
         assert(b.m_ == m_);
         assert(b.n_ <= n_);
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         pdpotrs(&uplo, &m_, &b.n_, &val_[0], &ione, &ione, desc_, &b.val_[0],
             &ione, &ione, b.desc_, &info);
@@ -1207,7 +1207,7 @@ void DistMatrix<float>::potrs(char uplo, DistMatrix<float>& b)
         assert(m_ == n_);
         assert(b.m_ == m_);
         assert(b.n_ <= n_);
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         pspotrs(&uplo, &m_, &b.n_, &val_[0], &ione, &ione, desc_, &b.val_[0],
             &ione, &ione, b.desc_, &info);
@@ -1235,7 +1235,7 @@ void DistMatrix<double>::getrs(
         assert(m_ == n_);
         assert(b.m_ == m_);
         assert(b.n_ <= n_);
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         assert((int)ipiv.size() == (mb_ + mloc_));
         pdgetrs(&trans, &m_, &b.n_, &val_[0], &ione, &ione, desc_, &ipiv[0],
@@ -1263,7 +1263,7 @@ void DistMatrix<float>::getrs(
         assert(m_ == n_);
         assert(b.m_ == m_);
         assert(b.n_ <= n_);
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         assert((int)ipiv.size() == (mb_ + mloc_));
         psgetrs(&trans, &m_, &b.n_, &val_[0], &ione, &ione, desc_, &ipiv[0],
@@ -1295,7 +1295,7 @@ int DistMatrix<double>::potri(char uplo)
     {
         assert(m_ == n_);
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         pdpotri(&uplo, &m_, &val_[0], &ione, &ione, desc_, &info);
 #else
@@ -1322,7 +1322,7 @@ int DistMatrix<float>::potri(char uplo)
     {
         assert(m_ == n_);
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         pspotri(&uplo, &m_, &val_[0], &ione, &ione, desc_, &info);
 #else
@@ -1350,7 +1350,7 @@ int DistMatrix<double>::trtri(char uplo, char diag)
     {
         assert(m_ == n_);
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         pdtrtri(&uplo, &diag, &m_, &val_[0], &ione, &ione, desc_, &info);
 #else
@@ -1383,7 +1383,7 @@ double DistMatrix<double>::norm(char ty)
     double norm_val = 1.;
     if (active_)
     {
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         if (ty == 'I' || ty == 'i') lwork = mloc_;
         if (ty == '1') lwork = nloc_;
@@ -1409,7 +1409,7 @@ double DistMatrix<float>::norm(char ty)
     float norm_val = 1.;
     if (active_)
     {
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         if (ty == 'I' || ty == 'i') lwork = mloc_;
         if (ty == '1') lwork = nloc_;
@@ -1444,7 +1444,7 @@ double DistMatrix<double>::pocon(char uplo, double anorm)
     {
         assert(m_ == n_);
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione     = 1;
         int lwork    = 2 * mloc_ + 3 * nloc_ + nb_ * std::min(npcol_, nprow_);
         lwork        = std::max(lwork, 1);
@@ -1490,7 +1490,7 @@ double DistMatrix<float>::pocon(char uplo, float anorm)
     {
         assert(m_ == n_);
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione    = 1;
         int lwork   = 2 * mloc_ + 3 * nloc_ + nb_ * std::min(npcol_, nprow_);
         lwork       = std::max(lwork, 1);
@@ -1552,7 +1552,7 @@ void DistMatrix<double>::syrk(
             k = a.m();
         }
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         pdsyrk(&uplo, &trans, &n, &k, &alpha, &a.val_[0], &ione, &ione,
             a.desc(), &beta, &val_[0], &ione, &ione, desc_);
@@ -1584,7 +1584,7 @@ void DistMatrix<float>::syrk(
             k = a.m();
         }
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         pssyrk(&uplo, &trans, &n, &k, &alpha, &a.val_[0], &ione, &ione,
             a.desc(), &beta, &val_[0], &ione, &ione, desc_);
@@ -1603,7 +1603,7 @@ template <>
 void DistMatrix<double>::getsub(
     const DistMatrix<double>& a, int m, int n, int ia, int ja)
 {
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
     int iap = ia + 1;
     int jap = ja + 1;
     assert(n <= n_);
@@ -1627,7 +1627,7 @@ template <>
 void DistMatrix<float>::getsub(
     const DistMatrix<float>& a, int m, int n, int ia, int ja)
 {
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
     int iap = ia + 1;
     int jap = ja + 1;
     assert(n <= n_);
@@ -1651,7 +1651,7 @@ template <>
 void DistMatrix<int>::getsub(
     const DistMatrix<int>& a, int m, int n, int ia, int ja)
 {
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
     int iap = ia + 1;
     int jap = ja + 1;
     assert(n <= n_);
@@ -1685,7 +1685,7 @@ void DistMatrix<double>::transpose(
         assert(a.m() == n_);
         assert(a.n() == m_);
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         pdtran(&m_, &n_, &alpha, &a.val_[0], &ione, &ione, a.desc(), &beta,
             &val_[0], &ione, &ione, desc_);
@@ -1714,7 +1714,7 @@ void DistMatrix<float>::transpose(
         assert(a.m() == n_);
         assert(a.n() == m_);
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         pstran(&m_, &n_, &alpha, &a.val_[0], &ione, &ione, a.desc(), &beta,
             &val_[0], &ione, &ione, desc_);
@@ -1859,7 +1859,7 @@ double DistMatrix<T>::sumProdElements(const DistMatrix<T>& a) const
     }
 
     double sum = 0.;
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
     MPI_Allreduce(&tsum, &sum, 1, MPI_DOUBLE, MPI_SUM, comm_global_);
 #else
     sum = tsum;
@@ -1896,7 +1896,7 @@ DistMatrix<T>::DistMatrix(const std::string& name, const BlacsContext& bc,
 template <>
 void DistMatrix<double>::initFromReplicated(double* const src, const int lda)
 {
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
     // all the nodes send data
     const int rev = 1;
     const int ii  = 1;
@@ -1921,7 +1921,7 @@ void DistMatrix<double>::allgather(double* const a, const int lda) const
 
     assert(m_ == n_);
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
     // all the nodes receive the data
     const int ii  = -1;
     const int jj  = -1;
@@ -1970,7 +1970,7 @@ void DistMatrix<float>::allgather(float* const a, const int lda) const
 
     assert(m_ == n_);
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
     const int ii  = -1;
     const int jj  = -1;
     const int rev = 0;
@@ -2101,7 +2101,7 @@ double DistMatrix<double>::trace(void) const
 
     if (active_)
     {
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         trace    = pdlatra(&n_, &val_[0], &ione, &ione, desc_);
 #else
@@ -2123,7 +2123,7 @@ double DistMatrix<float>::trace(void) const
 
     if (active_)
     {
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         trace    = (double)pslatra(&n_, &val_[0], &ione, &ione, desc_);
 #else
@@ -2154,7 +2154,7 @@ void DistMatrix<double>::sygst(
     {
         assert(m_ == n_);
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         double scale;
         pdsygst(&itype, &uplo, &m_, &val_[0], &ione, &ione, desc_, &b.val_[0],
@@ -2178,7 +2178,7 @@ void DistMatrix<float>::sygst(int itype, char uplo, const DistMatrix<float>& b)
     {
         assert(m_ == n_);
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         int ione = 1;
         float scale;
         pssygst(&itype, &uplo, &m_, &val_[0], &ione, &ione, desc_, &b.val_[0],
@@ -2202,7 +2202,7 @@ void DistMatrix<double>::syev(
     {
         assert(m_ == n_);
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         assert(mb_ > 1);
         int ione = 1, izero = 0;
         int nn    = std::max(mb_, m_);
@@ -2226,7 +2226,7 @@ void DistMatrix<double>::syev(
         delete[] work;
     }
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
     MPI_Bcast(&w[0], m_, MPI_DOUBLE, 0, comm_global_);
 #endif
 }
@@ -2240,7 +2240,7 @@ void DistMatrix<float>::syev(
     {
         assert(m_ == n_);
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         assert(mb_ > 1);
         int ione = 1, izero = 0;
         int nn    = std::max(mb_, m_);
@@ -2264,7 +2264,7 @@ void DistMatrix<float>::syev(
         delete[] work;
     }
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
     MPI_Bcast(&w[0], m_, MPI_FLOAT, 0, comm_global_);
 #endif
 }
@@ -2278,7 +2278,7 @@ void DistMatrix<double>::gesvd(char jobu, char jobvt, std::vector<double>& s,
     {
         assert(m_ == n_);
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         assert(mb_ > 1);
         int ione  = 1;
         int lwork = -1;
@@ -2309,7 +2309,7 @@ void DistMatrix<double>::gesvd(char jobu, char jobvt, std::vector<double>& s,
         delete[] work;
     }
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
     int m = std::min(m_, n_);
     MPI_Bcast(&s[0], m, MPI_DOUBLE, 0, comm_global_);
 #endif
@@ -2324,7 +2324,7 @@ void DistMatrix<float>::gesvd(char jobu, char jobvt, std::vector<float>& s,
     {
         assert(m_ == n_);
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
         assert(mb_ > 1);
         int ione  = 1;
         int lwork = -1;
@@ -2355,7 +2355,7 @@ void DistMatrix<float>::gesvd(char jobu, char jobvt, std::vector<float>& s,
         delete[] work;
     }
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
     int m = std::min(m_, n_);
     MPI_Bcast(&s[0], m, MPI_FLOAT, 0, comm_global_);
 #endif
@@ -2387,7 +2387,7 @@ int DistMatrix<double>::iamax(const int j, double& val)
 {
     int indx = -1;
     int incx = 1;
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
     int ix          = 1;
     int jx          = y(j) + 1; // C to fortran
     int proc_col    = pc(j);
@@ -2414,7 +2414,7 @@ int DistMatrix<float>::iamax(const int j, float& val)
 {
     int indx = -1;
     int incx = 1;
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
     int ix          = 1;
     int jx          = y(j) + 1; // C to fortran
     int proc_col    = pc(j);
@@ -2440,7 +2440,7 @@ template <>
 void DistMatrix<double>::swapColumns(const int j1, const int j2)
 {
     if (j1 == j2) return;
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
     int jx   = j1 + 1; // C to Fortran
     int jy   = j2 + 1; // C to Fortran
     int ione = 1;
@@ -2458,7 +2458,7 @@ template <>
 void DistMatrix<float>::swapColumns(const int j1, const int j2)
 {
     if (j1 == j2) return;
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
     int jx   = j1 + 1; // C to Fortran
     int jy   = j2 + 1; // C to Fortran
     int ione = 1;

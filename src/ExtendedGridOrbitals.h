@@ -11,9 +11,7 @@
 #define MGMOL_EXTENDEDGRIDORBITALS_H
 
 #include "BlockVector.h"
-#ifdef MGMOL_USE_SCALAPACK
 #include "DistMatrix.h"
-#endif
 #include "DotProductManager.h"
 #include "GridFunc.h"
 #include "HDFrestart.h"
@@ -35,9 +33,6 @@
 class ProjectedMatricesInterface;
 class LocalizationRegions;
 class ClusterOrbitals;
-#ifndef MGMOL_USE_SCALAPACK
-typedef double DISTMATDTYPE;
-#endif
 
 template <typename ScalarType>
 class ExtendedGridOrbitals : public Orbitals
@@ -57,8 +52,6 @@ private:
     static Timer assign_tm_;
     static Timer normalize_tm_;
     static Timer axpy_tm_;
-    static Timer gemm_nn_tm_;
-    static Timer gemm_tn_tm_;
 
     static int lda_; // leading dimension for storage
     static int numpt_;
@@ -88,15 +81,14 @@ private:
     //
     void projectOut(ScalarType* const, const int);
 
-    void multiply_by_ReplicatedMatrix(const ReplicatedMatrix& matrix,
-        const double alpha, ExtendedGridOrbitals<ORBDTYPE>& product);
-#ifdef MGMOL_USE_SCALAPACK
+    void multiply_by_ReplicatedMatrix(const ReplicatedMatrix& matrix);
     void multiply_by_DistMatrix(
-        const dist_matrix::DistMatrix<DISTMATDTYPE>& matrix, const double alpha,
-        ExtendedGridOrbitals<ORBDTYPE>& product);
-#endif
+        const dist_matrix::DistMatrix<DISTMATDTYPE>& matrix);
+
     void multiply_by_matrix(
         const DISTMATDTYPE* const, ScalarType*, const int) const;
+    void multiply_by_matrix(const dist_matrix::DistMatrix<DISTMATDTYPE>& matrix,
+        ScalarType* const product, const int ldp);
     void scal(const int i, const double alpha) { block_vector_.scal(i, alpha); }
     virtual void assign(const int i, const ScalarType* const v, const int n = 1)
     {
@@ -123,10 +115,8 @@ private:
     /*!
      * Specialized functions
      */
-#ifdef MGMOL_USE_SCALAPACK
     void addDotWithNcol2DistMatrix(
         ExtendedGridOrbitals&, dist_matrix::DistMatrix<DISTMATDTYPE>&) const;
-#endif
     void addDotWithNcol2ReplicatedMatrix(
         ExtendedGridOrbitals&, ReplicatedMatrix&) const;
 
@@ -310,11 +300,9 @@ public:
 
     void computeGram(const int verbosity = 0);
     void computeGramAndInvS(const int verbosity = 0);
-#ifdef MGMOL_USE_SCALAPACK
     void computeGram(dist_matrix::DistMatrix<DISTMATDTYPE>& gram_mat);
     void computeGram(const ExtendedGridOrbitals& orbitals,
         dist_matrix::DistMatrix<DISTMATDTYPE>& gram_mat);
-#endif
 
     ScalarType maxAbsValue() const { return block_vector_.maxAbsValue(); }
 
@@ -384,8 +372,7 @@ public:
     void multiply_by_matrix(
         const DISTMATDTYPE* const matrix, ExtendedGridOrbitals& product) const;
     template <class MatrixType>
-    void multiply_by_matrix(const MatrixType&, const double alpha,
-        ExtendedGridOrbitals<ORBDTYPE>& product);
+    void multiply_by_matrix(const MatrixType&);
     void multiplyByMatrix2states(const int st1, const int st2,
         const double* mat, ExtendedGridOrbitals& product);
 
@@ -415,18 +402,10 @@ public:
         const pb::Grid& mygrid = mymesh->grid();
         return mygrid.maxDomainSize();
     }
-};
 
-template <typename ScalarType>
-int ExtendedGridOrbitals<ScalarType>::lda_ = 0;
-template <typename ScalarType>
-int ExtendedGridOrbitals<ScalarType>::numpt_ = 0;
-template <typename ScalarType>
-int ExtendedGridOrbitals<ScalarType>::data_wghosts_index_ = -1;
-template <typename ScalarType>
-int ExtendedGridOrbitals<ScalarType>::numst_ = -1;
-template <typename ScalarType>
-std::vector<std::vector<int>>
-    ExtendedGridOrbitals<ScalarType>::overlapping_gids_;
+#ifdef MGMOL_HAS_LIBROM
+    void set(std::string file_path, int rdim);
+#endif
+};
 
 #endif

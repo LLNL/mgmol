@@ -9,7 +9,7 @@
 #include "GramMatrix.h"
 #include "ReplicatedMatrix.h"
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifndef HAVE_MAGMA
 #include "BlacsContext.h"
 #include "DistMatrix.h"
 #endif
@@ -20,10 +20,10 @@
 
 TEST_CASE("Check functionalities of class GramMatrix", "[functions_GramMatrix")
 {
-#ifdef MGMOL_USE_SCALAPACK
-    typedef dist_matrix::DistMatrix<double> MatrixType;
-#else
+#ifdef HAVE_MAGMA
     typedef ReplicatedMatrix MatrixType;
+#else
+    typedef dist_matrix::DistMatrix<double> MatrixType;
 #endif
     int myrank;
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
@@ -33,7 +33,7 @@ TEST_CASE("Check functionalities of class GramMatrix", "[functions_GramMatrix")
 
     MGmol_MPI::setup(MPI_COMM_WORLD, std::cout);
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifndef HAVE_MAGMA
     INFO("This example to set up to use only 4 processes");
     REQUIRE(npes == 4);
 

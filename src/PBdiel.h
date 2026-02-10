@@ -6,8 +6,10 @@
 // All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
-#ifndef MGMOL_included_PBdiel
-#define MGMOL_included_PBdiel
+
+// $Id$
+#ifndef included_PBdiel
+#define included_PBdiel
 
 #include "MPIdata.h"
 #include "Poisson.h"

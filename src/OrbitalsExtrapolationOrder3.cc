@@ -8,13 +8,10 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "OrbitalsExtrapolationOrder3.h"
+#include "DistMatrixTools.h"
 #include "ExtendedGridOrbitals.h"
 #include "LocGridOrbitals.h"
 #include "ProjectedMatrices.h"
-
-#ifdef MGMOL_USE_SCALAPACK
-#include "DistMatrixTools.h"
-#endif
 
 template <class OrbitalsType>
 void OrbitalsExtrapolationOrder3<OrbitalsType>::extrapolate_orbitals(
@@ -24,7 +21,6 @@ void OrbitalsExtrapolationOrder3<OrbitalsType>::extrapolate_orbitals(
 
     new_orbitals->assign(**orbitals);
 
-#ifdef MGMOL_USE_SCALAPACK
     bool use_dense_proj_mat = false;
     if (ct.OuterSolver() != OuterSolverType::ABPG
         && ct.OuterSolver() != OuterSolverType::NLCG)
@@ -36,7 +32,6 @@ void OrbitalsExtrapolationOrder3<OrbitalsType>::extrapolate_orbitals(
                 proj_matrices))
             use_dense_proj_mat = true;
     }
-#endif
 
     // do the extrapolation if previous orbitals exist (not at first step)
 
@@ -47,8 +42,7 @@ void OrbitalsExtrapolationOrder3<OrbitalsType>::extrapolate_orbitals(
         if (ct.verbose > 1 && onpe0)
             (*MPIdata::sout) << "Extrapolate orbitals using 3rd order scheme..."
                              << std::endl;
-            // align orbitals_minus1 with new_orbitals
-#ifdef MGMOL_USE_SCALAPACK
+        // align orbitals_minus1 with new_orbitals
         if (use_dense_proj_mat)
         {
             dist_matrix::DistMatrix<DISTMATDTYPE> matQ("Q", ct.numst, ct.numst);
@@ -58,30 +52,26 @@ void OrbitalsExtrapolationOrder3<OrbitalsType>::extrapolate_orbitals(
             // alignement
             orbitals_minus1_->computeGram(*new_orbitals, matQ);
             getProcrustesTransform(matQ, yyt);
-            orbitals_minus1_->multiply_by_matrix(matQ, 0., *orbitals_minus1_);
+            orbitals_minus1_->multiply_by_matrix(matQ);
 
             // compute delta Phi
             tmp_orbitals_minus1.assign(*orbitals_minus1_);
             tmp_orbitals_minus1.axpy((ORBDTYPE)-1., *new_orbitals);
-            tmp_orbitals_minus1.multiply_by_matrix(
-                yyt, 0., tmp_orbitals_minus1);
+            tmp_orbitals_minus1.multiply_by_matrix(yyt);
 
             if (orbitals_minus2_ != nullptr)
             {
                 // alignement
                 orbitals_minus2_->computeGram(*new_orbitals, matQ);
                 getProcrustesTransform(matQ, yyt);
-                orbitals_minus2_->multiply_by_matrix(
-                    matQ, 0., *orbitals_minus2_);
+                orbitals_minus2_->multiply_by_matrix(matQ);
 
                 // compute delta Phi
                 orbitals_minus2_->axpy((ORBDTYPE)-1., *orbitals_minus1_);
-                orbitals_minus2_->multiply_by_matrix(
-                    yyt, 0., *orbitals_minus2_);
+                orbitals_minus2_->multiply_by_matrix(yyt);
             }
         }
         else
-#endif
         {
             tmp_orbitals_minus1.assign(*orbitals_minus1_);
             if (orbitals_minus2_ != nullptr)
@@ -112,6 +102,10 @@ void OrbitalsExtrapolationOrder3<OrbitalsType>::extrapolate_orbitals(
     }
 
     orbitals_minus1_ = *orbitals;
+
+    if (use_dense_proj_mat)
+    {
+    }
 
     *orbitals = new_orbitals;
 

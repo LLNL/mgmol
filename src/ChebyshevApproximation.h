@@ -59,14 +59,4 @@ public:
     }
 };
 
-template <class MatrixType>
-Timer ChebyshevApproximation<MatrixType>::compute_tm_(
-    "ChebyshevApproximation::compute");
-template <class MatrixType>
-Timer ChebyshevApproximation<MatrixType>::compute2_tm_(
-    "ChebyshevApproximation::compute2");
-template <class MatrixType>
-Timer ChebyshevApproximation<MatrixType>::build_nodes_tm_(
-    "ChebyshevApproximation::build_nodes");
-
 #endif
