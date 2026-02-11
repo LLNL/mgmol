@@ -1,4 +1,7 @@
 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/mgmol_config.h.in
+  ${CMAKE_CURRENT_SOURCE_DIR}/mgmol_config.h @ONLY)
+
 add_subdirectory(linear_algebra)
 add_subdirectory(local_matrices)
 add_subdirectory(numerical_kernels)
@@ -172,8 +175,6 @@ if(USE_LIBROM)
   list(APPEND SOURCES
     rom_workflows.cc)
 endif(USE_LIBROM)
-
-add_library(mgmol_src ${SOURCES})
 
 if(${MGMOL_WITH_SCALAPACK})
   set(SCALAPACK_SOURCES
