@@ -982,6 +982,44 @@ void testROMIonDensity(MGmolInterface* mgmol_)
             abs(fom_rhoc[test_idx][sampled_row[d]] - sampled_rhoc[d]) < 1.0e-2);
     }
 
+    // Convert std::vector to CAROM::Vector for multiplication
+    CAROM::Vector sample_rhoc_carom(sampled_rhoc.data(), sampled_rhoc.size(), true);
+
+    /* Reconstruct the ROM coefficients (alpha) */
+    CAROM::Vector *rom_rhoc = rhoc_basis_inv.mult(sample_rhoc_carom);
+
+    // Verification of ROM coefficients
+    for (int d = 0; d < rom_rhoc->dim(); d++)
+    {
+        if ((rank == 0) && (abs(proj_rhoc->item(d, test_idx) - rom_rhoc->item(d)) > 1.0e-3))
+            printf("rom_rhoc coeff error: %.3e\n", abs(proj_rhoc->item(d, test_idx) - rom_rhoc->item(d)));
+        CAROM_VERIFY(abs(proj_rhoc->item(d, test_idx) - rom_rhoc->item(d)) < 1.0e-3);
+    }
+
+    /* Reconstruct the full-order ion density */
+    CAROM::Vector *fom_rhoc_reconstructed = rhoc_basis->mult(*rom_rhoc);
+
+    // rescale rho_comp_ due to finite mesh effects
+    CAROM_VERIFY(fom_rhoc_reconstructed->dim() == dim);
+    mgmol->electrostat_->setupRhoc(fom_rhoc_reconstructed->getData());
+    pot.rescaleRhoComp();
+    pot.initBackground();
+    pot.addBackgroundToRhoComp();
+    std::vector<RHODTYPE> fom_rhoc_rescaled(dim);
+    mgmol->electrostat_->getRhoc()->init_vect(fom_rhoc_rescaled.data(), 'd');
+
+    // Verification of reconstructed full-order ion density
+    for (int d = 0; d < dim; d++)
+    {
+        if (abs(fom_rhoc_rescaled[d] - fom_rhoc[test_idx][d]) > 1.0e-4)
+            printf("rank %d, FOM rhoc: %.3e, Reconstructed ROM rhoc: %.3e, Error: %.3e\n",
+                   rank, fom_rhoc[test_idx][d], fom_rhoc_rescaled[d],
+                   abs(fom_rhoc_rescaled[d] - fom_rhoc[test_idx][d]));
+        CAROM_VERIFY(abs(fom_rhoc_rescaled[d] - fom_rhoc[test_idx][d]) < 1.0e-4);
+    }
+
+    delete rom_rhoc;
+    delete fom_rhoc_reconstructed;
     delete new_ions;
 }
 
