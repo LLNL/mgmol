@@ -1,5 +1,6 @@
-module load hdf5
+module load hdf5/1.14.3-mpi
 module load boost
 module load cmake
 module load python
 module load openblas
+module load netlib-scalapack/2.2.0-mpi
