@@ -13,17 +13,17 @@ BUILD_DIR=${MGMOL_ROOT}/build
 mkdir -p ${BUILD_DIR}
 cd ${BUILD_DIR}
 
-SCALAPACK_DIR=/home/q8j/Software/ScaLapack/scalapack-2.2.2
+SCALAPACK_DIR=$OLCF_NETLIB_SCALAPACK_ROOT
 
 # call cmake 
 cmake -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} \
       -DCMAKE_BUILD_TYPE=Release \
       -DCMAKE_CXX_COMPILER=mpiCC \
       -DCMAKE_Fortran_COMPILER=mpif77 \
-      -DMGMOL_USE_HDF5P=OFF \
+      -DMGMOL_USE_HDF5P=ON \
       -DMGMOL_WITH_CLANG_FORMAT=ON \
       -DCMAKE_PREFIX_PATH=${HOME}/bin \
-      -DSCALAPACK_LIBRARY="${SCALAPACK_DIR}/lib/libscalapack.a;/lib64/libgfortran.so.5" \
+      -DSCALAPACK_LIBRARY="${SCALAPACK_DIR}/lib/libscalapack.so" \
       -DMPIEXEC_EXECUTABLE=${OPENMPI_DIR}/bin/mpiexec \
       ..
 
