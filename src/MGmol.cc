@@ -1585,6 +1585,66 @@ double MGmol<OrbitalsType>::evaluateDMandEnergyAndForces(Orbitals* orbitals,
     return eks;
 }
 
+/* Compute linear (nonlocal) part of Hamiltonian */
+/* Assumes ion positions are up-to-date so uses internal *ions_ 
+   instead of a temporary Ions object.
+*/
+template <class OrbitalsType>
+template <class MatrixType>
+void MGmol<OrbitalsType>::computeHnl(Orbitals* orbitals, MatrixType& mat)
+{
+    OrbitalsType* dorbitals = dynamic_cast<OrbitalsType*>(orbitals);
+    assert(dorbitals != nullptr);
+    
+    setupPotentials(*ions_);
+    g_kbpsi_->computeAll(*ions_, *dorbitals);
+    g_kbpsi_->computeHvnlMatrix(g_kbpsi_.get(), *ions_, mat);
+}
+
+/* Wrappers to templated function to support runtime polymorphism */
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::computeHnl(Orbitals* orbitals, ReplicatedMatrix& mat)
+{
+    MGmol<OrbitalsType>::computeHnl<ReplicatedMatrix>(orbitals, mat);
+}
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::computeHnl(Orbitals* orbitals, dist_matrix::DistMatrix<DISTMATDTYPE>& mat)
+{
+        MGmol<OrbitalsType>::computeHnl<dist_matrix::DistMatrix<DISTMATDTYPE>>(orbitals, mat);
+}
+
+/* Update local Hamiltonian with (precomputed) non-local part */
+template <class OrbitalsType>
+template <class MatrixType>
+void MGmol<OrbitalsType>::updateHFromHnl(Orbitals* orbitals, MatrixType& Hnl, MatrixType& mat)
+{
+    Control& ct = *(Control::instance()); 
+    OrbitalsType* dorbitals = dynamic_cast<OrbitalsType*>(orbitals);
+    
+    /* copy precomputed nonlocal part of H */
+    mat = Hnl;
+    
+    /* Update electron density and potentials */   
+    rho_->update(*dorbitals);
+    update_pot(*ions_);
+    
+    /* Update local Hamiltonian with non_local part */
+    OrbitalsType hphi("hphi", *dorbitals);    
+    hamiltonian_->applyLocal(ct.numst, *dorbitals, hphi);
+    dorbitals->addDotWithNcol2Matrix(hphi, mat);
+}
+/* Wrappers to templated function to support runtime polymorphism */
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::updateHFromHnl(Orbitals* orbitals, ReplicatedMatrix& Hnl, ReplicatedMatrix& mat)
+{
+    MGmol<OrbitalsType>::updateHFromHnl<ReplicatedMatrix>(orbitals, Hnl, mat);
+}
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::updateHFromHnl(Orbitals* orbitals, dist_matrix::DistMatrix<DISTMATDTYPE>& Hnl, dist_matrix::DistMatrix<DISTMATDTYPE>& mat)
+{
+    MGmol<OrbitalsType>::updateHFromHnl<dist_matrix::DistMatrix<DISTMATDTYPE>>(orbitals, Hnl, mat);
+}
+
 template class MGmol<LocGridOrbitals<ORBDTYPE>>;
 template class MGmol<ExtendedGridOrbitals<ORBDTYPE>>;
 template int MGmol<LocGridOrbitals<ORBDTYPE>>::initial<MemorySpace::Host>();
@@ -1595,3 +1655,10 @@ template int MGmol<LocGridOrbitals<ORBDTYPE>>::initial<MemorySpace::Device>();
 template int
 MGmol<ExtendedGridOrbitals<ORBDTYPE>>::initial<MemorySpace::Device>();
 #endif
+template void MGmol<ExtendedGridOrbitals<ORBDTYPE>>::computeHnl<ReplicatedMatrix>(Orbitals* orbitals, ReplicatedMatrix& mat);
+template void MGmol<LocGridOrbitals<ORBDTYPE>>::computeHnl<dist_matrix::DistMatrix<DISTMATDTYPE>>
+(Orbitals* orbitals, dist_matrix::DistMatrix<DISTMATDTYPE>& mat);
+template void MGmol<ExtendedGridOrbitals<ORBDTYPE>>::updateHFromHnl<ReplicatedMatrix>
+(Orbitals* orbitals, ReplicatedMatrix& Hnl, ReplicatedMatrix& mat);
+template void MGmol<LocGridOrbitals<ORBDTYPE>>::updateHFromHnl<dist_matrix::DistMatrix<DISTMATDTYPE>>
+(Orbitals* orbitals, dist_matrix::DistMatrix<DISTMATDTYPE>& Hnl, dist_matrix::DistMatrix<DISTMATDTYPE>& mat);

@@ -343,6 +343,17 @@ public:
     {
         return proj_matrices_;
     }
+    
+    /* Compute linear (nonlocal) part of Hamiltonian */
+    template <class MatrixType>
+    void computeHnl(Orbitals* orbitals, MatrixType& mat);
+    void computeHnl(Orbitals* orbitals,  ReplicatedMatrix& mat) override;
+    void computeHnl(Orbitals* orbitals,  dist_matrix::DistMatrix<DISTMATDTYPE>& mat) override;    
+
+    template <class MatrixType>
+    void updateHFromHnl(Orbitals* orbitals, MatrixType& Hnl, MatrixType& mat);
+    void updateHFromHnl(Orbitals* orbitals, ReplicatedMatrix& Hnl, ReplicatedMatrix& mat) override;
+    void updateHFromHnl(Orbitals* orbitals, dist_matrix::DistMatrix<DISTMATDTYPE>& Hnl, dist_matrix::DistMatrix<DISTMATDTYPE>& mat) override;
 };
 // Instantiate static variables here to avoid clang warnings
 template <class OrbitalsType>

@@ -44,6 +44,10 @@ public:
     virtual std::shared_ptr<ProjectedMatricesInterface> getProjectedMatrices()
         = 0;
     virtual void dumpRestart() = 0;
+    virtual void computeHnl(Orbitals*,  ReplicatedMatrix&) = 0;
+    virtual void computeHnl(Orbitals*,  dist_matrix::DistMatrix<DISTMATDTYPE>&) = 0;
+    virtual void updateHFromHnl(Orbitals* orbitals, ReplicatedMatrix& Hnl, ReplicatedMatrix& mat) = 0;
+    virtual void updateHFromHnl(Orbitals* orbitals, dist_matrix::DistMatrix<DISTMATDTYPE>& Hnl, dist_matrix::DistMatrix<DISTMATDTYPE>& mat) = 0;       
 };
 
 #endif
