@@ -321,6 +321,8 @@ add_executable(testDMandEnergyAndForces
                ${CMAKE_SOURCE_DIR}/tests/DMandEnergyAndForces/testDMandEnergyAndForces.cc)
 add_executable(testRestartEnergyAndForces
                ${CMAKE_SOURCE_DIR}/tests/RestartEnergyAndForces/testRestartEnergyAndForces.cc)
+add_executable(testTDDFT
+               ${CMAKE_SOURCE_DIR}/tests/TDDFT/testTDDFT.cc)
 
 if(${MAGMA_FOUND})
   add_executable(testOpenmpOffload
@@ -464,7 +466,14 @@ add_test(NAME testRhoVhRestart
          ${CMAKE_CURRENT_SOURCE_DIR}/RhoVhRestart/restart.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/RhoVhRestart/h2o.xyz
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
-
+add_test(NAME testTDDFT
+         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/TDDFT/test.py
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+         ${CMAKE_CURRENT_BINARY_DIR}/testTDDFT
+         ${CMAKE_CURRENT_SOURCE_DIR}/TDDFT/mgmol.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/TDDFT/coords.in
+         ${CMAKE_CURRENT_SOURCE_DIR}/TDDFT/lrs.in
+         ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 
 if(${MAGMA_FOUND}) 
   add_test(NAME testOpenmpOffload
@@ -778,6 +787,7 @@ target_link_libraries(testDMandEnergyAndForces PRIVATE mgmol_src)
 target_link_libraries(testRestartEnergyAndForces PRIVATE mgmol_src)
 target_link_libraries(testIons PRIVATE mgmol_src)
 target_link_libraries(testRhoVhRestart mgmol_src)
+target_link_libraries(testTDDFT PRIVATE mgmol_src)
 
 if(${MAGMA_FOUND})
   target_link_libraries(testDistVector PRIVATE ${SCALAPACK_LIBRARIES}
