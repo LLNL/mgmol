@@ -1,0 +1,47 @@
+#!/bin/tcsh
+#SBATCH -N 2
+#SBATCH -t 1:00:00
+#SBATCH -p pdebug
+
+date
+
+set maindir = /p/lustre2/cheung26/mgmol
+set exe     = ${maindir}/install_quartz/bin/mgmol-opt
+set datadir = $maindir/examples/H2O_64
+set cfg_quench = mgmol_quench.cfg
+set cfg_md = mgmol_md.cfg
+
+set temperature_min = 300
+set temperature_max = 400
+set temperature_num_increments = 1
+
+mkdir data
+
+foreach k (`seq 0 $temperature_num_increments`)
+  set temperature = `echo "scale=1; $temperature_min + $k * ($temperature_max - $temperature_min) / ($temperature_num_increments)" | bc` 
+  set tag = H2O_64_$temperature
+  echo ${tag}
+
+  if (-e data/${tag}) then
+    continue
+  else
+    mkdir data/${tag}
+  endif
+
+  cp $cfg_quench data/${tag}
+  cp $cfg_md data/${tag}
+  cp coords.in data/${tag}
+  cp job.snap data/${tag}
+
+  cd data/${tag}
+  ln -s -f $maindir/potentials/pseudo.O_ONCV_PBE_SG15 .
+  ln -s -f $maindir/potentials/pseudo.D_ONCV_PBE_SG15 .
+  sed -i -e "s/CUSTOM_TAG/${tag}/g" ${cfg_quench}
+  sed -i -e "s/CUSTOM_TEMPERATURE/${temperature}/g" ${cfg_quench}
+  sed -i -e "s/CUSTOM_TAG/${tag}/g" ${cfg_md}
+  sed -i -e "s/CUSTOM_TEMPERATURE/${temperature}/g" ${cfg_md}
+  sbatch job.snap
+  cd ../..
+end
+
+date
