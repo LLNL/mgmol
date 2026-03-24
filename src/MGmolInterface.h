@@ -47,7 +47,9 @@ public:
     virtual void computeHnl(Orbitals*,  ReplicatedMatrix&) = 0;
     virtual void computeHnl(Orbitals*,  dist_matrix::DistMatrix<DISTMATDTYPE>&) = 0;
     virtual void updateHFromHnl(Orbitals* orbitals, ReplicatedMatrix& Hnl, ReplicatedMatrix& mat) = 0;
-    virtual void updateHFromHnl(Orbitals* orbitals, dist_matrix::DistMatrix<DISTMATDTYPE>& Hnl, dist_matrix::DistMatrix<DISTMATDTYPE>& mat) = 0;       
+    virtual void updateHFromHnl(Orbitals* orbitals, dist_matrix::DistMatrix<DISTMATDTYPE>& Hnl, dist_matrix::DistMatrix<DISTMATDTYPE>& mat) = 0;
+    virtual void finalEnergy() = 0;
+    virtual double getTotalEnergy() = 0;
 };
 
 #endif

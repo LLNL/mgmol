@@ -299,7 +299,7 @@ public:
     void sebprintPositions();
     void sebprintForces();
     int nions() { return ions_->getNumIons(); }
-    double getTotalEnergy();
+    double getTotalEnergy() override;
     void cleanup() override;
     void geomOptimSetup();
     void geomOptimQuench();
@@ -309,7 +309,7 @@ public:
     void geomOptimSetForces(const std::vector<std::vector<double>>& f);
     short geomOptimCheckTolForces(const double tol_force);
 
-    void finalEnergy();
+    void finalEnergy() override;
     void printMM();
 
     void projectOutKernel(OrbitalsType& phi);
