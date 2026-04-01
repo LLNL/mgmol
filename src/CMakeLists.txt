@@ -48,7 +48,8 @@ set(SOURCES
  DMStrategyFactory.cc
  manage_memory.cc
  SubCell.cc
- SinCosOps.cc 
+ SinCosOps.cc
+ XYZOps.cc
  PolakRibiereSolver.cc 
  EnergySpreadPenalty.cc 
  SpreadPenalty.cc 

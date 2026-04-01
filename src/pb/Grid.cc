@@ -281,6 +281,30 @@ void Grid::getSinCosFunctions(std::vector<T>& sinx, std::vector<T>& siny,
         cosz[i] = std::cos(T(zoff + i) * hhz) * alphaz;
 }
 
+template <typename T>
+void Grid::getXYZFunctions(
+    std::vector<T>& x, std::vector<T>& y, std::vector<T>& z) const
+{
+    x.resize(dim_[0]);
+    y.resize(dim_[1]);
+    z.resize(dim_[2]);
+
+    const T hhx = ll_[0] / (T)gdim_[0];
+    const T hhy = ll_[1] / (T)gdim_[1];
+    const T hhz = ll_[2] / (T)gdim_[2];
+
+    const int xoff = istart_[0];
+    const int yoff = istart_[1];
+    const int zoff = istart_[2];
+
+    for (unsigned int i = 0; i < dim_[0]; i++)
+        x[i] = T(xoff + i) * hhx;
+    for (unsigned int i = 0; i < dim_[1]; i++)
+        y[i] = T(yoff + i) * hhy;
+    for (unsigned int i = 0; i < dim_[2]; i++)
+        z[i] = T(zoff + i) * hhz;
+}
+
 Vector3D Grid::closestGridPt(Vector3D coords) const
 {
     for (int i = 0; i < 3; i++)

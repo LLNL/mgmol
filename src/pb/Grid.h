@@ -118,6 +118,10 @@ public:
     void getSinCosFunctions(std::vector<T>& sinx, std::vector<T>& siny,
         std::vector<T>& sinz, std::vector<T>& cosx, std::vector<T>& cosy,
         std::vector<T>& cosz) const;
+
+    template <typename T>
+    void getXYZFunctions(
+        std::vector<T>& x, std::vector<T>& y, std::vector<T>& z) const;
 };
 
 } // namespace pb

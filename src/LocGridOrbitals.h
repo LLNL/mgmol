@@ -24,6 +24,7 @@
 #include "SaveData.h"
 #include "SinCosOps.h"
 #include "SquareLocalMatrices.h"
+#include "XYZOps.h"
 
 #include "hdf5.h"
 #include <iostream>
@@ -173,6 +174,7 @@ protected:
 
 public:
     friend class SinCosOps<LocGridOrbitals>;
+    friend class XYZOps<LocGridOrbitals>;
 
     double norm() const;
 

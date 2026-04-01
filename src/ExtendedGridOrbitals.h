@@ -25,6 +25,7 @@
 #include "ReplicatedMatrix.h"
 #include "SinCosOps.h"
 #include "SquareLocalMatrices.h"
+#include "XYZOps.h"
 
 #include "hdf5.h"
 #include <iostream>
@@ -155,6 +156,7 @@ protected:
 
 public:
     friend class SinCosOps<ExtendedGridOrbitals>;
+    friend class XYZOps<ExtendedGridOrbitals>;
 
     double norm() const;
 
