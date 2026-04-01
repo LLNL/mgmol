@@ -69,15 +69,15 @@ void XYZOps<OrbitalsType>::compute(
             if (i != -1)
             {
                 const OrbitalsDataType* const ppsii = psi_view + ld * icolor;
-                for (int jstate = 0; jstate <= icolor; jstate++)
+                for (int jcolor = 0; jcolor <= icolor; jcolor++)
                 {
-                    const int j = orbitals.overlapping_gids_[iloc][jstate];
+                    const int j = orbitals.overlapping_gids_[iloc][jcolor];
                     if (j != -1)
                     {
                         const OrbitalsDataType* const ppsij
-                            = psi_view + ld * jstate;
+                            = psi_view + ld * jcolor;
 
-                        double atmp[6]  = { 0., 0., 0., 0., 0., 0. };
+                        double atmp[3]  = { 0., 0., 0. };
                         const int ixend = loc_length * (iloc + 1);
 
                         // loop over patch
@@ -117,7 +117,7 @@ void XYZOps<OrbitalsType>::compute(
         psi_view);
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    for (short i = 0; i < 6; i++)
+    for (short i = 0; i < 3; i++)
     {
         mmpi.split_allreduce_sums_double(&a[i][0], n2);
         my_dscal(n2, grid.vel(), &a[i][0]);

@@ -337,7 +337,7 @@ void Control::sync(void)
     if (onpe0 && verbose > 0)
         (*MPIdata::sout) << "Control::sync()" << std::endl;
     // pack
-    const short size_short_buffer = 95;
+    const short size_short_buffer = 96;
     short* short_buffer           = new short[size_short_buffer];
     if (mype_ == 0)
     {
@@ -431,6 +431,7 @@ void Control::sync(void)
         short_buffer[92] = precond_precision_;
         short_buffer[93] = mg_npresmoothing_;
         short_buffer[94] = mg_npostsmoothing_;
+        short_buffer[95] = compute_dipole_;
     }
     else
     {
@@ -650,6 +651,7 @@ void Control::sync(void)
     precond_precision_ = short_buffer[92];
     mg_npresmoothing_  = short_buffer[93];
     mg_npostsmoothing_ = short_buffer[94];
+    compute_dipole_    = short_buffer[95];
 
     numst    = int_buffer[0];
     nel_     = int_buffer[1];
@@ -1807,6 +1809,7 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         }
         wannier_transform_type
             = vm["Quench.MLWF"].as<bool>() ? 2 : wannier_transform_type;
+        compute_dipole_ = vm["Quench.Dipole"].as<bool>() ? 1 : 0;
 
         maxDistanceAtomicInfo_ = vm["Parallel.atomic_info_radius"].as<float>();
 
@@ -1917,6 +1920,13 @@ int Control::checkOptions()
             << "ERROR: Max. number of iterations for computing interval for "
                "Chebyshev approximation for the density matrix must be > 0"
             << std::endl;
+    }
+    if (compute_dipole_ && !rmatrices)
+    {
+        (*MPIdata::sout)
+            << "ERROR: Dipole computation requires replicated matrices"
+            << std::endl;
+        return -1;
     }
     return 0;
 }

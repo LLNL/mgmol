@@ -48,6 +48,10 @@
 #include "OrbitalsTransform.h"
 #endif
 
+template <class OrbitalsType, class MatrixType>
+void computeDipoleMoment(const OrbitalsType& orbitals, Ions& ions,
+    ProjectedMatrices<MatrixType>& projmatrices);
+
 #define TEST_ENERGY 0
 
 Timer quench_tm("quench");
@@ -673,6 +677,16 @@ int MGmol<OrbitalsType>::quench(OrbitalsType& orbitals, Ions& ions,
             spreadf_->print(os_);
             spreadf_->printStats(os_);
         }
+    }
+
+    if (ct.compute_dipole_)
+    {
+        ProjectedMatrices<ReplicatedMatrix>* projmatrices
+            = dynamic_cast<ProjectedMatrices<ReplicatedMatrix>*>(
+                proj_matrices_.get());
+        assert(projmatrices != nullptr);
+
+        computeDipoleMoment(orbitals, ions, *projmatrices);
     }
 
 #ifdef MGMOL_USE_SCALAPACK

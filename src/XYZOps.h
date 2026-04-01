@@ -27,6 +27,6 @@ public:
 };
 
 template <class OrbitalsType>
-Timer XYZOps<OrbitalsType>::compute_tm_("SinCosOps::compute_tm");
+Timer XYZOps<OrbitalsType>::compute_tm_("XYZOps::compute_tm");
 
 #endif

@@ -50,6 +50,7 @@ set(SOURCES
  SubCell.cc
  SinCosOps.cc
  XYZOps.cc
+ DipoleMoment.cc
  PolakRibiereSolver.cc 
  EnergySpreadPenalty.cc 
  SpreadPenalty.cc 

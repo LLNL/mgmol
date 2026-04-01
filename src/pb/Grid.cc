@@ -298,11 +298,11 @@ void Grid::getXYZFunctions(
     const int zoff = istart_[2];
 
     for (unsigned int i = 0; i < dim_[0]; i++)
-        x[i] = T(xoff + i) * hhx;
+        x[i] = origin_[0] + T(xoff + i) * hhx;
     for (unsigned int i = 0; i < dim_[1]; i++)
-        y[i] = T(yoff + i) * hhy;
+        y[i] = origin_[1] + T(yoff + i) * hhy;
     for (unsigned int i = 0; i < dim_[2]; i++)
-        z[i] = T(zoff + i) * hhz;
+        z[i] = origin_[2] + T(zoff + i) * hhz;
 }
 
 Vector3D Grid::closestGridPt(Vector3D coords) const
@@ -347,5 +347,7 @@ template void Grid::getSinCosFunctions(std::vector<double>& sinx,
     std::vector<double>& siny, std::vector<double>& sinz,
     std::vector<double>& cosx, std::vector<double>& cosy,
     std::vector<double>& cosz) const;
+template void Grid::getXYZFunctions(std::vector<double>& x,
+    std::vector<double>& y, std::vector<double>& z) const;
 
 } // namespace pb
