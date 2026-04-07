@@ -703,19 +703,15 @@ void Ions::lockAtom(const std::string& name)
     }
 }
 
-void Ions::readLockedAtomNames(HDFrestart& h5f_file)
+void Ions::readAndLockAtoms(HDFrestart& h5f_file)
 {
-    int dim = 0;
-
-    if (dim == 0) return;
-
     std::vector<std::string> data;
     std::string datasetname("/LockedAtomsNames");
     h5f_file.readAtomicData(datasetname, data);
 
-    for (auto& i : data)
+    for (auto& name : data)
     {
-        lockAtom(i);
+        lockAtom(name);
     }
 }
 
@@ -999,7 +995,7 @@ void Ions::initFromRestartFile(HDFrestart& h5_file)
     readRestartPositions(h5_file);
     readRestartVelocities(h5_file);
     if (ct.LangevinThermostat()) readRestartRandomStates(h5_file);
-    readLockedAtomNames(h5_file);
+    readAndLockAtoms(h5_file);
 
     // remove atoms from local list if not local
     for (std::vector<Ion*>::iterator it = local_ions_.begin();

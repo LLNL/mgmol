@@ -520,6 +520,14 @@ add_test(NAME testContinuumSolvent
          ${CMAKE_CURRENT_SOURCE_DIR}/ContinuumSolvent/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/ContinuumSolvent/lrs.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+add_test(NAME testPinnedMolecule
+         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/PinnedMolecule/test.py
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+         ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
+         ${CMAKE_CURRENT_SOURCE_DIR}/PinnedMolecule/quench.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/PinnedMolecule/md.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/PinnedMolecule/coords.in
+         ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME Davidson
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Davidson/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
