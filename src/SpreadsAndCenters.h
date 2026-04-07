@@ -134,13 +134,10 @@ public:
     void computePositionMatrix(const T& orbitals);
 
     void computeSinCos(const T& orbitals);
-    void computeSinCosSquare(const T& orbitals);
-    void computeSinCosSquare1D(const T& orbitals, const int dir);
     void computeSinCos2states(const T& orbitals, const int st1, const int st2);
     void computeSinCosDiag2states(
         const T& orbitals, const int st1, const int st2);
 
-    void computeSinCos1D(const T& orbitals, const int dir);
     void computeSinCos(const T& orbitals1, const T& orbitals2);
     void computeSinCosDiag(const T& orbitals, const bool normalized_functions);
 };

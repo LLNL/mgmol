@@ -15,20 +15,22 @@
 #include "MGmol_MPI.h"
 #include "memory_space.h"
 
-using namespace std;
-
 #ifdef HAVE_MAGMA
 using memory_space_type = MemorySpace::Device;
 #else
 using memory_space_type = MemorySpace::Host;
 #endif
 
-template <class T>
-void SinCosOps<T>::compute(const T& orbitals, vector<vector<double>>& a)
+template <class OrbitalsType>
+void SinCosOps<OrbitalsType>::compute(
+    const OrbitalsType& orbitals, std::vector<std::vector<double>>& a)
 {
     assert(a.size() == 6);
 
     compute_tm_.start();
+
+    auto first_value       = orbitals.getPsi(0)[0];
+    using OrbitalsDataType = decltype(first_value);
 
     const pb::Grid& grid(orbitals.grid_);
     const int numst = orbitals.numst();
@@ -46,44 +48,43 @@ void SinCosOps<T>::compute(const T& orbitals, vector<vector<double>>& a)
     int incx = dim1 * dim2;
     int incy = dim2;
 
-    vector<double> sinx;
-    vector<double> siny;
-    vector<double> sinz;
-    vector<double> cosx;
-    vector<double> cosy;
-    vector<double> cosz;
+    std::vector<double> sinx;
+    std::vector<double> siny;
+    std::vector<double> sinz;
+    std::vector<double> cosx;
+    std::vector<double> cosy;
+    std::vector<double> cosz;
     grid.getSinCosFunctions(sinx, siny, sinz, cosx, cosy, cosz);
 
     const int size = orbitals.chromatic_number();
 
     const int ld                = orbitals.getLda();
     unsigned int const size_psi = size * ld;
-    ORBDTYPE* psi_view
-        = MemorySpace::Memory<ORBDTYPE, memory_space_type>::allocate_host_view(
-            size_psi);
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::copy_view_to_host(
+    OrbitalsDataType* psi_view  = MemorySpace::Memory<OrbitalsDataType,
+        memory_space_type>::allocate_host_view(size_psi);
+    MemorySpace::Memory<OrbitalsDataType, memory_space_type>::copy_view_to_host(
         orbitals.psi(0), size_psi, psi_view);
 
     for (short iloc = 0; iloc < orbitals.subdivx(); iloc++)
     {
-
         for (int icolor = 0; icolor < size; icolor++)
         {
             const int i = orbitals.overlapping_gids_[iloc][icolor];
             if (i != -1)
             {
-                const ORBDTYPE* const ppsii = psi_view + ld * icolor;
+                const OrbitalsDataType* const ppsii = psi_view + ld * icolor;
                 for (int jstate = 0; jstate <= icolor; jstate++)
                 {
                     const int j = orbitals.overlapping_gids_[iloc][jstate];
                     if (j != -1)
                     {
-
-                        const ORBDTYPE* const ppsij = psi_view + ld * jstate;
+                        const OrbitalsDataType* const ppsij
+                            = psi_view + ld * jstate;
 
                         double atmp[6]  = { 0., 0., 0., 0., 0., 0. };
                         const int ixend = loc_length * (iloc + 1);
 
+                        // loop over patch
                         for (int ix = loc_length * iloc; ix < ixend; ix++)
                         {
                             const double cosix = cosx[ix];
@@ -124,7 +125,8 @@ void SinCosOps<T>::compute(const T& orbitals, vector<vector<double>>& a)
         }
     }
 
-    MemorySpace::Memory<ORBDTYPE, memory_space_type>::free_host_view(psi_view);
+    MemorySpace::Memory<OrbitalsDataType, memory_space_type>::free_host_view(
+        psi_view);
 
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     for (short i = 0; i < 6; i++)
@@ -136,8 +138,9 @@ void SinCosOps<T>::compute(const T& orbitals, vector<vector<double>>& a)
     compute_tm_.stop();
 }
 
-template <class T>
-void SinCosOps<T>::computeSquare(const T& orbitals, vector<vector<double>>& a)
+template <class OrbitalsType>
+void SinCosOps<OrbitalsType>::computeSquare(
+    const OrbitalsType& orbitals, std::vector<std::vector<double>>& a)
 {
     assert(a.size() == 6);
     for (short i = 0; i < 6; i++)
@@ -173,7 +176,7 @@ void SinCosOps<T>::computeSquare(const T& orbitals, vector<vector<double>>& a)
     const double alphay  = grid.ll(1) * grid.ll(1) * inv_2pi * inv_2pi;
     const double alphaz  = grid.ll(2) * grid.ll(2) * inv_2pi * inv_2pi;
 
-    vector<double> sinx2, siny2, sinz2, cosx2, cosy2, cosz2;
+    std::vector<double> sinx2, siny2, sinz2, cosx2, cosy2, cosz2;
     sinx2.resize(dim0);
     cosx2.resize(dim0);
     siny2.resize(dim1);
@@ -202,7 +205,6 @@ void SinCosOps<T>::computeSquare(const T& orbitals, vector<vector<double>>& a)
 
     for (short iloc = 0; iloc < orbitals.subdivx(); iloc++)
     {
-
         for (int icolor = 0; icolor < size; icolor++)
         {
             int i = orbitals.overlapping_gids_[iloc][icolor];
@@ -212,7 +214,6 @@ void SinCosOps<T>::computeSquare(const T& orbitals, vector<vector<double>>& a)
                     int j = orbitals.overlapping_gids_[iloc][jstate];
                     if (j != -1)
                     {
-
                         double atmp[6] = { 0., 0., 0., 0., 0., 0. };
                         for (int ix = loc_length * iloc;
                              ix < loc_length * (iloc + 1); ix++)
@@ -254,9 +255,9 @@ void SinCosOps<T>::computeSquare(const T& orbitals, vector<vector<double>>& a)
     compute_tm_.stop();
 }
 
-template <class T>
-void SinCosOps<T>::computeSquare1D(
-    const T& orbitals, vector<vector<double>>& a, const int dim_index)
+template <class OrbitalsType>
+void SinCosOps<OrbitalsType>::computeSquare1D(const OrbitalsType& orbitals,
+    std::vector<std::vector<double>>& a, const int dim_index)
 {
     assert(a.size() == 2);
     for (short i = 0; i < 2; i++)
@@ -288,8 +289,8 @@ void SinCosOps<T>::computeSquare1D(
     const double alphax
         = grid.ll(dim_index) * grid.ll(dim_index) * inv_2pi * inv_2pi;
 
-    vector<double> sinx2(dim);
-    vector<double> cosx2(dim);
+    std::vector<double> sinx2(dim);
+    std::vector<double> cosx2(dim);
     for (int i = 0; i < dim; i++)
     {
         const double tmp = sin((double)(off + i) * hh);
@@ -300,7 +301,6 @@ void SinCosOps<T>::computeSquare1D(
 
     for (short iloc = 0; iloc < orbitals.subdivx(); iloc++)
     {
-
         for (int icolor = 0; icolor < size; icolor++)
         {
             int i = orbitals.overlapping_gids_[iloc][icolor];
@@ -310,14 +310,12 @@ void SinCosOps<T>::computeSquare1D(
                     int j = orbitals.overlapping_gids_[iloc][jstate];
                     if (j != -1)
                     {
-
                         double atmp[2] = { 0., 0. };
                         for (int ix = loc_length * iloc;
                              ix < loc_length * (iloc + 1); ix++)
                             for (int iy = 0; iy < dim1; iy++)
                                 for (int iz = 0; iz < dim2; iz++)
                                 {
-
                                     int dindex[3] = { ix, iy, iz };
                                     int index     = ix * incx + iy * incy + iz;
                                     double alpha
@@ -345,9 +343,9 @@ void SinCosOps<T>::computeSquare1D(
     compute_tm_.stop();
 }
 
-template <class T>
-void SinCosOps<T>::compute1D(
-    const T& orbitals, vector<vector<double>>& a, const int dim_index)
+template <class OrbitalsType>
+void SinCosOps<OrbitalsType>::compute1D(const OrbitalsType& orbitals,
+    std::vector<std::vector<double>>& a, const int dim_index)
 {
     assert(a.size() == 2);
     for (short i = 0; i < 2; i++)
@@ -379,11 +377,11 @@ void SinCosOps<T>::compute1D(
     const double inv_2pi = 0.5 * M_1_PI;
     const double alphax  = grid.ll(dim_index) * inv_2pi;
 
-    vector<double> sinx(dim);
+    std::vector<double> sinx(dim);
     for (int i = 0; i < dim; i++)
         sinx[i] = sin(double(off + i) * hh) * alphax;
 
-    vector<double> cosx(dim);
+    std::vector<double> cosx(dim);
     for (int i = 0; i < dim; i++)
         cosx[i] = cos(double(off + i) * hh) * alphax;
 
@@ -391,20 +389,18 @@ void SinCosOps<T>::compute1D(
 
     for (short iloc = 0; iloc < orbitals.subdivx(); iloc++)
     {
-
         for (int icolor = 0; icolor < size; icolor++)
         {
             const int i = orbitals.overlapping_gids_[iloc][icolor];
             if (i != -1)
             {
-                const ORBDTYPE* const ppsii = orbitals.psi(icolor);
+                const auto* const ppsii = orbitals.psi(icolor);
                 for (int jstate = 0; jstate <= icolor; jstate++)
                 {
                     const int j = orbitals.overlapping_gids_[iloc][jstate];
                     if (j != -1)
                     {
-
-                        const ORBDTYPE* const ppsij = orbitals.psi(jstate);
+                        const auto* const ppsij = orbitals.psi(jstate);
 
                         double atmp[2]  = { 0., 0. };
                         const int ixend = loc_length * (iloc + 1);
@@ -413,7 +409,6 @@ void SinCosOps<T>::compute1D(
                             for (int iy = 0; iy < dim1; iy++)
                                 for (int iz = 0; iz < dim2; iz++)
                                 {
-
                                     int dindex[3] = { ix, iy, iz };
                                     const int index
                                         = ix * incx + iy * incy + iz;
@@ -442,9 +437,9 @@ void SinCosOps<T>::compute1D(
     compute_tm_.stop();
 }
 
-template <class T>
-void SinCosOps<T>::computeDiag2states(
-    const T& orbitals, vector<vector<double>>& a, const int st1, const int st2)
+template <class OrbitalsType>
+void SinCosOps<OrbitalsType>::computeDiag2states(const OrbitalsType& orbitals,
+    std::vector<std::vector<double>>& a, const int st1, const int st2)
 {
     assert(st1 >= 0);
     assert(st2 >= 0);
@@ -473,12 +468,12 @@ void SinCosOps<T>::computeDiag2states(
     int incx = dim1 * dim2;
     int incy = dim2;
 
-    vector<double> sinx;
-    vector<double> siny;
-    vector<double> sinz;
-    vector<double> cosx;
-    vector<double> cosy;
-    vector<double> cosz;
+    std::vector<double> sinx;
+    std::vector<double> siny;
+    std::vector<double> sinz;
+    std::vector<double> cosx;
+    std::vector<double> cosy;
+    std::vector<double> cosz;
     grid.getSinCosFunctions(sinx, siny, sinz, cosx, cosy, cosz);
 
     double norm2[2] = { 0., 0. };
@@ -489,10 +484,9 @@ void SinCosOps<T>::computeDiag2states(
         if (mycolor >= 0)
             for (short iloc = 0; iloc < orbitals.subdivx(); iloc++)
             {
-
                 if (orbitals.overlapping_gids_[iloc][mycolor] == st[ic])
                 {
-                    const ORBDTYPE* const ppsii = orbitals.psi(mycolor);
+                    const auto* const ppsii = orbitals.psi(mycolor);
                     assert(ppsii != nullptr);
                     double atmp[6]  = { 0., 0., 0., 0., 0., 0. };
                     const int ixend = loc_length * (iloc + 1);
@@ -501,7 +495,6 @@ void SinCosOps<T>::computeDiag2states(
                         for (int iy = 0; iy < dim1; iy++)
                             for (int iz = 0; iz < dim2; iz++)
                             {
-
                                 const int index    = ix * incx + iy * incy + iz;
                                 const double alpha = (double)ppsii[index]
                                                      * (double)ppsii[index];
@@ -533,9 +526,9 @@ void SinCosOps<T>::computeDiag2states(
     compute_tm_.stop();
 }
 
-template <class T>
-void SinCosOps<T>::compute2states(
-    const T& orbitals, vector<vector<double>>& a, const int st1, const int st2)
+template <class OrbitalsType>
+void SinCosOps<OrbitalsType>::compute2states(const OrbitalsType& orbitals,
+    std::vector<std::vector<double>>& a, const int st1, const int st2)
 {
     assert(a.size() == 6);
     assert(st1 >= 0);
@@ -565,25 +558,23 @@ void SinCosOps<T>::compute2states(
     int incx = dim1 * dim2;
     int incy = dim2;
 
-    vector<double> sinx;
-    vector<double> siny;
-    vector<double> sinz;
-    vector<double> cosx;
-    vector<double> cosy;
-    vector<double> cosz;
+    std::vector<double> sinx;
+    std::vector<double> siny;
+    std::vector<double> sinz;
+    std::vector<double> cosx;
+    std::vector<double> cosy;
+    std::vector<double> cosz;
     grid.getSinCosFunctions(sinx, siny, sinz, cosx, cosy, cosz);
 
     for (int ic = 0; ic < 2; ic++)
     {
         const int mycolor = color_st[ic];
-
         if (mycolor >= 0)
             for (short iloc = 0; iloc < orbitals.subdivx(); iloc++)
             {
-
                 if (orbitals.overlapping_gids_[iloc][mycolor] == st[ic])
                 {
-                    const ORBDTYPE* const ppsii = orbitals.psi(mycolor);
+                    const auto* const ppsii = orbitals.psi(mycolor);
                     assert(ppsii != nullptr);
                     for (int jc = 0; jc <= ic; jc++)
                         if (color_st[jc] >= 0)
@@ -591,7 +582,7 @@ void SinCosOps<T>::compute2states(
                             if (orbitals.overlapping_gids_[iloc][color_st[jc]]
                                 == st[jc])
                             {
-                                const ORBDTYPE* const ppsij
+                                const auto* const ppsij
                                     = orbitals.psi(color_st[jc]);
                                 assert(ppsij != nullptr);
 
@@ -603,7 +594,6 @@ void SinCosOps<T>::compute2states(
                                     for (int iy = 0; iy < dim1; iy++)
                                         for (int iz = 0; iz < dim2; iz++)
                                         {
-
                                             const int index
                                                 = ix * incx + iy * incy + iz;
                                             const double alpha
@@ -640,9 +630,9 @@ void SinCosOps<T>::compute2states(
     compute_tm_.stop();
 }
 
-template <class T>
-void SinCosOps<T>::compute(
-    const T& orbitals1, const T& orbitals2, vector<vector<double>>& a)
+template <class OrbitalsType>
+void SinCosOps<OrbitalsType>::compute(const OrbitalsType& orbitals1,
+    const OrbitalsType& orbitals2, std::vector<std::vector<double>>& a)
 {
     assert(a.size() == 6);
 
@@ -663,12 +653,12 @@ void SinCosOps<T>::compute(
     int incx = dim1 * dim2;
     int incy = dim2;
 
-    vector<double> sinx;
-    vector<double> siny;
-    vector<double> sinz;
-    vector<double> cosx;
-    vector<double> cosy;
-    vector<double> cosz;
+    std::vector<double> sinx;
+    std::vector<double> siny;
+    std::vector<double> sinz;
+    std::vector<double> cosx;
+    std::vector<double> cosy;
+    std::vector<double> cosz;
     grid.getSinCosFunctions(sinx, siny, sinz, cosx, cosy, cosz);
 
     for (short iloc = 0; iloc < orbitals1.subdivx(); iloc++)
@@ -683,14 +673,12 @@ void SinCosOps<T>::compute(
                     int j = orbitals2.overlapping_gids_[iloc][jstate];
                     if (j != -1)
                     {
-
                         double atmp[6] = { 0., 0., 0., 0., 0., 0. };
                         for (int ix = loc_length * iloc;
                              ix < loc_length * (iloc + 1); ix++)
                             for (int iy = 0; iy < dim1; iy++)
                                 for (int iz = 0; iz < dim2; iz++)
                                 {
-
                                     const int index
                                         = ix * incx + iy * incy + iz;
                                     const double alpha
@@ -728,11 +716,14 @@ void SinCosOps<T>::compute(
     compute_tm_.stop();
 }
 
-template <class T>
-void SinCosOps<T>::computeDiag(const T& orbitals,
+template <class OrbitalsType>
+void SinCosOps<OrbitalsType>::computeDiag(const OrbitalsType& orbitals,
     VariableSizeMatrix<sparserow>& mat, const bool normalized_functions)
 {
     compute_tm_.start();
+
+    auto first_value       = orbitals.getPsi(0)[0];
+    using OrbitalsDataType = decltype(first_value);
 
     const pb::Grid& grid(orbitals.grid_);
 
@@ -747,15 +738,15 @@ void SinCosOps<T>::computeDiag(const T& orbitals,
     int incx = dim1 * dim2;
     int incy = dim2;
 
-    vector<double> sinx;
-    vector<double> siny;
-    vector<double> sinz;
-    vector<double> cosx;
-    vector<double> cosy;
-    vector<double> cosz;
+    std::vector<double> sinx;
+    std::vector<double> siny;
+    std::vector<double> sinz;
+    std::vector<double> cosx;
+    std::vector<double> cosy;
+    std::vector<double> cosz;
     grid.getSinCosFunctions(sinx, siny, sinz, cosx, cosy, cosz);
 
-    vector<vector<double>> inv_norms2;
+    std::vector<std::vector<double>> inv_norms2;
     if (!normalized_functions)
     {
         orbitals.computeInvNorms2(inv_norms2);
@@ -774,14 +765,16 @@ void SinCosOps<T>::computeDiag(const T& orbitals,
             int gid = orbitals.overlapping_gids_[iloc][icolor];
             if (gid != -1)
             {
-                const ORBDTYPE* const psii   = orbitals.psi(icolor);
-                using memory_space_type      = typename T::memory_space_type;
+                const auto* const psii = orbitals.psi(icolor);
+                using memory_space_type =
+                    typename OrbitalsType::memory_space_type;
                 unsigned int const psii_size = orbitals.getLocNumpt();
-                ORBDTYPE* psii_host_view     = MemorySpace::Memory<ORBDTYPE,
-                    memory_space_type>::allocate_host_view(psii_size);
-                MemorySpace::Memory<ORBDTYPE, memory_space_type>::
-                    copy_view_to_host(
-                        const_cast<ORBDTYPE*>(psii), psii_size, psii_host_view);
+                OrbitalsDataType* psii_host_view
+                    = MemorySpace::Memory<OrbitalsDataType,
+                        memory_space_type>::allocate_host_view(psii_size);
+                MemorySpace::Memory<OrbitalsDataType, memory_space_type>::
+                    copy_view_to_host(const_cast<OrbitalsDataType*>(psii),
+                        psii_size, psii_host_view);
 
                 double atmp[6] = { 0., 0., 0., 0., 0., 0. };
 
@@ -790,7 +783,6 @@ void SinCosOps<T>::computeDiag(const T& orbitals,
                     for (int iy = 0; iy < dim1; iy++)
                         for (int iz = 0; iz < dim2; iz++)
                         {
-
                             const int index = ix * incx + iy * incy + iz;
                             const double alpha
                                 = static_cast<double>(psii_host_view[index])
@@ -802,7 +794,7 @@ void SinCosOps<T>::computeDiag(const T& orbitals,
                             atmp[4] += alpha * cosz[iz];
                             atmp[5] += alpha * sinz[iz];
                         }
-                MemorySpace::Memory<ORBDTYPE,
+                MemorySpace::Memory<OrbitalsDataType,
                     memory_space_type>::free_host_view(psii_host_view);
                 if (!normalized_functions)
                 {

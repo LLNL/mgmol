@@ -47,9 +47,6 @@ short ProjectedMatrices<MatrixType>::n_instances_ = 0;
 template <class MatrixType>
 GramMatrix<MatrixType>* ProjectedMatrices<MatrixType>::gram_4dotProducts_
     = nullptr;
-template <class MatrixType>
-DensityMatrix<MatrixType>* ProjectedMatrices<MatrixType>::dm_4dot_product_
-    = nullptr;
 
 #ifdef MGMOL_USE_SCALAPACK
 static int sparse_distmatrix_nb_partitions = 128;

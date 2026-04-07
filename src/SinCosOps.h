@@ -15,33 +15,34 @@
 
 #include <vector>
 
-template <class T>
+template <class OrbitalsType>
 class SinCosOps
 {
 private:
     static Timer compute_tm_;
 
 public:
-    static void compute(const T& orbitals, std::vector<std::vector<double>>& a);
+    static void compute(
+        const OrbitalsType& orbitals, std::vector<std::vector<double>>& a);
     static void computeSquare(
-        const T& orbitals, std::vector<std::vector<double>>& a);
-    static void compute1D(const T& orbitals,
+        const OrbitalsType& orbitals, std::vector<std::vector<double>>& a);
+    static void compute1D(const OrbitalsType& orbitals,
         std::vector<std::vector<double>>& a, const int dim_index);
-    static void computeSquare1D(const T& orbitals,
+    static void computeSquare1D(const OrbitalsType& orbitals,
         std::vector<std::vector<double>>& a, const int dim_index);
-    static void compute2states(const T& orbitals,
+    static void compute2states(const OrbitalsType& orbitals,
         std::vector<std::vector<double>>& a, const int st1, const int st2);
-    static void computeDiag2states(const T& orbitals,
+    static void computeDiag2states(const OrbitalsType& orbitals,
         std::vector<std::vector<double>>& a, const int st1, const int st2);
-    static void compute(const T& orbitals1, const T& orbitals2,
-        std::vector<std::vector<double>>& a);
-    static void computeDiag(const T& orbitals,
+    static void compute(const OrbitalsType& orbitals1,
+        const OrbitalsType& orbitals2, std::vector<std::vector<double>>& a);
+    static void computeDiag(const OrbitalsType& orbitals,
         VariableSizeMatrix<sparserow>& mat, const bool normalized_functions);
 
     static void printTimers(std::ostream& os) { compute_tm_.print(os); }
 };
 
-template <class T>
-Timer SinCosOps<T>::compute_tm_("SinCosOps::compute_tm");
+template <class OrbitalsType>
+Timer SinCosOps<OrbitalsType>::compute_tm_("SinCosOps::compute_tm");
 
 #endif
