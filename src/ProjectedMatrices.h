@@ -28,7 +28,6 @@ class ProjectedMatrices : public ProjectedMatricesInterface
     static short n_instances_;
 
     static GramMatrix<MatrixType>* gram_4dotProducts_;
-    static DensityMatrix<MatrixType>* dm_4dot_product_;
 
     // spin: 0 for ignoring spin, 1 for calculation with spin
     const bool with_spin_;

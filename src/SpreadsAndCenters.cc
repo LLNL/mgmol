@@ -18,7 +18,6 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
-using namespace std;
 
 static double fourthirdpi = 4. * M_PI / 3.;
 
@@ -117,21 +116,21 @@ double SpreadsAndCenters<T>::volume() const
 
 ////////////////////////////////////////////////////////////////////////////////
 template <class T>
-void SpreadsAndCenters<T>::printGlobal(ostream& os, const int root) const
+void SpreadsAndCenters<T>::printGlobal(std::ostream& os, const int root) const
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     int ngids       = localRows_.size();
     mmpi.allreduce(&ngids, 1, MPI_SUM);
 
-    vector<double> lspreads;
-    vector<double> gspreads(ngids);
-    vector<int> lindex;
-    vector<int> gindex(ngids);
-    vector<double> lcenters;
-    vector<double> gcenters(3 * ngids);
+    std::vector<double> lspreads;
+    std::vector<double> gspreads(ngids);
+    std::vector<int> lindex;
+    std::vector<int> gindex(ngids);
+    std::vector<double> lcenters;
+    std::vector<double> gcenters(3 * ngids);
 
-    vector<int>::const_iterator it = localRowGid_.begin();
-    int i                          = 0;
+    std::vector<int>::const_iterator it = localRowGid_.begin();
+    int i                               = 0;
     while (it != localRowGid_.end())
     {
         Vector3D centeri(computeCenter(localRows_[i]));
@@ -153,11 +152,11 @@ void SpreadsAndCenters<T>::printGlobal(ostream& os, const int root) const
 
     if (mmpi.mypeSpin() == root)
     {
-        map<int, double> spread;
-        map<int, Vector3D> center;
+        std::map<int, double> spread;
+        std::map<int, Vector3D> center;
 
-        vector<int>::iterator gid = gindex.begin();
-        int i                     = 0;
+        std::vector<int>::iterator gid = gindex.begin();
+        int i                          = 0;
         while (gid != gindex.end())
         {
             Vector3D centeri(
@@ -169,20 +168,24 @@ void SpreadsAndCenters<T>::printGlobal(ostream& os, const int root) const
             i++;
         }
 
-        os << endl << " Orbitals centers and spreads " << endl << endl;
+        os << std::endl
+           << " Orbitals centers and spreads " << std::endl
+           << std::endl;
 
-        map<int, double>::const_iterator spread_id   = spread.begin();
-        map<int, Vector3D>::const_iterator center_id = center.begin();
+        std::map<int, double>::const_iterator spread_id   = spread.begin();
+        std::map<int, Vector3D>::const_iterator center_id = center.begin();
         while (spread_id != spread.end())
         {
-            os << "&& " << setw(4) << (spread_id->first + 1) << "   ";
-            os.setf(ios::fixed, ios::floatfield);
-            os.setf(ios::right, ios::adjustfield);
-            os << setw(10) << setprecision(3) << (center_id->second)[0] << " "
-               << setw(10) << setprecision(3) << (center_id->second)[1] << " "
-               << setw(10) << setprecision(3) << (center_id->second)[2]
-               << "         ";
-            os << setw(10) << setprecision(3) << spread_id->second << endl;
+            os << "&& " << std::setw(4) << (spread_id->first + 1) << "   ";
+            os.setf(std::ios::fixed, std::ios::floatfield);
+            os.setf(std::ios::right, std::ios::adjustfield);
+            os << std::setw(10) << std::setprecision(3)
+               << (center_id->second)[0] << " " << std::setw(10)
+               << std::setprecision(3) << (center_id->second)[1] << " "
+               << std::setw(10) << std::setprecision(3)
+               << (center_id->second)[2] << "         ";
+            os << std::setw(10) << std::setprecision(3) << spread_id->second
+               << std::endl;
 
             spread_id++;
             center_id++;
@@ -191,34 +194,36 @@ void SpreadsAndCenters<T>::printGlobal(ostream& os, const int root) const
 }
 
 template <class T>
-void SpreadsAndCenters<T>::printLocal(ostream& os, const int root) const
+void SpreadsAndCenters<T>::printLocal(std::ostream& os, const int root) const
 {
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     if (mmpi.mypeSpin() == root)
     {
-        os << endl
-           << " Overlapping Orbitals centers and spreads " << endl
-           << endl;
+        os << std::endl
+           << " Overlapping Orbitals centers and spreads " << std::endl
+           << std::endl;
         for (int i = 0; i < ngids_; i++)
         {
             Vector3D centeri(computeCenter(i));
             const double spreadi = computeSpread(i);
             if (onpe0)
             {
-                os << "&& " << setw(4) << i + 1 << "   ";
-                os.setf(ios::fixed, ios::floatfield);
-                os.setf(ios::right, ios::adjustfield);
-                os << setw(10) << setprecision(3) << centeri[0] << " "
-                   << setw(10) << setprecision(3) << centeri[1] << " "
-                   << setw(10) << setprecision(3) << centeri[2] << "         ";
-                os << setw(10) << setprecision(3) << spreadi << endl;
+                os << "&& " << std::setw(4) << i + 1 << "   ";
+                os.setf(std::ios::fixed, std::ios::floatfield);
+                os.setf(std::ios::right, std::ios::adjustfield);
+                os << std::setw(10) << std::setprecision(3) << centeri[0] << " "
+                   << std::setw(10) << std::setprecision(3) << centeri[1] << " "
+                   << std::setw(10) << std::setprecision(3) << centeri[2]
+                   << "         ";
+                os << std::setw(10) << std::setprecision(3) << spreadi
+                   << std::endl;
             }
         }
     }
 }
 
 template <class T>
-void SpreadsAndCenters<T>::print(ostream& os, const int root) const
+void SpreadsAndCenters<T>::print(std::ostream& os, const int root) const
 {
     Control& ct = *(Control::instance());
     if (ct.numst < 512 || ct.verbose > 2)
@@ -228,10 +233,12 @@ void SpreadsAndCenters<T>::print(ostream& os, const int root) const
 }
 ////////////////////////////////////////////////////////////////////////////////
 template <class T>
-void SpreadsAndCenters<T>::printStats(ostream& os) const
+void SpreadsAndCenters<T>::printStats(std::ostream& os) const
 {
     if (onpe0 && ngids_ > 0)
-        os << endl << " Orbitals spreads (statistics)" << endl << endl;
+        os << std::endl
+           << " Orbitals spreads (statistics)" << std::endl
+           << std::endl;
     double min_spread = 100000.;
     double max_spread = 0.;
     double avg_spread = 0.;
@@ -242,8 +249,8 @@ void SpreadsAndCenters<T>::printStats(ostream& os) const
     {
         const double spreadi = computeSpread(localRows_[igid]);
         avg_spread += spreadi;
-        min_spread = min(spreadi, min_spread);
-        max_spread = max(spreadi, max_spread);
+        min_spread = std::min(spreadi, min_spread);
+        max_spread = std::max(spreadi, max_spread);
     }
 
     double tmp;
@@ -263,16 +270,16 @@ void SpreadsAndCenters<T>::printStats(ostream& os) const
     if (onpe0)
     {
         os << "&& ";
-        os.setf(ios::fixed, ios::floatfield);
-        os.setf(ios::right, ios::adjustfield);
-        os << setw(10) << setprecision(3) << "Min. " << min_spread << ", Max. "
-           << max_spread << ", Avg. " << avg_spread << endl;
+        os.setf(std::ios::fixed, std::ios::floatfield);
+        os.setf(std::ios::right, std::ios::adjustfield);
+        os << std::setw(10) << std::setprecision(3) << "Min. " << min_spread
+           << ", Max. " << max_spread << ", Avg. " << avg_spread << std::endl;
     }
 }
 
 // get spreads for functions centered in subdomain
 template <class T>
-void SpreadsAndCenters<T>::computeLocalSpreads(vector<float>& spreads)
+void SpreadsAndCenters<T>::computeLocalSpreads(std::vector<float>& spreads)
 {
     spreads.clear();
 
@@ -284,7 +291,7 @@ void SpreadsAndCenters<T>::computeLocalSpreads(vector<float>& spreads)
 }
 
 template <class T>
-void SpreadsAndCenters<T>::computeLocalSpreads2(vector<float>& spreads)
+void SpreadsAndCenters<T>::computeLocalSpreads2(std::vector<float>& spreads)
 {
     spreads.clear();
 
@@ -297,7 +304,7 @@ void SpreadsAndCenters<T>::computeLocalSpreads2(vector<float>& spreads)
 
 // get centers for functions centered in subdomain
 template <class T>
-void SpreadsAndCenters<T>::getLocalCenters(vector<Vector3D>& centers)
+void SpreadsAndCenters<T>::getLocalCenters(std::vector<Vector3D>& centers)
 {
     centers.clear();
 
@@ -309,11 +316,11 @@ void SpreadsAndCenters<T>::getLocalCenters(vector<Vector3D>& centers)
 }
 
 template <class T>
-void SpreadsAndCenters<T>::getLocalGids(vector<int>& lindex)
+void SpreadsAndCenters<T>::getLocalGids(std::vector<int>& lindex)
 {
     lindex.clear();
 
-    vector<int>::const_iterator it = localRowGid_.begin();
+    std::vector<int>::const_iterator it = localRowGid_.begin();
     while (it != localRowGid_.end())
     {
         lindex.push_back(*it);
@@ -344,7 +351,7 @@ double SpreadsAndCenters<T>::computeDistance(const int st1, const int st2) const
 ///////////////////////////////////////////////////////////////////////////////
 template <class T>
 void SpreadsAndCenters<T>::setSinCosData(VariableSizeMatrix<sparserow>& mat,
-    const vector<int>& gids, const vector<int>& localRowGid)
+    const std::vector<int>& gids, const std::vector<int>& localRowGid)
 {
     setData(mat, gids, localRowGid, r_);
 }
@@ -352,8 +359,8 @@ void SpreadsAndCenters<T>::setSinCosData(VariableSizeMatrix<sparserow>& mat,
 ///////////////////////////////////////////////////////////////////////////////
 template <class T>
 void SpreadsAndCenters<T>::setData(VariableSizeMatrix<sparserow>& mat,
-    const vector<int>& gids, const vector<int>& localRowGid,
-    vector<vector<double>>& matr)
+    const std::vector<int>& gids, const std::vector<int>& localRowGid,
+    std::vector<std::vector<double>>& matr)
 {
     gids_ = gids;
 
@@ -371,8 +378,8 @@ void SpreadsAndCenters<T>::setData(VariableSizeMatrix<sparserow>& mat,
             matr[col].push_back(mat.getRowEntry(i, col));
         }
     }
-    // setup the localRows vector
-    for (vector<int>::const_iterator it = localRowGid.begin();
+    // setup the localRows std::vector
+    for (std::vector<int>::const_iterator it = localRowGid.begin();
          it != localRowGid.end(); ++it)
     {
         int* lrindex = (int*)mat.getTableValue(*it);
@@ -382,7 +389,8 @@ void SpreadsAndCenters<T>::setData(VariableSizeMatrix<sparserow>& mat,
 }
 
 template <class T>
-void SpreadsAndCenters<T>::setSinCosData(vector<vector<double>>& a, const int n)
+void SpreadsAndCenters<T>::setSinCosData(
+    std::vector<std::vector<double>>& a, const int n)
 {
     r_.clear();
     localRows_.clear();
@@ -397,7 +405,7 @@ void SpreadsAndCenters<T>::setSinCosData(vector<vector<double>>& a, const int n)
             r_[col].push_back(a[col][i]);
         }
     }
-    // setup the localRows vector
+    // setup the localRows std::vector
     for (int i = 0; i < ngids_; i++)
         localRows_.push_back(i);
 
@@ -425,56 +433,10 @@ void SpreadsAndCenters<T>::computePositionMatrix(const T& orbitals)
 }
 
 template <class T>
-void SpreadsAndCenters<T>::computeSinCos(const T& orbitals)
-{
-    vector<vector<double>> a;
-    a.resize(6);
-
-    int n2 = orbitals.numst() * orbitals.numst();
-    for (int k = 0; k < 6; k++)
-    {
-        a[k].resize(n2, 0.);
-    }
-    SinCosOps<T>::compute(orbitals, a);
-    setSinCosData(a, n2);
-}
-
-template <class T>
-void SpreadsAndCenters<T>::computeSinCosSquare(const T& orbitals)
-{
-    vector<vector<double>> a;
-    a.resize(6);
-
-    int n2 = orbitals.numst() * orbitals.numst();
-    for (short k = 0; k < 6; k++)
-    {
-        a[k].resize(n2, 0.);
-    }
-    SinCosOps<T>::computeSquare(orbitals, a);
-    setSinCosData(a, n2);
-}
-
-template <class T>
-void SpreadsAndCenters<T>::computeSinCosSquare1D(
-    const T& orbitals, const int dir)
-{
-    vector<vector<double>> a;
-    a.resize(2);
-
-    int n2 = orbitals.numst() * orbitals.numst();
-    for (short k = 0; k < 2; k++)
-    {
-        a[k].resize(n2, 0.);
-    }
-    SinCosOps<T>::computeSquare1D(orbitals, a, dir);
-    setSinCosData(a, n2);
-}
-
-template <class T>
 void SpreadsAndCenters<T>::computeSinCos2states(
     const T& orbitals, const int st1, const int st2)
 {
-    vector<vector<double>> a;
+    std::vector<std::vector<double>> a;
     a.resize(6);
 
     int n2 = 4;
@@ -490,7 +452,7 @@ template <class T>
 void SpreadsAndCenters<T>::computeSinCosDiag2states(
     const T& orbitals, const int st1, const int st2)
 {
-    vector<vector<double>> a;
+    std::vector<std::vector<double>> a;
     a.resize(6);
 
     for (int k = 0; k < 6; k++)
@@ -503,25 +465,9 @@ void SpreadsAndCenters<T>::computeSinCosDiag2states(
 }
 
 template <class T>
-void SpreadsAndCenters<T>::computeSinCos1D(const T& orbitals, const int dir)
-{
-    vector<vector<double>> a;
-    a.resize(2);
-
-    int n2 = orbitals.numst() * orbitals.numst();
-    for (short k = 0; k < 2; k++)
-    {
-        a[k].resize(n2, 0.);
-    }
-
-    SinCosOps<T>::compute1D(orbitals, a, dir);
-    setSinCosData(a, n2);
-}
-
-template <class T>
 void SpreadsAndCenters<T>::computeSinCos(const T& orbitals1, const T& orbitals2)
 {
-    vector<vector<double>> a;
+    std::vector<std::vector<double>> a;
     a.resize(6);
 
     int n2 = orbitals1.numst() * orbitals1.numst();
