@@ -236,24 +236,10 @@ public:
         const KBPsiMatrixSparse* const kbpsi_j, MatrixType& mat,
         const bool consolidate);
 
-#ifdef MGMOL_USE_SCALAPACK
-    void computeHij_private(OrbitalsType& orbitals_i, OrbitalsType& orbitals_j,
-        const Ions& ions, const KBPsiMatrixSparse* const kbpsi_i,
-        const KBPsiMatrixSparse* const kbpsi_j,
-        dist_matrix::DistMatrix<DISTMATDTYPE>& mat);
-
+    template <class MatrixType>
     void computeHij(OrbitalsType& orbitals_i, OrbitalsType& orbitals_j,
-        const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
-        dist_matrix::DistMatrix<double>& mat, const bool consolidate);
-
-    void computeHij_private(OrbitalsType& orbitals_i, OrbitalsType& orbitals_j,
         const Ions& ions, const KBPsiMatrixSparse* const kbpsi_i,
-        dist_matrix::DistMatrix<DISTMATDTYPE>& mat);
-#endif
-
-    void computeHij(OrbitalsType& orbitals_i, OrbitalsType& orbitals_j,
-        const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
-        VariableSizeMatrix<sparserow>& mat, const bool consolidate);
+        MatrixType& mat, const bool consolidate);
 
     void computeHij(OrbitalsType& orbitals_i, OrbitalsType& orbitals_j,
         const Ions& ions, const KBPsiMatrixSparse* const kbpsi,
