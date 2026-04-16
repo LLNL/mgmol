@@ -257,7 +257,7 @@ public:
     void writeAtomicNLprojIDs(HDFrestart& h5f_file);
     void writeAtomicNumbers(HDFrestart& h5f_file);
     void writeAtomNames(HDFrestart& h5f_file);
-    void readLockedAtomNames(HDFrestart& h5f_file);
+    void readAndLockAtoms(HDFrestart& h5f_file);
     void writeLockedAtomNames(HDFrestart& h5f_file);
 
     int countProjectors() const;
