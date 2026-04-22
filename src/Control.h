@@ -457,6 +457,9 @@ public:
     // Flag to compute Wannier centers at the end of the computation or not
     short wannier_transform_type;
 
+    // Flag to compute Dipole moment or not
+    short compute_dipole_;
+
     // Potential mixing parameters
     float mix_pot;
     float dm_mix;

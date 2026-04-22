@@ -114,7 +114,8 @@ int read_config(int argc, char** argv, po::variables_map& vm,
             "Convergence criterion")("Quench.MLWC", po::value<bool>(),
             "Compute MLWC in quench")("Quench.MLWF",
             po::value<bool>()->default_value(false),
-            "Compute MLWF (apply rotation) in quench")(
+            "Compute MLWF (apply rotation) in quench")("Quench.Dipole",
+            po::value<bool>()->default_value(false), "Compute dipole moment")(
             "Quench.num_lin_iterations", po::value<short>()->default_value(0),
             "Number of iterations without potential update in quench")(
             "Preconditioner.num_levels", po::value<short>()->default_value(2),

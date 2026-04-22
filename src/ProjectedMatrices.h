@@ -102,6 +102,13 @@ protected:
      */
     std::unique_ptr<GramMatrix<MatrixType>> gm_;
 
+    /*!
+     * Dipole Matrix
+     */
+    std::unique_ptr<MatrixType> matDx_;
+    std::unique_ptr<MatrixType> matDy_;
+    std::unique_ptr<MatrixType> matDz_;
+
     // work matrix for tmp usage
     std::unique_ptr<MatrixType> work_;
 

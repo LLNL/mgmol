@@ -14,7 +14,6 @@
 #include "HDFrestart.h"
 #include "LocalMatrices2ReplicatedMatrix.h"
 #include "MGmol_MPI.h"
-#include "Orbitals.h"
 #include "Power.h"
 #include "PowerGen.h"
 #include "ReplicatedMatrix.h"
@@ -135,6 +134,9 @@ ProjectedMatrices<MatrixType>::ProjectedMatrices(
     matH_.reset(new MatrixType("H", ndim, ndim));
     matHB_.reset(new MatrixType("HB", ndim, ndim));
     theta_.reset(new MatrixType("Theta", ndim, ndim));
+    matDx_.reset(new MatrixType("Dx", ndim, ndim));
+    matDy_.reset(new MatrixType("Dy", ndim, ndim));
+    matDz_.reset(new MatrixType("Dz", ndim, ndim));
     work_.reset(new MatrixType("work", ndim, ndim));
 
     n_instances_++;
