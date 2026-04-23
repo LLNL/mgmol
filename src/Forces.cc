@@ -6,7 +6,6 @@
 // All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
-
 #include "Forces.h"
 #include "Control.h"
 #include "DataDistribution.h"
@@ -15,94 +14,110 @@
 #include "KBPsiMatrixSparse.h"
 #include "LocGridOrbitals.h"
 #include "MGmol.h"
-#include "MGmol_blas1.h"
 #include "MPIdata.h"
 #include "Mesh.h"
 #include "Potentials.h"
 #include "ProjectedMatrices.h"
 #include "ProjectedMatricesSparse.h"
-#include "ReplicatedWorkSpace.h"
 #include "SuperSampling.h"
 #include "VariableSizeMatrix.h"
 #include "Vector3D.h"
-#include "tools.h"
 
 #include <iostream>
 
 #define Ry2Ha 0.5;
-double shift_R[3 * NPTS][3];
 
-double get_trilinval(const double xc, const double yc, const double zc,
-    const double h0, const double h1, const double h2, const Vector3D& ref,
-    const Vector3D& lattice, RadialInter& lpot);
-
-#if NPTS > 3
+#if MGMOL_FD_NPTS > 3
 double get_deriv4(double value[4])
 {
-    double sum = (value[1] - value[0]) * 2. / (3. * DELTAC);
-    sum -= (value[3] - value[2]) / (12. * DELTAC);
+    double sum = (value[1] - value[0]) * 2. / (3. * MGMOL_FD_DELTA);
+    sum -= (value[3] - value[2]) / (12. * MGMOL_FD_DELTA);
     return sum;
 }
 #endif
 
-double get_deriv2(double value[2])
+double get_deriv2(const double value[2])
 {
-    return (value[1] - value[0]) / (2. * DELTAC);
+    return (value[1] - value[0]) / (2. * MGMOL_FD_DELTA);
 }
 
-template <class T>
-void Forces<T>::evaluateShiftedFields(Ion& ion,
-    std::vector<std::array<double, 3 * NPTS>>& var_pot,
-    std::vector<std::array<double, 3 * NPTS>>& var_charge,
+template <class OrbitalsType>
+Forces<OrbitalsType>::Forces(Hamiltonian<OrbitalsType>* hamiltonian,
+    Rho<OrbitalsType>* rho, ProjectedMatricesInterface* proj_matrices)
+    : hamiltonian_(hamiltonian), rho_(rho), proj_matrices_(proj_matrices)
+{
+    assert(hamiltonian_ != 0);
+    assert(rho_ != 0);
+    assert(proj_matrices_ != 0);
+
+    for (int i = 0; i < 3 * MGMOL_FD_NPTS; i++)
+    {
+        for (int j = 0; j < 3; j++)
+            shift_R_[i][j] = 0.;
+    }
+    for (int i = 0; i < 3; i++)
+    {
+        shift_R_[MGMOL_FD_NPTS * i + 0][i] = -MGMOL_FD_DELTA;
+        shift_R_[MGMOL_FD_NPTS * i + 1][i] = MGMOL_FD_DELTA;
+#if MGMOL_FD_NPTS > 3
+        shift_R_[MGMOL_FD_NPTS * i + 2][i] = -2. * MGMOL_FD_DELTA;
+        shift_R_[MGMOL_FD_NPTS * i + 3][i] = 2. * MGMOL_FD_DELTA;
+#endif
+    }
+}
+
+template <class OrbitalsType>
+void Forces<OrbitalsType>::evaluateShiftedFields(const Ion& ion,
+    std::vector<std::array<double, 3 * MGMOL_FD_NPTS>>& local_pot,
+    std::vector<std::array<double, 3 * MGMOL_FD_NPTS>>& rhos,
     const char flag_filter)
 {
     evaluateShiftedFields_tm_.start();
 
-    const Species& sp(ion.getSpecies());
-    const RadialInter& lpot = ion.getLocalPot();
-
-    auto lambda_radiallpot = [&lpot](double r) { return lpot.cubint(r); };
-    auto lambda_rhocomp    = [&sp](double r) { return sp.getRhoComp(r); };
-
-    Vector3D ref_position(ion.position(0), ion.position(1), ion.position(2));
+    const Vector3D ref_position(
+        ion.position(0), ion.position(1), ion.position(2));
 
     // generate shifted atomic positions
-    // (NPTS in each direction)
+    // (MGMOL_FD_NPTS in each direction)
     std::vector<Vector3D> positions;
-    for (short ishift = 0; ishift < 3 * NPTS; ishift++)
+    for (short ishift = 0; ishift < 3 * MGMOL_FD_NPTS; ishift++)
     {
         Vector3D shifted_point(ref_position);
-        shifted_point[0] += shift_R[ishift][0];
-        shifted_point[1] += shift_R[ishift][1];
-        shifted_point[2] += shift_R[ishift][2];
+        shifted_point[0] += shift_R_[ishift][0];
+        shifted_point[1] += shift_R_[ishift][1];
+        shifted_point[2] += shift_R_[ishift][2];
 
         positions.push_back(shifted_point);
     }
 
+    const Species& sp(ion.getSpecies());
     const double lrad = sp.lradius();
 
     // evaluate filtered/unfiltered potential on mesh
     // for shifted atomic poistions
+    const RadialInter& lpot = ion.getLocalPot();
+    auto lambda_radiallpot  = [&lpot](double r) { return lpot.cubint(r); };
     if (flag_filter == 's')
     {
         evaluateSupersampledRadialFunc(
-            positions, lrad, var_pot, lambda_radiallpot);
+            positions, lrad, local_pot, lambda_radiallpot);
     }
     else
     {
-        evaluateRadialFunc(positions, lrad, var_pot, lambda_radiallpot);
+        evaluateRadialFunc(positions, lrad, local_pot, lambda_radiallpot);
     }
     // evaluate Gaussian compensating charge on mesh
     // for shifted atomic poistions
-    evaluateRadialFunc(positions, lrad, var_charge, lambda_rhocomp);
+    auto lambda_rhocomp = [&sp](double r) { return sp.getRhoComp(r); };
+    evaluateRadialFunc(positions, lrad, rhos, lambda_rhocomp);
 
     evaluateShiftedFields_tm_.stop();
 }
 
-template <class T>
-void Forces<T>::evaluateSupersampledRadialFunc(
+template <class OrbitalsType>
+void Forces<OrbitalsType>::evaluateSupersampledRadialFunc(
     const std::vector<Vector3D>& positions, const double lrad,
-    std::vector<std::array<double, 3 * NPTS>>& var,
+    std::vector<std::array<double, 3 * MGMOL_FD_NPTS>>& var,
     std::function<double(double)> const& lambda_radial)
 {
     Mesh* mymesh           = Mesh::instance();
@@ -193,9 +208,10 @@ void Forces<T>::evaluateSupersampledRadialFunc(
     }
 }
 
-template <class T>
-void Forces<T>::evaluateRadialFunc(const std::vector<Vector3D>& positions,
-    const double lrad, std::vector<std::array<double, 3 * NPTS>>& var,
+template <class OrbitalsType>
+void Forces<OrbitalsType>::evaluateRadialFunc(
+    const std::vector<Vector3D>& positions, const double lrad,
+    std::vector<std::array<double, 3 * MGMOL_FD_NPTS>>& var,
     std::function<double(double)> const& lambda_radial)
 {
     Control& ct = *(Control::instance());
@@ -203,148 +219,132 @@ void Forces<T>::evaluateRadialFunc(const std::vector<Vector3D>& positions,
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
 
-    int offset = 0;
-
-    const int dim0 = mygrid.dim(0);
-    const int dim1 = mygrid.dim(1);
-    const int dim2 = mygrid.dim(2);
-
-    const double h0 = mygrid.hgrid(0);
-    const double h1 = mygrid.hgrid(1);
-    const double h2 = mygrid.hgrid(2);
+    int offset                = 0;
+    const unsigned int dim[3] = { mygrid.dim(0), mygrid.dim(1), mygrid.dim(2) };
+    const double h[3] = { mygrid.hgrid(0), mygrid.hgrid(1), mygrid.hgrid(2) };
 
     Vector3D ll(mygrid.ll(0), mygrid.ll(1), mygrid.ll(2));
-
     Vector3D point(0., 0., 0.);
 
     point[0] = mygrid.start(0);
 
-    for (int ix = 0; ix < dim0; ix++)
+    for (unsigned int ix = 0; ix < dim[0]; ix++)
     {
         point[1] = mygrid.start(1);
 
-        for (int iy = 0; iy < dim1; iy++)
+        for (unsigned int iy = 0; iy < dim[1]; iy++)
         {
             point[2] = mygrid.start(2);
-            for (int iz = 0; iz < dim2; iz++)
+            for (unsigned int iz = 0; iz < dim[2]; iz++)
             {
                 short ishift = 0;
-                std::array<double, 3 * NPTS>& varpoint(var[offset]);
+                std::array<double, 3 * MGMOL_FD_NPTS>& varpoint(var[offset]);
 
                 for (auto& position : positions)
                 {
                     const double r = position.minimage(point, ll, ct.bcPoisson);
-                    if (r < lrad)
-                    {
-                        varpoint[ishift] = lambda_radial(r);
-                    }
-                    else
-                    {
-                        varpoint[ishift] = 0.;
-                    }
+                    varpoint[ishift] = (r < lrad) ? lambda_radial(r) : 0.;
                     ishift++;
                 }
-
                 offset++;
+                point[2] += h[2];
+            } // iz
 
-                point[2] += h2;
+            point[1] += h[1];
+        } // iy
 
-            } // end for iz
-
-            point[1] += h1;
-
-        } // end for iy
-
-        point[0] += h0;
-
-    } // end for ix
+        point[0] += h[0];
+    } // ix
 }
 
-template <class T>
-void Forces<T>::get_loc_proj(RHODTYPE* rho,
-    std::vector<std::array<double, 3 * NPTS>>& var_pot,
-    std::vector<std::array<double, 3 * NPTS>>& var_charge,
-    std::array<double, 3 * NPTS>& loc_proj)
+template <class OrbitalsType>
+void Forces<OrbitalsType>::computeIntegrals(const std::vector<double>& field,
+    const std::vector<std::array<double, 3 * MGMOL_FD_NPTS>>& shifted_field,
+    std::array<double, 3 * MGMOL_FD_NPTS>& integrals)
 {
-    get_loc_proj_tm_.start();
+    computeIntegrals_tm_.start();
 
     Mesh* mymesh    = Mesh::instance();
     const int numpt = mymesh->numpt();
 
-    Potentials& pot = hamiltonian_->potential();
-    const std::vector<POTDTYPE>& vh_rho(pot.vh_rho());
+    for (short i = 0; i < 3 * MGMOL_FD_NPTS; i++)
+        integrals[i] = 0.;
+
     for (int idx = 0; idx < numpt; idx++)
     {
-        const double vhrho = vh_rho[idx];
+        const double f = field[idx];
+        const std::array<double, 3 * MGMOL_FD_NPTS>& sf(shifted_field[idx]);
+
         for (short dir = 0; dir < 3; dir++)
         {
-            double* lproj = &(loc_proj[dir * NPTS]);
-            std::array<double, 3 * NPTS>& varpot(var_pot[idx]);
-            std::array<double, 3 * NPTS>& varcharge(var_charge[idx]);
+            const short offset = dir * MGMOL_FD_NPTS;
 
-            // pseudopotential * rho
-            // - delta rhoc * vh
-            for (short ishift = 0; ishift < NPTS; ishift++)
+            for (short ishift = 0; ishift < MGMOL_FD_NPTS; ishift++)
             {
-                lproj[ishift] += varpot[NPTS * dir + ishift] * rho[idx];
-                lproj[ishift] -= varcharge[NPTS * dir + ishift] * vhrho;
+                integrals[offset + ishift] += sf[offset + ishift] * f;
             }
         }
     }
 
-    get_loc_proj_tm_.stop();
+    computeIntegrals_tm_.stop();
 }
 
-template <class T>
-void Forces<T>::lforce_ion(Ion& ion, RHODTYPE* rho,
-    std::array<double, 3 * NPTS>& loc_proj, const char flag_filter)
+template <class OrbitalsType>
+void Forces<OrbitalsType>::integrals_ion(const Ion& ion,
+    const std::vector<RHODTYPE>& rho, const std::vector<POTDTYPE>& vh_rho,
+    std::array<double, 3 * MGMOL_FD_NPTS>& integrals, const char flag_filter)
 {
     Mesh* mymesh    = Mesh::instance();
     const int numpt = mymesh->numpt();
 
-    std::vector<std::array<double, 3 * NPTS>> var_pot(numpt);
-    std::vector<std::array<double, 3 * NPTS>> var_charge(numpt);
+    std::vector<std::array<double, 3 * MGMOL_FD_NPTS>> local_pot(numpt);
+    std::vector<std::array<double, 3 * MGMOL_FD_NPTS>> rhos(numpt);
 
-    // generate var_pot and var_charge for this ion
-    evaluateShiftedFields(ion, var_pot, var_charge, flag_filter);
+    // generate local_pot and rhos for this ion for all possible shifts
+    evaluateShiftedFields(ion, local_pot, rhos, flag_filter);
 
-    get_loc_proj(rho, var_pot, var_charge, loc_proj);
+    // compute integral of local potential * rhoe - rhos * vh
+    // for all possible shifts of ion (i.e. local potential and rhos)
+    std::array<double, 3 * MGMOL_FD_NPTS> integrals1;
+    computeIntegrals(rho, local_pot, integrals1);
+
+    std::array<double, 3 * MGMOL_FD_NPTS> integrals2;
+    computeIntegrals(vh_rho, rhos, integrals2);
+
+    for (short i = 0; i < 3 * MGMOL_FD_NPTS; i++)
+        integrals[i] = integrals1[i] - integrals2[i];
 }
 
-template <class T>
-void Forces<T>::lforce(Ions& ions, RHODTYPE* rho)
+template <class OrbitalsType>
+void Forces<OrbitalsType>::lforce(Ions& ions, const std::vector<RHODTYPE>& rho,
+    const std::vector<POTDTYPE>& vh_rho)
 {
     Mesh* mymesh           = Mesh::instance();
     const pb::Grid& mygrid = mymesh->grid();
-    //    Control& ct = *(Control::instance());
 
     lforce_tm_.start();
-
-    std::array<double, 3 * NPTS> loc_proj;
-
     lforce_local_tm_.start();
 
-    std::array<int, 3 * NPTS> cols;
-    for (int i = 0; i < 3 * NPTS; i++)
+    std::array<int, 3 * MGMOL_FD_NPTS> cols;
+    for (int i = 0; i < 3 * MGMOL_FD_NPTS; i++)
         cols[i] = i;
 
-    VariableSizeMatrix<sparserow> loc_proj_mat(
-        "locProj", ions.overlappingVL_ions().size());
-    // Loop over ions with potential overlaping with local subdomain
+    VariableSizeMatrix<sparserow> integrals_mat(
+        "integrals_mat", ions.overlappingVL_ions().size());
 
     // Hack filter type
     const char flag_filter = (hamiltonian_->potential()).pot_type(0);
 
-    for (auto& ion : ions.overlappingVL_ions())
+    // Loop over ions with potential overlaping with local subdomain
+    for (const auto& ion : ions.overlappingVL_ions())
     {
-        int index = ion->index();
-        for (short dir = 0; dir < 3 * NPTS; dir++)
-            loc_proj[dir] = 0.;
-        lforce_ion(*ion, rho, loc_proj, flag_filter);
+        std::array<double, 3 * MGMOL_FD_NPTS> integrals;
+        integrals_ion(*ion, rho, vh_rho, integrals, flag_filter);
 
         /* insert row into 2D matrix */
-        loc_proj_mat.insertNewRow(
-            3 * NPTS, index, cols.data(), &loc_proj[0], true);
+        const int index = ion->index();
+        integrals_mat.insertNewRow(
+            3 * MGMOL_FD_NPTS, index, cols.data(), &integrals[0], true);
     }
 
     lforce_local_tm_.stop();
@@ -367,24 +367,49 @@ void Forces<T>::lforce(Ions& ions, RHODTYPE* rho)
         DataDistribution::enforceComputeMaxDataSize();
         first_time = false;
     }
-    distributor.augmentLocalData(loc_proj_mat, false);
+    distributor.augmentLocalData(integrals_mat, false);
 
     consolidate_data_.stop();
 
-    for (auto& lion : ions.local_ions())
+    for (auto& ion : ions.local_ions())
     {
-        // Forces opposed to the gradient
-        int index   = lion->index();
-        int* rindex = (int*)loc_proj_mat.getTableValue(index);
+        int index   = ion->index();
+        int* rindex = (int*)integrals_mat.getTableValue(index);
         assert(rindex != nullptr);
-        std::fill(loc_proj.begin(), loc_proj.end(), 0.);
-        loc_proj_mat.row_daxpy(*rindex, 3 * NPTS, mygrid.vel(), &loc_proj[0]);
+        std::array<double, 3 * MGMOL_FD_NPTS> integrals;
+        std::fill(integrals.begin(), integrals.end(), 0.);
+        integrals_mat.row_daxpy(
+            *rindex, 3 * MGMOL_FD_NPTS, mygrid.vel(), &integrals[0]);
 
-        lion->add_force(-get_deriv2(&loc_proj[0]),
-            -get_deriv2(&(loc_proj[NPTS])), -get_deriv2(&(loc_proj[2 * NPTS])));
+        double ex[MGMOL_FD_NPTS];
+        for (short i = 0; i < MGMOL_FD_NPTS; i++)
+            ex[i] = integrals[i];
+
+        double ey[MGMOL_FD_NPTS];
+        for (short i = 0; i < MGMOL_FD_NPTS; i++)
+            ey[i] = integrals[i + MGMOL_FD_NPTS];
+
+        double ez[MGMOL_FD_NPTS];
+        for (short i = 0; i < MGMOL_FD_NPTS; i++)
+            ez[i] = integrals[i + 2 * MGMOL_FD_NPTS];
+
+        const double gx = get_deriv2(ex);
+        const double gy = get_deriv2(ey);
+        const double gz = get_deriv2(ez);
+
+        // Forces opposed to the gradient
+        ion->add_force(-gx, -gy, -gz);
     }
 
-#ifdef HAVE_TRICUBIC
+    lforce_tm_.stop();
+}
+
+template <class OrbitalsType>
+void Forces<OrbitalsType>::external_force(Ions& ions)
+{
+#ifndef HAVE_TRICUBIC
+    (void)ions;
+#else
     Potentials& pot = hamiltonian_->potential();
     if (pot.withVext())
     {
@@ -409,12 +434,11 @@ void Forces<T>::lforce(Ions& ions, RHODTYPE* rho)
         }
     }
 #endif
-
-    lforce_tm_.stop();
 }
 
-template <class T>
-SquareLocalMatrices<double, MemorySpace::Host> Forces<T>::getReplicatedDM()
+template <class OrbitalsType>
+SquareLocalMatrices<double, MemorySpace::Host>
+Forces<OrbitalsType>::getReplicatedDM()
 {
     {
         ProjectedMatrices<ReplicatedMatrix>* projmatrices
@@ -437,8 +461,8 @@ SquareLocalMatrices<double, MemorySpace::Host> Forces<T>::getReplicatedDM()
 // Get the nl energy as the trace of loc_kbpsi*mat_X for several loc_kbpsi
 // result added to erg
 
-template <class T>
-void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
+template <class OrbitalsType>
+void Forces<OrbitalsType>::nlforceSparse(OrbitalsType& orbitals, Ions& ions)
 {
     if (ions.getNumIons() == 0) return;
 
@@ -460,14 +484,14 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
     // compute all kbpsi matrices for all shifts
     for (short dir = 0; dir < 3; dir++)
     {
-        kbpsi[dir] = new KBPsiMatrixSparse*[NPTS];
-        for (int npt = 0; npt < NPTS; npt++)
+        kbpsi[dir] = new KBPsiMatrixSparse*[MGMOL_FD_NPTS];
+        for (int npt = 0; npt < MGMOL_FD_NPTS; npt++)
         {
             kbpsi[dir][npt] = new KBPsiMatrixSparse(nullptr, false);
 
             double shift[3] = { 0., 0., 0. };
-            shift[dir]      = shift_R[dir * NPTS + npt][dir];
-            Ions shifted_ions(ions, shift); ///***
+            shift[dir]      = shift_R_[dir * MGMOL_FD_NPTS + npt][dir];
+            Ions shifted_ions(ions, shift);
 
             kbpsi[dir][npt]->setup(shifted_ions);
             kbpsi[dir][npt]->computeAll(shifted_ions, orbitals);
@@ -499,22 +523,22 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
             {
                 const int gid = gids[i];
 
-                double* zeros = new double[3 * NPTS];
-                memset(zeros, 0, 3 * NPTS * sizeof(double));
+                double* zeros = new double[3 * MGMOL_FD_NPTS];
+                memset(zeros, 0, 3 * MGMOL_FD_NPTS * sizeof(double));
                 erg.insert(std::pair<int, double*>(gid, zeros));
             }
 
 #pragma omp parallel for
-            for (short ii = 0; ii < nprojs * 3 * NPTS; ii++)
+            for (short ii = 0; ii < nprojs * 3 * MGMOL_FD_NPTS; ii++)
             {
-                const short ip      = ii / (3 * NPTS);
+                const short ip      = ii / (3 * MGMOL_FD_NPTS);
                 const int gid       = gids[ip];
                 const double kbmult = static_cast<double>(kbsigns[ip]);
-                const short it      = ii % (3 * NPTS);
-                const short dir     = it / NPTS;
-                const short ishift  = it % NPTS;
+                const short it      = ii % (3 * MGMOL_FD_NPTS);
+                const short dir     = it / MGMOL_FD_NPTS;
+                const short ishift  = it % MGMOL_FD_NPTS;
                 const double alpha  = kbpsi[dir][ishift]->getTraceDM(gid, dm);
-                erg[gid][NPTS * dir + ishift] = alpha * kbmult;
+                erg[gid][MGMOL_FD_NPTS * dir + ishift] = alpha * kbmult;
             }
         }
     }
@@ -541,16 +565,16 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
                 const int gid       = gids[i];
                 const double kbmult = (double)kbsigns[i];
 
-                double* zeros = new double[3 * NPTS];
-                memset(zeros, 0, 3 * NPTS * sizeof(double));
+                double* zeros = new double[3 * MGMOL_FD_NPTS];
+                memset(zeros, 0, 3 * MGMOL_FD_NPTS * sizeof(double));
                 erg.insert(std::pair<int, double*>(gid, zeros));
 
                 for (short dir = 0; dir < 3; dir++)
-                    for (short ishift = 0; ishift < NPTS; ishift++)
+                    for (short ishift = 0; ishift < MGMOL_FD_NPTS; ishift++)
                     {
                         double alpha = kbpsi[dir][ishift]->getTraceDM(
                             gid, work_DM_matrix, ndim);
-                        erg[gid][NPTS * dir + ishift] = alpha * kbmult;
+                        erg[gid][MGMOL_FD_NPTS * dir + ishift] = alpha * kbmult;
                     }
             }
         }
@@ -560,7 +584,7 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
     // release memory
     for (short dir = 0; dir < 3; dir++)
     {
-        for (short npt = 0; npt < NPTS; npt++)
+        for (short npt = 0; npt < MGMOL_FD_NPTS; npt++)
         {
             delete kbpsi[dir][npt];
         }
@@ -580,9 +604,20 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
         {
             const int gid = gids[i];
 
-            double ff[3] = { get_deriv2(&erg[gid][NPTS * 0]) * factor,
-                get_deriv2(&erg[gid][NPTS * 1]) * factor,
-                get_deriv2(&erg[gid][NPTS * 2]) * factor };
+            double ex[MGMOL_FD_NPTS];
+            for (short i = 0; i < MGMOL_FD_NPTS; i++)
+                ex[i] = erg[gid][i];
+
+            double ey[MGMOL_FD_NPTS];
+            for (short i = 0; i < MGMOL_FD_NPTS; i++)
+                ey[i] = erg[gid][i + MGMOL_FD_NPTS];
+
+            double ez[MGMOL_FD_NPTS];
+            for (short i = 0; i < MGMOL_FD_NPTS; i++)
+                ez[i] = erg[gid][i + MGMOL_FD_NPTS * 2];
+
+            double ff[3] = { get_deriv2(ex) * factor, get_deriv2(ey) * factor,
+                get_deriv2(ez) * factor };
 
             if (mmpi.nspin() == 2)
             {
@@ -604,14 +639,9 @@ void Forces<T>::nlforceSparse(T& orbitals, Ions& ions)
     nlforce_tm_.stop();
 }
 
-template <class T>
-void Forces<T>::force(T& orbitals, Ions& ions)
+template <class OrbitalsType>
+void Forces<OrbitalsType>::force(OrbitalsType& orbitals, Ions& ions)
 {
-#ifdef USE_BARRIERS
-    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
-    mmpi.barrier();
-#endif
-
     total_tm_.start();
 
     const int numpt = rho_->rho_[0].size();
@@ -630,46 +660,23 @@ void Forces<T>::force(T& orbitals, Ions& ions)
     std::vector<RHODTYPE>& rho
         = (rho_->rho_.size() > 1) ? rho_tmp : rho_->rho_[0];
 
-    for (int i = 0; i < 3 * NPTS; i++)
-    {
-        for (int j = 0; j < 3; j++)
-            shift_R[i][j] = 0.;
-    }
-    for (int i = 0; i < 3; i++)
-    {
-        shift_R[NPTS * i + 0][i] = -DELTAC;
-        shift_R[NPTS * i + 1][i] = DELTAC;
-#if NPTS > 3
-        shift_R[NPTS * i + 2][i] = -2. * DELTAC;
-        shift_R[NPTS * i + 3][i] = 2. * DELTAC;
-#endif
-    }
     Control& ct = *(Control::instance());
 
     // Zero out forces
     ions.resetForces();
 
-    // Get the ion-ion component and store.
+    // Get ion-ion component and store it
     ions.iiforce(ct.bcPoisson);
 
-    // Add the non-local forces
-#ifdef USE_BARRIERS
-    mmpi.barrier();
-#endif
-    //    if(ct.short_sighted)
+    // Add non-local forces
     nlforceSparse(orbitals, ions);
-    //    else
-    //        nlforce(orbitals,ions);
 
-    // Add the local forces
-#ifdef USE_BARRIERS
-    mmpi.barrier();
-#endif
-    lforce(ions, &rho[0]);
+    // Add local forces
+    Potentials& pot = hamiltonian_->potential();
+    const std::vector<POTDTYPE>& vh_rho(pot.vh_rho());
+    lforce(ions, rho, vh_rho);
 
-#ifdef USE_BARRIERS
-    mmpi.barrier();
-#endif
+    external_force(ions);
 
     total_tm_.stop();
 }
