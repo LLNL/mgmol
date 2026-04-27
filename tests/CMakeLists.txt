@@ -512,6 +512,13 @@ add_test(NAME testCl2
          ${CMAKE_CURRENT_SOURCE_DIR}/Cl2_ONCVPSP_LDA/mgmol.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/Cl2_ONCVPSP_LDA/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+add_test(NAME testForcesSymmetry
+         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ForcesSymmetry/test.py
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+         ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
+         ${CMAKE_CURRENT_SOURCE_DIR}/ForcesSymmetry/mgmol.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/ForcesSymmetry/p4.xyz
+         ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME testContinuumSolvent
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ContinuumSolvent/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
