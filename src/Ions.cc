@@ -3339,7 +3339,8 @@ void Ions::initStepperData()
             rand_states_.push_back(ion->randomState(i));
         }
     }
-    // initialize taup to enable computing velocities
+    // initialize taup_ to enable computation of velocities
+    // taup_ = tau0_ + (tau0_-taum_)
     int size_tau = (int)tau0_.size();
     taup_        = tau0_;
 

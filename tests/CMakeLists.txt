@@ -645,6 +645,13 @@ add_test(NAME ReplicatedSP2
          ${CMAKE_CURRENT_SOURCE_DIR}/ReplicatedSP2/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/ReplicatedSP2/lrs.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+add_test(NAME testMD_NoRestart
+         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/MD_NoRestart/test.py
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+         ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
+         ${CMAKE_CURRENT_SOURCE_DIR}/MD_NoRestart/mgmol.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/MD_NoRestart/coords.in
+         ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME testMD_D72
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/MD_D72/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 5 ${MPIEXEC_PREFLAGS}
