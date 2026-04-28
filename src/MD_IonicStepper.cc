@@ -24,6 +24,7 @@ const double scmass = 1822.89;
 // kb_au=8.617343e-5 [eV/K] / 27.211608 [eV/Ha]
 const double kb_au = 3.16678939e-06; // [Ha/K]
 
+// Input: assume taum is initialized with values of velocities
 MD_IonicStepper::MD_IonicStepper(const double dt, vector<short>& atmove,
     vector<double>& tau0, vector<double>& taup, vector<double>& taum,
     vector<double>& fion, const vector<double>& pmass,
@@ -50,6 +51,27 @@ MD_IonicStepper::MD_IonicStepper(const double dt, vector<short>& atmove,
     thtime_  = -1.;
     thwidth_ = -1.;
     gamma_   = -1.;
+
+    int size_tau = (int)tau0_.size();
+    int ione     = 1;
+    double one   = 1.;
+    if (dt > 0.0)
+    {
+        if (onpe0)
+            (*MPIdata::sout) << "MD_IonicStepper() with dt =  " << dt_ << endl;
+        // taum_ was initialized with velocities
+        // set taum_ to displacements = -dt*vel
+        double alpha = -1. * dt;
+        DSCAL(&size_tau, &alpha, &taum_[0], &ione);
+
+        // initialize taup_ (to define velocities)
+        double minus_one = -1.;
+        taup_            = tau0_;
+        DAXPY(&size_tau, &minus_one, &taum_[0], &ione, &taup_[0], &ione);
+
+        // Now set taum_ to previous positions: tau0_ - dt*vel
+        DAXPY(&size_tau, &one, &tau0_[0], &ione, &taum_[0], &ione);
+    }
 }
 
 void MD_IonicStepper::setThermostat(const int ttherm, const double tkel,
@@ -91,7 +113,7 @@ double MD_IonicStepper::kineticEnergy()
             }
             ke += pmass_[ia] * v2;
         }
-    // get ke sum
+
     MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
     mmpi.allreduce(&ke, 1, MPI_SUM);
 
@@ -103,33 +125,7 @@ double MD_IonicStepper::temperature()
     return kineticEnergy() / (0.5 * ndofs_ * kb_au);
 }
 
-int MD_IonicStepper::init(HDFrestart& /*h5f_file*/)
-{
-    int size_tau = (int)tau0_.size();
-    int ione     = 1;
-    double one   = 1.;
-    if (dt_ > 0.0)
-    {
-        if (onpe0)
-            (*MPIdata::sout) << "MD_IonicStepper::init() --- use positions "
-                                "from restart file with dt="
-                             << dt_ << endl;
-        // taum_ was initialized with velocities
-        // set taum_ to displacements = -dt*vel
-        double alpha = -1. * dt_;
-        DSCAL(&size_tau, &alpha, &taum_[0], &ione);
-
-        // initialize taup_ (to define velocities)
-        double minus_one = -1.;
-        taup_            = tau0_;
-        DAXPY(&size_tau, &minus_one, &taum_[0], &ione, &taup_[0], &ione);
-
-        // Now set taum_ to previous positions: tau0_ - dt*vel
-        DAXPY(&size_tau, &one, &tau0_[0], &ione, &taum_[0], &ione);
-    }
-
-    return 0;
-}
+int MD_IonicStepper::init(HDFrestart& /*h5f_file*/) { return 0; }
 
 int MD_IonicStepper::write_hdf5(HDFrestart& h5f_file)
 {

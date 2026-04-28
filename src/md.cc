@@ -319,7 +319,6 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
     std::vector<double>& vel(ions.getVelocities());
     taum = vel;
 
-    int size_tau = (int)tau0.size();
     DFTsolver<OrbitalsType>::resetItCount();
 
     orbitals_extrapol_.reset(OrbitalsExtrapolationFactory<OrbitalsType>::create(
@@ -331,34 +330,6 @@ void MGmol<OrbitalsType>::md(OrbitalsType** orbitals, Ions& ions)
         constraints_->size());
 
     constraints_->printConstraints(os_);
-
-    if (ct.restart_info > 0)
-    {
-        if (onpe0) os_ << "Use restart file to initialize MD..." << std::endl;
-        stepper->init(*h5f_file_);
-    }
-    else
-    {
-        if (onpe0) os_ << "Use input file to initialize MD..." << std::endl;
-
-        // tau0: velocities->displacements
-        double dt = -ct.dt;
-        int ione  = 1;
-        DSCAL(&size_tau, &dt, &tau0[0], &ione);
-
-        // tau0: previous positions given displacement
-        double one = 1.;
-        DAXPY(&size_tau, &one, &taup[0], &ione, &tau0[0], &ione);
-
-        // enforce constraints before 1st step
-        constraints_->enforceConstraints(20);
-
-        stepper->updateTau();
-        ions.setLocalPositions(tau0);
-
-        // setup required after updating local ions positions
-        ions.setup();
-    }
 
     ions.printPositions(os_);
 
