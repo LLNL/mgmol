@@ -8,13 +8,13 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "Potentials.h"
+
 #include "Control.h"
 #include "Delh4.h"
 #include "Grid.h"
 #include "GridFunc.h"
 #include "Ions.h"
 #include "MGmol_MPI.h"
-#include "MGmol_blas1.h"
 #include "MPIdata.h"
 #include "Mesh.h"
 #include "Species.h"
@@ -71,6 +71,7 @@ Potentials::Potentials()
 
     v_nuc_.resize(size_);
     v_ext_.resize(size_);
+    v_efield_.resize(size_);
 
     dv_.resize(size_);
 
@@ -80,11 +81,18 @@ Potentials::Potentials()
     memset(vh_rho_.data(), 0, size_ * sizeof(POTDTYPE));
     memset(vxc_rho_.data(), 0, size_ * sizeof(POTDTYPE));
     memset(v_ext_.data(), 0, size_ * sizeof(POTDTYPE));
+    memset(v_efield_.data(), 0, size_ * sizeof(POTDTYPE));
     memset(vh_rho_backup_.data(), 0, size_ * sizeof(POTDTYPE));
 
 #ifdef HAVE_TRICUBIC
     vext_tricubic_ = NULL;
 #endif
+
+    Control& ct     = *(Control::instance());
+    const double ex = (double)ct.ex_;
+    const double ey = (double)ct.ey_;
+    const double ez = (double)ct.ez_;
+    setupVefield(ex, ey, ez);
 }
 
 double Potentials::max() const
@@ -144,7 +152,8 @@ double Potentials::updateVtot(const std::vector<std::vector<RHODTYPE>>& rho)
         vtot_[idx]
             = (POTDTYPE)(ha2ry
                          * ((double)v_nuc_[idx] + (double)v_ext_[idx]
-                             + (double)vh_rho_[idx] + (double)vxc_rho_[idx]));
+                             + (double)v_efield_[idx] + (double)vh_rho_[idx]
+                             + (double)vxc_rho_[idx]));
     }
     double two = ha2ry;
     if (diel_)
@@ -211,7 +220,8 @@ double Potentials::computeDeltaV(const std::vector<std::vector<RHODTYPE>>& rho)
         dv_[idx]
             = (POTDTYPE)(ha2ry
                          * ((double)v_nuc_[idx] + (double)v_ext_[idx]
-                             + (double)vh_rho_[idx] + (double)vxc_rho_[idx]));
+                             + (double)v_efield_[idx] + (double)vh_rho_[idx]
+                             + (double)vxc_rho_[idx]));
     }
     double two = ha2ry;
     if (diel_)
@@ -256,6 +266,44 @@ void Potentials::getVofRho(std::vector<POTDTYPE>& vrho) const
         size_, minustwo, &v_nuc_[0], &vrho[0]);
     LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
         size_, minustwo, &v_ext_[0], &vrho[0]);
+    LinearAlgebraUtils<MemorySpace::Host>::MPaxpy(
+        size_, minustwo, &v_efield_[0], &vrho[0]);
+}
+
+void Potentials::setupVefield(const double ex, const double ey, const double ez)
+{
+    // save field last used
+    efield_[0] = ex;
+    efield_[1] = ey;
+    efield_[2] = ez;
+
+    if (verbosity_level_ >= 0 && onpe0)
+        (*MPIdata::sout) << "Potentials: ex = " << ex << ", ey = " << ey
+                         << ", ez = " << ez << std::endl;
+
+    Mesh* mymesh           = Mesh::instance();
+    const pb::Grid& mygrid = mymesh->grid();
+
+    const double h[3] = { mygrid.hgrid(0), mygrid.hgrid(1), mygrid.hgrid(2) };
+    const double start[3]
+        = { mygrid.start(0), mygrid.start(1), mygrid.start(2) };
+
+    for (int i = 0; i < dim_[0]; i++)
+    {
+        const double x = start[0] + i * h[0];
+        for (int j = 0; j < dim_[1]; j++)
+        {
+            const double y = start[1] + j * h[1];
+            for (int k = 0; k < dim_[2]; k++)
+            {
+                const double z = start[2] + k * h[2];
+
+                // convention: potential 0 at origin
+                v_efield_[i * dim_[2] * dim_[1] + j * dim_[2] + k]
+                    = x * ex + y * ey + z * ez;
+            }
+        }
+    }
 }
 
 #ifdef HAVE_TRICUBIC

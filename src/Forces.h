@@ -70,6 +70,7 @@ private:
     void lforce(Ions& ions, const std::vector<RHODTYPE>& rho,
         const std::vector<POTDTYPE>& vh_rho);
     void external_force(Ions& ions);
+    void efield_force(Ions& ions);
 
 public:
     Forces(Hamiltonian<OrbitalsType>* hamiltonian, Rho<OrbitalsType>* rho,

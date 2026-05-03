@@ -451,7 +451,7 @@ void Control::sync(void)
         memset(&int_buffer[0], 0, size_int_buffer * sizeof(int));
     }
 
-    const short size_float_buffer = 45;
+    const short size_float_buffer = 48;
     float* float_buffer           = new float[size_float_buffer];
     if (mype_ == 0)
     {
@@ -499,6 +499,9 @@ void Control::sync(void)
         float_buffer[42] = e0_;
         float_buffer[43] = dm_tol;
         float_buffer[44] = poisson_conv_tol;
+        float_buffer[45] = ex_;
+        float_buffer[46] = ey_;
+        float_buffer[47] = ez_;
     }
     else
     {
@@ -702,6 +705,9 @@ void Control::sync(void)
     e0_                               = float_buffer[42];
     dm_tol                            = float_buffer[43];
     poisson_conv_tol                  = float_buffer[44];
+    ex_                               = float_buffer[45];
+    ey_                               = float_buffer[46];
+    ez_                               = float_buffer[47];
     max_electronic_steps_loose_       = max_electronic_steps;
 
     delete[] short_buffer;
@@ -1436,6 +1442,10 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         poisson_pc_data_ = vm["Poisson.precond_precision"].as<short>();
         poisson_conv_tol = vm["Poisson.conv_tol"].as<float>();
 
+        ex_ = vm["Efield.ex"].as<float>();
+        ey_ = vm["Efield.ey"].as<float>();
+        ez_ = vm["Efield.ez"].as<float>();
+
         str = vm["ProjectedMatrices.solver"].as<std::string>();
         if (str.compare("short_sighted") == 0) short_sighted = 1;
         if (str.compare("exact") == 0) short_sighted = 0;
@@ -1926,6 +1936,27 @@ int Control::checkOptions()
         (*MPIdata::sout)
             << "ERROR: Dipole computation requires replicated matrices"
             << std::endl;
+        return -1;
+    }
+    if (std::abs(ex_) > 0. && bcWF[0] == 1)
+    {
+        (*MPIdata::sout) << "ERROR: Electrostatic field in x-rection requires "
+                            "non-periodic BC"
+                         << std::endl;
+        return -1;
+    }
+    if (std::abs(ey_) > 0. && bcWF[1] == 1)
+    {
+        (*MPIdata::sout) << "ERROR: Electrostatic field in y-rection requires "
+                            "non-periodic BC"
+                         << std::endl;
+        return -1;
+    }
+    if (std::abs(ez_) > 0. && bcWF[2] == 1)
+    {
+        (*MPIdata::sout) << "ERROR: Electrostatic field in z-rection requires "
+                            "non-periodic BC"
+                         << std::endl;
         return -1;
     }
     return 0;
