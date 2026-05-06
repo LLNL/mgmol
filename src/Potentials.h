@@ -63,6 +63,11 @@ class Potentials
 #endif
 
     /*!
+     * Optional external potential from electrostatic field
+     */
+    std::vector<POTDTYPE> v_efield_;
+
+    /*!
      * Potential associated with the sum of Gaussian charge distributions
      * compensating  the Coulomb potential of each atom
      */
@@ -80,6 +85,11 @@ class Potentials
      * Backpup copy of Hartree potential to save previous state
      */
     std::vector<POTDTYPE> vh_rho_backup_;
+
+    /*!
+     * Electrostatic field
+     */
+    double efield_[3];
 
     int itindex_vxc_;
     int itindex_vh_;
@@ -170,6 +180,8 @@ public:
 
     void getVofRho(std::vector<POTDTYPE>& vrho) const;
 
+    double getEfield(short int dir) { return efield_[dir]; }
+
     /*!
      * evaluate potential correction associated with a new rho
      */
@@ -195,6 +207,11 @@ public:
     void setVh(const pb::GridFunc<POTDTYPE>& vh, const int iterativeIndex);
 
     void initialize(Ions& ions);
+
+    /*!
+     * Setup linear potential based on values of exetrostatic field ex, ey, ez
+     */
+    void setupVefield(const double ex, const double ey, const double ez);
 
     /*!
      * Save current Hartree potential into backup array

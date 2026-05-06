@@ -540,6 +540,7 @@ add_test(NAME testDipole
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
          ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
          ${CMAKE_CURRENT_SOURCE_DIR}/Dipole/mgmol.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/Dipole/efield.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/Dipole/h2o.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME Davidson

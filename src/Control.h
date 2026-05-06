@@ -549,6 +549,13 @@ public:
     // flag to reset Vh at beginning of each MD step
     short hartree_reset_;
 
+    /*!
+     * Components of electrostatic field
+     */
+    float ex_;
+    float ey_;
+    float ez_;
+
     // short-sighted computation of selected elements of inverse
     short short_sighted;
     short fgmres_kim;

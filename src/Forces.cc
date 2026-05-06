@@ -421,7 +421,7 @@ void Forces<OrbitalsType>::external_force(Ions& ions)
 
             pot.getGradVext(position, grad);
 
-            const double charge = (*ion)->getZion();
+            const double charge = ion->getZion();
 
             ion->add_force(
                 grad[0] * charge, grad[1] * charge, grad[2] * charge);
@@ -434,6 +434,21 @@ void Forces<OrbitalsType>::external_force(Ions& ions)
         }
     }
 #endif
+}
+
+template <class OrbitalsType>
+void Forces<OrbitalsType>::efield_force(Ions& ions)
+{
+    Potentials& pot = hamiltonian_->potential();
+
+    for (auto& ion : ions.local_ions())
+    {
+        double grad[3]
+            = { pot.getEfield(0), pot.getEfield(1), pot.getEfield(2) };
+        const double charge = ion->getZion();
+
+        ion->add_force(charge * grad[0], charge * grad[1], charge * grad[2]);
+    }
 }
 
 template <class OrbitalsType>
@@ -677,6 +692,8 @@ void Forces<OrbitalsType>::force(OrbitalsType& orbitals, Ions& ions)
     lforce(ions, rho, vh_rho);
 
     external_force(ions);
+
+    efield_force(ions);
 
     total_tm_.stop();
 }
