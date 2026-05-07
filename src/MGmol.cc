@@ -546,6 +546,8 @@ void MGmol<OrbitalsType>::run()
 
             if ((ions_->getNumIons() <= 1024 || ct.verbose > 1))
                 ions_->printForcesGlobal(os_);
+            if (ct.verbose > 1)
+                forces_->dVsdRhoComponent(*current_orbitals_, *ions_);
 
             finalEnergy();
 
