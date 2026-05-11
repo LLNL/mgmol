@@ -15,7 +15,7 @@ White
 # Number of valence electrons
 3.0
 # Gaussian core charge parameter rc
-1.
+0.5656854249492381
 # Number of potentials
 1
 # l-value for state which is local

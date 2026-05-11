@@ -1,6 +1,6 @@
 # Generate local potential according to
 # Goedecker, Teter, Hutter, Phys. rev. B 54 (3), 1996
-# Parameters from M. Krack, Theor. Chem. Acc. 114, 2005
+# PBE parameters from M. Krack, Theor. Chem. Acc. 114, 2005
 from math import exp, erf, sqrt, pi
 
 #coefficients for H
@@ -43,7 +43,9 @@ print(mass)
 print("# Number of valence electrons")
 print(zion)
 print("# Gaussian core charge parameter rc")
-print("1.")
+#change of convention from GTH to MGmol
+rc=sqrt(2.)*rloc
+print(rc)
 print("# Number of potentials")
 print("1")
 print("# l-value for state which is local")
