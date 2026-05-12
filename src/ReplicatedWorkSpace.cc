@@ -48,14 +48,12 @@ void ReplicatedWorkSpace<ScalarType>::setUpperTriangularSquareMatrixToZero()
     }
 }
 
-#ifdef MGMOL_USE_SCALAPACK
 template <class ScalarType>
 void ReplicatedWorkSpace<ScalarType>::initSquareMatrix(
     const dist_matrix::DistMatrix<ScalarType>& distmat)
 {
     distmat.allgather(square_matrix_, ndim_);
 }
-#endif
 
 template <class ScalarType>
 void ReplicatedWorkSpace<ScalarType>::initSquareMatrix(

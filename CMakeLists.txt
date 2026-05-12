@@ -131,13 +131,29 @@ set (MGMOL_WITH_SCALAPACK True CACHE BOOL "Build with SCALAPACK")
 if (${MGMOL_WITH_SCALAPACK} OR DEFINED SCALAPACK_ROOT)
   find_package(SCALAPACK)
   if(${SCALAPACK_FOUND})
-    add_definitions(-DMGMOL_USE_SCALAPACK)
+    add_definitions(-DSCALAPACK)
     message(STATUS "SCALAPACK_INCLUDE_DIRS: ${SCALAPACK_INCLUDE_DIRS}")
     message(STATUS "SCALAPACK_LIBARIES: ${SCALAPACK_LIBRARIES}")
   else(${SCALAPACK_FOUND})
     message(FATAL_ERROR "Required SCALAPACK package not found.")
   endif(${SCALAPACK_FOUND})  
 endif(${MGMOL_WITH_SCALAPACK} OR DEFINED SCALAPACK_ROOT)
+
+# libROM (optional)
+set(USE_LIBROM False CACHE BOOL "Build with libROM")
+set(LIBROM_PATH "" CACHE STRING "Path of libROM")
+if(USE_LIBROM)
+  message(STATUS "LIBROM_PATH: ${LIBROM_PATH}")
+  if(NOT LIBROM_PATH)
+    message(FATAL_ERROR "Cmake is asked to use libROM, but LIBROM_PATH not specified.")
+  endif(NOT LIBROM_PATH)
+
+  find_package(libROM REQUIRED)
+
+  if(libROM_FOUND)
+    add_definitions(-DMGMOL_HAS_LIBROM)
+  endif(libROM_FOUND)
+endif(USE_LIBROM)
 
 # ARPACK (optional)
 set(MGMOL_WITH_ARPACK FALSE CACHE BOOL "Compile with ARPACK package")
@@ -220,8 +236,7 @@ FortranCInterface_HEADER(
         DGETRF DGETRS DLACPY
 )
 
-if(${SCALAPACK_FOUND})
-  FortranCInterface_HEADER(
+FortranCInterface_HEADER(
     scalapack_mangle.h
     MACRO_NAMESPACE "FC_SCALAPACK_"
     SYMBOLS
@@ -234,8 +249,7 @@ if(${SCALAPACK_FOUND})
         pdtrtri pstrtri pdpocon pspocon pdsygst pssygst pdsyev pssyev
         pdelset pselset pdelget pselget pdlatra pslatra pdlaset pslaset pdgesvd psgesvd
         pdamax psamax
-  )
-endif(${SCALAPACK_FOUND})
+)
 
 FortranCInterface_HEADER(
     arpack_mangle.h
@@ -264,6 +278,9 @@ include_directories("${PROJECT_SOURCE_DIR}/src/radial")
 include_directories("${PROJECT_SOURCE_DIR}/src/sparse_linear_algebra")
 include_directories("${PROJECT_SOURCE_DIR}/src/tools")
 include_directories("${PROJECT_SOURCE_DIR}/src")
+
+include_directories("${LIBROM_PATH}/lib")
+link_libraries(${LIBROM_LIB})
 
 # add subdirectories for source files, tests
 add_subdirectory(src)

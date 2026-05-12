@@ -10,7 +10,10 @@
 #ifndef MGMOL_PCG_SOLVER_H
 #define MGMOL_PCG_SOLVER_H
 
+#include "Control.h"
 #include "Lap.h"
+#include "LapFactory.h"
+#include "global.h"
 
 #include <vector>
 
@@ -19,13 +22,12 @@ class PCGSolver
 {
 private:
     std::vector<pb::Grid*> grid_;
+    short precond_lap_type_;
     short bc_[3];
     bool fully_periodic_;
 
     // operator to solve for
     OperatorType oper_;
-
-    const short precond_lap_type_;
 
     // preconditioner operator for each MG level
     std::vector<pb::Lap<PrecondDataType>*> precond_oper_;
@@ -52,10 +54,9 @@ private:
     void clear();
 
 public:
-    PCGSolver(OperatorType& oper, const short precond_lap_type, const short px,
-        const short py, const short pz)
+    PCGSolver(
+        OperatorType& oper, const short px, const short py, const short pz)
         : oper_(oper),
-          precond_lap_type_(precond_lap_type),
           maxiters_(10),
           tol_(1.e-16),
           final_residual_(-1.),
@@ -70,6 +71,9 @@ public:
         bc_[1]          = py;
         bc_[2]          = pz;
         fully_periodic_ = ((bc_[0] == 1) && (bc_[1] == 1) && (bc_[2] == 1));
+
+        Control& ct       = *(Control::instance());
+        precond_lap_type_ = ct.lap_type;
     };
 
     void setup(const short nu1, const short nu2, const short max_sweeps,

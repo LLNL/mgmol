@@ -6,11 +6,9 @@
 
 #include <random>
 
-#include "catch.hpp"
-
 // check that all forces components have integer values larger than 0
 // and differ from each other
-void checkForces(std::vector<double>& forces)
+int checkForces(std::vector<double>& forces)
 {
     const double tol = 1.e-14;
 
@@ -20,15 +18,23 @@ void checkForces(std::vector<double>& forces)
         for (auto f1 = f0 + 1; f1 != forces.end(); f1++)
         {
             // make sure each force component is different
-            CHECK(std::abs(*f0 - *f1) > tol);
-            CHECK(*f1 > tol);
-            CHECK(*f0 > tol);
+            if (std::abs(*f0 - *f1) < tol || *f1 < tol || *f0 < tol)
+            {
+                std::cerr << "f0 = " << *f0 << ", f1 = " << *f1 << std::endl;
+                return 1;
+            }
         }
     }
+
+    return 0;
 }
 
-TEST_CASE("Ions", "[ions]")
+int main(int argc, char** argv)
 {
+    int status = 0;
+
+    int mpirc = MPI_Init(&argc, &argv);
+
     MPI_Comm comm = MPI_COMM_WORLD;
 
     int myrank;
@@ -36,8 +42,6 @@ TEST_CASE("Ions", "[ions]")
 
     MGmol_MPI::setup(comm, std::cout);
     Control::setup(comm, false, 0.);
-
-    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
     // create a domain [0.10.]^3
     const double origin[3]  = { 0., 0., 0. };
@@ -60,7 +64,8 @@ TEST_CASE("Ions", "[ions]")
     Species sp(MPI_COMM_WORLD);
 
     // read species info from pseudopotential file
-    std::string filename("pseudo.C_ONCV_PBE_SG15");
+    std::string file_path = argv[1];
+    std::string filename(file_path + "/pseudo.C_ONCV_PBE_SG15");
     if (myrank == 0) std::cout << "Potential = " << filename << std::endl;
 
     sp.read_1species(filename);
@@ -109,9 +114,13 @@ TEST_CASE("Ions", "[ions]")
 
         int ntotal = 0;
         MPI_Allreduce(&nlocal, &ntotal, 1, MPI_INT, MPI_SUM, comm);
-        CHECK(ntotal == na);
+        if (ntotal != na)
+        {
+            std::cout << "ntotal = " << ntotal << std::endl;
+            status = 1;
+        }
     }
-    mmpi.barrier();
+    MPI_Barrier(MPI_COMM_WORLD);
 
     // verify some functionalities of class Ions
     {
@@ -133,7 +142,7 @@ TEST_CASE("Ions", "[ions]")
                 i++;
             }
         }
-        mmpi.barrier();
+        MPI_Barrier(MPI_COMM_WORLD);
 
         // swap x and z
         for (size_t i = 0; i < positions.size() - 2; i += 3)
@@ -147,7 +156,7 @@ TEST_CASE("Ions", "[ions]")
         ions.setPositions(positions, anumbers);
     }
 
-    mmpi.barrier();
+    MPI_Barrier(MPI_COMM_WORLD);
     {
         std::vector<Ion*>& new_local_ions(ions.local_ions());
 
@@ -156,7 +165,11 @@ TEST_CASE("Ions", "[ions]")
 
         int ntotal = 0;
         MPI_Allreduce(&nlocal, &ntotal, 1, MPI_INT, MPI_SUM, comm);
-        CHECK(ntotal == na);
+        if (ntotal != na)
+        {
+            std::cerr << "ntotal = " << ntotal << std::endl;
+            MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+        }
     }
 
     // get the names of all the ions
@@ -165,9 +178,12 @@ TEST_CASE("Ions", "[ions]")
     if (myrank == 0)
         for (auto& name : names)
             std::cout << "name = " << name << std::endl;
-    CHECK(names.size() == na);
-
-    mmpi.barrier();
+    if (names.size() != na)
+    {
+        std::cerr << "Incorrect count of names..." << std::endl;
+        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
 
     std::vector<double> forces(3 * na);
     // set forces to a different arbitrary value for each component
@@ -187,13 +203,18 @@ TEST_CASE("Ions", "[ions]")
     ions.getLocalForces(lforces);
     for (auto& f : lforces)
     {
-        CHECK(std::fmod(f, 1.) < 1.e-14);
+        if (std::fmod(f, 1.) > 1.e-14)
+        {
+            std::cerr << "f = " << f << std::endl;
+            MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+        }
     }
 
     ions.getForces(forces);
     if (myrank == 0)
     {
-        checkForces(forces);
+        int status = checkForces(forces);
+        if (status > 0) MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
 
     // test Ions::setLocalForces based on coordinates matching
@@ -209,7 +230,17 @@ TEST_CASE("Ions", "[ions]")
         ions.getForces(forces);
         if (myrank == 0)
         {
-            checkForces(forces);
+            int status = checkForces(forces);
+            if (status > 0) MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
         }
     }
+
+    mpirc = MPI_Finalize();
+    if (mpirc != MPI_SUCCESS)
+    {
+        std::cerr << "MPI Finalize failed!!!" << std::endl;
+        status = 1;
+    }
+
+    return status;
 }

@@ -16,14 +16,11 @@
 #include "ProjectedMatrices.h"
 #include "ReplicatedMatrix.h"
 #include "SquareLocalMatrices.h"
+#include "SubMatrices.h"
 #include "magma_singleton.h"
 #include "memory_space.h"
 #include "mputils.h"
 #include "numerical_kernels.h"
-
-#ifdef MGMOL_USE_SCALAPACK
-#include "SubMatrices.h"
-#endif
 
 template <class OrbitalsType>
 Timer Rho<OrbitalsType>::update_tm_("Rho::update");
@@ -579,8 +576,6 @@ template double Rho<LocGridOrbitals<ORBDTYPE>>::dotWithRho<double>(
     const double* const func) const;
 template double Rho<ExtendedGridOrbitals<ORBDTYPE>>::dotWithRho<double>(
     const double* const func) const;
-
-#ifdef MGMOL_USE_SCALAPACK
 template void Rho<ExtendedGridOrbitals<ORBDTYPE>>::computeRho<
     dist_matrix::DistMatrix<double>>(ExtendedGridOrbitals<ORBDTYPE>&,
     ExtendedGridOrbitals<ORBDTYPE>&, const dist_matrix::DistMatrix<double>&,
@@ -593,7 +588,6 @@ template void Rho<ExtendedGridOrbitals<ORBDTYPE>>::computeRho<
 template void
 Rho<LocGridOrbitals<ORBDTYPE>>::computeRho<dist_matrix::DistMatrix<double>>(
     LocGridOrbitals<ORBDTYPE>&, const dist_matrix::DistMatrix<double>&);
-#endif
 #ifdef MGMOL_USE_MIXEDP
 template double Rho<LocGridOrbitals<ORBDTYPE>>::dotWithRho<float>(
     const float* const func) const;

@@ -8,11 +8,8 @@
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
 #include "ProjectedMatrices2N.h"
-#include "ReplicatedMatrix.h"
-
-#ifdef MGMOL_USE_SCALAPACK
 #include "DistMatrix.h"
-#endif
+#include "ReplicatedMatrix.h"
 
 template <class MatrixType>
 ProjectedMatrices2N<MatrixType>::ProjectedMatrices2N(
@@ -70,7 +67,5 @@ void ProjectedMatrices2N<MatrixType>::iterativeUpdateDMwithEigenstates(
     ProjectedMatrices<MatrixType>::buildDM(*work2N_);
 }
 
-#ifdef MGMOL_USE_SCALAPACK
 template class ProjectedMatrices2N<dist_matrix::DistMatrix<double>>;
-#endif
 template class ProjectedMatrices2N<ReplicatedMatrix>;

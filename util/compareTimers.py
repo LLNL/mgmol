@@ -27,67 +27,34 @@ lines2=input2.readlines()
 timers1={}
 timers2={}
 
-count1=0
-count2=0
-
-for line in lines1:
-  if line.count('comp_res_from_Hphi'):
-    words=line.split()
-    count1=eval(words[8])
-
-print("count 1 = {}".format(count1))
-
-for line in lines2:
-  if line.count('comp_res_from_Hphi'):
-    words=line.split()
-    count2=eval(words[8])
-
-print("count 2 = {}".format(count2))
-
 for line in lines1:
   if line.count('Timer:'):
     words=line.split()
-    key=words[1]
-    val=eval(words[6])
-    if 'gemm' in key:
-      key='gemm'
-    timers1[key]=val/count1
+    timers1[words[1]]=words[6]
 
 for line in lines2:
   if line.count('Timer:'):
     words=line.split()
-    key=words[1]
-    val=eval(words[6])
-    if 'gemm' in key:
-      key='gemm'
-    timers2[key]=val/count2
+    timers2[words[1]]=words[6]
 
 #analyse timers
 results={}
-for key in timers1.keys():
-  if key in timers2.keys():
+for timer in timers1.keys():
+  if timer in timers2.keys():
     #compute relative difference
-    diff=(timers2[key]-timers1[key])/timers1[key]
-    if abs(diff)>rel_threshold and abs(timers1[key])>abs_threshold/count1:
-      results[key]=diff
-    else:
-      if 'MGmol::total' in key:
-        results[key]=diff
-      if 'quench' in key:
-        results[key]=diff
-      if 'gemm' in key:
-        results[key]=diff
+    diff=(eval(timers2[timer])-eval(timers1[timer]))/eval(timers1[timer])
+    if abs(diff)>rel_threshold and abs(eval(timers1[timer]))>abs_threshold:
+      results[timer]=diff
 
 sorted_timers=sorted(results.items(), key=operator.itemgetter(1))
 
 #print results
-print('---------------------------------------------------------------------------------------')
-print('Timer                                             time1     time2     relative diff.(%)')
-print('---------------------------------------------------------------------------------------')
-ndec=2
+print('-----------------------------------------------------------------------------')
+print('Timer                                     time1    time2    relative diff.(%)')
+print('-----------------------------------------------------------------------------')
 for timer in reversed(sorted_timers):
   key=timer[0]
   print(key.ljust(50), end="")
-  print(str(round(timers1[key]*count1,ndec))[:8].ljust(10), end="")
-  print(str(round(timers2[key]*count1,ndec))[:8].ljust(10), end="")
-  print(str(round(100.*timer[1],ndec))[:8].ljust(10))
+  print(str(eval(timers1[key])).ljust(10), end="")
+  print(str(eval(timers2[key])).ljust(10), end="")
+  print(str(100.*timer[1]).ljust(20))

@@ -321,9 +321,9 @@ public:
     double computeEntropyWithCheb(const double kbt);
     double checkCond(const double tol, const bool flag = true) override;
     int writeDM(HDFrestart& h5f_file) override;
-    int writeSavedDM(HDFrestart& h5f_file) override;
+    int writeSavedDM(HDFrestart& h5f_file);
     int readDM(HDFrestart& h5f_file) override;
-    int readWFDM(HDFrestart& h5f_file) override;
+    int readWFDM(HDFrestart& h5f_file);
     void printEigenvalues(std::ostream& os) const;
     void updateDM() override;
     void updateDMwithEigenstates();
@@ -429,12 +429,12 @@ public:
 
 template <class MatrixType>
 Timer ProjectedMatrices<MatrixType>::init_gram_matrix_tm_(
-    "ProjectedMatrices::initialize_Gram_Matrix");
+    "ProjectedMatrices<MatrixType>::initialize_Gram_Matrix");
 template <class MatrixType>
 Timer ProjectedMatrices<MatrixType>::sygv_tm_("ProjectedMatrices::sygv");
 template <class MatrixType>
 Timer ProjectedMatrices<MatrixType>::compute_inverse_tm_(
-    "ProjectedMatrices::computeInverse");
+    "ProjectedMatrices<MatrixType>::computeInverse");
 template <class MatrixType>
 Timer ProjectedMatrices<MatrixType>::compute_invB_tm_(
     "ProjectedMatrices::computeInvB");
@@ -454,5 +454,5 @@ Timer ProjectedMatrices<MatrixType>::consolidate_H_tm_(
     "ProjectedMatrices::consolidate_sH");
 template <class MatrixType>
 Timer ProjectedMatrices<MatrixType>::compute_entropy_tm_(
-    "ProjectedMatrices::compute_entropy");
+    "ProjectedMatrices<MatrixType>::compute_entropy");
 #endif

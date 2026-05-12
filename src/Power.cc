@@ -15,11 +15,6 @@
 #include "mputils.h"
 #include "random.h"
 
-#ifdef MGMOL_USE_SCALAPACK
-#include "DistMatrix.h"
-#include "DistVector.h"
-#endif
-
 // compute sum of squares of elements of vector y-theta*v
 template <class VECTOR>
 double diff2(VECTOR& y, VECTOR& v, const double theta, const bool verbose)
@@ -102,8 +97,6 @@ void Power<VECTOR, MATRIX>::computeEigenInterval(const MATRIX& A, double& emin,
 
 template class Power<LocalVector<double, MemorySpace::Host>,
     SquareLocalMatrices<double, MemorySpace::Host>>;
-#ifdef MGMOL_USE_SCALAPACK
 template class Power<dist_matrix::DistVector<double>,
     dist_matrix::DistMatrix<double>>;
-#endif
 // template class Power<ReplicatedVector, ReplicatedMatrix>;
