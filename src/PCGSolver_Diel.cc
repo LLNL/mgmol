@@ -99,17 +99,19 @@ void PCGSolver_Diel<T, ScalarType>::setupPrecon()
     }
 }
 
-// MG V-cycle with no mask
 template <class T, typename ScalarType>
+// MG V-cycle with no mask
 void PCGSolver_Diel<T, ScalarType>::preconSolve(pb::GridFunc<ScalarType>& gf_v,
     const pb::GridFunc<ScalarType>& gf_f, const short level)
 {
+    //(*MPIdata::sout)<<"Preconditioning::mg() at level "<<level<<endl;
     short ncycl = nu1_;
     if (level == nlevels_)
     {
         ncycl = 4 > (nu1_ + nu2_) ? 4 : (nu1_ + nu2_);
     }
 
+    //    pb::Lap* myoper=pc_oper_[level];
     T* myoper = pc_oper_[level];
 
     // SMOOTHING
@@ -146,8 +148,8 @@ void PCGSolver_Diel<T, ScalarType>::preconSolve(pb::GridFunc<ScalarType>& gf_v,
     if (bc_[0] != 1 || bc_[2] != 1 || bc_[2] != 1) gf_v.trade_boundaries();
 }
 
-// Left Preconditioned CG
 template <class T, typename ScalarType>
+// Left Preconditioned CG
 bool PCGSolver_Diel<T, ScalarType>::solve(
     pb::GridFunc<ScalarType>& gf_phi, pb::GridFunc<ScalarType>& gf_rhs)
 {
@@ -167,33 +169,20 @@ bool PCGSolver_Diel<T, ScalarType>::solve(
     pb::GridFunc<ScalarType> res(finegrid, bc_[0], bc_[1], bc_[2]);
     // scale initial guess with epsilon
     oper_.inv_transform(gf_phi);
-
     // compute initial residual
     oper_.apply(gf_phi, lhs);
     pb::GridFunc<ScalarType> rhs(gf_rhs);
-
-    // transform r.h.s. to account for dielectric model
     oper_.transform(rhs);
-
-    // convert to Hartree units
+    // Hartree units
     rhs *= (4. * M_PI);
-
-    // save rhs norm to compute relative norms
-    const double rhs_norm = res.norm2();
-    assert(!std::isnan(rhs_norm));
-
     res.diff(rhs, lhs);
     double init_rnorm = res.norm2();
     double rnorm      = init_rnorm;
 
-    // Early return if already converged
-    if (init_rnorm < tol_ * rhs_norm) return true;
-
     // preconditioned residual
     pb::GridFunc<ScalarType> z(finegrid, bc_[0], bc_[1], bc_[2]);
     // preconditioning step
-    z.setZero();
-
+    z = 0.;
     preconSolve(z, res, 0);
     // conjugate vectors
     pb::GridFunc<ScalarType> p(z);
@@ -216,7 +205,7 @@ bool PCGSolver_Diel<T, ScalarType>::solve(
 
         // check for convergence
         rnorm = res.norm2();
-        if (rnorm <= tol_ * rhs_norm)
+        if (rnorm <= tol_ * init_rnorm)
         {
             converged = true;
             break;
@@ -236,8 +225,8 @@ bool PCGSolver_Diel<T, ScalarType>::solve(
     return converged;
 }
 
-// Left Preconditioned CG
 template <class T, typename ScalarType>
+// Left Preconditioned CG
 bool PCGSolver_Diel<T, ScalarType>::solve(pb::GridFunc<ScalarType>& gf_phi,
     pb::GridFunc<ScalarType>& gf_rhs, pb::GridFunc<ScalarType>& gf_rhod,
     pb::GridFunc<ScalarType>& gf_vks)

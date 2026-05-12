@@ -600,8 +600,7 @@ void ReplicatedMatrix::syev(
         &lwork, &info);
 #endif
     if (info != 0)
-        std::cerr << "ReplicatedMatrix::syev() failed, info = " << info
-                  << std::endl;
+        std::cerr << "magma_dsyevd_gpu failed, info = " << info << std::endl;
     // for(auto& d : evals)std::cout<<d<<std::endl;
 }
 

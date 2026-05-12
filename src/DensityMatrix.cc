@@ -9,16 +9,11 @@
 
 #include "DensityMatrix.h"
 
+#include "DistMatrix.h"
 #include "MGmol_MPI.h"
 #include "ReplicatedMatrix.h"
 #include "ReplicatedWorkSpace.h"
 #include "hdf_tools.h"
-
-#ifdef MGMOL_USE_SCALAPACK
-#include "DistMatrix.h"
-#else
-typedef double DISTMATDTYPE;
-#endif
 
 #include <cmath>
 #include <iomanip>
@@ -482,7 +477,5 @@ int DensityMatrix<MatrixType>::read(HDFrestart& h5f_file, std::string& name)
     return ierr;
 }
 
-#ifdef MGMOL_USE_SCALAPACK
 template class DensityMatrix<dist_matrix::DistMatrix<double>>;
-#endif
 template class DensityMatrix<ReplicatedMatrix>;

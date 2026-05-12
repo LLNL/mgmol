@@ -11,6 +11,7 @@
 #define PB_GRIDFUNC_H
 
 #include "Grid.h"
+#include "GridFuncInterface.h"
 #include "Timer.h"
 
 #include <complex>
@@ -25,8 +26,8 @@ namespace pb
 
 class PEenv;
 
-template <typename ScalarType>
-class GridFunc
+template <typename T>
+class GridFunc : public GridFuncInterface
 {
     bool directionDirichlet_[3];
     bool directionPeriodic_[3];
@@ -53,20 +54,19 @@ class GridFunc
     // private functions
     bool def_const() const;
 
-    void setBoundaryValuesNeumannX(const ScalarType alpha);
-    void setBoundaryValuesNeumannY(const ScalarType alpha);
-    void setBoundaryValuesNeumannZ(const ScalarType alpha);
+    void setBoundaryValuesNeumannX(const T alpha);
+    void setBoundaryValuesNeumannY(const T alpha);
+    void setBoundaryValuesNeumannZ(const T alpha);
 
-    ScalarType one(const double r, const double a)
+    T one(const double r, const double a)
     {
         (void)r; // unused
         (void)a; // unused
 
         return 1.;
     }
-    ScalarType ran0();
-    ScalarType radial_func(
-        const double r, const double a, const short ftype = 0);
+    T ran0();
+    T radial_func(const double r, const double a, const short ftype = 0);
 
     // allocate memory for function
     void alloc();
@@ -75,45 +75,34 @@ class GridFunc
 
     void resizeBuffers();
 
-    static Timer trade_bc_tm_;
-    static Timer extend3D_tm_;
-    static Timer restrict3D_tm_;
-    static Timer prod_tm_;
-    static Timer gather_tm_;
-    static Timer scatter_tm_;
-    static Timer all_gather_tm_;
-    static Timer finishExchangeNorthSouth_tm_;
-    static Timer finishExchangeUpDown_tm_;
-    static Timer finishExchangeEastWest_tm_;
-
 protected:
     const Grid& grid_;
 
     // data storage
-    std::unique_ptr<ScalarType> memory_;
+    std::unique_ptr<T> memory_;
 
     // raw pointer to data
-    ScalarType* uu_;
+    T* uu_;
 
     bool updated_boundaries_;
     short bc_[3];
-    ScalarType valuesNeumann_[3];
+    T valuesNeumann_[3];
 
-    static GridFunc<ScalarType>* bc_func_;
+    static GridFunc<T>* bc_func_;
 
-    static std::vector<ScalarType> buf1_;
-    static std::vector<ScalarType> buf2_;
-    static std::vector<ScalarType> buf3_;
-    static std::vector<ScalarType> buf4_;
+    static std::vector<T> buf1_;
+    static std::vector<T> buf2_;
+    static std::vector<T> buf3_;
+    static std::vector<T> buf4_;
 
-    void setValues(const int n, const ScalarType* src);
+    void setValues(const int n, const T* src);
 
 public:
     // Constructors
     GridFunc(const Grid&, const short, const short, const short);
 
     // constructor with pointer to data allocation
-    GridFunc(const Grid&, const short, const short, const short, ScalarType*,
+    GridFunc(const Grid&, const short, const short, const short, T*,
         const bool updated_boundaries = false);
 
     // copy constructor
@@ -121,26 +110,26 @@ public:
     GridFunc(const GridFunc<float>& A);
 
     // copy constructor on different grid
-    GridFunc(const GridFunc<ScalarType>&, const Grid&);
+    GridFunc(const GridFunc<T>&, const Grid&);
 
-    void setValues(const GridFunc<ScalarType>& src);
-    void setValues(const ScalarType val);
+    void setValues(const GridFunc<T>& src);
+    void setValues(const T val);
     void setZero();
 
     int inc(const short dir) const { return grid_.inc(dir); }
 
-    void assign(const GridFunc<ScalarType>& src, const char dis);
-    void scatterFrom(const GridFunc<ScalarType>& src);
+    void assign(const GridFunc<T>& src, const char dis);
+    void scatterFrom(const GridFunc<T>& src);
 
     double fmax();
 
-    template <typename ScalarType2, typename MemorySpaceType>
-    void getValues(ScalarType2*) const;
+    template <typename T2, typename MemorySpaceType>
+    void getValues(T2*) const;
 
-    void init_vect(ScalarType*, const char) const;
-    void init_vect_shift(ScalarType* global_func) const;
-    void gather(ScalarType*) const;
-    void allGather(ScalarType*) const;
+    void init_vect(T*, const char) const;
+    void init_vect_shift(T* global_func) const;
+    void gather(T*) const;
+    void allGather(T*) const;
 
     short bc(const short dir) const
     {
@@ -161,14 +150,14 @@ public:
         bc_[2]              = pz;
         updated_boundaries_ = false;
     }
-    void setValuesNeumann(const ScalarType valuesNeumann[3])
+    void setValuesNeumann(const T valuesNeumann[3])
     {
         valuesNeumann_[0]   = valuesNeumann[0];
         valuesNeumann_[1]   = valuesNeumann[1];
         valuesNeumann_[2]   = valuesNeumann[2];
         updated_boundaries_ = false;
     }
-    ScalarType* uu(const int i = 0) const
+    T* uu(const int i = 0) const
     {
         assert(uu_ != 0);
         return uu_ + i;
@@ -177,86 +166,85 @@ public:
 
     void set_updated_boundaries(const bool i) { updated_boundaries_ = i; }
 
-    void copyFrom(GridFunc<ScalarType>* src)
+    void copyFrom(GridFunc<T>* src)
     {
-        memcpy(uu_, src->uu_, grid_.sizeg() * sizeof(ScalarType));
+        memcpy(uu_, src->uu_, grid_.sizeg() * sizeof(T));
     }
 
-    void copyFrom(GridFunc<ScalarType>& src)
+    void copyFrom(GridFunc<T>& src)
     {
-        memcpy(uu_, src.uu_, grid_.sizeg() * sizeof(ScalarType));
+        memcpy(uu_, src.uu_, grid_.sizeg() * sizeof(T));
     }
 
-    GridFunc<ScalarType>& operator=(const GridFunc<ScalarType>& func);
-    GridFunc<ScalarType>& operator=(const ScalarType val);
+    GridFunc<T>& operator=(const GridFunc<T>& func);
+    GridFunc<T>& operator=(const T val);
 
-    GridFunc<ScalarType> operator+(const GridFunc<ScalarType>& A);
-    GridFunc<ScalarType> operator-(const GridFunc<ScalarType>& A);
-    GridFunc<ScalarType> operator*(const double val);
+    GridFunc<T> operator+(const GridFunc<T>& A);
+    GridFunc<T> operator-(const GridFunc<T>& A);
+    GridFunc<T> operator*(const double val);
 
-    GridFunc<ScalarType>& operator+=(const GridFunc<ScalarType>& func);
-    GridFunc<ScalarType>& operator+=(ScalarType alpha);
+    GridFunc<T>& operator+=(const GridFunc<T>& func);
+    GridFunc<T>& operator+=(T alpha);
 
-    GridFunc<ScalarType>& operator-=(const ScalarType alpha);
+    GridFunc<T>& operator-=(const T alpha);
 
-    GridFunc<ScalarType>& operator*=(const double alpha);
-    GridFunc<ScalarType>& operator*=(const GridFunc<ScalarType>& B);
+    GridFunc<T>& operator*=(const double alpha);
+    GridFunc<T>& operator*=(const GridFunc<T>& B);
 
-    GridFunc<ScalarType>& operator/=(const GridFunc<ScalarType>& B);
+    GridFunc<T>& operator/=(const GridFunc<T>& B);
 
-    void axpy(const ScalarType alpha, const GridFunc<ScalarType>& vv);
+    void axpy(const T alpha, const GridFunc<T>& vv);
     void scal(const double alpha);
-    void prod(const GridFunc<ScalarType>& A, const GridFunc<ScalarType>& B);
-    void diff(const GridFunc<ScalarType>& A, const GridFunc<ScalarType>& B);
+    void prod(const GridFunc<T>& A, const GridFunc<T>& B);
+    void diff(const GridFunc<T>& A, const GridFunc<T>& B);
 
-    void set_max(const ScalarType val);
+    void set_max(const T val);
 
-    virtual ~GridFunc();
+    ~GridFunc() override;
 
-    int count_threshold(const ScalarType);
+    int count_threshold(const T);
 
-    void jacobi(const GridFunc<ScalarType>& v,
-        const GridFunc<ScalarType>& epsilon, const double c0);
-    void add_prod(
-        const GridFunc<ScalarType>& v1, const GridFunc<ScalarType>& v2);
-    void substract_prod(
-        const GridFunc<ScalarType>& v1, const GridFunc<ScalarType>& v2);
+    void jacobi(
+        const GridFunc<T>& v, const GridFunc<T>& epsilon, const double c0);
+    void add_prod(const GridFunc<T>& v1, const GridFunc<T>& v2);
+    void substract_prod(const GridFunc<T>& v1, const GridFunc<T>& v2);
     void init_radial(const double[3], const double, const short ftype = 0);
     void initTrigo3d(const short bc[3], const int n[3]);
-    void initCos3d(const ScalarType k[3]);
+    void initCos3d(const T k[3]);
     void print_radial(const char[]);
     void defaultTrade_boundaries();
     virtual void trade_boundaries() { defaultTrade_boundaries(); }
-    void set_bc_func(GridFunc<ScalarType>* bc_func) { bc_func_ = bc_func; }
+    void set_bc_func(GridFunc<T>* bc_func) { bc_func_ = bc_func; }
 
-    void setBoundaryValues(const ScalarType, const bool direction[3]);
-    void setBoundaryValues(
-        const GridFunc<ScalarType>&, const bool direction[3]);
-    void setBoundaryValuesNeumann(
-        const ScalarType alpha[3], const bool direction[3]);
+    void setBoundaryValues(const T, const bool direction[3]);
+    void setBoundaryValues(const GridFunc<T>&, const bool direction[3]);
+    void setBoundaryValuesNeumann(const T alpha[3], const bool direction[3]);
 
     bool isZero(const double tol = 1.e-16, const bool wghosts = false);
     void test_setBoundaryValues();
-    template <typename ScalarType2>
-    double gdot(const GridFunc<ScalarType2>&) const;
+    /* gdot is split into two for consistency between float-double and
+     * double-float calls to gdot. See function definition for more details.
+     */
+    double gdot(const GridFunc<double>&) const;
+    double gdot(const GridFunc<float>&) const;
     double norm2() const;
-    void extend3D(GridFunc<ScalarType>&);
-    void restrict3D(GridFunc<ScalarType>&);
+    void extend3D(GridFunc<T>&);
+    void restrict3D(GridFunc<T>&);
     void test_grid_transfer();
     void init_rand();
-    void initTriLin(const ScalarType a[4], const bool wghosts = true);
+    void initTriLin(const T a[4], const bool wghosts = true);
     double integral() const;
     double get_average();
     double average0();
 
-    template <typename ScalarType2>
-    void assign(const ScalarType2* const, const char dis = 'd');
+    template <typename T2>
+    void assign(const T2* const, const char dis = 'd');
 
     void test_newgrid();
     void print(std::ostream&);
     void write_plt(const char[]) const;
     void write_global_x(const char str[]);
-    void global_xyz_task0(ScalarType*);
+    void global_xyz_task0(T*);
     void write_xyz(std::ofstream&) const;
     void write_zyx(std::ofstream&) const;
     void write_global_xyz(std::ofstream&);
@@ -274,10 +262,10 @@ public:
     int size() const { return grid_.size(); }
     const Grid& grid() const { return grid_; }
 
-    GridFunc<ScalarType>& operator-=(const GridFunc<ScalarType>& func);
+    GridFunc<T>& operator-=(const GridFunc<T>& func);
     void resetData()
     {
-        memset(uu_, 0, grid_.sizeg() * sizeof(ScalarType));
+        memset(uu_, 0, grid_.sizeg() * sizeof(T));
         updated_boundaries_ = true;
     }
     void getCellCornersValues(
@@ -291,66 +279,21 @@ public:
     void finishExchangeEastWest();
 
     void setBoundaryValuesBeforeTrade();
-
-    static void printTimers(std::ostream& os)
-    {
-        trade_bc_tm_.print(os);
-        finishExchangeNorthSouth_tm_.print(os);
-        finishExchangeUpDown_tm_.print(os);
-        finishExchangeEastWest_tm_.print(os);
-        extend3D_tm_.print(os);
-        restrict3D_tm_.print(os);
-        prod_tm_.print(os);
-        gather_tm_.print(os);
-        scatter_tm_.print(os);
-        all_gather_tm_.print(os);
-    }
 };
 
-template <typename ScalarType>
-double dot(const GridFunc<ScalarType>& A, const GridFunc<ScalarType>& B)
+template <typename T>
+double dot(const GridFunc<T>& A, const GridFunc<T>& B)
 {
     return A.gdot(B) * A.grid().vel();
 }
-template <typename ScalarType>
-double norm(const GridFunc<ScalarType>& A)
+template <typename T>
+double norm(const GridFunc<T>& A)
 {
     return A.norm2();
 }
 
-template <typename ScalarType>
-GridFunc<ScalarType>* GridFunc<ScalarType>::bc_func_ = nullptr;
-
-template <typename ScalarType>
-Timer GridFunc<ScalarType>::trade_bc_tm_(
-    "GridFunc::trade_bc_" + std::to_string(sizeof(ScalarType) * 8));
-template <typename ScalarType>
-Timer GridFunc<ScalarType>::restrict3D_tm_(
-    "GridFunc::restrict3D_" + std::to_string(sizeof(ScalarType) * 8));
-template <typename ScalarType>
-Timer GridFunc<ScalarType>::extend3D_tm_(
-    "GridFunc::extend3D_" + std::to_string(sizeof(ScalarType) * 8));
-template <typename ScalarType>
-Timer GridFunc<ScalarType>::prod_tm_(
-    "GridFunc::prod_" + std::to_string(sizeof(ScalarType) * 8));
-template <typename ScalarType>
-Timer GridFunc<ScalarType>::gather_tm_(
-    "GridFunc::gather_" + std::to_string(sizeof(ScalarType) * 8));
-template <typename ScalarType>
-Timer GridFunc<ScalarType>::scatter_tm_(
-    "GridFunc::scatter_" + std::to_string(sizeof(ScalarType) * 8));
-template <typename ScalarType>
-Timer GridFunc<ScalarType>::all_gather_tm_(
-    "GridFunc::all_gather_" + std::to_string(sizeof(ScalarType) * 8));
-template <typename ScalarType>
-Timer GridFunc<ScalarType>::finishExchangeNorthSouth_tm_(
-    "GridFunc::finishExNorthSouth_" + std::to_string(sizeof(ScalarType) * 8));
-template <typename ScalarType>
-Timer GridFunc<ScalarType>::finishExchangeUpDown_tm_(
-    "GridFunc::finishExUpDown_" + std::to_string(sizeof(ScalarType) * 8));
-template <typename ScalarType>
-Timer GridFunc<ScalarType>::finishExchangeEastWest_tm_(
-    "GridFunc::finishExEastWest_" + std::to_string(sizeof(ScalarType) * 8));
+template <typename T>
+GridFunc<T>* GridFunc<T>::bc_func_ = nullptr;
 
 } // namespace pb
 

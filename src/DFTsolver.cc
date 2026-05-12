@@ -13,15 +13,12 @@
 #include "DMStrategy.h"
 #include "Electrostatic.h"
 #include "Energy.h"
+#include "GrassmanCGFactory.h"
 #include "Ions.h"
 #include "MGmol.h"
 #include "Potentials.h"
 #include "ProjectedMatricesInterface.h"
 #include "Rho.h"
-
-#ifdef MGMOL_USE_SCALAPACK
-#include "GrassmanCGFactory.h"
-#endif
 
 template <class OrbitalsType>
 DFTsolver<OrbitalsType>::DFTsolver(Hamiltonian<OrbitalsType>* hamiltonian,
@@ -51,7 +48,6 @@ DFTsolver<OrbitalsType>::DFTsolver(Hamiltonian<OrbitalsType>* hamiltonian,
             break;
         }
 
-#ifdef MGMOL_USE_SCALAPACK
         case OuterSolverType::NLCG:
         {
             orbitals_stepper_ = GrassmanCGFactory<OrbitalsType>::create(
@@ -60,7 +56,6 @@ DFTsolver<OrbitalsType>::DFTsolver(Hamiltonian<OrbitalsType>* hamiltonian,
 
             break;
         }
-#endif
 
         default:
             std::cerr << "DFTsolver: Undefined iterative electronic structure "

@@ -6,11 +6,26 @@
 // All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
-#include "PBdiel.h"
-#include "MGmol_blas1.h"
 
+// $Id$
 #include <iomanip>
 #include <iostream>
+
+#include "MGmol_blas1.h"
+#include "PBdiel.h"
+
+template class PBdiel<pb::PBh2<POTDTYPE>>;
+// template class PBdiel<pb::PBh2<float> >;
+template class PBdiel<pb::PBh4<POTDTYPE>>;
+// template class PBdiel<pb::PBh4<float> >;
+template class PBdiel<pb::PBh6<POTDTYPE>>;
+// template class PBdiel<pb::PBh6<float> >;
+template class PBdiel<pb::PBh8<POTDTYPE>>;
+// template class PBdiel<pb::PBh8<float> >;
+template class PBdiel<pb::PBh4M<POTDTYPE>>;
+// template class PBdiel<pb::PBh4M<float> >;
+template class PBdiel<pb::PBh4MP<POTDTYPE>>;
+// template class PBdiel<pb::PBh4MP<float> >;
 
 template <class T>
 void PBdiel<T>::solve(
@@ -68,13 +83,7 @@ void PBdiel<T>::solve(
 template <class T>
 void PBdiel<T>::set_rhod(pb::GridFunc<RHODTYPE>* rhod)
 {
+    //(*MPIdata::sout)<<"set_rhod"<<endl;
     assert(rhod != nullptr);
     rhod_ = rhod;
 }
-
-template class PBdiel<pb::PBh2<POTDTYPE>>;
-template class PBdiel<pb::PBh4<POTDTYPE>>;
-template class PBdiel<pb::PBh6<POTDTYPE>>;
-template class PBdiel<pb::PBh8<POTDTYPE>>;
-template class PBdiel<pb::PBh4M<POTDTYPE>>;
-template class PBdiel<pb::PBh4MP<POTDTYPE>>;

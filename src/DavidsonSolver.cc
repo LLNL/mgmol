@@ -527,8 +527,6 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
             }
             else
             {
-                if (mmpi.PE0() && ct.verbose > 2)
-                    os_ << "Update h11..." << std::endl;
                 hamiltonian_->applyDeltaPot(orbitals, hphi);
                 orbitals.addDotWithNcol2Matrix(hphi, h11);
             }
@@ -544,8 +542,6 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
             }
 
             // update h22, h12 and h21
-            if (mmpi.PE0() && ct.verbose > 2)
-                os_ << "Update h22, h12 and h21..." << std::endl;
             orbitals.addDotWithNcol2Matrix(hphi, h12);
 
             work_orbitals.addDotWithNcol2Matrix(hphi, h22);
@@ -722,10 +718,9 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
 
         // replace orbitals with eigenvectors corresponding to largest
         // eigenvalues of DM
-        if (mmpi.PE0() && ct.verbose > 2)
-            os_ << "Update trial eigenvectors..." << std::endl;
-        orbitals.multiply_by_matrix(dm12, 0., orbitals);
-        work_orbitals.multiply_by_matrix(dm22, 1., orbitals);
+        orbitals.multiply_by_matrix(dm12);
+        work_orbitals.multiply_by_matrix(dm22);
+        orbitals.axpy((ORBDTYPE)1., work_orbitals);
         orbitals.incrementIterativeIndex();
         orbitals.incrementIterativeIndex();
         work_orbitals.incrementIterativeIndex(2);
@@ -864,8 +859,6 @@ void DavidsonSolver<OrbitalsType, MatrixType>::printTimers(std::ostream& os)
     target_tm_.print(os);
 }
 
-#ifdef MGMOL_USE_SCALAPACK
 template class DavidsonSolver<ExtendedGridOrbitals<ORBDTYPE>,
     dist_matrix::DistMatrix<DISTMATDTYPE>>;
-#endif
 template class DavidsonSolver<ExtendedGridOrbitals<ORBDTYPE>, ReplicatedMatrix>;

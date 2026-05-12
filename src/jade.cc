@@ -6,9 +6,7 @@
 // All rights reserved.
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
-#ifdef MGMOL_USE_SCALAPACK
 #include "DistMatrix.h"
-#endif
 #include "MGmol_MPI.h"
 #include "MGmol_blas1.h"
 #include "fc_mangle.h"
@@ -26,7 +24,6 @@
 // The input matrices are given in rmat[k], k = 0,..,m-1
 // the element a(i,j) of matrix a_k is in rmat[k][i+m_loc*j];
 // the orthogonal transformation is returned in tmat[i+m_loc*j]
-#ifdef MGMOL_USE_SCALAPACK
 double jade(std::vector<dist_matrix::DistMatrix<double>*>& rmat,
     const int n_loc, const int m_loc, const int offset_, const int maxsweep,
     const double tol, MPI_Comm comm, std::vector<double>& tmat,
@@ -37,7 +34,7 @@ double jade(std::vector<dist_matrix::DistMatrix<double>*>& rmat,
     const int m = 2 * NDIM;
 
     const int npecol = rmat[0]->npcol();
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
     MGmol_MPI& mmpi = *(MGmol_MPI::instance());
     int mype        = mmpi.mypeSpin();
 
@@ -282,7 +279,7 @@ double jade(std::vector<dist_matrix::DistMatrix<double>*>& rmat,
                 std::vector<int> remote_actualv(n_loc);
                 for (int pe = 0; pe < npecol; pe++)
                 {
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
                     if (mype == pe)
                     {
                         v_small        = u_small;
@@ -323,7 +320,7 @@ double jade(std::vector<dist_matrix::DistMatrix<double>*>& rmat,
 
                 } // pe
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
                 for (int i = 0; i < 8; i++)
                     req[i] = MPI_REQUEST_NULL;
 
@@ -457,7 +454,7 @@ double jade(std::vector<dist_matrix::DistMatrix<double>*>& rmat,
                 }
             }
 
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
             double in = sum;
             MPI_Allreduce(&in, &sum, 1, MPI_DOUBLE, MPI_SUM, comm);
             in = sum_off;
@@ -531,7 +528,7 @@ double jade(std::vector<dist_matrix::DistMatrix<double>*>& rmat,
         for (int ip = 0; ip < n_loc; ip++)
         {
             int lip = actual[ip];
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
             mmpi.bcast(&lip, 1, root);
 #endif
             if (lip < m_loc)
@@ -541,7 +538,7 @@ double jade(std::vector<dist_matrix::DistMatrix<double>*>& rmat,
                     memcpy(&tmat[m_loc * lip], &u_loc[m_loc * ip],
                         m_loc * sizeof(double));
                 }
-#ifdef MGMOL_USE_SCALAPACK
+#ifdef SCALAPACK
                 mmpi.bcast(&tmat[m_loc * lip], m_loc, root);
 #endif
             }
@@ -558,5 +555,3 @@ double jade(std::vector<dist_matrix::DistMatrix<double>*>& rmat,
 
     return delta;
 }
-
-#endif

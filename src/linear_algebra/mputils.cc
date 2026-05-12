@@ -872,6 +872,8 @@ template void LAU_H::MPgemmNN<double, double, double>(const int m, const int n,
     const int k, const double alpha, const double* const a, const int lda,
     const double* const b, const int ldb, const double beta, double* const c,
     const int ldc);
+template double LAU_H::MPdot<double, double>(
+    const int len, const double* const xptr, const double* const yptr);
 template double LAU_H::MPdot<float, float>(const int len,
     const float* __restrict__ xptr, const float* __restrict__ yptr);
 template double LAU_H::MPdot<double, float>(
