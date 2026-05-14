@@ -698,5 +698,26 @@ void Forces<OrbitalsType>::force(OrbitalsType& orbitals, Ions& ions)
     total_tm_.stop();
 }
 
+template <class OrbitalsType>
+void Forces<OrbitalsType>::dVsdRhoComponent(OrbitalsType& orbitals, const Ions& ions)
+{
+    assert(rho_.size()==1);
+
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+
+    // use tmp ions to avoid messing up with original ions
+    double shift[]={0.,0.,0.};
+    Ions tmp_ions(ions, shift);
+    tmp_ions.resetForces();
+
+    // use zeros to zero out unwanted component of lforce
+    const std::vector<POTDTYPE> zeros(orbitals.getLocNumpt(),0.);
+    lforce(tmp_ions, rho_->rho_[0], zeros);
+
+    if(mmpi.PE0())
+        std::cout<<std::endl<<"Diagnostics: dVsdRhoComponent"<<std::endl;
+    tmp_ions.printForcesGlobal(std::cout, 0);
+}
+
 template class Forces<LocGridOrbitals<ORBDTYPE>>;
 template class Forces<ExtendedGridOrbitals<ORBDTYPE>>;

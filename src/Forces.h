@@ -78,6 +78,11 @@ public:
 
     void force(OrbitalsType& orbitals, Ions& ions);
 
+    /*!
+     * Diagnostics function to evaluate integral of dvs*rhoe component of force
+     */
+    void dVsdRhoComponent(OrbitalsType& orbitals, const Ions& ions);
+
     void printTimers(std::ostream& os)
     {
         lforce_tm_.print(os);
