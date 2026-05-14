@@ -36,7 +36,7 @@ set(MGMOL_LINK_FLAGS "" CACHE STRING "Additional linker flags")
 list(APPEND LINK_LIBRARIES ${MGMOL_LINK_FLAGS})
 
 # Use MPI (required)
-find_package(MPI REQUIRED)
+find_package(MPI COMPONENTS CXX REQUIRED)
 message(STATUS "MPIEXEC :" ${MPIEXEC})
 
 # Use openMP
