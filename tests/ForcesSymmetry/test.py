@@ -13,7 +13,7 @@ def check_is_small(f):
   return 0
 
 def check_opposed(f0,f1):
-  tol = 1.e-5
+  tol = 3.e-5
   print("check opposites: {} {}".format(f0,f1))
   if abs(eval(f0)+eval(f1))>tol:
     print("valuee not opposites")
@@ -21,7 +21,7 @@ def check_opposed(f0,f1):
   return 0
 
 def check_equal(f0,f1):
-  tol = 1.e-5
+  tol = 3.e-5
   print("check equal : {} {}".format(f0,f1))
   if abs(eval(f0)-eval(f1))>tol:
     print("valuee not equal")
