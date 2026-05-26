@@ -37,6 +37,7 @@ lines=output.split(b'\n')
 
 tol = 4.e-6
 Fz  = -7.33e-04
+count = 0
 for line in lines:
   num_matches = line.count(b'%%')
   if num_matches:
@@ -47,6 +48,7 @@ for line in lines:
     words=line.split()
     if len(words)==8:
       print(line)
+      count = count + 1
       #check forces in x, y directions below tolerance
       for i in range(5,7):
         force = eval(words[i])
@@ -60,4 +62,5 @@ for line in lines:
       else:
         #switch sign for next test
         Fz = -Fz
-
+  if count == 2:
+    break

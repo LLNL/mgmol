@@ -55,6 +55,7 @@ if convergence==0:
 tol = 2.e-4
 energies=[]
 print("Check forces are smaller than tol = {}".format(tol))
+count = 0
 for line in lines:
   if line.count(b'%%'):
     print(line)
@@ -65,10 +66,13 @@ for line in lines:
     words=line.split()
     if len(words)==8:
       print(line)
+      count = count + 1
       for i in range(5,8):
         if abs(eval(words[i]))>tol:
           print("Error on force component {}".format(i-5))
           sys.exit(1)
+  if count == 5:
+    break
 
 niterations = len(energies)
 print("Davidson solver ran for {} iterations".format(niterations))
