@@ -24,7 +24,8 @@ public:
 
     ~ProjectedMatrices2N() override;
 
-    void assignBlocksH(MatrixType&, MatrixType&, MatrixType&, MatrixType&);
+    void assignBlocksH(const MatrixType&, const MatrixType&, const MatrixType&,
+        const MatrixType&);
 
     void iterativeUpdateDMwithEigenstates(
         const double occ_width, const bool flag_reduce_T = true);

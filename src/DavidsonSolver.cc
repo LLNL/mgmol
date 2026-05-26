@@ -44,6 +44,21 @@ double evalEntropy(ProjectedMatricesInterface* projmatrices,
     return ts;
 }
 
+// print 10 eigenvalues / row
+void printEigenvalues(const std::vector<double>& eval, std::ostream& os)
+{
+    os << std::fixed << std::setprecision(4);
+    for (unsigned int i = 0; i < eval.size(); i++)
+    {
+        os << eval[i];
+        if (i % 10 == 9)
+            os << std::endl;
+        else
+            os << "  ";
+    }
+    os << std::endl;
+}
+
 template <class OrbitalsType, class MatrixType>
 DavidsonSolver<OrbitalsType, MatrixType>::DavidsonSolver(std::ostream& os,
     Ions& ions, Hamiltonian<OrbitalsType>* hamiltonian, Rho<OrbitalsType>* rho,
@@ -225,8 +240,9 @@ double DavidsonSolver<OrbitalsType, MatrixType>::evaluateDerivative(
 
 template <class OrbitalsType, class MatrixType>
 void DavidsonSolver<OrbitalsType, MatrixType>::buildTarget2N_MVP(
-    MatrixType& h11, MatrixType& h12, MatrixType& h21, MatrixType& h22,
-    MatrixType& s11, MatrixType& s22, MatrixType& target)
+    const MatrixType& h11, const MatrixType& h12, const MatrixType& h21,
+    const MatrixType& h22, const MatrixType& s11, const MatrixType& s22,
+    MatrixType& target)
 {
     target_tm_.start();
 
@@ -427,7 +443,6 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
         OrbitalsType hphi("Davidson_hphi", orbitals);
         MatrixType dm2Ninit("dm2N", 2 * numst_, 2 * numst_);
         std::vector<DISTMATDTYPE> eval(2 * numst_);
-        MatrixType evect("EigVect", 2 * numst_, 2 * numst_);
 
         MatrixType dm11("dm11", numst_, numst_);
         MatrixType dm12("dm12", numst_, numst_);
@@ -681,21 +696,13 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
         } // inner iterations
 
         // update orbitals
+        MatrixType evect("EigVect", 2 * numst_, 2 * numst_);
         proj_mat2N_->diagonalizeDM(eval, evect);
 #if 1
         if (mmpi.PE0() && ct.verbose > 2)
         {
             os_ << "Eigenvalues of Interpolated DM: " << std::endl;
-            os_ << std::fixed << std::setprecision(4);
-            for (unsigned int i = 0; i < eval.size(); i++)
-            {
-                os_ << eval[i];
-                if (i % 10 == 9)
-                    os_ << std::endl;
-                else
-                    os_ << "  ";
-            }
-            os_ << std::endl;
+            printEigenvalues(eval, os_);
             double tot = 0.;
             for (int i = 0; i < numst_; i++)
             {
@@ -717,18 +724,22 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
         //        2*numst_); swapColumnsVect(evect, proj_mat2N_->getMatHB(),
         //        eval, z2N );
 
-        dm12.getsub(evect, numst_, numst_, 0, numst_);
-        dm22.getsub(evect, numst_, numst_, numst_, numst_);
-
         // replace orbitals with eigenvectors corresponding to largest
         // eigenvalues of DM
-        if (mmpi.PE0() && ct.verbose > 2)
-            os_ << "Update trial eigenvectors..." << std::endl;
-        orbitals.multiply_by_matrix(dm12, 0., orbitals);
-        work_orbitals.multiply_by_matrix(dm22, 1., orbitals);
-        orbitals.incrementIterativeIndex();
-        orbitals.incrementIterativeIndex();
-        work_orbitals.incrementIterativeIndex(2);
+        {
+            MatrixType v12("v12", numst_, numst_);
+            MatrixType v22("v22", numst_, numst_);
+            v12.getsub(evect, numst_, numst_, 0, numst_);
+            v22.getsub(evect, numst_, numst_, numst_, numst_);
+
+            if (mmpi.PE0() && ct.verbose > 2)
+                os_ << "Update trial eigenvectors..." << std::endl;
+            orbitals.multiply_by_matrix(v12, 0., orbitals);
+            work_orbitals.multiply_by_matrix(v22, 1., orbitals);
+            orbitals.incrementIterativeIndex();
+            orbitals.incrementIterativeIndex();
+            work_orbitals.incrementIterativeIndex(2);
+        }
 
         std::vector<double> new_occ(numst_);
         double tocc              = 0.;
@@ -771,14 +782,7 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
         if( onpe0 )
         {
             os_<<"New occupations: "<<endl;
-            os_<<fixed<<setprecision(4);
-            for(int i=0;i<numst_;i++)
-            {
-                os_<<new_occ[i];
-                if( i%10==9 )os_<<endl;
-                else         os_<<"  ";
-            }
-            os_<<endl;
+            printEigenvalues(new_occ, os_);
         }
 #endif
 #if 1
@@ -806,16 +810,7 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
             && ct.verbose > 2)
         {
             os_ << "Final Occupations: " << std::endl;
-            os_ << std::fixed << std::setprecision(4);
-            for (int i = 0; i < numst_; i++)
-            {
-                os_ << new_occ[i];
-                if (i % 10 == 9)
-                    os_ << std::endl;
-                else
-                    os_ << "  ";
-            }
-            os_ << std::endl;
+            printEigenvalues(new_occ, os_);
         }
 #endif
 

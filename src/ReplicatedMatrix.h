@@ -18,6 +18,8 @@ class ReplicatedVector;
 #include <string>
 #include <vector>
 
+// Square matrices
+// MPI operations assume replication by each MPI task
 class ReplicatedMatrix
 {
     static MPI_Comm comm_;
@@ -29,7 +31,7 @@ class ReplicatedMatrix
     // leading dimension for storage
     size_t ld_;
 
-    // matrix data
+    // matrix data stored in column major order
     std::unique_ptr<double, void (*)(double*)> data_;
 
     std::string name_;
@@ -123,7 +125,11 @@ public:
 
     void setVal(const int i, const int j, const double val);
     void setDiagonal(const std::vector<double>& diag_values);
+
     int iamax(const int j, double& val);
+    double nrm2(const int j);
+    void swapColumns(const int i, const int j);
+
     double norm(char ty);
     double traceProduct(const ReplicatedMatrix&) const;
     void shift(const double);

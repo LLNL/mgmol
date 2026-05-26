@@ -17,6 +17,7 @@
 using Memory                = MemorySpace::Memory<double, MemorySpace::Device>;
 constexpr double gpuroundup = 32;
 #else
+#include "MGmol_blas1.h"
 #include "blas3_c.h"
 #include "fc_mangle.h"
 #include "lapack_c.h"
@@ -685,6 +686,32 @@ int ReplicatedMatrix::iamax(const int j, double& val)
     val      = *(data_.get() + j * ld_ + indx);
 #endif
     return indx;
+}
+
+double ReplicatedMatrix::nrm2(const int j)
+{
+#ifdef HAVE_MAGMA
+    (void)os;
+    std::cerr << "ReplicatedMatrix::nrm2() not implemented" << std::endl;
+    MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+#else
+    int ione = 1;
+    return DNRM2(&dim_, data_.get() + j * ld_, &ione);
+#endif
+}
+
+void ReplicatedMatrix::swapColumns(const int i, const int j)
+{
+#ifdef HAVE_MAGMA
+    (void)os;
+    std::cerr << "ReplicatedMatrix::swapColumns) not implemented" << std::endl;
+    MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+#else
+    std::vector<double> tmp(data_.get() + i * ld_, data_.get() + (i + 1) * ld_);
+
+    memcpy(data_.get() + i * ld_, data_.get() + j * ld_, ld_ * sizeof(double));
+    memcpy(data_.get() + j * ld_, tmp.data(), ld_ * sizeof(double));
+#endif
 }
 
 void ReplicatedMatrix::setVal(const int i, const int j, const double val)
