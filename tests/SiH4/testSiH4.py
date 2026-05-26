@@ -45,6 +45,7 @@ lines=output.split(b'\n')
 
 tol = 5.e-3
 found_forces = False
+count = 0
 for line in lines:
   if line.count(b'%%'):
     print(line)
@@ -53,12 +54,15 @@ for line in lines:
     if len(words)==8:
       print(line)
       found_forces = True
+      count = count + 1
       for i in range(5,8):
         if abs(eval(words[i]))>tol:
           sys.exit(1)
+  if count == 5:
+    break
 
-if (not found_forces):
-  print("no forces found")
+if count != 5:
+  print("5 forces not found")
   sys.exit(1)
 
 sys.exit(0)
