@@ -70,6 +70,13 @@ private:
     //    const std::vector<DISTMATDTYPE>& auxenergies, const double kbT,
     //    const double eta, MatrixType& target);
 
+    /*!
+     * To differentiate very low occupation vectors, extract those with
+     * lowest energy by reordering evect/eval
+     * (rightmost vectors will be used in next outer itertaion)
+     */
+    void reorderEigenvectors(MatrixType& evect, std::vector<double>& eval);
+
 public:
     DavidsonSolver(std::ostream& os, Ions& ions,
         Hamiltonian<OrbitalsType>* hamiltonian, Rho<OrbitalsType>* rho,

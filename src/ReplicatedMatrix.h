@@ -90,6 +90,8 @@ public:
     // sum up values across MPI tasks
     void consolidate();
 
+    void bcast(const int root);
+
     void axpy(const double alpha, const ReplicatedMatrix& a);
 
     void init(const double* const ha, const int lda);
@@ -128,7 +130,6 @@ public:
 
     int iamax(const int j, double& val);
     double nrm2(const int j);
-    void swapColumns(const int i, const int j);
 
     double norm(char ty);
     double traceProduct(const ReplicatedMatrix&) const;
