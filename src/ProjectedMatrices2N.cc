@@ -31,8 +31,8 @@ ProjectedMatrices2N<MatrixType>::~ProjectedMatrices2N()
 }
 
 template <class MatrixType>
-void ProjectedMatrices2N<MatrixType>::assignBlocksH(
-    MatrixType& h11, MatrixType& h12, MatrixType& h21, MatrixType& h22)
+void ProjectedMatrices2N<MatrixType>::assignBlocksH(const MatrixType& h11,
+    const MatrixType& h12, const MatrixType& h21, const MatrixType& h22)
 {
     ProjectedMatrices<MatrixType>::matH_->assign(h11, 0, 0);
     ProjectedMatrices<MatrixType>::matH_->assign(h12, 0, bdim_);

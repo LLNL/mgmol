@@ -17,6 +17,7 @@
 using Memory                = MemorySpace::Memory<double, MemorySpace::Device>;
 constexpr double gpuroundup = 32;
 #else
+#include "MGmol_blas1.h"
 #include "blas3_c.h"
 #include "fc_mangle.h"
 #include "lapack_c.h"
@@ -169,6 +170,30 @@ void ReplicatedMatrix::consolidate()
 #endif
 }
 
+void ReplicatedMatrix::bcast(const int root)
+{
+    assert(comm_ != MPI_COMM_NULL);
+
+#ifdef HAVE_MAGMA
+    std::vector<double> mat(dim_ * ld_);
+    auto& magma_singleton = MagmaSingleton::get_magma_singleton();
+
+    // copy from GPU to CPU
+    magma_dgetmatrix(
+        dim_, dim_, data_.get(), ld_, mat.data(), ld_, magma_singleton.queue_);
+    double* data = mat.data();
+#else
+    double* data = data_.get();
+#endif
+    MPI_Bcast(data, dim_ * ld_, MPI_DOUBLE, root, comm_);
+
+#ifdef HAVE_MAGMA
+    // copy from CPU to GPU
+    magma_dsetmatrix(
+        dim_, dim_, data, ld_, data_.get(), ld_, magma_singleton.queue_);
+#endif
+}
+
 void ReplicatedMatrix::assign(
     const ReplicatedMatrix& src, const int ib, const int jb)
 {
@@ -180,10 +205,10 @@ void ReplicatedMatrix::assign(
     magma_dcopymatrix(src.dim_, src.dim_, src.data_.get(), src.ld_,
         data_.get() + jb * ld_ + ib, ld_, magma_singleton.queue_);
 #else
-    char uplo = 'a';
-    int dim   = src.dim_;
-    int lda   = src.ld_;
-    int ldb   = ld_;
+    char uplo    = 'a';
+    int dim      = src.dim_;
+    int lda      = src.ld_;
+    int ldb      = ld_;
     DLACPY(&uplo, &dim, &dim, src.data_.get(), &lda,
         data_.get() + jb * ld_ + ib, &ldb);
 #endif
@@ -685,6 +710,18 @@ int ReplicatedMatrix::iamax(const int j, double& val)
     val      = *(data_.get() + j * ld_ + indx);
 #endif
     return indx;
+}
+
+double ReplicatedMatrix::nrm2(const int j)
+{
+#ifdef HAVE_MAGMA
+    (void)os;
+    std::cerr << "ReplicatedMatrix::nrm2() not implemented" << std::endl;
+    MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+#else
+    int ione = 1;
+    return DNRM2(&dim_, data_.get() + j * ld_, &ione);
+#endif
 }
 
 void ReplicatedMatrix::setVal(const int i, const int j, const double val)

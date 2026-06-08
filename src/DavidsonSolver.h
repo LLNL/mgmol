@@ -57,8 +57,9 @@ private:
     int checkConvergence(const double e0, const int it, const double tol);
     double evaluateDerivative(
         MatrixType& dm2Ninit, MatrixType& delta_dm, const double ts0);
-    void buildTarget2N_MVP(MatrixType& h11, MatrixType& h12, MatrixType& h21,
-        MatrixType& h22, MatrixType& s11, MatrixType& s22, MatrixType& target);
+    void buildTarget2N_MVP(const MatrixType& h11, const MatrixType& h12,
+        const MatrixType& h21, const MatrixType& h22, const MatrixType& s11,
+        const MatrixType& s22, MatrixType& target);
     // void buildTarget2N_new(MatrixType& h11,
     //    MatrixType& h12,
     //    MatrixType& h21,
@@ -68,6 +69,13 @@ private:
     //    const std::vector<DISTMATDTYPE>& occ,
     //    const std::vector<DISTMATDTYPE>& auxenergies, const double kbT,
     //    const double eta, MatrixType& target);
+
+    /*!
+     * To differentiate very low occupation vectors, extract those with
+     * lowest energy by reordering evect/eval
+     * (rightmost vectors will be used in next outer itertaion)
+     */
+    void reorderEigenvectors(MatrixType& evect, std::vector<double>& eval);
 
 public:
     DavidsonSolver(std::ostream& os, Ions& ions,

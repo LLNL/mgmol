@@ -25,6 +25,7 @@
 #include "tools.h"
 
 #include <iomanip>
+#include <numeric> // for std::iota
 
 template <class OrbitalsType, class MatrixType>
 Timer DavidsonSolver<OrbitalsType, MatrixType>::solve_tm_(
@@ -42,6 +43,21 @@ double evalEntropy(ProjectedMatricesInterface* projmatrices,
            << std::endl;
 
     return ts;
+}
+
+// print 10 eigenvalues / row
+void printEigenvalues(const std::vector<double>& eval, std::ostream& os)
+{
+    os << std::fixed << std::setprecision(4);
+    for (unsigned int i = 0; i < eval.size(); i++)
+    {
+        os << eval[i];
+        if (i % 10 == 9)
+            os << std::endl;
+        else
+            os << "  ";
+    }
+    os << std::endl;
 }
 
 template <class OrbitalsType, class MatrixType>
@@ -225,8 +241,9 @@ double DavidsonSolver<OrbitalsType, MatrixType>::evaluateDerivative(
 
 template <class OrbitalsType, class MatrixType>
 void DavidsonSolver<OrbitalsType, MatrixType>::buildTarget2N_MVP(
-    MatrixType& h11, MatrixType& h12, MatrixType& h21, MatrixType& h22,
-    MatrixType& s11, MatrixType& s22, MatrixType& target)
+    const MatrixType& h11, const MatrixType& h12, const MatrixType& h21,
+    const MatrixType& h22, const MatrixType& s11, const MatrixType& s22,
+    MatrixType& target)
 {
     target_tm_.start();
 
@@ -234,11 +251,11 @@ void DavidsonSolver<OrbitalsType, MatrixType>::buildTarget2N_MVP(
 
     proj_mat2N_->assignBlocksH(h11, h12, h21, h22);
 
+    // Build s2N using diagonal blocks s11 and s22
+    // assuming s12 = s21 = 0
     // if( onpe0 )os_<<"Build S2N..."<<endl;
     MatrixType s2N("s2N", 2 * numst_, 2 * numst_);
     s2N.assign(s11, 0, 0);
-    // s2N.assign(s12,0,numst_);
-    // s2N.assign(s21,numst_,0);
     s2N.assign(s22, numst_, numst_);
 
     int orbitals_index = 0;
@@ -262,6 +279,131 @@ void DavidsonSolver<OrbitalsType, MatrixType>::buildTarget2N_MVP(
 
     target_tm_.stop();
 }
+
+#ifndef MGMOL_USE_SCALAPACK
+// to differentiate very low occupation vectors, extract those with
+// lowest energy
+template <class OrbitalsType, class MatrixType>
+void DavidsonSolver<OrbitalsType, MatrixType>::reorderEigenvectors(
+    MatrixType& evect, std::vector<double>& eval)
+{
+    Control& ct = *(Control::instance());
+    MGmol_MPI& mmpi(*(MGmol_MPI::instance()));
+
+    // get eigenvectors of H used to build target DM
+    const MatrixType& ev(proj_mat2N_->getEigenvectors());
+
+    MatrixType p("p", 2 * numst_, 2 * numst_);
+    p.gemm('t', 'n', 1, ev, evect, 0);
+
+#ifndef NDEBUG
+    // verify that the sum of the elements squrade in each column is 1
+    for (int j = 0; j < 2 * numst_; j++)
+    {
+        double a = p.nrm2(j);
+        std::cout << j << "  " << a * a << std::endl;
+        assert(std::abs(a - 1) < 1.e-2);
+    }
+#endif
+
+    // now find evect with largest overlap with first numst_ columns of
+    // ev zero out elements associated with last numst_ columns of ev
+    // (high energy ones)
+    for (int i = numst_; i < 2 * numst_; i++)
+        for (int j = 0; j < 2 * numst_; j++)
+            p.setVal(i, j, 0);
+
+    // do not include eigenstates with overlap below threshold
+    const double overlap_threshold = 0.2;
+    // keep vectors associated with occupation above threshold unchanged
+    const double occ_threshold = 0.01;
+    std::vector<double> w(2 * numst_);
+    int count = 0;
+    for (int j = 0; j < 2 * numst_; j++)
+    {
+        // first compute the norm of the projection onto ev lowest energy states
+        double a = p.nrm2(j);
+        w[j]     = a * a;
+        // std::cout << j << "  " << w[j] << std::endl;
+        //  Set weight to 0 if below tolerance
+        //  By doing that we exclude eigenvectors with very little
+        //  overlap with lowest eigenstates of H in subsequent reordering
+        if (w[j] < overlap_threshold) w[j] = 0;
+
+        if (eval[j] > occ_threshold) w[j] = 1;
+
+        if (w[j] > 0 && w[j] < 1) count++;
+    }
+    if (mmpi.instancePE0() && ct.verbose > 1)
+    {
+        std::cout << "Sort " << count << " eigenvectors" << std::endl;
+        for (int j = 0; j < 2 * numst_; j++)
+        {
+            if (w[j] > 0 && w[j] < 1)
+                std::cout << "eval [" << j << "] = " << eval[j] << std::endl;
+        }
+    }
+
+    // Create a vector of indices [0, 1, 2, ...]
+    std::vector<int> indices(w.size());
+    std::iota(indices.begin(), indices.end(), 0);
+
+    // Sort indices based on values in 'w'
+    std::sort(indices.begin(), indices.end(),
+        [&](int i1, int i2) { return w[i1] < w[i2]; });
+    for (int idx : indices)
+    {
+        if (w[idx] > 0 && w[idx] < 1 && mmpi.instancePE0() && ct.verbose > 2)
+            std::cout << "Original Index: " << idx << ", overlap " << w[idx]
+                      << std::endl;
+    }
+
+    // Broadcast permutations to make sure all MPI tasks use the same
+    MPI_Comm comm = mmpi.commSameSpin();
+    MPI_Bcast(indices.data(), indices.size(), MPI_INT, 0, comm);
+
+    // permutation of eigenvalues
+    {
+        std::vector<double> tmp_eval = eval;
+        int j                        = 0;
+        for (int idx : indices)
+        {
+            if (idx != j && w[idx] > 0 && w[idx] < 1 && mmpi.instancePE0()
+                && ct.verbose > 2)
+                std::cout << idx << " <-> " << j << std::endl;
+            eval[j] = tmp_eval[idx];
+            j++;
+        }
+    }
+
+    // permutation of eigenvectors in evect
+    {
+        MatrixType perm("perm", 2 * numst_, 2 * numst_);
+        int j = 0;
+        for (int idx : indices)
+        {
+            perm.setVal(idx, j, 1);
+            j++;
+        }
+        MatrixType tmp("tmp", 2 * numst_, 2 * numst_);
+        tmp.gemm('n', 'n', 1, evect, perm, 0);
+        evect = tmp;
+    }
+#if 0
+    // repeat to check result
+    p.gemm('t', 'n', 1, ev, evect, 0);
+    for (int i = numst_; i < 2 * numst_; i++)
+        for (int j = 0; j < 2 * numst_; j++)
+            p.setVal(i, j, 0);
+    for (int j = 0; j < 2 * numst_; j++)
+    {
+        double a = p.nrm2(j);
+        w[j]     = a * a;
+        std::cout << j << "  " << w[j] << std::endl;
+    }
+#endif
+};
+#endif
 
 // template <class OrbitalsType, class MatrixType>
 // void DavidsonSolver<OrbitalsType,MatrixType>::buildTarget2N_new(
@@ -427,7 +569,6 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
         OrbitalsType hphi("Davidson_hphi", orbitals);
         MatrixType dm2Ninit("dm2N", 2 * numst_, 2 * numst_);
         std::vector<DISTMATDTYPE> eval(2 * numst_);
-        MatrixType evect("EigVect", 2 * numst_, 2 * numst_);
 
         MatrixType dm11("dm11", numst_, numst_);
         MatrixType dm12("dm12", numst_, numst_);
@@ -577,7 +718,9 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
             MatrixType delta_dm("delta_dm", 2 * numst_, 2 * numst_);
 
             buildTarget2N_MVP(h11, h12, h21, h22, s11, s22, target);
-            if (mmpi.instancePE0() && ct.verbose > 1 && (outer_it % 10 == 0))
+            const int out_freq = ct.verbose > 2 ? 1 : 10;
+            if (mmpi.instancePE0() && ct.verbose > 1
+                && (outer_it % out_freq == 0))
             {
                 proj_mat2N_->printEigenvalues(os_);
                 proj_mat2N_->printOccupations(os_);
@@ -681,21 +824,14 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
         } // inner iterations
 
         // update orbitals
+        MatrixType evect("EigVect", 2 * numst_, 2 * numst_);
         proj_mat2N_->diagonalizeDM(eval, evect);
+
 #if 1
         if (mmpi.PE0() && ct.verbose > 2)
         {
             os_ << "Eigenvalues of Interpolated DM: " << std::endl;
-            os_ << std::fixed << std::setprecision(4);
-            for (unsigned int i = 0; i < eval.size(); i++)
-            {
-                os_ << eval[i];
-                if (i % 10 == 9)
-                    os_ << std::endl;
-                else
-                    os_ << "  ";
-            }
-            os_ << std::endl;
+            printEigenvalues(eval, os_);
             double tot = 0.;
             for (int i = 0; i < numst_; i++)
             {
@@ -711,24 +847,29 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
         }
 #endif
 
+#if 0
         // to differentiate very low occupation vectors, extract those with
         // lowest energy
-        //        MatrixType  z2N("z2N",2*numst_,
-        //        2*numst_); swapColumnsVect(evect, proj_mat2N_->getMatHB(),
-        //        eval, z2N );
+        // Note jlf 6/2026: code is functional, but does not seem to help much
+        //                  so turn it off for now
+        reorderEigenvectors(evect, eval);
+#endif
 
-        dm12.getsub(evect, numst_, numst_, 0, numst_);
-        dm22.getsub(evect, numst_, numst_, numst_, numst_);
+        // replace orbitals with rightmost numst_ columns of evect
+        {
+            MatrixType v12("v12", numst_, numst_);
+            MatrixType v22("v22", numst_, numst_);
+            v12.getsub(evect, numst_, numst_, 0, numst_);
+            v22.getsub(evect, numst_, numst_, numst_, numst_);
 
-        // replace orbitals with eigenvectors corresponding to largest
-        // eigenvalues of DM
-        if (mmpi.PE0() && ct.verbose > 2)
-            os_ << "Update trial eigenvectors..." << std::endl;
-        orbitals.multiply_by_matrix(dm12, 0., orbitals);
-        work_orbitals.multiply_by_matrix(dm22, 1., orbitals);
-        orbitals.incrementIterativeIndex();
-        orbitals.incrementIterativeIndex();
-        work_orbitals.incrementIterativeIndex(2);
+            if (mmpi.PE0() && ct.verbose > 2)
+                os_ << "Update trial eigenvectors..." << std::endl;
+            orbitals.multiply_by_matrix(v12, 0., orbitals);
+            work_orbitals.multiply_by_matrix(v22, 1., orbitals);
+            orbitals.incrementIterativeIndex();
+            orbitals.incrementIterativeIndex();
+            work_orbitals.incrementIterativeIndex(2);
+        }
 
         std::vector<double> new_occ(numst_);
         double tocc              = 0.;
@@ -771,14 +912,7 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
         if( onpe0 )
         {
             os_<<"New occupations: "<<endl;
-            os_<<fixed<<setprecision(4);
-            for(int i=0;i<numst_;i++)
-            {
-                os_<<new_occ[i];
-                if( i%10==9 )os_<<endl;
-                else         os_<<"  ";
-            }
-            os_<<endl;
+            printEigenvalues(new_occ, os_);
         }
 #endif
 #if 1
@@ -806,16 +940,7 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
             && ct.verbose > 2)
         {
             os_ << "Final Occupations: " << std::endl;
-            os_ << std::fixed << std::setprecision(4);
-            for (int i = 0; i < numst_; i++)
-            {
-                os_ << new_occ[i];
-                if (i % 10 == 9)
-                    os_ << std::endl;
-                else
-                    os_ << "  ";
-            }
-            os_ << std::endl;
+            printEigenvalues(new_occ, os_);
         }
 #endif
 

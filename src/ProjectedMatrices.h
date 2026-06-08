@@ -98,6 +98,12 @@ protected:
     std::unique_ptr<DensityMatrix<MatrixType>> dm_;
 
     /*!
+     * Matrix of eigenvectors used to build DM
+     * (if used)
+     */
+    std::unique_ptr<MatrixType> ev_;
+
+    /*!
      * Gram matrix of orbitals overlaps
      */
     std::unique_ptr<GramMatrix<MatrixType>> gm_;
@@ -242,7 +248,13 @@ public:
     }
 
     void assignH(const MatrixType& matH) { *matH_ = matH; }
+
     const MatrixType& getH() { return *matH_; }
+    const MatrixType& getEigenvectors()
+    {
+        assert(ev_ != nullptr);
+        return *ev_;
+    }
 
     void setHB2H() override
     {

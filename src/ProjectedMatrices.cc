@@ -390,18 +390,18 @@ void ProjectedMatrices<MatrixType>::updateDMwithEigenstates()
     if (mmpi.PE0() && ct.verbose > 1)
         (*MPIdata::sout) << "ProjectedMatrices: Compute DM using eigenstates\n";
 
-    MatrixType zz("Z", dim_, dim_);
+    if (ev_ == nullptr) ev_.reset(new MatrixType("ev", dim_, dim_));
 
     // solves generalized eigenvalue problem
     // and return solution in zz and val
-    solveGenEigenProblem(zz);
+    solveGenEigenProblem(*ev_);
     computeChemicalPotentialAndOccupations();
     if (mmpi.instancePE0() && ct.verbose > 1)
         std::cout << "Final mu_ = " << 0.5 * mu_ << " [Ha]" << std::endl;
 
     // Build the density matrix X
     // X = Z * gamma * Z^T
-    buildDM(zz);
+    buildDM(*ev_);
 }
 
 //"replicated" implementation of SP2.
