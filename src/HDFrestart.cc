@@ -519,10 +519,7 @@ HDFrestart::HDFrestart(const std::string& filename, const pb::PEenv& pes,
             // Set up file access property list with parallel I/O access
             herr_t err_id
                 = H5Pset_fapl_mpio(access_plist, comm_active_, MPI_INFO_NULL);
-            if (err_id < 0)
-            {
-                MGMOL_HDFRESTART_FAIL("H5Pset_fapl_mpio failed!!!");
-            }
+            if (err_id < 0) MGMOL_HDFRESTART_FAIL("H5Pset_fapl_mpio failed!!!");
         }
         else
 #endif
@@ -1655,13 +1652,14 @@ int HDFrestart::writeData(const T* const data, hid_t space_id, hid_t memspace,
 {
     if (precision == 1)
     {
-        assert((int)work_space_float_.size() == bsize_);
+        // make sure work_space is large enough (could be bigger)
+        assert((int)work_space_float_.size() >= bsize_);
         for (int i = 0; i < bsize_; i++)
             work_space_float_[i] = (float)data[i];
     }
     else
     {
-        assert((int)work_space_double_.size() == bsize_);
+        assert((int)work_space_double_.size() >= bsize_);
         for (int i = 0; i < bsize_; i++)
             work_space_double_[i] = (double)data[i];
     }
@@ -1849,15 +1847,12 @@ void HDFrestart::setOptions(const short option_number)
 
 void HDFrestart::setupWorkSpace()
 {
-    // if( active_ )
-    {
-        const int n = block_[0] * block_[1] * block_[2];
-        work_space_double_.resize(n);
-        memset(work_space_double_.data(), 0, n * sizeof(double));
+    const int n = block_[0] * block_[1] * block_[2];
+    work_space_double_.resize(n);
+    memset(work_space_double_.data(), 0, n * sizeof(double));
 
-        work_space_float_.resize(n);
-        memset(work_space_float_.data(), 0, n * sizeof(float));
-    }
+    work_space_float_.resize(n);
+    memset(work_space_float_.data(), 0, n * sizeof(float));
 }
 
 void HDFrestart::printTimers(std::ostream& os)
