@@ -38,9 +38,8 @@ KBPsiMatrixSparse::KBPsiMatrixSparse(
     pb::Lap<ORBDTYPE>* lapop, const bool need2radius)
     : lapop_(lapop), need2radius_(need2radius)
 {
-    kbpsimat_    = nullptr;
-    kbBpsimat_   = nullptr;
-    distributor_ = nullptr;
+    kbpsimat_  = nullptr;
+    kbBpsimat_ = nullptr;
 
     isDataSetup_ = false;
 }
@@ -57,9 +56,8 @@ void KBPsiMatrixSparse::clearData()
         {
             delete kbBpsimat_;
         }
+        distributor_.reset();
         kbBpsimat_ = nullptr;
-        delete distributor_;
-        distributor_ = nullptr;
 
         isDataSetup_ = false;
     }
@@ -98,12 +96,16 @@ void KBPsiMatrixSparse::setup(const Ions& ions)
     //        "<<spread_radius_<<endl;
 
     /* construct data distribution object */
-    assert(distributor_ == nullptr);
-    Mesh* mymesh             = Mesh::instance();
-    const pb::Grid& mygrid   = mymesh->grid();
-    const pb::PEenv& myPEenv = mymesh->peenv();
-    double domain[3]         = { mygrid.ll(0), mygrid.ll(1), mygrid.ll(2) };
-    distributor_ = new DataDistribution("KB", spread_radius_, myPEenv, domain);
+    assert(!distributor_);
+    if (spread_radius_ > 0)
+    {
+        Mesh* mymesh             = Mesh::instance();
+        const pb::Grid& mygrid   = mymesh->grid();
+        const pb::PEenv& myPEenv = mymesh->peenv();
+        double domain[3]         = { mygrid.ll(0), mygrid.ll(1), mygrid.ll(2) };
+        distributor_.reset(
+            new DataDistribution("KB", spread_radius_, myPEenv, domain));
+    }
 
     isDataSetup_ = true;
 
@@ -113,6 +115,9 @@ void KBPsiMatrixSparse::setup(const Ions& ions)
 // consolidate values with overlap of local projectors on other subdomains
 void KBPsiMatrixSparse::globalSumKBpsi()
 {
+    // early return if no data to distribute
+    if (!distributor_) return;
+
     bool append = false; // assuming projectors have rectangular domain
 #ifdef PRINT_OPERATIONS
     if (onpe0)
@@ -122,10 +127,10 @@ void KBPsiMatrixSparse::globalSumKBpsi()
     global_sum_tm_.start();
 
     /* perform data distribution */
-    (*distributor_).augmentLocalData((*kbpsimat_), append);
+    distributor_->augmentLocalData((*kbpsimat_), append);
     if (lapop_)
     {
-        (*distributor_).augmentLocalData((*kbBpsimat_), append);
+        distributor_->augmentLocalData((*kbBpsimat_), append);
     }
     global_sum_tm_.stop();
 
