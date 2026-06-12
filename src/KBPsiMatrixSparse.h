@@ -44,7 +44,7 @@ class KBPsiMatrixSparse : public KBPsiMatrixInterface
     // Sparse matrix - VariableSizeMatrix
     VariableSizeMatrix<sparserow>* kbpsimat_; // matrix <KB, psi>
     VariableSizeMatrix<sparserow>* kbBpsimat_; // matrix <KB, B*psi>
-    DataDistribution* distributor_; // data distribution object
+    std::unique_ptr<DataDistribution> distributor_; // data distribution object
     double spread_radius_; // radius for spreading data
 
     int count_proj_subdomain_;

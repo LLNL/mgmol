@@ -564,6 +564,13 @@ add_test(NAME DavidsonMixing
          ${CMAKE_CURRENT_SOURCE_DIR}/DavidsonMixing/davidson.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/DavidsonMixing/sih4.xyz
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+add_test(NAME LocalPotentials
+         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/LocalPotentials/test.py
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+         ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
+         ${CMAKE_CURRENT_SOURCE_DIR}/LocalPotentials/davidson.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/LocalPotentials/li2.xyz
+         ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME PolakRibiere
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/PolakRibiere/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
