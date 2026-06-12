@@ -50,7 +50,11 @@ class HDFrestart
     // flag to denote tasks writing (or not) directly to HDF file
     bool active_;
 
+    /*!
+     * sizes of data block associated with active task
+     */
     hsize_t block_[3];
+
     hsize_t offset_[3];
     hsize_t count_[3];
     hsize_t stride_[3];
@@ -58,6 +62,9 @@ class HDFrestart
     // global mesh dimensions
     hsize_t dimsf_[3];
 
+    /*!
+     * number of mesh points associated with local subdomain (MPI task)
+     */
     int bsize_;
 
     std::vector<double> work_space_double_;
@@ -207,8 +214,6 @@ public:
 #endif
         {
             filespace = H5Screate_simple(3, block_, nullptr);
-            // hsize_t dims[1]={block_[0]*block_[1]*block_[2]};
-            // filespace = H5Screate_simple(1, dims, NULL);
         }
         if (filespace < 0 && onpe0)
             (*MPIdata::serr)
@@ -219,17 +224,7 @@ public:
     {
         assert(active_);
 
-        hid_t memspace;
-#ifdef MGMOL_USE_HDF5P
-        if (use_hdf5p_)
-            memspace = H5Screate_simple(3, block_, nullptr);
-        else
-#endif
-        {
-            memspace = H5Screate_simple(3, block_, nullptr);
-            // hsize_t dims[1]={block_[0]*block_[1]*block_[2]};
-            // memspace=H5Screate_simple(1, dims, NULL);
-        }
+        hid_t memspace = H5Screate_simple(3, block_, nullptr);
         if (memspace < 0 && onpe0)
             (*MPIdata::serr)
                 << "ERROR: createMemspace() failed!!!" << std::endl;
