@@ -169,7 +169,9 @@ public:
 
     static void enforceComputeMaxDataSize()
     {
-        count_computeMaxDataSize_ = maxcount_computeMaxDataSize_ - 1;
+        // start with counter at max - 3 so that max is reached after
+        // three calls to computeMaxDataSize(), one for each direction x,y,z
+        count_computeMaxDataSize_ = maxcount_computeMaxDataSize_ - 3;
     }
 
     template <class T>
