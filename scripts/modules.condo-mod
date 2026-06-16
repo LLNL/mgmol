@@ -1,4 +1,4 @@
-module load hdf5
+module load hdf5/1.14.3-mpi
 module load boost
 module load cmake
 module load python
