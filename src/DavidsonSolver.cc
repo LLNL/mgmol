@@ -86,7 +86,7 @@ DavidsonSolver<OrbitalsType, MatrixType>::DavidsonSolver(std::ostream& os,
     work2N_.reset(new MatrixType("work2N", 2 * numst_, 2 * numst_));
 
     proj_mat2N_.reset(new ProjectedMatrices2N<MatrixType>(
-        2 * ct.numst, with_spin, ct.occ_width));
+        2 * ct.numst, with_spin, ct.occ_width_));
     proj_mat2N_->setup(global_indexes);
 }
 
@@ -879,7 +879,7 @@ int DavidsonSolver<OrbitalsType, MatrixType>::solve(
             new_occ[i] = spin_factor * eval[numst_ + i];
             tocc += new_occ[i];
         }
-        double kbT = ct.occ_width;
+        double kbT = ct.occ_width_;
         if (mmpi.PE0() && ct.verbose > 2)
             os_ << "Total occupations/spin for kbT = " << kbT << ": "
                 << std::setprecision(15) << tocc << std::endl;

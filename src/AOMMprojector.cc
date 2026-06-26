@@ -39,7 +39,7 @@ AOMMprojector::AOMMprojector(LocGridOrbitals<ORBDTYPE>& phi,
 
     if (ct.short_sighted)
         kernel_proj_matrices_
-            = new ProjectedMatricesSparse(ct.numst, ct.occ_width, lrs);
+            = new ProjectedMatricesSparse(ct.numst, ct.occ_width_, lrs);
     else
     {
 #ifdef MGMOL_USE_SCALAPACK
@@ -47,7 +47,7 @@ AOMMprojector::AOMMprojector(LocGridOrbitals<ORBDTYPE>& phi,
         bool with_spin  = (mmpi.nspin() > 1);
         kernel_proj_matrices_
             = new ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>(
-                ct.numst, with_spin, ct.occ_width);
+                ct.numst, with_spin, ct.occ_width_);
 #else
         std::cerr << "AOMMprojector requires ScaLapack" << std::endl;
         abort();

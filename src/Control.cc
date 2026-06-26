@@ -463,7 +463,7 @@ void Control::sync(void)
         float_buffer[5]  = mix_pot;
         float_buffer[6]  = dm_mix;
         float_buffer[7]  = cut_radius;
-        float_buffer[9]  = occ_width;
+        float_buffer[9]  = occ_width_;
         float_buffer[10] = init_rc;
         float_buffer[11] = dt;
         float_buffer[12] = tol_orb_centers_move;
@@ -669,7 +669,7 @@ void Control::sync(void)
     mix_pot                           = float_buffer[5];
     dm_mix                            = float_buffer[6];
     cut_radius                        = float_buffer[7];
-    occ_width                         = float_buffer[9];
+    occ_width_                        = float_buffer[9];
     init_rc                           = float_buffer[10];
     dt                                = float_buffer[11];
     tol_orb_centers_move              = float_buffer[12];
@@ -1709,9 +1709,9 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         if (str.compare("NO") == 0) orbital_type_ = 1;
         if (str.compare("Orthonormal") == 0) orbital_type_ = 2;
         std::cout << "Orbitals type: " << str << std::endl;
-        float etemp = vm["Orbitals.temperature"].as<float>();
+        etemp_ = vm["Orbitals.temperature"].as<float>();
         // K_B*T in Rydberg
-        occ_width = 2. * 3.166811429e-6 * etemp;
+        occ_width_ = 2. * 3.166811429e-6 * etemp_;
 
         str = vm["Orbitals.dotProduct"].as<std::string>();
         if (str.compare("diagonal") == 0)
