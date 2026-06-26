@@ -253,13 +253,13 @@ int MGmol<OrbitalsType>::initial()
         if (use_replicated_matrix)
             proj_matrices_.reset(
                 new ProjectedMatricesMehrstellen<ReplicatedMatrix>(
-                    ct.numst, with_spin, ct.occ_width));
+                    ct.numst, with_spin, ct.occ_width_));
         else
         {
 #ifdef MGMOL_USE_SCALAPACK
             proj_matrices_.reset(new ProjectedMatricesMehrstellen<
                 dist_matrix::DistMatrix<DISTMATDTYPE>>(
-                ct.numst, with_spin, ct.occ_width));
+                ct.numst, with_spin, ct.occ_width_));
 #else
             std::cerr << "Not implemented" << std::endl;
 #endif
@@ -267,16 +267,16 @@ int MGmol<OrbitalsType>::initial()
     }
     else if (ct.short_sighted)
         proj_matrices_.reset(new ProjectedMatricesSparse(
-            ct.numst, ct.occ_width, lrs_, local_cluster_.get()));
+            ct.numst, ct.occ_width_, lrs_, local_cluster_.get()));
     else if (use_replicated_matrix)
         proj_matrices_.reset(new ProjectedMatrices<ReplicatedMatrix>(
-            ct.numst, with_spin, ct.occ_width));
+            ct.numst, with_spin, ct.occ_width_));
     else
     {
 #ifdef MGMOL_USE_SCALAPACK
         proj_matrices_.reset(
             new ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>(
-                ct.numst, with_spin, ct.occ_width));
+                ct.numst, with_spin, ct.occ_width_));
 #else
         std::cerr << "Not implemented" << std::endl;
 #endif
@@ -690,7 +690,11 @@ void MGmol<OrbitalsType>::write_header()
     if (onpe0)
     {
         os_ << " Number of ions     = " << nions << std::endl;
-        os_ << " Total charge in cell = " << pot.getChargeInCell() << std::endl;
+        os_ << " Total charge in cell        = " << pot.getChargeInCell()
+            << std::endl;
+        os_ << " Electronic temperature (K)  = " << ct.etemp_ << std::endl;
+        os_ << " Fermi-Dirac width kb*T (Ha) = " << 0.5 * ct.occ_width_
+            << std::endl;
 
         ct.print(os_);
 

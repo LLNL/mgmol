@@ -296,7 +296,7 @@ public:
     void setSpreadRadius();
     bool checkTimeout() { return timeout_.check(); }
 
-    bool occupationWidthIsZero() { return occ_width < 1.e-12; }
+    bool occupationWidthIsZero() { return occ_width_ < 1.e-12; }
 
     void setLocMode(
         const float, const float, const float, const float, const float);
@@ -488,7 +488,9 @@ public:
     // Localization radius
     float cut_radius;
 
-    float occ_width;
+    // electronic temperature
+    float etemp_;
+    float occ_width_;
 
     // transfer matrix flag
     short tmatrices;
@@ -528,8 +530,8 @@ public:
     // with line minimization for electronic structure optimization
     short line_min;
 
-    short thermostat_type;
     // temperature control
+    short thermostat_type;
     float tkel;
     float thtime;
     float thwidth;
