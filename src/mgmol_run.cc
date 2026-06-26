@@ -88,8 +88,8 @@ int mgmol_init(MPI_Comm comm)
                   << (omp_get_max_threads() > 1 ? "s " : " ");
         std::cout << "active" << std::endl << std::endl;
     }
-    omp_set_nested(0);
-    if (omp_get_nested())
+    omp_set_max_active_levels(1); // 1 disables nesting
+    if (omp_get_max_active_levels() > 1)
     {
         std::cerr << "Nested parallelism not allowed" << std::endl;
         return 1;
