@@ -638,12 +638,12 @@ add_test(NAME testSpreadPenalty
          ${CMAKE_CURRENT_SOURCE_DIR}/SpreadPenalty/coords.in
          ${CMAKE_CURRENT_SOURCE_DIR}/SpreadPenalty/lrs.in
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
-add_test(NAME testFatom
-         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Fatom/test.py
+add_test(NAME HMVP
+         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/HMVP/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
          ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
-         ${CMAKE_CURRENT_SOURCE_DIR}/Fatom/mgmol.cfg
-         ${CMAKE_CURRENT_SOURCE_DIR}/Fatom/F.xyz
+         ${CMAKE_CURRENT_SOURCE_DIR}/HMVP/mgmol.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/HMVP/F.xyz
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME ReplicatedSP2
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ReplicatedSP2/test.py

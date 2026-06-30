@@ -122,6 +122,8 @@ int HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>::solve(
 
     MatrixType h11("h11", numst_);
 
+    OrbitalsType hphi("HMVP_hphi", orbitals);
+
     for (int inner_it = 0; inner_it < n_inner_steps_; inner_it++)
     {
         if (onpe0 && ct.verbose > 1)
@@ -151,7 +153,8 @@ int HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>::solve(
         // compute new h11 for the current potential by adding local part to
         // nonlocal components
         h11 = h11nl;
-        hamiltonian_->addHlocal2matrix(orbitals, orbitals, h11, false);
+        hamiltonian_->applyLocal(numst_, orbitals, hphi);
+        orbitals.addDotWithNcol2Matrix(hphi, h11);
 
         projmatrices->assignH(h11);
         projmatrices->setHB2H();
@@ -179,7 +182,8 @@ int HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>::solve(
 
         // update H and compute energy at midpoint
         h11 = h11nl;
-        hamiltonian_->addHlocal2matrix(orbitals, orbitals, h11, false);
+        hamiltonian_->applyLocal(numst_, orbitals, hphi);
+        orbitals.addDotWithNcol2Matrix(hphi, h11);
 
         projmatrices->assignH(h11);
         projmatrices->setHB2H();
@@ -214,7 +218,8 @@ int HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>::solve(
 
         // update H with new potential
         h11 = h11nl;
-        hamiltonian_->addHlocal2matrix(orbitals, orbitals, h11, false);
+        hamiltonian_->applyLocal(numst_, orbitals, hphi);
+        orbitals.addDotWithNcol2Matrix(hphi, h11);
 
         projmatrices->assignH(h11);
         projmatrices->setHB2H();
@@ -270,7 +275,8 @@ int HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>::solve(
 
                 // update H
                 h11 = h11nl;
-                hamiltonian_->addHlocal2matrix(orbitals, orbitals, h11, false);
+                hamiltonian_->applyLocal(numst_, orbitals, hphi);
+                orbitals.addDotWithNcol2Matrix(hphi, h11);
 
                 projmatrices->assignH(h11);
                 projmatrices->setHB2H();
@@ -358,7 +364,7 @@ template class HamiltonianMVPSolver<dist_matrix::DistMatrix<DISTMATDTYPE>,
     ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>,
     ExtendedGridOrbitals<ORBDTYPE>>;
 #endif
-template class HamiltonianMVPSolver<VariableSizeMatrix<sparserow>,
-    ProjectedMatricesSparse, LocGridOrbitals<ORBDTYPE>>;
+// template class HamiltonianMVPSolver<VariableSizeMatrix<sparserow>,
+//     ProjectedMatricesSparse, LocGridOrbitals<ORBDTYPE>>;
 template class HamiltonianMVPSolver<ReplicatedMatrix,
     ProjectedMatrices<ReplicatedMatrix>, ExtendedGridOrbitals<ORBDTYPE>>;
