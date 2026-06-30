@@ -16,6 +16,7 @@ DMStrategyFactory<LocGridOrbitals<ORBDTYPE>,
 {
     if (short_sighted)
     {
+#if 0
         DMStrategy<LocGridOrbitals<ORBDTYPE>>* dm_strategy
             = new HamiltonianMVP_DMStrategy<VariableSizeMatrix<sparserow>,
                 ProjectedMatricesSparse, LocGridOrbitals<ORBDTYPE>>(comm, os,
@@ -23,6 +24,11 @@ DMStrategyFactory<LocGridOrbitals<ORBDTYPE>,
                 orbitals);
 
         return dm_strategy;
+#endif
+        std::cerr << "DMStrategy not implemented" << std::endl;
+        MPI_Abort(comm, EXIT_FAILURE);
+
+        return nullptr;
     }
     else
     {
