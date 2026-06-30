@@ -39,11 +39,12 @@ HamiltonianMVPSolver<MatrixType, ProjMatrixType,
     Rho<OrbitalsType>* rho, Energy<OrbitalsType>* energy,
     Electrostatic* electrostat, Hamiltonian<OrbitalsType>* hamiltonian,
     MGmol<OrbitalsType>* mgmol_strategy, const int numst,
-    const short n_inner_steps, const MatrixType& hinit,
+    const short n_inner_steps, const MatrixType& hinit, const double mixing,
     const bool try_shorter_intervals)
     : os_(os),
       n_inner_steps_(n_inner_steps),
       ions_(ions),
+      mixing_(mixing),
       try_shorter_intervals_(try_shorter_intervals)
 {
     assert(n_inner_steps > 0);
@@ -79,22 +80,21 @@ template <class MatrixType, class ProjMatrixType, class OrbitalsType>
 int HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>::solve(
     OrbitalsType& orbitals)
 {
-    Control& ct = *(Control::instance());
+    Control& ct     = *(Control::instance());
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
 
     assert(numst_ == (int)orbitals.numst());
     assert(n_inner_steps_ > 0);
 
     solve_tm_.start();
 
-    if (onpe0 && ct.verbose > 1)
+    if (mmpi.PE0() && ct.verbose > 1)
     {
-        os_ << "---------------------------------------------------------------"
-               "-"
+        os_ << "---------------------------------------------------"
             << std::endl;
         os_ << "Update DM functions using Hamiltonian MVP Solver..."
             << std::endl;
-        os_ << "---------------------------------------------------------------"
-               "-"
+        os_ << "---------------------------------------------------"
             << std::endl;
     }
 
@@ -126,7 +126,7 @@ int HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>::solve(
 
     for (int inner_it = 0; inner_it < n_inner_steps_; inner_it++)
     {
-        if (onpe0 && ct.verbose > 1)
+        if (mmpi.PE0() && ct.verbose > 1)
         {
             os_ << "---------------------------" << std::endl;
             os_ << "Inner iteration " << inner_it << std::endl;
@@ -164,155 +164,165 @@ int HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>::solve(
         double e0        = energy_->evaluateTotal(
             ts0, projmatrices, ions_, orbitals, printE, os_);
 
-        //
-        // compute energy at end for new H
-        //
+        // set target H to H computed with last DM
         MatrixType htarget(projmatrices->getH());
-
-        // update DM and compute entropy
-        projmatrices->updateDM();
-        double ts1 = evalEntropyMVP(projmatrices, true, os_);
-        // Update density
-        rho_->update(orbitals);
-
-        // Update potential
-        mgmol_strategy_->update_pot(vh_init, ions_);
-
-        energy_->saveVofRho();
-
-        // update H and compute energy at midpoint
-        h11 = h11nl;
-        hamiltonian_->applyLocal(numst_, orbitals, hphi);
-        orbitals.addDotWithNcol2Matrix(hphi, h11);
-
-        projmatrices->assignH(h11);
-        projmatrices->setHB2H();
-
-        // compute energy at end (beta=1.)
-        double e1 = energy_->evaluateTotal(
-            ts1, projmatrices, ions_, orbitals, printE, os_);
-
-        //
-        // evaluate energy at mid-point
-        //
         MatrixType delta_h(htarget);
         delta_h -= *hmatrix_;
 
-        h11 = *hmatrix_;
-        h11.axpy(0.5, delta_h);
-
-        projmatrices->assignH(h11);
-        projmatrices->setHB2H();
-
-        // update DM and entropy
-        projmatrices->updateDM();
-        double tsi = evalEntropyMVP(projmatrices, true, os_);
-
-        // Update density
-        rho_->update(orbitals);
-
-        // Update potential
-        mgmol_strategy_->update_pot(vh_init, ions_);
-
-        energy_->saveVofRho();
-
-        // update H with new potential
-        h11 = h11nl;
-        hamiltonian_->applyLocal(numst_, orbitals, hphi);
-        orbitals.addDotWithNcol2Matrix(hphi, h11);
-
-        projmatrices->assignH(h11);
-        projmatrices->setHB2H();
-
-        // compute energy at midpoint
-        double ei = energy_->evaluateTotal(
-            tsi, projmatrices, ions_, orbitals, printE, os_);
-
-        // line minimization
-        double beta
-            = minQuadPolynomialFrom3values(e0, e1, ei, (ct.verbose > 2), os_);
-
-        if (onpe0 && ct.verbose > 0)
+        double beta = 0.;
+        if (mixing_ > 0.)
         {
-            os_ << std::setprecision(12);
-            os_ << std::fixed << "Inner iteration " << inner_it << ", E0=" << e0
-                << ", E(1/2)=" << ei << ", E1=" << e1;
-            os_ << std::scientific << " -> beta=" << beta;
-            os_ << std::endl;
-        }
-
-        if (try_shorter_intervals_)
-        {
-            double factor = 0.5;
-            while (
-                beta < 0.) // try with a shorter interval if line search failed
-            {
-                if (onpe0 && ct.verbose > 1)
-                {
-                    os_ << "HMVP: Reduce interval by factor " << factor
-                        << " ..." << std::endl;
-                }
-                ts1 = tsi;
-                e1  = ei;
-
-                h11 = *hmatrix_;
-                h11.axpy(0.5 * factor, delta_h);
-
-                projmatrices->assignH(h11);
-                projmatrices->setHB2H();
-
-                // update DM and entropy
-                projmatrices->updateDM();
-                tsi = evalEntropyMVP(projmatrices, true, os_);
-
-                // Update density
-                rho_->update(orbitals);
-
-                // Update potential
-                mgmol_strategy_->update_pot(vh_init, ions_);
-
-                energy_->saveVofRho();
-
-                // update H
-                h11 = h11nl;
-                hamiltonian_->applyLocal(numst_, orbitals, hphi);
-                orbitals.addDotWithNcol2Matrix(hphi, h11);
-
-                projmatrices->assignH(h11);
-                projmatrices->setHB2H();
-
-                // compute energy at end (beta=1.)
-                ei = energy_->evaluateTotal(
-                    tsi, projmatrices, ions_, orbitals, printE, os_);
-
-                // line minimization
-                beta = minQuadPolynomialFrom3values(
-                    e0, e1, ei, (ct.verbose > 2), os_);
-
-                if (onpe0 && ct.verbose > 0)
-                {
-                    os_ << std::setprecision(12);
-                    os_ << std::fixed << "Inner iteration " << inner_it
-                        << ", E0=" << e0 << ", E(1/2)=" << ei << ", E1=" << e1;
-                    os_ << std::scientific << " -> beta=" << beta;
-                    os_ << std::endl;
-                }
-
-                beta *= factor;
-
-                factor *= 0.5;
-            }
+            beta = mixing_;
+            if (mmpi.PE0() && ct.verbose > 1)
+                os_ << "HMVP with beta = " << beta << std::endl;
         }
         else
         {
-            if (beta < 0.)
-            {
-                if (onpe0)
-                    os_ << "!!! HMVP iteration failed: beta<0 !!!" << std::endl;
-                projmatrices->assignH(*hmatrix_);
-                projmatrices->setHB2H();
+            // update DM and compute entropy
+            projmatrices->updateDM();
+            double ts1 = evalEntropyMVP(projmatrices, true, os_);
+            // Update density
+            rho_->update(orbitals);
 
-                return -1;
+            // Update potential
+            mgmol_strategy_->update_pot(vh_init, ions_);
+
+            energy_->saveVofRho();
+
+            // update H and compute energy at midpoint
+            h11 = h11nl;
+            hamiltonian_->applyLocal(numst_, orbitals, hphi);
+            orbitals.addDotWithNcol2Matrix(hphi, h11);
+
+            projmatrices->assignH(h11);
+            projmatrices->setHB2H();
+
+            // compute energy at end (beta=1.)
+            double e1 = energy_->evaluateTotal(
+                ts1, projmatrices, ions_, orbitals, printE, os_);
+
+            //
+            // evaluate energy at mid-point
+            //
+            h11 = *hmatrix_;
+            h11.axpy(0.5, delta_h);
+
+            projmatrices->assignH(h11);
+            projmatrices->setHB2H();
+
+            // update DM and entropy
+            projmatrices->updateDM();
+            double tsi = evalEntropyMVP(projmatrices, true, os_);
+
+            // Update density
+            rho_->update(orbitals);
+
+            // Update potential
+            mgmol_strategy_->update_pot(vh_init, ions_);
+
+            energy_->saveVofRho();
+
+            // update H with new potential
+            h11 = h11nl;
+            hamiltonian_->applyLocal(numst_, orbitals, hphi);
+            orbitals.addDotWithNcol2Matrix(hphi, h11);
+
+            projmatrices->assignH(h11);
+            projmatrices->setHB2H();
+
+            // compute energy at midpoint
+            double ei = energy_->evaluateTotal(
+                tsi, projmatrices, ions_, orbitals, printE, os_);
+
+            // line minimization
+            beta = minQuadPolynomialFrom3values(
+                e0, e1, ei, (ct.verbose > 2), os_);
+
+            if (mmpi.PE0() && ct.verbose > 0)
+            {
+                os_ << std::setprecision(12);
+                os_ << std::fixed << "Inner iteration " << inner_it
+                    << ", E0=" << e0 << ", E(1/2)=" << ei << ", E1=" << e1;
+                os_ << std::scientific << " -> beta=" << beta;
+                os_ << std::endl;
+            }
+
+            if (try_shorter_intervals_)
+            {
+                double factor = 0.5;
+                while (
+                    beta
+                    < 0.) // try with a shorter interval if line search failed
+                {
+                    if (mmpi.PE0() && ct.verbose > 1)
+                    {
+                        os_ << "HMVP: Reduce interval by factor " << factor
+                            << " ..." << std::endl;
+                    }
+                    ts1 = tsi;
+                    e1  = ei;
+
+                    h11 = *hmatrix_;
+                    h11.axpy(0.5 * factor, delta_h);
+
+                    projmatrices->assignH(h11);
+                    projmatrices->setHB2H();
+
+                    // update DM and entropy
+                    projmatrices->updateDM();
+                    tsi = evalEntropyMVP(projmatrices, true, os_);
+
+                    // Update density
+                    rho_->update(orbitals);
+
+                    // Update potential
+                    mgmol_strategy_->update_pot(vh_init, ions_);
+
+                    energy_->saveVofRho();
+
+                    // update H
+                    h11 = h11nl;
+                    hamiltonian_->applyLocal(numst_, orbitals, hphi);
+                    orbitals.addDotWithNcol2Matrix(hphi, h11);
+
+                    projmatrices->assignH(h11);
+                    projmatrices->setHB2H();
+
+                    // compute energy at end (beta=1.)
+                    ei = energy_->evaluateTotal(
+                        tsi, projmatrices, ions_, orbitals, printE, os_);
+
+                    // line minimization
+                    beta = minQuadPolynomialFrom3values(
+                        e0, e1, ei, (ct.verbose > 2), os_);
+
+                    if (mmpi.PE0() && ct.verbose > 0)
+                    {
+                        os_ << std::setprecision(12);
+                        os_ << std::fixed << "Inner iteration " << inner_it
+                            << ", E0=" << e0 << ", E(1/2)=" << ei
+                            << ", E1=" << e1;
+                        os_ << std::scientific << " -> beta=" << beta;
+                        os_ << std::endl;
+                    }
+
+                    beta *= factor;
+
+                    factor *= 0.5;
+                }
+            } // try_shorter_intervals_
+            else
+            {
+                if (beta < 0.)
+                {
+                    if (mmpi.PE0())
+                        os_ << "!!! HMVP iteration failed: beta<0 !!!"
+                            << std::endl;
+                    projmatrices->assignH(*hmatrix_);
+                    projmatrices->setHB2H();
+
+                    return -1;
+                }
             }
         }
 
@@ -328,15 +338,11 @@ int HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>::solve(
     // Generate new density
     rho_->update(orbitals);
 
-    if (onpe0 && ct.verbose > 1)
+    if (mmpi.PE0() && ct.verbose > 1)
     {
-        os_ << "---------------------------------------------------------------"
-               "-"
-            << std::endl;
+        os_ << "-----------------------------" << std::endl;
         os_ << "End Hamiltonian MVP Solver..." << std::endl;
-        os_ << "---------------------------------------------------------------"
-               "-"
-            << std::endl;
+        os_ << "-----------------------------" << std::endl;
     }
     solve_tm_.stop();
 
@@ -364,7 +370,5 @@ template class HamiltonianMVPSolver<dist_matrix::DistMatrix<DISTMATDTYPE>,
     ProjectedMatrices<dist_matrix::DistMatrix<DISTMATDTYPE>>,
     ExtendedGridOrbitals<ORBDTYPE>>;
 #endif
-// template class HamiltonianMVPSolver<VariableSizeMatrix<sparserow>,
-//     ProjectedMatricesSparse, LocGridOrbitals<ORBDTYPE>>;
 template class HamiltonianMVPSolver<ReplicatedMatrix,
     ProjectedMatrices<ReplicatedMatrix>, ExtendedGridOrbitals<ORBDTYPE>>;

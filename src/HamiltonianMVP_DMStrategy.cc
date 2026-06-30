@@ -50,7 +50,7 @@ HamiltonianMVP_DMStrategy<MatrixType, ProjMatrixType,
         = new HamiltonianMVPSolver<MatrixType, ProjMatrixType, OrbitalsType>(
             os_, ions_, rho_, energy_, electrostat_, hamiltonian_,
             mgmol_strategy_, ct.numst, ct.dm_inner_steps, projmatrices->getH(),
-            true);
+            ct.dm_mix, true);
 }
 
 template <class MatrixType, class ProjMatrixType, class OrbitalsType>

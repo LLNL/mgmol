@@ -45,10 +45,15 @@ private:
     int numst_;
 
     /*!
+     * Mixing parameter to be used instead of line minimization (if > 0)
+     */
+    const double mixing_;
+
+    /*!
      * If this flag is on, try shortening interval for line minimization
      * until successful (interpolation coefficient larger than 0)
      */
-    bool try_shorter_intervals_;
+    const bool try_shorter_intervals_;
 
     /*!
      * "variable" matrix defining "variable" DM through diagonalization
@@ -70,7 +75,7 @@ public:
         Energy<OrbitalsType>* energy, Electrostatic* electrostat,
         Hamiltonian<OrbitalsType>* hamiltonian,
         MGmol<OrbitalsType>* mgmol_strategy, const int numst,
-        const short n_inner_steps, const MatrixType& hinit,
+        const short n_inner_steps, const MatrixType& hinit, const double mixing,
         const bool try_shorter_intervals = false);
     ~HamiltonianMVPSolver();
     int solve(OrbitalsType& orbitals);

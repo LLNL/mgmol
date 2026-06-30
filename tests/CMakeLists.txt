@@ -645,6 +645,13 @@ add_test(NAME HMVP
          ${CMAKE_CURRENT_SOURCE_DIR}/HMVP/mgmol.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/HMVP/F.xyz
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
+add_test(NAME HMVPmix
+         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/HMVPmix/test.py
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
+         ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
+         ${CMAKE_CURRENT_SOURCE_DIR}/HMVPmix/mgmol.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/HMVPmix/h2o.xyz
+         ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME ReplicatedSP2
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ReplicatedSP2/test.py
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 3 ${MPIEXEC_PREFLAGS}
