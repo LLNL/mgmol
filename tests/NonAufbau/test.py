@@ -1,0 +1,100 @@
+#!/usr/bin/env python
+import sys
+import os
+import subprocess
+import string
+
+print("Test HMVP solver with non-Aufbau occupations...")
+
+nargs=len(sys.argv)
+
+mpicmd = sys.argv[1]+" "+sys.argv[2]+" "+sys.argv[3]
+for i in range(4,nargs-4):
+  mpicmd = mpicmd + " "+sys.argv[i]
+print("MPI run command: {}".format(mpicmd)) 
+
+exe = sys.argv[nargs-4]
+inp = sys.argv[nargs-3]
+coords = sys.argv[nargs-2]
+print("coordinates file: %s"%coords)
+
+#create links to potentials files
+cwd = os.getcwd()
+
+dst = 'pseudo.O_ONCV_PBE_SG15'
+src = sys.argv[nargs-1] + '/' + dst
+if not os.path.exists(cwd+'/'+dst):
+  print("Create link to %s"%dst)
+  os.symlink(src, dst)
+
+dst = 'pseudo.H_ONCV_PBE_SG15'
+src = sys.argv[nargs-1] + '/' + dst
+if not os.path.exists(cwd+'/'+dst):
+  print("Create link to %s"%dst)
+  os.symlink(src, dst)
+
+#run mgmol
+command = "{} {} -c {} -i {}".format(mpicmd,exe,inp,coords)
+print("Run command: {}".format(command))
+
+output = subprocess.check_output(command,stderr=subprocess.STDOUT,shell=True)
+
+#analyse mgmol standard output
+#make sure force is below tolerance
+lines=output.split(b'\n')
+
+convergence=0
+for line in lines:
+  if line.count(b'DFTsolver:') and line.count(b'convergence'):
+    convergence=1
+    break
+
+if convergence==0:
+  print("HMVP Solver did not converge")
+  sys.exit(1)
+
+flag = 0
+eigenvalues=[]
+energies=[]
+ecount=0
+for line in lines:
+  if line.count(b'FERMI'):
+    flag = 0
+  if flag==1:
+    words=line.split()
+    for w in words:
+      eigenvalues.append(eval(w))
+  if line.count(b'Eigenvalues'):
+    flag = 1
+    eigenvalues=[]
+  if line.count(b'%%'):
+    words=line.split()
+    e=words[5][0:-1]
+    print(e)
+    ecount=ecount+1
+    energies.append(eval(e))
+print(energies)
+
+print(eigenvalues)
+tol = 1.e-4
+eigenvalue0 = -1.294
+if abs(eigenvalues[0]-eigenvalue0)>tol:
+  print("Expected eigenvalue 0 to be {}".format(eigenvalue0))
+  sys.exit(1)
+eigenvalue4 = -0.152
+if abs(eigenvalues[4]-eigenvalue4)>tol:
+  print("Expected eigenvalue 4 to be {}".format(eigenvalue8))
+  sys.exit(1)
+
+niterations = ecount
+print("HMVP solver ran for {} iterations".format(niterations))
+
+print("Check energy...")
+last_energy = energies[-1]
+print("Energy = {}".format(last_energy))
+if last_energy>-16.4566:
+  print("Last energy = {}".format(last_energy))
+  sys.exit(1)
+
+print("Test PASSED")
+sys.exit(0)

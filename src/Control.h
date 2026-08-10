@@ -128,6 +128,9 @@ private:
     // total charge of system ions+electrons
     short system_charge_;
 
+    // occupation of each orbitals when prescribed
+    std::vector<float> orbitals_occupations_;
+
     float min_distance_centers_;
 
     // threshold below which action is taken to reduce linear dependence between
@@ -262,6 +265,16 @@ public:
     float getSpin() const { return total_spin_; }
 
     void setNempty(const int nempty) { nempty_ = nempty; }
+
+    bool prescribedOccupations() { return (!orbitals_occupations_.empty()); }
+
+    void getOccupations(std::vector<double>& occ)
+    {
+        assert(occ.size() == orbitals_occupations_.size());
+
+        std::copy(orbitals_occupations_.begin(), orbitals_occupations_.end(),
+            occ.begin());
+    }
 
     short getMGlevels() { return mg_levels_; }
 

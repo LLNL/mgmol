@@ -395,7 +395,13 @@ void ProjectedMatrices<MatrixType>::updateDMwithEigenstates()
     // solves generalized eigenvalue problem
     // and return solution in zz and val
     solveGenEigenProblem(*ev_);
-    computeChemicalPotentialAndOccupations();
+
+    // fill up orbitals with their occupation value
+    if (ct.prescribedOccupations())
+        fillOrbitals();
+    else
+        computeChemicalPotentialAndOccupations();
+
     if (mmpi.instancePE0() && ct.verbose > 1)
         std::cout << "Final mu_ = " << 0.5 * mu_ << " [Ha]" << std::endl;
 
@@ -882,6 +888,32 @@ void ProjectedMatrices<MatrixType>::computeChemicalPotentialAndOccupations(
     // if( mmpi.instancePE0() )
     //    (*MPIdata::sout)<<"computeChemicalPotentialAndOccupations() with mu="
     //        <<mu<<std::endl;
+
+    dm_->setOccupations(occ);
+}
+
+// fill orbitals according to prescribed values
+template <class MatrixType>
+void ProjectedMatrices<MatrixType>::fillOrbitals()
+{
+    Control& ct     = *(Control::instance());
+    MGmol_MPI& mmpi = *(MGmol_MPI::instance());
+
+    // retrieve prescribed occupations from Control
+    std::vector<DISTMATDTYPE> occ(dim_, 0.);
+    ct.getOccupations(occ);
+    if (mmpi.instancePE0() && ct.verbose > 1)
+    {
+        short count = 0;
+        std::cout << "Prescribed occupations: " << std::endl;
+        for (auto& o : occ)
+        {
+            std::cout << "    " << o;
+            count++;
+            if (count % 10 == 0) std::cout << std::endl;
+        }
+        std::cout << std::endl;
+    }
 
     dm_->setOccupations(occ);
 }

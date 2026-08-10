@@ -25,11 +25,51 @@
 #include "Potentials.h"
 #include "tools.h"
 
+#include <boost/program_options.hpp>
+namespace po = boost::program_options;
+
 Control* Control::pinstance_   = nullptr;
 MPI_Comm Control::comm_global_ = MPI_COMM_NULL;
 float Control::total_spin_     = 0.;
 std::string Control::run_directory_(".");
 bool Control::with_spin_ = false;
+
+template <typename T>
+std::vector<T> parse_list(std::string s)
+{
+    for (char& c : s)
+    {
+        if (c == ',') c = ' ';
+    }
+
+    std::istringstream iss(s);
+    std::vector<T> result;
+    T value;
+
+    while (iss >> value)
+    {
+        result.push_back(value);
+    }
+
+    iss >> std::ws;
+    if (!iss.eof())
+    {
+        throw std::runtime_error("Invalid list: '" + s + "'");
+    }
+
+    return result;
+}
+
+template <typename T>
+std::vector<T> get_list_option(
+    const po::variables_map& vm, const std::string& name)
+{
+    if (!vm.count(name))
+    {
+        return {};
+    }
+    return parse_list<T>(vm[name].as<std::string>());
+}
 
 Control::Control()
 {
@@ -713,6 +753,13 @@ void Control::sync(void)
     delete[] short_buffer;
     delete[] int_buffer;
     delete[] float_buffer;
+
+    unsigned short nocc = orbitals_occupations_.size();
+    mpirc = MPI_Bcast(&nocc, 1, MPI_UNSIGNED_SHORT, 0, comm_global_);
+    orbitals_occupations_.resize(nocc);
+    if (!orbitals_occupations_.empty())
+        mpirc = MPI_Bcast(orbitals_occupations_.data(),
+            orbitals_occupations_.size(), MPI_FLOAT, 0, comm_global_);
 }
 
 // function to set default values when boost interface not used
@@ -1421,6 +1468,12 @@ void Control::setOptions(const boost::program_options::variables_map& vm)
         str = vm["Orbitals.bcz"].as<std::string>();
         if (str.compare("0") == 0) bcWF[2] = 0;
         if (str.compare("periodic") == 0) bcWF[2] = 1;
+
+        if (vm.count("Orbitals.occupations"))
+        {
+            orbitals_occupations_
+                = get_list_option<float>(vm, "Orbitals.occupations");
+        }
 
         str = vm["Poisson.solver"].as<std::string>();
         if (str.compare("CG") == 0 || str.compare("PCG") == 0) diel_flag_ = 10;
