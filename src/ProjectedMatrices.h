@@ -79,6 +79,10 @@ class ProjectedMatrices : public ProjectedMatricesInterface
     {
         computeChemicalPotentialAndOccupations(width_, dim_);
     }
+
+    // fill orbitals with prescribed values read in config file
+    void fillOrbitals();
+
     double computeChemicalPotentialAndDMwithChebyshev(
         const int order, const double emin, const double emax);
 
