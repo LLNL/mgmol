@@ -1620,6 +1620,7 @@ void MGmol<OrbitalsType>::updateHFromHnl(Orbitals* orbitals, MatrixType& Hnl, Ma
 {
     Control& ct = *(Control::instance()); 
     OrbitalsType* dorbitals = dynamic_cast<OrbitalsType*>(orbitals);
+    assert(dorbitals != nullptr);
     
     /* copy precomputed nonlocal part of H */
     mat = Hnl;
@@ -1643,6 +1644,150 @@ template <class OrbitalsType>
 void MGmol<OrbitalsType>::updateHFromHnl(Orbitals* orbitals, dist_matrix::DistMatrix<DISTMATDTYPE>& Hnl, dist_matrix::DistMatrix<DISTMATDTYPE>& mat)
 {
     MGmol<OrbitalsType>::updateHFromHnl<dist_matrix::DistMatrix<DISTMATDTYPE>>(orbitals, Hnl, mat);
+}
+
+/* Initialize ionic stepper for MD */
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::mdInit(Ions& ions)
+{
+    std::vector<double>& tau0(ions.getTau0());
+    std::vector<double>& taup(ions.getTaup());
+    std::vector<double>& taum(ions.getTaum());
+    std::vector<double>& fion(ions.getFion());
+    std::vector<double>& pmass(ions.getPmass());
+    std::vector<short>& atmove(ions.getAtmove());
+    std::vector<unsigned short>& rand_states(ions.getRandStates());
+    std::vector<double>& vel(ions.getVelocities());
+
+    taum = vel;
+    int size_tau = (int)tau0.size();
+    double stepper_dt = 0.2;
+
+    Control& ct = *(Control::instance());
+
+    stepper_.reset(new MD_IonicStepper(
+        stepper_dt, atmove, tau0, taup, taum, fion, pmass, rand_states));
+    stepper_->setThermostat(ct.thermostat_type, ct.tkel, ct.thtime,
+        ct.thwidth, constraints_->size());
+
+    md_files_.reset(new MDfiles());
+
+    constraints_->printConstraints(os_);
+
+    if (ct.restart_info > 0)
+    {
+        stepper_->init(*h5f_file_);
+    }
+    else
+    {
+//        if (onpe0) os_ << "Use input file to initialize MD... dt = " <<ct.dt<< std::endl;
+    
+        double dt = -stepper_dt;//ct.dt;
+        int ione  = 1;
+        DSCAL(&size_tau, &dt, &tau0[0], &ione);
+        double one = 1.;
+        DAXPY(&size_tau, &one, &taup[0], &ione, &tau0[0], &ione);
+
+        constraints_->enforceConstraints(20);
+        stepper_->updateTau();
+        ions.setLocalPositions(tau0);
+        ions.setup();
+    }
+
+    ions.printPositions(os_);
+    ct.max_changes_pot = 0;
+}
+
+/* Perform one ionic step */
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::mdStepImpl(OrbitalsType& orbitals, Ions& ions)
+{
+    Control& ct = *(Control::instance());
+
+    std::vector<std::string>& ions_names(ions.getLocalNames());
+    std::vector<double>& tau0(ions.getTau0());
+    std::vector<double>& fion(ions.getFion());
+    std::vector<short>& atmove(ions.getAtmove());
+    std::vector<double>& taum(ions.getTaum());
+
+    double stepper_dt = 0.2;    
+
+    md_iterations_tm.start();
+
+    // forces from the current RT-TDDFT density at the current geometry
+    force(orbitals, ions);
+    ions.getLocalForces(fion);
+
+    constraints_->addConstraints(ions);
+    constraints_->setup(ions);
+    constraints_->printConstraintsForces(os_);
+    constraints_->projectOutForces();
+
+    if (md_iteration_ % ct.md_print_freq == 0)
+    {
+        std::string zero = "0";
+        if (zero.compare(ct.md_print_filename) != 0)
+        {
+            std::vector<float> spreads;
+            std::vector<Vector3D> centers;
+            std::vector<int> lgids;
+            if (ct.isLocMode())
+            {
+                spreadf_->computeLocalSpreads(spreads);
+                spreadf_->getLocalCenters(centers);
+                spreadf_->getLocalGids(lgids);
+            }
+            md_files_->printDataInFiles(ions_names, tau0, fion, taum,
+                centers, spreads, lgids, md_iteration_, stepper_dt);
+        }
+        if (ions_->getNumIons() < 256 || ct.verbose > 2)
+        {
+            if (ct.verbose > 0) ions.printForcesGlobal(os_);
+        }
+        else if (zero.compare(ct.md_print_filename) == 0)
+        {
+            ions.printForcesLocal(os_);
+        }
+    }
+
+    if (stepper_dt <= 0.) checkMaxForces(fion, atmove, os_);
+
+    stepper_->run();
+    if (ct.enforceVmass0) ions.removeMassCenterMotion();
+    if (ct.verbose > 2 && stepper_dt > 0.) stepper_->printVelocities(os_);
+
+    double ekin = 0.;
+    if (stepper_dt > 0.)
+    {
+        const double temperature = stepper_->temperature();
+        ekin                     = stepper_->kineticEnergy();
+        if (onpe0)
+        {
+            os_ << std::setprecision(6) << "Kinetic   Energy= " << ekin
+                << std::setprecision(5) << " (T= " << temperature << " )"
+                << std::endl;
+        }
+    }
+
+    stepper_->updateTau();
+    ions.updateIons();
+    ions.setup();
+
+    ct.steps = md_iteration_;
+
+    moveVnuc(ions);   // rebuilds local potential / marks H stale at new R
+
+    md_time_ += stepper_dt;
+    if (stepper_dt > 0.) md_iteration_++;
+
+    md_iterations_tm.stop();
+}
+/* Finalize MD ionic stepper */
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::mdFinalize()
+{
+    stepper_.reset();
+    md_files_.reset();
 }
 
 template class MGmol<LocGridOrbitals<ORBDTYPE>>;

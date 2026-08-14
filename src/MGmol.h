@@ -52,6 +52,8 @@ class IonicAlgorithm;
 #include "Rho.h"
 #include "SpreadPenaltyInterface.h"
 #include "SpreadsAndCenters.h"
+#include "MD_IonicStepper.h"
+#include "MDfiles.h"
 
 #include <memory>
 
@@ -106,6 +108,9 @@ private:
     std::shared_ptr<ConstraintSet> constraints_;
 
     std::shared_ptr<OrbitalsExtrapolation<OrbitalsType>> orbitals_extrapol_;
+
+    std::unique_ptr<MD_IonicStepper> stepper_;
+    std::unique_ptr<MDfiles> md_files_;
 
     float md_time_;
     int md_iteration_;
@@ -344,6 +349,23 @@ public:
         return proj_matrices_;
     }
     
+    std::shared_ptr<Ions> getIons() override
+    {
+        return ions_;
+    }
+
+    /* Functions for MD Ionic stepper */
+    void checkMaxForces(const std::vector<double>& fion,
+        const std::vector<short>& atmove, std::ostream& os);
+    void mdInit(Ions& ions) override;
+    void mdStepImpl(OrbitalsType& orbitals, Ions& ions);
+    void mdStep(Orbitals& orbitals, Ions& ions) override
+    {
+        /* call templated implementation */
+        mdStepImpl(static_cast<OrbitalsType&>(orbitals), ions);
+    }
+    void mdFinalize() override;
+
     /* Compute linear (nonlocal) part of Hamiltonian */
     template <class MatrixType>
     void computeHnl(Orbitals* orbitals, MatrixType& mat);

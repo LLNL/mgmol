@@ -43,6 +43,8 @@ public:
     virtual void getAtomicNumbers(std::vector<short>& an)     = 0;
     virtual std::shared_ptr<ProjectedMatricesInterface> getProjectedMatrices()
         = 0;
+    virtual std::shared_ptr<Ions> getIons()
+        = 0;
     virtual void dumpRestart() = 0;
     virtual void computeHnl(Orbitals*,  ReplicatedMatrix&) = 0;
     virtual void computeHnl(Orbitals*,  dist_matrix::DistMatrix<DISTMATDTYPE>&) = 0;
@@ -50,6 +52,9 @@ public:
     virtual void updateHFromHnl(Orbitals* orbitals, dist_matrix::DistMatrix<DISTMATDTYPE>& Hnl, dist_matrix::DistMatrix<DISTMATDTYPE>& mat) = 0;
     virtual void finalEnergy() = 0;
     virtual double getTotalEnergy() = 0;
+    virtual void mdInit(Ions& ions) = 0;
+    virtual void mdStep(Orbitals& orbitals, Ions& ions) = 0;
+    virtual void mdFinalize() = 0;
 };
 
 #endif

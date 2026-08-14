@@ -7,6 +7,9 @@
 // This file is part of MGmol. For details, see https://github.com/llnl/mgmol.
 // Please also read this link https://github.com/llnl/mgmol/LICENSE
 
+#ifndef MDFILES_H
+#define MDFILES_H
+
 #include "Timer.h"
 
 #include <mpi.h>
@@ -49,3 +52,5 @@ private:
     void gatherVector3D(
         std::vector<Vector3D>& tau, std::vector<double>& recvbuf);
 };
+
+#endif

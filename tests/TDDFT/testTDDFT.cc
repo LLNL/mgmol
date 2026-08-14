@@ -35,7 +35,8 @@ namespace po = boost::program_options;
 #define PRINT_INTERVAL 1
 /* timestep size (in a.u.) and number of timesteps */
 #define	DELTA_T 0.2
-#define NUM_TIME_STEPS 20000
+#define NUM_TIME_STEPS 2000
+//#define NUM_TIME_STEPS 20000
 
 int propagate_density_matrix(ReplicatedMatrix& X_real, ReplicatedMatrix& X_imag, ReplicatedMatrix& H, double dt, double tol, int maxits=10);
 void compute_commutator(const ReplicatedMatrix& H, const ReplicatedMatrix& X, ReplicatedMatrix& commHX);
@@ -238,6 +239,11 @@ int main(int argc, char** argv)
             }
         }
 //        outputFile.flush();
+
+        /* Inititialize Ionic Stepper for MD */
+        std::shared_ptr<Ions> dions = mgmol->getIons(); 
+        mgmol->mdInit(*dions);           
+
         /* begin time-stepping */
         for(int step=0; step<NUM_TIME_STEPS; step++)
         {
@@ -257,6 +263,10 @@ int main(int argc, char** argv)
 
             /* Update the density matrix (Only real part is needed)*/
             dprojmatrices->setDM(X_real);
+
+            /* update ion positions */
+            mgmol->mdStep(orbitals, *dions);
+
             /* Compute Obersevables:
              * 1. trace of density matrix
              * 2. Energy
@@ -290,7 +300,9 @@ int main(int argc, char** argv)
                 }             
             }        
         }
-        
+        /* delete MD ionic stepper data */
+        mgmol->mdFinalize();
+
         /* Final summary */
         /* trace of Density matrix -- conserved value */
         trace = X_real.trace();

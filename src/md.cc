@@ -208,7 +208,8 @@ int MGmol<OrbitalsType>::update_masks()
     return 0;
 }
 
-void checkMaxForces(const std::vector<double>& fion,
+template <class OrbitalsType>
+void MGmol<OrbitalsType>::checkMaxForces(const std::vector<double>& fion,
     const std::vector<short>& atmove, std::ostream& os)
 {
     assert(3 * atmove.size() == fion.size());
