@@ -657,6 +657,7 @@ add_test(NAME NonAufbau
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS}
          ${CMAKE_CURRENT_BINARY_DIR}/../src/mgmol-opt
          ${CMAKE_CURRENT_SOURCE_DIR}/NonAufbau/mgmol.cfg
+         ${CMAKE_CURRENT_SOURCE_DIR}/NonAufbau/restart.cfg
          ${CMAKE_CURRENT_SOURCE_DIR}/NonAufbau/h2o.xyz
          ${CMAKE_CURRENT_SOURCE_DIR}/../potentials)
 add_test(NAME ReplicatedSP2

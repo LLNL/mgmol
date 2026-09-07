@@ -913,6 +913,15 @@ void ProjectedMatrices<MatrixType>::fillOrbitals()
             if (count % 10 == 0) std::cout << std::endl;
         }
         std::cout << std::endl;
+        std::cout << "Associated eigenvalues:" << std::endl;
+        count = 0;
+        for (auto& e : eigenvalues_)
+        {
+            std::cout << "    " << e;
+            count++;
+            if (count % 10 == 0) std::cout << std::endl;
+        }
+        std::cout << std::endl;
     }
 
     dm_->setOccupations(occ);
