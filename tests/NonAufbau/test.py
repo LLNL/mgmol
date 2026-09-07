@@ -9,12 +9,13 @@ print("Test HMVP solver with non-Aufbau occupations...")
 nargs=len(sys.argv)
 
 mpicmd = sys.argv[1]+" "+sys.argv[2]+" "+sys.argv[3]
-for i in range(4,nargs-4):
+for i in range(4,nargs-5):
   mpicmd = mpicmd + " "+sys.argv[i]
 print("MPI run command: {}".format(mpicmd)) 
 
-exe = sys.argv[nargs-4]
-inp = sys.argv[nargs-3]
+exe = sys.argv[nargs-5]
+inp1 = sys.argv[nargs-4]
+inp2 = sys.argv[nargs-3]
 coords = sys.argv[nargs-2]
 print("coordinates file: %s"%coords)
 
@@ -34,7 +35,24 @@ if not os.path.exists(cwd+'/'+dst):
   os.symlink(src, dst)
 
 #run mgmol
-command = "{} {} -c {} -i {}".format(mpicmd,exe,inp,coords)
+command = "{} {} -c {} -i {}".format(mpicmd,exe,inp1,coords)
+print("Run command: {}".format(command))
+
+output = subprocess.check_output(command,stderr=subprocess.STDOUT,shell=True)
+
+lines=output.split(b'\n')
+ecount=0
+for line in lines:
+  if line.count(b'%%'):
+    words=line.split()
+    e=words[5][0:-1]
+    print(e)
+    ecount=ecount+1
+
+print("Ground state: HMVP solver ran for {} iterations".format(ecount))
+
+#restart
+command = "{} {} -c {}".format(mpicmd,exe,inp2)
 print("Run command: {}".format(command))
 
 output = subprocess.check_output(command,stderr=subprocess.STDOUT,shell=True)
